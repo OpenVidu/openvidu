@@ -51,6 +51,11 @@ sed -i "s/AMIUSEAST1/${AMIUSEAST1}/g" cfn-mkt-kms-ami.yaml
 aws s3 cp cfn-mkt-kms-ami.yaml s3://aws.openvidu.io
 TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-kms-ami.yaml
 
+# Update installation script
+if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
+  aws s3 cp  ../docker-compose/media-node/install_media_node.sh s3://aws.openvidu.io/install_media_node_$OPENVIDU_PRO_VERSION.sh --acl public-read
+fi
+
 aws cloudformation create-stack \
   --stack-name kms-${DATESTAMP} \
   --template-url ${TEMPLATE_URL} \
@@ -78,6 +83,11 @@ aws cloudformation delete-stack --stack-name kms-${DATESTAMP}
 # Copy template to S3
   aws s3 cp cfn-mkt-ov-ami.yaml s3://aws.openvidu.io
   TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-ov-ami.yaml
+
+# Update installation script
+if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
+  aws s3 cp  ../docker-compose/openvidu-server-pro/install_openvidu_pro.sh s3://aws.openvidu.io/install_openvidu_pro_$OPENVIDU_PRO_VERSION.sh --acl public-read
+fi
 
 aws cloudformation create-stack \
   --stack-name openvidu-${DATESTAMP} \
