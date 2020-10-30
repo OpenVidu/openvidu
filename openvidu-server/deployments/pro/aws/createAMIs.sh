@@ -1,4 +1,12 @@
 #!/bin/bash -x
+set -eu -o pipefail
+
+CF_RELEASE=${CF_RELEASE:-false}
+
+if [[ $CF_RELEASE == "true" ]]; then
+    git checkout v$OPENVIDU_PRO_VERSION
+fi
+
 export AWS_DEFAULT_REGION=eu-west-1
 
 DATESTAMP=$(date +%s)
