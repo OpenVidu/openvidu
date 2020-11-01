@@ -92,3 +92,4 @@ services:
             - PROXY_MODE=CE
             - WITH_APP=true
             - SUPPORT_DEPRECATED_API=${SUPPORT_DEPRECATED_API:-true}
+            - REDIRECT_WWW=${REDIRECT_WWW:-false}

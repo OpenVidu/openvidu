@@ -148,7 +148,8 @@ case ${CERTIFICATE_TYPE} in
 
       certbot certonly -n --webroot -w /var/www/certbot \
                                     -m "${LETSENCRYPT_EMAIL}" \
-                                    --agree-tos -d "${DOMAIN_OR_PUBLIC_IP}"
+                                    --agree-tos -d "${DOMAIN_OR_PUBLIC_IP}" \
+                                    `if [[ "${REDIRECT_WWW}" == "true" ]]; then echo "-d www.${DOMAIN_OR_PUBLIC_IP}" ; fi`
     else
       printf "\n    - LetsEncrypt certificate already exists, using them..."
     fi
