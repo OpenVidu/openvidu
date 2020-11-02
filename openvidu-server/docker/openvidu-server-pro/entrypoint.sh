@@ -24,7 +24,7 @@ printf "\n  ======================================="
 printf "\n"
 
 # Get coturn public ip
-[[ -z ${COTURN_IP} ]] && export COTURN_IP=auto-ipv4
+[[ -z "${COTURN_IP}" ]] && export COTURN_IP=auto-ipv4
 if [[ -z "${COTURN_IP}" == "auto-ipv4" ]]; then
     COTURN_IP=$(/usr/local/bin/discover_my_public_ip.sh)
 elif [[ -z "${COTURN_IP}" == "auto-ipv6" ]]; then
