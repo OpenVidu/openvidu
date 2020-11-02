@@ -22,10 +22,10 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server-pro:2.16.0-dev2
+        image: openvidu/openvidu-server-pro:2.16.0-dev4
         restart: on-failure
         network_mode: host
-        entrypoint: ['/bin/bash', '-c', 'export COTURN_IP=`/usr/local/bin/discover_my_public_ip.sh`; /usr/local/bin/entrypoint.sh']
+        entrypoint: ['/usr/local/bin/entrypoint.sh']
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - ${OPENVIDU_RECORDING_PATH}:${OPENVIDU_RECORDING_PATH}
@@ -41,6 +41,7 @@ services:
             - KMS_URIS=[]
             - COTURN_REDIS_IP=127.0.0.1
             - COTURN_REDIS_PASSWORD=${OPENVIDU_SECRET}
+            - COTURN_IP=${COTURN_IP:-auto-ipv4}
             - OPENVIDU_PRO_CLUSTER=true
             - OPENVIDU_PRO_KIBANA_HOST=${OPENVIDU_PRO_KIBANA_HOST:-http://127.0.0.1/kibana}
             - OPENVIDU_PRO_ELASTICSEARCH_HOST=${OPENVIDU_PRO_ELASTICSEARCH_HOST:-http://127.0.0.1:9200}
@@ -65,7 +66,7 @@ services:
             - DB_PASSWORD=${OPENVIDU_SECRET}
             - MIN_PORT=40000
             - MAX_PORT=65535
-            - TURN_PUBLIC_IP=auto
+            - TURN_PUBLIC_IP=${TURN_PUBLIC_IP:-auto-ipv4}
 
     nginx:
         image: openvidu/openvidu-proxy:4.0.0-dev4
@@ -74,6 +75,7 @@ services:
         volumes:
             - ./certificates:/etc/letsencrypt
             - ./owncert:/owncert
+            - ./custom-nginx-vhosts:/etc/nginx/vhost.d/
             - ${OPENVIDU_RECORDING_CUSTOM_LAYOUT}:/opt/openvidu/custom-layout
         environment:
             - DOMAIN_OR_PUBLIC_IP=${DOMAIN_OR_PUBLIC_IP}
@@ -87,6 +89,7 @@ services:
             - WITH_APP=true
             - SUPPORT_DEPRECATED_API=${SUPPORT_DEPRECATED_API:-true}
             - REDIRECT_WWW=${REDIRECT_WWW:-false}
+            - WORKER_CONNECTIONS=${WORKER_CONNECTIONS:-10240}
 
     elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0

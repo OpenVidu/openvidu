@@ -22,10 +22,10 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server:2.16.0-dev1
+        image: openvidu/openvidu-server:2.16.0-dev2
         restart: on-failure
         network_mode: host
-        entrypoint: ['/bin/bash', '-c', 'export COTURN_IP=`/usr/local/bin/discover_my_public_ip.sh`; /usr/local/bin/entrypoint.sh']
+        entrypoint: ['/usr/local/bin/entrypoint.sh']
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - ${OPENVIDU_RECORDING_PATH}:${OPENVIDU_RECORDING_PATH}
@@ -39,6 +39,7 @@ services:
             - KMS_URIS=["ws://localhost:8888/kurento"]
             - COTURN_REDIS_IP=127.0.0.1
             - COTURN_REDIS_PASSWORD=${OPENVIDU_SECRET}
+            - COTURN_IP=${COTURN_IP:-auto-ipv4}
 
     kms:
         image: ${KMS_IMAGE:-kurento/kurento-media-server:6.14.0}
@@ -62,7 +63,7 @@ services:
             - REDIS_PASSWORD=${OPENVIDU_SECRET}
 
     coturn:
-        image: openvidu/openvidu-coturn:2.0.0-dev2
+        image: openvidu/openvidu-coturn:2.0.0-dev3
         restart: on-failure
         network_mode: host
         environment:
@@ -74,12 +75,13 @@ services:
             - MAX_PORT=65535
 
     nginx:
-        image: openvidu/openvidu-proxy:4.0.0-dev4
+        image: openvidu/openvidu-proxy:4.0.0-dev5
         restart: on-failure
         network_mode: host
         volumes:
             - ./certificates:/etc/letsencrypt
             - ./owncert:/owncert
+            - ./custom-nginx-vhosts:/etc/nginx/vhost.d/
             - ${OPENVIDU_RECORDING_CUSTOM_LAYOUT}:/opt/openvidu/custom-layout
         environment:
             - DOMAIN_OR_PUBLIC_IP=${DOMAIN_OR_PUBLIC_IP}
@@ -93,3 +95,5 @@ services:
             - WITH_APP=true
             - SUPPORT_DEPRECATED_API=${SUPPORT_DEPRECATED_API:-true}
             - REDIRECT_WWW=${REDIRECT_WWW:-false}
+            - WORKER_CONNECTIONS=${WORKER_CONNECTIONS:-10240}
+            - PUBLIC_IP=${PUBLIC_IP:-auto-ipv4}

@@ -5,7 +5,8 @@ DEBUG=${DEBUG:-false}
 [ "$DEBUG" == "true" ] && set -x
 
 #Check parameters
-[[ "${TURN_PUBLIC_IP}" == "auto" ]] && export TURN_PUBLIC_IP=$(/usr/local/bin/discover_my_public_ip.sh)
+[[ "${TURN_PUBLIC_IP}" == "auto-ipv4" ]] && export TURN_PUBLIC_IP=$(/usr/local/bin/discover_my_public_ip.sh)
+[[ "${TURN_PUBLIC_IP}" == "auto-ipv6" ]] && export TURN_PUBLIC_IP=$(/usr/local/bin/discover_my_public_ip.sh --ipv6)
 
 echo "TURN public IP: ${TURN_PUBLIC_IP:-"empty"}"
 

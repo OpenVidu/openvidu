@@ -54,6 +54,10 @@ new_ov_installation() {
      printf "\n     => Creating folder 'owncert'..."
      mkdir "${OPENVIDU_FOLDER}/owncert" || fatal_error "Error while creating the folder 'owncert'"
 
+     # Create vhost nginx folder
+     printf "\n     => Creating folder 'custom-nginx-vhosts'..."
+     mkdir "${OPENVIDU_FOLDER}/custom-nginx-vhosts" || fatal_error "Error while creating the folder 'custom-nginx-vhosts'"
+
      # Ready to use
      printf '\n'
      printf '\n'

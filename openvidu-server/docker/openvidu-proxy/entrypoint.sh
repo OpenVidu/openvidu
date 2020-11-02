@@ -38,7 +38,10 @@ CERTIFICATES_CONF="${CERTIFICATES_LIVE_FOLDER}/certificates.conf"
 [ -z "${PROXY_HTTPS_PORT}" ] && export PROXY_HTTPS_PORT=443
 [ -z "${WITH_APP}" ] && export WITH_APP=true
 [ -z "${SUPPORT_DEPRECATED_API}" ] && export SUPPORT_DEPRECATED_API=true
+[ -z "${REDIRECT_WWW}" ] && export REDIRECT_WWW=false
 [ -z "${PROXY_MODE}" ] && export PROXY_MODE=CE
+[ -z "${WORKER_CONNECTIONS}" ] && export WORKER_CONNECTIONS=10240
+[ -z "${PUBLIC_IP}" ] && export PUBLIC_IP=auto-ipv4
 [ -z "${ALLOWED_ACCESS_TO_DASHBOARD}" ] && export ALLOWED_ACCESS_TO_DASHBOARD=all
 [ -z "${ALLOWED_ACCESS_TO_RESTAPI}" ] && export ALLOWED_ACCESS_TO_RESTAPI=all
 
@@ -51,8 +54,10 @@ printf "\n"
 printf "\n  Config NGINX:"
 printf "\n    - Http Port: %s" "${PROXY_HTTP_PORT}"
 printf "\n    - Https Port: %s" "${PROXY_HTTPS_PORT}"
+printf "\n    - Worker Connections: %s" "${WORKER_CONNECTIONS}"
 printf "\n    - Allowed Access in Openvidu Dashboard: %s" "${ALLOWED_ACCESS_TO_DASHBOARD}"
 printf "\n    - Allowed Access in Openvidu API: %s" "${ALLOWED_ACCESS_TO_RESTAPI}"
+printf "\n    - Redirect www to non-www: %s" "${REDIRECT_WWW}"
 printf "\n"
 printf "\n  Config Openvidu Application:"
 printf "\n    - Domain name: %s" "${DOMAIN_OR_PUBLIC_IP}"
@@ -67,6 +72,9 @@ printf "\n  =       CONFIGURATION NGINX           ="
 printf "\n  ======================================="
 printf "\n"
 
+# Override worker connections
+sed -i "s/{worker_connections}/${WORKER_CONNECTIONS}/g" /etc/nginx/nginx.conf
+
 printf "\n  Configure %s domain..." "${DOMAIN_OR_PUBLIC_IP}"
 OLD_DOMAIN_OR_PUBLIC_IP=$(head -n 1 "${CERTIFICATES_CONF}" | cut -f1 -d$'\t')
 CERTIFICATED_OLD_CONFIG=$(head -n 1 "${CERTIFICATES_CONF}" | cut -f2 -d$'\t')
@@ -74,9 +82,9 @@ CERTIFICATED_OLD_CONFIG=$(head -n 1 "${CERTIFICATES_CONF}" | cut -f2 -d$'\t')
 printf "\n    - New configuration: %s %s" "${CERTIFICATE_TYPE}" "${DOMAIN_OR_PUBLIC_IP}"
 
 if [ -z "${CERTIFICATED_OLD_CONFIG}" ]; then
-  printf "\n    - Old configuration: none"
+  printf "\n    - Old configuration: none\n"
 else
-  printf "\n    - Old configuration: %s %s" "${CERTIFICATED_OLD_CONFIG}" "${OLD_DOMAIN_OR_PUBLIC_IP}"
+  printf "\n    - Old configuration: %s %s\n" "${CERTIFICATED_OLD_CONFIG}" "${OLD_DOMAIN_OR_PUBLIC_IP}"
 
   if [ "${CERTIFICATED_OLD_CONFIG}" != "${CERTIFICATE_TYPE}" ] || \
   [ "${OLD_DOMAIN_OR_PUBLIC_IP}" != "${DOMAIN_OR_PUBLIC_IP}" ]; then
@@ -161,34 +169,14 @@ chmod -R 777 /etc/letsencrypt
 
 # Use certificates in folder '/default_nginx_conf'
 if [ "${PROXY_MODE}" == "CE" ]; then
-  if [ "${WITH_APP}" == "true" ] && [ "${SUPPORT_DEPRECATED_API}" == "true" ]; then
-    mv /default_nginx_conf/ce/support_deprecated_api/default-app.conf /default_nginx_conf/default-app.conf
-  elif [ "${WITH_APP}" == "true" ] && [ "${SUPPORT_DEPRECATED_API}" == "false" ]; then
-    mv /default_nginx_conf/ce/default-app.conf /default_nginx_conf/default-app.conf
-  elif [ "${WITH_APP}" == "false" ] && [ "${SUPPORT_DEPRECATED_API}" == "true" ]; then
-    mv /default_nginx_conf/ce/support_deprecated_api/default-app-without-demos.conf /default_nginx_conf/default-app.conf
-  elif [ "${WITH_APP}" == "false" ] && [ "${SUPPORT_DEPRECATED_API}" == "false" ]; then
-    mv /default_nginx_conf/ce/default-app-without-demos.conf /default_nginx_conf/default-app.conf
-  fi
-  mv /default_nginx_conf/ce/default.conf /default_nginx_conf/default.conf
-
-  rm -rf /default_nginx_conf/ce
-  rm -rf /default_nginx_conf/pro
+  # Remove previous configuration
+  [[ -f /default_nginx_conf/default.conf ]] && rm /default_nginx_conf/default.conf
+  cp /default_nginx_conf/ce/default.conf /default_nginx_conf/default.conf
 fi
 
 if [ "${PROXY_MODE}" == "PRO" ]; then
-  if [ "${WITH_APP}" == "true" ] && [ "${SUPPORT_DEPRECATED_API}" == "true" ]; then
-    mv /default_nginx_conf/pro/support_deprecated_api/default.conf /default_nginx_conf/default.conf
-  elif [ "${WITH_APP}" == "true" ] && [ "${SUPPORT_DEPRECATED_API}" == "false" ]; then
-    mv /default_nginx_conf/pro/default.conf /default_nginx_conf/default.conf
-  elif [ "${WITH_APP}" == "false" ] && [ "${SUPPORT_DEPRECATED_API}" == "true" ]; then
-    mv /default_nginx_conf/pro/support_deprecated_api/default-app-without-demos.conf /default_nginx_conf/default.conf
-  elif [ "${WITH_APP}" == "false" ] && [ "${SUPPORT_DEPRECATED_API}" == "false" ]; then
-    mv /default_nginx_conf/pro/default-app-without-demos.conf /default_nginx_conf/default.conf
-  fi
-
-  rm -rf /default_nginx_conf/ce
-  rm -rf /default_nginx_conf/pro
+[[ -f /default_nginx_conf/default.conf ]] && rm /default_nginx_conf/default.conf
+  cp /default_nginx_conf/pro/default.conf /default_nginx_conf/default.conf
 fi
 
 # Create index.html
@@ -199,7 +187,50 @@ EOF
 
 # Load nginx conf files
 rm /etc/nginx/conf.d/*
-cp /default_nginx_conf/* /etc/nginx/conf.d
+cp /default_nginx_conf/default* /etc/nginx/conf.d
+
+# Replace config files
+sed -e '/{ssl_config}/{r default_nginx_conf/global/ssl_config.conf' -e 'd}' -i /etc/nginx/conf.d/*
+sed -e '/{proxy_config}/{r default_nginx_conf/global/proxy_config.conf' -e 'd}' -i /etc/nginx/conf.d/*
+sed -e '/{nginx_status}/{r default_nginx_conf/global/nginx_status.conf' -e 'd}' -i /etc/nginx/conf.d/*
+sed -e '/{common_api_ce}/{r default_nginx_conf/global/ce/common_api_ce.conf' -e 'd}' -i /etc/nginx/conf.d/*
+sed -e '/{new_api_ce}/{r default_nginx_conf/global/ce/new_api_ce.conf' -e 'd}' -i /etc/nginx/conf.d/*
+sed -e '/{common_api_pro}/{r default_nginx_conf/global/pro/common_api_pro.conf' -e 'd}' -i /etc/nginx/conf.d/*
+sed -e '/{new_api_pro}/{r default_nginx_conf/global/pro/new_api_pro.conf' -e 'd}' -i /etc/nginx/conf.d/*
+
+if [[ "${WITH_APP}" == "true" ]]; then
+  sed -e '/{app_upstream}/{r default_nginx_conf/global/app_upstream.conf' -e 'd}' -i /etc/nginx/conf.d/*
+  sed -e '/{app_config}/{r default_nginx_conf/global/app_config.conf' -e 'd}' -i /etc/nginx/conf.d/*
+elif [[ "${WITH_APP}" == "false" ]]; then
+  sed -i '/{app_upstream}/d' /etc/nginx/conf.d/*
+  sed -e '/{app_config}/{r default_nginx_conf/global/app_config_default.conf' -e 'd}' -i /etc/nginx/conf.d/*
+fi
+
+if [[ "${SUPPORT_DEPRECATED_API}" == "true" ]]; then
+  sed -e '/{deprecated_api_ce}/{r default_nginx_conf/global/ce/deprecated_api_ce.conf' -e 'd}' -i /etc/nginx/conf.d/*
+  sed -e '/{deprecated_api_pro}/{r default_nginx_conf/global/pro/deprecated_api_pro.conf' -e 'd}' -i /etc/nginx/conf.d/*
+elif [[ "${SUPPORT_DEPRECATED_API}" == "false" ]]; then
+  sed -i '/{deprecated_api_ce}/d' /etc/nginx/conf.d/*
+  sed -i '/{deprecated_api_pro}/d' /etc/nginx/conf.d/*
+fi
+
+if [[ "${REDIRECT_WWW}" == "true" ]]; then
+  sed -e '/{redirect_www_ssl}/{r default_nginx_conf/global/redirect_www_ssl.conf' -e 'd}' -i /etc/nginx/conf.d/*
+  if [[ "${PROXY_MODE}" == "CE" ]]; then
+    sed -e '/{redirect_www}/{r default_nginx_conf/global/ce/redirect_www.conf' -e 'd}' -i /etc/nginx/conf.d/*
+  fi
+
+  if [ "${PROXY_MODE}" == "PRO" ]; then
+    sed -e '/{redirect_www}/{r default_nginx_conf/global/pro/redirect_www.conf' -e 'd}' -i /etc/nginx/conf.d/*
+  fi
+elif [[ "${REDIRECT_WWW}" == "false" ]]; then
+  sed -i '/{redirect_www}/d' /etc/nginx/conf.d/*
+  sed -i '/{redirect_www_ssl}/d' /etc/nginx/conf.d/*
+fi
+
+# Process main configs
+sed -e '/{ssl_config}/{r default_nginx_conf/global/ssl_config.conf' -e 'd}' -i /etc/nginx/conf.d/*
+sed -e '/{proxy_config}/{r default_nginx_conf/global/proxy_config.conf' -e 'd}' -i /etc/nginx/conf.d/*
 sed -i "s/{domain_name}/${DOMAIN_OR_PUBLIC_IP}/g" /etc/nginx/conf.d/*
 sed -i "s/{http_port}/${PROXY_HTTP_PORT}/g" /etc/nginx/conf.d/*
 sed -i "s/{https_port}/${PROXY_HTTPS_PORT}/g" /etc/nginx/conf.d/*
@@ -212,8 +243,6 @@ printf "\n  ======================================="
 printf "\n"
 
 printf "\n  Adding rules..."
-LOCAL_NETWORKS=$(ip route list | grep -Eo '([0-9]*\.){3}[0-9]*/[0-9]*')
-PUBLIC_IP=$(/usr/local/bin/discover_my_public_ip.sh)
 
 valid_ip_v4()
 {
@@ -236,6 +265,23 @@ valid_ip_v6()
       return "$?"
   fi
 }
+
+LOCAL_NETWORKS=$(ip route list | grep -Eo '([0-9]*\.){3}[0-9]*/[0-9]*')
+if [[ "${PUBLIC_IP}" == "auto-ipv4" ]]; then
+  PUBLIC_IP=$(/usr/local/bin/discover_my_public_ip.sh)
+  printf "\n    - Public IPv4 for rules: %s" "$PUBLIC_IP"
+elif [[ "${PUBLIC_IP}" == "auto-ipv6" ]]; then
+  PUBLIC_IP=$(/usr/local/bin/discover_my_public_ip.sh --ipv6)
+  printf "\n    - Public IPv6 for rules: %s" "$PUBLIC_IP"
+else 
+  if valid_ip_v4 "$PUBLIC_IP"; then
+    printf "\n    - Valid defined public IPv4: %s" "$PUBLIC_IP"
+  elif valid_ip_v6 "$PUBLIC_IP"; then
+    printf "\n    - Valid defined public IPv6: %s" "$PUBLIC_IP"
+  else
+    printf "\n    - Not valid defined IP Address: %s" "$PUBLIC_IP"
+  fi
+fi
 
 if [ "${ALLOWED_ACCESS_TO_DASHBOARD}" != "all" ]; then
     IFS=','
@@ -302,7 +348,7 @@ else
 fi
 
 if [ "${RULES_DASHBOARD}" != "allow all;" ]; then
-  if ! echo "${RULES_DASHBOARD}" | grep -q "$PUBLIC_IP" && valid_ip_v4 "$PUBLIC_IP" || valid_ip_v6 "$IP"; then
+  if ! echo "${RULES_DASHBOARD}" | grep -q "$PUBLIC_IP" && valid_ip_v4 "$PUBLIC_IP" || valid_ip_v6 "$PUBLIC_IP"; then
     RULES_DASHBOARD="${RULES_DASHBOARD}{new_line}allow $PUBLIC_IP;"
   fi
 
@@ -320,7 +366,7 @@ if [ "${RULES_DASHBOARD}" != "allow all;" ]; then
 fi
 
 if [ "${RULES_RESTAPI}" != "allow all;" ]; then
-  if ! echo "${RULES_RESTAPI}" | grep -q "$PUBLIC_IP" && valid_ip_v4 "$PUBLIC_IP" || valid_ip_v6 "$IP"; then
+  if ! echo "${RULES_RESTAPI}" | grep -q "$PUBLIC_IP" && valid_ip_v4 "$PUBLIC_IP" || valid_ip_v6 "$PUBLIC_IP"; then
     RULES_RESTAPI="${RULES_RESTAPI}{new_line}allow $PUBLIC_IP;"
   fi
 

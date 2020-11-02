@@ -1,47 +1,116 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Check if a txt is a valid ip
-function valid_ip()
-{
-    local  ip=$1
-    local  stat=1
+#/ Use DNS to find out about the external IP of the running system.
+#/
+#/ This script is useful when running from a machine that sits behind a NAT.
+#/ Due to how NAT works, machines behind it belong to an internal or private
+#/ subnet, with a different address space than the external or public side.
+#/
+#/ Typically it is possible to make an HTTP request to a number of providers
+#/ that offer the external IP in their response body (eg: ifconfig.me). However,
+#/ why do a slow and heavy HTTP request, when DNS exists and is much faster?
+#/ Well established providers such as OpenDNS or Google offer special hostnames
+#/ that, when resolved, will actually return the IP address of the caller.
+#/
+#/ https://unix.stackexchange.com/questions/22615/how-can-i-get-my-external-ip-address-in-a-shell-script/81699#81699
+#/
+#/
+#/ Arguments
+#/ ---------
+#/
+#/ --ipv4
+#/
+#/   Find the external IPv4 address.
+#/   Optional. Default: Enabled.
+#/
+#/ --ipv6
+#/
+#/   Find the external IPv6 address.
+#/   Optional. Default: Disabled.
 
-    if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-        OIFS=$IFS
-        IFS='.'
-        ip=($ip)
-        IFS=$OIFS
-        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
-            && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
-        stat=$?
-    fi
-    return $stat
+
+
+# Shell setup
+# ===========
+
+# Bash options for strict error checking.
+set -o errexit -o errtrace -o pipefail -o nounset
+
+# Trace all commands (to stderr).
+#set -o xtrace
+
+# Trap function for unhandled errors.
+function on_error() {
+    echo "[getmyip] ERROR ($?)" >&2
+    exit 1
 }
+trap on_error ERR
 
-# Services to get public ip
-SERVICES=(
-    "curl --silent -sw :%{http_code} ipv4.icanhazip.com"
-    "curl --silent -sw :%{http_code} ifconfig.me"
-    "curl --silent -sw :%{http_code} -4 ifconfig.co"
-    "curl --silent -sw :%{http_code} ipecho.net/plain"
-    "curl --silent -sw :%{http_code} ipinfo.io/ip"
-    "curl --silent -sw :%{http_code} checkip.amazonaws.com"
-    "curl --silent -sw :%{http_code} v4.ident.me"
-)
 
-# Get public ip
-for service in "${SERVICES[@]}"; do
-    RUN_COMMAND=$($service | tr -d '[:space:]')
-    IP=$(echo "$RUN_COMMAND" | cut -d':' -f1)
-    HTTP_CODE=$(echo "$RUN_COMMAND" | cut -d':' -f2)
 
-    if [ "$HTTP_CODE" == "200" ]; then
-        if valid_ip "$IP"; then 
-            printf "%s" "$IP"
-            exit 0
-        fi
+# Parse call arguments
+# ====================
+
+CFG_IPV4="true"
+CFG_IPV6="false"
+
+while [[ $# -gt 0 ]]; do
+    case "${1-}" in
+        --ipv4)
+            CFG_IPV4="true"
+            CFG_IPV6="false"
+            ;;
+        --ipv6)
+            CFG_IPV4="false"
+            CFG_IPV6="true"
+            ;;
+        *)
+            echo "Invalid argument: '${1-}'" >&2
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+
+
+# Obtain the external IP address
+# ==============================
+
+if [[ "$CFG_IPV4" == "true" ]]; then
+    COMMANDS=(
+        'dig @resolver1.opendns.com myip.opendns.com A -4 +short'
+        'dig @ns1.google.com o-o.myaddr.l.google.com TXT -4 +short | tr -d \"'
+        'dig @1.1.1.1 whoami.cloudflare TXT CH -4 +short | tr -d \"'
+        'dig @ns1-1.akamaitech.net whoami.akamai.net A -4 +short'
+    )
+
+    function is_valid_ip() {
+        # Check if the input looks like an IPv4 address.
+        # Doesn't check if the actual values are valid; assumes they are.
+        echo "$1" | grep --perl-regexp --quiet '^(\d{1,3}\.){3}\d{1,3}$'
+    }
+elif [[ "$CFG_IPV6" == "true" ]]; then
+    COMMANDS=(
+        'dig @resolver1.opendns.com myip.opendns.com AAAA -6 +short'
+        'dig @ns1.google.com o-o.myaddr.l.google.com TXT -6 +short | tr -d \"'
+        'dig @2606:4700:4700::1111 whoami.cloudflare TXT CH -6 +short | tr -d \"'
+    )
+
+    function is_valid_ip() {
+        # Check if the input looks like an IPv6 address.
+        # It's almost impossible to check the IPv6 representation because it
+        # varies wildly, so just check that there are at least 2 colons.
+        [[ "$(echo "$1" | awk -F':' '{print NF-1}')" -ge 2 ]]
+    }
+fi
+
+for COMMAND in "${COMMANDS[@]}"; do
+    if IP="$(eval "$COMMAND")" && is_valid_ip "$IP"; then
+        echo "$IP"
+        exit 0
     fi
 done
 
-printf "error"
-exit 0
+echo "[getmyip] All providers failed" >&2
+exit 1
