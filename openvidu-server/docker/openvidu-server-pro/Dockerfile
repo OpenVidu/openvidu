@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
   redis-tools \
   jq \
   docker.io \
+  ethtool \
 && rm -rf /var/lib/apt/lists/*
     
 RUN mkdir -p /opt/openvidu /usr/local/bin/
