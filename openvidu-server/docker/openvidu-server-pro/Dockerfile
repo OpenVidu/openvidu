@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
   jq \
   docker.io \
   ethtool \
+  dnsutils \
 && rm -rf /var/lib/apt/lists/*
     
 RUN mkdir -p /opt/openvidu /usr/local/bin/

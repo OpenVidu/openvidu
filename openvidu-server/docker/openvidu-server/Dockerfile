@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
   openjdk-8-jre \
   coturn \
   redis-tools \
+  dnsutils \
 && rm -rf /var/lib/apt/lists/*
 
 # Copy OpenVidu Server
