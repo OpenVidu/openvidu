@@ -1012,7 +1012,8 @@ public class KurentoSessionManager extends SessionManager {
 		}
 
 		String rtspConnectionId = kMediaOptions.getTypeOfVideo() + "_" + protocol + "_"
-				+ RandomStringUtils.randomAlphanumeric(4).toUpperCase() + "_" + url.getAuthority() + url.getPath();
+				+ RandomStringUtils.randomAlphanumeric(4).toUpperCase() + "_" + url.getHost()
+				+ (url.getPort() != -1 ? (":" + url.getPort()) : "") + url.getPath();
 		rtspConnectionId = rtspConnectionId.replace("/", "_").replace("-", "").replace(".", "_").replace(":", "_");
 		rtspConnectionId = IdentifierPrefixes.IPCAM_ID + rtspConnectionId;
 
