@@ -53,7 +53,7 @@ services:
         environment:
             - KMS_MIN_PORT=40000
             - KMS_MAX_PORT=57000
-            - GST_DEBUG=${KMS_DEBUG_LEVEL:-}
+            - GST_DEBUG=${KMS_DOCKER_ENV_GST_DEBUG:-}
 
     redis:
         image: openvidu/openvidu-redis:1.0.0
