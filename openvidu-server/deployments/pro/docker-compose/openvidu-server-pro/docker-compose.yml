@@ -56,7 +56,7 @@ services:
             - REDIS_PASSWORD=${OPENVIDU_SECRET}
 
     coturn:
-        image: openvidu/openvidu-coturn:2.0.0-dev2
+        image: openvidu/openvidu-coturn:2.0.0-dev3
         restart: on-failure
         network_mode: host
         environment:
@@ -69,7 +69,7 @@ services:
             - TURN_PUBLIC_IP=${PUBLIC_IP:-auto-ipv4}
 
     nginx:
-        image: openvidu/openvidu-proxy:4.0.0-dev4
+        image: openvidu/openvidu-proxy:4.0.0-dev5
         restart: on-failure
         network_mode: host
         volumes:
