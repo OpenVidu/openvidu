@@ -33,10 +33,6 @@ new_media_node_installation() {
           --output "${MEDIA_NODE_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/.env \
-          --output "${MEDIA_NODE_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
-     printf '\n          - .env'
-
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/media_node \
           --output "${MEDIA_NODE_FOLDER}/media_node" || fatal_error "Error when downloading the file 'media_node'"
      printf '\n          - media_node'
@@ -68,9 +64,9 @@ new_media_node_installation() {
      # Pull images
      printf "\n     => Pulling images...\n"
      cd "${MEDIA_NODE_FOLDER}" || fatal_error "Error when moving to '${MEDIA_NODE_FOLDER}' folder"
-     KMS_IMAGE=$(cat docker-compose.yml | grep KMS_IMAGE | sed 's/\(^.*KMS_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
-     METRICBEAT_IMAGE=$(cat docker-compose.yml | grep METRICBEAT_IMAGE | sed 's/\(^.*METRICBEAT_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
-     FILEBEAT_IMAGE=$(cat docker-compose.yml | grep FILEBEAT_IMAGE | sed 's/\(^.*FILEBEAT_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
+     KMS_IMAGE=$(cat docker-compose.yml | grep KMS_IMAGE | cut -d"=" -f2)
+     METRICBEAT_IMAGE=$(cat docker-compose.yml | grep METRICBEAT_IMAGE | cut -d"=" -f2)
+     FILEBEAT_IMAGE=$(cat docker-compose.yml | grep FILEBEAT_IMAGE | cut -d"=" -f2)
      docker pull $KMS_IMAGE || fatal "Error while pulling docker image: $KMS_IMAGE"
      docker pull $METRICBEAT_IMAGE || fatal "Error while pulling docker image: $METRICBEAT_IMAGE"
      docker pull $FILEBEAT_IMAGE || fatal "Error while pulling docker image: $FILEBEAT_IMAGE"
@@ -81,12 +77,24 @@ new_media_node_installation() {
      printf '\n     ======================================='
      printf "\n          Media Node successfully installed."
      printf '\n     ======================================='
-     printf "\n"
+     printf '\n'
      printf '\n     1. Go to kms folder:'
      printf '\n     $ cd kms'
-     printf "\n"
+     printf '\n'
      printf '\n     2. Start Media Node Controller'
      printf '\n     $ ./media_node start'
+     printf '\n'
+     printf '\n     3. Add the private ip of this media node in `KMS_URIS=[]` in OpenVidu Pro machine'
+     printf '\n     in the file located at "/opt/openvidu/.env" with this format:'
+     printf '\n            ...'
+     printf '\n            KMS_URIS=["ws://<MEDIA_NODE_PRIVA_IP>:8888/kurento"]'
+     printf '\n            ...'
+     printf '\n     You can also add this node from inspector'
+     printf '\n     After that start or restart OpenVidu Pro and all containers will be provisioned in all media nodes' 
+     printf '\n     automatically to all the media nodes configured in "KMS_URIS"'
+     printf '\n     More info about Media Nodes deployment here:'
+     printf "\n     --> https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#set-the-number-of-media-nodes-on-startup"
+     printf '\n'
      printf '\n'
      printf "\n     For more information, check:"
      printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#deployment-instructions"
@@ -150,10 +158,6 @@ upgrade_media_node() {
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/docker-compose.yml \
           --output "${TMP_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
-
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/.env \
-          --output "${TMP_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
-     printf '\n          - .env'
 
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/media_node \
           --output "${TMP_FOLDER}/media_node" || fatal_error "Error when downloading the file 'media_node'"
@@ -231,9 +235,6 @@ upgrade_media_node() {
      mv "${TMP_FOLDER}/docker-compose.yml" "${MEDIA_NODE_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     mv "${TMP_FOLDER}/.env" "${MEDIA_NODE_PREVIOUS_FOLDER}/.env-${MEDIA_NODE_VERSION}" || fatal_error "Error while moving previous '.env'"
-     printf '\n          - .env-%s' "${MEDIA_NODE_VERSION}"
-
      mv "${TMP_FOLDER}/media_node" "${MEDIA_NODE_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'media_node'"
      printf '\n          - media_node'
 
@@ -275,12 +276,22 @@ upgrade_media_node() {
      printf '\n'
      printf "\n     1. A new file 'docker-compose.yml' has been created with the new OpenVidu %s services" "${OPENVIDU_VERSION}"
      printf '\n'
-     printf "\n     2. The previous file '.env' remains intact, but a new file '.env-%s' has been created." "${OPENVIDU_VERSION}"
-     printf "\n     Transfer any configuration you wish to keep in the upgraded version from '.env' to '.env-%s'." "${OPENVIDU_VERSION}"
-     printf "\n     When you are OK with it, rename and leave as the only '.env' file of the folder the new '.env-%s'." "${OPENVIDU_VERSION}"
+     printf "\n     2. This new version %s does not need any .env file. Everything is configured from OpenVidu Pro" "${OPENVIDU_VERSION}"
      printf '\n'
      printf '\n     3. Start new version of Media Node'
      printf '\n     $ ./media_node start'
+     printf '\n'
+     printf '\n     4. Add the private ip of this media node in `KMS_URIS=[]` in OpenVidu Pro machine'
+     printf '\n     in the file located at "/opt/openvidu/.env" with this format:'
+     printf '\n            ...'
+     printf '\n            KMS_URIS=["ws://<MEDIA_NODE_PRIVA_IP>:8888/kurento"]'
+     printf '\n            ...'
+     printf '\n     You can also add this node from inspector'
+     printf '\n     After that start or restart OpenVidu Pro and all containers will be provisioned' 
+     printf '\n     automatically to all the media nodes configured in "KMS_URIS"'
+     printf '\n     More info about Media Nodes deployment here:'
+     printf "\n     --> https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#set-the-number-of-media-nodes-on-startup"
+     printf '\n'
      printf '\n'
      printf "\n     If you want to rollback, all the files from the previous installation have been copied to folder '.old-%s'" "${OPENVIDU_PREVIOUS_VERSION}"
      printf '\n'

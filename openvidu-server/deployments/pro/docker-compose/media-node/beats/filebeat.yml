@@ -5,6 +5,14 @@ filebeat.inputs:
     multiline.pattern: '^\d*:\d*:\d*'
     multiline.negate: true
     multiline.match: after
+  - type: log 
+    paths:
+      - /opt/openvidu/kurento-logs/*.log
+    fields:
+      kurento-media-server: true
+      ip: ${MEDIA_NODE_IP}
+      cluster-id: ${CLUSTER_ID}
+    fields_under_root: true
 
 processors:
   - add_docker_metadata:
@@ -26,13 +34,13 @@ output:
     indices:
       - index: "filebeat-kurento-%{+yyyy.MM.dd}"
         when.or:
-          - contains:
-              container.image.name: kurento/kurento-media-server
+          - equals:
+              kurento-media-server: true
     pipelines:
       - pipeline: kurento-pipeline
         when.or:
-          - contains:
-              container.image.name: kurento/kurento-media-server
+          - equals:
+              kurento-media-server: true
 
 logging.json: true
 logging.metrics.enabled: false

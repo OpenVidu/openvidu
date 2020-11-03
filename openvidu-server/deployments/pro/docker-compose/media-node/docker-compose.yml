@@ -16,7 +16,7 @@ version: '3.1'
 
 services:
     media-node-controller:
-        image: openvidu/media-node-controller:1.0.0
+        image: openvidu/media-node-controller:2.0.0-dev1
         restart: always
         ulimits:
             core: -1
@@ -24,14 +24,14 @@ services:
         env_file:
             - .env
         environment:
-            - KMS_IMAGE=${KMS_IMAGE:-kurento/kurento-media-server:6.14.0}
-            - KMS_DEBUG_LEVEL=${KMS_DEBUG_LEVEL:-}
-            - METRICBEAT_IMAGE=${METRICBEAT_IMAGE:-docker.elastic.co/beats/metricbeat-oss:7.8.0}
-            - FILEBEAT_IMAGE=${FILEBEAT_IMAGE:-docker.elastic.co/beats/filebeat-oss:7.8.0}
+            - KMS_IMAGE=kurento/kurento-media-server:6.14.0
+            - METRICBEAT_IMAGE=docker.elastic.co/beats/metricbeat-oss:7.8.0
+            - FILEBEAT_IMAGE=docker.elastic.co/beats/filebeat-oss:7.8.0
         ports:
             - 3000:3000
         volumes:
             - /opt/openvidu/recordings:/opt/openvidu/recordings
             - /opt/openvidu/beats:/opt/openvidu/beats
             - /var/run/docker.sock:/var/run/docker.sock
+            - /opt/openvidu/kurento-logs:/opt/openvidu/kurento-logs
             - ./beats:/beats
