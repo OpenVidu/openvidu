@@ -42,10 +42,6 @@ new_ov_installation() {
           --output "${OPENVIDU_FOLDER}/openvidu" || fatal_error "Error when downloading the file 'openvidu'"
      printf '\n          - openvidu'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/readme.md \
-          --output "${OPENVIDU_FOLDER}/readme.md" || fatal_error "Error when downloading the file 'readme.md'"
-     printf '\n          - readme.md'
-
      # Add execution permissions
      printf "\n     => Adding permission to 'openvidu' program..."
      chmod +x "${OPENVIDU_FOLDER}/openvidu" || fatal_error "Error while adding permission to 'openvidu' program"
@@ -109,7 +105,11 @@ upgrade_ov() {
 
      # Uppgrade Openvidu
      OPENVIDU_PREVIOUS_VERSION=$(grep 'Openvidu Version:' "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml" | awk '{ print $4 }')
-     [ -z "${OPENVIDU_PREVIOUS_VERSION}" ] && OPENVIDU_PREVIOUS_VERSION=2.13.0
+     [ -z "${OPENVIDU_PREVIOUS_VERSION}" ] && fatal_error "Can't find previous OpenVidu version"
+
+     if [[ "${OPENVIDU_PREVIOUS_VERSION}" != "2.15.0" ]]; then
+          fatal_error "You can't update from version ${OPENVIDU_PREVIOUS_VERSION} to ${OPENVIDU_VERSION}.\nNever upgrade across multiple major versions."
+     fi
 
      # In this point using the variable 'OPENVIDU_PREVIOUS_VERSION' we can verify if the upgrade is
      # posible or not. If it is not posible launch a warning and stop the upgrade.
@@ -149,10 +149,6 @@ upgrade_ov() {
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/openvidu \
           --output "${TMP_FOLDER}/openvidu" || fatal_error "Error when downloading the file 'openvidu'"
      printf '\n          - openvidu'
-
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/readme.md \
-          --output "${TMP_FOLDER}/readme.md" || fatal_error "Error when downloading the file 'readme.md'"
-     printf '\n          - readme.md'
 
      # Dowloading new images and stoped actual Openvidu
      printf '\n     => Dowloading new images...'
@@ -217,9 +213,6 @@ upgrade_ov() {
      mv "${TMP_FOLDER}/openvidu" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'openvidu'"
      printf '\n          - openvidu'
 
-     mv "${TMP_FOLDER}/readme.md" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'readme.md'"
-     printf '\n          - readme.md'
-
      printf "\n     => Deleting 'tmp' folder"
      rm -rf "${TMP_FOLDER}" || fatal_error "Error deleting 'tmp' folder"
 
@@ -253,7 +246,9 @@ upgrade_ov() {
      printf '\n'
      printf "\n     If you want to rollback, all the files from the previous installation have been copied to folder '.old-%s'" "${OPENVIDU_PREVIOUS_VERSION}"
      printf '\n'
-     printf '\n     For more information, check readme.md'
+     printf '\n     For more information, check:'
+     printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/deployment/deploying-on-premises/"
+     printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/deployment/upgrading/
      printf '\n'
      printf '\n'
 }
