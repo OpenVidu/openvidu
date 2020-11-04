@@ -248,7 +248,7 @@ upgrade_ov() {
      printf '\n'
      printf '\n     For more information, check:'
      printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/deployment/deploying-on-premises/"
-     printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/deployment/upgrading/
+     printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/deployment/upgrading/"
      printf '\n'
      printf '\n'
 }
