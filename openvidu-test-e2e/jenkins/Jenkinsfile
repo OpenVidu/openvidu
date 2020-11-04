@@ -116,7 +116,15 @@ node('container') {
         }
         stage ('OpenVidu E2E tests') {
           try {
-            sh 'cd openvidu/openvidu-test-e2e && sudo mvn --batch-mode -Dtest=OpenViduTestAppE2eTest -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ -DEXTERNAL_CUSTOM_LAYOUT_URL=http://172.17.0.1:5555 -DEXTERNAL_CUSTOM_LAYOUT_PARAMS=sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET test'
+            sh(script: '''#!/bin/bash
+              cd openvidu
+              if [[ $OPENVIDU_TESTE2E_COMMIT != "default" ]]; then
+                git checkout $OPENVIDU_TESTE2E_COMMIT
+              fi
+              cd openvidu-test-e2e
+              sudo mvn --batch-mode -Dtest=OpenViduTestAppE2eTest -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ -DEXTERNAL_CUSTOM_LAYOUT_URL=http://172.17.0.1:5555 -DEXTERNAL_CUSTOM_LAYOUT_PARAMS=sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET test
+              git checkout -f $OPENVIDU_COMMIT
+            '''.stripIndent())
           }
           finally {
             junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
