@@ -315,16 +315,15 @@ upgrade_ov() {
      [ ! -z "${OLD_MODE}" ] && sed -i -r "s/Installation Mode:.+/Installation Mode: ${OLD_MODE}/" "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml"
 
      # In Aws, update AMI ID
-     CHECK_AWS=$(curl -s -o /dev/null -w "%{http_code}" http://169.254.169.254)
-     if [[ ${CHECK_AWS} == "200" ]]; then
-          AWS_REGION=$(grep -E "AWS_DEFAULT_REGION=.*$" "${OPENVIDU_PREVIOUS_FOLDER}/.env" | cut -d'=' -f2)
-          [[ -z ${AWS_REGION} ]] && fatal_error "Error while getting AWS_REGION"
+     AWS_REGION=$(grep -E "AWS_DEFAULT_REGION=.*$" "${OPENVIDU_PREVIOUS_FOLDER}/.env" | cut -d'=' -f2)
+     if [[ ! -z ${AWS_REGION} ]]; then
           NEW_AMI_ID=$(curl https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/CF-OpenVidu-Pro-${OPENVIDU_VERSION//v}.yaml --silent |
                          sed -n -e '/KMSAMIMAP:/,/Metadata:/ p' |
                          grep -A 1 ${AWS_REGION} | grep AMI | tr -d " " | cut -d":" -f2)
           [[ -z ${NEW_AMI_ID} ]] && fatal_error "Error while getting new AWS_IMAGE_ID for Media Nodes"
           sed -i "s/.*AWS_IMAGE_ID=.*/AWS_IMAGE_ID=${NEW_AMI_ID}/" "${OPENVIDU_PREVIOUS_FOLDER}/.env" || fatal_error "Error while updating new AWS_IMAGE_ID for Media Nodes"
      fi
+     
 
      # Ready to use
      printf '\n'
