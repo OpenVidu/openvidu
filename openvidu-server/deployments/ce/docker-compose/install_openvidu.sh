@@ -3,6 +3,7 @@
 # Global variables
 OPENVIDU_FOLDER=openvidu
 OPENVIDU_VERSION=master
+OPENVIDU_UPGRADABLE_VERSION="2.15"
 DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}
 
 fatal_error() {
@@ -107,12 +108,11 @@ upgrade_ov() {
      OPENVIDU_PREVIOUS_VERSION=$(grep 'Openvidu Version:' "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml" | awk '{ print $4 }')
      [ -z "${OPENVIDU_PREVIOUS_VERSION}" ] && fatal_error "Can't find previous OpenVidu version"
 
-     if [[ "${OPENVIDU_PREVIOUS_VERSION}" != "2.15.0" ]]; then
-          fatal_error "You can't update from version ${OPENVIDU_PREVIOUS_VERSION} to ${OPENVIDU_VERSION}.\nNever upgrade across multiple major versions."
-     fi
-
      # In this point using the variable 'OPENVIDU_PREVIOUS_VERSION' we can verify if the upgrade is
      # posible or not. If it is not posible launch a warning and stop the upgrade.
+     if [[ "${OPENVIDU_PREVIOUS_VERSION}" != "${OPENVIDU_UPGRADABLE_VERSION}."* ]]; then
+          fatal_error "You can't update from version ${OPENVIDU_PREVIOUS_VERSION} to ${OPENVIDU_VERSION}.\nNever upgrade across multiple major versions."
+     fi
 
      printf '\n'
      printf '\n     ======================================='
