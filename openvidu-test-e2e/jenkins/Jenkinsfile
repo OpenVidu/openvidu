@@ -49,7 +49,7 @@ node('container') {
             npm install --unsafe-perm && npm run build && npm pack
             cp openvidu-browser-*.tgz /opt/openvidu
             cd ..
-            git checkout $OPENVIDU_COMMIT
+            git checkout -f $OPENVIDU_COMMIT
         '''.stripIndent())
         }
         stage('OpenVidu Node Client build') {
@@ -62,7 +62,7 @@ node('container') {
             npm install --unsafe-perm && npm run build && npm pack
             cp openvidu-node-client-*.tgz /opt/openvidu
             cd ..
-            git checkout $OPENVIDU_COMMIT
+            git checkout -f $OPENVIDU_COMMIT
         '''.stripIndent())
         }
         stage('OpenVidu TestApp build') {
@@ -77,7 +77,7 @@ node('container') {
             npm install /opt/openvidu/openvidu-node-client-*.tgz
             export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng build --prod --output-path=/opt/openvidu/testapp
             cd ..
-            git checkout $OPENVIDU_COMMIT
+            git checkout -f $OPENVIDU_COMMIT
           '''.stripIndent())
         }
         stage('OpenVidu parent build') {
