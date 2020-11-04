@@ -99,7 +99,8 @@ public class ProtocolElements {
 
 	public static final String NETWORKQUALITYLEVELCHANGED_METHOD = "networkQualityLevelChanged";
 	public static final String NETWORKQUALITYCHANGED_CONNECTIONID_PARAM = "connectionId";
-	public static final String NETWORKQUALITYCHANGED_QUALITYLEVEL_PARAM = "qualityLevel";
+	public static final String NETWORKQUALITYCHANGED_NEWVALUE_PARAM = "newValue";
+	public static final String NETWORKQUALITYCHANGED_OLDVALUE_PARAM = "oldValue";
 
 	public static final String FORCEDISCONNECT_METHOD = "forceDisconnect";
 	public static final String FORCEDISCONNECT_CONNECTIONID_PARAM = "connectionId";

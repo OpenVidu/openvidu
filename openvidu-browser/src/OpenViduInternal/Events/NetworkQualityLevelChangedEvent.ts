@@ -30,7 +30,12 @@ export class NetworkQualityLevelChangedEvent extends Event {
     /**
      * New value of the network quality level
      */
-    qualityLevel: number;
+    newValue: number;
+
+    /**
+     * Old value of the network quality level
+     */
+    oldValue: number;
 
     /**
      * Connection for whom the network quality level changed
@@ -40,9 +45,10 @@ export class NetworkQualityLevelChangedEvent extends Event {
     /**
      * @hidden
      */
-    constructor(target: Session, qualityLevel: number, connection: Connection) {
+    constructor(target: Session, newValue: number, oldValue: number, connection: Connection) {
         super(false, target, 'networkQualityLevelChanged');
-        this.qualityLevel = qualityLevel;
+        this.newValue = newValue;
+        this.oldValue = oldValue;
         this.connection = connection;
     }
 

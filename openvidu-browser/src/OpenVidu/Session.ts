@@ -957,11 +957,11 @@ export class Session extends EventDispatcher {
      */
     onNetworkQualityLevelChangedChanged(msg): void {
         if (msg.connectionId === this.connection.connectionId) {
-            this.ee.emitEvent('networkQualityLevelChanged', [new NetworkQualityLevelChangedEvent(this, msg.qualityLevel, this.connection)]);
+            this.ee.emitEvent('networkQualityLevelChanged', [new NetworkQualityLevelChangedEvent(this, msg.newValue, msg.oldValue, this.connection)]);
         } else {
             this.getConnection(msg.connectionId, 'Connection not found for connectionId ' + msg.connectionId)
                 .then((connection: Connection) => {
-                    this.ee.emitEvent('networkQualityLevelChanged', [new NetworkQualityLevelChangedEvent(this, msg.qualityLevel, connection)]);
+                    this.ee.emitEvent('networkQualityLevelChanged', [new NetworkQualityLevelChangedEvent(this, msg.newValue, msg.oldValue, connection)]);
                 })
                 .catch(openViduError => {
                     logger.error(openViduError);
