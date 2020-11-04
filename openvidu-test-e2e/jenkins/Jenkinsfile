@@ -10,7 +10,7 @@ node('container') {
     docker.image('selenium/standalone-firefox:latest').withRun('-p 6667:4444 --name firefox --shm-size=1g') { d ->
       def mycontainer = docker.image('openvidu/openvidu-test-e2e:$DISTRO')
       mycontainer.pull()
-      mycontainer.inside("--name e2e -p 4200:4200 -p 4443:4443 -p 5555:5555 -u root -e MY_UID=0 -v /var/run/docker.sock:/var/run/docker.sock:rw -v /dev/shm:/dev/shm -v /opt/openvidu:/opt/openvidu --privileged") {
+      mycontainer.inside('--name e2e -p 4200:4200 -p 4443:4443 -p 5555:5555 -u root -e MY_UID=0 -v /var/run/docker.sock:/var/run/docker.sock:rw -v /dev/shm:/dev/shm -v /opt/openvidu:/opt/openvidu --privileged') {
         stage('Preparation') {
           sh 'rm -rf ~/.m2 || true'
           sh 'rm -rf openvidu || true'
@@ -66,7 +66,19 @@ node('container') {
         '''.stripIndent())
         }
         stage('OpenVidu TestApp build') {
-          sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm install /opt/openvidu/openvidu-browser-*.tgz && npm install /opt/openvidu/openvidu-node-client-*.tgz && export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng build --prod'
+          sh(script: '''#!/bin/bash
+            cd openvidu
+            if [[ $OPENVIDU_TESTAPP_COMMIT != "default" ]]; then
+              git checkout $OPENVIDU_TESTAPP_COMMIT
+            fi
+            cd openvidu-testapp
+            npm install --unsafe-perm
+            npm install /opt/openvidu/openvidu-browser-*.tgz
+            npm install /opt/openvidu/openvidu-node-client-*.tgz
+            export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng build --prod
+            cd ..
+            git checkout $OPENVIDU_COMMIT
+          '''.stripIndent())
         }
         stage('OpenVidu parent build') {
           sh 'cd openvidu/openvidu-java-client && mvn --batch-mode versions:set -DnewVersion=1.0.0-TEST'
