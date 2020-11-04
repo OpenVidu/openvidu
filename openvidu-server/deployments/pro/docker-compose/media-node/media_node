@@ -179,13 +179,28 @@ usage() {
     printf "\n"
 }
 
-stop_containers() {
-  CONTAINERS=$(docker ps | awk '{if(NR>1) print $NF}')
-  for CONTAINER in $CONTAINERS
-  do
-    [ "$(docker ps -a | grep ${CONTAINER})" ] && docker stop ${CONTAINER}
-  done
+stop_container_by_image() {
+  IMAGE_NAME=$1
+  if  [[ ! -z "${IMAGE_NAME}" ]]; then
+    CONTAINER_ID=$(docker ps | grep "${IMAGE_NAME}" | awk '{print $1}')
+    if [[ ! -z "${CONTAINER_ID}" ]]; then
+      docker stop "${CONTAINER_ID}"
+    fi
+  fi
+}
 
+stop_containers() {
+  IMAGES=(
+    "kurento-media-server",
+    "docker.elastic.co/beats/filebeat",
+    "docker.elastic.co/beats/metricbeat",
+    "openvidu/media-node-controller"
+  )
+
+  for image in ${IMAGES[@]}
+  do
+    stop_container_by_image "${image}"
+  done
 }
 
 case $1 in

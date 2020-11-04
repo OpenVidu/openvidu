@@ -84,23 +84,47 @@ new_media_node_installation() {
      printf '\n     2. Start Media Node Controller'
      printf '\n     $ ./media_node start'
      printf '\n'
-     printf '\n     3. Add the private ip of this media node in `KMS_URIS=[]` in OpenVidu Pro machine'
-     printf '\n     in the file located at "/opt/openvidu/.env" with this format:'
+     printf '\n     3. This will run a service at port 3000 wich OpenVidu will use to deploy necessary containers.'
+     printf '\n     Add the private ip of this media node in "KMS_URIS=[]" in OpenVidu Pro machine'
+     printf '\n     in file located at "/opt/openvidu/.env" with this format:'
      printf '\n            ...'
      printf '\n            KMS_URIS=["ws://<MEDIA_NODE_PRIVA_IP>:8888/kurento"]'
      printf '\n            ...'
      printf '\n     You can also add this node from inspector'
-     printf '\n     After that start or restart OpenVidu Pro and all containers will be provisioned in all media nodes' 
+     printf '\n'
+     printf '\n     4. Start or restart OpenVidu Pro and all containers will be provisioned' 
      printf '\n     automatically to all the media nodes configured in "KMS_URIS"'
      printf '\n     More info about Media Nodes deployment here:'
      printf "\n     --> https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#set-the-number-of-media-nodes-on-startup"
      printf '\n'
      printf '\n'
-     printf "\n     For more information, check:"
-     printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#deployment-instructions"
-     printf '\n'
+     printf "\n     If you want to rollback, all the files from the previous installation have been copied to folder '.old-%s'" "${OPENVIDU_PREVIOUS_VERSION}"
      printf '\n'
      exit 0
+}
+
+stop_and_remove_container_by_image() {
+  IMAGE_NAME=$1
+  if  [[ ! -z "${IMAGE_NAME}" ]]; then
+    CONTAINER_ID=$(docker ps -a | grep "${IMAGE_NAME}" | awk '{print $1}')
+    if [[ ! -z "${CONTAINER_ID}" ]]; then
+      docker rm -f "${CONTAINER_ID}"
+    fi
+  fi
+}
+
+stop_and_remove_containers() {
+  IMAGES=(
+    "kurento-media-server",
+    "docker.elastic.co/beats/filebeat",
+    "docker.elastic.co/beats/metricbeat",
+    "openvidu/media-node-controller"
+  )
+
+  for image in ${IMAGES[@]}
+  do
+    stop_container_by_image "${image}"
+  done
 }
 
 upgrade_media_node() {
@@ -186,10 +210,16 @@ upgrade_media_node() {
 
      printf "\n          => Moving to 'tmp' folder..."
      printf '\n'
+     cd "${TMP_FOLDER}" || fatal_error "Error when moving to '${TMP_FOLDER}' folder"
+
+     printf '\n     => Stoping Media Node containers...'
+     printf '\n'
+     sleep 1
+
+     stop_and_remove_containers
 
      # Pull images
      printf "\n     => Pulling images...\n"
-     cd "${TMP_FOLDER}" || fatal_error "Error when moving to '${TMP_FOLDER}' folder"
      KMS_IMAGE=$(cat docker-compose.yml | grep KMS_IMAGE | sed 's/\(^.*KMS_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
      METRICBEAT_IMAGE=$(cat docker-compose.yml | grep METRICBEAT_IMAGE | sed 's/\(^.*METRICBEAT_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
      FILEBEAT_IMAGE=$(cat docker-compose.yml | grep FILEBEAT_IMAGE | sed 's/\(^.*FILEBEAT_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
@@ -226,7 +256,7 @@ upgrade_media_node() {
      mv "${MEDIA_NODE_PREVIOUS_FOLDER}/nginx_conf" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'nginx_conf'"
      printf '\n          - nginx_conf'
 
-     cp "${MEDIA_NODE_PREVIOUS_FOLDER}/.env" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous '.env'"
+     mv "${MEDIA_NODE_PREVIOUS_FOLDER}/.env" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous '.env'"
      printf '\n          - .env'
 
      # Move tmp files to Openvidu
@@ -281,21 +311,21 @@ upgrade_media_node() {
      printf '\n     3. Start new version of Media Node'
      printf '\n     $ ./media_node start'
      printf '\n'
-     printf '\n     4. Add the private ip of this media node in `KMS_URIS=[]` in OpenVidu Pro machine'
-     printf '\n     in the file located at "/opt/openvidu/.env" with this format:'
+     printf '\n     4. This will run a service at port 3000 wich OpenVidu will use to deploy necessary containers.'
+     printf '\n     Add the private ip of this media node in "KMS_URIS=[]" in OpenVidu Pro machine'
+     printf '\n     in file located at "/opt/openvidu/.env" with this format:'
      printf '\n            ...'
      printf '\n            KMS_URIS=["ws://<MEDIA_NODE_PRIVA_IP>:8888/kurento"]'
      printf '\n            ...'
-     printf '\n     You can also add this node from inspector'
-     printf '\n     After that start or restart OpenVidu Pro and all containers will be provisioned' 
+     printf '\n     You can also add Media Nodes from inspector'
+     printf '\n'
+     printf '\n     5. Start or restart OpenVidu Pro and all containers will be provisioned' 
      printf '\n     automatically to all the media nodes configured in "KMS_URIS"'
      printf '\n     More info about Media Nodes deployment here:'
      printf "\n     --> https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#set-the-number-of-media-nodes-on-startup"
      printf '\n'
      printf '\n'
      printf "\n     If you want to rollback, all the files from the previous installation have been copied to folder '.old-%s'" "${OPENVIDU_PREVIOUS_VERSION}"
-     printf '\n'
-     printf '\n'
      printf '\n'
 }
 
