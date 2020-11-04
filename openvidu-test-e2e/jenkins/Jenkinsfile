@@ -75,7 +75,7 @@ node('container') {
             npm install --unsafe-perm
             npm install /opt/openvidu/openvidu-browser-*.tgz
             npm install /opt/openvidu/openvidu-node-client-*.tgz
-            export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng build --prod
+            export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng build --prod --output-path=/opt/openvidu/testapp
             cd ..
             git checkout $OPENVIDU_COMMIT
           '''.stripIndent())
@@ -100,7 +100,7 @@ node('container') {
         }
         stage ('Environment Launch') {
           sh 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout openvidu/openvidu-testapp/dist/key.pem -out openvidu/openvidu-testapp/dist/cert.pem'
-          sh 'cd openvidu/openvidu-testapp/dist && http-server -S -p 4200 &> /opt/openvidu/testapp.log &'
+          sh 'cd /opt/openvidu/testapp && http-server -S -p 4200 &> /opt/openvidu/testapp.log &'
           sh '/usr/bin/kurento-media-server &> /kms.log &'
           sh 'until $(curl --insecure --output /dev/null --silent http://127.0.0.1:8888/kurento); do echo "Waiting for KMS..."; sleep 1; done'
           sh(script: '''#!/bin/bash
