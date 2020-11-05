@@ -55,6 +55,7 @@ services:
             - KMS_MIN_PORT=40000
             - KMS_MAX_PORT=57000
             - GST_DEBUG=${KMS_DOCKER_ENV_GST_DEBUG:-}
+            - KURENTO_LOG_FILE_SIZE=${KMS_DOCKER_ENV_KURENTO_LOG_FILE_SIZE:-100}
             - KURENTO_LOGS_PATH=/opt/openvidu/kurento-logs
 
     redis:
