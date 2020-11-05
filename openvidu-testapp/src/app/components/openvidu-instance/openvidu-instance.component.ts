@@ -6,7 +6,7 @@ import {
 import {
   OpenVidu, Session, Subscriber, Publisher, Event, StreamEvent, ConnectionEvent,
   SessionDisconnectedEvent, SignalEvent, RecordingEvent,
-  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, ConnectionPropertyChangedEvent, OpenViduError
+  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, ConnectionPropertyChangedEvent, OpenViduError, NetworkQualityLevelChangedEvent
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,
@@ -116,6 +116,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     streamDestroyed: true,
     streamPropertyChanged: true,
     connectionPropertyChanged: true,
+    networkQualityLevelChanged: true,
     recordingStarted: true,
     recordingStopped: true,
     signal: true,
@@ -225,6 +226,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       streamDestroyed: false,
       streamPropertyChanged: false,
       connectionPropertyChanged: false,
+      networkQualityLevelChanged: false,
       recordingStarted: false,
       recordingStopped: false,
       signal: false,
@@ -379,6 +381,15 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       if (this.sessionEvents.connectionPropertyChanged) {
         this.session.on('connectionPropertyChanged', (event: ConnectionPropertyChangedEvent) => {
           this.updateEventList('connectionPropertyChanged', event.changedProperty + ' [' + event.newValue + ']', event);
+        });
+      }
+    }
+
+    if (this.sessionEvents.networkQualityLevelChanged !== oldValues.networkQualityLevelChanged || firstTime) {
+      this.session.off('networkQualityLevelChanged');
+      if (this.sessionEvents.networkQualityLevelChanged) {
+        this.session.on('networkQualityLevelChanged', (event: NetworkQualityLevelChangedEvent) => {
+          this.updateEventList('networkQualityLevelChanged', event.connection.connectionId + ' [new:' + event.newValue + ',old:' + event.oldValue + ']', event);
         });
       }
     }
@@ -638,6 +649,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       streamDestroyed: this.sessionEvents.streamDestroyed,
       streamPropertyChanged: this.sessionEvents.streamPropertyChanged,
       connectionPropertyChanged: this.sessionEvents.connectionPropertyChanged,
+      networkQualityLevelChanged: this.sessionEvents.networkQualityLevelChanged,
       recordingStarted: this.sessionEvents.recordingStarted,
       recordingStopped: this.sessionEvents.recordingStopped,
       signal: this.sessionEvents.signal,
@@ -671,6 +683,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         streamDestroyed: result.streamDestroyed,
         streamPropertyChanged: result.streamPropertyChanged,
         connectionPropertyChanged: result.connectionPropertyChanged,
+        networkQualityLevelChanged: result.networkQualityLevelChanged,
         recordingStarted: result.recordingStarted,
         recordingStopped: result.recordingStopped,
         signal: result.signal,

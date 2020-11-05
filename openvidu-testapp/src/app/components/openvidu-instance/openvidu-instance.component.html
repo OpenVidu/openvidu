@@ -18,16 +18,16 @@
             </mat-form-field>
 
             <div fxLayout="column" class="session-btns-div">
-              <button mat-icon-button title="Session properties" [id]="'session-settings-btn-' + index" class="mat-icon-custom"
-                (click)="openSessionPropertiesDialog()" [disabled]="session">
+              <button mat-icon-button title="Session properties" [id]="'session-settings-btn-' + index"
+                class="mat-icon-custom" (click)="openSessionPropertiesDialog()" [disabled]="session">
                 <mat-icon class="mat-icon-custom-ic" aria-label="Session properties button">settings</mat-icon>
               </button>
               <button mat-icon-button title="Session API" [id]="'session-api-btn-' + index" class="mat-icon-custom"
                 (click)="openSessionApiDialog()">
                 <mat-icon class="mat-icon-custom-ic" aria-label="Session API button">cloud_circle</mat-icon>
               </button>
-              <button mat-icon-button title="Session events" [id]="'session-events-btn-' + index" class="mat-icon-custom"
-                (click)="openSessionEventsDialog()">
+              <button mat-icon-button title="Session events" [id]="'session-events-btn-' + index"
+                class="mat-icon-custom" (click)="openSessionEventsDialog()">
                 <mat-icon class="mat-icon-custom-ic" aria-label="Session events button">notifications</mat-icon>
               </button>
             </div>
@@ -36,8 +36,8 @@
 
           <div class="join-publish-div">
             <button class="join-btn" mat-button (click)="joinSession()" [disabled]="session">JOIN</button>
-            <mat-checkbox class="subscribe-checkbox" name="subscribeTo" (click)="toggleSubscribeTo()" [checked]="subscribeTo"
-              [disabled]="session">Subscribe</mat-checkbox>
+            <mat-checkbox class="subscribe-checkbox" name="subscribeTo" (click)="toggleSubscribeTo()"
+              [checked]="subscribeTo" [disabled]="session">Subscribe</mat-checkbox>
             <mat-checkbox class="publish-checkbox" name="publishTo" (click)="togglePublishTo()" [checked]="publishTo"
               [disabled]="session">Publish</mat-checkbox>
           </div>
@@ -48,26 +48,32 @@
               <div>
                 <h4>Send</h4>
                 <div>
-                  <mat-checkbox class="send-audio-checkbox" name="sendAudio" (click)="toggleSendAudio()" [checked]="publisherProperties.audioSource !== false"
-                    [disabled]="session || !publishTo">Audio</mat-checkbox>
-                  <mat-checkbox class="send-video-checkbox" name="sendVideo" (click)="toggleSendVideo()" [checked]="publisherProperties.videoSource !== false"
-                    [disabled]="session || !publishTo">Video</mat-checkbox>
+                  <mat-checkbox class="send-audio-checkbox" name="sendAudio" (click)="toggleSendAudio()"
+                    [checked]="publisherProperties.audioSource !== false" [disabled]="session || !publishTo">Audio
+                  </mat-checkbox>
+                  <mat-checkbox class="send-video-checkbox" name="sendVideo" (click)="toggleSendVideo()"
+                    [checked]="publisherProperties.videoSource !== false" [disabled]="session || !publishTo">Video
+                  </mat-checkbox>
                 </div>
               </div>
               <div style="padding-top: 5px;">
                 <h4>Enter active</h4>
                 <div>
-                  <mat-checkbox class="active-audio-checkbox" name="activeAudio" [(ngModel)]="publisherProperties.publishAudio"
-                    (click)="publisherProperties.publishAudio = !publisherProperties.publishAudio" [disabled]="session || !publishTo">Audio</mat-checkbox>
-                  <mat-checkbox class="active-video-checkbox" name="activeVideo" [(ngModel)]="publisherProperties.publishVideo"
-                    (click)="publisherProperties.publishVideo = !publisherProperties.publishVideo" [disabled]="session || !publishTo">Video</mat-checkbox>
+                  <mat-checkbox class="active-audio-checkbox" name="activeAudio"
+                    [(ngModel)]="publisherProperties.publishAudio"
+                    (click)="publisherProperties.publishAudio = !publisherProperties.publishAudio"
+                    [disabled]="session || !publishTo">Audio</mat-checkbox>
+                  <mat-checkbox class="active-video-checkbox" name="activeVideo"
+                    [(ngModel)]="publisherProperties.publishVideo"
+                    (click)="publisherProperties.publishVideo = !publisherProperties.publishVideo"
+                    [disabled]="session || !publishTo">Video</mat-checkbox>
                 </div>
               </div>
             </div>
 
             <div fxFlex="35">
-              <mat-radio-group [(ngModel)]="optionsVideo" (change)="updateOptionsVideo($event)" [disabled]="session || !publishTo"
-                [ngModelOptions]="{standalone: true}">
+              <mat-radio-group [(ngModel)]="optionsVideo" (change)="updateOptionsVideo($event)"
+                [disabled]="session || !publishTo" [ngModelOptions]="{standalone: true}">
                 <div>
                   <mat-radio-button class="video-radio" value="video">Video</mat-radio-button>
                 </div>
@@ -75,15 +81,16 @@
                   <mat-radio-button class="screen-radio" value="screen">Screen</mat-radio-button>
                 </div>
               </mat-radio-group>
-              <mat-checkbox class="subscribe-remote-check" name="subscribeToRemote" (click)="subscribeToRemote = !subscribeToRemote"
-                [disabled]="!publishTo || session" [checked]="publishTo && subscribeToRemote">Subscribe
+              <mat-checkbox class="subscribe-remote-check" name="subscribeToRemote"
+                (click)="subscribeToRemote = !subscribeToRemote" [disabled]="!publishTo || session"
+                [checked]="publishTo && subscribeToRemote">Subscribe
                 <br>to remote</mat-checkbox>
             </div>
 
             <div fxFlex="10">
               <div fxLayout="column" class="publisher-btns-div">
-                <button mat-icon-button title="Publisher properties" [id]="'publisher-settings-btn-' + index" class="mat-icon-custom"
-                  (click)="openPublisherPropertiesDialog()" [disabled]="!publishTo">
+                <button mat-icon-button title="Publisher properties" [id]="'publisher-settings-btn-' + index"
+                  class="mat-icon-custom" (click)="openPublisherPropertiesDialog()" [disabled]="!publishTo">
                   <mat-icon class="mat-icon-custom-ic" aria-label="Publisher properties button">settings</mat-icon>
                 </button>
                 <button mat-icon-button title="Add new publisher to running session" [id]="'session-api-btn-' + index"
@@ -107,7 +114,8 @@
         <div class="session-card-inner">
           <div class="session-title">{{sessionName}}</div>
           <div class="session-actions">
-            <button *ngIf="republishPossible" class="republish-error-btn" (click)="republishAfterError()" title="Re publish">
+            <button *ngIf="republishPossible" class="republish-error-btn" (click)="republishAfterError()"
+              title="Re publish">
               <mat-icon aria-label="Re publish video" style="font-size: 20px">linked_camera</mat-icon>
             </button>
             <button class="message-btn" (click)="sendMessage()" title="Broadcast message">
@@ -136,8 +144,8 @@
         </div>
         <div [attr.id]="'remote-vid-' + session.connection.connectionId" fxFlex="240px" class="video-container">
           <div [attr.id]="'local-vid-' + session.connection.connectionId"></div>
-          <app-video *ngIf="this.publisher" [streamManager]="this.publisher" [OV]="OV" [properties]="publisherProperties"
-            (updateEventListInParent)="updateEventFromChild($event)">
+          <app-video *ngIf="this.publisher" [streamManager]="this.publisher" [OV]="OV"
+            [properties]="publisherProperties" (updateEventListInParent)="updateEventFromChild($event)">
           </app-video>
           <app-video *ngFor="let subscriber of this.subscribers" [streamManager]="subscriber" [OV]="OV"
             (updateEventListInParent)="updateEventFromChild($event)" (reSubbed)="updateSubscriberFromChild($event)">

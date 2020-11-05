@@ -38,7 +38,19 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
 
     this.eventsInfoSubscription = this.testFeedService.newLastEvent$.subscribe(
       newEvent => {
-        (window as any).myEvents += ('<br>' + this.stringifyEventNoCircularDependencies(newEvent));
+        const getCircularReplacer = () => {
+          const seen = new WeakSet();
+          return (key, value) => {
+            if (typeof value === "object" && value !== null) {
+              if (seen.has(value)) {
+                return;
+              }
+              seen.add(value);
+            }
+            return value;
+          };
+        };
+        (window as any).myEvents += ('<br>' + JSON.stringify(newEvent, getCircularReplacer()));
       });
   }
 
@@ -98,30 +110,6 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
     this.loadSubsPubs(subsPubs);
     this.loadPubs(pubs);
     this.loadSubs(subs);
-  }
-
-  stringifyEventNoCircularDependencies(event: Event): string {
-    const cache = [];
-    return JSON.stringify(event, function (key, value) {
-      if (key !== 'ee' && key !== 'openvidu') {
-        if (typeof value === 'object' && value !== null) {
-          if (cache.indexOf(value) !== -1) {
-            // Duplicate reference found
-            try {
-              // If this value does not reference a parent
-              return JSON.parse(JSON.stringify(value));
-            } catch (error) {
-              return;
-            }
-          }
-          // Store value in our collection
-          cache.push(value);
-        }
-        return value;
-      } else {
-        return;
-      }
-    });
   }
 
 }

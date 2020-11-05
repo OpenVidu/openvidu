@@ -1,13 +1,22 @@
 package io.openvidu.test.e2e;
 
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.FileReader;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,12 +45,37 @@ import io.openvidu.test.browsers.utils.Unzipper;
 
 public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
+	protected volatile static boolean isNetworkQualityTest;
+
 	@BeforeAll()
 	protected static void setupAll() {
 		checkFfmpegInstallation();
 		loadEnvironmentVariables();
 		setupBrowserDrivers();
 		cleanFoldersAndSetUpOpenViduJavaClient();
+	}
+
+	@Override
+	@AfterEach
+	protected void dispose() {
+		super.dispose();
+		if (isNetworkQualityTest) {
+			// Disable network quality API
+			try {
+				CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+				if (restClient.rest(HttpMethod.GET, "/openvidu/api/config", 200).get("OPENVIDU_PRO_NETWORK_QUALITY")
+						.getAsBoolean()) {
+					String body = "{'OPENVIDU_PRO_NETWORK_QUALITY':false}";
+					restClient.rest(HttpMethod.POST, "/openvidu/api/restart", body, 200);
+					waitUntilOpenViduRestarted(30);
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage());
+				Assert.fail("Error restarting OpenVidu Server to disable Network quality API");
+			} finally {
+				isNetworkQualityTest = false;
+			}
+		}
 	}
 
 	@Test
@@ -449,6 +483,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("openvidu-java-client PRO test")
 	void openViduJavaClientProTest() throws Exception {
+
+		log.info("openvidu-java-client PRO test");
+
 		Session session = OV.createSession();
 		Assert.assertFalse(session.fetch());
 		Connection connection = session.createConnection();
@@ -460,6 +497,103 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong role property", OpenViduRole.SUBSCRIBER, connection.getRole());
 		Assert.assertFalse("Wrong record property", connection.record());
 		Assert.assertFalse(session.fetch());
+	}
+
+	@Test
+	@DisplayName("Network quality test")
+	void networkQualityTest() throws Exception {
+
+		isNetworkQualityTest = true;
+
+		log.info("Network quality test");
+
+		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+		String body = "{'OPENVIDU_PRO_NETWORK_QUALITY':true, 'OPENVIDU_PRO_NETWORK_QUALITY_INTERVAL':5}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/restart", body, 200);
+		waitUntilOpenViduRestarted(30);
+
+		setupBrowser("chrome");
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("join-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+		JsonObject res = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/TestSession/connection",
+				HttpStatus.SC_OK);
+		final String connectionId = res.getAsJsonObject().get("content").getAsJsonArray().get(0).getAsJsonObject()
+				.get("id").getAsString();
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publish-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
+
+		final CountDownLatch latch1 = new CountDownLatch(1);
+		Queue<Boolean> threadAssertions = new ConcurrentLinkedQueue<Boolean>();
+		user.getEventManager().on("networkQualityLevelChanged", (event) -> {
+			try {
+				threadAssertions.add("networkQualityLevelChanged".equals(event.get("type").getAsString()));
+				threadAssertions.add(event.get("oldValue") == null);
+				threadAssertions.add(event.has("newValue") && event.get("newValue").getAsInt() > 0
+						&& event.get("newValue").getAsInt() < 6);
+				latch1.countDown();
+			} catch (Exception e) {
+				log.error("Error analysing NetworkQualityLevelChangedEvent: {}. {}", e.getCause(), e.getMessage());
+				fail("Error analysing NetworkQualityLevelChangedEvent: " + e.getCause() + ". " + e.getMessage());
+			}
+		});
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+		user.getEventManager().waitUntilEventReaches("networkQualityLevelChanged", 2);
+
+		if (!latch1.await(30000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(1);
+			fail();
+			return;
+		}
+
+		user.getEventManager().off("networkQualityLevelChanged");
+		log.info("Thread assertions: {}", threadAssertions.toString());
+		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
+			Assert.assertTrue("Some Event property was wrong", iter.next());
+			iter.remove();
+		}
+
+		// Both events should have publisher's connection ID
+		Assert.assertTrue("Wrong connectionId in event NetworkQualityLevelChangedEvent", user.getDriver()
+				.findElement(By.cssSelector("#openvidu-instance-0 .mat-expansion-panel:last-child .event-content"))
+				.getAttribute("textContent").contains(connectionId));
+		Assert.assertTrue("Wrong connectionId in event NetworkQualityLevelChangedEvent", user.getDriver()
+				.findElement(By.cssSelector("#openvidu-instance-1 .mat-expansion-panel:last-child .event-content"))
+				.getAttribute("textContent").contains(connectionId));
+
+		gracefullyLeaveParticipants(1);
+	}
+
+	private void waitUntilOpenViduRestarted(int maxSecondsWait) throws Exception {
+		boolean restarted = false;
+		int msInterval = 500;
+		int attempts = 0;
+		final int maxAttempts = maxSecondsWait * 1000 / msInterval;
+		Thread.sleep(500);
+		while (!restarted && attempts < maxAttempts) {
+			try {
+				CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+				restClient.rest(HttpMethod.GET, "/openvidu/api/health", 200);
+				restarted = true;
+			} catch (Exception e) {
+				try {
+					log.warn("Waiting for OpenVidu Server...");
+					Thread.sleep(msInterval);
+				} catch (InterruptedException e1) {
+					log.error("Sleep interrupted");
+				}
+				attempts++;
+			}
+		}
+		if (!restarted && attempts == maxAttempts) {
+			throw new TimeoutException();
+		}
 	}
 
 }

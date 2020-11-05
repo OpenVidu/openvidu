@@ -283,9 +283,8 @@ public class OpenViduEventManager {
 		}
 
 		String[] events = rawEvents.replaceFirst("^<br>", "").split("<br>");
-		JsonParser parser = new JsonParser();
 		for (String e : events) {
-			JsonObject event = (JsonObject) parser.parse(e);
+			JsonObject event = JsonParser.parseString(e).getAsJsonObject();
 			final String eventType = event.get("type").getAsString();
 
 			this.eventQueue.add(event);
