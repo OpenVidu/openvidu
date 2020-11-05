@@ -5,11 +5,39 @@ MEDIA_NODE_VERSION=master
 OPENVIDU_UPGRADABLE_VERSION="2.15"
 BEATS_FOLDER=${MEDIA_NODE_FOLDER}/beats
 DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${MEDIA_NODE_VERSION}
+IMAGES=(
+  "kurento-media-server",
+  "docker.elastic.co/beats/filebeat",
+  "docker.elastic.co/beats/metricbeat",
+  "openvidu/media-node-controller"
+)
+
 fatal_error() {
      printf "\n     =======¡ERROR!======="
      printf "\n     %s" "$1"
      printf "\n"
      exit 0
+}
+
+docker_command_by_container_image() {
+  IMAGE_NAME=$1
+  COMMAND=$2
+  if  [[ ! -z "${IMAGE_NAME}" ]]; then
+    CONTAINERS=$(docker ps -a | grep "${IMAGE_NAME}" | awk '{print $1}')
+    for CONTAINER_ID in ${CONTAINERS[@]}; do
+      if [[ ! -z "${CONTAINER_ID}" ]] && [[ ! -z "${COMMAND}" ]]; then
+        docker "${COMMAND}" "${CONTAINER_ID}"
+      fi
+    done
+  fi
+}
+
+
+stop_containers() {
+  printf "Stopping containers..."
+  for IMAGE in ${IMAGES[@]}; do
+    docker_command_by_container_image "${IMAGE}" "rm -f"
+  done
 }
 
 new_media_node_installation() {
@@ -104,30 +132,6 @@ new_media_node_installation() {
      exit 0
 }
 
-stop_and_remove_container_by_image() {
-  IMAGE_NAME=$1
-  if  [[ ! -z "${IMAGE_NAME}" ]]; then
-    CONTAINER_ID=$(docker ps -a | grep "${IMAGE_NAME}" | awk '{print $1}')
-    if [[ ! -z "${CONTAINER_ID}" ]]; then
-      docker rm -f "${CONTAINER_ID}"
-    fi
-  fi
-}
-
-stop_and_remove_containers() {
-  IMAGES=(
-    "kurento-media-server",
-    "docker.elastic.co/beats/filebeat",
-    "docker.elastic.co/beats/metricbeat",
-    "openvidu/media-node-controller"
-  )
-
-  for image in ${IMAGES[@]}
-  do
-    stop_container_by_image "${image}"
-  done
-}
-
 upgrade_media_node() {
  # Search local Openvidu installation
      printf '\n'
@@ -220,7 +224,7 @@ upgrade_media_node() {
      printf '\n'
      sleep 1
 
-     stop_and_remove_containers
+     stop_containers
 
      # Pull images
      printf "\n     => Pulling images...\n"
