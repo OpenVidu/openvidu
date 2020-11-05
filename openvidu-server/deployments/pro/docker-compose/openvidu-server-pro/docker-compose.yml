@@ -111,6 +111,7 @@ services:
         environment:
             - discovery.type=single-node
             - xpack.security.enabled=true
+            - "ES_JAVA_OPTS=${ES_JAVA_OPTS:--Xms2g -Xmx2g}"
         ports:
             - 9200:9200
         volumes:
