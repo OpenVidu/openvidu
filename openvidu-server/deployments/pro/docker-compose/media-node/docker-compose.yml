@@ -33,3 +33,6 @@ services:
             - /var/run/docker.sock:/var/run/docker.sock
             - /opt/openvidu/kurento-logs:/opt/openvidu/kurento-logs
             - ./beats:/beats
+        logging:
+            options:
+                max-size: "100M"

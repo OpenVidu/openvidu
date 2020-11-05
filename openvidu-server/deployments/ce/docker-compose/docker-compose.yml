@@ -40,6 +40,9 @@ services:
             - COTURN_REDIS_IP=127.0.0.1
             - COTURN_REDIS_PASSWORD=${OPENVIDU_SECRET}
             - COTURN_IP=${COTURN_IP:-auto-ipv4}
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     kms:
         image: ${KMS_IMAGE:-kurento/kurento-media-server:6.15.0}
@@ -57,6 +60,9 @@ services:
             - GST_DEBUG=${KMS_DOCKER_ENV_GST_DEBUG:-}
             - KURENTO_LOG_FILE_SIZE=${KMS_DOCKER_ENV_KURENTO_LOG_FILE_SIZE:-100}
             - KURENTO_LOGS_PATH=/opt/openvidu/kurento-logs
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     redis:
         image: openvidu/openvidu-redis:1.0.0
@@ -64,6 +70,9 @@ services:
         network_mode: host
         environment:
             - REDIS_PASSWORD=${OPENVIDU_SECRET}
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     coturn:
         image: openvidu/openvidu-coturn:2.0.0-dev3
@@ -76,6 +85,9 @@ services:
             - DB_PASSWORD=${OPENVIDU_SECRET}
             - MIN_PORT=57001
             - MAX_PORT=65535
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     nginx:
         image: openvidu/openvidu-proxy:4.0.0-dev5
@@ -100,3 +112,6 @@ services:
             - REDIRECT_WWW=${REDIRECT_WWW:-false}
             - WORKER_CONNECTIONS=${WORKER_CONNECTIONS:-10240}
             - PUBLIC_IP=${PROXY_PUBLIC_IP:-auto-ipv4}
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
