@@ -55,7 +55,7 @@ Parameters:
   InstanceType:
     Description: "Specifies the EC2 instance type for your OpenVidu instance"
     Type: String
-    Default: t2.xlarge
+    Default: c5.xlarge
     AllowedValues:
       - t2.large
       - t2.xlarge

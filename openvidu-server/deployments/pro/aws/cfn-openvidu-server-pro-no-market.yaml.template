@@ -99,7 +99,7 @@ Parameters:
   AwsInstanceTypeOV:
     Description: "Specifies the EC2 instance type for your OpenVidu Server Pro Node"
     Type: String
-    Default: t2.xlarge
+    Default: c5.xlarge
     AllowedValues:
       - t2.large
       - t2.xlarge
@@ -139,7 +139,7 @@ Parameters:
   AwsInstanceTypeKMS:
     Description: "Specifies the EC2 instance type for your Media Nodes"
     Type: String
-    Default: t2.xlarge
+    Default: c5.xlarge
     AllowedValues:
       - t2.large
       - t2.xlarge
