@@ -159,6 +159,16 @@ generate_report() {
       printf '\n'
     done
 
+    printf '\n'
+    printf "\n  ---------------------------------------"
+    printf "\n  KMS" 
+    printf "\n  ---------------------------------------"
+    printf '\n'
+    kurento_logs
+    printf "\n  ---------------------------------------"
+    printf '\n'
+    printf '\n'
+
     printf "\n  ======================================="
     printf "\n  =       CONTAINER ENVS VARIABLES      ="
     printf "\n  ======================================="
