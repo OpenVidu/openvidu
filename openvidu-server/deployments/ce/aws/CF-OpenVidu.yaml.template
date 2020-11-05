@@ -44,7 +44,7 @@ Parameters:
   # OpenVidu configuration
 
   OpenViduSecret:
-    Description: "Secret to connect to this OpenVidu Platform. No whitespaces or quotations allowed"
+    Description: "Secret to connect to this OpenVidu Platform. Cannot be empty and must contain only alphanumeric characters [a-zA-Z0-9], hypens ('-') and underscores ('_')"
     Type: String
     AllowedPattern: ^[a-zA-Z0-9_-]+$
     NoEcho: true

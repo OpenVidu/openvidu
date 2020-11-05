@@ -110,13 +110,15 @@ new_ov_installation() {
      printf '\n     1. Go to openvidu folder:'
      printf '\n     $ cd openvidu'
      printf '\n'
-     printf '\n     2. Configure OPENVIDU_DOMAIN_OR_PUBLIC_IP, OPENVIDU_PRO_LICENSE, OPENVIDU_SECRET, and ELASTICSEARCH_PASSWORD in .env file:'
+     printf '\n     2. Configure OPENVIDU_DOMAIN_OR_PUBLIC_IP, OPENVIDU_PRO_LICENSE, '
+     printf '\n     OPENVIDU_SECRET, and ELASTICSEARCH_PASSWORD in .env file:'
      printf '\n     $ nano .env'
      printf '\n'
      printf '\n     3. Start OpenVidu'
      printf '\n     $ ./openvidu start'
      printf '\n'
-     printf "\n     CAUTION: The folder 'openvidu/elasticsearch' use user and group 1000 permissions. This folder is necessary for store elasticsearch data."
+     printf "\n     CAUTION: The folder 'openvidu/elasticsearch' use user and group 1000 permissions. "
+     printf "\n     This folder is necessary for store elasticsearch data."
      printf "\n     For more information, check:"
      printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#deployment-instructions"
      printf '\n'
