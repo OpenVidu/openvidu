@@ -29,11 +29,9 @@ stop_containers() {
   done
 }
 
-tail_latest_kurento_logs() {
-  LATEST_LOG_FILE=$(find /opt/openvidu/kurento-logs/* -printf '%T+ %p\n' | sort -r | head -1 | awk '{print $2}')
-  if [[ ! -z "${LATEST_LOG_FILE}" ]]; then
-    tail -f "${LATEST_LOG_FILE}"
-  fi
+tail_kurento_logs() {
+  TAIL_ARGUMENTS=$1
+  tail "${TAIL_ARGUMENTS}" /opt/openvidu/kurento-logs/*
 }
 
 upgrade_media_node() {
@@ -217,7 +215,9 @@ usage() {
     printf "\n\tstop\t\t\tStop media node service"
     printf "\n\trestart\t\t\tRestart media node service"
     printf "\n\tlogs\t\t\tShow media-node-controller logs."
-    printf "\n\tlogs [container_name]\t\t\tShow logs by container name."
+    printf "\n\tlogs [-f]\t\t\tFollow media-node-controller logs."
+    printf "\n\tkms-logs\t\t\tShow kms logs"
+    printf "\n\tkms-logs -f\t\t\tFollow kms logs"
     printf "\n\tupgrade\t\t\tUpgrade to the lastest Media Node version"
     printf "\n\tupgrade [version]\tUpgrade to the specific Media Node version"
     printf "\n\tversion\t\t\tShow version of Media Node"
@@ -247,16 +247,17 @@ case $1 in
 
   logs)
     case $2 in
-      kms)
-        tail_latest_kurento_logs
-      ;;
+      "-f")
+        docker-compose logs -f media-node-controller
+        ;;
       *)
-        if [[ -z "$2" ]]; then
-          docker-compose logs -f media-node-controller
-        else 
-          docker logs -f "$2"
-        fi
-      ;;
+        docker-compose logs media-node-controller
+        ;;
+    esac
+    ;;
+  
+  kms-logs)
+    tail_kurento_logs $2
     ;;
 
   upgrade)
