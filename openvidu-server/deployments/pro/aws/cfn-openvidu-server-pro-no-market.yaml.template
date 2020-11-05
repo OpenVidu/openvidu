@@ -70,9 +70,9 @@ Parameters:
   OpenViduSecret:
     Description: "Secret to connect to this OpenVidu Platform. No whitespaces or quotations allowed"
     Type: String
-    AllowedPattern: ^((?!")(?! ).)+$
+    AllowedPattern: ^[a-zA-Z0-9_-]+$
     NoEcho: true
-    ConstraintDescription: OpenVidu Secret is mandatory (no whitespaces or quotations allowed)
+    ConstraintDescription: "Cannot be empty and must contain only alphanumeric characters [a-zA-Z0-9], hypens ('-') and underscores ('_')"
 
   MediaNodesStartNumber:
     Description: "How many Media Nodes do you want on startup (EC2 instances will be launched)"
