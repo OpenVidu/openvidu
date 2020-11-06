@@ -80,7 +80,15 @@ echo "Cleaning up"
 aws cloudformation delete-stack --stack-name openvidu-ce-${DATESTAMP}
 
 # Wait for the instance
-aws ec2 wait image-available --image-ids ${OV_RAW_AMI_ID}
+# Unfortunately, aws cli does not have a way to increase timeout
+WAIT_RETRIES=0
+WAIT_MAX_RETRIES=3
+until [ "${WAIT_RETRIES}" -ge "${WAIT_MAX_RETRIES}" ]
+do
+   aws ec2 wait image-available --image-ids ${OV_RAW_AMI_ID} && break
+   WAIT_RETRIES=$((WAIT_RETRIES+1)) 
+   sleep 5
+done
 
 # Updating the template
 sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" CF-OpenVidu.yaml.template > CF-OpenVidu-${OPENVIDU_VERSION}.yaml
