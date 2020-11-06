@@ -108,7 +108,6 @@ Resources:
         - DeviceName: /dev/sda1
           Ebs:
             VolumeType: gp2
-            Iops: 100
             DeleteOnTermination: true
             VolumeSize: 10
       UserData:
