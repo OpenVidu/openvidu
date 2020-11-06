@@ -7,7 +7,7 @@
 #    Application based on OpenVidu should be specified in
 #    docker-compose.override.yml file
 #
-#    This docker-compose file coordinates all services of OpenVidu CE Platform.
+#    This docker-compose file coordinates all services of OpenVidu Pro Platform
 #
 #    This file will be overridden when update OpenVidu Platform
 #
