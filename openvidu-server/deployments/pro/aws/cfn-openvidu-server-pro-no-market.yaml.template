@@ -641,7 +641,7 @@ Resources:
             VolumeType: io1
             Iops: 200
             DeleteOnTermination: true
-            VolumeSize: 50
+            VolumeSize: 100
 
   KMSSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
