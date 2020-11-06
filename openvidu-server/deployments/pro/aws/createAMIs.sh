@@ -2,6 +2,7 @@
 set -eu -o pipefail
 
 CF_RELEASE=${CF_RELEASE:-false}
+AWS_KEY_NAME=${AWS_KEY_NAME:-}
 
 if [[ $CF_RELEASE == "true" ]]; then
     git checkout v$OPENVIDU_PRO_VERSION
