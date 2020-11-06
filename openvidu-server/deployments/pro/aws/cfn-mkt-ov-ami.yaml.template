@@ -104,6 +104,13 @@ Resources:
       Tags:
         - Key: Name
           Value: !Ref AWS::StackName
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeType: gp2
+            Iops: 100
+            DeleteOnTermination: true
+            VolumeSize: 10
       UserData:
         "Fn::Base64":
           !Sub |
