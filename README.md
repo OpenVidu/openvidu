@@ -20,7 +20,7 @@ Visit [openvidu.io](https://openvidu.io)
 ## Contributors
 
 This project exists thanks to all the people who contribute. 
-<a href="https://github.com/undefined/undefinedgraphs/contributors"><img src="https://opencollective.com/openvidu/contributors.svg?width=890&button=false" /></a>
+<a href="https://github.com/OpenVidu/openvidu/contributors"><img src="https://opencollective.com/openvidu/contributors.svg?width=890&button=false" /></a>
 
 
 ## Backers
