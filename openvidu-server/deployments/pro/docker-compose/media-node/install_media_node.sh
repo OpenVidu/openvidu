@@ -228,9 +228,9 @@ upgrade_media_node() {
 
      # Pull images
      printf "\n     => Pulling images...\n"
-     KMS_IMAGE=$(cat docker-compose.yml | grep KMS_IMAGE | sed 's/\(^.*KMS_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
-     METRICBEAT_IMAGE=$(cat docker-compose.yml | grep METRICBEAT_IMAGE | sed 's/\(^.*METRICBEAT_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
-     FILEBEAT_IMAGE=$(cat docker-compose.yml | grep FILEBEAT_IMAGE | sed 's/\(^.*FILEBEAT_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
+     KMS_IMAGE=$(cat docker-compose.yml | grep KMS_IMAGE | cut -d"=" -f2)
+     METRICBEAT_IMAGE=$(cat docker-compose.yml | grep METRICBEAT_IMAGE | cut -d"=" -f2)
+     FILEBEAT_IMAGE=$(cat docker-compose.yml | grep FILEBEAT_IMAGE | cut -d"=" -f2)
      docker pull $KMS_IMAGE || fatal "Error while pulling docker image: $KMS_IMAGE"
      docker pull $METRICBEAT_IMAGE || fatal "Error while pulling docker image: $METRICBEAT_IMAGE"
      docker pull $FILEBEAT_IMAGE || fatal "Error while pulling docker image: $FILEBEAT_IMAGE"
@@ -261,8 +261,8 @@ upgrade_media_node() {
      mv "${MEDIA_NODE_PREVIOUS_FOLDER}/readme.md" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'readme.md'"
      printf '\n          - readme.md'
 
-     mv "${MEDIA_NODE_PREVIOUS_FOLDER}/nginx_conf" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'nginx_conf'"
-     printf '\n          - nginx_conf'
+     mv "${MEDIA_NODE_PREVIOUS_FOLDER}/beats" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'beats' folder"
+     printf '\n          - beats'
 
      mv "${MEDIA_NODE_PREVIOUS_FOLDER}/.env" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous '.env'"
      printf '\n          - .env'
