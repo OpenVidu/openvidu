@@ -6,9 +6,9 @@ OPENVIDU_UPGRADABLE_VERSION="2.15"
 BEATS_FOLDER=${MEDIA_NODE_FOLDER}/beats
 DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${MEDIA_NODE_VERSION}
 IMAGES=(
-  "kurento-media-server",
-  "docker.elastic.co/beats/filebeat",
-  "docker.elastic.co/beats/metricbeat",
+  "kurento-media-server"
+  "docker.elastic.co/beats/filebeat"
+  "docker.elastic.co/beats/metricbeat"
   "openvidu/media-node-controller"
 )
 
@@ -26,7 +26,7 @@ docker_command_by_container_image() {
     CONTAINERS=$(docker ps -a | grep "${IMAGE_NAME}" | awk '{print $1}')
     for CONTAINER_ID in ${CONTAINERS[@]}; do
       if [[ ! -z "${CONTAINER_ID}" ]] && [[ ! -z "${COMMAND}" ]]; then
-        docker "${COMMAND}" "${CONTAINER_ID}"
+        bash -c "docker ${COMMAND} ${CONTAINER_ID}"
       fi
     done
   fi
