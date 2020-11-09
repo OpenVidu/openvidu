@@ -187,9 +187,25 @@ EOF
 
 # Load nginx conf files
 rm /etc/nginx/conf.d/default*.conf
-cp /default_nginx_conf/default* /etc/nginx/conf.d
+
+# If custom config, don't generate configuration files
+if [[ -f /etc/nginx/conf.d/custom-nginx.conf ]]; then
+  printf "\n"
+  printf "\n  ======================================="
+  printf "\n  =         START OPENVIDU PROXY        ="
+  printf "\n  =         WITH CUSTOM CONFIG          ="
+  printf "\n  ======================================="
+  printf "\n\n"
+  nginx -s reload
+
+  # nginx logs
+  tail -f /var/log/nginx/*.log
+  exit 0
+fi
 
 # Replace config files
+cp /default_nginx_conf/default* /etc/nginx/conf.d
+
 sed -e '/{ssl_config}/{r default_nginx_conf/global/ssl_config.conf' -e 'd}' -i /etc/nginx/conf.d/*
 sed -e '/{proxy_config}/{r default_nginx_conf/global/proxy_config.conf' -e 'd}' -i /etc/nginx/conf.d/*
 sed -e '/{nginx_status}/{r default_nginx_conf/global/nginx_status.conf' -e 'd}' -i /etc/nginx/conf.d/*
