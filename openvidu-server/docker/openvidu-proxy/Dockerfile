@@ -10,8 +10,10 @@ RUN apk update && \
             perl pcre grep && \
     rm -rf /var/cache/apk/*
 
+# Copy certbot default config
+COPY ./default-certbot.conf /default-nginx-certbot-conf/default-certbot.conf
+
 # Default nginx conf
-COPY ./default.conf /etc/nginx/conf.d/default.conf
 COPY ./default_nginx_conf /default_nginx_conf
 
 # Entrypoint and discover public ip scripts
