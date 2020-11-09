@@ -186,10 +186,11 @@ Welcome to OpenVidu Server
 EOF
 
 # Load nginx conf files
-rm /etc/nginx/conf.d/default*.conf
+rm /etc/nginx/conf.d/*
 
 # If custom config, don't generate configuration files
-if [[ -f /etc/nginx/conf.d/custom-nginx.conf ]]; then
+if [[ -f /custom-nginx/custom-nginx.conf ]]; then
+  cp /custom-nginx/custom-nginx.conf /etc/nginx/conf.d/custom-nginx.conf
   printf "\n"
   printf "\n  ======================================="
   printf "\n  =         START OPENVIDU PROXY        ="

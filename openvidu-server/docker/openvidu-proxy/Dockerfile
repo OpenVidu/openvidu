@@ -25,6 +25,7 @@ COPY ./entrypoint.sh /usr/local/bin
 
 RUN mkdir -p /var/www/certbot && \
     mkdir -p /etc/nginx/vhost.d/ && \
+    mkdir -p /custom-nginx && \
     chmod +x /usr/local/bin/entrypoint.sh && \
     chmod +x /usr/local/bin/discover_my_public_ip.sh
 
