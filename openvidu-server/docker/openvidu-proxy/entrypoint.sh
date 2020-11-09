@@ -102,8 +102,7 @@ fi
 echo -e "${DOMAIN_OR_PUBLIC_IP}\t${CERTIFICATE_TYPE}" > "${CERTIFICATES_CONF}"
 
 # Start with default certbot conf
-cp /default-nginx-certbot-conf/default-certbot.conf /etc/nginx/vhost.d/default-certbot.conf
-sed -i "s/{http_port}/${PROXY_HTTP_PORT}/" /etc/nginx/vhost.d/default-certbot.conf
+sed -i "s/{http_port}/${PROXY_HTTP_PORT}/" /etc/nginx/conf.d/default.conf
 nginx -g "daemon on;"
 
 case ${CERTIFICATE_TYPE} in
@@ -187,8 +186,7 @@ Welcome to OpenVidu Server
 EOF
 
 # Load nginx conf files
-rm /etc/nginx/conf.d/*
-rm /etc/nginx/vhost.d/default-certbot.conf
+rm /etc/nginx/conf.d/default*.conf
 cp /default_nginx_conf/default* /etc/nginx/conf.d
 
 # Replace config files
