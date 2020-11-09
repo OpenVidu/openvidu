@@ -14,6 +14,10 @@ elif [[ "${COTURN_IP}" == "auto-ipv6" ]]; then
     COTURN_IP=$(/usr/local/bin/discover_my_public_ip.sh --ipv6)
 fi
 
+if [[ "${OV_CE_DEBUG_LEVEL}" == "DEBUG" ]]; then
+    export LOGGING_LEVEL_IO_OPENVIDU_SERVER=DEBUG
+fi
+
 if [ ! -z "${JAVA_OPTIONS}" ]; then
     printf "\n  Using java options: %s" "${JAVA_OPTIONS}"
 fi

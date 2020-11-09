@@ -259,6 +259,9 @@ upgrade_ov() {
      mv "${OPENVIDU_PREVIOUS_FOLDER}/cluster/aws" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'cluster/aws'"
      printf '\n          - cluster/aws'
 
+     mv "${OPENVIDU_PREVIOUS_FOLDER}/beats" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'beats'"
+     printf '\n          - beats'
+
      cp "${OPENVIDU_PREVIOUS_FOLDER}/.env" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous '.env'"
      printf '\n          - .env'
 
