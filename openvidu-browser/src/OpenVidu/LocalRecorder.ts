@@ -50,7 +50,7 @@ export class LocalRecorder {
     private connectionId: string;
     private mediaRecorder: any;
     private chunks: any[] = [];
-    private blob: Blob;
+    private blob?: Blob;
     private id: string;
     private videoPreviewSrc: string;
     private videoPreview: HTMLVideoElement;
@@ -281,7 +281,7 @@ export class LocalRecorder {
         if (this.state !== LocalRecorderState.FINISHED) {
             throw (Error('Call \'LocalRecord.stop()\' before getting Blob file'));
         } else {
-            return this.blob;
+            return this.blob!;
         }
     }
 
@@ -351,7 +351,7 @@ export class LocalRecorder {
                 }
 
                 const sendable = new FormData();
-                sendable.append('file', this.blob, this.id + '.webm');
+                sendable.append('file', this.blob!, this.id + '.webm');
 
                 http.onreadystatechange = () => {
                     if (http.readyState === 4) {

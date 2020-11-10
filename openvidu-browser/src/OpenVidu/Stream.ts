@@ -139,10 +139,10 @@ export class Stream extends EventDispatcher {
      * [[Filter.execMethod]] and remove it with [[Stream.removeFilter]]. Be aware that the client calling this methods must have the
      * necessary permissions: the token owned by the client must have been initialized with the appropriated `allowedFilters` array.
      */
-    filter: Filter;
+    filter?: Filter;
 
     protected webRtcPeer: WebRtcPeer;
-    protected mediaStream: MediaStream;
+    protected mediaStream?: MediaStream;
     private webRtcStats: WebRtcStats;
 
     private isSubscribeToRemote = false;
@@ -206,7 +206,7 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    localMediaStreamWhenSubscribedToRemote: MediaStream;
+    localMediaStreamWhenSubscribedToRemote?: MediaStream;
 
 
     /**
@@ -265,7 +265,7 @@ export class Stream extends EventDispatcher {
         }
 
         this.ee.on('mediastream-updated', () => {
-            this.streamManager.updateMediaStream(this.mediaStream);
+            this.streamManager.updateMediaStream(this.mediaStream!);
             logger.debug('Video srcObject [' + this.mediaStream + '] updated in stream [' + this.streamId + ']');
         });
     }
@@ -326,7 +326,7 @@ export class Stream extends EventDispatcher {
                         }
                     } else {
                         logger.info('Filter successfully applied on Stream ' + this.streamId);
-                        const oldValue: Filter = this.filter;
+                        const oldValue: Filter = this.filter!;
                         this.filter = new Filter(type, options);
                         this.filter.stream = this;
                         this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter, oldValue, 'applyFilter')]);
@@ -359,10 +359,10 @@ export class Stream extends EventDispatcher {
                         }
                     } else {
                         logger.info('Filter successfully removed from Stream ' + this.streamId);
-                        const oldValue = this.filter;
+                        const oldValue = this.filter!;
                         delete this.filter;
-                        this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter, oldValue, 'applyFilter')]);
-                        this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter, oldValue, 'applyFilter')]);
+                        this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
+                        this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
                         resolve();
                     }
                 }
@@ -385,7 +385,7 @@ export class Stream extends EventDispatcher {
      * @returns Native MediaStream Web API object
      */
     getMediaStream(): MediaStream {
-        return this.mediaStream;
+        return this.mediaStream!;
     }
 
     /* Hidden methods */
@@ -1005,7 +1005,7 @@ export class Stream extends EventDispatcher {
     }
 
     private initHarkEvents(): void {
-        if (!!this.mediaStream.getAudioTracks()[0]) {
+        if (!!this.mediaStream!.getAudioTracks()[0]) {
             // Hark events can only be set if audio track is available
             if (this.streamManager.remote) {
                 // publisherStartSpeaking/publisherStopSpeaking is only defined for remote streams

@@ -119,9 +119,9 @@ export class Filter {
                     } else {
                         logger.info('Filter method successfully executed on Stream ' + this.stream.streamId);
                         const oldValue = (<any>Object).assign({}, this.stream.filter);
-                        this.stream.filter.lastExecMethod = { method, params: JSON.parse(stringParams) };
-                        this.stream.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.session, this.stream, 'filter', this.stream.filter, oldValue, 'execFilterMethod')]);
-                        this.stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.streamManager, this.stream, 'filter', this.stream.filter, oldValue, 'execFilterMethod')]);
+                        this.stream.filter!.lastExecMethod = { method, params: JSON.parse(stringParams) };
+                        this.stream.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.session, this.stream, 'filter', this.stream.filter!, oldValue, 'execFilterMethod')]);
+                        this.stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.streamManager, this.stream, 'filter', this.stream.filter!, oldValue, 'execFilterMethod')]);
                         resolve();
                     }
                 }

@@ -802,12 +802,12 @@ export class Session extends EventDispatcher {
 
                 .then(connection => {
 
-                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', connection.stream, msg.reason);
+                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', connection.stream!, msg.reason);
                     this.ee.emitEvent('streamDestroyed', [streamEvent]);
                     streamEvent.callDefaultBehavior();
 
                     // Deleting the remote stream
-                    const streamId: string = connection.stream.streamId;
+                    const streamId: string = connection.stream!.streamId;
                     delete this.remoteStreamsCreated[streamId];
 
                     if (Object.keys(this.remoteStreamsCreated).length === 0) {
@@ -993,9 +993,9 @@ export class Session extends EventDispatcher {
         };
         this.getConnection(msg.senderConnectionId, 'Connection not found for connectionId ' + msg.senderConnectionId + ' owning endpoint ' + msg.endpointName + '. Ice candidate will be ignored: ' + candidate)
             .then(connection => {
-                const stream = connection.stream;
+                const stream: Stream = connection.stream!;
                 stream.getWebRtcPeer().addIceCandidate(candidate).catch(error => {
-                    logger.error('Error adding candidate for ' + stream.streamId
+                    logger.error('Error adding candidate for ' + stream!.streamId
                         + ' stream of endpoint ' + msg.endpointName + ': ' + error);
                 });
             })
@@ -1077,8 +1077,8 @@ export class Session extends EventDispatcher {
         this.getConnection(connectionId, 'No connection found for connectionId ' + connectionId)
             .then(connection => {
                 logger.info('Filter event dispatched');
-                const stream: Stream = connection.stream;
-                stream.filter.handlers[response.eventType](new FilterEvent(stream.filter, response.eventType, response.data));
+                const stream: Stream = connection.stream!;
+                stream.filter!.handlers[response.eventType](new FilterEvent(stream.filter!, response.eventType, response.data));
             });
     }
 

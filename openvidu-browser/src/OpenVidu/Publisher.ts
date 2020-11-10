@@ -127,7 +127,7 @@ export class Publisher extends StreamManager {
      */
     publishAudio(value: boolean): void {
         if (this.stream.audioActive !== value) {
-            const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote : this.stream.getMediaStream();
+            const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
             affectedMediaStream.getAudioTracks().forEach((track) => {
                 track.enabled = value;
             });
@@ -175,7 +175,7 @@ export class Publisher extends StreamManager {
      */
     publishVideo(value: boolean): void {
         if (this.stream.videoActive !== value) {
-            const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote : this.stream.getMediaStream();
+            const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
             affectedMediaStream.getVideoTracks().forEach((track) => {
                 track.enabled = value;
             });
@@ -304,7 +304,7 @@ export class Publisher extends StreamManager {
     replaceTrack(track: MediaStreamTrack): Promise<any> {
 
         const replaceMediaStreamTrack = () => {
-            const mediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote : this.stream.getMediaStream();
+            const mediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
             let removedTrack: MediaStreamTrack;
             if (track.kind === 'video') {
                 removedTrack = mediaStream.getVideoTracks()[0];

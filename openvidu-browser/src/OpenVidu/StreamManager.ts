@@ -87,7 +87,7 @@ export class StreamManager extends EventDispatcher {
     /**
      * @hidden
      */
-    firstVideoElement: StreamManagerVideo;
+    firstVideoElement?: StreamManagerVideo;
     /**
      * @hidden
      */

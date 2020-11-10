@@ -71,7 +71,7 @@ export class Connection {
     /**
      * @hidden
      */
-    stream: Stream;
+    stream?: Stream;
 
     /**
      * @hidden
@@ -132,7 +132,7 @@ export class Connection {
      */
     sendIceCandidate(candidate: RTCIceCandidate): void {
 
-        logger.debug((!!this.stream.outboundStreamOpts ? 'Local' : 'Remote') + 'candidate for' +
+        logger.debug((!!this.stream!.outboundStreamOpts ? 'Local' : 'Remote') + 'candidate for' +
             this.connectionId, candidate);
 
         this.session.openvidu.sendRequest('onIceCandidate', {
@@ -174,7 +174,7 @@ export class Connection {
             this.addStream(stream);
         });
 
-        logger.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + '] is now configured for receiving Streams with options: ', this.stream.inboundStreamOpts);
+        logger.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + '] is now configured for receiving Streams with options: ', this.stream!.inboundStreamOpts);
     }
 
     /**
