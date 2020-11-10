@@ -44,14 +44,14 @@
 	<properties>
 		<version.kurento>6.14.0</version.kurento>
 		<version.spring-boot>2.2.4.RELEASE</version.spring-boot>
-		<version.junit>4.12</version.junit>
+		<version.junit>4.13.1</version.junit>
 		<version.junit.jupiter>5.6.0</version.junit.jupiter>
 		<version.junit.platform>1.6.0</version.junit.platform>
 		<version.selenium>3.141.59</version.selenium>
 		<version.mockito.core>2.23.4</version.mockito.core>
 		<version.powermock>2.0.5</version.powermock>
 		<version.hamcrest>2.2</version.hamcrest>
-		<version.httpclient>4.5.11</version.httpclient>
+		<version.httpclient>4.5.13</version.httpclient>
 		<version.janino>3.1.0</version.janino>
 		<version.commonslang>3.10</version.commonslang>
 		<version.dockerjava>3.1.5</version.dockerjava>
@@ -72,7 +72,7 @@
 		<version.gpg.plugin>1.6</version.gpg.plugin>
 		<version.nexus.staging.plugin>1.6.8</version.nexus.staging.plugin>
 		<version.exec.plugin>1.6.0</version.exec.plugin>
-		<version.javadoc.plugin>3.1.1</version.javadoc.plugin>
+		<version.javadoc.plugin>3.2.0</version.javadoc.plugin>
 
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
