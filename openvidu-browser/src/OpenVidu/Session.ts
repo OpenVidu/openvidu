@@ -385,7 +385,7 @@ export class Session extends EventDispatcher {
                 this.connection.addStream(publisher.stream);
                 publisher.stream.publish()
                     .then(() => {
-                        this.sendVideoData(publisher, 5);
+                        this.sendVideoData(publisher, 8, true, 5);
                         resolve();
                     })
                     .catch(error => {
@@ -399,7 +399,7 @@ export class Session extends EventDispatcher {
                         publisher.reestablishStreamPlayingEvent();
                         publisher.stream.publish()
                             .then(() => {
-                                this.sendVideoData(publisher, 5);
+                                this.sendVideoData(publisher, 8, true, 5);
                                 resolve();
                             })
                             .catch(error => {
@@ -1162,30 +1162,46 @@ export class Session extends EventDispatcher {
         return joinParams;
     }
 
-    sendVideoData(streamManager: StreamManager, intervalSeconds: number = 1) {
+    sendVideoData(streamManager: StreamManager, intervalSeconds: number = 1, doInterval: boolean = false, maxLoops: number = 1) {
         if (
             platform.isChromeBrowser() || platform.isChromeMobileBrowser() || platform.isOperaBrowser() ||
             platform.isOperaMobileBrowser() || platform.isElectron() || (platform.isSafariBrowser() && !platform.isIonicIos()) ||
             platform.isAndroidBrowser() || platform.isSamsungBrowser() || platform.isIonicAndroid() ||
             (platform.isIPhoneOrIPad() && platform.isIOSWithSafari())
         ) {
-            setTimeout(async () => {
-                const statsMap = await streamManager.stream.getWebRtcPeer().pc.getStats();
-                statsMap.forEach((stats) => {
-                    if ("frameWidth" in stats) {
-                        this.openvidu.sendRequest('videoData', {
-                            height: stats.frameHeight,
-                            width: stats.frameWidth,
-                            videoActive: streamManager.stream.videoActive,
-                            audioActive: streamManager.stream.audioActive
-                        }, (error, response) => {
-                            if (error) {
-                                logger.error("Error sending 'videoData' event", error);
-                            }
-                        });
+            const obtainAndSendVideo = async () => {
+                const statsMap = await streamManager.stream.getRTCPeerConnection().getStats();
+                const arr: any[] = [];
+                statsMap.forEach(stats => {
+                    if (("frameWidth" in stats) && ("frameHeight" in stats) && (arr.length === 0)) {
+                        arr.push(stats);
                     }
                 });
-            }, intervalSeconds * 1000);
+                if (arr.length > 0) {
+                    this.openvidu.sendRequest('videoData', {
+                        height: arr[0].frameHeight,
+                        width: arr[0].frameWidth,
+                        videoActive: streamManager.stream.videoActive != null ? streamManager.stream.videoActive : false,
+                        audioActive: streamManager.stream.audioActive != null ? streamManager.stream.audioActive : false
+                    }, (error, response) => {
+                        if (error) {
+                            logger.error("Error sending 'videoData' event", error);
+                        }
+                    });
+                }
+            }
+            if (doInterval) {
+                let loops = 1;
+                let timer = setTimeout(async function myTimer() {
+                    await obtainAndSendVideo();
+                    if (loops < maxLoops) {
+                        loops++;
+                        timer = setTimeout(myTimer, intervalSeconds * 1000);
+                    }
+                }, intervalSeconds * 1000);
+            } else {
+                setTimeout(obtainAndSendVideo, intervalSeconds * 1000);
+            }
         } else if (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser() || platform.isIonicIos()) {
             // Basic version for Firefox and Ionic iOS. They do not support stats
             this.openvidu.sendRequest('videoData', {

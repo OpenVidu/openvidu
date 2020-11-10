@@ -314,7 +314,7 @@ export class Publisher extends StreamManager {
             mediaStream.removeTrack(removedTrack);
             removedTrack.stop();
             mediaStream.addTrack(track);
-            this.session.sendVideoData(this.stream.streamManager);
+            this.session.sendVideoData(this.stream.streamManager, 5, true, 5);
         }
 
         return new Promise((resolve, reject) => {
@@ -613,8 +613,8 @@ export class Publisher extends StreamManager {
                 .then(myConstraints => {
 
                     if (!!myConstraints.videoTrack && !!myConstraints.audioTrack ||
-                      !!myConstraints.audioTrack && myConstraints.constraints?.video === false ||
-                      !!myConstraints.videoTrack && myConstraints.constraints?.audio === false) {
+                        !!myConstraints.audioTrack && myConstraints.constraints?.video === false ||
+                        !!myConstraints.videoTrack && myConstraints.constraints?.audio === false) {
                         // No need to call getUserMedia at all. MediaStreamTracks already provided
                         successCallback(this.openvidu.addAlreadyProvidedTracks(myConstraints, new MediaStream()));
                         // Return as we do not need to process further
