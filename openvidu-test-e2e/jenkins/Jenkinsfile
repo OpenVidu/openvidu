@@ -112,7 +112,7 @@ node('container') {
         '''.stripIndent())
         }
         stage ('Environment Launch') {
-          sh 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout /opt/openvidu/testapp/key.pem -out /opt/openvidu/testapp/cert.pem'
+          sh 'sudo openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout /opt/openvidu/testapp/key.pem -out /opt/openvidu/testapp/cert.pem'
           sh 'cd /opt/openvidu/testapp && http-server -S -p 4200 &> /opt/openvidu/testapp.log &'
           sh '/usr/bin/kurento-media-server &> /kms.log &'
           sh 'until $(curl --insecure --output /dev/null --silent http://127.0.0.1:8888/kurento); do echo "Waiting for KMS..."; sleep 1; done'
