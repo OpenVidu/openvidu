@@ -43,35 +43,35 @@
 
 	<properties>
 		<version.kurento>6.15.0</version.kurento>
-		<version.spring-boot>2.2.4.RELEASE</version.spring-boot>
+		<version.spring-boot>2.3.5.RELEASE</version.spring-boot>
 		<version.junit>4.13.1</version.junit>
-		<version.junit.jupiter>5.6.0</version.junit.jupiter>
-		<version.junit.platform>1.6.0</version.junit.platform>
+		<version.junit.jupiter>5.7.0</version.junit.jupiter>
+		<version.junit.platform>1.7.0</version.junit.platform>
 		<version.selenium>3.141.59</version.selenium>
-		<version.mockito.core>2.23.4</version.mockito.core>
-		<version.powermock>2.0.5</version.powermock>
+		<version.mockito.core>3.6.0</version.mockito.core>
+		<version.powermock>2.0.9</version.powermock>
 		<version.hamcrest>2.2</version.hamcrest>
 		<version.httpclient>4.5.13</version.httpclient>
-		<version.janino>3.1.0</version.janino>
-		<version.commonslang>3.10</version.commonslang>
-		<version.dockerjava>3.1.5</version.dockerjava>
+		<version.janino>3.1.2</version.janino>
+		<version.commonslang>3.11</version.commonslang>
+		<version.dockerjava>3.2.5</version.dockerjava>
 		<version.slf4j>1.7.30</version.slf4j>
 		<version.gson>2.8.6</version.gson>
 		<version.unirest>1.4.9</version.unirest>
 
-		<version.webdrivermanager>4.0.0</version.webdrivermanager>
+		<version.webdrivermanager>4.2.2</version.webdrivermanager>
 
 		<version.openvidu.java.client>2.15.1</version.openvidu.java.client>
 		<version.openvidu.client>1.1.0</version.openvidu.client>
 		<version.openvidu.test.browsers>1.1.0</version.openvidu.test.browsers>
 
 		<version.enforcer.plugin>3.0.0-M3</version.enforcer.plugin>
-		<version.extra.enforcer.rules.plugin>1.2</version.extra.enforcer.rules.plugin>
+		<version.extra.enforcer.rules.plugin>1.3</version.extra.enforcer.rules.plugin>
 		<version.source.plugin>3.2.1</version.source.plugin>
-		<version.surefire.plugin>3.0.0-M4</version.surefire.plugin>
+		<version.surefire.plugin>3.0.0-M5</version.surefire.plugin>
 		<version.gpg.plugin>1.6</version.gpg.plugin>
 		<version.nexus.staging.plugin>1.6.8</version.nexus.staging.plugin>
-		<version.exec.plugin>1.6.0</version.exec.plugin>
+		<version.exec.plugin>3.0.0</version.exec.plugin>
 		<version.javadoc.plugin>3.2.0</version.javadoc.plugin>
 
 		<maven.compiler.target>1.8</maven.compiler.target>
