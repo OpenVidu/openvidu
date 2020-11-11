@@ -19,13 +19,11 @@ node('container') {
           sh 'git clone https://github.com/OpenVidu/openvidu.git'
           sh 'cd openvidu && git fetch --all && git checkout $OPENVIDU_COMMIT'
           sh(script: '''#!/bin/bash -e
-            if $KURENTO_JAVA_SNAPSHOT ; then
+             if [[ $KURENTO_JAVA_COMMIT != "default" ]]; then
               git clone https://github.com/Kurento/kurento-java.git
-              cd kurento-java && MVN_VERSION=$(mvn --batch-mode -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
-              mvn dependency:get -DrepoUrl=https://maven.openvidu.io/repository/snapshots/ -Dartifact=org.kurento:kurento-client:$MVN_VERSION
-              mvn dependency:get -DrepoUrl=https://maven.openvidu.io/repository/snapshots/ -Dartifact=org.kurento:kurento-jsonrpc-client-jetty:$MVN_VERSION
-              mvn dependency:get -DrepoUrl=https://maven.openvidu.io/repository/snapshots/ -Dartifact=org.kurento:kurento-jsonrpc-server:$MVN_VERSION
-              mvn dependency:get -DrepoUrl=https://maven.openvidu.io/repository/snapshots/ -Dartifact=org.kurento:kurento-test:$MVN_VERSION
+              cd kurento-java
+              git checkout -f $KURENTO_JAVA_COMMIT
+              mvn clean install
             fi
           '''.stripIndent())
           sh(script: '''#!/bin/bash -e
@@ -94,13 +92,14 @@ node('container') {
             mvn --batch-mode versions:set -DnewVersion=TEST
             mvn clean compile package
             mvn install:install-file -Dfile=target/openvidu-java-client-TEST.jar -DgroupId=io.openvidu -DartifactId=openvidu-java-client -Dversion=TEST -Dpackaging=jar
+            cd ..
             git checkout -f $OPENVIDU_COMMIT
           '''.stripIndent())
         }
 
         stage('OpenVidu parent build') {
           sh(script: '''#!/bin/bash -e
-            if $KURENTO_JAVA_SNAPSHOT ; then
+            if [[ $KURENTO_JAVA_COMMIT != "default" ]]; then
               cd kurento-java && MVN_VERSION=$(mvn --batch-mode -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
               cd ../openvidu && mvn --batch-mode versions:set-property -Dproperty=version.kurento -DnewVersion=$MVN_VERSION
             fi
