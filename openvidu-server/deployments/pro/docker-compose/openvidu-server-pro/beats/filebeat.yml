@@ -1,3 +1,25 @@
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+      templates:
+        - condition:
+            contains:
+              docker.container.name: "nginx"
+          config:
+            - module: nginx
+              access:
+                input:
+                  type: docker
+                  containers:
+                    ids: "${data.docker.container.id}"
+                    stream: "stdout"
+              error:
+                input:
+                  type: docker
+                  containers:
+                    ids: "${data.docker.container.id}"
+                    stream: "stderr"
 filebeat.inputs:
   - type: container
     paths:

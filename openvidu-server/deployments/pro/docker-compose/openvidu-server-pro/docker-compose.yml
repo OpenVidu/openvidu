@@ -138,6 +138,25 @@ services:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
+    metricbeat:
+        image: docker.elastic.co/beats/metricbeat-oss:7.8.0
+        network_mode: host
+        restart: always
+        user: root
+        env_file:
+            - .env
+        environment:
+            - OPENVIDU_PRO_ELASTICSEARCH_HOST=${OPENVIDU_PRO_ELASTICSEARCH_HOST:-http://127.0.0.1:9200}
+        volumes:
+            - ./beats/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+        command: >
+            /bin/bash -c "metricbeat -e -strict.perms=false
+            `if [ ! -z $ELASTICSEARCH_USERNAME ]; then echo '-E output.elasticsearch.username=$ELASTICSEARCH_USERNAME'; fi`
+            `if [ ! -z $ELASTICSEARCH_PASSWORD ]; then echo '-E output.elasticsearch.password=$ELASTICSEARCH_PASSWORD'; fi`"
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
+
     filebeat:
         image: docker.elastic.co/beats/filebeat-oss:7.8.0
         network_mode: host

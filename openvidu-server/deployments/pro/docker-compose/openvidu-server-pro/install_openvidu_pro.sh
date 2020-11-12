@@ -61,6 +61,10 @@ new_ov_installation() {
           --output "${BEATS_FOLDER}/filebeat.yml" || fatal_error "Error when downloading the file 'filebeat.yml'"
      printf '\n          - filebeat.yml'
 
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/openvidu-server-pro/beats/metricbeat.yml \
+          --output "${BEATS_FOLDER}/metricbeat.yml" || fatal_error "Error when downloading the file 'metricbeat.yml'"
+     printf '\n          - metricbeat.yml'
+
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/openvidu-server-pro/.env \
           --output "${OPENVIDU_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
      printf '\n          - .env'
@@ -198,6 +202,10 @@ upgrade_ov() {
           --output "${TMP_FOLDER}/filebeat.yml" || fatal_error "Error when downloading the file 'filebeat.yml'"
      printf '\n          - filebeat.yml'
 
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/openvidu-server-pro/beats/metricbeat.yml \
+          --output "${TMP_FOLDER}/metricbeat.yml" || fatal_error "Error when downloading the file 'metricbeat.yml'"
+     printf '\n          - metricbeat.yml'
+
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/openvidu-server-pro/.env \
           --output "${TMP_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
      printf '\n          - .env'
@@ -300,6 +308,9 @@ upgrade_ov() {
 
      mv "${TMP_FOLDER}/filebeat.yml" "${OPENVIDU_PREVIOUS_FOLDER}/beats/filebeat.yml" || fatal_error "Error while updating 'filebeat.yml'"
      printf '\n          - filebeat.yml'
+
+     mv "${TMP_FOLDER}/metricbeat.yml" "${OPENVIDU_PREVIOUS_FOLDER}/beats/metricbeat.yml" || fatal_error "Error while updating 'metricbeat.yml'"
+     printf '\n          - metricbeat.yml'
 
      printf "\n     => Deleting 'tmp' folder"
      rm -rf "${TMP_FOLDER}" || fatal_error "Error deleting 'tmp' folder"
