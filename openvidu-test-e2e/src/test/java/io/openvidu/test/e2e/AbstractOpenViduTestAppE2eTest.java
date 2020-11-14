@@ -102,6 +102,7 @@ public class AbstractOpenViduTestAppE2eTest {
 	protected static void setupBrowserDrivers() {
 		WebDriverManager.chromedriver().setup();
 		WebDriverManager.firefoxdriver().setup();
+		WebDriverManager.operadriver().setup();
 	}
 
 	protected static void cleanFoldersAndSetUpOpenViduJavaClient() {
