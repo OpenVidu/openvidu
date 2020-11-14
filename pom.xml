@@ -58,6 +58,7 @@
 		<version.slf4j>1.7.30</version.slf4j>
 		<version.gson>2.8.6</version.gson>
 		<version.unirest>1.4.9</version.unirest>
+		<version.jcodec>0.2.5</version.jcodec>
 
 		<version.webdrivermanager>4.2.2</version.webdrivermanager>
 

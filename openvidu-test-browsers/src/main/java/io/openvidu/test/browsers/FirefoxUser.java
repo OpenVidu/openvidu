@@ -22,6 +22,7 @@ import java.net.URL;
 
 import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -54,7 +55,7 @@ public class FirefoxUser extends BrowserUser {
 			}
 		} else {
 			log.info("Using local web driver");
-			this.driver = new FirefoxDriver(capabilities);
+			this.driver = new FirefoxDriver(new FirefoxOptions(capabilities));
 		}
 
 		this.configureDriver();
