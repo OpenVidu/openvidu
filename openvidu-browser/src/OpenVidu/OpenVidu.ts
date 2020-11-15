@@ -343,11 +343,11 @@ export class OpenVidu {
     }
 
     // Accept: Chrome (desktop and Android), Firefox (desktop and Android), Opera (desktop and Android),
-    // Safari (OSX and iOS), Ionic (Android and iOS), Samsung Internet Browser (Android)
-    if (platform.isSafariBrowser() || platform.isChromeBrowser() || platform.isChromeMobileBrowser() ||
-        platform.isFirefoxBrowser()  || platform.isFirefoxMobileBrowser() || platform.isOperaBrowser() ||
-        platform.isOperaMobileBrowser() || platform.isAndroidBrowser() || platform.isElectron() ||
-        platform.isSamsungBrowser()
+    // Safari (OSX and iOS), Edge Chromium (>= 80), Ionic (Android and iOS), Samsung Internet Browser (Android)
+    if (platform.isChromeBrowser() || platform.isChromeMobileBrowser() ||
+      platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser() || platform.isOperaBrowser() ||
+      platform.isOperaMobileBrowser() || platform.isSafariBrowser() || platform.isEdgeBrowser() ||
+      platform.isAndroidBrowser() || platform.isElectron() || platform.isSamsungBrowser()
     ) {
       return 1;
     }
@@ -1047,4 +1047,4 @@ export class OpenVidu {
       (platform.isElectron() && videoSource.startsWith('screen:'))
   }
 
- }
+}
