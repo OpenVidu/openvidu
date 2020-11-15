@@ -42,52 +42,8 @@ import io.openvidu.server.summary.SessionSummary;
 import io.openvidu.server.webhook.CDRLoggerWebhook;
 
 /**
- * CDR logger to register all information of a Session.
- * Enabled by property 'OPENVIDU_CDR=true'
- * 
- * - 'sessionCreated':				{sessionId, timestamp}
- * - 'sessionDestroyed':			{sessionId, timestamp, startTime, duration, reason}
- * - 'participantJoined':			{sessionId, timestamp, participantId, location, platform}
- * - 'participantLeft':				{sessionId, timestamp, participantId, startTime, duration, reason}
- * - 'webrtcConnectionCreated'		{sessionId, timestamp, participantId, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate]}
- * - 'webrtcConnectionDestroyed'	{sessionId, timestamp, participantId, startTime, duration, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate], reason}
- * - 'recordingStarted'				{sessionId, timestamp, id, name, hasAudio, hasVideo, resolution, recordingLayout, size}
- * - 'recordingStopped'				{sessionId, timestamp, id, name, hasAudio, hasVideo, resolution, recordingLayout, size}
- * - 'recordingStatusChanged'		{sessionId, timestamp, id, name, hasAudio, hasVideo, resolution, recordingLayout, size, status}
- * - 'filterEventDispatched'		{sessionId, timestamp, participantId, streamId, filterType, eventType, data}
- * 
- * PROPERTIES VALUES:
- * 
- * - sessionId:			string
- * - timestamp:			number
- * - startTime:			number
- * - duration:			number
- * - participantId:		string
- * - connection: 		"INBOUND", "OUTBOUND"
- * - receivingFrom: 	string
- * - audioEnabled: 		boolean
- * - videoEnabled: 		boolean
- * - videoSource: 		"CAMERA", "SCREEN", "CUSTOM", "IPCAM"
- * - videoFramerate:	number
- * - videoDimensions:	string
- * - id:				string
- * - name:				string
- * - hasAudio:			boolean
- * - hasVideo:			boolean
- * - resolution			string
- * - recordingLayout:	string
- * - size: 				number
- * - status:            string
- * - webrtcConnectionDestroyed.reason: 	"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "mediaServerDisconnect", "openviduServerStopped"
- * - participantLeft.reason: 			"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "mediaServerDisconnect", "openviduServerStopped"
- * - sessionDestroyed.reason: 			"lastParticipantLeft", "mediaServerDisconnect", "openviduServerStopped"
- * - recordingStopped.reason:			"recordingStoppedByServer", "lastParticipantLeft", "sessionClosedByServer", "automaticStop", "mediaServerDisconnect", "openviduServerStopped"
- * 
- * [OPTIONAL_PROPERTIES]:
- * - receivingFrom:		only if connection = "INBOUND"
- * - videoSource:		only if videoEnabled = true
- * - videoFramerate: 	only if videoEnabled = true
- * - videoDimensions: 	only if videoEnabled = true
+ * CDR logger to register all information of a Session. Enabled by property
+ * 'OPENVIDU_CDR=true'
  * 
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
  */
@@ -226,6 +182,13 @@ public class CallDetailRecord {
 	public void recordFilterEventDispatched(String sessionId, String participantId, String streamId, String filterType,
 			GenericMediaEvent event) {
 		this.log(new CDREventFilterEvent(sessionId, participantId, streamId, filterType, event));
+	}
+
+	public void recordSignalSent(String sessionId, String from, String[] to, String type, String data) {
+		if (from != null) {
+			type = type.replaceFirst("^signal:", "");
+		}
+		this.log(new CDREventSignal(sessionId, from, to, type, data));
 	}
 
 	protected void log(CDREvent event) {

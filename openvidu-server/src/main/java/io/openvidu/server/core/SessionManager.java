@@ -116,7 +116,7 @@ public abstract class SessionManager {
 	public void sendMessage(String message, String sessionId) {
 		try {
 			JsonObject messageJson = JsonParser.parseString(message).getAsJsonObject();
-			sessionEventsHandler.onSendMessage(null, messageJson, getParticipants(sessionId), null, null);
+			sessionEventsHandler.onSendMessage(null, messageJson, getParticipants(sessionId), sessionId, null, null);
 		} catch (JsonSyntaxException | IllegalStateException e) {
 			throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
 					"Provided signal object '" + message + "' has not a valid JSON format");
@@ -127,7 +127,7 @@ public abstract class SessionManager {
 		try {
 			JsonObject messageJson = JsonParser.parseString(message).getAsJsonObject();
 			sessionEventsHandler.onSendMessage(participant, messageJson, getParticipants(participant.getSessionId()),
-					transactionId, null);
+					participant.getSessionId(), transactionId, null);
 		} catch (JsonSyntaxException | IllegalStateException e) {
 			throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
 					"Provided signal object '" + message + "' has not a valid JSON format");

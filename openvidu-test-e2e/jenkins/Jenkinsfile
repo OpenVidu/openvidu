@@ -1,9 +1,11 @@
 node('container') {
+
   sh 'docker rm -f e2e chrome firefox opera || true'
   sh 'rm -rf /opt/openvidu/* || true'
   sh 'wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m -P /opt/openvidu'
   sh 'wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/fakeaudio.wav -P /opt/openvidu'
   sh 'wget --directory-prefix=/opt/openvidu/test-layouts/layout1 https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/docker/my-custom-layout/index.html'
+
   docker.image('openvidu/openvidu-test-e2e:$DISTRO').pull()
   docker.image('selenium/standalone-chrome:latest').pull()
   docker.image('selenium/standalone-firefox:latest').pull()

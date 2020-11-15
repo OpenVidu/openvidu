@@ -321,7 +321,7 @@ public class SessionEventsHandler {
 	}
 
 	public void onSendMessage(Participant participant, JsonObject message, Set<Participant> participants,
-			Integer transactionId, OpenViduException error) {
+			String sessionId, Integer transactionId, OpenViduException error) {
 
 		boolean isRpcCall = transactionId != null;
 		if (isRpcCall) {
@@ -332,16 +332,22 @@ public class SessionEventsHandler {
 			}
 		}
 
+		String from = null;
+		String type = null;
+		String data = null;
+
 		JsonObject params = new JsonObject();
 		if (message.has("data")) {
-			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_DATA_PARAM, message.get("data").getAsString());
+			data = message.get("data").getAsString();
+			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_DATA_PARAM, data);
 		}
 		if (message.has("type")) {
-			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_TYPE_PARAM, message.get("type").getAsString());
+			type = message.get("type").getAsString();
+			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_TYPE_PARAM, type);
 		}
 		if (participant != null) {
-			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_FROM_PARAM,
-					participant.getParticipantPublicId());
+			from = participant.getParticipantPublicId();
+			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_FROM_PARAM, from);
 		}
 
 		Set<String> toSet = new HashSet<String>();
@@ -360,6 +366,7 @@ public class SessionEventsHandler {
 
 		if (toSet.isEmpty()) {
 			for (Participant p : participants) {
+				toSet.add(p.getParticipantPublicId());
 				rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
 						ProtocolElements.PARTICIPANTSENDMESSAGE_METHOD, params);
 			}
@@ -382,6 +389,8 @@ public class SessionEventsHandler {
 		if (isRpcCall) {
 			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 		}
+
+		CDR.recordSignalSent(sessionId, from, toSet.toArray(new String[toSet.size()]), type, data);
 	}
 
 	public void onStreamPropertyChanged(Participant participant, Integer transactionId, Set<Participant> participants,
