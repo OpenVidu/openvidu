@@ -51,26 +51,9 @@ public class TokenGenerator {
 		if (this.openviduConfig.isTurnadminAvailable()) {
 			turnCredentials = coturnCredentialsService.createUser();
 		}
-
-		// REMOVE AFTER RELEASE 2.16.0
-		token = compatibilityWithOpenViduBrowser2150(token, role, turnCredentials);
-		// REMOVE AFTER RELEASE 2.16.0
-
 		ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
 				.data(serverMetadata).record(record).role(role).kurentoOptions(kurentoOptions).build();
 		return new Token(token, sessionId, connectionProperties, turnCredentials);
 	}
 
-	// REMOVE AFTER RELEASE 2.16.0
-	private String compatibilityWithOpenViduBrowser2150(String token, OpenViduRole role,
-			TurnCredentials turnCredentials) {
-		token += "&role=" + role.name();
-		token += "&version=" + openviduBuildConfig.getOpenViduServerVersion();
-		if (turnCredentials != null) {
-			token += "&coturnIp=" + openviduConfig.getCoturnIp();
-			token += "&turnUsername=" + turnCredentials.getUsername();
-			token += "&turnCredential=" + turnCredentials.getCredential();
-		}
-		return token;
-	}
 }
