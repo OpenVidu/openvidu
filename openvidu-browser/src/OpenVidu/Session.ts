@@ -1165,9 +1165,9 @@ export class Session extends EventDispatcher {
     sendVideoData(streamManager: StreamManager, intervalSeconds: number = 1, doInterval: boolean = false, maxLoops: number = 1) {
         if (
             platform.isChromeBrowser() || platform.isChromeMobileBrowser() || platform.isOperaBrowser() ||
-            platform.isOperaMobileBrowser() || platform.isElectron() || (platform.isSafariBrowser() && !platform.isIonicIos()) ||
-            platform.isAndroidBrowser() || platform.isSamsungBrowser() || platform.isIonicAndroid() ||
-            (platform.isIPhoneOrIPad() && platform.isIOSWithSafari())
+            platform.isOperaMobileBrowser() || platform.isEdgeBrowser() || platform.isElectron() ||
+            (platform.isSafariBrowser() && !platform.isIonicIos()) || platform.isAndroidBrowser() ||
+            platform.isSamsungBrowser() || platform.isIonicAndroid() || (platform.isIPhoneOrIPad() && platform.isIOSWithSafari())
         ) {
             const obtainAndSendVideo = async () => {
                 const statsMap = await streamManager.stream.getRTCPeerConnection().getStats();
