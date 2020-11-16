@@ -363,7 +363,8 @@ Resources:
                     - Fn::If:
                       # Get bucket name depending if the user defines a bucket name or not
                       - CreateS3Bucket
-                      - !Join [ "", [ 'arn:aws:s3:::', !Ref AWS::StackName, '-recordings', '/*'] ]
+                      ### Unique bucket name using Stack ID
+                      - !Join [ "", [ 'arn:aws:s3:::', 'openvidu-recordings-', !Select [0, !Split ["-", !Select [2, !Split [/, !Ref AWS::StackId ]]]], "/*" ]]
                       - !Join [ "", [ 'arn:aws:s3:::', !Ref S3RecordingsBucketName, '/*'] ]
                 - Ref: AWS::NoValue
               - Fn::If:
@@ -377,7 +378,8 @@ Resources:
                     - Fn::If:
                       # Get bucket name depending if the user defines a bucket name or not
                       - CreateS3Bucket
-                      - !Join [ "", [ 'arn:aws:s3:::', !Ref AWS::StackName, '-recordings' ] ]
+                      ### Unique bucket name using Stack ID
+                      - !Join [ "", [ 'arn:aws:s3:::', 'openvidu-recordings-', !Select [0, !Split ["-", !Select [2, !Split [/, !Ref AWS::StackId ]]]]]]
                       - !Join [ "", [ 'arn:aws:s3:::', !Ref S3RecordingsBucketName ] ]
                 - Ref: AWS::NoValue
               - Fn::If:
@@ -403,7 +405,8 @@ Resources:
   S3bucket:
     Type: 'AWS::S3::Bucket'
     Properties:
-      BucketName: !Join ["" , [ !Ref AWS::StackName, '-recordings' ] ]
+    ### Unique bucket name using Stack ID
+      BucketName: !Join ["-" , [ 'openvidu-recordings', !Select [0, !Split ["-", !Select [2, !Split [/, !Ref AWS::StackId ]]]]]]
       AccessControl: Private
       PublicAccessBlockConfiguration: 
         BlockPublicAcls: true
@@ -506,7 +509,8 @@ Resources:
                   fi
                 fi
               - kmsAmi: !FindInMap [KMSAMIMAP, !Ref 'AWS::Region', AMI]
-                s3BucketName: !Join ["", [ !Ref AWS::StackName, '-recordings' ] ]
+                ### Unique bucket name using Stack ID
+                s3BucketName: !Join ["" , [ 'openvidu-recordings-', !Select [0, !Split ["-", !Select [2, !Split [/, !Ref AWS::StackId ]]]]]]
               mode: "000755"
               owner: "root"
               group: "root"
