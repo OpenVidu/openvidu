@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 
-LABEL maintainer="openvidu@gmail.com"
+LABEL maintainer="info@openvidu.io"
 
 USER root
 

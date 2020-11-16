@@ -1,5 +1,5 @@
 FROM ubuntu:16.04
-MAINTAINER openvidu@gmail.com
+MAINTAINER info@openvidu.io
 
 # Install Kurento Media Server (KMS) 
 RUN echo "deb [arch=amd64] http://ubuntu.openvidu.io/6.7.2 xenial kms6" | tee /etc/apt/sources.list.d/kurento.list \

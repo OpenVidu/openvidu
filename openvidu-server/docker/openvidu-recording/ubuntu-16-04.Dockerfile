@@ -1,5 +1,5 @@
 FROM ubuntu:16.04
-MAINTAINER openvidu@gmail.com
+MAINTAINER info@openvidu.io
 
 ARG CHROME_VERSION
 
