@@ -8,4 +8,4 @@ DEBUG=${DEBUG:-false}
 ID=$1
 [ -z "${ID}" ] && { echo "Must provide instance ID"; exit 1; }
 
-docker run --rm amazon/aws-cli:2.0.7 ec2 terminate-instances --instance-ids ${ID} --output json 
+docker run --rm amazon/aws-cli:${AWS_CLI_DOCKER_TAG} ec2 terminate-instances --instance-ids ${ID} --output json 

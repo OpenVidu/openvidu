@@ -7,7 +7,7 @@ DEBUG=${DEBUG:-false}
 
 OUTPUT=$(mktemp -t openvidu-autodiscover-XXX --suffix .json)
 
-docker run --rm amazon/aws-cli:2.0.7 ec2 describe-instances \
+docker run --rm amazon/aws-cli:${AWS_CLI_DOCKER_TAG} ec2 describe-instances \
   --output text \
   --filters "Name=instance-state-name,Values=running" \
             "Name=tag:ov-cluster-member,Values=kms" \

@@ -487,6 +487,7 @@ Resources:
                 sed -i "s/#AWS_SUBNET_ID=/AWS_SUBNET_ID=${OpenViduSubnet}/" $WORKINGDIR/.env
                 sed -i "s/#AWS_STACK_ID=/AWS_STACK_ID=$(echo ${AWS::StackId} | sed 's#/#\\/#g')/" $WORKINGDIR/.env
                 sed -i "s/#AWS_STACK_NAME=/AWS_STACK_NAME=${AWS::StackName}/" $WORKINGDIR/.env
+                sed -i "s/#AWS_CLI_DOCKER_TAG=/AWS_CLI_DOCKER_TAG=AWS_DOCKER_TAG/" $WORKINGDIR/.env
 
                 # Get security group id of kms and use it as env variable
                 SECGRPIDKMS=$(/usr/local/bin/getSecurityGroupKms.sh)
@@ -526,7 +527,7 @@ Resources:
             '/usr/local/bin/getSecurityGroupKms.sh':
               content: !Sub |
                 #!/bin/bash -x
-                docker run --rm amazon/aws-cli:2.0.7 ec2 describe-security-groups \
+                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 describe-security-groups \
                                 --region ${AWS::Region} \
                                 --output text \
                                 --filters "Name=tag:aws:cloudformation:logical-id,Values=KMSSecurityGroup" \
@@ -538,7 +539,7 @@ Resources:
             '/usr/local/bin/getSecurityGroupOpenVidu.sh':
               content: !Sub |
                 #!/bin/bash -x
-                docker run --rm amazon/aws-cli:2.0.7 ec2 describe-security-groups \
+                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 describe-security-groups \
                                --region ${AWS::Region} \
                                --output text \
                                --filters "Name=tag:aws:cloudformation:logical-id,Values=OpenViduSecurityGroup" \
@@ -550,7 +551,7 @@ Resources:
             '/usr/local/bin/getCidrBlocKSubnet.sh':
               content: !Sub |
                 #!/bin/bash -x
-                docker run --rm amazon/aws-cli:2.0.7 ec2 describe-subnets \
+                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 describe-subnets \
                                 --region ${AWS::Region} \
                                 --output text \
                                 --filters "Name=subnet-id,Values=${OpenViduSubnet}" \
@@ -566,12 +567,12 @@ Resources:
                 SUBNET_CIDR=$(/usr/local/bin/getCidrBlocKSubnet.sh)
 
                 # Create Security group rules OpenVidu
-                docker run --rm amazon/aws-cli:2.0.7 ec2 authorize-security-group-ingress --group-id $SECGRPIDOV --protocol tcp --port 5044 --cidr $SUBNET_CIDR
-                docker run --rm amazon/aws-cli:2.0.7 ec2 authorize-security-group-ingress --group-id $SECGRPIDOV --protocol tcp --port 9200 --cidr $SUBNET_CIDR
+                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 authorize-security-group-ingress --group-id $SECGRPIDOV --protocol tcp --port 5044 --cidr $SUBNET_CIDR
+                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 authorize-security-group-ingress --group-id $SECGRPIDOV --protocol tcp --port 9200 --cidr $SUBNET_CIDR
 
                 # Create security group rules for KMS
-                docker run --rm amazon/aws-cli:2.0.7 ec2 authorize-security-group-ingress --group-id $SECGRPIDKMS --protocol tcp --port 8888 --cidr $SUBNET_CIDR
-                docker run --rm amazon/aws-cli:2.0.7 ec2 authorize-security-group-ingress --group-id $SECGRPIDKMS --protocol tcp --port 3000 --cidr $SUBNET_CIDR
+                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 authorize-security-group-ingress --group-id $SECGRPIDKMS --protocol tcp --port 8888 --cidr $SUBNET_CIDR
+                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 authorize-security-group-ingress --group-id $SECGRPIDKMS --protocol tcp --port 3000 --cidr $SUBNET_CIDR
 
               mode: "000755"
               owner: "root"
