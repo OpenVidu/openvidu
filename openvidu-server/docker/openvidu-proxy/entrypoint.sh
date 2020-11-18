@@ -250,6 +250,13 @@ fi
 sed -e '/{ssl_config}/{r default_nginx_conf/global/ssl_config.conf' -e 'd}' -i /etc/nginx/conf.d/*
 sed -e '/{proxy_config}/{r default_nginx_conf/global/proxy_config.conf' -e 'd}' -i /etc/nginx/conf.d/*
 sed -i "s/{domain_name}/${DOMAIN_OR_PUBLIC_IP}/g" /etc/nginx/conf.d/*
+
+# IPv6 listening (RFC 6540)
+if [ -f /proc/net/if_inet6 ]; then
+  sed -i 's/ {http_port}/ [::]:{http_port}/g' /etc/nginx/conf.d/*
+  sed -i 's/ {https_port}/ [::]:{https_port}/g' /etc/nginx/conf.d/*
+fi
+
 sed -i "s/{http_port}/${PROXY_HTTP_PORT}/g" /etc/nginx/conf.d/*
 sed -i "s/{https_port}/${PROXY_HTTPS_PORT}/g" /etc/nginx/conf.d/*
 
