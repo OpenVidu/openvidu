@@ -73,7 +73,7 @@ import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.utils.CustomFileManager;
-import io.openvidu.server.utils.DockerManager;
+import io.openvidu.server.utils.LocalDockerManager;
 import io.openvidu.server.utils.JsonUtils;
 import io.openvidu.server.utils.QuarantineKiller;
 import io.openvidu.server.utils.RecordingUtils;
@@ -85,7 +85,7 @@ public class RecordingManager {
 	private ComposedRecordingService composedRecordingService;
 	private ComposedQuickStartRecordingService composedQuickStartRecordingService;
 	private SingleStreamRecordingService singleStreamRecordingService;
-	private DockerManager dockerManager;
+	private LocalDockerManager dockerManager;
 
 	@Autowired
 	protected SessionEventsHandler sessionHandler;
@@ -164,7 +164,7 @@ public class RecordingManager {
 
 		RecordingManager.IMAGE_TAG = openviduConfig.getOpenViduRecordingVersion();
 
-		this.dockerManager = new DockerManager();
+		this.dockerManager = new LocalDockerManager();
 		this.composedRecordingService = new ComposedRecordingService(this, recordingDownloader, recordingUploader,
 				openviduConfig, cdr, quarantineKiller);
 		this.composedQuickStartRecordingService = new ComposedQuickStartRecordingService(this, recordingDownloader,
@@ -215,9 +215,9 @@ public class RecordingManager {
 
 	public void checkRecordingRequirements(String openviduRecordingPath, String openviduRecordingCustomLayout)
 			throws OpenViduException {
-		DockerManager dockerManager = null;
+		LocalDockerManager dockerManager = null;
 		try {
-			dockerManager = new DockerManager();
+			dockerManager = new LocalDockerManager();
 			dockerManager.checkDockerEnabled();
 		} catch (OpenViduException e) {
 			String message = e.getMessage();

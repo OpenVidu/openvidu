@@ -53,13 +53,13 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.recording.service.WaitForContainerStoppedCallback;
 
-public class DockerManager {
+public class LocalDockerManager {
 
-	private static final Logger log = LoggerFactory.getLogger(DockerManager.class);
+	private static final Logger log = LoggerFactory.getLogger(LocalDockerManager.class);
 
 	private DockerClient dockerClient;
 
-	public DockerManager() {
+	public LocalDockerManager() {
 		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
 		this.dockerClient = DockerClientBuilder.getInstance(config).build();
 	}

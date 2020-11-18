@@ -58,7 +58,7 @@ import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingInfoUtils;
 import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.rest.RequestMappings;
-import io.openvidu.server.utils.DockerManager;
+import io.openvidu.server.utils.LocalDockerManager;
 import io.openvidu.server.utils.QuarantineKiller;
 
 public class ComposedRecordingService extends RecordingService {
@@ -69,13 +69,13 @@ public class ComposedRecordingService extends RecordingService {
 	protected Map<String, String> sessionsContainers = new ConcurrentHashMap<>();
 	private Map<String, CompositeWrapper> composites = new ConcurrentHashMap<>();
 
-	protected DockerManager dockerManager;
+	protected LocalDockerManager dockerManager;
 
 	public ComposedRecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
 			RecordingUploader recordingUploader, OpenviduConfig openviduConfig, CallDetailRecord cdr,
 			QuarantineKiller quarantineKiller) {
 		super(recordingManager, recordingDownloader, recordingUploader, openviduConfig, cdr, quarantineKiller);
-		this.dockerManager = new DockerManager();
+		this.dockerManager = new LocalDockerManager();
 	}
 
 	@Override
