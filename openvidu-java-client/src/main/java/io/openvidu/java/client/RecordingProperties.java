@@ -33,6 +33,7 @@ public class RecordingProperties {
 	private boolean hasAudio;
 	private boolean hasVideo;
 	private long shmSize; // For COMPOSED recording
+	private String mediaNode;
 
 	/**
 	 * Builder for {@link io.openvidu.java.client.RecordingProperties}
@@ -47,6 +48,7 @@ public class RecordingProperties {
 		private boolean hasAudio = true;
 		private boolean hasVideo = true;
 		private long shmSize = 536870912L;
+		private String mediaNode;
 
 		/**
 		 * Builder for {@link io.openvidu.java.client.RecordingProperties}
@@ -61,7 +63,7 @@ public class RecordingProperties {
 				}
 			}
 			return new RecordingProperties(this.name, this.outputMode, this.recordingLayout, this.customLayout,
-					this.resolution, this.hasAudio, this.hasVideo, this.shmSize);
+					this.resolution, this.hasAudio, this.hasVideo, this.shmSize, this.mediaNode);
 		}
 
 		/**
@@ -168,10 +170,26 @@ public class RecordingProperties {
 			return this;
 		}
 
+		/**
+		 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank"
+		 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
+		 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
+		 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
+		 * sans-serif">PRO</a> Call this method to force the recording to be hosted in
+		 * the Media Node with identifier <code>mediaNodeId</code>. This property only
+		 * applies to COMPOSED recordings and is ignored for INDIVIDUAL recordings, that
+		 * are always hosted in the same Media Node hosting its Session
+		 */
+		public RecordingProperties.Builder mediaNode(String mediaNodeId) {
+			this.mediaNode = mediaNodeId;
+			return this;
+		}
+
 	}
 
 	protected RecordingProperties(String name, Recording.OutputMode outputMode, RecordingLayout layout,
-			String customLayout, String resolution, boolean hasAudio, boolean hasVideo, long shmSize) {
+			String customLayout, String resolution, boolean hasAudio, boolean hasVideo, long shmSize,
+			String mediaNode) {
 		this.name = name;
 		this.outputMode = outputMode;
 		this.recordingLayout = layout;
@@ -180,6 +198,7 @@ public class RecordingProperties {
 		this.hasAudio = hasAudio;
 		this.hasVideo = hasVideo;
 		this.shmSize = shmSize;
+		this.mediaNode = mediaNode;
 	}
 
 	/**
@@ -282,6 +301,20 @@ public class RecordingProperties {
 	 */
 	public long shmSize() {
 		return this.shmSize;
+	}
+
+	/**
+	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank"
+	 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
+	 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
+	 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
+	 * sans-serif">PRO</a> The Media Node where to host the recording. The default
+	 * option if this property is not defined is the same Media Node hosting the
+	 * Session to record. This property only applies to COMPOSED recordings and is
+	 * ignored for INDIVIDUAL recordings
+	 */
+	public String mediaNode() {
+		return this.mediaNode;
 	}
 
 }
