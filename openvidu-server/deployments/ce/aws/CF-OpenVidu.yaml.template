@@ -345,6 +345,7 @@ Resources:
       ResourceSignal:
         Timeout: PT30M
         Count: '1'
+    DependsOn: 'OpenviduServer'
 
   WebServerSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
