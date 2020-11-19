@@ -2638,13 +2638,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertFalse(sessionH264AllowTranscoding.fetch());
 		Assert.assertFalse(sessionVP9AllowTranscoding.fetch());
 
-		// Check session with default transcoding params
+		// Check transcoding session properties
 		assertTranscodingSessionProperties(sessionDefaultCodec, sessionH264AllowTranscoding, sessionVP9AllowTranscoding);
 
 		// Fetch all sessions
 		Assert.assertFalse(OV.fetch());
 
-		// Check session with default transcoding params
+		// Check transcoding session properties
 		assertTranscodingSessionProperties(sessionDefaultCodec, sessionH264AllowTranscoding, sessionVP9AllowTranscoding);
 
 		sessionDefaultCodec.close();
