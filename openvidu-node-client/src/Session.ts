@@ -94,6 +94,8 @@ export class Session {
         this.properties.recordingMode = !!this.properties.recordingMode ? this.properties.recordingMode : RecordingMode.MANUAL;
         this.properties.defaultOutputMode = !!this.properties.defaultOutputMode ? this.properties.defaultOutputMode : Recording.OutputMode.COMPOSED;
         this.properties.defaultRecordingLayout = !!this.properties.defaultRecordingLayout ? this.properties.defaultRecordingLayout : RecordingLayout.BEST_FIT;
+        this.properties.forcedVideoCodec = !!this.properties.forcedVideoCodec ? this.properties.forcedVideoCodec : undefined;
+        this.properties.allowTranscoding = this.properties.allowTranscoding != null ? this.properties.allowTranscoding : undefined;
     }
 
     /**
@@ -452,22 +454,25 @@ export class Session {
     /**
      * @hidden
      */
-    public getSessionIdHttp(): Promise<string> {
+    public getSessionHttp(): Promise<string> {
         return new Promise<string>((resolve, reject) => {
 
             if (!!this.sessionId) {
                 resolve(this.sessionId);
             }
 
-            const data = JSON.stringify({
-                mediaMode: !!this.properties.mediaMode ? this.properties.mediaMode : MediaMode.ROUTED,
-                recordingMode: !!this.properties.recordingMode ? this.properties.recordingMode : RecordingMode.MANUAL,
-                defaultOutputMode: !!this.properties.defaultOutputMode ? this.properties.defaultOutputMode : Recording.OutputMode.COMPOSED,
-                defaultRecordingLayout: !!this.properties.defaultRecordingLayout ? this.properties.defaultRecordingLayout : RecordingLayout.BEST_FIT,
-                defaultCustomLayout: !!this.properties.defaultCustomLayout ? this.properties.defaultCustomLayout : '',
-                customSessionId: !!this.properties.customSessionId ? this.properties.customSessionId : '',
-                mediaNode: !!this.properties.mediaNode ? this.properties.mediaNode : undefined
-            });
+            const mediaMode = !!this.properties.mediaMode ? this.properties.mediaMode : MediaMode.ROUTED;
+            const recordingMode = !!this.properties.recordingMode ? this.properties.recordingMode : RecordingMode.MANUAL;
+            const defaultOutputMode = !!this.properties.defaultOutputMode ? this.properties.defaultOutputMode : Recording.OutputMode.COMPOSED;
+            const defaultRecordingLayout = !!this.properties.defaultRecordingLayout ? this.properties.defaultRecordingLayout : RecordingLayout.BEST_FIT;
+            const defaultCustomLayout = !!this.properties.defaultCustomLayout ? this.properties.defaultCustomLayout : '';
+            const customSessionId = !!this.properties.customSessionId ? this.properties.customSessionId : '';
+            const mediaNode = !!this.properties.mediaNode ? this.properties.mediaNode : undefined;
+            const forcedVideoCodec = !!this.properties.forcedVideoCodec ? this.properties.forcedVideoCodec : undefined;
+            const allowTranscoding = this.properties.allowTranscoding != null ? this.properties.allowTranscoding : undefined;
+
+            const data = JSON.stringify({mediaMode, recordingMode, defaultOutputMode, defaultRecordingLayout, defaultCustomLayout,
+                customSessionId, mediaNode, forcedVideoCodec, allowTranscoding});
 
             axios.post(
                 this.ov.host + OpenVidu.API_SESSIONS,
@@ -484,6 +489,15 @@ export class Session {
                         // SUCCESS response from openvidu-server. Resolve token
                         this.sessionId = res.data.id;
                         this.createdAt = res.data.createdAt;
+                        this.properties.mediaMode = mediaMode;
+                        this.properties.recordingMode = recordingMode;
+                        this.properties.defaultOutputMode = defaultOutputMode;
+                        this.properties.defaultRecordingLayout = defaultRecordingLayout;
+                        this.properties.defaultCustomLayout = defaultCustomLayout;
+                        this.properties.customSessionId = customSessionId;
+                        this.properties.mediaNode = mediaNode;
+                        this.properties.forcedVideoCodec = res.data.forcedVideoCodec;
+                        this.properties.allowTranscoding = res.data.allowTranscoding;
                         resolve(this.sessionId);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
@@ -527,7 +541,9 @@ export class Session {
             recordingMode: json.recordingMode,
             defaultOutputMode: json.defaultOutputMode,
             defaultRecordingLayout: json.defaultRecordingLayout,
-            defaultCustomLayout: json.defaultCustomLayout
+            defaultCustomLayout: json.defaultCustomLayout,
+            forcedVideoCodec: json.forcedVideoCodec,
+            allowTranscoding: json.allowTranscoding
         };
         if (json.defaultRecordingLayout == null) {
             delete this.properties.defaultRecordingLayout;
@@ -537,6 +553,15 @@ export class Session {
         }
         if (json.defaultCustomLayout == null) {
             delete this.properties.defaultCustomLayout;
+        }
+        if (json.mediaNode == null) {
+            delete this.properties.mediaNode;
+        }
+        if (json.forcedVideoCodec == null) {
+            delete this.properties.forcedVideoCodec;
+        }
+        if (json.allowTranscoding == null) {
+            delete this.properties.allowTranscoding;
         }
 
         // 1. Array to store fetched connections and later remove closed ones
@@ -567,7 +592,6 @@ export class Session {
         this.connections.sort((c1, c2) => (c1.createdAt > c2.createdAt) ? 1 : ((c2.createdAt > c1.createdAt) ? -1 : 0));
         // Populate activeConnections array
         this.updateActiveConnectionsArray();
-
         return this;
     }
 

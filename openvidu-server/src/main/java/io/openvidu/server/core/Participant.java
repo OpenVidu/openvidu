@@ -210,7 +210,7 @@ public class Participant {
 	}
 
 	public boolean isIpcam() {
-		return this.platform.equals("IPCAM") && this.participantPrivatetId.startsWith(IdentifierPrefixes.IPCAM_ID);
+		return this.platform != null && this.platform.equals("IPCAM") && this.participantPrivatetId.startsWith(IdentifierPrefixes.IPCAM_ID);
 	}
 
 	public String getPublisherStreamId() {

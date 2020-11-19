@@ -39,6 +39,18 @@
           <input matInput placeholder="DefaultCustomLayout" type="text"
             [(ngModel)]="sessionProperties.defaultCustomLayout" id="default-custom-layout-input">
         </mat-form-field>
+        <div id="allow-transcoding-div">
+          <mat-checkbox class="checkbox-form" [(ngModel)]="sessionProperties.allowTranscoding"
+                        id="allow-transcoding-checkbox">Allow Transcoding</mat-checkbox>
+        </div>
+        <mat-form-field>
+          <mat-select placeholder="ForcedVideoCodec" [(ngModel)]="sessionProperties.forcedVideoCodec"
+                      id="forced-video-codec-select">
+            <mat-option *ngFor="let enumerator of enumToArray(forceVideoCodec)" [value]="enumerator">
+              <span [attr.id]="'option-' + enumerator">{{ enumerator }}</span>
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
         <mat-form-field>
           <input matInput placeholder="CustomSessionId" type="text" [(ngModel)]="sessionProperties.customSessionId">
         </mat-form-field>

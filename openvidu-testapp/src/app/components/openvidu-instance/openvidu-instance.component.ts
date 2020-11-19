@@ -93,7 +93,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     defaultOutputMode: Recording.OutputMode.COMPOSED,
     defaultRecordingLayout: RecordingLayout.BEST_FIT,
     defaultCustomLayout: '',
-    customSessionId: ''
+    customSessionId: '',
+    forcedVideoCodec: null,
+    allowTranscoding: null
   };
 
   publisherProperties: PublisherProperties = {
@@ -521,7 +523,12 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.republishPossible = false;
     }).catch((error: OpenViduError) => {
       console.error(error);
-      alert(error.name + ": " + error.message);
+      if (!error.name) {
+        alert(error);
+      } else {
+        alert(error.name + ": " + error.message);
+      }
+
       this.republishPossible = true;
       this.session.unpublish(this.publisher);
       delete this.publisher;

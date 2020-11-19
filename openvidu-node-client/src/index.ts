@@ -12,3 +12,4 @@ export * from './Recording';
 export * from './RecordingProperties';
 export * from './Connection';
 export * from './Publisher';
+export * from './VideoCodec';

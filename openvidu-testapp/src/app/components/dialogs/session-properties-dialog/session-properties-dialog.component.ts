@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import { SessionProperties, MediaMode, Recording, RecordingMode, RecordingLayout, ConnectionProperties } from 'openvidu-node-client';
+import { SessionProperties, MediaMode, Recording, RecordingMode, RecordingLayout, ConnectionProperties, VideoCodec } from 'openvidu-node-client';
 
 @Component({
     selector: 'app-session-properties-dialog',
@@ -16,6 +16,7 @@ export class SessionPropertiesDialogComponent {
     customToken: string;
     forcePublishing: boolean = false;
     connectionProperties: ConnectionProperties;
+    forceVideoCodec = VideoCodec;
 
     filterName = 'GStreamerFilter';
     filters: string[] = [];

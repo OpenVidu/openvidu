@@ -79,6 +79,7 @@ import io.openvidu.server.utils.MediaNodeStatusManager;
 import io.openvidu.server.utils.MediaNodeStatusManagerDummy;
 import io.openvidu.server.utils.QuarantineKiller;
 import io.openvidu.server.utils.QuarantineKillerDummy;
+import io.openvidu.server.utils.SDPMunging;
 import io.openvidu.server.webhook.CDRLoggerWebhook;
 
 /**
@@ -214,6 +215,12 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@ConditionalOnMissingBean
 	public GeoLocationByIp geoLocationByIp() {
 		return new GeoLocationByIpDummy();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public SDPMunging sdpMunging() {
+		return new SDPMunging();
 	}
 
 	@Bean

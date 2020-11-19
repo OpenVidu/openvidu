@@ -60,6 +60,7 @@ import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
+import io.openvidu.java.client.VideoCodec;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.IdentifierPrefixes;
@@ -715,6 +716,8 @@ public class SessionRestController {
 			String defaultOutputModeString;
 			String defaultRecordingLayoutString;
 			String defaultCustomLayout;
+			String forcedVideoCodec;
+			Boolean allowTranscoding;
 			try {
 				mediaModeString = (String) params.get("mediaMode");
 				recordingModeString = (String) params.get("recordingMode");
@@ -722,6 +725,8 @@ public class SessionRestController {
 				defaultRecordingLayoutString = (String) params.get("defaultRecordingLayout");
 				defaultCustomLayout = (String) params.get("defaultCustomLayout");
 				customSessionId = (String) params.get("customSessionId");
+				forcedVideoCodec = (String) params.get("forcedVideoCodec");
+				allowTranscoding = (Boolean) params.get("allowTranscoding");
 			} catch (ClassCastException e) {
 				throw new Exception("Type error in some parameter: " + e.getMessage());
 			}
@@ -763,6 +768,16 @@ public class SessionRestController {
 								"Parameter 'customSessionId' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-]");
 					}
 					builder = builder.customSessionId(customSessionId);
+				}
+				if (forcedVideoCodec != null) {
+					builder = builder.forcedVideoCodec(VideoCodec.valueOf(forcedVideoCodec));
+				} else {
+					builder = builder.forcedVideoCodec(openviduConfig.getOpenviduForcedCodec());
+				}
+				if (allowTranscoding != null) {
+					builder = builder.allowTranscoding(allowTranscoding);
+				} else {
+					builder = builder.allowTranscoding(openviduConfig.isOpenviduAllowingTranscoding());
 				}
 
 			} catch (IllegalArgumentException e) {

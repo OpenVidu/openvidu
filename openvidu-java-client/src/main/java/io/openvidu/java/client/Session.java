@@ -56,14 +56,14 @@ public class Session {
 	protected Session(OpenVidu openVidu) throws OpenViduJavaClientException, OpenViduHttpException {
 		this.openVidu = openVidu;
 		this.properties = new SessionProperties.Builder().build();
-		this.getSessionIdHttp();
+		this.getSessionHttp();
 	}
 
 	protected Session(OpenVidu openVidu, SessionProperties properties)
 			throws OpenViduJavaClientException, OpenViduHttpException {
 		this.openVidu = openVidu;
 		this.properties = properties;
-		this.getSessionIdHttp();
+		this.getSessionHttp();
 	}
 
 	protected Session(OpenVidu openVidu, JsonObject json) {
@@ -655,7 +655,7 @@ public class Session {
 		return (this.sessionId != null && !this.sessionId.isEmpty());
 	}
 
-	private void getSessionIdHttp() throws OpenViduJavaClientException, OpenViduHttpException {
+	private void getSessionHttp() throws OpenViduJavaClientException, OpenViduHttpException {
 		if (this.hasSessionId()) {
 			return;
 		}
@@ -683,6 +683,25 @@ public class Session {
 				JsonObject responseJson = httpResponseToJson(response);
 				this.sessionId = responseJson.get("id").getAsString();
 				this.createdAt = responseJson.get("createdAt").getAsLong();
+
+				// forcedVideoCodec and allowTranscoding values are configured in OpenVidu Server
+				// via configuration or session
+				VideoCodec forcedVideoCodec = VideoCodec.valueOf(responseJson.get("forcedVideoCodec").getAsString());
+				Boolean allowTranscoding = responseJson.get("allowTranscoding").getAsBoolean();
+
+				SessionProperties responseProperties = new SessionProperties.Builder()
+						.customSessionId(properties.customSessionId())
+						.mediaMode(properties.mediaMode())
+						.recordingMode(properties.recordingMode())
+						.defaultOutputMode(properties.defaultOutputMode())
+						.defaultRecordingLayout(properties.defaultRecordingLayout())
+						.defaultCustomLayout(properties.defaultCustomLayout())
+						.mediaNode(properties.mediaNode())
+						.forcedVideoCodec(forcedVideoCodec)
+						.allowTranscoding(allowTranscoding)
+						.build();
+
+				this.properties = responseProperties;
 				log.info("Session '{}' created", this.sessionId);
 			} else if (statusCode == org.apache.http.HttpStatus.SC_CONFLICT) {
 				// 'customSessionId' already existed
@@ -727,6 +746,13 @@ public class Session {
 			builder.customSessionId(json.get("customSessionId").getAsString());
 		}
 
+		if (json.has("forcedVideoCodec")) {
+			builder.forcedVideoCodec(VideoCodec.valueOf(json.get("forcedVideoCodec").getAsString()));
+		}
+		if (json.has("allowTranscoding")) {
+			builder.allowTranscoding(json.get("allowTranscoding").getAsBoolean());
+		}
+
 		this.properties = builder.build();
 		JsonArray jsonArrayConnections = (json.get("connections").getAsJsonObject()).get("content").getAsJsonArray();
 
@@ -768,6 +794,12 @@ public class Session {
 		json.addProperty("defaultOutputMode", this.properties.defaultOutputMode().name());
 		json.addProperty("defaultRecordingLayout", this.properties.defaultRecordingLayout().name());
 		json.addProperty("defaultCustomLayout", this.properties.defaultCustomLayout());
+		if(this.properties.forcedVideoCodec() != null) {
+			json.addProperty("forcedVideoCodec", this.properties.forcedVideoCodec().name());
+		}
+		if (this.properties.isTranscodingAllowed() != null) {
+			json.addProperty("allowTranscoding", this.properties.isTranscodingAllowed());
+		}
 		JsonObject connections = new JsonObject();
 		connections.addProperty("numberOfElements", this.getConnections().size());
 		JsonArray jsonArrayConnections = new JsonArray();

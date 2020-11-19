@@ -30,7 +30,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class FirefoxUser extends BrowserUser {
 
-	public FirefoxUser(String userName, int timeOfWaitInSeconds) {
+	public FirefoxUser(String userName, int timeOfWaitInSeconds, boolean disableOpenH264) {
 		super(userName, timeOfWaitInSeconds);
 
 		DesiredCapabilities capabilities = DesiredCapabilities.firefox();
@@ -42,6 +42,10 @@ public class FirefoxUser extends BrowserUser {
 		profile.setPreference("media.navigator.permission.disabled", true);
 		// This flag force to use fake user media (synthetic video of multiple color)
 		profile.setPreference("media.navigator.streams.fake", true);
+
+		if (disableOpenH264) {
+			profile.setPreference("media.gmp-gmpopenh264.enabled", false);
+		}
 
 		capabilities.setCapability(FirefoxDriver.PROFILE, profile);
 

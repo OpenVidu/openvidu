@@ -37,6 +37,7 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
+import io.openvidu.java.client.VideoCodec;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
@@ -180,6 +181,10 @@ public class OpenviduConfig {
 
 	protected int openviduSessionsGarbageThreshold;
 
+	private VideoCodec openviduForcedCodec;
+
+	private boolean openviduAllowTranscoding;
+
 	private String dotenvPath;
 
 	// Derived properties
@@ -312,6 +317,14 @@ public class OpenviduConfig {
 
 	public int getSessionGarbageThreshold() {
 		return openviduSessionsGarbageThreshold;
+	}
+
+	public VideoCodec getOpenviduForcedCodec() {
+		return openviduForcedCodec;
+	}
+
+	public boolean isOpenviduAllowingTranscoding() {
+		return openviduAllowTranscoding;
 	}
 
 	public String getDotenvPath() {
@@ -509,6 +522,9 @@ public class OpenviduConfig {
 
 		openviduSessionsGarbageInterval = asNonNegativeInteger("OPENVIDU_SESSIONS_GARBAGE_INTERVAL");
 		openviduSessionsGarbageThreshold = asNonNegativeInteger("OPENVIDU_SESSIONS_GARBAGE_THRESHOLD");
+
+		openviduForcedCodec = asEnumValue("OPENVIDU_FORCED_CODEC", VideoCodec.class);
+		openviduAllowTranscoding = asBoolean("OPENVIDU_ALLOW_TRANSCODING");
 
 		kmsUrisList = checkKmsUris();
 

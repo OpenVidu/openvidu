@@ -38,6 +38,10 @@ mat-radio-button:first-child {
     padding-bottom: 15px;
 }
 
+#allow-transcoding-div {
+  margin-bottom: 10px;
+}
+
 #record-div {
     padding-bottom: 20px;
 }

@@ -5,6 +5,9 @@
             <button class="video-btn events-btn bottom-left-rounded" title="Publisher events" (click)="openPublisherEventsDialog()">
                 <mat-icon aria-label="Publisher events" class="mat-icon material-icons" role="img" aria-hidden="true">notifications</mat-icon>
             </button>
+            <button class="video-btn stats-button bottom-left-rounded" title="Peer Connection Stats" (click)="showCodecUsed()">
+              <mat-icon aria-label="Peer Connection Stats" class="mat-icon material-icons" role="img" aria-hidden="true">info</mat-icon>
+            </button>
         </div>
         <div class="bottom-div">
             <button class="video-btn pub-btn" title="Publish/Unpublish" (click)="pubUnpub()">
@@ -40,6 +43,9 @@
             <p class="name bottom-right-rounded">{{streamManager.stream.connection.data}}</p>
             <button *ngIf="subbed" class="video-btn events-btn bottom-left-rounded" title="Subscriber events" (click)="openSubscriberEventsDialog()">
                 <mat-icon aria-label="Subscriber events" class="mat-icon material-icons" role="img" aria-hidden="true">notifications</mat-icon>
+            </button>
+            <button class="video-btn stats-button bottom-left-rounded" title="Peer Connection Stats" (click)="showCodecUsed()">
+              <mat-icon aria-label="Peer Connection Stats" class="mat-icon material-icons" role="img" aria-hidden="true">info</mat-icon>
             </button>
         </div>
         <div class="bottom-div">
