@@ -18,7 +18,6 @@
 package io.openvidu.test.e2e;
 
 import static org.junit.Assert.fail;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -3983,7 +3982,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Thread.sleep(1000);
 			user.getDriver().findElement(By.id("option-" + codec.name())).click();
 		}
-		if(allowTranscoding != null && allowTranscoding) {
+		if (allowTranscoding != null && allowTranscoding) {
 			user.getDriver().findElement(By.id("allow-transcoding-checkbox")).click();
 		}
 
@@ -4009,7 +4008,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		// Check values
-		JsonObject sessionJson = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/" + sessionName, HttpStatus.SC_OK);
+		JsonObject sessionJson = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/" + sessionName,
+				HttpStatus.SC_OK);
 		VideoCodec sessionCodec = VideoCodec.valueOf(sessionJson.get("forcedVideoCodec").getAsString());
 		boolean sessionAllowTranscoding = sessionJson.get("allowTranscoding").getAsBoolean();
 
@@ -4032,11 +4032,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Check real codecs
 		VideoCodec codecToCheck = (codec != null) ? codec : defaultCodec;
 		List<WebElement> statsButtons = user.getDriver().findElements(By.className("stats-button"));
-		for(WebElement statButton: statsButtons) {
+		for (WebElement statButton : statsButtons) {
 			statButton.click();
 			Thread.sleep(1000);
 			String videoCodecUsed = user.getDriver().findElement(By.id("video-codec-used")).getText();
-			assertEquals(videoCodecUsed, "video/" + codecToCheck);
+			Assert.assertEquals(videoCodecUsed, "video/" + codecToCheck);
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		}
 
@@ -4060,7 +4060,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("option-" + codec.name())).click();
 
-		if(allowTranscoding) {
+		if (allowTranscoding) {
 			user.getDriver().findElement(By.id("allow-transcoding-checkbox")).click();
 		}
 
@@ -4097,7 +4097,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 					alert.getText().contains("Error forcing codec: '" + codec.name() + "'"));
 			alert.accept();
 		}
-
 
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/" + sessionName, HttpStatus.SC_NO_CONTENT);
 		Thread.sleep(1000);
