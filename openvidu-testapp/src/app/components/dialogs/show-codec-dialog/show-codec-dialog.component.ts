@@ -7,7 +7,6 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
         <div id="app-codec-dialog-container">
             <h2 id="codec-used-title-dialog" mat-dialog-title>Used Codec: <span id="video-codec-used">{{usedVideoCodec}}</span></h2>
             <button mat-button id="close-dialog-btn" [mat-dialog-close]="{}">CLOSE</button>
-
         </div>
     `,
   styles: [`

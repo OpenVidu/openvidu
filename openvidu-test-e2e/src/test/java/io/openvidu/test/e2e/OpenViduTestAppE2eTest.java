@@ -88,11 +88,12 @@ import io.openvidu.test.browsers.utils.webhook.CustomWebhook;
 public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 	@BeforeAll()
-	protected static void setupAll() {
+	protected static void setupAll() throws Exception {
 		checkFfmpegInstallation();
 		loadEnvironmentVariables();
 		setupBrowserDrivers();
 		cleanFoldersAndSetUpOpenViduJavaClient();
+		getDefaultTranscodingValues();
 	}
 
 	@Test
@@ -2610,6 +2611,45 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong property networkCache", Integer.valueOf(50), ipcamera.getNetworkCache());
 
 		gracefullyLeaveParticipants(2);
+		session.close();
+
+		/** Test transcoding defined properties */
+		SessionProperties.Builder basePropertiesBuilder = new SessionProperties.Builder()
+				.mediaMode(MediaMode.ROUTED).recordingMode(RecordingMode.ALWAYS)
+				.defaultOutputMode(OutputMode.INDIVIDUAL);
+
+		SessionProperties propertiesDefaultCodec = basePropertiesBuilder.build();
+		SessionProperties propertiesH264AllowTranscoding = basePropertiesBuilder
+				.forcedVideoCodec(VideoCodec.H264)
+				.allowTranscoding(true)
+				.build();
+		SessionProperties propertiesVP9AllowTranscoding = basePropertiesBuilder
+				.forcedVideoCodec(VideoCodec.VP9)
+				.allowTranscoding(true)
+				.build();
+
+		Session sessionDefaultCodec = OV.createSession(propertiesDefaultCodec);
+		Session sessionH264AllowTranscoding = OV.createSession(propertiesH264AllowTranscoding);
+		Session sessionVP9AllowTranscoding = OV.createSession(propertiesVP9AllowTranscoding);
+		assertTranscodingSessionProperties(sessionDefaultCodec, sessionH264AllowTranscoding, sessionVP9AllowTranscoding);
+
+		// Fetch sessions
+		Assert.assertFalse(sessionDefaultCodec.fetch());
+		Assert.assertFalse(sessionH264AllowTranscoding.fetch());
+		Assert.assertFalse(sessionVP9AllowTranscoding.fetch());
+
+		// Check session with default transcoding params
+		assertTranscodingSessionProperties(sessionDefaultCodec, sessionH264AllowTranscoding, sessionVP9AllowTranscoding);
+
+		// Fetch all sessions
+		Assert.assertFalse(OV.fetch());
+
+		// Check session with default transcoding params
+		assertTranscodingSessionProperties(sessionDefaultCodec, sessionH264AllowTranscoding, sessionVP9AllowTranscoding);
+
+		sessionDefaultCodec.close();
+		sessionH264AllowTranscoding.close();
+		sessionVP9AllowTranscoding.close();
 	}
 
 	@Test
@@ -3048,6 +3088,39 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 						+ "'OPENVIDU_FORCED_CODEC':'STR','OPENVIDU_ALLOW_TRANSCODING':false,'OPENVIDU_RECORDING':false,'OPENVIDU_RECORDING_VERSION':'STR','OPENVIDU_RECORDING_PATH':'STR','OPENVIDU_RECORDING_PUBLIC_ACCESS':false,'OPENVIDU_RECORDING_NOTIFICATION':'STR',"
 						+ "'OPENVIDU_RECORDING_CUSTOM_LAYOUT':'STR','OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT':0,'OPENVIDU_WEBHOOK':false,'OPENVIDU_WEBHOOK_ENDPOINT':'STR','OPENVIDU_WEBHOOK_HEADERS':[],"
 						+ "'OPENVIDU_WEBHOOK_EVENTS':[]}");
+
+		/** POST /openvidu/api/sessions (default transcoding parameters) **/
+
+		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'MANUAL', 'customSessionId': 'CUSTOM_SESSION_ID', 'defaultOutputMode': 'COMPOSED', 'defaultRecordingLayout': 'BEST_FIT'}";
+		res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK);
+
+		// Check session info
+		Assert.assertEquals(VideoCodec.valueOf(res.get("forcedVideoCodec").getAsString()), defaultForcedVideoCodec);
+		Assert.assertEquals(res.get("allowTranscoding").getAsBoolean(), defaultAllowTranscoding);
+
+		// Check all sessions data
+		res = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions", HttpStatus.SC_OK);
+		Assert.assertEquals(res.get("numberOfElements").getAsInt(), 1);
+		Assert.assertEquals(VideoCodec.valueOf(res.get("content").getAsJsonArray().get(0).getAsJsonObject().get("forcedVideoCodec").getAsString()), defaultForcedVideoCodec);
+		Assert.assertEquals(res.get("content").getAsJsonArray().get(0).getAsJsonObject().get("allowTranscoding").getAsBoolean(), defaultAllowTranscoding);
+
+		// Remove session
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
+
+		/** POST /openvidu/api/sessions (define forceCodec and allowTranscoding) **/
+		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'MANUAL', 'customSessionId': 'CUSTOM_SESSION_ID', 'defaultOutputMode': 'COMPOSED', 'defaultRecordingLayout': 'BEST_FIT', 'forcedVideoCodec': 'H264', 'allowTranscoding': true}";
+		res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK);
+
+		Assert.assertEquals(VideoCodec.valueOf(res.get("forcedVideoCodec").getAsString()), VideoCodec.H264);
+		Assert.assertEquals(res.get("allowTranscoding").getAsBoolean(), true);
+
+		// Check all sessions data
+		res = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions", HttpStatus.SC_OK);
+		Assert.assertEquals(res.get("numberOfElements").getAsInt(), 1);
+		Assert.assertEquals(VideoCodec.valueOf(res.get("content").getAsJsonArray().get(0).getAsJsonObject().get("forcedVideoCodec").getAsString()), VideoCodec.H264);
+		Assert.assertEquals(res.get("content").getAsJsonArray().get(0).getAsJsonObject().get("allowTranscoding").getAsBoolean(), true);
+
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
 	}
 
 	@Test
@@ -3897,7 +3970,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("Force valid codec - Not Allow Transcoding")
 	void forceValidCodecNotAllowTranscodingTest() throws Exception {
-
 		log.info("Force codec Chrome - Force VP8 - Not Allow Transcoding");
 		setupBrowser("chrome");
 		this.forceCodecGenericE2eTest(VideoCodec.VP8, false);
@@ -3929,7 +4001,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Start firefox with OpenH264 disabled to check not supported codecs
 		log.info("Force codec Firefox - Force H264 - Allow Transcoding - Disabled H264 in Firefox");
 		setupBrowser("firefoxDisabledOpenH264");
-		this.forceCodecNotSupportedCodec(VideoCodec.H264, false);
+		this.forceNotSupportedCodec(VideoCodec.H264, false);
 	}
 
 	@Test
@@ -3938,7 +4010,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Start firefox with OpenH264 disabled to check not supported codecs
 		setupBrowser("firefoxDisabledOpenH264");
 		log.info("Force codec Firefox - Force H264 - Allow Transcoding - Disabled H264 in Firefox");
-		this.forceCodecNotSupportedCodec(VideoCodec.H264, true);
+		this.forceNotSupportedCodec(VideoCodec.H264, true);
 	}
 
 	private void checkNodeFetchChanged(boolean global, boolean hasChanged) {
@@ -3975,10 +4047,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	 */
 	private void forceCodecGenericE2eTest(VideoCodec codec, Boolean allowTranscoding) throws Exception {
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
-		JsonObject ovConfig = restClient.rest(HttpMethod.GET, "/openvidu/api/config", HttpStatus.SC_OK);
-		VideoCodec defaultCodec = VideoCodec.valueOf(ovConfig.get("OPENVIDU_FORCED_CODEC").getAsString());
-		Boolean defaultAllowTranscoding = ovConfig.get("OPENVIDU_ALLOW_TRANSCODING").getAsBoolean();
-
 		String sessionName = "CUSTOM_SESSION_" + ((codec != null) ? codec.name() : "DEFAULT_FORCE_CODEC");
 
 		// Configure Session to force Codec
@@ -4014,37 +4082,38 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
+		// Load properties from session object of node-client
+		user.getDriver().findElement(By.id("session-info-btn-0")).click();
+		JsonObject res = JsonParser.parseString(user.getDriver().findElement(By.id("session-text-area")).getAttribute("value")).getAsJsonObject();
+		VideoCodec sessionCodecNodeClient = VideoCodec.valueOf(res.get("properties").getAsJsonObject().get("forcedVideoCodec").getAsString());
+		boolean sessionAllowTranscodingNodeClient = res.get("properties").getAsJsonObject().get("allowTranscoding").getAsBoolean();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, 4, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
-		// Check values
-		JsonObject sessionJson = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/" + sessionName,
-				HttpStatus.SC_OK);
-		VideoCodec sessionCodec = VideoCodec.valueOf(sessionJson.get("forcedVideoCodec").getAsString());
-		boolean sessionAllowTranscoding = sessionJson.get("allowTranscoding").getAsBoolean();
-
-		// Assert Selected Codec
+		// Assert Selected Codec in node-client session object
 		if (codec != null) {
 			// If specified codec, assert selected codec
-			Assert.assertEquals(sessionCodec, codec);
+			Assert.assertEquals(sessionCodecNodeClient, codec);
 		} else {
 			// If not specified, assert default codec
-			Assert.assertEquals(sessionCodec, defaultCodec);
+			Assert.assertEquals(sessionCodecNodeClient, defaultForcedVideoCodec);
 		}
 
-		// Assert Selected allow transcoding
+		// Assert Selected allow transcoding in node-client session object
 		if (allowTranscoding != null) {
 			// If specified allowTranscoding, assert selected
-			Assert.assertEquals(sessionAllowTranscoding, allowTranscoding);
+			Assert.assertEquals(sessionAllowTranscodingNodeClient, allowTranscoding);
 		} else {
 			// If not specified, assert default allowTranscoding
-			Assert.assertEquals(sessionAllowTranscoding, defaultAllowTranscoding);
+			Assert.assertEquals(sessionAllowTranscodingNodeClient, defaultAllowTranscoding);
 		}
 
 		// Check browser codecs
-		VideoCodec codecToCheck = (codec != null) ? codec : defaultCodec;
+		VideoCodec codecToCheck = (codec != null) ? codec : defaultForcedVideoCodec;
 		List<WebElement> statsButtons = user.getDriver().findElements(By.className("stats-button"));
 		for (WebElement statButton : statsButtons) {
 			statButton.click();
@@ -4061,7 +4130,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	 * Force codec not allowed by opened browser
 	 * @throws Exception
 	 */
-	private void forceCodecNotSupportedCodec(VideoCodec codec, boolean allowTranscoding) throws Exception {
+	private void forceNotSupportedCodec(VideoCodec codec, boolean allowTranscoding) throws Exception {
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
 		String sessionName = "CUSTOM_SESSION_CODEC_NOT_SUPPORTED";
@@ -4119,4 +4188,19 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/" + sessionName, HttpStatus.SC_NO_CONTENT);
 		Thread.sleep(1000);
 	}
+
+	private void assertTranscodingSessionProperties(Session sessionDefaultCodec, Session sessionH264AllowTranscoding, Session sessionVP9AllowTranscoding) {
+		// Check session with default transcoding params
+		Assert.assertEquals("Wrong default forcedVideoCodec", defaultForcedVideoCodec, sessionDefaultCodec.getProperties().forcedVideoCodec());
+		Assert.assertEquals("Wrong default allowTranscoding", defaultAllowTranscoding, sessionDefaultCodec.getProperties().isTranscodingAllowed());
+
+		// Check session which use H264 and allow transcoding
+		Assert.assertEquals("Wrong default forcedVideoCodec", VideoCodec.H264, sessionH264AllowTranscoding.getProperties().forcedVideoCodec());
+		Assert.assertEquals("Wrong default allowTranscoding", true, sessionH264AllowTranscoding.getProperties().isTranscodingAllowed());
+
+		// Check session which use VP9 and allow transcoding
+		Assert.assertEquals("Wrong default forcedVideoCodec", VideoCodec.VP9, sessionVP9AllowTranscoding.getProperties().forcedVideoCodec());
+		Assert.assertEquals("Wrong default allowTranscoding", true, sessionVP9AllowTranscoding.getProperties().isTranscodingAllowed());
+	}
+
 }

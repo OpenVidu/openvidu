@@ -25,7 +25,10 @@ import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 
+import com.mashape.unirest.http.HttpMethod;
+import io.openvidu.test.browsers.utils.CustomHttpClient;
 import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpStatus;
 import org.jcodec.api.FrameGrab;
 import org.jcodec.api.JCodecException;
 import org.jcodec.common.model.Picture;
@@ -53,6 +56,7 @@ import io.openvidu.java.client.OpenVidu;
 import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduJavaClientException;
 import io.openvidu.java.client.Recording;
+import io.openvidu.java.client.VideoCodec;
 import io.openvidu.test.browsers.BrowserUser;
 import io.openvidu.test.browsers.ChromeAndroidUser;
 import io.openvidu.test.browsers.ChromeUser;
@@ -86,6 +90,10 @@ public class AbstractOpenViduTestAppE2eTest {
 	protected Collection<MyUser> otherUsers = new ArrayList<>();
 	protected volatile static boolean isRecordingTest;
 	protected volatile static boolean isKurentoRestartTest;
+
+	protected static VideoCodec defaultForcedVideoCodec;
+	protected static boolean defaultAllowTranscoding;
+
 	protected static OpenVidu OV;
 
 	protected static void checkFfmpegInstallation() {
@@ -222,6 +230,13 @@ public class AbstractOpenViduTestAppE2eTest {
 		secretInput.clear();
 		secretInput.sendKeys(OPENVIDU_SECRET);
 		user.getEventManager().startPolling();
+	}
+
+	protected static void getDefaultTranscodingValues() throws Exception {
+		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+		JsonObject ovConfig = restClient.rest(HttpMethod.GET, "/openvidu/api/config", HttpStatus.SC_OK);
+		defaultForcedVideoCodec = VideoCodec.valueOf(ovConfig.get("OPENVIDU_FORCED_CODEC").getAsString());
+		defaultAllowTranscoding = ovConfig.get("OPENVIDU_ALLOW_TRANSCODING").getAsBoolean();
 	}
 
 	@AfterEach

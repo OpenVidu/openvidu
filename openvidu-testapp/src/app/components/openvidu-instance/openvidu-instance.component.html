@@ -30,8 +30,11 @@
                 class="mat-icon-custom" (click)="openSessionEventsDialog()">
                 <mat-icon class="mat-icon-custom-ic" aria-label="Session events button">notifications</mat-icon>
               </button>
+              <button *ngIf="sessionAPI" mat-icon-button title="Session info" [id]="'session-info-btn-' + index"
+                      class="mat-icon-custom" (click)="openSessionInfo()">
+                <mat-icon class="mat-icon-custom-ic" aria-label="Session info button">info</mat-icon>
+              </button>
             </div>
-
           </div>
 
           <div class="join-publish-div">

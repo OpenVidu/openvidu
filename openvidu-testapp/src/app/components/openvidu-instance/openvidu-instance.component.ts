@@ -28,6 +28,8 @@ import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.co
 import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-dialog/session-properties-dialog.component';
 import { SessionApiDialogComponent } from '../dialogs/session-api-dialog/session-api-dialog.component';
 import { PublisherPropertiesDialogComponent } from '../dialogs/publisher-properties-dialog/publisher-properties-dialog.component';
+import { SessionInfoDialogComponent } from "../dialogs/session-info-dialog/session-info-dialog.component";
+import {ShowCodecDialogComponent} from "../dialogs/show-codec-dialog/show-codec-dialog.component";
 
 
 export interface SessionConf {
@@ -716,6 +718,15 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         this.optionsVideo = this.publisherProperties.videoSource === 'screen' ? 'screen' : 'video';
       }
       document.getElementById('publisher-settings-btn-' + this.index).classList.remove('cdk-program-focused');
+    });
+  }
+
+  openSessionInfo() {
+    this.dialog.open(SessionInfoDialogComponent, {
+      data: {
+        sessionAPI: this.sessionAPI
+      },
+      width: '450px'
     });
   }
 
