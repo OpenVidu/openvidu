@@ -3887,12 +3887,16 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
-	@DisplayName("Force valid codec - Not Allow Transcoding")
-	void forceValidCodecNotAllowTranscodingTest() throws Exception {
-		log.info("Force codec - Force VP8 - Not Allow Transcoding");
+	@DisplayName("Force codec default config")
+	void forceDefaultCodec() throws Exception {
+		log.info("Force codec default config");
 		setupBrowser("chrome");
 		this.forceCodecGenericE2eTest();
-		this.user.getDriver().close();
+	}
+
+	@Test
+	@DisplayName("Force valid codec - Not Allow Transcoding")
+	void forceValidCodecNotAllowTranscodingTest() throws Exception {
 
 		log.info("Force codec Chrome - Force VP8 - Not Allow Transcoding");
 		setupBrowser("chrome");
@@ -3957,10 +3961,18 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		}
 	}
 
+	/**
+	 * Test default config of forced codec and allowTranscoding
+	 */
 	private void forceCodecGenericE2eTest() throws Exception {
 		forceCodecGenericE2eTest(null, null);
 	}
 
+	/**
+	 * Test to force specified codec and allowTranscoding
+	 * @param codec codec to force. If null, default value in openvidu config will be used.
+	 * @param allowTranscoding If true, allow transcoding. If null, default value in openvidu config will be used.
+	 */
 	private void forceCodecGenericE2eTest(VideoCodec codec, Boolean allowTranscoding) throws Exception {
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 		JsonObject ovConfig = restClient.rest(HttpMethod.GET, "/openvidu/api/config", HttpStatus.SC_OK);
@@ -4024,12 +4036,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		// Assert Selected allow transcoding
 		if (allowTranscoding != null) {
+			// If specified allowTranscoding, assert selected
 			Assert.assertEquals(sessionAllowTranscoding, allowTranscoding);
 		} else {
+			// If not specified, assert default allowTranscoding
 			Assert.assertEquals(sessionAllowTranscoding, defaultAllowTranscoding);
 		}
 
-		// Check real codecs
+		// Check browser codecs
 		VideoCodec codecToCheck = (codec != null) ? codec : defaultCodec;
 		List<WebElement> statsButtons = user.getDriver().findElements(By.className("stats-button"));
 		for (WebElement statButton : statsButtons) {
@@ -4043,6 +4057,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/" + sessionName, HttpStatus.SC_NO_CONTENT);
 	}
 
+	/**
+	 * Force codec not allowed by opened browser
+	 * @throws Exception
+	 */
 	private void forceCodecNotSupportedCodec(VideoCodec codec, boolean allowTranscoding) throws Exception {
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
