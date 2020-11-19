@@ -153,7 +153,7 @@ public class Connection {
 	 * <strong>Only for
 	 * {@link io.openvidu.java.client.ConnectionType#IPCAM}</strong>
 	 */
-	public boolean adaptativeBitrate() {
+	public Boolean adaptativeBitrate() {
 		return this.connectionProperties.adaptativeBitrate();
 	}
 
@@ -169,7 +169,7 @@ public class Connection {
 	 * <strong>Only for
 	 * {@link io.openvidu.java.client.ConnectionType#IPCAM}</strong>
 	 */
-	public boolean onlyPlayWithSubscribers() {
+	public Boolean onlyPlayWithSubscribers() {
 		return this.connectionProperties.onlyPlayWithSubscribers();
 	}
 
@@ -185,7 +185,7 @@ public class Connection {
 	 * <strong>Only for
 	 * {@link io.openvidu.java.client.ConnectionType#IPCAM}</strong>
 	 */
-	public int getNetworkCache() {
+	public Integer getNetworkCache() {
 		return this.connectionProperties.getNetworkCache();
 	}
 

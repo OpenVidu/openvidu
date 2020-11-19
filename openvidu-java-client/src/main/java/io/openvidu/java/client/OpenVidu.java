@@ -199,7 +199,7 @@ public class OpenVidu {
 		JsonObject json = new JsonObject();
 		json.addProperty("session", sessionId);
 		json.addProperty("name", properties.name());
-		json.addProperty("outputMode", properties.outputMode().name());
+		json.addProperty("outputMode", properties.outputMode() != null ? properties.outputMode().name() : null);
 		json.addProperty("hasAudio", properties.hasAudio());
 		json.addProperty("hasVideo", properties.hasVideo());
 
