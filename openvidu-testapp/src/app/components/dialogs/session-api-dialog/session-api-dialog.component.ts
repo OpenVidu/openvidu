@@ -28,7 +28,8 @@ export class SessionApiDialogComponent {
 
     connectionProperties: ConnectionProperties = {
         record: true,
-        role: OpenViduRole.PUBLISHER
+        role: OpenViduRole.PUBLISHER,
+        data: ''
     };
 
     constructor(public dialogRef: MatDialogRef<SessionApiDialogComponent>,
@@ -176,7 +177,7 @@ export class SessionApiDialogComponent {
         console.log('Creating connection');
         this.session.createConnection(this.connectionProperties)
             .then(connection => {
-                this.response = 'Connection created: ' + connection.connectionId;
+                this.response = 'Connection created: ' + JSON.stringify(connection);
             })
             .catch(error => {
                 this.response = 'Error [' + error.message + ']';
@@ -187,7 +188,11 @@ export class SessionApiDialogComponent {
         console.log('Updating connection');
         this.session.updateConnection(this.connectionId, this.connectionProperties)
             .then(modifiedConnection => {
-                this.response = 'Connection updated: ' + JSON.stringify({ role: modifiedConnection.connectionProperties.role, record: modifiedConnection.connectionProperties.record });
+                this.response = 'Connection updated: ' + JSON.stringify({
+                    role: modifiedConnection.connectionProperties.role,
+                    record: modifiedConnection.connectionProperties.record,
+                    data: modifiedConnection.connectionProperties.data
+                });
             })
             .catch(error => {
                 this.response = 'Error [' + error.message + ']';

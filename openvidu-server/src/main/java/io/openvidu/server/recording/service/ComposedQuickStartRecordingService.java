@@ -163,7 +163,10 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 					runContainer(recorderSession, new RecordingProperties.Builder().name("")
 							.outputMode(recorderSession.getSessionProperties().defaultOutputMode())
 							.recordingLayout(recorderSession.getSessionProperties().defaultRecordingLayout())
-							.customLayout(recorderSession.getSessionProperties().defaultCustomLayout()).build());
+							.customLayout(recorderSession.getSessionProperties().defaultCustomLayout())
+							.resolution(
+									/* recorderSession.getSessionProperties().defaultRecordingResolution() */"1920x1080")
+							.build());
 					log.info("COMPOSED_QUICK_START recording container launched for session: {}",
 							recorderSession.getSessionId());
 					launched = true;

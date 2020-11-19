@@ -19,12 +19,15 @@
     <div style="margin-left:9px">
       <mat-checkbox class="checkbox-form" [(ngModel)]="connectionProperties.record" id="record-checkbox">Record
       </mat-checkbox>
-      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14 style="width:33%">
         <mat-select [(ngModel)]="connectionProperties.role" id="token-role-select">
           <mat-option *ngFor="let enumerator of enumToArray(openviduRoles)" [value]="enumerator">
             <span [attr.id]="'option-' + enumerator">{{ enumerator }}</span>
           </mat-option>
         </mat-select>
+      </mat-form-field>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14 style="width:40%">
+        <input matInput id="connection-data-field" placeholder="data" [(ngModel)]="connectionProperties.data">
       </mat-form-field>
     </div>
     <div>

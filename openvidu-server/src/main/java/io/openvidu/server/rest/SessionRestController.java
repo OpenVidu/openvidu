@@ -959,11 +959,21 @@ public class SessionRestController {
 			throw new RuntimeException("Cannot start a recording with both \"hasAudio\" and \"hasVideo\" set to false");
 		}
 
+		// If outputMode is COMPOSED when defaultOutputMode is COMPOSED_QUICK_START,
+		// change outputMode to COMPOSED_QUICK_START (and vice versa)
+		OutputMode defaultOutputMode = sessionProperties.defaultOutputMode();
+		if (OutputMode.COMPOSED_QUICK_START.equals(defaultOutputMode) && OutputMode.COMPOSED.equals(finalOutputMode)) {
+			finalOutputMode = OutputMode.COMPOSED_QUICK_START;
+		} else if (OutputMode.COMPOSED.equals(defaultOutputMode)
+				&& OutputMode.COMPOSED_QUICK_START.equals(finalOutputMode)) {
+			finalOutputMode = OutputMode.COMPOSED;
+		}
+
 		builder.outputMode(finalOutputMode == null ? sessionProperties.defaultOutputMode() : finalOutputMode);
 		if (RecordingUtils.IS_COMPOSED(finalOutputMode)) {
-			if (resolution != null) {
-				builder.resolution(resolution);
-			}
+			builder.resolution(resolution != null ? resolution : "1920x1080"); // resolution == null ?
+																				// sessionProperties.defaultRecordingResolution)
+																				// : resolution));
 			builder.recordingLayout(
 					recordingLayout == null ? sessionProperties.defaultRecordingLayout() : recordingLayout);
 			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {

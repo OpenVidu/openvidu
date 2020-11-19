@@ -486,17 +486,47 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		log.info("openvidu-java-client PRO test");
 
+		// Create default Connection
 		Session session = OV.createSession();
 		Assert.assertFalse(session.fetch());
-		Connection connection = session.createConnection();
+		Connection connectionDefault = session.createConnection();
 		Assert.assertFalse(session.fetch());
-		Assert.assertEquals("Wrong role property", OpenViduRole.PUBLISHER, connection.getRole());
-		Assert.assertTrue("Wrong record property", connection.record());
-		session.updateConnection(connection.getConnectionId(),
-				new ConnectionProperties.Builder().role(OpenViduRole.SUBSCRIBER).record(false).build());
-		Assert.assertEquals("Wrong role property", OpenViduRole.SUBSCRIBER, connection.getRole());
+		Assert.assertEquals("Wrong role property", OpenViduRole.PUBLISHER, connectionDefault.getRole());
+		Assert.assertTrue("Wrong record property", connectionDefault.record());
+		Assert.assertEquals("Wrong data property", "", connectionDefault.getServerData());
+		// Update Connection
+		session.updateConnection(connectionDefault.getConnectionId(), new ConnectionProperties.Builder()
+				.role(OpenViduRole.SUBSCRIBER).record(false).data("WILL HAVE NO EFFECT").build());
+		Assert.assertEquals("Wrong role property", OpenViduRole.SUBSCRIBER, connectionDefault.getRole());
+		Assert.assertFalse("Wrong record property", connectionDefault.record());
+		Assert.assertEquals("Wrong data property", "", connectionDefault.getServerData());
+		Assert.assertFalse(session.fetch());
+
+		// Create custom properties Connection
+		long timestamp = System.currentTimeMillis();
+		Connection connection = session.createConnection(
+				new ConnectionProperties.Builder().record(false).role(OpenViduRole.MODERATOR).data("SERVER_SIDE_DATA")
+						.kurentoOptions(new KurentoOptions.Builder().videoMaxRecvBandwidth(555)
+								.videoMinRecvBandwidth(555).videoMaxSendBandwidth(555).videoMinSendBandwidth(555)
+								.allowedFilters(new String[] { "555" }).build())
+						.build());
+		Assert.assertEquals("Wrong status Connection property", "pending", connection.getStatus());
+		Assert.assertTrue("Wrong timestamp Connection property", connection.createdAt() > timestamp);
+		Assert.assertTrue("Wrong activeAt Connection property", connection.activeAt() == null);
+		Assert.assertTrue("Wrong location Connection property", connection.getLocation() == null);
+		Assert.assertTrue("Wrong platform Connection property", connection.getPlatform() == null);
+		Assert.assertTrue("Wrong clientData Connection property", connection.getClientData() == null);
+		Assert.assertTrue("Wrong publishers Connection property", connection.getPublishers().size() == 0);
+		Assert.assertTrue("Wrong subscribers Connection property", connection.getSubscribers().size() == 0);
+		Assert.assertTrue("Wrong token Connection property", connection.getToken().contains(session.getSessionId()));
+		Assert.assertEquals("Wrong type property", ConnectionType.WEBRTC, connection.getType());
+		Assert.assertEquals("Wrong data property", "SERVER_SIDE_DATA", connection.getServerData());
 		Assert.assertFalse("Wrong record property", connection.record());
-		Assert.assertFalse(session.fetch());
+		Assert.assertEquals("Wrong role property", OpenViduRole.MODERATOR, connection.getRole());
+		Assert.assertTrue("Wrong rtspUri property", connection.getRtspUri() == null);
+		Assert.assertTrue("Wrong adaptativeBitrate property", connection.adaptativeBitrate() == null);
+		Assert.assertTrue("Wrong onlyPlayWithSubscribers property", connection.onlyPlayWithSubscribers() == null);
+		Assert.assertTrue("Wrong networkCache property", connection.getNetworkCache() == null);
 	}
 
 	@Test

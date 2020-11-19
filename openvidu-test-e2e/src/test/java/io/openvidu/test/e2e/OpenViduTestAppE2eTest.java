@@ -2295,7 +2295,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Verify publisher properties
 		Publisher pub = connectionModerator.getPublishers().get(0);
 		Assert.assertEquals("{\"width\":640,\"height\":480}", pub.getVideoDimensions());
-		Assert.assertEquals(new Integer(30), pub.getFrameRate());
+		Assert.assertEquals(Integer.valueOf(30), pub.getFrameRate());
 		Assert.assertEquals("CAMERA", pub.getTypeOfVideo());
 		Assert.assertTrue(pub.hasVideo());
 		Assert.assertTrue(pub.isVideoActive());
@@ -2341,7 +2341,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals(
 				"{\"width\":" + obj.get("width").getAsLong() + ",\"height\":" + obj.get("height").getAsLong() + "}",
 				pub.getVideoDimensions());
-		Assert.assertEquals(new Integer(30), pub.getFrameRate());
+		Assert.assertEquals(Integer.valueOf(30), pub.getFrameRate());
 		Assert.assertEquals("SCREEN", pub.getTypeOfVideo());
 		Assert.assertTrue(pub.hasVideo());
 		Assert.assertTrue(pub.isVideoActive());
@@ -2352,6 +2352,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		RecordingProperties recordingProperties;
 		try {
 			OV.startRecording("NOT_EXISTS");
+			Assert.fail("Expected OpenViduHttpException");
 		} catch (OpenViduHttpException e) {
 			Assert.assertEquals("Wrong HTTP status on OpenVidu.startRecording()", 404, e.getStatus());
 		}
@@ -2359,6 +2360,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertFalse("OpenVidu.fetch() should return false", OV.fetch());
 		try {
 			OV.startRecording(sessionAux.getSessionId());
+			Assert.fail("Expected OpenViduHttpException");
 		} catch (OpenViduHttpException e) {
 			Assert.assertEquals("Wrong HTTP status on OpenVidu.startRecording()", 406, e.getStatus());
 		} finally {
@@ -2366,25 +2368,49 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			sessionAux.close();
 			try {
 				sessionAux.fetch();
+				Assert.fail("Expected OpenViduHttpException");
 			} catch (OpenViduHttpException e2) {
 				Assert.assertEquals("Wrong HTTP status on Session.fetch()", 404, e2.getStatus());
 			}
 			Assert.assertFalse("OpenVidu.fetch() should return false", OV.fetch());
 		}
+		// Not recorded session
+		Session notRecordedSession = OV.createSession();
+		notRecordedSession.createConnection(new ConnectionProperties.Builder().type(ConnectionType.IPCAM)
+				.rtspUri("rtsp://does-not-matter.com").build());
 		try {
 			recordingProperties = new RecordingProperties.Builder().hasAudio(false).hasVideo(false).build();
-			OV.startRecording(session.getSessionId(), recordingProperties);
+			OV.startRecording(notRecordedSession.getSessionId(), recordingProperties);
+			Assert.fail("Expected OpenViduHttpException");
 		} catch (OpenViduHttpException e) {
 			Assert.assertEquals("Wrong HTTP status on OpenVidu.startRecording()", 422, e.getStatus());
 		}
 		try {
 			recordingProperties = new RecordingProperties.Builder().resolution("99x1080").build();
-			OV.startRecording(session.getSessionId(), recordingProperties);
+			OV.startRecording(notRecordedSession.getSessionId(), recordingProperties);
+			Assert.fail("Expected OpenViduHttpException");
 		} catch (OpenViduHttpException e) {
 			Assert.assertEquals("Wrong HTTP status on OpenVidu.startRecording()", 422, e.getStatus());
 		}
+		notRecordedSession.close();
+		// Recorded session
+		try {
+			recordingProperties = new RecordingProperties.Builder().hasAudio(false).hasVideo(false).build();
+			OV.startRecording(session.getSessionId(), recordingProperties);
+			Assert.fail("Expected OpenViduHttpException");
+		} catch (OpenViduHttpException e) {
+			Assert.assertEquals("Wrong HTTP status on OpenVidu.startRecording()", 409, e.getStatus());
+		}
+		try {
+			recordingProperties = new RecordingProperties.Builder().resolution("99x1080").build();
+			OV.startRecording(session.getSessionId(), recordingProperties);
+			Assert.fail("Expected OpenViduHttpException");
+		} catch (OpenViduHttpException e) {
+			Assert.assertEquals("Wrong HTTP status on OpenVidu.startRecording()", 409, e.getStatus());
+		}
 		try {
 			OV.startRecording(session.getSessionId());
+			Assert.fail("Expected OpenViduHttpException");
 		} catch (OpenViduHttpException e) {
 			Assert.assertEquals("Wrong HTTP status on OpenVidu.startRecording()", 409, e.getStatus());
 		}
@@ -2580,7 +2606,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong property rtspUri", rtsp, ipcamera.getRtspUri());
 		Assert.assertFalse("Wrong property adaptativeBitrate", ipcamera.adaptativeBitrate());
 		Assert.assertFalse("Wrong property onlyPlayWithSubscribers", ipcamera.onlyPlayWithSubscribers());
-		Assert.assertEquals("Wrong property networkCache", 50, ipcamera.getNetworkCache());
+		Assert.assertEquals("Wrong property networkCache", Integer.valueOf(50), ipcamera.getNetworkCache());
 
 		gracefullyLeaveParticipants(2);
 	}
@@ -2751,25 +2777,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// 400
 		body = "{}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
-		body = "{'session': true}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
-		body = "{'session':'SESSION_ID','name':999}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
-		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'NOT_EXISTS'}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
-		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'NOT_EXISTS'}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
-		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'resolution':999}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
-
-		// 422
-		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':false,'hasVideo':false}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
-		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'resolution':'1920x2000'}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
 
 		// 404
 		body = "{'session':'SESSION_ID'}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_NOT_FOUND);
+		body = "{'session':'SESSION_ID','name':999}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_NOT_FOUND);
 
 		// 406
@@ -2839,6 +2851,24 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				"{'count':0,'items':[]}");
 
 		/** POST /openvidu/api/recordings/start (ACTIVE SESSION) **/
+		// 400
+		body = "{'session': true}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session':'CUSTOM_SESSION_ID','name':999}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'NOT_EXISTS'}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'NOT_EXISTS'}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'resolution':999}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+
+		// 422
+		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':false,'hasVideo':false}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
+		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'resolution':'1920x2000'}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
+
 		// 200
 		body = "{'session':'CUSTOM_SESSION_ID'}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_OK, true, false, true,
@@ -3653,6 +3683,16 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		checkNodeFetchChanged(true, true);
 		checkNodeFetchChanged(true, false);
 
+		// OpenVidu CE does not support Session#updateConnection method
+		try {
+			session.updateConnection(connection.getConnectionId(), new ConnectionProperties.Builder().build());
+			Assert.fail("Expected exception was not thrown by OpenVidu Java Client");
+		} catch (OpenViduHttpException e) {
+			Assert.assertEquals("Wrong OpenViduException status", HttpStatus.SC_METHOD_NOT_ALLOWED, e.getStatus());
+		} catch (Exception e) {
+			Assert.fail("Wrong exception type thrown by OpenVidu Java Client");
+		}
+
 		restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", "{'session':'REST_SESSION'}", HttpStatus.SC_OK);
 		Assert.assertFalse("Fetch should be true", session.fetch());
 		Assert.assertTrue("Fetch should be false", OV.fetch());
@@ -3692,18 +3732,62 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		checkNodeFetchChanged(true, false);
 		checkNodeFetchChanged(true, false);
 
-		// Create and delete connection with openvidu-node-client
+		// Modify connection properties
+		user.getDriver().findElement(By.id("record-checkbox")).click();
+		user.getDriver().findElement(By.id("token-role-select")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("option-MODERATOR")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("connection-data-field")).sendKeys("MY_SERVER_DATA");
+
+		// Create Connection with openvidu-node-client
+		long timestamp = System.currentTimeMillis();
 		final String successMessage = "Connection created: ";
 		user.getDriver().findElement(By.id("crate-connection-api-btn")).click();
 		user.getWaiter()
 				.until(ExpectedConditions.attributeContains(By.id("api-response-text-area"), "value", successMessage));
 		String value = user.getDriver().findElement(By.id("api-response-text-area")).getAttribute("value");
-		String connectionId = value.substring(value.lastIndexOf(successMessage) + successMessage.length());
+		// Check openvidu-node-client Connection properties
+		JsonObject connectionJson = JsonParser
+				.parseString(value.substring(value.lastIndexOf(successMessage) + successMessage.length()))
+				.getAsJsonObject();
+		JsonObject connectionProperties = connectionJson.get("connectionProperties").getAsJsonObject();
+		String connectionId = connectionJson.get("connectionId").getAsString();
+		Assert.assertEquals("Wrong status Connection property", "pending", connectionJson.get("status").getAsString());
+		Assert.assertTrue("Wrong timestamp Connection property",
+				connectionJson.get("createdAt").getAsLong() > timestamp);
+		Assert.assertTrue("Wrong activeAt Connection property", connectionJson.get("activeAt").isJsonNull());
+		Assert.assertTrue("Wrong location Connection property", connectionJson.get("location").isJsonNull());
+		Assert.assertTrue("Wrong platform Connection property", connectionJson.get("platform").isJsonNull());
+		Assert.assertTrue("Wrong clientData Connection property", connectionJson.get("clientData").isJsonNull());
+		Assert.assertTrue("Wrong publishers Connection property",
+				connectionJson.get("publishers").getAsJsonArray().size() == 0);
+		Assert.assertTrue("Wrong subscribers Connection property",
+				connectionJson.get("subscribers").getAsJsonArray().size() == 0);
+		Assert.assertTrue("Wrong token Connection property",
+				connectionJson.get("token").getAsString().contains(session.getSessionId()));
+		Assert.assertEquals("Wrong number of keys in connectionProperties", 9, connectionProperties.keySet().size());
+		Assert.assertEquals("Wrong type property", ConnectionType.WEBRTC.name(),
+				connectionProperties.get("type").getAsString());
+		Assert.assertEquals("Wrong data property", "MY_SERVER_DATA", connectionProperties.get("data").getAsString());
+		Assert.assertTrue("Wrong record property", connectionProperties.get("record").getAsBoolean()); // Is true in CE
+		Assert.assertEquals("Wrong role property", OpenViduRole.MODERATOR.name(),
+				connectionProperties.get("role").getAsString());
+		Assert.assertTrue("Wrong kurentoOptions property", connectionProperties.get("kurentoOptions").isJsonNull());
+		Assert.assertTrue("Wrong rtspUri property", connectionProperties.get("rtspUri").isJsonNull());
+		Assert.assertTrue("Wrong adaptativeBitrate property",
+				connectionProperties.get("adaptativeBitrate").isJsonNull());
+		Assert.assertTrue("Wrong onlyPlayWithSubscribers property",
+				connectionProperties.get("onlyPlayWithSubscribers").isJsonNull());
+		Assert.assertTrue("Wrong networkCache property", connectionProperties.get("networkCache").isJsonNull());
+
 		Assert.assertTrue("Java fetch should be true", session.fetch());
 		Assert.assertFalse("Java fetch should be false", OV.fetch());
 		checkNodeFetchChanged(true, false);
 		checkNodeFetchChanged(false, false);
 		checkNodeFetchChanged(true, false);
+
+		// Delete Connection with openvidu-node-client
 		user.getDriver().findElement(By.id("connection-id-field")).clear();
 		user.getDriver().findElement(By.id("connection-id-field")).sendKeys(connectionId);
 		user.getDriver().findElement(By.id("force-disconnect-api-btn")).click();
