@@ -224,7 +224,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		 **/
 		String body = "{'customSessionId': 'CUSTOM_SESSION_ID'}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK);
-		body = "{'role':'PUBLISHER','record':false}";
+		body = "{'role':'PUBLISHER','record':false,'data':'MY_SERVER_PRO_DATA'}";
 		JsonObject res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body,
 				HttpStatus.SC_OK);
 		final String token = res.get("token").getAsString();
@@ -253,22 +253,22 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'record':false}", HttpStatus.SC_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'role':'PUBLISHER','record':false}", HttpStatus.SC_OK);
+				"{'role':'PUBLISHER','record':false,'data':'OTHER_DATA'}", HttpStatus.SC_OK);
 
 		// Updating only role should let record value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'role':'MODERATOR'}", HttpStatus.SC_OK, true, true, true,
 				mergeJson(DEFAULT_JSON_PENDING_CONNECTION,
 						"{'id':'" + connectionId + "','connectionId':'" + connectionId
-								+ "','role':'MODERATOR','serverData':'','record':false,'token':'" + token
-								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + "}",
+								+ "','role':'MODERATOR','serverData':'MY_SERVER_PRO_DATA','record':false,'token':'"
+								+ token + "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + "}",
 						new String[0]));
 		// Updating only record should let role value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'record':true}", HttpStatus.SC_OK, true, true, true,
 				mergeJson(DEFAULT_JSON_PENDING_CONNECTION,
 						"{'id':'" + connectionId + "','connectionId':'" + connectionId
-								+ "','role':'MODERATOR','serverData':'','token':'" + token
+								+ "','role':'MODERATOR','serverData':'MY_SERVER_PRO_DATA','token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + "}",
 						new String[0]));
 
@@ -287,6 +287,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				new ConnectionProperties.Builder().role(OpenViduRole.SUBSCRIBER).record(false).build());
 		Assert.assertEquals("Wrong role Connection property", OpenViduRole.SUBSCRIBER, connection.getRole());
 		Assert.assertFalse("Wrong record Connection property", connection.record());
+		Assert.assertEquals("Wrong data Connection property", "MY_SERVER_PRO_DATA", connection.getServerData());
 
 		setupBrowser("chrome");
 
@@ -347,7 +348,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'MODERATOR','record':false,'token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
-								+ activeAt + ",'serverData':''}",
+								+ activeAt + ",'serverData':'MY_SERVER_PRO_DATA'}",
 						new String[] { "location", "platform", "clientData" }));
 
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 1);
@@ -359,7 +360,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'MODERATOR','record':true,'token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
-								+ activeAt + ",'serverData':''}",
+								+ activeAt + ",'serverData':'MY_SERVER_PRO_DATA'}",
 						new String[] { "location", "platform", "clientData" }));
 
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 2);
@@ -370,7 +371,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'SUBSCRIBER','record':true,'token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
-								+ activeAt + ",'serverData':''}",
+								+ activeAt + ",'serverData':'MY_SERVER_PRO_DATA'}",
 						new String[] { "location", "platform", "clientData" }));
 
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 3);
@@ -381,7 +382,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'PUBLISHER','record':true,'token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
-								+ activeAt + ",'serverData':''}",
+								+ activeAt + ",'serverData':'MY_SERVER_PRO_DATA'}",
 						new String[] { "location", "platform", "clientData" }));
 
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 4);
@@ -393,7 +394,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("connection-id-field")).sendKeys(connectionId);
 		user.getDriver().findElement(By.id("update-connection-api-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
-				"Connection updated: {\"role\":\"PUBLISHER\",\"record\":true}"));
+				"Connection updated: {\"role\":\"PUBLISHER\",\"record\":true,\"data\":\"MY_SERVER_PRO_DATA\"}"));
 		user.getDriver().findElement(By.id("record-checkbox")).click();
 		user.getDriver().findElement(By.id("token-role-select")).click();
 		Thread.sleep(500);
@@ -401,7 +402,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(500);
 		user.getDriver().findElement(By.id("update-connection-api-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
-				"Connection updated: {\"role\":\"SUBSCRIBER\",\"record\":false}"));
+				"Connection updated: {\"role\":\"SUBSCRIBER\",\"record\":false,\"data\":\"MY_SERVER_PRO_DATA\"}"));
 
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 6);
 
@@ -442,7 +443,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertFalse("Session object should not have changed", session.fetch());
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.MODERATOR, connection.getRole());
 		Assert.assertFalse("Wrong record in Connection object", connection.record());
-		Assert.assertTrue("Wrong data in Connection object", connection.getServerData().isEmpty());
+		Assert.assertEquals("Wrong data in Connection object", "MY_SERVER_PRO_DATA", connection.getServerData());
 		Assert.assertEquals("Wrong status in Connection object", "active", connection.getStatus());
 
 		user.getEventManager().resetEventThread();
