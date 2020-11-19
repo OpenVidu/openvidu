@@ -124,7 +124,7 @@ export class Connection {
         this.token = json.token;
         if (this.connectionProperties != null) {
             this.connectionProperties.type = json.type;
-            this.connectionProperties.data = json.data;
+            this.connectionProperties.data = json.serverData;
             this.connectionProperties.record = json.record;
             this.connectionProperties.role = json.role;
             this.connectionProperties.kurentoOptions = json.kurentoOptions;
@@ -135,7 +135,7 @@ export class Connection {
         } else {
             this.connectionProperties = {
                 type: json.type,
-                data: json.data,
+                data: json.serverData,
                 record: json.record,
                 role: json.role,
                 kurentoOptions: json.kurentoOptions,
@@ -146,7 +146,7 @@ export class Connection {
             }
         }
         this.role = json.role;
-        this.serverData = json.data;
+        this.serverData = json.serverData;
 
         // publishers may be null
         if (json.publishers != null) {
