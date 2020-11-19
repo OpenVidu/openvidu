@@ -151,33 +151,45 @@ public class SDPMunging {
      * Return a SDP modified to force a specific codec
      */
     public String forceCodec(Participant participant, String sdp, boolean isOffer, Session session, boolean isPublisher,
-                             boolean isReconnecting, boolean isTranscodingAllowed, VideoCodec forcedVideoCodec) throws OpenViduException {
+            boolean isReconnecting, boolean isTranscodingAllowed, VideoCodec forcedVideoCodec) throws OpenViduException {
         try {
             if (supportedVideoCodecs.contains(forcedVideoCodec)) {
                 String mungedSdpOffer;
-                log.debug("PARTICIPANT '{}' in Session '{}'. Is Publisher: '{}'. Is Subscriber: '{}'. Is Offer SDP: '{}'. " +
-                                "Is Answer SDP: '{}'. Is Reconnecting '{}'. SDP before munging: \n {}", participant.getParticipantPublicId(),
+
+                log.debug("PARTICIPANT '{}' in Session '{}'. Is Publisher: '{}'. Is Subscriber: '{}'."
+                        + " Is Offer SDP: '{}'. Is Answer SDP: '{}'. Is Reconnecting '{}'."
+                        + " SDP before munging: \n {}", participant.getParticipantPublicId(),
                         session.getSessionId(), isPublisher, !isPublisher, isOffer, !isOffer, isReconnecting, sdp);
+
                 mungedSdpOffer = this.setCodecPreference(forcedVideoCodec, sdp);
-                log.debug("PARTICIPANT '{}' in Session '{}'. Is Publisher: '{}'. Is Subscriber: '{}'. Is Offer SDP: '{}'. " +
-                                "Is Answer SDP: '{}'. Is Reconnecting '{}'. SDP after munging: \n {}", participant.getParticipantPublicId(),
+
+                log.debug("PARTICIPANT '{}' in Session '{}'. Is Publisher: '{}'. Is Subscriber: '{}'."
+                        + " Is Offer SDP: '{}'. Is Answer SDP: '{}'. Is Reconnecting '{}'."
+                        + " SDP after munging: \n {}", participant.getParticipantPublicId(),
                         session.getSessionId(), isPublisher, !isPublisher, isOffer, !isOffer, isReconnecting, mungedSdpOffer);
+
                 return mungedSdpOffer;
             } else {
                 throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, "Codec not supported by Media Server");
             }
 
         } catch (OpenViduException e) {
-            String errorMessage = "Error forcing codec: '" + forcedVideoCodec + "', for PARTICIPANT: '" + participant.getParticipantPublicId()
-                    + "' in Session: '" + session.getSessionId() + "'. Is publishing: '" + isPublisher + "'. Is Subscriber: '" + !isPublisher
+
+            String errorMessage = "Error forcing codec: '" + forcedVideoCodec + "', for PARTICIPANT: '"
+                    + participant.getParticipantPublicId() + "' in Session: '" + session.getSessionId()
+                    + "'. Is publishing: '" + isPublisher + "'. Is Subscriber: '" + !isPublisher
                     + "'. Is Offer: '" + isOffer + "'. Is Answer: '" + !isOffer + "'. Is Reconnecting: '"
                     + isReconnecting + "'.\nException: " + e.getMessage() + "\nSDP:\n" + sdp;
+
             if(!isTranscodingAllowed) {
                 throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, errorMessage);
             }
-            log.info("Codec: '{}' is not supported for PARTICIPANT: '{}' in Session: '{}'. Is publishing: '{}'. Is Subscriber: '{}' "
-                            + "Is Offer SDP: '{}'. Is Answer SDP: '{}'. Is Reconnecting: '{}'. Transcoding will be allowed", forcedVideoCodec, participant.getParticipantPublicId(),
+
+            log.info("Codec: '{}' is not supported for PARTICIPANT: '{}' in Session: '{}'. Is publishing: '{}'. "
+                    + "Is Subscriber: '{}' Is Offer SDP: '{}'. Is Answer SDP: '{}'. Is Reconnecting: '{}'."
+                    + " Transcoding will be allowed", forcedVideoCodec, participant.getParticipantPublicId(),
                     session.getSessionId(), isPublisher, !isPublisher, isOffer, !isOffer, isReconnecting);
+
             return sdp;
         }
     }
