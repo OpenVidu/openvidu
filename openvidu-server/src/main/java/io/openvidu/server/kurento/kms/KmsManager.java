@@ -295,7 +295,7 @@ public abstract class KmsManager {
 							kmsReconnectionLocks.get(kms.getId()).unlock();
 						}
 					}
-				}, () -> new Long(dynamicReconnectLoopSeconds(ITERATION.getAndIncrement()) * 1000));
+				}, () -> Long.valueOf(dynamicReconnectLoopSeconds(ITERATION.getAndIncrement()) * 1000));
 
 				kurentoReconnectTimer.updateTimer();
 			}
@@ -352,10 +352,6 @@ public abstract class KmsManager {
 
 	public abstract List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure)
 			throws Exception;
-
-	public LoadManager getLoadManager() {
-		return this.loadManager;
-	}
 
 	@PostConstruct
 	protected abstract void postConstructInitKurentoClients();
