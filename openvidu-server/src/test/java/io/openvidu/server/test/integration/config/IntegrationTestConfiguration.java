@@ -38,8 +38,7 @@ public class IntegrationTestConfiguration {
 			List<Kms> successfullyConnectedKmss = new ArrayList<>();
 			List<KmsProperties> kmsProperties = invocation.getArgument(0);
 			for (KmsProperties kmsProp : kmsProperties) {
-				Kms kms = new Kms(kmsProp, Whitebox.getInternalState(spy, "loadManager"),
-						Whitebox.getInternalState(spy, "quarantineKiller"));
+				Kms kms = new Kms(kmsProp, Whitebox.getInternalState(spy, "loadManager"));
 				KurentoClient kClient = mock(KurentoClient.class);
 
 				doAnswer(i -> {
