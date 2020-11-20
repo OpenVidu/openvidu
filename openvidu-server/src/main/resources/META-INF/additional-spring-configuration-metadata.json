@@ -160,6 +160,18 @@
 			"defaultValue": 3600
 		},
 		{
+			"name": "OPENVIDU_FORCED_CODEC",
+			"type": "java.lang.Integer",
+			"description": "Defines which video codec is being forced to be used in the browser/client",
+			"defaultValue": 900
+		},
+		{
+			"name": "OPENVIDU_ALLOW_TRANSCODING",
+			"type": "java.lang.Integer",
+			"description": "Defines if transcoding is allowed or not when OPENVIDU_FORCED_CODEC is not a compatible codec with the browser/client.",
+			"defaultValue": 3600
+		},
+		{
 			"name": "COTURN_IP",
 			"type": "java.lang.String",
 			"description": "Coturn IP of a deployed coturn server"
