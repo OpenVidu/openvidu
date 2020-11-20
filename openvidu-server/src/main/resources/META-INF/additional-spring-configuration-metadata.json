@@ -163,13 +163,13 @@
 			"name": "OPENVIDU_FORCED_CODEC",
 			"type": "java.lang.Integer",
 			"description": "Defines which video codec is being forced to be used in the browser/client",
-			"defaultValue": 900
+			"defaultValue": "VP8"
 		},
 		{
 			"name": "OPENVIDU_ALLOW_TRANSCODING",
 			"type": "java.lang.Integer",
 			"description": "Defines if transcoding is allowed or not when OPENVIDU_FORCED_CODEC is not a compatible codec with the browser/client.",
-			"defaultValue": 3600
+			"defaultValue": false
 		},
 		{
 			"name": "COTURN_IP",
