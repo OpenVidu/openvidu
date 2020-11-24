@@ -8,7 +8,7 @@ if [ ! -z "${WAIT_KIBANA_URL}" ]; then
   printf "\n  ======================================="
   printf "\n"
 
-  until $(curl --insecure --output /dev/null --silent --head --fail ${WAIT_KIBANA_URL})
+  until $(curl --insecure --output /dev/null --silent --head --fail --max-time 10 --connect-timeout 10 ${WAIT_KIBANA_URL})
   do 
     printf "\n  Waiting for kibana in '%s' URL..." "${WAIT_KIBANA_URL}"
     sleep 1
