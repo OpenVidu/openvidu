@@ -253,7 +253,6 @@ Metadata:
           - KibanaUrl
           - ElasticsearchUser
           - ElasticsearchPassword
-          
       - Label:
             default: EC2 Instance configuration
         Parameters:
@@ -497,10 +496,10 @@ Resources:
 
                 # Replace Elastic Search Conf
                 if [[ ! -z ${ElasticsearchUrl} ]]; then
-                  sed -i "s/#OPENVIDU_PRO_ELASTICSEARCH_HOST=/OPENVIDU_PRO_ELASTICSEARCH_HOST=${ElasticsearchUrl}/" $WORKINGDIR/.env
+                  sed -i "s,#OPENVIDU_PRO_ELASTICSEARCH_HOST=,OPENVIDU_PRO_ELASTICSEARCH_HOST=${ElasticsearchUrl}," $WORKINGDIR/.env
                 fi
                 if [[ ! -z ${KibanaUrl} ]]; then
-                  sed -i "s/#OPENVIDU_PRO_KIBANA_HOST=/OPENVIDU_PRO_KIBANA_HOST=${KibanaUrl}/" $WORKINGDIR/.env
+                  sed -i "s,#OPENVIDU_PRO_KIBANA_HOST=,OPENVIDU_PRO_KIBANA_HOST=${KibanaUrl}," $WORKINGDIR/.env
                 fi
                 sed -i "s/ELASTICSEARCH_USERNAME=elasticadmin/ELASTICSEARCH_USERNAME=${ElasticsearchUser}/" $WORKINGDIR/.env
                 sed -i "s/ELASTICSEARCH_PASSWORD=/ELASTICSEARCH_PASSWORD=${ElasticsearchPassword}/" $WORKINGDIR/.env
