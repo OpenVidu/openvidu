@@ -183,6 +183,35 @@ generate_report() {
   printf "\n"
 }
 
+is_external_url() {
+  local URL=$1
+  if [[ -z "$URL" ]]; then
+    return 1
+  fi
+  if [[ "${URL}" == *"localhost"* ]] || [[ "${URL}" == *"127.0.0.1"* ]] || [[ "${URL}" == *"::1"* ]]; then
+    return 1
+  else
+    return 0
+  fi  
+}
+
+stop_elk_if_external() {
+  local CONFIGURED_ELASTICSEARCH_HOST
+  local CONFIGURED_KIBANA_HOST
+  CONFIGURED_ELASTICSEARCH_HOST=$(grep -v '^#' .env | grep OPENVIDU_PRO_ELASTICSEARCH_HOST | cut -d '=' -f2)
+  CONFIGURED_KIBANA_HOST=$(grep -v '^#' .env | grep OPENVIDU_PRO_KIBANA_HOST | cut -d '=' -f2)
+  if is_external_url "${CONFIGURED_ELASTICSEARCH_HOST}"; then
+    printf "Configured external elasticsearch: %s" "${CONFIGURED_ELASTICSEARCH_HOST}"
+    printf "\n"
+    docker-compose stop elasticsearch
+  fi
+  if is_external_url "${CONFIGURED_KIBANA_HOST}"; then
+    printf "Configured external kibana: %s" "${CONFIGURED_KIBANA_HOST}"
+    printf "\n"
+    docker-compose stop kibana
+  fi
+}
+
 usage() {
     printf "Usage: \n\t openvidu [command]"
     printf "\n\nAvailable Commands:"
@@ -202,6 +231,7 @@ case $1 in
 
   start)
     docker-compose up -d
+    stop_elk_if_external
     docker-compose logs -f openvidu-server
     ;;
 
@@ -212,6 +242,7 @@ case $1 in
   restart)
     docker-compose down
     docker-compose up -d
+    stop_elk_if_external
     docker-compose logs -f openvidu-server
     ;;
 
