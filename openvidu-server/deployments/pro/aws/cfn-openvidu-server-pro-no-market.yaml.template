@@ -94,6 +94,19 @@ Parameters:
     NoEcho: true
     ConstraintDescription: Elasticsearch password is mandatory (no whitespaces or quotations allowed)
 
+  # Elasticsearch configuration
+  ElasticsearchUrl:
+    Description: "If you have an external Elasticsearch service running, put here the url to the service. If empty, an Elasticsearch service will be deployed next to OpenVidu."
+    Type: String
+    AllowedPattern: (^(http|https):\/\/.*:[1-9]{1,5}+.*$|^$)
+    ConstraintDescription: "It is very important to specify the Elasticsearch URL with the port used by this service. For example: https://es-example:443"
+
+  KibanaUrl:
+    Description: "If you have an external Kibana service running, put here the url to the service. If empty, a Kibana service will be deployed next to OpenVidu."
+    Type: String
+    AllowedPattern: (^(http|https):\/\/.*:[1-9]{1,5}+.*$|^$)
+    ConstraintDescription: "It is very important to specify the url with port used by this service. For example: https://kibana-example:443"
+
   # EC2 Instance configuration
 
   AwsInstanceTypeOV:
@@ -236,8 +249,11 @@ Metadata:
       - Label:
           default: Elasticsearch and Kibana configuration
         Parameters:
+          - ElasticsearchUrl
+          - KibanaUrl
           - ElasticsearchUser
           - ElasticsearchPassword
+          
       - Label:
             default: EC2 Instance configuration
         Parameters:
@@ -280,6 +296,10 @@ Metadata:
       OpenViduSecret:
         default: "Openvidu Secret"
       # Kibana configuration
+      ElasticsearchUrl:
+        default: "Elasticsearch URL"
+      KibanaUrl:
+        default: "Kibana URL"
       ElasticsearchUser:
         default: "Elasticsearch and Kibana username"
       ElasticsearchPassword:
@@ -476,6 +496,12 @@ Resources:
                 sed -i "s/LETSENCRYPT_EMAIL=user@example.com/LETSENCRYPT_EMAIL=${LetsEncryptEmail}/" $WORKINGDIR/.env
 
                 # Replace Elastic Search Conf
+                if [[ ! -z ${ElasticsearchUrl} ]]; then
+                  sed -i "s/#OPENVIDU_PRO_ELASTICSEARCH_HOST=/OPENVIDU_PRO_ELASTICSEARCH_HOST=${ElasticsearchUrl}/" $WORKINGDIR/.env
+                fi
+                if [[ ! -z ${KibanaUrl} ]]; then
+                  sed -i "s/#OPENVIDU_PRO_KIBANA_HOST=/OPENVIDU_PRO_KIBANA_HOST=${KibanaUrl}/" $WORKINGDIR/.env
+                fi
                 sed -i "s/ELASTICSEARCH_USERNAME=elasticadmin/ELASTICSEARCH_USERNAME=${ElasticsearchUser}/" $WORKINGDIR/.env
                 sed -i "s/ELASTICSEARCH_PASSWORD=/ELASTICSEARCH_PASSWORD=${ElasticsearchPassword}/" $WORKINGDIR/.env
 
