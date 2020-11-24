@@ -656,7 +656,8 @@ Resources:
 
             # Start openvidu application
             pushd /opt/openvidu
-            docker-compose up -d
+            export FOLLOW_OPENVIDU_LOGS=false
+            /bin/bash openvidu start
             popd
 
             # Wait for the app

@@ -227,12 +227,15 @@ usage() {
     printf "\n"
 }
 
+# Follow openvidu logs by default
+[ -z "${FOLLOW_OPENVIDU_LOGS}" ] && export FOLLOW_OPENVIDU_LOGS=true
+
 case $1 in
 
   start)
     docker-compose up -d
     stop_elk_if_external
-    docker-compose logs -f openvidu-server
+    [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]] && docker-compose logs -f openvidu-server
     ;;
 
   stop)
@@ -243,7 +246,7 @@ case $1 in
     docker-compose down
     docker-compose up -d
     stop_elk_if_external
-    docker-compose logs -f openvidu-server
+    [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]] && docker-compose logs -f openvidu-server
     ;;
 
   logs)
