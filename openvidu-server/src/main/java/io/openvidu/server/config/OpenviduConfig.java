@@ -37,7 +37,6 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
-import io.openvidu.java.client.VideoCodec;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
@@ -55,6 +54,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonSyntaxException;
 
 import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.java.client.VideoCodec;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.cdr.CDREventName;
 import io.openvidu.server.config.Dotenv.DotenvFormatException;
@@ -237,6 +237,10 @@ public class OpenviduConfig {
 
 	public boolean isOpenViduRecordingDebug() {
 		return openViduRecordingDebug;
+	}
+
+	public boolean isRecordingComposedExternal() {
+		return false;
 	}
 
 	public String getOpenViduRecordingPath() {

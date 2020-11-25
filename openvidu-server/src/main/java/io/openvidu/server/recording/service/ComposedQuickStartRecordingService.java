@@ -1,7 +1,15 @@
 package io.openvidu.server.recording.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +18,7 @@ import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Volume;
 
 import io.openvidu.client.OpenViduException;
+import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
@@ -18,16 +27,18 @@ import io.openvidu.server.core.Session;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingUploader;
-import io.openvidu.server.utils.QuarantineKiller;
+import io.openvidu.server.utils.CustomFileManager;
+import io.openvidu.server.utils.DockerManager;
 
 public class ComposedQuickStartRecordingService extends ComposedRecordingService {
 
 	private static final Logger log = LoggerFactory.getLogger(ComposedRecordingService.class);
 
 	public ComposedQuickStartRecordingService(RecordingManager recordingManager,
-			RecordingDownloader recordingDownloader, RecordingUploader recordingUploader, OpenviduConfig openviduConfig,
-			CallDetailRecord cdr, QuarantineKiller quarantineKiller) {
-		super(recordingManager, recordingDownloader, recordingUploader, openviduConfig, cdr, quarantineKiller);
+			RecordingDownloader recordingDownloader, RecordingUploader recordingUploader, CustomFileManager fileManager,
+			OpenviduConfig openviduConfig, CallDetailRecord cdr, DockerManager dockerManager) {
+		super(recordingManager, recordingDownloader, recordingUploader, fileManager, openviduConfig, cdr,
+				dockerManager);
 	}
 
 	public void stopRecordingContainer(Session session, EndReason reason) {
@@ -38,7 +49,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 
 		if (containerId != null) {
 			try {
-				dockerManager.removeDockerContainer(containerId, true);
+				dockerManager.removeContainer(session.getMediaNodeId(), containerId, true);
 			} catch (Exception e) {
 				log.error("Can't remove COMPOSED_QUICK_START recording container from session {}",
 						session.getSessionId());
@@ -78,7 +89,8 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 				recordExecCommand += "export " + envs.get(i) + " ";
 			}
 			recordExecCommand += "&& ./composed_quick_start.sh --start-recording > /var/log/ffmpeg.log 2>&1 &";
-			dockerManager.runCommandInContainer(containerId, recordExecCommand);
+			dockerManager.runCommandInContainerAsync(recording.getRecordingProperties().mediaNode(), containerId,
+					recordExecCommand);
 		} catch (Exception e) {
 			this.cleanRecordingMaps(recording);
 			throw this.failStartRecording(session, recording,
@@ -89,10 +101,14 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 
 		try {
 			this.waitForVideoFileNotEmpty(recording);
-		} catch (OpenViduException e) {
+		} catch (Exception e) {
 			this.cleanRecordingMaps(recording);
 			throw this.failStartRecording(session, recording,
 					"Couldn't initialize recording container. Error: " + e.getMessage());
+		}
+
+		if (this.openviduConfig.isRecordingComposedExternal()) {
+			this.generateRecordingMetadataFile(recording);
 		}
 
 		return recording;
@@ -103,7 +119,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 		log.info("Stopping COMPOSED_QUICK_START ({}) recording {} of session {}. Reason: {}",
 				recording.hasAudio() ? "video + audio" : "audio-only", recording.getId(), recording.getSessionId(),
 				RecordingManager.finalReason(reason));
-		log.info("Container for session {} still being ready for new recordings", recording.getSessionId());
+		log.info("Container for session {} still ready for new recordings", recording.getSessionId());
 
 		String containerId = this.sessionsContainers.get(recording.getSessionId());
 
@@ -116,29 +132,28 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 		}
 
 		try {
-			dockerManager.runCommandInContainerSync(containerId, "./composed_quick_start.sh --stop-recording", 10);
-		} catch (InterruptedException e1) {
-			cleanRecordingMaps(recording);
-			log.error("Error stopping recording for session id: {}", session.getSessionId());
-			e1.printStackTrace();
+			dockerManager.runCommandInContainerSync(recording.getRecordingProperties().mediaNode(), containerId,
+					"./composed_quick_start.sh --stop-recording", 10);
+		} catch (IOException e1) {
+			log.error("Error stopping COMPOSED_QUICK_START recording {}: {}", recording.getId(), e1.getMessage());
+			failRecordingCompletion(recording, containerId, true,
+					new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE, e1.getMessage()));
 		}
 
-		updateRecordingAttributes(recording);
-
-		this.sealRecordingMetadataFileAsReady(recording, recording.getSize(), recording.getDuration(),
-				getMetadataFilePath(recording));
-		cleanRecordingMaps(recording);
+		if (this.openviduConfig.isRecordingComposedExternal()) {
+			try {
+				waitForComposedQuickStartFiles(recording);
+			} catch (Exception e) {
+				failRecordingCompletion(recording, containerId, false,
+						new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE, e.getMessage()));
+			}
+		}
 
 		if (session != null && reason != null) {
 			this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
 		}
 
-		final Recording[] finalRecordingArray = new Recording[1];
-		finalRecordingArray[0] = recording;
-		this.uploadRecording(finalRecordingArray[0], reason);
-
-		// Decrement active recordings
-		// ((KurentoSession) session).getKms().getActiveRecordings().decrementAndGet();
+		downloadComposedRecording(recording, reason);
 
 		return recording;
 	}
@@ -166,7 +181,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 							.customLayout(recorderSession.getSessionProperties().defaultCustomLayout())
 							.resolution(
 									/* recorderSession.getSessionProperties().defaultRecordingResolution() */"1920x1080")
-							.build());
+							.mediaNode(recorderSession.getMediaNodeId()).build());
 					log.info("COMPOSED_QUICK_START recording container launched for session: {}",
 							recorderSession.getSessionId());
 					launched = true;
@@ -213,13 +228,13 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 			Bind bind1 = new Bind(openviduConfig.getOpenViduRecordingPath(), volume1);
 			List<Bind> binds = new ArrayList<>();
 			binds.add(bind1);
-			containerId = dockerManager.runContainer(container, containerName, null, volumes, binds, "host", envs, null,
-					properties.shmSize(), false, null);
+			containerId = dockerManager.runContainer(properties.mediaNode(), container, containerName, null, volumes,
+					binds, "host", envs, null, properties.shmSize(), false, null);
 			containers.put(containerId, containerName);
 			this.sessionsContainers.put(session.getSessionId(), containerId);
 		} catch (Exception e) {
 			if (containerId != null) {
-				dockerManager.removeDockerContainer(containerId, true);
+				dockerManager.removeContainer(properties.mediaNode(), containerId, true);
 				containers.remove(containerId);
 				sessionsContainers.remove(session.getSessionId());
 			}
@@ -227,6 +242,67 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 			throw e;
 		}
 		return containerId;
+	}
+
+	private void waitForComposedQuickStartFiles(Recording recording) throws Exception {
+
+		final int SECONDS_MAX_WAIT = 30;
+		final String PATH = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
+
+		// Waiting for the files generated at the end of the stopping process: the
+		// ffprobe info and the thumbnail
+		final String INFO_FILE = PATH + recording.getId() + RecordingService.COMPOSED_INFO_FILE_EXTENSION;
+		final String THUMBNAIL_FILE = PATH + recording.getId() + RecordingService.COMPOSED_THUMBNAIL_EXTENSION;
+
+		Set<String> filesToWaitFor = Stream.of(INFO_FILE, THUMBNAIL_FILE).collect(Collectors.toSet());
+
+		Collection<Thread> waitForFileThreads = new HashSet<>();
+		CountDownLatch latch = new CountDownLatch(filesToWaitFor.size());
+
+		for (final String file : filesToWaitFor) {
+			Thread downloadThread = new Thread() {
+				@Override
+				public void run() {
+					try {
+						fileManager.waitForFileToExistAndNotEmpty(recording.getRecordingProperties().mediaNode(), file,
+								SECONDS_MAX_WAIT);
+					} catch (Exception e) {
+						log.error(e.getMessage());
+						recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
+					} finally {
+						latch.countDown();
+					}
+				}
+			};
+			waitForFileThreads.add(downloadThread);
+		}
+		waitForFileThreads.forEach(t -> t.start());
+
+		try {
+			if (!latch.await(SECONDS_MAX_WAIT, TimeUnit.SECONDS)) {
+				recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
+				String msg = "The wait for files of COMPOSED_QUICK_START recording " + recording.getId()
+						+ " didn't complete in " + SECONDS_MAX_WAIT + " seconds";
+				log.error(msg);
+				throw new Exception(msg);
+			} else {
+				if (io.openvidu.java.client.Recording.Status.failed.equals(recording.getStatus())) {
+					String msg = "Error waiting for some COMPOSED_QUICK_START recording file in recording "
+							+ recording.getId();
+					log.error(msg);
+					throw new Exception(msg);
+				} else {
+					log.info("All files of COMPOSED_QUICK_START recording {} are available to download",
+							recording.getId());
+				}
+			}
+		} catch (InterruptedException e) {
+			recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
+			String msg = "Error waiting for COMPOSED_QUICK_START recording files of recording " + recording.getId()
+					+ ": " + e.getMessage();
+			log.error(msg);
+			throw new Exception(msg);
+		}
 	}
 
 }

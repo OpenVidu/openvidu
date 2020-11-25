@@ -36,7 +36,6 @@ import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.utils.CommandExecutor;
 import io.openvidu.server.utils.CustomFileManager;
-import io.openvidu.server.utils.QuarantineKiller;
 import io.openvidu.server.utils.RecordingUtils;
 
 public abstract class RecordingService {
@@ -47,19 +46,26 @@ public abstract class RecordingService {
 	protected RecordingManager recordingManager;
 	protected RecordingDownloader recordingDownloader;
 	protected RecordingUploader recordingUploader;
+	protected CustomFileManager fileManager;
 	protected CallDetailRecord cdr;
-	protected QuarantineKiller quarantineKiller;
-	protected CustomFileManager fileWriter = new CustomFileManager();
 
-	RecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
-			RecordingUploader recordingUploader, OpenviduConfig openviduConfig, CallDetailRecord cdr,
-			QuarantineKiller quarantineKiller) {
+	public final static String RECORDING_ENTITY_FILE = ".recording.";
+	public final static String COMPOSED_RECORDING_EXTENSION = ".mp4";
+	public final static String COMPOSED_THUMBNAIL_EXTENSION = ".jpg";
+	public final static String COMPOSED_INFO_FILE_EXTENSION = ".info";
+	public final static String INDIVIDUAL_RECORDING_EXTENSION = ".webm";
+	public final static String INDIVIDUAL_STREAM_METADATA_FILE = ".stream.";
+	public final static String INDIVIDUAL_RECORDING_COMPRESSED_EXTENSION = ".zip";
+
+	public RecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
+			RecordingUploader recordingUploader, CustomFileManager fileManager, OpenviduConfig openviduConfig,
+			CallDetailRecord cdr) {
 		this.recordingManager = recordingManager;
 		this.recordingDownloader = recordingDownloader;
 		this.recordingUploader = recordingUploader;
+		this.fileManager = fileManager;
 		this.openviduConfig = openviduConfig;
 		this.cdr = cdr;
-		this.quarantineKiller = quarantineKiller;
 	}
 
 	public abstract Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException;
@@ -72,20 +78,16 @@ public abstract class RecordingService {
 	 */
 	protected void generateRecordingMetadataFile(Recording recording) {
 		String folder = this.openviduConfig.getOpenViduRecordingPath() + recording.getId();
-		boolean newFolderCreated = this.fileWriter.createFolderIfNotExists(folder);
+		boolean newFolderCreated = this.fileManager.createFolderIfNotExists(folder);
 
 		if (newFolderCreated) {
-			log.warn(
-					"New folder {} created. This means A) Cluster mode is enabled B) The recording started for a session with no publishers or C) No media type compatible publishers",
-					folder);
-		} else {
-			log.info("Folder {} already existed. Some publisher is already being recorded", folder);
+			log.info("New folder {} created for recording {}", folder, recording.getId());
 		}
 
 		String filePath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
-				+ RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
+				+ RecordingService.RECORDING_ENTITY_FILE + recording.getId();
 		String text = recording.toJson().toString();
-		this.fileWriter.createAndWriteFile(filePath, text);
+		this.fileManager.createAndWriteFile(filePath, text);
 		log.info("Generated recording metadata file at {}", filePath);
 	}
 
@@ -97,7 +99,7 @@ public abstract class RecordingService {
 	 */
 	protected Recording sealRecordingMetadataFileAsStopped(Recording recording) {
 		final String entityFile = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
-				+ RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
+				+ RecordingService.RECORDING_ENTITY_FILE + recording.getId();
 		return this.sealRecordingMetadataFile(recording, 0, 0, io.openvidu.java.client.Recording.Status.stopped,
 				entityFile);
 	}
@@ -123,7 +125,7 @@ public abstract class RecordingService {
 		recording.setUrl(recordingManager.getRecordingUrl(recording));
 
 		final String entityFile = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
-				+ RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
+				+ RecordingService.RECORDING_ENTITY_FILE + recording.getId();
 		return this.sealRecordingMetadataFile(recording, size, duration, status, entityFile);
 	}
 
@@ -133,7 +135,7 @@ public abstract class RecordingService {
 		recording.setSize(size); // Size in bytes
 		recording.setDuration(duration > 0 ? duration : 0); // Duration in seconds
 
-		if (this.fileWriter.overwriteFile(metadataFilePath, recording.toJson().toString())) {
+		if (this.fileManager.overwriteFile(metadataFilePath, recording.toJson().toString())) {
 			log.info("Sealed recording metadata file at {} with status [{}]", metadataFilePath, status.name());
 		}
 
@@ -151,8 +153,8 @@ public abstract class RecordingService {
 		if (properties.name() == null || properties.name().isEmpty()) {
 			// No name provided for the recording file. Use recordingId
 			RecordingProperties.Builder builder = new RecordingProperties.Builder().name(recordingId)
-					.outputMode(properties.outputMode()).hasAudio(properties.hasAudio())
-					.hasVideo(properties.hasVideo());
+					.outputMode(properties.outputMode()).hasAudio(properties.hasAudio()).hasVideo(properties.hasVideo())
+					.mediaNode(properties.mediaNode());
 			if (RecordingUtils.IS_COMPOSED(properties.outputMode()) && properties.hasVideo()) {
 				builder.resolution(properties.resolution());
 				builder.recordingLayout(properties.recordingLayout());
@@ -202,7 +204,7 @@ public abstract class RecordingService {
 
 	protected String getMetadataFilePath(Recording recording) {
 		final String folderPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
-		return folderPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
+		return folderPath + RecordingService.RECORDING_ENTITY_FILE + recording.getId();
 	}
 
 	protected void uploadRecording(final Recording recording, EndReason reason) {

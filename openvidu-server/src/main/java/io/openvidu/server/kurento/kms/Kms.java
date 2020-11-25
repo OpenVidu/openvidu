@@ -36,6 +36,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import io.openvidu.server.kurento.core.KurentoSession;
+import io.openvidu.server.utils.QuarantineKiller;
 
 /**
  * Abstraction of a KMS instance: an object of this class corresponds to a KMS
@@ -57,6 +58,7 @@ public class Kms {
 	private String ip;
 	private KurentoClient client;
 	private LoadManager loadManager;
+	private QuarantineKiller quarantineKiller;
 
 	private AtomicBoolean isKurentoClientConnected = new AtomicBoolean(false);
 	private AtomicLong timeOfKurentoClientConnection = new AtomicLong(0);
@@ -65,7 +67,7 @@ public class Kms {
 	private Map<String, KurentoSession> kurentoSessions = new ConcurrentHashMap<>();
 	private AtomicInteger activeRecordings = new AtomicInteger(0);
 
-	public Kms(KmsProperties props, LoadManager loadManager) {
+	public Kms(KmsProperties props, LoadManager loadManager, QuarantineKiller quarantineKiller) {
 		this.id = props.getId();
 		this.uri = props.getUri();
 
@@ -79,6 +81,7 @@ public class Kms {
 		this.ip = url.getHost();
 
 		this.loadManager = loadManager;
+		this.quarantineKiller = quarantineKiller;
 	}
 
 	public void setKurentoClient(KurentoClient client) {
@@ -145,8 +148,17 @@ public class Kms {
 		this.kurentoSessions.remove(sessionId);
 	}
 
-	public AtomicInteger getActiveRecordings() {
-		return this.activeRecordings;
+	public synchronized int getActiveRecordings() {
+		return this.activeRecordings.get();
+	}
+
+	public synchronized int incrementActiveRecordings() {
+		return this.activeRecordings.incrementAndGet();
+	}
+
+	public synchronized void decrementActiveRecordings() {
+		this.activeRecordings.updateAndGet(i -> i > 0 ? i - 1 : i);
+		this.quarantineKiller.dropMediaNode(this.id);
 	}
 
 	public JsonObject toJson() {

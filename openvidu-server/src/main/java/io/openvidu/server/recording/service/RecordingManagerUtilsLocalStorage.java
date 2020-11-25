@@ -50,9 +50,9 @@ public class RecordingManagerUtilsLocalStorage extends RecordingManagerUtils {
 				File[] innerFiles = files[i].listFiles();
 				for (int j = 0; j < innerFiles.length; j++) {
 					if (innerFiles[j].isFile()
-							&& innerFiles[j].getName().startsWith(RecordingManager.RECORDING_ENTITY_FILE)) {
+							&& innerFiles[j].getName().startsWith(RecordingService.RECORDING_ENTITY_FILE)) {
 						fileNamesNoExtension
-								.add(innerFiles[j].getName().replaceFirst(RecordingManager.RECORDING_ENTITY_FILE, ""));
+								.add(innerFiles[j].getName().replaceFirst(RecordingService.RECORDING_ENTITY_FILE, ""));
 						break;
 					}
 				}

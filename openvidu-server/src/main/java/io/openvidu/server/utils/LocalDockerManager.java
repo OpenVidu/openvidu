@@ -53,15 +53,23 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.recording.service.WaitForContainerStoppedCallback;
 
-public class LocalDockerManager {
+public class LocalDockerManager implements DockerManager {
 
-	private static final Logger log = LoggerFactory.getLogger(LocalDockerManager.class);
+	private static final Logger log = LoggerFactory.getLogger(DockerManager.class);
 
 	private DockerClient dockerClient;
 
-	public LocalDockerManager() {
+	public LocalDockerManager(boolean init) {
+		if (init) {
+			this.init();
+		}
+	}
+
+	@Override
+	public DockerManager init() {
 		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
 		this.dockerClient = DockerClientBuilder.getInstance(config).build();
+		return this;
 	}
 
 	public void downloadDockerImage(String image, int secondsOfWait) throws Exception {
@@ -107,11 +115,12 @@ public class LocalDockerManager {
 		}
 	}
 
-	public String runContainer(String container, String containerName, String user, List<Volume> volumes,
-			List<Bind> binds, String networkMode, List<String> envs, List<String> command, Long shmSize,
-			boolean privileged, Map<String, String> labels) throws Exception {
+	@Override
+	public String runContainer(String mediaNodeId, String image, String containerName, String user,
+			List<Volume> volumes, List<Bind> binds, String networkMode, List<String> envs, List<String> command,
+			Long shmSize, boolean privileged, Map<String, String> labels) throws Exception {
 
-		CreateContainerCmd cmd = dockerClient.createContainerCmd(container).withEnv(envs);
+		CreateContainerCmd cmd = dockerClient.createContainerCmd(image).withEnv(envs);
 		if (containerName != null) {
 			cmd.withName(containerName);
 		}
@@ -153,12 +162,13 @@ public class LocalDockerManager {
 					containerName);
 			throw e;
 		} catch (NotFoundException e) {
-			log.error("Docker image {} couldn't be found in docker host", container);
+			log.error("Docker image {} couldn't be found in docker host", image);
 			throw e;
 		}
 	}
 
-	public void removeDockerContainer(String containerId, boolean force) {
+	@Override
+	public void removeContainer(String mediaNodeId, String containerId, boolean force) {
 		dockerClient.removeContainerCmd(containerId).withForce(force).exec();
 	}
 
@@ -172,15 +182,9 @@ public class LocalDockerManager {
 		}
 	}
 
-	public void runCommandInContainer(String containerId, String command) throws InterruptedException {
-		ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId).withAttachStdout(true)
-				.withAttachStderr(true).withCmd("bash", "-c", command).exec();
-		dockerClient.execStartCmd(execCreateCmdResponse.getId()).exec(new ExecStartResultCallback() {
-		});
-	}
-
-	public void runCommandInContainerSync(String containerId, String command, int secondsOfWait)
-			throws InterruptedException {
+	@Override
+	public void runCommandInContainerSync(String mediaNodeId, String containerId, String command, int secondsOfWait)
+			throws IOException {
 		ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId).withAttachStdout(true)
 				.withAttachStderr(true).withCmd("bash", "-c", command).exec();
 		CountDownLatch latch = new CountDownLatch(1);
@@ -193,12 +197,21 @@ public class LocalDockerManager {
 		try {
 			latch.await(secondsOfWait, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
-			throw new InterruptedException("Container " + containerId + " did not return from executing command \""
-					+ command + "\" in " + secondsOfWait + " seconds");
+			throw new IOException("Container " + containerId + " did not return from executing command \"" + command
+					+ "\" in " + secondsOfWait + " seconds");
 		}
 	}
 
-	public void waitForContainerStopped(String containerId, int secondsOfWait) throws Exception {
+	@Override
+	public void runCommandInContainerAsync(String mediaNodeId, String containerId, String command) throws IOException {
+		ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId).withAttachStdout(true)
+				.withAttachStderr(true).withCmd("bash", "-c", command).exec();
+		dockerClient.execStartCmd(execCreateCmdResponse.getId()).exec(new ExecStartResultCallback() {
+		});
+	}
+
+	@Override
+	public void waitForContainerStopped(String mediaNodeId, String containerId, int secondsOfWait) throws Exception {
 		CountDownLatch latch = new CountDownLatch(1);
 		WaitForContainerStoppedCallback callback = new WaitForContainerStoppedCallback(latch);
 		dockerClient.waitContainerCmd(containerId).exec(callback);

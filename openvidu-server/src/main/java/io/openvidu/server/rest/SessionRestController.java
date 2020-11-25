@@ -367,7 +367,7 @@ public class SessionRestController {
 
 		RecordingProperties recordingProperties;
 		try {
-			recordingProperties = getRecordingPropertiesFromParams(params, session.getSessionProperties()).build();
+			recordingProperties = getRecordingPropertiesFromParams(params, session).build();
 		} catch (RuntimeException e) {
 			return this.generateErrorResponse(e.getMessage(), "/sessions", HttpStatus.UNPROCESSABLE_ENTITY);
 		} catch (Exception e) {
@@ -411,8 +411,13 @@ public class SessionRestController {
 
 		Session session = sessionManager.getSession(recording.getSessionId());
 
-		Recording stoppedRecording = this.recordingManager.stopRecording(session, recording.getId(),
-				EndReason.recordingStoppedByServer);
+		Recording stoppedRecording;
+		try {
+			stoppedRecording = this.recordingManager.stopRecording(session, recording.getId(),
+					EndReason.recordingStoppedByServer);
+		} catch (Exception e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 
 		session.recordingManuallyStopped.set(true);
 
@@ -906,8 +911,8 @@ public class SessionRestController {
 		return builder;
 	}
 
-	protected RecordingProperties.Builder getRecordingPropertiesFromParams(Map<?, ?> params,
-			SessionProperties sessionProperties) throws Exception {
+	protected RecordingProperties.Builder getRecordingPropertiesFromParams(Map<?, ?> params, Session session)
+			throws Exception {
 
 		RecordingProperties.Builder builder = new RecordingProperties.Builder();
 
@@ -976,7 +981,7 @@ public class SessionRestController {
 
 		// If outputMode is COMPOSED when defaultOutputMode is COMPOSED_QUICK_START,
 		// change outputMode to COMPOSED_QUICK_START (and vice versa)
-		OutputMode defaultOutputMode = sessionProperties.defaultOutputMode();
+		OutputMode defaultOutputMode = session.getSessionProperties().defaultOutputMode();
 		if (OutputMode.COMPOSED_QUICK_START.equals(defaultOutputMode) && OutputMode.COMPOSED.equals(finalOutputMode)) {
 			finalOutputMode = OutputMode.COMPOSED_QUICK_START;
 		} else if (OutputMode.COMPOSED.equals(defaultOutputMode)
@@ -984,15 +989,17 @@ public class SessionRestController {
 			finalOutputMode = OutputMode.COMPOSED;
 		}
 
-		builder.outputMode(finalOutputMode == null ? sessionProperties.defaultOutputMode() : finalOutputMode);
+		builder.outputMode(
+				finalOutputMode == null ? session.getSessionProperties().defaultOutputMode() : finalOutputMode);
 		if (RecordingUtils.IS_COMPOSED(finalOutputMode)) {
 			builder.resolution(resolution != null ? resolution : "1920x1080"); // resolution == null ?
 																				// sessionProperties.defaultRecordingResolution)
 																				// : resolution));
-			builder.recordingLayout(
-					recordingLayout == null ? sessionProperties.defaultRecordingLayout() : recordingLayout);
+			builder.recordingLayout(recordingLayout == null ? session.getSessionProperties().defaultRecordingLayout()
+					: recordingLayout);
 			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {
-				builder.customLayout(customLayout == null ? sessionProperties.defaultCustomLayout() : customLayout);
+				builder.customLayout(
+						customLayout == null ? session.getSessionProperties().defaultCustomLayout() : customLayout);
 			}
 			if (shmSize != null) {
 				if (shmSize < 134217728L) {

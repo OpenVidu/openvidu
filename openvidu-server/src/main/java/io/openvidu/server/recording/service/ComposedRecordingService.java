@@ -58,8 +58,8 @@ import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingInfoUtils;
 import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.rest.RequestMappings;
-import io.openvidu.server.utils.LocalDockerManager;
-import io.openvidu.server.utils.QuarantineKiller;
+import io.openvidu.server.utils.CustomFileManager;
+import io.openvidu.server.utils.DockerManager;
 
 public class ComposedRecordingService extends RecordingService {
 
@@ -69,13 +69,13 @@ public class ComposedRecordingService extends RecordingService {
 	protected Map<String, String> sessionsContainers = new ConcurrentHashMap<>();
 	private Map<String, CompositeWrapper> composites = new ConcurrentHashMap<>();
 
-	protected LocalDockerManager dockerManager;
+	protected DockerManager dockerManager;
 
 	public ComposedRecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
-			RecordingUploader recordingUploader, OpenviduConfig openviduConfig, CallDetailRecord cdr,
-			QuarantineKiller quarantineKiller) {
-		super(recordingManager, recordingDownloader, recordingUploader, openviduConfig, cdr, quarantineKiller);
-		this.dockerManager = new LocalDockerManager();
+			RecordingUploader recordingUploader, CustomFileManager fileManager, OpenviduConfig openviduConfig,
+			CallDetailRecord cdr, DockerManager dockerManager) {
+		super(recordingManager, recordingDownloader, recordingUploader, fileManager, openviduConfig, cdr);
+		this.dockerManager = dockerManager;
 	}
 
 	@Override
@@ -97,9 +97,6 @@ public class ComposedRecordingService extends RecordingService {
 			// Kurento composite used
 			recording = this.startRecordingAudioOnly(session, recording, properties);
 		}
-
-		// Increment active recordings
-		// ((KurentoSession) session).getKms().getActiveRecordings().incrementAndGet();
 
 		return recording;
 	}
@@ -177,8 +174,8 @@ public class ComposedRecordingService extends RecordingService {
 			Bind bind1 = new Bind(openviduConfig.getOpenViduRecordingPath(), volume1);
 			List<Bind> binds = new ArrayList<>();
 			binds.add(bind1);
-			containerId = dockerManager.runContainer(container, containerName, null, volumes, binds, "host", envs, null,
-					properties.shmSize(), false, null);
+			containerId = dockerManager.runContainer(properties.mediaNode(), container, containerName, null, volumes,
+					binds, "host", envs, null, properties.shmSize(), false, null);
 			containers.put(containerId, containerName);
 		} catch (Exception e) {
 			this.cleanRecordingMaps(recording);
@@ -190,10 +187,14 @@ public class ComposedRecordingService extends RecordingService {
 
 		try {
 			this.waitForVideoFileNotEmpty(recording);
-		} catch (OpenViduException e) {
+		} catch (Exception e) {
 			this.cleanRecordingMaps(recording);
 			throw this.failStartRecording(session, recording,
 					"Couldn't initialize recording container. Error: " + e.getMessage());
+		}
+
+		if (this.openviduConfig.isRecordingComposedExternal()) {
+			this.generateRecordingMetadataFile(recording);
 		}
 
 		return recording;
@@ -223,9 +224,6 @@ public class ComposedRecordingService extends RecordingService {
 		}
 
 		this.generateRecordingMetadataFile(recording);
-
-		// Increment active recordings
-		((KurentoSession) session).getKms().getActiveRecordings().incrementAndGet();
 
 		return recording;
 	}
@@ -273,7 +271,8 @@ public class ComposedRecordingService extends RecordingService {
 						} else {
 							log.warn("Removing container {} for closed session {}...", containerIdAux,
 									session.getSessionId());
-							dockerManager.removeDockerContainer(containerIdAux, true);
+							dockerManager.removeContainer(recordingAux.getRecordingProperties().mediaNode(),
+									containerIdAux, true);
 							containers.remove(containerId);
 							containerClosed = true;
 							log.warn("Container {} for closed session {} succesfully stopped and removed",
@@ -293,29 +292,18 @@ public class ComposedRecordingService extends RecordingService {
 						return;
 					}
 					// Decrement active recordings
-					// ((KurentoSession) session).getKms().getActiveRecordings().decrementAndGet();
+					((KurentoSession) session).getKms().decrementActiveRecordings();
 				}).start();
 			}
 		} else {
 
 			stopAndRemoveRecordingContainer(recording, containerId, 30);
-			updateRecordingAttributes(recording);
-
-			this.sealRecordingMetadataFileAsReady(recording, recording.getSize(), recording.getDuration(),
-					getMetadataFilePath(recording));
-			cleanRecordingMaps(recording);
 
 			if (session != null && reason != null) {
 				this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
 			}
 
-			// Upload if necessary
-			final Recording[] finalRecordingArray = new Recording[1];
-			finalRecordingArray[0] = recording;
-			this.uploadRecording(finalRecordingArray[0], reason);
-
-			// Decrement active recordings
-			// ((KurentoSession) session).getKms().getActiveRecordings().decrementAndGet();
+			downloadComposedRecording(session, recording, reason);
 		}
 
 		return recording;
@@ -370,13 +358,12 @@ public class ComposedRecordingService extends RecordingService {
 				this.updateFilePermissions(filesPath);
 				finalRecordingArray[0] = this.sealRecordingMetadataFileAsReady(finalRecordingArray[0], finalSize,
 						finalDuration,
-						filesPath + RecordingManager.RECORDING_ENTITY_FILE + finalRecordingArray[0].getId());
+						filesPath + RecordingService.RECORDING_ENTITY_FILE + finalRecordingArray[0].getId());
 
-				// Decrement active recordings once it is downloaded
-				((KurentoSession) session).getKms().getActiveRecordings().decrementAndGet();
-
-				// Now we can drop Media Node if waiting-idle-to-terminate
-				this.quarantineKiller.dropMediaNode(session.getMediaNodeId());
+				// Decrement active recordings once it is downloaded. This method will also drop
+				// the Media Node if no more sessions or recordings and status is
+				// waiting-idle-to-terminate
+				((KurentoSession) session).getKms().decrementActiveRecordings();
 
 				// Upload if necessary
 				this.uploadRecording(finalRecordingArray[0], reason);
@@ -397,29 +384,32 @@ public class ComposedRecordingService extends RecordingService {
 	private void stopAndRemoveRecordingContainer(Recording recording, String containerId, int secondsOfWait) {
 		// Gracefully stop ffmpeg process
 		try {
-			dockerManager.runCommandInContainer(containerId, "echo 'q' > stop");
-		} catch (InterruptedException e1) {
+			dockerManager.runCommandInContainerAsync(recording.getRecordingProperties().mediaNode(), containerId,
+					"echo 'q' > stop");
+		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
 
 		// Wait for the container to be gracefully self-stopped
 		final int timeOfWait = 30;
 		try {
-			dockerManager.waitForContainerStopped(containerId, timeOfWait);
+			dockerManager.waitForContainerStopped(recording.getRecordingProperties().mediaNode(), containerId,
+					timeOfWait);
 		} catch (Exception e) {
-			failRecordingCompletion(recording, containerId, new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
-					"The recording completion process couldn't finish in " + timeOfWait + " seconds"));
+			failRecordingCompletion(recording, containerId, true,
+					new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
+							"The recording completion process couldn't finish in " + timeOfWait + " seconds"));
 		}
 
 		// Remove container
-		dockerManager.removeDockerContainer(containerId, false);
+		dockerManager.removeContainer(recording.getRecordingProperties().mediaNode(), containerId, false);
 		containers.remove(containerId);
 	}
 
 	protected void updateRecordingAttributes(Recording recording) {
 		try {
 			RecordingInfoUtils infoUtils = new RecordingInfoUtils(this.openviduConfig.getOpenViduRecordingPath()
-					+ recording.getId() + "/" + recording.getId() + ".info");
+					+ recording.getId() + "/" + recording.getId() + RecordingService.COMPOSED_INFO_FILE_EXTENSION);
 
 			if (!infoUtils.hasVideo()) {
 				log.error("COMPOSED recording {} with hasVideo=true has not video track", recording.getId());
@@ -440,44 +430,24 @@ public class ComposedRecordingService extends RecordingService {
 		}
 	}
 
-	protected void waitForVideoFileNotEmpty(Recording recording) throws OpenViduException {
-
+	protected void waitForVideoFileNotEmpty(Recording recording) throws Exception {
 		final String VIDEO_FILE = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
-				+ recording.getName() + ".mp4";
-
-		int SECONDS_MAX_WAIT = 15;
-		int MILLISECONDS_INTERVAL_WAIT = 100;
-		int LIMIT = SECONDS_MAX_WAIT * 1000 / MILLISECONDS_INTERVAL_WAIT;
-
-		int i = 0;
-		boolean arePresent = fileExistsAndHasBytes(VIDEO_FILE);
-		while (!arePresent && i < LIMIT) {
-			try {
-				Thread.sleep(MILLISECONDS_INTERVAL_WAIT);
-				arePresent = fileExistsAndHasBytes(VIDEO_FILE);
-				i++;
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		if (!arePresent) {
-			log.error("Recorder container failed generating video file (is empty) for session {}",
-					recording.getSessionId());
-			throw new OpenViduException(Code.RECORDING_START_ERROR_CODE,
-					"Recorder container failed generating video file (is empty)");
-		}
+				+ recording.getName() + RecordingService.COMPOSED_RECORDING_EXTENSION;
+		int SECONDS_MAX_WAIT = 20;
+		this.fileManager.waitForFileToExistAndNotEmpty(recording.getRecordingProperties().mediaNode(), VIDEO_FILE,
+				SECONDS_MAX_WAIT);
 	}
 
-	private boolean fileExistsAndHasBytes(String fileName) {
-		File f = new File(fileName);
-		return (f.exists() && f.isFile() && f.length() > 0);
-	}
-
-	private void failRecordingCompletion(Recording recording, String containerId, OpenViduException e)
-			throws OpenViduException {
+	protected void failRecordingCompletion(Recording recording, String containerId, boolean removeContainer,
+			OpenViduException e) throws OpenViduException {
 		recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
-		dockerManager.removeDockerContainer(containerId, true);
-		containers.remove(containerId);
+		if (removeContainer) {
+			dockerManager.removeContainer(recording.getRecordingProperties().mediaNode(), containerId, true);
+			containers.remove(containerId);
+		}
+		sealRecordingMetadataFileAsReady(recording, recording.getSize(), recording.getDuration(),
+				getMetadataFilePath(recording));
+		cleanRecordingMaps(recording);
 		throw e;
 	}
 
@@ -609,6 +579,29 @@ public class ComposedRecordingService extends RecordingService {
 		}
 
 		return finalUrl;
+	}
+
+	protected void downloadComposedRecording(final Session session, final Recording recording, final EndReason reason) {
+		try {
+			this.recordingDownloader.downloadRecording(recording, null, () -> {
+
+				updateRecordingAttributes(recording);
+
+				this.sealRecordingMetadataFileAsReady(recording, recording.getSize(), recording.getDuration(),
+						getMetadataFilePath(recording));
+				cleanRecordingMaps(recording);
+
+				// Decrement active recordings once it is downloaded. This method will also drop
+				// the Media Node if no more sessions or recordings and status is
+				// waiting-idle-to-terminate
+				((KurentoSession) session).getKms().decrementActiveRecordings();
+
+				// Upload if necessary
+				this.uploadRecording(recording, reason);
+			});
+		} catch (IOException e) {
+			log.error("Error while downloading recording {}: {}", recording.getName(), e.getMessage());
+		}
 	}
 
 }

@@ -23,19 +23,17 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.KurentoClient;
 import org.kurento.commons.exception.KurentoException;
-
-import io.openvidu.server.core.IdentifierPrefixes;
 
 public class FixedOneKmsManager extends KmsManager {
 
 	@Override
-	public List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure) throws Exception {
+	public List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure)
+			throws Exception {
 		KmsProperties firstProps = kmsProperties.get(0);
 		KurentoClient kClient = null;
-		Kms kms = new Kms(firstProps, loadManager);
+		Kms kms = new Kms(firstProps, loadManager, quarantineKiller);
 		try {
 			kClient = KurentoClient.create(firstProps.getUri(), this.generateKurentoConnectionListener(kms.getId()));
 			this.addKms(kms);
@@ -53,6 +51,11 @@ public class FixedOneKmsManager extends KmsManager {
 			throw new Exception();
 		}
 		return Arrays.asList(kms);
+	}
+
+	@Override
+	public boolean isMediaNodeRunning(String mediaNodeId) {
+		return true;
 	}
 
 	@Override

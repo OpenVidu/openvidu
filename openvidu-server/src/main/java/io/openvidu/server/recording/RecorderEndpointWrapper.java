@@ -23,7 +23,7 @@ import org.kurento.client.RecorderEndpoint;
 import com.google.gson.JsonObject;
 
 import io.openvidu.server.kurento.core.KurentoParticipant;
-import io.openvidu.server.recording.service.SingleStreamRecordingService;
+import io.openvidu.server.recording.service.RecordingService;
 
 public class RecorderEndpointWrapper {
 
@@ -61,7 +61,7 @@ public class RecorderEndpointWrapper {
 	public RecorderEndpointWrapper(JsonObject json) {
 		String nameAux = json.get("name").getAsString();
 		// If the name includes the extension, remove it
-		this.name = StringUtils.removeEnd(nameAux, SingleStreamRecordingService.INDIVIDUAL_RECORDING_EXTENSION);
+		this.name = StringUtils.removeEnd(nameAux, RecordingService.INDIVIDUAL_RECORDING_EXTENSION);
 		this.connectionId = json.get("connectionId").getAsString();
 		this.streamId = json.get("streamId").getAsString();
 		this.clientData = (json.has("clientData") && !json.get("clientData").isJsonNull())
@@ -91,7 +91,7 @@ public class RecorderEndpointWrapper {
 	}
 
 	public String getNameWithExtension() {
-		return this.name + SingleStreamRecordingService.INDIVIDUAL_RECORDING_EXTENSION;
+		return this.name + RecordingService.INDIVIDUAL_RECORDING_EXTENSION;
 	}
 
 	public String getConnectionId() {

@@ -47,7 +47,6 @@ import org.kurento.client.StoppedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -68,7 +67,7 @@ import io.openvidu.server.recording.RecorderEndpointWrapper;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingUploader;
-import io.openvidu.server.utils.QuarantineKiller;
+import io.openvidu.server.utils.CustomFileManager;
 
 public class SingleStreamRecordingService extends RecordingService {
 
@@ -79,13 +78,10 @@ public class SingleStreamRecordingService extends RecordingService {
 	// Multiple recorder endpoints per stream during a recording
 	private Map<String, Map<String, List<RecorderEndpointWrapper>>> storedRecorders = new ConcurrentHashMap<>();
 
-	private final String INDIVIDUAL_STREAM_METADATA_FILE = ".stream.";
-	public static final String INDIVIDUAL_RECORDING_EXTENSION = ".webm";
-
 	public SingleStreamRecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
-			RecordingUploader recordingUploader, OpenviduConfig openviduConfig, CallDetailRecord cdr,
-			QuarantineKiller quarantineKiller) {
-		super(recordingManager, recordingDownloader, recordingUploader, openviduConfig, cdr, quarantineKiller);
+			RecordingUploader recordingUploader, CustomFileManager fileManager, OpenviduConfig openviduConfig,
+			CallDetailRecord cdr) {
+		super(recordingManager, recordingDownloader, recordingUploader, fileManager, openviduConfig, cdr);
 	}
 
 	@Override
@@ -139,9 +135,6 @@ public class SingleStreamRecordingService extends RecordingService {
 
 		this.generateRecordingMetadataFile(recording);
 
-		// Increment active recordings
-		((KurentoSession) session).getKms().getActiveRecordings().incrementAndGet();
-
 		return recording;
 	}
 
@@ -191,11 +184,10 @@ public class SingleStreamRecordingService extends RecordingService {
 
 				cleanRecordingWrappers(finalRecordingArray[0]);
 
-				// Decrement active recordings once it is downloaded
-				((KurentoSession) session).getKms().getActiveRecordings().decrementAndGet();
-
-				// Now we can drop Media Node if waiting-idle-to-terminate
-				this.quarantineKiller.dropMediaNode(session.getMediaNodeId());
+				// Decrement active recordings once it is downloaded. This method will also drop
+				// the Media Node if no more sessions or recordings and status is
+				// waiting-idle-to-terminate
+				((KurentoSession) session).getKms().decrementActiveRecordings();
 
 				// Upload if necessary
 				this.uploadRecording(finalRecordingArray[0], reason);
@@ -241,8 +233,8 @@ public class SingleStreamRecordingService extends RecordingService {
 
 					RecorderEndpoint recorder = new RecorderEndpoint.Builder(pipeline,
 							"file://" + openviduConfig.getOpenViduRemoteRecordingPath() + recordingId + "/" + fileName
-									+ SingleStreamRecordingService.INDIVIDUAL_RECORDING_EXTENSION)
-											.withMediaProfile(profile).build();
+									+ RecordingService.INDIVIDUAL_RECORDING_EXTENSION).withMediaProfile(profile)
+											.build();
 
 					recorder.addRecordingListener(new EventListener<RecordingEvent>() {
 						@Override
@@ -417,11 +409,11 @@ public class SingleStreamRecordingService extends RecordingService {
 	}
 
 	private void generateIndividualMetadataFile(RecorderEndpointWrapper wrapper) {
-		this.commonWriteIndividualMetadataFile(wrapper, this.fileWriter::createAndWriteFile);
+		this.commonWriteIndividualMetadataFile(wrapper, this.fileManager::createAndWriteFile);
 	}
 
 	private void updateIndividualMetadataFile(RecorderEndpointWrapper wrapper) {
-		this.commonWriteIndividualMetadataFile(wrapper, this.fileWriter::overwriteFile);
+		this.commonWriteIndividualMetadataFile(wrapper, this.fileManager::overwriteFile);
 	}
 
 	private void commonWriteIndividualMetadataFile(RecorderEndpointWrapper wrapper,
@@ -439,7 +431,7 @@ public class SingleStreamRecordingService extends RecordingService {
 		// individual recordings) and "size" (sum of all individual recordings size)
 
 		String folderPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
-		String metadataFilePath = folderPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
+		String metadataFilePath = folderPath + RecordingService.RECORDING_ENTITY_FILE + recording.getId();
 		String syncFilePath = folderPath + recording.getName() + ".json";
 
 		recording = this.recordingManager.getRecordingFromEntityFile(new File(metadataFilePath));
@@ -452,7 +444,6 @@ public class SingleStreamRecordingService extends RecordingService {
 		File[] files = folder.listFiles();
 
 		Reader reader = null;
-		Gson gson = new Gson();
 
 		// Sync metadata json object to store in "RECORDING_NAME.json"
 		JsonObject json = new JsonObject();
@@ -495,8 +486,9 @@ public class SingleStreamRecordingService extends RecordingService {
 		}
 
 		json.add("files", jsonArrayFiles);
-		this.fileWriter.createAndWriteFile(syncFilePath, new GsonBuilder().setPrettyPrinting().create().toJson(json));
-		this.generateZipFileAndCleanFolder(folderPath, recording.getName() + ".zip");
+		this.fileManager.createAndWriteFile(syncFilePath, new GsonBuilder().setPrettyPrinting().create().toJson(json));
+		this.generateZipFileAndCleanFolder(folderPath,
+				recording.getName() + RecordingService.INDIVIDUAL_RECORDING_COMPRESSED_EXTENSION);
 
 		double duration = (double) (maxEndTime - minStartTime) / 1000;
 		duration = duration > 0 ? duration : 0;
@@ -520,7 +512,7 @@ public class SingleStreamRecordingService extends RecordingService {
 				String fileExtension = FilenameUtils.getExtension(files[i].getName());
 
 				if (files[i].isFile() && (fileExtension.equals("json")
-						|| SingleStreamRecordingService.INDIVIDUAL_RECORDING_EXTENSION.equals("." + fileExtension))) {
+						|| RecordingService.INDIVIDUAL_RECORDING_EXTENSION.equals("." + fileExtension))) {
 
 					// Zip video files and json sync metadata file
 					FileInputStream fis = new FileInputStream(files[i]);
@@ -534,7 +526,7 @@ public class SingleStreamRecordingService extends RecordingService {
 					fis.close();
 
 				}
-				if (!files[i].getName().startsWith(RecordingManager.RECORDING_ENTITY_FILE)) {
+				if (!files[i].getName().startsWith(RecordingService.RECORDING_ENTITY_FILE)) {
 					// Clean inspected file if it is not
 					files[i].delete();
 				}

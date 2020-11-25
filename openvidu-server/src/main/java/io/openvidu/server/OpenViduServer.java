@@ -75,6 +75,8 @@ import io.openvidu.server.rpc.RpcNotificationService;
 import io.openvidu.server.utils.CommandExecutor;
 import io.openvidu.server.utils.GeoLocationByIp;
 import io.openvidu.server.utils.GeoLocationByIpDummy;
+import io.openvidu.server.utils.LocalCustomFileManager;
+import io.openvidu.server.utils.LocalDockerManager;
 import io.openvidu.server.utils.MediaNodeStatusManager;
 import io.openvidu.server.utils.MediaNodeStatusManagerDummy;
 import io.openvidu.server.utils.QuarantineKiller;
@@ -170,7 +172,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@ConditionalOnMissingBean
 	@DependsOn("openviduConfig")
 	public RecordingManager recordingManager() {
-		return new RecordingManager();
+		return new RecordingManager(new LocalDockerManager(false), new LocalCustomFileManager());
 	}
 
 	@Bean

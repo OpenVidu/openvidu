@@ -46,6 +46,7 @@ import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.IdentifierPrefixes;
 import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.utils.MediaNodeStatusManager;
+import io.openvidu.server.utils.QuarantineKiller;
 import io.openvidu.server.utils.UpdatableTimerTask;
 
 public abstract class KmsManager {
@@ -100,6 +101,9 @@ public abstract class KmsManager {
 
 	@Autowired
 	protected LoadManager loadManager;
+
+	@Autowired
+	protected QuarantineKiller quarantineKiller;
 
 	@Autowired
 	protected MediaNodeStatusManager mediaNodeStatusManager;
@@ -352,6 +356,8 @@ public abstract class KmsManager {
 
 	public abstract List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure)
 			throws Exception;
+
+	public abstract boolean isMediaNodeRunning(String mediaNodeId);
 
 	@PostConstruct
 	protected abstract void postConstructInitKurentoClients();
