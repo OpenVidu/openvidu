@@ -495,10 +495,10 @@ Resources:
                 sed -i "s/LETSENCRYPT_EMAIL=user@example.com/LETSENCRYPT_EMAIL=${LetsEncryptEmail}/" $WORKINGDIR/.env
 
                 # Replace Elastic Search Conf
-                if [[ ! -z ${ElasticsearchUrl} ]]; then
+                if [[ ! -z "${ElasticsearchUrl}" ]]; then
                   sed -i "s,#OPENVIDU_PRO_ELASTICSEARCH_HOST=,OPENVIDU_PRO_ELASTICSEARCH_HOST=${ElasticsearchUrl}," $WORKINGDIR/.env
                 fi
-                if [[ ! -z ${KibanaUrl} ]]; then
+                if [[ ! -z "${KibanaUrl}" ]]; then
                   sed -i "s,#OPENVIDU_PRO_KIBANA_HOST=,OPENVIDU_PRO_KIBANA_HOST=${KibanaUrl}," $WORKINGDIR/.env
                 fi
                 sed -i "s/ELASTICSEARCH_USERNAME=elasticadmin/ELASTICSEARCH_USERNAME=${ElasticsearchUser}/" $WORKINGDIR/.env
