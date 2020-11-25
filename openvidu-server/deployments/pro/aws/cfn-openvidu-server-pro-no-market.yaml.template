@@ -657,10 +657,10 @@ Resources:
             # Start openvidu application
             pushd /opt/openvidu
             docker-compose up -d
-            if [[ ! -z ${ElasticsearchUrl} ]]; then
+            if [[ ! -z "${ElasticsearchUrl}" ]]; then
               docker-compose stop elasticsearch
             fi
-            if [[ ! -z ${KibanaUrl} ]]; then
+            if [[ ! -z "${KibanaUrl}" ]]; then
               docker-compose stop kibana
             fi
             popd
