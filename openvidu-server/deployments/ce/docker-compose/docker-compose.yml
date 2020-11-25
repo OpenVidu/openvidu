@@ -65,7 +65,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     redis:
-        image: openvidu/openvidu-redis:1.0.0
+        image: openvidu/openvidu-redis:2.0.0-dev1
         restart: always
         network_mode: host
         environment:
@@ -75,7 +75,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     coturn:
-        image: openvidu/openvidu-coturn:2.0.0
+        image: openvidu/openvidu-coturn:3.0.0-dev1
         restart: on-failure
         network_mode: host
         environment:
@@ -85,6 +85,7 @@ services:
             - DB_PASSWORD=${OPENVIDU_SECRET}
             - MIN_PORT=57001
             - MAX_PORT=65535
+            - ENABLE_COTURN_LOGS=false
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"

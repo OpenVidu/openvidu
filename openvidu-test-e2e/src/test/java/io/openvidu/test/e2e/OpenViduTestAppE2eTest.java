@@ -4163,7 +4163,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			sessionName2.clear();
 			sessionName2.sendKeys(sessionName);
 
-			user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+			List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
+			for(WebElement el : joinButtons) {
+				Thread.sleep(5000);
+				el.sendKeys(Keys.ENTER);
+			}
 
 			user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
 			user.getEventManager().waitUntilEventReaches("accessAllowed", 2);

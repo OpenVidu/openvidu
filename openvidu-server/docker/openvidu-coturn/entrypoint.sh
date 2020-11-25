@@ -7,6 +7,7 @@ DEBUG=${DEBUG:-false}
 #Check parameters
 [[ "${TURN_PUBLIC_IP}" == "auto-ipv4" ]] && export TURN_PUBLIC_IP=$(/usr/local/bin/discover_my_public_ip.sh)
 [[ "${TURN_PUBLIC_IP}" == "auto-ipv6" ]] && export TURN_PUBLIC_IP=$(/usr/local/bin/discover_my_public_ip.sh --ipv6)
+[[ -z "${ENABLE_COTURN_LOGS}" ]] && export ENABLE_COTURN_LOGS=false
 
 echo "TURN public IP: ${TURN_PUBLIC_IP:-"empty"}"
 
@@ -23,4 +24,8 @@ source /tmp/configuration-files.sh
 # Remove temp file with configuration parameters
 rm /tmp/configuration-files.sh
 
-/usr/bin/turnserver -c /etc/turnserver.conf -v --log-file /dev/null
+if [[ "${ENABLE_COTURN_LOGS}" == "true" ]]; then
+    /usr/bin/turnserver -c /etc/turnserver.conf -v --log-file /dev/null
+else
+    /usr/bin/turnserver -c /etc/turnserver.conf -v --log-file /dev/null --no-stdout-log
+fi
