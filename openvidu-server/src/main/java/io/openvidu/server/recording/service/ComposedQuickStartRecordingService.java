@@ -153,7 +153,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 			this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
 		}
 
-		downloadComposedRecording(recording, reason);
+		downloadComposedRecording(session, recording, reason);
 
 		return recording;
 	}
