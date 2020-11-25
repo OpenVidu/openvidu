@@ -255,8 +255,8 @@ sed -i "s/{domain_name}/${DOMAIN_OR_PUBLIC_IP}/g" /etc/nginx/conf.d/*
 
 # IPv6 listening (RFC 6540)
 if [ ! -f /proc/net/if_inet6 ]; then
-  sed -i '/ [::]:{http_port}/d' /etc/nginx/conf.d/*
-  sed -i '/ [::]:{https_port}/d' /etc/nginx/conf.d/*
+  sed -i '/\[::\]:{http_port}/d' /etc/nginx/conf.d/*
+  sed -i '/\[::\]:{http_port}/d' /etc/nginx/conf.d/*
 fi
 
 sed -i "s/{http_port}/${PROXY_HTTP_PORT}/g" /etc/nginx/conf.d/*
