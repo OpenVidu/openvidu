@@ -235,8 +235,8 @@ public class AbstractOpenViduTestAppE2eTest {
 	protected static void getDefaultTranscodingValues() throws Exception {
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 		JsonObject ovConfig = restClient.rest(HttpMethod.GET, "/openvidu/api/config", HttpStatus.SC_OK);
-		defaultForcedVideoCodec = VideoCodec.valueOf(ovConfig.get("OPENVIDU_FORCED_CODEC").getAsString());
-		defaultAllowTranscoding = ovConfig.get("OPENVIDU_ALLOW_TRANSCODING").getAsBoolean();
+		defaultForcedVideoCodec = VideoCodec.valueOf(ovConfig.get("OPENVIDU_STREAMS_FORCED_VIDEO_CODEC").getAsString());
+		defaultAllowTranscoding = ovConfig.get("OPENVIDU_STREAMS_ALLOW_TRANSCODING").getAsBoolean();
 	}
 
 	@AfterEach

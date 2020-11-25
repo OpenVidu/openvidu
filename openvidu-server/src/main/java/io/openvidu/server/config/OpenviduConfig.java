@@ -523,8 +523,8 @@ public class OpenviduConfig {
 		openviduSessionsGarbageInterval = asNonNegativeInteger("OPENVIDU_SESSIONS_GARBAGE_INTERVAL");
 		openviduSessionsGarbageThreshold = asNonNegativeInteger("OPENVIDU_SESSIONS_GARBAGE_THRESHOLD");
 
-		openviduForcedCodec = asEnumValue("OPENVIDU_FORCED_CODEC", VideoCodec.class);
-		openviduAllowTranscoding = asBoolean("OPENVIDU_ALLOW_TRANSCODING");
+		openviduForcedCodec = asEnumValue("OPENVIDU_STREAMS_FORCED_VIDEO_CODEC", VideoCodec.class);
+		openviduAllowTranscoding = asBoolean("OPENVIDU_STREAMS_ALLOW_TRANSCODING");
 
 		kmsUrisList = checkKmsUris();
 
