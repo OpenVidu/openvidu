@@ -33,7 +33,7 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 /**
  * @hidden
  */
-const platform: PlatformUtils = PlatformUtils.getInstance();
+let platform: PlatformUtils;
 
 /**
  * Interface in charge of displaying the media streams in the HTML DOM. This wraps any [[Publisher]] and [[Subscriber]] object.
@@ -106,7 +106,7 @@ export class StreamManager extends EventDispatcher {
      */
     constructor(stream: Stream, targetElement?: HTMLElement | string) {
         super();
-
+        platform = PlatformUtils.getInstance();
         this.stream = stream;
         this.stream.streamManager = this;
         this.remote = !this.stream.isLocal();

@@ -38,7 +38,7 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 /**
  * @hidden
  */
-const platform: PlatformUtils = PlatformUtils.getInstance();
+let platform: PlatformUtils;
 
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
@@ -96,6 +96,7 @@ export class Publisher extends StreamManager {
      */
     constructor(targEl: string | HTMLElement, properties: PublisherProperties, openvidu: OpenVidu) {
         super(new Stream((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl);
+        platform = PlatformUtils.getInstance();
         this.properties = properties;
         this.openvidu = openvidu;
 

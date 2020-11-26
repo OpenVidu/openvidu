@@ -27,7 +27,7 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 /**
  * @hidden
  */
-const platform: PlatformUtils = PlatformUtils.getInstance();
+let platform: PlatformUtils;
 
 export class WebRtcStats {
 
@@ -63,7 +63,9 @@ export class WebRtcStats {
         }
     };
 
-    constructor(private stream: Stream) { }
+    constructor(private stream: Stream) {
+        platform = PlatformUtils.getInstance();
+    }
 
     public isEnabled(): boolean {
         return this.webRtcStatsEnabled;

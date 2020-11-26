@@ -33,7 +33,7 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 /**
  * @hidden
  */
-const platform: PlatformUtils = PlatformUtils.getInstance();
+let platform: PlatformUtils;
 
 
 /**
@@ -59,6 +59,7 @@ export class LocalRecorder {
      * @hidden
      */
     constructor(private stream: Stream) {
+        platform = PlatformUtils.getInstance();
         this.connectionId = (!!this.stream.connection) ? this.stream.connection.connectionId : 'default-connection';
         this.id = this.stream.streamId + '_' + this.connectionId + '_localrecord';
         this.state = LocalRecorderState.READY;

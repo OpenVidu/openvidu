@@ -53,7 +53,7 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 /**
  * @hidden
  */
-const platform: PlatformUtils = PlatformUtils.getInstance();
+let platform: PlatformUtils;
 
 /**
  * Represents a video call. It can also be seen as a videoconference room where multiple users can connect.
@@ -149,6 +149,7 @@ export class Session extends EventDispatcher {
      */
     constructor(openvidu: OpenVidu) {
         super();
+        platform = PlatformUtils.getInstance();
         this.openvidu = openvidu;
     }
 
@@ -1202,7 +1203,7 @@ export class Session extends EventDispatcher {
             } else {
                 setTimeout(obtainAndSendVideo, intervalSeconds * 1000);
             }
-        } else if (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser() || platform.isIonicIos()) {
+        } else if (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser() || platform.isIonicIos() || platform.isReactNative()) {
             // Basic version for Firefox and Ionic iOS. They do not support stats
             this.openvidu.sendRequest('videoData', {
                 height: streamManager.stream.videoDimensions.height,

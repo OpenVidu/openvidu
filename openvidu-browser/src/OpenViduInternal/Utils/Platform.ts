@@ -1,12 +1,12 @@
 import platform = require("platform");
 
 export class PlatformUtils {
-	private static instance: PlatformUtils;
-	private constructor() {}
+	protected static instance: PlatformUtils;
+	constructor() {}
 
 	static getInstance(): PlatformUtils {
-		if (!PlatformUtils.instance) {
-			PlatformUtils.instance = new PlatformUtils();
+		if (!this.instance) {
+			this.instance = new PlatformUtils();
 		}
 		return PlatformUtils.instance;
 	}
@@ -139,6 +139,13 @@ export class PlatformUtils {
 	 */
 	public isMobileDevice(): boolean {
 		return platform.os!!.family === "iOS" || platform.os!!.family === "Android";
+	}
+
+	/**
+	 * @hidden
+	 */
+	public isReactNative(): boolean {
+		return false;
 	}
 
 	/**

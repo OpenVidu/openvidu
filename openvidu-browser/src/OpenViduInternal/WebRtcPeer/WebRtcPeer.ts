@@ -27,7 +27,7 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 /**
  * @hidden
  */
-const platform: PlatformUtils = PlatformUtils.getInstance();
+let platform: PlatformUtils;
 
 
 export interface WebRtcPeerConfiguration {
@@ -55,6 +55,7 @@ export class WebRtcPeer {
     private candidategatheringdone = false;
 
     constructor(protected configuration: WebRtcPeerConfiguration) {
+        platform = PlatformUtils.getInstance();
         this.configuration.iceServers = (!!this.configuration.iceServers && this.configuration.iceServers.length > 0) ? this.configuration.iceServers : freeice();
 
         this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });
