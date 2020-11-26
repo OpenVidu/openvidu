@@ -240,7 +240,9 @@ case $1 in
 
   start)
     start_openvidu
-    [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]] && docker-compose logs -f openvidu-server
+    if [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]]; then
+      docker-compose logs -f openvidu-server
+    fi
     ;;
 
   stop)
@@ -250,7 +252,9 @@ case $1 in
   restart)
     docker-compose down
     start_openvidu
-    [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]] && docker-compose logs -f openvidu-server
+    if [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]]; then
+      docker-compose logs -f openvidu-server
+    fi
     ;;
 
   logs)
