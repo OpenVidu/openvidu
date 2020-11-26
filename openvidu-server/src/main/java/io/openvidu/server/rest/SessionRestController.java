@@ -49,6 +49,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import io.openvidu.client.OpenViduException;
+import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.java.client.ConnectionType;
@@ -379,8 +380,11 @@ public class SessionRestController {
 			return new ResponseEntity<>(startedRecording.toJson().toString(), RestUtils.getResponseHeaders(),
 					HttpStatus.OK);
 		} catch (OpenViduException e) {
+			HttpStatus status = e.getCodeValue() == Code.MEDIA_NODE_STATUS_WRONG.getValue()
+					? HttpStatus.SERVICE_UNAVAILABLE
+					: HttpStatus.INTERNAL_SERVER_ERROR;
 			return new ResponseEntity<>("Error starting recording: " + e.getMessage(), RestUtils.getResponseHeaders(),
-					HttpStatus.INTERNAL_SERVER_ERROR);
+					status);
 		}
 	}
 

@@ -357,7 +357,7 @@ public abstract class KmsManager {
 	public abstract List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure)
 			throws Exception;
 
-	public abstract boolean isMediaNodeRunning(String mediaNodeId);
+	public abstract boolean isMediaNodeAvailableForRecording(String mediaNodeId);
 
 	@PostConstruct
 	protected abstract void postConstructInitKurentoClients();

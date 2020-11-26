@@ -269,7 +269,7 @@ public class RecordingManager {
 			// 1. INCREMENT ACTIVE RECORDINGS OF MEDIA NODE HERE
 			((KurentoSession) session).getKms().incrementActiveRecordings();
 			// 2. CHECK THAT MEDIA NODE HAS RUNNING STATUS. IF NOT THEN FAIL RECORDING START
-			if (!kmsManager.isMediaNodeRunning(properties.mediaNode())) {
+			if (!kmsManager.isMediaNodeAvailableForRecording(properties.mediaNode())) {
 				throw new OpenViduException(Code.MEDIA_NODE_STATUS_WRONG,
 						"Media Node " + properties.mediaNode() + " status is not \"running\"");
 			}
