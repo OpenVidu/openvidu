@@ -147,14 +147,16 @@ export class OpenVidu {
           data = {
             session: sessionId,
             name: !!properties.name ? properties.name : '',
-            outputMode: !!properties.outputMode ? properties.outputMode : Recording.OutputMode.COMPOSED,
-            hasAudio: !!(properties.hasAudio),
-            hasVideo: !!(properties.hasVideo)
+            outputMode: properties.outputMode,
+            hasAudio: properties.hasAudio != null ? properties.hasAudio : null,
+            hasVideo: properties.hasVideo != null ? properties.hasVideo : null,
+            shmSize: properties.shmSize,
+            mediaNode: properties.mediaNode
           };
-          if (data.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED]
-            || data.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED_QUICK_START]) {
-            data.resolution = !!properties.resolution ? properties.resolution : '1920x1080';
-            data.recordingLayout = !!properties.recordingLayout ? properties.recordingLayout : RecordingLayout.BEST_FIT;
+          if ((data.hasVideo == null || data.hasVideo) && (data.outputMode == null || data.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED]
+            || data.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED_QUICK_START])) {
+            data.resolution = properties.resolution;
+            data.recordingLayout = !!properties.recordingLayout ? properties.recordingLayout : '';
             if (data.recordingLayout.toString() === RecordingLayout[RecordingLayout.CUSTOM]) {
               data.customLayout = !!properties.customLayout ? properties.customLayout : '';
             }
@@ -163,15 +165,13 @@ export class OpenVidu {
         } else {
           data = JSON.stringify({
             session: sessionId,
-            name: param2,
-            outputMode: Recording.OutputMode.COMPOSED
+            name: param2
           });
         }
       } else {
         data = JSON.stringify({
           session: sessionId,
-          name: '',
-          outputMode: Recording.OutputMode.COMPOSED
+          name: ''
         });
       }
 
