@@ -73,7 +73,7 @@ services:
             - MIN_PORT=40000
             - MAX_PORT=65535
             - TURN_PUBLIC_IP=${TURN_PUBLIC_IP:-auto-ipv4}
-            - ENABLE_COTURN_LOGS=false
+            - ENABLE_COTURN_LOGS=true
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"

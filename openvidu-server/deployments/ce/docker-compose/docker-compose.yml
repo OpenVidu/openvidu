@@ -85,7 +85,7 @@ services:
             - DB_PASSWORD=${OPENVIDU_SECRET}
             - MIN_PORT=57001
             - MAX_PORT=65535
-            - ENABLE_COTURN_LOGS=false
+            - ENABLE_COTURN_LOGS=true
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"

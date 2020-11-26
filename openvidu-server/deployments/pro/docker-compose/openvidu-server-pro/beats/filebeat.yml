@@ -13,6 +13,18 @@ processors:
       fields: ["message"]
       target: "json"
       overwrite_keys: true
+  - drop_event:
+      when.or:
+        - contains:
+            container.image.name: openvidu/openvidu-coturn
+        - contains:
+            container.image.name: docker.elastic.co/elasticsearch/elasticsearch
+        - contains:
+            container.image.name: docker.elastic.co/kibana/kibana
+        - contains:
+            container.image.name: docker.elastic.co/beats/filebeat-oss
+        - contains:
+            container.image.name: docker.elastic.co/beats/metricbeat-oss
   - add_fields:
       fields:
         cluster-id: ${OPENVIDU_PRO_CLUSTER_ID:undefined}
@@ -25,10 +37,10 @@ output:
         when.or:
           - contains:
               container.image.name: openvidu/openvidu-redis
-      - index: "filebeat-coturn-%{+yyyy.MM.dd}"
+      - index: "filebeat-nginx-%{+yyyy.MM.dd}"
         when.or:
           - contains:
-              container.image.name: openvidu/openvidu-coturn
+              container.image.name: openvidu/openvidu-proxy
 
 
 logging.json: true
