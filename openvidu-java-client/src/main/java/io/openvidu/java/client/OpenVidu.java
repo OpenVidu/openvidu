@@ -202,6 +202,8 @@ public class OpenVidu {
 		json.addProperty("outputMode", properties.outputMode() != null ? properties.outputMode().name() : null);
 		json.addProperty("hasAudio", properties.hasAudio());
 		json.addProperty("hasVideo", properties.hasVideo());
+		json.addProperty("shmSize", properties.shmSize());
+		json.addProperty("mediaNode", properties.mediaNode());
 
 		if ((properties.outputMode() == null || Recording.OutputMode.COMPOSED.equals(properties.outputMode())
 				|| (Recording.OutputMode.COMPOSED_QUICK_START.equals(properties.outputMode())))
