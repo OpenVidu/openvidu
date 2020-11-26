@@ -615,7 +615,8 @@ Resources:
 
                 # Restart all services
                 pushd /opt/openvidu
-                docker-compose up -d
+                export FOLLOW_OPENVIDU_LOGS=false
+                ./openvidu start
                 popd
               mode: "000755"
               owner: "root"
@@ -656,13 +657,8 @@ Resources:
 
             # Start openvidu application
             pushd /opt/openvidu
-            docker-compose up -d
-            if [[ ! -z "${ElasticsearchUrl}" ]]; then
-              docker-compose stop elasticsearch
-            fi
-            if [[ ! -z "${KibanaUrl}" ]]; then
-              docker-compose stop kibana
-            fi
+            export FOLLOW_OPENVIDU_LOGS=false
+            ./openvidu start
             popd
 
             # Wait for the app

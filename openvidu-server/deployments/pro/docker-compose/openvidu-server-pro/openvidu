@@ -234,11 +234,13 @@ usage() {
     printf "\n"
 }
 
+[[ -z "${FOLLOW_OPENVIDU_LOGS}" ]] && FOLLOW_OPENVIDU_LOGS=true
+
 case $1 in
 
   start)
     start_openvidu
-    docker-compose logs -f openvidu-server
+    [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]] && docker-compose logs -f openvidu-server
     ;;
 
   stop)
@@ -248,7 +250,7 @@ case $1 in
   restart)
     docker-compose down
     start_openvidu
-    docker-compose logs -f openvidu-server
+    [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]] && docker-compose logs -f openvidu-server
     ;;
 
   logs)
