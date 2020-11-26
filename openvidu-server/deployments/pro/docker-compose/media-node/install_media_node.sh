@@ -96,9 +96,11 @@ new_media_node_installation() {
      KMS_IMAGE=$(cat docker-compose.yml | grep KMS_IMAGE | cut -d"=" -f2)
      METRICBEAT_IMAGE=$(cat docker-compose.yml | grep METRICBEAT_IMAGE | cut -d"=" -f2)
      FILEBEAT_IMAGE=$(cat docker-compose.yml | grep FILEBEAT_IMAGE | cut -d"=" -f2)
+     OPENVIDU_RECORDING_IMAGE=$(cat docker-compose.yml | grep OPENVIDU_RECORDING_IMAGE | cut -d"=" -f2)
      docker pull $KMS_IMAGE || fatal "Error while pulling docker image: $KMS_IMAGE"
      docker pull $METRICBEAT_IMAGE || fatal "Error while pulling docker image: $METRICBEAT_IMAGE"
      docker pull $FILEBEAT_IMAGE || fatal "Error while pulling docker image: $FILEBEAT_IMAGE"
+     docker pull $OPENVIDU_RECORDING_IMAGE || fatal "Error while pulling docker image: $OPENVIDU_RECORDING_IMAGE"
      docker-compose pull | true
 
      # Ready to use
@@ -231,9 +233,11 @@ upgrade_media_node() {
      KMS_IMAGE=$(cat docker-compose.yml | grep KMS_IMAGE | cut -d"=" -f2)
      METRICBEAT_IMAGE=$(cat docker-compose.yml | grep METRICBEAT_IMAGE | cut -d"=" -f2)
      FILEBEAT_IMAGE=$(cat docker-compose.yml | grep FILEBEAT_IMAGE | cut -d"=" -f2)
+     OPENVIDU_RECORDING_IMAGE=$(cat docker-compose.yml | grep OPENVIDU_RECORDING_IMAGE | cut -d"=" -f2)
      docker pull $KMS_IMAGE || fatal "Error while pulling docker image: $KMS_IMAGE"
      docker pull $METRICBEAT_IMAGE || fatal "Error while pulling docker image: $METRICBEAT_IMAGE"
      docker pull $FILEBEAT_IMAGE || fatal "Error while pulling docker image: $FILEBEAT_IMAGE"
+     docker pull $OPENVIDU_RECORDING_IMAGE || fatal "Error while pulling docker image: $OPENVIDU_RECORDING_IMAGE"
      docker-compose pull | true
 
      printf '\n     => Stoping Media Node...'
