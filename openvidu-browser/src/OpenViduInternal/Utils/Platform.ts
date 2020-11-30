@@ -68,6 +68,14 @@ export class PlatformUtils {
 	/**
 	 * @hidden
 	 */
+	public isEdgeMobileBrowser(): boolean {
+		const version = platform?.version ? parseFloat(platform.version) : -1;
+		return platform.name === "Microsoft Edge" && platform.os?.family === 'Android' && version > 45;
+	}
+
+	/**
+	 * @hidden
+	 */
 	public isAndroidBrowser(): boolean {
 		return platform.name === "Android Browser";
 	}
