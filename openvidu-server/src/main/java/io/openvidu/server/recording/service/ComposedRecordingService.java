@@ -145,7 +145,7 @@ public class ComposedRecordingService extends RecordingService {
 			throws OpenViduException {
 
 		log.info("Starting composed ({}) recording {} of session {}",
-				properties.hasAudio() ? "video + audio" : "audio-only", recording.getId(), recording.getSessionId());
+				properties.hasAudio() ? "video + audio" : "video-only", recording.getId(), recording.getSessionId());
 
 		List<String> envs = new ArrayList<>();
 
@@ -231,7 +231,7 @@ public class ComposedRecordingService extends RecordingService {
 	protected Recording stopRecordingWithVideo(Session session, Recording recording, EndReason reason) {
 
 		log.info("Stopping composed ({}) recording {} of session {}. Reason: {}",
-				recording.hasAudio() ? "video + audio" : "audio-only", recording.getId(), recording.getSessionId(),
+				recording.hasAudio() ? "video + audio" : "video-only", recording.getId(), recording.getSessionId(),
 				RecordingManager.finalReason(reason));
 
 		String containerId = this.sessionsContainers.remove(recording.getSessionId());
