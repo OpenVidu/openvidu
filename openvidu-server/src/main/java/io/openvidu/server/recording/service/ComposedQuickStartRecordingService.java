@@ -220,7 +220,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 
 		String containerId = null;
 		try {
-			final String container = RecordingManager.IMAGE_NAME + ":" + RecordingManager.IMAGE_TAG;
+			final String container = RecordingManager.IMAGE_NAME + ":" + openviduConfig.getOpenViduRecordingVersion();
 			final String containerName = "recording_" + session.getSessionId();
 			Volume volume1 = new Volume("/recordings");
 			List<Volume> volumes = new ArrayList<>();

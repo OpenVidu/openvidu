@@ -126,7 +126,6 @@ public class RecordingManager {
 			Runtime.getRuntime().availableProcessors());
 
 	public static final String IMAGE_NAME = "openvidu/openvidu-recording";
-	public static String IMAGE_TAG;
 
 	private static final List<EndReason> LAST_PARTICIPANT_LEFT_REASONS = Arrays
 			.asList(new EndReason[] { EndReason.disconnect, EndReason.forceDisconnectByUser,
@@ -165,8 +164,6 @@ public class RecordingManager {
 	}
 
 	public void initializeRecordingManager() throws OpenViduException {
-
-		RecordingManager.IMAGE_TAG = openviduConfig.getOpenViduRecordingVersion();
 
 		this.dockerManager.init();
 
@@ -223,7 +220,7 @@ public class RecordingManager {
 		log.info("Recording module required: Downloading openvidu/openvidu-recording:"
 				+ openviduConfig.getOpenViduRecordingVersion() + " Docker image (350MB aprox)");
 
-		if (dockMng.dockerImageExistsLocally(IMAGE_NAME + ":" + IMAGE_TAG)) {
+		if (dockMng.dockerImageExistsLocally(IMAGE_NAME + ":" + openviduConfig.getOpenViduRecordingVersion())) {
 			log.info("Docker image already exists locally");
 		} else {
 			Thread t = new Thread(() -> {
@@ -241,9 +238,10 @@ public class RecordingManager {
 			});
 			t.start();
 			try {
-				dockMng.downloadDockerImage(IMAGE_NAME + ":" + IMAGE_TAG, 600);
+				dockMng.downloadDockerImage(IMAGE_NAME + ":" + openviduConfig.getOpenViduRecordingVersion(), 600);
 			} catch (Exception e) {
-				log.error("Error downloading docker image {}:{}", IMAGE_NAME, IMAGE_TAG);
+				log.error("Error downloading docker image {}:{}", IMAGE_NAME,
+						openviduConfig.getOpenViduRecordingVersion());
 			}
 			t.interrupt();
 			try {
