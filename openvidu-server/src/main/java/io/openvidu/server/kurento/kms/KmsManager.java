@@ -145,11 +145,6 @@ public abstract class KmsManager {
 		return this.kmss.get(kmsId);
 	}
 
-	public KmsLoad getKmsLoad(String kmsId) {
-		Kms kms = this.kmss.get(kmsId);
-		return new KmsLoad(kms, kms.getLoad());
-	}
-
 	public Collection<Kms> getKmss() {
 		return this.kmss.values();
 	}
