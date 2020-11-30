@@ -121,7 +121,8 @@ public abstract class CustomFileManager {
 		}
 	}
 
-	public abstract void waitForFileToExistAndNotEmpty(String mediaNodeId, String absolutePathToFile,
-			int maxSecondsWait) throws Exception;
+	public abstract void waitForFileToExistAndNotEmpty(String mediaNodeId, String absolutePathToFile) throws Exception;
+
+	public abstract int maxSecondsWaitForFile();
 
 }

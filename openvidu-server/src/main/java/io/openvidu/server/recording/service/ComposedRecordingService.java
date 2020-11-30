@@ -433,9 +433,7 @@ public class ComposedRecordingService extends RecordingService {
 	protected void waitForVideoFileNotEmpty(Recording recording) throws Exception {
 		final String VIDEO_FILE = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
 				+ recording.getName() + RecordingService.COMPOSED_RECORDING_EXTENSION;
-		int SECONDS_MAX_WAIT = 20;
-		this.fileManager.waitForFileToExistAndNotEmpty(recording.getRecordingProperties().mediaNode(), VIDEO_FILE,
-				SECONDS_MAX_WAIT);
+		this.fileManager.waitForFileToExistAndNotEmpty(recording.getRecordingProperties().mediaNode(), VIDEO_FILE);
 	}
 
 	protected void failRecordingCompletion(Recording recording, String containerId, boolean removeContainer,

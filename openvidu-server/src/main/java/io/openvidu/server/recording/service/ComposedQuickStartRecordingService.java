@@ -246,7 +246,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 
 	private void waitForComposedQuickStartFiles(Recording recording) throws Exception {
 
-		final int SECONDS_MAX_WAIT = 30;
+		final int SECONDS_MAX_WAIT = fileManager.maxSecondsWaitForFile();
 		final String PATH = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
 
 		// Waiting for the files generated at the end of the stopping process: the
@@ -264,8 +264,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 				@Override
 				public void run() {
 					try {
-						fileManager.waitForFileToExistAndNotEmpty(recording.getRecordingProperties().mediaNode(), file,
-								SECONDS_MAX_WAIT);
+						fileManager.waitForFileToExistAndNotEmpty(recording.getRecordingProperties().mediaNode(), file);
 					} catch (Exception e) {
 						log.error(e.getMessage());
 						recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
@@ -282,7 +281,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 			if (!latch.await(SECONDS_MAX_WAIT, TimeUnit.SECONDS)) {
 				recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 				String msg = "The wait for files of COMPOSED_QUICK_START recording " + recording.getId()
-						+ " didn't complete in " + SECONDS_MAX_WAIT + " seconds";
+						+ " didn't complete in " + fileManager.maxSecondsWaitForFile() + " seconds";
 				log.error(msg);
 				throw new Exception(msg);
 			} else {
