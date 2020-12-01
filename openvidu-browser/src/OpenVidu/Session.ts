@@ -1216,10 +1216,10 @@ export class Session extends EventDispatcher {
         } else if (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser() || platform.isIonicIos() || platform.isReactNative()) {
             // Basic version for Firefox and Ionic iOS. They do not support stats
             this.openvidu.sendRequest('videoData', {
-                height: streamManager.stream.videoDimensions.height,
-                width: streamManager.stream.videoDimensions.width,
-                videoActive: streamManager.stream.videoActive,
-                audioActive: streamManager.stream.audioActive
+                height: streamManager.stream.videoDimensions?.height || 0,
+                width: streamManager.stream.videoDimensions?.width || 0,
+                videoActive: streamManager.stream.videoActive != null ? streamManager.stream.videoActive : false,
+                audioActive: streamManager.stream.audioActive != null ? streamManager.stream.audioActive : false
             }, (error, response) => {
                 if (error) {
                     logger.error("Error sending 'videoData' event", error);
