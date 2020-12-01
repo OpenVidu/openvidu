@@ -143,6 +143,14 @@ export class Session extends EventDispatcher {
      * @hidden
      */
     stopSpeakingEventsEnabledOnce = false;
+    /**
+     * @hidden
+     */
+    private videoDataInterval: NodeJS.Timeout;
+    /**
+     * @hidden
+     */
+    private videoDataTimeout: NodeJS.Timeout;
 
     /**
      * @hidden
@@ -1122,6 +1130,7 @@ export class Session extends EventDispatcher {
 
         forced = !!forced;
         logger.info('Leaving Session (forced=' + forced + ')');
+        this.stopVideoDataIntervals();
 
         if (!!this.connection) {
             if (!this.connection.disposed && !forced) {
@@ -1193,15 +1202,16 @@ export class Session extends EventDispatcher {
             }
             if (doInterval) {
                 let loops = 1;
-                let timer = setTimeout(async function myTimer() {
-                    await obtainAndSendVideo();
+                this.videoDataInterval = setInterval(() => {
                     if (loops < maxLoops) {
                         loops++;
-                        timer = setTimeout(myTimer, intervalSeconds * 1000);
+                        obtainAndSendVideo();
+                    }else {
+                        clearInterval(this.videoDataInterval);
                     }
                 }, intervalSeconds * 1000);
             } else {
-                setTimeout(obtainAndSendVideo, intervalSeconds * 1000);
+                this.videoDataTimeout = setTimeout(obtainAndSendVideo, intervalSeconds * 1000);
             }
         } else if (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser() || platform.isIonicIos() || platform.isReactNative()) {
             // Basic version for Firefox and Ionic iOS. They do not support stats
@@ -1287,6 +1297,11 @@ export class Session extends EventDispatcher {
                 this.connection.stream.ee.emitEvent('local-stream-destroyed', [reason]);
             }
         }
+    }
+
+    private stopVideoDataIntervals(): void {
+        clearInterval(this.videoDataInterval);
+        clearTimeout(this.videoDataTimeout);
     }
 
     private stringClientMetadata(metadata: any): string {
