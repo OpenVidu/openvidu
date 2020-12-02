@@ -20,6 +20,7 @@ package io.openvidu.server.kurento.kms;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import javax.annotation.PostConstruct;
 
@@ -61,6 +62,24 @@ public class FixedOneKmsManager extends KmsManager {
 	@Override
 	public boolean isMediaNodeAvailableForRecording(String mediaNodeId) {
 		return true;
+	}
+
+	@Override
+	public void incrementActiveRecordings(String mediaNodeId) {
+		try {
+			this.getKmss().iterator().next().incrementActiveRecordings();
+		} catch (NoSuchElementException e) {
+			log.error("There is no KMS available when incrementing active recordings");
+		}
+	}
+
+	@Override
+	public void decrementActiveRecordings(String mediaNodeId) {
+		try {
+			this.getKmss().iterator().next().decrementActiveRecordings();
+		} catch (NoSuchElementException e) {
+			log.error("There is no KMS available when decrementing active recordings");
+		}
 	}
 
 	@Override

@@ -42,8 +42,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.gson.JsonObject;
 
-import io.openvidu.client.OpenViduException;
-import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.IdentifierPrefixes;
 import io.openvidu.server.kurento.core.KurentoSession;
@@ -351,73 +349,16 @@ public abstract class KmsManager {
 		return intervals[intervals.length - 1][0];
 	}
 
-	public void incrementActiveRecordings(String mediaNodeId) throws OpenViduException {
-		try {
-			if (KmsManager.selectAndRemoveKmsLock.tryLock(KmsManager.MAX_SECONDS_LOCK_WAIT, TimeUnit.SECONDS)) {
-				try {
-					final Kms kms = this.getKms(mediaNodeId);
-					if (kms == null) {
-						throw new OpenViduException(Code.MEDIA_NODE_NOT_FOUND,
-								"Media Node " + mediaNodeId + " does not exist");
-					}
-					kms.incrementActiveRecordings();
-					log.info("Incremented number of active recordings in Media Node {}. Current number: {}",
-							mediaNodeId, kms.getActiveRecordings());
-
-					if (!isMediaNodeAvailableForRecording(mediaNodeId)) {
-						throw new OpenViduException(Code.MEDIA_NODE_STATUS_WRONG,
-								"Media Node " + mediaNodeId + " does not allow starting new Recordings");
-					}
-
-				} finally {
-					KmsManager.selectAndRemoveKmsLock.unlock();
-				}
-			} else {
-				throw new OpenViduException(Code.GENERIC_ERROR_CODE,
-						"selectAndRemoveKmsLock couldn't be acquired within " + KmsManager.MAX_SECONDS_LOCK_WAIT
-								+ " seconds  when incrementing active recordings of Media Node " + mediaNodeId);
-			}
-		} catch (InterruptedException e) {
-			throw new OpenViduException(Code.GENERIC_ERROR_CODE,
-					"InterruptedException waiting to acquire selectAndRemoveKmsLock when incrementing active recordings of Media Node "
-							+ mediaNodeId + ": " + e.getMessage());
-		}
-	}
-
-	public void decrementActiveRecordings(String mediaNodeId) throws OpenViduException {
-		try {
-			if (KmsManager.selectAndRemoveKmsLock.tryLock(KmsManager.MAX_SECONDS_LOCK_WAIT, TimeUnit.SECONDS)) {
-				try {
-					final Kms kms = this.getKms(mediaNodeId);
-					if (kms != null) {
-						kms.decrementActiveRecordings();
-						log.info("Decremented number of active recordings in Media Node {}. Current number: {}",
-								mediaNodeId, kms.getActiveRecordings());
-					} else {
-						log.warn("Trying to decrement active recordings of Media Node {} but cannot be found",
-								mediaNodeId);
-					}
-				} finally {
-					KmsManager.selectAndRemoveKmsLock.unlock();
-				}
-			} else {
-				throw new OpenViduException(Code.GENERIC_ERROR_CODE,
-						"selectAndRemoveKmsLock couldn't be acquired within " + KmsManager.MAX_SECONDS_LOCK_WAIT
-								+ " seconds  when decrementing active recordings of Media Node " + mediaNodeId);
-			}
-		} catch (InterruptedException e) {
-			throw new OpenViduException(Code.GENERIC_ERROR_CODE,
-					"InterruptedException waiting to acquire selectAndRemoveKmsLock when decrementing active recordings of Media Node "
-							+ mediaNodeId + ": " + e.getMessage());
-		}
-	}
-
 	public abstract List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure)
 			throws Exception;
 
 	public abstract boolean isMediaNodeAvailableForSession(String mediaNodeId);
 
 	public abstract boolean isMediaNodeAvailableForRecording(String mediaNodeId);
+
+	public abstract void incrementActiveRecordings(String mediaNodeId);
+
+	public abstract void decrementActiveRecordings(String mediaNodeId);
 
 	@PostConstruct
 	protected abstract void postConstructInitKurentoClients();
