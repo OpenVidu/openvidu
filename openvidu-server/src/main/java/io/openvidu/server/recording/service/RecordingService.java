@@ -31,6 +31,7 @@ import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Session;
+import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingUploader;
@@ -46,6 +47,7 @@ public abstract class RecordingService {
 	protected RecordingManager recordingManager;
 	protected RecordingDownloader recordingDownloader;
 	protected RecordingUploader recordingUploader;
+	protected KmsManager kmsManager;
 	protected CustomFileManager fileManager;
 	protected CallDetailRecord cdr;
 
@@ -58,11 +60,12 @@ public abstract class RecordingService {
 	public final static String INDIVIDUAL_RECORDING_COMPRESSED_EXTENSION = ".zip";
 
 	public RecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
-			RecordingUploader recordingUploader, CustomFileManager fileManager, OpenviduConfig openviduConfig,
-			CallDetailRecord cdr) {
+			RecordingUploader recordingUploader, KmsManager kmsManager, CustomFileManager fileManager,
+			OpenviduConfig openviduConfig, CallDetailRecord cdr) {
 		this.recordingManager = recordingManager;
 		this.recordingDownloader = recordingDownloader;
 		this.recordingUploader = recordingUploader;
+		this.kmsManager = kmsManager;
 		this.fileManager = fileManager;
 		this.openviduConfig = openviduConfig;
 		this.cdr = cdr;

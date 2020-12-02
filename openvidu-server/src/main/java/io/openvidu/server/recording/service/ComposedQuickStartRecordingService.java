@@ -24,6 +24,7 @@ import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Session;
+import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingUploader;
@@ -35,9 +36,10 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 	private static final Logger log = LoggerFactory.getLogger(ComposedRecordingService.class);
 
 	public ComposedQuickStartRecordingService(RecordingManager recordingManager,
-			RecordingDownloader recordingDownloader, RecordingUploader recordingUploader, CustomFileManager fileManager,
-			OpenviduConfig openviduConfig, CallDetailRecord cdr, DockerManager dockerManager) {
-		super(recordingManager, recordingDownloader, recordingUploader, fileManager, openviduConfig, cdr,
+			RecordingDownloader recordingDownloader, RecordingUploader recordingUploader, KmsManager kmsManager,
+			CustomFileManager fileManager, OpenviduConfig openviduConfig, CallDetailRecord cdr,
+			DockerManager dockerManager) {
+		super(recordingManager, recordingDownloader, recordingUploader, kmsManager, fileManager, openviduConfig, cdr,
 				dockerManager);
 	}
 

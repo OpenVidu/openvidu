@@ -52,6 +52,7 @@ import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.kurento.core.KurentoSession;
+import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.recording.CompositeWrapper;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
@@ -72,9 +73,9 @@ public class ComposedRecordingService extends RecordingService {
 	protected DockerManager dockerManager;
 
 	public ComposedRecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
-			RecordingUploader recordingUploader, CustomFileManager fileManager, OpenviduConfig openviduConfig,
-			CallDetailRecord cdr, DockerManager dockerManager) {
-		super(recordingManager, recordingDownloader, recordingUploader, fileManager, openviduConfig, cdr);
+			RecordingUploader recordingUploader, KmsManager kmsManager, CustomFileManager fileManager,
+			OpenviduConfig openviduConfig, CallDetailRecord cdr, DockerManager dockerManager) {
+		super(recordingManager, recordingDownloader, recordingUploader, kmsManager, fileManager, openviduConfig, cdr);
 		this.dockerManager = dockerManager;
 	}
 
@@ -287,12 +288,14 @@ public class ComposedRecordingService extends RecordingService {
 						}
 					}
 					cleanRecordingMaps(recordingAux);
+
+					// Decrement active recordings
+					kmsManager.decrementActiveRecordings(recordingAux.getRecordingProperties().mediaNode());
+
 					if (i == timeout) {
 						log.error("Container did not launched in {} seconds", timeout / 2);
 						return;
 					}
-					// Decrement active recordings
-					((KurentoSession) session).getKms().decrementActiveRecordings();
 				}).start();
 			}
 		} else {
@@ -363,7 +366,7 @@ public class ComposedRecordingService extends RecordingService {
 				// Decrement active recordings once it is downloaded. This method will also drop
 				// the Media Node if no more sessions or recordings and status is
 				// waiting-idle-to-terminate
-				((KurentoSession) session).getKms().decrementActiveRecordings();
+				kmsManager.decrementActiveRecordings(finalRecordingArray[0].getRecordingProperties().mediaNode());
 
 				// Upload if necessary
 				this.uploadRecording(finalRecordingArray[0], reason);
@@ -592,7 +595,7 @@ public class ComposedRecordingService extends RecordingService {
 				// Decrement active recordings once it is downloaded. This method will also drop
 				// the Media Node if no more sessions or recordings and status is
 				// waiting-idle-to-terminate
-				((KurentoSession) session).getKms().decrementActiveRecordings();
+				kmsManager.decrementActiveRecordings(recording.getRecordingProperties().mediaNode());
 
 				// Upload if necessary
 				this.uploadRecording(recording, reason);

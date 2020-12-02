@@ -67,7 +67,6 @@ import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionEventsHandler;
 import io.openvidu.server.core.SessionManager;
-import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.recording.Recording;
@@ -168,11 +167,11 @@ public class RecordingManager {
 		this.dockerManager.init();
 
 		this.composedRecordingService = new ComposedRecordingService(this, recordingDownloader, recordingUploader,
-				fileManager, openviduConfig, cdr, this.dockerManager);
+				kmsManager, fileManager, openviduConfig, cdr, this.dockerManager);
 		this.composedQuickStartRecordingService = new ComposedQuickStartRecordingService(this, recordingDownloader,
-				recordingUploader, fileManager, openviduConfig, cdr, this.dockerManager);
+				recordingUploader, kmsManager, fileManager, openviduConfig, cdr, this.dockerManager);
 		this.singleStreamRecordingService = new SingleStreamRecordingService(this, recordingDownloader,
-				recordingUploader, fileManager, openviduConfig, cdr);
+				recordingUploader, kmsManager, fileManager, openviduConfig, cdr);
 
 		this.checkRecordingRequirements(this.openviduConfig.getOpenViduRecordingPath(),
 				this.openviduConfig.getOpenviduRecordingCustomLayout());
@@ -264,13 +263,9 @@ public class RecordingManager {
 	public Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException {
 		try {
 
-			// 1. INCREMENT ACTIVE RECORDINGS OF MEDIA NODE HERE
-			((KurentoSession) session).getKms().incrementActiveRecordings();
-			// 2. CHECK THAT MEDIA NODE HAS RUNNING STATUS. IF NOT THEN FAIL RECORDING START
-			if (!kmsManager.isMediaNodeAvailableForRecording(properties.mediaNode())) {
-				throw new OpenViduException(Code.MEDIA_NODE_STATUS_WRONG,
-						"Media Node " + properties.mediaNode() + " status is not \"running\"");
-			}
+			// INCREMENT ACTIVE RECORDINGS OF MEDIA NODE HERE. IF MEDIA NODE IS NOT
+			// AVAILABLE FOR STARTING NEW RECORDINGS THIS METHOD THROWS AN EXCEPTION
+			kmsManager.incrementActiveRecordings(properties.mediaNode());
 
 			try {
 				if (session.recordingLock.tryLock(15, TimeUnit.SECONDS)) {
@@ -328,7 +323,7 @@ public class RecordingManager {
 			}
 		} catch (Exception e) {
 			// DECREMENT ACTIVE RECORDINGS OF MEDIA NODE AND TRY REMOVE MEDIA NODE HERE
-			((KurentoSession) session).getKms().decrementActiveRecordings();
+			kmsManager.decrementActiveRecordings(properties.mediaNode());
 			throw e;
 		}
 	}

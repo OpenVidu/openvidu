@@ -61,8 +61,8 @@ import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.kurento.core.KurentoParticipant;
-import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
+import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.recording.RecorderEndpointWrapper;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
@@ -79,9 +79,9 @@ public class SingleStreamRecordingService extends RecordingService {
 	private Map<String, Map<String, List<RecorderEndpointWrapper>>> storedRecorders = new ConcurrentHashMap<>();
 
 	public SingleStreamRecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
-			RecordingUploader recordingUploader, CustomFileManager fileManager, OpenviduConfig openviduConfig,
-			CallDetailRecord cdr) {
-		super(recordingManager, recordingDownloader, recordingUploader, fileManager, openviduConfig, cdr);
+			RecordingUploader recordingUploader, KmsManager kmsManager, CustomFileManager fileManager,
+			OpenviduConfig openviduConfig, CallDetailRecord cdr) {
+		super(recordingManager, recordingDownloader, recordingUploader, kmsManager, fileManager, openviduConfig, cdr);
 	}
 
 	@Override
@@ -187,7 +187,7 @@ public class SingleStreamRecordingService extends RecordingService {
 				// Decrement active recordings once it is downloaded. This method will also drop
 				// the Media Node if no more sessions or recordings and status is
 				// waiting-idle-to-terminate
-				((KurentoSession) session).getKms().decrementActiveRecordings();
+				kmsManager.decrementActiveRecordings(session.getMediaNodeId());
 
 				// Upload if necessary
 				this.uploadRecording(finalRecordingArray[0], reason);

@@ -54,6 +54,11 @@ public class FixedOneKmsManager extends KmsManager {
 	}
 
 	@Override
+	public boolean isMediaNodeAvailableForSession(String mediaNodeId) {
+		return true;
+	}
+
+	@Override
 	public boolean isMediaNodeAvailableForRecording(String mediaNodeId) {
 		return true;
 	}
