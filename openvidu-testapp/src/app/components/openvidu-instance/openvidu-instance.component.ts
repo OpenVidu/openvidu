@@ -632,7 +632,10 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
             customLayout: this.sessionProperties.defaultCustomLayout,
             resolution: '1920x1080',
             hasAudio: true,
-            hasVideo: true
+            hasVideo: true,
+            mediaNode: {
+              id: ''
+            }
           }
       },
       width: '425px',
