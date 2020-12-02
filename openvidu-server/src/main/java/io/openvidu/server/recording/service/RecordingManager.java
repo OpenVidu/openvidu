@@ -273,7 +273,7 @@ public class RecordingManager {
 
 			// INCREMENT ACTIVE RECORDINGS OF MEDIA NODE HERE. IF MEDIA NODE IS NOT
 			// AVAILABLE FOR STARTING NEW RECORDINGS THIS METHOD THROWS AN EXCEPTION
-			kmsManager.incrementActiveRecordings(properties.mediaNode(), recordingId, session.getSessionId());
+			kmsManager.incrementActiveRecordings(properties, recordingId, session);
 
 			try {
 				if (session.recordingLock.tryLock(15, TimeUnit.SECONDS)) {

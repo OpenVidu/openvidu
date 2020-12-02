@@ -42,8 +42,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.gson.JsonObject;
 
+import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.IdentifierPrefixes;
+import io.openvidu.server.core.Session;
 import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.utils.MediaNodeStatusManager;
 import io.openvidu.server.utils.QuarantineKiller;
@@ -356,7 +358,8 @@ public abstract class KmsManager {
 
 	public abstract boolean isMediaNodeAvailableForRecording(String mediaNodeId);
 
-	public abstract void incrementActiveRecordings(String mediaNodeId, String recordingId, String sessionId);
+	public abstract void incrementActiveRecordings(RecordingProperties recordingProperties, String recordingId,
+			Session session);
 
 	public abstract void decrementActiveRecordings(String mediaNodeId, String recordingId);
 

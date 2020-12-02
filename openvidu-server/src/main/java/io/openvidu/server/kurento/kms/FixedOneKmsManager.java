@@ -27,6 +27,9 @@ import javax.annotation.PostConstruct;
 import org.kurento.client.KurentoClient;
 import org.kurento.commons.exception.KurentoException;
 
+import io.openvidu.java.client.RecordingProperties;
+import io.openvidu.server.core.Session;
+
 public class FixedOneKmsManager extends KmsManager {
 
 	@Override
@@ -65,9 +68,9 @@ public class FixedOneKmsManager extends KmsManager {
 	}
 
 	@Override
-	public void incrementActiveRecordings(String mediaNodeId, String recordingId, String sessionId) {
+	public void incrementActiveRecordings(RecordingProperties properties, String recordingId, Session session) {
 		try {
-			this.getKmss().iterator().next().incrementActiveRecordings(recordingId, sessionId);
+			this.getKmss().iterator().next().incrementActiveRecordings(recordingId, session.getSessionId());
 		} catch (NoSuchElementException e) {
 			log.error("There is no KMS available when incrementing active recordings");
 		}
