@@ -88,10 +88,19 @@
 			<version>${version.unirest}</version>
 		</dependency>
 		<dependency>
+			<groupId>org.jcodec</groupId>
+			<artifactId>jcodec-javase</artifactId>
+			<version>${version.jcodec}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.openvidu</groupId>
+			<artifactId>openvidu-java-client</artifactId>
+			<version>${version.openvidu.java.client}</version>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>${version.junit}</version>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

@@ -168,7 +168,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		String recPath = "/opt/openvidu/recordings/" + sessionName + "/";
 		Recording recording = new OpenVidu(OpenViduTestAppE2eTest.OPENVIDU_URL, OpenViduTestAppE2eTest.OPENVIDU_SECRET)
 				.getRecording(sessionName);
-		checkIndividualRecording(recPath, recording, 4, "opus", "vp8", true);
+		this.recordingUtils.checkIndividualRecording(recPath, recording, 4, "opus", "vp8", true);
 
 		// Analyze INDIVIDUAL recording metadata
 		new Unzipper().unzipFile(recPath, recording.getName() + ".zip");

@@ -73,6 +73,7 @@ import io.openvidu.java.client.SessionProperties;
 import io.openvidu.java.client.VideoCodec;
 import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
+import io.openvidu.test.browsers.utils.RecordingUtils;
 import io.openvidu.test.browsers.utils.layout.CustomLayoutHandler;
 import io.openvidu.test.browsers.utils.webhook.CustomWebhook;
 
@@ -1082,10 +1083,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("File " + file3.getAbsolutePath() + " does not exist or is empty",
 				file3.exists() && file3.length() > 0);
 
-		Assert.assertTrue("Recorded file " + file1.getAbsolutePath() + " is not fine", this.recordedGreenFileFine(file1,
-				new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName)));
+		Assert.assertTrue("Recorded file " + file1.getAbsolutePath() + " is not fine", this.recordingUtils
+				.recordedGreenFileFine(file1, new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName)));
 		Assert.assertTrue("Thumbnail " + file3.getAbsolutePath() + " is not fine",
-				this.thumbnailIsFine(file3, OpenViduTestAppE2eTest::checkVideoAverageRgbGreen));
+				this.recordingUtils.thumbnailIsFine(file3, RecordingUtils::checkVideoAverageRgbGreen));
 
 		// Try to get the stopped recording
 		user.getDriver().findElement(By.id("get-recording-btn")).click();
@@ -1368,7 +1369,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		String recPath = recordingsPath + sessionName + "/";
 
 		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName);
-		this.checkIndividualRecording(recPath, recording, 2, "opus", "vp8", true);
+		this.recordingUtils.checkIndividualRecording(recPath, recording, 2, "opus", "vp8", true);
 
 		// Try to get the stopped recording
 		user.getDriver().findElement(By.id("get-recording-btn")).click();
@@ -1592,24 +1593,24 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Check video-only COMPOSED recording
 		String recPath = recordingsPath + SESSION_NAME + "/";
 		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME);
-		this.checkMultimediaFile(new File(recPath + recording.getName() + ".mp4"), false, true, recording.getDuration(),
-				recording.getResolution(), null, "h264", true);
+		this.recordingUtils.checkMultimediaFile(new File(recPath + recording.getName() + ".mp4"), false, true,
+				recording.getDuration(), recording.getResolution(), null, "h264", true);
 
 		// Check audio-only COMPOSED recording
 		recPath = recordingsPath + SESSION_NAME + "-1/";
 		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-1");
-		this.checkMultimediaFile(new File(recPath + recording.getName() + ".webm"), true, false,
+		this.recordingUtils.checkMultimediaFile(new File(recPath + recording.getName() + ".webm"), true, false,
 				recording.getDuration(), null, "opus", null, true);
 
 		// Check video-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "-2/";
 		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-2");
-		this.checkIndividualRecording(recPath, recording, 3, "opus", "vp8", true);
+		this.recordingUtils.checkIndividualRecording(recPath, recording, 3, "opus", "vp8", true);
 
 		// Check audio-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "-3/";
 		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-3");
-		this.checkIndividualRecording(recPath, recording, 2, "opus", "vp8", true);
+		this.recordingUtils.checkIndividualRecording(recPath, recording, 2, "opus", "vp8", true);
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
@@ -1685,10 +1686,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		File file1 = new File(recordingsPath + SESSION_NAME + ".mp4");
 		File file2 = new File(recordingsPath + SESSION_NAME + ".jpg");
 
-		Assert.assertTrue("Recorded file " + file1.getAbsolutePath() + " is not fine", this.recordedRedFileFine(file1,
-				new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME)));
+		Assert.assertTrue("Recorded file " + file1.getAbsolutePath() + " is not fine", this.recordingUtils
+				.recordedRedFileFine(file1, new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME)));
 		Assert.assertTrue("Thumbnail " + file2.getAbsolutePath() + " is not fine",
-				this.thumbnailIsFine(file2, OpenViduTestAppE2eTest::checkVideoAverageRgbRed));
+				this.recordingUtils.thumbnailIsFine(file2, RecordingUtils::checkVideoAverageRgbRed));
 
 		// Custom layout from external URL
 		CountDownLatch initLatch = new CountDownLatch(1);
@@ -1737,10 +1738,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			file1 = new File(recordingsPath + SESSION_NAME + "-1.mp4");
 			file2 = new File(recordingsPath + SESSION_NAME + "-1.jpg");
 
-			Assert.assertTrue("Recorded file " + file1.getAbsolutePath() + " is not fine", this.recordedRedFileFine(
-					file1, new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-1")));
+			Assert.assertTrue("Recorded file " + file1.getAbsolutePath() + " is not fine",
+					this.recordingUtils.recordedRedFileFine(file1,
+							new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-1")));
 			Assert.assertTrue("Thumbnail " + file2.getAbsolutePath() + " is not fine",
-					this.thumbnailIsFine(file2, OpenViduTestAppE2eTest::checkVideoAverageRgbRed));
+					this.recordingUtils.thumbnailIsFine(file2, RecordingUtils::checkVideoAverageRgbRed));
 
 		} finally {
 			CustomLayoutHandler.shutDown();
@@ -1902,7 +1904,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Analyze Chrome fake video stream without gray filter (GREEN color)
 		Map<String, Long> rgb = user.getEventManager().getAverageRgbFromVideo(subscriberVideo);
 		System.out.println(rgb.toString());
-		Assert.assertTrue("Video is not average green", checkVideoAverageRgbGreen(rgb));
+		Assert.assertTrue("Video is not average green", RecordingUtils.checkVideoAverageRgbGreen(rgb));
 
 		// Try to apply none allowed filter
 		user.getDriver().findElement(By.cssSelector(".filter-btn")).click();
@@ -1941,7 +1943,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(500);
 		rgb = user.getEventManager().getAverageRgbFromVideo(subscriberVideo);
 		System.out.println(rgb.toString());
-		Assert.assertTrue("Video is not average gray", checkVideoAverageRgbGray(rgb));
+		Assert.assertTrue("Video is not average gray", RecordingUtils.checkVideoAverageRgbGray(rgb));
 
 		// Execute filter method
 		WebElement filterMethodInput = user.getDriver().findElement(By.id("filter-method-field"));
@@ -1959,7 +1961,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(500);
 		rgb = user.getEventManager().getAverageRgbFromVideo(subscriberVideo);
 		System.out.println(rgb.toString());
-		Assert.assertTrue("Video is not average green", checkVideoAverageRgbGreen(rgb));
+		Assert.assertTrue("Video is not average green", RecordingUtils.checkVideoAverageRgbGreen(rgb));
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
@@ -1984,7 +1986,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video"));
 		rgb = user.getEventManager().getAverageRgbFromVideo(subscriberVideo);
 		System.out.println(rgb.toString());
-		Assert.assertTrue("Video is not average gray", checkVideoAverageRgbGray(rgb));
+		Assert.assertTrue("Video is not average gray", RecordingUtils.checkVideoAverageRgbGray(rgb));
 
 		// Remove filter
 		user.getDriver().findElement(By.cssSelector(".filter-btn")).click();
@@ -1998,7 +2000,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Analyze Chrome fake video stream with gray filter (GREEN color)
 		rgb = user.getEventManager().getAverageRgbFromVideo(subscriberVideo);
 		System.out.println(rgb.toString());
-		Assert.assertTrue("Video is not average green", checkVideoAverageRgbGreen(rgb));
+		Assert.assertTrue("Video is not average green", RecordingUtils.checkVideoAverageRgbGreen(rgb));
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
@@ -2457,8 +2459,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertFalse("Session shouldn't be being recorded", session.isBeingRecorded());
 		Assert.assertFalse("OpenVidu.fetch() should return false", OV.fetch());
 
-		this.checkIndividualRecording("/opt/openvidu/recordings/" + customSessionId + "/", recording, 2, "opus", "vp8",
-				false);
+		this.recordingUtils.checkIndividualRecording("/opt/openvidu/recordings/" + customSessionId + "/", recording, 2,
+				"opus", "vp8", false);
 
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .change-publisher-btn")).click();
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 4);
@@ -2522,9 +2524,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				file3.exists() && file3.length() > 0);
 
 		Assert.assertTrue("Recorded file " + file1.getAbsolutePath() + " is not fine",
-				this.recordedGreenFileFine(file1, recording2));
+				this.recordingUtils.recordedGreenFileFine(file1, recording2));
 		Assert.assertTrue("Thumbnail " + file3.getAbsolutePath() + " is not fine",
-				this.thumbnailIsFine(file3, OpenViduTestAppE2eTest::checkVideoAverageRgbGreen));
+				this.recordingUtils.thumbnailIsFine(file3, RecordingUtils::checkVideoAverageRgbGreen));
 
 		try {
 			OV.deleteRecording("NOT_EXISTS");
@@ -2614,24 +2616,20 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		session.close();
 
 		/** Test transcoding defined properties */
-		SessionProperties.Builder basePropertiesBuilder = new SessionProperties.Builder()
-				.mediaMode(MediaMode.ROUTED).recordingMode(RecordingMode.ALWAYS)
-				.defaultOutputMode(OutputMode.INDIVIDUAL);
+		SessionProperties.Builder basePropertiesBuilder = new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
+				.recordingMode(RecordingMode.ALWAYS).defaultOutputMode(OutputMode.INDIVIDUAL);
 
 		SessionProperties propertiesDefaultCodec = basePropertiesBuilder.build();
-		SessionProperties propertiesH264AllowTranscoding = basePropertiesBuilder
-				.forcedVideoCodec(VideoCodec.H264)
-				.allowTranscoding(true)
-				.build();
-		SessionProperties propertiesVP9AllowTranscoding = basePropertiesBuilder
-				.forcedVideoCodec(VideoCodec.VP9)
-				.allowTranscoding(true)
-				.build();
+		SessionProperties propertiesH264AllowTranscoding = basePropertiesBuilder.forcedVideoCodec(VideoCodec.H264)
+				.allowTranscoding(true).build();
+		SessionProperties propertiesVP9AllowTranscoding = basePropertiesBuilder.forcedVideoCodec(VideoCodec.VP9)
+				.allowTranscoding(true).build();
 
 		Session sessionDefaultCodec = OV.createSession(propertiesDefaultCodec);
 		Session sessionH264AllowTranscoding = OV.createSession(propertiesH264AllowTranscoding);
 		Session sessionVP9AllowTranscoding = OV.createSession(propertiesVP9AllowTranscoding);
-		assertTranscodingSessionProperties(sessionDefaultCodec, sessionH264AllowTranscoding, sessionVP9AllowTranscoding);
+		assertTranscodingSessionProperties(sessionDefaultCodec, sessionH264AllowTranscoding,
+				sessionVP9AllowTranscoding);
 
 		// Fetch sessions
 		Assert.assertFalse(sessionDefaultCodec.fetch());
@@ -2639,13 +2637,15 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertFalse(sessionVP9AllowTranscoding.fetch());
 
 		// Check transcoding session properties
-		assertTranscodingSessionProperties(sessionDefaultCodec, sessionH264AllowTranscoding, sessionVP9AllowTranscoding);
+		assertTranscodingSessionProperties(sessionDefaultCodec, sessionH264AllowTranscoding,
+				sessionVP9AllowTranscoding);
 
 		// Fetch all sessions
 		Assert.assertFalse(OV.fetch());
 
 		// Check transcoding session properties
-		assertTranscodingSessionProperties(sessionDefaultCodec, sessionH264AllowTranscoding, sessionVP9AllowTranscoding);
+		assertTranscodingSessionProperties(sessionDefaultCodec, sessionH264AllowTranscoding,
+				sessionVP9AllowTranscoding);
 
 		sessionDefaultCodec.close();
 		sessionH264AllowTranscoding.close();
@@ -3101,8 +3101,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Check all sessions data
 		res = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions", HttpStatus.SC_OK);
 		Assert.assertEquals(res.get("numberOfElements").getAsInt(), 1);
-		Assert.assertEquals(VideoCodec.valueOf(res.get("content").getAsJsonArray().get(0).getAsJsonObject().get("forcedVideoCodec").getAsString()), defaultForcedVideoCodec);
-		Assert.assertEquals(res.get("content").getAsJsonArray().get(0).getAsJsonObject().get("allowTranscoding").getAsBoolean(), defaultAllowTranscoding);
+		Assert.assertEquals(VideoCodec.valueOf(
+				res.get("content").getAsJsonArray().get(0).getAsJsonObject().get("forcedVideoCodec").getAsString()),
+				defaultForcedVideoCodec);
+		Assert.assertEquals(
+				res.get("content").getAsJsonArray().get(0).getAsJsonObject().get("allowTranscoding").getAsBoolean(),
+				defaultAllowTranscoding);
 
 		// Remove session
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
@@ -3117,8 +3121,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Check all sessions data
 		res = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions", HttpStatus.SC_OK);
 		Assert.assertEquals(res.get("numberOfElements").getAsInt(), 1);
-		Assert.assertEquals(VideoCodec.valueOf(res.get("content").getAsJsonArray().get(0).getAsJsonObject().get("forcedVideoCodec").getAsString()), VideoCodec.H264);
-		Assert.assertEquals(res.get("content").getAsJsonArray().get(0).getAsJsonObject().get("allowTranscoding").getAsBoolean(), true);
+		Assert.assertEquals(VideoCodec.valueOf(
+				res.get("content").getAsJsonArray().get(0).getAsJsonObject().get("forcedVideoCodec").getAsString()),
+				VideoCodec.H264);
+		Assert.assertEquals(
+				res.get("content").getAsJsonArray().get(0).getAsJsonObject().get("allowTranscoding").getAsBoolean(),
+				true);
 
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
 	}
@@ -3248,7 +3256,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("Recording duration exceeds valid value. Expected no more than 0.2 seconds, got "
 				+ differenceInDuration, differenceInDuration < 0.2);
 
-		this.checkIndividualRecording("/opt/openvidu/recordings/TestSession/", rec, 1, "opus", "vp8", true);
+		this.recordingUtils.checkIndividualRecording("/opt/openvidu/recordings/TestSession/", rec, 1, "opus", "vp8",
+				true);
 
 		WebElement pubBtn = user.getDriver().findElements(By.cssSelector("#openvidu-instance-1 .pub-btn")).get(0);
 		pubBtn.click();
@@ -3672,7 +3681,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
 
 			Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(recId);
-			this.checkIndividualRecording(recPath + recId + "/", recording, 1, "opus", "vp8", true);
+			this.recordingUtils.checkIndividualRecording(recPath + recId + "/", recording, 1, "opus", "vp8", true);
 
 			// Test IPCAM individual recording (IPCAM video only, recording audio and video)
 
@@ -4042,8 +4051,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 	/**
 	 * Test to force specified codec and allowTranscoding
-	 * @param codec codec to force. If null, default value in openvidu config will be used.
-	 * @param allowTranscoding If true, allow transcoding. If null, default value in openvidu config will be used.
+	 * 
+	 * @param codec            codec to force. If null, default value in openvidu
+	 *                         config will be used.
+	 * @param allowTranscoding If true, allow transcoding. If null, default value in
+	 *                         openvidu config will be used.
 	 */
 	private void forceCodecGenericE2eTest(VideoCodec codec, Boolean allowTranscoding) throws Exception {
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
@@ -4084,9 +4096,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		// Load properties from session object of node-client
 		user.getDriver().findElement(By.id("session-info-btn-0")).click();
-		JsonObject res = JsonParser.parseString(user.getDriver().findElement(By.id("session-text-area")).getAttribute("value")).getAsJsonObject();
-		VideoCodec sessionCodecNodeClient = VideoCodec.valueOf(res.get("properties").getAsJsonObject().get("forcedVideoCodec").getAsString());
-		boolean sessionAllowTranscodingNodeClient = res.get("properties").getAsJsonObject().get("allowTranscoding").getAsBoolean();
+		JsonObject res = JsonParser
+				.parseString(user.getDriver().findElement(By.id("session-text-area")).getAttribute("value"))
+				.getAsJsonObject();
+		VideoCodec sessionCodecNodeClient = VideoCodec
+				.valueOf(res.get("properties").getAsJsonObject().get("forcedVideoCodec").getAsString());
+		boolean sessionAllowTranscodingNodeClient = res.get("properties").getAsJsonObject().get("allowTranscoding")
+				.getAsBoolean();
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
@@ -4128,6 +4144,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 	/**
 	 * Force codec not allowed by opened browser
+	 * 
 	 * @throws Exception
 	 */
 	private void forceNotSupportedCodec(VideoCodec codec, boolean allowTranscoding) throws Exception {
@@ -4164,7 +4181,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			sessionName2.sendKeys(sessionName);
 
 			List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
-			for(WebElement el : joinButtons) {
+			for (WebElement el : joinButtons) {
 				Thread.sleep(5000);
 				el.sendKeys(Keys.ENTER);
 			}
@@ -4193,18 +4210,25 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 	}
 
-	private void assertTranscodingSessionProperties(Session sessionDefaultCodec, Session sessionH264AllowTranscoding, Session sessionVP9AllowTranscoding) {
+	private void assertTranscodingSessionProperties(Session sessionDefaultCodec, Session sessionH264AllowTranscoding,
+			Session sessionVP9AllowTranscoding) {
 		// Check session with default transcoding params
-		Assert.assertEquals("Wrong default forcedVideoCodec", defaultForcedVideoCodec, sessionDefaultCodec.getProperties().forcedVideoCodec());
-		Assert.assertEquals("Wrong default allowTranscoding", defaultAllowTranscoding, sessionDefaultCodec.getProperties().isTranscodingAllowed());
+		Assert.assertEquals("Wrong default forcedVideoCodec", defaultForcedVideoCodec,
+				sessionDefaultCodec.getProperties().forcedVideoCodec());
+		Assert.assertEquals("Wrong default allowTranscoding", defaultAllowTranscoding,
+				sessionDefaultCodec.getProperties().isTranscodingAllowed());
 
 		// Check session which use H264 and allow transcoding
-		Assert.assertEquals("Wrong default forcedVideoCodec", VideoCodec.H264, sessionH264AllowTranscoding.getProperties().forcedVideoCodec());
-		Assert.assertEquals("Wrong default allowTranscoding", true, sessionH264AllowTranscoding.getProperties().isTranscodingAllowed());
+		Assert.assertEquals("Wrong default forcedVideoCodec", VideoCodec.H264,
+				sessionH264AllowTranscoding.getProperties().forcedVideoCodec());
+		Assert.assertEquals("Wrong default allowTranscoding", true,
+				sessionH264AllowTranscoding.getProperties().isTranscodingAllowed());
 
 		// Check session which use VP9 and allow transcoding
-		Assert.assertEquals("Wrong default forcedVideoCodec", VideoCodec.VP9, sessionVP9AllowTranscoding.getProperties().forcedVideoCodec());
-		Assert.assertEquals("Wrong default allowTranscoding", true, sessionVP9AllowTranscoding.getProperties().isTranscodingAllowed());
+		Assert.assertEquals("Wrong default forcedVideoCodec", VideoCodec.VP9,
+				sessionVP9AllowTranscoding.getProperties().forcedVideoCodec());
+		Assert.assertEquals("Wrong default allowTranscoding", true,
+				sessionVP9AllowTranscoding.getProperties().isTranscodingAllowed());
 	}
 
 }
