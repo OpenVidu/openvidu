@@ -39,6 +39,7 @@ import io.openvidu.test.browsers.BrowserUser;
 import io.openvidu.test.browsers.ChromeUser;
 import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.OperaUser;
+import io.openvidu.test.browsers.ChromeAndroidUser;
 import io.openvidu.test.browsers.utils.CommandLineExecutor;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.RecordingUtils;
