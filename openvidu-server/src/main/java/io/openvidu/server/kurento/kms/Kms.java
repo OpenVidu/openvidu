@@ -21,9 +21,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.kurento.client.KurentoClient;
@@ -65,7 +66,7 @@ public class Kms {
 	private AtomicLong timeOfKurentoClientDisconnection = new AtomicLong(0);
 
 	private Map<String, KurentoSession> kurentoSessions = new ConcurrentHashMap<>();
-	private AtomicInteger activeRecordings = new AtomicInteger(0);
+	private Map<String, String> activeRecordings = new ConcurrentHashMap<>();
 
 	public Kms(KmsProperties props, LoadManager loadManager, QuarantineKiller quarantineKiller) {
 		this.id = props.getId();
@@ -148,16 +149,16 @@ public class Kms {
 		this.kurentoSessions.remove(sessionId);
 	}
 
-	public synchronized int getActiveRecordings() {
-		return this.activeRecordings.get();
+	public synchronized Set<Entry<String, String>> getActiveRecordings() {
+		return this.activeRecordings.entrySet();
 	}
 
-	public synchronized int incrementActiveRecordings() {
-		return this.activeRecordings.incrementAndGet();
+	public synchronized void incrementActiveRecordings(String recordingId, String sessionId) {
+		this.activeRecordings.put(recordingId, sessionId);
 	}
 
-	public synchronized void decrementActiveRecordings() {
-		this.activeRecordings.updateAndGet(i -> i > 0 ? i - 1 : i);
+	public synchronized void decrementActiveRecordings(String recordingId) {
+		this.activeRecordings.remove(recordingId);
 		this.quarantineKiller.dropMediaNode(this.id);
 	}
 
@@ -176,7 +177,7 @@ public class Kms {
 		return json;
 	}
 
-	public JsonObject toJsonExtended(boolean withSessions, boolean withExtraInfo) {
+	public JsonObject toJsonExtended(boolean withSessions, boolean withActiveRecordings, boolean withExtraInfo) {
 
 		JsonObject json = this.toJson();
 
@@ -186,6 +187,14 @@ public class Kms {
 				sessions.add(session.toJson(false, false));
 			}
 			json.add("sessions", sessions);
+		}
+
+		if (withActiveRecordings) {
+			JsonArray activeRecordingsJson = new JsonArray();
+			for (String recordingId : this.activeRecordings.keySet()) {
+				activeRecordingsJson.add(recordingId);
+			}
+			json.add("activeRecordings", activeRecordingsJson);
 		}
 
 		if (withExtraInfo) {

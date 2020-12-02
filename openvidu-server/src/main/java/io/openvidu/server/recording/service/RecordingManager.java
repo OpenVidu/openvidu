@@ -72,6 +72,7 @@ import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingUploader;
+import io.openvidu.server.recording.service.RecordingService.PropertiesRecordingId;
 import io.openvidu.server.utils.CustomFileManager;
 import io.openvidu.server.utils.DockerManager;
 import io.openvidu.server.utils.JsonUtils;
@@ -261,11 +262,18 @@ public class RecordingManager {
 	}
 
 	public Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException {
+
+		String recordingId = null;
+
 		try {
+			PropertiesRecordingId updatePropertiesAndRecordingId = ((RecordingService) this.composedRecordingService)
+					.setFinalRecordingNameAndGetFreeRecordingId(session, properties);
+			properties = updatePropertiesAndRecordingId.properties;
+			recordingId = updatePropertiesAndRecordingId.recordingId;
 
 			// INCREMENT ACTIVE RECORDINGS OF MEDIA NODE HERE. IF MEDIA NODE IS NOT
 			// AVAILABLE FOR STARTING NEW RECORDINGS THIS METHOD THROWS AN EXCEPTION
-			kmsManager.incrementActiveRecordings(properties.mediaNode());
+			kmsManager.incrementActiveRecordings(properties.mediaNode(), recordingId, session.getSessionId());
 
 			try {
 				if (session.recordingLock.tryLock(15, TimeUnit.SECONDS)) {
@@ -277,13 +285,16 @@ public class RecordingManager {
 							Recording recording = null;
 							switch (properties.outputMode()) {
 							case COMPOSED:
-								recording = this.composedRecordingService.startRecording(session, properties);
+								recording = this.composedRecordingService.startRecording(session, recordingId,
+										properties);
 								break;
 							case COMPOSED_QUICK_START:
-								recording = this.composedQuickStartRecordingService.startRecording(session, properties);
+								recording = this.composedQuickStartRecordingService.startRecording(session, recordingId,
+										properties);
 								break;
 							case INDIVIDUAL:
-								recording = this.singleStreamRecordingService.startRecording(session, properties);
+								recording = this.singleStreamRecordingService.startRecording(session, recordingId,
+										properties);
 								break;
 							}
 							this.recordingFromStartingToStarted(recording);
@@ -323,7 +334,7 @@ public class RecordingManager {
 			}
 		} catch (Exception e) {
 			// DECREMENT ACTIVE RECORDINGS OF MEDIA NODE AND TRY REMOVE MEDIA NODE HERE
-			kmsManager.decrementActiveRecordings(properties.mediaNode());
+			kmsManager.decrementActiveRecordings(properties.mediaNode(), recordingId);
 			throw e;
 		}
 	}

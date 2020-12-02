@@ -71,7 +71,8 @@ public abstract class RecordingService {
 		this.cdr = cdr;
 	}
 
-	public abstract Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException;
+	public abstract Recording startRecording(Session session, String recordingId, RecordingProperties properties)
+			throws OpenViduException;
 
 	public abstract Recording stopRecording(Session session, Recording recording, EndReason reason);
 

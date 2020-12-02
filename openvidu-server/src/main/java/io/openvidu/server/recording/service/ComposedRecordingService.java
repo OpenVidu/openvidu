@@ -80,12 +80,8 @@ public class ComposedRecordingService extends RecordingService {
 	}
 
 	@Override
-	public Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException {
-
-		PropertiesRecordingId updatePropertiesAndRecordingId = this.setFinalRecordingNameAndGetFreeRecordingId(session,
-				properties);
-		properties = updatePropertiesAndRecordingId.properties;
-		String recordingId = updatePropertiesAndRecordingId.recordingId;
+	public Recording startRecording(Session session, String recordingId, RecordingProperties properties)
+			throws OpenViduException {
 
 		// Instantiate and store recording object
 		Recording recording = new Recording(session.getSessionId(), recordingId, properties);
@@ -290,7 +286,8 @@ public class ComposedRecordingService extends RecordingService {
 					cleanRecordingMaps(recordingAux);
 
 					// Decrement active recordings
-					kmsManager.decrementActiveRecordings(recordingAux.getRecordingProperties().mediaNode());
+					kmsManager.decrementActiveRecordings(recordingAux.getRecordingProperties().mediaNode(),
+							recordingId);
 
 					if (i == timeout) {
 						log.error("Container did not launched in {} seconds", timeout / 2);
@@ -366,7 +363,8 @@ public class ComposedRecordingService extends RecordingService {
 				// Decrement active recordings once it is downloaded. This method will also drop
 				// the Media Node if no more sessions or recordings and status is
 				// waiting-idle-to-terminate
-				kmsManager.decrementActiveRecordings(finalRecordingArray[0].getRecordingProperties().mediaNode());
+				kmsManager.decrementActiveRecordings(finalRecordingArray[0].getRecordingProperties().mediaNode(),
+						finalRecordingArray[0].getId());
 
 				// Upload if necessary
 				this.uploadRecording(finalRecordingArray[0], reason);
@@ -595,7 +593,7 @@ public class ComposedRecordingService extends RecordingService {
 				// Decrement active recordings once it is downloaded. This method will also drop
 				// the Media Node if no more sessions or recordings and status is
 				// waiting-idle-to-terminate
-				kmsManager.decrementActiveRecordings(recording.getRecordingProperties().mediaNode());
+				kmsManager.decrementActiveRecordings(recording.getRecordingProperties().mediaNode(), recording.getId());
 
 				// Upload if necessary
 				this.uploadRecording(recording, reason);

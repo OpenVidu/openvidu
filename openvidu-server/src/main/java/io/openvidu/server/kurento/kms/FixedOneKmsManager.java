@@ -65,18 +65,18 @@ public class FixedOneKmsManager extends KmsManager {
 	}
 
 	@Override
-	public void incrementActiveRecordings(String mediaNodeId) {
+	public void incrementActiveRecordings(String mediaNodeId, String recordingId, String sessionId) {
 		try {
-			this.getKmss().iterator().next().incrementActiveRecordings();
+			this.getKmss().iterator().next().incrementActiveRecordings(recordingId, sessionId);
 		} catch (NoSuchElementException e) {
 			log.error("There is no KMS available when incrementing active recordings");
 		}
 	}
 
 	@Override
-	public void decrementActiveRecordings(String mediaNodeId) {
+	public void decrementActiveRecordings(String mediaNodeId, String recordingId) {
 		try {
-			this.getKmss().iterator().next().decrementActiveRecordings();
+			this.getKmss().iterator().next().decrementActiveRecordings(recordingId);
 		} catch (NoSuchElementException e) {
 			log.error("There is no KMS available when decrementing active recordings");
 		}

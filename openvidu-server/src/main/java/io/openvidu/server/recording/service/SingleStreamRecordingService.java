@@ -85,12 +85,8 @@ public class SingleStreamRecordingService extends RecordingService {
 	}
 
 	@Override
-	public Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException {
-
-		PropertiesRecordingId updatePropertiesAndRecordingId = this.setFinalRecordingNameAndGetFreeRecordingId(session,
-				properties);
-		properties = updatePropertiesAndRecordingId.properties;
-		String recordingId = updatePropertiesAndRecordingId.recordingId;
+	public Recording startRecording(Session session, String recordingId, RecordingProperties properties)
+			throws OpenViduException {
 
 		log.info("Starting individual ({}) recording {} of session {}",
 				properties.hasVideo() ? (properties.hasAudio() ? "video+audio" : "video-only") : "audioOnly",
@@ -187,7 +183,7 @@ public class SingleStreamRecordingService extends RecordingService {
 				// Decrement active recordings once it is downloaded. This method will also drop
 				// the Media Node if no more sessions or recordings and status is
 				// waiting-idle-to-terminate
-				kmsManager.decrementActiveRecordings(session.getMediaNodeId());
+				kmsManager.decrementActiveRecordings(session.getMediaNodeId(), finalRecordingArray[0].getId());
 
 				// Upload if necessary
 				this.uploadRecording(finalRecordingArray[0], reason);

@@ -89,8 +89,8 @@ public abstract class KmsManager {
 			return json;
 		}
 
-		public JsonObject toJsonExtended(boolean withSessions, boolean withExtraInfo) {
-			JsonObject json = this.kms.toJsonExtended(withSessions, withExtraInfo);
+		public JsonObject toJsonExtended(boolean withSessions, boolean withActiveRecordings, boolean withExtraInfo) {
+			JsonObject json = this.kms.toJsonExtended(withSessions, withActiveRecordings, withExtraInfo);
 			json.addProperty("load", this.load);
 			return json;
 		}
@@ -356,9 +356,9 @@ public abstract class KmsManager {
 
 	public abstract boolean isMediaNodeAvailableForRecording(String mediaNodeId);
 
-	public abstract void incrementActiveRecordings(String mediaNodeId);
+	public abstract void incrementActiveRecordings(String mediaNodeId, String recordingId, String sessionId);
 
-	public abstract void decrementActiveRecordings(String mediaNodeId);
+	public abstract void decrementActiveRecordings(String mediaNodeId, String recordingId);
 
 	@PostConstruct
 	protected abstract void postConstructInitKurentoClients();
