@@ -58,7 +58,18 @@ export class SessionApiDialogComponent {
 
     startRecording() {
         console.log('Starting recording');
-        this.OV.startRecording(this.sessionId, this.recordingProperties)
+        const finalRecordingProperties = {
+            name: this.recordingProperties.name,
+            outputMode: this.recordingProperties.outputMode,
+            recordingLayout: this.recordingProperties.recordingLayout,
+            customLayout: this.recordingProperties.customLayout,
+            resolution: this.recordingProperties.resolution,
+            hasAudio: this.recordingProperties.hasAudio,
+            hasVideo: this.recordingProperties.hasVideo,
+            shmSize: this.recordingProperties.shmSize,
+            mediaNode: !this.recordingProperties.mediaNode.id ? undefined : this.recordingProperties.mediaNode
+        }
+        this.OV.startRecording(this.sessionId, finalRecordingProperties)
             .then(recording => {
                 this.response = 'Recording started [' + recording.id + ']';
             })
