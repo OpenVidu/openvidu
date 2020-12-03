@@ -334,7 +334,7 @@ public class RecordingManager {
 			}
 		} catch (Exception e) {
 			// DECREMENT ACTIVE RECORDINGS OF MEDIA NODE AND TRY REMOVE MEDIA NODE HERE
-			kmsManager.decrementActiveRecordings(properties.mediaNode(), recordingId);
+			kmsManager.decrementActiveRecordings(properties, recordingId, session);
 			throw e;
 		}
 	}

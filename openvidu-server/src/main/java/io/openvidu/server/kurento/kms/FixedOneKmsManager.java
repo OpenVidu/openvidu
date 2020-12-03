@@ -67,7 +67,8 @@ public class FixedOneKmsManager extends KmsManager {
 	}
 
 	@Override
-	public void decrementActiveRecordings(String mediaNodeId, String recordingId) {
+	public void decrementActiveRecordings(RecordingProperties recordingProperties, String recordingId,
+			Session session) {
 		try {
 			this.getKmss().iterator().next().decrementActiveRecordings(recordingId);
 		} catch (NoSuchElementException e) {

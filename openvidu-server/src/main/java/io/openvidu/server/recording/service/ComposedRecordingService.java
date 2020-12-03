@@ -286,8 +286,7 @@ public class ComposedRecordingService extends RecordingService {
 					cleanRecordingMaps(recordingAux);
 
 					// Decrement active recordings
-					kmsManager.decrementActiveRecordings(recordingAux.getRecordingProperties().mediaNode(),
-							recordingId);
+					kmsManager.decrementActiveRecordings(recordingAux.getRecordingProperties(), recordingId, session);
 
 					if (i == timeout) {
 						log.error("Container did not launched in {} seconds", timeout / 2);
@@ -363,8 +362,8 @@ public class ComposedRecordingService extends RecordingService {
 				// Decrement active recordings once it is downloaded. This method will also drop
 				// the Media Node if no more sessions or recordings and status is
 				// waiting-idle-to-terminate
-				kmsManager.decrementActiveRecordings(finalRecordingArray[0].getRecordingProperties().mediaNode(),
-						finalRecordingArray[0].getId());
+				kmsManager.decrementActiveRecordings(finalRecordingArray[0].getRecordingProperties(),
+						finalRecordingArray[0].getId(), session);
 
 				// Upload if necessary
 				this.uploadRecording(finalRecordingArray[0], reason);
@@ -593,7 +592,7 @@ public class ComposedRecordingService extends RecordingService {
 				// Decrement active recordings once it is downloaded. This method will also drop
 				// the Media Node if no more sessions or recordings and status is
 				// waiting-idle-to-terminate
-				kmsManager.decrementActiveRecordings(recording.getRecordingProperties().mediaNode(), recording.getId());
+				kmsManager.decrementActiveRecordings(recording.getRecordingProperties(), recording.getId(), session);
 
 				// Upload if necessary
 				this.uploadRecording(recording, reason);

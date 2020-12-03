@@ -357,7 +357,8 @@ public abstract class KmsManager {
 	public abstract void incrementActiveRecordings(RecordingProperties recordingProperties, String recordingId,
 			Session session);
 
-	public abstract void decrementActiveRecordings(String mediaNodeId, String recordingId);
+	public abstract void decrementActiveRecordings(RecordingProperties recordingProperties, String recordingId,
+			Session session);
 
 	@PostConstruct
 	protected abstract void postConstructInitKurentoClients();
