@@ -35,8 +35,8 @@
         "url": "git://github.com/OpenVidu/openvidu"
     },
     "scripts": {
-        "browserify": "VERSION=${VERSION:-dev}; cd src && ../node_modules/browserify/bin/cmd.js Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../static/js/openvidu-browser-$VERSION.js -v",
-        "browserify-prod": "VERSION=${VERSION:-dev}; cd src && ../node_modules/browserify/bin/cmd.js --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | ../node_modules/terser/bin/terser --source-map content=inline --output ../static/js/openvidu-browser-$VERSION.min.js",
+        "browserify": "VERSION=${VERSION:-dev}; mkdir -p static/js/ && cd src && ../node_modules/browserify/bin/cmd.js Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../static/js/openvidu-browser-$VERSION.js -v",
+        "browserify-prod": "VERSION=${VERSION:-dev}; mkdir -p static/js/ && cd src && ../node_modules/browserify/bin/cmd.js --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | ../node_modules/terser/bin/terser --source-map content=inline --output ../static/js/openvidu-browser-$VERSION.min.js",
         "build": "cd src/OpenVidu && ./../../node_modules/typescript/bin/tsc && cd ../.. && ./node_modules/typescript/bin/tsc --declaration src/index.ts --outDir ./lib --sourceMap --lib dom,es5,es2015.promise,scripthost",
         "docs": "./generate-docs.sh"
     },
