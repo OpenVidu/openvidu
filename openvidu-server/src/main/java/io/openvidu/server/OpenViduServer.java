@@ -103,7 +103,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
-	@DependsOn("openviduConfig")
+	@DependsOn({ "openviduConfig", "mediaNodeStatusManager" })
 	public KmsManager kmsManager(OpenviduConfig openviduConfig) {
 		if (openviduConfig.getKmsUris().isEmpty()) {
 			throw new IllegalArgumentException("'KMS_URIS' should contain at least one KMS url");
