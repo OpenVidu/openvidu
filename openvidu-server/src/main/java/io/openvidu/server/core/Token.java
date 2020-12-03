@@ -161,7 +161,7 @@ public class Token {
 	protected JsonObject getConnectionPropertiesWithFinalJsonFormat() {
 		JsonObject json = this.connectionProperties.toJson(this.sessionId);
 		json.remove("session");
-		json.addProperty("serverData", json.get("data").getAsString());
+		json.add("serverData", json.get("data"));
 		json.remove("data");
 		return json;
 	}
