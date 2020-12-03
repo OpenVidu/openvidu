@@ -58,16 +58,6 @@ public class FixedOneKmsManager extends KmsManager {
 	}
 
 	@Override
-	public boolean isMediaNodeAvailableForSession(String mediaNodeId) {
-		return true;
-	}
-
-	@Override
-	public boolean isMediaNodeAvailableForRecording(String mediaNodeId) {
-		return true;
-	}
-
-	@Override
 	public void incrementActiveRecordings(RecordingProperties properties, String recordingId, Session session) {
 		try {
 			this.getKmss().iterator().next().incrementActiveRecordings(recordingId, session.getSessionId());
