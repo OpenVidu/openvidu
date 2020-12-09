@@ -272,6 +272,10 @@ Resources:
 
                 # Restart all services
                 pushd /opt/openvidu
+                docker-compose up -d kms
+                until docker-compose ps | grep kms | grep healthy; do
+                    echo "Waiting kms..."
+                done
                 docker-compose up -d
                 popd
               mode: "000755"
@@ -306,6 +310,10 @@ Resources:
 
           # Start openvidu application
           pushd /opt/openvidu
+          docker-compose up -d kms
+          until docker-compose ps | grep kms | grep healthy; do
+              echo "Waiting kms..."
+          done
           docker-compose up -d
           popd
 
