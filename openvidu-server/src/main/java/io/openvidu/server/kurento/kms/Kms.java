@@ -194,7 +194,7 @@ public class Kms {
 			for (String recordingId : this.activeRecordings.keySet()) {
 				activeRecordingsJson.add(recordingId);
 			}
-			json.add("activeRecordings", activeRecordingsJson);
+			json.add("recordingIds", activeRecordingsJson);
 		}
 
 		if (withExtraInfo) {
