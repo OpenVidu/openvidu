@@ -62,6 +62,16 @@ TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-kms-ami.
 
 # Update installation script
 if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
+  # Avoid overriding existing versions
+  # Only master and non existing versions can be overriden
+  if [[ ${OPENVIDU_PRO_VERSION} != "master" ]]; then
+    INSTALL_SCRIPT_EXISTS=true
+    aws s3api head-object --bucket aws.openvidu.io --key install_media_node_$OPENVIDU_PRO_VERSION.sh || INSTALL_SCRIPT_EXISTS=false
+    if [[ ${INSTALL_SCRIPT_EXISTS} == "true" ]]; then
+      echo "Aborting updating s3://aws.openvidu.io/install_media_node_${OPENVIDU_PRO_VERSION}.sh. File actually exists."
+      exit 1
+    fi
+  fi
   aws s3 cp  ../docker-compose/media-node/install_media_node.sh s3://aws.openvidu.io/install_media_node_$OPENVIDU_PRO_VERSION.sh --acl public-read
 fi
 
@@ -95,6 +105,16 @@ aws cloudformation delete-stack --stack-name kms-${DATESTAMP}
 
 # Update installation script
 if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
+  # Avoid overriding existing versions
+  # Only master and non existing versions can be overriden
+  if [[ ${OPENVIDU_PRO_VERSION} != "master" ]]; then
+    INSTALL_SCRIPT_EXISTS=true
+    aws s3api head-object --bucket aws.openvidu.io --key install_openvidu_pro_$OPENVIDU_PRO_VERSION.sh || INSTALL_SCRIPT_EXISTS=false
+    if [[ ${INSTALL_SCRIPT_EXISTS} == "true" ]]; then
+      echo "Aborting updating s3://aws.openvidu.io/install_openvidu_pro_${OPENVIDU_PRO_VERSION}.sh. File actually exists."
+      exit 1
+    fi
+  fi
   aws s3 cp  ../docker-compose/openvidu-server-pro/install_openvidu_pro.sh s3://aws.openvidu.io/install_openvidu_pro_$OPENVIDU_PRO_VERSION.sh --acl public-read
 fi
 
@@ -136,6 +156,21 @@ done
 sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" cfn-openvidu-server-pro-no-market.yaml.template > cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
 sed -i "s/KMS_AMI_ID/${KMS_RAW_AMI_ID}/g" cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
 sed -i "s/AWS_DOCKER_TAG/${AWS_DOCKER_TAG}/g" cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
+
+# Update CF template
+if [[ ${UPDATE_CF} == "true" ]]; then
+  # Avoid overriding existing versions
+  # Only master and non existing versions can be overriden
+  if [[ ${OPENVIDU_PRO_VERSION} != "master" ]]; then
+    CF_EXIST=true
+    aws s3api head-object --bucket aws.openvidu.io --key CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml || CF_EXIST=false
+    if [[ ${CF_EXIST} == "true" ]]; then
+      echo "Aborting updating s3://aws.openvidu.io/CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml. File actually exists."
+      exit 1
+    fi
+  fi
+  aws s3 cp cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml s3://aws.openvidu.io/CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml --acl public-read
+fi
 
 rm $TEMPJSON
 rm cfn-mkt-kms-ami.yaml

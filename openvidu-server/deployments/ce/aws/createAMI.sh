@@ -54,6 +54,16 @@ TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-ov-ce-am
 
 # Update installation script
 if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
+  # Avoid overriding existing versions
+  # Only master and non existing versions can be overriden
+  if [[ ${OPENVIDU_VERSION} != "master" ]]; then
+    INSTALL_SCRIPT_EXISTS=true
+    aws s3api head-object --bucket aws.openvidu.io --key install_openvidu_$OPENVIDU_VERSION.sh || INSTALL_SCRIPT_EXISTS=false
+    if [[ ${INSTALL_SCRIPT_EXISTS} == "true" ]]; then
+      echo "Aborting updating s3://aws.openvidu.io/install_openvidu_${OPENVIDU_VERSION}.sh. File actually exists."
+      exit 1
+    fi
+  fi
   aws s3 cp  ../docker-compose/install_openvidu.sh s3://aws.openvidu.io/install_openvidu_$OPENVIDU_VERSION.sh --acl public-read
 fi
 
@@ -93,6 +103,21 @@ done
 # Updating the template
 sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" CF-OpenVidu.yaml.template > CF-OpenVidu-${OPENVIDU_VERSION}.yaml
 sed -i "s/OPENVIDU_VERSION/${OPENVIDU_VERSION}/g" CF-OpenVidu-${OPENVIDU_VERSION}.yaml
+
+# Update CF template
+if [[ ${UPDATE_CF} == "true" ]]; then
+  # Avoid overriding existing versions
+  # Only master and non existing versions can be overriden
+  if [[ ${OPENVIDU_VERSION} != "master" ]]; then
+    CF_EXIST=true
+    aws s3api head-object --bucket aws.openvidu.io --key CF-OpenVidu-${OPENVIDU_VERSION}.yaml || CF_EXIST=false
+    if [[ ${CF_EXIST} == "true" ]]; then
+      echo "Aborting updating s3://aws.openvidu.io/CF-OpenVidu-${OPENVIDU_VERSION}.yaml. File actually exists."
+      exit 1
+    fi
+  fi
+  aws s3 cp CF-OpenVidu-${OPENVIDU_VERSION}.yaml s3://aws.openvidu.io/CF-OpenVidu-${OPENVIDU_VERSION}.yaml --acl public-read
+fi
 
 rm $TEMPJSON
 rm cfn-mkt-ov-ce-ami.yaml
