@@ -7,7 +7,7 @@ set -eu -o pipefail
 #
 # OV_AMI_NAME       OpenVidu AMI Name
 # OV_AMI_ID         OpenVidu AMI ID
-# CF_UPDATE         Boolean, true if you want to update CF template by OPENVIDU_VERSION
+# UPDATE_CF         Boolean, true if you want to update CF template by OPENVIDU_VERSION
 # OPENVIDU_VERSION  OpenVidu Version of the CF you want to update. It will update CF-OpenVidu-OPENVIDU_VERSION 
 
 export AWS_DEFAULT_REGION=eu-west-1
