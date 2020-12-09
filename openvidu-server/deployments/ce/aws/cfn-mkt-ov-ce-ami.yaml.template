@@ -2,12 +2,14 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Openvidu Server CE CloudFormation AMI template.
 
+#start_mappings
 Mappings:
   AMIMAP:
     eu-west-1:
       AMI: AMIEUWEST1
     us-east-1:
       AMI: AMIUSEAST1
+#end_mappings
 
 Resources:
   OpenviduServerCE:

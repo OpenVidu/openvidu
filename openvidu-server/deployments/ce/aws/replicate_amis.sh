@@ -5,8 +5,10 @@ set -eu -o pipefail
 #
 # Input parameters:
 #
-# OV_AMI_NAME   OpenVidu AMI Name
-# OV_AMI_ID     OpenVidu AMI ID
+# OV_AMI_NAME       OpenVidu AMI Name
+# OV_AMI_ID         OpenVidu AMI ID
+# CF_UPDATE         Boolean, true if you want to update CF template by OPENVIDU_VERSION
+# OPENVIDU_VERSION  OpenVidu Version of the CF you want to update. It will update CF-OpenVidu-OPENVIDU_VERSION 
 
 export AWS_DEFAULT_REGION=eu-west-1
 
@@ -67,13 +69,37 @@ do
     ITER=$(expr $ITER + 1)
 done
 
+# Print and generate replicated AMIS
+REPLICATED_AMIS_FILE="replicated_amis.yaml"
 echo "OV IDs"
-ITER=0
-for i in "${AMI_IDS[@]}"
-do
-    AMI_ID=${AMI_IDS[$ITER]}
-    REGION=${REGIONS[$ITER]}
-    echo "    ${REGION}:"
-    echo "      AMI: ${AMI_ID}"
-    ITER=$(expr $ITER + 1)
-done
+{
+    echo "Mappings:"
+    echo "  AMIMAP:"
+    ITER=0
+        for i in "${AMI_IDS[@]}"
+        do
+            AMI_ID=${AMI_IDS[$ITER]}
+            REGION=${REGIONS[$ITER]}
+            echo "    ${REGION}:"
+            echo "      AMI: ${AMI_ID}"
+            ITER=$(expr $ITER + 1)
+        done
+    echo ""
+} > "${REPLICATED_AMIS_FILE}" 2>&1
+
+# Print replicated AMIs
+cat "${REPLICATED_AMIS_FILE}"
+
+if [[ ${UPDATE_CF} == "true" ]]; then
+    if [[ ! -z ${OPENVIDU_VERSION} ]]; then
+        # Download s3 file
+        aws s3 cp s3://aws.openvidu.io/CF-OpenVidu-${OPENVIDU_VERSION}.yaml CF-OpenVidu-${OPENVIDU_VERSION}.yaml
+        sed -e "/^#end_mappings/r ${REPLICATED_AMIS_FILE}" -e '/^#start_mappings/,/^#end_mappings/d' -i CF-OpenVidu-${OPENVIDU_VERSION}.yaml
+        aws s3 cp CF-OpenVidu-${OPENVIDU_VERSION}.yaml s3://aws.openvidu.io/CF-OpenVidu-${OPENVIDU_VERSION}.yaml --acl public-read
+    fi
+fi
+
+
+# Cleaning the house
+rm "${REPLICATED_AMIS_FILE}"
+rm CF-OpenVidu-${OPENVIDU_VERSION}.yaml
