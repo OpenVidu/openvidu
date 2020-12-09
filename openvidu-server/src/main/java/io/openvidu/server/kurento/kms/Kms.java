@@ -177,7 +177,7 @@ public class Kms {
 		return json;
 	}
 
-	public JsonObject toJsonExtended(boolean withSessions, boolean withActiveRecordings, boolean withExtraInfo) {
+	public JsonObject toJsonExtended(boolean withSessions, boolean withRecordings, boolean withExtraInfo) {
 
 		JsonObject json = this.toJson();
 
@@ -189,7 +189,7 @@ public class Kms {
 			json.add("sessions", sessions);
 		}
 
-		if (withActiveRecordings) {
+		if (withRecordings) {
 			JsonArray activeRecordingsJson = new JsonArray();
 			for (String recordingId : this.activeRecordings.keySet()) {
 				activeRecordingsJson.add(recordingId);
