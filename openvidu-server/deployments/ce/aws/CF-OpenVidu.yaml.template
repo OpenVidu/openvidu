@@ -115,10 +115,12 @@ Parameters:
       - false
     Default: true
 
+#start_mappings
 Mappings:
   OVAMIMAP:
     eu-west-1:
       AMI: OV_AMI_ID
+#end_mappings
 
 Metadata:
   'AWS::CloudFormation::Interface':

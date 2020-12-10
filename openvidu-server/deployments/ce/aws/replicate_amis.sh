@@ -74,7 +74,7 @@ REPLICATED_AMIS_FILE="replicated_amis.yaml"
 echo "OV IDs"
 {
     echo "Mappings:"
-    echo "  AMIMAP:"
+    echo "  OVAMIMAP:"
     ITER=0
         for i in "${AMI_IDS[@]}"
         do
