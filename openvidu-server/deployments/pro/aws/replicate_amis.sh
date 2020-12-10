@@ -151,7 +151,6 @@ do
     else 
         AMI_LIST="${AMI_LIST},${REGION}:${AMI_ID}"
     fi
-    AMI_LIST="${AMI_LIST},${REGION}:${AMI_ID}"
     ITER=$(expr $ITER + 1)
 done
 echo "AMI_LIST_OV: ${AMI_LIST}"
@@ -168,7 +167,6 @@ do
     else 
         AMI_LIST="${AMI_LIST},${REGION}:${AMI_ID}"
     fi
-    AMI_LIST="${AMI_LIST},${REGION}:${AMI_ID}"
     ITER=$(expr $ITER + 1)
 done
 echo "AMI_LIST_KMS: ${AMI_LIST}"
