@@ -214,6 +214,7 @@ Parameters:
       - false
     Default: true
 
+#start_mappings
 Mappings:
   OVAMIMAP:
     eu-west-1:
@@ -222,6 +223,7 @@ Mappings:
   KMSAMIMAP:
     eu-west-1:
       AMI: KMS_AMI_ID
+#end_mappings
 
 Metadata:
   'AWS::CloudFormation::Interface':
