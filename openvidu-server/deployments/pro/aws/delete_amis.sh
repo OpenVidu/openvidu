@@ -11,10 +11,11 @@ do
       mapfile -t SNAPSHOTS < <(aws ec2 describe-images --image-ids "$AMI_ID" --output text --query 'Images[*].BlockDeviceMappings[*].Ebs.SnapshotId')
       echo "Deregistering $AMI_ID"
 	aws ec2 deregister-image --image-id "${AMI_ID}"
+      sleep 1
       for snapshot in "${SNAPSHOTS[@]}";
       do
             echo "Deleting Snapshot $snapshot from $AMI_ID"
             aws ec2 delete-snapshot --snapshot-id "${snapshot}"
+            sleep 1
       done
-	sleep 1
 done
