@@ -137,6 +137,40 @@ if [[ ${UPDATE_CF} == "true" ]]; then
     fi
 fi
 
+# Print AMI_LIST for delete_amis.sh
+AMI_LIST=""
+ITER=0
+for i in "${OPENVIDU_SERVER_PRO_AMI_IDS[@]}"
+do
+    AMI_ID=${OPENVIDU_SERVER_PRO_AMI_IDS[$ITER]}
+    REGION=${REGIONS[$ITER]}
+    if [[ ${ITER} -eq  0 ]]; then
+        AMI_LIST="${REGION}:${AMI_ID}"
+    else 
+        AMI_LIST="${AMI_LIST},${REGION}:${AMI_ID}"
+    fi
+    AMI_LIST="${AMI_LIST},${REGION}:${AMI_ID}"
+    ITER=$(expr $ITER + 1)
+done
+echo "AMI_LIST_OV: ${AMI_LIST}"
+
+# Print AMI_LIST for delete_amis.sh
+AMI_LIST=""
+ITER=0
+for i in "${MEDIA_NODE_AMI_IDS[@]}"
+do
+    AMI_ID=${MEDIA_NODE_AMI_IDS[$ITER]}
+    REGION=${REGIONS[$ITER]}
+    if [[ ${ITER} -eq  0 ]]; then
+        AMI_LIST="${REGION}:${AMI_ID}"
+    else 
+        AMI_LIST="${AMI_LIST},${REGION}:${AMI_ID}"
+    fi
+    AMI_LIST="${AMI_LIST},${REGION}:${AMI_ID}"
+    ITER=$(expr $ITER + 1)
+done
+echo "AMI_LIST_KMS: ${AMI_LIST}"
+
 # Cleaning the house
 rm "${REPLICATED_AMIS_FILE}"
 rm CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml

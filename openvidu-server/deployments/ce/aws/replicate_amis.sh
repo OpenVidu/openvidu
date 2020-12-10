@@ -99,6 +99,7 @@ if [[ ${UPDATE_CF} == "true" ]]; then
     fi
 fi
 
+# Print AMI_LIST for delete_amis.sh
 AMI_LIST=""
 ITER=0
 for i in "${AMI_IDS[@]}"
@@ -107,8 +108,9 @@ do
     REGION=${REGIONS[$ITER]}
     if [[ ${ITER} -eq  0 ]]; then
         AMI_LIST="${REGION}:${AMI_ID}"
+    else 
+        AMI_LIST="${AMI_LIST},${REGION}:${AMI_ID}"
     fi
-    AMI_LIST="${AMI_LIST},${REGION}:${AMI_ID}"
     ITER=$(expr $ITER + 1)
 done
 echo "AMI_LIST: ${AMI_LIST}"
