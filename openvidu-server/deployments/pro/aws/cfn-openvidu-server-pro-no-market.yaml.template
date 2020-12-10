@@ -515,6 +515,7 @@ Resources:
                 sed -i "s/#AWS_STACK_ID=/AWS_STACK_ID=$(echo ${AWS::StackId} | sed 's#/#\\/#g')/" $WORKINGDIR/.env
                 sed -i "s/#AWS_STACK_NAME=/AWS_STACK_NAME=${AWS::StackName}/" $WORKINGDIR/.env
                 sed -i "s/#AWS_CLI_DOCKER_TAG=/AWS_CLI_DOCKER_TAG=AWS_DOCKER_TAG/" $WORKINGDIR/.env
+                sed -i "s/#AWS_VOLUME_SIZE=/AWS_VOLUME_SIZE=50/" $WORKINGDIR/.env
 
                 # Get security group id of kms and use it as env variable
                 SECGRPIDKMS=$(/usr/local/bin/getSecurityGroupKms.sh)
