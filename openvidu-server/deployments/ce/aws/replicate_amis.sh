@@ -73,6 +73,7 @@ done
 REPLICATED_AMIS_FILE="replicated_amis.yaml"
 echo "OV IDs"
 {
+    echo "#start_mappings"
     echo "Mappings:"
     echo "  OVAMIMAP:"
     ITER=0
@@ -84,6 +85,7 @@ echo "OV IDs"
         echo "      AMI: ${AMI_ID}"
         ITER=$(expr $ITER + 1)
     done
+    echo "#end_mappings"
     echo ""
 } > "${REPLICATED_AMIS_FILE}" 2>&1
 
