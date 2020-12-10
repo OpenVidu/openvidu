@@ -76,14 +76,14 @@ echo "OV IDs"
     echo "Mappings:"
     echo "  OVAMIMAP:"
     ITER=0
-        for i in "${AMI_IDS[@]}"
-        do
-            AMI_ID=${AMI_IDS[$ITER]}
-            REGION=${REGIONS[$ITER]}
-            echo "    ${REGION}:"
-            echo "      AMI: ${AMI_ID}"
-            ITER=$(expr $ITER + 1)
-        done
+    for i in "${AMI_IDS[@]}"
+    do
+        AMI_ID=${AMI_IDS[$ITER]}
+        REGION=${REGIONS[$ITER]}
+        echo "    ${REGION}:"
+        echo "      AMI: ${AMI_ID}"
+        ITER=$(expr $ITER + 1)
+    done
     echo ""
 } > "${REPLICATED_AMIS_FILE}" 2>&1
 
@@ -99,6 +99,19 @@ if [[ ${UPDATE_CF} == "true" ]]; then
     fi
 fi
 
+AMI_LIST=""
+ITER=0
+for i in "${AMI_IDS[@]}"
+do
+    AMI_ID=${AMI_IDS[$ITER]}
+    REGION=${REGIONS[$ITER]}
+    if [[ ${ITER} -eq  0 ]]; then
+        AMI_LIST="${REGION}:${AMI_ID}"
+    fi
+    AMI_LIST="${AMI_LIST},${REGION}:${AMI_ID}"
+    ITER=$(expr $ITER + 1)
+done
+echo "AMI_LIST: ${AMI_LIST}"
 
 # Cleaning the house
 rm "${REPLICATED_AMIS_FILE}"
