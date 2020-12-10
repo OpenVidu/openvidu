@@ -337,10 +337,9 @@ Resources:
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeType: io1
-            Iops: 200
+            VolumeType: gp2
             DeleteOnTermination: true
-            VolumeSize: 100
+            VolumeSize: 200
 
   MyEIP:
     Type: 'AWS::EC2::EIPAssociation'
