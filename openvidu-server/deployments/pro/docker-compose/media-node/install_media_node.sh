@@ -2,7 +2,7 @@
 
 MEDIA_NODE_FOLDER=kms
 MEDIA_NODE_VERSION=master
-OPENVIDU_UPGRADABLE_VERSION="2.15"
+OPENVIDU_UPGRADABLE_VERSION="2.16"
 BEATS_FOLDER=${MEDIA_NODE_FOLDER}/beats
 DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${MEDIA_NODE_VERSION}
 IMAGES=(
@@ -262,14 +262,8 @@ upgrade_media_node() {
      mv "${MEDIA_NODE_PREVIOUS_FOLDER}/media_node" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'openvidu'"
      printf '\n          - media_node'
 
-     mv "${MEDIA_NODE_PREVIOUS_FOLDER}/readme.md" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'readme.md'"
-     printf '\n          - readme.md'
-
      mv "${MEDIA_NODE_PREVIOUS_FOLDER}/beats" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'beats' folder"
      printf '\n          - beats'
-
-     mv "${MEDIA_NODE_PREVIOUS_FOLDER}/.env" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous '.env'"
-     printf '\n          - .env'
 
      # Move tmp files to Openvidu
      printf '\n     => Updating files:'
