@@ -37,29 +37,37 @@ export interface WebRtcPeerConfiguration {
     };
     simulcast: boolean;
     onicecandidate: (event) => void;
-    iceServers: RTCIceServer[] | undefined;
-    mediaStream?: MediaStream;
+    iceServers?: RTCIceServer[];
+    mediaStream?: MediaStream | null;
     mode?: 'sendonly' | 'recvonly' | 'sendrecv';
     id?: string;
 }
 
 export class WebRtcPeer {
+    public pc: RTCPeerConnection;
+    public remoteCandidatesQueue: RTCIceCandidate[] = [];
+    public localCandidatesQueue: RTCIceCandidate[] = [];
 
-    pc: RTCPeerConnection;
-    id: string;
-    remoteCandidatesQueue: RTCIceCandidate[] = [];
-    localCandidatesQueue: RTCIceCandidate[] = [];
+    // Same as WebRtcPeerConfiguration but without optional fields.
+    protected configuration: Required<WebRtcPeerConfiguration>;
 
-    iceCandidateList: RTCIceCandidate[] = [];
-
+    private iceCandidateList: RTCIceCandidate[] = [];
     private candidategatheringdone = false;
 
-    constructor(protected configuration: WebRtcPeerConfiguration) {
+    constructor(configuration: WebRtcPeerConfiguration) {
         platform = PlatformUtils.getInstance();
-        this.configuration.iceServers = (!!this.configuration.iceServers && this.configuration.iceServers.length > 0) ? this.configuration.iceServers : freeice();
+
+        this.configuration = {
+            ...configuration,
+            iceServers: (!!configuration.iceServers && configuration.iceServers.length > 0) ? configuration.iceServers : freeice(),
+            mediaStream: !!configuration.mediaStream
+                ? configuration.mediaStream
+                : null,
+            mode: !!configuration.mode ? configuration.mode : "sendrecv",
+            id: !!configuration.id ? configuration.id : this.generateUniqueId(),
+        };
 
         this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });
-        this.id = !!configuration.id ? configuration.id : this.generateUniqueId();
 
         this.pc.onicecandidate = event => {
             if (!!event.candidate) {
@@ -128,73 +136,110 @@ export class WebRtcPeer {
      */
     generateOffer(): Promise<string> {
         return new Promise((resolve, reject) => {
-            let offerAudio, offerVideo = true;
+            const useAudio = this.configuration.mediaConstraints.audio;
+            const useVideo = this.configuration.mediaConstraints.video;
 
-            // Constraints must have both blocks
-            if (!!this.configuration.mediaConstraints) {
-                offerAudio = (typeof this.configuration.mediaConstraints.audio === 'boolean') ?
-                    this.configuration.mediaConstraints.audio : true;
-                offerVideo = (typeof this.configuration.mediaConstraints.video === 'boolean') ?
-                    this.configuration.mediaConstraints.video : true;
+            let offerPromise: Promise<RTCSessionDescriptionInit>;
+
+            // TODO: Delete this conditional when all supported browsers are
+            // modern enough to implement the getTransceivers() method.
+            if ("getTransceivers" in this.pc) {
+                logger.debug("[generateOffer] Method pc.getTransceivers() is available; using it");
+
+                // At this point, all "send" audio/video tracks have been added
+                // with pc.addTrack(), which in modern versions of libwebrtc
+                // will have created Transceivers with "sendrecv" direction.
+                // Source: [addTrack/9.3](https://www.w3.org/TR/2020/CRD-webrtc-20201203/#dom-rtcpeerconnection-addtrack).
+                //
+                // Here we just need to enforce that those Transceivers have the
+                // correct direction, either "sendrecv" or "sendonly".
+                //
+                // Otherwise, if the tracks are "recv", no Transceiver should
+                // have been added yet.
+
+                const tcs = this.pc.getTransceivers();
+
+                if (tcs.length > 0) {
+                    // Assert correct mode.
+                    if (
+                        this.configuration.mode !== "sendrecv" &&
+                        this.configuration.mode !== "sendonly"
+                    ) {
+                        throw new Error(
+                            "BUG: Transceivers added, but direction is not send"
+                        );
+                    }
+
+                    for (const tc of tcs) {
+                        tc.direction = this.configuration.mode;
+                        logger.debug(
+                            `RTCRtpTransceiver direction: ${tc.direction}`
+                        );
+                    }
+                } else {
+                    if (this.configuration.mode !== "recvonly") {
+                        throw new Error(
+                            "BUG: Transceivers missing, but direction is not recv"
+                        );
+                    }
+
+                    if (useAudio) {
+                        this.pc.addTransceiver("audio", {
+                            direction: this.configuration.mode,
+                        });
+                    }
+
+                    if (useVideo) {
+                        this.pc.addTransceiver("video", {
+                            direction: this.configuration.mode,
+                        });
+                    }
+                }
+
+                offerPromise = this.pc.createOffer();
+            } else {
+                logger.debug("[generateOffer] Method pc.getTransceivers() NOT available; using LEGACY offerToReceive{Audio,Video}");
+
+                // DEPRECATED: LEGACY METHOD: Old WebRTC versions don't implement
+                // Transceivers, and instead depend on the deprecated
+                // "offerToReceiveAudio" and "offerToReceiveVideo".
+
+                const constraints: RTCOfferOptions = {
+                    offerToReceiveAudio:
+                        this.configuration.mode !== "sendonly" && useAudio,
+                    offerToReceiveVideo:
+                        this.configuration.mode !== "sendonly" && useVideo,
+                };
+
+                logger.debug(
+                    "RTCPeerConnection constraints: " +
+                        JSON.stringify(constraints)
+                );
+
+                // @ts-ignore: Compiler is too clever and thinks this branch
+                // will never execute.
+                offerPromise = this.pc.createOffer(constraints);
             }
 
-            const constraints: RTCOfferOptions = {
-                offerToReceiveAudio: (this.configuration.mode !== 'sendonly' && offerAudio),
-                offerToReceiveVideo: (this.configuration.mode !== 'sendonly' && offerVideo)
-            };
-
-            logger.debug('RTCPeerConnection constraints: ' + JSON.stringify(constraints));
-
-            if (platform.isSafariBrowser() && !platform.isIonicIos()) {
-                // Safari (excluding Ionic), at least on iOS just seems to support unified plan, whereas in other browsers is not yet ready and considered experimental
-                if (offerAudio) {
-                    this.pc.addTransceiver('audio', {
-                        direction: this.configuration.mode,
-                    });
-                }
-
-                if (offerVideo) {
-                    this.pc.addTransceiver('video', {
-                        direction: this.configuration.mode,
-                    });
-                }
-
-                this.pc
-                    .createOffer()
-                    .then(offer => {
-                        logger.debug('Created SDP offer');
-                        return this.pc.setLocalDescription(offer);
-                    })
-                    .then(() => {
-                        const localDescription = this.pc.localDescription;
-
-                        if (!!localDescription) {
-                            logger.debug('Local description set', localDescription.sdp);
-                            resolve(localDescription.sdp);
-                        } else {
-                            reject('Local description is not defined');
-                        }
-                    })
-                    .catch(error => reject(error));
-
-            } else {
-
-                // Rest of platforms
-                this.pc.createOffer(constraints).then(offer => {
-                    logger.debug('Created SDP offer');
+            offerPromise
+                .then((offer) => {
+                    logger.debug("Created SDP offer");
                     return this.pc.setLocalDescription(offer);
                 })
-                    .then(() => {
-                        const localDescription = this.pc.localDescription;
-                        if (!!localDescription) {
-                            logger.debug('Local description set', localDescription.sdp);
-                            resolve(localDescription.sdp);
-                        } else {
-                            reject('Local description is not defined');
-                        }
-                    })
-                    .catch(error => reject(error));
-            }
+                .then(() => {
+                    const localDescription = this.pc.localDescription;
+
+                    if (!!localDescription) {
+                        logger.debug(
+                            "Local description set:",
+                            localDescription.sdp
+                        );
+                        resolve(localDescription.sdp);
+                    } else {
+                        reject("Local description is not defined");
+                    }
+                })
+                .catch((error) => reject(error));
         });
     }
 
@@ -273,25 +318,25 @@ export class WebRtcPeer {
             switch (iceConnectionState) {
                 case 'disconnected':
                     // Possible network disconnection
-                    logger.warn('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection');
+                    logger.warn('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection');
                     break;
                 case 'failed':
-                    logger.error('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') to "failed"');
+                    logger.error('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') to "failed"');
                     break;
                 case 'closed':
-                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "closed"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "closed"');
                     break;
                 case 'new':
-                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "new"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "new"');
                     break;
                 case 'checking':
-                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "checking"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "checking"');
                     break;
                 case 'connected':
-                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "connected"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "connected"');
                     break;
                 case 'completed':
-                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "completed"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "completed"');
                     break;
             }
         }
