@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 
@@ -51,6 +52,8 @@ import org.springframework.stereotype.Component;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
 import io.openvidu.java.client.OpenViduRole;
@@ -904,6 +907,25 @@ public class OpenviduConfig {
 			addError(property, "Must be one of " + Arrays.asList(enumType.getEnumConstants()));
 			return null;
 		}
+	}
+
+	protected Map<String, String> asOptionalStringMap(String property) {
+		Map<String, String> map = new HashMap<>();
+		String str = getValue(property);
+		if (str != null && !str.isEmpty()) {
+			try {
+				Gson gson = new Gson();
+				JsonObject jsonObject = gson.fromJson(str, JsonObject.class);
+				for (Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+					map.put(entry.getKey(), entry.getValue().getAsString());
+				}
+				return map;
+			} catch (JsonSyntaxException e) {
+				addError(property, "Is not a valid map of strings. " + e.getMessage());
+				return map;
+			}
+		}
+		return map;
 	}
 
 	public URI checkWebsocketUri(String uri) throws Exception {
