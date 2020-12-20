@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
+import io.openvidu.server.recording.*;
 import org.bouncycastle.util.Arrays;
 import org.kurento.jsonrpc.internal.server.config.JsonRpcConfiguration;
 import org.kurento.jsonrpc.server.JsonRpcConfigurer;
@@ -61,10 +62,6 @@ import io.openvidu.server.kurento.kms.DummyLoadManager;
 import io.openvidu.server.kurento.kms.FixedOneKmsManager;
 import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.kurento.kms.LoadManager;
-import io.openvidu.server.recording.DummyRecordingDownloader;
-import io.openvidu.server.recording.DummyRecordingUploader;
-import io.openvidu.server.recording.RecordingDownloader;
-import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.recording.service.RecordingManagerUtils;
 import io.openvidu.server.recording.service.RecordingManagerUtilsLocalStorage;
@@ -203,7 +200,11 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public RecordingUploader recordingUpload() {
+	@DependsOn("openviduConfig")
+	public RecordingUploader recordingUpload(OpenviduConfig openviduConfig) {
+		if (openviduConfig.isGcpRecordingStorageEnabled()) {
+			return new GoogleCloudStorageRecordingUploader();
+		}
 		return new DummyRecordingUploader();
 	}
 

@@ -190,6 +190,10 @@ public class OpenviduConfig {
 
 	private String dotenvPath;
 
+	private boolean gcpRecordingStorageEnabled;
+
+	private String gcpStorageBucketName;
+
 	// Derived properties
 
 	public static String finalUrl;
@@ -336,6 +340,14 @@ public class OpenviduConfig {
 
 	public String getDotenvPath() {
 		return dotenvPath;
+	}
+
+	public boolean isGcpRecordingStorageEnabled() {
+		return gcpRecordingStorageEnabled;
+	}
+
+	public String getGcpStorageBucketName() {
+		return gcpStorageBucketName;
 	}
 
 	// Derived properties methods
@@ -532,6 +544,10 @@ public class OpenviduConfig {
 
 		openviduForcedCodec = asEnumValue("OPENVIDU_STREAMS_FORCED_VIDEO_CODEC", VideoCodec.class);
 		openviduAllowTranscoding = asBoolean("OPENVIDU_STREAMS_ALLOW_TRANSCODING");
+
+		gcpRecordingStorageEnabled = asBoolean("OPENVIDU_GCP_RECORDING_STORAGE_ENABLED");
+		gcpStorageBucketName = gcpRecordingStorageEnabled ? asNonEmptyString("OPENVIDU_GCP_STORAGE_BUCKET_NAME")
+				: null;
 
 		kmsUrisList = checkKmsUris();
 
