@@ -743,7 +743,7 @@ export class OpenVidu {
     const config = {
       heartbeat: 5000,
       ws: {
-        uri: this.wsUri,
+        uri: this.wsUri + '?sessionId=' + this.session.sessionId,
         onconnected: onConnectSucces,
         ondisconnect: this.disconnectCallback.bind(this),
         onreconnecting: this.reconnectingCallback.bind(this),
