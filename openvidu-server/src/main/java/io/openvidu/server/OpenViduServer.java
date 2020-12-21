@@ -126,7 +126,8 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		}
 		if (openviduConfig.isWebhookEnabled()) {
 			log.info("OpenVidu Webhook service is enabled");
-			loggers.add(new CDRLoggerWebhook(openviduConfig));
+			loggers.add(new CDRLoggerWebhook(openviduConfig.getOpenViduWebhookEndpoint(),
+					openviduConfig.getOpenViduWebhookHeaders(), openviduConfig.getOpenViduWebhookEvents()));
 		} else {
 			log.info("OpenVidu Webhook service is disabled (may be enabled with 'OPENVIDU_WEBHOOK=true')");
 		}
