@@ -42,6 +42,7 @@ import io.openvidu.server.config.OpenviduBuildInfo;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.kurento.endpoint.KurentoFilter;
+import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.rpc.RpcNotificationService;
 
@@ -604,6 +605,10 @@ public class SessionEventsHandler {
 	}
 
 	public void onConnectionPropertyChanged(Participant participant, String property, Object newValue) {
+	}
+
+	public void onMediaServerCrashed(Kms kms, long timeOfKurentoDisconnection) {
+		CDR.recordMediaServerCrashed(kms, timeOfKurentoDisconnection);
 	}
 
 	protected Set<Participant> filterParticipantsByRole(OpenViduRole[] roles, Set<Participant> participants) {

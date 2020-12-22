@@ -103,18 +103,6 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
-	@DependsOn({ "openviduConfig", "mediaNodeStatusManager" })
-	public KmsManager kmsManager(OpenviduConfig openviduConfig) {
-		if (openviduConfig.getKmsUris().isEmpty()) {
-			throw new IllegalArgumentException("'KMS_URIS' should contain at least one KMS url");
-		}
-		String firstKmsWsUri = openviduConfig.getKmsUris().get(0);
-		log.info("OpenVidu Server using one KMS: {}", firstKmsWsUri);
-		return new FixedOneKmsManager();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
 	@DependsOn("openviduConfig")
 	public CallDetailRecord cdr(OpenviduConfig openviduConfig) {
 		List<CDRLogger> loggers = new ArrayList<>();
@@ -146,6 +134,18 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@DependsOn("openviduConfig")
 	public SessionManager sessionManager() {
 		return new KurentoSessionManager();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	@DependsOn({ "openviduConfig", "sessionManager", "mediaNodeStatusManager" })
+	public KmsManager kmsManager(OpenviduConfig openviduConfig, SessionManager sessionManager) {
+		if (openviduConfig.getKmsUris().isEmpty()) {
+			throw new IllegalArgumentException("'KMS_URIS' should contain at least one KMS url");
+		}
+		String firstKmsWsUri = openviduConfig.getKmsUris().get(0);
+		log.info("OpenVidu Server using one KMS: {}", firstKmsWsUri);
+		return new FixedOneKmsManager(sessionManager);
 	}
 
 	@Bean

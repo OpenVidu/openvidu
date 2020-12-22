@@ -18,6 +18,7 @@ import org.powermock.reflect.Whitebox;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
+import io.openvidu.server.kurento.core.KurentoSessionManager;
 import io.openvidu.server.kurento.kms.FixedOneKmsManager;
 import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.kurento.kms.KmsManager;
@@ -33,7 +34,7 @@ public class IntegrationTestConfiguration {
 
 	@Bean
 	public KmsManager kmsManager() throws Exception {
-		final KmsManager spy = Mockito.spy(new FixedOneKmsManager());
+		final KmsManager spy = Mockito.spy(new FixedOneKmsManager(new KurentoSessionManager()));
 		doAnswer(invocation -> {
 			List<Kms> successfullyConnectedKmss = new ArrayList<>();
 			List<KmsProperties> kmsProperties = invocation.getArgument(0);

@@ -36,6 +36,7 @@ import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.endpoint.KmsEvent;
+import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.summary.SessionSummary;
@@ -214,6 +215,12 @@ public class CallDetailRecord {
 		this.loggers.forEach(logger -> {
 			logger.log(sessionSummary);
 		});
+	}
+
+	public void recordMediaServerCrashed(Kms kms, long timeOfKurentoDisconnection) {
+		CDREvent e = new CDREventMediaServerCrashed(CDREventName.mediaServerCrashed, null, timeOfKurentoDisconnection,
+				kms);
+		this.log(e);
 	}
 
 }

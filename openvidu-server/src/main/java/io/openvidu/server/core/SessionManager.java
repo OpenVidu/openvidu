@@ -459,7 +459,7 @@ public abstract class SessionManager {
 					log.warn("Possible ghost session {}", sessionActive.getSessionId());
 				}
 			}
-		}, () -> new Long(openviduConfig.getSessionGarbageInterval() * 1000));
+		}, () -> Long.valueOf(openviduConfig.getSessionGarbageInterval() * 1000));
 
 		this.sessionGarbageCollectorTimer.updateTimer();
 
