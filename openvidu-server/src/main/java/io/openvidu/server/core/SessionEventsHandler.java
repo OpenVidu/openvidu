@@ -608,7 +608,7 @@ public class SessionEventsHandler {
 	}
 
 	public void onMediaServerCrashed(Kms kms, long timeOfKurentoDisconnection) {
-		CDR.recordMediaServerCrashed(kms, timeOfKurentoDisconnection);
+		CDR.recordMediaServerCrashed(kms, null, timeOfKurentoDisconnection);
 	}
 
 	protected Set<Participant> filterParticipantsByRole(OpenViduRole[] roles, Set<Participant> participants) {
