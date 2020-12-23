@@ -45,39 +45,39 @@ new_ov_installation() {
      # Download necessary files
      printf '\n     => Downloading Openvidu PRO files:'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/cluster/aws/openvidu_autodiscover.sh \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/cluster/aws/openvidu_autodiscover.sh \
           --output "${AWS_SCRIPTS_FOLDER}/openvidu_autodiscover.sh" || fatal_error "Error when downloading the file 'openvidu_autodiscover.sh'"
      printf '\n          - openvidu_autodiscover.sh'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/cluster/aws/openvidu_drop.sh \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/cluster/aws/openvidu_drop.sh \
           --output "${AWS_SCRIPTS_FOLDER}/openvidu_drop.sh" || fatal_error "Error when downloading the file 'openvidu_drop.sh'"
      printf '\n          - openvidu_drop.sh'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/cluster/aws/openvidu_launch_kms.sh \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/cluster/aws/openvidu_launch_kms.sh \
           --output "${AWS_SCRIPTS_FOLDER}/openvidu_launch_kms.sh" || fatal_error "Error when downloading the file 'openvidu_launch_kms.sh'"
      printf '\n          - openvidu_launch_kms.sh'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/beats/filebeat.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/beats/filebeat.yml \
           --output "${BEATS_FOLDER}/filebeat.yml" || fatal_error "Error when downloading the file 'filebeat.yml'"
      printf '\n          - filebeat.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/beats/metricbeat.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/beats/metricbeat.yml \
           --output "${BEATS_FOLDER}/metricbeat.yml" || fatal_error "Error when downloading the file 'metricbeat.yml'"
      printf '\n          - metricbeat.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/.env \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/.env \
           --output "${OPENVIDU_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
      printf '\n          - .env'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/docker-compose.override.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/docker-compose.override.yml \
           --output "${OPENVIDU_FOLDER}/docker-compose.override.yml" || fatal_error "Error when downloading the file 'docker-compose.override.yml'"
      printf '\n          - docker-compose.override.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/docker-compose.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/docker-compose.yml \
           --output "${OPENVIDU_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/openvidu \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/openvidu \
           --output "${OPENVIDU_FOLDER}/openvidu" || fatal_error "Error when downloading the file 'openvidu'"
      printf '\n          - openvidu'
 
@@ -186,39 +186,39 @@ upgrade_ov() {
      # Download necessary files
      printf '\n     => Downloading new Openvidu PRO files:'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/cluster/aws/openvidu_autodiscover.sh \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/cluster/aws/openvidu_autodiscover.sh \
           --output "${TMP_FOLDER}/openvidu_autodiscover.sh" || fatal_error "Error when downloading the file 'openvidu_autodiscover.sh'"
      printf '\n          - openvidu_autodiscover.sh'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/cluster/aws/openvidu_drop.sh \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/cluster/aws/openvidu_drop.sh \
           --output "${TMP_FOLDER}/openvidu_drop.sh" || fatal_error "Error when downloading the file 'openvidu_drop.sh'"
      printf '\n          - openvidu_drop.sh'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/cluster/aws/openvidu_launch_kms.sh \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/cluster/aws/openvidu_launch_kms.sh \
           --output "${TMP_FOLDER}/openvidu_launch_kms.sh" || fatal_error "Error when downloading the file 'openvidu_launch_kms.sh'"
      printf '\n          - openvidu_launch_kms.sh'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/beats/filebeat.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/beats/filebeat.yml \
           --output "${TMP_FOLDER}/filebeat.yml" || fatal_error "Error when downloading the file 'filebeat.yml'"
      printf '\n          - filebeat.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/beats/metricbeat.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/beats/metricbeat.yml \
           --output "${TMP_FOLDER}/metricbeat.yml" || fatal_error "Error when downloading the file 'metricbeat.yml'"
      printf '\n          - metricbeat.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/.env \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/.env \
           --output "${TMP_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
      printf '\n          - .env'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/docker-compose.override.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/docker-compose.override.yml \
           --output "${TMP_FOLDER}/docker-compose.override.yml" || fatal_error "Error when downloading the file 'docker-compose.override.yml'"
      printf '\n          - docker-compose.override.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/docker-compose.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/docker-compose.yml \
           --output "${TMP_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-as-openvidu-server-pro/openvidu \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/aws-asg-openvidu-server-pro/openvidu \
           --output "${TMP_FOLDER}/openvidu" || fatal_error "Error when downloading the file 'openvidu'"
      printf '\n          - openvidu'
 
