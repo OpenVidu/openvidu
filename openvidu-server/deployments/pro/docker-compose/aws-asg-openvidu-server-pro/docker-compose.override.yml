@@ -1,0 +1,26 @@
+version: '3.1'
+
+services:
+    # --------------------------------------------------------------
+    #
+    #   Change this if your want use your own application.
+    #   It's very important expose your application in port 5442
+    #   and use the http protocol.
+    # 
+    #   Default Application
+    #
+    #   Openvidu-Call Version: 2.16.0
+    #
+    # --------------------------------------------------------------
+    app:
+        image: openvidu/openvidu-call:2.16.0
+        restart: on-failure
+        network_mode: host
+        environment: 
+            - SERVER_PORT=5442
+            - OPENVIDU_URL=http://localhost:5443
+            - OPENVIDU_SECRET=${OPENVIDU_SECRET}
+            - CALL_OPENVIDU_CERTTYPE=${CERTIFICATE_TYPE}
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
