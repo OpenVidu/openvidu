@@ -60,14 +60,13 @@ services:
         network_mode: host
         environment:
             - OPENVIDU_SECRET=${OPENVIDU_SECRET}
-            - LOCAL_OPENVIDU_SERVER_URI=https://replication-manager:8080/
-            - REDIS_HOST=127.0.0.1
-            - REDIS_PORT=6379
+            - LOCAL_OPENVIDU_SERVER_URI=https://127.0.0.1:5443/
+            - REDIS_HOST=${RM_REDIS_IP}
+            - REDIS_PORT=${RM_REDIS_PORT}
             - REDIS_PASS=${OPENVIDU_SECRET}
             - REDIS_TIMEOUT=5
             - REDIS_DB=replicationmanager
-            - SNS_QUEUE_NAME=ov-sns
-            - SQS_QUEUE_NAME=ov-sqs
+            - SQS_QUEUE_NAME=${RM_SQS_QUEUE}
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
