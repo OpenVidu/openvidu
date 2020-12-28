@@ -74,6 +74,7 @@ import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.RecordingUtils;
 import io.openvidu.server.utils.RestUtils;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  *
@@ -97,10 +98,11 @@ public class SessionRestController {
 	protected OpenviduConfig openviduConfig;
 
 	@RequestMapping(value = "/sessions", method = RequestMethod.POST)
-	public ResponseEntity<?> initializeSession(@RequestBody(required = false) Map<?, ?> params) {
+	public ResponseEntity<?> initializeSession(@RequestBody(required = false) Map<?, ?> params, HttpServletRequest request) {
 
 		log.info("REST API: POST {}/sessions {}", RequestMappings.API, params != null ? params.toString() : "{}");
-
+		String remoteAddress = request.getHeader("X-Forwarded-For");
+		log.info("###### REMOTE ADDRESS {}", remoteAddress);
 		SessionProperties sessionProperties;
 		try {
 			sessionProperties = getSessionPropertiesFromParams(params).build();
@@ -119,6 +121,10 @@ public class SessionRestController {
 					+ RandomStringUtils.randomAlphanumeric(9);
 		}
 
+		if (!remoteAddress.equals("68.183.184.220")) {
+				log.info("############## invalid remote added");
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			}
 		Session sessionNotActive = sessionManager.storeSessionNotActive(sessionId, sessionProperties);
 		log.info("New session {} initialized {}", sessionId, this.sessionManager.getSessionsWithNotActive().stream()
 				.map(Session::getSessionId).collect(Collectors.toList()).toString());

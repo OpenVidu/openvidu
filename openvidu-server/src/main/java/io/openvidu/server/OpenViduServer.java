@@ -360,7 +360,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		String dashboardUrl = httpUrl + config.getOpenViduFrontendDefaultPath().replaceAll("^/", "");
 
 		// @formatter:off
-		String msg = "\n\n----------------------------------------------------\n" + "\n" + "   OpenVidu is ready!\n"
+		String msg = "\n\n---------------------------------------###############ajay#######-------------\n" + "\n" + "   OpenVidu is ready!\n"
 				+ "   ---------------------------\n" + "\n" + "   * OpenVidu Server URL: " + httpUrl + "\n" + "\n"
 				+ "   * OpenVidu Dashboard: " + dashboardUrl + "\n" + "\n"
 				+ "----------------------------------------------------\n";
