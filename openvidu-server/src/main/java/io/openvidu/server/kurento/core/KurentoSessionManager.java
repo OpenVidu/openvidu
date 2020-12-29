@@ -264,29 +264,29 @@ public class KurentoSessionManager extends SessionManager {
 										this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
 								recordingManager.initAutomaticRecordingStopThread(session);
 							} else {
-								try {
-									if (session.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
-										try {
-											if (session.isClosed()) {
-												return false;
-											}
-											// log.info("No more participants in session '{}', removing it and closing it",
-											// 		sessionId);
-											// this.closeSessionAndEmptyCollections(session, reason, true);
-											// sessionClosedByLastParticipant = true;
-										} finally {
-											session.closingLock.writeLock().unlock();
-										}
-									} else {
-										log.error(
-												"Timeout waiting for Session {} closing lock to be available for closing as last participant left",
-												sessionId);
-									}
-								} catch (InterruptedException e) {
-									log.error(
-											"InterruptedException while waiting for Session {} closing lock to be available for closing as last participant left",
-											sessionId);
-								}
+								// try {
+								// 	if (session.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
+								// 		try {
+								// 			if (session.isClosed()) {
+								// 				return false;
+								// 			}
+								// 			log.info("No more participants in session '{}', removing it and closing it",
+								// 					sessionId);
+								// 			this.closeSessionAndEmptyCollections(session, reason, true);
+								// 			sessionClosedByLastParticipant = true;
+								// 		} finally {
+								// 			session.closingLock.writeLock().unlock();
+								// 		}
+								// 	} else {
+								// 		log.error(
+								// 				"Timeout waiting for Session {} closing lock to be available for closing as last participant left",
+								// 				sessionId);
+								// 	}
+								// } catch (InterruptedException e) {
+								// 	log.error(
+								// 			"InterruptedException while waiting for Session {} closing lock to be available for closing as last participant left",
+								// 			sessionId);
+								// }
 							}
 						} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
 								&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
