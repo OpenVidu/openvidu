@@ -74,6 +74,7 @@ import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.RecordingUtils;
 import io.openvidu.server.utils.RestUtils;
+import io.openvidu.server.utils.GameServerIP;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -98,7 +99,8 @@ public class SessionRestController {
 	protected OpenviduConfig openviduConfig;
 
 	@RequestMapping(value = "/sessions", method = RequestMethod.POST)
-	public ResponseEntity<?> initializeSession(@RequestBody(required = false) Map<?, ?> params, HttpServletRequest request) {
+	public ResponseEntity<?> initializeSession(@RequestBody(required = false) Map<?, ?> params,
+			HttpServletRequest request) {
 
 		log.info("REST API: POST {}/sessions {}", RequestMappings.API, params != null ? params.toString() : "{}");
 		String remoteAddress = request.getHeader("X-Forwarded-For");
@@ -120,10 +122,10 @@ public class SessionRestController {
 					+ RandomStringUtils.randomAlphanumeric(9);
 		}
 
-		if (!remoteAddress.equals("68.183.184.220")) {
-				log.info("############## invalid remote added");
-				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-			}
+		if (!GameServerIP.getInstance().isValidIP(remoteAddress)) {
+			log.info("invalid remote added {}", remoteAddress);
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
 		Session sessionNotActive = sessionManager.storeSessionNotActive(sessionId, sessionProperties);
 		log.info("New session {} initialized {}", sessionId, this.sessionManager.getSessionsWithNotActive().stream()
 				.map(Session::getSessionId).collect(Collectors.toList()).toString());
@@ -192,16 +194,15 @@ public class SessionRestController {
 						if (sessionNotActive.isClosed()) {
 							return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 						}
-						this.sessionManager.closeSessionAndEmptyCollections(sessionNotActive,
-								EndReason.sessionClosedByServer, true);
+						this.sessionManager.closeSessionAndEmptyCollections(sessionNotActive, EndReason.sessionClosedByServer,
+								true);
 						return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 					} finally {
 						sessionNotActive.closingLock.writeLock().unlock();
 					}
 				} else {
 					String errorMsg = "Timeout waiting for Session " + sessionId
-							+ " closing lock to be available for closing from DELETE " + RequestMappings.API
-							+ "/sessions";
+							+ " closing lock to be available for closing from DELETE " + RequestMappings.API + "/sessions";
 					log.error(errorMsg);
 					return this.generateErrorResponse(errorMsg, "/sessions", HttpStatus.BAD_REQUEST);
 				}
@@ -220,8 +221,7 @@ public class SessionRestController {
 	public ResponseEntity<?> initializeConnection(@PathVariable("sessionId") String sessionId,
 			@RequestBody Map<?, ?> params) {
 
-		log.info("REST API: POST {} {}", RequestMappings.API + "/sessions/" + sessionId + "/connection",
-				params.toString());
+		log.info("REST API: POST {} {}", RequestMappings.API + "/sessions/" + sessionId + "/connection", params.toString());
 
 		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
 		if (session == null) {
@@ -236,13 +236,13 @@ public class SessionRestController {
 					HttpStatus.BAD_REQUEST);
 		}
 		switch (connectionProperties.getType()) {
-		case WEBRTC:
-			return this.newWebrtcConnection(session, connectionProperties);
-		case IPCAM:
-			return this.newIpcamConnection(session, connectionProperties);
-		default:
-			return this.generateErrorResponse("Wrong type parameter", "/sessions/" + sessionId + "/connection",
-					HttpStatus.BAD_REQUEST);
+			case WEBRTC:
+				return this.newWebrtcConnection(session, connectionProperties);
+			case IPCAM:
+				return this.newIpcamConnection(session, connectionProperties);
+			default:
+				return this.generateErrorResponse("Wrong type parameter", "/sessions/" + sessionId + "/connection",
+						HttpStatus.BAD_REQUEST);
 		}
 	}
 
@@ -382,11 +382,9 @@ public class SessionRestController {
 
 		try {
 			Recording startedRecording = this.recordingManager.startRecording(session, recordingProperties);
-			return new ResponseEntity<>(startedRecording.toJson().toString(), RestUtils.getResponseHeaders(),
-					HttpStatus.OK);
+			return new ResponseEntity<>(startedRecording.toJson().toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 		} catch (OpenViduException e) {
-			HttpStatus status = e.getCodeValue() == Code.MEDIA_NODE_STATUS_WRONG.getValue()
-					? HttpStatus.SERVICE_UNAVAILABLE
+			HttpStatus status = e.getCodeValue() == Code.MEDIA_NODE_STATUS_WRONG.getValue() ? HttpStatus.SERVICE_UNAVAILABLE
 					: HttpStatus.INTERNAL_SERVER_ERROR;
 			return new ResponseEntity<>("Error starting recording: " + e.getMessage(), RestUtils.getResponseHeaders(),
 					status);
@@ -432,12 +430,11 @@ public class SessionRestController {
 
 		if (session != null && !session.isClosed() && OutputMode.COMPOSED.equals(recording.getOutputMode())
 				&& recording.hasVideo()) {
-			sessionManager.evictParticipant(
-					session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null, null);
+			sessionManager.evictParticipant(session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID),
+					null, null, null);
 		}
 
-		return new ResponseEntity<>(stoppedRecording.toJson().toString(), RestUtils.getResponseHeaders(),
-				HttpStatus.OK);
+		return new ResponseEntity<>(stoppedRecording.toJson().toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/recordings/{recordingId}", method = RequestMethod.GET)
@@ -504,8 +501,7 @@ public class SessionRestController {
 	public ResponseEntity<String> newToken(@RequestBody Map<?, ?> params) {
 
 		if (params == null) {
-			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/tokens",
-					HttpStatus.BAD_REQUEST);
+			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/tokens", HttpStatus.BAD_REQUEST);
 		}
 
 		log.info("REST API: POST {}/tokens {}", RequestMappings.API, params.toString());
@@ -564,8 +560,7 @@ public class SessionRestController {
 		session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
 
-			final String participantPrivateId = this.sessionManager.getParticipantPrivateIdFromStreamId(sessionId,
-					streamId);
+			final String participantPrivateId = this.sessionManager.getParticipantPrivateIdFromStreamId(sessionId, streamId);
 
 			if (participantPrivateId == null) {
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -587,8 +582,7 @@ public class SessionRestController {
 	public ResponseEntity<?> signal(@RequestBody Map<?, ?> params) {
 
 		if (params == null) {
-			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/signal",
-					HttpStatus.BAD_REQUEST);
+			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/signal", HttpStatus.BAD_REQUEST);
 		}
 
 		log.info("REST API: POST {}/signal {}", RequestMappings.API, params.toString());
@@ -659,21 +653,19 @@ public class SessionRestController {
 		// While closing a session tokens can't be generated
 		if (session.closingLock.readLock().tryLock()) {
 			try {
-				Token token = sessionManager.newToken(session, connectionProperties.getRole(),
-						connectionProperties.getData(), connectionProperties.record(),
-						connectionProperties.getKurentoOptions());
+				Token token = sessionManager.newToken(session, connectionProperties.getRole(), connectionProperties.getData(),
+						connectionProperties.record(), connectionProperties.getKurentoOptions());
 				return new ResponseEntity<>(token.toJsonAsParticipant().toString(), RestUtils.getResponseHeaders(),
 						HttpStatus.OK);
 			} catch (Exception e) {
 				return this.generateErrorResponse(
-						"Error creating Connection for session " + session.getSessionId() + ": " + e.getMessage(),
-						REQUEST_PATH, HttpStatus.INTERNAL_SERVER_ERROR);
+						"Error creating Connection for session " + session.getSessionId() + ": " + e.getMessage(), REQUEST_PATH,
+						HttpStatus.INTERNAL_SERVER_ERROR);
 			} finally {
 				session.closingLock.readLock().unlock();
 			}
 		} else {
-			log.error("Session {} is in the process of closing. Connection couldn't be created",
-					session.getSessionId());
+			log.error("Session {} is in the process of closing. Connection couldn't be created", session.getSessionId());
 			return this.generateErrorResponse("Session " + session.getSessionId() + " not found", REQUEST_PATH,
 					HttpStatus.NOT_FOUND);
 		}
@@ -690,8 +682,8 @@ public class SessionRestController {
 		String typeOfVideo = ConnectionType.IPCAM.name();
 		Integer frameRate = null;
 		String videoDimensions = null;
-		KurentoMediaOptions mediaOptions = new KurentoMediaOptions(true, null, hasAudio, hasVideo, audioActive,
-				videoActive, typeOfVideo, frameRate, videoDimensions, null, false, connectionProperties.getRtspUri(),
+		KurentoMediaOptions mediaOptions = new KurentoMediaOptions(true, null, hasAudio, hasVideo, audioActive, videoActive,
+				typeOfVideo, frameRate, videoDimensions, null, false, connectionProperties.getRtspUri(),
 				connectionProperties.adaptativeBitrate(), connectionProperties.onlyPlayWithSubscribers(),
 				connectionProperties.getNetworkCache());
 
@@ -701,8 +693,7 @@ public class SessionRestController {
 				if (session.isClosed()) {
 					return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 				}
-				Participant ipcamParticipant = this.sessionManager.publishIpcam(session, mediaOptions,
-						connectionProperties);
+				Participant ipcamParticipant = this.sessionManager.publishIpcam(session, mediaOptions, connectionProperties);
 				return new ResponseEntity<>(ipcamParticipant.toJson().toString(), RestUtils.getResponseHeaders(),
 						HttpStatus.OK);
 			} catch (MalformedURLException e) {
@@ -778,8 +769,7 @@ public class SessionRestController {
 				}
 				if (customSessionId != null && !customSessionId.isEmpty()) {
 					if (!sessionManager.formatChecker.isValidCustomSessionId(customSessionId)) {
-						throw new Exception(
-								"Parameter 'customSessionId' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-]");
+						throw new Exception("Parameter 'customSessionId' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-]");
 					}
 					builder = builder.customSessionId(customSessionId);
 				}
@@ -854,8 +844,7 @@ public class SessionRestController {
 			JsonObject kurentoOptionsJson = null;
 			if (params.get("kurentoOptions") != null) {
 				try {
-					kurentoOptionsJson = JsonParser.parseString(params.get("kurentoOptions").toString())
-							.getAsJsonObject();
+					kurentoOptionsJson = JsonParser.parseString(params.get("kurentoOptions").toString()).getAsJsonObject();
 				} catch (Exception e) {
 					throw new Exception("Error in parameter 'kurentoOptions'. It is not a valid JSON object");
 				}
@@ -913,8 +902,8 @@ public class SessionRestController {
 			networkCache = networkCache != null ? networkCache : 2000;
 
 			// Build IPCAM options
-			builder.rtspUri(rtspUri).adaptativeBitrate(adaptativeBitrate)
-					.onlyPlayWithSubscribers(onlyPlayWithSubscribers).networkCache(networkCache).build();
+			builder.rtspUri(rtspUri).adaptativeBitrate(adaptativeBitrate).onlyPlayWithSubscribers(onlyPlayWithSubscribers)
+					.networkCache(networkCache).build();
 		}
 
 		return builder;
@@ -998,17 +987,16 @@ public class SessionRestController {
 			finalOutputMode = OutputMode.COMPOSED;
 		}
 
-		builder.outputMode(
-				finalOutputMode == null ? session.getSessionProperties().defaultOutputMode() : finalOutputMode);
+		builder.outputMode(finalOutputMode == null ? session.getSessionProperties().defaultOutputMode() : finalOutputMode);
 		if (RecordingUtils.IS_COMPOSED(finalOutputMode)) {
 			builder.resolution(resolution != null ? resolution : "1920x1080"); // resolution == null ?
-																				// sessionProperties.defaultRecordingResolution)
-																				// : resolution));
-			builder.recordingLayout(recordingLayout == null ? session.getSessionProperties().defaultRecordingLayout()
-					: recordingLayout);
+			// sessionProperties.defaultRecordingResolution)
+			// : resolution));
+			builder.recordingLayout(
+					recordingLayout == null ? session.getSessionProperties().defaultRecordingLayout() : recordingLayout);
 			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {
-				builder.customLayout(
-						customLayout == null ? session.getSessionProperties().defaultCustomLayout() : customLayout);
+				builder
+						.customLayout(customLayout == null ? session.getSessionProperties().defaultCustomLayout() : customLayout);
 			}
 			if (shmSize != null) {
 				if (shmSize < 134217728L) {
