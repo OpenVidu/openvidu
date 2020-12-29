@@ -132,7 +132,7 @@ case ${CERTIFICATE_TYPE} in
   "owncert")
     if [[ ! -f "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" && \
           ! -f "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" ]]; then
-      printf "\n    - Copying owmcert certificate..."
+      printf "\n    - Copying owncert certificate..."
 
       # Delete and create certificate folder
       rm -rf "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" | true
@@ -141,7 +141,7 @@ case ${CERTIFICATE_TYPE} in
       cp /owncert/certificate.key "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem"
       cp /owncert/certificate.cert "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem"
     else
-      printf "\n    - Owmcert certificate already exists, using them..."
+      printf "\n    - Owncert certificate already exists, using them..."
     fi
     ;;
 
