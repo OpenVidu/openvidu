@@ -66,7 +66,7 @@ services:
             - REDIS_PASS=${OPENVIDU_SECRET}
             - REDIS_TIMEOUT=5
             - REDIS_DB=replicationmanager
-            - SQS_QUEUE_NAME=${RM_SQS_QUEUE}
+            - MEDIANODE_AS_NOTIFICATION_QUEUE=${RM_SQS_QUEUE}
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
@@ -94,33 +94,6 @@ services:
             - MAX_PORT=65535
             - TURN_PUBLIC_IP=${TURN_PUBLIC_IP:-auto-ipv4}
             - ENABLE_COTURN_LOGS=true
-        logging:
-            options:
-                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
-
-    nginx:
-        image: openvidu/openvidu-proxy:5.0.0-dev2
-        restart: on-failure
-        network_mode: host
-        volumes:
-            - ./certificates:/etc/letsencrypt
-            - ./owncert:/owncert
-            - ./custom-nginx-vhosts:/etc/nginx/vhost.d/
-            - ${OPENVIDU_RECORDING_CUSTOM_LAYOUT}:/opt/openvidu/custom-layout
-        environment:
-            - DOMAIN_OR_PUBLIC_IP=${DOMAIN_OR_PUBLIC_IP}
-            - CERTIFICATE_TYPE=${CERTIFICATE_TYPE}
-            - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
-            - PROXY_HTTP_PORT=${HTTP_PORT:-}
-            - PROXY_HTTPS_PORT=${HTTPS_PORT:-}
-            - ALLOWED_ACCESS_TO_DASHBOARD=${ALLOWED_ACCESS_TO_DASHBOARD:-}
-            - ALLOWED_ACCESS_TO_RESTAPI=${ALLOWED_ACCESS_TO_RESTAPI:-}
-            - PROXY_MODE=PRO
-            - WITH_APP=true
-            - SUPPORT_DEPRECATED_API=${SUPPORT_DEPRECATED_API:-true}
-            - REDIRECT_WWW=${REDIRECT_WWW:-false}
-            - WORKER_CONNECTIONS=${WORKER_CONNECTIONS:-10240}
-            - PUBLIC_IP=${PROXY_PUBLIC_IP:-auto-ipv4}
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
