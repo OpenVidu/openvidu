@@ -26,7 +26,7 @@ public class GameServerIP {
 
   private static void loadIPs() {
     try {
-      File file = new File("/opt/openvidu/gameserver_ips.txt");
+      File file = new File("/usr/local/bin/gameserver_ips.txt");
 
       Scanner scanner = new Scanner(file);
       while (scanner.hasNextLine()) {

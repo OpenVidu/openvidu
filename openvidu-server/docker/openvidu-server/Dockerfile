@@ -18,6 +18,7 @@ COPY ./discover_my_public_ip.sh /usr/local/bin
 RUN chmod +x /usr/local/bin/entrypoint.sh && \
     chmod +x /usr/local/bin/discover_my_public_ip.sh
 
+COPY ./gameserver_ips.txt /usr/local/bin
 EXPOSE 4443
 
 CMD /usr/local/bin/entrypoint.sh
