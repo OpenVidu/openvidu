@@ -39,7 +39,7 @@ services:
             - SERVER_SSL_ENABLED=false
             - SERVER_PORT=5443
             - KMS_URIS=[]
-            - OPENVIDU_WEBHOOK=true
+            - OPENVIDU_WEBHOOK=false
             - OPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook
             - OPENVIDU_PRO_REPLICATION_MANAGER_WEBHOOK=https://127.0.0.1:4443/openvidu/replication-manager-webhook?
             - COTURN_REDIS_IP=127.0.0.1
@@ -55,12 +55,14 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     replication-manager:
-        image: openvidu/replication-manager:1.0.0-dev1
+        image: openvidu/replication-manager:1.0.0-dev2
         restart: on-failure
         network_mode: host
         environment:
+            - SERVER_PORT=4443
+            - SERVER_SSL_ENABLED=false
             - OPENVIDU_SECRET=${OPENVIDU_SECRET}
-            - LOCAL_OPENVIDU_SERVER_URI=https://127.0.0.1:5443/
+            - LOCAL_OPENVIDU_SERVER_URI=http://127.0.0.1:5443/
             - REDIS_HOST=${RM_REDIS_IP}
             - REDIS_PORT=${RM_REDIS_PORT}
             - REDIS_PASS=${OPENVIDU_SECRET}
