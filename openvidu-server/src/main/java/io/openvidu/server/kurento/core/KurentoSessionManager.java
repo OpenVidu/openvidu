@@ -270,10 +270,10 @@ public class KurentoSessionManager extends SessionManager {
 											if (session.isClosed()) {
 												return false;
 											}
-											log.info("No more participants in session '{}', removing it and closing it",
-													sessionId);
-											this.closeSessionAndEmptyCollections(session, reason, true);
-											sessionClosedByLastParticipant = true;
+											// log.info("No more participants in session '{}', removing it and closing it",
+											// 		sessionId);
+											// this.closeSessionAndEmptyCollections(session, reason, true);
+											// sessionClosedByLastParticipant = true;
 										} finally {
 											session.closingLock.writeLock().unlock();
 										}

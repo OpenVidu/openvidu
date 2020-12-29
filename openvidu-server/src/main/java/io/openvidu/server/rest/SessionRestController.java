@@ -102,7 +102,6 @@ public class SessionRestController {
 
 		log.info("REST API: POST {}/sessions {}", RequestMappings.API, params != null ? params.toString() : "{}");
 		String remoteAddress = request.getHeader("X-Forwarded-For");
-		log.info("###### REMOTE ADDRESS {}", remoteAddress);
 		SessionProperties sessionProperties;
 		try {
 			sessionProperties = getSessionPropertiesFromParams(params).build();
