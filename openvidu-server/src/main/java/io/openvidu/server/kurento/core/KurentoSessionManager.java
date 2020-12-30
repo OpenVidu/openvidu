@@ -103,7 +103,6 @@ public class KurentoSessionManager extends SessionManager {
 				Session sessionNotActive = sessionsNotActive.get(sessionId);
 
 				if (sessionNotActive == null && this.isInsecureParticipant(participant.getParticipantPrivateId())) {
-					log.info("############# ip address is {}",participant.getLocation().getIp());
 					// Insecure user directly call joinRoom RPC method, without REST API use
 					sessionNotActive = new Session(sessionId,
 							new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
