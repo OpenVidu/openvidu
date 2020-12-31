@@ -41,7 +41,7 @@ services:
             - KMS_URIS=[]
             - OPENVIDU_WEBHOOK=false
             - OPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook
-            - OPENVIDU_PRO_REPLICATION_MANAGER_WEBHOOK=https://127.0.0.1:4443/openvidu/replication-manager-webhook?
+            - OPENVIDU_PRO_REPLICATION_MANAGER_WEBHOOK=http://127.0.0.1:4443/openvidu/replication-manager-webhook?OPENVIDU_SECRET=${OPENVIDU_SECRET}
             - COTURN_REDIS_IP=127.0.0.1
             - COTURN_REDIS_PASSWORD=${OPENVIDU_SECRET}
             - COTURN_IP=${COTURN_IP:-auto-ipv4}
