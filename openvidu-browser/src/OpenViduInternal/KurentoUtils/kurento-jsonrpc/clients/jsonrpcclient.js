@@ -17,6 +17,7 @@
 
 var RpcBuilder = require('../');
 var WebSocketWithReconnection = require('./transports/webSocketWithReconnection');
+var OpenViduLogger = require('../../../Logger/OpenViduLogger').OpenViduLogger;
 
 Date.now = Date.now || function () {
     return +new Date;
@@ -28,7 +29,7 @@ var RECONNECTING = 'RECONNECTING';
 var CONNECTED = 'CONNECTED';
 var DISCONNECTED = 'DISCONNECTED';
 
-var Logger = console;
+var Logger = OpenViduLogger.getInstance();
 
 /**
  *
