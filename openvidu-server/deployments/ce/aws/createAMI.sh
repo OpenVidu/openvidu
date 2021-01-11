@@ -17,13 +17,13 @@ TEMPJSON=$(mktemp -t cloudformation-XXX --suffix .json)
 # Get Latest Ubuntu AMI id from specified region
 # Parameters
 # $1 Aws region
+
 getUbuntuAmiId() {
     local AMI_ID=$(
         aws --region ${1} ec2 describe-images \
-        --filters Name=name,Values=ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64* \
-        --query 'Images[*].[ImageId,CreationDate]' \
-        --output text  \
-        | sort -k2 -r  | head -n1 | cut -d$'\t' -f1
+        --filters "Name=name,Values=*ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*" \
+        --query "sort_by(Images, &CreationDate)" \
+        | jq -r 'del(.[] | select(.ImageOwnerAlias != null)) | .[-1].ImageId'
     )
     echo $AMI_ID
 }
