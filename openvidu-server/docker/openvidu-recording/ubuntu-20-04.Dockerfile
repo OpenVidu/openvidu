@@ -23,6 +23,9 @@ RUN wget http://dl.google.com/linux/deb/pool/main/g/google-chrome-stable/google-
   && rm google-chrome-stable_${CHROME_VERSION}_amd64.deb \
   && google-chrome --version
 
+# Add root user to pulseaudio group
+RUN adduser root pulse-access
+
 # Clean
 RUN apt-get clean && apt-get autoclean && apt-get autoremove
 

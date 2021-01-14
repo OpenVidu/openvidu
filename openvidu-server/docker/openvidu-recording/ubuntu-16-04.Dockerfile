@@ -19,6 +19,9 @@ RUN apt-get install -y ffmpeg pulseaudio xvfb
 # Install jq for managing JSON
 RUN apt-get install -y jq
 
+# Add root user to pulseaudio group
+RUN adduser root pulse-access
+
 # Clean
 RUN apt-get autoclean
 

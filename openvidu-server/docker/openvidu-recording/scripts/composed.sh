@@ -41,7 +41,10 @@ fi
   chmod 777 /recordings/$VIDEO_ID
   echo $RECORDING_JSON > /recordings/$VIDEO_ID/.recording.$VIDEO_ID
 
-  pulseaudio -D
+  # Cleanup to be "stateless" on startup, otherwise pulseaudio daemon can't start
+  rm -rf /var/run/pulse /var/lib/pulse /root/.config/pulse
+  # Run pulseaudio
+  pulseaudio -D --system --disallow-exit --disallow-module-loading
 
   ### Start Chrome in headless mode with xvfb, using the display num previously obtained ###
 

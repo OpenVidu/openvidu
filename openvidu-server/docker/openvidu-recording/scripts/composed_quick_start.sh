@@ -24,7 +24,10 @@ if [[ -z "${COMPOSED_QUICK_START_ACTION}" ]]; then
         export HEIGHT="$(cut -d'x' -f2 <<< $RESOLUTION)"
         export RECORDING_MODE=${RECORDING_MODE}
 
-        pulseaudio -D
+        # Cleanup to be "stateless" on startup, otherwise pulseaudio daemon can't start
+        rm -rf /var/run/pulse /var/lib/pulse /root/.config/pulse
+        # Run pulseaudio
+        pulseaudio -D --system --disallow-exit --disallow-module-loading
 
         ### Start Chrome in headless mode with xvfb, using the display num previously obtained ###
 
