@@ -74,10 +74,6 @@ new_media_node_installation() {
           --output "${BEATS_FOLDER}/metricbeat-elasticsearch.yml" || fatal_error "Error when downloading the file 'metricbeat-elasticsearch.yml'"
      printf '\n          - metricbeat-elasticsearch.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/beats/metricbeat-openvidu.yml \
-          --output "${BEATS_FOLDER}/metricbeat-openvidu.yml" || fatal_error "Error when downloading the file 'metricbeat-openvidu.yml'"
-     printf '\n          - metricbeat-openvidu.yml'
-
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/beats/copy_config_files.sh \
           --output "${BEATS_FOLDER}/copy_config_files.sh" || fatal_error "Error when downloading the file 'copy_config_files.sh'"
      printf '\n          - copy_config_files.sh'
@@ -205,10 +201,6 @@ upgrade_media_node() {
           --output "${TMP_FOLDER}/metricbeat-elasticsearch.yml" || fatal_error "Error when downloading the file 'metricbeat-elasticsearch.yml'"
      printf '\n          - metricbeat-elasticsearch.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/beats/metricbeat-openvidu.yml \
-          --output "${TMP_FOLDER}/metricbeat-openvidu.yml" || fatal_error "Error when downloading the file 'metricbeat-openvidu.yml'"
-     printf '\n          - metricbeat-openvidu.yml'
-
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/beats/copy_config_files.sh \
           --output "${TMP_FOLDER}/copy_config_files.sh" || fatal_error "Error when downloading the file 'copy_config_files.sh'"
      printf '\n          - copy_config_files.sh'
@@ -281,9 +273,6 @@ upgrade_media_node() {
 
      mv "${TMP_FOLDER}/metricbeat-elasticsearch.yml" "${MEDIA_NODE_PREVIOUS_FOLDER}/beats" || fatal_error "Error while updating 'metricbeat-elasticsearch.yml'"
      printf '\n          - metricbeat-elasticsearch.yml'
-
-     mv "${TMP_FOLDER}/metricbeat-openvidu.yml" "${MEDIA_NODE_PREVIOUS_FOLDER}/beats" || fatal_error "Error while updating 'metricbeat-openvidu.yml'"
-     printf '\n          - metricbeat-openvidu.yml'
 
      mv "${TMP_FOLDER}/copy_config_files.sh" "${MEDIA_NODE_PREVIOUS_FOLDER}/beats" || fatal_error "Error while updating 'copy_config_files.sh'"
      printf '\n          - copy_config_files.sh'
