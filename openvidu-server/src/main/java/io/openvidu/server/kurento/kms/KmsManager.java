@@ -314,13 +314,13 @@ public abstract class KmsManager {
 
 	@PreDestroy
 	public void close() {
+		if (kurentoReconnectTimer != null) {
+			kurentoReconnectTimer.cancelTimer();
+		}
 		log.info("Closing all KurentoClients");
 		this.kmss.values().forEach(kms -> {
 			kms.getKurentoClient().destroy();
 		});
-		if (kurentoReconnectTimer != null) {
-			kurentoReconnectTimer.cancelTimer();
-		}
 	}
 
 	public static String generateKmsId() {
