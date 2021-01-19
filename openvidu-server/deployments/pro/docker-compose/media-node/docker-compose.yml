@@ -16,7 +16,7 @@ version: '3.1'
 
 services:
     media-node-controller:
-        image: openvidu/media-node-controller:3.0.0-dev2
+        image: openvidu/media-node-controller:3.0.0-dev3
         restart: always
         ulimits:
             core: -1
