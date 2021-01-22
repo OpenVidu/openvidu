@@ -47,8 +47,8 @@
 	</developers>
 
 	<properties>
-		<!-- Java 8 -->
-		<java.version>1.8</java.version>
+		<!-- Java 11 -->
+		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<!-- Encoding -->
@@ -93,18 +93,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
-			<artifactId>selenium-chrome-driver</artifactId>
-			<version>${version.selenium}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.seleniumhq.selenium</groupId>
-			<artifactId>selenium-firefox-driver</artifactId>
-			<version>${version.selenium}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-api</artifactId>
 			<version>${version.selenium}</version>
 			<scope>test</scope>
@@ -119,12 +107,6 @@
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 			<version>${version.gson}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jcodec</groupId>
-			<artifactId>jcodec-javase</artifactId>
-			<version>0.2.3</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.mashape.unirest</groupId>

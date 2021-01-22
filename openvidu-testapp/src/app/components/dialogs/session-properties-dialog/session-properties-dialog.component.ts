@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import { SessionProperties, MediaMode, Recording, RecordingMode, RecordingLayout, TokenOptions, VideoCodec } from 'openvidu-node-client';
+import { SessionProperties, MediaMode, Recording, RecordingMode, RecordingLayout, ConnectionProperties, VideoCodec } from 'openvidu-node-client';
 
 @Component({
     selector: 'app-session-properties-dialog',
@@ -14,7 +14,9 @@ export class SessionPropertiesDialogComponent {
     turnConf: string;
     manualTurnConf: RTCIceServer = { urls: [] };
     customToken: string;
-    tokenOptions: TokenOptions;
+    forcePublishing: boolean = false;
+    connectionProperties: ConnectionProperties;
+    forceVideoCodec = VideoCodec;
 
     filterName = 'GStreamerFilter';
     filters: string[] = [];
@@ -30,17 +32,18 @@ export class SessionPropertiesDialogComponent {
         this.sessionProperties = data.sessionProperties;
         this.turnConf = data.turnConf;
         this.manualTurnConf = data.manualTurnConf;
-        this.tokenOptions = data.tokenOptions;
         this.customToken = data.customToken;
+        this.forcePublishing = data.forcePublishing;
+        this.connectionProperties = data.connectionProperties;
     }
 
     enumToArray(enumerator: any) {
         return Object.keys(enumerator);
     }
 
-    generateTokenOptions(): TokenOptions {
-        this.tokenOptions.kurentoOptions.allowedFilters = this.filters;
-        return this.tokenOptions;
+    generateConnectionProperties(): ConnectionProperties {
+        this.connectionProperties.kurentoOptions.allowedFilters = this.filters;
+        return this.connectionProperties;
     }
 
 }

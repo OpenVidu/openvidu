@@ -17,12 +17,17 @@
 
 import freeice = require('freeice');
 import uuid = require('uuid');
-import platform = require('platform');
 import { OpenViduLogger } from '../Logger/OpenViduLogger';
+import { PlatformUtils } from '../Utils/Platform';
+
 /**
  * @hidden
  */
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
+/**
+ * @hidden
+ */
+let platform: PlatformUtils;
 
 
 export interface WebRtcPeerConfiguration {
@@ -50,6 +55,7 @@ export class WebRtcPeer {
     private candidategatheringdone = false;
 
     constructor(protected configuration: WebRtcPeerConfiguration) {
+        platform = PlatformUtils.getInstance();
         this.configuration.iceServers = (!!this.configuration.iceServers && this.configuration.iceServers.length > 0) ? this.configuration.iceServers : freeice();
 
         this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });
@@ -139,8 +145,7 @@ export class WebRtcPeer {
 
             logger.debug('RTCPeerConnection constraints: ' + JSON.stringify(constraints));
 
-            if (platform.name === 'Safari' && platform.ua!!.indexOf('Safari') !== -1) {
-
+            if (platform.isSafariBrowser() && !platform.isIonicIos()) {
                 // Safari (excluding Ionic), at least on iOS just seems to support unified plan, whereas in other browsers is not yet ready and considered experimental
                 if (offerAudio) {
                     this.pc.addTransceiver('audio', {
@@ -280,8 +285,35 @@ export class WebRtcPeer {
     /**
      * @hidden
      */
+
+// FIXME CONFLICT WITH MASTER
+// In the mediasoup branch, the special treatment for ionic was removed:
+//   openvidu-browser: removed Ionic iOS timeout on first subscription
+//   https://github.com/OpenVidu/openvidu/commit/23d64be8063f8fdb2a212ca845e304762f2803f5
+// and also the method was converted into async and returned a Promise.
+// However in master the code is still like the old one.
+<<<<<<< HEAD
     async setRemoteDescription(sdp: RTCSessionDescriptionInit): Promise<void> {
         return this.pc.setRemoteDescription(sdp);
+=======
+    setRemoteDescription(answer: RTCSessionDescriptionInit, needsTimeoutOnProcessAnswer: boolean, resolve: (value?: string | PromiseLike<string> | undefined) => void, reject: (reason?: any) => void) {
+        if (platform.isIonicIos()) {
+            // Ionic iOS platform
+            if (needsTimeoutOnProcessAnswer) {
+                // 400 ms have not elapsed yet since first remote stream triggered Stream#initWebRtcPeerReceive
+                setTimeout(() => {
+                    logger.info('setRemoteDescription run after timeout for Ionic iOS device');
+                    this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
+                }, 250);
+            } else {
+                // 400 ms have elapsed
+                this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
+            }
+        } else {
+            // Rest of platforms
+            this.pc.setRemoteDescription(answer).then(() => resolve()).catch(error => reject(error));
+        }
+>>>>>>> master
     }
 
     /**

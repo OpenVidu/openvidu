@@ -1,13 +1,14 @@
-FROM ubuntu:16.04
-MAINTAINER openvidu@gmail.com
+FROM ubuntu:18.04
+MAINTAINER info@openvidu.io
 
 # Install Java, supervisor and netstat
 RUN apt-get update && apt-get install -y \
   curl \
   wget \
-  openjdk-8-jre \
+  openjdk-11-jre \
   coturn \
   redis-tools \
+  dnsutils \
 && rm -rf /var/lib/apt/lists/*
 
 # Copy OpenVidu Server

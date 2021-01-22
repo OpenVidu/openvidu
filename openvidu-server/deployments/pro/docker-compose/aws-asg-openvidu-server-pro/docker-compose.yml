@@ -1,0 +1,141 @@
+# ------------------------------------------------------------------------------
+#
+#    DO NOT MODIFY THIS FILE !!!
+#
+#    Configuration properties should be specified in .env file
+#
+#    Application based on OpenVidu should be specified in
+#    docker-compose.override.yml file
+#
+#    This docker-compose file coordinates all services of OpenVidu Pro Platform
+#
+#    This file will be overridden when update OpenVidu Platform
+#
+#    Openvidu Version: 2.16.0
+#
+#    Installation Mode: On Premises
+#
+# ------------------------------------------------------------------------------
+
+version: '3.1'
+
+services:
+
+    openvidu-server:
+        image: openvidu/openvidu-server-pro:2.17.0-dev5
+        restart: on-failure
+        network_mode: host
+        entrypoint: ['/usr/local/bin/entrypoint.sh']
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - ${OPENVIDU_RECORDING_PATH}:${OPENVIDU_RECORDING_PATH}
+            - ${OPENVIDU_RECORDING_CUSTOM_LAYOUT}:${OPENVIDU_RECORDING_CUSTOM_LAYOUT}
+            - ${OPENVIDU_CDR_PATH}:${OPENVIDU_CDR_PATH}
+            - ./cluster:/opt/openvidu/cluster
+            - .env:${PWD}/.env
+        env_file:
+            - .env
+        environment:
+            - SERVER_SSL_ENABLED=false
+            - SERVER_PORT=5443
+            - KMS_URIS=[]
+            - OPENVIDU_WEBHOOK=false
+            - OPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook
+            - OPENVIDU_PRO_REPLICATION_MANAGER_WEBHOOK=http://127.0.0.1:4443/openvidu/replication-manager-webhook?OPENVIDU_SECRET=${OPENVIDU_SECRET}
+            - COTURN_REDIS_IP=127.0.0.1
+            - COTURN_REDIS_PASSWORD=${OPENVIDU_SECRET}
+            - COTURN_IP=${COTURN_IP:-auto-ipv4}
+            - OPENVIDU_PRO_CLUSTER=true
+            - OPENVIDU_PRO_KIBANA_HOST=${OPENVIDU_PRO_KIBANA_HOST:-http://127.0.0.1/kibana}
+            - OPENVIDU_PRO_ELASTICSEARCH_HOST=${OPENVIDU_PRO_ELASTICSEARCH_HOST:-http://127.0.0.1:9200}
+            - WAIT_KIBANA_URL=${OPENVIDU_PRO_KIBANA_HOST:-http://127.0.0.1/kibana}
+            - DOTENV_PATH=${PWD}
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
+
+    replication-manager:
+        image: openvidu/replication-manager:1.0.0-dev5
+        restart: on-failure
+        network_mode: host
+        environment:
+            - SERVER_PORT=4443
+            - SERVER_SSL_ENABLED=false
+            - OPENVIDU_SECRET=${OPENVIDU_SECRET}
+            - LOCAL_OPENVIDU_SERVER_URI=http://127.0.0.1:5443/
+            - REDIS_HOST=${RM_REDIS_IP}
+            - REDIS_PORT=${RM_REDIS_PORT}
+            - REDIS_PASS=${OPENVIDU_SECRET}
+            - REDIS_TIMEOUT=5
+            - REDIS_DB=replicationmanager
+            - MEDIANODE_AS_NOTIFICATION_QUEUE=${RM_SQS_QUEUE}
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
+
+    redis:
+        image: openvidu/openvidu-redis:2.0.0-dev2
+        restart: always
+        network_mode: host
+        environment:
+            - REDIS_PASSWORD=${OPENVIDU_SECRET}
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
+
+    coturn:
+        image: openvidu/openvidu-coturn:3.0.0-dev2
+        restart: on-failure
+        network_mode: host
+        environment:
+            - REDIS_IP=127.0.0.1
+            - TURN_LISTEN_PORT=3478
+            - DB_NAME=0
+            - DB_PASSWORD=${OPENVIDU_SECRET}
+            - MIN_PORT=40000
+            - MAX_PORT=65535
+            - TURN_PUBLIC_IP=${TURN_PUBLIC_IP:-auto-ipv4}
+            - ENABLE_COTURN_LOGS=true
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
+
+    metricbeat:
+        image: docker.elastic.co/beats/metricbeat-oss:7.8.0
+        network_mode: host
+        restart: always
+        user: root
+        env_file:
+            - .env
+        environment:
+            - OPENVIDU_PRO_ELASTICSEARCH_HOST=${OPENVIDU_PRO_ELASTICSEARCH_HOST:-http://127.0.0.1:9200}
+        volumes:
+            - ./beats/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+        command: >
+            /bin/bash -c "metricbeat -e -strict.perms=false
+            `if [ ! -z $ELASTICSEARCH_USERNAME ]; then echo '-E output.elasticsearch.username=$ELASTICSEARCH_USERNAME'; fi`
+            `if [ ! -z $ELASTICSEARCH_PASSWORD ]; then echo '-E output.elasticsearch.password=$ELASTICSEARCH_PASSWORD'; fi`"
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
+
+    filebeat:
+        image: docker.elastic.co/beats/filebeat-oss:7.8.0
+        network_mode: host
+        restart: always
+        user: root
+        env_file:
+            - .env
+        environment:
+            - OPENVIDU_PRO_ELASTICSEARCH_HOST=${OPENVIDU_PRO_ELASTICSEARCH_HOST:-http://127.0.0.1:9200}
+        volumes:
+            - ./beats/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+            - /var/lib/docker:/var/lib/docker:ro
+            - /var/run/docker.sock:/var/run/docker.sock
+        command: >
+            /bin/bash -c "filebeat -e -strict.perms=false
+            `if [ ! -z $ELASTICSEARCH_USERNAME ]; then echo '-E output.elasticsearch.username=$ELASTICSEARCH_USERNAME'; fi`
+            `if [ ! -z $ELASTICSEARCH_PASSWORD ]; then echo '-E output.elasticsearch.password=$ELASTICSEARCH_PASSWORD'; fi`"
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"

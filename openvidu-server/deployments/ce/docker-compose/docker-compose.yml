@@ -7,11 +7,11 @@
 #    Application based on OpenVidu should be specified in
 #    docker-compose.override.yml file
 #
-#    This docker-compose file coordinates all services of OpenVidu CE Platform.
+#    This docker-compose file coordinates all services of OpenVidu CE Platform
 #
 #    This file will be overridden when update OpenVidu Platform
 #
-#    Openvidu Version: 2.15.0
+#    Openvidu Version: 2.16.0
 #
 #    Installation Mode: On Premises
 #
@@ -22,10 +22,10 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server:2.15.0
+        image: openvidu/openvidu-server:2.17.0-dev2
         restart: on-failure
         network_mode: host
-        entrypoint: ['/bin/bash', '-c', 'export COTURN_IP=`/usr/local/bin/discover_my_public_ip.sh`; /usr/local/bin/entrypoint.sh']
+        entrypoint: ['/usr/local/bin/entrypoint.sh']
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - ${OPENVIDU_RECORDING_PATH}:${OPENVIDU_RECORDING_PATH}
@@ -39,9 +39,13 @@ services:
             - KMS_URIS=["ws://localhost:8888/kurento"]
             - COTURN_REDIS_IP=127.0.0.1
             - COTURN_REDIS_PASSWORD=${OPENVIDU_SECRET}
+            - COTURN_IP=${COTURN_IP:-auto-ipv4}
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     kms:
-        image: ${KMS_IMAGE:-kurento/kurento-media-server:6.14.0}
+        image: ${KMS_IMAGE:-kurento/kurento-media-server:6.15.0}
         restart: always
         network_mode: host
         ulimits:
@@ -49,20 +53,29 @@ services:
         volumes:
             - /opt/openvidu/kms-crashes:/opt/openvidu/kms-crashes
             - ${OPENVIDU_RECORDING_PATH}:${OPENVIDU_RECORDING_PATH}
+            - /opt/openvidu/kurento-logs:/opt/openvidu/kurento-logs
         environment:
             - KMS_MIN_PORT=40000
             - KMS_MAX_PORT=57000
-            - GST_DEBUG=${KMS_DEBUG_LEVEL:-}
+            - GST_DEBUG=${KMS_DOCKER_ENV_GST_DEBUG:-}
+            - KURENTO_LOG_FILE_SIZE=${KMS_DOCKER_ENV_KURENTO_LOG_FILE_SIZE:-100}
+            - KURENTO_LOGS_PATH=/opt/openvidu/kurento-logs
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     redis:
-        image: openvidu/openvidu-redis:1.0.0
+        image: openvidu/openvidu-redis:2.0.0-dev2
         restart: always
         network_mode: host
         environment:
             - REDIS_PASSWORD=${OPENVIDU_SECRET}
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     coturn:
-        image: openvidu/openvidu-coturn:1.0.0
+        image: openvidu/openvidu-coturn:3.0.0-dev2
         restart: on-failure
         network_mode: host
         environment:
@@ -72,14 +85,19 @@ services:
             - DB_PASSWORD=${OPENVIDU_SECRET}
             - MIN_PORT=57001
             - MAX_PORT=65535
+            - ENABLE_COTURN_LOGS=true
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     nginx:
-        image: openvidu/openvidu-proxy:3.0.0
+        image: openvidu/openvidu-proxy:5.0.0-dev2
         restart: on-failure
         network_mode: host
         volumes:
             - ./certificates:/etc/letsencrypt
             - ./owncert:/owncert
+            - ./custom-nginx-vhosts:/etc/nginx/vhost.d/
             - ${OPENVIDU_RECORDING_CUSTOM_LAYOUT}:/opt/openvidu/custom-layout
         environment:
             - DOMAIN_OR_PUBLIC_IP=${DOMAIN_OR_PUBLIC_IP}
@@ -91,3 +109,10 @@ services:
             - ALLOWED_ACCESS_TO_RESTAPI=${ALLOWED_ACCESS_TO_RESTAPI:-}
             - PROXY_MODE=CE
             - WITH_APP=true
+            - SUPPORT_DEPRECATED_API=${SUPPORT_DEPRECATED_API:-true}
+            - REDIRECT_WWW=${REDIRECT_WWW:-false}
+            - WORKER_CONNECTIONS=${WORKER_CONNECTIONS:-10240}
+            - PUBLIC_IP=${PROXY_PUBLIC_IP:-auto-ipv4}
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"

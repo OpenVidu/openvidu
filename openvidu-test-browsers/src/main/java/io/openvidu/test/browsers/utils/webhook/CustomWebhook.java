@@ -15,7 +15,7 @@
  *
  */
 
-package io.openvidu.test.browsers.utils;
+package io.openvidu.test.browsers.utils.webhook;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,6 +57,10 @@ public class CustomWebhook {
 	public static void shutDown() {
 		CustomWebhook.events.clear();
 		CustomWebhook.context.close();
+	}
+
+	public static void clean() {
+		CustomWebhook.events.clear();
 	}
 
 	public synchronized static JsonObject waitForEvent(String eventName, int maxSecondsWait) throws Exception {

@@ -83,6 +83,7 @@ public class OpenViduEventManager {
 	private Map<String, AtomicInteger> eventNumbers;
 	private Map<String, CountDownLatch> eventCountdowns;
 	private AtomicBoolean isInterrupted = new AtomicBoolean(false);
+	private CountDownLatch pollingLatch = new CountDownLatch(1);
 	private int timeOfWaitInSeconds;
 
 	public OpenViduEventManager(WebDriver driver, int timeOfWaitInSeconds) {
@@ -100,7 +101,7 @@ public class OpenViduEventManager {
 			public void uncaughtException(Thread th, Throwable ex) {
 				if (ex.getClass().getSimpleName().equals("UnhandledAlertException")
 						&& ex.getMessage().contains("unexpected alert open")) {
-					stopPolling(false);
+					stopPolling(false, false);
 					System.err
 							.println("Alert opened (" + ex.getMessage() + "). Waiting 1 second and restarting polling");
 					try {
@@ -130,19 +131,22 @@ public class OpenViduEventManager {
 					e.printStackTrace();
 				}
 			}
+			log.info("Polling thread is now interrupted!");
+			this.pollingLatch.countDown();
 		});
 		this.pollingThread.setUncaughtExceptionHandler(h);
 		this.pollingThread.start();
 	}
 
-	public void stopPolling(boolean stopThread) {
-		this.eventCallbacks.clear();
-		this.eventCountdowns.clear();
-		this.eventNumbers.clear();
-
+	public void stopPolling(boolean stopThread, boolean cleanExistingEvents) {
 		if (stopThread) {
 			this.isInterrupted.set(true);
 			this.pollingThread.interrupt();
+		}
+		if (cleanExistingEvents) {
+			this.eventCallbacks.clear();
+			this.eventCountdowns.clear();
+			this.eventNumbers.clear();
 		}
 	}
 
@@ -186,6 +190,26 @@ public class OpenViduEventManager {
 		this.setCountDown(eventName, new CountDownLatch(0));
 	}
 
+	public synchronized void clearAllCurrentEvents() {
+		this.eventNumbers.keySet().forEach(eventName -> {
+			this.clearCurrentEvents(eventName);
+		});
+	}
+
+	public void resetEventThread() throws InterruptedException {
+		this.stopPolling(true, true);
+		this.pollingLatch.await();
+		this.execService.shutdownNow();
+		this.execService.awaitTermination(10, TimeUnit.SECONDS);
+		this.execService = Executors.newCachedThreadPool();
+		this.stopPolling(false, true);
+		this.clearAllCurrentEvents();
+		this.isInterrupted.set(false);
+		this.pollingLatch = new CountDownLatch(1);
+		this.eventQueue.clear();
+		this.startPolling();
+	}
+
 	public boolean assertMediaTracks(WebElement videoElement, boolean audioTransmission, boolean videoTransmission,
 			String parentSelector) {
 		return this.assertMediaTracks(Collections.singleton(videoElement), audioTransmission, videoTransmission,
@@ -196,6 +220,10 @@ public class OpenViduEventManager {
 			boolean videoTransmission) {
 		boolean success = true;
 		for (WebElement video : videoElements) {
+			if (!waitUntilSrcObjectDefined(video, "", 5000)) {
+				System.err.println("srcObject of HTMLVideoElement was not defined!");
+				return false;
+			}
 			success = success && (audioTransmission == this.hasAudioTracks(video, ""))
 					&& (videoTransmission == this.hasVideoTracks(video, ""));
 			if (!success)
@@ -208,6 +236,10 @@ public class OpenViduEventManager {
 			boolean videoTransmission, String parentSelector) {
 		boolean success = true;
 		for (WebElement video : videoElements) {
+			if (!waitUntilSrcObjectDefined(video, "", 5000)) {
+				System.err.println("srcObject of HTMLVideoElement was not defined!");
+				return false;
+			}
 			success = success && (audioTransmission == this.hasAudioTracks(video, parentSelector))
 					&& (videoTransmission == this.hasVideoTracks(video, parentSelector));
 			if (!success)
@@ -251,9 +283,8 @@ public class OpenViduEventManager {
 		}
 
 		String[] events = rawEvents.replaceFirst("^<br>", "").split("<br>");
-		JsonParser parser = new JsonParser();
 		for (String e : events) {
-			JsonObject event = (JsonObject) parser.parse(e);
+			JsonObject event = JsonParser.parseString(e).getAsJsonObject();
 			final String eventType = event.get("type").getAsString();
 
 			this.eventQueue.add(event);
@@ -314,21 +345,44 @@ public class OpenViduEventManager {
 	}
 
 	private boolean hasAudioTracks(WebElement videoElement, String parentSelector) {
-		boolean audioTracks = (boolean) ((JavascriptExecutor) driver).executeScript(
-				"return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
-						+ videoElement.getAttribute("id") + "').srcObject.getAudioTracks().length > 0)"
-						+ "&& (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
-						+ videoElement.getAttribute("id") + "').srcObject.getAudioTracks()[0].enabled))");
+		String script = "return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
+				+ "#" + videoElement.getAttribute("id") + "').srcObject.getAudioTracks().length > 0)"
+				+ " && (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
+				+ videoElement.getAttribute("id") + "').srcObject.getAudioTracks()[0].enabled))";
+		boolean audioTracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
 		return audioTracks;
 	}
 
 	private boolean hasVideoTracks(WebElement videoElement, String parentSelector) {
-		boolean videoTracks = (boolean) ((JavascriptExecutor) driver).executeScript(
-				"return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
-						+ videoElement.getAttribute("id") + "').srcObject.getVideoTracks().length > 0)"
-						+ "&& (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
-						+ videoElement.getAttribute("id") + "').srcObject.getVideoTracks()[0].enabled))");
+		String script = "return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
+				+ "#" + videoElement.getAttribute("id") + "').srcObject.getVideoTracks().length > 0)"
+				+ " && (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
+				+ videoElement.getAttribute("id") + "').srcObject.getVideoTracks()[0].enabled))";
+		boolean videoTracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
 		return videoTracks;
+	}
+
+	private boolean waitUntilSrcObjectDefined(WebElement videoElement, String parentSelector, int maxMsWait) {
+		final int sleepInterval = 50;
+		int maxIterations = maxMsWait / sleepInterval;
+		int counter = 0;
+		boolean defined = srcObjectDefined(videoElement, parentSelector);
+		while (!defined && counter < maxIterations) {
+			try {
+				Thread.sleep(sleepInterval);
+			} catch (InterruptedException e) {
+			}
+			defined = srcObjectDefined(videoElement, parentSelector);
+			counter++;
+		}
+		return defined;
+	}
+
+	private boolean srcObjectDefined(WebElement videoElement, String parentSelector) {
+		String script = "return (!!(document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
+				+ "#" + videoElement.getAttribute("id") + "').srcObject))";
+		boolean defined = (boolean) ((JavascriptExecutor) driver).executeScript(script);
+		return defined;
 	}
 
 }

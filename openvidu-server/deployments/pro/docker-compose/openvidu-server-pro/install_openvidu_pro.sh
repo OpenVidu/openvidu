@@ -3,6 +3,7 @@
 # Global variables
 OPENVIDU_FOLDER=openvidu
 OPENVIDU_VERSION=master
+OPENVIDU_UPGRADABLE_VERSION="2.16"
 AWS_SCRIPTS_FOLDER=${OPENVIDU_FOLDER}/cluster/aws
 ELASTICSEARCH_FOLDER=${OPENVIDU_FOLDER}/elasticsearch
 BEATS_FOLDER=${OPENVIDU_FOLDER}/beats
@@ -60,6 +61,10 @@ new_ov_installation() {
           --output "${BEATS_FOLDER}/filebeat.yml" || fatal_error "Error when downloading the file 'filebeat.yml'"
      printf '\n          - filebeat.yml'
 
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/openvidu-server-pro/beats/metricbeat.yml \
+          --output "${BEATS_FOLDER}/metricbeat.yml" || fatal_error "Error when downloading the file 'metricbeat.yml'"
+     printf '\n          - metricbeat.yml'
+
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/openvidu-server-pro/.env \
           --output "${OPENVIDU_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
      printf '\n          - .env'
@@ -95,6 +100,10 @@ new_ov_installation() {
      printf "\n     => Creating folder 'owncert'..."
      mkdir "${OPENVIDU_FOLDER}/owncert" || fatal_error "Error while creating the folder 'owncert'"
 
+     # Create vhost nginx folder
+     printf "\n     => Creating folder 'custom-nginx-vhosts'..."
+     mkdir "${OPENVIDU_FOLDER}/custom-nginx-vhosts" || fatal_error "Error while creating the folder 'custom-nginx-vhosts'"
+
      # Ready to use
      printf '\n'
      printf '\n'
@@ -105,13 +114,15 @@ new_ov_installation() {
      printf '\n     1. Go to openvidu folder:'
      printf '\n     $ cd openvidu'
      printf '\n'
-     printf '\n     2. Configure OPENVIDU_DOMAIN_OR_PUBLIC_IP, OPENVIDU_PRO_LICENSE, OPENVIDU_SECRET, and KIBANA_PASSWORD in .env file:'
+     printf '\n     2. Configure OPENVIDU_DOMAIN_OR_PUBLIC_IP, OPENVIDU_PRO_LICENSE, '
+     printf '\n     OPENVIDU_SECRET, and ELASTICSEARCH_PASSWORD in .env file:'
      printf '\n     $ nano .env'
      printf '\n'
      printf '\n     3. Start OpenVidu'
      printf '\n     $ ./openvidu start'
      printf '\n'
-     printf "\n     CAUTION: The folder 'openvidu/elasticsearch' use user and group 1000 permissions. This folder is necessary for store elasticsearch data."
+     printf "\n     CAUTION: The folder 'openvidu/elasticsearch' use user and group 1000 permissions. "
+     printf "\n     This folder is necessary for store elasticsearch data."
      printf "\n     For more information, check:"
      printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#deployment-instructions"
      printf '\n'
@@ -147,10 +158,13 @@ upgrade_ov() {
 
      # Uppgrade Openvidu
      OPENVIDU_PREVIOUS_VERSION=$(grep 'Openvidu Version:' "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml" | awk '{ print $4 }')
-     [ -z "${OPENVIDU_PREVIOUS_VERSION}" ] && OPENVIDU_PREVIOUS_VERSION=2.13.0
+     [ -z "${OPENVIDU_PREVIOUS_VERSION}" ] && fatal_error "Can't find previous OpenVidu version"
 
      # In this point using the variable 'OPENVIDU_PREVIOUS_VERSION' we can verify if the upgrade is
      # posible or not. If it is not posible launch a warning and stop the upgrade.
+     if [[ "${OPENVIDU_PREVIOUS_VERSION}" != "${OPENVIDU_UPGRADABLE_VERSION}."* ]]; then
+          fatal_error "You can't update from version ${OPENVIDU_PREVIOUS_VERSION} to ${OPENVIDU_VERSION}.\nNever upgrade across multiple major versions."
+     fi
 
      printf '\n'
      printf '\n     ======================================='
@@ -187,6 +201,10 @@ upgrade_ov() {
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/openvidu-server-pro/beats/filebeat.yml \
           --output "${TMP_FOLDER}/filebeat.yml" || fatal_error "Error when downloading the file 'filebeat.yml'"
      printf '\n          - filebeat.yml'
+
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/openvidu-server-pro/beats/metricbeat.yml \
+          --output "${TMP_FOLDER}/metricbeat.yml" || fatal_error "Error when downloading the file 'metricbeat.yml'"
+     printf '\n          - metricbeat.yml'
 
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/openvidu-server-pro/.env \
           --output "${TMP_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
@@ -243,14 +261,19 @@ upgrade_ov() {
      mv "${OPENVIDU_PREVIOUS_FOLDER}/openvidu" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'openvidu'"
      printf '\n          - openvidu'
 
-     mv "${OPENVIDU_PREVIOUS_FOLDER}/readme.md" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'readme.md'"
-     printf '\n          - readme.md'
-
      mv "${OPENVIDU_PREVIOUS_FOLDER}/cluster/aws" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'cluster/aws'"
      printf '\n          - cluster/aws'
 
+     mv "${OPENVIDU_PREVIOUS_FOLDER}/beats" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'beats'"
+     printf '\n          - beats'
+
      cp "${OPENVIDU_PREVIOUS_FOLDER}/.env" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous '.env'"
      printf '\n          - .env'
+
+     if [ -d "${OPENVIDU_PREVIOUS_FOLDER}/custom-nginx-vhosts" ]; then
+          mv "${OPENVIDU_PREVIOUS_FOLDER}/custom-nginx-vhosts" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous directory 'custom-nginx-vhosts'"
+          printf '\n          - custom-nginx-vhosts'
+     fi
 
      # Move tmp files to Openvidu
      printf '\n     => Updating files:'
@@ -288,6 +311,9 @@ upgrade_ov() {
      mv "${TMP_FOLDER}/filebeat.yml" "${OPENVIDU_PREVIOUS_FOLDER}/beats/filebeat.yml" || fatal_error "Error while updating 'filebeat.yml'"
      printf '\n          - filebeat.yml'
 
+     mv "${TMP_FOLDER}/metricbeat.yml" "${OPENVIDU_PREVIOUS_FOLDER}/beats/metricbeat.yml" || fatal_error "Error while updating 'metricbeat.yml'"
+     printf '\n          - metricbeat.yml'
+
      printf "\n     => Deleting 'tmp' folder"
      rm -rf "${TMP_FOLDER}" || fatal_error "Error deleting 'tmp' folder"
 
@@ -311,16 +337,15 @@ upgrade_ov() {
      [ ! -z "${OLD_MODE}" ] && sed -i -r "s/Installation Mode:.+/Installation Mode: ${OLD_MODE}/" "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml"
 
      # In Aws, update AMI ID
-     CHECK_AWS=$(curl -s -o /dev/null -w "%{http_code}" http://169.254.169.254)
-     if [[ ${CHECK_AWS} == "200" ]]; then
-          AWS_REGION=$(grep -E "AWS_DEFAULT_REGION=.*$" "${OPENVIDU_PREVIOUS_FOLDER}/.env" | cut -d'=' -f2)
-          [[ -z ${AWS_REGION} ]] && fatal_error "Error while getting AWS_REGION"
+     AWS_REGION=$(grep -E "AWS_DEFAULT_REGION=.*$" "${OPENVIDU_PREVIOUS_FOLDER}/.env" | cut -d'=' -f2)
+     if [[ ! -z ${AWS_REGION} ]]; then
           NEW_AMI_ID=$(curl https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/CF-OpenVidu-Pro-${OPENVIDU_VERSION//v}.yaml --silent |
                          sed -n -e '/KMSAMIMAP:/,/Metadata:/ p' |
                          grep -A 1 ${AWS_REGION} | grep AMI | tr -d " " | cut -d":" -f2)
           [[ -z ${NEW_AMI_ID} ]] && fatal_error "Error while getting new AWS_IMAGE_ID for Media Nodes"
           sed -i "s/.*AWS_IMAGE_ID=.*/AWS_IMAGE_ID=${NEW_AMI_ID}/" "${OPENVIDU_PREVIOUS_FOLDER}/.env" || fatal_error "Error while updating new AWS_IMAGE_ID for Media Nodes"
      fi
+     
 
      # Ready to use
      printf '\n'

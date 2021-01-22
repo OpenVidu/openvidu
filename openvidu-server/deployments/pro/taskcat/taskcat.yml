@@ -1,6 +1,6 @@
 ---
 global:
-  owner: openvidu@gmail.com
+  owner: info@openvidu.io
   qsname: openvidu-pro-clustering
   regions:
     - us-east-1

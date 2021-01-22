@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import { OpenVidu as OpenViduAPI, Session as SessionAPI, Recording, RecordingProperties, RecordingLayout } from 'openvidu-node-client';
+import { OpenVidu as OpenViduAPI, Session as SessionAPI, Recording, RecordingProperties, RecordingLayout, ConnectionProperties, OpenViduRole } from 'openvidu-node-client';
 
 @Component({
     selector: 'app-session-api-dialog',
@@ -14,15 +14,23 @@ export class SessionApiDialogComponent {
     session: SessionAPI;
     sessionId: string;
     recordingId: string;
-    resourceId: string;
+    connectionId: string;
+    streamId: string;
     response: string;
 
     recordingProperties: RecordingProperties;
     recMode = Recording.OutputMode;
     recLayouts = RecordingLayout;
+    openviduRoles = OpenViduRole;
     customLayout = '';
     recPropertiesIcon = 'add_circle';
     showRecProperties = false;
+
+    connectionProperties: ConnectionProperties = {
+        record: true,
+        role: OpenViduRole.PUBLISHER,
+        data: ''
+    };
 
     constructor(public dialogRef: MatDialogRef<SessionApiDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data) {
@@ -50,7 +58,18 @@ export class SessionApiDialogComponent {
 
     startRecording() {
         console.log('Starting recording');
-        this.OV.startRecording(this.sessionId, this.recordingProperties)
+        const finalRecordingProperties = {
+            name: this.recordingProperties.name,
+            outputMode: this.recordingProperties.outputMode,
+            recordingLayout: this.recordingProperties.recordingLayout,
+            customLayout: this.recordingProperties.customLayout,
+            resolution: this.recordingProperties.resolution,
+            hasAudio: this.recordingProperties.hasAudio,
+            hasVideo: this.recordingProperties.hasVideo,
+            shmSize: this.recordingProperties.shmSize,
+            mediaNode: !this.recordingProperties.mediaNode.id ? undefined : this.recordingProperties.mediaNode
+        }
+        this.OV.startRecording(this.sessionId, finalRecordingProperties)
             .then(recording => {
                 this.response = 'Recording started [' + recording.id + ']';
             })
@@ -145,7 +164,7 @@ export class SessionApiDialogComponent {
 
     forceDisconnect() {
         console.log('Forcing disconnect');
-        this.session.forceDisconnect(this.resourceId)
+        this.session.forceDisconnect(this.connectionId)
             .then(() => {
                 this.response = 'User disconnected';
             })
@@ -156,9 +175,35 @@ export class SessionApiDialogComponent {
 
     forceUnpublish() {
         console.log('Forcing unpublish');
-        this.session.forceUnpublish(this.resourceId)
+        this.session.forceUnpublish(this.streamId)
             .then(() => {
                 this.response = 'Stream unpublished';
+            })
+            .catch(error => {
+                this.response = 'Error [' + error.message + ']';
+            });
+    }
+
+    createConnection() {
+        console.log('Creating connection');
+        this.session.createConnection(this.connectionProperties)
+            .then(connection => {
+                this.response = 'Connection created: ' + JSON.stringify(connection);
+            })
+            .catch(error => {
+                this.response = 'Error [' + error.message + ']';
+            });
+    }
+
+    updateConnection() {
+        console.log('Updating connection');
+        this.session.updateConnection(this.connectionId, this.connectionProperties)
+            .then(modifiedConnection => {
+                this.response = 'Connection updated: ' + JSON.stringify({
+                    role: modifiedConnection.connectionProperties.role,
+                    record: modifiedConnection.connectionProperties.record,
+                    data: modifiedConnection.connectionProperties.data
+                });
             })
             .catch(error => {
                 this.response = 'Error [' + error.message + ']';

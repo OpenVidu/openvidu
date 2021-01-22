@@ -1,5 +1,5 @@
 FROM ubuntu:20.04
-MAINTAINER openvidu@gmail.com
+MAINTAINER info@openvidu.io
 
 # Install packages
 RUN apt-get update && apt-get -y upgrade && apt-get install -y \

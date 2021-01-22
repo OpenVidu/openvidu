@@ -20,24 +20,37 @@ package io.openvidu.server.kurento.kms;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.KurentoClient;
 import org.kurento.commons.exception.KurentoException;
+import org.kurento.jsonrpc.client.JsonRpcClientNettyWebSocket;
+import org.kurento.jsonrpc.client.JsonRpcWSConnectionListener;
 
-import io.openvidu.server.core.IdentifierPrefixes;
+import io.openvidu.java.client.RecordingProperties;
+import io.openvidu.server.core.Session;
+import io.openvidu.server.core.SessionManager;
 
 public class FixedOneKmsManager extends KmsManager {
 
+	public FixedOneKmsManager(SessionManager sessionManager) {
+		super(sessionManager);
+	}
+
 	@Override
-	public List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure) throws Exception {
+	public List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure)
+			throws Exception {
 		KmsProperties firstProps = kmsProperties.get(0);
 		KurentoClient kClient = null;
-		Kms kms = new Kms(firstProps, loadManager);
+		Kms kms = new Kms(firstProps, loadManager, quarantineKiller);
 		try {
-			kClient = KurentoClient.create(firstProps.getUri(), this.generateKurentoConnectionListener(kms.getId()));
+			JsonRpcWSConnectionListener listener = this.generateKurentoConnectionListener(kms.getId());
+			JsonRpcClientNettyWebSocket client = new JsonRpcClientNettyWebSocket(firstProps.getUri(), listener);
+			client.setTryReconnectingMaxTime(0);
+			client.setTryReconnectingForever(false);
+			kClient = KurentoClient.createFromJsonRpcClient(client);
 			this.addKms(kms);
 			kms.setKurentoClient(kClient);
 
@@ -53,6 +66,25 @@ public class FixedOneKmsManager extends KmsManager {
 			throw new Exception();
 		}
 		return Arrays.asList(kms);
+	}
+
+	@Override
+	public void incrementActiveRecordings(RecordingProperties properties, String recordingId, Session session) {
+		try {
+			this.getKmss().iterator().next().incrementActiveRecordings(recordingId, session.getSessionId());
+		} catch (NoSuchElementException e) {
+			log.error("There is no KMS available when incrementing active recordings");
+		}
+	}
+
+	@Override
+	public void decrementActiveRecordings(RecordingProperties recordingProperties, String recordingId,
+			Session session) {
+		try {
+			this.getKmss().iterator().next().decrementActiveRecordings(recordingId);
+		} catch (NoSuchElementException e) {
+			log.error("There is no KMS available when decrementing active recordings");
+		}
 	}
 
 	@Override

@@ -18,7 +18,6 @@
 package io.openvidu.server.test.integration;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import org.junit.Assert;
@@ -36,7 +35,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
@@ -98,24 +97,24 @@ public class SessionGarbageCollectorIntegrationTest {
 	}
 
 	private String getSessionId() {
-		String stringResponse = (String) sessionRestController.getSessionId(new HashMap<>()).getBody();
+		String stringResponse = (String) sessionRestController.initializeSession(new HashMap<>()).getBody();
 		return new Gson().fromJson(stringResponse, JsonObject.class).get("id").getAsString();
 	}
 
 	private String getToken(String sessionId) {
-		Map<String, String> map = new HashMap<>();
-		map.put("session", sessionId);
-		String stringResponse = (String) sessionRestController.newToken(map).getBody();
+		String stringResponse = (String) sessionRestController.initializeConnection(sessionId, new HashMap<>())
+				.getBody();
 		return new Gson().fromJson(stringResponse, JsonObject.class).get("token").getAsString();
 	}
 
 	private JsonObject listSessions() {
-		String stringResponse = (String) sessionRestController.listSessions(false).getBody();
+		String stringResponse = (String) sessionRestController.listSessions(false, false).getBody();
 		return new Gson().fromJson(stringResponse, JsonObject.class);
 	}
 
 	private void joinParticipant(String sessionId, String token) {
-		Token t = new Token(token, OpenViduRole.PUBLISHER, "SERVER_METADATA", null, null);
+		ConnectionProperties connectionProperties = new ConnectionProperties.Builder().data("SERVER_METADATA").build();
+		Token t = new Token(token, sessionId, connectionProperties, null);
 		String uuid = UUID.randomUUID().toString();
 		String participantPrivateId = "PARTICIPANT_PRIVATE_ID_" + uuid;
 		String finalUserId = "FINAL_USER_ID_" + uuid;

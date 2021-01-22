@@ -24,7 +24,9 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -45,10 +47,10 @@ import org.kurento.client.StoppedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -59,34 +61,32 @@ import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.kurento.core.KurentoParticipant;
-import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
+import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.recording.RecorderEndpointWrapper;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
-import io.openvidu.server.utils.QuarantineKiller;
+import io.openvidu.server.recording.RecordingUploader;
+import io.openvidu.server.utils.CustomFileManager;
 
 public class SingleStreamRecordingService extends RecordingService {
 
 	private static final Logger log = LoggerFactory.getLogger(SingleStreamRecordingService.class);
 
+	// One recorder endpoint active at a time per stream
 	private Map<String, Map<String, RecorderEndpointWrapper>> activeRecorders = new ConcurrentHashMap<>();
-	private Map<String, Map<String, RecorderEndpointWrapper>> storedRecorders = new ConcurrentHashMap<>();
-
-	private final String INDIVIDUAL_STREAM_METADATA_FILE = ".stream.";
+	// Multiple recorder endpoints per stream during a recording
+	private Map<String, Map<String, List<RecorderEndpointWrapper>>> storedRecorders = new ConcurrentHashMap<>();
 
 	public SingleStreamRecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
-			OpenviduConfig openviduConfig, CallDetailRecord cdr, QuarantineKiller quarantineKiller) {
-		super(recordingManager, recordingDownloader, openviduConfig, cdr, quarantineKiller);
+			RecordingUploader recordingUploader, KmsManager kmsManager, CustomFileManager fileManager,
+			OpenviduConfig openviduConfig, CallDetailRecord cdr) {
+		super(recordingManager, recordingDownloader, recordingUploader, kmsManager, fileManager, openviduConfig, cdr);
 	}
 
 	@Override
-	public Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException {
-
-		PropertiesRecordingId updatePropertiesAndRecordingId = this.setFinalRecordingNameAndGetFreeRecordingId(session,
-				properties);
-		properties = updatePropertiesAndRecordingId.properties;
-		String recordingId = updatePropertiesAndRecordingId.recordingId;
+	public Recording startRecording(Session session, String recordingId, RecordingProperties properties)
+			throws OpenViduException {
 
 		log.info("Starting individual ({}) recording {} of session {}",
 				properties.hasVideo() ? (properties.hasAudio() ? "video+audio" : "video-only") : "audioOnly",
@@ -95,14 +95,14 @@ public class SingleStreamRecordingService extends RecordingService {
 		Recording recording = new Recording(session.getSessionId(), recordingId, properties);
 		this.recordingManager.recordingToStarting(recording);
 
-		activeRecorders.put(session.getSessionId(), new ConcurrentHashMap<String, RecorderEndpointWrapper>());
-		storedRecorders.put(session.getSessionId(), new ConcurrentHashMap<String, RecorderEndpointWrapper>());
+		activeRecorders.put(recording.getId(), new ConcurrentHashMap<>());
+		storedRecorders.put(recording.getId(), new ConcurrentHashMap<>());
 
-		final int activePublishers = session.getActivePublishers();
-		final CountDownLatch recordingStartedCountdown = new CountDownLatch(activePublishers);
+		int activePublishersToRecord = session.getActiveIndividualRecordedPublishers();
+		final CountDownLatch recordingStartedCountdown = new CountDownLatch(activePublishersToRecord);
 
 		for (Participant p : session.getParticipants()) {
-			if (p.isStreaming()) {
+			if (p.isStreaming() && p.getToken().record()) {
 
 				MediaProfileSpecType profile = null;
 				try {
@@ -114,7 +114,7 @@ public class SingleStreamRecordingService extends RecordingService {
 					recordingStartedCountdown.countDown();
 					continue;
 				}
-				this.startRecorderEndpointForPublisherEndpoint(session, recordingId, profile, p,
+				this.startRecorderEndpointForPublisherEndpoint(recording.getId(), profile, p,
 						recordingStartedCountdown);
 			}
 		}
@@ -131,30 +131,28 @@ public class SingleStreamRecordingService extends RecordingService {
 
 		this.generateRecordingMetadataFile(recording);
 
-		// Increment active recordings
-		((KurentoSession) session).getKms().getActiveRecordings().incrementAndGet();
-
 		return recording;
 	}
 
 	@Override
 	public Recording stopRecording(Session session, Recording recording, EndReason reason) {
-		recording = this.sealRecordingMetadataFileAsStopped(recording);
-		return this.stopRecording(session, recording, reason, 0);
+		return this.stopRecording(session, recording, reason, null);
 	}
 
-	public Recording stopRecording(Session session, Recording recording, EndReason reason, long kmsDisconnectionTime) {
+	public Recording stopRecording(Session session, Recording recording, EndReason reason, Long kmsDisconnectionTime) {
 		log.info("Stopping individual ({}) recording {} of session {}. Reason: {}",
 				recording.hasVideo() ? (recording.hasAudio() ? "video+audio" : "video-only") : "audioOnly",
 				recording.getId(), recording.getSessionId(), reason);
 
-		final HashMap<String, RecorderEndpointWrapper> wrappers = new HashMap<>(
-				storedRecorders.get(recording.getSessionId()));
+		final List<RecorderEndpointWrapper> wrappers = new ArrayList<>();
+		storedRecorders.get(recording.getId()).values().forEach(list -> {
+			wrappers.addAll(list);
+		});
 		final CountDownLatch stoppedCountDown = new CountDownLatch(wrappers.size());
 
-		for (RecorderEndpointWrapper wrapper : wrappers.values()) {
-			this.stopRecorderEndpointOfPublisherEndpoint(recording.getSessionId(), wrapper.getStreamId(),
-					stoppedCountDown, kmsDisconnectionTime);
+		for (RecorderEndpointWrapper wrapper : wrappers) {
+			this.stopRecorderEndpointOfPublisherEndpoint(recording.getId(), wrapper.getStreamId(), stoppedCountDown,
+					kmsDisconnectionTime);
 		}
 		try {
 			if (!stoppedCountDown.await(5, TimeUnit.SECONDS)) {
@@ -171,31 +169,30 @@ public class SingleStreamRecordingService extends RecordingService {
 		final Recording[] finalRecordingArray = new Recording[1];
 		finalRecordingArray[0] = recording;
 		try {
-			this.recordingDownloader.downloadRecording(finalRecordingArray[0], wrappers.keySet(), () -> {
+			this.recordingDownloader.downloadRecording(finalRecordingArray[0], wrappers, () -> {
 				// Update recording entity files with final file size
-				for (RecorderEndpointWrapper wrapper : wrappers.values()) {
+				for (RecorderEndpointWrapper wrapper : wrappers) {
 					if (wrapper.getSize() == 0) {
 						updateIndividualMetadataFile(wrapper);
 					}
 				}
 				finalRecordingArray[0] = this.sealMetadataFiles(finalRecordingArray[0]);
 
-				final long timestamp = System.currentTimeMillis();
-				cdr.recordRecordingStatusChanged(finalRecordingArray[0], reason, timestamp,
-						finalRecordingArray[0].getStatus());
+				cleanRecordingWrappers(finalRecordingArray[0]);
 
-				cleanRecordingWrappers(finalRecordingArray[0].getSessionId());
+				// Decrement active recordings once it is downloaded. This method will also drop
+				// the Media Node if no more sessions or recordings and status is
+				// waiting-idle-to-terminate
+				kmsManager.decrementActiveRecordings(finalRecordingArray[0].getRecordingProperties(),
+						finalRecordingArray[0].getId(), session);
 
-				// Decrement active recordings once it is downloaded
-				((KurentoSession) session).getKms().getActiveRecordings().decrementAndGet();
-
-				// Now we can drop Media Node if waiting-idle-to-terminate
-				this.quarantineKiller.dropMediaNode(session.getMediaNodeId());
+				// Upload if necessary
+				this.uploadRecording(finalRecordingArray[0], reason);
 
 			});
 		} catch (IOException e) {
 			log.error("Error while downloading recording {}", finalRecordingArray[0].getName());
-			cleanRecordingWrappers(finalRecordingArray[0].getSessionId());
+			cleanRecordingWrappers(finalRecordingArray[0]);
 		}
 
 		if (reason != null && session != null) {
@@ -206,60 +203,42 @@ public class SingleStreamRecordingService extends RecordingService {
 		return finalRecordingArray[0];
 	}
 
-	public void startRecorderEndpointForPublisherEndpoint(final Session session, String recordingId,
-			MediaProfileSpecType profile, final Participant participant, CountDownLatch globalStartLatch) {
+	public void startRecorderEndpointForPublisherEndpoint(final String recordingId, MediaProfileSpecType profile,
+			final Participant participant, CountDownLatch globalStartLatch) {
 
 		log.info("Starting single stream recorder for stream {} in session {}", participant.getPublisherStreamId(),
-				session.getSessionId());
+				participant.getSessionId());
+
+		final String streamId = participant.getPublisherStreamId();
 
 		try {
 			if (participant.singleRecordingLock.tryLock(15, TimeUnit.SECONDS)) {
 				try {
-					if (this.activeRecorders.get(session.getSessionId())
-							.containsKey(participant.getPublisherStreamId())) {
+					if (this.activeRecorders.get(recordingId).containsKey(streamId)) {
 						log.warn("Concurrent initialization of RecorderEndpoint for stream {} of session {}. Returning",
-								participant.getPublisherStreamId(), session.getSessionId());
+								streamId, participant.getSessionId());
 						return;
 					}
 
-					if (recordingId == null) {
-						// Stream is being recorded because is a new publisher in an ongoing recorded
-						// session. If recordingId is defined is because Stream is being recorded from
-						// "startRecording" method
-						Recording recording = this.recordingManager.sessionsRecordings.get(session.getSessionId());
-						if (recording == null) {
-							recording = this.recordingManager.sessionsRecordingsStarting.get(session.getSessionId());
-							if (recording == null) {
-								log.error(
-										"Cannot start single stream recorder for stream {} in session {}. The recording {} cannot be found",
-										participant.getPublisherStreamId(), session.getSessionId(), recordingId);
-								return;
-							}
-						}
-						recordingId = recording.getId();
-
-						try {
-							profile = generateMediaProfile(recording.getRecordingProperties(), participant);
-						} catch (OpenViduException e) {
-							log.error("Cannot start single stream recorder for stream {} in session {}: {}",
-									participant.getPublisherStreamId(), session.getSessionId(), e.getMessage());
-							return;
-						}
-					}
+					// Update stream recording counter
+					final List<RecorderEndpointWrapper> wrapperList = storedRecorders.get(recordingId).get(streamId);
+					final int streamCounter = wrapperList != null ? wrapperList.size() : 0;
+					String fileName = streamCounter == 0 ? streamId : (streamId + "-" + streamCounter);
 
 					KurentoParticipant kurentoParticipant = (KurentoParticipant) participant;
 					MediaPipeline pipeline = kurentoParticipant.getPublisher().getPipeline();
 
 					RecorderEndpoint recorder = new RecorderEndpoint.Builder(pipeline,
-							"file://" + openviduConfig.getOpenViduRemoteRecordingPath() + recordingId + "/"
-									+ participant.getPublisherStreamId() + ".webm").withMediaProfile(profile).build();
+							"file://" + openviduConfig.getOpenViduRemoteRecordingPath() + recordingId + "/" + fileName
+									+ RecordingService.INDIVIDUAL_RECORDING_EXTENSION).withMediaProfile(profile)
+											.build();
 
 					recorder.addRecordingListener(new EventListener<RecordingEvent>() {
 						@Override
 						public void onEvent(RecordingEvent event) {
-							activeRecorders.get(session.getSessionId()).get(participant.getPublisherStreamId())
+							activeRecorders.get(recordingId).get(streamId)
 									.setStartTime(Long.parseLong(event.getTimestampMillis()));
-							log.info("Recording started event for stream {}", participant.getPublisherStreamId());
+							log.info("Recording started event for stream {}", streamId);
 							globalStartLatch.countDown();
 						}
 					});
@@ -271,15 +250,14 @@ public class SingleStreamRecordingService extends RecordingService {
 						}
 					});
 
-					RecorderEndpointWrapper wrapper = new RecorderEndpointWrapper(recorder,
-							participant.getParticipantPublicId(), recordingId, participant.getPublisherStreamId(),
-							participant.getClientMetadata(), participant.getServerMetadata(),
-							kurentoParticipant.getPublisher().getMediaOptions().hasAudio(),
-							kurentoParticipant.getPublisher().getMediaOptions().hasVideo(),
-							kurentoParticipant.getPublisher().getMediaOptions().getTypeOfVideo());
-
-					activeRecorders.get(session.getSessionId()).put(participant.getPublisherStreamId(), wrapper);
-					storedRecorders.get(session.getSessionId()).put(participant.getPublisherStreamId(), wrapper);
+					RecorderEndpointWrapper wrapper = new RecorderEndpointWrapper(recorder, kurentoParticipant,
+							recordingId, fileName);
+					activeRecorders.get(recordingId).put(streamId, wrapper);
+					if (wrapperList != null) {
+						wrapperList.add(wrapper);
+					} else {
+						storedRecorders.get(recordingId).put(streamId, new ArrayList<>(Arrays.asList(wrapper)));
+					}
 
 					connectAccordingToProfile(kurentoParticipant.getPublisher(), recorder, profile);
 					wrapper.getRecorder().record();
@@ -289,51 +267,73 @@ public class SingleStreamRecordingService extends RecordingService {
 				}
 			} else {
 				log.error(
-						"Timeout waiting for individual recording lock to be available for participant {} of session {}",
-						participant.getParticipantPublicId(), session.getSessionId());
+						"Timeout waiting for individual recording lock to be available to start stream recording for participant {} of session {}",
+						participant.getParticipantPublicId(), participant.getSessionId());
 			}
 		} catch (InterruptedException e) {
 			log.error(
-					"InterruptedException waiting for individual recording lock to be available for participant {} of session {}",
-					participant.getParticipantPublicId(), session.getSessionId());
+					"InterruptedException waiting for individual recording lock to be available to start stream recording for participant {} of session {}",
+					participant.getParticipantPublicId(), participant.getSessionId());
 		}
 	}
 
-	public void stopRecorderEndpointOfPublisherEndpoint(String sessionId, String streamId,
+	public void stopRecorderEndpointOfPublisherEndpoint(String recordingId, String streamId,
 			CountDownLatch globalStopLatch, Long kmsDisconnectionTime) {
-		log.info("Stopping single stream recorder for stream {} in session {}", streamId, sessionId);
-		final RecorderEndpointWrapper finalWrapper = activeRecorders.get(sessionId).remove(streamId);
-		if (finalWrapper != null && kmsDisconnectionTime == 0) {
-			finalWrapper.getRecorder().addStoppedListener(new EventListener<StoppedEvent>() {
-				@Override
-				public void onEvent(StoppedEvent event) {
-					finalWrapper.setEndTime(Long.parseLong(event.getTimestampMillis()));
-					generateIndividualMetadataFile(finalWrapper);
-					log.info("Recording stopped event for stream {}", streamId);
-					finalWrapper.getRecorder().release();
-					globalStopLatch.countDown();
-				}
-			});
-			finalWrapper.getRecorder().stop();
-		} else {
-			if (kmsDisconnectionTime != 0) {
-				// Stopping recorder endpoint because of a KMS disconnection
-				finalWrapper.setEndTime(kmsDisconnectionTime);
-				generateIndividualMetadataFile(finalWrapper);
-				log.warn("Forcing individual recording stop after KMS restart for stream {} in session {}", streamId,
-						sessionId);
-			} else {
-				if (storedRecorders.get(sessionId).containsKey(streamId)) {
-					log.info("Stream {} recording of session {} was already stopped", streamId, sessionId);
+
+		log.info("Stopping single stream recorder for stream {} in recording {}", streamId, recordingId);
+
+		final RecorderEndpointWrapper finalWrapper = activeRecorders.get(recordingId).remove(streamId);
+		if (finalWrapper != null) {
+			KurentoParticipant kParticipant = finalWrapper.getParticipant();
+			try {
+				if (kParticipant.singleRecordingLock.tryLock(15, TimeUnit.SECONDS)) {
+					try {
+						if (kmsDisconnectionTime == null) {
+							finalWrapper.getRecorder().addStoppedListener(new EventListener<StoppedEvent>() {
+								@Override
+								public void onEvent(StoppedEvent event) {
+									finalWrapper.setEndTime(Long.parseLong(event.getTimestampMillis()));
+									generateIndividualMetadataFile(finalWrapper);
+									log.info("Recording stopped event for stream {}", streamId);
+									finalWrapper.getRecorder().release();
+									globalStopLatch.countDown();
+								}
+							});
+							finalWrapper.getRecorder().stop();
+						} else {
+							// Stopping recorder endpoint because of a KMS disconnection
+							finalWrapper.setEndTime(kmsDisconnectionTime);
+							generateIndividualMetadataFile(finalWrapper);
+							globalStopLatch.countDown();
+							log.warn(
+									"Forcing individual recording stop after KMS restart for stream {} in recording {}",
+									streamId, recordingId);
+						}
+					} finally {
+						kParticipant.singleRecordingLock.unlock();
+					}
 				} else {
-					log.error("Stream {} wasn't being recorded in session {}", streamId, sessionId);
+					log.error(
+							"Timeout waiting for individual recording lock to be available to stop stream recording for participant {} of session {}",
+							kParticipant.getParticipantPublicId(), kParticipant.getSessionId());
 				}
+			} catch (InterruptedException e) {
+				log.error(
+						"InterruptedException waiting for individual recording lock to be available to stop stream recording for participant {} of session {}",
+						kParticipant.getParticipantPublicId(), kParticipant.getSessionId());
+			}
+		} else {
+			// The streamId has no associated RecorderEndpoint
+			if (storedRecorders.get(recordingId).containsKey(streamId)) {
+				log.info("Stream {} recording of recording {} was already stopped", streamId, recordingId);
+			} else {
+				log.info("Stream {} wasn't being recorded in recording {}", streamId, recordingId);
 			}
 			globalStopLatch.countDown();
 		}
 	}
 
-	private MediaProfileSpecType generateMediaProfile(RecordingProperties properties, Participant participant)
+	MediaProfileSpecType generateMediaProfile(RecordingProperties properties, Participant participant)
 			throws OpenViduException {
 
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
@@ -406,19 +406,19 @@ public class SingleStreamRecordingService extends RecordingService {
 	}
 
 	private void generateIndividualMetadataFile(RecorderEndpointWrapper wrapper) {
-		this.commonWriteIndividualMetadataFile(wrapper, this.fileWriter::createAndWriteFile);
+		this.commonWriteIndividualMetadataFile(wrapper, this.fileManager::createAndWriteFile);
 	}
 
 	private void updateIndividualMetadataFile(RecorderEndpointWrapper wrapper) {
-		this.commonWriteIndividualMetadataFile(wrapper, this.fileWriter::overwriteFile);
+		this.commonWriteIndividualMetadataFile(wrapper, this.fileManager::overwriteFile);
 	}
 
 	private void commonWriteIndividualMetadataFile(RecorderEndpointWrapper wrapper,
 			BiFunction<String, String, Boolean> writeFunction) {
 		String filesPath = this.openviduConfig.getOpenViduRecordingPath() + wrapper.getRecordingId() + "/";
-		File videoFile = new File(filesPath + wrapper.getStreamId() + ".webm");
+		File videoFile = new File(filesPath + wrapper.getNameWithExtension());
 		wrapper.setSize(videoFile.length());
-		String metadataFilePath = filesPath + INDIVIDUAL_STREAM_METADATA_FILE + wrapper.getStreamId();
+		String metadataFilePath = filesPath + INDIVIDUAL_STREAM_METADATA_FILE + wrapper.getName();
 		String metadataFileContent = wrapper.toJson().toString();
 		writeFunction.apply(metadataFilePath, metadataFileContent);
 	}
@@ -428,7 +428,7 @@ public class SingleStreamRecordingService extends RecordingService {
 		// individual recordings) and "size" (sum of all individual recordings size)
 
 		String folderPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
-		String metadataFilePath = folderPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
+		String metadataFilePath = folderPath + RecordingService.RECORDING_ENTITY_FILE + recording.getId();
 		String syncFilePath = folderPath + recording.getName() + ".json";
 
 		recording = this.recordingManager.getRecordingFromEntityFile(new File(metadataFilePath));
@@ -441,7 +441,6 @@ public class SingleStreamRecordingService extends RecordingService {
 		File[] files = folder.listFiles();
 
 		Reader reader = null;
-		Gson gson = new Gson();
 
 		// Sync metadata json object to store in "RECORDING_NAME.json"
 		JsonObject json = new JsonObject();
@@ -458,12 +457,14 @@ public class SingleStreamRecordingService extends RecordingService {
 				} catch (FileNotFoundException e) {
 					log.error("Error reading file {}. Error: {}", files[i].getAbsolutePath(), e.getMessage());
 				}
-				RecorderEndpointWrapper wr = gson.fromJson(reader, RecorderEndpointWrapper.class);
+				RecorderEndpointWrapper wr = new RecorderEndpointWrapper(
+						JsonParser.parseReader(reader).getAsJsonObject());
 				minStartTime = Math.min(minStartTime, wr.getStartTime());
 				maxEndTime = Math.max(maxEndTime, wr.getEndTime());
 				accumulatedSize += wr.getSize();
 
 				JsonObject jsonFile = new JsonObject();
+				jsonFile.addProperty("name", wr.getNameWithExtension());
 				jsonFile.addProperty("connectionId", wr.getConnectionId());
 				jsonFile.addProperty("streamId", wr.getStreamId());
 				jsonFile.addProperty("size", wr.getSize());
@@ -482,8 +483,9 @@ public class SingleStreamRecordingService extends RecordingService {
 		}
 
 		json.add("files", jsonArrayFiles);
-		this.fileWriter.createAndWriteFile(syncFilePath, new GsonBuilder().setPrettyPrinting().create().toJson(json));
-		this.generateZipFileAndCleanFolder(folderPath, recording.getName() + ".zip");
+		this.fileManager.createAndWriteFile(syncFilePath, new GsonBuilder().setPrettyPrinting().create().toJson(json));
+		this.generateZipFileAndCleanFolder(folderPath,
+				recording.getName() + RecordingService.INDIVIDUAL_RECORDING_COMPRESSED_EXTENSION);
 
 		double duration = (double) (maxEndTime - minStartTime) / 1000;
 		duration = duration > 0 ? duration : 0;
@@ -506,7 +508,8 @@ public class SingleStreamRecordingService extends RecordingService {
 			for (int i = 0; i < files.length; i++) {
 				String fileExtension = FilenameUtils.getExtension(files[i].getName());
 
-				if (files[i].isFile() && (fileExtension.equals("json") || fileExtension.equals("webm"))) {
+				if (files[i].isFile() && (fileExtension.equals("json")
+						|| RecordingService.INDIVIDUAL_RECORDING_EXTENSION.equals("." + fileExtension))) {
 
 					// Zip video files and json sync metadata file
 					FileInputStream fis = new FileInputStream(files[i]);
@@ -520,7 +523,7 @@ public class SingleStreamRecordingService extends RecordingService {
 					fis.close();
 
 				}
-				if (!files[i].getName().startsWith(RecordingManager.RECORDING_ENTITY_FILE)) {
+				if (!files[i].getName().startsWith(RecordingService.RECORDING_ENTITY_FILE)) {
 					// Clean inspected file if it is not
 					files[i].delete();
 				}
@@ -539,9 +542,9 @@ public class SingleStreamRecordingService extends RecordingService {
 		}
 	}
 
-	private void cleanRecordingWrappers(String sessionId) {
-		this.storedRecorders.remove(sessionId);
-		this.activeRecorders.remove(sessionId);
+	private void cleanRecordingWrappers(Recording recording) {
+		this.storedRecorders.remove(recording.getId());
+		this.activeRecorders.remove(recording.getId());
 	}
 
 }

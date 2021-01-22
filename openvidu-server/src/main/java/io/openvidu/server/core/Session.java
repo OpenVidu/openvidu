@@ -18,6 +18,8 @@
 package io.openvidu.server.core;
 
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -27,7 +29,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -41,7 +43,6 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.config.OpenviduConfig;
-import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.RecordingUtils;
 
@@ -60,6 +61,7 @@ public class Session implements SessionInterface {
 
 	protected volatile boolean closed = false;
 	protected AtomicInteger activePublishers = new AtomicInteger(0);
+	protected AtomicInteger activeIndividualRecordedPublishers = new AtomicInteger(0);
 
 	/**
 	 * This lock protects the following operations with read lock: [REST API](POST
@@ -145,26 +147,48 @@ public class Session implements SessionInterface {
 		return activePublishers.get();
 	}
 
-	public void registerPublisher() {
-		this.activePublishers.incrementAndGet();
+	public int getActiveIndividualRecordedPublishers() {
+		return activeIndividualRecordedPublishers.get();
 	}
 
-	public void deregisterPublisher() {
+	public void registerPublisher(Participant participant) {
+		this.activePublishers.incrementAndGet();
+		if (participant.getToken().record()) {
+			activeIndividualRecordedPublishers.incrementAndGet();
+		}
+	}
+
+	public void deregisterPublisher(Participant participant) {
 		this.activePublishers.decrementAndGet();
+		if (participant.getToken().record()) {
+			activeIndividualRecordedPublishers.decrementAndGet();
+		}
 	}
 
 	public void storeToken(Token token) {
 		this.tokens.put(token.getToken(), token);
 	}
 
-	public boolean isTokenValid(String token) {
-		return this.tokens.containsKey(token);
+	public boolean deleteTokenFromConnectionId(String connectionId) {
+		boolean deleted = false;
+		Iterator<Entry<String, Token>> iterator = this.tokens.entrySet().iterator();
+		while (iterator.hasNext() && !deleted) {
+			Entry<String, Token> entry = iterator.next();
+			if (connectionId.equals(entry.getValue().getConnectionId())) {
+				iterator.remove();
+				deleted = true;
+			}
+		}
+		return deleted;
 	}
 
 	public Token consumeToken(String token) {
 		Token tokenObj = this.tokens.remove(token);
-		showTokens("Token consumed");
 		return tokenObj;
+	}
+
+	public Iterator<Entry<String, Token>> getTokenIterator() {
+		return this.tokens.entrySet().iterator();
 	}
 
 	public void showTokens(String preMessage) {
@@ -185,17 +209,34 @@ public class Session implements SessionInterface {
 		}
 	}
 
-	public JsonObject toJson() {
-		return this.sharedJson(KurentoParticipant::toJson);
+	public JsonArray getSnapshotOfConnectionsAsJsonArray(boolean withPendingConnections, boolean withWebrtcStats) {
+
+		Set<Participant> snapshotOfActiveConnections = this.getParticipants().stream().collect(Collectors.toSet());
+		JsonArray jsonArray = new JsonArray();
+		snapshotOfActiveConnections.forEach(participant -> {
+			// Filter recorder participant
+			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+				jsonArray.add(withWebrtcStats ? participant.withStatsToJson() : participant.toJson());
+			}
+		});
+
+		if (withPendingConnections) {
+			Set<Token> snapshotOfPendingConnections = this.tokens.values().stream().collect(Collectors.toSet());
+			// Eliminate duplicates in case some concurrent situation took place
+			Set<String> activeConnectionIds = snapshotOfActiveConnections.stream()
+					.map(participant -> participant.getParticipantPublicId()).collect(Collectors.toSet());
+			snapshotOfPendingConnections.removeIf(token -> activeConnectionIds.contains(token.getConnectionId()));
+			snapshotOfPendingConnections.forEach(token -> jsonArray.add(token.toJsonAsParticipant()));
+		}
+
+		return jsonArray;
 	}
 
-	public JsonObject withStatsToJson() {
-		return this.sharedJson(KurentoParticipant::withStatsToJson);
-	}
-
-	private JsonObject sharedJson(Function<KurentoParticipant, JsonObject> toJsonFunction) {
+	public JsonObject toJson(boolean withPendingConnections, boolean withWebrtcStats) {
 		JsonObject json = new JsonObject();
-		json.addProperty("sessionId", this.sessionId);
+		json.addProperty("id", this.sessionId);
+		json.addProperty("object", "session");
+		json.addProperty("sessionId", this.sessionId); // TODO: deprecated. Better use only "id"
 		json.addProperty("createdAt", this.startTime);
 		json.addProperty("mediaMode", this.sessionProperties.mediaMode().name());
 		json.addProperty("recordingMode", this.sessionProperties.recordingMode().name());
@@ -212,16 +253,15 @@ public class Session implements SessionInterface {
 			json.addProperty("customSessionId", this.sessionProperties.customSessionId());
 		}
 		JsonObject connections = new JsonObject();
-		JsonArray participants = new JsonArray();
-		this.participants.values().forEach(p -> {
-			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(p.getParticipantPublicId())) {
-				participants.add(toJsonFunction.apply((KurentoParticipant) p));
-			}
-		});
+		JsonArray participants = this.getSnapshotOfConnectionsAsJsonArray(withPendingConnections, withWebrtcStats);
 		connections.addProperty("numberOfElements", participants.size());
 		connections.add("content", participants);
 		json.add("connections", connections);
 		json.addProperty("recording", this.recordingManager.sessionIsBeingRecorded(this.sessionId));
+		if (this.sessionProperties.forcedVideoCodec() != null) {
+			json.addProperty("forcedVideoCodec", this.sessionProperties.forcedVideoCodec().name());
+		}
+		json.addProperty("allowTranscoding", this.sessionProperties.isTranscodingAllowed());
 		return json;
 	}
 

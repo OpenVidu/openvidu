@@ -22,6 +22,7 @@ import java.net.URL;
 
 import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -29,7 +30,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class FirefoxUser extends BrowserUser {
 
-	public FirefoxUser(String userName, int timeOfWaitInSeconds) {
+	public FirefoxUser(String userName, int timeOfWaitInSeconds, boolean disableOpenH264) {
 		super(userName, timeOfWaitInSeconds);
 
 		DesiredCapabilities capabilities = DesiredCapabilities.firefox();
@@ -41,6 +42,10 @@ public class FirefoxUser extends BrowserUser {
 		profile.setPreference("media.navigator.permission.disabled", true);
 		// This flag force to use fake user media (synthetic video of multiple color)
 		profile.setPreference("media.navigator.streams.fake", true);
+
+		if (disableOpenH264) {
+			profile.setPreference("media.gmp-gmpopenh264.enabled", false);
+		}
 
 		capabilities.setCapability(FirefoxDriver.PROFILE, profile);
 
@@ -54,7 +59,7 @@ public class FirefoxUser extends BrowserUser {
 			}
 		} else {
 			log.info("Using local web driver");
-			this.driver = new FirefoxDriver(capabilities);
+			this.driver = new FirefoxDriver(new FirefoxOptions(capabilities));
 		}
 
 		this.configureDriver();

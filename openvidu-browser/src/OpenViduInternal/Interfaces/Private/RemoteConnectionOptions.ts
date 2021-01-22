@@ -17,7 +17,7 @@
 
 import { StreamOptionsServer } from './StreamOptionsServer';
 
-export interface ConnectionOptions {
+export interface RemoteConnectionOptions {
     id: string;
     createdAt: number;
     metadata: string;

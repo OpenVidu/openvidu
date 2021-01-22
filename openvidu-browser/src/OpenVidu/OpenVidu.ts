@@ -19,6 +19,7 @@ import { LocalRecorder } from './LocalRecorder';
 import { Publisher } from './Publisher';
 import { Session } from './Session';
 import { Stream } from './Stream';
+import { SessionDisconnectedEvent } from '../OpenViduInternal/Events/SessionDisconnectedEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 import { Device } from '../OpenViduInternal/Interfaces/Public/Device';
 import { OpenViduAdvancedConfiguration } from '../OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration';
@@ -27,6 +28,7 @@ import { CustomMediaStreamConstraints } from '../OpenViduInternal/Interfaces/Pri
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
+import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 
 import * as screenSharingAuto from '../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto';
 import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturing';
@@ -38,13 +40,6 @@ import EventEmitter = require('wolfy87-eventemitter');
  * @hidden
  */
 import RpcBuilder = require('../OpenViduInternal/KurentoUtils/kurento-jsonrpc');
-/**
- * @hidden
- */
-import platform = require('platform');
-
-platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
-platform['isIonicAndroid'] = platform.os!!.family === 'Android' && platform.name == "Android Browser";
 
 /**
  * @hidden
@@ -58,6 +53,11 @@ declare var cordova: any;
  * @hidden
  */
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
+
+/**
+ * @hidden
+ */
+let platform: PlatformUtils;
 
 /**
  * Entrypoint of OpenVidu Browser library.
@@ -121,11 +121,12 @@ export class OpenVidu {
   ee = new EventEmitter()
 
   constructor() {
+    platform = PlatformUtils.getInstance();
     this.libraryVersion = packageJson.version;
     logger.info("'OpenVidu' initialized");
     logger.info("openvidu-browser version: " + this.libraryVersion);
 
-    if (platform.os!!.family === 'iOS' || platform.os!!.family === 'Android') {
+    if (platform.isMobileDevice()) {
       // Listen to orientationchange only on mobile devices
       (<any>window).addEventListener('orientationchange', () => {
         this.publishers.forEach(publisher => {
@@ -138,7 +139,7 @@ export class OpenVidu {
 
             const getNewVideoDimensions = (): Promise<{ newWidth: number, newHeight: number }> => {
               return new Promise((resolve, reject) => {
-                if (platform['isIonicIos']) {
+                if (platform.isIonicIos()) {
                   // iOS Ionic. Limitation: must get new dimensions from an existing video element already inserted into DOM
                   resolve({
                     newWidth: publisher.stream.streamManager.videos[0].video.videoWidth,
@@ -149,8 +150,8 @@ export class OpenVidu {
                   // New resolution got from different places for Chrome and Firefox. Chrome needs a videoWidth and videoHeight of a videoElement.
                   // Firefox needs getSettings from the videoTrack
                   const firefoxSettings = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
-                  const newWidth = <number>((platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.width : publisher.videoReference.videoWidth);
-                  const newHeight = <number>((platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.height : publisher.videoReference.videoHeight);
+                  const newWidth = <number>((platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) ? firefoxSettings.width : publisher.videoReference.videoWidth);
+                  const newHeight = <number>((platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) ? firefoxSettings.height : publisher.videoReference.videoHeight);
                   resolve({ newWidth, newHeight });
                 }
               });
@@ -186,6 +187,7 @@ export class OpenVidu {
                     } else {
                       this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
                       publisher.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(publisher, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
+                      this.session.sendVideoData(publisher);
                     }
                   });
                 clearTimeout(repeatUntilChange);
@@ -337,26 +339,20 @@ export class OpenVidu {
    * @returns 1 if the browser supports OpenVidu, 0 otherwise
    */
   checkSystemRequirements(): number {
-    const browser = platform.name;
-    const family = platform.os!!.family;
-    const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
 
-    if(this.isIPhoneOrIPad(userAgent)) {
-        if(this.isIOSWithSafari(userAgent) || platform['isIonicIos']){
-          return 1;
-        }
+    if (platform.isIPhoneOrIPad()) {
+      if (platform.isIOSWithSafari() || platform.isIonicIos()) {
+        return 1;
+      }
       return 0;
     }
 
     // Accept: Chrome (desktop and Android), Firefox (desktop and Android), Opera (desktop and Android),
-    // Safari (OSX and iOS), Ionic (Android and iOS), Samsung Internet Browser (Android)
-    if (
-      (browser === 'Safari') ||
-      (browser === 'Chrome') || (browser === 'Chrome Mobile') ||
-      (browser === 'Firefox') || (browser === 'Firefox Mobile') ||
-      (browser === 'Opera') || (browser === 'Opera Mobile') ||
-      (browser === 'Android Browser') || (browser === 'Electron') ||
-      (browser === 'Samsung Internet Mobile') || (browser === 'Samsung Internet')
+    // Safari (OSX and iOS), Edge Chromium (>= 80), Ionic (Android and iOS), Samsung Internet Browser (Android)
+    if (platform.isChromeBrowser() || platform.isChromeMobileBrowser() ||
+      platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser() || platform.isOperaBrowser() ||
+      platform.isOperaMobileBrowser() || platform.isEdgeBrowser() || platform.isEdgeMobileBrowser() ||
+      platform.isSafariBrowser() || platform.isAndroidBrowser() || platform.isElectron() || platform.isSamsungBrowser()
     ) {
       return 1;
     }
@@ -370,22 +366,8 @@ export class OpenVidu {
    * Checks if the browser supports screen-sharing. Desktop Chrome, Firefox and Opera support screen-sharing
    * @returns 1 if the browser supports screen-sharing, 0 otherwise
    */
-  checkScreenSharingCapabilities(): number {
-    const browser = platform.name;
-    const version = platform?.version ? parseFloat(platform.version) : -1;
-    const family = platform.os!!.family;
-
-    // Reject mobile devices
-    if (family === 'iOS' || family === 'Android') {
-      return 0;
-    }
-
-    if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera') && (browser !== 'Electron') &&
-       (browser === 'Safari' && version < 13)) {
-      return 0;
-    } else {
-      return 1;
-    }
+  checkScreenSharingCapabilities(): boolean {
+    return platform.canScreenShare();
   }
 
 
@@ -398,7 +380,7 @@ export class OpenVidu {
         const devices: Device[] = [];
 
         // Ionic Android  devices
-        if (platform['isIonicAndroid'] && typeof cordova != "undefined" && cordova?.plugins?.EnumerateDevicesPlugin) {
+        if (platform.isIonicAndroid() && typeof cordova != "undefined" && cordova?.plugins?.EnumerateDevicesPlugin) {
           cordova.plugins.EnumerateDevicesPlugin.getEnumerateDevices().then((pluginDevices: Device[]) => {
             let pluginAudioDevices: Device[] = [];
             let videoDevices: Device[] = [];
@@ -590,10 +572,10 @@ export class OpenVidu {
             // Video is deviceId or screen sharing
             if (options.videoSource === 'screen' ||
               options.videoSource === 'window' ||
-              (platform.name === 'Electron' && options.videoSource.startsWith('screen:'))) {
+              (platform.isElectron() && options.videoSource.startsWith('screen:'))) {
               // Video is screen sharing
               mustAskForAudioTrackLater = !myConstraints.audioTrack && (options.audioSource !== null && options.audioSource !== false);
-              if (navigator.mediaDevices['getDisplayMedia'] && platform.name !== 'Electron') {
+              if (navigator.mediaDevices['getDisplayMedia'] && !platform.isElectron()) {
                 // getDisplayMedia supported
                 navigator.mediaDevices['getDisplayMedia']({ video: true })
                   .then(mediaStream => {
@@ -663,6 +645,7 @@ export class OpenVidu {
    * - `iceServers`: set custom STUN/TURN servers to be used by OpenVidu Browser
    * - `screenShareChromeExtension`: url to a custom screen share extension for Chrome to be used instead of the default one, based on ours [https://github.com/OpenVidu/openvidu-screen-sharing-chrome-extension](https://github.com/OpenVidu/openvidu-screen-sharing-chrome-extension)
    * - `publisherSpeakingEventsOptions`: custom configuration for the [[PublisherSpeakingEvent]] feature and the [StreamManagerEvent.streamAudioVolumeChange](/en/stable/api/openvidu-browser/classes/streammanagerevent.html) feature
+   * - `forceMediaReconnectionAfterNetworkDrop`: always force WebRTC renegotiation of all the streams of a client after a network loss and reconnection. This can help reducing frozen videos in low quality networks.
    *
    * Call this method to override previous values at any moment.
    */
@@ -763,9 +746,8 @@ export class OpenVidu {
   startWs(onConnectSucces: (error: Error) => void): void {
     const config = {
       heartbeat: 5000,
-      sendCloseMessage: false,
       ws: {
-        uri: this.wsUri,
+        uri: this.wsUri + '?sessionId=' + this.session.sessionId,
         onconnected: onConnectSucces,
         ondisconnect: this.disconnectCallback.bind(this),
         onreconnecting: this.reconnectingCallback.bind(this),
@@ -782,6 +764,8 @@ export class OpenVidu {
         recordingStopped: this.session.onRecordingStopped.bind(this.session),
         sendMessage: this.session.onNewMessage.bind(this.session),
         streamPropertyChanged: this.session.onStreamPropertyChanged.bind(this.session),
+        connectionPropertyChanged: this.session.onConnectionPropertyChanged.bind(this.session),
+        networkQualityLevelChanged: this.session.onNetworkQualityLevelChangedChanged.bind(this.session),
         filterEventDispatched: this.session.onFilterEventDispatched.bind(this.session),
         iceCandidate: this.session.recvIceCandidate.bind(this.session),
         mediaError: this.session.onMediaError.bind(this.session)
@@ -899,12 +883,12 @@ export class OpenVidu {
         // Screen sharing
 
         if (!this.checkScreenSharingCapabilities()) {
-          const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox, Opera, Safari (>=13.0) or Electron. Detected client: ' + platform.name);
+          const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox, Opera, Safari (>=13.0), Edge (>= 80) or Electron. Detected client: ' + platform.getName() + ' ' + platform.getVersion());
           logger.error(error);
           reject(error);
         } else {
 
-          if (platform.name === 'Electron') {
+          if (platform.isElectron()) {
             const prefix = "screen:";
             const videoSourceString: string = videoSource;
             const electronScreenId = videoSourceString.substr(videoSourceString.indexOf(prefix) + prefix.length);
@@ -918,7 +902,7 @@ export class OpenVidu {
 
           } else {
 
-            if (!!this.advancedConfiguration.screenShareChromeExtension && !(platform.name!.indexOf('Firefox') !== -1) && !navigator.mediaDevices['getDisplayMedia']) {
+            if (!!this.advancedConfiguration.screenShareChromeExtension && !(platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) && !navigator.mediaDevices['getDisplayMedia']) {
 
               // Custom screen sharing extension for Chrome (and Opera) and no support for MediaDevices.getDisplayMedia()
 
@@ -957,7 +941,7 @@ export class OpenVidu {
                 resolve(myConstraints);
               } else {
                 // Default screen sharing extension for Chrome/Opera, or is Firefox < 66
-                const firefoxString = platform.name!.indexOf('Firefox') !== -1 ? publisherProperties.videoSource : undefined;
+                const firefoxString = (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) ? publisherProperties.videoSource : undefined;
 
                 screenSharingAuto.getScreenId(firefoxString, (error, sourceId, screenConstraints) => {
                   if (!!error) {
@@ -1029,17 +1013,25 @@ export class OpenVidu {
   private reconnectedCallback(): void {
     logger.warn('Websocket reconnected');
     if (this.isRoomAvailable()) {
-      this.sendRequest('connect', { sessionId: this.session.connection.rpcSessionId }, (error, response) => {
-        if (!!error) {
-          logger.error(error);
-          logger.warn('Websocket was able to reconnect to OpenVidu Server, but your Connection was already destroyed due to timeout. You are no longer a participant of the Session and your media streams have been destroyed');
-          this.session.onLostConnection("networkDisconnect");
-          this.jsonRpcClient.close(4101, "Reconnection fault");
-        } else {
-          this.jsonRpcClient.resetPing();
-          this.session.onRecoveredConnection();
-        }
-      });
+      if (!!this.session.connection) {
+        this.sendRequest('connect', { sessionId: this.session.connection.rpcSessionId }, (error, response) => {
+          if (!!error) {
+            logger.error(error);
+            logger.warn('Websocket was able to reconnect to OpenVidu Server, but your Connection was already destroyed due to timeout. You are no longer a participant of the Session and your media streams have been destroyed');
+            this.session.onLostConnection("networkDisconnect");
+            this.jsonRpcClient.close(4101, "Reconnection fault");
+          } else {
+            this.jsonRpcClient.resetPing();
+            this.session.onRecoveredConnection();
+          }
+        });
+      } else {
+        logger.warn('There was no previous connection when running reconnection callback');
+        // Make Session object dispatch 'sessionDisconnected' event
+        const sessionDisconnectEvent = new SessionDisconnectedEvent(this.session, 'networkDisconnect');
+        this.session.ee.emitEvent('sessionDisconnected', [sessionDisconnectEvent]);
+        sessionDisconnectEvent.callDefaultBehavior();
+      }
     } else {
       alert('Connection error. Please reload page.');
     }
@@ -1057,21 +1049,7 @@ export class OpenVidu {
   private isScreenShare(videoSource: string) {
     return videoSource === 'screen' ||
       videoSource === 'window' ||
-      (platform.name === 'Electron' && videoSource.startsWith('screen:'))
+      (platform.isElectron() && videoSource.startsWith('screen:'))
   }
-
-  private isIPhoneOrIPad(userAgent): boolean {
-    const isTouchable = 'ontouchend' in document;
-    const isIPad = /\b(\w*Macintosh\w*)\b/.test(userAgent) && isTouchable;
-    const isIPhone = /\b(\w*iPhone\w*)\b/.test(userAgent) && /\b(\w*Mobile\w*)\b/.test(userAgent) && isTouchable;
-
-    return isIPad || isIPhone;
-  }
-
-  private isIOSWithSafari(userAgent): boolean{
-    return /\b(\w*Apple\w*)\b/.test(navigator.vendor) && /\b(\w*Safari\w*)\b/.test(userAgent)
-          && !/\b(\w*CriOS\w*)\b/.test(userAgent) && !/\b(\w*FxiOS\w*)\b/.test(userAgent);
-  }
-
 
 }

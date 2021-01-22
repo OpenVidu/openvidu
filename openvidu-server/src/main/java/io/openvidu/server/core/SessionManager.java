@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -37,7 +38,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.jsonrpc.message.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,13 +46,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.ConnectionProperties;
+import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.cdr.CDREventRecording;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
-import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.kurento.endpoint.EndpointType;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.FormatChecker;
@@ -88,6 +89,8 @@ public abstract class SessionManager {
 
 	public FormatChecker formatChecker = new FormatChecker();
 
+	private UpdatableTimerTask sessionGarbageCollectorTimer;
+
 	final protected ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
 	final protected ConcurrentMap<String, Session> sessionsNotActive = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentHashMap<String, Participant>> sessionidParticipantpublicidParticipant = new ConcurrentHashMap<>();
@@ -115,7 +118,7 @@ public abstract class SessionManager {
 	public void sendMessage(String message, String sessionId) {
 		try {
 			JsonObject messageJson = JsonParser.parseString(message).getAsJsonObject();
-			sessionEventsHandler.onSendMessage(null, messageJson, getParticipants(sessionId), null, null);
+			sessionEventsHandler.onSendMessage(null, messageJson, getParticipants(sessionId), sessionId, null, null);
 		} catch (JsonSyntaxException | IllegalStateException e) {
 			throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
 					"Provided signal object '" + message + "' has not a valid JSON format");
@@ -126,7 +129,7 @@ public abstract class SessionManager {
 		try {
 			JsonObject messageJson = JsonParser.parseString(message).getAsJsonObject();
 			sessionEventsHandler.onSendMessage(participant, messageJson, getParticipants(participant.getSessionId()),
-					transactionId, null);
+					participant.getSessionId(), transactionId, null);
 		} catch (JsonSyntaxException | IllegalStateException e) {
 			throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
 					"Provided signal object '" + message + "' has not a valid JSON format");
@@ -160,14 +163,17 @@ public abstract class SessionManager {
 	public abstract void removeFilterEventListener(Session session, Participant subscriber, String streamId,
 			String eventType);
 
-	public abstract Participant publishIpcam(Session session, MediaOptions mediaOptions, String serverMetadata)
-			throws Exception;
+	public abstract Participant publishIpcam(Session session, MediaOptions mediaOptions,
+			ConnectionProperties connectionProperties) throws Exception;
 
 	public abstract void reconnectStream(Participant participant, String streamId, String sdpOffer,
 			Integer transactionId);
 
 	public abstract String getParticipantPrivateIdFromStreamId(String sessionId, String streamId)
 			throws OpenViduException;
+
+	public abstract void onVideoData(Participant participant, Integer transactionId, Integer height, Integer width,
+			Boolean videoActive, Boolean audioActive);
 
 	/**
 	 * Returns a Session given its id
@@ -297,22 +303,23 @@ public abstract class SessionManager {
 		return sessionNotActive;
 	}
 
-	public String newToken(Session session, OpenViduRole role, String serverMetadata,
-			KurentoTokenOptions kurentoTokenOptions) throws Exception {
+	public Token newToken(Session session, OpenViduRole role, String serverMetadata, boolean record,
+			KurentoOptions kurentoOptions) throws Exception {
 		if (!formatChecker.isServerMetadataFormatCorrect(serverMetadata)) {
 			log.error("Data invalid format");
 			throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Data invalid format");
 		}
-		Token tokenObj = tokenGenerator.generateToken(session.getSessionId(), role, serverMetadata,
-				kurentoTokenOptions);
+		Token tokenObj = tokenGenerator.generateToken(session.getSessionId(), serverMetadata, record, role,
+				kurentoOptions);
 		session.storeToken(tokenObj);
 		session.showTokens("Token created");
-		return tokenObj.getToken();
+		return tokenObj;
 	}
 
-	public Token newTokenForInsecureUser(Session session, String token, String serverMetadata) throws Exception {
-		Token tokenObj = new Token(token, OpenViduRole.PUBLISHER, serverMetadata != null ? serverMetadata : "",
-				this.openviduConfig.isTurnadminAvailable() ? this.coturnCredentialsService.createUser() : null, null);
+	public Token newTokenForInsecureUser(Session session, String token, ConnectionProperties connectionProperties)
+			throws Exception {
+		Token tokenObj = new Token(token, session.getSessionId(), connectionProperties,
+				this.openviduConfig.isTurnadminAvailable() ? this.coturnCredentialsService.createUser() : null);
 		session.storeToken(tokenObj);
 		session.showTokens("Token created for insecure user");
 		return tokenObj;
@@ -357,17 +364,13 @@ public abstract class SessionManager {
 
 	public Participant newParticipant(String sessionId, String participantPrivatetId, Token token,
 			String clientMetadata, GeoLocation location, String platform, String finalUserId) {
+
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			String participantPublicId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
-					+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(9);
-			Participant p = new Participant(finalUserId, participantPrivatetId, participantPublicId, sessionId, token,
-					clientMetadata, location, platform, EndpointType.WEBRTC_ENDPOINT, null);
-			while (this.sessionidParticipantpublicidParticipant.get(sessionId).putIfAbsent(participantPublicId,
-					p) != null) {
-				participantPublicId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
-						+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(9);
-				p.setParticipantPublicId(participantPublicId);
-			}
+
+			Participant p = new Participant(finalUserId, participantPrivatetId, token.getConnectionId(), sessionId,
+					token, clientMetadata, location, platform, EndpointType.WEBRTC_ENDPOINT, null);
+
+			this.sessionidParticipantpublicidParticipant.get(sessionId).put(p.getParticipantPublicId(), p);
 
 			this.sessionidFinalUsers.get(sessionId).computeIfAbsent(finalUserId, k -> {
 				log.info("Participant {} of session {} is a final user connecting to this session for the first time",
@@ -376,6 +379,7 @@ public abstract class SessionManager {
 			}).addConnectionIfAbsent(p);
 
 			return p;
+
 		} else {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);
 		}
@@ -425,6 +429,9 @@ public abstract class SessionManager {
 				log.warn("Error closing session '{}': {}", sessionId, e.getMessage());
 			}
 		}
+		if (this.sessionGarbageCollectorTimer != null) {
+			this.sessionGarbageCollectorTimer.cancelTimer();
+		}
 	}
 
 	@PostConstruct
@@ -434,44 +441,18 @@ public abstract class SessionManager {
 					"Garbage collector for non active sessions is disabled (property 'OPENVIDU_SESSIONS_GARBAGE_INTERVAL' is 0)");
 			return;
 		}
-		new UpdatableTimerTask(() -> {
+
+		this.sessionGarbageCollectorTimer = new UpdatableTimerTask(() -> {
 
 			// Remove all non active sessions created more than the specified time
 			log.info("Running non active sessions garbage collector...");
 			final long currentMillis = System.currentTimeMillis();
 
-			// Loop through all non active sessions. Safely remove them and clean all of
-			// their data if their threshold has elapsed
-			for (Iterator<Entry<String, Session>> iter = sessionsNotActive.entrySet().iterator(); iter.hasNext();) {
-				final Session sessionNotActive = iter.next().getValue();
-				final String sessionId = sessionNotActive.getSessionId();
-				long sessionExistsSince = currentMillis - sessionNotActive.getStartTime();
-				if (sessionExistsSince > (openviduConfig.getSessionGarbageThreshold() * 1000)) {
-					try {
-						if (sessionNotActive.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
-							try {
-								if (sessions.containsKey(sessionId)) {
-									// The session passed to active during lock wait
-									continue;
-								}
-								iter.remove();
-								cleanCollections(sessionId);
-								log.info("Non active session {} cleaned up by garbage collector", sessionId);
-							} finally {
-								sessionNotActive.closingLock.writeLock().unlock();
-							}
-						} else {
-							log.error(
-									"Timeout waiting for Session closing lock to be available for garbage collector to clean session {}",
-									sessionId);
-						}
-					} catch (InterruptedException e) {
-						log.error(
-								"InterruptedException while waiting for Session closing lock to be available for garbage collector to clean session {}",
-								sessionId);
-					}
-				}
-			}
+			this.closeNonActiveSessions(sessionNotActive -> {
+				// Remove non active session if threshold has elapsed
+				return (currentMillis - sessionNotActive.getStartTime()) > (openviduConfig.getSessionGarbageThreshold()
+						* 1000);
+			});
 
 			// Warn about possible ghost sessions
 			for (Iterator<Entry<String, Session>> iter = sessions.entrySet().iterator(); iter.hasNext();) {
@@ -480,7 +461,9 @@ public abstract class SessionManager {
 					log.warn("Possible ghost session {}", sessionActive.getSessionId());
 				}
 			}
-		}, () -> new Long(openviduConfig.getSessionGarbageInterval() * 1000)).updateTimer();
+		}, () -> Long.valueOf(openviduConfig.getSessionGarbageInterval() * 1000));
+
+		this.sessionGarbageCollectorTimer.updateTimer();
 
 		log.info(
 				"Garbage collector for non active sessions initialized. Running every {} seconds and cleaning up non active Sessions more than {} seconds old",
@@ -539,6 +522,40 @@ public abstract class SessionManager {
 				}
 			} catch (InterruptedException e) {
 				log.error("InterruptedException while waiting for Session {} closing lock to be available", sessionId);
+			}
+		}
+	}
+
+	public void closeNonActiveSessions(Function<Session, Boolean> conditionToRemove) {
+		// Loop through all non active sessions. Safely remove and clean all of
+		// the data for each non active session meeting the condition
+		for (Iterator<Entry<String, Session>> iter = sessionsNotActive.entrySet().iterator(); iter.hasNext();) {
+			final Session sessionNotActive = iter.next().getValue();
+			final String sessionId = sessionNotActive.getSessionId();
+			if (conditionToRemove.apply(sessionNotActive)) {
+				try {
+					if (sessionNotActive.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
+						try {
+							if (sessions.containsKey(sessionId)) {
+								// The session passed to active during lock wait
+								continue;
+							}
+							iter.remove();
+							cleanCollections(sessionId);
+							log.info("Non active session {} cleaned up", sessionId);
+						} finally {
+							sessionNotActive.closingLock.writeLock().unlock();
+						}
+					} else {
+						log.error(
+								"Timeout waiting for Session closing lock to be available to clean up non active session {}",
+								sessionId);
+					}
+				} catch (InterruptedException e) {
+					log.error(
+							"InterruptedException while waiting for non active Session closing lock to be available to clean up non active session session {}",
+							sessionId);
+				}
 			}
 		}
 	}

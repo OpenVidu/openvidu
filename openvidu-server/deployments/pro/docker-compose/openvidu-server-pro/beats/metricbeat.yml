@@ -1,0 +1,10 @@
+metricbeat.modules:
+- module: nginx
+  metricsets: ["stubstatus"]
+  enabled: true
+  period: 10s
+  hosts: ["http://127.0.0.1"]
+  server_status_path: "nginx_status"
+output:
+  elasticsearch:
+    hosts: ["${OPENVIDU_PRO_ELASTICSEARCH_HOST}"]

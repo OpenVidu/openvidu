@@ -17,9 +17,13 @@
 
 package io.openvidu.server.webhook;
 
+import java.util.List;
+
+import org.apache.http.Header;
+
 import io.openvidu.server.cdr.CDREvent;
+import io.openvidu.server.cdr.CDREventName;
 import io.openvidu.server.cdr.CDRLogger;
-import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.kurento.endpoint.KmsEvent;
 import io.openvidu.server.summary.SessionSummary;
 
@@ -27,9 +31,8 @@ public class CDRLoggerWebhook implements CDRLogger {
 
 	private HttpWebhookSender webhookSender;
 
-	public CDRLoggerWebhook(OpenviduConfig openviduConfig) {
-		this.webhookSender = new HttpWebhookSender(openviduConfig.getOpenViduWebhookEndpoint(),
-				openviduConfig.getOpenViduWebhookHeaders(), openviduConfig.getOpenViduWebhookEvents());
+	public CDRLoggerWebhook(String webhookEndpoint, List<Header> webhookHeaders, List<CDREventName> webhookEvents) {
+		this.webhookSender = new HttpWebhookSender(webhookEndpoint, webhookHeaders, webhookEvents);
 	}
 
 	@Override

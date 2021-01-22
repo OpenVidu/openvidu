@@ -15,37 +15,47 @@
  *
  */
 
-import { OpenViduRole } from './OpenViduRole';
 import { Publisher } from './Publisher';
+import { ConnectionProperties } from './ConnectionProperties';
+import { OpenViduRole } from './OpenViduRole';
 
 /**
- * See [[Session.activeConnections]]
+ * See [[Session.connections]]
  */
 export class Connection {
 
     /**
-     * Identifier of the connection. You can call [[Session.forceDisconnect]] passing this property as parameter
+     * Identifier of the Connection. You can call methods [[Session.forceDisconnect]]
+     * or [[Session.updateConnection]] passing this property as parameter
      */
     connectionId: string;
 
     /**
-     * Timestamp when this connection was established, in UTC milliseconds (ms since Jan 1, 1970, 00:00:00 UTC)
+     * Returns the status of the Connection. Can be:
+     * - `pending`: if the Connection is waiting for any user to use
+     * its internal token to connect to the session, calling method
+     * [Session.connect](https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect)
+     * in OpenVidu Browser.
+     * - `active`: if the internal token of the Connection has already
+     * been used by some user to connect to the session, and it cannot be used
+     * again.
+     */
+    status: string;
+
+    /**
+     * Timestamp when the Connection was created, in UTC milliseconds (ms since Jan 1, 1970, 00:00:00 UTC)
      */
     createdAt: number;
 
     /**
-     * Role of the connection
+     * Timestamp when the Connection was taken by a user (passing from status "pending" to "active")
+     * in UTC milliseconds (ms since Jan 1, 1970, 00:00:00 UTC)
      */
-    role: OpenViduRole;
-
-    /**
-     * Token associated to the connection
-     */
-    token: string;
+    activeAt: number;
 
     /**
      * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
-     * Geo location of the connection, with the following format: `"CITY, COUNTRY"` (`"unknown"` if it wasn't possible to locate it)
+     * Geo location of the Connection, with the following format: `"CITY, COUNTRY"` (`"unknown"` if it wasn't possible to locate it)
      */
     location: string;
 
@@ -55,15 +65,21 @@ export class Connection {
     platform: string;
 
     /**
-     * Data associated to the connection on the server-side. This value is set with property [[TokenOptions.data]] when calling [[Session.generateToken]]
-     */
-    serverData: string;
-
-    /**
-     * Data associated to the connection on the client-side. This value is set with second parameter of method
+     * Data associated to the Connection on the client-side. This value is set with second parameter of method
      * [Session.connect](/en/stable/api/openvidu-browser/classes/session.html#connect) in OpenVidu Browser
      */
     clientData: string;
+
+    /**
+     * The [[ConnectionProperties]] assigned to the Connection
+     */
+    connectionProperties: ConnectionProperties;
+
+    /**
+     * Token associated to the Connection. This is the value that must be sent to the client-side to be consumed in OpenVidu Browser
+     * method [Session.connect](https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect).
+     */
+    token: string;
 
     /**
      * Array of Publisher objects this particular Connection is publishing to the Session (each Publisher object has one Stream, uniquely
@@ -78,20 +94,111 @@ export class Connection {
     subscribers: string[] = [];
 
     /**
+     * @hidden deprecated. Inside ConnectionProperties
+     */
+    role?: OpenViduRole;
+    /**
+     * @hidden deprecated. Inside ConnectionProperties
+     */
+    serverData?: string;
+
+    /**
      * @hidden
      */
-    constructor(connectionId: string, createdAt: number, role: OpenViduRole, token: string, location: string, platform: string, serverData: string, clientData: string,
-        publishers: Publisher[], subscribers: string[]) {
-        this.connectionId = connectionId;
-        this.createdAt = createdAt;
-        this.role = role;
-        this.token = token;
-        this.location = location;
-        this.platform = platform;
-        this.serverData = serverData;
-        this.clientData = clientData;
-        this.publishers = publishers;
-        this.subscribers = subscribers;
+    constructor(json) {
+        this.resetWithJson(json);
+    }
+
+    /**
+     * @hidden
+     */
+    resetWithJson(json): Connection {
+
+        this.connectionId = json.connectionId;
+        this.status = json.status;
+        this.createdAt = json.createdAt;
+        this.activeAt = json.activeAt;
+        this.location = json.location;
+        this.platform = json.platform;
+        this.clientData = json.clientData;
+        this.token = json.token;
+        if (this.connectionProperties != null) {
+            this.connectionProperties.type = json.type;
+            this.connectionProperties.data = json.serverData;
+            this.connectionProperties.record = json.record;
+            this.connectionProperties.role = json.role;
+            this.connectionProperties.kurentoOptions = json.kurentoOptions;
+            this.connectionProperties.rtspUri = json.rtspUri;
+            this.connectionProperties.adaptativeBitrate = json.adaptativeBitrate;
+            this.connectionProperties.onlyPlayWithSubscribers = json.onlyPlayWithSubscribers;
+            this.connectionProperties.networkCache = json.networkCache;
+        } else {
+            this.connectionProperties = {
+                type: json.type,
+                data: json.serverData,
+                record: json.record,
+                role: json.role,
+                kurentoOptions: json.kurentoOptions,
+                rtspUri: json.rtspUri,
+                adaptativeBitrate: json.adaptativeBitrate,
+                onlyPlayWithSubscribers: json.onlyPlayWithSubscribers,
+                networkCache: json.networkCache
+            }
+        }
+        this.role = json.role;
+        this.serverData = json.serverData;
+
+        // publishers may be null
+        if (json.publishers != null) {
+
+            // 1. Array to store fetched Publishers and later remove closed ones
+            const fetchedPublisherIds: string[] = [];
+            json.publishers.forEach(jsonPublisher => {
+
+                const publisherObj: Publisher = new Publisher(jsonPublisher);
+                fetchedPublisherIds.push(publisherObj.streamId);
+                let storedPublisher = this.publishers.find(c => c.streamId === publisherObj.streamId);
+
+                if (!!storedPublisher) {
+                    // 2. Update existing Publisher
+                    storedPublisher.resetWithJson(jsonPublisher);
+                } else {
+                    // 3. Add new Publisher
+                    this.publishers.push(publisherObj);
+                }
+            });
+
+            // 4. Remove closed Publishers from local collection
+            for (var i = this.publishers.length - 1; i >= 0; --i) {
+                if (!fetchedPublisherIds.includes(this.publishers[i].streamId)) {
+                    this.publishers.splice(i, 1);
+                }
+            }
+
+        }
+
+        // subscribers may be null
+        if (json.subscribers != null) {
+
+            // 1. Array to store fetched Subscribers and later remove closed ones
+            const fetchedSubscriberIds: string[] = [];
+            json.subscribers.forEach(jsonSubscriber => {
+                fetchedSubscriberIds.push(jsonSubscriber.streamId)
+                if (this.subscribers.indexOf(jsonSubscriber.streamId) === -1) {
+                    // 2. Add new Subscriber
+                    this.subscribers.push(jsonSubscriber.streamId);
+                }
+            });
+
+            // 3. Remove closed Subscribers from local collection
+            for (var i = this.subscribers.length - 1; i >= 0; --i) {
+                if (!fetchedSubscriberIds.includes(this.subscribers[i])) {
+                    this.subscribers.splice(i, 1);
+                }
+            }
+        }
+
+        return this;
     }
 
     /**
@@ -100,17 +207,32 @@ export class Connection {
     equalTo(other: Connection): boolean {
         let equals: boolean = (
             this.connectionId === other.connectionId &&
+            this.status === other.status &&
             this.createdAt === other.createdAt &&
-            this.role === other.role &&
+            this.activeAt === other.activeAt &&
+            this.connectionProperties.type === other.connectionProperties.type &&
+            this.connectionProperties.data === other.connectionProperties.data &&
+            this.connectionProperties.record === other.connectionProperties.record &&
+            this.connectionProperties.role === other.connectionProperties.role &&
+            this.connectionProperties.rtspUri === other.connectionProperties.rtspUri &&
+            this.connectionProperties.adaptativeBitrate === other.connectionProperties.adaptativeBitrate &&
+            this.connectionProperties.onlyPlayWithSubscribers === other.connectionProperties.onlyPlayWithSubscribers &&
+            this.connectionProperties.networkCache === other.connectionProperties.networkCache &&
             this.token === other.token &&
             this.location === other.location &&
             this.platform === other.platform &&
-            this.serverData === other.serverData &&
             this.clientData === other.clientData &&
             this.subscribers.length === other.subscribers.length &&
             this.publishers.length === other.publishers.length);
         if (equals) {
-            equals = JSON.stringify(this.subscribers) === JSON.stringify(other.subscribers);
+            if (this.connectionProperties.kurentoOptions != null) {
+                equals = JSON.stringify(this.connectionProperties.kurentoOptions) === JSON.stringify(other.connectionProperties.kurentoOptions);
+            } else {
+                equals = (this.connectionProperties.kurentoOptions === other.connectionProperties.kurentoOptions);
+            }
+        }
+        if (equals) {
+            equals = JSON.stringify(this.subscribers.sort()) === JSON.stringify(other.subscribers.sort());
             if (equals) {
                 let i = 0;
                 while (equals && i < this.publishers.length) {
@@ -125,4 +247,18 @@ export class Connection {
             return false;
         }
     }
+
+    /**
+     * @hidden
+     */
+    overrideConnectionProperties(newConnectionProperties: ConnectionProperties): void {
+        // For now only properties record and role
+        if (newConnectionProperties.record != null) {
+            this.connectionProperties.record = newConnectionProperties.record;
+        }
+        if (newConnectionProperties.role != null) {
+            this.connectionProperties.role = newConnectionProperties.role;
+        }
+    }
+
 }

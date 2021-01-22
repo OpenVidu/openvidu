@@ -18,9 +18,16 @@
 import { OpenViduRole } from './OpenViduRole';
 
 /**
- * See [[Session.generateToken]]
+ * @deprecated Use [[ConnectionProperties]] instead
  */
 export interface TokenOptions {
+
+    /**
+     * The role assigned to this token
+     * 
+     * @default PUBLISHER
+     */
+    role?: OpenViduRole;
 
     /**
      * Secure (server-side) data associated to this token. Every client will receive this data in property `Connection.data`. Object `Connection` can be retrieved by subscribing to event `connectionCreated` of Session object.
@@ -29,11 +36,6 @@ export interface TokenOptions {
      * parameter passed in OpenVidu Browser in method `Session.connect` and `SERVER_DATA` this [[TokenOptions.data]] property.
      */
     data?: string;
-
-    /**
-     * The role assigned to this token
-     */
-    role?: OpenViduRole;
 
     /**
      * **WARNING**: experimental option. This interface may change in the near future

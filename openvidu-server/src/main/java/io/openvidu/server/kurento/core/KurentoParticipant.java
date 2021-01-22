@@ -37,6 +37,7 @@ import org.kurento.client.MediaElement;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.PassThrough;
 import org.kurento.client.internal.server.KurentoServerException;
+import org.kurento.jsonrpc.JsonRpcException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +80,7 @@ public class KurentoParticipant extends Participant {
 		super(participant.getFinalUserId(), participant.getParticipantPrivateId(), participant.getParticipantPublicId(),
 				kurentoSession.getSessionId(), participant.getToken(), participant.getClientMetadata(),
 				participant.getLocation(), participant.getPlatform(), participant.getEndpointType(),
-				participant.getCreatedAt());
+				participant.getActiveAt());
 		this.endpointConfig = endpointConfig;
 		this.openviduConfig = openviduConfig;
 		this.recordingManager = recordingManager;
@@ -87,9 +88,13 @@ public class KurentoParticipant extends Participant {
 
 		if (!OpenViduRole.SUBSCRIBER.equals(participant.getToken().getRole())) {
 			// Initialize a PublisherEndpoint
-			this.publisher = new PublisherEndpoint(endpointType, this, participant.getParticipantPublicId(),
-					this.session.getPipeline(), this.openviduConfig, null);
+			initPublisherEndpoint();
 		}
+	}
+
+	public void initPublisherEndpoint() {
+		this.publisher = new PublisherEndpoint(endpointType, this, this.participantPublicId, this.session.getPipeline(),
+				this.openviduConfig, null);
 	}
 
 	public void createPublishingEndpoint(MediaOptions mediaOptions, String streamId) {
@@ -133,6 +138,10 @@ public class KurentoParticipant extends Participant {
 		if (this.publisher != null && this.publisher.getFilter() != null) {
 			this.publisher.revert(this.publisher.getFilter());
 		}
+	}
+
+	public boolean isPublisherEndpointDefined() {
+		return this.publisher != null;
 	}
 
 	public PublisherEndpoint getPublisher() {
@@ -180,9 +189,9 @@ public class KurentoParticipant extends Participant {
 		log.info("PARTICIPANT {}: Is now publishing video in room {}", this.getParticipantPublicId(),
 				this.session.getSessionId());
 
-		if (this.openviduConfig.isRecordingModuleEnabled()
+		if (this.openviduConfig.isRecordingModuleEnabled() && this.token.record()
 				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
-			this.recordingManager.startOneIndividualStreamRecording(session, null, null, this);
+			this.recordingManager.startOneIndividualStreamRecording(session, this);
 		}
 
 		if (!silent) {
@@ -193,7 +202,7 @@ public class KurentoParticipant extends Participant {
 		return sdpAnswer;
 	}
 
-	public void unpublishMedia(EndReason reason, long kmsDisconnectionTime) {
+	public void unpublishMedia(EndReason reason, Long kmsDisconnectionTime) {
 		log.info("PARTICIPANT {}: unpublishing media stream from room {}", this.getParticipantPublicId(),
 				this.session.getSessionId());
 		final MediaOptions mediaOptions = this.getPublisher().getMediaOptions();
@@ -390,7 +399,7 @@ public class KurentoParticipant extends Participant {
 		}
 	}
 
-	public void close(EndReason reason, boolean definitelyClosed, long kmsDisconnectionTime) {
+	public void close(EndReason reason, boolean definitelyClosed, Long kmsDisconnectionTime) {
 		log.debug("PARTICIPANT {}: Closing user", this.getParticipantPublicId());
 		if (isClosed()) {
 			log.warn("PARTICIPANT {}: Already closed", this.getParticipantPublicId());
@@ -405,11 +414,16 @@ public class KurentoParticipant extends Participant {
 			it.remove();
 			if (subscriber != null && subscriber.getEndpoint() != null) {
 
-				releaseSubscriberEndpoint(remoteParticipantName,
-						(KurentoParticipant) this.session.getParticipantByPublicId(remoteParticipantName), subscriber,
-						reason, false);
-				log.debug("PARTICIPANT {}: Released subscriber endpoint to {}", this.getParticipantPublicId(),
-						remoteParticipantName);
+				try {
+					releaseSubscriberEndpoint(remoteParticipantName,
+							(KurentoParticipant) this.session.getParticipantByPublicId(remoteParticipantName),
+							subscriber, reason, false);
+					log.debug("PARTICIPANT {}: Released subscriber endpoint to {}", this.getParticipantPublicId(),
+							remoteParticipantName);
+				} catch (JsonRpcException e) {
+					log.error("Error releasing subscriber endpoint of participant {}: {}", this.participantPublicId,
+							e.getMessage());
+				}
 			} else {
 				log.warn(
 						"PARTICIPANT {}: Trying to close subscriber endpoint to {}. "
@@ -463,7 +477,7 @@ public class KurentoParticipant extends Participant {
 		session.sendMediaError(this.getParticipantPrivateId(), desc);
 	}
 
-	private void releasePublisherEndpoint(EndReason reason, long kmsDisconnectionTime) {
+	private void releasePublisherEndpoint(EndReason reason, Long kmsDisconnectionTime) {
 		if (publisher != null && publisher.getEndpoint() != null) {
 			final ReadWriteLock closingLock = publisher.closingLock;
 			try {
@@ -486,25 +500,33 @@ public class KurentoParticipant extends Participant {
 		}
 	}
 
-	private void releasePublisherEndpointAux(EndReason reason, long kmsDisconnectionTime) {
-		// Remove streamId from publisher's map
-		this.session.publishedStreamIds.remove(this.getPublisherStreamId());
+	private void releasePublisherEndpointAux(EndReason reason, Long kmsDisconnectionTime) {
+		try {
+			// Remove streamId from publisher's map
+			this.session.publishedStreamIds.remove(this.getPublisherStreamId());
 
-		if (this.openviduConfig.isRecordingModuleEnabled()
-				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
-			this.recordingManager.stopOneIndividualStreamRecording(session, this.getPublisherStreamId(),
-					kmsDisconnectionTime);
+			this.streaming = false;
+			this.session.deregisterPublisher(this);
+
+			if (this.openviduConfig.isRecordingModuleEnabled() && this.token.record()
+					&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
+				this.recordingManager.stopOneIndividualStreamRecording(session, this.getPublisherStreamId(),
+						kmsDisconnectionTime);
+			}
+
+			publisher.cancelStatsLoop.set(true);
+
+			// These operations are all remote
+			publisher.unregisterErrorListeners();
+			for (MediaElement el : publisher.getMediaElements()) {
+				releaseElement(getParticipantPublicId(), el);
+			}
+			releaseElement(getParticipantPublicId(), publisher.getEndpoint());
+
+		} catch (JsonRpcException e) {
+			log.error("Error releasing publisher endpoint of participant {}: {}", this.participantPublicId,
+					e.getMessage());
 		}
-
-		publisher.unregisterErrorListeners();
-		publisher.cancelStatsLoop.set(true);
-
-		for (MediaElement el : publisher.getMediaElements()) {
-			releaseElement(getParticipantPublicId(), el);
-		}
-		releaseElement(getParticipantPublicId(), publisher.getEndpoint());
-		this.streaming = false;
-		this.session.deregisterPublisher();
 
 		endpointConfig.getCdr().stopPublisher(this.getParticipantPublicId(), publisher.getStreamId(), reason);
 		publisher = null;
@@ -603,6 +625,7 @@ public class KurentoParticipant extends Participant {
 		return this.sharedJson(MediaEndpoint::toJson);
 	}
 
+	@Override
 	public JsonObject withStatsToJson() {
 		return this.sharedJson(MediaEndpoint::withStatsToJson);
 	}

@@ -1,18 +1,14 @@
 #!/bin/bash -x
+set -eu -o pipefail
 
-CF_OVP_TARGET=${CF_OVP_TARGET:-nomarket}
+CF_RELEASE=${CF_RELEASE:-false}
+AWS_KEY_NAME=${AWS_KEY_NAME:-}
 
-if [ ${CF_OVP_TARGET} == "market" ]; then
-  export AWS_ACCESS_KEY_ID=${NAEVA_AWS_ACCESS_KEY_ID}
-  export AWS_SECRET_ACCESS_KEY=${NAEVA_AWS_SECRET_ACCESS_KEY}
-  export AWS_DEFAULT_REGION=us-east-1
-else
-  export AWS_DEFAULT_REGION=eu-west-1
+if [[ $CF_RELEASE == "true" ]]; then
+    git checkout v$OPENVIDU_PRO_VERSION
 fi
 
-if [ "${OPENVIDU_PRO_IS_SNAPSHOT}" == "true" ]; then
-  OPENVIDU_PRO_VERSION=${OPENVIDU_PRO_VERSION}-SNAPSHOT
-fi
+export AWS_DEFAULT_REGION=eu-west-1
 
 DATESTAMP=$(date +%s)
 TEMPJSON=$(mktemp -t cloudformation-XXX --suffix .json)
@@ -23,10 +19,9 @@ TEMPJSON=$(mktemp -t cloudformation-XXX --suffix .json)
 getUbuntuAmiId() {
     local AMI_ID=$(
         aws --region ${1} ec2 describe-images \
-        --filters Name=name,Values=ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64* \
-        --query 'Images[*].[ImageId,CreationDate]' \
-        --output text  \
-        | sort -k2 -r  | head -n1 | cut -d$'\t' -f1
+        --filters "Name=name,Values=*ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*" \
+        --query "sort_by(Images, &CreationDate)" \
+        | jq -r 'del(.[] | select(.ImageOwnerAlias != null)) | .[-1].ImageId'
     )
     echo $AMI_ID
 }
@@ -61,12 +56,22 @@ sed -i "s/AMIUSEAST1/${AMIUSEAST1}/g" cfn-mkt-kms-ami.yaml
 ## KMS AMI
 
 # Copy template to S3
-if [ ${CF_OVP_TARGET} == "market" ]; then
-  aws s3 cp cfn-mkt-kms-ami.yaml s3://naeva-openvidu-pro
-  TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/naeva-openvidu-pro/cfn-mkt-kms-ami.yaml
-else
-  aws s3 cp cfn-mkt-kms-ami.yaml s3://aws.openvidu.io
-  TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-kms-ami.yaml
+aws s3 cp cfn-mkt-kms-ami.yaml s3://aws.openvidu.io
+TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-kms-ami.yaml
+
+# Update installation script
+if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
+  # Avoid overriding existing versions
+  # Only master and non existing versions can be overriden
+  if [[ ${OPENVIDU_PRO_VERSION} != "master" ]]; then
+    INSTALL_SCRIPT_EXISTS=true
+    aws s3api head-object --bucket aws.openvidu.io --key install_media_node_$OPENVIDU_PRO_VERSION.sh || INSTALL_SCRIPT_EXISTS=false
+    if [[ ${INSTALL_SCRIPT_EXISTS} == "true" ]]; then
+      echo "Aborting updating s3://aws.openvidu.io/install_media_node_${OPENVIDU_PRO_VERSION}.sh. File actually exists."
+      exit 1
+    fi
+  fi
+  aws s3 cp  ../docker-compose/media-node/install_media_node.sh s3://aws.openvidu.io/install_media_node_$OPENVIDU_PRO_VERSION.sh --acl public-read
 fi
 
 aws cloudformation create-stack \
@@ -94,12 +99,22 @@ aws cloudformation delete-stack --stack-name kms-${DATESTAMP}
 ## OpenVidu AMI
 
 # Copy template to S3
-if [ ${CF_OVP_TARGET} == "market" ]; then
-  aws s3 cp cfn-mkt-ov-ami.yaml s3://naeva-openvidu-pro
-  TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/naeva-openvidu-pro/cfn-mkt-ov-ami.yaml
-else
   aws s3 cp cfn-mkt-ov-ami.yaml s3://aws.openvidu.io
   TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-ov-ami.yaml
+
+# Update installation script
+if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
+  # Avoid overriding existing versions
+  # Only master and non existing versions can be overriden
+  if [[ ${OPENVIDU_PRO_VERSION} != "master" ]]; then
+    INSTALL_SCRIPT_EXISTS=true
+    aws s3api head-object --bucket aws.openvidu.io --key install_openvidu_pro_$OPENVIDU_PRO_VERSION.sh || INSTALL_SCRIPT_EXISTS=false
+    if [[ ${INSTALL_SCRIPT_EXISTS} == "true" ]]; then
+      echo "Aborting updating s3://aws.openvidu.io/install_openvidu_pro_${OPENVIDU_PRO_VERSION}.sh. File actually exists."
+      exit 1
+    fi
+  fi
+  aws s3 cp  ../docker-compose/openvidu-server-pro/install_openvidu_pro.sh s3://aws.openvidu.io/install_openvidu_pro_$OPENVIDU_PRO_VERSION.sh --acl public-read
 fi
 
 aws cloudformation create-stack \
@@ -125,15 +140,35 @@ echo "Cleaning up"
 aws cloudformation delete-stack --stack-name openvidu-${DATESTAMP}
 
 # Wait for the instance
-aws ec2 wait image-available --image-ids ${OV_RAW_AMI_ID}
+# Unfortunately, aws cli does not have a way to increase timeout
+WAIT_RETRIES=0
+WAIT_MAX_RETRIES=3
+until [ "${WAIT_RETRIES}" -ge "${WAIT_MAX_RETRIES}" ]
+do
+   aws ec2 wait image-available --image-ids ${OV_RAW_AMI_ID} && break
+   WAIT_RETRIES=$((WAIT_RETRIES+1)) 
+   sleep 5
+done
+
 
 # Updating the template
-if [ ${CF_OVP_TARGET} == "market" ]; then
-  sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" cfn-mkt-openvidu-server-pro.yaml.template > cfn-mkt-openvidu-server-pro-${OPENVIDU_PRO_VERSION}.yaml
-  sed -i "s/KMS_AMI_ID/${KMS_RAW_AMI_ID}/g" cfn-mkt-openvidu-server-pro-${OPENVIDU_PRO_VERSION}.yaml
-else
-  sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" cfn-openvidu-server-pro-no-market.yaml.template > cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
-  sed -i "s/KMS_AMI_ID/${KMS_RAW_AMI_ID}/g" cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
+sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" cfn-openvidu-server-pro-no-market.yaml.template > cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
+sed -i "s/KMS_AMI_ID/${KMS_RAW_AMI_ID}/g" cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
+sed -i "s/AWS_DOCKER_TAG/${AWS_DOCKER_TAG}/g" cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
+
+# Update CF template
+if [[ ${UPDATE_CF} == "true" ]]; then
+  # Avoid overriding existing versions
+  # Only master and non existing versions can be overriden
+  if [[ ${OPENVIDU_PRO_VERSION} != "master" ]]; then
+    CF_EXIST=true
+    aws s3api head-object --bucket aws.openvidu.io --key CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml || CF_EXIST=false
+    if [[ ${CF_EXIST} == "true" ]]; then
+      echo "Aborting updating s3://aws.openvidu.io/CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml. File actually exists."
+      exit 1
+    fi
+  fi
+  aws s3 cp cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml s3://aws.openvidu.io/CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml --acl public-read
 fi
 
 rm $TEMPJSON

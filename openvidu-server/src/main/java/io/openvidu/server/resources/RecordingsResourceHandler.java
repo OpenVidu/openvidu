@@ -23,6 +23,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.rest.RequestMappings;
 
 /**
  * This class serves recording files from host folder indicated in configuration
@@ -39,7 +40,7 @@ public class RecordingsResourceHandler implements WebMvcConfigurer {
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		String recordingsPath = openviduConfig.getOpenViduRecordingPath();
-		registry.addResourceHandler("/recordings/**").addResourceLocations("file:" + recordingsPath);
+		registry.addResourceHandler(RequestMappings.RECORDINGS + "/**").addResourceLocations("file:" + recordingsPath);
 	}
 
 }

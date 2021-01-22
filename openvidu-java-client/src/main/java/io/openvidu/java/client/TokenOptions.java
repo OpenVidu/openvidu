@@ -17,31 +17,42 @@
 
 package io.openvidu.java.client;
 
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+
 /**
- * See {@link io.openvidu.java.client.Session#generateToken(TokenOptions)}
+ * @deprecated Use {@link io.openvidu.java.client.ConnectionProperties
+ *             ConnectionProperties} instead
  */
 public class TokenOptions {
 
-	private String data;
 	private OpenViduRole role;
+	private String data;
 	private KurentoOptions kurentoOptions;
 
 	/**
-	 * 
-	 * Builder for {@link io.openvidu.java.client.TokenOptions}
-	 *
+	 * @deprecated Use {@link io.openvidu.java.client.ConnectionProperties.Builder
+	 *             ConnectionProperties.Builder} instead
 	 */
 	public static class Builder {
 
-		private String data = "";
 		private OpenViduRole role = OpenViduRole.PUBLISHER;
+		private String data;
 		private KurentoOptions kurentoOptions;
 
 		/**
-		 * Builder for {@link io.openvidu.java.client.TokenOptions}
+		 * Builder for {@link io.openvidu.java.client.TokenOptions}.
 		 */
 		public TokenOptions build() {
-			return new TokenOptions(this.data, this.role, this.kurentoOptions);
+			return new TokenOptions(this.role, this.data, this.kurentoOptions);
+		}
+
+		/**
+		 * Call this method to set the role assigned to this token.
+		 */
+		public Builder role(OpenViduRole role) {
+			this.role = role;
+			return this;
 		}
 
 		/**
@@ -72,16 +83,8 @@ public class TokenOptions {
 		}
 
 		/**
-		 * Call this method to set the role assigned to this token
-		 */
-		public Builder role(OpenViduRole role) {
-			this.role = role;
-			return this;
-		}
-
-		/**
 		 * Call this method to set a {@link io.openvidu.java.client.KurentoOptions}
-		 * object for this token
+		 * object for this token.
 		 */
 		public Builder kurentoOptions(KurentoOptions kurentoOptions) {
 			this.kurentoOptions = kurentoOptions;
@@ -90,24 +93,24 @@ public class TokenOptions {
 
 	}
 
-	private TokenOptions(String data, OpenViduRole role, KurentoOptions kurentoOptions) {
-		this.data = data;
+	TokenOptions(OpenViduRole role, String data, KurentoOptions kurentoOptions) {
 		this.role = role;
+		this.data = data;
 		this.kurentoOptions = kurentoOptions;
 	}
 
 	/**
-	 * Returns the secure (server-side) metadata assigned to this token
-	 */
-	public String getData() {
-		return this.data;
-	}
-
-	/**
-	 * Returns the role assigned to this token
+	 * Returns the role assigned to this token.
 	 */
 	public OpenViduRole getRole() {
 		return this.role;
+	}
+
+	/**
+	 * Returns the secure (server-side) metadata assigned to this token.
+	 */
+	public String getData() {
+		return this.data;
 	}
 
 	/**
@@ -115,6 +118,25 @@ public class TokenOptions {
 	 */
 	public KurentoOptions getKurentoOptions() {
 		return this.kurentoOptions;
+	}
+
+	protected JsonObject toJsonObject(String sessionId) {
+		JsonObject json = new JsonObject();
+		json.addProperty("session", sessionId);
+		if (getRole() != null) {
+			json.addProperty("role", getRole().name());
+		} else {
+			json.add("role", JsonNull.INSTANCE);
+		}
+		if (getData() != null) {
+			json.addProperty("data", getData());
+		} else {
+			json.add("data", JsonNull.INSTANCE);
+		}
+		if (this.kurentoOptions != null) {
+			json.add("kurentoOptions", kurentoOptions.toJson());
+		}
+		return json;
 	}
 
 }

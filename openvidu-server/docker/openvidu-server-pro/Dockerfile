@@ -1,15 +1,17 @@
-FROM ubuntu:16.04
-MAINTAINER openvidu@gmail.com
+FROM ubuntu:18.04
+MAINTAINER info@openvidu.io
 
 # Install main components
 RUN apt-get update && apt-get install -y \
   curl \
   wget \
-  openjdk-8-jre \
+  openjdk-11-jre \
   coturn \
   redis-tools \
   jq \
   docker.io \
+  ethtool \
+  dnsutils \
 && rm -rf /var/lib/apt/lists/*
     
 RUN mkdir -p /opt/openvidu /usr/local/bin/

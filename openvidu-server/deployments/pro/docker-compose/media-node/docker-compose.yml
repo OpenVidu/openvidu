@@ -6,7 +6,7 @@
 #
 #    This docker-compose file coordinates all services of OpenVidu CE Platform.
 #
-#    Openvidu Version: 2.15.0
+#    Openvidu Version: 2.16.0
 #
 #    Installation Mode: On Premises
 #
@@ -16,20 +16,24 @@ version: '3.1'
 
 services:
     media-node-controller:
-        image: openvidu/media-node-controller:1.0.0
+        image: openvidu/media-node-controller:3.0.0-dev4
         restart: always
         ulimits:
             core: -1
         entrypoint: ['/bin/sh', '-c', '/beats/copy_config_files.sh && /usr/local/bin/entrypoint.sh']
         environment:
-            - KMS_IMAGE=${KMS_IMAGE:-kurento/kurento-media-server:6.14.0}
-            - KMS_DEBUG_LEVEL=${KMS_DEBUG_LEVEL:-}
-            - METRICBEAT_IMAGE=${METRICBEAT_IMAGE:-docker.elastic.co/beats/metricbeat:7.8.0}
-            - FILEBEAT_IMAGE=${FILEBEAT_IMAGE:-docker.elastic.co/beats/filebeat:7.8.0}
+            - KMS_IMAGE=kurento/kurento-media-server:6.15.0
+            - METRICBEAT_IMAGE=docker.elastic.co/beats/metricbeat-oss:7.8.0
+            - FILEBEAT_IMAGE=docker.elastic.co/beats/filebeat-oss:7.8.0
+            - OPENVIDU_RECORDING_IMAGE=openvidu/openvidu-recording:2.17.0-dev1
         ports:
             - 3000:3000
         volumes:
             - /opt/openvidu/recordings:/opt/openvidu/recordings
             - /opt/openvidu/beats:/opt/openvidu/beats
             - /var/run/docker.sock:/var/run/docker.sock
+            - /opt/openvidu/kurento-logs:/opt/openvidu/kurento-logs
             - ./beats:/beats
+        logging:
+            options:
+                max-size: "100M"

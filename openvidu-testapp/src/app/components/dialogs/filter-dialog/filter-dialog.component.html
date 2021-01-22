@@ -5,19 +5,19 @@
             <mat-dialog-content>
                 <label class="label">Apply filter</label>
                 <button mat-button id="apply-filter-btn" (click)="apply()">Apply</button>
-                <mat-form-field class="inner-text-input">
+                <mat-form-field>
                     <input matInput id="filter-type-field" placeholder="Type" [(ngModel)]="filterType">
                 </mat-form-field>
-                <mat-form-field class="inner-text-input">
+                <mat-form-field>
                     <input matInput id="filter-options-field" placeholder="Options" [(ngModel)]="filterOptions">
                 </mat-form-field>
                 <mat-divider></mat-divider>
                 <label class="label">Exec filter method</label>
                 <button mat-button id="exec-filter-btn" (click)="execMethod()">Exec</button>
-                <mat-form-field class="inner-text-input">
+                <mat-form-field>
                     <input matInput id="filter-method-field" placeholder="Method" [(ngModel)]="filterMethod">
                 </mat-form-field>
-                <mat-form-field class="inner-text-input">
+                <mat-form-field>
                     <input matInput id="filter-params-field" placeholder="Params" [(ngModel)]="filterParams">
                 </mat-form-field>
                 <mat-divider></mat-divider>
@@ -34,7 +34,7 @@
         <div>
             <h2 mat-dialog-title>Filter events</h2>
             <mat-dialog-content>
-                <mat-form-field class="inner-text-input">
+                <mat-form-field>
                     <input matInput id="filter-event-type-field" placeholder="Event type" [(ngModel)]="eventType">
                 </mat-form-field>
                 <label class="label">Add listener to filter event</label>

@@ -6,26 +6,55 @@
       <button mat-button id="get-session-btn" (click)="fetchActiveConnections()">Fetch</button>
       <button mat-button id="list-sessions-btn" (click)="fetchActiveSessions()">Fetch all</button>
       <button mat-button id="close-session-btn" (click)="closeSession()">Close this session</button>
-    </div>
-    <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
-      <input matInput id="resource-id-field" placeholder="resourceId" [(ngModel)]="resourceId">
-    </mat-form-field>
-    <div>
-      <button mat-button id="force-disconnect-api-btn" (click)="forceDisconnect()" [disabled]="!resourceId">Force
-        disconnect</button>
-      <button mat-button id="force-unpublish-api-btn" (click)="forceUnpublish()" [disabled]="!resourceId">Force
-        unpublish</button>
       <mat-divider></mat-divider>
     </div>
+
+    <label class="label">Connections/Streams</label>
+    <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+      <input matInput id="connection-id-field" placeholder="connectionId" [(ngModel)]="connectionId">
+    </mat-form-field>
+    <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+      <input matInput id="stream-id-field" placeholder="streamId" [(ngModel)]="streamId">
+    </mat-form-field>
+    <div style="margin-left:9px">
+      <mat-checkbox class="checkbox-form" [(ngModel)]="connectionProperties.record" id="record-checkbox">Record
+      </mat-checkbox>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14 style="width:33%">
+        <mat-select [(ngModel)]="connectionProperties.role" id="token-role-select">
+          <mat-option *ngFor="let enumerator of enumToArray(openviduRoles)" [value]="enumerator">
+            <span [attr.id]="'option-' + enumerator">{{ enumerator }}</span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14 style="width:40%">
+        <input matInput id="connection-data-field" placeholder="data" [(ngModel)]="connectionProperties.data">
+      </mat-form-field>
+    </div>
+    <div>
+      <button mat-button id="crate-connection-api-btn" (click)="createConnection()">Create connection</button>
+      <button mat-button id="update-connection-api-btn" (click)="updateConnection()" [disabled]="!connectionId">Update
+        connection</button>
+      <button mat-button id="force-disconnect-api-btn" (click)="forceDisconnect()"
+        [disabled]="!connectionId">Disconnect</button>
+      <button mat-button id="force-unpublish-api-btn" (click)="forceUnpublish()"
+        [disabled]="!streamId">Unpublish</button>
+      <mat-divider></mat-divider>
+    </div>
+
     <label class="label">Recordings</label>
     <button mat-button id="list-recording-btn" (click)="listRecordings()">List recordings</button>
     <button mat-button id="start-recording-btn" (click)="startRecording()">Start recording</button>
-    <button id="rec-properties-btn" mat-icon-button style="width: 24px; height: 24px; line-height: 24px;" title="Recording properties"
-      (click)="toggleRecProperties()">
-      <mat-icon style="font-size: 18px; line-height: 18px; width: 18px; height: 18px" aria-label="Recording properties">{{recPropertiesIcon}}</mat-icon>
+    <button id="rec-properties-btn" mat-icon-button style="width: 24px; height: 24px; line-height: 24px;"
+      title="Recording properties" (click)="toggleRecProperties()">
+      <mat-icon style="font-size: 18px; line-height: 18px; width: 18px; height: 18px" aria-label="Recording properties">
+        {{recPropertiesIcon}}</mat-icon>
     </button>
     <div *ngIf="showRecProperties" id="rec-properties-div">
       <div>
+        <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+          <input matInput id="recording-media-node-field" placeholder="Media Node"
+            [(ngModel)]="recordingProperties.mediaNode.id">
+        </mat-form-field>
         <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
           <input matInput id="recording-name-field" placeholder="Recording name" [(ngModel)]="recordingProperties.name">
         </mat-form-field>
@@ -37,7 +66,9 @@
           </mat-select>
         </mat-form-field>
       </div>
-      <div *ngIf="recordingProperties.outputMode.toString() === recMode[recMode.COMPOSED] && recordingProperties.hasVideo" id="rec-layout-div">
+      <div
+        *ngIf="recordingProperties.hasVideo && (recordingProperties.outputMode === 'COMPOSED' || recordingProperties.outputMode === 'COMPOSED_QUICK_START')"
+        id="rec-layout-div">
         <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
           <mat-select placeholder="Recording layout" [(ngModel)]="recordingProperties.recordingLayout">
             <mat-option *ngFor="let enumerator of enumToArray(recLayouts)" [value]="enumerator">
@@ -45,17 +76,19 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-form-field *ngIf="recordingProperties.hasVideo && recordingProperties.recordingLayout.toString() === recLayouts[recLayouts.CUSTOM]" class="inner-text-input"
-          [style.fontSize.px]=14>
+        <mat-form-field *ngIf="recordingProperties.hasVideo && recordingProperties.recordingLayout === 'CUSTOM'"
+          class="inner-text-input" [style.fontSize.px]=14>
           <input matInput placeholder="Custom layout" type="text" [(ngModel)]="recordingProperties.customLayout">
         </mat-form-field>
       </div>
       <div>
         <mat-checkbox id="rec-hasaudio-checkbox" [(ngModel)]="recordingProperties.hasAudio">Has audio</mat-checkbox>
         <mat-checkbox id="rec-hasvideo-checkbox" [(ngModel)]="recordingProperties.hasVideo">Has video</mat-checkbox>
-        <mat-form-field *ngIf="recordingProperties.hasVideo && recordingProperties.outputMode.toString() === recMode[recMode.COMPOSED]" id="recording-resolution-form"
-          class="inner-text-input" [style.fontSize.px]=14>
-          <input matInput id="recording-resolution-field" placeholder="Resolution" type="text" [(ngModel)]="recordingProperties.resolution">
+        <mat-form-field
+          *ngIf="recordingProperties.hasVideo && (recordingProperties.outputMode === 'COMPOSED' || recordingProperties.outputMode === 'COMPOSED_QUICK_START')"
+          id="recording-resolution-form" class="inner-text-input" [style.fontSize.px]=14>
+          <input matInput id="recording-resolution-field" placeholder="Resolution" type="text"
+            [(ngModel)]="recordingProperties.resolution">
         </mat-form-field>
       </div>
     </div>
@@ -63,8 +96,10 @@
       <input matInput id="recording-id-field" placeholder="recordingId" [(ngModel)]="recordingId">
     </mat-form-field>
     <div>
-      <button mat-button id="stop-recording-btn" (click)="stopRecording()" [disabled]="!recordingId">Stop recording</button>
-      <button mat-button id="get-recording-btn" (click)="getRecording()" [disabled]="!recordingId">Get recording</button>
+      <button mat-button id="stop-recording-btn" (click)="stopRecording()" [disabled]="!recordingId">Stop
+        recording</button>
+      <button mat-button id="get-recording-btn" (click)="getRecording()" [disabled]="!recordingId">Get
+        recording</button>
       <button mat-button id="delete-recording-btn" (click)="deleteRecording()" [disabled]="!recordingId">Delete
         recording</button>
     </div>
@@ -73,6 +108,7 @@
     </mat-form-field>
   </mat-dialog-content>
   <mat-dialog-actions>
-    <button mat-button id="close-dialog-btn" [mat-dialog-close]="{session: session, recordingProperties: recordingProperties}">CLOSE</button>
+    <button mat-button id="close-dialog-btn"
+      [mat-dialog-close]="{session: session, recordingProperties: recordingProperties}">CLOSE</button>
   </mat-dialog-actions>
 </div>

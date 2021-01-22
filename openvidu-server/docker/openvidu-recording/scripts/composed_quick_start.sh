@@ -24,13 +24,16 @@ if [[ -z "${COMPOSED_QUICK_START_ACTION}" ]]; then
         export HEIGHT="$(cut -d'x' -f2 <<< $RESOLUTION)"
         export RECORDING_MODE=${RECORDING_MODE}
 
-        pulseaudio -D
+        # Cleanup to be "stateless" on startup, otherwise pulseaudio daemon can't start
+        rm -rf /var/run/pulse /var/lib/pulse /root/.config/pulse
+        # Run pulseaudio
+        pulseaudio -D --system --disallow-exit --disallow-module-loading
 
         ### Start Chrome in headless mode with xvfb, using the display num previously obtained ###
 
         touch xvfb.log
         chmod 777 xvfb.log
-        xvfb-run --auto-servernum --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome --kiosk --start-maximized --test-type --no-sandbox --disable-infobars --disable-gpu --disable-popup-blocking --window-size=$WIDTH,$HEIGHT --window-position=0,0 --no-first-run --ignore-certificate-errors --autoplay-policy=no-user-gesture-required --enable-logging --v=1 $DEBUG_CHROME_FLAGS $URL &> xvfb.log &
+        xvfb-run --auto-servernum --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome --kiosk --start-maximized --test-type --no-sandbox --disable-infobars --disable-gpu --disable-popup-blocking --window-size=$WIDTH,$HEIGHT --window-position=0,0 --no-first-run --ignore-certificate-errors --disable-dev-shm-usage --autoplay-policy=no-user-gesture-required --enable-logging --v=1 $DEBUG_CHROME_FLAGS $URL &> xvfb.log &
         chmod 777 /recordings
 
         until pids=$(pidof Xvfb)
@@ -96,6 +99,9 @@ elif [[ "${COMPOSED_QUICK_START_ACTION}" == "--start-recording" ]]; then
             <./stop ffmpeg -y -f alsa -i pulse -f x11grab -draw_mouse 0 -framerate $FRAMERATE -video_size $RESOLUTION -i :$DISPLAY_NUM -c:a aac -c:v libx264 -preset ultrafast -crf 28 -refs 4 -qmin 4 -pix_fmt yuv420p -filter:v fps=$FRAMERATE "/recordings/$VIDEO_ID/$VIDEO_NAME.$VIDEO_FORMAT"
         fi
 
+        # Warn the stop thread about ffmpeg process being completed
+        echo "ffmpeg-completed" > /tmp/$VIDEO_ID-completed.txt
+
     } 2>&1 | tee -a /tmp/container-start-recording.log
 
 elif [[ "${COMPOSED_QUICK_START_ACTION}" == "--stop-recording" ]]; then
@@ -109,10 +115,17 @@ elif [[ "${COMPOSED_QUICK_START_ACTION}" == "--stop-recording" ]]; then
             exit 0
         fi
 
-        # Stop and wait ffmpeg process to be stopped
+        # Stop ffmpeg process
         FFMPEG_PID=$(pgrep ffmpeg)
         echo 'q' > stop && tail --pid=$FFMPEG_PID -f /dev/null
 
+        ## Wait for the ffmpeg process to be finished
+        until [ -f /tmp/$VIDEO_ID-completed.txt ]
+        do
+            # Check 20 times per second
+            sleep 0.05
+        done
+        rm -f /tmp/$VIDEO_ID-completed.txt
 
         ### Generate video report file ###
         ffprobe -v quiet -print_format json -show_format -show_streams /recordings/$VIDEO_ID/$VIDEO_NAME.$VIDEO_FORMAT > /recordings/$VIDEO_ID/$VIDEO_ID.info

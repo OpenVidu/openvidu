@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 set -eu -o pipefail
 
 # Replicate AMIs in all regions
@@ -10,12 +10,11 @@ set -eu -o pipefail
 #
 # OV_AMI_NAME   OpenVidu AMI Name
 # OV_AMI_ID     OpenVidu AMI ID
+#
+# UPDATE_CF         Boolean, true if you want to update CF template by OPENVIDU_PRO_VERSION
+# OPENVIDU_VERSION  OpenVidu Version of the CF you want to update. It will update CF-OpenVidu-Pro-OPENVIDU_PRO_VERSION 
 
 export AWS_DEFAULT_REGION=eu-west-1
-if [ ${CF_OVP_TARGET} == "market" ]; then
-    export AWS_ACCESS_KEY_ID=${NAEVA_AWS_ACCESS_KEY_ID}
-    export AWS_SECRET_ACCESS_KEY=${NAEVA_AWS_SECRET_ACCESS_KEY}
-fi
 
 echo "Making original AMIs public"
 
@@ -96,26 +95,82 @@ do
     ITER=$(expr $ITER + 1)
 done
 
-echo
-echo "OpenVidu Server Pro Node AMI IDs"
+
+# Print and generate replicated AMIS
+REPLICATED_AMIS_FILE="replicated_amis.yaml"
+echo "OV AMIs and KMS AMIs replication:"
+{
+    echo "#start_mappings"
+    echo "Mappings:"
+    echo "  OVAMIMAP:"
+    ITER=0
+    for i in "${OPENVIDU_SERVER_PRO_AMI_IDS[@]}"
+    do
+        AMI_ID=${OPENVIDU_SERVER_PRO_AMI_IDS[$ITER]}
+        REGION=${REGIONS[$ITER]}
+        echo "    ${REGION}:"
+        echo "      AMI: ${AMI_ID}"
+        ITER=$(expr $ITER + 1)
+    done
+    echo ""
+    echo "  KMSAMIMAP:"
+    ITER=0
+    for i in "${MEDIA_NODE_AMI_IDS[@]}"
+    do
+        AMI_ID=${MEDIA_NODE_AMI_IDS[$ITER]}
+        REGION=${REGIONS[$ITER]}
+        echo "    ${REGION}:"
+        echo "      AMI: ${AMI_ID}"
+        ITER=$(expr $ITER + 1)
+    done
+    echo "#end_mappings"
+    echo ""
+} > "${REPLICATED_AMIS_FILE}" 2>&1
+
+# Print replicated AMIs
+cat "${REPLICATED_AMIS_FILE}"
+
+if [[ ${UPDATE_CF} == "true" ]]; then
+    if [[ ! -z ${OPENVIDU_PRO_VERSION} ]]; then
+        # Download s3 file
+        aws s3 cp s3://aws.openvidu.io/CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml
+        sed -e "/^#end_mappings/r ${REPLICATED_AMIS_FILE}" -e '/^#start_mappings/,/^#end_mappings/d' -i CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml
+        aws s3 cp CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml s3://aws.openvidu.io/CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml --acl public-read
+    fi
+fi
+
+# Print AMI_LIST for delete_amis.sh
+AMI_LIST=""
 ITER=0
 for i in "${OPENVIDU_SERVER_PRO_AMI_IDS[@]}"
 do
     AMI_ID=${OPENVIDU_SERVER_PRO_AMI_IDS[$ITER]}
     REGION=${REGIONS[$ITER]}
-    echo "    ${REGION}:"
-    echo "      AMI: ${AMI_ID}"
+    if [[ ${ITER} -eq  0 ]]; then
+        AMI_LIST="${REGION}:${AMI_ID}"
+    else 
+        AMI_LIST="${AMI_LIST},${REGION}:${AMI_ID}"
+    fi
     ITER=$(expr $ITER + 1)
 done
+echo "AMI_LIST_OV: ${AMI_LIST}"
 
-echo
-echo "Media Node AMI IDs"
+# Print AMI_LIST for delete_amis.sh
+AMI_LIST=""
 ITER=0
 for i in "${MEDIA_NODE_AMI_IDS[@]}"
 do
     AMI_ID=${MEDIA_NODE_AMI_IDS[$ITER]}
     REGION=${REGIONS[$ITER]}
-    echo "    ${REGION}:"
-    echo "      AMI: ${AMI_ID}"
+    if [[ ${ITER} -eq  0 ]]; then
+        AMI_LIST="${REGION}:${AMI_ID}"
+    else 
+        AMI_LIST="${AMI_LIST},${REGION}:${AMI_ID}"
+    fi
     ITER=$(expr $ITER + 1)
 done
+echo "AMI_LIST_KMS: ${AMI_LIST}"
+
+# Cleaning the house
+rm "${REPLICATED_AMIS_FILE}"
+rm CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml

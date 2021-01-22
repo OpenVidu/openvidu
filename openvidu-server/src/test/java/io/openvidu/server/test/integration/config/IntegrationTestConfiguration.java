@@ -14,9 +14,11 @@ import org.kurento.client.KurentoClient;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.ServerManager;
 import org.mockito.Mockito;
+import org.powermock.reflect.Whitebox;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
+import io.openvidu.server.kurento.core.KurentoSessionManager;
 import io.openvidu.server.kurento.kms.FixedOneKmsManager;
 import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.kurento.kms.KmsManager;
@@ -32,12 +34,13 @@ public class IntegrationTestConfiguration {
 
 	@Bean
 	public KmsManager kmsManager() throws Exception {
-		final KmsManager spy = Mockito.spy(new FixedOneKmsManager());
+		final KmsManager spy = Mockito.spy(new FixedOneKmsManager(new KurentoSessionManager()));
 		doAnswer(invocation -> {
 			List<Kms> successfullyConnectedKmss = new ArrayList<>();
 			List<KmsProperties> kmsProperties = invocation.getArgument(0);
 			for (KmsProperties kmsProp : kmsProperties) {
-				Kms kms = new Kms(kmsProp, spy.getLoadManager());
+				Kms kms = new Kms(kmsProp, Whitebox.getInternalState(spy, "loadManager"),
+						Whitebox.getInternalState(spy, "quarantineKiller"));
 				KurentoClient kClient = mock(KurentoClient.class);
 
 				doAnswer(i -> {

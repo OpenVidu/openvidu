@@ -67,4 +67,22 @@ export interface RecordingProperties {
      * Whether or not to record video. Cannot be set to false at the same time as [[RecordingProperties.hasAudio]]
      */
     hasVideo?: boolean;
+
+    /**
+     * If COMPOSED recording, the amount of shared memory reserved for the recording process in bytes.
+     * Minimum 134217728 (128MB). Property ignored if INDIVIDUAL recording. Default to 536870912 (512 MB)
+     */
+    shmSize?: number;
+
+    /**
+     * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> 
+     * 
+     * The Media Node where to host the recording. The default option if this property is not defined is the same
+     * Media Node hosting the Session to record. This object defines the following properties as Media Node selector:
+     * - `id`: Media Node unique identifier
+     */
+    mediaNode?: {
+        id: string;
+    }
+
 }

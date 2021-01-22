@@ -27,17 +27,42 @@ import io.openvidu.server.utils.GeoLocation;
 
 public class Participant {
 
+	enum ParticipantStatus {
+
+		/**
+		 * The participant has not called Session.publish in the client side yet. The
+		 * internal token is available.
+		 */
+		pending,
+
+		/**
+		 * The participant has called Session.publish in the client side and a WebSocket
+		 * connection is established. The internal token has been consumed and cannot be
+		 * used again.
+		 */
+		active
+	}
+
 	protected String finalUserId; // ID to match this connection with a final user (HttpSession id)
 	protected String participantPrivatetId; // ID to identify the user on server (org.kurento.jsonrpc.Session.id)
 	protected String participantPublicId; // ID to identify the user on clients
-	private String sessionId; // ID of the session to which the participant belongs
-	protected Long createdAt; // Timestamp when this connection was established
+	protected String sessionId; // ID of the session to which the participant belongs
+	protected ParticipantStatus status; // Status of the connection
+	protected Long activeAt; // Timestamp when this connection entered status "active"
 	protected String clientMetadata = ""; // Metadata provided on client side
-	protected String serverMetadata = ""; // Metadata provided on server side
 	protected Token token; // Token associated to this participant
 	protected GeoLocation location; // Location of the participant
 	protected String platform; // Platform used by the participant to connect to the session
 	protected EndpointType endpointType; // Type of participant (web participant, IP cam participant...)
+
+	// TODO
+	// Unify with "PublisherEndpoint.MediaOptions"
+	// Also unify "streamPropertyChanged" and "videoData" RPCs when possible
+	protected Integer videoWidth = 0;
+	protected Integer videoHeight = 0;
+	protected Boolean videoActive = false;
+	protected Boolean audioActive = false;
+	protected Long publishedAt = null; // Timestamp when this participant was published
 
 	protected boolean streaming = false;
 	protected volatile boolean closed = false;
@@ -52,22 +77,20 @@ public class Participant {
 
 	public Participant(String finalUserId, String participantPrivatetId, String participantPublicId, String sessionId,
 			Token token, String clientMetadata, GeoLocation location, String platform, EndpointType endpointType,
-			Long createdAt) {
+			Long activeAt) {
 		this.finalUserId = finalUserId;
 		this.participantPrivatetId = participantPrivatetId;
 		this.participantPublicId = participantPublicId;
 		this.sessionId = sessionId;
-		if (createdAt != null) {
-			this.createdAt = createdAt;
-		} else {
-			this.createdAt = System.currentTimeMillis();
-		}
+		this.status = ParticipantStatus.active;
 		this.token = token;
+		if (activeAt != null) {
+			this.activeAt = activeAt;
+		} else {
+			this.activeAt = System.currentTimeMillis();
+		}
 		if (clientMetadata != null) {
 			this.clientMetadata = clientMetadata;
-		}
-		if (!token.getServerMetadata().isEmpty()) {
-			this.serverMetadata = token.getServerMetadata();
 		}
 		this.location = location;
 		this.platform = platform;
@@ -98,8 +121,8 @@ public class Participant {
 		return sessionId;
 	}
 
-	public Long getCreatedAt() {
-		return this.createdAt;
+	public Long getActiveAt() {
+		return this.activeAt;
 	}
 
 	public String getClientMetadata() {
@@ -111,19 +134,11 @@ public class Participant {
 	}
 
 	public String getServerMetadata() {
-		return serverMetadata;
-	}
-
-	public void setServerMetadata(String serverMetadata) {
-		this.serverMetadata = serverMetadata;
+		return this.token.getServerMetadata();
 	}
 
 	public Token getToken() {
 		return this.token;
-	}
-
-	public void setToken(Token token) {
-		this.token = token;
 	}
 
 	public GeoLocation getLocation() {
@@ -146,6 +161,46 @@ public class Participant {
 		return this.endpointType;
 	}
 
+	public Integer getVideoWidth() {
+		return videoWidth;
+	}
+
+	public void setVideoWidth(Integer videoWidth) {
+		this.videoWidth = videoWidth;
+	}
+
+	public Integer getVideoHeight() {
+		return videoHeight;
+	}
+
+	public void setVideoHeight(Integer videoHeight) {
+		this.videoHeight = videoHeight;
+	}
+
+	public Boolean isVideoActive() {
+		return videoActive;
+	}
+
+	public void setVideoActive(Boolean videoActive) {
+		this.videoActive = videoActive;
+	}
+
+	public Boolean isAudioActive() {
+		return audioActive;
+	}
+
+	public void setPublishedAt(Long publishedAt) {
+		this.publishedAt = publishedAt;
+	}
+
+	public Long getPublishedAt() {
+		return publishedAt;
+	}
+
+	public void setAudioActive(Boolean audioActive) {
+		this.audioActive = audioActive;
+	}
+
 	public boolean isStreaming() {
 		return streaming;
 	}
@@ -155,7 +210,7 @@ public class Participant {
 	}
 
 	public boolean isIpcam() {
-		return this.platform.equals("IPCAM") && this.participantPrivatetId.startsWith(IdentifierPrefixes.IPCAM_ID);
+		return this.platform != null && this.platform.equals("IPCAM") && this.participantPrivatetId.startsWith(IdentifierPrefixes.IPCAM_ID);
 	}
 
 	public String getPublisherStreamId() {
@@ -163,17 +218,26 @@ public class Participant {
 	}
 
 	public String getFullMetadata() {
-		String fullMetadata;
-		if ((!this.clientMetadata.isEmpty()) && (!this.serverMetadata.isEmpty())) {
-			fullMetadata = this.clientMetadata + METADATA_SEPARATOR + this.serverMetadata;
-		} else {
-			fullMetadata = this.clientMetadata + this.serverMetadata;
+		String fullMetadata = "";
+		if (this.clientMetadata != null && !this.clientMetadata.isEmpty()) {
+			// Client data defined
+			fullMetadata += this.clientMetadata;
+		}
+		if (this.token.getServerMetadata() != null && !this.token.getServerMetadata().isEmpty()) {
+			// Server data defined
+			if (fullMetadata.isEmpty()) {
+				// Only server data
+				fullMetadata += this.token.getServerMetadata();
+			} else {
+				// Both client data and server data
+				fullMetadata += METADATA_SEPARATOR + this.token.getServerMetadata();
+			}
 		}
 		return fullMetadata;
 	}
 
 	public void deleteIpcamProperties() {
-		this.clientMetadata = "";
+		this.clientMetadata = null;
 		this.token.setToken(null);
 	}
 
@@ -235,17 +299,32 @@ public class Participant {
 
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
-		json.addProperty("connectionId", this.participantPublicId);
-		json.addProperty("createdAt", this.createdAt);
+		// COMMON
+		json.addProperty("id", this.participantPublicId);
+		json.addProperty("object", "connection");
+		json.addProperty("status", this.status.name());
+		json.addProperty("connectionId", this.participantPublicId); // TODO: deprecated. Better use only "id"
+		json.addProperty("sessionId", this.sessionId);
+		json.addProperty("createdAt", this.token.getCreatedAt());
+		json.addProperty("activeAt", this.activeAt);
 		json.addProperty("location", this.location != null ? this.location.toString() : "unknown");
 		json.addProperty("platform", this.platform);
 		if (this.token.getToken() != null) {
 			json.addProperty("token", this.token.getToken());
+		} else {
+			json.add("token", null);
 		}
-		json.addProperty("role", this.token.getRole().name());
-		json.addProperty("serverData", this.serverMetadata);
+		// Add all ConnectionProperties
+		JsonObject connectionPropertiesJson = this.token.getConnectionPropertiesWithFinalJsonFormat();
+		connectionPropertiesJson.entrySet().forEach(entry -> {
+			json.add(entry.getKey(), entry.getValue());
+		});
 		json.addProperty("clientData", this.clientMetadata);
 		return json;
+	}
+
+	public JsonObject withStatsToJson() {
+		return null;
 	}
 
 }

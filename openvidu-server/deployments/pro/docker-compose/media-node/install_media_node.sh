@@ -2,13 +2,42 @@
 
 MEDIA_NODE_FOLDER=kms
 MEDIA_NODE_VERSION=master
+OPENVIDU_UPGRADABLE_VERSION="2.16"
 BEATS_FOLDER=${MEDIA_NODE_FOLDER}/beats
 DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${MEDIA_NODE_VERSION}
+IMAGES=(
+  "kurento-media-server"
+  "docker.elastic.co/beats/filebeat"
+  "docker.elastic.co/beats/metricbeat"
+  "openvidu/media-node-controller"
+)
+
 fatal_error() {
      printf "\n     =======¡ERROR!======="
      printf "\n     %s" "$1"
      printf "\n"
      exit 0
+}
+
+docker_command_by_container_image() {
+  IMAGE_NAME=$1
+  COMMAND=$2
+  if  [[ ! -z "${IMAGE_NAME}" ]]; then
+    CONTAINERS=$(docker ps -a | grep "${IMAGE_NAME}" | awk '{print $1}')
+    for CONTAINER_ID in ${CONTAINERS[@]}; do
+      if [[ ! -z "${CONTAINER_ID}" ]] && [[ ! -z "${COMMAND}" ]]; then
+        bash -c "docker ${COMMAND} ${CONTAINER_ID}"
+      fi
+    done
+  fi
+}
+
+
+stop_containers() {
+  printf "Stopping containers..."
+  for IMAGE in ${IMAGES[@]}; do
+    docker_command_by_container_image "${IMAGE}" "rm -f"
+  done
 }
 
 new_media_node_installation() {
@@ -33,10 +62,6 @@ new_media_node_installation() {
           --output "${MEDIA_NODE_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/.env \
-          --output "${MEDIA_NODE_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
-     printf '\n          - .env'
-
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/media_node \
           --output "${MEDIA_NODE_FOLDER}/media_node" || fatal_error "Error when downloading the file 'media_node'"
      printf '\n          - media_node'
@@ -48,10 +73,6 @@ new_media_node_installation() {
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/beats/metricbeat-elasticsearch.yml \
           --output "${BEATS_FOLDER}/metricbeat-elasticsearch.yml" || fatal_error "Error when downloading the file 'metricbeat-elasticsearch.yml'"
      printf '\n          - metricbeat-elasticsearch.yml'
-
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/beats/metricbeat-openvidu.yml \
-          --output "${BEATS_FOLDER}/metricbeat-openvidu.yml" || fatal_error "Error when downloading the file 'metricbeat-openvidu.yml'"
-     printf '\n          - metricbeat-openvidu.yml'
 
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/beats/copy_config_files.sh \
           --output "${BEATS_FOLDER}/copy_config_files.sh" || fatal_error "Error when downloading the file 'copy_config_files.sh'"
@@ -68,12 +89,14 @@ new_media_node_installation() {
      # Pull images
      printf "\n     => Pulling images...\n"
      cd "${MEDIA_NODE_FOLDER}" || fatal_error "Error when moving to '${MEDIA_NODE_FOLDER}' folder"
-     KMS_IMAGE=$(cat docker-compose.yml | grep KMS_IMAGE | sed 's/\(^.*KMS_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
-     METRICBEAT_IMAGE=$(cat docker-compose.yml | grep METRICBEAT_IMAGE | sed 's/\(^.*METRICBEAT_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
-     FILEBEAT_IMAGE=$(cat docker-compose.yml | grep FILEBEAT_IMAGE | sed 's/\(^.*FILEBEAT_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
+     KMS_IMAGE=$(cat docker-compose.yml | grep KMS_IMAGE | cut -d"=" -f2)
+     METRICBEAT_IMAGE=$(cat docker-compose.yml | grep METRICBEAT_IMAGE | cut -d"=" -f2)
+     FILEBEAT_IMAGE=$(cat docker-compose.yml | grep FILEBEAT_IMAGE | cut -d"=" -f2)
+     OPENVIDU_RECORDING_IMAGE=$(cat docker-compose.yml | grep OPENVIDU_RECORDING_IMAGE | cut -d"=" -f2)
      docker pull $KMS_IMAGE || fatal "Error while pulling docker image: $KMS_IMAGE"
      docker pull $METRICBEAT_IMAGE || fatal "Error while pulling docker image: $METRICBEAT_IMAGE"
      docker pull $FILEBEAT_IMAGE || fatal "Error while pulling docker image: $FILEBEAT_IMAGE"
+     docker pull $OPENVIDU_RECORDING_IMAGE || fatal "Error while pulling docker image: $OPENVIDU_RECORDING_IMAGE"
      docker-compose pull | true
 
      # Ready to use
@@ -81,16 +104,28 @@ new_media_node_installation() {
      printf '\n     ======================================='
      printf "\n          Media Node successfully installed."
      printf '\n     ======================================='
-     printf "\n"
+     printf '\n'
      printf '\n     1. Go to kms folder:'
      printf '\n     $ cd kms'
-     printf "\n"
+     printf '\n'
      printf '\n     2. Start Media Node Controller'
      printf '\n     $ ./media_node start'
      printf '\n'
-     printf "\n     For more information, check:"
-     printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#deployment-instructions"
+     printf '\n     3. This will run a service at port 3000 which OpenVidu will use to deploy necessary containers.'
+     printf '\n     Add the private ip of this media node in "KMS_URIS=[]" in OpenVidu Pro machine'
+     printf '\n     in file located at "/opt/openvidu/.env" with this format:'
+     printf '\n            ...'
+     printf '\n            KMS_URIS=["ws://<MEDIA_NODE_PRIVATE_IP>:8888/kurento"]'
+     printf '\n            ...'
+     printf '\n     You can also add this node from inspector'
      printf '\n'
+     printf '\n     4. Start or restart OpenVidu Pro and all containers will be provisioned' 
+     printf '\n     automatically to all the media nodes configured in "KMS_URIS"'
+     printf '\n     More info about Media Nodes deployment here:'
+     printf "\n     --> https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#set-the-number-of-media-nodes-on-startup"
+     printf '\n'
+     printf '\n'
+     printf "\n     If you want to rollback, all the files from the previous installation have been copied to folder '.old-%s'" "${OPENVIDU_PREVIOUS_VERSION}"
      printf '\n'
      exit 0
 }
@@ -123,10 +158,13 @@ upgrade_media_node() {
 
      # Uppgrade Media Node
      OPENVIDU_PREVIOUS_VERSION=$(grep 'Openvidu Version:' "${MEDIA_NODE_PREVIOUS_FOLDER}/docker-compose.yml" | awk '{ print $4 }')
-     [ -z "${OPENVIDU_PREVIOUS_VERSION}" ] && OPENVIDU_PREVIOUS_VERSION=2.14.0
+     [ -z "${OPENVIDU_PREVIOUS_VERSION}" ] && fatal_error "Can't find previous OpenVidu version"
 
      # In this point using the variable 'OPENVIDU_PREVIOUS_VERSION' we can verify if the upgrade is
      # posible or not. If it is not posible launch a warning and stop the upgrade.
+     if [[ "${OPENVIDU_PREVIOUS_VERSION}" != "${OPENVIDU_UPGRADABLE_VERSION}."* ]]; then
+          fatal_error "You can't update from version ${OPENVIDU_PREVIOUS_VERSION} to ${OPENVIDU_VERSION}.\nNever upgrade across multiple major versions."
+     fi
 
      printf '\n'
      printf '\n     ======================================='
@@ -151,10 +189,6 @@ upgrade_media_node() {
           --output "${TMP_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/.env \
-          --output "${TMP_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
-     printf '\n          - .env'
-
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/media_node \
           --output "${TMP_FOLDER}/media_node" || fatal_error "Error when downloading the file 'media_node'"
      printf '\n          - media_node'
@@ -167,10 +201,6 @@ upgrade_media_node() {
           --output "${TMP_FOLDER}/metricbeat-elasticsearch.yml" || fatal_error "Error when downloading the file 'metricbeat-elasticsearch.yml'"
      printf '\n          - metricbeat-elasticsearch.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/beats/metricbeat-openvidu.yml \
-          --output "${TMP_FOLDER}/metricbeat-openvidu.yml" || fatal_error "Error when downloading the file 'metricbeat-openvidu.yml'"
-     printf '\n          - metricbeat-openvidu.yml'
-
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/media-node/beats/copy_config_files.sh \
           --output "${TMP_FOLDER}/copy_config_files.sh" || fatal_error "Error when downloading the file 'copy_config_files.sh'"
      printf '\n          - copy_config_files.sh'
@@ -182,16 +212,24 @@ upgrade_media_node() {
 
      printf "\n          => Moving to 'tmp' folder..."
      printf '\n'
+     cd "${TMP_FOLDER}" || fatal_error "Error when moving to '${TMP_FOLDER}' folder"
+
+     printf '\n     => Stoping Media Node containers...'
+     printf '\n'
+     sleep 1
+
+     stop_containers
 
      # Pull images
      printf "\n     => Pulling images...\n"
-     cd "${TMP_FOLDER}" || fatal_error "Error when moving to '${TMP_FOLDER}' folder"
-     KMS_IMAGE=$(cat docker-compose.yml | grep KMS_IMAGE | sed 's/\(^.*KMS_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
-     METRICBEAT_IMAGE=$(cat docker-compose.yml | grep METRICBEAT_IMAGE | sed 's/\(^.*METRICBEAT_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
-     FILEBEAT_IMAGE=$(cat docker-compose.yml | grep FILEBEAT_IMAGE | sed 's/\(^.*FILEBEAT_IMAGE:-\)\(.*\)\(\}.*$\)/\2/')
+     KMS_IMAGE=$(cat docker-compose.yml | grep KMS_IMAGE | cut -d"=" -f2)
+     METRICBEAT_IMAGE=$(cat docker-compose.yml | grep METRICBEAT_IMAGE | cut -d"=" -f2)
+     FILEBEAT_IMAGE=$(cat docker-compose.yml | grep FILEBEAT_IMAGE | cut -d"=" -f2)
+     OPENVIDU_RECORDING_IMAGE=$(cat docker-compose.yml | grep OPENVIDU_RECORDING_IMAGE | cut -d"=" -f2)
      docker pull $KMS_IMAGE || fatal "Error while pulling docker image: $KMS_IMAGE"
      docker pull $METRICBEAT_IMAGE || fatal "Error while pulling docker image: $METRICBEAT_IMAGE"
      docker pull $FILEBEAT_IMAGE || fatal "Error while pulling docker image: $FILEBEAT_IMAGE"
+     docker pull $OPENVIDU_RECORDING_IMAGE || fatal "Error while pulling docker image: $OPENVIDU_RECORDING_IMAGE"
      docker-compose pull | true
 
      printf '\n     => Stoping Media Node...'
@@ -216,23 +254,14 @@ upgrade_media_node() {
      mv "${MEDIA_NODE_PREVIOUS_FOLDER}/media_node" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'openvidu'"
      printf '\n          - media_node'
 
-     mv "${MEDIA_NODE_PREVIOUS_FOLDER}/readme.md" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'readme.md'"
-     printf '\n          - readme.md'
-
-     mv "${MEDIA_NODE_PREVIOUS_FOLDER}/nginx_conf" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'nginx_conf'"
-     printf '\n          - nginx_conf'
-
-     cp "${MEDIA_NODE_PREVIOUS_FOLDER}/.env" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous '.env'"
-     printf '\n          - .env'
+     mv "${MEDIA_NODE_PREVIOUS_FOLDER}/beats" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'beats' folder"
+     printf '\n          - beats'
 
      # Move tmp files to Openvidu
      printf '\n     => Updating files:'
 
      mv "${TMP_FOLDER}/docker-compose.yml" "${MEDIA_NODE_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
-
-     mv "${TMP_FOLDER}/.env" "${MEDIA_NODE_PREVIOUS_FOLDER}/.env-${MEDIA_NODE_VERSION}" || fatal_error "Error while moving previous '.env'"
-     printf '\n          - .env-%s' "${MEDIA_NODE_VERSION}"
 
      mv "${TMP_FOLDER}/media_node" "${MEDIA_NODE_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'media_node'"
      printf '\n          - media_node'
@@ -244,9 +273,6 @@ upgrade_media_node() {
 
      mv "${TMP_FOLDER}/metricbeat-elasticsearch.yml" "${MEDIA_NODE_PREVIOUS_FOLDER}/beats" || fatal_error "Error while updating 'metricbeat-elasticsearch.yml'"
      printf '\n          - metricbeat-elasticsearch.yml'
-
-     mv "${TMP_FOLDER}/metricbeat-openvidu.yml" "${MEDIA_NODE_PREVIOUS_FOLDER}/beats" || fatal_error "Error while updating 'metricbeat-openvidu.yml'"
-     printf '\n          - metricbeat-openvidu.yml'
 
      mv "${TMP_FOLDER}/copy_config_files.sh" "${MEDIA_NODE_PREVIOUS_FOLDER}/beats" || fatal_error "Error while updating 'copy_config_files.sh'"
      printf '\n          - copy_config_files.sh'
@@ -275,16 +301,26 @@ upgrade_media_node() {
      printf '\n'
      printf "\n     1. A new file 'docker-compose.yml' has been created with the new OpenVidu %s services" "${OPENVIDU_VERSION}"
      printf '\n'
-     printf "\n     2. The previous file '.env' remains intact, but a new file '.env-%s' has been created." "${OPENVIDU_VERSION}"
-     printf "\n     Transfer any configuration you wish to keep in the upgraded version from '.env' to '.env-%s'." "${OPENVIDU_VERSION}"
-     printf "\n     When you are OK with it, rename and leave as the only '.env' file of the folder the new '.env-%s'." "${OPENVIDU_VERSION}"
+     printf "\n     2. This new version %s does not need any .env file. Everything is configured from OpenVidu Pro" "${OPENVIDU_VERSION}"
      printf '\n'
      printf '\n     3. Start new version of Media Node'
      printf '\n     $ ./media_node start'
      printf '\n'
+     printf '\n     4. This will run a service at port 3000 which OpenVidu will use to deploy necessary containers.'
+     printf '\n     Add the private ip of this media node in "KMS_URIS=[]" in OpenVidu Pro machine'
+     printf '\n     in file located at "/opt/openvidu/.env" with this format:'
+     printf '\n            ...'
+     printf '\n            KMS_URIS=["ws://<MEDIA_NODE_PRIVATE_IP>:8888/kurento"]'
+     printf '\n            ...'
+     printf '\n     You can also add Media Nodes from inspector'
+     printf '\n'
+     printf '\n     5. Start or restart OpenVidu Pro and all containers will be provisioned' 
+     printf '\n     automatically to all the media nodes configured in "KMS_URIS"'
+     printf '\n     More info about Media Nodes deployment here:'
+     printf "\n     --> https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#set-the-number-of-media-nodes-on-startup"
+     printf '\n'
+     printf '\n'
      printf "\n     If you want to rollback, all the files from the previous installation have been copied to folder '.old-%s'" "${OPENVIDU_PREVIOUS_VERSION}"
-     printf '\n'
-     printf '\n'
      printf '\n'
 }
 

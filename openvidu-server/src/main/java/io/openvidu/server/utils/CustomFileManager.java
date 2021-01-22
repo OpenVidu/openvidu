@@ -28,7 +28,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CustomFileManager {
+public abstract class CustomFileManager {
 
 	private static final Logger log = LoggerFactory.getLogger(CustomFileManager.class);
 
@@ -120,5 +120,9 @@ public class CustomFileManager {
 			fos.close();
 		}
 	}
+
+	public abstract void waitForFileToExistAndNotEmpty(String mediaNodeId, String absolutePathToFile) throws Exception;
+
+	public abstract int maxSecondsWaitForFile();
 
 }

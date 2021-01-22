@@ -1,5 +1,5 @@
 FROM ubuntu:20.04
-MAINTAINER openvidu@gmail.com
+MAINTAINER info@openvidu.io
 
 ARG CHROME_VERSION
 
@@ -22,6 +22,9 @@ RUN wget http://dl.google.com/linux/deb/pool/main/g/google-chrome-stable/google-
   && apt install -y ./google-chrome-stable_${CHROME_VERSION}_amd64.deb \
   && rm google-chrome-stable_${CHROME_VERSION}_amd64.deb \
   && google-chrome --version
+
+# Add root user to pulseaudio group
+RUN adduser root pulse-access
 
 # Clean
 RUN apt-get clean && apt-get autoclean && apt-get autoremove

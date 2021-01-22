@@ -86,8 +86,8 @@ public class CompositeWrapper {
 		this.recorderEndpoint.record();
 	}
 
-	public synchronized void stopCompositeRecording(CountDownLatch stopLatch, Long timeOfKmsDisconnection) {
-		if (timeOfKmsDisconnection == 0) {
+	public synchronized void stopCompositeRecording(CountDownLatch stopLatch, Long kmsDisconnectionTime) {
+		if (kmsDisconnectionTime == null) {
 			this.recorderEndpoint.addStoppedListener(new EventListener<StoppedEvent>() {
 				@Override
 				public void onEvent(StoppedEvent event) {
@@ -101,7 +101,7 @@ public class CompositeWrapper {
 			});
 			this.recorderEndpoint.stop();
 		} else {
-			endTime = timeOfKmsDisconnection;
+			endTime = kmsDisconnectionTime;
 			stopLatch.countDown();
 			log.warn("Forcing composed audio-only recording stop after KMS restart in session {}",
 					this.session.getSessionId());

@@ -22,7 +22,9 @@ export { StreamEvent } from './OpenViduInternal/Events/StreamEvent';
 export { StreamManagerEvent } from './OpenViduInternal/Events/StreamManagerEvent';
 export { VideoElementEvent } from './OpenViduInternal/Events/VideoElementEvent';
 export { StreamPropertyChangedEvent } from './OpenViduInternal/Events/StreamPropertyChangedEvent';
+export { ConnectionPropertyChangedEvent } from './OpenViduInternal/Events/ConnectionPropertyChangedEvent';
 export { FilterEvent } from './OpenViduInternal/Events/FilterEvent';
+export { NetworkQualityLevelChangedEvent } from './OpenViduInternal/Events/NetworkQualityLevelChangedEvent';
 
 export { Capabilities } from './OpenViduInternal/Interfaces/Public/Capabilities';
 export { Device } from './OpenViduInternal/Interfaces/Public/Device';

@@ -22,13 +22,18 @@ import { Event } from '../OpenViduInternal/Events/Event';
 import { StreamManagerEvent } from '../OpenViduInternal/Events/StreamManagerEvent';
 import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
-
-import platform = require('platform');
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
+import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
+
 /**
  * @hidden
  */
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
+
+/**
+ * @hidden
+ */
+let platform: PlatformUtils;
 
 /**
  * Interface in charge of displaying the media streams in the HTML DOM. This wraps any [[Publisher]] and [[Subscriber]] object.
@@ -82,7 +87,7 @@ export class StreamManager extends EventDispatcher {
     /**
      * @hidden
      */
-    firstVideoElement: StreamManagerVideo;
+    firstVideoElement?: StreamManagerVideo;
     /**
      * @hidden
      */
@@ -101,7 +106,7 @@ export class StreamManager extends EventDispatcher {
      */
     constructor(stream: Stream, targetElement?: HTMLElement | string) {
         super();
-
+        platform = PlatformUtils.getInstance();
         this.stream = stream;
         this.stream.streamManager = this;
         this.remote = !this.stream.isLocal();
@@ -121,7 +126,7 @@ export class StreamManager extends EventDispatcher {
                     id: '',
                     canplayListenerAdded: false
                 };
-                if (platform.name === 'Safari') {
+                if (platform.isSafariBrowser()) {
                     this.firstVideoElement.video.setAttribute('playsinline', 'true');
                 }
                 this.targetElement = targEl;
@@ -379,7 +384,7 @@ export class StreamManager extends EventDispatcher {
         video.autoplay = true;
         video.controls = false;
 
-        if (platform.name === 'Safari') {
+        if (platform.isSafariBrowser()) {
             video.setAttribute('playsinline', 'true');
         }
 
@@ -463,7 +468,7 @@ export class StreamManager extends EventDispatcher {
     updateMediaStream(mediaStream: MediaStream) {
         this.videos.forEach(streamManagerVideo => {
             streamManagerVideo.video.srcObject = mediaStream;
-            if (platform['isIonicIos']) {
+            if (platform.isIonicIos()) {
                 // iOS Ionic. LIMITATION: must reinsert the video in the DOM for
                 // the media stream to be updated
                 const vParent = streamManagerVideo.video.parentElement;
@@ -506,7 +511,7 @@ export class StreamManager extends EventDispatcher {
     }
 
     private mirrorVideo(video): void {
-        if (!platform['isIonicIos']) {
+        if (!platform.isIonicIos()) {
             video.style.transform = 'rotateY(180deg)';
             video.style.webkitTransform = 'rotateY(180deg)';
         }

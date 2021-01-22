@@ -83,7 +83,7 @@ export class Recording {
             hasVideo: !!json['hasVideo']
         };
         if (this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED]
-        || this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED_QUICK_START]) {
+            || this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED_QUICK_START]) {
             this.properties.resolution = !!(json['resolution']) ? json['resolution'] : '1920x1080';
             this.properties.recordingLayout = !!(json['recordingLayout']) ? json['recordingLayout'] : RecordingLayout.BEST_FIT;
             if (this.properties.recordingLayout.toString() === RecordingLayout[RecordingLayout.CUSTOM]) {
@@ -103,7 +103,7 @@ export namespace Recording {
 
         /**
          * The recording is starting (cannot be stopped). Some recording may not go
-		 * through this status and directly reach "started" status
+         * through this status and directly reach "started" status
          */
         starting = 'starting',
 
@@ -113,21 +113,20 @@ export namespace Recording {
         started = 'started',
 
         /**
-		 * The recording has stopped and is being processed. At some point it will reach
-		 * "ready" status
-		 */
+         * The recording has stopped and is being processed. At some point it will reach
+         * "ready" status
+         */
         stopped = 'stopped',
 
         /**
-         * The recording has finished OK and is available for download through OpenVidu
-		 * Server recordings endpoint:
-		 * https://YOUR_OPENVIDUSERVER_IP/recordings/{RECORDING_ID}/{RECORDING_NAME}.{EXTENSION}
+         * The recording has finished being processed and is available for download through
+         * property [[Recording.url]]
          */
         ready = 'ready',
 
         /**
          * The recording has failed. This status may be reached from "starting",
-		 * "started" and "stopped" status
+         * "started" and "stopped" status
          */
         failed = 'failed'
     }
@@ -141,24 +140,24 @@ export namespace Recording {
          * Record all streams in a grid layout in a single archive
          */
         COMPOSED = 'COMPOSED',
-        
-		/**
-		 * Works the same way as COMPOSED mode, but the necessary recorder
-		 * service module will start some time in advance and won't be terminated
-		 * once a specific session recording has ended. This module will remain
-		 * up and running as long as the session remains active.
-		 * 
-		 * - **Pros vs COMPOSED**: the process of starting the recording will be noticeably
-		 * faster. This can be very useful in use cases where a session needs to be
-		 * recorded multiple times over time, when a better response time is usually
-		 * desirable.
 
-		 * - **Cons vs COMPOSED**: for every session initialized with COMPOSED_QUICK_START
-		 * recording output mode, extra CPU power will be required in OpenVidu Server.
-		 * The recording module will be continuously rendering all of the streams being
-		 * published to the session even when the session is not being recorded. And that
-		 * is for every session configured with COMPOSED_QUICK_START.
-		 */
+        /**
+         * Works the same way as COMPOSED mode, but the necessary recorder
+         * service module will start some time in advance and won't be terminated
+         * once a specific session recording has ended. This module will remain
+         * up and running as long as the session remains active.
+         * 
+         * - **Pros vs COMPOSED**: the process of starting the recording will be noticeably
+         * faster. This can be very useful in use cases where a session needs to be
+         * recorded multiple times over time, when a better response time is usually
+         * desirable.
+
+         * - **Cons vs COMPOSED**: for every session initialized with COMPOSED_QUICK_START
+         * recording output mode, extra CPU power will be required in OpenVidu Server.
+         * The recording module will be continuously rendering all of the streams being
+         * published to the session even when the session is not being recorded. And that
+         * is for every session configured with COMPOSED_QUICK_START.
+         */
         COMPOSED_QUICK_START = 'COMPOSED_QUICK_START',
 
         /**

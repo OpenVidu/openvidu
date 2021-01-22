@@ -21,9 +21,8 @@ import org.apache.http.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,6 +35,7 @@ import com.google.gson.JsonObject;
 import io.openvidu.server.cdr.CDREventName;
 import io.openvidu.server.config.OpenviduBuildInfo;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.utils.RestUtils;
 
 /**
  *
@@ -43,7 +43,8 @@ import io.openvidu.server.config.OpenviduConfig;
  */
 @RestController
 @CrossOrigin
-@RequestMapping("/config")
+@ConditionalOnMissingBean(name = "configRestControllerPro")
+@RequestMapping(RequestMappings.API + "/config")
 public class ConfigRestController {
 
 	private static final Logger log = LoggerFactory.getLogger(ConfigRestController.class);
@@ -54,10 +55,18 @@ public class ConfigRestController {
 	@Autowired
 	private OpenviduBuildInfo openviduBuildInfo;
 
+	@RequestMapping(method = RequestMethod.GET)
+	public ResponseEntity<String> getOpenViduConfiguration() {
+
+		log.info("REST API: GET {}", RequestMappings.API + "/config");
+
+		return this.getConfig();
+	}
+
 	@RequestMapping(value = "/openvidu-version", method = RequestMethod.GET)
 	public String getOpenViduServerVersion() {
 
-		log.info("REST API: GET /config/openvidu-version");
+		log.info("REST API: GET {}/openvidu-version", RequestMappings.API + "/config");
 
 		return openviduBuildInfo.getOpenViduServerVersion();
 	}
@@ -65,7 +74,7 @@ public class ConfigRestController {
 	@RequestMapping(value = "/openvidu-publicurl", method = RequestMethod.GET)
 	public String getOpenViduPublicUrl() {
 
-		log.info("REST API: GET /config/openvidu-publicurl");
+		log.info("REST API: GET {}/openvidu-publicurl", RequestMappings.API + "/config");
 
 		return openviduConfig.getFinalUrl();
 	}
@@ -73,7 +82,7 @@ public class ConfigRestController {
 	@RequestMapping(value = "/openvidu-recording", method = RequestMethod.GET)
 	public Boolean getOpenViduRecordingEnabled() {
 
-		log.info("REST API: GET /config/openvidu-recording");
+		log.info("REST API: GET {}/openvidu-recording", RequestMappings.API + "/config");
 
 		return openviduConfig.isRecordingModuleEnabled();
 	}
@@ -81,7 +90,7 @@ public class ConfigRestController {
 	@RequestMapping(value = "/openvidu-recording-path", method = RequestMethod.GET)
 	public String getOpenViduRecordingPath() {
 
-		log.info("REST API: GET /config/openvidu-recording-path");
+		log.info("REST API: GET {}/openvidu-recording-path", RequestMappings.API + "/config");
 
 		return openviduConfig.getOpenViduRecordingPath();
 	}
@@ -89,16 +98,12 @@ public class ConfigRestController {
 	@RequestMapping(value = "/openvidu-cdr", method = RequestMethod.GET)
 	public Boolean getOpenViduCdrEnabled() {
 
-		log.info("REST API: GET /config/openvidu-cdr");
+		log.info("REST API: GET {}/openvidu-cdr", RequestMappings.API + "/config");
 
 		return openviduConfig.isCdrEnabled();
 	}
 
-	@RequestMapping(method = RequestMethod.GET)
-	public ResponseEntity<String> getOpenViduConfiguration() {
-
-		log.info("REST API: GET /config");
-
+	protected ResponseEntity<String> getConfig() {
 		JsonObject json = new JsonObject();
 		json.addProperty("VERSION", openviduBuildInfo.getVersion());
 		json.addProperty("DOMAIN_OR_PUBLIC_IP", openviduConfig.getDomainOrPublicIp());
@@ -109,6 +114,8 @@ public class ConfigRestController {
 		json.addProperty("OPENVIDU_STREAMS_VIDEO_MIN_RECV_BANDWIDTH", openviduConfig.getVideoMinRecvBandwidth());
 		json.addProperty("OPENVIDU_STREAMS_VIDEO_MAX_SEND_BANDWIDTH", openviduConfig.getVideoMaxSendBandwidth());
 		json.addProperty("OPENVIDU_STREAMS_VIDEO_MIN_SEND_BANDWIDTH", openviduConfig.getVideoMinSendBandwidth());
+		json.addProperty("OPENVIDU_STREAMS_FORCED_VIDEO_CODEC", openviduConfig.getOpenviduForcedCodec().name());
+		json.addProperty("OPENVIDU_STREAMS_ALLOW_TRANSCODING", openviduConfig.isOpenviduAllowingTranscoding());
 		json.addProperty("OPENVIDU_SESSIONS_GARBAGE_INTERVAL", openviduConfig.getSessionGarbageInterval());
 		json.addProperty("OPENVIDU_SESSIONS_GARBAGE_THRESHOLD", openviduConfig.getSessionGarbageThreshold());
 		json.addProperty("OPENVIDU_RECORDING", openviduConfig.isRecordingModuleEnabled());
@@ -141,13 +148,7 @@ public class ConfigRestController {
 			json.add("OPENVIDU_WEBHOOK_EVENTS", webhookEvents);
 		}
 
-		return new ResponseEntity<>(json.toString(), getResponseHeaders(), HttpStatus.OK);
-	}
-
-	protected HttpHeaders getResponseHeaders() {
-		HttpHeaders responseHeaders = new HttpHeaders();
-		responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-		return responseHeaders;
+		return new ResponseEntity<>(json.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 	}
 
 }

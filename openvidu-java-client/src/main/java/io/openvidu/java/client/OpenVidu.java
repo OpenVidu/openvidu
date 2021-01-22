@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLContext;
 
@@ -70,16 +69,19 @@ public class OpenVidu {
 	protected HttpClient httpClient;
 	protected Map<String, Session> activeSessions = new ConcurrentHashMap<>();
 
-	protected final static String API_SESSIONS = "api/sessions";
-	protected final static String API_TOKENS = "api/tokens";
-	protected final static String API_RECORDINGS = "api/recordings";
-	protected final static String API_RECORDINGS_START = "/start";
-	protected final static String API_RECORDINGS_STOP = "/stop";
+	protected final static String API_PATH = "openvidu/api";
+	protected final static String API_SESSIONS = API_PATH + "/sessions";
+	protected final static String API_TOKENS = API_PATH + "/tokens";
+	protected final static String API_RECORDINGS = API_PATH + "/recordings";
+	protected final static String API_RECORDINGS_START = API_RECORDINGS + "/start";
+	protected final static String API_RECORDINGS_STOP = API_RECORDINGS + "/stop";
 
 	/**
-	 * @param urlOpenViduServer Public accessible IP where your instance of OpenVidu
-	 *                          Server is up an running
-	 * @param secret            Secret used on OpenVidu Server initialization
+	 * @param hostname URL where your instance of OpenVidu Server is up an running.
+	 *                 It must be the full URL (e.g.
+	 *                 <code>https://12.34.56.78:1234/</code>)
+	 * 
+	 * @param secret   Secret used on OpenVidu Server initialization
 	 */
 	public OpenVidu(String hostname, String secret) {
 
@@ -192,16 +194,19 @@ public class OpenVidu {
 	public Recording startRecording(String sessionId, RecordingProperties properties)
 			throws OpenViduJavaClientException, OpenViduHttpException {
 
-		HttpPost request = new HttpPost(this.hostname + API_RECORDINGS + API_RECORDINGS_START);
+		HttpPost request = new HttpPost(this.hostname + API_RECORDINGS_START);
 
 		JsonObject json = new JsonObject();
 		json.addProperty("session", sessionId);
 		json.addProperty("name", properties.name());
-		json.addProperty("outputMode", properties.outputMode().name());
+		json.addProperty("outputMode", properties.outputMode() != null ? properties.outputMode().name() : null);
 		json.addProperty("hasAudio", properties.hasAudio());
 		json.addProperty("hasVideo", properties.hasVideo());
+		json.addProperty("shmSize", properties.shmSize());
+		json.addProperty("mediaNode", properties.mediaNode());
 
-		if ((Recording.OutputMode.COMPOSED.equals(properties.outputMode()) || (Recording.OutputMode.COMPOSED_QUICK_START.equals(properties.outputMode())))
+		if ((properties.outputMode() == null || Recording.OutputMode.COMPOSED.equals(properties.outputMode())
+				|| (Recording.OutputMode.COMPOSED_QUICK_START.equals(properties.outputMode())))
 				&& properties.hasVideo()) {
 			json.addProperty("resolution", properties.resolution());
 			json.addProperty("recordingLayout",
@@ -236,8 +241,9 @@ public class OpenVidu {
 				if (activeSession != null) {
 					activeSession.setIsBeingRecorded(true);
 				} else {
-					log.warn("No active session found for sessionId '" + r.getSessionId()
-							+ "'. This instance of OpenVidu Java Client didn't create this session");
+					log.warn(
+							"No active session found for sessionId '{}'. This instance of OpenVidu Java Client didn't create this session",
+							r.getSessionId());
 				}
 				return r;
 			} else {
@@ -352,7 +358,7 @@ public class OpenVidu {
 	 *                                     </ul>
 	 */
 	public Recording stopRecording(String recordingId) throws OpenViduJavaClientException, OpenViduHttpException {
-		HttpPost request = new HttpPost(this.hostname + API_RECORDINGS + API_RECORDINGS_STOP + "/" + recordingId);
+		HttpPost request = new HttpPost(this.hostname + API_RECORDINGS_STOP + "/" + recordingId);
 		HttpResponse response;
 		try {
 			response = this.httpClient.execute(request);
@@ -368,8 +374,9 @@ public class OpenVidu {
 				if (activeSession != null) {
 					activeSession.setIsBeingRecorded(false);
 				} else {
-					log.warn("No active session found for sessionId '" + r.getSessionId()
-							+ "'. This instance of OpenVidu Java Client didn't create this session");
+					log.warn(
+							"No active session found for sessionId '{}'. This instance of OpenVidu Java Client didn't create this session",
+							r.getSessionId());
 				}
 				return r;
 			} else {
@@ -492,6 +499,10 @@ public class OpenVidu {
 	 * since the last time method {@link io.openvidu.java.client.OpenVidu#fetch()}
 	 * was called</strong>. Exceptions to this rule are:
 	 * <ul>
+	 * <li>Calling
+	 * {@link io.openvidu.java.client.OpenVidu#createSession(SessionProperties)
+	 * OpenVidu.createSession} automatically adds the new Session object to the
+	 * local collection.</li>
 	 * <li>Calling {@link io.openvidu.java.client.Session#fetch()} updates that
 	 * specific Session status</li>
 	 * <li>Calling {@link io.openvidu.java.client.Session#close()} automatically
@@ -531,7 +542,7 @@ public class OpenVidu {
 	 * @throws OpenViduJavaClientException
 	 */
 	public boolean fetch() throws OpenViduJavaClientException, OpenViduHttpException {
-		HttpGet request = new HttpGet(this.hostname + API_SESSIONS);
+		HttpGet request = new HttpGet(this.hostname + API_SESSIONS + "?pendingConnections=true");
 
 		HttpResponse response;
 		try {
@@ -543,44 +554,55 @@ public class OpenVidu {
 		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+
 				JsonObject jsonSessions = httpResponseToJson(response);
 				JsonArray jsonArraySessions = jsonSessions.get("content").getAsJsonArray();
 
-				// Set to store fetched sessionIds and later remove closed sessions
-				Set<String> fetchedSessionIds = new HashSet<>();
 				// Boolean to store if any Session has changed
 				final boolean[] hasChanged = { false };
-				jsonArraySessions.forEach(session -> {
-					String sessionId = (session.getAsJsonObject()).get("sessionId").getAsString();
-					fetchedSessionIds.add(sessionId);
-					this.activeSessions.computeIfPresent(sessionId, (sId, s) -> {
+
+				// 1. Set to store fetched sessionIds and later remove closed ones
+				Set<String> fetchedSessionIds = new HashSet<>();
+				jsonArraySessions.forEach(sessionJsonElement -> {
+
+					JsonObject sessionJson = sessionJsonElement.getAsJsonObject();
+					final Session sessionObj = new Session(this, sessionJson);
+					String id = sessionObj.getSessionId();
+					fetchedSessionIds.add(id);
+
+					// 2. Update existing Session
+					this.activeSessions.computeIfPresent(id, (sId, s) -> {
 						String beforeJSON = s.toJson();
-						s = s.resetSessionWithJson(session.getAsJsonObject());
+						s = s.resetWithJson(sessionJson);
 						String afterJSON = s.toJson();
 						boolean changed = !beforeJSON.equals(afterJSON);
 						hasChanged[0] = hasChanged[0] || changed;
-						log.info("Available session '{}' info fetched. Any change: {}", sessionId, changed);
+						log.info("Available session '{}' info fetched. Any change: {}", id, changed);
 						return s;
 					});
-					this.activeSessions.computeIfAbsent(sessionId, sId -> {
-						log.info("New session '{}' fetched", sessionId);
+
+					// 3. Add new Session
+					this.activeSessions.computeIfAbsent(id, sId -> {
+						log.info("New session '{}' fetched", id);
 						hasChanged[0] = true;
-						return new Session(this, session.getAsJsonObject());
+						return sessionObj;
 					});
 				});
 
-				// Remove closed sessions from activeSessions map
-				this.activeSessions = this.activeSessions.entrySet().stream().filter(entry -> {
+				// 4. Remove closed sessions from local collection
+				this.activeSessions.entrySet().removeIf(entry -> {
 					if (fetchedSessionIds.contains(entry.getKey())) {
-						return true;
+						return false;
 					} else {
 						log.info("Removing closed session {}", entry.getKey());
 						hasChanged[0] = true;
-						return false;
+						return true;
 					}
-				}).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+				});
+
 				log.info("Active sessions info fetched: {}", this.activeSessions.keySet());
 				return hasChanged[0];
+
 			} else {
 				throw new OpenViduHttpException(statusCode);
 			}

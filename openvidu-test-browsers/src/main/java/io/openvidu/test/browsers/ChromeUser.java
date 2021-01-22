@@ -51,7 +51,7 @@ public class ChromeUser extends BrowserUser {
 		options.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE);
 
 		options.addArguments("--disable-infobars");
-		options.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"}); 
+		options.setExperimentalOption("excludeSwitches", new String[] { "enable-automation" });
 
 		Map<String, Object> prefs = new HashMap<String, Object>();
 		prefs.put("profile.default_content_setting_values.media_stream_mic", 1);
@@ -83,6 +83,9 @@ public class ChromeUser extends BrowserUser {
 		options.addArguments("--use-fake-device-for-media-stream");
 		// This flag selects the entire screen as video source when screen sharing
 		options.addArguments("--auto-select-desktop-capture-source=Entire screen");
+
+		// Background Chrome
+		// options.addArguments("--headless");
 
 		if (runningAsRoot) {
 			options.addArguments("--no-sandbox");

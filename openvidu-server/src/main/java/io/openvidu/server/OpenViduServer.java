@@ -34,7 +34,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.DependsOn;
@@ -50,7 +52,6 @@ import io.openvidu.server.config.OpenviduConfig.Error;
 import io.openvidu.server.core.SessionEventsHandler;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.TokenGenerator;
-import io.openvidu.server.core.TokenGeneratorDefault;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.coturn.CoturnCredentialsServiceFactory;
 import io.openvidu.server.kurento.core.KurentoParticipantEndpointConfig;
@@ -61,13 +62,21 @@ import io.openvidu.server.kurento.kms.FixedOneKmsManager;
 import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.kurento.kms.LoadManager;
 import io.openvidu.server.recording.DummyRecordingDownloader;
+import io.openvidu.server.recording.DummyRecordingUploader;
 import io.openvidu.server.recording.RecordingDownloader;
+import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.recording.service.RecordingManager;
+import io.openvidu.server.recording.service.RecordingManagerUtils;
+import io.openvidu.server.recording.service.RecordingManagerUtilsLocalStorage;
+import io.openvidu.server.rest.ApiRestPathRewriteFilter;
+import io.openvidu.server.rest.RequestMappings;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.rpc.RpcNotificationService;
 import io.openvidu.server.utils.CommandExecutor;
 import io.openvidu.server.utils.GeoLocationByIp;
 import io.openvidu.server.utils.GeoLocationByIpDummy;
+import io.openvidu.server.utils.LocalCustomFileManager;
+import io.openvidu.server.utils.LocalDockerManager;
 import io.openvidu.server.utils.MediaNodeStatusManager;
 import io.openvidu.server.utils.MediaNodeStatusManagerDummy;
 import io.openvidu.server.utils.QuarantineKiller;
@@ -86,24 +95,11 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	private static final Logger log = LoggerFactory.getLogger(OpenViduServer.class);
 
-	public static final String WS_PATH = "/openvidu";
 	public static String wsUrl;
 	public static String httpUrl;
 
 	@Autowired
 	OpenviduConfig config;
-
-	@Bean
-	@ConditionalOnMissingBean
-	@DependsOn("openviduConfig")
-	public KmsManager kmsManager(OpenviduConfig openviduConfig) {
-		if (openviduConfig.getKmsUris().isEmpty()) {
-			throw new IllegalArgumentException("'KMS_URIS' should contain at least one KMS url");
-		}
-		String firstKmsWsUri = openviduConfig.getKmsUris().get(0);
-		log.info("OpenVidu Server using one KMS: {}", firstKmsWsUri);
-		return new FixedOneKmsManager();
-	}
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -118,7 +114,8 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		}
 		if (openviduConfig.isWebhookEnabled()) {
 			log.info("OpenVidu Webhook service is enabled");
-			loggers.add(new CDRLoggerWebhook(openviduConfig));
+			loggers.add(new CDRLoggerWebhook(openviduConfig.getOpenViduWebhookEndpoint(),
+					openviduConfig.getOpenViduWebhookHeaders(), openviduConfig.getOpenViduWebhookEvents()));
 		} else {
 			log.info("OpenVidu Webhook service is disabled (may be enabled with 'OPENVIDU_WEBHOOK=true')");
 		}
@@ -141,6 +138,18 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
+	@DependsOn({ "openviduConfig", "sessionManager", "mediaNodeStatusManager" })
+	public KmsManager kmsManager(OpenviduConfig openviduConfig, SessionManager sessionManager) {
+		if (openviduConfig.getKmsUris().isEmpty()) {
+			throw new IllegalArgumentException("'KMS_URIS' should contain at least one KMS url");
+		}
+		String firstKmsWsUri = openviduConfig.getKmsUris().get(0);
+		log.info("OpenVidu Server using one KMS: {}", firstKmsWsUri);
+		return new FixedOneKmsManager(sessionManager);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
 	@DependsOn("openviduConfig")
 	public RpcHandler rpcHandler() {
 		return new RpcHandler();
@@ -157,14 +166,14 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@ConditionalOnMissingBean
 	@DependsOn("openviduConfig")
 	public TokenGenerator tokenGenerator() {
-		return new TokenGeneratorDefault();
+		return new TokenGenerator();
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
 	@DependsOn("openviduConfig")
 	public RecordingManager recordingManager() {
-		return new RecordingManager();
+		return new RecordingManager(new LocalDockerManager(false), new LocalCustomFileManager());
 	}
 
 	@Bean
@@ -187,6 +196,20 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
+	@DependsOn({ "openviduConfig", "recordingManager" })
+	public RecordingManagerUtils recordingManagerUtils(OpenviduConfig openviduConfig,
+			RecordingManager recordingManager) {
+		return new RecordingManagerUtilsLocalStorage(openviduConfig, recordingManager);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public RecordingUploader recordingUpload() {
+		return new DummyRecordingUploader();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
 	public RecordingDownloader recordingDownload() {
 		return new DummyRecordingDownloader();
 	}
@@ -205,6 +228,12 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
+	public SDPMunging sdpMunging() {
+		return new SDPMunging();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
 	public QuarantineKiller quarantineKiller() {
 		return new QuarantineKillerDummy();
 	}
@@ -215,10 +244,20 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		return new MediaNodeStatusManagerDummy();
 	}
 
+	@Bean
+	@ConditionalOnMissingBean
+	@ConditionalOnProperty(name = "SUPPORT_DEPRECATED_API", havingValue = "true")
+	public FilterRegistrationBean<ApiRestPathRewriteFilter> filterRegistrationBean() {
+		FilterRegistrationBean<ApiRestPathRewriteFilter> registrationBean = new FilterRegistrationBean<ApiRestPathRewriteFilter>();
+		ApiRestPathRewriteFilter apiRestPathRewriteFilter = new ApiRestPathRewriteFilter();
+		registrationBean.setFilter(apiRestPathRewriteFilter);
+		return registrationBean;
+	}
+
 	@Override
 	public void registerJsonRpcHandlers(JsonRpcHandlerRegistry registry) {
 		registry.addHandler(rpcHandler().withPingWatchdog(true).withInterceptors(new HttpHandshakeInterceptor()),
-				WS_PATH);
+				RequestMappings.WS_RPC);
 	}
 
 	public static String getContainerIp() throws IOException, InterruptedException {
@@ -324,11 +363,11 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@EventListener(ApplicationReadyEvent.class)
 	public void whenReady() {
 
-		String dashboardUrl = httpUrl + "dashboard/";
+		String dashboardUrl = httpUrl + config.getOpenViduFrontendDefaultPath().replaceAll("^/", "");
 
 		// @formatter:off
 		String msg = "\n\n----------------------------------------------------\n" + "\n" + "   OpenVidu is ready!\n"
-				+ "   ---------------------------\n" + "\n" + "   * OpenVidu Server: " + httpUrl + "\n" + "\n"
+				+ "   ---------------------------\n" + "\n" + "   * OpenVidu Server URL: " + httpUrl + "\n" + "\n"
 				+ "   * OpenVidu Dashboard: " + dashboardUrl + "\n" + "\n"
 				+ "----------------------------------------------------\n";
 		// @formatter:on

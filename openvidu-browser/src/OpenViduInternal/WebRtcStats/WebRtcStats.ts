@@ -18,13 +18,16 @@
 // tslint:disable:no-string-literal
 
 import { Stream } from '../../OpenVidu/Stream';
-import platform = require('platform');
 import { OpenViduLogger } from '../Logger/OpenViduLogger';
+import { PlatformUtils } from '../Utils/Platform';
 /**
  * @hidden
  */
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
-
+/**
+ * @hidden
+ */
+let platform: PlatformUtils;
 
 export class WebRtcStats {
 
@@ -60,7 +63,9 @@ export class WebRtcStats {
         }
     };
 
-    constructor(private stream: Stream) { }
+    constructor(private stream: Stream) {
+        platform = PlatformUtils.getInstance();
+    }
 
     public isEnabled(): boolean {
         return this.webRtcStatsEnabled;
@@ -103,7 +108,7 @@ export class WebRtcStats {
         return new Promise((resolve, reject) => {
             this.getStatsAgnostic(this.stream.getRTCPeerConnection(),
                 (stats) => {
-                    if ((platform.name!.indexOf('Chrome') !== -1) || (platform.name!.indexOf('Opera') !== -1)) {
+                    if (platform.isChromeBrowser() || platform.isChromeMobileBrowser() || platform.isOperaBrowser() || platform.isOperaMobileBrowser()) {
                         let localCandidateId, remoteCandidateId, googCandidatePair;
                         const localCandidates = {};
                         const remoteCandidates = {};
@@ -181,7 +186,7 @@ export class WebRtcStats {
 
         const f = (stats) => {
 
-            if (platform.name!.indexOf('Firefox') !== -1) {
+            if (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) {
                 stats.forEach((stat) => {
 
                     let json = {};
@@ -278,7 +283,7 @@ export class WebRtcStats {
                         sendPost(JSON.stringify(json));
                     }
                 });
-            } else if ((platform.name!.indexOf('Chrome') !== -1) || (platform.name!.indexOf('Opera') !== -1)) {
+            } else if (platform.isChromeBrowser() || platform.isChromeMobileBrowser() || platform.isOperaBrowser() || platform.isOperaMobileBrowser()) {
                 for (const key of Object.keys(stats)) {
                     const stat = stats[key];
                     if (stat.type === 'ssrc') {
@@ -377,7 +382,7 @@ export class WebRtcStats {
         logger.log(response);
         const standardReport = {};
 
-        if (platform.name!.indexOf('Firefox') !== -1) {
+        if (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) {
             Object.keys(response).forEach(key => {
                 logger.log(response[key]);
             });
@@ -400,13 +405,13 @@ export class WebRtcStats {
     }
 
     private getStatsAgnostic(pc, successCb, failureCb) {
-        if (platform.name!.indexOf('Firefox') !== -1) {
+        if (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) {
             // getStats takes args in different order in Chrome and Firefox
             return pc.getStats(null).then(response => {
                 const report = this.standardizeReport(response);
                 successCb(report);
             }).catch(failureCb);
-        } else if ((platform.name!.indexOf('Chrome') !== -1) || (platform.name!.indexOf('Opera') !== -1)) {
+        } else if (platform.isChromeBrowser() || platform.isChromeMobileBrowser() || platform.isOperaBrowser() || platform.isOperaMobileBrowser()) {
             // In Chrome, the first two arguments are reversed
             return pc.getStats((response) => {
                 const report = this.standardizeReport(response);

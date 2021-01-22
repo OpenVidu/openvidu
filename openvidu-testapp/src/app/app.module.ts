@@ -31,6 +31,7 @@ import { OpenviduRestService } from './services/openvidu-rest.service';
 import { OpenviduParamsService } from './services/openvidu-params.service';
 import { TestFeedService } from './services/test-feed.service';
 import { MuteSubscribersService } from './services/mute-subscribers.service';
+import {SessionInfoDialogComponent} from "./components/dialogs/session-info-dialog/session-info-dialog.component";
 
 @NgModule({
   declarations: [
@@ -49,6 +50,8 @@ import { MuteSubscribersService } from './services/mute-subscribers.service';
     PublisherPropertiesDialogComponent,
     ScenarioPropertiesDialogComponent,
     FilterDialogComponent,
+    ShowCodecDialogComponent,
+    SessionInfoDialogComponent,
     UsersTableComponent,
     TableVideoComponent,
     ShowCodecDialogComponent
@@ -77,7 +80,8 @@ import { MuteSubscribersService } from './services/mute-subscribers.service';
     PublisherPropertiesDialogComponent,
     ScenarioPropertiesDialogComponent,
     FilterDialogComponent,
-    ShowCodecDialogComponent
+    ShowCodecDialogComponent,
+    SessionInfoDialogComponent
   ],
   bootstrap: [AppComponent]
 })

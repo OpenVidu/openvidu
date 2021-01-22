@@ -62,12 +62,12 @@ export class SessionDisconnectedEvent extends Event {
         // Dispose and delete all remote Connections
         for (const connectionId in session.remoteConnections) {
             if (!!session.remoteConnections[connectionId].stream) {
-                session.remoteConnections[connectionId].stream.disposeWebRtcPeer();
-                session.remoteConnections[connectionId].stream.disposeMediaStream();
-                if (session.remoteConnections[connectionId].stream.streamManager) {
-                    session.remoteConnections[connectionId].stream.streamManager.removeAllVideos();
+                session.remoteConnections[connectionId].stream!.disposeWebRtcPeer();
+                session.remoteConnections[connectionId].stream!.disposeMediaStream();
+                if (session.remoteConnections[connectionId].stream!.streamManager) {
+                    session.remoteConnections[connectionId].stream!.streamManager.removeAllVideos();
                 }
-                delete session.remoteStreamsCreated[session.remoteConnections[connectionId].stream.streamId];
+                delete session.remoteStreamsCreated[session.remoteConnections[connectionId].stream!.streamId];
                 session.remoteConnections[connectionId].dispose();
             }
             delete session.remoteConnections[connectionId];

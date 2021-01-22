@@ -48,9 +48,8 @@ public class Recording {
 		stopped,
 
 		/**
-		 * The recording has finished OK and is available for download through OpenVidu
-		 * Server recordings endpoint:
-		 * https://YOUR_OPENVIDUSERVER_IP/recordings/{RECORDING_ID}/{RECORDING_NAME}.{EXTENSION}
+		 * The recording has finished being processed and is available for download
+		 * through property {@link Recording#getUrl}
 		 */
 		ready,
 
@@ -75,27 +74,25 @@ public class Recording {
 		 * Record each stream individually
 		 */
 		INDIVIDUAL,
-		
+
 		/**
-		 * Works the same way as COMPOSED mode, but the necessary recorder
-		 * service module will start some time in advance and won't be terminated
-		 * once a specific session recording has ended. This module will remain
-		 * up and running as long as the session remains active.<br><br>
+		 * Works the same way as COMPOSED mode, but the necessary recorder service
+		 * module will start some time in advance and won't be terminated once a
+		 * specific session recording has ended. This module will remain up and running
+		 * as long as the session remains active.<br>
+		 * <br>
 		 * 
 		 * <ul>
-		 * <li>
-		 * <strong>Pros vs COMPOSED</strong>: the process of starting the recording will be noticeably
-		 * faster. This can be very useful in use cases where a session needs to be
-		 * recorded multiple times over time, when a better response time is usually
-		 * desirable.
-		 * </li>
-		 * <li>
-		 * <strong>Cons vs COMPOSED</strong>: for every session initialized with COMPOSED_QUICK_START
-		 * recording output mode, extra CPU power will be required in OpenVidu Server.
-		 * The recording module will be continuously rendering all of the streams being
-		 * published to the session even when the session is not being recorded. And that
-		 * is for every session configured with COMPOSED_QUICK_START.
-		 * </li>
+		 * <li><strong>Pros vs COMPOSED</strong>: the process of starting the recording
+		 * will be noticeably faster. This can be very useful in use cases where a
+		 * session needs to be recorded multiple times over time, when a better response
+		 * time is usually desirable.</li>
+		 * <li><strong>Cons vs COMPOSED</strong>: for every session initialized with
+		 * COMPOSED_QUICK_START recording output mode, extra CPU power will be required
+		 * in OpenVidu Server. The recording module will be continuously rendering all
+		 * of the streams being published to the session even when the session is not
+		 * being recorded. And that is for every session configured with
+		 * COMPOSED_QUICK_START.</li>
 		 * </ul>
 		 */
 		COMPOSED_QUICK_START;
@@ -129,7 +126,8 @@ public class Recording {
 		OutputMode outputMode = OutputMode.valueOf(json.get("outputMode").getAsString());
 		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(json.get("name").getAsString())
 				.outputMode(outputMode).hasAudio(hasAudio).hasVideo(hasVideo);
-		if ((OutputMode.COMPOSED.equals(outputMode) || OutputMode.COMPOSED_QUICK_START.equals(outputMode)) && hasVideo) {
+		if ((OutputMode.COMPOSED.equals(outputMode) || OutputMode.COMPOSED_QUICK_START.equals(outputMode))
+				&& hasVideo) {
 			builder.resolution(json.get("resolution").getAsString());
 			builder.recordingLayout(RecordingLayout.valueOf(json.get("recordingLayout").getAsString()));
 			JsonElement customLayout = json.get("customLayout");
@@ -219,8 +217,8 @@ public class Recording {
 	/**
 	 * URL of the recording. You can access the file from there. It is
 	 * <code>null</code> until recording reaches "ready" or "failed" status. If
-	 * <a href="https://docs.openvidu.io/en/stable/reference-docs/openvidu-config/" target=
-	 * "_blank">OpenVidu Server configuration</a> property
+	 * <a href="https://docs.openvidu.io/en/stable/reference-docs/openvidu-config/"
+	 * target= "_blank">OpenVidu Server configuration</a> property
 	 * <code>OPENVIDU_RECORDING_PUBLIC_ACCESS</code> is false, this path will be
 	 * secured with OpenVidu credentials
 	 */
@@ -230,7 +228,8 @@ public class Recording {
 
 	/**
 	 * Resolution of the video file. Only defined if OutputMode of the Recording is
-	 * set to {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
+	 * set to {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
 	 */
 	public String getResolution() {
 		return this.recordingProperties.resolution();

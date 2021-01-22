@@ -104,6 +104,12 @@ Resources:
       Tags:
         - Key: Name
           Value: !Ref AWS::StackName
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeType: gp2
+            DeleteOnTermination: true
+            VolumeSize: 10
       UserData:
         "Fn::Base64":
           !Sub |
@@ -138,5 +144,5 @@ Resources:
     Type: AWS::CloudFormation::WaitCondition
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT20M
         Count: 1

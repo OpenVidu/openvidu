@@ -47,9 +47,7 @@ public interface SessionInterface {
 
 	String getMediaNodeId();
 
-	JsonObject toJson();
-
-	JsonObject withStatsToJson();
+	JsonObject toJson(boolean withPendingConnections, boolean withWebrtcStats);
 
 	Long getStartTime();
 

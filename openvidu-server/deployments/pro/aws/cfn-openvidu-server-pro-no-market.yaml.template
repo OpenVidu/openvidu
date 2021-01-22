@@ -41,6 +41,22 @@ Parameters:
   LetsEncryptEmail:
     Description: "If certificate type is 'letsencrypt', this email will be used for Let's Encrypt notifications"
     Type: String
+  
+  Recording:
+    Description: |
+      If 'disabled', recordings will not be active.
+      If 'local' recordings will be saved in EC2 instance locally. 
+      If 's3', recordings will be stored in a S3 bucket"
+    Type: String
+    AllowedValues:
+      - disabled
+      - local
+      - s3
+    Default: local
+
+  S3RecordingsBucketName:
+    Description: "S3 Bucket Name"
+    Type: String
 
   # OpenVidu Configuration
 
@@ -52,39 +68,51 @@ Parameters:
     ConstraintDescription: OpenVidu Pro License is mandatory
 
   OpenViduSecret:
-    Description: "Secret to connect to this OpenVidu Platform. No whitespaces or quotations allowed"
+    Description: "Secret to connect to this OpenVidu Platform. Cannot be empty and must contain only alphanumeric characters [a-zA-Z0-9], hypens ('-') and underscores ('_')"
     Type: String
-    AllowedPattern: ^((?!")(?! ).)+$
+    AllowedPattern: ^[a-zA-Z0-9_-]+$
     NoEcho: true
-    ConstraintDescription: OpenVidu Secret is mandatory (no whitespaces or quotations allowed)
+    ConstraintDescription: "Cannot be empty and must contain only alphanumeric characters [a-zA-Z0-9], hypens ('-') and underscores ('_')"
 
   MediaNodesStartNumber:
     Description: "How many Media Nodes do you want on startup (EC2 instances will be launched)"
     Type: Number
     Default: 1
 
-  # Kibana configuration
-
-  KibanaUser:
-    Description: "Username for Kibana Dashboard"
+  # Elasticsearch configuration
+  ElasticsearchUser:
+    Description: "Username for Elasticsearch and Kibana"
     Type: String
     AllowedPattern: ^((?!")(?! ).)+$
-    ConstraintDescription: Kibana user is mandatory (no whitespaces or quotations allowed)
-    Default: kibanaadmin
+    ConstraintDescription: Elasticsearch user is mandatory (no whitespaces or quotations allowed)
+    Default: elasticadmin
 
-  KibanaPassword:
-    Description: "Password for Kibana Dashboard"
+  ElasticsearchPassword:
+    Description: "Password for Elasticsearch and Kibana"
     Type: String
     AllowedPattern: ^((?!")(?! ).)+$
     NoEcho: true
-    ConstraintDescription: Kibana password is mandatory (no whitespaces or quotations allowed)
+    ConstraintDescription: Elasticsearch password is mandatory (no whitespaces or quotations allowed)
+
+  # Elasticsearch configuration
+  ElasticsearchUrl:
+    Description: "If you have an external Elasticsearch service running, put here the url to the service. If empty, an Elasticsearch service will be deployed next to OpenVidu."
+    Type: String
+    AllowedPattern: (^(http|https):\/\/.*:[1-9]{1,5}+.*$|^$)
+    ConstraintDescription: "It is very important to specify the Elasticsearch URL with the port used by this service. For example: https://es-example:443"
+
+  KibanaUrl:
+    Description: "If you have an external Kibana service running, put here the url to the service. If empty, a Kibana service will be deployed next to OpenVidu."
+    Type: String
+    AllowedPattern: (^(http|https):\/\/.*:[1-9]{1,5}+.*$|^$)
+    ConstraintDescription: "It is very important to specify the url with port used by this service. For example: https://kibana-example:443"
 
   # EC2 Instance configuration
 
   AwsInstanceTypeOV:
     Description: "Specifies the EC2 instance type for your OpenVidu Server Pro Node"
     Type: String
-    Default: t2.xlarge
+    Default: c5.xlarge
     AllowedValues:
       - t2.large
       - t2.xlarge
@@ -124,7 +152,7 @@ Parameters:
   AwsInstanceTypeKMS:
     Description: "Specifies the EC2 instance type for your Media Nodes"
     Type: String
-    Default: t2.xlarge
+    Default: c5.xlarge
     AllowedValues:
       - t2.large
       - t2.xlarge
@@ -186,6 +214,7 @@ Parameters:
       - false
     Default: true
 
+#start_mappings
 Mappings:
   OVAMIMAP:
     eu-west-1:
@@ -194,6 +223,7 @@ Mappings:
   KMSAMIMAP:
     eu-west-1:
       AMI: KMS_AMI_ID
+#end_mappings
 
 Metadata:
   'AWS::CloudFormation::Interface':
@@ -214,10 +244,17 @@ Metadata:
           - OpenViduSecret
           - MediaNodesStartNumber
       - Label:
-          default: Kibana configuration
+          default: OpenVidu Recording Configuration
         Parameters:
-          - KibanaUser
-          - KibanaPassword
+          - Recording
+          - S3RecordingsBucketName
+      - Label:
+          default: Elasticsearch and Kibana configuration
+        Parameters:
+          - ElasticsearchUrl
+          - KibanaUrl
+          - ElasticsearchUser
+          - ElasticsearchPassword
       - Label:
             default: EC2 Instance configuration
         Parameters:
@@ -248,6 +285,10 @@ Metadata:
         default: "URL to the key file (owncert)"
       LetsEncryptEmail:
         default: "Email for Let's Encrypt (letsencrypt)"
+      Recording:
+        default: "OpenVidu Recording"
+      S3RecordingsBucketName:
+        default: "S3 Bucket where recordings will be stored"
       # OpenVidu configuration
       OpenViduLicense:
         default: "OpenVidu Pro License key"
@@ -256,10 +297,14 @@ Metadata:
       OpenViduSecret:
         default: "Openvidu Secret"
       # Kibana configuration
-      KibanaUser:
-        default: "Kibana username"
-      KibanaPassword:
-        default: "Kibana password"
+      ElasticsearchUrl:
+        default: "Elasticsearch URL"
+      KibanaUrl:
+        default: "Kibana URL"
+      ElasticsearchUser:
+        default: "Elasticsearch and Kibana username"
+      ElasticsearchPassword:
+        default: "Elasticsearch and Kibana password"
       # EC2 instance configuration
       AwsInstanceTypeOV:
         default: "Instance type for Openvidu Server Pro Node"
@@ -277,8 +322,22 @@ Metadata:
         default: "Deploy OpenVidu Call application"
 
 Conditions:
-    WhichCertPresent: !Not [ !Equals [!Ref WhichCert, ""] ]
-    PublicElasticIPPresent: !Not [ !Equals [!Ref PublicElasticIP, ""] ]
+  WhichCertPresent: !Not [ !Equals [!Ref WhichCert, ''] ]
+  PublicElasticIPPresent: !Not [ !Equals [!Ref PublicElasticIP, ''] ]
+  RecordingStorageIsS3: !Equals [ !Ref Recording, 's3' ]
+  CreateS3Bucket: !And
+    - !Equals [!Ref Recording, 's3' ]
+    - !Equals [!Ref S3RecordingsBucketName, '']
+        
+Rules:
+
+  RecordingValidation:
+    RuleCondition: 
+      Fn::Or: [ !Equals [!Ref Recording, 'disabled' ], !Equals [!Ref Recording, 'local' ] ]
+    Assertions:
+      - AssertDescription: If recording Storage is 'disabled' or 'local', you don't need to specify a S3 bucket.
+        Assert: 
+          Fn::Equals: [ !Ref S3RecordingsBucketName, "" ]
 
 Resources:
 
@@ -313,6 +372,45 @@ Resources:
                   - 'route53:ChangeResourceRecordSets'
                   - 'route53:ListHostedZones'
                 Resource: '*'
+              - Fn::If:
+                # Only apply this policy if S3 is configured
+                - RecordingStorageIsS3
+                - Effect: Allow
+                  Action:
+                    - 's3:DeleteObject'
+                    - 's3:GetObject'
+                    - 's3:PutObject'
+                  Resource: 
+                    - Fn::If:
+                      # Get bucket name depending if the user defines a bucket name or not
+                      - CreateS3Bucket
+                      ### Unique bucket name using Stack ID
+                      - !Join [ "", [ 'arn:aws:s3:::', 'openvidu-recordings-', !Select [0, !Split ["-", !Select [2, !Split [/, !Ref AWS::StackId ]]]], "/*" ]]
+                      - !Join [ "", [ 'arn:aws:s3:::', !Ref S3RecordingsBucketName, '/*'] ]
+                - Ref: AWS::NoValue
+              - Fn::If:
+                # Only apply this policy if S3 is configured
+                - RecordingStorageIsS3
+                - Effect: Allow
+                  Action: 
+                    - 's3:ListBucket'
+                    - 's3:GetBucketLocation'
+                  Resource: 
+                    - Fn::If:
+                      # Get bucket name depending if the user defines a bucket name or not
+                      - CreateS3Bucket
+                      ### Unique bucket name using Stack ID
+                      - !Join [ "", [ 'arn:aws:s3:::', 'openvidu-recordings-', !Select [0, !Split ["-", !Select [2, !Split [/, !Ref AWS::StackId ]]]]]]
+                      - !Join [ "", [ 'arn:aws:s3:::', !Ref S3RecordingsBucketName ] ]
+                - Ref: AWS::NoValue
+              - Fn::If:
+                # Only apply this policy if S3 is configured
+                - RecordingStorageIsS3
+                - Effect: Allow
+                  Action:
+                    - s3:ListAllMyBuckets
+                  Resource: 'arn:aws:s3:::'
+                - Ref: AWS::NoValue
       RoleName: !Join [ "-", [ OpenViduManageEC2Role, !Ref 'AWS::StackName', !Ref 'AWS::Region'] ]
 
   OpenviduInstancesProfile:
@@ -324,6 +422,21 @@ Resources:
         - !Join [ "-", [ OpenViduManageEC2Role, !Ref 'AWS::StackName', !Ref 'AWS::Region'] ]
     DependsOn:
       - OpenViduManageEC2Role
+
+  S3bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+    ### Unique bucket name using Stack ID
+      BucketName: !Join ["-" , [ 'openvidu-recordings', !Select [0, !Split ["-", !Select [2, !Split [/, !Ref AWS::StackId ]]]]]]
+      AccessControl: Private
+      PublicAccessBlockConfiguration: 
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls : true
+        RestrictPublicBuckets: true
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Condition: CreateS3Bucket
 
   OpenViduServer:
     Type: AWS::EC2::Instance
@@ -383,9 +496,15 @@ Resources:
                 sed -i "s/CERTIFICATE_TYPE=selfsigned/CERTIFICATE_TYPE=${WhichCert}/" $WORKINGDIR/.env
                 sed -i "s/LETSENCRYPT_EMAIL=user@example.com/LETSENCRYPT_EMAIL=${LetsEncryptEmail}/" $WORKINGDIR/.env
 
-                # Replace Kibana Conf
-                sed -i "s/KIBANA_USER=kibanaadmin/KIBANA_USER=${KibanaUser}/" $WORKINGDIR/.env
-                sed -i "s/KIBANA_PASSWORD=/KIBANA_PASSWORD=${KibanaPassword}/" $WORKINGDIR/.env
+                # Replace Elastic Search Conf
+                if [[ ! -z "${ElasticsearchUrl}" ]]; then
+                  sed -i "s,#OPENVIDU_PRO_ELASTICSEARCH_HOST=,OPENVIDU_PRO_ELASTICSEARCH_HOST=${ElasticsearchUrl}," $WORKINGDIR/.env
+                fi
+                if [[ ! -z "${KibanaUrl}" ]]; then
+                  sed -i "s,#OPENVIDU_PRO_KIBANA_HOST=,OPENVIDU_PRO_KIBANA_HOST=${KibanaUrl}," $WORKINGDIR/.env
+                fi
+                sed -i "s/ELASTICSEARCH_USERNAME=elasticadmin/ELASTICSEARCH_USERNAME=${ElasticsearchUser}/" $WORKINGDIR/.env
+                sed -i "s/ELASTICSEARCH_PASSWORD=/ELASTICSEARCH_PASSWORD=${ElasticsearchPassword}/" $WORKINGDIR/.env
 
                 # Replace vars AWS
                 sed -i "s/#AWS_DEFAULT_REGION=/AWS_DEFAULT_REGION=${AWS::Region}/" $WORKINGDIR/.env
@@ -395,6 +514,8 @@ Resources:
                 sed -i "s/#AWS_SUBNET_ID=/AWS_SUBNET_ID=${OpenViduSubnet}/" $WORKINGDIR/.env
                 sed -i "s/#AWS_STACK_ID=/AWS_STACK_ID=$(echo ${AWS::StackId} | sed 's#/#\\/#g')/" $WORKINGDIR/.env
                 sed -i "s/#AWS_STACK_NAME=/AWS_STACK_NAME=${AWS::StackName}/" $WORKINGDIR/.env
+                sed -i "s/#AWS_CLI_DOCKER_TAG=/AWS_CLI_DOCKER_TAG=AWS_DOCKER_TAG/" $WORKINGDIR/.env
+                sed -i "s/#AWS_VOLUME_SIZE=/AWS_VOLUME_SIZE=50/" $WORKINGDIR/.env
 
                 # Get security group id of kms and use it as env variable
                 SECGRPIDKMS=$(/usr/local/bin/getSecurityGroupKms.sh)
@@ -405,7 +526,20 @@ Resources:
                   sed -i "s/WITH_APP=true/WITH_APP=false/" $WORKINGDIR/docker-compose.yml
                   rm $WORKINGDIR/docker-compose.override.yml
                 fi
+
+                # Recording Configuration
+                if [ "${Recording}" != "disabled" ]; then
+                  sed -i "s/OPENVIDU_RECORDING=false/OPENVIDU_RECORDING=true/" $WORKINGDIR/.env
+                  sed -i "s/#OPENVIDU_PRO_RECORDING_STORAGE=/OPENVIDU_PRO_RECORDING_STORAGE=${Recording}/" $WORKINGDIR/.env
+                  if [ ! -z "${S3RecordingsBucketName}" ]; then
+                    sed -i "s/#OPENVIDU_PRO_AWS_S3_BUCKET=/OPENVIDU_PRO_AWS_S3_BUCKET=${S3RecordingsBucketName}/" $WORKINGDIR/.env
+                  elif [ "${Recording}" == "s3" ]; then
+                    sed -i "s/#OPENVIDU_PRO_AWS_S3_BUCKET=/OPENVIDU_PRO_AWS_S3_BUCKET=${s3BucketName}/" $WORKINGDIR/.env
+                  fi
+                fi
               - kmsAmi: !FindInMap [KMSAMIMAP, !Ref 'AWS::Region', AMI]
+                ### Unique bucket name using Stack ID
+                s3BucketName: !Join ["" , [ 'openvidu-recordings-', !Select [0, !Split ["-", !Select [2, !Split [/, !Ref AWS::StackId ]]]]]]
               mode: "000755"
               owner: "root"
               group: "root"
@@ -421,7 +555,7 @@ Resources:
             '/usr/local/bin/getSecurityGroupKms.sh':
               content: !Sub |
                 #!/bin/bash -x
-                docker run --rm amazon/aws-cli:2.0.7 ec2 describe-security-groups \
+                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 describe-security-groups \
                                 --region ${AWS::Region} \
                                 --output text \
                                 --filters "Name=tag:aws:cloudformation:logical-id,Values=KMSSecurityGroup" \
@@ -433,7 +567,7 @@ Resources:
             '/usr/local/bin/getSecurityGroupOpenVidu.sh':
               content: !Sub |
                 #!/bin/bash -x
-                docker run --rm amazon/aws-cli:2.0.7 ec2 describe-security-groups \
+                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 describe-security-groups \
                                --region ${AWS::Region} \
                                --output text \
                                --filters "Name=tag:aws:cloudformation:logical-id,Values=OpenViduSecurityGroup" \
@@ -445,7 +579,7 @@ Resources:
             '/usr/local/bin/getCidrBlocKSubnet.sh':
               content: !Sub |
                 #!/bin/bash -x
-                docker run --rm amazon/aws-cli:2.0.7 ec2 describe-subnets \
+                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 describe-subnets \
                                 --region ${AWS::Region} \
                                 --output text \
                                 --filters "Name=subnet-id,Values=${OpenViduSubnet}" \
@@ -454,25 +588,25 @@ Resources:
               owner: "root"
               group: "root"
             '/usr/local/bin/create_security_group_rules.sh':
-              content: !Sub |
+              content: |
                 #!/bin/bash -x
                 SECGRPIDKMS=$(/usr/local/bin/getSecurityGroupKms.sh)
                 SECGRPIDOV=$(/usr/local/bin/getSecurityGroupOpenVidu.sh)
                 SUBNET_CIDR=$(/usr/local/bin/getCidrBlocKSubnet.sh)
 
                 # Create Security group rules OpenVidu
-                docker run --rm amazon/aws-cli:2.0.7 ec2 authorize-security-group-ingress --group-id $SECGRPIDOV --protocol tcp --port 5044 --cidr $SUBNET_CIDR
-                docker run --rm amazon/aws-cli:2.0.7 ec2 authorize-security-group-ingress --group-id $SECGRPIDOV --protocol tcp --port 9200 --cidr $SUBNET_CIDR
+                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 authorize-security-group-ingress --group-id $SECGRPIDOV --protocol tcp --port 5044 --cidr $SUBNET_CIDR
+                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 authorize-security-group-ingress --group-id $SECGRPIDOV --protocol tcp --port 9200 --cidr $SUBNET_CIDR
 
                 # Create security group rules for KMS
-                docker run --rm amazon/aws-cli:2.0.7 ec2 authorize-security-group-ingress --group-id $SECGRPIDKMS --protocol tcp --port 8888 --cidr $SUBNET_CIDR
-                docker run --rm amazon/aws-cli:2.0.7 ec2 authorize-security-group-ingress --group-id $SECGRPIDKMS --protocol tcp --port 3000 --cidr $SUBNET_CIDR
+                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 authorize-security-group-ingress --group-id $SECGRPIDKMS --protocol tcp --port 8888 --cidr $SUBNET_CIDR
+                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 authorize-security-group-ingress --group-id $SECGRPIDKMS --protocol tcp --port 3000 --cidr $SUBNET_CIDR
 
               mode: "000755"
               owner: "root"
               group: "root"
             '/usr/local/bin/restartPRO.sh':
-              content: !Sub |
+              content: |
                 #!/bin/bash -x
                 WORKINGDIR=/opt/openvidu
 
@@ -484,7 +618,8 @@ Resources:
 
                 # Restart all services
                 pushd /opt/openvidu
-                docker-compose up -d
+                export FOLLOW_OPENVIDU_LOGS=false
+                ./openvidu start
                 popd
               mode: "000755"
               owner: "root"
@@ -509,6 +644,8 @@ Resources:
 
             cfn-init --region ${AWS::Region} --stack ${AWS::StackId} --resource OpenViduServer
 
+            export HOME="/root"
+
             # Replace .env variables
             /usr/local/bin/feedGroupVars.sh || { echo "[Openvidu] Parameters incorrect/insufficient"; exit 1; }
 
@@ -525,7 +662,8 @@ Resources:
 
             # Start openvidu application
             pushd /opt/openvidu
-            docker-compose up -d
+            export FOLLOW_OPENVIDU_LOGS=false
+            ./openvidu start
             popd
 
             # Wait for the app
@@ -537,10 +675,9 @@ Resources:
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeType: io1
-            Iops: 200
+            VolumeType: gp2
             DeleteOnTermination: true
-            VolumeSize: 50
+            VolumeSize: 200
 
   KMSSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'

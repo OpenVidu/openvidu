@@ -106,15 +106,15 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
       if (key !== 'ee' && key !== 'openvidu') {
         if (typeof value === 'object' && value !== null) {
           if (cache.indexOf(value) !== -1) {
-            // Duplicate reference found
+            // Duplicate reference found	
             try {
-              // If this value does not reference a parent
+              // If this value does not reference a parent	
               return JSON.parse(JSON.stringify(value));
             } catch (error) {
               return;
             }
           }
-          // Store value in our collection
+          // Store value in our collection	
           cache.push(value);
         }
         return value;

@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import org.kurento.client.GenericMediaEvent;
@@ -39,11 +38,11 @@ import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.cdr.CallDetailRecord;
-import io.openvidu.server.config.InfoHandler;
 import io.openvidu.server.config.OpenviduBuildInfo;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.kurento.endpoint.KurentoFilter;
+import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.rpc.RpcNotificationService;
 
@@ -55,9 +54,6 @@ public class SessionEventsHandler {
 	protected RpcNotificationService rpcNotificationService;
 
 	@Autowired
-	protected InfoHandler infoHandler;
-
-	@Autowired
 	protected CallDetailRecord CDR;
 
 	@Autowired
@@ -66,9 +62,7 @@ public class SessionEventsHandler {
 	@Autowired
 	protected OpenviduBuildInfo openviduBuildConfig;
 
-	Map<String, Recording> recordingsStarted = new ConcurrentHashMap<>();
-
-	ReentrantLock lock = new ReentrantLock();
+	protected Map<String, Recording> recordingsToSendClientEvents = new ConcurrentHashMap<>();
 
 	public void onSessionCreated(Session session) {
 		CDR.recordSessionCreated(session);
@@ -93,7 +87,7 @@ public class SessionEventsHandler {
 			participantJson.addProperty(ProtocolElements.JOINROOM_PEERID_PARAM,
 					existingParticipant.getParticipantPublicId());
 			participantJson.addProperty(ProtocolElements.JOINROOM_PEERCREATEDAT_PARAM,
-					existingParticipant.getCreatedAt());
+					existingParticipant.getActiveAt());
 
 			// Metadata associated to each existing participant
 			participantJson.addProperty(ProtocolElements.JOINROOM_METADATA_PARAM,
@@ -149,7 +143,7 @@ public class SessionEventsHandler {
 				// Metadata associated to new participant
 				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM,
 						participant.getParticipantPublicId());
-				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getCreatedAt());
+				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getActiveAt());
 				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM,
 						participant.getFullMetadata());
 
@@ -158,11 +152,27 @@ public class SessionEventsHandler {
 			}
 		}
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM, participant.getParticipantPublicId());
-		result.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getCreatedAt());
+		result.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getActiveAt());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, participant.getFullMetadata());
-		result.addProperty(ProtocolElements.JOINROOM_OPENVIDUSERVERVERSION_PARAM,
+		result.add(ProtocolElements.PARTICIPANTJOINED_VALUE_PARAM, resultArray);
+
+		result.addProperty(ProtocolElements.PARTICIPANTJOINED_SESSION_PARAM, participant.getSessionId());
+		result.addProperty(ProtocolElements.PARTICIPANTJOINED_VERSION_PARAM,
 				openviduBuildConfig.getOpenViduServerVersion());
-		result.add("value", resultArray);
+		if (participant.getToken() != null) {
+			result.addProperty(ProtocolElements.PARTICIPANTJOINED_RECORD_PARAM, participant.getToken().record());
+			if (participant.getToken().getRole() != null) {
+				result.addProperty(ProtocolElements.PARTICIPANTJOINED_ROLE_PARAM,
+						participant.getToken().getRole().name());
+			}
+			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNIP_PARAM, openviduConfig.getCoturnIp());
+			if (participant.getToken().getTurnCredentials() != null) {
+				result.addProperty(ProtocolElements.PARTICIPANTJOINED_TURNUSERNAME_PARAM,
+						participant.getToken().getTurnCredentials().getUsername());
+				result.addProperty(ProtocolElements.PARTICIPANTJOINED_TURNCREDENTIAL_PARAM,
+						participant.getToken().getTurnCredentials().getCredential());
+			}
+		}
 
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
 	}
@@ -306,16 +316,10 @@ public class SessionEventsHandler {
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
 
 		if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
-			lock.lock();
-			try {
-				Recording recording = this.recordingsStarted.remove(session.getSessionId());
-				if (recording != null) {
-					// RECORDER participant is now receiving video from the first publisher
-					this.sendRecordingStartedNotification(session, recording);
-				}
-			} finally {
-				lock.unlock();
-			}
+			recordingsToSendClientEvents.computeIfPresent(session.getSessionId(), (key, value) -> {
+				sendRecordingStartedNotification(session, value);
+				return null;
+			});
 		}
 	}
 
@@ -328,7 +332,7 @@ public class SessionEventsHandler {
 	}
 
 	public void onSendMessage(Participant participant, JsonObject message, Set<Participant> participants,
-			Integer transactionId, OpenViduException error) {
+			String sessionId, Integer transactionId, OpenViduException error) {
 
 		boolean isRpcCall = transactionId != null;
 		if (isRpcCall) {
@@ -339,16 +343,22 @@ public class SessionEventsHandler {
 			}
 		}
 
+		String from = null;
+		String type = null;
+		String data = null;
+
 		JsonObject params = new JsonObject();
 		if (message.has("data")) {
-			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_DATA_PARAM, message.get("data").getAsString());
+			data = message.get("data").getAsString();
+			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_DATA_PARAM, data);
 		}
 		if (message.has("type")) {
-			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_TYPE_PARAM, message.get("type").getAsString());
+			type = message.get("type").getAsString();
+			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_TYPE_PARAM, type);
 		}
 		if (participant != null) {
-			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_FROM_PARAM,
-					participant.getParticipantPublicId());
+			from = participant.getParticipantPublicId();
+			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_FROM_PARAM, from);
 		}
 
 		Set<String> toSet = new HashSet<String>();
@@ -367,6 +377,7 @@ public class SessionEventsHandler {
 
 		if (toSet.isEmpty()) {
 			for (Participant p : participants) {
+				toSet.add(p.getParticipantPublicId());
 				rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
 						ProtocolElements.PARTICIPANTSENDMESSAGE_METHOD, params);
 			}
@@ -389,6 +400,8 @@ public class SessionEventsHandler {
 		if (isRpcCall) {
 			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 		}
+
+		CDR.recordSignalSent(sessionId, from, toSet.toArray(new String[toSet.size()]), type, data);
 	}
 
 	public void onStreamPropertyChanged(Participant participant, Integer transactionId, Set<Participant> participants,
@@ -472,7 +485,7 @@ public class SessionEventsHandler {
 	public void sendRecordingStoppedNotification(Session session, Recording recording, EndReason reason) {
 
 		// Be sure to clean this map (this should return null)
-		this.recordingsStarted.remove(session.getSessionId());
+		recordingsToSendClientEvents.remove(session.getSessionId());
 
 		// Filter participants by roles according to "OPENVIDU_RECORDING_NOTIFICATION"
 		Set<Participant> existingParticipants;
@@ -578,15 +591,37 @@ public class SessionEventsHandler {
 		}
 	}
 
+	public void onVideoData(Participant participant, Integer transactionId, Integer height, Integer width,
+			Boolean videoActive, Boolean audioActive) {
+		participant.setVideoHeight(height);
+		participant.setVideoWidth(width);
+		participant.setVideoActive(videoActive);
+		participant.setAudioActive(audioActive);
+		log.info(
+				"Video data of participant {} was initialized. height:{}, width:{}, isVideoActive: {}, isAudioActive: {}",
+				participant.getParticipantPublicId(), height, width, videoActive, audioActive);
+		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
+	}
+
 	public void closeRpcSession(String participantPrivateId) {
 		this.rpcNotificationService.closeRpcSession(participantPrivateId);
 	}
 
-	public void setRecordingStarted(String sessionId, Recording recording) {
-		this.recordingsStarted.put(sessionId, recording);
+	public void storeRecordingToSendClientEvent(Recording recording) {
+		recordingsToSendClientEvents.put(recording.getSessionId(), recording);
 	}
 
-	private Set<Participant> filterParticipantsByRole(OpenViduRole[] roles, Set<Participant> participants) {
+	public void onNetworkQualityLevelChanged(Session session, JsonObject params) {
+	}
+
+	public void onConnectionPropertyChanged(Participant participant, String property, Object newValue) {
+	}
+
+	public void onMediaServerCrashed(Kms kms, long timeOfKurentoDisconnection) {
+		CDR.recordMediaServerCrashed(kms, null, timeOfKurentoDisconnection);
+	}
+
+	protected Set<Participant> filterParticipantsByRole(OpenViduRole[] roles, Set<Participant> participants) {
 		return participants.stream().filter(part -> {
 			if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(part.getParticipantPublicId())) {
 				return false;

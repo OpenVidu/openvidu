@@ -4,9 +4,9 @@ import {
 } from '@angular/core';
 
 import {
-  OpenVidu, Session, Subscriber, Publisher, Event, VideoInsertMode, StreamEvent, ConnectionEvent,
+  OpenVidu, Session, Subscriber, Publisher, Event, StreamEvent, ConnectionEvent,
   SessionDisconnectedEvent, SignalEvent, RecordingEvent,
-  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, OpenViduError
+  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, ConnectionPropertyChangedEvent, OpenViduError, NetworkQualityLevelChangedEvent
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,
@@ -15,11 +15,11 @@ import {
   MediaMode,
   RecordingMode,
   RecordingLayout,
-  TokenOptions,
+  Connection,
+  ConnectionProperties,
   OpenViduRole,
   RecordingProperties,
   Recording,
-  VideoCodec
 } from 'openvidu-node-client';
 import { MatDialog, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
@@ -28,6 +28,8 @@ import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.co
 import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-dialog/session-properties-dialog.component';
 import { SessionApiDialogComponent } from '../dialogs/session-api-dialog/session-api-dialog.component';
 import { PublisherPropertiesDialogComponent } from '../dialogs/publisher-properties-dialog/publisher-properties-dialog.component';
+import { SessionInfoDialogComponent } from "../dialogs/session-info-dialog/session-info-dialog.component";
+import {ShowCodecDialogComponent} from "../dialogs/show-codec-dialog/show-codec-dialog.component";
 
 
 export interface SessionConf {
@@ -117,6 +119,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     streamCreated: true,
     streamDestroyed: true,
     streamPropertyChanged: true,
+    connectionPropertyChanged: true,
+    networkQualityLevelChanged: true,
     recordingStarted: true,
     recordingStopped: true,
     signal: true,
@@ -130,8 +134,10 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   turnConf = 'auto';
   manualTurnConf: RTCIceServer = { urls: [] };
   customToken: string;
-  tokenOptions: TokenOptions = {
+  forcePublishing: boolean;
+  connectionProperties: ConnectionProperties = {
     role: OpenViduRole.PUBLISHER,
+    record: true,
     kurentoOptions: {
       videoMaxRecvBandwidth: 1000,
       videoMinRecvBandwidth: 300,
@@ -143,6 +149,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   events: OpenViduEvent[] = [];
 
+  republishPossible: boolean = false;
   openviduError: any;
 
   constructor(
@@ -189,22 +196,21 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     this.clientData = 'TestClient';
   }
 
-  joinSession(): void {
-
+  async joinSession(): Promise<void> {
     if (this.session) {
       this.leaveSession();
     }
-
+    const sessionId = !!this.customToken ? this.getSessionIdFromToken(this.customToken) : this.sessionName;
+    await this.initializeNodeClient(sessionId);
     if (!!this.customToken) {
       this.joinSessionShared(this.customToken);
     } else {
-      this.getToken().then(token => {
-        this.joinSessionShared(token);
-      });
+      const connection: Connection = await this.createConnection();
+      this.joinSessionShared(connection.token);
     }
   }
 
-  private joinSessionShared(token): void {
+  private joinSessionShared(token: string): void {
 
     this.OV = new OpenVidu();
 
@@ -223,6 +229,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       streamCreated: false,
       streamDestroyed: false,
       streamPropertyChanged: false,
+      connectionPropertyChanged: false,
+      networkQualityLevelChanged: false,
       recordingStarted: false,
       recordingStopped: false,
       signal: false,
@@ -236,7 +244,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       .then(() => {
         this.changeDetector.detectChanges();
 
-        if (this.publishTo && this.session.capabilities.publish) {
+        if (this.publishTo && this.session.capabilities.publish || this.forcePublishing) {
           // this.asyncInitPublisher();
           this.syncInitPublisher();
         }
@@ -372,6 +380,24 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       }
     }
 
+    if (this.sessionEvents.connectionPropertyChanged !== oldValues.connectionPropertyChanged || firstTime) {
+      this.session.off('connectionPropertyChanged');
+      if (this.sessionEvents.connectionPropertyChanged) {
+        this.session.on('connectionPropertyChanged', (event: ConnectionPropertyChangedEvent) => {
+          this.updateEventList('connectionPropertyChanged', event.changedProperty + ' [' + event.newValue + ']', event);
+        });
+      }
+    }
+
+    if (this.sessionEvents.networkQualityLevelChanged !== oldValues.networkQualityLevelChanged || firstTime) {
+      this.session.off('networkQualityLevelChanged');
+      if (this.sessionEvents.networkQualityLevelChanged) {
+        this.session.on('networkQualityLevelChanged', (event: NetworkQualityLevelChangedEvent) => {
+          this.updateEventList('networkQualityLevelChanged', event.connection.connectionId + ' [new:' + event.newValue + ',old:' + event.oldValue + ']', event);
+        });
+      }
+    }
+
     if (this.sessionEvents.connectionCreated !== oldValues.connectionCreated || firstTime) {
       this.session.off('connectionCreated');
       if (this.sessionEvents.connectionCreated) {
@@ -495,9 +521,19 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.publisher.subscribeToRemote();
     }
 
-    this.session.publish(this.publisher).catch((error: OpenViduError) => {
+    this.session.publish(this.publisher).then(() => {
+      this.republishPossible = false;
+    }).catch((error: OpenViduError) => {
       console.error(error);
+      if (!error.name) {
+        alert(error);
+      } else {
+        alert(error.name + ": " + error.message);
+      }
+
+      this.republishPossible = true;
       this.session.unpublish(this.publisher);
+      delete this.publisher;
     });
   }
 
@@ -560,7 +596,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         turnConf: this.turnConf,
         manualTurnConf: this.manualTurnConf,
         customToken: this.customToken,
-        tokenOptions: this.tokenOptions
+        forcePublishing: this.forcePublishing,
+        connectionProperties: this.connectionProperties,
       },
       width: '450px'
     });
@@ -574,7 +611,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         this.turnConf = result.turnConf;
         this.manualTurnConf = result.manualTurnConf;
         this.customToken = result.customToken;
-        this.tokenOptions = result.tokenOptions;
+        this.forcePublishing = result.forcePublishing;
+        this.connectionProperties = result.connectionProperties;
       }
       document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
     });
@@ -594,7 +632,10 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
             customLayout: this.sessionProperties.defaultCustomLayout,
             resolution: '1920x1080',
             hasAudio: true,
-            hasVideo: true
+            hasVideo: true,
+            mediaNode: {
+              id: ''
+            }
           }
       },
       width: '425px',
@@ -619,6 +660,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       streamCreated: this.sessionEvents.streamCreated,
       streamDestroyed: this.sessionEvents.streamDestroyed,
       streamPropertyChanged: this.sessionEvents.streamPropertyChanged,
+      connectionPropertyChanged: this.sessionEvents.connectionPropertyChanged,
+      networkQualityLevelChanged: this.sessionEvents.networkQualityLevelChanged,
       recordingStarted: this.sessionEvents.recordingStarted,
       recordingStopped: this.sessionEvents.recordingStopped,
       signal: this.sessionEvents.signal,
@@ -651,6 +694,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         streamCreated: result.streamCreated,
         streamDestroyed: result.streamDestroyed,
         streamPropertyChanged: result.streamPropertyChanged,
+        connectionPropertyChanged: result.connectionPropertyChanged,
+        networkQualityLevelChanged: result.networkQualityLevelChanged,
         recordingStarted: result.recordingStarted,
         recordingStopped: result.recordingStopped,
         signal: result.signal,
@@ -679,16 +724,23 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  getToken(): Promise<string> {
+  openSessionInfo() {
+    this.dialog.open(SessionInfoDialogComponent, {
+      data: {
+        sessionAPI: this.sessionAPI
+      },
+      width: '450px'
+    });
+  }
+
+  async initializeNodeClient(sessionId: string): Promise<any> {
     this.OV_NodeClient = new OpenViduAPI(this.openviduUrl, this.openviduSecret);
-    if (!this.sessionProperties.customSessionId) {
-      this.sessionProperties.customSessionId = this.sessionName;
-    }
-    return this.OV_NodeClient.createSession(this.sessionProperties)
-      .then(session_NodeClient => {
-        this.sessionAPI = session_NodeClient;
-        return session_NodeClient.generateToken({ role: this.tokenOptions.role, kurentoOptions: this.tokenOptions.kurentoOptions });
-      });
+    this.sessionProperties.customSessionId = sessionId;
+    this.sessionAPI = await this.OV_NodeClient.createSession(this.sessionProperties);
+  }
+
+  async createConnection(): Promise<Connection> {
+    return this.sessionAPI.createConnection(this.connectionProperties);
   }
 
   updateEventFromChild(event: OpenViduEvent) {
@@ -715,6 +767,21 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     return (this.publisherProperties.videoSource === undefined ||
       typeof this.publisherProperties.videoSource === 'string' &&
       this.publisherProperties.videoSource !== 'screen');
+  }
+
+  republishAfterError() {
+    this.syncInitPublisher();
+  }
+
+  private getSessionIdFromToken(token: string): string {
+    const queryParams = decodeURI(token.split('?')[1])
+      .split('&')
+      .map(param => param.split('='))
+      .reduce((values, [key, value]) => {
+        values[key] = value
+        return values
+      }, {});
+    return queryParams['sessionId'];
   }
 
 }

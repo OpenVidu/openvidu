@@ -34,14 +34,18 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.kurento.jsonrpc.JsonUtils;
@@ -58,6 +62,7 @@ import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.cdr.CDREventName;
 import io.openvidu.server.config.Dotenv.DotenvFormatException;
 import io.openvidu.server.recording.RecordingNotification;
+import io.openvidu.server.rest.RequestMappings;
 
 @Component
 public class OpenviduConfig {
@@ -103,7 +108,7 @@ public class OpenviduConfig {
 
 	private List<String> userConfigProps;
 
-	private Map<String, ?> propertiesSource;
+	protected Map<String, ?> propertiesSource;
 
 	@Autowired
 	protected Environment env;
@@ -130,6 +135,8 @@ public class OpenviduConfig {
 	private RecordingNotification openviduRecordingNotification;
 
 	private String openviduRecordingCustomLayout;
+
+	private boolean openviduRecordingComposedBasicauth;
 
 	private String openviduRecordingVersion;
 
@@ -243,6 +250,10 @@ public class OpenviduConfig {
 		return openViduRecordingDebug;
 	}
 
+	public boolean isRecordingComposedExternal() {
+		return false;
+	}
+
 	public String getOpenViduRecordingPath() {
 		return this.openviduRecordingPath;
 	}
@@ -257,6 +268,10 @@ public class OpenviduConfig {
 
 	public String getOpenviduRecordingCustomLayout() {
 		return this.openviduRecordingCustomLayout;
+	}
+
+	public boolean isOpenviduRecordingComposedBasicauth() {
+		return this.openviduRecordingComposedBasicauth;
 	}
 
 	public String getOpenViduRecordingVersion() {
@@ -317,6 +332,14 @@ public class OpenviduConfig {
 
 	public int getSessionGarbageThreshold() {
 		return openviduSessionsGarbageThreshold;
+	}
+
+	public VideoCodec getOpenviduForcedCodec() {
+		return openviduForcedCodec;
+	}
+
+	public boolean isOpenviduAllowingTranscoding() {
+		return openviduAllowTranscoding;
 	}
 
 	public String getDotenvPath() {
@@ -380,7 +403,7 @@ public class OpenviduConfig {
 	}
 
 	public String getOpenViduFrontendDefaultPath() {
-		return "dashboard";
+		return RequestMappings.FRONTEND_CE;
 	}
 
 	// Properties management methods
@@ -488,7 +511,8 @@ public class OpenviduConfig {
 
 		coturnRedisConnectTimeout = getValue("COTURN_REDIS_CONNECT_TIMEOUT");
 
-		openviduSecret = asNonEmptyString("OPENVIDU_SECRET");
+		openviduSecret = asNonEmptyAlphanumericString("OPENVIDU_SECRET",
+				"Cannot be empty and must contain only alphanumeric characters [a-zA-Z0-9], hypens (\"-\") and underscores (\"_\")");
 
 		openviduCdr = asBoolean("OPENVIDU_CDR");
 		openviduCdrPath = openviduCdr ? asWritableFileSystemPath("OPENVIDU_CDR_PATH")
@@ -501,6 +525,7 @@ public class OpenviduConfig {
 		openviduRecordingPublicAccess = asBoolean("OPENVIDU_RECORDING_PUBLIC_ACCESS");
 		openviduRecordingAutostopTimeout = asNonNegativeInteger("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT");
 		openviduRecordingCustomLayout = asFileSystemPath("OPENVIDU_RECORDING_CUSTOM_LAYOUT");
+		openviduRecordingComposedBasicauth = asBoolean("OPENVIDU_RECORDING_COMPOSED_BASICAUTH");
 		openviduRecordingVersion = asNonEmptyString("OPENVIDU_RECORDING_VERSION");
 		openviduRecordingComposedUrl = asOptionalURL("OPENVIDU_RECORDING_COMPOSED_URL");
 		checkOpenviduRecordingNotification();
@@ -513,9 +538,9 @@ public class OpenviduConfig {
 		openviduSessionsGarbageInterval = asNonNegativeInteger("OPENVIDU_SESSIONS_GARBAGE_INTERVAL");
 		openviduSessionsGarbageThreshold = asNonNegativeInteger("OPENVIDU_SESSIONS_GARBAGE_THRESHOLD");
 
-		openviduForcedCodec = asEnumValue("OPENVIDU_FORCED_CODEC", VideoCodec.class);
-		openviduAllowTranscoding = asBoolean("OPENVIDU_ALLOW_TRANSCODING");
-		
+		openviduForcedCodec = asEnumValue("OPENVIDU_STREAMS_FORCED_VIDEO_CODEC", VideoCodec.class);
+		openviduAllowTranscoding = asBoolean("OPENVIDU_STREAMS_ALLOW_TRANSCODING");
+
 		kmsUrisList = checkKmsUris();
 
 		checkCoturnIp();
@@ -748,6 +773,17 @@ public class OpenviduConfig {
 		}
 	}
 
+	protected String asNonEmptyAlphanumericString(String property, String errorMessage) {
+		final String REGEX = "^[a-zA-Z0-9_-]+$";
+		String stringValue = getValue(property);
+		if (stringValue != null && !stringValue.isEmpty() && stringValue.matches(REGEX)) {
+			return stringValue;
+		} else {
+			addError(property, errorMessage);
+			return null;
+		}
+	}
+
 	protected String asOptionalString(String property) {
 		return getValue(property);
 	}
@@ -881,9 +917,28 @@ public class OpenviduConfig {
 		}
 	}
 
+	protected Map<String, String> asOptionalStringMap(String property) {
+		Map<String, String> map = new HashMap<>();
+		String str = getValue(property);
+		if (str != null && !str.isEmpty()) {
+			try {
+				Gson gson = new Gson();
+				JsonObject jsonObject = gson.fromJson(str, JsonObject.class);
+				for (Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+					map.put(entry.getKey(), entry.getValue().getAsString());
+				}
+				return map;
+			} catch (JsonSyntaxException e) {
+				addError(property, "Is not a valid map of strings. " + e.getMessage());
+				return map;
+			}
+		}
+		return map;
+	}
+
 	public URI checkWebsocketUri(String uri) throws Exception {
 		try {
-			if (!uri.startsWith("ws://") || uri.startsWith("wss://")) {
+			if (!StringUtils.startsWithAny(uri, "ws://", "wss://")) {
 				throw new Exception("WebSocket protocol not found");
 			}
 			String parsedUri = uri.replaceAll("^ws://", "http://").replaceAll("^wss://", "https://");

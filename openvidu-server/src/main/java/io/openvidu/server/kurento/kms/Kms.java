@@ -21,9 +21,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.kurento.client.KurentoClient;
@@ -36,6 +37,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import io.openvidu.server.kurento.core.KurentoSession;
+import io.openvidu.server.utils.QuarantineKiller;
 
 /**
  * Abstraction of a KMS instance: an object of this class corresponds to a KMS
@@ -57,15 +59,16 @@ public class Kms {
 	private String ip;
 	private KurentoClient client;
 	private LoadManager loadManager;
+	private QuarantineKiller quarantineKiller;
 
 	private AtomicBoolean isKurentoClientConnected = new AtomicBoolean(false);
 	private AtomicLong timeOfKurentoClientConnection = new AtomicLong(0);
 	private AtomicLong timeOfKurentoClientDisconnection = new AtomicLong(0);
 
 	private Map<String, KurentoSession> kurentoSessions = new ConcurrentHashMap<>();
-	private AtomicInteger activeRecordings = new AtomicInteger(0);
+	private Map<String, String> activeRecordings = new ConcurrentHashMap<>();
 
-	public Kms(KmsProperties props, LoadManager loadManager) {
+	public Kms(KmsProperties props, LoadManager loadManager, QuarantineKiller quarantineKiller) {
 		this.id = props.getId();
 		this.uri = props.getUri();
 
@@ -79,6 +82,7 @@ public class Kms {
 		this.ip = url.getHost();
 
 		this.loadManager = loadManager;
+		this.quarantineKiller = quarantineKiller;
 	}
 
 	public void setKurentoClient(KurentoClient client) {
@@ -145,16 +149,25 @@ public class Kms {
 		this.kurentoSessions.remove(sessionId);
 	}
 
-	public AtomicInteger getActiveRecordings() {
-		return this.activeRecordings;
+	public synchronized Set<Entry<String, String>> getActiveRecordings() {
+		return this.activeRecordings.entrySet();
+	}
+
+	public synchronized void incrementActiveRecordings(String recordingId, String sessionId) {
+		this.activeRecordings.put(recordingId, sessionId);
+	}
+
+	public synchronized void decrementActiveRecordings(String recordingId) {
+		this.activeRecordings.remove(recordingId);
+		this.quarantineKiller.dropMediaNode(this.id);
 	}
 
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", this.id);
+		json.addProperty("object", "mediaNode");
 		json.addProperty("ip", this.ip);
 		json.addProperty("uri", this.uri);
-
 		final boolean connected = this.isKurentoClientConnected();
 		json.addProperty("connected", connected);
 		json.addProperty("connectionTime", this.getTimeOfKurentoClientConnection());
@@ -164,16 +177,24 @@ public class Kms {
 		return json;
 	}
 
-	public JsonObject toJsonExtended(boolean withSessions, boolean withExtraInfo) {
+	public JsonObject toJsonExtended(boolean withSessions, boolean withRecordings, boolean withExtraInfo) {
 
 		JsonObject json = this.toJson();
 
 		if (withSessions) {
 			JsonArray sessions = new JsonArray();
 			for (KurentoSession session : this.kurentoSessions.values()) {
-				sessions.add(session.toJson());
+				sessions.add(session.toJson(false, false));
 			}
 			json.add("sessions", sessions);
+		}
+
+		if (withRecordings) {
+			JsonArray activeRecordingsJson = new JsonArray();
+			for (String recordingId : this.activeRecordings.keySet()) {
+				activeRecordingsJson.add(recordingId);
+			}
+			json.add("recordingIds", activeRecordingsJson);
 		}
 
 		if (withExtraInfo) {

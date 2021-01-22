@@ -1,14 +1,34 @@
-output:
-  elasticsearch:
-    hosts: ["${OPENVIDU_SERVER_PRO_IP}:9200"]
 metricbeat.modules:
   - module: system
-    metricsets: [cpu]
-    enabled: true
-    period: ${OPENVIDU_PRO_CLUSTER_LOAD_INTERVAL}s
+    metricsets:
+      - cpu
+        #- diskio
+      - memory
+      - network
+      - filesystem
+      - fsstat
+      #- process
+      - process_summary
+      - uptime
+    filesystem.ignore_types: [nfs, smbfs, autofs, devtmpfs, devpts, hugetlbfs, tmpfs, sysfs, securityfs, cgroup2, cgroup, pstore, debugfs, configfs, fusectl, proc, fuse.lxcfs, squashfs]
     processes: ['.*']
+    #    process.include_top_n:
+    #      by_cpu: 2
+    #      by_memory: 2
+    processors:
+      - drop_event:
+           when:
+              or:
+                - regexp:
+                      system.network.name: '^(veth|lo|docker|br-)($|)'
+                - regexp:
+                      system.filesystem.mount_point: '^/(sys|cgroup|proc|dev|etc|host)($|/)'
+                - regexp:
+                      system.filesystem.mount_point: '^/hostfs/(sys|cgroup|proc|dev|etc|host)($|/)'
+    enabled: true
+    period: ${OPENVIDU_PRO_CLUSTER_LOAD_INTERVAL}0s
     cpu.metrics: [normalized_percentages]
-fields: {ip: "${MEDIA_NODE_IP}"}
+fields: {ip: "${MEDIA_NODE_IP}", cluster-id: "${CLUSTER_ID}"}
 pipeline:
   queue.mem.events: 0
 setup.ilm.enabled: false

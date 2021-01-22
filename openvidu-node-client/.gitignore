@@ -46,3 +46,5 @@ Thumbs.db
 
 docs/
 lib/
+
+*.tgz

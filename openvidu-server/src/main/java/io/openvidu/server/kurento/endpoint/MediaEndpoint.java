@@ -54,11 +54,11 @@ import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.kurento.core.KurentoMediaOptions;
 import io.openvidu.server.kurento.core.KurentoParticipant;
-import io.openvidu.server.kurento.core.KurentoTokenOptions;
 
 /**
  * {@link Endpoint} wrapper. Can be based on WebRtcEndpoint (that supports
@@ -129,7 +129,7 @@ public abstract class MediaEndpoint {
 
 		this.openviduConfig = openviduConfig;
 
-		KurentoTokenOptions kurentoTokenOptions = this.owner.getToken().getKurentoTokenOptions();
+		KurentoOptions kurentoTokenOptions = this.owner.getToken().getKurentoOptions();
 		if (kurentoTokenOptions != null) {
 			this.maxRecvKbps = kurentoTokenOptions.getVideoMaxRecvBandwidth() != null
 					? kurentoTokenOptions.getVideoMaxRecvBandwidth()
@@ -364,6 +364,9 @@ public abstract class MediaEndpoint {
 
 			if (!mediaOptions.adaptativeBitrate) {
 				playerBuilder = playerBuilder.useEncodedMedia();
+			}
+			if (mediaOptions.networkCache != null) {
+				playerBuilder = playerBuilder.withNetworkCache(mediaOptions.networkCache);
 			}
 
 			playerBuilder.buildAsync(new Continuation<PlayerEndpoint>() {

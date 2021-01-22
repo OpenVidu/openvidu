@@ -21,7 +21,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -37,13 +39,20 @@ public class CommandExecutor {
 	public static String execCommand(long msTimeout, String... command) throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(command);
 		processBuilder.redirectErrorStream(true);
-		return commonExecCommand(msTimeout, processBuilder);
+		return commonExecCommand(msTimeout, processBuilder, true).get(0);
+	}
+
+	public static List<String> execCommandReturnList(long msTimeout, String... command)
+			throws IOException, InterruptedException {
+		ProcessBuilder processBuilder = new ProcessBuilder(command);
+		processBuilder.redirectErrorStream(true);
+		return commonExecCommand(msTimeout, processBuilder, false);
 	}
 
 	public static String execCommandRedirectError(long msTimeout, File errorOutputFile, String... command)
 			throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(command).redirectError(errorOutputFile);
-		return commonExecCommand(msTimeout, processBuilder);
+		return commonExecCommand(msTimeout, processBuilder, true).get(0);
 	}
 
 	public static void execCommandRedirectStandardOutputAndError(long msTimeout, File standardOutputFile,
@@ -59,11 +68,11 @@ public class CommandExecutor {
 		}
 	}
 
-	private static String commonExecCommand(long msTimeout, ProcessBuilder processBuilder)
+	private static List<String> commonExecCommand(long msTimeout, ProcessBuilder processBuilder, boolean singleString)
 			throws IOException, InterruptedException {
 		Process process = processBuilder.start();
 		StringBuilder processOutput = new StringBuilder();
-		String output;
+		List<String> outputList = new ArrayList<>();
 		InputStreamReader inputStreamReader = null;
 		BufferedReader processOutputReader = null;
 		try {
@@ -71,9 +80,15 @@ public class CommandExecutor {
 			processOutputReader = new BufferedReader(inputStreamReader);
 			String readLine;
 			while ((readLine = processOutputReader.readLine()) != null) {
-				processOutput.append(readLine + System.lineSeparator());
+				if (singleString) {
+					processOutput.append(readLine + System.lineSeparator());
+				} else {
+					outputList.add(readLine);
+				}
 			}
-
+			if (singleString) {
+				outputList = Arrays.asList(processOutput.toString().trim());
+			}
 			if (!process.waitFor(msTimeout, TimeUnit.MILLISECONDS)) {
 				log.error("Command {} did not receive a response in {} ms",
 						Arrays.toString(processBuilder.command().toArray()), msTimeout);
@@ -81,7 +96,6 @@ public class CommandExecutor {
 				log.error(errorMsg);
 				throw new IOException(errorMsg);
 			}
-			output = processOutput.toString().trim();
 		} finally {
 			if (inputStreamReader != null) {
 				inputStreamReader.close();
@@ -90,7 +104,7 @@ public class CommandExecutor {
 				processOutputReader.close();
 			}
 		}
-		return output;
+		return outputList;
 	}
 
 	public static String gatherLinuxHostInformation() throws IOException, InterruptedException {

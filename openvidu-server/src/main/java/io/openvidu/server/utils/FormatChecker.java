@@ -30,8 +30,15 @@ public class FormatChecker {
 	}
 
 	public boolean isValidCustomSessionId(String customSessionId) {
-		// Alphanumeric string
-		return customSessionId.matches("[a-zA-Z0-9_-]+");
+		return isValidAlphanumeric(customSessionId);
+	}
+
+	public boolean isValidRecordingName(String recodingName) {
+		return isValidAlphanumeric(recodingName);
+	}
+
+	private boolean isValidAlphanumeric(String str) {
+		return str.matches("[a-zA-Z0-9_-]+");
 	}
 
 }

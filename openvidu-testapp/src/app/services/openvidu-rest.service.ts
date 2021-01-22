@@ -29,7 +29,7 @@ export class OpenviduRestService {
     });
   }
 
-  getToken(openviduURL: string, openviduSecret: string, sessionId: string, role: string, serverData: string): Promise<string> {
+  getToken(sessionId: string, role: string, serverData: string): Promise<string> {
     const session: SessionAPI = this.sessionIdSession.get(sessionId);
     const OVRole: OpenViduRoleAPI = OpenViduRoleAPI[role];
 

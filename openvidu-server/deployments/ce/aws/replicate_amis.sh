@@ -5,14 +5,12 @@ set -eu -o pipefail
 #
 # Input parameters:
 #
-# OV_AMI_NAME   OpenVidu AMI Name
-# OV_AMI_ID     OpenVidu AMI ID
+# OV_AMI_NAME       OpenVidu AMI Name
+# OV_AMI_ID         OpenVidu AMI ID
+# UPDATE_CF         Boolean, true if you want to update CF template by OPENVIDU_VERSION
+# OPENVIDU_VERSION  OpenVidu Version of the CF you want to update. It will update CF-OpenVidu-OPENVIDU_VERSION 
 
 export AWS_DEFAULT_REGION=eu-west-1
-if [ ${CF_OVP_TARGET} == "market" ]; then
-    export AWS_ACCESS_KEY_ID=${NAEVA_AWS_ACCESS_KEY_ID}
-    export AWS_SECRET_ACCESS_KEY=${NAEVA_AWS_SECRET_ACCESS_KEY}
-fi
 
 echo "Making original AMI public"
 aws ec2 wait image-exists --image-ids ${OV_AMI_ID}
@@ -71,13 +69,54 @@ do
     ITER=$(expr $ITER + 1)
 done
 
+# Print and generate replicated AMIS
+REPLICATED_AMIS_FILE="replicated_amis.yaml"
 echo "OV IDs"
+{
+    echo "#start_mappings"
+    echo "Mappings:"
+    echo "  OVAMIMAP:"
+    ITER=0
+    for i in "${AMI_IDS[@]}"
+    do
+        AMI_ID=${AMI_IDS[$ITER]}
+        REGION=${REGIONS[$ITER]}
+        echo "    ${REGION}:"
+        echo "      AMI: ${AMI_ID}"
+        ITER=$(expr $ITER + 1)
+    done
+    echo "#end_mappings"
+    echo ""
+} > "${REPLICATED_AMIS_FILE}" 2>&1
+
+# Print replicated AMIs
+cat "${REPLICATED_AMIS_FILE}"
+
+if [[ ${UPDATE_CF} == "true" ]]; then
+    if [[ ! -z ${OPENVIDU_VERSION} ]]; then
+        # Download s3 file
+        aws s3 cp s3://aws.openvidu.io/CF-OpenVidu-${OPENVIDU_VERSION}.yaml CF-OpenVidu-${OPENVIDU_VERSION}.yaml
+        sed -e "/^#end_mappings/r ${REPLICATED_AMIS_FILE}" -e '/^#start_mappings/,/^#end_mappings/d' -i CF-OpenVidu-${OPENVIDU_VERSION}.yaml
+        aws s3 cp CF-OpenVidu-${OPENVIDU_VERSION}.yaml s3://aws.openvidu.io/CF-OpenVidu-${OPENVIDU_VERSION}.yaml --acl public-read
+    fi
+fi
+
+# Print AMI_LIST for delete_amis.sh
+AMI_LIST=""
 ITER=0
 for i in "${AMI_IDS[@]}"
 do
     AMI_ID=${AMI_IDS[$ITER]}
     REGION=${REGIONS[$ITER]}
-    echo "    ${REGION}:"
-    echo "      AMI: ${AMI_ID}"
+    if [[ ${ITER} -eq  0 ]]; then
+        AMI_LIST="${REGION}:${AMI_ID}"
+    else 
+        AMI_LIST="${AMI_LIST},${REGION}:${AMI_ID}"
+    fi
     ITER=$(expr $ITER + 1)
 done
+echo "AMI_LIST: ${AMI_LIST}"
+
+# Cleaning the house
+rm "${REPLICATED_AMIS_FILE}"
+rm CF-OpenVidu-${OPENVIDU_VERSION}.yaml

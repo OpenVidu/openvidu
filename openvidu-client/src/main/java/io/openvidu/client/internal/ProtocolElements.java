@@ -98,6 +98,15 @@ public class ProtocolElements {
 	public static final String STREAMPROPERTYCHANGED_NEWVALUE_PARAM = "newValue";
 	public static final String STREAMPROPERTYCHANGED_REASON_PARAM = "reason";
 
+	public static final String CONNECTIONPERTYCHANGED_METHOD = "connectionPropertyChanged";
+	public static final String CONNECTIONROPERTYCHANGED_PROPERTY_PARAM = "property";
+	public static final String CONNECTIONPROPERTYCHANGED_NEWVALUE_PARAM = "newValue";
+
+	public static final String NETWORKQUALITYLEVELCHANGED_METHOD = "networkQualityLevelChanged";
+	public static final String NETWORKQUALITYCHANGED_CONNECTIONID_PARAM = "connectionId";
+	public static final String NETWORKQUALITYCHANGED_NEWVALUE_PARAM = "newValue";
+	public static final String NETWORKQUALITYCHANGED_OLDVALUE_PARAM = "oldValue";
+
 	public static final String FORCEDISCONNECT_METHOD = "forceDisconnect";
 	public static final String FORCEDISCONNECT_CONNECTIONID_PARAM = "connectionId";
 
@@ -127,12 +136,22 @@ public class ProtocolElements {
 	public static final String RECONNECTSTREAM_STREAM_PARAM = "stream";
 	public static final String RECONNECTSTREAM_SDPSTRING_PARAM = "sdpString";
 
+	public static final String VIDEODATA_METHOD = "videoData";
+
 	// ---------------------------- SERVER RESPONSES & EVENTS -----------------
 
 	public static final String PARTICIPANTJOINED_METHOD = "participantJoined";
 	public static final String PARTICIPANTJOINED_USER_PARAM = "id";
 	public static final String PARTICIPANTJOINED_CREATEDAT_PARAM = "createdAt";
 	public static final String PARTICIPANTJOINED_METADATA_PARAM = "metadata";
+	public static final String PARTICIPANTJOINED_VALUE_PARAM = "value";
+	public static final String PARTICIPANTJOINED_SESSION_PARAM = "session";
+	public static final String PARTICIPANTJOINED_VERSION_PARAM = "version";
+	public static final String PARTICIPANTJOINED_RECORD_PARAM = "record";
+	public static final String PARTICIPANTJOINED_ROLE_PARAM = "role";
+	public static final String PARTICIPANTJOINED_COTURNIP_PARAM = "coturnIp";
+	public static final String PARTICIPANTJOINED_TURNUSERNAME_PARAM = "turnUsername";
+	public static final String PARTICIPANTJOINED_TURNCREDENTIAL_PARAM = "turnCredential";
 
 	public static final String PARTICIPANTLEFT_METHOD = "participantLeft";
 	public static final String PARTICIPANTLEFT_NAME_PARAM = "connectionId";

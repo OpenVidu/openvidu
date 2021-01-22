@@ -28,14 +28,18 @@ import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPro
 import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
-
-import platform = require('platform');
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
+import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 
 /**
  * @hidden
  */
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
+
+/**
+ * @hidden
+ */
+let platform: PlatformUtils;
 
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
@@ -95,10 +99,32 @@ export class Publisher extends StreamManager {
 
         // TODO: CLEAN 2.15.0 LEGACY CODE
         // THIS LINE:
-        super(!openvidu.openviduServerVersion ? /*2.15.0 or 2.16.0 NOT CONNECTED (LEGACY)*/ new StreamLEGACY((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }) : /*2.16.0 CONNECTED (NORMAL API)*/ new Stream(openvidu.session, { publisherProperties: properties, mediaConstraints: {} }), targEl);
+        super(
+            !openvidu.openviduServerVersion
+                // 2.15.0 or 2.16.0 NOT CONNECTED (LEGACY)
+                ? new StreamLEGACY(
+                      !!openvidu.session
+                          ? openvidu.session
+                          : new Session(openvidu),
+                      { publisherProperties: properties, mediaConstraints: {} }
+                  )
+                // 2.16.0 CONNECTED (NORMAL API)
+                : new Stream(openvidu.session, {
+                      publisherProperties: properties,
+                      mediaConstraints: {},
+                  }),
+            targEl
+        );
         // SHOULD GET BACK TO:
-        // super(new Stream((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl);
+        // super(
+        //     new Stream(
+        //         !!openvidu.session ? openvidu.session : new Session(openvidu),
+        //         { publisherProperties: properties, mediaConstraints: {} }
+        //     ),
+        //     targEl
+        // );
 
+        platform = PlatformUtils.getInstance();
         this.properties = properties;
         this.openvidu = openvidu;
 
@@ -130,7 +156,7 @@ export class Publisher extends StreamManager {
      */
     publishAudio(value: boolean): void {
         if (this.stream.audioActive !== value) {
-            const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote : this.stream.getMediaStream();
+            const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
             affectedMediaStream.getAudioTracks().forEach((track) => {
                 track.enabled = value;
             });
@@ -149,6 +175,7 @@ export class Publisher extends StreamManager {
                         } else {
                             this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'audioActive', value, !value, 'publishAudio')]);
                             this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'audioActive', value, !value, 'publishAudio')]);
+                            this.session.sendVideoData(this.stream.streamManager);
                         }
                     });
             }
@@ -177,7 +204,7 @@ export class Publisher extends StreamManager {
      */
     publishVideo(value: boolean): void {
         if (this.stream.videoActive !== value) {
-            const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote : this.stream.getMediaStream();
+            const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
             affectedMediaStream.getVideoTracks().forEach((track) => {
                 track.enabled = value;
             });
@@ -196,6 +223,7 @@ export class Publisher extends StreamManager {
                         } else {
                             this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoActive', value, !value, 'publishVideo')]);
                             this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoActive', value, !value, 'publishVideo')]);
+                            this.session.sendVideoData(this.stream.streamManager);
                         }
                     });
             }
@@ -305,7 +333,7 @@ export class Publisher extends StreamManager {
     replaceTrack(track: MediaStreamTrack): Promise<any> {
 
         const replaceMediaStreamTrack = () => {
-            const mediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote : this.stream.getMediaStream();
+            const mediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
             let removedTrack: MediaStreamTrack;
             if (track.kind === 'video') {
                 removedTrack = mediaStream.getVideoTracks()[0];
@@ -315,6 +343,7 @@ export class Publisher extends StreamManager {
             mediaStream.removeTrack(removedTrack);
             removedTrack.stop();
             mediaStream.addTrack(track);
+            this.session.sendVideoData(this.stream.streamManager, 5, true, 5);
         }
 
         return new Promise((resolve, reject) => {
@@ -404,7 +433,7 @@ export class Publisher extends StreamManager {
                 if (this.stream.isSendVideo()) {
                     if (!this.stream.isSendScreen()) {
 
-                        if (platform['isIonicIos'] || platform.name === 'Safari') {
+                        if (platform.isIonicIos() || platform.isSafariBrowser()) {
                             // iOS Ionic or Safari. Limitation: cannot set videoDimensions directly, as the videoReference is not loaded
                             // if not added to DOM. Must add it to DOM and wait for videoWidth and videoHeight properties to be defined
 
@@ -440,7 +469,7 @@ export class Publisher extends StreamManager {
                             // Orientation must be checked for mobile devices (width and height are reversed)
                             const { width, height } = this.getVideoDimensions(mediaStream);
 
-                            if ((platform.os!!.family === 'iOS' || platform.os!!.family === 'Android') && (window.innerHeight > window.innerWidth)) {
+                            if (platform.isMobileDevice() && (window.innerHeight > window.innerWidth)) {
                                 // Mobile portrait mode
                                 this.stream.videoDimensions = {
                                     width: height || 0,
@@ -464,8 +493,8 @@ export class Publisher extends StreamManager {
                             };
                             this.screenShareResizeInterval = setInterval(() => {
                                 const firefoxSettings = mediaStream.getVideoTracks()[0].getSettings();
-                                const newWidth = (platform.name === 'Chrome' || platform.name === 'Opera') ? this.videoReference.videoWidth : firefoxSettings.width;
-                                const newHeight = (platform.name === 'Chrome' || platform.name === 'Opera') ? this.videoReference.videoHeight : firefoxSettings.height;
+                                const newWidth = (platform.isChromeBrowser() || platform.isOperaBrowser()) ? this.videoReference.videoWidth : firefoxSettings.width;
+                                const newHeight = (platform.isChromeBrowser() || platform.isOperaBrowser()) ? this.videoReference.videoHeight : firefoxSettings.height;
                                 if (this.stream.isLocalStreamPublished &&
                                     (newWidth !== this.stream.videoDimensions.width ||
                                         newHeight !== this.stream.videoDimensions.height)) {
@@ -488,6 +517,7 @@ export class Publisher extends StreamManager {
                                             } else {
                                                 this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoDimensions', this.stream.videoDimensions, oldValue, 'screenResized')]);
                                                 this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoDimensions', this.stream.videoDimensions, oldValue, 'screenResized')]);
+                                                this.session.sendVideoData(this.stream.streamManager);
                                             }
                                         });
                                 }
@@ -634,7 +664,7 @@ export class Publisher extends StreamManager {
                     startTime = Date.now();
                     this.setPermissionDialogTimer(timeForDialogEvent);
 
-                    if (this.stream.isSendScreen() && navigator.mediaDevices['getDisplayMedia'] && platform.name !== 'Electron') {
+                    if (this.stream.isSendScreen() && navigator.mediaDevices['getDisplayMedia'] && !platform.isElectron()) {
                         navigator.mediaDevices['getDisplayMedia']({ video: true })
                             .then(mediaStream => {
                                 this.openvidu.addAlreadyProvidedTracks(myConstraints, mediaStream);
@@ -683,7 +713,7 @@ export class Publisher extends StreamManager {
     initializeVideoReference(mediaStream: MediaStream) {
         this.videoReference = document.createElement('video');
 
-        if (platform.name === 'Safari') {
+        if (platform.isSafariBrowser()) {
             this.videoReference.setAttribute('playsinline', 'true');
         }
 

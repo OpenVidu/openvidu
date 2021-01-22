@@ -27,16 +27,29 @@
           </mat-select>
         </mat-form-field>
         <mat-form-field *ngIf="this.sessionProperties.defaultOutputMode === 'COMPOSED'">
-          <mat-select placeholder="DefaultRecordingLayout" [(ngModel)]="sessionProperties.defaultRecordingLayout">
+          <mat-select placeholder="DefaultRecordingLayout" [(ngModel)]="sessionProperties.defaultRecordingLayout"
+            id="recording-layout-select">
             <mat-option *ngFor="let enumerator of enumToArray(defaultRecordingLayout)" [value]="enumerator">
-              {{ enumerator }}
+              <span [attr.id]="'option-' + enumerator">{{ enumerator }}</span>
             </mat-option>
           </mat-select>
         </mat-form-field>
         <mat-form-field
           *ngIf="this.sessionProperties.defaultOutputMode === 'COMPOSED' && this.sessionProperties.defaultRecordingLayout === 'CUSTOM'">
           <input matInput placeholder="DefaultCustomLayout" type="text"
-            [(ngModel)]="sessionProperties.defaultCustomLayout">
+            [(ngModel)]="sessionProperties.defaultCustomLayout" id="default-custom-layout-input">
+        </mat-form-field>
+        <div id="allow-transcoding-div">
+          <mat-checkbox class="checkbox-form" [(ngModel)]="sessionProperties.allowTranscoding"
+                        id="allow-transcoding-checkbox">Allow Transcoding</mat-checkbox>
+        </div>
+        <mat-form-field>
+          <mat-select placeholder="ForcedVideoCodec" [(ngModel)]="sessionProperties.forcedVideoCodec"
+                      id="forced-video-codec-select">
+            <mat-option *ngFor="let enumerator of enumToArray(forceVideoCodec)" [value]="enumerator">
+              <span [attr.id]="'option-' + enumerator">{{ enumerator }}</span>
+            </mat-option>
+          </mat-select>
         </mat-form-field>
         <div id="allow-transcoding-div">
           <mat-checkbox class="checkbox-form" [(ngModel)]="sessionProperties.allowTranscoding"
@@ -79,7 +92,7 @@
       <mat-dialog-content>
         <label class="label">Role</label>
         <div id="role-div">
-          <mat-radio-group name="Role" [(ngModel)]="tokenOptions.role">
+          <mat-radio-group name="Role" [(ngModel)]="connectionProperties.role">
             <mat-radio-button id="radio-btn-sub" value="SUBSCRIBER">SUB</mat-radio-button>
             <mat-radio-button id="radio-btn-pub" value="PUBLISHER">PUB</mat-radio-button>
             <mat-radio-button id="radio-btn-mod" value="MODERATOR">MOD</mat-radio-button>
@@ -90,19 +103,19 @@
         <div id="kurento-config-div">
           <mat-form-field style="width: 39%; margin-right: 5px">
             <input matInput placeholder="Max recv" type="number"
-              [(ngModel)]="tokenOptions.kurentoOptions.videoMaxRecvBandwidth">
+              [(ngModel)]="connectionProperties.kurentoOptions.videoMaxRecvBandwidth">
           </mat-form-field>
           <mat-form-field style="width: 39%">
             <input matInput placeholder="Min recv" type="number"
-              [(ngModel)]="tokenOptions.kurentoOptions.videoMinRecvBandwidth">
+              [(ngModel)]="connectionProperties.kurentoOptions.videoMinRecvBandwidth">
           </mat-form-field>
           <mat-form-field style="width: 39%; margin-right: 5px">
             <input matInput placeholder="Max send" type="number"
-              [(ngModel)]="tokenOptions.kurentoOptions.videoMaxSendBandwidth">
+              [(ngModel)]="connectionProperties.kurentoOptions.videoMaxSendBandwidth">
           </mat-form-field>
           <mat-form-field style="width: 39%">
             <input matInput placeholder="Min send" type="number"
-              [(ngModel)]="tokenOptions.kurentoOptions.videoMinSendBandwidth">
+              [(ngModel)]="connectionProperties.kurentoOptions.videoMinSendBandwidth">
           </mat-form-field>
           <mat-chip-list *ngIf="filters.length > 0">
             <mat-chip style="height: 20px" *ngFor="let filterName of filters"
@@ -118,12 +131,24 @@
           </button>
         </div>
 
+        <div id="record-div">
+          <mat-checkbox class="checkbox-form" [(ngModel)]="connectionProperties.record" id="record-checkbox">Record
+          </mat-checkbox>
+        </div>
+
         <label class="label">Token</label>
         <div id="custom-token-div">
           <mat-form-field>
             <input matInput placeholder="Custom token" type="text" [(ngModel)]="customToken">
           </mat-form-field>
         </div>
+
+        <div id="force-publishing-div">
+          <mat-checkbox class="checkbox-form" [(ngModel)]="forcePublishing" id="force-publishing-checkbox">Force
+            publishing
+          </mat-checkbox>
+        </div>
+
       </mat-dialog-content>
     </div>
   </div>
@@ -131,6 +156,6 @@
   <mat-dialog-actions>
     <button id="cancel-btn" mat-button [mat-dialog-close]="undefined">CANCEL</button>
     <button id="save-btn" mat-button
-      [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf, tokenOptions: generateTokenOptions(), customToken: customToken}">SAVE</button>
+      [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf, customToken: customToken, forcePublishing: forcePublishing, connectionProperties: generateConnectionProperties()}">SAVE</button>
   </mat-dialog-actions>
 </div>

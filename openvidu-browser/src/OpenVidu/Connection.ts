@@ -18,7 +18,8 @@
 import { Session } from './Session';
 import { Stream } from './Stream';
 import { StreamLEGACY } from './StreamLEGACY';
-import { ConnectionOptions } from '../OpenViduInternal/Interfaces/Private/ConnectionOptions';
+import { LocalConnectionOptions } from '../OpenViduInternal/Interfaces/Private/LocalConnectionOptions';
+import { RemoteConnectionOptions } from '../OpenViduInternal/Interfaces/Private/RemoteConnectionOptions';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { StreamOptionsServer } from '../OpenViduInternal/Interfaces/Private/StreamOptionsServer';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
@@ -52,14 +53,36 @@ export class Connection {
     data: string;
 
     /**
-     * @hidden
+     * Role of the connection.
+     * - `SUBSCRIBER`: can subscribe to published Streams of other users by calling [[Session.subscribe]]
+     * - `PUBLISHER`: SUBSCRIBER permissions + can publish their own Streams by calling [[Session.publish]]
+     * - `MODERATOR`: SUBSCRIBER + PUBLISHER permissions + can force the unpublishing or disconnection over a third-party Stream or Connection by call [[Session.forceUnpublish]] and [[Session.forceDisconnect]]
+     *
+     * **Only defined for the local connection. In remote connections will be `undefined`**
      */
-    stream: Stream;
+    role: string;
+
+    /**
+     * Whether the streams published by this connection will be recorded or not. This only affects [INDIVIDUAL recording](/en/stable/advanced-features/recording#selecting-streams-to-be-recorded) <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
+     *
+     * **Only defined for the local connection. In remote connections will be `undefined`**
+     */
+    record: boolean;
 
     /**
      * @hidden
      */
-    options: ConnectionOptions | undefined;
+    stream?: Stream;
+
+    /**
+     * @hidden
+     */
+    localOptions: LocalConnectionOptions | undefined;
+
+    /**
+     * @hidden
+     */
+    remoteOptions: RemoteConnectionOptions | undefined;
 
     /**
      * @hidden
@@ -74,23 +97,30 @@ export class Connection {
     /**
      * @hidden
      */
-    constructor(private session: Session, opts?: ConnectionOptions) {
+    constructor(private session: Session, connectionOptions: LocalConnectionOptions | RemoteConnectionOptions) {
         let msg = "'Connection' created ";
-        if (!!opts) {
-            // Connection is remote
-            msg += "(remote) with 'connectionId' [" + opts.id + ']';
-            this.options = opts;
-            this.connectionId = opts.id;
-            this.creationTime = opts.createdAt;
-            if (opts.metadata) {
-                this.data = opts.metadata;
-            }
-            if (opts.streams) {
-                this.initRemoteStreams(opts.streams);
-            }
-        } else {
+        if (!!(<LocalConnectionOptions>connectionOptions).role) {
             // Connection is local
+            this.localOptions = <LocalConnectionOptions>connectionOptions;
+            this.connectionId = this.localOptions.id;
+            this.creationTime = this.localOptions.createdAt;
+            this.data = this.localOptions.metadata;
+            this.rpcSessionId = this.localOptions.sessionId;
+            this.role = this.localOptions.role;
+            this.record = this.localOptions.record;
             msg += '(local)';
+        } else {
+            // Connection is remote
+            this.remoteOptions = <RemoteConnectionOptions>connectionOptions;
+            this.connectionId = this.remoteOptions.id;
+            this.creationTime = this.remoteOptions.createdAt;
+            if (this.remoteOptions.metadata) {
+                this.data = this.remoteOptions.metadata;
+            }
+            if (this.remoteOptions.streams) {
+                this.initRemoteStreams(this.remoteOptions.streams);
+            }
+            msg += "(remote) with 'connectionId' [" + this.remoteOptions.id + ']';
         }
         logger.info(msg);
     }
@@ -103,7 +133,7 @@ export class Connection {
      */
     sendIceCandidate(candidate: RTCIceCandidate): void {
 
-        logger.debug((!!this.stream.outboundStreamOpts ? 'Local' : 'Remote') + 'candidate for' +
+        logger.debug((!!this.stream!.outboundStreamOpts ? 'Local' : 'Remote') + 'candidate for' +
             this.connectionId, candidate);
 
         this.session.openvidu.sendRequest('onIceCandidate', {
@@ -149,7 +179,7 @@ export class Connection {
             this.addStream(stream);
         });
 
-        logger.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + '] is now configured for receiving Streams with options: ', this.stream.inboundStreamOpts);
+        logger.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + '] is now configured for receiving Streams with options: ', this.stream!.inboundStreamOpts);
     }
 
     /**

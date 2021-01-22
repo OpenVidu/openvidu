@@ -1,97 +1,176 @@
 node('container') {
-  sh 'docker rm -f chrome firefox e2e  || true'
+
+  sh 'docker rm -f e2e chrome firefox opera || true'
+  sh 'rm -rf /opt/openvidu/* || true'
+  sh 'wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m -P /opt/openvidu'
+  sh 'wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/fakeaudio.wav -P /opt/openvidu'
+  sh 'wget --directory-prefix=/opt/openvidu/test-layouts/layout1 https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/docker/my-custom-layout/index.html'
+
+  docker.image('openvidu/openvidu-test-e2e:$DISTRO').pull()
   docker.image('selenium/standalone-chrome:latest').pull()
   docker.image('selenium/standalone-firefox:latest').pull()
-  docker.image('selenium/standalone-chrome:latest').withRun('-p 6666:4444 --name chrome --shm-size=1g -v /opt/openvidu:/opt/openvidu') { c ->
-    sh 'rm -rf /opt/openvidu/barcode.* && wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m -P /opt/openvidu'
-    sh 'rm -rf /opt/openvidu/fakeaudio.* && wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/fakeaudio.wav -P /opt/openvidu'
-    docker.image('selenium/standalone-firefox:latest').withRun('-p 6667:4444 --name firefox --shm-size=1g') { d ->
-      def mycontainer = docker.image('openvidu/openvidu-test-e2e:$DISTRO')
-      mycontainer.pull()
-      mycontainer.inside("--name e2e -p 4200:4200 -p 4443:4443 -u root -e MY_UID=0 -v /var/run/docker.sock:/var/run/docker.sock:rw -v /dev/shm:/dev/shm -v /opt/openvidu:/opt/openvidu --privileged") {
-        stage('Preparation') {
-          sh 'rm -rf ~/.m2 || true'
-          sh 'rm -rf openvidu || true'
-          sh 'rm -rf kurento-java || true'
-          sh 'rm -rf /opt/openvidu/recordings/* || true'
-          sh 'git clone https://github.com/OpenVidu/openvidu.git'
-          sh 'cd openvidu && git fetch origin && git checkout $OPENVIDU_COMMIT'
-          sh(script: '''#!/bin/bash
-            if $KURENTO_JAVA_SNAPSHOT ; then
-            git clone https://github.com/Kurento/kurento-java.git
-            cd kurento-java && MVN_VERSION=$(mvn --batch-mode -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
-            cd ../openvidu && mvn --batch-mode versions:set-property -Dproperty=version.kurento -DnewVersion=$MVN_VERSION
-            mvn dependency:get -DrepoUrl=https://maven.openvidu.io/repository/snapshots/ -Dartifact=org.kurento:kurento-client:$MVN_VERSION
-            mvn dependency:get -DrepoUrl=https://maven.openvidu.io/repository/snapshots/ -Dartifact=org.kurento:kurento-jsonrpc-client-jetty:$MVN_VERSION
-            mvn dependency:get -DrepoUrl=https://maven.openvidu.io/repository/snapshots/ -Dartifact=org.kurento:kurento-jsonrpc-server:$MVN_VERSION
-            mvn dependency:get -DrepoUrl=https://maven.openvidu.io/repository/snapshots/ -Dartifact=org.kurento:kurento-test:$MVN_VERSION
-            fi
-        '''.stripIndent())
-          sh(script: '''#!/bin/bash
-            if $KURENTO_MEDIA_SERVER_DEV ; then
-              echo "Upgrading KMS to dev version"
-              sudo apt-get update && sudo apt-get install -y aptitude
-              sudo aptitude remove -y kurento-media-server
-              DISTRO=`lsb_release --codename | cut -f2`
-              sudo echo "deb [arch=amd64] http://ubuntu.openvidu.io/dev $DISTRO kms6" | sudo tee /etc/apt/sources.list.d/kurento.list
-              sudo apt-get update && sudo apt-get --yes -o Dpkg::Options::="--force-confnew" install kurento-media-server
-            fi
-        '''.stripIndent())
-        }
-        stage('OpenVidu parent build') {
-          sh 'cd openvidu/openvidu-java-client && mvn --batch-mode versions:set -DnewVersion=1.0.0-TEST'
-          sh 'cd openvidu && mvn --batch-mode versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=1.0.0-TEST'
-          sh 'cd openvidu && mvn --batch-mode -DskipTests=true clean install'
-        }
-        stage('OpenVidu Browser build') {
-          sh 'cd openvidu/openvidu-browser && npm install --unsafe-perm && npm run build && npm link'
-        }
-        stage('OpenVidu Node Client build') {
-          sh 'cd openvidu/openvidu-node-client && npm install --unsafe-perm && npm run build && npm link'
-        }
-        stage('OpenVidu TestApp build') {
-          sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm link openvidu-browser && npm link openvidu-node-client && export NG_CLI_ANALYTICS=ci && ./node_modules/@angular/cli/bin/ng build --prod'
-        }
-        stage('OpenVidu Server unit tests') {
-          sh 'cd openvidu/openvidu-server && mvn --batch-mode -Dtest=io.openvidu.server.test.unit.*Test test'
-        }
-        stage('OpenVidu Server integration tests') {
-          sh 'cd openvidu/openvidu-server && mvn --batch-mode -Dtest=io.openvidu.server.test.integration.*Test test'
-        }
-        stage('OpenVidu Server build') {
-          sh 'cd openvidu/openvidu-server/src/dashboard && npm install --unsafe-perm && npm link openvidu-browser && export NG_CLI_ANALYTICS=ci && npm run build-prod'
-          sh 'cd openvidu/openvidu-server && mvn --batch-mode clean compile package'
-        }
-        stage ('Environment Launch') {
-          sh 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout openvidu/openvidu-testapp/dist/key.pem -out openvidu/openvidu-testapp/dist/cert.pem'  
-          sh 'cd openvidu/openvidu-testapp/dist && http-server -S -p 4200 &> /testapp.log &'
-          sh '/usr/bin/kurento-media-server &> /kms.log &'
-          sh 'until $(curl --insecure --output /dev/null --silent http://127.0.0.1:8888/kurento); do echo "Waiting for KMS..."; sleep 1; done'
-          sh(script: '''#!/bin/bash
-            if [ "$DOCKER_RECORDING_VERSION" != "default" ]; then
-              echo "Using custom openvidu-recording tag: $DOCKER_RECORDING_VERSION"
-              cd openvidu/openvidu-server/target && java -jar -DDOMAIN_OR_PUBLIC_IP=172.17.0.1 -DOPENVIDU_SECRET=MY_SECRET -DHTTPS_PORT=4443 -DOPENVIDU_RECORDING=true -DOPENVIDU_RECORDING_VERSION=$DOCKER_RECORDING_VERSION -DOPENVIDU_WEBHOOK=true -DOPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook openvidu-server-*.jar &> openvidu-server.log &
-            else
-              echo "Using default openvidu-recording tag"
-              cd openvidu/openvidu-server/target && java -jar -DDOMAIN_OR_PUBLIC_IP=172.17.0.1 -DOPENVIDU_SECRET=MY_SECRET -DHTTPS_PORT=4443 -DOPENVIDU_RECORDING=true -DOPENVIDU_WEBHOOK=true -DOPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook openvidu-server-*.jar &> openvidu-server.log &
-            fi
-          '''.stripIndent())
-          sh 'until $(curl --insecure --output /dev/null --silent --head --fail https://OPENVIDUAPP:MY_SECRET@localhost:4443/); do echo "Waiting for openvidu-server..."; sleep 2; done'
-        }
-        stage ('OpenVidu E2E tests') {
-          try {
-            sh(script: '''#!/bin/bash
-              cd openvidu/openvidu-test-e2e && sudo mvn --batch-mode -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ test
-              if [[ "$?" -ne 0 ]] ; then
-                echo "ERROR RUNNING TESTS"
-                cat openvidu/openvidu-server/target/openvidu-server.log
-              fi
-            '''.stripIndent())
+  docker.image('selenium/standalone-opera:latest').pull()
+
+  docker.image('openvidu/openvidu-test-e2e:$DISTRO').inside('--name e2e -p 4200:4200 -p 4443:4443 -p 5555:5555 -u root -e MY_UID=0 -v /var/run/docker.sock:/var/run/docker.sock:rw -v /dev/shm:/dev/shm -v /opt/openvidu:/opt/openvidu --privileged') {
+
+    stage('Preparation') {
+      sh 'rm -rf ~/.m2 || true'
+      sh 'rm -rf openvidu || true'
+      sh 'rm -rf kurento-java || true'
+      sh 'git clone https://github.com/OpenVidu/openvidu.git'
+      sh 'cd openvidu && git fetch --all && git checkout $OPENVIDU_COMMIT'
+      sh(script: '''#!/bin/bash -xe
+        if [[ $KURENTO_JAVA_COMMIT != "default" ]]; then
+          git clone https://github.com/Kurento/kurento-java.git
+          cd kurento-java
+          git checkout -f $KURENTO_JAVA_COMMIT
+          mvn clean install
+        fi
+      '''.stripIndent())
+      sh(script: '''#!/bin/bash -xe
+        if $KURENTO_MEDIA_SERVER_DEV ; then
+          echo "Upgrading KMS to dev version"
+          sudo apt-get update && sudo apt-get install -y aptitude
+          sudo aptitude remove -y kurento-media-server
+          DISTRO=`lsb_release --codename | cut -f2`
+          sudo echo "deb [arch=amd64] http://ubuntu.openvidu.io/dev $DISTRO kms6" | sudo tee /etc/apt/sources.list.d/kurento.list
+          sudo apt-get update && sudo apt-get --yes -o Dpkg::Options::="--force-confnew" install kurento-media-server
+        fi
+      '''.stripIndent())
+    }
+
+    stage('OpenVidu Browser build') {
+      sh(script: '''#!/bin/bash -xe
+        cd openvidu
+        if [[ $OPENVIDU_BROWSER_COMMIT != "default" ]]; then
+          git checkout -f $OPENVIDU_BROWSER_COMMIT
+        fi
+        cd openvidu-browser
+        npm install --unsafe-perm && npm run build && npm pack
+        cp openvidu-browser-*.tgz /opt/openvidu
+        cd ..
+        git checkout -f $OPENVIDU_COMMIT
+      '''.stripIndent())
+    }
+
+    stage('OpenVidu Node Client build') {
+      sh(script: '''#!/bin/bash -xe
+        cd openvidu
+        if [[ $OPENVIDU_NODE_CLIENT_COMMIT != "default" ]]; then
+          git checkout -f $OPENVIDU_NODE_CLIENT_COMMIT
+        fi
+        cd openvidu-node-client
+        npm install --unsafe-perm && npm run build && npm pack
+        cp openvidu-node-client-*.tgz /opt/openvidu
+        cd ..
+        git checkout -f $OPENVIDU_COMMIT
+      '''.stripIndent())
+    }
+
+    stage('OpenVidu TestApp build') {
+      sh(script: '''#!/bin/bash -xe
+        cd openvidu
+        if [[ $OPENVIDU_TESTAPP_COMMIT != "default" ]]; then
+          git checkout -f $OPENVIDU_TESTAPP_COMMIT
+        fi
+        cd openvidu-testapp
+        npm install --unsafe-perm
+        npm install /opt/openvidu/openvidu-browser-*.tgz
+        npm install /opt/openvidu/openvidu-node-client-*.tgz
+        export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng build --prod --output-path=/opt/openvidu/testapp
+        cd ..
+        git checkout -f $OPENVIDU_COMMIT
+      '''.stripIndent())
+    }
+
+    stage('OpenVidu Java Client build') {
+      sh(script: '''#!/bin/bash -xe
+        cd openvidu
+        if [[ $OPENVIDU_JAVA_CLIENT_COMMIT != "default" ]]; then
+          git checkout -f $OPENVIDU_JAVA_CLIENT_COMMIT
+        fi
+        cd openvidu-java-client
+        mvn --batch-mode versions:set -DnewVersion=TEST
+        mvn clean compile package
+        mvn install:install-file -Dfile=target/openvidu-java-client-TEST.jar -DgroupId=io.openvidu -DartifactId=openvidu-java-client -Dversion=TEST -Dpackaging=jar
+        cd ..
+        git checkout -f $OPENVIDU_COMMIT
+      '''.stripIndent())
+    }
+
+    stage('OpenVidu parent build') {
+      sh(script: '''#!/bin/bash -xe
+        if [[ $KURENTO_JAVA_COMMIT != "default" ]]; then
+          cd kurento-java && MVN_VERSION=$(mvn --batch-mode -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+          cd ../openvidu && mvn --batch-mode versions:set-property -Dproperty=version.kurento -DnewVersion=$MVN_VERSION
+        fi
+      '''.stripIndent())
+      sh 'cd openvidu && mvn --batch-mode versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST'
+      sh 'cd openvidu && mvn --batch-mode -DskipTests=true clean install'
+    }
+
+    stage('OpenVidu Server unit tests') {
+      sh 'cd openvidu/openvidu-server && mvn --batch-mode -Dtest=io.openvidu.server.test.unit.*Test test'
+    }
+
+    stage('OpenVidu Server integration tests') {
+      sh 'cd openvidu/openvidu-server && mvn --batch-mode -Dtest=io.openvidu.server.test.integration.*Test test'
+    }
+
+    stage('OpenVidu Server build') {
+      sh(script: '''#!/bin/bash -xe
+        cd openvidu/openvidu-server/src/dashboard && npm install --unsafe-perm && npm install /opt/openvidu/openvidu-browser-*.tgz && export NG_CLI_ANALYTICS="false" && npm run build-prod
+        cd ../..
+        mvn --batch-mode package
+        cp target/openvidu-server*.jar /opt/openvidu
+      '''.stripIndent())
+    }
+
+    stage ('Environment Launch') {
+      sh 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout /opt/openvidu/testapp/key.pem -out /opt/openvidu/testapp/cert.pem'
+      sh 'cd /opt/openvidu/testapp && http-server -S -p 4200 &> /opt/openvidu/testapp.log &'
+      sh '/usr/bin/kurento-media-server &> /kms.log &'
+      sh 'until $(curl --insecure --output /dev/null --silent http://127.0.0.1:8888/kurento); do echo "Waiting for KMS..."; sleep 1; done'
+      sh(script: '''#!/bin/bash -xe
+        if [ "$DOCKER_RECORDING_VERSION" != "default" ]; then
+          echo "Using custom openvidu-recording tag: $DOCKER_RECORDING_VERSION"
+          java -jar -DDOMAIN_OR_PUBLIC_IP=172.17.0.1 -DOPENVIDU_SECRET=MY_SECRET -DHTTPS_PORT=4443 -DOPENVIDU_RECORDING=true -DOPENVIDU_RECORDING_CUSTOM_LAYOUT=/opt/openvidu/test-layouts -DOPENVIDU_RECORDING_VERSION=$DOCKER_RECORDING_VERSION -DOPENVIDU_WEBHOOK=true -DOPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook /opt/openvidu/openvidu-server-*.jar &> openvidu-server.log &
+        else
+          echo "Using default openvidu-recording tag"
+          java -jar -DDOMAIN_OR_PUBLIC_IP=172.17.0.1 -DOPENVIDU_SECRET=MY_SECRET -DHTTPS_PORT=4443 -DOPENVIDU_RECORDING=true -DOPENVIDU_RECORDING_CUSTOM_LAYOUT=/opt/openvidu/test-layouts -DOPENVIDU_WEBHOOK=true -DOPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook /opt/openvidu/openvidu-server-*.jar &> openvidu-server.log &
+        fi
+      '''.stripIndent())
+      sh 'until $(curl --insecure --output /dev/null --silent --head --fail https://OPENVIDUAPP:MY_SECRET@localhost:4443/); do echo "Waiting for openvidu-server..."; sleep 2; done'
+    }
+
+    docker.image('selenium/standalone-chrome:latest').withRun('-p 6666:4444 --name chrome --shm-size=1g -v /opt/openvidu:/opt/openvidu') { a ->
+      docker.image('selenium/standalone-firefox:latest').withRun('-p 6667:4444 --name firefox --shm-size=1g') { b ->
+        docker.image('selenium/standalone-opera:latest').withRun('-p 6668:4444 --name opera --shm-size=1g') { c ->
+
+          stage ('OpenVidu E2E tests') {
+            try {
+              sh(script: '''#!/bin/bash -xe
+                cd openvidu
+                if [[ $OPENVIDU_TESTE2E_COMMIT != "default" ]]; then
+                  git checkout -f $OPENVIDU_TESTE2E_COMMIT
+                fi
+                cd openvidu-test-browsers
+                mvn --batch-mode versions:set -DnewVersion=TEST && mvn clean install
+                cd ..
+                mvn --batch-mode versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST
+                mvn --batch-mode versions:set-property -Dproperty=version.openvidu.test.browsers -DnewVersion=TEST
+                cd openvidu-test-e2e
+                mvn -DskipTests=true clean install
+                sudo mvn --batch-mode -Dtest=OpenViduTestAppE2eTest -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ -DREMOTE_URL_OPERA=http://172.17.0.1:6668/wd/hub/ -DEXTERNAL_CUSTOM_LAYOUT_URL=http://172.17.0.1:5555 -DEXTERNAL_CUSTOM_LAYOUT_PARAMS=sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET test
+                git checkout -f $OPENVIDU_COMMIT
+              '''.stripIndent())
+            }
+            finally {
+              junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
+              archiveArtifacts artifacts: '**/openvidu-server.log'
+            }
           }
-          finally {
-            junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
-            archiveArtifacts artifacts: '**/openvidu-server.log'
-          }
+
         }
       }
     }

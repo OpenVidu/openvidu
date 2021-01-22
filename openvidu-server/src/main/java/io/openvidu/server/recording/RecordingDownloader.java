@@ -22,7 +22,7 @@ import java.util.Collection;
 
 public interface RecordingDownloader {
 
-	public void downloadRecording(Recording recording, Collection<String> streamIds, Runnable callback)
+	public void downloadRecording(Recording recording, Collection<RecorderEndpointWrapper> wrappers, Runnable callback)
 			throws IOException;
 
 	public void cancelDownload(String recordingId);

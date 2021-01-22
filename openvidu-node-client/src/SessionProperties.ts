@@ -65,21 +65,31 @@ export interface SessionProperties {
      * If this parameter is undefined or an empty string, OpenVidu Server will generate a random sessionId for you.
      */
     customSessionId?: string;
-    
+
+    /**
+     * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
+     *
+     * The Media Node where to host the session. The default option if this property is not defined is the less loaded
+     * Media Node at the moment the first user joins the session. This object defines the following properties as Media Node selector:
+     * - `id`: Media Node unique identifier
+     */
+    mediaNode?: {
+        id: string;
+    }
+
     /**
      * It defines which video codec do you want to be forcibly used for this session.
      * This allows browsers/clients to use the same codec avoiding transcoding in the media server.
-     * If the browser/client is not compatible with the specified codec and [[allowTranscoding]] 
+     * If the browser/client is not compatible with the specified codec and [[allowTranscoding]]
      * is <code>false</code> and exception will occur.
-     * 
-     * If forcedVideoCodec is set to NONE, no codec will be forced. 
+     *
+     * If forcedVideoCodec is set to NONE, no codec will be forced.
      */
-    forcedVideoCodec?: VideoCodec;
-    
+    forcedVideoCodec?: string;
+
     /**
      * It defines if you want to allow transcoding in the media server or not
      * when [[forcedVideoCodec]] is not compatible with the browser/client.
      */
     allowTranscoding?: boolean;
-    
 }

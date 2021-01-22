@@ -30,19 +30,22 @@ import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpea
 import { StreamManagerEvent } from '../OpenViduInternal/Events/StreamManagerEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
+import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
+import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 
 /**
  * @hidden
  */
 import hark = require('hark');
-import platform = require('platform');
-import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 /**
  * @hidden
  */
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
-
+/**
+ * @hidden
+ */
+let platform: PlatformUtils;
 
 /**
  * Represents each one of the media streams available in OpenVidu Server for certain session.
@@ -108,7 +111,7 @@ export class Stream extends EventDispatcher {
      * - `"SCREEN"`: when the video source comes from screen-sharing.
      * - `"CUSTOM"`: when [[PublisherProperties.videoSource]] has been initialized in the Publisher side with a custom MediaStreamTrack when calling [[OpenVidu.initPublisher]]).
      * - `"IPCAM"`: when the video source comes from an IP camera participant instead of a regular participant (see [IP cameras](/en/stable/advanced-features/ip-cameras/)).
-     * 
+     *
      * If [[hasVideo]] is false, this property is undefined
      */
     typeOfVideo?: string;
@@ -136,10 +139,10 @@ export class Stream extends EventDispatcher {
      * [[Filter.execMethod]] and remove it with [[Stream.removeFilter]]. Be aware that the client calling this methods must have the
      * necessary permissions: the token owned by the client must have been initialized with the appropriated `allowedFilters` array.
      */
-    filter: Filter;
+    filter?: Filter;
 
     protected webRtcPeer: WebRtcPeer;
-    protected mediaStream: MediaStream;
+    protected mediaStream?: MediaStream;
     private webRtcStats: WebRtcStats;
 
     private isSubscribeToRemote = false;
@@ -203,7 +206,7 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    localMediaStreamWhenSubscribedToRemote: MediaStream;
+    localMediaStreamWhenSubscribedToRemote?: MediaStream;
 
 
     /**
@@ -212,7 +215,7 @@ export class Stream extends EventDispatcher {
     constructor(session: Session, options: InboundStreamOptions | OutboundStreamOptions | {}) {
 
         super();
-
+        platform = PlatformUtils.getInstance();
         this.session = session;
 
         if (options.hasOwnProperty('id')) {
@@ -262,7 +265,7 @@ export class Stream extends EventDispatcher {
         }
 
         this.ee.on('mediastream-updated', () => {
-            this.streamManager.updateMediaStream(this.mediaStream);
+            this.streamManager.updateMediaStream(this.mediaStream!);
             logger.debug('Video srcObject [' + this.mediaStream + '] updated in stream [' + this.streamId + ']');
         });
     }
@@ -323,7 +326,7 @@ export class Stream extends EventDispatcher {
                         }
                     } else {
                         logger.info('Filter successfully applied on Stream ' + this.streamId);
-                        const oldValue: Filter = this.filter;
+                        const oldValue: Filter = this.filter!;
                         this.filter = new Filter(type, options);
                         this.filter.stream = this;
                         this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter, oldValue, 'applyFilter')]);
@@ -356,10 +359,10 @@ export class Stream extends EventDispatcher {
                         }
                     } else {
                         logger.info('Filter successfully removed from Stream ' + this.streamId);
-                        const oldValue = this.filter;
+                        const oldValue = this.filter!;
                         delete this.filter;
-                        this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter, oldValue, 'applyFilter')]);
-                        this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter, oldValue, 'applyFilter')]);
+                        this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
+                        this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
                         resolve();
                     }
                 }
@@ -382,7 +385,7 @@ export class Stream extends EventDispatcher {
      * @returns Native MediaStream Web API object
      */
     getMediaStream(): MediaStream {
-        return this.mediaStream;
+        return this.mediaStream!;
     }
 
     /* Hidden methods */
@@ -537,7 +540,7 @@ export class Stream extends EventDispatcher {
      */
     isSendScreen(): boolean {
         let screen = this.outboundStreamOpts.publisherProperties.videoSource === 'screen';
-        if (platform.name === 'Electron') {
+        if (platform.isElectron()) {
             screen = typeof this.outboundStreamOpts.publisherProperties.videoSource === 'string' &&
                 this.outboundStreamOpts.publisherProperties.videoSource.startsWith('screen:');
         }
@@ -776,7 +779,7 @@ export class Stream extends EventDispatcher {
         if (!this.getWebRtcPeer() || !this.getRTCPeerConnection()) {
             return false;
         }
-        if (this.isLocal && !!this.session.openvidu.advancedConfiguration.forceMediaReconnectionAfterNetworkDrop) {
+        if (this.isLocal() && !!this.session.openvidu.advancedConfiguration.forceMediaReconnectionAfterNetworkDrop) {
             logger.warn('OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Publisher stream ' + this.streamId + 'will force a reconnection');
             return true;
         }
@@ -1022,8 +1025,8 @@ export class Stream extends EventDispatcher {
         }
     }
 
-    protected initHarkEvents(): void {
-        if (!!this.mediaStream.getAudioTracks()[0]) {
+    private initHarkEvents(): void {
+        if (!!this.mediaStream!.getAudioTracks()[0]) {
             // Hark events can only be set if audio track is available
             if (this.streamManager.remote) {
                 // publisherStartSpeaking/publisherStopSpeaking is only defined for remote streams

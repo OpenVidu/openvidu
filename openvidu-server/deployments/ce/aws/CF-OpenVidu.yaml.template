@@ -44,18 +44,18 @@ Parameters:
   # OpenVidu configuration
 
   OpenViduSecret:
-    Description: "Secret to connect to this OpenVidu Platform. No whitespaces or quotations allowed"
+    Description: "Secret to connect to this OpenVidu Platform. Cannot be empty and must contain only alphanumeric characters [a-zA-Z0-9], hypens ('-') and underscores ('_')"
     Type: String
-    AllowedPattern: ^((?!")(?! ).)+$
+    AllowedPattern: ^[a-zA-Z0-9_-]+$
     NoEcho: true
-    ConstraintDescription: OpenVidu Secret is mandatory
+    ConstraintDescription: "Cannot be empty and must contain only alphanumeric characters [a-zA-Z0-9], hypens ('-') and underscores ('_')"
 
   # EC2 Instance configuration
 
   InstanceType:
     Description: "Specifies the EC2 instance type for your OpenVidu instance"
     Type: String
-    Default: t2.xlarge
+    Default: c5.xlarge
     AllowedValues:
       - t2.large
       - t2.xlarge
@@ -115,10 +115,12 @@ Parameters:
       - false
     Default: true
 
+#start_mappings
 Mappings:
   OVAMIMAP:
     eu-west-1:
       AMI: OV_AMI_ID
+#end_mappings
 
 Metadata:
   'AWS::CloudFormation::Interface':
@@ -272,6 +274,10 @@ Resources:
 
                 # Restart all services
                 pushd /opt/openvidu
+                docker-compose up -d kms
+                until docker-compose ps | grep kms | grep healthy; do
+                    echo "Waiting kms..."
+                done
                 docker-compose up -d
                 popd
               mode: "000755"
@@ -293,6 +299,8 @@ Resources:
 
           cfn-init --region ${AWS::Region} --stack ${AWS::StackId} --resource OpenviduServer
 
+          export HOME="/root"
+
           # Replace .env variables
           /usr/local/bin/feedGroupVars.sh || { echo "[Openvidu] Parameters incorrect/insufficient"; exit 1; }
 
@@ -306,6 +314,10 @@ Resources:
 
           # Start openvidu application
           pushd /opt/openvidu
+          docker-compose up -d kms
+          until docker-compose ps | grep kms | grep healthy; do
+              echo "Waiting kms..."
+          done
           docker-compose up -d
           popd
 
@@ -327,10 +339,9 @@ Resources:
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeType: io1
-            Iops: 200
+            VolumeType: gp2
             DeleteOnTermination: true
-            VolumeSize: 100
+            VolumeSize: 200
 
   MyEIP:
     Type: 'AWS::EC2::EIPAssociation'
@@ -373,11 +384,11 @@ Resources:
           CidrIp: 0.0.0.0/0
         - IpProtocol: udp
           FromPort: 40000
-          ToPort: 65535
+          ToPort: 57000
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 40000
-          ToPort: 65535
+          ToPort: 57000
           CidrIp: 0.0.0.0/0
 
 Outputs:

@@ -13,7 +13,7 @@
 getScreenId(function (error, sourceId, screen_constraints) {
     // error    == null || 'permission-denied' || 'not-installed' || 'installed-disabled' || 'not-chrome'
     // sourceId == null || 'string' || 'firefox'
-    
+
     if(microsoftEdge) {
         navigator.getDisplayMedia(screen_constraints).then(onSuccess, onFailure);
     }
@@ -217,4 +217,4 @@ function postGetChromeExtensionStatusMessage() {
     }, '*');
 }
 
-exports.getScreenId = getScreenId;
+exports.getScreenId = window.getScreenId;
