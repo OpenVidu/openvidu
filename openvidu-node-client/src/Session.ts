@@ -145,10 +145,15 @@ export class Session {
     public createConnection(connectionProperties?: ConnectionProperties): Promise<Connection> {
         return new Promise<Connection>((resolve, reject) => {
             const data = JSON.stringify({
-                role: (!!connectionProperties && !!connectionProperties.role) ? connectionProperties.role : null,
+                type: (!!connectionProperties && !!connectionProperties.type) ? connectionProperties.type : null,
                 data: (!!connectionProperties && !!connectionProperties.data) ? connectionProperties.data : null,
                 record: !!connectionProperties ? connectionProperties.record : null,
-                kurentoOptions: (!!connectionProperties && !!connectionProperties.kurentoOptions) ? connectionProperties.kurentoOptions : null
+                role: (!!connectionProperties && !!connectionProperties.role) ? connectionProperties.role : null,
+                kurentoOptions: (!!connectionProperties && !!connectionProperties.kurentoOptions) ? connectionProperties.kurentoOptions : null,
+                rtspUri: (!!connectionProperties && !!connectionProperties.rtspUri) ? connectionProperties.rtspUri : null,
+                adaptativeBitrate: !!connectionProperties ? connectionProperties.adaptativeBitrate : null,
+                onlyPlayWithSubscribers: !!connectionProperties ? connectionProperties.onlyPlayWithSubscribers : null,
+                networkCache: (!!connectionProperties && (connectionProperties.networkCache != null)) ? connectionProperties.networkCache : null
             });
             axios.post(
                 this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/connection',
@@ -471,8 +476,10 @@ export class Session {
             const forcedVideoCodec = !!this.properties.forcedVideoCodec ? this.properties.forcedVideoCodec : undefined;
             const allowTranscoding = this.properties.allowTranscoding != null ? this.properties.allowTranscoding : undefined;
 
-            const data = JSON.stringify({mediaMode, recordingMode, defaultOutputMode, defaultRecordingLayout, defaultCustomLayout,
-                customSessionId, mediaNode, forcedVideoCodec, allowTranscoding});
+            const data = JSON.stringify({
+                mediaMode, recordingMode, defaultOutputMode, defaultRecordingLayout, defaultCustomLayout,
+                customSessionId, mediaNode, forcedVideoCodec, allowTranscoding
+            });
 
             axios.post(
                 this.ov.host + OpenVidu.API_SESSIONS,
