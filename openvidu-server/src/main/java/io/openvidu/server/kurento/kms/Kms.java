@@ -38,6 +38,7 @@ import com.google.gson.JsonObject;
 
 import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.utils.QuarantineKiller;
+import io.openvidu.server.utils.UpdatableTimerTask;
 
 /**
  * Abstraction of a KMS instance: an object of this class corresponds to a KMS
@@ -58,6 +59,7 @@ public class Kms {
 	private String uri;
 	private String ip;
 	private KurentoClient client;
+	private UpdatableTimerTask clientReconnectTimer;
 	private LoadManager loadManager;
 	private QuarantineKiller quarantineKiller;
 
@@ -85,8 +87,20 @@ public class Kms {
 		this.quarantineKiller = quarantineKiller;
 	}
 
+	public KurentoClient getKurentoClient() {
+		return this.client;
+	}
+
 	public void setKurentoClient(KurentoClient client) {
 		this.client = client;
+	}
+
+	public UpdatableTimerTask getKurentoClientReconnectTimer() {
+		return this.clientReconnectTimer;
+	}
+
+	public void setKurentoClientReconnectTimer(UpdatableTimerTask clientReconnectTimer) {
+		this.clientReconnectTimer = clientReconnectTimer;
 	}
 
 	public String getId() {
@@ -99,10 +113,6 @@ public class Kms {
 
 	public String getIp() {
 		return ip;
-	}
-
-	public KurentoClient getKurentoClient() {
-		return this.client;
 	}
 
 	public double getLoad() {
