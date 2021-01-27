@@ -56,7 +56,7 @@ services:
 
     replication-manager:
         image: openvidu/replication-manager:1.0.0-dev5
-        restart: on-failure
+        restart: always
         network_mode: host
         environment:
             - SERVER_PORT=4443
