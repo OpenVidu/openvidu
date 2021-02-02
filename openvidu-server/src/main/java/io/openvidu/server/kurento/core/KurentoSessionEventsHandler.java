@@ -56,4 +56,8 @@ public class KurentoSessionEventsHandler extends SessionEventsHandler {
 		rpcNotificationService.sendNotification(connectionId, ProtocolElements.MEDIAERROR_METHOD, notifParams);
 	}
 
+	public boolean addMediaNodeInfoToSessionEntity() {
+		return false;
+	}
+
 }

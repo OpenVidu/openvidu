@@ -31,6 +31,8 @@ import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonObject;
+
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
@@ -332,6 +334,15 @@ public class KurentoSession extends Session {
 				log.error("Error waiting to new MediaPipeline on KurentoSession restart: {}", e.getMessage());
 			}
 		});
+	}
+
+	@Override
+	public JsonObject toJson(boolean withPendingConnections, boolean withWebrtcStats) {
+		JsonObject json = super.toJson(withPendingConnections, withWebrtcStats);
+		if (this.kms != null && this.kurentoSessionHandler.addMediaNodeInfoToSessionEntity()) {
+			json.addProperty("mediaNodeId", kms.getId());
+		}
+		return json;
 	}
 
 }
