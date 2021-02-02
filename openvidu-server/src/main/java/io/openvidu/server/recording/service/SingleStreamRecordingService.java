@@ -120,7 +120,7 @@ public class SingleStreamRecordingService extends RecordingService {
 		}
 
 		try {
-			if (!recordingStartedCountdown.await(10, TimeUnit.SECONDS)) {
+			if (!recordingStartedCountdown.await(5, TimeUnit.SECONDS)) {
 				log.error("Error waiting for some recorder endpoint to start in session {}", session.getSessionId());
 				throw this.failStartRecording(session, recording, "Couldn't initialize some RecorderEndpoint");
 			}
@@ -260,12 +260,6 @@ public class SingleStreamRecordingService extends RecordingService {
 					}
 
 					connectAccordingToProfile(kurentoParticipant.getPublisher(), recorder, profile);
-
-//					if (globalStartLatch.getCount() == 1) {
-//						Thread.sleep(10000);
-//						throw new Exception("EXCEPTION!!");
-//					}
-
 					wrapper.getRecorder().record();
 
 				} finally {
