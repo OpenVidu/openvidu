@@ -638,6 +638,7 @@ public abstract class MediaEndpoint {
 			j.remove("sessionId");
 			j.remove("user");
 			j.remove("connection");
+			j.remove("connectionId");
 			j.remove("endpoint");
 			j.remove("timestampMillis");
 			jsonArray.add(j);
