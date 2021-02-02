@@ -191,10 +191,6 @@ public class Session implements SessionInterface {
 		return this.tokens.entrySet().iterator();
 	}
 
-	public void showTokens(String preMessage) {
-		log.info("{} { Session: {} | Tokens: {} }", preMessage, this.sessionId, this.tokens.keySet().toString());
-	}
-
 	public boolean isClosed() {
 		return closed;
 	}

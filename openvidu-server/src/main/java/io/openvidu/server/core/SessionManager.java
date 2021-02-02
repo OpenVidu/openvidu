@@ -310,7 +310,6 @@ public abstract class SessionManager {
 		Token tokenObj = tokenGenerator.generateToken(session.getSessionId(), serverMetadata, record, role,
 				kurentoOptions);
 		session.storeToken(tokenObj);
-		session.showTokens("Token created");
 		return tokenObj;
 	}
 
@@ -319,7 +318,6 @@ public abstract class SessionManager {
 		Token tokenObj = new Token(token, session.getSessionId(), connectionProperties,
 				this.openviduConfig.isTurnadminAvailable() ? this.coturnCredentialsService.createUser() : null);
 		session.storeToken(tokenObj);
-		session.showTokens("Token created for insecure user");
 		return tokenObj;
 	}
 
