@@ -223,7 +223,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		 * PATCH /openvidu/api/sessions/<SESSION_ID>/connection/<CONNECTION_ID>
 		 **/
 		String body = "{'customSessionId': 'CUSTOM_SESSION_ID'}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK, true, false, true,
+				DEFAULT_JSON_SESSION);
 		body = "{'role':'PUBLISHER','record':false,'data':'MY_SERVER_PRO_DATA'}";
 		JsonObject res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body,
 				HttpStatus.SC_OK);
@@ -319,6 +320,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+
+		// Session REST API entity should now have "mediaNodeId" property
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true, false,
+				true, mergeJson(DEFAULT_JSON_SESSION, "{'mediaNodeId':'STR'}", new String[0]));
 
 		Assert.assertTrue("Session object should have changed", session.fetch());
 		connection = session.getActiveConnections().get(0);
