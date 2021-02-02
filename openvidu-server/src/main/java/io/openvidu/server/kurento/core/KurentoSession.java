@@ -164,8 +164,8 @@ public class KurentoSession extends Session {
 				candidate);
 	}
 
-	public void sendMediaError(String participantId, String description) {
-		this.kurentoSessionHandler.onMediaElementError(sessionId, participantId, description);
+	public void sendMediaError(String connectionId, String description) {
+		this.kurentoSessionHandler.onMediaElementError(sessionId, connectionId, description);
 	}
 
 	private void removeParticipant(Participant participant, EndReason reason) {

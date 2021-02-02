@@ -44,7 +44,7 @@ public class Participant {
 	}
 
 	protected String finalUserId; // ID to match this connection with a final user (HttpSession id)
-	protected String participantPrivatetId; // ID to identify the user on server (org.kurento.jsonrpc.Session.id)
+	protected String participantPrivateId; // ID to identify the user on server (org.kurento.jsonrpc.Session.id)
 	protected String participantPublicId; // ID to identify the user on clients
 	protected String sessionId; // ID of the session to which the participant belongs
 	protected ParticipantStatus status; // Status of the connection
@@ -75,11 +75,11 @@ public class Participant {
 	 */
 	public Lock singleRecordingLock = new ReentrantLock();
 
-	public Participant(String finalUserId, String participantPrivatetId, String participantPublicId, String sessionId,
+	public Participant(String finalUserId, String participantPrivateId, String participantPublicId, String sessionId,
 			Token token, String clientMetadata, GeoLocation location, String platform, EndpointType endpointType,
 			Long activeAt) {
 		this.finalUserId = finalUserId;
-		this.participantPrivatetId = participantPrivatetId;
+		this.participantPrivateId = participantPrivateId;
 		this.participantPublicId = participantPublicId;
 		this.sessionId = sessionId;
 		this.status = ParticipantStatus.active;
@@ -102,11 +102,11 @@ public class Participant {
 	}
 
 	public String getParticipantPrivateId() {
-		return participantPrivatetId;
+		return participantPrivateId;
 	}
 
 	public void setParticipantPrivateId(String participantPrivateId) {
-		this.participantPrivatetId = participantPrivateId;
+		this.participantPrivateId = participantPrivateId;
 	}
 
 	public String getParticipantPublicId() {
@@ -210,7 +210,7 @@ public class Participant {
 	}
 
 	public boolean isIpcam() {
-		return this.platform != null && this.platform.equals("IPCAM") && this.participantPrivatetId.startsWith(IdentifierPrefixes.IPCAM_ID);
+		return this.platform != null && this.platform.equals("IPCAM") && this.participantPrivateId.startsWith(IdentifierPrefixes.IPCAM_ID);
 	}
 
 	public String getPublisherStreamId() {
@@ -245,7 +245,7 @@ public class Participant {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (participantPrivatetId == null ? 0 : participantPrivatetId.hashCode());
+		result = prime * result + (participantPrivateId == null ? 0 : participantPrivateId.hashCode());
 		result = prime * result + (streaming ? 1231 : 1237);
 		result = prime * result + (participantPublicId == null ? 0 : participantPublicId.hashCode());
 		return result;
@@ -263,11 +263,11 @@ public class Participant {
 			return false;
 		}
 		Participant other = (Participant) obj;
-		if (participantPrivatetId == null) {
-			if (other.participantPrivatetId != null) {
+		if (participantPrivateId == null) {
+			if (other.participantPrivateId != null) {
 				return false;
 			}
-		} else if (!participantPrivatetId.equals(other.participantPrivatetId)) {
+		} else if (!participantPrivateId.equals(other.participantPrivateId)) {
 			return false;
 		}
 		if (streaming != other.streaming) {
@@ -287,8 +287,8 @@ public class Participant {
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("[");
-		if (participantPrivatetId != null) {
-			builder.append("participantPrivateId=").append(participantPrivatetId).append(", ");
+		if (participantPrivateId != null) {
+			builder.append("participantPrivateId=").append(participantPrivateId).append(", ");
 		}
 		if (participantPublicId != null) {
 			builder.append("participantPublicId=").append(participantPublicId).append(", ");

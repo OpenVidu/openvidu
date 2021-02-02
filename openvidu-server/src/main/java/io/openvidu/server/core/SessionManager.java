@@ -358,12 +358,12 @@ public abstract class SessionManager {
 		this.insecureUsers.put(participantPrivateId, true);
 	}
 
-	public Participant newParticipant(String sessionId, String participantPrivatetId, Token token,
+	public Participant newParticipant(String sessionId, String participantPrivateId, Token token,
 			String clientMetadata, GeoLocation location, String platform, String finalUserId) {
 
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 
-			Participant p = new Participant(finalUserId, participantPrivatetId, token.getConnectionId(), sessionId,
+			Participant p = new Participant(finalUserId, participantPrivateId, token.getConnectionId(), sessionId,
 					token, clientMetadata, location, platform, EndpointType.WEBRTC_ENDPOINT, null);
 
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(p.getParticipantPublicId(), p);
@@ -381,10 +381,10 @@ public abstract class SessionManager {
 		}
 	}
 
-	public Participant newRecorderParticipant(String sessionId, String participantPrivatetId, Token token,
+	public Participant newRecorderParticipant(String sessionId, String participantPrivateId, Token token,
 			String clientMetadata) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = new Participant(null, participantPrivatetId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
+			Participant p = new Participant(null, participantPrivateId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
 					sessionId, token, clientMetadata, null, null, EndpointType.WEBRTC_ENDPOINT, null);
 			this.sessionidParticipantpublicidParticipant.get(sessionId)
 					.put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);

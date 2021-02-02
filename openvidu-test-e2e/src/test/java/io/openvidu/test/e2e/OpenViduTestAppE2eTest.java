@@ -3333,7 +3333,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			event = CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
 			Assert.assertEquals("Wrong number of properties in event 'webrtcConnectionCreated'", 10 + 1,
 					event.keySet().size());
-			String connectionId1 = event.get("participantId").getAsString();
+			String connectionId1 = event.get("connectionId").getAsString();
 
 			event = CustomWebhook.waitForEvent("recordingStatusChanged", 10);
 			Assert.assertEquals("Wrong number of properties in event 'recordingStatusChanged'", 11 + 1,
@@ -3380,7 +3380,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
 			CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
 
-			String connectionId2 = event.get("participantId").getAsString();
+			String connectionId2 = event.get("connectionId").getAsString();
 
 			// signalSent from client
 			long timestamp = System.currentTimeMillis();

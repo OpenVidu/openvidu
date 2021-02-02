@@ -41,7 +41,9 @@ public class CDREventParticipant extends CDREventEnd {
 	@Override
 	public JsonObject toJson() {
 		JsonObject json = super.toJson();
+		// TODO: remove deprecated "participantId" when possible
 		json.addProperty("participantId", this.participant.getParticipantPublicId());
+		json.addProperty("connectionId", this.participant.getParticipantPublicId());
 		json.addProperty("location",
 				this.participant.getLocation() != null ? this.participant.getLocation().toString() : "unknown");
 		json.addProperty("platform", this.participant.getPlatform());

@@ -58,7 +58,9 @@ public class CDREventWebrtcConnection extends CDREventEnd implements Comparable<
 	public JsonObject toJson() {
 		JsonObject json = super.toJson();
 		json.addProperty("streamId", this.streamId);
+		// TODO: remove deprecated "participantId" when possible
 		json.addProperty("participantId", this.participant.getParticipantPublicId());
+		json.addProperty("connectionId", this.participant.getParticipantPublicId());
 		if (this.receivingFrom != null) {
 			json.addProperty("connection", "INBOUND");
 			json.addProperty("receivingFrom", this.receivingFrom);

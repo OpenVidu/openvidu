@@ -180,9 +180,9 @@ public class CallDetailRecord {
 		this.log(new CDREventRecordingStatus(recording, recording.getCreatedAt(), finalReason, timestamp, status));
 	}
 
-	public void recordFilterEventDispatched(String sessionId, String participantId, String streamId, String filterType,
+	public void recordFilterEventDispatched(String sessionId, String connectionId, String streamId, String filterType,
 			GenericMediaEvent event) {
-		this.log(new CDREventFilterEvent(sessionId, participantId, streamId, filterType, event));
+		this.log(new CDREventFilterEvent(sessionId, connectionId, streamId, filterType, event));
 	}
 
 	public void recordSignalSent(String sessionId, String from, String[] to, String type, String data) {
