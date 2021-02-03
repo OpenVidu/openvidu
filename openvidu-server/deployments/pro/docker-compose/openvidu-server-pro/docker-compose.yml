@@ -148,6 +148,7 @@ services:
             - .env
         environment:
             - OPENVIDU_PRO_ELASTICSEARCH_HOST=${OPENVIDU_PRO_ELASTICSEARCH_HOST:-http://127.0.0.1:9200}
+            - OPENVIDU_PRO_STATS_MONITORING_INTERVAL=${OPENVIDU_PRO_STATS_MONITORING_INTERVAL:-10}
         volumes:
             - ./beats/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
         command: >
