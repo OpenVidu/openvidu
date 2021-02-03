@@ -19,7 +19,6 @@ import { Stream } from './Stream';
 import { FilterEvent } from '../OpenViduInternal/Events/FilterEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
-import { ObjMap } from '../OpenViduInternal/Interfaces/Private/ObjMap';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 
 /**
@@ -66,7 +65,7 @@ export class Filter {
     /**
      * @hidden
      */
-    handlers: ObjMap<(event: FilterEvent) => void> = {};
+    handlers: Map<string, (event: FilterEvent) => void> = new Map();
 
     /**
      * @hidden
@@ -153,7 +152,7 @@ export class Filter {
                             reject(error);
                         }
                     } else {
-                        this.handlers[eventType] = handler;
+                        this.handlers.set(eventType, handler);
                         logger.info('Filter event listener to event ' + eventType + ' successfully applied on Stream ' + this.stream.streamId);
                         resolve();
                     }
@@ -185,7 +184,7 @@ export class Filter {
                             reject(error);
                         }
                     } else {
-                        delete this.handlers[eventType];
+                        this.handlers.delete(eventType);
                         logger.info('Filter event listener to event ' + eventType + ' successfully removed on Stream ' + this.stream.streamId);
                         resolve();
                     }

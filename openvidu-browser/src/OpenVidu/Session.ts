@@ -28,7 +28,6 @@ import { SignalOptions } from '../OpenViduInternal/Interfaces/Public/SignalOptio
 import { SubscriberProperties } from '../OpenViduInternal/Interfaces/Public/SubscriberProperties';
 import { RemoteConnectionOptions } from '../OpenViduInternal/Interfaces/Private/RemoteConnectionOptions';
 import { LocalConnectionOptions } from '../OpenViduInternal/Interfaces/Private/LocalConnectionOptions';
-import { ObjMap } from '../OpenViduInternal/Interfaces/Private/ObjMap';
 import { SessionOptions } from '../OpenViduInternal/Interfaces/Private/SessionOptions';
 import { ConnectionEvent } from '../OpenViduInternal/Events/ConnectionEvent';
 import { FilterEvent } from '../OpenViduInternal/Events/FilterEvent';
@@ -105,7 +104,7 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    remoteStreamsCreated: ObjMap<boolean> = {};
+    remoteStreamsCreated: Map<string, boolean> = new Map();
 
     /**
      * @hidden
@@ -118,7 +117,7 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    remoteConnections: ObjMap<Connection> = {};
+    remoteConnections: Map<string, Connection> = new Map();
     /**
      * @hidden
      */
@@ -618,7 +617,7 @@ export class Session extends EventDispatcher {
             this.startSpeakingEventsEnabled = true;
             // If there are already available remote streams, enable hark 'speaking' event in all of them
             for (const connectionId in this.remoteConnections) {
-                const str = this.remoteConnections[connectionId].stream;
+                const str = this.remoteConnections.get(connectionId)?.stream;
                 if (!!str && str.hasAudio) {
                     str.enableStartSpeakingEvent();
                 }
@@ -628,7 +627,7 @@ export class Session extends EventDispatcher {
             this.stopSpeakingEventsEnabled = true;
             // If there are already available remote streams, enable hark 'stopped_speaking' event in all of them
             for (const connectionId in this.remoteConnections) {
-                const str = this.remoteConnections[connectionId].stream;
+                const str = this.remoteConnections.get(connectionId)?.stream;
                 if (!!str && str.hasAudio) {
                     str.enableStopSpeakingEvent();
                 }
@@ -650,7 +649,7 @@ export class Session extends EventDispatcher {
             this.startSpeakingEventsEnabledOnce = true;
             // If there are already available remote streams, enable hark 'speaking' event in all of them once
             for (const connectionId in this.remoteConnections) {
-                const str = this.remoteConnections[connectionId].stream;
+                const str = this.remoteConnections.get(connectionId)?.stream;
                 if (!!str && str.hasAudio) {
                     str.enableOnceStartSpeakingEvent();
                 }
@@ -660,7 +659,7 @@ export class Session extends EventDispatcher {
             this.stopSpeakingEventsEnabledOnce = true;
             // If there are already available remote streams, enable hark 'stopped_speaking' event in all of them once
             for (const connectionId in this.remoteConnections) {
-                const str = this.remoteConnections[connectionId].stream;
+                const str = this.remoteConnections.get(connectionId)?.stream;
                 if (!!str && str.hasAudio) {
                     str.enableOnceStopSpeakingEvent();
                 }
@@ -684,7 +683,7 @@ export class Session extends EventDispatcher {
                 this.startSpeakingEventsEnabled = false;
                 // If there are already available remote streams, disable hark in all of them
                 for (const connectionId in this.remoteConnections) {
-                    const str = this.remoteConnections[connectionId].stream;
+                    const str = this.remoteConnections.get(connectionId)?.stream;
                     if (!!str) {
                         str.disableStartSpeakingEvent(false);
                     }
@@ -697,7 +696,7 @@ export class Session extends EventDispatcher {
                 this.stopSpeakingEventsEnabled = false;
                 // If there are already available remote streams, disable hark in all of them
                 for (const connectionId in this.remoteConnections) {
-                    const str = this.remoteConnections[connectionId].stream;
+                    const str = this.remoteConnections.get(connectionId)?.stream;
                     if (!!str) {
                         str.disableStopSpeakingEvent(false);
                     }
@@ -722,7 +721,7 @@ export class Session extends EventDispatcher {
             })
             .catch(openViduError => {
                 const connection = new Connection(this, response);
-                this.remoteConnections[response.id] = connection;
+                this.remoteConnections.set(response.id, connection);
                 this.ee.emitEvent('connectionCreated', [new ConnectionEvent(false, this, 'connectionCreated', connection, '')]);
             });
     }
@@ -731,30 +730,29 @@ export class Session extends EventDispatcher {
      * @hidden
      */
     onParticipantLeft(msg): void {
-        this.getRemoteConnection(msg.connectionId, 'Remote connection ' + msg.connectionId + " unknown when 'onParticipantLeft'. " +
-            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
 
-            .then(connection => {
-                if (!!connection.stream) {
-                    const stream = connection.stream;
+        this.getRemoteConnection(msg.connectionId).then(connection => {
+            if (!!connection.stream) {
+                const stream = connection.stream;
 
-                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, msg.reason);
-                    this.ee.emitEvent('streamDestroyed', [streamEvent]);
-                    streamEvent.callDefaultBehavior();
+                const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, msg.reason);
+                this.ee.emitEvent('streamDestroyed', [streamEvent]);
+                streamEvent.callDefaultBehavior();
 
-                    delete this.remoteStreamsCreated[stream.streamId];
+                this.remoteStreamsCreated.delete(stream.streamId);
 
-                    if (Object.keys(this.remoteStreamsCreated).length === 0) {
-                        this.isFirstIonicIosSubscriber = true;
-                        this.countDownForIonicIosSubscribersActive = true;
-                    }
+                if (this.remoteStreamsCreated.size === 0) {
+                    this.isFirstIonicIosSubscriber = true;
+                    this.countDownForIonicIosSubscribersActive = true;
                 }
-                delete this.remoteConnections[connection.connectionId];
-                this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, msg.reason)]);
-            })
-            .catch(openViduError => {
-                logger.error(openViduError);
-            });
+            }
+            this.remoteConnections.delete(connection.connectionId);
+            this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, msg.reason)]);
+        })
+        .catch(openViduError => {
+            logger.error(openViduError);
+        });
+
     }
 
     /**
@@ -764,9 +762,9 @@ export class Session extends EventDispatcher {
 
         const afterConnectionFound = (connection) => {
 
-            this.remoteConnections[connection.connectionId] = connection;
+            this.remoteConnections.set(connection.connectionId, connection);
 
-            if (!this.remoteStreamsCreated[connection.stream.streamId]) {
+            if (!this.remoteStreamsCreated.get(connection.stream.streamId)) {
                 // Avoid race condition between stream.subscribe() in "onParticipantPublished" and in "joinRoom" rpc callback
                 // This condition is false if openvidu-server sends "participantPublished" event to a subscriber participant that has
                 // already subscribed to certain stream in the callback of "joinRoom" method
@@ -774,14 +772,13 @@ export class Session extends EventDispatcher {
                 this.ee.emitEvent('streamCreated', [new StreamEvent(false, this, 'streamCreated', connection.stream, '')]);
             }
 
-            this.remoteStreamsCreated[connection.stream.streamId] = true;
+            this.remoteStreamsCreated.set(connection.stream.streamId, true);
         };
 
         // Get the existing Connection created on 'onParticipantJoined' for
         // existing participants or create a new one for new participants
         let connection: Connection;
-        this.getRemoteConnection(response.id, "Remote connection '" + response.id + "' unknown when 'onParticipantPublished'. " +
-            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+        this.getRemoteConnection(response.id)
 
             .then(con => {
                 // Update existing Connection
@@ -806,8 +803,7 @@ export class Session extends EventDispatcher {
             // Your stream has been forcedly unpublished from the session
             this.stopPublisherStream(msg.reason);
         } else {
-            this.getRemoteConnection(msg.connectionId, "Remote connection '" + msg.connectionId + "' unknown when 'onParticipantUnpublished'. " +
-                'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+            this.getRemoteConnection(msg.connectionId)
 
                 .then(connection => {
 
@@ -817,9 +813,9 @@ export class Session extends EventDispatcher {
 
                     // Deleting the remote stream
                     const streamId: string = connection.stream!.streamId;
-                    delete this.remoteStreamsCreated[streamId];
+                    this.remoteStreamsCreated.delete(streamId);
 
-                    if (Object.keys(this.remoteStreamsCreated).length === 0) {
+                    if (this.remoteStreamsCreated.size === 0) {
                         this.isFirstIonicIosSubscriber = true;
                         this.countDownForIonicIosSubscribersActive = true;
                     }
@@ -856,7 +852,7 @@ export class Session extends EventDispatcher {
         if (!!msg.from) {
             // Signal sent by other client
             this.getConnection(msg.from, "Connection '" + msg.from + "' unknow when 'onNewMessage'. Existing remote connections: "
-                + JSON.stringify(Object.keys(this.remoteConnections)) + '. Existing local connection: ' + this.connection.connectionId)
+                + JSON.stringify(this.remoteConnections.keys()) + '. Existing local connection: ' + this.connection.connectionId)
 
                 .then(connection => {
                     this.ee.emitEvent('signal', [new SignalEvent(this, strippedType, msg.data, connection)]);
@@ -929,8 +925,7 @@ export class Session extends EventDispatcher {
             // Your stream has been forcedly changed (filter feature)
             callback(this.connection);
         } else {
-            this.getRemoteConnection(msg.connectionId, 'Remote connection ' + msg.connectionId + " unknown when 'onStreamPropertyChanged'. " +
-                'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+            this.getRemoteConnection(msg.connectionId)
                 .then(connection => {
                     callback(connection);
                 })
@@ -1259,10 +1254,10 @@ export class Session extends EventDispatcher {
                             const existingParticipants: RemoteConnectionOptions[] = response.value;
                             existingParticipants.forEach((remoteConnectionOptions: RemoteConnectionOptions) => {
                                 const connection = new Connection(this, remoteConnectionOptions);
-                                this.remoteConnections[connection.connectionId] = connection;
+                                this.remoteConnections.set(connection.connectionId, connection);
                                 events.connections.push(connection);
                                 if (!!connection.stream) {
-                                    this.remoteStreamsCreated[connection.stream.streamId] = true;
+                                    this.remoteStreamsCreated.set(connection.stream.streamId, true);
                                     events.streams.push(connection.stream);
                                 }
                             });
@@ -1314,7 +1309,7 @@ export class Session extends EventDispatcher {
 
     protected getConnection(connectionId: string, errorMessage: string): Promise<Connection> {
         return new Promise<Connection>((resolve, reject) => {
-            const connection = this.remoteConnections[connectionId];
+            const connection = this.remoteConnections.get(connectionId);
             if (!!connection) {
                 // Resolve remote connection
                 resolve(connection);
@@ -1330,14 +1325,17 @@ export class Session extends EventDispatcher {
         });
     }
 
-    private getRemoteConnection(connectionId: string, errorMessage: string): Promise<Connection> {
+    private getRemoteConnection(connectionId: string): Promise<Connection> {
         return new Promise<Connection>((resolve, reject) => {
-            const connection = this.remoteConnections[connectionId];
+            const connection = this.remoteConnections.get(connectionId);
             if (!!connection) {
                 // Resolve remote connection
                 resolve(connection);
             } else {
                 // Remote connection not found. Reject with OpenViduError
+               const errorMessage = 'Remote connection ' + connectionId + " unknown when 'onParticipantLeft'. " +
+                    'Existing remote connections: ' + JSON.stringify(this.remoteConnections.keys());
+
                 reject(new OpenViduError(OpenViduErrorName.GENERIC_ERROR, errorMessage));
             }
         });
