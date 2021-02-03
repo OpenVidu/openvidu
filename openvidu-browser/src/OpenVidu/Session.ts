@@ -731,28 +731,29 @@ export class Session extends EventDispatcher {
      */
     onParticipantLeft(msg): void {
 
-        this.getRemoteConnection(msg.connectionId).then(connection => {
-            if (!!connection.stream) {
-                const stream = connection.stream;
+        if(this.remoteConnections.size > 0) {
+            this.getRemoteConnection(msg.connectionId).then(connection => {
+                if (!!connection.stream) {
+                    const stream = connection.stream;
 
-                const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, msg.reason);
-                this.ee.emitEvent('streamDestroyed', [streamEvent]);
-                streamEvent.callDefaultBehavior();
+                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, msg.reason);
+                    this.ee.emitEvent('streamDestroyed', [streamEvent]);
+                    streamEvent.callDefaultBehavior();
 
-                this.remoteStreamsCreated.delete(stream.streamId);
+                    this.remoteStreamsCreated.delete(stream.streamId);
 
-                if (this.remoteStreamsCreated.size === 0) {
-                    this.isFirstIonicIosSubscriber = true;
-                    this.countDownForIonicIosSubscribersActive = true;
+                    if (this.remoteStreamsCreated.size === 0) {
+                        this.isFirstIonicIosSubscriber = true;
+                        this.countDownForIonicIosSubscribersActive = true;
+                    }
                 }
-            }
-            this.remoteConnections.delete(connection.connectionId);
-            this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, msg.reason)]);
-        })
-        .catch(openViduError => {
-            logger.error(openViduError);
-        });
-
+                this.remoteConnections.delete(connection.connectionId);
+                this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, msg.reason)]);
+            })
+            .catch(openViduError => {
+                logger.error(openViduError);
+            });
+        }
     }
 
     /**
