@@ -143,7 +143,6 @@ services:
         image: docker.elastic.co/beats/metricbeat-oss:7.8.0
         network_mode: host
         restart: always
-        user: root
         env_file:
             - .env
         environment:
@@ -151,8 +150,11 @@ services:
             - OPENVIDU_PRO_STATS_MONITORING_INTERVAL=${OPENVIDU_PRO_STATS_MONITORING_INTERVAL:-10}
         volumes:
             - ./beats/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - /proc:/hostfs/proc:ro
+            - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+            - /:/hostfs:ro
         command: >
-            /bin/bash -c "metricbeat -e -strict.perms=false
+            /bin/bash -c "metricbeat -e -strict.perms=false -e -system.hostfs=/hostfs
             `if [ ! -z $ELASTICSEARCH_USERNAME ]; then echo '-E output.elasticsearch.username=$ELASTICSEARCH_USERNAME'; fi`
             `if [ ! -z $ELASTICSEARCH_PASSWORD ]; then echo '-E output.elasticsearch.password=$ELASTICSEARCH_PASSWORD'; fi`"
         logging:
