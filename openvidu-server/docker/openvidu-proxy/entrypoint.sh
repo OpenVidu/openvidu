@@ -43,6 +43,7 @@ CERTIFICATES_CONF="${CERTIFICATES_LIVE_FOLDER}/certificates.conf"
 [ -z "${REDIRECT_WWW}" ] && export REDIRECT_WWW=false
 [ -z "${PROXY_MODE}" ] && export PROXY_MODE=CE
 [ -z "${WORKER_CONNECTIONS}" ] && export WORKER_CONNECTIONS=10240
+[ -z "${CLIENT_MAX_BODY_SIZE}" ] && export CLIENT_MAX_BODY_SIZE=200M
 [ -z "${PUBLIC_IP}" ] && export PUBLIC_IP=auto-ipv4
 [ -z "${ALLOWED_ACCESS_TO_DASHBOARD}" ] && export ALLOWED_ACCESS_TO_DASHBOARD=all
 [ -z "${ALLOWED_ACCESS_TO_RESTAPI}" ] && export ALLOWED_ACCESS_TO_RESTAPI=all
@@ -77,6 +78,7 @@ printf "\n"
 
 # Override worker connections
 sed -i "s/{worker_connections}/${WORKER_CONNECTIONS}/g" /etc/nginx/nginx.conf
+sed -i "s/{client_max_body_size}/${CLIENT_MAX_BODY_SIZE}/g" /etc/nginx/nginx.conf
 
 printf "\n  Configure %s domain..." "${DOMAIN_OR_PUBLIC_IP}"
 OLD_DOMAIN_OR_PUBLIC_IP=$(head -n 1 "${CERTIFICATES_CONF}" | cut -f1 -d$'\t')
