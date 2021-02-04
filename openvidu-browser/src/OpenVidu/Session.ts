@@ -1083,7 +1083,7 @@ export class Session extends EventDispatcher {
             .then(connection => {
                 logger.info('Filter event dispatched');
                 const stream: Stream = connection.stream!;
-                stream.filter!.handlers[response.eventType](new FilterEvent(stream.filter!, response.eventType, response.data));
+                stream.filter!.handlers.get(response.eventType)?.call(this, new FilterEvent(stream.filter!, response.eventType, response.data));
             });
     }
 
