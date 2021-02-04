@@ -44,6 +44,7 @@ metricbeat.modules:
     enabled: true
     period: ${OPENVIDU_PRO_STATS_MONITORING_INTERVAL}s
     cpu.metrics: [normalized_percentages]
+fields: {ip: "${MEDIA_NODE_IP}", cluster-id: "${CLUSTER_ID}", cluster-role: openvidu-server-pro}
 output:
   elasticsearch:
     hosts: ["${OPENVIDU_PRO_ELASTICSEARCH_HOST}"]

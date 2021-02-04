@@ -42,7 +42,7 @@ metricbeat.modules:
     enabled: true
     period: ${OPENVIDU_PRO_CLUSTER_LOAD_INTERVAL}0s
     cpu.metrics: [normalized_percentages]
-fields: {ip: "${MEDIA_NODE_IP}", cluster-id: "${CLUSTER_ID}"}
+fields: {ip: "${MEDIA_NODE_IP}", cluster-id: "${CLUSTER_ID}", cluster-role: media-node}
 pipeline:
   queue.mem.events: 0
 setup.ilm.enabled: false

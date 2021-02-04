@@ -28,6 +28,7 @@ processors:
   - add_fields:
       fields:
         cluster-id: ${OPENVIDU_PRO_CLUSTER_ID:undefined}
+        cluster-role: openvidu-server-pro
 
 output:
   elasticsearch:
