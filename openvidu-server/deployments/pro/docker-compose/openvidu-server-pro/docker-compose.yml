@@ -143,12 +143,14 @@ services:
         image: docker.elastic.co/beats/metricbeat-oss:7.8.0
         network_mode: host
         restart: always
+        user: root
         env_file:
             - .env
         environment:
             - OPENVIDU_PRO_ELASTICSEARCH_HOST=${OPENVIDU_PRO_ELASTICSEARCH_HOST:-http://127.0.0.1:9200}
             - OPENVIDU_PRO_STATS_MONITORING_INTERVAL=${OPENVIDU_PRO_STATS_MONITORING_INTERVAL:-10}
         volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
             - ./beats/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
             - /proc:/hostfs/proc:ro
             - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
