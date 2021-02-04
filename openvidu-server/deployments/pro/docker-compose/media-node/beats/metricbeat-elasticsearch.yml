@@ -11,7 +11,7 @@ metricbeat.modules:
       - "memory"
       - "network"
     hosts: ["unix:///var/run/docker.sock"]
-    period: ${OPENVIDU_PRO_STATS_MONITORING_INTERVAL}s
+    period: ${OPENVIDU_PRO_CLUSTER_LOAD_INTERVAL}0s
     enabled: true
   - module: system
     metricsets:
