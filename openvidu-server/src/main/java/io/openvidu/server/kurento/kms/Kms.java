@@ -250,4 +250,9 @@ public class Kms {
 		return this.uri;
 	}
 
+	public int getNumberOfWebrtcConnections() {
+		return this.kurentoSessions.values().stream().mapToInt(session -> session.getNumberOfWebrtcConnections())
+				.reduce(0, Integer::sum);
+	}
+
 }

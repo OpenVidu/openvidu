@@ -345,4 +345,9 @@ public class KurentoSession extends Session {
 		return json;
 	}
 
+	public int getNumberOfWebrtcConnections() {
+		return this.getActivePublishers() + this.participants.values().stream()
+				.mapToInt(p -> ((KurentoParticipant) p).getSubscribers().size()).reduce(0, Integer::sum);
+	}
+
 }
