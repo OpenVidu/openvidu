@@ -25,10 +25,6 @@ processors:
       fields: ["message"]
       target: "json"
       overwrite_keys: true
-  - add_fields:
-      fields:
-        ip: ${MEDIA_NODE_IP}
-        cluster-id: ${CLUSTER_ID}
 
 output:
   elasticsearch:
