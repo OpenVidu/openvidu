@@ -31,7 +31,7 @@ metricbeat.modules:
     period: ${OPENVIDU_PRO_STATS_MONITORING_INTERVAL}s
     cpu.metrics: [normalized_percentages]
 fields:
-    cluster_id: ${OPENVIDU_PRO_CLUSTER_ID:${DOMAIN_OR_PUBLIC_IP}}
+    cluster_id: ${OPENVIDU_PRO_CLUSTER_ID:${DOMAIN_OR_PUBLIC_IP:undefined}}
     cluster_role: masternode
 output:
   elasticsearch:

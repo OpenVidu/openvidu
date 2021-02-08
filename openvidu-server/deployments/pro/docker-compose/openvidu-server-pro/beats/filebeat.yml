@@ -27,7 +27,7 @@ processors:
             container.image.name: docker.elastic.co/beats/metricbeat-oss
   - add_fields:
       fields:
-        cluster_id: ${OPENVIDU_PRO_CLUSTER_ID:${DOMAIN_OR_PUBLIC_IP}}
+        cluster_id: ${OPENVIDU_PRO_CLUSTER_ID:${DOMAIN_OR_PUBLIC_IP:undefined}}
         cluster_role: masternode
 
 output:
