@@ -32,7 +32,7 @@ metricbeat.modules:
     cpu.metrics: [normalized_percentages]
 fields:
     cluster_id: ${OPENVIDU_PRO_CLUSTER_ID:${DOMAIN_OR_PUBLIC_IP:undefined}}
-    cluster_role: masternode
+    node_role: masternode
 output:
   elasticsearch:
     hosts: ["${OPENVIDU_PRO_ELASTICSEARCH_HOST}"]
