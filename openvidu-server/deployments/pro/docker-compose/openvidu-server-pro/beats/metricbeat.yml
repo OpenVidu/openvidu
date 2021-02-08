@@ -1,18 +1,4 @@
 metricbeat.modules:
-  - module: docker
-    metricsets:
-      - "container"
-      - "cpu"
-      - "diskio"
-      - "event"
-      - "healthcheck"
-      - "info"
-      - "image"
-      - "memory"
-      - "network"
-    hosts: ["unix:///var/run/docker.sock"]
-    period: ${OPENVIDU_PRO_STATS_MONITORING_INTERVAL}s
-    enabled: true
   - module: nginx
     metricsets: ["stubstatus"]
     enabled: true
@@ -44,7 +30,9 @@ metricbeat.modules:
     enabled: true
     period: ${OPENVIDU_PRO_STATS_MONITORING_INTERVAL}s
     cpu.metrics: [normalized_percentages]
-fields: {cluster-role: openvidu-server-pro}
+fields:
+    cluster_id: ${OPENVIDU_PRO_CLUSTER_ID:${DOMAIN_OR_PUBLIC_IP}}
+    cluster_role: masternode
 output:
   elasticsearch:
     hosts: ["${OPENVIDU_PRO_ELASTICSEARCH_HOST}"]
