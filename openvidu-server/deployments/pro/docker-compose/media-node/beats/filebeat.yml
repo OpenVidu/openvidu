@@ -12,6 +12,7 @@ filebeat.inputs:
       kurento-media-server: true
       ip: ${MEDIA_NODE_IP}
       cluster_id: ${CLUSTER_ID}
+      node_id: ${NODE_ID}
       node_role: medianode
     fields_under_root: true
 
