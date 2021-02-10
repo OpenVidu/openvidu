@@ -25,6 +25,8 @@ processors:
             container.image.name: docker.elastic.co/beats/filebeat-oss
         - contains:
             container.image.name: docker.elastic.co/beats/metricbeat-oss
+        - contains:
+            container.image.name: openvidu/openvidu-server-pro
   - add_fields:
       fields:
         cluster_id: ${OPENVIDU_PRO_CLUSTER_ID:${DOMAIN_OR_PUBLIC_IP:undefined}}

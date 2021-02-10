@@ -26,7 +26,7 @@ metricbeat.modules:
                 - regexp:
                       system.filesystem.mount_point: '^/hostfs/(sys|cgroup|proc|dev|etc|host)($|/)'
     enabled: true
-    period: ${OPENVIDU_PRO_CLUSTER_LOAD_INTERVAL}0s
+    period: ${OPENVIDU_PRO_STATS_MONITORING_INTERVAL}0s
     cpu.metrics: [normalized_percentages]
 fields: 
   ip: "${MEDIA_NODE_IP}"
