@@ -32,6 +32,7 @@ metricbeat.modules:
     cpu.metrics: [normalized_percentages]
 fields:
     cluster_id: ${OPENVIDU_PRO_CLUSTER_ID:${DOMAIN_OR_PUBLIC_IP:undefined}}
+    node_id: master_${AWS_INSTANCE_ID:${OPENVIDU_PRO_CLUSTER_ID:${DOMAIN_OR_PUBLIC_IP:undefined}}}
     node_role: masternode
 output:
   elasticsearch:
