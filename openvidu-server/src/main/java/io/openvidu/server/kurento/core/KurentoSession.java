@@ -347,6 +347,7 @@ public class KurentoSession extends Session {
 
 	public int getNumberOfWebrtcConnections() {
 		return this.getActivePublishers() + this.participants.values().stream()
+				.filter(p -> !ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(p.getParticipantPublicId()))
 				.mapToInt(p -> ((KurentoParticipant) p).getSubscribers().size()).reduce(0, Integer::sum);
 	}
 

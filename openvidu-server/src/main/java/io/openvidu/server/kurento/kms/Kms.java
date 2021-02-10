@@ -36,8 +36,10 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.utils.QuarantineKiller;
+import io.openvidu.server.utils.RecordingUtils;
 import io.openvidu.server.utils.UpdatableTimerTask;
 
 /**
@@ -69,6 +71,7 @@ public class Kms {
 
 	private Map<String, KurentoSession> kurentoSessions = new ConcurrentHashMap<>();
 	private Map<String, String> activeRecordings = new ConcurrentHashMap<>();
+	private AtomicLong activeComposedRecordings = new AtomicLong();
 
 	public Kms(KmsProperties props, LoadManager loadManager, QuarantineKiller quarantineKiller) {
 		this.id = props.getId();
@@ -163,12 +166,19 @@ public class Kms {
 		return this.activeRecordings.entrySet();
 	}
 
-	public synchronized void incrementActiveRecordings(String recordingId, String sessionId) {
+	public synchronized void incrementActiveRecordings(String sessionId, String recordingId,
+			RecordingProperties properties) {
 		this.activeRecordings.put(recordingId, sessionId);
+		if (RecordingUtils.IS_COMPOSED(properties.outputMode())) {
+			this.activeComposedRecordings.incrementAndGet();
+		}
 	}
 
-	public synchronized void decrementActiveRecordings(String recordingId) {
+	public synchronized void decrementActiveRecordings(String recordingId, RecordingProperties properties) {
 		this.activeRecordings.remove(recordingId);
+		if (RecordingUtils.IS_COMPOSED(properties.outputMode())) {
+			this.activeComposedRecordings.decrementAndGet();
+		}
 		this.quarantineKiller.dropMediaNode(this.id);
 	}
 
@@ -250,9 +260,18 @@ public class Kms {
 		return this.uri;
 	}
 
+	public int getNumberOfConnections() {
+		return this.kurentoSessions.values().stream().mapToInt(kSession -> kSession.getNumberOfConnections()).reduce(0,
+				Integer::sum);
+	}
+
 	public int getNumberOfWebrtcConnections() {
-		return this.kurentoSessions.values().stream().mapToInt(session -> session.getNumberOfWebrtcConnections())
+		return this.kurentoSessions.values().stream().mapToInt(kSession -> kSession.getNumberOfWebrtcConnections())
 				.reduce(0, Integer::sum);
+	}
+
+	public int getNumberOfComposedRecordings() {
+		return this.activeComposedRecordings.intValue();
 	}
 
 }

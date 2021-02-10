@@ -272,4 +272,8 @@ public class Session implements SessionInterface {
 		return false;
 	}
 
+	public int getNumberOfConnections() {
+		return this.participants.size();
+	}
+
 }

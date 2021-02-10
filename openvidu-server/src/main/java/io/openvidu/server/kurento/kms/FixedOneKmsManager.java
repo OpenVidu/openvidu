@@ -71,17 +71,16 @@ public class FixedOneKmsManager extends KmsManager {
 	@Override
 	public void incrementActiveRecordings(RecordingProperties properties, String recordingId, Session session) {
 		try {
-			this.getKmss().iterator().next().incrementActiveRecordings(recordingId, session.getSessionId());
+			this.getKmss().iterator().next().incrementActiveRecordings(session.getSessionId(), recordingId, properties);
 		} catch (NoSuchElementException e) {
 			log.error("There is no KMS available when incrementing active recordings");
 		}
 	}
 
 	@Override
-	public void decrementActiveRecordings(RecordingProperties recordingProperties, String recordingId,
-			Session session) {
+	public void decrementActiveRecordings(RecordingProperties properties, String recordingId, Session session) {
 		try {
-			this.getKmss().iterator().next().decrementActiveRecordings(recordingId);
+			this.getKmss().iterator().next().decrementActiveRecordings(recordingId, properties);
 		} catch (NoSuchElementException e) {
 			log.error("There is no KMS available when decrementing active recordings");
 		}
