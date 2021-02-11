@@ -475,7 +475,7 @@ public class OpenviduConfig {
 	}
 
 	@PostConstruct
-	public void checkConfiguration() {
+	public void postConstruct() {
 		this.checkConfiguration(true);
 	}
 
