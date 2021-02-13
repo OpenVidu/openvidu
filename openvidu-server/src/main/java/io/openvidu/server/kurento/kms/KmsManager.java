@@ -323,7 +323,7 @@ public abstract class KmsManager {
 	}
 
 	public static String generateKmsId() {
-		return IdentifierPrefixes.KMS_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
+		return IdentifierPrefixes.MEDIA_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 				+ RandomStringUtils.randomAlphanumeric(7);
 	}
 
