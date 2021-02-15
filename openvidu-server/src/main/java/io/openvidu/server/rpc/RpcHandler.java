@@ -280,6 +280,9 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 							participant = sessionManager.newParticipant(sessionId, participantPrivateId, tokenObj,
 									clientMetadata, location, platform,
 									httpSession.getId().substring(0, Math.min(16, httpSession.getId().length())));
+							log.info("New Connection {} in Session {} with IP {} and platform {}",
+									participant.getParticipantPublicId(), sessionId, remoteAddress.getHostAddress(),
+									participant.getPlatform());
 						}
 
 						rpcConnection.setSessionId(sessionId);
