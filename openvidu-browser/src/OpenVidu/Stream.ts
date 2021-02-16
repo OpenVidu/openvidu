@@ -750,17 +750,6 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    getSelectedIceCandidate(): Promise<any> {
-        return new Promise((resolve, reject) => {
-            this.webRtcStats.getSelectedIceCandidateInfo()
-                .then(report => resolve(report))
-                .catch(error => reject(error));
-        });
-    }
-
-    /**
-     * @hidden
-     */
     getRemoteIceCandidateList(): RTCIceCandidate[] {
         return this.webRtcPeer.remoteCandidatesQueue;
     }

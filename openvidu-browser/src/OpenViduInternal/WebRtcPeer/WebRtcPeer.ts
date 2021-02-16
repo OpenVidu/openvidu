@@ -93,7 +93,7 @@ export class WebRtcPeer {
      * callback is expected to send the SDP offer, in order to obtain an SDP
      * answer from another peer.
      */
-    start(): Promise<any> {
+    start(): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.pc.signalingState === 'closed') {
                 reject('The peer connection object is in "closed" state. This is most likely due to an invocation of the dispose method before accepting in the dialogue');
