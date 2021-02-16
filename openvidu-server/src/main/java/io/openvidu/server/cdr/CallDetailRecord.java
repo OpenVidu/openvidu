@@ -217,9 +217,9 @@ public class CallDetailRecord {
 		});
 	}
 
-	public void recordMediaServerCrashed(Kms kms, String environmentId, long timeOfKurentoDisconnection) {
-		CDREvent e = new CDREventMediaServerCrashed(CDREventName.mediaServerCrashed, null, timeOfKurentoDisconnection,
-				kms, environmentId);
+	public void recordNodeCrashed(Kms kms, String environmentId, long timeOfKurentoDisconnection) {
+		CDREvent e = new CDREventNodeCrashed(CDREventName.nodeCrashed, null, timeOfKurentoDisconnection, kms,
+				environmentId);
 		this.log(e);
 	}
 

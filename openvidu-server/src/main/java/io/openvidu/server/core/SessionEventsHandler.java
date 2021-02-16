@@ -607,8 +607,11 @@ public class SessionEventsHandler {
 	public void onConnectionPropertyChanged(Participant participant, String property, Object newValue) {
 	}
 
-	public void onMediaServerCrashed(Kms kms, long timeOfKurentoDisconnection) {
-		CDR.recordMediaServerCrashed(kms, null, timeOfKurentoDisconnection);
+	public void onMediaNodeCrashed(Kms kms, long timeOfKurentoDisconnection) {
+		CDR.recordNodeCrashed(kms, null, timeOfKurentoDisconnection);
+	}
+
+	public void onMasterNodeCrashed() {
 	}
 
 	protected Set<Participant> filterParticipantsByRole(OpenViduRole[] roles, Set<Participant> participants) {

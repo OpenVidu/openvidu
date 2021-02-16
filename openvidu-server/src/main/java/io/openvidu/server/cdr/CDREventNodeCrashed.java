@@ -4,12 +4,12 @@ import com.google.gson.JsonObject;
 
 import io.openvidu.server.kurento.kms.Kms;
 
-public class CDREventMediaServerCrashed extends CDREvent {
+public class CDREventNodeCrashed extends CDREvent {
 
 	private Kms kms;
 	private String environmentId;
 
-	public CDREventMediaServerCrashed(CDREventName eventName, String sessionId, Long timeStamp, Kms kms,
+	public CDREventNodeCrashed(CDREventName eventName, String sessionId, Long timeStamp, Kms kms,
 			String environmentId) {
 		super(eventName, sessionId, timeStamp);
 		this.kms = kms;
