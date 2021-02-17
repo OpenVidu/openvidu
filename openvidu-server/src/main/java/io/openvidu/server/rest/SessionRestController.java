@@ -1036,6 +1036,7 @@ public class SessionRestController {
 		responseJson.addProperty("error", status.getReasonPhrase());
 		responseJson.addProperty("message", errorMessage);
 		responseJson.addProperty("path", RequestMappings.API + path);
+		log.warn("REST API error response to path {} ({}): {}", path, status.value(), errorMessage);
 		return new ResponseEntity<>(responseJson.toString(), RestUtils.getResponseHeaders(), status);
 	}
 
