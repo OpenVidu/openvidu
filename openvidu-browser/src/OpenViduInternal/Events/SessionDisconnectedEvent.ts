@@ -60,7 +60,8 @@ export class SessionDisconnectedEvent extends Event {
         const session = <Session>this.target;
 
         // Dispose and delete all remote Connections
-        for (const connectionId in session.remoteConnections) {
+        session.remoteConnections.forEach(remoteConnection => {
+            const connectionId = remoteConnection.connectionId;
             if (!!session.remoteConnections.get(connectionId)?.stream) {
                 session.remoteConnections.get(connectionId)?.stream!.disposeWebRtcPeer();
                 session.remoteConnections.get(connectionId)?.stream!.disposeMediaStream();
@@ -68,13 +69,13 @@ export class SessionDisconnectedEvent extends Event {
                     session.remoteConnections.get(connectionId)?.stream!.streamManager.removeAllVideos();
                 }
                 const streamId = session.remoteConnections.get(connectionId)?.stream?.streamId;
-                if(!!streamId){
+                if (!!streamId) {
                     session.remoteStreamsCreated.delete(streamId);
                 }
                 session.remoteConnections.get(connectionId)?.dispose();
             }
             session.remoteConnections.delete(connectionId);
-        }
+        });
     }
 
 }

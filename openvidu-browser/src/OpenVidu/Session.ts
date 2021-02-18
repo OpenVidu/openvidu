@@ -616,22 +616,20 @@ export class Session extends EventDispatcher {
         if (type === 'publisherStartSpeaking') {
             this.startSpeakingEventsEnabled = true;
             // If there are already available remote streams, enable hark 'speaking' event in all of them
-            for (const connectionId in this.remoteConnections) {
-                const str = this.remoteConnections.get(connectionId)?.stream;
-                if (!!str && str.hasAudio) {
-                    str.enableStartSpeakingEvent();
+            this.remoteConnections.forEach(remoteConnection => {
+                if (!!remoteConnection.stream && remoteConnection.stream.hasAudio) {
+                    remoteConnection.stream.enableStartSpeakingEvent();
                 }
-            }
+            });
         }
         if (type === 'publisherStopSpeaking') {
             this.stopSpeakingEventsEnabled = true;
             // If there are already available remote streams, enable hark 'stopped_speaking' event in all of them
-            for (const connectionId in this.remoteConnections) {
-                const str = this.remoteConnections.get(connectionId)?.stream;
-                if (!!str && str.hasAudio) {
-                    str.enableStopSpeakingEvent();
+            this.remoteConnections.forEach(remoteConnection => {
+                if (!!remoteConnection.stream && remoteConnection.stream.hasAudio) {
+                    remoteConnection.stream.enableStopSpeakingEvent();
                 }
-            }
+            });
         }
 
         return this;
@@ -648,22 +646,20 @@ export class Session extends EventDispatcher {
         if (type === 'publisherStartSpeaking') {
             this.startSpeakingEventsEnabledOnce = true;
             // If there are already available remote streams, enable hark 'speaking' event in all of them once
-            for (const connectionId in this.remoteConnections) {
-                const str = this.remoteConnections.get(connectionId)?.stream;
-                if (!!str && str.hasAudio) {
-                    str.enableOnceStartSpeakingEvent();
+            this.remoteConnections.forEach(remoteConnection => {
+                if (!!remoteConnection.stream && remoteConnection.stream.hasAudio) {
+                    remoteConnection.stream.enableOnceStartSpeakingEvent();
                 }
-            }
+            });
         }
         if (type === 'publisherStopSpeaking') {
             this.stopSpeakingEventsEnabledOnce = true;
             // If there are already available remote streams, enable hark 'stopped_speaking' event in all of them once
-            for (const connectionId in this.remoteConnections) {
-                const str = this.remoteConnections.get(connectionId)?.stream;
-                if (!!str && str.hasAudio) {
-                    str.enableOnceStopSpeakingEvent();
+            this.remoteConnections.forEach(remoteConnection => {
+                if (!!remoteConnection.stream && remoteConnection.stream.hasAudio) {
+                    remoteConnection.stream.enableOnceStopSpeakingEvent();
                 }
-            }
+            });
         }
 
         return this;
@@ -682,12 +678,11 @@ export class Session extends EventDispatcher {
             if (remainingStartSpeakingListeners === 0) {
                 this.startSpeakingEventsEnabled = false;
                 // If there are already available remote streams, disable hark in all of them
-                for (const connectionId in this.remoteConnections) {
-                    const str = this.remoteConnections.get(connectionId)?.stream;
-                    if (!!str) {
-                        str.disableStartSpeakingEvent(false);
+                this.remoteConnections.forEach(remoteConnection => {
+                    if (!!remoteConnection.stream) {
+                        remoteConnection.stream.disableStartSpeakingEvent(false);
                     }
-                }
+                });
             }
         }
         if (type === 'publisherStopSpeaking') {
@@ -695,12 +690,11 @@ export class Session extends EventDispatcher {
             if (remainingStopSpeakingListeners === 0) {
                 this.stopSpeakingEventsEnabled = false;
                 // If there are already available remote streams, disable hark in all of them
-                for (const connectionId in this.remoteConnections) {
-                    const str = this.remoteConnections.get(connectionId)?.stream;
-                    if (!!str) {
-                        str.disableStopSpeakingEvent(false);
+                this.remoteConnections.forEach(remoteConnection => {
+                    if (!!remoteConnection.stream) {
+                        remoteConnection.stream.disableStopSpeakingEvent(false);
                     }
-                }
+                });
             }
         }
         return this;
@@ -731,7 +725,7 @@ export class Session extends EventDispatcher {
      */
     onParticipantLeft(msg): void {
 
-        if(this.remoteConnections.size > 0) {
+        if (this.remoteConnections.size > 0) {
             this.getRemoteConnection(msg.connectionId).then(connection => {
                 if (!!connection.stream) {
                     const stream = connection.stream;
@@ -750,9 +744,9 @@ export class Session extends EventDispatcher {
                 this.remoteConnections.delete(connection.connectionId);
                 this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, msg.reason)]);
             })
-            .catch(openViduError => {
-                logger.error(openViduError);
-            });
+                .catch(openViduError => {
+                    logger.error(openViduError);
+                });
         }
     }
 
@@ -852,7 +846,7 @@ export class Session extends EventDispatcher {
 
         if (!!msg.from) {
             // Signal sent by other client
-            this.getConnection(msg.from, "Connection '" + msg.from + "' unknow when 'onNewMessage'. Existing remote connections: "
+            this.getConnection(msg.from, "Connection '" + msg.from + "' unknown when 'onNewMessage'. Existing remote connections: "
                 + JSON.stringify(this.remoteConnections.keys()) + '. Existing local connection: ' + this.connection.connectionId)
 
                 .then(connection => {
@@ -1100,13 +1094,13 @@ export class Session extends EventDispatcher {
             someReconnection = true;
         }
         // Re-establish Subscriber streams
-        for (let remoteConnection of Object.values(this.remoteConnections)) {
+        this.remoteConnections.forEach(remoteConnection => {
             if (!!remoteConnection.stream && remoteConnection.stream.streamIceConnectionStateBroken()) {
                 logger.warn('Re-establishing Subscriber ' + remoteConnection.stream.streamId);
                 remoteConnection.stream.initWebRtcPeerReceive(true);
                 someReconnection = true;
             }
-        }
+        });
         if (!someReconnection) {
             logger.info('There were no media streams in need of a reconnection');
         }
@@ -1202,7 +1196,7 @@ export class Session extends EventDispatcher {
                     if (loops < maxLoops) {
                         loops++;
                         obtainAndSendVideo();
-                    }else {
+                    } else {
                         clearInterval(this.videoDataInterval);
                     }
                 }, intervalSeconds * 1000);
@@ -1334,7 +1328,7 @@ export class Session extends EventDispatcher {
                 resolve(connection);
             } else {
                 // Remote connection not found. Reject with OpenViduError
-               const errorMessage = 'Remote connection ' + connectionId + " unknown when 'onParticipantLeft'. " +
+                const errorMessage = 'Remote connection ' + connectionId + " unknown when 'onParticipantLeft'. " +
                     'Existing remote connections: ' + JSON.stringify(this.remoteConnections.keys());
 
                 reject(new OpenViduError(OpenViduErrorName.GENERIC_ERROR, errorMessage));

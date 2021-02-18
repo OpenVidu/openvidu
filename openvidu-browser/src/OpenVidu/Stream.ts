@@ -780,7 +780,7 @@ export class Stream extends EventDispatcher {
             return false;
         }
         if (this.isLocal() && !!this.session.openvidu.advancedConfiguration.forceMediaReconnectionAfterNetworkDrop) {
-            logger.warn('OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Publisher stream ' + this.streamId + 'will force a reconnection');
+            logger.warn('OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Stream ' + this.streamId + ' will force a reconnection');
             return true;
         }
         const iceConnectionState: RTCIceConnectionState = this.getRTCPeerConnection().iceConnectionState;
