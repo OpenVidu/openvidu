@@ -9,7 +9,7 @@ services:
     # 
     #   Default Application
     #
-    #   Openvidu-Call Version: 2.16.0
+    #   Openvidu-Call Version: 2.17.0-beta2
     #
     # --------------------------------------------------------------
     app:
