@@ -211,6 +211,12 @@ public class CallDetailRecord {
 		});
 	}
 
+	public void log(WebrtcDebugEvent event) {
+		this.loggers.forEach(logger -> {
+			logger.log(event);
+		});
+	}
+
 	public void log(SessionSummary sessionSummary) {
 		this.loggers.forEach(logger -> {
 			logger.log(sessionSummary);

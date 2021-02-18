@@ -201,7 +201,11 @@ public class PublisherEndpoint extends MediaEndpoint {
 		String sdpResponse = null;
 		switch (sdpType) {
 		case ANSWER:
+
+			/** THIS IS CURRENTLY NEVER CALLED **/
 			sdpResponse = processAnswer(sdpString);
+			/** THIS IS CURRENTLY NEVER CALLED **/
+
 			break;
 		case OFFER:
 			sdpResponse = processOffer(sdpString);

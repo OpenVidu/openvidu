@@ -99,12 +99,6 @@ public class KurentoParticipant extends Participant {
 	}
 
 	public void createPublishingEndpoint(MediaOptions mediaOptions, String streamId) {
-		String type = mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO";
-		if (streamId == null) {
-			streamId = IdentifierPrefixes.STREAM_ID + type.substring(0, Math.min(type.length(), 3)) + "_"
-					+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(3)
-					+ "_" + this.getParticipantPublicId();
-		}
 		publisher.setStreamId(streamId);
 		publisher.setEndpointName(streamId);
 		publisher.setMediaOptions(mediaOptions);
@@ -261,8 +255,7 @@ public class KurentoParticipant extends Participant {
 								"Unable to create subscriber endpoint");
 					}
 
-					String subscriberEndpointName = this.getParticipantPublicId() + "_"
-							+ kSender.getPublisherStreamId();
+					String subscriberEndpointName = calculateSubscriberEndpointName(kSender);
 
 					subscriber.setEndpointName(subscriberEndpointName);
 					subscriber.getEndpoint().setName(subscriberEndpointName);
@@ -432,6 +425,17 @@ public class KurentoParticipant extends Participant {
 		String desc = event.getType() + ": " + event.getDescription() + "(errCode=" + event.getErrorCode() + ")";
 		log.warn("PARTICIPANT {}: Media error encountered: {}", getParticipantPublicId(), desc);
 		session.sendMediaError(this.getParticipantPrivateId(), desc);
+	}
+
+	public String generateStreamId(MediaOptions mediaOptions) {
+		String type = mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO";
+		return IdentifierPrefixes.STREAM_ID + type.substring(0, Math.min(type.length(), 3)) + "_"
+				+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(3) + "_"
+				+ this.getParticipantPublicId();
+	}
+
+	public String calculateSubscriberEndpointName(Participant senderParticipant) {
+		return this.getParticipantPublicId() + "_" + senderParticipant.getPublisherStreamId();
 	}
 
 	private void releasePublisherEndpoint(EndReason reason, Long kmsDisconnectionTime) {

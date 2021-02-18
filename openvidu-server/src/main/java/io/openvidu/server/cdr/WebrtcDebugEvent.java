@@ -6,16 +6,28 @@ import io.openvidu.server.core.Participant;
 
 public class WebrtcDebugEvent {
 
+	public enum WebrtcDebugEventIssuer {
+		client, server
+	}
+
+	public enum WebrtcDebugEventOperation {
+		publish, subscribe, reconnectPublisher, reconnectSubscriber
+	}
+
+	public enum WebrtcDebugEventType {
+		sdpOffer, sdpOfferMunged, sdpAnswer
+	}
+
 	private Participant participant;
 	private String endpoint;
-	private String issuer; // [client, server]
-	private String operation; // [publish, subscribe, reconnectPublisher, reconnectSubscriber]
-	private String type; // [sdpOffer, mungedSdpOffer, sdpAnswer]
+	private WebrtcDebugEventIssuer issuer;
+	private WebrtcDebugEventOperation operation;
+	private WebrtcDebugEventType type;
 	private String content;
 	private Long timestamp;
 
-	public WebrtcDebugEvent(Participant participant, String endpoint, String issuer, String operation, String type,
-			String content) {
+	public WebrtcDebugEvent(Participant participant, String endpoint, WebrtcDebugEventIssuer issuer,
+			WebrtcDebugEventOperation operation, WebrtcDebugEventType type, String content) {
 		this.participant = participant;
 		this.endpoint = endpoint;
 		this.issuer = issuer;
@@ -31,9 +43,9 @@ public class WebrtcDebugEvent {
 		json.addProperty("user", participant.getFinalUserId());
 		json.addProperty("connectionId", participant.getParticipantPublicId());
 		json.addProperty("endpoint", this.endpoint);
-		json.addProperty("issuer", this.issuer);
-		json.addProperty("operation", this.operation);
-		json.addProperty("type", this.type);
+		json.addProperty("issuer", this.issuer.name());
+		json.addProperty("operation", this.operation.name());
+		json.addProperty("type", this.type.name());
 		json.addProperty("content", this.content);
 		json.addProperty("timestamp", this.timestamp);
 		return json;

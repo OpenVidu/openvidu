@@ -26,6 +26,8 @@ public interface CDRLogger {
 
 	public void log(KmsEvent event);
 
+	public void log(WebrtcDebugEvent event);
+
 	public void log(SessionSummary sessionSummary);
 
 }
