@@ -270,6 +270,10 @@ public class Kms {
 				.reduce(0, Integer::sum);
 	}
 
+	public int getNumberOfRecordings() {
+		return this.activeRecordings.size();
+	}
+
 	public int getNumberOfComposedRecordings() {
 		return this.activeComposedRecordings.intValue();
 	}
