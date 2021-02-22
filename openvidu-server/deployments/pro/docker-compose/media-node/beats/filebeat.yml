@@ -2,9 +2,6 @@ filebeat.inputs:
   - type: container
     paths:
       - '/var/lib/docker/containers/*/*.log'
-    multiline.pattern: '^\d*:\d*:\d*'
-    multiline.negate: true
-    multiline.match: after
   - type: log 
     paths:
       - /opt/openvidu/kurento-logs/*.log
@@ -26,6 +23,12 @@ processors:
       fields: ["message"]
       target: "json"
       overwrite_keys: true
+  - drop_event:
+      when.or:
+        - contains:
+            container.image.name: docker.elastic.co/beats/filebeat-oss
+        - contains:
+            container.image.name: docker.elastic.co/beats/metricbeat-oss
 
 output:
   elasticsearch:
@@ -34,6 +37,14 @@ output:
         when.or:
           - equals:
               kurento-media-server: true
+      - index: "filebeat-media-node-controller-%{+yyyy.MM.dd}"
+        when.or:
+          - contains:
+              container.image.name: openvidu/media-node-controller
+      - index: "filebeat-openvidu-recording-%{+yyyy.MM.dd}"
+        when.or:
+          - contains:
+              container.image.name: openvidu/openvidu-recording
     pipelines:
       - pipeline: kurento-pipeline
         when.or:

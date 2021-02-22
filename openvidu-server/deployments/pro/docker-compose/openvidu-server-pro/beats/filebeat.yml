@@ -45,7 +45,10 @@ output:
         when.or:
           - contains:
               container.image.name: openvidu/openvidu-proxy
-
+      - index: "filebeat-openvidu-recording-%{+yyyy.MM.dd}"
+        when.or:
+          - contains:
+              container.image.name: openvidu/openvidu-recording
 
 logging.json: true
 logging.metrics.enabled: false
