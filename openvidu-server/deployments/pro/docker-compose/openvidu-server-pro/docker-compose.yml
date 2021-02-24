@@ -120,6 +120,7 @@ services:
         command: > 
             /bin/bash -c "elasticsearch-users useradd ${ELASTICSEARCH_USERNAME} 
             -p ${ELASTICSEARCH_PASSWORD} -r superuser;
+            elasticsearch-users passwd ${ELASTICSEARCH_USERNAME} -p ${ELASTICSEARCH_PASSWORD};
             docker-entrypoint.sh"
         logging:
             options:
