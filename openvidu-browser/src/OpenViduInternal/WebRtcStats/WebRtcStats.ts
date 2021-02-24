@@ -228,20 +228,20 @@ export class WebRtcStats {
                         const isOutboundRtp = valueNames.includes('bytesSent');
 
                         if(isIndoundRtp){
-                            response.inbound[mediaType].bytesReceived = stat.stat('bytesReceived');
-                            response.inbound[mediaType].packetsReceived = stat.stat('packetsReceived');
-                            response.inbound[mediaType].packetsLost = stat.stat('packetsLost');
+                            response.inbound[mediaType].bytesReceived = Number(stat.stat('bytesReceived'));
+                            response.inbound[mediaType].packetsReceived = Number(stat.stat('packetsReceived'));
+                            response.inbound[mediaType].packetsLost = Number(stat.stat('packetsLost'));
                             if(mediaType === 'video'){
-                                response.inbound['video'].framesDecoded = stat.stat('framesDecoded');
-                                response.inbound['video'].nackCount = stat.stat('nackCount');
+                                response.inbound['video'].framesDecoded = Number(stat.stat('framesDecoded'));
+                                response.inbound['video'].nackCount = Number(stat.stat('nackCount'));
                             }
 
                         } else if(isOutboundRtp) {
-                            response.outbound[mediaType].bytesSent = stat.stat('bytesSent');
-                            response.outbound[mediaType].packetsSent = stat.stat('packetsSent');
+                            response.outbound[mediaType].bytesSent = Number(stat.stat('bytesSent'));
+                            response.outbound[mediaType].packetsSent = Number(stat.stat('packetsSent'));
                             if(mediaType === 'video'){
-                                response.outbound['video'].framesEncoded = stat.stat('framesEncoded');
-                                response.outbound['video'].nackCount = stat.stat('nackCount');
+                                response.outbound['video'].framesEncoded = Number(stat.stat('framesEncoded'));
+                                response.outbound['video'].nackCount = Number(stat.stat('nackCount'));
                             }
                         }
                     });
@@ -257,19 +257,19 @@ export class WebRtcStats {
                     // isRemote property has been deprecated from Firefox 66 https://blog.mozilla.org/webrtc/getstats-isremote-66/
                     switch (stat.type) {
                         case "outbound-rtp":
-                            response.outbound[mediaType].bytesSent = stat.bytesSent;
-                            response.outbound[mediaType].packetsSent = stat.packetsSent;
+                            response.outbound[mediaType].bytesSent = Number(stat.bytesSent);
+                            response.outbound[mediaType].packetsSent = Number(stat.packetsSent);
                             if(mediaType === 'video'){
-                                response.outbound[mediaType].framesEncoded = stat.framesEncoded;
+                                response.outbound[mediaType].framesEncoded = Number(stat.framesEncoded);
                             }
                             break;
                         case "inbound-rtp":
-                            response.inbound[mediaType].bytesReceived = stat.bytesReceived;
-                            response.inbound[mediaType].packetsReceived = stat.packetsReceived;
-                            response.inbound[mediaType].packetsLost = stat.packetsLost;
+                            response.inbound[mediaType].bytesReceived = Number(stat.bytesReceived);
+                            response.inbound[mediaType].packetsReceived = Number(stat.packetsReceived);
+                            response.inbound[mediaType].packetsLost = Number(stat.packetsLost);
                             if (mediaType === 'video') {
-                                response.inbound[mediaType].framesDecoded = stat.framesDecoded;
-                                response.inbound[mediaType].nackCount = stat.nackCount;
+                                response.inbound[mediaType].framesDecoded = Number(stat.framesDecoded);
+                                response.inbound[mediaType].nackCount = Number(stat.nackCount);
                             }
                             break;
                     }
