@@ -34,15 +34,44 @@ interface WebrtcStatsConfig {
     httpEndpoint: string
 }
 
-interface JSONStats {
+interface JSONStatsResponse {
     '@timestamp': string,
     participant_id: string,
     session_id: string,
     platform: string,
     platform_description: string,
     stream: string,
-    webrtc_stats: RTCStatsReport
+    webrtc_stats: IWebrtcStats
 }
+
+interface IWebrtcStats {
+    inbound: {
+        audio: {
+            bytesReceived: number,
+            packetsReceived: number,
+            packetsLost: number
+        } | {},
+        video: {
+            bytesReceived: number,
+            packetsReceived: number,
+            packetsLost: number,
+            framesDecoded: number,
+            nackCount: number
+        } | {}
+    } | {},
+    outbound: {
+        audio: {
+            bytesSent: number,
+            packetsSent: number,
+        } | {},
+        video: {
+            bytesSent: number,
+            packetsSent: number,
+            framesEncoded: number,
+            nackCount: number
+        } | {}
+    } | {}
+};
 
 export class WebRtcStats {
 
@@ -66,15 +95,14 @@ export class WebRtcStats {
         const webrtcObj = localStorage.getItem(this.STATS_ITEM_NAME);
 
         if (!!webrtcObj) {
-
             this.webRtcStatsEnabled = true;
             const webrtcStatsConfig: WebrtcStatsConfig = JSON.parse(webrtcObj);
-            this.POST_URL = webrtcStatsConfig.httpEndpoint;
-            this.statsInterval = webrtcStatsConfig.interval;  // Interval in seconds
-
             // webrtc object found in local storage
             logger.warn('WebRtc stats enabled for stream ' + this.stream.streamId + ' of connection ' + this.stream.connection.connectionId);
             logger.warn('localStorage item: ' + JSON.stringify(webrtcStatsConfig));
+
+            this.POST_URL = webrtcStatsConfig.httpEndpoint;
+            this.statsInterval = webrtcStatsConfig.interval;  // Interval in seconds
 
             this.webRtcStatsIntervalId = setInterval(async () => {
                 await this.sendStatsToHttpEndpoint();
@@ -155,13 +183,13 @@ export class WebRtcStats {
         }
     }
 
-    private async sendStats(url: string, json: JSONStats): Promise<void> {
+    private async sendStats(url: string, response: JSONStatsResponse): Promise<void> {
         try {
             const configuration: RequestInit = {
                 headers: {
                     'Content-type': 'application/json'
                 },
-                body: JSON.stringify(json),
+                body: JSON.stringify(response),
                 method: 'POST',
             };
             await fetch(url, configuration);
@@ -173,34 +201,88 @@ export class WebRtcStats {
 
     private async sendStatsToHttpEndpoint(): Promise<void> {
         try {
-            const stats: RTCStatsReport = await this.getStats();
-            const json = this.generateJSONStats(stats);
-            // this.parseAndSendStats(stats);
-            await this.sendStats(this.POST_URL, json);
+            const webrtcStats: IWebrtcStats = await this.getStats();
+            const response = this.generateJSONStatsResponse(webrtcStats);
+            await this.sendStats(this.POST_URL, response);
         } catch (error) {
             logger.log(error);
         }
     }
 
-    private async getStats(): Promise<any> {
+    private async getStats(): Promise<IWebrtcStats> {
 
         return new Promise(async (resolve, reject) => {
             if (platform.isChromeBrowser() || platform.isChromeMobileBrowser() || platform.isOperaBrowser() || platform.isOperaMobileBrowser()) {
 
                 const pc: any = this.stream.getRTCPeerConnection();
                 pc.getStats((statsReport) => {
-                    resolve(this.standardizeReport(statsReport));
+                    const stats = statsReport.result().filter((stat) => stat.type === 'ssrc');
+                    const response = this.initWebRtcStatsResponse();
+
+                    stats.forEach(stat => {
+                        const valueNames: string[] = stat.names();
+                        const mediaType = stat.stat("mediaType");
+                        const isAudio = mediaType === 'audio' && valueNames.includes('audioOutputLevel');
+                        const isVideo = mediaType === 'video' && valueNames.includes('qpSum');
+                        const isIndoundRtp = valueNames.includes('bytesReceived') && (isAudio || isVideo);
+                        const isOutboundRtp = valueNames.includes('bytesSent');
+
+                        if(isIndoundRtp){
+                            response.inbound[mediaType].bytesReceived = stat.stat('bytesReceived');
+                            response.inbound[mediaType].packetsReceived = stat.stat('packetsReceived');
+                            response.inbound[mediaType].packetsLost = stat.stat('packetsLost');
+                            if(mediaType === 'video'){
+                                response.inbound['video'].framesDecoded = stat.stat('framesDecoded');
+                                response.inbound['video'].nackCount = stat.stat('nackCount');
+                            }
+
+                        } else if(isOutboundRtp) {
+                            response.outbound[mediaType].bytesSent = stat.stat('bytesSent');
+                            response.outbound[mediaType].packetsSent = stat.stat('packetsSent');
+                            if(mediaType === 'video'){
+                                response.outbound['video'].framesEncoded = stat.stat('framesEncoded');
+                                response.outbound['video'].nackCount = stat.stat('nackCount');
+                            }
+                        }
+                    });
+                    resolve(response);
+
                 });
             } else {
-                const statsReport = await this.stream.getRTCPeerConnection().getStats();
-                resolve(this.standardizeReport(statsReport));
+                const statsReport:any = await this.stream.getRTCPeerConnection().getStats(null);
+                const response = this.initWebRtcStatsResponse();
+                statsReport.forEach((stat: any) => {
+
+                    const mediaType = stat.mediaType;
+                    // isRemote property has been deprecated from Firefox 66 https://blog.mozilla.org/webrtc/getstats-isremote-66/
+                    switch (stat.type) {
+                        case "outbound-rtp":
+                            response.outbound[mediaType].bytesSent = stat.bytesSent;
+                            response.outbound[mediaType].packetsSent = stat.packetsSent;
+                            if(mediaType === 'video'){
+                                response.outbound[mediaType].framesEncoded = stat.framesEncoded;
+                            }
+                            break;
+                        case "inbound-rtp":
+                            response.inbound[mediaType].bytesReceived = stat.bytesReceived;
+                            response.inbound[mediaType].packetsReceived = stat.packetsReceived;
+                            response.inbound[mediaType].packetsLost = stat.packetsLost;
+                            if (mediaType === 'video') {
+                                response.inbound[mediaType].framesDecoded = stat.framesDecoded;
+                                response.inbound[mediaType].nackCount = stat.nackCount;
+                            }
+                            break;
+                    }
+                });
+
+                return resolve(response);
             }
 
         });
 
     }
 
-    private generateJSONStats(stats: RTCStatsReport): JSONStats {
+    private generateJSONStatsResponse(stats: IWebrtcStats): JSONStatsResponse {
         return {
             '@timestamp': new Date().toISOString(),
             participant_id: this.stream.connection.data,
@@ -212,34 +294,19 @@ export class WebRtcStats {
         };
     }
 
-    private standardizeReport(response: RTCStatsReport | any) {
-        let standardReport = {};
+    private initWebRtcStatsResponse(): IWebrtcStats {
 
-        if (platform.isChromeBrowser() || platform.isChromeMobileBrowser() || platform.isOperaBrowser() || platform.isOperaMobileBrowser()) {
-            response.result().forEach(report => {
-                const standardStats = {
-                    id: report.id,
-                    timestamp: report.timestamp,
-                    type: report.type
-                };
-                report.names().forEach((name) => {
-                    standardStats[name] = report.stat(name);
-                });
-                standardReport[standardStats.id] = standardStats;
-            });
+        return {
+            inbound: {
+                audio: {},
+                video: {}
+            },
+            outbound: {
+                audio: {},
+                video: {}
+            }
+        };
 
-            return standardReport;
-        }
-
-        // Others platforms
-        response.forEach((values) => {
-            let standardStats: any = {};
-            Object.keys(values).forEach((value: any) => {
-                standardStats[value] = values[value];
-            });
-           standardReport[standardStats.id] = standardStats
-        });
-
-        return standardReport;
     }
+
 }
