@@ -1170,24 +1170,27 @@ export class Session extends EventDispatcher {
             platform.isSamsungBrowser() || platform.isIonicAndroid() || (platform.isIPhoneOrIPad() && platform.isIOSWithSafari())
         ) {
             const obtainAndSendVideo = async () => {
-                const statsMap = await streamManager.stream.getRTCPeerConnection().getStats();
-                const arr: any[] = [];
-                statsMap.forEach(stats => {
-                    if (("frameWidth" in stats) && ("frameHeight" in stats) && (arr.length === 0)) {
-                        arr.push(stats);
-                    }
-                });
-                if (arr.length > 0) {
-                    this.openvidu.sendRequest('videoData', {
-                        height: arr[0].frameHeight,
-                        width: arr[0].frameWidth,
-                        videoActive: streamManager.stream.videoActive != null ? streamManager.stream.videoActive : false,
-                        audioActive: streamManager.stream.audioActive != null ? streamManager.stream.audioActive : false
-                    }, (error, response) => {
-                        if (error) {
-                            logger.error("Error sending 'videoData' event", error);
+                const pc = streamManager.stream.getRTCPeerConnection();
+                if (pc.connectionState === 'connected') {
+                    const statsMap = await pc.getStats();
+                    const arr: any[] = [];
+                    statsMap.forEach(stats => {
+                        if (("frameWidth" in stats) && ("frameHeight" in stats) && (arr.length === 0)) {
+                            arr.push(stats);
                         }
                     });
+                    if (arr.length > 0) {
+                        this.openvidu.sendRequest('videoData', {
+                            height: arr[0].frameHeight,
+                            width: arr[0].frameWidth,
+                            videoActive: streamManager.stream.videoActive != null ? streamManager.stream.videoActive : false,
+                            audioActive: streamManager.stream.audioActive != null ? streamManager.stream.audioActive : false
+                        }, (error, response) => {
+                            if (error) {
+                                logger.error("Error sending 'videoData' event", error);
+                            }
+                        });
+                    }
                 }
             }
             if (doInterval) {
