@@ -427,7 +427,7 @@ public class OpenviduConfig {
 		return this.getValue(property, true);
 	}
 
-	private String getValue(String property, boolean storeInConfigProps) {
+	protected String getValue(String property, boolean storeInConfigProps) {
 		String value = null;
 		if (propertiesSource != null) {
 			Object valueObj = propertiesSource.get(property);
