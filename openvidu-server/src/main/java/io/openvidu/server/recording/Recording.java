@@ -58,6 +58,7 @@ public class Recording {
 	public Recording(JsonObject json) {
 		this.id = json.get("id").getAsString();
 		this.sessionId = json.get("sessionId").getAsString();
+		this.uniqueSessionId = json.get("uniqueSessionId").getAsString();
 		this.createdAt = json.get("createdAt").getAsLong();
 		this.size = json.get("size").getAsLong();
 		try {
@@ -204,6 +205,7 @@ public class Recording {
 			}
 		}
 		json.addProperty("sessionId", this.sessionId);
+		json.addProperty("uniqueSessionId", this.uniqueSessionId);
 		json.addProperty("createdAt", this.createdAt);
 		json.addProperty("size", this.size);
 		json.addProperty("duration", this.duration);
