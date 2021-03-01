@@ -27,8 +27,9 @@ public class CDREventSignal extends CDREvent {
 	private String type;
 	private String data;
 
-	public CDREventSignal(String sessionId, String from, String[] to, String type, String data) {
-		super(CDREventName.signalSent, sessionId, System.currentTimeMillis());
+	public CDREventSignal(String sessionId, String uniqueSessionId, String from, String[] to, String type,
+			String data) {
+		super(CDREventName.signalSent, sessionId, uniqueSessionId, System.currentTimeMillis());
 		this.from = from;
 		this.to = to;
 		this.type = type;

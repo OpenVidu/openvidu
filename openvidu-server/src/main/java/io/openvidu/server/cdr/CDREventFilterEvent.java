@@ -12,9 +12,10 @@ public class CDREventFilterEvent extends CDREvent {
 	private String streamId;
 	private String filterType;
 
-	public CDREventFilterEvent(String sessionId, String connectionId, String streamId, String filterType,
-			GenericMediaEvent event) {
-		super(CDREventName.filterEventDispatched, sessionId, Long.parseLong(event.getTimestampMillis()));
+	public CDREventFilterEvent(String sessionId, String uniqueSessionId, String connectionId, String streamId,
+			String filterType, GenericMediaEvent event) {
+		super(CDREventName.filterEventDispatched, sessionId, uniqueSessionId,
+				Long.parseLong(event.getTimestampMillis()));
 		this.event = event;
 		this.connectionId = connectionId;
 		this.streamId = streamId;

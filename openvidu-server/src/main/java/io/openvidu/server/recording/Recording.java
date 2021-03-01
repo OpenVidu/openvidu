@@ -31,6 +31,7 @@ public class Recording {
 
 	private String id;
 	private String sessionId;
+	private String uniqueSessionId;
 	private long createdAt; // milliseconds (UNIX Epoch time)
 	private long size = 0; // bytes
 	private double duration = 0; // seconds
@@ -42,8 +43,9 @@ public class Recording {
 
 	public AtomicBoolean recordingNotificationSent = new AtomicBoolean(false);
 
-	public Recording(String sessionId, String id, RecordingProperties recordingProperties) {
+	public Recording(String sessionId, String uniqueSessionId, String id, RecordingProperties recordingProperties) {
 		this.sessionId = sessionId;
+		this.uniqueSessionId = uniqueSessionId;
 		this.createdAt = System.currentTimeMillis();
 		this.id = id;
 		this.status = io.openvidu.java.client.Recording.Status.started;
@@ -128,8 +130,8 @@ public class Recording {
 		return sessionId;
 	}
 
-	public void setSessionId(String sessionId) {
-		this.sessionId = sessionId;
+	public String getUniqueSessionId() {
+		return uniqueSessionId;
 	}
 
 	public long getCreatedAt() {

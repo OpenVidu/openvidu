@@ -322,7 +322,7 @@ public class SessionEventsHandler {
 	}
 
 	public void onSendMessage(Participant participant, JsonObject message, Set<Participant> participants,
-			String sessionId, Integer transactionId, OpenViduException error) {
+			String sessionId, String uniqueSessionId, Integer transactionId, OpenViduException error) {
 
 		boolean isRpcCall = transactionId != null;
 		if (isRpcCall) {
@@ -391,7 +391,7 @@ public class SessionEventsHandler {
 			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 		}
 
-		CDR.recordSignalSent(sessionId, from, toSet.toArray(new String[toSet.size()]), type, data);
+		CDR.recordSignalSent(sessionId, uniqueSessionId, from, toSet.toArray(new String[toSet.size()]), type, data);
 	}
 
 	public void onStreamPropertyChanged(Participant participant, Integer transactionId, Set<Participant> participants,
@@ -561,10 +561,10 @@ public class SessionEventsHandler {
 		}
 	}
 
-	public void onFilterEventDispatched(String sessionId, String connectionId, String streamId, String filterType,
+	public void onFilterEventDispatched(String sessionId, String uniqueSessionId, String connectionId, String streamId, String filterType,
 			GenericMediaEvent event, Set<Participant> participants, Set<String> subscribedParticipants) {
 
-		CDR.recordFilterEventDispatched(sessionId, connectionId, streamId, filterType, event);
+		CDR.recordFilterEventDispatched(sessionId, uniqueSessionId, connectionId, streamId, filterType, event);
 
 		JsonObject params = new JsonObject();
 		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_CONNECTIONID_PARAM, connectionId);

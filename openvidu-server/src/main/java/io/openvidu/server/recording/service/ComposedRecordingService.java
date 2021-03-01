@@ -84,7 +84,8 @@ public class ComposedRecordingService extends RecordingService {
 			throws OpenViduException {
 
 		// Instantiate and store recording object
-		Recording recording = new Recording(session.getSessionId(), recordingId, properties);
+		Recording recording = new Recording(session.getSessionId(), session.getUniqueSessionId(), recordingId,
+				properties);
 		this.recordingManager.recordingToStarting(recording);
 
 		if (properties.hasVideo()) {

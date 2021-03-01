@@ -32,7 +32,8 @@ public class CDREventRecordingStatus extends CDREventEnd {
 
 	public CDREventRecordingStatus(Recording recording, Long startTime, EndReason reason, Long timestamp,
 			Status status) {
-		super(CDREventName.recordingStatusChanged, recording.getSessionId(), startTime, reason, timestamp);
+		super(CDREventName.recordingStatusChanged, recording.getSessionId(), recording.getUniqueSessionId(), startTime,
+				reason, timestamp);
 		this.recording = recording;
 		this.status = status;
 	}

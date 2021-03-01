@@ -9,9 +9,8 @@ public class CDREventNodeCrashed extends CDREvent {
 	private Kms kms;
 	private String environmentId;
 
-	public CDREventNodeCrashed(CDREventName eventName, String sessionId, Long timeStamp, Kms kms,
-			String environmentId) {
-		super(eventName, sessionId, timeStamp);
+	public CDREventNodeCrashed(CDREventName eventName, Long timeStamp, Kms kms, String environmentId) {
+		super(eventName, null, null, timeStamp);
 		this.kms = kms;
 		this.environmentId = environmentId;
 	}

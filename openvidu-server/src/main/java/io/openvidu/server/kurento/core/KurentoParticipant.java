@@ -79,9 +79,9 @@ public class KurentoParticipant extends Participant {
 			KurentoParticipantEndpointConfig endpointConfig, OpenviduConfig openviduConfig,
 			RecordingManager recordingManager) {
 		super(participant.getFinalUserId(), participant.getParticipantPrivateId(), participant.getParticipantPublicId(),
-				kurentoSession.getSessionId(), participant.getToken(), participant.getClientMetadata(),
-				participant.getLocation(), participant.getPlatform(), participant.getEndpointType(),
-				participant.getActiveAt());
+				kurentoSession.getSessionId(), kurentoSession.getUniqueSessionId(), participant.getToken(),
+				participant.getClientMetadata(), participant.getLocation(), participant.getPlatform(),
+				participant.getEndpointType(), participant.getActiveAt());
 		this.endpointConfig = endpointConfig;
 		this.openviduConfig = openviduConfig;
 		this.recordingManager = recordingManager;
@@ -190,8 +190,8 @@ public class KurentoParticipant extends Participant {
 		}
 
 		if (!silent) {
-			endpointConfig.getCdr().recordNewPublisher(this, session.getSessionId(), publisher.getStreamId(),
-					publisher.getMediaOptions(), publisher.createdAt());
+			endpointConfig.getCdr().recordNewPublisher(this, publisher.getStreamId(), publisher.getMediaOptions(),
+					publisher.createdAt());
 		}
 
 		return sdpResponse;
@@ -278,8 +278,8 @@ public class KurentoParticipant extends Participant {
 
 					if (!silent
 							&& !ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
-						endpointConfig.getCdr().recordNewSubscriber(this, this.session.getSessionId(),
-								sender.getPublisherStreamId(), sender.getParticipantPublicId(), subscriber.createdAt());
+						endpointConfig.getCdr().recordNewSubscriber(this, sender.getPublisherStreamId(),
+								sender.getParticipantPublicId(), subscriber.createdAt());
 					}
 
 					return sdpAnswer;

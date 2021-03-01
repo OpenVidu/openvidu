@@ -113,10 +113,11 @@ public abstract class SessionManager {
 
 	public abstract void unsubscribe(Participant participant, String senderName, Integer transactionId);
 
-	public void sendMessage(String message, String sessionId) {
+	public void sendMessage(String message, Session session) {
 		try {
 			JsonObject messageJson = JsonParser.parseString(message).getAsJsonObject();
-			sessionEventsHandler.onSendMessage(null, messageJson, getParticipants(sessionId), sessionId, null, null);
+			sessionEventsHandler.onSendMessage(null, messageJson, getParticipants(session.getSessionId()),
+					session.getSessionId(), session.getUniqueSessionId(), null, null);
 		} catch (JsonSyntaxException | IllegalStateException e) {
 			throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
 					"Provided signal object '" + message + "' has not a valid JSON format");
@@ -127,7 +128,7 @@ public abstract class SessionManager {
 		try {
 			JsonObject messageJson = JsonParser.parseString(message).getAsJsonObject();
 			sessionEventsHandler.onSendMessage(participant, messageJson, getParticipants(participant.getSessionId()),
-					participant.getSessionId(), transactionId, null);
+					participant.getSessionId(), participant.getUniqueSessionId(), transactionId, null);
 		} catch (JsonSyntaxException | IllegalStateException e) {
 			throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
 					"Provided signal object '" + message + "' has not a valid JSON format");
@@ -358,13 +359,15 @@ public abstract class SessionManager {
 		this.insecureUsers.put(participantPrivateId, true);
 	}
 
-	public Participant newParticipant(String sessionId, String participantPrivateId, Token token,
-			String clientMetadata, GeoLocation location, String platform, String finalUserId) {
+	public Participant newParticipant(Session session, String participantPrivateId, Token token, String clientMetadata,
+			GeoLocation location, String platform, String finalUserId) {
 
+		String sessionId = session.getSessionId();
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 
 			Participant p = new Participant(finalUserId, participantPrivateId, token.getConnectionId(), sessionId,
-					token, clientMetadata, location, platform, EndpointType.WEBRTC_ENDPOINT, null);
+					session.getUniqueSessionId(), token, clientMetadata, location, platform,
+					EndpointType.WEBRTC_ENDPOINT, null);
 
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(p.getParticipantPublicId(), p);
 
@@ -381,11 +384,13 @@ public abstract class SessionManager {
 		}
 	}
 
-	public Participant newRecorderParticipant(String sessionId, String participantPrivateId, Token token,
+	public Participant newRecorderParticipant(Session session, String participantPrivateId, Token token,
 			String clientMetadata) {
+		String sessionId = session.getSessionId();
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			Participant p = new Participant(null, participantPrivateId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
-					sessionId, token, clientMetadata, null, null, EndpointType.WEBRTC_ENDPOINT, null);
+					sessionId, session.getUniqueSessionId(), token, clientMetadata, null, null,
+					EndpointType.WEBRTC_ENDPOINT, null);
 			this.sessionidParticipantpublicidParticipant.get(sessionId)
 					.put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
 			return p;
@@ -394,11 +399,12 @@ public abstract class SessionManager {
 		}
 	}
 
-	public Participant newIpcamParticipant(String sessionId, String ipcamId, Token token, GeoLocation location,
+	public Participant newIpcamParticipant(Session session, String ipcamId, Token token, GeoLocation location,
 			String platform) {
+		String sessionId = session.getSessionId();
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = new Participant(ipcamId, ipcamId, ipcamId, sessionId, token, null, location, platform,
-					EndpointType.PLAYER_ENDPOINT, null);
+			Participant p = new Participant(ipcamId, ipcamId, ipcamId, sessionId, session.getUniqueSessionId(), token,
+					null, location, platform, EndpointType.PLAYER_ENDPOINT, null);
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(ipcamId, p);
 			return p;
 		} else {

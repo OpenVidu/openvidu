@@ -92,7 +92,8 @@ public class SingleStreamRecordingService extends RecordingService {
 				properties.hasVideo() ? (properties.hasAudio() ? "video+audio" : "video-only") : "audioOnly",
 				recordingId, session.getSessionId());
 
-		Recording recording = new Recording(session.getSessionId(), recordingId, properties);
+		Recording recording = new Recording(session.getSessionId(), session.getUniqueSessionId(), recordingId,
+				properties);
 		this.recordingManager.recordingToStarting(recording);
 
 		activeRecorders.put(recording.getId(), new ConcurrentHashMap<>());

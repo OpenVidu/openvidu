@@ -47,6 +47,7 @@ public class Participant {
 	protected String participantPrivateId; // ID to identify the user on server (org.kurento.jsonrpc.Session.id)
 	protected String participantPublicId; // ID to identify the user on clients
 	protected String sessionId; // ID of the session to which the participant belongs
+	protected String uniqueSessionId;
 	protected ParticipantStatus status; // Status of the connection
 	protected Long activeAt; // Timestamp when this connection entered status "active"
 	protected String clientMetadata = ""; // Metadata provided on client side
@@ -76,12 +77,13 @@ public class Participant {
 	public Lock singleRecordingLock = new ReentrantLock();
 
 	public Participant(String finalUserId, String participantPrivateId, String participantPublicId, String sessionId,
-			Token token, String clientMetadata, GeoLocation location, String platform, EndpointType endpointType,
-			Long activeAt) {
+			String uniqueSessionId, Token token, String clientMetadata, GeoLocation location, String platform,
+			EndpointType endpointType, Long activeAt) {
 		this.finalUserId = finalUserId;
 		this.participantPrivateId = participantPrivateId;
 		this.participantPublicId = participantPublicId;
 		this.sessionId = sessionId;
+		this.uniqueSessionId = uniqueSessionId;
 		this.status = ParticipantStatus.active;
 		this.token = token;
 		if (activeAt != null) {
@@ -119,6 +121,10 @@ public class Participant {
 
 	public String getSessionId() {
 		return sessionId;
+	}
+
+	public String getUniqueSessionId() {
+		return uniqueSessionId;
 	}
 
 	public Long getActiveAt() {
@@ -210,7 +216,8 @@ public class Participant {
 	}
 
 	public boolean isIpcam() {
-		return this.platform != null && this.platform.equals("IPCAM") && this.participantPrivateId.startsWith(IdentifierPrefixes.IPCAM_ID);
+		return this.platform != null && this.platform.equals("IPCAM")
+				&& this.participantPrivateId.startsWith(IdentifierPrefixes.IPCAM_ID);
 	}
 
 	public String getPublisherStreamId() {

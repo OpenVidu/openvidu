@@ -638,7 +638,7 @@ public class SessionRestController {
 		}
 
 		try {
-			sessionManager.sendMessage(completeMessage.toString(), sessionId);
+			sessionManager.sendMessage(completeMessage.toString(), session);
 		} catch (OpenViduException e) {
 			return this.generateErrorResponse("\"to\" array has no valid connection identifiers", "/signal",
 					HttpStatus.NOT_ACCEPTABLE);

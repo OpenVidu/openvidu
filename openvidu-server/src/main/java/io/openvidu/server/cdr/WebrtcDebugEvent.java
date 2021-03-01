@@ -40,6 +40,7 @@ public class WebrtcDebugEvent {
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("sessionId", participant.getSessionId());
+		json.addProperty("uniqueSessionId", participant.getUniqueSessionId());
 		json.addProperty("user", participant.getFinalUserId());
 		json.addProperty("connectionId", participant.getParticipantPublicId());
 		json.addProperty("endpoint", this.endpoint);

@@ -28,13 +28,15 @@ public class CDREventParticipant extends CDREventEnd {
 
 	// participantJoined
 	public CDREventParticipant(Participant participant) {
-		super(CDREventName.participantJoined, participant.getSessionId(), participant.getActiveAt());
+		super(CDREventName.participantJoined, participant.getSessionId(), participant.getUniqueSessionId(),
+				participant.getActiveAt());
 		this.participant = participant;
 	}
 
 	// participantLeft
 	public CDREventParticipant(CDREventParticipant event, EndReason reason, Long timestamp) {
-		super(CDREventName.participantLeft, event.getSessionId(), event.getTimestamp(), reason, timestamp);
+		super(CDREventName.participantLeft, event.getSessionId(), event.getUniqueSessionId(), event.getTimestamp(),
+				reason, timestamp);
 		this.participant = event.participant;
 	}
 

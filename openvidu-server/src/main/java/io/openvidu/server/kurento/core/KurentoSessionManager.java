@@ -1089,7 +1089,7 @@ public class KurentoSessionManager extends SessionManager {
 		this.newTokenForInsecureUser(session, token, connectionProperties);
 		final Token tokenObj = session.consumeToken(token);
 
-		Participant ipcamParticipant = this.newIpcamParticipant(sessionId, rtspConnectionId, tokenObj, location,
+		Participant ipcamParticipant = this.newIpcamParticipant(session, rtspConnectionId, tokenObj, location,
 				mediaOptions.getTypeOfVideo());
 
 		// Store a "fake" final user for the IpCam connection
@@ -1246,13 +1246,14 @@ public class KurentoSessionManager extends SessionManager {
 		PublisherEndpoint pub = kParticipant.getPublisher();
 		if (!pub.isListenerAddedToFilterEvent(eventType)) {
 			final String sessionId = kParticipant.getSessionId();
+			final String uniqueSessionId = kParticipant.getUniqueSessionId();
 			final String connectionId = kParticipant.getParticipantPublicId();
 			final String streamId = kParticipant.getPublisherStreamId();
 			final String filterType = kParticipant.getPublisherMediaOptions().getFilter().getType();
 			try {
 				ListenerSubscription listener = pub.getFilter().addEventListener(eventType, event -> {
-					sessionEventsHandler.onFilterEventDispatched(sessionId, connectionId, streamId, filterType, event,
-							kParticipant.getSession().getParticipants(),
+					sessionEventsHandler.onFilterEventDispatched(sessionId, uniqueSessionId, connectionId, streamId,
+							filterType, event, kParticipant.getSession().getParticipants(),
 							kParticipant.getPublisher().getPartipantsListentingToFilterEvent(eventType));
 				});
 				pub.storeListener(eventType, listener);

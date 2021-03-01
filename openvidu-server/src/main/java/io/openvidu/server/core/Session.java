@@ -56,6 +56,7 @@ public class Session implements SessionInterface {
 	protected ConcurrentMap<String, Token> tokens = new ConcurrentHashMap<>();
 	protected final ConcurrentMap<String, Participant> participants = new ConcurrentHashMap<>();
 	protected String sessionId;
+	protected String uniqueSessionId;
 	protected SessionProperties sessionProperties;
 	protected Long startTime;
 
@@ -91,6 +92,7 @@ public class Session implements SessionInterface {
 	public Session(Session previousSession) {
 		this.sessionId = previousSession.getSessionId();
 		this.startTime = previousSession.getStartTime();
+		this.uniqueSessionId = previousSession.getUniqueSessionId();
 		this.sessionProperties = previousSession.getSessionProperties();
 		this.openviduConfig = previousSession.openviduConfig;
 		this.recordingManager = previousSession.recordingManager;
@@ -101,6 +103,7 @@ public class Session implements SessionInterface {
 			RecordingManager recordingManager) {
 		this.sessionId = sessionId;
 		this.startTime = System.currentTimeMillis();
+		this.uniqueSessionId = sessionId + "_" + this.startTime;
 		this.sessionProperties = sessionProperties;
 		this.openviduConfig = openviduConfig;
 		this.recordingManager = recordingManager;
@@ -108,6 +111,10 @@ public class Session implements SessionInterface {
 
 	public String getSessionId() {
 		return this.sessionId;
+	}
+
+	public String getUniqueSessionId() {
+		return this.uniqueSessionId;
 	}
 
 	public SessionProperties getSessionProperties() {

@@ -105,10 +105,10 @@ public class CallDetailRecord {
 		sessionManager.getFinalUsers(sessionId).get(participant.getFinalUserId()).setConnection(eventParticipantEnd);
 	}
 
-	public void recordNewPublisher(Participant participant, String sessionId, String streamId,
-			MediaOptions mediaOptions, Long timestamp) {
-		CDREventWebrtcConnection publisher = new CDREventWebrtcConnection(sessionId, streamId, participant,
-				mediaOptions, null, timestamp);
+	public void recordNewPublisher(Participant participant, String streamId, MediaOptions mediaOptions,
+			Long timestamp) {
+		CDREventWebrtcConnection publisher = new CDREventWebrtcConnection(participant.getSessionId(),
+				participant.getUniqueSessionId(), streamId, participant, mediaOptions, null, timestamp);
 		this.publications.put(participant.getParticipantPublicId(), publisher);
 		this.log(publisher);
 	}
@@ -126,11 +126,11 @@ public class CallDetailRecord {
 		}
 	}
 
-	public void recordNewSubscriber(Participant participant, String sessionId, String streamId, String senderPublicId,
-			Long timestamp) {
+	public void recordNewSubscriber(Participant participant, String streamId, String senderPublicId, Long timestamp) {
 		CDREventWebrtcConnection publisher = this.publications.get(senderPublicId);
-		CDREventWebrtcConnection subscriber = new CDREventWebrtcConnection(sessionId, streamId, participant,
-				publisher.mediaOptions, senderPublicId, timestamp);
+		CDREventWebrtcConnection subscriber = new CDREventWebrtcConnection(participant.getSessionId(),
+				participant.getUniqueSessionId(), streamId, participant, publisher.mediaOptions, senderPublicId,
+				timestamp);
 		this.subscriptions.putIfAbsent(participant.getParticipantPublicId(), new ConcurrentSkipListSet<>());
 		this.subscriptions.get(participant.getParticipantPublicId()).add(subscriber);
 		this.log(subscriber);
@@ -180,16 +180,17 @@ public class CallDetailRecord {
 		this.log(new CDREventRecordingStatus(recording, recording.getCreatedAt(), finalReason, timestamp, status));
 	}
 
-	public void recordFilterEventDispatched(String sessionId, String connectionId, String streamId, String filterType,
-			GenericMediaEvent event) {
-		this.log(new CDREventFilterEvent(sessionId, connectionId, streamId, filterType, event));
+	public void recordFilterEventDispatched(String sessionId, String uniqueSessionId, String connectionId,
+			String streamId, String filterType, GenericMediaEvent event) {
+		this.log(new CDREventFilterEvent(sessionId, uniqueSessionId, connectionId, streamId, filterType, event));
 	}
 
-	public void recordSignalSent(String sessionId, String from, String[] to, String type, String data) {
+	public void recordSignalSent(String sessionId, String uniqueSessionId, String from, String[] to, String type,
+			String data) {
 		if (from != null) {
 			type = type.replaceFirst("^signal:", "");
 		}
-		this.log(new CDREventSignal(sessionId, from, to, type, data));
+		this.log(new CDREventSignal(sessionId, uniqueSessionId, from, to, type, data));
 	}
 
 	protected void log(CDREvent event) {
@@ -224,8 +225,7 @@ public class CallDetailRecord {
 	}
 
 	public void recordNodeCrashed(Kms kms, String environmentId, long timeOfKurentoDisconnection) {
-		CDREvent e = new CDREventNodeCrashed(CDREventName.nodeCrashed, null, timeOfKurentoDisconnection, kms,
-				environmentId);
+		CDREvent e = new CDREventNodeCrashed(CDREventName.nodeCrashed, timeOfKurentoDisconnection, kms, environmentId);
 		this.log(e);
 	}
 

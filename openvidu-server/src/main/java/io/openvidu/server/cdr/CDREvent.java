@@ -22,17 +22,23 @@ import com.google.gson.JsonObject;
 public class CDREvent {
 
 	protected String sessionId;
+	protected String uniqueSessionId;
 	protected Long timeStamp;
 	protected CDREventName eventName;
 
-	public CDREvent(CDREventName eventName, String sessionId, Long timeStamp) {
+	public CDREvent(CDREventName eventName, String sessionId, String uniqueSessionId, Long timeStamp) {
 		this.eventName = eventName;
 		this.sessionId = sessionId;
+		this.uniqueSessionId = uniqueSessionId;
 		this.timeStamp = timeStamp;
 	}
 
 	public String getSessionId() {
 		return this.sessionId;
+	}
+
+	public String getUniqueSessionId() {
+		return this.uniqueSessionId;
 	}
 
 	public Long getTimestamp() {
@@ -47,6 +53,9 @@ public class CDREvent {
 		JsonObject json = new JsonObject();
 		if (sessionId != null) {
 			json.addProperty("sessionId", this.sessionId);
+		}
+		if (uniqueSessionId != null) {
+			json.addProperty("uniqueSessionId", this.uniqueSessionId);
 		}
 		json.addProperty("timestamp", this.timeStamp);
 		return json;

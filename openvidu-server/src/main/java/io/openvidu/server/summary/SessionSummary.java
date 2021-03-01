@@ -46,6 +46,7 @@ public class SessionSummary {
 		json.addProperty("createdAt", this.eventSessionEnd.getStartTime());
 		json.addProperty("destroyedAt", this.eventSessionEnd.getTimestamp());
 		json.addProperty("sessionId", this.eventSessionEnd.getSessionId());
+		json.addProperty("uniqueSessionId", this.eventSessionEnd.getUniqueSessionId());
 		json.addProperty("customSessionId", this.eventSessionEnd.getSession().getSessionProperties().customSessionId());
 		json.addProperty("mediaMode", this.eventSessionEnd.getSession().getSessionProperties().mediaMode().name());
 		json.addProperty("recordingMode",

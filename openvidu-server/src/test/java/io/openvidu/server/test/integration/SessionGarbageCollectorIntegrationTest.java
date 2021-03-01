@@ -37,6 +37,7 @@ import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.server.core.Participant;
+import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
 import io.openvidu.server.kurento.kms.KmsManager;
@@ -71,7 +72,7 @@ public class SessionGarbageCollectorIntegrationTest {
 
 		JsonObject jsonResponse;
 
-		getSessionId();
+		getSession();
 		jsonResponse = listSessions();
 
 		Assert.assertEquals("Wrong number of sessions", 1, jsonResponse.get("numberOfElements").getAsInt());
@@ -81,14 +82,14 @@ public class SessionGarbageCollectorIntegrationTest {
 		jsonResponse = listSessions();
 		Assert.assertEquals("Wrong number of sessions", 0, jsonResponse.get("numberOfElements").getAsInt());
 
-		getSessionId();
-		getSessionId();
-		String sessionId = getSessionId();
+		getSession();
+		getSession();
+		Session session = getSession();
 		jsonResponse = listSessions();
 		Assert.assertEquals("Wrong number of sessions", 3, jsonResponse.get("numberOfElements").getAsInt());
 
-		String token = getToken(sessionId);
-		joinParticipant(sessionId, token);
+		String token = getToken(session);
+		joinParticipant(session, token);
 
 		Thread.sleep(2000);
 
@@ -96,14 +97,16 @@ public class SessionGarbageCollectorIntegrationTest {
 		Assert.assertEquals("Wrong number of sessions", 1, jsonResponse.get("numberOfElements").getAsInt());
 	}
 
-	private String getSessionId() {
+	private Session getSession() {
 		String stringResponse = (String) sessionRestController.initializeSession(new HashMap<>()).getBody();
-		return new Gson().fromJson(stringResponse, JsonObject.class).get("id").getAsString();
+		JsonObject json = new Gson().fromJson(stringResponse, JsonObject.class);
+		String sessionId = json.get("id").getAsString();
+		return new Session(sessionId, null, null, null);
 	}
 
-	private String getToken(String sessionId) {
-		String stringResponse = (String) sessionRestController.initializeConnection(sessionId, new HashMap<>())
-				.getBody();
+	private String getToken(Session session) {
+		String stringResponse = (String) sessionRestController
+				.initializeConnection(session.getSessionId(), new HashMap<>()).getBody();
 		return new Gson().fromJson(stringResponse, JsonObject.class).get("token").getAsString();
 	}
 
@@ -112,15 +115,15 @@ public class SessionGarbageCollectorIntegrationTest {
 		return new Gson().fromJson(stringResponse, JsonObject.class);
 	}
 
-	private void joinParticipant(String sessionId, String token) {
+	private void joinParticipant(Session session, String token) {
 		ConnectionProperties connectionProperties = new ConnectionProperties.Builder().data("SERVER_METADATA").build();
-		Token t = new Token(token, sessionId, connectionProperties, null);
+		Token t = new Token(token, session.getSessionId(), connectionProperties, null);
 		String uuid = UUID.randomUUID().toString();
 		String participantPrivateId = "PARTICIPANT_PRIVATE_ID_" + uuid;
 		String finalUserId = "FINAL_USER_ID_" + uuid;
-		Participant participant = sessionManager.newParticipant(sessionId, participantPrivateId, t, "CLIENT_METADATA",
+		Participant participant = sessionManager.newParticipant(session, participantPrivateId, t, "CLIENT_METADATA",
 				null, "Chrome", finalUserId);
-		sessionManager.joinRoom(participant, sessionId, null);
+		sessionManager.joinRoom(participant, session.getSessionId(), null);
 	}
 
 }
