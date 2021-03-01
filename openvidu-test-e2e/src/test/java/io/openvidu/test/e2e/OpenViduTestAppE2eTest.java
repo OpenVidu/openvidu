@@ -3324,19 +3324,19 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			user.getDriver().findElement(By.className("join-btn")).click();
 
 			JsonObject event = CustomWebhook.waitForEvent("sessionCreated", 2);
-			Assert.assertEquals("Wrong number of properties in event 'sessionCreated'", 2 + 1, event.keySet().size());
+			Assert.assertEquals("Wrong number of properties in event 'sessionCreated'", 3 + 1, event.keySet().size());
 
 			event = CustomWebhook.waitForEvent("participantJoined", 2);
-			Assert.assertEquals("Wrong number of properties in event 'participantJoined'", 8 + 1,
+			Assert.assertEquals("Wrong number of properties in event 'participantJoined'", 9 + 1,
 					event.keySet().size());
 
 			event = CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
-			Assert.assertEquals("Wrong number of properties in event 'webrtcConnectionCreated'", 11 + 1,
+			Assert.assertEquals("Wrong number of properties in event 'webrtcConnectionCreated'", 12 + 1,
 					event.keySet().size());
 			String connectionId1 = event.get("connectionId").getAsString();
 
 			event = CustomWebhook.waitForEvent("recordingStatusChanged", 10);
-			Assert.assertEquals("Wrong number of properties in event 'recordingStatusChanged'", 11 + 1,
+			Assert.assertEquals("Wrong number of properties in event 'recordingStatusChanged'", 12 + 1,
 					event.keySet().size());
 			Assert.assertEquals("Wrong recording status in webhook event", "started",
 					event.get("status").getAsString());
@@ -3387,7 +3387,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			user.getDriver().findElement(By.cssSelector(("#openvidu-instance-0 .message-btn"))).click();
 			user.getEventManager().waitUntilEventReaches("signal:chat", 2);
 			event = CustomWebhook.waitForEvent("signalSent", 1);
-			Assert.assertEquals("Wrong number of properties in event 'signalSent'", 6 + 1, event.keySet().size());
+			Assert.assertEquals("Wrong number of properties in event 'signalSent'", 7 + 1, event.keySet().size());
 			Assert.assertEquals("Wrong sessionId in webhook event", "TestSession",
 					event.get("sessionId").getAsString());
 			Assert.assertTrue("Wrong timestamp in webhook event", event.get("timestamp").getAsLong() > timestamp);
@@ -3409,7 +3409,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 					HttpStatus.SC_OK);
 			user.getEventManager().waitUntilEventReaches("signal:chat", 3);
 			event = CustomWebhook.waitForEvent("signalSent", 1);
-			Assert.assertEquals("Wrong number of properties in event 'signalSent'", 6 + 1, event.keySet().size());
+			Assert.assertEquals("Wrong number of properties in event 'signalSent'", 7 + 1, event.keySet().size());
 			Assert.assertEquals("Wrong sessionId in webhook event", "TestSession",
 					event.get("sessionId").getAsString());
 			Assert.assertTrue("Wrong timestamp in webhook event", event.get("timestamp").getAsLong() > timestamp);
@@ -3441,7 +3441,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong number of recording entities", 1, recs.size());
 			Recording rec = recs.get(0);
 
-			Assert.assertEquals("Wrong number of properties in event 'recordingStatusChanged'", 12 + 1,
+			Assert.assertEquals("Wrong number of properties in event 'recordingStatusChanged'", 13 + 1,
 					event.keySet().size());
 			Assert.assertEquals("Wrong recording status in webhook event", "stopped",
 					event.get("status").getAsString());
@@ -3459,7 +3459,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong number of recording entities", 1, recs.size());
 			rec = recs.get(0);
 
-			Assert.assertEquals("Wrong number of properties in event 'recordingStatusChanged'", 12 + 1,
+			Assert.assertEquals("Wrong number of properties in event 'recordingStatusChanged'", 13 + 1,
 					event.keySet().size());
 			Assert.assertEquals("Wrong recording status in webhook event", "ready", event.get("status").getAsString());
 			Assert.assertTrue("Wrong recording size in webhook event", event.get("size").getAsLong() > 0);
@@ -3470,7 +3470,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 					event.get("startTime").getAsLong());
 
 			event = CustomWebhook.waitForEvent("sessionDestroyed", 2);
-			Assert.assertEquals("Wrong number of properties in event 'sessionDestroyed'", 5 + 1, event.keySet().size());
+			Assert.assertEquals("Wrong number of properties in event 'sessionDestroyed'", 6 + 1, event.keySet().size());
 			Assert.assertEquals("Wrong session destroyed reason in webhook event", "sessionClosedByServer",
 					event.get("reason").getAsString());
 
