@@ -2,6 +2,11 @@ filebeat.inputs:
   - type: container
     paths:
       - '/var/lib/docker/containers/*/*.log'
+    fields:
+        cluster_id: ${OPENVIDU_PRO_CLUSTER_ID:${DOMAIN_OR_PUBLIC_IP:undefined}}
+        node_id: master_${AWS_INSTANCE_ID:${OPENVIDU_PRO_CLUSTER_ID:${DOMAIN_OR_PUBLIC_IP:undefined}}}
+        node_role: masternode
+    fields_under_root: true
 
 processors:
   - add_docker_metadata:
@@ -27,11 +32,6 @@ processors:
             container.image.name: docker.elastic.co/beats/metricbeat-oss
         - contains:
             container.image.name: openvidu/openvidu-server-pro
-  - add_fields:
-      fields:
-        cluster_id: ${OPENVIDU_PRO_CLUSTER_ID:${DOMAIN_OR_PUBLIC_IP:undefined}}
-        node_id: master_${AWS_INSTANCE_ID:${OPENVIDU_PRO_CLUSTER_ID:${DOMAIN_OR_PUBLIC_IP:undefined}}}
-        node_role: masternode
 
 output:
   elasticsearch:
