@@ -90,7 +90,7 @@ public abstract class RecordingService {
 
 		String filePath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
 				+ RecordingService.RECORDING_ENTITY_FILE + recording.getId();
-		String text = recording.toJson().toString();
+		String text = recording.toJson(true).toString();
 		this.fileManager.createAndWriteFile(filePath, text);
 		log.info("Generated recording metadata file at {}", filePath);
 	}
@@ -139,7 +139,7 @@ public abstract class RecordingService {
 		recording.setSize(size); // Size in bytes
 		recording.setDuration(duration > 0 ? duration : 0); // Duration in seconds
 
-		if (this.fileManager.overwriteFile(metadataFilePath, recording.toJson().toString())) {
+		if (this.fileManager.overwriteFile(metadataFilePath, recording.toJson(true).toString())) {
 			log.info("Sealed recording metadata file at {} with status [{}]", metadataFilePath, status.name());
 		}
 

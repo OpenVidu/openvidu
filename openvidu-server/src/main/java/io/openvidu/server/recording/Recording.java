@@ -191,7 +191,7 @@ public class Recording {
 		this.hasVideo = hasVideo;
 	}
 
-	public JsonObject toJson() {
+	public JsonObject toJson(boolean withUniqueSessionId) {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", this.id);
 		json.addProperty("object", "recording");
@@ -205,7 +205,9 @@ public class Recording {
 			}
 		}
 		json.addProperty("sessionId", this.sessionId);
-		json.addProperty("uniqueSessionId", this.uniqueSessionId);
+		if (withUniqueSessionId) {
+			json.addProperty("uniqueSessionId", this.uniqueSessionId);
+		}
 		json.addProperty("createdAt", this.createdAt);
 		json.addProperty("size", this.size);
 		json.addProperty("duration", this.duration);
