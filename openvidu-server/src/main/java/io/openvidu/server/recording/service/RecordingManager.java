@@ -299,9 +299,10 @@ public class RecordingManager {
 							}
 							this.recordingFromStartingToStarted(recording);
 
-							this.cdr.recordRecordingStarted(recording);
 							this.cdr.recordRecordingStatusChanged(recording, null, recording.getCreatedAt(),
 									Status.started);
+							// TODO: remove deprecated "recordingStarted" event
+							this.cdr.recordRecordingStarted(recording);
 
 							if (!(OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo())) {
 								// Directly send recording started notification for all cases except for
@@ -363,7 +364,8 @@ public class RecordingManager {
 
 		final long timestamp = System.currentTimeMillis();
 		this.cdr.recordRecordingStatusChanged(recording, reason, timestamp, Status.stopped);
-		cdr.recordRecordingStopped(recording, reason, timestamp);
+		// TODO: remove deprecated "recordingStopped" event
+		this.cdr.recordRecordingStopped(recording, reason, timestamp);
 
 		switch (recording.getOutputMode()) {
 		case COMPOSED:

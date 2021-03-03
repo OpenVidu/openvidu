@@ -51,6 +51,9 @@ public class CDREventRecordingStatus extends CDREventEnd {
 					&& this.recording.getCustomLayout() != null && !this.recording.getCustomLayout().isEmpty()) {
 				json.addProperty("customLayout", this.recording.getCustomLayout());
 			}
+			if (this.recording.getRecordingProperties().mediaNode() != null) {
+				json.addProperty("media_node_id", this.recording.getRecordingProperties().mediaNode());
+			}
 		}
 		json.addProperty("hasAudio", this.recording.hasAudio());
 		json.addProperty("hasVideo", this.recording.hasVideo());

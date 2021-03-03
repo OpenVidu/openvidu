@@ -208,6 +208,9 @@ public class Recording {
 		if (withUniqueSessionId) {
 			json.addProperty("uniqueSessionId", this.uniqueSessionId);
 		}
+		if (this.recordingProperties.mediaNode() != null) {
+			json.addProperty("mediaNode", this.recordingProperties.mediaNode());
+		}
 		json.addProperty("createdAt", this.createdAt);
 		json.addProperty("size", this.size);
 		json.addProperty("duration", this.duration);
