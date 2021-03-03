@@ -15,6 +15,10 @@ openvidu
 
 Visit [openvidu.io](https://openvidu.io)
 
+## Community Forum
+
+Visit [OpenVidu Community Forum](https://openvidu.discourse.group/)
+
 [OpenViduLogo]: https://secure.gravatar.com/avatar/5daba1d43042f2e4e85849733c8e5702?s=120
 
 ## Contributors
