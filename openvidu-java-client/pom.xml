@@ -138,6 +138,7 @@
 						<version>${version.javadoc.plugin}</version>
 						<configuration>
 							<show>public</show>
+							<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
 						</configuration>
 						<executions>
 							<execution>
