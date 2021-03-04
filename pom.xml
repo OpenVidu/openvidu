@@ -42,7 +42,7 @@
 	</developers>
 
 	<properties>
-		<version.kurento>6.15.0</version.kurento>
+		<version.kurento>6.16.0</version.kurento>
 		<version.spring-boot>2.3.5.RELEASE</version.spring-boot>
 		<version.junit>4.13.1</version.junit>
 		<version.junit.jupiter>5.7.0</version.junit.jupiter>
