@@ -49,7 +49,9 @@ interface IWebrtcStats {
         audio: {
             bytesReceived: number,
             packetsReceived: number,
-            packetsLost: number
+            packetsLost: number,
+            jitter: number,
+            delayMs: number
         } | {},
         video: {
             bytesReceived: number,
@@ -231,6 +233,8 @@ export class WebRtcStats {
                             response.inbound[mediaType].bytesReceived = Number(stat.stat('bytesReceived'));
                             response.inbound[mediaType].packetsReceived = Number(stat.stat('packetsReceived'));
                             response.inbound[mediaType].packetsLost = Number(stat.stat('packetsLost'));
+                            response.inbound[mediaType].jitter = Number(stat.stat('googJitterBufferMs'));
+                            response.inbound[mediaType].delayMs = Number(stat.stat('googCurrentDelayMs'));
                             if(mediaType === 'video'){
                                 response.inbound['video'].framesDecoded = Number(stat.stat('framesDecoded'));
                                 response.inbound['video'].nackCount = Number(stat.stat('nackCount'));
@@ -267,6 +271,7 @@ export class WebRtcStats {
                             response.inbound[mediaType].bytesReceived = Number(stat.bytesReceived);
                             response.inbound[mediaType].packetsReceived = Number(stat.packetsReceived);
                             response.inbound[mediaType].packetsLost = Number(stat.packetsLost);
+                            response.inbound[mediaType].jitter = Number(stat.jitter);
                             if (mediaType === 'video') {
                                 response.inbound[mediaType].framesDecoded = Number(stat.framesDecoded);
                                 response.inbound[mediaType].nackCount = Number(stat.nackCount);
