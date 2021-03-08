@@ -323,7 +323,7 @@ Resources:
 
           # Send info to openvidu
           if [ "${WantToSendInfo}" == "true" ]; then
-            /usr/local/bin/ping.sh
+            /usr/local/bin/ping.sh || true
           fi
           rm /usr/local/bin/ping.sh 
 
