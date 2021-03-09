@@ -302,7 +302,7 @@ export class Publisher extends StreamManager {
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the track was successfully replaced and rejected with an Error object in other case
      */
-    replaceTrack(track: MediaStreamTrack): Promise<any> {
+    replaceTrack(track: MediaStreamTrack): Promise<void> {
 
         const replaceMediaStreamTrack = () => {
             const mediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
@@ -355,7 +355,7 @@ export class Publisher extends StreamManager {
     /**
      * @hidden
      */
-    initialize(): Promise<any> {
+    initialize(): Promise<void> {
         return new Promise((resolve, reject) => {
 
             let constraints: MediaStreamConstraints = {};

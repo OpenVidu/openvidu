@@ -89,7 +89,7 @@ export class Filter {
      * @param method Name of the method
      * @param params Parameters of the method
      */
-    execMethod(method: string, params: Object): Promise<any> {
+    execMethod(method: string, params: Object): Promise<void> {
         return new Promise((resolve, reject) => {
             logger.info('Executing filter method to stream ' + this.stream.streamId);
             let stringParams;
@@ -137,7 +137,7 @@ export class Filter {
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the event listener was successfully attached to the filter and rejected with an Error object if not
      */
-    addEventListener(eventType: string, handler: (event: FilterEvent) => void): Promise<any> {
+    addEventListener(eventType: string, handler: (event: FilterEvent) => void): Promise<void> {
         return new Promise((resolve, reject) => {
             logger.info('Adding filter event listener to event ' + eventType + ' to stream ' + this.stream.streamId);
             this.stream.session.openvidu.sendRequest(
@@ -169,7 +169,7 @@ export class Filter {
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the event listener was successfully removed from the filter and rejected with an Error object in other case
      */
-    removeEventListener(eventType: string): Promise<any> {
+    removeEventListener(eventType: string): Promise<void> {
         return new Promise((resolve, reject) => {
             logger.info('Removing filter event listener to event ' + eventType + ' to stream ' + this.stream.streamId);
             this.stream.session.openvidu.sendRequest(

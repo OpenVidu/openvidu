@@ -190,7 +190,7 @@ export class Session extends EventDispatcher {
      * @returns A Promise to which you must subscribe that is resolved if the the connection to the Session was successful and rejected with an Error object if not
      *
      */
-    connect(token: string, metadata?: any): Promise<any> {
+    connect(token: string, metadata?: any): Promise<void> {
         return new Promise((resolve, reject) => {
 
             this.processToken(token);
@@ -383,7 +383,7 @@ export class Session extends EventDispatcher {
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the publisher was successfully published and rejected with an Error object if not
      */
-    publish(publisher: Publisher): Promise<any> {
+    publish(publisher: Publisher): Promise<void> {
         return new Promise((resolve, reject) => {
             publisher.session = this;
             publisher.stream.session = this;
@@ -490,7 +490,7 @@ export class Session extends EventDispatcher {
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the participant has been successfully evicted from the session and rejected with an Error object if not
      */
-    forceDisconnect(connection: Connection): Promise<any> {
+    forceDisconnect(connection: Connection): Promise<void> {
         return new Promise((resolve, reject) => {
             logger.info('Forcing disconnect for connection ' + connection.connectionId);
             this.openvidu.sendRequest(
@@ -529,7 +529,7 @@ export class Session extends EventDispatcher {
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the remote Stream has been successfully unpublished from the session and rejected with an Error object if not
      */
-    forceUnpublish(stream: Stream): Promise<any> {
+    forceUnpublish(stream: Stream): Promise<void> {
         return new Promise((resolve, reject) => {
             logger.info('Forcing unpublish for stream ' + stream.streamId);
             this.openvidu.sendRequest(
@@ -565,7 +565,7 @@ export class Session extends EventDispatcher {
      * mean that openvidu-server could resend the message to all the listed receivers._
      */
     /* tslint:disable:no-string-literal */
-    signal(signal: SignalOptions): Promise<any> {
+    signal(signal: SignalOptions): Promise<void> {
         return new Promise((resolve, reject) => {
 
             const signalMessage = {};
@@ -1225,7 +1225,7 @@ export class Session extends EventDispatcher {
 
     /* Private methods */
 
-    private connectAux(token: string): Promise<any> {
+    private connectAux(token: string): Promise<void> {
         return new Promise((resolve, reject) => {
             this.openvidu.startWs((error) => {
                 if (!!error) {
