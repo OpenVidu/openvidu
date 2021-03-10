@@ -138,7 +138,7 @@ get_previous_env_variable() {
 replace_variable_in_new_env_file() {
      local ENV_VARIABLE_NAME=$1
      local ENV_VARIABLE_VALUE=$2
-     [[ ! -z "${ENV_VARIABLE_VALUE}" ]] && sed -i "s/#${ENV_VARIABLE_NAME}=/${ENV_VARIABLE_NAME}=${ENV_VARIABLE_VALUE}/" "${OPENVIDU_PREVIOUS_FOLDER}/.env-${OPENVIDU_VERSION}"
+     [[ ! -z "${ENV_VARIABLE_VALUE}" ]] && sed -i "s|#${ENV_VARIABLE_NAME}=|${ENV_VARIABLE_NAME}=${ENV_VARIABLE_VALUE}|" "${OPENVIDU_PREVIOUS_FOLDER}/.env-${OPENVIDU_VERSION}"
 }
 
 upgrade_ov() {
@@ -173,7 +173,7 @@ upgrade_ov() {
 
      # In this point using the variable 'OPENVIDU_PREVIOUS_VERSION' we can verify if the upgrade is
      # posible or not. If it is not posible launch a warning and stop the upgrade.
-     if [[ "${OPENVIDU_PREVIOUS_VERSION}" != "${OPENVIDU_UPGRADABLE_VERSION}."* ]] || [[ "${OPENVIDU_PREVIOUS_VERSION}" != "${OPENVIDU_VERSION//v}"* ]]; then
+     if [[ "${OPENVIDU_PREVIOUS_VERSION}" != "${OPENVIDU_UPGRADABLE_VERSION}."* ]] && [[ "${OPENVIDU_PREVIOUS_VERSION}" != "${OPENVIDU_VERSION//v}"* ]]; then
           fatal_error "You can't update from version ${OPENVIDU_PREVIOUS_VERSION} to ${OPENVIDU_VERSION}.\nNever upgrade across multiple major versions."
      fi
 
@@ -348,7 +348,7 @@ upgrade_ov() {
      [ ! -z "${OLD_MODE}" ] && sed -i -r "s/Installation Mode:.+/Installation Mode: ${OLD_MODE}/" "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml"
 
      # Update .env variables to new .env-version
-     AWS_REGION=$(get_previous_env_variable AWS_REGION)
+     AWS_REGION=$(get_previous_env_variable AWS_DEFAULT_REGION)
      if [[ ! -z ${AWS_REGION} ]]; then
 
           # Get new AMI ID
