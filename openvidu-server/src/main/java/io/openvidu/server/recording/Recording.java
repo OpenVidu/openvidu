@@ -58,7 +58,9 @@ public class Recording {
 	public Recording(JsonObject json) {
 		this.id = json.get("id").getAsString();
 		this.sessionId = json.get("sessionId").getAsString();
-		this.uniqueSessionId = json.get("uniqueSessionId").getAsString();
+		if (json.has("uniqueSessionId")) {
+			this.uniqueSessionId = json.get("uniqueSessionId").getAsString();
+		}
 		this.createdAt = json.get("createdAt").getAsLong();
 		this.size = json.get("size").getAsLong();
 		try {
@@ -205,7 +207,7 @@ public class Recording {
 			}
 		}
 		json.addProperty("sessionId", this.sessionId);
-		if (withUniqueSessionId) {
+		if (withUniqueSessionId && this.uniqueSessionId != null) {
 			json.addProperty("uniqueSessionId", this.uniqueSessionId);
 		}
 		if (this.recordingProperties.mediaNode() != null) {
