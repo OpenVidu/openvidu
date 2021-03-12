@@ -50,7 +50,7 @@ public class SubscriberEndpoint extends MediaEndpoint {
 		this.createdAt = System.currentTimeMillis();
 		String sdpAnswer = processOffer(sdpOffer);
 		gatherCandidates();
-		publisher.connect(this.getEndpoint());
+		publisher.connect(this.getEndpoint(), false);
 		this.publisherStreamId = publisher.getStreamId();
 		return sdpAnswer;
 	}

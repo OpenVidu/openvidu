@@ -392,14 +392,14 @@ public class SingleStreamRecordingService extends RecordingService {
 			MediaProfileSpecType profile) {
 		switch (profile) {
 		case WEBM:
-			publisherEndpoint.connect(recorder, MediaType.AUDIO);
-			publisherEndpoint.connect(recorder, MediaType.VIDEO);
+			publisherEndpoint.connect(recorder, MediaType.AUDIO, false);
+			publisherEndpoint.connect(recorder, MediaType.VIDEO, false);
 			break;
 		case WEBM_AUDIO_ONLY:
-			publisherEndpoint.connect(recorder, MediaType.AUDIO);
+			publisherEndpoint.connect(recorder, MediaType.AUDIO, false);
 			break;
 		case WEBM_VIDEO_ONLY:
-			publisherEndpoint.connect(recorder, MediaType.VIDEO);
+			publisherEndpoint.connect(recorder, MediaType.VIDEO, false);
 			break;
 		default:
 			throw new UnsupportedOperationException("Unsupported profile when single stream recording: " + profile);
