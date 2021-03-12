@@ -181,16 +181,14 @@ public class PublisherEndpoint extends MediaEndpoint {
 	 * itself (after applying the intermediate media elements and the
 	 * {@link PassThrough}) to allow loopback of the media stream.
 	 *
-	 * @param sdpType                indicates the type of the sdpString (offer or
-	 *                               answer)
-	 * @param sdpString              offer or answer from the remote peer
+	 * @param sdpOffer               offer from the remote peer
 	 * @param doLoopback             loopback flag
 	 * @param loopbackAlternativeSrc alternative loopback source
 	 * @param loopbackConnectionType how to connect the loopback source
 	 * @return the SDP response (the answer if processing an offer SDP, otherwise is
 	 *         the updated offer generated previously by this endpoint)
 	 */
-	public synchronized String publish(SdpType sdpType, String sdpString, boolean doLoopback) {
+	public synchronized String publish(String sdpOffer, boolean doLoopback) {
 		registerOnIceCandidateEventListener(this.getOwner().getParticipantPublicId());
 		if (doLoopback) {
 			connect(this.getEndpoint());
@@ -198,21 +196,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 			innerConnect();
 		}
 		this.createdAt = System.currentTimeMillis();
-		String sdpResponse = null;
-		switch (sdpType) {
-		case ANSWER:
-
-			/** THIS IS CURRENTLY NEVER CALLED **/
-			sdpResponse = processAnswer(sdpString);
-			/** THIS IS CURRENTLY NEVER CALLED **/
-
-			break;
-		case OFFER:
-			sdpResponse = processOffer(sdpString);
-			break;
-		default:
-			throw new OpenViduException(Code.MEDIA_SDP_ERROR_CODE, "Sdp type not supported: " + sdpType);
-		}
+		String sdpResponse = processOffer(sdpOffer);
 		gatherCandidates();
 		return sdpResponse;
 	}

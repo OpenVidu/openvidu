@@ -686,8 +686,8 @@ public class SessionRestController {
 		String typeOfVideo = ConnectionType.IPCAM.name();
 		Integer frameRate = null;
 		String videoDimensions = null;
-		KurentoMediaOptions mediaOptions = new KurentoMediaOptions(true, null, hasAudio, hasVideo, audioActive,
-				videoActive, typeOfVideo, frameRate, videoDimensions, null, false, connectionProperties.getRtspUri(),
+		KurentoMediaOptions mediaOptions = new KurentoMediaOptions(null, hasAudio, hasVideo, audioActive, videoActive,
+				typeOfVideo, frameRate, videoDimensions, null, false, connectionProperties.getRtspUri(),
 				connectionProperties.adaptativeBitrate(), connectionProperties.onlyPlayWithSubscribers(),
 				connectionProperties.getNetworkCache());
 

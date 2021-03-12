@@ -55,7 +55,6 @@ import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.kurento.endpoint.MediaEndpoint;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
-import io.openvidu.server.kurento.endpoint.SdpType;
 import io.openvidu.server.kurento.endpoint.SubscriberEndpoint;
 import io.openvidu.server.recording.service.RecordingManager;
 
@@ -172,15 +171,15 @@ public class KurentoParticipant extends Participant {
 		return session;
 	}
 
-	public String publishToRoom(SdpType sdpType, String sdpString, boolean doLoopback, boolean silent) {
-		log.info("PARTICIPANT {}: Request to publish video in room {} (sdp type {})", this.getParticipantPublicId(),
-				this.session.getSessionId(), sdpType);
-		log.trace("PARTICIPANT {}: Publishing Sdp ({}) is {}", this.getParticipantPublicId(), sdpType, sdpString);
+	public String publishToRoom(String sdpOffer, boolean doLoopback, boolean silent) {
+		log.info("PARTICIPANT {}: Request to publish video in room {})", this.getParticipantPublicId(),
+				this.session.getSessionId());
+		log.trace("PARTICIPANT {}: Publishing SDPOffer is {}", this.getParticipantPublicId(), sdpOffer);
 
-		String sdpResponse = this.getPublisher().publish(sdpType, sdpString, doLoopback);
+		String sdpResponse = this.getPublisher().publish(sdpOffer, doLoopback);
 		this.streaming = true;
 
-		log.trace("PARTICIPANT {}: Publishing Sdp ({}) is {}", this.getParticipantPublicId(), sdpType, sdpResponse);
+		log.trace("PARTICIPANT {}: Publishing Sdp is {}", this.getParticipantPublicId(), sdpResponse);
 		log.info("PARTICIPANT {}: Is now publishing video in room {}", this.getParticipantPublicId(),
 				this.session.getSessionId());
 

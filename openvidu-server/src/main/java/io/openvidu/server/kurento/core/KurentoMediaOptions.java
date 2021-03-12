@@ -24,7 +24,6 @@ import io.openvidu.server.kurento.endpoint.KurentoFilter;
 
 public class KurentoMediaOptions extends MediaOptions {
 
-	public boolean isOffer;
 	public String sdpOffer;
 	public boolean doLoopback;
 
@@ -34,21 +33,19 @@ public class KurentoMediaOptions extends MediaOptions {
 	public Boolean onlyPlayWithSubscribers;
 	public Integer networkCache;
 
-	public KurentoMediaOptions(boolean isOffer, String sdpOffer, Boolean hasAudio, Boolean hasVideo,
-			Boolean audioActive, Boolean videoActive, String typeOfVideo, Integer frameRate, String videoDimensions,
-			KurentoFilter filter, boolean doLoopback) {
+	public KurentoMediaOptions(String sdpOffer, Boolean hasAudio, Boolean hasVideo, Boolean audioActive,
+			Boolean videoActive, String typeOfVideo, Integer frameRate, String videoDimensions, KurentoFilter filter,
+			boolean doLoopback) {
 		super(hasAudio, hasVideo, audioActive, videoActive, typeOfVideo, frameRate, videoDimensions, filter);
-		this.isOffer = isOffer;
 		this.sdpOffer = sdpOffer;
 		this.doLoopback = doLoopback;
 	}
 
-	public KurentoMediaOptions(boolean isOffer, String sdpOffer, Boolean hasAudio, Boolean hasVideo,
-			Boolean audioActive, Boolean videoActive, String typeOfVideo, Integer frameRate, String videoDimensions,
-			KurentoFilter filter, boolean doLoopback, String rtspUri, Boolean adaptativeBitrate,
-			Boolean onlyPlayWithSubscribers, Integer networkCache) {
+	public KurentoMediaOptions(String sdpOffer, Boolean hasAudio, Boolean hasVideo, Boolean audioActive,
+			Boolean videoActive, String typeOfVideo, Integer frameRate, String videoDimensions, KurentoFilter filter,
+			boolean doLoopback, String rtspUri, Boolean adaptativeBitrate, Boolean onlyPlayWithSubscribers,
+			Integer networkCache) {
 		super(hasAudio, hasVideo, audioActive, videoActive, typeOfVideo, frameRate, videoDimensions, filter);
-		this.isOffer = isOffer;
 		this.sdpOffer = sdpOffer;
 		this.doLoopback = doLoopback;
 		this.rtspUri = rtspUri;
@@ -61,7 +58,6 @@ public class KurentoMediaOptions extends MediaOptions {
 			String typeOfVideo, Integer frameRate, String videoDimensions, KurentoFilter filter,
 			KurentoMediaOptions streamProperties) {
 		super(hasAudio, hasVideo, audioActive, videoActive, typeOfVideo, frameRate, videoDimensions, filter);
-		this.isOffer = streamProperties.isOffer;
 		this.sdpOffer = streamProperties.sdpOffer;
 		this.doLoopback = streamProperties.doLoopback;
 		this.rtspUri = streamProperties.rtspUri;
