@@ -109,14 +109,6 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    isFirstIonicIosSubscriber = true;
-    /**
-     * @hidden
-     */
-    countDownForIonicIosSubscribersActive = true;
-    /**
-     * @hidden
-     */
     remoteConnections: Map<string, Connection> = new Map();
     /**
      * @hidden
@@ -735,11 +727,6 @@ export class Session extends EventDispatcher {
                     streamEvent.callDefaultBehavior();
 
                     this.remoteStreamsCreated.delete(stream.streamId);
-
-                    if (this.remoteStreamsCreated.size === 0) {
-                        this.isFirstIonicIosSubscriber = true;
-                        this.countDownForIonicIosSubscribersActive = true;
-                    }
                 }
                 this.remoteConnections.delete(connection.connectionId);
                 this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, msg.reason)]);
@@ -809,11 +796,6 @@ export class Session extends EventDispatcher {
                     // Deleting the remote stream
                     const streamId: string = connection.stream!.streamId;
                     this.remoteStreamsCreated.delete(streamId);
-
-                    if (this.remoteStreamsCreated.size === 0) {
-                        this.isFirstIonicIosSubscriber = true;
-                        this.countDownForIonicIosSubscribersActive = true;
-                    }
 
                     connection.removeStream(streamId);
                 })

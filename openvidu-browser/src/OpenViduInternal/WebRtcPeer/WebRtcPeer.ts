@@ -36,7 +36,7 @@ export interface WebRtcPeerConfiguration {
         video: boolean
     };
     simulcast: boolean;
-    onicecandidate: (event) => void;
+    onicecandidate: (event: RTCIceCandidate) => void;
     iceServers: RTCIceServer[] | undefined;
     mediaStream?: MediaStream;
     mode?: 'sendonly' | 'recvonly' | 'sendrecv';
@@ -52,8 +52,6 @@ export class WebRtcPeer {
 
     iceCandidateList: RTCIceCandidate[] = [];
 
-    private candidategatheringdone = false;
-
     constructor(protected configuration: WebRtcPeerConfiguration) {
         platform = PlatformUtils.getInstance();
         this.configuration.iceServers = (!!this.configuration.iceServers && this.configuration.iceServers.length > 0) ? this.configuration.iceServers : freeice();
@@ -61,15 +59,12 @@ export class WebRtcPeer {
         this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });
         this.id = !!configuration.id ? configuration.id : this.generateUniqueId();
 
-        this.pc.onicecandidate = event => {
-            if (!!event.candidate) {
+        this.pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
+            if (event.candidate != null) {
                 const candidate: RTCIceCandidate = event.candidate;
-                if (candidate) {
+                this.configuration.onicecandidate(candidate);
+                if (candidate.candidate !== '') {
                     this.localCandidatesQueue.push(<RTCIceCandidate>{ candidate: candidate.candidate });
-                    this.candidategatheringdone = false;
-                    this.configuration.onicecandidate(event.candidate);
-                } else if (!this.candidategatheringdone) {
-                    this.candidategatheringdone = true;
                 }
             }
         };
@@ -123,10 +118,10 @@ export class WebRtcPeer {
     }
 
     /**
-     * Function that creates an offer, sets it as local description and returns the offer param
-     * to send to OpenVidu Server (will be the remote description of other peer)
+     * Creates an SDP offer from the local RTCPeerConnection to send to the other peer
+     * Only if the negotiation was initiated by the this peer
      */
-    generateOffer(): Promise<string> {
+    createOffer(): Promise<RTCSessionDescriptionInit> {
         return new Promise((resolve, reject) => {
             let offerAudio, offerVideo = true;
 
@@ -146,7 +141,8 @@ export class WebRtcPeer {
             logger.debug('RTCPeerConnection constraints: ' + JSON.stringify(constraints));
 
             if (platform.isSafariBrowser() && !platform.isIonicIos()) {
-                // Safari (excluding Ionic), at least on iOS just seems to support unified plan, whereas in other browsers is not yet ready and considered experimental
+                // Safari (excluding Ionic), at least on iOS just seems to support unified plan,
+                // whereas in other browsers is not yet ready and considered experimental
                 if (offerAudio) {
                     this.pc.addTransceiver('audio', {
                         direction: this.configuration.mode,
@@ -159,39 +155,20 @@ export class WebRtcPeer {
                     });
                 }
 
-                this.pc
-                    .createOffer()
+                this.pc.createOffer()
                     .then(offer => {
                         logger.debug('Created SDP offer');
-                        return this.pc.setLocalDescription(offer);
-                    })
-                    .then(() => {
-                        const localDescription = this.pc.localDescription;
-
-                        if (!!localDescription) {
-                            logger.debug('Local description set', localDescription.sdp);
-                            resolve(localDescription.sdp);
-                        } else {
-                            reject('Local description is not defined');
-                        }
+                        resolve(offer);
                     })
                     .catch(error => reject(error));
 
             } else {
 
                 // Rest of platforms
-                this.pc.createOffer(constraints).then(offer => {
-                    logger.debug('Created SDP offer');
-                    return this.pc.setLocalDescription(offer);
-                })
-                    .then(() => {
-                        const localDescription = this.pc.localDescription;
-                        if (!!localDescription) {
-                            logger.debug('Local description set', localDescription.sdp);
-                            resolve(localDescription.sdp);
-                        } else {
-                            reject('Local description is not defined');
-                        }
+                this.pc.createOffer(constraints)
+                    .then(offer => {
+                        logger.debug('Created SDP offer');
+                        resolve(offer);
                     })
                     .catch(error => reject(error));
             }
@@ -199,10 +176,94 @@ export class WebRtcPeer {
     }
 
     /**
-     * Function invoked when a SDP answer is received. Final step in SDP negotiation, the peer
-     * just needs to set the answer as its remote description
+     * Creates an SDP answer from the local RTCPeerConnection to send to the other peer
+     * Only if the negotiation was initiated by the other peer
      */
-    processAnswer(sdpAnswer: string, needsTimeoutOnProcessAnswer: boolean): Promise<string> {
+    createAnswer(): Promise<RTCSessionDescriptionInit> {
+        return new Promise((resolve, reject) => {
+            let offerAudio, offerVideo = true;
+            if (!!this.configuration.mediaConstraints) {
+                offerAudio = (typeof this.configuration.mediaConstraints.audio === 'boolean') ?
+                    this.configuration.mediaConstraints.audio : true;
+                offerVideo = (typeof this.configuration.mediaConstraints.video === 'boolean') ?
+                    this.configuration.mediaConstraints.video : true;
+            }
+            const constraints: RTCOfferOptions = {
+                offerToReceiveAudio: offerAudio,
+                offerToReceiveVideo: offerVideo
+            };
+            this.pc.createAnswer(constraints).then(sdpAnswer => {
+                resolve(sdpAnswer);
+            }).catch(error => {
+                reject(error);
+            });
+        });
+    }
+
+    /**
+     * This peer initiated negotiation. Step 1/4 of SDP offer-answer protocol
+     */
+    processLocalOffer(offer: RTCSessionDescriptionInit): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.pc.setLocalDescription(offer)
+                .then(() => {
+                    const localDescription = this.pc.localDescription;
+                    if (!!localDescription) {
+                        logger.debug('Local description set', localDescription.sdp);
+                        resolve();
+                    } else {
+                        reject('Local description is not defined');
+                    }
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+    }
+
+    /**
+     * Other peer initiated negotiation. Step 2/4 of SDP offer-answer protocol
+     */
+    processRemoteOffer(sdpOffer: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const offer: RTCSessionDescriptionInit = {
+                type: 'offer',
+                sdp: sdpOffer
+            };
+            logger.debug('SDP offer received, setting remote description', offer);
+
+            if (this.pc.signalingState === 'closed') {
+                reject('RTCPeerConnection is closed when trying to set remote description');
+            }
+            this.setRemoteDescription(offer)
+                .then(() => {
+                    resolve();
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+    }
+
+    /**
+     * Other peer initiated negotiation. Step 3/4 of SDP offer-answer protocol
+     */
+    processLocalAnswer(answer: RTCSessionDescriptionInit): Promise<void> {
+        return new Promise((resolve, reject) => {
+            logger.debug('SDP answer created, setting local description');
+            if (this.pc.signalingState === 'closed') {
+                reject('RTCPeerConnection is closed when trying to set local description');
+            }
+            this.pc.setLocalDescription(answer)
+                .then(() => resolve())
+                .catch(error => reject(error));
+        });
+    }
+
+    /**
+     * This peer initiated negotiation. Step 4/4 of SDP offer-answer protocol
+     */
+    processRemoteAnswer(sdpAnswer: string): Promise<void> {
         return new Promise((resolve, reject) => {
             const answer: RTCSessionDescriptionInit = {
                 type: 'answer',
@@ -211,34 +272,19 @@ export class WebRtcPeer {
             logger.debug('SDP answer received, setting remote description');
 
             if (this.pc.signalingState === 'closed') {
-                reject('RTCPeerConnection is closed');
+                reject('RTCPeerConnection is closed when trying to set remote description');
             }
-
-            this.setRemoteDescription(answer, needsTimeoutOnProcessAnswer, resolve, reject);
-
+            this.setRemoteDescription(answer)
+                .then(() => resolve())
+                .catch(error => reject(error));
         });
     }
 
     /**
      * @hidden
      */
-    setRemoteDescription(answer: RTCSessionDescriptionInit, needsTimeoutOnProcessAnswer: boolean, resolve: (value?: string | PromiseLike<string> | undefined) => void, reject: (reason?: any) => void) {
-        if (platform.isIonicIos()) {
-            // Ionic iOS platform
-            if (needsTimeoutOnProcessAnswer) {
-                // 400 ms have not elapsed yet since first remote stream triggered Stream#initWebRtcPeerReceive
-                setTimeout(() => {
-                    logger.info('setRemoteDescription run after timeout for Ionic iOS device');
-                    this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
-                }, 250);
-            } else {
-                // 400 ms have elapsed
-                this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
-            }
-        } else {
-            // Rest of platforms
-            this.pc.setRemoteDescription(answer).then(() => resolve()).catch(error => reject(error));
-        }
+    async setRemoteDescription(sdp: RTCSessionDescriptionInit): Promise<void> {
+        return this.pc.setRemoteDescription(sdp);
     }
 
     /**

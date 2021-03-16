@@ -109,7 +109,18 @@ public abstract class SessionManager {
 	public abstract void unpublishVideo(Participant participant, Participant moderator, Integer transactionId,
 			EndReason reason);
 
-	public abstract void subscribe(Participant participant, String senderName, String sdpOffer, Integer transactionId);
+	public abstract void prepareSubscription(Participant participant, String senderPublicId, boolean reconnect,
+			Integer id);
+
+	// TODO: REMOVE ON 2.18.0
+	public abstract void subscribe(Participant participant, String senderName, String sdpAnwser, Integer transactionId,
+			boolean is2180);
+	// END TODO
+
+	// TODO: UNCOMMENT ON 2.18.0
+	// public abstract void subscribe(Participant participant, String senderName,
+	// String sdpAnwser, Integer transactionId);
+	// END TODO
 
 	public abstract void unsubscribe(Participant participant, String senderName, Integer transactionId);
 
@@ -167,6 +178,11 @@ public abstract class SessionManager {
 
 	public abstract void reconnectStream(Participant participant, String streamId, String sdpOffer,
 			Integer transactionId);
+
+	// TODO: REMOVE ON 2.18.0
+	public abstract void reconnectStream2170(Participant participant, String streamId, String sdpOffer,
+			Integer transactionId);
+	// END TODO
 
 	public abstract String getParticipantPrivateIdFromStreamId(String sessionId, String streamId)
 			throws OpenViduException;

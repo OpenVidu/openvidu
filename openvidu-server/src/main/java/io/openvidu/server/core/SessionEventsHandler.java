@@ -295,6 +295,18 @@ public class SessionEventsHandler {
 		}
 	}
 
+	public void onPrepareSubscription(Participant participant, Session session, String sdpOffer, Integer transactionId,
+			OpenViduException error) {
+		if (error != null) {
+			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
+			return;
+		}
+		JsonObject result = new JsonObject();
+		result.addProperty(ProtocolElements.PREPARERECEIVEVIDEO_SDPOFFER_PARAM, sdpOffer);
+		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
+	}
+
+	// TODO: REMOVE ON 2.18.0
 	public void onSubscribe(Participant participant, Session session, String sdpAnswer, Integer transactionId,
 			OpenViduException error) {
 		if (error != null) {
@@ -303,6 +315,23 @@ public class SessionEventsHandler {
 		}
 		JsonObject result = new JsonObject();
 		result.addProperty(ProtocolElements.RECEIVEVIDEO_SDPANSWER_PARAM, sdpAnswer);
+		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
+
+		if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+			recordingsToSendClientEvents.computeIfPresent(session.getSessionId(), (key, value) -> {
+				sendRecordingStartedNotification(session, value);
+				return null;
+			});
+		}
+	}
+	// END TODO
+
+	public void onSubscribe(Participant participant, Session session, Integer transactionId, OpenViduException error) {
+		if (error != null) {
+			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
+			return;
+		}
+		JsonObject result = new JsonObject();
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
 
 		if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
@@ -561,8 +590,9 @@ public class SessionEventsHandler {
 		}
 	}
 
-	public void onFilterEventDispatched(String sessionId, String uniqueSessionId, String connectionId, String streamId, String filterType,
-			GenericMediaEvent event, Set<Participant> participants, Set<String> subscribedParticipants) {
+	public void onFilterEventDispatched(String sessionId, String uniqueSessionId, String connectionId, String streamId,
+			String filterType, GenericMediaEvent event, Set<Participant> participants,
+			Set<String> subscribedParticipants) {
 
 		CDR.recordFilterEventDispatched(sessionId, uniqueSessionId, connectionId, streamId, filterType, event);
 

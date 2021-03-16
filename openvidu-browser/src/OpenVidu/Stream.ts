@@ -825,7 +825,7 @@ export class Stream extends EventDispatcher {
                 simulcast: false
             };
 
-            const successCallback = (sdpOfferParam) => {
+            const successOfferCallback = (sdpOfferParam) => {
                 logger.debug('Sending SDP offer to publish as '
                     + this.streamId, sdpOfferParam);
 
@@ -833,7 +833,8 @@ export class Stream extends EventDispatcher {
                 let params;
                 if (reconnect) {
                     params = {
-                        stream: this.streamId
+                        stream: this.streamId,
+                        sdpString: sdpOfferParam
                     }
                 } else {
                     let typeOfVideo = '';
@@ -849,10 +850,10 @@ export class Stream extends EventDispatcher {
                         typeOfVideo,
                         frameRate: !!this.frameRate ? this.frameRate : -1,
                         videoDimensions: JSON.stringify(this.videoDimensions),
-                        filter: this.outboundStreamOpts.publisherProperties.filter
+                        filter: this.outboundStreamOpts.publisherProperties.filter,
+                        sdpOffer: sdpOfferParam
                     }
                 }
-                params['sdpOffer'] = sdpOfferParam;
 
                 this.session.openvidu.sendRequest(method, params, (error, response) => {
                     if (error) {
@@ -862,7 +863,7 @@ export class Stream extends EventDispatcher {
                             reject('Error on publishVideo: ' + JSON.stringify(error));
                         }
                     } else {
-                        this.webRtcPeer.processAnswer(response.sdpAnswer, false)
+                        this.webRtcPeer.processRemoteAnswer(response.sdpAnswer)
                             .then(() => {
                                 this.streamId = response.id;
                                 this.creationTime = response.createdAt;
@@ -897,10 +898,15 @@ export class Stream extends EventDispatcher {
                 this.webRtcPeer = new WebRtcPeerSendonly(options);
             }
             this.webRtcPeer.addIceConnectionStateChangeListener('publisher of ' + this.connection.connectionId);
-            this.webRtcPeer.generateOffer().then(sdpOffer => {
-                successCallback(sdpOffer);
+            this.webRtcPeer.createOffer().then(sdpOffer => {
+                this.webRtcPeer.processLocalOffer(sdpOffer)
+                    .then(() => {
+                        successOfferCallback(sdpOffer.sdp);
+                    }).catch(error => {
+                        reject(new Error('(publish) SDP process local offer error: ' + JSON.stringify(error)));
+                    });
             }).catch(error => {
-                reject(new Error('(publish) SDP offer error: ' + JSON.stringify(error)));
+                reject(new Error('(publish) SDP create offer error: ' + JSON.stringify(error)));
             });
         });
     }
@@ -909,6 +915,30 @@ export class Stream extends EventDispatcher {
      * @hidden
      */
     initWebRtcPeerReceive(reconnect: boolean): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.session.openvidu.sendRequest('prepareReceiveVideoFrom', { sender: this.streamId, reconnect }, (error, response) => {
+                if (error) {
+                    reject(new Error('Error on prepareReceiveVideoFrom: ' + JSON.stringify(error)));
+                } else {
+                    this.completeWebRtcPeerReceive(response.sdpOffer, reconnect)
+                        .then(() => {
+                            logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
+                            this.remotePeerSuccessfullyEstablished();
+                            this.initWebRtcStats();
+                            resolve();
+                        })
+                        .catch(error => {
+                            reject(error);
+                        });
+                }
+            });
+        });
+    }
+
+    /**
+     * @hidden
+     */
+    completeWebRtcPeerReceive(sdpOffer: string, reconnect: boolean): Promise<void> {
         return new Promise((resolve, reject) => {
 
             const offerConstraints = {
@@ -924,50 +954,41 @@ export class Stream extends EventDispatcher {
                 simulcast: false
             };
 
-            const successCallback = (sdpOfferParam) => {
-                logger.debug('Sending SDP offer to subscribe to '
-                    + this.streamId, sdpOfferParam);
+            const successAnswerCallback = (sdpAnswer) => {
+                logger.debug('Sending SDP answer to subscribe to '
+                    + this.streamId, sdpAnswer);
 
                 const method = reconnect ? 'reconnectStream' : 'receiveVideoFrom';
-                const params = { sdpOffer: sdpOfferParam };
+                const params = {};
                 params[reconnect ? 'stream' : 'sender'] = this.streamId;
+                params[reconnect ? 'sdpString' : 'sdpAnswer'] = sdpAnswer;
 
                 this.session.openvidu.sendRequest(method, params, (error, response) => {
                     if (error) {
-                        reject(new Error('Error on recvVideoFrom: ' + JSON.stringify(error)));
+                        reject(new Error('Error on ' + method + ' : ' + JSON.stringify(error)));
                     } else {
-                        // Ios Ionic. Limitation: some bug in iosrtc cordova plugin makes it necessary
-                        // to add a timeout before calling PeerConnection#setRemoteDescription during
-                        // some time (400 ms) from the moment first subscriber stream is received
-                        if (this.session.isFirstIonicIosSubscriber) {
-                            this.session.isFirstIonicIosSubscriber = false;
-                            setTimeout(() => {
-                                // After 400 ms Ionic iOS subscribers won't need to run
-                                // PeerConnection#setRemoteDescription after 250 ms timeout anymore
-                                this.session.countDownForIonicIosSubscribersActive = false;
-                            }, 400);
-                        }
-                        const needsTimeoutOnProcessAnswer = this.session.countDownForIonicIosSubscribersActive;
-                        this.webRtcPeer.processAnswer(response.sdpAnswer, needsTimeoutOnProcessAnswer).then(() => {
-                            logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
-                            this.remotePeerSuccessfullyEstablished();
-                            this.initWebRtcStats();
-                            resolve();
-                        }).catch(error => {
-                            reject(error);
-                        });
+                        resolve();
                     }
                 });
             };
 
             this.webRtcPeer = new WebRtcPeerRecvonly(options);
             this.webRtcPeer.addIceConnectionStateChangeListener(this.streamId);
-            this.webRtcPeer.generateOffer()
-                .then(sdpOffer => {
-                    successCallback(sdpOffer);
+            this.webRtcPeer.processRemoteOffer(sdpOffer)
+                .then(() => {
+                    this.webRtcPeer.createAnswer().then(sdpAnswer => {
+                        this.webRtcPeer.processLocalAnswer(sdpAnswer)
+                            .then(() => {
+                                successAnswerCallback(sdpAnswer.sdp);
+                            }).catch(error => {
+                                reject(new Error('(subscribe) SDP process local answer error: ' + JSON.stringify(error)));
+                            });
+                    }).catch(error => {
+                        reject(new Error('(subscribe) SDP create answer error: ' + JSON.stringify(error)));
+                    });
                 })
                 .catch(error => {
-                    reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
+                    reject(new Error('(subscribe) SDP process remote offer error: ' + JSON.stringify(error)));
                 });
         });
     }

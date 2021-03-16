@@ -206,7 +206,153 @@ public class KurentoParticipant extends Participant {
 				this.getParticipantPublicId());
 	}
 
-	public String receiveMediaFrom(Participant sender, String sdpOffer, boolean silent) {
+	public String prepareReceiveMediaFrom(Participant sender) {
+		final String senderName = sender.getParticipantPublicId();
+
+		log.info("PARTICIPANT {}: Request to prepare receive media from {} in room {}", this.getParticipantPublicId(),
+				senderName, this.session.getSessionId());
+
+		if (senderName.equals(this.getParticipantPublicId())) {
+			log.warn("PARTICIPANT {}: trying to configure loopback by subscribing", this.getParticipantPublicId());
+			throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE, "Can loopback only when publishing media");
+		}
+
+		KurentoParticipant kSender = (KurentoParticipant) sender;
+
+		if (kSender.streaming && kSender.getPublisher() != null
+				&& kSender.getPublisher().closingLock.readLock().tryLock()) {
+
+			try {
+				log.debug("PARTICIPANT {}: Creating a subscriber endpoint to user {}", this.getParticipantPublicId(),
+						senderName);
+
+				SubscriberEndpoint subscriber = getNewOrExistingSubscriber(senderName);
+
+				try {
+					CountDownLatch subscriberLatch = new CountDownLatch(1);
+					Endpoint oldMediaEndpoint = subscriber.createEndpoint(subscriberLatch);
+
+					try {
+						if (!subscriberLatch.await(KurentoSession.ASYNC_LATCH_TIMEOUT, TimeUnit.SECONDS)) {
+							throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE,
+									"Timeout reached when creating subscriber endpoint");
+						}
+					} catch (InterruptedException e) {
+						throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE,
+								"Interrupted when creating subscriber endpoint: " + e.getMessage());
+					}
+					if (oldMediaEndpoint != null) {
+						log.warn(
+								"PARTICIPANT {}: Two threads are trying to create at "
+										+ "the same time a subscriber endpoint for user {}",
+								this.getParticipantPublicId(), senderName);
+						return null;
+					}
+					if (subscriber.getEndpoint() == null) {
+						throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE,
+								"Unable to create subscriber endpoint");
+					}
+
+					String subscriberEndpointName = calculateSubscriberEndpointName(kSender);
+
+					subscriber.setEndpointName(subscriberEndpointName);
+					subscriber.getEndpoint().setName(subscriberEndpointName);
+					subscriber.setStreamId(kSender.getPublisherStreamId());
+
+					endpointConfig.addEndpointListeners(subscriber, "subscriber");
+
+				} catch (OpenViduException e) {
+					this.subscribers.remove(senderName);
+					throw e;
+				}
+
+				log.debug("PARTICIPANT {}: Created subscriber endpoint for user {}", this.getParticipantPublicId(),
+						senderName);
+				try {
+					String sdpOffer = subscriber.prepareSubscription(kSender.getPublisher());
+					log.trace("PARTICIPANT {}: Subscribing SdpOffer is {}", this.getParticipantPublicId(), sdpOffer);
+					log.info("PARTICIPANT {}: offer prepared to receive media from {} in room {}",
+							this.getParticipantPublicId(), senderName, this.session.getSessionId());
+					return sdpOffer;
+				} catch (KurentoServerException e) {
+					log.error("Exception preparing subscriber endpoint for user {}: {}", this.getParticipantPublicId(),
+							e.getMessage());
+					this.subscribers.remove(senderName);
+					releaseSubscriberEndpoint(senderName, (KurentoParticipant) sender, subscriber, null, false);
+					return null;
+				}
+			} finally {
+				kSender.getPublisher().closingLock.readLock().unlock();
+			}
+		} else {
+			log.error(
+					"PublisherEndpoint of participant {} of session {} is closed. Participant {} couldn't subscribe to it ",
+					senderName, sender.getSessionId(), this.participantPublicId);
+			throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE,
+					"Unable to create subscriber endpoint. Publisher endpoint of participant " + senderName
+							+ "is closed");
+		}
+	}
+
+	public void receiveMediaFrom2180(Participant sender, String sdpAnswer, boolean silent) {
+		final String senderName = sender.getParticipantPublicId();
+
+		log.info("PARTICIPANT {}: Request to receive media from {} in room {}", this.getParticipantPublicId(),
+				senderName, this.session.getSessionId());
+		log.trace("PARTICIPANT {}: SdpAnswer for {} is {}", this.getParticipantPublicId(), senderName, sdpAnswer);
+
+		if (senderName.equals(this.getParticipantPublicId())) {
+			log.warn("PARTICIPANT {}: trying to configure loopback by subscribing", this.getParticipantPublicId());
+			throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE, "Can loopback only when publishing media");
+		}
+
+		KurentoParticipant kSender = (KurentoParticipant) sender;
+
+		if (kSender.streaming && kSender.getPublisher() != null
+				&& kSender.getPublisher().closingLock.readLock().tryLock()) {
+
+			try {
+				final SubscriberEndpoint subscriber = getSubscriber(senderName);
+				if (subscriber.getEndpoint() == null) {
+					throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE, "Unable to create subscriber endpoint");
+				}
+
+				try {
+					subscriber.subscribe(sdpAnswer, kSender.getPublisher());
+					log.info("PARTICIPANT {}: Is now receiving video from {} in room {}", this.getParticipantPublicId(),
+							senderName, this.session.getSessionId());
+
+					if (!silent
+							&& !ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
+						endpointConfig.getCdr().recordNewSubscriber(this, sender.getPublisherStreamId(),
+								sender.getParticipantPublicId(), subscriber.createdAt());
+					}
+				} catch (KurentoServerException e) {
+					// TODO Check object status when KurentoClient sets this info in the object
+					if (e.getCode() == 40101) {
+						log.warn(
+								"Publisher endpoint was already released when trying to connect a subscriber endpoint to it",
+								e);
+					} else {
+						log.error("Exception connecting subscriber endpoint to publisher endpoint", e);
+					}
+					this.subscribers.remove(senderName);
+					releaseSubscriberEndpoint(senderName, (KurentoParticipant) sender, subscriber, null, false);
+				}
+			} finally {
+				kSender.getPublisher().closingLock.readLock().unlock();
+			}
+		} else {
+			log.error(
+					"PublisherEndpoint of participant {} of session {} is closed. Participant {} couldn't subscribe to it ",
+					senderName, sender.getSessionId(), this.participantPublicId);
+			throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE,
+					"Unable to create subscriber endpoint. Publisher endpoint of participant " + senderName
+							+ "is closed");
+		}
+	}
+
+	public String receiveMediaFrom2170(Participant sender, String sdpOffer, boolean silent) {
 		final String senderName = sender.getParticipantPublicId();
 
 		log.info("PARTICIPANT {}: Request to receive media from {} in room {}", this.getParticipantPublicId(),

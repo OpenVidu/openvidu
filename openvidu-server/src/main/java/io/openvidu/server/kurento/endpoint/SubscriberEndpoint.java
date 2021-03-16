@@ -45,14 +45,36 @@ public class SubscriberEndpoint extends MediaEndpoint {
 		super(endpointType, owner, endpointName, pipeline, openviduConfig, log);
 	}
 
-	public synchronized String subscribe(String sdpOffer, PublisherEndpoint publisher) {
+	public synchronized String prepareSubscription(PublisherEndpoint publisher) {
 		registerOnIceCandidateEventListener(publisher.getOwner().getParticipantPublicId());
+		publisher.connect(this.getEndpoint(), true);
 		this.createdAt = System.currentTimeMillis();
-		String sdpAnswer = processOffer(sdpOffer);
-		gatherCandidates();
-		publisher.connect(this.getEndpoint(), false);
 		this.publisherStreamId = publisher.getStreamId();
-		return sdpAnswer;
+		String sdpOffer = generateOffer();
+		gatherCandidates();
+		return sdpOffer;
+	}
+
+	public synchronized String subscribe(String sdpAnswer, PublisherEndpoint publisher) {
+		// TODO: REMOVE ON 2.18.0
+		if (this.createdAt == null) {
+			// 2.17.0
+			registerOnIceCandidateEventListener(publisher.getOwner().getParticipantPublicId());
+			this.createdAt = System.currentTimeMillis();
+			String realSdpAnswer = processOffer(sdpAnswer);
+			gatherCandidates();
+			publisher.connect(this.getEndpoint(), false);
+			this.publisherStreamId = publisher.getStreamId();
+			return realSdpAnswer;
+		} else {
+			// 2.18.0
+			return processAnswer(sdpAnswer);
+		}
+		// END TODO
+
+		// TODO: UNCOMMENT ON 2.18.0
+		// processAnswer(sdpAnswer);
+		// END TODO
 	}
 
 	@Override
