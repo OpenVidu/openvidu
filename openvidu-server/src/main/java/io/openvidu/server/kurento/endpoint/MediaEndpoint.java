@@ -37,6 +37,7 @@ import org.kurento.client.IceCandidate;
 import org.kurento.client.ListenerSubscription;
 import org.kurento.client.MediaElement;
 import org.kurento.client.MediaPipeline;
+import org.kurento.client.OfferOptions;
 import org.kurento.client.PlayerEndpoint;
 import org.kurento.client.RtpEndpoint;
 import org.kurento.client.SdpEndpoint;
@@ -519,13 +520,13 @@ public abstract class MediaEndpoint {
 		}
 	}
 
-	protected String generateOffer() throws OpenViduException {
+	protected String generateOffer(OfferOptions offerOptions) throws OpenViduException {
 		if (this.isWeb()) {
 			if (webEndpoint == null) {
 				throw new OpenViduException(Code.MEDIA_WEBRTC_ENDPOINT_ERROR_CODE,
 						"Can't generate offer when WebRtcEndpoint is null (ep: " + endpointName + ")");
 			}
-			return webEndpoint.generateOffer();
+			return webEndpoint.generateOffer(offerOptions);
 		} else if (this.isPlayerEndpoint()) {
 			return "";
 		} else {
@@ -533,7 +534,7 @@ public abstract class MediaEndpoint {
 				throw new OpenViduException(Code.MEDIA_RTP_ENDPOINT_ERROR_CODE,
 						"Can't generate offer when RtpEndpoint is null (ep: " + endpointName + ")");
 			}
-			return endpoint.generateOffer();
+			return endpoint.generateOffer(offerOptions);
 		}
 	}
 

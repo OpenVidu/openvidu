@@ -20,6 +20,7 @@ package io.openvidu.server.kurento.endpoint;
 import java.util.Map.Entry;
 
 import org.kurento.client.MediaPipeline;
+import org.kurento.client.OfferOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,12 @@ public class SubscriberEndpoint extends MediaEndpoint {
 		publisher.connect(this.getEndpoint(), true);
 		this.createdAt = System.currentTimeMillis();
 		this.publisherStreamId = publisher.getStreamId();
-		String sdpOffer = generateOffer();
+
+		OfferOptions offerOptions = new OfferOptions();
+		offerOptions.setOfferToReceiveAudio(publisher.getMediaOptions().hasAudio());
+		offerOptions.setOfferToReceiveVideo(publisher.getMediaOptions().hasVideo());
+		String sdpOffer = generateOffer(offerOptions);
+
 		gatherCandidates();
 		return sdpOffer;
 	}
