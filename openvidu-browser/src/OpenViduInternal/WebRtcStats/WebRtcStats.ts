@@ -44,24 +44,34 @@ interface JSONStatsResponse {
     webrtc_stats: IWebrtcStats
 }
 
+/**
+ * Common WebRtcSTats for latest Chromium and Firefox versions
+ */
 interface IWebrtcStats {
-    inbound: {
+    inbound?: {
         audio: {
             bytesReceived: number,
             packetsReceived: number,
             packetsLost: number,
-            jitter: number,
-            delayMs: number
+            jitter: number
         } | {},
         video: {
             bytesReceived: number,
             packetsReceived: number,
             packetsLost: number,
+            jitter?: number, // Firefox
+            jitterBufferDelay?: number, // Chrome
             framesDecoded: number,
-            nackCount: number
+            firCount: number,
+            nackCount: number,
+            pliCount: number,
+            frameHeight?: number, // Chrome
+            frameWidth?: number, // Chrome
+            framesDropped?: number, // Chrome
+            framesReceived?: number // Chrome
         } | {}
-    } | {},
-    outbound: {
+    },
+    outbound?: {
         audio: {
             bytesSent: number,
             packetsSent: number,
@@ -69,10 +79,16 @@ interface IWebrtcStats {
         video: {
             bytesSent: number,
             packetsSent: number,
+            firCount: number,
             framesEncoded: number,
-            nackCount: number
+            nackCount: number,
+            pliCount: number,
+            qpSum: number,
+            frameHeight?: number, // Chrome
+            frameWidth?: number, // Chrome
+            framesSent?: number // Chrome
         } | {}
-    } | {}
+    }
 };
 
 export class WebRtcStats {
@@ -110,71 +126,121 @@ export class WebRtcStats {
                 await this.sendStatsToHttpEndpoint();
             }, this.statsInterval * 1000);
 
-        }else {
+        } else {
             logger.debug('WebRtc stats not enabled');
         }
     }
 
-    // Used in test-app
+    // Have been tested in:
+    //   - Linux Desktop:
+    //       - Chrome 89.0.4389.90
+    //       - Opera 74.0.3911.218
+    //       - Firefox 86
+    //       - Microsoft Edge 91.0.825.0
+    //       - Electron 11.3.0 (Chromium 87.0.4280.141)
+    //   - Windows Desktop:
+    //       - Chrome 
+    //       - ¿Opera?
+    //       - Firefox 
+    //       - Microsoft Edge 
+    //       - ¿Electron?
+    //   - MacOS Desktop:
+    //       - Chrome  
+    //       - ¿Opera?
+    //       - Firefox  
+    //       - ¿Electron?
+    //   - Android:
+    //       - Chrome Mobile 89.0.4389.90
+    //       - Opera 62.3.3146.57763
+    //       - Firefox Mobile 86.6.1
+    //       - Microsoft Edge Mobile 46.02.4.5147
+    //       - Ionic 5
+    //       - ¿React Native?
+    //   - iOS:
+    //       - Safari Mobile 
+    //       - ¿Ionic?
+    //       - ¿React Native?
     public getSelectedIceCandidateInfo(): Promise<any> {
-        return new Promise((resolve, reject) => {
-            this.getStats().then(
-                (stats) => {
-                    if (platform.isChromeBrowser() || platform.isChromeMobileBrowser() || platform.isOperaBrowser() || platform.isOperaMobileBrowser()) {
-                        let localCandidateId, remoteCandidateId, googCandidatePair;
-                        const localCandidates = {};
-                        const remoteCandidates = {};
-                        for (const key in stats) {
-                            const stat = stats[key];
-                            if (stat.type === 'localcandidate') {
-                                localCandidates[stat.id] = stat;
-                            } else if (stat.type === 'remotecandidate') {
-                                remoteCandidates[stat.id] = stat;
-                            } else if (stat.type === 'googCandidatePair' && (stat.googActiveConnection === 'true')) {
-                                googCandidatePair = stat;
-                                localCandidateId = stat.localCandidateId;
-                                remoteCandidateId = stat.remoteCandidateId;
-                            }
-                        }
-                        let finalLocalCandidate = localCandidates[localCandidateId];
-                        if (!!finalLocalCandidate) {
-                            const candList = this.stream.getLocalIceCandidateList();
-                            const cand = candList.filter((c: RTCIceCandidate) => {
-                                return (!!c.candidate &&
-                                    c.candidate.indexOf(finalLocalCandidate.ipAddress) >= 0 &&
-                                    c.candidate.indexOf(finalLocalCandidate.portNumber) >= 0 &&
-                                    c.candidate.indexOf(finalLocalCandidate.priority) >= 0);
-                            });
-                            finalLocalCandidate.raw = !!cand[0] ? cand[0].candidate : 'ERROR: Cannot find local candidate in list of sent ICE candidates';
-                        } else {
-                            finalLocalCandidate = 'ERROR: No active local ICE candidate. Probably ICE-TCP is being used';
-                        }
+        return new Promise(async (resolve, reject) => {
 
-                        let finalRemoteCandidate = remoteCandidates[remoteCandidateId];
-                        if (!!finalRemoteCandidate) {
-                            const candList = this.stream.getRemoteIceCandidateList();
-                            const cand = candList.filter((c: RTCIceCandidate) => {
-                                return (!!c.candidate &&
-                                    c.candidate.indexOf(finalRemoteCandidate.ipAddress) >= 0 &&
-                                    c.candidate.indexOf(finalRemoteCandidate.portNumber) >= 0 &&
-                                    c.candidate.indexOf(finalRemoteCandidate.priority) >= 0);
-                            });
-                            finalRemoteCandidate.raw = !!cand[0] ? cand[0].candidate : 'ERROR: Cannot find remote candidate in list of received ICE candidates';
-                        } else {
-                            finalRemoteCandidate = 'ERROR: No active remote ICE candidate. Probably ICE-TCP is being used';
-                        }
-
-                        resolve({
-                            googCandidatePair,
-                            localCandidate: finalLocalCandidate,
-                            remoteCandidate: finalRemoteCandidate
-                        });
-                    } else {
-                        reject('Selected ICE candidate info only available for Chrome');
+            const statsReport: any = await this.stream.getRTCPeerConnection().getStats();
+            let transportStat;
+            const candidatePairs: Map<string, any> = new Map();
+            const localCandidates: Map<string, any> = new Map();
+            const remoteCandidates: Map<string, any> = new Map();
+            statsReport.forEach((stat: any) => {
+                if (platform.isChromium() && stat.type === 'transport') {
+                    transportStat = stat;
+                }
+                console.log(stat.type);
+                console.log(stat);
+                switch (stat.type) {
+                    case 'candidate-pair':
+                        candidatePairs.set(stat.id, stat);
+                        break;
+                    case 'local-candidate':
+                        localCandidates.set(stat.id, stat);
+                        break;
+                    case 'remote-candidate':
+                        remoteCandidates.set(stat.id, stat);
+                        break;
+                }
+            });
+            let selectedCandidatePair;
+            if (platform.isChromium()) {
+                const selectedCandidatePairId = transportStat.selectedCandidatePairId
+                selectedCandidatePair = candidatePairs.get(selectedCandidatePairId);
+            } else {
+                // Firefox
+                const length = candidatePairs.size;
+                const iterator = candidatePairs.values();
+                for (let i = 0; i < length; i++) {
+                    const candidatePair = iterator.next().value;
+                    if (candidatePair['selected']) {
+                        selectedCandidatePair = candidatePair;
+                        break;
                     }
-                }).catch((error) => {
-                    reject(error);
+                }
+            }
+            const localCandidateId = selectedCandidatePair.localCandidateId;
+            const remoteCandidateId = selectedCandidatePair.remoteCandidateId;
+            let finalLocalCandidate = localCandidates.get(localCandidateId);
+            if (!!finalLocalCandidate) {
+                const candList = this.stream.getLocalIceCandidateList();
+                const cand = candList.filter((c: RTCIceCandidate) => {
+                    return (!!c.candidate &&
+                        (c.candidate.indexOf(finalLocalCandidate.ip) >= 0 || c.candidate.indexOf(finalLocalCandidate.address) >= 0) &&
+                        c.candidate.indexOf(finalLocalCandidate.port) >= 0 &&
+                        c.candidate.indexOf(finalLocalCandidate.priority) >= 0);
                 });
+                finalLocalCandidate.raw = [];
+                for (let c of cand) {
+                    finalLocalCandidate.raw.push(c.candidate);
+                }
+            } else {
+                finalLocalCandidate = 'ERROR: No active local ICE candidate. Probably ICE-TCP is being used';
+            }
+
+            let finalRemoteCandidate = remoteCandidates.get(remoteCandidateId);
+            if (!!finalRemoteCandidate) {
+                const candList = this.stream.getRemoteIceCandidateList();
+                const cand = candList.filter((c: RTCIceCandidate) => {
+                    return (!!c.candidate &&
+                        (c.candidate.indexOf(finalRemoteCandidate.ip) >= 0 || c.candidate.indexOf(finalRemoteCandidate.address) >= 0) &&
+                        c.candidate.indexOf(finalRemoteCandidate.port) >= 0);
+                });
+                finalRemoteCandidate.raw = [];
+                for (let c of cand) {
+                    finalRemoteCandidate.raw.push(c.candidate);
+                }
+            } else {
+                finalRemoteCandidate = 'ERROR: No active remote ICE candidate. Probably ICE-TCP is being used';
+            }
+
+            resolve({
+                localCandidate: finalLocalCandidate,
+                remoteCandidate: finalRemoteCandidate
+            });
         });
     }
 
@@ -203,7 +269,7 @@ export class WebRtcStats {
 
     private async sendStatsToHttpEndpoint(): Promise<void> {
         try {
-            const webrtcStats: IWebrtcStats = await this.getStats();
+            const webrtcStats: IWebrtcStats = await this.getCommonStats();
             const response = this.generateJSONStatsResponse(webrtcStats);
             await this.sendStats(this.POST_URL, response);
         } catch (error) {
@@ -211,80 +277,54 @@ export class WebRtcStats {
         }
     }
 
-    private async getStats(): Promise<IWebrtcStats> {
+    public async getCommonStats(): Promise<IWebrtcStats> {
 
         return new Promise(async (resolve, reject) => {
-            if (platform.isChromeBrowser() || platform.isChromeMobileBrowser() || platform.isOperaBrowser() || platform.isOperaMobileBrowser()) {
 
-                const pc: any = this.stream.getRTCPeerConnection();
-                pc.getStats((statsReport) => {
-                    const stats = statsReport.result().filter((stat) => stat.type === 'ssrc');
-                    const response = this.initWebRtcStatsResponse();
+            const statsReport: any = await this.stream.getRTCPeerConnection().getStats();
+            const response = this.getWebRtcStatsResponseOutline();
 
-                    stats.forEach(stat => {
-                        const valueNames: string[] = stat.names();
-                        const mediaType = stat.stat("mediaType");
-                        const isAudio = mediaType === 'audio' && valueNames.includes('audioOutputLevel');
-                        const isVideo = mediaType === 'video' && valueNames.includes('qpSum');
-                        const isIndoundRtp = valueNames.includes('bytesReceived') && (isAudio || isVideo);
-                        const isOutboundRtp = valueNames.includes('bytesSent');
+            statsReport.forEach((stat: any) => {
 
-                        if(isIndoundRtp){
-                            response.inbound[mediaType].bytesReceived = Number(stat.stat('bytesReceived'));
-                            response.inbound[mediaType].packetsReceived = Number(stat.stat('packetsReceived'));
-                            response.inbound[mediaType].packetsLost = Number(stat.stat('packetsLost'));
-                            response.inbound[mediaType].jitter = Number(stat.stat('googJitterBufferMs'));
-                            response.inbound[mediaType].delayMs = Number(stat.stat('googCurrentDelayMs'));
-                            if(mediaType === 'video'){
-                                response.inbound['video'].framesDecoded = Number(stat.stat('framesDecoded'));
-                                response.inbound['video'].nackCount = Number(stat.stat('nackCount'));
-                            }
-
-                        } else if(isOutboundRtp) {
-                            response.outbound[mediaType].bytesSent = Number(stat.stat('bytesSent'));
-                            response.outbound[mediaType].packetsSent = Number(stat.stat('packetsSent'));
-                            if(mediaType === 'video'){
-                                response.outbound['video'].framesEncoded = Number(stat.stat('framesEncoded'));
-                                response.outbound['video'].nackCount = Number(stat.stat('nackCount'));
-                            }
-                        }
-                    });
-                    resolve(response);
-
-                });
-            } else {
-                const statsReport:any = await this.stream.getRTCPeerConnection().getStats(null);
-                const response = this.initWebRtcStatsResponse();
-                statsReport.forEach((stat: any) => {
-
-                    const mediaType = stat.mediaType;
-                    // isRemote property has been deprecated from Firefox 66 https://blog.mozilla.org/webrtc/getstats-isremote-66/
-                    switch (stat.type) {
-                        case "outbound-rtp":
-                            response.outbound[mediaType].bytesSent = Number(stat.bytesSent);
-                            response.outbound[mediaType].packetsSent = Number(stat.packetsSent);
-                            if(mediaType === 'video'){
-                                response.outbound[mediaType].framesEncoded = Number(stat.framesEncoded);
-                            }
-                            break;
-                        case "inbound-rtp":
-                            response.inbound[mediaType].bytesReceived = Number(stat.bytesReceived);
-                            response.inbound[mediaType].packetsReceived = Number(stat.packetsReceived);
-                            response.inbound[mediaType].packetsLost = Number(stat.packetsLost);
-                            response.inbound[mediaType].jitter = Number(stat.jitter);
-                            if (mediaType === 'video') {
-                                response.inbound[mediaType].framesDecoded = Number(stat.framesDecoded);
-                                response.inbound[mediaType].nackCount = Number(stat.nackCount);
-                            }
-                            break;
+                const mediaType = stat.mediaType != null ? stat.mediaType : stat.kind;
+                const addStat = (direction: string, key: string): void => {
+                    if (stat[key] != null && response[direction] != null) {
+                        response[direction][mediaType][key] = Number(stat[key]);
                     }
-                });
+                }
 
-                return resolve(response);
-            }
-
+                switch (stat.type) {
+                    case "outbound-rtp":
+                        addStat('outbound', 'bytesSent');
+                        addStat('outbound', 'packetsSent');
+                        addStat('outbound', 'framesEncoded');
+                        addStat('outbound', 'nackCount');
+                        addStat('outbound', 'firCount');
+                        addStat('outbound', 'pliCount');
+                        addStat('outbound', 'qpSum');
+                        break;
+                    case "inbound-rtp":
+                        addStat('inbound', 'bytesReceived');
+                        addStat('inbound', 'packetsReceived');
+                        addStat('inbound', 'packetsLost');
+                        addStat('inbound', 'jitter');
+                        addStat('inbound', 'framesDecoded');
+                        addStat('inbound', 'nackCount');
+                        addStat('inbound', 'firCount');
+                        addStat('inbound', 'pliCount');
+                        break;
+                    case 'track':
+                        addStat('inbound', 'jitterBufferDelay');
+                        addStat('inbound', 'framesReceived');
+                        addStat('outbound', 'framesDropped');
+                        addStat('outbound', 'framesSent');
+                        addStat(this.stream.isLocal() ? 'outbound' : 'inbound', 'frameHeight');
+                        addStat(this.stream.isLocal() ? 'outbound' : 'inbound', 'frameWidth');
+                        break;
+                }
+            });
+            return resolve(response);
         });
-
     }
 
     private generateJSONStatsResponse(stats: IWebrtcStats): JSONStatsResponse {
@@ -299,19 +339,22 @@ export class WebRtcStats {
         };
     }
 
-    private initWebRtcStatsResponse(): IWebrtcStats {
-
-        return {
-            inbound: {
-                audio: {},
-                video: {}
-            },
-            outbound: {
-                audio: {},
-                video: {}
-            }
-        };
-
+    private getWebRtcStatsResponseOutline(): IWebrtcStats {
+        if (this.stream.isLocal()) {
+            return {
+                outbound: {
+                    audio: {},
+                    video: {}
+                }
+            };
+        } else {
+            return {
+                inbound: {
+                    audio: {},
+                    video: {}
+                }
+            };
+        }
     }
 
 }

@@ -2,7 +2,7 @@ import platform = require("platform");
 
 export class PlatformUtils {
 	protected static instance: PlatformUtils;
-	constructor() {}
+	constructor() { }
 
 	static getInstance(): PlatformUtils {
 		if (!this.instance) {
@@ -154,6 +154,17 @@ export class PlatformUtils {
 	 */
 	public isReactNative(): boolean {
 		return false;
+	}
+
+	/**
+	 * @hidden
+	 */
+	public isChromium(): boolean {
+		return this.isChromeBrowser() || this.isChromeMobileBrowser() ||
+			this.isOperaBrowser() || this.isOperaMobileBrowser() ||
+			this.isEdgeBrowser() || this.isEdgeMobileBrowser() ||
+			this.isIonicAndroid() || this.isIonicIos() ||
+			this.isElectron();
 	}
 
 	/**
