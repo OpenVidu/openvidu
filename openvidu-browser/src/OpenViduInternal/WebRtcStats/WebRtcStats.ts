@@ -131,6 +131,43 @@ export class WebRtcStats {
         }
     }
 
+    // {
+    // "localCandidate": {
+    //     "id": "RTCIceCandidate_/r4P1y2Q",
+    //     "timestamp": 1616080155617,
+    //     "type": "local-candidate",
+    //     "transportId": "RTCTransport_0_1",
+    //     "isRemote": false,
+    //     "networkType": "wifi",
+    //     "ip": "123.45.67.89",
+    //     "port": 63340,
+    //     "protocol": "udp",
+    //     "candidateType": "srflx",
+    //     "priority": 1686052607,
+    //     "deleted": false,
+    //     "raw": [
+    //     "candidate:3345412921 1 udp 1686052607 123.45.67.89 63340 typ srflx raddr 192.168.1.31 rport 63340 generation 0 ufrag 0ZtT network-id 1 network-cost 10",
+    //     "candidate:58094482 1 udp 41885695 98.76.54.32 44431 typ relay raddr 123.45.67.89 rport 63340 generation 0 ufrag 0ZtT network-id 1 network-cost 10"
+    //     ]
+    // },
+    // "remoteCandidate": {
+    //     "id": "RTCIceCandidate_1YO18gph",
+    //     "timestamp": 1616080155617,
+    //     "type": "remote-candidate",
+    //     "transportId": "RTCTransport_0_1",
+    //     "isRemote": true,
+    //     "ip": "12.34.56.78",
+    //     "port": 64989,
+    //     "protocol": "udp",
+    //     "candidateType": "srflx",
+    //     "priority": 1679819263,
+    //     "deleted": false,
+    //     "raw": [
+    //     "candidate:16 1 UDP 1679819263 12.34.56.78 64989 typ srflx raddr 172.19.0.1 rport 64989",
+    //     "candidate:16 1 UDP 1679819263 12.34.56.78 64989 typ srflx raddr 172.19.0.1 rport 64989"
+    //     ]
+    // }
+    // }
     // Have been tested in:
     //   - Linux Desktop:
     //       - Chrome 89.0.4389.90
@@ -139,11 +176,11 @@ export class WebRtcStats {
     //       - Microsoft Edge 91.0.825.0
     //       - Electron 11.3.0 (Chromium 87.0.4280.141)
     //   - Windows Desktop:
-    //       - Chrome 
-    //       - ¿Opera?
-    //       - Firefox 
-    //       - Microsoft Edge 
-    //       - ¿Electron?
+    //       - Chrome 89.0.4389.90
+    //       - Opera 74.0.3911.232
+    //       - Firefox 86.0.1
+    //       - Microsoft Edge 89.0.774.54
+    //       - Electron 11.3.0 (Chromium 87.0.4280.141)
     //   - MacOS Desktop:
     //       - Chrome  
     //       - ¿Opera?
@@ -155,7 +192,7 @@ export class WebRtcStats {
     //       - Firefox Mobile 86.6.1
     //       - Microsoft Edge Mobile 46.02.4.5147
     //       - Ionic 5
-    //       - ¿React Native?
+    //       - React Native 0.64
     //   - iOS:
     //       - Safari Mobile 
     //       - ¿Ionic?
@@ -169,11 +206,9 @@ export class WebRtcStats {
             const localCandidates: Map<string, any> = new Map();
             const remoteCandidates: Map<string, any> = new Map();
             statsReport.forEach((stat: any) => {
-                if (platform.isChromium() && stat.type === 'transport') {
+                if ((platform.isChromium() || platform.isReactNative()) && stat.type === 'transport') {
                     transportStat = stat;
                 }
-                console.log(stat.type);
-                console.log(stat);
                 switch (stat.type) {
                     case 'candidate-pair':
                         candidatePairs.set(stat.id, stat);
@@ -187,7 +222,7 @@ export class WebRtcStats {
                 }
             });
             let selectedCandidatePair;
-            if (platform.isChromium()) {
+            if (platform.isChromium() || platform.isReactNative()) {
                 const selectedCandidatePairId = transportStat.selectedCandidatePairId
                 selectedCandidatePair = candidatePairs.get(selectedCandidatePairId);
             } else {
@@ -210,8 +245,7 @@ export class WebRtcStats {
                 const cand = candList.filter((c: RTCIceCandidate) => {
                     return (!!c.candidate &&
                         (c.candidate.indexOf(finalLocalCandidate.ip) >= 0 || c.candidate.indexOf(finalLocalCandidate.address) >= 0) &&
-                        c.candidate.indexOf(finalLocalCandidate.port) >= 0 &&
-                        c.candidate.indexOf(finalLocalCandidate.priority) >= 0);
+                        c.candidate.indexOf(finalLocalCandidate.port) >= 0);
                 });
                 finalLocalCandidate.raw = [];
                 for (let c of cand) {
@@ -277,6 +311,35 @@ export class WebRtcStats {
         }
     }
 
+    // Have been tested in:
+    //   - Linux Desktop:
+    //       - Chrome 89.0.4389.90
+    //       - Opera 74.0.3911.218
+    //       - Firefox 86
+    //       - Microsoft Edge 91.0.825.0
+    //       - Electron 11.3.0 (Chromium 87.0.4280.141)
+    //   - Windows Desktop:
+    //       - Chrome 89.0.4389.90
+    //       - Opera 74.0.3911.232
+    //       - Firefox 86.0.1
+    //       - Microsoft Edge 89.0.774.54
+    //       - Electron 11.3.0 (Chromium 87.0.4280.141)
+    //   - MacOS Desktop:
+    //       - Chrome  
+    //       - ¿Opera?
+    //       - Firefox  
+    //       - ¿Electron?
+    //   - Android:
+    //       - Chrome Mobile 89.0.4389.90
+    //       - Opera 62.3.3146.57763
+    //       - Firefox Mobile 86.6.1
+    //       - Microsoft Edge Mobile 46.02.4.5147
+    //       - Ionic 5
+    //       - React Native 0.64
+    //   - iOS:
+    //       - Safari Mobile 
+    //       - ¿Ionic?
+    //       - ¿React Native?
     public async getCommonStats(): Promise<IWebrtcStats> {
 
         return new Promise(async (resolve, reject) => {
