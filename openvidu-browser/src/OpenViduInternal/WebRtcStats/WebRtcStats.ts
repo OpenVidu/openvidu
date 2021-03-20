@@ -222,11 +222,10 @@ export class WebRtcStats {
                 }
             });
             let selectedCandidatePair;
-            if (platform.isChromium() || platform.isReactNative()) {
+            if (transportStat != null) {
                 const selectedCandidatePairId = transportStat.selectedCandidatePairId
                 selectedCandidatePair = candidatePairs.get(selectedCandidatePairId);
             } else {
-                // Firefox
                 const length = candidatePairs.size;
                 const iterator = candidatePairs.values();
                 for (let i = 0; i < length; i++) {

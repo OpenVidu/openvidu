@@ -731,7 +731,7 @@ export class VideoComponent implements OnInit, OnDestroy {
       }
 
       async showCodecUsed() {
-          let stats = await this.streamManager.stream.getWebRtcPeer().pc.getStats(null);
+          let stats = await this.streamManager.stream.getWebRtcPeer().pc.getStats();
           let codecIdIndex = null;
           // Search codec Index
           stats.forEach(report => {
