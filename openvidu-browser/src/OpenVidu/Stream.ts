@@ -16,12 +16,10 @@
  */
 
 import { Connection } from './Connection';
-import { Event } from '../OpenViduInternal/Events/Event';
 import { Filter } from './Filter';
 import { Session } from './Session';
 import { StreamManager } from './StreamManager';
 import { Subscriber } from './Subscriber';
-import { EventDispatcher } from './EventDispatcher';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
 import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv } from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
@@ -40,6 +38,10 @@ import hark = require('hark');
 /**
  * @hidden
  */
+import EventEmitter = require('wolfy87-eventemitter');
+/**
+ * @hidden
+ */
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 /**
@@ -52,7 +54,7 @@ let platform: PlatformUtils;
  * Each [[Publisher]] and [[Subscriber]] has an attribute of type Stream, as they give access
  * to one of them (sending and receiving it, respectively)
  */
-export class Stream extends EventDispatcher {
+export class Stream {
 
     /**
      * The Connection object that is publishing the stream
@@ -207,6 +209,10 @@ export class Stream extends EventDispatcher {
      * @hidden
      */
     localMediaStreamWhenSubscribedToRemote?: MediaStream;
+    /**
+     * @hidden
+     */
+    ee = new EventEmitter();
 
 
     /**
@@ -214,7 +220,6 @@ export class Stream extends EventDispatcher {
      */
     constructor(session: Session, options: InboundStreamOptions | OutboundStreamOptions | {}) {
 
-        super();
         platform = PlatformUtils.getInstance();
         this.session = session;
 
@@ -268,33 +273,6 @@ export class Stream extends EventDispatcher {
             this.streamManager.updateMediaStream(this.mediaStream!);
             logger.debug('Video srcObject [' + this.mediaStream + '] updated in stream [' + this.streamId + ']');
         });
-    }
-
-
-    /**
-     * See [[EventDispatcher.on]]
-     */
-    on(type: string, handler: (event: Event) => void): EventDispatcher {
-        super.onAux(type, "Event '" + type + "' triggered by stream '" + this.streamId + "'", handler);
-        return this;
-    }
-
-
-    /**
-     * See [[EventDispatcher.once]]
-     */
-    once(type: string, handler: (event: Event) => void): EventDispatcher {
-        super.onceAux(type, "Event '" + type + "' triggered once by stream '" + this.streamId + "'", handler);
-        return this;
-    }
-
-
-    /**
-     * See [[EventDispatcher.off]]
-     */
-    off(type: string, handler?: (event: Event) => void): EventDispatcher {
-        super.off(type, handler);
-        return this;
     }
 
 
