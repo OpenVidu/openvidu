@@ -15,7 +15,7 @@
  *
  */
 
-var JsonRpcClient  = require('./jsonrpcclient');
+var JsonRpcClient = require('./jsonrpcclient');
 
 
-exports.JsonRpcClient  = JsonRpcClient;
+exports.JsonRpcClient = JsonRpcClient;

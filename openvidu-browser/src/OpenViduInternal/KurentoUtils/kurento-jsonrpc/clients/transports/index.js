@@ -15,7 +15,6 @@
  *
  */
 
-var WebSocketWithReconnection  = require('./webSocketWithReconnection');
+var WebSocketWithReconnection = require('./webSocketWithReconnection');
 
-
-exports.WebSocketWithReconnection  = WebSocketWithReconnection;
+exports.WebSocketWithReconnection = WebSocketWithReconnection;
