@@ -59,7 +59,7 @@ export class WebRtcPeer {
         this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });
         this.id = !!configuration.id ? configuration.id : this.generateUniqueId();
 
-        this.pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
+        this.pc.addEventListener('icecandidate', (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate != null) {
                 const candidate: RTCIceCandidate = event.candidate;
                 this.configuration.onicecandidate(candidate);
@@ -67,16 +67,16 @@ export class WebRtcPeer {
                     this.localCandidatesQueue.push(<RTCIceCandidate>{ candidate: candidate.candidate });
                 }
             }
-        };
+        });
 
-        this.pc.onsignalingstatechange = () => {
+        this.pc.addEventListener('signalingstatechange', () => {
             if (this.pc.signalingState === 'stable') {
                 while (this.iceCandidateList.length > 0) {
                     let candidate = this.iceCandidateList.shift();
                     this.pc.addIceCandidate(<RTCIceCandidate>candidate);
                 }
             }
-        };
+        });
 
         this.start();
     }
@@ -314,7 +314,7 @@ export class WebRtcPeer {
     }
 
     addIceConnectionStateChangeListener(otherId: string) {
-        this.pc.oniceconnectionstatechange = () => {
+        this.pc.addEventListener('iceconnectionstatechange', () => {
             const iceConnectionState: RTCIceConnectionState = this.pc.iceConnectionState;
             switch (iceConnectionState) {
                 case 'disconnected':
@@ -340,7 +340,7 @@ export class WebRtcPeer {
                     logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "completed"');
                     break;
             }
-        }
+        });
     }
 
     /**
