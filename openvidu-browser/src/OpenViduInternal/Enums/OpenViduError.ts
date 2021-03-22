@@ -102,12 +102,13 @@ export enum OpenViduErrorName {
     OPENVIDU_PERMISSION_DENIED = 'OPENVIDU_PERMISSION_DENIED',
 
     /**
-     * _Not in use yet_
+     * There is no connection to the Session. This error will be thrown when any method requiring a connection to
+     * openvidu-server is called before successfully calling method [[Session.connect]]
      */
     OPENVIDU_NOT_CONNECTED = 'OPENVIDU_NOT_CONNECTED',
 
     /**
-     * _Not in use yet_
+     * Generic error
      */
     GENERIC_ERROR = 'GENERIC_ERROR'
 }
@@ -117,7 +118,14 @@ export enum OpenViduErrorName {
  */
 export class OpenViduError {
 
+    /**
+     * Uniquely identifying name of the error
+     */
     name: OpenViduErrorName;
+
+    /**
+     * Full description of the error
+     */
     message: string;
 
     /**

@@ -76,6 +76,7 @@ let platform: PlatformUtils;
  * - networkQualityLevelChanged ([[NetworkQualityLevelChangedEvent]])
  * - reconnecting
  * - reconnected
+ * - exception ([[ExceptionEvent]])
  */
 export class Session extends EventDispatcher {
 

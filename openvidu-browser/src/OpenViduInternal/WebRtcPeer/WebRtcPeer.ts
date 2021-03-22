@@ -17,6 +17,7 @@
 
 import freeice = require('freeice');
 import uuid = require('uuid');
+import { ExceptionEventName } from '../Events/ExceptionEvent';
 import { OpenViduLogger } from '../Logger/OpenViduLogger';
 import { PlatformUtils } from '../Utils/Platform';
 
@@ -37,6 +38,7 @@ export interface WebRtcPeerConfiguration {
     };
     simulcast: boolean;
     onicecandidate: (event: RTCIceCandidate) => void;
+    onexception: (exceptionName: ExceptionEventName, message: string, data?: any) => void;
     iceServers: RTCIceServer[] | undefined;
     mediaStream?: MediaStream;
     mode?: 'sendonly' | 'recvonly' | 'sendrecv';
@@ -322,7 +324,9 @@ export class WebRtcPeer {
                     logger.warn('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection');
                     break;
                 case 'failed':
-                    logger.error('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') to "failed"');
+                    const msg = 'IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') to "failed"';
+                    logger.error(msg);
+                    this.configuration.onexception(ExceptionEventName.ICE_CONNECTION_FAILED, msg);
                     break;
                 case 'closed':
                     logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "closed"');
