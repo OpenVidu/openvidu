@@ -308,6 +308,11 @@ export class Stream extends EventDispatcher {
      */
     applyFilter(type: string, options: Object): Promise<Filter> {
         return new Promise((resolve, reject) => {
+
+            if (!this.session.sessionConnected()) {
+                reject(this.session.notConnectedError());
+            }
+
             logger.info('Applying filter to stream ' + this.streamId);
             options = !!options ? options : {};
             if (typeof options !== 'string') {
@@ -345,6 +350,11 @@ export class Stream extends EventDispatcher {
      */
     removeFilter(): Promise<void> {
         return new Promise((resolve, reject) => {
+
+            if (!this.session.sessionConnected()) {
+                reject(this.session.notConnectedError());
+            }
+
             logger.info('Removing filter of stream ' + this.streamId);
             this.session.openvidu.sendRequest(
                 'removeFilter',

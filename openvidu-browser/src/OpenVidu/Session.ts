@@ -272,11 +272,18 @@ export class Session extends EventDispatcher {
             };
         }
 
-        let completionHandler: (error: Error | undefined) => void;
+        let completionHandler: ((error: Error | undefined) => void) | undefined = undefined;
         if (!!param3 && (typeof param3 === 'function')) {
             completionHandler = param3;
         } else if (!!param4) {
             completionHandler = param4;
+        }
+
+        if (!this.sessionConnected()) {
+            if (completionHandler !== undefined) {
+                completionHandler(this.notConnectedError());
+            }
+            throw this.notConnectedError();
         }
 
         logger.info('Subscribing to ' + stream.connection.connectionId);
@@ -310,6 +317,10 @@ export class Session extends EventDispatcher {
     subscribeAsync(stream: Stream, targetElement: string | HTMLElement, properties?: SubscriberProperties): Promise<Subscriber> {
         return new Promise<Subscriber>((resolve, reject) => {
 
+            if (!this.sessionConnected()) {
+                reject(this.notConnectedError());
+            }
+
             let subscriber: Subscriber;
 
             const callback = (error: Error) => {
@@ -341,6 +352,11 @@ export class Session extends EventDispatcher {
      * See [[VideoElementEvent]] to learn more
      */
     unsubscribe(subscriber: Subscriber): void {
+
+        if (!this.sessionConnected()) {
+            throw this.notConnectedError()
+        }
+
         const connectionId = subscriber.stream.connection.connectionId;
 
         logger.info('Unsubscribing from ' + connectionId);
@@ -377,6 +393,11 @@ export class Session extends EventDispatcher {
      */
     publish(publisher: Publisher): Promise<void> {
         return new Promise((resolve, reject) => {
+
+            if (!this.sessionConnected()) {
+                reject(this.notConnectedError());
+            }
+
             publisher.session = this;
             publisher.stream.session = this;
 
@@ -434,6 +455,10 @@ export class Session extends EventDispatcher {
      */
     unpublish(publisher: Publisher): void {
 
+        if (!this.sessionConnected()) {
+            throw this.notConnectedError()
+        }
+
         const stream = publisher.stream;
 
         if (!stream.connection) {
@@ -484,6 +509,11 @@ export class Session extends EventDispatcher {
      */
     forceDisconnect(connection: Connection): Promise<void> {
         return new Promise((resolve, reject) => {
+
+            if (!this.sessionConnected()) {
+                reject(this.notConnectedError());
+            }
+
             logger.info('Forcing disconnect for connection ' + connection.connectionId);
             this.openvidu.sendRequest(
                 'forceDisconnect',
@@ -523,6 +553,11 @@ export class Session extends EventDispatcher {
      */
     forceUnpublish(stream: Stream): Promise<void> {
         return new Promise((resolve, reject) => {
+
+            if (!this.sessionConnected()) {
+                reject(this.notConnectedError());
+            }
+
             logger.info('Forcing unpublish for stream ' + stream.streamId);
             this.openvidu.sendRequest(
                 'forceUnpublish',
@@ -559,6 +594,10 @@ export class Session extends EventDispatcher {
     /* tslint:disable:no-string-literal */
     signal(signal: SignalOptions): Promise<void> {
         return new Promise((resolve, reject) => {
+
+            if (!this.sessionConnected()) {
+                reject(this.notConnectedError());
+            }
 
             const signalMessage = {};
 
@@ -1144,6 +1183,9 @@ export class Session extends EventDispatcher {
         return joinParams;
     }
 
+    /**
+     * @hidden
+     */
     sendVideoData(streamManager: StreamManager, intervalSeconds: number = 1, doInterval: boolean = false, maxLoops: number = 1) {
         if (
             platform.isChromeBrowser() || platform.isChromeMobileBrowser() || platform.isOperaBrowser() ||
@@ -1203,6 +1245,20 @@ export class Session extends EventDispatcher {
         } else {
             logger.error('Browser ' + platform.getName() + ' (version ' + platform.getVersion() + ') for ' + platform.getFamily() + ' is not supported in OpenVidu for Network Quality');
         }
+    }
+
+    /**
+     * @hidden
+     */
+    sessionConnected() {
+        return this.connection != null;
+    }
+
+    /**
+     * @hidden
+     */
+    notConnectedError(): OpenViduError {
+        return new OpenViduError(OpenViduErrorName.OPENVIDU_NOT_CONNECTED, "There is no connection to the session. Method 'Session.connect' must be successfully completed first");
     }
 
     /* Private methods */
