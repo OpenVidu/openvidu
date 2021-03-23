@@ -16,7 +16,7 @@
  */
 
 import freeice = require('freeice');
-import uuid = require('uuid');
+import { v4 as uuidv4 } from 'uuid';
 import { ExceptionEventName } from '../Events/ExceptionEvent';
 import { OpenViduLogger } from '../Logger/OpenViduLogger';
 import { PlatformUtils } from '../Utils/Platform';
@@ -351,7 +351,7 @@ export class WebRtcPeer {
      * @hidden
      */
     generateUniqueId(): string {
-        return uuid.v4();
+        return uuidv4();
     }
 
 }
