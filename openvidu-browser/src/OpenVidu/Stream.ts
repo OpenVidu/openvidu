@@ -861,7 +861,7 @@ export class Stream {
                                 this.publishedOnce = true;
                                 if (this.displayMyRemote()) {
                                     this.localMediaStreamWhenSubscribedToRemote = this.mediaStream;
-                                    this.remotePeerSuccessfullyEstablished();
+                                    this.remotePeerSuccessfullyEstablished(reconnect);
                                 }
                                 if (reconnect) {
                                     this.ee.emitEvent('stream-reconnected-by-publisher', []);
@@ -913,7 +913,7 @@ export class Stream {
                     this.completeWebRtcPeerReceive(response.sdpOffer, reconnect)
                         .then(() => {
                             logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
-                            this.remotePeerSuccessfullyEstablished();
+                            this.remotePeerSuccessfullyEstablished(reconnect);
                             this.initWebRtcStats();
                             resolve();
                         })
@@ -987,7 +987,13 @@ export class Stream {
     /**
      * @hidden
      */
-    remotePeerSuccessfullyEstablished(): void {
+    remotePeerSuccessfullyEstablished(reconnect: boolean): void {
+
+        if (reconnect && this.mediaStream != null) {
+            // Now we can destroy the existing MediaStream
+            this.disposeMediaStream();
+        }
+
         this.mediaStream = new MediaStream();
         let receiver: RTCRtpReceiver;
         for (receiver of this.webRtcPeer.pc.getReceivers()) {
@@ -1002,11 +1008,11 @@ export class Stream {
             if (this.streamManager instanceof Subscriber) {
                 // Apply SubscriberProperties.subscribeToAudio and SubscriberProperties.subscribeToVideo
                 if (!!this.mediaStream.getAudioTracks()[0]) {
-                    const enabled = !!((<Subscriber>this.streamManager).properties.subscribeToAudio);
+                    const enabled = reconnect ? this.audioActive : !!((this.streamManager as Subscriber).properties.subscribeToAudio);
                     this.mediaStream.getAudioTracks()[0].enabled = enabled;
                 }
                 if (!!this.mediaStream.getVideoTracks()[0]) {
-                    const enabled = !!((<Subscriber>this.streamManager).properties.subscribeToVideo);
+                    const enabled = reconnect ? this.videoActive : !!((this.streamManager as Subscriber).properties.subscribeToVideo);
                     this.mediaStream.getVideoTracks()[0].enabled = enabled;
                 }
             }
