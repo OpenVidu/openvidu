@@ -163,6 +163,7 @@ export class PlatformUtils {
 		return this.isChromeBrowser() || this.isChromeMobileBrowser() ||
 			this.isOperaBrowser() || this.isOperaMobileBrowser() ||
 			this.isEdgeBrowser() || this.isEdgeMobileBrowser() ||
+			this.isSamsungBrowser() ||
 			this.isIonicAndroid() || this.isIonicIos() ||
 			this.isElectron();
 	}
