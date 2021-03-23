@@ -30,6 +30,7 @@ import { RemoteConnectionOptions } from '../OpenViduInternal/Interfaces/Private/
 import { LocalConnectionOptions } from '../OpenViduInternal/Interfaces/Private/LocalConnectionOptions';
 import { SessionOptions } from '../OpenViduInternal/Interfaces/Private/SessionOptions';
 import { ConnectionEvent } from '../OpenViduInternal/Events/ConnectionEvent';
+import { ExceptionEvent } from '../OpenViduInternal/Events/ExceptionEvent';
 import { FilterEvent } from '../OpenViduInternal/Events/FilterEvent';
 import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpeakingEvent';
 import { RecordingEvent } from '../OpenViduInternal/Events/RecordingEvent';
@@ -641,7 +642,7 @@ export class Session extends EventDispatcher {
     /**
      * See [[EventDispatcher.on]]
      */
-    on(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent | NetworkQualityLevelChangedEvent) => void): EventDispatcher {
+    on(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent | NetworkQualityLevelChangedEvent | ExceptionEvent) => void): EventDispatcher {
 
         super.onAux(type, "Event '" + type + "' triggered by 'Session'", handler);
 
@@ -671,7 +672,7 @@ export class Session extends EventDispatcher {
     /**
      * See [[EventDispatcher.once]]
      */
-    once(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent | NetworkQualityLevelChangedEvent) => void): Session {
+    once(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent | NetworkQualityLevelChangedEvent | ExceptionEvent) => void): Session {
 
         super.onceAux(type, "Event '" + type + "' triggered once by 'Session'", handler);
 
@@ -701,7 +702,7 @@ export class Session extends EventDispatcher {
     /**
      * See [[EventDispatcher.off]]
      */
-    off(type: string, handler?: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent | NetworkQualityLevelChangedEvent) => void): Session {
+    off(type: string, handler?: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent | NetworkQualityLevelChangedEvent | ExceptionEvent) => void): Session {
 
         super.off(type, handler);
 
