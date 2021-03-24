@@ -182,10 +182,12 @@ export class WebRtcStats {
     //       - Microsoft Edge 89.0.774.54
     //       - Electron 11.3.0 (Chromium 87.0.4280.141)
     //   - MacOS Desktop:
-    //       - Chrome  
-    //       - ¿Opera?
-    //       - Firefox  
-    //       - ¿Electron?
+    //       - Chrome 89.0.4389.90
+    //       - Firefox 87.0
+    //       - Opera 75.0.3969.93
+    //       - Microsoft Edge 89.0.774.57 
+    //       - Safari 14.0 (14610.1.28.1.9) 
+    //       - Electron 11.3.0 (Chromium 87.0.4280.141)
     //   - Android:
     //       - Chrome Mobile 89.0.4389.90
     //       - Opera 62.3.3146.57763
@@ -206,7 +208,7 @@ export class WebRtcStats {
             const localCandidates: Map<string, any> = new Map();
             const remoteCandidates: Map<string, any> = new Map();
             statsReport.forEach((stat: any) => {
-                if ((platform.isChromium() || platform.isReactNative()) && stat.type === 'transport') {
+                if (stat.type === 'transport' && (platform.isChromium() || platform.isSafariBrowser() || platform.isReactNative())) {
                     transportStat = stat;
                 }
                 switch (stat.type) {
@@ -226,6 +228,7 @@ export class WebRtcStats {
                 const selectedCandidatePairId = transportStat.selectedCandidatePairId
                 selectedCandidatePair = candidatePairs.get(selectedCandidatePairId);
             } else {
+                // This is basically Firefox
                 const length = candidatePairs.size;
                 const iterator = candidatePairs.values();
                 for (let i = 0; i < length; i++) {
@@ -345,13 +348,19 @@ export class WebRtcStats {
 
             const statsReport: any = await this.stream.getRTCPeerConnection().getStats();
             const response = this.getWebRtcStatsResponseOutline();
+            const videoTrackStats = ['framesReceived', 'framesDropped', 'framesSent', 'frameHeight', 'frameWidth'];
 
             statsReport.forEach((stat: any) => {
 
-                const mediaType = stat.mediaType != null ? stat.mediaType : stat.kind;
+                let mediaType = stat.mediaType != null ? stat.mediaType : stat.kind;
                 const addStat = (direction: string, key: string): void => {
                     if (stat[key] != null && response[direction] != null) {
-                        response[direction][mediaType][key] = Number(stat[key]);
+                        if (!mediaType && (videoTrackStats.indexOf(key) > -1)) {
+                            mediaType = 'video';
+                        }
+                        if (direction != null && mediaType != null && key != null && response[direction] != null && response[direction][mediaType] != null) {
+                            response[direction][mediaType][key] = Number(stat[key]);
+                        }
                     }
                 }
 
