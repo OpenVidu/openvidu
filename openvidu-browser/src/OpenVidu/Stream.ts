@@ -293,13 +293,14 @@ export class Stream {
             }
 
             logger.info('Applying filter to stream ' + this.streamId);
-            options = !!options ? options : {};
-            if (typeof options !== 'string') {
-                options = JSON.stringify(options);
+            options = options != null ? options : {};
+            let optionsString = options;
+            if (typeof optionsString !== 'string') {
+                optionsString = JSON.stringify(optionsString);
             }
             this.session.openvidu.sendRequest(
                 'applyFilter',
-                { streamId: this.streamId, type, options },
+                { streamId: this.streamId, type, options: optionsString },
                 (error, response) => {
                     if (error) {
                         logger.error('Error applying filter for Stream ' + this.streamId, error);
