@@ -800,6 +800,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("one2many-btn")).click();
 		user.getDriver().findElement(By.className("screen-radio")).click();
 
+		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("radio-btn-mod")).click();
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+
 		List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
 		for (WebElement el : joinButtons) {
 			el.sendKeys(Keys.ENTER);
@@ -812,19 +818,21 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		// Give some time for the screen sharing warning to stop resizing the viewport
 		Thread.sleep(3000);
+		user.getEventManager().clearCurrentEvents("streamPropertyChanged");
 
 		// Unpublish video
 		final CountDownLatch latch1 = new CountDownLatch(2);
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
 			System.out.println(event.toString());
 			threadAssertions.add("videoActive".equals(event.get("changedProperty").getAsString()));
+			threadAssertions.add("publishVideo".equals(event.get("reason").getAsString()));
 			threadAssertions.add(!event.get("newValue").getAsBoolean());
 			latch1.countDown();
 		});
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .pub-video-btn")).click();
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);
 
-		if (!latch1.await(5000, TimeUnit.MILLISECONDS)) {
+		if (!latch1.await(4000, TimeUnit.MILLISECONDS)) {
 			gracefullyLeaveParticipants(2);
 			fail();
 			return;
@@ -842,13 +850,40 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
 			System.out.println(event.toString());
 			threadAssertions.add("audioActive".equals(event.get("changedProperty").getAsString()));
+			threadAssertions.add("publishAudio".equals(event.get("reason").getAsString()));
 			threadAssertions.add(!event.get("newValue").getAsBoolean());
 			latch2.countDown();
 		});
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .pub-audio-btn")).click();
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 4);
 
-		if (!latch2.await(5000, TimeUnit.MILLISECONDS)) {
+		if (!latch2.await(4000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail();
+			return;
+		}
+
+		// Filter
+		final CountDownLatch latch3 = new CountDownLatch(2);
+		user.getEventManager().on("streamPropertyChanged", (event) -> {
+			threadAssertions.add("filter".equals(event.get("changedProperty").getAsString()));
+			threadAssertions.add("applyFilter".equals(event.get("reason").getAsString()));
+			threadAssertions.add(!event.has("oldValue"));
+			JsonObject newValue = event.get("newValue").getAsJsonObject();
+			threadAssertions.add("GStreamerFilter".equals(newValue.get("type").getAsString()));
+			JsonObject options = newValue.get("options").getAsJsonObject();
+			threadAssertions.add("videobalance saturation=0.0".equals(options.get("command").getAsString()));
+			latch3.countDown();
+		});
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .filter-btn")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("apply-filter-btn")).click();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
+
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
+
+		if (!latch3.await(4000, TimeUnit.MILLISECONDS)) {
 			gracefullyLeaveParticipants(2);
 			fail();
 			return;
@@ -862,7 +897,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		}
 
 		// Resize captured window
-		final CountDownLatch latch3 = new CountDownLatch(2);
+		final CountDownLatch latch4 = new CountDownLatch(2);
 		int newWidth = 1000;
 		int newHeight = 700;
 
@@ -873,10 +908,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 					+ "}";
 			System.out.println("Publisher dimensions: " + event.get("newValue").getAsJsonObject().toString());
 			System.out.println("Real dimensions of viewport: " + expectedDimensions);
-			if ("videoDimensions".equals(event.get("changedProperty").getAsString())) {
-				if (expectedDimensions.equals(event.get("newValue").getAsJsonObject().toString())) {
-					latch3.countDown();
-				}
+			if ("videoDimensions".equals(event.get("changedProperty").getAsString())
+					&& "screenResized".equals(event.get("reason").getAsString())
+					&& expectedDimensions.equals(event.get("newValue").getAsJsonObject().toString())) {
+				latch4.countDown();
 			}
 		});
 
@@ -890,9 +925,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		System.out.println("New viewport dimension: " + obj.toString());
 
-		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 8);
 
-		if (!latch3.await(6000, TimeUnit.MILLISECONDS)) {
+		if (!latch3.await(4000, TimeUnit.MILLISECONDS)) {
 			gracefullyLeaveParticipants(2);
 			fail();
 			return;
