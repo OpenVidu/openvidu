@@ -315,7 +315,10 @@ export class Publisher extends StreamManager {
             mediaStream.removeTrack(removedTrack);
             removedTrack.stop();
             mediaStream.addTrack(track);
-            this.session.sendVideoData(this.stream.streamManager, 5, true, 5);
+            if (this.stream.isLocalStreamPublished) {
+                this.openvidu.sendNewVideoDimensionsIfRequired(this, 'trackReplaced', 50, 30);
+                this.session.sendVideoData(this.stream.streamManager, 5, true, 5);
+            }
         }
 
         return new Promise((resolve, reject) => {
@@ -326,17 +329,20 @@ export class Publisher extends StreamManager {
                 if (track.kind === 'video') {
                     sender = senders.find(s => !!s.track && s.track.kind === 'video');
                     if (!sender) {
-                        reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'))
+                        reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'));
+                        return;
                     }
                 } else if (track.kind === 'audio') {
                     sender = senders.find(s => !!s.track && s.track.kind === 'audio');
                     if (!sender) {
-                        reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'))
+                        reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'));
+                        return;
                     }
                 } else {
                     reject(new Error('Unknown track kind ' + track.kind));
+                    return;
                 }
-                (<any>sender).replaceTrack(track).then(() => {
+                (sender as RTCRtpSender).replaceTrack(track).then(() => {
                     replaceMediaStreamTrack();
                     resolve();
                 }).catch(error => {
@@ -360,7 +366,7 @@ export class Publisher extends StreamManager {
 
             let constraints: MediaStreamConstraints = {};
             let constraintsAux: MediaStreamConstraints = {};
-            const timeForDialogEvent = 1250;
+            const timeForDialogEvent = 1500;
             let startTime;
 
             const errorCallback = (openViduError: OpenViduError) => {
@@ -403,102 +409,38 @@ export class Publisher extends StreamManager {
                 delete this.firstVideoElement;
 
                 if (this.stream.isSendVideo()) {
-                    if (!this.stream.isSendScreen()) {
+                    // Has video track
+                    this.getVideoDimensions(mediaStream).then(dimensions => {
+                        this.stream.videoDimensions = {
+                            width: dimensions.width,
+                            height: dimensions.height
+                        };
 
-                        if (platform.isIonicIos() || platform.isSafariBrowser()) {
-                            // iOS Ionic or Safari. Limitation: cannot set videoDimensions directly, as the videoReference is not loaded
-                            // if not added to DOM. Must add it to DOM and wait for videoWidth and videoHeight properties to be defined
-
-                            this.videoReference.style.display = 'none';
-                            document.body.appendChild(this.videoReference);
-
-                            const videoDimensionsSet = () => {
-                                this.stream.videoDimensions = {
-                                    width: this.videoReference.videoWidth,
-                                    height: this.videoReference.videoHeight
-                                };
-                                this.stream.isLocalStreamReadyToPublish = true;
-                                this.stream.ee.emitEvent('stream-ready-to-publish', []);
-                                document.body.removeChild(this.videoReference);
-                            };
-
-                            let interval;
-                            this.videoReference.addEventListener('loadedmetadata', () => {
-                                if (this.videoReference.videoWidth === 0) {
-                                    interval = setInterval(() => {
-                                        if (this.videoReference.videoWidth !== 0) {
-                                            clearInterval(interval);
-                                            videoDimensionsSet();
-                                        }
-                                    }, 40);
-                                } else {
-                                    videoDimensionsSet();
-                                }
-                            });
-                        } else {
-                            // Rest of platforms
-                            // With no screen share, video dimension can be set directly from MediaStream (getSettings)
-                            // Orientation must be checked for mobile devices (width and height are reversed)
-                            const { width, height } = this.getVideoDimensions(mediaStream);
-
-                            if (platform.isMobileDevice() && (window.innerHeight > window.innerWidth)) {
-                                // Mobile portrait mode
-                                this.stream.videoDimensions = {
-                                    width: height || 0,
-                                    height: width || 0
-                                };
-                            } else {
-                                this.stream.videoDimensions = {
-                                    width: width || 0,
-                                    height: height || 0
-                                };
-                            }
-                            this.stream.isLocalStreamReadyToPublish = true;
-                            this.stream.ee.emitEvent('stream-ready-to-publish', []);
-                        }
-                    } else {
-                        // With screen share, video dimension must be got from a video element (onloadedmetadata event)
-                        this.videoReference.addEventListener('loadedmetadata', () => {
-                            this.stream.videoDimensions = {
-                                width: this.videoReference.videoWidth,
-                                height: this.videoReference.videoHeight
-                            };
+                        if (this.stream.isSendScreen()) {
+                            // Set interval to listen for screen resize events
                             this.screenShareResizeInterval = setInterval(() => {
-                                const firefoxSettings = mediaStream.getVideoTracks()[0].getSettings();
-                                const newWidth = (platform.isChromeBrowser() || platform.isOperaBrowser()) ? this.videoReference.videoWidth : firefoxSettings.width;
-                                const newHeight = (platform.isChromeBrowser() || platform.isOperaBrowser()) ? this.videoReference.videoHeight : firefoxSettings.height;
+                                const settings: MediaTrackSettings = mediaStream.getVideoTracks()[0].getSettings();
+                                const newWidth = settings.width;
+                                const newHeight = settings.height;
                                 if (this.stream.isLocalStreamPublished &&
-                                    (newWidth !== this.stream.videoDimensions.width ||
-                                        newHeight !== this.stream.videoDimensions.height)) {
-                                    const oldValue = { width: this.stream.videoDimensions.width, height: this.stream.videoDimensions.height };
-                                    this.stream.videoDimensions = {
-                                        width: newWidth || 0,
-                                        height: newHeight || 0
-                                    };
-                                    this.session.openvidu.sendRequest(
-                                        'streamPropertyChanged',
-                                        {
-                                            streamId: this.stream.streamId,
-                                            property: 'videoDimensions',
-                                            newValue: JSON.stringify(this.stream.videoDimensions),
-                                            reason: 'screenResized'
-                                        },
-                                        (error, response) => {
-                                            if (error) {
-                                                logger.error("Error sending 'streamPropertyChanged' event", error);
-                                            } else {
-                                                this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoDimensions', this.stream.videoDimensions, oldValue, 'screenResized')]);
-                                                this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoDimensions', this.stream.videoDimensions, oldValue, 'screenResized')]);
-                                                this.session.sendVideoData(this.stream.streamManager);
-                                            }
-                                        });
+                                    (newWidth !== this.stream.videoDimensions.width || newHeight !== this.stream.videoDimensions.height)) {
+                                    this.openvidu.sendVideoDimensionsChangedEvent(
+                                        this,
+                                        'screenResized',
+                                        this.stream.videoDimensions.width,
+                                        this.stream.videoDimensions.height,
+                                        newWidth || 0,
+                                        newHeight || 0
+                                    );
                                 }
-                            }, 500);
-                            this.stream.isLocalStreamReadyToPublish = true;
-                            this.stream.ee.emitEvent('stream-ready-to-publish', []);
-                        });
-                    }
+                            }, 650);
+                        }
+
+                        this.stream.isLocalStreamReadyToPublish = true;
+                        this.stream.ee.emitEvent('stream-ready-to-publish', []);
+                    });
                 } else {
+                    // Only audio track (no videoDimensions)
                     this.stream.isLocalStreamReadyToPublish = true;
                     this.stream.ee.emitEvent('stream-ready-to-publish', []);
                 }
@@ -665,9 +607,66 @@ export class Publisher extends StreamManager {
 
     /**
      * @hidden
+     * 
+     * To obtain the videoDimensions we wait for the video reference to have enough metadata
+     * and then try to use MediaStreamTrack.getSettingsMethod(). If not available, then we
+     * use the HTMLVideoElement properties videoWidth and videoHeight
      */
-    getVideoDimensions(mediaStream: MediaStream): MediaTrackSettings {
-        return mediaStream.getVideoTracks()[0].getSettings();
+    getVideoDimensions(mediaStream: MediaStream): Promise<{ width: number, height: number }> {
+        return new Promise((resolve, reject) => {
+
+            // Ionic iOS and Safari iOS supposedly require the video element to actually exist inside the DOM
+            const requiresDomInsertion: boolean = platform.isIonicIos() || platform.isIOSWithSafari();
+
+            let loadedmetadataListener;
+            const resolveDimensions = () => {
+                let width: number;
+                let height: number;
+                if (typeof this.stream.getMediaStream().getVideoTracks()[0].getSettings === 'function') {
+                    const settings = this.stream.getMediaStream().getVideoTracks()[0].getSettings();
+                    width = settings.width || this.videoReference.videoWidth;
+                    height = settings.height || this.videoReference.videoHeight;
+                } else {
+                    logger.warn('MediaStreamTrack does not have getSettings method on ' + platform.getDescription());
+                    width = this.videoReference.videoWidth;
+                    height = this.videoReference.videoHeight;
+                }
+
+                if (loadedmetadataListener != null) {
+                    this.videoReference.removeEventListener('loadedmetadata', loadedmetadataListener);
+                }
+                if (requiresDomInsertion) {
+                    document.body.removeChild(this.videoReference);
+                }
+
+                resolve({ width, height });
+            }
+
+            if (this.videoReference.readyState >= 1) {
+                // The video already has metadata available
+                // No need of loadedmetadata event
+                resolveDimensions();
+            } else {
+                // The video does not have metadata available yet
+                // Must listen to loadedmetadata event
+                loadedmetadataListener = () => {
+                    if (!this.videoReference.videoWidth) {
+                        let interval = setInterval(() => {
+                            if (!!this.videoReference.videoWidth) {
+                                clearInterval(interval);
+                                resolveDimensions();
+                            }
+                        }, 40);
+                    } else {
+                        resolveDimensions();
+                    }
+                };
+                this.videoReference.addEventListener('loadedmetadata', loadedmetadataListener);
+                if (requiresDomInsertion) {
+                    document.body.appendChild(this.videoReference);
+                }
+            }
+        });
     }
 
     /**
@@ -684,17 +683,15 @@ export class Publisher extends StreamManager {
      */
     initializeVideoReference(mediaStream: MediaStream) {
         this.videoReference = document.createElement('video');
-
+        this.videoReference.setAttribute('muted', 'true');
+        this.videoReference.style.display = 'none';
         if (platform.isSafariBrowser()) {
             this.videoReference.setAttribute('playsinline', 'true');
         }
-
         this.stream.setMediaStream(mediaStream);
-
         if (!!this.firstVideoElement) {
             this.createVideoElement(this.firstVideoElement.targetElement, <VideoInsertMode>this.properties.insertMode);
         }
-
         this.videoReference.srcObject = mediaStream;
     }
 

@@ -118,7 +118,7 @@ export class PlatformUtils {
 	 */
 	public isIOSWithSafari(): boolean {
 		const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
-		return (
+		return this.isIPhoneOrIPad() && (
 			/\b(\w*Apple\w*)\b/.test(navigator.vendor) &&
 			/\b(\w*Safari\w*)\b/.test(userAgent) &&
 			!/\b(\w*CriOS\w*)\b/.test(userAgent) &&
