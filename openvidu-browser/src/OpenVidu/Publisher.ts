@@ -304,7 +304,7 @@ export class Publisher extends StreamManager {
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the track was successfully replaced and rejected with an Error object in other case
      */
-    replaceTrack(track: MediaStreamTrack): Promise<void> {
+    async replaceTrack(track: MediaStreamTrack): Promise<void> {
 
         const replaceTrackInMediaStream = (): Promise<void> => {
             return new Promise((resolve, reject) => {
@@ -354,37 +354,27 @@ export class Publisher extends StreamManager {
             });
         }
 
-        return new Promise(async (resolve, reject) => {
-            // Set field "enabled" of the new track to the previous value
-            const trackOriginalEnabledValue: boolean = track.enabled;
-            if (track.kind === 'video') {
-                track.enabled = this.stream.videoActive;
-            } else if (track.kind === 'audio') {
-                track.enabled = this.stream.audioActive;
-            }
+        // Set field "enabled" of the new track to the previous value
+        const trackOriginalEnabledValue: boolean = track.enabled;
+        if (track.kind === 'video') {
+            track.enabled = this.stream.videoActive;
+        } else if (track.kind === 'audio') {
+            track.enabled = this.stream.audioActive;
+        }
+        try {
             if (this.stream.isLocalStreamPublished) {
                 // Only if the Publisher has been published is necessary to call native Web API RTCRtpSender.replaceTrack
                 // If it has not been published yet, replacing it on the MediaStream object is enough
-                try {
-                    await replaceTrackInRtcRtpSender();
-                    await replaceTrackInMediaStream();
-                    resolve();
-                } catch (error) {
-                    track.enabled = trackOriginalEnabledValue;
-                    reject(error);
-                }
+                await replaceTrackInRtcRtpSender();
+                return await replaceTrackInMediaStream();
             } else {
                 // Publisher not published. Simply replace the track on the local MediaStream
-                try {
-                    await replaceTrackInMediaStream();
-                    resolve();
-                } catch (error) {
-                    track.enabled = trackOriginalEnabledValue;
-                    reject(error);
-                }
+                return await replaceTrackInMediaStream();
             }
-        });
-
+        } catch (error) {
+            track.enabled = trackOriginalEnabledValue;
+            throw error;
+        }
     }
 
     /* Hidden methods */
