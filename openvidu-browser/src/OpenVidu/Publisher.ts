@@ -304,26 +304,28 @@ export class Publisher extends StreamManager {
      */
     replaceTrack(track: MediaStreamTrack): Promise<void> {
 
-        const replaceMediaStreamTrack = () => {
-            const mediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
-            let removedTrack: MediaStreamTrack;
-            if (track.kind === 'video') {
-                removedTrack = mediaStream.getVideoTracks()[0];
-            } else {
-                removedTrack = mediaStream.getAudioTracks()[0];
-            }
-            mediaStream.removeTrack(removedTrack);
-            removedTrack.stop();
-            mediaStream.addTrack(track);
-            if (this.stream.isLocalStreamPublished) {
-                this.openvidu.sendNewVideoDimensionsIfRequired(this, 'trackReplaced', 50, 30);
-                this.session.sendVideoData(this.stream.streamManager, 5, true, 5);
-            }
+        const replaceTrackInMediaStream = (): Promise<void> => {
+            return new Promise((resolve, reject) => {
+                const mediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
+                let removedTrack: MediaStreamTrack;
+                if (track.kind === 'video') {
+                    removedTrack = mediaStream.getVideoTracks()[0];
+                } else {
+                    removedTrack = mediaStream.getAudioTracks()[0];
+                }
+                mediaStream.removeTrack(removedTrack);
+                removedTrack.stop();
+                mediaStream.addTrack(track);
+                if (track.kind === 'video' && this.stream.isLocalStreamPublished) {
+                    this.openvidu.sendNewVideoDimensionsIfRequired(this, 'trackReplaced', 50, 30);
+                    this.session.sendVideoData(this.stream.streamManager, 5, true, 5);
+                }
+                resolve();
+            });
         }
 
-        return new Promise((resolve, reject) => {
-            if (this.stream.isLocalStreamPublished) {
-                // Only if the Publisher has been published is necessary to call native Web API RTCRtpSender.replaceTrack
+        const replaceTrackInRtcRtpSender = (): Promise<void> => {
+            return new Promise((resolve, reject) => {
                 const senders: RTCRtpSender[] = this.stream.getRTCPeerConnection().getSenders();
                 let sender: RTCRtpSender | undefined;
                 if (track.kind === 'video') {
@@ -343,17 +345,44 @@ export class Publisher extends StreamManager {
                     return;
                 }
                 (sender as RTCRtpSender).replaceTrack(track).then(() => {
-                    replaceMediaStreamTrack();
                     resolve();
                 }).catch(error => {
                     reject(error);
                 });
+            });
+        }
+
+        return new Promise(async (resolve, reject) => {
+            // Set field "enabled" of the new track to the previous value
+            const trackOriginalEnabledValue: boolean = track.enabled;
+            if (track.kind === 'video') {
+                track.enabled = this.stream.videoActive;
+            } else if (track.kind === 'audio') {
+                track.enabled = this.stream.audioActive;
+            }
+            if (this.stream.isLocalStreamPublished) {
+                // Only if the Publisher has been published is necessary to call native Web API RTCRtpSender.replaceTrack
+                // If it has not been published yet, replacing it on the MediaStream object is enough
+                try {
+                    await replaceTrackInRtcRtpSender();
+                    await replaceTrackInMediaStream();
+                    resolve();
+                } catch (error) {
+                    track.enabled = trackOriginalEnabledValue;
+                    reject(error);
+                }
             } else {
-                // Publisher not published. Simply modify local MediaStream tracks
-                replaceMediaStreamTrack();
-                resolve();
+                // Publisher not published. Simply replace the track on the local MediaStream
+                try {
+                    await replaceTrackInMediaStream();
+                    resolve();
+                } catch (error) {
+                    track.enabled = trackOriginalEnabledValue;
+                    reject(error);
+                }
             }
         });
+
     }
 
     /* Hidden methods */
