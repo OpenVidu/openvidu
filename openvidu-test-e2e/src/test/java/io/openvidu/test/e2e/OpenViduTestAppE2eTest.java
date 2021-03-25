@@ -839,7 +839,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		}
 
 		user.getEventManager().off("streamPropertyChanged");
-		log.info("Thread assertions: {}", threadAssertions.toString());
+		log.info("Thread assertions for unpublishing video: {}", threadAssertions.toString());
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
 			Assert.assertTrue("Some Event property was wrong", iter.next());
 			iter.remove();
@@ -861,6 +861,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			gracefullyLeaveParticipants(2);
 			fail();
 			return;
+		}
+
+		user.getEventManager().off("streamPropertyChanged");
+		log.info("Thread assertions for unpublishing audio: {}", threadAssertions.toString());
+		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
+			Assert.assertTrue("Some Event property was wrong", iter.next());
+			iter.remove();
 		}
 
 		// Filter
@@ -890,7 +897,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		}
 
 		user.getEventManager().off("streamPropertyChanged");
-		log.info("Thread assertions: {}", threadAssertions.toString());
+		log.info("Thread assertions for applying filter: {}", threadAssertions.toString());
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
 			Assert.assertTrue("Some Event property was wrong", iter.next());
 			iter.remove();
