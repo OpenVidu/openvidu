@@ -1427,12 +1427,9 @@ export class Session extends EventDispatcher {
     private processJoinRoomResponse(opts: LocalConnectionOptions) {
         this.sessionId = opts.session;
         if (opts.coturnIp != null && opts.turnUsername != null && opts.turnCredential != null) {
-            const stunUrl = 'stun:' + opts.coturnIp + ':3478';
             const turnUrl1 = 'turn:' + opts.coturnIp + ':3478';
-            const turnUrl2 = turnUrl1 + '?transport=tcp';
             this.openvidu.iceServers = [
-                { urls: [stunUrl] },
-                { urls: [turnUrl1, turnUrl2], username: opts.turnUsername, credential: opts.turnCredential }
+                { urls: [turnUrl1], username: opts.turnUsername, credential: opts.turnCredential }
             ];
             logger.log("STUN/TURN server IP: " + opts.coturnIp);
             logger.log('TURN temp credentials [' + opts.turnUsername + ':' + opts.turnCredential + ']');
