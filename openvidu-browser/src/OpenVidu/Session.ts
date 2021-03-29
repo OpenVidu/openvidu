@@ -353,30 +353,35 @@ export class Session extends EventDispatcher {
      *
      * See [[VideoElementEvent]] to learn more
      */
-    unsubscribe(subscriber: Subscriber): void {
+    unsubscribe(subscriber: Subscriber): Promise<void> {
 
-        if (!this.sessionConnected()) {
-            throw this.notConnectedError()
-        }
+        return new Promise((resolve, reject) => {
 
-        const connectionId = subscriber.stream.connection.connectionId;
+            if (!this.sessionConnected()) {
+                reject(this.notConnectedError());
+            } else {
+                const connectionId = subscriber.stream.connection.connectionId;
 
-        logger.info('Unsubscribing from ' + connectionId);
+                logger.info('Unsubscribing from ' + connectionId);
 
-        this.openvidu.sendRequest(
-            'unsubscribeFromVideo',
-            { sender: subscriber.stream.connection.connectionId },
-            (error, response) => {
-                if (error) {
-                    logger.error('Error unsubscribing from ' + connectionId, error);
-                } else {
-                    logger.info('Unsubscribed correctly from ' + connectionId);
-                }
-                subscriber.stream.disposeWebRtcPeer();
-                subscriber.stream.disposeMediaStream();
+                this.openvidu.sendRequest(
+                    'unsubscribeFromVideo',
+                    { sender: subscriber.stream.connection.connectionId },
+                    (error, response) => {
+                        if (error) {
+                            logger.error('Error unsubscribing from ' + connectionId);
+                            reject(error);
+                        } else {
+                            logger.info('Unsubscribed correctly from ' + connectionId);
+                            subscriber.stream.streamManager.removeAllVideos();
+                            subscriber.stream.disposeWebRtcPeer();
+                            subscriber.stream.disposeMediaStream();
+                            resolve();
+                        }
+                    }
+                );
             }
-        );
-        subscriber.stream.streamManager.removeAllVideos();
+        });
     }
 
 
@@ -455,40 +460,43 @@ export class Session extends EventDispatcher {
      *
      * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      */
-    unpublish(publisher: Publisher): void {
+    unpublish(publisher: Publisher): Promise<void> {
 
-        if (!this.sessionConnected()) {
-            throw this.notConnectedError()
-        }
+        return new Promise((resolve, reject) => {
 
-        const stream = publisher.stream;
+            if (!this.sessionConnected()) {
+                throw this.notConnectedError()
+            }
 
-        if (!stream.connection) {
-            logger.error('The associated Connection object of this Publisher is null', stream);
-            return;
-        } else if (stream.connection !== this.connection) {
-            logger.error('The associated Connection object of this Publisher is not your local Connection.' +
-                "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method", stream);
-            return;
-        } else {
+            const stream = publisher.stream;
 
-            logger.info('Unpublishing local media (' + stream.connection.connectionId + ')');
+            if (!stream.connection) {
+                reject(new Error('The associated Connection object of this Publisher is null'));
+            } else if (stream.connection !== this.connection) {
+                reject(new Error('The associated Connection object of this Publisher is not your local Connection.' +
+                    "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method"));
+            } else {
 
-            this.openvidu.sendRequest('unpublishVideo', (error, response) => {
-                if (error) {
-                    logger.error(error);
-                } else {
-                    logger.info('Media unpublished correctly');
-                }
-            });
+                logger.info('Unpublishing local media (' + stream.connection.connectionId + ')');
 
-            stream.disposeWebRtcPeer();
-            delete stream.connection.stream;
+                this.openvidu.sendRequest('unpublishVideo', (error, response) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        logger.info('Media unpublished correctly');
 
-            const streamEvent = new StreamEvent(true, publisher, 'streamDestroyed', publisher.stream, 'unpublish');
-            publisher.emitEvent('streamDestroyed', [streamEvent]);
-            streamEvent.callDefaultBehavior();
-        }
+                        stream.disposeWebRtcPeer();
+                        delete stream.connection.stream;
+
+                        const streamEvent = new StreamEvent(true, publisher, 'streamDestroyed', publisher.stream, 'unpublish');
+                        publisher.emitEvent('streamDestroyed', [streamEvent]);
+                        streamEvent.callDefaultBehavior();
+
+                        resolve();
+                    }
+                });
+            }
+        });
     }
 
 
