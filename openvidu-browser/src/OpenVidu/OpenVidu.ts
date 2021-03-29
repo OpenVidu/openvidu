@@ -106,7 +106,7 @@ export class OpenVidu {
   /**
    * @hidden
    */
-  webrtcStatsInterval: number = 0;
+  webrtcStatsInterval: number = -1;
   /**
    * @hidden
    */
