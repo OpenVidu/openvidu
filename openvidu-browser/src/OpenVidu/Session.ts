@@ -123,22 +123,6 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    startSpeakingEventsEnabled = false;
-    /**
-     * @hidden
-     */
-    startSpeakingEventsEnabledOnce = false;
-    /**
-     * @hidden
-     */
-    stopSpeakingEventsEnabled = false;
-    /**
-     * @hidden
-     */
-    stopSpeakingEventsEnabledOnce = false;
-    /**
-     * @hidden
-     */
     private videoDataInterval: NodeJS.Timeout;
     /**
      * @hidden
@@ -655,22 +639,28 @@ export class Session extends EventDispatcher {
         super.onAux(type, "Event '" + type + "' triggered by 'Session'", handler);
 
         if (type === 'publisherStartSpeaking') {
-            this.startSpeakingEventsEnabled = true;
-            // If there are already available remote streams, enable hark 'speaking' event in all of them
+            // If there are already available remote streams with audio, enable hark 'speaking' event in all of them
             this.remoteConnections.forEach(remoteConnection => {
-                if (!!remoteConnection.stream && remoteConnection.stream.hasAudio) {
-                    remoteConnection.stream.enableStartSpeakingEvent();
+                if (!!remoteConnection.stream?.hasAudio) {
+                    remoteConnection.stream.enableHarkSpeakingEvent();
                 }
             });
+            if (!!this.connection?.stream?.hasAudio) {
+                // If connected to the Session and publishing with audio, also enable hark 'speaking' event for the Publisher
+                this.connection.stream.enableHarkSpeakingEvent();
+            }
         }
         if (type === 'publisherStopSpeaking') {
-            this.stopSpeakingEventsEnabled = true;
-            // If there are already available remote streams, enable hark 'stopped_speaking' event in all of them
+            // If there are already available remote streams with audio, enable hark 'stopped_speaking' event in all of them
             this.remoteConnections.forEach(remoteConnection => {
-                if (!!remoteConnection.stream && remoteConnection.stream.hasAudio) {
-                    remoteConnection.stream.enableStopSpeakingEvent();
+                if (!!remoteConnection.stream?.hasAudio) {
+                    remoteConnection.stream.enableHarkStoppedSpeakingEvent();
                 }
             });
+            if (!!this.connection?.stream?.hasAudio) {
+                // If connected to the Session and publishing with audio, also enable hark 'stopped_speaking' event for the Publisher
+                this.connection.stream.enableHarkStoppedSpeakingEvent();
+            }
         }
 
         return this;
@@ -685,22 +675,28 @@ export class Session extends EventDispatcher {
         super.onceAux(type, "Event '" + type + "' triggered once by 'Session'", handler);
 
         if (type === 'publisherStartSpeaking') {
-            this.startSpeakingEventsEnabledOnce = true;
-            // If there are already available remote streams, enable hark 'speaking' event in all of them once
+            // If there are already available remote streams with audio, enable hark 'speaking' event (once) in all of them once
             this.remoteConnections.forEach(remoteConnection => {
-                if (!!remoteConnection.stream && remoteConnection.stream.hasAudio) {
-                    remoteConnection.stream.enableOnceStartSpeakingEvent();
+                if (!!remoteConnection.stream?.hasAudio) {
+                    remoteConnection.stream.enableOnceHarkSpeakingEvent();
                 }
             });
+            if (!!this.connection?.stream?.hasAudio) {
+                // If connected to the Session and publishing with audio, also enable hark 'speaking' event (once) for the Publisher
+                this.connection.stream.enableOnceHarkSpeakingEvent();
+            }
         }
         if (type === 'publisherStopSpeaking') {
-            this.stopSpeakingEventsEnabledOnce = true;
-            // If there are already available remote streams, enable hark 'stopped_speaking' event in all of them once
+            // If there are already available remote streams with audio, enable hark 'stopped_speaking' event (once) in all of them once
             this.remoteConnections.forEach(remoteConnection => {
-                if (!!remoteConnection.stream && remoteConnection.stream.hasAudio) {
-                    remoteConnection.stream.enableOnceStopSpeakingEvent();
+                if (!!remoteConnection.stream?.hasAudio) {
+                    remoteConnection.stream.enableOnceHarkStoppedSpeakingEvent();
                 }
             });
+            if (!!this.connection?.stream?.hasAudio) {
+                // If connected to the Session and publishing with audio, also enable hark 'stopped_speaking' event (once) for the Publisher
+                this.connection.stream.enableOnceHarkStoppedSpeakingEvent();
+            }
         }
 
         return this;
@@ -715,27 +711,41 @@ export class Session extends EventDispatcher {
         super.off(type, handler);
 
         if (type === 'publisherStartSpeaking') {
-            let remainingStartSpeakingListeners = this.ee.getListeners(type).length;
-            if (remainingStartSpeakingListeners === 0) {
-                this.startSpeakingEventsEnabled = false;
-                // If there are already available remote streams, disable hark in all of them
+            // Check if Session object still has some listener for the event
+            if (!this.anySpeechEventListenerEnabled('publisherStartSpeaking', false)) {
                 this.remoteConnections.forEach(remoteConnection => {
-                    if (!!remoteConnection.stream) {
-                        remoteConnection.stream.disableStartSpeakingEvent(false);
+                    if (!!remoteConnection.stream?.streamManager) {
+                        // Check if Subscriber object still has some listener for the event
+                        if (!this.anySpeechEventListenerEnabled('publisherStartSpeaking', false, remoteConnection.stream.streamManager)) {
+                            remoteConnection.stream.disableHarkSpeakingEvent(false);
+                        }
                     }
                 });
+                if (!!this.connection?.stream?.streamManager) {
+                    // Check if Publisher object still has some listener for the event
+                    if (!this.anySpeechEventListenerEnabled('publisherStartSpeaking', false, this.connection.stream.streamManager)) {
+                        this.connection.stream.disableHarkSpeakingEvent(false);
+                    }
+                }
             }
         }
         if (type === 'publisherStopSpeaking') {
-            let remainingStopSpeakingListeners = this.ee.getListeners(type).length;
-            if (remainingStopSpeakingListeners === 0) {
-                this.stopSpeakingEventsEnabled = false;
-                // If there are already available remote streams, disable hark in all of them
+            // Check if Session object still has some listener for the event
+            if (!this.anySpeechEventListenerEnabled('publisherStopSpeaking', false)) {
                 this.remoteConnections.forEach(remoteConnection => {
-                    if (!!remoteConnection.stream) {
-                        remoteConnection.stream.disableStopSpeakingEvent(false);
+                    if (!!remoteConnection.stream?.streamManager) {
+                        // Check if Subscriber object still has some listener for the event
+                        if (!this.anySpeechEventListenerEnabled('publisherStopSpeaking', false, remoteConnection.stream.streamManager)) {
+                            remoteConnection.stream.disableHarkStoppedSpeakingEvent(false);
+                        }
                     }
                 });
+                if (!!this.connection?.stream?.streamManager) {
+                    // Check if Publisher object still has some listener for the event
+                    if (!this.anySpeechEventListenerEnabled('publisherStopSpeaking', false, this.connection.stream.streamManager)) {
+                        this.connection.stream.disableHarkStoppedSpeakingEvent(false);
+                    }
+                }
             }
         }
         return this;
@@ -1269,6 +1279,27 @@ export class Session extends EventDispatcher {
      */
     notConnectedError(): OpenViduError {
         return new OpenViduError(OpenViduErrorName.OPENVIDU_NOT_CONNECTED, "There is no connection to the session. Method 'Session.connect' must be successfully completed first");
+    }
+
+    /**
+     * @hidden
+     */
+    anySpeechEventListenerEnabled(event: string, onlyOnce: boolean, streamManager?: StreamManager): boolean {
+        let handlersInSession = this.ee.getListeners(event);
+        if (onlyOnce) {
+            handlersInSession = handlersInSession.filter(h => (h as any).once);
+        }
+        let listenersInSession = handlersInSession.length;
+        if (listenersInSession > 0) return true;
+        let listenersInStreamManager = 0;
+        if (!!streamManager) {
+            let handlersInStreamManager = streamManager.ee.getListeners(event);
+            if (onlyOnce) {
+                handlersInStreamManager = handlersInStreamManager.filter(h => (h as any).once);
+            }
+            listenersInStreamManager = handlersInStreamManager.length;
+        }
+        return listenersInStreamManager > 0;
     }
 
     /* Private methods */

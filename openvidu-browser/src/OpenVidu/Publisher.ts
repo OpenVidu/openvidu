@@ -51,7 +51,7 @@ let platform: PlatformUtils;
  * - accessDialogClosed
  * - streamCreated ([[StreamEvent]])
  * - streamDestroyed ([[StreamEvent]])
- * - streamPropertyChanged ([[StreamPropertyChangedEvent]])
+ * - _All events inherited from [[StreamManager]] class_
  */
 export class Publisher extends StreamManager {
 

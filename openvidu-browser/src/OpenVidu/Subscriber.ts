@@ -27,6 +27,10 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 /**
  * Packs remote media streams. Participants automatically receive them when others publish their streams. Initialized with [[Session.subscribe]] method
+ * 
+ * ### Available event listeners (and events dispatched)
+ *
+ * - _All events inherited from [[StreamManager]] class_
  */
 export class Subscriber extends StreamManager {
 
