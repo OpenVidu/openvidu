@@ -16,7 +16,8 @@
 
 "use strict";
 
-var Logger = console;
+var OpenViduLogger = require('../../../../Logger/OpenViduLogger').OpenViduLogger;
+var Logger = OpenViduLogger.getInstance();
 
 var MAX_RETRIES = 2000; // Forever...
 var RETRY_TIME_MS = 3000; // FIXME: Implement exponential wait times...

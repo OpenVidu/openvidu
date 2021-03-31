@@ -82,10 +82,14 @@ public abstract class SessionManager {
 	protected TokenGenerator tokenGenerator;
 
 	@Autowired
+	protected TokenRegister tokenRegister;
+
+	@Autowired
 	protected QuarantineKiller quarantineKiller;
 
 	@Autowired
 	protected GeoLocationByIp geoLocationByIp;
+
 
 	public FormatChecker formatChecker = new FormatChecker();
 
@@ -327,6 +331,7 @@ public abstract class SessionManager {
 		Token tokenObj = tokenGenerator.generateToken(session.getSessionId(), serverMetadata, record, role,
 				kurentoOptions);
 		session.storeToken(tokenObj);
+		tokenRegister.registerToken(session.getSessionId(), tokenObj);
 		return tokenObj;
 	}
 
@@ -335,6 +340,7 @@ public abstract class SessionManager {
 		Token tokenObj = new Token(token, session.getSessionId(), connectionProperties,
 				this.openviduConfig.isTurnadminAvailable() ? this.coturnCredentialsService.createUser() : null);
 		session.storeToken(tokenObj);
+		tokenRegister.registerToken(session.getSessionId(), tokenObj);
 		return tokenObj;
 	}
 
@@ -623,6 +629,7 @@ public abstract class SessionManager {
 		sessionidParticipantpublicidParticipant.remove(sessionId);
 		sessionidFinalUsers.remove(sessionId);
 		sessionidAccumulatedRecordings.remove(sessionId);
+		tokenRegister.deregisterTokens(sessionId);
 	}
 
 	private void initializeCollections(String sessionId) {

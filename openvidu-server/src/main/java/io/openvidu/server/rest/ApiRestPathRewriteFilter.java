@@ -120,25 +120,25 @@ public class ApiRestPathRewriteFilter implements Filter {
 			ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry conf,
 			OpenviduConfig openviduConf) throws Exception {
 
-		conf.antMatchers("/api/**").authenticated()
+		conf.antMatchers("/api/**").hasRole("ADMIN")
 				// /config
 				.antMatchers(HttpMethod.GET, "/config/openvidu-publicurl").permitAll()
-				.antMatchers(HttpMethod.GET, "/config/**").authenticated()
+				.antMatchers(HttpMethod.GET, "/config/**").hasRole("ADMIN")
 				// /cdr
-				.antMatchers(HttpMethod.GET, "/cdr/**").authenticated()
+				.antMatchers(HttpMethod.GET, "/cdr/**").hasRole("ADMIN")
 				// /accept-certificate
 				.antMatchers(HttpMethod.GET, "/accept-certificate").permitAll()
 				// Dashboard
-				.antMatchers(HttpMethod.GET, "/dashboard/**").authenticated();
+				.antMatchers(HttpMethod.GET, "/dashboard/**").hasRole("ADMIN");
 
 		// Security for recording layouts
-		conf.antMatchers("/layouts/**").authenticated();
+		conf.antMatchers("/layouts/**").hasRole("ADMIN");
 
 		// Security for recorded video files
 		if (openviduConf.getOpenViduRecordingPublicAccess()) {
 			conf = conf.antMatchers("/recordings/**").permitAll();
 		} else {
-			conf = conf.antMatchers("/recordings/**").authenticated();
+			conf = conf.antMatchers("/recordings/**").hasRole("ADMIN");
 		}
 	}
 

@@ -1322,6 +1322,10 @@ export class Session extends EventDispatcher {
                             reject(error);
                         } else {
 
+                            // Configure JSNLogs
+                            OpenViduLogger.configureJSNLog(this.openvidu, this.sessionId, response.id, token);
+
+                            // Process join room response
                             this.processJoinRoomResponse(response);
 
                             // Initialize local Connection object with values returned by openvidu-server
@@ -1461,7 +1465,6 @@ export class Session extends EventDispatcher {
 
             this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
             this.openvidu.httpUri = 'https://' + url.host;
-
         } else {
             logger.error('Token "' + token + '" is not valid')
         }

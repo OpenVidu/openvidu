@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
+import io.openvidu.server.core.TokenRegister;
 import org.bouncycastle.util.Arrays;
 import org.kurento.jsonrpc.internal.server.config.JsonRpcConfiguration;
 import org.kurento.jsonrpc.server.JsonRpcConfigurer;
@@ -167,6 +168,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@DependsOn("openviduConfig")
 	public TokenGenerator tokenGenerator() {
 		return new TokenGenerator();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	@DependsOn("openviduConfig")
+	public TokenRegister tokenRegister() {
+		return new TokenRegister();
 	}
 
 	@Bean
