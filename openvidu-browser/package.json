@@ -3,6 +3,7 @@
     "dependencies": {
         "freeice": "2.2.2",
         "hark": "1.2.3",
+        "jsnlog": "2.30.0",
         "platform": "1.3.6",
         "uuid": "8.3.2",
         "wolfy87-eventemitter": "5.2.9"
