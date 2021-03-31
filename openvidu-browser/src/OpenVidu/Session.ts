@@ -470,7 +470,11 @@ export class Session extends EventDispatcher {
                         logger.info('Media unpublished correctly');
 
                         stream.disposeWebRtcPeer();
-                        delete stream.connection.stream;
+
+                        if (stream.connection.stream == stream) {
+                            // The Connection.stream may have changed if Session.publish was called with other Publisher
+                            delete stream.connection.stream;
+                        }
 
                         const streamEvent = new StreamEvent(true, publisher, 'streamDestroyed', publisher.stream, 'unpublish');
                         publisher.emitEvent('streamDestroyed', [streamEvent]);
