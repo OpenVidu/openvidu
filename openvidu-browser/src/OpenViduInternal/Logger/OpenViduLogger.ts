@@ -5,8 +5,9 @@ export class OpenViduLogger {
 
 	private static instance: OpenViduLogger;
 
-	private JSNLOG_URL = "/openvidu/elk/openvidu-browser-logs";
+	private JSNLOG_URL: string = "/openvidu/elk/openvidu-browser-logs";
 	private MAX_JSNLOG_BATCH_LOG_MESSAGES: number = 50;
+	private MAX_JSNLOG_MAX_BACTH_MESSAGES: number = 1000;
 	private MAX_MSECONDS_BATCH_MESSAGES: number = 5000;
 
 	private openvidu: OpenVidu;
@@ -42,7 +43,7 @@ export class OpenViduLogger {
 				customAppender.setOptions({
 					beforeSend: openViduJSNLogHeaders,
 					batchSize: this.instance.MAX_JSNLOG_BATCH_LOG_MESSAGES,
-                    maxBatchSize: this.instance.MAX_JSNLOG_BATCH_LOG_MESSAGES,
+                    maxBatchSize: 1000,
 					batchTimeout: this.instance.MAX_MSECONDS_BATCH_MESSAGES
 				});
 
