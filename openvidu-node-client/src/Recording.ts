@@ -84,7 +84,7 @@ export class Recording {
         };
         if (this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED]
             || this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED_QUICK_START]) {
-            this.properties.resolution = !!(json['resolution']) ? json['resolution'] : '1920x1080';
+            this.properties.resolution = !!(json['resolution']) ? json['resolution'] : '1280x720';
             this.properties.recordingLayout = !!(json['recordingLayout']) ? json['recordingLayout'] : RecordingLayout.BEST_FIT;
             if (this.properties.recordingLayout.toString() === RecordingLayout[RecordingLayout.CUSTOM]) {
                 this.properties.customLayout = json['customLayout'];

@@ -153,9 +153,7 @@ public class Recording {
 	}
 
 	/**
-	 * Name of the recording. The video file will be named after this property. You
-	 * can access this same value in your clients on recording events
-	 * (<code>recordingStarted</code>, <code>recordingStopped</code>)
+	 * Name of the recording. The video file will be named after this property
 	 */
 	public String getName() {
 		return this.recordingProperties.name();
@@ -170,15 +168,22 @@ public class Recording {
 	}
 
 	/**
-	 * The layout used in this recording. Only defined if OutputMode is COMPOSED
+	 * The layout used in this recording. Only applicable if
+	 * {@link io.openvidu.java.client.Recording.OutputMode} is
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START} and
+	 * {@link Recording#hasVideo()} is true
 	 */
 	public RecordingLayout getRecordingLayout() {
 		return this.recordingProperties.recordingLayout();
 	}
 
 	/**
-	 * The custom layout used in this recording. Only defined if if OutputMode is
-	 * COMPOSED and
+	 * The custom layout used in this recording. Only applicable if
+	 * {@link io.openvidu.java.client.Recording.OutputMode} is
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START},
+	 * {@link Recording#hasVideo()} is true and
 	 * {@link io.openvidu.java.client.RecordingProperties.Builder#customLayout(String)}
 	 * has been called
 	 */
@@ -227,12 +232,25 @@ public class Recording {
 	}
 
 	/**
-	 * Resolution of the video file. Only defined if OutputMode of the Recording is
-	 * set to {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
-	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
+	 * Resolution of the video file. Only applicable if
+	 * {@link io.openvidu.java.client.Recording.OutputMode} is
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START} and
+	 * {@link Recording#hasVideo()} is true
 	 */
 	public String getResolution() {
 		return this.recordingProperties.resolution();
+	}
+
+	/**
+	 * Frame rate of the video file. Only applicable if
+	 * {@link io.openvidu.java.client.Recording.OutputMode} is
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START} and
+	 * {@link Recording#hasVideo()} is true
+	 */
+	public int getFrameRate() {
+		return this.recordingProperties.frameRate();
 	}
 
 	/**

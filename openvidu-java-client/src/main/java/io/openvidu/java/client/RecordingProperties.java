@@ -17,6 +17,10 @@
 
 package io.openvidu.java.client;
 
+import com.google.gson.JsonObject;
+
+import io.openvidu.java.client.Recording.OutputMode;
+
 /**
  * See
  * {@link io.openvidu.java.client.OpenVidu#startRecording(String, RecordingProperties)}
@@ -28,6 +32,7 @@ public class RecordingProperties {
 	private RecordingLayout recordingLayout;
 	private String customLayout;
 	private String resolution;
+	private int frameRate;
 	private boolean hasAudio;
 	private boolean hasVideo;
 	private long shmSize; // For COMPOSED recording
@@ -39,27 +44,42 @@ public class RecordingProperties {
 	public static class Builder {
 
 		private String name = "";
-		private Recording.OutputMode outputMode;
-		private RecordingLayout recordingLayout;
-		private String customLayout;
-		private String resolution;
+		private Recording.OutputMode outputMode = Recording.OutputMode.COMPOSED;
+		private RecordingLayout recordingLayout = RecordingLayout.BEST_FIT;
+		private String customLayout = "";
+		private String resolution = "1280x720";
+		private int frameRate = 25;
 		private boolean hasAudio = true;
 		private boolean hasVideo = true;
 		private long shmSize = 536870912L;
 		private String mediaNode;
+
+		public Builder() {
+		}
+
+		public Builder(RecordingProperties props) {
+			this.name = props.name();
+			this.outputMode = props.outputMode();
+			this.recordingLayout = props.recordingLayout();
+			this.customLayout = props.customLayout();
+			this.resolution = props.resolution();
+			this.frameRate = props.frameRate();
+			this.hasAudio = props.hasAudio();
+			this.hasVideo = props.hasVideo();
+			this.shmSize = props.shmSize();
+			this.mediaNode = props.mediaNode();
+		}
 
 		/**
 		 * Builder for {@link io.openvidu.java.client.RecordingProperties}
 		 */
 		public RecordingProperties build() {
 			return new RecordingProperties(this.name, this.outputMode, this.recordingLayout, this.customLayout,
-					this.resolution, this.hasAudio, this.hasVideo, this.shmSize, this.mediaNode);
+					this.resolution, this.frameRate, this.hasAudio, this.hasVideo, this.shmSize, this.mediaNode);
 		}
 
 		/**
-		 * Call this method to set the name of the video file. You can access this same
-		 * value in your clients on recording events (<code>recordingStarted</code>,
-		 * <code>recordingStopped</code>)
+		 * Call this method to set the name of the video file
 		 */
 		public RecordingProperties.Builder name(String name) {
 			this.name = name;
@@ -67,8 +87,11 @@ public class RecordingProperties {
 		}
 
 		/**
-		 * Call this method to set the mode of recording: COMPOSED for a single archive
-		 * in a grid layout or INDIVIDUAL for one archive for each stream
+		 * Call this method to set the mode of recording:
+		 * {@link Recording.OutputMode#COMPOSED} or
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START} for
+		 * a single archive in a grid layout or {@link Recording.OutputMode#INDIVIDUAL}
+		 * for one archive for each stream.
 		 */
 		public RecordingProperties.Builder outputMode(Recording.OutputMode outputMode) {
 			this.outputMode = outputMode;
@@ -77,11 +100,9 @@ public class RecordingProperties {
 
 		/**
 		 * Call this method to set the layout to be used in the recording. Will only
-		 * have effect if
-		 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
-		 * has been called with value
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
+		 * have effect for {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}
+		 * or {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
+		 * recordings with {@link RecordingProperties#hasVideo()} to true.
 		 */
 		public RecordingProperties.Builder recordingLayout(RecordingLayout layout) {
 			this.recordingLayout = layout;
@@ -94,13 +115,6 @@ public class RecordingProperties {
 		 * to {@link io.openvidu.java.client.RecordingLayout#CUSTOM} you can call this
 		 * method to set the relative path to the specific custom layout you want to
 		 * use.<br>
-		 * Will only have effect if
-		 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)
-		 * Builder.outputMode()} has been called with value
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED
-		 * OutputMode.COMPOSED} or
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START
-		 * OutputMode.COMPOSED_QUICK_START}.<br>
 		 * See <a href=
 		 * "https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts"
 		 * target="_blank">Custom recording layouts</a> to learn more
@@ -114,19 +128,32 @@ public class RecordingProperties {
 		 * Call this method to specify the recording resolution. Must be a string with
 		 * format "WIDTHxHEIGHT", being both WIDTH and HEIGHT the number of pixels
 		 * between 100 and 1999.<br>
-		 * Will only have effect if
-		 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)
-		 * Builder.outputMode()} has been called with value
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED
-		 * OutputMode.COMPOSED} or
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START
-		 * OutputMode.COMPOSED_QUICK_START}. For
-		 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL
-		 * OutputMode.INDIVIDUAL} all individual video files will have the native
-		 * resolution of the published stream
+		 * Will only have effect for
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
+		 * recordings with {@link RecordingProperties#hasVideo()} to true. Property
+		 * ignored for INDIVIDUAL recordings and audio-only recordings. For
+		 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} all
+		 * individual video files will have the native resolution of the published
+		 * stream.
 		 */
 		public RecordingProperties.Builder resolution(String resolution) {
 			this.resolution = resolution;
+			return this;
+		}
+
+		/**
+		 * Call this method to specify the recording frame rate. Will only have effect
+		 * for {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
+		 * recordings with {@link RecordingProperties#hasVideo()} to true. Property
+		 * ignored for INDIVIDUAL recordings and audio-only recordings. For
+		 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} all
+		 * individual video files will have the native frame rate of the published
+		 * stream.
+		 */
+		public RecordingProperties.Builder frameRate(int frameRate) {
+			this.frameRate = frameRate;
 			return this;
 		}
 
@@ -151,9 +178,13 @@ public class RecordingProperties {
 		}
 
 		/**
-		 * If COMPOSED recording, call this method to specify the amount of shared
-		 * memory reserved for the recording process in bytes. Minimum 134217728 (128
-		 * MB). Property ignored if INDIVIDUAL recording
+		 * Call this method to specify the amount of shared memory reserved for the
+		 * recording process in bytes. Minimum 134217728 (128MB).<br>
+		 * Will only have effect for
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
+		 * recordings with {@link RecordingProperties#hasVideo()} to true. Property
+		 * ignored for INDIVIDUAL recordings and audio-only recordings
 		 */
 		public RecordingProperties.Builder shmSize(long shmSize) {
 			this.shmSize = shmSize;
@@ -167,8 +198,10 @@ public class RecordingProperties {
 		 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
 		 * sans-serif">PRO</a> Call this method to force the recording to be hosted in
 		 * the Media Node with identifier <code>mediaNodeId</code>. This property only
-		 * applies to COMPOSED recordings and is ignored for INDIVIDUAL recordings, that
-		 * are always hosted in the same Media Node hosting its Session
+		 * applies to COMPOSED or COMPOSED_QUICK_START recordings with
+		 * {@link RecordingProperties#hasVideo()} to true and is ignored for INDIVIDUAL
+		 * recordings and audio-only recordings, that are always hosted in the same
+		 * Media Node hosting its Session
 		 */
 		public RecordingProperties.Builder mediaNode(String mediaNodeId) {
 			this.mediaNode = mediaNodeId;
@@ -178,13 +211,14 @@ public class RecordingProperties {
 	}
 
 	protected RecordingProperties(String name, Recording.OutputMode outputMode, RecordingLayout layout,
-			String customLayout, String resolution, boolean hasAudio, boolean hasVideo, long shmSize,
+			String customLayout, String resolution, int frameRate, boolean hasAudio, boolean hasVideo, long shmSize,
 			String mediaNode) {
 		this.name = name;
 		this.outputMode = outputMode;
 		this.recordingLayout = layout;
 		this.customLayout = customLayout;
 		this.resolution = resolution;
+		this.frameRate = frameRate;
 		this.hasAudio = hasAudio;
 		this.hasVideo = hasVideo;
 		this.shmSize = shmSize;
@@ -192,9 +226,7 @@ public class RecordingProperties {
 	}
 
 	/**
-	 * Defines the name you want to give to the video file. You can access this same
-	 * value in your clients on recording events (<code>recordingStarted</code>,
-	 * <code>recordingStopped</code>)
+	 * Defines the name you want to give to the video file
 	 */
 	public String name() {
 		return this.name;
@@ -215,12 +247,11 @@ public class RecordingProperties {
 
 	/**
 	 * Defines the layout to be used in the recording.<br>
-	 * Will only have effect if
-	 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)
-	 * Builder.outputMode()} has been called with value
-	 * {@link Recording.OutputMode#COMPOSED OutputMode.COMPOSED} or
-	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START
-	 * OutputMode.COMPOSED_QUICK_START}.<br>
+	 * Will only have effect for
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
+	 * recordings with {@link RecordingProperties#hasVideo()} to true. Property
+	 * ignored for INDIVIDUAL recordings and audio-only recordings<br>
 	 * <br>
 	 * 
 	 * Default to {@link RecordingLayout#BEST_FIT RecordingLayout.BEST_FIT}
@@ -243,20 +274,38 @@ public class RecordingProperties {
 
 	/**
 	 * Defines the resolution of the recorded video.<br>
-	 * Will only have effect if
-	 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
-	 * has been called with value
+	 * Will only have effect for
 	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
-	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}.
-	 * For {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} all
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
+	 * recordings with {@link RecordingProperties#hasVideo()} to true. Property
+	 * ignored for INDIVIDUAL recordings and audio-only recordings. For
+	 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} all
 	 * individual video files will have the native resolution of the published
 	 * stream.<br>
 	 * <br>
 	 * 
-	 * Default to "1920x1080"
+	 * Default to "1280x720"
 	 */
 	public String resolution() {
 		return this.resolution;
+	}
+
+	/**
+	 * Defines the frame rate of the recorded video.<br>
+	 * Will only have effect for
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
+	 * recordings with {@link RecordingProperties#hasVideo()} to true. Property
+	 * ignored for INDIVIDUAL recordings and audio-only recordings. For
+	 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} all
+	 * individual video files will have the native frame rate of the published
+	 * stream.<br>
+	 * <br>
+	 * 
+	 * Default to 25
+	 */
+	public int frameRate() {
+		return this.frameRate;
 	}
 
 	/**
@@ -282,9 +331,13 @@ public class RecordingProperties {
 	}
 
 	/**
-	 * If COMPOSED recording, the amount of shared memory reserved for the recording
-	 * process in bytes. Minimum 134217728 (128MB). Property ignored if INDIVIDUAL
-	 * recording<br>
+	 * The amount of shared memory reserved for the recording process in bytes.
+	 * Minimum 134217728 (128MB).<br>
+	 * Will only have effect for
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
+	 * recordings with {@link RecordingProperties#hasVideo()} to true. Property
+	 * ignored for INDIVIDUAL recordings and audio-only recordings<br>
 	 * <br>
 	 * 
 	 * Default to 536870912 (512 MB)
@@ -300,11 +353,71 @@ public class RecordingProperties {
 	 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
 	 * sans-serif">PRO</a> The Media Node where to host the recording. The default
 	 * option if this property is not defined is the same Media Node hosting the
-	 * Session to record. This property only applies to COMPOSED recordings and is
-	 * ignored for INDIVIDUAL recordings
+	 * Session to record. This property only applies to COMPOSED or
+	 * COMPOSED_QUICK_START recordings with {@link RecordingProperties#hasVideo()}
+	 * to true and is ignored for INDIVIDUAL recordings and audio-only recordings
 	 */
 	public String mediaNode() {
 		return this.mediaNode;
+	}
+
+	/**
+	 * @hidden
+	 */
+	public JsonObject toJson() {
+		JsonObject json = new JsonObject();
+		json.addProperty("name", name);
+		json.addProperty("outputMode", outputMode.name());
+		json.addProperty("hasAudio", hasAudio);
+		json.addProperty("hasVideo", hasVideo);
+		if (OutputMode.COMPOSED.equals(outputMode) || OutputMode.COMPOSED_QUICK_START.equals(outputMode)) {
+			json.addProperty("recordingLayout", recordingLayout.name());
+			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {
+				json.addProperty("customLayout", customLayout);
+			}
+			json.addProperty("resolution", resolution);
+			json.addProperty("frameRate", frameRate);
+			json.addProperty("shmSize", shmSize);
+		}
+		if (this.mediaNode != null) {
+			json.addProperty("mediaNode", mediaNode);
+		}
+		return json;
+	}
+
+	public static RecordingProperties fromJson(JsonObject json) {
+		Builder builder = new RecordingProperties.Builder();
+		if (json.has("name")) {
+			builder.name(json.get("name").getAsString());
+		}
+		if (json.has("outputMode")) {
+			builder.outputMode(OutputMode.valueOf(json.get("outputMode").getAsString()));
+		}
+		if (json.has("recordingLayout")) {
+			builder.recordingLayout(RecordingLayout.valueOf(json.get("recordingLayout").getAsString()));
+		}
+		if (json.has("customLayout")) {
+			builder.customLayout(json.get("customLayout").getAsString());
+		}
+		if (json.has("resolution")) {
+			builder.resolution(json.get("resolution").getAsString());
+		}
+		if (json.has("frameRate")) {
+			builder.frameRate(json.get("frameRate").getAsInt());
+		}
+		if (json.has("hasAudio")) {
+			builder.hasAudio(json.get("hasAudio").getAsBoolean());
+		}
+		if (json.has("hasVideo")) {
+			builder.hasVideo(json.get("hasVideo").getAsBoolean());
+		}
+		if (json.has("shmSize")) {
+			builder.shmSize(json.get("shmSize").getAsLong());
+		}
+		if (json.has("mediaNode")) {
+			builder.mediaNode(json.get("mediaNode").getAsString());
+		}
+		return builder.build();
 	}
 
 }

@@ -684,22 +684,17 @@ public class Session {
 				this.sessionId = responseJson.get("id").getAsString();
 				this.createdAt = responseJson.get("createdAt").getAsLong();
 
-				// forcedVideoCodec and allowTranscoding values are configured in OpenVidu Server
-				// via configuration or session
+				// forcedVideoCodec and allowTranscoding values are configured in OpenVidu
+				// Server via configuration or session
 				VideoCodec forcedVideoCodec = VideoCodec.valueOf(responseJson.get("forcedVideoCodec").getAsString());
 				Boolean allowTranscoding = responseJson.get("allowTranscoding").getAsBoolean();
 
 				SessionProperties responseProperties = new SessionProperties.Builder()
-						.customSessionId(properties.customSessionId())
-						.mediaMode(properties.mediaMode())
+						.customSessionId(properties.customSessionId()).mediaMode(properties.mediaMode())
 						.recordingMode(properties.recordingMode())
-						.defaultOutputMode(properties.defaultOutputMode())
-						.defaultRecordingLayout(properties.defaultRecordingLayout())
-						.defaultCustomLayout(properties.defaultCustomLayout())
-						.mediaNode(properties.mediaNode())
-						.forcedVideoCodec(forcedVideoCodec)
-						.allowTranscoding(allowTranscoding)
-						.build();
+						.defaultRecordingProperties(properties.defaultRecordingProperties())
+						.mediaNode(properties.mediaNode()).forcedVideoCodec(forcedVideoCodec)
+						.allowTranscoding(allowTranscoding).build();
 
 				this.properties = responseProperties;
 				log.info("Session '{}' created", this.sessionId);
@@ -734,13 +729,10 @@ public class Session {
 		this.recording = json.get("recording").getAsBoolean();
 		SessionProperties.Builder builder = new SessionProperties.Builder()
 				.mediaMode(MediaMode.valueOf(json.get("mediaMode").getAsString()))
-				.recordingMode(RecordingMode.valueOf(json.get("recordingMode").getAsString()))
-				.defaultOutputMode(Recording.OutputMode.valueOf(json.get("defaultOutputMode").getAsString()));
-		if (json.has("defaultRecordingLayout")) {
-			builder.defaultRecordingLayout(RecordingLayout.valueOf(json.get("defaultRecordingLayout").getAsString()));
-		}
-		if (json.has("defaultCustomLayout")) {
-			builder.defaultCustomLayout(json.get("defaultCustomLayout").getAsString());
+				.recordingMode(RecordingMode.valueOf(json.get("recordingMode").getAsString()));
+		if (json.has("defaultRecordingProperties")) {
+			builder.defaultRecordingProperties(
+					RecordingProperties.fromJson(json.get("defaultRecordingProperties").getAsJsonObject()));
 		}
 		if (json.has("customSessionId")) {
 			builder.customSessionId(json.get("customSessionId").getAsString());
@@ -791,10 +783,10 @@ public class Session {
 		json.addProperty("recording", this.recording);
 		json.addProperty("mediaMode", this.properties.mediaMode().name());
 		json.addProperty("recordingMode", this.properties.recordingMode().name());
-		json.addProperty("defaultOutputMode", this.properties.defaultOutputMode().name());
-		json.addProperty("defaultRecordingLayout", this.properties.defaultRecordingLayout().name());
-		json.addProperty("defaultCustomLayout", this.properties.defaultCustomLayout());
-		if(this.properties.forcedVideoCodec() != null) {
+		if (this.properties.defaultRecordingProperties() != null) {
+			json.add("defaultRecordingProperties", this.properties.defaultRecordingProperties().toJson());
+		}
+		if (this.properties.forcedVideoCodec() != null) {
 			json.addProperty("forcedVideoCodec", this.properties.forcedVideoCodec().name());
 		}
 		if (this.properties.isTranscodingAllowed() != null) {

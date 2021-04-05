@@ -32,45 +32,67 @@ export interface RecordingProperties {
 
     /**
      * The mode of recording: COMPOSED for a single archive in a grid layout or INDIVIDUAL for one archive for each stream
+     * 
+     * Default to [[Recording.OutputMode.COMPOSED]]
      */
     outputMode?: Recording.OutputMode;
 
     /**
      * The layout to be used in the recording.<br>
      * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED` or `COMPOSED_QUICK_START`
+     * 
+     * Default to [[RecordingLayout.BEST_FIT]]
      */
     recordingLayout?: RecordingLayout;
 
     /**
      * The relative path to the specific custom layout you want to use.<br>
      * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED` (or `COMPOSED_QUICK_START`) and [[RecordingProperties.recordingLayout]] is `CUSTOM`<br>
-     * See [Custom recording layouts](/en/stable/advanced-features/recording#custom-recording-layouts) to learn more
+     * See [Custom recording layouts](/en/stable/advanced-features/recording#custom-recording-layouts) to learn more.
      */
     customLayout?: string;
 
     /**
      * Recording video file resolution. Must be a string with format "WIDTHxHEIGHT",
      * being both WIDTH and HEIGHT the number of pixels between 100 and 1999.<br>
-     * Will only have effect if [[RecordingProperties.outputMode]]
-     * is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]].
-     * For [[Recording.OutputMode.INDIVIDUAL]] all
-     * individual video files will have the native resolution of the published stream
+     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
+     * and [[RecordingProperties.hasVideo]] is set to true. For [[Recording.OutputMode.INDIVIDUAL]] all individual video files will have the native resolution of the published stream.
+     * 
+     * Default to "1280x720"
      */
     resolution?: string;
 
     /**
+     * Recording video file frame rate.<br>
+     * Will only have effect if [[RecordingProperties.outputMode]]
+     * is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]] and [[RecordingProperties.hasVideo]] is set to true.
+     * For [[Recording.OutputMode.INDIVIDUAL]] all individual video files will have the native frame rate of the published stream.
+     * 
+     * Default to 25
+     */
+    frameRate?: number;
+
+    /**
      * Whether or not to record audio. Cannot be set to false at the same time as [[RecordingProperties.hasVideo]]
+     * 
+     * Default to true
      */
     hasAudio?: boolean;
 
     /**
      * Whether or not to record video. Cannot be set to false at the same time as [[RecordingProperties.hasAudio]]
+     * 
+     * Default to true
      */
     hasVideo?: boolean;
 
     /**
-     * If COMPOSED recording, the amount of shared memory reserved for the recording process in bytes.
-     * Minimum 134217728 (128MB). Property ignored if INDIVIDUAL recording. Default to 536870912 (512 MB)
+     * The amount of shared memory reserved for the recording process in bytes.
+     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
+     * and [[RecordingProperties.hasVideo]] is set to true. Property ignored for INDIVIDUAL recordings and audio-only recordings.
+     * Minimum 134217728 (128MB).
+     * 
+     * Default to 536870912 (512 MB)
      */
     shmSize?: number;
 

@@ -19,8 +19,6 @@ package io.openvidu.java.client;
 
 import com.google.gson.JsonObject;
 
-import io.openvidu.java.client.Recording.OutputMode;
-
 /**
  * See {@link io.openvidu.java.client.OpenVidu#createSession(SessionProperties)}
  */
@@ -28,9 +26,7 @@ public class SessionProperties {
 
 	private MediaMode mediaMode;
 	private RecordingMode recordingMode;
-	private OutputMode defaultOutputMode;
-	private RecordingLayout defaultRecordingLayout;
-	private String defaultCustomLayout;
+	private RecordingProperties defaultRecordingProperties;
 	private String customSessionId;
 	private String mediaNode;
 	private VideoCodec forcedVideoCodec;
@@ -43,30 +39,26 @@ public class SessionProperties {
 
 		private MediaMode mediaMode = MediaMode.ROUTED;
 		private RecordingMode recordingMode = RecordingMode.MANUAL;
-		private OutputMode defaultOutputMode = OutputMode.COMPOSED;
-		private RecordingLayout defaultRecordingLayout = RecordingLayout.BEST_FIT;
-		private String defaultCustomLayout = "";
+		private RecordingProperties defaultRecordingProperties = new RecordingProperties.Builder().build();
 		private String customSessionId = "";
 		private String mediaNode;
-		private VideoCodec forcedVideoCodec;
-		private Boolean allowTranscoding;
+		private VideoCodec forcedVideoCodec = VideoCodec.VP8;
+		private Boolean allowTranscoding = false;
 
 		/**
 		 * Returns the {@link io.openvidu.java.client.SessionProperties} object properly
 		 * configured
 		 */
 		public SessionProperties build() {
-			return new SessionProperties(this.mediaMode, this.recordingMode, this.defaultOutputMode,
-					this.defaultRecordingLayout, this.defaultCustomLayout, this.customSessionId, this.mediaNode,
-					this.forcedVideoCodec, this.allowTranscoding);
+			return new SessionProperties(this.mediaMode, this.recordingMode, this.defaultRecordingProperties,
+					this.customSessionId, this.mediaNode, this.forcedVideoCodec, this.allowTranscoding);
 		}
 
 		/**
 		 * Call this method to set how the media streams will be sent and received by
 		 * your clients: routed through OpenVidu Media Node
 		 * (<code>MediaMode.ROUTED</code>) or attempting direct p2p connections
-		 * (<code>MediaMode.RELAYED</code>, <i>not available yet</i>)
-		 * 
+		 * (<code>MediaMode.RELAYED</code>, <i>not available yet</i>)<br>
 		 * Default value is <code>MediaMode.ROUTED</code>
 		 */
 		public SessionProperties.Builder mediaMode(MediaMode mediaMode) {
@@ -85,53 +77,14 @@ public class SessionProperties {
 		}
 
 		/**
-		 * Call this method to set the the default value used to initialize property
-		 * {@link io.openvidu.java.client.RecordingProperties#outputMode()} of every
-		 * recording of this session. You can easily override this value later when
-		 * starting a {@link io.openvidu.java.client.Recording} by calling
-		 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
-		 * with any other value.<br>
-		 * Default value is {@link Recording.OutputMode#COMPOSED}
+		 * Call this method to set the default recording properties of this session. You
+		 * can easily override this value later when starting a
+		 * {@link io.openvidu.java.client.Recording} by providing new
+		 * {@link RecordingProperties}<br>
+		 * Default values defined in {@link RecordingProperties} class.
 		 */
-		public SessionProperties.Builder defaultOutputMode(OutputMode outputMode) {
-			this.defaultOutputMode = outputMode;
-			return this;
-		}
-
-		/**
-		 * Call this method to set the the default value used to initialize property
-		 * {@link io.openvidu.java.client.RecordingProperties#recordingLayout()} of
-		 * every recording of this session. You can easily override this value later
-		 * when starting a {@link io.openvidu.java.client.Recording} by calling
-		 * {@link io.openvidu.java.client.RecordingProperties.Builder#recordingLayout(RecordingLayout)}
-		 * with any other value.<br>
-		 * Default value is {@link RecordingLayout#BEST_FIT}<br>
-		 * <br>
-		 * Recording layouts are only applicable to recordings with OutputMode
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
-		 */
-		public SessionProperties.Builder defaultRecordingLayout(RecordingLayout layout) {
-			this.defaultRecordingLayout = layout;
-			return this;
-		}
-
-		/**
-		 * Call this method to set the default value used to initialize property
-		 * {@link io.openvidu.java.client.RecordingProperties#customLayout()} of every
-		 * recording of this session. You can easily override this value later when
-		 * starting a {@link io.openvidu.java.client.Recording} by calling
-		 * {@link io.openvidu.java.client.RecordingProperties.Builder#customLayout(String)}
-		 * with any other value.<br>
-		 * <br>
-		 * 
-		 * Custom layouts are only applicable to recordings with OutputMode
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} (or
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START})
-		 * and RecordingLayout {@link io.openvidu.java.client.RecordingLayout#CUSTOM}
-		 */
-		public SessionProperties.Builder defaultCustomLayout(String path) {
-			this.defaultCustomLayout = path;
+		public SessionProperties.Builder defaultRecordingProperties(RecordingProperties defaultRecordingProperties) {
+			this.defaultRecordingProperties = defaultRecordingProperties;
 			return this;
 		}
 
@@ -161,12 +114,13 @@ public class SessionProperties {
 		}
 
 		/**
-		 * Call this method to define which video codec do you want to be forcibly used for this session.
-		 * This allows browsers/clients to use the same codec avoiding transcoding in the media server.
-		 * If the browser/client is not compatible with the specified codec and {@link #allowTranscoding(Boolean)}
-		 * is <code>false</code> and exception will occur.
-		 *
-		 * If forcedVideoCodec is set to NONE, no codec will be forced.
+		 * Call this method to define which video codec do you want to be forcibly used
+		 * for this session. This allows browsers/clients to use the same codec avoiding
+		 * transcoding in the media server. If the browser/client is not compatible with
+		 * the specified codec and {@link #allowTranscoding(Boolean)} is
+		 * <code>false</code> and exception will occur. If forcedVideoCodec is set to
+		 * NONE, no codec will be forced.<br>
+		 * Default value is {@link VideoCodec#VP8}
 		 */
 		public SessionProperties.Builder forcedVideoCodec(VideoCodec forcedVideoCodec) {
 			this.forcedVideoCodec = forcedVideoCodec;
@@ -174,8 +128,10 @@ public class SessionProperties {
 		}
 
 		/**
-		 * Call this method to define if you want to allow transcoding in the media server or not
-		 * when {@link #forcedVideoCodec(VideoCodec)} is not compatible with the browser/client.
+		 * Call this method to define if you want to allow transcoding in the media
+		 * server or not when {@link #forcedVideoCodec(VideoCodec)} is not compatible
+		 * with the browser/client.<br>
+		 * Default value is false
 		 */
 		public SessionProperties.Builder allowTranscoding(Boolean allowTranscoding) {
 			this.allowTranscoding = allowTranscoding;
@@ -187,21 +143,17 @@ public class SessionProperties {
 	protected SessionProperties() {
 		this.mediaMode = MediaMode.ROUTED;
 		this.recordingMode = RecordingMode.MANUAL;
-		this.defaultOutputMode = OutputMode.COMPOSED;
-		this.defaultRecordingLayout = RecordingLayout.BEST_FIT;
-		this.defaultCustomLayout = "";
+		this.defaultRecordingProperties = new RecordingProperties.Builder().build();
 		this.customSessionId = "";
 		this.mediaNode = "";
 	}
 
-	private SessionProperties(MediaMode mediaMode, RecordingMode recordingMode, OutputMode outputMode,
-			RecordingLayout layout, String defaultCustomLayout, String customSessionId, String mediaNode,
+	private SessionProperties(MediaMode mediaMode, RecordingMode recordingMode,
+			RecordingProperties defaultRecordingProperties, String customSessionId, String mediaNode,
 			VideoCodec forcedVideoCodec, Boolean allowTranscoding) {
 		this.mediaMode = mediaMode;
 		this.recordingMode = recordingMode;
-		this.defaultOutputMode = outputMode;
-		this.defaultRecordingLayout = layout;
-		this.defaultCustomLayout = defaultCustomLayout;
+		this.defaultRecordingProperties = defaultRecordingProperties;
 		this.customSessionId = customSessionId;
 		this.mediaNode = mediaNode;
 		this.forcedVideoCodec = forcedVideoCodec;
@@ -227,46 +179,13 @@ public class SessionProperties {
 	}
 
 	/**
-	 * Defines the default value used to initialize property
-	 * {@link io.openvidu.java.client.RecordingProperties#outputMode()} of every
-	 * recording of this session. You can easily override this value later when
-	 * starting a {@link io.openvidu.java.client.Recording} by calling
-	 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
-	 * with any other value
+	 * Defines the default recording properties of this session. You can easily
+	 * override this value later when starting a
+	 * {@link io.openvidu.java.client.Recording} by providing new
+	 * {@link RecordingProperties}
 	 */
-	public OutputMode defaultOutputMode() {
-		return this.defaultOutputMode;
-	}
-
-	/**
-	 * Defines the default value used to initialize property
-	 * {@link io.openvidu.java.client.RecordingProperties#recordingLayout()} of
-	 * every recording of this session. You can easily override this value later
-	 * when starting a {@link io.openvidu.java.client.Recording} by calling
-	 * {@link io.openvidu.java.client.RecordingProperties.Builder#recordingLayout(RecordingLayout)}
-	 * with any other value.<br>
-	 * Recording layouts are only applicable to recordings with OutputMode
-	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
-	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
-	 */
-	public RecordingLayout defaultRecordingLayout() {
-		return this.defaultRecordingLayout;
-	}
-
-	/**
-	 * Defines the default value used to initialize property
-	 * {@link io.openvidu.java.client.RecordingProperties#customLayout()} of every
-	 * recording of this session. You can easily override this value later when
-	 * starting a {@link io.openvidu.java.client.Recording} by calling
-	 * {@link io.openvidu.java.client.RecordingProperties.Builder#customLayout(String)}
-	 * with any other value.<br>
-	 * Custom layouts are only applicable to recordings with OutputMode
-	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} (or
-	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START})
-	 * and RecordingLayout {@link io.openvidu.java.client.RecordingLayout#CUSTOM}
-	 */
-	public String defaultCustomLayout() {
-		return this.defaultCustomLayout;
+	public RecordingProperties defaultRecordingProperties() {
+		return this.defaultRecordingProperties;
 	}
 
 	/**
@@ -301,8 +220,8 @@ public class SessionProperties {
 	}
 
 	/**
-	 * Defines if transcoding is allowed or not when {@link #forcedVideoCodec}
-	 * is not a compatible codec with the browser/client.
+	 * Defines if transcoding is allowed or not when {@link #forcedVideoCodec} is
+	 * not a compatible codec with the browser/client.
 	 */
 	public Boolean isTranscodingAllowed() {
 		return this.allowTranscoding;
@@ -312,10 +231,8 @@ public class SessionProperties {
 		JsonObject json = new JsonObject();
 		json.addProperty("mediaMode", mediaMode().name());
 		json.addProperty("recordingMode", recordingMode().name());
-		json.addProperty("defaultOutputMode", defaultOutputMode().name());
-		json.addProperty("defaultRecordingLayout", defaultRecordingLayout().name());
-		json.addProperty("defaultCustomLayout", defaultCustomLayout());
 		json.addProperty("customSessionId", customSessionId());
+		json.add("defaultRecordingProperties", defaultRecordingProperties.toJson());
 		if (mediaNode() != null) {
 			JsonObject mediaNodeJson = new JsonObject();
 			mediaNodeJson.addProperty("id", mediaNode());

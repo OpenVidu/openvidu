@@ -258,12 +258,10 @@ public class OpenVidu {
 	 * Starts the recording of a {@link io.openvidu.java.client.Session}
 	 *
 	 * @param sessionId The sessionId of the session you want to start recording
-	 * @param name      The name you want to give to the video file. You can access
-	 *                  this same value in your clients on recording events
-	 *                  (recordingStarted, recordingStopped). <strong>WARNING: this
-	 *                  parameter follows an overwriting policy.</strong> If you
-	 *                  name two recordings the same, the newest MP4 file will
-	 *                  overwrite the oldest one
+	 * @param name      The name you want to give to the video file.
+	 *                  <strong>WARNING: this parameter follows an overwriting
+	 *                  policy.</strong> If you name two recordings the same, the
+	 *                  newest MP4 file will overwrite the oldest one
 	 *
 	 * @return The started recording. If this method successfully returns the
 	 *         Recording object it means that the recording can be stopped with
