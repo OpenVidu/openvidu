@@ -632,7 +632,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
             outputMode: this.sessionProperties.defaultRecordingProperties.outputMode,
             recordingLayout: this.sessionProperties.defaultRecordingProperties.recordingLayout,
             customLayout: this.sessionProperties.defaultRecordingProperties.customLayout,
-            resolution: '1920x1080',
+            resolution: '1280x720',
             frameRate: 25,
             hasAudio: true,
             hasVideo: true,

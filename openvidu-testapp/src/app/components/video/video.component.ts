@@ -12,7 +12,8 @@ import {
     Publisher,
     StreamEvent,
     VideoInsertMode,
-    FilterEvent
+    FilterEvent,
+    PublisherSpeakingEvent
 } from 'openvidu-browser';
 
 import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.component';
@@ -81,6 +82,8 @@ export class VideoComponent implements OnInit, OnDestroy {
                   videoElementCreated: true,
                   videoElementDestroyed: true,
                   streamPlaying: true,
+                  publisherStartSpeaking: false,
+                  publisherStopSpeaking: false,
                   streamAudioVolumeChange: false,
                   streamPropertyChanged: false
               };
@@ -88,6 +91,8 @@ export class VideoComponent implements OnInit, OnDestroy {
                   videoElementCreated: false,
                   videoElementDestroyed: false,
                   streamPlaying: false,
+                  publisherStartSpeaking: true,
+                  publisherStopSpeaking: true,
                   streamAudioVolumeChange: true,
                   streamPropertyChanged: true
               });
@@ -98,6 +103,8 @@ export class VideoComponent implements OnInit, OnDestroy {
                   videoElementCreated: true,
                   videoElementDestroyed: true,
                   streamPlaying: true,
+                  publisherStartSpeaking: false,
+                  publisherStopSpeaking: false,
                   streamAudioVolumeChange: false,
                   accessAllowed: true,
                   accessDenied: true,
@@ -113,6 +120,8 @@ export class VideoComponent implements OnInit, OnDestroy {
                       videoElementCreated: false,
                       videoElementDestroyed: false,
                       streamPlaying: false,
+                      publisherStartSpeaking: true,
+                      publisherStopSpeaking: true,
                       streamAudioVolumeChange: true,
                       accessAllowed: false,
                       accessDenied: false,
@@ -150,7 +159,7 @@ export class VideoComponent implements OnInit, OnDestroy {
       subUnsub() {
           const subscriber: Subscriber = <Subscriber>this.streamManager;
           if (this.subbed) {
-              this.streamManager.stream.session.unsubscribe(subscriber);
+              this.streamManager.stream.session.unsubscribe(subscriber).then(() => console.log('Unsubbed'));
               this.restartRecorder();
 
               this.pubSubVideoIcon = '';
@@ -165,6 +174,8 @@ export class VideoComponent implements OnInit, OnDestroy {
                   videoElementCreated: this.eventCollection.videoElementCreated,
                   videoElementDestroyed: this.eventCollection.videoElementDestroyed,
                   streamPlaying: this.eventCollection.streamPlaying,
+                  publisherStartSpeaking: this.eventCollection.publisherStartSpeaking,
+                  publisherStopSpeaking: this.eventCollection.publisherStopSpeaking,
                   streamAudioVolumeChange: this.eventCollection.streamAudioVolumeChange,
                   streamPropertyChanged: this.eventCollection.streamPropertyChanged
               };
@@ -283,6 +294,8 @@ export class VideoComponent implements OnInit, OnDestroy {
               videoElementCreated: !this.eventCollection.videoElementCreated,
               videoElementDestroyed: !this.eventCollection.videoElementDestroyed,
               streamPlaying: !this.eventCollection.streamPlaying,
+              publisherStartSpeaking: !this.eventCollection.publisherStartSpeaking,
+              publisherStopSpeaking: !this.eventCollection.publisherStopSpeaking,
               streamAudioVolumeChange: !this.eventCollection.streamAudioVolumeChange,
               accessAllowed: !this.eventCollection.accessAllowed,
               accessDenied: !this.eventCollection.accessDenied,
@@ -299,12 +312,16 @@ export class VideoComponent implements OnInit, OnDestroy {
           }
 
           otherPublisher.once('accessAllowed', () => {
-              if (!this.unpublished) {
-                  this.streamManager.stream.session.unpublish(oldPublisher);
-              }
-              this.streamManager.stream.session.publish(otherPublisher).then(() => {
+              const publishFunc = () => this.streamManager.stream.session.publish(otherPublisher).then(() => {
                   this.streamManager = otherPublisher;
               });
+              if (!this.unpublished) {
+                  this.streamManager.stream.session.unpublish(oldPublisher).then(() => {
+                    publishFunc();
+                  });
+              } else {
+                 publishFunc();
+              }
           });
 
           this.publisherChanged = !this.publisherChanged;
@@ -362,6 +379,34 @@ export class VideoComponent implements OnInit, OnDestroy {
               }
           } else {
               sub.off('streamPlaying');
+          }
+
+          if (this.eventCollection.publisherStartSpeaking) {
+            if (!oldValues.publisherStartSpeaking) {
+                sub.on('publisherStartSpeaking', (event: PublisherSpeakingEvent) => {
+                    this.updateEventListInParent.emit({
+                        eventName: 'publisherStartSpeaking',
+                        eventContent: event.connection.connectionId,
+                        event
+                    });
+                });
+            }
+          } else {
+              sub.off('publisherStartSpeaking');
+          }
+
+          if (this.eventCollection.publisherStopSpeaking) {
+            if (!oldValues.publisherStopSpeaking) {
+                sub.on('publisherStopSpeaking', (event: PublisherSpeakingEvent) => {
+                    this.updateEventListInParent.emit({
+                        eventName: 'publisherStopSpeaking',
+                        eventContent: event.connection.connectionId,
+                        event
+                    });
+                });
+              }
+          } else {
+              sub.off('publisherStopSpeaking');
           }
 
           if (this.eventCollection.streamAudioVolumeChange) {
@@ -582,6 +627,34 @@ export class VideoComponent implements OnInit, OnDestroy {
               pub.off('streamPlaying');
           }
 
+          if (this.eventCollection.publisherStartSpeaking) {
+            if (!oldValues.publisherStartSpeaking) {
+                pub.on('publisherStartSpeaking', (event: PublisherSpeakingEvent) => {
+                    this.updateEventListInParent.emit({
+                        eventName: 'publisherStartSpeaking',
+                        eventContent: event.connection.connectionId,
+                        event
+                    });
+                });
+            }
+        } else {
+            pub.off('publisherStartSpeaking');
+        }
+
+        if (this.eventCollection.publisherStopSpeaking) {
+            if (!oldValues.publisherStopSpeaking) {
+                pub.on('publisherStopSpeaking', (event: PublisherSpeakingEvent) => {
+                    this.updateEventListInParent.emit({
+                        eventName: 'publisherStopSpeaking',
+                        eventContent: event.connection.connectionId,
+                        event
+                    });
+                });
+            }
+        } else {
+            pub.off('publisherStopSpeaking');
+        }
+
           if (this.eventCollection.streamAudioVolumeChange) {
               if (!oldValues.streamAudioVolumeChange) {
                   pub.on('streamAudioVolumeChange', (event: StreamManagerEvent) => {
@@ -602,6 +675,8 @@ export class VideoComponent implements OnInit, OnDestroy {
               videoElementCreated: this.eventCollection.videoElementCreated,
               videoElementDestroyed: this.eventCollection.videoElementDestroyed,
               streamPlaying: this.eventCollection.streamPlaying,
+              publisherStartSpeaking: this.eventCollection.publisherStartSpeaking,
+              publisherStopSpeaking: this.eventCollection.publisherStopSpeaking,
               streamAudioVolumeChange: this.eventCollection.streamAudioVolumeChange,
               streamPropertyChanged: this.eventCollection.streamPropertyChanged
           };
@@ -624,6 +699,8 @@ export class VideoComponent implements OnInit, OnDestroy {
               videoElementCreated: this.eventCollection.videoElementCreated,
               videoElementDestroyed: this.eventCollection.videoElementDestroyed,
               streamPlaying: this.eventCollection.streamPlaying,
+              publisherStartSpeaking: this.eventCollection.publisherStartSpeaking,
+              publisherStopSpeaking: this.eventCollection.publisherStopSpeaking,
               streamAudioVolumeChange: this.eventCollection.streamAudioVolumeChange,
               accessAllowed: this.eventCollection.accessAllowed,
               accessDenied: this.eventCollection.accessDenied,

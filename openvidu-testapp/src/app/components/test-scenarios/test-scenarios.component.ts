@@ -60,8 +60,10 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
   sessionProperties: SessionPropertiesAPI = {
     mediaMode: MediaMode.ROUTED,
     recordingMode: RecordingMode.MANUAL,
-    defaultRecordingLayout: RecordingLayout.BEST_FIT,
-    defaultCustomLayout: '',
+    defaultRecordingProperties: {
+      recordingLayout: RecordingLayout.BEST_FIT,
+      customLayout: ''
+    },
     customSessionId: ''
   };
 
