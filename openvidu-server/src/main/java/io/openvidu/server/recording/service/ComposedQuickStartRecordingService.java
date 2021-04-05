@@ -210,6 +210,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 		envs.add("DEBUG_MODE=" + openviduConfig.isOpenViduRecordingDebug());
 		envs.add("RECORDING_TYPE=COMPOSED_QUICK_START");
 		envs.add("RESOLUTION=" + properties.resolution());
+		envs.add("FRAMERATE=" + properties.frameRate());
 		envs.add("URL=" + layoutUrl);
 
 		log.info("Recorder connecting to url {}", layoutUrl);

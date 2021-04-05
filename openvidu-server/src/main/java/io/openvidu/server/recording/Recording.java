@@ -189,6 +189,7 @@ public class Recording {
 		json.addProperty("outputMode", this.getOutputMode().name());
 		if (RecordingUtils.IS_COMPOSED(this.recordingProperties.outputMode()) && this.recordingProperties.hasVideo()) {
 			json.addProperty("resolution", this.recordingProperties.resolution());
+			json.addProperty("frameRate", this.recordingProperties.frameRate());
 			json.addProperty("recordingLayout", this.recordingProperties.recordingLayout().name());
 			if (RecordingLayout.CUSTOM.equals(this.recordingProperties.recordingLayout())) {
 				json.addProperty("customLayout", this.recordingProperties.customLayout());

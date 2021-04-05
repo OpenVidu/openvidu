@@ -161,6 +161,7 @@ public abstract class RecordingService {
 					.mediaNode(properties.mediaNode());
 			if (RecordingUtils.IS_COMPOSED(properties.outputMode()) && properties.hasVideo()) {
 				builder.resolution(properties.resolution());
+				builder.frameRate(properties.frameRate());
 				builder.recordingLayout(properties.recordingLayout());
 				if (RecordingLayout.CUSTOM.equals(properties.recordingLayout())) {
 					builder.customLayout(properties.customLayout());
