@@ -2386,8 +2386,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
 		JsonObject obj = JsonParser.parseString(widthAndHeight).getAsJsonObject();
-		Assert.assertEquals("{\"width\":" + obj.get("width").getAsLong() + ",\"height\":"
-				+ (obj.get("height").getAsLong() - 1) + "}", pub.getVideoDimensions());
+		Assert.assertEquals(
+				"{\"width\":" + obj.get("width").getAsLong() + ",\"height\":" + obj.get("height").getAsLong() + "}",
+				pub.getVideoDimensions());
 		Assert.assertEquals(Integer.valueOf(30), pub.getFrameRate());
 		Assert.assertEquals("SCREEN", pub.getTypeOfVideo());
 		Assert.assertTrue(pub.hasVideo());
