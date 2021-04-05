@@ -19,7 +19,7 @@
           </mat-select>
         </mat-form-field>
         <mat-form-field>
-          <mat-select placeholder="DefaultOutputMode" [(ngModel)]="sessionProperties.defaultOutputMode"
+          <mat-select placeholder="DefaultOutputMode" [(ngModel)]="sessionProperties.defaultRecordingProperties.outputMode"
             id="output-mode-select">
             <mat-option *ngFor="let enumerator of enumToArray(defaultOutputMode)" [value]="enumerator">
               <span [attr.id]="'option-' + enumerator">{{ enumerator }}</span>
@@ -35,7 +35,7 @@
           </mat-select>
         </mat-form-field>
         <mat-form-field
-          *ngIf="this.sessionProperties.defaultOutputMode === 'COMPOSED' && this.sessionProperties.defaultRecordingProperties.recordingLayout === 'CUSTOM'">
+          *ngIf="this.sessionProperties.defaultRecordingProperties.outputMode === 'COMPOSED' && this.sessionProperties.defaultRecordingProperties.recordingLayout === 'CUSTOM'">
           <input matInput placeholder="DefaultCustomLayout" type="text"
             [(ngModel)]="sessionProperties.defaultCustomLayout" id="default-custom-layout-input">
         </mat-form-field>
