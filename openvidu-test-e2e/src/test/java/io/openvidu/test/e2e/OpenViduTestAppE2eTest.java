@@ -1637,13 +1637,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		String recPath = recordingsPath + SESSION_NAME + "/";
 		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME);
 		this.recordingUtils.checkMultimediaFile(new File(recPath + recording.getName() + ".mp4"), false, true,
-				recording.getDuration(), recording.getResolution(), null, "h264", true);
+				recording.getDuration(), recording.getResolution(), recording.getFrameRate(), null, "h264", true);
 
 		// Check audio-only COMPOSED recording
 		recPath = recordingsPath + SESSION_NAME + "-1/";
 		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-1");
 		this.recordingUtils.checkMultimediaFile(new File(recPath + recording.getName() + ".webm"), true, false,
-				recording.getDuration(), null, "opus", null, true);
+				recording.getDuration(), null, null, "opus", null, true);
 
 		// Check video-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "-2/";
@@ -2200,7 +2200,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		SessionProperties properties = new SessionProperties.Builder().customSessionId(customSessionId)
 				.mediaMode(MediaMode.ROUTED).recordingMode(RecordingMode.ALWAYS)
-				.defaultOutputMode(OutputMode.INDIVIDUAL).build();
+				.defaultRecordingProperties(new RecordingProperties.Builder().outputMode(OutputMode.INDIVIDUAL).build())
+				.build();
 		Session session = OV.createSession(properties);
 
 		Assert.assertFalse("Session.fetch() should return false after OpenVidu.createSession()", session.fetch());
@@ -2294,7 +2295,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong sessionId", customSessionId, session.getSessionId());
 		Assert.assertEquals("Wrong recording mode", RecordingMode.ALWAYS, session.getProperties().recordingMode());
 		Assert.assertEquals("Wrong default output mode", Recording.OutputMode.INDIVIDUAL,
-				session.getProperties().defaultOutputMode());
+				session.getProperties().defaultRecordingProperties().outputMode());
 		Assert.assertTrue("Session should be being recorded", session.isBeingRecorded());
 		Assert.assertEquals("Expected 2 active connections but found " + session.getActiveConnections().size(), 2,
 				session.getActiveConnections().size());
@@ -2385,9 +2386,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
 		JsonObject obj = JsonParser.parseString(widthAndHeight).getAsJsonObject();
-		Assert.assertEquals(
-				"{\"width\":" + obj.get("width").getAsLong() + ",\"height\":" + obj.get("height").getAsLong() + "}",
-				pub.getVideoDimensions());
+		Assert.assertEquals("{\"width\":" + obj.get("width").getAsLong() + ",\"height\":"
+				+ (obj.get("height").getAsLong() - 1) + "}", pub.getVideoDimensions());
 		Assert.assertEquals(Integer.valueOf(30), pub.getFrameRate());
 		Assert.assertEquals("SCREEN", pub.getTypeOfVideo());
 		Assert.assertTrue(pub.hasVideo());
@@ -2474,9 +2474,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong recording size", 0, recording.getSize());
 		Assert.assertNull("Wrong recording url", recording.getUrl());
 		Assert.assertEquals("Wrong recording output mode", Recording.OutputMode.INDIVIDUAL, recording.getOutputMode());
-		Assert.assertNull("Wrong recording layout", recording.getRecordingLayout());
-		Assert.assertNull("Wrong recording custom layout", recording.getCustomLayout());
-		Assert.assertNull("Wrong recording resolution", recording.getResolution());
+		Assert.assertEquals("Wrong recording layout", RecordingLayout.BEST_FIT, recording.getRecordingLayout());
+		Assert.assertEquals("Wrong recording custom layout", "", recording.getCustomLayout());
+		Assert.assertEquals("Wrong recording resolution", "1280x720", recording.getResolution());
+		Assert.assertEquals("Wrong recording frameRate", 25, recording.getFrameRate());
 		Assert.assertEquals("Wrong recording status", Recording.Status.started, recording.getStatus());
 		Assert.assertTrue("Wrong recording hasAudio", recording.hasAudio());
 		Assert.assertTrue("Wrong recording hasVideo", recording.hasVideo());
@@ -2660,7 +2661,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		/** Test transcoding defined properties */
 		SessionProperties.Builder basePropertiesBuilder = new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
-				.recordingMode(RecordingMode.ALWAYS).defaultOutputMode(OutputMode.INDIVIDUAL);
+				.recordingMode(RecordingMode.ALWAYS).defaultRecordingProperties(
+						new RecordingProperties.Builder().outputMode(OutputMode.INDIVIDUAL).build());
 
 		SessionProperties propertiesDefaultCodec = basePropertiesBuilder.build();
 		SessionProperties propertiesH264AllowTranscoding = basePropertiesBuilder.forcedVideoCodec(VideoCodec.H264)
