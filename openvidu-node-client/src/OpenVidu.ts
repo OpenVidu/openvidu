@@ -126,6 +126,7 @@ export class OpenVidu {
    *
    * @param sessionId The `sessionId` of the [[Session]] you want to start recording
    * @param name The name you want to give to the video file. You can access this same value in your clients on recording events (`recordingStarted`, `recordingStopped`)
+   * @param properties Custom RecordingProperties to apply to this Recording. This will override the global default values set to the Session with [[SessionProperties.defaultRecordingProperties]]
    *
    * @returns A Promise that is resolved to the [[Recording]] if it successfully started (the recording can be stopped with guarantees) and rejected with an Error
    * object if not. This Error object has as `message` property with the following values:
@@ -141,32 +142,28 @@ export class OpenVidu {
 
       let data;
 
-      if (!!param2) {
-        if (!(typeof param2 === 'string')) {
-          const properties = <RecordingProperties>param2;
-          data = {
-            session: sessionId,
-            name: !!properties.name ? properties.name : '',
-            outputMode: properties.outputMode,
-            hasAudio: properties.hasAudio != null ? properties.hasAudio : null,
-            hasVideo: properties.hasVideo != null ? properties.hasVideo : null,
-            shmSize: properties.shmSize,
-            mediaNode: properties.mediaNode
-          };
-          if ((data.hasVideo == null || data.hasVideo) && (data.outputMode == null || data.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED]
-            || data.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED_QUICK_START])) {
-            data.resolution = properties.resolution;
-            data.recordingLayout = !!properties.recordingLayout ? properties.recordingLayout : '';
-            if (data.recordingLayout.toString() === RecordingLayout[RecordingLayout.CUSTOM]) {
-              data.customLayout = !!properties.customLayout ? properties.customLayout : '';
-            }
-          }
-          data = JSON.stringify(data);
-        } else {
+      if (param2 != null) {
+        if (typeof param2 === 'string') {
           data = JSON.stringify({
             session: sessionId,
             name: param2
           });
+        } else {
+          const properties: RecordingProperties = param2 as RecordingProperties;
+          data = {
+            session: sessionId,
+            name: properties.name,
+            outputMode: properties.outputMode,
+            recordingLayout: properties.recordingLayout,
+            customLayout: properties.customLayout,
+            resolution: properties.resolution,
+            frameRate: properties.frameRate,
+            hasAudio: properties.hasAudio,
+            hasVideo: properties.hasVideo,
+            shmSize: properties.shmSize,
+            mediaNode: properties.mediaNode
+          };
+          data = JSON.stringify(data);
         }
       } else {
         data = JSON.stringify({

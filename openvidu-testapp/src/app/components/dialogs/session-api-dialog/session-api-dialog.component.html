@@ -90,6 +90,12 @@
           <input matInput id="recording-resolution-field" placeholder="Resolution" type="text"
             [(ngModel)]="recordingProperties.resolution">
         </mat-form-field>
+        <mat-form-field
+          *ngIf="recordingProperties.hasVideo && (recordingProperties.outputMode === 'COMPOSED' || recordingProperties.outputMode === 'COMPOSED_QUICK_START')"
+          id="recording-framerate-form" class="inner-text-input" [style.fontSize.px]=14>
+          <input matInput id="recording-framerate-field" placeholder="FrameRate" type="number"
+            [(ngModel)]="recordingProperties.frameRate">
+        </mat-form-field>
       </div>
     </div>
     <mat-form-field class="inner-text-input" [style.fontSize.px]=14>

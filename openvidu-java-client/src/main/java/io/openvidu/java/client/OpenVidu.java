@@ -209,6 +209,7 @@ public class OpenVidu {
 				|| (Recording.OutputMode.COMPOSED_QUICK_START.equals(properties.outputMode())))
 				&& properties.hasVideo()) {
 			json.addProperty("resolution", properties.resolution());
+			json.addProperty("frameRate", properties.frameRate());
 			json.addProperty("recordingLayout",
 					(properties.recordingLayout() != null) ? properties.recordingLayout().name() : "");
 			if (RecordingLayout.CUSTOM.equals(properties.recordingLayout())) {

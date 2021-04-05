@@ -29,7 +29,7 @@ import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-
 import { SessionApiDialogComponent } from '../dialogs/session-api-dialog/session-api-dialog.component';
 import { PublisherPropertiesDialogComponent } from '../dialogs/publisher-properties-dialog/publisher-properties-dialog.component';
 import { SessionInfoDialogComponent } from "../dialogs/session-info-dialog/session-info-dialog.component";
-import {ShowCodecDialogComponent} from "../dialogs/show-codec-dialog/show-codec-dialog.component";
+import { ShowCodecDialogComponent } from "../dialogs/show-codec-dialog/show-codec-dialog.component";
 
 
 export interface SessionConf {
@@ -92,9 +92,11 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   sessionProperties: SessionPropertiesAPI = {
     mediaMode: MediaMode.ROUTED,
     recordingMode: RecordingMode.MANUAL,
-    defaultOutputMode: Recording.OutputMode.COMPOSED,
-    defaultRecordingLayout: RecordingLayout.BEST_FIT,
-    defaultCustomLayout: '',
+    defaultRecordingProperties: {
+      outputMode: Recording.OutputMode.COMPOSED,
+      recordingLayout: RecordingLayout.BEST_FIT,
+      customLayout: ''
+    },
     customSessionId: '',
     forcedVideoCodec: null,
     allowTranscoding: null
@@ -627,10 +629,11 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         recordingProperties: !!this.recordingProperties ? this.recordingProperties :
           {
             name: '',
-            outputMode: this.sessionProperties.defaultOutputMode,
-            recordingLayout: this.sessionProperties.defaultRecordingLayout,
-            customLayout: this.sessionProperties.defaultCustomLayout,
+            outputMode: this.sessionProperties.defaultRecordingProperties.outputMode,
+            recordingLayout: this.sessionProperties.defaultRecordingProperties.recordingLayout,
+            customLayout: this.sessionProperties.defaultRecordingProperties.customLayout,
             resolution: '1920x1080',
+            frameRate: 25,
             hasAudio: true,
             hasVideo: true,
             mediaNode: {

@@ -75,8 +75,10 @@ export class TestApirestComponent implements OnInit, OnDestroy {
     this.openviduRestService.getSessionId(this.openviduUrl, this.openviduSecret,
       {
         recordingMode: RecordingMode[this.selectedRecordingMode],
-        defaultRecordingLayout: RecordingLayout[this.selectedDefaultRecordingLayout],
-        defaultCustomLayout: this.customLayout,
+        defaultRecordingProperties: {
+          recordingLayout: RecordingLayout[this.selectedDefaultRecordingLayout],
+          customLayout: this.customLayout
+        },
         mediaMode: MediaMode[this.selectedMediaMode],
         customSessionId: this.customSessionId
       })

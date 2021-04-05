@@ -64,6 +64,7 @@ export class SessionApiDialogComponent {
             recordingLayout: this.recordingProperties.recordingLayout,
             customLayout: this.recordingProperties.customLayout,
             resolution: this.recordingProperties.resolution,
+            frameRate: this.recordingProperties.frameRate,
             hasAudio: this.recordingProperties.hasAudio,
             hasVideo: this.recordingProperties.hasVideo,
             shmSize: this.recordingProperties.shmSize,
