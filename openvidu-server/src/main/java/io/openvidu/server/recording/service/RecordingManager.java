@@ -513,7 +513,10 @@ public class RecordingManager {
 	}
 
 	public String getFreeRecordingId(String sessionId) {
-		return recordingManagerUtils.getFreeRecordingId(sessionId);
+		log.info("Getting free recording id for session {}", sessionId);
+		String recordingId = recordingManagerUtils.getFreeRecordingId(sessionId);
+		log.info("Free recording id got for session {}: {}", sessionId, recordingId);
+		return recordingId;
 	}
 
 	public HttpStatus deleteRecordingFromHost(String recordingId, boolean force) {

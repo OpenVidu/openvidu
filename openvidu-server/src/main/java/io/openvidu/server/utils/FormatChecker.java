@@ -25,6 +25,11 @@ public class FormatChecker {
 		return stringResolution.matches("^(?!(0))(([0-9]{3})|1([0-9]{3}))x(?!0)(([0-9]{3})|1([0-9]{3}))$");
 	}
 
+	public boolean isAcceptableRecordingFrameRate(Integer frameRate) {
+		// Integer greater than 0 and below 120
+		return (frameRate > 0 && frameRate <= 120);
+	}
+
 	public boolean isServerMetadataFormatCorrect(String metadata) {
 		return true;
 	}

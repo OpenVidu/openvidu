@@ -36,9 +36,6 @@ public class Recording {
 	private long size = 0; // bytes
 	private double duration = 0; // seconds
 	private String url;
-	private String resolution;
-	private boolean hasAudio = true;
-	private boolean hasVideo = true;
 	private RecordingProperties recordingProperties;
 
 	public AtomicBoolean recordingNotificationSent = new AtomicBoolean(false);
@@ -50,9 +47,6 @@ public class Recording {
 		this.id = id;
 		this.status = io.openvidu.java.client.Recording.Status.started;
 		this.recordingProperties = recordingProperties;
-		this.resolution = this.recordingProperties.resolution();
-		this.hasAudio = this.recordingProperties.hasAudio();
-		this.hasVideo = this.recordingProperties.hasVideo();
 	}
 
 	public Recording(JsonObject json) {
@@ -73,17 +67,19 @@ public class Recording {
 		} else {
 			this.url = json.get("url").getAsString();
 		}
-		this.hasAudio = json.get("hasAudio").getAsBoolean();
-		this.hasVideo = json.get("hasVideo").getAsBoolean();
+
 		this.status = io.openvidu.java.client.Recording.Status.valueOf(json.get("status").getAsString());
+
+		Boolean hasAudio = json.get("hasAudio").getAsBoolean();
+		Boolean hasVideo = json.get("hasVideo").getAsBoolean();
 
 		io.openvidu.java.client.Recording.OutputMode outputMode = io.openvidu.java.client.Recording.OutputMode
 				.valueOf(json.get("outputMode").getAsString());
 		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(json.get("name").getAsString())
-				.outputMode(outputMode).hasAudio(this.hasAudio).hasVideo(this.hasVideo);
-		if (RecordingUtils.IS_COMPOSED(outputMode) && this.hasVideo) {
-			this.resolution = json.get("resolution").getAsString();
-			builder.resolution(this.resolution);
+				.outputMode(outputMode).hasAudio(hasAudio).hasVideo(hasVideo);
+		if (RecordingUtils.IS_COMPOSED(outputMode) && hasVideo) {
+			builder.resolution(json.get("resolution").getAsString());
+			builder.frameRate(json.get("frameRate").getAsInt());
 			RecordingLayout recordingLayout = RecordingLayout.valueOf(json.get("recordingLayout").getAsString());
 			builder.recordingLayout(recordingLayout);
 			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {
@@ -170,27 +166,19 @@ public class Recording {
 	}
 
 	public String getResolution() {
-		return resolution;
+		return this.recordingProperties.resolution();
 	}
 
-	public void setResolution(String resolution) {
-		this.resolution = resolution;
+	public int getFrameRate() {
+		return this.recordingProperties.frameRate();
 	}
 
 	public boolean hasAudio() {
-		return hasAudio;
-	}
-
-	public void setHasAudio(boolean hasAudio) {
-		this.hasAudio = hasAudio;
+		return this.recordingProperties.hasAudio();
 	}
 
 	public boolean hasVideo() {
-		return hasVideo;
-	}
-
-	public void setHasVideo(boolean hasVideo) {
-		this.hasVideo = hasVideo;
+		return this.recordingProperties.hasVideo();
 	}
 
 	public JsonObject toJson(boolean withUniqueSessionId) {
@@ -199,8 +187,8 @@ public class Recording {
 		json.addProperty("object", "recording");
 		json.addProperty("name", this.recordingProperties.name());
 		json.addProperty("outputMode", this.getOutputMode().name());
-		if (RecordingUtils.IS_COMPOSED(this.recordingProperties.outputMode()) && this.hasVideo) {
-			json.addProperty("resolution", this.resolution);
+		if (RecordingUtils.IS_COMPOSED(this.recordingProperties.outputMode()) && this.recordingProperties.hasVideo()) {
+			json.addProperty("resolution", this.recordingProperties.resolution());
 			json.addProperty("recordingLayout", this.recordingProperties.recordingLayout().name());
 			if (RecordingLayout.CUSTOM.equals(this.recordingProperties.recordingLayout())) {
 				json.addProperty("customLayout", this.recordingProperties.customLayout());
@@ -217,10 +205,28 @@ public class Recording {
 		json.addProperty("size", this.size);
 		json.addProperty("duration", this.duration);
 		json.addProperty("url", this.url);
-		json.addProperty("hasAudio", this.hasAudio);
-		json.addProperty("hasVideo", this.hasVideo);
+		json.addProperty("hasAudio", this.recordingProperties.hasAudio());
+		json.addProperty("hasVideo", this.recordingProperties.hasVideo());
 		json.addProperty("status", this.status.toString());
 		return json;
+	}
+
+	public void setHasAudio(boolean hasAudio) {
+		this.recordingProperties = new RecordingProperties.Builder(this.recordingProperties).hasAudio(hasAudio).build();
+	}
+
+	public void setHasVideo(boolean hasVideo) {
+		this.recordingProperties = new RecordingProperties.Builder(this.recordingProperties).hasVideo(hasVideo).build();
+	}
+
+	public void setResolution(String resolution) {
+		this.recordingProperties = new RecordingProperties.Builder(this.recordingProperties).resolution(resolution)
+				.build();
+	}
+
+	public void setFrameRate(int frameRate) {
+		this.recordingProperties = new RecordingProperties.Builder(this.recordingProperties).frameRate(frameRate)
+				.build();
 	}
 
 }

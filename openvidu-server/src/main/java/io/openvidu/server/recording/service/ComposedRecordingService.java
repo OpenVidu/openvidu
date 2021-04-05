@@ -153,7 +153,7 @@ public class ComposedRecordingService extends RecordingService {
 		envs.add("URL=" + layoutUrl);
 		envs.add("ONLY_VIDEO=" + !properties.hasAudio());
 		envs.add("RESOLUTION=" + properties.resolution());
-		envs.add("FRAMERATE=30");
+		envs.add("FRAMERATE=" + properties.frameRate());
 		envs.add("VIDEO_ID=" + recording.getId());
 		envs.add("VIDEO_NAME=" + properties.name());
 		envs.add("VIDEO_FORMAT=mp4");
@@ -420,6 +420,7 @@ public class ComposedRecordingService extends RecordingService {
 				recording.setDuration(infoUtils.getDurationInSeconds());
 				recording.setSize(infoUtils.getSizeInBytes());
 				recording.setResolution(infoUtils.videoWidth() + "x" + infoUtils.videoHeight());
+				recording.setFrameRate(infoUtils.getVideoFramerate());
 				recording.setHasAudio(infoUtils.hasAudio());
 				recording.setHasVideo(infoUtils.hasVideo());
 			}
@@ -435,6 +436,7 @@ public class ComposedRecordingService extends RecordingService {
 		final String VIDEO_FILE = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
 				+ recording.getName() + RecordingService.COMPOSED_RECORDING_EXTENSION;
 		this.fileManager.waitForFileToExistAndNotEmpty(recording.getRecordingProperties().mediaNode(), VIDEO_FILE);
+		log.info("File {} exists and is not empty", VIDEO_FILE);
 	}
 
 	protected void failRecordingCompletion(Recording recording, String containerId, boolean removeContainer,

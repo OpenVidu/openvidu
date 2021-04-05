@@ -31,24 +31,17 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
-import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.recording.service.RecordingManager;
-import io.openvidu.server.utils.RecordingUtils;
 
 public class Session implements SessionInterface {
-
-	private static final Logger log = LoggerFactory.getLogger(Session.class);
 
 	protected OpenviduConfig openviduConfig;
 	protected RecordingManager recordingManager;
@@ -243,13 +236,7 @@ public class Session implements SessionInterface {
 		json.addProperty("createdAt", this.startTime);
 		json.addProperty("mediaMode", this.sessionProperties.mediaMode().name());
 		json.addProperty("recordingMode", this.sessionProperties.recordingMode().name());
-		json.addProperty("defaultOutputMode", this.sessionProperties.defaultOutputMode().name());
-		if (RecordingUtils.IS_COMPOSED(this.sessionProperties.defaultOutputMode())) {
-			json.addProperty("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
-			if (RecordingLayout.CUSTOM.equals(this.sessionProperties.defaultRecordingLayout())) {
-				json.addProperty("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
-			}
-		}
+		json.add("defaultRecordingProperties", this.sessionProperties.defaultRecordingProperties().toJson());
 		if (this.sessionProperties.customSessionId() != null) {
 			json.addProperty("customSessionId", this.sessionProperties.customSessionId());
 		}

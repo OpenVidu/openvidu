@@ -74,8 +74,8 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 
 		envs.add("DEBUG_MODE=" + openviduConfig.isOpenViduRecordingDebug());
 		envs.add("RESOLUTION=" + properties.resolution());
+		envs.add("FRAMERATE=" + properties.frameRate());
 		envs.add("ONLY_VIDEO=" + !properties.hasAudio());
-		envs.add("FRAMERATE=30");
 		envs.add("VIDEO_ID=" + recording.getId());
 		envs.add("VIDEO_NAME=" + properties.name());
 		envs.add("VIDEO_FORMAT=mp4");
@@ -164,7 +164,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 		// Start recording container if output mode=COMPOSED_QUICK_START
 		Session recorderSession = session;
 		io.openvidu.java.client.Recording.OutputMode defaultOutputMode = recorderSession.getSessionProperties()
-				.defaultOutputMode();
+				.defaultRecordingProperties().outputMode();
 		if (io.openvidu.java.client.Recording.OutputMode.COMPOSED_QUICK_START.equals(defaultOutputMode)
 				&& sessionsContainers.get(recorderSession.getSessionId()) == null) {
 			// Retry to run if container is launched for the same session quickly after
@@ -177,13 +177,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 				try {
 					log.info("Launching COMPOSED_QUICK_START recording container for session: {}",
 							recorderSession.getSessionId());
-					runContainer(recorderSession, new RecordingProperties.Builder().name("")
-							.outputMode(recorderSession.getSessionProperties().defaultOutputMode())
-							.recordingLayout(recorderSession.getSessionProperties().defaultRecordingLayout())
-							.customLayout(recorderSession.getSessionProperties().defaultCustomLayout())
-							.resolution(
-									/* recorderSession.getSessionProperties().defaultRecordingResolution() */"1920x1080")
-							.mediaNode(recorderSession.getMediaNodeId()).build());
+					runContainer(recorderSession, recorderSession.getSessionProperties().defaultRecordingProperties());
 					log.info("COMPOSED_QUICK_START recording container launched for session: {}",
 							recorderSession.getSessionId());
 					launched = true;

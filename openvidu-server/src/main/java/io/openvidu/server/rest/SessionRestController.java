@@ -723,17 +723,11 @@ public class SessionRestController {
 
 			String mediaModeString;
 			String recordingModeString;
-			String defaultOutputModeString;
-			String defaultRecordingLayoutString;
-			String defaultCustomLayout;
 			String forcedVideoCodec;
 			Boolean allowTranscoding;
 			try {
 				mediaModeString = (String) params.get("mediaMode");
 				recordingModeString = (String) params.get("recordingMode");
-				defaultOutputModeString = (String) params.get("defaultOutputMode");
-				defaultRecordingLayoutString = (String) params.get("defaultRecordingLayout");
-				defaultCustomLayout = (String) params.get("defaultCustomLayout");
 				customSessionId = (String) params.get("customSessionId");
 				forcedVideoCodec = (String) params.get("forcedVideoCodec");
 				allowTranscoding = (Boolean) params.get("allowTranscoding");
@@ -748,23 +742,6 @@ public class SessionRestController {
 					builder = builder.recordingMode(recordingMode);
 				} else {
 					builder = builder.recordingMode(RecordingMode.MANUAL);
-				}
-				if (defaultOutputModeString != null) {
-					OutputMode defaultOutputMode = OutputMode.valueOf(defaultOutputModeString);
-					builder = builder.defaultOutputMode(defaultOutputMode);
-				} else {
-					builder.defaultOutputMode(OutputMode.COMPOSED);
-				}
-				if (defaultRecordingLayoutString != null) {
-					RecordingLayout defaultRecordingLayout = RecordingLayout.valueOf(defaultRecordingLayoutString);
-					builder = builder.defaultRecordingLayout(defaultRecordingLayout);
-				} else {
-					builder.defaultRecordingLayout(RecordingLayout.BEST_FIT);
-				}
-				if (defaultCustomLayout != null) {
-					builder.defaultCustomLayout(defaultCustomLayout);
-				} else {
-					builder.defaultCustomLayout("");
 				}
 				if (mediaModeString != null) {
 					MediaMode mediaMode = MediaMode.valueOf(mediaModeString);
@@ -790,11 +767,30 @@ public class SessionRestController {
 					builder = builder.allowTranscoding(openviduConfig.isOpenviduAllowingTranscoding());
 				}
 
+				JsonObject defaultRecordingPropertiesJson = null;
+				if (params.get("defaultRecordingProperties") != null) {
+					try {
+						defaultRecordingPropertiesJson = new Gson()
+								.toJsonTree(params.get("defaultRecordingProperties"), Map.class).getAsJsonObject();
+					} catch (Exception e) {
+						throw new Exception(
+								"Error in parameter 'defaultRecordingProperties'. It is not a valid JSON object");
+					}
+				}
+				if (defaultRecordingPropertiesJson != null) {
+					try {
+						RecordingProperties defaultRecordingProperties = RecordingProperties
+								.fromJson(defaultRecordingPropertiesJson);
+						builder = builder.defaultRecordingProperties(defaultRecordingProperties);
+					} catch (Exception e) {
+						throw new Exception("Parameter 'defaultRecordingProperties' is not valid: " + e.getMessage());
+					}
+				} else {
+					builder.defaultRecordingProperties(new RecordingProperties.Builder().build());
+				}
+
 			} catch (IllegalArgumentException e) {
-				throw new Exception("RecordingMode " + params.get("recordingMode") + " | " + "Default OutputMode "
-						+ params.get("defaultOutputMode") + " | " + "Default RecordingLayout "
-						+ params.get("defaultRecordingLayout") + " | " + "MediaMode " + params.get("mediaMode")
-						+ ". Some parameter is not defined");
+				throw new Exception("Some parameter is not valid. " + e.getMessage());
 			}
 		}
 		return builder;
@@ -850,7 +846,7 @@ public class SessionRestController {
 			JsonObject kurentoOptionsJson = null;
 			if (params.get("kurentoOptions") != null) {
 				try {
-					kurentoOptionsJson = JsonParser.parseString(params.get("kurentoOptions").toString())
+					kurentoOptionsJson = new Gson().toJsonTree(params.get("kurentoOptions"), Map.class)
 							.getAsJsonObject();
 				} catch (Exception e) {
 					throw new Exception("Error in parameter 'kurentoOptions'. It is not a valid JSON object");
@@ -925,6 +921,7 @@ public class SessionRestController {
 		String name;
 		String outputModeString;
 		String resolution;
+		Integer frameRate;
 		Boolean hasAudio;
 		Boolean hasVideo;
 		String recordingLayoutString;
@@ -935,6 +932,7 @@ public class SessionRestController {
 			name = (String) params.get("name");
 			outputModeString = (String) params.get("outputMode");
 			resolution = (String) params.get("resolution");
+			frameRate = (Integer) params.get("frameRate");
 			hasAudio = (Boolean) params.get("hasAudio");
 			hasVideo = (Boolean) params.get("hasVideo");
 			recordingLayoutString = (String) params.get("recordingLayout");
@@ -971,6 +969,9 @@ public class SessionRestController {
 				throw new RuntimeException(
 						"Wrong 'resolution' parameter. Acceptable values from 100 to 1999 for both width and height");
 			}
+			if (frameRate != null && !sessionManager.formatChecker.isAcceptableRecordingFrameRate(frameRate)) {
+				throw new RuntimeException("Wrong 'frameRate' parameter. Must be a number between 1 and 120");
+			}
 			if (recordingLayoutString != null && !recordingLayoutString.isEmpty()) {
 				try {
 					recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
@@ -984,9 +985,11 @@ public class SessionRestController {
 			throw new RuntimeException("Cannot start a recording with both \"hasAudio\" and \"hasVideo\" set to false");
 		}
 
+		RecordingProperties defaultRecordingProperties = session.getSessionProperties().defaultRecordingProperties();
+
 		// If outputMode is COMPOSED when defaultOutputMode is COMPOSED_QUICK_START,
 		// change outputMode to COMPOSED_QUICK_START (and vice versa)
-		OutputMode defaultOutputMode = session.getSessionProperties().defaultOutputMode();
+		OutputMode defaultOutputMode = defaultRecordingProperties.outputMode();
 		if (OutputMode.COMPOSED_QUICK_START.equals(defaultOutputMode) && OutputMode.COMPOSED.equals(finalOutputMode)) {
 			finalOutputMode = OutputMode.COMPOSED_QUICK_START;
 		} else if (OutputMode.COMPOSED.equals(defaultOutputMode)
@@ -994,17 +997,14 @@ public class SessionRestController {
 			finalOutputMode = OutputMode.COMPOSED;
 		}
 
-		builder.outputMode(
-				finalOutputMode == null ? session.getSessionProperties().defaultOutputMode() : finalOutputMode);
+		builder.outputMode(finalOutputMode == null ? defaultRecordingProperties.outputMode() : finalOutputMode);
 		if (RecordingUtils.IS_COMPOSED(finalOutputMode)) {
-			builder.resolution(resolution != null ? resolution : "1920x1080"); // resolution == null ?
-																				// sessionProperties.defaultRecordingResolution)
-																				// : resolution));
-			builder.recordingLayout(recordingLayout == null ? session.getSessionProperties().defaultRecordingLayout()
-					: recordingLayout);
+			builder.resolution(resolution == null ? defaultRecordingProperties.resolution() : resolution);
+			builder.frameRate(frameRate == null ? defaultRecordingProperties.frameRate() : frameRate);
+			builder.recordingLayout(
+					recordingLayout == null ? defaultRecordingProperties.recordingLayout() : recordingLayout);
 			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {
-				builder.customLayout(
-						customLayout == null ? session.getSessionProperties().defaultCustomLayout() : customLayout);
+				builder.customLayout(customLayout == null ? defaultRecordingProperties.customLayout() : customLayout);
 			}
 			if (shmSize != null) {
 				if (shmSize < 134217728L) {

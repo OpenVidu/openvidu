@@ -46,6 +46,7 @@ public class CDREventRecordingStatus extends CDREventEnd {
 		json.addProperty("outputMode", this.recording.getOutputMode().name());
 		if (RecordingUtils.IS_COMPOSED(this.recording.getOutputMode()) && this.recording.hasVideo()) {
 			json.addProperty("resolution", this.recording.getResolution());
+			json.addProperty("frameRate", this.recording.getFrameRate());
 			json.addProperty("recordingLayout", this.recording.getRecordingLayout().name());
 			if (RecordingLayout.CUSTOM.equals(this.recording.getRecordingLayout())
 					&& this.recording.getCustomLayout() != null && !this.recording.getCustomLayout().isEmpty()) {

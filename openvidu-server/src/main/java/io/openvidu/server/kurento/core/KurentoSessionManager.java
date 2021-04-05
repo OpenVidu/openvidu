@@ -52,9 +52,7 @@ import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.Recording;
-import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingMode;
-import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.java.client.VideoCodec;
 import io.openvidu.server.cdr.CallDetailRecord;
@@ -111,11 +109,9 @@ public class KurentoSessionManager extends SessionManager {
 
 				if (sessionNotActive == null && this.isInsecureParticipant(participant.getParticipantPrivateId())) {
 					// Insecure user directly call joinRoom RPC method, without REST API use
-					sessionNotActive = new Session(sessionId,
-							new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
-									.recordingMode(RecordingMode.ALWAYS)
-									.defaultRecordingLayout(RecordingLayout.BEST_FIT).build(),
-							openviduConfig, recordingManager);
+					sessionNotActive = new Session(sessionId, new SessionProperties.Builder()
+							.mediaMode(MediaMode.ROUTED).recordingMode(RecordingMode.ALWAYS).build(), openviduConfig,
+							recordingManager);
 				}
 
 				try {
@@ -147,7 +143,8 @@ public class KurentoSessionManager extends SessionManager {
 			}
 
 			// If Recording default layout is COMPOSED_QUICK_START
-			Recording.OutputMode defaultOutputMode = kSession.getSessionProperties().defaultOutputMode();
+			Recording.OutputMode defaultOutputMode = kSession.getSessionProperties().defaultRecordingProperties()
+					.outputMode();
 			if (openviduConfig.isRecordingModuleEnabled()
 					&& defaultOutputMode.equals(Recording.OutputMode.COMPOSED_QUICK_START)) {
 				recordingManager.startComposedQuickStartContainer(kSession);
@@ -307,7 +304,7 @@ public class KurentoSessionManager extends SessionManager {
 
 						} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
 								&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-								&& session.getSessionProperties().defaultOutputMode()
+								&& session.getSessionProperties().defaultRecordingProperties().outputMode()
 										.equals(Recording.OutputMode.COMPOSED_QUICK_START)
 								&& ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
 										.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
@@ -451,13 +448,8 @@ public class KurentoSessionManager extends SessionManager {
 							// Start automatic recording for sessions configured with RecordingMode.ALWAYS
 							// that have not been been manually stopped
 							new Thread(() -> {
-								recordingManager.startRecording(kSession, new RecordingProperties.Builder().name("")
-										.outputMode(kSession.getSessionProperties().defaultOutputMode())
-										.recordingLayout(kSession.getSessionProperties().defaultRecordingLayout())
-										.customLayout(kSession.getSessionProperties().defaultCustomLayout())
-										.resolution(/*
-													 * kSession.getSessionProperties().defaultRecordingResolution()
-													 */"1920x1080").mediaNode(kSession.getMediaNodeId()).build());
+								recordingManager.startRecording(kSession,
+										kSession.getSessionProperties().defaultRecordingProperties());
 							}).start();
 						} else if (recordingManager.sessionIsBeingRecorded(kSession.getSessionId())) {
 							// Abort automatic recording stop thread for any recorded session in which a

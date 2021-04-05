@@ -90,7 +90,6 @@ public abstract class SessionManager {
 	@Autowired
 	protected GeoLocationByIp geoLocationByIp;
 
-
 	public FormatChecker formatChecker = new FormatChecker();
 
 	private UpdatableTimerTask sessionGarbageCollectorTimer;
@@ -594,7 +593,8 @@ public abstract class SessionManager {
 					log.error("Error stopping recording of session {}: {}", session.getSessionId(), e.getMessage());
 				}
 			}
-			if (Recording.OutputMode.COMPOSED_QUICK_START.equals(session.getSessionProperties().defaultOutputMode())) {
+			if (Recording.OutputMode.COMPOSED_QUICK_START
+					.equals(session.getSessionProperties().defaultRecordingProperties().outputMode())) {
 				try {
 					this.recordingManager.stopComposedQuickStartContainer(session, reason);
 				} catch (OpenViduException e) {
