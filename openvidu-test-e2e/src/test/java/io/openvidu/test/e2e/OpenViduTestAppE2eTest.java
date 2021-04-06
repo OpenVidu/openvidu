@@ -2539,6 +2539,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong recording layout", RecordingLayout.BEST_FIT, recording2.getRecordingLayout());
 		Assert.assertNull("Wrong recording custom layout", recording2.getCustomLayout());
 		Assert.assertEquals("Wrong recording resolution", "1280x720", recording2.getResolution());
+		Assert.assertEquals("Wrong recording frameRate", 25, recording2.getFrameRate());
 		Assert.assertEquals("Wrong recording status", Recording.Status.started, recording2.getStatus());
 		Assert.assertFalse("Wrong recording hasAudio", recording2.hasAudio());
 		Assert.assertTrue("Wrong recording hasVideo", recording2.hasVideo());
@@ -2728,13 +2729,15 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'NOT_EXISTS'}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
-		body = "{'mediaMode': 'ROUTED',  'recordingMode': 'ALWAYS', 'defaultOutputMode': 'NOT_EXISTS'}";
+		body = "{'mediaMode': 'ROUTED',  'recordingMode': 'ALWAYS', 'defaultRecordingProperties': 'STR'}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
-		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'ALWAYS', 'defaultOutputMode': 'INDIVIDUAL', 'defaultRecordingLayout': 'NOT_EXISTS'}";
+		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'ALWAYS', 'defaultRecordingProperties': {'outputMode': 'NOT_EXISTS'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'ALWAYS', 'defaultRecordingProperties': {'outputMode': 'COMPOSED', 'recordingLayout': 'NOT_EXISTS'}}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
 
 		// 200
-		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'MANUAL', 'customSessionId': 'CUSTOM_SESSION_ID', 'defaultOutputMode': 'COMPOSED', 'defaultRecordingLayout': 'BEST_FIT'}";
+		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'MANUAL', 'customSessionId': 'CUSTOM_SESSION_ID', 'defaultRecordingProperties': {'outputMode': 'COMPOSED', 'recordingLayout': 'BEST_FIT'}}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK, true, false, true,
 				DEFAULT_JSON_SESSION);
 		// Default values
@@ -2949,17 +2952,21 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'resolution':999}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'frameRate':true}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
 
 		// 422
 		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':false,'hasVideo':false}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
 		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'resolution':'1920x2000'}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
+		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'frameRate':0}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
 
 		// 200
 		body = "{'session':'CUSTOM_SESSION_ID'}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_OK, true, false, true,
-				"{'id':'STR','object':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':null,'status':'STR'}");
+				"{'id':'STR','object':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','frameRate':0,'createdAt':0,'size':0,'duration':0,'url':null,'status':'STR'}");
 
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
 
@@ -2979,11 +2986,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/recordings/CUSTOM_SESSION_ID", HttpStatus.SC_CONFLICT);
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/CUSTOM_SESSION_ID", body, HttpStatus.SC_OK,
 				true, false, true,
-				"{'id':'STR','object':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':'STR','status':'STR'}");
+				"{'id':'STR','object':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','frameRate':0,'createdAt':0,'size':0,'duration':0,'url':'STR','status':'STR'}");
 		/** GET /openvidu/api/recordings (after recording created) **/
 		restClient.rest(HttpMethod.GET, "/openvidu/api/recordings/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
 				false, true,
-				"{'id':'STR','object':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':'STR','status':'STR'}");
+				"{'id':'STR','object':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','frameRate':0,'createdAt':0,'size':0,'duration':0,'url':'STR','status':'STR'}");
 		restClient.rest(HttpMethod.GET, "/openvidu/api/recordings", null, HttpStatus.SC_OK, true, true, false,
 				"{'count':1,'items':[]}");
 
@@ -3005,12 +3012,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				HttpStatus.SC_NOT_FOUND);
 		res = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
 				false, true,
-				"{'id':'STR','object':'STR','sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':2,'content'"
+				"{'id':'STR','object':'STR','sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultRecordingProperties':{'hasVideo':true,'frameRate':25,"
+						+ "'hasAudio':true,'shmSize':536870912,'name':'','outputMode':'COMPOSED','resolution':'1280x720','recordingLayout':'BEST_FIT'},'customSessionId':'STR','connections':{'numberOfElements':2,'content'"
 						+ ":[{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','token':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':["
 						+ "{'createdAt':0,'streamId':'STR','mediaOptions':{'hasAudio':false,'audioActive':false,'hasVideo':false,'videoActive':false,'typeOfVideo':'STR','frameRate':0,"
 						+ "'videoDimensions':'STR','filter':{}}}],'subscribers':[{'createdAt':0,'streamId':'STR','publisher':'STR'}]},{'connectionId':'STR','createdAt':0,'location':'STR',"
 						+ "'platform':'STR','token':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':[{'createdAt':0,'streamId':'STR','mediaOptions':{'hasAudio':false,"
-						+ "'audioActive':false,'hasVideo':false,'videoActive':false,'typeOfVideo':'STR','frameRate':0,'videoDimensions':'STR','filter':{}}}],'subscribers':[{'createdAt':0,'streamId':'STR','publisher':'STR'}]}]},'recording':false,'forcedVideoCodec':'STR','allowTranscoding':false}");
+						+ "'audioActive':false,'hasVideo':false,'videoActive':false,'typeOfVideo':'STR','frameRate':0,'videoDimensions':'STR','filter':{}}}],'subscribers':[{'createdAt':0,'streamId':'STR','publisher':'STR'}]}]},"
+						+ "'recording':false,'forcedVideoCodec':'STR','allowTranscoding':false}");
 		String streamId = res.get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0)
 				.getAsJsonObject().get("publishers").getAsJsonArray().get(0).getAsJsonObject().get("streamId")
 				.getAsString();
@@ -3137,7 +3146,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		/** POST /openvidu/api/sessions (default transcoding parameters) **/
 
-		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'MANUAL', 'customSessionId': 'CUSTOM_SESSION_ID', 'defaultOutputMode': 'COMPOSED', 'defaultRecordingLayout': 'BEST_FIT'}";
+		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'MANUAL', 'customSessionId': 'CUSTOM_SESSION_ID', 'defaultRecordingProperties': {'outputMode': 'COMPOSED', 'recordingLayout': 'BEST_FIT'}}";
 		res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK);
 
 		// Check session info
@@ -3158,7 +3167,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
 
 		/** POST /openvidu/api/sessions (define forceCodec and allowTranscoding) **/
-		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'MANUAL', 'customSessionId': 'CUSTOM_SESSION_ID', 'defaultOutputMode': 'COMPOSED', 'defaultRecordingLayout': 'BEST_FIT', 'forcedVideoCodec': 'H264', 'allowTranscoding': true}";
+		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'MANUAL', 'customSessionId': 'CUSTOM_SESSION_ID', 'defaultRecordingProperties': {'outputMode': 'COMPOSED', 'recordingLayout': 'BEST_FIT'}, 'forcedVideoCodec': 'H264', 'allowTranscoding': true}";
 		res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK);
 
 		Assert.assertEquals(VideoCodec.valueOf(res.get("forcedVideoCodec").getAsString()), VideoCodec.H264);
