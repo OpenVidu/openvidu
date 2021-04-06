@@ -47,7 +47,7 @@ public class RecordingUtils {
 	private boolean recordedFileFine(File file, Recording recording,
 			Function<Map<String, Long>, Boolean> colorCheckFunction) throws IOException {
 		this.checkMultimediaFile(file, recording.hasAudio(), recording.hasVideo(), recording.getDuration(),
-				recording.getResolution(), "aac", "h264", true);
+				recording.getResolution(), recording.getFrameRate(), "aac", "h264", true);
 
 		boolean isFine = false;
 		Picture frame;
@@ -170,7 +170,7 @@ public class RecordingUtils {
 			log.info("Duration of {} according to sync metadata json file: {} s", webmFile.getName(),
 					durationInSeconds);
 			this.checkMultimediaFile(webmFile, recording.hasAudio(), recording.hasVideo(), durationInSeconds,
-					recording.getResolution(), audioDecoder, videoDecoder, checkAudio);
+					recording.getResolution(), recording.getFrameRate(), audioDecoder, videoDecoder, checkAudio);
 			webmFile.delete();
 		}
 
@@ -181,7 +181,7 @@ public class RecordingUtils {
 	}
 
 	public void checkMultimediaFile(File file, boolean hasAudio, boolean hasVideo, double duration, String resolution,
-			String audioDecoder, String videoDecoder, boolean checkAudio) throws IOException {
+			Integer frameRate, String audioDecoder, String videoDecoder, boolean checkAudio) throws IOException {
 		// Check tracks, duration, resolution, framerate and decoders
 		MultimediaFileMetadata metadata = new MultimediaFileMetadata(file.getAbsolutePath());
 
@@ -199,6 +199,9 @@ public class RecordingUtils {
 			}
 			if (resolution != null) {
 				Assert.assertEquals(resolution, metadata.getVideoWidth() + "x" + metadata.getVideoHeight());
+			}
+			if (frameRate != null) {
+				Assert.assertEquals(frameRate.intValue(), metadata.getFrameRate());
 			}
 			Assert.assertTrue(metadata.getVideoDecoder().toLowerCase().contains(videoDecoder));
 		} else if (hasAudio && checkAudio) {
