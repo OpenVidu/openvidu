@@ -32,6 +32,7 @@ import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 
 import * as screenSharingAuto from '../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto';
 import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturing';
+import {OpenViduLoggerConfiguration} from "../OpenViduInternal/Logger/OpenViduLoggerConfiguration";
 /**
  * @hidden
  */
@@ -107,6 +108,12 @@ export class OpenVidu {
    * @hidden
    */
   webrtcStatsInterval: number = -1;
+
+  /**
+   * @hidden
+   */
+  sendBrowserLogs: OpenViduLoggerConfiguration = OpenViduLoggerConfiguration.disabled;
+
   /**
    * @hidden
    */

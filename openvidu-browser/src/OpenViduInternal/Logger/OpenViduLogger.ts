@@ -1,5 +1,6 @@
 import {JL} from 'jsnlog'
 import {OpenVidu} from "../../OpenVidu/OpenVidu";
+import {OpenViduLoggerConfiguration} from "./OpenViduLoggerConfiguration";
 
 export class OpenViduLogger {
 
@@ -7,7 +8,6 @@ export class OpenViduLogger {
 
 	private JSNLOG_URL: string = "/openvidu/elk/openvidu-browser-logs";
 	private MAX_JSNLOG_BATCH_LOG_MESSAGES: number = 50;
-	private MAX_JSNLOG_MAX_BACTH_MESSAGES: number = 1000;
 	private MAX_MSECONDS_BATCH_MESSAGES: number = 5000;
 
 	private openvidu: OpenVidu;
@@ -16,6 +16,7 @@ export class OpenViduLogger {
 	private isProdMode = false;
 	private isJSNLogEnabled = true;
 	private isJSNLogSetup = false;
+	private customAppenders: JL.JSNLogAjaxAppender[] = [];
 
 
 	private constructor() {}
@@ -25,27 +26,29 @@ export class OpenViduLogger {
 	 */
 	static configureJSNLog(openVidu: OpenVidu, sessionId: string, connectionId: string, token: string) {
 		// If instance is not null, JSNLog is enabled and is OpenVidu Pro
-		if (this.instance && this.instance.isJSNLogEnabled && openVidu.webrtcStatsInterval > -1) {
+		if (this.instance && this.instance.isJSNLogEnabled && openVidu.webrtcStatsInterval > -1 && openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debug) {
 			this.instance.info("Configuring JSNLogs.");
 			try {
 				this.instance.openvidu = openVidu;
 
 				// Use connection id as user and token as password
 				const openViduJSNLogHeaders = (xhr) => {
-					xhr.setRequestHeader('Authorization', "Basic " + btoa(connectionId + ":" + token));
+					xhr.setRequestHeader('Authorization', "Basic " + btoa(`${connectionId}%/%${sessionId}` + ":" + token));
 					xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
 					// Additional headers for OpenVidu
-					xhr.setRequestHeader('OV-Connection-Id', connectionId);
-					xhr.setRequestHeader('OV-Session-Id', sessionId);
+					xhr.setRequestHeader('OV-Connection-Id', btoa(connectionId));
+					xhr.setRequestHeader('OV-Session-Id', btoa(sessionId));
+					xhr.setRequestHeader('OV-Token', btoa(token));
 				}
 
 				const customAppender: any = JL.createAjaxAppender("openvidu-browser-logs-appender-" + connectionId);
 				customAppender.setOptions({
 					beforeSend: openViduJSNLogHeaders,
+					maxBatchSize: 1000,
 					batchSize: this.instance.MAX_JSNLOG_BATCH_LOG_MESSAGES,
-                    maxBatchSize: 1000,
 					batchTimeout: this.instance.MAX_MSECONDS_BATCH_MESSAGES
 				});
+				this.instance.customAppenders.push(customAppender);
 
 				// Avoid circular dependencies
 				const logSerializer = (obj): string => {
@@ -94,7 +97,7 @@ export class OpenViduLogger {
 		if (!this.isProdMode) {
 			this.LOG_FNS[0].apply(this.logger, arguments);
 		}
-		if (this.isMonitoringLogEnabled()) {
+		if (this.isDebugLogEnabled()) {
 			JL().info(arguments);
 		}
 	}
@@ -103,7 +106,7 @@ export class OpenViduLogger {
 		if (!this.isProdMode) {
 			this.LOG_FNS[1].apply(this.logger, arguments);
 		}
-		if (this.isMonitoringLogEnabled()) {
+		if (this.isDebugLogEnabled()) {
 			JL().debug(arguments);
 		}
 	}
@@ -112,7 +115,7 @@ export class OpenViduLogger {
 		if (!this.isProdMode) {
 			this.LOG_FNS[2].apply(this.logger, arguments);
 		}
-		if (this.isMonitoringLogEnabled()) {
+		if (this.isDebugLogEnabled()) {
 			JL().info(arguments);
 		}
 	}
@@ -121,15 +124,23 @@ export class OpenViduLogger {
 		if (!this.isProdMode) {
 			this.LOG_FNS[3].apply(this.logger, arguments);
 		}
-		if (this.isMonitoringLogEnabled()) {
+		if (this.isDebugLogEnabled()) {
 			JL().warn(arguments);
 		}
 	}
 
 	error(...args: any[]) {
 		this.LOG_FNS[4].apply(this.logger, arguments);
-		if (this.isMonitoringLogEnabled()) {
+		if (this.isDebugLogEnabled()) {
 			JL().error(arguments);
+		}
+	}
+
+	flush() {
+		if(this.isDebugLogEnabled()) {
+			for(const appender of this.customAppenders) {
+				if (appender.sendBatch) appender.sendBatch();
+			}
 		}
 	}
 
@@ -141,7 +152,7 @@ export class OpenViduLogger {
 		this.isJSNLogEnabled = false;
 	}
 
-	private isMonitoringLogEnabled() {
+	private isDebugLogEnabled() {
 		return this.isJSNLogEnabled && this.isJSNLogSetup;
 	}
 

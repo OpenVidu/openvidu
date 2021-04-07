@@ -1190,6 +1190,7 @@ export class Session extends EventDispatcher {
         } else {
             logger.warn('You were not connected to the session ' + this.sessionId);
         }
+        logger.flush();
     }
 
     /**
@@ -1452,6 +1453,7 @@ export class Session extends EventDispatcher {
             const secret = queryParams['secret'];
             const recorder = queryParams['recorder'];
             const webrtcStatsInterval = queryParams['webrtcStatsInterval'];
+            const sendBrowserLogs = queryParams['sendBrowserLogs'];
 
             if (!!secret) {
                 this.openvidu.secret = secret;
@@ -1461,6 +1463,9 @@ export class Session extends EventDispatcher {
             }
             if (!!webrtcStatsInterval) {
                 this.openvidu.webrtcStatsInterval = +webrtcStatsInterval;
+            }
+            if(!!sendBrowserLogs) {
+                this.openvidu.sendBrowserLogs = sendBrowserLogs;
             }
 
             this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
