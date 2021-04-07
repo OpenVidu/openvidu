@@ -330,7 +330,6 @@ public abstract class SessionManager {
 		Token tokenObj = tokenGenerator.generateToken(session.getSessionId(), serverMetadata, record, role,
 				kurentoOptions);
 		session.storeToken(tokenObj);
-		tokenRegister.registerToken(session.getSessionId(), tokenObj);
 		return tokenObj;
 	}
 
@@ -339,7 +338,6 @@ public abstract class SessionManager {
 		Token tokenObj = new Token(token, session.getSessionId(), connectionProperties,
 				this.openviduConfig.isTurnadminAvailable() ? this.coturnCredentialsService.createUser() : null);
 		session.storeToken(tokenObj);
-		tokenRegister.registerToken(session.getSessionId(), tokenObj);
 		return tokenObj;
 	}
 
@@ -390,6 +388,8 @@ public abstract class SessionManager {
 					session.getUniqueSessionId(), token, clientMetadata, location, platform,
 					EndpointType.WEBRTC_ENDPOINT, null);
 
+			this.tokenRegister.registerToken(sessionId, p, token);
+
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(p.getParticipantPublicId(), p);
 
 			this.sessionidFinalUsers.get(sessionId).computeIfAbsent(finalUserId, k -> {
@@ -412,6 +412,7 @@ public abstract class SessionManager {
 			Participant p = new Participant(null, participantPrivateId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
 					sessionId, session.getUniqueSessionId(), token, clientMetadata, null, null,
 					EndpointType.WEBRTC_ENDPOINT, null);
+			this.tokenRegister.registerToken(sessionId, p, token);
 			this.sessionidParticipantpublicidParticipant.get(sessionId)
 					.put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
 			return p;
@@ -426,6 +427,7 @@ public abstract class SessionManager {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			Participant p = new Participant(ipcamId, ipcamId, ipcamId, sessionId, session.getUniqueSessionId(), token,
 					null, location, platform, EndpointType.PLAYER_ENDPOINT, null);
+			this.tokenRegister.registerToken(sessionId, p, token);
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(ipcamId, p);
 			return p;
 		} else {
