@@ -40,7 +40,7 @@ public class RecordingManagerUtilsLocalStorage extends RecordingManagerUtils {
 	}
 
 	@Override
-	protected Set<String> getAllRecordingIdsFromStorage() {
+	protected Set<String> getAllRecordingIdsFromStorage(String sessionIdPrefix) {
 		File folder = new File(openviduConfig.getOpenViduRecordingPath());
 		File[] files = folder.listFiles();
 
