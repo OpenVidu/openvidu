@@ -18,6 +18,7 @@ public class TokenRegister {
     private final ConcurrentHashMap<String, Participant> participantsByTokens = new ConcurrentHashMap<>();
 
     /**
+     * O(1)
      * Register a token of an specific active session
      * @param sessionId Id of the sessions where the token is generated
      * @param token Token to register
@@ -31,6 +32,7 @@ public class TokenRegister {
     }
 
     /**
+     * O(n)
      * Deregister all tokens of an specific session which is not active
      * @param sessionId Id of the session which is no longer active
      */
@@ -45,6 +47,7 @@ public class TokenRegister {
     }
 
     /**
+     * O(1)
      * Check if the current token string was registered in an active session
      * @param token Token string to check if it is registered
      * @param connectionId Id of the connection to check
@@ -67,17 +70,20 @@ public class TokenRegister {
             return false;
         }
 
-        if (!this.participantsByTokens.containsKey(connectionId)) {
+        if (!this.participantsByTokens.containsKey(token)) {
             // Participant is not registered for specific token
             return false;
         }
 
-        // In this final state, if connectionId is equal to participant public id, the token is registered
-        return participantsByTokens.get(connectionId).getParticipantPublicId().equals(connectionId);
+        // In this final state, if connectionId is equal to participant public id and session Id is the same,
+        // the token is registered correctly in the specific connectionId and sessionId
+        return participantsByTokens.get(token).getParticipantPublicId().equals(connectionId)
+                && participantsByTokens.get(token).getSessionId().equals(sessionId);
 
     }
 
     /**
+     * O(1)
      * Get registered token from token string
      * @param tokenKey string key which represents the token
      * @return
@@ -89,6 +95,5 @@ public class TokenRegister {
         }
         return null;
     }
-
 
 }
