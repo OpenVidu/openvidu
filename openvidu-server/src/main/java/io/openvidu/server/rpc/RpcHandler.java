@@ -204,7 +204,8 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 				e.printStackTrace();
 				location = null;
 			} catch (Exception e) {
-				log.warn("Error getting address location: {}", e.getMessage());
+				log.warn("Couldn't locate IP address {} in geolocation database: {}", remoteAddress.getHostAddress(),
+						e.getMessage());
 				location = null;
 			}
 		}
