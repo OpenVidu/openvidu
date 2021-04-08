@@ -1,6 +1,7 @@
 import {JL} from 'jsnlog'
 import {OpenVidu} from "../../OpenVidu/OpenVidu";
 import {OpenViduLoggerConfiguration} from "./OpenViduLoggerConfiguration";
+import JSNLogAjaxAppender = JL.JSNLogAjaxAppender;
 
 export class OpenViduLogger {
 
@@ -10,29 +11,43 @@ export class OpenViduLogger {
 	private MAX_JSNLOG_BATCH_LOG_MESSAGES: number = 50;
 	private MAX_MSECONDS_BATCH_MESSAGES: number = 5000;
 
-	private openvidu: OpenVidu;
 	private logger: Console = window.console;
+	private loggingSessionId: string;
 	private LOG_FNS = [this.logger.log, this.logger.debug, this.logger.info, this.logger.warn, this.logger.error];
+	private currentAppender: any;
+
 	private isProdMode = false;
-	private isJSNLogEnabled = true;
 	private isJSNLogSetup = false;
-	private customAppenders: JL.JSNLogAjaxAppender[] = [];
 
 
 	private constructor() {}
 
-	/**
-	 * Configure http uri to send logs using JSNlog
-	 */
 	static configureJSNLog(openVidu: OpenVidu, sessionId: string, connectionId: string, token: string) {
-		// If instance is not null, JSNLog is enabled and is OpenVidu Pro
-		if (this.instance && this.instance.isJSNLogEnabled && openVidu.webrtcStatsInterval > -1 && openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debug) {
-			this.instance.info("Configuring JSNLogs.");
-			try {
-				this.instance.openvidu = openVidu;
+		// If instance is created is OpenVidu Pro
+		if (this.instance && openVidu.webrtcStatsInterval > -1
+			// If logs are enabled
+			&& openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debug
+			// If diferent session or first session
+			&& sessionId !== this.instance.loggingSessionId) {
 
-				// Use connection id as user and token as password
-				const openViduJSNLogHeaders = (xhr) => {
+			try {
+				// isJSNLogSetup will not be true until completed setup
+				this.instance.isJSNLogSetup = false;
+				this.instance.info("Configuring JSNLogs.");
+
+				const beforeSendCallback = (xhr) => {
+					// If 401 or 403 or 404 modify ready and status so JSNLog don't retry to send logs
+					// https://github.com/mperdeck/jsnlog.js/blob/v2.30.0/jsnlog.ts#L805-L818
+					const parentReadyStateFunction = xhr.onreadystatechange;
+					xhr.onreadystatechange = () => {
+						if ((xhr.status == 401) || (xhr.status == 403) || (xhr.status == 404)) {
+							Object.defineProperty( xhr, "readyState", {value: 4});
+							Object.defineProperty( xhr, "status", {value: 200});
+						}
+						parentReadyStateFunction();
+					}
+
+					// Headers to identify and authenticate logs
 					xhr.setRequestHeader('Authorization', "Basic " + btoa(`${connectionId}%/%${sessionId}` + ":" + token));
 					xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
 					// Additional headers for OpenVidu
@@ -41,14 +56,14 @@ export class OpenViduLogger {
 					xhr.setRequestHeader('OV-Token', btoa(token));
 				}
 
-				const customAppender: any = JL.createAjaxAppender("openvidu-browser-logs-appender-" + connectionId);
-				customAppender.setOptions({
-					beforeSend: openViduJSNLogHeaders,
+				// Creation of the appender.
+				this.instance.currentAppender = JL.createAjaxAppender("appender-" + connectionId);
+				this.instance.currentAppender.setOptions({
+					beforeSend: beforeSendCallback,
 					maxBatchSize: 1000,
 					batchSize: this.instance.MAX_JSNLOG_BATCH_LOG_MESSAGES,
 					batchTimeout: this.instance.MAX_MSECONDS_BATCH_MESSAGES
 				});
-				this.instance.customAppenders.push(customAppender);
 
 				// Avoid circular dependencies
 				const logSerializer = (obj): string => {
@@ -69,14 +84,15 @@ export class OpenViduLogger {
 
 				// Initialize JL to send logs
 				JL.setOptions({
-					defaultAjaxUrl: OpenViduLogger.instance.openvidu.httpUri + this.instance.JSNLOG_URL,
+					defaultAjaxUrl: openVidu.httpUri + this.instance.JSNLOG_URL,
 					serialize: logSerializer
 				});
 				JL().setOptions({
-					appenders: [customAppender]
+					appenders: [this.instance.currentAppender]
 				});
-				
+
 				this.instance.isJSNLogSetup = true;
+				this.instance.loggingSessionId = sessionId;
 				this.instance.info("JSNLog configured.");
 			} catch (e) {
 				console.error("Error configuring JSNLog: ");
@@ -137,10 +153,8 @@ export class OpenViduLogger {
 	}
 
 	flush() {
-		if(this.isDebugLogEnabled()) {
-			for(const appender of this.customAppenders) {
-				if (appender.sendBatch) appender.sendBatch();
-			}
+		if(this.isDebugLogEnabled() && this.currentAppender != null) {
+			this.currentAppender.sendBatch();
 		}
 	}
 
@@ -148,12 +162,8 @@ export class OpenViduLogger {
 		this.isProdMode = true;
 	}
 
-	disableBrowserLogsMonitoring() {
-		this.isJSNLogEnabled = false;
-	}
-
 	private isDebugLogEnabled() {
-		return this.isJSNLogEnabled && this.isJSNLogSetup;
+		return this.isJSNLogSetup;
 	}
 
 }
