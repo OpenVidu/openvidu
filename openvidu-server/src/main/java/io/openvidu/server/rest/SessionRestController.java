@@ -973,7 +973,7 @@ public class SessionRestController {
 			throw new Exception("\"session\" parameter is mandatory");
 		}
 
-		if (nameParam != null) {
+		if (nameParam != null && !nameParam.isEmpty()) {
 			if (!sessionManager.formatChecker.isValidRecordingName(nameParam)) {
 				throw new Exception("Parameter 'name' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-]+");
 			}
