@@ -30,6 +30,11 @@ public class FormatChecker {
 		return (frameRate > 0 && frameRate <= 120);
 	}
 
+	public boolean isAcceptableRecordingShmSize(Long shmSize) {
+		// Long grater than 134217728 (128 MB)
+		return (shmSize >= 134217728L);
+	}
+
 	public boolean isServerMetadataFormatCorrect(String metadata) {
 		return true;
 	}
