@@ -2475,10 +2475,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong recording size", 0, recording.getSize());
 		Assert.assertNull("Wrong recording url", recording.getUrl());
 		Assert.assertEquals("Wrong recording output mode", Recording.OutputMode.INDIVIDUAL, recording.getOutputMode());
-		Assert.assertEquals("Wrong recording layout", RecordingLayout.BEST_FIT, recording.getRecordingLayout());
-		Assert.assertEquals("Wrong recording custom layout", "", recording.getCustomLayout());
-		Assert.assertEquals("Wrong recording resolution", "1280x720", recording.getResolution());
-		Assert.assertEquals("Wrong recording frameRate", 25, recording.getFrameRate());
+		Assert.assertNull("Wrong recording layout", recording.getRecordingLayout());
+		Assert.assertNull("Wrong recording custom layout", recording.getCustomLayout());
+		Assert.assertNull("Wrong recording resolution", recording.getResolution());
+		Assert.assertNull("Wrong recording frameRate", recording.getFrameRate());
 		Assert.assertEquals("Wrong recording status", Recording.Status.started, recording.getStatus());
 		Assert.assertTrue("Wrong recording hasAudio", recording.hasAudio());
 		Assert.assertTrue("Wrong recording hasVideo", recording.hasVideo());
@@ -2539,7 +2539,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong recording layout", RecordingLayout.BEST_FIT, recording2.getRecordingLayout());
 		Assert.assertNull("Wrong recording custom layout", recording2.getCustomLayout());
 		Assert.assertEquals("Wrong recording resolution", "1280x720", recording2.getResolution());
-		Assert.assertEquals("Wrong recording frameRate", 25, recording2.getFrameRate());
+		Assert.assertEquals("Wrong recording frameRate", 25, recording2.getFrameRate().intValue());
 		Assert.assertEquals("Wrong recording status", Recording.Status.started, recording2.getStatus());
 		Assert.assertFalse("Wrong recording hasAudio", recording2.hasAudio());
 		Assert.assertTrue("Wrong recording hasVideo", recording2.hasVideo());
