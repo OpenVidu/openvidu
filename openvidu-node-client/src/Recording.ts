@@ -77,17 +77,21 @@ export class Recording {
         this.url = json['url'];
         this.status = json['status'];
         this.properties = {
-            name: !!(json['name']) ? json['name'] : this.id,
-            outputMode: !!(json['outputMode']) ? json['outputMode'] : Recording.OutputMode.COMPOSED,
-            hasAudio: !!(json['hasAudio']),
-            hasVideo: !!json['hasVideo']
+            name: (json['name'] != null) ? json['name'] : this.id,
+            hasAudio: (json['hasAudio'] != null) ? !!json['hasAudio'] : Recording.DefaultRecordingPropertiesValues.hasAudio,
+            hasVideo: (json['hasVideo'] != null) ? !!json['hasVideo'] : Recording.DefaultRecordingPropertiesValues.hasVideo,
+            outputMode: (json['outputMode'] != null) ? json['outputMode'] : Recording.DefaultRecordingPropertiesValues.outputMode,
+            mediaNode: json['mediaNode']
         };
-        if (this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED]
-            || this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED_QUICK_START]) {
-            this.properties.resolution = !!(json['resolution']) ? json['resolution'] : '1280x720';
-            this.properties.recordingLayout = !!(json['recordingLayout']) ? json['recordingLayout'] : RecordingLayout.BEST_FIT;
+        if ((this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED]
+            || this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED_QUICK_START])
+            && this.properties.hasVideo) {
+            this.properties.recordingLayout = (json['recordingLayout'] != null) ? json['recordingLayout'] : Recording.DefaultRecordingPropertiesValues.recordingLayout;
+            this.properties.resolution = (json['resolution'] != null) ? json['resolution'] : Recording.DefaultRecordingPropertiesValues.resolution;
+            this.properties.frameRate = (json['frameRate'] != null) ? Number(json['frameRate']) : Recording.DefaultRecordingPropertiesValues.frameRate;
+            this.properties.shmSize = (json['shmSize'] != null) ? Number(json['shmSize']) : Recording.DefaultRecordingPropertiesValues.shmSize;
             if (this.properties.recordingLayout.toString() === RecordingLayout[RecordingLayout.CUSTOM]) {
-                this.properties.customLayout = json['customLayout'];
+                this.properties.customLayout = (json['customLayout'] != null) ? json['customLayout'] : '';
             }
         }
     }
@@ -165,4 +169,18 @@ export namespace Recording {
          */
         INDIVIDUAL = 'INDIVIDUAL'
     }
+
+    /**
+     * @hidden
+     */
+    export class DefaultRecordingPropertiesValues {
+        static readonly hasAudio: boolean = true;
+        static readonly hasVideo: boolean = true;
+        static readonly outputMode: Recording.OutputMode = Recording.OutputMode.COMPOSED;
+        static readonly recordingLayout: RecordingLayout = RecordingLayout.BEST_FIT;
+        static readonly resolution: string = "1280x720";
+        static readonly frameRate: number = 25;
+        static readonly shmSize: number = 536870912;
+    }
+
 }

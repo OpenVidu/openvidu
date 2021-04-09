@@ -160,6 +160,22 @@ public class Recording {
 	}
 
 	/**
+	 * <code>true</code> if the recording has an audio track, <code>false</code>
+	 * otherwise (currently fixed to true)
+	 */
+	public boolean hasAudio() {
+		return this.recordingProperties.hasAudio();
+	}
+
+	/**
+	 * <code>true</code> if the recording has a video track, <code>false</code>
+	 * otherwise (currently fixed to true)
+	 */
+	public boolean hasVideo() {
+		return this.recordingProperties.hasVideo();
+	}
+
+	/**
 	 * Mode of recording: COMPOSED for a single archive in a grid layout or
 	 * INDIVIDUAL for one archive for each stream
 	 */
@@ -249,24 +265,8 @@ public class Recording {
 	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START} and
 	 * {@link Recording#hasVideo()} is true
 	 */
-	public int getFrameRate() {
+	public Integer getFrameRate() {
 		return this.recordingProperties.frameRate();
-	}
-
-	/**
-	 * <code>true</code> if the recording has an audio track, <code>false</code>
-	 * otherwise (currently fixed to true)
-	 */
-	public boolean hasAudio() {
-		return this.recordingProperties.hasAudio();
-	}
-
-	/**
-	 * <code>true</code> if the recording has a video track, <code>false</code>
-	 * otherwise (currently fixed to true)
-	 */
-	public boolean hasVideo() {
-		return this.recordingProperties.hasVideo();
 	}
 
 }

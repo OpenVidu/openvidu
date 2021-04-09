@@ -31,6 +31,20 @@ export interface RecordingProperties {
     name?: string;
 
     /**
+     * Whether or not to record audio. Cannot be set to false at the same time as [[RecordingProperties.hasVideo]]
+     * 
+     * Default to true
+     */
+    hasAudio?: boolean;
+
+    /**
+     * Whether or not to record video. Cannot be set to false at the same time as [[RecordingProperties.hasAudio]]
+     * 
+     * Default to true
+     */
+    hasVideo?: boolean;
+
+    /**
      * The mode of recording: COMPOSED for a single archive in a grid layout or INDIVIDUAL for one archive for each stream
      * 
      * Default to [[Recording.OutputMode.COMPOSED]]
@@ -44,13 +58,6 @@ export interface RecordingProperties {
      * Default to [[RecordingLayout.BEST_FIT]]
      */
     recordingLayout?: RecordingLayout;
-
-    /**
-     * The relative path to the specific custom layout you want to use.<br>
-     * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED` (or `COMPOSED_QUICK_START`) and [[RecordingProperties.recordingLayout]] is `CUSTOM`<br>
-     * See [Custom recording layouts](/en/stable/advanced-features/recording#custom-recording-layouts) to learn more.
-     */
-    customLayout?: string;
 
     /**
      * Recording video file resolution. Must be a string with format "WIDTHxHEIGHT",
@@ -73,20 +80,6 @@ export interface RecordingProperties {
     frameRate?: number;
 
     /**
-     * Whether or not to record audio. Cannot be set to false at the same time as [[RecordingProperties.hasVideo]]
-     * 
-     * Default to true
-     */
-    hasAudio?: boolean;
-
-    /**
-     * Whether or not to record video. Cannot be set to false at the same time as [[RecordingProperties.hasAudio]]
-     * 
-     * Default to true
-     */
-    hasVideo?: boolean;
-
-    /**
      * The amount of shared memory reserved for the recording process in bytes.
      * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
      * and [[RecordingProperties.hasVideo]] is set to true. Property ignored for INDIVIDUAL recordings and audio-only recordings.
@@ -95,6 +88,13 @@ export interface RecordingProperties {
      * Default to 536870912 (512 MB)
      */
     shmSize?: number;
+
+    /**
+     * The relative path to the specific custom layout you want to use.<br>
+     * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED` (or `COMPOSED_QUICK_START`) and [[RecordingProperties.recordingLayout]] is `CUSTOM`<br>
+     * See [Custom recording layouts](/en/stable/advanced-features/recording#custom-recording-layouts) to learn more.
+     */
+    customLayout?: string;
 
     /**
      * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> 

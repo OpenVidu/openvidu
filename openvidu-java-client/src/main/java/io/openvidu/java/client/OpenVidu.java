@@ -196,26 +196,8 @@ public class OpenVidu {
 
 		HttpPost request = new HttpPost(this.hostname + API_RECORDINGS_START);
 
-		JsonObject json = new JsonObject();
+		JsonObject json = properties.toJson();
 		json.addProperty("session", sessionId);
-		json.addProperty("name", properties.name());
-		json.addProperty("outputMode", properties.outputMode() != null ? properties.outputMode().name() : null);
-		json.addProperty("hasAudio", properties.hasAudio());
-		json.addProperty("hasVideo", properties.hasVideo());
-		json.addProperty("shmSize", properties.shmSize());
-		json.addProperty("mediaNode", properties.mediaNode());
-
-		if ((properties.outputMode() == null || Recording.OutputMode.COMPOSED.equals(properties.outputMode())
-				|| (Recording.OutputMode.COMPOSED_QUICK_START.equals(properties.outputMode())))
-				&& properties.hasVideo()) {
-			json.addProperty("resolution", properties.resolution());
-			json.addProperty("frameRate", properties.frameRate());
-			json.addProperty("recordingLayout",
-					(properties.recordingLayout() != null) ? properties.recordingLayout().name() : "");
-			if (RecordingLayout.CUSTOM.equals(properties.recordingLayout())) {
-				json.addProperty("customLayout", (properties.customLayout() != null) ? properties.customLayout() : "");
-			}
-		}
 
 		StringEntity params = null;
 		try {

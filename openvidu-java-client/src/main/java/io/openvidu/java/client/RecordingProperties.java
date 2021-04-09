@@ -27,15 +27,29 @@ import io.openvidu.java.client.Recording.OutputMode;
  */
 public class RecordingProperties {
 
-	private String name;
-	private Recording.OutputMode outputMode;
+	public static class DefaultValues {
+		public static final Boolean hasAudio = true;
+		public static final Boolean hasVideo = true;
+		public static final Recording.OutputMode outputMode = Recording.OutputMode.COMPOSED;
+		public static final RecordingLayout recordingLayout = RecordingLayout.BEST_FIT;
+		public static final String resolution = "1280x720";
+		public static final Integer frameRate = 25;
+		public static final Long shmSize = 536870912L;
+	}
+
+	// For all
+	private String name = "";
+	private Boolean hasAudio = true;
+	private Boolean hasVideo = true;
+	private Recording.OutputMode outputMode = Recording.OutputMode.COMPOSED;
+	// For COMPOSED/COMPOSED_QUICK_START + hasVideo
 	private RecordingLayout recordingLayout;
-	private String customLayout;
 	private String resolution;
-	private int frameRate;
-	private boolean hasAudio;
-	private boolean hasVideo;
-	private long shmSize; // For COMPOSED recording
+	private Integer frameRate;
+	private Long shmSize;
+	// For COMPOSED/COMPOSED_QUICK_START + hasVideo + RecordingLayout.CUSTOM
+	private String customLayout;
+	// For OpenVidu Pro
 	private String mediaNode;
 
 	/**
@@ -44,14 +58,14 @@ public class RecordingProperties {
 	public static class Builder {
 
 		private String name = "";
+		private Boolean hasAudio = true;
+		private Boolean hasVideo = true;
 		private Recording.OutputMode outputMode = Recording.OutputMode.COMPOSED;
-		private RecordingLayout recordingLayout = RecordingLayout.BEST_FIT;
-		private String customLayout = "";
-		private String resolution = "1280x720";
-		private int frameRate = 25;
-		private boolean hasAudio = true;
-		private boolean hasVideo = true;
-		private long shmSize = 536870912L;
+		private RecordingLayout recordingLayout;
+		private String resolution;
+		private Integer frameRate;
+		private Long shmSize;
+		private String customLayout;
 		private String mediaNode;
 
 		public Builder() {
@@ -59,14 +73,14 @@ public class RecordingProperties {
 
 		public Builder(RecordingProperties props) {
 			this.name = props.name();
-			this.outputMode = props.outputMode();
-			this.recordingLayout = props.recordingLayout();
-			this.customLayout = props.customLayout();
-			this.resolution = props.resolution();
-			this.frameRate = props.frameRate();
 			this.hasAudio = props.hasAudio();
 			this.hasVideo = props.hasVideo();
+			this.outputMode = props.outputMode();
+			this.recordingLayout = props.recordingLayout();
+			this.resolution = props.resolution();
+			this.frameRate = props.frameRate();
 			this.shmSize = props.shmSize();
+			this.customLayout = props.customLayout();
 			this.mediaNode = props.mediaNode();
 		}
 
@@ -74,8 +88,9 @@ public class RecordingProperties {
 		 * Builder for {@link io.openvidu.java.client.RecordingProperties}
 		 */
 		public RecordingProperties build() {
-			return new RecordingProperties(this.name, this.outputMode, this.recordingLayout, this.customLayout,
-					this.resolution, this.frameRate, this.hasAudio, this.hasVideo, this.shmSize, this.mediaNode);
+			return new RecordingProperties(this.name, this.hasAudio, this.hasVideo, this.outputMode,
+					this.recordingLayout, this.resolution, this.frameRate, this.shmSize, this.customLayout,
+					this.mediaNode);
 		}
 
 		/**
@@ -83,6 +98,26 @@ public class RecordingProperties {
 		 */
 		public RecordingProperties.Builder name(String name) {
 			this.name = name;
+			return this;
+		}
+
+		/**
+		 * Call this method to specify whether to record audio or not. Cannot be set to
+		 * false at the same time as
+		 * {@link RecordingProperties.Builder#hasVideo(boolean)}
+		 */
+		public RecordingProperties.Builder hasAudio(boolean hasAudio) {
+			this.hasAudio = hasAudio;
+			return this;
+		}
+
+		/**
+		 * Call this method to specify whether to record video or not. Cannot be set to
+		 * false at the same time as
+		 * {@link RecordingProperties.Builder#hasAudio(boolean)}
+		 */
+		public RecordingProperties.Builder hasVideo(boolean hasVideo) {
+			this.hasVideo = hasVideo;
 			return this;
 		}
 
@@ -106,21 +141,6 @@ public class RecordingProperties {
 		 */
 		public RecordingProperties.Builder recordingLayout(RecordingLayout layout) {
 			this.recordingLayout = layout;
-			return this;
-		}
-
-		/**
-		 * If setting
-		 * {@link io.openvidu.java.client.RecordingProperties.Builder#recordingLayout(RecordingLayout)}
-		 * to {@link io.openvidu.java.client.RecordingLayout#CUSTOM} you can call this
-		 * method to set the relative path to the specific custom layout you want to
-		 * use.<br>
-		 * See <a href=
-		 * "https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts"
-		 * target="_blank">Custom recording layouts</a> to learn more
-		 */
-		public RecordingProperties.Builder customLayout(String path) {
-			this.customLayout = path;
 			return this;
 		}
 
@@ -158,26 +178,6 @@ public class RecordingProperties {
 		}
 
 		/**
-		 * Call this method to specify whether to record audio or not. Cannot be set to
-		 * false at the same time as
-		 * {@link RecordingProperties.Builder#hasVideo(boolean)}
-		 */
-		public RecordingProperties.Builder hasAudio(boolean hasAudio) {
-			this.hasAudio = hasAudio;
-			return this;
-		}
-
-		/**
-		 * Call this method to specify whether to record video or not. Cannot be set to
-		 * false at the same time as
-		 * {@link RecordingProperties.Builder#hasAudio(boolean)}
-		 */
-		public RecordingProperties.Builder hasVideo(boolean hasVideo) {
-			this.hasVideo = hasVideo;
-			return this;
-		}
-
-		/**
 		 * Call this method to specify the amount of shared memory reserved for the
 		 * recording process in bytes. Minimum 134217728 (128MB).<br>
 		 * Will only have effect for
@@ -188,6 +188,21 @@ public class RecordingProperties {
 		 */
 		public RecordingProperties.Builder shmSize(long shmSize) {
 			this.shmSize = shmSize;
+			return this;
+		}
+
+		/**
+		 * If setting
+		 * {@link io.openvidu.java.client.RecordingProperties.Builder#recordingLayout(RecordingLayout)}
+		 * to {@link io.openvidu.java.client.RecordingLayout#CUSTOM} you can call this
+		 * method to set the relative path to the specific custom layout you want to
+		 * use.<br>
+		 * See <a href=
+		 * "https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts"
+		 * target="_blank">Custom recording layouts</a> to learn more
+		 */
+		public RecordingProperties.Builder customLayout(String path) {
+			this.customLayout = path;
 			return this;
 		}
 
@@ -210,18 +225,23 @@ public class RecordingProperties {
 
 	}
 
-	protected RecordingProperties(String name, Recording.OutputMode outputMode, RecordingLayout layout,
-			String customLayout, String resolution, int frameRate, boolean hasAudio, boolean hasVideo, long shmSize,
+	protected RecordingProperties(String name, Boolean hasAudio, Boolean hasVideo, Recording.OutputMode outputMode,
+			RecordingLayout layout, String resolution, Integer frameRate, Long shmSize, String customLayout,
 			String mediaNode) {
-		this.name = name;
-		this.outputMode = outputMode;
-		this.recordingLayout = layout;
-		this.customLayout = customLayout;
-		this.resolution = resolution;
-		this.frameRate = frameRate;
-		this.hasAudio = hasAudio;
-		this.hasVideo = hasVideo;
-		this.shmSize = shmSize;
+		this.name = name != null ? name : "";
+		this.hasAudio = hasAudio != null ? hasAudio : DefaultValues.hasAudio;
+		this.hasVideo = hasVideo != null ? hasVideo : DefaultValues.hasVideo;
+		this.outputMode = outputMode != null ? outputMode : DefaultValues.outputMode;
+		if ((OutputMode.COMPOSED.equals(this.outputMode) || OutputMode.COMPOSED_QUICK_START.equals(this.outputMode))
+				&& this.hasVideo) {
+			this.recordingLayout = layout != null ? layout : DefaultValues.recordingLayout;
+			this.resolution = resolution != null ? resolution : DefaultValues.resolution;
+			this.frameRate = frameRate != null ? frameRate : DefaultValues.frameRate;
+			this.shmSize = shmSize != null ? shmSize : DefaultValues.shmSize;
+			if (RecordingLayout.CUSTOM.equals(this.recordingLayout)) {
+				this.customLayout = customLayout;
+			}
+		}
 		this.mediaNode = mediaNode;
 	}
 
@@ -230,6 +250,28 @@ public class RecordingProperties {
 	 */
 	public String name() {
 		return this.name;
+	}
+
+	/**
+	 * Defines whether to record audio or not. Cannot be set to false at the same
+	 * time as {@link RecordingProperties#hasVideo()}.<br>
+	 * <br>
+	 * 
+	 * Default to true
+	 */
+	public Boolean hasAudio() {
+		return this.hasAudio;
+	}
+
+	/**
+	 * Defines whether to record video or not. Cannot be set to false at the same
+	 * time as {@link RecordingProperties#hasAudio()}.<br>
+	 * <br>
+	 * 
+	 * Default to true
+	 */
+	public Boolean hasVideo() {
+		return this.hasVideo;
 	}
 
 	/**
@@ -258,18 +300,6 @@ public class RecordingProperties {
 	 */
 	public RecordingLayout recordingLayout() {
 		return this.recordingLayout;
-	}
-
-	/**
-	 * If {@link io.openvidu.java.client.RecordingProperties#recordingLayout()} is
-	 * set to {@link io.openvidu.java.client.RecordingLayout#CUSTOM}, this property
-	 * defines the relative path to the specific custom layout you want to use.<br>
-	 * See <a href=
-	 * "https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts"
-	 * target="_blank">Custom recording layouts</a> to learn more
-	 */
-	public String customLayout() {
-		return this.customLayout;
 	}
 
 	/**
@@ -304,30 +334,8 @@ public class RecordingProperties {
 	 * 
 	 * Default to 25
 	 */
-	public int frameRate() {
+	public Integer frameRate() {
 		return this.frameRate;
-	}
-
-	/**
-	 * Defines whether to record audio or not. Cannot be set to false at the same
-	 * time as {@link RecordingProperties#hasVideo()}.<br>
-	 * <br>
-	 * 
-	 * Default to true
-	 */
-	public boolean hasAudio() {
-		return this.hasAudio;
-	}
-
-	/**
-	 * Defines whether to record video or not. Cannot be set to false at the same
-	 * time as {@link RecordingProperties#hasAudio()}.<br>
-	 * <br>
-	 * 
-	 * Default to true
-	 */
-	public boolean hasVideo() {
-		return this.hasVideo;
 	}
 
 	/**
@@ -342,8 +350,20 @@ public class RecordingProperties {
 	 * 
 	 * Default to 536870912 (512 MB)
 	 */
-	public long shmSize() {
+	public Long shmSize() {
 		return this.shmSize;
+	}
+
+	/**
+	 * If {@link io.openvidu.java.client.RecordingProperties#recordingLayout()} is
+	 * set to {@link io.openvidu.java.client.RecordingLayout#CUSTOM}, this property
+	 * defines the relative path to the specific custom layout you want to use.<br>
+	 * See <a href=
+	 * "https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts"
+	 * target="_blank">Custom recording layouts</a> to learn more
+	 */
+	public String customLayout() {
+		return this.customLayout;
 	}
 
 	/**
@@ -367,17 +387,19 @@ public class RecordingProperties {
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("name", name);
-		json.addProperty("outputMode", outputMode.name());
-		json.addProperty("hasAudio", hasAudio);
-		json.addProperty("hasVideo", hasVideo);
-		if (OutputMode.COMPOSED.equals(outputMode) || OutputMode.COMPOSED_QUICK_START.equals(outputMode)) {
-			json.addProperty("recordingLayout", recordingLayout.name());
+		json.addProperty("hasAudio", hasAudio != null ? hasAudio : DefaultValues.hasAudio);
+		json.addProperty("hasVideo", hasVideo != null ? hasVideo : DefaultValues.hasVideo);
+		json.addProperty("outputMode", outputMode != null ? outputMode.name() : DefaultValues.outputMode.name());
+		if ((OutputMode.COMPOSED.equals(outputMode) || OutputMode.COMPOSED_QUICK_START.equals(outputMode))
+				&& hasVideo) {
+			json.addProperty("recordingLayout",
+					recordingLayout != null ? recordingLayout.name() : DefaultValues.recordingLayout.name());
+			json.addProperty("resolution", resolution != null ? resolution : DefaultValues.resolution);
+			json.addProperty("frameRate", frameRate != null ? frameRate : DefaultValues.frameRate);
+			json.addProperty("shmSize", shmSize != null ? shmSize : DefaultValues.shmSize);
 			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {
-				json.addProperty("customLayout", customLayout);
+				json.addProperty("customLayout", customLayout != null ? customLayout : "");
 			}
-			json.addProperty("resolution", resolution);
-			json.addProperty("frameRate", frameRate);
-			json.addProperty("shmSize", shmSize);
 		}
 		if (this.mediaNode != null) {
 			json.addProperty("mediaNode", mediaNode);
@@ -386,33 +408,46 @@ public class RecordingProperties {
 	}
 
 	public static RecordingProperties fromJson(JsonObject json) {
+
+		Boolean hasVideoAux = true;
+		Recording.OutputMode outputModeAux = null;
+		RecordingLayout recordingLayoutAux = null;
+
 		Builder builder = new RecordingProperties.Builder();
 		if (json.has("name")) {
 			builder.name(json.get("name").getAsString());
-		}
-		if (json.has("outputMode")) {
-			builder.outputMode(OutputMode.valueOf(json.get("outputMode").getAsString()));
-		}
-		if (json.has("recordingLayout")) {
-			builder.recordingLayout(RecordingLayout.valueOf(json.get("recordingLayout").getAsString()));
-		}
-		if (json.has("customLayout")) {
-			builder.customLayout(json.get("customLayout").getAsString());
-		}
-		if (json.has("resolution")) {
-			builder.resolution(json.get("resolution").getAsString());
-		}
-		if (json.has("frameRate")) {
-			builder.frameRate(json.get("frameRate").getAsInt());
 		}
 		if (json.has("hasAudio")) {
 			builder.hasAudio(json.get("hasAudio").getAsBoolean());
 		}
 		if (json.has("hasVideo")) {
-			builder.hasVideo(json.get("hasVideo").getAsBoolean());
+			hasVideoAux = json.get("hasVideo").getAsBoolean();
+			builder.hasVideo(hasVideoAux);
 		}
-		if (json.has("shmSize")) {
-			builder.shmSize(json.get("shmSize").getAsLong());
+		if (json.has("outputMode")) {
+			outputModeAux = OutputMode.valueOf(json.get("outputMode").getAsString());
+			builder.outputMode(outputModeAux);
+		}
+		if ((OutputMode.COMPOSED.equals(outputModeAux) || OutputMode.COMPOSED_QUICK_START.equals(outputModeAux))
+				&& hasVideoAux) {
+			if (json.has("recordingLayout")) {
+				recordingLayoutAux = RecordingLayout.valueOf(json.get("recordingLayout").getAsString());
+				builder.recordingLayout(recordingLayoutAux);
+			}
+			if (json.has("resolution")) {
+				builder.resolution(json.get("resolution").getAsString());
+			}
+			if (json.has("frameRate")) {
+				builder.frameRate(json.get("frameRate").getAsInt());
+			}
+			if (json.has("shmSize")) {
+				builder.shmSize(json.get("shmSize").getAsLong());
+			}
+			if (RecordingLayout.CUSTOM.equals(recordingLayoutAux)) {
+				if (json.has("customLayout")) {
+					builder.customLayout(json.get("customLayout").getAsString());
+				}
+			}
 		}
 		if (json.has("mediaNode")) {
 			builder.mediaNode(json.get("mediaNode").getAsString());

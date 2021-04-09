@@ -656,17 +656,21 @@ export class Session {
         this.properties.mediaMode = !!this.properties.mediaMode ? this.properties.mediaMode : MediaMode.ROUTED;
         this.properties.recordingMode = !!this.properties.recordingMode ? this.properties.recordingMode : RecordingMode.MANUAL;
         this.properties.defaultRecordingProperties = {
-            name: !!this.properties.defaultRecordingProperties?.name ? this.properties.defaultRecordingProperties?.name : '',
-            outputMode: !!this.properties.defaultRecordingProperties?.outputMode ? this.properties.defaultRecordingProperties?.outputMode : Recording.OutputMode.COMPOSED,
-            recordingLayout: !!this.properties.defaultRecordingProperties?.recordingLayout ? this.properties.defaultRecordingProperties?.recordingLayout : RecordingLayout.BEST_FIT,
-            customLayout: !!this.properties.defaultRecordingProperties?.customLayout ? this.properties.defaultRecordingProperties?.customLayout : '',
-            resolution: !!this.properties.defaultRecordingProperties?.resolution ? this.properties.defaultRecordingProperties?.resolution : '1280x720',
-            frameRate: !!this.properties.defaultRecordingProperties?.frameRate ? this.properties.defaultRecordingProperties?.frameRate : 25,
-            hasAudio: !!this.properties.defaultRecordingProperties?.hasAudio ? this.properties.defaultRecordingProperties?.hasAudio : true,
-            hasVideo: !!this.properties.defaultRecordingProperties?.hasVideo ? this.properties.defaultRecordingProperties?.hasVideo : true,
-            shmSize: !!this.properties.defaultRecordingProperties?.shmSize ? this.properties.defaultRecordingProperties?.shmSize : 536870912,
+            name: !!this.properties.defaultRecordingProperties?.name ? this.properties.defaultRecordingProperties.name : '',
+            hasAudio: !!this.properties.defaultRecordingProperties?.hasAudio ? this.properties.defaultRecordingProperties.hasAudio : true,
+            hasVideo: !!this.properties.defaultRecordingProperties?.hasVideo ? this.properties.defaultRecordingProperties.hasVideo : true,
+            outputMode: !!this.properties.defaultRecordingProperties?.outputMode ? this.properties.defaultRecordingProperties.outputMode : Recording.OutputMode.COMPOSED,
             mediaNode: this.properties.defaultRecordingProperties?.mediaNode
         };
+        if ((this.properties.defaultRecordingProperties.outputMode === Recording.OutputMode.COMPOSED || this.properties.defaultRecordingProperties.outputMode == Recording.OutputMode.COMPOSED_QUICK_START) && this.properties.defaultRecordingProperties.hasVideo) {
+            this.properties.defaultRecordingProperties.recordingLayout = !!this.properties.defaultRecordingProperties.recordingLayout ? this.properties.defaultRecordingProperties.recordingLayout : RecordingLayout.BEST_FIT;
+            this.properties.defaultRecordingProperties.resolution = !!this.properties.defaultRecordingProperties.resolution ? this.properties.defaultRecordingProperties.resolution : '1280x720';
+            this.properties.defaultRecordingProperties.frameRate = !!this.properties.defaultRecordingProperties.frameRate ? this.properties.defaultRecordingProperties.frameRate : 25;
+            this.properties.defaultRecordingProperties.shmSize = !!this.properties.defaultRecordingProperties.shmSize ? this.properties.defaultRecordingProperties.shmSize : 536870912;
+            if (this.properties.defaultRecordingProperties.recordingLayout === RecordingLayout.CUSTOM) {
+                this.properties.defaultRecordingProperties.customLayout = !!this.properties.defaultRecordingProperties.customLayout ? this.properties.defaultRecordingProperties.customLayout : '';
+            }
+        }
         this.properties.customSessionId = !!this.properties.customSessionId ? this.properties.customSessionId : '';
         this.properties.mediaNode = !!this.properties.mediaNode ? this.properties.mediaNode : undefined;
         this.properties.forcedVideoCodec = !!this.properties.forcedVideoCodec ? this.properties.forcedVideoCodec : VideoCodec.VP8;
