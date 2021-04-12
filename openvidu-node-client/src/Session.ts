@@ -655,26 +655,30 @@ export class Session {
     private initDefaultSessionProperties() {
         this.properties.mediaMode = !!this.properties.mediaMode ? this.properties.mediaMode : MediaMode.ROUTED;
         this.properties.recordingMode = !!this.properties.recordingMode ? this.properties.recordingMode : RecordingMode.MANUAL;
-        this.properties.defaultRecordingProperties = {
-            name: !!this.properties.defaultRecordingProperties?.name ? this.properties.defaultRecordingProperties.name : '',
-            hasAudio: !!this.properties.defaultRecordingProperties?.hasAudio ? this.properties.defaultRecordingProperties.hasAudio : true,
-            hasVideo: !!this.properties.defaultRecordingProperties?.hasVideo ? this.properties.defaultRecordingProperties.hasVideo : true,
-            outputMode: !!this.properties.defaultRecordingProperties?.outputMode ? this.properties.defaultRecordingProperties.outputMode : Recording.OutputMode.COMPOSED,
-            mediaNode: this.properties.defaultRecordingProperties?.mediaNode
-        };
+
+        if (!this.properties.defaultRecordingProperties) {
+            this.properties.defaultRecordingProperties = {};
+        }
+
+        this.properties.defaultRecordingProperties.name = (this.properties.defaultRecordingProperties?.name != null) ? this.properties.defaultRecordingProperties.name : '';
+        this.properties.defaultRecordingProperties.hasAudio = (this.properties.defaultRecordingProperties?.hasAudio != null) ? this.properties.defaultRecordingProperties.hasAudio : true;
+        this.properties.defaultRecordingProperties.hasVideo = (this.properties.defaultRecordingProperties?.hasVideo != null) ? this.properties.defaultRecordingProperties.hasVideo : true;
+        this.properties.defaultRecordingProperties.outputMode = (this.properties.defaultRecordingProperties?.outputMode != null) ? this.properties.defaultRecordingProperties.outputMode : Recording.OutputMode.COMPOSED;
+        this.properties.defaultRecordingProperties.mediaNode = this.properties.defaultRecordingProperties?.mediaNode;
+
         if ((this.properties.defaultRecordingProperties.outputMode === Recording.OutputMode.COMPOSED || this.properties.defaultRecordingProperties.outputMode == Recording.OutputMode.COMPOSED_QUICK_START) && this.properties.defaultRecordingProperties.hasVideo) {
-            this.properties.defaultRecordingProperties.recordingLayout = !!this.properties.defaultRecordingProperties.recordingLayout ? this.properties.defaultRecordingProperties.recordingLayout : RecordingLayout.BEST_FIT;
-            this.properties.defaultRecordingProperties.resolution = !!this.properties.defaultRecordingProperties.resolution ? this.properties.defaultRecordingProperties.resolution : '1280x720';
-            this.properties.defaultRecordingProperties.frameRate = !!this.properties.defaultRecordingProperties.frameRate ? this.properties.defaultRecordingProperties.frameRate : 25;
-            this.properties.defaultRecordingProperties.shmSize = !!this.properties.defaultRecordingProperties.shmSize ? this.properties.defaultRecordingProperties.shmSize : 536870912;
+            this.properties.defaultRecordingProperties.recordingLayout = (this.properties.defaultRecordingProperties.recordingLayout != null) ? this.properties.defaultRecordingProperties.recordingLayout : RecordingLayout.BEST_FIT;
+            this.properties.defaultRecordingProperties.resolution = (this.properties.defaultRecordingProperties.resolution != null) ? this.properties.defaultRecordingProperties.resolution : '1280x720';
+            this.properties.defaultRecordingProperties.frameRate = (this.properties.defaultRecordingProperties.frameRate != null) ? this.properties.defaultRecordingProperties.frameRate : 25;
+            this.properties.defaultRecordingProperties.shmSize = (this.properties.defaultRecordingProperties.shmSize != null) ? this.properties.defaultRecordingProperties.shmSize : 536870912;
             if (this.properties.defaultRecordingProperties.recordingLayout === RecordingLayout.CUSTOM) {
-                this.properties.defaultRecordingProperties.customLayout = !!this.properties.defaultRecordingProperties.customLayout ? this.properties.defaultRecordingProperties.customLayout : '';
+                this.properties.defaultRecordingProperties.customLayout = (this.properties.defaultRecordingProperties.customLayout != null) ? this.properties.defaultRecordingProperties.customLayout : '';
             }
         }
-        this.properties.customSessionId = !!this.properties.customSessionId ? this.properties.customSessionId : '';
-        this.properties.mediaNode = !!this.properties.mediaNode ? this.properties.mediaNode : undefined;
-        this.properties.forcedVideoCodec = !!this.properties.forcedVideoCodec ? this.properties.forcedVideoCodec : VideoCodec.VP8;
-        this.properties.allowTranscoding = this.properties.allowTranscoding != null ? this.properties.allowTranscoding : false;
+        this.properties.customSessionId = (this.properties.customSessionId != null) ? this.properties.customSessionId : '';
+        this.properties.mediaNode = (this.properties.mediaNode != null) ? this.properties.mediaNode : undefined;
+        this.properties.forcedVideoCodec = (this.properties.forcedVideoCodec != null) ? this.properties.forcedVideoCodec : VideoCodec.VP8;
+        this.properties.allowTranscoding = (this.properties.allowTranscoding != null) ? this.properties.allowTranscoding : false;
     }
 
 }

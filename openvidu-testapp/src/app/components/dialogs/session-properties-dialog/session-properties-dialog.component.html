@@ -37,7 +37,7 @@
         <mat-form-field
           *ngIf="this.sessionProperties.defaultRecordingProperties.outputMode === 'COMPOSED' && this.sessionProperties.defaultRecordingProperties.recordingLayout === 'CUSTOM'">
           <input matInput placeholder="DefaultCustomLayout" type="text"
-            [(ngModel)]="sessionProperties.defaultCustomLayout" id="default-custom-layout-input">
+            [(ngModel)]="sessionProperties.defaultRecordingProperties.customLayout" id="default-custom-layout-input">
         </mat-form-field>
         <div id="allow-transcoding-div">
           <mat-checkbox class="checkbox-form" [(ngModel)]="sessionProperties.allowTranscoding"
