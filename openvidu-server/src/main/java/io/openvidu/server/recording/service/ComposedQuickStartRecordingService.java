@@ -30,6 +30,7 @@ import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.utils.CustomFileManager;
 import io.openvidu.server.utils.DockerManager;
+import io.openvidu.server.utils.RecordingUtils;
 
 public class ComposedQuickStartRecordingService extends ComposedRecordingService {
 
@@ -177,7 +178,8 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 				try {
 					log.info("Launching COMPOSED_QUICK_START recording container for session: {}",
 							recorderSession.getSessionId());
-					runContainer(recorderSession, recorderSession.getSessionProperties().defaultRecordingProperties());
+					RecordingProperties props = RecordingUtils.RECORDING_PROPERTIES_WITH_MEDIA_NODE(recorderSession);
+					runContainer(recorderSession, props);
 					log.info("COMPOSED_QUICK_START recording container launched for session: {}",
 							recorderSession.getSessionId());
 					launched = true;

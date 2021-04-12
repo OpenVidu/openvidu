@@ -53,6 +53,7 @@ import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.RecordingMode;
+import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.java.client.VideoCodec;
 import io.openvidu.server.cdr.CallDetailRecord;
@@ -75,6 +76,7 @@ import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.utils.GeoLocation;
 import io.openvidu.server.utils.JsonUtils;
+import io.openvidu.server.utils.RecordingUtils;
 import io.openvidu.server.utils.SDPMunging;
 
 public class KurentoSessionManager extends SessionManager {
@@ -448,8 +450,9 @@ public class KurentoSessionManager extends SessionManager {
 							// Start automatic recording for sessions configured with RecordingMode.ALWAYS
 							// that have not been been manually stopped
 							new Thread(() -> {
-								recordingManager.startRecording(kSession,
-										kSession.getSessionProperties().defaultRecordingProperties());
+								RecordingProperties props = RecordingUtils
+										.RECORDING_PROPERTIES_WITH_MEDIA_NODE(kSession);
+								recordingManager.startRecording(kSession, props);
 							}).start();
 						} else if (recordingManager.sessionIsBeingRecorded(kSession.getSessionId())) {
 							// Abort automatic recording stop thread for any recorded session in which a
