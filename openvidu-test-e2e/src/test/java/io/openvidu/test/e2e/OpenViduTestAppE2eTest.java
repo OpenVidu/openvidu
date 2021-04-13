@@ -1014,7 +1014,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		log.info("Composed record");
 
 		final String sessionName = "COMPOSED_RECORDED_SESSION";
-		final String resolution = "1280x720";
+		final String resolution = "1200x700";
+		final int frameRate = 16;
+		final long shmSize = 500000000;
 
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.id("session-name-input-0")).clear();
@@ -1074,6 +1076,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		WebElement resolutionField = user.getDriver().findElement(By.id("recording-resolution-field"));
 		resolutionField.clear();
 		resolutionField.sendKeys(resolution);
+		WebElement frameRateField = user.getDriver().findElement(By.id("recording-framerate-field"));
+		frameRateField.clear();
+		frameRateField.sendKeys(String.valueOf(frameRate));
+		WebElement shmSizeField = user.getDriver().findElement(By.id("recording-shmsize-field"));
+		shmSizeField.clear();
+		shmSizeField.sendKeys(String.valueOf(shmSize));
 
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 
@@ -2960,7 +2968,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
 		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'resolution':'1920x2000'}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
+		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'resolution':'99x1080'}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
 		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'frameRate':0}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
+		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'frameRate':121}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
 
 		// 200
