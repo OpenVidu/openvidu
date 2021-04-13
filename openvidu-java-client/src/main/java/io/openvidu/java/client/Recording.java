@@ -120,22 +120,7 @@ public class Recording {
 		}
 		this.status = Recording.Status.valueOf(json.get("status").getAsString());
 
-		boolean hasAudio = json.get("hasAudio").getAsBoolean();
-		boolean hasVideo = json.get("hasVideo").getAsBoolean();
-
-		OutputMode outputMode = OutputMode.valueOf(json.get("outputMode").getAsString());
-		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(json.get("name").getAsString())
-				.outputMode(outputMode).hasAudio(hasAudio).hasVideo(hasVideo);
-		if ((OutputMode.COMPOSED.equals(outputMode) || OutputMode.COMPOSED_QUICK_START.equals(outputMode))
-				&& hasVideo) {
-			builder.resolution(json.get("resolution").getAsString());
-			builder.recordingLayout(RecordingLayout.valueOf(json.get("recordingLayout").getAsString()));
-			JsonElement customLayout = json.get("customLayout");
-			if (customLayout != null) {
-				builder.customLayout(customLayout.getAsString());
-			}
-		}
-		this.recordingProperties = builder.build();
+		this.recordingProperties = RecordingProperties.fromJson(json);
 	}
 
 	/**

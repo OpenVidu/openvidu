@@ -450,7 +450,11 @@ public class RecordingProperties {
 			}
 		}
 		if (json.has("mediaNode")) {
-			builder.mediaNode(json.get("mediaNode").getAsString());
+			if (json.get("mediaNode").isJsonObject()) {
+				builder.mediaNode(json.get("mediaNode").getAsJsonObject().get("id").getAsString());
+			} else if (json.get("mediaNode").isJsonPrimitive()) {
+				builder.mediaNode(json.get("mediaNode").getAsString());
+			}
 		}
 		return builder.build();
 	}
