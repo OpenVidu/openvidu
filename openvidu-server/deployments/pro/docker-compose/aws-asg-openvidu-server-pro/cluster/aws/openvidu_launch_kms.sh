@@ -35,6 +35,14 @@ exit_on_error () {
   esac
 }
 
+# Check custom parameters
+if [[ -n "${CUSTOM_INSTANCE_TYPE}" ]]; then
+  AWS_INSTANCE_TYPE="${CUSTOM_INSTANCE_TYPE}"
+fi
+if [[ -n "${CUSTOM_VOLUME_SIZE}" ]]; then
+  AWS_VOLUME_SIZE="${CUSTOM_VOLUME_SIZE}"
+fi
+
 docker run --rm amazon/aws-cli:${AWS_CLI_DOCKER_TAG} ec2 run-instances \
     --image-id ${AWS_IMAGE_ID} --count 1 \
     --instance-type ${AWS_INSTANCE_TYPE} \
@@ -50,18 +58,6 @@ docker run --rm amazon/aws-cli:${AWS_CLI_DOCKER_TAG} ec2 wait instance-running -
 # Generating the output
 KMS_IP=$(cat ${OUTPUT} | jq --raw-output ' .Instances[] | .NetworkInterfaces[0] | .PrivateIpAddress')
 KMS_ID=$(cat ${OUTPUT} | jq --raw-output ' .Instances[] | .InstanceId')
-
-# Wait media-node controller
-attempt_counter=0
-max_attempts=10
-
-until $(curl --output /dev/null --silent --head --fail -u OPENVIDUAPP:${OPENVIDU_SECRET} http://${KMS_IP}:3000/media-node/status); do
-    if [ ${attempt_counter} -eq ${max_attempts} ];then
-      exit 1
-    fi
-    attempt_counter=$(($attempt_counter+1))
-    sleep 5
-done
 
 jq -n \
   --arg id "${KMS_ID}" \

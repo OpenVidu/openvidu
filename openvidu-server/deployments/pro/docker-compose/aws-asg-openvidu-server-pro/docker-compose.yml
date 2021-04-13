@@ -22,7 +22,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server-pro:2.17.0
+        image: openvidu/openvidu-server-pro:2.18.0-beta5
         restart: on-failure
         network_mode: host
         entrypoint: ['/usr/local/bin/entrypoint.sh']
@@ -109,10 +109,15 @@ services:
             - .env
         environment:
             - OPENVIDU_PRO_ELASTICSEARCH_HOST=${OPENVIDU_PRO_ELASTICSEARCH_HOST:-http://127.0.0.1:9200}
+            - OPENVIDU_PRO_STATS_MONITORING_INTERVAL=${OPENVIDU_PRO_STATS_MONITORING_INTERVAL:-10}
         volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
             - ./beats/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - /proc:/hostfs/proc:ro
+            - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+            - /:/hostfs:ro
         command: >
-            /bin/bash -c "metricbeat -e -strict.perms=false
+            /bin/bash -c "metricbeat -e -strict.perms=false -e -system.hostfs=/hostfs
             `if [ ! -z $ELASTICSEARCH_USERNAME ]; then echo '-E output.elasticsearch.username=$ELASTICSEARCH_USERNAME'; fi`
             `if [ ! -z $ELASTICSEARCH_PASSWORD ]; then echo '-E output.elasticsearch.password=$ELASTICSEARCH_PASSWORD'; fi`"
         logging:

@@ -130,6 +130,17 @@ new_ov_installation() {
      exit 0
 }
 
+get_previous_env_variable() {
+     local ENV_VARIABLE_NAME=$1
+     echo $(grep -E "${ENV_VARIABLE_NAME}=.*$" "${OPENVIDU_PREVIOUS_FOLDER}/.env" | cut -d'=' -f2)
+}
+
+replace_variable_in_new_env_file() {
+     local ENV_VARIABLE_NAME=$1
+     local ENV_VARIABLE_VALUE=$2
+     [[ ! -z "${ENV_VARIABLE_VALUE}" ]] && sed -i "s|#${ENV_VARIABLE_NAME}=|${ENV_VARIABLE_NAME}=${ENV_VARIABLE_VALUE}|" "${OPENVIDU_PREVIOUS_FOLDER}/.env-${OPENVIDU_VERSION}"
+}
+
 upgrade_ov() {
      # Search local Openvidu installation
      printf '\n'
@@ -336,14 +347,42 @@ upgrade_ov() {
      OLD_MODE=$(grep -E "Installation Mode:.*$" "${ROLL_BACK_FOLDER}/docker-compose.yml" | awk '{ print $4,$5 }')
      [ ! -z "${OLD_MODE}" ] && sed -i -r "s/Installation Mode:.+/Installation Mode: ${OLD_MODE}/" "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml"
 
-     # In Aws, update AMI ID
-     AWS_REGION=$(grep -E "AWS_DEFAULT_REGION=.*$" "${OPENVIDU_PREVIOUS_FOLDER}/.env" | cut -d'=' -f2)
+     # Update .env variables to new .env-version
+     AWS_REGION=$(get_previous_env_variable AWS_DEFAULT_REGION)
      if [[ ! -z ${AWS_REGION} ]]; then
+
+          # Get new AMI ID
           NEW_AMI_ID=$(curl https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/CF-OpenVidu-Pro-${OPENVIDU_VERSION//v}.yaml --silent |
                          sed -n -e '/KMSAMIMAP:/,/Metadata:/ p' |
                          grep -A 1 ${AWS_REGION} | grep AMI | tr -d " " | cut -d":" -f2)
           [[ -z ${NEW_AMI_ID} ]] && fatal_error "Error while getting new AWS_IMAGE_ID for Media Nodes"
-          sed -i "s/.*AWS_IMAGE_ID=.*/AWS_IMAGE_ID=${NEW_AMI_ID}/" "${OPENVIDU_PREVIOUS_FOLDER}/.env" || fatal_error "Error while updating new AWS_IMAGE_ID for Media Nodes"
+
+          # Get previous values
+          PREV_AWS_DEFAULT_REGION=$(get_previous_env_variable AWS_DEFAULT_REGION)
+          PREV_AWS_INSTANCE_TYPE=$(get_previous_env_variable AWS_INSTANCE_TYPE)
+          PREV_AWS_INSTANCE_ID=$(get_previous_env_variable AWS_INSTANCE_ID)
+          PREV_AWS_KEY_NAME=$(get_previous_env_variable AWS_KEY_NAME)
+          PREV_AWS_SUBNET_ID=$(get_previous_env_variable AWS_SUBNET_ID)
+          PREV_AWS_SECURITY_GROUP=$(get_previous_env_variable AWS_SECURITY_GROUP)
+          PREV_AWS_STACK_ID=$(get_previous_env_variable AWS_STACK_ID)
+          PREV_AWS_STACK_NAME=$(get_previous_env_variable AWS_STACK_NAME)
+          PREV_AWS_CLI_DOCKER_TAG=$(get_previous_env_variable AWS_CLI_DOCKER_TAG)
+          PREV_AWS_VOLUME_SIZE=$(get_previous_env_variable AWS_VOLUME_SIZE)
+          
+          # Replace variables in new .env-version file
+          replace_variable_in_new_env_file "AWS_DEFAULT_REGION" "${PREV_AWS_DEFAULT_REGION}"
+          replace_variable_in_new_env_file "AWS_INSTANCE_TYPE" "${PREV_AWS_INSTANCE_TYPE}"
+          replace_variable_in_new_env_file "AWS_INSTANCE_ID" "${PREV_AWS_INSTANCE_ID}"
+          replace_variable_in_new_env_file "AWS_KEY_NAME" "${PREV_AWS_KEY_NAME}"
+          replace_variable_in_new_env_file "AWS_SUBNET_ID" "${PREV_AWS_SUBNET_ID}"
+          replace_variable_in_new_env_file "AWS_SECURITY_GROUP" "${PREV_AWS_SECURITY_GROUP}"
+          replace_variable_in_new_env_file "AWS_STACK_ID" "${PREV_AWS_STACK_ID}"
+          replace_variable_in_new_env_file "AWS_STACK_NAME" "${PREV_AWS_STACK_NAME}"
+          replace_variable_in_new_env_file "AWS_CLI_DOCKER_TAG" "${PREV_AWS_CLI_DOCKER_TAG}"
+          replace_variable_in_new_env_file "AWS_VOLUME_SIZE" "${PREV_AWS_VOLUME_SIZE}"
+
+          # Replace new AMI
+          replace_variable_in_new_env_file "AWS_IMAGE_ID" "${NEW_AMI_ID}"
      fi
      
 
