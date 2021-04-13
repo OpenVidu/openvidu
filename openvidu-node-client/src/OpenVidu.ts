@@ -506,8 +506,8 @@ export class OpenVidu {
               events: publisherExtended.events,
               localCandidate: publisherExtended.localCandidate,
               remoteCandidate: publisherExtended.remoteCandidate,
-              receivedCandidates: publisherExtended.receivedCandidates,
-              gatheredCandidates: publisherExtended.gatheredCandidates,
+              clientIceCandidates: publisherExtended.clientIceCandidates,
+              serverIceCandidates: publisherExtended.serverIceCandidates,
               webrtcEndpointName: publisherExtended.webrtcEndpointName,
               localSdp: publisherExtended.localSdp,
               remoteSdp: publisherExtended.remoteSdp
@@ -532,8 +532,8 @@ export class OpenVidu {
               events: subscriberExtended.events,
               localCandidate: subscriberExtended.localCandidate,
               remoteCandidate: subscriberExtended.remoteCandidate,
-              receivedCandidates: subscriberExtended.receivedCandidates,
-              gatheredCandidates: subscriberExtended.gatheredCandidates,
+              clientIceCandidates: subscriberExtended.clientIceCandidates,
+              serverIceCandidates: subscriberExtended.serverIceCandidates,
               webrtcEndpointName: subscriberExtended.webrtcEndpointName,
               localSdp: subscriberExtended.localSdp,
               remoteSdp: subscriberExtended.remoteSdp

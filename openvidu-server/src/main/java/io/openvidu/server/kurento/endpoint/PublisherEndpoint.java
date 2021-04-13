@@ -46,6 +46,7 @@ import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.server.cdr.WebrtcDebugEvent.WebrtcDebugEventOperation;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.kurento.core.KurentoMediaOptions;
@@ -590,6 +591,11 @@ public class PublisherEndpoint extends MediaEndpoint {
 	public String filterCollectionsToString() {
 		return "{filter: " + ((this.filter != null) ? this.filter.getName() : "null") + ", listener: "
 				+ this.filterListeners.toString() + ", subscribers: " + this.subscribersToFilterEvents.toString() + "}";
+	}
+
+	@Override
+	protected WebrtcDebugEventOperation getWebrtcDebugOperation() {
+		return WebrtcDebugEventOperation.publish;
 	}
 
 }

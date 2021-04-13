@@ -48,6 +48,7 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.server.cdr.WebrtcDebugEvent;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.IdentifierPrefixes;
@@ -724,6 +725,10 @@ public class KurentoParticipant extends Participant {
 				this.session.getPipeline(), this.openviduConfig, passThru);
 		this.publisher.setMediaOptions(mediaOptions);
 		this.publisherLatch = new CountDownLatch(1);
+	}
+
+	public void logIceCandidate(WebrtcDebugEvent event) {
+		endpointConfig.getCdr().log(event);
 	}
 
 	@Override

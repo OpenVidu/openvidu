@@ -15,7 +15,7 @@ public class WebrtcDebugEvent {
 	}
 
 	public enum WebrtcDebugEventType {
-		sdpOffer, sdpOfferMunged, sdpAnswer
+		sdpOffer, sdpOfferMunged, sdpAnswer, iceCandidate
 	}
 
 	private Participant participant;
