@@ -1187,7 +1187,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 			user.getDriver().findElement(By.id("session-settings-btn-0")).click();
 			Thread.sleep(1000);
-			user.getDriver().findElement(By.id("output-mode-select")).click();
+			user.getDriver().findElement(By.id("rec-outputmode-select")).click();
 			Thread.sleep(500);
 			user.getDriver().findElement(By.id("option-COMPOSED_QUICK_START")).click();
 			Thread.sleep(500);
@@ -1250,7 +1250,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Thread.sleep(500);
 			user.getDriver().findElement(By.id("option-ALWAYS")).click();
 			Thread.sleep(500);
-			user.getDriver().findElement(By.id("output-mode-select")).click();
+			user.getDriver().findElement(By.id("rec-outputmode-select")).click();
 			Thread.sleep(500);
 			user.getDriver().findElement(By.id("option-COMPOSED_QUICK_START")).click();
 			Thread.sleep(500);
@@ -1292,7 +1292,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Thread.sleep(500);
 			user.getDriver().findElement(By.id("option-ALWAYS")).click();
 			Thread.sleep(500);
-			user.getDriver().findElement(By.id("output-mode-select")).click();
+			user.getDriver().findElement(By.id("rec-outputmode-select")).click();
 			Thread.sleep(500);
 			user.getDriver().findElement(By.id("option-COMPOSED_QUICK_START")).click();
 			Thread.sleep(500);
@@ -1695,7 +1695,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(500);
 		user.getDriver().findElement(By.id("option-CUSTOM")).click();
 		Thread.sleep(500);
-		WebElement tokeInput = user.getDriver().findElement(By.id("default-custom-layout-input"));
+		WebElement tokeInput = user.getDriver().findElement(By.id("custom-layout-input"));
 		tokeInput.clear();
 		tokeInput.sendKeys("layout1");
 		user.getDriver().findElement(By.id("save-btn")).click();
@@ -1747,7 +1747,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 			user.getDriver().findElement(By.id("session-settings-btn-0")).click();
 			Thread.sleep(1000);
-			tokeInput = user.getDriver().findElement(By.id("default-custom-layout-input"));
+			tokeInput = user.getDriver().findElement(By.id("custom-layout-input"));
 			tokeInput.clear();
 			tokeInput.sendKeys(EXTERNAL_CUSTOM_LAYOUT_URL + "?" + EXTERNAL_CUSTOM_LAYOUT_PARAMS);
 			user.getDriver().findElement(By.id("save-btn")).click();
@@ -3362,7 +3362,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Thread.sleep(500);
 			user.getDriver().findElement(By.id("option-ALWAYS")).click();
 			Thread.sleep(500);
-			user.getDriver().findElement(By.id("output-mode-select")).click();
+			user.getDriver().findElement(By.id("rec-outputmode-select")).click();
 			Thread.sleep(500);
 			user.getDriver().findElement(By.id("option-INDIVIDUAL")).click();
 			Thread.sleep(500);
@@ -4189,7 +4189,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		List<WebElement> statsButtons = user.getDriver().findElements(By.className("stats-button"));
 		for (WebElement statButton : statsButtons) {
 			statButton.click();
-			Thread.sleep(1000);
+			Thread.sleep(750);
 			String videoCodecUsed = user.getDriver().findElement(By.id("video-codec-used")).getText();
 			Assert.assertEquals(videoCodecUsed, "video/" + codecToCheck);
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
