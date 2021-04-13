@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import { OpenVidu as OpenViduAPI, Session as SessionAPI, Recording, RecordingProperties, RecordingLayout, ConnectionProperties, OpenViduRole } from 'openvidu-node-client';
+import { OpenVidu as OpenViduAPI, Session as SessionAPI, RecordingProperties, ConnectionProperties, OpenViduRole } from 'openvidu-node-client';
 
 @Component({
     selector: 'app-session-api-dialog',
@@ -19,8 +19,6 @@ export class SessionApiDialogComponent {
     response: string;
 
     recordingProperties: RecordingProperties;
-    recMode = Recording.OutputMode;
-    recLayouts = RecordingLayout;
     openviduRoles = OpenViduRole;
     customLayout = '';
     recPropertiesIcon = 'add_circle';

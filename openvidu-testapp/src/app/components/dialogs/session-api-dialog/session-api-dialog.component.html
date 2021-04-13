@@ -42,66 +42,22 @@
     </div>
 
     <label class="label">Recordings</label>
-    <button mat-button id="list-recording-btn" (click)="listRecordings()">List recordings</button>
-    <button mat-button id="start-recording-btn" (click)="startRecording()">Start recording</button>
-    <button id="rec-properties-btn" mat-icon-button style="width: 24px; height: 24px; line-height: 24px;"
-      title="Recording properties" (click)="toggleRecProperties()">
-      <mat-icon style="font-size: 18px; line-height: 18px; width: 18px; height: 18px" aria-label="Recording properties">
-        {{recPropertiesIcon}}</mat-icon>
-    </button>
-    <div *ngIf="showRecProperties" id="rec-properties-div">
-      <div>
-        <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
-          <input matInput id="recording-media-node-field" placeholder="Media Node"
-            [(ngModel)]="recordingProperties.mediaNode.id">
-        </mat-form-field>
-        <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
-          <input matInput id="recording-name-field" placeholder="Recording name" [(ngModel)]="recordingProperties.name">
-        </mat-form-field>
-        <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
-          <mat-select id="rec-outputmode-select" placeholder="Output mode" [(ngModel)]="recordingProperties.outputMode">
-            <mat-option *ngFor="let enumerator of enumToArray(recMode)" [value]="enumerator">
-              <span [attr.id]="'option-' + enumerator">{{ enumerator }}</span>
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div
-        *ngIf="recordingProperties.hasVideo && (recordingProperties.outputMode === 'COMPOSED' || recordingProperties.outputMode === 'COMPOSED_QUICK_START')"
-        id="rec-layout-div">
-        <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
-          <mat-select placeholder="Recording layout" [(ngModel)]="recordingProperties.recordingLayout">
-            <mat-option *ngFor="let enumerator of enumToArray(recLayouts)" [value]="enumerator">
-              {{ enumerator }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field *ngIf="recordingProperties.hasVideo && recordingProperties.recordingLayout === 'CUSTOM'"
-          class="inner-text-input" [style.fontSize.px]=14>
-          <input matInput placeholder="Custom layout" type="text" [(ngModel)]="recordingProperties.customLayout">
-        </mat-form-field>
-      </div>
-      <div>
-        <mat-checkbox id="rec-hasaudio-checkbox" [(ngModel)]="recordingProperties.hasAudio">Has audio</mat-checkbox>
-        <mat-checkbox id="rec-hasvideo-checkbox" [(ngModel)]="recordingProperties.hasVideo">Has video</mat-checkbox>
-        <mat-form-field
-          *ngIf="recordingProperties.hasVideo && (recordingProperties.outputMode === 'COMPOSED' || recordingProperties.outputMode === 'COMPOSED_QUICK_START')"
-          id="recording-resolution-form" class="inner-text-input" [style.fontSize.px]=14>
-          <input matInput id="recording-resolution-field" placeholder="Resolution" type="text"
-            [(ngModel)]="recordingProperties.resolution">
-        </mat-form-field>
-        <mat-form-field
-          *ngIf="recordingProperties.hasVideo && (recordingProperties.outputMode === 'COMPOSED' || recordingProperties.outputMode === 'COMPOSED_QUICK_START')"
-          id="recording-framerate-form" class="inner-text-input" [style.fontSize.px]=14>
-          <input matInput id="recording-framerate-field" placeholder="FrameRate" type="number"
-            [(ngModel)]="recordingProperties.frameRate">
-        </mat-form-field>
-      </div>
-    </div>
-    <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
-      <input matInput id="recording-id-field" placeholder="recordingId" [(ngModel)]="recordingId">
-    </mat-form-field>
     <div>
+      <button mat-button id="list-recording-btn" (click)="listRecordings()">List recordings</button>
+      <button mat-button id="start-recording-btn" (click)="startRecording()">Start recording</button>
+      <button id="rec-properties-btn" mat-icon-button style="width: 24px; height: 24px; line-height: 24px;"
+        title="Recording properties" (click)="toggleRecProperties()">
+        <mat-icon style="font-size: 18px; line-height: 18px; width: 18px; height: 18px"
+          aria-label="Recording properties">
+          {{recPropertiesIcon}}</mat-icon>
+      </button>
+      <app-recording-properties *ngIf="showRecProperties" [(recordingProperties)]="recordingProperties">
+      </app-recording-properties>
+    </div>
+    <div>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <input matInput id="recording-id-field" placeholder="recordingId" [(ngModel)]="recordingId">
+      </mat-form-field>
       <button mat-button id="stop-recording-btn" (click)="stopRecording()" [disabled]="!recordingId">Stop
         recording</button>
       <button mat-button id="get-recording-btn" (click)="getRecording()" [disabled]="!recordingId">Get

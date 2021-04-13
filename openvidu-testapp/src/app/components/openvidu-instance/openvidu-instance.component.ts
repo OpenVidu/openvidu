@@ -93,9 +93,18 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     mediaMode: MediaMode.ROUTED,
     recordingMode: RecordingMode.MANUAL,
     defaultRecordingProperties: {
+      name: '',
+      hasAudio: true,
+      hasVideo: true,
       outputMode: Recording.OutputMode.COMPOSED,
       recordingLayout: RecordingLayout.BEST_FIT,
-      customLayout: ''
+      resolution: '1280x720',
+      frameRate: 25,
+      shmSize: 536870912,
+      customLayout: '',
+      mediaNode: {
+        id: ''
+      }
     },
     customSessionId: '',
     forcedVideoCodec: null,
@@ -600,8 +609,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         customToken: this.customToken,
         forcePublishing: this.forcePublishing,
         connectionProperties: this.connectionProperties,
-      },
-      width: '450px'
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -626,22 +634,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         openVidu: !!this.OV_NodeClient ? this.OV_NodeClient : new OpenViduAPI(this.openviduUrl, this.openviduSecret),
         session: this.sessionAPI,
         sessionId: !!this.session ? this.session.sessionId : this.sessionName,
-        recordingProperties: !!this.recordingProperties ? this.recordingProperties :
-          {
-            name: '',
-            outputMode: this.sessionProperties.defaultRecordingProperties.outputMode,
-            recordingLayout: this.sessionProperties.defaultRecordingProperties.recordingLayout,
-            customLayout: this.sessionProperties.defaultRecordingProperties.customLayout,
-            resolution: '1280x720',
-            frameRate: 25,
-            hasAudio: true,
-            hasVideo: true,
-            mediaNode: {
-              id: ''
-            }
-          }
+        recordingProperties: !!this.recordingProperties ? this.recordingProperties : this.sessionProperties.defaultRecordingProperties
       },
-      width: '425px',
       disableClose: true
     });
 
