@@ -11,6 +11,10 @@
         </mat-option>
       </mat-select>
     </mat-form-field>
+    <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+      <input matInput id="recording-media-node-field" placeholder="Media Node"
+        [(ngModel)]="recordingProperties.mediaNode.id">
+    </mat-form-field>
     <div class="inner-text-input mat-form-field">
       <mat-checkbox id="rec-hasaudio-checkbox" [(ngModel)]="recordingProperties.hasAudio">Has audio</mat-checkbox>
       <mat-checkbox id="rec-hasvideo-checkbox" [(ngModel)]="recordingProperties.hasVideo">Has video</mat-checkbox>
@@ -28,7 +32,8 @@
     </mat-form-field>
     <mat-form-field *ngIf="recordingProperties.recordingLayout === 'CUSTOM'" class="inner-text-input"
       [style.fontSize.px]=14>
-      <input matInput placeholder="Custom layout" id="custom-layout-input" type="text" [(ngModel)]="recordingProperties.customLayout">
+      <input matInput placeholder="Custom layout" id="custom-layout-input" type="text"
+        [(ngModel)]="recordingProperties.customLayout">
     </mat-form-field>
     <mat-form-field id="recording-resolution-form" class="inner-text-input" [style.fontSize.px]=14>
       <input matInput id="recording-resolution-field" placeholder="Resolution" type="text"
@@ -41,10 +46,6 @@
     <mat-form-field id="recording-shmsize-form" class="inner-text-input" [style.fontSize.px]=14>
       <input matInput id="recording-shmsize-field" placeholder="Shmsize" type="number"
         [(ngModel)]="recordingProperties.shmSize">
-    </mat-form-field>
-    <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
-      <input matInput id="recording-media-node-field" placeholder="Media Node"
-        [(ngModel)]="recordingProperties.mediaNode.id">
     </mat-form-field>
   </div>
 </div>

@@ -29,7 +29,6 @@ import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-
 import { SessionApiDialogComponent } from '../dialogs/session-api-dialog/session-api-dialog.component';
 import { PublisherPropertiesDialogComponent } from '../dialogs/publisher-properties-dialog/publisher-properties-dialog.component';
 import { SessionInfoDialogComponent } from "../dialogs/session-info-dialog/session-info-dialog.component";
-import { ShowCodecDialogComponent } from "../dialogs/show-codec-dialog/show-codec-dialog.component";
 
 
 export interface SessionConf {
