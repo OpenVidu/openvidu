@@ -27,6 +27,7 @@ import { RecordingLayout } from './RecordingLayout';
 import { RecordingMode } from './RecordingMode';
 import { SessionProperties } from './SessionProperties';
 import { TokenOptions } from './TokenOptions';
+import { RecordingProperties } from 'RecordingProperties';
 
 export class Session {
 
@@ -91,7 +92,7 @@ export class Session {
             // Empty parameter
             this.properties = {};
         }
-        this.initDefaultSessionProperties();
+        this.sanitizeDefaultSessionProperties(this.properties);
     }
 
     /**
@@ -462,7 +463,7 @@ export class Session {
                 resolve(this.sessionId);
             }
 
-            this.initDefaultSessionProperties();
+            this.sanitizeDefaultSessionProperties(this.properties);
 
             const data = JSON.stringify(
                 this.properties
@@ -485,11 +486,12 @@ export class Session {
                         this.createdAt = res.data.createdAt;
                         this.properties.mediaMode = res.data.mediaMode;
                         this.properties.recordingMode = res.data.recordingMode;
-                        this.properties.defaultRecordingProperties = res.data.defaultRecordingProperties;
                         this.properties.customSessionId = res.data.customSessionId;
+                        this.properties.defaultRecordingProperties = res.data.defaultRecordingProperties;
                         this.properties.mediaNode = res.data.mediaNode;
                         this.properties.forcedVideoCodec = res.data.forcedVideoCodec;
                         this.properties.allowTranscoding = res.data.allowTranscoding;
+                        this.sanitizeDefaultSessionProperties(this.properties);
                         resolve(this.sessionId);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
@@ -535,7 +537,7 @@ export class Session {
             forcedVideoCodec: json.forcedVideoCodec,
             allowTranscoding: json.allowTranscoding
         };
-        this.initDefaultSessionProperties();
+        this.sanitizeDefaultSessionProperties(this.properties);
         if (json.defaultRecordingProperties == null) {
             delete this.properties.defaultRecordingProperties;
         }
@@ -652,33 +654,46 @@ export class Session {
     /**
      * @hidden
      */
-    private initDefaultSessionProperties() {
-        this.properties.mediaMode = !!this.properties.mediaMode ? this.properties.mediaMode : MediaMode.ROUTED;
-        this.properties.recordingMode = !!this.properties.recordingMode ? this.properties.recordingMode : RecordingMode.MANUAL;
+    private sanitizeDefaultSessionProperties(props: SessionProperties) {
 
-        if (!this.properties.defaultRecordingProperties) {
-            this.properties.defaultRecordingProperties = {};
+        props.mediaMode = (props.mediaMode != null) ? props.mediaMode : MediaMode.ROUTED;
+        props.recordingMode = (props.recordingMode != null) ? props.recordingMode : RecordingMode.MANUAL;
+        props.customSessionId = (props.customSessionId != null) ? props.customSessionId : '';
+        props.mediaNode = (props.mediaNode != null) ? props.mediaNode : undefined;
+        props.forcedVideoCodec = (props.forcedVideoCodec != null) ? props.forcedVideoCodec : VideoCodec.VP8;
+        props.allowTranscoding = (props.allowTranscoding != null) ? props.allowTranscoding : false;
+
+        if (!props.defaultRecordingProperties) {
+            props.defaultRecordingProperties = {};
         }
-
-        this.properties.defaultRecordingProperties.name = (this.properties.defaultRecordingProperties?.name != null) ? this.properties.defaultRecordingProperties.name : '';
-        this.properties.defaultRecordingProperties.hasAudio = (this.properties.defaultRecordingProperties?.hasAudio != null) ? this.properties.defaultRecordingProperties.hasAudio : true;
-        this.properties.defaultRecordingProperties.hasVideo = (this.properties.defaultRecordingProperties?.hasVideo != null) ? this.properties.defaultRecordingProperties.hasVideo : true;
-        this.properties.defaultRecordingProperties.outputMode = (this.properties.defaultRecordingProperties?.outputMode != null) ? this.properties.defaultRecordingProperties.outputMode : Recording.OutputMode.COMPOSED;
-        this.properties.defaultRecordingProperties.mediaNode = this.properties.defaultRecordingProperties?.mediaNode;
-
-        if ((this.properties.defaultRecordingProperties.outputMode === Recording.OutputMode.COMPOSED || this.properties.defaultRecordingProperties.outputMode == Recording.OutputMode.COMPOSED_QUICK_START) && this.properties.defaultRecordingProperties.hasVideo) {
-            this.properties.defaultRecordingProperties.recordingLayout = (this.properties.defaultRecordingProperties.recordingLayout != null) ? this.properties.defaultRecordingProperties.recordingLayout : RecordingLayout.BEST_FIT;
-            this.properties.defaultRecordingProperties.resolution = (this.properties.defaultRecordingProperties.resolution != null) ? this.properties.defaultRecordingProperties.resolution : '1280x720';
-            this.properties.defaultRecordingProperties.frameRate = (this.properties.defaultRecordingProperties.frameRate != null) ? this.properties.defaultRecordingProperties.frameRate : 25;
-            this.properties.defaultRecordingProperties.shmSize = (this.properties.defaultRecordingProperties.shmSize != null) ? this.properties.defaultRecordingProperties.shmSize : 536870912;
-            if (this.properties.defaultRecordingProperties.recordingLayout === RecordingLayout.CUSTOM) {
-                this.properties.defaultRecordingProperties.customLayout = (this.properties.defaultRecordingProperties.customLayout != null) ? this.properties.defaultRecordingProperties.customLayout : '';
+        props.defaultRecordingProperties.name = (props.defaultRecordingProperties?.name != null) ? props.defaultRecordingProperties.name : '';
+        props.defaultRecordingProperties.hasAudio = (props.defaultRecordingProperties?.hasAudio != null) ? props.defaultRecordingProperties.hasAudio : true;
+        props.defaultRecordingProperties.hasVideo = (props.defaultRecordingProperties?.hasVideo != null) ? props.defaultRecordingProperties.hasVideo : true;
+        props.defaultRecordingProperties.outputMode = (props.defaultRecordingProperties?.outputMode != null) ? props.defaultRecordingProperties.outputMode : Recording.OutputMode.COMPOSED;
+        props.defaultRecordingProperties.mediaNode = props.defaultRecordingProperties?.mediaNode;
+        if ((props.defaultRecordingProperties.outputMode === Recording.OutputMode.COMPOSED || props.defaultRecordingProperties.outputMode == Recording.OutputMode.COMPOSED_QUICK_START) && props.defaultRecordingProperties.hasVideo) {
+            props.defaultRecordingProperties.recordingLayout = (props.defaultRecordingProperties.recordingLayout != null) ? props.defaultRecordingProperties.recordingLayout : RecordingLayout.BEST_FIT;
+            props.defaultRecordingProperties.resolution = (props.defaultRecordingProperties.resolution != null) ? props.defaultRecordingProperties.resolution : '1280x720';
+            props.defaultRecordingProperties.frameRate = (props.defaultRecordingProperties.frameRate != null) ? props.defaultRecordingProperties.frameRate : 25;
+            props.defaultRecordingProperties.shmSize = (props.defaultRecordingProperties.shmSize != null) ? props.defaultRecordingProperties.shmSize : 536870912;
+            if (props.defaultRecordingProperties.recordingLayout === RecordingLayout.CUSTOM) {
+                props.defaultRecordingProperties.customLayout = (props.defaultRecordingProperties.customLayout != null) ? props.defaultRecordingProperties.customLayout : '';
             }
         }
-        this.properties.customSessionId = (this.properties.customSessionId != null) ? this.properties.customSessionId : '';
-        this.properties.mediaNode = (this.properties.mediaNode != null) ? this.properties.mediaNode : undefined;
-        this.properties.forcedVideoCodec = (this.properties.forcedVideoCodec != null) ? this.properties.forcedVideoCodec : VideoCodec.VP8;
-        this.properties.allowTranscoding = (this.properties.allowTranscoding != null) ? this.properties.allowTranscoding : false;
+
+        this.formatMediaNodeObjectIfNecessary(props.defaultRecordingProperties);
+        this.formatMediaNodeObjectIfNecessary(props);
+    }
+
+    /**
+     * @hidden
+     */
+    private formatMediaNodeObjectIfNecessary(properties: RecordingProperties | SessionProperties) {
+        if (properties.mediaNode != null) {
+            if (typeof properties.mediaNode === 'string') {
+                properties.mediaNode = { id: properties.mediaNode };
+            }
+        }
     }
 
 }
