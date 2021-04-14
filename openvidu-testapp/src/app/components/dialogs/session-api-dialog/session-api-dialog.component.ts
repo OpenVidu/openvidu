@@ -36,6 +36,9 @@ export class SessionApiDialogComponent {
         this.session = data.session;
         this.sessionId = data.sessionId;
         this.recordingProperties = data.recordingProperties;
+        if (!this.recordingProperties.mediaNode) {
+            this.recordingProperties.mediaNode = { id: '' };
+        }
     }
 
     closeSession() {
