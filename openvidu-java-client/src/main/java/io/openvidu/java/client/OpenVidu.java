@@ -200,11 +200,7 @@ public class OpenVidu {
 		json.addProperty("session", sessionId);
 
 		StringEntity params = null;
-		try {
-			params = new StringEntity(json.toString());
-		} catch (UnsupportedEncodingException e1) {
-			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
-		}
+		params = new StringEntity(json.toString(), "UTF-8");
 
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 		request.setEntity(params);
