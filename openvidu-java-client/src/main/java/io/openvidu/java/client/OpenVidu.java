@@ -588,7 +588,7 @@ public class OpenVidu {
 
 	private JsonObject httpResponseToJson(HttpResponse response) throws OpenViduJavaClientException {
 		try {
-			JsonObject json = new Gson().fromJson(EntityUtils.toString(response.getEntity()), JsonObject.class);
+			JsonObject json = new Gson().fromJson(EntityUtils.toString(response.getEntity(), "UTF-8"), JsonObject.class);
 			return json;
 		} catch (JsonSyntaxException | ParseException | IOException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());

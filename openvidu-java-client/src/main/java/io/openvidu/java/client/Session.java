@@ -689,7 +689,7 @@ public class Session {
 	private JsonObject httpResponseToJson(HttpResponse response) throws OpenViduJavaClientException {
 		JsonObject json;
 		try {
-			json = new Gson().fromJson(EntityUtils.toString(response.getEntity()), JsonObject.class);
+			json = new Gson().fromJson(EntityUtils.toString(response.getEntity(), "UTF-8"), JsonObject.class);
 		} catch (JsonSyntaxException | IOException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
