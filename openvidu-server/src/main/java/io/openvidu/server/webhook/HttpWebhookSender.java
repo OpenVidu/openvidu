@@ -130,13 +130,9 @@ public class HttpWebhookSender {
 		HttpPost request = new HttpPost(httpEndpoint);
 
 		StringEntity params = null;
-		try {
-			JsonObject jsonEvent = event.toJson();
-			jsonEvent.addProperty("event", event.getEventName().name());
-			params = new StringEntity(jsonEvent.toString());
-		} catch (UnsupportedEncodingException e) {
-			log.error("Cannot create StringEntity from JSON CDREvent. Default HTTP charset is not supported");
-		}
+		JsonObject jsonEvent = event.toJson();
+		jsonEvent.addProperty("event", event.getEventName().name());
+		params = new StringEntity(jsonEvent.toString(), "UTF-8");
 
 		for (Header header : this.customHeaders) {
 			request.setHeader(header);
