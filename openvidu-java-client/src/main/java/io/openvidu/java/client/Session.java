@@ -18,7 +18,6 @@
 package io.openvidu.java.client;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -121,13 +120,7 @@ public class Session {
 		}
 
 		HttpPost request = new HttpPost(this.openVidu.hostname + OpenVidu.API_TOKENS);
-
-		StringEntity params;
-		try {
-			params = new StringEntity(tokenOptions.toJsonObject(sessionId).toString());
-		} catch (UnsupportedEncodingException e1) {
-			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
-		}
+		StringEntity params = new StringEntity(tokenOptions.toJsonObject(sessionId).toString(), "UTF-8");
 
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 		request.setEntity(params);
@@ -190,13 +183,7 @@ public class Session {
 
 		HttpPost request = new HttpPost(
 				this.openVidu.hostname + OpenVidu.API_SESSIONS + "/" + this.sessionId + "/connection");
-
-		StringEntity params;
-		try {
-			params = new StringEntity(connectionProperties.toJson(sessionId).toString());
-		} catch (UnsupportedEncodingException e1) {
-			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
-		}
+		StringEntity params = new StringEntity(connectionProperties.toJson(sessionId).toString(), "UTF-8");
 
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 		request.setEntity(params);
@@ -506,13 +493,8 @@ public class Session {
 
 		HttpPatch request = new HttpPatch(
 				this.openVidu.hostname + OpenVidu.API_SESSIONS + "/" + this.sessionId + "/connection/" + connectionId);
+		StringEntity params = new StringEntity(connectionProperties.toJson(this.sessionId).toString(), "UTF-8");
 
-		StringEntity params;
-		try {
-			params = new StringEntity(connectionProperties.toJson(this.sessionId).toString());
-		} catch (UnsupportedEncodingException e1) {
-			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
-		}
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 		request.setEntity(params);
 
@@ -661,12 +643,7 @@ public class Session {
 		}
 
 		HttpPost request = new HttpPost(this.openVidu.hostname + OpenVidu.API_SESSIONS);
-		StringEntity params = null;
-		try {
-			params = new StringEntity(properties.toJson().toString());
-		} catch (UnsupportedEncodingException e1) {
-			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
-		}
+		StringEntity params = new StringEntity(properties.toJson().toString(), "UTF-8");
 
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 		request.setEntity(params);

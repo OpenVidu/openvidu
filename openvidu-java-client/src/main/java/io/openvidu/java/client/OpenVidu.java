@@ -18,7 +18,6 @@
 package io.openvidu.java.client;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -199,8 +198,7 @@ public class OpenVidu {
 		JsonObject json = properties.toJson();
 		json.addProperty("session", sessionId);
 
-		StringEntity params = null;
-		params = new StringEntity(json.toString(), "UTF-8");
+		StringEntity params = new StringEntity(json.toString(), "UTF-8");
 
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 		request.setEntity(params);
