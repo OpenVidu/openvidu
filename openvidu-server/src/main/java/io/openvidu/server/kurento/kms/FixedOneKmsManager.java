@@ -87,6 +87,10 @@ public class FixedOneKmsManager extends KmsManager {
 	}
 
 	@Override
+	protected void removeMediaNodeUponCrash(String mediaNodeId) {
+	}
+
+	@Override
 	@PostConstruct
 	protected void postConstructInitKurentoClients() {
 		try {
