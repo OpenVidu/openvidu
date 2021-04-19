@@ -55,6 +55,7 @@ import io.openvidu.server.cdr.CDREventRecording;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.kurento.endpoint.EndpointType;
+import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.FormatChecker;
 import io.openvidu.server.utils.GeoLocation;
@@ -640,6 +641,35 @@ public abstract class SessionManager {
 		if (this.openviduConfig.isRecordingModuleEnabled()) {
 			this.sessionidAccumulatedRecordings.putIfAbsent(sessionId, new ConcurrentLinkedQueue<>());
 		}
+	}
+
+	public void closeAllSessionsAndRecordingsOfKms(Kms kms, EndReason reason) {
+		// Close all active sessions
+		kms.getKurentoSessions().forEach(kSession -> {
+			this.closeSession(kSession.getSessionId(), reason);
+		});
+		// Close all non active sessions configured with this Media Node
+		this.closeNonActiveSessions(sessionNotActive -> {
+			return (sessionNotActive.getSessionProperties().mediaNode() != null
+					&& kms.getId().equals(sessionNotActive.getSessionProperties().mediaNode()));
+		});
+		// Stop all external recordings
+		kms.getActiveRecordings().forEach(recordingIdSessionId -> {
+
+			final String recordingId = recordingIdSessionId.getKey();
+			final String sessionId = recordingIdSessionId.getValue();
+			Session session = this.getSession(sessionId);
+
+			if (session != null && !session.isClosed()) {
+				// This is a recording of a Session hosted on a different Media Node
+				try {
+					this.recordingManager.stopRecording(session, null, RecordingManager.finalReason(reason));
+				} catch (OpenViduException e) {
+					log.error("Error stopping external recording {} of session {} in Media Node {}: {}", recordingId,
+							sessionId, kms.getId(), e.getMessage());
+				}
+			}
+		});
 	}
 
 }

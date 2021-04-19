@@ -217,11 +217,11 @@ public abstract class KmsManager {
 						final long timeOfKurentoDisconnection = kms.getTimeOfKurentoClientDisconnection();
 						sessionEventsHandler.onMediaNodeCrashed(kms, timeOfKurentoDisconnection);
 
-						// Close all session with reason "nodeCrashed"
+						// Close all sessions and recordings with reason "nodeCrashed"
 						log.warn("Closing {} sessions hosted by KMS with uri {}: {}", kms.getKurentoSessions().size(),
 								kms.getUri(), kms.getKurentoSessions().stream().map(s -> s.getSessionId())
 										.collect(Collectors.joining(",", "[", "]")));
-						closeAllSessionsInKms(kms, EndReason.nodeCrashed);
+						sessionManager.closeAllSessionsAndRecordingsOfKms(kms, EndReason.nodeCrashed);
 
 						// Remove Media Node
 						log.warn("Removing Media Node {} after crash", kms.getId());
@@ -313,18 +313,6 @@ public abstract class KmsManager {
 		} catch (Exception e) {
 			return true;
 		}
-	}
-
-	public void closeAllSessionsInKms(Kms kms, EndReason reason) {
-		// Close all active sessions
-		kms.getKurentoSessions().forEach(kSession -> {
-			sessionManager.closeSession(kSession.getSessionId(), reason);
-		});
-		// Close all non active sessions configured with this Media Node
-		sessionManager.closeNonActiveSessions(sessionNotActive -> {
-			return (sessionNotActive.getSessionProperties().mediaNode() != null
-					&& kms.getId().equals(sessionNotActive.getSessionProperties().mediaNode()));
-		});
 	}
 
 	public abstract List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure)

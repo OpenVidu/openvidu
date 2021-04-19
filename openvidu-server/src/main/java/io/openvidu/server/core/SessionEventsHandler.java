@@ -631,6 +631,10 @@ public class SessionEventsHandler {
 		recordingsToSendClientEvents.put(recording.getSessionId(), recording);
 	}
 
+	/**
+	 * This handler must be called before cleaning any sessions or recordings hosted
+	 * by the crashed Media Node
+	 */
 	public void onMediaNodeCrashed(Kms kms, long timeOfKurentoDisconnection) {
 	}
 
