@@ -631,14 +631,7 @@ public class SessionEventsHandler {
 		recordingsToSendClientEvents.put(recording.getSessionId(), recording);
 	}
 
-	public void onNetworkQualityLevelChanged(Session session, JsonObject params) {
-	}
-
-	public void onConnectionPropertyChanged(Participant participant, String property, Object newValue) {
-	}
-
 	public void onMediaNodeCrashed(Kms kms, long timeOfKurentoDisconnection) {
-		CDR.recordNodeCrashed(kms, null, timeOfKurentoDisconnection);
 	}
 
 	public void onMasterNodeCrashed() {
