@@ -22,7 +22,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server-pro:2.18.0-beta7
+        image: openvidu/openvidu-server-pro:2.18.0-beta8
         restart: on-failure
         network_mode: host
         entrypoint: ['/usr/local/bin/entrypoint.sh']
@@ -55,7 +55,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     replication-manager:
-        image: openvidu/replication-manager:1.0.0-dev5
+        image: openvidu/replication-manager:1.0.0-dev6
         restart: always
         network_mode: host
         environment:
