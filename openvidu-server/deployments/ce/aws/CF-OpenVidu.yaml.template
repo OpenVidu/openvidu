@@ -100,7 +100,7 @@ Parameters:
   # Other configuration
 
   WantToDeployDemos:
-    Description: "Choose if you want to deploy OpenVidu Call application alongside OpenVidu platform." 
+    Description: "Choose if you want to deploy OpenVidu Call application alongside OpenVidu platform."
     Type: String
     AllowedValues:
       - true
@@ -180,7 +180,7 @@ Metadata:
 Conditions:
     WhichCertPresent: !Not [ !Equals [!Ref WhichCert, ""] ]
     PublicElasticIPPresent: !Not [ !Equals [!Ref PublicElasticIP, ""] ]
-    
+
 Resources:
 
   OpenviduServer:
@@ -224,7 +224,7 @@ Resources:
               content: !Sub |
                 #!/bin/bash -x
                 WORKINGDIR=/opt/openvidu
-                
+
                 # Replace secret
                 sed -i "s/OPENVIDU_SECRET=/OPENVIDU_SECRET=${OpenViduSecret}/" $WORKINGDIR/.env
 
@@ -243,7 +243,7 @@ Resources:
                 # Replace certificated type
                 sed -i "s/CERTIFICATE_TYPE=selfsigned/CERTIFICATE_TYPE=${WhichCert}/" $WORKINGDIR/.env
                 sed -i "s/LETSENCRYPT_EMAIL=user@example.com/LETSENCRYPT_EMAIL=${LetsEncryptEmail}/" $WORKINGDIR/.env
-                
+
                 # Without Application
                 if [ "${WantToDeployDemos}" == "false" ]; then
                   sed -i "s/WITH_APP=true/WITH_APP=false/" $WORKINGDIR/docker-compose.yml
@@ -265,7 +265,7 @@ Resources:
               content: !Sub |
                 #!/bin/bash -x
                 WORKINGDIR=/opt/openvidu
-                
+
                 # Get new amazon URL
                 OldPublicHostname=$(cat /usr/share/openvidu/old-host-name)
                 PublicHostname=$(curl http://169.254.169.254/latest/meta-data/public-hostname)
@@ -302,14 +302,14 @@ Resources:
           export HOME="/root"
 
           # Replace .env variables
-          /usr/local/bin/feedGroupVars.sh || { echo "[Openvidu] Parameters incorrect/insufficient"; exit 1; }
+          /usr/local/bin/feedGroupVars.sh || { echo "[OpenVidu] Parameters incorrect/insufficient"; exit 1; }
 
           # Launch on reboot
           echo "@reboot /usr/local/bin/restartCE.sh" | crontab
 
           # Download certs if "WichCert" mode
           if [ "${WhichCert}" == "owncert" ]; then
-            /usr/local/bin/buildCerts.sh || { echo "[Openvidu] error with the certificate files"; exit 1; }
+            /usr/local/bin/buildCerts.sh || { echo "[OpenVidu] error with the certificate files"; exit 1; }
           fi
 
           # Start openvidu application
@@ -325,13 +325,13 @@ Resources:
           if [ "${WantToSendInfo}" == "true" ]; then
             /usr/local/bin/ping.sh || true
           fi
-          rm /usr/local/bin/ping.sh 
+          rm /usr/local/bin/ping.sh
 
           # Wait for the app
           /usr/local/bin/check_app_ready.sh
 
           # Start up the cfn-hup daemon to listen for changes to the Web Server metadata
-          /usr/local/bin/cfn-hup -v || { echo "[Openvidu] Failed to start cfn-hup"; exit 1; }
+          /usr/local/bin/cfn-hup -v || { echo "[OpenVidu] Failed to start cfn-hup"; exit 1; }
 
           # sending the finish call
           /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource WaitCondition --region ${AWS::Region}

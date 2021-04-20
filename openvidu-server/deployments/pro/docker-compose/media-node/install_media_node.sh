@@ -119,7 +119,7 @@ new_media_node_installation() {
      printf '\n            ...'
      printf '\n     You can also add this node from inspector'
      printf '\n'
-     printf '\n     4. Start or restart OpenVidu Pro and all containers will be provisioned' 
+     printf '\n     4. Start or restart OpenVidu Pro and all containers will be provisioned'
      printf '\n     automatically to all the media nodes configured in "KMS_URIS"'
      printf '\n     More info about Media Nodes deployment here:'
      printf "\n     --> https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#set-the-number-of-media-nodes-on-startup"
@@ -156,7 +156,7 @@ upgrade_media_node() {
 
      [ -z "${MEDIA_NODE_PREVIOUS_FOLDER}" ] && fatal_error "No previous Media Node installation found"
 
-     # Uppgrade Media Node
+     # Upgrade Media Node
      OPENVIDU_PREVIOUS_VERSION=$(grep 'Openvidu Version:' "${MEDIA_NODE_PREVIOUS_FOLDER}/docker-compose.yml" | awk '{ print $4 }')
      [ -z "${OPENVIDU_PREVIOUS_VERSION}" ] && fatal_error "Can't find previous OpenVidu version"
 
@@ -205,8 +205,8 @@ upgrade_media_node() {
           --output "${TMP_FOLDER}/copy_config_files.sh" || fatal_error "Error when downloading the file 'copy_config_files.sh'"
      printf '\n          - copy_config_files.sh'
 
-     # Dowloading new images and stoped actual Media Node
-     printf '\n     => Dowloading new images...'
+     # Downloading new images and stopped actual Media Node
+     printf '\n     => Downloading new images...'
      printf '\n'
      sleep 1
 
@@ -214,7 +214,7 @@ upgrade_media_node() {
      printf '\n'
      cd "${TMP_FOLDER}" || fatal_error "Error when moving to '${TMP_FOLDER}' folder"
 
-     printf '\n     => Stoping Media Node containers...'
+     printf '\n     => Stopping Media Node containers...'
      printf '\n'
      sleep 1
 
@@ -232,7 +232,7 @@ upgrade_media_node() {
      docker pull $OPENVIDU_RECORDING_IMAGE || fatal "Error while pulling docker image: $OPENVIDU_RECORDING_IMAGE"
      docker-compose pull | true
 
-     printf '\n     => Stoping Media Node...'
+     printf '\n     => Stopping Media Node...'
      printf '\n'
      sleep 1
 
@@ -314,7 +314,7 @@ upgrade_media_node() {
      printf '\n            ...'
      printf '\n     You can also add Media Nodes from inspector'
      printf '\n'
-     printf '\n     5. Start or restart OpenVidu Pro and all containers will be provisioned' 
+     printf '\n     5. Start or restart OpenVidu Pro and all containers will be provisioned'
      printf '\n     automatically to all the media nodes configured in "KMS_URIS"'
      printf '\n     More info about Media Nodes deployment here:'
      printf "\n     --> https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#set-the-number-of-media-nodes-on-startup"

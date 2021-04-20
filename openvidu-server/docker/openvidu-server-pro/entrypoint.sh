@@ -9,14 +9,14 @@ if [ ! -z "${WAIT_KIBANA_URL}" ]; then
   printf "\n"
 
   until $(curl --insecure --output /dev/null --silent --head --fail --max-time 10 --connect-timeout 10 ${WAIT_KIBANA_URL})
-  do 
+  do
     printf "\n  Waiting for kibana in '%s' URL..." "${WAIT_KIBANA_URL}"
     sleep 1
   done
   printf "\n  ==== Kibana is Ready ===="
 fi
 
-# Launch Openvidu Pro
+# Launch OpenVidu Pro
 printf "\n"
 printf "\n  ======================================="
 printf "\n  =       LAUNCH OPENVIDU-SERVER        ="

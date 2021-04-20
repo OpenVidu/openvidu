@@ -1,6 +1,6 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
-Description: Openvidu Pro CloudFormation template
+Description: OpenVidu Pro CloudFormation template
 
 Parameters:
 
@@ -41,11 +41,11 @@ Parameters:
   LetsEncryptEmail:
     Description: "If certificate type is 'letsencrypt', this email will be used for Let's Encrypt notifications"
     Type: String
-  
+
   Recording:
     Description: |
       If 'disabled', recordings will not be active.
-      If 'local' recordings will be saved in EC2 instance locally. 
+      If 'local' recordings will be saved in EC2 instance locally.
       If 's3', recordings will be stored in a S3 bucket"
     Type: String
     AllowedValues:
@@ -328,15 +328,15 @@ Conditions:
   CreateS3Bucket: !And
     - !Equals [!Ref Recording, 's3' ]
     - !Equals [!Ref S3RecordingsBucketName, '']
-        
+
 Rules:
 
   RecordingValidation:
-    RuleCondition: 
+    RuleCondition:
       Fn::Or: [ !Equals [!Ref Recording, 'disabled' ], !Equals [!Ref Recording, 'local' ] ]
     Assertions:
       - AssertDescription: If recording Storage is 'disabled' or 'local', you don't need to specify a S3 bucket.
-        Assert: 
+        Assert:
           Fn::Equals: [ !Ref S3RecordingsBucketName, "" ]
 
 Resources:
@@ -380,7 +380,7 @@ Resources:
                     - 's3:DeleteObject'
                     - 's3:GetObject'
                     - 's3:PutObject'
-                  Resource: 
+                  Resource:
                     - Fn::If:
                       # Get bucket name depending if the user defines a bucket name or not
                       - CreateS3Bucket
@@ -392,10 +392,10 @@ Resources:
                 # Only apply this policy if S3 is configured
                 - RecordingStorageIsS3
                 - Effect: Allow
-                  Action: 
+                  Action:
                     - 's3:ListBucket'
                     - 's3:GetBucketLocation'
-                  Resource: 
+                  Resource:
                     - Fn::If:
                       # Get bucket name depending if the user defines a bucket name or not
                       - CreateS3Bucket
@@ -429,7 +429,7 @@ Resources:
     ### Unique bucket name using Stack ID
       BucketName: !Join ["-" , [ 'openvidu-recordings', !Select [0, !Split ["-", !Select [2, !Split [/, !Ref AWS::StackId ]]]]]]
       AccessControl: Private
-      PublicAccessBlockConfiguration: 
+      PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
         IgnorePublicAcls : true
@@ -483,13 +483,13 @@ Resources:
                   echo $PublicHostname > /usr/share/openvidu/old-host-name
                 fi
 
-                # Openvidu Pro mode
+                # OpenVidu Pro mode
                 sed -i "s/OPENVIDU_PRO_CLUSTER_MODE=manual/OPENVIDU_PRO_CLUSTER_MODE=auto/" $WORKINGDIR/.env
 
-                # Openvidu Pro Media Nodes
+                # OpenVidu Pro Media Nodes
                 sed -i "s/#OPENVIDU_PRO_CLUSTER_MEDIA_NODES=/OPENVIDU_PRO_CLUSTER_MEDIA_NODES=${MediaNodesStartNumber}/" $WORKINGDIR/.env
 
-                # Openvidu Pro enviroment
+                # OpenVidu Pro enviroment
                 sed -i "s/OPENVIDU_PRO_CLUSTER_ENVIRONMENT=on_premise/OPENVIDU_PRO_CLUSTER_ENVIRONMENT=aws/" $WORKINGDIR/.env
 
                 # Replace certificated type
@@ -650,17 +650,17 @@ Resources:
             export HOME="/root"
 
             # Replace .env variables
-            /usr/local/bin/feedGroupVars.sh || { echo "[Openvidu] Parameters incorrect/insufficient"; exit 1; }
+            /usr/local/bin/feedGroupVars.sh || { echo "[OpenVidu] Parameters incorrect/insufficient"; exit 1; }
 
             # Create security groups
-            /usr/local/bin/create_security_group_rules.sh || { echo "[Openvidu] Error creating security groups"; exit 1; }
+            /usr/local/bin/create_security_group_rules.sh || { echo "[OpenVidu] Error creating security groups"; exit 1; }
 
             # Launch on reboot
             echo "@reboot /usr/local/bin/restartPRO.sh" | crontab
 
             # Download certs if "WichCert" mode
             if [ "${WhichCert}" == "owncert" ]; then
-              /usr/local/bin/buildCerts.sh || { echo "[Openvidu] error with the certificate files"; exit 1; }
+              /usr/local/bin/buildCerts.sh || { echo "[OpenVidu] error with the certificate files"; exit 1; }
             fi
 
             # Start openvidu application

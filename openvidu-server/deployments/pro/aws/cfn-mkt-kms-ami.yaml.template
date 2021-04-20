@@ -120,11 +120,11 @@ Resources:
 
             cfn-init --region ${AWS::Region} --stack ${AWS::StackId} --resource KurentoMediaServer
 
-            /usr/local/bin/installDockerAndDockerCompose.sh || { echo "[Openvidu] error installing software"; exit 1; }
+            /usr/local/bin/installDockerAndDockerCompose.sh || { echo "[OpenVidu] error installing software"; exit 1; }
 
-            /usr/local/bin/installMediaNode.sh || { echo "[Openvidu] error installing Media Node"; exit 1; }
+            /usr/local/bin/installMediaNode.sh || { echo "[OpenVidu] error installing Media Node"; exit 1; }
 
-            /usr/local/bin/runMediaNode.sh || { echo "[Openvidu] error running Media Node"; exit 1; }
+            /usr/local/bin/runMediaNode.sh || { echo "[OpenVidu] error running Media Node"; exit 1; }
 
             # sending the finish call
             /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource WaitCondition --region ${AWS::Region}

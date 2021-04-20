@@ -16,7 +16,7 @@ fatal_error() {
 new_ov_installation() {
      printf '\n'
      printf '\n     ======================================='
-     printf '\n          Install Openvidu CE %s' "${OPENVIDU_VERSION}"
+     printf '\n          Install OpenVidu CE %s' "${OPENVIDU_VERSION}"
      printf '\n     ======================================='
      printf '\n'
 
@@ -25,7 +25,7 @@ new_ov_installation() {
      mkdir "${OPENVIDU_FOLDER}" || fatal_error "Error while creating the folder '${OPENVIDU_FOLDER}'"
 
      # Download necessary files
-     printf '\n     => Downloading Openvidu CE files:'
+     printf '\n     => Downloading OpenVidu CE files:'
 
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/.env \
           --output "${OPENVIDU_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
@@ -104,7 +104,7 @@ upgrade_ov() {
 
      [ -z "${OPENVIDU_PREVIOUS_FOLDER}" ] && fatal_error "No previous Openvidu installation found"
 
-     # Uppgrade Openvidu
+     # Upgrade Openvidu
      OPENVIDU_PREVIOUS_VERSION=$(grep 'Openvidu Version:' "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml" | awk '{ print $4 }')
      [ -z "${OPENVIDU_PREVIOUS_VERSION}" ] && fatal_error "Can't find previous OpenVidu version"
 
@@ -116,7 +116,7 @@ upgrade_ov() {
 
      printf '\n'
      printf '\n     ======================================='
-     printf '\n       Upgrade Openvidu CE %s to %s' "${OPENVIDU_PREVIOUS_VERSION}" "${OPENVIDU_VERSION}"
+     printf '\n       Upgrade OpenVidu CE %s to %s' "${OPENVIDU_PREVIOUS_VERSION}" "${OPENVIDU_VERSION}"
      printf '\n     ======================================='
      printf '\n'
 
@@ -132,7 +132,7 @@ upgrade_ov() {
      mkdir "${TMP_FOLDER}" || fatal_error "Error while creating the folder 'temporal'"
 
      # Download necessary files
-     printf '\n     => Downloading new Openvidu CE files:'
+     printf '\n     => Downloading new OpenVidu CE files:'
 
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/docker-compose.yml \
           --output "${TMP_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
@@ -150,8 +150,8 @@ upgrade_ov() {
           --output "${TMP_FOLDER}/openvidu" || fatal_error "Error when downloading the file 'openvidu'"
      printf '\n          - openvidu'
 
-     # Dowloading new images and stoped actual Openvidu
-     printf '\n     => Dowloading new images...'
+     # Downloading new images and stopped actual Openvidu
+     printf '\n     => Downloading new images...'
      printf '\n'
      sleep 1
 
@@ -160,7 +160,7 @@ upgrade_ov() {
      cd "${TMP_FOLDER}" || fatal_error "Error when moving to 'tmp' folder"
      docker-compose pull | true
 
-     printf '\n     => Stoping Openvidu...'
+     printf '\n     => Stopping Openvidu...'
      printf '\n'
      sleep 1
 

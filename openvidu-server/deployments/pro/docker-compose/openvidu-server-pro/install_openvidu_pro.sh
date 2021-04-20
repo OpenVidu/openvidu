@@ -19,7 +19,7 @@ fatal_error() {
 new_ov_installation() {
      printf '\n'
      printf '\n     ======================================='
-     printf '\n          Install Openvidu PRO %s' "${OPENVIDU_VERSION}"
+     printf '\n          Install OpenVidu Pro %s' "${OPENVIDU_VERSION}"
      printf '\n     ======================================='
      printf '\n'
 
@@ -43,7 +43,7 @@ new_ov_installation() {
      chown 1000:1000 "${ELASTICSEARCH_FOLDER}" || fatal_error "Error while changing permission to 'elasticsearch' folder"
 
      # Download necessary files
-     printf '\n     => Downloading Openvidu PRO files:'
+     printf '\n     => Downloading OpenVidu Pro files:'
 
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/openvidu-server-pro/cluster/aws/openvidu_autodiscover.sh \
           --output "${AWS_SCRIPTS_FOLDER}/openvidu_autodiscover.sh" || fatal_error "Error when downloading the file 'openvidu_autodiscover.sh'"
@@ -108,7 +108,7 @@ new_ov_installation() {
      printf '\n'
      printf '\n'
      printf '\n     ======================================='
-     printf '\n       Openvidu PRO successfully installed.'
+     printf '\n       OpenVidu Pro successfully installed.'
      printf '\n     ======================================='
      printf '\n'
      printf '\n     1. Go to openvidu folder:'
@@ -167,7 +167,7 @@ upgrade_ov() {
 
      [ -z "${OPENVIDU_PREVIOUS_FOLDER}" ] && fatal_error "No previous Openvidu installation found"
 
-     # Uppgrade Openvidu
+     # Upgrade Openvidu
      OPENVIDU_PREVIOUS_VERSION=$(grep 'Openvidu Version:' "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml" | awk '{ print $4 }')
      [ -z "${OPENVIDU_PREVIOUS_VERSION}" ] && fatal_error "Can't find previous OpenVidu version"
 
@@ -179,7 +179,7 @@ upgrade_ov() {
 
      printf '\n'
      printf '\n     ======================================='
-     printf '\n       Upgrade Openvidu PRO %s to %s' "${OPENVIDU_PREVIOUS_VERSION}" "${OPENVIDU_VERSION}"
+     printf '\n       Upgrade OpenVidu Pro %s to %s' "${OPENVIDU_PREVIOUS_VERSION}" "${OPENVIDU_VERSION}"
      printf '\n     ======================================='
      printf '\n'
 
@@ -195,7 +195,7 @@ upgrade_ov() {
      mkdir "${TMP_FOLDER}" || fatal_error "Error while creating the folder 'temporal'"
 
      # Download necessary files
-     printf '\n     => Downloading new Openvidu PRO files:'
+     printf '\n     => Downloading new OpenVidu Pro files:'
 
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/pro/docker-compose/openvidu-server-pro/cluster/aws/openvidu_autodiscover.sh \
           --output "${TMP_FOLDER}/openvidu_autodiscover.sh" || fatal_error "Error when downloading the file 'openvidu_autodiscover.sh'"
@@ -233,8 +233,8 @@ upgrade_ov() {
           --output "${TMP_FOLDER}/openvidu" || fatal_error "Error when downloading the file 'openvidu'"
      printf '\n          - openvidu'
 
-     # Dowloading new images and stoped actual Openvidu
-     printf '\n     => Dowloading new images...'
+     # Downloading new images and stopped actual Openvidu
+     printf '\n     => Downloading new images...'
      printf '\n'
      sleep 1
 
@@ -244,7 +244,7 @@ upgrade_ov() {
      printf '\n'
      docker-compose pull | true
 
-     printf '\n     => Stoping Openvidu...'
+     printf '\n     => Stopping Openvidu...'
      printf '\n'
      sleep 1
 
@@ -368,7 +368,7 @@ upgrade_ov() {
           PREV_AWS_STACK_NAME=$(get_previous_env_variable AWS_STACK_NAME)
           PREV_AWS_CLI_DOCKER_TAG=$(get_previous_env_variable AWS_CLI_DOCKER_TAG)
           PREV_AWS_VOLUME_SIZE=$(get_previous_env_variable AWS_VOLUME_SIZE)
-          
+
           # Replace variables in new .env-version file
           replace_variable_in_new_env_file "AWS_DEFAULT_REGION" "${PREV_AWS_DEFAULT_REGION}"
           replace_variable_in_new_env_file "AWS_INSTANCE_TYPE" "${PREV_AWS_INSTANCE_TYPE}"
@@ -384,7 +384,7 @@ upgrade_ov() {
           # Replace new AMI
           replace_variable_in_new_env_file "AWS_IMAGE_ID" "${NEW_AMI_ID}"
      fi
-     
+
 
      # Ready to use
      printf '\n'
