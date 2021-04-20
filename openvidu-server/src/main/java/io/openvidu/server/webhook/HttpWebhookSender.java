@@ -108,7 +108,6 @@ public class HttpWebhookSender {
 	public void sendHttpPostCallbackAsync(CDREvent event) {
 		executor.execute(() -> {
 			try {
-				log.info("Sending event {} to Webhook 2", event.getEventName().name());
 				this.sendHttpPostCallbackBlocking(event);
 			} catch (IOException e) {
 				log.error("Error sending webhook event: {}", e.getMessage());
@@ -141,7 +140,6 @@ public class HttpWebhookSender {
 
 		HttpResponse response = null;
 		try {
-			log.info("Sending event {} to Webhook 3", event.getEventName().name());
 			response = this.httpClient.execute(request);
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {

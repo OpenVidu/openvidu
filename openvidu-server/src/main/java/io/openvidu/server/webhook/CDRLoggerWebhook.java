@@ -20,8 +20,6 @@ package io.openvidu.server.webhook;
 import java.util.List;
 
 import org.apache.http.Header;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import io.openvidu.server.cdr.CDREvent;
 import io.openvidu.server.cdr.CDREventName;
@@ -32,8 +30,6 @@ import io.openvidu.server.summary.SessionSummary;
 
 public class CDRLoggerWebhook implements CDRLogger {
 
-	private static final Logger log = LoggerFactory.getLogger(HttpWebhookSender.class);
-
 	private HttpWebhookSender webhookSender;
 
 	public CDRLoggerWebhook(String webhookEndpoint, List<Header> webhookHeaders, List<CDREventName> webhookEvents) {
@@ -42,7 +38,6 @@ public class CDRLoggerWebhook implements CDRLogger {
 
 	@Override
 	public void log(CDREvent event) {
-		log.info("Sending event {} to Webhook 1", event.getEventName().name());
 		this.webhookSender.sendHttpPostCallbackAsync(event);
 	}
 
