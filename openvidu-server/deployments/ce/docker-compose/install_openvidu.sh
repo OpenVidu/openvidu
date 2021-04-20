@@ -72,7 +72,7 @@ new_ov_installation() {
      printf '\n     $ ./openvidu start'
      printf '\n'
      printf '\n     For more information, check:'
-     printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/deployment/deploying-on-premises/"
+     printf '\n     https://docs.openvidu.io/en/%s/deployment/deploying-on-premises/' "${OPENVIDU_VERSION//v}"
      printf '\n'
      printf '\n'
      exit 0
@@ -158,7 +158,7 @@ upgrade_ov() {
      printf "\n          => Moving to 'tmp' folder..."
      printf '\n'
      cd "${TMP_FOLDER}" || fatal_error "Error when moving to 'tmp' folder"
-     docker-compose pull | true
+     docker-compose pull || true
 
      printf '\n     => Stopping Openvidu...'
      printf '\n'
@@ -167,7 +167,7 @@ upgrade_ov() {
      printf "\n          => Moving to 'openvidu' folder..."
      printf '\n'
      cd "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error when moving to 'openvidu' folder"
-     docker-compose down | true
+     docker-compose down || true
 
      printf '\n'
      printf '\n     => Moving to working dir...'
@@ -179,7 +179,7 @@ upgrade_ov() {
      mv "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     if [ ! -z "${USE_OV_CALL}" ]; then
+     if [ -n "${USE_OV_CALL}" ]; then
           mv "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.override.yml" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'docker-compose.override.yml'"
           printf '\n          - docker-compose.override.yml'
      fi
@@ -201,7 +201,7 @@ upgrade_ov() {
      mv "${TMP_FOLDER}/docker-compose.yml" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     if [ ! -z "${USE_OV_CALL}" ]; then
+     if [ -n "${USE_OV_CALL}" ]; then
           mv "${TMP_FOLDER}/docker-compose.override.yml" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'docker-compose.override.yml'"
           printf '\n          - docker-compose.override.yml'
      else
@@ -224,7 +224,7 @@ upgrade_ov() {
 
      # Define old mode: On Premise or Cloud Formation
      OLD_MODE=$(grep -E "Installation Mode:.*$" "${ROLL_BACK_FOLDER}/docker-compose.yml" | awk '{ print $4,$5 }')
-     [ ! -z "${OLD_MODE}" ] && sed -i -r "s/Installation Mode:.+/Installation Mode: ${OLD_MODE}/" "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml"
+     [ -n "${OLD_MODE}" ] && sed -i -r "s/Installation Mode:.+/Installation Mode: ${OLD_MODE}/" "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml"
 
      # Ready to use
      printf '\n'
@@ -249,8 +249,8 @@ upgrade_ov() {
      printf "\n     If you want to rollback, all the files from the previous installation have been copied to folder '.old-%s'" "${OPENVIDU_PREVIOUS_VERSION}"
      printf '\n'
      printf '\n     For more information, check:'
-     printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/deployment/deploying-on-premises/"
-     printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/deployment/upgrading/"
+     printf '\n     https://docs.openvidu.io/en/%s/deployment/deploying-on-premises/' "${OPENVIDU_VERSION//v}"
+     printf '\n     https://docs.openvidu.io/en/%s/deployment/upgrading/' "${OPENVIDU_VERSION//v}"
      printf '\n'
      printf '\n'
 }
@@ -273,7 +273,7 @@ else
 fi
 
 # Check type of installation
-if [[ ! -z "$1" && "$1" == "upgrade" ]]; then
+if [[ -n "$1" && "$1" == "upgrade" ]]; then
      upgrade_ov
 else
      new_ov_installation

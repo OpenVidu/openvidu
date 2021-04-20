@@ -124,7 +124,7 @@ new_ov_installation() {
      printf "\n     CAUTION: The folder 'openvidu/elasticsearch' use user and group 1000 permissions. "
      printf "\n     This folder is necessary for store elasticsearch data."
      printf "\n     For more information, check:"
-     printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#deployment-instructions"
+     printf '\n     https://docs.openvidu.io/en/%s/openvidu-pro/deployment/on-premises/#deployment-instructions' "${OPENVIDU_VERSION//v}"
      printf '\n'
      printf '\n'
      exit 0
@@ -132,13 +132,13 @@ new_ov_installation() {
 
 get_previous_env_variable() {
      local ENV_VARIABLE_NAME=$1
-     echo $(grep -E "${ENV_VARIABLE_NAME}=.*$" "${OPENVIDU_PREVIOUS_FOLDER}/.env" | cut -d'=' -f2)
+     echo "$(grep -E "${ENV_VARIABLE_NAME}=.*$" "${OPENVIDU_PREVIOUS_FOLDER}/.env" | cut -d'=' -f2)"
 }
 
 replace_variable_in_new_env_file() {
      local ENV_VARIABLE_NAME=$1
      local ENV_VARIABLE_VALUE=$2
-     [[ ! -z "${ENV_VARIABLE_VALUE}" ]] && sed -i "s|#${ENV_VARIABLE_NAME}=|${ENV_VARIABLE_NAME}=${ENV_VARIABLE_VALUE}|" "${OPENVIDU_PREVIOUS_FOLDER}/.env-${OPENVIDU_VERSION}"
+     [[ -n "${ENV_VARIABLE_VALUE}" ]] && sed -i "s|#${ENV_VARIABLE_NAME}=|${ENV_VARIABLE_NAME}=${ENV_VARIABLE_VALUE}|" "${OPENVIDU_PREVIOUS_FOLDER}/.env-${OPENVIDU_VERSION}"
 }
 
 upgrade_ov() {
@@ -242,7 +242,7 @@ upgrade_ov() {
      printf '\n'
      cd "${TMP_FOLDER}" || fatal_error "Error when moving to 'tmp' folder"
      printf '\n'
-     docker-compose pull | true
+     docker-compose pull || true
 
      printf '\n     => Stopping Openvidu...'
      printf '\n'
@@ -252,7 +252,7 @@ upgrade_ov() {
      printf '\n'
      cd "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error when moving to 'openvidu' folder"
      printf '\n'
-     docker-compose down | true
+     docker-compose down || true
 
      printf '\n'
      printf '\n     => Moving to working dir...'
@@ -264,7 +264,7 @@ upgrade_ov() {
      mv "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     if [ ! -z "${USE_OV_CALL}" ]; then
+     if [ -n "${USE_OV_CALL}" ]; then
           mv "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.override.yml" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'docker-compose.override.yml'"
           printf '\n          - docker-compose.override.yml'
      fi
@@ -292,7 +292,7 @@ upgrade_ov() {
      mv "${TMP_FOLDER}/docker-compose.yml" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     if [ ! -z "${USE_OV_CALL}" ]; then
+     if [ -n "${USE_OV_CALL}" ]; then
           mv "${TMP_FOLDER}/docker-compose.override.yml" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'docker-compose.override.yml'"
           printf '\n          - docker-compose.override.yml'
      else
@@ -345,16 +345,16 @@ upgrade_ov() {
 
      # Define old mode: On Premise or Cloud Formation
      OLD_MODE=$(grep -E "Installation Mode:.*$" "${ROLL_BACK_FOLDER}/docker-compose.yml" | awk '{ print $4,$5 }')
-     [ ! -z "${OLD_MODE}" ] && sed -i -r "s/Installation Mode:.+/Installation Mode: ${OLD_MODE}/" "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml"
+     [ -n "${OLD_MODE}" ] && sed -i -r "s/Installation Mode:.+/Installation Mode: ${OLD_MODE}/" "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml"
 
      # Update .env variables to new .env-version
      AWS_REGION=$(get_previous_env_variable AWS_DEFAULT_REGION)
-     if [[ ! -z ${AWS_REGION} ]]; then
+     if [[ -n ${AWS_REGION} ]]; then
 
           # Get new AMI ID
           NEW_AMI_ID=$(curl https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/CF-OpenVidu-Pro-${OPENVIDU_VERSION//v}.yaml --silent |
                          sed -n -e '/KMSAMIMAP:/,/Metadata:/ p' |
-                         grep -A 1 ${AWS_REGION} | grep AMI | tr -d " " | cut -d":" -f2)
+                         grep -A 1 "${AWS_REGION}" | grep AMI | tr -d " " | cut -d":" -f2)
           [[ -z ${NEW_AMI_ID} ]] && fatal_error "Error while getting new AWS_IMAGE_ID for Media Nodes"
 
           # Get previous values
@@ -430,7 +430,7 @@ else
 fi
 
 # Check type of installation
-if [[ ! -z "$1" && "$1" == "upgrade" ]]; then
+if [[ -n "$1" && "$1" == "upgrade" ]]; then
      upgrade_ov
 else
      new_ov_installation

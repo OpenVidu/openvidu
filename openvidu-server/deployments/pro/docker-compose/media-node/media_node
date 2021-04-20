@@ -11,10 +11,10 @@ IMAGES=(
 docker_command_by_container_image() {
   IMAGE_NAME=$1
   COMMAND=$2
-  if  [[ ! -z "${IMAGE_NAME}" ]]; then
-    CONTAINERS=$(docker ps -a | grep "${IMAGE_NAME}" | awk '{print $1}')
-    for CONTAINER_ID in ${CONTAINERS[@]}; do
-      if [[ ! -z "${CONTAINER_ID}" ]] && [[ ! -z "${COMMAND}" ]]; then
+  if  [[ -n "${IMAGE_NAME}" ]]; then
+    CONTAINERS="$(docker ps -a | grep "${IMAGE_NAME}" | awk '{print $1}')"
+    for CONTAINER_ID in $CONTAINERS; do
+      if [[ -n "${CONTAINER_ID}" ]] && [[ -n "${COMMAND}" ]]; then
         bash -c "docker ${COMMAND} ${CONTAINER_ID}"
       fi
     done
@@ -24,7 +24,7 @@ docker_command_by_container_image() {
 
 stop_containers() {
   printf "Stopping containers..."
-  for IMAGE in ${IMAGES[@]}; do
+  for IMAGE in "${IMAGES[@]}"; do
     docker_command_by_container_image "${IMAGE}" "rm -f"
   done
 }
@@ -167,10 +167,10 @@ generate_report() {
     do
       printf '\n'
       printf "\n  ---------------------------------------"
-      printf "\n  %s" $CONTAINER
+      printf "\n  %s" "$CONTAINER"
       printf "\n  ---------------------------------------"
       printf '\n'
-      docker logs $CONTAINER
+      docker logs "$CONTAINER"
       printf "\n  ---------------------------------------"
       printf '\n'
       printf '\n'
@@ -194,10 +194,10 @@ generate_report() {
     do
       printf '\n'
       printf "\n  ======================================="
-      printf "\n  %s" $CONTAINER
+      printf "\n  %s" "$CONTAINER"
       printf "\n  ---------------------------------------"
       printf '\n'
-      docker exec $CONTAINER env
+      docker exec "$CONTAINER" env
       printf "\n  ---------------------------------------"
       printf '\n'
       printf '\n'
@@ -257,7 +257,7 @@ case $1 in
     ;;
 
   kms-logs)
-    kurento_logs $2
+    kurento_logs "$2"
     ;;
 
   upgrade)

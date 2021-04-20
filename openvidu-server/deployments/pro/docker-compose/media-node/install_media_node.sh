@@ -22,10 +22,10 @@ fatal_error() {
 docker_command_by_container_image() {
   IMAGE_NAME=$1
   COMMAND=$2
-  if  [[ ! -z "${IMAGE_NAME}" ]]; then
-    CONTAINERS=$(docker ps -a | grep "${IMAGE_NAME}" | awk '{print $1}')
-    for CONTAINER_ID in ${CONTAINERS[@]}; do
-      if [[ ! -z "${CONTAINER_ID}" ]] && [[ ! -z "${COMMAND}" ]]; then
+  if  [[ -n "${IMAGE_NAME}" ]]; then
+    CONTAINERS="$(docker ps -a | grep "${IMAGE_NAME}" | awk '{print $1}')"
+    for CONTAINER_ID in $CONTAINERS; do
+      if [[ -n "${CONTAINER_ID}" ]] && [[ -n "${COMMAND}" ]]; then
         bash -c "docker ${COMMAND} ${CONTAINER_ID}"
       fi
     done
@@ -35,7 +35,7 @@ docker_command_by_container_image() {
 
 stop_containers() {
   printf "Stopping containers..."
-  for IMAGE in ${IMAGES[@]}; do
+  for IMAGE in "${IMAGES[@]}"; do
     docker_command_by_container_image "${IMAGE}" "rm -f"
   done
 }
@@ -89,15 +89,15 @@ new_media_node_installation() {
      # Pull images
      printf "\n     => Pulling images...\n"
      cd "${MEDIA_NODE_FOLDER}" || fatal_error "Error when moving to '${MEDIA_NODE_FOLDER}' folder"
-     KMS_IMAGE=$(cat docker-compose.yml | grep KMS_IMAGE | cut -d"=" -f2)
-     METRICBEAT_IMAGE=$(cat docker-compose.yml | grep METRICBEAT_IMAGE | cut -d"=" -f2)
-     FILEBEAT_IMAGE=$(cat docker-compose.yml | grep FILEBEAT_IMAGE | cut -d"=" -f2)
-     OPENVIDU_RECORDING_IMAGE=$(cat docker-compose.yml | grep OPENVIDU_RECORDING_IMAGE | cut -d"=" -f2)
-     docker pull $KMS_IMAGE || fatal "Error while pulling docker image: $KMS_IMAGE"
-     docker pull $METRICBEAT_IMAGE || fatal "Error while pulling docker image: $METRICBEAT_IMAGE"
-     docker pull $FILEBEAT_IMAGE || fatal "Error while pulling docker image: $FILEBEAT_IMAGE"
-     docker pull $OPENVIDU_RECORDING_IMAGE || fatal "Error while pulling docker image: $OPENVIDU_RECORDING_IMAGE"
-     docker-compose pull | true
+     KMS_IMAGE=$(grep KMS_IMAGE docker-compose.yml | cut -d"=" -f2)
+     METRICBEAT_IMAGE=$(grep METRICBEAT_IMAGE docker-compose.yml | cut -d"=" -f2)
+     FILEBEAT_IMAGE=$(grep FILEBEAT_IMAGE docker-compose.yml | cut -d"=" -f2)
+     OPENVIDU_RECORDING_IMAGE=$(grep OPENVIDU_RECORDING_IMAGE docker-compose.yml | cut -d"=" -f2)
+     docker pull "$KMS_IMAGE" || fatal "Error while pulling docker image: $KMS_IMAGE"
+     docker pull "$METRICBEAT_IMAGE" || fatal "Error while pulling docker image: $METRICBEAT_IMAGE"
+     docker pull "$FILEBEAT_IMAGE" || fatal "Error while pulling docker image: $FILEBEAT_IMAGE"
+     docker pull "$OPENVIDU_RECORDING_IMAGE" || fatal "Error while pulling docker image: $OPENVIDU_RECORDING_IMAGE"
+     docker-compose pull || true
 
      # Ready to use
      printf "\n"
@@ -122,7 +122,7 @@ new_media_node_installation() {
      printf '\n     4. Start or restart OpenVidu Pro and all containers will be provisioned'
      printf '\n     automatically to all the media nodes configured in "KMS_URIS"'
      printf '\n     More info about Media Nodes deployment here:'
-     printf "\n     --> https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#set-the-number-of-media-nodes-on-startup"
+     printf '\n     --> https://docs.openvidu.io/en/%s/openvidu-pro/deployment/on-premises/#set-the-number-of-media-nodes-on-startup' "${OPENVIDU_VERSION//v}"
      printf '\n'
      printf '\n'
      printf "\n     If you want to rollback, all the files from the previous installation have been copied to folder '.old-%s'" "${OPENVIDU_PREVIOUS_VERSION}"
@@ -222,15 +222,15 @@ upgrade_media_node() {
 
      # Pull images
      printf "\n     => Pulling images...\n"
-     KMS_IMAGE=$(cat docker-compose.yml | grep KMS_IMAGE | cut -d"=" -f2)
-     METRICBEAT_IMAGE=$(cat docker-compose.yml | grep METRICBEAT_IMAGE | cut -d"=" -f2)
-     FILEBEAT_IMAGE=$(cat docker-compose.yml | grep FILEBEAT_IMAGE | cut -d"=" -f2)
-     OPENVIDU_RECORDING_IMAGE=$(cat docker-compose.yml | grep OPENVIDU_RECORDING_IMAGE | cut -d"=" -f2)
-     docker pull $KMS_IMAGE || fatal "Error while pulling docker image: $KMS_IMAGE"
-     docker pull $METRICBEAT_IMAGE || fatal "Error while pulling docker image: $METRICBEAT_IMAGE"
-     docker pull $FILEBEAT_IMAGE || fatal "Error while pulling docker image: $FILEBEAT_IMAGE"
-     docker pull $OPENVIDU_RECORDING_IMAGE || fatal "Error while pulling docker image: $OPENVIDU_RECORDING_IMAGE"
-     docker-compose pull | true
+     KMS_IMAGE="$(grep KMS_IMAGE docker-compose.yml | cut -d"=" -f2)"
+     METRICBEAT_IMAGE="$(grep METRICBEAT_IMAGE docker-compose.yml | cut -d"=" -f2)"
+     FILEBEAT_IMAGE="$(grep FILEBEAT_IMAGE docker-compose.yml | cut -d"=" -f2)"
+     OPENVIDU_RECORDING_IMAGE="$(grep OPENVIDU_RECORDING_IMAGE docker-compose.yml | cut -d"=" -f2)"
+     docker pull "$KMS_IMAGE" || fatal "Error while pulling docker image: $KMS_IMAGE"
+     docker pull "$METRICBEAT_IMAGE" || fatal "Error while pulling docker image: $METRICBEAT_IMAGE"
+     docker pull "$FILEBEAT_IMAGE" || fatal "Error while pulling docker image: $FILEBEAT_IMAGE"
+     docker pull "$OPENVIDU_RECORDING_IMAGE" || fatal "Error while pulling docker image: $OPENVIDU_RECORDING_IMAGE"
+     docker-compose pull || true
 
      printf '\n     => Stopping Media Node...'
      printf '\n'
@@ -239,7 +239,7 @@ upgrade_media_node() {
      printf "\n          => Moving to 'openvidu' folder..."
      printf '\n'
      cd "${MEDIA_NODE_PREVIOUS_FOLDER}" || fatal_error "Error when moving to 'openvidu' folder"
-     docker-compose down | true
+     docker-compose down || true
 
      printf '\n'
      printf '\n     => Moving to working dir...'
@@ -290,7 +290,7 @@ upgrade_media_node() {
 
      # Define old mode: On Premise or Cloud Formation
      OLD_MODE=$(grep -E "Installation Mode:.*$" "${ROLL_BACK_FOLDER}/docker-compose.yml" | awk '{ print $4,$5 }')
-     [ ! -z "${OLD_MODE}" ] && sed -i -r "s/Installation Mode:.+/Installation Mode: ${OLD_MODE}/" "${MEDIA_NODE_PREVIOUS_FOLDER}/docker-compose.yml"
+     [ -n "${OLD_MODE}" ] && sed -i -r "s/Installation Mode:.+/Installation Mode: ${OLD_MODE}/" "${MEDIA_NODE_PREVIOUS_FOLDER}/docker-compose.yml"
 
      # Ready to use
      printf '\n'
@@ -317,7 +317,7 @@ upgrade_media_node() {
      printf '\n     5. Start or restart OpenVidu Pro and all containers will be provisioned'
      printf '\n     automatically to all the media nodes configured in "KMS_URIS"'
      printf '\n     More info about Media Nodes deployment here:'
-     printf "\n     --> https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/openvidu-pro/deployment/on-premises/#set-the-number-of-media-nodes-on-startup"
+     printf '\n     --> https://docs.openvidu.io/en/%s/openvidu-pro/deployment/on-premises/#set-the-number-of-media-nodes-on-startup' "${OPENVIDU_VERSION//v}"
      printf '\n'
      printf '\n'
      printf "\n     If you want to rollback, all the files from the previous installation have been copied to folder '.old-%s'" "${OPENVIDU_PREVIOUS_VERSION}"
@@ -342,7 +342,7 @@ else
 fi
 
 # Check type of installation
-if [[ ! -z "$1" && "$1" == "upgrade" ]]; then
+if [[ -n "$1" && "$1" == "upgrade" ]]; then
      upgrade_media_node
 else
      new_media_node_installation

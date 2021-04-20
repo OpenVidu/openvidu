@@ -28,7 +28,7 @@ collect_basic_information() {
   OV_VERSION=$(grep 'Openvidu Version:' "${OV_FOLDER}/docker-compose.yml" | awk '{ print $4 }')
   CONTAINERS=$(docker ps | awk '{if(NR>1) print $NF}')
 
-  if [ ! -z "$(grep -E '^        image: openvidu/openvidu-call:.*$' "${OV_FOLDER}/docker-compose.override.yml" | tr -d '[:space:]')" ]; then
+  if [ -n "$(grep -E '^        image: openvidu/openvidu-call:.*$' "${OV_FOLDER}/docker-compose.override.yml" | tr -d '[:space:]')" ]; then
     OV_CALL_VERSION=$(grep -E 'Openvidu-Call Version:' "${OV_FOLDER}/docker-compose.override.yml" | awk '{ print $4 }')
   fi
   [ -z "${OV_CALL_VERSION}" ] && OV_CALL_VERSION="No present"
@@ -150,10 +150,10 @@ generate_report() {
     do
       printf '\n'
       printf "\n  ---------------------------------------"
-      printf "\n  %s" $CONTAINER
+      printf "\n  %s" "$CONTAINER"
       printf "\n  ---------------------------------------"
       printf '\n'
-      docker logs $CONTAINER
+      docker logs "$CONTAINER"
       printf "\n  ---------------------------------------"
       printf '\n'
       printf '\n'
@@ -167,10 +167,10 @@ generate_report() {
     do
       printf '\n'
       printf "\n  ======================================="
-      printf "\n  %s" $CONTAINER
+      printf "\n  %s" "$CONTAINER"
       printf "\n  ---------------------------------------"
       printf '\n'
-      docker exec $CONTAINER env
+      docker exec "$CONTAINER" env
       printf "\n  ---------------------------------------"
       printf '\n'
       printf '\n'
