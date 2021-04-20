@@ -20,7 +20,7 @@ package io.openvidu.server.core;
 public enum EndReason {
 
 	unsubscribe, unpublish, disconnect, forceUnpublishByUser, forceUnpublishByServer, forceDisconnectByUser,
-	forceDisconnectByServer, lastParticipantLeft, networkDisconnect, mediaServerDisconnect, nodeCrashed,
-	openviduServerStopped, recordingStoppedByServer, automaticStop, sessionClosedByServer
+	forceDisconnectByServer, lastParticipantLeft, recordingStoppedByServer, sessionClosedByServer, networkDisconnect,
+	mediaServerDisconnect, mediaServerReconnect, nodeCrashed, openviduServerStopped, automaticStop
 
 }

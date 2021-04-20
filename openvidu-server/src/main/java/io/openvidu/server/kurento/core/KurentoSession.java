@@ -288,7 +288,7 @@ public class KurentoSession extends Session {
 
 		// Stop recording if session is being recorded
 		if (recordingManager.sessionIsBeingRecorded(this.sessionId)) {
-			this.recordingManager.forceStopRecording(this, EndReason.mediaServerDisconnect, kmsDisconnectionTime);
+			this.recordingManager.forceStopRecording(this, EndReason.mediaServerReconnect, kmsDisconnectionTime);
 		}
 
 		// Store MediaOptions for resetting PublisherEndpoints later
@@ -303,10 +303,10 @@ public class KurentoSession extends Session {
 						kParticipant.getPublisher().getMediaOptions());
 			}
 			kParticipant.releaseAllFilters();
-			kParticipant.close(EndReason.mediaServerDisconnect, false, kmsDisconnectionTime);
+			kParticipant.close(EndReason.mediaServerReconnect, false, kmsDisconnectionTime);
 			if (wasStreaming) {
 				kurentoSessionHandler.onUnpublishMedia(kParticipant, this.getParticipants(), null, null, null,
-						EndReason.mediaServerDisconnect);
+						EndReason.mediaServerReconnect);
 			}
 		});
 
