@@ -215,7 +215,13 @@ public abstract class KmsManager {
 						kms.getKurentoClientReconnectTimer().cancelTimer();
 
 						final long timeOfKurentoDisconnection = kms.getTimeOfKurentoClientDisconnection();
-						sessionEventsHandler.onMediaNodeCrashed(kms, timeOfKurentoDisconnection);
+						final List<String> affectedSessionIds = kms.getKurentoSessions().stream()
+								.map(session -> session.getSessionId()).collect(Collectors.toUnmodifiableList());
+						final List<String> affectedRecordingIds = kms.getActiveRecordings().stream()
+								.map(entry -> entry.getKey()).collect(Collectors.toUnmodifiableList());
+
+						sessionEventsHandler.onMediaNodeCrashed(kms, timeOfKurentoDisconnection, affectedSessionIds,
+								affectedRecordingIds);
 
 						// Close all sessions and recordings with reason "nodeCrashed"
 						log.warn("Closing {} sessions hosted by KMS with uri {}: {}", kms.getKurentoSessions().size(),

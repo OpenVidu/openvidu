@@ -19,6 +19,7 @@ package io.openvidu.server.cdr;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -193,6 +194,13 @@ public class CallDetailRecord {
 		this.log(new CDREventSignal(sessionId, uniqueSessionId, from, to, type, data));
 	}
 
+	public void recordNodeCrashed(Kms kms, String environmentId, long timeOfKurentoDisconnection,
+			List<String> sessionIds, List<String> recordingIds) {
+		CDREvent e = new CDREventNodeCrashed(CDREventName.nodeCrashed, timeOfKurentoDisconnection, kms, environmentId,
+				sessionIds, recordingIds);
+		this.log(e);
+	}
+
 	protected void log(CDREvent event) {
 		this.loggers.forEach(logger -> {
 
@@ -222,11 +230,6 @@ public class CallDetailRecord {
 		this.loggers.forEach(logger -> {
 			logger.log(sessionSummary);
 		});
-	}
-
-	public void recordNodeCrashed(Kms kms, String environmentId, long timeOfKurentoDisconnection) {
-		CDREvent e = new CDREventNodeCrashed(CDREventName.nodeCrashed, timeOfKurentoDisconnection, kms, environmentId);
-		this.log(e);
 	}
 
 }

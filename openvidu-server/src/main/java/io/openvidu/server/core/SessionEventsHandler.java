@@ -18,6 +18,7 @@
 package io.openvidu.server.core;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -635,7 +636,8 @@ public class SessionEventsHandler {
 	 * This handler must be called before cleaning any sessions or recordings hosted
 	 * by the crashed Media Node
 	 */
-	public void onMediaNodeCrashed(Kms kms, long timeOfKurentoDisconnection) {
+	public void onMediaNodeCrashed(Kms kms, long timeOfKurentoDisconnection, List<String> sessionIds,
+			List<String> recordingIds) {
 	}
 
 	public void onMasterNodeCrashed() {

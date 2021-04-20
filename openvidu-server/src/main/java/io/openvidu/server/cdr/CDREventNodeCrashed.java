@@ -1,6 +1,5 @@
 package io.openvidu.server.cdr;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.JsonArray;
@@ -11,15 +10,16 @@ import io.openvidu.server.kurento.kms.Kms;
 public class CDREventNodeCrashed extends CDREvent {
 
 	private Kms kms;
-	private List<String> sessionIds = new ArrayList<>();
-	private List<String> recordingIds = new ArrayList<>();
+	private List<String> sessionIds;
+	private List<String> recordingIds;
 	private String environmentId;
 
-	public CDREventNodeCrashed(CDREventName eventName, Long timeStamp, Kms kms, String environmentId) {
+	public CDREventNodeCrashed(CDREventName eventName, Long timeStamp, Kms kms, String environmentId,
+			List<String> sessionIds, List<String> recordingIds) {
 		super(eventName, null, null, timeStamp);
 		this.kms = kms;
-		kms.getKurentoSessions().forEach(session -> sessionIds.add(session.getSessionId()));
-		kms.getActiveRecordings().forEach(entry -> recordingIds.add(entry.getKey()));
+		this.sessionIds = sessionIds;
+		this.recordingIds = recordingIds;
 		this.environmentId = environmentId;
 	}
 
