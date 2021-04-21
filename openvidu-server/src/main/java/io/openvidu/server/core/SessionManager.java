@@ -620,6 +620,8 @@ public abstract class SessionManager {
 				log.error("Error recording 'sessionDestroyed' event for session {}: {} - {}", session.getSessionId(),
 						e.getClass().getName(), e.getMessage());
 			}
+		} else {
+			this.cleanCollections(session.getSessionId());
 		}
 
 		if (mediaNodeId != null) {
