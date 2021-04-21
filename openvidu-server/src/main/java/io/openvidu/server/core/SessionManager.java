@@ -609,6 +609,11 @@ public abstract class SessionManager {
 		final String mediaNodeId = session.getMediaNodeId();
 
 		if (session.close(reason)) {
+
+			this.cleanCollections(session.getSessionId());
+
+			log.info("Session '{}' removed and closed", session.getSessionId());
+
 			try {
 				sessionEventsHandler.onSessionClosed(session.getSessionId(), reason);
 			} catch (Exception e) {
@@ -616,10 +621,6 @@ public abstract class SessionManager {
 						e.getClass().getName(), e.getMessage());
 			}
 		}
-
-		this.cleanCollections(session.getSessionId());
-
-		log.info("Session '{}' removed and closed", session.getSessionId());
 
 		if (mediaNodeId != null) {
 			this.quarantineKiller.dropMediaNode(mediaNodeId);
