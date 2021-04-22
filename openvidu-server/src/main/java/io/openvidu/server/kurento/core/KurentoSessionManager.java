@@ -192,7 +192,8 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public boolean leaveRoom(Participant participant, Integer transactionId, EndReason reason, boolean closeWebSocket) {
+	public boolean leaveRoom(Participant participant, Integer transactionId, EndReason reason,
+			boolean scheduleWebsocketClose) {
 		log.info("Request [LEAVE_ROOM] for participant {} of session {} with reason {}",
 				participant.getParticipantPublicId(), participant.getSessionId(),
 				reason != null ? reason.name() : "NULL");
@@ -252,7 +253,7 @@ public class KurentoSessionManager extends SessionManager {
 						remainingParticipants = Collections.emptySet();
 					}
 					sessionEventsHandler.onParticipantLeft(participant, sessionId, remainingParticipants, transactionId,
-							null, reason);
+							null, reason, scheduleWebsocketClose);
 
 					if (!EndReason.sessionClosedByServer.equals(reason)) {
 						// If session is closed by a call to "DELETE /api/sessions" do NOT stop the
@@ -314,11 +315,6 @@ public class KurentoSessionManager extends SessionManager {
 							// container
 							recordingManager.stopComposedQuickStartContainer(session, reason);
 						}
-					}
-
-					// Finally close websocket session if required
-					if (closeWebSocket) {
-						sessionEventsHandler.closeRpcSession(participant.getParticipantPrivateId());
 					}
 
 					return sessionClosedByLastParticipant;
@@ -789,20 +785,20 @@ public class KurentoSessionManager extends SessionManager {
 		boolean sessionClosedByLastParticipant = false;
 
 		if (evictedParticipant != null) {
+
 			KurentoParticipant kParticipant = (KurentoParticipant) evictedParticipant;
 			Set<Participant> participants = kParticipant.getSession().getParticipants();
 			sessionClosedByLastParticipant = this.leaveRoom(kParticipant, null, reason, false);
-			this.sessionEventsHandler.onForceDisconnect(moderator, evictedParticipant, participants, transactionId,
-					null, reason);
-			sessionEventsHandler.closeRpcSession(evictedParticipant.getParticipantPrivateId());
-		} else {
-			if (moderator != null && transactionId != null) {
-				this.sessionEventsHandler.onForceDisconnect(moderator, evictedParticipant,
-						new HashSet<>(Arrays.asList(moderator)), transactionId,
-						new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE,
-								"Connection not found when calling 'forceDisconnect'"),
-						null);
-			}
+			sessionEventsHandler.onForceDisconnect(moderator, evictedParticipant, participants, transactionId, null,
+					reason);
+
+		} else if (moderator != null && transactionId != null) {
+
+			this.sessionEventsHandler.onForceDisconnect(moderator, evictedParticipant,
+					new HashSet<>(Arrays.asList(moderator)), transactionId,
+					new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE,
+							"Connection not found when calling 'forceDisconnect'"),
+					null);
 		}
 
 		return sessionClosedByLastParticipant;

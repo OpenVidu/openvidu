@@ -179,7 +179,7 @@ public class SessionEventsHandler {
 	}
 
 	public void onParticipantLeft(Participant participant, String sessionId, Set<Participant> remainingParticipants,
-			Integer transactionId, OpenViduException error, EndReason reason) {
+			Integer transactionId, OpenViduException error, EndReason reason, boolean scheduleWebsocketClose) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
@@ -203,6 +203,13 @@ public class SessionEventsHandler {
 			// No response when the participant is forcibly evicted instead of voluntarily
 			// leaving the session
 			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
+		}
+
+		if (scheduleWebsocketClose) {
+			// Schedule the close up of this WebSocket connection. This is only as an extra
+			// guarantee: the client-side should always close it after receiving the
+			// response to "leaveRoom" method
+			this.rpcNotificationService.scheduleCloseRpcSession(participant.getParticipantPrivateId(), 10000);
 		}
 
 		if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
@@ -483,6 +490,11 @@ public class SessionEventsHandler {
 						ProtocolElements.PARTICIPANTEVICTED_METHOD, params);
 			}
 		}
+
+		// Schedule the close up of this WebSocket connection. This is only as an extra
+		// guarantee: the client-side should always close it after receiving the
+		// participantEvicted notification
+		this.rpcNotificationService.scheduleCloseRpcSession(evictedParticipant.getParticipantPrivateId(), 10000);
 	}
 
 	public void sendRecordingStartedNotification(Session session, Recording recording) {
@@ -624,14 +636,6 @@ public class SessionEventsHandler {
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 	}
 
-	public void closeRpcSession(String participantPrivateId) {
-		this.rpcNotificationService.closeRpcSession(participantPrivateId);
-	}
-
-	public void storeRecordingToSendClientEvent(Recording recording) {
-		recordingsToSendClientEvents.put(recording.getSessionId(), recording);
-	}
-
 	/**
 	 * This handler must be called before cleaning any sessions or recordings hosted
 	 * by the crashed Media Node
@@ -641,6 +645,10 @@ public class SessionEventsHandler {
 	}
 
 	public void onMasterNodeCrashed() {
+	}
+
+	public void storeRecordingToSendClientEvent(Recording recording) {
+		recordingsToSendClientEvents.put(recording.getSessionId(), recording);
 	}
 
 	protected Set<Participant> filterParticipantsByRole(OpenViduRole[] roles, Set<Participant> participants) {

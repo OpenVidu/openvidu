@@ -767,7 +767,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 
 		if (!message.isEmpty()) {
-			RpcConnection rpc = this.notificationService.closeRpcSession(rpcSessionId);
+			RpcConnection rpc = this.notificationService.immediatelyCloseRpcSession(rpcSessionId);
 			if (rpc != null && rpc.getSessionId() != null) {
 				io.openvidu.server.core.Session session = this.sessionManager.getSession(rpc.getSessionId());
 				if (session != null && session.getParticipantByPrivateId(rpc.getParticipantPrivateId()) != null) {

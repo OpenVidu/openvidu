@@ -106,7 +106,7 @@ public abstract class SessionManager {
 	public abstract void joinRoom(Participant participant, String sessionId, Integer transactionId);
 
 	public abstract boolean leaveRoom(Participant participant, Integer transactionId, EndReason reason,
-			boolean closeWebSocket);
+			boolean scheduleWebocketClose);
 
 	public abstract void publishVideo(Participant participant, MediaOptions mediaOptions, Integer transactionId);
 

@@ -20,6 +20,9 @@ package io.openvidu.server.rpc;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.kurento.jsonrpc.Session;
 import org.kurento.jsonrpc.Transaction;
@@ -37,6 +40,9 @@ public class RpcNotificationService {
 	private static final Logger log = LoggerFactory.getLogger(RpcNotificationService.class);
 
 	private ConcurrentMap<String, RpcConnection> rpcConnections = new ConcurrentHashMap<>();
+
+	private ScheduledExecutorService closeWsScheduler = Executors
+			.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 
 	public RpcConnection newRpcConnection(Transaction t, Request<JsonObject> request) {
 		String participantPrivateId = t.getSession().getSessionId();
@@ -109,24 +115,30 @@ public class RpcNotificationService {
 		}
 	}
 
-	public RpcConnection closeRpcSession(String participantPrivateId) {
+	public RpcConnection immediatelyCloseRpcSession(String participantPrivateId) {
 		RpcConnection rpcSession = rpcConnections.remove(participantPrivateId);
 		if (rpcSession == null || rpcSession.getSession() == null) {
 			if (!isIpcamParticipant(participantPrivateId)) {
-				log.error("No session found for private id {}, unable to cleanup", participantPrivateId);
+				log.error("No rpc session found for private id {}, unable to cleanup", participantPrivateId);
 			}
 			return null;
 		}
 		Session s = rpcSession.getSession();
 		try {
 			s.close();
-			log.info("Closed session for participant with private id {}", participantPrivateId);
+			log.info("Closed rpc session for participant with private id {}", participantPrivateId);
 			this.showRpcConnections();
 			return rpcSession;
 		} catch (IOException e) {
-			log.error("Error closing session for participant with private id {}", participantPrivateId, e);
+			log.error("Error closing rpc session for participant with private id {}: {}", participantPrivateId,
+					e.getMessage());
 		}
 		return null;
+	}
+
+	public void scheduleCloseRpcSession(String participantPrivateId, int timeoutMs) {
+		closeWsScheduler.schedule(() -> immediatelyCloseRpcSession(participantPrivateId), timeoutMs,
+				TimeUnit.MILLISECONDS);
 	}
 
 	private Transaction getAndRemoveTransaction(String participantPrivateId, Integer transactionId) {
