@@ -51,6 +51,7 @@ import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.utils.MediaNodeStatusManager;
 import io.openvidu.server.utils.QuarantineKiller;
+import io.openvidu.server.utils.RemoteOperationUtils;
 import io.openvidu.server.utils.UpdatableTimerTask;
 
 public abstract class KmsManager {
@@ -227,7 +228,14 @@ public abstract class KmsManager {
 						log.warn("Closing {} sessions hosted by KMS with uri {}: {}", kms.getKurentoSessions().size(),
 								kms.getUri(), kms.getKurentoSessions().stream().map(s -> s.getSessionId())
 										.collect(Collectors.joining(",", "[", "]")));
-						sessionManager.closeAllSessionsAndRecordingsOfKms(kms, EndReason.nodeCrashed);
+
+						try {
+							// Flag the thread to skip remote operations to KMS
+							RemoteOperationUtils.setToSkipRemoteOperations();
+							sessionManager.closeAllSessionsAndRecordingsOfKms(kms, EndReason.nodeCrashed);
+						} finally {
+							RemoteOperationUtils.revertToRunRemoteOperations();
+						}
 
 						// Remove Media Node
 						log.warn("Removing Media Node {} after crash", kms.getId());
@@ -269,7 +277,7 @@ public abstract class KmsManager {
 										kms.getUri(), kms.getKurentoSessions().size(), kms.getKurentoSessions().stream()
 												.map(s -> s.getSessionId()).collect(Collectors.joining(",", "[", "]")));
 								kms.getKurentoSessions().forEach(kSession -> {
-									kSession.restartStatusInKurento(timeOfKurentoDisconnection);
+									kSession.restartStatusInKurentoAfterReconnection(timeOfKurentoDisconnection);
 								});
 							} else {
 								log.info("KMS with URI {} is the same process. Nothing must be done", kms.getUri());

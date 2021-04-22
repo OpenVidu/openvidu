@@ -63,6 +63,7 @@ import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.kurento.core.KurentoMediaOptions;
 import io.openvidu.server.kurento.core.KurentoParticipant;
+import io.openvidu.server.utils.RemoteOperationUtils;
 
 /**
  * {@link Endpoint} wrapper. Can be based on WebRtcEndpoint (that supports
@@ -471,7 +472,9 @@ public abstract class MediaEndpoint {
 		if (element == null || subscription == null) {
 			return;
 		}
-		element.removeErrorListener(subscription);
+		if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
+			element.removeErrorListener(subscription);
+		}
 	}
 
 	/**

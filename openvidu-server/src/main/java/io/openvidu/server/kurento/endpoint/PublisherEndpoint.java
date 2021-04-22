@@ -52,6 +52,7 @@ import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.kurento.core.KurentoMediaOptions;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.utils.JsonUtils;
+import io.openvidu.server.utils.RemoteOperationUtils;
 
 /**
  * Publisher aspect of the {@link MediaEndpoint}.
@@ -333,17 +334,19 @@ public class PublisherEndpoint extends MediaEndpoint {
 		}
 		elementIds.remove(elementId);
 		if (releaseElement) {
-			element.release(new Continuation<Void>() {
-				@Override
-				public void onSuccess(Void result) throws Exception {
-					log.trace("EP {}: Released media element {}", getEndpointName(), elementId);
-				}
+			if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
+				element.release(new Continuation<Void>() {
+					@Override
+					public void onSuccess(Void result) throws Exception {
+						log.trace("EP {}: Released media element {}", getEndpointName(), elementId);
+					}
 
-				@Override
-				public void onError(Throwable cause) throws Exception {
-					log.error("EP {}: Failed to release media element {}", getEndpointName(), elementId, cause);
-				}
-			});
+					@Override
+					public void onError(Throwable cause) throws Exception {
+						log.error("EP {}: Failed to release media element {}", getEndpointName(), elementId, cause);
+					}
+				});
+			}
 		}
 		this.filter = null;
 	}
@@ -504,22 +507,24 @@ public class PublisherEndpoint extends MediaEndpoint {
 	}
 
 	private void internalSinkDisconnect(final MediaElement source, final MediaElement sink, boolean blocking) {
-		if (blocking) {
-			source.disconnect(sink);
-		} else {
-			source.disconnect(sink, new Continuation<Void>() {
-				@Override
-				public void onSuccess(Void result) throws Exception {
-					log.debug("EP {}: Elements have been disconnected (source {} -> sink {})", getEndpointName(),
-							source.getId(), sink.getId());
-				}
+		if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
+			if (blocking) {
+				source.disconnect(sink);
+			} else {
+				source.disconnect(sink, new Continuation<Void>() {
+					@Override
+					public void onSuccess(Void result) throws Exception {
+						log.debug("EP {}: Elements have been disconnected (source {} -> sink {})", getEndpointName(),
+								source.getId(), sink.getId());
+					}
 
-				@Override
-				public void onError(Throwable cause) throws Exception {
-					log.warn("EP {}: Failed to disconnect media elements (source {} -> sink {})", getEndpointName(),
-							source.getId(), sink.getId(), cause);
-				}
-			});
+					@Override
+					public void onError(Throwable cause) throws Exception {
+						log.warn("EP {}: Failed to disconnect media elements (source {} -> sink {})", getEndpointName(),
+								source.getId(), sink.getId(), cause);
+					}
+				});
+			}
 		}
 	}
 
@@ -536,25 +541,27 @@ public class PublisherEndpoint extends MediaEndpoint {
 	 */
 	private void internalSinkDisconnect(final MediaElement source, final MediaElement sink, final MediaType type,
 			boolean blocking) {
-		if (type == null) {
-			internalSinkDisconnect(source, sink, blocking);
-		} else {
-			if (blocking) {
-				source.disconnect(sink, type);
+		if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
+			if (type == null) {
+				internalSinkDisconnect(source, sink, blocking);
 			} else {
-				source.disconnect(sink, type, new Continuation<Void>() {
-					@Override
-					public void onSuccess(Void result) throws Exception {
-						log.debug("EP {}: {} media elements have been disconnected (source {} -> sink {})",
-								getEndpointName(), type, source.getId(), sink.getId());
-					}
+				if (blocking) {
+					source.disconnect(sink, type);
+				} else {
+					source.disconnect(sink, type, new Continuation<Void>() {
+						@Override
+						public void onSuccess(Void result) throws Exception {
+							log.debug("EP {}: {} media elements have been disconnected (source {} -> sink {})",
+									getEndpointName(), type, source.getId(), sink.getId());
+						}
 
-					@Override
-					public void onError(Throwable cause) throws Exception {
-						log.warn("EP {}: Failed to disconnect {} media elements (source {} -> sink {})",
-								getEndpointName(), type, source.getId(), sink.getId(), cause);
-					}
-				});
+						@Override
+						public void onError(Throwable cause) throws Exception {
+							log.warn("EP {}: Failed to disconnect {} media elements (source {} -> sink {})",
+									getEndpointName(), type, source.getId(), sink.getId(), cause);
+						}
+					});
+				}
 			}
 		}
 	}

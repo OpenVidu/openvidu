@@ -68,6 +68,7 @@ import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.utils.CustomFileManager;
+import io.openvidu.server.utils.RemoteOperationUtils;
 
 public class SingleStreamRecordingService extends RecordingService {
 
@@ -289,7 +290,20 @@ public class SingleStreamRecordingService extends RecordingService {
 			try {
 				if (kParticipant.singleRecordingLock.tryLock(15, TimeUnit.SECONDS)) {
 					try {
-						if (kmsDisconnectionTime == null) {
+
+						if (kmsDisconnectionTime != null || RemoteOperationUtils.mustSkipRemoteOperation()) {
+
+							// Stopping recorder endpoint because of a KMS disconnection
+							finalWrapper.setEndTime(
+									kmsDisconnectionTime != null ? kmsDisconnectionTime : System.currentTimeMillis());
+							generateIndividualMetadataFile(finalWrapper);
+							globalStopLatch.countDown();
+							log.warn("Forcing individual recording stop after {} for stream {} in recording {}",
+									kmsDisconnectionTime != null ? "KMS restart" : "node crashed", streamId,
+									recordingId);
+
+						} else {
+
 							finalWrapper.getRecorder().addStoppedListener(new EventListener<StoppedEvent>() {
 								@Override
 								public void onEvent(StoppedEvent event) {
@@ -301,14 +315,7 @@ public class SingleStreamRecordingService extends RecordingService {
 								}
 							});
 							finalWrapper.getRecorder().stop();
-						} else {
-							// Stopping recorder endpoint because of a KMS disconnection
-							finalWrapper.setEndTime(kmsDisconnectionTime);
-							generateIndividualMetadataFile(finalWrapper);
-							globalStopLatch.countDown();
-							log.warn(
-									"Forcing individual recording stop after KMS restart for stream {} in recording {}",
-									streamId, recordingId);
+
 						}
 					} finally {
 						kParticipant.singleRecordingLock.unlock();

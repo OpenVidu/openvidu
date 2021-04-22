@@ -42,6 +42,7 @@ import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.kurento.kms.Kms;
+import io.openvidu.server.utils.RemoteOperationUtils;
 
 /**
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
@@ -252,29 +253,31 @@ public class KurentoSession extends Session {
 				return;
 			}
 
-			getPipeline().release(new Continuation<Void>() {
-				@Override
-				public void onSuccess(Void result) throws Exception {
-					log.debug("SESSION {}: Released Pipeline", sessionId);
-					pipeline = null;
-					pipelineLatch = new CountDownLatch(1);
-					pipelineCreationErrorCause = null;
-					if (callback != null) {
-						callback.run();
+			if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
+				getPipeline().release(new Continuation<Void>() {
+					@Override
+					public void onSuccess(Void result) throws Exception {
+						log.debug("SESSION {}: Released Pipeline", sessionId);
+						pipeline = null;
+						pipelineLatch = new CountDownLatch(1);
+						pipelineCreationErrorCause = null;
+						if (callback != null) {
+							callback.run();
+						}
 					}
-				}
 
-				@Override
-				public void onError(Throwable cause) throws Exception {
-					log.warn("SESSION {}: Could not successfully release Pipeline", sessionId, cause);
-					pipeline = null;
-					pipelineLatch = new CountDownLatch(1);
-					pipelineCreationErrorCause = null;
-					if (callback != null) {
-						callback.run();
+					@Override
+					public void onError(Throwable cause) throws Exception {
+						log.warn("SESSION {}: Could not successfully release Pipeline", sessionId, cause);
+						pipeline = null;
+						pipelineLatch = new CountDownLatch(1);
+						pipelineCreationErrorCause = null;
+						if (callback != null) {
+							callback.run();
+						}
 					}
-				}
-			});
+				});
+			}
 		}
 	}
 
@@ -282,7 +285,7 @@ public class KurentoSession extends Session {
 		return this.publishedStreamIds.get(streamId);
 	}
 
-	public void restartStatusInKurento(Long kmsDisconnectionTime) {
+	public void restartStatusInKurentoAfterReconnection(Long kmsDisconnectionTime) {
 
 		log.info("Resetting process: resetting remote media objects for active session {}", this.sessionId);
 

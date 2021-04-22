@@ -58,6 +58,7 @@ import io.openvidu.server.kurento.endpoint.MediaEndpoint;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.kurento.endpoint.SubscriberEndpoint;
 import io.openvidu.server.recording.service.RecordingManager;
+import io.openvidu.server.utils.RemoteOperationUtils;
 
 public class KurentoParticipant extends Participant {
 
@@ -663,7 +664,9 @@ public class KurentoParticipant extends Participant {
 							senderPublisher.numberOfSubscribers--;
 							if (senderPublisher.isPlayerEndpoint() && senderPublisher.numberOfSubscribers == 0) {
 								try {
-									senderPublisher.getPlayerEndpoint().stop();
+									if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
+										senderPublisher.getPlayerEndpoint().stop();
+									}
 									log.info(
 											"IP Camera stream {} feed is now disabled because there are no subscribers",
 											senderPublisher.getStreamId());
@@ -691,19 +694,21 @@ public class KurentoParticipant extends Participant {
 	void releaseElement(final String senderName, final MediaElement element) {
 		final String eid = element.getId();
 		try {
-			element.release(new Continuation<Void>() {
-				@Override
-				public void onSuccess(Void result) throws Exception {
-					log.debug("PARTICIPANT {}: Released successfully media element #{} for {}",
-							getParticipantPublicId(), eid, senderName);
-				}
+			if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
+				element.release(new Continuation<Void>() {
+					@Override
+					public void onSuccess(Void result) throws Exception {
+						log.debug("PARTICIPANT {}: Released successfully media element #{} for {}",
+								getParticipantPublicId(), eid, senderName);
+					}
 
-				@Override
-				public void onError(Throwable cause) throws Exception {
-					log.warn("PARTICIPANT {}: Could not release media element #{} for {}", getParticipantPublicId(),
-							eid, senderName, cause);
-				}
-			});
+					@Override
+					public void onError(Throwable cause) throws Exception {
+						log.warn("PARTICIPANT {}: Could not release media element #{} for {}", getParticipantPublicId(),
+								eid, senderName, cause);
+					}
+				});
+			}
 		} catch (Exception e) {
 			log.error("PARTICIPANT {}: Error calling release on elem #{} for {}", getParticipantPublicId(), eid,
 					senderName, e);

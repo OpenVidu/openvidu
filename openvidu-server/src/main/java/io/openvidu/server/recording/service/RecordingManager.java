@@ -31,8 +31,9 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -79,6 +80,7 @@ import io.openvidu.server.utils.JsonUtils;
 import io.openvidu.server.utils.LocalCustomFileManager;
 import io.openvidu.server.utils.LocalDockerManager;
 import io.openvidu.server.utils.RecordingUtils;
+import io.openvidu.server.utils.RemoteOperationUtils;
 
 public class RecordingManager {
 
@@ -122,8 +124,8 @@ public class RecordingManager {
 
 	private JsonUtils jsonUtils = new JsonUtils();
 
-	private ScheduledThreadPoolExecutor automaticRecordingStopExecutor = new ScheduledThreadPoolExecutor(
-			Runtime.getRuntime().availableProcessors());
+	private ScheduledExecutorService automaticRecordingStopExecutor = Executors
+			.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 
 	public static final String IMAGE_NAME = "openvidu/openvidu-recording";
 
@@ -809,9 +811,11 @@ public class RecordingManager {
 					throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
 				}
 
-				recorder.stop();
-				recorder.release();
-				pipeline.release();
+				if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
+					recorder.stop();
+					recorder.release();
+					pipeline.release();
+				}
 
 				log.info("Kurento Media Server has write permissions on recording path: {}", openviduRecordingPath);
 
