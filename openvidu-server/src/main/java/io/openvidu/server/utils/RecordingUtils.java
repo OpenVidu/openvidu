@@ -12,7 +12,7 @@ public final class RecordingUtils {
 
 	public final static RecordingProperties RECORDING_PROPERTIES_WITH_MEDIA_NODE(Session session) {
 		RecordingProperties recordingProperties = session.getSessionProperties().defaultRecordingProperties();
-		if (recordingProperties.mediaNode() == null || recordingProperties.mediaNode().isEmpty()) {
+		if (recordingProperties.mediaNode() == null) {
 			recordingProperties = new RecordingProperties.Builder(recordingProperties)
 					.mediaNode(session.getMediaNodeId()).build();
 		}

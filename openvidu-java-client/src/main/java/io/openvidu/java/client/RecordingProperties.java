@@ -407,6 +407,9 @@ public class RecordingProperties {
 		return json;
 	}
 
+	/**
+	 * @hidden
+	 */
 	public static RecordingProperties fromJson(JsonObject json) {
 
 		Boolean hasVideoAux = true;
@@ -450,10 +453,15 @@ public class RecordingProperties {
 			}
 		}
 		if (json.has("mediaNode")) {
+			String mediaNodeId = null;
 			if (json.get("mediaNode").isJsonObject()) {
-				builder.mediaNode(json.get("mediaNode").getAsJsonObject().get("id").getAsString());
+				mediaNodeId = json.get("mediaNode").getAsJsonObject().get("id").getAsString();
+
 			} else if (json.get("mediaNode").isJsonPrimitive()) {
-				builder.mediaNode(json.get("mediaNode").getAsString());
+				mediaNodeId = json.get("mediaNode").getAsString();
+			}
+			if (mediaNodeId != null && !mediaNodeId.isEmpty()) {
+				builder.mediaNode(mediaNodeId);
 			}
 		}
 		return builder.build();
