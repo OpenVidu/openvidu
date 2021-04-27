@@ -18,6 +18,7 @@
 package io.openvidu.server.webhook;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -31,17 +32,23 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
-import org.apache.http.Header;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
+import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.Registry;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicHeaderElementIterator;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
@@ -96,13 +103,26 @@ public class HttpWebhookSender {
 			throw new RuntimeException(e);
 		}
 
-		RequestConfig.Builder requestBuilder = RequestConfig.custom();
-		requestBuilder = requestBuilder.setConnectTimeout(30000);
-		requestBuilder = requestBuilder.setConnectionRequestTimeout(30000);
+		// Retry request a minimum of 5 times
+		HttpRequestRetryHandler requestRetryHandler = new HttpRequestRetryHandler() {
+			@Override
+			public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
+				return executionCount < 5;
+			}
+		};
 
-		this.httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestBuilder.build())
+		// Close after 3 seconds of inactivity
+		PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+		cm.setValidateAfterInactivity(3000);
+
+		// Socket 10 seconds timeout
+		RequestConfig.Builder requestConfigBuilder = RequestConfig.custom()
+				.setConnectTimeout(10000)
+				.setSocketTimeout(10000);
+
+		this.httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfigBuilder.build())
 				.setConnectionTimeToLive(30, TimeUnit.SECONDS).setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
-				.setSSLContext(sslContext).build();
+				.setSSLContext(sslContext).setConnectionManager(cm).setRetryHandler(requestRetryHandler).build();
 	}
 
 	public void sendHttpPostCallbackAsync(CDREvent event) {
@@ -129,9 +149,13 @@ public class HttpWebhookSender {
 		HttpPost request = new HttpPost(httpEndpoint);
 
 		StringEntity params = null;
-		JsonObject jsonEvent = event.toJson();
-		jsonEvent.addProperty("event", event.getEventName().name());
-		params = new StringEntity(jsonEvent.toString(), "UTF-8");
+		try {
+			JsonObject jsonEvent = event.toJson();
+			jsonEvent.addProperty("event", event.getEventName().name());
+			params = new StringEntity(jsonEvent.toString());
+		} catch (UnsupportedEncodingException e) {
+			log.error("Cannot create StringEntity from JSON CDREvent. Default HTTP charset is not supported");
+		}
 
 		for (Header header : this.customHeaders) {
 			request.setHeader(header);
