@@ -367,29 +367,57 @@ Resources:
           ToPort: 22
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIpv6: ::/0
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
           FromPort: 3478
           ToPort: 3478
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3478
+          ToPort: 3478
+          CidrIpv6: ::/0
         - IpProtocol: udp
           FromPort: 3478
           ToPort: 3478
           CidrIp: 0.0.0.0/0
         - IpProtocol: udp
+          FromPort: 3478
+          ToPort: 3478
+          CidrIpv6: ::/0
+        - IpProtocol: udp
+          FromPort: 40000
+          ToPort: 57000
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 40000
+          ToPort: 57000
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
           FromPort: 40000
           ToPort: 57000
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 40000
           ToPort: 57000
-          CidrIp: 0.0.0.0/0
+          CidrIpv6: ::/0
 
 Outputs:
   OpenViduServerURL:
