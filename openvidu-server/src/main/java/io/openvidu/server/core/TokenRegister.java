@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Each time a token is created, it is registered by {@link SessionManager} using {@link #registerToken(String, Participant, Token)} (String, Participant, Token)}
  * All registered tokens will be present until {@link SessionManager} calls the method {@link #deregisterTokens(String)}
  *
- * The purpose of this service is to know when a token was registered into a session with its correspondent connectionId
+ * The purpose of this service is to know when a token was registered into a session with its correspondent finalUserId
  * All maps of this class are present to be able to verify this in the most optimal way
  */
 public class TokenRegister {
@@ -75,8 +75,8 @@ public class TokenRegister {
             return false;
         }
 
-        // In this final state, if connectionId is equal to participant public id and session Id is the same,
-        // the token is registered correctly in the specific connectionId and sessionId
+        // In this final state, if finalUserId is equal to participant public id and session Id is the same,
+        // the token is registered correctly in the specific finalUserId and sessionId
         return participantsByTokens.get(token).getFinalUserId().equals(finalUserId)
                 && participantsByTokens.get(token).getSessionId().equals(sessionId);
 
