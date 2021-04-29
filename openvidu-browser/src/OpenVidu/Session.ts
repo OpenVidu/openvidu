@@ -1323,11 +1323,11 @@ export class Session extends EventDispatcher {
                             reject(error);
                         } else {
 
-                            // Configure JSNLogs
-                            OpenViduLogger.configureJSNLog(this.openvidu, this.sessionId, response.id, token);
-
                             // Process join room response
                             this.processJoinRoomResponse(response);
+
+                            // Configure JSNLogs
+                            OpenViduLogger.configureJSNLog(this.openvidu, token);
 
                             // Initialize local Connection object with values returned by openvidu-server
                             this.connection = new Connection(this, response);

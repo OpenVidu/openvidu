@@ -50,11 +50,11 @@ public class TokenRegister {
      * O(1)
      * Check if the current token string was registered in an active session
      * @param token Token string to check if it is registered
-     * @param connectionId Id of the connection to check
+     * @param finalUserId userId of browser to check
      * @param sessionId Id of session to check
      * @return <code>true</code> if token was registered. <code>false</code> otherwise
      */
-    public boolean isTokenRegistered(String token, String connectionId, String sessionId) {
+    public boolean isTokenRegistered(String token, String finalUserId, String sessionId) {
         if (!this.tokensRegistered.containsKey(token)) {
             // False because token is not registered
             return false;
@@ -77,23 +77,9 @@ public class TokenRegister {
 
         // In this final state, if connectionId is equal to participant public id and session Id is the same,
         // the token is registered correctly in the specific connectionId and sessionId
-        return participantsByTokens.get(token).getParticipantPublicId().equals(connectionId)
+        return participantsByTokens.get(token).getFinalUserId().equals(finalUserId)
                 && participantsByTokens.get(token).getSessionId().equals(sessionId);
 
-    }
-
-    /**
-     * O(1)
-     * Get registered token from token string
-     * @param tokenKey string key which represents the token
-     * @return
-     */
-    public Token getRegisteredToken(String tokenKey) {
-        Token token = this.tokensRegistered.get(tokenKey);
-        if (token != null) {
-            return token;
-        }
-        return null;
     }
 
 }

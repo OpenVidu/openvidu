@@ -12,28 +12,35 @@ export class OpenViduLogger {
 	private MAX_MSECONDS_BATCH_MESSAGES: number = 5000;
 
 	private logger: Console = window.console;
-	private loggingSessionId: string;
 	private LOG_FNS = [this.logger.log, this.logger.debug, this.logger.info, this.logger.warn, this.logger.error];
 	private currentAppender: any;
 
 	private isProdMode = false;
 	private isJSNLogSetup = false;
 
+	// This two variables are used to restart JSNLog
+	// on different sessions and different userIds
+	private loggingSessionId: string | undefined;
+	private loggingFinalUserId: string | undefined;
+
 
 	private constructor() {}
 
-	static configureJSNLog(openVidu: OpenVidu, sessionId: string, connectionId: string, token: string) {
+	static configureJSNLog(openVidu: OpenVidu, token: string) {
 		// If instance is created is OpenVidu Pro
 		if (this.instance && openVidu.webrtcStatsInterval > -1
 			// If logs are enabled
 			&& openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debug
-			// If diferent session or first session
-			&& sessionId !== this.instance.loggingSessionId) {
+			// Only reconfigure it if session or finalUserId has changed
+			&& this.instance.canConfigureJSNLog(openVidu, this.instance)) {
 
 			try {
 				// isJSNLogSetup will not be true until completed setup
 				this.instance.isJSNLogSetup = false;
 				this.instance.info("Configuring JSNLogs.");
+
+				const finalUserId = openVidu.finalUserId;
+				const sessionId = openVidu.session.sessionId;
 
 				const beforeSendCallback = (xhr) => {
 					// If 401 or 403 or 404 modify ready and status so JSNLog don't retry to send logs
@@ -48,16 +55,16 @@ export class OpenViduLogger {
 					}
 
 					// Headers to identify and authenticate logs
-					xhr.setRequestHeader('Authorization', "Basic " + btoa(`${connectionId}%/%${sessionId}` + ":" + token));
+					xhr.setRequestHeader('Authorization', "Basic " + btoa(`${finalUserId}%/%${sessionId}` + ":" + token));
 					xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
 					// Additional headers for OpenVidu
-					xhr.setRequestHeader('OV-Connection-Id', connectionId);
+					xhr.setRequestHeader('OV-Final-User-Id', finalUserId);
 					xhr.setRequestHeader('OV-Session-Id', sessionId);
 					xhr.setRequestHeader('OV-Token', token);
 				}
 
 				// Creation of the appender.
-				this.instance.currentAppender = JL.createAjaxAppender("appender-" + connectionId);
+				this.instance.currentAppender = JL.createAjaxAppender(`appender-${finalUserId}-${sessionId}`);
 				this.instance.currentAppender.setOptions({
 					beforeSend: beforeSendCallback,
 					maxBatchSize: 1000,
@@ -70,7 +77,7 @@ export class OpenViduLogger {
 					const getCircularReplacer = () => {
 						const seen = new WeakSet();
 						return (key, value) => {
-							if (typeof value === "object" && value !== null) {
+							if (typeof value === "object" && value != null) {
 								if (seen.has(value)) {
 									return;
 								}
@@ -93,11 +100,15 @@ export class OpenViduLogger {
 
 				this.instance.isJSNLogSetup = true;
 				this.instance.loggingSessionId = sessionId;
+				this.instance.loggingFinalUserId = finalUserId;
 				this.instance.info("JSNLog configured.");
 			} catch (e) {
 				console.error("Error configuring JSNLog: ");
 				console.error(e);
 				this.instance.isJSNLogSetup = false;
+				this.instance.loggingSessionId = undefined;
+				this.instance.loggingFinalUserId = undefined;
+				this.instance.currentAppender = undefined;
 			}
 		}
 	}
@@ -164,6 +175,10 @@ export class OpenViduLogger {
 
 	private isDebugLogEnabled() {
 		return this.isJSNLogSetup;
+	}
+
+	private canConfigureJSNLog(openVidu: OpenVidu, logger: OpenViduLogger): boolean {
+		return openVidu.session.sessionId != logger.loggingSessionId || openVidu.finalUserId != logger.loggingFinalUserId
 	}
 
 }
