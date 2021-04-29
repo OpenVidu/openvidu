@@ -10,6 +10,7 @@ export class OpenViduLogger {
 	private JSNLOG_URL: string = "/openvidu/elk/openvidu-browser-logs";
 	private MAX_JSNLOG_BATCH_LOG_MESSAGES: number = 100;
 	private MAX_MSECONDS_BATCH_MESSAGES: number = 5000;
+	private MAX_LENGTH_STRING_JSON: number = 1000;
 
 	private logger: Console = window.console;
 	private LOG_FNS = [this.logger.log, this.logger.debug, this.logger.info, this.logger.warn, this.logger.error];
@@ -27,7 +28,7 @@ export class OpenViduLogger {
 	private constructor() {}
 
 	static configureJSNLog(openVidu: OpenVidu, token: string) {
-		// If instance is created is OpenVidu Pro
+		// If instance is created and it is OpenVidu Pro
 		if (this.instance && openVidu.webrtcStatsInterval > -1
 			// If logs are enabled
 			&& openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debug
@@ -86,7 +87,13 @@ export class OpenViduLogger {
 							return value;
 						};
 					};
-					return JSON.stringify(obj, getCircularReplacer());
+
+					// Cut long messages
+					const stringifyJson = JSON.stringify(obj, getCircularReplacer());
+					if (stringifyJson.length > this.instance.MAX_LENGTH_STRING_JSON) {
+						return `${stringifyJson.substring(0, this.instance.MAX_LENGTH_STRING_JSON)}...`;
+					}
+					return stringifyJson;
 				};
 
 				// Initialize JL to send logs
@@ -118,6 +125,15 @@ export class OpenViduLogger {
 			OpenViduLogger.instance = new OpenViduLogger();
 		}
 		return OpenViduLogger.instance;
+	}
+
+	private isDebugLogEnabled() {
+		return this.isJSNLogSetup;
+	}
+
+	private canConfigureJSNLog(openVidu: OpenVidu, logger: OpenViduLogger): boolean {
+		return openVidu.session.sessionId != logger.loggingSessionId &&
+		 	openVidu.finalUserId != logger.loggingFinalUserId
 	}
 
 	log(...args: any[]){
@@ -168,14 +184,6 @@ export class OpenViduLogger {
 
 	enableProdMode(){
 		this.isProdMode = true;
-	}
-
-	private isDebugLogEnabled() {
-		return this.isJSNLogSetup;
-	}
-
-	private canConfigureJSNLog(openVidu: OpenVidu, logger: OpenViduLogger): boolean {
-		return openVidu.session.sessionId != logger.loggingSessionId || openVidu.finalUserId != logger.loggingFinalUserId
 	}
 
 }

@@ -74,9 +74,9 @@ export abstract class EventDispatcher {
     onAux(type: string, message: string, handler: (event: Event) => void): EventDispatcher {
         const arrowHandler = event => {
             if (event) {
-                logger.debug(message, event);
+                logger.info(message, event);
             } else {
-                logger.debug(message);
+                logger.info(message);
             }
             handler(event);
         };
@@ -91,9 +91,9 @@ export abstract class EventDispatcher {
     onceAux(type: string, message: string, handler: (event: Event) => void): EventDispatcher {
         const arrowHandler = event => {
             if (event) {
-                logger.debug(message, event);
+                logger.info(message, event);
             } else {
-                logger.debug(message);
+                logger.info(message);
             }
             handler(event);
             // Remove handler from map after first and only execution

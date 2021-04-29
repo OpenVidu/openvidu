@@ -306,7 +306,7 @@ export class StreamManager extends EventDispatcher {
             canplayListenerAdded: false
         });
         
-        logger.debug('New video element associated to ', this);
+        logger.info('New video element associated to ', this);
 
         return returnNumber;
     }
