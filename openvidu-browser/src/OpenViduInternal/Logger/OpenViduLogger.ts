@@ -8,7 +8,7 @@ export class OpenViduLogger {
 	private static instance: OpenViduLogger;
 
 	private JSNLOG_URL: string = "/openvidu/elk/openvidu-browser-logs";
-	private MAX_JSNLOG_BATCH_LOG_MESSAGES: number = 50;
+	private MAX_JSNLOG_BATCH_LOG_MESSAGES: number = 100;
 	private MAX_MSECONDS_BATCH_MESSAGES: number = 5000;
 
 	private logger: Console = window.console;
@@ -132,9 +132,6 @@ export class OpenViduLogger {
 	debug(...args: any[]) {
 		if (!this.isProdMode) {
 			this.LOG_FNS[1].apply(this.logger, arguments);
-		}
-		if (this.isDebugLogEnabled()) {
-			JL().debug(arguments);
 		}
 	}
 
