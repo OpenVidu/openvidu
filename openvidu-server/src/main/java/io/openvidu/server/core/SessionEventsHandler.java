@@ -153,6 +153,7 @@ public class SessionEventsHandler {
 			}
 		}
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM, participant.getParticipantPublicId());
+		result.addProperty(ProtocolElements.PARTICIPANTJOINED_FINALUSERID_PARAM, participant.getFinalUserId());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getActiveAt());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, participant.getFullMetadata());
 		result.add(ProtocolElements.PARTICIPANTJOINED_VALUE_PARAM, resultArray);

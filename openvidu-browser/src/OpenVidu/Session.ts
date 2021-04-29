@@ -1464,7 +1464,7 @@ export class Session extends EventDispatcher {
             if (!!webrtcStatsInterval) {
                 this.openvidu.webrtcStatsInterval = +webrtcStatsInterval;
             }
-            if(!!sendBrowserLogs) {
+            if (!!sendBrowserLogs) {
                 this.openvidu.sendBrowserLogs = sendBrowserLogs;
             }
 
@@ -1486,6 +1486,7 @@ export class Session extends EventDispatcher {
             logger.log('TURN temp credentials [' + opts.turnUsername + ':' + opts.turnCredential + ']');
         }
         this.openvidu.role = opts.role;
+        this.openvidu.finalUserId = opts.finalUserId;
         this.capabilities = {
             subscribe: true,
             publish: this.openvidu.role !== 'SUBSCRIBER',

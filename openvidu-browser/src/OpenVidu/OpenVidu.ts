@@ -32,7 +32,7 @@ import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 
 import * as screenSharingAuto from '../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto';
 import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturing';
-import {OpenViduLoggerConfiguration} from "../OpenViduInternal/Logger/OpenViduLoggerConfiguration";
+import { OpenViduLoggerConfiguration } from "../OpenViduInternal/Logger/OpenViduLoggerConfiguration";
 /**
  * @hidden
  */
@@ -100,6 +100,10 @@ export class OpenVidu {
    * @hidden
    */
   role: string;
+  /**
+   * @hidden
+   */
+  finalUserId: string;
   /**
    * @hidden
    */

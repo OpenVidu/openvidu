@@ -144,6 +144,7 @@ public class ProtocolElements {
 
 	public static final String PARTICIPANTJOINED_METHOD = "participantJoined";
 	public static final String PARTICIPANTJOINED_USER_PARAM = "id";
+	public static final String PARTICIPANTJOINED_FINALUSERID_PARAM = "finalUserId";
 	public static final String PARTICIPANTJOINED_CREATEDAT_PARAM = "createdAt";
 	public static final String PARTICIPANTJOINED_METADATA_PARAM = "metadata";
 	public static final String PARTICIPANTJOINED_VALUE_PARAM = "value";
