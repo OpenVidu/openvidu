@@ -51,9 +51,9 @@ export class OpenViduLogger {
 					xhr.setRequestHeader('Authorization', "Basic " + btoa(`${connectionId}%/%${sessionId}` + ":" + token));
 					xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
 					// Additional headers for OpenVidu
-					xhr.setRequestHeader('OV-Connection-Id', btoa(connectionId));
-					xhr.setRequestHeader('OV-Session-Id', btoa(sessionId));
-					xhr.setRequestHeader('OV-Token', btoa(token));
+					xhr.setRequestHeader('OV-Connection-Id', connectionId);
+					xhr.setRequestHeader('OV-Session-Id', sessionId);
+					xhr.setRequestHeader('OV-Token', token);
 				}
 
 				// Creation of the appender.
