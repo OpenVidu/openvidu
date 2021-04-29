@@ -174,8 +174,8 @@ export class Connection {
 
             this.addStream(stream);
         });
-
-        logger.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + '] is now configured for receiving Streams with options: ', this.stream!.inboundStreamOpts);
+        
+        logger.debug("Remote 'Connection' with 'connectionId' [" + this.connectionId + '] is now configured for receiving Streams with options: ', this.stream!.inboundStreamOpts);
     }
 
     /**

@@ -74,9 +74,9 @@ export abstract class EventDispatcher {
     onAux(type: string, message: string, handler: (event: Event) => void): EventDispatcher {
         const arrowHandler = event => {
             if (event) {
-                logger.info(message, event);
+                logger.debug(message, event);
             } else {
-                logger.info(message);
+                logger.debug(message);
             }
             handler(event);
         };
