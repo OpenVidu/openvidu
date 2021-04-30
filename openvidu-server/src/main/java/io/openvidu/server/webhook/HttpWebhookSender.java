@@ -18,7 +18,6 @@
 package io.openvidu.server.webhook;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -30,24 +29,28 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 
-import org.apache.http.*;
+import org.apache.http.Header;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.config.Registry;
-import org.apache.http.conn.ConnectionKeepAliveStrategy;
+import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicHeader;
-import org.apache.http.message.BasicHeaderElementIterator;
-import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.TrustStrategy;
@@ -88,21 +91,6 @@ public class HttpWebhookSender {
 			this.customHeaders.add(new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"));
 		}
 
-		TrustStrategy trustStrategy = new TrustStrategy() {
-			@Override
-			public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-				return true;
-			}
-		};
-
-		SSLContext sslContext;
-
-		try {
-			sslContext = new SSLContextBuilder().loadTrustMaterial(null, trustStrategy).build();
-		} catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
-			throw new RuntimeException(e);
-		}
-
 		// Retry request a minimum of 5 times
 		HttpRequestRetryHandler requestRetryHandler = new HttpRequestRetryHandler() {
 			@Override
@@ -111,18 +99,39 @@ public class HttpWebhookSender {
 			}
 		};
 
+		// Accept insecure certificates
+		SSLContext sslContext;
+		try {
+			sslContext = new SSLContextBuilder().loadTrustMaterial(null, new TrustStrategy() {
+				@Override
+				public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+					return true;
+				}
+			}).build();
+		} catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
+			throw new RuntimeException(e);
+		}
+		SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, new HostnameVerifier() {
+			@Override
+			public boolean verify(String arg0, SSLSession arg1) {
+				return true;
+			}
+		});
+
+		Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
+				.register("http", new PlainConnectionSocketFactory()).register("https", sslsf).build();
+
 		// Close after 3 seconds of inactivity
-		PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+		PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
 		cm.setValidateAfterInactivity(3000);
 
 		// Socket 10 seconds timeout
-		RequestConfig.Builder requestConfigBuilder = RequestConfig.custom()
-				.setConnectTimeout(10000)
+		RequestConfig.Builder requestConfigBuilder = RequestConfig.custom().setConnectTimeout(10000)
 				.setSocketTimeout(10000);
 
 		this.httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfigBuilder.build())
 				.setConnectionTimeToLive(30, TimeUnit.SECONDS).setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
-				.setSSLContext(sslContext).setConnectionManager(cm).setRetryHandler(requestRetryHandler).build();
+				.setConnectionManager(cm).setRetryHandler(requestRetryHandler).build();
 	}
 
 	public void sendHttpPostCallbackAsync(CDREvent event) {
