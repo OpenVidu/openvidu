@@ -135,16 +135,12 @@ export class WebRtcPeer {
                     this.configuration.mediaConstraints.video : true;
             }
 
-            const constraints: RTCOfferOptions = {
-                offerToReceiveAudio: (this.configuration.mode !== 'sendonly' && offerAudio),
-                offerToReceiveVideo: (this.configuration.mode !== 'sendonly' && offerVideo)
-            };
+            if (typeof this.pc['addTransceiver'] === 'function') {
 
-            logger.debug('RTCPeerConnection constraints: ' + JSON.stringify(constraints));
+                // SDP "Unified Plan" supported
 
-            if (platform.isSafariBrowser() && !platform.isIonicIos()) {
-                // Safari (excluding Ionic), at least on iOS just seems to support unified plan,
-                // whereas in other browsers is not yet ready and considered experimental
+                logger.debug('Unified Plan supported');
+
                 if (offerAudio) {
                     this.pc.addTransceiver('audio', {
                         direction: this.configuration.mode,
@@ -163,10 +159,17 @@ export class WebRtcPeer {
                         resolve(offer);
                     })
                     .catch(error => reject(error));
-
             } else {
 
-                // Rest of platforms
+                // SDP legacy "Plan B" support
+
+                const constraints: RTCOfferOptions = {
+                    offerToReceiveAudio: (this.configuration.mode !== 'sendonly' && offerAudio),
+                    offerToReceiveVideo: (this.configuration.mode !== 'sendonly' && offerVideo)
+                };
+
+                logger.debug('Unified Plan not supported. Using Plan B. RTCPeerConnection constraints: ' + JSON.stringify(constraints));
+
                 this.pc.createOffer(constraints)
                     .then(offer => {
                         logger.debug('Created SDP offer');
