@@ -75,7 +75,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     coturn:
-        image: openvidu/openvidu-coturn:4.0.0-dev1
+        image: openvidu/openvidu-coturn:4.0.0-dev2
         restart: on-failure
         network_mode: host
         environment: 
