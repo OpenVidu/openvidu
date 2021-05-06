@@ -1,14 +1,17 @@
-FROM ubuntu:16.04
+FROM coturn/coturn:4.5.2-alpine
 
-RUN apt-get update \
-    && apt-get install -y coturn curl dnsutils
+USER root
 
-COPY ./configuration-files.sh /tmp/
-COPY ./entrypoint.sh /usr/local/bin
-COPY ./discover_my_public_ip.sh /usr/local/bin
+RUN apk add --no-cache bind-tools
 
-RUN chmod +x /tmp/configuration-files.sh \
-    && chmod +x /usr/local/bin/entrypoint.sh \
-    && chmod +x /usr/local/bin/discover_my_public_ip.sh
+# Override detect-external-ip.sh script
+COPY ./detect-external-ip.sh /usr/local/bin/detect-external-ip.sh
+COPY ./docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
-ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
+RUN chmod +x /usr/local/bin/detect-external-ip.sh /usr/local/bin/docker-entrypoint.sh && \
+    chown -R nobody:nogroup /var/lib/coturn/ && \
+    touch /turnserver.conf && chown nobody:nogroup /turnserver.conf
+
+USER nobody:nogroup
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["--log-file=stdout", "--external-ip=$(detect-external-ip)"]
