@@ -38,6 +38,7 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.server.cdr.CDREventNodeCrashed;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduBuildInfo;
 import io.openvidu.server.config.OpenviduConfig;
@@ -645,7 +646,7 @@ public class SessionEventsHandler {
 			List<String> recordingIds) {
 	}
 
-	public void onMasterNodeCrashed() {
+	public void onMasterNodeCrashed(CDREventNodeCrashed event) {
 	}
 
 	public void storeRecordingToSendClientEvent(Recording recording) {

@@ -10,6 +10,7 @@ public class RequestMappings {
 	final public static String CDR = "/openvidu/cdr";
 	final public static String API_ELK = "/openvidu/elk";
 	final public static String API_INSPECTOR = "/openvidu/inspector-api";
+	final public static String API_MULTI_MASTER = "/openvidu/multi-master";
 	// Static resources
 	final public static String RECORDINGS = "/openvidu/recordings";
 	final public static String CUSTOM_LAYOUTS = "/openvidu/layouts";

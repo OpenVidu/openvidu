@@ -19,7 +19,6 @@ package io.openvidu.server.cdr;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,7 +36,6 @@ import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.endpoint.KmsEvent;
-import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.summary.SessionSummary;
@@ -192,13 +190,6 @@ public class CallDetailRecord {
 			type = type.replaceFirst("^signal:", "");
 		}
 		this.log(new CDREventSignal(sessionId, uniqueSessionId, from, to, type, data));
-	}
-
-	public void recordNodeCrashed(Kms kms, String environmentId, long timeOfKurentoDisconnection,
-			List<String> sessionIds, List<String> recordingIds) {
-		CDREvent e = new CDREventNodeCrashed(CDREventName.nodeCrashed, timeOfKurentoDisconnection, kms, environmentId,
-				sessionIds, recordingIds);
-		this.log(e);
 	}
 
 	protected void log(CDREvent event) {

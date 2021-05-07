@@ -149,7 +149,7 @@ public class HttpWebhookSender {
 	 *                     endpoint B) The response received from the endpoint is
 	 *                     not 200
 	 */
-	public void sendHttpPostCallbackBlocking(CDREvent event) throws IOException {
+	private void sendHttpPostCallbackBlocking(CDREvent event) throws IOException {
 
 		if (!this.events.contains(event.getEventName())) {
 			return;
