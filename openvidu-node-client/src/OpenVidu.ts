@@ -156,6 +156,7 @@ export class OpenVidu {
             outputMode: properties.outputMode,
             recordingLayout: properties.recordingLayout,
             customLayout: properties.customLayout,
+            ignoreFailedStreams: properties.ignoreFailedStreams,
             resolution: properties.resolution,
             frameRate: properties.frameRate,
             hasAudio: properties.hasAudio,

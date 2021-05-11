@@ -2304,6 +2304,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong recording mode", RecordingMode.ALWAYS, session.getProperties().recordingMode());
 		Assert.assertEquals("Wrong default output mode", Recording.OutputMode.INDIVIDUAL,
 				session.getProperties().defaultRecordingProperties().outputMode());
+		Assert.assertEquals("Wrong default ignoreFailedStreams", false,
+				session.getProperties().defaultRecordingProperties().ignoreFailedStreams());
 		Assert.assertTrue("Session should be being recorded", session.isBeingRecorded());
 		Assert.assertEquals("Expected 2 active connections but found " + session.getActiveConnections().size(), 2,
 				session.getActiveConnections().size());
@@ -2483,6 +2485,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong recording size", 0, recording.getSize());
 		Assert.assertNull("Wrong recording url", recording.getUrl());
 		Assert.assertEquals("Wrong recording output mode", Recording.OutputMode.INDIVIDUAL, recording.getOutputMode());
+		Assert.assertEquals("Wrong recording ignoreFailedStreams", false, recording.ignoreFailedStreams());
 		Assert.assertNull("Wrong recording layout", recording.getRecordingLayout());
 		Assert.assertNull("Wrong recording custom layout", recording.getCustomLayout());
 		Assert.assertNull("Wrong recording resolution", recording.getResolution());
@@ -3370,6 +3373,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			user.getDriver().findElement(By.id("add-user-btn")).click();
 			user.getDriver().findElement(By.id("session-settings-btn-0")).click();
 			Thread.sleep(1000);
+
+			String rareCharsName = "öæééEstoSi`+´çḈ€$";
+			user.getDriver().findElement(By.id("recording-name-field")).sendKeys(rareCharsName);
 			user.getDriver().findElement(By.id("recording-mode-select")).click();
 			Thread.sleep(500);
 			user.getDriver().findElement(By.id("option-ALWAYS")).click();
@@ -3413,6 +3419,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong recording startTime/timestamp in webhook event",
 					event.get("startTime").getAsLong(), event.get("timestamp").getAsLong());
 			Assert.assertNull("Wrong recording reason in webhook event (should be null)", event.get("reason"));
+			Assert.assertEquals("Wrong recording name in webhook event", rareCharsName,
+					event.get("name").getAsString());
 
 			// Filter event webhook
 			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .filter-btn")).click();

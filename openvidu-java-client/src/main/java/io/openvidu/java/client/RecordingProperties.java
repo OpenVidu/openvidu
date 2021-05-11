@@ -216,16 +216,17 @@ public class RecordingProperties {
 		 * starting the recording. This property only applies to
 		 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} recordings.
 		 * For this type of recordings, when calling
-		 * {@link io.openvidu.java.client.OpenVidu#startRecording} by default all the
-		 * streams available at the moment the recording process starts must be healthy
-		 * and properly sending media. If some stream that should be sending media is
-		 * broken, then the recording process fails after a 10s timeout. In this way
-		 * your application is notified that some stream is not being recorded, so it
-		 * can retry the process again. But you can disable this rollback behavior and
-		 * simply ignore any failed stream, which will be susceptible to be recorded in
-		 * the future if media starts flowing as expected at any point. The downside of
-		 * this behavior is that you will have no guarantee that all streams present at
-		 * the beginning of a recording are actually being recorded.
+		 * {@link io.openvidu.java.client.OpenVidu#startRecording(String, RecordingProperties)}
+		 * by default all the streams available at the moment the recording process
+		 * starts must be healthy and properly sending media. If some stream that should
+		 * be sending media is broken, then the recording process fails after a 10s
+		 * timeout. In this way your application is notified that some stream is not
+		 * being recorded, so it can retry the process again. But you can disable this
+		 * rollback behavior and simply ignore any failed stream, which will be
+		 * susceptible to be recorded in the future if media starts flowing as expected
+		 * at any point. The downside of this behavior is that you will have no
+		 * guarantee that all streams present at the beginning of a recording are
+		 * actually being recorded.
 		 */
 		public RecordingProperties.Builder ignoreFailedStreams(boolean ignoreFailedStreams) {
 			this.ignoreFailedStreams = ignoreFailedStreams;
@@ -402,16 +403,17 @@ public class RecordingProperties {
 	 * This property only applies to
 	 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} recordings.
 	 * For this type of recordings, when calling
-	 * {@link io.openvidu.java.client.OpenVidu#startRecording} by default all the
-	 * streams available at the moment the recording process starts must be healthy
-	 * and properly sending media. If some stream that should be sending media is
-	 * broken, then the recording process fails after a 10s timeout. In this way
-	 * your application is notified that some stream is not being recorded, so it
-	 * can retry the process again. But you can disable this rollback behavior and
-	 * simply ignore any failed stream, which will be susceptible to be recorded in
-	 * the future if media starts flowing as expected at any point. The downside of
-	 * this behavior is that you will have no guarantee that all streams present at
-	 * the beginning of a recording are actually being recorded.<br>
+	 * {@link io.openvidu.java.client.OpenVidu#startRecording(String, RecordingProperties)}
+	 * by default all the streams available at the moment the recording process
+	 * starts must be healthy and properly sending media. If some stream that should
+	 * be sending media is broken, then the recording process fails after a 10s
+	 * timeout. In this way your application is notified that some stream is not
+	 * being recorded, so it can retry the process again. But you can disable this
+	 * rollback behavior and simply ignore any failed stream, which will be
+	 * susceptible to be recorded in the future if media starts flowing as expected
+	 * at any point. The downside of this behavior is that you will have no
+	 * guarantee that all streams present at the beginning of a recording are
+	 * actually being recorded.<br>
 	 * <br>
 	 * 
 	 * Default to false
@@ -510,7 +512,7 @@ public class RecordingProperties {
 				}
 			}
 		}
-		if (OutputMode.INDIVIDUAL.equals(outputModeAux)) {
+		if (json.has("ignoreFailedStreams") && OutputMode.INDIVIDUAL.equals(outputModeAux)) {
 			builder.ignoreFailedStreams(json.get("ignoreFailedStreams").getAsBoolean());
 		}
 		if (json.has("mediaNode")) {

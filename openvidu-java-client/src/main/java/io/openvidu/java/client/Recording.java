@@ -193,6 +193,15 @@ public class Recording {
 	}
 
 	/**
+	 * Whether failed streams were ignored when the recording process started or
+	 * not. Only applicable if {@link io.openvidu.java.client.Recording.OutputMode}
+	 * is {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL}
+	 */
+	public boolean ignoreFailedStreams() {
+		return this.recordingProperties.ignoreFailedStreams();
+	}
+
+	/**
 	 * Session associated to the recording
 	 */
 	public String getSessionId() {
