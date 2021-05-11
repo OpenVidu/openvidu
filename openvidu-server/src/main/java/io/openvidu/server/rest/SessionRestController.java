@@ -925,6 +925,7 @@ public class SessionRestController {
 		Integer frameRateFinal = null;
 		Long shmSizeFinal = null;
 		String customLayoutFinal = null;
+		Boolean ignoreFailedStreamsFinal = null;
 
 		RecordingProperties defaultProps = session.getSessionProperties().defaultRecordingProperties();
 
@@ -938,6 +939,7 @@ public class SessionRestController {
 		Integer frameRateDefault = defaultProps.frameRate();
 		Long shmSizeDefault = defaultProps.shmSize();
 		String customLayoutDefault = defaultProps.customLayout();
+		Boolean ignoreFailedStreamsDefault = defaultProps.ignoreFailedStreams();
 
 		// Provided properties through params
 		String sessionIdParam;
@@ -950,6 +952,7 @@ public class SessionRestController {
 		Integer frameRateParam;
 		Long shmSizeParam = null;
 		String customLayoutParam;
+		Boolean ignoreFailedStreamsParam;
 
 		try {
 			sessionIdParam = (String) params.get("session");
@@ -964,6 +967,7 @@ public class SessionRestController {
 				shmSizeParam = Long.parseLong(params.get("shmSize").toString());
 			}
 			customLayoutParam = (String) params.get("customLayout");
+			ignoreFailedStreamsParam = (Boolean) params.get("ignoreFailedStreams");
 		} catch (ClassCastException | NumberFormatException e) {
 			throw new Exception("Type error in some parameter: " + e.getMessage());
 		}
@@ -1086,6 +1090,14 @@ public class SessionRestController {
 					customLayoutFinal = "";
 				}
 			}
+		} else if (OutputMode.INDIVIDUAL.equals(outputModeFinal)) {
+			if (ignoreFailedStreamsParam != null) {
+				ignoreFailedStreamsFinal = ignoreFailedStreamsParam;
+			} else if (ignoreFailedStreamsDefault != null) {
+				ignoreFailedStreamsFinal = ignoreFailedStreamsDefault;
+			} else {
+				ignoreFailedStreamsFinal = RecordingProperties.DefaultValues.ignoreFailedStreams;
+			}
 		}
 
 		RecordingProperties.Builder builder = new RecordingProperties.Builder();
@@ -1098,6 +1110,9 @@ public class SessionRestController {
 			if (RecordingLayout.CUSTOM.equals(recordingLayoutFinal)) {
 				builder.customLayout(customLayoutFinal);
 			}
+		}
+		if (OutputMode.INDIVIDUAL.equals(outputModeFinal)) {
+			builder.ignoreFailedStreams(ignoreFailedStreamsFinal);
 		}
 		return builder;
 	}
