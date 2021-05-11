@@ -68,6 +68,7 @@ export class SessionApiDialogComponent {
             frameRate: this.recordingProperties.frameRate,
             hasAudio: this.recordingProperties.hasAudio,
             hasVideo: this.recordingProperties.hasVideo,
+            ignoreFailedStreams: this.recordingProperties.ignoreFailedStreams,
             shmSize: this.recordingProperties.shmSize,
             mediaNode: !this.recordingProperties.mediaNode.id ? undefined : this.recordingProperties.mediaNode
         }

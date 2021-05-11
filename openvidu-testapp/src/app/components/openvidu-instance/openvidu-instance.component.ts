@@ -101,6 +101,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       frameRate: 25,
       shmSize: 536870912,
       customLayout: '',
+      ignoreFailedStreams: false,
       mediaNode: {
         id: ''
       }
