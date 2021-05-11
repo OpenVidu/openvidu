@@ -35,6 +35,7 @@ public class RecordingProperties {
 		public static final String resolution = "1280x720";
 		public static final Integer frameRate = 25;
 		public static final Long shmSize = 536870912L;
+		public static final Boolean ignoreFailedStreams = false;
 	}
 
 	// For all
@@ -49,6 +50,8 @@ public class RecordingProperties {
 	private Long shmSize;
 	// For COMPOSED/COMPOSED_QUICK_START + hasVideo + RecordingLayout.CUSTOM
 	private String customLayout;
+	// For INDIVIDUAL
+	private Boolean ignoreFailedStreams;
 	// For OpenVidu Pro
 	private String mediaNode;
 
@@ -58,14 +61,15 @@ public class RecordingProperties {
 	public static class Builder {
 
 		private String name = "";
-		private Boolean hasAudio = true;
-		private Boolean hasVideo = true;
-		private Recording.OutputMode outputMode = Recording.OutputMode.COMPOSED;
+		private Boolean hasAudio = DefaultValues.hasAudio;
+		private Boolean hasVideo = DefaultValues.hasVideo;
+		private Recording.OutputMode outputMode = DefaultValues.outputMode;
 		private RecordingLayout recordingLayout;
 		private String resolution;
 		private Integer frameRate;
 		private Long shmSize;
 		private String customLayout;
+		private Boolean ignoreFailedStreams = DefaultValues.ignoreFailedStreams;
 		private String mediaNode;
 
 		public Builder() {
@@ -81,6 +85,7 @@ public class RecordingProperties {
 			this.frameRate = props.frameRate();
 			this.shmSize = props.shmSize();
 			this.customLayout = props.customLayout();
+			this.ignoreFailedStreams = props.ignoreFailedStreams();
 			this.mediaNode = props.mediaNode();
 		}
 
@@ -90,7 +95,7 @@ public class RecordingProperties {
 		public RecordingProperties build() {
 			return new RecordingProperties(this.name, this.hasAudio, this.hasVideo, this.outputMode,
 					this.recordingLayout, this.resolution, this.frameRate, this.shmSize, this.customLayout,
-					this.mediaNode);
+					this.ignoreFailedStreams, this.mediaNode);
 		}
 
 		/**
@@ -207,14 +212,37 @@ public class RecordingProperties {
 		}
 
 		/**
+		 * Call this method to specify whether to ignore failed streams or not when
+		 * starting the recording. This property only applies to
+		 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} recordings.
+		 * For this type of recordings, when calling
+		 * {@link io.openvidu.java.client.OpenVidu#startRecording} by default all the
+		 * streams available at the moment the recording process starts must be healthy
+		 * and properly sending media. If some stream that should be sending media is
+		 * broken, then the recording process fails after a 10s timeout. In this way
+		 * your application is notified that some stream is not being recorded, so it
+		 * can retry the process again. But you can disable this rollback behavior and
+		 * simply ignore any failed stream, which will be susceptible to be recorded in
+		 * the future if media starts flowing as expected at any point. The downside of
+		 * this behavior is that you will have no guarantee that all streams present at
+		 * the beginning of a recording are actually being recorded.
+		 */
+		public RecordingProperties.Builder ignoreFailedStreams(boolean ignoreFailedStreams) {
+			this.ignoreFailedStreams = ignoreFailedStreams;
+			return this;
+		}
+
+		/**
 		 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank"
 		 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
 		 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
 		 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
 		 * sans-serif">PRO</a> Call this method to force the recording to be hosted in
 		 * the Media Node with identifier <code>mediaNodeId</code>. This property only
-		 * applies to COMPOSED or COMPOSED_QUICK_START recordings with
-		 * {@link RecordingProperties#hasVideo()} to true and is ignored for INDIVIDUAL
+		 * applies to {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
+		 * recordings with {@link RecordingProperties#hasVideo()} to true and is ignored
+		 * for {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL}
 		 * recordings and audio-only recordings, that are always hosted in the same
 		 * Media Node hosting its Session
 		 */
@@ -227,7 +255,7 @@ public class RecordingProperties {
 
 	protected RecordingProperties(String name, Boolean hasAudio, Boolean hasVideo, Recording.OutputMode outputMode,
 			RecordingLayout layout, String resolution, Integer frameRate, Long shmSize, String customLayout,
-			String mediaNode) {
+			Boolean ignoreFailedStreams, String mediaNode) {
 		this.name = name != null ? name : "";
 		this.hasAudio = hasAudio != null ? hasAudio : DefaultValues.hasAudio;
 		this.hasVideo = hasVideo != null ? hasVideo : DefaultValues.hasVideo;
@@ -241,6 +269,9 @@ public class RecordingProperties {
 			if (RecordingLayout.CUSTOM.equals(this.recordingLayout)) {
 				this.customLayout = customLayout;
 			}
+		}
+		if (OutputMode.INDIVIDUAL.equals(this.outputMode)) {
+			this.ignoreFailedStreams = ignoreFailedStreams;
 		}
 		this.mediaNode = mediaNode;
 	}
@@ -367,6 +398,29 @@ public class RecordingProperties {
 	}
 
 	/**
+	 * Defines whether to ignore failed streams or not when starting the recording.
+	 * This property only applies to
+	 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} recordings.
+	 * For this type of recordings, when calling
+	 * {@link io.openvidu.java.client.OpenVidu#startRecording} by default all the
+	 * streams available at the moment the recording process starts must be healthy
+	 * and properly sending media. If some stream that should be sending media is
+	 * broken, then the recording process fails after a 10s timeout. In this way
+	 * your application is notified that some stream is not being recorded, so it
+	 * can retry the process again. But you can disable this rollback behavior and
+	 * simply ignore any failed stream, which will be susceptible to be recorded in
+	 * the future if media starts flowing as expected at any point. The downside of
+	 * this behavior is that you will have no guarantee that all streams present at
+	 * the beginning of a recording are actually being recorded.<br>
+	 * <br>
+	 * 
+	 * Default to false
+	 */
+	public Boolean ignoreFailedStreams() {
+		return this.ignoreFailedStreams;
+	}
+
+	/**
 	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank"
 	 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
 	 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
@@ -400,6 +454,10 @@ public class RecordingProperties {
 			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {
 				json.addProperty("customLayout", customLayout != null ? customLayout : "");
 			}
+		}
+		if (OutputMode.INDIVIDUAL.equals(outputMode)) {
+			json.addProperty("ignoreFailedStreams",
+					ignoreFailedStreams != null ? ignoreFailedStreams : DefaultValues.ignoreFailedStreams);
 		}
 		if (this.mediaNode != null) {
 			json.addProperty("mediaNode", mediaNode);
@@ -451,6 +509,9 @@ public class RecordingProperties {
 					builder.customLayout(json.get("customLayout").getAsString());
 				}
 			}
+		}
+		if (OutputMode.INDIVIDUAL.equals(outputModeAux)) {
+			builder.ignoreFailedStreams(json.get("ignoreFailedStreams").getAsBoolean());
 		}
 		if (json.has("mediaNode")) {
 			String mediaNodeId = null;

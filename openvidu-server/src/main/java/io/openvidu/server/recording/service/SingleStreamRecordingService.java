@@ -122,9 +122,16 @@ public class SingleStreamRecordingService extends RecordingService {
 		}
 
 		try {
-			if (!recordingStartedCountdown.await(10, TimeUnit.SECONDS)) {
-				log.error("Error waiting for some recorder endpoint to start in session {}", session.getSessionId());
-				throw this.failStartRecording(session, recording, "Couldn't initialize some RecorderEndpoint");
+			if (!properties.ignoreFailedStreams()) {
+				if (!recordingStartedCountdown.await(10, TimeUnit.SECONDS)) {
+					log.error("Error waiting for some recorder endpoint to start in session {}",
+							session.getSessionId());
+					throw this.failStartRecording(session, recording, "Couldn't initialize some RecorderEndpoint");
+				}
+			} else {
+				log.info(
+						"Ignoring failed streams in recording {}. Some streams may not be immediately or ever recorded",
+						recordingId);
 			}
 		} catch (InterruptedException e) {
 			recording.setStatus(io.openvidu.java.client.Recording.Status.failed);

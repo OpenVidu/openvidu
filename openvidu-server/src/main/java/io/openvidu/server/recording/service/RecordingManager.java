@@ -430,7 +430,6 @@ public class RecordingManager {
 			// Start new RecorderEndpoint for this stream
 			log.info("Starting new RecorderEndpoint in session {} for new stream of participant {}",
 					session.getSessionId(), participant.getParticipantPublicId());
-			final CountDownLatch startedCountDown = new CountDownLatch(1);
 
 			MediaProfileSpecType profile = null;
 			try {
@@ -443,7 +442,7 @@ public class RecordingManager {
 			}
 
 			this.singleStreamRecordingService.startRecorderEndpointForPublisherEndpoint(recording.getId(), profile,
-					participant, startedCountDown);
+					participant, new CountDownLatch(1));
 		} else if (RecordingUtils.IS_COMPOSED(recording.getOutputMode()) && !recording.hasVideo()) {
 			// Connect this stream to existing Composite recorder
 			log.info("Joining PublisherEndpoint to existing Composite in session {} for new stream of participant {}",
