@@ -131,8 +131,7 @@ export class OpenViduLogger {
 	}
 
 	private canConfigureJSNLog(openVidu: OpenVidu, logger: OpenViduLogger): boolean {
-		return openVidu.session.sessionId != logger.loggingSessionId &&
-			openVidu.finalUserId != logger.loggingFinalUserId
+		return openVidu.session.sessionId != logger.loggingSessionId
 	}
 
 	log(...args: any[]){
