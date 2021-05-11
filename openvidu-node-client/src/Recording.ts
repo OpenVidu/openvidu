@@ -94,6 +94,9 @@ export class Recording {
                 this.properties.customLayout = (json['customLayout'] != null) ? json['customLayout'] : '';
             }
         }
+        if (this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.INDIVIDUAL]) {
+            this.properties.ignoreFailedStreams = (json['ignoreFailedStreams'] != null) ? !!json['ignoreFailedStreams'] : Recording.DefaultRecordingPropertiesValues.ignoreFailedStreams;
+        }
     }
     /* tslint:enable:no-string-literal */
 }
@@ -181,6 +184,7 @@ export namespace Recording {
         static readonly resolution: string = "1280x720";
         static readonly frameRate: number = 25;
         static readonly shmSize: number = 536870912;
+        static readonly ignoreFailedStreams: boolean = false;
     }
 
 }

@@ -667,18 +667,21 @@ export class Session {
             props.defaultRecordingProperties = {};
         }
         props.defaultRecordingProperties.name = (props.defaultRecordingProperties?.name != null) ? props.defaultRecordingProperties.name : '';
-        props.defaultRecordingProperties.hasAudio = (props.defaultRecordingProperties?.hasAudio != null) ? props.defaultRecordingProperties.hasAudio : true;
-        props.defaultRecordingProperties.hasVideo = (props.defaultRecordingProperties?.hasVideo != null) ? props.defaultRecordingProperties.hasVideo : true;
-        props.defaultRecordingProperties.outputMode = (props.defaultRecordingProperties?.outputMode != null) ? props.defaultRecordingProperties.outputMode : Recording.OutputMode.COMPOSED;
+        props.defaultRecordingProperties.hasAudio = (props.defaultRecordingProperties?.hasAudio != null) ? props.defaultRecordingProperties.hasAudio : Recording.DefaultRecordingPropertiesValues.hasAudio;
+        props.defaultRecordingProperties.hasVideo = (props.defaultRecordingProperties?.hasVideo != null) ? props.defaultRecordingProperties.hasVideo : Recording.DefaultRecordingPropertiesValues.hasVideo;
+        props.defaultRecordingProperties.outputMode = (props.defaultRecordingProperties?.outputMode != null) ? props.defaultRecordingProperties.outputMode : Recording.DefaultRecordingPropertiesValues.outputMode;
         props.defaultRecordingProperties.mediaNode = props.defaultRecordingProperties?.mediaNode;
         if ((props.defaultRecordingProperties.outputMode === Recording.OutputMode.COMPOSED || props.defaultRecordingProperties.outputMode == Recording.OutputMode.COMPOSED_QUICK_START) && props.defaultRecordingProperties.hasVideo) {
-            props.defaultRecordingProperties.recordingLayout = (props.defaultRecordingProperties.recordingLayout != null) ? props.defaultRecordingProperties.recordingLayout : RecordingLayout.BEST_FIT;
-            props.defaultRecordingProperties.resolution = (props.defaultRecordingProperties.resolution != null) ? props.defaultRecordingProperties.resolution : '1280x720';
-            props.defaultRecordingProperties.frameRate = (props.defaultRecordingProperties.frameRate != null) ? props.defaultRecordingProperties.frameRate : 25;
-            props.defaultRecordingProperties.shmSize = (props.defaultRecordingProperties.shmSize != null) ? props.defaultRecordingProperties.shmSize : 536870912;
+            props.defaultRecordingProperties.recordingLayout = (props.defaultRecordingProperties.recordingLayout != null) ? props.defaultRecordingProperties.recordingLayout : Recording.DefaultRecordingPropertiesValues.recordingLayout;
+            props.defaultRecordingProperties.resolution = (props.defaultRecordingProperties.resolution != null) ? props.defaultRecordingProperties.resolution : Recording.DefaultRecordingPropertiesValues.resolution;
+            props.defaultRecordingProperties.frameRate = (props.defaultRecordingProperties.frameRate != null) ? props.defaultRecordingProperties.frameRate : Recording.DefaultRecordingPropertiesValues.frameRate;
+            props.defaultRecordingProperties.shmSize = (props.defaultRecordingProperties.shmSize != null) ? props.defaultRecordingProperties.shmSize : Recording.DefaultRecordingPropertiesValues.shmSize;
             if (props.defaultRecordingProperties.recordingLayout === RecordingLayout.CUSTOM) {
                 props.defaultRecordingProperties.customLayout = (props.defaultRecordingProperties.customLayout != null) ? props.defaultRecordingProperties.customLayout : '';
             }
+        }
+        if (props.defaultRecordingProperties.outputMode === Recording.OutputMode.INDIVIDUAL) {
+            props.defaultRecordingProperties.ignoreFailedStreams = (props.defaultRecordingProperties?.ignoreFailedStreams != null) ? props.defaultRecordingProperties.ignoreFailedStreams : Recording.DefaultRecordingPropertiesValues.ignoreFailedStreams;
         }
 
         this.formatMediaNodeObjectIfNecessary(props.defaultRecordingProperties);

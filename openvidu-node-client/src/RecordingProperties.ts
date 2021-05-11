@@ -53,7 +53,7 @@ export interface RecordingProperties {
 
     /**
      * The layout to be used in the recording.<br>
-     * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED` or `COMPOSED_QUICK_START`
+     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
      * 
      * Default to [[RecordingLayout.BEST_FIT]]
      */
@@ -71,9 +71,8 @@ export interface RecordingProperties {
 
     /**
      * Recording video file frame rate.<br>
-     * Will only have effect if [[RecordingProperties.outputMode]]
-     * is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]] and [[RecordingProperties.hasVideo]] is set to true.
-     * For [[Recording.OutputMode.INDIVIDUAL]] all individual video files will have the native frame rate of the published stream.
+     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
+     * and [[RecordingProperties.hasVideo]] is set to true. For [[Recording.OutputMode.INDIVIDUAL]] all individual video files will have the native frame rate of the published stream.
      * 
      * Default to 25
      */
@@ -91,10 +90,24 @@ export interface RecordingProperties {
 
     /**
      * The relative path to the specific custom layout you want to use.<br>
-     * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED` (or `COMPOSED_QUICK_START`) and [[RecordingProperties.recordingLayout]] is `CUSTOM`<br>
+     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
+     * and [[RecordingProperties.recordingLayout]] is set to [[RecordingLayout.CUSTOM]]<br>
      * See [Custom recording layouts](/en/stable/advanced-features/recording#custom-recording-layouts) to learn more.
      */
     customLayout?: string;
+
+    /**
+     * Whether to ignore failed streams or not when starting the recording. This property only applies if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.INDIVIDUAL]].
+     * For this type of recordings, when calling [[OpenVidu.startRecording]] by default all the streams available at the moment the recording process starts must be healthy
+     * and properly sending media. If some stream that should be sending media is broken, then the recording process fails after a 10s timeout. In this way your application is notified
+     * that some stream is not being recorded, so it can retry the process again.
+     * 
+     * But you can disable this rollback behavior and simply ignore any failed stream, which will be susceptible to be recorded in the future if media starts flowing as expected at any point.
+     * The downside of this behavior is that you will have no guarantee that all streams present at the beginning of a recording are actually being recorded.
+     * 
+     * Default to false
+     */
+    ignoreFailedStreams?: boolean;
 
     /**
      * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> 
