@@ -28,14 +28,13 @@ export class OpenViduLogger {
 	private constructor() {}
 
 	static configureJSNLog(openVidu: OpenVidu, token: string) {
-		// If instance is created and it is OpenVidu Pro
-		if (this.instance && openVidu.webrtcStatsInterval > -1
-			// If logs are enabled
-			&& openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debug
-			// Only reconfigure it if session or finalUserId has changed
-			&& this.instance.canConfigureJSNLog(openVidu, this.instance)) {
-
-			try {
+		try {
+			// If instance is created and it is OpenVidu Pro
+			if (this.instance && openVidu.webrtcStatsInterval > -1
+				// If logs are enabled
+				&& openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debug
+				// Only reconfigure it if session or finalUserId has changed
+				&& this.instance.canConfigureJSNLog(openVidu, this.instance)) {
 				// isJSNLogSetup will not be true until completed setup
 				this.instance.isJSNLogSetup = false;
 				this.instance.info("Configuring JSNLogs.");
@@ -79,7 +78,7 @@ export class OpenViduLogger {
 						const seen = new WeakSet();
 						return (key, value) => {
 							if (typeof value === "object" && value != null) {
-								if (seen.has(value)) {
+								if (seen.has(value) || value instanceof HTMLElement) {
 									return;
 								}
 								seen.add(value);
@@ -109,14 +108,14 @@ export class OpenViduLogger {
 				this.instance.loggingSessionId = sessionId;
 				this.instance.loggingFinalUserId = finalUserId;
 				this.instance.info("JSNLog configured.");
-			} catch (e) {
-				console.error("Error configuring JSNLog: ");
-				console.error(e);
-				this.instance.isJSNLogSetup = false;
-				this.instance.loggingSessionId = undefined;
-				this.instance.loggingFinalUserId = undefined;
-				this.instance.currentAppender = undefined;
 			}
+		} catch (e) {
+			console.error("Error configuring JSNLog: ");
+			console.error(e);
+			this.instance.isJSNLogSetup = false;
+			this.instance.loggingSessionId = undefined;
+			this.instance.loggingFinalUserId = undefined;
+			this.instance.currentAppender = undefined;
 		}
 	}
 
@@ -133,7 +132,7 @@ export class OpenViduLogger {
 
 	private canConfigureJSNLog(openVidu: OpenVidu, logger: OpenViduLogger): boolean {
 		return openVidu.session.sessionId != logger.loggingSessionId &&
-		 	openVidu.finalUserId != logger.loggingFinalUserId
+			openVidu.finalUserId != logger.loggingFinalUserId
 	}
 
 	log(...args: any[]){
