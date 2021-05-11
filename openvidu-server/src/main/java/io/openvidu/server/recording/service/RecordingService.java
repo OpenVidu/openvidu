@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.java.client.Recording.OutputMode;
 import io.openvidu.java.client.Recording.Status;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
@@ -167,6 +168,9 @@ public abstract class RecordingService {
 					builder.customLayout(properties.customLayout());
 				}
 				builder.shmSize(properties.shmSize());
+			}
+			if (OutputMode.INDIVIDUAL.equals(properties.outputMode())) {
+				builder.ignoreFailedStreams(properties.ignoreFailedStreams());
 			}
 			properties = builder.build();
 		}
