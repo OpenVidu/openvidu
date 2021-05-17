@@ -36,9 +36,22 @@ export enum ExceptionEventName {
      * The [ICE connection state](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/iceConnectionState)
      * of an [RTCPeerConnection](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection) reached `failed` status.
      * 
+     * This is a terminal error that won't have any kind of possible recovery.
+     * 
      * [[ExceptionEvent]] objects with this [[ExceptionEvent.name]] will have as [[ExceptionEvent.origin]] property a [[Stream]] object.
      */
-    ICE_CONNECTION_FAILED = 'ICE_CONNECTION_FAILED'
+    ICE_CONNECTION_FAILED = 'ICE_CONNECTION_FAILED',
+
+    /**
+     * The [ICE connection state](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/iceConnectionState)
+     * of an [RTCPeerConnection](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection) reached `disconnected` status.
+     * 
+     * This is not a terminal error, and it is possible for the ICE connection to be reconnected.
+     * 
+     * [[ExceptionEvent]] objects with this [[ExceptionEvent.name]] will have as [[ExceptionEvent.origin]] property a [[Stream]] object.
+     */
+    ICE_CONNECTION_DISCONNECTED = 'ICE_CONNECTION_DISCONNECTED'
+
 }
 
 /**
@@ -56,7 +69,7 @@ export class ExceptionEvent extends Event {
     /**
      * Object affected by the exception. Depending on the [[ExceptionEvent.name]] property:
      * - [[Session]]: `ICE_CANDIDATE_ERROR`
-     * - [[Stream]]: `ICE_CONNECTION_FAILED`
+     * - [[Stream]]: `ICE_CONNECTION_FAILED`, `ICE_CONNECTION_DISCONNECTED`
      */
     origin: Session | Stream;
 

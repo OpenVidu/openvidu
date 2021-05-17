@@ -324,12 +324,14 @@ export class WebRtcPeer {
             switch (iceConnectionState) {
                 case 'disconnected':
                     // Possible network disconnection
-                    logger.warn('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection');
+                    const msg1 = 'IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection';
+                    logger.warn(msg1);
+                    this.configuration.onexception(ExceptionEventName.ICE_CONNECTION_DISCONNECTED, msg1);
                     break;
                 case 'failed':
-                    const msg = 'IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') to "failed"';
-                    logger.error(msg);
-                    this.configuration.onexception(ExceptionEventName.ICE_CONNECTION_FAILED, msg);
+                    const msg2 = 'IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') to "failed"';
+                    logger.error(msg2);
+                    this.configuration.onexception(ExceptionEventName.ICE_CONNECTION_FAILED, msg2);
                     break;
                 case 'closed':
                     logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "closed"');
