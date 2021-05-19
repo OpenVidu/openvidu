@@ -327,10 +327,12 @@ export class WebRtcStats {
     //       - Microsoft Edge 89.0.774.54
     //       - Electron 11.3.0 (Chromium 87.0.4280.141)
     //   - MacOS Desktop:
-    //       - Chrome  
-    //       - ¿Opera?
-    //       - Firefox  
-    //       - ¿Electron?
+    //       - Chrome 89.0.4389.90
+    //       - Opera 75.0.3969.93
+    //       - Firefox 87.0
+    //       - Microsoft Edge 89.0.774.57
+    //       - Safari 14.0 (14610.1.28.1.9)
+    //       - Electron 11.3.0 (Chromium 87.0.4280.141)	
     //   - Android:
     //       - Chrome Mobile 89.0.4389.90
     //       - Opera 62.3.3146.57763
