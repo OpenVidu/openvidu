@@ -806,20 +806,6 @@ export class Stream {
                 this.initHarkEvents(); // Init hark events for the local stream
             }
 
-            const userMediaConstraints = {
-                audio: this.isSendAudio(),
-                video: this.isSendVideo()
-            };
-
-            const options: WebRtcPeerConfiguration = {
-                mediaStream: this.mediaStream,
-                mediaConstraints: userMediaConstraints,
-                onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-                onexception: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
-                iceServers: this.getIceServersConf(),
-                simulcast: false
-            };
-
             const successOfferCallback = (sdpOfferParam) => {
                 logger.debug('Sending SDP offer to publish as '
                     + this.streamId, sdpOfferParam);
@@ -884,13 +870,25 @@ export class Stream {
                 });
             };
 
+            const config: WebRtcPeerConfiguration = {
+                mediaConstraints: {
+                    audio: this.hasAudio,
+                    video: this.hasVideo,
+                },
+                simulcast: false,
+                onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
+                onexception: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
+                iceServers: this.getIceServersConf(),
+                mediaStream: this.mediaStream,
+            };
+
             if (reconnect) {
                 this.disposeWebRtcPeer();
             }
             if (this.displayMyRemote()) {
-                this.webRtcPeer = new WebRtcPeerSendrecv(options);
+                this.webRtcPeer = new WebRtcPeerSendrecv(config);
             } else {
-                this.webRtcPeer = new WebRtcPeerSendonly(options);
+                this.webRtcPeer = new WebRtcPeerSendonly(config);
             }
             this.webRtcPeer.addIceConnectionStateChangeListener('publisher of ' + this.connection.connectionId);
             this.webRtcPeer.createOffer().then(sdpOffer => {
@@ -936,19 +934,7 @@ export class Stream {
     completeWebRtcPeerReceive(sdpOffer: string, reconnect: boolean): Promise<void> {
         return new Promise((resolve, reject) => {
 
-            const offerConstraints = {
-                audio: this.inboundStreamOpts.hasAudio,
-                video: this.inboundStreamOpts.hasVideo
-            };
-            logger.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer",
-                offerConstraints);
-            const options = {
-                onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-                onexception: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
-                mediaConstraints: offerConstraints,
-                iceServers: this.getIceServersConf(),
-                simulcast: false
-            };
+            logger.debug("'Session.subscribe(Stream)' called");
 
             const successAnswerCallback = (sdpAnswer) => {
                 logger.debug('Sending SDP answer to subscribe to '
@@ -968,7 +954,18 @@ export class Stream {
                 });
             };
 
-            this.webRtcPeer = new WebRtcPeerRecvonly(options);
+            const config: WebRtcPeerConfiguration = {
+                mediaConstraints: {
+                    audio: this.hasAudio,
+                    video: this.hasVideo,
+                },
+                simulcast: false,
+                onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
+                onexception: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
+                iceServers: this.getIceServersConf(),
+            };
+
+            this.webRtcPeer = new WebRtcPeerRecvonly(config);
             this.webRtcPeer.addIceConnectionStateChangeListener(this.streamId);
             this.webRtcPeer.processRemoteOffer(sdpOffer)
                 .then(() => {

@@ -111,112 +111,49 @@ export class WebRtcPeer {
      * Only if the negotiation was initiated by the this peer
      */
     createOffer(): Promise<RTCSessionDescriptionInit> {
-        return new Promise((resolve, reject) => {
-            const hasAudio = this.configuration.mediaConstraints.audio;
-            const hasVideo = this.configuration.mediaConstraints.video;
+        const hasAudio = this.configuration.mediaConstraints.audio;
+        const hasVideo = this.configuration.mediaConstraints.video;
 
-            let offerPromise: Promise<RTCSessionDescriptionInit>;
+        let promise: Promise<RTCSessionDescriptionInit>;
 
-            // TODO: Delete this conditional when all supported browsers are
-            // modern enough to implement the Transceiver methods.
-            if ("addTransceiver" in this.pc) {
-                logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is available; using it");
+        // TODO: Delete this conditional when all supported browsers are
+        // modern enough to implement the Transceiver methods.
+        if ("addTransceiver" in this.pc) {
+            logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is available; using it");
 
-                // At this point, all "send" audio/video tracks have been added
-                // with pc.addTrack(), which in modern versions of libwebrtc
-                // will have created Transceivers with "sendrecv" direction.
-                // Source: [addTrack/9.3](https://www.w3.org/TR/2020/CRD-webrtc-20201203/#dom-rtcpeerconnection-addtrack).
-                //
-                // Here we just need to enforce that those Transceivers have the
-                // correct direction, either "sendrecv" or "sendonly".
-                //
-                // Otherwise, if the tracks are "recv", no Transceiver should
-                // have been added yet.
-
-                const tcs = this.pc.getTransceivers();
-
-                if (tcs.length > 0) {
-                    // Assert correct mode.
-                    if (
-                        this.configuration.mode !== "sendrecv" &&
-                        this.configuration.mode !== "sendonly"
-                    ) {
-                        throw new Error(
-                            "BUG: Transceivers added, but direction is not send"
-                        );
-                    }
-
-                    for (const tc of tcs) {
-                        tc.direction = this.configuration.mode;
-                        logger.debug(
-                            `RTCRtpTransceiver direction: ${tc.direction}`
-                        );
-                    }
-                } else {
-                    if (this.configuration.mode !== "recvonly") {
-                        throw new Error(
-                            "BUG: Transceivers missing, but direction is not recv"
-                        );
-                    }
-
-                    if (hasAudio) {
-                        this.pc.addTransceiver("audio", {
-                            direction: this.configuration.mode,
-                        });
-                    }
-
-                    if (hasVideo) {
-                        this.pc.addTransceiver("video", {
-                            direction: this.configuration.mode,
-                        });
-                    }
+            if (this.configuration.mediaStream) {
+                for (const track of this.configuration.mediaStream.getTracks()) {
+                    this.pc.addTransceiver(track, {
+                        direction: this.configuration.mode,
+                        streams: [this.configuration.mediaStream],
+                        sendEncodings: [],
+                    });
                 }
-
-                offerPromise = this.pc.createOffer();
-            } else {
-                logger.debug("[generateOffer] Method pc.getTransceivers() NOT available; using LEGACY offerToReceive{Audio,Video}");
-
-                // DEPRECATED: LEGACY METHOD: Old WebRTC versions don't implement
-                // Transceivers, and instead depend on the deprecated
-                // "offerToReceiveAudio" and "offerToReceiveVideo".
-
-                const constraints: RTCOfferOptions = {
-                    offerToReceiveAudio:
-                        this.configuration.mode !== "sendonly" && hasAudio,
-                    offerToReceiveVideo:
-                        this.configuration.mode !== "sendonly" && hasVideo,
-                };
-
-                logger.debug(
-                    "RTCPeerConnection constraints: " +
-                        JSON.stringify(constraints)
-                );
-
-                // @ts-ignore: Compiler is too clever and thinks this branch
-                // will never execute.
-                offerPromise = this.pc.createOffer(constraints);
             }
 
-            offerPromise
-                .then((offer) => {
-                    logger.debug("Created SDP offer");
-                    return this.pc.setLocalDescription(offer);
-                })
-                .then(() => {
-                    const localDescription = this.pc.localDescription;
+            promise = this.pc.createOffer();
+        } else {
+            logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is NOT available; using LEGACY offerToReceive{Audio,Video}");
 
-                    if (!!localDescription) {
-                        logger.debug(
-                            "Local description set:",
-                            localDescription.sdp
-                        );
-                        resolve(localDescription.sdp);
-                    } else {
-                        reject("Local description is not defined");
-                    }
-                })
-                .catch((error) => reject(error));
-        });
+            // DEPRECATED: LEGACY METHOD: Old WebRTC versions don't implement
+            // Transceivers, and instead depend on the deprecated
+            // "offerToReceiveAudio" and "offerToReceiveVideo".
+
+            const options: RTCOfferOptions = {
+                offerToReceiveAudio:
+                    this.configuration.mode !== "sendonly" && hasAudio,
+                offerToReceiveVideo:
+                    this.configuration.mode !== "sendonly" && hasVideo,
+            };
+
+            logger.debug("RTCPeerConnection.createOffer() options:", JSON.stringify(options));
+
+            // @ts-ignore: Compiler is too clever and thinks this branch
+            // will never execute.
+            promise = this.pc.createOffer(options);
+        }
+
+        return promise;
     }
 
     /**
@@ -224,24 +161,32 @@ export class WebRtcPeer {
      * Only if the negotiation was initiated by the other peer
      */
     createAnswer(): Promise<RTCSessionDescriptionInit> {
-        return new Promise((resolve, reject) => {
-            let offerAudio, offerVideo = true;
-            if (!!this.configuration.mediaConstraints) {
-                offerAudio = (typeof this.configuration.mediaConstraints.audio === 'boolean') ?
-                    this.configuration.mediaConstraints.audio : true;
-                offerVideo = (typeof this.configuration.mediaConstraints.video === 'boolean') ?
-                    this.configuration.mediaConstraints.video : true;
+        const hasAudio = this.configuration.mediaConstraints.audio;
+        const hasVideo = this.configuration.mediaConstraints.video;
+
+        let promise: Promise<RTCSessionDescriptionInit>;
+
+        // TODO: Delete this conditional when all supported browsers are
+        // modern enough to implement the Transceiver methods.
+        if ("addTransceiver" in this.pc) {
+            logger.debug("[createAnswer] Method RTCPeerConnection.addTransceiver() is available; using it");
+
+            if (hasAudio) {
+                this.pc.addTransceiver("audio", {
+                    direction: this.configuration.mode,
+                });
             }
-            const constraints: RTCOfferOptions = {
-                offerToReceiveAudio: offerAudio,
-                offerToReceiveVideo: offerVideo
-            };
-            this.pc.createAnswer(constraints).then(sdpAnswer => {
-                resolve(sdpAnswer);
-            }).catch(error => {
-                reject(error);
-            });
-        });
+            if (hasVideo) {
+                this.pc.addTransceiver("video", {
+                    direction: this.configuration.mode,
+                });
+            }
+        }
+
+        // else, there is nothing to do; the legacy createAnswer() options do
+        // not offer any control over what tracks are included in the answer.
+
+        return this.pc.createAnswer();
     }
 
     /**
@@ -363,12 +308,12 @@ export class WebRtcPeer {
             switch (iceConnectionState) {
                 case 'disconnected':
                     // Possible network disconnection
-                    const msg1 = 'IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection';
+                    const msg1 = 'IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection';
                     logger.warn(msg1);
                     this.configuration.onexception(ExceptionEventName.ICE_CONNECTION_DISCONNECTED, msg1);
                     break;
                 case 'failed':
-                    const msg2 = 'IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') to "failed"';
+                    const msg2 = 'IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') to "failed"';
                     logger.error(msg2);
                     this.configuration.onexception(ExceptionEventName.ICE_CONNECTION_FAILED, msg2);
                     break;
