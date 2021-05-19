@@ -778,7 +778,7 @@ export class Stream {
             return true;
         }
         const iceConnectionState: RTCIceConnectionState = this.getRTCPeerConnection().iceConnectionState;
-        return iceConnectionState === 'disconnected' || iceConnectionState === 'failed';
+        return iceConnectionState !== 'connected' && iceConnectionState !== 'completed';
     }
 
     /* Private methods */
