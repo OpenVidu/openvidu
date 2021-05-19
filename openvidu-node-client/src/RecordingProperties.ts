@@ -31,48 +31,83 @@ export interface RecordingProperties {
     name?: string;
 
     /**
-     * The mode of recording: COMPOSED for a single archive in a grid layout or INDIVIDUAL for one archive for each stream
-     */
-    outputMode?: Recording.OutputMode;
-
-    /**
-     * The layout to be used in the recording.<br>
-     * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED` or `COMPOSED_QUICK_START`
-     */
-    recordingLayout?: RecordingLayout;
-
-    /**
-     * The relative path to the specific custom layout you want to use.<br>
-     * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED` (or `COMPOSED_QUICK_START`) and [[RecordingProperties.recordingLayout]] is `CUSTOM`<br>
-     * See [Custom recording layouts](/en/stable/advanced-features/recording#custom-recording-layouts) to learn more
-     */
-    customLayout?: string;
-
-    /**
-     * Recording video file resolution. Must be a string with format "WIDTHxHEIGHT",
-     * being both WIDTH and HEIGHT the number of pixels between 100 and 1999.<br>
-     * Will only have effect if [[RecordingProperties.outputMode]]
-     * is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]].
-     * For [[Recording.OutputMode.INDIVIDUAL]] all
-     * individual video files will have the native resolution of the published stream
-     */
-    resolution?: string;
-
-    /**
      * Whether or not to record audio. Cannot be set to false at the same time as [[RecordingProperties.hasVideo]]
+     * 
+     * Default to true
      */
     hasAudio?: boolean;
 
     /**
      * Whether or not to record video. Cannot be set to false at the same time as [[RecordingProperties.hasAudio]]
+     * 
+     * Default to true
      */
     hasVideo?: boolean;
 
     /**
-     * If COMPOSED recording, the amount of shared memory reserved for the recording process in bytes.
-     * Minimum 134217728 (128MB). Property ignored if INDIVIDUAL recording. Default to 536870912 (512 MB)
+     * The mode of recording: COMPOSED for a single archive in a grid layout or INDIVIDUAL for one archive for each stream
+     * 
+     * Default to [[Recording.OutputMode.COMPOSED]]
+     */
+    outputMode?: Recording.OutputMode;
+
+    /**
+     * The layout to be used in the recording.<br>
+     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
+     * 
+     * Default to [[RecordingLayout.BEST_FIT]]
+     */
+    recordingLayout?: RecordingLayout;
+
+    /**
+     * Recording video file resolution. Must be a string with format "WIDTHxHEIGHT",
+     * being both WIDTH and HEIGHT the number of pixels between 100 and 1999.<br>
+     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
+     * and [[RecordingProperties.hasVideo]] is set to true. For [[Recording.OutputMode.INDIVIDUAL]] all individual video files will have the native resolution of the published stream.
+     * 
+     * Default to "1280x720"
+     */
+    resolution?: string;
+
+    /**
+     * Recording video file frame rate.<br>
+     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
+     * and [[RecordingProperties.hasVideo]] is set to true. For [[Recording.OutputMode.INDIVIDUAL]] all individual video files will have the native frame rate of the published stream.
+     * 
+     * Default to 25
+     */
+    frameRate?: number;
+
+    /**
+     * The amount of shared memory reserved for the recording process in bytes.
+     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
+     * and [[RecordingProperties.hasVideo]] is set to true. Property ignored for INDIVIDUAL recordings and audio-only recordings.
+     * Minimum 134217728 (128MB).
+     * 
+     * Default to 536870912 (512 MB)
      */
     shmSize?: number;
+
+    /**
+     * The relative path to the specific custom layout you want to use.<br>
+     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
+     * and [[RecordingProperties.recordingLayout]] is set to [[RecordingLayout.CUSTOM]]<br>
+     * See [Custom recording layouts](/en/stable/advanced-features/recording#custom-recording-layouts) to learn more.
+     */
+    customLayout?: string;
+
+    /**
+     * Whether to ignore failed streams or not when starting the recording. This property only applies if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.INDIVIDUAL]].
+     * For this type of recordings, when calling [[OpenVidu.startRecording]] by default all the streams available at the moment the recording process starts must be healthy
+     * and properly sending media. If some stream that should be sending media is broken, then the recording process fails after a 10s timeout. In this way your application is notified
+     * that some stream is not being recorded, so it can retry the process again.
+     * 
+     * But you can disable this rollback behavior and simply ignore any failed stream, which will be susceptible to be recorded in the future if media starts flowing as expected at any point.
+     * The downside of this behavior is that you will have no guarantee that all streams present at the beginning of a recording are actually being recorded.
+     * 
+     * Default to false
+     */
+    ignoreFailedStreams?: boolean;
 
     /**
      * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> 

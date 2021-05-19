@@ -70,6 +70,10 @@ public class ProtocolElements {
 
 	public static final String UNPUBLISHVIDEO_METHOD = "unpublishVideo";
 
+	public static final String PREPARERECEIVEVIDEO_METHOD = "prepareReceiveVideoFrom";
+	public static final String PREPARERECEIVEVIDEO_SDPOFFER_PARAM = "sdpOffer";
+	public static final String PREPARERECEIVEVIDEO_RECONNECT_PARAM = "reconnect";
+
 	public static final String RECEIVEVIDEO_METHOD = "receiveVideoFrom";
 	public static final String RECEIVEVIDEO_SDPOFFER_PARAM = "sdpOffer";
 	public static final String RECEIVEVIDEO_SENDER_PARAM = "sender";
@@ -129,7 +133,10 @@ public class ProtocolElements {
 
 	public static final String RECONNECTSTREAM_METHOD = "reconnectStream";
 	public static final String RECONNECTSTREAM_STREAM_PARAM = "stream";
+	public static final String RECONNECTSTREAM_SDPSTRING_PARAM = "sdpString";
+	// TODO: REMOVE ON 2.18.0
 	public static final String RECONNECTSTREAM_SDPOFFER_PARAM = "sdpOffer";
+	// ENDTODO
 
 	public static final String VIDEODATA_METHOD = "videoData";
 
@@ -137,6 +144,7 @@ public class ProtocolElements {
 
 	public static final String PARTICIPANTJOINED_METHOD = "participantJoined";
 	public static final String PARTICIPANTJOINED_USER_PARAM = "id";
+	public static final String PARTICIPANTJOINED_FINALUSERID_PARAM = "finalUserId";
 	public static final String PARTICIPANTJOINED_CREATEDAT_PARAM = "createdAt";
 	public static final String PARTICIPANTJOINED_METADATA_PARAM = "metadata";
 	public static final String PARTICIPANTJOINED_VALUE_PARAM = "value";

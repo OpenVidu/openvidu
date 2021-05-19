@@ -36,7 +36,6 @@ import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.endpoint.KmsEvent;
-import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.summary.SessionSummary;
@@ -105,10 +104,10 @@ public class CallDetailRecord {
 		sessionManager.getFinalUsers(sessionId).get(participant.getFinalUserId()).setConnection(eventParticipantEnd);
 	}
 
-	public void recordNewPublisher(Participant participant, String sessionId, String streamId,
-			MediaOptions mediaOptions, Long timestamp) {
-		CDREventWebrtcConnection publisher = new CDREventWebrtcConnection(sessionId, streamId, participant,
-				mediaOptions, null, timestamp);
+	public void recordNewPublisher(Participant participant, String streamId, MediaOptions mediaOptions,
+			Long timestamp) {
+		CDREventWebrtcConnection publisher = new CDREventWebrtcConnection(participant.getSessionId(),
+				participant.getUniqueSessionId(), streamId, participant, mediaOptions, null, timestamp);
 		this.publications.put(participant.getParticipantPublicId(), publisher);
 		this.log(publisher);
 	}
@@ -126,11 +125,11 @@ public class CallDetailRecord {
 		}
 	}
 
-	public void recordNewSubscriber(Participant participant, String sessionId, String streamId, String senderPublicId,
-			Long timestamp) {
+	public void recordNewSubscriber(Participant participant, String streamId, String senderPublicId, Long timestamp) {
 		CDREventWebrtcConnection publisher = this.publications.get(senderPublicId);
-		CDREventWebrtcConnection subscriber = new CDREventWebrtcConnection(sessionId, streamId, participant,
-				publisher.mediaOptions, senderPublicId, timestamp);
+		CDREventWebrtcConnection subscriber = new CDREventWebrtcConnection(participant.getSessionId(),
+				participant.getUniqueSessionId(), streamId, participant, publisher.mediaOptions, senderPublicId,
+				timestamp);
 		this.subscriptions.putIfAbsent(participant.getParticipantPublicId(), new ConcurrentSkipListSet<>());
 		this.subscriptions.get(participant.getParticipantPublicId()).add(subscriber);
 		this.log(subscriber);
@@ -180,16 +179,17 @@ public class CallDetailRecord {
 		this.log(new CDREventRecordingStatus(recording, recording.getCreatedAt(), finalReason, timestamp, status));
 	}
 
-	public void recordFilterEventDispatched(String sessionId, String participantId, String streamId, String filterType,
-			GenericMediaEvent event) {
-		this.log(new CDREventFilterEvent(sessionId, participantId, streamId, filterType, event));
+	public void recordFilterEventDispatched(String sessionId, String uniqueSessionId, String connectionId,
+			String streamId, String filterType, GenericMediaEvent event) {
+		this.log(new CDREventFilterEvent(sessionId, uniqueSessionId, connectionId, streamId, filterType, event));
 	}
 
-	public void recordSignalSent(String sessionId, String from, String[] to, String type, String data) {
+	public void recordSignalSent(String sessionId, String uniqueSessionId, String from, String[] to, String type,
+			String data) {
 		if (from != null) {
 			type = type.replaceFirst("^signal:", "");
 		}
-		this.log(new CDREventSignal(sessionId, from, to, type, data));
+		this.log(new CDREventSignal(sessionId, uniqueSessionId, from, to, type, data));
 	}
 
 	protected void log(CDREvent event) {
@@ -211,16 +211,16 @@ public class CallDetailRecord {
 		});
 	}
 
+	public void log(WebrtcDebugEvent event) {
+		this.loggers.forEach(logger -> {
+			logger.log(event);
+		});
+	}
+
 	public void log(SessionSummary sessionSummary) {
 		this.loggers.forEach(logger -> {
 			logger.log(sessionSummary);
 		});
-	}
-
-	public void recordMediaServerCrashed(Kms kms, String environmentId, long timeOfKurentoDisconnection) {
-		CDREvent e = new CDREventMediaServerCrashed(CDREventName.mediaServerCrashed, null, timeOfKurentoDisconnection,
-				kms, environmentId);
-		this.log(e);
 	}
 
 }

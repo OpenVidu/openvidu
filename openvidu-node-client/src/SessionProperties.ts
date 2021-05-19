@@ -16,9 +16,9 @@
  */
 
 import { MediaMode } from './MediaMode';
-import { Recording } from './Recording';
-import { RecordingLayout } from './RecordingLayout';
+import { RecordingProperties } from './RecordingProperties';
 import { RecordingMode } from './RecordingMode';
+import { VideoCodec } from './VideoCodec';
 
 /**
  * See [[OpenVidu.createSession]]
@@ -28,35 +28,25 @@ export interface SessionProperties {
     /**
      * How the media streams will be sent and received by your clients: routed through OpenVidu Media Node
      * (`MediaMode.ROUTED`) or attempting direct p2p connections (`MediaMode.RELAYED`, _not available yet_)
+     * 
+     * Default to [[MediaMode.ROUTED]]
      */
     mediaMode?: MediaMode;
 
     /**
      * Whether the Session will be automatically recorded (`RecordingMode.ALWAYS`) or not (`RecordingMode.MANUAL`)
+     * 
+     * Default to [[RecordingMode.MANUAL]]
      */
     recordingMode?: RecordingMode;
 
     /**
-     * Default value used to initialize property [[RecordingProperties.outputMode]] of every recording of this session.
-     *
-     * You can easily override this value later by setting [[RecordingProperties.outputMode]] to any other value
+     * Default recording properties of this session. You can easily override this value later when starting a
+     * [[Recording]] by providing new [[RecordingProperties]]
+     * 
+     * Default values defined in [[RecordingProperties]] class
      */
-    defaultOutputMode?: Recording.OutputMode;
-
-    /**
-     * Default value used to initialize property [[RecordingProperties.recordingLayout]] of every recording of this session.
-     *
-     * You can easily override this value later by setting [[RecordingProperties.recordingLayout]] to any other value
-     */
-    defaultRecordingLayout?: RecordingLayout;
-
-    /**
-     * Default value used to initialize property [[RecordingProperties.customLayout]] of every recording of this session.
-     * This property can only be defined if [[SessionProperties.defaultRecordingLayout]] is set to [[RecordingLayout.CUSTOM]].
-     *
-     * You can easily override this value later by setting [[RecordingProperties.customLayout]] to any other value
-     */
-    defaultCustomLayout?: string;
+    defaultRecordingProperties?: RecordingProperties;
 
     /**
      * Fix the sessionId that will be assigned to the session with this parameter. You can take advantage of this property
@@ -79,16 +69,18 @@ export interface SessionProperties {
     /**
      * It defines which video codec do you want to be forcibly used for this session.
      * This allows browsers/clients to use the same codec avoiding transcoding in the media server.
-     * If the browser/client is not compatible with the specified codec and [[allowTranscoding]]
-     * is <code>false</code> and exception will occur.
-     *
-     * If forcedVideoCodec is set to NONE, no codec will be forced.
+     * If the browser/client is not compatible with the specified codec and [[allowTranscoding]] is <code>false</code>
+     * and exception will occur. If forcedVideoCodec is set to [[VideoCodec.NONE]], no codec will be forced.
+     * 
+     * Default to [[VideoCodec.VP8]]
      */
-    forcedVideoCodec?: string;
+    forcedVideoCodec?: VideoCodec;
 
     /**
      * It defines if you want to allow transcoding in the media server or not
      * when [[forcedVideoCodec]] is not compatible with the browser/client.
+     * 
+     * Default to false
      */
     allowTranscoding?: boolean;
 

@@ -31,24 +31,17 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
-import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.recording.service.RecordingManager;
-import io.openvidu.server.utils.RecordingUtils;
 
 public class Session implements SessionInterface {
-
-	private static final Logger log = LoggerFactory.getLogger(Session.class);
 
 	protected OpenviduConfig openviduConfig;
 	protected RecordingManager recordingManager;
@@ -56,6 +49,7 @@ public class Session implements SessionInterface {
 	protected ConcurrentMap<String, Token> tokens = new ConcurrentHashMap<>();
 	protected final ConcurrentMap<String, Participant> participants = new ConcurrentHashMap<>();
 	protected String sessionId;
+	protected String uniqueSessionId;
 	protected SessionProperties sessionProperties;
 	protected Long startTime;
 
@@ -91,6 +85,7 @@ public class Session implements SessionInterface {
 	public Session(Session previousSession) {
 		this.sessionId = previousSession.getSessionId();
 		this.startTime = previousSession.getStartTime();
+		this.uniqueSessionId = previousSession.getUniqueSessionId();
 		this.sessionProperties = previousSession.getSessionProperties();
 		this.openviduConfig = previousSession.openviduConfig;
 		this.recordingManager = previousSession.recordingManager;
@@ -101,6 +96,7 @@ public class Session implements SessionInterface {
 			RecordingManager recordingManager) {
 		this.sessionId = sessionId;
 		this.startTime = System.currentTimeMillis();
+		this.uniqueSessionId = sessionId + "_" + this.startTime;
 		this.sessionProperties = sessionProperties;
 		this.openviduConfig = openviduConfig;
 		this.recordingManager = recordingManager;
@@ -108,6 +104,10 @@ public class Session implements SessionInterface {
 
 	public String getSessionId() {
 		return this.sessionId;
+	}
+
+	public String getUniqueSessionId() {
+		return this.uniqueSessionId;
 	}
 
 	public SessionProperties getSessionProperties() {
@@ -191,10 +191,6 @@ public class Session implements SessionInterface {
 		return this.tokens.entrySet().iterator();
 	}
 
-	public void showTokens(String preMessage) {
-		log.info("{} { Session: {} | Tokens: {} }", preMessage, this.sessionId, this.tokens.keySet().toString());
-	}
-
 	public boolean isClosed() {
 		return closed;
 	}
@@ -240,13 +236,7 @@ public class Session implements SessionInterface {
 		json.addProperty("createdAt", this.startTime);
 		json.addProperty("mediaMode", this.sessionProperties.mediaMode().name());
 		json.addProperty("recordingMode", this.sessionProperties.recordingMode().name());
-		json.addProperty("defaultOutputMode", this.sessionProperties.defaultOutputMode().name());
-		if (RecordingUtils.IS_COMPOSED(this.sessionProperties.defaultOutputMode())) {
-			json.addProperty("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
-			if (RecordingLayout.CUSTOM.equals(this.sessionProperties.defaultRecordingLayout())) {
-				json.addProperty("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
-			}
-		}
+		json.add("defaultRecordingProperties", this.sessionProperties.defaultRecordingProperties().toJson());
 		if (this.sessionProperties.customSessionId() != null) {
 			json.addProperty("customSessionId", this.sessionProperties.customSessionId());
 		}
@@ -274,6 +264,10 @@ public class Session implements SessionInterface {
 	@Override
 	public boolean close(EndReason reason) {
 		return false;
+	}
+
+	public int getNumberOfConnections() {
+		return this.participants.size();
 	}
 
 }

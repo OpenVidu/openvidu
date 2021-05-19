@@ -161,9 +161,6 @@ function JsonRpcClient(configuration) {
         });
 
     this.send = function (method, params, callback) {
-        if (method !== 'ping') {
-            Logger.debug('Request: method:' + method + " params:" + JSON.stringify(params));
-        }
 
         var requestTime = Date.now();
 

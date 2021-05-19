@@ -31,6 +31,8 @@ import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonObject;
+
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
@@ -40,6 +42,7 @@ import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.kurento.kms.Kms;
+import io.openvidu.server.utils.RemoteOperationUtils;
 
 /**
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
@@ -164,8 +167,8 @@ public class KurentoSession extends Session {
 				candidate);
 	}
 
-	public void sendMediaError(String participantId, String description) {
-		this.kurentoSessionHandler.onMediaElementError(sessionId, participantId, description);
+	public void sendMediaError(String connectionId, String description) {
+		this.kurentoSessionHandler.onMediaElementError(sessionId, connectionId, description);
 	}
 
 	private void removeParticipant(Participant participant, EndReason reason) {
@@ -250,29 +253,31 @@ public class KurentoSession extends Session {
 				return;
 			}
 
-			getPipeline().release(new Continuation<Void>() {
-				@Override
-				public void onSuccess(Void result) throws Exception {
-					log.debug("SESSION {}: Released Pipeline", sessionId);
-					pipeline = null;
-					pipelineLatch = new CountDownLatch(1);
-					pipelineCreationErrorCause = null;
-					if (callback != null) {
-						callback.run();
+			if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
+				getPipeline().release(new Continuation<Void>() {
+					@Override
+					public void onSuccess(Void result) throws Exception {
+						log.debug("SESSION {}: Released Pipeline", sessionId);
+						pipeline = null;
+						pipelineLatch = new CountDownLatch(1);
+						pipelineCreationErrorCause = null;
+						if (callback != null) {
+							callback.run();
+						}
 					}
-				}
 
-				@Override
-				public void onError(Throwable cause) throws Exception {
-					log.warn("SESSION {}: Could not successfully release Pipeline", sessionId, cause);
-					pipeline = null;
-					pipelineLatch = new CountDownLatch(1);
-					pipelineCreationErrorCause = null;
-					if (callback != null) {
-						callback.run();
+					@Override
+					public void onError(Throwable cause) throws Exception {
+						log.warn("SESSION {}: Could not successfully release Pipeline", sessionId, cause);
+						pipeline = null;
+						pipelineLatch = new CountDownLatch(1);
+						pipelineCreationErrorCause = null;
+						if (callback != null) {
+							callback.run();
+						}
 					}
-				}
-			});
+				});
+			}
 		}
 	}
 
@@ -280,13 +285,13 @@ public class KurentoSession extends Session {
 		return this.publishedStreamIds.get(streamId);
 	}
 
-	public void restartStatusInKurento(Long kmsDisconnectionTime) {
+	public void restartStatusInKurentoAfterReconnection(Long kmsDisconnectionTime) {
 
 		log.info("Resetting process: resetting remote media objects for active session {}", this.sessionId);
 
 		// Stop recording if session is being recorded
 		if (recordingManager.sessionIsBeingRecorded(this.sessionId)) {
-			this.recordingManager.forceStopRecording(this, EndReason.mediaServerDisconnect, kmsDisconnectionTime);
+			this.recordingManager.forceStopRecording(this, EndReason.mediaServerReconnect, kmsDisconnectionTime);
 		}
 
 		// Store MediaOptions for resetting PublisherEndpoints later
@@ -301,10 +306,10 @@ public class KurentoSession extends Session {
 						kParticipant.getPublisher().getMediaOptions());
 			}
 			kParticipant.releaseAllFilters();
-			kParticipant.close(EndReason.mediaServerDisconnect, false, kmsDisconnectionTime);
+			kParticipant.close(EndReason.mediaServerReconnect, false, kmsDisconnectionTime);
 			if (wasStreaming) {
 				kurentoSessionHandler.onUnpublishMedia(kParticipant, this.getParticipants(), null, null, null,
-						EndReason.mediaServerDisconnect);
+						EndReason.mediaServerReconnect);
 			}
 		});
 
@@ -332,6 +337,21 @@ public class KurentoSession extends Session {
 				log.error("Error waiting to new MediaPipeline on KurentoSession restart: {}", e.getMessage());
 			}
 		});
+	}
+
+	@Override
+	public JsonObject toJson(boolean withPendingConnections, boolean withWebrtcStats) {
+		JsonObject json = super.toJson(withPendingConnections, withWebrtcStats);
+		if (this.kms != null && this.kurentoSessionHandler.addMediaNodeInfoToSessionEntity()) {
+			json.addProperty("mediaNodeId", kms.getId());
+		}
+		return json;
+	}
+
+	public int getNumberOfWebrtcConnections() {
+		return this.getActivePublishers() + this.participants.values().stream()
+				.filter(p -> !ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(p.getParticipantPublicId()))
+				.mapToInt(p -> ((KurentoParticipant) p).getSubscribers().size()).reduce(0, Integer::sum);
 	}
 
 }

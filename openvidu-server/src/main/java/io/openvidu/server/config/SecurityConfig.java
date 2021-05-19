@@ -56,16 +56,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.csrf().disable().authorizeRequests()
 				.antMatchers(HttpMethod.GET, RequestMappings.API + "/config/openvidu-publicurl").permitAll()
 				.antMatchers(HttpMethod.GET, RequestMappings.ACCEPT_CERTIFICATE).permitAll()
-				.antMatchers(RequestMappings.API + "/**").authenticated()
-				.antMatchers(HttpMethod.GET, RequestMappings.CDR + "/**").authenticated()
-				.antMatchers(HttpMethod.GET, RequestMappings.FRONTEND_CE + "/**").authenticated()
-				.antMatchers(HttpMethod.GET, RequestMappings.CUSTOM_LAYOUTS + "/**").authenticated();
+				.antMatchers(RequestMappings.API + "/**").hasRole("ADMIN")
+				.antMatchers(HttpMethod.GET, RequestMappings.CDR + "/**").hasRole("ADMIN")
+				.antMatchers(HttpMethod.GET, RequestMappings.FRONTEND_CE + "/**").hasRole("ADMIN")
+				.antMatchers(HttpMethod.GET, RequestMappings.CUSTOM_LAYOUTS + "/**").hasRole("ADMIN");
 
 		// Secure recordings depending on OPENVIDU_RECORDING_PUBLIC_ACCESS
 		if (openviduConf.getOpenViduRecordingPublicAccess()) {
 			conf = conf.antMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").permitAll();
 		} else {
-			conf = conf.antMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").authenticated();
+			conf = conf.antMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").hasRole("ADMIN");
 		}
 
 		conf.and().httpBasic();

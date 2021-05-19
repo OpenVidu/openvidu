@@ -32,9 +32,9 @@ public class CDREventWebrtcConnection extends CDREventEnd implements Comparable<
 	String receivingFrom;
 
 	// webrtcConnectionCreated
-	public CDREventWebrtcConnection(String sessionId, String streamId, Participant participant,
+	public CDREventWebrtcConnection(String sessionId, String uniqueSessionId, String streamId, Participant participant,
 			MediaOptions mediaOptions, String receivingFrom, Long timestamp) {
-		super(CDREventName.webrtcConnectionCreated, sessionId, timestamp);
+		super(CDREventName.webrtcConnectionCreated, sessionId, uniqueSessionId, timestamp);
 		this.streamId = streamId;
 		this.participant = participant;
 		this.mediaOptions = mediaOptions;
@@ -43,7 +43,8 @@ public class CDREventWebrtcConnection extends CDREventEnd implements Comparable<
 
 	// webrtcConnectionDestroyed
 	public CDREventWebrtcConnection(CDREventWebrtcConnection event, EndReason reason, Long timestamp) {
-		super(CDREventName.webrtcConnectionDestroyed, event.getSessionId(), event.getTimestamp(), reason, timestamp);
+		super(CDREventName.webrtcConnectionDestroyed, event.getSessionId(), event.getUniqueSessionId(),
+				event.getTimestamp(), reason, timestamp);
 		this.streamId = event.streamId;
 		this.participant = event.participant;
 		this.mediaOptions = event.mediaOptions;
@@ -58,14 +59,16 @@ public class CDREventWebrtcConnection extends CDREventEnd implements Comparable<
 	public JsonObject toJson() {
 		JsonObject json = super.toJson();
 		json.addProperty("streamId", this.streamId);
+		// TODO: remove deprecated "participantId" when possible
 		json.addProperty("participantId", this.participant.getParticipantPublicId());
+		json.addProperty("connectionId", this.participant.getParticipantPublicId());
 		if (this.receivingFrom != null) {
 			json.addProperty("connection", "INBOUND");
 			json.addProperty("receivingFrom", this.receivingFrom);
 		} else {
 			json.addProperty("connection", "OUTBOUND");
 			if (mediaOptions instanceof KurentoMediaOptions) {
-				KurentoMediaOptions kMediaOptions = (KurentoMediaOptions)mediaOptions;
+				KurentoMediaOptions kMediaOptions = (KurentoMediaOptions) mediaOptions;
 				if (kMediaOptions.rtspUri != null) {
 					json.addProperty("rtspUri", kMediaOptions.rtspUri);
 					json.addProperty("adaptativeBitrate", kMediaOptions.adaptativeBitrate);

@@ -22,6 +22,7 @@ import { RemoteConnectionOptions } from '../OpenViduInternal/Interfaces/Private/
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { StreamOptionsServer } from '../OpenViduInternal/Interfaces/Private/StreamOptionsServer';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
+import { ExceptionEvent, ExceptionEventName } from '../OpenViduInternal/Events/ExceptionEvent';
 
 /**
  * @hidden
@@ -142,8 +143,8 @@ export class Connection {
             sdpMLineIndex: candidate.sdpMLineIndex
         }, (error, response) => {
             if (error) {
-                logger.error('Error sending ICE candidate: '
-                    + JSON.stringify(error));
+                logger.error('Error sending ICE candidate: ' + JSON.stringify(error));
+                this.session.emitEvent('exception', [new ExceptionEvent(this.session, ExceptionEventName.ICE_CANDIDATE_ERROR, this.session, "There was an unexpected error on the server-side processing an ICE candidate generated and sent by the client-side", error)]);
             }
         });
     }
@@ -173,7 +174,7 @@ export class Connection {
 
             this.addStream(stream);
         });
-
+        
         logger.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + '] is now configured for receiving Streams with options: ', this.stream!.inboundStreamOpts);
     }
 

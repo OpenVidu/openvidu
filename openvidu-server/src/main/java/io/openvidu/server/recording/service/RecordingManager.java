@@ -31,8 +31,9 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -79,6 +80,7 @@ import io.openvidu.server.utils.JsonUtils;
 import io.openvidu.server.utils.LocalCustomFileManager;
 import io.openvidu.server.utils.LocalDockerManager;
 import io.openvidu.server.utils.RecordingUtils;
+import io.openvidu.server.utils.RemoteOperationUtils;
 
 public class RecordingManager {
 
@@ -122,8 +124,8 @@ public class RecordingManager {
 
 	private JsonUtils jsonUtils = new JsonUtils();
 
-	private ScheduledThreadPoolExecutor automaticRecordingStopExecutor = new ScheduledThreadPoolExecutor(
-			Runtime.getRuntime().availableProcessors());
+	private ScheduledExecutorService automaticRecordingStopExecutor = Executors
+			.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 
 	public static final String IMAGE_NAME = "openvidu/openvidu-recording";
 
@@ -299,9 +301,10 @@ public class RecordingManager {
 							}
 							this.recordingFromStartingToStarted(recording);
 
-							this.cdr.recordRecordingStarted(recording);
 							this.cdr.recordRecordingStatusChanged(recording, null, recording.getCreatedAt(),
 									Status.started);
+							// TODO: remove deprecated "recordingStarted" event
+							this.cdr.recordRecordingStarted(recording);
 
 							if (!(OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo())) {
 								// Directly send recording started notification for all cases except for
@@ -363,7 +366,8 @@ public class RecordingManager {
 
 		final long timestamp = System.currentTimeMillis();
 		this.cdr.recordRecordingStatusChanged(recording, reason, timestamp, Status.stopped);
-		cdr.recordRecordingStopped(recording, reason, timestamp);
+		// TODO: remove deprecated "recordingStopped" event
+		this.cdr.recordRecordingStopped(recording, reason, timestamp);
 
 		switch (recording.getOutputMode()) {
 		case COMPOSED:
@@ -426,7 +430,6 @@ public class RecordingManager {
 			// Start new RecorderEndpoint for this stream
 			log.info("Starting new RecorderEndpoint in session {} for new stream of participant {}",
 					session.getSessionId(), participant.getParticipantPublicId());
-			final CountDownLatch startedCountDown = new CountDownLatch(1);
 
 			MediaProfileSpecType profile = null;
 			try {
@@ -439,7 +442,7 @@ public class RecordingManager {
 			}
 
 			this.singleStreamRecordingService.startRecorderEndpointForPublisherEndpoint(recording.getId(), profile,
-					participant, startedCountDown);
+					participant, new CountDownLatch(1));
 		} else if (RecordingUtils.IS_COMPOSED(recording.getOutputMode()) && !recording.hasVideo()) {
 			// Connect this stream to existing Composite recorder
 			log.info("Joining PublisherEndpoint to existing Composite in session {} for new stream of participant {}",
@@ -511,7 +514,10 @@ public class RecordingManager {
 	}
 
 	public String getFreeRecordingId(String sessionId) {
-		return recordingManagerUtils.getFreeRecordingId(sessionId);
+		log.info("Getting free recording id for session {}", sessionId);
+		String recordingId = recordingManagerUtils.getFreeRecordingId(sessionId);
+		log.info("Free recording id got for session {}: {}", sessionId, recordingId);
+		return recordingId;
 	}
 
 	public HttpStatus deleteRecordingFromHost(String recordingId, boolean force) {
@@ -804,9 +810,11 @@ public class RecordingManager {
 					throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
 				}
 
-				recorder.stop();
-				recorder.release();
-				pipeline.release();
+				if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
+					recorder.stop();
+					recorder.release();
+					pipeline.release();
+				}
 
 				log.info("Kurento Media Server has write permissions on recording path: {}", openviduRecordingPath);
 

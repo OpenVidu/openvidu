@@ -68,7 +68,7 @@ public class BrowserUser {
 		this.driver.quit();
 	}
 
-	public void waitWithNewTime(int newWaitTime, ExpectedCondition<Boolean> condition) {
+	public void waitWithNewTime(int newWaitTime, ExpectedCondition<?> condition) {
 		this.waiter.withTimeout(Duration.of(newWaitTime, ChronoUnit.SECONDS));
 		this.waiter.until(condition);
 		this.waiter.withTimeout(Duration.of(this.timeOfWaitInSeconds, ChronoUnit.SECONDS));

@@ -28,8 +28,8 @@ import io.openvidu.server.config.OpenviduConfig;
  * This class changes the path where static files are served from / to
  * /NEW_FRONTEND_PATH. Entrypoint file index.html must have tag
  * <base href="/NEW_FRONTEND_PATH/">
- * 
- * By default in OpenVidu CE this path is /dashboard and in OpenVidu PRO is
+ *
+ * By default in OpenVidu CE this path is /dashboard and in OpenVidu Pro is
  * /inspector
  *
  * @author Pablo Fuente (pablofuenteperez@gmail.com)

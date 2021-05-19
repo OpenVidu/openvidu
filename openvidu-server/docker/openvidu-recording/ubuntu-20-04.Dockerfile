@@ -30,9 +30,12 @@ RUN adduser root pulse-access
 RUN apt-get clean && apt-get autoclean && apt-get autoremove
 
 COPY entrypoint.sh scripts/composed.sh scripts/composed_quick_start.sh ./
-RUN ["chmod", "+x", "/entrypoint.sh", "/composed.sh", "/composed_quick_start.sh"]
+COPY utils/xvfb-run-safe /usr/local/bin 
 
-RUN mkdir /recordings
-RUN chmod 777 /recordings
+# Prepare scripts and folders
+RUN chmod +x /entrypoint.sh /composed.sh /composed_quick_start.sh \
+  && chmod +x /usr/local/bin/xvfb-run-safe \
+  && mkdir /recordings \
+  && chmod 777 /recordings
 
 ENTRYPOINT /entrypoint.sh

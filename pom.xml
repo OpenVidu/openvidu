@@ -42,7 +42,7 @@
 	</developers>
 
 	<properties>
-		<version.kurento>6.15.0</version.kurento>
+		<version.kurento>6.16.0</version.kurento>
 		<version.spring-boot>2.3.5.RELEASE</version.spring-boot>
 		<version.junit>4.13.1</version.junit>
 		<version.junit.jupiter>5.7.0</version.junit.jupiter>
@@ -62,7 +62,7 @@
 
 		<version.webdrivermanager>4.2.2</version.webdrivermanager>
 
-		<version.openvidu.java.client>2.16.0</version.openvidu.java.client>
+		<version.openvidu.java.client>2.17.0</version.openvidu.java.client>
 		<version.openvidu.client>1.1.0</version.openvidu.client>
 		<version.openvidu.test.browsers>1.1.0</version.openvidu.test.browsers>
 

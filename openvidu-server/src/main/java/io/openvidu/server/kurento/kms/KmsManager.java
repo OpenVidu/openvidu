@@ -51,6 +51,7 @@ import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.utils.MediaNodeStatusManager;
 import io.openvidu.server.utils.QuarantineKiller;
+import io.openvidu.server.utils.RemoteOperationUtils;
 import io.openvidu.server.utils.UpdatableTimerTask;
 
 public abstract class KmsManager {
@@ -59,8 +60,6 @@ public abstract class KmsManager {
 
 	public static final Lock selectAndRemoveKmsLock = new ReentrantLock(true);
 	public static final int MAX_SECONDS_LOCK_WAIT = 15;
-
-	private UpdatableTimerTask kurentoReconnectTimer;
 
 	public class KmsLoad implements Comparable<KmsLoad> {
 
@@ -115,7 +114,7 @@ public abstract class KmsManager {
 
 	final protected Map<String, Kms> kmss = new ConcurrentHashMap<>();
 
-	private SessionManager sessionManager;
+	protected SessionManager sessionManager;
 
 	public KmsManager(SessionManager sessionManager) {
 		this.sessionManager = sessionManager;
@@ -200,28 +199,57 @@ public abstract class KmsManager {
 							kms.getUri(), kms.getKurentoClient().toString());
 				}
 
-				final int loops = 6;
+				// 6 attempts, 2 times per second (3 seconds total)
+				final int maxReconnectTimeMillis = 3000;
+				final int intervalWaitMs = 500;
+				final int loops = maxReconnectTimeMillis / intervalWaitMs;
 				final AtomicInteger iteration = new AtomicInteger(loops);
-				final long intervalWaitMs = 500L;
 
-				kurentoReconnectTimer = new UpdatableTimerTask(() -> {
+				final long initTime = System.currentTimeMillis();
+
+				final UpdatableTimerTask kurentoClientReconnectTimer = new UpdatableTimerTask(() -> {
 					if (iteration.decrementAndGet() < 0) {
 
-						log.error("KurentoClient [{}] could not reconnect to KMS with uri {} in {} seconds",
-								kms.getKurentoClient().toString(), kms.getUri(), (intervalWaitMs * 6 / 1000));
-						kurentoReconnectTimer.cancelTimer();
+						log.error(
+								"KurentoClient [{}] could not reconnect to KMS with uri {} in {} seconds. Media Node crashed",
+								kms.getKurentoClient().toString(), kms.getUri(), (intervalWaitMs * loops / 1000));
+						kms.getKurentoClientReconnectTimer().cancelTimer();
+
+						final long timeOfKurentoDisconnection = kms.getTimeOfKurentoClientDisconnection();
+						final List<String> affectedSessionIds = kms.getKurentoSessions().stream()
+								.map(session -> session.getSessionId()).collect(Collectors.toUnmodifiableList());
+						final List<String> affectedRecordingIds = kms.getActiveRecordings().stream()
+								.map(entry -> entry.getKey()).collect(Collectors.toUnmodifiableList());
+
+						sessionEventsHandler.onMediaNodeCrashed(kms, timeOfKurentoDisconnection, affectedSessionIds,
+								affectedRecordingIds);
+
+						// Close all sessions and recordings with reason "nodeCrashed"
 						log.warn("Closing {} sessions hosted by KMS with uri {}: {}", kms.getKurentoSessions().size(),
 								kms.getUri(), kms.getKurentoSessions().stream().map(s -> s.getSessionId())
 										.collect(Collectors.joining(",", "[", "]")));
 
-						final long timeOfKurentoDisconnection = kms.getTimeOfKurentoClientDisconnection();
-						sessionEventsHandler.onMediaServerCrashed(kms, timeOfKurentoDisconnection);
+						try {
+							// Flag the thread to skip remote operations to KMS
+							RemoteOperationUtils.setToSkipRemoteOperations();
+							sessionManager.closeAllSessionsAndRecordingsOfKms(kms, EndReason.nodeCrashed);
+						} finally {
+							RemoteOperationUtils.revertToRunRemoteOperations();
+						}
 
-						kms.getKurentoSessions().forEach(kSession -> {
-							sessionManager.closeSession(kSession.getSessionId(), EndReason.mediaServerCrashed);
-						});
+						// Remove Media Node
+						log.warn("Removing Media Node {} after crash", kms.getId());
+						removeMediaNodeUponCrash(kms.getId());
 
 					} else {
+
+						// KurentoClient connection timeout may exceed the limit.
+						// This happens if not only kms process has crashed, but the instance itself is
+						// not reachable
+						if ((System.currentTimeMillis() - initTime) > maxReconnectTimeMillis) {
+							iteration.set(0);
+							return;
+						}
 
 						try {
 							kms.getKurentoClient().getServerManager().getInfo();
@@ -234,7 +262,7 @@ public abstract class KmsManager {
 
 						log.info("According to Timer KMS with uri {} and KurentoClient [{}] is now reconnected",
 								kms.getUri(), kms.getKurentoClient().toString());
-						kurentoReconnectTimer.cancelTimer();
+						kms.getKurentoClientReconnectTimer().cancelTimer();
 						kms.setKurentoClientConnected(true);
 						kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
 
@@ -249,7 +277,7 @@ public abstract class KmsManager {
 										kms.getUri(), kms.getKurentoSessions().size(), kms.getKurentoSessions().stream()
 												.map(s -> s.getSessionId()).collect(Collectors.joining(",", "[", "]")));
 								kms.getKurentoSessions().forEach(kSession -> {
-									kSession.restartStatusInKurento(timeOfKurentoDisconnection);
+									kSession.restartStatusInKurentoAfterReconnection(timeOfKurentoDisconnection);
 								});
 							} else {
 								log.info("KMS with URI {} is the same process. Nothing must be done", kms.getUri());
@@ -258,9 +286,10 @@ public abstract class KmsManager {
 
 						kms.setTimeOfKurentoClientDisconnection(0);
 					}
-				}, () -> intervalWaitMs); // Try 2 times per seconds
+				}, () -> Long.valueOf(intervalWaitMs)); // Try 2 times per seconds
 
-				kurentoReconnectTimer.updateTimer();
+				kms.setKurentoClientReconnectTimer(kurentoClientReconnectTimer);
+				kurentoClientReconnectTimer.updateTimer();
 			}
 
 			@Override
@@ -309,22 +338,24 @@ public abstract class KmsManager {
 	public abstract void decrementActiveRecordings(RecordingProperties recordingProperties, String recordingId,
 			Session session);
 
+	protected abstract void removeMediaNodeUponCrash(String mediaNodeId);
+
 	@PostConstruct
 	protected abstract void postConstructInitKurentoClients();
 
 	@PreDestroy
 	public void close() {
-		if (kurentoReconnectTimer != null) {
-			kurentoReconnectTimer.cancelTimer();
-		}
 		log.info("Closing all KurentoClients");
 		this.kmss.values().forEach(kms -> {
+			if (kms.getKurentoClientReconnectTimer() != null) {
+				kms.getKurentoClientReconnectTimer().cancelTimer();
+			}
 			kms.getKurentoClient().destroy();
 		});
 	}
 
 	public static String generateKmsId() {
-		return IdentifierPrefixes.KMS_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
+		return IdentifierPrefixes.MEDIA_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 				+ RandomStringUtils.randomAlphanumeric(7);
 	}
 

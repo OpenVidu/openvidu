@@ -16,16 +16,15 @@
  */
 
 import { Connection } from './Connection';
-import { Event } from '../OpenViduInternal/Events/Event';
 import { Filter } from './Filter';
 import { Session } from './Session';
 import { StreamManager } from './StreamManager';
 import { Subscriber } from './Subscriber';
-import { EventDispatcher } from './EventDispatcher';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
-import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv } from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
+import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv, WebRtcPeerConfiguration } from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
 import { WebRtcStats } from '../OpenViduInternal/WebRtcStats/WebRtcStats';
+import { ExceptionEvent, ExceptionEventName } from '../OpenViduInternal/Events/ExceptionEvent';
 import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpeakingEvent';
 import { StreamManagerEvent } from '../OpenViduInternal/Events/StreamManagerEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
@@ -37,6 +36,10 @@ import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
  * @hidden
  */
 import hark = require('hark');
+/**
+ * @hidden
+ */
+import EventEmitter = require('wolfy87-eventemitter');
 /**
  * @hidden
  */
@@ -52,7 +55,7 @@ let platform: PlatformUtils;
  * Each [[Publisher]] and [[Subscriber]] has an attribute of type Stream, as they give access
  * to one of them (sending and receiving it, respectively)
  */
-export class Stream extends EventDispatcher {
+export class Stream {
 
     /**
      * The Connection object that is publishing the stream
@@ -178,27 +181,27 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    publisherStartSpeakingEventEnabled = false;
+    harkSpeakingEnabled = false;
     /**
      * @hidden
      */
-    publisherStartSpeakingEventEnabledOnce = false;
+    harkSpeakingEnabledOnce = false;
     /**
      * @hidden
      */
-    publisherStopSpeakingEventEnabled = false;
+    harkStoppedSpeakingEnabled = false;
     /**
      * @hidden
      */
-    publisherStopSpeakingEventEnabledOnce = false;
+    harkStoppedSpeakingEnabledOnce = false;
     /**
      * @hidden
      */
-    volumeChangeEventEnabled = false;
+    harkVolumeChangeEnabled = false;
     /**
      * @hidden
      */
-    volumeChangeEventEnabledOnce = false;
+    harkVolumeChangeEnabledOnce = false;
     /**
      * @hidden
      */
@@ -207,6 +210,10 @@ export class Stream extends EventDispatcher {
      * @hidden
      */
     localMediaStreamWhenSubscribedToRemote?: MediaStream;
+    /**
+     * @hidden
+     */
+    ee = new EventEmitter();
 
 
     /**
@@ -214,7 +221,6 @@ export class Stream extends EventDispatcher {
      */
     constructor(session: Session, options: InboundStreamOptions | OutboundStreamOptions | {}) {
 
-        super();
         platform = PlatformUtils.getInstance();
         this.session = session;
 
@@ -272,33 +278,6 @@ export class Stream extends EventDispatcher {
 
 
     /**
-     * See [[EventDispatcher.on]]
-     */
-    on(type: string, handler: (event: Event) => void): EventDispatcher {
-        super.onAux(type, "Event '" + type + "' triggered by stream '" + this.streamId + "'", handler);
-        return this;
-    }
-
-
-    /**
-     * See [[EventDispatcher.once]]
-     */
-    once(type: string, handler: (event: Event) => void): EventDispatcher {
-        super.onceAux(type, "Event '" + type + "' triggered once by stream '" + this.streamId + "'", handler);
-        return this;
-    }
-
-
-    /**
-     * See [[EventDispatcher.off]]
-     */
-    off(type: string, handler?: (event: Event) => void): EventDispatcher {
-        super.off(type, handler);
-        return this;
-    }
-
-
-    /**
      * Applies an audio/video filter to the stream.
      *
      * @param type Type of filter applied. See [[Filter.type]]
@@ -308,14 +287,20 @@ export class Stream extends EventDispatcher {
      */
     applyFilter(type: string, options: Object): Promise<Filter> {
         return new Promise((resolve, reject) => {
+
+            if (!this.session.sessionConnected()) {
+                reject(this.session.notConnectedError());
+            }
+
             logger.info('Applying filter to stream ' + this.streamId);
-            options = !!options ? options : {};
-            if (typeof options !== 'string') {
-                options = JSON.stringify(options);
+            options = options != null ? options : {};
+            let optionsString = options;
+            if (typeof optionsString !== 'string') {
+                optionsString = JSON.stringify(optionsString);
             }
             this.session.openvidu.sendRequest(
                 'applyFilter',
-                { streamId: this.streamId, type, options },
+                { streamId: this.streamId, type, options: optionsString },
                 (error, response) => {
                     if (error) {
                         logger.error('Error applying filter for Stream ' + this.streamId, error);
@@ -343,8 +328,13 @@ export class Stream extends EventDispatcher {
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the previously applied filter has been successfully removed and rejected with an Error object in other case
      */
-    removeFilter(): Promise<any> {
+    removeFilter(): Promise<void> {
         return new Promise((resolve, reject) => {
+
+            if (!this.session.sessionConnected()) {
+                reject(this.session.notConnectedError());
+            }
+
             logger.info('Removing filter of stream ' + this.streamId);
             this.session.openvidu.sendRequest(
                 'removeFilter',
@@ -428,7 +418,7 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    subscribe(): Promise<any> {
+    subscribe(): Promise<void> {
         return new Promise((resolve, reject) => {
             this.initWebRtcPeerReceive(false)
                 .then(() => {
@@ -443,7 +433,7 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    publish(): Promise<any> {
+    publish(): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.isLocalStreamReadyToPublish) {
                 this.initWebRtcPeerSend(false)
@@ -550,13 +540,14 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    enableStartSpeakingEvent(): void {
-        this.setSpeechEventIfNotExists();
-        if (!this.publisherStartSpeakingEventEnabled) {
-            this.publisherStartSpeakingEventEnabled = true;
+    enableHarkSpeakingEvent(): void {
+        this.setHarkListenerIfNotExists();
+        if (!this.harkSpeakingEnabled) {
+            this.harkSpeakingEnabled = true;
             this.speechEvent.on('speaking', () => {
                 this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStartSpeaking', this.connection, this.streamId)]);
-                this.publisherStartSpeakingEventEnabledOnce = false; // Disable 'once' version if 'on' version was triggered
+                this.streamManager.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.streamManager, 'publisherStartSpeaking', this.connection, this.streamId)]);
+                this.harkSpeakingEnabledOnce = false; // Disable 'once' version if 'on' version was triggered
             });
         }
     }
@@ -564,16 +555,17 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    enableOnceStartSpeakingEvent(): void {
-        this.setSpeechEventIfNotExists();
-        if (!this.publisherStartSpeakingEventEnabledOnce) {
-            this.publisherStartSpeakingEventEnabledOnce = true;
+    enableOnceHarkSpeakingEvent(): void {
+        this.setHarkListenerIfNotExists();
+        if (!this.harkSpeakingEnabledOnce) {
+            this.harkSpeakingEnabledOnce = true;
             this.speechEvent.once('speaking', () => {
-                if (this.publisherStartSpeakingEventEnabledOnce) {
+                if (this.harkSpeakingEnabledOnce) {
                     // If the listener has been disabled in the meantime (for example by the 'on' version) do not trigger the event
                     this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStartSpeaking', this.connection, this.streamId)]);
+                    this.streamManager.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.streamManager, 'publisherStartSpeaking', this.connection, this.streamId)]);
                 }
-                this.disableStartSpeakingEvent(true);
+                this.disableHarkSpeakingEvent(true);
             });
         }
     }
@@ -581,22 +573,22 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    disableStartSpeakingEvent(disabledByOnce: boolean): void {
+    disableHarkSpeakingEvent(disabledByOnce: boolean): void {
         if (!!this.speechEvent) {
-            this.publisherStartSpeakingEventEnabledOnce = false;
+            this.harkSpeakingEnabledOnce = false;
             if (disabledByOnce) {
-                if (this.publisherStartSpeakingEventEnabled) {
+                if (this.harkSpeakingEnabled) {
                     // The 'on' version of this same event is enabled too. Do not remove the hark listener
                     return;
                 }
             } else {
-                this.publisherStartSpeakingEventEnabled = false;
+                this.harkSpeakingEnabled = false;
             }
             // Shutting down the hark event
-            if (this.volumeChangeEventEnabled ||
-                this.volumeChangeEventEnabledOnce ||
-                this.publisherStopSpeakingEventEnabled ||
-                this.publisherStopSpeakingEventEnabledOnce) {
+            if (this.harkVolumeChangeEnabled ||
+                this.harkVolumeChangeEnabledOnce ||
+                this.harkStoppedSpeakingEnabled ||
+                this.harkStoppedSpeakingEnabledOnce) {
                 // Some other hark event is enabled. Cannot stop the hark process, just remove the specific listener
                 this.speechEvent.off('speaking');
             } else {
@@ -610,13 +602,14 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    enableStopSpeakingEvent(): void {
-        this.setSpeechEventIfNotExists();
-        if (!this.publisherStopSpeakingEventEnabled) {
-            this.publisherStopSpeakingEventEnabled = true;
+    enableHarkStoppedSpeakingEvent(): void {
+        this.setHarkListenerIfNotExists();
+        if (!this.harkStoppedSpeakingEnabled) {
+            this.harkStoppedSpeakingEnabled = true;
             this.speechEvent.on('stopped_speaking', () => {
                 this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStopSpeaking', this.connection, this.streamId)]);
-                this.publisherStopSpeakingEventEnabledOnce = false; // Disable 'once' version if 'on' version was triggered
+                this.streamManager.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.streamManager, 'publisherStopSpeaking', this.connection, this.streamId)]);
+                this.harkStoppedSpeakingEnabledOnce = false; // Disable 'once' version if 'on' version was triggered
             });
         }
     }
@@ -624,16 +617,17 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    enableOnceStopSpeakingEvent(): void {
-        this.setSpeechEventIfNotExists();
-        if (!this.publisherStopSpeakingEventEnabledOnce) {
-            this.publisherStopSpeakingEventEnabledOnce = true;
+    enableOnceHarkStoppedSpeakingEvent(): void {
+        this.setHarkListenerIfNotExists();
+        if (!this.harkStoppedSpeakingEnabledOnce) {
+            this.harkStoppedSpeakingEnabledOnce = true;
             this.speechEvent.once('stopped_speaking', () => {
-                if (this.publisherStopSpeakingEventEnabledOnce) {
+                if (this.harkStoppedSpeakingEnabledOnce) {
                     // If the listener has been disabled in the meantime (for example by the 'on' version) do not trigger the event
                     this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStopSpeaking', this.connection, this.streamId)]);
+                    this.streamManager.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.streamManager, 'publisherStopSpeaking', this.connection, this.streamId)]);
                 }
-                this.disableStopSpeakingEvent(true);
+                this.disableHarkStoppedSpeakingEvent(true);
             });
         }
     }
@@ -641,23 +635,23 @@ export class Stream extends EventDispatcher {
     /**
     * @hidden
     */
-    disableStopSpeakingEvent(disabledByOnce: boolean): void {
+    disableHarkStoppedSpeakingEvent(disabledByOnce: boolean): void {
         if (!!this.speechEvent) {
-            this.publisherStopSpeakingEventEnabledOnce = false;
+            this.harkStoppedSpeakingEnabledOnce = false;
             if (disabledByOnce) {
-                if (this.publisherStopSpeakingEventEnabled) {
+                if (this.harkStoppedSpeakingEnabled) {
                     // We are cancelling the 'once' listener for this event, but the 'on' version
                     // of this same event is enabled too. Do not remove the hark listener
                     return;
                 }
             } else {
-                this.publisherStopSpeakingEventEnabled = false;
+                this.harkStoppedSpeakingEnabled = false;
             }
             // Shutting down the hark event
-            if (this.volumeChangeEventEnabled ||
-                this.volumeChangeEventEnabledOnce ||
-                this.publisherStartSpeakingEventEnabled ||
-                this.publisherStartSpeakingEventEnabledOnce) {
+            if (this.harkVolumeChangeEnabled ||
+                this.harkVolumeChangeEnabledOnce ||
+                this.harkSpeakingEnabled ||
+                this.harkSpeakingEnabledOnce) {
                 // Some other hark event is enabled. Cannot stop the hark process, just remove the specific listener
                 this.speechEvent.off('stopped_speaking');
             } else {
@@ -671,10 +665,10 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    enableVolumeChangeEvent(force: boolean): void {
-        if (this.setSpeechEventIfNotExists()) {
-            if (!this.volumeChangeEventEnabled || force) {
-                this.volumeChangeEventEnabled = true;
+    enableHarkVolumeChangeEvent(force: boolean): void {
+        if (this.setHarkListenerIfNotExists()) {
+            if (!this.harkVolumeChangeEnabled || force) {
+                this.harkVolumeChangeEnabled = true;
                 this.speechEvent.on('volume_change', harkEvent => {
                     const oldValue = this.speechEvent.oldVolumeValue;
                     const value = { newValue: harkEvent, oldValue };
@@ -684,51 +678,51 @@ export class Stream extends EventDispatcher {
             }
         } else {
             // This way whenever the MediaStream object is available, the event listener will be automatically added
-            this.volumeChangeEventEnabled = true;
+            this.harkVolumeChangeEnabled = true;
         }
     }
 
     /**
      * @hidden
      */
-    enableOnceVolumeChangeEvent(force: boolean): void {
-        if (this.setSpeechEventIfNotExists()) {
-            if (!this.volumeChangeEventEnabledOnce || force) {
-                this.volumeChangeEventEnabledOnce = true;
+    enableOnceHarkVolumeChangeEvent(force: boolean): void {
+        if (this.setHarkListenerIfNotExists()) {
+            if (!this.harkVolumeChangeEnabledOnce || force) {
+                this.harkVolumeChangeEnabledOnce = true;
                 this.speechEvent.once('volume_change', harkEvent => {
                     const oldValue = this.speechEvent.oldVolumeValue;
                     const value = { newValue: harkEvent, oldValue };
                     this.speechEvent.oldVolumeValue = harkEvent;
-                    this.disableVolumeChangeEvent(true);
+                    this.disableHarkVolumeChangeEvent(true);
                     this.streamManager.emitEvent('streamAudioVolumeChange', [new StreamManagerEvent(this.streamManager, 'streamAudioVolumeChange', value)]);
                 });
             }
         } else {
             // This way whenever the MediaStream object is available, the event listener will be automatically added
-            this.volumeChangeEventEnabledOnce = true;
+            this.harkVolumeChangeEnabledOnce = true;
         }
     }
 
     /**
      * @hidden
      */
-    disableVolumeChangeEvent(disabledByOnce: boolean): void {
+    disableHarkVolumeChangeEvent(disabledByOnce: boolean): void {
         if (!!this.speechEvent) {
-            this.volumeChangeEventEnabledOnce = false;
+            this.harkVolumeChangeEnabledOnce = false;
             if (disabledByOnce) {
-                if (this.volumeChangeEventEnabled) {
+                if (this.harkVolumeChangeEnabled) {
                     // We are cancelling the 'once' listener for this event, but the 'on' version
                     // of this same event is enabled too. Do not remove the hark listener
                     return;
                 }
             } else {
-                this.volumeChangeEventEnabled = false;
+                this.harkVolumeChangeEnabled = false;
             }
             // Shutting down the hark event
-            if (this.publisherStartSpeakingEventEnabled ||
-                this.publisherStartSpeakingEventEnabledOnce ||
-                this.publisherStopSpeakingEventEnabled ||
-                this.publisherStopSpeakingEventEnabledOnce) {
+            if (this.harkSpeakingEnabled ||
+                this.harkSpeakingEnabledOnce ||
+                this.harkStoppedSpeakingEnabled ||
+                this.harkStoppedSpeakingEnabledOnce) {
                 // Some other hark event is enabled. Cannot stop the hark process, just remove the specific listener
                 this.speechEvent.off('volume_change');
             } else {
@@ -780,16 +774,16 @@ export class Stream extends EventDispatcher {
             return false;
         }
         if (this.isLocal() && !!this.session.openvidu.advancedConfiguration.forceMediaReconnectionAfterNetworkDrop) {
-            logger.warn('OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Publisher stream ' + this.streamId + 'will force a reconnection');
+            logger.warn('OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Stream ' + this.streamId + ' will force a reconnection');
             return true;
         }
         const iceConnectionState: RTCIceConnectionState = this.getRTCPeerConnection().iceConnectionState;
-        return iceConnectionState === 'disconnected' || iceConnectionState === 'failed';
+        return iceConnectionState !== 'connected' && iceConnectionState !== 'completed';
     }
 
     /* Private methods */
 
-    private setSpeechEventIfNotExists(): boolean {
+    private setHarkListenerIfNotExists(): boolean {
         if (!!this.mediaStream) {
             if (!this.speechEvent) {
                 const harkOptions = !!this.harkOptions ? this.harkOptions : (this.session.openvidu.advancedConfiguration.publisherSpeakingEventsOptions || {});
@@ -805,7 +799,7 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    initWebRtcPeerSend(reconnect: boolean): Promise<any> {
+    initWebRtcPeerSend(reconnect: boolean): Promise<void> {
         return new Promise((resolve, reject) => {
 
             if (!reconnect) {
@@ -817,15 +811,16 @@ export class Stream extends EventDispatcher {
                 video: this.isSendVideo()
             };
 
-            const options = {
+            const options: WebRtcPeerConfiguration = {
                 mediaStream: this.mediaStream,
                 mediaConstraints: userMediaConstraints,
                 onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
+                onexception: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
                 iceServers: this.getIceServersConf(),
                 simulcast: false
             };
 
-            const successCallback = (sdpOfferParam) => {
+            const successOfferCallback = (sdpOfferParam) => {
                 logger.debug('Sending SDP offer to publish as '
                     + this.streamId, sdpOfferParam);
 
@@ -833,7 +828,8 @@ export class Stream extends EventDispatcher {
                 let params;
                 if (reconnect) {
                     params = {
-                        stream: this.streamId
+                        stream: this.streamId,
+                        sdpString: sdpOfferParam
                     }
                 } else {
                     let typeOfVideo = '';
@@ -849,10 +845,10 @@ export class Stream extends EventDispatcher {
                         typeOfVideo,
                         frameRate: !!this.frameRate ? this.frameRate : -1,
                         videoDimensions: JSON.stringify(this.videoDimensions),
-                        filter: this.outboundStreamOpts.publisherProperties.filter
+                        filter: this.outboundStreamOpts.publisherProperties.filter,
+                        sdpOffer: sdpOfferParam
                     }
                 }
-                params['sdpOffer'] = sdpOfferParam;
 
                 this.session.openvidu.sendRequest(method, params, (error, response) => {
                     if (error) {
@@ -862,7 +858,7 @@ export class Stream extends EventDispatcher {
                             reject('Error on publishVideo: ' + JSON.stringify(error));
                         }
                     } else {
-                        this.webRtcPeer.processAnswer(response.sdpAnswer, false)
+                        this.webRtcPeer.processRemoteAnswer(response.sdpAnswer)
                             .then(() => {
                                 this.streamId = response.id;
                                 this.creationTime = response.createdAt;
@@ -870,7 +866,7 @@ export class Stream extends EventDispatcher {
                                 this.publishedOnce = true;
                                 if (this.displayMyRemote()) {
                                     this.localMediaStreamWhenSubscribedToRemote = this.mediaStream;
-                                    this.remotePeerSuccessfullyEstablished();
+                                    this.remotePeerSuccessfullyEstablished(reconnect);
                                 }
                                 if (reconnect) {
                                     this.ee.emitEvent('stream-reconnected-by-publisher', []);
@@ -897,10 +893,15 @@ export class Stream extends EventDispatcher {
                 this.webRtcPeer = new WebRtcPeerSendonly(options);
             }
             this.webRtcPeer.addIceConnectionStateChangeListener('publisher of ' + this.connection.connectionId);
-            this.webRtcPeer.generateOffer().then(sdpOffer => {
-                successCallback(sdpOffer);
+            this.webRtcPeer.createOffer().then(sdpOffer => {
+                this.webRtcPeer.processLocalOffer(sdpOffer)
+                    .then(() => {
+                        successOfferCallback(sdpOffer.sdp);
+                    }).catch(error => {
+                        reject(new Error('(publish) SDP process local offer error: ' + JSON.stringify(error)));
+                    });
             }).catch(error => {
-                reject(new Error('(publish) SDP offer error: ' + JSON.stringify(error)));
+                reject(new Error('(publish) SDP create offer error: ' + JSON.stringify(error)));
             });
         });
     }
@@ -908,7 +909,31 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    initWebRtcPeerReceive(reconnect: boolean): Promise<any> {
+    initWebRtcPeerReceive(reconnect: boolean): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.session.openvidu.sendRequest('prepareReceiveVideoFrom', { sender: this.streamId, reconnect }, (error, response) => {
+                if (error) {
+                    reject(new Error('Error on prepareReceiveVideoFrom: ' + JSON.stringify(error)));
+                } else {
+                    this.completeWebRtcPeerReceive(response.sdpOffer, reconnect)
+                        .then(() => {
+                            logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
+                            this.remotePeerSuccessfullyEstablished(reconnect);
+                            this.initWebRtcStats();
+                            resolve();
+                        })
+                        .catch(error => {
+                            reject(error);
+                        });
+                }
+            });
+        });
+    }
+
+    /**
+     * @hidden
+     */
+    completeWebRtcPeerReceive(sdpOffer: string, reconnect: boolean): Promise<void> {
         return new Promise((resolve, reject) => {
 
             const offerConstraints = {
@@ -919,55 +944,47 @@ export class Stream extends EventDispatcher {
                 offerConstraints);
             const options = {
                 onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
+                onexception: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
                 mediaConstraints: offerConstraints,
                 iceServers: this.getIceServersConf(),
                 simulcast: false
             };
 
-            const successCallback = (sdpOfferParam) => {
-                logger.debug('Sending SDP offer to subscribe to '
-                    + this.streamId, sdpOfferParam);
+            const successAnswerCallback = (sdpAnswer) => {
+                logger.debug('Sending SDP answer to subscribe to '
+                    + this.streamId, sdpAnswer);
 
                 const method = reconnect ? 'reconnectStream' : 'receiveVideoFrom';
-                const params = { sdpOffer: sdpOfferParam };
+                const params = {};
                 params[reconnect ? 'stream' : 'sender'] = this.streamId;
+                params[reconnect ? 'sdpString' : 'sdpAnswer'] = sdpAnswer;
 
                 this.session.openvidu.sendRequest(method, params, (error, response) => {
                     if (error) {
-                        reject(new Error('Error on recvVideoFrom: ' + JSON.stringify(error)));
+                        reject(new Error('Error on ' + method + ' : ' + JSON.stringify(error)));
                     } else {
-                        // Ios Ionic. Limitation: some bug in iosrtc cordova plugin makes it necessary
-                        // to add a timeout before calling PeerConnection#setRemoteDescription during
-                        // some time (400 ms) from the moment first subscriber stream is received
-                        if (this.session.isFirstIonicIosSubscriber) {
-                            this.session.isFirstIonicIosSubscriber = false;
-                            setTimeout(() => {
-                                // After 400 ms Ionic iOS subscribers won't need to run
-                                // PeerConnection#setRemoteDescription after 250 ms timeout anymore
-                                this.session.countDownForIonicIosSubscribersActive = false;
-                            }, 400);
-                        }
-                        const needsTimeoutOnProcessAnswer = this.session.countDownForIonicIosSubscribersActive;
-                        this.webRtcPeer.processAnswer(response.sdpAnswer, needsTimeoutOnProcessAnswer).then(() => {
-                            logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
-                            this.remotePeerSuccessfullyEstablished();
-                            this.initWebRtcStats();
-                            resolve();
-                        }).catch(error => {
-                            reject(error);
-                        });
+                        resolve();
                     }
                 });
             };
 
             this.webRtcPeer = new WebRtcPeerRecvonly(options);
             this.webRtcPeer.addIceConnectionStateChangeListener(this.streamId);
-            this.webRtcPeer.generateOffer()
-                .then(sdpOffer => {
-                    successCallback(sdpOffer);
+            this.webRtcPeer.processRemoteOffer(sdpOffer)
+                .then(() => {
+                    this.webRtcPeer.createAnswer().then(sdpAnswer => {
+                        this.webRtcPeer.processLocalAnswer(sdpAnswer)
+                            .then(() => {
+                                successAnswerCallback(sdpAnswer.sdp);
+                            }).catch(error => {
+                                reject(new Error('(subscribe) SDP process local answer error: ' + JSON.stringify(error)));
+                            });
+                    }).catch(error => {
+                        reject(new Error('(subscribe) SDP create answer error: ' + JSON.stringify(error)));
+                    });
                 })
                 .catch(error => {
-                    reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
+                    reject(new Error('(subscribe) SDP process remote offer error: ' + JSON.stringify(error)));
                 });
         });
     }
@@ -975,7 +992,13 @@ export class Stream extends EventDispatcher {
     /**
      * @hidden
      */
-    remotePeerSuccessfullyEstablished(): void {
+    remotePeerSuccessfullyEstablished(reconnect: boolean): void {
+
+        if (reconnect && this.mediaStream != null) {
+            // Now we can destroy the existing MediaStream
+            this.disposeMediaStream();
+        }
+
         this.mediaStream = new MediaStream();
         let receiver: RTCRtpReceiver;
         for (receiver of this.webRtcPeer.pc.getReceivers()) {
@@ -990,11 +1013,11 @@ export class Stream extends EventDispatcher {
             if (this.streamManager instanceof Subscriber) {
                 // Apply SubscriberProperties.subscribeToAudio and SubscriberProperties.subscribeToVideo
                 if (!!this.mediaStream.getAudioTracks()[0]) {
-                    const enabled = !!((<Subscriber>this.streamManager).properties.subscribeToAudio);
+                    const enabled = reconnect ? this.audioActive : !!((this.streamManager as Subscriber).properties.subscribeToAudio);
                     this.mediaStream.getAudioTracks()[0].enabled = enabled;
                 }
                 if (!!this.mediaStream.getVideoTracks()[0]) {
-                    const enabled = !!((<Subscriber>this.streamManager).properties.subscribeToVideo);
+                    const enabled = reconnect ? this.videoActive : !!((this.streamManager as Subscriber).properties.subscribeToVideo);
                     this.mediaStream.getVideoTracks()[0].enabled = enabled;
                 }
             }
@@ -1007,27 +1030,23 @@ export class Stream extends EventDispatcher {
     private initHarkEvents(): void {
         if (!!this.mediaStream!.getAudioTracks()[0]) {
             // Hark events can only be set if audio track is available
-            if (this.streamManager.remote) {
-                // publisherStartSpeaking/publisherStopSpeaking is only defined for remote streams
-                if (this.session.startSpeakingEventsEnabled) {
-                    this.enableStartSpeakingEvent();
-                }
-                if (this.session.startSpeakingEventsEnabledOnce) {
-                    this.enableOnceStartSpeakingEvent();
-                }
-                if (this.session.stopSpeakingEventsEnabled) {
-                    this.enableStopSpeakingEvent();
-                }
-                if (this.session.stopSpeakingEventsEnabledOnce) {
-                    this.enableOnceStopSpeakingEvent();
-                }
+            if (this.session.anySpeechEventListenerEnabled('publisherStartSpeaking', true, this.streamManager)) {
+                this.enableOnceHarkSpeakingEvent();
             }
-            // streamAudioVolumeChange event is defined for both Publishers and Subscribers
-            if (this.volumeChangeEventEnabled) {
-                this.enableVolumeChangeEvent(true);
+            if (this.session.anySpeechEventListenerEnabled('publisherStartSpeaking', false, this.streamManager)) {
+                this.enableHarkSpeakingEvent();
             }
-            if (this.volumeChangeEventEnabledOnce) {
-                this.enableOnceVolumeChangeEvent(true);
+            if (this.session.anySpeechEventListenerEnabled('publisherStopSpeaking', true, this.streamManager)) {
+                this.enableOnceHarkStoppedSpeakingEvent();
+            }
+            if (this.session.anySpeechEventListenerEnabled('publisherStopSpeaking', false, this.streamManager)) {
+                this.enableHarkStoppedSpeakingEvent();
+            }
+            if (this.harkVolumeChangeEnabledOnce) {
+                this.enableOnceHarkVolumeChangeEvent(true);
+            }
+            if (this.harkVolumeChangeEnabled) {
+                this.enableHarkVolumeChangeEvent(true);
             }
         }
     }

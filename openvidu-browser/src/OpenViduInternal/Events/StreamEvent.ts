@@ -97,10 +97,10 @@ export class StreamEvent extends Event {
             if (this.stream.streamManager) this.stream.streamManager.removeAllVideos();
 
             // Delete stream from Session.remoteStreamsCreated map
-            delete this.stream.session.remoteStreamsCreated[this.stream.streamId];
+            this.stream.session.remoteStreamsCreated.delete(this.stream.streamId);
 
             // Delete StreamOptionsServer from remote Connection
-            const remoteConnection = this.stream.session.remoteConnections[this.stream.connection.connectionId];
+            const remoteConnection = this.stream.session.remoteConnections.get(this.stream.connection.connectionId);
             if (!!remoteConnection && !!remoteConnection.remoteOptions) {
                 const streamOptionsServer = remoteConnection.remoteOptions.streams;
                 for (let i = streamOptionsServer.length - 1; i >= 0; --i) {

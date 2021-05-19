@@ -18,15 +18,16 @@
 package io.openvidu.server.kurento.endpoint;
 
 import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.kurento.client.MediaPipeline;
+import org.kurento.client.OfferOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import io.openvidu.server.cdr.WebrtcDebugEvent.WebrtcDebugEventOperation;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 
@@ -36,9 +37,8 @@ import io.openvidu.server.kurento.core.KurentoParticipant;
  * @author <a href="mailto:rvlad@naevatec.com">Radu Tom Vlad</a>
  */
 public class SubscriberEndpoint extends MediaEndpoint {
-	private final static Logger log = LoggerFactory.getLogger(SubscriberEndpoint.class);
 
-	private AtomicBoolean connectedToPublisher = new AtomicBoolean(false);
+	private final static Logger log = LoggerFactory.getLogger(SubscriberEndpoint.class);
 
 	private String publisherStreamId;
 
@@ -47,23 +47,42 @@ public class SubscriberEndpoint extends MediaEndpoint {
 		super(endpointType, owner, endpointName, pipeline, openviduConfig, log);
 	}
 
-	public synchronized String subscribe(String sdpOffer, PublisherEndpoint publisher) {
+	public synchronized String prepareSubscription(PublisherEndpoint publisher) {
 		registerOnIceCandidateEventListener(publisher.getOwner().getParticipantPublicId());
+		publisher.connect(this.getEndpoint(), true);
 		this.createdAt = System.currentTimeMillis();
-		String sdpAnswer = processOffer(sdpOffer);
-		gatherCandidates();
-		publisher.connect(this.getEndpoint());
-		setConnectedToPublisher(true);
 		this.publisherStreamId = publisher.getStreamId();
-		return sdpAnswer;
+
+		OfferOptions offerOptions = new OfferOptions();
+		offerOptions.setOfferToReceiveAudio(publisher.getMediaOptions().hasAudio());
+		offerOptions.setOfferToReceiveVideo(publisher.getMediaOptions().hasVideo());
+		String sdpOffer = generateOffer(offerOptions);
+
+		return sdpOffer;
 	}
 
-	public boolean isConnectedToPublisher() {
-		return connectedToPublisher.get();
-	}
+	public synchronized String subscribe(String sdpAnswer, PublisherEndpoint publisher) {
+		// TODO: REMOVE ON 2.18.0
+		if (this.createdAt == null) {
+			// 2.17.0
+			registerOnIceCandidateEventListener(publisher.getOwner().getParticipantPublicId());
+			this.createdAt = System.currentTimeMillis();
+			String realSdpAnswer = processOffer(sdpAnswer);
+			gatherCandidates();
+			publisher.connect(this.getEndpoint(), false);
+			this.publisherStreamId = publisher.getStreamId();
+			return realSdpAnswer;
+		} else {
+			// 2.18.0
+			processAnswer(sdpAnswer);
+			gatherCandidates();
+			return null;
+		}
+		// END TODO
 
-	public void setConnectedToPublisher(boolean connectedToPublisher) {
-		this.connectedToPublisher.set(connectedToPublisher);
+		// TODO: UNCOMMENT ON 2.18.0
+		// processAnswer(sdpAnswer);
+		// END TODO
 	}
 
 	@Override
@@ -86,4 +105,10 @@ public class SubscriberEndpoint extends MediaEndpoint {
 		}
 		return json;
 	}
+
+	@Override
+	protected WebrtcDebugEventOperation getWebrtcDebugOperation() {
+		return WebrtcDebugEventOperation.subscribe;
+	}
+
 }

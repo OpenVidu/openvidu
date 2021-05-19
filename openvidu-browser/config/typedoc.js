@@ -15,7 +15,8 @@ module.exports = {
         "**/OpenViduInternal/WebRtcStats/WebRtcStats.ts",
         "**/OpenViduInternal/WebRtcPeer/WebRtcPeer.ts",
         "**/OpenViduInternal/ScreenSharing/**",
-        "**/OpenViduInternal/KurentoUtils/**"
+        "**/OpenViduInternal/KurentoUtils/**",
+        "**/OpenViduInternal/Logger/**",
     ],
     excludeExternals: true,
     excludePrivate: true,

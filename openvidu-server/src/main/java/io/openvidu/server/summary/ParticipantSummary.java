@@ -87,6 +87,7 @@ public class ParticipantSummary {
 			JsonObject j = cdrEvent.toJson();
 			j.remove("participantId");
 			j.remove("connection");
+			j.remove("connectionId");
 			jsonArrayPublishers.add(j);
 		});
 		publishersJson.add("content", jsonArrayPublishers);
@@ -100,6 +101,7 @@ public class ParticipantSummary {
 			JsonObject j = cdrEvent.toJson();
 			j.remove("participantId");
 			j.remove("connection");
+			j.remove("connectionId");
 			jsonArraySubscribers.add(j);
 		});
 		subscribersJson.add("content", jsonArraySubscribers);

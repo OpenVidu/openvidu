@@ -4,7 +4,7 @@ upgrade_ov() {
   UPGRADE_SCRIPT_URL="https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/install_openvidu_pro_OVVERSION.sh"
   HTTP_STATUS=$(curl -s -o /dev/null -I -w "%{http_code}" ${UPGRADE_SCRIPT_URL//OVVERSION/$1})
 
-  printf "  => Upgrading Openvidu PRO to '%s' version" "$1"
+  printf "  => Upgrading OpenVidu Pro to '%s' version" "$1"
 
   if [ "$HTTP_STATUS" == "200" ]; then
     printf "\n    => Downloading and upgrading new version"
@@ -13,7 +13,7 @@ upgrade_ov() {
     curl --silent ${UPGRADE_SCRIPT_URL//OVVERSION/$1} | bash -s upgrade
   else
      printf "\n     =======¡ERROR!======="
-     printf "\n     Openvidu PRO Version '%s' not exist" "$1"
+     printf "\n     OpenVidu Pro Version '%s' not exist" "$1"
      printf "\n"
      exit 0
   fi
@@ -28,7 +28,7 @@ collect_basic_information() {
   OV_VERSION=$(grep 'Openvidu Version:' "${OV_FOLDER}/docker-compose.yml" | awk '{ print $4 }')
   CONTAINERS=$(docker ps | awk '{if(NR>1) print $NF}')
 
-  if [ ! -z "$(grep -E '^        image: openvidu/openvidu-call:.*$' "${OV_FOLDER}/docker-compose.override.yml" | tr -d '[:space:]')" ]; then
+  if [ -n "$(grep -E '^        image: openvidu/openvidu-call:.*$' "${OV_FOLDER}/docker-compose.override.yml" | tr -d '[:space:]')" ]; then
     OV_CALL_VERSION=$(grep -E 'Openvidu-Call Version:' "${OV_FOLDER}/docker-compose.override.yml" | awk '{ print $4 }')
   fi
   [ -z "${OV_CALL_VERSION}" ] && OV_CALL_VERSION="No present"
@@ -71,7 +71,7 @@ generate_report() {
   REPORT_CREATION_DATE=$(date +"%d-%m-%Y")
   REPORT_CREATION_TIME=$(date +"%H:%M:%S")
   REPORT_NAME="openvidu-report-${REPORT_CREATION_DATE}-$(date +"%H-%M").txt"
-  REPORT_OUPUT="${OV_FOLDER}/${REPORT_NAME}"
+  REPORT_OUTPUT="${OV_FOLDER}/${REPORT_NAME}"
 
   {
     printf "\n  ======================================="
@@ -150,10 +150,10 @@ generate_report() {
     do
       printf '\n'
       printf "\n  ---------------------------------------"
-      printf "\n  %s" $CONTAINER
+      printf "\n  %s" "$CONTAINER"
       printf "\n  ---------------------------------------"
       printf '\n'
-      docker logs $CONTAINER
+      docker logs "$CONTAINER"
       printf "\n  ---------------------------------------"
       printf '\n'
       printf '\n'
@@ -167,19 +167,19 @@ generate_report() {
     do
       printf '\n'
       printf "\n  ======================================="
-      printf "\n  %s" $CONTAINER
+      printf "\n  %s" "$CONTAINER"
       printf "\n  ---------------------------------------"
       printf '\n'
-      docker exec $CONTAINER env
+      docker exec "$CONTAINER" env
       printf "\n  ---------------------------------------"
       printf '\n'
       printf '\n'
     done
 
-  } >> "${REPORT_OUPUT}" 2>&1
+  } >> "${REPORT_OUTPUT}" 2>&1
 
   printf "\n  Generation of the report completed with success"
-  printf "\n  You can get your report at path '%s'" "${REPORT_OUPUT}"
+  printf "\n  You can get your report at path '%s'" "${REPORT_OUTPUT}"
   printf "\n"
 }
 
@@ -192,7 +192,7 @@ is_external_url() {
     return 1
   else
     return 0
-  fi  
+  fi
 }
 
 start_openvidu() {
@@ -224,9 +224,9 @@ usage() {
     printf "\n\nAvailable Commands:"
     printf "\n\tstart\t\t\tStart all services"
     printf "\n\tstop\t\t\tStop all services"
-    printf "\n\trestart\t\t\tRestart all stoped and running services"
+    printf "\n\trestart\t\t\tRestart all stopped and running services"
     printf "\n\tlogs\t\t\tShow openvidu-server logs"
-    printf "\n\tupgrade\t\t\tUpgrade to the lastest Openvidu version"
+    printf "\n\tupgrade\t\t\tUpgrade to the latest Openvidu version"
     printf "\n\tupgrade [version]\tUpgrade to the specific Openvidu version"
     printf "\n\tversion\t\t\tShow version of Openvidu Server"
     printf "\n\treport\t\t\tGenerate a report with the current status of Openvidu"
@@ -268,7 +268,7 @@ case $1 in
       UPGRADE_VERSION="$2"
     fi
 
-    read -r -p "  You're about to update Openvidu PRO to '${UPGRADE_VERSION}' version. Are you sure? [y/N]: " response
+    read -r -p "  You're about to update OpenVidu Pro to '${UPGRADE_VERSION}' version. Are you sure? [y/N]: " response
     case "$response" in
       [yY][eE][sS]|[yY])
         upgrade_ov "${UPGRADE_VERSION}"

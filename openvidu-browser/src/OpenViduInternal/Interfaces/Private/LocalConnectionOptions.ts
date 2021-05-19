@@ -19,6 +19,7 @@ import { RemoteConnectionOptions } from './RemoteConnectionOptions';
 
 export interface LocalConnectionOptions {
     id: string;
+    finalUserId: string;
     createdAt: number;
     metadata: string;
     value: RemoteConnectionOptions[];

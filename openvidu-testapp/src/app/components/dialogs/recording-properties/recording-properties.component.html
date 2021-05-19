@@ -1,0 +1,53 @@
+<div id="rec-properties-div">
+  <label class="label">Recording properties</label>
+  <div>
+    <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+      <input matInput id="recording-name-field" placeholder="Recording name" [(ngModel)]="recordingProperties.name">
+    </mat-form-field>
+    <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+      <mat-select id="rec-outputmode-select" placeholder="Output mode" [(ngModel)]="recordingProperties.outputMode">
+        <mat-option *ngFor="let enumerator of enumToArray(recMode)" [value]="enumerator">
+          <span [attr.id]="'option-' + enumerator">{{ enumerator }}</span>
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+      <input matInput id="recording-media-node-field" placeholder="Media Node"
+        [(ngModel)]="recordingProperties.mediaNode.id">
+    </mat-form-field>
+    <div class="inner-text-input mat-form-field">
+      <mat-checkbox id="rec-hasaudio-checkbox" [(ngModel)]="recordingProperties.hasAudio">Has audio</mat-checkbox>
+      <mat-checkbox id="rec-hasvideo-checkbox" [(ngModel)]="recordingProperties.hasVideo">Has video</mat-checkbox>
+      <mat-checkbox *ngIf="recordingProperties.outputMode === 'INDIVIDUAL'" id="rec-ignorefailedstreams-checkbox"
+        [(ngModel)]="recordingProperties.ignoreFailedStreams">Ignore failed streams</mat-checkbox>
+    </div>
+  </div>
+  <div
+    *ngIf="recordingProperties.hasVideo && (recordingProperties.outputMode === 'COMPOSED' || recordingProperties.outputMode === 'COMPOSED_QUICK_START')">
+    <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+      <mat-select placeholder="Recording layout" id="recording-layout-select"
+        [(ngModel)]="recordingProperties.recordingLayout">
+        <mat-option *ngFor="let enumerator of enumToArray(recLayouts)" [value]="enumerator">
+          <span [attr.id]="'option-' + enumerator">{{ enumerator }}</span>
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field *ngIf="recordingProperties.recordingLayout === 'CUSTOM'" class="inner-text-input"
+      [style.fontSize.px]=14>
+      <input matInput placeholder="Custom layout" id="custom-layout-input" type="text"
+        [(ngModel)]="recordingProperties.customLayout">
+    </mat-form-field>
+    <mat-form-field id="recording-resolution-form" class="inner-text-input" [style.fontSize.px]=14>
+      <input matInput id="recording-resolution-field" placeholder="Resolution" type="text"
+        [(ngModel)]="recordingProperties.resolution">
+    </mat-form-field>
+    <mat-form-field id="recording-framerate-form" class="inner-text-input" [style.fontSize.px]=14>
+      <input matInput id="recording-framerate-field" placeholder="FrameRate" type="number"
+        [(ngModel)]="recordingProperties.frameRate">
+    </mat-form-field>
+    <mat-form-field id="recording-shmsize-form" class="inner-text-input" [style.fontSize.px]=14>
+      <input matInput id="recording-shmsize-field" placeholder="Shmsize" type="number"
+        [(ngModel)]="recordingProperties.shmSize">
+    </mat-form-field>
+  </div>
+</div>

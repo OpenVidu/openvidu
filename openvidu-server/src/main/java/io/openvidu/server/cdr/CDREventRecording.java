@@ -30,13 +30,15 @@ public class CDREventRecording extends CDREventEnd {
 
 	// recordingStarted
 	public CDREventRecording(Recording recording) {
-		super(CDREventName.recordingStarted, recording.getSessionId(), recording.getCreatedAt());
+		super(CDREventName.recordingStarted, recording.getSessionId(), recording.getUniqueSessionId(),
+				recording.getCreatedAt());
 		this.recording = recording;
 	}
 
 	// recordingStopped
 	public CDREventRecording(CDREventRecording event, Recording recording, EndReason reason, Long timestamp) {
 		super(CDREventName.recordingStopped, event == null ? recording.getSessionId() : event.getSessionId(),
+				event == null ? recording.getUniqueSessionId() : event.getUniqueSessionId(),
 				event == null ? recording.getCreatedAt() : event.getTimestamp(), reason, timestamp);
 		this.recording = recording;
 	}
@@ -49,10 +51,14 @@ public class CDREventRecording extends CDREventEnd {
 		json.addProperty("outputMode", this.recording.getOutputMode().name());
 		if (RecordingUtils.IS_COMPOSED(this.recording.getOutputMode()) && this.recording.hasVideo()) {
 			json.addProperty("resolution", this.recording.getResolution());
+			json.addProperty("frameRate", this.recording.getFrameRate());
 			json.addProperty("recordingLayout", this.recording.getRecordingLayout().name());
 			if (RecordingLayout.CUSTOM.equals(this.recording.getRecordingLayout())
 					&& this.recording.getCustomLayout() != null && !this.recording.getCustomLayout().isEmpty()) {
 				json.addProperty("customLayout", this.recording.getCustomLayout());
+			}
+			if (this.recording.getRecordingProperties().mediaNode() != null) {
+				json.addProperty("media_node_id", this.recording.getRecordingProperties().mediaNode());
 			}
 		}
 		json.addProperty("hasAudio", this.recording.hasAudio());

@@ -40,6 +40,10 @@ public class CDRLoggerFile implements CDRLogger {
 	}
 
 	@Override
+	public void log(WebrtcDebugEvent event) {
+	}
+
+	@Override
 	public void log(SessionSummary sessionSummary) {
 	}
 

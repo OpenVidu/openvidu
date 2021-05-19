@@ -25,6 +25,7 @@ export { StreamPropertyChangedEvent } from './OpenViduInternal/Events/StreamProp
 export { ConnectionPropertyChangedEvent } from './OpenViduInternal/Events/ConnectionPropertyChangedEvent';
 export { FilterEvent } from './OpenViduInternal/Events/FilterEvent';
 export { NetworkQualityLevelChangedEvent } from './OpenViduInternal/Events/NetworkQualityLevelChangedEvent';
+export { ExceptionEvent } from './OpenViduInternal/Events/ExceptionEvent';
 
 export { Capabilities } from './OpenViduInternal/Interfaces/Public/Capabilities';
 export { Device } from './OpenViduInternal/Interfaces/Public/Device';

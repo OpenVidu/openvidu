@@ -17,16 +17,17 @@
 
 import { Event } from './Event';
 import { Connection } from '../../OpenVidu/Connection';
-import { Session } from '../..';
+import { Session } from '../../OpenVidu/Session';
+import { StreamManager } from '../../OpenVidu/StreamManager';
 
 
 /**
  * Defines the following events:
- * - `publisherStartSpeaking`: dispatched by [[Session]] when a remote user has started speaking
- * - `publisherStopSpeaking`: dispatched by [[Session]] when a remote user has stopped speaking
+ * - `publisherStartSpeaking`: dispatched by [[Session]] and [[StreamManager]] when a user has started speaking
+ * - `publisherStopSpeaking`: dispatched by [[Session]] and [[StreamManager]] when a user has stopped speaking
  *
  * More information:
- * - This events will only be triggered for **remote streams that have audio tracks** ([[Stream.hasAudio]] must be true)
+ * - This events will only be triggered for **streams that have audio tracks** ([[Stream.hasAudio]] must be true)
  * - You can further configure how the events are dispatched by setting property `publisherSpeakingEventsOptions` in the call of [[OpenVidu.setAdvancedConfiguration]]
  */
 export class PublisherSpeakingEvent extends Event {
@@ -44,7 +45,7 @@ export class PublisherSpeakingEvent extends Event {
     /**
      * @hidden
      */
-    constructor(target: Session, type: string, connection: Connection, streamId: string) {
+    constructor(target: Session | StreamManager, type: string, connection: Connection, streamId: string) {
         super(false, target, type);
         this.type = type;
         this.connection = connection;

@@ -19,9 +19,7 @@ package io.openvidu.java.client;
 
 /**
  * See
- * {@link io.openvidu.java.client.SessionProperties.Builder#defaultRecordingLayout(RecordingLayout)}
- * and
- * {@link io.openvidu.java.client.RecordingProperties.Builder#recordingLayout(RecordingLayout)}
+ * {@link io.openvidu.java.client.RecordingProperties#recordingLayout(RecordingLayout)}
  */
 public enum RecordingLayout {
 
@@ -46,8 +44,8 @@ public enum RecordingLayout {
 	HORIZONTAL_PRESENTATION,
 
 	/**
-	 * Use your own custom recording layout. See
-	 * <a href="https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts"
+	 * Use your own custom recording layout. See <a href=
+	 * "https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts"
 	 * target="_blank">Custom recording layouts</a> to learn more
 	 */
 	CUSTOM

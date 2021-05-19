@@ -19,6 +19,7 @@ package io.openvidu.server.core;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.ConnectionProperties;
@@ -161,7 +162,11 @@ public class Token {
 	protected JsonObject getConnectionPropertiesWithFinalJsonFormat() {
 		JsonObject json = this.connectionProperties.toJson(this.sessionId);
 		json.remove("session");
-		json.add("serverData", json.get("data"));
+		if (json.has("data") && !json.get("data").isJsonNull()) {
+			json.addProperty("serverData", json.get("data").getAsString());
+		} else {
+			json.add("serverData", JsonNull.INSTANCE);
+		}
 		json.remove("data");
 		return json;
 	}

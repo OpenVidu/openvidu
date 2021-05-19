@@ -27,12 +27,13 @@ public class CDREventEnd extends CDREvent {
 	protected Integer duration;
 	protected EndReason reason;
 
-	public CDREventEnd(CDREventName eventName, String sessionId, Long timestamp) {
-		super(eventName, sessionId, timestamp);
+	public CDREventEnd(CDREventName eventName, String sessionId, String uniqueSessionId, Long timestamp) {
+		super(eventName, sessionId, uniqueSessionId, timestamp);
 	}
 
-	public CDREventEnd(CDREventName eventName, String sessionId, Long startTime, EndReason reason, Long timestamp) {
-		super(eventName, sessionId, timestamp);
+	public CDREventEnd(CDREventName eventName, String sessionId, String uniqueSessionId, Long startTime,
+			EndReason reason, Long timestamp) {
+		super(eventName, sessionId, uniqueSessionId, timestamp);
 		this.startTime = startTime;
 		this.duration = (int) ((this.timeStamp - this.startTime) / 1000);
 		this.reason = reason;

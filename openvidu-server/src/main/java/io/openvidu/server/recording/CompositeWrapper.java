@@ -38,6 +38,7 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
+import io.openvidu.server.utils.RemoteOperationUtils;
 
 public class CompositeWrapper {
 
@@ -87,7 +88,21 @@ public class CompositeWrapper {
 	}
 
 	public synchronized void stopCompositeRecording(CountDownLatch stopLatch, Long kmsDisconnectionTime) {
-		if (kmsDisconnectionTime == null) {
+
+		if (kmsDisconnectionTime != null || RemoteOperationUtils.mustSkipRemoteOperation()) {
+			// Stopping composite endpoint because of a KMS disconnection
+			String msg;
+			if (kmsDisconnectionTime != null) {
+				endTime = kmsDisconnectionTime;
+				msg = "KMS restart";
+			} else {
+				endTime = System.currentTimeMillis();
+				msg = "node crashed";
+			}
+			stopLatch.countDown();
+			log.warn("Forcing composed audio-only recording stop after {} in session {}", msg,
+					this.session.getSessionId());
+		} else {
 			this.recorderEndpoint.addStoppedListener(new EventListener<StoppedEvent>() {
 				@Override
 				public void onEvent(StoppedEvent event) {
@@ -100,18 +115,13 @@ public class CompositeWrapper {
 				}
 			});
 			this.recorderEndpoint.stop();
-		} else {
-			endTime = kmsDisconnectionTime;
-			stopLatch.countDown();
-			log.warn("Forcing composed audio-only recording stop after KMS restart in session {}",
-					this.session.getSessionId());
 		}
 
 	}
 
 	public void connectPublisherEndpoint(PublisherEndpoint endpoint) throws OpenViduException {
 		HubPort hubPort = new HubPort.Builder(composite).build();
-		endpoint.connect(hubPort);
+		endpoint.connect(hubPort, false);
 		String streamId = endpoint.getOwner().getPublisherStreamId();
 		this.hubPorts.put(streamId, hubPort);
 		this.publisherEndpoints.put(streamId, endpoint);
@@ -145,7 +155,9 @@ public class CompositeWrapper {
 		HubPort hubPort = this.hubPorts.remove(streamId);
 		PublisherEndpoint publisherEndpoint = this.publisherEndpoints.remove(streamId);
 		publisherEndpoint.disconnectFrom(hubPort);
-		hubPort.release();
+		if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
+			hubPort.release();
+		}
 		log.info("Composite for session {} has now {} connected publishers", this.session.getSessionId(),
 				this.composite.getChildren().size() - 1);
 	}
@@ -155,11 +167,15 @@ public class CompositeWrapper {
 			PublisherEndpoint endpoint = this.publisherEndpoints.get(streamId);
 			HubPort hubPort = this.hubPorts.get(streamId);
 			endpoint.disconnectFrom(hubPort);
-			hubPort.release();
+			if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
+				hubPort.release();
+			}
 		});
 		this.hubPorts.clear();
 		this.publisherEndpoints.clear();
-		this.composite.release();
+		if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
+			this.composite.release();
+		}
 	}
 
 	public long getDuration() {

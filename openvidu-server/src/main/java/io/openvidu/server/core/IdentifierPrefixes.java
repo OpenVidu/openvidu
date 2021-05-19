@@ -10,7 +10,7 @@ public interface IdentifierPrefixes {
 	public static final String SESSION_ID = "ses_";
 	public static final String TOKEN_ID = "tok_";
 	public static final String IPCAM_ID = "ipc_";
-	public static final String KMS_ID = "kms_";
+	public static final String MEDIA_ID = "media_";
 	public static final String CLUSTER_ID = "clu_";
 
 }

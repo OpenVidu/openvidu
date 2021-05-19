@@ -16,7 +16,7 @@ fatal_error() {
 new_ov_installation() {
      printf '\n'
      printf '\n     ======================================='
-     printf '\n          Install Openvidu CE %s' "${OPENVIDU_VERSION}"
+     printf '\n          Install OpenVidu CE %s' "${OPENVIDU_VERSION}"
      printf '\n     ======================================='
      printf '\n'
 
@@ -25,7 +25,7 @@ new_ov_installation() {
      mkdir "${OPENVIDU_FOLDER}" || fatal_error "Error while creating the folder '${OPENVIDU_FOLDER}'"
 
      # Download necessary files
-     printf '\n     => Downloading Openvidu CE files:'
+     printf '\n     => Downloading OpenVidu CE files:'
 
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/.env \
           --output "${OPENVIDU_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
@@ -72,7 +72,7 @@ new_ov_installation() {
      printf '\n     $ ./openvidu start'
      printf '\n'
      printf '\n     For more information, check:'
-     printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/deployment/deploying-on-premises/"
+     printf '\n     https://docs.openvidu.io/en/%s/deployment/deploying-on-premises/' "${OPENVIDU_VERSION//v}"
      printf '\n'
      printf '\n'
      exit 0
@@ -104,7 +104,7 @@ upgrade_ov() {
 
      [ -z "${OPENVIDU_PREVIOUS_FOLDER}" ] && fatal_error "No previous Openvidu installation found"
 
-     # Uppgrade Openvidu
+     # Upgrade Openvidu
      OPENVIDU_PREVIOUS_VERSION=$(grep 'Openvidu Version:' "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml" | awk '{ print $4 }')
      [ -z "${OPENVIDU_PREVIOUS_VERSION}" ] && fatal_error "Can't find previous OpenVidu version"
 
@@ -116,7 +116,7 @@ upgrade_ov() {
 
      printf '\n'
      printf '\n     ======================================='
-     printf '\n       Upgrade Openvidu CE %s to %s' "${OPENVIDU_PREVIOUS_VERSION}" "${OPENVIDU_VERSION}"
+     printf '\n       Upgrade OpenVidu CE %s to %s' "${OPENVIDU_PREVIOUS_VERSION}" "${OPENVIDU_VERSION}"
      printf '\n     ======================================='
      printf '\n'
 
@@ -132,7 +132,7 @@ upgrade_ov() {
      mkdir "${TMP_FOLDER}" || fatal_error "Error while creating the folder 'temporal'"
 
      # Download necessary files
-     printf '\n     => Downloading new Openvidu CE files:'
+     printf '\n     => Downloading new OpenVidu CE files:'
 
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/docker-compose.yml \
           --output "${TMP_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
@@ -150,24 +150,24 @@ upgrade_ov() {
           --output "${TMP_FOLDER}/openvidu" || fatal_error "Error when downloading the file 'openvidu'"
      printf '\n          - openvidu'
 
-     # Dowloading new images and stoped actual Openvidu
-     printf '\n     => Dowloading new images...'
+     # Downloading new images and stopped actual Openvidu
+     printf '\n     => Downloading new images...'
      printf '\n'
      sleep 1
 
      printf "\n          => Moving to 'tmp' folder..."
      printf '\n'
      cd "${TMP_FOLDER}" || fatal_error "Error when moving to 'tmp' folder"
-     docker-compose pull | true
+     docker-compose pull || true
 
-     printf '\n     => Stoping Openvidu...'
+     printf '\n     => Stopping Openvidu...'
      printf '\n'
      sleep 1
 
      printf "\n          => Moving to 'openvidu' folder..."
      printf '\n'
      cd "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error when moving to 'openvidu' folder"
-     docker-compose down | true
+     docker-compose down || true
 
      printf '\n'
      printf '\n     => Moving to working dir...'
@@ -179,7 +179,7 @@ upgrade_ov() {
      mv "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     if [ ! -z "${USE_OV_CALL}" ]; then
+     if [ -n "${USE_OV_CALL}" ]; then
           mv "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.override.yml" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'docker-compose.override.yml'"
           printf '\n          - docker-compose.override.yml'
      fi
@@ -201,7 +201,7 @@ upgrade_ov() {
      mv "${TMP_FOLDER}/docker-compose.yml" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     if [ ! -z "${USE_OV_CALL}" ]; then
+     if [ -n "${USE_OV_CALL}" ]; then
           mv "${TMP_FOLDER}/docker-compose.override.yml" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'docker-compose.override.yml'"
           printf '\n          - docker-compose.override.yml'
      else
@@ -224,7 +224,7 @@ upgrade_ov() {
 
      # Define old mode: On Premise or Cloud Formation
      OLD_MODE=$(grep -E "Installation Mode:.*$" "${ROLL_BACK_FOLDER}/docker-compose.yml" | awk '{ print $4,$5 }')
-     [ ! -z "${OLD_MODE}" ] && sed -i -r "s/Installation Mode:.+/Installation Mode: ${OLD_MODE}/" "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml"
+     [ -n "${OLD_MODE}" ] && sed -i -r "s/Installation Mode:.+/Installation Mode: ${OLD_MODE}/" "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml"
 
      # Ready to use
      printf '\n'
@@ -249,8 +249,8 @@ upgrade_ov() {
      printf "\n     If you want to rollback, all the files from the previous installation have been copied to folder '.old-%s'" "${OPENVIDU_PREVIOUS_VERSION}"
      printf '\n'
      printf '\n     For more information, check:'
-     printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/deployment/deploying-on-premises/"
-     printf "\n     https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/deployment/upgrading/"
+     printf '\n     https://docs.openvidu.io/en/%s/deployment/deploying-on-premises/' "${OPENVIDU_VERSION//v}"
+     printf '\n     https://docs.openvidu.io/en/%s/deployment/upgrading/' "${OPENVIDU_VERSION//v}"
      printf '\n'
      printf '\n'
 }
@@ -273,7 +273,7 @@ else
 fi
 
 # Check type of installation
-if [[ ! -z "$1" && "$1" == "upgrade" ]]; then
+if [[ -n "$1" && "$1" == "upgrade" ]]; then
      upgrade_ov
 else
      new_ov_installation

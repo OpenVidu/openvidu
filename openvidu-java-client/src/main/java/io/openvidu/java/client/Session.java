@@ -18,7 +18,6 @@
 package io.openvidu.java.client;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -121,13 +120,7 @@ public class Session {
 		}
 
 		HttpPost request = new HttpPost(this.openVidu.hostname + OpenVidu.API_TOKENS);
-
-		StringEntity params;
-		try {
-			params = new StringEntity(tokenOptions.toJsonObject(sessionId).toString());
-		} catch (UnsupportedEncodingException e1) {
-			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
-		}
+		StringEntity params = new StringEntity(tokenOptions.toJsonObject(sessionId).toString(), "UTF-8");
 
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 		request.setEntity(params);
@@ -190,13 +183,7 @@ public class Session {
 
 		HttpPost request = new HttpPost(
 				this.openVidu.hostname + OpenVidu.API_SESSIONS + "/" + this.sessionId + "/connection");
-
-		StringEntity params;
-		try {
-			params = new StringEntity(connectionProperties.toJson(sessionId).toString());
-		} catch (UnsupportedEncodingException e1) {
-			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
-		}
+		StringEntity params = new StringEntity(connectionProperties.toJson(sessionId).toString(), "UTF-8");
 
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 		request.setEntity(params);
@@ -506,13 +493,8 @@ public class Session {
 
 		HttpPatch request = new HttpPatch(
 				this.openVidu.hostname + OpenVidu.API_SESSIONS + "/" + this.sessionId + "/connection/" + connectionId);
+		StringEntity params = new StringEntity(connectionProperties.toJson(this.sessionId).toString(), "UTF-8");
 
-		StringEntity params;
-		try {
-			params = new StringEntity(connectionProperties.toJson(this.sessionId).toString());
-		} catch (UnsupportedEncodingException e1) {
-			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
-		}
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 		request.setEntity(params);
 
@@ -661,12 +643,7 @@ public class Session {
 		}
 
 		HttpPost request = new HttpPost(this.openVidu.hostname + OpenVidu.API_SESSIONS);
-		StringEntity params = null;
-		try {
-			params = new StringEntity(properties.toJson().toString());
-		} catch (UnsupportedEncodingException e1) {
-			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
-		}
+		StringEntity params = new StringEntity(properties.toJson().toString(), "UTF-8");
 
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 		request.setEntity(params);
@@ -684,22 +661,17 @@ public class Session {
 				this.sessionId = responseJson.get("id").getAsString();
 				this.createdAt = responseJson.get("createdAt").getAsLong();
 
-				// forcedVideoCodec and allowTranscoding values are configured in OpenVidu Server
-				// via configuration or session
+				// forcedVideoCodec and allowTranscoding values are configured in OpenVidu
+				// Server via configuration or session
 				VideoCodec forcedVideoCodec = VideoCodec.valueOf(responseJson.get("forcedVideoCodec").getAsString());
 				Boolean allowTranscoding = responseJson.get("allowTranscoding").getAsBoolean();
 
 				SessionProperties responseProperties = new SessionProperties.Builder()
-						.customSessionId(properties.customSessionId())
-						.mediaMode(properties.mediaMode())
+						.customSessionId(properties.customSessionId()).mediaMode(properties.mediaMode())
 						.recordingMode(properties.recordingMode())
-						.defaultOutputMode(properties.defaultOutputMode())
-						.defaultRecordingLayout(properties.defaultRecordingLayout())
-						.defaultCustomLayout(properties.defaultCustomLayout())
-						.mediaNode(properties.mediaNode())
-						.forcedVideoCodec(forcedVideoCodec)
-						.allowTranscoding(allowTranscoding)
-						.build();
+						.defaultRecordingProperties(properties.defaultRecordingProperties())
+						.mediaNode(properties.mediaNode()).forcedVideoCodec(forcedVideoCodec)
+						.allowTranscoding(allowTranscoding).build();
 
 				this.properties = responseProperties;
 				log.info("Session '{}' created", this.sessionId);
@@ -717,7 +689,7 @@ public class Session {
 	private JsonObject httpResponseToJson(HttpResponse response) throws OpenViduJavaClientException {
 		JsonObject json;
 		try {
-			json = new Gson().fromJson(EntityUtils.toString(response.getEntity()), JsonObject.class);
+			json = new Gson().fromJson(EntityUtils.toString(response.getEntity(), "UTF-8"), JsonObject.class);
 		} catch (JsonSyntaxException | IOException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
@@ -734,13 +706,10 @@ public class Session {
 		this.recording = json.get("recording").getAsBoolean();
 		SessionProperties.Builder builder = new SessionProperties.Builder()
 				.mediaMode(MediaMode.valueOf(json.get("mediaMode").getAsString()))
-				.recordingMode(RecordingMode.valueOf(json.get("recordingMode").getAsString()))
-				.defaultOutputMode(Recording.OutputMode.valueOf(json.get("defaultOutputMode").getAsString()));
-		if (json.has("defaultRecordingLayout")) {
-			builder.defaultRecordingLayout(RecordingLayout.valueOf(json.get("defaultRecordingLayout").getAsString()));
-		}
-		if (json.has("defaultCustomLayout")) {
-			builder.defaultCustomLayout(json.get("defaultCustomLayout").getAsString());
+				.recordingMode(RecordingMode.valueOf(json.get("recordingMode").getAsString()));
+		if (json.has("defaultRecordingProperties")) {
+			builder.defaultRecordingProperties(
+					RecordingProperties.fromJson(json.get("defaultRecordingProperties").getAsJsonObject()));
 		}
 		if (json.has("customSessionId")) {
 			builder.customSessionId(json.get("customSessionId").getAsString());
@@ -791,10 +760,10 @@ public class Session {
 		json.addProperty("recording", this.recording);
 		json.addProperty("mediaMode", this.properties.mediaMode().name());
 		json.addProperty("recordingMode", this.properties.recordingMode().name());
-		json.addProperty("defaultOutputMode", this.properties.defaultOutputMode().name());
-		json.addProperty("defaultRecordingLayout", this.properties.defaultRecordingLayout().name());
-		json.addProperty("defaultCustomLayout", this.properties.defaultCustomLayout());
-		if(this.properties.forcedVideoCodec() != null) {
+		if (this.properties.defaultRecordingProperties() != null) {
+			json.add("defaultRecordingProperties", this.properties.defaultRecordingProperties().toJson());
+		}
+		if (this.properties.forcedVideoCodec() != null) {
 			json.addProperty("forcedVideoCodec", this.properties.forcedVideoCodec().name());
 		}
 		if (this.properties.isTranscodingAllowed() != null) {

@@ -18,6 +18,7 @@
 package io.openvidu.server.core;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -37,6 +38,7 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.server.cdr.CDREventNodeCrashed;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduBuildInfo;
 import io.openvidu.server.config.OpenviduConfig;
@@ -152,6 +154,7 @@ public class SessionEventsHandler {
 			}
 		}
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM, participant.getParticipantPublicId());
+		result.addProperty(ProtocolElements.PARTICIPANTJOINED_FINALUSERID_PARAM, participant.getFinalUserId());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getActiveAt());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, participant.getFullMetadata());
 		result.add(ProtocolElements.PARTICIPANTJOINED_VALUE_PARAM, resultArray);
@@ -178,7 +181,7 @@ public class SessionEventsHandler {
 	}
 
 	public void onParticipantLeft(Participant participant, String sessionId, Set<Participant> remainingParticipants,
-			Integer transactionId, OpenViduException error, EndReason reason) {
+			Integer transactionId, OpenViduException error, EndReason reason, boolean scheduleWebsocketClose) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
@@ -202,6 +205,13 @@ public class SessionEventsHandler {
 			// No response when the participant is forcibly evicted instead of voluntarily
 			// leaving the session
 			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
+		}
+
+		if (scheduleWebsocketClose) {
+			// Schedule the close up of this WebSocket connection. This is only as an extra
+			// guarantee: the client-side should always close it after receiving the
+			// response to "leaveRoom" method
+			this.rpcNotificationService.scheduleCloseRpcSession(participant.getParticipantPrivateId(), 10000);
 		}
 
 		if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
@@ -295,6 +305,18 @@ public class SessionEventsHandler {
 		}
 	}
 
+	public void onPrepareSubscription(Participant participant, Session session, String sdpOffer, Integer transactionId,
+			OpenViduException error) {
+		if (error != null) {
+			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
+			return;
+		}
+		JsonObject result = new JsonObject();
+		result.addProperty(ProtocolElements.PREPARERECEIVEVIDEO_SDPOFFER_PARAM, sdpOffer);
+		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
+	}
+
+	// TODO: REMOVE ON 2.18.0
 	public void onSubscribe(Participant participant, Session session, String sdpAnswer, Integer transactionId,
 			OpenViduException error) {
 		if (error != null) {
@@ -303,6 +325,23 @@ public class SessionEventsHandler {
 		}
 		JsonObject result = new JsonObject();
 		result.addProperty(ProtocolElements.RECEIVEVIDEO_SDPANSWER_PARAM, sdpAnswer);
+		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
+
+		if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+			recordingsToSendClientEvents.computeIfPresent(session.getSessionId(), (key, value) -> {
+				sendRecordingStartedNotification(session, value);
+				return null;
+			});
+		}
+	}
+	// END TODO
+
+	public void onSubscribe(Participant participant, Session session, Integer transactionId, OpenViduException error) {
+		if (error != null) {
+			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
+			return;
+		}
+		JsonObject result = new JsonObject();
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
 
 		if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
@@ -322,7 +361,7 @@ public class SessionEventsHandler {
 	}
 
 	public void onSendMessage(Participant participant, JsonObject message, Set<Participant> participants,
-			String sessionId, Integer transactionId, OpenViduException error) {
+			String sessionId, String uniqueSessionId, Integer transactionId, OpenViduException error) {
 
 		boolean isRpcCall = transactionId != null;
 		if (isRpcCall) {
@@ -391,7 +430,7 @@ public class SessionEventsHandler {
 			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 		}
 
-		CDR.recordSignalSent(sessionId, from, toSet.toArray(new String[toSet.size()]), type, data);
+		CDR.recordSignalSent(sessionId, uniqueSessionId, from, toSet.toArray(new String[toSet.size()]), type, data);
 	}
 
 	public void onStreamPropertyChanged(Participant participant, Integer transactionId, Set<Participant> participants,
@@ -453,6 +492,11 @@ public class SessionEventsHandler {
 						ProtocolElements.PARTICIPANTEVICTED_METHOD, params);
 			}
 		}
+
+		// Schedule the close up of this WebSocket connection. This is only as an extra
+		// guarantee: the client-side should always close it after receiving the
+		// participantEvicted notification
+		this.rpcNotificationService.scheduleCloseRpcSession(evictedParticipant.getParticipantPrivateId(), 10000);
 	}
 
 	public void sendRecordingStartedNotification(Session session, Recording recording) {
@@ -561,10 +605,11 @@ public class SessionEventsHandler {
 		}
 	}
 
-	public void onFilterEventDispatched(String sessionId, String connectionId, String streamId, String filterType,
-			GenericMediaEvent event, Set<Participant> participants, Set<String> subscribedParticipants) {
+	public void onFilterEventDispatched(String sessionId, String uniqueSessionId, String connectionId, String streamId,
+			String filterType, GenericMediaEvent event, Set<Participant> participants,
+			Set<String> subscribedParticipants) {
 
-		CDR.recordFilterEventDispatched(sessionId, connectionId, streamId, filterType, event);
+		CDR.recordFilterEventDispatched(sessionId, uniqueSessionId, connectionId, streamId, filterType, event);
 
 		JsonObject params = new JsonObject();
 		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_CONNECTIONID_PARAM, connectionId);
@@ -593,22 +638,19 @@ public class SessionEventsHandler {
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 	}
 
-	public void closeRpcSession(String participantPrivateId) {
-		this.rpcNotificationService.closeRpcSession(participantPrivateId);
+	/**
+	 * This handler must be called before cleaning any sessions or recordings hosted
+	 * by the crashed Media Node
+	 */
+	public void onMediaNodeCrashed(Kms kms, long timeOfKurentoDisconnection, List<String> sessionIds,
+			List<String> recordingIds) {
+	}
+
+	public void onMasterNodeCrashed(CDREventNodeCrashed event) {
 	}
 
 	public void storeRecordingToSendClientEvent(Recording recording) {
 		recordingsToSendClientEvents.put(recording.getSessionId(), recording);
-	}
-
-	public void onNetworkQualityLevelChanged(Session session, JsonObject params) {
-	}
-
-	public void onConnectionPropertyChanged(Participant participant, String property, Object newValue) {
-	}
-
-	public void onMediaServerCrashed(Kms kms, long timeOfKurentoDisconnection) {
-		CDR.recordMediaServerCrashed(kms, null, timeOfKurentoDisconnection);
 	}
 
 	protected Set<Participant> filterParticipantsByRole(OpenViduRole[] roles, Set<Participant> participants) {

@@ -1,6 +1,6 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
-Description: Openvidu Pro CloudFormation template
+Description: OpenVidu Pro CloudFormation template
 
 Parameters:
 
@@ -41,11 +41,11 @@ Parameters:
   LetsEncryptEmail:
     Description: "If certificate type is 'letsencrypt', this email will be used for Let's Encrypt notifications"
     Type: String
-  
+
   Recording:
     Description: |
       If 'disabled', recordings will not be active.
-      If 'local' recordings will be saved in EC2 instance locally. 
+      If 'local' recordings will be saved in EC2 instance locally.
       If 's3', recordings will be stored in a S3 bucket"
     Type: String
     AllowedValues:
@@ -328,15 +328,15 @@ Conditions:
   CreateS3Bucket: !And
     - !Equals [!Ref Recording, 's3' ]
     - !Equals [!Ref S3RecordingsBucketName, '']
-        
+
 Rules:
 
   RecordingValidation:
-    RuleCondition: 
+    RuleCondition:
       Fn::Or: [ !Equals [!Ref Recording, 'disabled' ], !Equals [!Ref Recording, 'local' ] ]
     Assertions:
       - AssertDescription: If recording Storage is 'disabled' or 'local', you don't need to specify a S3 bucket.
-        Assert: 
+        Assert:
           Fn::Equals: [ !Ref S3RecordingsBucketName, "" ]
 
 Resources:
@@ -380,7 +380,7 @@ Resources:
                     - 's3:DeleteObject'
                     - 's3:GetObject'
                     - 's3:PutObject'
-                  Resource: 
+                  Resource:
                     - Fn::If:
                       # Get bucket name depending if the user defines a bucket name or not
                       - CreateS3Bucket
@@ -392,10 +392,10 @@ Resources:
                 # Only apply this policy if S3 is configured
                 - RecordingStorageIsS3
                 - Effect: Allow
-                  Action: 
+                  Action:
                     - 's3:ListBucket'
                     - 's3:GetBucketLocation'
-                  Resource: 
+                  Resource:
                     - Fn::If:
                       # Get bucket name depending if the user defines a bucket name or not
                       - CreateS3Bucket
@@ -429,7 +429,7 @@ Resources:
     ### Unique bucket name using Stack ID
       BucketName: !Join ["-" , [ 'openvidu-recordings', !Select [0, !Split ["-", !Select [2, !Split [/, !Ref AWS::StackId ]]]]]]
       AccessControl: Private
-      PublicAccessBlockConfiguration: 
+      PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
         IgnorePublicAcls : true
@@ -483,13 +483,13 @@ Resources:
                   echo $PublicHostname > /usr/share/openvidu/old-host-name
                 fi
 
-                # Openvidu Pro mode
+                # OpenVidu Pro mode
                 sed -i "s/OPENVIDU_PRO_CLUSTER_MODE=manual/OPENVIDU_PRO_CLUSTER_MODE=auto/" $WORKINGDIR/.env
 
-                # Openvidu Pro Media Nodes
+                # OpenVidu Pro Media Nodes
                 sed -i "s/#OPENVIDU_PRO_CLUSTER_MEDIA_NODES=/OPENVIDU_PRO_CLUSTER_MEDIA_NODES=${MediaNodesStartNumber}/" $WORKINGDIR/.env
 
-                # Openvidu Pro enviroment
+                # OpenVidu Pro enviroment
                 sed -i "s/OPENVIDU_PRO_CLUSTER_ENVIRONMENT=on_premise/OPENVIDU_PRO_CLUSTER_ENVIRONMENT=aws/" $WORKINGDIR/.env
 
                 # Replace certificated type
@@ -507,15 +507,18 @@ Resources:
                 sed -i "s/ELASTICSEARCH_PASSWORD=/ELASTICSEARCH_PASSWORD=${ElasticsearchPassword}/" $WORKINGDIR/.env
 
                 # Replace vars AWS
+                INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
                 sed -i "s/#AWS_DEFAULT_REGION=/AWS_DEFAULT_REGION=${AWS::Region}/" $WORKINGDIR/.env
                 sed -i "s/#AWS_IMAGE_ID=/AWS_IMAGE_ID=${kmsAmi}/" $WORKINGDIR/.env
                 sed -i "s/#AWS_INSTANCE_TYPE=/AWS_INSTANCE_TYPE=${AwsInstanceTypeKMS}/" $WORKINGDIR/.env
+                sed -i "s/#AWS_INSTANCE_ID=/AWS_INSTANCE_ID=$INSTANCE_ID/" $WORKINGDIR/.env
                 sed -i "s/#AWS_KEY_NAME=/AWS_KEY_NAME=${KeyName}/" $WORKINGDIR/.env
                 sed -i "s/#AWS_SUBNET_ID=/AWS_SUBNET_ID=${OpenViduSubnet}/" $WORKINGDIR/.env
                 sed -i "s/#AWS_STACK_ID=/AWS_STACK_ID=$(echo ${AWS::StackId} | sed 's#/#\\/#g')/" $WORKINGDIR/.env
                 sed -i "s/#AWS_STACK_NAME=/AWS_STACK_NAME=${AWS::StackName}/" $WORKINGDIR/.env
                 sed -i "s/#AWS_CLI_DOCKER_TAG=/AWS_CLI_DOCKER_TAG=AWS_DOCKER_TAG/" $WORKINGDIR/.env
                 sed -i "s/#AWS_VOLUME_SIZE=/AWS_VOLUME_SIZE=50/" $WORKINGDIR/.env
+                sed -i "s/#OPENVIDU_PRO_AWS_REGION=/OPENVIDU_PRO_AWS_REGION=${AWS::Region}/" $WORKINGDIR/.env
 
                 # Get security group id of kms and use it as env variable
                 SECGRPIDKMS=$(/usr/local/bin/getSecurityGroupKms.sh)
@@ -647,17 +650,17 @@ Resources:
             export HOME="/root"
 
             # Replace .env variables
-            /usr/local/bin/feedGroupVars.sh || { echo "[Openvidu] Parameters incorrect/insufficient"; exit 1; }
+            /usr/local/bin/feedGroupVars.sh || { echo "[OpenVidu] Parameters incorrect/insufficient"; exit 1; }
 
             # Create security groups
-            /usr/local/bin/create_security_group_rules.sh || { echo "[Openvidu] Error creating security groups"; exit 1; }
+            /usr/local/bin/create_security_group_rules.sh || { echo "[OpenVidu] Error creating security groups"; exit 1; }
 
             # Launch on reboot
             echo "@reboot /usr/local/bin/restartPRO.sh" | crontab
 
             # Download certs if "WichCert" mode
             if [ "${WhichCert}" == "owncert" ]; then
-              /usr/local/bin/buildCerts.sh || { echo "[Openvidu] error with the certificate files"; exit 1; }
+              /usr/local/bin/buildCerts.sh || { echo "[OpenVidu] error with the certificate files"; exit 1; }
             fi
 
             # Start openvidu application
@@ -690,23 +693,43 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIpv6: ::/0
         - IpProtocol: udp
+          FromPort: 40000
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 40000
+          ToPort: 65535
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
           FromPort: 40000
           ToPort: 65535
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 40000
           ToPort: 65535
-          CidrIp: 0.0.0.0/0
+          CidrIpv6: ::/0
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 1
           ToPort: 65535
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 1
+          ToPort: 65535
+          CidrIpv6: ::/0
         - IpProtocol: udp
           FromPort: 1
           ToPort: 65535
           CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 1
+          ToPort: 65535
+          CidrIpv6: ::/0
 
   OpenViduSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
@@ -720,38 +743,74 @@ Resources:
           ToPort: 22
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIpv6: ::/0
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
           FromPort: 3478
           ToPort: 3478
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3478
+          ToPort: 3478
+          CidrIpv6: ::/0
         - IpProtocol: udp
           FromPort: 3478
           ToPort: 3478
           CidrIp: 0.0.0.0/0
         - IpProtocol: udp
+          FromPort: 3478
+          ToPort: 3478
+          CidrIpv6: ::/0
+        - IpProtocol: udp
+          FromPort: 40000
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 40000
+          ToPort: 65535
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
           FromPort: 40000
           ToPort: 65535
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 40000
           ToPort: 65535
-          CidrIp: 0.0.0.0/0
+          CidrIpv6: ::/0
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 1
           ToPort: 65535
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 1
+          ToPort: 65535
+          CidrIpv6: ::/0
         - IpProtocol: udp
           FromPort: 1
           ToPort: 65535
           CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 1
+          ToPort: 65535
+          CidrIpv6: ::/0
 
   WaitCondition:
     Type: AWS::CloudFormation::WaitCondition

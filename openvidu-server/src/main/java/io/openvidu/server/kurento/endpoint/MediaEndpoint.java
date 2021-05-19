@@ -37,6 +37,7 @@ import org.kurento.client.IceCandidate;
 import org.kurento.client.ListenerSubscription;
 import org.kurento.client.MediaElement;
 import org.kurento.client.MediaPipeline;
+import org.kurento.client.OfferOptions;
 import org.kurento.client.PlayerEndpoint;
 import org.kurento.client.RtpEndpoint;
 import org.kurento.client.SdpEndpoint;
@@ -54,10 +55,15 @@ import com.google.gson.JsonObject;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.java.client.KurentoOptions;
+import io.openvidu.server.cdr.WebrtcDebugEvent;
+import io.openvidu.server.cdr.WebrtcDebugEvent.WebrtcDebugEventIssuer;
+import io.openvidu.server.cdr.WebrtcDebugEvent.WebrtcDebugEventOperation;
+import io.openvidu.server.cdr.WebrtcDebugEvent.WebrtcDebugEventType;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.kurento.core.KurentoMediaOptions;
 import io.openvidu.server.kurento.core.KurentoParticipant;
+import io.openvidu.server.utils.RemoteOperationUtils;
 
 /**
  * {@link Endpoint} wrapper. Can be based on WebRtcEndpoint (that supports
@@ -104,6 +110,8 @@ public abstract class MediaEndpoint {
 	public Runnable kmsWebrtcStatsRunnable;
 	public AtomicInteger statsNotFoundErrors = new AtomicInteger(0);
 	public AtomicBoolean cancelStatsLoop = new AtomicBoolean(false);
+
+	private Gson gson = new GsonBuilder().create();
 
 	/**
 	 * Constructor to set the owner, the endpoint's name and the media pipeline.
@@ -464,7 +472,9 @@ public abstract class MediaEndpoint {
 		if (element == null || subscription == null) {
 			return;
 		}
-		element.removeErrorListener(subscription);
+		if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
+			element.removeErrorListener(subscription);
+		}
 	}
 
 	/**
@@ -519,6 +529,24 @@ public abstract class MediaEndpoint {
 		}
 	}
 
+	protected String generateOffer(OfferOptions offerOptions) throws OpenViduException {
+		if (this.isWeb()) {
+			if (webEndpoint == null) {
+				throw new OpenViduException(Code.MEDIA_WEBRTC_ENDPOINT_ERROR_CODE,
+						"Can't generate offer when WebRtcEndpoint is null (ep: " + endpointName + ")");
+			}
+			return webEndpoint.generateOffer(offerOptions);
+		} else if (this.isPlayerEndpoint()) {
+			return "";
+		} else {
+			if (endpoint == null) {
+				throw new OpenViduException(Code.MEDIA_RTP_ENDPOINT_ERROR_CODE,
+						"Can't generate offer when RtpEndpoint is null (ep: " + endpointName + ")");
+			}
+			return endpoint.generateOffer(offerOptions);
+		}
+	}
+
 	/**
 	 * If supported, it registers a listener for when a new {@link IceCandidate} is
 	 * gathered by the internal endpoint ({@link WebRtcEndpoint}) and sends it to
@@ -539,7 +567,12 @@ public abstract class MediaEndpoint {
 		}
 		webEndpoint.addIceCandidateFoundListener(event -> {
 			final IceCandidate candidate = event.getCandidate();
+
 			gatheredCandidateList.add(candidate);
+			this.owner.logIceCandidate(new WebrtcDebugEvent(this.owner, this.streamId, WebrtcDebugEventIssuer.server,
+					this.getWebrtcDebugOperation(), WebrtcDebugEventType.iceCandidate,
+					gson.toJsonTree(candidate).toString()));
+
 			owner.sendIceCandidate(senderPublicId, endpointName, candidate);
 		});
 	}
@@ -574,7 +607,12 @@ public abstract class MediaEndpoint {
 			throw new OpenViduException(Code.MEDIA_WEBRTC_ENDPOINT_ERROR_CODE,
 					"Can't add existing ICE candidates to null WebRtcEndpoint (ep: " + endpointName + ")");
 		}
+
 		this.receivedCandidateList.add(candidate);
+		this.owner.logIceCandidate(new WebrtcDebugEvent(this.owner, this.streamId, WebrtcDebugEventIssuer.client,
+				this.getWebrtcDebugOperation(), WebrtcDebugEventType.iceCandidate,
+				gson.toJsonTree(candidate).toString()));
+
 		this.webEndpoint.addIceCandidate(candidate, new Continuation<Void>() {
 			@Override
 			public void onSuccess(Void result) throws Exception {
@@ -615,19 +653,18 @@ public abstract class MediaEndpoint {
 				json.add("localSdp", JsonNull.INSTANCE);
 			}
 		}
-		Gson gson = new GsonBuilder().create();
-		JsonArray receivedCandidates = new JsonArray();
+		JsonArray clientIceCandidates = new JsonArray();
 		Iterator<IceCandidate> it1 = this.receivedCandidateList.iterator();
 		while (it1 != null && it1.hasNext()) {
-			receivedCandidates.add(gson.toJsonTree(it1.next()));
+			clientIceCandidates.add(gson.toJsonTree(it1.next()));
 		}
-		json.add("receivedCandidates", receivedCandidates);
-		JsonArray gatheredCandidates = new JsonArray();
+		json.add("clientIceCandidates", clientIceCandidates);
+		JsonArray serverIceCandidates = new JsonArray();
 		Iterator<IceCandidate> it2 = this.gatheredCandidateList.iterator();
 		while (it2 != null && it2.hasNext()) {
-			gatheredCandidates.add(gson.toJsonTree(it2.next()));
+			serverIceCandidates.add(gson.toJsonTree(it2.next()));
 		}
-		json.add("gatheredCandidates", gatheredCandidates);
+		json.add("serverIceCandidates", serverIceCandidates);
 		json.addProperty("localCandidate", this.selectedLocalIceCandidate);
 		json.addProperty("remoteCandidate", this.selectedRemoteIceCandidate);
 
@@ -638,6 +675,7 @@ public abstract class MediaEndpoint {
 			j.remove("sessionId");
 			j.remove("user");
 			j.remove("connection");
+			j.remove("connectionId");
 			j.remove("endpoint");
 			j.remove("timestampMillis");
 			jsonArray.add(j);
@@ -646,4 +684,7 @@ public abstract class MediaEndpoint {
 
 		return json;
 	}
+
+	protected abstract WebrtcDebugEventOperation getWebrtcDebugOperation();
+
 }

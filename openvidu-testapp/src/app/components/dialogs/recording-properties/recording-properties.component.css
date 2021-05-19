@@ -1,0 +1,42 @@
+.inner-text-input {
+  margin-left: 9px;
+  width: 25%;
+}
+
+#rec-properties-btn {
+  padding-left: 0;
+  padding-right: 0;
+  display: inline-block;
+}
+
+#rec-properties-div {
+  background-color: #f7f7f7;
+  margin-bottom: 10px;
+  padding: 10px 5px 0 5px;
+  border: 1px solid #00000026;
+  border-radius: 3px;
+}
+
+#rec-properties-div mat-form-field {
+  max-width: 150px;
+}
+
+#rec-properties-div mat-checkbox {
+  margin-left: 10px;
+}
+
+#recording-resolution-form {
+  max-width: 100px !important;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.54);
+  font-weight: 400;
+  margin-bottom: 5px;
+}
+
+mat-checkbox {
+  font-size: 14px;
+}

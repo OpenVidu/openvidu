@@ -8,15 +8,16 @@ import com.google.gson.JsonObject;
 public class CDREventFilterEvent extends CDREvent {
 
 	private GenericMediaEvent event;
-	private String participantId;
+	private String connectionId;
 	private String streamId;
 	private String filterType;
 
-	public CDREventFilterEvent(String sessionId, String participantId, String streamId, String filterType,
-			GenericMediaEvent event) {
-		super(CDREventName.filterEventDispatched, sessionId, Long.parseLong(event.getTimestampMillis()));
+	public CDREventFilterEvent(String sessionId, String uniqueSessionId, String connectionId, String streamId,
+			String filterType, GenericMediaEvent event) {
+		super(CDREventName.filterEventDispatched, sessionId, uniqueSessionId,
+				Long.parseLong(event.getTimestampMillis()));
 		this.event = event;
-		this.participantId = participantId;
+		this.connectionId = connectionId;
 		this.streamId = streamId;
 		this.filterType = filterType;
 	}
@@ -32,7 +33,9 @@ public class CDREventFilterEvent extends CDREvent {
 	@Override
 	public JsonObject toJson() {
 		JsonObject json = super.toJson();
-		json.addProperty("participantId", this.participantId);
+		// TODO: remove deprecated "participantId" when possible
+		json.addProperty("participantId", this.connectionId);
+		json.addProperty("connectionId", this.connectionId);
 		json.addProperty("streamId", this.streamId);
 		json.addProperty("filterType", this.filterType);
 		json.addProperty("eventType", this.event.getType());

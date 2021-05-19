@@ -1,6 +1,6 @@
 var JsonRPC = require('./JsonRPC');
-var XmlRPC  = require('./XmlRPC');
+var XmlRPC = require('./XmlRPC');
 
 
 exports.JsonRPC = JsonRPC;
-exports.XmlRPC  = XmlRPC;
+exports.XmlRPC = XmlRPC;

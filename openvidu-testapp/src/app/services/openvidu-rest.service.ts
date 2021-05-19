@@ -49,7 +49,7 @@ export class OpenviduRestService {
 
   getAvailableParams(): Map<string, string[]> {
     const params = new Map<string, string[]>();
-    this.sessionIdSession.forEach((sessionApi, sessionId, map) => {
+    this.sessionIdSession.forEach((sessionApi, sessionId) => {
       params.set(sessionId, Array.from(this.sessionIdTokenOpenViduRole.get(sessionId).keys()));
     });
     return params;

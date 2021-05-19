@@ -21,6 +21,6 @@ public enum CDREventName {
 
 	sessionCreated, sessionDestroyed, participantJoined, participantLeft, webrtcConnectionCreated,
 	webrtcConnectionDestroyed, recordingStarted, recordingStopped, recordingStatusChanged, filterEventDispatched,
-	signalSent, mediaNodeStatusChanged, autoscaling, mediaServerCrashed
+	signalSent, mediaNodeStatusChanged, autoscaling, nodeCrashed
 
 }

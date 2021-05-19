@@ -127,6 +127,9 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		case ProtocolElements.ONICECANDIDATE_METHOD:
 			onIceCandidate(rpcConnection, request);
 			break;
+		case ProtocolElements.PREPARERECEIVEVIDEO_METHOD:
+			prepareReceiveVideoFrom(rpcConnection, request);
+			break;
 		case ProtocolElements.RECEIVEVIDEO_METHOD:
 			receiveVideoFrom(rpcConnection, request);
 			break;
@@ -181,7 +184,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		String token = getStringParam(request, ProtocolElements.JOINROOM_TOKEN_PARAM);
 		String secret = getStringParam(request, ProtocolElements.JOINROOM_SECRET_PARAM);
 		String platform = getStringParam(request, ProtocolElements.JOINROOM_PLATFORM_PARAM);
-		String participantPrivatetId = rpcConnection.getParticipantPrivateId();
+		String participantPrivateId = rpcConnection.getParticipantPrivateId();
 
 		final io.openvidu.server.core.Session session = sessionManager.getSessionWithNotActive(sessionId);
 		if (session == null) {
@@ -201,7 +204,8 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 				e.printStackTrace();
 				location = null;
 			} catch (Exception e) {
-				log.warn("Error getting address location: {}", e.getMessage());
+				log.warn("Couldn't locate IP address {} in geolocation database: {}", remoteAddress.getHostAddress(),
+						e.getMessage());
 				location = null;
 			}
 		}
@@ -245,7 +249,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		boolean generateRecorderParticipant = false;
 
 		if (openviduConfig.isOpenViduSecret(secret)) {
-			sessionManager.newInsecureParticipant(participantPrivatetId);
+			sessionManager.newInsecureParticipant(participantPrivateId);
 			token = IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 					+ RandomStringUtils.randomAlphanumeric(15);
 			try {
@@ -262,8 +266,6 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		Token tokenObj = session.consumeToken(token);
 		if (tokenObj != null) {
 
-			session.showTokens("Token consumed");
-
 			String clientMetadata = getStringParam(request, ProtocolElements.JOINROOM_METADATA_PARAM);
 			if (sessionManager.formatChecker.isServerMetadataFormatCorrect(clientMetadata)) {
 
@@ -276,12 +278,15 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 						}
 						Participant participant;
 						if (generateRecorderParticipant) {
-							participant = sessionManager.newRecorderParticipant(sessionId, participantPrivatetId,
-									tokenObj, clientMetadata);
+							participant = sessionManager.newRecorderParticipant(session, participantPrivateId, tokenObj,
+									clientMetadata);
 						} else {
-							participant = sessionManager.newParticipant(sessionId, participantPrivatetId, tokenObj,
+							participant = sessionManager.newParticipant(session, participantPrivateId, tokenObj,
 									clientMetadata, location, platform,
 									httpSession.getId().substring(0, Math.min(16, httpSession.getId().length())));
+							log.info("New Connection {} in Session {} with IP {} and platform {}",
+									participant.getParticipantPublicId(), sessionId, remoteAddress.getHostAddress(),
+									participant.getPlatform());
 						}
 
 						rpcConnection.setSessionId(sessionId);
@@ -293,7 +298,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 				} else {
 					log.error(
 							"ERROR: The session {} is in the process of closing while participant {} (privateId) was joining",
-							sessionId, participantPrivatetId);
+							sessionId, participantPrivateId);
 					throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE,
 							"Unable to join the session. Session " + sessionId + " was in the process of closing");
 				}
@@ -340,31 +345,65 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 	}
 
-	private void receiveVideoFrom(RpcConnection rpcConnection, Request<JsonObject> request) {
+	private void prepareReceiveVideoFrom(RpcConnection rpcConnection, Request<JsonObject> request) {
 		Participant participant;
 		try {
-			participant = sanityCheckOfSession(rpcConnection, "subscribe");
+			participant = sanityCheckOfSession(rpcConnection, "prepareReceiveVideoFrom");
 		} catch (OpenViduException e) {
 			return;
 		}
 
-		String senderPublicId = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SENDER_PARAM);
+		String senderStreamId = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SENDER_PARAM);
+		String senderPublicId = parseSenderPublicIdFromStreamId(senderStreamId);
+		boolean reconnect = false;
 
-		// Parse sender public id from stream id
-		if (senderPublicId.startsWith(IdentifierPrefixes.STREAM_ID + "IPC_")
-				&& senderPublicId.contains(IdentifierPrefixes.IPCAM_ID)) {
-			// If IPCAM
-			senderPublicId = senderPublicId.substring(senderPublicId.indexOf("_" + IdentifierPrefixes.IPCAM_ID) + 1,
-					senderPublicId.length());
-		} else {
-			// Not IPCAM
-			senderPublicId = senderPublicId.substring(
-					senderPublicId.lastIndexOf(IdentifierPrefixes.PARTICIPANT_PUBLIC_ID), senderPublicId.length());
+		// TODO: REMOVE ON 2.18.0
+		if (request.getParams().has(ProtocolElements.PREPARERECEIVEVIDEO_RECONNECT_PARAM)) {
+			reconnect = getBooleanParam(request, ProtocolElements.PREPARERECEIVEVIDEO_RECONNECT_PARAM);
+		}
+		// END TODO
+
+		// TODO: UNCOMMENT ON 2.18.0
+		// boolean reconnect = getBooleanParam(request,
+		// ProtocolElements.PREPARERECEIVEVIDEO_RECONNECT_PARAM);
+		// END TODO
+
+		sessionManager.prepareSubscription(participant, senderPublicId, reconnect, request.getId());
+	}
+
+	private void receiveVideoFrom(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "receiveVideoFrom");
+		} catch (OpenViduException e) {
+			return;
 		}
 
-		String sdpOffer = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SDPOFFER_PARAM);
+		String senderStreamId = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SENDER_PARAM);
+		String senderPublicId = parseSenderPublicIdFromStreamId(senderStreamId);
 
-		sessionManager.subscribe(participant, senderPublicId, sdpOffer, request.getId());
+		// TODO: REMOVE ON 2.18.0
+		if (request.getParams().has(ProtocolElements.RECEIVEVIDEO_SDPOFFER_PARAM)) {
+			// 2.17.0: initiative held by browser when subscribing
+			// The request comes with an SDPOffer
+			String sdpOffer = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SDPOFFER_PARAM);
+			sessionManager.subscribe(participant, senderPublicId, sdpOffer, request.getId(), false);
+		} else if (request.getParams().has(ProtocolElements.RECEIVEVIDEO_SDPANSWER_PARAM)) {
+			// 2.18.0: initiative held by server when subscribing
+			// This is the final call after prepareReceiveVidoFrom, comes with SDPAnswer
+			String sdpAnswer = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SDPANSWER_PARAM);
+			sessionManager.subscribe(participant, senderPublicId, sdpAnswer, request.getId(), true);
+		}
+		// END TODO
+
+		// TODO: UNCOMMENT ON 2.18.0
+		/*
+		 * String sdpAnswer = getStringParam(request,
+		 * ProtocolElements.RECEIVEVIDEO_SDPANSWER_PARAM);
+		 * sessionManager.subscribe(participant, senderPublicId, sdpAnswer,
+		 * request.getId());
+		 */
+		// END TODO
 	}
 
 	private void unsubscribeFromVideo(RpcConnection rpcConnection, Request<JsonObject> request) {
@@ -629,13 +668,39 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			return;
 		}
 		String streamId = getStringParam(request, ProtocolElements.RECONNECTSTREAM_STREAM_PARAM);
-		String sdpOffer = getStringParam(request, ProtocolElements.RECONNECTSTREAM_SDPOFFER_PARAM);
-		try {
-			sessionManager.reconnectStream(participant, streamId, sdpOffer, request.getId());
-		} catch (OpenViduException e) {
-			this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),
-					new JsonObject(), e);
+
+		// TODO: REMOVE ON 2.18.0
+		if (request.getParams().has(ProtocolElements.RECONNECTSTREAM_SDPOFFER_PARAM)) {
+			// 2.17.0
+			try {
+				String sdpOffer = getStringParam(request, ProtocolElements.RECONNECTSTREAM_SDPOFFER_PARAM);
+				sessionManager.reconnectStream(participant, streamId, sdpOffer, request.getId());
+			} catch (OpenViduException e) {
+				this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),
+						new JsonObject(), e);
+			}
+		} else if (request.getParams().has(ProtocolElements.RECONNECTSTREAM_SDPSTRING_PARAM)) {
+			// 2.18.0
+			String sdpString = getStringParam(request, ProtocolElements.RECONNECTSTREAM_SDPSTRING_PARAM);
+			try {
+				sessionManager.reconnectStream(participant, streamId, sdpString, request.getId());
+			} catch (OpenViduException e) {
+				this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),
+						new JsonObject(), e);
+			}
 		}
+		// END TODO
+
+		// TODO: UNCOMMENT ON 2.18.0
+		/*
+		 * String sdpString = getStringParam(request,
+		 * ProtocolElements.RECONNECTSTREAM_SDPSTRING_PARAM); try {
+		 * sessionManager.reconnectStream(participant, streamId, sdpString,
+		 * request.getId()); } catch (OpenViduException e) {
+		 * this.notificationService.sendErrorResponse(participant.
+		 * getParticipantPrivateId(), request.getId(), new JsonObject(), e); }
+		 */
+		// END TODO
 	}
 
 	private void updateVideoData(RpcConnection rpcConnection, Request<JsonObject> request) {
@@ -702,7 +767,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 
 		if (!message.isEmpty()) {
-			RpcConnection rpc = this.notificationService.closeRpcSession(rpcSessionId);
+			RpcConnection rpc = this.notificationService.immediatelyCloseRpcSession(rpcSessionId);
 			if (rpc != null && rpc.getSessionId() != null) {
 				io.openvidu.server.core.Session session = this.sessionManager.getSession(rpc.getSessionId());
 				if (session != null && session.getParticipantByPrivateId(rpc.getParticipantPrivateId()) != null) {
@@ -819,6 +884,22 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	private boolean userIsStreamOwner(String sessionId, Participant participant, String streamId) {
 		return participant.getParticipantPrivateId()
 				.equals(this.sessionManager.getParticipantPrivateIdFromStreamId(sessionId, streamId));
+	}
+
+	private String parseSenderPublicIdFromStreamId(String streamId) {
+		String senderPublicId;
+		// Parse sender public id from stream id
+		if (streamId.startsWith(IdentifierPrefixes.STREAM_ID + "IPC_")
+				&& streamId.contains(IdentifierPrefixes.IPCAM_ID)) {
+			// If IPCAM
+			senderPublicId = streamId.substring(streamId.indexOf("_" + IdentifierPrefixes.IPCAM_ID) + 1,
+					streamId.length());
+		} else {
+			// Not IPCAM
+			senderPublicId = streamId.substring(streamId.lastIndexOf(IdentifierPrefixes.PARTICIPANT_PUBLIC_ID),
+					streamId.length());
+		}
+		return senderPublicId;
 	}
 
 }

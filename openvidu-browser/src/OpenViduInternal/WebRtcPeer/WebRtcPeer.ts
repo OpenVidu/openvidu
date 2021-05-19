@@ -16,7 +16,8 @@
  */
 
 import freeice = require('freeice');
-import uuid = require('uuid');
+import { v4 as uuidv4 } from 'uuid';
+import { ExceptionEventName } from '../Events/ExceptionEvent';
 import { OpenViduLogger } from '../Logger/OpenViduLogger';
 import { PlatformUtils } from '../Utils/Platform';
 
@@ -36,8 +37,9 @@ export interface WebRtcPeerConfiguration {
         video: boolean
     };
     simulcast: boolean;
-    onicecandidate: (event) => void;
-    iceServers?: RTCIceServer[];
+    onicecandidate: (event: RTCIceCandidate) => void;
+    onexception: (exceptionName: ExceptionEventName, message: string, data?: any) => void;
+    iceServers: RTCIceServer[] | undefined;
     mediaStream?: MediaStream | null;
     mode?: 'sendonly' | 'recvonly' | 'sendrecv';
     id?: string;
@@ -69,48 +71,22 @@ export class WebRtcPeer {
 
         this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });
 
-        this.pc.onicecandidate = event => {
-            if (!!event.candidate) {
+        this.pc.addEventListener('icecandidate', (event: RTCPeerConnectionIceEvent) => {
+            if (event.candidate != null) {
                 const candidate: RTCIceCandidate = event.candidate;
-                if (candidate) {
+                this.configuration.onicecandidate(candidate);
+                if (candidate.candidate !== '') {
                     this.localCandidatesQueue.push(<RTCIceCandidate>{ candidate: candidate.candidate });
-                    this.candidategatheringdone = false;
-                    this.configuration.onicecandidate(event.candidate);
-                } else if (!this.candidategatheringdone) {
-                    this.candidategatheringdone = true;
                 }
             }
-        };
+        });
 
-        this.pc.onsignalingstatechange = () => {
+        this.pc.addEventListener('signalingstatechange', () => {
             if (this.pc.signalingState === 'stable') {
                 while (this.iceCandidateList.length > 0) {
                     let candidate = this.iceCandidateList.shift();
                     this.pc.addIceCandidate(<RTCIceCandidate>candidate);
                 }
-            }
-        };
-
-        this.start();
-    }
-
-    /**
-     * This function creates the RTCPeerConnection object taking into account the
-     * properties received in the constructor. It starts the SDP negotiation
-     * process: generates the SDP offer and invokes the onsdpoffer callback. This
-     * callback is expected to send the SDP offer, in order to obtain an SDP
-     * answer from another peer.
-     */
-    start(): Promise<any> {
-        return new Promise((resolve, reject) => {
-            if (this.pc.signalingState === 'closed') {
-                reject('The peer connection object is in "closed" state. This is most likely due to an invocation of the dispose method before accepting in the dialogue');
-            }
-            if (!!this.configuration.mediaStream) {
-                for (const track of this.configuration.mediaStream.getTracks()) {
-                    this.pc.addTrack(track, this.configuration.mediaStream);
-                }
-                resolve();
             }
         });
     }
@@ -131,20 +107,20 @@ export class WebRtcPeer {
     }
 
     /**
-     * Function that creates an offer, sets it as local description and returns the offer param
-     * to send to OpenVidu Server (will be the remote description of other peer)
+     * Creates an SDP offer from the local RTCPeerConnection to send to the other peer
+     * Only if the negotiation was initiated by the this peer
      */
-    generateOffer(): Promise<string> {
+    createOffer(): Promise<RTCSessionDescriptionInit> {
         return new Promise((resolve, reject) => {
-            const useAudio = this.configuration.mediaConstraints.audio;
-            const useVideo = this.configuration.mediaConstraints.video;
+            const hasAudio = this.configuration.mediaConstraints.audio;
+            const hasVideo = this.configuration.mediaConstraints.video;
 
             let offerPromise: Promise<RTCSessionDescriptionInit>;
 
             // TODO: Delete this conditional when all supported browsers are
-            // modern enough to implement the getTransceivers() method.
-            if ("getTransceivers" in this.pc) {
-                logger.debug("[generateOffer] Method pc.getTransceivers() is available; using it");
+            // modern enough to implement the Transceiver methods.
+            if ("addTransceiver" in this.pc) {
+                logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is available; using it");
 
                 // At this point, all "send" audio/video tracks have been added
                 // with pc.addTrack(), which in modern versions of libwebrtc
@@ -183,13 +159,13 @@ export class WebRtcPeer {
                         );
                     }
 
-                    if (useAudio) {
+                    if (hasAudio) {
                         this.pc.addTransceiver("audio", {
                             direction: this.configuration.mode,
                         });
                     }
 
-                    if (useVideo) {
+                    if (hasVideo) {
                         this.pc.addTransceiver("video", {
                             direction: this.configuration.mode,
                         });
@@ -206,9 +182,9 @@ export class WebRtcPeer {
 
                 const constraints: RTCOfferOptions = {
                     offerToReceiveAudio:
-                        this.configuration.mode !== "sendonly" && useAudio,
+                        this.configuration.mode !== "sendonly" && hasAudio,
                     offerToReceiveVideo:
-                        this.configuration.mode !== "sendonly" && useVideo,
+                        this.configuration.mode !== "sendonly" && hasVideo,
                 };
 
                 logger.debug(
@@ -244,10 +220,94 @@ export class WebRtcPeer {
     }
 
     /**
-     * Function invoked when a SDP answer is received. Final step in SDP negotiation, the peer
-     * just needs to set the answer as its remote description
+     * Creates an SDP answer from the local RTCPeerConnection to send to the other peer
+     * Only if the negotiation was initiated by the other peer
      */
-    processAnswer(sdpAnswer: string, needsTimeoutOnProcessAnswer: boolean): Promise<string> {
+    createAnswer(): Promise<RTCSessionDescriptionInit> {
+        return new Promise((resolve, reject) => {
+            let offerAudio, offerVideo = true;
+            if (!!this.configuration.mediaConstraints) {
+                offerAudio = (typeof this.configuration.mediaConstraints.audio === 'boolean') ?
+                    this.configuration.mediaConstraints.audio : true;
+                offerVideo = (typeof this.configuration.mediaConstraints.video === 'boolean') ?
+                    this.configuration.mediaConstraints.video : true;
+            }
+            const constraints: RTCOfferOptions = {
+                offerToReceiveAudio: offerAudio,
+                offerToReceiveVideo: offerVideo
+            };
+            this.pc.createAnswer(constraints).then(sdpAnswer => {
+                resolve(sdpAnswer);
+            }).catch(error => {
+                reject(error);
+            });
+        });
+    }
+
+    /**
+     * This peer initiated negotiation. Step 1/4 of SDP offer-answer protocol
+     */
+    processLocalOffer(offer: RTCSessionDescriptionInit): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.pc.setLocalDescription(offer)
+                .then(() => {
+                    const localDescription = this.pc.localDescription;
+                    if (!!localDescription) {
+                        logger.debug('Local description set', localDescription.sdp);
+                        resolve();
+                    } else {
+                        reject('Local description is not defined');
+                    }
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+    }
+
+    /**
+     * Other peer initiated negotiation. Step 2/4 of SDP offer-answer protocol
+     */
+    processRemoteOffer(sdpOffer: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const offer: RTCSessionDescriptionInit = {
+                type: 'offer',
+                sdp: sdpOffer
+            };
+            logger.debug('SDP offer received, setting remote description', offer);
+
+            if (this.pc.signalingState === 'closed') {
+                reject('RTCPeerConnection is closed when trying to set remote description');
+            }
+            this.setRemoteDescription(offer)
+                .then(() => {
+                    resolve();
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+    }
+
+    /**
+     * Other peer initiated negotiation. Step 3/4 of SDP offer-answer protocol
+     */
+    processLocalAnswer(answer: RTCSessionDescriptionInit): Promise<void> {
+        return new Promise((resolve, reject) => {
+            logger.debug('SDP answer created, setting local description');
+            if (this.pc.signalingState === 'closed') {
+                reject('RTCPeerConnection is closed when trying to set local description');
+            }
+            this.pc.setLocalDescription(answer)
+                .then(() => resolve())
+                .catch(error => reject(error));
+        });
+    }
+
+    /**
+     * This peer initiated negotiation. Step 4/4 of SDP offer-answer protocol
+     */
+    processRemoteAnswer(sdpAnswer: string): Promise<void> {
         return new Promise((resolve, reject) => {
             const answer: RTCSessionDescriptionInit = {
                 type: 'answer',
@@ -256,34 +316,19 @@ export class WebRtcPeer {
             logger.debug('SDP answer received, setting remote description');
 
             if (this.pc.signalingState === 'closed') {
-                reject('RTCPeerConnection is closed');
+                reject('RTCPeerConnection is closed when trying to set remote description');
             }
-
-            this.setRemoteDescription(answer, needsTimeoutOnProcessAnswer, resolve, reject);
-
+            this.setRemoteDescription(answer)
+                .then(() => resolve())
+                .catch(error => reject(error));
         });
     }
 
     /**
      * @hidden
      */
-    setRemoteDescription(answer: RTCSessionDescriptionInit, needsTimeoutOnProcessAnswer: boolean, resolve: (value?: string | PromiseLike<string> | undefined) => void, reject: (reason?: any) => void) {
-        if (platform.isIonicIos()) {
-            // Ionic iOS platform
-            if (needsTimeoutOnProcessAnswer) {
-                // 400 ms have not elapsed yet since first remote stream triggered Stream#initWebRtcPeerReceive
-                setTimeout(() => {
-                    logger.info('setRemoteDescription run after timeout for Ionic iOS device');
-                    this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
-                }, 250);
-            } else {
-                // 400 ms have elapsed
-                this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
-            }
-        } else {
-            // Rest of platforms
-            this.pc.setRemoteDescription(answer).then(() => resolve()).catch(error => reject(error));
-        }
+    async setRemoteDescription(sdp: RTCSessionDescriptionInit): Promise<void> {
+        return this.pc.setRemoteDescription(sdp);
     }
 
     /**
@@ -313,15 +358,19 @@ export class WebRtcPeer {
     }
 
     addIceConnectionStateChangeListener(otherId: string) {
-        this.pc.oniceconnectionstatechange = () => {
+        this.pc.addEventListener('iceconnectionstatechange', () => {
             const iceConnectionState: RTCIceConnectionState = this.pc.iceConnectionState;
             switch (iceConnectionState) {
                 case 'disconnected':
                     // Possible network disconnection
-                    logger.warn('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection');
+                    const msg1 = 'IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection';
+                    logger.warn(msg1);
+                    this.configuration.onexception(ExceptionEventName.ICE_CONNECTION_DISCONNECTED, msg1);
                     break;
                 case 'failed':
-                    logger.error('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') to "failed"');
+                    const msg2 = 'IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') to "failed"';
+                    logger.error(msg2);
+                    this.configuration.onexception(ExceptionEventName.ICE_CONNECTION_FAILED, msg2);
                     break;
                 case 'closed':
                     logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "closed"');
@@ -339,14 +388,14 @@ export class WebRtcPeer {
                     logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "completed"');
                     break;
             }
-        }
+        });
     }
 
     /**
      * @hidden
      */
     generateUniqueId(): string {
-        return uuid.v4();
+        return uuidv4();
     }
 
 }

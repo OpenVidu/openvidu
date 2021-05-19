@@ -4,6 +4,8 @@ import { OpenviduParamsService } from '../../services/openvidu-params.service';
 import { TestFeedService } from '../../services/test-feed.service';
 import { SessionConf } from '../openvidu-instance/openvidu-instance.component';
 
+var stringify = require('json-stringify-safe');
+
 @Component({
   selector: 'app-test-sessions',
   templateUrl: './test-sessions.component.html',
@@ -101,25 +103,12 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
   }
 
   stringifyEventNoCircularDependencies(event: Event): string {
-    const cache = [];
-    return JSON.stringify(event, function (key, value) {
-      if (key !== 'ee' && key !== 'openvidu') {
-        if (typeof value === 'object' && value !== null) {
-          if (cache.indexOf(value) !== -1) {
-            // Duplicate reference found	
-            try {
-              // If this value does not reference a parent	
-              return JSON.parse(JSON.stringify(value));
-            } catch (error) {
-              return;
-            }
-          }
-          // Store value in our collection	
-          cache.push(value);
-        }
-        return value;
+    return stringify(event, (key, value) => {
+      // Remove unnecessary properties
+      if (key == 'ee' || key == 'openvidu' || key == 'userHandlerArrowHandler' || key == 'handlers') {
+        return
       } else {
-        return;
+        return value;
       }
     });
   }

@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import { OpenVidu as OpenViduAPI, Session as SessionAPI, Recording, RecordingProperties, RecordingLayout, ConnectionProperties, OpenViduRole } from 'openvidu-node-client';
+import { OpenVidu as OpenViduAPI, Session as SessionAPI, RecordingProperties, ConnectionProperties, OpenViduRole } from 'openvidu-node-client';
 
 @Component({
     selector: 'app-session-api-dialog',
@@ -19,8 +19,6 @@ export class SessionApiDialogComponent {
     response: string;
 
     recordingProperties: RecordingProperties;
-    recMode = Recording.OutputMode;
-    recLayouts = RecordingLayout;
     openviduRoles = OpenViduRole;
     customLayout = '';
     recPropertiesIcon = 'add_circle';
@@ -38,6 +36,9 @@ export class SessionApiDialogComponent {
         this.session = data.session;
         this.sessionId = data.sessionId;
         this.recordingProperties = data.recordingProperties;
+        if (!this.recordingProperties.mediaNode) {
+            this.recordingProperties.mediaNode = { id: '' };
+        }
     }
 
     closeSession() {
@@ -64,8 +65,10 @@ export class SessionApiDialogComponent {
             recordingLayout: this.recordingProperties.recordingLayout,
             customLayout: this.recordingProperties.customLayout,
             resolution: this.recordingProperties.resolution,
+            frameRate: this.recordingProperties.frameRate,
             hasAudio: this.recordingProperties.hasAudio,
             hasVideo: this.recordingProperties.hasVideo,
+            ignoreFailedStreams: this.recordingProperties.ignoreFailedStreams,
             shmSize: this.recordingProperties.shmSize,
             mediaNode: !this.recordingProperties.mediaNode.id ? undefined : this.recordingProperties.mediaNode
         }

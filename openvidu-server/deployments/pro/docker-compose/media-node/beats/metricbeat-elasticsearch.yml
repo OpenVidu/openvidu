@@ -2,7 +2,7 @@ metricbeat.modules:
   - module: system
     metricsets:
       - cpu
-        #- diskio
+      - diskio
       - memory
       - network
       - filesystem
@@ -26,9 +26,13 @@ metricbeat.modules:
                 - regexp:
                       system.filesystem.mount_point: '^/hostfs/(sys|cgroup|proc|dev|etc|host)($|/)'
     enabled: true
-    period: ${OPENVIDU_PRO_CLUSTER_LOAD_INTERVAL}0s
+    period: ${OPENVIDU_PRO_STATS_MONITORING_INTERVAL}s
     cpu.metrics: [normalized_percentages]
-fields: {ip: "${MEDIA_NODE_IP}", cluster-id: "${CLUSTER_ID}"}
+fields: 
+  ip: "${MEDIA_NODE_IP}"
+  cluster_id: "${CLUSTER_ID}"
+  node_id: ${NODE_ID}
+  node_role: medianode
 pipeline:
   queue.mem.events: 0
 setup.ilm.enabled: false

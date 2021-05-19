@@ -28,20 +28,24 @@ public class CDREventParticipant extends CDREventEnd {
 
 	// participantJoined
 	public CDREventParticipant(Participant participant) {
-		super(CDREventName.participantJoined, participant.getSessionId(), participant.getActiveAt());
+		super(CDREventName.participantJoined, participant.getSessionId(), participant.getUniqueSessionId(),
+				participant.getActiveAt());
 		this.participant = participant;
 	}
 
 	// participantLeft
 	public CDREventParticipant(CDREventParticipant event, EndReason reason, Long timestamp) {
-		super(CDREventName.participantLeft, event.getSessionId(), event.getTimestamp(), reason, timestamp);
+		super(CDREventName.participantLeft, event.getSessionId(), event.getUniqueSessionId(), event.getTimestamp(),
+				reason, timestamp);
 		this.participant = event.participant;
 	}
 
 	@Override
 	public JsonObject toJson() {
 		JsonObject json = super.toJson();
+		// TODO: remove deprecated "participantId" when possible
 		json.addProperty("participantId", this.participant.getParticipantPublicId());
+		json.addProperty("connectionId", this.participant.getParticipantPublicId());
 		json.addProperty("location",
 				this.participant.getLocation() != null ? this.participant.getLocation().toString() : "unknown");
 		json.addProperty("platform", this.participant.getPlatform());

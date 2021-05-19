@@ -91,7 +91,7 @@ Resources:
                 # Openvidu recording
                 docker pull openvidu/openvidu-recording:OPENVIDU_RECORDING_DOCKER_TAG
 
-                # Openvidu PRO images
+                # OpenVidu Pro images
                 cd /opt/openvidu
                 docker-compose pull
               mode: "000755"
@@ -122,11 +122,11 @@ Resources:
 
             cfn-init --region ${AWS::Region} --stack ${AWS::StackId} --resource OpenviduServerPro
 
-            /usr/local/bin/installDockerAndDockerCompose.sh || { echo "[Openvidu] error installing docker and compose"; exit 1; }
+            /usr/local/bin/installDockerAndDockerCompose.sh || { echo "[OpenVidu] error installing docker and compose"; exit 1; }
 
-            /usr/local/bin/installOpenviduServerPRO.sh || { echo "[Openvidu] error installing Openvidu Server PRO"; exit 1; }
+            /usr/local/bin/installOpenviduServerPRO.sh || { echo "[OpenVidu] error installing Openvidu Server PRO"; exit 1; }
 
-            /usr/local/bin/getDockerImages.sh || { echo "[Openvidu] error getting docker images"; exit 1; }
+            /usr/local/bin/getDockerImages.sh || { echo "[OpenVidu] error getting docker images"; exit 1; }
 
             # sending the finish call
             /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource WaitCondition --region ${AWS::Region}

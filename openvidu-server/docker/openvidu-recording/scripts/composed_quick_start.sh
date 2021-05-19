@@ -17,7 +17,7 @@ if [[ -z "${COMPOSED_QUICK_START_ACTION}" ]]; then
     {
 
         ### Variables ###
-        export RESOLUTION=${RESOLUTION:-1920x1080}
+        export RESOLUTION=${RESOLUTION:-1280x720}
         export URL=${URL:-https://www.youtube.com/watch?v=JMuzlEQz3uo}
         export VIDEO_ID=${VIDEO_ID:-video}
         export WIDTH="$(cut -d'x' -f1 <<< $RESOLUTION)"
@@ -33,7 +33,7 @@ if [[ -z "${COMPOSED_QUICK_START_ACTION}" ]]; then
 
         touch xvfb.log
         chmod 777 xvfb.log
-        xvfb-run --auto-servernum --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome --kiosk --start-maximized --test-type --no-sandbox --disable-infobars --disable-gpu --disable-popup-blocking --window-size=$WIDTH,$HEIGHT --window-position=0,0 --no-first-run --ignore-certificate-errors --disable-dev-shm-usage --autoplay-policy=no-user-gesture-required --enable-logging --v=1 $DEBUG_CHROME_FLAGS $URL &> xvfb.log &
+        xvfb-run-safe --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome --kiosk --start-maximized --test-type --no-sandbox --disable-infobars --disable-gpu --disable-popup-blocking --window-size=$WIDTH,$HEIGHT --window-position=0,0 --no-first-run --ignore-certificate-errors --disable-dev-shm-usage --autoplay-policy=no-user-gesture-required --simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT' $DEBUG_CHROME_FLAGS $URL &> xvfb.log &
         chmod 777 /recordings
 
         until pids=$(pidof Xvfb)
@@ -65,7 +65,7 @@ elif [[ "${COMPOSED_QUICK_START_ACTION}" == "--start-recording" ]]; then
         touch stop
 
         # Variables
-        export RESOLUTION=${RESOLUTION:-1920x1080}
+        export RESOLUTION=${RESOLUTION:-1280x720}
         export WIDTH="$(cut -d'x' -f1 <<< $RESOLUTION)"
         export HEIGHT="$(cut -d'x' -f2 <<< $RESOLUTION)"
         export ONLY_VIDEO=${ONLY_VIDEO:-false}

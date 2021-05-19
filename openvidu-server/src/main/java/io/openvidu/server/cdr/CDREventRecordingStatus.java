@@ -32,7 +32,8 @@ public class CDREventRecordingStatus extends CDREventEnd {
 
 	public CDREventRecordingStatus(Recording recording, Long startTime, EndReason reason, Long timestamp,
 			Status status) {
-		super(CDREventName.recordingStatusChanged, recording.getSessionId(), startTime, reason, timestamp);
+		super(CDREventName.recordingStatusChanged, recording.getSessionId(), recording.getUniqueSessionId(), startTime,
+				reason, timestamp);
 		this.recording = recording;
 		this.status = status;
 	}
@@ -45,10 +46,14 @@ public class CDREventRecordingStatus extends CDREventEnd {
 		json.addProperty("outputMode", this.recording.getOutputMode().name());
 		if (RecordingUtils.IS_COMPOSED(this.recording.getOutputMode()) && this.recording.hasVideo()) {
 			json.addProperty("resolution", this.recording.getResolution());
+			json.addProperty("frameRate", this.recording.getFrameRate());
 			json.addProperty("recordingLayout", this.recording.getRecordingLayout().name());
 			if (RecordingLayout.CUSTOM.equals(this.recording.getRecordingLayout())
 					&& this.recording.getCustomLayout() != null && !this.recording.getCustomLayout().isEmpty()) {
 				json.addProperty("customLayout", this.recording.getCustomLayout());
+			}
+			if (this.recording.getRecordingProperties().mediaNode() != null) {
+				json.addProperty("media_node_id", this.recording.getRecordingProperties().mediaNode());
 			}
 		}
 		json.addProperty("hasAudio", this.recording.hasAudio());

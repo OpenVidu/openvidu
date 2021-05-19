@@ -30,6 +30,7 @@ import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.utils.CustomFileManager;
 import io.openvidu.server.utils.DockerManager;
+import io.openvidu.server.utils.RecordingUtils;
 
 public class ComposedQuickStartRecordingService extends ComposedRecordingService {
 
@@ -74,12 +75,12 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 
 		envs.add("DEBUG_MODE=" + openviduConfig.isOpenViduRecordingDebug());
 		envs.add("RESOLUTION=" + properties.resolution());
+		envs.add("FRAMERATE=" + properties.frameRate());
 		envs.add("ONLY_VIDEO=" + !properties.hasAudio());
-		envs.add("FRAMERATE=30");
 		envs.add("VIDEO_ID=" + recording.getId());
 		envs.add("VIDEO_NAME=" + properties.name());
 		envs.add("VIDEO_FORMAT=mp4");
-		envs.add("RECORDING_JSON='" + recording.toJson().toString() + "'");
+		envs.add("RECORDING_JSON='" + recording.toJson(true).toString() + "'");
 
 		String containerId = this.sessionsContainers.get(session.getSessionId());
 		try {
@@ -164,7 +165,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 		// Start recording container if output mode=COMPOSED_QUICK_START
 		Session recorderSession = session;
 		io.openvidu.java.client.Recording.OutputMode defaultOutputMode = recorderSession.getSessionProperties()
-				.defaultOutputMode();
+				.defaultRecordingProperties().outputMode();
 		if (io.openvidu.java.client.Recording.OutputMode.COMPOSED_QUICK_START.equals(defaultOutputMode)
 				&& sessionsContainers.get(recorderSession.getSessionId()) == null) {
 			// Retry to run if container is launched for the same session quickly after
@@ -177,13 +178,8 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 				try {
 					log.info("Launching COMPOSED_QUICK_START recording container for session: {}",
 							recorderSession.getSessionId());
-					runContainer(recorderSession, new RecordingProperties.Builder().name("")
-							.outputMode(recorderSession.getSessionProperties().defaultOutputMode())
-							.recordingLayout(recorderSession.getSessionProperties().defaultRecordingLayout())
-							.customLayout(recorderSession.getSessionProperties().defaultCustomLayout())
-							.resolution(
-									/* recorderSession.getSessionProperties().defaultRecordingResolution() */"1920x1080")
-							.mediaNode(recorderSession.getMediaNodeId()).build());
+					RecordingProperties props = RecordingUtils.RECORDING_PROPERTIES_WITH_MEDIA_NODE(recorderSession);
+					runContainer(recorderSession, props);
 					log.info("COMPOSED_QUICK_START recording container launched for session: {}",
 							recorderSession.getSessionId());
 					launched = true;
@@ -209,13 +205,14 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 	private String runContainer(Session session, RecordingProperties properties) throws Exception {
 		log.info("Starting COMPOSED_QUICK_START container for session id: {}", session.getSessionId());
 
-		Recording recording = new Recording(session.getSessionId(), null, properties);
+		Recording recording = new Recording(session.getSessionId(), session.getUniqueSessionId(), null, properties);
 		String layoutUrl = this.getLayoutUrl(recording);
 
 		List<String> envs = new ArrayList<>();
 		envs.add("DEBUG_MODE=" + openviduConfig.isOpenViduRecordingDebug());
 		envs.add("RECORDING_TYPE=COMPOSED_QUICK_START");
 		envs.add("RESOLUTION=" + properties.resolution());
+		envs.add("FRAMERATE=" + properties.frameRate());
 		envs.add("URL=" + layoutUrl);
 
 		log.info("Recorder connecting to url {}", layoutUrl);

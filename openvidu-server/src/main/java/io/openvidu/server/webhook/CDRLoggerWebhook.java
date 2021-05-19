@@ -24,6 +24,7 @@ import org.apache.http.Header;
 import io.openvidu.server.cdr.CDREvent;
 import io.openvidu.server.cdr.CDREventName;
 import io.openvidu.server.cdr.CDRLogger;
+import io.openvidu.server.cdr.WebrtcDebugEvent;
 import io.openvidu.server.kurento.endpoint.KmsEvent;
 import io.openvidu.server.summary.SessionSummary;
 
@@ -42,6 +43,10 @@ public class CDRLoggerWebhook implements CDRLogger {
 
 	@Override
 	public void log(KmsEvent event) {
+	}
+
+	@Override
+	public void log(WebrtcDebugEvent event) {
 	}
 
 	@Override

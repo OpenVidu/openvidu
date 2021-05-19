@@ -11,7 +11,7 @@
 #
 #    This file will be overridden when update OpenVidu Platform
 #
-#    Openvidu Version: 2.16.0
+#    Openvidu Version: 2.17.0
 #
 #    Installation Mode: On Premises
 #
@@ -22,7 +22,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server:2.17.0-dev2
+        image: openvidu/openvidu-server:2.18.0-dev2
         restart: on-failure
         network_mode: host
         entrypoint: ['/usr/local/bin/entrypoint.sh']
@@ -45,7 +45,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     kms:
-        image: ${KMS_IMAGE:-kurento/kurento-media-server:6.15.0}
+        image: ${KMS_IMAGE:-kurento/kurento-media-server:6.16.0}
         restart: always
         network_mode: host
         ulimits:
@@ -65,7 +65,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     redis:
-        image: openvidu/openvidu-redis:2.0.0-dev2
+        image: openvidu/openvidu-redis:2.0.0
         restart: always
         network_mode: host
         environment:
@@ -75,23 +75,28 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     coturn:
-        image: openvidu/openvidu-coturn:3.0.0-dev2
+        image: openvidu/openvidu-coturn:4.0.0-dev2
         restart: on-failure
         network_mode: host
-        environment:
+        environment: 
             - REDIS_IP=127.0.0.1
-            - TURN_LISTEN_PORT=3478
             - DB_NAME=0
             - DB_PASSWORD=${OPENVIDU_SECRET}
-            - MIN_PORT=57001
-            - MAX_PORT=65535
-            - ENABLE_COTURN_LOGS=true
+        command:
+            - --log-file=stdout
+            - --listening-port=3478
+            - --fingerprint
+            - --lt-cred-mech
+            - --min-port=57001
+            - --max-port=65535
+            - --realm=openvidu
+            - --verbose
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     nginx:
-        image: openvidu/openvidu-proxy:5.0.0-dev2
+        image: openvidu/openvidu-proxy:6.0.0-dev1
         restart: on-failure
         network_mode: host
         volumes:

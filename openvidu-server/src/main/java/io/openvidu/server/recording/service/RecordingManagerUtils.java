@@ -29,7 +29,7 @@ public abstract class RecordingManagerUtils {
 
 	protected abstract String getRecordingUrl(Recording recording);
 
-	protected abstract Set<String> getAllRecordingIdsFromStorage();
+	protected abstract Set<String> getAllRecordingIdsFromStorage(String sessionIdPrefix);
 
 	protected String getExtensionFromRecording(Recording recording) {
 		if (OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
@@ -42,7 +42,7 @@ public abstract class RecordingManagerUtils {
 	}
 
 	public String getFreeRecordingId(String sessionId) {
-		Set<String> recordingIds = getAllRecordingIdsFromStorage();
+		Set<String> recordingIds = getAllRecordingIdsFromStorage(sessionId);
 		return getNextAvailableRecordingId(sessionId, recordingIds);
 	}
 

@@ -48,8 +48,11 @@ public class KmsEvent {
 		json.remove("timestampMillis");
 		json.addProperty("timestamp", timestamp);
 		json.addProperty("sessionId", participant.getSessionId());
+		json.addProperty("uniqueSessionId", participant.getUniqueSessionId());
 		json.addProperty("user", participant.getFinalUserId());
+		// TODO: remove deprecated "connection" when possible
 		json.addProperty("connection", participant.getParticipantPublicId());
+		json.addProperty("connectionId", participant.getParticipantPublicId());
 		json.addProperty("endpoint", this.endpoint);
 		json.addProperty("msSinceEndpointCreation", msSinceCreation);
 		return json;

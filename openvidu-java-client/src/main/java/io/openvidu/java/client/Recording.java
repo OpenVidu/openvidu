@@ -120,22 +120,7 @@ public class Recording {
 		}
 		this.status = Recording.Status.valueOf(json.get("status").getAsString());
 
-		boolean hasAudio = json.get("hasAudio").getAsBoolean();
-		boolean hasVideo = json.get("hasVideo").getAsBoolean();
-
-		OutputMode outputMode = OutputMode.valueOf(json.get("outputMode").getAsString());
-		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(json.get("name").getAsString())
-				.outputMode(outputMode).hasAudio(hasAudio).hasVideo(hasVideo);
-		if ((OutputMode.COMPOSED.equals(outputMode) || OutputMode.COMPOSED_QUICK_START.equals(outputMode))
-				&& hasVideo) {
-			builder.resolution(json.get("resolution").getAsString());
-			builder.recordingLayout(RecordingLayout.valueOf(json.get("recordingLayout").getAsString()));
-			JsonElement customLayout = json.get("customLayout");
-			if (customLayout != null) {
-				builder.customLayout(customLayout.getAsString());
-			}
-		}
-		this.recordingProperties = builder.build();
+		this.recordingProperties = RecordingProperties.fromJson(json);
 	}
 
 	/**
@@ -153,12 +138,26 @@ public class Recording {
 	}
 
 	/**
-	 * Name of the recording. The video file will be named after this property. You
-	 * can access this same value in your clients on recording events
-	 * (<code>recordingStarted</code>, <code>recordingStopped</code>)
+	 * Name of the recording. The video file will be named after this property
 	 */
 	public String getName() {
 		return this.recordingProperties.name();
+	}
+
+	/**
+	 * <code>true</code> if the recording has an audio track, <code>false</code>
+	 * otherwise (currently fixed to true)
+	 */
+	public boolean hasAudio() {
+		return this.recordingProperties.hasAudio();
+	}
+
+	/**
+	 * <code>true</code> if the recording has a video track, <code>false</code>
+	 * otherwise (currently fixed to true)
+	 */
+	public boolean hasVideo() {
+		return this.recordingProperties.hasVideo();
 	}
 
 	/**
@@ -170,20 +169,36 @@ public class Recording {
 	}
 
 	/**
-	 * The layout used in this recording. Only defined if OutputMode is COMPOSED
+	 * The layout used in this recording. Only applicable if
+	 * {@link io.openvidu.java.client.Recording.OutputMode} is
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START} and
+	 * {@link Recording#hasVideo()} is true
 	 */
 	public RecordingLayout getRecordingLayout() {
 		return this.recordingProperties.recordingLayout();
 	}
 
 	/**
-	 * The custom layout used in this recording. Only defined if if OutputMode is
-	 * COMPOSED and
+	 * The custom layout used in this recording. Only applicable if
+	 * {@link io.openvidu.java.client.Recording.OutputMode} is
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START},
+	 * {@link Recording#hasVideo()} is true and
 	 * {@link io.openvidu.java.client.RecordingProperties.Builder#customLayout(String)}
 	 * has been called
 	 */
 	public String getCustomLayout() {
 		return this.recordingProperties.customLayout();
+	}
+
+	/**
+	 * Whether failed streams were ignored when the recording process started or
+	 * not. Only applicable if {@link io.openvidu.java.client.Recording.OutputMode}
+	 * is {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL}
+	 */
+	public boolean ignoreFailedStreams() {
+		return this.recordingProperties.ignoreFailedStreams();
 	}
 
 	/**
@@ -227,28 +242,25 @@ public class Recording {
 	}
 
 	/**
-	 * Resolution of the video file. Only defined if OutputMode of the Recording is
-	 * set to {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
-	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
+	 * Resolution of the video file. Only applicable if
+	 * {@link io.openvidu.java.client.Recording.OutputMode} is
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START} and
+	 * {@link Recording#hasVideo()} is true
 	 */
 	public String getResolution() {
 		return this.recordingProperties.resolution();
 	}
 
 	/**
-	 * <code>true</code> if the recording has an audio track, <code>false</code>
-	 * otherwise (currently fixed to true)
+	 * Frame rate of the video file. Only applicable if
+	 * {@link io.openvidu.java.client.Recording.OutputMode} is
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START} and
+	 * {@link Recording#hasVideo()} is true
 	 */
-	public boolean hasAudio() {
-		return this.recordingProperties.hasAudio();
-	}
-
-	/**
-	 * <code>true</code> if the recording has a video track, <code>false</code>
-	 * otherwise (currently fixed to true)
-	 */
-	public boolean hasVideo() {
-		return this.recordingProperties.hasVideo();
+	public Integer getFrameRate() {
+		return this.recordingProperties.frameRate();
 	}
 
 }

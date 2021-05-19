@@ -4,7 +4,7 @@
 
 URL=${URL:-https://www.youtube.com/watch?v=JMuzlEQz3uo}
 ONLY_VIDEO=${ONLY_VIDEO:-false}
-RESOLUTION=${RESOLUTION:-1920x1080}
+RESOLUTION=${RESOLUTION:-1280x720}
 FRAMERATE=${FRAMERATE:-25}
 WIDTH="$(cut -d'x' -f1 <<< $RESOLUTION)"
 HEIGHT="$(cut -d'x' -f2 <<< $RESOLUTION)"

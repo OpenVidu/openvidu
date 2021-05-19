@@ -55,6 +55,7 @@ import io.openvidu.server.cdr.CDREventRecording;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.kurento.endpoint.EndpointType;
+import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.FormatChecker;
 import io.openvidu.server.utils.GeoLocation;
@@ -82,6 +83,9 @@ public abstract class SessionManager {
 	protected TokenGenerator tokenGenerator;
 
 	@Autowired
+	protected TokenRegister tokenRegister;
+
+	@Autowired
 	protected QuarantineKiller quarantineKiller;
 
 	@Autowired
@@ -102,21 +106,33 @@ public abstract class SessionManager {
 	public abstract void joinRoom(Participant participant, String sessionId, Integer transactionId);
 
 	public abstract boolean leaveRoom(Participant participant, Integer transactionId, EndReason reason,
-			boolean closeWebSocket);
+			boolean scheduleWebocketClose);
 
 	public abstract void publishVideo(Participant participant, MediaOptions mediaOptions, Integer transactionId);
 
 	public abstract void unpublishVideo(Participant participant, Participant moderator, Integer transactionId,
 			EndReason reason);
 
-	public abstract void subscribe(Participant participant, String senderName, String sdpOffer, Integer transactionId);
+	public abstract void prepareSubscription(Participant participant, String senderPublicId, boolean reconnect,
+			Integer id);
+
+	// TODO: REMOVE ON 2.18.0
+	public abstract void subscribe(Participant participant, String senderName, String sdpAnwser, Integer transactionId,
+			boolean is2180);
+	// END TODO
+
+	// TODO: UNCOMMENT ON 2.18.0
+	// public abstract void subscribe(Participant participant, String senderName,
+	// String sdpAnwser, Integer transactionId);
+	// END TODO
 
 	public abstract void unsubscribe(Participant participant, String senderName, Integer transactionId);
 
-	public void sendMessage(String message, String sessionId) {
+	public void sendMessage(String message, Session session) {
 		try {
 			JsonObject messageJson = JsonParser.parseString(message).getAsJsonObject();
-			sessionEventsHandler.onSendMessage(null, messageJson, getParticipants(sessionId), sessionId, null, null);
+			sessionEventsHandler.onSendMessage(null, messageJson, getParticipants(session.getSessionId()),
+					session.getSessionId(), session.getUniqueSessionId(), null, null);
 		} catch (JsonSyntaxException | IllegalStateException e) {
 			throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
 					"Provided signal object '" + message + "' has not a valid JSON format");
@@ -127,7 +143,7 @@ public abstract class SessionManager {
 		try {
 			JsonObject messageJson = JsonParser.parseString(message).getAsJsonObject();
 			sessionEventsHandler.onSendMessage(participant, messageJson, getParticipants(participant.getSessionId()),
-					participant.getSessionId(), transactionId, null);
+					participant.getSessionId(), participant.getUniqueSessionId(), transactionId, null);
 		} catch (JsonSyntaxException | IllegalStateException e) {
 			throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
 					"Provided signal object '" + message + "' has not a valid JSON format");
@@ -166,6 +182,11 @@ public abstract class SessionManager {
 
 	public abstract void reconnectStream(Participant participant, String streamId, String sdpOffer,
 			Integer transactionId);
+
+	// TODO: REMOVE ON 2.18.0
+	public abstract void reconnectStream2170(Participant participant, String streamId, String sdpOffer,
+			Integer transactionId);
+	// END TODO
 
 	public abstract String getParticipantPrivateIdFromStreamId(String sessionId, String streamId)
 			throws OpenViduException;
@@ -310,7 +331,6 @@ public abstract class SessionManager {
 		Token tokenObj = tokenGenerator.generateToken(session.getSessionId(), serverMetadata, record, role,
 				kurentoOptions);
 		session.storeToken(tokenObj);
-		session.showTokens("Token created");
 		return tokenObj;
 	}
 
@@ -319,7 +339,6 @@ public abstract class SessionManager {
 		Token tokenObj = new Token(token, session.getSessionId(), connectionProperties,
 				this.openviduConfig.isTurnadminAvailable() ? this.coturnCredentialsService.createUser() : null);
 		session.storeToken(tokenObj);
-		session.showTokens("Token created for insecure user");
 		return tokenObj;
 	}
 
@@ -360,13 +379,17 @@ public abstract class SessionManager {
 		this.insecureUsers.put(participantPrivateId, true);
 	}
 
-	public Participant newParticipant(String sessionId, String participantPrivatetId, Token token,
-			String clientMetadata, GeoLocation location, String platform, String finalUserId) {
+	public Participant newParticipant(Session session, String participantPrivateId, Token token, String clientMetadata,
+			GeoLocation location, String platform, String finalUserId) {
 
+		String sessionId = session.getSessionId();
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 
-			Participant p = new Participant(finalUserId, participantPrivatetId, token.getConnectionId(), sessionId,
-					token, clientMetadata, location, platform, EndpointType.WEBRTC_ENDPOINT, null);
+			Participant p = new Participant(finalUserId, participantPrivateId, token.getConnectionId(), sessionId,
+					session.getUniqueSessionId(), token, clientMetadata, location, platform,
+					EndpointType.WEBRTC_ENDPOINT, null);
+
+			this.tokenRegister.registerToken(sessionId, p, token);
 
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(p.getParticipantPublicId(), p);
 
@@ -383,11 +406,14 @@ public abstract class SessionManager {
 		}
 	}
 
-	public Participant newRecorderParticipant(String sessionId, String participantPrivatetId, Token token,
+	public Participant newRecorderParticipant(Session session, String participantPrivateId, Token token,
 			String clientMetadata) {
+		String sessionId = session.getSessionId();
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = new Participant(null, participantPrivatetId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
-					sessionId, token, clientMetadata, null, null, EndpointType.WEBRTC_ENDPOINT, null);
+			Participant p = new Participant(null, participantPrivateId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
+					sessionId, session.getUniqueSessionId(), token, clientMetadata, null, null,
+					EndpointType.WEBRTC_ENDPOINT, null);
+			this.tokenRegister.registerToken(sessionId, p, token);
 			this.sessionidParticipantpublicidParticipant.get(sessionId)
 					.put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
 			return p;
@@ -396,11 +422,13 @@ public abstract class SessionManager {
 		}
 	}
 
-	public Participant newIpcamParticipant(String sessionId, String ipcamId, Token token, GeoLocation location,
+	public Participant newIpcamParticipant(Session session, String ipcamId, Token token, GeoLocation location,
 			String platform) {
+		String sessionId = session.getSessionId();
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = new Participant(ipcamId, ipcamId, ipcamId, sessionId, token, null, location, platform,
-					EndpointType.PLAYER_ENDPOINT, null);
+			Participant p = new Participant(ipcamId, ipcamId, ipcamId, sessionId, session.getUniqueSessionId(), token,
+					null, location, platform, EndpointType.PLAYER_ENDPOINT, null);
+			this.tokenRegister.registerToken(sessionId, p, token);
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(ipcamId, p);
 			return p;
 		} else {
@@ -568,7 +596,8 @@ public abstract class SessionManager {
 					log.error("Error stopping recording of session {}: {}", session.getSessionId(), e.getMessage());
 				}
 			}
-			if (Recording.OutputMode.COMPOSED_QUICK_START.equals(session.getSessionProperties().defaultOutputMode())) {
+			if (Recording.OutputMode.COMPOSED_QUICK_START
+					.equals(session.getSessionProperties().defaultRecordingProperties().outputMode())) {
 				try {
 					this.recordingManager.stopComposedQuickStartContainer(session, reason);
 				} catch (OpenViduException e) {
@@ -603,6 +632,7 @@ public abstract class SessionManager {
 		sessionidParticipantpublicidParticipant.remove(sessionId);
 		sessionidFinalUsers.remove(sessionId);
 		sessionidAccumulatedRecordings.remove(sessionId);
+		tokenRegister.deregisterTokens(sessionId);
 	}
 
 	private void initializeCollections(String sessionId) {
@@ -611,6 +641,35 @@ public abstract class SessionManager {
 		if (this.openviduConfig.isRecordingModuleEnabled()) {
 			this.sessionidAccumulatedRecordings.putIfAbsent(sessionId, new ConcurrentLinkedQueue<>());
 		}
+	}
+
+	public void closeAllSessionsAndRecordingsOfKms(Kms kms, EndReason reason) {
+		// Close all active sessions
+		kms.getKurentoSessions().forEach(kSession -> {
+			this.closeSession(kSession.getSessionId(), reason);
+		});
+		// Close all non active sessions configured with this Media Node
+		this.closeNonActiveSessions(sessionNotActive -> {
+			return (sessionNotActive.getSessionProperties().mediaNode() != null
+					&& kms.getId().equals(sessionNotActive.getSessionProperties().mediaNode()));
+		});
+		// Stop all external recordings
+		kms.getActiveRecordings().forEach(recordingIdSessionId -> {
+
+			final String recordingId = recordingIdSessionId.getKey();
+			final String sessionId = recordingIdSessionId.getValue();
+			Session session = this.getSession(sessionId);
+
+			if (session != null && !session.isClosed()) {
+				// This is a recording of a Session hosted on a different Media Node
+				try {
+					this.recordingManager.stopRecording(session, null, RecordingManager.finalReason(reason));
+				} catch (OpenViduException e) {
+					log.error("Error stopping external recording {} of session {} in Media Node {}: {}", recordingId,
+							sessionId, kms.getId(), e.getMessage());
+				}
+			}
+		});
 	}
 
 }

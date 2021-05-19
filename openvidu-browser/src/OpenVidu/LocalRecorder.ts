@@ -74,7 +74,7 @@ export class LocalRecorder {
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the recording successfully started and rejected with an Error object if not
      */
-    record(mimeType?: string): Promise<any> {
+    record(mimeType?: string): Promise<void> {
         return new Promise((resolve, reject) => {
             try {
                 if (typeof MediaRecorder === 'undefined') {
@@ -146,7 +146,7 @@ export class LocalRecorder {
      * Ends the recording of the Stream. [[state]] property must be `RECORDING` or `PAUSED`. After method succeeds is set to `FINISHED`
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the recording successfully stopped and rejected with an Error object if not
      */
-    stop(): Promise<any> {
+    stop(): Promise<void> {
         return new Promise((resolve, reject) => {
             try {
                 if (this.state === LocalRecorderState.READY || this.state === LocalRecorderState.FINISHED) {
@@ -168,7 +168,7 @@ export class LocalRecorder {
      * Pauses the recording of the Stream. [[state]] property must be `RECORDING`. After method succeeds is set to `PAUSED`
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the recording was successfully paused and rejected with an Error object if not
      */
-    pause(): Promise<any> {
+    pause(): Promise<void> {
         return new Promise((resolve, reject) => {
             try {
                 if (this.state !== LocalRecorderState.RECORDING) {
@@ -187,7 +187,7 @@ export class LocalRecorder {
      * Resumes the recording of the Stream. [[state]] property must be `PAUSED`. After method succeeds is set to `RECORDING`
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the recording was successfully resumed and rejected with an Error object if not
      */
-    resume(): Promise<any> {
+    resume(): Promise<void> {
         return new Promise((resolve, reject) => {
             try {
                 if (this.state !== LocalRecorderState.PAUSED) {

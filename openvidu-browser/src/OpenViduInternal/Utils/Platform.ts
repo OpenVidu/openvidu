@@ -2,7 +2,7 @@ import platform = require("platform");
 
 export class PlatformUtils {
 	protected static instance: PlatformUtils;
-	constructor() {}
+	constructor() { }
 
 	static getInstance(): PlatformUtils {
 		if (!this.instance) {
@@ -118,7 +118,7 @@ export class PlatformUtils {
 	 */
 	public isIOSWithSafari(): boolean {
 		const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
-		return (
+		return this.isIPhoneOrIPad() && (
 			/\b(\w*Apple\w*)\b/.test(navigator.vendor) &&
 			/\b(\w*Safari\w*)\b/.test(userAgent) &&
 			!/\b(\w*CriOS\w*)\b/.test(userAgent) &&
@@ -154,6 +154,18 @@ export class PlatformUtils {
 	 */
 	public isReactNative(): boolean {
 		return false;
+	}
+
+	/**
+	 * @hidden
+	 */
+	public isChromium(): boolean {
+		return this.isChromeBrowser() || this.isChromeMobileBrowser() ||
+			this.isOperaBrowser() || this.isOperaMobileBrowser() ||
+			this.isEdgeBrowser() || this.isEdgeMobileBrowser() ||
+			this.isSamsungBrowser() ||
+			this.isIonicAndroid() || this.isIonicIos() ||
+			this.isElectron();
 	}
 
 	/**

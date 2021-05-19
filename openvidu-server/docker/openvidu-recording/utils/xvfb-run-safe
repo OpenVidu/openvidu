@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# allow settings to be updated via environment
+: "${xvfb_lockdir:=/recordings/.xvfb-locks}" # Lock folder necessary to block displays
+: "${xvfb_display_min:=99}" # Min display
+: "${xvfb_display_max:=599}" # Max display
+
+
+
+mkdir -p -- "$xvfb_lockdir" || exit
+
+i=$xvfb_display_min     # minimum display number
+while (( i < xvfb_display_max )); do
+  if [ -f "/tmp/.X$i-lock" ]; then
+    (( ++i )); continue
+  fi
+  exec 5>"$xvfb_lockdir/$i" || continue
+  if flock -x -n 5; then
+    exec xvfb-run --server-num="$i" "$@" || exit
+  fi
+  (( i++ ))
+done

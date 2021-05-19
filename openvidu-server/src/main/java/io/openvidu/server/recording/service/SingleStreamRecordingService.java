@@ -68,6 +68,7 @@ import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.utils.CustomFileManager;
+import io.openvidu.server.utils.RemoteOperationUtils;
 
 public class SingleStreamRecordingService extends RecordingService {
 
@@ -92,7 +93,8 @@ public class SingleStreamRecordingService extends RecordingService {
 				properties.hasVideo() ? (properties.hasAudio() ? "video+audio" : "video-only") : "audioOnly",
 				recordingId, session.getSessionId());
 
-		Recording recording = new Recording(session.getSessionId(), recordingId, properties);
+		Recording recording = new Recording(session.getSessionId(), session.getUniqueSessionId(), recordingId,
+				properties);
 		this.recordingManager.recordingToStarting(recording);
 
 		activeRecorders.put(recording.getId(), new ConcurrentHashMap<>());
@@ -120,9 +122,16 @@ public class SingleStreamRecordingService extends RecordingService {
 		}
 
 		try {
-			if (!recordingStartedCountdown.await(5, TimeUnit.SECONDS)) {
-				log.error("Error waiting for some recorder endpoint to start in session {}", session.getSessionId());
-				throw this.failStartRecording(session, recording, "Couldn't initialize some RecorderEndpoint");
+			if (!properties.ignoreFailedStreams()) {
+				if (!recordingStartedCountdown.await(10, TimeUnit.SECONDS)) {
+					log.error("Error waiting for some recorder endpoint to start in session {}",
+							session.getSessionId());
+					throw this.failStartRecording(session, recording, "Couldn't initialize some RecorderEndpoint");
+				}
+			} else {
+				log.info(
+						"Ignoring failed streams in recording {}. Some streams may not be immediately or ever recorded",
+						recordingId);
 			}
 		} catch (InterruptedException e) {
 			recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
@@ -288,7 +297,20 @@ public class SingleStreamRecordingService extends RecordingService {
 			try {
 				if (kParticipant.singleRecordingLock.tryLock(15, TimeUnit.SECONDS)) {
 					try {
-						if (kmsDisconnectionTime == null) {
+
+						if (kmsDisconnectionTime != null || RemoteOperationUtils.mustSkipRemoteOperation()) {
+
+							// Stopping recorder endpoint because of a KMS disconnection
+							finalWrapper.setEndTime(
+									kmsDisconnectionTime != null ? kmsDisconnectionTime : System.currentTimeMillis());
+							generateIndividualMetadataFile(finalWrapper);
+							globalStopLatch.countDown();
+							log.warn("Forcing individual recording stop after {} for stream {} in recording {}",
+									kmsDisconnectionTime != null ? "KMS restart" : "node crashed", streamId,
+									recordingId);
+
+						} else {
+
 							finalWrapper.getRecorder().addStoppedListener(new EventListener<StoppedEvent>() {
 								@Override
 								public void onEvent(StoppedEvent event) {
@@ -300,14 +322,7 @@ public class SingleStreamRecordingService extends RecordingService {
 								}
 							});
 							finalWrapper.getRecorder().stop();
-						} else {
-							// Stopping recorder endpoint because of a KMS disconnection
-							finalWrapper.setEndTime(kmsDisconnectionTime);
-							generateIndividualMetadataFile(finalWrapper);
-							globalStopLatch.countDown();
-							log.warn(
-									"Forcing individual recording stop after KMS restart for stream {} in recording {}",
-									streamId, recordingId);
+
 						}
 					} finally {
 						kParticipant.singleRecordingLock.unlock();
@@ -391,14 +406,14 @@ public class SingleStreamRecordingService extends RecordingService {
 			MediaProfileSpecType profile) {
 		switch (profile) {
 		case WEBM:
-			publisherEndpoint.connect(recorder, MediaType.AUDIO);
-			publisherEndpoint.connect(recorder, MediaType.VIDEO);
+			publisherEndpoint.connect(recorder, MediaType.AUDIO, false);
+			publisherEndpoint.connect(recorder, MediaType.VIDEO, false);
 			break;
 		case WEBM_AUDIO_ONLY:
-			publisherEndpoint.connect(recorder, MediaType.AUDIO);
+			publisherEndpoint.connect(recorder, MediaType.AUDIO, false);
 			break;
 		case WEBM_VIDEO_ONLY:
-			publisherEndpoint.connect(recorder, MediaType.VIDEO);
+			publisherEndpoint.connect(recorder, MediaType.VIDEO, false);
 			break;
 		default:
 			throw new UnsupportedOperationException("Unsupported profile when single stream recording: " + profile);

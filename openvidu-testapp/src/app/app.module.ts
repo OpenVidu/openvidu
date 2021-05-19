@@ -26,12 +26,13 @@ import { PublisherPropertiesDialogComponent } from './components/dialogs/publish
 import { ScenarioPropertiesDialogComponent } from './components/dialogs/scenario-properties-dialog/scenario-properties-dialog.component';
 import { FilterDialogComponent } from './components/dialogs/filter-dialog/filter-dialog.component';
 import { ShowCodecDialogComponent } from './components/dialogs/show-codec-dialog/show-codec-dialog.component';
+import { RecordingPropertiesComponent } from './components/dialogs/recording-properties/recording-properties.component';
 
 import { OpenviduRestService } from './services/openvidu-rest.service';
 import { OpenviduParamsService } from './services/openvidu-params.service';
 import { TestFeedService } from './services/test-feed.service';
 import { MuteSubscribersService } from './services/mute-subscribers.service';
-import {SessionInfoDialogComponent} from "./components/dialogs/session-info-dialog/session-info-dialog.component";
+import { SessionInfoDialogComponent } from "./components/dialogs/session-info-dialog/session-info-dialog.component";
 
 @NgModule({
   declarations: [
@@ -46,6 +47,7 @@ import {SessionInfoDialogComponent} from "./components/dialogs/session-info-dial
     SessionPropertiesDialogComponent,
     SessionApiDialogComponent,
     EventsDialogComponent,
+    RecordingPropertiesComponent,
     LocalRecordingDialogComponent,
     PublisherPropertiesDialogComponent,
     ScenarioPropertiesDialogComponent,

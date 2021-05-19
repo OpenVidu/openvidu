@@ -29,7 +29,6 @@ import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-
 import { SessionApiDialogComponent } from '../dialogs/session-api-dialog/session-api-dialog.component';
 import { PublisherPropertiesDialogComponent } from '../dialogs/publisher-properties-dialog/publisher-properties-dialog.component';
 import { SessionInfoDialogComponent } from "../dialogs/session-info-dialog/session-info-dialog.component";
-import {ShowCodecDialogComponent} from "../dialogs/show-codec-dialog/show-codec-dialog.component";
 
 
 export interface SessionConf {
@@ -92,9 +91,21 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   sessionProperties: SessionPropertiesAPI = {
     mediaMode: MediaMode.ROUTED,
     recordingMode: RecordingMode.MANUAL,
-    defaultOutputMode: Recording.OutputMode.COMPOSED,
-    defaultRecordingLayout: RecordingLayout.BEST_FIT,
-    defaultCustomLayout: '',
+    defaultRecordingProperties: {
+      name: '',
+      hasAudio: true,
+      hasVideo: true,
+      outputMode: Recording.OutputMode.COMPOSED,
+      recordingLayout: RecordingLayout.BEST_FIT,
+      resolution: '1280x720',
+      frameRate: 25,
+      shmSize: 536870912,
+      customLayout: '',
+      ignoreFailedStreams: false,
+      mediaNode: {
+        id: ''
+      }
+    },
     customSessionId: '',
     forcedVideoCodec: null,
     allowTranscoding: null
@@ -598,8 +609,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         customToken: this.customToken,
         forcePublishing: this.forcePublishing,
         connectionProperties: this.connectionProperties,
-      },
-      width: '450px'
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -624,21 +634,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         openVidu: !!this.OV_NodeClient ? this.OV_NodeClient : new OpenViduAPI(this.openviduUrl, this.openviduSecret),
         session: this.sessionAPI,
         sessionId: !!this.session ? this.session.sessionId : this.sessionName,
-        recordingProperties: !!this.recordingProperties ? this.recordingProperties :
-          {
-            name: '',
-            outputMode: this.sessionProperties.defaultOutputMode,
-            recordingLayout: this.sessionProperties.defaultRecordingLayout,
-            customLayout: this.sessionProperties.defaultCustomLayout,
-            resolution: '1920x1080',
-            hasAudio: true,
-            hasVideo: true,
-            mediaNode: {
-              id: ''
-            }
-          }
+        recordingProperties: !!this.recordingProperties ? this.recordingProperties : this.sessionProperties.defaultRecordingProperties
       },
-      width: '425px',
       disableClose: true
     });
 

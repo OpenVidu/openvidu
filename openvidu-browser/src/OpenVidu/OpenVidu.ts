@@ -32,6 +32,7 @@ import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 
 import * as screenSharingAuto from '../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto';
 import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturing';
+import { OpenViduLoggerConfiguration } from "../OpenViduInternal/Logger/OpenViduLoggerConfiguration";
 /**
  * @hidden
  */
@@ -102,11 +103,21 @@ export class OpenVidu {
   /**
    * @hidden
    */
+  finalUserId: string;
+  /**
+   * @hidden
+   */
   advancedConfiguration: OpenViduAdvancedConfiguration = {};
   /**
    * @hidden
    */
-  webrtcStatsInterval: number = 0;
+  webrtcStatsInterval: number = -1;
+
+  /**
+   * @hidden
+   */
+  sendBrowserLogs: OpenViduLoggerConfiguration = OpenViduLoggerConfiguration.disabled;
+
   /**
    * @hidden
    */
@@ -116,85 +127,71 @@ export class OpenVidu {
    */
   ee = new EventEmitter()
 
+  onOrientationChanged(handler): void {
+    (<any>window).addEventListener('orientationchange', handler);
+  }
+
   constructor() {
     platform = PlatformUtils.getInstance();
     this.libraryVersion = packageJson.version;
-    logger.info("'OpenVidu' initialized");
-    logger.info("openvidu-browser version: " + this.libraryVersion);
+    logger.info("OpenVidu initialized");
+    logger.info('Platform detected: ' + platform.getDescription());
+    logger.info('openvidu-browser version: ' + this.libraryVersion);
 
-    if (platform.isMobileDevice()) {
+    if (platform.isMobileDevice() || platform.isReactNative()) {
       // Listen to orientationchange only on mobile devices
-      (<any>window).addEventListener('orientationchange', () => {
+      this.onOrientationChanged(() => {
         this.publishers.forEach(publisher => {
-          if (publisher.stream.isLocalStreamPublished && !!publisher.stream && !!publisher.stream.hasVideo && !!publisher.stream.streamManager.videos[0]) {
-
-            let attempts = 0;
-
-            const oldWidth = publisher.stream.videoDimensions.width;
-            const oldHeight = publisher.stream.videoDimensions.height;
-
-            const getNewVideoDimensions = (): Promise<{ newWidth: number, newHeight: number }> => {
-              return new Promise((resolve, reject) => {
-                if (platform.isIonicIos()) {
-                  // iOS Ionic. Limitation: must get new dimensions from an existing video element already inserted into DOM
-                  resolve({
-                    newWidth: publisher.stream.streamManager.videos[0].video.videoWidth,
-                    newHeight: publisher.stream.streamManager.videos[0].video.videoHeight
-                  });
-                } else {
-                  // Rest of platforms
-                  // New resolution got from different places for Chrome and Firefox. Chrome needs a videoWidth and videoHeight of a videoElement.
-                  // Firefox needs getSettings from the videoTrack
-                  const firefoxSettings = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
-                  const newWidth = <number>((platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) ? firefoxSettings.width : publisher.videoReference.videoWidth);
-                  const newHeight = <number>((platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) ? firefoxSettings.height : publisher.videoReference.videoHeight);
-                  resolve({ newWidth, newHeight });
-                }
-              });
-            };
-
-            const repeatUntilChange = setInterval(() => {
-              getNewVideoDimensions().then(newDimensions => {
-                sendStreamPropertyChangedEvent(oldWidth, oldHeight, newDimensions.newWidth, newDimensions.newHeight);
-              });
-            }, 75);
-
-            const sendStreamPropertyChangedEvent = (oldWidth, oldHeight, newWidth, newHeight) => {
-              attempts++;
-              if (attempts > 10) {
-                clearTimeout(repeatUntilChange);
-              }
-              if (newWidth !== oldWidth || newHeight !== oldHeight) {
-                publisher.stream.videoDimensions = {
-                  width: newWidth || 0,
-                  height: newHeight || 0
-                };
-                this.sendRequest(
-                  'streamPropertyChanged',
-                  {
-                    streamId: publisher.stream.streamId,
-                    property: 'videoDimensions',
-                    newValue: JSON.stringify(publisher.stream.videoDimensions),
-                    reason: 'deviceRotated'
-                  },
-                  (error, response) => {
-                    if (error) {
-                      logger.error("Error sending 'streamPropertyChanged' event", error);
-                    } else {
-                      this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
-                      publisher.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(publisher, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
-                      this.session.sendVideoData(publisher);
-                    }
-                  });
-                clearTimeout(repeatUntilChange);
-              }
-            };
+          if (publisher.stream.isLocalStreamPublished && !!publisher.stream && !!publisher.stream.hasVideo) {
+            this.sendNewVideoDimensionsIfRequired(publisher, 'deviceRotated', 75, 10);
           }
         });
       });
     }
   }
 
+  sendNewVideoDimensionsIfRequired(publisher: Publisher, reason: string, WAIT_INTERVAL: number, MAX_ATTEMPTS: number) {
+    let attempts = 0;
+    const oldWidth = publisher.stream.videoDimensions.width;
+    const oldHeight = publisher.stream.videoDimensions.height;
+
+    const repeatUntilChangeOrMaxAttempts: NodeJS.Timeout = setInterval(() => {
+      attempts++;
+      if (attempts > MAX_ATTEMPTS) {
+        clearTimeout(repeatUntilChangeOrMaxAttempts);
+      }
+      publisher.getVideoDimensions(publisher.stream.getMediaStream()).then(newDimensions => {
+        if (newDimensions.width !== oldWidth || newDimensions.height !== oldHeight) {
+          clearTimeout(repeatUntilChangeOrMaxAttempts);
+          this.sendVideoDimensionsChangedEvent(publisher, reason, oldWidth, oldHeight, newDimensions.width, newDimensions.height);
+        }
+      });
+    }, WAIT_INTERVAL);
+  }
+
+  sendVideoDimensionsChangedEvent(publisher: Publisher, reason: string, oldWidth: number, oldHeight: number, newWidth: number, newHeight: number) {
+    publisher.stream.videoDimensions = {
+      width: newWidth || 0,
+      height: newHeight || 0
+    };
+    this.sendRequest(
+      'streamPropertyChanged',
+      {
+        streamId: publisher.stream.streamId,
+        property: 'videoDimensions',
+        newValue: JSON.stringify(publisher.stream.videoDimensions),
+        reason
+      },
+      (error, response) => {
+        if (error) {
+          logger.error("Error sending 'streamPropertyChanged' event", error);
+        } else {
+          this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, reason)]);
+          publisher.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(publisher, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, reason)]);
+          this.session.sendVideoData(publisher);
+        }
+      });
+  };
 
   /**
    * Returns new session

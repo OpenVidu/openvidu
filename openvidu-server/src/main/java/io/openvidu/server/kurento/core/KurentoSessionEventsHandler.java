@@ -50,10 +50,14 @@ public class KurentoSessionEventsHandler extends SessionEventsHandler {
 		}
 	}
 
-	public void onMediaElementError(String roomName, String participantId, String description) {
+	public void onMediaElementError(String roomName, String connectionId, String description) {
 		JsonObject notifParams = new JsonObject();
 		notifParams.addProperty(ProtocolElements.MEDIAERROR_ERROR_PARAM, description);
-		rpcNotificationService.sendNotification(participantId, ProtocolElements.MEDIAERROR_METHOD, notifParams);
+		rpcNotificationService.sendNotification(connectionId, ProtocolElements.MEDIAERROR_METHOD, notifParams);
+	}
+
+	public boolean addMediaNodeInfoToSessionEntity() {
+		return false;
 	}
 
 }

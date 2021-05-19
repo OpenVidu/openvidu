@@ -18,7 +18,6 @@
 package io.openvidu.server.webhook;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -30,19 +29,29 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
@@ -82,28 +91,47 @@ public class HttpWebhookSender {
 			this.customHeaders.add(new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"));
 		}
 
-		TrustStrategy trustStrategy = new TrustStrategy() {
+		// Retry request a minimum of 5 times
+		HttpRequestRetryHandler requestRetryHandler = new HttpRequestRetryHandler() {
 			@Override
-			public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-				return true;
+			public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
+				return executionCount < 5;
 			}
 		};
 
+		// Accept insecure certificates
 		SSLContext sslContext;
-
 		try {
-			sslContext = new SSLContextBuilder().loadTrustMaterial(null, trustStrategy).build();
+			sslContext = new SSLContextBuilder().loadTrustMaterial(null, new TrustStrategy() {
+				@Override
+				public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+					return true;
+				}
+			}).build();
 		} catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
 			throw new RuntimeException(e);
 		}
+		SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, new HostnameVerifier() {
+			@Override
+			public boolean verify(String arg0, SSLSession arg1) {
+				return true;
+			}
+		});
 
-		RequestConfig.Builder requestBuilder = RequestConfig.custom();
-		requestBuilder = requestBuilder.setConnectTimeout(30000);
-		requestBuilder = requestBuilder.setConnectionRequestTimeout(30000);
+		Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
+				.register("http", new PlainConnectionSocketFactory()).register("https", sslsf).build();
 
-		this.httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestBuilder.build())
+		// Close after 3 seconds of inactivity
+		PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
+		cm.setValidateAfterInactivity(3000);
+
+		// Socket 10 seconds timeout
+		RequestConfig.Builder requestConfigBuilder = RequestConfig.custom().setConnectTimeout(10000)
+				.setSocketTimeout(10000);
+
+		this.httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfigBuilder.build())
 				.setConnectionTimeToLive(30, TimeUnit.SECONDS).setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
-				.setSSLContext(sslContext).build();
+				.setConnectionManager(cm).setRetryHandler(requestRetryHandler).build();
 	}
 
 	public void sendHttpPostCallbackAsync(CDREvent event) {
@@ -121,7 +149,7 @@ public class HttpWebhookSender {
 	 *                     endpoint B) The response received from the endpoint is
 	 *                     not 200
 	 */
-	public void sendHttpPostCallbackBlocking(CDREvent event) throws IOException {
+	private void sendHttpPostCallbackBlocking(CDREvent event) throws IOException {
 
 		if (!this.events.contains(event.getEventName())) {
 			return;
@@ -130,13 +158,9 @@ public class HttpWebhookSender {
 		HttpPost request = new HttpPost(httpEndpoint);
 
 		StringEntity params = null;
-		try {
-			JsonObject jsonEvent = event.toJson();
-			jsonEvent.addProperty("event", event.getEventName().name());
-			params = new StringEntity(jsonEvent.toString());
-		} catch (UnsupportedEncodingException e) {
-			log.error("Cannot create StringEntity from JSON CDREvent. Default HTTP charset is not supported");
-		}
+		JsonObject jsonEvent = event.toJson();
+		jsonEvent.addProperty("event", event.getEventName().name());
+		params = new StringEntity(jsonEvent.toString(), "UTF-8");
 
 		for (Header header : this.customHeaders) {
 			request.setHeader(header);

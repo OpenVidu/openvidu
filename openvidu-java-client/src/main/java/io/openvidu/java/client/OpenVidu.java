@@ -18,7 +18,6 @@
 package io.openvidu.java.client;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -196,32 +195,10 @@ public class OpenVidu {
 
 		HttpPost request = new HttpPost(this.hostname + API_RECORDINGS_START);
 
-		JsonObject json = new JsonObject();
+		JsonObject json = properties.toJson();
 		json.addProperty("session", sessionId);
-		json.addProperty("name", properties.name());
-		json.addProperty("outputMode", properties.outputMode() != null ? properties.outputMode().name() : null);
-		json.addProperty("hasAudio", properties.hasAudio());
-		json.addProperty("hasVideo", properties.hasVideo());
-		json.addProperty("shmSize", properties.shmSize());
-		json.addProperty("mediaNode", properties.mediaNode());
 
-		if ((properties.outputMode() == null || Recording.OutputMode.COMPOSED.equals(properties.outputMode())
-				|| (Recording.OutputMode.COMPOSED_QUICK_START.equals(properties.outputMode())))
-				&& properties.hasVideo()) {
-			json.addProperty("resolution", properties.resolution());
-			json.addProperty("recordingLayout",
-					(properties.recordingLayout() != null) ? properties.recordingLayout().name() : "");
-			if (RecordingLayout.CUSTOM.equals(properties.recordingLayout())) {
-				json.addProperty("customLayout", (properties.customLayout() != null) ? properties.customLayout() : "");
-			}
-		}
-
-		StringEntity params = null;
-		try {
-			params = new StringEntity(json.toString());
-		} catch (UnsupportedEncodingException e1) {
-			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
-		}
+		StringEntity params = new StringEntity(json.toString(), "UTF-8");
 
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 		request.setEntity(params);
@@ -258,12 +235,10 @@ public class OpenVidu {
 	 * Starts the recording of a {@link io.openvidu.java.client.Session}
 	 *
 	 * @param sessionId The sessionId of the session you want to start recording
-	 * @param name      The name you want to give to the video file. You can access
-	 *                  this same value in your clients on recording events
-	 *                  (recordingStarted, recordingStopped). <strong>WARNING: this
-	 *                  parameter follows an overwriting policy.</strong> If you
-	 *                  name two recordings the same, the newest MP4 file will
-	 *                  overwrite the oldest one
+	 * @param name      The name you want to give to the video file.
+	 *                  <strong>WARNING: this parameter follows an overwriting
+	 *                  policy.</strong> If you name two recordings the same, the
+	 *                  newest MP4 file will overwrite the oldest one
 	 *
 	 * @return The started recording. If this method successfully returns the
 	 *         Recording object it means that the recording can be stopped with
@@ -613,7 +588,7 @@ public class OpenVidu {
 
 	private JsonObject httpResponseToJson(HttpResponse response) throws OpenViduJavaClientException {
 		try {
-			JsonObject json = new Gson().fromJson(EntityUtils.toString(response.getEntity()), JsonObject.class);
+			JsonObject json = new Gson().fromJson(EntityUtils.toString(response.getEntity(), "UTF-8"), JsonObject.class);
 			return json;
 		} catch (JsonSyntaxException | ParseException | IOException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
