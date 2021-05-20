@@ -31,7 +31,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.jsonrpc.client.JsonRpcWSConnectionListener;
@@ -343,8 +342,7 @@ public abstract class KmsManager {
 	@PostConstruct
 	protected abstract void postConstructInitKurentoClients();
 
-	@PreDestroy
-	public void close() {
+	public void closeAllKurentoClients() {
 		log.info("Closing all KurentoClients");
 		this.kmss.values().forEach(kms -> {
 			if (kms.getKurentoClientReconnectTimer() != null) {

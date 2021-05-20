@@ -31,6 +31,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.PreDestroy;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.GenericMediaElement;
 import org.kurento.client.IceCandidate;
@@ -1442,6 +1444,13 @@ public class KurentoSessionManager extends SessionManager {
 		}
 		log.info("KMS less loaded is {} with a load of {}", lessLoadedKms.getUri(), lessLoadedKms.getLoad());
 		return lessLoadedKms;
+	}
+
+	@PreDestroy
+	@Override
+	public void close() {
+		super.close();
+		this.kmsManager.closeAllKurentoClients();
 	}
 
 }
