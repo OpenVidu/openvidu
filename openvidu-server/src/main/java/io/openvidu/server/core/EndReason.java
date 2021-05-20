@@ -19,8 +19,114 @@ package io.openvidu.server.core;
 
 public enum EndReason {
 
-	unsubscribe, unpublish, disconnect, forceUnpublishByUser, forceUnpublishByServer, forceDisconnectByUser,
-	forceDisconnectByServer, lastParticipantLeft, recordingStoppedByServer, sessionClosedByServer, networkDisconnect,
-	mediaServerDisconnect, mediaServerReconnect, nodeCrashed, openviduServerStopped, automaticStop
+	/**
+	 * A user called the RPC operation to unsubscribe from a remote stream. Applies
+	 * to webrtcConnectionDestroyed
+	 */
+	unsubscribe,
+
+	/**
+	 * A user called the RPC operation to unpublish a local stream. Applies to
+	 * webrtcConnectionDestroyed
+	 */
+	unpublish,
+
+	/**
+	 * A user called the RPC operation to leave the session. Applies to
+	 * webrtcConnectionDestroyed and participantLeft. Can trigger other events with
+	 * lastParticipantLeft
+	 */
+	disconnect,
+
+	/**
+	 * A user called the RPC operation to force the unpublishing of a remote stream.
+	 * Applies to webrtcConnectionDestroyed
+	 */
+	forceUnpublishByUser,
+
+	/**
+	 * The server application called the REST operation to force the unpublishing of
+	 * a user's stream. Applies to webrtcConnectionDestroyed
+	 */
+	forceUnpublishByServer,
+
+	/**
+	 * A user called the RPC operation to force the disconnection of a remote user.
+	 * Applies to webrtcConnectionDestroyed and participantLeft. Can trigger other
+	 * events with lastParticipantLeft
+	 */
+	forceDisconnectByUser,
+
+	/**
+	 * The server application called the REST operation to force the disconnection
+	 * of a user. Applies to webrtcConnectionDestroyed and participantLeft. Can
+	 * trigger other events with lastParticipantLeft
+	 */
+	forceDisconnectByServer,
+
+	/**
+	 * The last participant left the session, which caused the session to be closed.
+	 * Applies to webrtcConnectionDestroyed, participantLeft, recordingStatusChanged
+	 * and sessionDestroyed. Can be triggered from other events with other end
+	 * reasons (disconnect, forceDisconnectByUser, forceDisconnectByServer,
+	 * networkDisconnect)
+	 */
+	lastParticipantLeft,
+
+	/**
+	 * The server application called the REST operation to stop a recording. Applies
+	 * to recordingStatusChanged
+	 */
+	recordingStoppedByServer,
+
+	/**
+	 * The server application called the REST operation to close a session. Applies
+	 * to webrtcConnectionDestroyed, participantLeft, recordingStatusChanged and
+	 * sessionDestroyed
+	 */
+	sessionClosedByServer,
+
+	/**
+	 * A user left the session because of a network disconnection. Applies to
+	 * webrtcConnectionDestroyed and participantLeft. Can trigger other events with
+	 * lastParticipantLeft
+	 */
+	networkDisconnect,
+
+	/**
+	 * A media server disconnected. This is reserved for Media Nodes being
+	 * gracefully removed from an OpenVidu Pro cluster. Applies to
+	 * webrtcConnectionDestroyed, participantLeft, recordingStatusChanged and
+	 * sessionDestroyed
+	 */
+	mediaServerDisconnect,
+
+	/**
+	 * A media server disconnected, but was able to reconnect again. Nevertheless
+	 * all of the media endpoints were destroyed in the process. Applies to
+	 * webrtcConnectionDestroyed and recordingStatusChanged
+	 */
+	mediaServerReconnect,
+
+	/**
+	 * A node has crashed. For now this means a Media Node has crashed. Applies to
+	 * webrtcConnectionDestroyed, participantLeft, recordingStatusChanged and
+	 * sessionDestroyed
+	 */
+	nodeCrashed,
+
+	/**
+	 * OpenVidu Server has gracefully stopped. This is reserved for OpenVidu Pro
+	 * restart operation. Applies to webrtcConnectionDestroyed, participantLeft,
+	 * recordingStatusChanged and sessionDestroyed
+	 */
+	openviduServerStopped,
+
+	/**
+	 * A recording has been stopped automatically
+	 * (https://docs.openvidu.io/en/latest/advanced-features/recording/#automatic-stop-of-recordings).
+	 * Applies to recordingStatusChanged
+	 */
+	automaticStop
 
 }
