@@ -66,8 +66,12 @@ function WebSocketWithReconnection(config) {
             if (closing) {
                 Logger.debug("Connection closed by user");
             } else {
-                Logger.debug("Connection closed unexpectecly. Reconnecting...");
-                reconnect(MAX_RETRIES, 1);
+                if (config.ismasternodecrashed()) {
+                    Logger.error("Master Node has crashed. Stopping reconnection process");
+                } else {
+                    Logger.debug("Connection closed unexpectedly. Reconnecting...");
+                    reconnect(MAX_RETRIES, 1);
+                }
             }
         } else {
             Logger.debug("Close callback from previous websocket. Ignoring it");
