@@ -67,6 +67,7 @@ let platform: PlatformUtils;
 export class OpenVidu {
 
   private jsonRpcClient: any;
+  private masterNodeHasCrashed = false;
 
   /**
    * @hidden
@@ -744,7 +745,8 @@ export class OpenVidu {
         onconnected: onConnectSucces,
         ondisconnect: this.disconnectCallback.bind(this),
         onreconnecting: this.reconnectingCallback.bind(this),
-        onreconnected: this.reconnectedCallback.bind(this)
+        onreconnected: this.reconnectedCallback.bind(this),
+        ismasternodecrashed: this.isMasterNodeCrashed.bind(this)
       },
       rpc: {
         requestTimeout: 10000,
@@ -761,10 +763,21 @@ export class OpenVidu {
         networkQualityLevelChanged: this.session.onNetworkQualityLevelChangedChanged.bind(this.session),
         filterEventDispatched: this.session.onFilterEventDispatched.bind(this.session),
         iceCandidate: this.session.recvIceCandidate.bind(this.session),
-        mediaError: this.session.onMediaError.bind(this.session)
+        mediaError: this.session.onMediaError.bind(this.session),
+        masterNodeCrashedNotification: this.onMasterNodeCrashedNotification.bind(this)
       }
     };
     this.jsonRpcClient = new RpcBuilder.clients.JsonRpcClient(config);
+  }
+
+  /**
+   * @hidden
+   */
+  onMasterNodeCrashedNotification(response): void {
+    console.error('Master Node has crashed');
+    this.masterNodeHasCrashed = true;
+    this.session.onLostConnection("nodeCrashed");
+    this.jsonRpcClient.close(4103, "Master Node has crashed");
   }
 
   /**
@@ -1009,10 +1022,14 @@ export class OpenVidu {
       if (!!this.session.connection) {
         this.sendRequest('connect', { sessionId: this.session.connection.rpcSessionId }, (error, response) => {
           if (!!error) {
-            logger.error(error);
-            logger.warn('Websocket was able to reconnect to OpenVidu Server, but your Connection was already destroyed due to timeout. You are no longer a participant of the Session and your media streams have been destroyed');
-            this.session.onLostConnection("networkDisconnect");
-            this.jsonRpcClient.close(4101, "Reconnection fault");
+            if (this.isMasterNodeCrashed()) {
+              logger.warn('Master Node has crashed!');
+            } else {
+              logger.error(error);
+              logger.warn('Websocket was able to reconnect to OpenVidu Server, but your Connection was already destroyed due to timeout. You are no longer a participant of the Session and your media streams have been destroyed');
+              this.session.onLostConnection("networkDisconnect");
+              this.jsonRpcClient.close(4101, "Reconnection fault");
+            }
           } else {
             this.jsonRpcClient.resetPing();
             this.session.onRecoveredConnection();
@@ -1028,6 +1045,10 @@ export class OpenVidu {
     } else {
       alert('Connection error. Please reload page.');
     }
+  }
+
+  private isMasterNodeCrashed() {
+    return this.masterNodeHasCrashed;
   }
 
   private isRoomAvailable(): boolean {
