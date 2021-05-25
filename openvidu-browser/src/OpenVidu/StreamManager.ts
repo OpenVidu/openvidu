@@ -24,6 +24,7 @@ import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent'
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
+import { ExceptionEvent, ExceptionEventName } from '../OpenViduInternal/Events/ExceptionEvent';
 
 /**
  * @hidden
@@ -90,19 +91,23 @@ export class StreamManager extends EventDispatcher {
     /**
      * @hidden
      */
-    firstVideoElement?: StreamManagerVideo;
+    protected firstVideoElement?: StreamManagerVideo;
     /**
      * @hidden
      */
-    lazyLaunchVideoElementCreatedEvent = false;
-    /**
-     * @hidden
-     */
-    element: HTMLElement;
+    protected element: HTMLElement;
     /**
      * @hidden
      */
     protected canPlayListener: EventListener;
+    /**
+     * @hidden
+     */
+    private streamPlayingEventExceptionTimeout?: NodeJS.Timeout;
+    /**
+     * @hidden
+     */
+    private lazyLaunchVideoElementCreatedEvent = false;
 
     /**
      * @hidden
@@ -138,6 +143,7 @@ export class StreamManager extends EventDispatcher {
         }
 
         this.canPlayListener = () => {
+            this.deactivateStreamPlayingEventExceptionTimeout();
             if (this.stream.isLocal()) {
                 if (!this.stream.displayMyRemote()) {
                     logger.info("Your local 'Stream' with id [" + this.stream.streamId + '] video is now playing');
@@ -305,7 +311,7 @@ export class StreamManager extends EventDispatcher {
             id: video.id,
             canplayListenerAdded: false
         });
-        
+
         logger.info('New video element associated to ', this);
 
         return returnNumber;
@@ -492,6 +498,7 @@ export class StreamManager extends EventDispatcher {
      */
     addPlayEventToFirstVideo() {
         if ((!!this.videos[0]) && (!!this.videos[0].video) && (!this.videos[0].canplayListenerAdded)) {
+            this.activateStreamPlayingEventExceptionTimeout();
             this.videos[0].video.addEventListener('canplay', this.canPlayListener);
             this.videos[0].canplayListenerAdded = true;
         }
@@ -533,6 +540,7 @@ export class StreamManager extends EventDispatcher {
      */
     removeSrcObject(streamManagerVideo: StreamManagerVideo) {
         streamManagerVideo.video.srcObject = null;
+        this.deactivateStreamPlayingEventExceptionTimeout();
     }
 
     /* Private methods */
@@ -555,6 +563,26 @@ export class StreamManager extends EventDispatcher {
     private removeMirrorVideo(video): void {
         video.style.transform = 'unset';
         video.style.webkitTransform = 'unset';
+    }
+
+    private activateStreamPlayingEventExceptionTimeout() {
+        if (this.streamPlayingEventExceptionTimeout != null) {
+            // The timeout is already activated
+            return;
+        }
+        // Trigger ExceptionEvent NO_STREAM_PLAYING_EVENT if after timeout there is no 'canplay' event
+        const msTimeout = this.stream.session.openvidu.advancedConfiguration.noStreamPlayingEventExceptionTimeout || 4000;
+        this.streamPlayingEventExceptionTimeout = setTimeout(() => {
+            const msg = 'StreamManager of Stream ' + this.stream.streamId + ' (' + (this.remote ? 'Subscriber' : 'Publisher') + ') did not trigger "streamPlaying" event in ' + msTimeout + ' ms';
+            logger.warn(msg);
+            this.emitEvent('exception', [new ExceptionEvent(this.stream.session, ExceptionEventName.NO_STREAM_PLAYING_EVENT, this, msg)]);
+            delete this.streamPlayingEventExceptionTimeout;
+        }, msTimeout);
+    }
+
+    private deactivateStreamPlayingEventExceptionTimeout() {
+        clearTimeout(this.streamPlayingEventExceptionTimeout as any);
+        delete this.streamPlayingEventExceptionTimeout;
     }
 
 }

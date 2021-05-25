@@ -52,4 +52,20 @@ export interface OpenViduAdvancedConfiguration {
      */
     forceMediaReconnectionAfterNetworkDrop?: boolean;
 
+    /**
+     * The milliseconds that must elapse after triggering [[ExceptionEvent]] of type `ICE_CONNECTION_DISCONNECTED` to perform an automatic reconnection process of the affected media stream.
+     * This automatic reconnection process can only take place if the client still has network connection to OpenVidu Server. If the ICE connection has broken because of a total network drop,
+     * then no reconnection process will be possible at all.
+     * 
+     * Default to `4000`.
+     */
+    iceConnectionDisconnectedExceptionTimeout?: number;
+
+    /**
+     * The milliseconds that must elapse for the [[ExceptionEvent]] of name [`NO_STREAM_PLAYING_EVENT`]((/en/latest/api/openvidu-browser/enums/exceptioneventname.html#no_stream_playing_event)) to be fired.
+     * 
+     * Default to `4000`.
+     */
+    noStreamPlayingEventExceptionTimeout?: number;
+
 }
