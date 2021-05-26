@@ -139,6 +139,8 @@ public class ProtocolElements {
 	// ENDTODO
 
 	public static final String VIDEODATA_METHOD = "videoData";
+	
+	public static final String ECHO_METHOD = "echo";
 
 	// ---------------------------- SERVER RESPONSES & EVENTS -----------------
 
