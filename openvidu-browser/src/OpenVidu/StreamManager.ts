@@ -575,7 +575,7 @@ export class StreamManager extends EventDispatcher {
         this.streamPlayingEventExceptionTimeout = setTimeout(() => {
             const msg = 'StreamManager of Stream ' + this.stream.streamId + ' (' + (this.remote ? 'Subscriber' : 'Publisher') + ') did not trigger "streamPlaying" event in ' + msTimeout + ' ms';
             logger.warn(msg);
-            this.emitEvent('exception', [new ExceptionEvent(this.stream.session, ExceptionEventName.NO_STREAM_PLAYING_EVENT, this, msg)]);
+            this.stream.session.emitEvent('exception', [new ExceptionEvent(this.stream.session, ExceptionEventName.NO_STREAM_PLAYING_EVENT, this, msg)]);
             delete this.streamPlayingEventExceptionTimeout;
         }, msTimeout);
     }
