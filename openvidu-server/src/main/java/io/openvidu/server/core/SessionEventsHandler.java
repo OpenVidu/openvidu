@@ -638,6 +638,10 @@ public class SessionEventsHandler {
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 	}
 
+	public void onEcho(String participantPrivateId, Integer transactionId) {
+		rpcNotificationService.sendResponse(participantPrivateId, transactionId, new JsonObject());
+	}
+
 	/**
 	 * This handler must be called before cleaning any sessions or recordings hosted
 	 * by the crashed Media Node

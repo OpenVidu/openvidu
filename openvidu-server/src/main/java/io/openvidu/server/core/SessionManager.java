@@ -194,6 +194,10 @@ public abstract class SessionManager {
 	public abstract void onVideoData(Participant participant, Integer transactionId, Integer height, Integer width,
 			Boolean videoActive, Boolean audioActive);
 
+	public void onEcho(String participantPrivateId, Integer requestId) {
+		sessionEventsHandler.onEcho(participantPrivateId, requestId);
+	}
+
 	/**
 	 * Returns a Session given its id
 	 *
