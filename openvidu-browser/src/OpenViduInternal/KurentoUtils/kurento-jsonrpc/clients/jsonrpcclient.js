@@ -270,6 +270,10 @@ function JsonRpcClient(configuration) {
         pingNextNum = 0;
         usePing();
     }
+
+    this.getReadyState = function () {
+        return ws.getReadyState();
+    }
 }
 
 

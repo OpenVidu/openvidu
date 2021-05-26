@@ -151,6 +151,10 @@ function WebSocketWithReconnection(config) {
         };
         registerMessageHandler();
     };
+
+    this.getReadyState = () => {
+        return ws.readyState;
+    }
 }
 
 module.exports = WebSocketWithReconnection;

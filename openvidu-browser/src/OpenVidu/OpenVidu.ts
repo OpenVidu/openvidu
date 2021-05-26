@@ -783,6 +783,13 @@ export class OpenVidu {
   /**
    * @hidden
    */
+  getWsReadyState(): number {
+    return this.jsonRpcClient.getReadyState();
+  }
+
+  /**
+   * @hidden
+   */
   closeWs(): void {
     this.jsonRpcClient.close(4102, "Connection closed by client");
   }
