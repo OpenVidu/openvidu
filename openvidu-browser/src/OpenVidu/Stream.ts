@@ -814,8 +814,8 @@ export class Stream {
             const options: WebRtcPeerConfiguration = {
                 mediaStream: this.mediaStream,
                 mediaConstraints: userMediaConstraints,
-                onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-                onexception: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
+                onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
+                onIceConnectionStateException: this.onIceConnectionStateExceptionHandler.bind(this),
                 iceServers: this.getIceServersConf(),
                 simulcast: false
             };
@@ -943,9 +943,9 @@ export class Stream {
             logger.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer",
                 offerConstraints);
             const options = {
-                onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-                onexception: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
                 mediaConstraints: offerConstraints,
+                onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
+                onIceConnectionStateException: this.onIceConnectionStateExceptionHandler.bind(this),
                 iceServers: this.getIceServersConf(),
                 simulcast: false
             };
@@ -968,6 +968,9 @@ export class Stream {
                 });
             };
 
+            if (reconnect) {
+                this.disposeWebRtcPeer();
+            }
             this.webRtcPeer = new WebRtcPeerRecvonly(options);
             this.webRtcPeer.addIceConnectionStateChangeListener(this.streamId);
             this.webRtcPeer.processRemoteOffer(sdpOffer)
