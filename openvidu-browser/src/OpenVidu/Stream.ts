@@ -214,6 +214,10 @@ export class Stream {
      * @hidden
      */
     ee = new EventEmitter();
+    /**
+     * @hidden
+     */
+    reconnectionEventEmitter: EventEmitter | undefined;
 
 
     /**
@@ -774,7 +778,7 @@ export class Stream {
             return false;
         }
         if (this.isLocal() && !!this.session.openvidu.advancedConfiguration.forceMediaReconnectionAfterNetworkDrop) {
-            logger.warn('OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Stream ' + this.streamId + ' will force a reconnection');
+            logger.warn(`OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) will force a reconnection`);
             return true;
         }
         const iceConnectionState: RTCIceConnectionState = this.getRTCPeerConnection().iceConnectionState;
@@ -802,8 +806,40 @@ export class Stream {
     initWebRtcPeerSend(reconnect: boolean): Promise<void> {
         return new Promise((resolve, reject) => {
 
-            if (!reconnect) {
+            if (reconnect) {
+                if (this.reconnectionEventEmitter == undefined) {
+                    // There is no ongoing reconnection
+                    this.reconnectionEventEmitter = new EventEmitter();
+                } else {
+                    // Ongoing reconnection
+                    console.warn(`Trying to reconnect stream ${this.streamId} (Publisher) but an ongoing reconnection process is active. Waiting for response...`);
+                    this.reconnectionEventEmitter.once('success', () => {
+                        resolve();
+                    });
+                    this.reconnectionEventEmitter.once('error', error => {
+                        reject(error);
+                    });
+                    return;
+                }
+            } else {
+                // MediaStream will already have hark events for reconnected streams
                 this.initHarkEvents(); // Init hark events for the local stream
+            }
+
+            const finalResolve = () => {
+                if (reconnect) {
+                    this.reconnectionEventEmitter?.emitEvent('success');
+                    delete this.reconnectionEventEmitter;
+                }
+                resolve();
+            }
+
+            const finalReject = error => {
+                if (reconnect) {
+                    this.reconnectionEventEmitter?.emitEvent('error', [error]);
+                    delete this.reconnectionEventEmitter;
+                }
+                reject(error);
             }
 
             const userMediaConstraints = {
@@ -853,9 +889,9 @@ export class Stream {
                 this.session.openvidu.sendRequest(method, params, (error, response) => {
                     if (error) {
                         if (error.code === 401) {
-                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to publish"));
+                            finalReject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to publish"));
                         } else {
-                            reject('Error on publishVideo: ' + JSON.stringify(error));
+                            finalReject('Error on publishVideo: ' + JSON.stringify(error));
                         }
                     } else {
                         this.webRtcPeer.processRemoteAnswer(response.sdpAnswer)
@@ -875,10 +911,11 @@ export class Stream {
                                 }
                                 this.initWebRtcStats();
                                 logger.info("'Publisher' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "published") + " to session");
-                                resolve();
+
+                                finalResolve();
                             })
                             .catch(error => {
-                                reject(error);
+                                finalReject(error);
                             });
                     }
                 });
@@ -898,10 +935,10 @@ export class Stream {
                     .then(() => {
                         successOfferCallback(sdpOffer.sdp);
                     }).catch(error => {
-                        reject(new Error('(publish) SDP process local offer error: ' + JSON.stringify(error)));
+                        finalReject(new Error('(publish) SDP process local offer error: ' + JSON.stringify(error)));
                     });
             }).catch(error => {
-                reject(new Error('(publish) SDP create offer error: ' + JSON.stringify(error)));
+                finalReject(new Error('(publish) SDP create offer error: ' + JSON.stringify(error)));
             });
         });
     }
@@ -911,19 +948,53 @@ export class Stream {
      */
     initWebRtcPeerReceive(reconnect: boolean): Promise<void> {
         return new Promise((resolve, reject) => {
+
+            if (reconnect) {
+                if (this.reconnectionEventEmitter == undefined) {
+                    // There is no ongoing reconnection
+                    this.reconnectionEventEmitter = new EventEmitter();
+                } else {
+                    // Ongoing reconnection
+                    console.warn(`Trying to reconnect stream ${this.streamId} (Subscriber) but an ongoing reconnection process is active. Waiting for response...`);
+                    this.reconnectionEventEmitter.once('success', () => {
+                        resolve();
+                    });
+                    this.reconnectionEventEmitter.once('error', error => {
+                        reject(error);
+                    });
+                    return;
+                }
+            }
+
+            const finalResolve = () => {
+                if (reconnect) {
+                    this.reconnectionEventEmitter?.emitEvent('success');
+                    delete this.reconnectionEventEmitter;
+                }
+                resolve();
+            }
+
+            const finalReject = error => {
+                if (reconnect) {
+                    this.reconnectionEventEmitter?.emitEvent('error', [error]);
+                    delete this.reconnectionEventEmitter;
+                }
+                reject(error);
+            }
+
             this.session.openvidu.sendRequest('prepareReceiveVideoFrom', { sender: this.streamId, reconnect }, (error, response) => {
                 if (error) {
-                    reject(new Error('Error on prepareReceiveVideoFrom: ' + JSON.stringify(error)));
+                    finalReject(new Error('Error on prepareReceiveVideoFrom: ' + JSON.stringify(error)));
                 } else {
                     this.completeWebRtcPeerReceive(response.sdpOffer, reconnect)
                         .then(() => {
                             logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
                             this.remotePeerSuccessfullyEstablished(reconnect);
                             this.initWebRtcStats();
-                            resolve();
+                            finalResolve();
                         })
                         .catch(error => {
-                            reject(error);
+                            finalReject(error);
                         });
                 }
             });
@@ -1052,6 +1123,137 @@ export class Stream {
                 this.enableHarkVolumeChangeEvent(true);
             }
         }
+    }
+
+    private onIceConnectionStateExceptionHandler(exceptionName: ExceptionEventName, message: string, data?: any): void {
+        switch (exceptionName) {
+            case ExceptionEventName.ICE_CONNECTION_FAILED:
+                this.onIceConnectionFailed();
+                break;
+            case ExceptionEventName.ICE_CONNECTION_DISCONNECTED:
+                this.onIceConnectionDisconnected();
+                break;
+        }
+        this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]);
+    }
+
+    private onIceConnectionFailed() {
+        // Immediately reconnect, as this is a terminal error
+        logger.log(`[ICE_CONNECTION_FAILED] Handling ICE_CONNECTION_FAILED event. Reconnecting stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')})`);
+        this.reconnectStreamAndLogResultingIceConnectionState(ExceptionEventName.ICE_CONNECTION_FAILED);
+    }
+
+    private onIceConnectionDisconnected() {
+        // Wait to see if the ICE connection is able to reconnect
+        logger.log(`[ICE_CONNECTION_DISCONNECTED] Handling ICE_CONNECTION_DISCONNECTED event. Waiting for ICE to be restored and reconnect stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) if not possible`);
+        const timeout = this.session.openvidu.advancedConfiguration.iceConnectionDisconnectedExceptionTimeout || 4000;
+        this.awaitWebRtcPeerConnectionState(timeout).then(state => {
+            switch (state) {
+                case 'failed':
+                    // Do nothing, as an ICE_CONNECTION_FAILED event will have already raised
+                    logger.warn(`[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) is now failed after ICE_CONNECTION_DISCONNECTED`);
+                    break;
+                case 'connected':
+                case 'completed':
+                    logger.log(`[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) automatically restored after ICE_CONNECTION_DISCONNECTED. Current ICE connection state: ${state}`);
+                    break;
+                case 'closed':
+                case 'checking':
+                case 'new':
+                case 'disconnected':
+                    // Rest of states
+                    logger.warn(`[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) couldn't be restored after ICE_CONNECTION_DISCONNECTED event. Current ICE connection state after ${timeout} ms: ${state}`);
+                    this.reconnectStreamAndLogResultingIceConnectionState(ExceptionEventName.ICE_CONNECTION_DISCONNECTED);
+                    break;
+            }
+        });
+    }
+
+    private async reconnectStreamAndLogResultingIceConnectionState(event: string) {
+        try {
+            const finalIceStateAfterReconnection = await this.reconnectStreamAndReturnIceConnectionState(event);
+            switch (finalIceStateAfterReconnection) {
+                case 'connected':
+                case 'completed':
+                    logger.log(`[${event}] Stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) successfully reconnected after ${event}. Current ICE connection state: ${finalIceStateAfterReconnection}`);
+                    break;
+                default:
+                    logger.error(`[${event}] Stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) failed to reconnect after ${event}. Current ICE connection state: ${finalIceStateAfterReconnection}`);
+                    break;
+            }
+        } catch (error) {
+            logger.error(`[${event}] Error reconnecting stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) after ${event}: ${error}`);
+        }
+    }
+
+    private async reconnectStreamAndReturnIceConnectionState(event: string): Promise<RTCIceConnectionState> {
+        logger.log(`[${event}] Reconnecting stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) after event ${event}`);
+        try {
+            await this.reconnectStream(event);
+            const timeout = this.session.openvidu.advancedConfiguration.iceConnectionDisconnectedExceptionTimeout || 4000;
+            return this.awaitWebRtcPeerConnectionState(timeout);
+        } catch (error) {
+            logger.warn(`[${event}] Error reconnecting stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}). Reason: ${error}`);
+            return this.awaitWebRtcPeerConnectionState(1);
+        }
+    }
+
+    public async reconnectStream(event: string): Promise<void> {
+        const isWsConnected = await this.isWebsocketConnected(event, 3000);
+        if (isWsConnected) {
+            // There is connection to openvidu-server. The RTCPeerConnection is the only one broken
+            logger.log(`[${event}] Trying to reconnect stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) and the websocket is opened`);
+            if (this.isLocal()) {
+                return this.initWebRtcPeerSend(true);
+            } else {
+                return this.initWebRtcPeerReceive(true);
+            }
+        } else {
+            // There is no connection to openvidu-server. Nothing can be done. The automatic reconnection
+            // feature should handle a possible reconnection of RTCPeerConnection in case network comes back
+            const errorMsg = `[${event}] Trying to reconnect stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) but the websocket wasn't opened`;
+            logger.error(errorMsg);
+            throw Error(errorMsg);
+        }
+    }
+
+    private isWebsocketConnected(event: string, msResponseTimeout: number): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            const wsReadyState = this.session.openvidu.getWsReadyState();
+            if (wsReadyState === 1) {
+                const responseTimeout = setTimeout(() => {
+                    console.warn(`[${event}] Websocket timeout of ${msResponseTimeout}ms`);
+                    resolve(false);
+                }, msResponseTimeout);
+                this.session.openvidu.sendRequest('echo', {}, (error, response) => {
+                    clearTimeout(responseTimeout);
+                    if (!!error) {
+                        console.warn(`[${event}] Websocket 'echo' returned error: ${error}`);
+                        resolve(false);
+                    } else {
+                        resolve(true);
+                    }
+                });
+            } else {
+                console.warn(`[${event}] Websocket readyState is ${wsReadyState}`);
+                resolve(false);
+            }
+        });
+    }
+
+    async awaitWebRtcPeerConnectionState(timeout: number): Promise<RTCIceConnectionState> {
+        let state = this.getRTCPeerConnection().iceConnectionState;
+        const interval = 150;
+        const intervals = Math.ceil(timeout / interval);
+        for (let i = 0; i < intervals; i++) {
+            state = this.getRTCPeerConnection().iceConnectionState;
+            if (state === 'connected' || state === 'completed') {
+                break;
+            }
+            // Sleep
+            await new Promise((resolve) => setTimeout(resolve, interval));
+        }
+        return state;
     }
 
     private initWebRtcStats(): void {
