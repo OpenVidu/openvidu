@@ -392,7 +392,7 @@ export class StreamManager extends EventDispatcher {
      * - `interval`: (number) how frequently the analyser polls the audio stream to check if speaking has started/stopped or audio volume has changed. Default **100** (ms)
      * - `threshold`: (number) the volume at which _publisherStartSpeaking_, _publisherStopSpeaking_ events will be fired. Default **-50** (dB)
      */
-    updatePublisherSpeakingEventsOptions(publisherSpeakingEventsOptions): void {
+    updatePublisherSpeakingEventsOptions(publisherSpeakingEventsOptions: { interval?: number, threshold?: number }): void {
         const currentHarkOptions = !!this.stream.harkOptions ? this.stream.harkOptions : (this.stream.session.openvidu.advancedConfiguration.publisherSpeakingEventsOptions || {});
         const newInterval = (typeof publisherSpeakingEventsOptions.interval === 'number') ?
             publisherSpeakingEventsOptions.interval : ((typeof currentHarkOptions.interval === 'number') ? currentHarkOptions.interval : 100);

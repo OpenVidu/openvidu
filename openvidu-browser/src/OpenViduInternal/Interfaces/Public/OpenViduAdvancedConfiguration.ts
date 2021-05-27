@@ -39,7 +39,10 @@ export interface OpenViduAdvancedConfiguration {
      * 
      * This sets the global default configuration that will affect all streams, but you can later customize these values for each specific stream by calling [[StreamManager.updatePublisherSpeakingEventsOptions]]
      */
-    publisherSpeakingEventsOptions?: any;
+    publisherSpeakingEventsOptions?: {
+        interval?: number;
+        threshold?: number;
+    };
 
     /**
      * Determines the automatic reconnection process policy. Whenever the client's network drops, OpenVidu Browser starts a reconnection process with OpenVidu Server. After network is recovered, OpenVidu Browser automatically
