@@ -108,6 +108,10 @@ export class OpenVidu {
   /**
    * @hidden
    */
+  mediaServer: string;
+  /**
+   * @hidden
+   */
   advancedConfiguration: OpenViduAdvancedConfiguration = {};
   /**
    * @hidden

@@ -61,6 +61,7 @@ import io.openvidu.java.client.VideoCodec;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.cdr.CDREventName;
 import io.openvidu.server.config.Dotenv.DotenvFormatException;
+import io.openvidu.server.core.MediaServer;
 import io.openvidu.server.recording.RecordingNotification;
 import io.openvidu.server.rest.RequestMappings;
 
@@ -244,6 +245,10 @@ public class OpenviduConfig {
 
 	public boolean isRecordingComposedExternal() {
 		return false;
+	}
+
+	public MediaServer getMediaServer() {
+		return MediaServer.kurento;
 	}
 
 	public String getOpenViduRecordingPath() {
