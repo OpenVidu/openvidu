@@ -162,7 +162,7 @@ public class SessionEventsHandler {
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_SESSION_PARAM, participant.getSessionId());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_VERSION_PARAM,
 				openviduBuildConfig.getOpenViduServerVersion());
-		result.addProperty(ProtocolElements.PARTICIPANTJOINED_VERSION_PARAM,
+		result.addProperty(ProtocolElements.PARTICIPANTJOINED_MEDIASERVER_PARAM,
 				this.openviduConfig.getMediaServer().name());
 
 		if (participant.getToken() != null) {
