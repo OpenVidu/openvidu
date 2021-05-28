@@ -58,6 +58,7 @@ public class SubscriberEndpoint extends MediaEndpoint {
 		offerOptions.setOfferToReceiveVideo(publisher.getMediaOptions().hasVideo());
 		String sdpOffer = generateOffer(offerOptions);
 
+		gatherCandidates();
 		return sdpOffer;
 	}
 
@@ -74,9 +75,7 @@ public class SubscriberEndpoint extends MediaEndpoint {
 			return realSdpAnswer;
 		} else {
 			// 2.18.0
-			processAnswer(sdpAnswer);
-			gatherCandidates();
-			return null;
+			return processAnswer(sdpAnswer);
 		}
 		// END TODO
 
