@@ -781,7 +781,7 @@ export class Session extends EventDispatcher {
     onParticipantLeft(msg): void {
 
         if (this.remoteConnections.size > 0) {
-            this.getRemoteConnection(msg.connectionId).then(connection => {
+            this.getRemoteConnection(msg.connectionId, 'onParticipantLeft').then(connection => {
                 if (!!connection.stream) {
                     const stream = connection.stream;
 
@@ -823,7 +823,7 @@ export class Session extends EventDispatcher {
         // Get the existing Connection created on 'onParticipantJoined' for
         // existing participants or create a new one for new participants
         let connection: Connection;
-        this.getRemoteConnection(response.id)
+        this.getRemoteConnection(response.id, 'onParticipantPublished')
 
             .then(con => {
                 // Update existing Connection
@@ -848,7 +848,7 @@ export class Session extends EventDispatcher {
             // Your stream has been forcedly unpublished from the session
             this.stopPublisherStream(msg.reason);
         } else {
-            this.getRemoteConnection(msg.connectionId)
+            this.getRemoteConnection(msg.connectionId, 'onParticipantUnpublished')
 
                 .then(connection => {
 
@@ -965,7 +965,7 @@ export class Session extends EventDispatcher {
             // Your stream has been forcedly changed (filter feature)
             callback(this.connection);
         } else {
-            this.getRemoteConnection(msg.connectionId)
+            this.getRemoteConnection(msg.connectionId, 'onStreamPropertyChanged')
                 .then(connection => {
                     callback(connection);
                 })
@@ -1411,7 +1411,7 @@ export class Session extends EventDispatcher {
         });
     }
 
-    private getRemoteConnection(connectionId: string): Promise<Connection> {
+    private getRemoteConnection(connectionId: string, operation: string): Promise<Connection> {
         return new Promise<Connection>((resolve, reject) => {
             const connection = this.remoteConnections.get(connectionId);
             if (!!connection) {
@@ -1419,9 +1419,8 @@ export class Session extends EventDispatcher {
                 resolve(connection);
             } else {
                 // Remote connection not found. Reject with OpenViduError
-                const errorMessage = 'Remote connection ' + connectionId + " unknown when 'onParticipantLeft'. " +
+                const errorMessage = 'Remote connection ' + connectionId + " unknown when '" + operation + "'. " +
                     'Existing remote connections: ' + JSON.stringify(this.remoteConnections.keys());
-
                 reject(new OpenViduError(OpenViduErrorName.GENERIC_ERROR, errorMessage));
             }
         });
