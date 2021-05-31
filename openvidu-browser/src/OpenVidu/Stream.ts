@@ -282,6 +282,19 @@ export class Stream {
 
 
     /**
+     * Recreates the media connection with the server. This entails the disposal of the previous RTCPeerConnection and the re-negotiation
+     * of a new one, that will apply the same properties.
+     *
+     * This method can be useful in those situations were there the media connection breaks and OpenVidu is not able to recover on its own
+     * for any kind of unanticipated reason (see [Automatic reconnection](/en/latest/advanced-features/automatic-reconnection/)).
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the reconnection operation was successful and rejected with an Error object if not
+     */
+    public reconnect(): Promise<void> {
+        return this.reconnectStream('API');
+    }
+
+    /**
      * Applies an audio/video filter to the stream.
      *
      * @param type Type of filter applied. See [[Filter.type]]
@@ -465,11 +478,12 @@ export class Stream {
      * @hidden
      */
     disposeWebRtcPeer(): void {
+        const webrtcId: string = this.webRtcPeer.id;
         if (!!this.webRtcPeer) {
             this.webRtcPeer.dispose();
             this.stopWebRtcStats();
         }
-        logger.info((!!this.outboundStreamOpts ? 'Outbound ' : 'Inbound ') + "WebRTCPeer from 'Stream' with id [" + this.streamId + '] is now closed');
+        logger.info((!!this.outboundStreamOpts ? 'Outbound ' : 'Inbound ') + "RTCPeerConnection with id [" + webrtcId + "] from 'Stream' with id [" + this.streamId + '] is now closed');
     }
 
     /**
@@ -967,6 +981,9 @@ export class Stream {
             }
 
             const finalResolve = () => {
+                logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
+                this.remotePeerSuccessfullyEstablished(reconnect);
+                this.initWebRtcStats();
                 if (reconnect) {
                     this.reconnectionEventEmitter?.emitEvent('success');
                     delete this.reconnectionEventEmitter;
@@ -982,20 +999,50 @@ export class Stream {
                 reject(error);
             }
 
+            if (this.session.openvidu.mediaServer === 'mediasoup') {
+
+                // Server initiates negotiation
+
+                this.initWebRtcPeerReceiveFromServer(reconnect)
+                    .then(() => finalResolve())
+                    .catch(error => finalReject(error));
+
+            } else {
+
+                // Client initiates negotiation
+
+                this.initWebRtcPeerReceiveFromClient(reconnect)
+                    .then(() => finalResolve())
+                    .catch(error => finalReject(error));
+
+            }
+        });
+    }
+
+    /**
+     * @hidden
+     */
+    initWebRtcPeerReceiveFromClient(reconnect: boolean): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.completeWebRtcPeerReceive(reconnect).then(response => {
+                this.webRtcPeer.processRemoteAnswer(response.sdpAnswer)
+                    .then(() => resolve()).catch(error => reject(error));
+            }).catch(error => reject(error));
+        });
+    }
+
+    /**
+     * @hidden
+     */
+    initWebRtcPeerReceiveFromServer(reconnect: boolean): Promise<void> {
+        return new Promise((resolve, reject) => {
+            // Server initiates negotiation
             this.session.openvidu.sendRequest('prepareReceiveVideoFrom', { sender: this.streamId, reconnect }, (error, response) => {
                 if (error) {
-                    finalReject(new Error('Error on prepareReceiveVideoFrom: ' + JSON.stringify(error)));
+                    reject(new Error('Error on prepareReceiveVideoFrom: ' + JSON.stringify(error)));
                 } else {
-                    this.completeWebRtcPeerReceive(response.sdpOffer, reconnect)
-                        .then(() => {
-                            logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
-                            this.remotePeerSuccessfullyEstablished(reconnect);
-                            this.initWebRtcStats();
-                            finalResolve();
-                        })
-                        .catch(error => {
-                            finalReject(error);
-                        });
+                    this.completeWebRtcPeerReceive(reconnect, response.sdpOffer)
+                        .then(() => resolve()).catch(error => reject(error));
                 }
             });
         });
@@ -1004,7 +1051,7 @@ export class Stream {
     /**
      * @hidden
      */
-    completeWebRtcPeerReceive(sdpOffer: string, reconnect: boolean): Promise<void> {
+    completeWebRtcPeerReceive(reconnect: boolean, sdpOfferByServer?: string): Promise<any> {
         return new Promise((resolve, reject) => {
 
             const offerConstraints = {
@@ -1021,20 +1068,24 @@ export class Stream {
                 simulcast: false
             };
 
-            const successAnswerCallback = (sdpAnswer) => {
-                logger.debug('Sending SDP answer to subscribe to '
-                    + this.streamId, sdpAnswer);
+            const sendSdpToServer = (sdpString: string) => {
+
+                logger.debug(`Sending local SDP ${(!!sdpOfferByServer ? 'answer' : 'offer')} to subscribe to ${this.streamId}`, sdpString);
 
                 const method = reconnect ? 'reconnectStream' : 'receiveVideoFrom';
                 const params = {};
                 params[reconnect ? 'stream' : 'sender'] = this.streamId;
-                params[reconnect ? 'sdpString' : 'sdpAnswer'] = sdpAnswer;
+                if (!!sdpOfferByServer) {
+                    params[reconnect ? 'sdpString' : 'sdpAnswer'] = sdpString;
+                } else {
+                    params['sdpOffer'] = sdpString;
+                }
 
                 this.session.openvidu.sendRequest(method, params, (error, response) => {
                     if (error) {
                         reject(new Error('Error on ' + method + ' : ' + JSON.stringify(error)));
                     } else {
-                        resolve();
+                        resolve(response);
                     }
                 });
             };
@@ -1044,22 +1095,36 @@ export class Stream {
             }
             this.webRtcPeer = new WebRtcPeerRecvonly(options);
             this.webRtcPeer.addIceConnectionStateChangeListener(this.streamId);
-            this.webRtcPeer.processRemoteOffer(sdpOffer)
-                .then(() => {
+
+            if (!!sdpOfferByServer) {
+
+                this.webRtcPeer.processRemoteOffer(sdpOfferByServer).then(() => {
                     this.webRtcPeer.createAnswer().then(sdpAnswer => {
-                        this.webRtcPeer.processLocalAnswer(sdpAnswer)
-                            .then(() => {
-                                successAnswerCallback(sdpAnswer.sdp);
-                            }).catch(error => {
-                                reject(new Error('(subscribe) SDP process local answer error: ' + JSON.stringify(error)));
-                            });
+                        this.webRtcPeer.processLocalAnswer(sdpAnswer).then(() => {
+                            sendSdpToServer(sdpAnswer.sdp!);
+                        }).catch(error => {
+                            reject(new Error('(subscribe) SDP process local answer error: ' + JSON.stringify(error)));
+                        });
                     }).catch(error => {
                         reject(new Error('(subscribe) SDP create answer error: ' + JSON.stringify(error)));
                     });
-                })
-                .catch(error => {
+                }).catch(error => {
                     reject(new Error('(subscribe) SDP process remote offer error: ' + JSON.stringify(error)));
                 });
+
+            } else {
+
+                this.webRtcPeer.createOffer().then(sdpOffer => {
+                    this.webRtcPeer.processLocalOffer(sdpOffer).then(() => {
+                        sendSdpToServer(sdpOffer.sdp!);
+                    }).catch(error => {
+                        reject(new Error('(subscribe) SDP process local offer error: ' + JSON.stringify(error)));
+                    });
+                }).catch(error => {
+                    reject(new Error('(subscribe) SDP create offer error: ' + JSON.stringify(error)));
+                });
+
+            }
         });
     }
 
@@ -1198,7 +1263,7 @@ export class Stream {
         }
     }
 
-    public async reconnectStream(event: string): Promise<void> {
+    private async reconnectStream(event: string) {
         const isWsConnected = await this.isWebsocketConnected(event, 3000);
         if (isWsConnected) {
             // There is connection to openvidu-server. The RTCPeerConnection is the only one broken
@@ -1241,7 +1306,7 @@ export class Stream {
         });
     }
 
-    async awaitWebRtcPeerConnectionState(timeout: number): Promise<RTCIceConnectionState> {
+    private async awaitWebRtcPeerConnectionState(timeout: number): Promise<RTCIceConnectionState> {
         let state = this.getRTCPeerConnection().iceConnectionState;
         const interval = 150;
         const intervals = Math.ceil(timeout / interval);

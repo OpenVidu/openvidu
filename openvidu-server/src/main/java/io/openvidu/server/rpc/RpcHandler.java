@@ -358,18 +358,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 		String senderStreamId = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SENDER_PARAM);
 		String senderPublicId = parseSenderPublicIdFromStreamId(senderStreamId);
-		boolean reconnect = false;
-
-		// TODO: REMOVE ON 2.18.0
-		if (request.getParams().has(ProtocolElements.PREPARERECEIVEVIDEO_RECONNECT_PARAM)) {
-			reconnect = getBooleanParam(request, ProtocolElements.PREPARERECEIVEVIDEO_RECONNECT_PARAM);
-		}
-		// END TODO
-
-		// TODO: UNCOMMENT ON 2.18.0
-		// boolean reconnect = getBooleanParam(request,
-		// ProtocolElements.PREPARERECEIVEVIDEO_RECONNECT_PARAM);
-		// END TODO
+		boolean reconnect = getBooleanParam(request, ProtocolElements.PREPARERECEIVEVIDEO_RECONNECT_PARAM);
 
 		sessionManager.prepareSubscription(participant, senderPublicId, reconnect, request.getId());
 	}
@@ -385,28 +374,15 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		String senderStreamId = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SENDER_PARAM);
 		String senderPublicId = parseSenderPublicIdFromStreamId(senderStreamId);
 
-		// TODO: REMOVE ON 2.18.0
 		if (request.getParams().has(ProtocolElements.RECEIVEVIDEO_SDPOFFER_PARAM)) {
-			// 2.17.0: initiative held by browser when subscribing
-			// The request comes with an SDPOffer
+			// Client initiated negotiation (comes with SDP Offer)
 			String sdpOffer = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SDPOFFER_PARAM);
 			sessionManager.subscribe(participant, senderPublicId, sdpOffer, request.getId(), false);
 		} else if (request.getParams().has(ProtocolElements.RECEIVEVIDEO_SDPANSWER_PARAM)) {
-			// 2.18.0: initiative held by server when subscribing
-			// This is the final call after prepareReceiveVidoFrom, comes with SDPAnswer
+			// Server initiated negotiation (comes with SDP Answer)
 			String sdpAnswer = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SDPANSWER_PARAM);
 			sessionManager.subscribe(participant, senderPublicId, sdpAnswer, request.getId(), true);
 		}
-		// END TODO
-
-		// TODO: UNCOMMENT ON 2.18.0
-		/*
-		 * String sdpAnswer = getStringParam(request,
-		 * ProtocolElements.RECEIVEVIDEO_SDPANSWER_PARAM);
-		 * sessionManager.subscribe(participant, senderPublicId, sdpAnswer,
-		 * request.getId());
-		 */
-		// END TODO
 	}
 
 	private void unsubscribeFromVideo(RpcConnection rpcConnection, Request<JsonObject> request) {
@@ -670,40 +646,28 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		} catch (OpenViduException e) {
 			return;
 		}
+
 		String streamId = getStringParam(request, ProtocolElements.RECONNECTSTREAM_STREAM_PARAM);
+		boolean isPublisher = streamId.equals(participant.getPublisherStreamId());
 
-		// TODO: REMOVE ON 2.18.0
+		String sdpString = null;
 		if (request.getParams().has(ProtocolElements.RECONNECTSTREAM_SDPOFFER_PARAM)) {
-			// 2.17.0
-			try {
-				String sdpOffer = getStringParam(request, ProtocolElements.RECONNECTSTREAM_SDPOFFER_PARAM);
-				sessionManager.reconnectStream(participant, streamId, sdpOffer, request.getId());
-			} catch (OpenViduException e) {
-				this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),
-						new JsonObject(), e);
-			}
+			sdpString = getStringParam(request, ProtocolElements.RECONNECTSTREAM_SDPOFFER_PARAM);
 		} else if (request.getParams().has(ProtocolElements.RECONNECTSTREAM_SDPSTRING_PARAM)) {
-			// 2.18.0
-			String sdpString = getStringParam(request, ProtocolElements.RECONNECTSTREAM_SDPSTRING_PARAM);
-			try {
-				sessionManager.reconnectStream(participant, streamId, sdpString, request.getId());
-			} catch (OpenViduException e) {
-				this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),
-						new JsonObject(), e);
-			}
+			sdpString = getStringParam(request, ProtocolElements.RECONNECTSTREAM_SDPSTRING_PARAM);
 		}
-		// END TODO
 
-		// TODO: UNCOMMENT ON 2.18.0
-		/*
-		 * String sdpString = getStringParam(request,
-		 * ProtocolElements.RECONNECTSTREAM_SDPSTRING_PARAM); try {
-		 * sessionManager.reconnectStream(participant, streamId, sdpString,
-		 * request.getId()); } catch (OpenViduException e) {
-		 * this.notificationService.sendErrorResponse(participant.
-		 * getParticipantPrivateId(), request.getId(), new JsonObject(), e); }
-		 */
-		// END TODO
+		try {
+			if (isPublisher) {
+				sessionManager.reconnectPublisher(participant, streamId, sdpString, request.getId());
+			} else {
+				boolean initByServer = request.getParams().has(ProtocolElements.RECONNECTSTREAM_SDPSTRING_PARAM);
+				sessionManager.reconnectSubscriber(participant, streamId, sdpString, request.getId(), initByServer);
+			}
+		} catch (OpenViduException e) {
+			this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),
+					new JsonObject(), e);
+		}
 	}
 
 	private void updateVideoData(RpcConnection rpcConnection, Request<JsonObject> request) {
