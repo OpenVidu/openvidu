@@ -387,7 +387,7 @@ public class KurentoSessionManager extends SessionManager {
 		// Modify sdp if forced codec is defined
 		if (forcedVideoCodec != VideoCodec.NONE && !participant.isIpcam()) {
 			kurentoOptions.sdpOffer = sdpMunging.forceCodec(kurentoOptions.sdpOffer, participant, true, false,
-					isTranscodingAllowed, forcedVideoCodec, false);
+					isTranscodingAllowed, forcedVideoCodec);
 			CDR.log(new WebrtcDebugEvent(participant, streamId, WebrtcDebugEventIssuer.client,
 					WebrtcDebugEventOperation.publish, WebrtcDebugEventType.sdpOfferMunged, kurentoOptions.sdpOffer));
 		}
@@ -575,7 +575,7 @@ public class KurentoSessionManager extends SessionManager {
 			// Modify server's SDPOffer if forced codec is defined
 			if (forcedVideoCodec != VideoCodec.NONE && !participant.isIpcam()) {
 				sdpOffer = sdpMunging.forceCodec(sdpOffer, participant, false, false, isTranscodingAllowed,
-						forcedVideoCodec, true);
+						forcedVideoCodec);
 
 				CDR.log(new WebrtcDebugEvent(participant, subscriberEndpointName, WebrtcDebugEventIssuer.server,
 						WebrtcDebugEventOperation.subscribe, WebrtcDebugEventType.sdpOfferMunged, sdpOffer));
@@ -648,7 +648,7 @@ public class KurentoSessionManager extends SessionManager {
 				// Modify sdp if forced codec is defined
 				if (forcedVideoCodec != VideoCodec.NONE && !participant.isIpcam()) {
 					sdpOffer = sdpMunging.forceCodec(sdpString, participant, false, false, isTranscodingAllowed,
-							forcedVideoCodec, false);
+							forcedVideoCodec);
 
 					CDR.log(new WebrtcDebugEvent(participant, subscriberEndpointName, WebrtcDebugEventIssuer.client,
 							WebrtcDebugEventOperation.subscribe, WebrtcDebugEventType.sdpOfferMunged, sdpOffer));
@@ -1195,7 +1195,7 @@ public class KurentoSessionManager extends SessionManager {
 		// Modify sdp if forced codec is defined
 		if (forcedVideoCodec != VideoCodec.NONE && !participant.isIpcam()) {
 			return sdpMunging.forceCodec(sdpOffer, participant, isPublisher, true, isTranscodingAllowed,
-					forcedVideoCodec, false);
+					forcedVideoCodec);
 		}
 		return null;
 	}
