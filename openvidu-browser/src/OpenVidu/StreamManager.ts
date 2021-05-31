@@ -16,6 +16,7 @@
  */
 
 import { Stream } from './Stream';
+import { Subscriber } from './Subscriber';
 import { EventDispatcher } from './EventDispatcher';
 import { StreamManagerVideo } from '../OpenViduInternal/Interfaces/Public/StreamManagerVideo';
 import { Event } from '../OpenViduInternal/Events/Event';
@@ -144,7 +145,10 @@ export class StreamManager extends EventDispatcher {
 
         this.canPlayListener = () => {
             this.deactivateStreamPlayingEventExceptionTimeout();
-            if (this.stream.isLocal()) {
+            if (this.remote) {
+                logger.info("Remote 'Stream' with id [" + this.stream.streamId + '] video is now playing');
+                this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
+            } else {
                 if (!this.stream.displayMyRemote()) {
                     logger.info("Your local 'Stream' with id [" + this.stream.streamId + '] video is now playing');
                     this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
@@ -152,9 +156,6 @@ export class StreamManager extends EventDispatcher {
                     logger.info("Your own remote 'Stream' with id [" + this.stream.streamId + '] video is now playing');
                     this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
                 }
-            } else {
-                logger.info("Remote 'Stream' with id [" + this.stream.streamId + '] video is now playing');
-                this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
             }
             this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this, 'streamPlaying', undefined)]);
         };
@@ -280,7 +281,7 @@ export class StreamManager extends EventDispatcher {
 
         this.initializeVideoProperties(video);
 
-        if (this.stream.isLocal() && this.stream.displayMyRemote()) {
+        if (!this.remote && this.stream.displayMyRemote()) {
             if (video.srcObject !== this.stream.getMediaStream()) {
                 video.srcObject = this.stream.getMediaStream();
             }
@@ -414,7 +415,7 @@ export class StreamManager extends EventDispatcher {
      * @hidden
      */
     initializeVideoProperties(video: HTMLVideoElement): void {
-        if (!(this.stream.isLocal() && this.stream.displayMyRemote())) {
+        if (!(!this.remote && this.stream.displayMyRemote())) {
             // Avoid setting the MediaStream into the srcObject if remote subscription before publishing
             if (video.srcObject !== this.stream.getMediaStream()) {
                 // If srcObject already set don't do it again
@@ -566,6 +567,10 @@ export class StreamManager extends EventDispatcher {
     }
 
     private activateStreamPlayingEventExceptionTimeout() {
+        if (!this.remote) {
+            // ExceptionEvent NO_STREAM_PLAYING_EVENT is only for subscribers
+            return;
+        }
         if (this.streamPlayingEventExceptionTimeout != null) {
             // The timeout is already activated
             return;
@@ -575,7 +580,7 @@ export class StreamManager extends EventDispatcher {
         this.streamPlayingEventExceptionTimeout = setTimeout(() => {
             const msg = 'StreamManager of Stream ' + this.stream.streamId + ' (' + (this.remote ? 'Subscriber' : 'Publisher') + ') did not trigger "streamPlaying" event in ' + msTimeout + ' ms';
             logger.warn(msg);
-            this.stream.session.emitEvent('exception', [new ExceptionEvent(this.stream.session, ExceptionEventName.NO_STREAM_PLAYING_EVENT, this, msg)]);
+            this.stream.session.emitEvent('exception', [new ExceptionEvent(this.stream.session, ExceptionEventName.NO_STREAM_PLAYING_EVENT, (<any>this) as Subscriber, msg)]);
             delete this.streamPlayingEventExceptionTimeout;
         }, msTimeout);
     }
