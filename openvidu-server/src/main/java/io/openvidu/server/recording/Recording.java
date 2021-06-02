@@ -78,12 +78,18 @@ public class Recording {
 		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(json.get("name").getAsString())
 				.outputMode(outputMode).hasAudio(hasAudio).hasVideo(hasVideo);
 		if (RecordingUtils.IS_COMPOSED(outputMode) && hasVideo) {
-			builder.resolution(json.get("resolution").getAsString());
-			builder.frameRate(json.get("frameRate").getAsInt());
-			RecordingLayout recordingLayout = RecordingLayout.valueOf(json.get("recordingLayout").getAsString());
-			builder.recordingLayout(recordingLayout);
-			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {
-				builder.customLayout(json.get("customLayout").getAsString());
+			if (json.has("resolution")) {
+				builder.resolution(json.get("resolution").getAsString());
+			}
+			if (json.has("frameRate")) {
+				builder.frameRate(json.get("frameRate").getAsInt());
+			}
+			if (json.has("recordingLayout")) {
+				RecordingLayout recordingLayout = RecordingLayout.valueOf(json.get("recordingLayout").getAsString());
+				builder.recordingLayout(recordingLayout);
+				if (RecordingLayout.CUSTOM.equals(recordingLayout) && json.has("customLayout")) {
+					builder.customLayout(json.get("customLayout").getAsString());
+				}
 			}
 		}
 		this.recordingProperties = builder.build();
