@@ -67,6 +67,7 @@ import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.FinalUser;
 import io.openvidu.server.core.IdentifierPrefixes;
 import io.openvidu.server.core.MediaOptions;
+import io.openvidu.server.core.MediaServer;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
@@ -113,9 +114,13 @@ public class KurentoSessionManager extends SessionManager {
 
 				if (sessionNotActive == null && this.isInsecureParticipant(participant.getParticipantPrivateId())) {
 					// Insecure user directly call joinRoom RPC method, without REST API use
-					sessionNotActive = new Session(sessionId, new SessionProperties.Builder()
-							.mediaMode(MediaMode.ROUTED).recordingMode(RecordingMode.ALWAYS).build(), openviduConfig,
-							recordingManager);
+					SessionProperties.Builder builder = new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
+							.recordingMode(RecordingMode.ALWAYS);
+					// forcedVideoCodec to NONE if mediasoup
+					if (MediaServer.mediasoup.equals(openviduConfig.getMediaServer())) {
+						builder.forcedVideoCodec(VideoCodec.NONE);
+					}
+					sessionNotActive = new Session(sessionId, builder.build(), openviduConfig, recordingManager);
 				}
 
 				try {

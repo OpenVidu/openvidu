@@ -65,6 +65,7 @@ import io.openvidu.java.client.VideoCodec;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.IdentifierPrefixes;
+import io.openvidu.server.core.MediaServer;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
@@ -756,10 +757,15 @@ public class SessionRestController {
 					}
 					builder = builder.customSessionId(customSessionId);
 				}
-				if (forcedVideoCodec != null) {
-					builder = builder.forcedVideoCodec(VideoCodec.valueOf(forcedVideoCodec));
+				// forcedVideoCodec to NONE if mediasoup
+				if (MediaServer.mediasoup.equals(openviduConfig.getMediaServer())) {
+					builder = builder.forcedVideoCodec(VideoCodec.NONE);
 				} else {
-					builder = builder.forcedVideoCodec(openviduConfig.getOpenviduForcedCodec());
+					if (forcedVideoCodec != null) {
+						builder = builder.forcedVideoCodec(VideoCodec.valueOf(forcedVideoCodec));
+					} else {
+						builder = builder.forcedVideoCodec(openviduConfig.getOpenviduForcedCodec());
+					}
 				}
 				if (allowTranscoding != null) {
 					builder = builder.allowTranscoding(allowTranscoding);
