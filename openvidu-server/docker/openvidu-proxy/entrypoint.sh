@@ -47,6 +47,7 @@ CERTIFICATES_CONF="${CERTIFICATES_LIVE_FOLDER}/certificates.conf"
 [ -z "${PUBLIC_IP}" ] && export PUBLIC_IP=auto-ipv4
 [ -z "${ALLOWED_ACCESS_TO_DASHBOARD}" ] && export ALLOWED_ACCESS_TO_DASHBOARD=all
 [ -z "${ALLOWED_ACCESS_TO_RESTAPI}" ] && export ALLOWED_ACCESS_TO_RESTAPI=all
+[ -z "${XFRAME_SAMEORIGIN}" ] && export XFRAME_SAMEORIGIN=false
 
 # Show input enviroment variables
 printf "\n  ======================================="
@@ -226,6 +227,12 @@ if [[ "${WITH_APP}" == "true" ]]; then
 elif [[ "${WITH_APP}" == "false" ]]; then
   sed -i '/{app_upstream}/d' /etc/nginx/conf.d/*
   sed -e '/{app_config}/{r default_nginx_conf/global/app_config_default.conf' -e 'd}' -i /etc/nginx/conf.d/*
+fi
+
+if [[ "${XFRAME_SAMEORIGIN}" == "true" ]]; then
+  sed -e '/{xframe_options}/{r default_nginx_conf/global/xframe_sameorigin.conf' -e 'd}' -i /etc/nginx/conf.d/*
+elif [[ "${XFRAME_SAMEORIGIN}" == "false" ]]; then
+  sed -i '/{xframe_options}/d' /etc/nginx/conf.d/*
 fi
 
 if [[ "${SUPPORT_DEPRECATED_API}" == "true" ]]; then
