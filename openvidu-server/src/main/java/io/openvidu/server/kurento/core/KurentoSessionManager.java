@@ -777,7 +777,6 @@ public class KurentoSessionManager extends SessionManager {
 		log.info("No session '{}' exists yet. Created one on KMS '{}' with ip '{}'", session.getSessionId(),
 				kms.getId(), kms.getIp());
 
-		sessionEventsHandler.onSessionCreated(session);
 		return session;
 	}
 

@@ -121,7 +121,7 @@ public class SessionRestController {
 		}
 
 		Session sessionNotActive = sessionManager.storeSessionNotActive(sessionId, sessionProperties);
-		log.info("New session {} initialized {}", sessionId, this.sessionManager.getSessionsWithNotActive().stream()
+		log.info("New session {} created {}", sessionId, this.sessionManager.getSessionsWithNotActive().stream()
 				.map(Session::getSessionId).collect(Collectors.toList()).toString());
 
 		return new ResponseEntity<>(sessionNotActive.toJson(false, false).toString(), RestUtils.getResponseHeaders(),

@@ -303,8 +303,10 @@ public abstract class SessionManager {
 	}
 
 	public Session storeSessionNotActive(String sessionId, SessionProperties sessionProperties) {
-		Session sessionNotActive = new Session(sessionId, sessionProperties, openviduConfig, recordingManager);
-		return this.storeSessionNotActive(sessionNotActive);
+		Session sessionNotActive = this
+				.storeSessionNotActive(new Session(sessionId, sessionProperties, openviduConfig, recordingManager));
+		sessionEventsHandler.onSessionCreated(sessionNotActive);
+		return sessionNotActive;
 	}
 
 	public Session storeSessionNotActive(Session sessionNotActive) {
