@@ -478,11 +478,12 @@ export class Stream {
      * @hidden
      */
     disposeWebRtcPeer(): void {
-        const webrtcId: string = this.webRtcPeer.id;
+        let webrtcId;
         if (!!this.webRtcPeer) {
             this.webRtcPeer.dispose();
-            this.stopWebRtcStats();
+            webrtcId = this.webRtcPeer.id;
         }
+        this.stopWebRtcStats();
         logger.info((!!this.outboundStreamOpts ? 'Outbound ' : 'Inbound ') + "RTCPeerConnection with id [" + webrtcId + "] from 'Stream' with id [" + this.streamId + '] is now closed');
     }
 
