@@ -14,6 +14,7 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y \
     pulseaudio \
     xvfb \
     jq \
+    fonts-noto \
   && rm -rf /var/lib/apt/lists/*
 
 # Install chrome
