@@ -14,7 +14,8 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y \
     pulseaudio \
     xvfb \
     jq \
-    fonts-droid-fallback \
+    # Language Fonts
+    ttf-ancient-fonts fonts-beng fonts-wqy-zenhei fonts-indic \
   && rm -rf /var/lib/apt/lists/*
 
 # Install chrome
