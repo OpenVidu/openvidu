@@ -97,7 +97,7 @@ export class WebRtcPeer {
         });
     }
 
-    get id(): string {
+    getId(): string {
         return this.configuration.id;
     }
 

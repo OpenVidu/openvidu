@@ -481,7 +481,7 @@ export class Stream {
         let webrtcId;
         if (!!this.webRtcPeer) {
             this.webRtcPeer.dispose();
-            webrtcId = this.webRtcPeer.id;
+            webrtcId = this.webRtcPeer.getId();
         }
         this.stopWebRtcStats();
         logger.info((!!this.outboundStreamOpts ? 'Outbound ' : 'Inbound ') + "RTCPeerConnection with id [" + webrtcId + "] from 'Stream' with id [" + this.streamId + '] is now closed');
