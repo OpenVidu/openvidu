@@ -4,7 +4,10 @@ MAINTAINER info@openvidu.io
 ARG CHROME_VERSION
 
 # Install Chrome
-RUN apt-get update && apt-get -y upgrade && apt-get install -y wget sudo fonts-noto
+RUN apt-get update && apt-get -y upgrade && apt-get install -y wget sudo \
+  # Language Fonts
+  ttf-ancient-fonts fonts-beng fonts-wqy-zenhei fonts-indic
+
 RUN wget http://dl.google.com/linux/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb \
   && apt install -y ./google-chrome-stable_${CHROME_VERSION}_amd64.deb \
   && rm google-chrome-stable_${CHROME_VERSION}_amd64.deb \
