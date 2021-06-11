@@ -6,7 +6,7 @@
 #
 #    This docker-compose file coordinates all services of OpenVidu CE Platform.
 #
-#    Openvidu Version: 2.17.0
+#    Openvidu Version: 2.18.0
 #
 #    Installation Mode: On Premises
 #
@@ -16,7 +16,7 @@ version: '3.1'
 
 services:
     media-node-controller:
-        image: openvidu/media-node-controller:4.0.0-dev1
+        image: openvidu/media-node-controller:4.0.0
         restart: always
         ulimits:
             core: -1

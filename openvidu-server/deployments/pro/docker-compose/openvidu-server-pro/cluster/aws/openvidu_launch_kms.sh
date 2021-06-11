@@ -23,7 +23,7 @@ exit_on_error () {
 
     "UnauthorizedOperation")
       MSG_COD=$(cat ${ERROUTPUT} | awk -F: '{ print $3 }')
-      MSG_DEC=$(docker run --rm amazon/aws-cli:${AWS_CLI_DOCKER_TAG} sts decode-authorization-message --encoded-message ${MSG_COD})
+      MSG_DEC=$(docker run --rm amazon/aws-cli:"${AWS_CLI_DOCKER_TAG}" sts decode-authorization-message --encoded-message "${MSG_COD}")
 
       echo -e "Unauthorized " $(cat ${MSG_DEC}) >&2
       exit 1
@@ -43,21 +43,21 @@ if [[ -n "${CUSTOM_VOLUME_SIZE}" ]]; then
   AWS_VOLUME_SIZE="${CUSTOM_VOLUME_SIZE}"
 fi
 
-docker run --rm amazon/aws-cli:${AWS_CLI_DOCKER_TAG} ec2 run-instances \
-    --image-id ${AWS_IMAGE_ID} --count 1 \
-    --instance-type ${AWS_INSTANCE_TYPE} \
-    --key-name ${AWS_KEY_NAME} \
-    --subnet-id ${AWS_SUBNET_ID} \
+docker run --rm amazon/aws-cli:"${AWS_CLI_DOCKER_TAG}" ec2 run-instances \
+    --image-id "${AWS_IMAGE_ID}" --count 1 \
+    --instance-type "${AWS_INSTANCE_TYPE}" \
+    --key-name "${AWS_KEY_NAME}" \
+    --subnet-id "${AWS_SUBNET_ID}" \
     --tag-specifications "ResourceType=instance,Tags=[{Key='Name',Value='Kurento Media Server'},{Key='ov-cluster-member',Value='kms'},{Key='ov-stack-name',Value='${AWS_STACK_NAME}'},{Key='ov-stack-region',Value='${AWS_DEFAULT_REGION}'}]" \
     --iam-instance-profile Name="OpenViduInstanceProfile-${AWS_STACK_NAME}-${AWS_DEFAULT_REGION}" \
     --block-device-mappings "DeviceName=/dev/sda1,Ebs={DeleteOnTermination=True,VolumeType='gp2',VolumeSize='${AWS_VOLUME_SIZE}'}" \
-    --security-group-ids ${AWS_SECURITY_GROUP} > ${OUTPUT} 2> ${ERROUTPUT}
+    --security-group-ids "${AWS_SECURITY_GROUP}" > "${OUTPUT}" 2> "${ERROUTPUT}"
 
-docker run --rm amazon/aws-cli:${AWS_CLI_DOCKER_TAG} ec2 wait instance-running --instance-ids $(cat ${OUTPUT} | jq --raw-output ' .Instances[] | .InstanceId')
+docker run --rm amazon/aws-cli:"${AWS_CLI_DOCKER_TAG}" ec2 wait instance-running --instance-ids $(cat ${OUTPUT} | jq --raw-output ' .Instances[] | .InstanceId')
 
 # Generating the output
-KMS_IP=$(cat ${OUTPUT} | jq --raw-output ' .Instances[] | .NetworkInterfaces[0] | .PrivateIpAddress')
-KMS_ID=$(cat ${OUTPUT} | jq --raw-output ' .Instances[] | .InstanceId')
+KMS_IP=$(cat "${OUTPUT}" | jq --raw-output ' .Instances[] | .NetworkInterfaces[0] | .PrivateIpAddress')
+KMS_ID=$(cat "${OUTPUT}" | jq --raw-output ' .Instances[] | .InstanceId')
 
 jq -n \
   --arg id "${KMS_ID}" \

@@ -206,10 +206,10 @@ export class OpenVidu {
             // The request was made but no response was received
             // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
             // http.ClientRequest in node.js
-            console.error(error.request);
+            reject(error.request);
           } else {
             // Something happened in setting up the request that triggered an Error
-            console.error('Error', error.message);
+            reject(error.message);
           }
         });
     });
@@ -259,10 +259,10 @@ export class OpenVidu {
           } else if (error.request) {
             // The request was made but no response was received `error.request` is an instance of XMLHttpRequest
             // in the browser and an instance of http.ClientRequest in node.js
-            console.error(error.request);
+            reject(new Error(error.request));
           } else {
             // Something happened in setting up the request that triggered an Error
-            console.error('Error', error.message);
+            reject(new Error(error.message));
           }
         });
     });
@@ -304,10 +304,10 @@ export class OpenVidu {
             // The request was made but no response was received
             // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
             // http.ClientRequest in node.js
-            console.error(error.request);
+            reject(new Error(error.request));
           } else {
             // Something happened in setting up the request that triggered an Error
-            console.error('Error', error.message);
+            reject(new Error(error.message));
           }
         });
     });
@@ -352,10 +352,10 @@ export class OpenVidu {
             // The request was made but no response was received
             // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
             // http.ClientRequest in node.js
-            console.error(error.request);
+            reject(new Error(error.request));
           } else {
             // Something happened in setting up the request that triggered an Error
-            console.error('Error', error.message);
+            reject(new Error(error.message));
           }
         });
     });
@@ -398,10 +398,10 @@ export class OpenVidu {
             // The request was made but no response was received
             // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
             // http.ClientRequest in node.js
-            console.error(error.request);
+            reject(new Error(error.request));
           } else {
             // Something happened in setting up the request that triggered an Error
-            console.error('Error', error.message);
+            reject(new Error(error.message));
           }
         });
     });
@@ -479,11 +479,9 @@ export class OpenVidu {
             // The request was made but no response was received
             // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
             // http.ClientRequest in node.js
-            console.error(error.request);
             reject(error);
           } else {
             // Something happened in setting up the request that triggered an Error
-            console.error('Error', error.message);
             reject(new Error(error.message));
           }
         });
@@ -649,10 +647,10 @@ export class OpenVidu {
             // The request was made but no response was received
             // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
             // http.ClientRequest in node.js
-            console.error(error.request);
+            reject(new Error(error.request));
           } else {
             // Something happened in setting up the request that triggered an Error
-            console.error('Error', error.message);
+            reject(new Error(error.message));
           }
         });
     });
@@ -668,7 +666,6 @@ export class OpenVidu {
     try {
       url = new URL(this.hostname);
     } catch (error) {
-      console.error('URL format incorrect', error);
       throw new Error('URL format incorrect: ' + error);
     }
     this.host = url.protocol + '//' + url.host;

@@ -344,6 +344,13 @@ public class OpenViduEventManager {
 		return dimension;
 	}
 
+	public void stopVideoTracksOfVideoElement(WebElement videoElement, String parentSelector) {
+		String script = "return (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
+				+ "#" + videoElement.getAttribute("id")
+				+ "').srcObject.getVideoTracks().forEach(track => track.stop()))";
+		((JavascriptExecutor) driver).executeScript(script);
+	}
+
 	private boolean hasAudioTracks(WebElement videoElement, String parentSelector) {
 		String script = "return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
 				+ "#" + videoElement.getAttribute("id") + "').srcObject.getAudioTracks().length > 0)"

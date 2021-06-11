@@ -39,6 +39,8 @@ export class SessionDisconnectedEvent extends Event {
      *      Session object will always have previously dispatched a `reconnecting` event. If the reconnection process succeeds,
      *      Session object will dispatch a `reconnected` event. If it fails, Session object will dispatch a SessionDisconnectedEvent
      *      with reason "networkDisconnect"
+     * - "nodeCrashed": a node has crashed in the server side. You can use this reason to ask your application's backend to reconnect 
+     * to a new session to replace the crashed one
      */
     reason: string;
 

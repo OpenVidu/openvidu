@@ -58,31 +58,24 @@ public class SubscriberEndpoint extends MediaEndpoint {
 		offerOptions.setOfferToReceiveVideo(publisher.getMediaOptions().hasVideo());
 		String sdpOffer = generateOffer(offerOptions);
 
+		gatherCandidates();
 		return sdpOffer;
 	}
 
-	public synchronized String subscribe(String sdpAnswer, PublisherEndpoint publisher) {
-		// TODO: REMOVE ON 2.18.0
-		if (this.createdAt == null) {
-			// 2.17.0
+	public synchronized String subscribe(String sdpString, PublisherEndpoint publisher) {
+		if (this.publisherStreamId == null) {
+			// Client initiated negotiation
 			registerOnIceCandidateEventListener(publisher.getOwner().getParticipantPublicId());
 			this.createdAt = System.currentTimeMillis();
-			String realSdpAnswer = processOffer(sdpAnswer);
+			String realSdpAnswer = processOffer(sdpString);
 			gatherCandidates();
 			publisher.connect(this.getEndpoint(), false);
 			this.publisherStreamId = publisher.getStreamId();
 			return realSdpAnswer;
 		} else {
-			// 2.18.0
-			processAnswer(sdpAnswer);
-			gatherCandidates();
-			return null;
+			// Server initiated negotiation
+			return processAnswer(sdpString);
 		}
-		// END TODO
-
-		// TODO: UNCOMMENT ON 2.18.0
-		// processAnswer(sdpAnswer);
-		// END TODO
 	}
 
 	@Override

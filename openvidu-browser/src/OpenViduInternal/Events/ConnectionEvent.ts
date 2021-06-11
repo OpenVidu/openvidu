@@ -39,6 +39,7 @@ export class ConnectionEvent extends Event {
      * - "forceDisconnectByServer": the remote user has been evicted from the Session by the application
      * - "sessionClosedByServer": the Session has been closed by the application
      * - "networkDisconnect": the remote user network connection has dropped
+     * - "nodeCrashed": a node has crashed in the server side
      *
      * For `connectionCreated` event an empty string
      */

@@ -68,7 +68,7 @@ public class SDPMunging {
 	 * ordering of formats. Browsers (tested with Chrome 84) honor this change and
 	 * use the first codec provided in the answer, so this operation actually works.
 	 */
-	public String setCodecPreference(VideoCodec codec, String sdp, boolean applyHeavyMunging) throws OpenViduException {
+	public String setCodecPreference(VideoCodec codec, String sdp) throws OpenViduException {
 		String codecStr = codec.name();
 		log.info("[setCodecPreference] codec: {}", codecStr);
 
@@ -156,9 +156,8 @@ public class SDPMunging {
 			lines[sl] = newLine.toString().trim();
 		}
 
-		if (applyHeavyMunging) {
-			lines = cleanLinesWithRemovedCodecs(unusedCodecPts, lines);
-		}
+		lines = cleanLinesWithRemovedCodecs(unusedCodecPts, lines);
+
 		return String.join("\r\n", lines) + "\r\n";
 	}
 
@@ -166,8 +165,7 @@ public class SDPMunging {
 	 * Return a SDP modified to force a specific codec
 	 */
 	public String forceCodec(String sdp, Participant participant, boolean isPublisher, boolean isReconnecting,
-			boolean isTranscodingAllowed, VideoCodec forcedVideoCodec, boolean applyHeavyMunging)
-			throws OpenViduException {
+			boolean isTranscodingAllowed, VideoCodec forcedVideoCodec) throws OpenViduException {
 		try {
 			if (supportedVideoCodecs.contains(forcedVideoCodec)) {
 				String mungedSdpOffer;
@@ -178,7 +176,7 @@ public class SDPMunging {
 						participant.getParticipantPublicId(), participant.getSessionId(), isPublisher, !isPublisher,
 						isReconnecting, sdp);
 
-				mungedSdpOffer = this.setCodecPreference(forcedVideoCodec, sdp, applyHeavyMunging);
+				mungedSdpOffer = this.setCodecPreference(forcedVideoCodec, sdp);
 
 				log.debug(
 						"PARTICIPANT '{}' in Session '{}'. Is Publisher: '{}'. Is Subscriber: '{}'."

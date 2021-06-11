@@ -64,6 +64,7 @@ import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
+import io.openvidu.server.core.MediaServer;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionEventsHandler;
@@ -768,6 +769,8 @@ public class RecordingManager {
 		// Check Kurento Media Server write permissions in recording path
 		if (this.kmsManager.getKmss().isEmpty()) {
 			log.warn("No KMSs were defined in KMS_URIS array. Recording path check aborted");
+		} else if (MediaServer.mediasoup.equals(openviduConfig.getMediaServer())) {
+			log.warn("Using mediasoup. Recording path check aborted");
 		} else {
 			Kms kms = null;
 			try {

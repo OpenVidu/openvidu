@@ -139,6 +139,8 @@ public class ProtocolElements {
 	// ENDTODO
 
 	public static final String VIDEODATA_METHOD = "videoData";
+	
+	public static final String ECHO_METHOD = "echo";
 
 	// ---------------------------- SERVER RESPONSES & EVENTS -----------------
 
@@ -150,6 +152,7 @@ public class ProtocolElements {
 	public static final String PARTICIPANTJOINED_VALUE_PARAM = "value";
 	public static final String PARTICIPANTJOINED_SESSION_PARAM = "session";
 	public static final String PARTICIPANTJOINED_VERSION_PARAM = "version";
+	public static final String PARTICIPANTJOINED_MEDIASERVER_PARAM = "mediaServer";
 	public static final String PARTICIPANTJOINED_RECORD_PARAM = "record";
 	public static final String PARTICIPANTJOINED_ROLE_PARAM = "role";
 	public static final String PARTICIPANTJOINED_COTURNIP_PARAM = "coturnIp";

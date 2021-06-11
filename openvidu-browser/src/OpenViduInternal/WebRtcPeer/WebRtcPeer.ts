@@ -37,18 +37,19 @@ export interface WebRtcPeerConfiguration {
         video: boolean
     };
     simulcast: boolean;
-    onicecandidate: (event: RTCIceCandidate) => void;
-    onexception: (exceptionName: ExceptionEventName, message: string, data?: any) => void;
-    iceServers: RTCIceServer[] | undefined;
+    onIceCandidate: (event: RTCIceCandidate) => void;
+    onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => void;
+
+    iceServers?: RTCIceServer[];
     mediaStream?: MediaStream | null;
     mode?: 'sendonly' | 'recvonly' | 'sendrecv';
     id?: string;
 }
 
 export class WebRtcPeer {
-    public pc: RTCPeerConnection;
-    public remoteCandidatesQueue: RTCIceCandidate[] = [];
-    public localCandidatesQueue: RTCIceCandidate[] = [];
+    pc: RTCPeerConnection;
+    remoteCandidatesQueue: RTCIceCandidate[] = [];
+    localCandidatesQueue: RTCIceCandidate[] = [];
 
     // Same as WebRtcPeerConfiguration but without optional fields.
     protected configuration: Required<WebRtcPeerConfiguration>;
@@ -61,10 +62,15 @@ export class WebRtcPeer {
 
         this.configuration = {
             ...configuration,
-            iceServers: (!!configuration.iceServers && configuration.iceServers.length > 0) ? configuration.iceServers : freeice(),
-            mediaStream: !!configuration.mediaStream
-                ? configuration.mediaStream
-                : null,
+            iceServers:
+                !!configuration.iceServers &&
+                configuration.iceServers.length > 0
+                    ? configuration.iceServers
+                    : freeice(),
+            mediaStream:
+                configuration.mediaStream !== undefined
+                    ? configuration.mediaStream
+                    : null,
             mode: !!configuration.mode ? configuration.mode : "sendrecv",
             id: !!configuration.id ? configuration.id : this.generateUniqueId(),
         };
@@ -74,7 +80,7 @@ export class WebRtcPeer {
         this.pc.addEventListener('icecandidate', (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate != null) {
                 const candidate: RTCIceCandidate = event.candidate;
-                this.configuration.onicecandidate(candidate);
+                this.configuration.onIceCandidate(candidate);
                 if (candidate.candidate !== '') {
                     this.localCandidatesQueue.push(<RTCIceCandidate>{ candidate: candidate.candidate });
                 }
@@ -89,6 +95,10 @@ export class WebRtcPeer {
                 }
             }
         });
+    }
+
+    get id(): string {
+        return this.configuration.id;
     }
 
     /**
@@ -310,12 +320,12 @@ export class WebRtcPeer {
                     // Possible network disconnection
                     const msg1 = 'IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection';
                     logger.warn(msg1);
-                    this.configuration.onexception(ExceptionEventName.ICE_CONNECTION_DISCONNECTED, msg1);
+                    this.configuration.onIceConnectionStateException(ExceptionEventName.ICE_CONNECTION_DISCONNECTED, msg1);
                     break;
                 case 'failed':
                     const msg2 = 'IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') to "failed"';
                     logger.error(msg2);
-                    this.configuration.onexception(ExceptionEventName.ICE_CONNECTION_FAILED, msg2);
+                    this.configuration.onIceConnectionStateException(ExceptionEventName.ICE_CONNECTION_FAILED, msg2);
                     break;
                 case 'closed':
                     logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "closed"');

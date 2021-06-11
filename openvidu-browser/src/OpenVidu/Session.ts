@@ -197,7 +197,7 @@ export class Session extends EventDispatcher {
      * #### Events dispatched
      *
      * The [[Session]] object of the local participant will dispatch a `sessionDisconnected` event.
-     * This event will automatically unsubscribe the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
+     * This event will automatically unsubscribe the leaving participant from every Subscriber object of the session (this includes closing the RTCPeerConnection and disposing all MediaStreamTracks)
      * and also deletes any HTML video element associated to each Subscriber (only those [created by OpenVidu Browser](/en/stable/cheatsheet/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, each Subscriber object will dispatch a `videoElementDestroyed` event.
      * Call `event.preventDefault()` upon event `sessionDisconnected` to avoid this behavior and take care of disposing and cleaning all the Subscriber objects yourself.
@@ -210,7 +210,7 @@ export class Session extends EventDispatcher {
      * or/and `Session.disconnect()` in the previous session). See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event if the disconnected participant was publishing.
-     * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
+     * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the RTCPeerConnection and disposing all MediaStreamTracks)
      * and also deletes any HTML video element associated to that Subscriber (only those [created by OpenVidu Browser](/en/stable/cheatsheet/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
      * Call `event.preventDefault()` upon event `streamDestroyed` to avoid this default behavior and take care of disposing and cleaning the Subscriber object yourself.
@@ -437,7 +437,7 @@ export class Session extends EventDispatcher {
      * Call `event.preventDefault()` upon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event.
-     * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and
+     * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the RTCPeerConnection and disposing all MediaStreamTracks) and
      * delete any HTML video element associated to it (only those [created by OpenVidu Browser](/en/stable/cheatsheet/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
      * Call `event.preventDefault()` upon event `streamDestroyed` to avoid this default behavior and take care of disposing and cleaning the Subscriber object on your own.
@@ -781,7 +781,7 @@ export class Session extends EventDispatcher {
     onParticipantLeft(msg): void {
 
         if (this.remoteConnections.size > 0) {
-            this.getRemoteConnection(msg.connectionId).then(connection => {
+            this.getRemoteConnection(msg.connectionId, 'onParticipantLeft').then(connection => {
                 if (!!connection.stream) {
                     const stream = connection.stream;
 
@@ -823,7 +823,7 @@ export class Session extends EventDispatcher {
         // Get the existing Connection created on 'onParticipantJoined' for
         // existing participants or create a new one for new participants
         let connection: Connection;
-        this.getRemoteConnection(response.id)
+        this.getRemoteConnection(response.id, 'onParticipantPublished')
 
             .then(con => {
                 // Update existing Connection
@@ -848,7 +848,7 @@ export class Session extends EventDispatcher {
             // Your stream has been forcedly unpublished from the session
             this.stopPublisherStream(msg.reason);
         } else {
-            this.getRemoteConnection(msg.connectionId)
+            this.getRemoteConnection(msg.connectionId, 'onParticipantUnpublished')
 
                 .then(connection => {
 
@@ -965,7 +965,7 @@ export class Session extends EventDispatcher {
             // Your stream has been forcedly changed (filter feature)
             callback(this.connection);
         } else {
-            this.getRemoteConnection(msg.connectionId)
+            this.getRemoteConnection(msg.connectionId, 'onStreamPropertyChanged')
                 .then(connection => {
                     callback(connection);
                 })
@@ -1411,7 +1411,7 @@ export class Session extends EventDispatcher {
         });
     }
 
-    private getRemoteConnection(connectionId: string): Promise<Connection> {
+    private getRemoteConnection(connectionId: string, operation: string): Promise<Connection> {
         return new Promise<Connection>((resolve, reject) => {
             const connection = this.remoteConnections.get(connectionId);
             if (!!connection) {
@@ -1419,9 +1419,8 @@ export class Session extends EventDispatcher {
                 resolve(connection);
             } else {
                 // Remote connection not found. Reject with OpenViduError
-                const errorMessage = 'Remote connection ' + connectionId + " unknown when 'onParticipantLeft'. " +
+                const errorMessage = 'Remote connection ' + connectionId + " unknown when '" + operation + "'. " +
                     'Existing remote connections: ' + JSON.stringify(this.remoteConnections.keys());
-
                 reject(new OpenViduError(OpenViduErrorName.GENERIC_ERROR, errorMessage));
             }
         });
@@ -1487,6 +1486,7 @@ export class Session extends EventDispatcher {
         }
         this.openvidu.role = opts.role;
         this.openvidu.finalUserId = opts.finalUserId;
+        this.openvidu.mediaServer = opts.mediaServer;
         this.capabilities = {
             subscribe: true,
             publish: this.openvidu.role !== 'SUBSCRIBER',

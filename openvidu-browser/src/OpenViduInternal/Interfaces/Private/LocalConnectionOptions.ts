@@ -31,4 +31,5 @@ export interface LocalConnectionOptions {
     turnUsername: string;
     turnCredential: string;
     version: string;
+    mediaServer: string;
 }

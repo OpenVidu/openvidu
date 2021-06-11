@@ -86,10 +86,6 @@ export class Publisher extends StreamManager {
      * @hidden
      */
     screenShareResizeInterval: NodeJS.Timer;
-    /**
-     * @hidden
-     */
-    IEAdapter: any;
 
     /**
      * @hidden

@@ -153,15 +153,18 @@ public class SessionEventsHandler {
 						ProtocolElements.PARTICIPANTJOINED_METHOD, notifParams);
 			}
 		}
+
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM, participant.getParticipantPublicId());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_FINALUSERID_PARAM, participant.getFinalUserId());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getActiveAt());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, participant.getFullMetadata());
 		result.add(ProtocolElements.PARTICIPANTJOINED_VALUE_PARAM, resultArray);
-
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_SESSION_PARAM, participant.getSessionId());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_VERSION_PARAM,
 				openviduBuildConfig.getOpenViduServerVersion());
+		result.addProperty(ProtocolElements.PARTICIPANTJOINED_MEDIASERVER_PARAM,
+				this.openviduConfig.getMediaServer().name());
+
 		if (participant.getToken() != null) {
 			result.addProperty(ProtocolElements.PARTICIPANTJOINED_RECORD_PARAM, participant.getToken().record());
 			if (participant.getToken().getRole() != null) {
@@ -636,6 +639,10 @@ public class SessionEventsHandler {
 				"Video data of participant {} was initialized. height:{}, width:{}, isVideoActive: {}, isAudioActive: {}",
 				participant.getParticipantPublicId(), height, width, videoActive, audioActive);
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
+	}
+
+	public void onEcho(String participantPrivateId, Integer transactionId) {
+		rpcNotificationService.sendResponse(participantPrivateId, transactionId, new JsonObject());
 	}
 
 	/**

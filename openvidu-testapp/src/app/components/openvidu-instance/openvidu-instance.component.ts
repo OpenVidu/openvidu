@@ -6,7 +6,7 @@ import {
 import {
   OpenVidu, Session, Subscriber, Publisher, Event, StreamEvent, ConnectionEvent,
   SessionDisconnectedEvent, SignalEvent, RecordingEvent,
-  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, ConnectionPropertyChangedEvent, OpenViduError, NetworkQualityLevelChangedEvent
+  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, ConnectionPropertyChangedEvent, OpenViduError, NetworkQualityLevelChangedEvent, ExceptionEvent
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,
@@ -138,7 +138,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     publisherStartSpeaking: false,
     publisherStopSpeaking: false,
     reconnecting: true,
-    reconnected: true
+    reconnected: true,
+    exception: true
   };
 
   // Session properties dialog
@@ -247,8 +248,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       signal: false,
       publisherStartSpeaking: true,
       publisherStopSpeaking: true,
-      reconnecting: true,
-      reconnected: true
+      reconnecting: false,
+      reconnected: false,
+      exception: false
     }, true);
 
     this.session.connect(token, this.clientData)
@@ -508,6 +510,15 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       }
     }
 
+    if (this.sessionEvents.exception !== oldValues.exception || firstTime) {
+      this.session.off('exception');
+      if (this.sessionEvents.exception) {
+        this.session.on('exception', (event: ExceptionEvent) => {
+          this.updateEventList('exception', event.name, event);
+        });
+      }
+    }
+
   }
 
   syncInitPublisher() {
@@ -665,7 +676,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       publisherStartSpeaking: this.sessionEvents.publisherStartSpeaking,
       publisherStopSpeaking: this.sessionEvents.publisherStopSpeaking,
       reconnecting: this.sessionEvents.reconnecting,
-      reconnected: this.sessionEvents.reconnected
+      reconnected: this.sessionEvents.reconnected,
+      exception: this.sessionEvents.exception
     };
 
     const dialogRef = this.dialog.open(EventsDialogComponent, {
@@ -699,7 +711,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         publisherStartSpeaking: result.publisherStartSpeaking,
         publisherStopSpeaking: result.publisherStopSpeaking,
         reconnecting: result.reconnecting,
-        reconnected: result.reconnected
+        reconnected: result.reconnected,
+        exception: result.exception
       };
       document.getElementById('session-events-btn-' + this.index).classList.remove('cdk-program-focused');
     });

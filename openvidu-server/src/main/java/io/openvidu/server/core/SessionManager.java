@@ -116,15 +116,8 @@ public abstract class SessionManager {
 	public abstract void prepareSubscription(Participant participant, String senderPublicId, boolean reconnect,
 			Integer id);
 
-	// TODO: REMOVE ON 2.18.0
-	public abstract void subscribe(Participant participant, String senderName, String sdpAnwser, Integer transactionId,
-			boolean is2180);
-	// END TODO
-
-	// TODO: UNCOMMENT ON 2.18.0
-	// public abstract void subscribe(Participant participant, String senderName,
-	// String sdpAnwser, Integer transactionId);
-	// END TODO
+	public abstract void subscribe(Participant participant, String senderName, String sdpString, Integer transactionId,
+			boolean initByServer);
 
 	public abstract void unsubscribe(Participant participant, String senderName, Integer transactionId);
 
@@ -180,19 +173,21 @@ public abstract class SessionManager {
 	public abstract Participant publishIpcam(Session session, MediaOptions mediaOptions,
 			ConnectionProperties connectionProperties) throws Exception;
 
-	public abstract void reconnectStream(Participant participant, String streamId, String sdpOffer,
+	public abstract void reconnectPublisher(Participant participant, String streamId, String sdpOffer,
 			Integer transactionId);
 
-	// TODO: REMOVE ON 2.18.0
-	public abstract void reconnectStream2170(Participant participant, String streamId, String sdpOffer,
-			Integer transactionId);
-	// END TODO
+	public abstract void reconnectSubscriber(Participant participant, String streamId, String sdpString,
+			Integer transactionId, boolean initByServer);
 
 	public abstract String getParticipantPrivateIdFromStreamId(String sessionId, String streamId)
 			throws OpenViduException;
 
 	public abstract void onVideoData(Participant participant, Integer transactionId, Integer height, Integer width,
 			Boolean videoActive, Boolean audioActive);
+
+	public void onEcho(String participantPrivateId, Integer requestId) {
+		sessionEventsHandler.onEcho(participantPrivateId, requestId);
+	}
 
 	/**
 	 * Returns a Session given its id
@@ -308,8 +303,10 @@ public abstract class SessionManager {
 	}
 
 	public Session storeSessionNotActive(String sessionId, SessionProperties sessionProperties) {
-		Session sessionNotActive = new Session(sessionId, sessionProperties, openviduConfig, recordingManager);
-		return this.storeSessionNotActive(sessionNotActive);
+		Session sessionNotActive = this
+				.storeSessionNotActive(new Session(sessionId, sessionProperties, openviduConfig, recordingManager));
+		sessionEventsHandler.onSessionCreated(sessionNotActive);
+		return sessionNotActive;
 	}
 
 	public Session storeSessionNotActive(Session sessionNotActive) {

@@ -482,6 +482,38 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@DisplayName("ExceptionEvent test")
+	void exceptionEventTest() throws Exception {
+
+		setupBrowser("chrome");
+
+		log.info("ExceptionEvent test");
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .send-audio-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		// Stop video track
+		WebElement video = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video"));
+		this.user.getEventManager().stopVideoTracksOfVideoElement(video, "#openvidu-instance-0");
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publish-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("exception", 1);
+
+		Assert.assertTrue("Wrong ExceptionEvent type", user.getDriver()
+				.findElement(By.cssSelector("#openvidu-instance-1 .mat-expansion-panel:last-child .event-content"))
+				.getAttribute("textContent").equals("NO_STREAM_PLAYING_EVENT"));
+
+		gracefullyLeaveParticipants(2);
+	}
+
+	@Test
 	@DisplayName("Subscribe Unsubscribe")
 	void subscribeUnsubscribeTest() throws Exception {
 
