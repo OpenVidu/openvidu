@@ -118,52 +118,78 @@ export class WebRtcPeer {
 
     /**
      * Creates an SDP offer from the local RTCPeerConnection to send to the other peer
-     * Only if the negotiation was initiated by the this peer
+     * Only if the negotiation was initiated by this peer
      */
     createOffer(): Promise<RTCSessionDescriptionInit> {
-        const hasAudio = this.configuration.mediaConstraints.audio;
-        const hasVideo = this.configuration.mediaConstraints.video;
+        return new Promise((resolve, reject) => {
+            // TODO: Delete this conditional when all supported browsers are
+            // modern enough to implement the Transceiver methods.
+            if ("addTransceiver" in this.pc) {
+                logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is available; using it");
 
-        let promise: Promise<RTCSessionDescriptionInit>;
+                if (this.configuration.mode !== "recvonly") {
+                    // To send media, assume that all desired media tracks
+                    // have been already added by higher level code to our
+                    // MediaStream.
 
-        // TODO: Delete this conditional when all supported browsers are
-        // modern enough to implement the Transceiver methods.
-        if ("addTransceiver" in this.pc) {
-            logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is available; using it");
+                    if (!this.configuration.mediaStream) {
+                        reject(new Error(`${this.configuration.mode} direction requested, but no stream was configured to be sent`));
+                        return;
+                    }
 
-            if (this.configuration.mediaStream) {
-                for (const track of this.configuration.mediaStream.getTracks()) {
-                    this.pc.addTransceiver(track, {
-                        direction: this.configuration.mode,
-                        streams: [this.configuration.mediaStream],
-                        sendEncodings: [],
-                    });
+                    for (const track of this.configuration.mediaStream.getTracks()) {
+                        this.pc.addTransceiver(track, {
+                            direction: this.configuration.mode,
+                            streams: [this.configuration.mediaStream],
+                            sendEncodings: [],
+                        });
+                    }
+                } else {
+                    // To just receive media, create new recvonly transceivers.
+                    for (const kind of ["audio", "video"]) {
+                        // Check if the media kind should be used.
+                        if (!this.configuration.mediaConstraints[kind]) {
+                            continue;
+                        }
+
+                        this.configuration.mediaStream = new MediaStream();
+                        this.pc.addTransceiver(kind, {
+                            direction: this.configuration.mode,
+                            streams: [this.configuration.mediaStream],
+                        });
+                    }
                 }
+
+                this.pc
+                    .createOffer()
+                    .then((sdpOffer) => resolve(sdpOffer))
+                    .catch((error) => reject(error));
+            } else {
+                logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is NOT available; using LEGACY offerToReceive{Audio,Video}");
+
+                // DEPRECATED LEGACY METHOD: Old WebRTC versions don't implement
+                // Transceivers, and instead depend on the deprecated
+                // "offerToReceiveAudio" and "offerToReceiveVideo".
+
+                const hasAudio = this.configuration.mediaConstraints.audio;
+                const hasVideo = this.configuration.mediaConstraints.video;
+
+                const options: RTCOfferOptions = {
+                    offerToReceiveAudio:
+                        this.configuration.mode !== "sendonly" && hasAudio,
+                    offerToReceiveVideo:
+                        this.configuration.mode !== "sendonly" && hasVideo,
+                };
+
+                logger.debug("RTCPeerConnection.createOffer() options:", JSON.stringify(options));
+
+                this.pc
+                    // @ts-ignore - Compiler is too clever and thinks this branch will never execute.
+                    .createOffer(options)
+                    .then((sdpOffer) => resolve(sdpOffer))
+                    .catch((error) => reject(error));
             }
-
-            promise = this.pc.createOffer();
-        } else {
-            logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is NOT available; using LEGACY offerToReceive{Audio,Video}");
-
-            // DEPRECATED: LEGACY METHOD: Old WebRTC versions don't implement
-            // Transceivers, and instead depend on the deprecated
-            // "offerToReceiveAudio" and "offerToReceiveVideo".
-
-            const options: RTCOfferOptions = {
-                offerToReceiveAudio:
-                    this.configuration.mode !== "sendonly" && hasAudio,
-                offerToReceiveVideo:
-                    this.configuration.mode !== "sendonly" && hasVideo,
-            };
-
-            logger.debug("RTCPeerConnection.createOffer() options:", JSON.stringify(options));
-
-            // @ts-ignore: Compiler is too clever and thinks this branch
-            // will never execute.
-            promise = this.pc.createOffer(options);
-        }
-
-        return promise;
+        });
     }
 
     /**
@@ -171,32 +197,44 @@ export class WebRtcPeer {
      * Only if the negotiation was initiated by the other peer
      */
     createAnswer(): Promise<RTCSessionDescriptionInit> {
-        const hasAudio = this.configuration.mediaConstraints.audio;
-        const hasVideo = this.configuration.mediaConstraints.video;
+        return new Promise((resolve, reject) => {
+            // TODO: Delete this conditional when all supported browsers are
+            // modern enough to implement the Transceiver methods.
+            if ("getTransceivers" in this.pc) {
+                logger.debug("[createAnswer] Method RTCPeerConnection.getTransceivers() is available; using it");
 
-        let promise: Promise<RTCSessionDescriptionInit>;
+                // Ensure that the PeerConnection already contains one Transceiver
+                // for each kind of media.
+                // The Transceivers should have been already created internally by
+                // the PC itself, when `pc.setRemoteDescription(sdpOffer)` was called.
 
-        // TODO: Delete this conditional when all supported browsers are
-        // modern enough to implement the Transceiver methods.
-        if ("addTransceiver" in this.pc) {
-            logger.debug("[createAnswer] Method RTCPeerConnection.addTransceiver() is available; using it");
+                for (const kind of ["audio", "video"]) {
+                    // Check if the media kind should be used.
+                    if (!this.configuration.mediaConstraints[kind]) {
+                        continue;
+                    }
 
-            if (hasAudio) {
-                this.pc.addTransceiver("audio", {
-                    direction: this.configuration.mode,
-                });
+                    let tc = this.pc
+                        .getTransceivers()
+                        .find((tc) => tc.receiver.track.kind === kind);
+
+                    if (tc) {
+                        // Enforce our desired direction.
+                        tc.direction = this.configuration.mode;
+                    } else {
+                        reject(new Error(`${kind} requested, but no transceiver was created from remote description`));
+                    }
+                }
+
+                this.pc
+                    .createAnswer()
+                    .then((sdpAnswer) => resolve(sdpAnswer))
+                    .catch((error) => reject(error));
             }
-            if (hasVideo) {
-                this.pc.addTransceiver("video", {
-                    direction: this.configuration.mode,
-                });
-            }
-        }
 
-        // else, there is nothing to do; the legacy createAnswer() options do
-        // not offer any control over what tracks are included in the answer.
-
-        return this.pc.createAnswer();
+            // else, there is nothing to do; the legacy createAnswer() options do
+            // not offer any control over which tracks are included in the answer.
+        });
     }
 
     /**
