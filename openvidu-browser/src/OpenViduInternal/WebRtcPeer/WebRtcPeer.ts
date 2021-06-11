@@ -39,27 +39,43 @@ export interface WebRtcPeerConfiguration {
     simulcast: boolean;
     onIceCandidate: (event: RTCIceCandidate) => void;
     onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => void;
-    iceServers: RTCIceServer[] | undefined;
-    mediaStream?: MediaStream;
+
+    iceServers?: RTCIceServer[];
+    mediaStream?: MediaStream | null;
     mode?: 'sendonly' | 'recvonly' | 'sendrecv';
     id?: string;
 }
 
 export class WebRtcPeer {
-
     pc: RTCPeerConnection;
-    id: string;
     remoteCandidatesQueue: RTCIceCandidate[] = [];
     localCandidatesQueue: RTCIceCandidate[] = [];
 
-    iceCandidateList: RTCIceCandidate[] = [];
+    // Same as WebRtcPeerConfiguration but without optional fields.
+    protected configuration: Required<WebRtcPeerConfiguration>;
 
-    constructor(protected configuration: WebRtcPeerConfiguration) {
+    private iceCandidateList: RTCIceCandidate[] = [];
+    private candidategatheringdone = false;
+
+    constructor(configuration: WebRtcPeerConfiguration) {
         platform = PlatformUtils.getInstance();
-        this.configuration.iceServers = (!!this.configuration.iceServers && this.configuration.iceServers.length > 0) ? this.configuration.iceServers : freeice();
+
+        this.configuration = {
+            ...configuration,
+            iceServers:
+                !!configuration.iceServers &&
+                configuration.iceServers.length > 0
+                    ? configuration.iceServers
+                    : freeice(),
+            mediaStream:
+                configuration.mediaStream !== undefined
+                    ? configuration.mediaStream
+                    : null,
+            mode: !!configuration.mode ? configuration.mode : "sendrecv",
+            id: !!configuration.id ? configuration.id : this.generateUniqueId(),
+        };
 
         this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });
-        this.id = !!configuration.id ? configuration.id : this.generateUniqueId();
 
         this.pc.addEventListener('icecandidate', (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate != null) {
@@ -79,29 +95,10 @@ export class WebRtcPeer {
                 }
             }
         });
-
-        this.start();
     }
 
-    /**
-     * This function creates the RTCPeerConnection object taking into account the
-     * properties received in the constructor. It starts the SDP negotiation
-     * process: generates the SDP offer and invokes the onsdpoffer callback. This
-     * callback is expected to send the SDP offer, in order to obtain an SDP
-     * answer from another peer.
-     */
-    start(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (this.pc.signalingState === 'closed') {
-                reject('The peer connection object is in "closed" state. This is most likely due to an invocation of the dispose method before accepting in the dialogue');
-            }
-            if (!!this.configuration.mediaStream) {
-                for (const track of this.configuration.mediaStream.getTracks()) {
-                    this.pc.addTrack(track, this.configuration.mediaStream);
-                }
-                resolve();
-            }
-        });
+    getId(): string {
+        return this.configuration.id;
     }
 
     /**
@@ -121,61 +118,76 @@ export class WebRtcPeer {
 
     /**
      * Creates an SDP offer from the local RTCPeerConnection to send to the other peer
-     * Only if the negotiation was initiated by the this peer
+     * Only if the negotiation was initiated by this peer
      */
     createOffer(): Promise<RTCSessionDescriptionInit> {
         return new Promise((resolve, reject) => {
-            let offerAudio, offerVideo = true;
+            // TODO: Delete this conditional when all supported browsers are
+            // modern enough to implement the Transceiver methods.
+            if ("addTransceiver" in this.pc) {
+                logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is available; using it");
 
-            // Constraints must have both blocks
-            if (!!this.configuration.mediaConstraints) {
-                offerAudio = (typeof this.configuration.mediaConstraints.audio === 'boolean') ?
-                    this.configuration.mediaConstraints.audio : true;
-                offerVideo = (typeof this.configuration.mediaConstraints.video === 'boolean') ?
-                    this.configuration.mediaConstraints.video : true;
-            }
+                if (this.configuration.mode !== "recvonly") {
+                    // To send media, assume that all desired media tracks
+                    // have been already added by higher level code to our
+                    // MediaStream.
 
-            if (typeof this.pc['addTransceiver'] === 'function') {
+                    if (!this.configuration.mediaStream) {
+                        reject(new Error(`${this.configuration.mode} direction requested, but no stream was configured to be sent`));
+                        return;
+                    }
 
-                // SDP "Unified Plan" supported
+                    for (const track of this.configuration.mediaStream.getTracks()) {
+                        this.pc.addTransceiver(track, {
+                            direction: this.configuration.mode,
+                            streams: [this.configuration.mediaStream],
+                            sendEncodings: [],
+                        });
+                    }
+                } else {
+                    // To just receive media, create new recvonly transceivers.
+                    for (const kind of ["audio", "video"]) {
+                        // Check if the media kind should be used.
+                        if (!this.configuration.mediaConstraints[kind]) {
+                            continue;
+                        }
 
-                logger.debug('Unified Plan supported');
-
-                if (offerAudio) {
-                    this.pc.addTransceiver('audio', {
-                        direction: this.configuration.mode,
-                    });
+                        this.configuration.mediaStream = new MediaStream();
+                        this.pc.addTransceiver(kind, {
+                            direction: this.configuration.mode,
+                            streams: [this.configuration.mediaStream],
+                        });
+                    }
                 }
 
-                if (offerVideo) {
-                    this.pc.addTransceiver('video', {
-                        direction: this.configuration.mode,
-                    });
-                }
-
-                this.pc.createOffer()
-                    .then(offer => {
-                        logger.debug('Created SDP offer');
-                        resolve(offer);
-                    })
-                    .catch(error => reject(error));
+                this.pc
+                    .createOffer()
+                    .then((sdpOffer) => resolve(sdpOffer))
+                    .catch((error) => reject(error));
             } else {
+                logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is NOT available; using LEGACY offerToReceive{Audio,Video}");
 
-                // SDP legacy "Plan B" support
+                // DEPRECATED LEGACY METHOD: Old WebRTC versions don't implement
+                // Transceivers, and instead depend on the deprecated
+                // "offerToReceiveAudio" and "offerToReceiveVideo".
 
-                const constraints: RTCOfferOptions = {
-                    offerToReceiveAudio: (this.configuration.mode !== 'sendonly' && offerAudio),
-                    offerToReceiveVideo: (this.configuration.mode !== 'sendonly' && offerVideo)
+                const hasAudio = this.configuration.mediaConstraints.audio;
+                const hasVideo = this.configuration.mediaConstraints.video;
+
+                const options: RTCOfferOptions = {
+                    offerToReceiveAudio:
+                        this.configuration.mode !== "sendonly" && hasAudio,
+                    offerToReceiveVideo:
+                        this.configuration.mode !== "sendonly" && hasVideo,
                 };
 
-                logger.debug('Unified Plan not supported. Using Plan B. RTCPeerConnection constraints: ' + JSON.stringify(constraints));
+                logger.debug("RTCPeerConnection.createOffer() options:", JSON.stringify(options));
 
-                this.pc.createOffer(constraints)
-                    .then(offer => {
-                        logger.debug('Created SDP offer');
-                        resolve(offer);
-                    })
-                    .catch(error => reject(error));
+                this.pc
+                    // @ts-ignore - Compiler is too clever and thinks this branch will never execute.
+                    .createOffer(options)
+                    .then((sdpOffer) => resolve(sdpOffer))
+                    .catch((error) => reject(error));
             }
         });
     }
@@ -186,22 +198,42 @@ export class WebRtcPeer {
      */
     createAnswer(): Promise<RTCSessionDescriptionInit> {
         return new Promise((resolve, reject) => {
-            let offerAudio, offerVideo = true;
-            if (!!this.configuration.mediaConstraints) {
-                offerAudio = (typeof this.configuration.mediaConstraints.audio === 'boolean') ?
-                    this.configuration.mediaConstraints.audio : true;
-                offerVideo = (typeof this.configuration.mediaConstraints.video === 'boolean') ?
-                    this.configuration.mediaConstraints.video : true;
+            // TODO: Delete this conditional when all supported browsers are
+            // modern enough to implement the Transceiver methods.
+            if ("getTransceivers" in this.pc) {
+                logger.debug("[createAnswer] Method RTCPeerConnection.getTransceivers() is available; using it");
+
+                // Ensure that the PeerConnection already contains one Transceiver
+                // for each kind of media.
+                // The Transceivers should have been already created internally by
+                // the PC itself, when `pc.setRemoteDescription(sdpOffer)` was called.
+
+                for (const kind of ["audio", "video"]) {
+                    // Check if the media kind should be used.
+                    if (!this.configuration.mediaConstraints[kind]) {
+                        continue;
+                    }
+
+                    let tc = this.pc
+                        .getTransceivers()
+                        .find((tc) => tc.receiver.track.kind === kind);
+
+                    if (tc) {
+                        // Enforce our desired direction.
+                        tc.direction = this.configuration.mode;
+                    } else {
+                        reject(new Error(`${kind} requested, but no transceiver was created from remote description`));
+                    }
+                }
+
+                this.pc
+                    .createAnswer()
+                    .then((sdpAnswer) => resolve(sdpAnswer))
+                    .catch((error) => reject(error));
             }
-            const constraints: RTCOfferOptions = {
-                offerToReceiveAudio: offerAudio,
-                offerToReceiveVideo: offerVideo
-            };
-            this.pc.createAnswer(constraints).then(sdpAnswer => {
-                resolve(sdpAnswer);
-            }).catch(error => {
-                reject(error);
-            });
+
+            // else, there is nothing to do; the legacy createAnswer() options do
+            // not offer any control over which tracks are included in the answer.
         });
     }
 
@@ -324,29 +356,29 @@ export class WebRtcPeer {
             switch (iceConnectionState) {
                 case 'disconnected':
                     // Possible network disconnection
-                    const msg1 = 'IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection';
+                    const msg1 = 'IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection';
                     logger.warn(msg1);
                     this.configuration.onIceConnectionStateException(ExceptionEventName.ICE_CONNECTION_DISCONNECTED, msg1);
                     break;
                 case 'failed':
-                    const msg2 = 'IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') to "failed"';
+                    const msg2 = 'IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') to "failed"';
                     logger.error(msg2);
                     this.configuration.onIceConnectionStateException(ExceptionEventName.ICE_CONNECTION_FAILED, msg2);
                     break;
                 case 'closed':
-                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "closed"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "closed"');
                     break;
                 case 'new':
-                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "new"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "new"');
                     break;
                 case 'checking':
-                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "checking"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "checking"');
                     break;
                 case 'connected':
-                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "connected"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "connected"');
                     break;
                 case 'completed':
-                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "completed"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "completed"');
                     break;
             }
         });

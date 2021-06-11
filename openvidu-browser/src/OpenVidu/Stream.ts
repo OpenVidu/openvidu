@@ -481,7 +481,7 @@ export class Stream {
         let webrtcId;
         if (!!this.webRtcPeer) {
             this.webRtcPeer.dispose();
-            webrtcId = this.webRtcPeer.id;
+            webrtcId = this.webRtcPeer.getId();
         }
         this.stopWebRtcStats();
         logger.info((!!this.outboundStreamOpts ? 'Outbound ' : 'Inbound ') + "RTCPeerConnection with id [" + webrtcId + "] from 'Stream' with id [" + this.streamId + '] is now closed');
@@ -857,20 +857,6 @@ export class Stream {
                 reject(error);
             }
 
-            const userMediaConstraints = {
-                audio: this.isSendAudio(),
-                video: this.isSendVideo()
-            };
-
-            const options: WebRtcPeerConfiguration = {
-                mediaStream: this.mediaStream,
-                mediaConstraints: userMediaConstraints,
-                onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
-                onIceConnectionStateException: this.onIceConnectionStateExceptionHandler.bind(this),
-                iceServers: this.getIceServersConf(),
-                simulcast: false
-            };
-
             const successOfferCallback = (sdpOfferParam) => {
                 logger.debug('Sending SDP offer to publish as '
                     + this.streamId, sdpOfferParam);
@@ -936,13 +922,25 @@ export class Stream {
                 });
             };
 
+            const config: WebRtcPeerConfiguration = {
+                mediaConstraints: {
+                    audio: this.hasAudio,
+                    video: this.hasVideo,
+                },
+                simulcast: false,
+                onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
+                onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
+                iceServers: this.getIceServersConf(),
+                mediaStream: this.mediaStream,
+            };
+
             if (reconnect) {
                 this.disposeWebRtcPeer();
             }
             if (this.displayMyRemote()) {
-                this.webRtcPeer = new WebRtcPeerSendrecv(options);
+                this.webRtcPeer = new WebRtcPeerSendrecv(config);
             } else {
-                this.webRtcPeer = new WebRtcPeerSendonly(options);
+                this.webRtcPeer = new WebRtcPeerSendonly(config);
             }
             this.webRtcPeer.addIceConnectionStateChangeListener('publisher of ' + this.connection.connectionId);
             this.webRtcPeer.createOffer().then(sdpOffer => {
@@ -1055,19 +1053,7 @@ export class Stream {
     completeWebRtcPeerReceive(reconnect: boolean, sdpOfferByServer?: string): Promise<any> {
         return new Promise((resolve, reject) => {
 
-            const offerConstraints = {
-                audio: this.inboundStreamOpts.hasAudio,
-                video: this.inboundStreamOpts.hasVideo
-            };
-            logger.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer",
-                offerConstraints);
-            const options = {
-                mediaConstraints: offerConstraints,
-                onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
-                onIceConnectionStateException: this.onIceConnectionStateExceptionHandler.bind(this),
-                iceServers: this.getIceServersConf(),
-                simulcast: false
-            };
+            logger.debug("'Session.subscribe(Stream)' called");
 
             const sendSdpToServer = (sdpString: string) => {
 
@@ -1091,10 +1077,22 @@ export class Stream {
                 });
             };
 
+            const config: WebRtcPeerConfiguration = {
+                mediaConstraints: {
+                    audio: this.hasAudio,
+                    video: this.hasVideo,
+                },
+                simulcast: false,
+                onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
+                onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
+                iceServers: this.getIceServersConf(),
+            };
+
             if (reconnect) {
                 this.disposeWebRtcPeer();
             }
-            this.webRtcPeer = new WebRtcPeerRecvonly(options);
+
+            this.webRtcPeer = new WebRtcPeerRecvonly(config);
             this.webRtcPeer.addIceConnectionStateChangeListener(this.streamId);
 
             if (!!sdpOfferByServer) {
