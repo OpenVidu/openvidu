@@ -165,7 +165,7 @@ export class WebRtcPeer {
                     .then((sdpOffer) => resolve(sdpOffer))
                     .catch((error) => reject(error));
             } else {
-                logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is NOT available; using LEGACY offerToReceive{Audio,Video}");
+                logger.error("[createOffer] Method RTCPeerConnection.addTransceiver() is NOT available; using LEGACY offerToReceive{Audio,Video}");
 
                 // DEPRECATED LEGACY METHOD: Old WebRTC versions don't implement
                 // Transceivers, and instead depend on the deprecated
