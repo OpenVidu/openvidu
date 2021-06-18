@@ -88,6 +88,11 @@ interface IWebrtcStats {
             frameWidth?: number, // Chrome
             framesSent?: number // Chrome
         } | {}
+    },
+    candidatepair?: {
+        currentRoundTripTime?: number // Chrome
+        availableOutgoingBitrate?: number //Chrome
+        // availableIncomingBitrate?: number // No support for any browsers (https://developer.mozilla.org/en-US/docs/Web/API/RTCIceCandidatePairStats/availableIncomingBitrate)
     }
 };
 
@@ -185,8 +190,8 @@ export class WebRtcStats {
     //       - Chrome 89.0.4389.90
     //       - Firefox 87.0
     //       - Opera 75.0.3969.93
-    //       - Microsoft Edge 89.0.774.57 
-    //       - Safari 14.0 (14610.1.28.1.9) 
+    //       - Microsoft Edge 89.0.774.57
+    //       - Safari 14.0 (14610.1.28.1.9)
     //       - Electron 11.3.0 (Chromium 87.0.4280.141)
     //   - Android:
     //       - Chrome Mobile 89.0.4389.90
@@ -196,7 +201,7 @@ export class WebRtcStats {
     //       - Ionic 5
     //       - React Native 0.64
     //   - iOS:
-    //       - Safari Mobile 
+    //       - Safari Mobile
     //       - ¿Ionic?
     //       - ¿React Native?
     public getSelectedIceCandidateInfo(): Promise<any> {
@@ -332,7 +337,7 @@ export class WebRtcStats {
     //       - Firefox 87.0
     //       - Microsoft Edge 89.0.774.57
     //       - Safari 14.0 (14610.1.28.1.9)
-    //       - Electron 11.3.0 (Chromium 87.0.4280.141)	
+    //       - Electron 11.3.0 (Chromium 87.0.4280.141)
     //   - Android:
     //       - Chrome Mobile 89.0.4389.90
     //       - Opera 62.3.3146.57763
@@ -341,7 +346,7 @@ export class WebRtcStats {
     //       - Ionic 5
     //       - React Native 0.64
     //   - iOS:
-    //       - Safari Mobile 
+    //       - Safari Mobile
     //       - ¿Ionic?
     //       - ¿React Native?
     public async getCommonStats(): Promise<IWebrtcStats> {
@@ -349,8 +354,9 @@ export class WebRtcStats {
         return new Promise(async (resolve, reject) => {
 
             const statsReport: any = await this.stream.getRTCPeerConnection().getStats();
-            const response = this.getWebRtcStatsResponseOutline();
+            const response: IWebrtcStats = this.getWebRtcStatsResponseOutline();
             const videoTrackStats = ['framesReceived', 'framesDropped', 'framesSent', 'frameHeight', 'frameWidth'];
+            const candidatePairStats = ['availableOutgoingBitrate', 'currentRoundTripTime'];
 
             statsReport.forEach((stat: any) => {
 
@@ -360,8 +366,11 @@ export class WebRtcStats {
                         if (!mediaType && (videoTrackStats.indexOf(key) > -1)) {
                             mediaType = 'video';
                         }
-                        if (direction != null && mediaType != null && key != null && response[direction] != null && response[direction][mediaType] != null) {
+                        if (direction != null && mediaType != null && key != null && response[direction][mediaType] != null) {
                             response[direction][mediaType][key] = Number(stat[key]);
+                        } else if(direction != null && key != null && candidatePairStats.includes(key)) {
+                            // candidate-pair-stats
+                            response[direction][key] = Number(stat[key]);
                         }
                     }
                 }
@@ -394,8 +403,18 @@ export class WebRtcStats {
                         addStat(this.stream.isLocal() ? 'outbound' : 'inbound', 'frameHeight');
                         addStat(this.stream.isLocal() ? 'outbound' : 'inbound', 'frameWidth');
                         break;
+                    case 'candidate-pair':
+                        addStat('candidatepair', 'currentRoundTripTime');
+                        addStat('candidatepair', 'availableOutgoingBitrate');
+                        break;
                 }
             });
+
+            // Delete candidatepair from response if null
+            if(!response?.candidatepair || Object.keys(<Object>response.candidatepair).length === 0){
+                delete response.candidatepair;
+            }
+
             return resolve(response);
         });
     }
@@ -418,7 +437,8 @@ export class WebRtcStats {
                 outbound: {
                     audio: {},
                     video: {}
-                }
+                },
+                candidatepair: {}
             };
         } else {
             return {
