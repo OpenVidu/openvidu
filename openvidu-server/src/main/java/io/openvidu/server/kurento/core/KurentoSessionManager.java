@@ -35,6 +35,7 @@ import javax.annotation.PreDestroy;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.GenericMediaElement;
+import org.kurento.client.GenericMediaEvent;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.ListenerSubscription;
 import org.kurento.client.PassThrough;
@@ -1355,7 +1356,7 @@ public class KurentoSessionManager extends SessionManager {
 					sessionEventsHandler.onFilterEventDispatched(sessionId, uniqueSessionId, connectionId, streamId,
 							filterType, event, kParticipant.getSession().getParticipants(),
 							kParticipant.getPublisher().getPartipantsListentingToFilterEvent(eventType));
-				});
+				}, GenericMediaEvent.class);
 				pub.storeListener(eventType, listener);
 			} catch (Exception e) {
 				log.error("Request to addFilterEventListener to stream {} gone wrong. Error: {}", streamId,
