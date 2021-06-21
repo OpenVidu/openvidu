@@ -304,7 +304,7 @@ export class WebRtcStats {
             await fetch(url, configuration);
 
         } catch (error) {
-            logger.error(error);
+            logger.error(`sendStats error: ${JSON.stringify(error)}`);
         }
     }
 

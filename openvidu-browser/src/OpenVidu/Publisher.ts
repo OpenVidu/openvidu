@@ -496,7 +496,7 @@ export class Publisher extends StreamManager {
             };
 
             const getMediaError = error => {
-                logger.error(error);
+                logger.error(`getMediaError: ${JSON.stringify(error)}`);
                 this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
                 if (error.name === 'Error') {
                     // Safari OverConstrainedError has as name property 'Error' instead of 'OverConstrainedError'

@@ -1171,7 +1171,7 @@ export class Session extends EventDispatcher {
             if (!this.connection.disposed && !forced) {
                 this.openvidu.sendRequest('leaveRoom', (error, response) => {
                     if (error) {
-                        logger.error(error);
+                        logger.error(`leaveRoom error: ${JSON.stringify(error)}`);
                     }
                     this.openvidu.closeWs();
                 });
