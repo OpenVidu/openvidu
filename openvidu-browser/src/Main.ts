@@ -5,5 +5,5 @@ if (window) {
     window['OpenVidu'] = OpenVidu;
 }
 
-// Disable jsnlog window error overriding
+// Disable jsnlog when library is loaded
 JL.setOptions({ enabled: false })

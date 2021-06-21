@@ -38,5 +38,5 @@ export { SignalOptions } from './OpenViduInternal/Interfaces/Public/SignalOption
 export { StreamManagerVideo } from './OpenViduInternal/Interfaces/Public/StreamManagerVideo';
 export { SubscriberProperties } from './OpenViduInternal/Interfaces/Public/SubscriberProperties';
 
-// Disable jsnlog window error overriding
+// Disable jsnlog when library is loaded
 JL.setOptions({ enabled: false })
