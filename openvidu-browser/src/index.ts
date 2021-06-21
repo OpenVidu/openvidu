@@ -1,3 +1,5 @@
+import { JL } from 'jsnlog';
+
 export { OpenVidu } from './OpenVidu/OpenVidu';
 export { Session } from './OpenVidu/Session';
 export { Publisher } from './OpenVidu/Publisher';
@@ -35,3 +37,6 @@ export { PublisherProperties } from './OpenViduInternal/Interfaces/Public/Publis
 export { SignalOptions } from './OpenViduInternal/Interfaces/Public/SignalOptions';
 export { StreamManagerVideo } from './OpenViduInternal/Interfaces/Public/StreamManagerVideo';
 export { SubscriberProperties } from './OpenViduInternal/Interfaces/Public/SubscriberProperties';
+
+// Disable jsnlog window error overriding
+JL.setOptions({ enabled: false })

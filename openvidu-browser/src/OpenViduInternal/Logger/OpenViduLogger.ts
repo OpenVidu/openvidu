@@ -98,7 +98,8 @@ export class OpenViduLogger {
 				// Initialize JL to send logs
 				JL.setOptions({
 					defaultAjaxUrl: openVidu.httpUri + this.instance.JSNLOG_URL,
-					serialize: logSerializer
+					serialize: logSerializer,
+					enabled: true
 				});
 				JL().setOptions({
 					appenders: [this.instance.currentAppender]
