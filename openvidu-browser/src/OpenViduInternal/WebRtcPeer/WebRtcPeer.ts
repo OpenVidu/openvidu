@@ -171,6 +171,13 @@ export class WebRtcPeer {
                 // Transceivers, and instead depend on the deprecated
                 // "offerToReceiveAudio" and "offerToReceiveVideo".
 
+                if (!!this.configuration.mediaStream) {
+                    for (const track of this.configuration.mediaStream.getTracks()) {
+                        // @ts-ignore - Compiler is too clever and thinks this branch will never execute.
+                        this.pc.addTrack(track, this.configuration.mediaStream);
+                    }
+                }
+
                 const hasAudio = this.configuration.mediaConstraints.audio;
                 const hasVideo = this.configuration.mediaConstraints.video;
 
