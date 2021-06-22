@@ -389,6 +389,7 @@ export class Publisher extends StreamManager {
             const errorCallback = (openViduError: OpenViduError) => {
                 this.accessDenied = true;
                 this.accessAllowed = false;
+                logger.error(`Publisher initialization failed. ${openViduError.name}: ${openViduError.message}`)
                 reject(openViduError);
             };
 
@@ -496,7 +497,7 @@ export class Publisher extends StreamManager {
             };
 
             const getMediaError = error => {
-                logger.error(`getMediaError: ${JSON.stringify(error)}`);
+                logger.error(`getMediaError: ${error.toString()}`);
                 this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
                 if (error.name === 'Error') {
                     // Safari OverConstrainedError has as name property 'Error' instead of 'OverConstrainedError'

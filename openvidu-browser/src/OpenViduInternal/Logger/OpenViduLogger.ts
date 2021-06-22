@@ -1,6 +1,6 @@
-import {JL} from 'jsnlog'
-import {OpenVidu} from "../../OpenVidu/OpenVidu";
-import {OpenViduLoggerConfiguration} from "./OpenViduLoggerConfiguration";
+import { JL } from 'jsnlog'
+import { OpenVidu } from "../../OpenVidu/OpenVidu";
+import { OpenViduLoggerConfiguration } from "./OpenViduLoggerConfiguration";
 import JSNLogAjaxAppender = JL.JSNLogAjaxAppender;
 
 export class OpenViduLogger {
@@ -25,16 +25,18 @@ export class OpenViduLogger {
 	private loggingFinalUserId: string | undefined;
 
 
-	private constructor() {}
+	private constructor() { }
 
 	static configureJSNLog(openVidu: OpenVidu, token: string) {
 		try {
-			// If instance is created and it is OpenVidu Pro
-			if (this.instance && openVidu.webrtcStatsInterval > -1
-				// If logs are enabled
-				&& openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debug
-				// Only reconfigure it if session or finalUserId has changed
-				&& this.instance.canConfigureJSNLog(openVidu, this.instance)) {
+			// If dev mode
+			if ((window['LOG_JSNLOG_RESULTS']) ||
+				// If instance is created and it is OpenVidu Pro
+				(this.instance && openVidu.webrtcStatsInterval > -1
+					// If logs are enabled
+					&& openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debug
+					// Only reconfigure it if session or finalUserId has changed
+					&& this.instance.canConfigureJSNLog(openVidu, this.instance))) {
 				// isJSNLogSetup will not be true until completed setup
 				this.instance.isJSNLogSetup = false;
 				this.instance.info("Configuring JSNLogs.");
@@ -48,8 +50,8 @@ export class OpenViduLogger {
 					const parentReadyStateFunction = xhr.onreadystatechange;
 					xhr.onreadystatechange = () => {
 						if ((xhr.status == 401) || (xhr.status == 403) || (xhr.status == 404)) {
-							Object.defineProperty( xhr, "readyState", {value: 4});
-							Object.defineProperty( xhr, "status", {value: 200});
+							Object.defineProperty(xhr, "readyState", { value: 4 });
+							Object.defineProperty(xhr, "status", { value: 200 });
 						}
 						parentReadyStateFunction();
 					}
@@ -88,10 +90,15 @@ export class OpenViduLogger {
 					};
 
 					// Cut long messages
-					const stringifyJson = JSON.stringify(obj, getCircularReplacer());
+					let stringifyJson = JSON.stringify(obj, getCircularReplacer());
 					if (stringifyJson.length > this.instance.MAX_LENGTH_STRING_JSON) {
-						return `${stringifyJson.substring(0, this.instance.MAX_LENGTH_STRING_JSON)}...`;
+						stringifyJson = `${stringifyJson.substring(0, this.instance.MAX_LENGTH_STRING_JSON)}...`;
 					}
+
+					if (window['LOG_JSNLOG_RESULTS']) {
+						console.log(stringifyJson);
+					}
+
 					return stringifyJson;
 				};
 
@@ -121,7 +128,7 @@ export class OpenViduLogger {
 	}
 
 	static getInstance(): OpenViduLogger {
-		if(!OpenViduLogger.instance){
+		if (!OpenViduLogger.instance) {
 			OpenViduLogger.instance = new OpenViduLogger();
 		}
 		return OpenViduLogger.instance;
@@ -135,7 +142,7 @@ export class OpenViduLogger {
 		return openVidu.session.sessionId != logger.loggingSessionId
 	}
 
-	log(...args: any[]){
+	log(...args: any[]) {
 		if (!this.isProdMode) {
 			this.LOG_FNS[0].apply(this.logger, arguments);
 		}
@@ -176,12 +183,12 @@ export class OpenViduLogger {
 	}
 
 	flush() {
-		if(this.isDebugLogEnabled() && this.currentAppender != null) {
+		if (this.isDebugLogEnabled() && this.currentAppender != null) {
 			this.currentAppender.sendBatch();
 		}
 	}
 
-	enableProdMode(){
+	enableProdMode() {
 		this.isProdMode = true;
 	}
 
