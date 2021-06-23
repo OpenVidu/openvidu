@@ -90,10 +90,12 @@ new_media_node_installation() {
      printf "\n     => Pulling images...\n"
      cd "${MEDIA_NODE_FOLDER}" || fatal_error "Error when moving to '${MEDIA_NODE_FOLDER}' folder"
      KMS_IMAGE=$(grep KMS_IMAGE docker-compose.yml | cut -d"=" -f2)
+     MEDIASOUP_IMAGE=$(grep MEDIASOUP_IMAGE docker-compose.yml | cut -d"=" -f2)
      METRICBEAT_IMAGE=$(grep METRICBEAT_IMAGE docker-compose.yml | cut -d"=" -f2)
      FILEBEAT_IMAGE=$(grep FILEBEAT_IMAGE docker-compose.yml | cut -d"=" -f2)
      OPENVIDU_RECORDING_IMAGE=$(grep OPENVIDU_RECORDING_IMAGE docker-compose.yml | cut -d"=" -f2)
      docker pull "$KMS_IMAGE" || fatal "Error while pulling docker image: $KMS_IMAGE"
+     docker pull "$MEDIASOUP_IMAGE" || fatal "Error while pulling docker image: $MEDIASOUP_IMAGE"
      docker pull "$METRICBEAT_IMAGE" || fatal "Error while pulling docker image: $METRICBEAT_IMAGE"
      docker pull "$FILEBEAT_IMAGE" || fatal "Error while pulling docker image: $FILEBEAT_IMAGE"
      docker pull "$OPENVIDU_RECORDING_IMAGE" || fatal "Error while pulling docker image: $OPENVIDU_RECORDING_IMAGE"
@@ -223,10 +225,12 @@ upgrade_media_node() {
      # Pull images
      printf "\n     => Pulling images...\n"
      KMS_IMAGE="$(grep KMS_IMAGE docker-compose.yml | cut -d"=" -f2)"
+     MEDIASOUP_IMAGE="$(grep MEDIASOUP_IMAGE docker-compose.yml | cut -d"=" -f2)"
      METRICBEAT_IMAGE="$(grep METRICBEAT_IMAGE docker-compose.yml | cut -d"=" -f2)"
      FILEBEAT_IMAGE="$(grep FILEBEAT_IMAGE docker-compose.yml | cut -d"=" -f2)"
      OPENVIDU_RECORDING_IMAGE="$(grep OPENVIDU_RECORDING_IMAGE docker-compose.yml | cut -d"=" -f2)"
      docker pull "$KMS_IMAGE" || fatal "Error while pulling docker image: $KMS_IMAGE"
+     docker pull "$MEDIASOUP_IMAGE" || fatal "Error while pulling docker image: $MEDIASOUP_IMAGE"
      docker pull "$METRICBEAT_IMAGE" || fatal "Error while pulling docker image: $METRICBEAT_IMAGE"
      docker pull "$FILEBEAT_IMAGE" || fatal "Error while pulling docker image: $FILEBEAT_IMAGE"
      docker pull "$OPENVIDU_RECORDING_IMAGE" || fatal "Error while pulling docker image: $OPENVIDU_RECORDING_IMAGE"
