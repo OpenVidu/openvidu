@@ -56,7 +56,6 @@ export class OpenViduLogger {
 					// https://github.com/mperdeck/jsnlog.js/blob/v2.30.0/jsnlog.ts#L805-L818
 					const parentReadyStateFunction = xhr.onreadystatechange;
 					xhr.onreadystatechange = () => {
-						console.log(xhr.status);
 						if (this.isInvalidResponse(xhr)) {
 							Object.defineProperty(xhr, "readyState", { value: 4 });
 							Object.defineProperty(xhr, "status", { value: 200 });
