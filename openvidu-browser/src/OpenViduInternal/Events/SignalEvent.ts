@@ -51,7 +51,7 @@ export class SignalEvent extends Event {
     /**
      * @hidden
      */
-    constructor(target: Session, type: string, data?: string, from?: Connection) {
+    constructor(target: Session, type?: string, data?: string, from?: Connection) {
         super(false, target, 'signal');
         if (!!type) {
             this.type = 'signal:' + type;

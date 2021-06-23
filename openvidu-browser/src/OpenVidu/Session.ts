@@ -761,16 +761,15 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onParticipantJoined(response: RemoteConnectionOptions): void {
+    onParticipantJoined(event: RemoteConnectionOptions): void {
         // Connection shouldn't exist
-        this.getConnection(response.id, '')
-
+        this.getConnection(event.id, '')
             .then(connection => {
-                logger.warn('Connection ' + response.id + ' already exists in connections list');
+                logger.warn('Connection ' + connection.connectionId + ' already exists in connections list');
             })
             .catch(openViduError => {
-                const connection = new Connection(this, response);
-                this.remoteConnections.set(response.id, connection);
+                const connection = new Connection(this, event);
+                this.remoteConnections.set(event.id, connection);
                 this.ee.emitEvent('connectionCreated', [new ConnectionEvent(false, this, 'connectionCreated', connection, '')]);
             });
     }
@@ -778,21 +777,21 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onParticipantLeft(msg): void {
+    onParticipantLeft(event: { connectionId: string, reason: string }): void {
 
         if (this.remoteConnections.size > 0) {
-            this.getRemoteConnection(msg.connectionId, 'onParticipantLeft').then(connection => {
+            this.getRemoteConnection(event.connectionId, 'onParticipantLeft').then(connection => {
                 if (!!connection.stream) {
                     const stream = connection.stream;
 
-                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, msg.reason);
+                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, event.reason);
                     this.ee.emitEvent('streamDestroyed', [streamEvent]);
                     streamEvent.callDefaultBehavior();
 
                     this.remoteStreamsCreated.delete(stream.streamId);
                 }
                 this.remoteConnections.delete(connection.connectionId);
-                this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, msg.reason)]);
+                this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, event.reason)]);
             })
                 .catch(openViduError => {
                     logger.error(openViduError);
@@ -803,7 +802,7 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onParticipantPublished(response: RemoteConnectionOptions): void {
+    onParticipantPublished(event: RemoteConnectionOptions): void {
 
         const afterConnectionFound = (connection) => {
 
@@ -823,19 +822,19 @@ export class Session extends EventDispatcher {
         // Get the existing Connection created on 'onParticipantJoined' for
         // existing participants or create a new one for new participants
         let connection: Connection;
-        this.getRemoteConnection(response.id, 'onParticipantPublished')
+        this.getRemoteConnection(event.id, 'onParticipantPublished')
 
             .then(con => {
                 // Update existing Connection
                 connection = con;
-                response.metadata = con.data;
-                connection.remoteOptions = response;
-                connection.initRemoteStreams(response.streams);
+                event.metadata = con.data;
+                connection.remoteOptions = event;
+                connection.initRemoteStreams(event.streams);
                 afterConnectionFound(connection);
             })
             .catch(openViduError => {
                 // Create new Connection
-                connection = new Connection(this, response);
+                connection = new Connection(this, event);
                 afterConnectionFound(connection);
             });
     }
@@ -843,16 +842,16 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onParticipantUnpublished(msg): void {
-        if (msg.connectionId === this.connection.connectionId) {
+    onParticipantUnpublished(event: { connectionId: string, reason: string }): void {
+        if (event.connectionId === this.connection.connectionId) {
             // Your stream has been forcedly unpublished from the session
-            this.stopPublisherStream(msg.reason);
+            this.stopPublisherStream(event.reason);
         } else {
-            this.getRemoteConnection(msg.connectionId, 'onParticipantUnpublished')
+            this.getRemoteConnection(event.connectionId, 'onParticipantUnpublished')
 
                 .then(connection => {
 
-                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', connection.stream!, msg.reason);
+                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', connection.stream!, event.reason);
                     this.ee.emitEvent('streamDestroyed', [streamEvent]);
                     streamEvent.callDefaultBehavior();
 
@@ -871,11 +870,11 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onParticipantEvicted(msg): void {
-        if (msg.connectionId === this.connection.connectionId) {
+    onParticipantEvicted(event: { connectionId: string, reason: string }): void {
+        if (event.connectionId === this.connection.connectionId) {
             // You have been evicted from the session
             if (!!this.sessionId && !this.connection.disposed) {
-                this.leave(true, msg.reason);
+                this.leave(true, event.reason);
             }
         }
     }
@@ -883,21 +882,21 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onNewMessage(msg): void {
+    onNewMessage(event: { type?: string, data?: string, from?: string }): void {
 
-        logger.info('New signal: ' + JSON.stringify(msg));
+        logger.info('New signal: ' + JSON.stringify(event));
 
-        const strippedType: string = !!msg.type ? msg.type.replace(/^(signal:)/, '') : undefined;
+        const strippedType = !!event.type ? event.type.replace(/^(signal:)/, '') : undefined;
 
-        if (!!msg.from) {
+        if (!!event.from) {
             // Signal sent by other client
-            this.getConnection(msg.from, "Connection '" + msg.from + "' unknown when 'onNewMessage'. Existing remote connections: "
+            this.getConnection(event.from, "Connection '" + event.from + "' unknown when 'onNewMessage'. Existing remote connections: "
                 + JSON.stringify(this.remoteConnections.keys()) + '. Existing local connection: ' + this.connection.connectionId)
 
                 .then(connection => {
-                    this.ee.emitEvent('signal', [new SignalEvent(this, strippedType, msg.data, connection)]);
-                    if (msg.type !== 'signal') {
-                        this.ee.emitEvent(msg.type, [new SignalEvent(this, strippedType, msg.data, connection)]);
+                    this.ee.emitEvent('signal', [new SignalEvent(this, strippedType, event.data, connection)]);
+                    if (!!event.type && event.type !== 'signal') {
+                        this.ee.emitEvent(event.type, [new SignalEvent(this, strippedType, event.data, connection)]);
                     }
                 })
                 .catch(openViduError => {
@@ -905,9 +904,9 @@ export class Session extends EventDispatcher {
                 });
         } else {
             // Signal sent by server
-            this.ee.emitEvent('signal', [new SignalEvent(this, strippedType, msg.data, undefined)]);
-            if (msg.type !== 'signal') {
-                this.ee.emitEvent(msg.type, [new SignalEvent(this, strippedType, msg.data, undefined)]);
+            this.ee.emitEvent('signal', [new SignalEvent(this, strippedType, event.data, undefined)]);
+            if (!!event.type && event.type !== 'signal') {
+                this.ee.emitEvent(event.type, [new SignalEvent(this, strippedType, event.data, undefined)]);
             }
         }
     }
@@ -915,57 +914,57 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onStreamPropertyChanged(msg): void {
+    onStreamPropertyChanged(event: { connectionId: string, streamId: string, property: string, newValue: any, reason: string }): void {
 
         const callback = (connection: Connection) => {
-            if (!!connection.stream && connection.stream.streamId === msg.streamId) {
+            if (!!connection.stream && connection.stream.streamId === event.streamId) {
                 const stream = connection.stream;
                 let oldValue;
-                switch (msg.property) {
+                switch (event.property) {
                     case 'audioActive':
                         oldValue = stream.audioActive;
-                        msg.newValue = msg.newValue === 'true';
-                        stream.audioActive = msg.newValue;
+                        event.newValue = event.newValue === 'true';
+                        stream.audioActive = event.newValue;
                         break;
                     case 'videoActive':
                         oldValue = stream.videoActive;
-                        msg.newValue = msg.newValue === 'true';
-                        stream.videoActive = msg.newValue;
+                        event.newValue = event.newValue === 'true';
+                        stream.videoActive = event.newValue;
                         break;
                     case 'videoDimensions':
                         oldValue = stream.videoDimensions;
-                        msg.newValue = JSON.parse(JSON.parse(msg.newValue));
-                        stream.videoDimensions = msg.newValue;
+                        event.newValue = JSON.parse(JSON.parse(event.newValue));
+                        stream.videoDimensions = event.newValue;
                         break;
                     case 'filter':
                         oldValue = stream.filter;
-                        msg.newValue = (Object.keys(msg.newValue).length > 0) ? msg.newValue : undefined;
-                        if (msg.newValue !== undefined) {
-                            stream.filter = new Filter(msg.newValue.type, msg.newValue.options);
+                        event.newValue = (Object.keys(event.newValue).length > 0) ? event.newValue : undefined;
+                        if (event.newValue !== undefined) {
+                            stream.filter = new Filter(event.newValue.type, event.newValue.options);
                             stream.filter.stream = stream;
-                            if (msg.newValue.lastExecMethod) {
-                                stream.filter.lastExecMethod = msg.newValue.lastExecMethod;
+                            if (event.newValue.lastExecMethod) {
+                                stream.filter.lastExecMethod = event.newValue.lastExecMethod;
                             }
                         } else {
                             delete stream.filter;
                         }
-                        msg.newValue = stream.filter;
+                        event.newValue = stream.filter;
                         break;
                 }
-                this.ee.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
+                this.ee.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, stream, event.property, event.newValue, oldValue, event.reason)]);
                 if (!!stream.streamManager) {
-                    stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
+                    stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, event.property, event.newValue, oldValue, event.reason)]);
                 }
             } else {
-                logger.error("No stream with streamId '" + msg.streamId + "' found for connection '" + msg.connectionId + "' on 'streamPropertyChanged' event");
+                logger.error("No stream with streamId '" + event.streamId + "' found for connection '" + event.connectionId + "' on 'streamPropertyChanged' event");
             }
         };
 
-        if (msg.connectionId === this.connection.connectionId) {
+        if (event.connectionId === this.connection.connectionId) {
             // Your stream has been forcedly changed (filter feature)
             callback(this.connection);
         } else {
-            this.getRemoteConnection(msg.connectionId, 'onStreamPropertyChanged')
+            this.getRemoteConnection(event.connectionId, 'onStreamPropertyChanged')
                 .then(connection => {
                     callback(connection);
                 })
@@ -978,34 +977,34 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onConnectionPropertyChanged(msg): void {
+    onConnectionPropertyChanged(event: { property: string, newValue: any }): void {
         let oldValue;
-        switch (msg.property) {
+        switch (event.property) {
             case 'role':
                 oldValue = this.connection.role.slice();
-                this.connection.role = msg.newValue;
-                this.connection.localOptions!.role = msg.newValue;
+                this.connection.role = event.newValue;
+                this.connection.localOptions!.role = event.newValue;
                 break;
             case 'record':
                 oldValue = this.connection.record;
-                msg.newValue = msg.newValue === 'true';
-                this.connection.record = msg.newValue;
-                this.connection.localOptions!.record = msg.newValue;
+                event.newValue = event.newValue === 'true';
+                this.connection.record = event.newValue;
+                this.connection.localOptions!.record = event.newValue;
                 break;
         }
-        this.ee.emitEvent('connectionPropertyChanged', [new ConnectionPropertyChangedEvent(this, this.connection, msg.property, msg.newValue, oldValue)]);
+        this.ee.emitEvent('connectionPropertyChanged', [new ConnectionPropertyChangedEvent(this, this.connection, event.property, event.newValue, oldValue)]);
     }
 
     /**
      * @hidden
      */
-    onNetworkQualityLevelChangedChanged(msg): void {
-        if (msg.connectionId === this.connection.connectionId) {
-            this.ee.emitEvent('networkQualityLevelChanged', [new NetworkQualityLevelChangedEvent(this, msg.newValue, msg.oldValue, this.connection)]);
+    onNetworkQualityLevelChangedChanged(event: { connectionId: string, newValue: number, oldValue: number }): void {
+        if (event.connectionId === this.connection.connectionId) {
+            this.ee.emitEvent('networkQualityLevelChanged', [new NetworkQualityLevelChangedEvent(this, event.newValue, event.oldValue, this.connection)]);
         } else {
-            this.getConnection(msg.connectionId, 'Connection not found for connectionId ' + msg.connectionId)
+            this.getConnection(event.connectionId, 'Connection not found for connectionId ' + event.connectionId)
                 .then((connection: Connection) => {
-                    this.ee.emitEvent('networkQualityLevelChanged', [new NetworkQualityLevelChangedEvent(this, msg.newValue, msg.oldValue, connection)]);
+                    this.ee.emitEvent('networkQualityLevelChanged', [new NetworkQualityLevelChangedEvent(this, event.newValue, event.oldValue, connection)]);
                 })
                 .catch(openViduError => {
                     logger.error(openViduError);
@@ -1016,31 +1015,31 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    recvIceCandidate(msg): void {
+    recvIceCandidate(event: { senderConnectionId: string, endpointName: string, sdpMLineIndex: number, sdpMid: string, candidate: string }): void {
         const candidate: RTCIceCandidate = {
-            candidate: msg.candidate,
-            component: msg.component,
-            foundation: msg.foundation,
-            port: msg.port,
-            priority: msg.priority,
-            protocol: msg.protocol,
-            relatedAddress: msg.relatedAddress,
-            relatedPort: msg.relatedPort,
-            sdpMid: msg.sdpMid,
-            sdpMLineIndex: msg.sdpMLineIndex,
-            tcpType: msg.tcpType,
-            usernameFragment: msg.usernameFragment,
-            type: msg.type,
+            candidate: event.candidate,
+            sdpMid: event.sdpMid,
+            sdpMLineIndex: event.sdpMLineIndex,
+            component: null,
+            foundation: null,
+            port: null,
+            priority: null,
+            protocol: null,
+            relatedAddress: null,
+            relatedPort: null,
+            tcpType: null,
+            usernameFragment: null,
+            type: null,
             toJSON: () => {
-                return { candidate: msg.candidate };
+                return { candidate: event.candidate };
             }
         };
-        this.getConnection(msg.senderConnectionId, 'Connection not found for connectionId ' + msg.senderConnectionId + ' owning endpoint ' + msg.endpointName + '. Ice candidate will be ignored: ' + candidate)
+        this.getConnection(event.senderConnectionId, 'Connection not found for connectionId ' + event.senderConnectionId + ' owning endpoint ' + event.endpointName + '. Ice candidate will be ignored: ' + candidate)
             .then(connection => {
                 const stream: Stream = connection.stream!;
                 stream.getWebRtcPeer().addIceCandidate(candidate).catch(error => {
                     logger.error('Error adding candidate for ' + stream!.streamId
-                        + ' stream of endpoint ' + msg.endpointName + ': ' + error);
+                        + ' stream of endpoint ' + event.endpointName + ': ' + error);
                 });
             })
             .catch(openViduError => {
@@ -1085,44 +1084,42 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onMediaError(params): void {
-        logger.error('Media error: ' + JSON.stringify(params));
-        const err = params.error;
+    onMediaError(event: { error: string }): void {
+        logger.error('Media error: ' + JSON.stringify(event));
+        const err = event.error;
         if (err) {
             this.ee.emitEvent('error-media', [{
                 error: err
             }]);
         } else {
-            logger.warn('Received undefined media error. Params:', params);
+            logger.warn('Received undefined media error:', event);
         }
     }
 
     /**
      * @hidden
      */
-    onRecordingStarted(response): void {
-        this.ee.emitEvent('recordingStarted', [new RecordingEvent(this, 'recordingStarted', response.id, response.name)]);
+    onRecordingStarted(event: { id: string, name: string }): void {
+        this.ee.emitEvent('recordingStarted', [new RecordingEvent(this, 'recordingStarted', event.id, event.name)]);
     }
 
     /**
      * @hidden
      */
-    onRecordingStopped(response): void {
-        this.ee.emitEvent('recordingStopped', [new RecordingEvent(this, 'recordingStopped', response.id, response.name, response.reason)]);
+    onRecordingStopped(event: { id: string, name: string, reason: string }): void {
+        this.ee.emitEvent('recordingStopped', [new RecordingEvent(this, 'recordingStopped', event.id, event.name, event.reason)]);
     }
 
     /**
      * @hidden
-     * response = {connectionId: string, streamId: string, type: string, data: Object}
      */
-    onFilterEventDispatched(response): void {
-        const connectionId: string = response.connectionId;
-        const streamId: string = response.streamId;
+    onFilterEventDispatched(event: { connectionId: string, streamId: string, filterType: string, eventType: string, data: string }): void {
+        const connectionId: string = event.connectionId;
         this.getConnection(connectionId, 'No connection found for connectionId ' + connectionId)
             .then(connection => {
                 logger.info('Filter event dispatched');
                 const stream: Stream = connection.stream!;
-                stream.filter!.handlers.get(response.eventType)?.call(this, new FilterEvent(stream.filter!, response.eventType, response.data));
+                stream.filter!.handlers.get(event.eventType)?.call(this, new FilterEvent(stream.filter!, event.eventType, event.data));
             });
     }
 
