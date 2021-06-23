@@ -1,7 +1,7 @@
 import { JL } from 'jsnlog'
 import { OpenVidu } from "../../OpenVidu/OpenVidu";
+import { ConsoleLogger } from './ConsoleLogger';
 import { OpenViduLoggerConfiguration } from "./OpenViduLoggerConfiguration";
-import JSNLogAjaxAppender = JL.JSNLogAjaxAppender;
 
 export class OpenViduLogger {
 
@@ -12,8 +12,8 @@ export class OpenViduLogger {
 	private MAX_MSECONDS_BATCH_MESSAGES: number = 5000;
 	private MAX_LENGTH_STRING_JSON: number = 1000;
 
-	private logger: Console = window.console;
-	private LOG_FNS = [this.logger.log, this.logger.debug, this.logger.info, this.logger.warn, this.logger.error];
+	private defaultConsoleLogger: ConsoleLogger = new ConsoleLogger(window.console);
+
 	private currentAppender: any;
 
 	private isProdMode = false;
@@ -22,11 +22,10 @@ export class OpenViduLogger {
 	// This two variables are used to restart JSNLog
 	// on different sessions and different userIds
 	private loggingSessionId: string | undefined;
-	private loggingFinalUserId: string | undefined;
 
-
-	private constructor() { }
-
+	/**
+     * @hidden
+     */
 	static configureJSNLog(openVidu: OpenVidu, token: string) {
 		try {
 			// If dev mode
@@ -34,9 +33,17 @@ export class OpenViduLogger {
 				// If instance is created and it is OpenVidu Pro
 				(this.instance && openVidu.webrtcStatsInterval > -1
 					// If logs are enabled
-					&& openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debug
+					&& this.instance.isOpenViduBrowserLogsDebugActive(openVidu)
 					// Only reconfigure it if session or finalUserId has changed
 					&& this.instance.canConfigureJSNLog(openVidu, this.instance))) {
+
+				// Check if app logs can be sent
+				// and replace console.log function to send
+				// logs of the application
+				if (openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debugApp) {
+					this.instance.replaceWindowConsole();
+				}
+
 				// isJSNLogSetup will not be true until completed setup
 				this.instance.isJSNLogSetup = false;
 				this.instance.info("Configuring JSNLogs.");
@@ -49,9 +56,12 @@ export class OpenViduLogger {
 					// https://github.com/mperdeck/jsnlog.js/blob/v2.30.0/jsnlog.ts#L805-L818
 					const parentReadyStateFunction = xhr.onreadystatechange;
 					xhr.onreadystatechange = () => {
-						if ((xhr.status == 401) || (xhr.status == 403) || (xhr.status == 404)) {
+						console.log(xhr.status);
+						if (this.isInvalidResponse(xhr)) {
 							Object.defineProperty(xhr, "readyState", { value: 4 });
 							Object.defineProperty(xhr, "status", { value: 200 });
+							// Disable JSNLog too to not send periodically errors
+							this.instance.disableLogger();
 						}
 						parentReadyStateFunction();
 					}
@@ -114,19 +124,20 @@ export class OpenViduLogger {
 
 				this.instance.isJSNLogSetup = true;
 				this.instance.loggingSessionId = sessionId;
-				this.instance.loggingFinalUserId = finalUserId;
 				this.instance.info("JSNLog configured.");
 			}
 		} catch (e) {
+			// Print error
 			console.error("Error configuring JSNLog: ");
 			console.error(e);
-			this.instance.isJSNLogSetup = false;
-			this.instance.loggingSessionId = undefined;
-			this.instance.loggingFinalUserId = undefined;
-			this.instance.currentAppender = undefined;
+			// Restore defaults values just in case any exception happen-
+			this.instance.disableLogger();
 		}
 	}
 
+	/**
+     * @hidden
+     */
 	static getInstance(): OpenViduLogger {
 		if (!OpenViduLogger.instance) {
 			OpenViduLogger.instance = new OpenViduLogger();
@@ -134,56 +145,136 @@ export class OpenViduLogger {
 		return OpenViduLogger.instance;
 	}
 
-	private isDebugLogEnabled() {
-		return this.isJSNLogSetup;
+	private static isInvalidResponse(xhr: XMLHttpRequest) {
+		return xhr.status == 401 || xhr.status == 403 || xhr.status == 404 || xhr.status == 0;
 	}
 
 	private canConfigureJSNLog(openVidu: OpenVidu, logger: OpenViduLogger): boolean {
 		return openVidu.session.sessionId != logger.loggingSessionId
 	}
 
+	private isOpenViduBrowserLogsDebugActive(openVidu: OpenVidu) {
+		return openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debug ||
+			openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debugApp;
+	}
+
+	// Return console functions with jsnlog integration
+	private getConsoleWithJSNLog() {
+		return function(openViduLogger: OpenViduLogger){
+			return {
+				log: function(...args){
+					openViduLogger.defaultConsoleLogger.log.apply(openViduLogger.defaultConsoleLogger.logger, arguments);
+					if (openViduLogger.isJSNLogSetup) {
+						JL().info(arguments);
+					}
+				},
+				info: function (...args) {
+					openViduLogger.defaultConsoleLogger.info.apply(openViduLogger.defaultConsoleLogger.logger, arguments);
+					if (openViduLogger.isJSNLogSetup) {
+						JL().info(arguments);
+					}
+				},
+				debug: function(...args) {
+					openViduLogger.defaultConsoleLogger.debug.apply(openViduLogger.defaultConsoleLogger.logger, arguments);
+				},
+				warn: function (...args) {
+					openViduLogger.defaultConsoleLogger.warn.apply(openViduLogger.defaultConsoleLogger.logger, arguments);
+					if (openViduLogger.isJSNLogSetup) {
+						JL().warn(arguments);
+					}
+				},
+				error: function (...args) {
+					openViduLogger.defaultConsoleLogger.error.apply(openViduLogger.defaultConsoleLogger.logger, arguments);
+					if (openViduLogger.isJSNLogSetup) {
+						JL().error(arguments);
+					}
+				}
+			};
+		}(this);
+	}
+
+	private replaceWindowConsole() {
+		window.console = this.defaultConsoleLogger.logger;
+		window.console.log = this.getConsoleWithJSNLog().log;
+		window.console.info = this.getConsoleWithJSNLog().info;
+		window.console.debug = this.getConsoleWithJSNLog().debug;
+		window.console.warn = this.getConsoleWithJSNLog().warn;
+		window.console.error = this.getConsoleWithJSNLog().error;
+	}
+
+	private disableLogger() {
+		JL.setOptions({enabled: false});
+		this.isJSNLogSetup = false;
+		this.loggingSessionId = undefined;
+		this.currentAppender = undefined;
+		window.console = this.defaultConsoleLogger.logger;
+		window.console.log = this.defaultConsoleLogger.log;
+		window.console.info = this.defaultConsoleLogger.info;
+		window.console.debug = this.defaultConsoleLogger.debug;
+		window.console.warn = this.defaultConsoleLogger.warn;
+		window.console.error = this.defaultConsoleLogger.error;
+	}
+
+	/**
+     * @hidden
+     */
 	log(...args: any[]) {
 		if (!this.isProdMode) {
-			this.LOG_FNS[0].apply(this.logger, arguments);
+			this.defaultConsoleLogger.log.apply(this.defaultConsoleLogger.logger, arguments);
 		}
-		if (this.isDebugLogEnabled()) {
+		if (this.isJSNLogSetup) {
 			JL().info(arguments);
 		}
 	}
 
+	/**
+     * @hidden
+     */
 	debug(...args: any[]) {
 		if (!this.isProdMode) {
-			this.LOG_FNS[1].apply(this.logger, arguments);
+			this.defaultConsoleLogger.debug.apply(this.defaultConsoleLogger.logger, arguments);
 		}
 	}
 
+	/**
+     * @hidden
+     */
 	info(...args: any[]) {
 		if (!this.isProdMode) {
-			this.LOG_FNS[2].apply(this.logger, arguments);
+			this.defaultConsoleLogger.info.apply(this.defaultConsoleLogger.logger, arguments);
 		}
-		if (this.isDebugLogEnabled()) {
+		if (this.isJSNLogSetup) {
 			JL().info(arguments);
 		}
 	}
 
+	/**
+     * @hidden
+     */
 	warn(...args: any[]) {
 		if (!this.isProdMode) {
-			this.LOG_FNS[3].apply(this.logger, arguments);
+			this.defaultConsoleLogger.warn.apply(this.defaultConsoleLogger.logger, arguments);
 		}
-		if (this.isDebugLogEnabled()) {
+		if (this.isJSNLogSetup) {
 			JL().warn(arguments);
 		}
 	}
 
+	/**
+     * @hidden
+     */
 	error(...args: any[]) {
-		this.LOG_FNS[4].apply(this.logger, arguments);
-		if (this.isDebugLogEnabled()) {
+		this.defaultConsoleLogger.error.apply(this.defaultConsoleLogger.logger, arguments);
+		if (this.isJSNLogSetup) {
 			JL().error(arguments);
 		}
 	}
 
+	/**
+     * @hidden
+     */
 	flush() {
-		if (this.isDebugLogEnabled() && this.currentAppender != null) {
+		if (this.isJSNLogSetup && this.currentAppender != null) {
 			this.currentAppender.sendBatch();
 		}
 	}
