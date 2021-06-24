@@ -327,6 +327,12 @@ export class VideoComponent implements OnInit, OnDestroy {
           this.publisherChanged = !this.publisherChanged;
       }
 
+      reconnect() {
+        this.streamManager.stream.reconnect()
+            .then(() => console.log(`Stream ${this.streamManager.stream} (${this.streamManager.remote ? 'Subscriber' : 'Publisher'}) successfully reconnected`))
+            .catch(error => console.error(`Error while reconnecting stream ${this.streamManager.stream} (${this.streamManager.remote ? 'Subscriber' : 'Publisher'})`, error));
+    }
+
       updateSubscriberEvents(oldValues) {
           const sub: Subscriber = <Subscriber>this.streamManager;
 

@@ -26,10 +26,10 @@ p {
 }
 
 .material-icons {
-  font-size: 17px;
-  width: 17px;
-  height: 17px;
-  line-height: 20px;
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  line-height: 16px;
 }
 
 .video-btn {
@@ -37,7 +37,7 @@ p {
   background: rgba(255, 255, 255, 0.75);
   cursor: pointer;
   padding: 0;
-  height: 20px;
+  height: 16px;
   float: left;
 }
 
@@ -61,6 +61,10 @@ p {
 }
 
 .events-btn {
+  float: right;
+}
+
+.filter-btn {
   float: right;
 }
 
@@ -94,6 +98,6 @@ p {
 .bottom-div {
   position: absolute;
   bottom: 0;
-  height: 20px;
+  height: 16px;
   width: 100%;
 }

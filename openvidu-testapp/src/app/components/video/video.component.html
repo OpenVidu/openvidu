@@ -5,6 +5,9 @@
             <button class="video-btn events-btn bottom-left-rounded" title="Publisher events" (click)="openPublisherEventsDialog()">
                 <mat-icon aria-label="Publisher events" class="mat-icon material-icons" role="img" aria-hidden="true">notifications</mat-icon>
             </button>
+            <button class="video-btn filter-btn" *ngIf="!this.unpublished" title="Filter configuration" (click)="filterConfig()">
+                <mat-icon aria-label="Filter configuration" class="mat-icon material-icons" role="img" aria-hidden="true">filter_vintage</mat-icon>
+            </button>
             <button class="video-btn stats-button bottom-left-rounded" title="Peer Connection Stats" (click)="showCodecUsed()">
               <mat-icon aria-label="Peer Connection Stats" class="mat-icon material-icons" role="img" aria-hidden="true">info</mat-icon>
             </button>
@@ -24,8 +27,8 @@
             <button *ngIf="!this.unpublished" class="video-btn change-publisher-btn" title="Change publisher" (click)="changePub()">
                 <mat-icon aria-label="Change publisher" class="mat-icon material-icons" role="img" aria-hidden="true">switch_video</mat-icon>
             </button>
-            <button *ngIf="!this.unpublished" class="video-btn filter-btn" title="Filter configuration" (click)="filterConfig()">
-                <mat-icon aria-label="Filter configuration" class="mat-icon material-icons" role="img" aria-hidden="true">filter_vintage</mat-icon>
+            <button *ngIf="!this.unpublished" class="video-btn reconnect-publisher-btn" title="Reconnect publisher" (click)="reconnect()">
+                <mat-icon aria-label="Reconnect publisher" class="mat-icon material-icons" role="img" aria-hidden="true">refresh</mat-icon>
             </button>
             <button *ngIf="!this.unpublished" class="video-btn rec-btn publisher-rec-btn" title="Record" (click)="record()">
                 <mat-icon aria-label="Start/Stop local recording" class="mat-icon material-icons" role="img" aria-hidden="true">
@@ -44,6 +47,9 @@
             <button *ngIf="subbed" class="video-btn events-btn bottom-left-rounded" title="Subscriber events" (click)="openSubscriberEventsDialog()">
                 <mat-icon aria-label="Subscriber events" class="mat-icon material-icons" role="img" aria-hidden="true">notifications</mat-icon>
             </button>
+            <button *ngIf="OV.session.capabilities.forceDisconnect" class="video-btn filter-btn" title="Filter configuration" (click)="filterConfig()">
+                <mat-icon aria-label="Filter configuration" class="mat-icon material-icons" role="img" aria-hidden="true">filter_vintage</mat-icon>
+            </button>
             <button class="video-btn stats-button bottom-left-rounded" title="Peer Connection Stats" (click)="showCodecUsed()">
               <mat-icon aria-label="Peer Connection Stats" class="mat-icon material-icons" role="img" aria-hidden="true">info</mat-icon>
             </button>
@@ -60,17 +66,15 @@
                 (click)="subUnsubAudio()">
                 <mat-icon aria-label="Subscribe or unsubscribe audio" class="mat-icon material-icons" role="img" aria-hidden="true">{{pubSubAudioIcon}}</mat-icon>
             </button>
-
+            <button *ngIf="!!pubSubVideoIcon" class="video-btn reconnect-subscriber-btn" title="Reconnect subscriber" (click)="reconnect()">
+                <mat-icon aria-label="Reconnect subscriber" class="mat-icon material-icons" role="img" aria-hidden="true">refresh</mat-icon>
+            </button>
             <button *ngIf="OV.session.capabilities.forceUnpublish" class="video-btn force-unpub-btn" title="Force Unpublish" (click)="forceUnpublish()">
                 <mat-icon aria-label="Force unpublish" class="mat-icon material-icons" role="img" aria-hidden="true">voice_over_off</mat-icon>
             </button>
             <button *ngIf="OV.session.capabilities.forceDisconnect" class="video-btn force-disconnect-btn" title="Force Disconnect" (click)="forceDisconnect()">
                 <mat-icon aria-label="Force disconnect" class="mat-icon material-icons" role="img" aria-hidden="true">clear</mat-icon>
             </button>
-            <button *ngIf="OV.session.capabilities.forceDisconnect" class="video-btn filter-btn" title="Filter configuration" (click)="filterConfig()">
-                <mat-icon aria-label="Filter configuration" class="mat-icon material-icons" role="img" aria-hidden="true">filter_vintage</mat-icon>
-            </button>
-
             <button *ngIf="!!recordIcon" class="video-btn rec-btn" title="Record" (click)="record()">
                 <mat-icon aria-label="Start/Stop recording" class="mat-icon material-icons" role="img" aria-hidden="true">{{recordIcon}}</mat-icon>
             </button>
