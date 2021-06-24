@@ -40,7 +40,7 @@ export class OpenViduLogger {
 				// Check if app logs can be sent
 				// and replace console.log function to send
 				// logs of the application
-				if (openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debugApp) {
+				if (openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debug_app) {
 					this.instance.replaceWindowConsole();
 				}
 
@@ -154,7 +154,7 @@ export class OpenViduLogger {
 
 	private isOpenViduBrowserLogsDebugActive(openVidu: OpenVidu) {
 		return openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debug ||
-			openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debugApp;
+			openVidu.sendBrowserLogs === OpenViduLoggerConfiguration.debug_app;
 	}
 
 	// Return console functions with jsnlog integration

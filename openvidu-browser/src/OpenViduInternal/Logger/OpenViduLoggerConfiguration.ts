@@ -1,5 +1,5 @@
 export enum OpenViduLoggerConfiguration {
     disabled = 'disabled',
     debug = 'debug',
-    debugApp = 'debugApp'
+    debug_app = 'debug_app'
 }
