@@ -63,6 +63,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   sessionConf: SessionConf;
 
   @Input()
+  useMediasoup: boolean;
+
+  @Input()
   index: number;
 
   // Session join data
@@ -252,6 +255,14 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       reconnected: false,
       exception: false
     }, true);
+
+    if (this.useMediasoup) {
+      const realProcessJoinRoomResponseFunction = this.session['processJoinRoomResponse'];
+      this.session['processJoinRoomResponse'] = opts => {
+        opts.mediaServer = 'mediasoup';
+        realProcessJoinRoomResponseFunction.bind(this.session, opts)();
+      };
+    }
 
     this.session.connect(token, this.clientData)
       .then(() => {

@@ -24,6 +24,7 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
 
   numberSubs = 3;
   autoJoin = false;
+  useMediasoup = false;
 
   constructor(private openviduParamsService: OpenviduParamsService, private testFeedService: TestFeedService) { }
 

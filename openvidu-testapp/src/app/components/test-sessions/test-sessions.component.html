@@ -8,6 +8,7 @@
         ALL</button>
     </div>
     <div class="scenario-div">
+      <mat-checkbox id="mediasoup-checkbox" class="auto-join-check" [(ngModel)]="useMediasoup" name="useMediasoup">Mediasoup</mat-checkbox>
       <mat-checkbox id="auto-join-checkbox" class="auto-join-check" [(ngModel)]="autoJoin" name="autoJoin">Auto join</mat-checkbox>
       <button id="one2one-btn" mat-raised-button color="primary" (click)="loadScenario(2,0,0)">1:1</button>
       <button id="one2many-btn" mat-raised-button color="primary" (click)="loadScenario(0,1,numberSubs)">1:{{numberSubs}}</button>
@@ -19,7 +20,7 @@
 
   <div class="instance-div">
     <app-openvidu-instance *ngFor="let user of users; let i=index" [attr.id]="'openvidu-instance-' + i" [openviduUrl]="openviduUrl"
-      [openviduSecret]="openviduSecret" [sessionConf]="user" [index]="i">
+      [openviduSecret]="openviduSecret" [sessionConf]="user" [useMediasoup]="useMediasoup" [index]="i">
     </app-openvidu-instance>
   </div>
 
