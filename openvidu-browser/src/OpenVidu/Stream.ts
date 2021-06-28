@@ -927,7 +927,7 @@ export class Stream {
                     audio: this.hasAudio,
                     video: this.hasVideo,
                 },
-                simulcast: false,
+                simulcast: this.session.openvidu.advancedConfiguration.enableSimulcastExperimental || false,
                 onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
                 onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
                 iceServers: this.getIceServersConf(),

@@ -71,4 +71,11 @@ export interface OpenViduAdvancedConfiguration {
      */
     noStreamPlayingEventExceptionTimeout?: number;
 
+    /**
+     * Whether to enable simulcast for Publishers or not.
+     * 
+     * Default to `false`.
+     */
+    enableSimulcastExperimental?: boolean;
+
 }

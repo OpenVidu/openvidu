@@ -30,6 +30,49 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
  */
 let platform: PlatformUtils;
 
+/*
+ * Table of sender video encodings for simulcast.
+ * Note that this is just a polite request, but the browser is free to honor it
+ * or just play by its own rules.
+ *
+ * Chrome imposes some restrictions based on the size of the video, max bitrate,
+ * and available bandwidth. Check here for the video size table:
+ * https://chromium.googlesource.com/external/webrtc/+/master/media/engine/simulcast.cc#90
+ *
+ * | Size (px) | Bitrate (kbps) | Max Layers |
+ * |----------:|---------------:|-----------:|
+ * | 1920x1080 |           5000 |          3 |
+ * |  1280x720 |           2500 |          3 |
+ * |   960x540 |           1200 |          3 |
+ * |   640x360 |            700 |          2 |
+ * |   480x270 |            450 |          2 |
+ * |   320x180 |            200 |          1 |
+ */
+const simulcastVideoEncodings: RTCRtpEncodingParameters[] = [
+    {
+        rid: "r0",
+        maxBitrate: 700000,
+
+        // TODO: Remove for final version; leave the browser decide:
+        // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-addtransceiver
+        // > If the scaleResolutionDownBy attribues of sendEncodings are still
+        // > undefined, initialize each encoding's scaleResolutionDownBy to
+        // > 2^(length of sendEncodings - encoding index - 1). This results in
+        // > smaller-to-larger resolutions where the last encoding has no scaling
+        // > applied to it, e.g. 4:2:1 if the length is 3.
+        scaleResolutionDownBy: 16,
+    },
+    {
+        rid: "r1",
+        maxBitrate: 800000,
+        scaleResolutionDownBy: 8,
+    },
+    {
+        rid: "r2",
+        maxBitrate: 900000,
+        scaleResolutionDownBy: 1,
+    },
+];
 
 export interface WebRtcPeerConfiguration {
     mediaConstraints: {
@@ -64,7 +107,7 @@ export class WebRtcPeer {
             ...configuration,
             iceServers:
                 !!configuration.iceServers &&
-                configuration.iceServers.length > 0
+                    configuration.iceServers.length > 0
                     ? configuration.iceServers
                     : freeice(),
             mediaStream:
@@ -127,6 +170,8 @@ export class WebRtcPeer {
             if ("addTransceiver" in this.pc) {
                 logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is available; using it");
 
+                // Spec doc: https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-addtransceiver
+
                 if (this.configuration.mode !== "recvonly") {
                     // To send media, assume that all desired media tracks
                     // have been already added by higher level code to our
@@ -138,11 +183,14 @@ export class WebRtcPeer {
                     }
 
                     for (const track of this.configuration.mediaStream.getTracks()) {
-                        this.pc.addTransceiver(track, {
+                        const tcInit: RTCRtpTransceiverInit = {
                             direction: this.configuration.mode,
                             streams: [this.configuration.mediaStream],
-                            sendEncodings: [],
-                        });
+                        };
+                        if (this.configuration.simulcast && track.kind === "video") {
+                            tcInit.sendEncodings = simulcastVideoEncodings;
+                        }
+                        this.pc.addTransceiver(track, tcInit);
                     }
                 } else {
                     // To just receive media, create new recvonly transceivers.
