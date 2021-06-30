@@ -1031,7 +1031,7 @@ export class Stream {
      */
     initWebRtcPeerReceiveFromClient(reconnect: boolean): Promise<void> {
         return new Promise((resolve, reject) => {
-            this.completeWebRtcPeerReceive(reconnect).then(response => {
+            this.completeWebRtcPeerReceive(reconnect, false).then(response => {
                 this.webRtcPeer.processRemoteAnswer(response.sdpAnswer)
                     .then(() => resolve()).catch(error => reject(error));
             }).catch(error => reject(error));
@@ -1048,7 +1048,7 @@ export class Stream {
                 if (error) {
                     reject(new Error('Error on prepareReceiveVideoFrom: ' + JSON.stringify(error)));
                 } else {
-                    this.completeWebRtcPeerReceive(reconnect, response.sdpOffer)
+                    this.completeWebRtcPeerReceive(reconnect, false, response.sdpOffer)
                         .then(() => resolve()).catch(error => reject(error));
                 }
             });
@@ -1058,7 +1058,7 @@ export class Stream {
     /**
      * @hidden
      */
-    completeWebRtcPeerReceive(reconnect: boolean, sdpOfferByServer?: string): Promise<any> {
+    completeWebRtcPeerReceive(reconnect: boolean, forciblyReconnect: boolean, sdpOfferByServer?: string): Promise<any> {
         return new Promise((resolve, reject) => {
 
             logger.debug("'Session.subscribe(Stream)' called");
@@ -1074,6 +1074,9 @@ export class Stream {
                     params[reconnect ? 'sdpString' : 'sdpAnswer'] = sdpString;
                 } else {
                     params['sdpOffer'] = sdpString;
+                }
+                if (reconnect) {
+                    params['forciblyReconnect'] = forciblyReconnect;
                 }
 
                 this.session.openvidu.sendRequest(method, params, (error, response) => {

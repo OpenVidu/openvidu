@@ -116,6 +116,8 @@ public abstract class SessionManager {
 	public abstract void prepareSubscription(Participant participant, String senderPublicId, boolean reconnect,
 			Integer id);
 
+	public abstract String prepareForcedSubscription(Participant participant, String senderPublicId);
+
 	public abstract void subscribe(Participant participant, String senderName, String sdpString, Integer transactionId,
 			boolean initByServer);
 
@@ -177,7 +179,7 @@ public abstract class SessionManager {
 			Integer transactionId);
 
 	public abstract void reconnectSubscriber(Participant participant, String streamId, String sdpString,
-			Integer transactionId, boolean initByServer);
+			Integer transactionId, boolean initByServer, boolean forciblyReconnect);
 
 	public abstract String getParticipantPrivateIdFromStreamId(String sessionId, String streamId)
 			throws OpenViduException;

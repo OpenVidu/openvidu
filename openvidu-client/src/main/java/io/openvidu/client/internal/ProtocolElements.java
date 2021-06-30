@@ -134,13 +134,19 @@ public class ProtocolElements {
 	public static final String RECONNECTSTREAM_METHOD = "reconnectStream";
 	public static final String RECONNECTSTREAM_STREAM_PARAM = "stream";
 	public static final String RECONNECTSTREAM_SDPSTRING_PARAM = "sdpString";
+	public static final String RECONNECTSTREAM_FORCIBLYRECONNECT_PARAM = "forciblyReconnect";
 	// TODO: REMOVE ON 2.18.0
 	public static final String RECONNECTSTREAM_SDPOFFER_PARAM = "sdpOffer";
 	// ENDTODO
 
 	public static final String VIDEODATA_METHOD = "videoData";
-	
+
 	public static final String ECHO_METHOD = "echo";
+
+	public static final String FORCIBLYRECONNECTSUBSCRIBER_METHOD = "forciblyReconnectSubscriber";
+	public static final String FORCIBLYRECONNECTSUBSCRIBER_CONNECTIONID_PARAM = "connectionId";
+	public static final String FORCIBLYRECONNECTSUBSCRIBER_STREAMID_PARAM = "streamId";
+	public static final String FORCIBLYRECONNECTSUBSCRIBER_SDPOFFER_PARAM = "sdpOffer";
 
 	// ---------------------------- SERVER RESPONSES & EVENTS -----------------
 

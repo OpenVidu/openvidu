@@ -11,7 +11,7 @@ public class WebrtcDebugEvent {
 	}
 
 	public enum WebrtcDebugEventOperation {
-		publish, subscribe, reconnectPublisher, reconnectSubscriber
+		publish, subscribe, reconnectPublisher, reconnectSubscriber, forciblyReconnectSubscriber
 	}
 
 	public enum WebrtcDebugEventType {

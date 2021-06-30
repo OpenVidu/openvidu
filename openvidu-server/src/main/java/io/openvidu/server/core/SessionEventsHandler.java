@@ -308,7 +308,7 @@ public class SessionEventsHandler {
 		}
 	}
 
-	public void onPrepareSubscription(Participant participant, Session session, String sdpOffer, Integer transactionId,
+	public void onPrepareSubscription(Participant participant, String sdpOffer, Integer transactionId,
 			OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);

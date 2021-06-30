@@ -662,7 +662,13 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 				sessionManager.reconnectPublisher(participant, streamId, sdpString, request.getId());
 			} else {
 				boolean initByServer = request.getParams().has(ProtocolElements.RECONNECTSTREAM_SDPSTRING_PARAM);
-				sessionManager.reconnectSubscriber(participant, streamId, sdpString, request.getId(), initByServer);
+				boolean forciblyReconnectSubscriber = false;
+				if (request.getParams().has(ProtocolElements.RECONNECTSTREAM_FORCIBLYRECONNECT_PARAM)) {
+					forciblyReconnectSubscriber = getBooleanParam(request,
+							ProtocolElements.RECONNECTSTREAM_FORCIBLYRECONNECT_PARAM);
+				}
+				sessionManager.reconnectSubscriber(participant, streamId, sdpString, request.getId(), initByServer,
+						forciblyReconnectSubscriber);
 			}
 		} catch (OpenViduException e) {
 			this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),

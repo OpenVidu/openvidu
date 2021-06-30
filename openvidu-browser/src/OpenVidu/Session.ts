@@ -1159,7 +1159,7 @@ export class Session extends EventDispatcher {
                             return;
                         }
 
-                        stream.completeWebRtcPeerReceive(true, event.sdpOffer)
+                        stream.completeWebRtcPeerReceive(true, true, event.sdpOffer)
                             .then(() => stream.finalResolveForSubscription(true, resolve))
                             .catch(error => stream.finalRejectForSubscription(true, `Error while forcibly reconnecting remote stream ${event.streamId}: ${error.toString()}`, reject));
                     } else {

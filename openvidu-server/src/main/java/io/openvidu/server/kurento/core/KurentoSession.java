@@ -19,9 +19,11 @@ package io.openvidu.server.kurento.core;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.kurento.client.Continuation;
 import org.kurento.client.ErrorEvent;
@@ -283,6 +285,12 @@ public class KurentoSession extends Session {
 
 	public String getParticipantPrivateIdFromStreamId(String streamId) {
 		return this.publishedStreamIds.get(streamId);
+	}
+
+	public Set<Participant> getParticipantsSubscribedToParticipant(String senderPublicId) {
+		return this.participants.values().stream()
+				.filter(p -> ((KurentoParticipant) p).getSubscriber(senderPublicId) != null)
+				.collect(Collectors.toSet());
 	}
 
 	public void restartStatusInKurentoAfterReconnection(Long kmsDisconnectionTime) {
