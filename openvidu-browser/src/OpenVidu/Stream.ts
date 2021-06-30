@@ -818,22 +818,33 @@ export class Stream {
     /**
      * @hidden
      */
+    setupReconnectionEventEmitter(resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void): boolean {
+        if (this.reconnectionEventEmitter == undefined) {
+            // There is no ongoing reconnection
+            this.reconnectionEventEmitter = new EventEmitter();
+            return false;
+        } else {
+            // Ongoing reconnection
+            console.warn(`Trying to reconnect stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'}) but an ongoing reconnection process is active. Waiting for response...`);
+            this.reconnectionEventEmitter.once('success', () => {
+                resolve();
+            });
+            this.reconnectionEventEmitter.once('error', error => {
+                reject(error);
+            });
+            return true;
+        }
+    }
+
+    /**
+     * @hidden
+     */
     initWebRtcPeerSend(reconnect: boolean): Promise<void> {
         return new Promise((resolve, reject) => {
 
             if (reconnect) {
-                if (this.reconnectionEventEmitter == undefined) {
-                    // There is no ongoing reconnection
-                    this.reconnectionEventEmitter = new EventEmitter();
-                } else {
+                if (this.setupReconnectionEventEmitter(resolve, reject)) {
                     // Ongoing reconnection
-                    console.warn(`Trying to reconnect stream ${this.streamId} (Publisher) but an ongoing reconnection process is active. Waiting for response...`);
-                    this.reconnectionEventEmitter.once('success', () => {
-                        resolve();
-                    });
-                    this.reconnectionEventEmitter.once('error', error => {
-                        reject(error);
-                    });
                     return;
                 }
             } else {
@@ -959,43 +970,40 @@ export class Stream {
     /**
      * @hidden
      */
+    finalResolveForSubscription(reconnect: boolean, resolve: (value: void | PromiseLike<void>) => void) {
+        logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
+        this.remotePeerSuccessfullyEstablished(reconnect);
+        this.initWebRtcStats();
+        if (reconnect) {
+            this.reconnectionEventEmitter?.emitEvent('success');
+            delete this.reconnectionEventEmitter;
+        }
+        resolve();
+    }
+
+    /**
+     * @hidden
+     */
+    finalRejectForSubscription(reconnect: boolean, error: any, reject: (reason?: any) => void) {
+        logger.error("Error for 'Subscriber' (" + this.streamId + ") while trying to " + (reconnect ? "reconnect" : "subscribe") + ": " + error.toString());
+        if (reconnect) {
+            this.reconnectionEventEmitter?.emitEvent('error', [error]);
+            delete this.reconnectionEventEmitter;
+        }
+        reject(error);
+    }
+
+    /**
+     * @hidden
+     */
     initWebRtcPeerReceive(reconnect: boolean): Promise<void> {
         return new Promise((resolve, reject) => {
 
             if (reconnect) {
-                if (this.reconnectionEventEmitter == undefined) {
-                    // There is no ongoing reconnection
-                    this.reconnectionEventEmitter = new EventEmitter();
-                } else {
+                if (this.setupReconnectionEventEmitter(resolve, reject)) {
                     // Ongoing reconnection
-                    console.warn(`Trying to reconnect stream ${this.streamId} (Subscriber) but an ongoing reconnection process is active. Waiting for response...`);
-                    this.reconnectionEventEmitter.once('success', () => {
-                        resolve();
-                    });
-                    this.reconnectionEventEmitter.once('error', error => {
-                        reject(error);
-                    });
                     return;
                 }
-            }
-
-            const finalResolve = () => {
-                logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
-                this.remotePeerSuccessfullyEstablished(reconnect);
-                this.initWebRtcStats();
-                if (reconnect) {
-                    this.reconnectionEventEmitter?.emitEvent('success');
-                    delete this.reconnectionEventEmitter;
-                }
-                resolve();
-            }
-
-            const finalReject = error => {
-                if (reconnect) {
-                    this.reconnectionEventEmitter?.emitEvent('error', [error]);
-                    delete this.reconnectionEventEmitter;
-                }
-                reject(error);
             }
 
             if (this.session.openvidu.mediaServer === 'mediasoup') {
@@ -1003,16 +1011,16 @@ export class Stream {
                 // Server initiates negotiation
 
                 this.initWebRtcPeerReceiveFromServer(reconnect)
-                    .then(() => finalResolve())
-                    .catch(error => finalReject(error));
+                    .then(() => this.finalResolveForSubscription(reconnect, resolve))
+                    .catch(error => this.finalRejectForSubscription(reconnect, error, reject));
 
             } else {
 
                 // Client initiates negotiation
 
                 this.initWebRtcPeerReceiveFromClient(reconnect)
-                    .then(() => finalResolve())
-                    .catch(error => finalReject(error));
+                    .then(() => this.finalResolveForSubscription(reconnect, resolve))
+                    .catch(error => this.finalRejectForSubscription(reconnect, error, reject));
 
             }
         });
@@ -1320,7 +1328,10 @@ export class Stream {
         return state;
     }
 
-    private initWebRtcStats(): void {
+    /**
+     * @hidden
+     */
+    initWebRtcStats(): void {
         this.webRtcStats = new WebRtcStats(this);
         this.webRtcStats.initWebRtcStats();
 

@@ -117,12 +117,14 @@ export class OpenVidu {
    * @hidden
    */
   webrtcStatsInterval: number = -1;
-
   /**
    * @hidden
    */
   sendBrowserLogs: OpenViduLoggerConfiguration = OpenViduLoggerConfiguration.disabled;
-
+  /**
+   * @hidden
+   */
+  isPro: boolean = false;
   /**
    * @hidden
    */
@@ -768,7 +770,8 @@ export class OpenVidu {
         filterEventDispatched: this.session.onFilterEventDispatched.bind(this.session),
         iceCandidate: this.session.recvIceCandidate.bind(this.session),
         mediaError: this.session.onMediaError.bind(this.session),
-        masterNodeCrashedNotification: this.onMasterNodeCrashedNotification.bind(this)
+        masterNodeCrashedNotification: this.onMasterNodeCrashedNotification.bind(this),
+        forciblyReconnectSubscriber: this.session.onForciblyReconnectSubscriber.bind(this.session)
       }
     };
     this.jsonRpcClient = new RpcBuilder.clients.JsonRpcClient(config);

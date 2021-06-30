@@ -778,25 +778,22 @@ export class Session extends EventDispatcher {
      * @hidden
      */
     onParticipantLeft(event: { connectionId: string, reason: string }): void {
+        this.getRemoteConnection(event.connectionId, 'onParticipantLeft').then(connection => {
+            if (!!connection.stream) {
+                const stream = connection.stream;
 
-        if (this.remoteConnections.size > 0) {
-            this.getRemoteConnection(event.connectionId, 'onParticipantLeft').then(connection => {
-                if (!!connection.stream) {
-                    const stream = connection.stream;
+                const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, event.reason);
+                this.ee.emitEvent('streamDestroyed', [streamEvent]);
+                streamEvent.callDefaultBehavior();
 
-                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, event.reason);
-                    this.ee.emitEvent('streamDestroyed', [streamEvent]);
-                    streamEvent.callDefaultBehavior();
-
-                    this.remoteStreamsCreated.delete(stream.streamId);
-                }
-                this.remoteConnections.delete(connection.connectionId);
-                this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, event.reason)]);
-            })
-                .catch(openViduError => {
-                    logger.error(openViduError);
-                });
-        }
+                this.remoteStreamsCreated.delete(stream.streamId);
+            }
+            this.remoteConnections.delete(connection.connectionId);
+            this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, event.reason)]);
+        })
+            .catch(openViduError => {
+                logger.error(openViduError);
+            });
     }
 
     /**
@@ -1121,6 +1118,61 @@ export class Session extends EventDispatcher {
                 const stream: Stream = connection.stream!;
                 stream.filter!.handlers.get(event.eventType)?.call(this, new FilterEvent(stream.filter!, event.eventType, event.data));
             });
+    }
+
+    /**
+     * @hidden
+     */
+    onForciblyReconnectSubscriber(event: { connectionId: string, streamId: string, sdpOffer: string }): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.getRemoteConnection(event.connectionId, 'onForciblyReconnectSubscriber')
+                .then(connection => {
+                    if (!!connection.stream && connection.stream.streamId === event.streamId) {
+                        const stream = connection.stream;
+
+                        if (stream.setupReconnectionEventEmitter(resolve, reject)) {
+                            // Ongoing reconnection
+                            // Wait for the event emitter to be free (with success or error) and call the method again
+                            if (stream.reconnectionEventEmitter!['onForciblyReconnectSubscriberLastEvent'] != null) {
+                                // Two or more onForciblyReconnectSubscriber events were received while a reconnection process
+                                // of the subscriber was already taking place. Always use the last one to retry the re-subscription
+                                // process, as that SDP offer will be the only one available at the server side. Ignore previous ones
+                                stream.reconnectionEventEmitter!['onForciblyReconnectSubscriberLastEvent'] = event;
+                                reject('Ongoing forced subscriber reconnection');
+                            } else {
+                                // One onForciblyReconnectSubscriber even has been received while a reconnection process
+                                // of the subscriber was already taking place. Set up a listener to wait for it to retry the
+                                // forced reconnection process
+                                stream.reconnectionEventEmitter!['onForciblyReconnectSubscriberLastEvent'] = event;
+                                const callback = () => {
+                                    const eventAux = stream.reconnectionEventEmitter!['onForciblyReconnectSubscriberLastEvent'];
+                                    delete stream.reconnectionEventEmitter!['onForciblyReconnectSubscriberLastEvent'];
+                                    this.onForciblyReconnectSubscriber(eventAux);
+                                }
+                                stream.reconnectionEventEmitter!.once('success', () => {
+                                    callback();
+                                });
+                                stream.reconnectionEventEmitter!.once('error', () => {
+                                    callback();
+                                });
+                            }
+                            return;
+                        }
+
+                        stream.completeWebRtcPeerReceive(true, event.sdpOffer)
+                            .then(() => stream.finalResolveForSubscription(true, resolve))
+                            .catch(error => stream.finalRejectForSubscription(true, `Error while forcibly reconnecting remote stream ${event.streamId}: ${error.toString()}`, reject));
+                    } else {
+                        const errMsg = "No stream with streamId '" + event.streamId + "' found for connection '" + event.connectionId + "' on 'streamPropertyChanged' event";
+                        logger.error(errMsg);
+                        reject(errMsg);
+                    }
+                })
+                .catch(openViduError => {
+                    logger.error(openViduError);
+                    reject(openViduError);
+                });
+        });
     }
 
     /**
@@ -1463,6 +1515,7 @@ export class Session extends EventDispatcher {
             if (!!sendBrowserLogs) {
                 this.openvidu.sendBrowserLogs = sendBrowserLogs;
             }
+            this.openvidu.isPro = !!webrtcStatsInterval && !!sendBrowserLogs;
 
             this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
             this.openvidu.httpUri = 'https://' + url.host;

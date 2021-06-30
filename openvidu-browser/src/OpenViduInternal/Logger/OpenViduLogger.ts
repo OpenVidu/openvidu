@@ -24,14 +24,14 @@ export class OpenViduLogger {
 	private loggingSessionId: string | undefined;
 
 	/**
-     * @hidden
-     */
+	 * @hidden
+	 */
 	static configureJSNLog(openVidu: OpenVidu, token: string) {
 		try {
-			// If dev mode
+			// If dev mode or...
 			if ((window['LOG_JSNLOG_RESULTS']) ||
 				// If instance is created and it is OpenVidu Pro
-				(this.instance && openVidu.webrtcStatsInterval > -1
+				(this.instance && openVidu.isPro
 					// If logs are enabled
 					&& this.instance.isOpenViduBrowserLogsDebugActive(openVidu)
 					// Only reconfigure it if session or finalUserId has changed
@@ -135,8 +135,8 @@ export class OpenViduLogger {
 	}
 
 	/**
-     * @hidden
-     */
+	 * @hidden
+	 */
 	static getInstance(): OpenViduLogger {
 		if (!OpenViduLogger.instance) {
 			OpenViduLogger.instance = new OpenViduLogger();
@@ -159,9 +159,9 @@ export class OpenViduLogger {
 
 	// Return console functions with jsnlog integration
 	private getConsoleWithJSNLog() {
-		return function(openViduLogger: OpenViduLogger){
+		return function (openViduLogger: OpenViduLogger) {
 			return {
-				log: function(...args){
+				log: function (...args) {
 					openViduLogger.defaultConsoleLogger.log.apply(openViduLogger.defaultConsoleLogger.logger, arguments);
 					if (openViduLogger.isJSNLogSetup) {
 						JL().info(arguments);
@@ -173,7 +173,7 @@ export class OpenViduLogger {
 						JL().info(arguments);
 					}
 				},
-				debug: function(...args) {
+				debug: function (...args) {
 					openViduLogger.defaultConsoleLogger.debug.apply(openViduLogger.defaultConsoleLogger.logger, arguments);
 				},
 				warn: function (...args) {
@@ -202,7 +202,7 @@ export class OpenViduLogger {
 	}
 
 	private disableLogger() {
-		JL.setOptions({enabled: false});
+		JL.setOptions({ enabled: false });
 		this.isJSNLogSetup = false;
 		this.loggingSessionId = undefined;
 		this.currentAppender = undefined;
@@ -215,8 +215,8 @@ export class OpenViduLogger {
 	}
 
 	/**
-     * @hidden
-     */
+	 * @hidden
+	 */
 	log(...args: any[]) {
 		if (!this.isProdMode) {
 			this.defaultConsoleLogger.log.apply(this.defaultConsoleLogger.logger, arguments);
@@ -227,8 +227,8 @@ export class OpenViduLogger {
 	}
 
 	/**
-     * @hidden
-     */
+	 * @hidden
+	 */
 	debug(...args: any[]) {
 		if (!this.isProdMode) {
 			this.defaultConsoleLogger.debug.apply(this.defaultConsoleLogger.logger, arguments);
@@ -236,8 +236,8 @@ export class OpenViduLogger {
 	}
 
 	/**
-     * @hidden
-     */
+	 * @hidden
+	 */
 	info(...args: any[]) {
 		if (!this.isProdMode) {
 			this.defaultConsoleLogger.info.apply(this.defaultConsoleLogger.logger, arguments);
@@ -248,8 +248,8 @@ export class OpenViduLogger {
 	}
 
 	/**
-     * @hidden
-     */
+	 * @hidden
+	 */
 	warn(...args: any[]) {
 		if (!this.isProdMode) {
 			this.defaultConsoleLogger.warn.apply(this.defaultConsoleLogger.logger, arguments);
@@ -260,8 +260,8 @@ export class OpenViduLogger {
 	}
 
 	/**
-     * @hidden
-     */
+	 * @hidden
+	 */
 	error(...args: any[]) {
 		this.defaultConsoleLogger.error.apply(this.defaultConsoleLogger.logger, arguments);
 		if (this.isJSNLogSetup) {
@@ -270,8 +270,8 @@ export class OpenViduLogger {
 	}
 
 	/**
-     * @hidden
-     */
+	 * @hidden
+	 */
 	flush() {
 		if (this.isJSNLogSetup && this.currentAppender != null) {
 			this.currentAppender.sendBatch();
