@@ -164,7 +164,7 @@ export class WebRtcPeer {
      * Only if the negotiation was initiated by this peer
      */
     createOffer(): Promise<RTCSessionDescriptionInit> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             // TODO: Delete this conditional when all supported browsers are
             // modern enough to implement the Transceiver methods.
             if ("addTransceiver" in this.pc) {
@@ -190,7 +190,29 @@ export class WebRtcPeer {
                         if (this.configuration.simulcast && track.kind === "video") {
                             tcInit.sendEncodings = simulcastVideoEncodings;
                         }
-                        this.pc.addTransceiver(track, tcInit);
+                        const tc = this.pc.addTransceiver(track, tcInit);
+
+                        // FIXME: Check that the simulcast encodings were applied.
+                        // Firefox doesn't implement `RTCRtpTransceiverInit.sendEncodings`
+                        // so the only way to enable simulcast is with `RTCRtpSender.setParameters()`.
+                        //
+                        // This next block can be deleted when Firefox fixes bug #1396918:
+                        // https://bugzilla.mozilla.org/show_bug.cgi?id=1396918
+                        //
+                        // NOTE: This is done in a way that is compatible with all browsers, to save on
+                        // browser-conditional code. The idea comes from WebRTC Adapter.js:
+                        // * https://github.com/webrtcHacks/adapter/issues/998
+                        // * https://github.com/webrtcHacks/adapter/blob/845a3b4874f1892a76f04c3cc520e80b5041c303/src/js/firefox/firefox_shim.js#L217
+                        if (this.configuration.simulcast && track.kind === "video") {
+                            const sendParams = tc.sender.getParameters();
+                            if (
+                                !("encodings" in sendParams) ||
+                                sendParams.encodings.length !== tcInit.sendEncodings!.length
+                            ) {
+                                sendParams.encodings = tcInit.sendEncodings!;
+                                await tc.sender.setParameters(sendParams);
+                            }
+                        }
                     }
                 } else {
                     // To just receive media, create new recvonly transceivers.
