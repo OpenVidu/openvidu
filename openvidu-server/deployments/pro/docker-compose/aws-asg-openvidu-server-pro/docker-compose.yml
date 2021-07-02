@@ -22,7 +22,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server-pro:2.18.0
+        image: openvidu/openvidu-server-pro:2.19.0-beta8
         restart: on-failure
         network_mode: host
         entrypoint: ['/usr/local/bin/entrypoint.sh']
@@ -89,7 +89,7 @@ services:
         image: openvidu/openvidu-coturn:4.0.0
         restart: on-failure
         network_mode: host
-        environment: 
+        environment:
             - REDIS_IP=127.0.0.1
             - DB_NAME=0
             - DB_PASSWORD=${OPENVIDU_SECRET}
