@@ -47,29 +47,46 @@ let platform: PlatformUtils;
  * |   640x360 |            700 |          2 |
  * |   480x270 |            450 |          2 |
  * |   320x180 |            200 |          1 |
+ *
+ * Firefox will send as many layers as we request, but there are some limits on
+ * their bitrate:
+ *
+ * | Size (px) | Min bitrate (bps) | Start bitrate (bps) | Max bitrate (bps) |       Comments |
+ * |----------:|------------------:|--------------------:|------------------:|---------------:|
+ * | 1920x1200 |              1500 |                2000 |             10000 |   >HD (3K, 4K) |
+ * |  1280x720 |              1200 |                1500 |              5000 |  HD ~1080-1200 |
+ * |   800x480 |               200 |                 800 |              2500 |        HD ~720 |
+ * |   480x270 |               150 |                 500 |              2000 |           WVGA |
+ * |   400x240 |               125 |                 300 |              1300 |            VGA |
+ * |   176x144 |               100 |                 150 |               500 |     WQVGA, CIF |
+ * |         0 |                40 |                  80 |               250 | QCIF and below |
+ *
+ * Docs for `RTCRtpEncodingParameters`: https://www.w3.org/TR/webrtc/#dom-rtcrtpencodingparameters
+ * Most interesting members are `maxBitrate` and `scaleResolutionDownBy`.
+ *
+ * `scaleResolutionDownBy` is specified as 4:2:1 which is the same that the default.
+ * The WebRTC spec says this (https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection-addtransceiver):
+ *     > If the scaleResolutionDownBy attributes of sendEncodings are still undefined, initialize
+ *     > each encoding's scaleResolutionDownBy to 2^(length of sendEncodings - encoding index
+ *     > - 1). This results in smaller-to-larger resolutions where the last encoding has no scaling
+ *     > applied to it, e.g. 4:2:1 if the length is 3.
+ * However, Firefox doesn't seem to implement this default yet. Mediasoup never gets to select
+ * an output layer.
+ *
+ * `maxBitrate` is left unspecified, to let the client decide based on its own
+ * bandwidth limit detection.
  */
 const simulcastVideoEncodings: RTCRtpEncodingParameters[] = [
     {
         rid: "r0",
-        maxBitrate: 700000,
-
-        // TODO: Remove for final version; leave the browser decide:
-        // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-addtransceiver
-        // > If the scaleResolutionDownBy attribues of sendEncodings are still
-        // > undefined, initialize each encoding's scaleResolutionDownBy to
-        // > 2^(length of sendEncodings - encoding index - 1). This results in
-        // > smaller-to-larger resolutions where the last encoding has no scaling
-        // > applied to it, e.g. 4:2:1 if the length is 3.
-        scaleResolutionDownBy: 16,
+        scaleResolutionDownBy: 4,
     },
     {
         rid: "r1",
-        maxBitrate: 800000,
-        scaleResolutionDownBy: 8,
+        scaleResolutionDownBy: 2,
     },
     {
         rid: "r2",
-        maxBitrate: 900000,
         scaleResolutionDownBy: 1,
     },
 ];
