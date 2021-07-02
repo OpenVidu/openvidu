@@ -10,6 +10,7 @@ IMAGES=(
   "docker.elastic.co/beats/filebeat"
   "docker.elastic.co/beats/metricbeat"
   "openvidu/media-node-controller"
+  "openvidu/mediasoup-controller"
 )
 
 fatal_error() {
