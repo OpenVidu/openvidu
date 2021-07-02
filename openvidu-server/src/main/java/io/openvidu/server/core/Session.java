@@ -263,7 +263,7 @@ public class Session implements SessionInterface {
 
 	@Override
 	public boolean close(EndReason reason) {
-		return false;
+		return true;
 	}
 
 	public int getNumberOfConnections() {
