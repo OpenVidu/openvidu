@@ -848,21 +848,7 @@ public class OpenviduConfig {
 
 	protected String asOptionalIPv4OrIPv6(String property) {
 		String ip = getValue(property);
-		if (ip != null && !ip.isEmpty()) {
-			boolean isIP;
-			try {
-				final InetAddress inet = InetAddress.getByName(ip);
-				isIP = inet instanceof Inet4Address || inet instanceof Inet6Address;
-				if (isIP) {
-					ip = inet.getHostAddress();
-				}
-			} catch (final UnknownHostException e) {
-				isIP = false;
-			}
-			if (!isIP) {
-				addError(property, "Is not a valid IP Address (IPv4 or IPv6)");
-			}
-		}
+		isValidIp(property, ip);
 		return ip;
 	}
 
@@ -1045,7 +1031,7 @@ public class OpenviduConfig {
 		return mediaNodesPublicIps;
 	}
 
-	private void isValidIp(String propertyName, String ip) {
+	private void isValidIp(String property, String ip) {
 		if (ip != null && !ip.isEmpty()) {
 			boolean isIP;
 			try {
@@ -1058,7 +1044,7 @@ public class OpenviduConfig {
 				isIP = false;
 			}
 			if (!isIP) {
-				addError(propertyName, "Is not a valid IP Address (IPv4 or IPv6): " + ip);
+				addError(property, "Is not a valid IP Address (IPv4 or IPv6): " + ip);
 			}
 		}
 	}
