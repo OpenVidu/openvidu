@@ -17,6 +17,8 @@
 
 package io.openvidu.server.kurento.endpoint;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -28,6 +30,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.openvidu.server.utils.ice.IceCandidateDataParser;
+import io.openvidu.server.utils.ice.IceCandidateType;
 import org.kurento.client.BaseRtpEndpoint;
 import org.kurento.client.Continuation;
 import org.kurento.client.Endpoint;
@@ -102,6 +106,7 @@ public abstract class MediaEndpoint {
 	private final List<IceCandidate> receivedCandidateList = Collections.synchronizedList(new ArrayList<>());
 	private final List<IceCandidate> gatheredCandidateList = Collections.synchronizedList(new ArrayList<>());
 	private LinkedList<IceCandidate> candidates = new LinkedList<IceCandidate>();
+
 
 	public String selectedLocalIceCandidate;
 	public String selectedRemoteIceCandidate;
@@ -568,13 +573,62 @@ public abstract class MediaEndpoint {
 		webEndpoint.addIceCandidateFoundListener(event -> {
 			final IceCandidate candidate = event.getCandidate();
 
-			gatheredCandidateList.add(candidate);
-			this.owner.logIceCandidate(new WebrtcDebugEvent(this.owner, this.streamId, WebrtcDebugEventIssuer.server,
-					this.getWebrtcDebugOperation(), WebrtcDebugEventType.iceCandidate,
-					gson.toJsonTree(candidate).toString()));
-
-			owner.sendIceCandidate(senderPublicId, endpointName, candidate);
+			if (this.openviduConfig.areMediaNodesPublicIpsDefined()) {
+				sendCandidatesWithConfiguredIp(senderPublicId, candidate);
+			} else {
+				gatheredCandidateList.add(candidate);
+				this.owner.logIceCandidate(new WebrtcDebugEvent(this.owner, this.streamId, WebrtcDebugEventIssuer.server,
+						this.getWebrtcDebugOperation(), WebrtcDebugEventType.iceCandidate,
+						gson.toJsonTree(candidate).toString()));
+				owner.sendIceCandidate(senderPublicId, endpointName, candidate);
+			}
 		});
+	}
+
+	private void sendCandidatesWithConfiguredIp(String senderPublicId, IceCandidate candidate) {
+		// Get media node private IP
+		String kurentoPrivateIp = this.owner.getSession().getKms().getIp();
+
+		// Get Ip to be replaced
+		String ipToReplace = this.openviduConfig.getMediaNodesPublicIpsMap().get(kurentoPrivateIp);
+
+		// If Ip is configured
+		if (ipToReplace != null && !ipToReplace.isEmpty()) {
+
+			// Candidate which will have the public IP
+			IceCandidate candidatePublicIp = new IceCandidate(candidate.getCandidate(), candidate.getSdpMid(),
+					candidate.getSdpMLineIndex());
+			IceCandidateDataParser candidatePublicIpParser = new IceCandidateDataParser(candidatePublicIp);
+			// Only create host candidates to increase priority
+			if (candidatePublicIpParser.getType() == IceCandidateType.host) {
+				candidatePublicIpParser.setIp(ipToReplace);
+				// Max priority for public IP
+				candidatePublicIpParser.setMaxPriority();
+				candidatePublicIp.setCandidate(candidatePublicIpParser.toString());
+
+				gatheredCandidateList.add(candidatePublicIp);
+				this.owner.logIceCandidate(new WebrtcDebugEvent(this.owner, this.streamId, WebrtcDebugEventIssuer.server,
+						this.getWebrtcDebugOperation(), WebrtcDebugEventType.iceCandidate,
+						gson.toJsonTree(candidatePublicIp).toString()));
+				owner.sendIceCandidate(senderPublicId, endpointName, candidatePublicIp);
+
+				// Candidate which will have the private IP exposed of the media node
+				IceCandidate candidatePrivateIp = new IceCandidate(candidate.getCandidate(), candidate.getSdpMid(),
+						candidate.getSdpMLineIndex());
+				IceCandidateDataParser candidatePrivateIpParser = new IceCandidateDataParser(candidatePrivateIp);
+				// Min priority for private IP
+				candidatePrivateIpParser.setMinPriority();
+				candidatePrivateIpParser.setIp(kurentoPrivateIp);
+				candidatePrivateIp.setCandidate(candidatePrivateIpParser.toString());
+
+				gatheredCandidateList.add(candidatePrivateIp);
+				this.owner.logIceCandidate(new WebrtcDebugEvent(this.owner, this.streamId, WebrtcDebugEventIssuer.server,
+						this.getWebrtcDebugOperation(), WebrtcDebugEventType.iceCandidate,
+						gson.toJsonTree(candidatePrivateIp).toString()));
+
+				owner.sendIceCandidate(senderPublicId, endpointName, candidatePrivateIp);
+			}
+		}
 	}
 
 	/**

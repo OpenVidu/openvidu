@@ -191,6 +191,12 @@ public class OpenviduConfig {
 
 	private String dotenvPath;
 
+	// Media Nodes private IPs and Public IPs
+	// If defined, they will be configured as public IPs of Kurento or Mediasoup
+	// Key: Private IP
+	// Value: Public IP
+	private Map<String, String> mediaNodesPublicIps = new HashMap<>();
+
 	// Derived properties
 
 	public static String finalUrl;
@@ -365,6 +371,14 @@ public class OpenviduConfig {
 		this.isTurnadminAvailable = available;
 	}
 
+	public boolean areMediaNodesPublicIpsDefined() {
+		return !this.mediaNodesPublicIps.isEmpty();
+	}
+
+	public Map<String, String> getMediaNodesPublicIpsMap() {
+		return this.mediaNodesPublicIps;
+	}
+
 	public OpenViduRole[] getRolesFromRecordingNotification() {
 		OpenViduRole[] roles;
 		switch (this.openviduRecordingNotification) {
@@ -537,6 +551,9 @@ public class OpenviduConfig {
 
 		openviduForcedCodec = asEnumValue("OPENVIDU_STREAMS_FORCED_VIDEO_CODEC", VideoCodec.class);
 		openviduAllowTranscoding = asBoolean("OPENVIDU_STREAMS_ALLOW_TRANSCODING");
+
+		// Load Public IPS
+		mediaNodesPublicIps = loadMediaNodePublicIps("MEDIA_NODES_PUBLIC_IPS");
 
 		kmsUrisList = checkKmsUris();
 
@@ -1003,6 +1020,47 @@ public class OpenviduConfig {
 			log.warn("DOTENV_PATH configuration property is not defined");
 		}
 		return null;
+	}
+
+	private Map<String, String> loadMediaNodePublicIps(String propertyName) {
+		String mediaNodesPublicIpsRaw = this.asOptionalString(propertyName);
+		final Map<String, String> mediaNodesPublicIps = new HashMap<>();
+
+		if (mediaNodesPublicIpsRaw == null || mediaNodesPublicIpsRaw.isEmpty()) {
+			return mediaNodesPublicIps;
+		}
+		List<String> mediaNodesPublicIpsList = asJsonStringsArray(propertyName);
+		for(String ipPairStr: mediaNodesPublicIpsList) {
+			String[] ipPair = ipPairStr.trim().split(":");
+			if (ipPair.length != 2) {
+				addError(propertyName, "Not valid ip pair in " + propertyName + ": " + ipPairStr);
+				break;
+			}
+			String privateIp = ipPair[0];
+			String publicIp = ipPair[1];
+			isValidIp(propertyName, privateIp);
+			isValidIp(propertyName, publicIp);
+			mediaNodesPublicIps.put(privateIp, publicIp);
+		}
+		return mediaNodesPublicIps;
+	}
+
+	private void isValidIp(String propertyName, String ip) {
+		if (ip != null && !ip.isEmpty()) {
+			boolean isIP;
+			try {
+				final InetAddress inet = InetAddress.getByName(ip);
+				isIP = inet instanceof Inet4Address || inet instanceof Inet6Address;
+				if (isIP) {
+					ip = inet.getHostAddress();
+				}
+			} catch (final UnknownHostException e) {
+				isIP = false;
+			}
+			if (!isIP) {
+				addError(propertyName, "Is not a valid IP Address (IPv4 or IPv6): " + ip);
+			}
+		}
 	}
 
 }
