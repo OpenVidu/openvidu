@@ -89,7 +89,7 @@ export class OpenViduLogger {
 						const seen = new WeakSet();
 						return (key, value) => {
 							if (typeof value === "object" && value != null) {
-								if (seen.has(value) || value instanceof HTMLElement) {
+								if (seen.has(value) || (HTMLElement && value instanceof HTMLElement)) {
 									return;
 								}
 								seen.add(value);

@@ -259,10 +259,7 @@ export class WebRtcPeer {
                 // "offerToReceiveAudio" and "offerToReceiveVideo".
 
                 if (!!this.configuration.mediaStream) {
-                    for (const track of this.configuration.mediaStream.getTracks()) {
-                        // @ts-ignore - Compiler is too clever and thinks this branch will never execute.
-                        this.pc.addTrack(track, this.configuration.mediaStream);
-                    }
+                    this.deprecatedPeerConnectionTrackApi();
                 }
 
                 const hasAudio = this.configuration.mediaConstraints.audio;
@@ -284,6 +281,12 @@ export class WebRtcPeer {
                     .catch((error) => reject(error));
             }
         });
+    }
+
+    deprecatedPeerConnectionTrackApi() {
+        for (const track of this.configuration.mediaStream!.getTracks()) {
+            this.pc.addTrack(track, this.configuration.mediaStream!);
+        }
     }
 
     /**
@@ -324,6 +327,29 @@ export class WebRtcPeer {
                     .createAnswer()
                     .then((sdpAnswer) => resolve(sdpAnswer))
                     .catch((error) => reject(error));
+
+            } else {
+
+                // TODO: Delete else branch when all supported browsers are
+                // modern enough to implement the Transceiver methods
+
+                let offerAudio, offerVideo = true;
+                if (!!this.configuration.mediaConstraints) {
+                    offerAudio = (typeof this.configuration.mediaConstraints.audio === 'boolean') ?
+                        this.configuration.mediaConstraints.audio : true;
+                    offerVideo = (typeof this.configuration.mediaConstraints.video === 'boolean') ?
+                        this.configuration.mediaConstraints.video : true;
+                    const constraints: RTCOfferOptions = {
+                        offerToReceiveAudio: offerAudio,
+                        offerToReceiveVideo: offerVideo
+                    };
+                    this.pc!.createAnswer(constraints).then(sdpAnswer => {
+                        resolve(sdpAnswer);
+                    }).catch(error => {
+                        reject(error);
+                    });
+                }
+
             }
 
             // else, there is nothing to do; the legacy createAnswer() options do
