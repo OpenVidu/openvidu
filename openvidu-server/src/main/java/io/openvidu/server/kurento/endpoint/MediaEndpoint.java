@@ -594,39 +594,35 @@ public abstract class MediaEndpoint {
 
 		// If Ip is configured
 		if (ipToReplace != null && !ipToReplace.isEmpty()) {
+			// Create IceCandidateParser to modify original candidate information
+			IceCandidateDataParser candidateParser = new IceCandidateDataParser(candidate);
 
-			// Candidate which will have the public IP
-			IceCandidate candidatePublicIp = new IceCandidate(candidate.getCandidate(), candidate.getSdpMid(),
-					candidate.getSdpMLineIndex());
-			IceCandidateDataParser candidatePublicIpParser = new IceCandidateDataParser(candidatePublicIp);
 			// Only create host candidates to increase priority
-			if (candidatePublicIpParser.getType() == IceCandidateType.host) {
-				candidatePublicIpParser.setIp(ipToReplace);
-				// Max priority for public IP
-				candidatePublicIpParser.setMaxPriority();
-				candidatePublicIp.setCandidate(candidatePublicIpParser.toString());
-
-				gatheredCandidateList.add(candidatePublicIp);
-				this.owner.logIceCandidate(new WebrtcDebugEvent(this.owner, this.streamId, WebrtcDebugEventIssuer.server,
-						this.getWebrtcDebugOperation(), WebrtcDebugEventType.iceCandidate,
-						gson.toJsonTree(candidatePublicIp).toString()));
-				owner.sendIceCandidate(senderPublicId, endpointName, candidatePublicIp);
-
-				// Candidate which will have the private IP exposed of the media node
-				IceCandidate candidatePrivateIp = new IceCandidate(candidate.getCandidate(), candidate.getSdpMid(),
+			if (candidateParser.getType() == IceCandidateType.host) {
+				String originalIP = candidateParser.getIp();
+				// Send candidate with new configured IP
+				IceCandidate candidateMaxPriority = new IceCandidate(candidate.getCandidate(), candidate.getSdpMid(),
 						candidate.getSdpMLineIndex());
-				IceCandidateDataParser candidatePrivateIpParser = new IceCandidateDataParser(candidatePrivateIp);
-				// Min priority for private IP
-				candidatePrivateIpParser.setMinPriority();
-				candidatePrivateIpParser.setIp(kurentoPrivateIp);
-				candidatePrivateIp.setCandidate(candidatePrivateIpParser.toString());
-
-				gatheredCandidateList.add(candidatePrivateIp);
+				candidateParser.setIp(ipToReplace);
+				candidateParser.setMaxPriority(); // Set max priority for this candidate
+				candidateMaxPriority.setCandidate(candidateParser.toString());
+				gatheredCandidateList.add(candidateMaxPriority);
 				this.owner.logIceCandidate(new WebrtcDebugEvent(this.owner, this.streamId, WebrtcDebugEventIssuer.server,
 						this.getWebrtcDebugOperation(), WebrtcDebugEventType.iceCandidate,
-						gson.toJsonTree(candidatePrivateIp).toString()));
+						gson.toJsonTree(candidateMaxPriority).toString()));
+				owner.sendIceCandidate(senderPublicId, endpointName, candidateMaxPriority);
 
-				owner.sendIceCandidate(senderPublicId, endpointName, candidatePrivateIp);
+				// Send candidate with original IP
+				IceCandidate candidateMinPriority = new IceCandidate(candidate.getCandidate(), candidate.getSdpMid(),
+						candidate.getSdpMLineIndex());
+				candidateParser.setIp(originalIP);
+				candidateParser.setMinPriority(); // Set min priority for private IP
+				candidateMinPriority.setCandidate(candidateParser.toString());
+				gatheredCandidateList.add(candidateMinPriority);
+				this.owner.logIceCandidate(new WebrtcDebugEvent(this.owner, this.streamId, WebrtcDebugEventIssuer.server,
+						this.getWebrtcDebugOperation(), WebrtcDebugEventType.iceCandidate,
+						gson.toJsonTree(candidateMinPriority).toString()));
+				owner.sendIceCandidate(senderPublicId, endpointName, candidateMinPriority);
 			}
 		}
 	}
