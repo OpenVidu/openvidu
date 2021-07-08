@@ -75,7 +75,7 @@ public class RpcNotificationService {
 		try {
 			t.sendResponse(result);
 		} catch (KurentoException e) {
-			if (e.getCause().getClass().equals(java.lang.IllegalStateException.class)) {
+			if (e.getCause() instanceof IllegalStateException) {
 				log.warn("Response couldn't be sent to participant with privateId {}: {}", participantPrivateId,
 						e.getCause().getMessage());
 			} else {
@@ -118,7 +118,7 @@ public class RpcNotificationService {
 		try {
 			s.sendNotification(method, params);
 		} catch (KurentoException e) {
-			if (e.getCause().getClass().equals(java.lang.IllegalStateException.class)) {
+			if (e.getCause() instanceof IllegalStateException) {
 				log.warn("Notification '{}' couldn't be sent to participant with privateId {}: {}", method,
 						participantPrivateId, e.getCause().getMessage());
 			} else {
