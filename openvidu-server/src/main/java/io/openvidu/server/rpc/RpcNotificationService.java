@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.kurento.commons.exception.KurentoException;
 import org.kurento.jsonrpc.Session;
 import org.kurento.jsonrpc.Transaction;
 import org.kurento.jsonrpc.message.Request;
@@ -109,6 +110,15 @@ public class RpcNotificationService {
 
 		try {
 			s.sendNotification(method, params);
+		} catch (KurentoException e) {
+			if (e.getCause().getMessage()
+					.contains("been closed and no method (apart from close()) may be called on a closed session")) {
+				log.warn("Notification '{}' couldn't be sent to participant with privateId {}: {}", method,
+						participantPrivateId, e.getCause().getMessage());
+			} else {
+				log.error("Exception sending notification '{}': {} to participant with private id {}", method, params,
+						participantPrivateId, e);
+			}
 		} catch (Exception e) {
 			log.error("Exception sending notification '{}': {} to participant with private id {}", method, params,
 					participantPrivateId, e);
