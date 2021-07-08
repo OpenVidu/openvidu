@@ -74,6 +74,14 @@ public class RpcNotificationService {
 		}
 		try {
 			t.sendResponse(result);
+		} catch (KurentoException e) {
+			if (e.getCause().getMessage()
+					.contains("been closed and no method (apart from close()) may be called on a closed session")) {
+				log.warn("Response couldn't be sent to participant with privateId {}: {}", participantPrivateId,
+						e.getCause().getMessage());
+			} else {
+				log.error("Exception responding to participant ({})", participantPrivateId, e);
+			}
 		} catch (Exception e) {
 			log.error("Exception responding to participant ({})", participantPrivateId, e);
 		}
