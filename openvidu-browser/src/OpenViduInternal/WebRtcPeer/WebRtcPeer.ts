@@ -97,9 +97,9 @@ export interface WebRtcPeerConfiguration {
         video: boolean
     };
     simulcast: boolean;
+    mediaServer: string;
     onIceCandidate: (event: RTCIceCandidate) => void;
     onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => void;
-
     iceServers?: RTCIceServer[];
     mediaStream?: MediaStream | null;
     mode?: 'sendonly' | 'recvonly' | 'sendrecv';

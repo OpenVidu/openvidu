@@ -943,6 +943,7 @@ export class Stream {
                 onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
                 iceServers: this.getIceServersConf(),
                 mediaStream: this.mediaStream,
+                mediaServer: this.session.openvidu.mediaServer
             };
 
             if (reconnect) {
@@ -1097,6 +1098,7 @@ export class Stream {
                 onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
                 onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
                 iceServers: this.getIceServersConf(),
+                mediaServer: this.session.openvidu.mediaServer
             };
 
             if (reconnect) {
