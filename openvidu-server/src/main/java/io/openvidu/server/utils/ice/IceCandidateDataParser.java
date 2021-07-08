@@ -2,7 +2,6 @@ package io.openvidu.server.utils.ice;
 
 import org.kurento.client.IceCandidate;
 
-import java.security.SecureRandom;
 import java.util.Objects;
 
 /**
@@ -14,10 +13,11 @@ public class IceCandidateDataParser {
      * Max priority and Min priority possible defined in rfc5245 15.1
      * "<priority>:  is a positive integer between 1 and (2**31 - 1)"
      * MAX_PRIORITY = (2^24)*126 + (2^8)*65535 + 255
-     * MIN_PRIORITY = (2^24)*126 + (2^8)*1 + 255
+     * MIN_PRIORITY = (2^24)*1 + (2^8)*1 + 255
      */
     private final int MAX_PRIORITY = 2130706431;
-    private final int MIN_PRIORITY = 511;
+    private final int MIN_PRIORITY = 16777727;
+
 
     /**
      * Full string with the candidate
@@ -30,15 +30,6 @@ public class IceCandidateDataParser {
 
     public IceCandidateDataParser(String iceCandidate) {
         this.candidate = iceCandidate.split(" ");
-    }
-
-    /**
-     * Following rfc5245, section-15.1, the candidate foundation id is the 1 th element
-     * @return
-     */
-    public void setRandomFoundation() {
-        String prefix = candidate[0].split(":")[0];
-        candidate[0] = prefix + ":" + new SecureRandom().nextInt(Integer.MAX_VALUE - 1);
     }
 
     /**
