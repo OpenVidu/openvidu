@@ -22,7 +22,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server-pro:2.19.0-beta8
+        image: openvidu/openvidu-server-pro:2.19.0-beta9
         restart: on-failure
         network_mode: host
         entrypoint: ['/usr/local/bin/entrypoint.sh']
