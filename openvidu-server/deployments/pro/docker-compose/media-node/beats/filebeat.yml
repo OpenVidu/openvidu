@@ -2,7 +2,7 @@ filebeat.inputs:
   - type: container
     paths:
       - '/var/lib/docker/containers/*/*.log'
-  - type: log 
+  - type: log
     paths:
       - /opt/openvidu/kurento-logs/*.log
     fields:
@@ -37,6 +37,10 @@ output:
         when.or:
           - equals:
               kurento-media-server: true
+      - index: "filebeat-mediasoup-%{+yyyy.MM.dd}"
+        when.or:
+          - contains:
+              container.image.name: openvidu/mediasoup-controller
       - index: "filebeat-media-node-controller-%{+yyyy.MM.dd}"
         when.or:
           - contains:
