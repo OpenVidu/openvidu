@@ -206,6 +206,16 @@
 			"description": "Which kind of certificate shall be used by OpenVidu in production mode [selfsigned,letsencrypt,owncert]"
 		},
 		{
+			"name": "MEDIA_NODES_PUBLIC_IPS",
+			"type": "java.lang.String",
+			"description": "Additional IP to be returned for each media node in ICE candidates. The format consists on a list of pairs with private ips and public ips [<private-ip>:<public_ip>:...]"
+		},
+		{
+			"name": "COTURN_INTERNAL_RELAY",
+			"type": "java.lang.String",
+			"description": "If true, coturn is returning the private IP on relayed candidates. This can be useful to know which candidates must be sent when MEDIA_NODES_PUBLIC_IPS is defined"
+		},
+		{
 			"name": "jsonRpcClientWebSocket.reconnectionDelay",
 			"type": "java.lang.Integer",
 			"description": "Reconnection delay when Kurento Media Server connection is lost (ms)",

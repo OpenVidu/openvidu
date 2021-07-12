@@ -52,7 +52,12 @@ if [ -n "${REAL_EXTERNAL_IP:-}" ]; then
     exit 0
 fi
 
-
+# Shortcut to use internal IP as external IP: COTURN_INTERNAL_RELAY
+# ==========================
+if [ -n "${COTURN_INTERNAL_RELAY}" ] && [ "${COTURN_INTERNAL_RELAY}" = "true" ]; then
+    discover-internal-ip.sh
+    exit 0
+fi
 
 # Parse call arguments
 # ====================

@@ -605,11 +605,19 @@ public abstract class MediaEndpoint {
 
 				// Resend old public IP next to the new one
 				if (candidateParser.isType(IceCandidateType.srflx)) {
-					// Send candidate with private ip
 					IceCandidate candidateMinPriority = new IceCandidate(candidate.getCandidate(), candidate.getSdpMid(),
 							candidate.getSdpMLineIndex());
-					candidateParser.setIp(originalIp);
-					candidateParser.setMinPriority(); // Set min priority for original public IP
+					if (openviduConfig.isCoturnUsingInternalRelay()) {
+						// If coturn is using internal relay, there should be candidates with the private IP
+						// to relay on the internal network
+						candidateParser.setIp(kurentoPrivateIp); // Send candidate with private ip
+					} else {
+						// If coturn is configured using public IP as relay, candidates with the original IP
+						// and the new one should be sent
+						// to relay using the public internet
+						candidateParser.setIp(originalIp); // Send candidate with original IP
+					}
+					candidateParser.setMinPriority(); // Set min priority for this candidate
 					candidateMinPriority.setCandidate(candidateParser.toString());
 					sendCandidate(senderPublicId, candidateMinPriority);
 				}

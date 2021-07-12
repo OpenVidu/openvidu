@@ -153,6 +153,9 @@ public class OpenviduConfig {
 
 	private String coturnRedisIp;
 
+	// If true, coturn relay ips will come with the private IP of the machine
+	private boolean coturnInternalRelay;
+
 	private boolean openviduWebhookEnabled;
 
 	private String openviduWebhookEndpoint;
@@ -211,6 +214,10 @@ public class OpenviduConfig {
 
 	public String getCoturnDatabasePassword() {
 		return this.coturnRedisPassword;
+	}
+
+	public boolean isCoturnUsingInternalRelay() {
+		return this.coturnInternalRelay;
 	}
 
 	public List<String> getKmsUris() {
@@ -521,6 +528,9 @@ public class OpenviduConfig {
 		coturnRedisPassword = getValue("COTURN_REDIS_PASSWORD");
 
 		coturnRedisConnectTimeout = getValue("COTURN_REDIS_CONNECT_TIMEOUT");
+
+		// If true, coturn is using private IPs as relay IPs to enable relay connections pass through internal network
+		coturnInternalRelay = asBoolean("COTURN_INTERNAL_RELAY");
 
 		openviduSecret = asNonEmptyAlphanumericString("OPENVIDU_SECRET",
 				"Cannot be empty and must contain only alphanumeric characters [a-zA-Z0-9], hypens (\"-\") and underscores (\"_\")");
