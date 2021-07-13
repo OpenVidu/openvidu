@@ -703,7 +703,7 @@ export class Publisher extends StreamManager {
         this.videoReference = document.createElement('video');
         this.videoReference.setAttribute('muted', 'true');
         this.videoReference.style.display = 'none';
-        if (platform.isSafariBrowser()) {
+        if (platform.isSafariBrowser() || (platform.isIPhoneOrIPad() && (platform.isChromeMobileBrowser() || platform.isEdgeMobileBrowser() || platform.isOperaMobileBrowser() || platform.isFirefoxMobileBrowser()))) {
             this.videoReference.setAttribute('playsinline', 'true');
         }
         this.stream.setMediaStream(mediaStream);

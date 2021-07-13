@@ -135,7 +135,7 @@ export class StreamManager extends EventDispatcher {
                     id: '',
                     canplayListenerAdded: false
                 };
-                if (platform.isSafariBrowser()) {
+                if (platform.isSafariBrowser() || (platform.isIPhoneOrIPad() && (platform.isChromeMobileBrowser() || platform.isEdgeMobileBrowser() || platform.isOperaMobileBrowser() || platform.isFirefoxMobileBrowser()))) {
                     this.firstVideoElement.video.setAttribute('playsinline', 'true');
                 }
                 this.targetElement = targEl;
@@ -425,7 +425,7 @@ export class StreamManager extends EventDispatcher {
         video.autoplay = true;
         video.controls = false;
 
-        if (platform.isSafariBrowser()) {
+        if (platform.isSafariBrowser() || (platform.isIPhoneOrIPad() && (platform.isChromeMobileBrowser() || platform.isEdgeMobileBrowser() || platform.isOperaMobileBrowser() || platform.isFirefoxMobileBrowser()))) {
             video.setAttribute('playsinline', 'true');
         }
 

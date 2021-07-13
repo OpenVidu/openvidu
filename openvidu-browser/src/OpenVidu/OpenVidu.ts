@@ -341,7 +341,8 @@ export class OpenVidu {
   checkSystemRequirements(): number {
 
     if (platform.isIPhoneOrIPad()) {
-      if (platform.isIOSWithSafari() || platform.isIonicIos()) {
+      if (platform.isIOSWithSafari() || platform.isIonicIos() ||
+        platform.isChromeMobileBrowser() || platform.isEdgeMobileBrowser() || platform.isOperaMobileBrowser() || platform.isFirefoxMobileBrowser()) {
         return 1;
       }
       return 0;

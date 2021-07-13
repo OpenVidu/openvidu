@@ -40,7 +40,7 @@ export class PlatformUtils {
 	 * @hidden
 	 */
 	public isFirefoxMobileBrowser(): boolean {
-		return platform.name === "Firefox Mobile";
+		return platform.name === "Firefox Mobile" || platform.name === "Firefox for iOS";
 	}
 
 	/**
@@ -70,7 +70,7 @@ export class PlatformUtils {
 	 */
 	public isEdgeMobileBrowser(): boolean {
 		const version = platform?.version ? parseFloat(platform.version) : -1;
-		return platform.name === "Microsoft Edge" && platform.os?.family === 'Android' && version > 45;
+		return platform.name === "Microsoft Edge" && (platform.os?.family === 'Android' || platform.os?.family === 'iOS') && version > 45;
 	}
 
 	/**
@@ -102,14 +102,12 @@ export class PlatformUtils {
 	 */
 	public isIPhoneOrIPad(): boolean {
 		const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
-
 		const isTouchable = "ontouchend" in document;
 		const isIPad = /\b(\w*Macintosh\w*)\b/.test(userAgent) && isTouchable;
 		const isIPhone =
 			/\b(\w*iPhone\w*)\b/.test(userAgent) &&
 			/\b(\w*Mobile\w*)\b/.test(userAgent) &&
 			isTouchable;
-
 		return isIPad || isIPhone;
 	}
 
