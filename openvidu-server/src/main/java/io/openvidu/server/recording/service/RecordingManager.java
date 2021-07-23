@@ -128,8 +128,6 @@ public class RecordingManager {
 	private ScheduledExecutorService automaticRecordingStopExecutor = Executors
 			.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 
-	public static final String IMAGE_NAME = "openvidu/openvidu-recording";
-
 	private static final List<EndReason> LAST_PARTICIPANT_LEFT_REASONS = Arrays
 			.asList(new EndReason[] { EndReason.disconnect, EndReason.forceDisconnectByUser,
 					EndReason.forceDisconnectByServer, EndReason.networkDisconnect });
@@ -187,7 +185,7 @@ public class RecordingManager {
 		}
 
 		// Clean any stranded openvidu/openvidu-recording container on startup
-		dockMng.cleanStrandedContainers(RecordingManager.IMAGE_NAME);
+		dockMng.cleanStrandedContainers(openviduConfig.getOpenviduRecordingImageRepo());
 	}
 
 	public void checkRecordingRequirements(String openviduRecordingPath, String openviduRecordingCustomLayout)
@@ -223,7 +221,7 @@ public class RecordingManager {
 		log.info("Recording module required: Downloading openvidu/openvidu-recording:"
 				+ openviduConfig.getOpenViduRecordingVersion() + " Docker image (350MB aprox)");
 
-		if (dockMng.dockerImageExistsLocally(IMAGE_NAME + ":" + openviduConfig.getOpenViduRecordingVersion())) {
+		if (dockMng.dockerImageExistsLocally(openviduConfig.getOpenviduRecordingImageRepo() + ":" + openviduConfig.getOpenViduRecordingVersion())) {
 			log.info("Docker image already exists locally");
 		} else {
 			Thread t = new Thread(() -> {
@@ -241,9 +239,9 @@ public class RecordingManager {
 			});
 			t.start();
 			try {
-				dockMng.downloadDockerImage(IMAGE_NAME + ":" + openviduConfig.getOpenViduRecordingVersion(), 600);
+				dockMng.downloadDockerImage(openviduConfig.getOpenviduRecordingImageRepo() + ":" + openviduConfig.getOpenViduRecordingVersion(), 600);
 			} catch (Exception e) {
-				log.error("Error downloading docker image {}:{}", IMAGE_NAME,
+				log.error("Error downloading docker image {}:{}", openviduConfig.getOpenviduRecordingImageRepo(),
 						openviduConfig.getOpenViduRecordingVersion());
 			}
 			t.interrupt();

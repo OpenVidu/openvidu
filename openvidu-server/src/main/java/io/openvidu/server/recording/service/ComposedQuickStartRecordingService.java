@@ -219,7 +219,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 
 		String containerId = null;
 		try {
-			final String container = RecordingManager.IMAGE_NAME + ":" + openviduConfig.getOpenViduRecordingVersion();
+			final String container = openviduConfig.getOpenviduRecordingImageRepo() + ":" + openviduConfig.getOpenViduRecordingVersion();
 			final String containerName = "recording_" + session.getSessionId();
 			Volume volume1 = new Volume("/recordings");
 			List<Volume> volumes = new ArrayList<>();
@@ -228,7 +228,8 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 			List<Bind> binds = new ArrayList<>();
 			binds.add(bind1);
 			containerId = dockerManager.runContainer(properties.mediaNode(), container, containerName, null, volumes,
-					binds, "host", envs, null, properties.shmSize(), false, null);
+					binds, "host", envs, null, properties.shmSize(), false, null,
+					openviduConfig.isOpenviduRecordingGPUEnabled());
 			containers.put(containerId, containerName);
 			this.sessionsContainers.put(session.getSessionId(), containerId);
 		} catch (Exception e) {

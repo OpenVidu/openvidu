@@ -111,6 +111,8 @@ public class OpenviduConfig {
 
 	protected Map<String, ?> propertiesSource;
 
+	public static final String DEFAULT_RECORDING_IMAGE_REPO = "openvidu/openvidu-recording";
+
 	@Autowired
 	protected Environment env;
 
@@ -140,6 +142,10 @@ public class OpenviduConfig {
 	private boolean openviduRecordingComposedBasicauth;
 
 	private String openviduRecordingVersion;
+
+	private String openviduRecordingImageRepo;
+
+	private boolean openviduRecordingEnableGPU;
 
 	private Integer openviduStreamsVideoMaxRecvBandwidth;
 
@@ -290,6 +296,14 @@ public class OpenviduConfig {
 
 	public int getOpenviduRecordingAutostopTimeout() {
 		return this.openviduRecordingAutostopTimeout;
+	}
+
+	public String getOpenviduRecordingImageRepo() {
+		return this.openviduRecordingImageRepo;
+	}
+
+	public boolean isOpenviduRecordingGPUEnabled() {
+		return this.openviduRecordingEnableGPU;
 	}
 
 	public int getVideoMaxRecvBandwidth() {
@@ -507,7 +521,8 @@ public class OpenviduConfig {
 
 	protected List<String> getNonUserProperties() {
 		return Arrays.asList("server.port", "SERVER_PORT", "DOTENV_PATH", "COTURN_IP", "COTURN_REDIS_IP",
-				"COTURN_REDIS_DBNAME", "COTURN_REDIS_PASSWORD", "COTURN_REDIS_CONNECT_TIMEOUT");
+				"COTURN_REDIS_DBNAME", "COTURN_REDIS_PASSWORD", "COTURN_REDIS_CONNECT_TIMEOUT",
+				"COTURN_INTERNAL_RELAY", "OPENVIDU_RECORDING_IMAGE", "OPENVIDU_RECORDING_ENABLE_GPU");
 	}
 
 	// Properties
@@ -549,6 +564,8 @@ public class OpenviduConfig {
 		openviduRecordingComposedBasicauth = asBoolean("OPENVIDU_RECORDING_COMPOSED_BASICAUTH");
 		openviduRecordingVersion = asNonEmptyString("OPENVIDU_RECORDING_VERSION");
 		openviduRecordingComposedUrl = asOptionalURL("OPENVIDU_RECORDING_COMPOSED_URL");
+		openviduRecordingEnableGPU = asBoolean("OPENVIDU_RECORDING_ENABLE_GPU");
+		configureRecordingImage("OPENVIDU_RECORDING_IMAGE");
 		checkOpenviduRecordingNotification();
 
 		openviduStreamsVideoMaxRecvBandwidth = asNonNegativeInteger("OPENVIDU_STREAMS_VIDEO_MAX_RECV_BANDWIDTH");
@@ -1016,6 +1033,24 @@ public class OpenviduConfig {
 			log.warn("DOTENV_PATH configuration property is not defined");
 		}
 		return null;
+	}
+
+	private void configureRecordingImage(String recordingImageProperty) {
+		String configuredImage = asOptionalString(recordingImageProperty);
+		if (configuredImage == null || configuredImage.isEmpty()) {
+			openviduRecordingImageRepo = DEFAULT_RECORDING_IMAGE_REPO;
+		} else {
+			String[] customImageSplit = configuredImage.split(":");
+			if (customImageSplit.length != 2) {
+				addError(recordingImageProperty, "The docker image configured is not valid. " +
+						"This parameter must have this format: '<image>:<tag>'");
+			} else {
+				String customImageName = customImageSplit[0];
+				String customVersion = customImageSplit[1];
+				openviduRecordingImageRepo = customImageName;
+				openviduRecordingVersion = customVersion;
+			}
+		}
 	}
 
 	private Map<String, String> loadMediaNodePublicIps(String propertyName) {

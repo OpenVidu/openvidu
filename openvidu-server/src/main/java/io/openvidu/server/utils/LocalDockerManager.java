@@ -26,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.ProcessingException;
 
+import com.github.dockerjava.api.model.*;
+import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,10 +41,6 @@ import com.github.dockerjava.api.exception.ConflictException;
 import com.github.dockerjava.api.exception.DockerClientException;
 import com.github.dockerjava.api.exception.InternalServerErrorException;
 import com.github.dockerjava.api.exception.NotFoundException;
-import com.github.dockerjava.api.model.Bind;
-import com.github.dockerjava.api.model.Container;
-import com.github.dockerjava.api.model.HostConfig;
-import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
@@ -118,7 +116,7 @@ public class LocalDockerManager implements DockerManager {
 	@Override
 	public String runContainer(String mediaNodeId, String image, String containerName, String user,
 			List<Volume> volumes, List<Bind> binds, String networkMode, List<String> envs, List<String> command,
-			Long shmSize, boolean privileged, Map<String, String> labels) throws Exception {
+			Long shmSize, boolean privileged, Map<String, String> labels, boolean enableGPU) throws Exception {
 
 		CreateContainerCmd cmd = dockerClient.createContainerCmd(image).withEnv(envs);
 		if (containerName != null) {
@@ -133,6 +131,15 @@ public class LocalDockerManager implements DockerManager {
 		if (shmSize != null) {
 			hostConfig.withShmSize(shmSize);
 		}
+
+		if (enableGPU) {
+			DeviceRequest deviceRequest = new DeviceRequest()
+					.withCapabilities(ImmutableList.of(ImmutableList.of("gpu")))
+					.withCount(-1)
+					.withOptions(null);
+			hostConfig.withDeviceRequests(ImmutableList.of(deviceRequest));
+		}
+
 		if (volumes != null) {
 			cmd.withVolumes(volumes);
 		}

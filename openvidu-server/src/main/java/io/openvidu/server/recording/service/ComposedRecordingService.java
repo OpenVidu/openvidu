@@ -164,7 +164,7 @@ public class ComposedRecordingService extends RecordingService {
 
 		String containerId;
 		try {
-			final String container = RecordingManager.IMAGE_NAME + ":" + openviduConfig.getOpenViduRecordingVersion();
+			final String container = openviduConfig.getOpenviduRecordingImageRepo() + ":" + openviduConfig.getOpenViduRecordingVersion();
 			final String containerName = "recording_" + recording.getId();
 			Volume volume1 = new Volume("/recordings");
 			List<Volume> volumes = new ArrayList<>();
@@ -173,7 +173,8 @@ public class ComposedRecordingService extends RecordingService {
 			List<Bind> binds = new ArrayList<>();
 			binds.add(bind1);
 			containerId = dockerManager.runContainer(properties.mediaNode(), container, containerName, null, volumes,
-					binds, "host", envs, null, properties.shmSize(), false, null);
+					binds, "host", envs, null, properties.shmSize(), false, null,
+					openviduConfig.isOpenviduRecordingGPUEnabled());
 			containers.put(containerId, containerName);
 		} catch (Exception e) {
 			this.cleanRecordingMaps(recording);
