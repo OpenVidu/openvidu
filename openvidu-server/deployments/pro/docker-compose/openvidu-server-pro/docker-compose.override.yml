@@ -9,11 +9,11 @@ services:
     #
     #   Default Application
     #
-    #   Openvidu-Call Version: 2.18.0
+    #   Openvidu-Call Version: 2.19.0
     #
     # --------------------------------------------------------------
     app:
-        image: openvidu/openvidu-call:2.19.0-dev7
+        image: openvidu/openvidu-call:2.19.0
         restart: on-failure
         network_mode: host
         environment:

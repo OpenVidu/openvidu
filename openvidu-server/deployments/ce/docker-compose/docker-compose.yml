@@ -11,7 +11,7 @@
 #
 #    This file will be overridden when update OpenVidu Platform
 #
-#    Openvidu Version: 2.18.0
+#    Openvidu Version: 2.19.0
 #
 #    Installation Mode: On Premises
 #
@@ -22,7 +22,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server:2.19.0-beta2
+        image: openvidu/openvidu-server:2.19.0
         restart: on-failure
         network_mode: host
         entrypoint: ['/usr/local/bin/entrypoint.sh']
@@ -75,7 +75,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     coturn:
-        image: openvidu/openvidu-coturn:5.0.0-dev1
+        image: openvidu/openvidu-coturn:5.0.0
         restart: on-failure
         network_mode: host
         environment:
@@ -96,7 +96,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     nginx:
-        image: openvidu/openvidu-proxy:7.0.0-dev1
+        image: openvidu/openvidu-proxy:7.0.0
         restart: on-failure
         network_mode: host
         volumes:
