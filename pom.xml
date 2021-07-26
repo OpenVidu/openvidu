@@ -62,7 +62,7 @@
 
 		<version.webdrivermanager>4.2.2</version.webdrivermanager>
 
-		<version.openvidu.java.client>2.18.0</version.openvidu.java.client>
+		<version.openvidu.java.client>2.19.0</version.openvidu.java.client>
 		<version.openvidu.client>1.1.0</version.openvidu.client>
 		<version.openvidu.test.browsers>1.1.0</version.openvidu.test.browsers>
 
