@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 MEDIA_NODE_FOLDER=kms
-MEDIA_NODE_VERSION=master
+MEDIA_NODE_VERSION=v2.19.0
 OPENVIDU_UPGRADABLE_VERSION="2.18"
 BEATS_FOLDER=${MEDIA_NODE_FOLDER}/beats
 DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${MEDIA_NODE_VERSION}
