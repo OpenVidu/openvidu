@@ -1133,6 +1133,7 @@ public class KurentoSessionManager extends SessionManager {
 		// Generate the location for the IpCam
 		GeoLocation location = null;
 		URL url = null;
+		InetAddress ipAddress = null;
 		String protocol = null;
 		try {
 			Pattern pattern = Pattern.compile("^(file|rtsp)://");
@@ -1149,13 +1150,14 @@ public class KurentoSessionManager extends SessionManager {
 		}
 
 		try {
-			location = this.geoLocationByIp.getLocationByIp(InetAddress.getByName(url.getHost()));
+			ipAddress = InetAddress.getByName(url.getHost());
+			location = this.geoLocationByIp.getLocationByIp(ipAddress);
 		} catch (IOException e) {
 			e.printStackTrace();
-			location = null;
+			location = new GeoLocation(ipAddress.getHostAddress());
 		} catch (Exception e) {
 			log.warn("Error getting address location: {}", e.getMessage());
-			location = null;
+			location = new GeoLocation(ipAddress.getHostAddress());
 		}
 
 		String rtspConnectionId = kMediaOptions.getTypeOfVideo() + "_" + protocol + "_"
@@ -1204,7 +1206,8 @@ public class KurentoSessionManager extends SessionManager {
 			boolean initByServer, boolean forciblyReconnect) {
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
 		KurentoSession kSession = kParticipant.getSession();
-		reconnectSubscriber(kSession, kParticipant, streamId, sdpString, transactionId, initByServer, forciblyReconnect);
+		reconnectSubscriber(kSession, kParticipant, streamId, sdpString, transactionId, initByServer,
+				forciblyReconnect);
 	}
 
 	private String mungeSdpOffer(Session kSession, Participant participant, String sdpOffer, boolean isPublisher) {

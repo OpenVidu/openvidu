@@ -205,11 +205,11 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 				location = this.geoLocationByIp.getLocationByIp(remoteAddress);
 			} catch (IOException e) {
 				e.printStackTrace();
-				location = null;
+				location = new GeoLocation(remoteAddress.getHostAddress());
 			} catch (Exception e) {
 				log.warn("Couldn't locate IP address {} in geolocation database: {}", remoteAddress.getHostAddress(),
 						e.getMessage());
-				location = null;
+				location = new GeoLocation(remoteAddress.getHostAddress());
 			}
 		}
 

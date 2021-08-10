@@ -9,6 +9,11 @@ public class GeoLocation {
 	private Double latitude;
 	private Double longitude;
 
+	public GeoLocation(String ip) {
+		super();
+		this.ip = ip;
+	}
+
 	public GeoLocation(String ip, String country, String city, String timezone, Double latitude, Double longitude) {
 		super();
 		this.ip = ip;
@@ -45,6 +50,9 @@ public class GeoLocation {
 
 	@Override
 	public String toString() {
+		if (this.country == null) {
+			return "unknown";
+		}
 		String location = this.country;
 		if (this.city != null) {
 			location = this.city + ", " + location;
