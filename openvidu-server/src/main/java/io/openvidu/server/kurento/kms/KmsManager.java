@@ -220,14 +220,14 @@ public abstract class KmsManager {
 						final List<String> affectedRecordingIds = kms.getActiveRecordings().stream()
 								.map(entry -> entry.getKey()).collect(Collectors.toUnmodifiableList());
 
-						sessionEventsHandler.onMediaNodeCrashed(kms, timeOfKurentoDisconnection, affectedSessionIds,
-								affectedRecordingIds);
+						// 1. Remove Media Node from cluster
+						log.warn("Removing Media Node {} after crash", kms.getId());
+						removeMediaNodeUponCrash(kms.getId());
 
-						// Close all sessions and recordings with reason "nodeCrashed"
+						// 2. Close all sessions and recordings with reason "nodeCrashed"
 						log.warn("Closing {} sessions hosted by KMS with uri {}: {}", kms.getKurentoSessions().size(),
 								kms.getUri(), kms.getKurentoSessions().stream().map(s -> s.getSessionId())
 										.collect(Collectors.joining(",", "[", "]")));
-
 						try {
 							// Flag the thread to skip remote operations to KMS
 							RemoteOperationUtils.setToSkipRemoteOperations();
@@ -236,9 +236,9 @@ public abstract class KmsManager {
 							RemoteOperationUtils.revertToRunRemoteOperations();
 						}
 
-						// Remove Media Node
-						log.warn("Removing Media Node {} after crash", kms.getId());
-						removeMediaNodeUponCrash(kms.getId());
+						// 3. Send nodeCrashed webhook event
+						sessionEventsHandler.onMediaNodeCrashed(kms, timeOfKurentoDisconnection, affectedSessionIds,
+								affectedRecordingIds);
 
 					} else {
 
