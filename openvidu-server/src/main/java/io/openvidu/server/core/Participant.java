@@ -314,7 +314,8 @@ public class Participant {
 		json.addProperty("sessionId", this.sessionId);
 		json.addProperty("createdAt", this.token.getCreatedAt());
 		json.addProperty("activeAt", this.activeAt);
-		json.addProperty("location", this.location != null ? this.location.toString() : "unknown");
+		json.addProperty("location", his.location.toString());
+		json.addProperty("ip", this.location.getIp());
 		json.addProperty("platform", this.platform);
 		if (this.token.getToken() != null) {
 			json.addProperty("token", this.token.getToken());

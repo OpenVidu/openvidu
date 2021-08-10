@@ -70,8 +70,8 @@ public class FinalUser {
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", id);
-		json.addProperty("ip", this.location.getIp());
 		json.addProperty("location", this.location.toString());
+		json.addProperty("ip", this.location.getIp());
 		json.addProperty("platform", platform);
 
 		JsonObject connectionsJson = new JsonObject();

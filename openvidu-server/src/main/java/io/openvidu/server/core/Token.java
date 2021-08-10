@@ -152,6 +152,7 @@ public class Token {
 		json.addProperty("token", this.getToken());
 		json.add("activeAt", null);
 		json.add("location", null);
+		json.add("ip", null);
 		json.add("platform", null);
 		json.add("clientData", null);
 		json.add("publishers", null);
