@@ -37,6 +37,7 @@ public class Connection {
 	private Long createdAt;
 	private Long activeAt;
 	private String location;
+	private String ip;
 	private String platform;
 	private String clientData;
 	private ConnectionProperties connectionProperties;
@@ -216,6 +217,13 @@ public class Connection {
 	}
 
 	/**
+	 * Returns the IP of the connection, as seen by OpenVidu Server
+	 */
+	public String getIp() {
+		return ip;
+	}
+
+	/**
 	 * Returns a complete description of the platform used by the participant to
 	 * connect to the session
 	 */
@@ -262,6 +270,7 @@ public class Connection {
 		json.addProperty("createdAt", this.createdAt());
 		json.addProperty("activeAt", this.activeAt());
 		json.addProperty("location", this.getLocation());
+		json.addProperty("ip", this.getIp());
 		json.addProperty("platform", this.getPlatform());
 		json.addProperty("clientData", this.getClientData());
 		json.addProperty("token", this.getToken());
@@ -382,6 +391,9 @@ public class Connection {
 		}
 		if (!json.get("location").isJsonNull()) {
 			this.location = json.get("location").getAsString();
+		}
+		if (!json.get("ip").isJsonNull()) {
+			this.ip = json.get("ip").getAsString();
 		}
 		if (!json.get("platform").isJsonNull()) {
 			this.platform = json.get("platform").getAsString();

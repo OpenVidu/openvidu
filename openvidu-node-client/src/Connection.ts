@@ -60,6 +60,11 @@ export class Connection {
     location: string;
 
     /**
+     * IP of the Connection, as seen by OpenVidu Server
+     */
+    ip: string;
+
+    /**
      * A complete description of the platform used by the participant to connect to the session
      */
     platform: string;
@@ -119,6 +124,7 @@ export class Connection {
         this.createdAt = json.createdAt;
         this.activeAt = json.activeAt;
         this.location = json.location;
+        this.ip = json.ip;
         this.platform = json.platform;
         this.clientData = json.clientData;
         this.token = json.token;
@@ -220,6 +226,7 @@ export class Connection {
             this.connectionProperties.networkCache === other.connectionProperties.networkCache &&
             this.token === other.token &&
             this.location === other.location &&
+            this.ip === other.ip &&
             this.platform === other.platform &&
             this.clientData === other.clientData &&
             this.subscribers.length === other.subscribers.length &&
