@@ -1154,10 +1154,10 @@ public class KurentoSessionManager extends SessionManager {
 			location = this.geoLocationByIp.getLocationByIp(ipAddress);
 		} catch (IOException e) {
 			e.printStackTrace();
-			location = new GeoLocation(ipAddress.getHostAddress());
+			location = new GeoLocation(ipAddress != null ? ipAddress.getHostAddress() : null);
 		} catch (Exception e) {
 			log.warn("Error getting address location: {}", e.getMessage());
-			location = new GeoLocation(ipAddress.getHostAddress());
+			location = new GeoLocation(ipAddress != null ? ipAddress.getHostAddress() : null);
 		}
 
 		String rtspConnectionId = kMediaOptions.getTypeOfVideo() + "_" + protocol + "_"
