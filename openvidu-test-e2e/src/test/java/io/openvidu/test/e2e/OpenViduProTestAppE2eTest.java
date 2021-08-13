@@ -354,7 +354,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 								+ "','role':'MODERATOR','record':false,'token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
 								+ activeAt + ",'serverData':'MY_SERVER_PRO_DATA'}",
-						new String[] { "location", "platform", "clientData" }));
+						new String[] { "location", "ip", "platform", "clientData" }));
 
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 1);
 
@@ -366,7 +366,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 								+ "','role':'MODERATOR','record':true,'token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
 								+ activeAt + ",'serverData':'MY_SERVER_PRO_DATA'}",
-						new String[] { "location", "platform", "clientData" }));
+						new String[] { "location", "ip", "platform", "clientData" }));
 
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 2);
 
@@ -377,7 +377,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 								+ "','role':'SUBSCRIBER','record':true,'token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
 								+ activeAt + ",'serverData':'MY_SERVER_PRO_DATA'}",
-						new String[] { "location", "platform", "clientData" }));
+						new String[] { "location", "ip", "platform", "clientData" }));
 
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 3);
 
@@ -388,7 +388,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 								+ "','role':'PUBLISHER','record':true,'token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
 								+ activeAt + ",'serverData':'MY_SERVER_PRO_DATA'}",
-						new String[] { "location", "platform", "clientData" }));
+						new String[] { "location", "ip", "platform", "clientData" }));
 
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 4);
 
