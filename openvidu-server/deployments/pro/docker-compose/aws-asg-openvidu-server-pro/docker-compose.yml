@@ -55,7 +55,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     replication-manager:
-        image: openvidu/replication-manager:1.0.0-dev6
+        image: openvidu/replication-manager:1.0.0-dev7
         restart: always
         network_mode: host
         environment:
