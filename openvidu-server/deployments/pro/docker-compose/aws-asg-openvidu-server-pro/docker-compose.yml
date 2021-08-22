@@ -71,8 +71,6 @@ services:
             - REDIS_DB=replicationmanager
             - MEDIANODE_AS_NOTIFICATION_QUEUE=${RM_SQS_QUEUE}
             - AWS_INSTANCE_ID=${AWS_INSTANCE_ID}
-            - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
-            - RM_OPENVIDU_PRO_CONFIG_S3_BUCKET=${RM_OPENVIDU_PRO_CONFIG_S3_BUCKET}
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
