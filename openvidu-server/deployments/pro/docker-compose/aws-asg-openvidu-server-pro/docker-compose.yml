@@ -58,6 +58,8 @@ services:
         image: openvidu/replication-manager:1.0.0-dev7
         restart: always
         network_mode: host
+        volumes:
+            - ./:/opt/openvidu
         environment:
             - SERVER_PORT=4443
             - SERVER_SSL_ENABLED=false
@@ -71,6 +73,8 @@ services:
             - REDIS_DB=replicationmanager
             - MEDIANODE_AS_NOTIFICATION_QUEUE=${RM_SQS_QUEUE}
             - AWS_INSTANCE_ID=${AWS_INSTANCE_ID}
+            - RM_S3_CONFIGURATION_BUCKET=${RM_S3_CONFIGURATION_BUCKET}
+            - RM_S3_CONFIGURATION_BUCKET_REGION=${RM_S3_CONFIGURATION_BUCKET_REGION}
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
