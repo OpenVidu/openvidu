@@ -269,6 +269,7 @@ public class SingleStreamRecordingService extends RecordingService {
 					}
 
 					connectAccordingToProfile(kurentoParticipant.getPublisher(), recorder, profile);
+
 					wrapper.getRecorder().record();
 
 				} finally {
@@ -404,16 +405,18 @@ public class SingleStreamRecordingService extends RecordingService {
 
 	private void connectAccordingToProfile(PublisherEndpoint publisherEndpoint, RecorderEndpoint recorder,
 			MediaProfileSpecType profile) {
+		// Perform blocking connections, to ensure that elements are
+		// already connected when `RecorderEndpoint.record()` is called.
 		switch (profile) {
 		case WEBM:
-			publisherEndpoint.connect(recorder, MediaType.AUDIO, false);
-			publisherEndpoint.connect(recorder, MediaType.VIDEO, false);
+			publisherEndpoint.connect(recorder, MediaType.AUDIO, true);
+			publisherEndpoint.connect(recorder, MediaType.VIDEO, true);
 			break;
 		case WEBM_AUDIO_ONLY:
-			publisherEndpoint.connect(recorder, MediaType.AUDIO, false);
+			publisherEndpoint.connect(recorder, MediaType.AUDIO, true);
 			break;
 		case WEBM_VIDEO_ONLY:
-			publisherEndpoint.connect(recorder, MediaType.VIDEO, false);
+			publisherEndpoint.connect(recorder, MediaType.VIDEO, true);
 			break;
 		default:
 			throw new UnsupportedOperationException("Unsupported profile when single stream recording: " + profile);
