@@ -26,8 +26,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.ProcessingException;
 
-import com.github.dockerjava.api.model.*;
-import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,11 +39,17 @@ import com.github.dockerjava.api.exception.ConflictException;
 import com.github.dockerjava.api.exception.DockerClientException;
 import com.github.dockerjava.api.exception.InternalServerErrorException;
 import com.github.dockerjava.api.exception.NotFoundException;
+import com.github.dockerjava.api.model.Bind;
+import com.github.dockerjava.api.model.Container;
+import com.github.dockerjava.api.model.DeviceRequest;
+import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
+import com.google.common.collect.ImmutableList;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -134,9 +138,7 @@ public class LocalDockerManager implements DockerManager {
 
 		if (enableGPU) {
 			DeviceRequest deviceRequest = new DeviceRequest()
-					.withCapabilities(ImmutableList.of(ImmutableList.of("gpu")))
-					.withCount(-1)
-					.withOptions(null);
+					.withCapabilities(ImmutableList.of(ImmutableList.of("gpu"))).withCount(-1).withOptions(null);
 			hostConfig.withDeviceRequests(ImmutableList.of(deviceRequest));
 		}
 

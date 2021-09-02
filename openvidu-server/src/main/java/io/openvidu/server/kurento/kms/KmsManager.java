@@ -222,7 +222,7 @@ public abstract class KmsManager {
 
 						// 1. Remove Media Node from cluster
 						log.warn("Removing Media Node {} after crash", kms.getId());
-						removeMediaNodeUponCrash(kms.getId());
+						String environmentId = removeMediaNodeUponCrash(kms.getId());
 
 						// 2. Close all sessions and recordings with reason "nodeCrashed"
 						log.warn("Closing {} sessions hosted by KMS with uri {}: {}", kms.getKurentoSessions().size(),
@@ -237,8 +237,8 @@ public abstract class KmsManager {
 						}
 
 						// 3. Send nodeCrashed webhook event
-						sessionEventsHandler.onMediaNodeCrashed(kms, timeOfKurentoDisconnection, affectedSessionIds,
-								affectedRecordingIds);
+						sessionEventsHandler.onMediaNodeCrashed(kms, environmentId, timeOfKurentoDisconnection,
+								affectedSessionIds, affectedRecordingIds);
 
 					} else {
 
@@ -337,7 +337,7 @@ public abstract class KmsManager {
 	public abstract void decrementActiveRecordings(RecordingProperties recordingProperties, String recordingId,
 			Session session);
 
-	protected abstract void removeMediaNodeUponCrash(String mediaNodeId);
+	protected abstract String removeMediaNodeUponCrash(String mediaNodeId);
 
 	@PostConstruct
 	protected abstract void postConstructInitKurentoClients();

@@ -649,8 +649,8 @@ public class SessionEventsHandler {
 	 * This handler must be called before cleaning any sessions or recordings hosted
 	 * by the crashed Media Node
 	 */
-	public void onMediaNodeCrashed(Kms kms, long timeOfKurentoDisconnection, List<String> sessionIds,
-			List<String> recordingIds) {
+	public void onMediaNodeCrashed(Kms kms, String environmentId, long timeOfKurentoDisconnection,
+			List<String> sessionIds, List<String> recordingIds) {
 	}
 
 	public void onMasterNodeCrashed(CDREventNodeCrashed event) {
