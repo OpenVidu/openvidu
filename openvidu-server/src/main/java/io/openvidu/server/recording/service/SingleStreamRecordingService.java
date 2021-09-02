@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.zip.ZipEntry;
@@ -159,10 +160,16 @@ public class SingleStreamRecordingService extends RecordingService {
 		});
 		final CountDownLatch stoppedCountDown = new CountDownLatch(wrappers.size());
 
-		for (RecorderEndpointWrapper wrapper : wrappers) {
-			this.stopRecorderEndpointOfPublisherEndpoint(recording.getId(), wrapper.getStreamId(), stoppedCountDown,
-					kmsDisconnectionTime);
+		ForkJoinPool customThreadPool = new ForkJoinPool(4);
+		try {
+			customThreadPool.submit(() -> wrappers.parallelStream().forEach(wrapper -> {
+				this.stopRecorderEndpointOfPublisherEndpoint(recording.getId(), wrapper.getStreamId(), stoppedCountDown,
+						kmsDisconnectionTime);
+			}));
+		} finally {
+			customThreadPool.shutdown();
 		}
+
 		try {
 			if (!stoppedCountDown.await(5, TimeUnit.SECONDS)) {
 				recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
