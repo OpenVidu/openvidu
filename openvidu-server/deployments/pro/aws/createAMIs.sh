@@ -50,6 +50,7 @@ sed -i "s/AMIUSEAST1/${AMIUSEAST1}/g" cfn-mkt-ov-ami.yaml
 
 sed -i "s/AWS_KEY_NAME/${AWS_KEY_NAME}/g" cfn-mkt-kms-ami.yaml
 sed -i "s/OPENVIDU_VERSION/${OPENVIDU_PRO_VERSION}/g" cfn-mkt-kms-ami.yaml
+sed -i "s/OPENVIDU_RECORDING_DOCKER_TAG/${OPENVIDU_RECORDING_DOCKER_TAG}/g" cfn-mkt-kms-ami.yaml
 sed -i "s/AMIEUWEST1/${AMIEUWEST1}/g" cfn-mkt-kms-ami.yaml
 sed -i "s/AMIUSEAST1/${AMIUSEAST1}/g" cfn-mkt-kms-ami.yaml
 

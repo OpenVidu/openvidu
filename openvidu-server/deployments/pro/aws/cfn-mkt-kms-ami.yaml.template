@@ -95,7 +95,7 @@ Resources:
                 #!/bin/bash -x
                 TEST_RECORDING_DIR="/opt/openvidu/test-recording"
 
-                docker run -d --rm --name=test-recording -e URL=https://openvidu.io/ -v "${TEST_RECORDING_DIR}":/recordings openvidu/openvidu-recording:2.19.0
+                docker run -d --rm --name=test-recording -e URL=https://openvidu.io/ -v "${TEST_RECORDING_DIR}":/recordings openvidu/openvidu-recording:OPENVIDU_RECORDING_DOCKER_TAG
 
                 # Wait to file to be created
                 TIMEOUT_WAIT_FILE=30
