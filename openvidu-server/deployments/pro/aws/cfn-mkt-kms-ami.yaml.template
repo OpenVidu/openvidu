@@ -90,6 +90,25 @@ Resources:
               mode: "000755"
               owner: "root"
               group: "root"
+            "/usr/local/bin/testRecording.sh":
+              content: |
+                #!/bin/bash -x
+                TEST_RECORDING_DIR="/opt/openvidu/test-recording"
+
+                docker run -d --rm --name=test-recording -e URL=https://openvidu.io/ -v "${TEST_RECORDING_DIR}":/recordings openvidu/openvidu-recording:2.19.0
+
+                # Wait to file to be created
+                while [ ! -f "${TEST_RECORDING_DIR}/video/video.mp4" ]; do sleep 1; done
+
+                # Sleep 30 seconds
+                sleep 30
+
+                # Clean test recording
+                docker rm -f test-recording
+                rm -rf "${TEST_RECORDING_DIR}"
+              mode: "000755"
+              owner: "root"
+              group: "root"
             "/usr/local/bin/runMediaNode.sh":
               content: |
                 #!/bin/bash
@@ -125,6 +144,8 @@ Resources:
             /usr/local/bin/installMediaNode.sh || { echo "[OpenVidu] error installing Media Node"; exit 1; }
 
             /usr/local/bin/runMediaNode.sh || { echo "[OpenVidu] error running Media Node"; exit 1; }
+
+            echo "@reboot /usr/local/bin/testRecording.sh >> /var/log/testRecording.log 2>&1" | crontab
 
             # sending the finish call
             /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource WaitCondition --region ${AWS::Region}
