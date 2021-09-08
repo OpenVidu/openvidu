@@ -100,6 +100,30 @@ Resources:
               mode: "000755"
               owner: "root"
               group: "root"
+            "/usr/local/bin/testRecording.sh":
+              content: |
+                #!/bin/bash -x
+                TEST_RECORDING_DIR="/opt/openvidu/test-recording"
+
+                docker run -d --rm --name=test-recording -e URL=https://openvidu.io/ -v "${TEST_RECORDING_DIR}":/recordings openvidu/openvidu-recording:2.19.0
+
+                # Wait to file to be created
+                TIMEOUT_WAIT_FILE=30
+                ELAPSED=0
+                while [[ ! -f "${TEST_RECORDING_DIR}/video/video.mp4" ]] && [[ "${ELAPSED}" -lt "${TIMEOUT_WAIT_FILE}" ]]; do
+                  sleep 1;
+                  ELAPSED=$((ELAPSED+1))
+                done
+
+                # Sleep 30 seconds
+                sleep 30
+
+                # Clean test recording
+                docker rm -f test-recording
+                rm -rf "${TEST_RECORDING_DIR}"
+              mode: "000755"
+              owner: "root"
+              group: "root"
     Properties:
       ImageId: !FindInMap [AMIMAP, !Ref 'AWS::Region', AMI]
       InstanceType: "t2.2xlarge"
@@ -124,6 +148,8 @@ Resources:
             /usr/local/bin/installOpenviduCE.sh || { echo "[OpenVidu] error installing OpenVidu CE"; exit 1; }
 
             /usr/local/bin/getDockerImages.sh || { echo "[OpenVidu] error getting docker images"; exit 1; }
+
+            echo "@reboot /usr/local/bin/testRecording.sh >> /var/log/testRecording.log 2>&1" | crontab
 
             # sending the finish call
             /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource WaitCondition --region ${AWS::Region}

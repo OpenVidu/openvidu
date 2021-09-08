@@ -98,7 +98,12 @@ Resources:
                 docker run -d --rm --name=test-recording -e URL=https://openvidu.io/ -v "${TEST_RECORDING_DIR}":/recordings openvidu/openvidu-recording:2.19.0
 
                 # Wait to file to be created
-                while [ ! -f "${TEST_RECORDING_DIR}/video/video.mp4" ]; do sleep 1; done
+                TIMEOUT_WAIT_FILE=30
+                ELAPSED=0
+                while [[ ! -f "${TEST_RECORDING_DIR}/video/video.mp4" ]] && [[ "${ELAPSED}" -lt "${TIMEOUT_WAIT_FILE}" ]]; do
+                  sleep 1;
+                  ELAPSED=$((ELAPSED+1))
+                done
 
                 # Sleep 30 seconds
                 sleep 30
