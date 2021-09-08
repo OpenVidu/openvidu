@@ -262,7 +262,11 @@ public class SingleStreamRecordingService extends RecordingService {
 					recorder.addErrorListener(new EventListener<ErrorEvent>() {
 						@Override
 						public void onEvent(ErrorEvent event) {
-							log.error(event.getErrorCode() + " " + event.getDescription());
+							final String msg = "Event [" + event.getType() + "] endpoint: "
+									+ recorder.getName() + " | errorCode: " + event.getErrorCode()
+									+ " | description: " + event.getDescription() + " | timestamp: "
+									+ event.getTimestampMillis();
+							log.error(msg);
 						}
 					});
 
