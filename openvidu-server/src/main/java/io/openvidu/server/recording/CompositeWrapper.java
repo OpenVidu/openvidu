@@ -121,7 +121,11 @@ public class CompositeWrapper {
 
 	public void connectPublisherEndpoint(PublisherEndpoint endpoint) throws OpenViduException {
 		HubPort hubPort = new HubPort.Builder(composite).build();
-		endpoint.connect(hubPort, false);
+
+		// Block on this call: connections must have been already finished
+		// before calling `RecorderEndpoint.record()`.
+		endpoint.connect(hubPort, true);
+
 		String streamId = endpoint.getOwner().getPublisherStreamId();
 		this.hubPorts.put(streamId, hubPort);
 		this.publisherEndpoints.put(streamId, endpoint);
