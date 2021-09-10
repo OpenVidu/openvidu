@@ -1544,6 +1544,9 @@ export class Session extends EventDispatcher {
             forceDisconnect: this.openvidu.role === 'MODERATOR'
         };
         logger.info("openvidu-server version: " + opts.version);
+        if (opts.life != null) {
+            this.openvidu.life = opts.life;
+        }
         if (opts.version !== this.openvidu.libraryVersion) {
             logger.warn('OpenVidu Server (' + opts.version +
                 ') and OpenVidu Browser (' + this.openvidu.libraryVersion +

@@ -136,6 +136,10 @@ function WebSocketWithReconnection(config) {
         ws.close();
     };
 
+    this.forceClose = () => {
+        ws.close();
+    };
+
     this.reconnectWs = () => {
         Logger.debug("reconnectWs");
         reconnect(MAX_RETRIES, 1);

@@ -32,4 +32,5 @@ export interface LocalConnectionOptions {
     turnCredential: string;
     version: string;
     mediaServer: string;
+    life: number;
 }

@@ -112,6 +112,10 @@ export class OpenVidu {
   /**
    * @hidden
    */
+  life: number = -1;
+  /**
+   * @hidden
+   */
   advancedConfiguration: OpenViduAdvancedConfiguration = {};
   /**
    * @hidden
@@ -1029,15 +1033,43 @@ export class OpenVidu {
     logger.warn('Websocket reconnected');
     if (this.isRoomAvailable()) {
       if (!!this.session.connection) {
+        // This RPC method allows checking if the WebSocket reconnected to a session where
+        // the user is still a participant, or the session evicted the user
         this.sendRequest('connect', { sessionId: this.session.connection.rpcSessionId }, (error, response) => {
           if (!!error) {
+
             if (this.isMasterNodeCrashed()) {
+
               logger.warn('Master Node has crashed!');
+
             } else {
+
               logger.error(error);
-              logger.warn('Websocket was able to reconnect to OpenVidu Server, but your Connection was already destroyed due to timeout. You are no longer a participant of the Session and your media streams have been destroyed');
-              this.session.onLostConnection("networkDisconnect");
-              this.jsonRpcClient.close(4101, "Reconnection fault");
+
+              const notifyNetworkDisconnection = (error) => {
+                logger.warn('Websocket was able to reconnect to OpenVidu Server, but your Connection was already destroyed due to timeout. You are no longer a participant of the Session and your media streams have been destroyed');
+                this.session.onLostConnection("networkDisconnect");
+                this.jsonRpcClient.close(4101, "Reconnection fault");
+              }
+
+              if (this.life === -1) {
+                notifyNetworkDisconnection(error);
+              } else {
+                // This RPC method is only required to find out the reason of the disconnection:
+                // whether the client lost its network connection or a Master Node crashed
+                this.sendRequest('sessionStatus', { sessionId: this.session.sessionId }, (error, response) => {
+                  if (this.life === response.life) {
+                    // If the life stored in the client matches the life stored in the server, it means that the client lost its network connection
+                    notifyNetworkDisconnection(error);
+                  } else {
+                    // If the life stored in the client is below the life stored in the server, it means that the Master Node has crashed
+                    logger.warn('Websocket was able to reconnect to OpenVidu Server, but your Master Node crashed.');
+                    this.session.onLostConnection("nodeCrashed");
+                    this.jsonRpcClient.close(4101, "Reconnection fault");
+                  }
+                });
+              }
+
             }
           } else {
             this.jsonRpcClient.resetPing();
