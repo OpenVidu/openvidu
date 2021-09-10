@@ -121,11 +121,15 @@ public class SessionRestController {
 		}
 
 		Session sessionNotActive = sessionManager.storeSessionNotActive(sessionId, sessionProperties);
-		log.info("New session {} created {}", sessionId, this.sessionManager.getSessionsWithNotActive().stream()
-				.map(Session::getSessionId).collect(Collectors.toList()).toString());
 
-		return new ResponseEntity<>(sessionNotActive.toJson(false, false).toString(), RestUtils.getResponseHeaders(),
-				HttpStatus.OK);
+		if (sessionNotActive == null) {
+			return new ResponseEntity<>(HttpStatus.CONFLICT);
+		} else {
+			log.info("New session {} created {}", sessionId, this.sessionManager.getSessionsWithNotActive().stream()
+					.map(Session::getSessionId).collect(Collectors.toList()).toString());
+			return new ResponseEntity<>(sessionNotActive.toJson(false, false).toString(),
+					RestUtils.getResponseHeaders(), HttpStatus.OK);
+		}
 	}
 
 	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.GET)
