@@ -112,6 +112,7 @@ public class SessionRestController {
 		String sessionId;
 		if (sessionProperties.customSessionId() != null && !sessionProperties.customSessionId().isEmpty()) {
 			if (sessionManager.getSessionWithNotActive(sessionProperties.customSessionId()) != null) {
+				log.warn("Session {} is already created", sessionProperties.customSessionId());
 				return new ResponseEntity<>(HttpStatus.CONFLICT);
 			}
 			sessionId = sessionProperties.customSessionId();
