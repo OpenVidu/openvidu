@@ -637,7 +637,7 @@ Resources:
         - !GetAtt 'OpenViduSecurityGroup.GroupId'
       Tags:
         - Key: Name
-          Value: 'OpenVidu Server'
+          Value: 'Master Node'
         - Key: 'ov-cluster-member'
           Value: 'server'
       UserData:

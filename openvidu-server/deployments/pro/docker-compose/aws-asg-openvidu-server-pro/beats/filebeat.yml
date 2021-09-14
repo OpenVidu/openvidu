@@ -41,10 +41,10 @@ output:
         when.or:
           - contains:
               container.image.name: openvidu/openvidu-redis
-      - index: "filebeat-nginx-%{+yyyy.MM.dd}"
+      - index: "filebeat-replication-manager-%{+yyyy.MM.dd}"
         when.or:
           - contains:
-              container.image.name: openvidu/openvidu-proxy
+              container.image.name: openvidu/replication-manager
       - index: "filebeat-openvidu-recording-%{+yyyy.MM.dd}"
         when.or:
           - contains:
