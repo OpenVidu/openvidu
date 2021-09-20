@@ -371,46 +371,50 @@ public class SingleStreamRecordingService extends RecordingService {
 		boolean propertiesHasAudio = properties.hasAudio();
 		boolean propertiesHasVideo = properties.hasVideo();
 
-		if (streamHasAudio) {
-			if (streamHasVideo) {
-				// Stream has both audio and video tracks
+		// Detect some error conditions to provide a hint about what's wrong
 
-				if (propertiesHasAudio) {
-					if (propertiesHasVideo) {
-						profile = MediaProfileSpecType.WEBM;
-					} else {
-						profile = MediaProfileSpecType.WEBM_AUDIO_ONLY;
-					}
-				} else {
-					profile = MediaProfileSpecType.WEBM_VIDEO_ONLY;
-				}
-			} else {
-				// Stream has audio track only
-
-				if (propertiesHasAudio) {
-					profile = MediaProfileSpecType.WEBM_AUDIO_ONLY;
-				} else {
-					// ERROR: RecordingProperties set to video only but there's no video track
-					throw new OpenViduException(
-							Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
-							"RecordingProperties set to \"hasAudio(false)\" but stream is audio-only");
-				}
-			}
-		} else if (streamHasVideo) {
-			// Stream has video track only
-
-			if (propertiesHasVideo) {
-				profile = MediaProfileSpecType.WEBM_VIDEO_ONLY;
-			} else {
-				// ERROR: RecordingProperties set to audio only but there's no audio track
-				throw new OpenViduException(Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
-						"RecordingProperties set to \"hasVideo(false)\" but stream is video-only");
-			}
-		} else {
+		if (!streamHasAudio && !streamHasVideo) {
 			// ERROR: Stream has no track at all. This branch should never be reachable
-			throw new OpenViduException(Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
+			throw new OpenViduException(
+					Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
 					"Stream has no track at all. Cannot be recorded");
 		}
+
+		if (!propertiesHasAudio && !propertiesHasVideo) {
+			// ERROR: Properties don't enable any track. This branch should never be reachable
+			throw new OpenViduException(
+					Code.MEDIA_TYPE_RECORDING_PROPERTIES_ERROR_CODE,
+					"RecordingProperties cannot set both \"hasAudio(false)\" and \"hasVideo(false)\"");
+		}
+
+		boolean streamOnlyAudio = streamHasAudio && !streamHasVideo;
+		if (streamOnlyAudio && !propertiesHasAudio) {
+			throw new OpenViduException(
+					Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
+					"RecordingProperties set to \"hasAudio(false)\" but stream is audio-only");
+		}
+
+		boolean streamOnlyVideo = !streamHasAudio && streamHasVideo;
+		if (streamOnlyVideo & !propertiesHasVideo) {
+			throw new OpenViduException(
+					Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
+					"RecordingProperties set to \"hasVideo(false)\" but stream is video-only");
+		}
+
+		// Detect the requested media kinds and select the appropriate profile
+
+		boolean recordAudio = streamHasAudio && propertiesHasAudio;
+		boolean recordVideo = streamHasVideo && propertiesHasVideo;
+		if (recordAudio && recordVideo) {
+			profile = MediaProfileSpecType.WEBM;
+		}
+		else if (recordAudio) {
+			profile = MediaProfileSpecType.WEBM_AUDIO_ONLY;
+		}
+		else if (recordVideo) {
+			profile = MediaProfileSpecType.WEBM_VIDEO_ONLY;
+		}
+
 		return profile;
 	}
 
