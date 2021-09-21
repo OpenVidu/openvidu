@@ -86,8 +86,8 @@ new_media_node_installation() {
 
      # Change recording folder with all permissions
      printf "\n     => Adding permission to 'recordings' folder..."
-     mkdir -p "${OPENVIDU_RECORDINGS_FOLDER}/recordings"
-     chmod 777 "${OPENVIDU_RECORDINGS_FOLDER}/recordings"
+     mkdir -p "${OPENVIDU_RECORDINGS_FOLDER}"
+     chmod 777 "${OPENVIDU_RECORDINGS_FOLDER}"
 
      # Add execution permissions
      printf "\n     => Adding permission to 'copy_config_files.sh' script..."
@@ -297,8 +297,8 @@ upgrade_media_node() {
 
      # Change recording folder with all permissions
      printf "\n     => Adding permission to 'recordings' folder..."
-     mkdir -p "${OPENVIDU_RECORDINGS_FOLDER}/recordings"
-     chmod 777 "${OPENVIDU_RECORDINGS_FOLDER}/recordings"
+     mkdir -p "${OPENVIDU_RECORDINGS_FOLDER}"
+     chmod 777 "${OPENVIDU_RECORDINGS_FOLDER}"
 
      # Add execution permissions
      printf "\n     => Adding permission to 'copy_config_files.sh' script..."
