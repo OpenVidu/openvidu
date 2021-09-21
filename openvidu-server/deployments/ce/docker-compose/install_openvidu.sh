@@ -47,6 +47,11 @@ new_ov_installation() {
      printf "\n     => Adding permission to 'openvidu' program..."
      chmod +x "${OPENVIDU_FOLDER}/openvidu" || fatal_error "Error while adding permission to 'openvidu' program"
 
+     # Change recording folder with all permissions
+     printf "\n     => Adding permission to 'recordings' folder..."
+     mkdir -p "${OPENVIDU_FOLDER}/recordings"
+     chmod 777 "${OPENVIDU_FOLDER}/recordings"
+
      # Create own certificated folder
      printf "\n     => Creating folder 'owncert'..."
      mkdir "${OPENVIDU_FOLDER}/owncert" || fatal_error "Error while creating the folder 'owncert'"
@@ -221,6 +226,11 @@ upgrade_ov() {
      # Add execution permissions
      printf "\n     => Adding permission to 'openvidu' program..."
      chmod +x "${OPENVIDU_PREVIOUS_FOLDER}/openvidu" || fatal_error "Error while adding permission to 'openvidu' program"
+
+     # Change recording folder with all permissions
+     printf "\n     => Adding permission to 'recordings' folder..."
+     mkdir -p "${OPENVIDU_PREVIOUS_FOLDER}/recordings"
+     chmod 777 "${OPENVIDU_PREVIOUS_FOLDER}/recordings"
 
      # Define old mode: On Premise or Cloud Formation
      OLD_MODE=$(grep -E "Installation Mode:.*$" "${ROLL_BACK_FOLDER}/docker-compose.yml" | awk '{ print $4,$5 }')

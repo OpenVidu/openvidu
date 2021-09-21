@@ -78,10 +78,6 @@ Resources:
                 # Define Installation Type
                 sed -i "s/Installation Mode: On Premises/Installation Mode: Cloud Formation/" /opt/kms/docker-compose.yml
 
-                # Create recording folder
-                mkdir -p /opt/openvidu/recordings
-                chmod 777 /opt/openvidu/recordings
-
                 # Configure crash report
                 mkdir -p /opt/openvidu/kms-crashes
                 sed -i "s/enabled=1/enabled=0/" /etc/default/apport

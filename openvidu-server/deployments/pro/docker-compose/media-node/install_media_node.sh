@@ -4,6 +4,7 @@ MEDIA_NODE_FOLDER=kms
 MEDIA_NODE_VERSION=master
 OPENVIDU_UPGRADABLE_VERSION="2.18"
 BEATS_FOLDER=${MEDIA_NODE_FOLDER}/beats
+OPENVIDU_RECORDINGS_FOLDER="/opt/openvidu/recordings"
 DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${MEDIA_NODE_VERSION}
 IMAGES=(
   "kurento-media-server"
@@ -82,6 +83,11 @@ new_media_node_installation() {
      # Add execution permissions
      printf "\n     => Adding permission to 'media_node' program..."
      chmod +x "${MEDIA_NODE_FOLDER}/media_node" || fatal_error "Error while adding permission to 'media_node' program"
+
+     # Change recording folder with all permissions
+     printf "\n     => Adding permission to 'recordings' folder..."
+     mkdir -p "${OPENVIDU_RECORDINGS_FOLDER}/recordings"
+     chmod 777 "${OPENVIDU_RECORDINGS_FOLDER}/recordings"
 
      # Add execution permissions
      printf "\n     => Adding permission to 'copy_config_files.sh' script..."
@@ -288,6 +294,11 @@ upgrade_media_node() {
      # Add execution permissions
      printf "\n     => Adding permission to 'media_node' program..."
      chmod +x "${MEDIA_NODE_PREVIOUS_FOLDER}/media_node" || fatal_error "Error while adding permission to 'media_node' program"
+
+     # Change recording folder with all permissions
+     printf "\n     => Adding permission to 'recordings' folder..."
+     mkdir -p "${OPENVIDU_RECORDINGS_FOLDER}/recordings"
+     chmod 777 "${OPENVIDU_RECORDINGS_FOLDER}/recordings"
 
      # Add execution permissions
      printf "\n     => Adding permission to 'copy_config_files.sh' script..."
