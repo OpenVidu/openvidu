@@ -40,6 +40,8 @@ import javax.annotation.PostConstruct;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.validator.routines.DomainValidator;
+import org.apache.commons.validator.routines.InetAddressValidator;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.kurento.jsonrpc.JsonUtils;
@@ -521,8 +523,8 @@ public class OpenviduConfig {
 
 	protected List<String> getNonUserProperties() {
 		return Arrays.asList("server.port", "SERVER_PORT", "DOTENV_PATH", "COTURN_IP", "COTURN_REDIS_IP",
-				"COTURN_REDIS_DBNAME", "COTURN_REDIS_PASSWORD", "COTURN_REDIS_CONNECT_TIMEOUT",
-				"COTURN_INTERNAL_RELAY", "OPENVIDU_RECORDING_IMAGE", "OPENVIDU_RECORDING_ENABLE_GPU");
+				"COTURN_REDIS_DBNAME", "COTURN_REDIS_PASSWORD", "COTURN_REDIS_CONNECT_TIMEOUT", "COTURN_INTERNAL_RELAY",
+				"OPENVIDU_RECORDING_IMAGE", "OPENVIDU_RECORDING_ENABLE_GPU");
 	}
 
 	// Properties
@@ -544,7 +546,8 @@ public class OpenviduConfig {
 
 		coturnRedisConnectTimeout = getValue("COTURN_REDIS_CONNECT_TIMEOUT");
 
-		// If true, coturn is using private IPs as relay IPs to enable relay connections pass through internal network
+		// If true, coturn is using private IPs as relay IPs to enable relay connections
+		// pass through internal network
 		coturnInternalRelay = asBoolean("COTURN_INTERNAL_RELAY");
 
 		openviduSecret = asNonEmptyAlphanumericString("OPENVIDU_SECRET",
@@ -864,8 +867,17 @@ public class OpenviduConfig {
 	protected String asOptionalInetAddress(String property) {
 		String inetAddress = getValue(property);
 		if (inetAddress != null && !inetAddress.isEmpty()) {
+			DomainValidator domainValidator = DomainValidator.getInstance();
+			if (domainValidator.isValid(inetAddress)) {
+				return inetAddress;
+			}
+			InetAddressValidator ipValidator = InetAddressValidator.getInstance();
+			if (ipValidator.isValid(inetAddress)) {
+				return inetAddress;
+			}
 			try {
 				Inet6Address.getByName(inetAddress).getHostAddress();
+				return inetAddress;
 			} catch (UnknownHostException e) {
 				addError(property, "Is not a valid Internet Address (IP or Domain Name): " + e.getMessage());
 			}
@@ -1042,8 +1054,8 @@ public class OpenviduConfig {
 		} else {
 			String[] customImageSplit = configuredImage.split(":");
 			if (customImageSplit.length != 2) {
-				addError(recordingImageProperty, "The docker image configured is not valid. " +
-						"This parameter must have this format: '<image>:<tag>'");
+				addError(recordingImageProperty, "The docker image configured is not valid. "
+						+ "This parameter must have this format: '<image>:<tag>'");
 			} else {
 				String customImageName = customImageSplit[0];
 				String customVersion = customImageSplit[1];
@@ -1061,7 +1073,7 @@ public class OpenviduConfig {
 			return mediaNodesPublicIps;
 		}
 		List<String> mediaNodesPublicIpsList = asJsonStringsArray(propertyName);
-		for(String ipPairStr: mediaNodesPublicIpsList) {
+		for (String ipPairStr : mediaNodesPublicIpsList) {
 			String[] ipPair = ipPairStr.trim().split(":");
 			if (ipPair.length != 2) {
 				addError(propertyName, "Not valid ip pair in " + propertyName + ": " + ipPairStr);
