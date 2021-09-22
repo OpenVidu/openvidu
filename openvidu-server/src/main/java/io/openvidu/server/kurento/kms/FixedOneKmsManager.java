@@ -104,7 +104,7 @@ public class FixedOneKmsManager extends KmsManager {
 		} catch (Exception e) {
 			// Some KMS wasn't reachable
 			log.error("Shutting down OpenVidu Server");
-			System.exit(1);
+			Runtime.getRuntime().halt(1);
 		}
 	}
 

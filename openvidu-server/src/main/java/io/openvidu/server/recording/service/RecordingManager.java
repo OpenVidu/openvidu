@@ -157,7 +157,7 @@ public class RecordingManager {
 							+ "\" set with system property \"OPENVIDU_RECORDING_CUSTOM_LAYOUT\"";
 				}
 				log.error(finalErrorMessage + ". Shutting down OpenVidu Server");
-				System.exit(1);
+				Runtime.getRuntime().halt(1);
 			}
 		} else {
 			log.info("OpenVidu recording service is disabled");
