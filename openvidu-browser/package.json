@@ -42,5 +42,5 @@
         "docs": "./generate-docs.sh"
     },
     "types": "lib/index.d.ts",
-    "version": "2.19.0"
+    "version": "2.20.0"
 }
