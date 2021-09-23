@@ -2,8 +2,8 @@
 
 # Global variables
 OPENVIDU_FOLDER=openvidu
-OPENVIDU_VERSION=master
-OPENVIDU_UPGRADABLE_VERSION="2.18"
+OPENVIDU_VERSION=v2.20.0
+OPENVIDU_UPGRADABLE_VERSION="2.19"
 DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}
 
 fatal_error() {
