@@ -28,14 +28,14 @@ export interface SessionProperties {
     /**
      * How the media streams will be sent and received by your clients: routed through OpenVidu Media Node
      * (`MediaMode.ROUTED`) or attempting direct p2p connections (`MediaMode.RELAYED`, _not available yet_)
-     * 
+     *
      * Default to [[MediaMode.ROUTED]]
      */
     mediaMode?: MediaMode;
 
     /**
      * Whether the Session will be automatically recorded (`RecordingMode.ALWAYS`) or not (`RecordingMode.MANUAL`)
-     * 
+     *
      * Default to [[RecordingMode.MANUAL]]
      */
     recordingMode?: RecordingMode;
@@ -43,7 +43,7 @@ export interface SessionProperties {
     /**
      * Default recording properties of this session. You can easily override this value later when starting a
      * [[Recording]] by providing new [[RecordingProperties]]
-     * 
+     *
      * Default values defined in [[RecordingProperties]] class
      */
     defaultRecordingProperties?: RecordingProperties;
@@ -57,7 +57,7 @@ export interface SessionProperties {
 
     /**
      * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> 
-     * 
+     *
      * The Media Node where to host the session. The default option if this property is not defined is the less loaded
      * Media Node at the moment the first user joins the session. This object defines the following properties as Media Node selector:
      * - `id`: Media Node unique identifier
@@ -71,16 +71,18 @@ export interface SessionProperties {
      * This allows browsers/clients to use the same codec avoiding transcoding in the media server.
      * If the browser/client is not compatible with the specified codec and [[allowTranscoding]] is <code>false</code>
      * and exception will occur. If forcedVideoCodec is set to [[VideoCodec.NONE]], no codec will be forced.
-     * 
-     * Default to [[VideoCodec.VP8]]
+     *
+     * If defined here, this parameter has prevalence over OPENVIDU_STREAMS_FORCED_VIDEO_CODEC.
+     * OPENVIDU_STREAMS_FORCED_VIDEO_CODEC default is [[VideoCodec.VP8]]
      */
     forcedVideoCodec?: VideoCodec;
 
     /**
      * It defines if you want to allow transcoding in the media server or not
      * when [[forcedVideoCodec]] is not compatible with the browser/client.
-     * 
-     * Default to false
+     *
+     * If defined here, this parameter has prevalence over OPENVIDU_STREAMS_ALLOW_TRANSCODING.
+     * OPENVIDU_STREAMS_ALLOW_TRANSCODING default is 'false'
      */
     allowTranscoding?: boolean;
 

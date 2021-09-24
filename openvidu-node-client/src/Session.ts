@@ -656,8 +656,8 @@ export class Session {
         props.recordingMode = (props.recordingMode != null) ? props.recordingMode : RecordingMode.MANUAL;
         props.customSessionId = (props.customSessionId != null) ? props.customSessionId : '';
         props.mediaNode = (props.mediaNode != null) ? props.mediaNode : undefined;
-        props.forcedVideoCodec = (props.forcedVideoCodec != null) ? props.forcedVideoCodec : VideoCodec.VP8;
-        props.allowTranscoding = (props.allowTranscoding != null) ? props.allowTranscoding : false;
+        props.forcedVideoCodec = props.forcedVideoCodec;
+        props.allowTranscoding = props.allowTranscoding;
 
         if (!props.defaultRecordingProperties) {
             props.defaultRecordingProperties = {};

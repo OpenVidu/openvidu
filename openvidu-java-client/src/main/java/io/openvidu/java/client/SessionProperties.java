@@ -120,7 +120,8 @@ public class SessionProperties {
 		 * the specified codec and {@link #allowTranscoding(Boolean)} is
 		 * <code>false</code> and exception will occur. If forcedVideoCodec is set to
 		 * NONE, no codec will be forced.<br>
-		 * Default value is {@link VideoCodec#VP8}
+		 * If defined here, this parameter has prevalence over OPENVIDU_STREAMS_FORCED_VIDEO_CODEC.
+		 * OPENVIDU_STREAMS_FORCED_VIDEO_CODEC default is {@link VideoCodec#VP8}
 		 */
 		public SessionProperties.Builder forcedVideoCodec(VideoCodec forcedVideoCodec) {
 			this.forcedVideoCodec = forcedVideoCodec;
@@ -131,7 +132,8 @@ public class SessionProperties {
 		 * Call this method to define if you want to allow transcoding in the media
 		 * server or not when {@link #forcedVideoCodec(VideoCodec)} is not compatible
 		 * with the browser/client.<br>
-		 * Default value is false
+		 * If defined here, this parameter has prevalence over OPENVIDU_STREAMS_ALLOW_TRANSCODING.
+		 * OPENVIDU_STREAMS_ALLOW_TRANSCODING default is 'false'
 		 */
 		public SessionProperties.Builder allowTranscoding(Boolean allowTranscoding) {
 			this.allowTranscoding = allowTranscoding;
