@@ -286,7 +286,7 @@ export class Stream {
      * of a new one, that will apply the same properties.
      *
      * This method can be useful in those situations were there the media connection breaks and OpenVidu is not able to recover on its own
-     * for any kind of unanticipated reason (see [Automatic reconnection](/en/latest/advanced-features/automatic-reconnection/)).
+     * for any kind of unanticipated reason (see [Automatic reconnection](/en/stable/advanced-features/automatic-reconnection/)).
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the reconnection operation was successful and rejected with an Error object if not
      */

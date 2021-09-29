@@ -124,7 +124,7 @@ public enum EndReason {
 
 	/**
 	 * A recording has been stopped automatically
-	 * (https://docs.openvidu.io/en/latest/advanced-features/recording/#automatic-stop-of-recordings).
+	 * (https://docs.openvidu.io/en/stable/advanced-features/recording/#automatic-stop-of-recordings).
 	 * Applies to recordingStatusChanged
 	 */
 	automaticStop

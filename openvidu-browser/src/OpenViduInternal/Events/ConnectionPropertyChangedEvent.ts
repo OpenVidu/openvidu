@@ -28,7 +28,7 @@ import { Event } from './Event';
  * 
  * The only way the Connection properties may change is by updating them through:
  * 
- * - [API REST](/en/stable/reference-docs/REST-API/#patch-openviduapisessionsltsession_idgtconnectionltconnection_idgt)
+ * - [API REST](/en/stable/reference-docs/REST-API/#patch-connection)
  * - [openvidu-java-client](/en/stable/reference-docs/openvidu-java-client/#update-a-connection)
  * - [openvidu-node-client](/en/stable/reference-docs/openvidu-node-client/#update-a-connection)<br><br>
  */
