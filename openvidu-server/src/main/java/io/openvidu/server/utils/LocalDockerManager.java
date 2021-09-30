@@ -19,6 +19,7 @@ package io.openvidu.server.utils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -247,7 +248,8 @@ public class LocalDockerManager implements DockerManager {
 
 	public List<String> getRunningContainers(String fullImageName) {
 		List<String> containerIds = new ArrayList<>();
-		List<Container> existingContainers = this.dockerClient.listContainersCmd().exec();
+		List<Container> existingContainers = this.dockerClient.listContainersCmd()
+				.withStatusFilter(Arrays.asList("created", "restarting", "running")).exec();
 		for (Container container : existingContainers) {
 			if (container.getImage().startsWith(fullImageName)) {
 				containerIds.add(container.getId());
