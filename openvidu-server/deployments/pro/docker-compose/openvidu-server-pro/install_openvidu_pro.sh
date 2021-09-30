@@ -109,6 +109,10 @@ new_ov_installation() {
      printf "\n     => Creating folder 'custom-nginx-vhosts'..."
      mkdir "${OPENVIDU_FOLDER}/custom-nginx-vhosts" || fatal_error "Error while creating the folder 'custom-nginx-vhosts'"
 
+     # Create vhost nginx folder
+     printf "\n     => Creating folder 'custom-nginx-locations'..."
+     mkdir "${OPENVIDU_FOLDER}/custom-nginx-locations" || fatal_error "Error while creating the folder 'custom-nginx-locations'"
+
      # Ready to use
      printf '\n'
      printf '\n'
@@ -289,6 +293,11 @@ upgrade_ov() {
      if [ -d "${OPENVIDU_PREVIOUS_FOLDER}/custom-nginx-vhosts" ]; then
           mv "${OPENVIDU_PREVIOUS_FOLDER}/custom-nginx-vhosts" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous directory 'custom-nginx-vhosts'"
           printf '\n          - custom-nginx-vhosts'
+     fi
+
+     if [ -d "${OPENVIDU_PREVIOUS_FOLDER}/custom-nginx-locations" ]; then
+          mv "${OPENVIDU_PREVIOUS_FOLDER}/custom-nginx-locations" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous directory 'custom-nginx-locations'"
+          printf '\n          - custom-nginx-locations'
      fi
 
      # Move tmp files to Openvidu

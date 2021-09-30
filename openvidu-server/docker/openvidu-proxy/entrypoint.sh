@@ -262,6 +262,27 @@ sed -e '/{ssl_config}/{r default_nginx_conf/global/ssl_config.conf' -e 'd}' -i /
 sed -e '/{proxy_config}/{r default_nginx_conf/global/proxy_config.conf' -e 'd}' -i /etc/nginx/conf.d/*
 sed -i "s/{domain_name}/${DOMAIN_OR_PUBLIC_IP}/g" /etc/nginx/conf.d/*
 
+# Read custom locations and apply them in configuration
+if [[ -d /custom-nginx-locations ]]; then
+  TMP_PARSED_CUSTOM_LOCATIONS="$(mktemp)"
+  {
+    for CUSTOM_LOCATION in /custom-nginx-locations/*.conf; do
+      [ -f "${CUSTOM_LOCATION}" ] || break
+      echo "    # Custom location loaded from: ${CUSTOM_LOCATION}"
+      while read -r ; do
+        echo "    ${REPLY}"
+      done < "${CUSTOM_LOCATION}"
+      echo
+    done
+  } > "${TMP_PARSED_CUSTOM_LOCATIONS}"
+  if [[ -n $(cat "${TMP_PARSED_CUSTOM_LOCATIONS}") ]]; then
+    sed -e "/{custom_locations}/{r ${TMP_PARSED_CUSTOM_LOCATIONS}" -e 'd}' -i /etc/nginx/conf.d/*
+  fi
+  rm "${TMP_PARSED_CUSTOM_LOCATIONS}"
+fi
+# Delete custom_locations if not replaced
+sed -i '/{custom_locations}/d' /etc/nginx/conf.d/*
+
 # IPv6 listening (RFC 6540)
 if [ ! -f /proc/net/if_inet6 ]; then
   sed -i '/\[::\]:{http_port}/d' /etc/nginx/conf.d/*

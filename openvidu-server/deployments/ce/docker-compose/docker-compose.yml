@@ -103,6 +103,7 @@ services:
             - ./certificates:/etc/letsencrypt
             - ./owncert:/owncert
             - ./custom-nginx-vhosts:/etc/nginx/vhost.d/
+            - ./custom-nginx-locations:/custom-nginx-locations
             - ${OPENVIDU_RECORDING_CUSTOM_LAYOUT}:/opt/openvidu/custom-layout
         environment:
             - DOMAIN_OR_PUBLIC_IP=${DOMAIN_OR_PUBLIC_IP}
