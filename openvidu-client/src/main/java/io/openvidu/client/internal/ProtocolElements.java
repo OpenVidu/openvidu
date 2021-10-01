@@ -162,6 +162,7 @@ public class ProtocolElements {
 	public static final String PARTICIPANTJOINED_RECORD_PARAM = "record";
 	public static final String PARTICIPANTJOINED_ROLE_PARAM = "role";
 	public static final String PARTICIPANTJOINED_COTURNIP_PARAM = "coturnIp";
+	public static final String PARTICIPANTJOINED_COTURNPORT_PARAM = "coturnPort";
 	public static final String PARTICIPANTJOINED_TURNUSERNAME_PARAM = "turnUsername";
 	public static final String PARTICIPANTJOINED_TURNCREDENTIAL_PARAM = "turnCredential";
 

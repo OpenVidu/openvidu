@@ -159,6 +159,8 @@ public class OpenviduConfig {
 
 	private String coturnIp;
 
+	private int coturnPort;
+
 	private String coturnRedisIp;
 
 	// If true, coturn relay ips will come with the private IP of the machine
@@ -326,6 +328,10 @@ public class OpenviduConfig {
 
 	public String getCoturnIp() {
 		return this.coturnIp;
+	}
+
+	public int getCoturnPort() {
+		return this.coturnPort;
 	}
 
 	public RecordingNotification getOpenViduRecordingNotification() {
@@ -589,6 +595,8 @@ public class OpenviduConfig {
 
 		checkCoturnIp();
 
+		checkCoturnPort();
+
 		coturnRedisIp = asOptionalInetAddress("COTURN_REDIS_IP");
 
 		checkWebhook();
@@ -619,6 +627,14 @@ public class OpenviduConfig {
 			} catch (MalformedURLException e) {
 				log.error("Can't get Domain name from OpenVidu public Url: " + e.getMessage());
 			}
+		}
+	}
+
+	private void checkCoturnPort(){
+		String property = "COTURN_PORT";
+		coturnPort = this.asNonNegativeInteger(property);
+		if (coturnPort <= 0 || coturnPort > 65535){
+			log.warn("Non valid coturn port,  setting to default 3478");
 		}
 	}
 

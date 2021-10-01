@@ -28,6 +28,7 @@ export interface LocalConnectionOptions {
     role: string;
     record: boolean;
     coturnIp: string;
+    coturnPort: string;
     turnUsername: string;
     turnCredential: string;
     version: string;

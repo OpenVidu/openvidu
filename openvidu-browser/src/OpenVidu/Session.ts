@@ -1526,8 +1526,8 @@ export class Session extends EventDispatcher {
 
     private processJoinRoomResponse(opts: LocalConnectionOptions) {
         this.sessionId = opts.session;
-        if (opts.coturnIp != null && opts.turnUsername != null && opts.turnCredential != null) {
-            const turnUrl1 = 'turn:' + opts.coturnIp + ':3478';
+        if (opts.coturnIp != null && opts.coturnPort != null && opts.turnUsername != null && opts.turnCredential != null) {
+            const turnUrl1 = 'turn:' + opts.coturnIp + ':' + opts.coturnPort;
             this.openvidu.iceServers = [
                 { urls: [turnUrl1], username: opts.turnUsername, credential: opts.turnCredential }
             ];

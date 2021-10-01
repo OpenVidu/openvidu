@@ -40,6 +40,7 @@ services:
             - COTURN_REDIS_IP=127.0.0.1
             - COTURN_REDIS_PASSWORD=${OPENVIDU_SECRET}
             - COTURN_IP=${COTURN_IP:-auto-ipv4}
+            - COTURN_PORT=${COTURN_PORT:-3478}
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
@@ -84,11 +85,11 @@ services:
             - DB_PASSWORD=${OPENVIDU_SECRET}
         command:
             - --log-file=stdout
-            - --listening-port=3478
+            - --listening-port=${COTURN_PORT:-3478}
             - --fingerprint
             - --lt-cred-mech
-            - --min-port=57001
-            - --max-port=65535
+            - --min-port=${COTURN_MIN_PORT:-57001}
+            - --max-port=${COTURN_MIN_PORT:-65535}
             - --realm=openvidu
             - --verbose
         logging:
