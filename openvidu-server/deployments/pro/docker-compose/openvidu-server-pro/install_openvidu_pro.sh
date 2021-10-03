@@ -90,7 +90,6 @@ new_ov_installation() {
      # Change recording folder with all permissions
      printf "\n     => Adding permission to 'recordings' folder..."
      mkdir -p "${OPENVIDU_FOLDER}/recordings"
-     chmod 777 "${OPENVIDU_FOLDER}/recordings"
 
      chmod +x "${AWS_SCRIPTS_FOLDER}/openvidu_autodiscover.sh" || fatal_error "Error while adding permission to 'openvidu_autodiscover.sh' program"
      printf '\n          - openvidu_autodiscover.sh'
@@ -351,7 +350,6 @@ upgrade_ov() {
      # Change recording folder with all permissions
      printf "\n     => Adding permission to 'recordings' folder..."
      mkdir -p "${OPENVIDU_PREVIOUS_FOLDER}/recordings"
-     chmod 777 "${OPENVIDU_PREVIOUS_FOLDER}/recordings"
 
      chmod +x "${OPENVIDU_PREVIOUS_FOLDER}/cluster/aws/openvidu_autodiscover.sh" || fatal_error "Error while adding permission to 'openvidu_autodiscover.sh' program"
      printf '\n          - openvidu_autodiscover.sh'
