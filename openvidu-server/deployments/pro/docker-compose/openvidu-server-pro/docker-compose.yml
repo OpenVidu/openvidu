@@ -74,7 +74,7 @@ services:
             - DB_PASSWORD=${OPENVIDU_SECRET}
         command:
             - --log-file=stdout
-            - --external-ip=${COTURN_IP:-auto-ipv4}
+            - --external-ip=$$(detect-external-ip)
             - --listening-port=${COTURN_PORT:-3478}
             - --fingerprint
             - --lt-cred-mech
