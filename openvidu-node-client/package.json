@@ -1,7 +1,7 @@
 {
     "author": "OpenVidu",
     "dependencies": {
-        "axios": "0.21.2",
+        "axios": "0.21.4",
         "buffer": "6.0.3"
     },
     "description": "OpenVidu Node Client",
