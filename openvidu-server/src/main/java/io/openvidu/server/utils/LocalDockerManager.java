@@ -35,6 +35,7 @@ import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.ExecCreateCmdResponse;
 import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.command.InspectContainerResponse.Mount;
 import com.github.dockerjava.api.command.InspectImageResponse;
 import com.github.dockerjava.api.exception.ConflictException;
 import com.github.dockerjava.api.exception.DockerClientException;
@@ -258,6 +259,14 @@ public class LocalDockerManager implements DockerManager {
 			}
 		}
 		return containerIds;
+	}
+
+	public List<Mount> getMountsForContainers(List<String> containers) {
+		List<Mount> mounts = new ArrayList<>();
+		for (String container : containers) {
+			mounts.addAll(this.dockerClient.inspectContainerCmd(container).exec().getMounts());
+		}
+		return mounts;
 	}
 
 	public String getImageId(String fullImageName) {
