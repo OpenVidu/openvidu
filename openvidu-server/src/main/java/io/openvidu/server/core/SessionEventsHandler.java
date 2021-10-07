@@ -172,6 +172,7 @@ public class SessionEventsHandler {
 						participant.getToken().getRole().name());
 			}
 			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNIP_PARAM, openviduConfig.getCoturnIp());
+			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNPORT_PARAM, openviduConfig.getCoturnPort());
 			if (participant.getToken().getTurnCredentials() != null) {
 				result.addProperty(ProtocolElements.PARTICIPANTJOINED_TURNUSERNAME_PARAM,
 						participant.getToken().getTurnCredentials().getUsername());

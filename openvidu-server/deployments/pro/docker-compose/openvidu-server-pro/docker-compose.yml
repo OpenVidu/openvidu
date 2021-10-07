@@ -42,6 +42,7 @@ services:
             - COTURN_REDIS_IP=127.0.0.1
             - COTURN_REDIS_PASSWORD=${OPENVIDU_SECRET}
             - COTURN_IP=${COTURN_IP:-auto-ipv4}
+            - COTURN_PORT=${COTURN_PORT:-3478}
             - OPENVIDU_PRO_CLUSTER=true
             - OPENVIDU_PRO_KIBANA_HOST=${OPENVIDU_PRO_KIBANA_HOST:-http://127.0.0.1/kibana}
             - OPENVIDU_PRO_ELASTICSEARCH_HOST=${OPENVIDU_PRO_ELASTICSEARCH_HOST:-http://127.0.0.1:9200}
@@ -74,11 +75,11 @@ services:
         command:
             - --log-file=stdout
             - --external-ip=$$(detect-external-ip)
-            - --listening-port=3478
+            - --listening-port=${COTURN_PORT:-3478}
             - --fingerprint
             - --lt-cred-mech
-            - --min-port=40000
-            - --max-port=65535
+            - --min-port=${COTURN_MIN_PORT:-40000}
+            - --max-port=${COTURN_MAX_PORT:-65535}
             - --realm=openvidu
             - --verbose
         logging:
