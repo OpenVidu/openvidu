@@ -22,7 +22,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server-pro:2.20.0
+        image: openvidu/openvidu-server-pro:2.21.0-beta1
         restart: on-failure
         network_mode: host
         entrypoint: ['/usr/local/bin/entrypoint.sh']
@@ -53,7 +53,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     redis:
-        image: openvidu/openvidu-redis:3.0.0
+        image: openvidu/openvidu-redis:4.0.0-dev1
         restart: always
         network_mode: host
         environment:
@@ -63,7 +63,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     coturn:
-        image: openvidu/openvidu-coturn:5.0.0
+        image: openvidu/openvidu-coturn:6.0.0-dev1
         restart: on-failure
         network_mode: host
         env_file:
@@ -87,7 +87,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     nginx:
-        image: openvidu/openvidu-proxy:7.0.0
+        image: openvidu/openvidu-proxy:8.0.0-dev1
         restart: on-failure
         network_mode: host
         volumes:
