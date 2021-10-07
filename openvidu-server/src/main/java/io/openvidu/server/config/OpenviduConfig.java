@@ -528,7 +528,7 @@ public class OpenviduConfig {
 	}
 
 	protected List<String> getNonUserProperties() {
-		return Arrays.asList("server.port", "SERVER_PORT", "DOTENV_PATH", "COTURN_IP", "COTURN_REDIS_IP",
+		return Arrays.asList("server.port", "SERVER_PORT", "DOTENV_PATH", "COTURN_IP", "COTURN_PORT", "COTURN_REDIS_IP",
 				"COTURN_REDIS_DBNAME", "COTURN_REDIS_PASSWORD", "COTURN_REDIS_CONNECT_TIMEOUT", "COTURN_INTERNAL_RELAY",
 				"OPENVIDU_RECORDING_IMAGE", "OPENVIDU_RECORDING_ENABLE_GPU");
 	}
