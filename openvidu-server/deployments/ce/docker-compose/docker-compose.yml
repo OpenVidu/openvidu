@@ -89,7 +89,7 @@ services:
             - --fingerprint
             - --lt-cred-mech
             - --min-port=${COTURN_MIN_PORT:-57001}
-            - --max-port=${COTURN_MIN_PORT:-65535}
+            - --max-port=${COTURN_MAX_PORT:-65535}
             - --realm=openvidu
             - --verbose
         logging:
