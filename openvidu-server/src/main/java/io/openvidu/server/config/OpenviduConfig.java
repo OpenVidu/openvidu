@@ -634,7 +634,7 @@ public class OpenviduConfig {
 		String property = "COTURN_PORT";
 		coturnPort = this.asNonNegativeInteger(property);
 		if (coturnPort <= 0 || coturnPort > 65535){
-			log.warn("Non valid coturn port,  setting to default 3478");
+			log.warn("Non valid coturn port, setting to default 3478");
 		}
 	}
 
