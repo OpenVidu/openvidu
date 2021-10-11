@@ -6,7 +6,7 @@ import {
 import {
   OpenVidu, Session, Subscriber, Publisher, Event, StreamEvent, ConnectionEvent,
   SessionDisconnectedEvent, SignalEvent, RecordingEvent,
-  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, ConnectionPropertyChangedEvent, OpenViduError, NetworkQualityLevelChangedEvent, ExceptionEvent
+  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, ConnectionPropertyChangedEvent, OpenViduError, NetworkQualityLevelChangedEvent, ExceptionEvent, OpenViduAdvancedConfiguration
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,
@@ -229,11 +229,15 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
     this.OV = new OpenVidu();
 
+    const advancedConfiguration: OpenViduAdvancedConfiguration = {
+      enableSimulcastExperimental: false
+    };
     if (this.turnConf === 'freeice') {
-      this.OV.setAdvancedConfiguration({ iceServers: 'freeice' });
+      advancedConfiguration.iceServers = 'freeice';
     } else if (this.turnConf === 'manual') {
-      this.OV.setAdvancedConfiguration({ iceServers: [this.manualTurnConf] });
+      advancedConfiguration.iceServers = [this.manualTurnConf];
     }
+    this.OV.setAdvancedConfiguration(advancedConfiguration);
 
     this.session = this.OV.initSession();
 
