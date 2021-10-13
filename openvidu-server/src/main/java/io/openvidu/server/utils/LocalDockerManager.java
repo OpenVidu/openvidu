@@ -269,6 +269,10 @@ public class LocalDockerManager implements DockerManager {
 		return mounts;
 	}
 
+	public void removeVolume(String volumeId) throws NotFoundException {
+		this.dockerClient.removeVolumeCmd(volumeId).exec();
+	}
+
 	public String getImageId(String fullImageName) {
 		InspectImageResponse imageResponse = this.dockerClient.inspectImageCmd(fullImageName).exec();
 		return imageResponse.getId();
