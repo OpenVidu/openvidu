@@ -54,9 +54,9 @@ public abstract class RecordingService {
 
 	public final static String RECORDING_ENTITY_FILE = ".recording.";
 	public final static String COMPOSED_RECORDING_EXTENSION = ".mp4";
+	public final static String COMPOSED_RECORDING_AUDIO_ONLY_EXTENSION = ".webm";
 	public final static String COMPOSED_THUMBNAIL_EXTENSION = ".jpg";
 	public final static String COMPOSED_INFO_FILE_EXTENSION = ".info";
-	public final static String INDIVIDUAL_RECORDING_EXTENSION = ".webm";
 	public final static String INDIVIDUAL_STREAM_METADATA_FILE = ".stream.";
 	public final static String INDIVIDUAL_RECORDING_COMPRESSED_EXTENSION = ".zip";
 
