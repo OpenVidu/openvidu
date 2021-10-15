@@ -37,7 +37,7 @@ public class SDPMunging {
 
 	private static final Logger log = LoggerFactory.getLogger(SDPMunging.class);
 
-	private Set<VideoCodec> supportedVideoCodecs = new HashSet<>(Arrays.asList(VideoCodec.VP8, VideoCodec.H264));
+	private Set<VideoCodec> supportedVideoCodecs = new HashSet<>(Arrays.asList(VideoCodec.VP8, VideoCodec.VP9, VideoCodec.H264));
 
 	private final String PT_PATTERN = "a=rtpmap:(\\d+) %s/90000";
 	private final String EXTRA_PT_PATTERN = "a=fmtp:(\\d+) apt=%s";
@@ -45,7 +45,7 @@ public class SDPMunging {
 			Arrays.asList("^a=extmap:%s .+$", "^a=rtpmap:%s .+$", "^a=fmtp:%s .+$", "^a=rtcp-fb:%s .+$"));
 
 	/**
-	 * `codec` is a uppercase SDP-style codec name: "VP8", "H264".
+	 * `codec` is an uppercase SDP-style codec name: "VP8", "VP9", "H264".
 	 *
 	 * This looks for all video m-sections (lines starting with "m=video"), then
 	 * searches all of its related PayloadTypes trying to find those which
