@@ -76,7 +76,7 @@ Resources:
                 curl https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/install_media_node_OPENVIDU_VERSION.sh | bash
 
                 if [[ USE_MASTER_DOCKER_IMAGE == "true" ]]; then
-
+                  pushd kms
                   # docker-compose.yml replace with master version
                   IMAGES="$(cat docker-compose.yml | grep 'image: openvidu/' | cut -d':' -f2 | sed -e 's/^[[:space:]]*//')"
                   for IMG in $IMAGES
@@ -86,6 +86,7 @@ Resources:
 
                   # Environment variables from docker-compose.yml
                   sed -i "s|MEDIASOUP_IMAGE=openvidu/mediasoup-controller.*|MEDIASOUP_IMAGE=openvidu/mediasoup-controller:master|g" docker-compose.yml
+                  popd
                 fi
 
                 # Define Installation Type
