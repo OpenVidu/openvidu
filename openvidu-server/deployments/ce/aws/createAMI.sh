@@ -41,6 +41,7 @@ else
   sed -i '/      KeyName: AWS_KEY_NAME/d' cfn-mkt-ov-ce-ami.yaml
 fi
 sed -i "s/AWS_KEY_NAME/${AWS_KEY_NAME}/g" cfn-mkt-ov-ce-ami.yaml
+sed -i "s/USE_MASTER_DOCKER_IMAGE/${USE_MASTER_DOCKER_IMAGE}/g" cfn-mkt-ov-ce-ami.yaml
 sed -i "s/OPENVIDU_VERSION/${OPENVIDU_VERSION}/g" cfn-mkt-ov-ce-ami.yaml
 sed -i "s/OPENVIDU_RECORDING_DOCKER_TAG/${OPENVIDU_RECORDING_DOCKER_TAG}/g" cfn-mkt-ov-ce-ami.yaml
 sed -i "s/AMIEUWEST1/${AMIEUWEST1}/g" cfn-mkt-ov-ce-ami.yaml

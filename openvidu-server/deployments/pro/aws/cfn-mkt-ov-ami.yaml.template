@@ -67,13 +67,30 @@ Resources:
               owner: "root"
               group: "root"
             "/usr/local/bin/installOpenviduServerPRO.sh":
-              content: !Sub |
+              content: |
                 #!/bin/bash
                 set -eu -o pipefail
 
                 # Install openvidu-pro
                 cd /opt
                 curl https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/install_openvidu_pro_OPENVIDU_VERSION.sh | bash
+
+                if [[ USE_MASTER_DOCKER_IMAGE == "true" ]]; then
+
+                  # docker-compose.yml replace with master version
+                  IMAGES="$(cat docker-compose.yml | grep 'image: openvidu/' | cut -d':' -f2 | sed -e 's/^[[:space:]]*//')"
+                  for IMG in $IMAGES
+                  do
+                    sed -i "s|$IMG.*|$IMG:master|g" docker-compose.yml
+                  done
+
+                  # docker-compose.override.yml replace with master version
+                  IMAGES="$(cat docker-compose.override.yml | grep 'image: openvidu/' | cut -d':' -f2 | sed -e 's/^[[:space:]]*//')"
+                  for IMG in $IMAGES
+                  do
+                    sed -i "s|$IMG.*|$IMG:master|g" docker-compose.override.yml
+                  done
+                fi
 
                 # Define Installation Type
                 sed -i "s/Installation Mode: On Premises/Installation Mode: Cloud Formation/" /opt/openvidu/docker-compose.yml
