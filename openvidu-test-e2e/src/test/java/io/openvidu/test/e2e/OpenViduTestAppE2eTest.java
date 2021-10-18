@@ -4086,13 +4086,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
-	@DisplayName("Force valid codec - Not Allow Transcoding")
-	void forceValidCodecNotAllowTranscodingTest() throws Exception {
+	@DisplayName("Force valid codec VP8 - Not Allow Transcoding")
+	void forceValidCodecNotAllowTranscodingVP8Test() throws Exception {
 		log.info("Force codec Chrome - Force VP8 - Not Allow Transcoding");
 		setupBrowser("chrome");
 		this.forceCodecGenericE2eTest(VideoCodec.VP8, false);
 		this.user.getDriver().close();
+	}
 
+	@Test
+	@DisplayName("Force valid codec H264 - Not Allow Transcoding")
+	void forceValidCodecNotAllowTranscodingH264Test() throws Exception {
 		log.info("Force codec Chrome - Force H264 - Not Allow Transcoding");
 		setupBrowser("chrome");
 		this.forceCodecGenericE2eTest(VideoCodec.H264, false);
@@ -4100,13 +4104,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
-	@DisplayName("Force valid codec - Allow Transcoding")
-	void forceValidCodecAllowTranscodingTest() throws Exception {
+	@DisplayName("Force valid codec VP8 - Allow Transcoding")
+	void forceValidCodecAllowTranscodingVP8Test() throws Exception {
 		log.info("Force codec Chrome - Force VP8 - Allow Transcoding");
 		setupBrowser("chrome");
 		this.forceCodecGenericE2eTest(VideoCodec.VP8, true);
 		this.user.getDriver().close();
+	}
 
+	@Test
+	@DisplayName("Force valid codec H264 - Allow Transcoding")
+	void forceValidCodecAllowTranscodingH264Test() throws Exception {
 		log.info("Force codec Chrome - Force H264 - Allow Transcoding");
 		setupBrowser("chrome");
 		this.forceCodecGenericE2eTest(VideoCodec.H264, true);

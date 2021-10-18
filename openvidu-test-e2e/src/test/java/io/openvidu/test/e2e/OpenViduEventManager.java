@@ -340,7 +340,7 @@ public class OpenViduEventManager {
 
 	public String getDimensionOfViewport() {
 		String dimension = (String) ((JavascriptExecutor) driver)
-				.executeScript("return (JSON.stringify({width: window.innerWidth, height: window.innerHeight}))");
+				.executeScript("return (JSON.stringify({width: window.innerWidth, height: window.innerHeight - 1}))");
 		return dimension;
 	}
 
