@@ -5,12 +5,13 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.FileReader;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -109,13 +110,12 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 9);
 
-		// Start the recording for one of the not recorded users
+		// Get connectionId and streamId for the user configured to be recorded
 		JsonObject sessionInfo = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/" + sessionName,
 				HttpStatus.SC_OK);
 		JsonArray connections = sessionInfo.get("connections").getAsJsonObject().get("content").getAsJsonArray();
 		String connectionId1 = null;
 		String streamId1 = null;
-		// Get connectionId and streamId
 		for (JsonElement connection : connections) {
 			if (connection.getAsJsonObject().get("record").getAsBoolean()) {
 				connectionId1 = connection.getAsJsonObject().get("connectionId").getAsString();
@@ -125,17 +125,18 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			}
 		}
 
+		// Start the recording of the sessions
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start",
 				"{'session':'" + sessionName + "','outputMode':'INDIVIDUAL'}", HttpStatus.SC_OK);
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 3);
 		Thread.sleep(1000);
 
-		// Start the recording for one of the not recorded users
+		// Get connectionId and streamId for one of the users configured to NOT be
+		// recorded
 		sessionInfo = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/" + sessionName, HttpStatus.SC_OK);
 		connections = sessionInfo.get("connections").getAsJsonObject().get("content").getAsJsonArray();
 		String connectionId2 = null;
 		String streamId2 = null;
-		// Get connectionId and streamId
 		for (JsonElement connection : connections) {
 			if (!connection.getAsJsonObject().get("record").getAsBoolean()) {
 				connectionId2 = connection.getAsJsonObject().get("connectionId").getAsString();
@@ -145,7 +146,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			}
 		}
 
-		// Generate 3 total recordings of 1 second length for this same stream
+		// Generate 3 total recordings of 1 second length for the stream of the user
+		// configured to NOT be recorded
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':true}", HttpStatus.SC_OK);
 		Thread.sleep(1000);
@@ -178,8 +180,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		JsonArray syncArray = jsonMetadata.get("files").getAsJsonArray();
 		int count1 = 0;
 		int count2 = 0;
-		List<String> names = Stream.of(streamId2 + ".webm", streamId2 + "-1.webm", streamId2 + "-2.webm")
-				.collect(Collectors.toList());
+
+		Set<String> regexNames = Stream.of("^" + streamId2 + "\\.(webm|mkv|mp4)$",
+				"^" + streamId2 + "-1\\.(webm|mkv|mp4)$", "^" + streamId2 + "-2\\.(webm|mkv|mp4)$")
+				.collect(Collectors.toSet());
+
 		for (JsonElement fileJson : syncArray) {
 			JsonObject file = fileJson.getAsJsonObject();
 			String fileStreamId = file.get("streamId").getAsString();
@@ -199,8 +204,20 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				Assert.assertTrue(
 						"Wrong recording duration of individual file. Difference: " + Math.abs(msDuration - 1000),
 						Math.abs(msDuration - 1000) < 150);
-				Assert.assertTrue("File name not found among " + names.toString(),
-						names.remove(file.get("name").getAsString()));
+
+				String fileName = file.get("name").getAsString();
+
+				boolean found = false;
+				Iterator<String> regexNamesIterator = regexNames.iterator();
+				while (regexNamesIterator.hasNext()) {
+					if (Pattern.compile(regexNamesIterator.next()).matcher(fileName).matches()) {
+						found = true;
+						regexNamesIterator.remove();
+						break;
+					}
+				}
+
+				Assert.assertTrue("File name " + fileName + " not found among regex " + regexNames.toString(), found);
 				count2++;
 			} else {
 				Assert.fail("Metadata file element does not belong to a known stream (" + fileStreamId + ")");
@@ -208,7 +225,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		}
 		Assert.assertEquals("Wrong number of recording files for stream " + streamId1, 1, count1);
 		Assert.assertEquals("Wrong number of recording files for stream " + streamId2, 3, count2);
-		Assert.assertTrue("Some expected file name didn't existed: " + names.toString(), names.isEmpty());
+		Assert.assertTrue("Some expected file name didn't existed: " + regexNames.toString(), regexNames.isEmpty());
 	}
 
 	@Test
