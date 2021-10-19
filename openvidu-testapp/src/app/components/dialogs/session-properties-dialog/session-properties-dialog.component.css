@@ -50,3 +50,7 @@ mat-radio-button:first-child {
 mat-form-field {
   margin-right: 9px;
 }
+
+#force-publishing-checkbox {
+  margin-right: 10px;
+}

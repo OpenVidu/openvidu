@@ -150,6 +150,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   manualTurnConf: RTCIceServer = { urls: [] };
   customToken: string;
   forcePublishing: boolean;
+  reconnectionOnServerFailure: boolean;
   connectionProperties: ConnectionProperties = {
     role: OpenViduRole.PUBLISHER,
     record: true,
@@ -448,12 +449,20 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     if (this.sessionEvents.sessionDisconnected !== oldValues.sessionDisconnected || firstTime) {
       this.session.off('sessionDisconnected');
       if (this.sessionEvents.sessionDisconnected) {
-        this.session.on('sessionDisconnected', (event: SessionDisconnectedEvent) => {
+        this.session.on('sessionDisconnected', async (event: SessionDisconnectedEvent) => {
           this.updateEventList('sessionDisconnected', '', event);
           this.subscribers = [];
           delete this.publisher;
           delete this.session;
           delete this.OV;
+
+          if (event.reason === 'nodeCrashed' && this.reconnectionOnServerFailure) {
+            console.warn('Reconnecting after node crash');
+            await this.initializeNodeClient((event.target as Session).sessionId);
+            const connection: Connection = await this.createConnection();
+            this.joinSessionShared(connection.token);
+          }
+
         });
       }
     }
@@ -634,6 +643,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         manualTurnConf: this.manualTurnConf,
         customToken: this.customToken,
         forcePublishing: this.forcePublishing,
+        reconnectionOnServerFailure: this.reconnectionOnServerFailure,
         connectionProperties: this.connectionProperties,
       }
     });
@@ -648,6 +658,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         this.manualTurnConf = result.manualTurnConf;
         this.customToken = result.customToken;
         this.forcePublishing = result.forcePublishing;
+        this.reconnectionOnServerFailure = result.reconnectionOnServerFailure;
         this.connectionProperties = result.connectionProperties;
       }
       document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
