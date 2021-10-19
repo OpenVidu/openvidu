@@ -19,25 +19,22 @@ package io.openvidu.test.browsers.utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.io.Files;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
-import io.openvidu.test.browsers.utils.CommandLineExecutor;
 
 public class MultimediaFileMetadata {
 
 	private static final Logger log = LoggerFactory.getLogger(MultimediaFileMetadata.class);
 
 	private CommandLineExecutor executer = new CommandLineExecutor();
-	private JsonParser parser = new JsonParser();
 
 	private JsonObject json;
 	private JsonObject formatJson;
@@ -155,13 +152,14 @@ public class MultimediaFileMetadata {
 	private JsonObject executeFfprobeCommand(String filePath) {
 		log.info("Running ffprobe command on '{}'", filePath);
 		String cmd = "ffprobe -v quiet -print_format json -show_format -show_streams " + filePath;
-		return this.parser.parse(this.executer.executeCommand(cmd)).getAsJsonObject();
+		return JsonParser.parseString(this.executer.executeCommand(cmd)).getAsJsonObject();
 	}
 
 	private void fixWebmFile(String filePath) throws IOException {
 		Path source = Paths.get(filePath);
+		String extension = Files.getFileExtension(source.getFileName().toString());
 		String pathCopy = null;
-		pathCopy = Files.move(source, source.resolveSibling("COPY.webm")).toString();
+		pathCopy = java.nio.file.Files.move(source, source.resolveSibling("COPY." + extension)).toString();
 		log.warn("Fixing file '{}' with ffmpeg", filePath);
 		String cmd = "ffmpeg -i " + pathCopy + " -vcodec copy -acodec copy " + filePath;
 		this.executer.executeCommand(cmd);

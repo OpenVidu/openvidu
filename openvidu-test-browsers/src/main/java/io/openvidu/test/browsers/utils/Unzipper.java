@@ -24,15 +24,20 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.io.Files;
+
 public class Unzipper {
 
 	private static final Logger log = LoggerFactory.getLogger(Unzipper.class);
+
+	private final Set<String> VIDEO_EXTENSIONS = Set.of("webm", "mkv", "mp4");
 
 	public List<File> unzipFile(String path, String fileName) {
 		final int BUFFER = 2048;
@@ -44,7 +49,8 @@ public class Unzipper {
 			ZipEntry entry;
 			while ((entry = zis.getNextEntry()) != null) {
 				log.info("Extracting: " + entry);
-				if (entry.getName().endsWith(".webm")) {
+				String fileExtension = Files.getFileExtension(entry.getName());
+				if (VIDEO_EXTENSIONS.contains(fileExtension)) {
 					recordingFiles.add(new File(path + entry.getName()));
 				}
 				int count;
