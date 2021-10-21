@@ -520,7 +520,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.session.off('reconnecting');
       if (this.sessionEvents.reconnecting) {
         this.session.on('reconnecting', () => {
-          this.updateEventList('reconnecting', '', undefined);
+          this.updateEventList('reconnecting', '', { cancelable: false, target: this.session, type: 'reconnecting', hasBeenPrevented: false, isDefaultPrevented: undefined, preventDefault: undefined, callDefaultBehavior: undefined });
         });
       }
     }
@@ -529,7 +529,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.session.off('reconnected');
       if (this.sessionEvents.reconnected) {
         this.session.on('reconnected', () => {
-          this.updateEventList('reconnected', '', undefined);
+          this.updateEventList('reconnected', '', { cancelable: false, target: this.session, type: 'reconnected', hasBeenPrevented: false, isDefaultPrevented: undefined, preventDefault: undefined, callDefaultBehavior: undefined });
         });
       }
     }
