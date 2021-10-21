@@ -15,7 +15,7 @@ export class TestFeedService {
     return this.lastEvent;
   }
 
-  pushNewEvent(session: string, connection: string, event: Event) {
+  pushNewEvent(event: Event) {
     this.lastEvent = event;
     this.newLastEvent$.next(this.lastEvent);
   }

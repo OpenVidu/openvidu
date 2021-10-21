@@ -297,7 +297,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   updateEventList(eventName: string, eventContent: string, event: Event) {
     const eventInterface: OpenViduEvent = { eventName, eventContent, event };
     this.events.push(eventInterface);
-    this.testFeedService.pushNewEvent(this.sessionName, this.session.connection.connectionId, event);
+    this.testFeedService.pushNewEvent(event);
   }
 
   toggleSubscribeTo(): void {
