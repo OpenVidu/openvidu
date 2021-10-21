@@ -31,13 +31,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import io.openvidu.java.client.*;
+import io.openvidu.test.e2e.annotations.OnlyKurento;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -47,6 +45,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.springframework.test.context.junit.jupiter.DisabledIf;
+import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.google.gson.JsonArray;
@@ -55,23 +55,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mashape.unirest.http.HttpMethod;
 
-import io.openvidu.java.client.Connection;
-import io.openvidu.java.client.ConnectionProperties;
-import io.openvidu.java.client.ConnectionType;
-import io.openvidu.java.client.KurentoOptions;
-import io.openvidu.java.client.MediaMode;
-import io.openvidu.java.client.OpenVidu;
-import io.openvidu.java.client.OpenViduHttpException;
-import io.openvidu.java.client.OpenViduRole;
-import io.openvidu.java.client.Publisher;
-import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.Recording.OutputMode;
-import io.openvidu.java.client.RecordingLayout;
-import io.openvidu.java.client.RecordingMode;
-import io.openvidu.java.client.RecordingProperties;
-import io.openvidu.java.client.Session;
-import io.openvidu.java.client.SessionProperties;
-import io.openvidu.java.client.VideoCodec;
 import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.RecordingUtils;
@@ -101,7 +85,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("One2One Chrome [Video + Audio]")
 	void oneToOneVideoAudioSessionChrome() throws Exception {
-
 		setupBrowser("chrome");
 
 		log.info("One2One Chrome [Video + Audio]");
@@ -249,6 +232,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Unique user remote subscription [Video + Audio]")
 	void oneRemoteSubscription() throws Exception {
 
@@ -274,6 +258,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Unique user remote subscription Firefox [Video + Audio]")
 	void oneRemoteSubscriptionFirefox() throws Exception {
 
@@ -299,6 +284,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Unique user remote subscription [ScreenShare + Audio]")
 	void oneRemoteSubscriptionScreen() throws Exception {
 
@@ -816,6 +802,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Stream property changed event")
 	void streamPropertyChangedEventTest() throws Exception {
 
@@ -1478,6 +1465,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Record cross-browser audio-only and video-only")
 	void audioOnlyVideoOnlyRecordTest() throws Exception {
 		isRecordingTest = true;
@@ -1710,6 +1698,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Custom layout recording")
 	void customLayoutRecordTest() throws Exception {
 		isRecordingTest = true;
@@ -1949,6 +1938,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Video filter test")
 	void videoFilterTest() throws Exception {
 
@@ -2092,6 +2082,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Video filter events test")
 	void videoFilterEventsTest() throws Exception {
 
@@ -2216,6 +2207,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("openvidu-java-client test")
 	void openViduJavaClientTest() throws Exception {
 		isRecordingTest = true;
@@ -2743,6 +2735,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("REST API test")
 	void restApiTest() throws Exception {
 		isRecordingTest = true;
@@ -3246,7 +3239,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		List<Session> sessions = OV.getActiveSessions();
 		Assert.assertEquals("Expected no active sessions but found " + sessions.size(), 0, sessions.size());
 
-		this.stopKms();
+		this.stopMediaServer();
 
 		OV.fetch();
 
@@ -3268,7 +3261,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		user.getDriver().findElement(By.id("remove-user-btn")).sendKeys(Keys.ENTER);
 
-		this.startKms();
+		this.startMediaServer();
 		Thread.sleep(3000);
 
 		// Connect one subscriber with connection to KMS -> restart KMS -> connect a
@@ -3284,7 +3277,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		sessions = OV.getActiveSessions();
 		Assert.assertEquals("Expected 1 active sessions but found " + sessions.size(), 1, sessions.size());
 
-		this.restartKms();
+		this.restartMediaServer();
 		Thread.sleep(3000);
 
 		OV.fetch();
@@ -3335,7 +3328,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		});
 
 		long recEndTime = System.currentTimeMillis();
-		this.restartKms();
+		this.restartMediaServer();
 
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
@@ -3383,6 +3376,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Webhook test")
 	void webhookTest() throws Exception {
 		isRecordingTest = true;
@@ -3586,6 +3580,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("IP camera test")
 	void ipCameraTest() throws Exception {
 		isRecordingTest = true;
@@ -4078,6 +4073,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Force codec default config")
 	void forceDefaultCodec() throws Exception {
 		log.info("Force codec default config");
@@ -4086,6 +4082,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Force valid codec VP8 - Not Allow Transcoding")
 	void forceValidCodecNotAllowTranscodingVP8Test() throws Exception {
 		log.info("Force codec Chrome - Force VP8 - Not Allow Transcoding");
@@ -4095,6 +4092,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Force valid codec H264 - Not Allow Transcoding")
 	void forceValidCodecNotAllowTranscodingH264Test() throws Exception {
 		log.info("Force codec Chrome - Force H264 - Not Allow Transcoding");
@@ -4104,6 +4102,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Force valid codec VP8 - Allow Transcoding")
 	void forceValidCodecAllowTranscodingVP8Test() throws Exception {
 		log.info("Force codec Chrome - Force VP8 - Allow Transcoding");
@@ -4113,6 +4112,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Force valid codec H264 - Allow Transcoding")
 	void forceValidCodecAllowTranscodingH264Test() throws Exception {
 		log.info("Force codec Chrome - Force H264 - Allow Transcoding");
@@ -4122,6 +4122,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Force not valid codec - Not Allow Transcoding")
 	void forceCodecNotValidCodecNotAllowTranscoding() throws Exception {
 		// Start firefox with OpenH264 disabled to check not supported codecs
