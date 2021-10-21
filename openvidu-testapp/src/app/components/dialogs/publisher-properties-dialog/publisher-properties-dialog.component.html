@@ -35,17 +35,17 @@
         </mat-chip-list>
         <mat-divider></mat-divider>
         <mat-form-field>
-            <input matInput placeholder="Resolution" [(ngModel)]="publisherProperties.resolution">
+            <input matInput id="resolution-input" placeholder="Resolution" [(ngModel)]="publisherProperties.resolution">
         </mat-form-field>
         <mat-form-field>
-            <input matInput placeholder="Framerate" [(ngModel)]="publisherProperties.frameRate" type="number">
+            <input matInput id="framerate-input" placeholder="Framerate" [(ngModel)]="publisherProperties.frameRate" type="number">
         </mat-form-field>
         <mat-divider></mat-divider>
         <mat-form-field>
-            <input matInput placeholder="Filter type" [(ngModel)]="filter.type" type="text">
+            <input matInput id="filter-type-input" placeholder="Filter type" [(ngModel)]="filter.type" type="text">
         </mat-form-field>
         <mat-form-field>
-            <input matInput placeholder="Filter options" [(ngModel)]="stringOptions" type="text">
+            <input matInput id="filter-options-input" placeholder="Filter options" [(ngModel)]="stringOptions" type="text">
         </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions>
