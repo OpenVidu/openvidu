@@ -26,12 +26,28 @@ export class PublisherPropertiesDialogComponent {
     audioDevices = [];
     videoDevices = [];
 
-    filter = { type: 'GStreamerFilter', options: { 'command': 'videobalance saturation=0.0' } };
-    stringOptions = '{"command":"videobalance saturation=0.0"}';
+    filter = {};
+    stringOptions: string;
 
     constructor(public dialogRef: MatDialogRef<PublisherPropertiesDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: PublisherProperties) {
         this.publisherProperties = data;
+        if (this.publisherProperties.filter === null) {
+            console.log('Filter deleted');
+        } else {
+            if (!!this.publisherProperties.filter && !!this.publisherProperties.filter.type) {
+                this.filter['type'] = this.publisherProperties.filter.type;
+            } else {
+                this.filter['type'] = 'GStreamerFilter';
+            }
+            if (!!this.publisherProperties.filter && !!this.publisherProperties.filter.options) {
+                this.stringOptions = JSON.stringify(this.publisherProperties.filter.options);
+                this.filter['options'] = this.publisherProperties.filter.options;
+            } else {
+                this.stringOptions = '{"command":"videobalance saturation=0.0"}';
+                this.filter['options'] = JSON.parse(this.stringOptions);
+            }
+        }
         this.OV = new OpenVidu();
         this.initValue = Object.assign({}, this.publisherProperties);
         this.audioSource = typeof this.publisherProperties.audioSource === 'string' ? this.publisherProperties.audioSource : undefined;
@@ -76,14 +92,13 @@ export class PublisherPropertiesDialogComponent {
             }
         }
         try {
-            this.filter.options = JSON.parse(this.stringOptions);
+            this.filter['options'] = JSON.parse(this.stringOptions);
         } catch (e) {
-            console.error('Invalid JSON object in "Filter options" field');
         }
-        if (!this.filter.type) {
-            delete this.publisherProperties.filter;
+        if (!this.filter['type']) {
+            this.publisherProperties.filter = null;
         } else {
-            this.publisherProperties.filter = new Filter(this.filter.type, this.filter.options);
+            this.publisherProperties.filter = new Filter(this.filter['type'], this.filter['options']);
         }
         return this.publisherProperties;
     }
