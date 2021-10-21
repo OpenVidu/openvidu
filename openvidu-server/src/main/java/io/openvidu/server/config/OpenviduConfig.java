@@ -216,6 +216,9 @@ public class OpenviduConfig {
 
 	private boolean isTurnadminAvailable = false;
 
+	// Media Server properties
+	private MediaServer mediaServerInfo = MediaServer.kurento;
+
 	// Plain config properties getters
 
 	public String getCoturnDatabaseDbname() {
@@ -271,7 +274,11 @@ public class OpenviduConfig {
 	}
 
 	public MediaServer getMediaServer() {
-		return MediaServer.kurento;
+		return this.mediaServerInfo;
+	}
+
+	public void setMediaServer(MediaServer mediaServerInfo) {
+		this.mediaServerInfo = mediaServerInfo;
 	}
 
 	public String getOpenViduRecordingPath() {

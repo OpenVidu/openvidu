@@ -46,6 +46,9 @@ import io.openvidu.test.browsers.utils.RecordingUtils;
 
 public class AbstractOpenViduTestAppE2eTest {
 
+	// Media server variables
+	public static String MEDIA_SERVER = "kurento";
+
 	final protected String DEFAULT_JSON_SESSION = "{'id':'STR','object':'session','sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultRecordingProperties':{'hasVideo':true,'frameRate':25,'hasAudio':true,'shmSize':536870912,'name':'','outputMode':'COMPOSED','resolution':'1280x720','recordingLayout':'BEST_FIT'},'customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':false,'forcedVideoCodec':'STR','allowTranscoding':false}";
 	final protected String DEFAULT_JSON_PENDING_CONNECTION = "{'id':'STR','object':'connection','type':'WEBRTC','status':'pending','connectionId':'STR','sessionId':'STR','createdAt':0,'activeAt':null,'location':null,'ip':null,'platform':null,'token':'STR','serverData':'STR','record':true,'role':'STR','kurentoOptions':null,'rtspUri':null,'adaptativeBitrate':null,'onlyPlayWithSubscribers':null,'networkCache':null,'clientData':null,'publishers':null,'subscribers':null}";
 	final protected String DEFAULT_JSON_ACTIVE_CONNECTION = "{'id':'STR','object':'connection','type':'WEBRTC','status':'active','connectionId':'STR','sessionId':'STR','createdAt':0,'activeAt':0,'location':'STR','ip':'STR','platform':'STR','token':'STR','serverData':'STR','record':true,'role':'STR','kurentoOptions':null,'rtspUri':null,'adaptativeBitrate':null,'onlyPlayWithSubscribers':null,'networkCache':null,'clientData':'STR','publishers':[],'subscribers':[]}";
@@ -154,6 +157,12 @@ public class AbstractOpenViduTestAppE2eTest {
 			OPENVIDU_SECRET = openvidusecret;
 		}
 		log.info("Using secret {} to connect to openvidu-server", OPENVIDU_SECRET);
+
+		String mediaServer = System.getProperty("MEDIA_SERVER");
+		if (mediaServer != null) {
+			MEDIA_SERVER = mediaServer;
+		}
+		log.info("Using media server {} for e2e tests");
 	}
 
 	protected void setupBrowser(String browser) {
@@ -255,7 +264,7 @@ public class AbstractOpenViduTestAppE2eTest {
 			isRecordingTest = false;
 		}
 		if (isKurentoRestartTest) {
-			this.restartKms();
+			this.restartMediaServer();
 			isKurentoRestartTest = false;
 		}
 		OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
@@ -295,24 +304,38 @@ public class AbstractOpenViduTestAppE2eTest {
 		return "data:image/png;base64," + screenshotBase64;
 	}
 
-	protected void startKms() {
-		log.info("Starting KMS");
-		commandLine.executeCommand("/usr/bin/kurento-media-server &>> /kms.log &");
+	protected void startMediaServer() {
+		if ("kurento".equals(MEDIA_SERVER)) {
+			log.info("Starting KMS");
+			commandLine.executeCommand("/usr/bin/kurento-media-server &>> /kms.log &");
+		} else if ("mediasoup".equals(MEDIA_SERVER)) {
+			log.info("Starting MediaSoup");
+			// TODO?: Test which use this method are disabled
+		} else {
+			log.error("Unrecognized MEDIA_SERVER: {}", MEDIA_SERVER);
+			System.exit(1);
+		}
 	}
 
-	protected void stopKms() {
-		log.info("Stopping KMS");
-		commandLine.executeCommand("kill -9 $(pidof kurento-media-server)");
+	protected void stopMediaServer() {
+		if ("kurento".equals(MEDIA_SERVER)) {
+			log.info("Stopping KMS");
+			commandLine.executeCommand("kill -9 $(pidof kurento-media-server)");
+		} else if ("mediasoup".equals(MEDIA_SERVER)) {
+			log.info("Stopping mediasoup");
+			commandLine.executeCommand("docker rm -f mediasoup");
+		}
+
 	}
 
-	protected void restartKms() {
-		this.stopKms();
+	protected void restartMediaServer() {
+		this.stopMediaServer();
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		this.startKms();
+		this.startMediaServer();
 	}
 
 	protected void checkDockerContainerRunning(String imageName, int amount) {
