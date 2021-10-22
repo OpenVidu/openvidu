@@ -116,6 +116,15 @@ node('container') {
           export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng build --prod --output-path=/opt/openvidu/testapp
         '''.stripIndent())
         }
+      }, 'OpenVidu Server dashboard build': {
+        stage('OpenVidu Server dashboard build') {
+          sh(script: '''#!/bin/bash -xe
+            cd openvidu/openvidu-server/src/dashboard
+            npm install --unsafe-perm --quiet
+            npm install /opt/openvidu/openvidu-browser-*.tgz --quiet
+            export NG_CLI_ANALYTICS="false" && npm run build-prod --quiet
+          '''.stripIndent())
+        }
       }, 'OpenVidu Server build': {
         stage('OpenVidu parent build') {
           sh(script: '''#!/bin/bash -xe
@@ -135,11 +144,7 @@ node('container') {
         }
         stage('OpenVidu Server build') {
           sh(script: '''#!/bin/bash -xe
-            cd openvidu/openvidu-server/src/dashboard
-            npm install --unsafe-perm --quiet
-            npm install /opt/openvidu/openvidu-browser-*.tgz --quiet
-            export NG_CLI_ANALYTICS="false" && npm run build-prod --quiet
-            cd ../..
+            cd openvidu/openvidu-server
             mvn -B package
             cp target/openvidu-server*.jar /opt/openvidu
           '''.stripIndent())
