@@ -1,19 +1,36 @@
 node('container') {
-
   sh 'docker rm -f e2e chrome firefox opera mediasoup || true'
   sh 'rm -rf /opt/openvidu/* || true'
-  sh 'wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m -P /opt/openvidu'
-  sh 'wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/fakeaudio.wav -P /opt/openvidu'
-  sh 'wget --directory-prefix=/opt/openvidu/test-layouts/layout1 https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/docker/my-custom-layout/index.html'
-
-  docker.image('openvidu/openvidu-test-e2e:$DISTRO').pull()
-  docker.image('selenium/standalone-chrome:latest').pull()
-  docker.image('selenium/standalone-firefox:latest').pull()
-  docker.image('selenium/standalone-opera:latest').pull()
-  docker.image('openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_DOCKER_VERSION').pull()
+  parallel (
+    'Download fake video': {
+      sh 'wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m -P /opt/openvidu'
+    },
+    'Download fake audio': {
+      sh 'wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/fakeaudio.wav -P /opt/openvidu'
+    },
+    'Download custom layout': {
+      sh 'wget --directory-prefix=/opt/openvidu/test-layouts/layout1 https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/docker/my-custom-layout/index.html'
+    }
+  )
+  parallel (
+    'Pull openvidu/openvidu-test-e2e': {
+      docker.image('openvidu/openvidu-test-e2e:$DISTRO').pull()
+    },
+    'Pull selenium/standalone-chrome': {
+      docker.image('selenium/standalone-chrome:latest').pull()
+    },
+    'Pull selenium/standalone-firefox': {
+      docker.image('selenium/standalone-firefox:latest').pull()
+    },
+    'Pull selenium/standalone-opera': {
+      docker.image('selenium/standalone-opera:latest').pull()
+    },
+    'Pull openvidu/mediasoup-controller': {
+      docker.image('openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_DOCKER_VERSION').pull()
+    }
+  )
 
   docker.image('openvidu/openvidu-test-e2e:$DISTRO').inside('--name e2e -p 4200:4200 -p 4443:4443 -p 5555:5555 -u root -e MY_UID=0 -v /var/run/docker.sock:/var/run/docker.sock:rw -v /dev/shm:/dev/shm -v /opt/openvidu:/opt/openvidu --privileged') {
-
     stage('Preparation') {
       sh 'rm -rf ~/.m2 || true'
       sh 'rm -rf openvidu || true'
@@ -40,32 +57,36 @@ node('container') {
       '''.stripIndent())
     }
 
-    stage('OpenVidu Browser build') {
-      sh(script: '''#!/bin/bash -xe
-        cd openvidu
-        if [[ $OPENVIDU_BROWSER_COMMIT != "default" ]]; then
-          git checkout -f $OPENVIDU_BROWSER_COMMIT
-        fi
-        cd openvidu-browser
-        npm install --unsafe-perm && npm run build && npm pack
-        cp openvidu-browser-*.tgz /opt/openvidu
-        cd ..
-        git checkout -f $OPENVIDU_COMMIT
-      '''.stripIndent())
-    }
+    parallel {
 
-    stage('OpenVidu Node Client build') {
-      sh(script: '''#!/bin/bash -xe
-        cd openvidu
-        if [[ $OPENVIDU_NODE_CLIENT_COMMIT != "default" ]]; then
-          git checkout -f $OPENVIDU_NODE_CLIENT_COMMIT
-        fi
-        cd openvidu-node-client
-        npm install --unsafe-perm && npm run build && npm pack
-        cp openvidu-node-client-*.tgz /opt/openvidu
-        cd ..
-        git checkout -f $OPENVIDU_COMMIT
-      '''.stripIndent())
+      stage('OpenVidu Browser build') {
+        sh(script: '''#!/bin/bash -xe
+          cd openvidu
+          if [[ $OPENVIDU_BROWSER_COMMIT != "default" ]]; then
+            git checkout -f $OPENVIDU_BROWSER_COMMIT
+          fi
+          cd openvidu-browser
+          npm install --unsafe-perm && npm run build && npm pack
+          cp openvidu-browser-*.tgz /opt/openvidu
+          cd ..
+          git checkout -f $OPENVIDU_COMMIT
+        '''.stripIndent())
+      }
+
+      stage('OpenVidu Node Client build') {
+        sh(script: '''#!/bin/bash -xe
+          cd openvidu
+          if [[ $OPENVIDU_NODE_CLIENT_COMMIT != "default" ]]; then
+            git checkout -f $OPENVIDU_NODE_CLIENT_COMMIT
+          fi
+          cd openvidu-node-client
+          npm install --unsafe-perm && npm run build && npm pack
+          cp openvidu-node-client-*.tgz /opt/openvidu
+          cd ..
+          git checkout -f $OPENVIDU_COMMIT
+        '''.stripIndent())
+      }
+
     }
 
     stage('OpenVidu TestApp build') {
@@ -141,7 +162,7 @@ node('container') {
               openViduE2ETest('kurento')
             }
           } catch (error) {
-            echo "Test failed"
+            echo 'Test failed'
             currentBuild.result = 'FAILURE'
           } finally {
             // Kill all environment for next test
@@ -159,7 +180,7 @@ node('container') {
               openViduE2ETest('mediasoup')
             }
           } catch (error) {
-            echo "Test failed"
+            echo 'Test failed'
             currentBuild.result = 'FAILURE'
           } finally {
             environmentStop()
