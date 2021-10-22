@@ -26,7 +26,7 @@ export class PublisherPropertiesDialogComponent {
     audioDevices = [];
     videoDevices = [];
 
-    filter = {};
+    filter = { type: undefined, options: undefined };
     stringOptions: string;
 
     constructor(public dialogRef: MatDialogRef<PublisherPropertiesDialogComponent>,
@@ -95,7 +95,7 @@ export class PublisherPropertiesDialogComponent {
             this.filter['options'] = JSON.parse(this.stringOptions);
         } catch (e) {
         }
-        if (!this.filter['type']) {
+        if (this.filter['type'] == null || this.filter['type'] == '') {
             this.publisherProperties.filter = null;
         } else {
             this.publisherProperties.filter = new Filter(this.filter['type'], this.filter['options']);
