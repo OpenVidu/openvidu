@@ -42,7 +42,7 @@ node('container') {
           git clone https://github.com/Kurento/kurento-java.git
           cd kurento-java
           git checkout -f $KURENTO_JAVA_COMMIT
-          mvn clean install
+          mvn --batch-mode clean install
         fi
       '''.stripIndent())
       sh(script: '''#!/bin/bash -xe
@@ -62,7 +62,9 @@ node('container') {
         stage('OpenVidu Browser build') {
           sh(script: '''#!/bin/bash -xe
             cd openvidu/openvidu-browser
-            npm install --unsafe-perm && npm run build && npm pack
+            npm install --quiet --unsafe-perm
+            npm run build --quiet
+            npm pack --quiet
             cp openvidu-browser-*.tgz /opt/openvidu
           '''.stripIndent())
         }
@@ -70,7 +72,9 @@ node('container') {
         stage('OpenVidu Node Client build') {
           sh(script: '''#!/bin/bash -xe
             cd openvidu/openvidu-node-client
-            npm install --unsafe-perm && npm run build && npm pack
+            npm install --quiet --unsafe-perm
+            npm run build --quiet
+            npm pack --quiet
             cp openvidu-node-client-*.tgz /opt/openvidu
           '''.stripIndent())
         }
@@ -79,8 +83,8 @@ node('container') {
           sh(script: '''#!/bin/bash -xe
             cd openvidu/openvidu-java-client
             mvn --batch-mode versions:set -DnewVersion=TEST
-            mvn clean compile package
-            mvn install:install-file -Dfile=target/openvidu-java-client-TEST.jar -DgroupId=io.openvidu -DartifactId=openvidu-java-client -Dversion=TEST -Dpackaging=jar
+            mvn --batch-mode clean compile package
+            mvn --batch-mode install:install-file -Dfile=target/openvidu-java-client-TEST.jar -DgroupId=io.openvidu -DartifactId=openvidu-java-client -Dversion=TEST -Dpackaging=jar
           '''.stripIndent())
         }
       }
@@ -91,9 +95,9 @@ node('container') {
         stage('OpenVidu TestApp build') {
           sh(script: '''#!/bin/bash -xe
           cd openvidu/openvidu-testapp
-          npm install --unsafe-perm
-          npm install /opt/openvidu/openvidu-browser-*.tgz
-          npm install /opt/openvidu/openvidu-node-client-*.tgz
+          npm install --unsafe-perm --quiet
+          npm install /opt/openvidu/openvidu-browser-*.tgz --quiet
+          npm install /opt/openvidu/openvidu-node-client-*.tgz --quiet
           export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng build --prod --output-path=/opt/openvidu/testapp
         '''.stripIndent())
         }
@@ -116,7 +120,10 @@ node('container') {
         }
         stage('OpenVidu Server build') {
           sh(script: '''#!/bin/bash -xe
-            cd openvidu/openvidu-server/src/dashboard && npm install --unsafe-perm && npm install /opt/openvidu/openvidu-browser-*.tgz && export NG_CLI_ANALYTICS="false" && npm run build-prod
+            cd openvidu/openvidu-server/src/dashboard
+            npm install --unsafe-perm --quiet
+            npm install /opt/openvidu/openvidu-browser-*.tgz --quiet
+            export NG_CLI_ANALYTICS="false" && npm run build-prod --quiet
             cd ../..
             mvn --batch-mode package
             cp target/openvidu-server*.jar /opt/openvidu
@@ -232,12 +239,12 @@ def openViduE2ETest(mediaServer) {
     env.mediaServer = mediaServer
     sh(script: '''#!/bin/bash -xe
       cd openvidu/openvidu-test-browsers
-      mvn --batch-mode versions:set -DnewVersion=TEST && mvn clean install
+      mvn --batch-mode versions:set -DnewVersion=TEST && mvn --batch-mode clean install
       cd ..
       mvn --batch-mode versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST
       mvn --batch-mode versions:set-property -Dproperty=version.openvidu.test.browsers -DnewVersion=TEST
       cd openvidu-test-e2e
-      mvn -DskipTests=true clean install
+      mvn --batch-mode -DskipTests=true clean install
       sudo mvn --batch-mode -DMEDIA_SERVER=${mediaServer} -Dtest=OpenViduTestAppE2eTest -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ -DREMOTE_URL_OPERA=http://172.17.0.1:6668/wd/hub/ -DEXTERNAL_CUSTOM_LAYOUT_URL=http://172.17.0.1:5555 -DEXTERNAL_CUSTOM_LAYOUT_PARAMS=sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET test
     '''.stripIndent())
   }
