@@ -147,7 +147,7 @@ node('container') {
       }
     }
 
-    docker.image('selenium/standalone-chrome:latest').withRun('-p 6666:4444 --name chrome --shm-size=1g -v /opt/openvidu:/opt/openvidu') { a ->
+    docker.image('selenium/standalone-chrome:latest').withRun('-p 6666:4444 --name chrome --shm-size=1g -v /opt/openvidu/removable:/opt/openvidu') { a ->
       docker.image('selenium/standalone-firefox:latest').withRun('-p 6667:4444 --name firefox --shm-size=1g') { b ->
         docker.image('selenium/standalone-opera:latest').withRun('-p 6668:4444 --name opera --shm-size=1g') { c ->
           // -----
