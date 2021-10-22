@@ -1,0 +1,35 @@
+{
+    "enabler": "openvidu",
+    "chapter": "iotagents",
+    "academy": "",
+    "readthedocs": "https://openvidu.io/",
+    "helpdesk": "",
+    "coveralls": "",
+    "github": ["OpenVidu/openvidu"],
+    "dockerregistry": ["hub.docker.com"],
+    "docker": [
+      "openvidu/openvidu-coturn",
+      "openvidu-proxy",
+      "openvidu-recording",
+      "openvidu-redis",
+      "openvidu-server-kms",
+      "openvidu-server-pro",
+      "openvidu-server"
+    ],
+    "email": "",
+    "status": "incubating",
+    "compose": "https://github.com/OpenVidu/openvidu/blob/master/openvidu-server/deployments/ce/docker-compose/docker-compose.yml",
+    "exclude": [""],
+    "stackexchange": [""],
+    "unit-test": "",
+    "smoke-test": "",
+    "dockerfile": [
+      "https://github.com/OpenVidu/openvidu/blob/master/openvidu-server/docker/openvidu-coturn/Dockerfile",
+      "https://github.com/OpenVidu/openvidu/blob/master/openvidu-server/docker/openvidu-proxy/Dockerfile",
+      "https://github.com/OpenVidu/openvidu/blob/master/openvidu-server/docker/openvidu-recording/Dockerfile",
+      "https://github.com/OpenVidu/openvidu/blob/master/openvidu-server/docker/openvidu-redis/Dockerfile",
+      "https://github.com/OpenVidu/openvidu/blob/master/openvidu-server/docker/openvidu-server-kms/Dockerfile",
+      "https://github.com/OpenVidu/openvidu/blob/master/openvidu-server/docker/openvidu-server-pro/Dockerfile",
+      "https://github.com/OpenVidu/openvidu/blob/master/openvidu-server/docker/openvidu-server/Dockerfile" 
+    ]
+}
