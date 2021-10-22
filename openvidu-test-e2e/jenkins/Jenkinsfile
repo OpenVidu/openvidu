@@ -64,7 +64,6 @@ node('container') {
             cd openvidu/openvidu-browser
             npm install --unsafe-perm && npm run build && npm pack
             cp openvidu-browser-*.tgz /opt/openvidu
-            cd ..
           '''.stripIndent())
         }
       }, 'OpenVidu Node Client build': {
@@ -73,7 +72,6 @@ node('container') {
             cd openvidu/openvidu-node-client
             npm install --unsafe-perm && npm run build && npm pack
             cp openvidu-node-client-*.tgz /opt/openvidu
-            cd ..
           '''.stripIndent())
         }
       }, 'OpenVidu Java Client build': {
@@ -83,7 +81,6 @@ node('container') {
             mvn --batch-mode versions:set -DnewVersion=TEST
             mvn clean compile package
             mvn install:install-file -Dfile=target/openvidu-java-client-TEST.jar -DgroupId=io.openvidu -DartifactId=openvidu-java-client -Dversion=TEST -Dpackaging=jar
-            cd ..
           '''.stripIndent())
         }
       }
@@ -98,7 +95,6 @@ node('container') {
           npm install /opt/openvidu/openvidu-browser-*.tgz
           npm install /opt/openvidu/openvidu-node-client-*.tgz
           export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng build --prod --output-path=/opt/openvidu/testapp
-          cd ..
         '''.stripIndent())
         }
       }, 'OpenVidu Server build': {
