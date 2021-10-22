@@ -1,1 +1,1 @@
-docker build -t openvidu/openvidu-test-e2e:xenial -f xenial/Dockerfile .
+docker build --rm --pull --no-cache -t openvidu/openvidu-test-e2e:xenial -f xenial/Dockerfile .
