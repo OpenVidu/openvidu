@@ -140,7 +140,15 @@ node('container') {
           }
           try {
             stage ('OpenVidu Kurento E2E tests') {
-              openViduE2ETest('kurento')
+              try {
+                openViduE2ETest('kurento')
+              } catch (err) {
+                // In case of error, fail the stage
+                sh 'exit 1'
+              } finally {
+                junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
+                archiveArtifacts artifacts: '**/openvidu-server-*.log'
+              }
             }
           } catch (error) {
             echo 'Test failed'
@@ -148,8 +156,6 @@ node('container') {
           } finally {
             // Kill all environment for next test
             environmentStop()
-            junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
-            archiveArtifacts artifacts: '**/openvidu-server-*.log'
           }
 
           // ----
@@ -160,7 +166,15 @@ node('container') {
           }
           try {
             stage ('OpenVidu Mediasoup E2E tests') {
-              openViduE2ETest('mediasoup')
+              try {
+                openViduE2ETest('mediasoup')
+              } catch (err) {
+                // In case of error, fail the stage
+                sh 'exit 1'
+              } finally {
+                junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
+                archiveArtifacts artifacts: '**/openvidu-server-*.log'
+              }
             }
           } catch (error) {
             echo 'Test failed'
