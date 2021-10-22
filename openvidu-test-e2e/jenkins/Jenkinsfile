@@ -23,14 +23,7 @@ node('container') {
       '''.stripIndent())
     },
     'Download custom layout': {
-      sh(script: '''#!/bin/bash -xe
-        CUSTOM_LAYOUT=/opt/openvidu/test-layouts/layout1/index.html
-        if [ ! -f $CUSTOM_LAYOUT ]; then
-          wget https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/docker/my-custom-layout/index.html -O $CUSTOM_LAYOUT
-        else
-          echo "File $CUSTOM_LAYOUT already exists"
-        fi
-      '''.stripIndent())
+      sh 'wget --directory-prefix=/opt/openvidu/test-layouts/layout1 https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/docker/my-custom-layout/index.html'
     }
   )
   parallel (
