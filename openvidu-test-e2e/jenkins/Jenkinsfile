@@ -217,7 +217,7 @@ def environmentLaunch(mediaServer) {
       --env=OPENVIDU_PRO_LICENSE=$OPENVIDU_PRO_LICENSE \
       --env=OPENVIDU_PRO_LICENSE_API=$OPENVIDU_PRO_LICENSE_API \
       --env=WEBRTC_LISTENIPS_0_ANNOUNCEDIP=172.17.0.1 --env=WEBRTC_LISTENIPS_0_IP=172.17.0.1 \
-      --volume=/opt/openvidu/recordings:/opt/openvidu/recordings --network=host --restart=always --detach=true \
+      --volume=/opt/openvidu/removable/recordings:/opt/openvidu/recordings --network=host --restart=always --detach=true \
       openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_DOCKER_VERSION
     '''.stripIndent())
   }
