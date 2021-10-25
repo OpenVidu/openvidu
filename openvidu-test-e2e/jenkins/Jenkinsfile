@@ -10,7 +10,7 @@ node('container') {
         else
           echo "File $FAKE_VIDEO already exists"
         fi
-        cp /opt/openvidu-cache/barcode.y4m /opt/openvidu/barcode.y4m
+        sudo cp /opt/openvidu-cache/barcode.y4m /opt/openvidu/barcode.y4m
       '''.stripIndent())
     },
     'Download fake audio': {
@@ -21,7 +21,7 @@ node('container') {
         else
           echo "File $FAKE_AUDIO already exists"
         fi
-        cp /opt/openvidu-cache/barcode.y4m /opt/openvidu/fakeaudio.wav
+        sudo cp /opt/openvidu-cache/barcode.y4m /opt/openvidu/fakeaudio.wav
       '''.stripIndent())
     },
     'Download custom layout': {
