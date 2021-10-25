@@ -10,6 +10,7 @@ node('container') {
         else
           echo "File $FAKE_VIDEO already exists"
         fi
+        cp /opt/openvidu-cache/barcode.y4m /opt/openvidu/barcode.y4m
       '''.stripIndent())
     },
     'Download fake audio': {
@@ -20,6 +21,7 @@ node('container') {
         else
           echo "File $FAKE_AUDIO already exists"
         fi
+        cp /opt/openvidu-cache/barcode.y4m /opt/openvidu/fakeaudio.wav
       '''.stripIndent())
     },
     'Download custom layout': {
@@ -47,8 +49,6 @@ node('container') {
   def bindsArray = ['-v /var/run/docker.sock:/var/run/docker.sock:rw',
                     '-v /dev/shm:/dev/shm',
                     '-v /opt/openvidu:/opt/openvidu',
-                    '-v /opt/openvidu-cache/barcode.y4m:/opt/openvidu/barcode.y4m',
-                    '-v /opt/openvidu-cache/fakeaudio.wav:/opt/openvidu/fakeaudio.wav',
                     '-v /opt/openvidu-cache/test-layouts:/opt/openvidu/test-layouts',
                     '-v /opt/openvidu-cache/.m2:/root/.m2'].join(' ')
 
