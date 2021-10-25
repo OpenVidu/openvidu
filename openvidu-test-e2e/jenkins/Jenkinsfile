@@ -52,7 +52,7 @@ node('container') {
                     '-v /opt/openvidu-cache/test-layouts:/opt/openvidu/test-layouts',
                     '-v /opt/openvidu-cache/.m2:/root/.m2'].join(' ')
 
-  docker.image('openvidu/openvidu-test-e2e:$DISTRO').inside('--name e2e -p 4200:4200 -p 4443:4443 -p 5555:5555 -u root -e MY_UID=0 ${bindsArray} --privileged') {
+  docker.image('openvidu/openvidu-test-e2e:$DISTRO').inside('--name e2e -p 4200:4200 -p 4443:4443 -p 5555:5555 -u root -e MY_UID=0 ' + "${bindsArray}" + ' --privileged') {
     stage('Preparation') {
       sh 'rm -rf ~/.m2/repository/io/openvidu || true'
       sh 'rm -rf ~/.m2/repository/org/kurento || true'
