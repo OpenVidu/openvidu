@@ -622,6 +622,7 @@ Resources:
                 # Restart all services
                 pushd /opt/openvidu
                 export FOLLOW_OPENVIDU_LOGS=false
+                ./openvidu stop
                 ./openvidu start
                 popd
               mode: "000755"
