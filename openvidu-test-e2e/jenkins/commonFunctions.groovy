@@ -48,7 +48,7 @@ def prepareTestingEnvironment() {
         }
     )
 
-    println('Pulling containers')
+    println('Pulling containers and downloading files')
     parallel (
         'Pull openvidu/openvidu-test-e2e': {
             if (env.DISTRO) {
@@ -73,11 +73,7 @@ def prepareTestingEnvironment() {
             if (env.MEDIASOUP_CONTROLLER_DOCKER_VERSION) {
                 docker.image('openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_DOCKER_VERSION').pull()
             }
-        }
-    )
-
-    println('Downloading files')
-    parallel (
+        },
         'Download fake video': {
             sh(script: '''#!/bin/bash -xe
                 FAKE_VIDEO=/opt/openvidu-cache/barcode.y4m
