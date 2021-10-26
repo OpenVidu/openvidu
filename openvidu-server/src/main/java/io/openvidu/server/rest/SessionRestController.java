@@ -762,15 +762,10 @@ public class SessionRestController {
 					}
 					builder = builder.customSessionId(customSessionId);
 				}
-				// forcedVideoCodec to NONE if mediasoup
-				if (MediaServer.mediasoup.equals(openviduConfig.getMediaServer())) {
-					builder = builder.forcedVideoCodec(VideoCodec.NONE);
+				if (forcedVideoCodec != null) {
+					builder = builder.forcedVideoCodec(VideoCodec.valueOf(forcedVideoCodec));
 				} else {
-					if (forcedVideoCodec != null) {
-						builder = builder.forcedVideoCodec(VideoCodec.valueOf(forcedVideoCodec));
-					} else {
-						builder = builder.forcedVideoCodec(openviduConfig.getOpenviduForcedCodec());
-					}
+					builder = builder.forcedVideoCodec(openviduConfig.getOpenviduForcedCodec());
 				}
 				if (allowTranscoding != null) {
 					builder = builder.allowTranscoding(allowTranscoding);

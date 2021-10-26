@@ -117,10 +117,6 @@ public class KurentoSessionManager extends SessionManager {
 					// Insecure user directly call joinRoom RPC method, without REST API use
 					SessionProperties.Builder builder = new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
 							.recordingMode(RecordingMode.ALWAYS);
-					// forcedVideoCodec to NONE if mediasoup
-					if (MediaServer.mediasoup.equals(openviduConfig.getMediaServer())) {
-						builder.forcedVideoCodec(VideoCodec.NONE);
-					}
 					sessionNotActive = new Session(sessionId, builder.build(), openviduConfig, recordingManager);
 				}
 
@@ -767,7 +763,7 @@ public class KurentoSessionManager extends SessionManager {
 	/**
 	 * Creates a session with the already existing not-active session in the
 	 * indicated KMS, if it doesn't already exist
-	 * 
+	 *
 	 * @throws OpenViduException in case of error while creating the session
 	 */
 	public KurentoSession createSession(Session sessionNotActive, Kms kms) throws OpenViduException {
