@@ -6,6 +6,7 @@ def prepareTestingEnvironment() {
             sh 'sudo rm -rf /opt/openvidu/* || true'
         },
         'Deleting repository openvidu': {
+            sh 'readlink -f .'
             sh 'sudo rm -rf openvidu || true'
         },
         'Deleting repository openvidu-pro': {
