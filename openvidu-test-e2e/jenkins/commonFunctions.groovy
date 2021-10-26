@@ -1,42 +1,52 @@
 #!groovy
 def prepareTestingEnvironment() {
-    println('Deleting folder /opt/openvidu')
-    sh 'sudo rm -rf /opt/openvidu/* || true'
-
-    println('Deleting repositories')
-    sh 'sudo rm -rf openvidu || true'
-    sh 'sudo rm -rf openvidu-pro || true'
-    sh 'sudo rm -rf kurento-java || true'
-
-    println('Deleting OpenVidu related .m2 dependencies')
-    sh 'sudo rm -rf /opt/openvidu-cache/.m2/repository/io/openvidu || true'
-    sh 'sudo rm -rf /opt/openvidu-cache/.m2/repository/org/kurento || true'
-
-    println('Removing stranded containers')
-    sh(script: '''#!/bin/bash -xe
-        declare -a arr=('openvidu/openvidu-test-e2e:',
-                        'openvidu/openvidu-pro-test-e2e:',
-                        'selenium/standalone-chrome:',
-                        'selenium/standalone-firefox:',
-                        'selenium/standalone-opera:',
-                        'openvidu/mediasoup-controller:',
-                        'openvidu/openvidu-server-pro:',
-                        'openvidu/openvidu-redis:',
-                        'openvidu/openvidu-coturn:',
-                        'openvidu/openvidu-proxy:',
-                        'openvidu/replication-manager:',
-                        'docker.elastic.co/elasticsearch/elasticsearch:',
-                        'docker.elastic.co/kibana/kibana:',
-                        'docker.elastic.co/beats/metricbeat-oss:',
-                        'docker.elastic.co/beats/filebeat-oss:',
-                        'openvidu/openvidu-pro-dind-media-node:',
-                        'kurento/kurento-media-server:',
-                        'openvidu/media-node-controller:')
-        for image in "${containersToRemove[@]}"
-        do
-            docker ps -a | awk \'{ print $1,$2 }\' | grep "$image" | awk \'{ print $1 }\' | xargs -I {} docker rm -f {}
-        done
-    '''.stripIndent())
+    println('Cleaning environment')
+    parallel (
+        'Deleting folder /opt/openvidu': {
+            sh 'sudo rm -rf /opt/openvidu/* || true'
+        },
+        'Deleting repository openvidu': {
+            sh 'sudo rm -rf openvidu || true'
+        },
+        'Deleting repository openvidu-pro': {
+            sh 'sudo rm -rf openvidu-pro || true'
+        },
+        'Deleting repository kurento-java': {
+            sh 'sudo rm -rf kurento-java || true'
+        },
+        'Deleting openvidu .m2 dependencies': {
+            sh 'sudo rm -rf /opt/openvidu-cache/.m2/repository/io/openvidu || true'
+        },
+        'Deleting kurento .m2 dependencies': {
+            sh 'sudo rm -rf /opt/openvidu-cache/.m2/repository/org/kurento || true'
+        },
+        'Removing stranded containers': {
+            sh(script: '''#!/bin/bash -xe
+                declare -a arr=('openvidu/openvidu-test-e2e:',
+                                'openvidu/openvidu-pro-test-e2e:',
+                                'selenium/standalone-chrome:',
+                                'selenium/standalone-firefox:',
+                                'selenium/standalone-opera:',
+                                'openvidu/mediasoup-controller:',
+                                'openvidu/openvidu-server-pro:',
+                                'openvidu/openvidu-redis:',
+                                'openvidu/openvidu-coturn:',
+                                'openvidu/openvidu-proxy:',
+                                'openvidu/replication-manager:',
+                                'docker.elastic.co/elasticsearch/elasticsearch:',
+                                'docker.elastic.co/kibana/kibana:',
+                                'docker.elastic.co/beats/metricbeat-oss:',
+                                'docker.elastic.co/beats/filebeat-oss:',
+                                'openvidu/openvidu-pro-dind-media-node:',
+                                'kurento/kurento-media-server:',
+                                'openvidu/media-node-controller:')
+                for image in "${containersToRemove[@]}"
+                do
+                    docker ps -a | awk \'{ print $1,$2 }\' | grep "$image" | awk \'{ print $1 }\' | xargs -I {} docker rm -f {}
+                done
+            '''.stripIndent())
+        }
+    )
 
     println('Pulling containers')
     parallel (
