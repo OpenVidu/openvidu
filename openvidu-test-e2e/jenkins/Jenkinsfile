@@ -1,9 +1,10 @@
 node('container') {
+  sh 'curl -O https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/jenkins/commonFunctions.groovy'
+  def commonFunctions = load 'commonFunctions.groovy'
+  commonFunctions.prepareTestingEnvironment()
+
   def commitId = "${OPENVIDU_COMMIT}"
   checkout([$class: 'GitSCM', branches: [[name: commitId]], userRemoteConfigs: [[url: 'https://github.com/OpenVidu/openvidu']]])
-
-  def commonFunctions = load('openvidu-test-e2e/jenkins/commonFunctions.groovy')
-  commonFunctions.prepareTestingEnvironment()
 
   def bindsArray = ['-v /var/run/docker.sock:/var/run/docker.sock:rw',
                     '-v /dev/shm:/dev/shm',
