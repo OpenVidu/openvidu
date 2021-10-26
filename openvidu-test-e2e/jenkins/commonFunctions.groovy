@@ -4,8 +4,8 @@ def prepareTestingEnvironment() {
     sh 'sudo rm -rf /opt/openvidu/* || true'
 
     println('Deleting repositories')
-    sh 'sudo rm -rf openvidu-pro || true'
     sh 'sudo rm -rf openvidu || true'
+    sh 'sudo rm -rf openvidu-pro || true'
     sh 'sudo rm -rf kurento-java || true'
 
     println('Deleting OpenVidu related .m2 dependencies')

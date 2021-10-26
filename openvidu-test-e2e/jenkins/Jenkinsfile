@@ -6,7 +6,7 @@ node('container') {
 
   // Clone and checkout OpenVidu/openvidu repository
   def commitId = "${OPENVIDU_COMMIT}"
-  checkout([$class: 'GitSCM', branches: [[name: commitId]], userRemoteConfigs: [[url: 'https://github.com/OpenVidu/openvidu']], extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'openvidu']],])
+  checkout([$class: 'GitSCM', branches: [[name: commitId]], userRemoteConfigs: [[url: 'https://github.com/OpenVidu/openvidu']], extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'openvidu']]])
 
   // Volumes to use in container openvidu/openvidu-test-e2e
   def bindsArray = ['-v /var/run/docker.sock:/var/run/docker.sock:rw',
