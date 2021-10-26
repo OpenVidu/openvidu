@@ -1,5 +1,5 @@
 #!groovy
-def prepareTestingEnvironment() {
+def prepareTestingEnvironment(def DISTRO, def MEDIASOUP_CONTROLLER_DOCKER_VERSION) {
     println('Deleting folder /opt/openvidu')
     sh 'sudo rm -rf /opt/openvidu/* || true'
 

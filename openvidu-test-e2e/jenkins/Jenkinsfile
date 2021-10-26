@@ -2,7 +2,7 @@ node('container') {
   // Load and execute common functions Groovy script
   sh 'curl -O https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/jenkins/commonFunctions.groovy'
   def commonFunctions = load 'commonFunctions.groovy'
-  commonFunctions.prepareTestingEnvironment()
+  commonFunctions.prepareTestingEnvironment("${DISTRO}", "${MEDIASOUP_CONTROLLER_DOCKER_VERSION}")
 
   // Clone and checkout OpenVidu/openvidu repository
   def commitId = "${OPENVIDU_COMMIT}"
