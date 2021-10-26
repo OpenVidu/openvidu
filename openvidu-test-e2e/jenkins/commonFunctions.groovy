@@ -1,5 +1,5 @@
 #!groovy
-def prepareTestingEnvironment(def DISTRO, def MEDIASOUP_CONTROLLER_DOCKER_VERSION) {
+def prepareTestingEnvironment() {
     println('Deleting folder /opt/openvidu')
     sh 'sudo rm -rf /opt/openvidu/* || true'
 
@@ -41,10 +41,14 @@ def prepareTestingEnvironment(def DISTRO, def MEDIASOUP_CONTROLLER_DOCKER_VERSIO
     println('Pulling containers')
     parallel (
         'Pull openvidu/openvidu-test-e2e': {
-            docker.image('openvidu/openvidu-test-e2e:$DISTRO').pull()
+            if (env.DISTRO) {
+                docker.image('openvidu/openvidu-test-e2e:$DISTRO').pull()
+            }
         },
         'Pull openvidu/openvidu-pro-test-e2e': {
-            docker.image('openvidu/openvidu-pro-test-e2e:$DISTRO').pull()
+            if (env.DISTRO) {
+                docker.image('openvidu/openvidu-pro-test-e2e:$DISTRO').pull()
+            }
         },
         'Pull selenium/standalone-chrome': {
             docker.image('selenium/standalone-chrome:latest').pull()
@@ -56,7 +60,9 @@ def prepareTestingEnvironment(def DISTRO, def MEDIASOUP_CONTROLLER_DOCKER_VERSIO
             docker.image('selenium/standalone-opera:latest').pull()
         },
         'Pull openvidu/mediasoup-controller': {
-            docker.image('openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_DOCKER_VERSION').pull()
+            if (env.MEDIASOUP_CONTROLLER_DOCKER_VERSION) {
+                docker.image('openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_DOCKER_VERSION').pull()
+            }
         }
     )
 
