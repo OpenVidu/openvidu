@@ -1,4 +1,7 @@
 node('container') {
+  def commitId = "${OPENVIDU_COMMIT}"
+  checkout([$class: 'GitSCM', branches: [[name: commitId]], userRemoteConfigs: [[url: 'https://github.com/OpenVidu/openvidu']]])
+
   def commonFunctions = load('openvidu-test-e2e/jenkins/commonFunctions.groovy')
   commonFunctions.prepareTestingEnvironment()
 
@@ -10,12 +13,6 @@ node('container') {
 
   docker.image('openvidu/openvidu-test-e2e:$DISTRO').inside('--name e2e -p 4200:4200 -p 4443:4443 -p 5555:5555 -u root -e MY_UID=0 ' + "${bindsArray}" + ' --privileged') {
     stage('Preparation') {
-      sh 'rm -rf ~/.m2/repository/io/openvidu || true'
-      sh 'rm -rf ~/.m2/repository/org/kurento || true'
-      sh 'rm -rf openvidu || true'
-      sh 'rm -rf kurento-java || true'
-      sh 'git clone https://github.com/OpenVidu/openvidu.git'
-      sh 'cd openvidu && git fetch --all && git checkout $OPENVIDU_COMMIT'
       sh(script: '''#!/bin/bash -xe
         if [[ $KURENTO_JAVA_COMMIT != "default" ]]; then
           git clone https://github.com/Kurento/kurento-java.git
