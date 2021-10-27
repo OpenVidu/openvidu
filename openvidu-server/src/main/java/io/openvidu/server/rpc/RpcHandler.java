@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentMap;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.kurento.jsonrpc.DefaultJsonRpcHandler;
 import org.kurento.jsonrpc.Session;
 import org.kurento.jsonrpc.Transaction;
@@ -46,6 +47,7 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.ConnectionProperties;
+import io.openvidu.server.config.OpenviduBuildInfo;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.IdentifierPrefixes;
@@ -55,6 +57,8 @@ import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
 import io.openvidu.server.utils.GeoLocation;
 import io.openvidu.server.utils.GeoLocationByIp;
+import io.openvidu.server.utils.VersionComparator;
+import io.openvidu.server.utils.VersionComparator.VersionMismatchException;
 
 public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
@@ -62,6 +66,9 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	@Autowired
 	OpenviduConfig openviduConfig;
+
+	@Autowired
+	OpenviduBuildInfo openviduBuildConfig;
 
 	@Autowired
 	GeoLocationByIp geoLocationByIp;
@@ -291,6 +298,8 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 									participant.getParticipantPublicId(), sessionId, remoteAddress.getHostAddress(),
 									participant.getPlatform());
 						}
+
+						checkSdkVersionCompliancy(request, participant);
 
 						rpcConnection.setSessionId(sessionId);
 						sessionManager.joinRoom(participant, sessionId, request.getId());
@@ -795,36 +804,36 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		return Arrays.asList("*");
 	}
 
-	public static String getStringParam(Request<JsonObject> request, String key) {
+	public static String getStringParam(Request<JsonObject> request, String key) throws RuntimeException {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
 			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request != null
 					? request.getMethod()
 					: "[NO REQUEST OBJECT]"
-							+ "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
+							+ "'. Check that 'openvidu-server' AND 'openvidu-browser' versions are compatible with each other");
 		}
 		return request.getParams().get(key).getAsString();
 	}
 
-	public static int getIntParam(Request<JsonObject> request, String key) {
+	public static int getIntParam(Request<JsonObject> request, String key) throws RuntimeException {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
 			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod()
-					+ "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
+					+ "'. Check that 'openvidu-server' AND 'openvidu-browser' versions are compatible with each other");
 		}
 		return request.getParams().get(key).getAsInt();
 	}
 
-	public static boolean getBooleanParam(Request<JsonObject> request, String key) {
+	public static boolean getBooleanParam(Request<JsonObject> request, String key) throws RuntimeException {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
 			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod()
-					+ "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
+					+ "'. Check that 'openvidu-server' AND 'openvidu-browser' versions are compatible with each other");
 		}
 		return request.getParams().get(key).getAsBoolean();
 	}
 
-	public static JsonElement getParam(Request<JsonObject> request, String key) {
+	public static JsonElement getParam(Request<JsonObject> request, String key) throws RuntimeException {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
 			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod()
-					+ "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
+					+ "'. Check that 'openvidu-server' AND 'openvidu-browser' versions are compatible with each other");
 		}
 		return request.getParams().get(key);
 	}
@@ -877,6 +886,41 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 					streamId.length());
 		}
 		return senderPublicId;
+	}
+
+	private void checkSdkVersionCompliancy(Request<JsonObject> request, Participant participant) {
+		// TODO: remove try-catch after release 2.21.0
+		String clientVersion = null;
+		try {
+			clientVersion = getStringParam(request, ProtocolElements.JOINROOM_SDKVERSION_PARAM);
+		} catch (RuntimeException e) {
+			// This empty catch is here to support client SDK 2.20.0 with server 2.21.0
+			// TODO: remove try-catch after release 2.21.0
+			return;
+		}
+		final String serverVersion = openviduBuildConfig.getOpenViduServerVersion();
+		try {
+			new VersionComparator().checkVersionCompatibility(clientVersion, serverVersion);
+		} catch (VersionMismatchException e) {
+			if (e.isIncompatible()) {
+				log.error(
+						"Participant {} with IP {} and platform {} has an incompatible version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). This may cause the system to malfunction",
+						participant.getParticipantPublicId(), participant.getLocation().getIp(),
+						participant.getPlatform(), clientVersion, serverVersion);
+				log.error(e.getMessage());
+				log.error(
+						"openvidu-browser SDK is only compatible with the same version or the immediately following minor version of an OpenVidu deployment");
+			} else {
+				DefaultArtifactVersion v = new DefaultArtifactVersion(serverVersion);
+				log.warn(
+						"Participant {} with IP {} and platform {} has an older version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). "
+								+ "These versions are still compatible with each other, but client SDK must be updated as soon as possible to {}.x. This client using "
+								+ "openvidu-browser {} will become incompatible with the next release of openvidu-server",
+						participant.getParticipantPublicId(), participant.getLocation().getIp(),
+						participant.getPlatform(), clientVersion, serverVersion,
+						(v.getMajorVersion() + "." + v.getMinorVersion()), clientVersion);
+			}
+		}
 	}
 
 }

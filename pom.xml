@@ -75,6 +75,7 @@
 		<version.nexus.staging.plugin>1.6.8</version.nexus.staging.plugin>
 		<version.exec.plugin>3.0.0</version.exec.plugin>
 		<version.javadoc.plugin>3.2.0</version.javadoc.plugin>
+		<version.maven.artifact>3.8.3</version.maven.artifact>
 
 		<maven.compiler.target>11</maven.compiler.target>
 		<maven.compiler.source>11</maven.compiler.source>

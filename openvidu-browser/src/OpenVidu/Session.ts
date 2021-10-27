@@ -44,6 +44,8 @@ import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/Open
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
+import semverMajor = require('semver/functions/major');
+import semverMinor = require('semver/functions/minor');
 
 /**
  * @hidden
@@ -1250,6 +1252,7 @@ export class Session extends EventDispatcher {
             token: (!!token) ? token : '',
             session: this.sessionId,
             platform: !!platform.getDescription() ? platform.getDescription() : 'unknown',
+            sdkVersion: this.openvidu.libraryVersion,
             metadata: !!this.options.metadata ? this.options.metadata : '',
             secret: this.openvidu.getSecret(),
             recorder: this.openvidu.getRecorder()
@@ -1547,10 +1550,14 @@ export class Session extends EventDispatcher {
         if (opts.life != null) {
             this.openvidu.life = opts.life;
         }
-        if (opts.version !== this.openvidu.libraryVersion) {
-            logger.warn('OpenVidu Server (' + opts.version +
-                ') and OpenVidu Browser (' + this.openvidu.libraryVersion +
-                ') versions do NOT match. There may be incompatibilities')
+        const minorDifference: number = semverMinor(opts.version) - semverMinor(this.openvidu.libraryVersion);
+        if ((semverMajor(opts.version) !== semverMajor(this.openvidu.libraryVersion)) || !(minorDifference == 0 || minorDifference == 1)) {
+            logger.error(`openvidu-browser (${this.openvidu.libraryVersion}) and openvidu-server (${opts.version}) versions are incompatible. `
+                + 'Errors are likely to occur. openvidu-browser SDK is only compatible with the same version or the immediately following minor version of an OpenVidu deployment');
+        } else if (minorDifference == 1) {
+            logger.warn(`openvidu-browser version ${this.openvidu.libraryVersion} does not match openvidu-server version ${opts.version}. `
+                + `These versions are still compatible with each other, but openvidu-browser version must be updated as soon as possible to ${semverMajor(opts.version)}.${semverMinor(opts.version)}.x. `
+                + `This client using openvidu-browser ${this.openvidu.libraryVersion} will become incompatible with the next release of openvidu-server`);
         }
     }
 
