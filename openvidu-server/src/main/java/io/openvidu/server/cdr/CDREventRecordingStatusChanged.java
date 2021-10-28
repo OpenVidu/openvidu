@@ -19,28 +19,23 @@ package io.openvidu.server.cdr;
 
 import com.google.gson.JsonObject;
 
+import io.openvidu.java.client.Recording.Status;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.utils.RecordingUtils;
 
-public class CDREventRecording extends CDREventEnd {
+public class CDREventRecordingStatusChanged extends CDREventEnd {
 
-	protected Recording recording;
+	private Recording recording;
+	private Status status;
 
-	// recordingStarted
-	public CDREventRecording(Recording recording) {
-		super(CDREventName.recordingStarted, recording.getSessionId(), recording.getUniqueSessionId(),
-				recording.getCreatedAt());
+	public CDREventRecordingStatusChanged(Recording recording, Long startTime, EndReason reason, Long timestamp,
+			Status status) {
+		super(CDREventName.recordingStatusChanged, recording.getSessionId(), recording.getUniqueSessionId(), startTime,
+				reason, timestamp);
 		this.recording = recording;
-	}
-
-	// recordingStopped
-	public CDREventRecording(CDREventRecording event, Recording recording, EndReason reason, Long timestamp) {
-		super(CDREventName.recordingStopped, event == null ? recording.getSessionId() : event.getSessionId(),
-				event == null ? recording.getUniqueSessionId() : event.getUniqueSessionId(),
-				event == null ? recording.getCreatedAt() : event.getTimestamp(), reason, timestamp);
-		this.recording = recording;
+		this.status = status;
 	}
 
 	@Override
@@ -65,11 +60,8 @@ public class CDREventRecording extends CDREventEnd {
 		json.addProperty("hasVideo", this.recording.hasVideo());
 		json.addProperty("size", this.recording.getSize());
 		json.addProperty("duration", this.recording.getDuration());
+		json.addProperty("status", this.status.name());
 		return json;
-	}
-
-	public Recording getRecording() {
-		return this.recording;
 	}
 
 }

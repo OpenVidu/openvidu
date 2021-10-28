@@ -221,7 +221,8 @@ public class RecordingManager {
 		log.info("Recording module required: Downloading openvidu/openvidu-recording:"
 				+ openviduConfig.getOpenViduRecordingVersion() + " Docker image (350MB aprox)");
 
-		if (dockMng.dockerImageExistsLocally(openviduConfig.getOpenviduRecordingImageRepo() + ":" + openviduConfig.getOpenViduRecordingVersion())) {
+		if (dockMng.dockerImageExistsLocally(
+				openviduConfig.getOpenviduRecordingImageRepo() + ":" + openviduConfig.getOpenViduRecordingVersion())) {
 			log.info("Docker image already exists locally");
 		} else {
 			Thread t = new Thread(() -> {
@@ -239,7 +240,8 @@ public class RecordingManager {
 			});
 			t.start();
 			try {
-				dockMng.downloadDockerImage(openviduConfig.getOpenviduRecordingImageRepo() + ":" + openviduConfig.getOpenViduRecordingVersion(), 600);
+				dockMng.downloadDockerImage(openviduConfig.getOpenviduRecordingImageRepo() + ":"
+						+ openviduConfig.getOpenViduRecordingVersion(), 600);
 			} catch (Exception e) {
 				log.error("Error downloading docker image {}:{}", openviduConfig.getOpenviduRecordingImageRepo(),
 						openviduConfig.getOpenViduRecordingVersion());
@@ -302,8 +304,6 @@ public class RecordingManager {
 
 							this.cdr.recordRecordingStatusChanged(recording, null, recording.getCreatedAt(),
 									Status.started);
-							// TODO: remove deprecated "recordingStarted" event
-							this.cdr.recordRecordingStarted(recording);
 
 							if (!(OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo())) {
 								// Directly send recording started notification for all cases except for
@@ -365,8 +365,6 @@ public class RecordingManager {
 
 		final long timestamp = System.currentTimeMillis();
 		this.cdr.recordRecordingStatusChanged(recording, reason, timestamp, Status.stopped);
-		// TODO: remove deprecated "recordingStopped" event
-		this.cdr.recordRecordingStopped(recording, reason, timestamp);
 
 		switch (recording.getOutputMode()) {
 		case COMPOSED:

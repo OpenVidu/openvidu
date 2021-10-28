@@ -51,7 +51,7 @@ import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.SessionProperties;
-import io.openvidu.server.cdr.CDREventRecording;
+import io.openvidu.server.cdr.CDREventRecordingStatusChanged;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.kurento.endpoint.EndpointType;
@@ -99,7 +99,7 @@ public abstract class SessionManager {
 	final protected ConcurrentMap<String, Session> sessionsNotActive = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentHashMap<String, Participant>> sessionidParticipantpublicidParticipant = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentHashMap<String, FinalUser>> sessionidFinalUsers = new ConcurrentHashMap<>();
-	protected ConcurrentMap<String, ConcurrentLinkedQueue<CDREventRecording>> sessionidAccumulatedRecordings = new ConcurrentHashMap<>();
+	protected ConcurrentMap<String, ConcurrentLinkedQueue<CDREventRecordingStatusChanged>> sessionidAccumulatedRecordings = new ConcurrentHashMap<>();
 
 	protected ConcurrentMap<String, Boolean> insecureUsers = new ConcurrentHashMap<>();
 
@@ -292,11 +292,11 @@ public abstract class SessionManager {
 		return this.sessionidFinalUsers.remove(sessionId);
 	}
 
-	public Collection<CDREventRecording> getAccumulatedRecordings(String sessionId) {
-		return this.sessionidAccumulatedRecordings.get(sessionId);
+	public void accumulateNewRecording(CDREventRecordingStatusChanged event) {
+		this.sessionidAccumulatedRecordings.get(event.getSessionId()).add(event);
 	}
 
-	public Collection<CDREventRecording> removeAccumulatedRecordings(String sessionId) {
+	public Collection<CDREventRecordingStatusChanged> removeAccumulatedRecordings(String sessionId) {
 		return this.sessionidAccumulatedRecordings.remove(sessionId);
 	}
 
