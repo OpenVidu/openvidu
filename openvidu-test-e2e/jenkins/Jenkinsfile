@@ -184,10 +184,7 @@ def environmentLaunch(mediaServer) {
   script {
     env.mediaServer = mediaServer
     sh(script: '''#!/bin/bash -xe
-      KMS_IP=127.0.0.1
-      if [[ "${mediaServer}" == "mediasoup" ]]; then
-        KMS_IP=172.17.0.1
-      fi
+      KMS_IP=172.17.0.1
       until $(curl --insecure --output /dev/null --silent http://${KMS_IP}:8888/kurento); do echo "Waiting for ${mediaServer}..."; sleep 1; done
       if [ "$DOCKER_RECORDING_VERSION" != "default" ]; then
         echo "Using custom openvidu-recording tag: $DOCKER_RECORDING_VERSION"
