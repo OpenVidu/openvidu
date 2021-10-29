@@ -114,7 +114,7 @@ node('container') {
           try {
             stage ('OpenVidu Kurento E2E tests') {
               try {
-                openViduE2ETest('kurento')
+                openViduE2ETest('kurento/kurento-media-server:$KURENTO_MEDIA_SERVER_VERSION')
               } catch (err) {
                 // In case of error, fail the stage
                 sh 'exit 1'
@@ -135,7 +135,7 @@ node('container') {
           // Mediasoup TESTS
           // ----
           stage ('Environment Launch Mediasoup') {
-            environmentLaunch('mediasoup')
+            environmentLaunch('openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_VERSION')
           }
           try {
             stage ('OpenVidu Mediasoup E2E tests') {
@@ -210,14 +210,9 @@ def environmentStop() {
   '''.stripIndent())
 }
 
-def openViduE2ETest(mediaServer) {
-  if (mediaServer == 'kurento') {
-    MEDIA_SERVER_IMAGE = "kurento/kurento-media-server:$KURENTO_MEDIA_SERVER_VERSION"
-  } else if (mediaServer == 'mediasoup') {
-    MEDIA_SERVER_IMAGE = "openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_VERSION"
-  }
+def openViduE2ETest(mediaServerImage) {
   script {
-    env.mediaServerImage = $MEDIA_SERVER_IMAGE
+    env.mediaServerImage = mediaServerImage
     sh(script: '''#!/bin/bash -xe
       cd openvidu/openvidu-test-browsers
       mvn -B versions:set -DnewVersion=TEST && mvn -B clean install
