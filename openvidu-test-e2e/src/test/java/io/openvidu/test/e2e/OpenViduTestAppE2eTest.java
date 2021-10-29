@@ -31,11 +31,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import io.openvidu.java.client.*;
-import io.openvidu.test.e2e.annotations.OnlyKurento;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -45,8 +46,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.springframework.test.context.junit.jupiter.DisabledIf;
-import org.springframework.test.context.junit.jupiter.EnabledIf;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.google.gson.JsonArray;
@@ -55,12 +54,29 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mashape.unirest.http.HttpMethod;
 
+import io.openvidu.java.client.Connection;
+import io.openvidu.java.client.ConnectionProperties;
+import io.openvidu.java.client.ConnectionType;
+import io.openvidu.java.client.KurentoOptions;
+import io.openvidu.java.client.MediaMode;
+import io.openvidu.java.client.OpenVidu;
+import io.openvidu.java.client.OpenViduHttpException;
+import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.java.client.Publisher;
+import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.Recording.OutputMode;
+import io.openvidu.java.client.RecordingLayout;
+import io.openvidu.java.client.RecordingMode;
+import io.openvidu.java.client.RecordingProperties;
+import io.openvidu.java.client.Session;
+import io.openvidu.java.client.SessionProperties;
+import io.openvidu.java.client.VideoCodec;
 import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.RecordingUtils;
 import io.openvidu.test.browsers.utils.layout.CustomLayoutHandler;
 import io.openvidu.test.browsers.utils.webhook.CustomWebhook;
+import io.openvidu.test.e2e.annotations.OnlyKurento;
 
 /**
  * E2E tests for openvidu-testapp.
@@ -3228,7 +3244,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 	@Test
 	@DisplayName("Kurento reconnect test")
-	@Disabled
 	void kurentoReconnectTest() throws Exception {
 		isRecordingTest = true;
 		isKurentoRestartTest = true;
@@ -3248,7 +3263,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Connect one publisher with no connection to KMS
 
 		user.getDriver().findElement(By.id("add-user-btn")).click();
-		user.getDriver().findElement(By.className("subscribe-remote-check")).click();
 		user.getDriver().findElement(By.className("join-btn")).click();
 
 		user.getWaiter().until(ExpectedConditions.alertIsPresent());
@@ -3262,10 +3276,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("remove-user-btn")).sendKeys(Keys.ENTER);
 
 		this.startMediaServer();
-		Thread.sleep(3000);
+		Thread.sleep(5000);
 
-		// Connect one subscriber with connection to KMS -> restart KMS -> connect a
-		// publisher -> restart KMS -> check streamDestroyed events
+		// Connect one subscriber with connection to KMS -> restart KMS -> -> check the
+		// session is still OK -> connect a publisher -> restart KMS -> check
+		// streamDestroyed events
 
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElements(By.className("publish-checkbox")).forEach(el -> el.click());
@@ -3278,7 +3293,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Expected 1 active sessions but found " + sessions.size(), 1, sessions.size());
 
 		this.restartMediaServer();
-		Thread.sleep(3000);
+		Thread.sleep(5000);
 
 		OV.fetch();
 		sessions = OV.getActiveSessions();
@@ -3310,33 +3325,33 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				new RecordingProperties.Builder().outputMode(OutputMode.INDIVIDUAL).build());
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
 
-		long recStartTime = System.currentTimeMillis();
+		Thread.sleep(5000);
 
 		final CountDownLatch latch = new CountDownLatch(4);
 
 		user.getEventManager().on("recordingStopped", (event) -> {
 			String reason = event.get("reason").getAsString();
-			Assert.assertEquals("Expected 'recordingStopped' reason 'mediaServerDisconnect'", "mediaServerDisconnect",
+			Assert.assertEquals("Expected 'recordingStopped' reason 'mediaServerReconnect'", "mediaServerReconnect",
 					reason);
 			latch.countDown();
 		});
 		user.getEventManager().on("streamDestroyed", (event) -> {
 			String reason = event.get("reason").getAsString();
-			Assert.assertEquals("Expected 'streamDestroyed' reason 'mediaServerDisconnect'", "mediaServerDisconnect",
+			Assert.assertEquals("Expected 'streamDestroyed' reason 'mediaServerReconnect'", "mediaServerReconnect",
 					reason);
 			latch.countDown();
 		});
 
-		long recEndTime = System.currentTimeMillis();
 		this.restartMediaServer();
 
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
 		if (!latch.await(5000, TimeUnit.MILLISECONDS)) {
 			gracefullyLeaveParticipants(2);
-			fail("Waiting for 2 streamDestroyed events with reason 'mediaServerDisconnect' to happen in total");
+			fail("Waiting for 2 recordingStopped and 2 streamDestroyed events with reason 'mediaServerReconnect' to happen in total");
 			return;
 		}
+		user.getEventManager().off("recordingStopped");
 		user.getEventManager().off("streamDestroyed");
 
 		session.fetch();
@@ -3348,18 +3363,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Expected no active subscribers but found " + subs, 0, subs);
 
 		Recording rec = OV.getRecording("TestSession");
-		double differenceInDuration = Math.abs(rec.getDuration() - ((recEndTime - recStartTime) / 1000));
-		Assert.assertTrue("Recording duration exceeds valid value. Expected no more than 0.2 seconds, got "
-				+ differenceInDuration, differenceInDuration < 0.2);
+		Assert.assertTrue("Recording duration is 0", rec.getDuration() > 0);
+		Assert.assertTrue("Recording size is 0", rec.getSize() > 0);
 
 		this.recordingUtils.checkIndividualRecording("/opt/openvidu/recordings/TestSession/", rec, 1, "opus", "vp8",
 				true);
 
 		WebElement pubBtn = user.getDriver().findElements(By.cssSelector("#openvidu-instance-1 .pub-btn")).get(0);
 		pubBtn.click();
-		// This is not real, only in testapp (user is not streaming media after KMS
-		// restarted)
-		user.getEventManager().waitUntilEventReaches("streamDestroyed", 3);
 		pubBtn.click();
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);

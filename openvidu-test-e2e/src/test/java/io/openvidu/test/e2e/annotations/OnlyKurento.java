@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@DisabledIf(expression = "#{systemProperties['MEDIA_SERVER'].toLowerCase().equals('mediasoup')}")
+@DisabledIf(expression = "#{systemProperties['MEDIA_SERVER_IMAGE'].toLowerCase().contains('openvidu/mediasoup-controller')}")
 public @interface OnlyKurento {
 
 }

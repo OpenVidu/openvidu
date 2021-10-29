@@ -293,7 +293,7 @@ public class KurentoSession extends Session {
 				.collect(Collectors.toSet());
 	}
 
-	public void restartStatusInKurentoAfterReconnection(Long kmsDisconnectionTime) {
+	public void restartStatusInKurentoAfterReconnectionToNewKms(Long kmsDisconnectionTime) {
 
 		log.info("Resetting process: resetting remote media objects for active session {}", this.sessionId);
 
@@ -313,8 +313,14 @@ public class KurentoSession extends Session {
 				mediaOptionsMap.put(kParticipant.getParticipantPublicId(),
 						kParticipant.getPublisher().getMediaOptions());
 			}
-			kParticipant.releaseAllFilters();
-			kParticipant.close(EndReason.mediaServerReconnect, false, kmsDisconnectionTime);
+			try {
+				// Skip remote operations to non-existant KMS
+				RemoteOperationUtils.setToSkipRemoteOperations();
+				kParticipant.releaseAllFilters();
+				kParticipant.close(EndReason.mediaServerReconnect, false, kmsDisconnectionTime);
+			} finally {
+				RemoteOperationUtils.revertToRunRemoteOperations();
+			}
 			if (wasStreaming) {
 				kurentoSessionHandler.onUnpublishMedia(kParticipant, this.getParticipants(), null, null, null,
 						EndReason.mediaServerReconnect);

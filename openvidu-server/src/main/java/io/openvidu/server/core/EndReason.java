@@ -102,8 +102,8 @@ public enum EndReason {
 	mediaServerDisconnect,
 
 	/**
-	 * A media server disconnected, but was able to reconnect again. Nevertheless
-	 * all of the media endpoints were destroyed in the process. Applies to
+	 * A media server disconnected, and a new one automatically reconnected. All of
+	 * the media endpoints were destroyed in the process. Applies to
 	 * webrtcConnectionDestroyed and recordingStatusChanged
 	 */
 	mediaServerReconnect,

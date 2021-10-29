@@ -240,12 +240,15 @@ public abstract class KmsManager {
 						sessionEventsHandler.onMediaNodeCrashed(kms, environmentId, timeOfKurentoDisconnection,
 								affectedSessionIds, affectedRecordingIds);
 
+						if (infiniteRetry()) {
+							disconnected();
+						}
+
 					} else {
 
-						// KurentoClient connection timeout may exceed the limit.
-						// This happens if not only kms process has crashed, but the instance itself is
-						// not reachable
 						if ((System.currentTimeMillis() - initTime) > maxReconnectTimeMillis) {
+							// KurentoClient connection timeout exceeds the limit. This happens if not only
+							// media server process has crashed, but the instance itself is not reachable
 							iteration.set(0);
 							return;
 						}
@@ -276,7 +279,7 @@ public abstract class KmsManager {
 										kms.getUri(), kms.getKurentoSessions().size(), kms.getKurentoSessions().stream()
 												.map(s -> s.getSessionId()).collect(Collectors.joining(",", "[", "]")));
 								kms.getKurentoSessions().forEach(kSession -> {
-									kSession.restartStatusInKurentoAfterReconnection(timeOfKurentoDisconnection);
+									kSession.restartStatusInKurentoAfterReconnectionToNewKms(timeOfKurentoDisconnection);
 								});
 							} else {
 								log.info("KMS with URI {} is the same process. Nothing must be done", kms.getUri());
@@ -341,6 +344,8 @@ public abstract class KmsManager {
 
 	@PostConstruct
 	protected abstract void postConstructInitKurentoClients();
+
+	protected abstract boolean infiniteRetry();
 
 	public void closeAllKurentoClients() {
 		log.info("Closing all KurentoClients");

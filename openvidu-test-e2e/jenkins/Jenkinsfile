@@ -17,27 +17,6 @@ node('container') {
 
   // Run openvidu/openvidu-test-e2e container
   docker.image('openvidu/openvidu-test-e2e:$DISTRO').inside('--name e2e -p 4200:4200 -p 4443:4443 -p 5555:5555 -u root -e MY_UID=0 ' + "${bindsArray}" + ' --privileged') {
-    stage('Preparation') {
-      sh(script: '''#!/bin/bash -xe
-        if [[ $KURENTO_JAVA_COMMIT != "default" ]]; then
-          git clone https://github.com/Kurento/kurento-java.git
-          cd kurento-java
-          git checkout -f $KURENTO_JAVA_COMMIT
-          mvn -B clean install
-        fi
-      '''.stripIndent())
-      sh(script: '''#!/bin/bash -xe
-        if $KURENTO_MEDIA_SERVER_DEV ; then
-          echo "Upgrading KMS to dev version"
-          sudo apt-get update && sudo apt-get install -y aptitude
-          sudo aptitude remove -y kurento-media-server
-          DISTRO=`lsb_release --codename | cut -f2`
-          sudo echo "deb [arch=amd64] http://ubuntu.openvidu.io/dev $DISTRO kms6" | sudo tee /etc/apt/sources.list.d/kurento.list
-          sudo apt-get update && sudo apt-get --yes -o Dpkg::Options::="--force-confnew" install kurento-media-server
-        fi
-      '''.stripIndent())
-    }
-
     stage('Build 1') {
       parallel 'OpenVidu Browser build': {
         stage('OpenVidu Browser build') {
@@ -95,7 +74,11 @@ node('container') {
         stage('OpenVidu parent build') {
           sh(script: '''#!/bin/bash -xe
             if [[ $KURENTO_JAVA_COMMIT != "default" ]]; then
-              cd kurento-java && MVN_VERSION=$(mvn -B -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+              git clone https://github.com/Kurento/kurento-java.git
+              cd kurento-java
+              git checkout -f $KURENTO_JAVA_COMMIT
+              mvn -B clean install
+              MVN_VERSION=$(mvn -B -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
               cd ../openvidu && mvn -B versions:set-property -Dproperty=version.kurento -DnewVersion=$MVN_VERSION
             fi
           '''.stripIndent())
@@ -182,14 +165,19 @@ def environmentLaunch(mediaServer) {
   sh 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout /opt/openvidu/testapp/key.pem -out /opt/openvidu/testapp/cert.pem'
   sh 'cd /opt/openvidu/testapp && http-server -S -p 4200 &> /opt/openvidu/testapp.log &'
   if (mediaServer == 'kurento') {
-    sh '/usr/bin/kurento-media-server &> /kms.log &'
+    sh(script: '''#!/bin/bash -xe
+      docker run -e KMS_UID=$(id -u) --network=host --detach=true --volume=/opt/openvidu/recordings:/opt/openvidu/recordings kurento/kurento-media-server:$KURENTO_MEDIA_SERVER_VERSION
+    '''.stripIndent())
   } else if (mediaServer == 'mediasoup') {
     sh(script: '''#!/bin/bash -xe
-      docker run --name=mediasoup --env=KMS_MIN_PORT=40000 --env=KMS_MAX_PORT=65535 \
+      docker run --network=host --restart=always --detach=true \
+      --env=KMS_MIN_PORT=40000 \
+      --env=KMS_MAX_PORT=65535 \
       --env=OPENVIDU_PRO_LICENSE=$OPENVIDU_PRO_LICENSE \
       --env=OPENVIDU_PRO_LICENSE_API=$OPENVIDU_PRO_LICENSE_API \
-      --env=WEBRTC_LISTENIPS_0_ANNOUNCEDIP=172.17.0.1 --env=WEBRTC_LISTENIPS_0_IP=172.17.0.1 \
-      --volume=/opt/openvidu/recordings:/opt/openvidu/recordings --network=host --restart=always --detach=true \
+      --env=WEBRTC_LISTENIPS_0_ANNOUNCEDIP=172.17.0.1 \
+      --env=WEBRTC_LISTENIPS_0_IP=172.17.0.1 \
+      --volume=/opt/openvidu/recordings:/opt/openvidu/recordings \
       openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_DOCKER_VERSION
     '''.stripIndent())
   }
@@ -214,14 +202,24 @@ def environmentLaunch(mediaServer) {
 }
 
 def environmentStop() {
-  sh 'kill -9 $(pidof kurento-media-server) || true'
   sh 'kill -9 $(pgrep -f /opt/openvidu/openvidu-server) || true'
-  sh 'docker rm -f mediasoup || true'
+  sh(script: '''#!/bin/bash -xe
+    declare -a arr=("openvidu/mediasoup-controller:"
+                    "kurento/kurento-media-server:")
+    for image in "${arr[@]}"
+    do
+        docker ps -a | awk '{ print $1,$2 }' | grep "$image" | awk '{ print $1 }' | xargs -I {} docker rm -f {}
+    done
+  '''.stripIndent())
 }
 
 def openViduE2ETest(mediaServer) {
   script {
-    env.mediaServer = mediaServer
+    if [ "$mediaServer" = "kurento" ]; then
+      env.mediaServerImage="kurento/kurento-media-server:$KURENTO_MEDIA_SERVER_VERSION"
+    elif [ "$mediaServer" = "mediasoup" ]; then
+      env.mediaServerImage="openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_DOCKER_VERSION"
+    fi
     sh(script: '''#!/bin/bash -xe
       cd openvidu/openvidu-test-browsers
       mvn -B versions:set -DnewVersion=TEST && mvn -B clean install
@@ -230,7 +228,7 @@ def openViduE2ETest(mediaServer) {
       mvn -B versions:set-property -Dproperty=version.openvidu.test.browsers -DnewVersion=TEST
       cd openvidu-test-e2e
       mvn -B -DskipTests=true clean install
-      sudo mvn -B -DMEDIA_SERVER=${mediaServer} -Dtest=OpenViduTestAppE2eTest -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ -DREMOTE_URL_OPERA=http://172.17.0.1:6668/wd/hub/ -DEXTERNAL_CUSTOM_LAYOUT_URL=http://172.17.0.1:5555 -DEXTERNAL_CUSTOM_LAYOUT_PARAMS=sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET test
+      sudo mvn -B -DMEDIA_SERVER_IMAGE=${mediaServerImage} -Dtest=OpenViduTestAppE2eTest -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ -DREMOTE_URL_OPERA=http://172.17.0.1:6668/wd/hub/ -DEXTERNAL_CUSTOM_LAYOUT_URL=http://172.17.0.1:5555 -DEXTERNAL_CUSTOM_LAYOUT_PARAMS=sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET test
     '''.stripIndent())
   }
 }

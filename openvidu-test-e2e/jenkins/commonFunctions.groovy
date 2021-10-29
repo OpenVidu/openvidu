@@ -6,7 +6,6 @@ def prepareTestingEnvironment() {
             sh 'sudo rm -rf /opt/openvidu/* || true'
         },
         'Deleting repository openvidu': {
-            sh 'echo $(readlink -f .)'
             sh 'sudo rm -rf openvidu || true'
         },
         'Deleting repository openvidu-pro': {
@@ -23,27 +22,27 @@ def prepareTestingEnvironment() {
         },
         'Removing stranded containers': {
             sh(script: '''#!/bin/bash -xe
-                declare -a arr=('openvidu/openvidu-test-e2e:',
-                                'openvidu/openvidu-pro-test-e2e:',
-                                'selenium/standalone-chrome:',
-                                'selenium/standalone-firefox:',
-                                'selenium/standalone-opera:',
-                                'openvidu/mediasoup-controller:',
-                                'openvidu/openvidu-server-pro:',
-                                'openvidu/openvidu-redis:',
-                                'openvidu/openvidu-coturn:',
-                                'openvidu/openvidu-proxy:',
-                                'openvidu/replication-manager:',
-                                'docker.elastic.co/elasticsearch/elasticsearch:',
-                                'docker.elastic.co/kibana/kibana:',
-                                'docker.elastic.co/beats/metricbeat-oss:',
-                                'docker.elastic.co/beats/filebeat-oss:',
-                                'openvidu/openvidu-pro-dind-media-node:',
-                                'kurento/kurento-media-server:',
-                                'openvidu/media-node-controller:')
-                for image in "${containersToRemove[@]}"
+                declare -a arr=("openvidu/openvidu-test-e2e:"
+                                "openvidu/openvidu-pro-test-e2e:"
+                                "selenium/standalone-chrome:"
+                                "selenium/standalone-firefox:"
+                                "selenium/standalone-opera:"
+                                "openvidu/mediasoup-controller:"
+                                "openvidu/openvidu-server-pro:"
+                                "openvidu/openvidu-redis:"
+                                "openvidu/openvidu-coturn:"
+                                "openvidu/openvidu-proxy:"
+                                "openvidu/replication-manager:"
+                                "docker.elastic.co/elasticsearch/elasticsearch:"
+                                "docker.elastic.co/kibana/kibana:"
+                                "docker.elastic.co/beats/metricbeat-oss:"
+                                "docker.elastic.co/beats/filebeat-oss:"
+                                "openvidu/openvidu-pro-dind-media-node:"
+                                "kurento/kurento-media-server:"
+                                "openvidu/media-node-controller:")
+                for image in "${arr[@]}"
                 do
-                    docker ps -a | awk \'{ print $1,$2 }\' | grep "$image" | awk \'{ print $1 }\' | xargs -I {} docker rm -f {}
+                    docker ps -a | awk '{ print $1,$2 }' | grep "$image" | awk '{ print $1 }' | xargs -I {} docker rm -f {}
                 done
             '''.stripIndent())
         }
@@ -73,6 +72,11 @@ def prepareTestingEnvironment() {
         'Pull openvidu/mediasoup-controller': {
             if (env.MEDIASOUP_CONTROLLER_DOCKER_VERSION) {
                 docker.image('openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_DOCKER_VERSION').pull()
+            }
+        },
+        'Pull kurento/kurento-media-server': {
+            if (env.KURENTO_MEDIA_SERVER_VERSION) {
+                docker.image('kurento/kurento-media-server:$KURENTO_MEDIA_SERVER_VERSION').pull()
             }
         },
         'Download fake video': {

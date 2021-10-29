@@ -24,7 +24,6 @@ import java.util.NoSuchElementException;
 
 import javax.annotation.PostConstruct;
 
-import io.openvidu.server.core.MediaServer;
 import org.kurento.client.KurentoClient;
 import org.kurento.client.ServerInfo;
 import org.kurento.commons.exception.KurentoException;
@@ -32,6 +31,7 @@ import org.kurento.jsonrpc.client.JsonRpcClientNettyWebSocket;
 import org.kurento.jsonrpc.client.JsonRpcWSConnectionListener;
 
 import io.openvidu.java.client.RecordingProperties;
+import io.openvidu.server.core.MediaServer;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
 
@@ -99,6 +99,11 @@ public class FixedOneKmsManager extends KmsManager {
 	@Override
 	protected String removeMediaNodeUponCrash(String mediaNodeId) {
 		return null;
+	}
+
+	@Override
+	protected boolean infiniteRetry() {
+		return true;
 	}
 
 	@Override
