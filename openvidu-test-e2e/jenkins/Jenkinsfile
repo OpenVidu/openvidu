@@ -146,12 +146,12 @@ node('container') {
           // Mediasoup TESTS
           // ----
           stage ('Environment Launch Mediasoup') {
-            environmentLaunch('openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_VERSION')
+            environmentLaunch('mediasoup')
           }
           try {
             stage ('OpenVidu Mediasoup E2E tests') {
               try {
-                openViduE2ETest('mediasoup')
+                openViduE2ETest('openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_VERSION')
               } catch (err) {
                 // In case of error, fail the stage
                 sh 'exit 1'
