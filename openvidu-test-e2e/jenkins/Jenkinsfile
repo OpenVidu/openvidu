@@ -178,7 +178,7 @@ def environmentLaunch(mediaServer) {
       --env=WEBRTC_LISTENIPS_0_ANNOUNCEDIP=172.17.0.1 \
       --env=WEBRTC_LISTENIPS_0_IP=172.17.0.1 \
       --volume=/opt/openvidu/recordings:/opt/openvidu/recordings \
-      openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_DOCKER_VERSION
+      openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_VERSION
     '''.stripIndent())
   }
   script {
@@ -214,7 +214,7 @@ def openViduE2ETest(mediaServer) {
   if (mediaServer == 'kurento') {
     MEDIA_SERVER_IMAGE = "kurento/kurento-media-server:$KURENTO_MEDIA_SERVER_VERSION"
   } else if (mediaServer == 'mediasoup') {
-    MEDIA_SERVER_IMAGE = "openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_DOCKER_VERSION"
+    MEDIA_SERVER_IMAGE = "openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_VERSION"
   }
   script {
     env.mediaServerImage = $MEDIA_SERVER_IMAGE

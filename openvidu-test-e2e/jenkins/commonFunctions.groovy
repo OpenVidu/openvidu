@@ -70,8 +70,8 @@ def prepareTestingEnvironment() {
             docker.image('selenium/standalone-opera:latest').pull()
         },
         'Pull openvidu/mediasoup-controller': {
-            if (env.MEDIASOUP_CONTROLLER_DOCKER_VERSION) {
-                docker.image('openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_DOCKER_VERSION').pull()
+            if (env.MEDIASOUP_CONTROLLER_VERSION) {
+                docker.image('openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_VERSION').pull()
             }
         },
         'Pull kurento/kurento-media-server': {
