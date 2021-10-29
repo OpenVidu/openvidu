@@ -20,32 +20,32 @@ node('container') {
     stage('Build 1') {
       parallel 'OpenVidu Browser build': {
         stage('OpenVidu Browser build') {
-          sh(script: """#!/bin/bash -xe
+          sh(script: '''#!/bin/bash -xe
             cd openvidu/openvidu-browser
             npm install --quiet --unsafe-perm
             npm run build --quiet
             npm pack --quiet
             cp openvidu-browser-*.tgz /opt/openvidu
-          """.stripIndent())
+          '''.stripIndent())
         }
       }, 'OpenVidu Node Client build': {
         stage('OpenVidu Node Client build') {
-          sh(script: """#!/bin/bash -xe
+          sh(script: '''#!/bin/bash -xe
             cd openvidu/openvidu-node-client
             npm install --quiet --unsafe-perm
             npm run build --quiet
             npm pack --quiet
             cp openvidu-node-client-*.tgz /opt/openvidu
-          """.stripIndent())
+          '''.stripIndent())
         }
       }, 'OpenVidu Java Client build': {
         stage('OpenVidu Java Client build') {
-          sh(script: """#!/bin/bash -xe
+          sh(script: '''#!/bin/bash -xe
             cd openvidu/openvidu-java-client
             mvn -B versions:set -DnewVersion=TEST
             mvn -B clean compile package
             mvn -B install:install-file -Dfile=target/openvidu-java-client-TEST.jar -DgroupId=io.openvidu -DartifactId=openvidu-java-client -Dversion=TEST -Dpackaging=jar
-          """.stripIndent())
+          '''.stripIndent())
         }
       }
     }
@@ -53,26 +53,26 @@ node('container') {
     stage('Build 2') {
       parallel 'OpenVidu TestApp build': {
         stage('OpenVidu TestApp build') {
-          sh(script: """#!/bin/bash -xe
+          sh(script: '''#!/bin/bash -xe
           cd openvidu/openvidu-testapp
           npm install --unsafe-perm --quiet
           npm install /opt/openvidu/openvidu-browser-*.tgz --quiet
           npm install /opt/openvidu/openvidu-node-client-*.tgz --quiet
           export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng build --prod --output-path=/opt/openvidu/testapp
-        """.stripIndent())
+        '''.stripIndent())
         }
       }, 'OpenVidu Server dashboard build': {
         stage('OpenVidu Server dashboard build') {
-          sh(script: """#!/bin/bash -xe
+          sh(script: '''#!/bin/bash -xe
             cd openvidu/openvidu-server/src/dashboard
             npm install --unsafe-perm --quiet
             npm install /opt/openvidu/openvidu-browser-*.tgz --quiet
             export NG_CLI_ANALYTICS="false" && npm run build-prod --quiet
-          """.stripIndent())
+          '''.stripIndent())
         }
       }, 'OpenVidu Server pre-build': {
         stage('OpenVidu parent build') {
-          sh(script: """#!/bin/bash -xe
+          sh(script: '''#!/bin/bash -xe
             if [[ ${KURENTO_JAVA_COMMIT} != "default" ]]; then
               git clone https://github.com/Kurento/kurento-java.git
               cd kurento-java
@@ -81,7 +81,7 @@ node('container') {
               MVN_VERSION=$(mvn -B -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
               cd ../openvidu && mvn -B versions:set-property -Dproperty=version.kurento -DnewVersion=${MVN_VERSION}
             fi
-          """.stripIndent())
+          '''.stripIndent())
           sh 'cd openvidu && mvn -B versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST'
           sh 'cd openvidu && mvn -B -DskipTests=true clean install'
         }
@@ -92,7 +92,7 @@ node('container') {
           sh 'cd openvidu/openvidu-server && mvn -B -Dtest=io.openvidu.server.test.integration.*Test test'
         }
         stage('OpenVidu Test E2E build') {
-          sh(script: """#!/bin/bash -xe
+          sh(script: '''#!/bin/bash -xe
             cd openvidu/openvidu-test-browsers
             mvn -B versions:set -DnewVersion=TEST && mvn -B clean install
             cd ..
@@ -100,17 +100,17 @@ node('container') {
             mvn -B versions:set-property -Dproperty=version.openvidu.test.browsers -DnewVersion=TEST
             cd openvidu-test-e2e
             mvn -B -DskipTests=true clean install
-          """.stripIndent())
+          '''.stripIndent())
         }
       }
     }
 
     stage('OpenVidu Server build') {
-      sh(script: """#!/bin/bash -xe
+      sh(script: '''#!/bin/bash -xe
         cd openvidu/openvidu-server
         mvn -B package
         cp target/openvidu-server*.jar /opt/openvidu
-      """.stripIndent())
+      '''.stripIndent())
     }
 
     docker.image('selenium/standalone-chrome:latest').withRun('-p 6666:4444 --name chrome --shm-size=1g -v /opt/openvidu:/opt/openvidu') { a ->
@@ -176,11 +176,11 @@ def environmentLaunch(mediaServer) {
   sh 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout /opt/openvidu/testapp/key.pem -out /opt/openvidu/testapp/cert.pem'
   sh 'cd /opt/openvidu/testapp && http-server -S -p 4200 &> /opt/openvidu/testapp.log &'
   if (mediaServer == 'kurento') {
-    sh(script: """#!/bin/bash -xe
+    sh(script: '''#!/bin/bash -xe
       docker run -e KMS_UID=$(id -u) --network=host --detach=true --volume=/opt/openvidu/recordings:/opt/openvidu/recordings kurento/kurento-media-server:${KURENTO_MEDIA_SERVER_VERSION}
-    """.stripIndent())
+    '''.stripIndent())
   } else if (mediaServer == 'mediasoup') {
-    sh(script: """#!/bin/bash -xe
+    sh(script: '''#!/bin/bash -xe
       docker run --network=host --restart=always --detach=true \
       --env=KMS_MIN_PORT=40000 \
       --env=KMS_MAX_PORT=65535 \
@@ -190,11 +190,11 @@ def environmentLaunch(mediaServer) {
       --env=WEBRTC_LISTENIPS_0_IP=172.17.0.1 \
       --volume=/opt/openvidu/recordings:/opt/openvidu/recordings \
       openvidu/mediasoup-controller:${MEDIASOUP_CONTROLLER_VERSION}
-    """.stripIndent())
+    '''.stripIndent())
   }
   script {
     env.mediaServer = mediaServer
-    sh(script: """#!/bin/bash -xe
+    sh(script: '''#!/bin/bash -xe
       KMS_IP=172.17.0.1
       until $(curl --insecure --output /dev/null --silent http://${KMS_IP}:8888/kurento); do echo "Waiting for ${mediaServer}..."; sleep 1; done
       if [ "${DOCKER_RECORDING_VERSION}" != "default" ]; then
@@ -204,7 +204,7 @@ def environmentLaunch(mediaServer) {
         echo "Using default openvidu-recording tag"
         java -jar -DKMS_URIS=[\\"ws://${KMS_IP}:8888/kurento\\"] -DDOMAIN_OR_PUBLIC_IP=172.17.0.1 -DOPENVIDU_SECRET=MY_SECRET -DHTTPS_PORT=4443 -DOPENVIDU_RECORDING=true -DOPENVIDU_RECORDING_CUSTOM_LAYOUT=/opt/openvidu/test-layouts -DOPENVIDU_WEBHOOK=true -DOPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook /opt/openvidu/openvidu-server-*.jar &> openvidu-server-${mediaServer}.log &
       fi
-    """.stripIndent())
+    '''.stripIndent())
   }
   sh 'until $(curl --insecure --output /dev/null --silent --head --fail https://OPENVIDUAPP:MY_SECRET@localhost:4443/); do echo "Waiting for openvidu-server..."; sleep 2; done'
 }
@@ -213,22 +213,22 @@ def environmentStop() {
   // Kill openvidu-server
   sh 'kill -9 $(pgrep -f /opt/openvidu/openvidu-server) || true'
   // Kill media server
-  sh(script: """#!/bin/bash -xe
+  sh(script: '''#!/bin/bash -xe
     declare -a arr=("openvidu/mediasoup-controller:"
                     "kurento/kurento-media-server:")
     for image in "${arr[@]}"
     do
         docker ps -a | awk '{ print $1,$2 }' | grep "${image}" | awk '{ print $1 }' | xargs -I {} docker rm -f {}
     done
-  """.stripIndent())
+  '''.stripIndent())
 }
 
 def openViduE2ETest(mediaServerImage) {
   script {
       env.mediaServerImage = mediaServerImage
-      sh(script: """#!/bin/bash -xe
+      sh(script: '''#!/bin/bash -xe
         cd openvidu/openvidu-test-e2e
         sudo mvn -B -Dtest=OpenViduTestAppE2eTest -DMEDIA_SERVER_IMAGE=${mediaServerImage} -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ -DREMOTE_URL_OPERA=http://172.17.0.1:6668/wd/hub/ -DEXTERNAL_CUSTOM_LAYOUT_URL=http://172.17.0.1:5555 -DEXTERNAL_CUSTOM_LAYOUT_PARAMS=sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET test
-      """.stripIndent())
+      '''.stripIndent())
   }
 }
