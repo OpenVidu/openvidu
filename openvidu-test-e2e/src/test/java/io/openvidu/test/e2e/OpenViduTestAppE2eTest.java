@@ -818,7 +818,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
-	@OnlyKurento
 	@DisplayName("Stream property changed event")
 	void streamPropertyChangedEventTest() throws Exception {
 
@@ -905,6 +904,82 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			iter.remove();
 		}
 
+		// Resize captured window
+		final CountDownLatch latch3 = new CountDownLatch(2);
+		int newWidth = 1000;
+		int newHeight = 700;
+
+		final long[] expectedWidthHeight = new long[2];
+
+		user.getEventManager().on("streamPropertyChanged", (event) -> {
+			String expectedDimensions = "{\"width\":" + expectedWidthHeight[0] + ",\"height\":" + expectedWidthHeight[1]
+					+ "}";
+			System.out.println("Publisher dimensions: " + event.get("newValue").getAsJsonObject().toString());
+			System.out.println("Real dimensions of viewport: " + expectedDimensions);
+			if ("videoDimensions".equals(event.get("changedProperty").getAsString())
+					&& "screenResized".equals(event.get("reason").getAsString())
+					&& expectedDimensions.equals(event.get("newValue").getAsJsonObject().toString())) {
+				latch3.countDown();
+			}
+		});
+
+		user.getDriver().manage().window().setSize(new Dimension(newWidth, newHeight));
+
+		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
+		JsonObject obj = JsonParser.parseString(widthAndHeight).getAsJsonObject();
+
+		expectedWidthHeight[0] = obj.get("width").getAsLong();
+		expectedWidthHeight[1] = obj.get("height").getAsLong();
+
+		System.out.println("New viewport dimension: " + obj.toString());
+
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
+
+		if (!latch3.await(4000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail();
+			return;
+		}
+
+		user.getEventManager().off("streamPropertyChanged");
+
+		gracefullyLeaveParticipants(2);
+	}
+
+	@Test
+	@OnlyKurento
+	@DisplayName("Stream property changed filter event")
+	void streamPropertyChangedFilterEventTest() throws Exception {
+
+		Queue<Boolean> threadAssertions = new ConcurrentLinkedQueue<Boolean>();
+
+		setupBrowser("chromeAlternateScreenShare");
+
+		log.info("Stream property changed event");
+
+		WebElement oneToManyInput = user.getDriver().findElement(By.id("one2many-input"));
+		oneToManyInput.clear();
+		oneToManyInput.sendKeys("1");
+
+		user.getDriver().findElement(By.id("one2many-btn")).click();
+		user.getDriver().findElement(By.className("screen-radio")).click();
+
+		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("radio-btn-mod")).click();
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+
+		List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
+		for (WebElement el : joinButtons) {
+			el.sendKeys(Keys.ENTER);
+		}
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
 		// Filter
 		final CountDownLatch latch3 = new CountDownLatch(2);
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
@@ -923,7 +998,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
 
-		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);
 
 		if (!latch3.await(4000, TimeUnit.MILLISECONDS)) {
 			gracefullyLeaveParticipants(2);
@@ -937,47 +1012,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Assert.assertTrue("Some Event property was wrong", iter.next());
 			iter.remove();
 		}
-
-		// Resize captured window
-		final CountDownLatch latch4 = new CountDownLatch(2);
-		int newWidth = 1000;
-		int newHeight = 700;
-
-		final long[] expectedWidthHeight = new long[2];
-
-		user.getEventManager().on("streamPropertyChanged", (event) -> {
-			String expectedDimensions = "{\"width\":" + expectedWidthHeight[0] + ",\"height\":" + expectedWidthHeight[1]
-					+ "}";
-			System.out.println("Publisher dimensions: " + event.get("newValue").getAsJsonObject().toString());
-			System.out.println("Real dimensions of viewport: " + expectedDimensions);
-			if ("videoDimensions".equals(event.get("changedProperty").getAsString())
-					&& "screenResized".equals(event.get("reason").getAsString())
-					&& expectedDimensions.equals(event.get("newValue").getAsJsonObject().toString())) {
-				latch4.countDown();
-			}
-		});
-
-		user.getDriver().manage().window().setSize(new Dimension(newWidth, newHeight));
-
-		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
-		JsonObject obj = JsonParser.parseString(widthAndHeight).getAsJsonObject();
-
-		expectedWidthHeight[0] = obj.get("width").getAsLong();
-		expectedWidthHeight[1] = obj.get("height").getAsLong();
-
-		System.out.println("New viewport dimension: " + obj.toString());
-
-		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 8);
-
-		if (!latch3.await(4000, TimeUnit.MILLISECONDS)) {
-			gracefullyLeaveParticipants(2);
-			fail();
-			return;
-		}
-
-		System.out.println(getBase64Screenshot(user));
-
-		user.getEventManager().off("streamPropertyChanged");
 
 		gracefullyLeaveParticipants(2);
 	}
@@ -3387,12 +3421,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
-	@OnlyKurento
 	@DisplayName("Webhook test")
 	void webhookTest() throws Exception {
 		isRecordingTest = true;
 
-		setupChromeWithFakeVideo(Paths.get("/opt/openvidu/barcode.y4m"));
+		setupBrowser("chrome");
 
 		log.info("Webhook test");
 
@@ -3421,11 +3454,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Thread.sleep(500);
 			user.getDriver().findElement(By.id("option-INDIVIDUAL")).click();
 			Thread.sleep(500);
-
-			WebElement allowedFilterInput = user.getDriver().findElement(By.id("allowed-filter-input"));
-			allowedFilterInput.clear();
-			allowedFilterInput.sendKeys("ZBarFilter");
-			user.getDriver().findElement(By.id("add-allowed-filter-btn")).click();
 
 			user.getDriver().findElement(By.id("save-btn")).click();
 			Thread.sleep(1000);
@@ -3458,30 +3486,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Assert.assertNull("Wrong recording reason in webhook event (should be null)", event.get("reason"));
 			Assert.assertEquals("Wrong recording name in webhook event", rareCharsName,
 					event.get("name").getAsString());
-
-			// Filter event webhook
-			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .filter-btn")).click();
-			Thread.sleep(500);
-			WebElement input = user.getDriver().findElement(By.id("filter-type-field"));
-			input.clear();
-			input.sendKeys("ZBarFilter");
-			input = user.getDriver().findElement(By.id("filter-options-field"));
-			input.clear();
-			input.sendKeys("{}");
-			user.getDriver().findElement(By.id("apply-filter-btn")).click();
-			user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 1);
-
-			// Apply listener
-			input = user.getDriver().findElement(By.id("filter-event-type-field"));
-			input.clear();
-			input.sendKeys("CodeFound");
-			user.getDriver().findElement(By.id("sub-filter-event-btn")).click();
-			user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
-					"Filter event listener added"));
-			CustomWebhook.waitForEvent("filterEventDispatched", 2);
-			user.getDriver().findElement(By.id("unsub-filter-event-btn")).click();
-			user.getDriver().findElement(By.id("close-dialog-btn")).click();
-			Thread.sleep(500);
 
 			user.getDriver().findElement(By.id("add-user-btn")).click();
 			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
@@ -3584,6 +3588,81 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong number of properties in event 'sessionDestroyed'", 6 + 1, event.keySet().size());
 			Assert.assertEquals("Wrong session destroyed reason in webhook event", "sessionClosedByServer",
 					event.get("reason").getAsString());
+
+		} finally {
+			CustomWebhook.shutDown();
+		}
+	}
+
+	@Test
+	@OnlyKurento
+	@DisplayName("Webhook filter event test")
+	void webhookFilterEventTest() throws Exception {
+		isRecordingTest = true;
+
+		setupChromeWithFakeVideo(Paths.get("/opt/openvidu/barcode.y4m"));
+
+		log.info("Webhook test");
+
+		CountDownLatch initLatch = new CountDownLatch(1);
+		io.openvidu.test.browsers.utils.webhook.CustomWebhook.main(new String[0], initLatch);
+
+		try {
+
+			if (!initLatch.await(30, TimeUnit.SECONDS)) {
+				Assert.fail("Timeout waiting for webhook springboot app to start");
+				CustomWebhook.shutDown();
+				return;
+			}
+
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+			Thread.sleep(1000);
+
+			WebElement allowedFilterInput = user.getDriver().findElement(By.id("allowed-filter-input"));
+			allowedFilterInput.clear();
+			allowedFilterInput.sendKeys("ZBarFilter");
+			user.getDriver().findElement(By.id("add-allowed-filter-btn")).click();
+
+			user.getDriver().findElement(By.id("save-btn")).click();
+			Thread.sleep(1000);
+
+			user.getDriver().findElement(By.className("join-btn")).click();
+
+			JsonObject event = CustomWebhook.waitForEvent("sessionCreated", 2);
+			Assert.assertEquals("Wrong number of properties in event 'sessionCreated'", 3 + 1, event.keySet().size());
+
+			event = CustomWebhook.waitForEvent("participantJoined", 2);
+			Assert.assertEquals("Wrong number of properties in event 'participantJoined'", 10 + 1,
+					event.keySet().size());
+
+			event = CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
+			Assert.assertEquals("Wrong number of properties in event 'webrtcConnectionCreated'", 12 + 1,
+					event.keySet().size());
+
+			// Filter event webhook
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .filter-btn")).click();
+			Thread.sleep(500);
+			WebElement input = user.getDriver().findElement(By.id("filter-type-field"));
+			input.clear();
+			input.sendKeys("ZBarFilter");
+			input = user.getDriver().findElement(By.id("filter-options-field"));
+			input.clear();
+			input.sendKeys("{}");
+			user.getDriver().findElement(By.id("apply-filter-btn")).click();
+			user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 1);
+
+			// Apply listener
+			input = user.getDriver().findElement(By.id("filter-event-type-field"));
+			input.clear();
+			input.sendKeys("CodeFound");
+			user.getDriver().findElement(By.id("sub-filter-event-btn")).click();
+			user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+					"Filter event listener added"));
+			CustomWebhook.waitForEvent("filterEventDispatched", 2);
+			user.getDriver().findElement(By.id("unsub-filter-event-btn")).click();
+			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			Thread.sleep(500);
 
 		} finally {
 			CustomWebhook.shutDown();
