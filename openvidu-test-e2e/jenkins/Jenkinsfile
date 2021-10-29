@@ -214,12 +214,13 @@ def environmentStop() {
 }
 
 def openViduE2ETest(mediaServer) {
+  if (mediaServer == 'kurento') {
+    MEDIA_SERVER_IMAGE = "kurento/kurento-media-server:$KURENTO_MEDIA_SERVER_VERSION"
+  } else if (mediaServer == 'mediasoup') {
+    MEDIA_SERVER_IMAGE = "openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_DOCKER_VERSION"
+  }
   script {
-    if [ "$mediaServer" = "kurento" ]; then
-      env.mediaServerImage="kurento/kurento-media-server:$KURENTO_MEDIA_SERVER_VERSION"
-    elif [ "$mediaServer" = "mediasoup" ]; then
-      env.mediaServerImage="openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_DOCKER_VERSION"
-    fi
+    env.mediaServerImage = $MEDIA_SERVER_IMAGE
     sh(script: '''#!/bin/bash -xe
       cd openvidu/openvidu-test-browsers
       mvn -B versions:set -DnewVersion=TEST && mvn -B clean install
