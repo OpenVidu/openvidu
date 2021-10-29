@@ -91,6 +91,17 @@ node('container') {
         stage('OpenVidu Server integration tests') {
           sh 'cd openvidu/openvidu-server && mvn -B -Dtest=io.openvidu.server.test.integration.*Test test'
         }
+        stage('OpenVidu Test E2E build') {
+          sh(script: '''#!/bin/bash -xe
+            cd openvidu/openvidu-test-browsers
+            mvn -B versions:set -DnewVersion=TEST && mvn -B clean install
+            cd ..
+            mvn -B versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST
+            mvn -B versions:set-property -Dproperty=version.openvidu.test.browsers -DnewVersion=TEST
+            cd openvidu-test-e2e
+            mvn -B -DskipTests=true clean install
+          '''.stripIndent())
+        }
       }
     }
 
@@ -199,7 +210,9 @@ def environmentLaunch(mediaServer) {
 }
 
 def environmentStop() {
+  // Kill openvidu-server
   sh 'kill -9 $(pgrep -f /opt/openvidu/openvidu-server) || true'
+  // Kill media server
   sh(script: '''#!/bin/bash -xe
     declare -a arr=("openvidu/mediasoup-controller:"
                     "kurento/kurento-media-server:")
@@ -214,13 +227,7 @@ def openViduE2ETest(mediaServerImage) {
   script {
     env.mediaServerImage = mediaServerImage
     sh(script: '''#!/bin/bash -xe
-      cd openvidu/openvidu-test-browsers
-      mvn -B versions:set -DnewVersion=TEST && mvn -B clean install
-      cd ..
-      mvn -B versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST
-      mvn -B versions:set-property -Dproperty=version.openvidu.test.browsers -DnewVersion=TEST
       cd openvidu-test-e2e
-      mvn -B -DskipTests=true clean install
       sudo mvn -B -DMEDIA_SERVER_IMAGE=${mediaServerImage} -Dtest=OpenViduTestAppE2eTest -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ -DREMOTE_URL_OPERA=http://172.17.0.1:6668/wd/hub/ -DEXTERNAL_CUSTOM_LAYOUT_URL=http://172.17.0.1:5555 -DEXTERNAL_CUSTOM_LAYOUT_PARAMS=sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET test
     '''.stripIndent())
   }
