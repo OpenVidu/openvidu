@@ -1,0 +1,1 @@
+docker build --rm --pull --no-cache -t openvidu/openvidu-test-e2e:focal -f Dockerfile .
