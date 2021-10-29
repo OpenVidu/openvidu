@@ -21,7 +21,7 @@ def prepareTestingEnvironment() {
             sh 'sudo rm -rf /opt/openvidu-cache/.m2/repository/org/kurento || true'
         },
         'Removing stranded containers': {
-            sh(script: '''#!/bin/bash -xe
+            sh(script: """#!/bin/bash -xe
                 declare -a arr=("openvidu/openvidu-test-e2e:"
                                 "openvidu/openvidu-pro-test-e2e:"
                                 "selenium/standalone-chrome:"
@@ -42,9 +42,9 @@ def prepareTestingEnvironment() {
                                 "openvidu/media-node-controller:")
                 for image in "${arr[@]}"
                 do
-                    docker ps -a | awk '{ print $1,$2 }' | grep "$image" | awk '{ print $1 }' | xargs -I {} docker rm -f {}
+                    docker ps -a | awk '{ print $1,$2 }' | grep "${image}" | awk '{ print $1 }' | xargs -I {} docker rm -f {}
                 done
-            '''.stripIndent())
+            """.stripIndent())
         }
     )
 
@@ -52,54 +52,54 @@ def prepareTestingEnvironment() {
     parallel (
         'Pull openvidu/openvidu-test-e2e': {
             if (env.DISTRO) {
-                docker.image('openvidu/openvidu-test-e2e:$DISTRO').pull()
+                docker.image("openvidu/openvidu-test-e2e:${DISTRO}").pull()
             }
         },
         'Pull openvidu/openvidu-pro-test-e2e': {
             if (env.DISTRO) {
-                docker.image('openvidu/openvidu-pro-test-e2e:$DISTRO').pull()
+                docker.image("openvidu/openvidu-pro-test-e2e:${DISTRO}").pull()
             }
         },
         'Pull selenium/standalone-chrome': {
-            docker.image('selenium/standalone-chrome:latest').pull()
+            docker.image("selenium/standalone-chrome:latest").pull()
         },
         'Pull selenium/standalone-firefox': {
-            docker.image('selenium/standalone-firefox:latest').pull()
+            docker.image("selenium/standalone-firefox:latest").pull()
         },
         'Pull selenium/standalone-opera': {
-            docker.image('selenium/standalone-opera:latest').pull()
+            docker.image("selenium/standalone-opera:latest").pull()
         },
         'Pull openvidu/mediasoup-controller': {
             if (env.MEDIASOUP_CONTROLLER_VERSION) {
-                docker.image('openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_VERSION').pull()
+                docker.image("openvidu/mediasoup-controller:${MEDIASOUP_CONTROLLER_VERSION}").pull()
             }
         },
         'Pull kurento/kurento-media-server': {
             if (env.KURENTO_MEDIA_SERVER_VERSION) {
-                docker.image('kurento/kurento-media-server:$KURENTO_MEDIA_SERVER_VERSION').pull()
+                docker.image("kurento/kurento-media-server:${KURENTO_MEDIA_SERVER_VERSION}").pull()
             }
         },
         'Download fake video': {
-            sh(script: '''#!/bin/bash -xe
+            sh(script: """#!/bin/bash -xe
                 FAKE_VIDEO=/opt/openvidu-cache/barcode.y4m
-                if [ ! -f $FAKE_VIDEO ]; then
+                if [ ! -f ${FAKE_VIDEO} ]; then
                     sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m --create-dirs --output /opt/openvidu-cache/barcode.y4m
                 else
-                    echo "File $FAKE_VIDEO already exists"
+                    echo "File ${FAKE_VIDEO} already exists"
                 fi
                 sudo cp /opt/openvidu-cache/barcode.y4m /opt/openvidu/barcode.y4m
-            '''.stripIndent())
+            """.stripIndent())
         },
         'Download fake audio': {
-            sh(script: '''#!/bin/bash -xe
+            sh(script: """#!/bin/bash -xe
                 FAKE_AUDIO=/opt/openvidu-cache/fakeaudio.wav
-                if [ ! -f $FAKE_AUDIO ]; then
+                if [ ! -f ${FAKE_AUDIO} ]; then
                     sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/fakeaudio.wav --create-dirs --output /opt/openvidu-cache/fakeaudio.wav
                 else
-                    echo "File $FAKE_AUDIO already exists"
+                    echo "File ${FAKE_AUDIO} already exists"
                 fi
                 sudo cp /opt/openvidu-cache/barcode.y4m /opt/openvidu/fakeaudio.wav
-            '''.stripIndent())
+            """.stripIndent())
         },
         'Download custom layout': {
             sh 'sudo curl --location https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/docker/my-custom-layout/index.html --create-dirs --output /opt/openvidu-cache/test-layouts/layout1/index.html'
