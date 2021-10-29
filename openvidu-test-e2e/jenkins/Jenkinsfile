@@ -16,7 +16,7 @@ node('container') {
                     '-v /opt/openvidu-cache/.m2:/root/.m2'].join(' ')
 
   // Run openvidu/openvidu-test-e2e container
-  docker.image('openvidu/openvidu-test-e2e:$DISTRO').inside('--name e2e -p 4200:4200 -p 4443:4443 -p 5555:5555 -u root -e MY_UID=0 ' + "${bindsArray}" + ' --privileged') {
+  docker.image("openvidu/openvidu-test-e2e:$DISTRO").inside('--name e2e -p 4200:4200 -p 4443:4443 -p 5555:5555 -u root -e MY_UID=0 ' + "${bindsArray}" + ' --privileged') {
     stage('Build 1') {
       parallel 'OpenVidu Browser build': {
         stage('OpenVidu Browser build') {
@@ -125,7 +125,7 @@ node('container') {
           try {
             stage ('OpenVidu Kurento E2E tests') {
               try {
-                openViduE2ETest('kurento/kurento-media-server:$KURENTO_MEDIA_SERVER_VERSION')
+                openViduE2ETest("kurento/kurento-media-server:$KURENTO_MEDIA_SERVER_VERSION")
               } catch (err) {
                 // In case of error, fail the stage
                 sh 'exit 1'
@@ -151,7 +151,7 @@ node('container') {
           try {
             stage ('OpenVidu Mediasoup E2E tests') {
               try {
-                openViduE2ETest('openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_VERSION')
+                openViduE2ETest("openvidu/mediasoup-controller:$MEDIASOUP_CONTROLLER_VERSION")
               } catch (err) {
                 // In case of error, fail the stage
                 sh 'exit 1'
@@ -224,8 +224,11 @@ def environmentStop() {
 }
 
 def openViduE2ETest(mediaServerImage) {
-  env.MEDIA_SERVER_IMAGE = mediaServerImage
   script {
-    sh 'cd openvidu/openvidu-test-e2e && sudo mvn -B -Dtest=OpenViduTestAppE2eTest -DMEDIA_SERVER_IMAGE=${MEDIA_SERVER_IMAGE} -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ -DREMOTE_URL_OPERA=http://172.17.0.1:6668/wd/hub/ -DEXTERNAL_CUSTOM_LAYOUT_URL=http://172.17.0.1:5555 -DEXTERNAL_CUSTOM_LAYOUT_PARAMS=sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET test'
+      env.mediaServerImage = mediaServerImage
+      sh(script: '''#!/bin/bash -xe
+        cd openvidu/openvidu-test-e2e
+        sudo mvn -B -Dtest=OpenViduTestAppE2eTest -DMEDIA_SERVER_IMAGE=${mediaServerImage} -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ -DREMOTE_URL_OPERA=http://172.17.0.1:6668/wd/hub/ -DEXTERNAL_CUSTOM_LAYOUT_URL=http://172.17.0.1:5555 -DEXTERNAL_CUSTOM_LAYOUT_PARAMS=sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET test
+      '''.stripIndent())
   }
 }
