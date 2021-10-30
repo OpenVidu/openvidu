@@ -3675,7 +3675,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong number of properties in event 'participantJoined'", 10 + 1,
 					event.keySet().size());
 
-			event = CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
+			event = CustomWebhook.waitForEvent("webrtcConnectionCreated", 4);
 			Assert.assertEquals("Wrong number of properties in event 'webrtcConnectionCreated'", 12 + 1,
 					event.keySet().size());
 			String connectionId1 = event.get("connectionId").getAsString();
@@ -3844,7 +3844,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong number of properties in event 'participantJoined'", 10 + 1,
 					event.keySet().size());
 
-			event = CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
+			event = CustomWebhook.waitForEvent("webrtcConnectionCreated", 4);
 			Assert.assertEquals("Wrong number of properties in event 'webrtcConnectionCreated'", 12 + 1,
 					event.keySet().size());
 
