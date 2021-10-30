@@ -3294,7 +3294,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		setupBrowser("chromeAsRoot");
 
-		// Connect one publisher with no connection to KMS
+		// Connect one publisher with no connection to KMS. Session should fail to be
+		// created and an alert message should be displayed on the browser
 
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.className("join-btn")).click();
@@ -3312,8 +3313,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		this.startMediaServer();
 		Thread.sleep(5000);
 
-		// Connect one subscriber with connection to KMS -> restart KMS -> -> check the
-		// session is still OK -> connect a publisher -> restart KMS -> check
+		// Connect one subscriber-only user with connection to KMS -> restart KMS -> ->
+		// check the session is still OK -> connect a publisher -> restart KMS -> check
 		// streamDestroyed events
 
 		user.getDriver().findElement(By.id("add-user-btn")).click();

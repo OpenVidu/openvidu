@@ -108,7 +108,7 @@ node('container') {
     stage('OpenVidu Server build') {
       sh(script: '''#!/bin/bash -xe
         cd openvidu/openvidu-server
-        mvn -B package
+        mvn -B -DskipTests=true package
         cp target/openvidu-server*.jar /opt/openvidu
       '''.stripIndent())
     }
