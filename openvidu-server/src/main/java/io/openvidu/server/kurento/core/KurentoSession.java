@@ -246,6 +246,15 @@ public class KurentoSession extends Session {
 		}
 	}
 
+	private void resetPipeline(Runnable callback) {
+		pipeline = null;
+		pipelineLatch = new CountDownLatch(1);
+		pipelineCreationErrorCause = null;
+		if (callback != null) {
+			callback.run();
+		}
+	}
+
 	private void closePipeline(Runnable callback) {
 		synchronized (pipelineReleaseLock) {
 			if (pipeline == null) {
@@ -260,25 +269,17 @@ public class KurentoSession extends Session {
 					@Override
 					public void onSuccess(Void result) throws Exception {
 						log.debug("SESSION {}: Released Pipeline", sessionId);
-						pipeline = null;
-						pipelineLatch = new CountDownLatch(1);
-						pipelineCreationErrorCause = null;
-						if (callback != null) {
-							callback.run();
-						}
+						resetPipeline(callback);
 					}
 
 					@Override
 					public void onError(Throwable cause) throws Exception {
 						log.warn("SESSION {}: Could not successfully release Pipeline", sessionId, cause);
-						pipeline = null;
-						pipelineLatch = new CountDownLatch(1);
-						pipelineCreationErrorCause = null;
-						if (callback != null) {
-							callback.run();
-						}
+						resetPipeline(callback);
 					}
 				});
+			} else {
+				resetPipeline(callback);
 			}
 		}
 	}
@@ -330,27 +331,33 @@ public class KurentoSession extends Session {
 		// Release pipeline, create a new one and prepare new PublisherEndpoints for
 		// allowed users
 		log.info("Resetting process: closing media pipeline for active session {}", this.sessionId);
-		this.closePipeline(() -> {
-			log.info("Resetting process: media pipeline closed for active session {}", this.sessionId);
-			createPipeline();
-			try {
-				if (!pipelineLatch.await(20, TimeUnit.SECONDS)) {
-					throw new Exception("MediaPipeline was not created in 20 seconds");
-				}
-				getParticipants().forEach(p -> {
-					if (!OpenViduRole.SUBSCRIBER.equals(p.getToken().getRole())) {
-
-						((KurentoParticipant) p).resetPublisherEndpoint(mediaOptionsMap.get(p.getParticipantPublicId()),
-								null);
+		try {
+			RemoteOperationUtils.setToSkipRemoteOperations();
+			this.closePipeline(() -> {
+				RemoteOperationUtils.revertToRunRemoteOperations();
+				log.info("Resetting process: media pipeline closed for active session {}", this.sessionId);
+				createPipeline();
+				try {
+					if (!pipelineLatch.await(20, TimeUnit.SECONDS)) {
+						throw new Exception("MediaPipeline was not created in 20 seconds");
 					}
-				});
-				log.info(
-						"Resetting process: media pipeline created and publisher endpoints reseted for active session {}",
-						this.sessionId);
-			} catch (Exception e) {
-				log.error("Error waiting to new MediaPipeline on KurentoSession restart: {}", e.getMessage());
-			}
-		});
+					getParticipants().forEach(p -> {
+						if (!OpenViduRole.SUBSCRIBER.equals(p.getToken().getRole())) {
+
+							((KurentoParticipant) p)
+									.resetPublisherEndpoint(mediaOptionsMap.get(p.getParticipantPublicId()), null);
+						}
+					});
+					log.info(
+							"Resetting process: media pipeline created and publisher endpoints reseted for active session {}",
+							this.sessionId);
+				} catch (Exception e) {
+					log.error("Error waiting to new MediaPipeline on KurentoSession restart: {}", e.getMessage());
+				}
+			});
+		} finally {
+			RemoteOperationUtils.revertToRunRemoteOperations();
+		}
 	}
 
 	@Override

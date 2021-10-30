@@ -362,7 +362,6 @@ public class RecordingManager {
 		}
 
 		((RecordingService) singleStreamRecordingService).sealRecordingMetadataFileAsStopped(recording);
-
 		final long timestamp = System.currentTimeMillis();
 		this.cdr.recordRecordingStatusChanged(recording, reason, timestamp, Status.stopped);
 
@@ -384,6 +383,11 @@ public class RecordingManager {
 	public Recording forceStopRecording(Session session, EndReason reason, Long kmsDisconnectionTime) {
 		Recording recording;
 		recording = this.sessionsRecordings.get(session.getSessionId());
+
+		((RecordingService) singleStreamRecordingService).sealRecordingMetadataFileAsStopped(recording);
+		final long timestamp = System.currentTimeMillis();
+		this.cdr.recordRecordingStatusChanged(recording, reason, timestamp, Status.stopped);
+
 		switch (recording.getOutputMode()) {
 		case COMPOSED:
 			recording = this.composedRecordingService.stopRecording(session, recording, reason, kmsDisconnectionTime);

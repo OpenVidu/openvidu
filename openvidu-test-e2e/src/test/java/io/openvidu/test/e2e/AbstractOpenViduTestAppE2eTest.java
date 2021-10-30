@@ -253,12 +253,26 @@ public class AbstractOpenViduTestAppE2eTest {
 			other.dispose();
 			it.remove();
 		}
+		this.closeAllSessions(OV);
+		if (isRecordingTest) {
+			deleteAllRecordings(OV);
+			isRecordingTest = false;
+		}
+		if (isKurentoRestartTest) {
+			this.stopMediaServer(false);
+			this.startMediaServer(true);
+			isKurentoRestartTest = false;
+		}
+		OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
+	}
+
+	protected void closeAllSessions(OpenVidu client) {
 		try {
-			OV.fetch();
+			client.fetch();
 		} catch (OpenViduJavaClientException | OpenViduHttpException e1) {
 			log.error("Error fetching sessions: {}", e1.getMessage());
 		}
-		OV.getActiveSessions().forEach(session -> {
+		client.getActiveSessions().forEach(session -> {
 			try {
 				session.close();
 				log.info("Session {} successfully closed", session.getSessionId());
@@ -268,20 +282,29 @@ public class AbstractOpenViduTestAppE2eTest {
 				log.error("Error closing session: {}", e.getMessage());
 			}
 		});
-		if (isRecordingTest) {
-			removeAllRecordingContiners();
-			try {
-				FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
-			} catch (IOException e) {
-				log.error(e.getMessage());
-			}
-			isRecordingTest = false;
+	}
+
+	protected void deleteAllRecordings(OpenVidu client) {
+		try {
+			client.listRecordings().forEach(recording -> {
+				try {
+					client.deleteRecording(recording.getId());
+					log.info("Recording {} successfully deleted", recording.getId());
+				} catch (OpenViduJavaClientException e) {
+					log.error("Error deleting recording: {}", e.getMessage());
+				} catch (OpenViduHttpException e) {
+					log.error("Error deleting recording: {}", e.getMessage());
+				}
+			});
+		} catch (OpenViduJavaClientException | OpenViduHttpException e) {
+			log.error("Error listing recordings: {}", e.getMessage());
 		}
-		if (isKurentoRestartTest) {
-			this.restartMediaServer();
-			isKurentoRestartTest = false;
+		removeAllRecordingContiners();
+		try {
+			FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
+		} catch (IOException e) {
+			log.error(e.getMessage());
 		}
-		OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
 	}
 
 	protected void listEmptyRecordings() {
@@ -318,7 +341,7 @@ public class AbstractOpenViduTestAppE2eTest {
 		return "data:image/png;base64," + screenshotBase64;
 	}
 
-	protected void startMediaServer() {
+	protected void startMediaServer(boolean waitUntilKurentoClientReconnection) {
 		String command = null;
 		if (MEDIA_SERVER_IMAGE.startsWith(KURENTO_IMAGE)) {
 			log.info("Starting kurento");
@@ -336,9 +359,16 @@ public class AbstractOpenViduTestAppE2eTest {
 			System.exit(1);
 		}
 		commandLine.executeCommand(command);
+		if (waitUntilKurentoClientReconnection) {
+			try {
+				Thread.sleep(4000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
-	protected void stopMediaServer() {
+	protected void stopMediaServer(boolean waitUntilNodeCrashedEvent) {
 		final String dockerRemoveCmd = "docker ps -a | awk '{ print $1,$2 }' | grep GREP_PARAMETER | awk '{ print $1 }' | xargs -I {} docker rm -f {}";
 		String grep = null;
 		if (MEDIA_SERVER_IMAGE.startsWith(KURENTO_IMAGE)) {
@@ -352,17 +382,13 @@ public class AbstractOpenViduTestAppE2eTest {
 			System.exit(1);
 		}
 		commandLine.executeCommand(dockerRemoveCmd.replaceFirst("GREP_PARAMETER", grep));
-	}
-
-	protected void restartMediaServer() {
-		this.stopMediaServer();
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			System.err.println("Error restarting media server");
-			e.printStackTrace();
+		if (waitUntilNodeCrashedEvent) {
+			try {
+				Thread.sleep(4000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
-		this.startMediaServer();
 	}
 
 	protected void checkDockerContainerRunning(String imageName, int amount) {
