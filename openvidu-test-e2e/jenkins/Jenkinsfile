@@ -165,7 +165,6 @@ node('container') {
             currentBuild.result = 'FAILURE'
           } finally {
             environmentStop()
-            commonFunctions.removeStrandedContainers()
           }
         }
       }

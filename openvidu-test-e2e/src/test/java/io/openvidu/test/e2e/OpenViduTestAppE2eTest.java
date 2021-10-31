@@ -190,8 +190,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
-		System.out.println(this.getBase64Screenshot(user));
-
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, 4, numberOfVideos);
 		Assert.assertTrue("Videos were expected to only have audio tracks", user.getEventManager()
@@ -1925,7 +1923,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("get-session-btn")).click();
 
 		Thread.sleep(1000);
-		System.out.println(getBase64Screenshot(user));
 		System.out.println(user.getDriver().findElement(By.id("api-response-text-area")).getAttribute("value"));
 
 		user.getWaiter()
@@ -3336,7 +3333,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 	@Test
 	@DisplayName("Media server reconnect active session no streams test")
-	void mediaServerReconnectActiveSessionNoSteamsTest() throws Exception {
+	void mediaServerReconnectActiveSessionNoStreamsTest() throws Exception {
 		isKurentoRestartTest = true;
 
 		log.info("Media server reconnect active session no streams test");
@@ -3432,12 +3429,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
 			user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 			user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
-
-			this.closeAllSessions(OV);
-			CustomWebhook.waitForEvent("sessionDestroyed", 2);
-			user.getDriver().findElement(By.id("remove-all-users-btn")).click();
-			user.getEventManager().clearAllCurrentEvents();
-			CustomWebhook.clean();
 
 		} finally {
 			CustomWebhook.shutDown();

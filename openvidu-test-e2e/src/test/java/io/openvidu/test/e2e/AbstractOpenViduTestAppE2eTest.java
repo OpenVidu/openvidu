@@ -269,16 +269,14 @@ public class AbstractOpenViduTestAppE2eTest {
 	protected void closeAllSessions(OpenVidu client) {
 		try {
 			client.fetch();
-		} catch (OpenViduJavaClientException | OpenViduHttpException e1) {
-			log.error("Error fetching sessions: {}", e1.getMessage());
+		} catch (OpenViduJavaClientException | OpenViduHttpException e) {
+			log.error("Error fetching sessions: {}", e.getMessage());
 		}
 		client.getActiveSessions().forEach(session -> {
 			try {
 				session.close();
 				log.info("Session {} successfully closed", session.getSessionId());
-			} catch (OpenViduJavaClientException e) {
-				log.error("Error closing session: {}", e.getMessage());
-			} catch (OpenViduHttpException e) {
+			} catch (OpenViduJavaClientException | OpenViduHttpException e) {
 				log.error("Error closing session: {}", e.getMessage());
 			}
 		});
@@ -290,9 +288,7 @@ public class AbstractOpenViduTestAppE2eTest {
 				try {
 					client.deleteRecording(recording.getId());
 					log.info("Recording {} successfully deleted", recording.getId());
-				} catch (OpenViduJavaClientException e) {
-					log.error("Error deleting recording: {}", e.getMessage());
-				} catch (OpenViduHttpException e) {
+				} catch (OpenViduJavaClientException | OpenViduHttpException e) {
 					log.error("Error deleting recording: {}", e.getMessage());
 				}
 			});
