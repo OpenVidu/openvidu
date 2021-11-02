@@ -300,7 +300,18 @@ public class KurentoSession extends Session {
 
 		// Stop recording if session is being recorded
 		if (recordingManager.sessionIsBeingRecorded(this.sessionId)) {
-			this.recordingManager.forceStopRecording(this, EndReason.mediaServerReconnect, kmsDisconnectionTime);
+			if (recordingManager.sessionIsBeingRecordedIndividual(this.sessionId)) {
+				// Disable KurentoClient RecorderEndpoint operations
+				try {
+					RemoteOperationUtils.setToSkipRemoteOperations();
+					this.recordingManager.forceStopRecording(this, EndReason.mediaServerReconnect,
+							kmsDisconnectionTime);
+				} finally {
+					RemoteOperationUtils.revertToRunRemoteOperations();
+				}
+			} else {
+				this.recordingManager.forceStopRecording(this, EndReason.mediaServerReconnect, kmsDisconnectionTime);
+			}
 		}
 
 		// Store MediaOptions for resetting PublisherEndpoints later

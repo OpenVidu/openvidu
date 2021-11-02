@@ -381,8 +381,7 @@ public class RecordingManager {
 	}
 
 	public Recording forceStopRecording(Session session, EndReason reason, Long kmsDisconnectionTime) {
-		Recording recording;
-		recording = this.sessionsRecordings.get(session.getSessionId());
+		Recording recording = this.sessionsRecordings.get(session.getSessionId());
 
 		((RecordingService) singleStreamRecordingService).sealRecordingMetadataFileAsStopped(recording);
 		final long timestamp = System.currentTimeMillis();
@@ -491,6 +490,18 @@ public class RecordingManager {
 	public boolean sessionIsBeingRecorded(String sessionId) {
 		return (this.sessionsRecordings.get(sessionId) != null
 				|| this.sessionsRecordingsStarting.get(sessionId) != null);
+	}
+
+	public boolean sessionIsBeingRecordedIndividual(String sessionId) {
+		if (!sessionIsBeingRecorded(sessionId)) {
+			return false;
+		} else {
+			Recording recording = this.sessionsRecordings.get(sessionId);
+			if (recording == null) {
+				recording = this.sessionsRecordingsStarting.get(sessionId);
+			}
+			return OutputMode.INDIVIDUAL.equals(recording.getOutputMode());
+		}
 	}
 
 	public Recording getStartedRecording(String recordingId) {
