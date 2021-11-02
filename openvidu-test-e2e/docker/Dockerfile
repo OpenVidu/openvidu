@@ -6,11 +6,16 @@ USER root
 
 RUN apt-get update && apt-get -y upgrade 
 
-RUN apt-get install -y software-properties-common && apt-get install -y --no-install-recommends apt-utils
+RUN apt-get install -y \
+    software-properties-common \ 
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release && \
+    apt-get install -y --no-install-recommends apt-utils
 
 # Install Node
-RUN apt-get update && apt-get install -y curl
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - && apt-get install -y nodejs
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs
 
 # Java 11
 RUN apt-get install -y openjdk-11-jdk-headless
@@ -31,7 +36,9 @@ RUN apt-get -y install sudo
 RUN apt-get install -y ffmpeg
 
 # docker
-RUN apt-get update && apt-get -y install docker.io
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu focal stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
 
 # Cleanup
 RUN rm -rf /var/lib/apt/lists/*
