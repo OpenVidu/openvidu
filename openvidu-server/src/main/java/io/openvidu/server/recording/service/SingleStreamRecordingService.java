@@ -240,13 +240,14 @@ public class SingleStreamRecordingService extends RecordingService {
 					final List<RecorderEndpointWrapper> wrapperList = storedRecorders.get(recordingId).get(streamId);
 					final int streamCounter = wrapperList != null ? wrapperList.size() : 0;
 					String fileName = streamCounter == 0 ? streamId : (streamId + "-" + streamCounter);
+					String fileExtension = openviduConfig.getMediaServer().getRecordingFileExtension();
 
 					KurentoParticipant kurentoParticipant = (KurentoParticipant) participant;
 					MediaPipeline pipeline = kurentoParticipant.getPublisher().getPipeline();
 
 					RecorderEndpoint recorder = new RecorderEndpoint.Builder(pipeline,
 							"file://" + openviduConfig.getOpenViduRemoteRecordingPath() + recordingId + "/" + fileName
-									+ RecordingService.INDIVIDUAL_RECORDING_EXTENSION).withMediaProfile(profile)
+									+ fileExtension).withMediaProfile(profile)
 											.build();
 
 					recorder.addRecordingListener(new EventListener<RecordingEvent>() {
@@ -271,7 +272,7 @@ public class SingleStreamRecordingService extends RecordingService {
 					});
 
 					RecorderEndpointWrapper wrapper = new RecorderEndpointWrapper(recorder, kurentoParticipant,
-							recordingId, fileName);
+							recordingId, fileName, fileExtension);
 					activeRecorders.get(recordingId).put(streamId, wrapper);
 					if (wrapperList != null) {
 						wrapperList.add(wrapper);
@@ -406,13 +407,13 @@ public class SingleStreamRecordingService extends RecordingService {
 		boolean recordAudio = streamHasAudio && propertiesHasAudio;
 		boolean recordVideo = streamHasVideo && propertiesHasVideo;
 		if (recordAudio && recordVideo) {
-			profile = MediaProfileSpecType.WEBM;
+			profile = openviduConfig.getMediaServer().getRecordingProfile();
 		}
 		else if (recordAudio) {
-			profile = MediaProfileSpecType.WEBM_AUDIO_ONLY;
+			profile = openviduConfig.getMediaServer().getRecordingProfileAudioOnly();
 		}
 		else if (recordVideo) {
-			profile = MediaProfileSpecType.WEBM_VIDEO_ONLY;
+			profile = openviduConfig.getMediaServer().getRecordingProfileVideoOnly();
 		}
 
 		return profile;
@@ -422,19 +423,15 @@ public class SingleStreamRecordingService extends RecordingService {
 			MediaProfileSpecType profile) {
 		// Perform blocking connections, to ensure that elements are
 		// already connected when `RecorderEndpoint.record()` is called.
-		switch (profile) {
-		case WEBM:
+		if (profile.name().contains("AUDIO_ONLY")) {
+			publisherEndpoint.connect(recorder, MediaType.AUDIO, true);
+		}
+		else if (profile.name().contains("VIDEO_ONLY")) {
+			publisherEndpoint.connect(recorder, MediaType.VIDEO, true);
+		}
+		else {
 			publisherEndpoint.connect(recorder, MediaType.AUDIO, true);
 			publisherEndpoint.connect(recorder, MediaType.VIDEO, true);
-			break;
-		case WEBM_AUDIO_ONLY:
-			publisherEndpoint.connect(recorder, MediaType.AUDIO, true);
-			break;
-		case WEBM_VIDEO_ONLY:
-			publisherEndpoint.connect(recorder, MediaType.VIDEO, true);
-			break;
-		default:
-			throw new UnsupportedOperationException("Unsupported profile when single stream recording: " + profile);
 		}
 	}
 
@@ -491,7 +488,8 @@ public class SingleStreamRecordingService extends RecordingService {
 					log.error("Error reading file {}. Error: {}", files[i].getAbsolutePath(), e.getMessage());
 				}
 				RecorderEndpointWrapper wr = new RecorderEndpointWrapper(
-						JsonParser.parseReader(reader).getAsJsonObject());
+						JsonParser.parseReader(reader).getAsJsonObject(),
+						openviduConfig.getMediaServer().getRecordingFileExtension());
 				minStartTime = Math.min(minStartTime, wr.getStartTime());
 				maxEndTime = Math.max(maxEndTime, wr.getEndTime());
 				accumulatedSize += wr.getSize();
@@ -542,7 +540,7 @@ public class SingleStreamRecordingService extends RecordingService {
 				String fileExtension = FilenameUtils.getExtension(files[i].getName());
 
 				if (files[i].isFile() && (fileExtension.equals("json")
-						|| RecordingService.INDIVIDUAL_RECORDING_EXTENSION.equals("." + fileExtension))) {
+						|| openviduConfig.getMediaServer().getRecordingFileExtension().equals("." + fileExtension))) {
 
 					// Zip video files and json sync metadata file
 					FileInputStream fis = new FileInputStream(files[i]);

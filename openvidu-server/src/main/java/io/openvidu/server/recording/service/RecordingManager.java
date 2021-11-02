@@ -764,7 +764,7 @@ public class RecordingManager {
 
 		final String testFolderPath = openviduRecordingPath + "/TEST_RECORDING_PATH_" + System.currentTimeMillis();
 		final String testFilePath = testFolderPath + "/TEST_RECORDING_PATH"
-				+ RecordingService.INDIVIDUAL_RECORDING_EXTENSION;
+				+ openviduConfig.getMediaServer().getRecordingFileExtension();
 
 		// Check Kurento Media Server write permissions in recording path
 		if (this.kmsManager.getKmss().isEmpty()) {
