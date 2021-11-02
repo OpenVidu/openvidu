@@ -21,7 +21,7 @@ def prepareTestingEnvironment() {
             sh 'sudo rm -rf /opt/openvidu-cache/.m2/repository/org/kurento || true'
         },
         'Removing stranded containers': {
-            removeStrandedContainers()
+            removeStrandedContainers(true)
         }
     )
 
@@ -84,32 +84,38 @@ def prepareTestingEnvironment() {
     )
 }
 
-def removeStrandedContainers() {
+def removeStrandedContainers(removeTestingContainers) {
     println('Removing stranded containers')
-    sh(script: '''#!/bin/bash -xe
-        declare -a arr=("openvidu/openvidu-test-e2e:"
-                        "openvidu/openvidu-pro-test-e2e:"
-                        "selenium/standalone-chrome:"
-                        "selenium/standalone-firefox:"
-                        "selenium/standalone-opera:"
-                        "openvidu/mediasoup-controller:"
-                        "openvidu/openvidu-server-pro:"
-                        "openvidu/openvidu-redis:"
-                        "openvidu/openvidu-coturn:"
-                        "openvidu/openvidu-proxy:"
-                        "openvidu/replication-manager:"
-                        "docker.elastic.co/elasticsearch/elasticsearch:"
-                        "docker.elastic.co/kibana/kibana:"
-                        "docker.elastic.co/beats/metricbeat-oss:"
-                        "docker.elastic.co/beats/filebeat-oss:"
-                        "openvidu/openvidu-pro-dind-media-node:"
-                        "kurento/kurento-media-server:"
-                        "openvidu/media-node-controller:")
-        for image in "${arr[@]}"
-        do
-            docker ps -a | awk '{ print $1,$2 }' | grep "${image}" | awk '{ print $1 }' | xargs -I {} docker rm -f {}
-        done
-    '''.stripIndent())
+    script {
+        env.removeTestingContainers = removeTestingContainers
+        sh(script: '''#!/bin/bash -xe
+            declare -a arr=("selenium/standalone-chrome:"
+                            "selenium/standalone-firefox:"
+                            "selenium/standalone-opera:"
+                            "openvidu/mediasoup-controller:"
+                            "openvidu/openvidu-server-pro:"
+                            "openvidu/openvidu-redis:"
+                            "openvidu/openvidu-coturn:"
+                            "openvidu/openvidu-proxy:"
+                            "openvidu/replication-manager:"
+                            "docker.elastic.co/elasticsearch/elasticsearch:"
+                            "docker.elastic.co/kibana/kibana:"
+                            "docker.elastic.co/beats/metricbeat-oss:"
+                            "docker.elastic.co/beats/filebeat-oss:"
+                            "openvidu/openvidu-pro-dind-media-node:"
+                            "kurento/kurento-media-server:"
+                            "openvidu/media-node-controller:")
+            if [ "${removeTestingContainers}" == "true" ]; then
+                arr+=("openvidu/openvidu-test-e2e:")
+                arr+=("openvidu/openvidu-pro-test-e2e:")
+            fi
+            for image in "${arr[@]}"
+            do
+                docker ps -a | awk '{ print $1,$2 }' | grep "${image}" | awk '{ print $1 }' | xargs -I {} docker rm -f {}
+            done
+            docker ps -a
+        '''.stripIndent())
+    }
 }
 
 return this
