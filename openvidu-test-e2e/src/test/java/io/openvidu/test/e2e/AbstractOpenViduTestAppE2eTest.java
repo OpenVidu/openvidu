@@ -4,7 +4,9 @@ import static org.openqa.selenium.OutputType.BASE64;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -408,6 +410,65 @@ public class AbstractOpenViduTestAppE2eTest {
 			jsonObj.remove(prop);
 		}
 		return jsonObj.toString().replaceAll("\"", "'");
+	}
+
+	protected String getIndividualRecordingExtension() throws Exception {
+		if (MEDIA_SERVER_IMAGE.contains(KURENTO_IMAGE)) {
+			return "webm";
+		}
+		if (MEDIA_SERVER_IMAGE.contains(MEDIASOUP_IMAGE)) {
+			return "mkv";
+		} else {
+			throw new Exception("Unknown media server");
+		}
+	}
+
+	protected void waitUntilFileExistsAndIsBiggerThan(String absolutePath, int kbs, int maxSecondsWait)
+			throws Exception {
+
+		long startTime = System.currentTimeMillis();
+
+		int interval = 100;
+		int maxLoops = (maxSecondsWait * 1000) / interval;
+		int loop = 0;
+		long bytes = 0;
+
+		boolean bigger = false;
+		Path path = Paths.get(absolutePath);
+
+		while (!bigger && loop < maxLoops) {
+			bigger = Files.exists(path) && Files.isReadable(path);
+			if (bigger) {
+				try {
+					bytes = Files.size(path);
+				} catch (IOException e) {
+					System.err.println("Error getting file size from " + path + ": " + e.getMessage());
+				}
+				bigger = (bytes / 1024) > kbs;
+			}
+			loop++;
+			Thread.sleep(interval);
+		}
+
+		if (!bigger && loop >= maxLoops) {
+			String errorMessage;
+			if (!Files.exists(path)) {
+				errorMessage = "File " + absolutePath + " does not exist and has not been created in " + maxSecondsWait
+						+ " seconds";
+			} else if (!Files.isReadable(path)) {
+				errorMessage = "File " + absolutePath
+						+ " exists but is not readable, and read permissions have not been granted in " + maxSecondsWait
+						+ " seconds";
+			} else {
+				errorMessage = "File " + absolutePath + " did not reach a size of at least " + kbs + " KBs in "
+						+ maxSecondsWait + " seconds. Last check was " + (bytes / 1024) + " KBs";
+			}
+			throw new Exception(errorMessage);
+		} else {
+			log.info("File " + absolutePath + " did reach a size of at least " + kbs + " KBs in "
+					+ (System.currentTimeMillis() - startTime) + " ms (last checked size was " + (bytes / 1024)
+					+ " KBs)");
+		}
 	}
 
 }
