@@ -12,7 +12,7 @@ This image is also usefull to automation tests of infrastructure.
 docker run --shm-size 2g \
     -e OV_URL=<OV_URL> \
     -e OV_SECRET=<OV_SECRET> \
-    openvidu-health-checker
+    openvidu/openvidu-health-checker
 ```
 
 Just put your OpenVidu url at `OV_URL` and your `OV_SECRET` and the stack will be tested.
