@@ -113,9 +113,9 @@ node('container') {
       '''.stripIndent())
     }
 
-    docker.image('selenium/standalone-chrome:latest').withRun('-p 6666:4444 --name chrome --shm-size=1536m -v /opt/openvidu:/opt/openvidu') { a ->
-      docker.image('selenium/standalone-firefox:latest').withRun('-p 6667:4444 --name firefox --shm-size=1536m') { b ->
-        docker.image('selenium/standalone-opera:latest').withRun('-p 6668:4444 --name opera --shm-size=1536m') { c ->
+    docker.image('selenium/standalone-chrome:latest').withRun('-p 6666:4444 --name chrome --shm-size=2g -v /opt/openvidu:/opt/openvidu') { a ->
+      docker.image('selenium/standalone-firefox:latest').withRun('-p 6667:4444 --name firefox --shm-size=2g') { b ->
+        docker.image('selenium/standalone-opera:latest').withRun('-p 6668:4444 --name opera --shm-size=2g') { c ->
           // -----
           // Kurento TESTS
           // -----
