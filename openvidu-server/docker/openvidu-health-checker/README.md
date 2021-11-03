@@ -1,10 +1,10 @@
 # Openvidu health checker
 
-The main purpose of this image is to have an self-contained and indpendent docker image to test and check possible errors in OpenVidu deployments.
+The main purpose of this image is to have a self-contained and indpendent docker image to test and check possible errors in OpenVidu deployments.
 
 This image is also usefull to automation tests of infrastructure.
 
-# Currest health checks
+# Current health checks
 
 ## 1. Video working and Turn correctly setup
 
