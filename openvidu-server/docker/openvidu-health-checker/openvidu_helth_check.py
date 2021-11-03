@@ -59,7 +59,7 @@ class InfraSmokeTests(unittest.TestCase):
 
         video_error = False
         try:
-            self.driver.find_elements(By.XPATH, "//*[contains(text(), 'Stream playing')]")
+            self.driver.find_element(By.XPATH, "//*[contains(text(), 'Stream playing')]")
         except:
             video_error = True
         finally:
