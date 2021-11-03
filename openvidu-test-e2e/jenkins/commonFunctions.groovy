@@ -111,7 +111,7 @@ def removeStrandedContainers(removeTestingContainers) {
             fi
             for image in "${arr[@]}"
             do
-                docker ps -a | awk '{ print $1,$2 }' | grep "${image}" | awk '{ print $1 }' | xargs -I {} docker rm -f {}
+                docker ps -a | awk '{ print $1,$2 }' | grep "${image}" | awk '{ print $1 }' | xargs -I {} docker rm -f {} || true
             done
             docker ps -a
         '''.stripIndent())
