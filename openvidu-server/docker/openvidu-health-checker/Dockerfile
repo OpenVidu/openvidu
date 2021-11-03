@@ -21,7 +21,7 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
     google-chrome-stable firefox \
   && rm /etc/apt/sources.list.d/google-chrome.list
 
-RUN pip3 install selenium webdriver_manager
+RUN pip3 install selenium webdriver_manager prettytable
 
 COPY ./run.sh /usr/local/bin/run.sh
 COPY ./openvidu_helth_check.py /usr/local/bin/openvidu_helth_check
