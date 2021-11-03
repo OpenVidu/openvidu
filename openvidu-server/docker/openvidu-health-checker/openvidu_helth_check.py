@@ -118,7 +118,7 @@ class InfraSmokeTests(unittest.TestCase):
             self.driver.execute_script("window.open('');")
             # Switch to the new window
             self.driver.switch_to.window(self.driver.window_handles[1])
-                    # Open about:webrtc
+            # Open about:webrtc
             self.driver.get('about:webrtc')
             peer_conn_elems = self.driver.find_elements(By.CLASS_NAME, "peer-connection")
             for peer_conn in peer_conn_elems:
@@ -127,7 +127,7 @@ class InfraSmokeTests(unittest.TestCase):
                     show_details.click()
 
             print("Waiting for candidates to be checked...")
-                    # Get ice stats
+            # Get ice stats
             time.sleep(15)
             ice_stats_div_elems = self.driver.find_elements(By.XPATH, "//div[contains(@id, 'ice-stats')]")
             for ice_stats_div in ice_stats_div_elems:
