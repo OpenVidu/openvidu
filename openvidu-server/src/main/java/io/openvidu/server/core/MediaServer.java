@@ -3,6 +3,7 @@ package io.openvidu.server.core;
 import org.kurento.client.MediaProfileSpecType;
 
 public enum MediaServer {
+
 	kurento(MediaProfileSpecType.WEBM), mediasoup(MediaProfileSpecType.MKV);
 
 	private final MediaProfileSpecType recordingProfile;

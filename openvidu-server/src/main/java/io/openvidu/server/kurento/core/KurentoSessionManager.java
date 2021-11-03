@@ -68,7 +68,6 @@ import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.FinalUser;
 import io.openvidu.server.core.IdentifierPrefixes;
 import io.openvidu.server.core.MediaOptions;
-import io.openvidu.server.core.MediaServer;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;

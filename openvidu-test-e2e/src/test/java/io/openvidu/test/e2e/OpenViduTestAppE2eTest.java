@@ -2795,6 +2795,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Connection ipcamera = session.createConnection(new ConnectionProperties.Builder().type(ConnectionType.IPCAM)
 				.rtspUri(rtsp).adaptativeBitrate(false).onlyPlayWithSubscribers(false).networkCache(50).build());
 
+		// Give some time for the recording to start in background
+		Thread.sleep(3000);
+
 		// New stream should automatically start recording with ALWAYS recording mode
 		Assert.assertFalse("Wrong recording property", session.isBeingRecorded());
 		Assert.assertTrue("OpenVidu.fetch() should return true", session.fetch());
