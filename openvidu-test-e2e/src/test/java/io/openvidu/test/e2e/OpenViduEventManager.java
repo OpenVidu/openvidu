@@ -128,7 +128,6 @@ public class OpenViduEventManager {
 				try {
 					Thread.sleep(25);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
 				}
 			}
 			log.info("Polling thread is now interrupted!");
@@ -171,9 +170,11 @@ public class OpenViduEventManager {
 		this.setCountDown(eventName, eventSignal);
 		try {
 			if (!eventSignal.await(secondsOfWait * 1000, TimeUnit.MILLISECONDS)) {
-				String screenshot = "data:image/png;base64," + ((TakesScreenshot) driver).getScreenshotAs(BASE64);
-				System.out.println("TIMEOUT SCREENSHOT");
-				System.out.println(screenshot);
+				if (printTimeoutError) {
+					String screenshot = "data:image/png;base64," + ((TakesScreenshot) driver).getScreenshotAs(BASE64);
+					System.out.println("TIMEOUT SCREENSHOT");
+					System.out.println(screenshot);
+				}
 				throw (new TimeoutException());
 			}
 		} catch (InterruptedException | TimeoutException e) {

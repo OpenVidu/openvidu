@@ -20,7 +20,6 @@ package io.openvidu.test.e2e;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
@@ -31,6 +30,8 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import org.apache.http.HttpStatus;
@@ -74,7 +75,6 @@ import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.Session;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.java.client.VideoCodec;
-import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.RecordingUtils;
 import io.openvidu.test.browsers.utils.layout.CustomLayoutHandler;
@@ -96,89 +96,64 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	protected static void setupAll() throws Exception {
 		checkFfmpegInstallation();
 		loadEnvironmentVariables();
-		setupBrowserDrivers();
+		prepareBrowsers();
 		cleanFoldersAndSetUpOpenViduJavaClient();
 		getDefaultTranscodingValues();
 	}
 
 	@Test
-	@DisplayName("One2One Chrome [Video + Audio]")
-	void oneToOneVideoAudioSessionChrome() throws Exception {
-		setupBrowser("chrome");
+	@DisplayName("One2One Chrome")
+	void oneToOneChrome() throws Exception {
+		MyUser user = setupBrowser("chrome");
+		log.info("One2One Chrome");
+		oneToOneAux(user);
+	}
 
-		log.info("One2One Chrome [Video + Audio]");
+	@Test
+	@DisplayName("One2One Firefox")
+	void oneToOneFirefox() throws Exception {
+		MyUser user = setupBrowser("firefox");
+		log.info("One2One Firefox");
+		oneToOneAux(user);
+	}
 
+	@Test
+	@DisplayName("One2One Opera")
+	void oneToOneOpera() throws Exception {
+		MyUser user = setupBrowser("opera");
+		log.info("One2One Opera");
+		oneToOneAux(user);
+	}
+
+	@Test
+	@DisplayName("One2One Edge")
+	void oneToOneEdge() throws Exception {
+		MyUser user = setupBrowser("edge");
+		log.info("One2One Edge");
+		oneToOneAux(user);
+	}
+
+	private void oneToOneAux(MyUser user) throws Exception {
 		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
 		user.getDriver().findElement(By.id("one2one-btn")).click();
-
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
-
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assert.assertEquals("Wrong number of videos", 4, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
-
-		gracefullyLeaveParticipants(2);
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
-	@DisplayName("One2One Firefox [Video + Audio]")
-	void oneToOneVideoAudioSessionFirefox() throws Exception {
+	@DisplayName("One2One only audio")
+	void oneToOneOnlyAudioSession() throws Exception {
 
-		setupBrowser("firefox");
+		MyUser user = setupBrowser("chrome");
 
-		log.info("One2One Firefox [Video + Audio]");
-
-		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
-		user.getDriver().findElement(By.id("one2one-btn")).click();
-
-		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
-		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
-		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
-		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
-
-		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Wrong number of videos", 4, numberOfVideos);
-		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
-				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
-
-		gracefullyLeaveParticipants(2);
-	}
-
-	@Test
-	@DisplayName("One2One Opera [Video + Audio]")
-	void oneToOneVideoAudioSessionOpera() throws Exception {
-
-		setupBrowser("opera");
-
-		log.info("One2One Opera [Video + Audio]");
-
-		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
-		user.getDriver().findElement(By.id("one2one-btn")).click();
-
-		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
-		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
-		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
-		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
-
-		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Wrong number of videos", 4, numberOfVideos);
-		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
-				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
-
-		gracefullyLeaveParticipants(2);
-	}
-
-	@Test
-	@DisplayName("One2One [Audio]")
-	void oneToOneAudioSession() throws Exception {
-
-		setupBrowser("chrome");
-
-		log.info("One2One [Audio]");
+		log.info("One2One only audio");
 
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 
@@ -195,16 +170,16 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("Videos were expected to only have audio tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, false));
 
-		gracefullyLeaveParticipants(2);
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
-	@DisplayName("One2One [Video]")
-	void oneToOneVideoSession() throws Exception {
+	@DisplayName("One2One only video")
+	void oneToOneOnlyVideoSession() throws Exception {
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
-		log.info("One2One [Video]");
+		log.info("One2One only video");
 
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 
@@ -221,14 +196,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("Videos were expected to only have video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true));
 
-		gracefullyLeaveParticipants(2);
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
 	@DisplayName("One2Many [Video + Audio]")
 	void oneToManyVideoAudioSession() throws Exception {
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("One2Many [Video + Audio]");
 
@@ -245,7 +220,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
-		gracefullyLeaveParticipants(4);
+		gracefullyLeaveParticipants(user, 4);
 	}
 
 	@Test
@@ -253,7 +228,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Unique user remote subscription [Video + Audio]")
 	void oneRemoteSubscription() throws Exception {
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Unique user remote subscription [Video + Audio]");
 
@@ -271,7 +246,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("Video was expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
-		gracefullyLeaveParticipants(1);
+		gracefullyLeaveParticipants(user, 1);
 	}
 
 	@Test
@@ -279,7 +254,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Unique user remote subscription Firefox [Video + Audio]")
 	void oneRemoteSubscriptionFirefox() throws Exception {
 
-		setupBrowser("firefox");
+		MyUser user = setupBrowser("firefox");
 
 		log.info("Unique user remote subscription Firefox [Video + Audio]");
 
@@ -297,7 +272,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("Video was expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
-		gracefullyLeaveParticipants(1);
+		gracefullyLeaveParticipants(user, 1);
 	}
 
 	@Test
@@ -305,7 +280,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Unique user remote subscription [ScreenShare + Audio]")
 	void oneRemoteSubscriptionScreen() throws Exception {
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Unique user remote subscription [ScreenShare + Audio]");
 
@@ -324,14 +299,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("Video was expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
-		gracefullyLeaveParticipants(1);
+		gracefullyLeaveParticipants(user, 1);
 	}
 
 	@Test
 	@DisplayName("Many2Many [Video + Audio]")
 	void manyToManyVideoAudioSession() throws Exception {
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Many2Many [Video + Audio]");
 
@@ -352,7 +327,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
-		gracefullyLeaveParticipants(4);
+		gracefullyLeaveParticipants(user, 4);
 	}
 
 	@Test
@@ -370,89 +345,67 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			}
 		};
 
-		final CountDownLatch latch = new CountDownLatch(2);
+		final CountDownLatch latch = new CountDownLatch(4);
 
-		Thread threadFirefox = new Thread(() -> {
-			MyUser user2 = new MyUser(new FirefoxUser("TestUser", 30, false));
-			otherUsers.add(user2);
-			user2.getDriver().get(APP_URL);
-			WebElement urlInput = user2.getDriver().findElement(By.id("openvidu-url"));
-			urlInput.clear();
-			urlInput.sendKeys(OPENVIDU_URL);
-			WebElement secretInput = user2.getDriver().findElement(By.id("openvidu-secret"));
-			secretInput.clear();
-			secretInput.sendKeys(OPENVIDU_SECRET);
+		final BiFunction<MyUser, String, Void> browserTest = (user, browserName) -> {
 
-			user2.getEventManager().startPolling();
-
-			user2.getDriver().findElement(By.id("add-user-btn")).click();
-			user2.getDriver().findElement(By.className("join-btn")).click();
-			try {
-				user2.getEventManager().waitUntilEventReaches("connectionCreated", 2);
-				user2.getEventManager().waitUntilEventReaches("accessAllowed", 1);
-				user2.getEventManager().waitUntilEventReaches("streamCreated", 2);
-				user2.getEventManager().waitUntilEventReaches("streamPlaying", 2);
-
-				final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-				Assert.assertEquals("Wrong number of videos", 2, numberOfVideos);
-				Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
-						.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
-
-				latch.countDown();
-				if (!latch.await(30, TimeUnit.SECONDS)) {
-					Assert.fail("The other browser didn't play the stream within the timeout");
-				}
-
-				user2.getEventManager().waitUntilEventReaches("streamDestroyed", 1);
-				user2.getEventManager().waitUntilEventReaches("connectionDestroyed", 1);
-				user2.getDriver().findElement(By.id("remove-user-btn")).click();
-				user2.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
-			} catch (Exception e) {
-				e.printStackTrace();
-				Thread.currentThread().interrupt();
-				Assert.fail("Exception on Firefox participant: " + e.getMessage());
-			} finally {
-				user2.dispose();
-			}
-		});
-
-		Thread threadChrome = new Thread(() -> {
-			setupBrowser("chrome");
 			user.getDriver().findElement(By.id("add-user-btn")).click();
 			user.getDriver().findElement(By.className("join-btn")).click();
 
 			try {
-				user.getEventManager().waitUntilEventReaches("connectionCreated", 2);
+				user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
 				user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
-				user.getEventManager().waitUntilEventReaches("streamCreated", 2);
-				user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+				user.getEventManager().waitUntilEventReaches("streamCreated", 4);
+				user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
 				final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-				Assert.assertEquals("Wrong number of videos", 2, numberOfVideos);
+				Assert.assertEquals("Wrong number of videos", 4, numberOfVideos);
 				Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 						.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 				latch.countDown();
-				if (!latch.await(30, TimeUnit.SECONDS)) {
-					Assert.fail("The other browser didn't play the stream within the timeout");
+				if (!latch.await(60, TimeUnit.SECONDS)) {
+					Assert.fail("Other browser didn't play the stream within the timeout");
 				}
 
-				gracefullyLeaveParticipants(1);
+				user.getDriver().findElement(By.id("remove-user-btn")).click();
+				user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
+
 			} catch (Exception e) {
 				e.printStackTrace();
-				Assert.fail("Exception on Chrome participant: " + e.getMessage());
 				Thread.currentThread().interrupt();
+				Assert.fail("Exception on " + browserName + " participant: " + e.getMessage());
 			} finally {
 				user.dispose();
 			}
+			return null;
+		};
+
+		Thread threadChrome = new Thread(() -> {
+			browserTest.apply(setupBrowser("chrome"), "Chrome");
+		});
+		Thread threadFirefox = new Thread(() -> {
+			browserTest.apply(setupBrowser("firefox"), "Firefox");
+		});
+		Thread threadOpera = new Thread(() -> {
+			browserTest.apply(setupBrowser("opera"), "Opera");
+		});
+		Thread threadEdge = new Thread(() -> {
+			browserTest.apply(setupBrowser("edge"), "Edge");
 		});
 
-		threadFirefox.setUncaughtExceptionHandler(h);
 		threadChrome.setUncaughtExceptionHandler(h);
-		threadFirefox.start();
+		threadFirefox.setUncaughtExceptionHandler(h);
+		threadOpera.setUncaughtExceptionHandler(h);
+		threadEdge.setUncaughtExceptionHandler(h);
 		threadChrome.start();
-		threadFirefox.join();
+		threadFirefox.start();
+		threadOpera.start();
+		threadEdge.start();
 		threadChrome.join();
+		threadFirefox.join();
+		threadOpera.join();
+		threadEdge.join();
 
 		synchronized (lock) {
 			if (OpenViduTestAppE2eTest.ex != null) {
@@ -465,7 +418,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Signal message")
 	void oneToManySignalMessage() throws Exception {
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Signal message");
 
@@ -481,14 +434,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElements(By.className(("message-btn"))).get(0).click();
 		user.getEventManager().waitUntilEventReaches("signal:chat", 4);
 
-		gracefullyLeaveParticipants(4);
+		gracefullyLeaveParticipants(user, 4);
 	}
 
 	@Test
 	@DisplayName("ExceptionEvent test")
 	void exceptionEventTest() throws Exception {
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("ExceptionEvent test");
 
@@ -501,7 +454,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		// Stop video track
 		WebElement video = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video"));
-		this.user.getEventManager().stopVideoTracksOfVideoElement(video, "#openvidu-instance-0");
+		user.getEventManager().stopVideoTracksOfVideoElement(video, "#openvidu-instance-0");
 
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publish-checkbox")).click();
@@ -513,14 +466,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				.findElement(By.cssSelector("#openvidu-instance-1 .mat-expansion-panel:last-child .event-content"))
 				.getAttribute("textContent").equals("NO_STREAM_PLAYING_EVENT"));
 
-		gracefullyLeaveParticipants(2);
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
 	@DisplayName("Subscribe Unsubscribe")
 	void subscribeUnsubscribeTest() throws Exception {
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Subscribe Unsubscribe");
 
@@ -581,14 +534,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("Subscriber video was expected to have audio and video tracks",
 				user.getEventManager().assertMediaTracks(firstVideo, true, true));
 
-		gracefullyLeaveParticipants(2);
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
 	@DisplayName("Publish Unpublish")
 	void publishUnpublishTest() throws Exception {
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Publisher unpublish");
 
@@ -627,7 +580,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
-		gracefullyLeaveParticipants(2);
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
@@ -636,7 +589,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		Queue<Boolean> threadAssertions = new ConcurrentLinkedQueue<Boolean>();
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Change publisher dynamically");
 
@@ -664,7 +617,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
 		if (!latch1.await(5000, TimeUnit.MILLISECONDS)) {
-			gracefullyLeaveParticipants(2);
+			gracefullyLeaveParticipants(user, 2);
 			fail("Waiting for 2 streamPlaying events to happen in total");
 			return;
 		}
@@ -698,7 +651,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
 		if (!latch2.await(5000, TimeUnit.MILLISECONDS)) {
-			gracefullyLeaveParticipants(2);
+			gracefullyLeaveParticipants(user, 2);
 			fail("Waiting for 4 streamPlaying events to happen in total");
 			return;
 		}
@@ -731,7 +684,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 6);
 
 		if (!latch3.await(8000, TimeUnit.MILLISECONDS)) {
-			gracefullyLeaveParticipants(2);
+			gracefullyLeaveParticipants(user, 2);
 			fail("Waiting for 6 streamPlaying events to happen in total");
 			return;
 		}
@@ -748,14 +701,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
-		gracefullyLeaveParticipants(2);
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
 	@DisplayName("Moderator capabilities")
 	void moderatorCapabilitiesTest() throws Exception {
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Moderator capabilities");
 
@@ -815,7 +768,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 0));
 
-		gracefullyLeaveParticipants(3);
+		gracefullyLeaveParticipants(user, 3);
 	}
 
 	@Test
@@ -824,7 +777,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		Queue<Boolean> threadAssertions = new ConcurrentLinkedQueue<Boolean>();
 
-		setupBrowser("chromeAlternateScreenShare");
+		MyUser user = setupBrowser("chromeAlternateScreenShare");
 
 		log.info("Stream property changed event");
 
@@ -868,7 +821,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);
 
 		if (!latch1.await(4000, TimeUnit.MILLISECONDS)) {
-			gracefullyLeaveParticipants(2);
+			gracefullyLeaveParticipants(user, 2);
 			fail();
 			return;
 		}
@@ -893,7 +846,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 4);
 
 		if (!latch2.await(4000, TimeUnit.MILLISECONDS)) {
-			gracefullyLeaveParticipants(2);
+			gracefullyLeaveParticipants(user, 2);
 			fail();
 			return;
 		}
@@ -937,14 +890,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
 
 		if (!latch3.await(4000, TimeUnit.MILLISECONDS)) {
-			gracefullyLeaveParticipants(2);
+			gracefullyLeaveParticipants(user, 2);
 			fail();
 			return;
 		}
 
 		user.getEventManager().off("streamPropertyChanged");
 
-		gracefullyLeaveParticipants(2);
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
@@ -954,7 +907,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		Queue<Boolean> threadAssertions = new ConcurrentLinkedQueue<Boolean>();
 
-		setupBrowser("chromeAlternateScreenShare");
+		MyUser user = setupBrowser("chromeAlternateScreenShare");
 
 		log.info("Stream property changed event");
 
@@ -1002,7 +955,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);
 
 		if (!latch3.await(4000, TimeUnit.MILLISECONDS)) {
-			gracefullyLeaveParticipants(2);
+			gracefullyLeaveParticipants(user, 2);
 			fail();
 			return;
 		}
@@ -1014,14 +967,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			iter.remove();
 		}
 
-		gracefullyLeaveParticipants(2);
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
 	@DisplayName("Local browser record")
 	void localBrowserRecordTest() throws Exception {
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Local browser record");
 
@@ -1071,7 +1024,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.cssSelector("#recorder-preview video"), 0));
 
-		gracefullyLeaveParticipants(1);
+		gracefullyLeaveParticipants(user, 1);
 	}
 
 	@Test
@@ -1079,7 +1032,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void composedRecordTest() throws Exception {
 		isRecordingTest = true;
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Composed record");
 
@@ -1101,7 +1054,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
 
-		listEmptyRecordings();
+		listEmptyRecordings(user);
 
 		// Try to stop a non-existing recording
 		user.getDriver().findElement(By.id("recording-id-field")).sendKeys("FAIL");
@@ -1109,14 +1062,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
 
-		listEmptyRecordings();
+		listEmptyRecordings(user);
 
 		// Try to get a non-existing recording
 		user.getDriver().findElement(By.id("get-recording-btn")).click();
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
 
-		listEmptyRecordings();
+		listEmptyRecordings(user);
 
 		// Try to delete a non-existing recording
 		user.getDriver().findElement(By.id("get-recording-btn")).click();
@@ -1231,7 +1184,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
 
-		gracefullyLeaveParticipants(1);
+		gracefullyLeaveParticipants(user, 1);
 	}
 
 	@Test
@@ -1239,7 +1192,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void composedQuickStartRecordTest() throws Exception {
 		isRecordingTest = true;
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Composed quick start record");
 
@@ -1414,7 +1367,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void individualRecordTest() throws Exception {
 		isRecordingTest = true;
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Individual record");
 
@@ -1516,7 +1469,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
 
-		gracefullyLeaveParticipants(2);
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
@@ -1524,7 +1477,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void audioOnlyVideoOnlyRecordTest() throws Exception {
 		isRecordingTest = true;
 
-		setupBrowser("chromeAlternateScreenShare");
+		MyUser user = setupBrowser("chromeAlternateScreenShare");
 
 		log.info("Record cross-browser audio-only and video-only");
 
@@ -1544,8 +1497,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		};
 
 		Thread t = new Thread(() -> {
-			MyUser user2 = new MyUser(new FirefoxUser("FirefoxUser", 30, false));
-			otherUsers.add(user2);
+			MyUser user2 = setupBrowser("firefox");
 			user2.getDriver().get(APP_URL);
 			WebElement urlInput = user2.getDriver().findElement(By.id("openvidu-url"));
 			urlInput.clear();
@@ -1708,7 +1660,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
 
-		gracefullyLeaveParticipants(2);
+		gracefullyLeaveParticipants(user, 2);
 
 		t.join();
 
@@ -1725,7 +1677,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void audioOnlyComposedRecordTest() throws Exception {
 		isRecordingTest = true;
 
-		setupBrowser("chromeAlternateScreenShare");
+		MyUser user = setupBrowser("chromeAlternateScreenShare");
 
 		log.info("Record audio-only COMPOSED");
 
@@ -1790,7 +1742,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
 
-		gracefullyLeaveParticipants(3);
+		gracefullyLeaveParticipants(user, 3);
 	}
 
 	@Test
@@ -1798,7 +1750,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void customLayoutRecordTest() throws Exception {
 		isRecordingTest = true;
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Custom layout recording");
 
@@ -1919,7 +1871,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("REST API: Fetch all, fetch one, force disconnect, force unpublish, close session")
 	void restApiFetchForce() throws Exception {
-		setupBrowser("chrome");
+
+		MyUser user = setupBrowser("chrome");
 
 		log.info("REST API: Fetch all, fetch one, force disconnect, force unpublish, close session");
 
@@ -2027,7 +1980,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
 
-		gracefullyLeaveParticipants(1);
+		gracefullyLeaveParticipants(user, 1);
 
 	}
 
@@ -2036,7 +1989,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Video filter test")
 	void videoFilterTest() throws Exception {
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Video filter test");
 
@@ -2172,7 +2125,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
 
-		gracefullyLeaveParticipants(2);
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
@@ -2180,7 +2133,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Video filter events test")
 	void videoFilterEventsTest() throws Exception {
 
-		setupChromeWithFakeVideo(Paths.get("/opt/openvidu/barcode.y4m"));
+		MyUser user = setupChromeWithFakeVideo("/opt/openvidu/barcode.y4m");
 
 		log.info("Video filter events test");
 
@@ -2259,8 +2212,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			// listener has not worked fine
 			user.getEventManager().waitUntilEventReaches("CodeFound", 1, 3, false);
 			Assert.fail("'filterEvent' was received. Filter.removeEventListener() failed");
-		} catch (Exception e) {
-			System.out.println("Filter event removal worked fine");
+		} catch (TimeoutException e) {
+			log.info("Filter event removal worked fine");
 		}
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
@@ -2297,7 +2250,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			System.out.println("Filter removal worked fine");
 		}
 
-		gracefullyLeaveParticipants(2);
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
@@ -2305,7 +2258,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void openViduJavaClientTest() throws Exception {
 		isRecordingTest = true;
 
-		setupBrowser("chromeAlternateScreenShare");
+		MyUser user = setupBrowser("chromeAlternateScreenShare");
 
 		user.getDriver().manage().window().setSize(new Dimension(1000, 800));
 
@@ -3043,7 +2996,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				HttpStatus.SC_NO_CONTENT);
 
 		// Start session
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
 		Thread.sleep(1000);
@@ -3419,7 +3372,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				return;
 			}
 
-			setupBrowser("chrome");
+			MyUser user = setupBrowser("chrome");
 
 			// TOTAL DISCONNECTION
 			// Session should be destroyed with reason nodeCrashed
@@ -3524,7 +3477,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				return;
 			}
 
-			setupBrowser("chrome");
+			MyUser user = setupBrowser("chrome");
 
 			// TOTAL DISCONNECTION
 			// Streams, Connections and Session should be destroyed with reason
@@ -3569,7 +3522,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 			user.getEventManager().waitUntilEventReaches("sessionDisconnected", 2);
 			if (!latch.await(6000, TimeUnit.MILLISECONDS)) {
-				gracefullyLeaveParticipants(2);
+				gracefullyLeaveParticipants(user, 2);
 				fail("Waiting for 2 sessionDisconnected events with reason 'nodeCrashed' to happen in total");
 				return;
 			}
@@ -3654,7 +3607,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 			user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
 			if (!latch2.await(6000, TimeUnit.MILLISECONDS)) {
-				gracefullyLeaveParticipants(2);
+				gracefullyLeaveParticipants(user, 2);
 				fail("Waiting for 2 recordingStopped and 2 streamDestroyed events with reason 'mediaServerReconnect' to happen in total");
 				return;
 			}
@@ -3698,7 +3651,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void webhookTest() throws Exception {
 		isRecordingTest = true;
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Webhook test");
 
@@ -3873,7 +3826,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void webhookFilterEventTest() throws Exception {
 		isRecordingTest = true;
 
-		setupChromeWithFakeVideo(Paths.get("/opt/openvidu/barcode.y4m"));
+		MyUser user = setupChromeWithFakeVideo("/opt/openvidu/barcode.y4m");
 
 		log.info("Webhook test");
 
@@ -4030,7 +3983,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 					response.get("reason").getAsString());
 			CustomWebhook.waitForEvent("sessionDestroyed", 1);
 
-			setupBrowser("chrome");
+			MyUser user = setupBrowser("chrome");
 
 			// Record a session to get an MP4 file
 
@@ -4215,7 +4168,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void openviduSdkFetchTest() throws Exception {
 		isRecordingTest = true;
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("OpenVidu SDK fetch test");
 
@@ -4225,8 +4178,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		Session session = OV.createSession();
 		Assert.assertFalse("Java fetch should be false", OV.fetch());
-		checkNodeFetchChanged(true, true);
-		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(user, true, true);
+		checkNodeFetchChanged(user, true, false);
 
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", "{'customSessionId':'REST_SESSION'}",
@@ -4234,14 +4187,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("Java fetch should be true", OV.fetch());
 		Assert.assertFalse("Java fetch should be false", OV.fetch());
 		Assert.assertFalse("Java fetch should be false", session.fetch());
-		checkNodeFetchChanged(true, true);
-		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(user, true, true);
+		checkNodeFetchChanged(user, true, false);
 
 		Connection connection = session.createConnection();
 		Assert.assertFalse("Java fetch should be false", session.fetch());
 		Assert.assertFalse("Java fetch should be false", OV.fetch());
-		checkNodeFetchChanged(true, true);
-		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(user, true, true);
+		checkNodeFetchChanged(user, true, false);
 
 		// OpenVidu CE does not support Session#updateConnection method
 		try {
@@ -4256,15 +4209,15 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", "{'session':'REST_SESSION'}", HttpStatus.SC_OK);
 		Assert.assertFalse("Fetch should be true", session.fetch());
 		Assert.assertTrue("Fetch should be false", OV.fetch());
-		checkNodeFetchChanged(true, true);
-		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(user, true, true);
+		checkNodeFetchChanged(user, true, false);
 
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/REST_SESSION", HttpStatus.SC_NO_CONTENT);
 		Assert.assertFalse("Java fetch should be true", session.fetch());
 		Assert.assertTrue("Java fetch should be true", OV.fetch());
 		Assert.assertFalse("Java fetch should be false", OV.fetch());
-		checkNodeFetchChanged(true, true);
-		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(user, true, true);
+		checkNodeFetchChanged(user, true, false);
 
 		// Set token and join session
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
@@ -4288,9 +4241,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		Assert.assertTrue("Java fetch should be true", OV.fetch());
 		Assert.assertFalse("Java fetch should be false", session.fetch());
-		checkNodeFetchChanged(false, true);
-		checkNodeFetchChanged(true, false);
-		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(user, false, true);
+		checkNodeFetchChanged(user, true, false);
+		checkNodeFetchChanged(user, true, false);
 
 		// Modify connection properties
 		user.getDriver().findElement(By.id("record-checkbox")).click();
@@ -4344,9 +4297,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		Assert.assertTrue("Java fetch should be true", session.fetch());
 		Assert.assertFalse("Java fetch should be false", OV.fetch());
-		checkNodeFetchChanged(true, false);
-		checkNodeFetchChanged(false, false);
-		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(user, true, false);
+		checkNodeFetchChanged(user, false, false);
+		checkNodeFetchChanged(user, true, false);
 
 		// Delete Connection with openvidu-node-client
 		user.getDriver().findElement(By.id("connection-id-field")).clear();
@@ -4356,9 +4309,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "User disconnected"));
 		Assert.assertTrue("Java fetch should be true", OV.fetch());
 		Assert.assertFalse("Java fetch should be false", session.fetch());
-		checkNodeFetchChanged(false, false);
-		checkNodeFetchChanged(true, false);
-		checkNodeFetchChanged(false, false);
+		checkNodeFetchChanged(user, false, false);
+		checkNodeFetchChanged(user, true, false);
+		checkNodeFetchChanged(user, false, false);
 
 		// RECORD
 		user.getDriver().findElement(By.id("rec-properties-btn")).click();
@@ -4372,9 +4325,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
 
 		// Node SDK should return false as the recording has been started with it
-		checkNodeFetchChanged(false, false);
-		checkNodeFetchChanged(true, false);
-		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(user, false, false);
+		checkNodeFetchChanged(user, true, false);
+		checkNodeFetchChanged(user, true, false);
 		// Java SDK should return true as it doesn't know about the recording yet
 		Assert.assertTrue("Java fetch should be true", session.fetch());
 		Assert.assertFalse("Java fetch should be false", OV.fetch());
@@ -4385,9 +4338,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertFalse("Java fetch should be false", session.fetch());
 		Assert.assertFalse("Java fetch should be false", OV.fetch());
 		// Node SDK should return true as it doesn't know about the recording stooped
-		checkNodeFetchChanged(false, true);
-		checkNodeFetchChanged(false, false);
-		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(user, false, true);
+		checkNodeFetchChanged(user, false, false);
+		checkNodeFetchChanged(user, true, false);
 
 		// NEW SUBSCRIBER
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
@@ -4403,9 +4356,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 		Assert.assertTrue("Java fetch should be true", OV.fetch());
 		Assert.assertFalse("Java fetch should be false", session.fetch());
-		checkNodeFetchChanged(true, true);
-		checkNodeFetchChanged(true, false);
-		checkNodeFetchChanged(false, false);
+		checkNodeFetchChanged(user, true, true);
+		checkNodeFetchChanged(user, true, false);
+		checkNodeFetchChanged(user, false, false);
 
 		// MODIFY STREAM
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
@@ -4416,9 +4369,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 		Assert.assertTrue("Java fetch should be true", session.fetch());
 		Assert.assertFalse("Java fetch should be false", OV.fetch());
-		checkNodeFetchChanged(false, true);
-		checkNodeFetchChanged(true, false);
-		checkNodeFetchChanged(false, false);
+		checkNodeFetchChanged(user, false, true);
+		checkNodeFetchChanged(user, true, false);
+		checkNodeFetchChanged(user, false, false);
 
 		// REMOVE STREAM
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
@@ -4428,9 +4381,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 		Assert.assertTrue("Java fetch should be true", OV.fetch());
 		Assert.assertFalse("Java fetch should be false", session.fetch());
-		checkNodeFetchChanged(true, true);
-		checkNodeFetchChanged(true, false);
-		checkNodeFetchChanged(false, false);
+		checkNodeFetchChanged(user, true, true);
+		checkNodeFetchChanged(user, true, false);
+		checkNodeFetchChanged(user, false, false);
 
 		// REMOVE USER
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
@@ -4441,9 +4394,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 		Assert.assertTrue("Java fetch should be true", session.fetch());
 		Assert.assertFalse("Java fetch should be false", OV.fetch());
-		checkNodeFetchChanged(false, true);
-		checkNodeFetchChanged(false, false);
-		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(user, false, true);
+		checkNodeFetchChanged(user, false, false);
+		checkNodeFetchChanged(user, true, false);
 	}
 
 	@Test
@@ -4451,8 +4404,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Force codec default config")
 	void forceDefaultCodec() throws Exception {
 		log.info("Force codec default config");
-		setupBrowser("chrome");
-		this.forceCodecGenericE2eTest();
+		MyUser user = setupBrowser("chrome");
+		this.forceCodecGenericE2eTest(user);
 	}
 
 	@Test
@@ -4460,9 +4413,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Force valid codec VP8 - Not Allow Transcoding")
 	void forceValidCodecNotAllowTranscodingVP8Test() throws Exception {
 		log.info("Force codec Chrome - Force VP8 - Not Allow Transcoding");
-		setupBrowser("chrome");
-		this.forceCodecGenericE2eTest(VideoCodec.VP8, false);
-		this.user.getDriver().close();
+		MyUser user = setupBrowser("chrome");
+		this.forceCodecGenericE2eTest(user, VideoCodec.VP8, false);
+		user.getDriver().close();
 	}
 
 	@Test
@@ -4470,9 +4423,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Force valid codec H264 - Not Allow Transcoding")
 	void forceValidCodecNotAllowTranscodingH264Test() throws Exception {
 		log.info("Force codec Chrome - Force H264 - Not Allow Transcoding");
-		setupBrowser("chrome");
-		this.forceCodecGenericE2eTest(VideoCodec.H264, false);
-		this.user.getDriver().close();
+		MyUser user = setupBrowser("chrome");
+		this.forceCodecGenericE2eTest(user, VideoCodec.H264, false);
+		user.getDriver().close();
 	}
 
 	@Test
@@ -4480,9 +4433,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Force valid codec VP8 - Allow Transcoding")
 	void forceValidCodecAllowTranscodingVP8Test() throws Exception {
 		log.info("Force codec Chrome - Force VP8 - Allow Transcoding");
-		setupBrowser("chrome");
-		this.forceCodecGenericE2eTest(VideoCodec.VP8, true);
-		this.user.getDriver().close();
+		MyUser user = setupBrowser("chrome");
+		this.forceCodecGenericE2eTest(user, VideoCodec.VP8, true);
+		user.getDriver().close();
 	}
 
 	@Test
@@ -4490,9 +4443,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Force valid codec H264 - Allow Transcoding")
 	void forceValidCodecAllowTranscodingH264Test() throws Exception {
 		log.info("Force codec Chrome - Force H264 - Allow Transcoding");
-		setupBrowser("chrome");
-		this.forceCodecGenericE2eTest(VideoCodec.H264, true);
-		this.user.getDriver().close();
+		MyUser user = setupBrowser("chrome");
+		this.forceCodecGenericE2eTest(user, VideoCodec.H264, true);
+		user.getDriver().close();
 	}
 
 	@Test
@@ -4501,20 +4454,20 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void forceCodecNotValidCodecNotAllowTranscoding() throws Exception {
 		// Start firefox with OpenH264 disabled to check not supported codecs
 		log.info("Force codec Firefox - Force H264 - Allow Transcoding - Disabled H264 in Firefox");
-		setupBrowser("firefoxDisabledOpenH264");
-		this.forceNotSupportedCodec(VideoCodec.H264, false);
+		MyUser user = setupBrowser("firefoxDisabledOpenH264");
+		this.forceNotSupportedCodec(user, VideoCodec.H264, false);
 	}
 
 	@Test
 	@DisplayName("Force not valid codec - Allow Transcoding")
 	void forceCodecNotValidCodecAllowTranscoding() throws Exception {
 		// Start firefox with OpenH264 disabled to check not supported codecs
-		setupBrowser("firefoxDisabledOpenH264");
+		MyUser user = setupBrowser("firefoxDisabledOpenH264");
 		log.info("Force codec Firefox - Force H264 - Allow Transcoding - Disabled H264 in Firefox");
-		this.forceNotSupportedCodec(VideoCodec.H264, true);
+		this.forceNotSupportedCodec(user, VideoCodec.H264, true);
 	}
 
-	private void checkNodeFetchChanged(boolean global, boolean hasChanged) {
+	private void checkNodeFetchChanged(MyUser user, boolean global, boolean hasChanged) {
 		user.getDriver().findElement(By.id(global ? "list-sessions-btn" : "get-session-btn")).click();
 		user.getWaiter().until(new NodeFetchHasChanged(hasChanged));
 	}
@@ -4537,8 +4490,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	/**
 	 * Test default config of forced codec and allowTranscoding
 	 */
-	private void forceCodecGenericE2eTest() throws Exception {
-		forceCodecGenericE2eTest(null, null);
+	private void forceCodecGenericE2eTest(MyUser user) throws Exception {
+		forceCodecGenericE2eTest(user, null, null);
 	}
 
 	/**
@@ -4549,7 +4502,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	 * @param allowTranscoding If true, allow transcoding. If null, default value in
 	 *                         openvidu config will be used.
 	 */
-	private void forceCodecGenericE2eTest(VideoCodec codec, Boolean allowTranscoding) throws Exception {
+	private void forceCodecGenericE2eTest(MyUser user, VideoCodec codec, Boolean allowTranscoding) throws Exception {
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 		String sessionName = "CUSTOM_SESSION_" + ((codec != null) ? codec.name() : "DEFAULT_FORCE_CODEC");
 
@@ -4639,7 +4592,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	 * 
 	 * @throws Exception
 	 */
-	private void forceNotSupportedCodec(VideoCodec codec, boolean allowTranscoding) throws Exception {
+	private void forceNotSupportedCodec(MyUser user, VideoCodec codec, boolean allowTranscoding) throws Exception {
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
 		String sessionName = "CUSTOM_SESSION_CODEC_NOT_SUPPORTED";

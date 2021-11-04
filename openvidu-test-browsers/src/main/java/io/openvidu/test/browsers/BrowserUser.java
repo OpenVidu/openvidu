@@ -56,11 +56,11 @@ public class BrowserUser {
 	}
 
 	protected void newWaiter(int timeOfWait) {
-		this.waiter = new WebDriverWait(this.driver, timeOfWait);
+		this.waiter = new WebDriverWait(this.driver, Duration.ofSeconds(timeOfWait));
 	}
 
 	protected void configureDriver() {
-		this.waiter = new WebDriverWait(this.driver, this.timeOfWaitInSeconds);
+		this.waiter = new WebDriverWait(this.driver, Duration.ofSeconds(timeOfWaitInSeconds));
 		this.driver.manage().window().setSize(new org.openqa.selenium.Dimension(1920, 1080));
 	}
 

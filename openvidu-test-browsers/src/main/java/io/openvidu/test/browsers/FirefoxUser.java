@@ -19,13 +19,13 @@ package io.openvidu.test.browsers;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
 
 import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.remote.CapabilityType;
-import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class FirefoxUser extends BrowserUser {
@@ -33,9 +33,14 @@ public class FirefoxUser extends BrowserUser {
 	public FirefoxUser(String userName, int timeOfWaitInSeconds, boolean disableOpenH264) {
 		super(userName, timeOfWaitInSeconds);
 
-		DesiredCapabilities capabilities = DesiredCapabilities.firefox();
-		capabilities.setAcceptInsecureCerts(true);
-		capabilities.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, UnexpectedAlertBehaviour.IGNORE);
+		FirefoxOptions options = new FirefoxOptions();
+
+		options.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, UnexpectedAlertBehaviour.IGNORE);
+		options.setAcceptInsecureCerts(true);
+		options.addArguments("allow-file-access-from-files");
+		options.addArguments("use-fake-device-for-media-stream");
+		options.addArguments("use-fake-ui-for-media-stream");
+
 		FirefoxProfile profile = new FirefoxProfile();
 
 		// This flag avoids granting the access to the camera
@@ -47,21 +52,22 @@ public class FirefoxUser extends BrowserUser {
 			profile.setPreference("media.gmp-gmpopenh264.enabled", false);
 		}
 
-		capabilities.setCapability(FirefoxDriver.PROFILE, profile);
+		options.setCapability(FirefoxDriver.Capability.PROFILE, profile);
 
 		String REMOTE_URL = System.getProperty("REMOTE_URL_FIREFOX");
 		if (REMOTE_URL != null) {
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {
-				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), capabilities);
+				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), options);
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 			}
 		} else {
 			log.info("Using local web driver");
-			this.driver = new FirefoxDriver(new FirefoxOptions(capabilities));
+			this.driver = new FirefoxDriver(options);
 		}
 
+		this.driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(timeOfWaitInSeconds));
 		this.configureDriver();
 	}
 

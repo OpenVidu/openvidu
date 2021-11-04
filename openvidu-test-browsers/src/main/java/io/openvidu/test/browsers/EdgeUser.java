@@ -5,17 +5,17 @@ import java.net.URL;
 import java.time.Duration;
 
 import org.openqa.selenium.UnexpectedAlertBehaviour;
-import org.openqa.selenium.opera.OperaDriver;
-import org.openqa.selenium.opera.OperaOptions;
+import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
-public class OperaUser extends BrowserUser {
+public class EdgeUser extends BrowserUser {
 
-	public OperaUser(String userName, int timeOfWaitInSeconds) {
+	public EdgeUser(String userName, int timeOfWaitInSeconds) {
 		super(userName, timeOfWaitInSeconds);
 
-		OperaOptions options = new OperaOptions();
+		EdgeOptions options = new EdgeOptions();
 
 		options.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, UnexpectedAlertBehaviour.IGNORE);
 		options.setAcceptInsecureCerts(true);
@@ -23,7 +23,7 @@ public class OperaUser extends BrowserUser {
 		options.addArguments("use-fake-device-for-media-stream");
 		options.addArguments("use-fake-ui-for-media-stream");
 
-		String REMOTE_URL = System.getProperty("REMOTE_URL_OPERA");
+		String REMOTE_URL = System.getProperty("REMOTE_URL_EDGE");
 		if (REMOTE_URL != null) {
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {
@@ -33,7 +33,7 @@ public class OperaUser extends BrowserUser {
 			}
 		} else {
 			log.info("Using local web driver");
-			this.driver = new OperaDriver(options);
+			this.driver = new EdgeDriver(options);
 		}
 
 		this.driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(timeOfWaitInSeconds));

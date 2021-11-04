@@ -46,6 +46,9 @@ def prepareTestingEnvironment() {
         'Pull selenium/standalone-opera': {
             docker.image('selenium/standalone-opera:latest').pull()
         },
+        'Pull selenium/standalone-edge': {
+            docker.image('selenium/standalone-edge:latest').pull()
+        },
         'Pull openvidu/mediasoup-controller': {
             if (env.MEDIASOUP_CONTROLLER_VERSION) {
                 docker.image("openvidu/mediasoup-controller:${MEDIASOUP_CONTROLLER_VERSION}").pull()
@@ -92,6 +95,7 @@ def removeStrandedContainers(removeTestingContainers) {
             declare -a arr=("selenium/standalone-chrome:"
                             "selenium/standalone-firefox:"
                             "selenium/standalone-opera:"
+                            "selenium/standalone-edge:"
                             "openvidu/mediasoup-controller:"
                             "openvidu/openvidu-server-pro:"
                             "openvidu/openvidu-redis:"

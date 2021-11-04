@@ -54,7 +54,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	protected static void setupAll() {
 		checkFfmpegInstallation();
 		loadEnvironmentVariables();
-		setupBrowserDrivers();
+		prepareBrowsers();
 		cleanFoldersAndSetUpOpenViduJavaClient();
 	}
 
@@ -86,7 +86,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void individualDynamicRecordTest() throws Exception {
 		isRecordingTest = true;
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		log.info("Individual dynamic record");
 
@@ -165,7 +165,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/" + sessionName, HttpStatus.SC_OK);
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 3);
 
-		gracefullyLeaveParticipants(3);
+		gracefullyLeaveParticipants(user, 3);
 
 		String recPath = "/opt/openvidu/recordings/" + sessionName + "/";
 		Recording recording = new OpenVidu(OpenViduTestAppE2eTest.OPENVIDU_URL, OpenViduTestAppE2eTest.OPENVIDU_SECRET)
@@ -307,7 +307,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertFalse("Wrong record Connection property", connection.record());
 		Assert.assertEquals("Wrong data Connection property", "MY_SERVER_PRO_DATA", connection.getServerData());
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
@@ -567,7 +567,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.POST, "/openvidu/api/restart", body, 200);
 		waitUntilOpenViduRestarted(30);
 
-		setupBrowser("chrome");
+		MyUser user = setupBrowser("chrome");
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.className("join-btn")).click();
 
@@ -602,7 +602,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("networkQualityLevelChanged", 2);
 
 		if (!latch1.await(30000, TimeUnit.MILLISECONDS)) {
-			gracefullyLeaveParticipants(1);
+			gracefullyLeaveParticipants(user, 1);
 			fail();
 			return;
 		}
@@ -622,7 +622,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				.findElement(By.cssSelector("#openvidu-instance-1 .mat-expansion-panel:last-child .event-content"))
 				.getAttribute("textContent").contains(connectionId));
 
-		gracefullyLeaveParticipants(1);
+		gracefullyLeaveParticipants(user, 1);
 	}
 
 	private void waitUntilOpenViduRestarted(int maxSecondsWait) throws Exception {

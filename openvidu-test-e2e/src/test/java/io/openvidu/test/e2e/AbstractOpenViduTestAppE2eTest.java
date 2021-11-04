@@ -7,16 +7,21 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.jupiter.api.AfterEach;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -27,6 +32,9 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.DockerImageName;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -38,15 +46,30 @@ import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduJavaClientException;
 import io.openvidu.java.client.VideoCodec;
 import io.openvidu.test.browsers.BrowserUser;
-import io.openvidu.test.browsers.ChromeAndroidUser;
 import io.openvidu.test.browsers.ChromeUser;
+import io.openvidu.test.browsers.EdgeUser;
 import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.OperaUser;
+import io.openvidu.test.browsers.utils.BrowserNames;
 import io.openvidu.test.browsers.utils.CommandLineExecutor;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.RecordingUtils;
 
 public class AbstractOpenViduTestAppE2eTest {
+
+	@ClassRule
+	public static GenericContainer<?> chrome;
+
+	@ClassRule
+	public static GenericContainer<?> firefox;
+
+	@ClassRule
+	public static GenericContainer<?> opera;
+
+	@ClassRule
+	public static GenericContainer<?> edge;
+
+	private Map<BrowserNames, Set<String>> webdriverVersions = new HashMap<>();
 
 	// Media server variables
 	final protected static String KURENTO_IMAGE = "kurento/kurento-media-server";
@@ -66,6 +89,16 @@ public class AbstractOpenViduTestAppE2eTest {
 	protected static String OPENVIDU_PRO_LICENSE = "not_valid";
 	protected static String OPENVIDU_PRO_LICENSE_API = "not_valid";
 	protected static String EXTERNAL_CUSTOM_LAYOUT_PARAMS = "sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET";
+
+	// https://hub.docker.com/r/selenium/standalone-chrome/tags
+	protected static String CHROME_VERSION = "latest";
+	// https://hub.docker.com/r/selenium/standalone-firefox/tags
+	protected static String FIREFOX_VERSION = "latest";
+	// https://hub.docker.com/r/selenium/standalone-opera/tags
+	protected static String OPERA_VERSION = "latest";
+	// https://hub.docker.com/r/selenium/standalone-edge/tags
+	protected static String EDGE_VERSION = "latest";
+
 	protected static Exception ex = null;
 	protected final Object lock = new Object();
 
@@ -73,8 +106,7 @@ public class AbstractOpenViduTestAppE2eTest {
 	protected static final CommandLineExecutor commandLine = new CommandLineExecutor();
 	protected static final String RECORDING_IMAGE = "openvidu/openvidu-recording";
 
-	protected MyUser user;
-	protected Collection<MyUser> otherUsers = new ArrayList<>();
+	private Collection<MyUser> users = new HashSet<>();
 	protected volatile static boolean isRecordingTest;
 	protected volatile static boolean isKurentoRestartTest;
 
@@ -96,10 +128,40 @@ public class AbstractOpenViduTestAppE2eTest {
 		}
 	}
 
-	protected static void setupBrowserDrivers() {
-		WebDriverManager.chromedriver().setup();
-		WebDriverManager.firefoxdriver().setup();
-		WebDriverManager.operadriver().setup();
+	@SuppressWarnings("resource")
+	protected static void prepareBrowsers() {
+		if (isRemote(BrowserNames.CHROME)) {
+			chrome = new GenericContainer<>(DockerImageName.parse("selenium/standalone-chrome:" + CHROME_VERSION))
+					.withSharedMemorySize(2147483648L).withFileSystemBind("/opt/openvidu", "/opt/openvidu");
+			chrome.setPortBindings(Arrays.asList("6666:4444"));
+			chrome.withExposedPorts(4444);
+		} else {
+			WebDriverManager.chromedriver().setup();
+		}
+		if (isRemote(BrowserNames.FIREFOX)) {
+			firefox = new GenericContainer<>(DockerImageName.parse("selenium/standalone-firefox:" + FIREFOX_VERSION))
+					.withSharedMemorySize(2147483648L).withFileSystemBind("/opt/openvidu", "/opt/openvidu");
+			firefox.setPortBindings(Arrays.asList("6667:4444"));
+			firefox.withExposedPorts(4444);
+		} else {
+			WebDriverManager.firefoxdriver().setup();
+		}
+		if (isRemote(BrowserNames.OPERA)) {
+			opera = new GenericContainer<>(DockerImageName.parse("selenium/standalone-opera:" + OPERA_VERSION))
+					.withSharedMemorySize(2147483648L).withFileSystemBind("/opt/openvidu", "/opt/openvidu");
+			opera.setPortBindings(Arrays.asList("6668:4444"));
+			opera.withExposedPorts(4444);
+		} else {
+			WebDriverManager.operadriver().setup();
+		}
+		if (isRemote(BrowserNames.EDGE)) {
+			edge = new GenericContainer<>(DockerImageName.parse("selenium/standalone-edge:" + EDGE_VERSION))
+					.withSharedMemorySize(2147483648L).withFileSystemBind("/opt/openvidu", "/opt/openvidu");
+			edge.setPortBindings(Arrays.asList("6669:4444"));
+			edge.withExposedPorts(4444);
+		} else {
+			WebDriverManager.edgedriver().setup();
+		}
 	}
 
 	protected static void cleanFoldersAndSetUpOpenViduJavaClient() {
@@ -179,39 +241,64 @@ public class AbstractOpenViduTestAppE2eTest {
 		if (openviduProLicenseApi != null) {
 			OPENVIDU_PRO_LICENSE_API = openviduProLicenseApi;
 		}
+
+		String chromeVersion = System.getProperty("CHROME_VERSION");
+		if (chromeVersion != null) {
+			CHROME_VERSION = chromeVersion;
+		}
+		String firefoxVersion = System.getProperty("FIREFOX_VERSION");
+		if (firefoxVersion != null) {
+			FIREFOX_VERSION = firefoxVersion;
+		}
+		String operaVersion = System.getProperty("OPERA_VERSION");
+		if (operaVersion != null) {
+			OPERA_VERSION = operaVersion;
+		}
+		String edgeVersion = System.getProperty("EDGE_VERSION");
+		if (edgeVersion != null) {
+			EDGE_VERSION = edgeVersion;
+		}
 	}
 
-	protected void setupBrowser(String browser) {
+	protected MyUser setupBrowser(String browser) {
 
 		BrowserUser browserUser;
 
 		switch (browser) {
 		case "chrome":
+			setupBrowserAux(BrowserNames.CHROME, CHROME_VERSION, chrome, WebDriverManager.chromedriver(), false);
 			browserUser = new ChromeUser("TestUser", 50, false);
 			break;
 		case "firefox":
+			setupBrowserAux(BrowserNames.FIREFOX, FIREFOX_VERSION, firefox, WebDriverManager.firefoxdriver(), false);
 			browserUser = new FirefoxUser("TestUser", 50, false);
 			break;
 		case "firefoxDisabledOpenH264":
+			setupBrowserAux(BrowserNames.FIREFOX, FIREFOX_VERSION, firefox, WebDriverManager.firefoxdriver(), false);
 			browserUser = new FirefoxUser("TestUser", 50, true);
 			break;
 		case "opera":
+			setupBrowserAux(BrowserNames.OPERA, OPERA_VERSION, opera, WebDriverManager.operadriver(), false);
 			browserUser = new OperaUser("TestUser", 50);
 			break;
-		case "chromeAndroid":
-			browserUser = new ChromeAndroidUser("TestUser", 50);
+		case "edge":
+			setupBrowserAux(BrowserNames.EDGE, EDGE_VERSION, edge, WebDriverManager.edgedriver(), false);
+			browserUser = new EdgeUser("TestUser", 50);
 			break;
 		case "chromeAlternateScreenShare":
+			setupBrowserAux(BrowserNames.CHROME, CHROME_VERSION, chrome, WebDriverManager.chromedriver(), false);
 			browserUser = new ChromeUser("TestUser", 50, "OpenVidu TestApp", false);
 			break;
 		case "chromeAsRoot":
+			setupBrowserAux(BrowserNames.CHROME, CHROME_VERSION, chrome, WebDriverManager.chromedriver(), false);
 			browserUser = new ChromeUser("TestUser", 50, true);
 			break;
 		default:
+			setupBrowserAux(BrowserNames.CHROME, CHROME_VERSION, chrome, WebDriverManager.chromedriver(), false);
 			browserUser = new ChromeUser("TestUser", 50, false);
 		}
 
-		this.user = new MyUser(browserUser);
+		MyUser user = new MyUser(browserUser);
 
 		user.getDriver().get(APP_URL);
 
@@ -223,10 +310,67 @@ public class AbstractOpenViduTestAppE2eTest {
 		secretInput.sendKeys(OPENVIDU_SECRET);
 
 		user.getEventManager().startPolling();
+
+		this.users.add(user);
+		return user;
 	}
 
-	protected void setupChromeWithFakeVideo(Path videoFileLocation) {
-		this.user = new MyUser(new ChromeUser("TestUser", 50, videoFileLocation));
+	private void setupBrowserAux(BrowserNames browser, String version, GenericContainer<?> container,
+			WebDriverManager webDriverManager, boolean forceRestart) {
+		if (isRemote(browser)) {
+			if (forceRestart && container.isRunning()) {
+				container.stop();
+			}
+			if (!container.isRunning()) {
+				container.start();
+				container.waitingFor(Wait.forHttp("/wd/hub/status").forStatusCode(200));
+			}
+			if (webdriverVersions.containsKey(browser)) {
+				// This browser has already been used
+				if (!webdriverVersions.get(browser).contains(version)) {
+					// This browser version has not been used yet
+					webdriverVersions.get(browser).add(version);
+					if ("latest".equals(version)) {
+						webDriverManager.setup();
+					} else {
+						webDriverManager.browserVersion(simplifiedBrowserVersion(version)).setup();
+					}
+				}
+			} else {
+				// This browser has not been used yet
+				Set<String> versions = new HashSet<>();
+				versions.add(version);
+				webdriverVersions.put(browser, versions);
+			}
+		}
+	}
+
+	private static boolean isRemote(BrowserNames browser) {
+		String remoteUrl = null;
+		switch (browser) {
+		case CHROME:
+			remoteUrl = System.getProperty("REMOTE_URL_CHROME");
+			break;
+		case FIREFOX:
+			remoteUrl = System.getProperty("REMOTE_URL_FIREFOX");
+			break;
+		case OPERA:
+			remoteUrl = System.getProperty("REMOTE_URL_OPERA");
+			break;
+		case EDGE:
+			remoteUrl = System.getProperty("REMOTE_URL_EDGE");
+			break;
+		}
+		return remoteUrl != null;
+	}
+
+	protected MyUser setupChromeWithFakeVideo(String absolutePathToVideoFile) {
+
+		if (isRemote(BrowserNames.CHROME)) {
+			setupBrowserAux(BrowserNames.CHROME, CHROME_VERSION, chrome, WebDriverManager.chromedriver(), true);
+		}
+
+		MyUser user = new MyUser(new ChromeUser("TestUser", 50, Paths.get(absolutePathToVideoFile)));
 		user.getDriver().get(APP_URL);
 		WebElement urlInput = user.getDriver().findElement(By.id("openvidu-url"));
 		urlInput.clear();
@@ -235,6 +379,8 @@ public class AbstractOpenViduTestAppE2eTest {
 		secretInput.clear();
 		secretInput.sendKeys(OPENVIDU_SECRET);
 		user.getEventManager().startPolling();
+		this.users.add(user);
+		return user;
 	}
 
 	protected static void getDefaultTranscodingValues() throws Exception {
@@ -246,15 +392,6 @@ public class AbstractOpenViduTestAppE2eTest {
 
 	@AfterEach
 	protected void dispose() {
-		if (user != null) {
-			user.dispose();
-		}
-		Iterator<MyUser> it = otherUsers.iterator();
-		while (it.hasNext()) {
-			MyUser other = it.next();
-			other.dispose();
-			it.remove();
-		}
 		this.closeAllSessions(OV);
 		if (isRecordingTest) {
 			deleteAllRecordings(OV);
@@ -264,6 +401,24 @@ public class AbstractOpenViduTestAppE2eTest {
 			this.stopMediaServer(false);
 			this.startMediaServer(true);
 			isKurentoRestartTest = false;
+		}
+		Iterator<MyUser> it = users.iterator();
+		while (it.hasNext()) {
+			MyUser u = it.next();
+			u.dispose();
+			it.remove();
+		}
+		if (chrome.isRunning()) {
+			chrome.stop();
+		}
+		if (firefox.isRunning()) {
+			firefox.stop();
+		}
+		if (opera.isRunning()) {
+			opera.stop();
+		}
+		if (edge.isRunning()) {
+			edge.stop();
 		}
 		OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
 	}
@@ -305,7 +460,7 @@ public class AbstractOpenViduTestAppE2eTest {
 		}
 	}
 
-	protected void listEmptyRecordings() {
+	protected void listEmptyRecordings(MyUser user) {
 		// List existing recordings (empty)
 		user.getDriver().findElement(By.id("list-recording-btn")).click();
 		user.getWaiter()
@@ -322,7 +477,7 @@ public class AbstractOpenViduTestAppE2eTest {
 		};
 	}
 
-	protected void gracefullyLeaveParticipants(int numberOfParticipants) throws Exception {
+	protected void gracefullyLeaveParticipants(MyUser user, int numberOfParticipants) throws Exception {
 		int accumulatedConnectionDestroyed = 0;
 		for (int j = 1; j <= numberOfParticipants; j++) {
 			user.getDriver().findElement(By.id("remove-user-btn")).sendKeys(Keys.ENTER);
@@ -469,6 +624,13 @@ public class AbstractOpenViduTestAppE2eTest {
 					+ (System.currentTimeMillis() - startTime) + " ms (last checked size was " + (bytes / 1024)
 					+ " KBs)");
 		}
+	}
+
+	private static String simplifiedBrowserVersion(String version) {
+		String[] v = version.split("\\.");
+		String firstNumber = v[0].split("-")[0];
+		log.info("Using version for webdriver {}", firstNumber);
+		return firstNumber;
 	}
 
 }

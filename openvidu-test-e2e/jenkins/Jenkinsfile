@@ -113,62 +113,52 @@ node('container') {
       '''.stripIndent())
     }
 
-    docker.image('selenium/standalone-chrome:latest').withRun('-p 6666:4444 --name chrome --shm-size=2g -v /opt/openvidu:/opt/openvidu') { a ->
-      docker.image('selenium/standalone-firefox:latest').withRun('-p 6667:4444 --name firefox --shm-size=2g') { b ->
-        docker.image('selenium/standalone-opera:latest').withRun('-p 6668:4444 --name opera --shm-size=2g') { c ->
-          // -----
-          // Kurento TESTS
-          // -----
-          stage ('Environment Launch Kurento') {
-            environmentLaunch('kurento')
-          }
-          try {
-            stage ('OpenVidu Kurento E2E tests') {
-              try {
-                openViduE2ETest("kurento/kurento-media-server:${KURENTO_MEDIA_SERVER_VERSION}")
-              } catch (err) {
-                // In case of error, fail the stage
-                sh 'exit 1'
-              } finally {
-                junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
-                archiveArtifacts artifacts: '**/openvidu-server-*.log'
-              }
-            }
-          } catch (error) {
-            echo 'Test failed'
-            currentBuild.result = 'FAILURE'
-          } finally {
-            // Kill all environment for next test
-            environmentStop()
-          }
-
-          // ----
-          // Mediasoup TESTS
-          // ----
-          stage ('Environment Launch Mediasoup') {
-            environmentLaunch('mediasoup')
-          }
-          try {
-            stage ('OpenVidu Mediasoup E2E tests') {
-              try {
-                openViduE2ETest("openvidu/mediasoup-controller:${MEDIASOUP_CONTROLLER_VERSION}")
-              } catch (err) {
-                // In case of error, fail the stage
-                sh 'exit 1'
-              } finally {
-                junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
-                archiveArtifacts artifacts: '**/openvidu-server-*.log'
-              }
-            }
-          } catch (error) {
-            echo 'Test failed'
-            currentBuild.result = 'FAILURE'
-          } finally {
-            environmentStop()
-            commonFunctions.removeStrandedContainers(false)
-          }
+    // Kurento tests
+    stage ('Environment Launch Kurento') {
+      environmentLaunch('kurento')
+    }
+    try {
+      stage ('OpenVidu Kurento E2E tests') {
+        try {
+          openViduE2ETest("kurento/kurento-media-server:${KURENTO_MEDIA_SERVER_VERSION}")
+        } catch (err) {
+          // In case of error, fail the stage
+          sh 'exit 1'
+        } finally {
+          junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
+          archiveArtifacts artifacts: '**/openvidu-server-*.log'
         }
       }
+    } catch (error) {
+      echo 'Test failed'
+      currentBuild.result = 'FAILURE'
+    } finally {
+      // Kill all environment for next test
+      environmentStop()
+    }
+
+    // Mediasoup tests
+    stage ('Environment Launch Mediasoup') {
+      environmentLaunch('mediasoup')
+    }
+    try {
+      stage ('OpenVidu Mediasoup E2E tests') {
+        try {
+          openViduE2ETest("openvidu/mediasoup-controller:${MEDIASOUP_CONTROLLER_VERSION}")
+        } catch (err) {
+          // In case of error, fail the stage
+          sh 'exit 1'
+        } finally {
+          junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
+          archiveArtifacts artifacts: '**/openvidu-server-*.log'
+        }
+      }
+    } catch (error) {
+      echo 'Test failed'
+      currentBuild.result = 'FAILURE'
+    } finally {
+      environmentStop()
+      commonFunctions.removeStrandedContainers(false)
     }
   }
 }
