@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import unittest
+import requests
 from selenium import webdriver
 from selenium.webdriver import firefox
 from selenium.webdriver.firefox import service
@@ -17,20 +18,28 @@ import os
 class InfraSmokeTests(unittest.TestCase):
 
     def setUp(self):
+        print('Executing test... Please wait...')
         self.openvidu_url = os.getenv('OV_URL')
         self.openvidu_password = os.getenv('OV_SECRET')
+        self.is_openvidu_ce = self.check_is_openvidu_ce()
+        if self.is_openvidu_ce:
+            self.inject_basic_auth_in_url()
         self.driver = None
 
-    def test_inspector(self):
+    def test_chrome_no_relay(self):
         self.inspector_check(browser="chrome")
+
+    def test_firefox_no_relay(self):
         self.inspector_check(browser="firefox")
+
+    def test_firefox_force_relay(self):
         self.inspector_check(browser="firefox", turn=True)
 
     def inspector_check(self, browser="chrome", turn=False):
         print('\n\n======================================================================')
         print('|')
         print('|')
-        print('|   Testing OpenVidu with ' + browser + ' and force relay: ' + str(turn))
+        print('|   Testing OpenVidu ' + ('CE ' if self.is_openvidu_ce else 'PRO/ENTERPRISE ') + 'with ' + browser + ' and force relay: ' + str(turn))
         print('|')
         print('|')
         print('======================================================================')
@@ -41,21 +50,35 @@ class InfraSmokeTests(unittest.TestCase):
         else:
             self.runFirefox(turn)
 
-        url_test = self.openvidu_url + '/inspector'
-        self.driver.get(url_test)
+        if self.is_openvidu_ce:
+            url_test = self.openvidu_url + '/dashboard'
+            self.driver.get(url_test)
 
-        elem = self.driver.find_element(By.ID, 'secret-input')
-        elem.send_keys(self.openvidu_password)
+            elem = self.driver.find_element(By.ID,'test-btn')
+            elem.send_keys(Keys.RETURN)
 
-        elem = self.driver.find_element(By.ID, 'login-btn')
-        elem.send_keys(Keys.RETURN)
+            elem = self.driver.find_element(By.NAME, 'secret')
+            elem.send_keys(self.openvidu_password)
 
-        # print('data:image/png;base64,' + self.driver.get_screenshot_as_base64())
-        elem = self.driver.find_element(By.ID,'menu-test-btn')
-        elem.send_keys(Keys.RETURN)
+            elem = self.driver.find_element(By.ID, 'join-btn')
+            elem.send_keys(Keys.RETURN)
 
-        elem = self.driver.find_element(By.ID,'test-btn')
-        elem.send_keys(Keys.RETURN)
+        else:
+            url_test = self.openvidu_url + '/inspector'
+            self.driver.get(url_test)
+
+            elem = self.driver.find_element(By.ID, 'secret-input')
+            elem.send_keys(self.openvidu_password)
+
+            elem = self.driver.find_element(By.ID, 'login-btn')
+            elem.send_keys(Keys.RETURN)
+
+            # print('data:image/png;base64,' + self.driver.get_screenshot_as_base64())
+            elem = self.driver.find_element(By.ID,'menu-test-btn')
+            elem.send_keys(Keys.RETURN)
+
+            elem = self.driver.find_element(By.ID,'test-btn')
+            elem.send_keys(Keys.RETURN)
 
         video_error = False
         try:
@@ -111,6 +134,20 @@ class InfraSmokeTests(unittest.TestCase):
             options = self.options)
         self.driver.implicitly_wait(5)
         self.driver.maximize_window()
+
+    def check_is_openvidu_ce(self):
+        response = requests.get(self.openvidu_url + "/dashboard")
+        if response.status_code == 401:
+            return True
+        else:
+            return False
+
+    def inject_basic_auth_in_url(self):
+        separator = "://"
+        basic_auth_url_str = "OPENVIDUAPP:" + self.openvidu_password + "@"
+        split_url = self.openvidu_url.split(separator)
+        self.openvidu_url = split_url[0] + separator + basic_auth_url_str + split_url[1]
+
 
     def print_candidates(self):
         try:

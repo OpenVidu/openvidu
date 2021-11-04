@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 set -eu -o pipefail
 
 # Launch XVFB
@@ -11,4 +11,6 @@ do
   echo "Waiting xvfb..."
 done
 
-exec "$*"
+echo "Running tests... Please wait..."
+
+exec python3 "$@"

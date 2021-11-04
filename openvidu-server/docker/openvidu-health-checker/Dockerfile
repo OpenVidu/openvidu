@@ -23,13 +23,16 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
 
 RUN pip3 install selenium webdriver_manager prettytable
 
-COPY ./run.sh /usr/local/bin/run.sh
-COPY ./openvidu_helth_check.py /usr/local/bin/openvidu_helth_check
-RUN chmod +x /usr/local/bin/run.sh /usr/local/bin/openvidu_helth_check
-
 WORKDIR /workdir
 
-ENTRYPOINT [ "/usr/local/bin/run.sh" ]
+COPY ./run.sh ./entrypoint.sh /usr/local/bin/
+COPY ./openvidu_health_check.py ./download_webdrivers.py ./
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/run.sh
 
-CMD [ "openvidu_helth_check" ]
+# Cache web driver
+RUN python3 download_webdrivers.py
+
+ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
+
+CMD [ "openvidu_health_check.py" ]
 
