@@ -221,7 +221,7 @@ def openViduE2ETest(mediaServerImage) {
       env.openviduProLicenseApi = "${OPENVIDU_PRO_LICENSE_API}"
       sh(script: '''#!/bin/bash -xe
         cd openvidu/openvidu-test-e2e
-        ENV_VARS="-DMEDIA_SERVER_IMAGE=${mediaServerImage} -Dtest=OpenViduTestAppE2eTest -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ -DREMOTE_URL_OPERA=http://172.17.0.1:6668/wd/hub/ -DEXTERNAL_CUSTOM_LAYOUT_URL=http://172.17.0.1:5555 -DEXTERNAL_CUSTOM_LAYOUT_PARAMS=sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET"
+        ENV_VARS="-DMEDIA_SERVER_IMAGE=${mediaServerImage} -Dtest=OpenViduTestAppE2eTest -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ -DREMOTE_URL_OPERA=http://172.17.0.1:6668/wd/hub/ -DREMOTE_URL_EDGE=http://172.17.0.1:6669/wd/hub/ -DEXTERNAL_CUSTOM_LAYOUT_URL=http://172.17.0.1:5555 -DEXTERNAL_CUSTOM_LAYOUT_PARAMS=sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET"
         if [[ $mediaServerImage == *"openvidu/mediasoup-controller"* ]]; then
           ENV_VARS+=" -DOPENVIDU_PRO_LICENSE=${openviduProLicense} -DOPENVIDU_PRO_LICENSE_API=${openviduProLicenseApi}"
         fi
