@@ -20,6 +20,7 @@ package io.openvidu.test.browsers;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -61,7 +62,13 @@ public class BrowserUser {
 
 	protected void configureDriver() {
 		this.waiter = new WebDriverWait(this.driver, Duration.ofSeconds(timeOfWaitInSeconds));
-		this.driver.manage().window().setSize(new org.openqa.selenium.Dimension(1920, 1080));
+	}
+
+	protected void configureDriver(Dimension windowDimensions) {
+		this.configureDriver();
+		if (windowDimensions != null) {
+			this.driver.manage().window().setSize(windowDimensions);
+		}
 	}
 
 	public void dispose() {

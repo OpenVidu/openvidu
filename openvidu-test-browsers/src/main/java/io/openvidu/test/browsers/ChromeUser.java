@@ -72,7 +72,7 @@ public class ChromeUser extends BrowserUser {
 		}
 
 		this.driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(timeOfWaitInSeconds));
-		this.configureDriver();
+		this.configureDriver(new org.openqa.selenium.Dimension(1920, 1080));
 	}
 
 	private static ChromeOptions generateDefaultScreenChromeOptions(boolean runningAsRoot) {

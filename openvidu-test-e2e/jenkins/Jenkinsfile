@@ -16,7 +16,7 @@ node('container') {
                     '-v /opt/openvidu-cache/.m2:/root/.m2'].join(' ')
 
   // Run openvidu/openvidu-test-e2e container
-  docker.image("openvidu/openvidu-test-e2e:${DISTRO}").inside('--name e2e -p 4200:4200 -p 4443:4443 -p 5555:5555 -u root -e MY_UID=0 ' + "${bindsArray}" + ' --privileged') {
+  docker.image("openvidu/openvidu-test-e2e:${DISTRO}").inside('--privileged -p 4200:4200 -p 4443:4443 -p 5555:5555 -u root -e MY_UID=0 ' + "${bindsArray}") {
     stage('Build 1') {
       parallel 'OpenVidu Browser build': {
         stage('OpenVidu Browser build') {
