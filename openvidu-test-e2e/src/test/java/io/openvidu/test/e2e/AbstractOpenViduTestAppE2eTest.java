@@ -392,35 +392,39 @@ public class AbstractOpenViduTestAppE2eTest {
 
 	@AfterEach
 	protected void dispose() {
+		// Close all remaining OpenVidu sessions
 		this.closeAllSessions(OV);
+		// Remove all recordings
 		if (isRecordingTest) {
 			deleteAllRecordings(OV);
 			isRecordingTest = false;
 		}
+		// Reset Media Server
 		if (isKurentoRestartTest) {
 			this.stopMediaServer(false);
 			this.startMediaServer(true);
 			isKurentoRestartTest = false;
 		}
+		// Dispose all browsers
 		Iterator<MyUser> it = users.iterator();
 		while (it.hasNext()) {
 			MyUser u = it.next();
 			u.dispose();
 			it.remove();
 		}
-		if (chrome.isRunning()) {
-			chrome.stop();
-		}
-		if (firefox.isRunning()) {
-			firefox.stop();
-		}
-		if (opera.isRunning()) {
-			opera.stop();
-		}
-		if (edge.isRunning()) {
-			edge.stop();
-		}
+		// Stop and remove all browser containers if necessary
+		stopContainerIfPossible(chrome);
+		stopContainerIfPossible(firefox);
+		stopContainerIfPossible(opera);
+		stopContainerIfPossible(edge);
+		// Reset REST client
 		OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
+	}
+
+	private void stopContainerIfPossible(GenericContainer<?> container) {
+		if (container != null && container.isRunning()) {
+			container.stop();
+		}
 	}
 
 	protected void closeAllSessions(OpenVidu client) {
