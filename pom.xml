@@ -43,7 +43,7 @@
 
 	<properties>
 		<version.kurento>6.16.1</version.kurento>
-		<version.spring-boot>2.5.6</version.spring-boot>
+		<version.spring-boot>2.3.12.RELEASE</version.spring-boot>
 		<version.junit>4.13.1</version.junit>
 		<version.junit.jupiter>5.7.0</version.junit.jupiter>
 		<version.junit.platform>1.7.0</version.junit.platform>
@@ -61,6 +61,7 @@
 		<version.jcodec>0.2.5</version.jcodec>
 		<version.commons-validator>1.7</version.commons-validator>
 		<version.testcontainers>1.16.2</version.testcontainers>
+		<version.appium>7.6.0</version.appium>
 
 		<version.webdrivermanager>4.2.2</version.webdrivermanager>
 
