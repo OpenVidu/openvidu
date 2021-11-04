@@ -38,16 +38,32 @@ def prepareTestingEnvironment() {
             }
         },
         'Pull selenium/standalone-chrome': {
-            docker.image('selenium/standalone-chrome:latest').pull()
+            if (env.CHROME_VERSION) {
+                docker.image("selenium/standalone-chrome:${CHROME_VERSION}").pull()
+            } else {
+                docker.image('selenium/standalone-chrome:latest').pull()
+            }
         },
         'Pull selenium/standalone-firefox': {
-            docker.image('selenium/standalone-firefox:latest').pull()
+            if (env.FIREFOX_VERSION) {
+                docker.image("selenium/standalone-firefox:${FIREFOX_VERSION}").pull()
+            } else {
+                docker.image('selenium/standalone-firefox:latest').pull()
+            }
         },
         'Pull selenium/standalone-opera': {
-            docker.image('selenium/standalone-opera:latest').pull()
+            if (env.OPERA_VERSION) {
+                docker.image("selenium/standalone-opera:${OPERA_VERSION}").pull()
+            } else {
+                docker.image('selenium/standalone-opera:latest').pull()
+            }
         },
         'Pull selenium/standalone-edge': {
-            docker.image('selenium/standalone-edge:latest').pull()
+            if (env.EDGE_VERSION) {
+                docker.image("selenium/standalone-edge:${EDGE_VERSION}").pull()
+            } else {
+                docker.image('selenium/standalone-edge:latest').pull()
+            }
         },
         'Pull openvidu/mediasoup-controller': {
             if (env.MEDIASOUP_CONTROLLER_VERSION) {
