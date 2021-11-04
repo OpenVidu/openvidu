@@ -9,12 +9,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -68,8 +65,6 @@ public class AbstractOpenViduTestAppE2eTest {
 
 	@ClassRule
 	public static GenericContainer<?> edge;
-
-	private Map<BrowserNames, Set<String>> webdriverVersions = new HashMap<>();
 
 	// Media server variables
 	final protected static String KURENTO_IMAGE = "kurento/kurento-media-server";
@@ -324,23 +319,6 @@ public class AbstractOpenViduTestAppE2eTest {
 			if (!container.isRunning()) {
 				container.start();
 				container.waitingFor(Wait.forHttp("/wd/hub/status").forStatusCode(200));
-			}
-			if (webdriverVersions.containsKey(browser)) {
-				// This browser has already been used
-				if (!webdriverVersions.get(browser).contains(version)) {
-					// This browser version has not been used yet
-					webdriverVersions.get(browser).add(version);
-					if ("latest".equals(version)) {
-						webDriverManager.setup();
-					} else {
-						webDriverManager.browserVersion(simplifiedBrowserVersion(version)).setup();
-					}
-				}
-			} else {
-				// This browser has not been used yet
-				Set<String> versions = new HashSet<>();
-				versions.add(version);
-				webdriverVersions.put(browser, versions);
 			}
 		}
 	}
@@ -628,13 +606,6 @@ public class AbstractOpenViduTestAppE2eTest {
 					+ (System.currentTimeMillis() - startTime) + " ms (last checked size was " + (bytes / 1024)
 					+ " KBs)");
 		}
-	}
-
-	private static String simplifiedBrowserVersion(String version) {
-		String[] v = version.split("\\.");
-		String firstNumber = v[0].split("-")[0];
-		log.info("Using version for webdriver {}", firstNumber);
-		return firstNumber;
 	}
 
 }
