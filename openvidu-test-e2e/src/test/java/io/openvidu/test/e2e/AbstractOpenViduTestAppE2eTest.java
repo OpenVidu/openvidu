@@ -227,6 +227,30 @@ public class AbstractOpenViduTestAppE2eTest {
 		}
 		log.info("Using media server {} for e2e tests", MEDIA_SERVER_IMAGE);
 
+		String chromeVersion = System.getProperty("CHROME_VERSION");
+		if (chromeVersion != null && !chromeVersion.isBlank()) {
+			CHROME_VERSION = chromeVersion;
+		}
+		log.info("Using Chrome {}", CHROME_VERSION);
+
+		String firefoxVersion = System.getProperty("FIREFOX_VERSION");
+		if (firefoxVersion != null && !firefoxVersion.isBlank()) {
+			FIREFOX_VERSION = firefoxVersion;
+		}
+		log.info("Using Firefox {}", FIREFOX_VERSION);
+
+		String operaVersion = System.getProperty("OPERA_VERSION");
+		if (operaVersion != null && !operaVersion.isBlank()) {
+			OPERA_VERSION = operaVersion;
+		}
+		log.info("Using Opera {}", OPERA_VERSION);
+
+		String edgeVersion = System.getProperty("EDGE_VERSION");
+		if (edgeVersion != null && !edgeVersion.isBlank()) {
+			EDGE_VERSION = edgeVersion;
+		}
+		log.info("Using Edge {}", EDGE_VERSION);
+
 		String openviduProLicense = System.getProperty("OPENVIDU_PRO_LICENSE");
 		if (openviduProLicense != null) {
 			OPENVIDU_PRO_LICENSE = openviduProLicense;
@@ -235,23 +259,6 @@ public class AbstractOpenViduTestAppE2eTest {
 		String openviduProLicenseApi = System.getProperty("OPENVIDU_PRO_LICENSE_API");
 		if (openviduProLicenseApi != null) {
 			OPENVIDU_PRO_LICENSE_API = openviduProLicenseApi;
-		}
-
-		String chromeVersion = System.getProperty("CHROME_VERSION");
-		if (chromeVersion != null) {
-			CHROME_VERSION = chromeVersion;
-		}
-		String firefoxVersion = System.getProperty("FIREFOX_VERSION");
-		if (firefoxVersion != null) {
-			FIREFOX_VERSION = firefoxVersion;
-		}
-		String operaVersion = System.getProperty("OPERA_VERSION");
-		if (operaVersion != null) {
-			OPERA_VERSION = operaVersion;
-		}
-		String edgeVersion = System.getProperty("EDGE_VERSION");
-		if (edgeVersion != null) {
-			EDGE_VERSION = edgeVersion;
 		}
 	}
 
