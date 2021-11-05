@@ -132,7 +132,7 @@ class InfraSmokeTests(unittest.TestCase):
         self.driver = webdriver.Firefox(
             service=FirefoxService(GeckoDriverManager().install()),
             options = self.options)
-        self.driver.implicitly_wait(5)
+        self.driver.implicitly_wait(15)
         self.driver.maximize_window()
 
     def check_is_openvidu_ce(self):
@@ -173,6 +173,7 @@ class InfraSmokeTests(unittest.TestCase):
                 html_ice_table = '<table>' + ice_candidates_table.get_attribute('innerHTML') + '</table>'
                 print(from_html_one(html_ice_table))
             # Go to main window
+            self.driver.close()
             self.driver.switch_to.window(self.driver.window_handles[0])
         except:
             print('Error getting candidates')
