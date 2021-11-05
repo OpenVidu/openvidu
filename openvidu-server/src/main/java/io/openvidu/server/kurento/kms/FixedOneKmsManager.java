@@ -25,13 +25,11 @@ import java.util.NoSuchElementException;
 import javax.annotation.PostConstruct;
 
 import org.kurento.client.KurentoClient;
-import org.kurento.client.ServerInfo;
 import org.kurento.commons.exception.KurentoException;
 import org.kurento.jsonrpc.client.JsonRpcClientNettyWebSocket;
 import org.kurento.jsonrpc.client.JsonRpcWSConnectionListener;
 
 import io.openvidu.java.client.RecordingProperties;
-import io.openvidu.server.core.MediaServer;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
 
@@ -61,12 +59,7 @@ public class FixedOneKmsManager extends KmsManager {
 			kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
 
 			// Set Media Server in OpenVidu configuration
-			ServerInfo serverInfo = kms.getKurentoClient().getServerManager().getInfo();
-			if (serverInfo.getVersion().startsWith("openvidu/mediasoup-controller")) {
-				this.openviduConfig.setMediaServer(MediaServer.mediasoup);
-			} else {
-				this.openviduConfig.setMediaServer(MediaServer.kurento);
-			}
+			this.openviduConfig.setMediaServer(kms.getMediaServer());
 
 		} catch (KurentoException e) {
 			log.error("KMS in {} is not reachable by OpenVidu Server", firstProps.getUri());
