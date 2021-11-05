@@ -149,6 +149,7 @@ export class WebRtcPeer {
 
         this.pc.addEventListener('signalingstatechange', () => {
             if (this.pc.signalingState === 'stable') {
+                // SDP Offer/Answer finished. Add stored remote candidates.
                 while (this.iceCandidateList.length > 0) {
                     let candidate = this.iceCandidateList.shift();
                     this.pc.addIceCandidate(<RTCIceCandidate>candidate);
