@@ -83,6 +83,7 @@ class InfraSmokeTests(unittest.TestCase):
         video_error = False
         try:
             self.driver.find_element(By.XPATH, "//*[contains(text(), 'Stream playing')]")
+            print('Video detected.\n')
         except:
             video_error = True
         finally:
@@ -93,7 +94,9 @@ class InfraSmokeTests(unittest.TestCase):
         if video_error == True:
             raise Exception('Error. No video detected')
 
-        print('Video detected.\n')
+        time.sleep(3)
+        self.driver.switch_to.window(self.driver.window_handles[0])
+        time.sleep(3)
         elem = self.driver.find_element(By.ID,'test-btn')
         elem.send_keys(Keys.RETURN)
 
@@ -174,9 +177,8 @@ class InfraSmokeTests(unittest.TestCase):
                 print(from_html_one(html_ice_table))
             # Go to main window
             self.driver.close()
-            self.driver.switch_to.window(self.driver.window_handles[0])
         except:
-            print('Error getting candidates')
+            pass
 
     def closeBrowser(self):
         # close the browser window
