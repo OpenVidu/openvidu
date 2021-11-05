@@ -21,7 +21,7 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
     google-chrome-stable firefox \
   && rm /etc/apt/sources.list.d/google-chrome.list
 
-RUN pip3 install selenium webdriver_manager prettytable
+RUN pip3 install selenium webdriver_manager prettytable beautifulsoup4
 
 WORKDIR /workdir
 

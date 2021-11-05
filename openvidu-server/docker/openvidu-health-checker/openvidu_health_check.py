@@ -11,6 +11,7 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from bs4 import BeautifulSoup
 from prettytable import from_html_one
 import time
 import os
@@ -94,9 +95,7 @@ class InfraSmokeTests(unittest.TestCase):
         if video_error == True:
             raise Exception('Error. No video detected')
 
-        time.sleep(3)
         self.driver.switch_to.window(self.driver.window_handles[0])
-        time.sleep(3)
         elem = self.driver.find_element(By.ID,'test-btn')
         elem.send_keys(Keys.RETURN)
 
@@ -169,16 +168,17 @@ class InfraSmokeTests(unittest.TestCase):
             print("Waiting for candidates to be checked...")
             # Get ice stats
             time.sleep(15)
-            ice_stats_div_elems = self.driver.find_elements(By.XPATH, "//div[contains(@id, 'ice-stats')]")
-            for ice_stats_div in ice_stats_div_elems:
-                table_elems = ice_stats_div.find_elements(By.TAG_NAME, 'table')
-                ice_candidates_table = table_elems[0]
-                html_ice_table = '<table>' + ice_candidates_table.get_attribute('innerHTML') + '</table>'
-                print(from_html_one(html_ice_table))
-            # Go to main window
+            # about:webrtc page refreshes each second, so we need to
+            # safe the entire HTML in a variable to have a Snapshot of the situation
+            about_webrtc_html = '<html>' + self.driver.find_element(By.TAG_NAME, 'html').get_attribute('innerHTML') + '</html>'
+            # Search the tables using a parser and print all candidates
+            soup = BeautifulSoup(about_webrtc_html, 'html.parser')
+            for caption in soup.findAll('caption', {'data-l10n-id' : 'about-webrtc-trickle-caption-msg'}):
+                print(from_html_one(str(caption.parent)))
+            # Close about:webrtc
             self.driver.close()
         except:
-            pass
+            print('[Warn] Some candidates may not appear in test result')
 
     def closeBrowser(self):
         # close the browser window
