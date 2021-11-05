@@ -649,17 +649,8 @@ public abstract class MediaEndpoint {
 			throw new OpenViduException(Code.MEDIA_WEBRTC_ENDPOINT_ERROR_CODE,
 					"Can't start gathering ICE candidates on null WebRtcEndpoint (ep: " + endpointName + ")");
 		}
-		webEndpoint.gatherCandidates(new Continuation<Void>() {
-			@Override
-			public void onSuccess(Void result) throws Exception {
-				log.trace("EP {}: Internal endpoint started to gather candidates", endpointName);
-			}
-
-			@Override
-			public void onError(Throwable cause) throws Exception {
-				log.warn("EP {}: Internal endpoint failed to start gathering candidates", endpointName, cause);
-			}
-		});
+		webEndpoint.gatherCandidates();
+		log.trace("EP {}: Internal endpoint started to gather candidates", endpointName);
 	}
 
 	private void internalAddIceCandidate(IceCandidate candidate) throws OpenViduException {
