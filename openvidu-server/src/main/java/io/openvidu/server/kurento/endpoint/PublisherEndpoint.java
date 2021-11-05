@@ -453,6 +453,8 @@ public class PublisherEndpoint extends MediaEndpoint {
 	private void internalSinkConnect(final MediaElement source, final MediaElement sink, boolean blocking) {
 		if (blocking) {
 			source.connect(sink);
+			log.debug("EP {}: Elements have been connected (source {} -> sink {})", getEndpointName(), source.getId(),
+					sink.getId());
 		} else {
 			source.connect(sink, new Continuation<Void>() {
 				@Override
@@ -463,7 +465,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 
 				@Override
 				public void onError(Throwable cause) throws Exception {
-					log.warn("EP {}: Failed to connect media elements (source {} -> sink {})", getEndpointName(),
+					log.warn("EP {}: Elements failed connecting (source {} -> sink {})", getEndpointName(),
 							source.getId(), sink.getId(), cause);
 				}
 			});
@@ -488,18 +490,20 @@ public class PublisherEndpoint extends MediaEndpoint {
 		} else {
 			if (blocking) {
 				source.connect(sink, type);
+				log.debug("EP {}: {} elements have been connected (source {} -> sink {})", getEndpointName(), type,
+						source.getId(), sink.getId());
 			} else {
 				source.connect(sink, type, new Continuation<Void>() {
 					@Override
 					public void onSuccess(Void result) throws Exception {
-						log.debug("EP {}: {} media elements have been connected (source {} -> sink {})",
-								getEndpointName(), type, source.getId(), sink.getId());
+						log.debug("EP {}: {} elements have been connected (source {} -> sink {})", getEndpointName(),
+								type, source.getId(), sink.getId());
 					}
 
 					@Override
 					public void onError(Throwable cause) throws Exception {
-						log.warn("EP {}: Failed to connect {} media elements (source {} -> sink {})", getEndpointName(),
-								type, source.getId(), sink.getId(), cause);
+						log.warn("EP {}: {} elements failed connecting (source {} -> sink {})", getEndpointName(), type,
+								source.getId(), sink.getId(), cause);
 					}
 				});
 			}
@@ -510,6 +514,8 @@ public class PublisherEndpoint extends MediaEndpoint {
 		if (!RemoteOperationUtils.mustSkipRemoteOperation()) {
 			if (blocking) {
 				source.disconnect(sink);
+				log.debug("EP {}: Elements have been disconnected (source {} -> sink {})", getEndpointName(),
+						source.getId(), sink.getId());
 			} else {
 				source.disconnect(sink, new Continuation<Void>() {
 					@Override
@@ -520,7 +526,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 
 					@Override
 					public void onError(Throwable cause) throws Exception {
-						log.warn("EP {}: Failed to disconnect media elements (source {} -> sink {})", getEndpointName(),
+						log.warn("EP {}: Elements failed disconnecting (source {} -> sink {})", getEndpointName(),
 								source.getId(), sink.getId(), cause);
 					}
 				});
@@ -547,17 +553,19 @@ public class PublisherEndpoint extends MediaEndpoint {
 			} else {
 				if (blocking) {
 					source.disconnect(sink, type);
+					log.debug("EP {}: {} elements have been disconnected (source {} -> sink {})", getEndpointName(),
+							type, source.getId(), sink.getId());
 				} else {
 					source.disconnect(sink, type, new Continuation<Void>() {
 						@Override
 						public void onSuccess(Void result) throws Exception {
-							log.debug("EP {}: {} media elements have been disconnected (source {} -> sink {})",
+							log.debug("EP {}: {} elements have been disconnected (source {} -> sink {})",
 									getEndpointName(), type, source.getId(), sink.getId());
 						}
 
 						@Override
 						public void onError(Throwable cause) throws Exception {
-							log.warn("EP {}: Failed to disconnect {} media elements (source {} -> sink {})",
+							log.warn("EP {}: {} elements failed disconnecting (source {} -> sink {})",
 									getEndpointName(), type, source.getId(), sink.getId(), cause);
 						}
 					});
