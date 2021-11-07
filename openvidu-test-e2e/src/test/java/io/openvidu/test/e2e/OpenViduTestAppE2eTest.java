@@ -23,6 +23,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -57,6 +59,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mashape.unirest.http.HttpMethod;
 
+import io.appium.java_client.AppiumDriver;
 import io.openvidu.java.client.Connection;
 import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.java.client.ConnectionType;
@@ -75,6 +78,7 @@ import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.Session;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.java.client.VideoCodec;
+import io.openvidu.test.browsers.utils.BrowserNames;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.RecordingUtils;
 import io.openvidu.test.browsers.utils.layout.CustomLayoutHandler;
@@ -96,7 +100,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	protected static void setupAll() throws Exception {
 		checkFfmpegInstallation();
 		loadEnvironmentVariables();
-		prepareBrowsers();
+		prepareBrowsers(new HashSet<>(Arrays.asList(BrowserNames.CHROME, BrowserNames.FIREFOX, BrowserNames.OPERA,
+				BrowserNames.EDGE, BrowserNames.ANDROID)));
 		cleanFoldersAndSetUpOpenViduJavaClient();
 		getDefaultTranscodingValues();
 	}
@@ -133,6 +138,51 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		oneToOneAux(user);
 	}
 
+	@Test
+	@DisplayName("One2One Chrome Android")
+	void oneToOneChromeAndroid() throws Exception {
+		long initTime = System.currentTimeMillis();
+		MyUser user = setupBrowser("androidChrome");
+		log.info("Android emulator ready after {} seconds", (System.currentTimeMillis() - initTime) / 1000);
+		log.info("One2One Android Chrome");
+		onePublisherOneSubscriber(user);
+	}
+
+	@Test
+	@DisplayName("One2One Firefox Android")
+	@Disabled
+	void oneToOneFirefoxAndroid() throws Exception {
+		long initTime = System.currentTimeMillis();
+		MyUser user = setupBrowser("androidFirefox");
+		log.info("Android emulator ready after {} seconds", (System.currentTimeMillis() - initTime) / 1000);
+		log.info("One2One Android Firefox");
+		onePublisherOneSubscriber(user);
+	}
+
+	@Test
+	@DisplayName("One2One Ionic Android")
+	@Disabled
+	void oneToOneIonicAndroid() throws Exception {
+		long initTime = System.currentTimeMillis();
+		MyUser user = setupBrowser("androidApp");
+		log.info("Android emulator ready after {} seconds", (System.currentTimeMillis() - initTime) / 1000);
+		log.info("One2One Ionic Android");
+
+		AppiumDriver<WebElement> appiumDriver = (AppiumDriver) user.getDriver();
+		appiumDriver.findElement(By.cssSelector("#settings-button")).click();
+		Thread.sleep(500);
+		WebElement urlInput = appiumDriver.findElement(By.cssSelector("#openvidu-url"));
+		urlInput.clear();
+		urlInput.sendKeys(OPENVIDU_URL);
+		urlInput = appiumDriver.findElement(By.cssSelector("#openvidu-secret"));
+		urlInput.clear();
+		urlInput.sendKeys(OPENVIDU_SECRET);
+		appiumDriver.findElement(By.cssSelector(".ok-btn")).click();
+		Thread.sleep(500);
+		// Self signed cert over 172.17.0.1 problem
+		appiumDriver.findElement(By.cssSelector("#join-button")).click();
+	}
+
 	private void oneToOneAux(MyUser user) throws Exception {
 		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
 		user.getDriver().findElement(By.id("one2one-btn")).click();
@@ -142,6 +192,24 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assert.assertEquals("Wrong number of videos", 4, numberOfVideos);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	private void onePublisherOneSubscriber(MyUser user) throws Exception {
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publish-checkbox")).click();
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Wrong number of videos", 2, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 		gracefullyLeaveParticipants(user, 2);

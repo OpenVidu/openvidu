@@ -65,6 +65,9 @@ def prepareTestingEnvironment() {
                 docker.image('selenium/standalone-edge:latest').pull()
             }
         },
+        'Pull budtmo/docker-android-x86-12.0': {
+            docker.image('budtmo/docker-android-x86-12.0:latest').pull()
+        },
         'Pull openvidu/mediasoup-controller': {
             if (env.MEDIASOUP_CONTROLLER_VERSION) {
                 docker.image("openvidu/mediasoup-controller:${MEDIASOUP_CONTROLLER_VERSION}").pull()
@@ -112,6 +115,7 @@ def removeStrandedContainers(removeTestingContainers) {
                             "selenium/standalone-firefox:"
                             "selenium/standalone-opera:"
                             "selenium/standalone-edge:"
+                            "budtmo/docker-android"
                             "openvidu/mediasoup-controller:"
                             "openvidu/openvidu-server-pro:"
                             "openvidu/openvidu-redis:"

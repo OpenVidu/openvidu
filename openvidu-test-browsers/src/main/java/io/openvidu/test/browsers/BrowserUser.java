@@ -57,11 +57,11 @@ public class BrowserUser {
 	}
 
 	protected void newWaiter(int timeOfWait) {
-		this.waiter = new WebDriverWait(this.driver, Duration.ofSeconds(timeOfWait));
+		this.waiter = new WebDriverWait(this.driver, timeOfWait);
 	}
 
 	protected void configureDriver() {
-		this.waiter = new WebDriverWait(this.driver, Duration.ofSeconds(timeOfWaitInSeconds));
+		this.waiter = new WebDriverWait(this.driver, timeOfWaitInSeconds);
 	}
 
 	protected void configureDriver(Dimension windowDimensions) {

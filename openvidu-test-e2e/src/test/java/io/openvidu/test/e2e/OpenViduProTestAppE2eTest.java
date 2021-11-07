@@ -4,6 +4,8 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Queue;
 import java.util.Set;
@@ -43,6 +45,7 @@ import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.Session;
+import io.openvidu.test.browsers.utils.BrowserNames;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.Unzipper;
 
@@ -54,7 +57,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	protected static void setupAll() {
 		checkFfmpegInstallation();
 		loadEnvironmentVariables();
-		prepareBrowsers();
+		prepareBrowsers(new HashSet<>(Arrays.asList(BrowserNames.CHROME)));
 		cleanFoldersAndSetUpOpenViduJavaClient();
 	}
 

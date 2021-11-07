@@ -47,7 +47,7 @@
 		<version.junit>4.13.1</version.junit>
 		<version.junit.jupiter>5.7.0</version.junit.jupiter>
 		<version.junit.platform>1.7.0</version.junit.platform>
-		<version.selenium>4.0.0</version.selenium>
+		<version.selenium>3.141.59</version.selenium>
 		<version.mockito.core>3.6.0</version.mockito.core>
 		<version.powermock>2.0.9</version.powermock>
 		<version.hamcrest>2.2</version.hamcrest>
