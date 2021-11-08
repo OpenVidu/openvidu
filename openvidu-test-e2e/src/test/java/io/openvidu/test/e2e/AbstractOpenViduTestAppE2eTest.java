@@ -93,7 +93,7 @@ public class AbstractOpenViduTestAppE2eTest {
 	protected static String OPENVIDU_SECRET = "MY_SECRET";
 	protected static String OPENVIDU_URL = "https://localhost:4443/";
 	protected static String APP_URL = "http://localhost:4200/";
-	protected static String EXTERNAL_CUSTOM_LAYOUT_URL = "http://localhost:5555";
+	protected static String EXTERNAL_CUSTOM_LAYOUT_URL = "http://localhost:4114";
 	protected static String OPENVIDU_PRO_LICENSE = "not_valid";
 	protected static String OPENVIDU_PRO_LICENSE_API = "not_valid";
 	protected static String EXTERNAL_CUSTOM_LAYOUT_PARAMS = "sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET";
