@@ -139,6 +139,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@Disabled
 	@DisplayName("One2One Chrome Android")
 	void oneToOneChromeAndroid() throws Exception {
 		long initTime = System.currentTimeMillis();
