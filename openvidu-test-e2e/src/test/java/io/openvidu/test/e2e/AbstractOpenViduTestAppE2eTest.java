@@ -77,7 +77,7 @@ public class AbstractOpenViduTestAppE2eTest {
 	public static GenericContainer<?> android;
 
 	private final static WaitStrategy waitBrowser = Wait.forHttp("/wd/hub/status").forStatusCode(200);
-	private final static WaitStrategy waitAndroid = Wait.forHealthcheck().withStartupTimeout(Duration.ofSeconds(300));
+	private final static WaitStrategy waitAndroid = Wait.forHealthcheck().withStartupTimeout(Duration.ofSeconds(600));
 
 	// Media server variables
 	final protected static String KURENTO_IMAGE = "kurento/kurento-media-server";
