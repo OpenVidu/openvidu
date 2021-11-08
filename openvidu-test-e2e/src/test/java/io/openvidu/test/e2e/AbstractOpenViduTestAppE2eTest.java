@@ -184,7 +184,7 @@ public class AbstractOpenViduTestAppE2eTest {
 					.withPrivilegedMode(true)
 					.withEnv(Map.of("DEVICE", "Samsung Galaxy S10", "APPIUM", "true", "APPIUM_HOST", "172.17.0.1",
 							"APPIUM_PORT", "4723", "MOBILE_WEB_TEST", "true", "RELAXED_SECURITY", "true"))
-					.withExposedPorts(6080, 5554, 5555, 4723).waitingFor(waitAndroid)
+					.withSharedMemorySize(4294967296L).withExposedPorts(6080, 5554, 5555, 4723).waitingFor(waitAndroid)
 					.withFileSystemBind("/opt/openvidu-cache", "/opt/openvidu-cache");
 			android.setPortBindings(Arrays.asList("6080:6080", "5554:5554", "5555:5555", "4723:4723"));
 		}
