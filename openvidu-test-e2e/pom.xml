@@ -71,7 +71,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<version>${version.spring-boot}</version>
-			<scope>test</scope>
 			<exclusions>
 				<exclusion>
 					<groupId>org.skyscreamer</groupId>
@@ -83,25 +82,21 @@
 			<groupId>io.github.bonigarcia</groupId>
 			<artifactId>webdrivermanager</artifactId>
 			<version>${version.webdrivermanager}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-java</artifactId>
 			<version>${version.selenium}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-api</artifactId>
 			<version>${version.selenium}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-remote-driver</artifactId>
 			<version>${version.selenium}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
@@ -112,25 +107,21 @@
 			<groupId>com.mashape.unirest</groupId>
 			<artifactId>unirest-java</artifactId>
 			<version>${version.unirest}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-test-browsers</artifactId>
 			<version>${version.openvidu.test.browsers}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-java-client</artifactId>
 			<version>${version.openvidu.java.client}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>testcontainers</artifactId>
 			<version>${version.testcontainers}</version>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

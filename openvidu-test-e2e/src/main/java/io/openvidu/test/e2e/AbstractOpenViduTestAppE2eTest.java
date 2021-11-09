@@ -110,7 +110,7 @@ public class AbstractOpenViduTestAppE2eTest {
 	protected static Exception ex = null;
 	protected final Object lock = new Object();
 
-	protected static final Logger log = LoggerFactory.getLogger(OpenViduTestAppE2eTest.class);
+	protected static final Logger log = LoggerFactory.getLogger(AbstractOpenViduTestAppE2eTest.class);
 	protected static final CommandLineExecutor commandLine = new CommandLineExecutor();
 	protected static final String RECORDING_IMAGE = "openvidu/openvidu-recording";
 
