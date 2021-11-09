@@ -237,6 +237,14 @@ public class RecordingUtils {
 		Map<String, Long> colorMap = this.averageColor(image);
 		log.info("Thumbnail map color: {}", colorMap.toString());
 		isFine = colorCheckFunction.apply(colorMap);
+		if (!isFine) {
+			try {
+				log.error("Thumbnail is not fine. Printed below");
+				System.out.println(bufferedImageToBase64PngString(ImageIO.read(file)));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		return isFine;
 	}
 
