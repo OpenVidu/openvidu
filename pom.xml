@@ -45,8 +45,8 @@
 		<version.kurento>6.16.1</version.kurento>
 		<version.spring-boot>2.3.12.RELEASE</version.spring-boot>
 		<version.junit>4.13.1</version.junit>
-		<version.junit.jupiter>5.7.0</version.junit.jupiter>
-		<version.junit.platform>1.7.0</version.junit.platform>
+		<version.junit.jupiter>5.8.1</version.junit.jupiter>
+		<version.junit.platform>1.8.1</version.junit.platform>
 		<version.selenium>3.141.59</version.selenium>
 		<version.mockito.core>3.6.0</version.mockito.core>
 		<version.powermock>2.0.9</version.powermock>
