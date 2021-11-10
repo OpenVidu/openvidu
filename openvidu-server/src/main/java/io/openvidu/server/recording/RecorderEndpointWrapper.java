@@ -23,7 +23,6 @@ import org.kurento.client.RecorderEndpoint;
 import com.google.gson.JsonObject;
 
 import io.openvidu.server.kurento.core.KurentoParticipant;
-import io.openvidu.server.recording.service.RecordingService;
 
 public class RecorderEndpointWrapper {
 
