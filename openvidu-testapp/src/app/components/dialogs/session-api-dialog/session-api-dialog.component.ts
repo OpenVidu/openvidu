@@ -141,17 +141,27 @@ export class SessionApiDialogComponent {
         this.session.fetch()
             .then(anyChange => {
                 const resp = {
-                    activeConnections: [],
+                    activeConnections: <any>[],
                     sessionId: this.session.sessionId,
                     createdAt: this.session.createdAt,
                     properties: this.session.properties,
                     recording: this.session.recording
                 };
                 this.session.activeConnections.forEach(con => {
-                    resp.activeConnections[con.connectionId] = [];
+                    const publishers = <any>[];
                     con.publishers.forEach(pub => {
-                        resp.activeConnections[con.connectionId].push(pub);
+                        publishers.push(pub);
                     });
+                    resp.activeConnections.push({
+                        connectionId: con.connectionId,
+                        activeAt: con.activeAt,
+                        clientData: con.clientData,
+                        createdAt: con.createdAt,
+                        ip: con.ip,
+                        platform: con.platform,
+                        status: con.status,
+                        publishers
+                    })
                 });
                 this.response = 'Session info fetched ' + JSON.stringify(resp) + '. Changes: ' + anyChange;
             })

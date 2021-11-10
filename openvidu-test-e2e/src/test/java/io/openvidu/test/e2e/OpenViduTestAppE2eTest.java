@@ -1996,9 +1996,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Store connectionId and streamId
 		String response = user.getDriver().findElement(By.id("api-response-text-area")).getAttribute("value");
-		JsonObject json = JsonParser.parseString(response.split("%")[1]).getAsJsonArray().get(0).getAsJsonObject();
-		String connectionId = json.keySet().iterator().next();
-		String streamId = json.get(connectionId).getAsJsonArray().get(0).getAsJsonObject().get("streamId")
+		response = response.replace("Session info fetched {", "{").replace("}. Changes: true", "}");
+		JsonObject jsonConnection = JsonParser.parseString(response).getAsJsonObject().get("activeConnections")
+				.getAsJsonArray().get(0).getAsJsonObject();
+		String connectionId = jsonConnection.get("connectionId").getAsString();
+		String streamId = jsonConnection.get("publishers").getAsJsonArray().get(0).getAsJsonObject().get("streamId")
 				.getAsString();
 
 		// Fetch all sessions (no change)
