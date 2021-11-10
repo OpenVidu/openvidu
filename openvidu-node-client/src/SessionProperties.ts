@@ -56,7 +56,7 @@ export interface SessionProperties {
     customSessionId?: string;
 
     /**
-     * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> 
+     * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
      *
      * The Media Node where to host the session. The default option if this property is not defined is the less loaded
      * Media Node at the moment the first user joins the session. This object defines the following properties as Media Node selector:
@@ -67,13 +67,19 @@ export interface SessionProperties {
     }
 
     /**
-     * It defines which video codec do you want to be forcibly used for this session.
-     * This allows browsers/clients to use the same codec avoiding transcoding in the media server.
-     * If the browser/client is not compatible with the specified codec and [[allowTranscoding]] is <code>false</code>
-     * and exception will occur. If forcedVideoCodec is set to [[VideoCodec.NONE]], no codec will be forced.
+     * Define which video codec will be forcibly used for this session.
+     * This forces all browsers/clients to use the same codec, which would
+     * avoid transcoding in the media server (Kurento only). If
+     * <code>forcedVideoCodec</code> is set to NONE, no codec will be forced.
      *
-     * If defined here, this parameter has prevalence over OPENVIDU_STREAMS_FORCED_VIDEO_CODEC.
-     * OPENVIDU_STREAMS_FORCED_VIDEO_CODEC default is [[VideoCodec.VP8]]
+     * If the browser/client is not compatible with the specified codec, and
+     * [[allowTranscoding]] is <code>false</code>, an exception will occur.
+     *
+     * If defined here, this parameter has prevalence over
+     * OPENVIDU_STREAMS_FORCED_VIDEO_CODEC.
+     *
+     * Default is [[VideoCodec.VP8]] for Kurento, and
+     * [[VideoCodec.NONE]] for mediasoup.
      */
     forcedVideoCodec?: VideoCodec;
 
@@ -85,5 +91,4 @@ export interface SessionProperties {
      * OPENVIDU_STREAMS_ALLOW_TRANSCODING default is 'false'
      */
     allowTranscoding?: boolean;
-
 }

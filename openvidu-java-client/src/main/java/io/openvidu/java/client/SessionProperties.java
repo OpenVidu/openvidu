@@ -42,7 +42,7 @@ public class SessionProperties {
 		private RecordingProperties defaultRecordingProperties = new RecordingProperties.Builder().build();
 		private String customSessionId = "";
 		private String mediaNode;
-		private VideoCodec forcedVideoCodec = VideoCodec.VP8;
+		private VideoCodec forcedVideoCodec = VideoCodec.MEDIA_SERVER_PREFERRED;
 		private Boolean allowTranscoding = false;
 
 		/**
@@ -114,15 +114,20 @@ public class SessionProperties {
 		}
 
 		/**
-		 * Call this method to define which video codec do you want to be forcibly used
-		 * for this session. This allows browsers/clients to use the same codec avoiding
-		 * transcoding in the media server. If the browser/client is not compatible with
-		 * the specified codec and {@link #allowTranscoding(Boolean)} is
-		 * <code>false</code> and exception will occur. If forcedVideoCodec is set to
-		 * NONE, no codec will be forced.<br>
+		 * Define which video codec will be forcibly used for this session.
+		 * This forces all browsers/clients to use the same codec, which would
+		 * avoid transcoding in the media server (Kurento only). If
+		 * <code>forcedVideoCodec</code> is set to NONE, no codec will be forced.
+		 *
+		 * If the browser/client is not compatible with the specified codec, and
+		 * {@link #allowTranscoding(Boolean)} is <code>false</code>, an
+		 * exception will occur.
+		 *
 		 * If defined here, this parameter has prevalence over
-		 * OPENVIDU_STREAMS_FORCED_VIDEO_CODEC. OPENVIDU_STREAMS_FORCED_VIDEO_CODEC
-		 * default is {@link VideoCodec#VP8}
+		 * OPENVIDU_STREAMS_FORCED_VIDEO_CODEC.
+		 *
+		 * Default is {@link VideoCodec#VP8} for Kurento, and
+		 * {@link VideoCodec#NONE} for mediasoup.
 		 */
 		public SessionProperties.Builder forcedVideoCodec(VideoCodec forcedVideoCodec) {
 			this.forcedVideoCodec = forcedVideoCodec;

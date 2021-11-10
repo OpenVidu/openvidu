@@ -392,6 +392,22 @@ public class KurentoSessionManager extends SessionManager {
 			log.warn("AllowTranscoding has no effect if the Media Server is not Kurento");
 		}
 
+		// Set appropriate value for the ForcedVideoCodec feature.
+		if (forcedVideoCodec == VideoCodec.MEDIA_SERVER_PREFERRED) {
+			final MediaServer mediaServer = openviduConfig.getMediaServer();
+			switch (mediaServer) {
+				case mediasoup:
+					forcedVideoCodec = VideoCodec.NONE;
+					break;
+				case kurento:
+				default:
+					forcedVideoCodec = VideoCodec.VP8;
+					break;
+			}
+
+			log.info("Media Server: {}, selected ForcedVideoCodec value: {}", mediaServer, forcedVideoCodec);
+		}
+
 		// Modify sdp if forced codec is defined
 		if (forcedVideoCodec != VideoCodec.NONE && !participant.isIpcam()) {
 			kurentoOptions.sdpOffer = sdpMunging.forceCodec(kurentoOptions.sdpOffer, participant, true, false,
