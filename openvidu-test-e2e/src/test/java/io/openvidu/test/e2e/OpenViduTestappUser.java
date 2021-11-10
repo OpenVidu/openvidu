@@ -9,14 +9,18 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import io.openvidu.test.browsers.BrowserUser;
 
-public class MyUser {
+public class OpenViduTestappUser {
 
 	private BrowserUser browserUser;
 	private OpenViduEventManager eventManager;
 
-	public MyUser(BrowserUser browserUser) {
+	public OpenViduTestappUser(BrowserUser browserUser) {
 		this.browserUser = browserUser;
 		this.eventManager = new OpenViduEventManager(this.browserUser.getDriver(), this.browserUser.getTimeOfWait());
+	}
+
+	public BrowserUser getBrowserUser() {
+		return this.browserUser;
 	}
 
 	public WebDriver getDriver() {
