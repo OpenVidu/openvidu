@@ -4407,7 +4407,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Java SDK should return false as the recording has been stopped with it
 		Assert.assertFalse("Java fetch should be false", session.fetch());
 		Assert.assertFalse("Java fetch should be false", OV.fetch());
-		// Node SDK should return true as it doesn't know about the recording stooped
+		// Node SDK should return true as it doesn't know about the recording stopped
 		checkNodeFetchChanged(user, false, true);
 		checkNodeFetchChanged(user, false, false);
 		checkNodeFetchChanged(user, true, false);
@@ -4538,6 +4538,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	private void checkNodeFetchChanged(OpenViduTestappUser user, boolean global, boolean hasChanged) {
+		final String textAreaId = "api-response-text-area";
+		By textAreaLocator = By.id(textAreaId);
+		user.getDriver().findElement(By.id("clear-response-text-area-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(textAreaLocator, "value", ""));
 		user.getDriver().findElement(By.id(global ? "list-sessions-btn" : "get-session-btn")).click();
 		user.getWaiter().until(new NodeFetchHasChanged(hasChanged));
 	}

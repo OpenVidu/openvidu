@@ -33,3 +33,9 @@ mat-dialog-content button {
   margin-left: 9px;
   width: 30%;
 }
+
+#clear-response-text-area-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+}

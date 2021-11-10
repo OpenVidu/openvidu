@@ -140,14 +140,20 @@ export class SessionApiDialogComponent {
         }
         this.session.fetch()
             .then(anyChange => {
-                const resp = {};
+                const resp = {
+                    activeConnections: [],
+                    sessionId: this.session.sessionId,
+                    createdAt: this.session.createdAt,
+                    properties: this.session.properties,
+                    recording: this.session.recording
+                };
                 this.session.activeConnections.forEach(con => {
-                    resp[con.connectionId] = [];
+                    resp.activeConnections[con.connectionId] = [];
                     con.publishers.forEach(pub => {
-                        resp[con.connectionId].push(pub);
+                        resp.activeConnections[con.connectionId].push(pub);
                     });
                 });
-                this.response = 'Session info fetched %[' + JSON.stringify(resp) + ']%. Changes: ' + anyChange;
+                this.response = 'Session info fetched ' + JSON.stringify(resp) + '. Changes: ' + anyChange;
             })
             .catch(error => {
                 this.response = 'Error [' + error.message + ']';

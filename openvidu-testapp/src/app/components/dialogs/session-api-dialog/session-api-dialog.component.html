@@ -65,8 +65,9 @@
       <button mat-button id="delete-recording-btn" (click)="deleteRecording()" [disabled]="!recordingId">Delete
         recording</button>
     </div>
-    <mat-form-field *ngIf="!!response" id="response-text-area" appearance="fill">
+    <mat-form-field id="response-text-area" appearance="fill">
       <textarea id="api-response-text-area" [(ngModel)]="response" matInput readonly></textarea>
+      <button mat-button id="clear-response-text-area-btn" (click)="response=''">Clear</button>
     </mat-form-field>
   </mat-dialog-content>
   <mat-dialog-actions>
