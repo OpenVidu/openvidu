@@ -40,10 +40,4 @@ public class OpenViduTestappUser {
 		this.browserUser.dispose();
 	}
 
-	public void waitWithNewTime(int newWaitTime, ExpectedCondition<?> condition) {
-		this.getWaiter().withTimeout(Duration.of(newWaitTime, ChronoUnit.SECONDS));
-		this.getWaiter().until(condition);
-		this.getWaiter().withTimeout(Duration.of(this.browserUser.getTimeOfWait(), ChronoUnit.SECONDS));
-	}
-
 }

@@ -17,8 +17,12 @@
 
 package io.openvidu.test.browsers;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +69,12 @@ public class BrowserUser {
 		if (windowDimensions != null) {
 			this.driver.manage().window().setSize(windowDimensions);
 		}
+	}
+
+	public void waitWithNewTime(int newWaitTime, ExpectedCondition<?> condition) {
+		this.waiter.withTimeout(Duration.of(newWaitTime, ChronoUnit.SECONDS));
+		this.waiter.until(condition);
+		this.waiter.withTimeout(Duration.of(this.getTimeOfWait(), ChronoUnit.SECONDS));
 	}
 
 	public void dispose() {
