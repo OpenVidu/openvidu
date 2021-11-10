@@ -89,7 +89,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void individualDynamicRecordTest() throws Exception {
 		isRecordingTest = true;
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Individual dynamic record");
 
@@ -310,7 +310,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertFalse("Wrong record Connection property", connection.record());
 		Assert.assertEquals("Wrong data Connection property", "MY_SERVER_PRO_DATA", connection.getServerData());
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
@@ -570,7 +570,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.POST, "/openvidu/api/restart", body, 200);
 		waitUntilOpenViduRestarted(30);
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.className("join-btn")).click();
 

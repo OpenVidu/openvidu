@@ -293,10 +293,15 @@ public class AbstractOpenViduTestAppE2eTest {
 		}
 	}
 
+	protected MyUser setupBrowserAndConnectToOpenViduTestapp(String browser) {
+		MyUser user = this.setupBrowserAndConnectToOpenViduTestapp(browser);
+		this.connectToOpenViduTestApp(user);
+		return user;
+	}
+
 	protected MyUser setupBrowser(String browser) {
 
 		BrowserUser browserUser;
-		boolean isOpenViduTestApp = true;
 
 		switch (browser) {
 		case "chrome":
@@ -361,7 +366,6 @@ public class AbstractOpenViduTestAppE2eTest {
 				log.error("Error running command in Android container");
 			}
 			browserUser = new AndroidAppUser("TestUser", 50, "/opt/openvidu-cache/app-debug.apk");
-			isOpenViduTestApp = false;
 			break;
 		default:
 			setupBrowserAux(BrowserNames.CHROME, chrome, false);
@@ -369,17 +373,6 @@ public class AbstractOpenViduTestAppE2eTest {
 		}
 
 		MyUser user = new MyUser(browserUser);
-
-		if (isOpenViduTestApp) {
-			user.getDriver().get(APP_URL);
-			WebElement urlInput = user.getDriver().findElement(By.id("openvidu-url"));
-			urlInput.clear();
-			urlInput.sendKeys(OPENVIDU_URL);
-			WebElement secretInput = user.getDriver().findElement(By.id("openvidu-secret"));
-			secretInput.clear();
-			secretInput.sendKeys(OPENVIDU_SECRET);
-			user.getEventManager().startPolling();
-		}
 
 		this.users.add(user);
 		return user;
@@ -415,6 +408,17 @@ public class AbstractOpenViduTestAppE2eTest {
 			return true;
 		}
 		return remoteUrl != null;
+	}
+
+	private void connectToOpenViduTestApp(MyUser user) {
+		user.getDriver().get(APP_URL);
+		WebElement urlInput = user.getDriver().findElement(By.id("openvidu-url"));
+		urlInput.clear();
+		urlInput.sendKeys(OPENVIDU_URL);
+		WebElement secretInput = user.getDriver().findElement(By.id("openvidu-secret"));
+		secretInput.clear();
+		secretInput.sendKeys(OPENVIDU_SECRET);
+		user.getEventManager().startPolling();
 	}
 
 	protected MyUser setupChromeWithFakeVideo(String absolutePathToVideoFile) {

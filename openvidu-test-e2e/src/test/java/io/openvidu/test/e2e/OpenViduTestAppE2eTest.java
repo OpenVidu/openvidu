@@ -109,7 +109,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("One2One Chrome")
 	void oneToOneChrome() throws Exception {
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		log.info("One2One Chrome");
 		oneToOneAux(user);
 	}
@@ -117,7 +117,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("One2One Firefox")
 	void oneToOneFirefox() throws Exception {
-		MyUser user = setupBrowser("firefox");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 		log.info("One2One Firefox");
 		oneToOneAux(user);
 	}
@@ -125,7 +125,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("One2One Opera")
 	void oneToOneOpera() throws Exception {
-		MyUser user = setupBrowser("opera");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("opera");
 		log.info("One2One Opera");
 		oneToOneAux(user);
 	}
@@ -133,7 +133,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("One2One Edge")
 	void oneToOneEdge() throws Exception {
-		MyUser user = setupBrowser("edge");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("edge");
 		log.info("One2One Edge");
 		oneToOneAux(user);
 	}
@@ -143,7 +143,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("One2One Chrome Android")
 	void oneToOneChromeAndroid() throws Exception {
 		long initTime = System.currentTimeMillis();
-		MyUser user = setupBrowser("androidChrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("androidChrome");
 		log.info("Android emulator ready after {} seconds", (System.currentTimeMillis() - initTime) / 1000);
 		log.info("One2One Android Chrome");
 		onePublisherOneSubscriber(user);
@@ -154,7 +154,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@Disabled
 	void oneToOneFirefoxAndroid() throws Exception {
 		long initTime = System.currentTimeMillis();
-		MyUser user = setupBrowser("androidFirefox");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("androidFirefox");
 		log.info("Android emulator ready after {} seconds", (System.currentTimeMillis() - initTime) / 1000);
 		log.info("One2One Android Firefox");
 		onePublisherOneSubscriber(user);
@@ -165,7 +165,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@Disabled
 	void oneToOneIonicAndroid() throws Exception {
 		long initTime = System.currentTimeMillis();
-		MyUser user = setupBrowser("androidApp");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("androidApp");
 		log.info("Android emulator ready after {} seconds", (System.currentTimeMillis() - initTime) / 1000);
 		log.info("One2One Ionic Android");
 
@@ -220,7 +220,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("One2One only audio")
 	void oneToOneOnlyAudioSession() throws Exception {
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("One2One only audio");
 
@@ -246,7 +246,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("One2One only video")
 	void oneToOneOnlyVideoSession() throws Exception {
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("One2One only video");
 
@@ -272,7 +272,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("One2Many [Video + Audio]")
 	void oneToManyVideoAudioSession() throws Exception {
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("One2Many [Video + Audio]");
 
@@ -297,7 +297,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Unique user remote subscription [Video + Audio]")
 	void oneRemoteSubscription() throws Exception {
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Unique user remote subscription [Video + Audio]");
 
@@ -323,7 +323,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Unique user remote subscription Firefox [Video + Audio]")
 	void oneRemoteSubscriptionFirefox() throws Exception {
 
-		MyUser user = setupBrowser("firefox");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 
 		log.info("Unique user remote subscription Firefox [Video + Audio]");
 
@@ -349,7 +349,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Unique user remote subscription [ScreenShare + Audio]")
 	void oneRemoteSubscriptionScreen() throws Exception {
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Unique user remote subscription [ScreenShare + Audio]");
 
@@ -375,7 +375,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Many2Many [Video + Audio]")
 	void manyToManyVideoAudioSession() throws Exception {
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Many2Many [Video + Audio]");
 
@@ -451,16 +451,16 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		};
 
 		Thread threadChrome = new Thread(() -> {
-			browserTest.apply(setupBrowser("chrome"), "Chrome");
+			browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("chrome"), "Chrome");
 		});
 		Thread threadFirefox = new Thread(() -> {
-			browserTest.apply(setupBrowser("firefox"), "Firefox");
+			browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("firefox"), "Firefox");
 		});
 		Thread threadOpera = new Thread(() -> {
-			browserTest.apply(setupBrowser("opera"), "Opera");
+			browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("opera"), "Opera");
 		});
 		Thread threadEdge = new Thread(() -> {
-			browserTest.apply(setupBrowser("edge"), "Edge");
+			browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("edge"), "Edge");
 		});
 
 		threadChrome.setUncaughtExceptionHandler(h);
@@ -487,7 +487,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Signal message")
 	void oneToManySignalMessage() throws Exception {
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Signal message");
 
@@ -510,7 +510,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("ExceptionEvent test")
 	void exceptionEventTest() throws Exception {
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("ExceptionEvent test");
 
@@ -542,7 +542,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Subscribe Unsubscribe")
 	void subscribeUnsubscribeTest() throws Exception {
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Subscribe Unsubscribe");
 
@@ -610,7 +610,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Publish Unpublish")
 	void publishUnpublishTest() throws Exception {
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Publisher unpublish");
 
@@ -658,7 +658,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		Queue<Boolean> threadAssertions = new ConcurrentLinkedQueue<Boolean>();
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Change publisher dynamically");
 
@@ -777,7 +777,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Moderator capabilities")
 	void moderatorCapabilitiesTest() throws Exception {
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Moderator capabilities");
 
@@ -846,7 +846,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		Queue<Boolean> threadAssertions = new ConcurrentLinkedQueue<Boolean>();
 
-		MyUser user = setupBrowser("chromeAlternateScreenShare");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chromeAlternateScreenShare");
 
 		log.info("Stream property changed event");
 
@@ -976,7 +976,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		Queue<Boolean> threadAssertions = new ConcurrentLinkedQueue<Boolean>();
 
-		MyUser user = setupBrowser("chromeAlternateScreenShare");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chromeAlternateScreenShare");
 
 		log.info("Stream property changed event");
 
@@ -1043,7 +1043,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Local browser record")
 	void localBrowserRecordTest() throws Exception {
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Local browser record");
 
@@ -1101,7 +1101,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void composedRecordTest() throws Exception {
 		isRecordingTest = true;
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Composed record");
 
@@ -1261,7 +1261,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void composedQuickStartRecordTest() throws Exception {
 		isRecordingTest = true;
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Composed quick start record");
 
@@ -1436,7 +1436,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void individualRecordTest() throws Exception {
 		isRecordingTest = true;
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Individual record");
 
@@ -1546,7 +1546,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void audioOnlyVideoOnlyRecordTest() throws Exception {
 		isRecordingTest = true;
 
-		MyUser user = setupBrowser("chromeAlternateScreenShare");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chromeAlternateScreenShare");
 
 		log.info("Record cross-browser audio-only and video-only");
 
@@ -1566,7 +1566,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		};
 
 		Thread t = new Thread(() -> {
-			MyUser user2 = setupBrowser("firefox");
+			MyUser user2 = setupBrowserAndConnectToOpenViduTestapp("firefox");
 			user2.getDriver().get(APP_URL);
 			WebElement urlInput = user2.getDriver().findElement(By.id("openvidu-url"));
 			urlInput.clear();
@@ -1746,7 +1746,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void audioOnlyComposedRecordTest() throws Exception {
 		isRecordingTest = true;
 
-		MyUser user = setupBrowser("chromeAlternateScreenShare");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chromeAlternateScreenShare");
 
 		log.info("Record audio-only COMPOSED");
 
@@ -1819,7 +1819,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void customLayoutRecordTest() throws Exception {
 		isRecordingTest = true;
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Custom layout recording");
 
@@ -1941,7 +1941,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("REST API: Fetch all, fetch one, force disconnect, force unpublish, close session")
 	void restApiFetchForce() throws Exception {
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("REST API: Fetch all, fetch one, force disconnect, force unpublish, close session");
 
@@ -2058,7 +2058,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Video filter test")
 	void videoFilterTest() throws Exception {
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Video filter test");
 
@@ -2327,7 +2327,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void openViduJavaClientTest() throws Exception {
 		isRecordingTest = true;
 
-		MyUser user = setupBrowser("chromeAlternateScreenShare");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chromeAlternateScreenShare");
 
 		user.getDriver().manage().window().setSize(new Dimension(1000, 800));
 
@@ -3065,7 +3065,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				HttpStatus.SC_NO_CONTENT);
 
 		// Start session
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
 		Thread.sleep(1000);
@@ -3441,7 +3441,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				return;
 			}
 
-			MyUser user = setupBrowser("chrome");
+			MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 			// TOTAL DISCONNECTION
 			// Session should be destroyed with reason nodeCrashed
@@ -3546,7 +3546,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				return;
 			}
 
-			MyUser user = setupBrowser("chrome");
+			MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 			// TOTAL DISCONNECTION
 			// Streams, Connections and Session should be destroyed with reason
@@ -3720,7 +3720,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void webhookTest() throws Exception {
 		isRecordingTest = true;
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Webhook test");
 
@@ -4052,7 +4052,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 					response.get("reason").getAsString());
 			CustomWebhook.waitForEvent("sessionDestroyed", 1);
 
-			MyUser user = setupBrowser("chrome");
+			MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 			// Record a session to get an MP4 file
 
@@ -4237,7 +4237,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void openviduSdkFetchTest() throws Exception {
 		isRecordingTest = true;
 
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("OpenVidu SDK fetch test");
 
@@ -4473,7 +4473,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Force codec default config")
 	void forceDefaultCodec() throws Exception {
 		log.info("Force codec default config");
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		this.forceCodecGenericE2eTest(user);
 	}
 
@@ -4482,7 +4482,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Force valid codec VP8 - Not Allow Transcoding")
 	void forceValidCodecNotAllowTranscodingVP8Test() throws Exception {
 		log.info("Force codec Chrome - Force VP8 - Not Allow Transcoding");
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		this.forceCodecGenericE2eTest(user, VideoCodec.VP8, false);
 		user.getDriver().close();
 	}
@@ -4492,7 +4492,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Force valid codec H264 - Not Allow Transcoding")
 	void forceValidCodecNotAllowTranscodingH264Test() throws Exception {
 		log.info("Force codec Chrome - Force H264 - Not Allow Transcoding");
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		this.forceCodecGenericE2eTest(user, VideoCodec.H264, false);
 		user.getDriver().close();
 	}
@@ -4502,7 +4502,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Force valid codec VP8 - Allow Transcoding")
 	void forceValidCodecAllowTranscodingVP8Test() throws Exception {
 		log.info("Force codec Chrome - Force VP8 - Allow Transcoding");
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		this.forceCodecGenericE2eTest(user, VideoCodec.VP8, true);
 		user.getDriver().close();
 	}
@@ -4512,7 +4512,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Force valid codec H264 - Allow Transcoding")
 	void forceValidCodecAllowTranscodingH264Test() throws Exception {
 		log.info("Force codec Chrome - Force H264 - Allow Transcoding");
-		MyUser user = setupBrowser("chrome");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		this.forceCodecGenericE2eTest(user, VideoCodec.H264, true);
 		user.getDriver().close();
 	}
@@ -4523,7 +4523,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	void forceCodecNotValidCodecNotAllowTranscoding() throws Exception {
 		// Start firefox with OpenH264 disabled to check not supported codecs
 		log.info("Force codec Firefox - Force H264 - Allow Transcoding - Disabled H264 in Firefox");
-		MyUser user = setupBrowser("firefoxDisabledOpenH264");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("firefoxDisabledOpenH264");
 		this.forceNotSupportedCodec(user, VideoCodec.H264, false);
 	}
 
@@ -4531,7 +4531,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 	@DisplayName("Force not valid codec - Allow Transcoding")
 	void forceCodecNotValidCodecAllowTranscoding() throws Exception {
 		// Start firefox with OpenH264 disabled to check not supported codecs
-		MyUser user = setupBrowser("firefoxDisabledOpenH264");
+		MyUser user = setupBrowserAndConnectToOpenViduTestapp("firefoxDisabledOpenH264");
 		log.info("Force codec Firefox - Force H264 - Allow Transcoding - Disabled H264 in Firefox");
 		this.forceNotSupportedCodec(user, VideoCodec.H264, true);
 	}
