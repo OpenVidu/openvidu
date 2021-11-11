@@ -121,6 +121,8 @@ public class OpenViduEventManager {
 			this.pollingThread.interrupt();
 		}
 
+		this.isInterrupted.set(false);
+
 		this.pollingThread = new Thread(() -> {
 			while (!this.isInterrupted.get()) {
 				this.getEventsFromBrowser();
