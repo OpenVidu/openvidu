@@ -2,7 +2,7 @@ package io.openvidu.test.browsers;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,16 +19,22 @@ public class EdgeUser extends BrowserUser {
 	public EdgeUser(String userName, int timeOfWaitInSeconds) {
 		super(userName, timeOfWaitInSeconds);
 
+		String REMOTE_URL = System.getProperty("REMOTE_URL_EDGE");
+
 		EdgeOptions options = new EdgeOptions();
 		options.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, UnexpectedAlertBehaviour.IGNORE);
 		options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
 		// When upgrading to selenium 4.0.0 options.addArguments will make this easier
-		List<String> args = Arrays.asList("use-fake-ui-for-media-stream", "use-fake-device-for-media-stream");
+		List<String> args = new ArrayList<>();
+		args.add("use-fake-ui-for-media-stream");
+		args.add("use-fake-device-for-media-stream");
+		if (REMOTE_URL != null) {
+			args.add("headless");
+		}
 		Map<String, Object> map = new HashMap<>();
 		map.put("args", args);
 		options.setCapability("ms:edgeOptions", map);
 
-		String REMOTE_URL = System.getProperty("REMOTE_URL_EDGE");
 		if (REMOTE_URL != null) {
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {

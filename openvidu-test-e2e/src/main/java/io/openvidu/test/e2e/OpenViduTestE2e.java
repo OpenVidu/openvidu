@@ -139,6 +139,8 @@ public class OpenViduTestE2e {
 			if (isRemote(BrowserNames.CHROME)) {
 				chrome = new GenericContainer<>(DockerImageName.parse("selenium/standalone-chrome:" + CHROME_VERSION))
 						.withSharedMemorySize(2147483648L).withFileSystemBind("/opt/openvidu", "/opt/openvidu")
+						.withEnv(Map.of("START_XVFB", "false", "SE_NODE_OVERRIDE_MAX_SESSIONS", "true",
+								"SE_NODE_MAX_SESSIONS", "2"))
 						.withExposedPorts(4444).waitingFor(waitBrowser);
 				chrome.setPortBindings(Arrays.asList("6666:4444"));
 			} else {
@@ -150,7 +152,7 @@ public class OpenViduTestE2e {
 				firefox = new GenericContainer<>(
 						DockerImageName.parse("selenium/standalone-firefox:" + FIREFOX_VERSION))
 								.withSharedMemorySize(2147483648L).withFileSystemBind("/opt/openvidu", "/opt/openvidu")
-								.withExposedPorts(4444).waitingFor(waitBrowser);
+								.withEnv(Map.of("START_XVFB", "false")).withExposedPorts(4444).waitingFor(waitBrowser);
 				firefox.setPortBindings(Arrays.asList("6667:4444"));
 			} else {
 				WebDriverManager.firefoxdriver().setup();
@@ -170,7 +172,7 @@ public class OpenViduTestE2e {
 			if (isRemote(BrowserNames.EDGE)) {
 				edge = new GenericContainer<>(DockerImageName.parse("selenium/standalone-edge:" + EDGE_VERSION))
 						.withSharedMemorySize(2147483648L).withFileSystemBind("/opt/openvidu", "/opt/openvidu")
-						.withExposedPorts(4444).waitingFor(waitBrowser);
+						.withEnv(Map.of("START_XVFB", "false")).withExposedPorts(4444).waitingFor(waitBrowser);
 				edge.setPortBindings(Arrays.asList("6669:4444"));
 			} else {
 				WebDriverManager.edgedriver().setup();

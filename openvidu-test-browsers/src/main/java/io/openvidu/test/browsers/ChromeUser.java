@@ -47,8 +47,15 @@ public class ChromeUser extends BrowserUser {
 
 	private ChromeUser(String userName, int timeOfWaitInSeconds, ChromeOptions options) {
 		super(userName, timeOfWaitInSeconds);
+
+		String REMOTE_URL = System.getProperty("REMOTE_URL_CHROME");
+
 		options.setAcceptInsecureCerts(true);
 		options.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE);
+
+		if (REMOTE_URL != null) {
+			options.setHeadless(true);
+		}
 
 		options.addArguments("--disable-infobars");
 		options.setExperimentalOption("excludeSwitches", new String[] { "enable-automation" });
@@ -58,7 +65,6 @@ public class ChromeUser extends BrowserUser {
 		prefs.put("profile.default_content_setting_values.media_stream_camera", 1);
 		options.setExperimentalOption("prefs", prefs);
 
-		String REMOTE_URL = System.getProperty("REMOTE_URL_CHROME");
 		if (REMOTE_URL != null) {
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {
