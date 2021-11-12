@@ -750,8 +750,14 @@ public class KurentoSessionManager extends SessionManager {
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
 			log.debug("Request [ICE_CANDIDATE] endpoint={} candidate={} " + "sdpMLineIdx={} sdpMid={} ({})",
 					endpointName, candidate, sdpMLineIndex, sdpMid, participant.getParticipantPublicId());
-			kParticipant.addIceCandidate(endpointName, new IceCandidate(candidate, sdpMid, sdpMLineIndex));
-			sessionEventsHandler.onRecvIceCandidate(participant, transactionId, null);
+			if (kParticipant.isPublisherEndpointDefined()) {
+				kParticipant.addIceCandidate(endpointName, new IceCandidate(candidate, sdpMid, sdpMLineIndex));
+				sessionEventsHandler.onRecvIceCandidate(participant, transactionId, null);
+			} else {
+				throw new OpenViduException(Code.PUBLISHER_ENDPOINT_NOT_FOUND_ERROR_CODE,
+						"Request to onIceCandidate for connection " + endpointName
+								+ " gone wrong. There is no publisher endpoint available");
+			}
 		} catch (OpenViduException e) {
 			log.error("PARTICIPANT {}: Error receiving ICE " + "candidate (epName={}, candidate={})",
 					participant.getParticipantPublicId(), endpointName, candidate, e);
@@ -1374,7 +1380,7 @@ public class KurentoSessionManager extends SessionManager {
 			} catch (Exception e) {
 				log.error("Request to addFilterEventListener to stream {} gone wrong. Error: {}", streamId,
 						e.getMessage());
-				throw new OpenViduException(Code.FILTER_EVENT_LISTENER_NOT_FOUND,
+				throw new OpenViduException(Code.FILTER_EVENT_LISTENER_NOT_FOUND_ERROR_CODE,
 						"Request to addFilterEventListener to stream " + streamId + " gone wrong: " + e.getMessage());
 			}
 		}
