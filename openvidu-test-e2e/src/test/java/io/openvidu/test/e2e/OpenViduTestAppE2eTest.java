@@ -100,7 +100,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	protected static void setupAll() throws Exception {
 		checkFfmpegInstallation();
 		loadEnvironmentVariables();
-		prepareBrowsers(new HashSet<>(Arrays.asList(BrowserNames.CHROME, BrowserNames.FIREFOX, BrowserNames.OPERA,
+		prepareBrowserDrivers(new HashSet<>(Arrays.asList(BrowserNames.CHROME, BrowserNames.FIREFOX, BrowserNames.OPERA,
 				BrowserNames.EDGE, BrowserNames.ANDROID)));
 		cleanFoldersAndSetUpOpenViduJavaClient();
 		getDefaultTranscodingValues();
@@ -139,8 +139,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@Disabled
 	@DisplayName("One2One Chrome Android")
+	@Disabled
 	void oneToOneChromeAndroid() throws Exception {
 		long initTime = System.currentTimeMillis();
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("androidChrome");
@@ -2204,7 +2204,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@DisplayName("Video filter events test")
 	void videoFilterEventsTest() throws Exception {
 
-		OpenViduTestappUser user = setupChromeWithFakeVideoAndConnectToOpenViduTestApp("/opt/openvidu/barcode.y4m");
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeAlternateFakeVideo");
 
 		log.info("Video filter events test");
 
@@ -3898,7 +3898,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	void webhookFilterEventTest() throws Exception {
 		isRecordingTest = true;
 
-		OpenViduTestappUser user = setupChromeWithFakeVideoAndConnectToOpenViduTestApp("/opt/openvidu/barcode.y4m");
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeAlternateFakeVideo");
 
 		log.info("Webhook test");
 

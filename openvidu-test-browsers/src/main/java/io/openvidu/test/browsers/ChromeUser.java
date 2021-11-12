@@ -32,20 +32,20 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class ChromeUser extends BrowserUser {
 
-	public ChromeUser(String userName, int timeOfWaitInSeconds, boolean runningAsRoot) {
-		this(userName, timeOfWaitInSeconds, generateDefaultScreenChromeOptions(runningAsRoot));
+	public ChromeUser(String userName, int timeOfWaitInSeconds, boolean headless) {
+		this(userName, timeOfWaitInSeconds, generateDefaultScreenChromeOptions(), headless);
 	}
 
-	public ChromeUser(String userName, int timeOfWaitInSeconds, String screenToCapture, boolean runningAsRoot) {
-		this(userName, timeOfWaitInSeconds, generateCustomScreenChromeOptions(screenToCapture, runningAsRoot,
-				Paths.get("/opt/openvidu/fakeaudio.wav")));
+	public ChromeUser(String userName, int timeOfWaitInSeconds, String screenToCapture) {
+		this(userName, timeOfWaitInSeconds,
+				generateCustomScreenChromeOptions(screenToCapture, Paths.get("/opt/openvidu/fakeaudio.wav")), false);
 	}
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds, Path fakeVideoLocation) {
-		this(userName, timeOfWaitInSeconds, generateFakeVideoChromeOptions(fakeVideoLocation));
+		this(userName, timeOfWaitInSeconds, generateFakeVideoChromeOptions(fakeVideoLocation), false);
 	}
 
-	private ChromeUser(String userName, int timeOfWaitInSeconds, ChromeOptions options) {
+	private ChromeUser(String userName, int timeOfWaitInSeconds, ChromeOptions options, boolean headless) {
 		super(userName, timeOfWaitInSeconds);
 
 		String REMOTE_URL = System.getProperty("REMOTE_URL_CHROME");
@@ -53,7 +53,7 @@ public class ChromeUser extends BrowserUser {
 		options.setAcceptInsecureCerts(true);
 		options.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE);
 
-		if (REMOTE_URL != null) {
+		if (REMOTE_URL != null && headless) {
 			options.setHeadless(true);
 		}
 
@@ -81,7 +81,7 @@ public class ChromeUser extends BrowserUser {
 		this.configureDriver(new org.openqa.selenium.Dimension(1920, 1080));
 	}
 
-	private static ChromeOptions generateDefaultScreenChromeOptions(boolean runningAsRoot) {
+	private static ChromeOptions generateDefaultScreenChromeOptions() {
 		ChromeOptions options = new ChromeOptions();
 		// This flag avoids to grant the user media
 		options.addArguments("--use-fake-ui-for-media-stream");
@@ -89,28 +89,15 @@ public class ChromeUser extends BrowserUser {
 		options.addArguments("--use-fake-device-for-media-stream");
 		// This flag selects the entire screen as video source when screen sharing
 		options.addArguments("--auto-select-desktop-capture-source=Entire screen");
-
-		// Background Chrome
-		// options.addArguments("--headless");
-
-		if (runningAsRoot) {
-			options.addArguments("--no-sandbox");
-		}
-
 		return options;
 	}
 
-	private static ChromeOptions generateCustomScreenChromeOptions(String screenToCapture, boolean runningAsRoot,
-			Path audioFileLocation) {
+	private static ChromeOptions generateCustomScreenChromeOptions(String screenToCapture, Path audioFileLocation) {
 		ChromeOptions options = new ChromeOptions();
 		// This flag selects the entire screen as video source when screen sharing
 		options.addArguments("--auto-select-desktop-capture-source=" + screenToCapture);
 		options.addArguments("--use-fake-device-for-media-stream");
 		options.addArguments("--use-file-for-fake-audio-capture=" + audioFileLocation.toString());
-
-		if (runningAsRoot) {
-			options.addArguments("--no-sandbox");
-		}
 
 		return options;
 	}

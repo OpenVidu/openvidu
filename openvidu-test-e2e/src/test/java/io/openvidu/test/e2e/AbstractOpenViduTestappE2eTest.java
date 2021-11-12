@@ -35,20 +35,6 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 		return testappUser;
 	}
 
-	protected OpenViduTestappUser setupChromeWithFakeVideoAndConnectToOpenViduTestApp(String absolutePathToVideoFile) {
-		BrowserUser browserUser = this.setupChromeWithFakeVideo(absolutePathToVideoFile);
-		OpenViduTestappUser testappUser = new OpenViduTestappUser(browserUser);
-		testappUser.getDriver().get(APP_URL);
-		WebElement urlInput = testappUser.getDriver().findElement(By.id("openvidu-url"));
-		urlInput.clear();
-		urlInput.sendKeys(OPENVIDU_URL);
-		WebElement secretInput = testappUser.getDriver().findElement(By.id("openvidu-secret"));
-		secretInput.clear();
-		secretInput.sendKeys(OPENVIDU_SECRET);
-		testappUser.getEventManager().startPolling();
-		return testappUser;
-	}
-
 	protected void listEmptyRecordings(OpenViduTestappUser user) {
 		// List existing recordings (empty)
 		user.getDriver().findElement(By.id("list-recording-btn")).click();

@@ -57,7 +57,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	protected static void setupAll() {
 		checkFfmpegInstallation();
 		loadEnvironmentVariables();
-		prepareBrowsers(new HashSet<>(Arrays.asList(BrowserNames.CHROME)));
+		prepareBrowserDrivers(new HashSet<>(Arrays.asList(BrowserNames.CHROME)));
 		cleanFoldersAndSetUpOpenViduJavaClient();
 	}
 

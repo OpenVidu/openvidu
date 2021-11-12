@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -21,7 +22,6 @@ import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
-import org.junit.ClassRule;
 import org.junit.jupiter.api.AfterEach;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -57,21 +57,6 @@ import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.RecordingUtils;
 
 public class OpenViduTestE2e {
-
-	@ClassRule
-	public static GenericContainer<?> chrome;
-
-	@ClassRule
-	public static GenericContainer<?> firefox;
-
-	@ClassRule
-	public static GenericContainer<?> opera;
-
-	@ClassRule
-	public static GenericContainer<?> edge;
-
-	@ClassRule
-	public static GenericContainer<?> android;
 
 	private final static WaitStrategy waitBrowser = Wait.forHttp("/wd/hub/status").forStatusCode(200);
 	private final static WaitStrategy waitAndroid = Wait.forHealthcheck().withStartupTimeout(Duration.ofSeconds(600));
@@ -112,6 +97,7 @@ public class OpenViduTestE2e {
 	protected static final String RECORDING_IMAGE = "openvidu/openvidu-recording";
 
 	protected Collection<BrowserUser> browserUsers = new HashSet<>();
+	protected Collection<GenericContainer<?>> containers = new HashSet<>();
 	protected volatile static boolean isRecordingTest;
 	protected volatile static boolean isKurentoRestartTest;
 
@@ -133,59 +119,89 @@ public class OpenViduTestE2e {
 		}
 	}
 
-	@SuppressWarnings("resource")
-	protected static void prepareBrowsers(Set<BrowserNames> browsers) {
-		if (browsers.contains(BrowserNames.CHROME)) {
-			if (isRemote(BrowserNames.CHROME)) {
-				chrome = new GenericContainer<>(DockerImageName.parse("selenium/standalone-chrome:" + CHROME_VERSION))
-						.withSharedMemorySize(2147483648L).withFileSystemBind("/opt/openvidu", "/opt/openvidu")
-						.withEnv(Map.of("START_XVFB", "false", "SE_NODE_OVERRIDE_MAX_SESSIONS", "true",
-								"SE_NODE_MAX_SESSIONS", "2"))
-						.withExposedPorts(4444).waitingFor(waitBrowser);
-				chrome.setPortBindings(Arrays.asList("6666:4444"));
-			} else {
-				WebDriverManager.chromedriver().setup();
-			}
+	private GenericContainer<?> chromeContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
+		Map<String, String> map = new HashMap<>();
+		if (headless) {
+			map.put("START_XVFB", "false");
 		}
-		if (browsers.contains(BrowserNames.FIREFOX)) {
-			if (isRemote(BrowserNames.FIREFOX)) {
-				firefox = new GenericContainer<>(
-						DockerImageName.parse("selenium/standalone-firefox:" + FIREFOX_VERSION))
-								.withSharedMemorySize(2147483648L).withFileSystemBind("/opt/openvidu", "/opt/openvidu")
-								.withEnv(Map.of("START_XVFB", "false")).withExposedPorts(4444).waitingFor(waitBrowser);
-				firefox.setPortBindings(Arrays.asList("6667:4444"));
-			} else {
-				WebDriverManager.firefoxdriver().setup();
-			}
+		if (maxBrowserSessions > 1) {
+			map.put("SE_NODE_OVERRIDE_MAX_SESSIONS", "true");
+			map.put("SE_NODE_MAX_SESSIONS", String.valueOf(maxBrowserSessions));
 		}
-		if (browsers.contains(BrowserNames.OPERA)) {
-			if (isRemote(BrowserNames.OPERA)) {
-				opera = new GenericContainer<>(DockerImageName.parse("selenium/standalone-opera:" + OPERA_VERSION))
-						.withSharedMemorySize(2147483648L).withFileSystemBind("/opt/openvidu", "/opt/openvidu")
-						.withExposedPorts(4444).waitingFor(waitBrowser);
-				opera.setPortBindings(Arrays.asList("6668:4444"));
-			} else {
-				WebDriverManager.operadriver().setup();
-			}
+		GenericContainer<?> chrome = new GenericContainer<>(DockerImageName.parse(image)).withSharedMemorySize(shmSize)
+				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withExposedPorts(4444)
+				.waitingFor(waitBrowser);
+		chrome.setPortBindings(Arrays.asList("6666:4444"));
+		return chrome;
+	}
+
+	private GenericContainer<?> firefoxContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
+		Map<String, String> map = new HashMap<>();
+		if (headless) {
+			map.put("START_XVFB", "false");
 		}
-		if (browsers.contains(BrowserNames.EDGE)) {
-			if (isRemote(BrowserNames.EDGE)) {
-				edge = new GenericContainer<>(DockerImageName.parse("selenium/standalone-edge:" + EDGE_VERSION))
-						.withSharedMemorySize(2147483648L).withFileSystemBind("/opt/openvidu", "/opt/openvidu")
-						.withEnv(Map.of("START_XVFB", "false")).withExposedPorts(4444).waitingFor(waitBrowser);
-				edge.setPortBindings(Arrays.asList("6669:4444"));
-			} else {
-				WebDriverManager.edgedriver().setup();
-			}
+		if (maxBrowserSessions > 1) {
+			map.put("SE_NODE_OVERRIDE_MAX_SESSIONS", "true");
+			map.put("SE_NODE_MAX_SESSIONS", String.valueOf(maxBrowserSessions));
 		}
-		if (browsers.contains(BrowserNames.ANDROID)) {
-			android = new GenericContainer<>(DockerImageName.parse("budtmo/docker-android-x86-12.0:latest"))
-					.withPrivilegedMode(true)
-					.withEnv(Map.of("DEVICE", "Samsung Galaxy S10", "APPIUM", "true", "APPIUM_HOST", "172.17.0.1",
-							"APPIUM_PORT", "4723", "MOBILE_WEB_TEST", "true", "RELAXED_SECURITY", "true"))
-					.withSharedMemorySize(4294967296L).withExposedPorts(6080, 5554, 5555, 4723).waitingFor(waitAndroid)
-					.withFileSystemBind("/opt/openvidu-cache", "/opt/openvidu-cache");
-			android.setPortBindings(Arrays.asList("6080:6080", "5554:5554", "5555:5555", "4723:4723"));
+		GenericContainer<?> firefox = new GenericContainer<>(DockerImageName.parse(image)).withSharedMemorySize(shmSize)
+				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withExposedPorts(4444)
+				.waitingFor(waitBrowser);
+		firefox.setPortBindings(Arrays.asList("6667:4444"));
+		return firefox;
+	}
+
+	private GenericContainer<?> operaContainer(String image, long shmSize, int maxBrowserSessions) {
+		Map<String, String> map = new HashMap<>();
+		if (maxBrowserSessions > 1) {
+			map.put("SE_NODE_OVERRIDE_MAX_SESSIONS", "true");
+			map.put("SE_NODE_MAX_SESSIONS", String.valueOf(maxBrowserSessions));
+		}
+		GenericContainer<?> opera = new GenericContainer<>(DockerImageName.parse(image)).withSharedMemorySize(shmSize)
+				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withExposedPorts(4444)
+				.waitingFor(waitBrowser);
+		opera.setPortBindings(Arrays.asList("6668:4444"));
+		return opera;
+	}
+
+	private GenericContainer<?> edgeContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
+		Map<String, String> map = new HashMap<>();
+		if (headless) {
+			map.put("START_XVFB", "false");
+		}
+		if (maxBrowserSessions > 1) {
+			map.put("SE_NODE_OVERRIDE_MAX_SESSIONS", "true");
+			map.put("SE_NODE_MAX_SESSIONS", String.valueOf(maxBrowserSessions));
+		}
+		GenericContainer<?> edge = new GenericContainer<>(DockerImageName.parse(image)).withSharedMemorySize(shmSize)
+				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withExposedPorts(4444)
+				.waitingFor(waitBrowser);
+		edge.setPortBindings(Arrays.asList("6669:4444"));
+		return edge;
+	}
+
+	private GenericContainer<?> androidContainer(String image, long shmSize) {
+		GenericContainer<?> android = new GenericContainer<>(DockerImageName.parse(image)).withPrivilegedMode(true)
+				.withEnv(Map.of("DEVICE", "Samsung Galaxy S10", "APPIUM", "true", "APPIUM_HOST", "172.17.0.1",
+						"APPIUM_PORT", "4723", "MOBILE_WEB_TEST", "true", "RELAXED_SECURITY", "true"))
+				.withSharedMemorySize(shmSize).withExposedPorts(6080, 5554, 5555, 4723).waitingFor(waitAndroid)
+				.withFileSystemBind("/opt/openvidu-cache", "/opt/openvidu-cache");
+		android.setPortBindings(Arrays.asList("6080:6080", "5554:5554", "5555:5555", "4723:4723"));
+		return android;
+	}
+
+	protected static void prepareBrowserDrivers(Set<BrowserNames> browsers) {
+		if (browsers.contains(BrowserNames.CHROME) && !isRemote(BrowserNames.CHROME)) {
+			WebDriverManager.chromedriver().setup();
+		}
+		if (browsers.contains(BrowserNames.FIREFOX) && !isRemote(BrowserNames.FIREFOX)) {
+			WebDriverManager.firefoxdriver().setup();
+		}
+		if (browsers.contains(BrowserNames.OPERA) && !isRemote(BrowserNames.OPERA)) {
+			WebDriverManager.operadriver().setup();
+		}
+		if (browsers.contains(BrowserNames.EDGE) && !isRemote(BrowserNames.EDGE)) {
+			WebDriverManager.edgedriver().setup();
 		}
 	}
 
@@ -294,43 +310,57 @@ public class OpenViduTestE2e {
 
 	protected BrowserUser setupBrowser(String browser) {
 
-		BrowserUser browserUser;
+		BrowserUser browserUser = null;
+		GenericContainer<?> container;
 
 		switch (browser) {
 		case "chrome":
-			setupBrowserAux(BrowserNames.CHROME, chrome, false);
-			browserUser = new ChromeUser("TestUser", 50, false);
+			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
+			setupBrowserAux(BrowserNames.CHROME, container, false);
+			browserUser = new ChromeUser("TestUser", 50, true);
+			break;
+		case "chromeTwoInstances":
+			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 2, true);
+			setupBrowserAux(BrowserNames.CHROME, container, false);
+			browserUser = new ChromeUser("TestUser", 50, true);
+			break;
+		case "chromeAlternateScreenShare":
+			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
+			setupBrowserAux(BrowserNames.CHROME, container, false);
+			browserUser = new ChromeUser("TestUser", 50, "OpenVidu TestApp");
+			break;
+		case "chromeAlternateFakeVideo":
+			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
+			setupBrowserAux(BrowserNames.CHROME, container, false);
+			browserUser = new ChromeUser("TestUser", 50, Paths.get("/opt/openvidu/barcode.y4m"));
 			break;
 		case "firefox":
-			setupBrowserAux(BrowserNames.FIREFOX, firefox, false);
+			container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, true);
+			setupBrowserAux(BrowserNames.FIREFOX, container, false);
 			browserUser = new FirefoxUser("TestUser", 50, false);
 			break;
 		case "firefoxDisabledOpenH264":
-			setupBrowserAux(BrowserNames.FIREFOX, firefox, false);
+			container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, true);
+			setupBrowserAux(BrowserNames.FIREFOX, container, false);
 			browserUser = new FirefoxUser("TestUser", 50, true);
 			break;
 		case "opera":
-			setupBrowserAux(BrowserNames.OPERA, opera, false);
+			container = operaContainer("selenium/standalone-opera:" + OPERA_VERSION, 2147483648L, 1);
+			setupBrowserAux(BrowserNames.OPERA, container, false);
 			browserUser = new OperaUser("TestUser", 50);
 			break;
 		case "edge":
-			setupBrowserAux(BrowserNames.EDGE, edge, false);
+			container = edgeContainer("selenium/standalone-edge:" + EDGE_VERSION, 2147483648L, 1, true);
+			setupBrowserAux(BrowserNames.EDGE, container, false);
 			browserUser = new EdgeUser("TestUser", 50);
 			break;
-		case "chromeAlternateScreenShare":
-			setupBrowserAux(BrowserNames.CHROME, chrome, false);
-			browserUser = new ChromeUser("TestUser", 50, "OpenVidu TestApp", false);
-			break;
-		case "chromeAsRoot":
-			setupBrowserAux(BrowserNames.CHROME, chrome, false);
-			browserUser = new ChromeUser("TestUser", 50, true);
-			break;
 		case "androidChrome":
-			setupBrowserAux(BrowserNames.ANDROID, android, false);
+			container = androidContainer("budtmo/docker-android-x86-12.0:latest", 4294967296L);
+			setupBrowserAux(BrowserNames.ANDROID, container, false);
 			try {
 				// TODO: remove this try-catch when possible. Fixes
 				// https://github.com/budtmo/docker-android/issues/309
-				android.execInContainer("bash", "-c",
+				container.execInContainer("bash", "-c",
 						"rm chromedriver && wget https://chromedriver.storage.googleapis.com/91.0.4472.101/chromedriver_linux64.zip && unzip chromedriver_linux64.zip && rm chromedriver_linux64.zip");
 			} catch (UnsupportedOperationException | IOException | InterruptedException e) {
 				log.error("Error running command in Android container");
@@ -338,10 +368,11 @@ public class OpenViduTestE2e {
 			browserUser = new AndroidChromeUser("TestUser", 50);
 			break;
 		case "androidFirefox":
-			setupBrowserAux(BrowserNames.ANDROID, android, false);
+			container = androidContainer("budtmo/docker-android-x86-12.0:latest", 4294967296L);
+			setupBrowserAux(BrowserNames.ANDROID, container, false);
 			try {
 				// Download geckodriver and place in PATH at /usr/bin/
-				android.execInContainer("bash", "-c",
+				container.execInContainer("bash", "-c",
 						"wget https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz && tar -xf geckodriver*.tar.gz && rm geckodriver*.tar.gz && mv geckodriver /usr/bin/.");
 			} catch (UnsupportedOperationException | IOException | InterruptedException e) {
 				log.error("Error running command in Android container");
@@ -349,11 +380,12 @@ public class OpenViduTestE2e {
 			browserUser = new AndroidFirefoxUser("TestUser", 50);
 			break;
 		case "androidApp":
-			setupBrowserAux(BrowserNames.ANDROID, android, false);
+			container = androidContainer("budtmo/docker-android-x86-12.0:latest", 4294967296L);
+			setupBrowserAux(BrowserNames.ANDROID, container, false);
 			try {
 				// TODO: remove this try-catch when possible. Fixes
 				// https://github.com/budtmo/docker-android/issues/309
-				android.execInContainer("bash", "-c",
+				container.execInContainer("bash", "-c",
 						"rm chromedriver && wget https://chromedriver.storage.googleapis.com/91.0.4472.101/chromedriver_linux64.zip && unzip chromedriver_linux64.zip && rm chromedriver_linux64.zip");
 			} catch (UnsupportedOperationException | IOException | InterruptedException e) {
 				log.error("Error running command in Android container");
@@ -361,19 +393,9 @@ public class OpenViduTestE2e {
 			browserUser = new AndroidAppUser("TestUser", 50, "/opt/openvidu-cache/app-debug.apk");
 			break;
 		default:
-			setupBrowserAux(BrowserNames.CHROME, chrome, false);
-			browserUser = new ChromeUser("TestUser", 50, false);
+			log.error("Browser {} not recognized", browser);
 		}
 
-		this.browserUsers.add(browserUser);
-		return browserUser;
-	}
-
-	protected BrowserUser setupChromeWithFakeVideo(String absolutePathToVideoFile) {
-		if (isRemote(BrowserNames.CHROME)) {
-			setupBrowserAux(BrowserNames.CHROME, chrome, true);
-		}
-		BrowserUser browserUser = new ChromeUser("TestUser", 50, Paths.get(absolutePathToVideoFile));
 		this.browserUsers.add(browserUser);
 		return browserUser;
 	}
@@ -385,6 +407,7 @@ public class OpenViduTestE2e {
 			}
 			if (!container.isRunning()) {
 				container.start();
+				containers.add(container);
 			}
 		}
 	}
@@ -440,11 +463,12 @@ public class OpenViduTestE2e {
 			it1.remove();
 		}
 		// Stop and remove all browser containers if necessary
-		stopContainerIfPossible(chrome);
-		stopContainerIfPossible(firefox);
-		stopContainerIfPossible(opera);
-		stopContainerIfPossible(edge);
-		stopContainerIfPossible(android);
+		Iterator<GenericContainer<?>> it2 = containers.iterator();
+		while (it2.hasNext()) {
+			GenericContainer<?> c = it2.next();
+			stopContainerIfPossible(c);
+			it2.remove();
+		}
 		// Reset REST client
 		OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
 	}
@@ -452,6 +476,7 @@ public class OpenViduTestE2e {
 	private void stopContainerIfPossible(GenericContainer<?> container) {
 		if (container != null && container.isRunning()) {
 			container.stop();
+			container.close();
 		}
 	}
 
