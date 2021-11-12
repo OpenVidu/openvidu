@@ -158,7 +158,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 			String streamId = this.getStreamId();
 			log.error("Request to removeFilterEventListener to stream {} gone wrong: Filter {} has no listener added",
 					streamId, eventType);
-			throw new OpenViduException(Code.FILTER_EVENT_LISTENER_NOT_FOUND_ERROR_CODE,
+			throw new OpenViduException(Code.FILTER_EVENT_LISTENER_NOT_FOUND,
 					"Request to removeFilterEventListener to stream " + streamId + " gone wrong: Filter " + eventType
 							+ " has no listener added");
 		}
