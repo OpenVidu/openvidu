@@ -19,15 +19,20 @@ package io.openvidu.test.browsers.utils;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.concurrent.TimeUnit;
 
 public class CommandLineExecutor {
 
-	public String executeCommand(String command) {
+	public String executeCommand(String command, int secondsTimeout) {
 		String output = "";
 		Process p = null;
 		try {
 			p = Runtime.getRuntime().exec((new String[] { "/bin/sh", "-c", command }));
-			p.waitFor();
+			if (!p.waitFor(secondsTimeout, TimeUnit.SECONDS)) {
+				System.err.println("Command " + command + " did not completed in " + secondsTimeout + " seconds");
+				p.destroyForcibly();
+				return output;
+			}
 			BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			String line = "";
 			while ((line = br.readLine()) != null) {

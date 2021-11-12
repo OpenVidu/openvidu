@@ -42,7 +42,7 @@ public class ChromeUser extends BrowserUser {
 	}
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds, Path fakeVideoLocation) {
-		this(userName, timeOfWaitInSeconds, generateFakeVideoChromeOptions(fakeVideoLocation), false);
+		this(userName, timeOfWaitInSeconds, generateFakeVideoChromeOptions(fakeVideoLocation), true);
 	}
 
 	private ChromeUser(String userName, int timeOfWaitInSeconds, ChromeOptions options, boolean headless) {

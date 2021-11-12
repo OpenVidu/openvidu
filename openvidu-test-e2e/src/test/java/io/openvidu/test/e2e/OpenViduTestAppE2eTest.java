@@ -78,6 +78,7 @@ import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.Session;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.java.client.VideoCodec;
+import io.openvidu.test.browsers.BrowserUser;
 import io.openvidu.test.browsers.utils.BrowserNames;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.RecordingUtils;
@@ -165,7 +166,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@Disabled
 	void oneToOneIonicAndroid() throws Exception {
 		long initTime = System.currentTimeMillis();
-		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("androidApp");
+		BrowserUser user = setupBrowser("androidApp");
 		log.info("Android emulator ready after {} seconds", (System.currentTimeMillis() - initTime) / 1000);
 		log.info("One2One Ionic Android");
 

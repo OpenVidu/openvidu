@@ -152,7 +152,7 @@ public class MultimediaFileMetadata {
 	private JsonObject executeFfprobeCommand(String filePath) {
 		log.info("Running ffprobe command on '{}'", filePath);
 		String cmd = "ffprobe -v quiet -print_format json -show_format -show_streams " + filePath;
-		return JsonParser.parseString(this.executer.executeCommand(cmd)).getAsJsonObject();
+		return JsonParser.parseString(this.executer.executeCommand(cmd, 60)).getAsJsonObject();
 	}
 
 	private void fixWebmFile(String filePath) throws IOException {
@@ -162,7 +162,7 @@ public class MultimediaFileMetadata {
 		pathCopy = java.nio.file.Files.move(source, source.resolveSibling("COPY." + extension)).toString();
 		log.warn("Fixing file '{}' with ffmpeg", filePath);
 		String cmd = "ffmpeg -i " + pathCopy + " -vcodec copy -acodec copy " + filePath;
-		this.executer.executeCommand(cmd);
+		this.executer.executeCommand(cmd, 60);
 		new File(pathCopy).delete();
 	}
 

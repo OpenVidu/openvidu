@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -109,7 +110,7 @@ public class OpenViduTestE2e {
 	protected RecordingUtils recordingUtils = new RecordingUtils();
 
 	protected static void checkFfmpegInstallation() {
-		String ffmpegOutput = commandLine.executeCommand("which ffmpeg");
+		String ffmpegOutput = commandLine.executeCommand("which ffmpeg", 60);
 		if (ffmpegOutput == null || ffmpegOutput.isEmpty()) {
 			log.error("ffmpeg package is not installed in the host machine");
 			Assert.fail();
@@ -330,7 +331,7 @@ public class OpenViduTestE2e {
 			browserUser = new ChromeUser("TestUser", 50, "OpenVidu TestApp");
 			break;
 		case "chromeAlternateFakeVideo":
-			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
+			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
 			setupBrowserAux(BrowserNames.CHROME, container, false);
 			browserUser = new ChromeUser("TestUser", 50, Paths.get("/opt/openvidu/barcode.y4m"));
 			break;
@@ -464,11 +465,19 @@ public class OpenViduTestE2e {
 		}
 		// Stop and remove all browser containers if necessary
 		Iterator<GenericContainer<?>> it2 = containers.iterator();
+		List<String> waitUntilContainerIsRemovedCommands = new ArrayList<>();
+		containers.forEach(c -> {
+			waitUntilContainerIsRemovedCommands
+					.add("while docker inspect " + c.getContainerId() + " >/dev/null 2>&1; do sleep 1; done");
+		});
 		while (it2.hasNext()) {
 			GenericContainer<?> c = it2.next();
 			stopContainerIfPossible(c);
 			it2.remove();
 		}
+		waitUntilContainerIsRemovedCommands.forEach(command -> {
+			commandLine.executeCommand(command, 30);
+		});
 		// Reset REST client
 		OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
 	}
@@ -549,7 +558,7 @@ public class OpenViduTestE2e {
 			log.error("Unrecognized MEDIA_SERVER_IMAGE: {}", MEDIA_SERVER_IMAGE);
 			System.exit(1);
 		}
-		commandLine.executeCommand(command);
+		commandLine.executeCommand(command, 60);
 		if (waitUntilKurentoClientReconnection) {
 			try {
 				Thread.sleep(5000);
@@ -572,7 +581,7 @@ public class OpenViduTestE2e {
 			log.error("Unrecognized MEDIA_SERVER_IMAGE: {}", MEDIA_SERVER_IMAGE);
 			System.exit(1);
 		}
-		commandLine.executeCommand(dockerRemoveCmd.replaceFirst("GREP_PARAMETER", grep));
+		commandLine.executeCommand(dockerRemoveCmd.replaceFirst("GREP_PARAMETER", grep), 60);
 		if (waitUntilNodeCrashedEvent) {
 			try {
 				Thread.sleep(4000);
@@ -583,13 +592,13 @@ public class OpenViduTestE2e {
 	}
 
 	protected void checkDockerContainerRunning(String imageName, int amount) {
-		int number = Integer.parseInt(commandLine.executeCommand("docker ps | grep " + imageName + " | wc -l"));
+		int number = Integer.parseInt(commandLine.executeCommand("docker ps | grep " + imageName + " | wc -l", 60));
 		Assert.assertEquals("Wrong number of Docker containers for image " + imageName + " running", amount, number);
 	}
 
 	protected void removeAllRecordingContiners() {
 		commandLine.executeCommand("docker ps -a | awk '{ print $1,$2 }' | grep " + RECORDING_IMAGE
-				+ " | awk '{print $1 }' | xargs -I {} docker rm -f {}");
+				+ " | awk '{print $1 }' | xargs -I {} docker rm -f {}", 60);
 	}
 
 	protected String mergeJson(String json, String newProperties, String[] removeProperties) {
