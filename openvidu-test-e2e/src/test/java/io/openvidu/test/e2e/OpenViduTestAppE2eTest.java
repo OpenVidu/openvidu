@@ -3790,9 +3790,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
 
 			event = CustomWebhook.waitForEvent("participantJoined", 2);
-			CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
-			CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
-			CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 5);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 5);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 5);
 
 			String connectionId2 = event.get("connectionId").getAsString();
 
@@ -3888,6 +3888,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assert.assertEquals("Wrong session destroyed reason in webhook event", "sessionClosedByServer",
 					event.get("reason").getAsString());
 
+		} catch (TimeoutException e) {
+			log.error("Timeout: {}", e.getMessage());
+			e.printStackTrace();
+			System.out.println(getBase64Screenshot(user.getBrowserUser()));
+			Assert.fail(e.getMessage());
 		} finally {
 			CustomWebhook.shutDown();
 		}

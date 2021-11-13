@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -63,13 +64,13 @@ public class CustomWebhook {
 		CustomWebhook.events.clear();
 	}
 
-	public synchronized static JsonObject waitForEvent(String eventName, int maxSecondsWait) throws Exception {
+	public synchronized static JsonObject waitForEvent(String eventName, int maxSecondsWait) throws TimeoutException, InterruptedException {
 		if (events.get(eventName) == null) {
 			events.put(eventName, new LinkedBlockingDeque<>());
 		}
 		JsonObject event = CustomWebhook.events.get(eventName).poll(maxSecondsWait, TimeUnit.SECONDS);
 		if (event == null) {
-			throw new Exception("Timeout waiting for Webhook " + eventName);
+			throw new TimeoutException("Timeout waiting for Webhook " + eventName);
 		} else {
 			return event;
 		}
