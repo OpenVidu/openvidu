@@ -3790,9 +3790,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
 
 			event = CustomWebhook.waitForEvent("participantJoined", 2);
-			CustomWebhook.waitForEvent("webrtcConnectionCreated", 5);
-			CustomWebhook.waitForEvent("webrtcConnectionCreated", 5);
-			CustomWebhook.waitForEvent("webrtcConnectionCreated", 5);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 12);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 12);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 12);
 
 			String connectionId2 = event.get("connectionId").getAsString();
 
