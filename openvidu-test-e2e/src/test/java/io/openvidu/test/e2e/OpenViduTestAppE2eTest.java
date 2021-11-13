@@ -4167,7 +4167,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.id("remove-user-btn")).click();
 			user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
 
-			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
+			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 4);
 			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
 			CustomWebhook.waitForEvent("participantLeft", 1);
 
@@ -4232,7 +4232,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/TestSession", HttpStatus.SC_NO_CONTENT);
 
-			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
+			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 4);
 			CustomWebhook.waitForEvent("participantLeft", 1);
 			CustomWebhook.waitForEvent("sessionDestroyed", 1);
 
