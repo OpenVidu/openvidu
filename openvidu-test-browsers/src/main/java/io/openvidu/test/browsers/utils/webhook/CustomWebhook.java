@@ -64,11 +64,17 @@ public class CustomWebhook {
 		CustomWebhook.events.clear();
 	}
 
-	public synchronized static JsonObject waitForEvent(String eventName, int maxSecondsWait) throws TimeoutException, InterruptedException {
+	public synchronized static JsonObject waitForEvent(String eventName, int maxSecondsWait)
+			throws TimeoutException, InterruptedException {
+		return CustomWebhook.waitForEvent(eventName, maxSecondsWait, TimeUnit.SECONDS);
+	}
+
+	public synchronized static JsonObject waitForEvent(String eventName, int maxWait, TimeUnit timeUnit)
+			throws TimeoutException, InterruptedException {
 		if (events.get(eventName) == null) {
 			events.put(eventName, new LinkedBlockingDeque<>());
 		}
-		JsonObject event = CustomWebhook.events.get(eventName).poll(maxSecondsWait, TimeUnit.SECONDS);
+		JsonObject event = CustomWebhook.events.get(eventName).poll(maxWait, timeUnit);
 		if (event == null) {
 			throw new TimeoutException("Timeout waiting for Webhook " + eventName);
 		} else {
