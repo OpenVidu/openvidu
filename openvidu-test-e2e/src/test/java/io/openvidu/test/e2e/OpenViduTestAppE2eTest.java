@@ -1411,21 +1411,30 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			session = OV.getActiveSessions().get(0);
 			session.close();
 
-			// Recording hasn't had time to start. Should trigger stopped, started, failed
-			event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // stopped
-			Assert.assertEquals("Wrong status in recordingStatusChanged event", "stopped",
-					event.get("status").getAsString());
-			event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
-			Assert.assertEquals("Wrong status in recordingStatusChanged event", "started",
-					event.get("status").getAsString());
-			event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // failed
-			Assert.assertEquals("Wrong status in recordingStatusChanged event", "failed",
-					event.get("status").getAsString());
+			event = CustomWebhook.waitForEvent("recordingStatusChanged", 1);
+			if ("stopped".equals(event.get("status").getAsString())) {
+				// Recording hasn't had time to start. Should trigger stopped, started, failed
+				event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
+				Assert.assertEquals("Wrong status in recordingStatusChanged event", "started",
+						event.get("status").getAsString());
+				event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // failed
+				Assert.assertEquals("Wrong status in recordingStatusChanged event", "failed",
+						event.get("status").getAsString());
+				Assert.assertEquals("Wrong recording status", Recording.Status.failed,
+						OV.getRecording(sessionName + "-2").getStatus());
+			} else {
+				// Recording did have time to start. Should trigger started, stopped, ready
+				event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
+				Assert.assertEquals("Wrong status in recordingStatusChanged event", "stopped",
+						event.get("status").getAsString());
+				event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // failed
+				Assert.assertEquals("Wrong status in recordingStatusChanged event", "ready",
+						event.get("status").getAsString());
+				Assert.assertEquals("Wrong recording status", Recording.Status.ready,
+						OV.getRecording(sessionName + "-2").getStatus());
+			}
 
 			checkDockerContainerRunning("openvidu/openvidu-recording", 0);
-
-			Assert.assertEquals("Wrong recording status", Recording.Status.failed,
-					OV.getRecording(sessionName + "-2").getStatus());
 
 		} finally {
 			CustomWebhook.shutDown();
