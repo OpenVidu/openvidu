@@ -3300,10 +3300,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			alert.accept();
 		} catch (Exception e) {
 			Assert.fail("Alert exception");
+		} finally {
+			user.getEventManager().resetEventThread(false);
 		}
 
 		Thread.sleep(500);
-		user.getEventManager().resetEventThread();
+		user.getEventManager().resetEventThread(true);
 
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).sendKeys(Keys.ENTER);
 
@@ -3481,13 +3483,18 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.className("subscribe-checkbox")).click();
 			user.getDriver().findElement(By.className("join-btn")).click();
 
-			user.getWaiter().until(ExpectedConditions.alertIsPresent());
-			Alert alert = user.getDriver().switchTo().alert();
-
-			final String alertMessage = "Error connecting to the session: There is no available Media Node where to initialize session 'TestSession'. Code: 204";
-			Assert.assertTrue("Alert message wrong. Expected to contain: \"" + alertMessage + "\". Actual message: \""
-					+ alert.getText() + "\"", alert.getText().contains(alertMessage));
-			alert.accept();
+			try {
+				user.getWaiter().until(ExpectedConditions.alertIsPresent());
+				Alert alert = user.getDriver().switchTo().alert();
+				final String alertMessage = "Error connecting to the session: There is no available Media Node where to initialize session 'TestSession'. Code: 204";
+				Assert.assertTrue("Alert message wrong. Expected to contain: \"" + alertMessage
+						+ "\". Actual message: \"" + alert.getText() + "\"", alert.getText().contains(alertMessage));
+				alert.accept();
+			} catch (Exception e) {
+				Assert.fail("Alert exception");
+			} finally {
+				user.getEventManager().resetEventThread(false);
+			}
 
 			OV.fetch();
 			sessions = OV.getActiveSessions();
@@ -3520,7 +3527,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			this.stopMediaServer(false);
 			this.startMediaServer(true);
 
-			user.getEventManager().resetEventThread();
+			user.getEventManager().resetEventThread(true);
 			user.getDriver().findElement(By.id("add-user-btn")).click();
 			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
 			user.getEventManager().waitUntilEventReaches("streamCreated", 2);
@@ -4728,11 +4735,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		} else {
 			// If transcoding not allowed it should return an alert with error
 			user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
-			user.getWaiter().until(ExpectedConditions.alertIsPresent());
-			Alert alert = user.getDriver().switchTo().alert();
-			Assert.assertTrue("Alert does not contain expected text",
-					alert.getText().contains("Error forcing codec: '" + codec.name() + "'"));
-			alert.accept();
+			try {
+				user.getWaiter().until(ExpectedConditions.alertIsPresent());
+				Alert alert = user.getDriver().switchTo().alert();
+				Assert.assertTrue("Alert does not contain expected text",
+						alert.getText().contains("Error forcing codec: '" + codec.name() + "'"));
+				alert.accept();
+			} catch (Exception e) {
+				Assert.fail("Alert exception");
+			} finally {
+				user.getEventManager().resetEventThread(false);
+			}
 		}
 
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/" + sessionName, HttpStatus.SC_NO_CONTENT);

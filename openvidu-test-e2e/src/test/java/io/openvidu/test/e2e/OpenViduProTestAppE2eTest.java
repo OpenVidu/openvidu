@@ -335,6 +335,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			alert.accept();
 		} catch (Exception e) {
 			Assert.fail("Alert exception");
+		} finally {
+			user.getEventManager().resetEventThread(false);
 		}
 		Thread.sleep(500);
 
@@ -471,7 +473,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assert.assertEquals("Wrong data in Connection object", "MY_SERVER_PRO_DATA", connection.getServerData());
 		Assert.assertEquals("Wrong status in Connection object", "active", connection.getStatus());
 
-		user.getEventManager().resetEventThread();
+		user.getEventManager().resetEventThread(true);
 
 		user.getWaiter().until(ExpectedConditions.elementToBeClickable(By.cssSelector(".republish-error-btn")));
 		user.getDriver().findElement(By.cssSelector(".republish-error-btn")).click();

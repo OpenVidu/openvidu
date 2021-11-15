@@ -197,17 +197,21 @@ public class OpenViduEventManager {
 		});
 	}
 
-	public void resetEventThread() throws InterruptedException {
-		this.stopPolling(true, true);
+	public void resetEventThread(boolean clearData) throws InterruptedException {
+		this.stopPolling(true, clearData);
 		this.pollingLatch.await();
 		this.execService.shutdownNow();
 		this.execService.awaitTermination(10, TimeUnit.SECONDS);
 		this.execService = Executors.newCachedThreadPool();
-		this.stopPolling(false, true);
-		this.clearAllCurrentEvents();
+		this.stopPolling(false, clearData);
+		if (clearData) {
+			this.clearAllCurrentEvents();
+		}
 		this.isInterrupted.set(false);
 		this.pollingLatch = new CountDownLatch(1);
-		this.eventQueue.clear();
+		if (clearData) {
+			this.eventQueue.clear();
+		}
 		this.startPolling();
 	}
 

@@ -403,10 +403,13 @@ public class OpenViduTestE2e {
 
 	private void setupBrowserAux(BrowserNames browser, GenericContainer<?> container, boolean forceRestart) {
 		if (isRemote(browser)) {
-			if (forceRestart && container.isRunning()) {
+			String dockerImage = container.getDockerImageName();
+			String ps = commandLine.executeCommand("docker ps | grep " + dockerImage, 30);
+			boolean containerAlreadyRunning = container.isRunning() || !ps.isBlank();
+			if (forceRestart && containerAlreadyRunning) {
 				container.stop();
 			}
-			if (!container.isRunning()) {
+			if (!containerAlreadyRunning) {
 				container.start();
 				containers.add(container);
 			}
