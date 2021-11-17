@@ -58,6 +58,7 @@ services:
         network_mode: host
         environment:
             - REDIS_PASSWORD=${OPENVIDU_SECRET}
+            - REDIS_BINDING=127.0.0.1
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
