@@ -11,6 +11,9 @@ def prepareTestingEnvironment() {
         'Deleting repository openvidu-pro': {
             sh 'sudo rm -rf openvidu-pro || true'
         },
+        'Deleting repository replication-manager': {
+            sh 'sudo rm -rf replication-manager || true'
+        },
         'Deleting repository kurento-java': {
             sh 'sudo rm -rf kurento-java || true'
         },
