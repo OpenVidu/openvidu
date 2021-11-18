@@ -145,4 +145,16 @@ def removeStrandedContainers(removeTestingContainers) {
     }
 }
 
+def storeInCache(folderToStore, cacheDestiny) {
+    println('Storing in cache')
+    sh "sudo mkdir -p ${folderToStore}"
+    sh "sudo mv ${folderToStore} ${cacheDestiny}"
+}
+
+def loadFromCache(cacheFolder, destinyFolder) {
+    println('Loading from cache')
+    sh "sudo mv ${cacheFolder} ${destinyFolder}"
+    sh "sudo chown -R 1000:1000 ${destinyFolder} && sudo chmod 777 ${destinyFolder}"
+}
+
 return this
