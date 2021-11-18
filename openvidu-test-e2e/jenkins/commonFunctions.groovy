@@ -146,12 +146,18 @@ def removeStrandedContainers(removeTestingContainers) {
 }
 
 def storeFolderInCache(folderToStore, cacheDestiny) {
-    if (fileExists(folderToStore)) {
-        println('Storing in cache')
-        sh "sudo mkdir -p ${cacheDestiny}"
-        sh "sudo mv ${folderToStore}/* ${cacheDestiny}"
-    } else {
-        println('Folder to store in cache does not exist')
+    script {
+        env.folderToStore = folderToStore
+        env.cacheDestiny = cacheDestiny
+        sh(script: '''#!/bin/bash -xe
+            if [[ (-d ${folderToStore}) && ("$(ls -A ${folderToStore})") ]]; then
+                echo "Storing in cache"
+                sudo mkdir -p ${cacheDestiny}
+                sudo mv ${folderToStore}/* ${cacheDestiny}
+            else
+                echo "Folder to store in cache does not exist or is empty"
+            fi
+        '''.stripIndent())
     }
 }
 
