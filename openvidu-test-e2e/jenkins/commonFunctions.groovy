@@ -149,13 +149,13 @@ def storeFolderInCache(folderToStore, cacheDestiny) {
     println('Storing in cache')
     sh "sudo mkdir -p ${folderToStore}"
     sh "sudo mkdir -p ${cacheDestiny}"
-    sh "sudo mv ${folderToStore} ${cacheDestiny}"
+    sh "sudo mv ${folderToStore}/* ${cacheDestiny}"
 }
 
 def loadFolderFromCache(cacheFolder, destinyFolder) {
     println('Loading from cache')
     sh "sudo mkdir -p ${destinyFolder}"
-    sh "sudo mv ${cacheFolder} ${destinyFolder}"
+    sh "sudo mv ${cacheFolder}/* ${destinyFolder}"
     sh "sudo chown -R 1000:1000 ${destinyFolder} && sudo chmod 777 ${destinyFolder}"
 }
 
