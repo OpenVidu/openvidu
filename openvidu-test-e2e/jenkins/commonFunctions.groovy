@@ -162,10 +162,20 @@ def storeFolderInCache(folderToStore, cacheDestiny) {
 }
 
 def loadFolderFromCache(cacheFolder, destinyFolder) {
-    println('Loading from cache')
-    sh "sudo mkdir -p ${destinyFolder}"
-    sh "sudo mv ${cacheFolder}/* ${destinyFolder}"
-    sh "sudo chown -R 1000:1000 ${destinyFolder} && sudo chmod 777 ${destinyFolder}"
+    script {
+        env.cacheFolder = cacheFolder
+        env.destinyFolder = destinyFolder
+        sh(script: '''#!/bin/bash -xe
+            if [[ (-d ${cacheFolder}) && ("$(ls -A ${cacheFolder})") ]]; then
+                echo "Loading from cache"
+                sudo mkdir -p ${destinyFolder}
+                sudo mv ${cacheFolder}/* ${destinyFolder}
+                sudo chown -R 1000:1000 ${destinyFolder} && sudo chmod 777 ${destinyFolder}
+            else
+                echo "Cache folder does not exist or is empty"
+            fi
+        '''.stripIndent())
+    }
 }
 
 return this
