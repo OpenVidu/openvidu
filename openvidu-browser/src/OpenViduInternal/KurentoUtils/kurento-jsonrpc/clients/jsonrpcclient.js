@@ -15,7 +15,7 @@
  *
  */
 
-var RpcBuilder = require('../');
+var RpcBuilder = require('../RpcBuilder');
 var WebSocketWithReconnection = require('./transports/webSocketWithReconnection');
 var OpenViduLogger = require('../../../Logger/OpenViduLogger').OpenViduLogger;
 
