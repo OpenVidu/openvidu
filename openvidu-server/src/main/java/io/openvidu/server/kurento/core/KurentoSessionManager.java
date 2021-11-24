@@ -68,6 +68,7 @@ import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.FinalUser;
 import io.openvidu.server.core.IdentifierPrefixes;
 import io.openvidu.server.core.MediaOptions;
+import io.openvidu.server.core.MediaServer;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
@@ -384,6 +385,11 @@ public class KurentoSessionManager extends SessionManager {
 
 		CDR.log(new WebrtcDebugEvent(participant, streamId, WebrtcDebugEventIssuer.client,
 				WebrtcDebugEventOperation.publish, WebrtcDebugEventType.sdpOffer, kurentoOptions.sdpOffer));
+
+		// Warn about useless usage of the AllowTranscoding feature.
+		if (isTranscodingAllowed && openviduConfig.getMediaServer() != MediaServer.kurento) {
+			log.warn("AllowTranscoding has no effect if the Media Server is not Kurento");
+		}
 
 		// Modify sdp if forced codec is defined
 		if (forcedVideoCodec != VideoCodec.NONE && !participant.isIpcam()) {
