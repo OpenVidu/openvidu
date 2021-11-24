@@ -637,10 +637,10 @@ public class OpenviduConfig {
 		}
 	}
 
-	private void checkCoturnPort(){
+	private void checkCoturnPort() {
 		String property = "COTURN_PORT";
 		coturnPort = this.asNonNegativeInteger(property);
-		if (coturnPort <= 0 || coturnPort > 65535){
+		if (coturnPort <= 0 || coturnPort > 65535) {
 			addError("COTURN_PORT", "COTURN PORT is out of valid ports range (0-65535)");
 		}
 	}
@@ -820,9 +820,10 @@ public class OpenviduConfig {
 	protected String asOptionalURL(String property) {
 		String optionalUrl = getValue(property);
 		try {
-			if (!optionalUrl.isEmpty()) {
-				checkUrl(optionalUrl);
+			if (optionalUrl.isBlank()) {
+				return null;
 			}
+			checkUrl(optionalUrl);
 			return optionalUrl;
 		} catch (Exception e) {
 			addError(property, "Is not a valid URL. " + e.getMessage());
@@ -853,6 +854,14 @@ public class OpenviduConfig {
 
 	protected String asOptionalString(String property) {
 		return getValue(property);
+	}
+
+	protected String asOptionalStringAndNullIfBlank(String property) {
+		String value = getValue(property);
+		if (value != null && value.isBlank()) {
+			value = null;
+		}
+		return value;
 	}
 
 	protected boolean asBoolean(String property) {
