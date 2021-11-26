@@ -236,13 +236,13 @@ public class SessionProperties {
 		return this.allowTranscoding;
 	}
 
-	protected JsonObject toJson() {
+	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("mediaMode", mediaMode().name());
 		json.addProperty("recordingMode", recordingMode().name());
 		json.addProperty("customSessionId", customSessionId());
 		json.add("defaultRecordingProperties", defaultRecordingProperties.toJson());
-		if (mediaNode() != null) {
+		if (mediaNode() != null && !mediaNode().isEmpty()) {
 			JsonObject mediaNodeJson = new JsonObject();
 			mediaNodeJson.addProperty("id", mediaNode());
 			json.add("mediaNode", mediaNodeJson);
