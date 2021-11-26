@@ -4656,19 +4656,19 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Assert Selected Codec in node-client session object
 		if (codec != null) {
 			// If specified codec, assert selected codec
-			Assert.assertEquals(sessionCodecNodeClient, codec);
+			Assert.assertEquals(codec, sessionCodecNodeClient);
 		} else {
 			// If not specified, assert default codec
-			Assert.assertEquals(sessionCodecNodeClient, defaultForcedVideoCodec);
+			Assert.assertEquals(defaultForcedVideoCodec, sessionCodecNodeClient);
 		}
 
 		// Assert Selected allow transcoding in node-client session object
 		if (allowTranscoding != null) {
 			// If specified allowTranscoding, assert selected
-			Assert.assertEquals(sessionAllowTranscodingNodeClient, allowTranscoding);
+			Assert.assertEquals(allowTranscoding, sessionAllowTranscodingNodeClient);
 		} else {
 			// If not specified, assert default allowTranscoding
-			Assert.assertEquals(sessionAllowTranscodingNodeClient, defaultAllowTranscoding);
+			Assert.assertEquals(defaultAllowTranscoding, sessionAllowTranscodingNodeClient);
 		}
 
 		// Check browser codecs
@@ -4678,7 +4678,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			statButton.click();
 			Thread.sleep(750);
 			String videoCodecUsed = user.getDriver().findElement(By.id("video-codec-used")).getText();
-			Assert.assertEquals(videoCodecUsed, "video/" + codecToCheck);
+			Assert.assertEquals("video/" + codecToCheck, videoCodecUsed);
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		}
 
