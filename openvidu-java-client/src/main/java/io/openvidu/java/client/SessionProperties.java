@@ -30,6 +30,7 @@ public class SessionProperties {
 	private String customSessionId;
 	private String mediaNode;
 	private VideoCodec forcedVideoCodec;
+	private VideoCodec forcedVideoCodecResolved;
 	private Boolean allowTranscoding;
 
 	/**
@@ -43,6 +44,7 @@ public class SessionProperties {
 		private String customSessionId = "";
 		private String mediaNode;
 		private VideoCodec forcedVideoCodec = VideoCodec.MEDIA_SERVER_PREFERRED;
+		private VideoCodec forcedVideoCodecResolved = VideoCodec.NONE;
 		private Boolean allowTranscoding = false;
 
 		/**
@@ -51,7 +53,8 @@ public class SessionProperties {
 		 */
 		public SessionProperties build() {
 			return new SessionProperties(this.mediaMode, this.recordingMode, this.defaultRecordingProperties,
-					this.customSessionId, this.mediaNode, this.forcedVideoCodec, this.allowTranscoding);
+					this.customSessionId, this.mediaNode, this.forcedVideoCodec, this.forcedVideoCodecResolved,
+					this.allowTranscoding);
 		}
 
 		/**
@@ -126,11 +129,22 @@ public class SessionProperties {
 		 * If defined here, this parameter has prevalence over
 		 * OPENVIDU_STREAMS_FORCED_VIDEO_CODEC.
 		 *
-		 * Default is {@link VideoCodec#VP8} for Kurento, and
-		 * {@link VideoCodec#NONE} for mediasoup.
+		 * Default is {@link VideoCodec#MEDIA_SERVER_PREFERRED}.
 		 */
 		public SessionProperties.Builder forcedVideoCodec(VideoCodec forcedVideoCodec) {
 			this.forcedVideoCodec = forcedVideoCodec;
+			return this;
+		}
+
+		/**
+		 * Actual video codec that will be forcibly used for this session.
+		 * This is the same as <code>forcedVideoCodec</code>, except when its
+		 * value is {@link VideoCodec#MEDIA_SERVER_PREFERRED}: in that case,
+		 * OpenVidu Server will fill this property with a resolved value,
+		 * depending on what is the configured media server.
+		 */
+		public SessionProperties.Builder forcedVideoCodecResolved(VideoCodec forcedVideoCodec) {
+			this.forcedVideoCodecResolved = forcedVideoCodec;
 			return this;
 		}
 
@@ -159,13 +173,14 @@ public class SessionProperties {
 
 	private SessionProperties(MediaMode mediaMode, RecordingMode recordingMode,
 			RecordingProperties defaultRecordingProperties, String customSessionId, String mediaNode,
-			VideoCodec forcedVideoCodec, Boolean allowTranscoding) {
+			VideoCodec forcedVideoCodec, VideoCodec forcedVideoCodecResolved, Boolean allowTranscoding) {
 		this.mediaMode = mediaMode;
 		this.recordingMode = recordingMode;
 		this.defaultRecordingProperties = defaultRecordingProperties;
 		this.customSessionId = customSessionId;
 		this.mediaNode = mediaNode;
 		this.forcedVideoCodec = forcedVideoCodec;
+		this.forcedVideoCodecResolved = forcedVideoCodecResolved;
 		this.allowTranscoding = allowTranscoding;
 	}
 
@@ -222,10 +237,22 @@ public class SessionProperties {
 	}
 
 	/**
-	 * Defines which video codec is being forced to be used in the browser/client
+	 * Defines which video codec is being forced to be used in the browser/client.
+	 * This is the raw value that was configured. It might get resolved into a
+	 * different one for actual usage in the server.
 	 */
 	public VideoCodec forcedVideoCodec() {
 		return this.forcedVideoCodec;
+	}
+
+	/**
+	 * Defines which video codec is being forced to be used in the browser/client.
+	 * This is the resolved value, for actual usage in the server.
+	 *
+	 * @hidden
+	 */
+	public VideoCodec forcedVideoCodecResolved() {
+		return this.forcedVideoCodecResolved;
 	}
 
 	/**
@@ -238,20 +265,23 @@ public class SessionProperties {
 
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
-		json.addProperty("mediaMode", mediaMode().name());
-		json.addProperty("recordingMode", recordingMode().name());
-		json.addProperty("customSessionId", customSessionId());
-		json.add("defaultRecordingProperties", defaultRecordingProperties.toJson());
-		if (mediaNode() != null && !mediaNode().isEmpty()) {
+		json.addProperty("mediaMode", this.mediaMode.name());
+		json.addProperty("recordingMode", this.recordingMode.name());
+		json.add("defaultRecordingProperties", this.defaultRecordingProperties.toJson());
+		json.addProperty("customSessionId", this.customSessionId);
+		if (this.mediaNode != null && !this.mediaNode.isEmpty()) {
 			JsonObject mediaNodeJson = new JsonObject();
-			mediaNodeJson.addProperty("id", mediaNode());
+			mediaNodeJson.addProperty("id", this.mediaNode);
 			json.add("mediaNode", mediaNodeJson);
 		}
-		if (forcedVideoCodec() != null) {
-			json.addProperty("forcedVideoCodec", forcedVideoCodec().name());
+		if (this.forcedVideoCodec != null) {
+			json.addProperty("forcedVideoCodec", this.forcedVideoCodec.name());
 		}
-		if (isTranscodingAllowed() != null) {
-			json.addProperty("allowTranscoding", isTranscodingAllowed());
+		if (this.forcedVideoCodecResolved != null) {
+			json.addProperty("forcedVideoCodecResolved", this.forcedVideoCodecResolved.name());
+		}
+		if (this.allowTranscoding != null) {
+			json.addProperty("allowTranscoding", this.allowTranscoding);
 		}
 		return json;
 	}
