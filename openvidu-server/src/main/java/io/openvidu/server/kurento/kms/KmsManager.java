@@ -189,9 +189,10 @@ public abstract class KmsManager {
 				kms.setKurentoClientConnected(false);
 				kms.setTimeOfKurentoClientDisconnection(System.currentTimeMillis());
 
-				if (kms.getKurentoClient().isClosed()) {
-					log.info("Kurento Client \"disconnected\" event for KMS {} [{}]. Closed explicitly", kms.getUri(),
-							kms.getKurentoClient().toString());
+				if (kms.getKurentoClient().isDestroyed()) {
+					log.info(
+							"Kurento Client \"disconnected\" event for KMS {} [{}]. Closed explicitly by openvidu-server",
+							kms.getUri(), kms.getKurentoClient().toString());
 					return;
 				} else {
 					log.info("Kurento Client \"disconnected\" event for KMS {} [{}]. Waiting reconnection",
@@ -279,7 +280,8 @@ public abstract class KmsManager {
 										kms.getUri(), kms.getKurentoSessions().size(), kms.getKurentoSessions().stream()
 												.map(s -> s.getSessionId()).collect(Collectors.joining(",", "[", "]")));
 								kms.getKurentoSessions().forEach(kSession -> {
-									kSession.restartStatusInKurentoAfterReconnectionToNewKms(timeOfKurentoDisconnection);
+									kSession.restartStatusInKurentoAfterReconnectionToNewKms(
+											timeOfKurentoDisconnection);
 								});
 							} else {
 								log.info("KMS with URI {} is the same process. Nothing must be done", kms.getUri());
