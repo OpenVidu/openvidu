@@ -58,7 +58,6 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 						session.getSessionId());
 			}
 
-			containers.remove(containerId);
 			sessionsContainers.remove(session.getSessionId());
 		}
 
@@ -219,7 +218,8 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 
 		String containerId = null;
 		try {
-			final String container = openviduConfig.getOpenviduRecordingImageRepo() + ":" + openviduConfig.getOpenViduRecordingVersion();
+			final String container = openviduConfig.getOpenviduRecordingImageRepo() + ":"
+					+ openviduConfig.getOpenViduRecordingVersion();
 			final String containerName = "recording_" + session.getSessionId();
 			Volume volume1 = new Volume("/recordings");
 			List<Volume> volumes = new ArrayList<>();
@@ -230,12 +230,10 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 			containerId = dockerManager.runContainer(properties.mediaNode(), container, containerName, null, volumes,
 					binds, "host", envs, null, properties.shmSize(), false, null,
 					openviduConfig.isOpenviduRecordingGPUEnabled());
-			containers.put(containerId, containerName);
 			this.sessionsContainers.put(session.getSessionId(), containerId);
 		} catch (Exception e) {
 			if (containerId != null) {
 				dockerManager.removeContainer(properties.mediaNode(), containerId, true);
-				containers.remove(containerId);
 				sessionsContainers.remove(session.getSessionId());
 			}
 			log.error("Error while launching container for COMPOSED_QUICK_START: ({})", e.getMessage());
