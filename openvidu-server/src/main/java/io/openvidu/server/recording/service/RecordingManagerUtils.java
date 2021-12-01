@@ -51,7 +51,7 @@ public abstract class RecordingManagerUtils {
 		boolean isPresent = existingRecordingIds.contains(recordingId);
 		int i = 1;
 		while (isPresent) {
-			recordingId = baseRecordingId + "-" + i;
+			recordingId = baseRecordingId + "~" + i;
 			i++;
 			isPresent = existingRecordingIds.contains(recordingId);
 		}

@@ -2724,7 +2724,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assert.assertFalse("Session shouldn't be being recorded", session.isBeingRecorded());
 		Assert.assertFalse("Session.fetch() should return false", session.fetch());
 
-		String recordingsPath = "/opt/openvidu/recordings/" + customSessionId + "-1/";
+		String recordingsPath = "/opt/openvidu/recordings/" + customSessionId + "~1/";
 		File file1 = new File(recordingsPath + customRecordingName + ".mp4");
 		File file2 = new File(recordingsPath + ".recording." + recording2.getId());
 		File file3 = new File(recordingsPath + recording2.getId() + ".jpg");
