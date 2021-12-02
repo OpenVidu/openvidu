@@ -165,7 +165,7 @@ public class ComposedRecordingService extends RecordingService {
 		try {
 			final String container = openviduConfig.getOpenviduRecordingImageRepo() + ":"
 					+ openviduConfig.getOpenViduRecordingVersion();
-			final String containerName = "recording_" + recording.getId();
+			final String containerName = "recording_" + recording.getId().replace("~", "_");
 			Volume volume1 = new Volume("/recordings");
 			List<Volume> volumes = new ArrayList<>();
 			volumes.add(volume1);

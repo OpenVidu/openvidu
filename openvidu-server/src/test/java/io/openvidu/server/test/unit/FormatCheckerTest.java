@@ -14,6 +14,7 @@ public class FormatCheckerTest {
 
 	@Test
 	void customSessionIdFormatTest() {
+
 		List<String> invalidCustomSessionIds = Arrays.asList("", "session#", "session!", "session*", "'session",
 				"\"session", "sess(ion", "sess_ion)", "session:session", ";session;", "session@session", "$",
 				"&session", "ses=sion", "+", "session,", "/session", "session?", "session#", "session%", "[session]",
