@@ -227,7 +227,8 @@ public class KurentoSessionManager extends SessionManager {
 						Participant p = sessionidParticipantpublicidParticipant.get(sessionId)
 								.remove(participant.getParticipantPublicId());
 
-						if (p != null && this.openviduConfig.isTurnadminAvailable()) {
+						if (p != null && p.getToken() != null && p.getToken().getTurnCredentials() != null
+								&& this.openviduConfig.isTurnadminAvailable()) {
 							this.coturnCredentialsService.deleteUser(p.getToken().getTurnCredentials().getUsername());
 						}
 
