@@ -31,4 +31,33 @@ public class FormatCheckerTest {
 			assertTrue(formatChecker.isValidCustomSessionId(id));
 	}
 
+	@Test
+	void acceptableRecordingResolutionTest() {
+
+		List<String> invalidResolutions = Arrays.asList("", "a", "123", "true", "AXB", "AxB", "12x", "x12", "0920x1080",
+				"1080x0720", "720x2000", "99x720", "1920X1080");
+
+		List<String> validResolutions = Arrays.asList("1920x1080", "1280x720", "100x1999");
+
+		FormatChecker formatChecker = new FormatChecker();
+		for (String resolution : invalidResolutions)
+			assertFalse(formatChecker.isAcceptableRecordingResolution(resolution));
+		for (String resolution : validResolutions)
+			assertTrue(formatChecker.isAcceptableRecordingResolution(resolution));
+	}
+
+	@Test
+	void acceptableRecordingFrameRateTest() {
+
+		List<Integer> invalidFrameRates = Arrays.asList(-1, 0, 121, 9999);
+
+		List<Integer> validFramerates = Arrays.asList(1, 2, 30, 60, 119, 120);
+
+		FormatChecker formatChecker = new FormatChecker();
+		for (int framerate : invalidFrameRates)
+			assertFalse(formatChecker.isAcceptableRecordingFrameRate(framerate));
+		for (int framerate : validFramerates)
+			assertTrue(formatChecker.isAcceptableRecordingFrameRate(framerate));
+	}
+
 }
