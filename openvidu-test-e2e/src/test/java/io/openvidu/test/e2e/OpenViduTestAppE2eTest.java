@@ -1378,7 +1378,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			checkDockerContainerRunning("openvidu/openvidu-recording", 0);
 
 			Assert.assertEquals("Wrong recording status", Recording.Status.ready,
-					OV.getRecording(sessionName + "-1").getStatus());
+					OV.getRecording(sessionName + "~1").getStatus());
 
 			// 3. Session closed before recording started should trigger
 			CustomWebhook.clean();
@@ -1421,7 +1421,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Assert.assertEquals("Wrong status in recordingStatusChanged event", "failed",
 						event.get("status").getAsString());
 				Assert.assertEquals("Wrong recording status", Recording.Status.failed,
-						OV.getRecording(sessionName + "-2").getStatus());
+						OV.getRecording(sessionName + "~2").getStatus());
 			} else {
 				// Recording did have time to start. Should trigger started, stopped, ready
 				event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
@@ -1431,7 +1431,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Assert.assertEquals("Wrong status in recordingStatusChanged event", "ready",
 						event.get("status").getAsString());
 				Assert.assertEquals("Wrong recording status", Recording.Status.ready,
-						OV.getRecording(sessionName + "-2").getStatus());
+						OV.getRecording(sessionName + "~2").getStatus());
 			}
 
 			checkDockerContainerRunning("openvidu/openvidu-recording", 0);
@@ -1686,16 +1686,16 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Thread.sleep(500);
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
-				"Recording started [" + SESSION_NAME + "-1]"));
+				"Recording started [" + SESSION_NAME + "~1]"));
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 4);
 
 		Thread.sleep(RECORDING_DURATION);
 
 		user.getDriver().findElement(By.id("recording-id-field")).clear();
-		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(SESSION_NAME + "-1");
+		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(SESSION_NAME + "~1");
 		user.getDriver().findElement(By.id("stop-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
-				"Recording stopped [" + SESSION_NAME + "-1]"));
+				"Recording stopped [" + SESSION_NAME + "~1]"));
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 4);
 
 		// Audio-only INDIVIDUAL recording
@@ -1706,16 +1706,16 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Thread.sleep(500);
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
-				"Recording started [" + SESSION_NAME + "-2]"));
+				"Recording started [" + SESSION_NAME + "~2]"));
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 6);
 
 		Thread.sleep(RECORDING_DURATION);
 
 		user.getDriver().findElement(By.id("recording-id-field")).clear();
-		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(SESSION_NAME + "-2");
+		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(SESSION_NAME + "~2");
 		user.getDriver().findElement(By.id("stop-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
-				"Recording stopped [" + SESSION_NAME + "-2]"));
+				"Recording stopped [" + SESSION_NAME + "~2]"));
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 6);
 
 		String recordingsPath = "/opt/openvidu/recordings/";
@@ -1727,13 +1727,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				recording.getDuration(), recording.getResolution(), recording.getFrameRate(), null, "h264", true);
 
 		// Check video-only INDIVIDUAL recording
-		recPath = recordingsPath + SESSION_NAME + "-1/";
-		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-1");
+		recPath = recordingsPath + SESSION_NAME + "~1/";
+		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "~1");
 		this.recordingUtils.checkIndividualRecording(recPath, recording, 3, "opus", "vp8", true);
 
 		// Check audio-only INDIVIDUAL recording
-		recPath = recordingsPath + SESSION_NAME + "-2/";
-		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-2");
+		recPath = recordingsPath + SESSION_NAME + "~2/";
+		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "~2");
 		this.recordingUtils.checkIndividualRecording(recPath, recording, 2, "opus", "vp8", true);
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
@@ -1922,23 +1922,23 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Thread.sleep(1000);
 
 			user.getDriver().findElement(By.id("recording-id-field")).clear();
-			user.getDriver().findElement(By.id("recording-id-field")).sendKeys(SESSION_NAME + "-1");
+			user.getDriver().findElement(By.id("recording-id-field")).sendKeys(SESSION_NAME + "~1");
 			user.getDriver().findElement(By.id("stop-recording-btn")).click();
 			user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
-					"Recording stopped [" + SESSION_NAME + "-1]"));
+					"Recording stopped [" + SESSION_NAME + "~1]"));
 			user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 			user.getDriver().findElement(By.id("close-session-btn")).click();
 			user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
 			user.getEventManager().waitUntilEventReaches("sessionDisconnected", 2);
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
 
-			recordingsPath = "/opt/openvidu/recordings/" + SESSION_NAME + "-1/";
-			file1 = new File(recordingsPath + SESSION_NAME + "-1.mp4");
-			file2 = new File(recordingsPath + SESSION_NAME + "-1.jpg");
+			recordingsPath = "/opt/openvidu/recordings/" + SESSION_NAME + "~1/";
+			file1 = new File(recordingsPath + SESSION_NAME + "~1.mp4");
+			file2 = new File(recordingsPath + SESSION_NAME + "~1.jpg");
 
 			Assert.assertTrue("Recorded file " + file1.getAbsolutePath() + " is not fine",
 					this.recordingUtils.recordedRedFileFine(file1,
-							new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-1")));
+							new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "~1")));
 			Assert.assertTrue("Thumbnail " + file2.getAbsolutePath() + " is not fine",
 					this.recordingUtils.thumbnailIsFine(file2, RecordingUtils::checkVideoAverageRgbRed));
 
@@ -2697,7 +2697,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
 
 		Assert.assertEquals("Wrong recording name", customRecordingName, recording2.getName());
-		Assert.assertEquals("Wrong recording id", session.getSessionId() + "-1", recording2.getId());
+		Assert.assertEquals("Wrong recording id", session.getSessionId() + "~1", recording2.getId());
 		Assert.assertEquals("Wrong recording session id", session.getSessionId(), recording2.getSessionId());
 		Assert.assertEquals("Wrong recording duration", 0, recording2.getDuration(), 0.0001);
 		Assert.assertEquals("Wrong recording size", 0, recording2.getSize());
@@ -4126,7 +4126,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getEventManager().waitUntilEventReaches("recordingStarted", 1); // Started
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Started
 			Thread.sleep(4000);
-			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/TestSession-1", HttpStatus.SC_OK);
+			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/TestSession~1", HttpStatus.SC_OK);
 			user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Stopped
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
@@ -4222,7 +4222,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					HttpStatus.SC_OK);
 
 			// Publish video only IPCAM
-			fullRecordingPath = "file://" + recPath + "TestSession-1/videoOnly.mp4";
+			fullRecordingPath = "file://" + recPath + "TestSession~1/videoOnly.mp4";
 			ipCamBody = "{'type':'IPCAM','rtspUri':'" + fullRecordingPath + "'}";
 			response = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/TestSession/connection", ipCamBody,
 					HttpStatus.SC_OK);
@@ -4239,7 +4239,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 //			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Started
 //
 //			Thread.sleep(2000);
-//			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/TestSession-2", HttpStatus.SC_OK);
+//			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/TestSession~2", HttpStatus.SC_OK);
 //			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Stopped
 //			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
 //
