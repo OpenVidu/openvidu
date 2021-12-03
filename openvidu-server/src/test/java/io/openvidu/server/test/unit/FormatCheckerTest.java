@@ -18,7 +18,7 @@ public class FormatCheckerTest {
 		List<String> invalidCustomSessionIds = Arrays.asList("", "session#", "session!", "session*", "'session",
 				"\"session", "sess(ion", "sess_ion)", "session:session", ";session;", "session@session", "$",
 				"&session", "ses=sion", "+", "session,", "/session", "session?", "session#", "session%", "[session]",
-				"session.", "session~", "~session", "session~1", "\\session");
+				"session.", "~", "session~", "~session", "session~1", "\\session");
 
 		List<String> validCustomSessionIds = Arrays.asList("s", "1", "-", "_", "_-_", "session", "session1",
 				"0session10", "-session", "session-", "-session-", "_session", "session_", "_session_", "_-session",
