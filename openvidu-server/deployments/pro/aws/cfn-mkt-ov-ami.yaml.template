@@ -134,9 +134,9 @@ Resources:
             #!/bin/bash -x
             set -eu -o pipefail
             apt-get update && apt-get install -y \
-                python-pip \
+                python-pip python3-pip \
                 ec2-instance-connect
-            pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
+            pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
 
             cfn-init --region ${AWS::Region} --stack ${AWS::StackId} --resource OpenviduServerPro
 
