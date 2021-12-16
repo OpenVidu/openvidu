@@ -1,4 +1,4 @@
-FROM redis:6.0.1-alpine
+FROM redis:6.2.6-alpine
 
 COPY ./entrypoint.sh /usr/local/bin
 
