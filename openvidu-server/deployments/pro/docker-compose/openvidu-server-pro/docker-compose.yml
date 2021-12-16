@@ -120,7 +120,7 @@ services:
 
 
     elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
+        image: openvidu/openvidu-elasticsearch:7.8.0
         restart: always
         environment:
             - discovery.type=single-node
