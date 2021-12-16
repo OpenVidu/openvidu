@@ -7,7 +7,7 @@ if [ -z "${DOMAIN_OR_PUBLIC_IP}" ]; then
   exit 0
 fi
 
-if [ -z "${CERTIFICATE_TYPE}" ]; then 
+if [ -z "${CERTIFICATE_TYPE}" ]; then
   printf "\n  =======¡ERROR!======="
   printf "\n  Variable 'CERTIFICATE_TYPE' it's necessary\n"
   exit 0
@@ -117,10 +117,10 @@ case ${CERTIFICATE_TYPE} in
     if [[ ! -f "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" && \
           ! -f "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" ]]; then
       printf "\n    - Generating selfsigned certificate...\n"
-      
+
       # Delete and create certificate folder
       rm -rf "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" | true
-      mkdir -p "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" 
+      mkdir -p "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}"
 
       openssl req -new -nodes -x509 \
         -subj "/CN=${DOMAIN_OR_PUBLIC_IP}" -days 365 \
@@ -139,7 +139,7 @@ case ${CERTIFICATE_TYPE} in
 
       # Delete and create certificate folder
       rm -rf "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" | true
-      mkdir -p "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" 
+      mkdir -p "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}"
 
       cp /owncert/certificate.key "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem"
       cp /owncert/certificate.cert "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem"
@@ -338,7 +338,7 @@ if [[ "${PUBLIC_IP}" == "auto-ipv4" ]]; then
 elif [[ "${PUBLIC_IP}" == "auto-ipv6" ]]; then
   PUBLIC_IP=$(/usr/local/bin/discover_my_public_ip.sh --ipv6)
   printf "\n    - Public IPv6 for rules: %s" "$PUBLIC_IP"
-else 
+else
   if valid_ip_v4 "$PUBLIC_IP"; then
     printf "\n    - Valid defined public IPv4: %s" "$PUBLIC_IP"
   elif valid_ip_v6 "$PUBLIC_IP"; then
@@ -353,7 +353,7 @@ if [ "${ALLOWED_ACCESS_TO_DASHBOARD}" != "all" ]; then
     for IP in $(echo "${ALLOWED_ACCESS_TO_DASHBOARD}" | tr -d '[:space:]')
     do
         if valid_ip_v4 "$IP" || valid_ip_v6 "$IP"; then
-            if [ -z "${RULES_DASHBOARD}" ]; then             
+            if [ -z "${RULES_DASHBOARD}" ]; then
                 RULES_DASHBOARD="allow $IP;"
 
                 printf "\n    - Allowing IP/RANGE %s in Dashboard..." "$IP"
@@ -382,7 +382,7 @@ if [ "${ALLOWED_ACCESS_TO_DASHBOARD}" != "all" ]; then
             exit 0
         fi
     done
-else 
+else
     RULES_DASHBOARD="allow all;"
 fi
 
@@ -463,7 +463,11 @@ printf "\n  ======================================="
 printf "\n  =         START OPENVIDU PROXY        ="
 printf "\n  ======================================="
 printf "\n\n"
-nginx -s reload
-
-# nginx logs
-tail -f /var/log/nginx/*.log
+echo "Restarting nginx"
+NGINX_STARTING_PID=$(cat /var/run/nginx.pid)
+while kill -s 0 "$NGINX_STARTING_PID" 2> /dev/null; do
+  nginx -s quit
+  sleep 10
+done
+echo "Starting nginx..."
+nginx -g "daemon off;"

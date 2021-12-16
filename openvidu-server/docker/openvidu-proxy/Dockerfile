@@ -1,7 +1,7 @@
-FROM nginx:1.20.0-alpine
+FROM nginx:1.21.4-alpine
 
 # Install required software
-RUN apk update && \ 
+RUN apk update && \
     apk add bash \
             certbot \
             openssl \
@@ -29,4 +29,4 @@ RUN mkdir -p /var/www/certbot && \
     chmod +x /usr/local/bin/entrypoint.sh && \
     chmod +x /usr/local/bin/discover_my_public_ip.sh
 
-CMD /usr/local/bin/entrypoint.sh
+CMD [ "/usr/local/bin/entrypoint.sh" ]
