@@ -14,8 +14,8 @@ export class SessionPropertiesDialogComponent {
     turnConf: string;
     manualTurnConf: RTCIceServer = { urls: [] };
     customToken: string;
-    forcePublishing: boolean = false;
-    reconnectionOnServerFailure: boolean = false;
+    forcePublishing: boolean;
+    reconnectionOnServerFailure: boolean;
     connectionProperties: ConnectionProperties;
     forceVideoCodec = VideoCodec;
 

@@ -149,8 +149,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   turnConf = 'auto';
   manualTurnConf: RTCIceServer = { urls: [] };
   customToken: string;
-  forcePublishing: boolean;
-  reconnectionOnServerFailure: boolean;
+  forcePublishing: boolean = false;
+  reconnectionOnServerFailure: boolean = false;
   connectionProperties: ConnectionProperties = {
     role: OpenViduRole.PUBLISHER,
     record: true,
