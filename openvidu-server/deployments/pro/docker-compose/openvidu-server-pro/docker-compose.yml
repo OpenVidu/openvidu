@@ -88,8 +88,8 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     nginx:
-        image: openvidu/openvidu-proxy:8.0.0-dev1
-        restart: on-failure
+        image: openvidu/openvidu-proxy:8.0.0-beta1
+        restart: always
         network_mode: host
         volumes:
             - ./certificates:/etc/letsencrypt
