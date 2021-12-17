@@ -79,6 +79,8 @@ Resources:
                   pushd openvidu
                   # docker-compose.yml replace with master version
                   IMAGES="$(cat docker-compose.yml | grep 'image: openvidu/' | cut -d':' -f2 | sed -e 's/^[[:space:]]*//')"
+                  # Ignore elasticsearch image to change tag
+                  IMAGES=$(echo "$IMAGES" | grep -v openvidu/openvidu-elasticsearch)
                   for IMG in $IMAGES
                   do
                     sed -i "s|$IMG.*|$IMG:master|g" docker-compose.yml
