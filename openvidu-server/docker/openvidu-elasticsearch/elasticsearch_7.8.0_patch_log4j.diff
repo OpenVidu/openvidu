@@ -1,0 +1,25 @@
+--- Dockerfile	2021-12-20 11:10:54.760000000 +0100
++++ Dockerfile_new	2021-12-20 11:11:00.512000000 +0100
+@@ -43,10 +43,19 @@
+ 
+ RUN curl --retry 8 -S -L \
+       --output /opt/elasticsearch.tar.gz \
+-      https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.8.0-linux-$(arch).tar.gz
++      https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.8.0-linux-$(arch).tar.gz && \
++      tar zxf /opt/elasticsearch.tar.gz --strip-components=1 && \
++      # Remove SQS CLI which contains outdated log4j
++      rm /usr/share/elasticsearch/bin/elasticsearch-sql-cli-7.8.0.jar && \
++      # Download log4j-api and log4j-core 2.17.0
++      curl https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-core/2.17.0/log4j-core-2.17.0.jar -o log4j-core-2.17.0.jar && \
++      curl https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-api/2.17.0/log4j-api-2.17.0.jar -o log4j-api-2.17.0.jar && \
++      # Remove outdated versions
++      rm /usr/share/elasticsearch/lib/log4j-core-*.jar && \
++      rm /usr/share/elasticsearch/lib/log4j-api-*.jar && \
++      # Move new lib
++      mv log4j-core-2.17.0.jar log4j-api-2.17.0.jar /usr/share/elasticsearch/lib/
+ 
+-
+-RUN tar zxf /opt/elasticsearch.tar.gz --strip-components=1
+ RUN sed -i -e 's/ES_DISTRIBUTION_TYPE=tar/ES_DISTRIBUTION_TYPE=docker/' /usr/share/elasticsearch/bin/elasticsearch-env
+ RUN mkdir -p config config/jvm.options.d data logs
+ RUN chmod 0775 config config/jvm.options.d data logs
