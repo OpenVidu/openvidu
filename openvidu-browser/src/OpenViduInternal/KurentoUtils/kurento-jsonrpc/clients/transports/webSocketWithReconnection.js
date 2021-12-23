@@ -102,7 +102,7 @@ function WebSocketWithReconnection(config) {
 
     function reconnectAux(maxRetries, numRetries) {
         Logger.debug("Reconnection attempt #" + numRetries);
-        ws.close();
+        ws.close(4104, 'Connection closed for reconnection');
         ws = new WebSocket(wsUri);
 
         ws.onopen = () => {
@@ -131,13 +131,9 @@ function WebSocketWithReconnection(config) {
         };
     }
 
-    this.close = () => {
+    this.close = (code, reason) => {
         closing = true;
-        ws.close();
-    };
-
-    this.forceClose = () => {
-        ws.close();
+        ws.close(code, reason);
     };
 
     this.reconnectWs = () => {
