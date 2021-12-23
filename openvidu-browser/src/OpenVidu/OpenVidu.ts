@@ -755,6 +755,7 @@ export class OpenVidu {
       },
       rpc: {
         requestTimeout: 10000,
+        heartbeatRequestTimeout: 5000,
         participantJoined: this.session.onParticipantJoined.bind(this.session),
         participantPublished: this.session.onParticipantPublished.bind(this.session),
         participantUnpublished: this.session.onParticipantUnpublished.bind(this.session),
