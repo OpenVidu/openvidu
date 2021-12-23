@@ -100,9 +100,19 @@ function WebSocketWithReconnection(config) {
         reconnectAux(maxRetries, numRetries);
     }
 
+    function addReconnectionQueryParamsIfMissing(uriString) {
+        var searchParams = new URLSearchParams((new URL(uriString)).search);
+        if (!searchParams.has("reconnect")) {
+            uriString = (Array.from(searchParams).length > 0) ? (uriString + '&reconnect=true') : (uriString + '?reconnect=true');
+        }
+        return uriString;
+    }
+
     function reconnectAux(maxRetries, numRetries) {
         Logger.debug("Reconnection attempt #" + numRetries);
         ws.close(4104, 'Connection closed for reconnection');
+
+        wsUri = addReconnectionQueryParamsIfMissing(wsUri);
         ws = new WebSocket(wsUri);
 
         ws.onopen = () => {

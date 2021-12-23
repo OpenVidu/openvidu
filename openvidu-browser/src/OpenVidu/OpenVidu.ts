@@ -1030,53 +1030,81 @@ export class OpenVidu {
     }
   }
 
+  private reconnectWebsocketThroughRpcConnectMethod(rpcSessionId) {
+    // This RPC method allows checking:
+    // Single Master: if success, connection recovered
+    //                if error, no Master Node crashed and life will be -1. onLostConnection with reason networkDisconnect will be triggered
+    // Multi Master: if success, connection recovered
+    //               if error and Master Node crashed notification was already received, nothing must be done
+    //               if error and Master Node NOT crashed, sessionStatus method must be sent:
+    //                 if life is equal, networkDisconnect
+    //                 if life is greater, nodeCrashed
+    this.sendRequest('connect', { sessionId: rpcSessionId, reconnect: true }, (error, response) => {
+      if (!!error) {
+
+        if (this.isMasterNodeCrashed()) {
+
+          logger.warn('Master Node has crashed!');
+
+        } else {
+
+          logger.error(error);
+
+          const notifyLostConnection = (reason, errorMsg) => {
+            logger.warn(errorMsg);
+            this.session.onLostConnection(reason);
+            this.jsonRpcClient.close(4101, "Reconnection fault: " + errorMsg);
+          }
+
+          const rpcSessionStatus = () => {
+            if (this.life === -1) {
+              // Single Master
+              notifyLostConnection('networkDisconnect', 'WS successfully reconnected but the user was already evicted due to timeout');
+            } else {
+              // Multi Master
+              // This RPC method is only required to find out the reason of the disconnection:
+              // whether the client lost its network connection or a Master Node crashed
+              this.sendRequest('sessionStatus', { sessionId: this.session.sessionId }, (error, response) => {
+                if (error != null) {
+                  console.error('Error checking session status', error);
+                } else {
+                  if (this.life === response.life) {
+                    // If the life stored in the client matches the life stored in the server, it means that the client lost its network connection
+                    notifyLostConnection('networkDisconnect', 'WS successfully reconnected but the user was already evicted due to timeout');
+                  } else {
+                    // If the life stored in the client is below the life stored in the server, it means that the Master Node has crashed
+                    notifyLostConnection('nodeCrashed', 'WS successfully reconnected to OpenVidu Server but your Master Node crashed');
+                  }
+                }
+              });
+            }
+          };
+
+          if (error.code === 40007 && error.message === 'reconnection error') {
+            // Kurento error: invalid RPC sessionId. This means that the kurento-jsonrpc-server of openvidu-server where kurento-jsonrpc-client
+            // is trying to reconnect does not know about this sessionId. This can mean two things: 
+            // 1) openvidu-browser managed to reconnect after a while, but openvidu-server already evicted the user for not receiving ping.
+            // 2) openvidu-server process is a different one because of a node crash.
+            // Send a "sessionStatus" method to check the reason
+            console.error('Invalid RPC sessionId. Client network disconnection or Master Node crash');
+            rpcSessionStatus();
+          } else {
+            rpcSessionStatus();
+          }
+
+        }
+      } else {
+        this.jsonRpcClient.resetPing();
+        this.session.onRecoveredConnection();
+      }
+    });
+  }
+
   private reconnectedCallback(): void {
     logger.warn('Websocket reconnected');
     if (this.isRoomAvailable()) {
       if (!!this.session.connection) {
-        // This RPC method allows checking if the WebSocket reconnected to a session where
-        // the user is still a participant, or the session evicted the user
-        this.sendRequest('connect', { sessionId: this.session.connection.rpcSessionId }, (error, response) => {
-          if (!!error) {
-
-            if (this.isMasterNodeCrashed()) {
-
-              logger.warn('Master Node has crashed!');
-
-            } else {
-
-              logger.error(error);
-
-              const notifyNetworkDisconnection = (error) => {
-                logger.warn('Websocket was able to reconnect to OpenVidu Server, but your Connection was already destroyed due to timeout. You are no longer a participant of the Session and your media streams have been destroyed');
-                this.session.onLostConnection("networkDisconnect");
-                this.jsonRpcClient.close(4101, "Reconnection fault");
-              }
-
-              if (this.life === -1) {
-                notifyNetworkDisconnection(error);
-              } else {
-                // This RPC method is only required to find out the reason of the disconnection:
-                // whether the client lost its network connection or a Master Node crashed
-                this.sendRequest('sessionStatus', { sessionId: this.session.sessionId }, (error, response) => {
-                  if (this.life === response.life) {
-                    // If the life stored in the client matches the life stored in the server, it means that the client lost its network connection
-                    notifyNetworkDisconnection(error);
-                  } else {
-                    // If the life stored in the client is below the life stored in the server, it means that the Master Node has crashed
-                    logger.warn('Websocket was able to reconnect to OpenVidu Server, but your Master Node crashed.');
-                    this.session.onLostConnection("nodeCrashed");
-                    this.jsonRpcClient.close(4101, "Reconnection fault");
-                  }
-                });
-              }
-
-            }
-          } else {
-            this.jsonRpcClient.resetPing();
-            this.session.onRecoveredConnection();
-          }
-        });
+        this.reconnectWebsocketThroughRpcConnectMethod(this.session.connection.rpcSessionId);
       } else {
         logger.warn('There was no previous connection when running reconnection callback');
         // Make Session object dispatch 'sessionDisconnected' event
