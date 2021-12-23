@@ -256,11 +256,6 @@ function JsonRpcClient(configuration) {
         ws.close(code, reason);
     }
 
-    // This method is only for testing
-    this.forceClose = function (millis) {
-        ws.forceClose(millis);
-    }
-
     this.reconnect = function () {
         ws.reconnectWs();
     }
