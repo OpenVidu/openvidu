@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#/ Use DNS to find out about the external IP of the running system.
+#/ Discover the external IP address of the running system.
 #/
 #/ This script is useful when running from a machine that sits behind a NAT.
 #/ Due to how NAT works, machines behind it belong to an internal or private
@@ -16,7 +16,7 @@
 #/
 #/
 #/ Arguments
-#/ ---------
+#/ =========
 #/
 #/ --ipv4
 #/
@@ -40,16 +40,31 @@ set -o errexit -o errtrace -o pipefail -o nounset
 #set -o xtrace
 
 # Trap function for unhandled errors.
-function on_error() {
-    echo "[getmyip] ERROR ($?)" >&2
+function on_error {
+    echo "[$0] ERROR ($?)" >&2
     exit 1
 }
 trap on_error ERR
 
+# Check dependencies.
+function check_programs {
+    local PROGRAMS=(
+        dig
+        wget
+    )
+    for PROGRAM in "${PROGRAMS[@]}"; do
+        command -v "$PROGRAM" >/dev/null || {
+            echo "[$0] ERROR: '$PROGRAM' is not installed; please install it"
+            exit 1
+        }
+    done
+}
+check_programs
 
 
-# Parse call arguments
-# ====================
+
+# Parse arguments
+# ===============
 
 CFG_IPV4="true"
 CFG_IPV6="false"
@@ -65,7 +80,7 @@ while [[ $# -gt 0 ]]; do
             CFG_IPV6="true"
             ;;
         *)
-            echo "Invalid argument: '${1-}'" >&2
+            echo "[$0] Invalid argument: '${1-}'" >&2
             exit 1
             ;;
     esac
@@ -74,8 +89,8 @@ done
 
 
 
-# Obtain the external IP address
-# ==============================
+# Discover external IP address
+# ============================
 
 if [[ "$CFG_IPV4" == "true" ]]; then
     COMMANDS=(
@@ -83,10 +98,10 @@ if [[ "$CFG_IPV4" == "true" ]]; then
         'dig @ns1.google.com o-o.myaddr.l.google.com TXT -4 +short | tr -d \"'
         'dig @1.1.1.1 whoami.cloudflare TXT CH -4 +short | tr -d \"'
         'dig @ns1-1.akamaitech.net whoami.akamai.net A -4 +short'
-        'curl -4 ifconfig.co'
+        'wget --quiet -4 -O - ifconfig.co'
     )
 
-    function is_valid_ip() {
+    function is_valid_ip {
         # Check if the input looks like an IPv4 address.
         # Doesn't check if the actual values are valid; assumes they are.
         echo "$1" | grep --perl-regexp --quiet '^(\d{1,3}\.){3}\d{1,3}$'
@@ -96,10 +111,10 @@ elif [[ "$CFG_IPV6" == "true" ]]; then
         'dig @resolver1.opendns.com myip.opendns.com AAAA -6 +short'
         'dig @ns1.google.com o-o.myaddr.l.google.com TXT -6 +short | tr -d \"'
         'dig @2606:4700:4700::1111 whoami.cloudflare TXT CH -6 +short | tr -d \"'
-        'curl -6 ifconfig.co'
+        'wget --quiet -6 -O - ifconfig.co'
     )
 
-    function is_valid_ip() {
+    function is_valid_ip {
         # Check if the input looks like an IPv6 address.
         # It's almost impossible to check the IPv6 representation because it
         # varies wildly, so just check that there are at least 2 colons.
@@ -114,5 +129,5 @@ for COMMAND in "${COMMANDS[@]}"; do
     fi
 done
 
-echo "[getmyip] All providers failed" >&2
+echo "[$0] Discovery failed" >&2
 exit 1
