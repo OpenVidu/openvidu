@@ -2,7 +2,7 @@ FROM coturn/coturn:4.5.2-alpine
 
 USER root
 
-RUN apk add --no-cache bind-tools grep
+RUN apk add --no-cache bind-tools grep curl
 
 # Override detect-external-ip.sh script
 COPY ./detect-external-ip.sh /usr/local/bin/detect-external-ip.sh

@@ -83,6 +83,7 @@ if [[ "$CFG_IPV4" == "true" ]]; then
         'dig @ns1.google.com o-o.myaddr.l.google.com TXT -4 +short | tr -d \"'
         'dig @1.1.1.1 whoami.cloudflare TXT CH -4 +short | tr -d \"'
         'dig @ns1-1.akamaitech.net whoami.akamai.net A -4 +short'
+        'curl -4 ifconfig.co'
     )
 
     function is_valid_ip() {
@@ -95,6 +96,7 @@ elif [[ "$CFG_IPV6" == "true" ]]; then
         'dig @resolver1.opendns.com myip.opendns.com AAAA -6 +short'
         'dig @ns1.google.com o-o.myaddr.l.google.com TXT -6 +short | tr -d \"'
         'dig @2606:4700:4700::1111 whoami.cloudflare TXT CH -6 +short | tr -d \"'
+        'curl -6 ifconfig.co'
     )
 
     function is_valid_ip() {
