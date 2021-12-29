@@ -165,6 +165,19 @@ public class SessionEventsHandler {
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_MEDIASERVER_PARAM,
 				this.openviduConfig.getMediaServer().name());
 
+		switch (this.openviduConfig.getMediaServer()) {
+			case mediasoup:
+				// mediasoup supports simulcast
+				result.addProperty(ProtocolElements.PARTICIPANTJOINED_SIMULCAST_PARAM,
+						this.openviduConfig.isStreamsVideoSimulcast());
+				break;
+			case kurento:
+			default:
+				// Kurento does not support simulcast
+				result.addProperty(ProtocolElements.PARTICIPANTJOINED_SIMULCAST_PARAM, false);
+				break;
+		}
+
 		if (participant.getToken() != null) {
 			result.addProperty(ProtocolElements.PARTICIPANTJOINED_RECORD_PARAM, participant.getToken().record());
 			if (participant.getToken().getRole() != null) {

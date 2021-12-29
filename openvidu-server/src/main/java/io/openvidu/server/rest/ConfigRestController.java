@@ -114,6 +114,7 @@ public class ConfigRestController {
 		json.addProperty("OPENVIDU_STREAMS_VIDEO_MIN_RECV_BANDWIDTH", openviduConfig.getVideoMinRecvBandwidth());
 		json.addProperty("OPENVIDU_STREAMS_VIDEO_MAX_SEND_BANDWIDTH", openviduConfig.getVideoMaxSendBandwidth());
 		json.addProperty("OPENVIDU_STREAMS_VIDEO_MIN_SEND_BANDWIDTH", openviduConfig.getVideoMinSendBandwidth());
+		json.addProperty("OPENVIDU_STREAMS_VIDEO_SIMULCAST", openviduConfig.isStreamsVideoSimulcast());
 		json.addProperty("OPENVIDU_STREAMS_FORCED_VIDEO_CODEC", openviduConfig.getOpenviduForcedCodec().name());
 		json.addProperty("OPENVIDU_STREAMS_ALLOW_TRANSCODING", openviduConfig.isOpenviduAllowingTranscoding());
 		json.addProperty("OPENVIDU_SESSIONS_GARBAGE_INTERVAL", openviduConfig.getSessionGarbageInterval());

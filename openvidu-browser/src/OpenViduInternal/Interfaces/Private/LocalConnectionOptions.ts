@@ -33,5 +33,6 @@ export interface LocalConnectionOptions {
     turnCredential: string;
     version: string;
     mediaServer: string;
+    videoSimulcast: boolean;
     life: number;
 }

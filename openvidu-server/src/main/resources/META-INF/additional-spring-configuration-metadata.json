@@ -148,6 +148,12 @@
 			"defaultValue": 300
 		},
 		{
+			"name": "OPENVIDU_STREAMS_VIDEO_SIMULCAST",
+			"type": "java.lang.Boolean",
+			"description": "Send Simulcast video.",
+			"defaultValue": true
+		},
+		{
 			"name": "OPENVIDU_STREAMS_FORCED_VIDEO_CODEC",
 			"type": "java.lang.String",
 			"description": "Defines which video codec is being forced to be used in the browser/client",
