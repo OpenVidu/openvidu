@@ -112,6 +112,10 @@ export class OpenVidu {
   /**
    * @hidden
    */
+  videoSimulcast: boolean;
+  /**
+   * @hidden
+   */
   life: number = -1;
   /**
    * @hidden
@@ -257,6 +261,7 @@ export class OpenVidu {
         publishVideo: (typeof properties.publishVideo !== 'undefined') ? properties.publishVideo : true,
         resolution: (typeof MediaStreamTrack !== 'undefined' && properties.videoSource instanceof MediaStreamTrack) ? undefined : ((typeof properties.resolution !== 'undefined') ? properties.resolution : '640x480'),
         videoSource: (typeof properties.videoSource !== 'undefined') ? properties.videoSource : undefined,
+        videoSimulcast: properties.videoSimulcast,
         filter: properties.filter
       };
     } else {

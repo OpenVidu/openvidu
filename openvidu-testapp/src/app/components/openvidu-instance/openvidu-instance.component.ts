@@ -121,7 +121,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     resolution: '640x480',
     mirror: true,
     publishAudio: true,
-    publishVideo: true
+    publishVideo: true,
+    videoSimulcast: true
   };
 
   publisherPropertiesAux: PublisherProperties;
@@ -230,9 +231,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
     this.OV = new OpenVidu();
 
-    const advancedConfiguration: OpenViduAdvancedConfiguration = {
-      enableSimulcastExperimental: false
-    };
+    const advancedConfiguration: OpenViduAdvancedConfiguration = {};
     if (this.turnConf === 'freeice') {
       advancedConfiguration.iceServers = 'freeice';
     } else if (this.turnConf === 'manual') {

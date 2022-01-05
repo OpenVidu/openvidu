@@ -8,6 +8,7 @@
         <mat-checkbox [(ngModel)]="publisherProperties.publishAudio" (click)="publisherProperties.publishAudio = !publisherProperties.publishAudio">Publish audio</mat-checkbox>
         <mat-checkbox [(ngModel)]="publisherProperties.publishVideo" (click)="publisherProperties.publishVideo = !publisherProperties.publishVideo">Publish video</mat-checkbox>
         <mat-checkbox [(ngModel)]="publisherProperties.mirror" (click)="publisherProperties.mirror = !publisherProperties.mirror">Mirror</mat-checkbox>
+        <mat-checkbox [(ngModel)]="publisherProperties.videoSimulcast" (click)="publisherProperties.videoSimulcast = !publisherProperties.videoSimulcast">Video Simulcast</mat-checkbox>
         <mat-divider></mat-divider>
         <mat-form-field>
             <input matInput placeholder="Audio source" [(ngModel)]="audioSource" [disabled]="(publisherProperties.audioSource === false)">

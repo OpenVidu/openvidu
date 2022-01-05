@@ -938,13 +938,19 @@ export class Stream {
                     audio: this.hasAudio,
                     video: this.hasVideo,
                 },
-                simulcast: this.session.openvidu.advancedConfiguration.enableSimulcastExperimental || false,
+                simulcast:
+                    this.outboundStreamOpts.publisherProperties.videoSimulcast ?? this.session.openvidu.videoSimulcast,
                 onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
                 onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
                 iceServers: this.getIceServersConf(),
                 mediaStream: this.mediaStream,
                 mediaServer: this.session.openvidu.mediaServer
             };
+
+            if (this.session.openvidu.mediaServer !== 'mediasoup') {
+                // Simulcast is only supported by mediasoup
+                config.simulcast = false;
+            }
 
             if (reconnect) {
                 this.disposeWebRtcPeer();

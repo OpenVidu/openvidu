@@ -83,6 +83,16 @@ export interface PublisherProperties {
     videoSource?: string | MediaStreamTrack | boolean;
 
     /**
+     * Send Simulcast video.
+     * Publishers will encode duplicate video streams with different qualities,
+     * so the media server is able to select the most appropriate quality stream
+     * for each Subscriber.
+     * This setting is honored only if OpenVidu Server was configured to use the
+     * mediasoup media server. Otherwise, Simulcast will be disabled.
+     */
+    videoSimulcast?: boolean;
+
+    /**
      * **WARNING**: experimental option. This property may change in the near future
      *
      * Define a filter to apply in the Publisher's stream

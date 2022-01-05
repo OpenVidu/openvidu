@@ -1540,6 +1540,7 @@ export class Session extends EventDispatcher {
         this.openvidu.role = opts.role;
         this.openvidu.finalUserId = opts.finalUserId;
         this.openvidu.mediaServer = opts.mediaServer;
+        this.openvidu.videoSimulcast = opts.videoSimulcast;
         this.capabilities = {
             subscribe: true,
             publish: this.openvidu.role !== 'SUBSCRIBER',

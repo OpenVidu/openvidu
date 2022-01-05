@@ -217,7 +217,12 @@ public class OpenviduConfig {
 	private boolean isTurnadminAvailable = false;
 
 	// Media Server properties
+
 	private MediaServer mediaServerInfo = MediaServer.kurento;
+
+	// Media properties
+
+	private boolean streamsVideoSimulcast = false;
 
 	// Plain config properties getters
 
@@ -279,6 +284,10 @@ public class OpenviduConfig {
 
 	public void setMediaServer(MediaServer mediaServerInfo) {
 		this.mediaServerInfo = mediaServerInfo;
+	}
+
+	public boolean isStreamsVideoSimulcast() {
+		return this.streamsVideoSimulcast;
 	}
 
 	public String getOpenViduRecordingPath() {
