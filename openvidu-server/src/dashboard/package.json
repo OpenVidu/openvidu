@@ -5,7 +5,7 @@
     "@angular/common": "12.2.15",
     "@angular/compiler": "12.2.15",
     "@angular/core": "12.2.15",
-    "@angular/flex-layout": "11.0.0-beta.33",
+    "@angular/flex-layout": "12.0.0-beta.35",
     "@angular/forms": "12.2.15",
     "@angular/material": "11.2.3",
     "@angular/platform-browser": "12.2.15",
