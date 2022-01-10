@@ -19,13 +19,13 @@ import { Stream } from './Stream';
 import { Subscriber } from './Subscriber';
 import { EventDispatcher } from './EventDispatcher';
 import { StreamManagerVideo } from '../OpenViduInternal/Interfaces/Public/StreamManagerVideo';
-import { Event } from '../OpenViduInternal/Events/Event';
+import { StreamManagerEventMap } from '../OpenViduInternal/Events/EventMap/StreamManagerEventMap';
 import { StreamManagerEvent } from '../OpenViduInternal/Events/StreamManagerEvent';
 import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent';
+import { ExceptionEvent, ExceptionEventName } from '../OpenViduInternal/Events/ExceptionEvent';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
-import { ExceptionEvent, ExceptionEventName } from '../OpenViduInternal/Events/ExceptionEvent';
 
 /**
  * @hidden
@@ -145,18 +145,6 @@ export class StreamManager extends EventDispatcher {
 
         this.canPlayListener = () => {
             this.deactivateStreamPlayingEventExceptionTimeout();
-            if (this.remote) {
-                logger.info("Remote 'Stream' with id [" + this.stream.streamId + '] video is now playing');
-                this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
-            } else {
-                if (!this.stream.displayMyRemote()) {
-                    logger.info("Your local 'Stream' with id [" + this.stream.streamId + '] video is now playing');
-                    this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
-                } else {
-                    logger.info("Your own remote 'Stream' with id [" + this.stream.streamId + '] video is now playing');
-                    this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
-                }
-            }
             this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this, 'streamPlaying', undefined)]);
         };
     }
@@ -164,9 +152,9 @@ export class StreamManager extends EventDispatcher {
     /**
      * See [[EventDispatcher.on]]
      */
-    on(type: string, handler: (event: Event) => void): EventDispatcher {
+    on<K extends keyof StreamManagerEventMap>(type: K, handler: (event: StreamManagerEventMap[K]) => void): this {
 
-        super.onAux(type, "Event '" + type + "' triggered by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", handler)
+        super.onAux(type, "Event '" + type + "' triggered by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", handler);
 
         if (type === 'videoElementCreated') {
             if (!!this.stream && this.lazyLaunchVideoElementCreatedEvent) {
@@ -174,14 +162,13 @@ export class StreamManager extends EventDispatcher {
                 this.lazyLaunchVideoElementCreatedEvent = false;
             }
         }
-        if (type === 'streamPlaying' || type === 'videoPlaying') {
+        if (type === 'streamPlaying') {
             if (this.videos[0] && this.videos[0].video &&
                 this.videos[0].video.currentTime > 0 &&
                 this.videos[0].video.paused === false &&
                 this.videos[0].video.ended === false &&
                 this.videos[0].video.readyState === 4) {
                 this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this, 'streamPlaying', undefined)]);
-                this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
             }
         }
         if (this.stream.hasAudio) {
@@ -201,7 +188,7 @@ export class StreamManager extends EventDispatcher {
     /**
      * See [[EventDispatcher.once]]
      */
-    once(type: string, handler: (event: Event) => void): StreamManager {
+    once<K extends keyof StreamManagerEventMap>(type: K, handler: (event: StreamManagerEventMap[K]) => void): this {
 
         super.onceAux(type, "Event '" + type + "' triggered once by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", handler);
 
@@ -210,14 +197,13 @@ export class StreamManager extends EventDispatcher {
                 this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(this.videos[0].video, this, 'videoElementCreated')]);
             }
         }
-        if (type === 'streamPlaying' || type === 'videoPlaying') {
+        if (type === 'streamPlaying') {
             if (this.videos[0] && this.videos[0].video &&
                 this.videos[0].video.currentTime > 0 &&
                 this.videos[0].video.paused === false &&
                 this.videos[0].video.ended === false &&
                 this.videos[0].video.readyState === 4) {
                 this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this, 'streamPlaying', undefined)]);
-                this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
             }
         }
         if (this.stream.hasAudio) {
@@ -237,9 +223,9 @@ export class StreamManager extends EventDispatcher {
     /**
      * See [[EventDispatcher.off]]
      */
-    off(type: string, handler?: (event: Event) => void): StreamManager {
+    off<K extends keyof StreamManagerEventMap>(type: K, handler?: (event: StreamManagerEventMap[K]) => void): this {
 
-        super.off(type, handler);
+        super.offAux(type, handler);
 
         if (type === 'publisherStartSpeaking') {
             // Both StreamManager and Session can have "publisherStartSpeaking" event listeners

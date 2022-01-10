@@ -16,6 +16,9 @@
  */
 
 import { Event as Event } from '../OpenViduInternal/Events/Event';
+import { SessionEventMap } from '../OpenViduInternal/Events/EventMap/SessionEventMap';
+import { StreamManagerEventMap } from '../OpenViduInternal/Events/EventMap/StreamManagerEventMap';
+
 import EventEmitter = require('wolfy87-eventemitter');
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 
@@ -40,33 +43,21 @@ export abstract class EventDispatcher {
      *
      * @returns The EventDispatcher object
      */
-    abstract on(type: string, handler: (event: Event) => void): EventDispatcher;
+    abstract on<K extends keyof (SessionEventMap | StreamManagerEventMap)>(type: K, handler: (event: (SessionEventMap | StreamManagerEventMap)[K]) => void): this;
 
     /**
      * Adds function `handler` to handle event `type` just once. The handler will be automatically removed after first execution
      *
      * @returns The object that dispatched the event
      */
-    abstract once(type: string, handler: (event: Event) => void): EventDispatcher;
+    abstract once<K extends keyof (SessionEventMap | StreamManagerEventMap)>(type: K, handler: (event: (SessionEventMap | StreamManagerEventMap)[K]) => void): this;
 
     /**
      * Removes a `handler` from event `type`. If no handler is provided, all handlers will be removed from the event
      *
      * @returns The object that dispatched the event
      */
-    off(type: string, handler?: (event: Event) => void): EventDispatcher {
-        if (!handler) {
-            this.ee.removeAllListeners(type);
-        } else {
-            // Must remove internal arrow function handler paired with user handler
-            const arrowHandler = this.userHandlerArrowHandler.get(handler);
-            if (!!arrowHandler) {
-                this.ee.off(type, arrowHandler);
-            }
-            this.userHandlerArrowHandler.delete(handler);
-        }
-        return this;
-    }
+    abstract off<K extends keyof (SessionEventMap | StreamManagerEventMap)>(type: K, handler?: (event: (SessionEventMap | StreamManagerEventMap)[K]) => void): this;
 
     /**
      * @hidden
@@ -101,6 +92,23 @@ export abstract class EventDispatcher {
         };
         this.userHandlerArrowHandler.set(handler, arrowHandler);
         this.ee.once(type, arrowHandler);
+        return this;
+    }
+
+    /**
+     * @hidden
+     */
+    offAux(type: string, handler?: (event: Event) => void): EventDispatcher {
+        if (!handler) {
+            this.ee.removeAllListeners(type);
+        } else {
+            // Must remove internal arrow function handler paired with user handler
+            const arrowHandler = this.userHandlerArrowHandler.get(handler);
+            if (!!arrowHandler) {
+                this.ee.off(type, arrowHandler);
+            }
+            this.userHandlerArrowHandler.delete(handler);
+        }
         return this;
     }
 

@@ -19,12 +19,10 @@ import { OpenVidu } from './OpenVidu';
 import { Session } from './Session';
 import { Stream } from './Stream';
 import { StreamManager } from './StreamManager';
-import { EventDispatcher } from './EventDispatcher';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
-import { Event } from '../OpenViduInternal/Events/Event';
+import { PublisherEventMap } from '../OpenViduInternal/Events/EventMap/PublisherEventMap';
 import { StreamEvent } from '../OpenViduInternal/Events/StreamEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
-import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
@@ -214,8 +212,10 @@ export class Publisher extends StreamManager {
     /**
      * See [[EventDispatcher.on]]
      */
-    on(type: string, handler: (event: Event) => void): EventDispatcher {
-        super.on(type, handler);
+    on<K extends keyof PublisherEventMap>(type: K, handler: (event: PublisherEventMap[K]) => void): this {
+
+        super.on(<any>type, handler);
+
         if (type === 'streamCreated') {
             if (!!this.stream && this.stream.isLocalStreamPublished) {
                 this.emitEvent('streamCreated', [new StreamEvent(false, this, 'streamCreated', this.stream, '')]);
@@ -223,15 +223,6 @@ export class Publisher extends StreamManager {
                 this.stream.ee.on('stream-created-by-publisher', () => {
                     this.emitEvent('streamCreated', [new StreamEvent(false, this, 'streamCreated', this.stream, '')]);
                 });
-            }
-        }
-        if (type === 'remoteVideoPlaying') {
-            if (this.stream.displayMyRemote() && this.videos[0] && this.videos[0].video &&
-                this.videos[0].video.currentTime > 0 &&
-                this.videos[0].video.paused === false &&
-                this.videos[0].video.ended === false &&
-                this.videos[0].video.readyState === 4) {
-                this.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
             }
         }
         if (type === 'accessAllowed') {
@@ -251,8 +242,10 @@ export class Publisher extends StreamManager {
     /**
      * See [[EventDispatcher.once]]
      */
-    once(type: string, handler: (event: Event) => void): Publisher {
-        super.once(type, handler);
+    once<K extends keyof PublisherEventMap>(type: K, handler: (event: PublisherEventMap[K]) => void): this {
+
+        super.once(<any>type, handler);
+
         if (type === 'streamCreated') {
             if (!!this.stream && this.stream.isLocalStreamPublished) {
                 this.emitEvent('streamCreated', [new StreamEvent(false, this, 'streamCreated', this.stream, '')]);
@@ -260,15 +253,6 @@ export class Publisher extends StreamManager {
                 this.stream.ee.once('stream-created-by-publisher', () => {
                     this.emitEvent('streamCreated', [new StreamEvent(false, this, 'streamCreated', this.stream, '')]);
                 });
-            }
-        }
-        if (type === 'remoteVideoPlaying') {
-            if (this.stream.displayMyRemote() && this.videos[0] && this.videos[0].video &&
-                this.videos[0].video.currentTime > 0 &&
-                this.videos[0].video.paused === false &&
-                this.videos[0].video.ended === false &&
-                this.videos[0].video.readyState === 4) {
-                this.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
             }
         }
         if (type === 'accessAllowed') {
@@ -283,6 +267,16 @@ export class Publisher extends StreamManager {
         }
         return this;
     }
+
+
+    /**
+     * See [[EventDispatcher.off]]
+     */
+    off<K extends keyof PublisherEventMap>(type: K, handler?: (event: PublisherEventMap[K]) => void): this {
+        super.off(<any>type, handler);
+        return this;
+    }
+
 
     /**
      * Replaces the current video or audio track with a different one. This allows you to replace an ongoing track with a different one

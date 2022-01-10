@@ -29,10 +29,9 @@ import { SubscriberProperties } from '../OpenViduInternal/Interfaces/Public/Subs
 import { RemoteConnectionOptions } from '../OpenViduInternal/Interfaces/Private/RemoteConnectionOptions';
 import { LocalConnectionOptions } from '../OpenViduInternal/Interfaces/Private/LocalConnectionOptions';
 import { SessionOptions } from '../OpenViduInternal/Interfaces/Private/SessionOptions';
+import { SessionEventMap } from '../OpenViduInternal/Events/EventMap/SessionEventMap';
 import { ConnectionEvent } from '../OpenViduInternal/Events/ConnectionEvent';
-import { ExceptionEvent } from '../OpenViduInternal/Events/ExceptionEvent';
 import { FilterEvent } from '../OpenViduInternal/Events/FilterEvent';
-import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpeakingEvent';
 import { RecordingEvent } from '../OpenViduInternal/Events/RecordingEvent';
 import { SessionDisconnectedEvent } from '../OpenViduInternal/Events/SessionDisconnectedEvent';
 import { SignalEvent } from '../OpenViduInternal/Events/SignalEvent';
@@ -62,25 +61,6 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
  * @hidden
  */
 let platform: PlatformUtils;
-
-export interface SessionEventMap {
-    connectionCreated: ConnectionEvent
-    connectionDestroyed: ConnectionEvent
-    connectionPropertyChanged: ConnectionPropertyChangedEvent
-    sessionDisconnected: SessionDisconnectedEvent
-    streamCreated: StreamEvent
-    streamDestroyed: StreamEvent
-    streamPropertyChanged: StreamPropertyChangedEvent
-    publisherStartSpeaking: PublisherSpeakingEvent
-    publisherStopSpeaking: PublisherSpeakingEvent
-    signal: SignalEvent
-    recordingStarted: RecordingEvent
-    recordingStopped: RecordingEvent
-    networkQualityLevelChanged: NetworkQualityLevelChangedEvent
-    reconnecting: never
-    reconnected: never
-    exception: ExceptionEvent
-}
 
 /**
  * Represents a video call. It can also be seen as a videoconference room where multiple users can connect.
@@ -665,7 +645,7 @@ export class Session extends EventDispatcher {
     /**
      * See [[EventDispatcher.on]]
      */
-     on<K extends keyof SessionEventMap>(type: K, handler: (event: SessionEventMap[K]) => void): this {
+    on<K extends keyof SessionEventMap>(type: K, handler: (event: SessionEventMap[K]) => void): this {
 
         super.onAux(type, "Event '" + type + "' triggered by 'Session'", handler);
 
@@ -739,7 +719,7 @@ export class Session extends EventDispatcher {
      */
     off<K extends keyof SessionEventMap>(type: K, handler?: (event: SessionEventMap[K]) => void): this {
 
-        super.off(type, handler);
+        super.offAux(type, handler);
 
         if (type === 'publisherStartSpeaking') {
             // Check if Session object still has some listener for the event
@@ -1041,7 +1021,6 @@ export class Session extends EventDispatcher {
      */
     recvIceCandidate(event: { senderConnectionId: string, endpointName: string, sdpMLineIndex: number, sdpMid: string, candidate: string }): void {
         const candidate: RTCIceCandidate = {
-            address: null,
             candidate: event.candidate,
             sdpMid: event.sdpMid,
             sdpMLineIndex: event.sdpMLineIndex,
