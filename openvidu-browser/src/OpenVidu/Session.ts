@@ -57,6 +57,25 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
  */
 let platform: PlatformUtils;
 
+export interface SessionEventMap {
+    connectionCreated: ConnectionEvent
+    connectionDestroyed: ConnectionEvent
+    connectionPropertyChanged: ConnectionPropertyChangedEvent
+    sessionDisconnected: SessionDisconnectedEvent
+    streamCreated: StreamEvent
+    streamDestroyed: StreamEvent
+    streamPropertyChanged: StreamPropertyChangedEvent
+    publisherStartSpeaking: PublisherSpeakingEvent
+    publisherStopSpeaking: PublisherSpeakingEvent
+    signal: SignalEvent
+    recordingStarted: RecordingEvent
+    recordingStopped: RecordingEvent
+    networkQualityLevelChanged: NetworkQualityLevelChangedEvent
+    reconnecting: never
+    reconnected: never
+    exception: ExceptionEvent
+}
+
 /**
  * Represents a video call. It can also be seen as a videoconference room where multiple users can connect.
  * Participants who publish their videos to a session can be seen by the rest of users connected to that specific session.
@@ -640,7 +659,7 @@ export class Session extends EventDispatcher {
     /**
      * See [[EventDispatcher.on]]
      */
-    on(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent | NetworkQualityLevelChangedEvent | ExceptionEvent) => void): EventDispatcher {
+     on<K extends keyof SessionEventMap>(type: K, handler: (event: SessionEventMap[K]) => void): this {
 
         super.onAux(type, "Event '" + type + "' triggered by 'Session'", handler);
 
@@ -676,7 +695,7 @@ export class Session extends EventDispatcher {
     /**
      * See [[EventDispatcher.once]]
      */
-    once(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent | NetworkQualityLevelChangedEvent | ExceptionEvent) => void): Session {
+    once<K extends keyof SessionEventMap>(type: K, handler: (event: SessionEventMap[K]) => void): this {
 
         super.onceAux(type, "Event '" + type + "' triggered once by 'Session'", handler);
 
@@ -712,7 +731,7 @@ export class Session extends EventDispatcher {
     /**
      * See [[EventDispatcher.off]]
      */
-    off(type: string, handler?: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent | NetworkQualityLevelChangedEvent | ExceptionEvent) => void): Session {
+    off<K extends keyof SessionEventMap>(type: K, handler: (event: SessionEventMap[K]) => void): this {
 
         super.off(type, handler);
 
