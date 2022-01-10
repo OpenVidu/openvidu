@@ -44,7 +44,13 @@ import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/Open
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
+/**
+ * @hidden
+ */
 import semverMajor = require('semver/functions/major');
+/**
+ * @hidden
+ */
 import semverMinor = require('semver/functions/minor');
 
 /**
@@ -1035,6 +1041,7 @@ export class Session extends EventDispatcher {
      */
     recvIceCandidate(event: { senderConnectionId: string, endpointName: string, sdpMLineIndex: number, sdpMid: string, candidate: string }): void {
         const candidate: RTCIceCandidate = {
+            address: null,
             candidate: event.candidate,
             sdpMid: event.sdpMid,
             sdpMLineIndex: event.sdpMLineIndex,
