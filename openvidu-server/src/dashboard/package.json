@@ -42,8 +42,8 @@
   "name": "frontend",
   "private": true,
   "scripts": {
-    "build": "./node_modules/@angular/cli/bin/ng build --base-href /dashboard/ --output-path ../main/resources/static/dashboard",
-    "build-prod": "./node_modules/@angular/cli/bin/ng build --configuration production --base-href /dashboard/ --output-path ../main/resources/static/dashboard",
+    "build": "./node_modules/.bin/ng build --base-href /dashboard/ --output-path ../main/resources/static/dashboard",
+    "build-prod": "./node_modules/.bin/ng build --configuration production --base-href /dashboard/ --output-path ../main/resources/static/dashboard",
     "e2e": "ng e2e",
     "lint": "ng lint",
     "ng": "ng",
