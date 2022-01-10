@@ -737,7 +737,7 @@ export class Session extends EventDispatcher {
     /**
      * See [[EventDispatcher.off]]
      */
-    off<K extends keyof SessionEventMap>(type: K, handler: (event: SessionEventMap[K]) => void): this {
+    off<K extends keyof SessionEventMap>(type: K, handler?: (event: SessionEventMap[K]) => void): this {
 
         super.off(type, handler);
 
