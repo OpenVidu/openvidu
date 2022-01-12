@@ -265,7 +265,7 @@ export class LocalRecorder {
             a.style.display = 'none';
             document.body.appendChild(a);
 
-            const url = window.URL.createObjectURL(this.blob);
+            const url = window.URL.createObjectURL(<any>this.blob);
             a.href = url;
             a.download = this.id + '.webm';
             a.click();

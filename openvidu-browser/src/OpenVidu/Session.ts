@@ -1021,6 +1021,7 @@ export class Session extends EventDispatcher {
      */
     recvIceCandidate(event: { senderConnectionId: string, endpointName: string, sdpMLineIndex: number, sdpMid: string, candidate: string }): void {
         const candidate: RTCIceCandidate = {
+            address: null,
             candidate: event.candidate,
             sdpMid: event.sdpMid,
             sdpMLineIndex: event.sdpMLineIndex,
