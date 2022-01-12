@@ -11,7 +11,7 @@ export { LocalRecorder } from './OpenVidu/LocalRecorder';
 export { Filter } from './OpenVidu/Filter';
 
 export { LocalRecorderState } from './OpenViduInternal/Enums/LocalRecorderState';
-export { OpenViduError } from './OpenViduInternal/Enums/OpenViduError';
+export { OpenViduError, OpenViduErrorName } from './OpenViduInternal/Enums/OpenViduError';
 export { VideoInsertMode } from './OpenViduInternal/Enums/VideoInsertMode';
 
 export { Event } from './OpenViduInternal/Events/Event';
@@ -27,7 +27,7 @@ export { StreamPropertyChangedEvent } from './OpenViduInternal/Events/StreamProp
 export { ConnectionPropertyChangedEvent } from './OpenViduInternal/Events/ConnectionPropertyChangedEvent';
 export { FilterEvent } from './OpenViduInternal/Events/FilterEvent';
 export { NetworkQualityLevelChangedEvent } from './OpenViduInternal/Events/NetworkQualityLevelChangedEvent';
-export { ExceptionEvent } from './OpenViduInternal/Events/ExceptionEvent';
+export { ExceptionEvent, ExceptionEventName } from './OpenViduInternal/Events/ExceptionEvent';
 
 export { Capabilities } from './OpenViduInternal/Interfaces/Public/Capabilities';
 export { Device } from './OpenViduInternal/Interfaces/Public/Device';
@@ -37,6 +37,10 @@ export { PublisherProperties } from './OpenViduInternal/Interfaces/Public/Publis
 export { SignalOptions } from './OpenViduInternal/Interfaces/Public/SignalOptions';
 export { StreamManagerVideo } from './OpenViduInternal/Interfaces/Public/StreamManagerVideo';
 export { SubscriberProperties } from './OpenViduInternal/Interfaces/Public/SubscriberProperties';
+
+export { SessionEventMap } from './OpenViduInternal/Events/EventMap/SessionEventMap';
+export { StreamManagerEventMap } from './OpenViduInternal/Events/EventMap/StreamManagerEventMap';
+export { PublisherEventMap } from './OpenViduInternal/Events/EventMap/PublisherEventMap';
 
 // Disable jsnlog when library is loaded
 JL.setOptions({ enabled: false })

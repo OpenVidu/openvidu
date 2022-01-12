@@ -1,0 +1,16 @@
+{
+    "name": "OpenVidu Browser",
+    "entryPoints": ["src/index.ts"],
+    "out": "../docs",
+    "theme": "default",
+    "readme": "none",
+    "includeVersion": true,
+    "validation": {
+        "notExported": true,
+        "invalidLink": true
+    },
+    "excludeExternals": true,
+    "excludePrivate": true,
+    "excludeProtected": true,
+    "excludeInternal": true
+}
