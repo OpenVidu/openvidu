@@ -19,6 +19,10 @@ export interface SessionEventMap {
     streamPropertyChanged: StreamPropertyChangedEvent;
     publisherStartSpeaking: PublisherSpeakingEvent;
     publisherStopSpeaking: PublisherSpeakingEvent;
+    /**
+     * @hidden
+     */
+    [key: `signal:${string}`]: SignalEvent;
     signal: SignalEvent;
     recordingStarted: RecordingEvent;
     recordingStopped: RecordingEvent;
