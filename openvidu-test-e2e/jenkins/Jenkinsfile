@@ -55,7 +55,7 @@ node('container') {
         stage('OpenVidu TestApp build') {
           sh(script: '''#!/bin/bash -xe
           cd openvidu/openvidu-testapp
-          npm install --unsafe-perm --quiet
+          npm install --force --unsafe-perm --quiet
           npm install /opt/openvidu/openvidu-browser-*.tgz --quiet
           npm install /opt/openvidu/openvidu-node-client-*.tgz --quiet
           export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng build --prod --output-path=/opt/openvidu/testapp
