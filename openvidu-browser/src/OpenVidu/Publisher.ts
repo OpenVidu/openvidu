@@ -377,7 +377,7 @@ export class Publisher extends StreamManager {
 
             let constraints: MediaStreamConstraints = {};
             let constraintsAux: MediaStreamConstraints = {};
-            const timeForDialogEvent = 1500;
+            const timeForDialogEvent = 2000;
             let startTime;
 
             const errorCallback = (openViduError: OpenViduError) => {
