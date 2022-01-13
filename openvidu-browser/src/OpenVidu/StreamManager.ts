@@ -45,16 +45,7 @@ let platform: PlatformUtils;
  * want to directly manage your own video elements (even more than one video element per Stream). This scenario is pretty common in
  * declarative, MVC frontend frameworks such as Angular, React or Vue.js
  *
- * ### Available event listeners (and events dispatched)
- *
- * - videoElementCreated ([[VideoElementEvent]])
- * - videoElementDestroyed ([[VideoElementEvent]])
- * - streamPlaying ([[StreamManagerEvent]])
- * - streamPropertyChanged ([[StreamPropertyChangedEvent]])
- * - publisherStartSpeaking ([[PublisherSpeakingEvent]])
- * - publisherStopSpeaking ([[PublisherSpeakingEvent]])
- * - streamAudioVolumeChange ([[StreamManagerEvent]])
- *
+ * See available event listeners at [[StreamManagerEventMap]].
  */
 export class StreamManager extends EventDispatcher {
 

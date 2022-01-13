@@ -38,6 +38,7 @@ export { SignalOptions } from './OpenViduInternal/Interfaces/Public/SignalOption
 export { StreamManagerVideo } from './OpenViduInternal/Interfaces/Public/StreamManagerVideo';
 export { SubscriberProperties } from './OpenViduInternal/Interfaces/Public/SubscriberProperties';
 
+export { EventMap } from './OpenViduInternal/Events/EventMap/EventMap';
 export { SessionEventMap } from './OpenViduInternal/Events/EventMap/SessionEventMap';
 export { StreamManagerEventMap } from './OpenViduInternal/Events/EventMap/StreamManagerEventMap';
 export { PublisherEventMap } from './OpenViduInternal/Events/EventMap/PublisherEventMap';

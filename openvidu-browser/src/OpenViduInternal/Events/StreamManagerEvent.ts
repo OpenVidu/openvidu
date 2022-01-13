@@ -19,15 +19,9 @@ import { Event } from './Event';
 import { StreamManager } from '../../OpenVidu/StreamManager';
 
 /**
- * Defines the following events:
- * - `streamPlaying`: dispatched by [[StreamManager]] ([[Publisher]] and [[Subscriber]]) whenever its media stream starts playing (one of its videos has media
- * and has begun to play). This event will be dispatched when these 3 conditions are met:
- *   1. The StreamManager has no video associated in the DOM
- *   2. It is associated to one video
- *   3. That video starts playing. Internally the expected Web API event is [HTMLMediaElement.canplay](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/canplay_event)
- * - `streamAudioVolumeChange`: dispatched by [[StreamManager]] ([[Publisher]] and [[Subscriber]]) when the volume of its Stream's audio track
- * changes. Only applies if [[Stream.hasAudio]] is `true`. The frequency this event is fired with is defined by property `interval` of
- * [[OpenViduAdvancedConfiguration.publisherSpeakingEventsOptions]] (default 100ms)
+ * Triggered by:
+ * - [[streamPlaying]]
+ * - [[streamAudioVolumeChange]]
  */
 export class StreamManagerEvent extends Event {
 

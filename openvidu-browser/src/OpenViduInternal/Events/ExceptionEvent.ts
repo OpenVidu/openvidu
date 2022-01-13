@@ -84,10 +84,7 @@ export enum ExceptionEventName {
 }
 
 /**
- * Defines event `exception` dispatched by [[Session]] object.
- * 
- * This event acts as a global handler for asynchronous errors that may be triggered for multiple reasons and from multiple origins. To see the different
- * types of exceptions go to [[ExceptionEventName]].
+ * Triggered by [[SessionEventMap.exception]]
  */
 export class ExceptionEvent extends Event {
 

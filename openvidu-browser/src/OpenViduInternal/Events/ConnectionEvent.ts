@@ -21,9 +21,9 @@ import { Session } from '../../OpenVidu/Session';
 
 
 /**
- * Defines the following events:
- * - `connectionCreated`: dispatched by [[Session]] after a new user has connected to the session
- * - `connectionDestroyed`: dispatched by [[Session]] after a new user has left the session
+ * Triggered by:
+ * - [[connectionCreated]]
+ * - [[connectionDestroyed]]
  */
 export class ConnectionEvent extends Event {
 

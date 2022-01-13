@@ -21,9 +21,7 @@ import { Stream } from '../../OpenVidu/Stream';
 import { StreamManager } from '../../OpenVidu/StreamManager';
 
 /**
- * Defines event `streamPropertyChanged` dispatched by [[Session]] as well as by [[StreamManager]] ([[Publisher]] and [[Subscriber]]).
- * This event is fired when any remote stream (owned by a Subscriber) or local stream (owned by a Publisher) undergoes
- * any change in any of its mutable properties (see [[changedProperty]]).
+ * Triggered by `streamPropertyChanged` (available for [Session](/en/stable/api/openvidu-browser/interfaces/SessionEventMap.html#streamPropertyChanged) and [StreamManager](/en/stable/api/openvidu-browser/interfaces/StreamManagerEventMap.html#streamPropertyChanged) objects)
  */
 export class StreamPropertyChangedEvent extends Event {
 

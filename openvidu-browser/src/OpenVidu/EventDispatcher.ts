@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2020 OpenVidu (https://openvidu.io)
+ * (C) Copyright 2017-2022 OpenVidu (https://openvidu.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
  */
 
 import { Event as Event } from '../OpenViduInternal/Events/Event';
-import { SessionEventMap } from '../OpenViduInternal/Events/EventMap/SessionEventMap';
-import { StreamManagerEventMap } from '../OpenViduInternal/Events/EventMap/StreamManagerEventMap';
+import { EventMap } from '../OpenViduInternal/Events/EventMap/EventMap';
 
 import EventEmitter = require('wolfy87-eventemitter');
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
@@ -43,21 +42,21 @@ export abstract class EventDispatcher {
      *
      * @returns The EventDispatcher object
      */
-    abstract on<K extends keyof (SessionEventMap | StreamManagerEventMap)>(type: K, handler: (event: (SessionEventMap | StreamManagerEventMap)[K]) => void): this;
+    abstract on<K extends keyof (EventMap)>(type: K, handler: (event: (EventMap)[K]) => void): this;
 
     /**
      * Adds function `handler` to handle event `type` just once. The handler will be automatically removed after first execution
      *
      * @returns The object that dispatched the event
      */
-    abstract once<K extends keyof (SessionEventMap | StreamManagerEventMap)>(type: K, handler: (event: (SessionEventMap | StreamManagerEventMap)[K]) => void): this;
+    abstract once<K extends keyof (EventMap)>(type: K, handler: (event: (EventMap)[K]) => void): this;
 
     /**
      * Removes a `handler` from event `type`. If no handler is provided, all handlers will be removed from the event
      *
      * @returns The object that dispatched the event
      */
-    abstract off<K extends keyof (SessionEventMap | StreamManagerEventMap)>(type: K, handler?: (event: (SessionEventMap | StreamManagerEventMap)[K]) => void): this;
+    abstract off<K extends keyof (EventMap)>(type: K, handler?: (event: (EventMap)[K]) => void): this;
 
     /**
      * @hidden

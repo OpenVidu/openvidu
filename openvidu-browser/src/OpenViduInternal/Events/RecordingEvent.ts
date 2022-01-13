@@ -20,12 +20,9 @@ import { Session } from '../../OpenVidu/Session';
 
 
 /**
- * Defines the following events:
- * - `recordingStarted`: dispatched by [[Session]] after the session has started being recorded
- * - `recordingStopped`: dispatched by [[Session]] after the session has stopped being recorded
- * 
- * Property **`OPENVIDU_RECORDING_NOTIFICATION`** of [OpenVidu Server configuration](/en/stable/reference-docs/openvidu-config/)
- * defines which users should receive these events (by default, only users with role `PUBLISHER` or `MODERATOR`)
+ * Triggered by:
+ * - [[recordingStarted]]
+ * - [[recordingStopped]]
  */
 export class RecordingEvent extends Event {
 

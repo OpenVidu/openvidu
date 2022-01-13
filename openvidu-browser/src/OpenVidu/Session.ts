@@ -67,24 +67,7 @@ let platform: PlatformUtils;
  * Participants who publish their videos to a session can be seen by the rest of users connected to that specific session.
  * Initialized with [[OpenVidu.initSession]] method.
  *
- * ### Available event listeners (and events dispatched)
- *
- * - connectionCreated ([[ConnectionEvent]])
- * - connectionDestroyed ([[ConnectionEvent]])
- * - connectionPropertyChanged ([[ConnectionPropertyChangedEvent]]) <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
- * - sessionDisconnected ([[SessionDisconnectedEvent]])
- * - streamCreated ([[StreamEvent]])
- * - streamDestroyed ([[StreamEvent]])
- * - streamPropertyChanged ([[StreamPropertyChangedEvent]])
- * - publisherStartSpeaking ([[PublisherSpeakingEvent]])
- * - publisherStopSpeaking ([[PublisherSpeakingEvent]])
- * - signal ([[SignalEvent]])
- * - recordingStarted ([[RecordingEvent]])
- * - recordingStopped ([[RecordingEvent]])
- * - networkQualityLevelChanged ([[NetworkQualityLevelChangedEvent]])
- * - reconnecting
- * - reconnected
- * - exception ([[ExceptionEvent]])
+ * See available event listeners at [[SessionEventMap]].
  */
 export class Session extends EventDispatcher {
 

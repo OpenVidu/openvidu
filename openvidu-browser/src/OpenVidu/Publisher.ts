@@ -39,17 +39,9 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 let platform: PlatformUtils;
 
 /**
- * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
+ * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method.
  *
- * ### Available event listeners (and events dispatched)
- *
- * - accessAllowed
- * - accessDenied
- * - accessDialogOpened
- * - accessDialogClosed
- * - streamCreated ([[StreamEvent]])
- * - streamDestroyed ([[StreamEvent]])
- * - _All events inherited from [[StreamManager]] class_
+ * See available event listeners at [[PublisherEventMap]].
  */
 export class Publisher extends StreamManager {
 

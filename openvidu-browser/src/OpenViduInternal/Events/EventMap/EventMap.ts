@@ -15,34 +15,7 @@
  *
  */
 
-import { Event } from './Event';
-import { StreamManager } from '../../OpenVidu/StreamManager';
-
-
 /**
- * Triggered by:
- * - [[videoElementCreated]]
- * - [[videoElementDestroyed]]
+ * All OpenVidu Browser events inherit from this interface
  */
-export class VideoElementEvent extends Event {
-
-    /**
-     * Video element that was created or destroyed
-     */
-    element: HTMLVideoElement;
-
-    /**
-     * @hidden
-     */
-    constructor(element: HTMLVideoElement, target: StreamManager, type: string) {
-        super(false, target, type);
-        this.element = element;
-    }
-
-    /**
-     * @hidden
-     */
-    // tslint:disable-next-line:no-empty
-    callDefaultBehavior() { }
-
-}
+export interface EventMap { }
