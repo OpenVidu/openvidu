@@ -397,7 +397,7 @@ export class Session {
      * This method automatically updates the properties of the local affected objects. This means that there is no need to call
      * [[Session.fetch]] or [[OpenVidu.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
      * 
-     * The affected client will trigger one [ConnectionPropertyChangedEvent](/en/stable/api/openvidu-browser/classes/connectionpropertychangedevent.html)
+     * The affected client will trigger one [ConnectionPropertyChangedEvent](/en/stable/api/openvidu-browser/classes/ConnectionPropertyChangedEvent.html)
      * for each modified property.
      * 
      * @param connectionId The [[Connection.connectionId]] of the Connection object to modify

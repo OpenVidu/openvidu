@@ -24,7 +24,7 @@ import com.google.gson.JsonObject;
  * 
  * <br>
  * This is a backend representation of a published media stream (see <a href=
- * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html"
+ * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
  * target="_blank"> OpenVidu Browser Stream class</a>).
  */
 public class Publisher {
@@ -45,11 +45,11 @@ public class Publisher {
 
 	/**
 	 * Returns the unique identifier of the <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html"
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
 	 * target= "_blank">Stream</a> associated to this Publisher. Each Publisher is
 	 * paired with only one Stream, so you can identify each Publisher by its
 	 * <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html#streamid"
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html#streamId"
 	 * target= "_blank"><code>Stream.streamId</code></a>
 	 */
 	public String getStreamId() {
@@ -66,7 +66,7 @@ public class Publisher {
 
 	/**
 	 * See properties of <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html"
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
 	 * target= "_blank">Stream</a> object in OpenVidu Browser library to find out
 	 * more
 	 */
@@ -76,7 +76,7 @@ public class Publisher {
 
 	/**
 	 * See properties of <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html"
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
 	 * target= "_blank">Stream</a> object in OpenVidu Browser library to find out
 	 * more
 	 */
@@ -86,7 +86,7 @@ public class Publisher {
 
 	/**
 	 * See properties of <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html"
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
 	 * target= "_blank">Stream</a> object in OpenVidu Browser library to find out
 	 * more
 	 */
@@ -96,7 +96,7 @@ public class Publisher {
 
 	/**
 	 * See properties of <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html"
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
 	 * target= "_blank">Stream</a> object in OpenVidu Browser library to find out
 	 * more
 	 */
@@ -106,7 +106,7 @@ public class Publisher {
 
 	/**
 	 * See properties of <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html"
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
 	 * target= "_blank">Stream</a> object in OpenVidu Browser library to find out
 	 * more
 	 */
@@ -116,7 +116,7 @@ public class Publisher {
 
 	/**
 	 * See properties of <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html"
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
 	 * target= "_blank">Stream</a> object in OpenVidu Browser library to find out
 	 * more
 	 */
@@ -126,7 +126,7 @@ public class Publisher {
 
 	/**
 	 * See properties of <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html"
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
 	 * target= "_blank">Stream</a> object in OpenVidu Browser library to find out
 	 * more
 	 */

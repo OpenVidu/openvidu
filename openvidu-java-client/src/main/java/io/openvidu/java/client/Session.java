@@ -474,7 +474,7 @@ public class Session {
 	 * <br>
 	 * 
 	 * The affected client will trigger one <a href=
-	 * "/en/stable/api/openvidu-browser/classes/connectionpropertychangedevent.html"
+	 * "/en/stable/api/openvidu-browser/classes/ConnectionPropertyChangedEvent.html"
 	 * target="_blank">ConnectionPropertyChangedEvent</a> for each modified
 	 * property.
 	 * 

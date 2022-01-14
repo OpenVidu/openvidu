@@ -34,7 +34,7 @@ export class Connection {
      * Returns the status of the Connection. Can be:
      * - `pending`: if the Connection is waiting for any user to use
      * its internal token to connect to the session, calling method
-     * [Session.connect](https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect)
+     * [Session.connect](https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html#connect)
      * in OpenVidu Browser.
      * - `active`: if the internal token of the Connection has already
      * been used by some user to connect to the session, and it cannot be used
@@ -71,7 +71,7 @@ export class Connection {
 
     /**
      * Data associated to the Connection on the client-side. This value is set with second parameter of method
-     * [Session.connect](/en/stable/api/openvidu-browser/classes/session.html#connect) in OpenVidu Browser
+     * [Session.connect](/en/stable/api/openvidu-browser/classes/Session.html#connect) in OpenVidu Browser
      */
     clientData: string;
 
@@ -82,7 +82,7 @@ export class Connection {
 
     /**
      * Token associated to the Connection. This is the value that must be sent to the client-side to be consumed in OpenVidu Browser
-     * method [Session.connect](https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect).
+     * method [Session.connect](https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html#connect).
      */
     token: string;
 

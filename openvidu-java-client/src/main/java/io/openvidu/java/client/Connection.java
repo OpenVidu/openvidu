@@ -65,7 +65,7 @@ public class Connection {
 	 * <ul>
 	 * <li><code>pending</code>: if the Connection is waiting for any user to use
 	 * its internal token to connect to the session, calling method <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect"
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html#connect"
 	 * target ="_blank">Session.connect</a> in OpenVidu Browser.</li>
 	 * <li><code>active</code>: if the internal token of the Connection has already
 	 * been used by some user to connect to the session, and it cannot be used
@@ -194,7 +194,7 @@ public class Connection {
 	 * Returns the token string associated to the Connection. This is the value that
 	 * must be sent to the client-side to be consumed in OpenVidu Browser method
 	 * <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect"
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html#connect"
 	 * target="_blank">Session.connect</a>.
 	 */
 	public String getToken() {
@@ -234,7 +234,7 @@ public class Connection {
 	/**
 	 * Returns the data associated to the connection on the client-side. This value
 	 * is set with second parameter of method <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect"
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html#connect"
 	 * target ="_blank">Session.connect</a> in OpenVidu Browser
 	 */
 	public String getClientData() {
