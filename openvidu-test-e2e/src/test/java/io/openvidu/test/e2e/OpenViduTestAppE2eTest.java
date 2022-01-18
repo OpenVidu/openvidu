@@ -423,7 +423,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.className("join-btn")).click();
 
 			try {
-				user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+				user.getEventManager().waitUntilEventReaches("connectionCreated", 4, 100, true);
 				user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 				user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 				user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
