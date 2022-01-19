@@ -1,0 +1,21 @@
+<div id="room-container">
+
+	<!-- Custom toolbar -->
+	<!-- <ng-container *ngIf="toolbarTemplate">
+		<div  id="toolbar-container">
+			<ng-container *ngTemplateOutlet="toolbarTemplate"></ng-container>
+		</div>
+	</ng-container> -->
+
+
+	<div id="layout-container">
+		<ng-content select="[layout]"></ng-content>
+	</div>
+
+	<ng-container *ngIf="toolbarTemplate">
+		<div id="footer-container">
+			<ng-container *ngTemplateOutlet="toolbarTemplate"></ng-container>
+		</div>
+	</ng-container>
+
+</div>

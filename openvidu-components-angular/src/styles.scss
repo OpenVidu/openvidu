@@ -1,0 +1,106 @@
+
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+@use '@angular/material' as mat;
+@import '~@angular/material/theming';
+
+// Plus imports for other components in your app.
+
+// Include the common styles for Angular Material. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+// Be sure that you only ever include this mixin once!
+@include mat.core();
+
+// Define the palettes for your theme using the Material Design palettes available in palette.scss
+// (imported above). For each palette, you can optionally specify a default, lighter, and darker
+// hue. Available color palettes: https://material.io/design/color/
+$openvidu-components-primary: mat-palette($mat-blue-grey, 50, 300);
+$openvidu-components-accent: mat-palette($mat-amber, 500, 700, A100);
+
+// The warn palette is optional (defaults to red).
+$openvidu-components-warn: mat.define-palette(mat.$red-palette);
+
+// Create the theme object. A theme consists of configurations for individual
+// theming systems such as "color" or "typography".
+$openvidu-components-theme: mat.define-light-theme((
+  color: (
+    primary: $openvidu-components-primary,
+    accent: $openvidu-components-accent,
+    warn: $openvidu-components-warn,
+  )
+));
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+@include mat.all-component-themes($openvidu-components-theme);
+
+
+// Custom openvidu-components colors
+:root {
+
+  --ov-primary-color: #303030;
+  --ov-secondary-color: #586063;
+  --ov-tertiary-color: #598eff;
+  --ov-warn-color: #EB5144;
+  --ov-accent-color: #ffae35;
+
+  --ov-dark-color: #1d1d1d;
+  --ov-dark-light-color: #43484A;
+
+  --ov-light-color: #ffffff;
+  --ov-light-dark-color: #f1f1f1;
+}
+
+
+
+/* You can add global styles to this file, and also import other style files */
+
+html, body { height: 100%; overflow: hidden;}
+body { margin: 0; font-family: 'Roboto','RobotoDraft',Helvetica,Arial,sans-serif;}
+
+.toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  background-color: #2aa762;
+  color: white;
+  font-weight: 600;
+}
+.spacer {
+  flex: 1;
+}
+.toolbar img {
+  margin: 0 16px;
+}
+
+.toolbar #twitter-logo {
+  height: 40px;
+  margin: 0 16px;
+}
+
+.toolbar #twitter-logo:hover {
+  opacity: 0.8;
+}
+
+.back-button {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  line-height: 20px;
+  padding: 10px;
+	position: absolute;
+	top: 70px;
+  svg {
+    transform: rotate(180deg);
+  }
+}
+
+.back-button a {
+  display: flex;
+  align-items: center;
+}

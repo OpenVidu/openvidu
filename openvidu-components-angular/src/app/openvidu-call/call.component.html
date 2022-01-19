@@ -1,0 +1,20 @@
+<div id="call-container">
+	<div id="userSettings" *ngIf="!joinSessionClicked && !closeClicked || !isSessionAlive">
+		<ov-user-settings (onJoinClicked)="onJoinClicked()" (onCloseClicked)="onCloseClicked()"></ov-user-settings>
+	</div>
+
+	<div *ngIf="joinSessionClicked && isSessionAlive" style="height: 100%;">
+		<ov-room [tokens]="tokens">
+			<ng-template #toolbar>
+				<ov-toolbar
+					(onCamClicked)="onCamClicked()"
+					(onMicClicked)="onMicClicked()"
+					(onScreenShareClicked)="onScreenShareClicked()"
+					(onSpeakerLayoutClicked)="onSpeakerLayoutClicked()"
+					(onLeaveSessionClicked)="onLeaveSessionClicked()"
+				></ov-toolbar>
+			</ng-template>
+			<ov-layout layout></ov-layout>
+		</ov-room>
+	</div>
+</div>

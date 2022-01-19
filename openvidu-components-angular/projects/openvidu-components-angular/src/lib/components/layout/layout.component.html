@@ -1,0 +1,67 @@
+<mat-sidenav-container class="sidenav-container">
+	<mat-sidenav
+		#sidenav
+		mode="{{ sidenavMode }}"
+		position="end"
+		class="sidenav-menu"
+		fixedInViewport="true"
+		fixedTopGap="0"
+		fixedBottomGap="0"
+	>
+		<!-- Custom menu content -->
+		<ng-container *ngIf="customMenuContentTemplate; else defaultMenuContent">
+			<ng-container *ngTemplateOutlet="customMenuContentTemplate"></ng-container>
+		</ng-container>
+
+		<!-- Default menu content if custom menu content is not injected -->
+		<ng-template #defaultMenuContent>
+			<ov-chat *ngIf="isChatOpened"></ov-chat>
+			<ov-participant-panel *ngIf="isParticipantsOpened"></ov-participant-panel>
+		</ng-template>
+
+	</mat-sidenav>
+
+	<mat-sidenav-content class="sidenav-main">
+		<div id="layout" class="bounds">
+
+			<!-- Custom local participant -->
+			<ng-container *ngIf="customLocalParticipantTemplate; else defaultLocalParticipant">
+				<ng-container *ngTemplateOutlet="customLocalParticipantTemplate"></ng-container>
+			</ng-container>
+
+			<!-- Default local participant if custom participant is not injected -->
+			<ng-template #defaultLocalParticipant>
+				<div
+					class="OT_root OT_publisher"
+					id="localUser"
+					*ngFor="let connection of localParticipant | connections"
+					[ngClass]="{ OV_small: !connection.streamManager?.stream?.videoActive }"
+				>
+					<ov-participant [participant]="connection" [videoEnlarged]="connection.videoEnlarged"></ov-participant>
+				</div>
+			</ng-template>
+
+			<!-- Custom layout elements -->
+			<ng-container *ngIf="customLayoutElementTemplate">
+				<ng-container *ngTemplateOutlet="customLayoutElementTemplate" [@inOutAnimation]></ng-container>
+			</ng-container>
+
+			<!-- Custom remote participant -->
+			<ng-container *ngIf="customRemoteParticipantsTemplate; else defaultRemoteParticipants">
+				<ng-container *ngTemplateOutlet="customRemoteParticipantsTemplate"></ng-container>
+			</ng-container>
+
+			<!-- Default remote participants if custom participants is not injected -->
+			<ng-template #defaultRemoteParticipants>
+				<div
+					*ngFor="let connection of remoteParticipants | connections"
+					class="OT_root OT_publisher"
+					id="remote-participant"
+					[ngClass]="{ OV_small: !connection.streamManager?.stream?.videoActive }"
+				>
+					<ov-participant [participant]="connection" [videoEnlarged]="connection.videoEnlarged"></ov-participant>
+				</div>
+			</ng-template>
+		</div>
+	</mat-sidenav-content>
+</mat-sidenav-container>

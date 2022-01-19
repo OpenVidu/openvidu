@@ -1,0 +1,26 @@
+#chat-test-container{
+	background: #d1d1d1;
+	position: absolute;
+	left: 50px;
+	right: 50px;
+	top: 150px;
+	border: solid 2px;
+	height: 500px;
+	text-align: center;
+
+
+	span {
+		position: relative;
+		top: 50%;
+		font-size: medium;
+		width: 50px;
+		font-weight: bold;
+	}
+}
+
+
+::ng-deep #chat-container {
+	width: 400px !important;
+	right: 0;
+}
+

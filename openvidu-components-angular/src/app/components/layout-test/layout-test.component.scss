@@ -1,0 +1,29 @@
+#layout-test-container{
+	background: #d1d1d1;
+	position: absolute;
+	left: 50px;
+	right: 50px;
+	top: 150px;
+	border: solid 2px;
+	height: calc(100% - 250px);
+	text-align: center;
+
+	span {
+		position: relative;
+		top: 50%;
+		font-size: medium;
+		font-weight: bold;
+	}
+}
+
+#buttons {
+	position: absolute;
+	bottom: 20px;
+    left: 0;
+    right: 0;
+    margin: auto;
+    text-align: center;
+	button {
+		margin: 15px;
+	}
+}

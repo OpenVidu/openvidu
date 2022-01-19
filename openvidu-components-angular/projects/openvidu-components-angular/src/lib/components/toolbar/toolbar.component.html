@@ -1,0 +1,109 @@
+<mat-toolbar id="toolbar" role="heading" fxLayout fxLayoutAlign="center" fxLayoutGap="10px">
+	<div fxFlex="20%" fxLayoutAlign="start center">
+		<div id="img-container">
+			<img id="company-logo" alt="OpenVidu Logo" [src]="logoUrl" />
+			<span id="session-title" *ngIf="session && session.sessionId">{{ session.sessionId }}</span>
+		</div>
+	</div>
+	<div fxFlex="60%" fxFlexOrder="2" fxLayoutAlign="center center" id="media-buttons-container">
+		<!-- Microphone button -->
+		<button
+			id="navMicrophoneButton"
+			mat-icon-button
+			(click)="toggleMicrophone()"
+			[disabled]="isConnectionLost"
+			*ngIf="hasAudioDevices"
+			[class.warn-btn]="!isWebcamAudioEnabled"
+		>
+			<mat-icon *ngIf="isWebcamAudioEnabled" matTooltip="Mute your audio">mic</mat-icon>
+			<mat-icon *ngIf="!isWebcamAudioEnabled" matTooltip="Unmute your audio">mic_off</mat-icon>
+		</button>
+
+		<!-- Camera button -->
+		<button
+			id="navCameraButton"
+			mat-icon-button
+			(click)="toggleCamera()"
+			[disabled]="isConnectionLost"
+			*ngIf="hasVideoDevices"
+			[class.warn-btn]="!isWebcamVideoEnabled"
+		>
+			<mat-icon *ngIf="isWebcamVideoEnabled" matTooltip="Mute your cam">videocam</mat-icon>
+			<mat-icon *ngIf="!isWebcamVideoEnabled" matTooltip="Unmute your cam">videocam_off</mat-icon>
+		</button>
+
+		<!-- Screenshare button -->
+		<button
+			id="navScreenButton"
+			mat-icon-button
+			(click)="toggleScreenShare()"
+			[disabled]="isConnectionLost"
+			[class.active-btn]="isScreenShareEnabled"
+		>
+			<mat-icon *ngIf="!isScreenShareEnabled" matTooltip="Enable screen share">screen_share</mat-icon>
+			<mat-icon *ngIf="isScreenShareEnabled" matTooltip="Disable screen share">screen_share</mat-icon>
+		</button>
+
+		<!-- Replace Screen track button -->
+		<!-- <button
+			id="navReplaceScreenButton"
+			mat-icon-button
+			*ngIf="isScreenShareEnabled"
+			(click)="replaceScreenTrack()"
+			[disabled]="isConnectionLost"
+		>
+			<mat-icon matTooltip="Replace screen track">picture_in_picture</mat-icon>
+		</button> -->
+
+		<!-- Fullscreen button -->
+		<button mat-icon-button (click)="toggleFullscreen()" [disabled]="isConnectionLost" [class.active-btn]="isFullscreenEnabled">
+			<mat-icon *ngIf="isFullscreenEnabled" matTooltip="Exit Fullscreen">fullscreen_exit</mat-icon>
+			<mat-icon *ngIf="!isFullscreenEnabled" matTooltip="Fullscreen">fullscreen</mat-icon>
+		</button>
+
+		<!-- Custom centered buttons -->
+		<ng-container *ngIf="centeredButtonsTemplate">
+			<ng-container *ngTemplateOutlet="centeredButtonsTemplate"></ng-container>
+		</ng-container>
+
+		<!-- Leave session button -->
+		<button mat-icon-button (click)="leaveSession()" id="leave-btn">
+			<mat-icon matTooltip="Leave the session">call_end</mat-icon>
+		</button>
+	</div>
+	<div fxFlex="20%" fxFlexOrder="3" fxLayoutAlign="end center" id="menu-buttons-container">
+		<!-- Default participants button -->
+		<button
+			mat-icon-button
+			matTooltip="Show articipants"
+			(click)="toggleMenu('participants')"
+			[disabled]="isConnectionLost"
+			[class.active-btn]="isParticipantsOpened"
+		>
+			<mat-icon>people</mat-icon>
+		</button>
+
+		<div #customMenuButton>
+			<ng-content select="[menu-button]"></ng-content>
+		</div>
+
+		<!-- Default chat button -->
+		<button
+			mat-icon-button
+			*ngIf="!customMenuButton.innerHTML"
+			(click)="toggleMenu('chat')"
+			[disabled]="isConnectionLost"
+			[class.active-btn]="isChatOpened"
+		>
+			<mat-icon
+				matBadge="{{ unreadMessages }}"
+				[matBadgeHidden]="unreadMessages === 0"
+				matBadgePosition="above before"
+				matBadgeSize="small"
+				matBadgeColor="accent"
+			>
+				chat
+			</mat-icon>
+		</button>
+	</div>
+</mat-toolbar>

@@ -1,0 +1,93 @@
+<div
+	*ngIf="this._participant"
+	class="OT_widget-container"
+	[id]="'container-' + this._participant.streamManager?.stream?.streamId"
+	#streamComponent
+>
+	<div class="nickname" [class.fullscreen]="isFullscreen">
+		<div (click)="toggleNicknameForm()" class="nicknameContainer" selected *ngIf="!toggleNickname">
+			<span id="nickname">{{ this._participant.nickname }}</span>
+			<span *ngIf="_participant.local || (_participant.streamManager && !_participant.streamManager?.remote)"> (edit)</span>
+		</div>
+		<div *ngIf="toggleNickname && !this._participant.streamManager?.remote" [class.fullscreen]="isFullscreen" id="dialogNickname">
+			<form id="nicknameForm">
+				<mat-form-field color="primary">
+					<input
+						matInput
+						#nicknameInput
+						placeholder="Nick: {{ this._participant.nickname }}"
+						[formControl]="nicknameFormControl"
+						[errorStateMatcher]="matcher"
+						(keypress)="eventKeyPress($event)"
+						autocomplete="off"
+						(focusout)="toggleNicknameForm()"
+					/>
+					<mat-error *ngIf="nicknameFormControl.hasError('required')"> Nickname is <strong>required</strong> </mat-error>
+					<mat-error *ngIf="nicknameFormControl.hasError('maxlength')"> Nickname is <strong>too long!</strong> </mat-error>
+				</mat-form-field>
+			</form>
+		</div>
+		<!-- Custom network quality element -->
+		<ng-content select="[network-quality]"></ng-content>
+	</div>
+
+	<ov-video
+		(dblclick)="toggleVideoSize()"
+		[streamManager]="this._participant.streamManager"
+		[mutedSound]="mutedSound"
+		(toggleVideoSizeEvent)="toggleVideoSize($event)"
+	></ov-video>
+
+
+	<div class="status-icons">
+		<!-- <div id="statusMic" *ngIf="!this._participant.streamManager?.stream?.audioActive">
+			<mat-icon>mic_off</mat-icon>
+		</div> -->
+
+		<button mat-icon-button id="statusMic" *ngIf="!this._participant.streamManager?.stream?.audioActive" disabled>
+			<mat-icon>mic_off</mat-icon>
+		</button>
+	</div>
+
+	<div class="videoButtons">
+
+		<!-- Custom hand notification -->
+		<ng-content select="[hand-notification]"></ng-content>
+
+		<button mat-icon-button (click)="toggleVideoMenu($event)" matTooltip="Settings" aria-label="Video settings menu">
+			<mat-icon>more_vert</mat-icon>
+		</button>
+		<span [matMenuTriggerFor]="menu"></span>
+		<mat-menu #menu="matMenu" yPosition="above" xPosition="before">
+			<button mat-menu-item id="videoZoomButton" (click)="toggleVideoSize()">
+				<mat-icon>{{ this.videoSizeIcon }}</mat-icon>
+				<span *ngIf="videoSizeIcon === videoSizeIconEnum.NORMAL">Zoom out</span>
+				<span *ngIf="videoSizeIcon === videoSizeIconEnum.BIG">Zoom in</span>
+			</button>
+			<button mat-menu-item id="volumeButton" *ngIf="this._participant.streamManager?.remote" (click)="toggleSound()">
+				<mat-icon *ngIf="!mutedSound">volume_up</mat-icon>
+				<span *ngIf="!mutedSound">Mute sound</span>
+
+				<mat-icon *ngIf="mutedSound">volume_off</mat-icon>
+				<span *ngIf="mutedSound">Unmute sound</span>
+			</button>
+			<!-- <button mat-menu-item *ngIf="this._participant.streamManager?.stream?.videoActive" id="fullscreenButton" (click)="toggleFullscreen()">
+				<mat-icon *ngIf="!isFullscreenEnabled">fullscreen</mat-icon>
+				<span *ngIf="!isFullscreenEnabled">Fullscreen</span>
+
+				<mat-icon *ngIf="isFullscreenEnabled">fullscreen_exit</mat-icon>
+				<span *ngIf="isFullscreenEnabled">Exit fullscreen</span>
+			</button> -->
+
+			<button
+				mat-menu-item
+				(click)="replaceScreenTrack()"
+				id="changeScreenButton"
+				*ngIf="!this._participant.streamManager?.remote && this._participant.streamManager?.stream?.typeOfVideo === videoTypeEnum.SCREEN"
+			>
+				<mat-icon>picture_in_picture</mat-icon>
+				<span>Replace screen</span>
+			</button>
+		</mat-menu>
+	</div>
+</div>

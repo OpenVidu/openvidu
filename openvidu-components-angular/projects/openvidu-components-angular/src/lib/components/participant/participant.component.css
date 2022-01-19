@@ -1,0 +1,127 @@
+.nickname {
+	padding: 0px;
+	position: absolute;
+	z-index: 999;
+	border-radius: 5px;
+	color: #ffffff;
+	font-family: 'Roboto','RobotoDraft',Helvetica,Arial,sans-serif;
+  }
+  .nicknameContainer {
+	background-color: var(--ov-secondary-color);
+	padding: 5px;
+	color: #ffffff;
+	font-weight: bold;
+	border-radius: 2px;
+  }
+
+  #dialogNickname {
+	background-color:  #0000005e;
+	border-radius: 3px;
+  }
+
+  #closeButton {
+	position: absolute;
+	top: -3px;
+	right: 0;
+	z-index: 999;
+  }
+
+  #nicknameForm {
+	padding: 10px;
+  }
+
+  .fullscreen {
+	top: 40px;
+  }
+
+  mat-error {
+	text-align: center;
+	color: #353535;
+  }
+
+  video {
+	-o-object-fit: cover;
+	object-fit: cover;
+	width: 100%;
+	height: 100%;
+	color: #ffffff;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+  }
+
+  .status-icons, .videoButtons {
+	position: absolute;
+	bottom: 0;
+	z-index: 10;
+	text-align: center;
+  }
+
+  .status-icons {
+	left: 0;
+  }
+
+  .status-icons button, .videoButtons button {
+	color: #ffffff;
+	width: 26px;
+	height: 26px;
+	margin: 5px;
+  }
+
+  .status-icons button {
+	background-color: var(--ov-warn-color);
+  }
+
+  .status-icons .mat-icon-button, .videoButtons .mat-icon-button{
+	line-height: 0px;
+  }
+
+  .status-icons mat-icon, .videoButtons mat-icon {
+	font-size: 18px;
+  }
+
+  .videoButtons{
+	right: 0;
+  }
+
+  .videoButtons button {
+	background-color: var(--ov-dark-color);
+  }
+
+  /* Contains the video element, used to fix video letter-boxing */
+  .OT_widget-container {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	overflow: hidden;
+	background-color: #000000;
+	border-radius: 5px;
+  }
+
+  mat-error,
+  ::ng-deep .mat-focused .mat-form-field-label,
+  ::ng-deep .mat-form-field-appearance-legacy .mat-form-field-label {
+	color: #cacaca !important;
+  }
+
+  ::ng-deep .mat-form-field-appearance-legacy .mat-form-field-underline,
+  ::ng-deep .mat-form-field.mat-focused .mat-form-field-ripple {
+	background-color: #cacaca !important;
+  }
+
+  input {
+	caret-color: #ffffff !important;
+  }
+
+  .poster_img {
+	position: absolute;
+	z-index: 888;
+	max-width: 70%;
+	max-height: 70%;
+	bottom: 0;
+	top: 0;
+	margin: auto;
+	right: 0;
+	left: 0;
+  }

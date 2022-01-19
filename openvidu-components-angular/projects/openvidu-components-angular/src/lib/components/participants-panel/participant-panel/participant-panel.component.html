@@ -1,0 +1,34 @@
+<div class="participants-container">
+	<div class="header-container">
+		<h3>Participants</h3>
+		<button mat-icon-button matTooltip="Close" (click)="close()">
+			<mat-icon>close</mat-icon>
+		</button>
+	</div>
+
+	<div class="scrollable">
+
+		<div class="local-participant-container">
+			<ov-participant-item
+				[name]="localParticipant | nickname"
+				[connections]="localParticipant | connectionsEnabled"
+				[showDividerLine]="true"
+			></ov-participant-item>
+		</div>
+
+		<!-- <div class="message-container">
+			<p *ngIf="remoteParticipants.length === 0" class="text-info">No remote participants connected</p>
+			<p *ngIf="remoteParticipants.length > 0" class="text-info">{{ remoteParticipants.length }} remote participants connected</p>
+		</div> -->
+
+		<div class="remote-participants-container" *ngIf="remoteParticipants.length > 0">
+			<ov-participant-item
+				*ngFor="let p of remoteParticipants; let lastItem = last"
+				[name]="p | nickname"
+				[connections]="p | connectionsEnabled"
+				[showDividerLine]="!lastItem"
+			></ov-participant-item>
+		</div>
+
+	</div>
+</div>

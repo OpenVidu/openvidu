@@ -25,3 +25,9 @@ nbactions.xml
 */.classpath
 */.settings/*
 */.tscache/*
+
+openvidu-components-angular/node_modules/
+
+openvidu-components-angular/.angular/
+
+openvidu-components-angular/dist/

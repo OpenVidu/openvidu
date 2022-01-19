@@ -1,0 +1,18 @@
+#toolbar-test-container{
+	background: #d1d1d1;
+	position: absolute;
+	left: 50px;
+	right: 50px;
+	top: 150px;
+	border: solid 2px;
+	height: 300px;
+	text-align: center;
+
+	span {
+		position: relative;
+		top: 50%;
+		font-size: medium;
+		font-weight: bold;
+	}
+}
+

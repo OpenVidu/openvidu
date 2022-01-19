@@ -1,0 +1,15 @@
+import { Pipe, PipeTransform } from '@angular/core';
+import { Linkifier } from '../models/linkifier.model';
+
+@Pipe({ name: 'linkify' })
+export class LinkifyPipe implements PipeTransform {
+	private linkifer: Linkifier;
+
+	constructor() {
+		this.linkifer = new Linkifier();
+	}
+
+	transform(str: string): string {
+		return str ? this.linkifer.link(str) : str;
+	}
+}

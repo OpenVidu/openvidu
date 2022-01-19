@@ -1,0 +1,42 @@
+<div id="chat-container" fxLayout="column" fxLayoutAlign="space-evenly none" >
+	<div class="header-container" fxFlex="55px" fxLayoutAlign="start center">
+		<h3>Chat</h3>
+		<button mat-icon-button matTooltip="Close" (click)="close()">
+			<mat-icon>close</mat-icon>
+		</button>
+	</div>
+
+	<div class="text-container" fxFlex="30px">
+		<p class="text-info">Messages will be removed at the end of the session</p>
+	</div>
+
+	<div class="messages-container" fxFlex="75%" fxLayoutAlign="space-evenly none" #chatScroll>
+		<div *ngFor="let data of messageList" class="message" [ngClass]="data.isLocal ? 'right' : 'left'">
+			<div class="msg-detail">
+				<div class="nickname-container">
+					<p *ngIf="data.isLocal">You</p>
+					<p *ngIf="!data.isLocal">{{ data.nickname }}</p>
+				</div>
+				<div class="msg-content">
+					<p [innerHTML]="data.message | linkify"></p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="input-container" fxFlex="55px" fxFlexOrder="3" fxLayoutAlign="space-evenly none">
+		<textarea
+			#chatInput
+			maxlength="500"
+			rows="4"
+			placeholder="Send a message"
+			autocomplete="off"
+			(keypress)="eventKeyPress($event)"
+			[(ngModel)]="message"
+			id="chat-input"
+		></textarea>
+		<button mat-icon-button id="send-btn" (click)="sendMessage()">
+			<mat-icon matTooltip="Send">send</mat-icon>
+		</button>
+	</div>
+</div>

@@ -1,0 +1,44 @@
+.participants-container {
+	margin: 20px;
+	background-color: var(--ov-light-color);
+	border-radius: 5px;
+	height: -webkit-fill-available;
+	height: -moz-available;
+}
+
+.header-container {
+	padding: 10px;
+	display: flex;
+}
+
+.header-container h3 {
+	margin-left: 5px;
+	margin-top: auto;
+	margin-bottom: auto;
+}
+
+.header-container button {
+	margin-left: auto;
+}
+
+.local-participant-container, .remote-participants-container {
+    margin: 5px 10px;
+}
+
+.scrollable {
+	overflow: auto;
+}
+
+.message-container{
+	padding: 5px;
+	background-color: var(--ov-light-dark-color);
+	color: var(--ov-dark-color);
+	text-align: center;
+	margin: 5px 5px;
+	font-size: 12px;
+}
+
+.message-container p{
+	margin: 0;
+
+}

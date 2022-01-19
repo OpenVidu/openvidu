@@ -1,0 +1,23 @@
+video {
+	-o-object-fit: cover;
+	object-fit: cover;
+	width: 100%;
+	height: 100%;
+	color: #ffffff;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	border-radius: 5px;
+}
+
+.poster_img {
+	position: absolute;
+	z-index: 888;
+	max-width: 60%;
+	max-height: 60%;
+	bottom: 25%;
+	margin: auto;
+	right: 0;
+	left: 0;
+}
