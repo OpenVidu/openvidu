@@ -16,33 +16,35 @@ import { ChatTestComponent } from './components/chat-test/chat-test.component';
 import { LayoutTestComponent } from './components/layout-test/layout-test.component';
 import { ParticipantTestComponent } from './components/participant-test/participant-test.component';
 
-import { OpenviduAngularModule, UserSettingsComponent, ChatComponent, ToolbarComponent, RoomComponent, LayoutComponent } from 'openvidu-angular';
+import {
+	OpenviduAngularModule,
+	UserSettingsComponent,
+	ChatComponent,
+	ToolbarComponent,
+	RoomComponent,
+	LayoutComponent,
+	VideoconferenceComponent
+} from 'openvidu-angular';
 import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    DashboardComponent,
-    CallComponent,
-    ToolbarTestComponent,
-    ChatTestComponent,
-    LayoutTestComponent,
-    ParticipantTestComponent
-  ],
-  imports: [
-    BrowserModule,
-    MatButtonModule,
-    BrowserAnimationsModule,
-    OpenviduAngularModule.forRoot(environment),
-    AppRoutingModule // Order is important, AppRoutingModule must be the last import for useHash working
-  ],
-  providers: [
-    UserSettingsComponent,
-    ToolbarComponent,
-    ChatComponent,
-    RoomComponent,
-    LayoutComponent
-  ],
-  bootstrap: [AppComponent]
+	declarations: [
+		AppComponent,
+		DashboardComponent,
+		CallComponent,
+		ToolbarTestComponent,
+		ChatTestComponent,
+		LayoutTestComponent,
+		ParticipantTestComponent
+	],
+	imports: [
+		BrowserModule,
+		MatButtonModule,
+		BrowserAnimationsModule,
+		OpenviduAngularModule.forRoot(environment),
+		AppRoutingModule // Order is important, AppRoutingModule must be the last import for useHash working
+	],
+	providers: [VideoconferenceComponent, UserSettingsComponent, ToolbarComponent, ChatComponent, RoomComponent, LayoutComponent],
+	bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {}

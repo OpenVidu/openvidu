@@ -2,13 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { RestService } from '../services/rest.service';
 import { Router } from '@angular/router';
 
-
 @Component({
 	selector: 'app-call',
 	templateUrl: './call.component.html',
 	styleUrls: ['./call.component.scss']
 })
-
 export class CallComponent implements OnInit {
 	sessionId = 'prueba-majestuosa-amable';
 	tokens: { webcam: string; screen: string };
