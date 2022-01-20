@@ -7,7 +7,7 @@ import { Router } from '@angular/router';
 	styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
-	title = 'openvidu-components-angular';
+	title = 'openvidu-angular';
 
 	constructor(private router: Router) {}
 

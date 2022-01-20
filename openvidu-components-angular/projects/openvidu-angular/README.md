@@ -1,6 +1,6 @@
-# openvidu-components-angular
+# openvidu-angular
 
-openvidu-components-angular is a library generated with the aim of facilitate the customization of videconference app provides by OpenVidu, providing powerful ready-to-use components.
+openvidu-angular is a library generated with the aim of facilitate the customization of videconference app provides by OpenVidu, providing powerful ready-to-use components.
 
 This library is an Angular library based on Angular projections
 
@@ -28,7 +28,7 @@ Importing library module in yout `app.module.ts`
 @NgModule({
   imports: [
     BrowserModule,
-    OpenviduComponentsAngularModule.forRoot({
+    OpenviduAngularModule.forRoot({
       environment: environment
     }),
     ...

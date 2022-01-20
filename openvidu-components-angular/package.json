@@ -4,11 +4,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --configuration development",
-    "lib:serve": "ng build openvidu-components-angular --watch",
-    "lib:build": "ng build openvidu-components-angular --configuration production && cd ./dist/openvidu-components-angular && npm pack",
-    "lib:copy": "cp dist/openvidu-components-angular/openvidu-components-angular-*.tgz ../openvidu-tutorials/openvidu-angular-components",
-    "lib:test": "ng test openvidu-components-angular --no-watch --code-coverage",
-    "lib:singleTest": "ng test openvidu-components-angular --include=**/action.service.spec.ts",
+    "lib:serve": "ng build openvidu-angular --watch",
+    "lib:build": "ng build openvidu-angular --configuration production && cd ./dist/openvidu-angular && npm pack",
+    "lib:copy": "cp dist/openvidu-angular/openvidu-angular-*.tgz ../openvidu-tutorials/openvidu-angular-components",
+    "lib:test": "ng test openvidu-angular --no-watch --code-coverage",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },

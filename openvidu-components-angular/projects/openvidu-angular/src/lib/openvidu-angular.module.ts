@@ -136,13 +136,13 @@ import { ParticipantPanelComponent } from './components/participants-panel/parti
 })
 
 
-export class OpenviduComponentsAngularModule {
-  static forRoot(environment): ModuleWithProviders<OpenviduComponentsAngularModule> {
+export class OpenviduAngularModule {
+  static forRoot(environment): ModuleWithProviders<OpenviduAngularModule> {
 
     // console.log(`${library.name} config: ${environment}`);
     const libConfig: LibConfig = { environment };
     return {
-      ngModule: OpenviduComponentsAngularModule,
+      ngModule: OpenviduAngularModule,
       providers: [LibraryConfigService , {provide: 'LIB_CONFIG', useValue: libConfig}]
     };
   }

@@ -16,7 +16,7 @@ import { ChatTestComponent } from './components/chat-test/chat-test.component';
 import { LayoutTestComponent } from './components/layout-test/layout-test.component';
 import { ParticipantTestComponent } from './components/participant-test/participant-test.component';
 
-import { OpenviduComponentsAngularModule, UserSettingsComponent, ChatComponent, ToolbarComponent, RoomComponent, LayoutComponent } from 'openvidu-components-angular';
+import { OpenviduAngularModule, UserSettingsComponent, ChatComponent, ToolbarComponent, RoomComponent, LayoutComponent } from 'openvidu-angular';
 import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
@@ -33,7 +33,7 @@ import { MatButtonModule } from '@angular/material/button';
     BrowserModule,
     MatButtonModule,
     BrowserAnimationsModule,
-    OpenviduComponentsAngularModule.forRoot(environment),
+    OpenviduAngularModule.forRoot(environment),
     AppRoutingModule // Order is important, AppRoutingModule must be the last import for useHash working
   ],
   providers: [

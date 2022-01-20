@@ -2,7 +2,7 @@
  * Public API Surface of openvidu-components-angular
  */
 
-export * from './lib/openvidu-components-angular.module';
+export * from './lib/openvidu-angular.module';
 
 // Services
 export * from './lib/services/webrtc/webrtc.service';

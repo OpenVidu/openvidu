@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ParticipantService, SidenavMenuService } from 'openvidu-components-angular';
+import { ParticipantService, SidenavMenuService } from 'openvidu-angular';
 
 @Component({
 	selector: 'app-layout-test',

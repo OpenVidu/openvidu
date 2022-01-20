@@ -1,6 +1,6 @@
 {
-  "name": "openvidu-components-angular",
-  "version": "0.0.1",
+  "name": "openvidu-angular",
+  "version": "2.20.0",
   "peerDependencies": {
     "@angular/animations": "^13.0.0",
     "@angular/common": "^13.0.0",

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ParticipantModel } from 'openvidu-components-angular';
+import { ParticipantModel } from 'openvidu-angular';
 
 @Component({
   selector: 'app-participant-test',
