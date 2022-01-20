@@ -21,6 +21,7 @@ export * from './lib/services/cdk-overlay/cdk-overlay.service';
 export * from './lib/services/storage/storage.service';
 
 // Components
+export * from './lib/components/videoconference/videoconference.component';
 export * from './lib/components/user-settings/user-settings.component';
 export * from './lib/components/toolbar/toolbar.component';
 export * from './lib/components/chat/chat.component';

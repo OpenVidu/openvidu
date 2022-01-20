@@ -56,31 +56,33 @@ import { SidenavMenuService } from './services/sidenav-menu/sidenav-menu.service
 import { ParticipantService } from './services/participant/participant.service';
 import { ParticipantItemComponent } from './components/participants-panel/participant-item/participant-item.component';
 import { ParticipantPanelComponent } from './components/participants-panel/participant-panel/participant-panel.component';
+import { VideoconferenceComponent } from './components/videoconference/videoconference.component';
 
 @NgModule({
-  declarations: [
-    UserSettingsComponent,
-    VideoComponent,
-    ToolbarComponent,
-    ChatComponent,
-    RoomComponent,
-    LayoutComponent,
-    ParticipantComponent,
-    DialogTemplateComponent,
-    LinkifyPipe,
-    TooltipListPipe,
-    ParticipantConnectionsPipe,
-    ConnectionsEnabledPipe,
-    NicknamePipe,
-    ParticipantItemComponent,
-    ParticipantPanelComponent
-  ],
-  imports: [
-    CommonModule,
-    HttpClientModule,
-    FormsModule,
+	declarations: [
+		UserSettingsComponent,
+		VideoComponent,
+		ToolbarComponent,
+		ChatComponent,
+		RoomComponent,
+		LayoutComponent,
+		ParticipantComponent,
+		DialogTemplateComponent,
+		LinkifyPipe,
+		TooltipListPipe,
+		ParticipantConnectionsPipe,
+		ConnectionsEnabledPipe,
+		NicknamePipe,
+		ParticipantItemComponent,
+		ParticipantPanelComponent,
+		VideoconferenceComponent
+	],
+	imports: [
+		CommonModule,
+		HttpClientModule,
+		FormsModule,
 		ReactiveFormsModule,
-    RouterModule.forRoot([]),
+		RouterModule.forRoot([]),
 		MatButtonModule,
 		MatCardModule,
 		MatToolbarModule,
@@ -99,53 +101,46 @@ import { ParticipantPanelComponent } from './components/participants-panel/parti
 		MatSnackBarModule,
 		FlexLayoutModule,
 		MatMenuModule,
-    MatDividerModule,
-    MatListModule
-  ],
-  providers: [
-    ActionService,
-    CdkOverlayContainer,
+		MatDividerModule,
+		MatListModule
+	],
+	providers: [
+		ActionService,
+		CdkOverlayContainer,
 		{ provide: OverlayContainer, useClass: CdkOverlayContainer },
-    ChatService,
-    SidenavMenuService,
-    DeviceService,
-    DocumentService,
-    LayoutService,
-    LoggerService,
-    PlatformService,
-    ParticipantService,
-    StorageService,
-    TokenService,
-    WebrtcService
-
-  ],
-  exports: [
-    UserSettingsComponent,
-    ToolbarComponent,
-    ChatComponent,
-    RoomComponent,
-    LayoutComponent,
-    ParticipantComponent,
-    VideoComponent,
-    ParticipantConnectionsPipe,
-    CommonModule
-  ],
-  entryComponents: [
-    DialogTemplateComponent
-  ]
+		ChatService,
+		SidenavMenuService,
+		DeviceService,
+		DocumentService,
+		LayoutService,
+		LoggerService,
+		PlatformService,
+		ParticipantService,
+		StorageService,
+		TokenService,
+		WebrtcService
+	],
+	exports: [
+		VideoconferenceComponent,
+		UserSettingsComponent,
+		ToolbarComponent,
+		ChatComponent,
+		RoomComponent,
+		LayoutComponent,
+		ParticipantComponent,
+		VideoComponent,
+		ParticipantConnectionsPipe,
+		CommonModule
+	],
+	entryComponents: [DialogTemplateComponent]
 })
-
-
 export class OpenviduAngularModule {
-  static forRoot(environment): ModuleWithProviders<OpenviduAngularModule> {
-
-    // console.log(`${library.name} config: ${environment}`);
-    const libConfig: LibConfig = { environment };
-    return {
-      ngModule: OpenviduAngularModule,
-      providers: [LibraryConfigService , {provide: 'LIB_CONFIG', useValue: libConfig}]
-    };
-  }
-
-
- }
+	static forRoot(environment): ModuleWithProviders<OpenviduAngularModule> {
+		// console.log(`${library.name} config: ${environment}`);
+		const libConfig: LibConfig = { environment };
+		return {
+			ngModule: OpenviduAngularModule,
+			providers: [LibraryConfigService, { provide: 'LIB_CONFIG', useValue: libConfig }]
+		};
+	}
+}
