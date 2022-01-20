@@ -22,5 +22,5 @@ package io.openvidu.java.client;
  * {@link io.openvidu.java.client.SessionProperties.Builder#forcedVideoCodec(VideoCodec)}
  */
 public enum VideoCodec {
-	VP8, VP9, H264, NONE
+    MEDIA_SERVER_PREFERRED, NONE, VP8, VP9, H264
 }

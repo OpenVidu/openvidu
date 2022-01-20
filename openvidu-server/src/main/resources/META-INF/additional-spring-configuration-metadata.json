@@ -157,7 +157,7 @@
 			"name": "OPENVIDU_STREAMS_FORCED_VIDEO_CODEC",
 			"type": "java.lang.String",
 			"description": "Defines which video codec is being forced to be used in the browser/client",
-			"defaultValue": "VP8"
+			"defaultValue": "MEDIA_SERVER_PREFERRED"
 		},
 		{
 			"name": "OPENVIDU_STREAMS_ALLOW_TRANSCODING",

@@ -726,18 +726,29 @@ public class SessionRestController {
 
 		if (params != null) {
 
+			// Obtain primitive values from the params map
 			String mediaModeString;
 			String recordingModeString;
-			String forcedVideoCodec;
+			String forcedVideoCodecStr;
 			Boolean allowTranscoding;
 			try {
 				mediaModeString = (String) params.get("mediaMode");
 				recordingModeString = (String) params.get("recordingMode");
 				customSessionId = (String) params.get("customSessionId");
-				forcedVideoCodec = (String) params.get("forcedVideoCodec");
+				forcedVideoCodecStr = (String) params.get("forcedVideoCodec");
 				allowTranscoding = (Boolean) params.get("allowTranscoding");
 			} catch (ClassCastException e) {
 				throw new Exception("Type error in some parameter: " + e.getMessage());
+			}
+
+			// Parse obtained values into actual types
+			VideoCodec forcedVideoCodec = null;
+			try {
+				forcedVideoCodec = VideoCodec.valueOf(forcedVideoCodecStr);
+			} catch (NullPointerException e) {
+				// Not an error: "forcedVideoCodec" was not provided in params.
+			} catch (IllegalArgumentException e) {
+				throw new Exception("Invalid value for parameter 'forcedVideoCodec': " + e.getMessage());
 			}
 
 			try {
@@ -761,11 +772,25 @@ public class SessionRestController {
 					}
 					builder = builder.customSessionId(customSessionId);
 				}
-				if (forcedVideoCodec != null) {
-					builder = builder.forcedVideoCodec(VideoCodec.valueOf(forcedVideoCodec));
-				} else {
-					builder = builder.forcedVideoCodec(openviduConfig.getOpenviduForcedCodec());
+
+				if (forcedVideoCodec == null) {
+					forcedVideoCodec = openviduConfig.getOpenviduForcedCodec();
 				}
+				builder = builder.forcedVideoCodec(forcedVideoCodec);
+				if (forcedVideoCodec == VideoCodec.MEDIA_SERVER_PREFERRED) {
+					switch (openviduConfig.getMediaServer()) {
+					case mediasoup:
+						builder = builder.forcedVideoCodecResolved(VideoCodec.NONE);
+						break;
+					case kurento:
+					default:
+						builder = builder.forcedVideoCodecResolved(VideoCodec.VP8);
+						break;
+					}
+				} else {
+					builder = builder.forcedVideoCodecResolved(forcedVideoCodec);
+				}
+
 				if (allowTranscoding != null) {
 					builder = builder.allowTranscoding(allowTranscoding);
 				} else {

@@ -3213,7 +3213,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 						+ "'videoDimensions':'STR','filter':{}}}],'subscribers':[{'createdAt':0,'streamId':'STR','publisher':'STR'}]},{'connectionId':'STR','createdAt':0,'location':'STR','ip':'STR',"
 						+ "'platform':'STR','token':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':[{'createdAt':0,'streamId':'STR','mediaOptions':{'hasAudio':false,"
 						+ "'audioActive':false,'hasVideo':false,'videoActive':false,'typeOfVideo':'STR','frameRate':0,'videoDimensions':'STR','filter':{}}}],'subscribers':[{'createdAt':0,'streamId':'STR','publisher':'STR'}]}]},"
-						+ "'recording':false,'forcedVideoCodec':'STR','allowTranscoding':false}");
+						+ "'recording':false,'forcedVideoCodec':'STR','forcedVideoCodecResolved':'STR','allowTranscoding':false}");
 		String streamId = res.get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0)
 				.getAsJsonObject().get("publishers").getAsJsonArray().get(0).getAsJsonObject().get("streamId")
 				.getAsString();
@@ -4673,6 +4673,20 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Check browser codecs
 		VideoCodec codecToCheck = (codec != null) ? codec : defaultForcedVideoCodec;
+
+		// Validate the codec to check for special cases:
+		// * MEDIA_SERVER_PREFERRED means to use the codec that is preferred by the media server.
+		// * NONE means to use the codec that is preferred by the web browser.
+		// Because this test is always run only for Kurento and Chrome, we know what to select here.
+		if (codecToCheck == VideoCodec.MEDIA_SERVER_PREFERRED) {
+			// Kurento preferred video codec is VP8.
+			codecToCheck = VideoCodec.VP8;
+		}
+		else if (codecToCheck == VideoCodec.NONE) {
+			// Chrome preferred video codec is VP8.
+			codecToCheck = VideoCodec.VP8;
+		}
+
 		List<WebElement> statsButtons = user.getDriver().findElements(By.className("stats-button"));
 		for (WebElement statButton : statsButtons) {
 			statButton.click();

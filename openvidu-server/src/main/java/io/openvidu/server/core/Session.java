@@ -19,6 +19,7 @@ package io.openvidu.server.core;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,6 +33,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
@@ -234,22 +236,21 @@ public class Session implements SessionInterface {
 		json.addProperty("object", "session");
 		json.addProperty("sessionId", this.sessionId); // TODO: deprecated. Better use only "id"
 		json.addProperty("createdAt", this.startTime);
-		json.addProperty("mediaMode", this.sessionProperties.mediaMode().name());
-		json.addProperty("recordingMode", this.sessionProperties.recordingMode().name());
-		json.add("defaultRecordingProperties", this.sessionProperties.defaultRecordingProperties().toJson());
-		if (this.sessionProperties.customSessionId() != null) {
-			json.addProperty("customSessionId", this.sessionProperties.customSessionId());
+		json.addProperty("recording", this.recordingManager.sessionIsBeingRecorded(this.sessionId));
+
+		// Add keys from SessionProperties
+		JsonObject sessionPropertiesJson = sessionProperties.toJson();
+		for (Map.Entry<String, JsonElement> entry : sessionPropertiesJson.entrySet()) {
+			json.add(entry.getKey(), entry.getValue().deepCopy());
 		}
+
+		// Add "connections" object
 		JsonObject connections = new JsonObject();
 		JsonArray participants = this.getSnapshotOfConnectionsAsJsonArray(withPendingConnections, withWebrtcStats);
 		connections.addProperty("numberOfElements", participants.size());
 		connections.add("content", participants);
 		json.add("connections", connections);
-		json.addProperty("recording", this.recordingManager.sessionIsBeingRecorded(this.sessionId));
-		if (this.sessionProperties.forcedVideoCodec() != null) {
-			json.addProperty("forcedVideoCodec", this.sessionProperties.forcedVideoCodec().name());
-		}
-		json.addProperty("allowTranscoding", this.sessionProperties.isTranscodingAllowed());
+
 		return json;
 	}
 

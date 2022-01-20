@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
@@ -661,16 +662,17 @@ public class Session {
 				this.sessionId = responseJson.get("id").getAsString();
 				this.createdAt = responseJson.get("createdAt").getAsLong();
 
-				// forcedVideoCodec and allowTranscoding values are configured in OpenVidu
-				// Server via configuration or session
+				// Values that get filled by OpenVidu Server from its global or per-session configuration
 				VideoCodec forcedVideoCodec = VideoCodec.valueOf(responseJson.get("forcedVideoCodec").getAsString());
+				VideoCodec forcedVideoCodecResolved = VideoCodec
+						.valueOf(responseJson.get("forcedVideoCodecResolved").getAsString());
 				Boolean allowTranscoding = responseJson.get("allowTranscoding").getAsBoolean();
 
-				SessionProperties responseProperties = new SessionProperties.Builder()
-						.customSessionId(properties.customSessionId()).mediaMode(properties.mediaMode())
+				SessionProperties responseProperties = new SessionProperties.Builder().mediaMode(properties.mediaMode())
 						.recordingMode(properties.recordingMode())
 						.defaultRecordingProperties(properties.defaultRecordingProperties())
-						.mediaNode(properties.mediaNode()).forcedVideoCodec(forcedVideoCodec)
+						.customSessionId(properties.customSessionId()).mediaNode(properties.mediaNode())
+						.forcedVideoCodec(forcedVideoCodec).forcedVideoCodecResolved(forcedVideoCodecResolved)
 						.allowTranscoding(allowTranscoding).build();
 
 				this.properties = responseProperties;
@@ -718,6 +720,9 @@ public class Session {
 		if (json.has("forcedVideoCodec")) {
 			builder.forcedVideoCodec(VideoCodec.valueOf(json.get("forcedVideoCodec").getAsString()));
 		}
+		if (json.has("forcedVideoCodecResolved")) {
+			builder.forcedVideoCodecResolved(VideoCodec.valueOf(json.get("forcedVideoCodecResolved").getAsString()));
+		}
 		if (json.has("allowTranscoding")) {
 			builder.allowTranscoding(json.get("allowTranscoding").getAsBoolean());
 		}
@@ -756,19 +761,15 @@ public class Session {
 		JsonObject json = new JsonObject();
 		json.addProperty("sessionId", this.sessionId);
 		json.addProperty("createdAt", this.createdAt);
-		json.addProperty("customSessionId", this.properties.customSessionId());
 		json.addProperty("recording", this.recording);
-		json.addProperty("mediaMode", this.properties.mediaMode().name());
-		json.addProperty("recordingMode", this.properties.recordingMode().name());
-		if (this.properties.defaultRecordingProperties() != null) {
-			json.add("defaultRecordingProperties", this.properties.defaultRecordingProperties().toJson());
+
+		// Add keys from SessionProperties
+		JsonObject sessionPropertiesJson = this.properties.toJson();
+		for (Map.Entry<String, JsonElement> entry : sessionPropertiesJson.entrySet()) {
+			json.add(entry.getKey(), entry.getValue().deepCopy());
 		}
-		if (this.properties.forcedVideoCodec() != null) {
-			json.addProperty("forcedVideoCodec", this.properties.forcedVideoCodec().name());
-		}
-		if (this.properties.isTranscodingAllowed() != null) {
-			json.addProperty("allowTranscoding", this.properties.isTranscodingAllowed());
-		}
+
+		// Add "connections" object
 		JsonObject connections = new JsonObject();
 		connections.addProperty("numberOfElements", this.getConnections().size());
 		JsonArray jsonArrayConnections = new JsonArray();

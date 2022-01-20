@@ -380,7 +380,7 @@ public class KurentoSessionManager extends SessionManager {
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
 		KurentoSession kSession = kParticipant.getSession();
 		boolean isTranscodingAllowed = kSession.getSessionProperties().isTranscodingAllowed();
-		VideoCodec forcedVideoCodec = kSession.getSessionProperties().forcedVideoCodec();
+		VideoCodec forcedVideoCodec = kSession.getSessionProperties().forcedVideoCodecResolved();
 
 		final String streamId = kParticipant.generateStreamId(kurentoOptions);
 
@@ -597,7 +597,7 @@ public class KurentoSessionManager extends SessionManager {
 				WebrtcDebugEventType.sdpOffer, sdpOffer));
 
 		boolean isTranscodingAllowed = session.getSessionProperties().isTranscodingAllowed();
-		VideoCodec forcedVideoCodec = session.getSessionProperties().forcedVideoCodec();
+		VideoCodec forcedVideoCodec = session.getSessionProperties().forcedVideoCodecResolved();
 
 		// Modify server's SDPOffer if forced codec is defined
 		if (forcedVideoCodec != VideoCodec.NONE && !participant.isIpcam()) {
@@ -663,7 +663,7 @@ public class KurentoSessionManager extends SessionManager {
 				// Client initiated negotiation. sdpString is the SDP Offer of the client
 
 				boolean isTranscodingAllowed = session.getSessionProperties().isTranscodingAllowed();
-				VideoCodec forcedVideoCodec = session.getSessionProperties().forcedVideoCodec();
+				VideoCodec forcedVideoCodec = session.getSessionProperties().forcedVideoCodecResolved();
 				String sdpOffer = sdpString;
 
 				// Modify sdp if forced codec is defined
@@ -1220,7 +1220,7 @@ public class KurentoSessionManager extends SessionManager {
 
 	private String mungeSdpOffer(Session kSession, Participant participant, String sdpOffer, boolean isPublisher) {
 		boolean isTranscodingAllowed = kSession.getSessionProperties().isTranscodingAllowed();
-		VideoCodec forcedVideoCodec = kSession.getSessionProperties().forcedVideoCodec();
+		VideoCodec forcedVideoCodec = kSession.getSessionProperties().forcedVideoCodecResolved();
 		// Modify sdp if forced codec is defined
 		if (forcedVideoCodec != VideoCodec.NONE && !participant.isIpcam()) {
 			return sdpMunging.forceCodec(sdpOffer, participant, isPublisher, true, isTranscodingAllowed,

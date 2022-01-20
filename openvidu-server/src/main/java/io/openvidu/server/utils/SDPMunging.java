@@ -187,7 +187,7 @@ public class SDPMunging {
 				return mungedSdpOffer;
 			} else {
 				throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER,
-						"Codec not supported by Media Server");
+						"Codec not supported by Media Server: " + forcedVideoCodec);
 			}
 
 		} catch (OpenViduException e) {
