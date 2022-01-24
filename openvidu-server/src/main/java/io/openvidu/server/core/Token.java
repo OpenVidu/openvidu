@@ -37,7 +37,7 @@ public class Token {
 	private ConnectionProperties connectionProperties;
 	private TurnCredentials turnCredentials;
 
-	private final String connectionId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
+	private String connectionId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
 			+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(9);
 
 	public Token(String token, String sessionId, ConnectionProperties connectionProperties,
@@ -117,6 +117,10 @@ public class Token {
 
 	public String getConnectionId() {
 		return connectionId;
+	}
+	
+	public void setConnectionId(String connectionId) {
+		this.connectionId = connectionId;
 	}
 
 	public JsonObject toJson() {

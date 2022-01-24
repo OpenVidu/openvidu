@@ -336,6 +336,21 @@ public abstract class SessionManager {
 		}
 		Token tokenObj = tokenGenerator.generateToken(session.getSessionId(), serverMetadata, record, role,
 				kurentoOptions);
+
+		// Internal dev feature: allows customizing connectionId
+		if (serverMetadata.contains("openviduCustomConnectionId")) {
+			try {
+				JsonObject serverMetadataJson = JsonParser.parseString(serverMetadata).getAsJsonObject();
+				String customConnectionId = serverMetadataJson.get("openviduCustomConnectionId").getAsString();
+				customConnectionId = customConnectionId.replaceAll(IdentifierPrefixes.PARTICIPANT_PUBLIC_ID, "");
+				tokenObj.setConnectionId(IdentifierPrefixes.PARTICIPANT_PUBLIC_ID + customConnectionId);
+			} catch (Exception e) {
+				log.debug(
+						"Tried to parse server metadata as JSON after encountering \"openviduCustomConnectionId\" string but failed with {}: {}",
+						e.getClass().getCanonicalName(), e.getMessage());
+			}
+		}
+
 		session.storeToken(tokenObj);
 		return tokenObj;
 	}
