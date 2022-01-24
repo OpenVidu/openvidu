@@ -7,7 +7,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { environment } from 'src/environments/environment';
 
-// openvidu-components-angular
+// openvidu-angular
 
 import { CallComponent } from './openvidu-call/call.component';
 import { ToolbarTestComponent } from './components/toolbar-test/toolbar-test.component';

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, Output } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { RestService } from '../../services/rest/rest.service';
 
 @Component({
@@ -11,7 +11,7 @@ export class VideoconferenceComponent implements OnInit {
 	@Input() userName: string;
 	@Input() openviduServerUrl: string;
 	@Input() openviduSecret: string;
-	@Input() tokens: string[];
+	@Input() tokens: { webcam: string; screen: string };
 
 	joinSessionClicked: boolean = false;
 	closeClicked: boolean = false;
@@ -25,8 +25,7 @@ export class VideoconferenceComponent implements OnInit {
 	ngOnInit() {}
 
 	async onJoinClicked() {
-
-		if (!this.tokens || this.tokens?.length === 0) {
+		if (!this.tokens || (!this.tokens?.webcam && !this.tokens?.screen)) {
 			//No tokens received
 
 			if (!!this.sessionName && !!this.openviduServerUrl && !!this.openviduSecret) {
@@ -41,17 +40,18 @@ export class VideoconferenceComponent implements OnInit {
 				this.errorMessage = `Cannot access to OpenVidu Server with url '${this.openviduServerUrl}' to genere tokens for session '${this.sessionName}'`;
 				throw this.errorMessage;
 			}
-		} else if (this.tokens?.length < 2) {
+		} else if (!this.tokens?.webcam || !this.tokens?.screen) {
 			// 1 token received
+			const aditionalToken = await this.restService.getToken(this.sessionName, this.openviduServerUrl, this.openviduSecret);
 			this._tokens = {
-				webcam: this.tokens[0],
-				screen: await this.restService.getToken(this.sessionName, this.openviduServerUrl, this.openviduSecret)
+				webcam: !!this.tokens.webcam ? this.tokens.webcam : aditionalToken,
+				screen: !!this.tokens.screen ? this.tokens.screen : aditionalToken
 			};
 		} else {
 			// 2 tokens received.
 			this._tokens = {
-				webcam: this.tokens[0],
-				screen: this.tokens[1]
+				webcam: this.tokens.webcam,
+				screen: this.tokens.screen
 			};
 		}
 		this.joinSessionClicked = true;

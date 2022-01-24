@@ -8,6 +8,8 @@
     "lib:build": "ng build openvidu-angular --configuration production && cd ./dist/openvidu-angular && npm pack",
     "lib:copy": "cp dist/openvidu-angular/openvidu-angular-*.tgz ../openvidu-tutorials/openvidu-angular-components",
     "lib:test": "ng test openvidu-angular --no-watch --code-coverage",
+    "webcomponent:build": "./node_modules/@angular/cli/bin/ng.js build openvidu-webcomponent --configuration production && node ./openvidu-webcomponent-build.js",
+    "bundle-report": "ng build openvidu-webcomponent --stats-json --configuration production && webpack-bundle-analyzer dist/openvidu-webcomponent/stats.json",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
@@ -16,15 +18,15 @@
     "@angular/animations": "13.0.0",
     "@angular/cdk": "13.0.0",
     "@angular/common": "13.0.0",
-    "@angular/compiler": "13.0.0",
     "@angular/core": "13.0.0",
-    "@angular/flex-layout": "12.0.0-beta.35",
+    "@angular/flex-layout": "13.0.0-beta.36",
     "@angular/forms": "13.0.0",
     "@angular/material": "13.0.0",
     "@angular/platform-browser": "13.0.0",
     "@angular/platform-browser-dynamic": "13.0.0",
     "@angular/router": "13.0.0",
     "autolinker": "3.14.3",
+    "buffer": "^6.0.3",
     "openvidu-browser": "2.21.0-beta1",
     "rxjs": "7.4.0",
     "tslib": "2.3.1",
@@ -33,11 +35,14 @@
   "devDependencies": {
     "@angular-devkit/build-angular": "13.0.1",
     "@angular/cli": "13.0.1",
+    "@angular/compiler": "13.0.0",
     "@angular/compiler-cli": "13.0.0",
+    "@angular/elements": "13.0.0",
     "@types/jasmine": "3.10.2",
     "@types/jasminewd2": "2.0.10",
     "@types/node": "16.11.6",
     "codelyzer": "6.0.2",
+    "concat": "^1.0.3",
     "jasmine-core": "3.10.1",
     "jasmine-spec-reporter": "7.0.0",
     "karma": "^6.3.9",
@@ -53,6 +58,7 @@
     "protractor": "7.0.0",
     "ts-node": "10.4.0",
     "tslint": "6.1.3",
-    "typescript": "4.4.4"
+    "typescript": "4.4.4",
+    "webpack-bundle-analyzer": "^4.5.0"
   }
 }
