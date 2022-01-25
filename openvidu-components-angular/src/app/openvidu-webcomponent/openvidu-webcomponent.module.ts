@@ -1,37 +1,29 @@
-import { BrowserModule } from "@angular/platform-browser";
-import { DoBootstrap, Injector, NgModule } from "@angular/core";
-import { APP_BASE_HREF, CommonModule } from "@angular/common";
-import { createCustomElement, NgElement, WithProperties } from "@angular/elements";
-import { OpenviduWebComponentComponent } from "./openvidu-webcomponent.component";
+import { BrowserModule } from '@angular/platform-browser';
+import { DoBootstrap, Injector, NgModule } from '@angular/core';
+import { APP_BASE_HREF, CommonModule } from '@angular/common';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
-import { OpenviduAngularModule, VideoconferenceComponent } from "openvidu-angular";
+import { OpenviduWebComponentComponent } from './openvidu-webcomponent.component';
+
+import { OpenviduAngularModule, VideoconferenceComponent } from 'openvidu-angular';
 import { environment } from '../../environments/environment';
 
-
-declare global {
-	interface HTMLElementTagNameMap {
-	  'openvidu-webcomponent': NgElement & WithProperties<{ openviduServerUrl: string, openviduSecret: string}>;
-	}
-  }
+import { createCustomElement } from '@angular/elements';
 
 @NgModule({
 	declarations: [OpenviduWebComponentComponent],
-	imports: [
-		CommonModule,
-		BrowserModule,
-		OpenviduAngularModule.forRoot(environment),
-	],
+	imports: [CommonModule, BrowserModule, BrowserAnimationsModule, OpenviduAngularModule.forRoot(environment)],
 	// exports: [OpenviduWebComponentComponent],
-	providers: [{provide: APP_BASE_HREF, useValue: '/'} , VideoconferenceComponent],
+	providers: [{ provide: APP_BASE_HREF, useValue: '/' }, VideoconferenceComponent]
 })
 export class OpenviduWebComponentModule implements DoBootstrap {
 	constructor(private injector: Injector) {}
 
 	ngDoBootstrap(): void {
 		const element = createCustomElement(OpenviduWebComponentComponent, {
-			injector: this.injector,
+			injector: this.injector
 		});
 
-		customElements.define("openvidu-webcomponent", element);
+		customElements.define('openvidu-webcomponent', element);
 	}
 }

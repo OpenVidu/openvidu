@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from "@angular/core";
+import { Component, Input, OnInit } from '@angular/core';
 
 export interface SessionConfig {
 	sessionName: string;
@@ -7,18 +7,19 @@ export interface SessionConfig {
 }
 
 @Component({
-	template: ` <ov-videoconference
+	template: `<ov-videoconference
 		*ngIf="successParams"
-		[sessionName]="sessionConfig.sessionName"
-		[userName]="sessionConfig.userName"
+		[sessionName]="_sessionConfig.sessionName"
+		[userName]="_sessionConfig.userName"
 		[openviduServerUrl]="openviduServerUrl"
 		[openviduSecret]="openviduSecret"
-		[tokens]="sessionConfig.tokens"
-	></ov-videoconference>`,
+		[tokens]="_sessionConfig.tokens"
+	></ov-videoconference>`
 })
 export class OpenviduWebComponentComponent implements OnInit {
 	@Input() openviduServerUrl: string;
 	@Input() openviduSecret: string;
+	_sessionConfig: SessionConfig;
 
 	successParams: boolean = false;
 
@@ -26,39 +27,38 @@ export class OpenviduWebComponentComponent implements OnInit {
 
 	ngOnInit(): void {}
 
-	@Input("sessionConfig")
+	@Input('sessionConfig')
 	set sessionConfig(config: SessionConfig | string) {
-		console.log("Webcomponent sessionConfig: ", config);
-		// setTimeout(() => {
-		if (typeof config === "string") {
+		console.log('Webcomponent sessionConfig: ', config);
+		if (typeof config === 'string') {
 			try {
+				console.log('STRING')
 				config = JSON.parse(config);
 			} catch (error) {
-				console.error("Unexpected JSON", error);
-			}
-		} else {
-			if (this.isEmpty(config)) {
-				// Leaving session when sessionConfig is empty
-			} else {
-				this.successParams = this.isCorrectParams(config);
-				if (!this.successParams) {
-					console.error("Parameters received are incorrect: ", config);
-					console.error("Session cannot start");
-				}
+				console.error('Unexpected JSON', error);
+				throw 'Unexpected JSON';
 			}
 		}
 
-		// }, 200);
+		if (this.isEmpty(<SessionConfig>config)) {
+			// Leaving session when sessionConfig is empty
+		} else {
+			console.log("URL",this.openviduServerUrl);
+			console.log('SECRET',this.openviduSecret);
+			this.successParams = this.isCorrectParams(<SessionConfig>config);
+			this._sessionConfig = <SessionConfig>config;
+			if (!this.successParams) {
+				console.error('Parameters received are incorrect: ', config);
+				console.error('Session cannot start');
+			}
+		}
 	}
 
 	private isCorrectParams(config: SessionConfig): boolean {
-		const canGenerateToken =
-			!!config.sessionName &&
-			!!config.userName &&
-			!!this.openviduServerUrl &&
-			!!this.openviduSecret;
-		const hasToken =
-			!!config.tokens?.webcam && !!config.tokens?.screen && !!config.userName;
+
+		console.log(config)
+		const canGenerateToken = !!config.sessionName && !!config.userName && !!this.openviduServerUrl && !!this.openviduSecret;
+		const hasToken = !!config.tokens?.webcam && !!config.tokens?.screen && !!config.userName;
 
 		return canGenerateToken || hasToken;
 	}

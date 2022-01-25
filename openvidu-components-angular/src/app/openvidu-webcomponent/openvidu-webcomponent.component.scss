@@ -71,3 +71,6 @@ $openvidu-components-theme: mat.define-light-theme((
 	--ov-light-color: #ffffff;
 	--ov-light-dark-color: #f1f1f1;
 }
+
+html, body { height: 100%; overflow: hidden;}
+body { margin: 0; font-family: 'Roboto','RobotoDraft',Helvetica,Arial,sans-serif;}
