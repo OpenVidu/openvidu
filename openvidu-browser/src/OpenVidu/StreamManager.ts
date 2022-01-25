@@ -414,7 +414,12 @@ export class StreamManager extends EventDispatcher {
             }
         }
 
-        if (!this.remote && !this.stream.displayMyRemote()) {
+        if (this.remote) {
+          // Do not mirror remote video.
+          // Remove the mirror if this video was currently associated with a local mirrored video.
+          this.removeMirrorVideo(video);
+        }
+        else if (!this.stream.displayMyRemote()) {
             video.muted = true;
             if (video.style.transform === 'rotateY(180deg)' && !this.stream.outboundStreamOpts.publisherProperties.mirror) {
                 // If the video was already rotated and now is set to not mirror
