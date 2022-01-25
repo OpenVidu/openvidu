@@ -548,12 +548,15 @@ export class Stream {
      * @hidden
      */
     isSendScreen(): boolean {
+        if (!this.outboundStreamOpts) {
+            return false;
+        }
         let screen = this.outboundStreamOpts.publisherProperties.videoSource === 'screen';
         if (platform.isElectron()) {
             screen = typeof this.outboundStreamOpts.publisherProperties.videoSource === 'string' &&
                 this.outboundStreamOpts.publisherProperties.videoSource.startsWith('screen:');
         }
-        return !!this.outboundStreamOpts && screen;
+        return screen;
     }
 
     /**
