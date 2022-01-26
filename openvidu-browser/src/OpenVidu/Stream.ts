@@ -35,7 +35,7 @@ import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 /**
  * @hidden
  */
-import hark from 'hark';
+import hark = require('hark');
 /**
  * @hidden
  */
@@ -536,15 +536,12 @@ export class Stream {
      * @hidden
      */
     isSendScreen(): boolean {
-        if (!this.outboundStreamOpts) {
-            return false;
-        }
         let screen = this.outboundStreamOpts.publisherProperties.videoSource === 'screen';
         if (platform.isElectron()) {
             screen = typeof this.outboundStreamOpts.publisherProperties.videoSource === 'string' &&
                 this.outboundStreamOpts.publisherProperties.videoSource.startsWith('screen:');
         }
-        return screen;
+        return !!this.outboundStreamOpts && screen;
     }
 
     /**

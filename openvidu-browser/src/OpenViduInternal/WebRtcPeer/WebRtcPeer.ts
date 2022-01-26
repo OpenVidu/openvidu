@@ -15,7 +15,7 @@
  *
  */
 
-import freeice from 'freeice';
+import freeice = require('freeice');
 import { v4 as uuidv4 } from 'uuid';
 import { ExceptionEventName } from '../Events/ExceptionEvent';
 import { OpenViduLogger } from '../Logger/OpenViduLogger';
