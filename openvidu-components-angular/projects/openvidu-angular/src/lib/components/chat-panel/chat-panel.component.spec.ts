@@ -2,21 +2,21 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChatService } from '../../services/chat/chat.service';
 import { ChatServiceMock } from '../../services/chat/chat.service.mock';
 
-import { ChatComponent } from './chat.component';
+import { ChatPanelComponent } from './chat-panel.component';
 
-describe('ChatComponent', () => {
-	let component: ChatComponent;
-	let fixture: ComponentFixture<ChatComponent>;
+describe('ChatPanelComponent', () => {
+	let component: ChatPanelComponent;
+	let fixture: ComponentFixture<ChatPanelComponent>;
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ChatComponent],
+			declarations: [ChatPanelComponent],
 			providers: [{ provide: ChatService, useClass: ChatServiceMock }]
 		}).compileComponents();
 	});
 
 	beforeEach(() => {
-		fixture = TestBed.createComponent(ChatComponent);
+		fixture = TestBed.createComponent(ChatPanelComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});

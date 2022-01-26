@@ -13,8 +13,8 @@
 		<span>{{errorMessage}}</span>
 	</div>
 
-	<div id="room-container" *ngIf="joinSessionClicked && isSessionAlive && !error">
-		<ov-room [tokens]="_tokens">
+	<div id="session-container" *ngIf="joinSessionClicked && isSessionAlive && !error">
+		<ov-session [tokens]="_tokens">
 			<ng-template #toolbar>
 				<ov-toolbar
 					(onCamClicked)="onCamClicked()"
@@ -25,6 +25,6 @@
 				></ov-toolbar>
 			</ng-template>
 			<ov-layout layout></ov-layout>
-		</ov-room>
+		</ov-session>
 	</div>
 </div>

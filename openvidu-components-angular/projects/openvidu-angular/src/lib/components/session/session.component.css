@@ -1,4 +1,4 @@
-#room-container {
+#session-container {
 	background-color: var(--ov-primary-color);
 	min-width: 400px;
 	height: 100%;
@@ -41,7 +41,7 @@
 
 
 @media only screen and (max-width: 600px) {
-	#room-container {
+	#session-container {
 		width: 100%;
 		/* position: fixed; */
 	}

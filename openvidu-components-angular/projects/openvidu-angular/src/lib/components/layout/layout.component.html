@@ -15,8 +15,8 @@
 
 		<!-- Default menu content if custom menu content is not injected -->
 		<ng-template #defaultMenuContent>
-			<ov-chat *ngIf="isChatOpened"></ov-chat>
-			<ov-participant-panel *ngIf="isParticipantsOpened"></ov-participant-panel>
+			<ov-chat-panel *ngIf="isChatOpened"></ov-chat-panel>
+			<ov-participants-panel *ngIf="isParticipantsOpened"></ov-participants-panel>
 		</ng-template>
 
 	</mat-sidenav>
@@ -37,7 +37,7 @@
 					*ngFor="let connection of localParticipant | connections"
 					[ngClass]="{ OV_small: !connection.streamManager?.stream?.videoActive }"
 				>
-					<ov-participant [participant]="connection" [videoEnlarged]="connection.videoEnlarged"></ov-participant>
+					<ov-stream [participant]="connection" [videoEnlarged]="connection.videoEnlarged"></ov-stream>
 				</div>
 			</ng-template>
 
@@ -59,7 +59,7 @@
 					id="remote-participant"
 					[ngClass]="{ OV_small: !connection.streamManager?.stream?.videoActive }"
 				>
-					<ov-participant [participant]="connection" [videoEnlarged]="connection.videoEnlarged"></ov-participant>
+					<ov-stream [participant]="connection" [videoEnlarged]="connection.videoEnlarged"></ov-stream>
 				</div>
 			</ng-template>
 		</div>

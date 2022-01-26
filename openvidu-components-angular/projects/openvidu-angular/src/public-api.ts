@@ -24,10 +24,11 @@ export * from './lib/services/storage/storage.service';
 export * from './lib/components/videoconference/videoconference.component';
 export * from './lib/components/user-settings/user-settings.component';
 export * from './lib/components/toolbar/toolbar.component';
-export * from './lib/components/chat/chat.component';
-export * from './lib/components/room/room.component';
+export * from './lib/components/chat-panel/chat-panel.component';
+export * from './lib/components/participants-panel/participants-panel/participants-panel.component';
+export * from './lib/components/session/session.component';
 export * from './lib/components/layout/layout.component';
-export * from './lib/components/participant/participant.component';
+export * from './lib/components/stream/stream.component';
 export * from './lib/components/video/video.component';
 
 // Models

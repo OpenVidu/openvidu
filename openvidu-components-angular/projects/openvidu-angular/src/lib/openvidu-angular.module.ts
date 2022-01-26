@@ -29,10 +29,10 @@ import { HttpClientModule } from '@angular/common/http';
 import { UserSettingsComponent } from './components/user-settings/user-settings.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { VideoComponent } from './components/video/video.component';
-import { ChatComponent } from './components/chat/chat.component';
-import { RoomComponent } from './components/room/room.component';
+import { ChatPanelComponent } from './components/chat-panel/chat-panel.component';
+import { SessionComponent } from './components/session/session.component';
 import { LayoutComponent } from './components/layout/layout.component';
-import { ParticipantComponent } from './components/participant/participant.component';
+import { StreamComponent } from './components/stream/stream.component';
 import { DialogTemplateComponent } from './components/material/dialog.component';
 
 import { LinkifyPipe } from './pipes/linkify.pipe';
@@ -55,7 +55,7 @@ import { LayoutService } from './services/layout/layout.service';
 import { SidenavMenuService } from './services/sidenav-menu/sidenav-menu.service';
 import { ParticipantService } from './services/participant/participant.service';
 import { ParticipantItemComponent } from './components/participants-panel/participant-item/participant-item.component';
-import { ParticipantPanelComponent } from './components/participants-panel/participant-panel/participant-panel.component';
+import { ParticipantsPanelComponent } from './components/participants-panel/participants-panel/participants-panel.component';
 import { VideoconferenceComponent } from './components/videoconference/videoconference.component';
 
 @NgModule({
@@ -63,10 +63,10 @@ import { VideoconferenceComponent } from './components/videoconference/videoconf
 		UserSettingsComponent,
 		VideoComponent,
 		ToolbarComponent,
-		ChatComponent,
-		RoomComponent,
+		ChatPanelComponent,
+		SessionComponent,
 		LayoutComponent,
-		ParticipantComponent,
+		StreamComponent,
 		DialogTemplateComponent,
 		LinkifyPipe,
 		TooltipListPipe,
@@ -74,7 +74,7 @@ import { VideoconferenceComponent } from './components/videoconference/videoconf
 		ConnectionsEnabledPipe,
 		NicknamePipe,
 		ParticipantItemComponent,
-		ParticipantPanelComponent,
+		ParticipantsPanelComponent,
 		VideoconferenceComponent
 	],
 	imports: [
@@ -124,10 +124,10 @@ import { VideoconferenceComponent } from './components/videoconference/videoconf
 		VideoconferenceComponent,
 		UserSettingsComponent,
 		ToolbarComponent,
-		ChatComponent,
-		RoomComponent,
+		ChatPanelComponent,
+		SessionComponent,
 		LayoutComponent,
-		ParticipantComponent,
+		StreamComponent,
 		VideoComponent,
 		ParticipantConnectionsPipe,
 		CommonModule

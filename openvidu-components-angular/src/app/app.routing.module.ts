@@ -5,7 +5,7 @@ import { CallComponent } from './openvidu-call/call.component';
 import { ToolbarTestComponent } from './components/toolbar-test/toolbar-test.component';
 import { ChatTestComponent } from './components/chat-test/chat-test.component';
 import { LayoutTestComponent } from './components/layout-test/layout-test.component';
-import { ParticipantTestComponent } from './components/participant-test/participant-test.component';
+import { StreamTestComponent } from './components/stream-test/stream-test.component';
 
 const routes: Routes = [
 	{ path: '', component: DashboardComponent },
@@ -13,7 +13,7 @@ const routes: Routes = [
 	{ path: 'toolbar', component: ToolbarTestComponent },
 	{ path: 'chat', component: ChatTestComponent },
 	{ path: 'layout', component: LayoutTestComponent },
-	{ path: 'participant', component: ParticipantTestComponent }
+	{ path: 'stream', component: StreamTestComponent }
 ];
 @NgModule({
 	imports: [RouterModule.forRoot(routes, { useHash: true })],

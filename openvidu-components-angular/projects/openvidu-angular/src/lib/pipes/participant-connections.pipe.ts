@@ -1,12 +1,12 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { ConnectionWrapper, ParticipantAbstractModel } from '../models/participant.model';
+import { StreamModel, ParticipantAbstractModel } from '../models/participant.model';
 
 @Pipe({ name: 'connections' })
 export class ParticipantConnectionsPipe implements PipeTransform {
 	constructor() {}
 
-	transform(participants: ParticipantAbstractModel[] | ParticipantAbstractModel): ConnectionWrapper[] {
-		let connections: ConnectionWrapper[] = [];
+	transform(participants: ParticipantAbstractModel[] | ParticipantAbstractModel): StreamModel[] {
+		let connections: StreamModel[] = [];
 		if (Array.isArray(participants)) {
 			participants.forEach((p) => {
 				connections = connections.concat(Array.from(p.connections.values()));

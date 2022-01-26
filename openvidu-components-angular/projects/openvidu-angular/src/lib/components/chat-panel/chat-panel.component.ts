@@ -6,11 +6,11 @@ import { ChatService } from '../../services/chat/chat.service';
 import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.service';
 
 @Component({
-	selector: 'ov-chat',
-	templateUrl: './chat.component.html',
-	styleUrls: ['./chat.component.css']
+	selector: 'ov-chat-panel',
+	templateUrl: './chat-panel.component.html',
+	styleUrls: ['./chat-panel.component.css']
 })
-export class ChatComponent implements OnInit, AfterViewInit {
+export class ChatPanelComponent implements OnInit, AfterViewInit {
 	@ViewChild('chatScroll') chatScroll: ElementRef;
 	@ViewChild('chatInput') chatInput: ElementRef;
 	message: string;

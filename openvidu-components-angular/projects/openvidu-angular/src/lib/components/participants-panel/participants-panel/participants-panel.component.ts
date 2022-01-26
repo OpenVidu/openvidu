@@ -4,11 +4,11 @@ import { ParticipantService } from '../../../services/participant/participant.se
 import { SidenavMenuService } from '../../../services/sidenav-menu/sidenav-menu.service';
 
 @Component({
-	selector: 'ov-participant-panel',
-	templateUrl: './participant-panel.component.html',
-	styleUrls: ['./participant-panel.component.css']
+	selector: 'ov-participants-panel',
+	templateUrl: './participants-panel.component.html',
+	styleUrls: ['./participants-panel.component.css']
 })
-export class ParticipantPanelComponent implements OnInit {
+export class ParticipantsPanelComponent implements OnInit {
 	localParticipant: any;
 	remoteParticipants: ParticipantAbstractModel[] = [];
 

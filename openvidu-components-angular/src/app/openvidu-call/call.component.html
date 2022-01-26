@@ -4,7 +4,7 @@
 	</div>
 
 	<div *ngIf="joinSessionClicked && isSessionAlive" style="height: 100%;">
-		<ov-room [tokens]="tokens">
+		<ov-session [tokens]="tokens">
 			<ng-template #toolbar>
 				<ov-toolbar
 					(onCamClicked)="onCamClicked()"
@@ -15,6 +15,6 @@
 				></ov-toolbar>
 			</ng-template>
 			<ov-layout layout></ov-layout>
-		</ov-room>
+		</ov-session>
 	</div>
 </div>

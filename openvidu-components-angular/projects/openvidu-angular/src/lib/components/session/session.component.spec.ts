@@ -16,15 +16,15 @@ import { WebrtcServiceMock } from '../../services/webrtc/webrtc.service.mock';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { ParticipantServiceMock } from '../../services/participant/participant.service.mock';
 
-import { RoomComponent } from './room.component';
+import { SessionComponent } from './session.component';
 
-describe('RoomComponent', () => {
-  let component: RoomComponent;
-  let fixture: ComponentFixture<RoomComponent>;
+describe('SessionComponent', () => {
+  let component: SessionComponent;
+  let fixture: ComponentFixture<SessionComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ RoomComponent ],
+      declarations: [ SessionComponent ],
       providers: [
       { provide: LoggerService, useClass: LoggerServiceMock },
 				{ provide: ActionService, useClass: ActionServiceMock },
@@ -39,7 +39,7 @@ describe('RoomComponent', () => {
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(RoomComponent);
+    fixture = TestBed.createComponent(SessionComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

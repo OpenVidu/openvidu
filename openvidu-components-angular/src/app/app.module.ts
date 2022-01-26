@@ -14,14 +14,14 @@ import { ToolbarTestComponent } from './components/toolbar-test/toolbar-test.com
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { ChatTestComponent } from './components/chat-test/chat-test.component';
 import { LayoutTestComponent } from './components/layout-test/layout-test.component';
-import { ParticipantTestComponent } from './components/participant-test/participant-test.component';
+import { StreamTestComponent } from './components/stream-test/stream-test.component';
 
 import {
 	OpenviduAngularModule,
 	UserSettingsComponent,
-	ChatComponent,
+	ChatPanelComponent,
 	ToolbarComponent,
-	RoomComponent,
+	SessionComponent,
 	LayoutComponent,
 	VideoconferenceComponent
 } from 'openvidu-angular';
@@ -35,7 +35,7 @@ import { MatButtonModule } from '@angular/material/button';
 		ToolbarTestComponent,
 		ChatTestComponent,
 		LayoutTestComponent,
-		ParticipantTestComponent
+		StreamTestComponent
 	],
 	imports: [
 		BrowserModule,
@@ -44,7 +44,7 @@ import { MatButtonModule } from '@angular/material/button';
 		OpenviduAngularModule.forRoot(environment),
 		AppRoutingModule // Order is important, AppRoutingModule must be the last import for useHash working
 	],
-	providers: [VideoconferenceComponent, UserSettingsComponent, ToolbarComponent, ChatComponent, RoomComponent, LayoutComponent],
+	providers: [VideoconferenceComponent, UserSettingsComponent, ToolbarComponent, ChatPanelComponent, SessionComponent, LayoutComponent],
 	bootstrap: [AppComponent]
 })
 export class AppModule {}

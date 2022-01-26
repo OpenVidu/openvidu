@@ -2,11 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { ParticipantModel } from 'openvidu-angular';
 
 @Component({
-  selector: 'app-participant-test',
-  templateUrl: './participant-test.component.html',
-  styleUrls: ['./participant-test.component.scss']
+  selector: 'app-stream-test',
+  templateUrl: './stream-test.component.html',
+  styleUrls: ['./stream-test.component.scss']
 })
-export class ParticipantTestComponent implements OnInit {
+export class StreamTestComponent implements OnInit {
 
   participant: ParticipantModel;
   constructor() { }

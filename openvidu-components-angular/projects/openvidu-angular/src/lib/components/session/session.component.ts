@@ -14,11 +14,11 @@ import { Signal } from '../../models/signal.model';
 import { ParticipantService } from '../../services/participant/participant.service';
 
 @Component({
-	selector: 'ov-room',
-	templateUrl: './room.component.html',
-	styleUrls: ['./room.component.css']
+	selector: 'ov-session',
+	templateUrl: './session.component.html',
+	styleUrls: ['./session.component.css']
 })
-export class RoomComponent implements OnInit {
+export class SessionComponent implements OnInit {
 	@ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any>;
 	@Input() tokens: { webcam: string; screen: string };
 	@Output() _session = new EventEmitter<any>();
@@ -38,7 +38,7 @@ export class RoomComponent implements OnInit {
 		protected tokenService: TokenService,
 		protected platformService: PlatformService
 	) {
-		this.log = this.loggerSrv.get('RoomComponent');
+		this.log = this.loggerSrv.get('SessionComponent');
 	}
 
 	@HostListener('window:beforeunload')

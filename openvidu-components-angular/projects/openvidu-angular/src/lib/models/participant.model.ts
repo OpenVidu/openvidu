@@ -1,7 +1,7 @@
 import { Publisher, StreamManager } from 'openvidu-browser';
 import { VideoType } from './video-type.model';
 
-export interface ConnectionWrapper {
+export interface StreamModel {
 	local: boolean;
 	connected: boolean;
 	nickname: string;
@@ -12,11 +12,11 @@ export interface ConnectionWrapper {
 }
 
 export abstract class ParticipantAbstractModel {
-	connections: Map<VideoType, ConnectionWrapper> = new Map();
+	connections: Map<VideoType, StreamModel> = new Map();
 	id: string;
 
-	addConnection(connWrapper: ConnectionWrapper) {
-		this.connections.set(connWrapper.type, connWrapper);
+	addConnection(streamModel: StreamModel) {
+		this.connections.set(streamModel.type, streamModel);
 	}
 
 	public isCameraAudioActive(): boolean {
@@ -37,11 +37,11 @@ export abstract class ParticipantAbstractModel {
 		return this.connections.has(type);
 	}
 
-	public getCameraConnection(): ConnectionWrapper {
+	public getCameraConnection(): StreamModel {
 		return this.connections.get(VideoType.CAMERA);
 	}
 
-	public getScreenConnection(): ConnectionWrapper {
+	public getScreenConnection(): StreamModel {
 		return this.connections.get(VideoType.SCREEN);
 	}
 
@@ -68,11 +68,11 @@ export abstract class ParticipantAbstractModel {
 		return Array.from(this.connections.values()).some((conn) => conn.connectionId === connectionId);
 	}
 
-	getConnectionById(connectionId: string): ConnectionWrapper {
+	getConnectionById(connectionId: string): StreamModel {
 		return Array.from(this.connections.values()).find((conn) => conn.connectionId === connectionId);
 	}
 
-	getAvailableConnections(): ConnectionWrapper[] {
+	getAvailableConnections(): StreamModel[] {
 		return Array.from(this.connections.values()).filter((conn) => conn.connected);
 	}
 
@@ -161,18 +161,18 @@ export abstract class ParticipantAbstractModel {
 
 export class ParticipantModel extends ParticipantAbstractModel {
 
-	constructor(connWrapper?: ConnectionWrapper, id?: string) {
+	constructor(model?: StreamModel, id?: string) {
 		super();
-		let connectionWrapper: ConnectionWrapper = {
-			local: connWrapper ? connWrapper.local : true,
+		let streamModel: StreamModel = {
+			local: model ? model.local : true,
 			connected: true,
-			nickname: connWrapper ? connWrapper.nickname : 'OpenVidu_User',
-			type: connWrapper ? connWrapper.type : VideoType.CAMERA,
-			streamManager: connWrapper ? connWrapper.streamManager : null,
-			videoEnlarged: connWrapper ? connWrapper.videoEnlarged : false,
-			connectionId: connWrapper ? connWrapper.connectionId : null
+			nickname: model ? model.nickname : 'OpenVidu_User',
+			type: model ? model.type : VideoType.CAMERA,
+			streamManager: model ? model.streamManager : null,
+			videoEnlarged: model ? model.videoEnlarged : false,
+			connectionId: model ? model.connectionId : null
 		};
-		this.connections.set(connectionWrapper.type, connectionWrapper);
+		this.connections.set(streamModel.type, streamModel);
 		this.id = id ? id : new Date().getTime().toString();
 	}
 

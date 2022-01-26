@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Publisher, Subscriber } from 'openvidu-browser';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
-import { ConnectionWrapper, ParticipantAbstractModel, ParticipantModel } from '../../models/participant.model';
+import { StreamModel, ParticipantAbstractModel, ParticipantModel } from '../../models/participant.model';
 import { VideoType } from '../../models/video-type.model';
 import { LoggerService } from '../logger/logger.service';
 
@@ -87,7 +87,7 @@ export class ParticipantService {
 	enableScreenUser(screenPublisher: Publisher) {
 		this.log.d('Enabling screen publisher');
 
-		const connWrapper: ConnectionWrapper = {
+		const steramModel: StreamModel = {
 			local: true,
 			type: VideoType.SCREEN,
 			videoEnlarged: true,
@@ -97,7 +97,7 @@ export class ParticipantService {
 			connectionId: null
 		};
 
-		this.localParticipant.addConnection(connWrapper);
+		this.localParticipant.addConnection(steramModel);
 
 		this._screensharing.next(true);
 
@@ -205,7 +205,7 @@ export class ParticipantService {
 
 	addRemoteConnection(connectionId:string, data: string, subscriber: Subscriber) {
 
-		const connWrapper: ConnectionWrapper = {
+		const steramModel: StreamModel = {
 			local: false,
 			type: this.getTypeConnectionData(data),
 			videoEnlarged: false,
@@ -219,16 +219,16 @@ export class ParticipantService {
 		const participantAdded = this.getRemoteParticipantById(participantId);
 		if (!!participantAdded) {
 			this.log.d('Adding connection to existing participant: ', participantId);
-			if(participantAdded.hasConnectionType(connWrapper.type)) {
+			if(participantAdded.hasConnectionType(steramModel.type)) {
 				this.log.d('Participant has publisher, updating it');
-				participantAdded.setPublisher(connWrapper.type, subscriber);
+				participantAdded.setPublisher(steramModel.type, subscriber);
 			} else {
 				this.log.d('Participant has not publisher, adding it');
-				participantAdded.addConnection(connWrapper);
+				participantAdded.addConnection(steramModel);
 			}
 		} else {
 			this.log.d('Creating new participant with id: ', participantId);
-			const remoteParticipant = this.newParticipant(connWrapper, participantId);
+			const remoteParticipant = this.newParticipant(steramModel, participantId);
 			this.remoteParticipants.push(remoteParticipant);
 		}
 		this.updateRemoteParticipants();
@@ -300,7 +300,7 @@ export class ParticipantService {
 	protected updateRemoteParticipants() {
 		this._remoteParticipants.next(this.remoteParticipants);
 	}
-	protected newParticipant(connWrapper?: ConnectionWrapper, participantId?: string) {
-		return new ParticipantModel(connWrapper, participantId);
+	protected newParticipant(steramModel?: StreamModel, participantId?: string) {
+		return new ParticipantModel(steramModel, participantId);
 	}
 }

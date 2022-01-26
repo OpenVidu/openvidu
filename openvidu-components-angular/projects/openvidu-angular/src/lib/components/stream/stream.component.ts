@@ -13,15 +13,15 @@ import { StorageService } from '../../services/storage/storage.service';
 import { Signal } from '../../models/signal.model';
 import { LayoutClass } from '../../models/layout.model';
 import { PublisherProperties } from 'openvidu-browser';
-import { ConnectionWrapper } from '../../models/participant.model';
+import { StreamModel } from '../../models/participant.model';
 import { ParticipantService } from '../../services/participant/participant.service';
 
 @Component({
-	selector: 'ov-participant',
-	templateUrl: './participant.component.html',
-	styleUrls: ['./participant.component.css']
+	selector: 'ov-stream',
+	templateUrl: './stream.component.html',
+	styleUrls: ['./stream.component.css']
 })
-export class ParticipantComponent implements OnInit {
+export class StreamComponent implements OnInit {
 	videoSizeIconEnum = VideoSizeIcon;
 	videoTypeEnum = VideoType;
 	videoSizeIcon: VideoSizeIcon = VideoSizeIcon.BIG;
@@ -29,7 +29,7 @@ export class ParticipantComponent implements OnInit {
 	toggleNickname: boolean;
 	nicknameFormControl: FormControl;
 	matcher: NicknameMatcher;
-	_participant: ConnectionWrapper;
+	_participant: StreamModel;
 
 	@ViewChild('streamComponent', { read: ViewContainerRef }) streamComponent: ViewContainerRef;
 	@ViewChild(MatMenuTrigger) public menuTrigger: MatMenuTrigger;
@@ -53,14 +53,14 @@ export class ParticipantComponent implements OnInit {
 	// }
 
 	// Has been mandatory fullscreen Input because of Input user did not fire changing
-	// the fullscreen user property in publisherStartSpeaking event in VideoRoom Component
+	// the fullscreen user property in publisherStartSpeaking event in SessionComponent
 	@Input()
 	set videoEnlarged(enlarged: boolean) {
 		this.checkVideoSizeBigIcon(enlarged);
 	}
 
 	@Input()
-	set participant(participant: ConnectionWrapper) {
+	set participant(participant: StreamModel) {
 		this._participant = participant;
 		this.nicknameFormControl = new FormControl(this._participant.nickname, [Validators.maxLength(25), Validators.required]);
 	}
