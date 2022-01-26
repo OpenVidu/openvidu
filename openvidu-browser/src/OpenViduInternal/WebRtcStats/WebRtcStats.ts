@@ -278,7 +278,7 @@ export class WebRtcStats {
                 finalRemoteCandidate = 'ERROR: No active remote ICE candidate. Probably ICE-TCP is being used';
             }
 
-            resolve({
+            return resolve({
                 localCandidate: finalLocalCandidate,
                 remoteCandidate: finalRemoteCandidate
             });

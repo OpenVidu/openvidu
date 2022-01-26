@@ -304,7 +304,7 @@ export class Publisher extends StreamManager {
                     this.openvidu.sendNewVideoDimensionsIfRequired(this, 'trackReplaced', 50, 30);
                     this.session.sendVideoData(this.stream.streamManager, 5, true, 5);
                 }
-                resolve();
+                return resolve();
             });
         }
 
@@ -315,24 +315,19 @@ export class Publisher extends StreamManager {
                 if (track.kind === 'video') {
                     sender = senders.find(s => !!s.track && s.track.kind === 'video');
                     if (!sender) {
-                        reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'));
-                        return;
+                        return reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'));
                     }
                 } else if (track.kind === 'audio') {
                     sender = senders.find(s => !!s.track && s.track.kind === 'audio');
                     if (!sender) {
-                        reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'));
-                        return;
+                        return reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'));
                     }
                 } else {
-                    reject(new Error('Unknown track kind ' + track.kind));
-                    return;
+                    return reject(new Error('Unknown track kind ' + track.kind));
                 }
-                (sender as RTCRtpSender).replaceTrack(track).then(() => {
-                    resolve();
-                }).catch(error => {
-                    reject(error);
-                });
+                (sender as RTCRtpSender).replaceTrack(track)
+                    .then(() => resolve())
+                    .catch(error => reject(error));
             });
         }
 
@@ -376,7 +371,7 @@ export class Publisher extends StreamManager {
                 this.accessDenied = true;
                 this.accessAllowed = false;
                 logger.error(`Publisher initialization failed. ${openViduError.name}: ${openViduError.message}`)
-                reject(openViduError);
+                return reject(openViduError);
             };
 
             const successCallback = (mediaStream: MediaStream) => {
@@ -448,7 +443,7 @@ export class Publisher extends StreamManager {
                     this.stream.isLocalStreamReadyToPublish = true;
                     this.stream.ee.emitEvent('stream-ready-to-publish', []);
                 }
-                resolve();
+                return resolve();
             };
 
             const getMediaSuccess = (mediaStream: MediaStream, definedAudioConstraint) => {
@@ -643,7 +638,7 @@ export class Publisher extends StreamManager {
                     document.body.removeChild(this.videoReference);
                 }
 
-                resolve({ width, height });
+                return resolve({ width, height });
             }
 
             if (this.videoReference.readyState >= 1) {

@@ -272,9 +272,9 @@ export class OpenVidu {
 
       const callback = (error: Error) => {
         if (!!error) {
-          reject(error);
+          return reject(error);
         } else {
-          resolve(publisher);
+          return resolve(publisher);
         }
       };
 
@@ -416,7 +416,7 @@ export class OpenVidu {
                 });
               }
             });
-            resolve(devices);
+            return resolve(devices);
           });
         } else {
 
@@ -430,11 +430,11 @@ export class OpenVidu {
               });
             }
           });
-          resolve(devices);
+          return resolve(devices);
         }
       }).catch((error) => {
         logger.error('Error getting devices', error);
-        reject(error);
+        return reject(error);
       });
     });
   }
@@ -497,7 +497,7 @@ export class OpenVidu {
         navigator.mediaDevices.getUserMedia(constraintsAux)
           .then(audioOnlyStream => {
             previousMediaStream.addTrack(audioOnlyStream.getAudioTracks()[0]);
-            resolve(previousMediaStream);
+            return resolve(previousMediaStream);
           })
           .catch(error => {
             previousMediaStream.getAudioTracks().forEach((track) => {
@@ -506,7 +506,7 @@ export class OpenVidu {
             previousMediaStream.getVideoTracks().forEach((track) => {
               track.stop();
             });
-            reject(this.generateAudioDeviceError(error, constraintsAux));
+            return reject(this.generateAudioDeviceError(error, constraintsAux));
           });
       }
 
@@ -517,7 +517,7 @@ export class OpenVidu {
           !!myConstraints.videoTrack && myConstraints.constraints?.audio === false) {
 
           // No need to call getUserMedia at all. Both tracks provided, or only AUDIO track provided or only VIDEO track provided
-          resolve(this.addAlreadyProvidedTracks(myConstraints, new MediaStream()));
+          return resolve(this.addAlreadyProvidedTracks(myConstraints, new MediaStream()));
 
         } else {
           // getUserMedia must be called. AUDIO or VIDEO are requesting a new track
@@ -547,13 +547,13 @@ export class OpenVidu {
                       askForAudioStreamOnly(mediaStream, <MediaStreamConstraints>myConstraints.constraints);
                       return;
                     } else {
-                      resolve(mediaStream);
+                      return resolve(mediaStream);
                     }
                   })
                   .catch(error => {
                     let errorName: OpenViduErrorName = OpenViduErrorName.SCREEN_CAPTURE_DENIED;
                     const errorMessage = error.toString();
-                    reject(new OpenViduError(errorName, errorMessage));
+                    return reject(new OpenViduError(errorName, errorMessage));
                   });
                 return;
               } else {
@@ -572,7 +572,7 @@ export class OpenVidu {
                 askForAudioStreamOnly(mediaStream, <MediaStreamConstraints>myConstraints.constraints);
                 return;
               } else {
-                resolve(mediaStream);
+                return resolve(mediaStream);
               }
             })
             .catch(error => {
@@ -583,12 +583,10 @@ export class OpenVidu {
               } else {
                 errorName = OpenViduErrorName.SCREEN_CAPTURE_DENIED;
               }
-              reject(new OpenViduError(errorName, errorMessage));
+              return reject(new OpenViduError(errorName, errorMessage));
             });
         }
-      }).catch((error: OpenViduError) => {
-        reject(error);
-      });
+      }).catch((error: OpenViduError) => reject(error));
     });
   }
 
@@ -697,7 +695,7 @@ export class OpenVidu {
       }
       if (myConstraints.constraints!.audio === false && myConstraints.constraints!.video === false) {
         // ERROR! audioSource and videoSource cannot be both false at the same time
-        reject(new OpenViduError(OpenViduErrorName.NO_INPUT_SOURCE_SET,
+        return reject(new OpenViduError(OpenViduErrorName.NO_INPUT_SOURCE_SET,
           "Properties 'audioSource' and 'videoSource' cannot be set to false or null at the same time"));
       }
 
@@ -749,7 +747,7 @@ export class OpenVidu {
       // CASE 4: deviceId or screen sharing
       this.configureDeviceIdOrScreensharing(myConstraints, publisherProperties, resolve, reject);
 
-      resolve(myConstraints);
+      return resolve(myConstraints);
     });
   }
 
@@ -919,7 +917,7 @@ export class OpenVidu {
         if (!this.checkScreenSharingCapabilities()) {
           const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox, Opera, Safari (>=13.0), Edge (>= 80) or Electron. Detected client: ' + platform.getName() + ' ' + platform.getVersion());
           logger.error(error);
-          reject(error);
+          return reject(error);
         } else {
 
           if (platform.isElectron()) {
@@ -932,7 +930,7 @@ export class OpenVidu {
                 chromeMediaSourceId: electronScreenId
               }
             };
-            resolve(myConstraints);
+            return resolve(myConstraints);
 
           } else {
 
@@ -945,26 +943,26 @@ export class OpenVidu {
                   if (error === 'permission-denied' || error === 'PermissionDeniedError') {
                     const error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
                     logger.error(error);
-                    reject(error);
+                    return reject(error);
                   } else {
                     const extensionId = this.advancedConfiguration.screenShareChromeExtension!.split('/').pop()!!.trim();
                     screenSharing.getChromeExtensionStatus(extensionId, status => {
                       if (status === 'installed-disabled') {
                         const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
                         logger.error(error);
-                        reject(error);
+                        return reject(error);
                       }
                       if (status === 'not-installed') {
                         const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, (<string>this.advancedConfiguration.screenShareChromeExtension));
                         logger.error(error);
-                        reject(error);
+                        return reject(error);
                       }
                     });
                     return;
                   }
                 } else {
                   myConstraints.constraints!.video = screenConstraints;
-                  resolve(myConstraints);
+                  return resolve(myConstraints);
                 }
               });
               return;
@@ -972,7 +970,7 @@ export class OpenVidu {
 
               if (navigator.mediaDevices['getDisplayMedia']) {
                 // getDisplayMedia support (Chrome >= 72, Firefox >= 66, Safari >= 13)
-                resolve(myConstraints);
+                return resolve(myConstraints);
               } else {
                 // Default screen sharing extension for Chrome/Opera, or is Firefox < 66
                 const firefoxString = (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) ? publisherProperties.videoSource : undefined;
@@ -984,24 +982,24 @@ export class OpenVidu {
                         'https://chrome.google.com/webstore/detail/openvidu-screensharing/lfcgfepafnobdloecchnfaclibenjold';
                       const err = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, extensionUrl);
                       logger.error(err);
-                      reject(err);
+                      return reject(err);
                     } else if (error === 'installed-disabled') {
                       const err = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
                       logger.error(err);
-                      reject(err);
+                      return reject(err);
                     } else if (error === 'permission-denied') {
                       const err = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
                       logger.error(err);
-                      reject(err);
+                      return reject(err);
                     } else {
                       const err = new OpenViduError(OpenViduErrorName.GENERIC_ERROR, 'Unknown error when accessing screen share');
                       logger.error(err);
                       logger.error(error);
-                      reject(err);
+                      return reject(err);
                     }
                   } else {
                     myConstraints.constraints!.video = screenConstraints.video;
-                    resolve(myConstraints);
+                    return resolve(myConstraints);
                   }
                 });
                 return;

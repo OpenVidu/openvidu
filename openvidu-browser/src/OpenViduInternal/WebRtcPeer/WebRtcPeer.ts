@@ -196,8 +196,7 @@ export class WebRtcPeer {
                     // MediaStream.
 
                     if (!this.configuration.mediaStream) {
-                        reject(new Error(`${this.configuration.mode} direction requested, but no stream was configured to be sent`));
-                        return;
+                        return reject(new Error(`${this.configuration.mode} direction requested, but no stream was configured to be sent`));
                     }
 
                     for (const track of this.configuration.mediaStream.getTracks()) {
@@ -320,7 +319,7 @@ export class WebRtcPeer {
                         // Enforce our desired direction.
                         tc.direction = this.configuration.mode;
                     } else {
-                        reject(new Error(`${kind} requested, but no transceiver was created from remote description`));
+                        return reject(new Error(`${kind} requested, but no transceiver was created from remote description`));
                     }
                 }
 
@@ -344,11 +343,9 @@ export class WebRtcPeer {
                         offerToReceiveAudio: offerAudio,
                         offerToReceiveVideo: offerVideo
                     };
-                    this.pc!.createAnswer(constraints).then(sdpAnswer => {
-                        resolve(sdpAnswer);
-                    }).catch(error => {
-                        reject(error);
-                    });
+                    this.pc!.createAnswer(constraints)
+                        .then(sdpAnswer => resolve(sdpAnswer))
+                        .catch(error => reject(error));
                 }
 
             }
@@ -368,14 +365,12 @@ export class WebRtcPeer {
                     const localDescription = this.pc.localDescription;
                     if (!!localDescription) {
                         logger.debug('Local description set', localDescription.sdp);
-                        resolve();
+                        return resolve();
                     } else {
-                        reject('Local description is not defined');
+                        return reject('Local description is not defined');
                     }
                 })
-                .catch(error => {
-                    reject(error);
-                });
+                .catch(error => reject(error));
         });
     }
 
@@ -391,15 +386,11 @@ export class WebRtcPeer {
             logger.debug('SDP offer received, setting remote description', offer);
 
             if (this.pc.signalingState === 'closed') {
-                reject('RTCPeerConnection is closed when trying to set remote description');
+                return reject('RTCPeerConnection is closed when trying to set remote description');
             }
             this.setRemoteDescription(offer)
-                .then(() => {
-                    resolve();
-                })
-                .catch(error => {
-                    reject(error);
-                });
+                .then(() => resolve())
+                .catch(error => reject(error));
         });
     }
 
@@ -410,7 +401,7 @@ export class WebRtcPeer {
         return new Promise((resolve, reject) => {
             logger.debug('SDP answer created, setting local description');
             if (this.pc.signalingState === 'closed') {
-                reject('RTCPeerConnection is closed when trying to set local description');
+                return reject('RTCPeerConnection is closed when trying to set local description');
             }
             this.pc.setLocalDescription(answer)
                 .then(() => resolve())
@@ -430,7 +421,7 @@ export class WebRtcPeer {
             logger.debug('SDP answer received, setting remote description');
 
             if (this.pc.signalingState === 'closed') {
-                reject('RTCPeerConnection is closed when trying to set remote description');
+                return reject('RTCPeerConnection is closed when trying to set remote description');
             }
             this.setRemoteDescription(answer)
                 .then(() => resolve())

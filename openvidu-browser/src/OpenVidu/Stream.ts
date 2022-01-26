@@ -306,7 +306,7 @@ export class Stream {
         return new Promise((resolve, reject) => {
 
             if (!this.session.sessionConnected()) {
-                reject(this.session.notConnectedError());
+                return reject(this.session.notConnectedError());
             }
 
             logger.info('Applying filter to stream ' + this.streamId);
@@ -322,9 +322,9 @@ export class Stream {
                     if (error) {
                         logger.error('Error applying filter for Stream ' + this.streamId, error);
                         if (error.code === 401) {
-                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to apply a filter"));
+                            return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to apply a filter"));
                         } else {
-                            reject(error);
+                            return reject(error);
                         }
                     } else {
                         logger.info('Filter successfully applied on Stream ' + this.streamId);
@@ -333,7 +333,7 @@ export class Stream {
                         this.filter.stream = this;
                         this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter, oldValue, 'applyFilter')]);
                         this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter, oldValue, 'applyFilter')]);
-                        resolve(this.filter);
+                        return resolve(this.filter);
                     }
                 }
             );
@@ -349,7 +349,7 @@ export class Stream {
         return new Promise((resolve, reject) => {
 
             if (!this.session.sessionConnected()) {
-                reject(this.session.notConnectedError());
+                return reject(this.session.notConnectedError());
             }
 
             logger.info('Removing filter of stream ' + this.streamId);
@@ -360,9 +360,9 @@ export class Stream {
                     if (error) {
                         logger.error('Error removing filter for Stream ' + this.streamId, error);
                         if (error.code === 401) {
-                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to remove a filter"));
+                            return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to remove a filter"));
                         } else {
-                            reject(error);
+                            return reject(error);
                         }
                     } else {
                         logger.info('Filter successfully removed from Stream ' + this.streamId);
@@ -370,7 +370,7 @@ export class Stream {
                         delete this.filter;
                         this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
                         this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
-                        resolve();
+                        return resolve();
                     }
                 }
             );
@@ -438,12 +438,8 @@ export class Stream {
     subscribe(): Promise<void> {
         return new Promise((resolve, reject) => {
             this.initWebRtcPeerReceive(false)
-                .then(() => {
-                    resolve();
-                })
-                .catch(error => {
-                    reject(error);
-                });
+                .then(() => resolve())
+                .catch(error => reject(error));
         });
     }
 
@@ -454,21 +450,13 @@ export class Stream {
         return new Promise((resolve, reject) => {
             if (this.isLocalStreamReadyToPublish) {
                 this.initWebRtcPeerSend(false)
-                    .then(() => {
-                        resolve();
-                    })
-                    .catch(error => {
-                        reject(error);
-                    });
+                    .then(() => resolve())
+                    .catch(error => reject(error));
             } else {
                 this.ee.once('stream-ready-to-publish', () => {
                     this.publish()
-                        .then(() => {
-                            resolve();
-                        })
-                        .catch(error => {
-                            reject(error);
-                        });
+                        .then(() => resolve())
+                        .catch(error => reject(error));
                 });
             }
         });
@@ -826,12 +814,8 @@ export class Stream {
         } else {
             // Ongoing reconnection
             console.warn(`Trying to reconnect stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'}) but an ongoing reconnection process is active. Waiting for response...`);
-            this.reconnectionEventEmitter.once('success', () => {
-                resolve();
-            });
-            this.reconnectionEventEmitter.once('error', error => {
-                reject(error);
-            });
+            this.reconnectionEventEmitter.once('success', () => resolve());
+            this.reconnectionEventEmitter.once('error', error => reject(error));
             return true;
         }
     }
@@ -857,7 +841,7 @@ export class Stream {
                     this.reconnectionEventEmitter?.emitEvent('success');
                     delete this.reconnectionEventEmitter;
                 }
-                resolve();
+                return resolve();
             }
 
             const finalReject = error => {
@@ -865,7 +849,7 @@ export class Stream {
                     this.reconnectionEventEmitter?.emitEvent('error', [error]);
                     delete this.reconnectionEventEmitter;
                 }
-                reject(error);
+                return reject(error);
             }
 
             const successOfferCallback = (sdpOfferParam) => {
@@ -985,7 +969,7 @@ export class Stream {
             this.reconnectionEventEmitter?.emitEvent('success');
             delete this.reconnectionEventEmitter;
         }
-        resolve();
+        return resolve();
     }
 
     /**
@@ -997,7 +981,7 @@ export class Stream {
             this.reconnectionEventEmitter?.emitEvent('error', [error]);
             delete this.reconnectionEventEmitter;
         }
-        reject(error);
+        return reject(error);
     }
 
     /**
@@ -1038,10 +1022,13 @@ export class Stream {
      */
     initWebRtcPeerReceiveFromClient(reconnect: boolean): Promise<void> {
         return new Promise((resolve, reject) => {
-            this.completeWebRtcPeerReceive(reconnect, false).then(response => {
-                this.webRtcPeer.processRemoteAnswer(response.sdpAnswer)
-                    .then(() => resolve()).catch(error => reject(error));
-            }).catch(error => reject(error));
+            this.completeWebRtcPeerReceive(reconnect, false)
+                .then(response => {
+                    this.webRtcPeer.processRemoteAnswer(response.sdpAnswer)
+                        .then(() => resolve())
+                        .catch(error => reject(error));
+                })
+                .catch(error => reject(error));
         });
     }
 
@@ -1053,10 +1040,11 @@ export class Stream {
             // Server initiates negotiation
             this.session.openvidu.sendRequest('prepareReceiveVideoFrom', { sender: this.streamId, reconnect }, (error, response) => {
                 if (error) {
-                    reject(new Error('Error on prepareReceiveVideoFrom: ' + JSON.stringify(error)));
+                    return reject(new Error('Error on prepareReceiveVideoFrom: ' + JSON.stringify(error)));
                 } else {
                     this.completeWebRtcPeerReceive(reconnect, false, response.sdpOffer)
-                        .then(() => resolve()).catch(error => reject(error));
+                        .then(() => resolve())
+                        .catch(error => reject(error));
                 }
             });
         });
@@ -1088,9 +1076,9 @@ export class Stream {
 
                 this.session.openvidu.sendRequest(method, params, (error, response) => {
                     if (error) {
-                        reject(new Error('Error on ' + method + ' : ' + JSON.stringify(error)));
+                        return reject(new Error('Error on ' + method + ' : ' + JSON.stringify(error)));
                     } else {
-                        resolve(response);
+                        return resolve(response);
                     }
                 });
             };
@@ -1121,13 +1109,13 @@ export class Stream {
                         this.webRtcPeer.processLocalAnswer(sdpAnswer).then(() => {
                             sendSdpToServer(sdpAnswer.sdp!);
                         }).catch(error => {
-                            reject(new Error('(subscribe) SDP process local answer error: ' + JSON.stringify(error)));
+                            return reject(new Error('(subscribe) SDP process local answer error: ' + JSON.stringify(error)));
                         });
                     }).catch(error => {
-                        reject(new Error('(subscribe) SDP create answer error: ' + JSON.stringify(error)));
+                        return reject(new Error('(subscribe) SDP create answer error: ' + JSON.stringify(error)));
                     });
                 }).catch(error => {
-                    reject(new Error('(subscribe) SDP process remote offer error: ' + JSON.stringify(error)));
+                    return reject(new Error('(subscribe) SDP process remote offer error: ' + JSON.stringify(error)));
                 });
 
             } else {
@@ -1136,10 +1124,10 @@ export class Stream {
                     this.webRtcPeer.processLocalOffer(sdpOffer).then(() => {
                         sendSdpToServer(sdpOffer.sdp!);
                     }).catch(error => {
-                        reject(new Error('(subscribe) SDP process local offer error: ' + JSON.stringify(error)));
+                        return reject(new Error('(subscribe) SDP process local offer error: ' + JSON.stringify(error)));
                     });
                 }).catch(error => {
-                    reject(new Error('(subscribe) SDP create offer error: ' + JSON.stringify(error)));
+                    return reject(new Error('(subscribe) SDP create offer error: ' + JSON.stringify(error)));
                 });
 
             }
@@ -1306,20 +1294,20 @@ export class Stream {
             if (wsReadyState === 1) {
                 const responseTimeout = setTimeout(() => {
                     console.warn(`[${event}] Websocket timeout of ${msResponseTimeout}ms`);
-                    resolve(false);
+                    return resolve(false);
                 }, msResponseTimeout);
                 this.session.openvidu.sendRequest('echo', {}, (error, response) => {
                     clearTimeout(responseTimeout);
                     if (!!error) {
                         console.warn(`[${event}] Websocket 'echo' returned error: ${error}`);
-                        resolve(false);
+                        return resolve(false);
                     } else {
-                        resolve(true);
+                        return resolve(true);
                     }
                 });
             } else {
                 console.warn(`[${event}] Websocket readyState is ${wsReadyState}`);
-                resolve(false);
+                return resolve(false);
             }
         });
     }

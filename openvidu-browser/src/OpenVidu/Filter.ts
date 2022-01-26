@@ -99,7 +99,7 @@ export class Filter {
                 } catch (error) {
                     const errorMsg = "'params' property must be a JSON formatted object";
                     logger.error(errorMsg);
-                    reject(errorMsg);
+                    return reject(errorMsg);
                 }
             } else {
                 stringParams = <string>params;
@@ -111,9 +111,9 @@ export class Filter {
                     if (error) {
                         logger.error('Error executing filter method for Stream ' + this.stream.streamId, error);
                         if (error.code === 401) {
-                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to execute a filter method"));
+                            return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to execute a filter method"));
                         } else {
-                            reject(error);
+                            return reject(error);
                         }
                     } else {
                         logger.info('Filter method successfully executed on Stream ' + this.stream.streamId);
@@ -121,7 +121,7 @@ export class Filter {
                         this.stream.filter!.lastExecMethod = { method, params: JSON.parse(stringParams) };
                         this.stream.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.session, this.stream, 'filter', this.stream.filter!, oldValue, 'execFilterMethod')]);
                         this.stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.streamManager, this.stream, 'filter', this.stream.filter!, oldValue, 'execFilterMethod')]);
-                        resolve();
+                        return resolve();
                     }
                 }
             );
@@ -147,14 +147,14 @@ export class Filter {
                     if (error) {
                         logger.error('Error adding filter event listener to event ' + eventType + 'for Stream ' + this.stream.streamId, error);
                         if (error.code === 401) {
-                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to add a filter event listener"));
+                            return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to add a filter event listener"));
                         } else {
-                            reject(error);
+                            return reject(error);
                         }
                     } else {
                         this.handlers.set(eventType, handler);
                         logger.info('Filter event listener to event ' + eventType + ' successfully applied on Stream ' + this.stream.streamId);
-                        resolve();
+                        return resolve();
                     }
                 }
             );
@@ -179,14 +179,14 @@ export class Filter {
                     if (error) {
                         logger.error('Error removing filter event listener to event ' + eventType + 'for Stream ' + this.stream.streamId, error);
                         if (error.code === 401) {
-                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to add a filter event listener"));
+                            return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to add a filter event listener"));
                         } else {
-                            reject(error);
+                            return reject(error);
                         }
                     } else {
                         this.handlers.delete(eventType);
                         logger.info('Filter event listener to event ' + eventType + ' successfully removed on Stream ' + this.stream.streamId);
-                        resolve();
+                        return resolve();
                     }
                 }
             );

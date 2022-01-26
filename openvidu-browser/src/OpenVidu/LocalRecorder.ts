@@ -90,7 +90,7 @@ export class LocalRecorder {
                 if (typeof MediaRecorder.isTypeSupported === 'function') {
                     if (!!mimeType) {
                         if (!MediaRecorder.isTypeSupported(mimeType)) {
-                            reject(new Error('mimeType "' + mimeType + '" is not supported'));
+                            return reject(new Error('mimeType "' + mimeType + '" is not supported'));
                         }
                         options = { mimeType };
                     } else {
@@ -104,7 +104,7 @@ export class LocalRecorder {
                 this.mediaRecorder.start(10);
 
             } catch (err) {
-                reject(err);
+                return reject(err);
             }
 
             this.mediaRecorder.ondataavailable = (e) => {
@@ -136,7 +136,7 @@ export class LocalRecorder {
             };
 
             this.state = LocalRecorderState.RECORDING;
-            resolve();
+            return resolve();
 
         });
     }
@@ -154,11 +154,11 @@ export class LocalRecorder {
                 }
                 this.mediaRecorder.onstop = () => {
                     this.onStopDefault();
-                    resolve();
+                    return resolve();
                 };
                 this.mediaRecorder.stop();
             } catch (e) {
-                reject(e);
+                return reject(e);
             }
         });
     }
@@ -172,13 +172,13 @@ export class LocalRecorder {
         return new Promise((resolve, reject) => {
             try {
                 if (this.state !== LocalRecorderState.RECORDING) {
-                    reject(Error('\'LocalRecord.pause()\' needs \'LocalRecord.state\' to be \'RECORDING\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.start()\' or \'LocalRecorder.resume()\' before'));
+                    return reject(Error('\'LocalRecord.pause()\' needs \'LocalRecord.state\' to be \'RECORDING\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.start()\' or \'LocalRecorder.resume()\' before'));
                 }
                 this.mediaRecorder.pause();
                 this.state = LocalRecorderState.PAUSED;
-                resolve();
+                return resolve();
             } catch (error) {
-                reject(error);
+                return reject(error);
             }
         });
     }
@@ -195,9 +195,9 @@ export class LocalRecorder {
                 }
                 this.mediaRecorder.resume();
                 this.state = LocalRecorderState.RECORDING;
-                resolve();
+                return resolve();
             } catch (error) {
-                reject(error);
+                return reject(error);
             }
         });
     }
@@ -300,7 +300,7 @@ export class LocalRecorder {
     uploadAsBinary(endpoint: string, headers?: any): Promise<any> {
         return new Promise((resolve, reject) => {
             if (this.state !== LocalRecorderState.FINISHED) {
-                reject(Error('\'LocalRecord.uploadAsBinary()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
+                return reject(Error('\'LocalRecord.uploadAsBinary()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
             } else {
                 const http = new XMLHttpRequest();
                 http.open('POST', endpoint, true);
@@ -315,9 +315,9 @@ export class LocalRecorder {
                     if (http.readyState === 4) {
                         if (http.status.toString().charAt(0) === '2') {
                             // Success response from server (HTTP status standard: 2XX is success)
-                            resolve(http.responseText);
+                            return resolve(http.responseText);
                         } else {
-                            reject(http.status);
+                            return reject(http.status);
                         }
                     }
                 };
@@ -340,7 +340,7 @@ export class LocalRecorder {
     uploadAsMultipartfile(endpoint: string, headers?: any): Promise<any> {
         return new Promise((resolve, reject) => {
             if (this.state !== LocalRecorderState.FINISHED) {
-                reject(Error('\'LocalRecord.uploadAsMultipartfile()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
+                return reject(Error('\'LocalRecord.uploadAsMultipartfile()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
             } else {
                 const http = new XMLHttpRequest();
                 http.open('POST', endpoint, true);
@@ -358,9 +358,9 @@ export class LocalRecorder {
                     if (http.readyState === 4) {
                         if (http.status.toString().charAt(0) === '2') {
                             // Success response from server (HTTP status standard: 2XX is success)
-                            resolve(http.responseText);
+                            return resolve(http.responseText);
                         } else {
-                            reject(http.status);
+                            return reject(http.status);
                         }
                     }
                 };
