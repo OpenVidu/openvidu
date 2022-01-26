@@ -9,8 +9,8 @@
         "semver": "7.3.5",
         "uuid": "8.3.2",
         "wolfy87-eventemitter": "5.2.9",
-        "events": "3.1.0",
-        "inherits": "2.0.3"
+        "events": "3.3.0",
+        "inherits": "2.0.4"
     },
     "description": "OpenVidu Browser",
     "devDependencies": {
