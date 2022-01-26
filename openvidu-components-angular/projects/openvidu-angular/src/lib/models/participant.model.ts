@@ -15,6 +15,20 @@ export abstract class ParticipantAbstractModel {
 	connections: Map<VideoType, StreamModel> = new Map();
 	id: string;
 
+	constructor(model?: StreamModel, id?: string) {
+		let streamModel: StreamModel = {
+			local: model ? model.local : true,
+			connected: true,
+			nickname: model ? model.nickname : 'OpenVidu_User',
+			type: model ? model.type : VideoType.CAMERA,
+			streamManager: model ? model.streamManager : null,
+			videoEnlarged: model ? model.videoEnlarged : false,
+			connectionId: model ? model.connectionId : null
+		};
+		this.connections.set(streamModel.type, streamModel);
+		this.id = id ? id : new Date().getTime().toString();
+	}
+
 	addConnection(streamModel: StreamModel) {
 		this.connections.set(streamModel.type, streamModel);
 	}
@@ -161,20 +175,6 @@ export abstract class ParticipantAbstractModel {
 
 export class ParticipantModel extends ParticipantAbstractModel {
 
-	constructor(model?: StreamModel, id?: string) {
-		super();
-		let streamModel: StreamModel = {
-			local: model ? model.local : true,
-			connected: true,
-			nickname: model ? model.nickname : 'OpenVidu_User',
-			type: model ? model.type : VideoType.CAMERA,
-			streamManager: model ? model.streamManager : null,
-			videoEnlarged: model ? model.videoEnlarged : false,
-			connectionId: model ? model.connectionId : null
-		};
-		this.connections.set(streamModel.type, streamModel);
-		this.id = id ? id : new Date().getTime().toString();
-	}
 
 }
 
