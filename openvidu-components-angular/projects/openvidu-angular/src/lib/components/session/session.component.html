@@ -1,4 +1,34 @@
 <div id="session-container">
+	<mat-sidenav-container class="sidenav-container">
+		<!-- OPENVIDU PANELS -->
+		<mat-sidenav
+			#sidenav
+			mode="{{ sidenavMode }}"
+			position="end"
+			class="sidenav-menu"
+			fixedInViewport="true"
+			fixedTopGap="0"
+			fixedBottomGap="0"
+		>
+			<!-- Custom menu content -->
+			<ng-container *ngIf="customPanelContentTemplate; else defaultPanelContent">
+				<ng-container *ngTemplateOutlet="customPanelContentTemplate"></ng-container>
+			</ng-container>
+
+			<!-- Default menu content if custom menu content is not injected -->
+			<ng-template #defaultPanelContent>
+				<ov-chat-panel *ngIf="isChatPanelOpened"></ov-chat-panel>
+				<ov-participants-panel *ngIf="isParticipantsPanelOpened"></ov-participants-panel>
+			</ng-template>
+		</mat-sidenav>
+
+		<!-- OPENVIDU LAYOUT -->
+		<mat-sidenav-content class="sidenav-main">
+			<div id="layout-container">
+				<ng-content select="[layout]"></ng-content>
+			</div>
+		</mat-sidenav-content>
+	</mat-sidenav-container>
 
 	<!-- Custom toolbar -->
 	<!-- <ng-container *ngIf="toolbarTemplate">
@@ -7,15 +37,9 @@
 		</div>
 	</ng-container> -->
 
-
-	<div id="layout-container">
-		<ng-content select="[layout]"></ng-content>
-	</div>
-
 	<ng-container *ngIf="toolbarTemplate">
 		<div id="footer-container">
 			<ng-container *ngTemplateOutlet="toolbarTemplate"></ng-container>
 		</div>
 	</ng-container>
-
 </div>

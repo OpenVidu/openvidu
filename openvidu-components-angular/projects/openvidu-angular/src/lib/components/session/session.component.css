@@ -4,6 +4,36 @@
 	height: 100%;
 }
 
+.sidenav-container {
+	position: relative;
+	height: calc(100% - 80px);
+	min-height: calc(100% - 80px);
+	padding-top: 10px;
+	width: 100%;
+	overflow: hidden;
+}
+
+.sidenav-menu {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 360px;
+	background-color: var(--ov-primary-color);
+	border-left: none;
+	position: absolute;
+}
+
+.sidenav-main {
+	height: 100%;
+	overflow: hidden;
+	min-height: -webkit-fill-available;
+	min-height: -moz-available;
+}
+
+.mat-drawer-container {
+	background-color: var(--ov-primary-color);
+}
+
 #toolbar-container, #footer-container {
 	background-color: var(--ov-primary-color);
 	min-width: 400px !important;
@@ -23,11 +53,6 @@
 	min-width: 400px !important;
 }
 
-
-#layout-container {
-	height: calc(100% - 80px);
-	padding-top: 10px;
-}
 
 
 .reconnecting-container{

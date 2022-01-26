@@ -1,4 +1,4 @@
-import { Component, ContentChild, EventEmitter, HostListener, Input, OnInit, Output, TemplateRef } from '@angular/core';
+import { Component, ContentChild, EventEmitter, HostListener, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
 import { Subscriber, Session, StreamEvent, StreamPropertyChangedEvent, SessionDisconnectedEvent, ConnectionEvent } from 'openvidu-browser';
 
 import { VideoType } from '../../models/video-type.model';
@@ -12,6 +12,12 @@ import { PlatformService } from '../../services/platform/platform.service';
 import { ActionService } from '../../services/action/action.service';
 import { Signal } from '../../models/signal.model';
 import { ParticipantService } from '../../services/participant/participant.service';
+import { MatSidenav } from '@angular/material/sidenav';
+import { SidenavMode } from '../../models/layout.model';
+import { LayoutService } from '../../services/layout/layout.service';
+import { Subscription, skip } from 'rxjs';
+import { MenuType } from '../../models/menu.model';
+import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.service';
 
 @Component({
 	selector: 'ov-session',
@@ -20,6 +26,9 @@ import { ParticipantService } from '../../services/participant/participant.servi
 })
 export class SessionComponent implements OnInit {
 	@ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any>;
+	@ContentChild('customPanelContent', { read: TemplateRef }) customPanelContentTemplate: TemplateRef<any>;
+	@ContentChild('customLayoutElement', { read: TemplateRef }) customLayoutElementTemplate: TemplateRef<any>;
+
 	@Input() tokens: { webcam: string; screen: string };
 	@Output() _session = new EventEmitter<any>();
 	@Output() _publisher = new EventEmitter<any>();
@@ -27,6 +36,19 @@ export class SessionComponent implements OnInit {
 
 	session: Session;
 	sessionScreen: Session;
+
+	sideMenu: MatSidenav;
+
+	sidenavMode: SidenavMode = SidenavMode.SIDE;
+	isParticipantsPanelOpened: boolean;
+	isChatPanelOpened: boolean;
+	protected readonly SIDENAV_WIDTH_LIMIT_MODE = 790;
+
+	protected menuSubscription: Subscription;
+	protected layoutWidthSubscription: Subscription;
+
+	protected updateLayoutInterval: NodeJS.Timer;
+
 	protected log: ILogger;
 
 	constructor(
@@ -36,6 +58,9 @@ export class SessionComponent implements OnInit {
 		protected loggerSrv: LoggerService,
 		protected chatService: ChatService,
 		protected tokenService: TokenService,
+		protected layoutService: LayoutService,
+		protected menuService: SidenavMenuService,
+
 		protected platformService: PlatformService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
@@ -46,7 +71,24 @@ export class SessionComponent implements OnInit {
 		this.leaveSession();
 	}
 
+	@HostListener('window:resize')
+	sizeChange() {
+		this.layoutService.update();
+	}
+
+	@ViewChild('sidenav')
+	set sidenavMenu(menu: MatSidenav) {
+		setTimeout(() => {
+			if (menu) {
+				this.sideMenu = menu;
+				this.subscribeToTogglingMenu();
+			}
+		}, 0);
+	}
+
 	async ngOnInit() {
+		this.layoutService.initialize();
+
 		if (this.webrtcService.getWebcamSession() === null) {
 			this.webrtcService.initialize();
 			await this.webrtcService.initDefaultPublisher(undefined);
@@ -81,11 +123,47 @@ export class SessionComponent implements OnInit {
 		this.participantService.clear();
 		this.session = null;
 		this.sessionScreen = null;
+		this.layoutService.clear();
+		this.isChatPanelOpened = false;
+		this.isParticipantsPanelOpened = false;
+		if (this.menuSubscription) this.menuSubscription.unsubscribe();
+		if (this.layoutWidthSubscription) this.layoutWidthSubscription.unsubscribe();
 	}
 
 	leaveSession() {
 		this.log.d('Leaving session...');
 		this.webrtcService.disconnect();
+	}
+
+	protected subscribeToTogglingMenu() {
+		this.sideMenu.openedChange.subscribe(() => {
+			if (this.updateLayoutInterval) {
+				clearInterval(this.updateLayoutInterval);
+			}
+			this.layoutService.update();
+		});
+
+		this.sideMenu.openedStart.subscribe(() => {
+			this.updateLayoutInterval = setInterval(() => this.layoutService.update(), 50);
+		});
+
+		this.sideMenu.closedStart.subscribe(() => {
+			this.updateLayoutInterval = setInterval(() => this.layoutService.update(), 50);
+		});
+
+		this.menuSubscription = this.menuService.menuOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
+			if (this.sideMenu) {
+				this.isChatPanelOpened = ev.opened && ev.type === MenuType.CHAT;
+				this.isParticipantsPanelOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
+				ev.opened ? this.sideMenu.open() : this.sideMenu.close();
+			}
+		});
+	}
+
+	protected subscribeToLayoutWidth() {
+		this.layoutWidthSubscription = this.layoutService.layoutWidthObs.subscribe((width) => {
+			this.sidenavMode = width <= this.SIDENAV_WIDTH_LIMIT_MODE ? SidenavMode.OVER : SidenavMode.SIDE;
+		});
 	}
 
 	private async connectToSession(): Promise<void> {
@@ -116,7 +194,6 @@ export class SessionComponent implements OnInit {
 			const isRemoteConnection: boolean = !this.webrtcService.isMyOwnConnection(connectionId);
 			const isCameraConnection: boolean = !nickname?.includes(`_${VideoType.SCREEN}`);
 			const data = event.connection?.data;
-
 
 			if (isRemoteConnection && isCameraConnection) {
 				// Adding participant when connection is created and it's not screen
@@ -167,7 +244,6 @@ export class SessionComponent implements OnInit {
 		// this.session.on('streamPropertyChanged', (event: StreamPropertyChangedEvent) => {
 		// 	const connectionId = event.stream.connection.connectionId;
 		// 	const isRemoteConnection: boolean = !this.webrtcService.isMyOwnConnection(connectionId);
-
 		// 	if (isRemoteConnection) {
 		// 		if (event.changedProperty === 'videoActive') {
 		// 			// this.participantService.updateUsers();
