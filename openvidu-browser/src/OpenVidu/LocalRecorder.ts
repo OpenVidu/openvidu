@@ -19,7 +19,7 @@ import { Stream } from './Stream';
 import { LocalRecorderState } from '../OpenViduInternal/Enums/LocalRecorderState';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
-import * as mime from 'mime-types';
+import Mime = require('mime/lite');
 
 /**
  * @hidden
@@ -262,7 +262,7 @@ export class LocalRecorder {
 
             const url = window.URL.createObjectURL(<any>this.blob);
             a.href = url;
-            a.download = this.id + '.' + mime.extension(this.blob!.type);
+            a.download = this.id + '.' + Mime.getExtension(this.blob!.type);
             a.click();
             window.URL.revokeObjectURL(url);
 
@@ -347,7 +347,7 @@ export class LocalRecorder {
                 }
 
                 const sendable = new FormData();
-                sendable.append('file', this.blob!, this.id + '.' + mime.extension(this.blob!.type));
+                sendable.append('file', this.blob!, this.id + '.' + Mime.getExtension(this.blob!.type));
 
                 http.onreadystatechange = () => {
                     if (http.readyState === 4) {
