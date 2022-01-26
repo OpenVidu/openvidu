@@ -83,6 +83,9 @@ export class LocalRecorder {
     record(options?: any): Promise<void> {
         return new Promise((resolve, reject) => {
             try {
+                if (typeof options === 'string' || options instanceof String) {
+                    return reject(`When calling LocalRecorder.record(options) parameter 'options' cannot be a string. Must be an object like { mimeType: "${options}" }`);
+                }
                 if (typeof MediaRecorder === 'undefined') {
                     logger.error('MediaRecorder not supported on your device. See compatibility in https://caniuse.com/#search=MediaRecorder');
                     throw (Error('MediaRecorder not supported on your device. See compatibility in https://caniuse.com/#search=MediaRecorder'));
