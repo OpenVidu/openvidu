@@ -5,7 +5,7 @@ import { VideoType } from '../../models/video-type.model';
 @Component({
 	selector: 'ov-video',
 	template: `
-		<img *ngIf="!_streamManager?.stream?.videoActive && _streamManager?.stream?.typeOfVideo === 'CAMERA'" class="poster_img" alt="OpenVidu Logo" src="assets/images/poster.png" />
+		<img *ngIf="!_streamManager?.stream?.videoActive && (type === 'CAMERA' || !type)" class="poster_img" alt="OpenVidu Logo" src="assets/images/poster.png" />
 		<video
 			#videoElement
 			[attr.id]="streamManager && _streamManager.stream ? 'video-' + _streamManager.stream.streamId : 'video-undefined'"
@@ -22,6 +22,7 @@ export class VideoComponent implements AfterViewInit {
 	_streamManager: StreamManager;
 
 	_videoElement: ElementRef;
+	type: VideoType = VideoType.CAMERA;
 
 	ngAfterViewInit() {
 		setTimeout(() => {
@@ -41,7 +42,8 @@ export class VideoComponent implements AfterViewInit {
 		setTimeout(() => {
 			this._streamManager = streamManager;
 			if (!!this._videoElement && this._streamManager) {
-				if (this._streamManager.stream.typeOfVideo === VideoType.SCREEN) {
+				this.type = <VideoType>this._streamManager?.stream?.typeOfVideo;
+				if (this.type === VideoType.SCREEN) {
 					this._videoElement.nativeElement.style.objectFit = 'contain';
 					this._videoElement.nativeElement.style.background = '#272727';
 					this.enableVideoSizeBig();

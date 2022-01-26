@@ -58,7 +58,7 @@
 									<mat-form-field class="alternate-theme">
 										<mat-select
 											placeholder="Camera Options"
-											[ngModel]="isVideoActive && cameraSelected ? cameraSelected.device : 'None'"
+											[ngModel]="isVideoActive && !!cameraSelected ? cameraSelected.device : 'None'"
 											(selectionChange)="onCameraSelected($event)"
 										>
 											<mat-option *ngFor="let camera of cameras" [value]="camera.device">

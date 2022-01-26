@@ -106,11 +106,16 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 			// Publish Webcam video
 			this.openViduWebRTCService.publishVideo(this.participantService.getMyCameraPublisher(), true);
 			this.isVideoActive = true;
-			return;
+
+		} else {
+			// Videosource is 'null' because of the user has selected 'None' or muted the camera
+			// Unpublish webcam
+			this.openViduWebRTCService.publishVideo(this.participantService.getMyCameraPublisher(), false);
+			//TODO: save 'None' device in storage
+			// this.deviceSrv.setCameraSelected(videoSource);
+			// this.cameraSelected = this.deviceSrv.getCameraSelected();
+			this.isVideoActive = false;
 		}
-		// Unpublish webcam video
-		this.openViduWebRTCService.publishVideo(this.participantService.getMyCameraPublisher(), false);
-		this.isVideoActive = false;
 	}
 
 	async onMicrophoneSelected(event: any) {
@@ -229,6 +234,10 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 		this.cameras = this.deviceSrv.getCameras();
 		this.cameraSelected = this.deviceSrv.getCameraSelected();
 		this.microphoneSelected = this.deviceSrv.getMicrophoneSelected();
+
+		this.isVideoActive = this.hasVideoDevices && this.cameraSelected.label !== 'None';
+		this.isAudioActive = this.hasAudioDevices && this.microphoneSelected.label !== 'None';
+
 	}
 
 	private scrollToBottom(): void {
@@ -255,28 +264,31 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 	private async initwebcamPublisher() {
 		const publisher = await this.openViduWebRTCService.initDefaultPublisher(undefined);
 		if (publisher) {
-			this.handlePublisherSuccess(publisher);
+
+			// this.handlePublisherSuccess(publisher);
 			this.handlePublisherError(publisher);
 		}
 	}
 
-	private handlePublisherSuccess(publisher: Publisher) {
-		publisher.once('accessAllowed', async () => {
-			if (this.deviceSrv.areEmptyLabels()) {
-				await this.deviceSrv.forceUpdate();
-				if (this.hasAudioDevices) {
-					const audioLabel = publisher?.stream?.getMediaStream()?.getAudioTracks()[0]?.label;
-					this.deviceSrv.setMicSelected(audioLabel);
-				}
+	//? After test in Chrome and Firefox, the devices always have labels.
+	//? It's not longer needed
+	// private handlePublisherSuccess(publisher: Publisher) {
+	// 	publisher.once('accessAllowed', async () => {
+	// 		if (this.deviceSrv.areEmptyLabels()) {
+	// 			await this.deviceSrv.forceUpdate();
+	// 			if (this.hasAudioDevices) {
+	// 				const audioLabel = publisher?.stream?.getMediaStream()?.getAudioTracks()[0]?.label;
+	// 				this.deviceSrv.setMicSelected(audioLabel);
+	// 			}
 
-				if (this.hasVideoDevices) {
-					const videoLabel = publisher?.stream?.getMediaStream()?.getVideoTracks()[0]?.label;
-					this.deviceSrv.setCameraSelected(videoLabel);
-				}
-				this.setDevicesInfo();
-			}
-		});
-	}
+	// 			if (this.hasVideoDevices) {
+	// 				const videoLabel = publisher?.stream?.getMediaStream()?.getVideoTracks()[0]?.label;
+	// 				this.deviceSrv.setCameraSelected(videoLabel);
+	// 			}
+	// 			this.setDevicesInfo();
+	// 		}
+	// 	});
+	// }
 
 	private handlePublisherError(publisher: Publisher) {
 		publisher.once('accessDenied', (e: any) => {

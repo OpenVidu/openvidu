@@ -118,19 +118,43 @@ export class WebrtcService {
 	 */
 	async initDefaultPublisher(targetElement: string | HTMLElement): Promise<Publisher> {
 		await this.deviceService.initializeDevices();
-		const publishAudio = this.deviceService.hasAudioDeviceAvailable();
-		const publishVideo = this.deviceService.hasVideoDeviceAvailable();
-		const videoSource = publishVideo ? this.deviceService.getCameraSelected().device : false;
-		const audioSource = publishAudio ? this.deviceService.getMicrophoneSelected().device : false;
+
+		const hasVideoDevices = this.deviceService.hasVideoDeviceAvailable();
+		const hasAudioDevices = this.deviceService.hasAudioDeviceAvailable();
+		const isVideoActive = hasVideoDevices && this.deviceService.getCameraSelected().label !== 'None';
+		const isAudioActive = hasAudioDevices && this.deviceService.getMicrophoneSelected().label !== 'None';
+
+		let videoSource = null;
+		let audioSource = null;
+
+		if(isVideoActive){
+			// Video is active, assign the device selected
+			videoSource = this.deviceService.getCameraSelected().device
+		} else if(!isVideoActive && hasVideoDevices) {
+			// Video is muted, assign the default device
+			videoSource = undefined;
+		}
+
+		if(isAudioActive){
+			// Audio is active, assign the device selected
+			audioSource = this.deviceService.getMicrophoneSelected().device
+		} else if(!isAudioActive && hasAudioDevices) {
+			// Audio is muted, assign the default device
+			audioSource = undefined;
+		}
+
+
+		// const videoSource = publishVideo ? this.deviceService.getCameraSelected().device : false;
+		// const audioSource = publishAudio ? this.deviceService.getMicrophoneSelected().device : false;
 		const mirror = this.deviceService.getCameraSelected() && this.deviceService.getCameraSelected().type === CameraType.FRONT;
 		const properties: PublisherProperties = {
 			videoSource,
 			audioSource,
-			publishVideo,
-			publishAudio,
+			publishVideo: isVideoActive,
+			publishAudio: isAudioActive,
 			mirror
 		};
-		if (publishAudio || publishVideo) {
+		if (isVideoActive || isAudioActive) {
 			const publisher = this.initPublisher(targetElement, properties);
 			this.participantService.setMyCameraPublisher(publisher);
 			return publisher;

@@ -34,12 +34,15 @@ export class DeviceService {
 
 	async initializeDevices() {
 		// Requesting media permissions. Sometimes, browser doens't launch the media permissions modal.
-		await this.OV.getUserMedia({audioSource: undefined, videoSource: undefined });
+		const mediaStream = await this.OV.getUserMedia({audioSource: undefined, videoSource: undefined });
 
 		this.devices = await this.OV.getDevices();
 		const customDevices = this.initializeCustomDevices(this.devices);
 		this.cameras = customDevices.cameras;
 		this.microphones = customDevices.microphones;
+
+		mediaStream?.getAudioTracks().forEach((track) => track.stop());
+		mediaStream?.getVideoTracks().forEach((track) => track.stop());
 
 		this.log.d('Media devices',customDevices);
 	}
