@@ -35,7 +35,7 @@ import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 /**
  * @hidden
  */
-import hark = require('hark');
+import hark from 'hark';
 /**
  * @hidden
  */

@@ -1,4 +1,4 @@
-import platform = require("platform");
+import platform = require('platform');
 
 export class PlatformUtils {
 	protected static instance: PlatformUtils;

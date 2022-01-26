@@ -46,11 +46,11 @@ import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 /**
  * @hidden
  */
-import semverMajor = require('semver/functions/major');
+import semverMajor from 'semver/functions/major';
 /**
  * @hidden
  */
-import semverMinor = require('semver/functions/minor');
+import semverMinor from 'semver/functions/minor';
 
 /**
  * @hidden

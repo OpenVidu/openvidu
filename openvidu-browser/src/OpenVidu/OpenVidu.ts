@@ -40,7 +40,7 @@ import EventEmitter = require('wolfy87-eventemitter');
 /**
  * @hidden
  */
-import RpcBuilder = require('../OpenViduInternal/KurentoUtils/kurento-jsonrpc');
+import RpcBuilder from '../OpenViduInternal/KurentoUtils/kurento-jsonrpc';
 
 /**
  * @hidden
