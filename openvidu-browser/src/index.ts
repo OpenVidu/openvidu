@@ -12,6 +12,7 @@ export { Filter } from './OpenVidu/Filter';
 
 export { LocalRecorderState } from './OpenViduInternal/Enums/LocalRecorderState';
 export { OpenViduError, OpenViduErrorName } from './OpenViduInternal/Enums/OpenViduError';
+export { TypeOfVideo } from './OpenViduInternal/Enums/TypeOfVideo';
 export { VideoInsertMode } from './OpenViduInternal/Enums/VideoInsertMode';
 
 export { Event } from './OpenViduInternal/Events/Event';

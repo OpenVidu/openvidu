@@ -29,6 +29,7 @@ import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpea
 import { StreamManagerEvent } from '../OpenViduInternal/Events/StreamManagerEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
+import { TypeOfVideo } from '../OpenViduInternal/Enums/TypeOfVideo';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 
@@ -117,7 +118,7 @@ export class Stream {
      *
      * If [[hasVideo]] is false, this property is undefined
      */
-    typeOfVideo?: string;
+    typeOfVideo?: TypeOfVideo;
 
     /**
      * StreamManager object ([[Publisher]] or [[Subscriber]]) in charge of displaying this stream in the DOM
@@ -264,9 +265,9 @@ export class Stream {
                 this.videoActive = !!this.outboundStreamOpts.publisherProperties.publishVideo;
                 this.frameRate = this.outboundStreamOpts.publisherProperties.frameRate;
                 if (typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack) {
-                    this.typeOfVideo = 'CUSTOM';
+                    this.typeOfVideo = TypeOfVideo.CUSTOM;
                 } else {
-                    this.typeOfVideo = this.isSendScreen() ? 'SCREEN' : 'CAMERA';
+                    this.typeOfVideo = this.isSendScreen() ? TypeOfVideo.SCREEN : TypeOfVideo.CAMERA;
                 }
             }
             if (!!this.outboundStreamOpts.publisherProperties.filter) {
@@ -864,9 +865,9 @@ export class Stream {
                         sdpString: sdpOfferParam
                     }
                 } else {
-                    let typeOfVideo = '';
+                    let typeOfVideo;
                     if (this.isSendVideo()) {
-                        typeOfVideo = (typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack) ? 'CUSTOM' : (this.isSendScreen() ? 'SCREEN' : 'CAMERA');
+                        typeOfVideo = (typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack) ? TypeOfVideo.CUSTOM : (this.isSendScreen() ? TypeOfVideo.SCREEN : TypeOfVideo.CAMERA);
                     }
                     params = {
                         doLoopback: this.displayMyRemote() || false,
@@ -928,7 +929,8 @@ export class Stream {
                 onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
                 iceServers: this.getIceServersConf(),
                 mediaStream: this.mediaStream,
-                mediaServer: this.session.openvidu.mediaServer
+                mediaServer: this.session.openvidu.mediaServer,
+                typeOfVideo: this.typeOfVideo
             };
 
             if (this.session.openvidu.mediaServer !== 'mediasoup') {
@@ -1092,7 +1094,8 @@ export class Stream {
                 onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
                 onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
                 iceServers: this.getIceServersConf(),
-                mediaServer: this.session.openvidu.mediaServer
+                mediaServer: this.session.openvidu.mediaServer,
+                typeOfVideo: this.typeOfVideo
             };
 
             if (reconnect) {

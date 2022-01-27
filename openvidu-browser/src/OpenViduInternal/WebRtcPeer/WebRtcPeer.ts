@@ -17,6 +17,7 @@
 
 import freeice = require('freeice');
 import { v4 as uuidv4 } from 'uuid';
+import { TypeOfVideo } from '../Enums/TypeOfVideo';
 import { ExceptionEventName } from '../Events/ExceptionEvent';
 import { OpenViduLogger } from '../Logger/OpenViduLogger';
 import { PlatformUtils } from '../Utils/Platform';
@@ -104,6 +105,7 @@ export interface WebRtcPeerConfiguration {
     mediaStream?: MediaStream | null;
     mode?: 'sendonly' | 'recvonly' | 'sendrecv';
     id?: string;
+    typeOfVideo: TypeOfVideo | undefined
 }
 
 export class WebRtcPeer {
@@ -133,6 +135,7 @@ export class WebRtcPeer {
                     : null,
             mode: !!configuration.mode ? configuration.mode : "sendrecv",
             id: !!configuration.id ? configuration.id : this.generateUniqueId(),
+            typeOfVideo: configuration.typeOfVideo
         };
 
         this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });

@@ -16,6 +16,7 @@
  */
 
 import { Filter } from '../../../OpenVidu/Filter';
+import { TypeOfVideo } from '../../Enums/TypeOfVideo';
 
 export interface StreamOptionsServer {
     id: string;
@@ -24,7 +25,7 @@ export interface StreamOptionsServer {
     hasVideo: boolean;
     audioActive: boolean;
     videoActive: boolean;
-    typeOfVideo: string;
+    typeOfVideo: TypeOfVideo;
     frameRate: number;
     videoDimensions: string;
     filter: Filter;
