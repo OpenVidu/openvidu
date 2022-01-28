@@ -31,71 +31,10 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
  */
 let platform: PlatformUtils;
 
-/*
- * Table of sender video encodings for simulcast.
- * Note that this is just a polite request, but the browser is free to honor it
- * or just play by its own rules.
- *
- * Chrome imposes some restrictions based on the size of the video, max bitrate,
- * and available bandwidth. Check here for the video size table:
- * https://chromium.googlesource.com/external/webrtc/+/master/media/engine/simulcast.cc#90
- *
- * | Size (px) | Bitrate (kbps) | Max Layers |
- * |----------:|---------------:|-----------:|
- * | 1920x1080 |           5000 |          3 |
- * |  1280x720 |           2500 |          3 |
- * |   960x540 |           1200 |          3 |
- * |   640x360 |            700 |          2 |
- * |   480x270 |            450 |          2 |
- * |   320x180 |            200 |          1 |
- *
- * Firefox will send as many layers as we request, but there are some limits on
- * their bitrate:
- *
- * | Size (px) | Min bitrate (bps) | Start bitrate (bps) | Max bitrate (bps) |       Comments |
- * |----------:|------------------:|--------------------:|------------------:|---------------:|
- * | 1920x1200 |              1500 |                2000 |             10000 |   >HD (3K, 4K) |
- * |  1280x720 |              1200 |                1500 |              5000 |  HD ~1080-1200 |
- * |   800x480 |               200 |                 800 |              2500 |        HD ~720 |
- * |   480x270 |               150 |                 500 |              2000 |           WVGA |
- * |   400x240 |               125 |                 300 |              1300 |            VGA |
- * |   176x144 |               100 |                 150 |               500 |     WQVGA, CIF |
- * |         0 |                40 |                  80 |               250 | QCIF and below |
- *
- * Docs for `RTCRtpEncodingParameters`: https://www.w3.org/TR/webrtc/#dom-rtcrtpencodingparameters
- * Most interesting members are `maxBitrate` and `scaleResolutionDownBy`.
- *
- * `scaleResolutionDownBy` is specified as 4:2:1 which is the same that the default.
- * The WebRTC spec says this (https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection-addtransceiver):
- *     > If the scaleResolutionDownBy attributes of sendEncodings are still undefined, initialize
- *     > each encoding's scaleResolutionDownBy to 2^(length of sendEncodings - encoding index
- *     > - 1). This results in smaller-to-larger resolutions where the last encoding has no scaling
- *     > applied to it, e.g. 4:2:1 if the length is 3.
- * However, Firefox doesn't seem to implement this default yet. Mediasoup never gets to select
- * an output layer.
- *
- * `maxBitrate` is left unspecified, to let the client decide based on its own
- * bandwidth limit detection.
- */
-const simulcastVideoEncodings: RTCRtpEncodingParameters[] = [
-    {
-        rid: "r0",
-        scaleResolutionDownBy: 4,
-    },
-    {
-        rid: "r1",
-        scaleResolutionDownBy: 2,
-    },
-    {
-        rid: "r2",
-        scaleResolutionDownBy: 1,
-    },
-];
-
 export interface WebRtcPeerConfiguration {
     mediaConstraints: {
-        audio: boolean,
-        video: boolean
+        audio: boolean;
+        video: boolean;
     };
     simulcast: boolean;
     mediaServer: string;
@@ -105,7 +44,7 @@ export interface WebRtcPeerConfiguration {
     mediaStream?: MediaStream | null;
     mode?: 'sendonly' | 'recvonly' | 'sendrecv';
     id?: string;
-    typeOfVideo: TypeOfVideo | undefined
+    typeOfVideo: TypeOfVideo | undefined;
 }
 
 export class WebRtcPeer {
@@ -135,8 +74,9 @@ export class WebRtcPeer {
                     : null,
             mode: !!configuration.mode ? configuration.mode : "sendrecv",
             id: !!configuration.id ? configuration.id : this.generateUniqueId(),
-            typeOfVideo: configuration.typeOfVideo
         };
+        // prettier-ignore
+        logger.debug(`[WebRtcPeer] configuration:\n${JSON.stringify(this.configuration, null, 2)}`);
 
         this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });
 
@@ -207,32 +147,153 @@ export class WebRtcPeer {
                             direction: this.configuration.mode,
                             streams: [this.configuration.mediaStream],
                         };
-                        if (this.configuration.simulcast && track.kind === "video") {
-                            tcInit.sendEncodings = simulcastVideoEncodings;
+
+                        if (track.kind === "audio") {
+                            if ("contentHint" in track) {
+                                // For audio: "", "speech", "speech-recognition", "music".
+                                // https://w3c.github.io/mst-content-hint/#audio-content-hints
+                                track.contentHint = "";
+                                logger.info(`[createOffer] Audio track Content Hint set: '${track.contentHint}'`);
+                            }
+                        } else if (track.kind === "video") {
+                            if ("contentHint" in track) {
+                                // For video: "", "motion", "detail", "text".
+                                // https://w3c.github.io/mst-content-hint/#video-content-hints
+                                if (this.configuration.typeOfVideo === TypeOfVideo.SCREEN) {
+                                    track.contentHint = "detail";
+                                } else {
+                                    track.contentHint = "motion";
+                                }
+                                logger.info(`[createOffer] Video track Content Hint set: '${track.contentHint}'`);
+                            }
+
+                            logger.info(`[createOffer] this.configuration.simulcast: ${this.configuration.simulcast}`);
+                            if (this.configuration.simulcast) {
+                                // Check if the requested size is enough to ask for 3 layers.
+                                const trackSettings = track.getSettings();
+                                const trackConsts = track.getConstraints();
+
+                                const trackWidth: number =
+                                    trackSettings.width ??
+                                    (trackConsts.width as ConstrainULongRange).ideal ??
+                                    (trackConsts.width as number) ??
+                                    0;
+                                const trackHeight: number =
+                                    trackSettings.height ??
+                                    (trackConsts.height as ConstrainULongRange).ideal ??
+                                    (trackConsts.height as number) ??
+                                    0;
+                                logger.info(`[createOffer] Video track dimensions: ${trackWidth}x${trackHeight}`);
+
+                                const trackPixels = trackWidth * trackHeight;
+                                let maxLayers = 0;
+                                if (trackPixels >= 960 * 540) {
+                                    maxLayers = 3;
+                                } else if (trackPixels >= 480 * 270) {
+                                    maxLayers = 2;
+                                } else {
+                                    maxLayers = 1;
+                                }
+
+                                tcInit.sendEncodings = [];
+                                for (let l = 0; l < maxLayers; l++) {
+                                    const layerDiv = 2 ** (maxLayers - l - 1);
+
+                                    const encoding: RTCRtpEncodingParameters = {
+                                        rid: "rDiv" + layerDiv.toString(),
+
+                                        // @ts-ignore: Property missing from DOM types.
+                                        scalabilityMode: "L1T1",
+                                    };
+
+                                    if (this.configuration.typeOfVideo === TypeOfVideo.SCREEN) {
+                                        // Prioritize best resolution, for maximum picture detail.
+                                        encoding.scaleResolutionDownBy = 1.0;
+
+                                        // @ts-ignore: Property missing from DOM types.
+                                        encoding.maxFramerate = Math.floor(30 / layerDiv);
+                                        // encoding.maxFramerate = (l === 2) ? 30 : Math.floor(30 / (2 * layerDiv)); // TESTING
+                                    } else {
+                                        encoding.scaleResolutionDownBy = layerDiv;
+                                    }
+
+                                    tcInit.sendEncodings.push(encoding);
+                                }
+                            }
                         }
+
                         const tc = this.pc.addTransceiver(track, tcInit);
 
-                        // FIXME: Check that the simulcast encodings were applied.
-                        // Firefox doesn't implement `RTCRtpTransceiverInit.sendEncodings`
-                        // so the only way to enable simulcast is with `RTCRtpSender.setParameters()`.
-                        //
-                        // This next block can be deleted when Firefox fixes bug #1396918:
-                        // https://bugzilla.mozilla.org/show_bug.cgi?id=1396918
-                        //
-                        // NOTE: This is done in a way that is compatible with all browsers, to save on
-                        // browser-conditional code. The idea comes from WebRTC Adapter.js:
-                        // * https://github.com/webrtcHacks/adapter/issues/998
-                        // * https://github.com/webrtcHacks/adapter/blob/845a3b4874f1892a76f04c3cc520e80b5041c303/src/js/firefox/firefox_shim.js#L217
-                        if (this.configuration.simulcast && track.kind === "video") {
-                            const sendParams = tc.sender.getParameters();
-                            if (
-                                !("encodings" in sendParams) ||
-                                sendParams.encodings.length !== tcInit.sendEncodings!.length
-                            ) {
-                                sendParams.encodings = tcInit.sendEncodings!;
+                        if (track.kind === "video") {
+                            let sendParams = tc.sender.getParameters();
+                            let needSetParams = false;
+
+                            if (!("degradationPreference" in sendParams)) {
+                                logger.debug(
+                                    `[createOffer] RTCRtpSendParameters.degradationPreference attribute not present`
+                                );
+                                // Asked about why this might happen. Check it:
+                                // https://groups.google.com/g/discuss-webrtc/c/R8Xug-irfRY
+
+                                // For video: "balanced", "maintain-framerate", "maintain-resolution".
+                                if (this.configuration.typeOfVideo === TypeOfVideo.SCREEN) {
+                                    sendParams.degradationPreference = "maintain-resolution";
+                                } else {
+                                    sendParams.degradationPreference = "balanced";
+                                }
+
+                                logger.debug(
+                                    `[createOffer] Video sender Degradation Preference set: ${sendParams.degradationPreference}`
+                                );
+
+                                // FIXME: Firefox implements degradationPreference on each individual encoding!
+                                // (set it on every element of the sendParams.encodings array)
+
+                                needSetParams = true;
+                            }
+
+                            // FIXME: Check that the simulcast encodings were applied.
+                            // Firefox doesn't implement `RTCRtpTransceiverInit.sendEncodings`
+                            // so the only way to enable simulcast is with `RTCRtpSender.setParameters()`.
+                            //
+                            // This next block can be deleted when Firefox fixes bug #1396918:
+                            // https://bugzilla.mozilla.org/show_bug.cgi?id=1396918
+                            //
+                            // NOTE: This is done in a way that is compatible with all browsers, to save on
+                            // browser-conditional code. The idea comes from WebRTC Adapter.js:
+                            // * https://github.com/webrtcHacks/adapter/issues/998
+                            // * https://github.com/webrtcHacks/adapter/blob/v7.7.0/src/js/firefox/firefox_shim.js#L231-L255
+                            if (this.configuration.simulcast) {
+                                if (
+                                    !("encodings" in sendParams) ||
+                                    sendParams.encodings.length !== tcInit.sendEncodings!.length
+                                ) {
+                                    sendParams.encodings = tcInit.sendEncodings!;
+
+                                    needSetParams = true;
+                                }
+                            }
+
+                            if (needSetParams) {
+                                logger.debug(`[createOffer] Setting new RTCRtpSendParameters`);
                                 await tc.sender.setParameters(sendParams);
                             }
                         }
+
+                        // DEBUG: Uncomment for details.
+                        // if (track.kind === "video" && this.configuration.simulcast) {
+                        //     // Print browser capabilities.
+                        //     // prettier-ignore
+                        //     logger.error(`[createOffer] Transceiver send capabilities (static):\n${JSON.stringify(RTCRtpSender.getCapabilities?.("video"), null, 2)}`);
+                        //     // prettier-ignore
+                        //     logger.error(`[createOffer] Transceiver recv capabilities (static):\n${JSON.stringify(RTCRtpReceiver.getCapabilities?.("video"), null, 2)}`);
+
+                        //     // Print requested Transceiver encodings and parameters.
+                        //     // prettier-ignore
+                        //     logger.error(`[createOffer] Transceiver send encodings (requested):\n${JSON.stringify(tcInit.sendEncodings, null, 2)}`);
+                        //     // prettier-ignore
+                        //     logger.error(`[createOffer] Transceiver send parameters (requested):\n${JSON.stringify(tc.sender.getParameters(), null, 2)}`);
+                        // }
                     }
                 } else {
                     // To just receive media, create new recvonly transceivers.
@@ -427,8 +488,18 @@ export class WebRtcPeer {
                 return reject('RTCPeerConnection is closed when trying to set remote description');
             }
             this.setRemoteDescription(answer)
-                .then(() => resolve())
-                .catch(error => reject(error));
+                .then(() => {
+                    // DEBUG: Uncomment for details.
+                    // {
+                    //     const tc = this.pc.getTransceivers().find((tc) => tc.sender.track?.kind === "video");
+                    //     const sendParams = tc?.sender.getParameters();
+                    //     // prettier-ignore
+                    //     logger.error(`[processRemoteAnswer] Transceiver send parameters (effective):\n${JSON.stringify(sendParams, null, 2)}`);
+                    // }
+
+                    resolve();
+                })
+                .catch((error) => reject(error));
         });
     }
 

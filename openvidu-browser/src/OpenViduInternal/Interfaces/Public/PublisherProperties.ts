@@ -83,8 +83,8 @@ export interface PublisherProperties {
     videoSource?: string | MediaStreamTrack | boolean;
 
     /**
-     * Send Simulcast video.
-     * Publishers will encode duplicate video streams with different qualities,
+     * Use Simulcast video on WebRTC Publishers.
+     * Senders will encode duplicate video streams with different qualities,
      * so the media server is able to select the most appropriate quality stream
      * for each Subscriber.
      * This setting is honored only if OpenVidu Server was configured to use the
