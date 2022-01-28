@@ -122,7 +122,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     mirror: true,
     publishAudio: true,
     publishVideo: true,
-    videoSimulcast: true
+    videoSimulcast: false
   };
 
   publisherPropertiesAux: PublisherProperties;

@@ -163,7 +163,7 @@
 			"name": "OPENVIDU_WEBRTC_SIMULCAST",
 			"type": "java.lang.Boolean",
 			"description": "Use Simulcast video on WebRTC Publishers.",
-			"defaultValue": true
+			"defaultValue": false
 		},
 		{
 			"name": "OPENVIDU_SESSIONS_GARBAGE_INTERVAL",
