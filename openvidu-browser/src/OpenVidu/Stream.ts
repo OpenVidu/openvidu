@@ -118,7 +118,7 @@ export class Stream {
      *
      * If [[hasVideo]] is false, this property is undefined
      */
-    typeOfVideo?: TypeOfVideo;
+    typeOfVideo?: keyof typeof TypeOfVideo;
 
     /**
      * StreamManager object ([[Publisher]] or [[Subscriber]]) in charge of displaying this stream in the DOM
@@ -930,7 +930,7 @@ export class Stream {
                 iceServers: this.getIceServersConf(),
                 mediaStream: this.mediaStream,
                 mediaServer: this.session.openvidu.mediaServer,
-                typeOfVideo: this.typeOfVideo
+                typeOfVideo: this.typeOfVideo ? TypeOfVideo[this.typeOfVideo] : undefined,
             };
 
             if (this.session.openvidu.mediaServer !== 'mediasoup') {
@@ -1095,7 +1095,7 @@ export class Stream {
                 onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
                 iceServers: this.getIceServersConf(),
                 mediaServer: this.session.openvidu.mediaServer,
-                typeOfVideo: this.typeOfVideo
+                typeOfVideo: this.typeOfVideo ? TypeOfVideo[this.typeOfVideo] : undefined,
             };
 
             if (reconnect) {
