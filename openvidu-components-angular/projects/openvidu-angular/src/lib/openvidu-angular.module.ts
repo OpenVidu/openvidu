@@ -29,7 +29,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { UserSettingsComponent } from './components/user-settings/user-settings.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { VideoComponent } from './components/video/video.component';
-import { ChatPanelComponent } from './components/chat-panel/chat-panel.component';
+import { ChatPanelComponent } from './components/panel/chat-panel/chat-panel.component';
 import { SessionComponent } from './components/session/session.component';
 import { LayoutComponent } from './components/layout/layout.component';
 import { StreamComponent } from './components/stream/stream.component';
@@ -54,9 +54,14 @@ import { DocumentService } from './services/document/document.service';
 import { LayoutService } from './services/layout/layout.service';
 import { SidenavMenuService } from './services/sidenav-menu/sidenav-menu.service';
 import { ParticipantService } from './services/participant/participant.service';
-import { ParticipantItemComponent } from './components/participants-panel/participant-item/participant-item.component';
-import { ParticipantsPanelComponent } from './components/participants-panel/participants-panel/participants-panel.component';
+import { ParticipantItemComponent } from './components/panel/participants-panel/participant-item/participant-item.component';
+import { ParticipantsPanelComponent } from './components/panel/participants-panel/participants-panel/participants-panel.component';
 import { VideoconferenceComponent } from './components/videoconference/videoconference.component';
+import { PanelComponent } from './components/panel/panel.component';
+
+// Used for loading dynamic components because of Inputs and Outputs are not supported in the official Angular way
+// https://github.com/angular/angular/issues/15360
+import { DynamicIoModule } from 'ng-dynamic-component';
 
 @NgModule({
 	declarations: [
@@ -75,7 +80,8 @@ import { VideoconferenceComponent } from './components/videoconference/videoconf
 		NicknamePipe,
 		ParticipantItemComponent,
 		ParticipantsPanelComponent,
-		VideoconferenceComponent
+		VideoconferenceComponent,
+  PanelComponent,
 	],
 	imports: [
 		CommonModule,
@@ -102,7 +108,8 @@ import { VideoconferenceComponent } from './components/videoconference/videoconf
 		FlexLayoutModule,
 		MatMenuModule,
 		MatDividerModule,
-		MatListModule
+		MatListModule,
+		DynamicIoModule
 	],
 	providers: [
 		ActionService,

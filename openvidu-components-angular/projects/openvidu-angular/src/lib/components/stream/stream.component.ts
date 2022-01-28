@@ -52,16 +52,10 @@ export class StreamComponent implements OnInit {
 	// 	this.isFullscreenEnabled = !this.isFullscreenEnabled;
 	// }
 
-	// Has been mandatory fullscreen Input because of Input user did not fire changing
-	// the fullscreen user property in publisherStartSpeaking event in SessionComponent
-	@Input()
-	set videoEnlarged(enlarged: boolean) {
-		this.checkVideoSizeBigIcon(enlarged);
-	}
-
 	@Input()
 	set participant(participant: StreamModel) {
 		this._participant = participant;
+		this.checkVideoSizeBigIcon(this._participant.videoEnlarged);
 		this.nicknameFormControl = new FormControl(this._participant.nickname, [Validators.maxLength(25), Validators.required]);
 	}
 

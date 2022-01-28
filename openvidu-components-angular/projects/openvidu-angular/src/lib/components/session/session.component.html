@@ -11,22 +11,30 @@
 			fixedBottomGap="0"
 		>
 			<!-- Custom menu content -->
-			<ng-container *ngIf="customPanelContentTemplate; else defaultPanelContent">
-				<ng-container *ngTemplateOutlet="customPanelContentTemplate"></ng-container>
-			</ng-container>
+			<!-- <ng-container *ngIf="customPanelContentTemplate; else defaultPanelContent"> -->
+				<!-- <ng-container *ngTemplateOutlet="customPanelContentTemplate"></ng-container> -->
+			<!-- </ng-container> -->
 
 			<!-- Default menu content if custom menu content is not injected -->
-			<ng-template #defaultPanelContent>
+			<!-- <ng-template #defaultPanelContent>
 				<ov-chat-panel *ngIf="isChatPanelOpened"></ov-chat-panel>
 				<ov-participants-panel *ngIf="isParticipantsPanelOpened"></ov-participants-panel>
-			</ng-template>
+			</ng-template> -->
+			<ng-template #panel></ng-template>
+
+
+
 		</mat-sidenav>
 
 		<!-- OPENVIDU LAYOUT -->
 		<mat-sidenav-content class="sidenav-main">
-			<div id="layout-container">
+			<!-- <div id="layout-container">
 				<ng-content select="[layout]"></ng-content>
-			</div>
+			</div> -->
+
+			<ng-template #layout></ng-template>
+
+
 		</mat-sidenav-content>
 	</mat-sidenav-container>
 
@@ -37,9 +45,11 @@
 		</div>
 	</ng-container> -->
 
-	<ng-container *ngIf="toolbarTemplate">
+	<!-- <ng-container *ngIf="toolbarTemplate">
 		<div id="footer-container">
 			<ng-container *ngTemplateOutlet="toolbarTemplate"></ng-container>
 		</div>
-	</ng-container>
+	</ng-container> -->
+
+	<ng-template #toolbar></ng-template>
 </div>

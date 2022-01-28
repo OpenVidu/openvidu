@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { ParticipantAbstractModel, ParticipantModel } from '../../../models/participant.model';
-import { ParticipantService } from '../../../services/participant/participant.service';
-import { SidenavMenuService } from '../../../services/sidenav-menu/sidenav-menu.service';
+import { ParticipantAbstractModel, ParticipantModel } from '../../../../models/participant.model';
+import { ParticipantService } from '../../../../services/participant/participant.service';
+import { SidenavMenuService } from '../../../../services/sidenav-menu/sidenav-menu.service';
 
 @Component({
 	selector: 'ov-participants-panel',

@@ -5,12 +5,12 @@ import { LibConfig } from '../../config/lib.config';
 
 @Injectable()
 export class LibraryConfigService {
+
 	private configuration: LibConfig;
 
 	constructor(@Inject('LIB_CONFIG') config: LibConfig) {
 		this.configuration = config;
 		console.log(this.configuration);
-		this.isUsingProLibrary() ? console.log('Using PRO library') : console.log('Using CE library');
 		if(this.isProduction()) console.log('Production Mode');
 		// console.log(version)
 	}
@@ -22,7 +22,11 @@ export class LibraryConfigService {
 		return this.configuration?.environment?.production;
 	}
 
-	isUsingProLibrary(): boolean {
-		return !!this.configuration?.environment?.useProdLibrary;
+	isCustomComponentDefined(component: string): boolean {
+		return !!this.configuration?.environment?.customComponents && !!this.configuration.environment.customComponents[component];
+	}
+
+	getCustomComponent(component: string){
+		return this.configuration.environment.customComponents[component];
 	}
 }
