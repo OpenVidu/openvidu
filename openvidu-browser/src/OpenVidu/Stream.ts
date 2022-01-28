@@ -118,7 +118,7 @@ export class Stream {
      *
      * If [[hasVideo]] is false, this property is undefined
      */
-    typeOfVideo?: keyof typeof TypeOfVideo;
+    typeOfVideo?: keyof typeof TypeOfVideo; // TODO: Change this type to enum TypeOfVideo on the next breaking-change release
 
     /**
      * StreamManager object ([[Publisher]] or [[Subscriber]]) in charge of displaying this stream in the DOM
