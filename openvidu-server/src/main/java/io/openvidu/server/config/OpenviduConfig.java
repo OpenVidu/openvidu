@@ -222,7 +222,7 @@ public class OpenviduConfig {
 
 	// Media properties
 
-	private boolean streamsVideoSimulcast = false;
+	private boolean webrtcSimulcast = false;
 
 	// Plain config properties getters
 
@@ -286,8 +286,8 @@ public class OpenviduConfig {
 		this.mediaServerInfo = mediaServerInfo;
 	}
 
-	public boolean isStreamsVideoSimulcast() {
-		return this.streamsVideoSimulcast;
+	public boolean isWebrtcSimulcast() {
+		return this.webrtcSimulcast;
 	}
 
 	public String getOpenViduRecordingPath() {

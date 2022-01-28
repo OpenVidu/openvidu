@@ -169,7 +169,7 @@ public class SessionEventsHandler {
 			case mediasoup:
 				// mediasoup supports simulcast
 				result.addProperty(ProtocolElements.PARTICIPANTJOINED_SIMULCAST_PARAM,
-						this.openviduConfig.isStreamsVideoSimulcast());
+						this.openviduConfig.isWebrtcSimulcast());
 				break;
 			case kurento:
 			default:

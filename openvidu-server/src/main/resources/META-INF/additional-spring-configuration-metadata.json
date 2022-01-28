@@ -148,12 +148,6 @@
 			"defaultValue": 300
 		},
 		{
-			"name": "OPENVIDU_STREAMS_VIDEO_SIMULCAST",
-			"type": "java.lang.Boolean",
-			"description": "Send Simulcast video.",
-			"defaultValue": true
-		},
-		{
 			"name": "OPENVIDU_STREAMS_FORCED_VIDEO_CODEC",
 			"type": "java.lang.String",
 			"description": "Defines which video codec is being forced to be used in the browser/client",
@@ -164,6 +158,12 @@
 			"type": "java.lang.Boolean",
 			"description": "Defines if transcoding is allowed or not when OPENVIDU_STREAMS_FORCED_VIDEO_CODEC is not a compatible codec with the browser/client.",
 			"defaultValue": false
+		},
+		{
+			"name": "OPENVIDU_WEBRTC_SIMULCAST",
+			"type": "java.lang.Boolean",
+			"description": "Use Simulcast video on WebRTC Publishers.",
+			"defaultValue": true
 		},
 		{
 			"name": "OPENVIDU_SESSIONS_GARBAGE_INTERVAL",
