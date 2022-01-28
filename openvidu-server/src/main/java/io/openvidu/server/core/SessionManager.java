@@ -342,11 +342,12 @@ public abstract class SessionManager {
 			try {
 				JsonObject serverMetadataJson = JsonParser.parseString(serverMetadata).getAsJsonObject();
 				String customConnectionId = serverMetadataJson.get("openviduCustomConnectionId").getAsString();
+				customConnectionId = customConnectionId.replaceAll("\\W", ""); // Remove all non-word characters: [^A-Za-z0-9_]
 				customConnectionId = customConnectionId.replaceAll(IdentifierPrefixes.PARTICIPANT_PUBLIC_ID, "");
 				tokenObj.setConnectionId(IdentifierPrefixes.PARTICIPANT_PUBLIC_ID + customConnectionId);
 			} catch (Exception e) {
 				log.debug(
-						"Tried to parse server metadata as JSON after encountering \"openviduCustomConnectionId\" string but failed with {}: {}",
+						"Tried to parse server metadata as JSON after encountering \"openviduCustomConnectionId\" string, but failed with {}: {}",
 						e.getClass().getCanonicalName(), e.getMessage());
 			}
 		}
