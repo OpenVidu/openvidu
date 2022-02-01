@@ -5,7 +5,6 @@ import { ParticipantAbstractModel } from '../../models/participant.model';
 import { LayoutService } from '../../services/layout/layout.service';
 import { LibraryComponents } from '../../config/lib.config';
 import { LibraryConfigService } from '../../services/library-config/library-config.service';
-import { StreamComponent } from '../stream/stream.component';
 
 @Component({
 	selector: 'ov-layout',
@@ -13,9 +12,7 @@ import { StreamComponent } from '../stream/stream.component';
 	styleUrls: ['./layout.component.css']
 })
 export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
-	_localStream: ViewContainerRef;
 	_localStreamComponent: Type<any>;
-	_remoteStream: ViewContainerRef;
 	_remoteStreamComponent: Type<any>;
 
 	localParticipant: ParticipantAbstractModel;
@@ -33,16 +30,11 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	@ViewChild('localStream', { static: false, read: ViewContainerRef })
 	set stream(reference: ViewContainerRef) {
 		setTimeout(() => {
-			this._localStream = reference;
-
-			if (this._localStream) {
-				let component = StreamComponent;
-				if (this.libraryConfigSrv.isCustomComponentDefined(LibraryComponents.STREAM)) {
-					component = this.libraryConfigSrv.getCustomComponent(LibraryComponents.STREAM);
-				}
-				// this._stream?.clear();
+			if (reference) {
+				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.STREAM);
+				//reference.clear();
 				this._localStreamComponent = component;
-				// this._stream.createComponent(component);
+				// reference.createComponent(component);
 			}
 		}, 0);
 	}
@@ -50,16 +42,12 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	@ViewChild('remoteStream', { static: false, read: ViewContainerRef })
 	set remoteStream(reference: ViewContainerRef) {
 		setTimeout(() => {
-			this._remoteStream = reference;
+			if (reference) {
 
-			if (this._remoteStream) {
-				let component = StreamComponent;
-				if (this.libraryConfigSrv.isCustomComponentDefined(LibraryComponents.STREAM)) {
-					component = this.libraryConfigSrv.getCustomComponent(LibraryComponents.STREAM);
-				}
-				// this.remoteStream?.clear();
+				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.STREAM);
+				// reference.clear();
 				this._remoteStreamComponent = component;
-				// this._stream.createComponent(component);
+				// reference.createComponent(component);
 			}
 		}, 0);
 	}

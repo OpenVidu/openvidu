@@ -40,10 +40,6 @@ import { LibraryComponents } from '../../config/lib.config';
 	styleUrls: ['./session.component.css']
 })
 export class SessionComponent implements OnInit {
-	// @ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any>;
-	@ContentChild('customPanelContent', { read: TemplateRef }) customPanelContentTemplate: TemplateRef<any>;
-	@ContentChild('customLayoutElement', { read: TemplateRef }) customLayoutElementTemplate: TemplateRef<any>;
-
 	@Input() tokens: { webcam: string; screen: string };
 	// @Output() _session = new EventEmitter<any>();
 	// @Output() _publisher = new EventEmitter<any>();
@@ -65,10 +61,6 @@ export class SessionComponent implements OnInit {
 
 	protected log: ILogger;
 
-	_toolbar: ViewContainerRef;
-	_layout: ViewContainerRef;
-	_panel: ViewContainerRef;
-
 	constructor(
 		protected actionService: ActionService,
 		protected webrtcService: WebrtcService,
@@ -86,16 +78,10 @@ export class SessionComponent implements OnInit {
 	@ViewChild('toolbar', { static: false, read: ViewContainerRef })
 	set toolbar(reference: ViewContainerRef) {
 		setTimeout(() => {
-			this._toolbar = reference;
-
-			if (this._toolbar) {
-				let component = ToolbarComponent;
-				// Inject the custom component if exists
-				if (this.libraryConfigSrv.isCustomComponentDefined(LibraryComponents.TOOLBAR)) {
-					component = this.libraryConfigSrv.getCustomComponent(LibraryComponents.TOOLBAR);
-				}
-				this._toolbar?.clear();
-				this._toolbar.createComponent(component);
+			if (reference) {
+				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.TOOLBAR);
+				reference.clear();
+				reference.createComponent(component);
 			}
 		}, 0);
 	}
@@ -103,16 +89,10 @@ export class SessionComponent implements OnInit {
 	@ViewChild('layout', { static: false, read: ViewContainerRef })
 	set layout(reference: ViewContainerRef) {
 		setTimeout(() => {
-			this._layout = reference;
-
-			if (this._layout) {
-				let component = LayoutComponent;
-				// Inject the custom component if exists
-				if (this.libraryConfigSrv.isCustomComponentDefined(LibraryComponents.LAYOUT)) {
-					component = this.libraryConfigSrv.getCustomComponent(LibraryComponents.LAYOUT);
-				}
-				this._layout?.clear();
-				this._layout.createComponent(component);
+			if (reference) {
+				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.LAYOUT);
+				reference.clear();
+				reference.createComponent(component);
 				this.layoutService.initialize();
 			}
 		}, 0);
@@ -121,16 +101,10 @@ export class SessionComponent implements OnInit {
 	@ViewChild('panel', { static: false, read: ViewContainerRef })
 	set panel(reference: ViewContainerRef) {
 		setTimeout(() => {
-			this._panel = reference;
-
-			if (this._panel) {
-				let component = PanelComponent;
-				// Inject the custom component if exists
-				// if (this.libraryConfigSrv.isCustomComponentDefined(LibraryComponents.PANEL)) {
-				// 	component = this.libraryConfigSrv.getCustomComponent(LibraryComponents.PANEL);
-				// }
-				this._panel?.clear();
-				this._panel.createComponent(component);
+			if (reference) {
+				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.PANEL);
+				reference.clear();
+				reference.createComponent(component);
 			}
 		}, 0);
 	}
