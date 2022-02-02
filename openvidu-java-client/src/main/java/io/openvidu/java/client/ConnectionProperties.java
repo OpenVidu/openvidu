@@ -1,7 +1,11 @@
 package io.openvidu.java.client;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * See
@@ -21,6 +25,9 @@ public class ConnectionProperties {
 	private Boolean adaptativeBitrate;
 	private Boolean onlyPlayWithSubscribers;
 	private Integer networkCache;
+
+	// External Turn Service
+	private List<IceServerProperties> customIceServers;
 
 	/**
 	 * 
@@ -42,12 +49,16 @@ public class ConnectionProperties {
 		private Boolean onlyPlayWithSubscribers;
 		private Integer networkCache;
 
+		// External Turn Service
+		private List<IceServerProperties> customIceServers = new ArrayList<>();
+
 		/**
 		 * Builder for {@link io.openvidu.java.client.ConnectionProperties}.
 		 */
 		public ConnectionProperties build() {
 			return new ConnectionProperties(this.type, this.data, this.record, this.role, this.kurentoOptions,
-					this.rtspUri, this.adaptativeBitrate, this.onlyPlayWithSubscribers, this.networkCache);
+					this.rtspUri, this.adaptativeBitrate, this.onlyPlayWithSubscribers, this.networkCache,
+					this.customIceServers);
 		}
 
 		/**
@@ -219,11 +230,17 @@ public class ConnectionProperties {
 			this.networkCache = networkCache;
 			return this;
 		}
+
+		// TODO: Comment
+		public Builder addCustomIceServer(IceServerProperties iceServerProperties) {
+			this.customIceServers.add(iceServerProperties);
+			return this;
+		}
 	}
 
 	ConnectionProperties(ConnectionType type, String data, Boolean record, OpenViduRole role,
 			KurentoOptions kurentoOptions, String rtspUri, Boolean adaptativeBitrate, Boolean onlyPlayWithSubscribers,
-			Integer networkCache) {
+			Integer networkCache, List<IceServerProperties> customIceServers) {
 		this.type = type;
 		this.data = data;
 		this.record = record;
@@ -233,6 +250,7 @@ public class ConnectionProperties {
 		this.adaptativeBitrate = adaptativeBitrate;
 		this.onlyPlayWithSubscribers = onlyPlayWithSubscribers;
 		this.networkCache = networkCache;
+		this.customIceServers = customIceServers;
 	}
 
 	/**
@@ -346,6 +364,11 @@ public class ConnectionProperties {
 		return this.networkCache;
 	}
 
+	// TODO: Comment
+	public List<IceServerProperties> getCustomIceServers() {
+		return new ArrayList<>(this.customIceServers);
+	}
+
 	public JsonObject toJson(String sessionId) {
 		JsonObject json = new JsonObject();
 		json.addProperty("session", sessionId);
@@ -397,6 +420,14 @@ public class ConnectionProperties {
 		} else {
 			json.add("networkCache", JsonNull.INSTANCE);
 		}
+
+		// Ice Servers
+		JsonArray customIceServersJsonList = new JsonArray();
+		customIceServers.forEach((customIceServer) -> {
+			customIceServersJsonList.add(customIceServer.toJson());
+		});
+		json.add("customIceServers", customIceServersJsonList);
+
 		return json;
 	}
 
