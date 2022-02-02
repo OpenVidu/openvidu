@@ -57,6 +57,7 @@ import { ParticipantService } from './services/participant/participant.service';
 import { ParticipantItemComponent } from './components/participants-panel/participant-item/participant-item.component';
 import { ParticipantsPanelComponent } from './components/participants-panel/participants-panel/participants-panel.component';
 import { VideoconferenceComponent } from './components/videoconference/videoconference.component';
+import { PanelComponent } from './components/panel/panel.component';
 
 @NgModule({
 	declarations: [
@@ -75,7 +76,8 @@ import { VideoconferenceComponent } from './components/videoconference/videoconf
 		NicknamePipe,
 		ParticipantItemComponent,
 		ParticipantsPanelComponent,
-		VideoconferenceComponent
+		VideoconferenceComponent,
+  PanelComponent
 	],
 	imports: [
 		CommonModule,
