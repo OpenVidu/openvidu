@@ -175,76 +175,55 @@ export class WebRtcPeer {
                     streams: [this.configuration.mediaStream],
                 };
 
-                if (track.kind === "audio") {
-                    if ("contentHint" in track) {
-                        // For audio: "", "speech", "speech-recognition", "music".
-                        // https://w3c.github.io/mst-content-hint/#audio-content-hints
-                        track.contentHint = "";
-                        logger.info(`[createOffer] Audio track Content Hint set: '${track.contentHint}'`);
+                if (track.kind === "video" && this.configuration.simulcast) {
+                    // Check if the requested size is enough to ask for 3 layers.
+                    const trackSettings = track.getSettings();
+                    const trackConsts = track.getConstraints();
+
+                    const trackWidth: number =
+                        trackSettings.width ??
+                        (trackConsts.width as ConstrainULongRange).ideal ??
+                        (trackConsts.width as number) ??
+                        0;
+                    const trackHeight: number =
+                        trackSettings.height ??
+                        (trackConsts.height as ConstrainULongRange).ideal ??
+                        (trackConsts.height as number) ??
+                        0;
+                    logger.info(`[createOffer] Video track dimensions: ${trackWidth}x${trackHeight}`);
+
+                    const trackPixels = trackWidth * trackHeight;
+                    let maxLayers = 0;
+                    if (trackPixels >= 960 * 540) {
+                        maxLayers = 3;
+                    } else if (trackPixels >= 480 * 270) {
+                        maxLayers = 2;
+                    } else {
+                        maxLayers = 1;
                     }
-                } else if (track.kind === "video") {
-                    if ("contentHint" in track) {
-                        // For video: "", "motion", "detail", "text".
-                        // https://w3c.github.io/mst-content-hint/#video-content-hints
-                        if (this.configuration.typeOfVideo === TypeOfVideo.SCREEN) {
-                            track.contentHint = "detail";
+
+                    tcInit.sendEncodings = [];
+                    for (let l = 0; l < maxLayers; l++) {
+                        const layerDiv = 2 ** (maxLayers - l - 1);
+
+                        const encoding: RTCRtpEncodingParameters = {
+                            rid: "rDiv" + layerDiv.toString(),
+
+                            // @ts-ignore -- Property missing from DOM types.
+                            scalabilityMode: "L1T1",
+                        };
+
+                        if (["detail", "text"].includes(track.contentHint)) {
+                            // Prioritize best resolution, for maximum picture detail.
+                            encoding.scaleResolutionDownBy = 1.0;
+
+                            // @ts-ignore -- Property missing from DOM types.
+                            encoding.maxFramerate = Math.floor(30 / layerDiv);
                         } else {
-                            track.contentHint = "motion";
-                        }
-                        logger.info(`[createOffer] Video track Content Hint set: '${track.contentHint}'`);
-                    }
-
-                    if (this.configuration.simulcast) {
-                        // Check if the requested size is enough to ask for 3 layers.
-                        const trackSettings = track.getSettings();
-                        const trackConsts = track.getConstraints();
-
-                        const trackWidth: number =
-                            trackSettings.width ??
-                            (trackConsts.width as ConstrainULongRange).ideal ??
-                            (trackConsts.width as number) ??
-                            0;
-                        const trackHeight: number =
-                            trackSettings.height ??
-                            (trackConsts.height as ConstrainULongRange).ideal ??
-                            (trackConsts.height as number) ??
-                            0;
-                        logger.info(`[createOffer] Video track dimensions: ${trackWidth}x${trackHeight}`);
-
-                        const trackPixels = trackWidth * trackHeight;
-                        let maxLayers = 0;
-                        if (trackPixels >= 960 * 540) {
-                            maxLayers = 3;
-                        } else if (trackPixels >= 480 * 270) {
-                            maxLayers = 2;
-                        } else {
-                            maxLayers = 1;
+                            encoding.scaleResolutionDownBy = layerDiv;
                         }
 
-                        tcInit.sendEncodings = [];
-                        for (let l = 0; l < maxLayers; l++) {
-                            const layerDiv = 2 ** (maxLayers - l - 1);
-
-                            const encoding: RTCRtpEncodingParameters = {
-                                rid: "rDiv" + layerDiv.toString(),
-
-                                // @ts-ignore -- Property missing from DOM types.
-                                scalabilityMode: "L1T1",
-                            };
-
-                            if (this.configuration.typeOfVideo === TypeOfVideo.SCREEN) {
-                                // Prioritize best resolution, for maximum picture detail.
-                                encoding.scaleResolutionDownBy = 1.0;
-
-                                // @ts-ignore -- Property missing from DOM types.
-                                encoding.maxFramerate = Math.floor(30 / layerDiv);
-                                // encoding.maxFramerate = (l === 2) ? 30 : Math.floor(30 / (2 * layerDiv)); // TESTING
-                            } else {
-                                encoding.scaleResolutionDownBy = layerDiv;
-                            }
-
-                            tcInit.sendEncodings.push(encoding);
-                        }
+                        tcInit.sendEncodings.push(encoding);
                     }
                 }
 
@@ -254,19 +233,16 @@ export class WebRtcPeer {
                     let sendParams = tc.sender.getParameters();
                     let needSetParams = false;
 
-                    if (!("degradationPreference" in sendParams)) {
-                        logger.debug(`[createOffer] RTCRtpSendParameters.degradationPreference attribute not present`);
-                        // Asked about why this might happen. Check it:
-                        // https://groups.google.com/g/discuss-webrtc/c/R8Xug-irfRY
-
-                        // For video: "balanced", "maintain-framerate", "maintain-resolution".
-                        if (this.configuration.typeOfVideo === TypeOfVideo.SCREEN) {
+                    if (!sendParams.degradationPreference?.length) {
+                        // degradationPreference for video: "balanced", "maintain-framerate", "maintain-resolution".
+                        // https://www.w3.org/TR/2018/CR-webrtc-20180927/#dom-rtcdegradationpreference
+                        if (["detail", "text"].includes(track.contentHint)) {
                             sendParams.degradationPreference = "maintain-resolution";
                         } else {
                             sendParams.degradationPreference = "balanced";
                         }
 
-                        logger.debug(
+                        logger.info(
                             `[createOffer] Video sender Degradation Preference set: ${sendParams.degradationPreference}`
                         );
 
