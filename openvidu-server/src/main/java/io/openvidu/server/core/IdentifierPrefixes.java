@@ -12,5 +12,6 @@ public interface IdentifierPrefixes {
 	public static final String IPCAM_ID = "ipc_";
 	public static final String MEDIA_ID = "media_";
 	public static final String CLUSTER_ID = "clu_";
+	public static final String OPENVIDU_NODE_ID = "opv_";
 
 }
