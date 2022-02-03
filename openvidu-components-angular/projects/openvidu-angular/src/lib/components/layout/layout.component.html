@@ -1,35 +1,23 @@
 <div id="layout" class="bounds">
-	<!-- Custom local participant -->
-	<ng-container *ngIf="customLocalParticipantTemplate; else defaultLocalParticipant">
-		<ng-container *ngTemplateOutlet="customLocalParticipantTemplate"></ng-container>
-	</ng-container>
+	<div
+		class="OT_root OT_publisher"
+		id="localUser"
+		*ngFor="let connection of localParticipant | connections"
+		[ngClass]="{ OV_small: !connection.streamManager?.stream?.videoActive }"
+	>
+		<ng-container *ngTemplateOutlet="streamTemplate; context: { stream: connection }"></ng-container>
+	</div>
+	<!-- <ng-template #stream let-stream="stream">
+		<p>{{prueba.videoEnlarged}}</p>
+		<ov-stream [participant]="prueba"></ov-stream>
+	</ng-template> -->
 
-	<!-- Default local participant if custom participant is not injected -->
-	<ng-template #defaultLocalParticipant>
-		<div
-			class="OT_root OT_publisher"
-			id="localUser"
-			*ngFor="let connection of localParticipant | connections"
-			[ngClass]="{ OV_small: !connection.streamManager?.stream?.videoActive }"
-		>
-			<ov-stream [participant]="connection" [videoEnlarged]="connection.videoEnlarged"></ov-stream>
-		</div>
-	</ng-template>
-
-	<!-- Custom remote participant -->
-	<ng-container *ngIf="customRemoteParticipantsTemplate; else defaultRemoteParticipants">
-		<ng-container *ngTemplateOutlet="customRemoteParticipantsTemplate"></ng-container>
-	</ng-container>
-
-	<!-- Default remote participants if custom participants is not injected -->
-	<ng-template #defaultRemoteParticipants>
-		<div
-			*ngFor="let connection of remoteParticipants | connections"
-			class="OT_root OT_publisher"
-			id="remote-participant"
-			[ngClass]="{ OV_small: !connection.streamManager?.stream?.videoActive }"
-		>
-			<ov-stream [participant]="connection" [videoEnlarged]="connection.videoEnlarged"></ov-stream>
-		</div>
-	</ng-template>
+	<div
+		*ngFor="let connection of remoteParticipants | connections"
+		class="OT_root OT_publisher"
+		id="remote-participant"
+		[ngClass]="{ OV_small: !connection.streamManager?.stream?.videoActive }"
+	>
+		<ng-container *ngTemplateOutlet="streamTemplate; context: { stream: connection }"></ng-container>
+	</div>
 </div>

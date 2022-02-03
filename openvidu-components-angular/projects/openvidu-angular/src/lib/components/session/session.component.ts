@@ -26,8 +26,8 @@ import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.ser
 })
 export class SessionComponent implements OnInit {
 	@ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any>;
-	@ContentChild('customPanelContent', { read: TemplateRef }) customPanelContentTemplate: TemplateRef<any>;
-	@ContentChild('customLayoutElement', { read: TemplateRef }) customLayoutElementTemplate: TemplateRef<any>;
+	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
+	@ContentChild('panel', { read: TemplateRef }) panelTemplate: TemplateRef<any>;
 
 	@Input() tokens: { webcam: string; screen: string };
 	@Output() _session = new EventEmitter<any>();
@@ -87,7 +87,7 @@ export class SessionComponent implements OnInit {
 	}
 
 	async ngOnInit() {
-		this.layoutService.initialize();
+		// this.layoutService.initialize();
 
 		if (this.webrtcService.getWebcamSession() === null) {
 			this.webrtcService.initialize();

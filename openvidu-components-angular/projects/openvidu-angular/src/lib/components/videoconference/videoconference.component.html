@@ -1,6 +1,6 @@
 <div id="call-container">
 	<div id="user-settings-container" *ngIf="!joinSessionClicked && !closeClicked">
-		<ov-user-settings (onJoinClicked)="onJoinClicked()" (onCloseClicked)="onLeaveSessionClicked()"></ov-user-settings>
+		<ov-user-settings (onJoinClicked)="_onJoinClicked()" (onCloseClicked)="onLeaveSessionClicked()"></ov-user-settings>
 	</div>
 
 	<div id="spinner" *ngIf="joinSessionClicked && !isSessionAlive && !error">
@@ -10,21 +10,88 @@
 
 	<div id="spinner" *ngIf="joinSessionClicked && !isSessionAlive && error">
 		<mat-icon class="error-icon">error</mat-icon>
-		<span>{{errorMessage}}</span>
+		<span>{{ errorMessage }}</span>
 	</div>
 
 	<div id="session-container" *ngIf="joinSessionClicked && isSessionAlive && !error">
 		<ov-session [tokens]="_tokens">
+
+			<!-- Toolbar container injection -->
 			<ng-template #toolbar>
-				<ov-toolbar
-					(onCamClicked)="onCamClicked()"
-					(onMicClicked)="onMicClicked()"
-					(onScreenShareClicked)="onScreenShareClicked()"
-					(onSpeakerLayoutClicked)="onSpeakerLayoutClicked()"
-					(onLeaveSessionClicked)="onLeaveSessionClicked()"
-				></ov-toolbar>
+				<!-- Custom toolbar -->
+				<ng-container *ngIf="toolbarTemplate; else defaultToolbar">
+					<ng-container *ngTemplateOutlet="toolbarTemplate"></ng-container>
+				</ng-container>
+
+					<!-- Default toolbar if custom toolbar is not injected -->
+				<ng-template #defaultToolbar>
+					<ov-toolbar></ov-toolbar>
+				</ng-template>
+
 			</ng-template>
-			<ov-layout layout></ov-layout>
+
+			<ng-template #panel>
+				<!-- Custom panel -->
+				<ng-container *ngIf="panelTemplate; else defaultPanel">
+					<ng-container *ngTemplateOutlet="panelTemplate"></ng-container>
+				</ng-container>
+
+				<!-- Default panel if custom panel is not injected -->
+				<ng-template #defaultPanel>
+					<ov-panel>
+						<!-- CHAT panel -->
+						<ng-template #chatPanel>
+							<ng-container *ngIf="chatPanelTemplate; else defaultChatPanel">
+								<ng-container *ngTemplateOutlet="chatPanelTemplate"></ng-container>
+							</ng-container>
+
+							<ng-template #defaultChatPanel>
+								<ov-chat-panel></ov-chat-panel>
+							</ng-template>
+						</ng-template>
+
+						<!-- PARTICIPANTS panel -->
+						<ng-template #participantsPanel>
+							<ng-container *ngIf="participantsPanelTemplate; else defaultParticipantsPanel">
+								<ng-container *ngTemplateOutlet="participantsPanelTemplate"></ng-container>
+							</ng-container>
+							<ng-template #defaultParticipantsPanel>
+								<ov-participants-panel></ov-participants-panel>
+							</ng-template>
+						</ng-template>
+					</ov-panel>
+				</ng-template>
+
+			</ng-template>
+
+
+			<!-- Layout container injection -->
+			<ng-template #layout>
+				<!-- Custom layout -->
+				<ng-container *ngIf="layoutTemplate; else defaultLayout">
+					<ng-container *ngTemplateOutlet="layoutTemplate"></ng-container>
+				</ng-container>
+
+				<!-- Default layout if custom layout is not injected -->
+				<ng-template #defaultLayout>
+					<ov-layout>
+						<ng-template #stream let-stream="stream">
+							<!-- Custom stream component -->
+							<!-- We must to bind a context for the 'participant' input property -->
+							<ng-container *ngIf="streamTemplate; else defaultStream">
+								<ng-container *ngTemplateOutlet="streamTemplate;context:{stream:stream}"></ng-container>
+							</ng-container>
+
+							<!-- Default stream component if custom component is not injected -->
+							<!-- We must to bind a context for the 'participant' input property -->
+							<ng-template #defaultStream>
+								<ov-stream [participant]="stream"></ov-stream>
+							</ng-template>
+						</ng-template>
+					</ov-layout>
+				</ng-template>
+			</ng-template>
+
 		</ov-session>
 	</div>
 </div>

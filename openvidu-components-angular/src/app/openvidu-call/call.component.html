@@ -1,4 +1,4 @@
-<div id="call-container">
+<!-- <div id="call-container">
 	<div id="userSettings" *ngIf="!joinSessionClicked && !closeClicked || !isSessionAlive">
 		<ov-user-settings (onJoinClicked)="onJoinClicked()" (onCloseClicked)="onCloseClicked()"></ov-user-settings>
 	</div>
@@ -17,4 +17,39 @@
 			<ov-layout layout></ov-layout>
 		</ov-session>
 	</div>
-</div>
+</div> -->
+
+<ov-videoconference (onJoinClicked)="onJoinClicked()" [tokens]="tokens">
+
+	<!-- <ng-template #toolbar>
+		<ov-toolbar postion="top" (onCamClicked)="onCamClicked()"></ov-toolbar>
+	</ng-template> -->
+
+	<!-- <ng-template #layout>
+		<ov-toolbar postion="top" (onCamClicked)="onCamClicked()"></ov-toolbar>
+	</ng-template> -->
+
+
+	<!-- <ng-template #panel>
+		<ov-toolbar postion="top" (onCamClicked)="onCamClicked()"></ov-toolbar>
+	</ng-template> -->
+
+	<!-- <ng-template #chatPanel>
+		<ov-toolbar postion="top" (onCamClicked)="onCamClicked()"></ov-toolbar>
+	</ng-template> -->
+
+	<!-- <ng-template #participantsPanel>
+		<ov-toolbar postion="top" (onCamClicked)="onCamClicked()"></ov-toolbar>
+	</ng-template> -->
+
+	<!-- <ng-template #stream let-stream="stream">
+
+		<ov-stream postion="top" [participant]="stream">
+			<button network-quality> hola</button>
+		</ov-stream>
+
+	</ng-template> -->
+
+
+
+</ov-videoconference>

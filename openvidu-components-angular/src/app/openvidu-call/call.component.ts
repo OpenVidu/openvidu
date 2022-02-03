@@ -37,7 +37,9 @@ export class CallComponent implements OnInit {
 
 	onMicClicked() {}
 
-	onCamClicked() {}
+	onCamClicked() {
+		console.log('APP: CAM CLIKED')
+	}
 
 	onScreenShareClicked() {}
 
