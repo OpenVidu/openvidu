@@ -1,4 +1,4 @@
-import { Component, ContentChild, EventEmitter, HostListener, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ContentChild, EventEmitter, HostListener, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
 import { Subscriber, Session, StreamEvent, StreamPropertyChangedEvent, SessionDisconnectedEvent, ConnectionEvent } from 'openvidu-browser';
 
 import { VideoType } from '../../models/video-type.model';
@@ -23,7 +23,7 @@ import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.ser
 	templateUrl: './session.component.html',
 	styleUrls: ['./session.component.css']
 })
-export class SessionComponent implements OnInit {
+export class SessionComponent implements OnInit, AfterViewInit {
 	@ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any>;
 	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
 	@ContentChild('panel', { read: TemplateRef }) panelTemplate: TemplateRef<any>;
@@ -84,7 +84,6 @@ export class SessionComponent implements OnInit {
 	}
 
 	async ngOnInit() {
-		// this.layoutService.initialize();
 
 		if (this.webrtcService.getWebcamSession() === null) {
 			this.webrtcService.initialize();
@@ -111,6 +110,12 @@ export class SessionComponent implements OnInit {
 		// }
 
 		this._session.emit(this.session);
+	}
+
+	ngAfterViewInit(): void {
+		this.layoutService.initialize();
+		this.layoutService.update();
+
 	}
 
 	ngOnDestroy() {
