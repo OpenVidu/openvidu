@@ -8,7 +8,6 @@ import { ChatService } from '../../services/chat/chat.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { WebrtcService } from '../../services/webrtc/webrtc.service';
 import { TokenService } from '../../services/token/token.service';
-import { PlatformService } from '../../services/platform/platform.service';
 import { ActionService } from '../../services/action/action.service';
 import { Signal } from '../../models/signal.model';
 import { ParticipantService } from '../../services/participant/participant.service';
@@ -60,8 +59,6 @@ export class SessionComponent implements OnInit {
 		protected tokenService: TokenService,
 		protected layoutService: LayoutService,
 		protected menuService: SidenavMenuService,
-
-		protected platformService: PlatformService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
 	}

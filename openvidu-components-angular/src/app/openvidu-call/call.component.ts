@@ -27,8 +27,8 @@ export class CallComponent implements OnInit {
 			screen: await this.restService.getToken(this.sessionId)
 		};
 
-		this.joinSessionClicked = true;
-		this.isSessionAlive = true;
+		// this.joinSessionClicked = true;
+		// this.isSessionAlive = true;
 	}
 	onCloseClicked() {
 		this.closeClicked = true;
