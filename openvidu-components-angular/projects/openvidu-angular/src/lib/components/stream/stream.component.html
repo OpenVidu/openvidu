@@ -51,8 +51,10 @@
 
 	<div class="videoButtons">
 
-		<!-- Custom hand notification -->
-		<ng-content select="[hand-notification]"></ng-content>
+		<!-- Custom stream notifications -->
+		<ng-container *ngIf="notificationTemplate">
+			<ng-container *ngTemplateOutlet="notificationTemplate; context: { stream: _participant }"></ng-container>
+		</ng-container>
 
 		<button mat-icon-button (click)="toggleVideoMenu($event)" matTooltip="Settings" aria-label="Video settings menu">
 			<mat-icon>more_vert</mat-icon>
