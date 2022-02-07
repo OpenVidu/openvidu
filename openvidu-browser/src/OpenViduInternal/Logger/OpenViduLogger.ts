@@ -251,9 +251,7 @@ export class OpenViduLogger {
 	 * @hidden
 	 */
 	warn(...args: any[]) {
-		if (!this.isProdMode) {
-			this.defaultConsoleLogger.warn.apply(this.defaultConsoleLogger.logger, arguments);
-		}
+		this.defaultConsoleLogger.warn.apply(this.defaultConsoleLogger.logger, arguments);
 		if (this.isJSNLogSetup) {
 			JL().warn(arguments);
 		}

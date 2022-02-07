@@ -27,6 +27,7 @@
     "@angular/router": "13.0.0",
     "autolinker": "3.14.3",
     "buffer": "^6.0.3",
+    "ng-dynamic-component": "10.1.0",
     "openvidu-browser": "2.21.0-beta1",
     "rxjs": "7.4.0",
     "tslib": "2.3.1",

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ChatService } from '../../services/chat/chat.service';
-import { ChatServiceMock } from '../../services/chat/chat.service.mock';
+import { ChatService } from '../../../services/chat/chat.service';
+import { ChatServiceMock } from '../../../services/chat/chat.service.mock';
 
 import { ChatPanelComponent } from './chat-panel.component';
 

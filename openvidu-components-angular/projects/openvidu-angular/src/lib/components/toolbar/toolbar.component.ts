@@ -1,4 +1,15 @@
-import { Component, ContentChild, EventEmitter, HostListener, OnDestroy, OnInit, Output, TemplateRef } from '@angular/core';
+import {
+	AfterViewInit,
+	Component,
+	ContentChild,
+	EventEmitter,
+	HostListener,
+	OnDestroy,
+	OnInit,
+	Output,
+	TemplateRef,
+	ViewChild
+} from '@angular/core';
 import { skip, Subscription } from 'rxjs';
 import { TokenService } from '../../services/token/token.service';
 import { ChatService } from '../../services/chat/chat.service';
@@ -103,10 +114,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		this.subscribeToUserMediaProperties();
 		this.subscribeToReconnection();
 
-		if(!this.libraryConfigSrv.isUsingProLibrary()){
-			this.subscribeToMenuToggling();
-			this.subscribeToChatMessages();
-		}
+		this.subscribeToMenuToggling();
+		this.subscribeToChatMessages();
 	}
 
 	toggleMicrophone() {
@@ -268,7 +277,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		});
 	}
 	protected subscribeToMenuToggling() {
-		this.menuTogglingSubscription = this.menuService.menuOpenedObs.subscribe((ev: {opened: boolean, type?: MenuType}) => {
+		this.menuTogglingSubscription = this.menuService.menuOpenedObs.subscribe((ev: { opened: boolean; type?: MenuType }) => {
 			this.isChatOpened = ev.opened && ev.type === MenuType.CHAT;
 			this.isParticipantsOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
 			if (this.isChatOpened) {

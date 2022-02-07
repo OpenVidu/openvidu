@@ -1,9 +1,9 @@
 import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { ChatMessage } from '../../models/chat.model';
-import { MenuType } from '../../models/menu.model';
-import { ChatService } from '../../services/chat/chat.service';
-import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.service';
+import { ChatMessage } from '../../../models/chat.model';
+import { MenuType } from '../../../models/menu.model';
+import { ChatService } from '../../../services/chat/chat.service';
+import { SidenavMenuService } from '../../../services/sidenav-menu/sidenav-menu.service';
 
 @Component({
 	selector: 'ov-chat-panel',

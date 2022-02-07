@@ -1,4 +1,15 @@
-import { Component, ContentChild, EventEmitter, HostListener, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
+import {
+	Component,
+	ContentChild,
+	EventEmitter,
+	HostListener,
+	Input,
+	OnInit,
+	Output,
+	TemplateRef,
+	ViewChild,
+	ViewContainerRef
+} from '@angular/core';
 import { Subscriber, Session, StreamEvent, StreamPropertyChangedEvent, SessionDisconnectedEvent, ConnectionEvent } from 'openvidu-browser';
 
 import { VideoType } from '../../models/video-type.model';
@@ -8,7 +19,6 @@ import { ChatService } from '../../services/chat/chat.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { WebrtcService } from '../../services/webrtc/webrtc.service';
 import { TokenService } from '../../services/token/token.service';
-import { PlatformService } from '../../services/platform/platform.service';
 import { ActionService } from '../../services/action/action.service';
 import { Signal } from '../../models/signal.model';
 import { ParticipantService } from '../../services/participant/participant.service';
@@ -18,6 +28,11 @@ import { LayoutService } from '../../services/layout/layout.service';
 import { Subscription, skip } from 'rxjs';
 import { MenuType } from '../../models/menu.model';
 import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.service';
+import { ToolbarComponent } from '../toolbar/toolbar.component';
+import { LibraryConfigService } from '../../services/library-config/library-config.service';
+import { LayoutComponent } from '../layout/layout.component';
+import { PanelComponent } from '../panel/panel.component';
+import { LibraryComponents } from '../../config/lib.config';
 
 @Component({
 	selector: 'ov-session',
@@ -25,14 +40,10 @@ import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.ser
 	styleUrls: ['./session.component.css']
 })
 export class SessionComponent implements OnInit {
-	@ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any>;
-	@ContentChild('customPanelContent', { read: TemplateRef }) customPanelContentTemplate: TemplateRef<any>;
-	@ContentChild('customLayoutElement', { read: TemplateRef }) customLayoutElementTemplate: TemplateRef<any>;
-
 	@Input() tokens: { webcam: string; screen: string };
-	@Output() _session = new EventEmitter<any>();
-	@Output() _publisher = new EventEmitter<any>();
-	@Output() _error = new EventEmitter<any>();
+	// @Output() _session = new EventEmitter<any>();
+	// @Output() _publisher = new EventEmitter<any>();
+	// @Output() _error = new EventEmitter<any>();
 
 	session: Session;
 	sessionScreen: Session;
@@ -40,8 +51,7 @@ export class SessionComponent implements OnInit {
 	sideMenu: MatSidenav;
 
 	sidenavMode: SidenavMode = SidenavMode.SIDE;
-	isParticipantsPanelOpened: boolean;
-	isChatPanelOpened: boolean;
+
 	protected readonly SIDENAV_WIDTH_LIMIT_MODE = 790;
 
 	protected menuSubscription: Subscription;
@@ -60,10 +70,43 @@ export class SessionComponent implements OnInit {
 		protected tokenService: TokenService,
 		protected layoutService: LayoutService,
 		protected menuService: SidenavMenuService,
-
-		protected platformService: PlatformService
+		protected libraryConfigSrv: LibraryConfigService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
+	}
+
+	@ViewChild('toolbar', { static: false, read: ViewContainerRef })
+	set toolbar(reference: ViewContainerRef) {
+		setTimeout(() => {
+			if (reference) {
+				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.TOOLBAR);
+				reference.clear();
+				reference.createComponent(component);
+			}
+		}, 0);
+	}
+
+	@ViewChild('layout', { static: false, read: ViewContainerRef })
+	set layout(reference: ViewContainerRef) {
+		setTimeout(() => {
+			if (reference) {
+				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.LAYOUT);
+				reference.clear();
+				reference.createComponent(component);
+				this.layoutService.initialize();
+			}
+		}, 0);
+	}
+
+	@ViewChild('panel', { static: false, read: ViewContainerRef })
+	set panel(reference: ViewContainerRef) {
+		setTimeout(() => {
+			if (reference) {
+				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.PANEL);
+				reference.clear();
+				reference.createComponent(component);
+			}
+		}, 0);
 	}
 
 	@HostListener('window:beforeunload')
@@ -87,8 +130,6 @@ export class SessionComponent implements OnInit {
 	}
 
 	async ngOnInit() {
-		this.layoutService.initialize();
-
 		if (this.webrtcService.getWebcamSession() === null) {
 			this.webrtcService.initialize();
 			await this.webrtcService.initDefaultPublisher(undefined);
@@ -113,7 +154,7 @@ export class SessionComponent implements OnInit {
 		// 	this.webrtcService.publishVideo(this.localUserService.getMyCameraPublisher(), false);
 		// }
 
-		this._session.emit(this.session);
+		// this._session.emit(this.session);
 	}
 
 	ngOnDestroy() {
@@ -124,8 +165,6 @@ export class SessionComponent implements OnInit {
 		this.session = null;
 		this.sessionScreen = null;
 		this.layoutService.clear();
-		this.isChatPanelOpened = false;
-		this.isParticipantsPanelOpened = false;
 		if (this.menuSubscription) this.menuSubscription.unsubscribe();
 		if (this.layoutWidthSubscription) this.layoutWidthSubscription.unsubscribe();
 	}
@@ -152,11 +191,7 @@ export class SessionComponent implements OnInit {
 		});
 
 		this.menuSubscription = this.menuService.menuOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
-			if (this.sideMenu) {
-				this.isChatPanelOpened = ev.opened && ev.type === MenuType.CHAT;
-				this.isParticipantsPanelOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
-				ev.opened ? this.sideMenu.open() : this.sideMenu.close();
-			}
+			this.sideMenu && ev.opened ? this.sideMenu.open() : this.sideMenu.close();
 		});
 	}
 
@@ -181,7 +216,7 @@ export class SessionComponent implements OnInit {
 				await this.webrtcService.publish(this.participantService.getMyCameraPublisher());
 			}
 		} catch (error) {
-			this._error.emit({ error: error.error, messgae: error.message, code: error.code, status: error.status });
+			// this._error.emit({ error: error.error, messgae: error.message, code: error.code, status: error.status });
 			this.log.e('There was an error connecting to the session:', error.code, error.message);
 			this.actionService.openDialog('There was an error connecting to the session:', error?.error || error?.message);
 		}

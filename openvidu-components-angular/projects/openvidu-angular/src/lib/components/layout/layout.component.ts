@@ -1,8 +1,10 @@
-import { AfterViewInit, Component, ContentChild, OnDestroy, OnInit, TemplateRef } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { ParticipantAbstractModel } from '../../models/participant.model';
 import { LayoutService } from '../../services/layout/layout.service';
+import { LibraryComponents } from '../../config/lib.config';
+import { LibraryConfigService } from '../../services/library-config/library-config.service';
 
 @Component({
 	selector: 'ov-layout',
@@ -10,8 +12,8 @@ import { LayoutService } from '../../services/layout/layout.service';
 	styleUrls: ['./layout.component.css']
 })
 export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
-	@ContentChild('customLocalParticipant', { read: TemplateRef }) customLocalParticipantTemplate: TemplateRef<any>;
-	@ContentChild('customRemoteParticipants', { read: TemplateRef }) customRemoteParticipantsTemplate: TemplateRef<any>;
+	_localStreamComponent: Type<any>;
+	_remoteStreamComponent: Type<any>;
 
 	localParticipant: ParticipantAbstractModel;
 	remoteParticipants: ParticipantAbstractModel[] = [];
@@ -19,10 +21,39 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	protected remoteParticipantsSubs: Subscription;
 	protected updateLayoutInterval: NodeJS.Timer;
 
-	constructor(protected layoutService: LayoutService, protected participantService: ParticipantService) {}
+	constructor(
+		protected libraryConfigSrv: LibraryConfigService,
+		protected layoutService: LayoutService,
+		protected participantService: ParticipantService
+	) {}
+
+	@ViewChild('localStream', { static: false, read: ViewContainerRef })
+	set stream(reference: ViewContainerRef) {
+		setTimeout(() => {
+			if (reference) {
+				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.STREAM);
+				//reference.clear();
+				this._localStreamComponent = component;
+				// reference.createComponent(component);
+			}
+		}, 0);
+	}
+
+	@ViewChild('remoteStream', { static: false, read: ViewContainerRef })
+	set remoteStream(reference: ViewContainerRef) {
+		setTimeout(() => {
+			if (reference) {
+
+				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.STREAM);
+				// reference.clear();
+				this._remoteStreamComponent = component;
+				// reference.createComponent(component);
+			}
+		}, 0);
+	}
 
 	ngOnInit(): void {
-		this.subscribeToUsers();
+		this.subscribeToParticipants();
 	}
 
 	ngAfterViewInit() {}
@@ -34,7 +65,7 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 		if (this.remoteParticipantsSubs) this.remoteParticipantsSubs.unsubscribe();
 	}
 
-	protected subscribeToUsers() {
+	protected subscribeToParticipants() {
 		this.localParticipantSubs = this.participantService.localParticipantObs.subscribe((p) => {
 			this.localParticipant = p;
 			this.layoutService.update();

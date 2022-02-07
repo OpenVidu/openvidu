@@ -1,6 +1,6 @@
 <div id="call-container">
 	<div id="user-settings-container" *ngIf="!joinSessionClicked && !closeClicked">
-		<ov-user-settings (onJoinClicked)="onJoinClicked()" (onCloseClicked)="onLeaveSessionClicked()"></ov-user-settings>
+		<ov-user-settings (onJoinClicked)="_onJoinClicked()" (onCloseClicked)="onLeaveSessionClicked()"></ov-user-settings>
 	</div>
 
 	<div id="spinner" *ngIf="joinSessionClicked && !isSessionAlive && !error">
@@ -10,21 +10,23 @@
 
 	<div id="spinner" *ngIf="joinSessionClicked && !isSessionAlive && error">
 		<mat-icon class="error-icon">error</mat-icon>
-		<span>{{errorMessage}}</span>
+		<span>{{ errorMessage }}</span>
 	</div>
 
 	<div id="session-container" *ngIf="joinSessionClicked && isSessionAlive && !error">
 		<ov-session [tokens]="_tokens">
-			<ng-template #toolbar>
-				<ov-toolbar
+
+			<!-- Default toolbar -->
+			<!--<ng-template #toolbar toolbar>
+				 <ov-toolbar
 					(onCamClicked)="onCamClicked()"
 					(onMicClicked)="onMicClicked()"
 					(onScreenShareClicked)="onScreenShareClicked()"
-					(onSpeakerLayoutClicked)="onSpeakerLayoutClicked()"
 					(onLeaveSessionClicked)="onLeaveSessionClicked()"
 				></ov-toolbar>
-			</ng-template>
-			<ov-layout layout></ov-layout>
+			</ng-template>-->
+
+			<!-- <ov-layout layout></ov-layout> -->
 		</ov-session>
 	</div>
 </div>
