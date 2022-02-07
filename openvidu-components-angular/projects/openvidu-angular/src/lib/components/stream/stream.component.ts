@@ -1,4 +1,4 @@
-import { Component, ContentChild, ElementRef, HostListener, Input, OnInit, TemplateRef, ViewChild, ViewContainerRef } from '@angular/core';
+import { Component, ContentChild, ElementRef, HostListener, Input, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { MatMenuPanel, MatMenuTrigger } from '@angular/material/menu';
 import { NicknameMatcher } from '../../matchers/nickname.matcher';
@@ -32,8 +32,7 @@ export class StreamComponent implements OnInit {
 	nicknameFormControl: FormControl;
 	matcher: NicknameMatcher;
 	_stream: StreamModel;
-
-	@ViewChild('streamComponent', { read: ViewContainerRef }) streamComponent: ViewContainerRef;
+	private _streamContainer: ElementRef;
 	@ViewChild(MatMenuTrigger) public menuTrigger: MatMenuTrigger;
 	@ViewChild('menu') menu: MatMenuPanel;
 
@@ -54,11 +53,22 @@ export class StreamComponent implements OnInit {
 	// 	this.isFullscreenEnabled = !this.isFullscreenEnabled;
 	// }
 
+	@ViewChild('streamContainer', { static: false, read: ElementRef })
+	set streamContainer(streamContainer: ElementRef) {
+		setTimeout(() => {
+			if (streamContainer) {
+				this._streamContainer = streamContainer;
+				if (this._stream.type === VideoType.SCREEN) {
+					this.toggleVideoEnlarged(true);
+				}
+			}
+		}, 0);
+	}
 
 	@Input()
 	set stream(stream: StreamModel) {
 		this._stream = stream;
-		this.checkVideoSizeBigIcon(this._stream.videoEnlarged);
+		this.checkVideoEnlarged();
 		this.nicknameFormControl = new FormControl(this._stream.nickname, [Validators.maxLength(25), Validators.required]);
 	}
 
@@ -77,21 +87,21 @@ export class StreamComponent implements OnInit {
 		this.cdkSrv.setSelector('body');
 	}
 
-	toggleVideoSize(resetAll?) {
-		const element = this.documentService.getHTMLElementByClassName(this.streamComponent.element.nativeElement, LayoutClass.ROOT_ELEMENT);
+	toggleVideoEnlarged(resetAll?) {
+		const element = this.documentService.getHTMLElementByClassName(this._streamContainer.nativeElement, LayoutClass.ROOT_ELEMENT);
 		if (!!resetAll) {
 			this.documentService.removeAllBigElementClass();
-			this.participantService.resetUsersZoom();
-			this.participantService.resetUsersZoom();
+			this.participantService.resetMyVideoEnlarged();
+			this.participantService.resetRemotesVideoEnlarged();
 		}
 
 		this.documentService.toggleBigElementClass(element);
 
 		if (!!this._stream.streamManager?.stream?.connection?.connectionId) {
 			if (this.openViduWebRTCService.isMyOwnConnection(this._stream.streamManager?.stream?.connection?.connectionId)) {
-				this.participantService.toggleZoom(this._stream.streamManager?.stream?.connection?.connectionId);
+				this.participantService.toggleMyVideoEnlarged(this._stream.streamManager?.stream?.connection?.connectionId);
 			} else {
-				this.participantService.toggleUserZoom(this._stream.streamManager?.stream?.connection?.connectionId);
+				this.participantService.toggleRemoteVideoEnlarged(this._stream.streamManager?.stream?.connection?.connectionId);
 			}
 		}
 		this.layoutService.update();
@@ -121,7 +131,7 @@ export class StreamComponent implements OnInit {
 			const nickname = this.nicknameFormControl.value;
 			this.participantService.setNickname(this._stream.connectionId, nickname);
 			this.storageService.set(Storage.USER_NICKNAME, nickname);
-			this.openViduWebRTCService.sendSignal(Signal.NICKNAME_CHANGED, undefined, {clientData: nickname});
+			this.openViduWebRTCService.sendSignal(Signal.NICKNAME_CHANGED, undefined, { clientData: nickname });
 			this.toggleNicknameForm();
 		}
 	}
@@ -136,8 +146,7 @@ export class StreamComponent implements OnInit {
 		await this.openViduWebRTCService.replaceTrack(this.participantService.getMyScreenPublisher(), properties);
 	}
 
-	protected checkVideoSizeBigIcon(videoEnlarged: boolean) {
-		this.videoSizeIcon = videoEnlarged ? VideoSizeIcon.NORMAL : VideoSizeIcon.BIG;
+	protected checkVideoEnlarged() {
+		this.videoSizeIcon = this._stream.videoEnlarged ? VideoSizeIcon.NORMAL : VideoSizeIcon.BIG;
 	}
-
 }

@@ -2,7 +2,7 @@
 	*ngIf="this._stream"
 	class="OT_widget-container"
 	[id]="'container-' + this._stream.streamManager?.stream?.streamId"
-	#streamComponent
+	#streamContainer
 >
 	<div class="nickname" [class.fullscreen]="isFullscreen">
 		<div (click)="toggleNicknameForm()" class="nicknameContainer" selected *ngIf="!toggleNickname">
@@ -32,10 +32,9 @@
 	</div>
 
 	<ov-video
-		(dblclick)="toggleVideoSize()"
+		(dblclick)="toggleVideoEnlarged()"
 		[streamManager]="this._stream.streamManager"
 		[mutedSound]="mutedSound"
-		(toggleVideoSizeEvent)="toggleVideoSize($event)"
 	></ov-video>
 
 
@@ -61,7 +60,7 @@
 		</button>
 		<span [matMenuTriggerFor]="menu"></span>
 		<mat-menu #menu="matMenu" yPosition="above" xPosition="before">
-			<button mat-menu-item id="videoZoomButton" (click)="toggleVideoSize()">
+			<button mat-menu-item id="videoZoomButton" (click)="toggleVideoEnlarged()">
 				<mat-icon>{{ this.videoSizeIcon }}</mat-icon>
 				<span *ngIf="videoSizeIcon === videoSizeIconEnum.NORMAL">Zoom out</span>
 				<span *ngIf="videoSizeIcon === videoSizeIconEnum.BIG">Zoom in</span>

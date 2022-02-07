@@ -139,11 +139,11 @@ export class ParticipantService {
 		return this.localParticipant.getScreenNickname();
 	}
 
-	resetUsersZoom() {
+	resetMyVideoEnlarged() {
 		this.localParticipant?.setAllVideoEnlarged(false);
 	}
 
-	toggleZoom(connectionId: string) {
+	toggleMyVideoEnlarged(connectionId: string) {
 		this.localParticipant.toggleVideoEnlarged(connectionId);
 	}
 
@@ -263,12 +263,12 @@ export class ParticipantService {
 		return this.remoteParticipants.some((p) => p.someHasVideoEnlarged());
 	}
 
-	toggleUserZoom(connectionId: string) {
+	toggleRemoteVideoEnlarged(connectionId: string) {
 		const p = this.getRemoteParticipantByConnectionId(connectionId);
 		p.toggleVideoEnlarged(connectionId);
 	}
 
-	resetRemotesZoom() {
+	resetRemotesVideoEnlarged() {
 		this.remoteParticipants.forEach((u) => u.setAllVideoEnlarged(false));
 	}
 
