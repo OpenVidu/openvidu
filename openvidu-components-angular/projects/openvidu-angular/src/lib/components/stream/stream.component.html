@@ -1,21 +1,21 @@
 <div
-	*ngIf="this._participant"
+	*ngIf="this._stream"
 	class="OT_widget-container"
-	[id]="'container-' + this._participant.streamManager?.stream?.streamId"
+	[id]="'container-' + this._stream.streamManager?.stream?.streamId"
 	#streamComponent
 >
 	<div class="nickname" [class.fullscreen]="isFullscreen">
 		<div (click)="toggleNicknameForm()" class="nicknameContainer" selected *ngIf="!toggleNickname">
-			<span id="nickname">{{ this._participant.nickname }}</span>
-			<span *ngIf="_participant.local || (_participant.streamManager && !_participant.streamManager?.remote)"> (edit)</span>
+			<span id="nickname">{{ this._stream.nickname }}</span>
+			<span *ngIf="_stream.local || (_stream.streamManager && !_stream.streamManager?.remote)"> (edit)</span>
 		</div>
-		<div *ngIf="toggleNickname && !this._participant.streamManager?.remote" [class.fullscreen]="isFullscreen" id="dialogNickname">
+		<div *ngIf="toggleNickname && !this._stream.streamManager?.remote" [class.fullscreen]="isFullscreen" id="dialogNickname">
 			<form id="nicknameForm">
 				<mat-form-field color="primary">
 					<input
 						matInput
 						#nicknameInput
-						placeholder="Nick: {{ this._participant.nickname }}"
+						placeholder="Nick: {{ this._stream.nickname }}"
 						[formControl]="nicknameFormControl"
 						[errorStateMatcher]="matcher"
 						(keypress)="eventKeyPress($event)"
@@ -33,18 +33,18 @@
 
 	<ov-video
 		(dblclick)="toggleVideoSize()"
-		[streamManager]="this._participant.streamManager"
+		[streamManager]="this._stream.streamManager"
 		[mutedSound]="mutedSound"
 		(toggleVideoSizeEvent)="toggleVideoSize($event)"
 	></ov-video>
 
 
 	<div class="status-icons">
-		<!-- <div id="statusMic" *ngIf="!this._participant.streamManager?.stream?.audioActive">
+		<!-- <div id="statusMic" *ngIf="!this._stream.streamManager?.stream?.audioActive">
 			<mat-icon>mic_off</mat-icon>
 		</div> -->
 
-		<button mat-icon-button id="statusMic" *ngIf="!this._participant.streamManager?.stream?.audioActive" disabled>
+		<button mat-icon-button id="statusMic" *ngIf="!this._stream.streamManager?.stream?.audioActive" disabled>
 			<mat-icon>mic_off</mat-icon>
 		</button>
 	</div>
@@ -53,7 +53,7 @@
 
 		<!-- Custom stream notifications -->
 		<ng-container *ngIf="notificationTemplate">
-			<ng-container *ngTemplateOutlet="notificationTemplate; context: { stream: _participant }"></ng-container>
+			<ng-container *ngTemplateOutlet="notificationTemplate; context: { stream: _stream }"></ng-container>
 		</ng-container>
 
 		<button mat-icon-button (click)="toggleVideoMenu($event)" matTooltip="Settings" aria-label="Video settings menu">
@@ -66,14 +66,14 @@
 				<span *ngIf="videoSizeIcon === videoSizeIconEnum.NORMAL">Zoom out</span>
 				<span *ngIf="videoSizeIcon === videoSizeIconEnum.BIG">Zoom in</span>
 			</button>
-			<button mat-menu-item id="volumeButton" *ngIf="this._participant.streamManager?.remote" (click)="toggleSound()">
+			<button mat-menu-item id="volumeButton" *ngIf="this._stream.streamManager?.remote" (click)="toggleSound()">
 				<mat-icon *ngIf="!mutedSound">volume_up</mat-icon>
 				<span *ngIf="!mutedSound">Mute sound</span>
 
 				<mat-icon *ngIf="mutedSound">volume_off</mat-icon>
 				<span *ngIf="mutedSound">Unmute sound</span>
 			</button>
-			<!-- <button mat-menu-item *ngIf="this._participant.streamManager?.stream?.videoActive" id="fullscreenButton" (click)="toggleFullscreen()">
+			<!-- <button mat-menu-item *ngIf="this._stream.streamManager?.stream?.videoActive" id="fullscreenButton" (click)="toggleFullscreen()">
 				<mat-icon *ngIf="!isFullscreenEnabled">fullscreen</mat-icon>
 				<span *ngIf="!isFullscreenEnabled">Fullscreen</span>
 
@@ -85,7 +85,7 @@
 				mat-menu-item
 				(click)="replaceScreenTrack()"
 				id="changeScreenButton"
-				*ngIf="!this._participant.streamManager?.remote && this._participant.streamManager?.stream?.typeOfVideo === videoTypeEnum.SCREEN"
+				*ngIf="!this._stream.streamManager?.remote && this._stream.streamManager?.stream?.typeOfVideo === videoTypeEnum.SCREEN"
 			>
 				<mat-icon>picture_in_picture</mat-icon>
 				<span>Replace screen</span>

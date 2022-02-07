@@ -31,7 +31,7 @@ export class StreamComponent implements OnInit {
 	toggleNickname: boolean;
 	nicknameFormControl: FormControl;
 	matcher: NicknameMatcher;
-	_participant: StreamModel;
+	_stream: StreamModel;
 
 	@ViewChild('streamComponent', { read: ViewContainerRef }) streamComponent: ViewContainerRef;
 	@ViewChild(MatMenuTrigger) public menuTrigger: MatMenuTrigger;
@@ -56,10 +56,10 @@ export class StreamComponent implements OnInit {
 
 
 	@Input()
-	set participant(participant: StreamModel) {
-		this._participant = participant;
-		this.checkVideoSizeBigIcon(participant.videoEnlarged);
-		this.nicknameFormControl = new FormControl(this._participant.nickname, [Validators.maxLength(25), Validators.required]);
+	set stream(stream: StreamModel) {
+		this._stream = stream;
+		this.checkVideoSizeBigIcon(this._stream.videoEnlarged);
+		this.nicknameFormControl = new FormControl(this._stream.nickname, [Validators.maxLength(25), Validators.required]);
 	}
 
 	@ViewChild('nicknameInput')
@@ -87,11 +87,11 @@ export class StreamComponent implements OnInit {
 
 		this.documentService.toggleBigElementClass(element);
 
-		if (!!this._participant.streamManager?.stream?.connection?.connectionId) {
-			if (this.openViduWebRTCService.isMyOwnConnection(this._participant.streamManager?.stream?.connection?.connectionId)) {
-				this.participantService.toggleZoom(this._participant.streamManager?.stream?.connection?.connectionId);
+		if (!!this._stream.streamManager?.stream?.connection?.connectionId) {
+			if (this.openViduWebRTCService.isMyOwnConnection(this._stream.streamManager?.stream?.connection?.connectionId)) {
+				this.participantService.toggleZoom(this._stream.streamManager?.stream?.connection?.connectionId);
 			} else {
-				this.participantService.toggleUserZoom(this._participant.streamManager?.stream?.connection?.connectionId);
+				this.participantService.toggleUserZoom(this._stream.streamManager?.stream?.connection?.connectionId);
 			}
 		}
 		this.layoutService.update();
@@ -102,7 +102,7 @@ export class StreamComponent implements OnInit {
 			this.menuTrigger.closeMenu();
 			return;
 		}
-		this.cdkSrv.setSelector('#container-' + this._participant.streamManager?.stream?.streamId);
+		this.cdkSrv.setSelector('#container-' + this._stream.streamManager?.stream?.streamId);
 		this.menuTrigger.openMenu();
 	}
 
@@ -111,7 +111,7 @@ export class StreamComponent implements OnInit {
 	}
 
 	toggleNicknameForm() {
-		if (this._participant.local) {
+		if (this._stream.local) {
 			this.toggleNickname = !this.toggleNickname;
 		}
 	}
@@ -119,7 +119,7 @@ export class StreamComponent implements OnInit {
 	eventKeyPress(event) {
 		if (event && event.keyCode === 13 && this.nicknameFormControl.valid) {
 			const nickname = this.nicknameFormControl.value;
-			this.participantService.setNickname(this._participant.connectionId, nickname);
+			this.participantService.setNickname(this._stream.connectionId, nickname);
 			this.storageService.set(Storage.USER_NICKNAME, nickname);
 			this.openViduWebRTCService.sendSignal(Signal.NICKNAME_CHANGED, undefined, {clientData: nickname});
 			this.toggleNicknameForm();

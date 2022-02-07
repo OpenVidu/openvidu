@@ -2,10 +2,10 @@
 	<div
 		class="OT_root OT_publisher"
 		id="localUser"
-		*ngFor="let connection of localParticipant | connections"
-		[ngClass]="{ OV_small: !connection.streamManager?.stream?.videoActive }"
+		*ngFor="let stream of localParticipant | connections"
+		[ngClass]="{ OV_small: !stream.streamManager?.stream?.videoActive }"
 	>
-		<ng-container *ngTemplateOutlet="streamTemplate; context: { stream: connection }"></ng-container>
+		<ng-container *ngTemplateOutlet="streamTemplate; context: { stream: stream }"></ng-container>
 	</div>
 	<!-- <ng-template #stream let-stream="stream">
 		<p>{{prueba.videoEnlarged}}</p>
@@ -13,11 +13,11 @@
 	</ng-template> -->
 
 	<div
-		*ngFor="let connection of remoteParticipants | connections"
+		*ngFor="let stream of remoteParticipants | connections"
 		class="OT_root OT_publisher"
 		id="remote-participant"
-		[ngClass]="{ OV_small: !connection.streamManager?.stream?.videoActive }"
+		[ngClass]="{ OV_small: !stream.streamManager?.stream?.videoActive }"
 	>
-		<ng-container *ngTemplateOutlet="streamTemplate; context: { stream: connection }"></ng-container>
+		<ng-container *ngTemplateOutlet="streamTemplate; context: { stream: stream }"></ng-container>
 	</div>
 </div>

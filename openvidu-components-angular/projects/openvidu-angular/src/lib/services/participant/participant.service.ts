@@ -31,7 +31,6 @@ export class ParticipantService {
 
 	constructor(protected loggerSrv: LoggerService) {
 		this.log = this.loggerSrv.get('ParticipantService');
-		// this.participantsObs = this._participants.asObservable();
 
 		this.localParticipantObs = this._localParticipant.asObservable();
 		this.remoteParticipantsObs = this._remoteParticipants.asObservable();

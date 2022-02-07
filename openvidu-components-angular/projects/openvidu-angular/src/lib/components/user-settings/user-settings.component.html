@@ -22,14 +22,14 @@
 							<mat-spinner></mat-spinner>
 						</div>
 						<div class="videoContainer" *ngIf="!isLoading">
-							<div *ngFor="let connection of localParticipant | connections">
+							<div *ngFor="let stream of localParticipant | connections">
 								<!-- Only webcam video will be shown if webcamera is available -->
 								<ov-video
-									*ngIf="(connection.type === 'CAMERA' && hasVideoDevices) || connection.type === 'SCREEN'"
-									[streamManager]="connection.streamManager"
-									[ngClass]="{ ovVideoSmall: localParticipant.connections.size > 1 && connection.type === 'CAMERA' }"
+									*ngIf="(stream.type === 'CAMERA' && hasVideoDevices) || stream.type === 'SCREEN'"
+									[streamManager]="stream.streamManager"
+									[ngClass]="{ ovVideoSmall: localParticipant.connections.size > 1 && stream.type === 'CAMERA' }"
 								></ov-video>
-								<div class="cameraMessageContainer" *ngIf="connection.type === 'CAMERA' && !hasVideoDevices">
+								<div class="cameraMessageContainer" *ngIf="stream.type === 'CAMERA' && !hasVideoDevices">
 									<span *ngIf="!hasVideoDevices && !hasAudioDevices">Oops! Camera and microphone are not available</span>
 									<span *ngIf="!hasVideoDevices && hasAudioDevices">Oops! Camera is not available</span>
 									<span *ngIf="hasVideoDevices && !hasAudioDevices">Oops! Microphone is not available</span>

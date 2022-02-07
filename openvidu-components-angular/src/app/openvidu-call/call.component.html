@@ -44,8 +44,14 @@
 
 	<!-- <ng-template #stream let-stream="stream">
 
-		<ov-stream postion="top" [participant]="stream">
+		<ov-stream postion="top" [stream]="stream">
 			<button network-quality> hola</button>
+			<ng-template #notification>
+				<button  mat-icon-button id="hand-notification" *ngIf="stream.videoEnlarged">
+					<mat-icon>front_hand</mat-icon>
+				</button>
+
+			</ng-template>
 		</ov-stream>
 
 	</ng-template> -->
