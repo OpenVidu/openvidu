@@ -207,7 +207,7 @@ export class WebRtcPeer {
                         const layerDiv = 2 ** (maxLayers - l - 1);
 
                         const encoding: RTCRtpEncodingParameters = {
-                            rid: "rDiv" + layerDiv.toString(),
+                            rid: "rdiv" + layerDiv.toString(),
 
                             // @ts-ignore -- Property missing from DOM types.
                             scalabilityMode: "L1T1",
