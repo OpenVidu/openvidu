@@ -86,6 +86,11 @@
 			<version>${version.junit}</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>commons-validator</groupId>
+			<artifactId>commons-validator</artifactId>
+			<version>${version.commons-validator}</version>
+		</dependency>
 	</dependencies>
 
 	<profiles>

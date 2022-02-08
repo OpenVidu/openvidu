@@ -19,6 +19,7 @@ package io.openvidu.server.core;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -51,6 +52,7 @@ import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.SessionProperties;
+import io.openvidu.java.client.IceServerProperties;
 import io.openvidu.server.cdr.CDREventRecordingStatusChanged;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
@@ -329,13 +331,13 @@ public abstract class SessionManager {
 	}
 
 	public Token newToken(Session session, OpenViduRole role, String serverMetadata, boolean record,
-			KurentoOptions kurentoOptions) throws Exception {
+			KurentoOptions kurentoOptions, List<IceServerProperties> customIceServers) throws Exception {
 		if (!formatChecker.isServerMetadataFormatCorrect(serverMetadata)) {
 			log.error("Data invalid format");
 			throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Data invalid format");
 		}
 		Token tokenObj = tokenGenerator.generateToken(session.getSessionId(), serverMetadata, record, role,
-				kurentoOptions);
+				kurentoOptions, customIceServers);
 
 		// Internal dev feature: allows customizing connectionId
 		if (serverMetadata.contains("openviduCustomConnectionId")) {

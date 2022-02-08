@@ -399,6 +399,12 @@ public class ConnectionProperties {
 		} else {
 			json.add("kurentoOptions", JsonNull.INSTANCE);
 		}
+		JsonArray customIceServersJsonList = new JsonArray();
+		customIceServers.forEach((customIceServer) -> {
+			customIceServersJsonList.add(customIceServer.toJson());
+		});
+		json.add("customIceServers", customIceServersJsonList);
+
 		// IPCAM
 		if (getRtspUri() != null) {
 			json.addProperty("rtspUri", getRtspUri());
@@ -420,14 +426,6 @@ public class ConnectionProperties {
 		} else {
 			json.add("networkCache", JsonNull.INSTANCE);
 		}
-
-		// Ice Servers
-		JsonArray customIceServersJsonList = new JsonArray();
-		customIceServers.forEach((customIceServer) -> {
-			customIceServersJsonList.add(customIceServer.toJson());
-		});
-		json.add("customIceServers", customIceServersJsonList);
-
 		return json;
 	}
 

@@ -21,6 +21,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -653,7 +654,7 @@ public class SessionRestController {
 			try {
 				Token token = sessionManager.newToken(session, connectionProperties.getRole(),
 						connectionProperties.getData(), connectionProperties.record(),
-						connectionProperties.getKurentoOptions());
+						connectionProperties.getKurentoOptions(), connectionProperties.getCustomIceServers());
 				return new ResponseEntity<>(token.toJsonAsParticipant().toString(), RestUtils.getResponseHeaders(),
 						HttpStatus.OK);
 			} catch (Exception e) {
@@ -909,7 +910,7 @@ public class SessionRestController {
 			JsonArray customIceServersJsonArray = null;
 			if (params.get("customIceServers") != null) {
 				try {
-					customIceServersJsonArray = new Gson().toJsonTree(params.get("customIceServers"), Map.class)
+					customIceServersJsonArray = new Gson().toJsonTree(params.get("customIceServers"), List.class)
 							.getAsJsonArray();
 				} catch (Exception e) {
 					throw new Exception("Error in parameter 'customIceServersJson'. It is not a valid JSON object");
@@ -920,7 +921,7 @@ public class SessionRestController {
 					for (int i = 0; i < customIceServersJsonArray.size(); i++) {
 						JsonObject customIceServerJson = customIceServersJsonArray.get(i).getAsJsonObject();
 						IceServerProperties.Builder iceServerPropertiesBuilder = new IceServerProperties.Builder();
-						iceServerPropertiesBuilder.url(customIceServerJson.get("urls").getAsString());
+						iceServerPropertiesBuilder.url(customIceServerJson.get("url").getAsString());
 						if (customIceServerJson.has("username")) {
 							iceServerPropertiesBuilder.username(customIceServerJson.get("username").getAsString());
 						}
@@ -931,7 +932,7 @@ public class SessionRestController {
 						builder.addCustomIceServer(iceServerProperties);
 					}
 				} catch (Exception e) {
-					throw new Exception("Type error in some parameter of 'kurentoOptions': " + e.getMessage());
+					throw new Exception("Type error in some parameter of 'customIceServers': " + e.getMessage());
 				}
 			}
 

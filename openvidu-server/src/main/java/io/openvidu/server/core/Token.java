@@ -17,17 +17,16 @@
 
 package io.openvidu.server.core;
 
+import io.openvidu.java.client.*;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
-import io.openvidu.java.client.ConnectionProperties;
-import io.openvidu.java.client.ConnectionType;
-import io.openvidu.java.client.KurentoOptions;
-import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.core.Participant.ParticipantStatus;
 import io.openvidu.server.coturn.TurnCredentials;
+
+import java.util.List;
 
 public class Token {
 
@@ -77,7 +76,8 @@ public class Token {
 		this.updateConnectionProperties(connectionProperties.getType(), connectionProperties.getData(), newRecord,
 				connectionProperties.getRole(), connectionProperties.getKurentoOptions(),
 				connectionProperties.getRtspUri(), connectionProperties.adaptativeBitrate(),
-				connectionProperties.onlyPlayWithSubscribers(), connectionProperties.getNetworkCache());
+				connectionProperties.onlyPlayWithSubscribers(), connectionProperties.getNetworkCache(),
+				connectionProperties.getCustomIceServers());
 	}
 
 	public OpenViduRole getRole() {
@@ -88,7 +88,8 @@ public class Token {
 		this.updateConnectionProperties(connectionProperties.getType(), connectionProperties.getData(),
 				connectionProperties.record(), newRole, connectionProperties.getKurentoOptions(),
 				connectionProperties.getRtspUri(), connectionProperties.adaptativeBitrate(),
-				connectionProperties.onlyPlayWithSubscribers(), connectionProperties.getNetworkCache());
+				connectionProperties.onlyPlayWithSubscribers(), connectionProperties.getNetworkCache(),
+				connectionProperties.getCustomIceServers());
 	}
 
 	public KurentoOptions getKurentoOptions() {
@@ -117,6 +118,10 @@ public class Token {
 
 	public String getConnectionId() {
 		return connectionId;
+	}
+
+	public List<IceServerProperties> getCustomIceServers() {
+		return this.connectionProperties.getCustomIceServers();
 	}
 	
 	public void setConnectionId(String connectionId) {
@@ -178,7 +183,7 @@ public class Token {
 
 	private void updateConnectionProperties(ConnectionType type, String data, Boolean record, OpenViduRole role,
 			KurentoOptions kurentoOptions, String rtspUri, Boolean adaptativeBitrate, Boolean onlyPlayWithSubscribers,
-			Integer networkCache) {
+			Integer networkCache, List<IceServerProperties> iceServerProperties) {
 		ConnectionProperties.Builder builder = new ConnectionProperties.Builder();
 		if (type != null) {
 			builder.type(type);
@@ -206,6 +211,11 @@ public class Token {
 		}
 		if (networkCache != null) {
 			builder.networkCache(networkCache);
+		}
+		if (iceServerProperties != null) {
+			for (IceServerProperties customIceServer: iceServerProperties) {
+				builder.addCustomIceServer(customIceServer);
+			}
 		}
 		this.connectionProperties = builder.build();
 	}
