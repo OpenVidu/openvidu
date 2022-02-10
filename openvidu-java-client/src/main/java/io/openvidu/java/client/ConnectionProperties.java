@@ -43,14 +43,13 @@ public class ConnectionProperties {
 		// WEBRTC
 		private OpenViduRole role;
 		private KurentoOptions kurentoOptions;
+		private List<IceServerProperties> customIceServers = new ArrayList<>();
 		// IPCAM
 		private String rtspUri;
 		private Boolean adaptativeBitrate;
 		private Boolean onlyPlayWithSubscribers;
 		private Integer networkCache;
 
-		// External Turn Service
-		private List<IceServerProperties> customIceServers = new ArrayList<>();
 
 		/**
 		 * Builder for {@link io.openvidu.java.client.ConnectionProperties}.
@@ -231,7 +230,32 @@ public class ConnectionProperties {
 			return this;
 		}
 
-		// TODO: Comment
+		/**
+		 * On certain type of networks, clients using default OpenVidu STUN/TURN server can not be reached it because
+		 * firewall rules and network topologies at the client side. This method allows you to configure your
+		 * own ICE Server for specific connections if you need it. This is usually not necessary, only it is usefull for
+		 * OpenVidu users behind firewalls which allows traffic from/to specific ports which may need a custom
+		 * ICE Server configuration
+		 *
+		 * Add an ICE Server if in your use case you need this connection to use your own ICE Server deployment.
+		 * When the user uses this connection, it will use the specified ICE Servers defined here.
+		 *
+		 * The level of precedence for ICE Server configuration on every OpenVidu connection is:
+	 	 * <ol>
+		 * <li>Configured ICE Server using Openvidu.setAdvancedCofiguration() at openvidu-browser.</li>
+		 * <li><bold>Configured ICE server at
+		 * {@link io.openvidu.java.client.ConnectionProperties#customIceServers ConnectionProperties.customIceServers}</li>
+		 * <li>Configured ICE Server at global configuration parameter: OPENVIDU_WEBRTC_ICE_SERVERS</li>
+		 * <li>Default deployed Coturn within OpenVidu deployment</li>
+		 * </ol>
+		 * <br>
+		 * If no value is found at level 1, level 2 will be used, and so on until level 4.
+		 * <br>
+		 * This method is equivalent to level 2 of precedence.
+		 * <br><br>
+		 * <strong>Only for
+		 * {@link io.openvidu.java.client.ConnectionType#WEBRTC}</strong>
+		 */
 		public Builder addCustomIceServer(IceServerProperties iceServerProperties) {
 			this.customIceServers.add(iceServerProperties);
 			return this;
@@ -364,7 +388,15 @@ public class ConnectionProperties {
 		return this.networkCache;
 	}
 
-	// TODO: Comment
+	/**
+	 * Returns a list of custom ICE Servers configured for this connection.
+	 * <br><br>
+	 * See {@link io.openvidu.java.client.ConnectionProperties.Builder#addCustomIceServer(IceServerProperties)} for more
+	 * information.
+	 * <br><br>
+	 * <strong>Only for
+	 * {@link io.openvidu.java.client.ConnectionType#WEBRTC}</strong>
+	 */
 	public List<IceServerProperties> getCustomIceServers() {
 		return new ArrayList<>(this.customIceServers);
 	}

@@ -10,20 +10,35 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * See
+ * {@link io.openvidu.java.client.ConnectionProperties.Builder#addCustomIceServer(IceServerProperties)}
+ */
 public class IceServerProperties {
 
     private String url;
     private String username;
     private String credential;
 
+    /**
+     * Returns the defined ICE Server url for this {@link IceServerProperties} object.
+     */
     public String getUrl() {
         return url;
     }
 
+    /**
+     * Returns the Username to be used for TURN connections at the defined {@link IceServerProperties#getUrl()}
+     * and {@link IceServerProperties#getCredential()} for this {@link IceServerProperties} object.
+     */
     public String getUsername() {
         return username;
     }
 
+    /**
+     * Returns the credential to be used for TURN connections at the defined {@link IceServerProperties#getUrl()}
+     * and {@link IceServerProperties#getUsername()} for this {@link IceServerProperties} object.
+     */
     public String getCredential() {
         return credential;
     }
@@ -35,9 +50,7 @@ public class IceServerProperties {
     }
 
     /**
-     * Ice server properties following RTCIceServers format:
-     * https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer/urls
-     * @return
+     * @hidden
      */
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
@@ -51,28 +64,56 @@ public class IceServerProperties {
         return json;
     }
 
+    /**
+     * Builder for {@link IceServerProperties}
+     */
     public static class Builder {
 
         private String url;
         private String username;
         private String credential;
 
+        /**
+         * Set the url for the ICE Server you want to use.
+         * It should follow a valid format:
+         * <ul>
+         *     <li><a href="https://datatracker.ietf.org/doc/html/rfc7065#section-3.1" target="_blank">https://datatracker.ietf.org/doc/html/rfc7065#section-3.1</a></li>
+         *     <li><a href="https://datatracker.ietf.org/doc/html/rfc7064#section-3.1" target="_blank">https://datatracker.ietf.org/doc/html/rfc7064#section-3.1</a></li>
+         * </ul>
+         */
         public IceServerProperties.Builder url(String url) {
             this.url = url;
             return this;
         }
 
+        /**
+         * Set a username for the ICE Server you want to use.
+         * This parameter should be defined only for TURN, not for STUN ICE Servers.
+         */
         public IceServerProperties.Builder username(String userName) {
             this.username = userName;
             return this;
         }
 
+        /**
+         * Set a credential for the ICE Server you want to use.
+         * This parameter should be defined only for TURN, not for STUN ICE Servers.
+         */
         public IceServerProperties.Builder credential(String credential) {
             this.credential = credential;
             return this;
         }
 
 
+        /**
+         * Builder for {@link io.openvidu.java.client.RecordingProperties}
+         * @throws IllegalArgumentException if the defined properties does not follows
+         * common STUN/TURN RFCs:
+         * <ul>
+         *     <li><a href="https://datatracker.ietf.org/doc/html/rfc7065#section-3.1" target="_blank">https://datatracker.ietf.org/doc/html/rfc7065#section-3.1</a></li>
+         *     <li><a href="https://datatracker.ietf.org/doc/html/rfc7064#section-3.1" target="_blank">https://datatracker.ietf.org/doc/html/rfc7064#section-3.1</a></li>
+         * </ul>
+         */
         public IceServerProperties build() throws IllegalArgumentException {
             if (this.url == null) {
                 throw new IllegalArgumentException("External turn url cannot be null");
@@ -91,10 +132,6 @@ public class IceServerProperties {
             return new IceServerProperties(this.url, this.username, this.credential);
         }
 
-        /** Parsing Turn Stun Uri based on:
-         * - https://datatracker.ietf.org/doc/html/rfc7065#section-3.1
-         * - https://datatracker.ietf.org/doc/html/rfc7064#section-3.1
-         */
         private void checkValidStunTurn(String uri) throws IllegalArgumentException {
             final String TCP_TRANSPORT_SUFFIX = "?transport=tcp";
             final String UDP_TRANSPORT_SUFFIX = "?transport=udp";
