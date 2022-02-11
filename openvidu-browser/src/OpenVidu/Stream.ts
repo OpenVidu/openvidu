@@ -550,7 +550,7 @@ export class Stream {
      */
     enableHarkSpeakingEvent(): void {
         this.setHarkListenerIfNotExists();
-        if (!this.harkSpeakingEnabled) {
+        if (!this.harkSpeakingEnabled && !!this.speechEvent) {
             this.harkSpeakingEnabled = true;
             this.speechEvent.on('speaking', () => {
                 this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStartSpeaking', this.connection, this.streamId)]);
@@ -565,7 +565,7 @@ export class Stream {
      */
     enableOnceHarkSpeakingEvent(): void {
         this.setHarkListenerIfNotExists();
-        if (!this.harkSpeakingEnabledOnce) {
+        if (!this.harkSpeakingEnabledOnce && !!this.speechEvent) {
             this.harkSpeakingEnabledOnce = true;
             this.speechEvent.once('speaking', () => {
                 if (this.harkSpeakingEnabledOnce) {
@@ -612,7 +612,7 @@ export class Stream {
      */
     enableHarkStoppedSpeakingEvent(): void {
         this.setHarkListenerIfNotExists();
-        if (!this.harkStoppedSpeakingEnabled) {
+        if (!this.harkStoppedSpeakingEnabled && !!this.speechEvent) {
             this.harkStoppedSpeakingEnabled = true;
             this.speechEvent.on('stopped_speaking', () => {
                 this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStopSpeaking', this.connection, this.streamId)]);
@@ -627,7 +627,7 @@ export class Stream {
      */
     enableOnceHarkStoppedSpeakingEvent(): void {
         this.setHarkListenerIfNotExists();
-        if (!this.harkStoppedSpeakingEnabledOnce) {
+        if (!this.harkStoppedSpeakingEnabledOnce && !!this.speechEvent) {
             this.harkStoppedSpeakingEnabledOnce = true;
             this.speechEvent.once('stopped_speaking', () => {
                 if (this.harkStoppedSpeakingEnabledOnce) {
