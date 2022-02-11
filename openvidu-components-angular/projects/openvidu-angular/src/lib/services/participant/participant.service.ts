@@ -252,7 +252,7 @@ export class ParticipantService {
 			this.updateRemoteParticipants();
 		}
 	}
-	protected getRemoteParticipantByConnectionId(connectionId: string): ParticipantAbstractModel {
+	getRemoteParticipantByConnectionId(connectionId: string): ParticipantAbstractModel {
 		return this.remoteParticipants.find((p) => p.hasConnectionId(connectionId));
 	}
 
@@ -296,7 +296,7 @@ export class ParticipantService {
 		}
 	}
 
-	protected updateRemoteParticipants() {
+	updateRemoteParticipants() {
 		this._remoteParticipants.next(this.remoteParticipants);
 	}
 	protected newParticipant(steramModel?: StreamModel, participantId?: string) {
