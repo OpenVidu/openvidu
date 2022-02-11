@@ -17,6 +17,7 @@
 
 package io.openvidu.server.core;
 
+import com.google.gson.JsonArray;
 import io.openvidu.java.client.*;
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -141,6 +142,16 @@ public class Token {
 			json.add("kurentoOptions", this.getKurentoOptions().toJson());
 		}
 		return json;
+	}
+
+	public JsonArray getCustomIceServersAsJson() {
+		JsonArray customIceServersJsonList = new JsonArray();
+		if (this.connectionProperties.getCustomIceServers() != null) {
+			this.connectionProperties.getCustomIceServers().forEach((customIceServer) -> {
+				customIceServersJsonList.add(customIceServer.toJson());
+			});
+		}
+		return customIceServersJsonList;
 	}
 
 	public JsonObject toJsonAsParticipant() {

@@ -243,7 +243,7 @@ public class ConnectionProperties {
 		 * The level of precedence for ICE Server configuration on every OpenVidu connection is:
 	 	 * <ol>
 		 * <li>Configured ICE Server using Openvidu.setAdvancedCofiguration() at openvidu-browser.</li>
-		 * <li><bold>Configured ICE server at
+		 * <li>Configured ICE server at
 		 * {@link io.openvidu.java.client.ConnectionProperties#customIceServers ConnectionProperties.customIceServers}</li>
 		 * <li>Configured ICE Server at global configuration parameter: OPENVIDU_WEBRTC_ICE_SERVERS</li>
 		 * <li>Default deployed Coturn within OpenVidu deployment</li>

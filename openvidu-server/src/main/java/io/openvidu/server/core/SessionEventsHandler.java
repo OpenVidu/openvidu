@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import io.openvidu.java.client.IceServerProperties;
 import org.kurento.client.GenericMediaEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,6 +187,11 @@ public class SessionEventsHandler {
 			}
 			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNIP_PARAM, openviduConfig.getCoturnIp());
 			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNPORT_PARAM, openviduConfig.getCoturnPort());
+			List<IceServerProperties> customIceServers = participant.getToken().getCustomIceServers();
+			if (customIceServers!= null && !customIceServers.isEmpty()) {
+				result.add(ProtocolElements.PARTICIPANTJOINED_CUSTOM_ICE_SERVERS,
+						participant.getToken().getCustomIceServersAsJson());
+			}
 			if (participant.getToken().getTurnCredentials() != null) {
 				result.addProperty(ProtocolElements.PARTICIPANTJOINED_TURNUSERNAME_PARAM,
 						participant.getToken().getTurnCredentials().getUsername());

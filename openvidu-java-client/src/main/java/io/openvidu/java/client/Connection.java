@@ -193,6 +193,19 @@ public class Connection {
 	}
 
 	/**
+	 * Returns a list of custom ICE Servers configured for this connection.
+	 * <br><br>
+	 * See {@link io.openvidu.java.client.ConnectionProperties.Builder#addCustomIceServer(IceServerProperties)} for more
+	 * information.
+	 * <br><br>
+	 * <strong>Only for
+	 * {@link io.openvidu.java.client.ConnectionType#WEBRTC}</strong>
+	 */
+	public List<IceServerProperties> getCustomIceServers() {
+		return this.connectionProperties.getCustomIceServers();
+	}
+
+	/**
 	 * Returns the token string associated to the Connection. This is the value that
 	 * must be sent to the client-side to be consumed in OpenVidu Browser method
 	 * <a href=

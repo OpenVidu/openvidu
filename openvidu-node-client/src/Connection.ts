@@ -18,6 +18,7 @@
 import { Publisher } from './Publisher';
 import { ConnectionProperties } from './ConnectionProperties';
 import { OpenViduRole } from './OpenViduRole';
+import { IceServerProperties } from './IceServerProperties';
 
 /**
  * See [[Session.connections]]
@@ -138,6 +139,7 @@ export class Connection {
             this.connectionProperties.adaptativeBitrate = json.adaptativeBitrate;
             this.connectionProperties.onlyPlayWithSubscribers = json.onlyPlayWithSubscribers;
             this.connectionProperties.networkCache = json.networkCache;
+            this.connectionProperties.customIceServers = json.customIceServers ?? []
         } else {
             this.connectionProperties = {
                 type: json.type,
@@ -148,7 +150,8 @@ export class Connection {
                 rtspUri: json.rtspUri,
                 adaptativeBitrate: json.adaptativeBitrate,
                 onlyPlayWithSubscribers: json.onlyPlayWithSubscribers,
-                networkCache: json.networkCache
+                networkCache: json.networkCache,
+                customIceServers: json.customIceServers ?? []
             }
         }
         this.role = json.role;
@@ -224,6 +227,7 @@ export class Connection {
             this.connectionProperties.adaptativeBitrate === other.connectionProperties.adaptativeBitrate &&
             this.connectionProperties.onlyPlayWithSubscribers === other.connectionProperties.onlyPlayWithSubscribers &&
             this.connectionProperties.networkCache === other.connectionProperties.networkCache &&
+            this.connectionProperties.customIceServers.length === other.connectionProperties.customIceServers.length &&
             this.token === other.token &&
             this.location === other.location &&
             this.ip === other.ip &&
@@ -236,6 +240,14 @@ export class Connection {
                 equals = JSON.stringify(this.connectionProperties.kurentoOptions) === JSON.stringify(other.connectionProperties.kurentoOptions);
             } else {
                 equals = (this.connectionProperties.kurentoOptions === other.connectionProperties.kurentoOptions);
+            }
+        }
+        if (equals) {
+            if (this.connectionProperties.customIceServers != null) {
+                const simpleIceComparator = (a: IceServerProperties, b: IceServerProperties) => (a.url > b.url) ? 1 : -1
+                const sortedIceServers = this.connectionProperties.customIceServers.sort(simpleIceComparator);
+                const sortedOtherIceServers = other.connectionProperties.customIceServers.sort(simpleIceComparator);
+                equals = JSON.stringify(sortedIceServers) === JSON.stringify(sortedOtherIceServers);
             }
         }
         if (equals) {
