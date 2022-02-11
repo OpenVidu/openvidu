@@ -5,12 +5,8 @@
 		*ngFor="let stream of localParticipant | connections"
 		[ngClass]="{ OV_small: !stream.streamManager?.stream?.videoActive }"
 	>
-		<ng-container *ngTemplateOutlet="streamTemplate; context: { stream: stream }"></ng-container>
+		<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: stream }"></ng-container>
 	</div>
-	<!-- <ng-template #stream let-stream="stream">
-		<p>{{prueba.videoEnlarged}}</p>
-		<ov-stream [participant]="prueba"></ov-stream>
-	</ng-template> -->
 
 	<div
 		*ngFor="let stream of remoteParticipants | connections"
@@ -18,6 +14,6 @@
 		id="remote-participant"
 		[ngClass]="{ OV_small: !stream.streamManager?.stream?.videoActive }"
 	>
-		<ng-container *ngTemplateOutlet="streamTemplate; context: { stream: stream }"></ng-container>
+		<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: stream }"></ng-container>
 	</div>
 </div>

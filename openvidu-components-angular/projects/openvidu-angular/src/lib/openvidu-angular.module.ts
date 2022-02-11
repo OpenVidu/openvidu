@@ -58,9 +58,13 @@ import { ParticipantItemComponent } from './components/panel/participants-panel/
 import { ParticipantsPanelComponent } from './components/panel/participants-panel/participants-panel/participants-panel.component';
 import { VideoconferenceComponent } from './components/videoconference/videoconference.component';
 import { PanelComponent } from './components/panel/panel.component';
+import { StreamDirective } from './directives/stream/stream.directive';
+import { BrowserModule } from '@angular/platform-browser';
 
 @NgModule({
 	declarations: [
+		StreamDirective,
+
 		UserSettingsComponent,
 		VideoComponent,
 		ToolbarComponent,
@@ -77,7 +81,7 @@ import { PanelComponent } from './components/panel/panel.component';
 		ParticipantItemComponent,
 		ParticipantsPanelComponent,
 		VideoconferenceComponent,
-  PanelComponent
+		PanelComponent,
 	],
 	imports: [
 		CommonModule,
@@ -132,7 +136,8 @@ import { PanelComponent } from './components/panel/panel.component';
 		StreamComponent,
 		VideoComponent,
 		ParticipantConnectionsPipe,
-		CommonModule
+		CommonModule,
+		StreamDirective
 	],
 	entryComponents: [DialogTemplateComponent]
 })

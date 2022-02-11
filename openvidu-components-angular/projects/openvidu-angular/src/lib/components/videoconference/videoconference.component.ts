@@ -1,4 +1,5 @@
-import { Component, ContentChild, EventEmitter, Input, OnInit, Output, TemplateRef } from '@angular/core';
+import { Component, ContentChild, EventEmitter, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
+import { StreamDirective } from '../../directives/stream/stream.directive';
 
 @Component({
 	selector: 'ov-videoconference',
@@ -6,15 +7,37 @@ import { Component, ContentChild, EventEmitter, Input, OnInit, Output, TemplateR
 	styleUrls: ['./videoconference.component.css']
 })
 export class VideoconferenceComponent implements OnInit {
-	@ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any>;
-	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
-	@ContentChild('panel', { read: TemplateRef }) panelTemplate: TemplateRef<any>;
-	@ContentChild('chatPanel', { read: TemplateRef }) chatPanelTemplate: TemplateRef<any>;
-	@ContentChild('participantsPanel', { read: TemplateRef }) participantsPanelTemplate: TemplateRef<any>;
-	@ContentChild('stream', { read: TemplateRef }) streamTemplate: TemplateRef<any>;
+	streamTemplate: TemplateRef<any>;
+
+	// @ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
+
+	@ContentChild(StreamDirective)
+	set customStream(customStream: StreamDirective) {
+		if (customStream) {
+			this.streamTemplate = customStream.template;
+		}
+	}
 
 	@Input() sessionName: string;
 	@Input() userName: string;
+
+	@Input()
+	set tokens(tokens: { webcam: string; screen: string }) {
+		if (!tokens || (!tokens.webcam && !tokens.screen)) {
+			//No tokens received
+			// throw new Error('No tokens received');
+			console.warn('No tokens received');
+		} else {
+			if (tokens.webcam || tokens.screen) {
+				this._tokens = {
+					webcam: tokens.webcam,
+					screen: tokens.screen
+				};
+				this.joinSessionClicked = true;
+				this.isSessionAlive = true;
+			}
+		}
+	}
 
 	// @Input() openviduServerUrl: string;
 	// @Input() openviduSecret: string;
@@ -32,25 +55,6 @@ export class VideoconferenceComponent implements OnInit {
 	constructor() {}
 
 	ngOnInit() {}
-
-	@Input()
-	set tokens(tokens: { webcam: string; screen: string }) {
-		if (!tokens || (!tokens.webcam && !tokens.screen)) {
-			//No tokens received
-			// throw new Error('No tokens received');
-			console.warn('No tokens received');
-
-		} else {
-			if (tokens.webcam || tokens.screen) {
-				this._tokens = {
-					webcam: tokens.webcam,
-					screen: tokens.screen
-				};
-				this.joinSessionClicked = true;
-				this.isSessionAlive = true;
-			}
-		}
-	}
 
 	async _onJoinClicked() {
 		this.onJoinClicked.emit();

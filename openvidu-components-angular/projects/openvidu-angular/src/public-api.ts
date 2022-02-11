@@ -40,3 +40,6 @@ export * from './lib/models/notification-options.model';
 
 // Pipes
 export * from './lib/pipes/participant-connections.pipe';
+
+// Directives
+export * from './lib/directives/stream/stream.directive';
