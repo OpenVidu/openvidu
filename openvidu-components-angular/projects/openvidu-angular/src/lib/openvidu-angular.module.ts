@@ -59,7 +59,7 @@ import { ParticipantsPanelComponent } from './components/panel/participants-pane
 import { VideoconferenceComponent } from './components/videoconference/videoconference.component';
 import { PanelComponent } from './components/panel/panel.component';
 import { StreamDirective } from './directives/stream/stream.directive';
-import { BrowserModule } from '@angular/platform-browser';
+import { AudioWaveComponent } from './components/audio-wave/audio-wave.component';
 
 @NgModule({
 	declarations: [
@@ -81,6 +81,7 @@ import { BrowserModule } from '@angular/platform-browser';
 		ParticipantItemComponent,
 		ParticipantsPanelComponent,
 		VideoconferenceComponent,
+  		AudioWaveComponent,
 		PanelComponent,
 	],
 	imports: [
@@ -135,6 +136,7 @@ import { BrowserModule } from '@angular/platform-browser';
 		LayoutComponent,
 		StreamComponent,
 		VideoComponent,
+		AudioWaveComponent,
 		ParticipantConnectionsPipe,
 		CommonModule,
 		StreamDirective

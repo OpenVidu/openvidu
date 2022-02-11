@@ -31,9 +31,13 @@
 		<ng-content select="[network-quality]"></ng-content>
 	</div>
 
+	<div id="audio-wave-container">
+		<ov-audio-wave [streamManager]="_stream.streamManager"></ov-audio-wave>
+	</div>
+
 	<ov-video
 		(dblclick)="toggleVideoEnlarged()"
-		[streamManager]="this._stream.streamManager"
+		[streamManager]="_stream.streamManager"
 		[mutedSound]="mutedSound"
 	></ov-video>
 

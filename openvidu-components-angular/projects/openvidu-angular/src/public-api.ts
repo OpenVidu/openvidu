@@ -30,6 +30,7 @@ export * from './lib/components/session/session.component';
 export * from './lib/components/layout/layout.component';
 export * from './lib/components/stream/stream.component';
 export * from './lib/components/video/video.component';
+export * from './lib/components/audio-wave/audio-wave.component';
 
 // Models
 export * from './lib/models/participant.model';
