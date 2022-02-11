@@ -16,6 +16,7 @@
  */
 
 import { RemoteConnectionOptions } from './RemoteConnectionOptions';
+import { IceServerProperties } from './IceServerProperties';
 
 export interface LocalConnectionOptions {
     id: string;
@@ -35,4 +36,5 @@ export interface LocalConnectionOptions {
     mediaServer: string;
     videoSimulcast: boolean;
     life: number;
+    customIceServers?: IceServerProperties[]
 }

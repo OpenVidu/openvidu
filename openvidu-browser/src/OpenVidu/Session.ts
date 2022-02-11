@@ -1510,7 +1510,19 @@ export class Session extends EventDispatcher {
 
     private processJoinRoomResponse(opts: LocalConnectionOptions) {
         this.sessionId = opts.session;
-        if (opts.coturnIp != null && opts.coturnPort != null && opts.turnUsername != null && opts.turnCredential != null) {
+        if (opts.customIceServers != null && opts.customIceServers.length > 0) {
+            this.openvidu.iceServers = [];
+            for(const iceServer of opts.customIceServers) {
+                let rtcIceServer: RTCIceServer = {
+                    urls: [ iceServer.url ]
+                }
+                if (iceServer.username != null && iceServer.credential != null) {
+                    rtcIceServer.username = iceServer.username;
+                    rtcIceServer.credential = iceServer.credential;
+                }
+                this.openvidu.iceServers.push(rtcIceServer);
+            }
+        } else if (opts.coturnIp != null && opts.coturnPort != null && opts.turnUsername != null && opts.turnCredential != null) {
             const turnUrl1 = 'turn:' + opts.coturnIp + ':' + opts.coturnPort;
             this.openvidu.iceServers = [
                 { urls: [turnUrl1], username: opts.turnUsername, credential: opts.turnCredential }
