@@ -934,6 +934,11 @@ public class SessionRestController {
 				} catch (Exception e) {
 					throw new Exception("Type error in some parameter of 'customIceServers': " + e.getMessage());
 				}
+			} else if(!openviduConfig.getWebrtcIceServers().isEmpty()){
+				// If not defined in connection, check if defined in openvidu config
+				for (IceServerProperties iceServerProperties: openviduConfig.getWebrtcIceServers()) {
+					builder.addCustomIceServer(iceServerProperties);
+				}
 			}
 
 			// Build WEBRTC options

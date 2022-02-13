@@ -38,6 +38,7 @@ import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 
+import io.openvidu.java.client.IceServerProperties;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.DomainValidator;
@@ -220,9 +221,11 @@ public class OpenviduConfig {
 
 	private MediaServer mediaServerInfo = MediaServer.kurento;
 
-	// Media properties
+	// Webrtc properties
 
 	private boolean webrtcSimulcast = false;
+
+	private List<IceServerProperties> webrtcIceServers;
 
 	// Plain config properties getters
 
@@ -288,6 +291,10 @@ public class OpenviduConfig {
 
 	public boolean isWebrtcSimulcast() {
 		return this.webrtcSimulcast;
+	}
+
+	public List<IceServerProperties> getWebrtcIceServers() {
+		return webrtcIceServers;
 	}
 
 	public String getOpenViduRecordingPath() {
@@ -618,6 +625,8 @@ public class OpenviduConfig {
 		checkWebhook();
 
 		checkCertificateType();
+
+		webrtcIceServers = loadWebrtcIceServers("OPENVIDU_WEBRTC_ICE_SERVERS");
 
 	}
 
@@ -1145,6 +1154,48 @@ public class OpenviduConfig {
 				addError(property, "Is not a valid IP Address (IPv4 or IPv6): " + ip);
 			}
 		}
+	}
+
+	private List<IceServerProperties> loadWebrtcIceServers(String property) {
+		String rawIceServers = asOptionalString(property);
+		List<IceServerProperties> webrtcIceServers = new ArrayList<>();
+		if (rawIceServers == null || rawIceServers.isEmpty()) {
+			return webrtcIceServers;
+		}
+		List<String> arrayIceServers = asJsonStringsArray(property);
+		for (String iceServerString : arrayIceServers) {
+			try {
+				IceServerProperties iceServerProperties = readIceServer(property, iceServerString);
+				webrtcIceServers.add(iceServerProperties);
+			} catch (Exception e) {
+				addError(property, iceServerString + " is not a valid webrtc ice server: " + e.getMessage());
+			}
+		}
+		return webrtcIceServers;
+	}
+
+	private IceServerProperties readIceServer(String property, String iceServerString) {
+		String url = null, username = null, credential = null;
+		String[] iceServerPropList = iceServerString.split(",");
+		for (String iceServerProp: iceServerPropList) {
+			String[] iceServerPropEntry = iceServerProp.split("=");
+			if (iceServerPropEntry.length == 2) {
+				if (iceServerProp.startsWith("url=")) {
+					url = iceServerPropEntry[1];
+				} else if (iceServerProp.startsWith("username=")) {
+					username = iceServerPropEntry[1];
+				} else if (iceServerProp.startsWith("credential=")) {
+					credential = iceServerPropEntry[1];
+				} else {
+					addError(property, "Wrong parameter: " + iceServerProp);
+				}
+			} else {
+				addError(property, "Wrong parameter: " + iceServerProp);
+			}
+		}
+		IceServerProperties iceServerProperties = new IceServerProperties.Builder()
+				.url(url).username(username).credential(credential).build();
+		return iceServerProperties;
 	}
 
 }

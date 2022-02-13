@@ -1516,9 +1516,11 @@ export class Session extends EventDispatcher {
                 let rtcIceServer: RTCIceServer = {
                     urls: [ iceServer.url ]
                 }
+                logger.log("STUN/TURN server IP: " + iceServer.url);
                 if (iceServer.username != null && iceServer.credential != null) {
                     rtcIceServer.username = iceServer.username;
                     rtcIceServer.credential = iceServer.credential;
+                    logger.log('TURN credentials [' + iceServer.username + ':' + iceServer.credential + ']');
                 }
                 this.openvidu.iceServers.push(rtcIceServer);
             }
