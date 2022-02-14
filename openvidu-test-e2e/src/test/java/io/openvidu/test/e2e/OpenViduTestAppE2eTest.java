@@ -4373,7 +4373,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				connectionJson.get("subscribers").getAsJsonArray().size() == 0);
 		Assert.assertTrue("Wrong token Connection property",
 				connectionJson.get("token").getAsString().contains(session.getSessionId()));
-		Assert.assertEquals("Wrong number of keys in connectionProperties", 9, connectionProperties.keySet().size());
+		Assert.assertEquals("Wrong number of keys in connectionProperties", 10, connectionProperties.keySet().size());
 		Assert.assertEquals("Wrong type property", ConnectionType.WEBRTC.name(),
 				connectionProperties.get("type").getAsString());
 		Assert.assertEquals("Wrong data property", "MY_SERVER_DATA", connectionProperties.get("data").getAsString());
