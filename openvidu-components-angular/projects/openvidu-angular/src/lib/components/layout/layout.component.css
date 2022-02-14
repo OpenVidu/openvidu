@@ -219,6 +219,7 @@
 	position: relative;
 	min-width: 48px;
 	min-height: 48px;
+	margin: 1px;
   }
 
   .OT_publisher .OT_video-element,
