@@ -9,8 +9,6 @@ import { StreamDirective } from '../../directives/stream/stream.directive';
 export class VideoconferenceComponent implements OnInit {
 	streamTemplate: TemplateRef<any>;
 
-	// @ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
-
 	@ContentChild(StreamDirective)
 	set customStream(customStream: StreamDirective) {
 		if (customStream) {

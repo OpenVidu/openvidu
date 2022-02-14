@@ -102,11 +102,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
 		this.subscribeToUserMediaProperties();
 		this.subscribeToReconnection();
-
-		if(!this.libraryConfigSrv.isUsingProLibrary()){
-			this.subscribeToMenuToggling();
-			this.subscribeToChatMessages();
-		}
+		this.subscribeToMenuToggling();
+		this.subscribeToChatMessages();
 	}
 
 	toggleMicrophone() {

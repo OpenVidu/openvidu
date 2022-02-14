@@ -144,9 +144,9 @@ import { AudioWaveComponent } from './components/audio-wave/audio-wave.component
 	entryComponents: [DialogTemplateComponent]
 })
 export class OpenviduAngularModule {
-	static forRoot(environment): ModuleWithProviders<OpenviduAngularModule> {
+	static forRoot(config): ModuleWithProviders<OpenviduAngularModule> {
 		// console.log(`${library.name} config: ${environment}`);
-		const libConfig: LibConfig = { environment };
+		const libConfig: LibConfig = config;
 		return {
 			ngModule: OpenviduAngularModule,
 			providers: [LibraryConfigService, { provide: 'LIB_CONFIG', useValue: libConfig }]

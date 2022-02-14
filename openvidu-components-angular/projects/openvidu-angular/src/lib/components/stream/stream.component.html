@@ -43,9 +43,6 @@
 
 
 	<div class="status-icons">
-		<!-- <div id="statusMic" *ngIf="!this._stream.streamManager?.stream?.audioActive">
-			<mat-icon>mic_off</mat-icon>
-		</div> -->
 
 		<button mat-icon-button id="statusMic" *ngIf="!this._stream.streamManager?.stream?.audioActive" disabled>
 			<mat-icon>mic_off</mat-icon>
@@ -53,11 +50,6 @@
 	</div>
 
 	<div class="videoButtons">
-
-		<!-- Custom stream notifications -->
-		<ng-container *ngIf="notificationTemplate">
-			<ng-container *ngTemplateOutlet="notificationTemplate; context: { stream: _stream }"></ng-container>
-		</ng-container>
 
 		<button mat-icon-button (click)="toggleVideoMenu($event)" matTooltip="Settings" aria-label="Video settings menu">
 			<mat-icon>more_vert</mat-icon>

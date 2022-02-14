@@ -22,8 +22,6 @@ import { ParticipantService } from '../../services/participant/participant.servi
 	styleUrls: ['./stream.component.css']
 })
 export class StreamComponent implements OnInit {
-	@ContentChild('notification', { read: TemplateRef }) notificationTemplate: TemplateRef<any>;
-
 	videoSizeIconEnum = VideoSizeIcon;
 	videoTypeEnum = VideoType;
 	videoSizeIcon: VideoSizeIcon = VideoSizeIcon.BIG;

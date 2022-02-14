@@ -15,7 +15,7 @@
 	align-items: center;
 }
 
-#media-buttons-container button, ::ng-deep #media-buttons-container>.ng-star-inserted {
+#media-buttons-container > *, ::ng-deep #media-buttons-container > * {
 	width: 40px;
 	height: 40px;
 	background-color: var(--ov-secondary-color);
@@ -26,7 +26,7 @@
 	background-color: var(--ov-warn-color) !important;
 }
 
-.active-btn {
+.active-btn, ::ng-deep .active-btn {
 	background-color: var(--ov-tertiary-color) !important;
 }
 

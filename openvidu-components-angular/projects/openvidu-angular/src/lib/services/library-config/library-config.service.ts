@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@angular/core';
-import { LibConfig } from '../../config/lib.config';
+import { LibConfig, ParticipantFactoryFunction } from '../../config/lib.config';
 
 // import { version } from '../../../../package.json';
 
@@ -10,8 +10,7 @@ export class LibraryConfigService {
 	constructor(@Inject('LIB_CONFIG') config: LibConfig) {
 		this.configuration = config;
 		console.log(this.configuration);
-		this.isUsingProLibrary() ? console.log('Using PRO library') : console.log('Using CE library');
-		if(this.isProduction()) console.log('Production Mode');
+		if(this.isProduction()) console.log('OpenVidu Angular Production Mode');
 		// console.log(version)
 	}
 
@@ -19,10 +18,14 @@ export class LibraryConfigService {
 		return this.configuration;
 	}
 	isProduction(): boolean {
-		return this.configuration?.environment?.production;
+		return this.configuration?.production;
 	}
 
-	isUsingProLibrary(): boolean {
-		return !!this.configuration?.environment?.useProdLibrary;
+	hasParticipantFactory(): boolean {
+		return typeof this.getConfig().participantFactory === "function";
+	}
+
+	getParticipantFactory(): ParticipantFactoryFunction {
+		return this.getConfig().participantFactory;
 	}
 }

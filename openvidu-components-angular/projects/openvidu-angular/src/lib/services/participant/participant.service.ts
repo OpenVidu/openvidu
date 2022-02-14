@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
 import { StreamModel, ParticipantAbstractModel, ParticipantModel } from '../../models/participant.model';
 import { VideoType } from '../../models/video-type.model';
+import { LibraryConfigService } from '../library-config/library-config.service';
 import { LoggerService } from '../logger/logger.service';
 
 @Injectable({
@@ -29,7 +30,7 @@ export class ParticipantService {
 
 	protected log: ILogger;
 
-	constructor(protected loggerSrv: LoggerService) {
+	constructor(protected libraryConfigSrv: LibraryConfigService, protected loggerSrv: LoggerService) {
 		this.log = this.loggerSrv.get('ParticipantService');
 
 		this.localParticipantObs = this._localParticipant.asObservable();
@@ -42,6 +43,9 @@ export class ParticipantService {
 		this.updateLocalParticipant();
 	}
 
+	getLocalParticipant(): ParticipantAbstractModel {
+		return this.localParticipant;
+	}
 	getMyParticipantId(): string {
 		return this.localParticipant.id;
 	}
@@ -189,7 +193,7 @@ export class ParticipantService {
 		return this.localParticipant.isScreenAudioActive();
 	}
 
-	protected updateLocalParticipant() {
+	updateLocalParticipant() {
 		// Cloning localParticipant object for not applying changes on the global variable
 		let participantsWithConnectionAvailable: ParticipantAbstractModel = Object.assign(this.newParticipant(), this.localParticipant);
 		const availableConnections = participantsWithConnectionAvailable.getAvailableConnections();
@@ -299,7 +303,11 @@ export class ParticipantService {
 	updateRemoteParticipants() {
 		this._remoteParticipants.next(this.remoteParticipants);
 	}
-	protected newParticipant(steramModel?: StreamModel, participantId?: string) {
-		return new ParticipantModel(steramModel, participantId);
+	protected newParticipant(streamModel?: StreamModel, participantId?: string) {
+
+		if(this.libraryConfigSrv.hasParticipantFactory()){
+			return this.libraryConfigSrv.getParticipantFactory().apply(this, [streamModel, participantId]);
+		}
+		return new ParticipantModel(streamModel, participantId);
 	}
 }
