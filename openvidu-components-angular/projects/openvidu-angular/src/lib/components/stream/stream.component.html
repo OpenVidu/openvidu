@@ -31,7 +31,7 @@
 		<ng-content select="[network-quality]"></ng-content>
 	</div>
 
-	<div id="audio-wave-container">
+	<div id="audio-wave-container" *ngIf="_stream.type === 'CAMERA'">
 		<ov-audio-wave [streamManager]="_stream.streamManager"></ov-audio-wave>
 	</div>
 
