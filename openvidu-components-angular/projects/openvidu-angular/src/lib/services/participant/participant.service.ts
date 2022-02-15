@@ -198,7 +198,7 @@ export class ParticipantService {
 		let participantsWithConnectionAvailable: ParticipantAbstractModel = Object.assign(this.newParticipant(), this.localParticipant);
 		const availableConnections = participantsWithConnectionAvailable.getAvailableConnections();
 		const availableConnectionsMap = new Map(availableConnections.map((conn) => [conn.type, conn]));
-		participantsWithConnectionAvailable.connections = availableConnectionsMap;
+		participantsWithConnectionAvailable.streams = availableConnectionsMap;
 		this._localParticipant.next(participantsWithConnectionAvailable);
 	}
 
@@ -249,7 +249,7 @@ export class ParticipantService {
 		if (participant) {
 			participant.removeConnection(connectionId);
 			//TODO: Timeout of X seconds?? Its possible sometimes the connections map was empty but must not be deleted
-			if (participant.connections.size === 0) {
+			if (participant.streams.size === 0) {
 				// Remove participants without connections
 				this.remoteParticipants = this.remoteParticipants.filter((p) => p !== participant);
 			}

@@ -40,7 +40,7 @@ export * from './lib/models/video-type.model';
 export * from './lib/models/notification-options.model';
 
 // Pipes
-export * from './lib/pipes/participant-connections.pipe';
+export * from './lib/pipes/participant.pipe';
 
 // Directives
 export * from './lib/directives/stream/stream.directive';

@@ -12,7 +12,7 @@ export interface StreamModel {
 }
 
 export abstract class ParticipantAbstractModel {
-	connections: Map<VideoType, StreamModel> = new Map();
+	streams: Map<VideoType, StreamModel> = new Map();
 	id: string;
 
 	constructor(model?: StreamModel, id?: string) {
@@ -25,12 +25,12 @@ export abstract class ParticipantAbstractModel {
 			videoEnlarged: model ? model.videoEnlarged : false,
 			connectionId: model ? model.connectionId : null
 		};
-		this.connections.set(streamModel.type, streamModel);
+		this.streams.set(streamModel.type, streamModel);
 		this.id = id ? id : new Date().getTime().toString();
 	}
 
 	addConnection(streamModel: StreamModel) {
-		this.connections.set(streamModel.type, streamModel);
+		this.streams.set(streamModel.type, streamModel);
 	}
 
 	public isCameraAudioActive(): boolean {
@@ -48,15 +48,15 @@ export abstract class ParticipantAbstractModel {
 	}
 
 	hasConnectionType(type: VideoType): boolean {
-		return this.connections.has(type);
+		return this.streams.has(type);
 	}
 
 	public getCameraConnection(): StreamModel {
-		return this.connections.get(VideoType.CAMERA);
+		return this.streams.get(VideoType.CAMERA);
 	}
 
 	public getScreenConnection(): StreamModel {
-		return this.connections.get(VideoType.SCREEN);
+		return this.streams.get(VideoType.SCREEN);
 	}
 
 	getConnectionTypesEnabled(): VideoType[] {
@@ -75,27 +75,27 @@ export abstract class ParticipantAbstractModel {
 	}
 
 	removeConnection(connectionId: string) {
-		this.connections.delete(this.getConnectionById(connectionId).type);
+		this.streams.delete(this.getConnectionById(connectionId).type);
 	}
 
 	hasConnectionId(connectionId: string): boolean {
-		return Array.from(this.connections.values()).some((conn) => conn.connectionId === connectionId);
+		return Array.from(this.streams.values()).some((conn) => conn.connectionId === connectionId);
 	}
 
 	getConnectionById(connectionId: string): StreamModel {
-		return Array.from(this.connections.values()).find((conn) => conn.connectionId === connectionId);
+		return Array.from(this.streams.values()).find((conn) => conn.connectionId === connectionId);
 	}
 
 	getAvailableConnections(): StreamModel[] {
-		return Array.from(this.connections.values()).filter((conn) => conn.connected);
+		return Array.from(this.streams.values()).filter((conn) => conn.connected);
 	}
 
 	isLocal(): boolean {
-		return Array.from(this.connections.values()).every((conn) => conn.local);
+		return Array.from(this.streams.values()).every((conn) => conn.local);
 	}
 
 	setNickname(nickname: string) {
-		this.connections.forEach((conn) => {
+		this.streams.forEach((conn) => {
 			if (conn.type === VideoType.CAMERA) {
 				conn.nickname = nickname;
 			} else {
@@ -123,7 +123,7 @@ export abstract class ParticipantAbstractModel {
 	}
 
 	setPublisher(connType: VideoType, publisher: StreamManager) {
-		const connection = this.connections.get(connType);
+		const connection = this.streams.get(connType);
 		if(connection) {
 			connection.streamManager = publisher;
 		}
@@ -157,11 +157,11 @@ export abstract class ParticipantAbstractModel {
 		if (screenConnection) screenConnection.connected = false;
 	}
 	setAllVideoEnlarged(enlarged: boolean) {
-		this.connections.forEach((conn) => (conn.videoEnlarged = enlarged));
+		this.streams.forEach((conn) => (conn.videoEnlarged = enlarged));
 	}
 
 	toggleVideoEnlarged(connectionId: string) {
-		this.connections.forEach((conn) => {
+		this.streams.forEach((conn) => {
 			if (conn.connectionId === connectionId) {
 				conn.videoEnlarged = !conn.videoEnlarged;
 			}
@@ -169,7 +169,7 @@ export abstract class ParticipantAbstractModel {
 	}
 
 	someHasVideoEnlarged(): boolean {
-		return Array.from(this.connections.values()).some((conn) => conn.videoEnlarged);
+		return Array.from(this.streams.values()).some((conn) => conn.videoEnlarged);
 	}
 }
 

@@ -1,25 +1,25 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { StreamModel, ParticipantAbstractModel } from '../models/participant.model';
 
-@Pipe({ name: 'connections' })
-export class ParticipantConnectionsPipe implements PipeTransform {
+@Pipe({ name: 'streams' })
+export class ParticipantStreamsPipe implements PipeTransform {
 	constructor() {}
 
 	transform(participants: ParticipantAbstractModel[] | ParticipantAbstractModel): StreamModel[] {
-		let connections: StreamModel[] = [];
+		let streams: StreamModel[] = [];
 		if (Array.isArray(participants)) {
 			participants.forEach((p) => {
-				connections = connections.concat(Array.from(p.connections.values()));
+				streams = streams.concat(Array.from(p.streams.values()));
 			});
 		} else {
-			connections = Array.from(participants.connections.values());
+			streams = Array.from(participants.streams.values());
 		}
-		return connections;
+		return streams;
 	}
 }
 
-@Pipe({ name: 'connectionsEnabled', pure: false })
-export class ConnectionsEnabledPipe implements PipeTransform {
+@Pipe({ name: 'streamsEnabled', pure: false })
+export class StreamsEnabledPipe implements PipeTransform {
 	constructor() {}
 
 	transform(participant: ParticipantAbstractModel): string {

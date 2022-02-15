@@ -13,7 +13,6 @@ export class AudioWaveComponent implements OnInit {
 
 	@Input()
 	set streamManager(streamManager: StreamManager) {
-		console.log('streamManager', streamManager);
 
 		if(streamManager) {
 			streamManager.on('publisherStartSpeaking', (event: PublisherSpeakingEvent) => {

@@ -37,7 +37,7 @@ import { DialogTemplateComponent } from './components/material/dialog.component'
 
 import { LinkifyPipe } from './pipes/linkify.pipe';
 import { TooltipListPipe } from './pipes/tooltip-list.pipe';
-import { ConnectionsEnabledPipe, NicknamePipe, ParticipantConnectionsPipe } from './pipes/participant-connections.pipe';
+import { StreamsEnabledPipe, NicknamePipe, ParticipantStreamsPipe } from './pipes/participant.pipe';
 
 import { LibConfig } from './config/lib.config';
 import { CdkOverlayContainer } from './config/custom-cdk-overlay';
@@ -64,7 +64,6 @@ import { AudioWaveComponent } from './components/audio-wave/audio-wave.component
 @NgModule({
 	declarations: [
 		StreamDirective,
-
 		UserSettingsComponent,
 		VideoComponent,
 		ToolbarComponent,
@@ -75,8 +74,8 @@ import { AudioWaveComponent } from './components/audio-wave/audio-wave.component
 		DialogTemplateComponent,
 		LinkifyPipe,
 		TooltipListPipe,
-		ParticipantConnectionsPipe,
-		ConnectionsEnabledPipe,
+		ParticipantStreamsPipe,
+		StreamsEnabledPipe,
 		NicknamePipe,
 		ParticipantItemComponent,
 		ParticipantsPanelComponent,
@@ -137,7 +136,7 @@ import { AudioWaveComponent } from './components/audio-wave/audio-wave.component
 		StreamComponent,
 		VideoComponent,
 		AudioWaveComponent,
-		ParticipantConnectionsPipe,
+		ParticipantStreamsPipe,
 		CommonModule,
 		StreamDirective
 	],

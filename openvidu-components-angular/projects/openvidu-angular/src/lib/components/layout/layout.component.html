@@ -2,14 +2,14 @@
 	<div
 		class="OT_root OT_publisher"
 		id="localUser"
-		*ngFor="let stream of localParticipant | connections"
+		*ngFor="let stream of localParticipant | streams"
 		[ngClass]="{ OV_small: !stream.streamManager?.stream?.videoActive }"
 	>
 		<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: stream }"></ng-container>
 	</div>
 
 	<div
-		*ngFor="let stream of remoteParticipants | connections"
+		*ngFor="let stream of remoteParticipants | streams"
 		class="OT_root OT_publisher"
 		id="remote-participant"
 		[ngClass]="{ OV_small: !stream.streamManager?.stream?.videoActive }"

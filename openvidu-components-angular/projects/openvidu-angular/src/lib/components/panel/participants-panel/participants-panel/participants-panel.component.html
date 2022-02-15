@@ -11,7 +11,7 @@
 		<div class="local-participant-container">
 			<ov-participant-item
 				[name]="localParticipant | nickname"
-				[connections]="localParticipant | connectionsEnabled"
+				[connections]="localParticipant | streamsEnabled"
 				[showDividerLine]="true"
 			></ov-participant-item>
 		</div>
@@ -25,7 +25,7 @@
 			<ov-participant-item
 				*ngFor="let p of remoteParticipants; let lastItem = last"
 				[name]="p | nickname"
-				[connections]="p | connectionsEnabled"
+				[connections]="p | streamsEnabled"
 				[showDividerLine]="!lastItem"
 			></ov-participant-item>
 		</div>
