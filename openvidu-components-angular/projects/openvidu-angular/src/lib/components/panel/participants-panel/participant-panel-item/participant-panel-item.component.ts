@@ -1,4 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
+import { ParticipantAbstractModel } from '../../../../models/participant.model';
 
 @Component({
 	selector: 'ov-participant-panel-item',
@@ -6,8 +7,7 @@ import { Component, Input, OnInit } from '@angular/core';
 	styleUrls: ['./participant-panel-item.component.css']
 })
 export class ParticipantPanelItemComponent implements OnInit {
-	@Input() name: string;
-	@Input() connections: string;
+	@Input() participant: ParticipantAbstractModel;
 	@Input() showDividerLine: boolean;
 
 	constructor() {}

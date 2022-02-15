@@ -1,8 +1,8 @@
 <mat-list>
 	<mat-list-item>
 		<mat-icon matListAvatar class="participant-avatar">person</mat-icon>
-		<h3 matLine class="participant-nickname">{{ name }}</h3>
-		<p matLine class="participant-subtitle">{{ connections }}</p>
+		<h3 matLine class="participant-nickname">{{ participant | nickname }}</h3>
+		<p matLine class="participant-subtitle">{{ participant | streamsEnabled }}</p>
 		<!-- <p matLine>
 			<span class="participant-subtitle"></span>
 		</p> -->
