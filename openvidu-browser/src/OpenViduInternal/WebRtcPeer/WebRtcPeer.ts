@@ -264,10 +264,7 @@ export class WebRtcPeer {
                     // * https://github.com/webrtcHacks/adapter/issues/998
                     // * https://github.com/webrtcHacks/adapter/blob/v7.7.0/src/js/firefox/firefox_shim.js#L231-L255
                     if (this.configuration.simulcast) {
-                        if (
-                            !("encodings" in sendParams) ||
-                            sendParams.encodings.length !== tcInit.sendEncodings!.length
-                        ) {
+                        if (sendParams.encodings?.length !== tcInit.sendEncodings!.length) {
                             sendParams.encodings = tcInit.sendEncodings!;
 
                             needSetParams = true;
@@ -292,15 +289,15 @@ export class WebRtcPeer {
                 // if (track.kind === "video" && this.configuration.simulcast) {
                 //     // Print browser capabilities.
                 //     // prettier-ignore
-                //     logger.error(`[createOffer] Transceiver send capabilities (static):\n${JSON.stringify(RTCRtpSender.getCapabilities?.("video"), null, 2)}`);
+                //     logger.debug(`[createOffer] Transceiver send capabilities (static):\n${JSON.stringify(RTCRtpSender.getCapabilities?.("video"), null, 2)}`);
                 //     // prettier-ignore
-                //     logger.error(`[createOffer] Transceiver recv capabilities (static):\n${JSON.stringify(RTCRtpReceiver.getCapabilities?.("video"), null, 2)}`);
+                //     logger.debug(`[createOffer] Transceiver recv capabilities (static):\n${JSON.stringify(RTCRtpReceiver.getCapabilities?.("video"), null, 2)}`);
 
                 //     // Print requested Transceiver encodings and parameters.
                 //     // prettier-ignore
-                //     logger.error(`[createOffer] Transceiver send encodings (requested):\n${JSON.stringify(tcInit.sendEncodings, null, 2)}`);
+                //     logger.debug(`[createOffer] Transceiver send encodings (requested):\n${JSON.stringify(tcInit.sendEncodings, null, 2)}`);
                 //     // prettier-ignore
-                //     logger.error(`[createOffer] Transceiver send parameters (requested):\n${JSON.stringify(tc.sender.getParameters(), null, 2)}`);
+                //     logger.debug(`[createOffer] Transceiver send parameters (accepted):\n${JSON.stringify(tc.sender.getParameters(), null, 2)}`);
                 // }
             }
         } else {
@@ -478,9 +475,8 @@ export class WebRtcPeer {
                     // DEBUG: Uncomment for details.
                     // {
                     //     const tc = this.pc.getTransceivers().find((tc) => tc.sender.track?.kind === "video");
-                    //     const sendParams = tc?.sender.getParameters();
                     //     // prettier-ignore
-                    //     logger.error(`[processRemoteAnswer] Transceiver send parameters (effective):\n${JSON.stringify(sendParams, null, 2)}`);
+                    //     logger.debug(`[processRemoteAnswer] Transceiver send parameters (effective):\n${JSON.stringify(tc?.sender.getParameters(), null, 2)}`);
                     // }
 
                     resolve();
