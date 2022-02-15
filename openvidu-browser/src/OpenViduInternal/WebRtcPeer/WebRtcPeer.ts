@@ -275,8 +275,16 @@ export class WebRtcPeer {
                     }
 
                     if (needSetParams) {
-                        logger.debug(`[createOffer] Setting new RTCRtpSendParameters`);
-                        await tc.sender.setParameters(sendParams);
+                        logger.debug(`[createOffer] Setting new RTCRtpSendParameters to video sender`);
+                        try {
+                            await tc.sender.setParameters(sendParams);
+                        } catch (error) {
+                            let message = `[WebRtcPeer.createOffer] Cannot set RTCRtpSendParameters to video sender`;
+                            if (error instanceof Error) {
+                                message += `: ${error.message}`;
+                            }
+                            throw new Error(message);
+                        }
                     }
                 }
 
@@ -311,7 +319,18 @@ export class WebRtcPeer {
             }
         }
 
-        return this.pc.createOffer();
+        let sdpOffer: RTCSessionDescriptionInit;
+        try {
+            sdpOffer = await this.pc.createOffer();
+        } catch (error) {
+            let message = `[WebRtcPeer.createOffer] Browser failed creating an SDP Offer`;
+            if (error instanceof Error) {
+                message += `: ${error.message}`;
+            }
+            throw new Error(message);
+        }
+
+        return sdpOffer;
     }
 
     deprecatedPeerConnectionTrackApi() {
