@@ -9,17 +9,12 @@
 	<div class="scrollable">
 
 		<div class="local-participant-container">
-			<ov-participant-item
+			<ov-participant-panel-item
 				[name]="localParticipant | nickname"
 				[connections]="localParticipant | streamsEnabled"
 				[showDividerLine]="true"
-			></ov-participant-item>
+			></ov-participant-panel-item>
 		</div>
-
-		<!-- <div class="message-container">
-			<p *ngIf="remoteParticipants.length === 0" class="text-info">No remote participants connected</p>
-			<p *ngIf="remoteParticipants.length > 0" class="text-info">{{ remoteParticipants.length }} remote participants connected</p>
-		</div> -->
 
 		<div class="remote-participants-container" *ngIf="remoteParticipants.length > 0">
 			<ov-participant-item

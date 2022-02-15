@@ -54,7 +54,7 @@ import { DocumentService } from './services/document/document.service';
 import { LayoutService } from './services/layout/layout.service';
 import { SidenavMenuService } from './services/sidenav-menu/sidenav-menu.service';
 import { ParticipantService } from './services/participant/participant.service';
-import { ParticipantItemComponent } from './components/panel/participants-panel/participant-item/participant-item.component';
+import { ParticipantPanelItemComponent } from './components/panel/participants-panel/participant-panel-item/participant-panel-item.component';
 import { ParticipantsPanelComponent } from './components/panel/participants-panel/participants-panel/participants-panel.component';
 import { VideoconferenceComponent } from './components/videoconference/videoconference.component';
 import { PanelComponent } from './components/panel/panel.component';
@@ -77,7 +77,7 @@ import { AudioWaveComponent } from './components/audio-wave/audio-wave.component
 		ParticipantStreamsPipe,
 		StreamsEnabledPipe,
 		NicknamePipe,
-		ParticipantItemComponent,
+		ParticipantPanelItemComponent,
 		ParticipantsPanelComponent,
 		VideoconferenceComponent,
   		AudioWaveComponent,
