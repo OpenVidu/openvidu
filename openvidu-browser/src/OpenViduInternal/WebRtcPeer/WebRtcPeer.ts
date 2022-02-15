@@ -80,12 +80,20 @@ export class WebRtcPeer {
 
         this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });
 
-        this.pc.addEventListener('icecandidate', (event: RTCPeerConnectionIceEvent) => {
-            if (event.candidate != null) {
-                const candidate: RTCIceCandidate = event.candidate;
-                this.configuration.onIceCandidate(candidate);
-                if (candidate.candidate !== '') {
-                    this.localCandidatesQueue.push(<RTCIceCandidate>{ candidate: candidate.candidate });
+        this.pc.addEventListener("icecandidate", (event: RTCPeerConnectionIceEvent) => {
+            if (event.candidate !== null) {
+                // `RTCPeerConnectionIceEvent.candidate` is supposed to be an RTCIceCandidate:
+                // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnectioniceevent-candidate
+                //
+                // But in practice, it is actually an RTCIceCandidateInit that can be used to
+                // obtain a proper candidate, using the RTCIceCandidate constructor:
+                // https://w3c.github.io/webrtc-pc/#dom-rtcicecandidate-constructor
+                const candidateInit: RTCIceCandidateInit = event.candidate as RTCIceCandidateInit;
+                const iceCandidate = new RTCIceCandidate(candidateInit);
+
+                this.configuration.onIceCandidate(iceCandidate);
+                if (iceCandidate.candidate !== '') {
+                    this.localCandidatesQueue.push(iceCandidate);
                 }
             }
         });
