@@ -9,6 +9,7 @@ export interface StreamModel {
 	streamManager: StreamManager;
 	videoEnlarged: boolean;
 	connectionId: string;
+	participant?: ParticipantAbstractModel
 }
 
 export abstract class ParticipantAbstractModel {
@@ -23,7 +24,8 @@ export abstract class ParticipantAbstractModel {
 			type: model ? model.type : VideoType.CAMERA,
 			streamManager: model ? model.streamManager : null,
 			videoEnlarged: model ? model.videoEnlarged : false,
-			connectionId: model ? model.connectionId : null
+			connectionId: model ? model.connectionId : null,
+			participant: this
 		};
 		this.streams.set(streamModel.type, streamModel);
 		this.id = id ? id : new Date().getTime().toString();
