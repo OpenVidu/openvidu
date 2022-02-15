@@ -1,20 +1,20 @@
 import { Inject, Injectable } from '@angular/core';
-import { LibConfig, ParticipantFactoryFunction } from '../../config/lib.config';
+import { OpenViduAngularConfig, ParticipantFactoryFunction } from '../../config/openvidu-angular.config';
 
 // import { version } from '../../../../package.json';
 
 @Injectable()
-export class LibraryConfigService {
-	private configuration: LibConfig;
+export class OpenViduAngularConfigService {
+	private configuration: OpenViduAngularConfig;
 
-	constructor(@Inject('LIB_CONFIG') config: LibConfig) {
+	constructor(@Inject('OPENVIDU_ANGULAR_CONFIG') config: OpenViduAngularConfig) {
 		this.configuration = config;
 		console.log(this.configuration);
 		if(this.isProduction()) console.log('OpenVidu Angular Production Mode');
 		// console.log(version)
 	}
 
-	getConfig(): LibConfig {
+	getConfig(): OpenViduAngularConfig {
 		return this.configuration;
 	}
 	isProduction(): boolean {

@@ -5,7 +5,7 @@ import { LoggerService } from '../logger/logger.service';
 
 import { ILogger } from '../../models/logger.model';
 import { Signal } from '../../models/signal.model';
-import { LibraryConfigService } from '../library-config/library-config.service';
+import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.service';
 import { PlatformService } from '../platform/platform.service';
 import { DeviceService } from '../device/device.service';
 import { CameraType } from '../../models/device.model';
@@ -27,7 +27,7 @@ export class OpenViduService {
 	protected log: ILogger;
 
 	constructor(
-		protected libraryConfigSrv: LibraryConfigService,
+		protected openviduAngularConfigSrv: OpenViduAngularConfigService,
 		protected platformService: PlatformService,
 		protected loggerSrv: LoggerService,
 		private participantService: ParticipantService,
@@ -38,13 +38,13 @@ export class OpenViduService {
 
 	initialize() {
 		this.OV = new OpenVidu();
-		if (this.libraryConfigSrv.isProduction()) this.OV.enableProdMode();
+		if (this.openviduAngularConfigSrv.isProduction()) this.OV.enableProdMode();
 		this.webcamSession = this.OV.initSession();
 
 		// Initialize screen session only if it is not mobile platform
 		if (!this.platformService.isMobile()) {
 			this.OVScreen = new OpenVidu();
-			if (this.libraryConfigSrv.isProduction()) this.OVScreen.enableProdMode();
+			if (this.openviduAngularConfigSrv.isProduction()) this.OVScreen.enableProdMode();
 			this.screenSession = this.OVScreen.initSession();
 		}
 	}

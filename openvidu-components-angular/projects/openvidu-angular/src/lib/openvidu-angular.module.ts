@@ -39,14 +39,14 @@ import { LinkifyPipe } from './pipes/linkify.pipe';
 import { TooltipListPipe } from './pipes/tooltip-list.pipe';
 import { StreamsEnabledPipe, NicknamePipe, ParticipantStreamsPipe } from './pipes/participant.pipe';
 
-import { LibConfig } from './config/lib.config';
+import { OpenViduAngularConfig } from './config/openvidu-angular.config';
 import { CdkOverlayContainer } from './config/custom-cdk-overlay';
 import { DeviceService } from './services/device/device.service';
 import { LoggerService } from './services/logger/logger.service';
 import { PlatformService } from './services/platform/platform.service';
 import { StorageService } from './services/storage/storage.service';
 import { TokenService } from './services/token/token.service';
-import { LibraryConfigService } from './services/library-config/library-config.service';
+import { OpenViduAngularConfigService } from './services/config/openvidu-angular.config.service';
 import { OpenViduService } from './services/openvidu/openvidu.service';
 import { ActionService } from './services/action/action.service';
 import { ChatService } from './services/chat/chat.service';
@@ -142,13 +142,13 @@ import { AudioWaveComponent } from './components/audio-wave/audio-wave.component
 	],
 	entryComponents: [DialogTemplateComponent]
 })
-export class OpenviduAngularModule {
-	static forRoot(config): ModuleWithProviders<OpenviduAngularModule> {
+export class OpenViduAngularModule {
+	static forRoot(config): ModuleWithProviders<OpenViduAngularModule> {
 		// console.log(`${library.name} config: ${environment}`);
-		const libConfig: LibConfig = config;
+		const libConfig: OpenViduAngularConfig = config;
 		return {
-			ngModule: OpenviduAngularModule,
-			providers: [LibraryConfigService, { provide: 'LIB_CONFIG', useValue: libConfig }]
+			ngModule: OpenViduAngularModule,
+			providers: [OpenViduAngularConfigService, { provide: 'OPENVIDU_ANGULAR_CONFIG', useValue: libConfig }]
 		};
 	}
 }

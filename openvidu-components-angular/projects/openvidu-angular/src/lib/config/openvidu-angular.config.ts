@@ -1,4 +1,4 @@
-export interface LibConfig {
+export interface OpenViduAngularConfig {
 	production?: boolean,
 	participantFactory?: ParticipantFactoryFunction,
 

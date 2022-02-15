@@ -10,7 +10,7 @@ export * from './lib/services/participant/participant.service';
 export * from './lib/services/chat/chat.service';
 export * from './lib/services/platform/platform.service';
 export * from './lib/services/logger/logger.service';
-export * from './lib/services/library-config/library-config.service';
+export * from './lib/services/config/openvidu-angular.config.service';
 export * from './lib/services/document/document.service';
 export * from './lib/services/token/token.service';
 export * from './lib/services/device/device.service';
@@ -34,7 +34,7 @@ export * from './lib/components/audio-wave/audio-wave.component';
 
 // Models
 export * from './lib/models/participant.model';
-export * from './lib/config/lib.config';
+export * from './lib/config/openvidu-angular.config';
 export * from './lib/models/logger.model';
 export * from './lib/models/video-type.model';
 export * from './lib/models/notification-options.model';

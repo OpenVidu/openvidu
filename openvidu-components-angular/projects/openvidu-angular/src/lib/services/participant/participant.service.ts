@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
 import { StreamModel, ParticipantAbstractModel, ParticipantModel } from '../../models/participant.model';
 import { VideoType } from '../../models/video-type.model';
-import { LibraryConfigService } from '../library-config/library-config.service';
+import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.service';
 import { LoggerService } from '../logger/logger.service';
 
 @Injectable({
@@ -30,7 +30,7 @@ export class ParticipantService {
 
 	protected log: ILogger;
 
-	constructor(protected libraryConfigSrv: LibraryConfigService, protected loggerSrv: LoggerService) {
+	constructor(protected openviduAngularConfigSrv: OpenViduAngularConfigService, protected loggerSrv: LoggerService) {
 		this.log = this.loggerSrv.get('ParticipantService');
 
 		this.localParticipantObs = this._localParticipant.asObservable();
@@ -305,8 +305,8 @@ export class ParticipantService {
 	}
 	protected newParticipant(streamModel?: StreamModel, participantId?: string) {
 
-		if(this.libraryConfigSrv.hasParticipantFactory()){
-			return this.libraryConfigSrv.getParticipantFactory().apply(this, [streamModel, participantId]);
+		if(this.openviduAngularConfigSrv.hasParticipantFactory()){
+			return this.openviduAngularConfigSrv.getParticipantFactory().apply(this, [streamModel, participantId]);
 		}
 		return new ParticipantModel(streamModel, participantId);
 	}

@@ -14,7 +14,6 @@ import { ActionService } from '../../services/action/action.service';
 import { DeviceService } from '../../services/device/device.service';
 import { ChatMessage } from '../../models/chat.model';
 import { ParticipantService } from '../../services/participant/participant.service';
-import { LibraryConfigService } from '../../services/library-config/library-config.service';
 import { MenuType } from '../../models/menu.model';
 
 @Component({
@@ -53,7 +52,6 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	protected webcamAudioStateSubscription: Subscription;
 
 	constructor(
-		protected libraryConfigSrv: LibraryConfigService,
 		protected documentService: DocumentService,
 		protected chatService: ChatService,
 		protected menuService: SidenavMenuService,
