@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Connection, OpenVidu, Publisher, PublisherProperties, Session, SignalOptions } from 'openvidu-browser';
 
-import { LoggerService } from '../../services/logger/logger.service';
+import { LoggerService } from '../logger/logger.service';
 
 import { ILogger } from '../../models/logger.model';
 import { Signal } from '../../models/signal.model';
@@ -15,7 +15,7 @@ import { ParticipantService } from '../participant/participant.service';
 @Injectable({
 	providedIn: 'root'
 })
-export class WebrtcService {
+export class OpenViduService {
 	protected OV: OpenVidu = null;
 	protected OVScreen: OpenVidu = null;
 	protected webcamSession: Session = null;
@@ -33,7 +33,7 @@ export class WebrtcService {
 		private participantService: ParticipantService,
 		protected deviceService: DeviceService
 	) {
-		this.log = this.loggerSrv.get('WebRTCService');
+		this.log = this.loggerSrv.get('OpenViduService');
 	}
 
 	initialize() {

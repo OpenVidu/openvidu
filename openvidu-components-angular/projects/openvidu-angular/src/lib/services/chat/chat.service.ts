@@ -7,7 +7,7 @@ import { ChatMessage } from '../../models/chat.model';
 import { INotificationOptions } from '../../models/notification-options.model';
 
 import { ActionService } from '../action/action.service';
-import { WebrtcService } from '../webrtc/webrtc.service';
+import { OpenViduService } from '../openvidu/openvidu.service';
 import { LoggerService } from '../logger/logger.service';
 import { Signal } from '../../models/signal.model';
 import { SidenavMenuService } from '../sidenav-menu/sidenav-menu.service';
@@ -25,7 +25,7 @@ export class ChatService {
 	protected log: ILogger;
 	constructor(
 		protected loggerSrv: LoggerService,
-		protected webrtcService: WebrtcService,
+		protected openviduService: OpenViduService,
 		protected participantService: ParticipantService,
 		protected menuService: SidenavMenuService,
 		protected actionService: ActionService
@@ -35,11 +35,11 @@ export class ChatService {
 	}
 
 	subscribeToChat() {
-		const session = this.webrtcService.getWebcamSession();
+		const session = this.openviduService.getWebcamSession();
 		session.on(`signal:${Signal.CHAT}`, (event: any) => {
 			const connectionId = event.from.connectionId;
 			const data = JSON.parse(event.data);
-			const isMyOwnConnection = this.webrtcService.isMyOwnConnection(connectionId);
+			const isMyOwnConnection = this.openviduService.isMyOwnConnection(connectionId);
 			this.messageList.push({
 				isLocal: isMyOwnConnection,
 				nickname: data.nickname,
@@ -65,7 +65,7 @@ export class ChatService {
 				nickname: this.participantService.getWebcamNickname()
 			};
 
-			this.webrtcService.sendSignal(Signal.CHAT, undefined, data);
+			this.openviduService.sendSignal(Signal.CHAT, undefined, data);
 		}
 	}
 

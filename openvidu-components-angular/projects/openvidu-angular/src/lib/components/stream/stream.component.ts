@@ -1,4 +1,4 @@
-import { Component, ContentChild, ElementRef, HostListener, Input, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { MatMenuPanel, MatMenuTrigger } from '@angular/material/menu';
 import { NicknameMatcher } from '../../matchers/nickname.matcher';
@@ -7,7 +7,7 @@ import { ScreenType, VideoType } from '../../models/video-type.model';
 import { Storage } from '../../models/storage.model';
 import { DocumentService } from '../../services/document/document.service';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
-import { WebrtcService } from '../../services/webrtc/webrtc.service';
+import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { LayoutService } from '../../services/layout/layout.service';
 import { StorageService } from '../../services/storage/storage.service';
 import { Signal } from '../../models/signal.model';
@@ -36,7 +36,7 @@ export class StreamComponent implements OnInit {
 
 	constructor(
 		protected documentService: DocumentService,
-		protected openViduWebRTCService: WebrtcService,
+		protected openviduService: OpenViduService,
 		protected layoutService: LayoutService,
 		protected participantService: ParticipantService,
 		protected storageService: StorageService,
@@ -96,7 +96,7 @@ export class StreamComponent implements OnInit {
 		this.documentService.toggleBigElementClass(element);
 
 		if (!!this._stream.streamManager?.stream?.connection?.connectionId) {
-			if (this.openViduWebRTCService.isMyOwnConnection(this._stream.streamManager?.stream?.connection?.connectionId)) {
+			if (this.openviduService.isMyOwnConnection(this._stream.streamManager?.stream?.connection?.connectionId)) {
 				this.participantService.toggleMyVideoEnlarged(this._stream.streamManager?.stream?.connection?.connectionId);
 			} else {
 				this.participantService.toggleRemoteVideoEnlarged(this._stream.streamManager?.stream?.connection?.connectionId);
@@ -129,7 +129,7 @@ export class StreamComponent implements OnInit {
 			const nickname = this.nicknameFormControl.value;
 			this.participantService.setNickname(this._stream.connectionId, nickname);
 			this.storageService.set(Storage.USER_NICKNAME, nickname);
-			this.openViduWebRTCService.sendSignal(Signal.NICKNAME_CHANGED, undefined, { clientData: nickname });
+			this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, undefined, { clientData: nickname });
 			this.toggleNicknameForm();
 		}
 	}
@@ -141,7 +141,7 @@ export class StreamComponent implements OnInit {
 			publishAudio: !this.participantService.isMyCameraEnabled(),
 			mirror: false
 		};
-		await this.openViduWebRTCService.replaceTrack(this.participantService.getMyScreenPublisher(), properties);
+		await this.openviduService.replaceTrack(this.participantService.getMyScreenPublisher(), properties);
 	}
 
 	protected checkVideoEnlarged() {

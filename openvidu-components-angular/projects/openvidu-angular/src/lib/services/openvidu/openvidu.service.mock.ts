@@ -5,7 +5,7 @@ import { Signal } from '../../models/signal.model';
 @Injectable({
 	providedIn: 'root'
 })
-export class WebrtcServiceMock {
+export class OpenViduServiceMock {
 	private OV: OpenVidu = null;
 	private OVScreen: OpenVidu = null;
 

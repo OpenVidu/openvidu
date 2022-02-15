@@ -15,7 +15,7 @@ import { NicknameMatcher } from '../../matchers/nickname.matcher';
 import { DeviceService } from '../../services/device/device.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { StorageService } from '../../services/storage/storage.service';
-import { WebrtcService } from '../../services/webrtc/webrtc.service';
+import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { ActionService } from '../../services/action/action.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { ParticipantAbstractModel } from '../../models/participant.model';
@@ -55,7 +55,7 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 		private actionService: ActionService,
 		private deviceSrv: DeviceService,
 		private loggerSrv: LoggerService,
-		private openViduWebRTCService: WebrtcService,
+		private openViduopenviduService: OpenViduService,
 		private participantService: ParticipantService,
 		private storageSrv: StorageService
 	) {
@@ -69,7 +69,7 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 
 	async ngOnInit() {
 		this.subscribeToLocalParticipantEvents();
-		this.openViduWebRTCService.initialize();
+		this.openViduopenviduService.initialize();
 		await this.deviceSrv.initializeDevices();
 		const nickname = this.storageSrv.get(Storage.USER_NICKNAME) || this.generateRandomNickname();
 		this.nicknameFormControl.setValue(nickname);
@@ -99,18 +99,18 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 			// Is New deviceId different from the old one?
 			if (this.deviceSrv.needUpdateVideoTrack(videoSource)) {
 				const mirror = this.deviceSrv.cameraNeedsMirror(videoSource);
-				await this.openViduWebRTCService.republishTrack(videoSource, null, mirror);
+				await this.openViduopenviduService.republishTrack(videoSource, null, mirror);
 				this.deviceSrv.setCameraSelected(videoSource);
 				this.cameraSelected = this.deviceSrv.getCameraSelected();
 			}
 			// Publish Webcam video
-			this.openViduWebRTCService.publishVideo(this.participantService.getMyCameraPublisher(), true);
+			this.openViduopenviduService.publishVideo(this.participantService.getMyCameraPublisher(), true);
 			this.isVideoActive = true;
 
 		} else {
 			// Videosource is 'null' because of the user has selected 'None' or muted the camera
 			// Unpublish webcam
-			this.openViduWebRTCService.publishVideo(this.participantService.getMyCameraPublisher(), false);
+			this.openViduopenviduService.publishVideo(this.participantService.getMyCameraPublisher(), false);
 			//TODO: save 'None' device in storage
 			// this.deviceSrv.setCameraSelected(videoSource);
 			// this.cameraSelected = this.deviceSrv.getCameraSelected();
@@ -125,7 +125,7 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 			// Is New deviceId different than older?
 			if (this.deviceSrv.needUpdateAudioTrack(audioSource)) {
 				const mirror = this.deviceSrv.cameraNeedsMirror(this.cameraSelected.device);
-				await this.openViduWebRTCService.republishTrack(null, audioSource, mirror);
+				await this.openViduopenviduService.republishTrack(null, audioSource, mirror);
 				this.deviceSrv.setMicSelected(audioSource);
 				this.microphoneSelected = this.deviceSrv.getMicrophoneSelected();
 			}
@@ -141,11 +141,11 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 
 	toggleCam() {
 		this.isVideoActive = !this.isVideoActive;
-		this.openViduWebRTCService.publishVideo(this.participantService.getMyCameraPublisher(), this.isVideoActive);
+		this.openViduopenviduService.publishVideo(this.participantService.getMyCameraPublisher(), this.isVideoActive);
 
 		if (this.participantService.areBothEnabled()) {
 			this.participantService.disableWebcamUser();
-			this.openViduWebRTCService.publishAudio(this.participantService.getMyScreenPublisher(), this.isAudioActive);
+			this.openViduopenviduService.publishAudio(this.participantService.getMyScreenPublisher(), this.isAudioActive);
 		} else if (this.participantService.isOnlyMyScreenEnabled()) {
 			this.participantService.enableWebcamUser();
 		}
@@ -169,7 +169,7 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 				publishAudio: hasAudio,
 				mirror: false
 			};
-			const screenPublisher = this.openViduWebRTCService.initPublisher(undefined, properties);
+			const screenPublisher = this.openViduopenviduService.initPublisher(undefined, properties);
 
 			screenPublisher.on('accessAllowed', (event) => {
 				screenPublisher.stream
@@ -248,8 +248,8 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 
 	private publishAudio(audio: boolean) {
 		this.participantService.isMyCameraEnabled()
-			? this.openViduWebRTCService.publishAudio(this.participantService.getMyCameraPublisher(), audio)
-			: this.openViduWebRTCService.publishAudio(this.participantService.getMyScreenPublisher(), audio);
+			? this.openViduopenviduService.publishAudio(this.participantService.getMyCameraPublisher(), audio)
+			: this.openViduopenviduService.publishAudio(this.participantService.getMyScreenPublisher(), audio);
 	}
 
 	private subscribeToLocalParticipantEvents() {
@@ -262,7 +262,7 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 	}
 
 	private async initwebcamPublisher() {
-		const publisher = await this.openViduWebRTCService.initDefaultPublisher(undefined);
+		const publisher = await this.openViduopenviduService.initDefaultPublisher(undefined);
 		if (publisher) {
 
 			// this.handlePublisherSuccess(publisher);

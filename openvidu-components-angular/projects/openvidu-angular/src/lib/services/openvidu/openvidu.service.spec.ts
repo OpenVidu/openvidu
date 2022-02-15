@@ -4,15 +4,15 @@ import { LoggerServiceMock } from '../logger/logger.service.mock';
 
 import { LocalUserService } from '../local-user/local-user.service';
 import { LocalUserServiceMock } from '../local-user/local-user.service.mock';
-import { WebrtcService } from './webrtc.service';
+import { OpenViduService } from './openvidu.service';
 import { PlatformService } from '../platform/platform.service';
 import { PlatformServiceMock } from '../platform/platform.service.mock';
 import { LibraryConfigService } from '../library-config/library-config.service';
 import { LibraryConfigServiceMock } from '../library-config/library-config.service.mock';
 
 
-describe('WebrtcService', () => {
-	let service: WebrtcService;
+describe('OpenViduService', () => {
+	let service: OpenViduService;
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
@@ -23,7 +23,7 @@ describe('WebrtcService', () => {
 				{ provide: LibraryConfigService, useClass: LibraryConfigServiceMock }
 			]
 		});
-		service = TestBed.inject(WebrtcService);
+		service = TestBed.inject(OpenViduService);
 	});
 
 	it('should be created', () => {

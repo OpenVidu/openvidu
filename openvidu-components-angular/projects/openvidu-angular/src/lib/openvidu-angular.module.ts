@@ -47,7 +47,7 @@ import { PlatformService } from './services/platform/platform.service';
 import { StorageService } from './services/storage/storage.service';
 import { TokenService } from './services/token/token.service';
 import { LibraryConfigService } from './services/library-config/library-config.service';
-import { WebrtcService } from './services/webrtc/webrtc.service';
+import { OpenViduService } from './services/openvidu/openvidu.service';
 import { ActionService } from './services/action/action.service';
 import { ChatService } from './services/chat/chat.service';
 import { DocumentService } from './services/document/document.service';
@@ -124,7 +124,7 @@ import { AudioWaveComponent } from './components/audio-wave/audio-wave.component
 		ParticipantService,
 		StorageService,
 		TokenService,
-		WebrtcService
+		OpenViduService
 	],
 	exports: [
 		VideoconferenceComponent,

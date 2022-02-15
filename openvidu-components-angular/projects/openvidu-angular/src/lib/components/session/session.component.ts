@@ -6,7 +6,7 @@ import { ILogger } from '../../models/logger.model';
 
 import { ChatService } from '../../services/chat/chat.service';
 import { LoggerService } from '../../services/logger/logger.service';
-import { WebrtcService } from '../../services/webrtc/webrtc.service';
+import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { TokenService } from '../../services/token/token.service';
 import { ActionService } from '../../services/action/action.service';
 import { Signal } from '../../models/signal.model';
@@ -50,7 +50,7 @@ export class SessionComponent implements OnInit, AfterViewInit {
 
 	constructor(
 		protected actionService: ActionService,
-		protected webrtcService: WebrtcService,
+		protected openviduService: OpenViduService,
 		protected participantService: ParticipantService,
 		protected loggerSrv: LoggerService,
 		protected chatService: ChatService,
@@ -83,12 +83,12 @@ export class SessionComponent implements OnInit, AfterViewInit {
 
 	async ngOnInit() {
 
-		if (this.webrtcService.getWebcamSession() === null) {
-			this.webrtcService.initialize();
-			await this.webrtcService.initDefaultPublisher(undefined);
+		if (this.openviduService.getWebcamSession() === null) {
+			this.openviduService.initialize();
+			await this.openviduService.initDefaultPublisher(undefined);
 		}
-		this.session = this.webrtcService.getWebcamSession();
-		this.sessionScreen = this.webrtcService.getScreenSession();
+		this.session = this.openviduService.getWebcamSession();
+		this.sessionScreen = this.openviduService.getScreenSession();
 		this.subscribeToConnectionCreatedAndDestroyed();
 		this.subscribeToStreamCreated();
 		this.subscribeToStreamDestroyed();
@@ -103,8 +103,8 @@ export class SessionComponent implements OnInit, AfterViewInit {
 		await this.connectToSession();
 		// Workaround, firefox does not have audio when publisher join with muted camera
 		// if (this.platformService.isFirefox() && !this.localUserService.hasCameraVideoActive()) {
-		// 	this.webrtcService.publishVideo(this.localUserService.getMyCameraPublisher(), true);
-		// 	this.webrtcService.publishVideo(this.localUserService.getMyCameraPublisher(), false);
+		// 	this.openviduService.publishVideo(this.localUserService.getMyCameraPublisher(), true);
+		// 	this.openviduService.publishVideo(this.localUserService.getMyCameraPublisher(), false);
 		// }
 
 		this._session.emit(this.session);
@@ -132,7 +132,7 @@ export class SessionComponent implements OnInit, AfterViewInit {
 
 	leaveSession() {
 		this.log.d('Leaving session...');
-		this.webrtcService.disconnect();
+		this.openviduService.disconnect();
 	}
 
 	protected subscribeToTogglingMenu() {
@@ -169,16 +169,16 @@ export class SessionComponent implements OnInit, AfterViewInit {
 	private async connectToSession(): Promise<void> {
 		try {
 			if (this.participantService.areBothEnabled()) {
-				await this.webrtcService.connectSession(this.webrtcService.getWebcamSession(), this.tokenService.getWebcamToken());
-				await this.webrtcService.connectSession(this.webrtcService.getScreenSession(), this.tokenService.getScreenToken());
-				await this.webrtcService.publish(this.participantService.getMyCameraPublisher());
-				await this.webrtcService.publish(this.participantService.getMyScreenPublisher());
+				await this.openviduService.connectSession(this.openviduService.getWebcamSession(), this.tokenService.getWebcamToken());
+				await this.openviduService.connectSession(this.openviduService.getScreenSession(), this.tokenService.getScreenToken());
+				await this.openviduService.publish(this.participantService.getMyCameraPublisher());
+				await this.openviduService.publish(this.participantService.getMyScreenPublisher());
 			} else if (this.participantService.isOnlyMyScreenEnabled()) {
-				await this.webrtcService.connectSession(this.webrtcService.getScreenSession(), this.tokenService.getScreenToken());
-				await this.webrtcService.publish(this.participantService.getMyScreenPublisher());
+				await this.openviduService.connectSession(this.openviduService.getScreenSession(), this.tokenService.getScreenToken());
+				await this.openviduService.publish(this.participantService.getMyScreenPublisher());
 			} else {
-				await this.webrtcService.connectSession(this.webrtcService.getWebcamSession(), this.tokenService.getWebcamToken());
-				await this.webrtcService.publish(this.participantService.getMyCameraPublisher());
+				await this.openviduService.connectSession(this.openviduService.getWebcamSession(), this.tokenService.getWebcamToken());
+				await this.openviduService.publish(this.participantService.getMyCameraPublisher());
 			}
 		} catch (error) {
 			this._error.emit({ error: error.error, messgae: error.message, code: error.code, status: error.status });
@@ -191,7 +191,7 @@ export class SessionComponent implements OnInit, AfterViewInit {
 		this.session.on('connectionCreated', (event: ConnectionEvent) => {
 			const connectionId = event.connection?.connectionId;
 			const nickname: string = this.participantService.getNicknameFromConnectionData(event.connection.data);
-			const isRemoteConnection: boolean = !this.webrtcService.isMyOwnConnection(connectionId);
+			const isRemoteConnection: boolean = !this.openviduService.isMyOwnConnection(connectionId);
 			const isCameraConnection: boolean = !nickname?.includes(`_${VideoType.SCREEN}`);
 			const data = event.connection?.data;
 
@@ -200,16 +200,16 @@ export class SessionComponent implements OnInit, AfterViewInit {
 				this.participantService.addRemoteConnection(connectionId, data, null);
 
 				//Sending nicnkanme signal to new participants
-				if (this.webrtcService.needSendNicknameSignal()) {
+				if (this.openviduService.needSendNicknameSignal()) {
 					const data = { clientData: this.participantService.getWebcamNickname() };
-					this.webrtcService.sendSignal(Signal.NICKNAME_CHANGED, [event.connection], data);
+					this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, [event.connection], data);
 				}
 			}
 		});
 
 		this.session.on('connectionDestroyed', (event: ConnectionEvent) => {
 			const nickname: string = this.participantService.getNicknameFromConnectionData(event.connection.data);
-			const isRemoteConnection: boolean = !this.webrtcService.isMyOwnConnection(event.connection.connectionId);
+			const isRemoteConnection: boolean = !this.openviduService.isMyOwnConnection(event.connection.connectionId);
 			const isCameraConnection: boolean = !nickname?.includes(`_${VideoType.SCREEN}`);
 			// Deleting participant when connection is destroyed
 			if (isRemoteConnection && isCameraConnection) {
@@ -223,7 +223,7 @@ export class SessionComponent implements OnInit, AfterViewInit {
 			const connectionId = event.stream?.connection?.connectionId;
 			const data = event.stream?.connection?.data;
 
-			const isRemoteConnection: boolean = !this.webrtcService.isMyOwnConnection(connectionId);
+			const isRemoteConnection: boolean = !this.openviduService.isMyOwnConnection(connectionId);
 			if (isRemoteConnection) {
 				const subscriber: Subscriber = this.session.subscribe(event.stream, undefined);
 				this.participantService.addRemoteConnection(connectionId, data, subscriber);
@@ -243,7 +243,7 @@ export class SessionComponent implements OnInit, AfterViewInit {
 	private subscribeToStreamPropertyChange() {
 		// this.session.on('streamPropertyChanged', (event: StreamPropertyChangedEvent) => {
 		// 	const connectionId = event.stream.connection.connectionId;
-		// 	const isRemoteConnection: boolean = !this.webrtcService.isMyOwnConnection(connectionId);
+		// 	const isRemoteConnection: boolean = !this.openviduService.isMyOwnConnection(connectionId);
 		// 	if (isRemoteConnection) {
 		// 		if (event.changedProperty === 'videoActive') {
 		// 			// this.participantService.updateUsers();
@@ -255,7 +255,7 @@ export class SessionComponent implements OnInit, AfterViewInit {
 	private subscribeToNicknameChanged() {
 		this.session.on(`signal:${Signal.NICKNAME_CHANGED}`, (event: any) => {
 			const connectionId = event.from.connectionId;
-			const isRemoteConnection: boolean = !this.webrtcService.isMyOwnConnection(connectionId);
+			const isRemoteConnection: boolean = !this.openviduService.isMyOwnConnection(connectionId);
 
 			if (isRemoteConnection) {
 				const nickname = this.participantService.getNicknameFromConnectionData(event.data);

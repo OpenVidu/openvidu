@@ -5,7 +5,7 @@ import { ChatService } from '../../services/chat/chat.service';
 import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.service';
 import { DocumentService } from '../../services/document/document.service';
 
-import { WebrtcService } from '../../services/webrtc/webrtc.service';
+import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { ILogger } from '../../models/logger.model';
 import { ScreenType } from '../../models/video-type.model';
@@ -59,7 +59,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		protected menuService: SidenavMenuService,
 		protected tokenService: TokenService,
 		protected participantService: ParticipantService,
-		protected webrtcService: WebrtcService,
+		protected openviduService: OpenViduService,
 		protected oVDevicesService: DeviceService,
 		protected actionService: ActionService,
 		protected loggerSrv: LoggerService
@@ -98,7 +98,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		await this.oVDevicesService.initializeDevices();
 		this.hasVideoDevices = this.oVDevicesService.hasVideoDeviceAvailable();
 		this.hasAudioDevices = this.oVDevicesService.hasAudioDeviceAvailable();
-		this.session = this.webrtcService.getWebcamSession();
+		this.session = this.openviduService.getWebcamSession();
 
 		this.subscribeToUserMediaProperties();
 		this.subscribeToReconnection();
@@ -110,13 +110,13 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		this.onMicClicked.emit();
 
 		if (this.participantService.isMyCameraEnabled()) {
-			this.webrtcService.publishAudio(
+			this.openviduService.publishAudio(
 				this.participantService.getMyCameraPublisher(),
 				!this.participantService.hasCameraAudioActive()
 			);
 			return;
 		}
-		this.webrtcService.publishAudio(this.participantService.getMyScreenPublisher(), !this.participantService.hasScreenAudioActive());
+		this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), !this.participantService.hasScreenAudioActive());
 	}
 
 	async toggleCamera() {
@@ -127,26 +127,26 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 			const publishAudio = this.participantService.hasCameraAudioActive();
 			// Disabling webcam
 			if (this.participantService.areBothEnabled()) {
-				this.webrtcService.publishVideo(this.participantService.getMyCameraPublisher(), publishVideo);
+				this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), publishVideo);
 				this.participantService.disableWebcamUser();
-				this.webrtcService.unpublish(this.participantService.getMyCameraPublisher());
-				this.webrtcService.publishAudio(this.participantService.getMyScreenPublisher(), publishAudio);
+				this.openviduService.unpublish(this.participantService.getMyCameraPublisher());
+				this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), publishAudio);
 				return;
 			}
 			// Enabling webcam
 			if (this.participantService.isOnlyMyScreenEnabled()) {
 				const hasAudio = this.participantService.hasScreenAudioActive();
 
-				if (!this.webrtcService.isWebcamSessionConnected()) {
-					await this.webrtcService.connectSession(this.webrtcService.getWebcamSession(), this.tokenService.getWebcamToken());
+				if (!this.openviduService.isWebcamSessionConnected()) {
+					await this.openviduService.connectSession(this.openviduService.getWebcamSession(), this.tokenService.getWebcamToken());
 				}
-				await this.webrtcService.publish(this.participantService.getMyCameraPublisher());
-				this.webrtcService.publishAudio(this.participantService.getMyScreenPublisher(), false);
-				this.webrtcService.publishAudio(this.participantService.getMyCameraPublisher(), hasAudio);
+				await this.openviduService.publish(this.participantService.getMyCameraPublisher());
+				this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), false);
+				this.openviduService.publishAudio(this.participantService.getMyCameraPublisher(), hasAudio);
 				this.participantService.enableWebcamUser();
 			}
 			// Muting/unmuting webcam
-			this.webrtcService.publishVideo(this.participantService.getMyCameraPublisher(), publishVideo);
+			this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), publishVideo);
 		} catch (error) {
 			this.log.e('There was an error toggling camera:', error.code, error.message);
 			this.actionService.openDialog('There was an error toggling camera:', error?.error || error?.message);
@@ -160,7 +160,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 			// Disabling screenShare
 			if (this.participantService.areBothEnabled()) {
 				this.participantService.disableScreenUser();
-				this.webrtcService.unpublish(this.participantService.getMyScreenPublisher());
+				this.openviduService.unpublish(this.participantService.getMyScreenPublisher());
 				return;
 			}
 
@@ -175,7 +175,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 					publishAudio: hasAudio,
 					mirror: false
 				};
-				const screenPublisher = this.webrtcService.initPublisher(undefined, properties);
+				const screenPublisher = this.openviduService.initPublisher(undefined, properties);
 
 				screenPublisher.once('accessAllowed', async (event) => {
 					// Listen to event fired when native stop button is clicked
@@ -189,15 +189,15 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 					this.log.d('ACCESS ALOWED screenPublisher');
 					this.participantService.enableScreenUser(screenPublisher);
 
-					if (!this.webrtcService.isScreenSessionConnected()) {
-						await this.webrtcService.connectSession(this.webrtcService.getScreenSession(), this.tokenService.getScreenToken());
+					if (!this.openviduService.isScreenSessionConnected()) {
+						await this.openviduService.connectSession(this.openviduService.getScreenSession(), this.tokenService.getScreenToken());
 					}
-					await this.webrtcService.publish(this.participantService.getMyScreenPublisher());
-					// this.webrtcService.sendNicknameSignal();
+					await this.openviduService.publish(this.participantService.getMyScreenPublisher());
+					// this.openviduService.sendNicknameSignal();
 					if (!this.participantService.hasCameraVideoActive()) {
 						// Disabling webcam
 						this.participantService.disableWebcamUser();
-						this.webrtcService.unpublish(this.participantService.getMyCameraPublisher());
+						this.openviduService.unpublish(this.participantService.getMyCameraPublisher());
 					}
 				});
 
@@ -212,15 +212,15 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
 			// Disabling screnShare and enabling webcam
 			const hasAudio = this.participantService.hasScreenAudioActive();
-			if (!this.webrtcService.isWebcamSessionConnected()) {
-				await this.webrtcService.connectSession(this.webrtcService.getWebcamSession(), this.tokenService.getWebcamToken());
+			if (!this.openviduService.isWebcamSessionConnected()) {
+				await this.openviduService.connectSession(this.openviduService.getWebcamSession(), this.tokenService.getWebcamToken());
 			}
-			await this.webrtcService.publish(this.participantService.getMyCameraPublisher());
-			this.webrtcService.publishAudio(this.participantService.getMyScreenPublisher(), false);
-			this.webrtcService.publishAudio(this.participantService.getMyCameraPublisher(), hasAudio);
+			await this.openviduService.publish(this.participantService.getMyCameraPublisher());
+			this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), false);
+			this.openviduService.publishAudio(this.participantService.getMyCameraPublisher(), hasAudio);
 			this.participantService.enableWebcamUser();
 			this.participantService.disableScreenUser();
-			this.webrtcService.unpublish(this.participantService.getMyScreenPublisher());
+			this.openviduService.unpublish(this.participantService.getMyScreenPublisher());
 		} catch (error) {
 			this.log.e('There was an error toggling screen share:', error.code, error.message);
 			this.actionService.openDialog('There was an error toggling screen share:', error?.error || error?.message);
@@ -234,12 +234,12 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 			publishAudio: !this.participantService.isMyCameraEnabled(),
 			mirror: false
 		};
-		await this.webrtcService.replaceTrack(this.participantService.getMyScreenPublisher(), properties);
+		await this.openviduService.replaceTrack(this.participantService.getMyScreenPublisher(), properties);
 	}
 
 	leaveSession() {
 		this.log.d('Leaving session...');
-		this.webrtcService.disconnect();
+		this.openviduService.disconnect();
 		this.onLeaveSessionClicked.emit();
 	}
 

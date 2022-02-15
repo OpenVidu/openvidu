@@ -5,7 +5,7 @@
 export * from './lib/openvidu-angular.module';
 
 // Services
-export * from './lib/services/webrtc/webrtc.service';
+export * from './lib/services/openvidu/openvidu.service';
 export * from './lib/services/participant/participant.service';
 export * from './lib/services/chat/chat.service';
 export * from './lib/services/platform/platform.service';
