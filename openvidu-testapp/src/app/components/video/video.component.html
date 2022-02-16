@@ -11,7 +11,9 @@
             <button class="video-btn stats-button bottom-left-rounded" title="Peer Connection Stats" (click)="showCodecUsed()">
               <mat-icon aria-label="Peer Connection Stats" class="mat-icon material-icons" role="img" aria-hidden="true">info</mat-icon>
             </button>
-            <button class="video-btn ice-config-button bottom-left-rounded" title="Ice Server configuration" (click)="getConfiguredIceServer()">
+            <button *ngIf="OV.session.connection.connectionId"
+              class="video-btn bottom-left-rounded ice-config-button-{{OV.session.connection.connectionId}}"
+              title="Ice Server configuration" (click)="getConfiguredIceServer()">
               <mat-icon aria-label="Ice Server configuration" class="mat-icon material-icons" role="img" aria-hidden="true">storage</mat-icon>
             </button>
         </div>
@@ -56,7 +58,9 @@
             <button class="video-btn stats-button bottom-left-rounded" title="Peer Connection Stats" (click)="showCodecUsed()">
               <mat-icon aria-label="Peer Connection Stats" class="mat-icon material-icons" role="img" aria-hidden="true">info</mat-icon>
             </button>
-            <button class="video-btn ice-config-button bottom-left-rounded" title="Ice Server configuration" (click)="getConfiguredIceServer()">
+            <button *ngIf="OV.session.connection.connectionId"
+              class="video-btn bottom-left-rounded ice-config-button-{{OV.session.connection.connectionId}}"
+              title="Ice Server configuration" (click)="getConfiguredIceServer()">
               <mat-icon aria-label="Ice Server configuration" class="mat-icon material-icons" role="img" aria-hidden="true">storage</mat-icon>
             </button>
         </div>

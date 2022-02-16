@@ -28,6 +28,7 @@ import { RecordingMode } from './RecordingMode';
 import { SessionProperties } from './SessionProperties';
 import { TokenOptions } from './TokenOptions';
 import { RecordingProperties } from 'RecordingProperties';
+import { IceServerProperties } from 'IceServerProperties';
 
 export class Session {
 
@@ -561,7 +562,6 @@ export class Session {
         // 1. Array to store fetched connections and later remove closed ones
         const fetchedConnectionIds: string[] = [];
         json.connections.content.forEach(jsonConnection => {
-
             const connectionObj: Connection = new Connection(jsonConnection);
             fetchedConnectionIds.push(connectionObj.connectionId);
             let storedConnection = this.connections.find(c => c.connectionId === connectionObj.connectionId);
@@ -584,6 +584,16 @@ export class Session {
 
         // Order connections by time of creation
         this.connections.sort((c1, c2) => (c1.createdAt > c2.createdAt) ? 1 : ((c2.createdAt > c1.createdAt) ? -1 : 0));
+
+        // Order Ice candidates in connection properties
+        this.connections.forEach(connection => {
+            if (connection.connectionProperties.customIceServers != null &&
+                connection.connectionProperties.customIceServers.length > 0) {
+                    // Order alphabetically Ice servers using url just to keep the same list order.
+                    const simpleIceComparator = (a: IceServerProperties, b: IceServerProperties) => (a.url > b.url) ? 1 : -1
+                    connection.connectionProperties.customIceServers.sort(simpleIceComparator);
+                }
+        });
         // Populate activeConnections array
         this.updateActiveConnectionsArray();
         return this;

@@ -39,3 +39,12 @@ mat-dialog-content button {
   top: 0;
   right: 0;
 }
+
+#manual-turn-div {
+  background-color: #f7f7f7;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 5px;
+  border: 1px solid #00000026;
+  border-radius: 3px;
+}

@@ -23,6 +23,8 @@ export class SessionApiDialogComponent {
     customLayout = '';
     recPropertiesIcon = 'add_circle';
     showRecProperties = false;
+    numCustomIceServers = 0;
+    configuredCustomIceServers = []
 
     connectionProperties: ConnectionProperties = {
         record: true,
@@ -205,6 +207,7 @@ export class SessionApiDialogComponent {
 
     createConnection() {
         console.log('Creating connection');
+        this.connectionProperties.customIceServers = this.configuredCustomIceServers;
         this.session.createConnection(this.connectionProperties)
             .then(connection => {
                 this.response = 'Connection created: ' + JSON.stringify(connection);
@@ -236,6 +239,25 @@ export class SessionApiDialogComponent {
     toggleRecProperties() {
         this.showRecProperties = !this.showRecProperties;
         this.recPropertiesIcon = this.showRecProperties ? 'remove_circle' : 'add_circle';
+    }
+
+    changedNumIceServers(numIceServers: number) {
+        // Save Previous Ice Servers
+        let previousIceServers = [];
+        for (let i = 0; i < this.configuredCustomIceServers.length; i++) {
+            previousIceServers.push(this.configuredCustomIceServers[i]);
+        }
+
+        // Fill empty ice servers
+        this.configuredCustomIceServers = []
+        for(let i = 1; i <= numIceServers; i++) {
+            this.configuredCustomIceServers.push({});
+        }
+
+        // Add previous items
+        for(let i = 0; i < previousIceServers.length && i < this.configuredCustomIceServers.length; i++) {
+            this.configuredCustomIceServers[0] = previousIceServers[0];
+        }
     }
 
 }

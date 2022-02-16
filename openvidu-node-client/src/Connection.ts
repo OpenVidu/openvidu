@@ -244,6 +244,7 @@ export class Connection {
         }
         if (equals) {
             if (this.connectionProperties.customIceServers != null) {
+                // Order alphabetically Ice servers using url just to keep the same list order.
                 const simpleIceComparator = (a: IceServerProperties, b: IceServerProperties) => (a.url > b.url) ? 1 : -1
                 const sortedIceServers = this.connectionProperties.customIceServers.sort(simpleIceComparator);
                 const sortedOtherIceServers = other.connectionProperties.customIceServers.sort(simpleIceComparator);

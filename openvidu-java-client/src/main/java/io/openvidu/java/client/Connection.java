@@ -441,13 +441,13 @@ public class Connection {
 			customIceServersJsonArray.forEach(iceJsonElem -> {
 				JsonObject iceJsonObj = iceJsonElem.getAsJsonObject();
 				String url = (iceJsonObj.has("url") && !iceJsonObj.get("url").isJsonNull())
-						? json.get("url").getAsString()
+						? iceJsonObj.get("url").getAsString()
 						: null;
 				String username = (iceJsonObj.has("username") && !iceJsonObj.get("username").isJsonNull())
-						? json.get("username").getAsString()
+						? iceJsonObj.get("username").getAsString()
 						: null;
 				String credential = (iceJsonObj.has("credential") && !iceJsonObj.get("credential").isJsonNull())
-						? json.get("credential").getAsString()
+						? iceJsonObj.get("credential").getAsString()
 						: null;
 				customIceServers.add(new IceServerProperties.Builder().url(url).username(username).credential(credential).build());
 			});
