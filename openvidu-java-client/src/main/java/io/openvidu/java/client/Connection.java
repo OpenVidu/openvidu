@@ -25,7 +25,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 /**
  * See {@link io.openvidu.java.client.Session#getConnections()}
@@ -191,6 +193,19 @@ public class Connection {
 	}
 
 	/**
+	 * Returns a list of custom ICE Servers configured for this connection.
+	 * <br><br>
+	 * See {@link io.openvidu.java.client.ConnectionProperties.Builder#addCustomIceServer(IceServerProperties)} for more
+	 * information.
+	 * <br><br>
+	 * <strong>Only for
+	 * {@link io.openvidu.java.client.ConnectionType#WEBRTC}</strong>
+	 */
+	public List<IceServerProperties> getCustomIceServers() {
+		return this.connectionProperties.getCustomIceServers();
+	}
+
+	/**
 	 * Returns the token string associated to the Connection. This is the value that
 	 * must be sent to the client-side to be consumed in OpenVidu Browser method
 	 * <a href=
@@ -322,6 +337,11 @@ public class Connection {
 		if (this.connectionProperties.getNetworkCache() != null) {
 			builder.networkCache(this.connectionProperties.getNetworkCache());
 		}
+		if (this.connectionProperties.getCustomIceServers() != null && !this.connectionProperties.getCustomIceServers().isEmpty()) {
+			for (IceServerProperties iceServerProperties: this.connectionProperties.getCustomIceServers()) {
+				builder.addCustomIceServer(iceServerProperties);
+			}
+		}
 		this.connectionProperties = builder.build();
 	}
 
@@ -415,6 +435,24 @@ public class Connection {
 				? OpenViduRole.valueOf(json.get("role").getAsString())
 				: null;
 
+		List<IceServerProperties> customIceServers = new ArrayList<>();
+		if (json.has("customIceServers") && json.get("customIceServers").isJsonArray()) {
+			JsonArray customIceServersJsonArray = json.get("customIceServers").getAsJsonArray();
+			customIceServersJsonArray.forEach(iceJsonElem -> {
+				JsonObject iceJsonObj = iceJsonElem.getAsJsonObject();
+				String url = (iceJsonObj.has("url") && !iceJsonObj.get("url").isJsonNull())
+						? iceJsonObj.get("url").getAsString()
+						: null;
+				String username = (iceJsonObj.has("username") && !iceJsonObj.get("username").isJsonNull())
+						? iceJsonObj.get("username").getAsString()
+						: null;
+				String credential = (iceJsonObj.has("credential") && !iceJsonObj.get("credential").isJsonNull())
+						? iceJsonObj.get("credential").getAsString()
+						: null;
+				customIceServers.add(new IceServerProperties.Builder().url(url).username(username).credential(credential).build());
+			});
+		}
+
 		// IPCAM
 		String rtspUri = (json.has("rtspUri") && !json.get("rtspUri").isJsonNull()) ? json.get("rtspUri").getAsString()
 				: null;
@@ -428,8 +466,9 @@ public class Connection {
 		Integer networkCache = (json.has("networkCache") && !json.get("networkCache").isJsonNull())
 				? json.get("networkCache").getAsInt()
 				: null;
+
 		this.connectionProperties = new ConnectionProperties(type, data, record, role, null, rtspUri, adaptativeBitrate,
-				onlyPlayWithSubscribers, networkCache);
+				onlyPlayWithSubscribers, networkCache, customIceServers);
 
 		return this;
 	}

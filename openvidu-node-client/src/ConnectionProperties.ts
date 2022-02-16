@@ -15,6 +15,7 @@
  *
  */
 
+import { IceServerProperties } from './IceServerProperties';
 import { ConnectionType } from './ConnectionType';
 import { OpenViduRole } from './OpenViduRole';
 
@@ -127,4 +128,30 @@ export interface ConnectionProperties {
      */
     networkCache?: number;
 
+    /**
+     * On certain type of networks, clients using default OpenVidu STUN/TURN server can not be reached it because
+     * firewall rules and network topologies at the client side. This method allows you to configure your
+     * own ICE Server for specific connections if you need it. This is usually not necessary, only it is usefull for
+     * OpenVidu users behind firewalls which allows traffic from/to specific ports which may need a custom
+     * ICE Server configuration
+     *
+     * Add an ICE Server if in your use case you need this connection to use your own ICE Server deployment.
+     * When the user uses this connection, it will use the specified ICE Servers defined here.
+     *
+     * The level of precedence for ICE Server configuration on every OpenVidu connection is:
+     *
+     * 1. Configured ICE Server using Openvidu.setAdvancedCofiguration() at openvidu-browser.
+     * 2. Configured ICE server at [[ConnectionProperties.customIceServers]].
+     * 3. Configured ICE Server at global configuration parameter: `OPENVIDU_WEBRTC_ICE_SERVERS`.
+     * 4. Default deployed Coturn within OpenVidu deployment.
+     *
+     *
+     * If no value is found at level 1, level 2 will be used, and so on until level 4.
+     *
+     * This method is equivalent to level 2 of precedence.
+     *
+     * **Only for [[ConnectionType.WEBRTC]]**
+     *
+     */
+    customIceServers?: IceServerProperties[];
 }

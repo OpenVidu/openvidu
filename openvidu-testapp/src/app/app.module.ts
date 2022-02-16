@@ -33,6 +33,7 @@ import { OpenviduParamsService } from './services/openvidu-params.service';
 import { TestFeedService } from './services/test-feed.service';
 import { MuteSubscribersService } from './services/mute-subscribers.service';
 import { SessionInfoDialogComponent } from "./components/dialogs/session-info-dialog/session-info-dialog.component";
+import { ShowIceServerConfiguredDialog } from './components/dialogs/show-configured-ice/show-configured-ice.component';
 
 @NgModule({
   declarations: [
@@ -53,6 +54,7 @@ import { SessionInfoDialogComponent } from "./components/dialogs/session-info-di
     ScenarioPropertiesDialogComponent,
     FilterDialogComponent,
     ShowCodecDialogComponent,
+    ShowIceServerConfiguredDialog,
     SessionInfoDialogComponent,
     UsersTableComponent,
     TableVideoComponent
@@ -82,6 +84,7 @@ import { SessionInfoDialogComponent } from "./components/dialogs/session-info-di
     ScenarioPropertiesDialogComponent,
     FilterDialogComponent,
     ShowCodecDialogComponent,
+    ShowIceServerConfiguredDialog,
     SessionInfoDialogComponent
   ],
   bootstrap: [AppComponent]

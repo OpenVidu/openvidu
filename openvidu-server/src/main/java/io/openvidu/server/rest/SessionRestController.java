@@ -21,11 +21,13 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import io.openvidu.java.client.*;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,17 +53,7 @@ import com.google.gson.JsonParser;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
-import io.openvidu.java.client.ConnectionProperties;
-import io.openvidu.java.client.ConnectionType;
-import io.openvidu.java.client.KurentoOptions;
-import io.openvidu.java.client.MediaMode;
-import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording.OutputMode;
-import io.openvidu.java.client.RecordingLayout;
-import io.openvidu.java.client.RecordingMode;
-import io.openvidu.java.client.RecordingProperties;
-import io.openvidu.java.client.SessionProperties;
-import io.openvidu.java.client.VideoCodec;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.IdentifierPrefixes;
@@ -662,7 +654,7 @@ public class SessionRestController {
 			try {
 				Token token = sessionManager.newToken(session, connectionProperties.getRole(),
 						connectionProperties.getData(), connectionProperties.record(),
-						connectionProperties.getKurentoOptions());
+						connectionProperties.getKurentoOptions(), connectionProperties.getCustomIceServers());
 				return new ResponseEntity<>(token.toJsonAsParticipant().toString(), RestUtils.getResponseHeaders(),
 						HttpStatus.OK);
 			} catch (Exception e) {
@@ -914,6 +906,41 @@ public class SessionRestController {
 				}
 			}
 
+			// Custom Ice Servers
+			JsonArray customIceServersJsonArray = null;
+			if (params.get("customIceServers") != null) {
+				try {
+					customIceServersJsonArray = new Gson().toJsonTree(params.get("customIceServers"), List.class)
+							.getAsJsonArray();
+				} catch (Exception e) {
+					throw new Exception("Error in parameter 'customIceServersJson'. It is not a valid JSON object");
+				}
+			}
+			if (customIceServersJsonArray != null) {
+				try {
+					for (int i = 0; i < customIceServersJsonArray.size(); i++) {
+						JsonObject customIceServerJson = customIceServersJsonArray.get(i).getAsJsonObject();
+						IceServerProperties.Builder iceServerPropertiesBuilder = new IceServerProperties.Builder();
+						iceServerPropertiesBuilder.url(customIceServerJson.get("url").getAsString());
+						if (customIceServerJson.has("username")) {
+							iceServerPropertiesBuilder.username(customIceServerJson.get("username").getAsString());
+						}
+						if (customIceServerJson.has("credential")) {
+							iceServerPropertiesBuilder.credential(customIceServerJson.get("credential").getAsString());
+						}
+						IceServerProperties iceServerProperties = iceServerPropertiesBuilder.build();
+						builder.addCustomIceServer(iceServerProperties);
+					}
+				} catch (Exception e) {
+					throw new Exception("Type error in some parameter of 'customIceServers': " + e.getMessage());
+				}
+			} else if(!openviduConfig.getWebrtcIceServers().isEmpty()){
+				// If not defined in connection, check if defined in openvidu config
+				for (IceServerProperties iceServerProperties: openviduConfig.getWebrtcIceServers()) {
+					builder.addCustomIceServer(iceServerProperties);
+				}
+			}
+
 			// Build WEBRTC options
 			builder.role(role).kurentoOptions(kurentoOptions);
 
@@ -938,6 +965,8 @@ public class SessionRestController {
 			builder.rtspUri(rtspUri).adaptativeBitrate(adaptativeBitrate)
 					.onlyPlayWithSubscribers(onlyPlayWithSubscribers).networkCache(networkCache).build();
 		}
+
+
 
 		return builder;
 	}

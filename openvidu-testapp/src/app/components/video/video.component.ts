@@ -23,6 +23,7 @@ import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
 import { FilterDialogComponent } from '../dialogs/filter-dialog/filter-dialog.component';
 import { OpenViduEvent } from '../openvidu-instance/openvidu-instance.component';
+import { ShowIceServerConfiguredDialog } from '../dialogs/show-configured-ice/show-configured-ice.component';
 
 @Component({
     selector: 'app-video',
@@ -811,6 +812,16 @@ export class VideoComponent implements OnInit, OnDestroy {
               eventContent: JSON.stringify(event.data),
               event
           });
+      }
+
+      getConfiguredIceServer() {
+        let iceServerList: RTCIceServer[] = this.streamManager.stream.getWebRtcPeer().pc.getConfiguration().iceServers;
+        this.dialog.open(ShowIceServerConfiguredDialog, {
+          data: {
+            iceServerList: iceServerList
+          },
+          width: '450px'
+        })
       }
 
       async showCodecUsed() {
