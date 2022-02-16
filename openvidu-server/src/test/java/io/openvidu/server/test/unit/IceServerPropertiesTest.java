@@ -4,11 +4,9 @@ import io.openvidu.java.client.IceServerProperties;
 import org.junit.Test;
 import org.junit.jupiter.api.DisplayName;
 
-import java.io.IOException;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-public class IceServerPropertiesTests {
+public class IceServerPropertiesTest {
 
     @Test
     @DisplayName("IceServerProperty exceptions tests")
