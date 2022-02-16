@@ -80,12 +80,20 @@ export class WebRtcPeer {
 
         this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });
 
-        this.pc.addEventListener('icecandidate', (event: RTCPeerConnectionIceEvent) => {
-            if (event.candidate != null) {
-                const candidate: RTCIceCandidate = event.candidate;
-                this.configuration.onIceCandidate(candidate);
-                if (candidate.candidate !== '') {
-                    this.localCandidatesQueue.push(<RTCIceCandidate>{ candidate: candidate.candidate });
+        this.pc.addEventListener("icecandidate", (event: RTCPeerConnectionIceEvent) => {
+            if (event.candidate !== null) {
+                // `RTCPeerConnectionIceEvent.candidate` is supposed to be an RTCIceCandidate:
+                // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnectioniceevent-candidate
+                //
+                // But in practice, it is actually an RTCIceCandidateInit that can be used to
+                // obtain a proper candidate, using the RTCIceCandidate constructor:
+                // https://w3c.github.io/webrtc-pc/#dom-rtcicecandidate-constructor
+                const candidateInit: RTCIceCandidateInit = event.candidate as RTCIceCandidateInit;
+                const iceCandidate = new RTCIceCandidate(candidateInit);
+
+                this.configuration.onIceCandidate(iceCandidate);
+                if (iceCandidate.candidate !== '') {
+                    this.localCandidatesQueue.push(iceCandidate);
                 }
             }
         });
@@ -120,231 +128,214 @@ export class WebRtcPeer {
         }
     }
 
+    // DEPRECATED LEGACY METHOD: Old WebRTC versions don't implement
+    // Transceivers, and instead depend on the deprecated
+    // "offerToReceiveAudio" and "offerToReceiveVideo".
+    private createOfferLegacy(): Promise<RTCSessionDescriptionInit> {
+        if (!!this.configuration.mediaStream) {
+            this.deprecatedPeerConnectionTrackApi();
+        }
+
+        const hasAudio = this.configuration.mediaConstraints.audio;
+        const hasVideo = this.configuration.mediaConstraints.video;
+
+        const options: RTCOfferOptions = {
+            offerToReceiveAudio: this.configuration.mode !== "sendonly" && hasAudio,
+            offerToReceiveVideo: this.configuration.mode !== "sendonly" && hasVideo,
+        };
+
+        logger.debug("[createOfferLegacy] RTCPeerConnection.createOffer() options:", JSON.stringify(options));
+
+        return this.pc.createOffer(options);
+    }
+
     /**
-     * Creates an SDP offer from the local RTCPeerConnection to send to the other peer
-     * Only if the negotiation was initiated by this peer
+     * Creates an SDP offer from the local RTCPeerConnection to send to the other peer.
+     * Only if the negotiation was initiated by this peer.
      */
-    createOffer(): Promise<RTCSessionDescriptionInit> {
-        return new Promise(async (resolve, reject) => {
-            // TODO: Delete this conditional when all supported browsers are
-            // modern enough to implement the Transceiver methods.
-            if ("addTransceiver" in this.pc) {
-                logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is available; using it");
+    async createOffer(): Promise<RTCSessionDescriptionInit> {
+        // TODO: Delete this conditional when all supported browsers are
+        // modern enough to implement the Transceiver methods.
+        if (!("addTransceiver" in this.pc)) {
+            logger.warn(
+                "[createOffer] Method RTCPeerConnection.addTransceiver() is NOT available; using LEGACY offerToReceive{Audio,Video}"
+            );
+            return this.createOfferLegacy();
+        } else {
+            logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is available; using it");
+        }
 
-                // Spec doc: https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-addtransceiver
+        // Spec doc: https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-addtransceiver
 
-                if (this.configuration.mode !== "recvonly") {
-                    // To send media, assume that all desired media tracks
-                    // have been already added by higher level code to our
-                    // MediaStream.
+        if (this.configuration.mode !== "recvonly") {
+            // To send media, assume that all desired media tracks have been
+            // already added by higher level code to our MediaStream.
 
-                    if (!this.configuration.mediaStream) {
-                        return reject(new Error(`${this.configuration.mode} direction requested, but no stream was configured to be sent`));
-                    }
+            if (!this.configuration.mediaStream) {
+                throw new Error(
+                    `[WebRtcPeer.createOffer] Direction is '${this.configuration.mode}', but no stream was configured to be sent`
+                );
+            }
 
-                    for (const track of this.configuration.mediaStream.getTracks()) {
-                        const tcInit: RTCRtpTransceiverInit = {
-                            direction: this.configuration.mode,
-                            streams: [this.configuration.mediaStream],
-                        };
-
-                        if (track.kind === "audio") {
-                            if ("contentHint" in track) {
-                                // For audio: "", "speech", "speech-recognition", "music".
-                                // https://w3c.github.io/mst-content-hint/#audio-content-hints
-                                track.contentHint = "";
-                                logger.info(`[createOffer] Audio track Content Hint set: '${track.contentHint}'`);
-                            }
-                        } else if (track.kind === "video") {
-                            if ("contentHint" in track) {
-                                // For video: "", "motion", "detail", "text".
-                                // https://w3c.github.io/mst-content-hint/#video-content-hints
-                                if (this.configuration.typeOfVideo === TypeOfVideo.SCREEN) {
-                                    track.contentHint = "detail";
-                                } else {
-                                    track.contentHint = "motion";
-                                }
-                                logger.info(`[createOffer] Video track Content Hint set: '${track.contentHint}'`);
-                            }
-
-                            logger.info(`[createOffer] this.configuration.simulcast: ${this.configuration.simulcast}`);
-                            if (this.configuration.simulcast) {
-                                // Check if the requested size is enough to ask for 3 layers.
-                                const trackSettings = track.getSettings();
-                                const trackConsts = track.getConstraints();
-
-                                const trackWidth: number =
-                                    trackSettings.width ??
-                                    (trackConsts.width as ConstrainULongRange).ideal ??
-                                    (trackConsts.width as number) ??
-                                    0;
-                                const trackHeight: number =
-                                    trackSettings.height ??
-                                    (trackConsts.height as ConstrainULongRange).ideal ??
-                                    (trackConsts.height as number) ??
-                                    0;
-                                logger.info(`[createOffer] Video track dimensions: ${trackWidth}x${trackHeight}`);
-
-                                const trackPixels = trackWidth * trackHeight;
-                                let maxLayers = 0;
-                                if (trackPixels >= 960 * 540) {
-                                    maxLayers = 3;
-                                } else if (trackPixels >= 480 * 270) {
-                                    maxLayers = 2;
-                                } else {
-                                    maxLayers = 1;
-                                }
-
-                                tcInit.sendEncodings = [];
-                                for (let l = 0; l < maxLayers; l++) {
-                                    const layerDiv = 2 ** (maxLayers - l - 1);
-
-                                    const encoding: RTCRtpEncodingParameters = {
-                                        rid: "rDiv" + layerDiv.toString(),
-
-                                        // @ts-ignore: Property missing from DOM types.
-                                        scalabilityMode: "L1T1",
-                                    };
-
-                                    if (this.configuration.typeOfVideo === TypeOfVideo.SCREEN) {
-                                        // Prioritize best resolution, for maximum picture detail.
-                                        encoding.scaleResolutionDownBy = 1.0;
-
-                                        // @ts-ignore: Property missing from DOM types.
-                                        encoding.maxFramerate = Math.floor(30 / layerDiv);
-                                        // encoding.maxFramerate = (l === 2) ? 30 : Math.floor(30 / (2 * layerDiv)); // TESTING
-                                    } else {
-                                        encoding.scaleResolutionDownBy = layerDiv;
-                                    }
-
-                                    tcInit.sendEncodings.push(encoding);
-                                }
-                            }
-                        }
-
-                        const tc = this.pc.addTransceiver(track, tcInit);
-
-                        if (track.kind === "video") {
-                            let sendParams = tc.sender.getParameters();
-                            let needSetParams = false;
-
-                            if (!("degradationPreference" in sendParams)) {
-                                logger.debug(
-                                    `[createOffer] RTCRtpSendParameters.degradationPreference attribute not present`
-                                );
-                                // Asked about why this might happen. Check it:
-                                // https://groups.google.com/g/discuss-webrtc/c/R8Xug-irfRY
-
-                                // For video: "balanced", "maintain-framerate", "maintain-resolution".
-                                if (this.configuration.typeOfVideo === TypeOfVideo.SCREEN) {
-                                    sendParams.degradationPreference = "maintain-resolution";
-                                } else {
-                                    sendParams.degradationPreference = "balanced";
-                                }
-
-                                logger.debug(
-                                    `[createOffer] Video sender Degradation Preference set: ${sendParams.degradationPreference}`
-                                );
-
-                                // FIXME: Firefox implements degradationPreference on each individual encoding!
-                                // (set it on every element of the sendParams.encodings array)
-
-                                needSetParams = true;
-                            }
-
-                            // FIXME: Check that the simulcast encodings were applied.
-                            // Firefox doesn't implement `RTCRtpTransceiverInit.sendEncodings`
-                            // so the only way to enable simulcast is with `RTCRtpSender.setParameters()`.
-                            //
-                            // This next block can be deleted when Firefox fixes bug #1396918:
-                            // https://bugzilla.mozilla.org/show_bug.cgi?id=1396918
-                            //
-                            // NOTE: This is done in a way that is compatible with all browsers, to save on
-                            // browser-conditional code. The idea comes from WebRTC Adapter.js:
-                            // * https://github.com/webrtcHacks/adapter/issues/998
-                            // * https://github.com/webrtcHacks/adapter/blob/v7.7.0/src/js/firefox/firefox_shim.js#L231-L255
-                            if (this.configuration.simulcast) {
-                                if (
-                                    !("encodings" in sendParams) ||
-                                    sendParams.encodings.length !== tcInit.sendEncodings!.length
-                                ) {
-                                    sendParams.encodings = tcInit.sendEncodings!;
-
-                                    needSetParams = true;
-                                }
-                            }
-
-                            if (needSetParams) {
-                                logger.debug(`[createOffer] Setting new RTCRtpSendParameters`);
-                                await tc.sender.setParameters(sendParams);
-                            }
-                        }
-
-                        // DEBUG: Uncomment for details.
-                        // if (track.kind === "video" && this.configuration.simulcast) {
-                        //     // Print browser capabilities.
-                        //     // prettier-ignore
-                        //     logger.error(`[createOffer] Transceiver send capabilities (static):\n${JSON.stringify(RTCRtpSender.getCapabilities?.("video"), null, 2)}`);
-                        //     // prettier-ignore
-                        //     logger.error(`[createOffer] Transceiver recv capabilities (static):\n${JSON.stringify(RTCRtpReceiver.getCapabilities?.("video"), null, 2)}`);
-
-                        //     // Print requested Transceiver encodings and parameters.
-                        //     // prettier-ignore
-                        //     logger.error(`[createOffer] Transceiver send encodings (requested):\n${JSON.stringify(tcInit.sendEncodings, null, 2)}`);
-                        //     // prettier-ignore
-                        //     logger.error(`[createOffer] Transceiver send parameters (requested):\n${JSON.stringify(tc.sender.getParameters(), null, 2)}`);
-                        // }
-                    }
-                } else {
-                    // To just receive media, create new recvonly transceivers.
-                    for (const kind of ["audio", "video"]) {
-                        // Check if the media kind should be used.
-                        if (!this.configuration.mediaConstraints[kind]) {
-                            continue;
-                        }
-
-                        this.configuration.mediaStream = new MediaStream();
-                        this.pc.addTransceiver(kind, {
-                            direction: this.configuration.mode,
-                            streams: [this.configuration.mediaStream],
-                        });
-                    }
-                }
-
-                this.pc
-                    .createOffer()
-                    .then((sdpOffer) => resolve(sdpOffer))
-                    .catch((error) => reject(error));
-            } else {
-                logger.warn("[createOffer] Method RTCPeerConnection.addTransceiver() is NOT available; using LEGACY offerToReceive{Audio,Video}");
-
-                // DEPRECATED LEGACY METHOD: Old WebRTC versions don't implement
-                // Transceivers, and instead depend on the deprecated
-                // "offerToReceiveAudio" and "offerToReceiveVideo".
-
-                if (!!this.configuration.mediaStream) {
-                    this.deprecatedPeerConnectionTrackApi();
-                }
-
-                const hasAudio = this.configuration.mediaConstraints.audio;
-                const hasVideo = this.configuration.mediaConstraints.video;
-
-                const options: RTCOfferOptions = {
-                    offerToReceiveAudio:
-                        this.configuration.mode !== "sendonly" && hasAudio,
-                    offerToReceiveVideo:
-                        this.configuration.mode !== "sendonly" && hasVideo,
+            for (const track of this.configuration.mediaStream.getTracks()) {
+                const tcInit: RTCRtpTransceiverInit = {
+                    direction: this.configuration.mode,
+                    streams: [this.configuration.mediaStream],
                 };
 
-                logger.debug("RTCPeerConnection.createOffer() options:", JSON.stringify(options));
+                if (track.kind === "video" && this.configuration.simulcast) {
+                    // Check if the requested size is enough to ask for 3 layers.
+                    const trackSettings = track.getSettings();
+                    const trackConsts = track.getConstraints();
 
-                this.pc
-                    // @ts-ignore - Compiler is too clever and thinks this branch will never execute.
-                    .createOffer(options)
-                    .then((sdpOffer) => resolve(sdpOffer))
-                    .catch((error) => reject(error));
+                    const trackWidth: number =
+                        trackSettings.width ??
+                        (trackConsts.width as ConstrainULongRange).ideal ??
+                        (trackConsts.width as number) ??
+                        0;
+                    const trackHeight: number =
+                        trackSettings.height ??
+                        (trackConsts.height as ConstrainULongRange).ideal ??
+                        (trackConsts.height as number) ??
+                        0;
+                    logger.info(`[createOffer] Video track dimensions: ${trackWidth}x${trackHeight}`);
+
+                    const trackPixels = trackWidth * trackHeight;
+                    let maxLayers = 0;
+                    if (trackPixels >= 960 * 540) {
+                        maxLayers = 3;
+                    } else if (trackPixels >= 480 * 270) {
+                        maxLayers = 2;
+                    } else {
+                        maxLayers = 1;
+                    }
+
+                    tcInit.sendEncodings = [];
+                    for (let l = 0; l < maxLayers; l++) {
+                        const layerDiv = 2 ** (maxLayers - l - 1);
+
+                        const encoding: RTCRtpEncodingParameters = {
+                            rid: "rdiv" + layerDiv.toString(),
+
+                            // @ts-ignore -- Property missing from DOM types.
+                            scalabilityMode: "L1T1",
+                        };
+
+                        if (["detail", "text"].includes(track.contentHint)) {
+                            // Prioritize best resolution, for maximum picture detail.
+                            encoding.scaleResolutionDownBy = 1.0;
+
+                            // @ts-ignore -- Property missing from DOM types.
+                            encoding.maxFramerate = Math.floor(30 / layerDiv);
+                        } else {
+                            encoding.scaleResolutionDownBy = layerDiv;
+                        }
+
+                        tcInit.sendEncodings.push(encoding);
+                    }
+                }
+
+                const tc = this.pc.addTransceiver(track, tcInit);
+
+                if (track.kind === "video") {
+                    let sendParams = tc.sender.getParameters();
+                    let needSetParams = false;
+
+                    if (!sendParams.degradationPreference?.length) {
+                        // degradationPreference for video: "balanced", "maintain-framerate", "maintain-resolution".
+                        // https://www.w3.org/TR/2018/CR-webrtc-20180927/#dom-rtcdegradationpreference
+                        if (["detail", "text"].includes(track.contentHint)) {
+                            sendParams.degradationPreference = "maintain-resolution";
+                        } else {
+                            sendParams.degradationPreference = "balanced";
+                        }
+
+                        logger.info(
+                            `[createOffer] Video sender Degradation Preference set: ${sendParams.degradationPreference}`
+                        );
+
+                        // FIXME: Firefox implements degradationPreference on each individual encoding!
+                        // (set it on every element of the sendParams.encodings array)
+
+                        needSetParams = true;
+                    }
+
+                    // FIXME: Check that the simulcast encodings were applied.
+                    // Firefox doesn't implement `RTCRtpTransceiverInit.sendEncodings`
+                    // so the only way to enable simulcast is with `RTCRtpSender.setParameters()`.
+                    //
+                    // This next block can be deleted when Firefox fixes bug #1396918:
+                    // https://bugzilla.mozilla.org/show_bug.cgi?id=1396918
+                    //
+                    // NOTE: This is done in a way that is compatible with all browsers, to save on
+                    // browser-conditional code. The idea comes from WebRTC Adapter.js:
+                    // * https://github.com/webrtcHacks/adapter/issues/998
+                    // * https://github.com/webrtcHacks/adapter/blob/v7.7.0/src/js/firefox/firefox_shim.js#L231-L255
+                    if (this.configuration.simulcast) {
+                        if (sendParams.encodings?.length !== tcInit.sendEncodings!.length) {
+                            sendParams.encodings = tcInit.sendEncodings!;
+
+                            needSetParams = true;
+                        }
+                    }
+
+                    if (needSetParams) {
+                        logger.debug(`[createOffer] Setting new RTCRtpSendParameters to video sender`);
+                        try {
+                            await tc.sender.setParameters(sendParams);
+                        } catch (error) {
+                            let message = `[WebRtcPeer.createOffer] Cannot set RTCRtpSendParameters to video sender`;
+                            if (error instanceof Error) {
+                                message += `: ${error.message}`;
+                            }
+                            throw new Error(message);
+                        }
+                    }
+                }
+
+                // DEBUG: Uncomment for details.
+                // if (track.kind === "video" && this.configuration.simulcast) {
+                //     // Print browser capabilities.
+                //     // prettier-ignore
+                //     logger.debug(`[createOffer] Transceiver send capabilities (static):\n${JSON.stringify(RTCRtpSender.getCapabilities?.("video"), null, 2)}`);
+                //     // prettier-ignore
+                //     logger.debug(`[createOffer] Transceiver recv capabilities (static):\n${JSON.stringify(RTCRtpReceiver.getCapabilities?.("video"), null, 2)}`);
+
+                //     // Print requested Transceiver encodings and parameters.
+                //     // prettier-ignore
+                //     logger.debug(`[createOffer] Transceiver send encodings (requested):\n${JSON.stringify(tcInit.sendEncodings, null, 2)}`);
+                //     // prettier-ignore
+                //     logger.debug(`[createOffer] Transceiver send parameters (accepted):\n${JSON.stringify(tc.sender.getParameters(), null, 2)}`);
+                // }
             }
-        });
+        } else {
+            // To just receive media, create new recvonly transceivers.
+            for (const kind of ["audio", "video"]) {
+                // Check if the media kind should be used.
+                if (!this.configuration.mediaConstraints[kind]) {
+                    continue;
+                }
+
+                this.configuration.mediaStream = new MediaStream();
+                this.pc.addTransceiver(kind, {
+                    direction: this.configuration.mode,
+                    streams: [this.configuration.mediaStream],
+                });
+            }
+        }
+
+        let sdpOffer: RTCSessionDescriptionInit;
+        try {
+            sdpOffer = await this.pc.createOffer();
+        } catch (error) {
+            let message = `[WebRtcPeer.createOffer] Browser failed creating an SDP Offer`;
+            if (error instanceof Error) {
+                message += `: ${error.message}`;
+            }
+            throw new Error(message);
+        }
+
+        return sdpOffer;
     }
 
     deprecatedPeerConnectionTrackApi() {
@@ -492,9 +483,8 @@ export class WebRtcPeer {
                     // DEBUG: Uncomment for details.
                     // {
                     //     const tc = this.pc.getTransceivers().find((tc) => tc.sender.track?.kind === "video");
-                    //     const sendParams = tc?.sender.getParameters();
                     //     // prettier-ignore
-                    //     logger.error(`[processRemoteAnswer] Transceiver send parameters (effective):\n${JSON.stringify(sendParams, null, 2)}`);
+                    //     logger.debug(`[processRemoteAnswer] Transceiver send parameters (effective):\n${JSON.stringify(tc?.sender.getParameters(), null, 2)}`);
                     // }
 
                     resolve();

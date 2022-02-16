@@ -995,29 +995,20 @@ export class Session extends EventDispatcher {
      * @hidden
      */
     recvIceCandidate(event: { senderConnectionId: string, endpointName: string, sdpMLineIndex: number, sdpMid: string, candidate: string }): void {
-        const candidate: RTCIceCandidate = {
-            address: null,
+        // The event contains fields that can be used to obtain a proper candidate,
+        // using the RTCIceCandidate constructor:
+        // https://w3c.github.io/webrtc-pc/#dom-rtcicecandidate-constructor
+        const candidateInit: RTCIceCandidateInit = {
             candidate: event.candidate,
-            sdpMid: event.sdpMid,
             sdpMLineIndex: event.sdpMLineIndex,
-            component: null,
-            foundation: null,
-            port: null,
-            priority: null,
-            protocol: null,
-            relatedAddress: null,
-            relatedPort: null,
-            tcpType: null,
-            usernameFragment: null,
-            type: null,
-            toJSON: () => {
-                return { candidate: event.candidate };
-            }
+            sdpMid: event.sdpMid,
         };
-        this.getConnection(event.senderConnectionId, 'Connection not found for connectionId ' + event.senderConnectionId + ' owning endpoint ' + event.endpointName + '. Ice candidate will be ignored: ' + candidate)
+        const iceCandidate = new RTCIceCandidate(candidateInit);
+
+        this.getConnection(event.senderConnectionId, 'Connection not found for connectionId ' + event.senderConnectionId + ' owning endpoint ' + event.endpointName + '. Ice candidate will be ignored: ' + iceCandidate)
             .then(connection => {
                 const stream: Stream = connection.stream!;
-                stream.getWebRtcPeer().addIceCandidate(candidate).catch(error => {
+                stream.getWebRtcPeer().addIceCandidate(iceCandidate).catch(error => {
                     logger.error('Error adding candidate for ' + stream!.streamId
                         + ' stream of endpoint ' + event.endpointName + ': ' + error);
                 });

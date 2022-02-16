@@ -27,6 +27,7 @@ import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/Open
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
+import { TypeOfVideo } from '../OpenViduInternal/Enums/TypeOfVideo';
 
 /**
  * @hidden
@@ -398,6 +399,37 @@ export class Publisher extends StreamManager {
                     mediaStream.getVideoTracks()[0].enabled = enabled;
                 }
 
+                // Set Content Hint on all MediaStreamTracks
+                for (const track of mediaStream.getAudioTracks()) {
+                    if (!track.contentHint?.length) {
+                        // contentHint for audio: "", "speech", "speech-recognition", "music".
+                        // https://w3c.github.io/mst-content-hint/#audio-content-hints
+                        track.contentHint = "";
+                        logger.info(`Audio track Content Hint set: '${track.contentHint}'`);
+                    }
+                }
+                for (const track of mediaStream.getVideoTracks()) {
+                    if (!track.contentHint?.length) {
+                        // contentHint for video: "", "motion", "detail", "text".
+                        // https://w3c.github.io/mst-content-hint/#video-content-hints
+                        switch (this.stream.typeOfVideo) {
+                            case TypeOfVideo.SCREEN:
+                                track.contentHint = "detail";
+                                break;
+                            case TypeOfVideo.CUSTOM:
+                                logger.warn("CUSTOM type video track was provided without Content Hint!");
+                                track.contentHint = "motion";
+                                break;
+                            case TypeOfVideo.CAMERA:
+                            case TypeOfVideo.IPCAM:
+                            default:
+                                track.contentHint = "motion";
+                                break;
+                        }
+                        logger.info(`Video track Content Hint set: '${track.contentHint}'`);
+                    }
+                }
+
                 this.initializeVideoReference(mediaStream);
 
                 if (!this.stream.displayMyRemote()) {
@@ -443,6 +475,7 @@ export class Publisher extends StreamManager {
                     this.stream.isLocalStreamReadyToPublish = true;
                     this.stream.ee.emitEvent('stream-ready-to-publish', []);
                 }
+
                 return resolve();
             };
 
@@ -606,7 +639,7 @@ export class Publisher extends StreamManager {
 
     /**
      * @hidden
-     * 
+     *
      * To obtain the videoDimensions we wait for the video reference to have enough metadata
      * and then try to use MediaStreamTrack.getSettingsMethod(). If not available, then we
      * use the HTMLVideoElement properties videoWidth and videoHeight
