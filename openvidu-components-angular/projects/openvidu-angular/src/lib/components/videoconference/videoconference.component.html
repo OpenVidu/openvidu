@@ -15,54 +15,69 @@
 
 	<div id="session-container" *ngIf="joinSessionClicked && isSessionAlive && !error">
 		<ov-session [tokens]="_tokens">
-			<ng-content select="[toolbar]" toolbar></ng-content>
+			<ng-template #toolbar>
+				<ng-container *ngIf="openviduAngularToolbarTemplate">
+					<ng-container *ngTemplateOutlet="openviduAngularToolbarTemplate"></ng-container>
+				</ng-container>
+			</ng-template>
 
-			<!-- OPENVIDU PANEL -->
-			<span #panelRef panel>
-				<!-- Custom panel -->
-				<ng-content select="[panel]"></ng-content>
-			</span>
-
-			<!-- Default panel if the custom one is not injected -->
-			<ov-panel *ngIf="panelRef.childNodes.length === 0" panel>
-				<span #chatPanelRef chatPanel>
-					<!-- Custom CHAT panel -->
-					<ng-content select="[chatPanel]"></ng-content>
-				</span>
-
-				<!-- Default CHAT PANEL if the custom one is not injected -->
-				<ov-chat-panel *ngIf="chatPanelRef.childNodes.length === 0" chatPanel></ov-chat-panel>
-
-				<span #participantsPanelRef participantsPanel>
-					<!-- Custom PARTICIPANTS panel -->
-					<ng-content select="[participantsPanel]"></ng-content>
-				</span>
-
-				<!-- Default PARTICIPANTS PANEL if the custom one is not injected -->
-				<ov-participants-panel *ngIf="participantsPanelRef.childNodes.length === 0" participantsPanel></ov-participants-panel>
-			</ov-panel>
+			<ng-template #panel>
+				<ng-container *ngIf="openviduAngularPanelTemplate">
+					<ng-container *ngTemplateOutlet="openviduAngularPanelTemplate"></ng-container>
+				</ng-container>
+			</ng-template>
 
 			<ng-template #layout>
-				<!-- Custom layout -->
-				<span #layoutRef layout>
-					<ng-content select="[layout]"></ng-content>
-				</span>
-
-				<!-- Default layout if custom layout is not injected -->
-				<ov-layout *ngIf="layoutRef.childNodes.length === 0" layout>
-					<ng-template #stream let-stream>
-						<!-- Custom stream component -->
-						<ng-container *ngIf="streamTemplate; else defaultStream">
-							<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: stream }"> </ng-container>
-						</ng-container>
-
-						<!-- Default stream component if custom one is not injected -->
-						<ng-template #defaultStream>
-							<ov-stream [stream]="stream"></ov-stream>
-						</ng-template>
-					</ng-template>
-				</ov-layout>
+				<ng-container *ngIf="openviduAngularLayoutTemplate">
+					<ng-container *ngTemplateOutlet="openviduAngularLayoutTemplate"></ng-container>
+				</ng-container>
 			</ng-template>
 		</ov-session>
 	</div>
 </div>
+
+<ng-template #defaultToolbar>
+	<ov-toolbar></ov-toolbar>
+</ng-template>
+
+<ng-template #defaultPanel>
+	<ov-panel>
+		<ng-template #chatPanel>
+			<ng-container *ngTemplateOutlet="openviduAngularChatPanelTemplate"></ng-container>
+		</ng-template>
+
+		<ng-template #participantsPanel>
+			<ng-container *ngTemplateOutlet="openviduAngularParticipantsPanelTemplate"></ng-container>
+		</ng-template>
+	</ov-panel>
+</ng-template>
+
+<ng-template #defaultChatPanel>
+	<ov-chat-panel></ov-chat-panel>
+</ng-template>
+
+<ng-template #defaultParticipantsPanel>
+	<ov-participants-panel>
+		<ng-template #participantPanelItem let-participant>
+			<ng-container
+				*ngTemplateOutlet="openviduAngularParticipantPanelItemTemplate; context: { $implicit: participant }"
+			></ng-container>
+		</ng-template>
+	</ov-participants-panel>
+</ng-template>
+
+<ng-template #defaultParticipantPanelItem let-participant>
+	<ov-participant-panel-item [participant]="participant"></ov-participant-panel-item>
+</ng-template>
+
+<ng-template #defaultLayout>
+	<ov-layout>
+		<ng-template #stream let-stream>
+			<ng-container *ngTemplateOutlet="openviduAngularStreamTemplate; context: { $implicit: stream }"> </ng-container>
+		</ng-template>
+	</ov-layout>
+</ng-template>
+
+<ng-template #defaultStream let-stream>
+	<ov-stream [stream]="stream"></ov-stream>
+</ng-template>

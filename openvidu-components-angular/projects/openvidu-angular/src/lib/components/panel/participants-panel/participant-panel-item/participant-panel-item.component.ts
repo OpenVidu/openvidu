@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { ParticipantAbstractModel } from '../../../../models/participant.model';
 
 @Component({
@@ -6,11 +6,13 @@ import { ParticipantAbstractModel } from '../../../../models/participant.model';
 	templateUrl: './participant-panel-item.component.html',
 	styleUrls: ['./participant-panel-item.component.css']
 })
-export class ParticipantPanelItemComponent implements OnInit {
-	@Input() participant: ParticipantAbstractModel;
-	@Input() showDividerLine: boolean;
+export class ParticipantPanelItemComponent {
 
+	@Input()
+	set participant( p: ParticipantAbstractModel) {
+		this._participant = p;
+	}
+	_participant: ParticipantAbstractModel;
 	constructor() {}
 
-	ngOnInit(): void {}
 }

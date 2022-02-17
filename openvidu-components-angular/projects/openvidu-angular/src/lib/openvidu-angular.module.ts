@@ -36,7 +36,6 @@ import { StreamComponent } from './components/stream/stream.component';
 import { DialogTemplateComponent } from './components/material/dialog.component';
 
 import { LinkifyPipe } from './pipes/linkify.pipe';
-import { TooltipListPipe } from './pipes/tooltip-list.pipe';
 import { StreamsEnabledPipe, NicknamePipe, ParticipantStreamsPipe } from './pipes/participant.pipe';
 
 import { OpenViduAngularConfig } from './config/openvidu-angular.config';
@@ -58,12 +57,12 @@ import { ParticipantPanelItemComponent } from './components/panel/participants-p
 import { ParticipantsPanelComponent } from './components/panel/participants-panel/participants-panel/participants-panel.component';
 import { VideoconferenceComponent } from './components/videoconference/videoconference.component';
 import { PanelComponent } from './components/panel/panel.component';
-import { StreamDirective } from './directives/stream/stream.directive';
 import { AudioWaveComponent } from './components/audio-wave/audio-wave.component';
+
+import { ChatPanelDirective, LayoutDirective, PanelDirective, ParticipantPanelItemDirective, ParticipantsPanelDirective, StreamDirective, ToolbarDirective } from './directives/openvidu-angular.directive';
 
 @NgModule({
 	declarations: [
-		StreamDirective,
 		UserSettingsComponent,
 		VideoComponent,
 		ToolbarComponent,
@@ -73,7 +72,6 @@ import { AudioWaveComponent } from './components/audio-wave/audio-wave.component
 		StreamComponent,
 		DialogTemplateComponent,
 		LinkifyPipe,
-		TooltipListPipe,
 		ParticipantStreamsPipe,
 		StreamsEnabledPipe,
 		NicknamePipe,
@@ -82,6 +80,13 @@ import { AudioWaveComponent } from './components/audio-wave/audio-wave.component
 		VideoconferenceComponent,
   		AudioWaveComponent,
 		PanelComponent,
+		ToolbarDirective,
+		PanelDirective,
+		ChatPanelDirective,
+		ParticipantsPanelDirective,
+		ParticipantPanelItemDirective,
+		LayoutDirective,
+		StreamDirective
 	],
 	imports: [
 		CommonModule,
@@ -130,6 +135,9 @@ import { AudioWaveComponent } from './components/audio-wave/audio-wave.component
 		VideoconferenceComponent,
 		UserSettingsComponent,
 		ToolbarComponent,
+		PanelComponent,
+		ParticipantsPanelComponent,
+		ParticipantPanelItemComponent,
 		ChatPanelComponent,
 		SessionComponent,
 		LayoutComponent,
@@ -137,7 +145,15 @@ import { AudioWaveComponent } from './components/audio-wave/audio-wave.component
 		VideoComponent,
 		AudioWaveComponent,
 		ParticipantStreamsPipe,
+		StreamsEnabledPipe,
+		NicknamePipe,
 		CommonModule,
+		ToolbarDirective,
+		PanelDirective,
+		ChatPanelDirective,
+		ParticipantsPanelDirective,
+		ParticipantPanelItemDirective,
+		LayoutDirective,
 		StreamDirective
 	],
 	entryComponents: [DialogTemplateComponent]

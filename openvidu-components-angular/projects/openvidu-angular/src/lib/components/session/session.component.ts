@@ -24,6 +24,8 @@ import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.ser
 	styleUrls: ['./session.component.css']
 })
 export class SessionComponent implements OnInit, AfterViewInit {
+	@ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any>;
+	@ContentChild('panel', { read: TemplateRef }) panelTemplate: TemplateRef<any>;
 	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
 
 	@Input() tokens: { webcam: string; screen: string };

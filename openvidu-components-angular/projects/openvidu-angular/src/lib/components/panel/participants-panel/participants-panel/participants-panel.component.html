@@ -9,18 +9,15 @@
 	<div class="scrollable">
 
 		<div class="local-participant-container">
-			<ov-participant-panel-item
-				[participant]="localParticipant"
-				[showDividerLine]="true"
-			></ov-participant-panel-item>
+			<ng-container *ngTemplateOutlet="participantPanelItemTemplate; context: { $implicit: localParticipant }"></ng-container>
+			<mat-divider *ngIf="true"></mat-divider>
 		</div>
 
 		<div class="remote-participants-container" *ngIf="remoteParticipants.length > 0">
-			<ov-participant-panel-item
-				*ngFor="let participant of remoteParticipants; let lastItem = last"
-				[participant]="participant"
-				[showDividerLine]="!lastItem"
-			></ov-participant-panel-item>
+
+			<div *ngFor="let participant of remoteParticipants; let lastItem = last">
+				<ng-container *ngTemplateOutlet="participantPanelItemTemplate; context: { $implicit: participant }"></ng-container>
+			</div>
 		</div>
 
 	</div>

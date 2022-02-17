@@ -1,5 +1,6 @@
 import { Component, ContentChild, OnInit, TemplateRef } from '@angular/core';
 import { skip, Subscription } from 'rxjs';
+import { ChatPanelDirective, ParticipantsPanelDirective } from '../../directives/openvidu-angular.directive';
 import { MenuType } from '../../models/menu.model';
 import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.service';
 
@@ -11,6 +12,24 @@ import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.ser
 export class PanelComponent implements OnInit {
 	@ContentChild('participantsPanel', { read: TemplateRef }) participantsPanelTemplate: TemplateRef<any>;
 	@ContentChild('chatPanel', { read: TemplateRef }) chatPanelTemplate: TemplateRef<any>;
+
+	@ContentChild(ParticipantsPanelDirective)
+	set externalParticipantPanel(externalParticipantsPanel: ParticipantsPanelDirective) {
+		// This directive will has value only when PARTICIPANTS PANEL component tagged with '*ovParticipantsPanel'
+		// is inside of the PANEL component tagged with '*ovPanel'
+		if (externalParticipantsPanel) {
+			this.participantsPanelTemplate = externalParticipantsPanel.template;
+		}
+	}
+
+	@ContentChild(ChatPanelDirective)
+	set externalChatPanel(externalChatPanel: ChatPanelDirective) {
+		// This directive will has value only when CHAT PANEL component tagged with '*ovChatPanel'
+		// is inside of the PANEL component tagged with '*ovPanel'
+		if (externalChatPanel) {
+			this.chatPanelTemplate = externalChatPanel.template;
+		}
+	}
 
 	isParticipantsPanelOpened: boolean;
 	isChatPanelOpened: boolean;

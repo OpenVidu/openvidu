@@ -1,6 +1,12 @@
 <!-- CHAT panel -->
-<ng-content select="[chatPanel]" *ngIf="isChatPanelOpened"></ng-content>
+<ng-container *ngIf="isChatPanelOpened">
+	<ng-container *ngTemplateOutlet="chatPanelTemplate"></ng-container>
+</ng-container>
+
 
 <!-- PARTICIPANTS panel -->
-<ng-content select="[participantsPanel]"  *ngIf="isParticipantsPanelOpened"></ng-content>
+<ng-container *ngIf="isParticipantsPanelOpened">
+	<ng-container *ngTemplateOutlet="participantsPanelTemplate"></ng-container>
+</ng-container>
+
 

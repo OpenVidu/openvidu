@@ -24,8 +24,10 @@ export * from './lib/services/storage/storage.service';
 export * from './lib/components/videoconference/videoconference.component';
 export * from './lib/components/user-settings/user-settings.component';
 export * from './lib/components/toolbar/toolbar.component';
+export * from './lib/components/panel/panel.component';
 export * from './lib/components/panel/chat-panel/chat-panel.component';
 export * from './lib/components/panel/participants-panel/participants-panel/participants-panel.component';
+export * from './lib/components/panel/participants-panel/participant-panel-item/participant-panel-item.component';
 export * from './lib/components/session/session.component';
 export * from './lib/components/layout/layout.component';
 export * from './lib/components/stream/stream.component';
@@ -43,4 +45,4 @@ export * from './lib/models/notification-options.model';
 export * from './lib/pipes/participant.pipe';
 
 // Directives
-export * from './lib/directives/stream/stream.directive';
+export * from './lib/directives/openvidu-angular.directive';

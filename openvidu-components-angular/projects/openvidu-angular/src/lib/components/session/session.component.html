@@ -9,30 +9,17 @@
 			fixedTopGap="0"
 			fixedBottomGap="0"
 		>
-
-			<!-- OPENVIDU PANEL -->
-			<ng-content select="[panel]"></ng-content>
-
+			<ng-container *ngTemplateOutlet="panelTemplate"></ng-container>
 		</mat-sidenav>
 
 		<mat-sidenav-content class="sidenav-main">
-			<!-- OPENVIDU LAYOUT -->
-			<ng-container *ngIf="layoutTemplate">
-				<div id="layout-container">
-					<ng-container *ngTemplateOutlet="layoutTemplate"></ng-container>
-				</div>
-			</ng-container>
+			<div id="layout-container">
+				<ng-container *ngTemplateOutlet="layoutTemplate"></ng-container>
+			</div>
 		</mat-sidenav-content>
 	</mat-sidenav-container>
 
-	<!-- OPENVIDU TOOLBAR -->
 	<div id="footer-container">
-		<span #toolbarRef>
-			<!-- Custom toolbar -->
-			<ng-content select="[toolbar]"></ng-content>
-		</span>
-
-		<!-- Default toolbar if custom toolbar is not injected -->
-		<ov-toolbar *ngIf="toolbarRef.childNodes.length === 0"></ov-toolbar>
+		<ng-container *ngTemplateOutlet="toolbarTemplate"></ng-container>
 	</div>
 </div>

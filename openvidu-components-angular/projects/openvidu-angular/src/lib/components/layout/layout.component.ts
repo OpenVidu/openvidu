@@ -3,6 +3,7 @@ import { Subscription } from 'rxjs';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { ParticipantAbstractModel } from '../../models/participant.model';
 import { LayoutService } from '../../services/layout/layout.service';
+import { StreamDirective } from '../../directives/openvidu-angular.directive';
 
 @Component({
 	selector: 'ov-layout',
@@ -11,6 +12,15 @@ import { LayoutService } from '../../services/layout/layout.service';
 })
 export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	@ContentChild('stream', { read: TemplateRef }) streamTemplate: TemplateRef<any>;
+
+	@ContentChild(StreamDirective)
+	set externalStream (externalStream: StreamDirective) {
+		// This directive will has value only when STREAM component tagget with '*ovStream' directive
+		// is inside of the layout component tagged with '*ovLayout' directive
+		if(externalStream) {
+			this.streamTemplate = externalStream.template;
+		}
+	}
 
 	localParticipant: ParticipantAbstractModel;
 	remoteParticipants: ParticipantAbstractModel[] = [];

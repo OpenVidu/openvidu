@@ -23,7 +23,7 @@ export class StreamsEnabledPipe implements PipeTransform {
 	constructor() {}
 
 	transform(participant: ParticipantAbstractModel): string {
-		return `(${participant.getConnectionTypesEnabled().toString().replace(',', ', ')})`;
+		return `(${participant?.getConnectionTypesEnabled().toString().replace(',', ', ')})`;
 	}
 }
 
@@ -31,6 +31,6 @@ export class StreamsEnabledPipe implements PipeTransform {
 export class NicknamePipe implements PipeTransform {
 	constructor() {}
 	transform(participant: ParticipantAbstractModel): string {
-		return participant.getCameraNickname();
+		return participant?.getCameraNickname();
 	}
 }
