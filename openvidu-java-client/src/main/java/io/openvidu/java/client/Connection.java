@@ -113,7 +113,7 @@ public class Connection {
 	/**
 	 * Whether the streams published by this Connection will be recorded or not.
 	 * This only affects <a href=
-	 * "https://docs.openvidu.io/en/stable/advanced-features/recording#selecting-streams-to-be-recorded"
+	 * "https://docs.openvidu.io/en/stable/advanced-features/recording/#individual-recording-selection"
 	 * target="_blank">INDIVIDUAL recording</a>.
 	 */
 	public boolean record() {

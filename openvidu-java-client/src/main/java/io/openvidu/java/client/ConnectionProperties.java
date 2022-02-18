@@ -126,7 +126,7 @@ public class ConnectionProperties {
 		/**
 		 * Call this method to flag the streams published by this Connection to be
 		 * recorded or not. This only affects <a href=
-		 * "https://docs.openvidu.io/en/stable/advanced-features/recording#selecting-streams-to-be-recorded"
+		 * "https://docs.openvidu.io/en/stable/advanced-features/recording/#individual-recording-selection"
 		 * target="_blank">INDIVIDUAL recording</a>. If not set by default will be true.
 		 */
 		public Builder record(boolean record) {
@@ -298,7 +298,7 @@ public class ConnectionProperties {
 	 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
 	 * sans-serif">PRO</a> Whether the streams published by this Connection will be
 	 * recorded or not. This only affects <a href=
-	 * "https://docs.openvidu.io/en/stable/advanced-features/recording#selecting-streams-to-be-recorded"
+	 * "https://docs.openvidu.io/en/stable/advanced-features/recording/#individual-recording-selection"
 	 * target="_blank">INDIVIDUAL recording</a>.
 	 */
 	public Boolean record() {
