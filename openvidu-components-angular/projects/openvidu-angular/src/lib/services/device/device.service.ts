@@ -3,7 +3,6 @@ import { Device, OpenVidu } from 'openvidu-browser';
 
 import { CameraType, DeviceType, CustomDevice } from '../../models/device.model';
 import { ILogger } from '../../models/logger.model';
-import { Storage } from '../../models/storage.model';
 
 import { LoggerService } from '../logger/logger.service';
 import { PlatformService } from '../platform/platform.service';
@@ -23,6 +22,11 @@ export class DeviceService {
 	private videoDevicesDisabled: boolean;
 	private audioDevicesDisabled: boolean;
 
+	// Initialized with Storage.VIDEO_MUTED info saved on storage
+	private _isVideoMuted: boolean;
+	// Initialized with Storage.AUDIO_MUTED info saved on storage
+	private _isAudioMuted: boolean;
+
 	constructor(private loggerSrv: LoggerService, private platformSrv: PlatformService, private storageSrv: StorageService) {
 		this.log = this.loggerSrv.get('DevicesService');
 		this.OV = new OpenVidu();
@@ -33,18 +37,21 @@ export class DeviceService {
 	}
 
 	async initializeDevices() {
-		// Requesting media permissions. Sometimes, browser doens't launch the media permissions modal.
-		const mediaStream = await this.OV.getUserMedia({audioSource: undefined, videoSource: undefined });
+		// Forcing media permissions request.
+		// Sometimes, browser doens't launch the media permissions modal.
+		const mediaStream = await this.OV.getUserMedia({ audioSource: undefined, videoSource: undefined });
+		mediaStream?.getAudioTracks().forEach((track) => track.stop());
+		mediaStream?.getVideoTracks().forEach((track) => track.stop());
 
 		this.devices = await this.OV.getDevices();
 		const customDevices = this.initializeCustomDevices(this.devices);
 		this.cameras = customDevices.cameras;
 		this.microphones = customDevices.microphones;
 
-		mediaStream?.getAudioTracks().forEach((track) => track.stop());
-		mediaStream?.getVideoTracks().forEach((track) => track.stop());
+		this._isVideoMuted = this.storageSrv.isVideoMuted();
+		this._isAudioMuted = this.storageSrv.isAudioMuted();
 
-		this.log.d('Media devices',customDevices);
+		this.log.d('Media devices', customDevices);
 	}
 
 	private initializeCustomDevices(defaultVDevices: Device[]) {
@@ -52,8 +59,8 @@ export class DeviceService {
 		const defaultMicrophones = defaultVDevices.filter((device) => device.kind === DeviceType.AUDIO_INPUT);
 		const defaultCameras = defaultVDevices.filter((device) => device.kind === DeviceType.VIDEO_INPUT);
 		const customDevices: { cameras: CustomDevice[]; microphones: CustomDevice[] } = {
-			cameras: [{ label: 'None', device: null, type: null }],
-			microphones: [{ label: 'None', device: null, type: null }]
+			cameras: [],
+			microphones: []
 		};
 
 		if (this.hasAudioDeviceAvailable) {
@@ -61,12 +68,12 @@ export class DeviceService {
 				customDevices.microphones.push({ label: device.label, device: device.deviceId });
 			});
 
-			// Settings microphone selected
+			// Setting microphone selected
 			const storageMicrophone = this.getMicrophoneFromStogare();
 			if (!!storageMicrophone) {
 				this.microphoneSelected = storageMicrophone;
 			} else if (customDevices.microphones.length > 0) {
-				this.microphoneSelected = customDevices.microphones.find((d) => d.label !== 'None');
+				this.microphoneSelected = customDevices.microphones[0];
 			}
 		}
 
@@ -96,10 +103,18 @@ export class DeviceService {
 			if (!!storageCamera) {
 				this.cameraSelected = storageCamera;
 			} else if (customDevices.cameras.length > 0) {
-				this.cameraSelected = customDevices.cameras.find((d) => d.label !== 'None');
+				this.cameraSelected = customDevices.cameras[0];
 			}
 		}
 		return customDevices;
+	}
+
+	isVideoMuted(): boolean {
+		return this.hasVideoDeviceAvailable() && this._isVideoMuted;
+	}
+
+	isAudioMuted(): boolean {
+		return this.hasAudioDeviceAvailable() && this._isAudioMuted;
 	}
 
 	getCameraSelected(): CustomDevice {
@@ -137,11 +152,11 @@ export class DeviceService {
 	}
 
 	hasVideoDeviceAvailable(): boolean {
-		return !this.videoDevicesDisabled && !this.cameras.every((device) => device.label === 'None');
+		return !this.videoDevicesDisabled && this.cameras.length > 0;
 	}
 
 	hasAudioDeviceAvailable(): boolean {
-		return !this.audioDevicesDisabled && !this.microphones.every((device) => device.label === 'None');
+		return !this.audioDevicesDisabled && this.microphones.length > 0;
 	}
 
 	cameraNeedsMirror(deviceField: string): boolean {
@@ -180,24 +195,24 @@ export class DeviceService {
 	}
 
 	private getMicrophoneFromStogare(): CustomDevice {
-		let storageDevice = this.storageSrv.get(Storage.AUDIO_DEVICE);
-		if (!!storageDevice) {
+		const storageDevice: CustomDevice = this.storageSrv.getAudioDevice();
+		if (!!storageDevice && this.microphones.some((device) => device.device === storageDevice.device)) {
 			return storageDevice;
 		}
 	}
 
 	private getCameraFromStorage() {
-		let storageDevice = this.storageSrv.get(Storage.VIDEO_DEVICE);
-		if (!!storageDevice) {
+		const storageDevice: CustomDevice = this.storageSrv.getVideoDevice();
+		if (!!storageDevice && this.cameras.some((device) => device.device === storageDevice.device)) {
 			return storageDevice;
 		}
 	}
 
 	private saveCameraToStorage(cam: CustomDevice) {
-		this.storageSrv.set(Storage.VIDEO_DEVICE, cam);
+		this.storageSrv.setVideoDevice(cam);
 	}
 
 	private saveMicrophoneToStorage(mic: CustomDevice) {
-		this.storageSrv.set(Storage.AUDIO_DEVICE, mic);
+		this.storageSrv.setAudioDevice(mic);
 	}
 }

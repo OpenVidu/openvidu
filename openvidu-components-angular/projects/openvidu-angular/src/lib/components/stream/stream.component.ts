@@ -34,6 +34,10 @@ export class StreamComponent implements OnInit {
 	@ViewChild(MatMenuTrigger) public menuTrigger: MatMenuTrigger;
 	@ViewChild('menu') menu: MatMenuPanel;
 
+	@Input() showNickname: boolean = true;
+	@Input() showAudioDetection: boolean = true;
+	@Input() showSettings: boolean = true;
+
 	constructor(
 		protected documentService: DocumentService,
 		protected openviduService: OpenViduService,
@@ -128,7 +132,7 @@ export class StreamComponent implements OnInit {
 		if (event && event.keyCode === 13 && this.nicknameFormControl.valid) {
 			const nickname = this.nicknameFormControl.value;
 			this.participantService.setNickname(this._stream.connectionId, nickname);
-			this.storageService.set(Storage.USER_NICKNAME, nickname);
+			this.storageService.setNickname(nickname);
 			this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, undefined, { clientData: nickname });
 			this.toggleNicknameForm();
 		}
@@ -141,7 +145,7 @@ export class StreamComponent implements OnInit {
 			publishAudio: !this.participantService.isMyCameraEnabled(),
 			mirror: false
 		};
-		await this.openviduService.replaceTrack(this.participantService.getMyScreenPublisher(), properties);
+		await this.openviduService.replaceTrack(VideoType.SCREEN, properties);
 	}
 
 	protected checkVideoEnlarged() {

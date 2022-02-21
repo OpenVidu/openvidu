@@ -4,7 +4,7 @@
 	[id]="'container-' + this._stream.streamManager?.stream?.streamId"
 	#streamContainer
 >
-	<div class="nickname" [class.fullscreen]="isFullscreen">
+	<div class="nickname" [class.fullscreen]="isFullscreen" *ngIf="showNickname">
 		<div (click)="toggleNicknameForm()" class="nicknameContainer" selected *ngIf="!toggleNickname">
 			<span id="nickname">{{ this._stream.nickname }}</span>
 			<span *ngIf="_stream.local || (_stream.streamManager && !_stream.streamManager?.remote)"> (edit)</span>
@@ -31,7 +31,7 @@
 		<ng-content select="[network-quality]"></ng-content>
 	</div>
 
-	<div id="audio-wave-container" *ngIf="_stream.type === 'CAMERA'">
+	<div id="audio-wave-container" *ngIf="showAudioDetection && _stream.type === 'CAMERA'">
 		<ov-audio-wave [streamManager]="_stream.streamManager"></ov-audio-wave>
 	</div>
 
@@ -49,7 +49,7 @@
 		</button>
 	</div>
 
-	<div class="videoButtons">
+	<div class="videoButtons" *ngIf="showSettings">
 
 		<button mat-icon-button (click)="toggleVideoMenu($event)" matTooltip="Settings" aria-label="Video settings menu">
 			<mat-icon>more_vert</mat-icon>

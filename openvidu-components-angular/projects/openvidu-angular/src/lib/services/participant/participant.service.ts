@@ -113,7 +113,7 @@ export class ParticipantService {
 		this._screensharing.next(false);
 	}
 
-	updateUsersStatus() {
+	updateParticipantMediaStatus() {
 		this._cameraVideoActive.next(this.localParticipant.isCameraVideoActive());
 		if (this.isMyCameraEnabled()) {
 			this._cameraAudioActive.next(this.localParticipant.isCameraAudioActive());

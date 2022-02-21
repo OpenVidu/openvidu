@@ -22,8 +22,8 @@ export class OpenViduService {
 	protected screenSession: Session = null;
 	protected videoSource = undefined;
 	protected audioSource = undefined;
-	protected screenMediaStream: MediaStream = null;
-	protected webcamMediaStream: MediaStream = null;
+	// protected screenMediaStream: MediaStream = null;
+	// protected webcamMediaStream: MediaStream = null;
 	protected log: ILogger;
 
 	constructor(
@@ -47,6 +47,10 @@ export class OpenViduService {
 			if (this.openviduAngularConfigSrv.isProduction()) this.OVScreen.enableProdMode();
 			this.screenSession = this.OVScreen.initSession();
 		}
+	}
+
+	getSession(): Session {
+		return this.getWebcamSession();
 	}
 
 	getWebcamSession(): Session {
@@ -90,59 +94,43 @@ export class OpenViduService {
 		}
 	}
 
-	private disconnectSession(session: Session) {
-		if (session) {
-			if (session.sessionId === this.webcamSession?.sessionId) {
-				this.log.d('Disconnecting webcam session');
-				this.webcamSession?.disconnect();
-				this.webcamSession = null;
-			} else if (session.sessionId === this.screenSession?.sessionId) {
-				this.log.d('Disconnecting screen session');
-				this.screenSession?.disconnect();
-				this.screenSession = null;
-			}
-		}
-	}
-
 	disconnect() {
 		this.disconnectSession(this.webcamSession);
 		this.disconnectSession(this.screenSession);
 		this.videoSource = undefined;
 		this.audioSource = undefined;
-		this.stopTracks(this.participantService.getMyCameraPublisher()?.stream?.getMediaStream());
-		this.stopTracks(this.participantService.getMyScreenPublisher()?.stream?.getMediaStream());
+		// this.stopTracks(this.participantService.getMyCameraPublisher()?.stream?.getMediaStream());
+		// this.stopTracks(this.participantService.getMyScreenPublisher()?.stream?.getMediaStream());
 	}
 
 	/**
 	 * Initialize a publisher checking devices saved on storage or if participant have devices available.
 	 */
 	async initDefaultPublisher(targetElement: string | HTMLElement): Promise<Publisher> {
-		await this.deviceService.initializeDevices();
 
 		const hasVideoDevices = this.deviceService.hasVideoDeviceAvailable();
 		const hasAudioDevices = this.deviceService.hasAudioDeviceAvailable();
-		const isVideoActive = hasVideoDevices && this.deviceService.getCameraSelected().label !== 'None';
-		const isAudioActive = hasAudioDevices && this.deviceService.getMicrophoneSelected().label !== 'None';
+		const isVideoActive = !this.deviceService.isVideoMuted();
+		const isAudioActive = !this.deviceService.isAudioMuted();
 
 		let videoSource = null;
 		let audioSource = null;
 
-		if(isVideoActive){
+		if (hasVideoDevices) {
 			// Video is active, assign the device selected
-			videoSource = this.deviceService.getCameraSelected().device
-		} else if(!isVideoActive && hasVideoDevices) {
+			videoSource = this.deviceService.getCameraSelected().device;
+		} else if (!isVideoActive && hasVideoDevices) {
 			// Video is muted, assign the default device
-			videoSource = undefined;
+			// videoSource = undefined;
 		}
 
-		if(isAudioActive){
+		if (hasAudioDevices) {
 			// Audio is active, assign the device selected
-			audioSource = this.deviceService.getMicrophoneSelected().device
-		} else if(!isAudioActive && hasAudioDevices) {
+			audioSource = this.deviceService.getMicrophoneSelected().device;
+		} else if (!isAudioActive && hasAudioDevices) {
 			// Audio is muted, assign the default device
-			audioSource = undefined;
+			// audioSource = undefined;
 		}
-
 
 		// const videoSource = publishVideo ? this.deviceService.getCameraSelected().device : false;
 		// const audioSource = publishAudio ? this.deviceService.getMicrophoneSelected().device : false;
@@ -154,8 +142,8 @@ export class OpenViduService {
 			publishAudio: isAudioActive,
 			mirror
 		};
-		if (isVideoActive || isAudioActive) {
-			const publisher = this.initPublisher(targetElement, properties);
+		if (hasVideoDevices || hasAudioDevices) {
+			const publisher = await this.initPublisher(targetElement, properties);
 			this.participantService.setMyCameraPublisher(publisher);
 			return publisher;
 		} else {
@@ -163,10 +151,10 @@ export class OpenViduService {
 		}
 	}
 
-	initPublisher(targetElement: string | HTMLElement, properties: PublisherProperties): Publisher {
+	async initPublisher(targetElement: string | HTMLElement, properties: PublisherProperties): Promise<Publisher> {
 		this.log.d('Initializing publisher with properties: ', properties);
 
-		const publisher = this.OV.initPublisher(targetElement, properties);
+		const publisher = await this.OV.initPublisherAsync(targetElement, properties);
 		// this.participantService.setMyCameraPublisher(publisher);
 		publisher.once('streamPlaying', () => {
 			(<HTMLElement>publisher.videos[0].video).parentElement.classList.remove('custom-class');
@@ -174,21 +162,21 @@ export class OpenViduService {
 		return publisher;
 	}
 
-	//TODO: This method is used by replaceTrack. Check if it's neecessary
-	private destroyPublisher(publisher: Publisher): void {
-		if (!!publisher) {
-			// publisher.off('streamAudioVolumeChange');
-			if (publisher.stream.getWebRtcPeer()) {
-				publisher.stream.disposeWebRtcPeer();
-			}
-			publisher.stream.disposeMediaStream();
-			if (publisher.id === this.participantService.getMyCameraPublisher().id) {
-				this.participantService.setMyCameraPublisher(publisher);
-			} else if (publisher.id === this.participantService.getMyScreenPublisher().id) {
-				this.participantService.setMyScreenPublisher(publisher);
-			}
-		}
-	}
+	//TODO: This method is used by republishTrack. Check if it's neecessary
+	// private destroyPublisher(publisher: Publisher): void {
+	// 	if (!!publisher) {
+	// 		// publisher.off('streamAudioVolumeChange');
+	// 		if (publisher.stream.getWebRtcPeer()) {
+	// 			publisher.stream.disposeWebRtcPeer();
+	// 		}
+	// 		publisher.stream.disposeMediaStream();
+	// 		if (publisher.id === this.participantService.getMyCameraPublisher().id) {
+	// 			this.participantService.setMyCameraPublisher(publisher);
+	// 		} else if (publisher.id === this.participantService.getMyScreenPublisher().id) {
+	// 			this.participantService.setMyScreenPublisher(publisher);
+	// 		}
+	// 	}
+	// }
 
 	async publish(publisher: Publisher): Promise<void> {
 		if (!!publisher) {
@@ -221,7 +209,7 @@ export class OpenViduService {
 		if (!!publisher) {
 			publisher.publishVideo(value);
 			// Send event to subscribers because of video has changed and view must update
-			this.participantService.updateUsersStatus();
+			this.participantService.updateParticipantMediaStatus();
 		}
 	}
 
@@ -229,44 +217,43 @@ export class OpenViduService {
 		if (!!publisher) {
 			publisher.publishAudio(value);
 			// Send event to subscribers because of video has changed and view must update
-			this.participantService.updateUsersStatus();
+			this.participantService.updateParticipantMediaStatus();
 		}
 	}
 
-	republishTrack(videoSource: string, audioSource: string, mirror: boolean = true): Promise<void> {
-		return new Promise((resolve, reject) => {
-			if (!!videoSource) {
-				this.log.d('Replacing video track ' + videoSource);
-				this.videoSource = videoSource;
-				// this.stopVideoTracks(this.webcamUser.getStreamManager().stream.getMediaStream());
-			}
-			if (!!audioSource) {
-				this.log.d('Replacing audio track ' + audioSource);
-				this.audioSource = audioSource;
-				// this.stopAudioTracks(this.webcamUser.getStreamManager().stream.getMediaStream());
-			}
-			this.destroyPublisher(this.participantService.getMyCameraPublisher());
-			const properties: PublisherProperties = {
-				videoSource: this.videoSource,
-				audioSource: this.audioSource,
-				publishVideo: this.participantService.hasCameraVideoActive(),
-				publishAudio: this.participantService.hasCameraAudioActive(),
-				mirror
-			};
+	// Used replaceTrack instead
+	// republishTrack(videoSource: string, audioSource: string, mirror: boolean = true): Promise<void> {
+	// 	return new Promise(async (resolve, reject) => {
+	// 		if (!!videoSource) {
+	// 			this.log.d('Replacing video track ' + videoSource);
+	// 			this.videoSource = videoSource;
+	// 		}
+	// 		if (!!audioSource) {
+	// 			this.log.d('Replacing audio track ' + audioSource);
+	// 			this.audioSource = audioSource;
+	// 		}
+	// 		this.destroyPublisher(this.participantService.getMyCameraPublisher());
+	// 		const properties: PublisherProperties = {
+	// 			videoSource: this.videoSource,
+	// 			audioSource: this.audioSource,
+	// 			publishVideo: this.participantService.hasCameraVideoActive(),
+	// 			publishAudio: this.participantService.hasCameraAudioActive(),
+	// 			mirror
+	// 		};
 
-			const publisher = this.initPublisher(undefined, properties);
-			this.participantService.setMyCameraPublisher(publisher);
+	// 		const publisher = await this.initPublisher(undefined, properties);
+	// 		this.participantService.setMyCameraPublisher(publisher);
 
-			publisher.once('streamPlaying', () => {
-				this.participantService.setMyCameraPublisher(publisher);
-				resolve();
-			});
+	// 		publisher.once('streamPlaying', () => {
+	// 			this.participantService.setMyCameraPublisher(publisher);
+	// 			resolve();
+	// 		});
 
-			publisher.once('accessDenied', () => {
-				reject();
-			});
-		});
-	}
+	// 		publisher.once('accessDenied', () => {
+	// 			reject();
+	// 		});
+	// 	});
+	// }
 
 	sendSignal(type: Signal, connections?: Connection[], data?: any): void {
 		const signalOptions: SignalOptions = {
@@ -282,28 +269,38 @@ export class OpenViduService {
 		}
 	}
 
-	async replaceTrack(currentPublisher: Publisher, newProperties: PublisherProperties) {
+	async replaceTrack(videoType: VideoType, props: PublisherProperties) {
 		try {
-			if (!!currentPublisher) {
-				if (currentPublisher === this.participantService.getMyCameraPublisher()) {
-					// This branch has been disabled because echo problems replacing audio track.
-					// this.stopAudioTracks(this.webcamMediaStream);
-					// this.stopVideoTracks(this.webcamMediaStream);
-					// this.webcamMediaStream = await this.OV.getUserMedia(newProperties);
-					// const videoTrack: MediaStreamTrack = this.webcamMediaStream.getVideoTracks()[0];
-					// const audioTrack: MediaStreamTrack = this.webcamMediaStream.getAudioTracks()[0];
-					// if(!!videoTrack){
-					// 	await this.participantService.getMyCameraPublisher().replaceTrack(videoTrack);
-					// }
-					// if(!!audioTrack) {
-					// 	await this.participantService.getMyCameraPublisher().replaceTrack(audioTrack);
-					// }
-				} else if (currentPublisher === this.participantService.getMyScreenPublisher()) {
-					const newScreenMediaStream = await this.OVScreen.getUserMedia(newProperties);
-					this.stopTracks(this.screenMediaStream);
-					await this.participantService.getMyScreenPublisher().replaceTrack(newScreenMediaStream.getVideoTracks()[0]);
-					this.screenMediaStream = newScreenMediaStream;
+			this.log.d(`Replacing ${videoType} track`, props);
+			if (videoType === VideoType.CAMERA) {
+				const isReplacingAudio = !!props.audioSource;
+				const isReplacingVideo = !!props.videoSource;
+
+				if (this.platformService.isFirefox()) {
+					// Firefox throw an exception trying to get a new MediaStreamTrack if the older one is not stopped
+					// NotReadableError: Concurrent mic process limit. Stopping tracks before call to getUserMedia
+					if (isReplacingVideo) {
+						this.participantService.getMyCameraPublisher().stream.getMediaStream().getVideoTracks()[0].stop();
+					} else if (isReplacingAudio) {
+						this.participantService.getMyCameraPublisher().stream.getMediaStream().getAudioTracks()[0].stop();
+					}
 				}
+
+				const track = await this.OV.getUserMedia(props);
+				if (isReplacingAudio) {
+					// Replace audio track
+					const audioTrack: MediaStreamTrack = track.getAudioTracks()[0];
+					await this.participantService.getMyCameraPublisher().replaceTrack(audioTrack);
+				} else if (isReplacingVideo) {
+					// Replace video track
+					const videoTrack: MediaStreamTrack = track.getVideoTracks()[0];
+					await this.participantService.getMyCameraPublisher().replaceTrack(videoTrack);
+				}
+			} else if (videoType === VideoType.SCREEN) {
+				const newScreenMediaStream = await this.OVScreen.getUserMedia(props);
+				// this.stopTracks(this.screenMediaStream);
+				// this.screenMediaStream = newScreenMediaStream;
+				await this.participantService.getMyScreenPublisher().replaceTrack(newScreenMediaStream.getVideoTracks()[0]);
 			}
 		} catch (error) {
 			this.log.e('Error replacing track ', error);
@@ -331,11 +328,25 @@ export class OpenViduService {
 		return remoteCameraConnections;
 	}
 
-	private stopTracks(mediaStream: MediaStream) {
-		if (mediaStream) {
-			mediaStream?.getAudioTracks().forEach((track) => track.stop());
-			mediaStream?.getVideoTracks().forEach((track) => track.stop());
-			// this.webcamMediaStream?.getAudioTracks().forEach((track) => track.stop());
+	private disconnectSession(session: Session) {
+		if (session) {
+			if (session.sessionId === this.webcamSession?.sessionId) {
+				this.log.d('Disconnecting webcam session');
+				this.webcamSession?.disconnect();
+				this.webcamSession = null;
+			} else if (session.sessionId === this.screenSession?.sessionId) {
+				this.log.d('Disconnecting screen session');
+				this.screenSession?.disconnect();
+				this.screenSession = null;
+			}
 		}
 	}
+
+	// private stopTracks(mediaStream: MediaStream) {
+	// 	if (mediaStream) {
+	// 		mediaStream?.getAudioTracks().forEach((track) => track.stop());
+	// 		mediaStream?.getVideoTracks().forEach((track) => track.stop());
+	// 		// this.webcamMediaStream?.getAudioTracks().forEach((track) => track.stop());
+	// 	}
+	// }
 }

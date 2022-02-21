@@ -44,17 +44,6 @@
 			<mat-icon *ngIf="isScreenShareEnabled" matTooltip="Disable screen share">screen_share</mat-icon>
 		</button>
 
-		<!-- Replace Screen track button -->
-		<!-- <button
-			id="navReplaceScreenButton"
-			mat-icon-button
-			*ngIf="isScreenShareEnabled"
-			(click)="replaceScreenTrack()"
-			[disabled]="isConnectionLost"
-		>
-			<mat-icon matTooltip="Replace screen track">picture_in_picture</mat-icon>
-		</button> -->
-
 		<!-- Fullscreen button -->
 		<button mat-icon-button (click)="toggleFullscreen()" [disabled]="isConnectionLost" [class.active-btn]="isFullscreenEnabled">
 			<mat-icon *ngIf="isFullscreenEnabled" matTooltip="Exit Fullscreen">fullscreen_exit</mat-icon>

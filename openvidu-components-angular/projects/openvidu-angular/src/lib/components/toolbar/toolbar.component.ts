@@ -173,7 +173,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 					publishAudio: hasAudio,
 					mirror: false
 				};
-				const screenPublisher = this.openviduService.initPublisher(undefined, properties);
+				const screenPublisher = await this.openviduService.initPublisher(undefined, properties);
 
 				screenPublisher.once('accessAllowed', async (event) => {
 					// Listen to event fired when native stop button is clicked
@@ -223,16 +223,6 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 			this.log.e('There was an error toggling screen share:', error.code, error.message);
 			this.actionService.openDialog('There was an error toggling screen share:', error?.error || error?.message);
 		}
-	}
-
-	async replaceScreenTrack() {
-		const properties: PublisherProperties = {
-			videoSource: ScreenType.SCREEN,
-			publishVideo: true,
-			publishAudio: !this.participantService.isMyCameraEnabled(),
-			mirror: false
-		};
-		await this.openviduService.replaceTrack(this.participantService.getMyScreenPublisher(), properties);
 	}
 
 	leaveSession() {
