@@ -292,15 +292,19 @@ export class Publisher extends StreamManager {
         const replaceTrackInMediaStream = (): Promise<void> => {
             return new Promise((resolve, reject) => {
                 const mediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
-                let removedTrack: MediaStreamTrack;
+                const newMediaStream: MediaStream = new MediaStream();
+                // Added new audio or video track to new MediaStream
+                newMediaStream.addTrack(track);
+
                 if (track.kind === 'video') {
-                    removedTrack = mediaStream.getVideoTracks()[0];
+                    newMediaStream.addTrack(mediaStream.getAudioTracks()[0]);
                 } else {
-                    removedTrack = mediaStream.getAudioTracks()[0];
+                    newMediaStream.addTrack(mediaStream.getVideoTracks()[0]);
                 }
-                mediaStream.removeTrack(removedTrack);
-                removedTrack.stop();
-                mediaStream.addTrack(track);
+
+                this.stream.setMediaStream(newMediaStream);
+                this.stream.streamManager.updateMediaStream(newMediaStream);
+
                 if (track.kind === 'video' && this.stream.isLocalStreamPublished) {
                     this.openvidu.sendNewVideoDimensionsIfRequired(this, 'trackReplaced', 50, 30);
                     this.session.sendVideoData(this.stream.streamManager, 5, true, 5);
