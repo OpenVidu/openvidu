@@ -560,10 +560,6 @@ public class OpenviduConfig {
 	protected void postProcessConfigProps() {
 	}
 
-	protected Map<String, String> getPostProcessedProperties() {
-		return new HashMap<>();
-	}
-
 	protected List<String> getNonUserProperties() {
 		return Arrays.asList("server.port", "SERVER_PORT", "DOTENV_PATH", "COTURN_IP", "COTURN_PORT", "COTURN_REDIS_IP",
 				"COTURN_REDIS_DBNAME", "COTURN_REDIS_PASSWORD", "COTURN_REDIS_CONNECT_TIMEOUT", "COTURN_INTERNAL_RELAY",
