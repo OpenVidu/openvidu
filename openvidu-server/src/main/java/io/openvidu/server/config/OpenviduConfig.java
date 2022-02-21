@@ -541,8 +541,15 @@ public class OpenviduConfig {
 			log.error("Exception checking configuration", e);
 			addError(null, "Exception checking configuration." + e.getClass().getName() + ":" + e.getMessage());
 		}
+		postProcessConfigProps();
 		userConfigProps = new ArrayList<>(configProps.keySet());
 		userConfigProps.removeAll(getNonUserProperties());
+		for (String notShowEmptyConfigKey: getNonPrintablePropertiesIfEmpty()) {
+			String value = configProps.get(notShowEmptyConfigKey);
+			if (value == null || value.isEmpty() || value.equals(new JsonArray().toString())) {
+				userConfigProps.remove(notShowEmptyConfigKey);
+			}
+		}
 	}
 
 	@PostConstruct
@@ -550,10 +557,21 @@ public class OpenviduConfig {
 		this.checkConfiguration(true);
 	}
 
+	protected void postProcessConfigProps() {
+	}
+
+	protected Map<String, String> getPostProcessedProperties() {
+		return new HashMap<>();
+	}
+
 	protected List<String> getNonUserProperties() {
 		return Arrays.asList("server.port", "SERVER_PORT", "DOTENV_PATH", "COTURN_IP", "COTURN_PORT", "COTURN_REDIS_IP",
 				"COTURN_REDIS_DBNAME", "COTURN_REDIS_PASSWORD", "COTURN_REDIS_CONNECT_TIMEOUT", "COTURN_INTERNAL_RELAY",
 				"OPENVIDU_RECORDING_IMAGE", "OPENVIDU_RECORDING_ENABLE_GPU");
+	}
+
+	protected List<String> getNonPrintablePropertiesIfEmpty() {
+		return Arrays.asList("MEDIA_NODES_PUBLIC_IPS", "OPENVIDU_WEBRTC_ICE_SERVERS");
 	}
 
 	// Properties
