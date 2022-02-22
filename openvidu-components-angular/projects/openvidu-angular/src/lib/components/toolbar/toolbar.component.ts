@@ -237,7 +237,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	}
 
 	toggleFullscreen() {
-		this.documentService.toggleFullscreen('room-container');
+		this.documentService.toggleFullscreen('session-container');
 		this.isFullscreenEnabled = !this.isFullscreenEnabled;
 	}
 
