@@ -1,5 +1,14 @@
 import { Injectable } from '@angular/core';
-import { Connection, OpenVidu, Publisher, PublisherProperties, Session, SignalOptions } from 'openvidu-browser';
+import {
+	Connection,
+	OpenVidu,
+	OpenViduError,
+	OpenViduErrorName,
+	Publisher,
+	PublisherProperties,
+	Session,
+	SignalOptions
+} from 'openvidu-browser';
 
 import { LoggerService } from '../logger/logger.service';
 
@@ -107,7 +116,6 @@ export class OpenViduService {
 	 * Initialize a publisher checking devices saved on storage or if participant have devices available.
 	 */
 	async initDefaultPublisher(targetElement: string | HTMLElement): Promise<Publisher> {
-
 		const hasVideoDevices = this.deviceService.hasVideoDeviceAvailable();
 		const hasAudioDevices = this.deviceService.hasAudioDeviceAvailable();
 		const isVideoActive = !this.deviceService.isVideoMuted();
@@ -272,29 +280,35 @@ export class OpenViduService {
 	async replaceTrack(videoType: VideoType, props: PublisherProperties) {
 		try {
 			this.log.d(`Replacing ${videoType} track`, props);
+
 			if (videoType === VideoType.CAMERA) {
+				let mediaStream: MediaStream;
+				const oldMediaStream = this.participantService.getMyCameraPublisher().stream.getMediaStream();
+				const isFirefoxPlatform = this.platformService.isFirefox();
 				const isReplacingAudio = !!props.audioSource;
 				const isReplacingVideo = !!props.videoSource;
 
-				if (this.platformService.isFirefox()) {
-					// Firefox throw an exception trying to get a new MediaStreamTrack if the older one is not stopped
-					// NotReadableError: Concurrent mic process limit. Stopping tracks before call to getUserMedia
-					if (isReplacingVideo) {
-						this.participantService.getMyCameraPublisher().stream.getMediaStream().getVideoTracks()[0].stop();
-					} else if (isReplacingAudio) {
-						this.participantService.getMyCameraPublisher().stream.getMediaStream().getAudioTracks()[0].stop();
+				if (isReplacingVideo) {
+					if (isFirefoxPlatform) {
+						// Firefox throw an exception trying to get a new MediaStreamTrack if the older one is not stopped
+						// NotReadableError: Concurrent mic process limit. Stopping tracks before call to getUserMedia
+						oldMediaStream.getVideoTracks()[0].stop();
 					}
-				}
-
-				const track = await this.OV.getUserMedia(props);
-				if (isReplacingAudio) {
-					// Replace audio track
-					const audioTrack: MediaStreamTrack = track.getAudioTracks()[0];
-					await this.participantService.getMyCameraPublisher().replaceTrack(audioTrack);
-				} else if (isReplacingVideo) {
+					mediaStream = await this.createMediaStream(props);
 					// Replace video track
-					const videoTrack: MediaStreamTrack = track.getVideoTracks()[0];
+					const videoTrack: MediaStreamTrack = mediaStream.getVideoTracks()[0];
 					await this.participantService.getMyCameraPublisher().replaceTrack(videoTrack);
+
+				} else if (isReplacingAudio) {
+					if (isFirefoxPlatform) {
+						// Firefox throw an exception trying to get a new MediaStreamTrack if the older one is not stopped
+						// NotReadableError: Concurrent mic process limit. Stopping tracks before call to getUserMedia
+						oldMediaStream.getAudioTracks()[0].stop();
+					}
+					mediaStream = await this.createMediaStream(props);
+					// Replace audio track
+					const audioTrack: MediaStreamTrack = mediaStream.getAudioTracks()[0];
+					await this.participantService.getMyCameraPublisher().replaceTrack(audioTrack);
 				}
 			} else if (videoType === VideoType.SCREEN) {
 				const newScreenMediaStream = await this.OVScreen.getUserMedia(props);
@@ -304,6 +318,33 @@ export class OpenViduService {
 			}
 		} catch (error) {
 			this.log.e('Error replacing track ', error);
+		}
+	}
+
+	private async createMediaStream(pp: PublisherProperties): Promise<MediaStream>{
+		let mediaStream: MediaStream;
+		const isFirefoxPlatform = this.platformService.isFirefox();
+		const isReplacingAudio = !!pp.audioSource;
+		const isReplacingVideo = !!pp.videoSource;
+
+		try {
+			mediaStream = await this.OV.getUserMedia(pp);
+		} catch (error) {
+			if ((<OpenViduError>error).name === OpenViduErrorName.DEVICE_ACCESS_DENIED) {
+				if (isFirefoxPlatform) {
+					this.log.w('The device requested is not available. Restoring the older one');
+					// The track requested is not available so we are getting the old tracks ids for recovering the track
+					if (isReplacingVideo) {
+						pp.videoSource = this.deviceService.getCameraSelected().device;
+					} else if (isReplacingAudio) {
+						pp.audioSource = this.deviceService.getMicrophoneSelected().device;
+					}
+					mediaStream = await this.OV.getUserMedia(pp);
+					// TODO show error alert informing that the new device is not available
+				}
+			}
+		} finally {
+			return mediaStream;
 		}
 	}
 
