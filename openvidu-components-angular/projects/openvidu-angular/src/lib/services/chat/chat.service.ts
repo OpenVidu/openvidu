@@ -19,7 +19,7 @@ import { MenuType } from '../../models/menu.model';
 })
 export class ChatService {
 	messagesObs: Observable<ChatMessage[]>;
-
+	private messageSound: HTMLAudioElement;
 	protected _messageList = <BehaviorSubject<ChatMessage[]>>new BehaviorSubject([]);
 	protected messageList: ChatMessage[] = [];
 	protected log: ILogger;
@@ -32,6 +32,8 @@ export class ChatService {
 	) {
 		this.log = this.loggerSrv.get('ChatService');
 		this.messagesObs = this._messageList.asObservable();
+		this.messageSound = new Audio('assets/audio/message_sound.mp3');
+		this.messageSound.volume = 0.5;
 	}
 
 	subscribeToChat() {
@@ -52,6 +54,8 @@ export class ChatService {
 					buttonActionText: 'READ'
 				};
 				this.launchNotification(notificationOptions);
+				this.messageSound.play().catch(() => {});
+
 			}
 			this._messageList.next(this.messageList);
 		});
