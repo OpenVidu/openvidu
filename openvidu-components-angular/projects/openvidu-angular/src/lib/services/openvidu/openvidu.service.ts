@@ -153,6 +153,7 @@ export class OpenViduService {
 		if (hasVideoDevices || hasAudioDevices) {
 			const publisher = await this.initPublisher(targetElement, properties);
 			this.participantService.setMyCameraPublisher(publisher);
+			this.participantService.updateParticipantMediaStatus();
 			return publisher;
 		} else {
 			this.participantService.setMyCameraPublisher(null);
@@ -298,7 +299,6 @@ export class OpenViduService {
 					// Replace video track
 					const videoTrack: MediaStreamTrack = mediaStream.getVideoTracks()[0];
 					await this.participantService.getMyCameraPublisher().replaceTrack(videoTrack);
-
 				} else if (isReplacingAudio) {
 					if (isFirefoxPlatform) {
 						// Firefox throw an exception trying to get a new MediaStreamTrack if the older one is not stopped
@@ -311,17 +311,21 @@ export class OpenViduService {
 					await this.participantService.getMyCameraPublisher().replaceTrack(audioTrack);
 				}
 			} else if (videoType === VideoType.SCREEN) {
-				const newScreenMediaStream = await this.OVScreen.getUserMedia(props);
-				// this.stopTracks(this.screenMediaStream);
-				// this.screenMediaStream = newScreenMediaStream;
-				await this.participantService.getMyScreenPublisher().replaceTrack(newScreenMediaStream.getVideoTracks()[0]);
+				let newScreenMediaStream;
+				try {
+					newScreenMediaStream = await this.OVScreen.getUserMedia(props);
+					this.participantService.getMyScreenPublisher().stream.getMediaStream().getVideoTracks()[0].stop();
+					await this.participantService.getMyScreenPublisher().replaceTrack(newScreenMediaStream.getVideoTracks()[0]);
+				} catch (error) {
+					this.log.w('Cannot create the new MediaStream', error);
+				}
 			}
 		} catch (error) {
 			this.log.e('Error replacing track ', error);
 		}
 	}
 
-	private async createMediaStream(pp: PublisherProperties): Promise<MediaStream>{
+	private async createMediaStream(pp: PublisherProperties): Promise<MediaStream> {
 		let mediaStream: MediaStream;
 		const isFirefoxPlatform = this.platformService.isFirefox();
 		const isReplacingAudio = !!pp.audioSource;
