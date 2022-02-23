@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ChatMessage } from '../../../models/chat.model';
 import { MenuType } from '../../../models/menu.model';
@@ -8,7 +8,8 @@ import { SidenavMenuService } from '../../../services/sidenav-menu/sidenav-menu.
 @Component({
 	selector: 'ov-chat-panel',
 	templateUrl: './chat-panel.component.html',
-	styleUrls: ['./chat-panel.component.css']
+	styleUrls: ['./chat-panel.component.css'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ChatPanelComponent implements OnInit, AfterViewInit {
 	@ViewChild('chatScroll') chatScroll: ElementRef;

@@ -4,7 +4,6 @@ import { MatMenuPanel, MatMenuTrigger } from '@angular/material/menu';
 import { NicknameMatcher } from '../../matchers/nickname.matcher';
 import { VideoSizeIcon } from '../../models/icon.model';
 import { ScreenType, VideoType } from '../../models/video-type.model';
-import { Storage } from '../../models/storage.model';
 import { DocumentService } from '../../services/document/document.service';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';

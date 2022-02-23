@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 
@@ -22,7 +22,8 @@ import { ParticipantAbstractModel } from '../../models/participant.model';
 @Component({
 	selector: 'ov-user-settings',
 	templateUrl: './user-settings.component.html',
-	styleUrls: ['./user-settings.component.css']
+	styleUrls: ['./user-settings.component.css'],
+	// changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserSettingsComponent implements OnInit, OnDestroy {
 	@ViewChild('bodyCard') bodyCard: ElementRef;

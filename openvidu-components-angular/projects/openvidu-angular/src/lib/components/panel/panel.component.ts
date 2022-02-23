@@ -1,4 +1,4 @@
-import { Component, ContentChild, OnInit, TemplateRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, OnInit, TemplateRef } from '@angular/core';
 import { skip, Subscription } from 'rxjs';
 import { ChatPanelDirective, ParticipantsPanelDirective } from '../../directives/openvidu-angular.directive';
 import { MenuType } from '../../models/menu.model';
@@ -7,7 +7,8 @@ import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.ser
 @Component({
 	selector: 'ov-panel',
 	templateUrl: './panel.component.html',
-	styleUrls: ['./panel.component.css']
+	styleUrls: ['./panel.component.css'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PanelComponent implements OnInit {
 	@ContentChild('participantsPanel', { read: TemplateRef }) participantsPanelTemplate: TemplateRef<any>;
@@ -34,7 +35,7 @@ export class PanelComponent implements OnInit {
 	isParticipantsPanelOpened: boolean;
 	isChatPanelOpened: boolean;
 	menuSubscription: Subscription;
-	constructor(protected menuService: SidenavMenuService) {}
+	constructor(protected menuService: SidenavMenuService, private cd: ChangeDetectorRef) {}
 
 	ngOnInit(): void {
 		this.subscribeToPanelToggling();
@@ -43,6 +44,7 @@ export class PanelComponent implements OnInit {
 		this.menuSubscription = this.menuService.menuOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
 			this.isChatPanelOpened = ev.opened && ev.type === MenuType.CHAT;
 			this.isParticipantsPanelOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
+			this.cd.markForCheck();
 		});
 	}
 

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ContentChild, OnDestroy, OnInit, TemplateRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, OnDestroy, OnInit, TemplateRef } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { ParticipantAbstractModel } from '../../models/participant.model';
@@ -8,9 +8,10 @@ import { StreamDirective } from '../../directives/openvidu-angular.directive';
 @Component({
 	selector: 'ov-layout',
 	templateUrl: './layout.component.html',
-	styleUrls: ['./layout.component.css']
+	styleUrls: ['./layout.component.css'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
+export class LayoutComponent implements OnInit, OnDestroy {
 	@ContentChild('stream', { read: TemplateRef }) streamTemplate: TemplateRef<any>;
 
 	@ContentChild(StreamDirective)
@@ -27,30 +28,33 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	protected localParticipantSubs: Subscription;
 	protected remoteParticipantsSubs: Subscription;
 
-	constructor(protected layoutService: LayoutService, protected participantService: ParticipantService) {}
+	constructor(protected layoutService: LayoutService, protected participantService: ParticipantService, private cd: ChangeDetectorRef) {}
 
 	ngOnInit(): void {
 		this.subscribeToUsers();
+		this.layoutService.initialize();
+		this.layoutService.update();
 	}
-
-	ngAfterViewInit() {}
 
 	ngOnDestroy() {
 		this.localParticipant = null;
 		this.remoteParticipants = [];
 		if (this.localParticipantSubs) this.localParticipantSubs.unsubscribe();
 		if (this.remoteParticipantsSubs) this.remoteParticipantsSubs.unsubscribe();
+		this.layoutService.clear();
 	}
 
 	protected subscribeToUsers() {
 		this.localParticipantSubs = this.participantService.localParticipantObs.subscribe((p) => {
 			this.localParticipant = p;
 			this.layoutService.update();
+			this.cd.markForCheck();
 		});
 
 		this.remoteParticipantsSubs = this.participantService.remoteParticipantsObs.subscribe((participants) => {
 			this.remoteParticipants = [...participants];
 			this.layoutService.update();
+			this.cd.markForCheck();
 		});
 	}
 }
