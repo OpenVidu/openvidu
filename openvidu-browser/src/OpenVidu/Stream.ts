@@ -277,7 +277,7 @@ export class Stream {
 
         this.ee.on('mediastream-updated', () => {
             this.streamManager.updateMediaStream(this.mediaStream!);
-            logger.debug('Video srcObject [' + this.mediaStream + '] updated in stream [' + this.streamId + ']');
+            logger.debug('Video srcObject [' + this.mediaStream?.id + '] updated in stream [' + this.streamId + ']');
         });
     }
 
