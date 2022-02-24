@@ -1192,17 +1192,12 @@ public class OpenviduConfig {
 		String url = null, username = null, credential = null;
 		String[] iceServerPropList = iceServerString.split(",");
 		for (String iceServerProp: iceServerPropList) {
-			String[] iceServerPropEntry = iceServerProp.split("=");
-			if (iceServerPropEntry.length == 2) {
-				if (iceServerProp.startsWith("url=")) {
-					url = iceServerPropEntry[1];
-				} else if (iceServerProp.startsWith("username=")) {
-					username = iceServerPropEntry[1];
-				} else if (iceServerProp.startsWith("credential=")) {
-					credential = iceServerPropEntry[1];
-				} else {
-					addError(property, "Wrong parameter: " + iceServerProp);
-				}
+			if (iceServerProp.startsWith("url=")) {
+				url = StringUtils.substringAfter(iceServerProp, "url=");
+			} else if (iceServerProp.startsWith("username=")) {
+				username = StringUtils.substringAfter(iceServerProp, "username=");
+			} else if (iceServerProp.startsWith("credential=")) {
+				credential = StringUtils.substringAfter(iceServerProp, "credential=");
 			} else {
 				addError(property, "Wrong parameter: " + iceServerProp);
 			}
@@ -1211,5 +1206,5 @@ public class OpenviduConfig {
 				.url(url).username(username).credential(credential).build();
 		return iceServerProperties;
 	}
-
+	
 }
