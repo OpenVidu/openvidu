@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ContentChild, EventEmitter, HostListener, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ContentChild, EventEmitter, HostListener, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
 import { Subscriber, Session, StreamEvent, StreamPropertyChangedEvent, SessionDisconnectedEvent, ConnectionEvent } from 'openvidu-browser';
 
 import { VideoType } from '../../models/video-type.model';
@@ -21,9 +21,10 @@ import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.ser
 @Component({
 	selector: 'ov-session',
 	templateUrl: './session.component.html',
-	styleUrls: ['./session.component.css']
+	styleUrls: ['./session.component.css'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SessionComponent implements OnInit, AfterViewInit {
+export class SessionComponent implements OnInit {
 	@ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any>;
 	@ContentChild('panel', { read: TemplateRef }) panelTemplate: TemplateRef<any>;
 	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
@@ -112,12 +113,6 @@ export class SessionComponent implements OnInit, AfterViewInit {
 		this._session.emit(this.session);
 	}
 
-	ngAfterViewInit(): void {
-		this.layoutService.initialize();
-		this.layoutService.update();
-
-	}
-
 	ngOnDestroy() {
 		// Reconnecting session is received in Firefox
 		// To avoid 'Connection lost' message uses session.off()
@@ -125,7 +120,6 @@ export class SessionComponent implements OnInit, AfterViewInit {
 		this.participantService.clear();
 		this.session = null;
 		this.sessionScreen = null;
-		this.layoutService.clear();
 		this.isChatPanelOpened = false;
 		this.isParticipantsPanelOpened = false;
 		if (this.menuSubscription) this.menuSubscription.unsubscribe();
@@ -238,7 +232,6 @@ export class SessionComponent implements OnInit, AfterViewInit {
 		this.session.on('streamDestroyed', (event: StreamEvent) => {
 			const connectionId = event.stream.connection.connectionId;
 			this.participantService.removeConnectionByConnectionId(connectionId);
-			// event.preventDefault();
 		});
 	}
 

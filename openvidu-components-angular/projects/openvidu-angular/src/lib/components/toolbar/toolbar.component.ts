@@ -1,4 +1,6 @@
 import {
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
 	Component,
 	ContentChild,
 	EventEmitter,
@@ -28,7 +30,8 @@ import { MenuType } from '../../models/menu.model';
 @Component({
 	selector: 'ov-toolbar',
 	templateUrl: './toolbar.component.html',
-	styleUrls: ['./toolbar.component.css']
+	styleUrls: ['./toolbar.component.css'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolbarComponent implements OnInit, OnDestroy {
 	@ContentChild('centeredButtons', { read: TemplateRef }) centeredButtonsTemplate: TemplateRef<any>;
@@ -71,7 +74,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		protected openviduService: OpenViduService,
 		protected oVDevicesService: DeviceService,
 		protected actionService: ActionService,
-		protected loggerSrv: LoggerService
+		protected loggerSrv: LoggerService,
+		private cd: ChangeDetectorRef
 	) {
 		this.log = this.loggerSrv.get('ToolbarComponent');
 	}
@@ -292,18 +296,22 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 				this.unreadMessages++;
 			}
 			this.messageList = messages;
+			this.cd.markForCheck();
 		});
 	}
 	protected subscribeToUserMediaProperties() {
 		this.screenShareStateSubscription = this.participantService.screenShareState.subscribe((active) => {
 			this.isScreenShareActive = active;
+			this.cd.markForCheck();
 		});
 
 		this.webcamVideoStateSubscription = this.participantService.webcamVideoActive.subscribe((active) => {
 			this.isWebcamVideoActive = active;
+			this.cd.markForCheck();
 		});
 		this.webcamAudioStateSubscription = this.participantService.webcamAudioActive.subscribe((active) => {
 			this.isWebcamAudioActive = active;
+			this.cd.markForCheck();
 		});
 	}
 }
