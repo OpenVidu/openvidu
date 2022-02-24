@@ -347,7 +347,13 @@ export class OpenViduService {
 	}
 
 	needSendNicknameSignal(): boolean {
-		const oldNickname: string = JSON.parse(this.webcamSession.connection.data).clientData;
+		let oldNickname: string;
+		try {
+			const connData = JSON.parse(this.webcamSession.connection.data.split('%/%')[0]);
+			oldNickname = connData.clientData;
+		} catch (error) {
+			this.log.e(error);
+		}
 		return oldNickname !== this.participantService.getWebcamNickname();
 	}
 
