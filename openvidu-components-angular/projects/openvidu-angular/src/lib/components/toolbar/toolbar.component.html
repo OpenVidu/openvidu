@@ -11,12 +11,11 @@
 			id="navMicrophoneButton"
 			mat-icon-button
 			(click)="toggleMicrophone()"
-			[disabled]="isConnectionLost"
-			*ngIf="hasAudioDevices"
-			[class.warn-btn]="!isWebcamAudioEnabled"
+			[disabled]="isConnectionLost || !hasAudioDevices"
+			[class.warn-btn]="!isWebcamAudioActive"
 		>
-			<mat-icon *ngIf="isWebcamAudioEnabled" matTooltip="Mute your audio">mic</mat-icon>
-			<mat-icon *ngIf="!isWebcamAudioEnabled" matTooltip="Unmute your audio">mic_off</mat-icon>
+			<mat-icon *ngIf="isWebcamAudioActive" matTooltip="Mute your audio">mic</mat-icon>
+			<mat-icon *ngIf="!isWebcamAudioActive" matTooltip="Unmute your audio">mic_off</mat-icon>
 		</button>
 
 		<!-- Camera button -->
@@ -24,12 +23,11 @@
 			id="navCameraButton"
 			mat-icon-button
 			(click)="toggleCamera()"
-			[disabled]="isConnectionLost"
-			*ngIf="hasVideoDevices"
-			[class.warn-btn]="!isWebcamVideoEnabled"
+			[disabled]="isConnectionLost || !hasVideoDevices"
+			[class.warn-btn]="!isWebcamVideoActive"
 		>
-			<mat-icon *ngIf="isWebcamVideoEnabled" matTooltip="Mute your cam">videocam</mat-icon>
-			<mat-icon *ngIf="!isWebcamVideoEnabled" matTooltip="Unmute your cam">videocam_off</mat-icon>
+			<mat-icon *ngIf="isWebcamVideoActive" matTooltip="Mute your cam">videocam</mat-icon>
+			<mat-icon *ngIf="!isWebcamVideoActive" matTooltip="Unmute your cam">videocam_off</mat-icon>
 		</button>
 
 		<!-- Screenshare button -->
@@ -38,16 +36,16 @@
 			mat-icon-button
 			(click)="toggleScreenShare()"
 			[disabled]="isConnectionLost"
-			[class.active-btn]="isScreenShareEnabled"
+			[class.active-btn]="isScreenShareActive"
 		>
-			<mat-icon *ngIf="!isScreenShareEnabled" matTooltip="Enable screen share">screen_share</mat-icon>
-			<mat-icon *ngIf="isScreenShareEnabled" matTooltip="Disable screen share">screen_share</mat-icon>
+			<mat-icon *ngIf="!isScreenShareActive" matTooltip="Enable screen share">screen_share</mat-icon>
+			<mat-icon *ngIf="isScreenShareActive" matTooltip="Disable screen share">screen_share</mat-icon>
 		</button>
 
 		<!-- Fullscreen button -->
-		<button mat-icon-button (click)="toggleFullscreen()" [disabled]="isConnectionLost" [class.active-btn]="isFullscreenEnabled">
-			<mat-icon *ngIf="isFullscreenEnabled" matTooltip="Exit Fullscreen">fullscreen_exit</mat-icon>
-			<mat-icon *ngIf="!isFullscreenEnabled" matTooltip="Fullscreen">fullscreen</mat-icon>
+		<button mat-icon-button (click)="toggleFullscreen()" [disabled]="isConnectionLost" [class.active-btn]="isFullscreenActive">
+			<mat-icon *ngIf="isFullscreenActive" matTooltip="Exit Fullscreen">fullscreen_exit</mat-icon>
+			<mat-icon *ngIf="!isFullscreenActive" matTooltip="Fullscreen">fullscreen</mat-icon>
 		</button>
 
 		<!-- Custom toolbar buttons -->

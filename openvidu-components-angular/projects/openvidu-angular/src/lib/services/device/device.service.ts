@@ -50,7 +50,6 @@ export class DeviceService {
 		}
 
 		this.devices = await this.OV.getDevices();
-		console.log(this.devices);
 		const customDevices = this.initializeCustomDevices(this.devices);
 		this.cameras = customDevices.cameras;
 		this.microphones = customDevices.microphones;

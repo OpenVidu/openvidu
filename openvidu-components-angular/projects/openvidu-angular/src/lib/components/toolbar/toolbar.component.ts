@@ -1,4 +1,13 @@
-import { Component, ContentChild, EventEmitter, HostListener, OnDestroy, OnInit, Output, TemplateRef } from '@angular/core';
+import {
+	Component,
+	ContentChild,
+	EventEmitter,
+	HostListener,
+	OnDestroy,
+	OnInit,
+	Output,
+	TemplateRef
+} from '@angular/core';
 import { skip, Subscription } from 'rxjs';
 import { TokenService } from '../../services/token/token.service';
 import { ChatService } from '../../services/chat/chat.service';
@@ -33,13 +42,13 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	session: Session;
 	unreadMessages: number = 0;
 	messageList: ChatMessage[] = [];
-	isScreenShareEnabled: boolean;
-	isWebcamVideoEnabled: boolean;
-	isWebcamAudioEnabled: boolean;
+	isScreenShareActive: boolean;
+	isWebcamVideoActive: boolean;
+	isWebcamAudioActive: boolean;
 	isConnectionLost: boolean;
 	hasVideoDevices: boolean;
 	hasAudioDevices: boolean;
-	isFullscreenEnabled: boolean = false;
+	isFullscreenActive: boolean = false;
 	isChatOpened: boolean = false;
 	isParticipantsOpened: boolean = false;
 	logoUrl = 'assets/images/openvidu_globe.png';
@@ -50,6 +59,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	protected screenShareStateSubscription: Subscription;
 	protected webcamVideoStateSubscription: Subscription;
 	protected webcamAudioStateSubscription: Subscription;
+
+	private currentWindowHeight = window.innerHeight;
 
 	constructor(
 		protected documentService: DocumentService,
@@ -85,11 +96,21 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
 	@HostListener('window:resize', ['$event'])
 	sizeChange(event) {
-		const maxHeight = window.screen.height;
-		const maxWidth = window.screen.width;
-		const curHeight = window.innerHeight;
-		const curWidth = window.innerWidth;
-		this.isFullscreenEnabled = maxWidth == curWidth && maxHeight == curHeight;
+		if(this.currentWindowHeight >= window.innerHeight) {
+			// The user has exit the fullscreen mode
+			this.isFullscreenActive = false;
+			this.currentWindowHeight = window.innerHeight;
+		}
+	}
+
+	@HostListener('document:keydown', ['$event'])
+	keyDown(event: KeyboardEvent) {
+		if(event.key === 'F11'){
+			event.preventDefault();
+			this.toggleFullscreen();
+			this.currentWindowHeight = window.innerHeight;
+			return false;
+		}
 	}
 
 	async ngOnInit() {
@@ -188,7 +209,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 					this.participantService.enableScreenUser(screenPublisher);
 
 					if (!this.openviduService.isScreenSessionConnected()) {
-						await this.openviduService.connectSession(this.openviduService.getScreenSession(), this.tokenService.getScreenToken());
+						await this.openviduService.connectSession(
+							this.openviduService.getScreenSession(),
+							this.tokenService.getScreenToken()
+						);
 					}
 					await this.openviduService.publish(this.participantService.getMyScreenPublisher());
 					// this.openviduService.sendNicknameSignal();
@@ -237,8 +261,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	}
 
 	toggleFullscreen() {
+		this.isFullscreenActive = !this.isFullscreenActive;
 		this.documentService.toggleFullscreen('session-container');
-		this.isFullscreenEnabled = !this.isFullscreenEnabled;
 	}
 
 	protected subscribeToReconnection() {
@@ -253,7 +277,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		});
 	}
 	protected subscribeToMenuToggling() {
-		this.menuTogglingSubscription = this.menuService.menuOpenedObs.subscribe((ev: {opened: boolean, type?: MenuType}) => {
+		this.menuTogglingSubscription = this.menuService.menuOpenedObs.subscribe((ev: { opened: boolean; type?: MenuType }) => {
 			this.isChatOpened = ev.opened && ev.type === MenuType.CHAT;
 			this.isParticipantsOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
 			if (this.isChatOpened) {
@@ -271,15 +295,15 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		});
 	}
 	protected subscribeToUserMediaProperties() {
-		this.screenShareStateSubscription = this.participantService.screenShareState.subscribe((enabled) => {
-			this.isScreenShareEnabled = enabled;
+		this.screenShareStateSubscription = this.participantService.screenShareState.subscribe((active) => {
+			this.isScreenShareActive = active;
 		});
 
-		this.webcamVideoStateSubscription = this.participantService.webcamVideoActive.subscribe((enabled) => {
-			this.isWebcamVideoEnabled = enabled;
+		this.webcamVideoStateSubscription = this.participantService.webcamVideoActive.subscribe((active) => {
+			this.isWebcamVideoActive = active;
 		});
-		this.webcamAudioStateSubscription = this.participantService.webcamAudioActive.subscribe((enabled) => {
-			this.isWebcamAudioEnabled = enabled;
+		this.webcamAudioStateSubscription = this.participantService.webcamAudioActive.subscribe((active) => {
+			this.isWebcamAudioActive = active;
 		});
 	}
 }
