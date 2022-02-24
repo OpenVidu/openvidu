@@ -19,7 +19,7 @@
 				<div class="row align-items-center">
 					<div class="col-sm-6 col-md-6 col-lg-6 leftSection">
 						<div class="spinner-container" *ngIf="isLoading">
-							<mat-spinner></mat-spinner>
+							<mat-spinner [diameter]="50"></mat-spinner>
 						</div>
 						<div class="videoContainer" *ngIf="!isLoading">
 							<div *ngFor="let stream of localParticipant | streams">

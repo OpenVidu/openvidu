@@ -214,7 +214,6 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 			const nickname = this.nicknameFormControl.value;
 			this.participantService.setNickname(this.participantService.getMyCameraConnectionId(), nickname);
 			this.storageSrv.setNickname(nickname);
-			this.participantService.updateParticipantMediaStatus();
 			return this.onJoinClicked.emit();
 		}
 		this.scrollToBottom();

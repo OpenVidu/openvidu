@@ -12,6 +12,7 @@ import { VideoType } from '../../models/video-type.model';
 			src="assets/images/poster.png"
 		/>
 		<video
+			class="OT_video-element"
 			#videoElement
 			[attr.id]="streamManager && _streamManager.stream ? 'video-' + _streamManager.stream.streamId : 'video-undefined'"
 			[muted]="mutedSound"
