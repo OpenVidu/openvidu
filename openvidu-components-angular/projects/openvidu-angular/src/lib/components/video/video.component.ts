@@ -1,3 +1,4 @@
+import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { StreamManager } from 'openvidu-browser';
 import { VideoType } from '../../models/video-type.model';
@@ -43,7 +44,7 @@ export class VideoComponent implements AfterViewInit {
 
 	@Input()
 	set streamManager(streamManager: StreamManager) {
-		setTimeout(() => {
+		if(streamManager) {
 			this._streamManager = streamManager;
 			if (!!this._videoElement && this._streamManager) {
 				this.type = <VideoType>this._streamManager?.stream?.typeOfVideo;
@@ -55,6 +56,6 @@ export class VideoComponent implements AfterViewInit {
 				}
 				this._streamManager.addVideoElement(this._videoElement.nativeElement);
 			}
-		});
+		}
 	}
 }

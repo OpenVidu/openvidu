@@ -162,13 +162,7 @@ export class OpenViduService {
 
 	async initPublisher(targetElement: string | HTMLElement, properties: PublisherProperties): Promise<Publisher> {
 		this.log.d('Initializing publisher with properties: ', properties);
-
-		const publisher = await this.OV.initPublisherAsync(targetElement, properties);
-		// this.participantService.setMyCameraPublisher(publisher);
-		publisher.once('streamPlaying', () => {
-			(<HTMLElement>publisher.videos[0].video).parentElement.classList.remove('custom-class');
-		});
-		return publisher;
+		return await this.OV.initPublisherAsync(targetElement, properties);
 	}
 
 	//TODO: This method is used by republishTrack. Check if it's neecessary

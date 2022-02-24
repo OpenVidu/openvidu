@@ -1,3 +1,10 @@
+   /* Fixes layout bug. The OT_root is created with the entire layout width and it has a weird UX behaviour */
+   .no-size {
+	height: 0px !important;
+	width: 0px !important;
+  }
+
+
 .nickname {
 	padding: 0px;
 	position: absolute;

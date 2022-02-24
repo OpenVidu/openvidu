@@ -55,6 +55,11 @@ export class DocumentService {
 		}
 	}
 
+
+	removeNoSizeElementClass(element: HTMLElement | Element) {
+		element?.classList.remove(LayoutClass.NO_SIZE_ELEMENT);
+	}
+
 	removeBigElementClass(element: HTMLElement | Element) {
 		element?.classList.remove(LayoutClass.BIG_ELEMENT);
 	}

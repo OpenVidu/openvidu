@@ -46,14 +46,6 @@ export class StreamComponent implements OnInit {
 		protected cdkSrv: CdkOverlayService
 	) {}
 
-	// @HostListener('document:fullscreenchange', ['$event'])
-	// @HostListener('document:webkitfullscreenchange', ['$event'])
-	// @HostListener('document:mozfullscreenchange', ['$event'])
-	// @HostListener('document:MSFullscreenChange', ['$event'])
-	// onFullscreenHandler(event) {
-	// 	this.isFullscreenEnabled = !this.isFullscreenEnabled;
-	// }
-
 	@ViewChild('streamContainer', { static: false, read: ElementRef })
 	set streamContainer(streamContainer: ElementRef) {
 		setTimeout(() => {
@@ -62,6 +54,10 @@ export class StreamComponent implements OnInit {
 				if (this._stream.type === VideoType.SCREEN) {
 					this.toggleVideoEnlarged(true);
 				}
+				// Remove 'no-size' css class for showing the element in the view.
+				// This is a workaround for fixing a layout bug which provide a bad UX with each new elements created.
+				//
+				this.documentService.removeNoSizeElementClass(this._streamContainer.nativeElement);
 			}
 		}, 0);
 	}
