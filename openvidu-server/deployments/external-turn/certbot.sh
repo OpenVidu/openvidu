@@ -16,6 +16,7 @@ while :; do
     	CERTIFICATES_FOUND=true
     fi
     certbot "$@";
+    # Let coturn to load letsencrypt certificates
     chmod 777 -R /etc/letsencrypt;
     TURN_PID=$(pgrep -n '^turnserver$')
     if [ -n "${TURN_PID}" ]; then
@@ -24,7 +25,7 @@ while :; do
             kill -KILL "${TURN_PID}"
         else
             # Send SIGUSR2 signal to coturn to restart process with new certificates
-            # As certbot is running in the same namespace as coturn (#pid:container:coturn),
+            # As certbot is running in the same namespace as coturn,
             # it will send the signal to the coturn process to reload the certificates
             kill -USR2 "${TURN_PID}"
         fi
