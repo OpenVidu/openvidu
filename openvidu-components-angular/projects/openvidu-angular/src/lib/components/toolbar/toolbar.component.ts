@@ -201,7 +201,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 							this.toggleScreenShare();
 						});
 					this.log.d('ACCESS ALOWED screenPublisher');
-					this.participantService.enableScreenUser(screenPublisher);
+					this.participantService.activeMyScreenShare(screenPublisher);
 
 					if (!this.openviduService.isScreenSessionConnected()) {
 						await this.openviduService.connectSession(

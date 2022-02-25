@@ -1,4 +1,3 @@
-import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { StreamManager } from 'openvidu-browser';
 import { VideoType } from '../../models/video-type.model';

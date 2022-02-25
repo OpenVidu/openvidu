@@ -236,15 +236,13 @@ export class SessionComponent implements OnInit {
 	}
 
 	private subscribeToStreamPropertyChange() {
-		// this.session.on('streamPropertyChanged', (event: StreamPropertyChangedEvent) => {
-		// 	const connectionId = event.stream.connection.connectionId;
-		// 	const isRemoteConnection: boolean = !this.openviduService.isMyOwnConnection(connectionId);
-		// 	if (isRemoteConnection) {
-		// 		if (event.changedProperty === 'videoActive') {
-		// 			// this.participantService.updateUsers();
-		// 		}
-		// 	}
-		// });
+		this.session.on('streamPropertyChanged', (event: StreamPropertyChangedEvent) => {
+			const connectionId = event.stream.connection.connectionId;
+			const isRemoteConnection: boolean = !this.openviduService.isMyOwnConnection(connectionId);
+			if (isRemoteConnection) {
+				this.participantService.updateRemoteParticipants();
+			}
+		});
 	}
 
 	private subscribeToNicknameChanged() {

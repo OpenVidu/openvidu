@@ -82,8 +82,10 @@ export abstract class ParticipantAbstractModel {
 		this.getScreenConnection().connectionId = connectionId;
 	}
 
-	removeConnection(connectionId: string) {
-		this.streams.delete(this.getConnectionById(connectionId).type);
+	removeConnection(connectionId: string): StreamModel {
+		const removeStream = this.getConnectionById(connectionId);
+		this.streams.delete(removeStream.type);
+		return removeStream;
 	}
 
 	hasConnectionId(connectionId: string): boolean {
@@ -164,9 +166,18 @@ export abstract class ParticipantAbstractModel {
 		const screenConnection = this.getScreenConnection();
 		if (screenConnection) screenConnection.connected = false;
 	}
+
 	setAllVideoEnlarged(enlarged: boolean) {
 		this.streams.forEach((conn) => (conn.videoEnlarged = enlarged));
 	}
+
+	setCameraEnlarged(enlarged: boolean) {
+		this.streams.get(VideoType.CAMERA).videoEnlarged = enlarged;
+	}
+	setScreenEnlarged(enlarged: boolean) {
+		this.streams.get(VideoType.SCREEN).videoEnlarged = enlarged;
+	}
+
 
 	toggleVideoEnlarged(connectionId: string) {
 		this.streams.forEach((conn) => {

@@ -2,7 +2,7 @@
 	<div
 		class="OT_root OT_publisher"
 		*ngFor="let stream of localParticipant | streams"
-		[ngClass]="{ OV_small: !stream.streamManager?.stream?.videoActive }"
+		[ngClass]="{ OV_big: stream.videoEnlarged }"
 	>
 		<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: stream }"></ng-container>
 	</div>
@@ -11,7 +11,7 @@
 		*ngFor="let stream of remoteParticipants | streams"
 		class="OT_root OT_publisher"
 		id="remote-participant"
-		[ngClass]="{ OV_small: !stream.streamManager?.stream?.videoActive }"
+		[ngClass]="{ OV_big: stream.videoEnlarged }"
 	>
 		<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: stream }"></ng-container>
 	</div>

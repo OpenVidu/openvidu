@@ -173,7 +173,7 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 						this.log.d('Clicked native stop button. Stopping screen sharing');
 						this.toggleScreenShare();
 					});
-				this.participantService.enableScreenUser(screenPublisher);
+				this.participantService.activeMyScreenShare(screenPublisher);
 				if (!this.participantService.hasCameraVideoActive()) {
 					this.participantService.disableWebcamUser();
 				}

@@ -51,12 +51,8 @@ export class StreamComponent implements OnInit {
 		setTimeout(() => {
 			if (streamContainer) {
 				this._streamContainer = streamContainer;
-				if (this._stream.type === VideoType.SCREEN) {
-					this.toggleVideoEnlarged(true);
-				}
 				// Remove 'no-size' css class for showing the element in the view.
 				// This is a workaround for fixing a layout bug which provide a bad UX with each new elements created.
-				//
 				this.documentService.removeNoSizeElementClass(this._streamContainer.nativeElement);
 			}
 		}, 0);
@@ -84,16 +80,7 @@ export class StreamComponent implements OnInit {
 		this.cdkSrv.setSelector('body');
 	}
 
-	toggleVideoEnlarged(resetAll?) {
-		const element = this.documentService.getHTMLElementByClassName(this._streamContainer.nativeElement, LayoutClass.ROOT_ELEMENT);
-		if (!!resetAll) {
-			this.documentService.removeAllBigElementClass();
-			this.participantService.resetMyVideoEnlarged();
-			this.participantService.resetRemotesVideoEnlarged();
-		}
-
-		this.documentService.toggleBigElementClass(element);
-
+	toggleVideoEnlarged() {
 		if (!!this._stream.streamManager?.stream?.connection?.connectionId) {
 			if (this.openviduService.isMyOwnConnection(this._stream.streamManager?.stream?.connection?.connectionId)) {
 				this.participantService.toggleMyVideoEnlarged(this._stream.streamManager?.stream?.connection?.connectionId);

@@ -78,7 +78,7 @@ export class ParticipantService {
 		this.updateLocalParticipant();
 	}
 
-	enableScreenUser(screenPublisher: Publisher) {
+	activeMyScreenShare(screenPublisher: Publisher) {
 		this.log.d('Enabling screen publisher');
 
 		const steramModel: StreamModel = {
@@ -91,6 +91,8 @@ export class ParticipantService {
 			connectionId: null
 		};
 
+		this.resetRemoteStreamsToNormalSize();
+		this.resetMyStreamsToNormalSize();
 		this.localParticipant.addConnection(steramModel);
 		this.updateLocalParticipant();
 	}
@@ -121,12 +123,17 @@ export class ParticipantService {
 		return this.localParticipant.getScreenNickname();
 	}
 
-	resetMyVideoEnlarged() {
-		this.localParticipant?.setAllVideoEnlarged(false);
-	}
 
 	toggleMyVideoEnlarged(connectionId: string) {
 		this.localParticipant.toggleVideoEnlarged(connectionId);
+	}
+
+
+	resetMyStreamsToNormalSize() {
+		if(this.localParticipant.someHasVideoEnlarged()){
+			this.localParticipant.setAllVideoEnlarged(false);
+			this.updateLocalParticipant();
+		}
 	}
 
 	clear() {
@@ -186,10 +193,11 @@ export class ParticipantService {
 
 	addRemoteConnection(connectionId:string, data: string, subscriber: Subscriber) {
 
-		const steramModel: StreamModel = {
+		const type: VideoType = this.getTypeConnectionData(data);
+		const streamModel: StreamModel = {
 			local: false,
-			type: this.getTypeConnectionData(data),
-			videoEnlarged: false,
+			type,
+			videoEnlarged: type === VideoType.SCREEN,
 			streamManager: subscriber,
 			nickname: this.getNicknameFromConnectionData(data),
 			connected: true,
@@ -200,18 +208,25 @@ export class ParticipantService {
 		const participantAdded = this.getRemoteParticipantById(participantId);
 		if (!!participantAdded) {
 			this.log.d('Adding connection to existing participant: ', participantId);
-			if(participantAdded.hasConnectionType(steramModel.type)) {
+			if(participantAdded.hasConnectionType(streamModel.type)) {
 				this.log.d('Participant has publisher, updating it');
-				participantAdded.setPublisher(steramModel.type, subscriber);
+				participantAdded.setPublisher(streamModel.type, subscriber);
 			} else {
 				this.log.d('Participant has not publisher, adding it');
-				participantAdded.addConnection(steramModel);
+				this.resetRemoteStreamsToNormalSize();
+				this.resetMyStreamsToNormalSize();
+				participantAdded.addConnection(streamModel);
 			}
 		} else {
-			this.log.d('Creating new participant with id: ', participantId);
-			const remoteParticipant = this.newParticipant(steramModel, participantId);
+			this.log.w('Creating new participant with id: ', participantId);
+			const remoteParticipant = this.newParticipant(streamModel, participantId);
 			this.remoteParticipants.push(remoteParticipant);
 		}
+		this.updateRemoteParticipants();
+	}
+
+	resetRemoteStreamsToNormalSize() {
+		this.remoteParticipants.forEach(participant => participant.setAllVideoEnlarged(false));
 		this.updateRemoteParticipants();
 	}
 
@@ -225,12 +240,24 @@ export class ParticipantService {
 		}
 
 		if (participant) {
-			participant.removeConnection(connectionId);
+			const removeStream: StreamModel = participant.removeConnection(connectionId);
 			//TODO: Timeout of X seconds?? Its possible sometimes the connections map was empty but must not be deleted
 			if (participant.streams.size === 0) {
 				// Remove participants without connections
 				this.remoteParticipants = this.remoteParticipants.filter((p) => p !== participant);
 			}
+			if(removeStream.type === VideoType.SCREEN){
+				const remoteScreens = this.remoteParticipants.filter(p => p.isScreenActive());
+				if(remoteScreens.length > 0){
+					// Enlarging the last screen connection active
+					const lastScreenActive = remoteScreens[remoteScreens.length -1];
+					lastScreenActive.setScreenEnlarged(true);
+				} else if(this.localParticipant.isScreenActive()) {
+					// Enlarging my screen if thereare not any remote screen active
+					this.localParticipant.setScreenEnlarged(true);
+				}
+			}
+
 			this.updateRemoteParticipants();
 		}
 	}
@@ -250,16 +277,16 @@ export class ParticipantService {
 		p.toggleVideoEnlarged(connectionId);
 	}
 
-	resetRemotesVideoEnlarged() {
-		this.remoteParticipants.forEach((u) => u.setAllVideoEnlarged(false));
-	}
-
 	getNicknameFromConnectionData(data: string): string {
 		try {
 			return JSON.parse(data).clientData;
 		} catch (error) {
 			return 'OpenVidu_User';
 		}
+	}
+
+	updateRemoteParticipants() {
+		this._remoteParticipants.next(this.remoteParticipants);
 	}
 
 	protected getTypeConnectionData(data: string): VideoType {
@@ -278,9 +305,6 @@ export class ParticipantService {
 		}
 	}
 
-	updateRemoteParticipants() {
-		this._remoteParticipants.next(this.remoteParticipants);
-	}
 	protected newParticipant(streamModel?: StreamModel, participantId?: string) {
 
 		if(this.openviduAngularConfigSrv.hasParticipantFactory()){

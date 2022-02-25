@@ -48,28 +48,8 @@ export class DocumentService {
 		}
 	}
 
-	removeAllBigElementClass() {
-		const elements: HTMLCollectionOf<Element> = document.getElementsByClassName(LayoutClass.BIG_ELEMENT);
-		while (elements.length > 0) {
-			this.removeBigElementClass(elements[0]);
-		}
-	}
-
-
 	removeNoSizeElementClass(element: HTMLElement | Element) {
 		element?.classList.remove(LayoutClass.NO_SIZE_ELEMENT);
-	}
-
-	removeBigElementClass(element: HTMLElement | Element) {
-		element?.classList.remove(LayoutClass.BIG_ELEMENT);
-	}
-
-	toggleBigElementClass(element: HTMLElement | Element) {
-		if (element?.className.includes(LayoutClass.BIG_ELEMENT)) {
-			this.removeBigElementClass(element);
-		} else {
-			element.classList.add(LayoutClass.BIG_ELEMENT);
-		}
 	}
 
 	isSmallElement(element: HTMLElement | Element): boolean {
