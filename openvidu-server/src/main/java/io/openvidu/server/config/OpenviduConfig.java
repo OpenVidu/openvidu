@@ -1222,5 +1222,5 @@ public class OpenviduConfig {
 		builderCheck.build();
 		return builder;
 	}
-	
+
 }

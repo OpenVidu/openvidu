@@ -129,9 +129,12 @@ public class IceServerProperties {
 
         /**
          * Secret for TURN authentication based on:
-         *  - https://tools.ietf.org/html/draft-uberti-behave-turn-rest-00
-         *  - https://www.ietf.org/proceedings/87/slides/slides-87-behave-10.pdf
-         * This will generate credentials valid for 24 hours which is the recommended value
+         *  <ul>
+         *      <li><a href="https://tools.ietf.org/html/draft-uberti-behave-turn-rest-00" target="_blank">https://tools.ietf.org/html/draft-uberti-behave-turn-rest-00</a></li>
+         *      <li><a href="https://www.ietf.org/proceedings/87/slides/slides-87-behave-10.pdf" target="_blank">https://www.ietf.org/proceedings/87/slides/slides-87-behave-10.pdf</a></li>
+         *  </ul>
+         * This will generate credentials valid for 24 hours which is the recommended value. You need to setup in your TURN service this same secret value
+         * which uses HMAC SHA1 as encryption algorithm. A TURN implementation which by default uses this is COTURN with static-auth-secret parameter.
          */
         public IceServerProperties.Builder staticAuthSecret(String staticAuthSecret) {
             this.staticAuthSecret = staticAuthSecret;
@@ -318,7 +321,7 @@ public class IceServerProperties {
 
         private void generateTURNCredentials() throws NoSuchAlgorithmException, InvalidKeyException {
             // 1. Generate random username
-            char[] ALPHANUMERIC =("abcdefghijklmnopqrstuvwxyzABCDEFGHIJK " +
+            char[] ALPHANUMERIC =("abcdefghijklmnopqrstuvwxyzABCDEFGHIJK" +
                     "LMNOPQRSTUVWXYZ0123456789").toCharArray();
             int MAX_LENGTH = 8;
             StringBuilder randomUsername = new StringBuilder();

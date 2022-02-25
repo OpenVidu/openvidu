@@ -28,6 +28,14 @@ export interface IceServerProperties {
     url: string;
 
     /**
+     * Secret for TURN authentication based on:
+     *  - [https://tools.ietf.org/html/draft-uberti-behave-turn-rest-00](https://tools.ietf.org/html/draft-uberti-behave-turn-rest-00)
+     *  - [https://www.ietf.org/proceedings/87/slides/slides-87-behave-10.pdf](https://www.ietf.org/proceedings/87/slides/slides-87-behave-10.pdf)
+     * This will generate credentials valid for 24 hours which is the recommended value
+     */
+    staticAuthSecret?: string;
+
+    /**
      * Set a username for the ICE Server you want to use.
      * This parameter should be defined only for TURN, not for STUN ICE Servers.
      */
