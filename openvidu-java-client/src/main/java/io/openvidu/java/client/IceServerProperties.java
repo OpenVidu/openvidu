@@ -331,7 +331,6 @@ public class IceServerProperties {
 
             // 3. Generate TURN username
             String username = unixTimestamp + ":" + randomUsername;
-            System.out.println(username);
 
             // 4. Generate HMAC SHA-1 password
             SecretKeySpec signingKey = new SecretKeySpec(staticAuthSecret.getBytes(), "HmacSHA1");
