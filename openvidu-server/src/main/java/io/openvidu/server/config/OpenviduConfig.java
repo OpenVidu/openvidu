@@ -225,7 +225,7 @@ public class OpenviduConfig {
 
 	private boolean webrtcSimulcast = false;
 
-	private List<IceServerProperties> webrtcIceServers;
+	private List<IceServerProperties.Builder> webrtcIceServersBuilders;
 
 	// Plain config properties getters
 
@@ -293,8 +293,8 @@ public class OpenviduConfig {
 		return this.webrtcSimulcast;
 	}
 
-	public List<IceServerProperties> getWebrtcIceServers() {
-		return webrtcIceServers;
+	public List<IceServerProperties.Builder> getWebrtcIceServersBuilders() {
+		return webrtcIceServersBuilders;
 	}
 
 	public String getOpenViduRecordingPath() {
@@ -640,7 +640,7 @@ public class OpenviduConfig {
 
 		checkCertificateType();
 
-		webrtcIceServers = loadWebrtcIceServers("OPENVIDU_WEBRTC_ICE_SERVERS");
+		webrtcIceServersBuilders = loadWebrtcIceServers("OPENVIDU_WEBRTC_ICE_SERVERS");
 
 	}
 
@@ -1170,16 +1170,16 @@ public class OpenviduConfig {
 		}
 	}
 
-	private List<IceServerProperties> loadWebrtcIceServers(String property) {
+	private List<IceServerProperties.Builder> loadWebrtcIceServers(String property) {
 		String rawIceServers = asOptionalString(property);
-		List<IceServerProperties> webrtcIceServers = new ArrayList<>();
+		List<IceServerProperties.Builder> webrtcIceServers = new ArrayList<>();
 		if (rawIceServers == null || rawIceServers.isEmpty()) {
 			return webrtcIceServers;
 		}
 		List<String> arrayIceServers = asJsonStringsArray(property);
 		for (String iceServerString : arrayIceServers) {
 			try {
-				IceServerProperties iceServerProperties = readIceServer(property, iceServerString);
+				IceServerProperties.Builder iceServerProperties = readIceServer(property, iceServerString);
 				webrtcIceServers.add(iceServerProperties);
 			} catch (Exception e) {
 				addError(property, iceServerString + " is not a valid webrtc ice server: " + e.getMessage());
@@ -1188,8 +1188,8 @@ public class OpenviduConfig {
 		return webrtcIceServers;
 	}
 
-	private IceServerProperties readIceServer(String property, String iceServerString) {
-		String url = null, username = null, credential = null;
+	private IceServerProperties.Builder readIceServer(String property, String iceServerString) {
+		String url = null, username = null, credential = null, staticAuthSecret = null;
 		String[] iceServerPropList = iceServerString.split(",");
 		for (String iceServerProp: iceServerPropList) {
 			if (iceServerProp.startsWith("url=")) {
@@ -1198,13 +1198,29 @@ public class OpenviduConfig {
 				username = StringUtils.substringAfter(iceServerProp, "username=");
 			} else if (iceServerProp.startsWith("credential=")) {
 				credential = StringUtils.substringAfter(iceServerProp, "credential=");
+			} else if (iceServerProp.startsWith("staticAuthSecret=")) {
+				staticAuthSecret = StringUtils.substringAfter(iceServerProp, "staticAuthSecret=");
 			} else {
 				addError(property, "Wrong parameter: " + iceServerProp);
 			}
 		}
-		IceServerProperties iceServerProperties = new IceServerProperties.Builder()
-				.url(url).username(username).credential(credential).build();
-		return iceServerProperties;
+		IceServerProperties.Builder builder = new IceServerProperties.Builder().url(url);
+		IceServerProperties.Builder builderCheck = new IceServerProperties.Builder().url(url);
+		if (staticAuthSecret != null) {
+			builder.staticAuthSecret(staticAuthSecret);
+			builderCheck.staticAuthSecret(staticAuthSecret);
+		}
+		if (username != null) {
+			builder.username(username);
+			builderCheck.username(username);
+		}
+		if (credential != null) {
+			builder.credential(credential);
+			builderCheck.credential(credential);
+		}
+		// Validate config input
+		builderCheck.build();
+		return builder;
 	}
 	
 }

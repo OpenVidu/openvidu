@@ -18,14 +18,19 @@
 package io.openvidu.java.client;
 
 import com.google.gson.JsonObject;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.validator.routines.DomainValidator;
 import org.apache.commons.validator.routines.InetAddressValidator;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.net.Inet6Address;
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.*;
 
 /**
  * See
@@ -89,6 +94,7 @@ public class IceServerProperties {
         private String url;
         private String username;
         private String credential;
+        private String staticAuthSecret;
 
         /**
          * Set the url for the ICE Server you want to use.
@@ -121,6 +127,23 @@ public class IceServerProperties {
             return this;
         }
 
+        /**
+         * Secret for TURN authentication based on:
+         *  - https://tools.ietf.org/html/draft-uberti-behave-turn-rest-00
+         *  - https://www.ietf.org/proceedings/87/slides/slides-87-behave-10.pdf
+         * This will generate credentials valid for 24 hours which is the recommended value
+         */
+        public IceServerProperties.Builder staticAuthSecret(String staticAuthSecret) {
+            this.staticAuthSecret = staticAuthSecret;
+            return this;
+        }
+
+        public IceServerProperties.Builder clone() {
+            return new Builder().url(this.url)
+                    .username(this.username)
+                    .credential(this.credential)
+                    .staticAuthSecret(this.staticAuthSecret);
+        }
 
         /**
          * Builder for {@link io.openvidu.java.client.RecordingProperties}
@@ -137,6 +160,16 @@ public class IceServerProperties {
             }
             this.checkValidStunTurn(this.url);
             if (this.url.startsWith("turn")) {
+                if (this.staticAuthSecret != null) {
+                    if (this.username != null || this.credential != null) {
+                        throw new IllegalArgumentException("You can't define username or credential if staticAuthSecret is defined");
+                    }
+                    try {
+                        this.generateTURNCredentials();
+                    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+                        throw new IllegalArgumentException("Error while generating credentials: " + e.getMessage());
+                    }
+                }
                 if ((this.username == null || this.credential == null)) {
                     throw new IllegalArgumentException("Credentials must be defined while using turn");
                 }
@@ -280,6 +313,35 @@ public class IceServerProperties {
         private void checkHostAndPort(String uri, String host, String port) {
             this.checkHost(uri, host);
             this.checkPort(uri, port);
+        }
+
+
+        private void generateTURNCredentials() throws NoSuchAlgorithmException, InvalidKeyException {
+            // 1. Generate random username
+            char[] ALPHANUMERIC =("abcdefghijklmnopqrstuvwxyzABCDEFGHIJK " +
+                    "LMNOPQRSTUVWXYZ0123456789").toCharArray();
+            int MAX_LENGTH = 8;
+            StringBuilder randomUsername = new StringBuilder();
+            for(int i =0; i < MAX_LENGTH; i++) {
+                int index = new SecureRandom().nextInt(ALPHANUMERIC.length);
+                randomUsername.append(ALPHANUMERIC[index]);
+            }
+            // 2. Get unix timestamp adding 24 hours to define max credential valid time
+            String unixTimestamp = Long.toString((System.currentTimeMillis() / 1000) + 24*3600);
+
+            // 3. Generate TURN username
+            String username = unixTimestamp + ":" + randomUsername;
+            System.out.println(username);
+
+            // 4. Generate HMAC SHA-1 password
+            SecretKeySpec signingKey = new SecretKeySpec(staticAuthSecret.getBytes(), "HmacSHA1");
+            Mac mac = Mac.getInstance("HmacSHA1");
+            mac.init(signingKey);
+            String credential = new String(Base64.encodeBase64(mac.doFinal(username.getBytes())));
+
+            // Set credentials in builder
+            this.username = username;
+            this.credential = credential;
         }
     }
 

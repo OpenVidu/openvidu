@@ -922,6 +922,9 @@ public class SessionRestController {
 						JsonObject customIceServerJson = customIceServersJsonArray.get(i).getAsJsonObject();
 						IceServerProperties.Builder iceServerPropertiesBuilder = new IceServerProperties.Builder();
 						iceServerPropertiesBuilder.url(customIceServerJson.get("url").getAsString());
+						if (customIceServerJson.has("staticAuthSecret")) {
+							iceServerPropertiesBuilder.staticAuthSecret(customIceServerJson.get("staticAuthSecret").getAsString());
+						}
 						if (customIceServerJson.has("username")) {
 							iceServerPropertiesBuilder.username(customIceServerJson.get("username").getAsString());
 						}
@@ -934,10 +937,11 @@ public class SessionRestController {
 				} catch (Exception e) {
 					throw new Exception("Type error in some parameter of 'customIceServers': " + e.getMessage());
 				}
-			} else if(!openviduConfig.getWebrtcIceServers().isEmpty()){
+			} else if(!openviduConfig.getWebrtcIceServersBuilders().isEmpty()){
 				// If not defined in connection, check if defined in openvidu config
-				for (IceServerProperties iceServerProperties: openviduConfig.getWebrtcIceServers()) {
-					builder.addCustomIceServer(iceServerProperties);
+				for (IceServerProperties.Builder iceServerPropertiesBuilder: openviduConfig.getWebrtcIceServersBuilders()) {
+					IceServerProperties.Builder configIceBuilder = iceServerPropertiesBuilder.clone();
+					builder.addCustomIceServer(configIceBuilder.build());
 				}
 			}
 
