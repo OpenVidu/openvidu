@@ -34,6 +34,9 @@
 									<span *ngIf="!hasVideoDevices && hasAudioDevices">Oops! Camera is not available</span>
 									<span *ngIf="hasVideoDevices && !hasAudioDevices">Oops! Microphone is not available</span>
 								</div>
+								<div id="audio-wave-container" *ngIf="stream.type === 'CAMERA'">
+									<ov-audio-wave [streamManager]="stream.streamManager"></ov-audio-wave>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -56,11 +59,8 @@
 								</div>
 								<div class="two" fxFlex="80" fxLayoutAlign="center center">
 									<mat-form-field class="alternate-theme">
-										<mat-select
-											placeholder="Camera Options"
-											[ngModel]="!isVideoMuted && !!cameraSelected ? cameraSelected.device : 'None'"
-											(selectionChange)="onCameraSelected($event)"
-										>
+										<mat-label>Camera Options</mat-label>
+										<mat-select [disabled]="isVideoMuted" (selectionChange)="onCameraSelected($event)">
 											<mat-option *ngFor="let camera of cameras" [value]="camera.device">
 												{{ camera.label }}
 											</mat-option>
@@ -86,11 +86,8 @@
 								</div>
 								<div class="two" fxFlex="80" fxLayoutAlign="center center">
 									<mat-form-field class="alternate-theme">
-										<mat-select
-											placeholder="Microphone Options"
-											[ngModel]="!isAudioMuted && microphoneSelected ? microphoneSelected.device : 'None'"
-											(selectionChange)="onMicrophoneSelected($event)"
-										>
+										<mat-label>Microphone Options</mat-label>
+										<mat-select [disabled]="isAudioMuted" (selectionChange)="onMicrophoneSelected($event)">
 											<mat-option *ngFor="let microphone of microphones" [value]="microphone.device">
 												{{ microphone.label }}
 											</mat-option>

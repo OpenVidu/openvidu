@@ -98,9 +98,14 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 		// Is New deviceId different from the old one?
 		if (this.deviceSrv.needUpdateVideoTrack(videoSource)) {
 			const mirror = this.deviceSrv.cameraNeedsMirror(videoSource);
-			const pp: PublisherProperties = { videoSource, audioSource: false, mirror };
+			//TODO: Uncomment this when replaceTrack issue is fixed
+			// const pp: PublisherProperties = { videoSource, audioSource: false, mirror };
+			// await this.openviduService.replaceTrack(VideoType.CAMERA, pp);
+			// TODO: Remove this when replaceTrack issue is fixed
+			const pp: PublisherProperties = { videoSource, audioSource: this.microphoneSelected.device, mirror };
+			await this.openviduService.republishTrack(pp);
 
-			await this.openviduService.replaceTrack(VideoType.CAMERA, pp);
+
 			this.cameraSelected = videoSource;
 			this.deviceSrv.setCameraSelected(this.cameraSelected);
 		}
@@ -115,8 +120,14 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 		const audioSource = event?.value;
 		// Is New deviceId different than older?
 		if (this.deviceSrv.needUpdateAudioTrack(audioSource)) {
-			const pp: PublisherProperties = { audioSource, videoSource: false };
-			await this.openviduService.replaceTrack(VideoType.CAMERA, pp);
+			//TODO: Uncomment this when replaceTrack issue is fixed
+			// const pp: PublisherProperties = { audioSource, videoSource: false };
+			// await this.openviduService.replaceTrack(VideoType.CAMERA, pp);
+			// TODO: Remove this when replaceTrack issue is fixed
+			const mirror = this.deviceSrv.cameraNeedsMirror(this.cameraSelected.device);
+			const pp: PublisherProperties = { videoSource: this.cameraSelected.device, audioSource, mirror };
+			await this.openviduService.republishTrack(pp);
+
 			this.microphoneSelected = audioSource;
 			this.deviceSrv.setMicSelected(this.microphoneSelected);
 		}

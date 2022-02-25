@@ -163,22 +163,6 @@ export class OpenViduService {
 		return await this.OV.initPublisherAsync(targetElement, properties);
 	}
 
-	//TODO: This method is used by republishTrack. Check if it's neecessary
-	// private destroyPublisher(publisher: Publisher): void {
-	// 	if (!!publisher) {
-	// 		// publisher.off('streamAudioVolumeChange');
-	// 		if (publisher.stream.getWebRtcPeer()) {
-	// 			publisher.stream.disposeWebRtcPeer();
-	// 		}
-	// 		publisher.stream.disposeMediaStream();
-	// 		if (publisher.id === this.participantService.getMyCameraPublisher().id) {
-	// 			this.participantService.setMyCameraPublisher(publisher);
-	// 		} else if (publisher.id === this.participantService.getMyScreenPublisher().id) {
-	// 			this.participantService.setMyScreenPublisher(publisher);
-	// 		}
-	// 	}
-	// }
-
 	async publish(publisher: Publisher): Promise<void> {
 		if (!!publisher) {
 			if (publisher === this.participantService.getMyCameraPublisher()) {
@@ -220,39 +204,41 @@ export class OpenViduService {
 		}
 	}
 
-	// Used replaceTrack instead
-	// republishTrack(videoSource: string, audioSource: string, mirror: boolean = true): Promise<void> {
-	// 	return new Promise(async (resolve, reject) => {
-	// 		if (!!videoSource) {
-	// 			this.log.d('Replacing video track ' + videoSource);
-	// 			this.videoSource = videoSource;
-	// 		}
-	// 		if (!!audioSource) {
-	// 			this.log.d('Replacing audio track ' + audioSource);
-	// 			this.audioSource = audioSource;
-	// 		}
-	// 		this.destroyPublisher(this.participantService.getMyCameraPublisher());
-	// 		const properties: PublisherProperties = {
-	// 			videoSource: this.videoSource,
-	// 			audioSource: this.audioSource,
-	// 			publishVideo: this.participantService.hasCameraVideoActive(),
-	// 			publishAudio: this.participantService.hasCameraAudioActive(),
-	// 			mirror
-	// 		};
+	// TODO: Remove this method when replaceTrack issue is fixed
+	// https://github.com/OpenVidu/openvidu/pull/700
+	republishTrack(properties: PublisherProperties): Promise<void> {
+		const {videoSource, audioSource, mirror} = properties;
+		return new Promise(async (resolve, reject) => {
+			if (!!videoSource) {
+				this.log.d('Replacing video track ' + videoSource);
+				this.videoSource = videoSource;
+			}
+			if (!!audioSource) {
+				this.log.d('Replacing audio track ' + audioSource);
+				this.audioSource = audioSource;
+			}
+			this.destroyPublisher(this.participantService.getMyCameraPublisher());
+			const properties: PublisherProperties = {
+				videoSource: this.videoSource,
+				audioSource: this.audioSource,
+				publishVideo: this.participantService.hasCameraVideoActive(),
+				publishAudio: this.participantService.hasCameraAudioActive(),
+				mirror
+			};
 
-	// 		const publisher = await this.initPublisher(undefined, properties);
-	// 		this.participantService.setMyCameraPublisher(publisher);
+			const publisher = await this.initPublisher(undefined, properties);
+			this.participantService.setMyCameraPublisher(publisher);
 
-	// 		publisher.once('streamPlaying', () => {
-	// 			this.participantService.setMyCameraPublisher(publisher);
-	// 			resolve();
-	// 		});
+			publisher.once('streamPlaying', () => {
+				this.participantService.setMyCameraPublisher(publisher);
+				resolve();
+			});
 
-	// 		publisher.once('accessDenied', () => {
-	// 			reject();
-	// 		});
-	// 	});
-	// }
+			publisher.once('accessDenied', () => {
+				reject();
+			});
+		});
+	}
 
 	sendSignal(type: Signal, connections?: Connection[], data?: any): void {
 		const signalOptions: SignalOptions = {
@@ -273,33 +259,36 @@ export class OpenViduService {
 			this.log.d(`Replacing ${videoType} track`, props);
 
 			if (videoType === VideoType.CAMERA) {
-				let mediaStream: MediaStream;
-				const oldMediaStream = this.participantService.getMyCameraPublisher().stream.getMediaStream();
-				const isFirefoxPlatform = this.platformService.isFirefox();
-				const isReplacingAudio = !!props.audioSource;
-				const isReplacingVideo = !!props.videoSource;
+				//TODO: Uncomment this section when replaceTrack issue is fixed
+				// https://github.com/OpenVidu/openvidu/pull/700
+				throw('Replace track feature has a bug. We are trying to fix it');
+				// let mediaStream: MediaStream;
+				// const oldMediaStream = this.participantService.getMyCameraPublisher().stream.getMediaStream();
+				// const isFirefoxPlatform = this.platformService.isFirefox();
+				// const isReplacingAudio = !!props.audioSource;
+				// const isReplacingVideo = !!props.videoSource;
 
-				if (isReplacingVideo) {
-					if (isFirefoxPlatform) {
-						// Firefox throw an exception trying to get a new MediaStreamTrack if the older one is not stopped
-						// NotReadableError: Concurrent mic process limit. Stopping tracks before call to getUserMedia
-						oldMediaStream.getVideoTracks()[0].stop();
-					}
-					mediaStream = await this.createMediaStream(props);
-					// Replace video track
-					const videoTrack: MediaStreamTrack = mediaStream.getVideoTracks()[0];
-					await this.participantService.getMyCameraPublisher().replaceTrack(videoTrack);
-				} else if (isReplacingAudio) {
-					if (isFirefoxPlatform) {
-						// Firefox throw an exception trying to get a new MediaStreamTrack if the older one is not stopped
-						// NotReadableError: Concurrent mic process limit. Stopping tracks before call to getUserMedia
-						oldMediaStream.getAudioTracks()[0].stop();
-					}
-					mediaStream = await this.createMediaStream(props);
-					// Replace audio track
-					const audioTrack: MediaStreamTrack = mediaStream.getAudioTracks()[0];
-					await this.participantService.getMyCameraPublisher().replaceTrack(audioTrack);
-				}
+				// if (isReplacingVideo) {
+				// 	if (isFirefoxPlatform) {
+				// 		// Firefox throw an exception trying to get a new MediaStreamTrack if the older one is not stopped
+				// 		// NotReadableError: Concurrent mic process limit. Stopping tracks before call to getUserMedia
+				// 		oldMediaStream.getVideoTracks()[0].stop();
+				// 	}
+				// 	mediaStream = await this.createMediaStream(props);
+				// 	// Replace video track
+				// 	const videoTrack: MediaStreamTrack = mediaStream.getVideoTracks()[0];
+				// 	await this.participantService.getMyCameraPublisher().replaceTrack(videoTrack);
+				// } else if (isReplacingAudio) {
+				// 	if (isFirefoxPlatform) {
+				// 		// Firefox throw an exception trying to get a new MediaStreamTrack if the older one is not stopped
+				// 		// NotReadableError: Concurrent mic process limit. Stopping tracks before call to getUserMedia
+				// 		oldMediaStream.getAudioTracks()[0].stop();
+				// 	}
+				// 	mediaStream = await this.createMediaStream(props);
+				// 	// Replace audio track
+				// 	const audioTrack: MediaStreamTrack = mediaStream.getAudioTracks()[0];
+				// 	await this.participantService.getMyCameraPublisher().replaceTrack(audioTrack);
+				// }
 			} else if (videoType === VideoType.SCREEN) {
 				let newScreenMediaStream;
 				try {
@@ -312,6 +301,20 @@ export class OpenViduService {
 			}
 		} catch (error) {
 			this.log.e('Error replacing track ', error);
+		}
+	}
+
+	private destroyPublisher(publisher: Publisher): void {
+		if (!!publisher) {
+			if (publisher.stream.getWebRtcPeer()) {
+				publisher.stream.disposeWebRtcPeer();
+			}
+			publisher.stream.disposeMediaStream();
+			if (publisher.id === this.participantService.getMyCameraPublisher().id) {
+				this.participantService.setMyCameraPublisher(publisher);
+			} else if (publisher.id === this.participantService.getMyScreenPublisher().id) {
+				this.participantService.setMyScreenPublisher(publisher);
+			}
 		}
 	}
 

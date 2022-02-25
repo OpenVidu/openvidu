@@ -47,6 +47,12 @@
 	bottom: 0px;
   }
 
+  #audio-wave-container {
+	position: absolute;
+    right: 20px;
+	top: 30px;
+  }
+
   .cameraMessageContainer {
 	height: 100%;
 	width: 100%;
@@ -1074,7 +1080,7 @@
 	  padding: 35px;
 	}
 	.videoContainer{
-	  width: 90%;
+	  width: 100%;
 	}
   }
   @media (min-width: 768px) {
