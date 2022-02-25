@@ -13,13 +13,7 @@ import { LoggerService } from '../logger/logger.service';
 export class ParticipantService {
 	//Local participants observables
 	localParticipantObs: Observable<ParticipantAbstractModel>;
-	screenShareState: Observable<boolean>;
-	webcamVideoActive: Observable<boolean>;
-	webcamAudioActive: Observable<boolean>;
 	protected _localParticipant = <BehaviorSubject<ParticipantAbstractModel>>new BehaviorSubject(null);
-	protected _screensharing = <BehaviorSubject<boolean>>new BehaviorSubject(false);
-	protected _cameraVideoActive = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	protected _cameraAudioActive = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 
 	//Remote participants observable
 	remoteParticipantsObs: Observable<ParticipantAbstractModel[]>;
@@ -35,9 +29,6 @@ export class ParticipantService {
 
 		this.localParticipantObs = this._localParticipant.asObservable();
 		this.remoteParticipantsObs = this._remoteParticipants.asObservable();
-		this.screenShareState = this._screensharing.asObservable();
-		this.webcamVideoActive = this._cameraVideoActive.asObservable();
-		this.webcamAudioActive = this._cameraAudioActive.asObservable();
 
 		this.localParticipant = this.newParticipant();
 		this.updateLocalParticipant();
@@ -101,25 +92,12 @@ export class ParticipantService {
 		};
 
 		this.localParticipant.addConnection(steramModel);
-
-		this._screensharing.next(true);
-
 		this.updateLocalParticipant();
 	}
 
 	disableScreenUser() {
 		this.localParticipant.disableScreen();
 		this.updateLocalParticipant();
-		this._screensharing.next(false);
-	}
-
-	updateParticipantMediaStatus() {
-		this._cameraVideoActive.next(this.localParticipant.isCameraVideoActive());
-		if (this.isMyCameraEnabled()) {
-			this._cameraAudioActive.next(this.localParticipant.isCameraAudioActive());
-		} else {
-			this._cameraAudioActive.next(this.hasScreenAudioActive());
-		}
 	}
 
 	setNickname(connectionId: string, nickname: string) {
@@ -154,31 +132,31 @@ export class ParticipantService {
 	clear() {
 		this.disableScreenUser();
 		this.localParticipant = this.newParticipant();
-		this._screensharing.next(false);
+		// this._screensharing.next(false);
 		this.remoteParticipants = [];
 		this._remoteParticipants = <BehaviorSubject<ParticipantAbstractModel[]>>new BehaviorSubject([]);
 		this.remoteParticipantsObs = this._remoteParticipants.asObservable();
 		this.updateLocalParticipant();
 	}
 
-	isMyCameraEnabled(): boolean {
-		return this.localParticipant.isCameraEnabled();
+	isMyCameraActive(): boolean {
+		return this.localParticipant.isCameraActive();
 	}
 
-	isMyScreenEnabled(): boolean {
-		return this.localParticipant.isScreenEnabled();
+	isMyScreenActive(): boolean {
+		return this.localParticipant.isScreenActive();
 	}
 
-	isOnlyMyCameraEnabled(): boolean {
-		return this.isMyCameraEnabled() && !this.isMyScreenEnabled();
+	isOnlyMyCameraActive(): boolean {
+		return this.isMyCameraActive() && !this.isMyScreenActive();
 	}
 
-	isOnlyMyScreenEnabled(): boolean {
-		return this.isMyScreenEnabled() && !this.isMyCameraEnabled();
+	isOnlyMyScreenActive(): boolean {
+		return this.isMyScreenActive() && !this.isMyCameraActive();
 	}
 
-	areBothEnabled(): boolean {
-		return this.isMyCameraEnabled() && this.isMyScreenEnabled();
+	haveICameraAndScreenActive(): boolean {
+		return this.isMyCameraActive() && this.isMyScreenActive();
 	}
 
 	hasCameraVideoActive(): boolean {

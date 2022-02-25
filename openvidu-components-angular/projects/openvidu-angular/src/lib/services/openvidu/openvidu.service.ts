@@ -31,8 +31,6 @@ export class OpenViduService {
 	protected screenSession: Session = null;
 	protected videoSource = undefined;
 	protected audioSource = undefined;
-	// protected screenMediaStream: MediaStream = null;
-	// protected webcamMediaStream: MediaStream = null;
 	protected log: ILogger;
 
 	constructor(
@@ -153,7 +151,7 @@ export class OpenViduService {
 		if (hasVideoDevices || hasAudioDevices) {
 			const publisher = await this.initPublisher(targetElement, properties);
 			this.participantService.setMyCameraPublisher(publisher);
-			this.participantService.updateParticipantMediaStatus();
+			this.participantService.updateLocalParticipant();
 			return publisher;
 		} else {
 			this.participantService.setMyCameraPublisher(null);
@@ -211,16 +209,14 @@ export class OpenViduService {
 	publishVideo(publisher: Publisher, value: boolean): void {
 		if (!!publisher) {
 			publisher.publishVideo(value);
-			// Send event to subscribers because of video has changed and view must update
-			this.participantService.updateParticipantMediaStatus();
+			this.participantService.updateLocalParticipant();
 		}
 	}
 
 	publishAudio(publisher: Publisher, value: boolean): void {
 		if (!!publisher) {
 			publisher.publishAudio(value);
-			// Send event to subscribers because of video has changed and view must update
-			this.participantService.updateParticipantMediaStatus();
+			this.participantService.updateLocalParticipant();
 		}
 	}
 

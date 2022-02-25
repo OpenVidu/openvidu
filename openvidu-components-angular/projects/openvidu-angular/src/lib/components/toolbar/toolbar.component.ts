@@ -59,10 +59,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	protected log: ILogger;
 	protected menuTogglingSubscription: Subscription;
 	protected chatMessagesSubscription: Subscription;
-	protected screenShareStateSubscription: Subscription;
-	protected webcamVideoStateSubscription: Subscription;
-	protected webcamAudioStateSubscription: Subscription;
-
+	protected localParticipantSubscription: Subscription;
 	private currentWindowHeight = window.innerHeight;
 
 	constructor(
@@ -87,14 +84,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		if (this.chatMessagesSubscription) {
 			this.chatMessagesSubscription.unsubscribe();
 		}
-		if (this.screenShareStateSubscription) {
-			this.screenShareStateSubscription.unsubscribe();
-		}
-		if (this.webcamVideoStateSubscription) {
-			this.webcamVideoStateSubscription.unsubscribe();
-		}
-		if (this.webcamAudioStateSubscription) {
-			this.webcamAudioStateSubscription.unsubscribe();
+		if (this.localParticipantSubscription) {
+			this.localParticipantSubscription.unsubscribe();
 		}
 	}
 
@@ -132,7 +123,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	toggleMicrophone() {
 		this.onMicClicked.emit();
 
-		if (this.participantService.isMyCameraEnabled()) {
+		if (this.participantService.isMyCameraActive()) {
 			this.openviduService.publishAudio(
 				this.participantService.getMyCameraPublisher(),
 				!this.participantService.hasCameraAudioActive()
@@ -149,7 +140,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 			const publishVideo = !this.participantService.hasCameraVideoActive();
 			const publishAudio = this.participantService.hasCameraAudioActive();
 			// Disabling webcam
-			if (this.participantService.areBothEnabled()) {
+			if (this.participantService.haveICameraAndScreenActive()) {
 				this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), publishVideo);
 				this.participantService.disableWebcamUser();
 				this.openviduService.unpublish(this.participantService.getMyCameraPublisher());
@@ -157,7 +148,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 				return;
 			}
 			// Enabling webcam
-			if (this.participantService.isOnlyMyScreenEnabled()) {
+			if (this.participantService.isOnlyMyScreenActive()) {
 				const hasAudio = this.participantService.hasScreenAudioActive();
 
 				if (!this.openviduService.isWebcamSessionConnected()) {
@@ -181,15 +172,15 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
 		try {
 			// Disabling screenShare
-			if (this.participantService.areBothEnabled()) {
+			if (this.participantService.haveICameraAndScreenActive()) {
 				this.participantService.disableScreenUser();
 				this.openviduService.unpublish(this.participantService.getMyScreenPublisher());
 				return;
 			}
 
 			// Enabling screenShare
-			if (this.participantService.isOnlyMyCameraEnabled()) {
-				const willThereBeWebcam = this.participantService.isMyCameraEnabled() && this.participantService.hasCameraVideoActive();
+			if (this.participantService.isOnlyMyCameraActive()) {
+				const willThereBeWebcam = this.participantService.isMyCameraActive() && this.participantService.hasCameraVideoActive();
 				const hasAudio = willThereBeWebcam ? false : this.hasAudioDevices && this.participantService.hasCameraAudioActive();
 				const properties: PublisherProperties = {
 					videoSource: ScreenType.SCREEN,
@@ -300,17 +291,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		});
 	}
 	protected subscribeToUserMediaProperties() {
-		this.screenShareStateSubscription = this.participantService.screenShareState.subscribe((active) => {
-			this.isScreenShareActive = active;
-			this.cd.markForCheck();
-		});
-
-		this.webcamVideoStateSubscription = this.participantService.webcamVideoActive.subscribe((active) => {
-			this.isWebcamVideoActive = active;
-			this.cd.markForCheck();
-		});
-		this.webcamAudioStateSubscription = this.participantService.webcamAudioActive.subscribe((active) => {
-			this.isWebcamAudioActive = active;
+		this.localParticipantSubscription = this.participantService.localParticipantObs.subscribe((p) => {
+			this.isWebcamVideoActive = p.isCameraVideoActive();
+			this.isWebcamAudioActive = p.isCameraAudioActive();
+			this.isScreenShareActive = p.isScreenActive();
 			this.cd.markForCheck();
 		});
 	}

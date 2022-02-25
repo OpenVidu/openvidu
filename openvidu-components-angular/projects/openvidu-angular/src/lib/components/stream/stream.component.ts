@@ -137,7 +137,7 @@ export class StreamComponent implements OnInit {
 		const properties: PublisherProperties = {
 			videoSource: ScreenType.SCREEN,
 			publishVideo: true,
-			publishAudio: !this.participantService.isMyCameraEnabled(),
+			publishAudio: !this.participantService.isMyCameraActive(),
 			mirror: false
 		};
 		await this.openviduService.replaceTrack(VideoType.SCREEN, properties);

@@ -23,7 +23,7 @@ export class StreamsEnabledPipe implements PipeTransform {
 	constructor() {}
 
 	transform(participant: ParticipantAbstractModel): string {
-		return `(${participant?.getConnectionTypesEnabled().toString().replace(',', ', ')})`;
+		return `(${participant?.getConnectionTypesActive().toString().replace(',', ', ')})`;
 	}
 }
 

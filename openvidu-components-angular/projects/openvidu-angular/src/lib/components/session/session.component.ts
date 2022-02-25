@@ -164,12 +164,12 @@ export class SessionComponent implements OnInit {
 
 	private async connectToSession(): Promise<void> {
 		try {
-			if (this.participantService.areBothEnabled()) {
+			if (this.participantService.haveICameraAndScreenActive()) {
 				await this.openviduService.connectSession(this.openviduService.getWebcamSession(), this.tokenService.getWebcamToken());
 				await this.openviduService.connectSession(this.openviduService.getScreenSession(), this.tokenService.getScreenToken());
 				await this.openviduService.publish(this.participantService.getMyCameraPublisher());
 				await this.openviduService.publish(this.participantService.getMyScreenPublisher());
-			} else if (this.participantService.isOnlyMyScreenEnabled()) {
+			} else if (this.participantService.isOnlyMyScreenActive()) {
 				await this.openviduService.connectSession(this.openviduService.getScreenSession(), this.tokenService.getScreenToken());
 				await this.openviduService.publish(this.participantService.getMyScreenPublisher());
 			} else {

@@ -48,7 +48,7 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 	hasAudioDevices: boolean;
 	isLoading = true;
 	private log: ILogger;
-	private oVUsersSubscription: Subscription;
+	private localParticipantSubscription: Subscription;
 	private screenShareStateSubscription: Subscription;
 
 	constructor(
@@ -83,8 +83,8 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy() {
-		if (this.oVUsersSubscription) {
-			this.oVUsersSubscription.unsubscribe();
+		if (this.localParticipantSubscription) {
+			this.localParticipantSubscription.unsubscribe();
 		}
 
 		if (this.screenShareStateSubscription) {
@@ -132,11 +132,11 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 		const publish = this.isVideoMuted;
 		this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), publish);
 
-		if (this.participantService.areBothEnabled()) {
+		if (this.participantService.haveICameraAndScreenActive()) {
 			// Cam will not published, disable webcam with screensharing active
 			this.participantService.disableWebcamUser();
 			this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), publish);
-		} else if (this.participantService.isOnlyMyScreenEnabled()) {
+		} else if (this.participantService.isOnlyMyScreenActive()) {
 			// Cam will be published, enable webcam
 			this.participantService.enableWebcamUser();
 		}
@@ -147,14 +147,14 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 
 	async toggleScreenShare() {
 		// Disabling screenShare
-		if (this.participantService.areBothEnabled()) {
+		if (this.participantService.haveICameraAndScreenActive()) {
 			this.participantService.disableScreenUser();
 			return;
 		}
 
 		// Enabling screenShare
-		if (this.participantService.isOnlyMyCameraEnabled()) {
-			const willThereBeWebcam = this.participantService.isMyCameraEnabled() && this.participantService.hasCameraVideoActive();
+		if (this.participantService.isOnlyMyCameraActive()) {
+			const willThereBeWebcam = this.participantService.isMyCameraActive() && this.participantService.hasCameraVideoActive();
 			const hasAudio = willThereBeWebcam ? false : this.hasAudioDevices && this.isAudioMuted;
 			const properties: PublisherProperties = {
 				videoSource: ScreenType.SCREEN,
@@ -242,11 +242,9 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 	}
 
 	private subscribeToLocalParticipantEvents() {
-		this.oVUsersSubscription = this.participantService.localParticipantObs.subscribe((p) => {
+		this.localParticipantSubscription = this.participantService.localParticipantObs.subscribe((p) => {
 			this.localParticipant = p;
-		});
-		this.screenShareStateSubscription = this.participantService.screenShareState.subscribe((enabled) => {
-			this.screenShareEnabled = enabled;
+			this.screenShareEnabled = p.isScreenActive();
 		});
 	}
 

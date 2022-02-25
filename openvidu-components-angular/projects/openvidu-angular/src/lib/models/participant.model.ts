@@ -37,7 +37,10 @@ export abstract class ParticipantAbstractModel {
 
 	public isCameraAudioActive(): boolean {
 		const cameraConnection = this.getCameraConnection();
-		return cameraConnection.connected && cameraConnection.streamManager.stream.audioActive;
+		if(cameraConnection) {
+			return cameraConnection.connected && cameraConnection.streamManager.stream.audioActive;
+		}
+		return this.isScreenAudioActive();;
 	}
 
 	public isCameraVideoActive(): boolean {
@@ -46,7 +49,10 @@ export abstract class ParticipantAbstractModel {
 	}
 	isScreenAudioActive(): boolean {
 		const screenConnection = this.getScreenConnection();
-		return screenConnection?.connected && screenConnection?.streamManager?.stream?.audioActive;
+		if(screenConnection){
+			return screenConnection?.connected && screenConnection?.streamManager?.stream?.audioActive;
+		}
+		return false;
 	}
 
 	hasConnectionType(type: VideoType): boolean {
@@ -61,10 +67,10 @@ export abstract class ParticipantAbstractModel {
 		return this.streams.get(VideoType.SCREEN);
 	}
 
-	getConnectionTypesEnabled(): VideoType[] {
+	getConnectionTypesActive(): VideoType[] {
 		let connType = [];
-		if (this.isCameraEnabled()) connType.push(VideoType.CAMERA);
-		if (this.isScreenEnabled()) connType.push(VideoType.SCREEN);
+		if (this.isCameraActive()) connType.push(VideoType.CAMERA);
+		if (this.isScreenActive()) connType.push(VideoType.SCREEN);
 
 		return connType;
 	}
@@ -131,7 +137,7 @@ export abstract class ParticipantAbstractModel {
 		}
 	}
 
-	isCameraEnabled(): boolean {
+	isCameraActive(): boolean {
 		return this.getCameraConnection()?.connected;
 	}
 
@@ -145,11 +151,11 @@ export abstract class ParticipantAbstractModel {
 		if (cameraConnection) cameraConnection.connected = false;
 	}
 
-	isScreenEnabled(): boolean {
+	isScreenActive(): boolean {
 		return this.getScreenConnection()?.connected;
 	}
 
-	enablescreen() {
+	enableScreen() {
 		const screenConnection = this.getScreenConnection();
 		if (screenConnection) screenConnection.connected = true;
 	}
