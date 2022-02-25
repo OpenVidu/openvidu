@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+    coturn:
+        container_name: coturn
+        image: coturn/coturn:4.5.2
+        restart: always
+        network_mode: host
+        volumes:
+            - ./certbot/etc/letsencrypt:/etc/letsencrypt
+        command:
+            - --cert=/etc/letsencrypt/live/${TURN_DOMAIN_NAME}/cert.pem
+            - --pkey=/etc/letsencrypt/live/${TURN_DOMAIN_NAME}/privkey.pem
+            - --realm=${TURN_DOMAIN_NAME}
+            - --fingerprint
+            - --listening-ip=0.0.0.0
+            - --external-ip=$$(detect-external-ip)
+            - --listening-port=443
+            - --tls-listening-port=443
+            - --min-port=${MIN_PORT:-40000}
+            - --max-port=${MAX_PORT:-65535}
+            - --log-file=stdout
+            - --verbose
+            - --use-auth-secret
+            - --static-auth-secret=${TURN_STATIC_AUTH_SECRET}
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
+
+    certbot:
+        image: certbot/certbot
+        container_name: certbot
+        restart: always
+        pid: host
+        entrypoint: /wrapper/certbot.sh
+        ports:
+            - 80:80
+        environment:
+            - CRONTIME=12h
+            - COTURN_CONTAINER_NAME=coturn
+            - TURN_DOMAIN_NAME=${TURN_DOMAIN_NAME}
+        volumes:
+            - ./certbot-wrapper/certbot.sh:/wrapper/certbot.sh
+            - ./certbot/etc/letsencrypt:/etc/letsencrypt
+            - ./certbot/letsencrypt:/var/lib/letsencrypt
+            - ./certbot/www-certbot:/var/www/certbot
+        command:
+            - certonly
+            - --non-interactive
+            - --standalone
+            - --preferred-challenges=http
+            - --email=${LETSENCRYPT_EMAIL}
+            - --agree-tos
+            - --domain=${TURN_DOMAIN_NAME}
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
