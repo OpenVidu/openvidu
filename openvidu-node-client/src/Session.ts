@@ -65,7 +65,7 @@ export class Session {
     /**
      * Array containing the active Connections of the Session. It is a subset of [[Session.connections]] array containing only
      * those Connections with property [[Connection.status]] to `active`.
-     * 
+     *
      * To get the array of active Connections with their current actual value, you must call [[Session.fetch]] or [[OpenVidu.fetch]]
      * before consulting property [[activeConnections]]
      */
@@ -98,7 +98,7 @@ export class Session {
 
     /**
      * @deprecated Use [[Session.createConnection]] instead to get a [[Connection]] object.
-     * 
+     *
      * @returns A Promise that is resolved to the generated _token_ string if success and rejected with an Error object if not
      */
     public generateToken(tokenOptions?: TokenOptions): Promise<string> {
@@ -137,7 +137,7 @@ export class Session {
      * Creates a new Connection object associated to Session object and configured with
      * `connectionProperties`. Each user connecting to the Session requires a Connection.
      * The token string value to send to the client side is available at [[Connection.token]].
-     * 
+     *
      * @returns A Promise that is resolved to the generated [[Connection]] object if success and rejected with an Error object if not
      */
     public createConnection(connectionProperties?: ConnectionProperties): Promise<Connection> {
@@ -258,17 +258,17 @@ export class Session {
     /**
      * Removes the Connection from the Session. This can translate into a forced eviction of a user from the Session if the
      * Connection had status `active` or into a token invalidation if no user had taken the Connection yet (status `pending`).
-     * 
+     *
      * In the first case, OpenVidu Browser will trigger the proper events in the client-side (`streamDestroyed`, `connectionDestroyed`,
      * `sessionDisconnected`) with reason set to `"forceDisconnectByServer"`.
-     * 
+     *
      * In the second case, the token of the Connection will be invalidated and no user will be able to connect to the session with it.
-     * 
+     *
      * This method automatically updates the properties of the local affected objects. This means that there is no need to call
      * [[Session.fetch]] or [[OpenVidu.fetch]]] to see the changes consequence of the execution of this method applied in the local objects.
      *
      * @param connection The Connection object to remove from the session, or its `connectionId` property
-     * 
+     *
      * @returns A Promise that is resolved if the Connection was successfully removed from the Session and rejected with an Error object if not
      */
     public forceDisconnect(connection: string | Connection): Promise<void> {
@@ -338,9 +338,9 @@ export class Session {
      *
      * This method automatically updates the properties of the local affected objects. This means that there is no need to call
      * [[Session.fetch]] or [[OpenVidu.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
-     * 
+     *
      * @param publisher The Publisher object to unpublish, or its `streamId` property
-     * 
+     *
      * @returns A Promise that is resolved if the stream was successfully unpublished and rejected with an Error object if not
      */
     public forceUnpublish(publisher: string | Publisher): Promise<void> {
@@ -388,23 +388,23 @@ export class Session {
     }
 
     /**
-     * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> 
-     * 
+     * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
+     *
      * Updates the properties of a Connection  with a [[ConnectionProperties]] object.
      * Only these properties can be updated:
-     * 
+     *
      * - [[ConnectionProperties.role]]
      * - [[ConnectionProperties.record]]
-     * 
+     *
      * This method automatically updates the properties of the local affected objects. This means that there is no need to call
      * [[Session.fetch]] or [[OpenVidu.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
-     * 
+     *
      * The affected client will trigger one [ConnectionPropertyChangedEvent](/en/stable/api/openvidu-browser/classes/ConnectionPropertyChangedEvent.html)
      * for each modified property.
-     * 
+     *
      * @param connectionId The [[Connection.connectionId]] of the Connection object to modify
      * @param connectionProperties A new [[ConnectionProperties]] object with the updated values to apply
-     * 
+     *
      * @returns A Promise that is resolved to the updated [[Connection]] object if the operation was
      *          successful and rejected with an Error object if not
      */

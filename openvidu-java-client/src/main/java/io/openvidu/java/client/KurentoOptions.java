@@ -34,7 +34,7 @@ public class KurentoOptions {
 	private String[] allowedFilters;
 
 	/**
-	 * 
+	 *
 	 * Builder for {@link io.openvidu.java.client.KurentoOptions}
 	 *
 	 */
@@ -113,8 +113,9 @@ public class KurentoOptions {
 	 * Defines the maximum number of Kbps that the Connection will be able to
 	 * receive from Kurento Media Server per media stream. 0 means unconstrained.
 	 * Giving a value to this property will override the global configuration set in
-	 * <a href="https://docs.openvidu.io/en/stable/reference-docs/openvidu-config/"
-	 * target="_blank">OpenVidu Server configuration</a> (parameter
+	 * <a href="https://docs.openvidu.io/en/stable/reference-docs/openvidu-config/">
+	 *   OpenVidu Server configuration
+	 * </a> (parameter
 	 * <code>OPENVIDU_STREAMS_VIDEO_MAX_RECV_BANDWIDTH</code>) for every incoming
 	 * stream of the user owning the token. <br>
 	 * <strong>WARNING</strong>: the lower value set to this property limits every
@@ -130,8 +131,9 @@ public class KurentoOptions {
 	 * Defines the minimum number of Kbps that the Connection will try to receive
 	 * from Kurento Media Server per media stream. 0 means unconstrained. Giving a
 	 * value to this property will override the global configuration set in
-	 * <a href= "https://docs.openvidu.io/en/stable/reference-docs/openvidu-config/"
-	 * target="_blank">OpenVidu Server configuration</a> (parameter
+	 * <a href= "https://docs.openvidu.io/en/stable/reference-docs/openvidu-config/">
+	 *   OpenVidu Server configuration
+	 * </a> (parameter
 	 * <code>OPENVIDU_STREAMS_VIDEO_MIN_RECV_BANDWIDTH</code>) for every incoming
 	 * stream of the user owning the token.
 	 */
@@ -143,8 +145,9 @@ public class KurentoOptions {
 	 * Defines the maximum number of Kbps that the Connection will be able to send
 	 * to Kurento Media Server per media stream. 0 means unconstrained. Giving a
 	 * value to this property will override the global configuration set in
-	 * <a href= "https://docs.openvidu.io/en/stable/reference-docs/openvidu-config/"
-	 * target="_blank">OpenVidu Server configuration</a> (parameter
+	 * <a href= "https://docs.openvidu.io/en/stable/reference-docs/openvidu-config/">
+	 *   OpenVidu Server configuration
+	 * </a> (parameter
 	 * <code>OPENVIDU_STREAMS_VIDEO_MAX_SEND_BANDWIDTH</code>) for every outgoing
 	 * stream of the user owning the token. <br>
 	 * <strong>WARNING</strong>: this value limits every other bandwidth of the
@@ -159,8 +162,9 @@ public class KurentoOptions {
 	 * Defines the minimum number of Kbps that the Connection will try to send to
 	 * Kurento Media Server per media stream. 0 means unconstrained. Giving a value
 	 * to this property will override the global configuration set in
-	 * <a href= "https://docs.openvidu.io/en/stable/reference-docs/openvidu-config/"
-	 * target="_blank">OpenVidu Server configuration</a> (parameter
+	 * <a href= "https://docs.openvidu.io/en/stable/reference-docs/openvidu-config/">
+	 *   OpenVidu Server configuration
+	 * </a> (parameter
 	 * <code>OPENVIDU_STREAMS_VIDEO_MIN_SEND_BANDWIDTH</code>) for every outgoing
 	 * stream of the user owning the token.
 	 */
@@ -171,8 +175,9 @@ public class KurentoOptions {
 	/**
 	 * Defines the names of the filters the Connection will be able to apply to its
 	 * published streams. See
-	 * <a href="https://docs.openvidu.io/en/stable/advanced-features/filters/"
-	 * target= "_blank">Voice and video filters</a>.
+	 * <a href="https://docs.openvidu.io/en/stable/advanced-features/filters/">
+	 *   Voice and video filters
+	 * </a>.
 	 */
 	public String[] getAllowedFilters() {
 		return allowedFilters;
@@ -180,8 +185,9 @@ public class KurentoOptions {
 
 	/**
 	 * See if the Connection can apply certain filter. See
-	 * <a href="https://docs.openvidu.io/en/stable/advanced-features/filters/"
-	 * target= "_blank">Voice and video filters</a>.
+	 * <a href="https://docs.openvidu.io/en/stable/advanced-features/filters/">
+	 *   Voice and video filters
+	 * </a>.
 	 */
 	public boolean isFilterAllowed(String filterType) {
 		if (filterType == null) {

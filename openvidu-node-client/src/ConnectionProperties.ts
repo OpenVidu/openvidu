@@ -23,10 +23,10 @@ export interface ConnectionProperties {
 
     /**
      * Type of Connection. The [[ConnectionType]] dictates what properties will have effect:
-     * 
+     *
      * - **[[ConnectionType.WEBRTC]]**: [[data]], [[record]], [[role]], [[kurentoOptions]]
      * - **[[ConnectionType.IPCAM]]**: [[data]], [[record]], [[rtspUri]], [[adaptativeBitrate]], [[onlyPlayWithSubscribers]], [[networkCache]]
-     * 
+     *
      * @default WEBRTC
      */
     type?: ConnectionType;
@@ -40,19 +40,19 @@ export interface ConnectionProperties {
     data?: string;
 
     /**
-     * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> 
-     * 
+     * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
+     *
      * Whether to record the streams published by this Connection or not. This only affects [INDIVIDUAL recording](/en/stable/advanced-features/recording/#individual-recording-selection)
-     * 
+     *
      * @default true
      */
     record?: boolean;
 
     /**
      * The role assigned to this Connection
-     * 
+     *
      * **Only for [[ConnectionType.WEBRTC]]**
-     * 
+     *
      * @default PUBLISHER
      */
     role?: OpenViduRole;
@@ -77,7 +77,7 @@ export interface ConnectionProperties {
      * the global configuration set in [OpenVidu Server configuration](/en/stable/reference-docs/openvidu-config/)
      * (parameter `OPENVIDU_STREAMS_VIDEO_MIN_SEND_BANDWIDTH`) for every outgoing stream of the Connection.
      * - `allowedFilters`: names of the filters the Connection will be able to apply. See [Voice and video filters](/en/stable/advanced-features/filters/)
-     * 
+     *
      * **Only for [[ConnectionType.WEBRTC]]**
      */
     kurentoOptions?: {
@@ -90,8 +90,8 @@ export interface ConnectionProperties {
 
     /**
      * RTSP URI of an IP camera. For example: `rtsp://your.camera.ip:7777/path`
-     * 
-     * **Only for [[ConnectionType.IPCAM]]** 
+     *
+     * **Only for [[ConnectionType.IPCAM]]**
      */
     rtspUri?: string;
 
@@ -99,9 +99,9 @@ export interface ConnectionProperties {
      * Whether to use adaptative bitrate (and therefore adaptative quality) or not. For local network connections
      * that do not require media transcoding this can be disabled to save CPU power. If you are not sure if transcoding
      * might be necessary, setting this property to false **may result in media connections not being established**.
-     * 
+     *
      * **Only for [[ConnectionType.IPCAM]]**
-     * 
+     *
      * @default true
      */
     adaptativeBitrate?: boolean;
@@ -110,9 +110,9 @@ export interface ConnectionProperties {
      * Whether to enable the IP camera stream only when some user is subscribed to it, or not. This allows you to reduce
      * power consumption and network bandwidth in your server while nobody is asking to receive the camera's video.
      * On the counterpart, first user subscribing to the IP camera stream will take a little longer to receive its video.
-     * 
+     *
      * **Only for [[ConnectionType.IPCAM]]**
-     * 
+     *
      * @default true
      */
     onlyPlayWithSubscribers?: boolean;
@@ -121,9 +121,9 @@ export interface ConnectionProperties {
      * Size of the buffer of the endpoint receiving the IP camera's stream, in milliseconds. The smaller it is, the less
      * delay the signal will have, but more problematic will be in unstable networks. Use short buffers only if there is
      * a quality connection between the IP camera and OpenVidu Server.
-     * 
+     *
      * **Only for [[ConnectionType.IPCAM]]**
-     * 
+     *
      * @default 2000
      */
     networkCache?: number;

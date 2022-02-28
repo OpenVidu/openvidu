@@ -202,9 +202,9 @@ public class RecordingProperties {
 		 * to {@link io.openvidu.java.client.RecordingLayout#CUSTOM} you can call this
 		 * method to set the relative path to the specific custom layout you want to
 		 * use.<br>
-		 * See <a href=
-		 * "https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts"
-		 * target="_blank">Custom recording layouts</a> to learn more
+		 * See <a href="https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts">
+		 *   Custom recording layouts
+		 * </a> to learn more
 		 */
 		public RecordingProperties.Builder customLayout(String path) {
 			this.customLayout = path;
@@ -234,7 +234,7 @@ public class RecordingProperties {
 		}
 
 		/**
-		 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank"
+		 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/"
 		 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
 		 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
 		 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
@@ -288,7 +288,7 @@ public class RecordingProperties {
 	 * Defines whether to record audio or not. Cannot be set to false at the same
 	 * time as {@link RecordingProperties#hasVideo()}.<br>
 	 * <br>
-	 * 
+	 *
 	 * Default to true
 	 */
 	public Boolean hasAudio() {
@@ -299,7 +299,7 @@ public class RecordingProperties {
 	 * Defines whether to record video or not. Cannot be set to false at the same
 	 * time as {@link RecordingProperties#hasAudio()}.<br>
 	 * <br>
-	 * 
+	 *
 	 * Default to true
 	 */
 	public Boolean hasVideo() {
@@ -312,7 +312,7 @@ public class RecordingProperties {
 	 * a single archive in a grid layout or {@link Recording.OutputMode#INDIVIDUAL}
 	 * for one archive for each stream.<br>
 	 * <br>
-	 * 
+	 *
 	 * Default to {@link Recording.OutputMode#COMPOSED OutputMode.COMPOSED}
 	 */
 	public Recording.OutputMode outputMode() {
@@ -327,7 +327,7 @@ public class RecordingProperties {
 	 * recordings with {@link RecordingProperties#hasVideo()} to true. Property
 	 * ignored for INDIVIDUAL recordings and audio-only recordings<br>
 	 * <br>
-	 * 
+	 *
 	 * Default to {@link RecordingLayout#BEST_FIT RecordingLayout.BEST_FIT}
 	 */
 	public RecordingLayout recordingLayout() {
@@ -345,7 +345,7 @@ public class RecordingProperties {
 	 * individual video files will have the native resolution of the published
 	 * stream.<br>
 	 * <br>
-	 * 
+	 *
 	 * Default to "1280x720"
 	 */
 	public String resolution() {
@@ -363,7 +363,7 @@ public class RecordingProperties {
 	 * individual video files will have the native frame rate of the published
 	 * stream.<br>
 	 * <br>
-	 * 
+	 *
 	 * Default to 25
 	 */
 	public Integer frameRate() {
@@ -379,7 +379,7 @@ public class RecordingProperties {
 	 * recordings with {@link RecordingProperties#hasVideo()} to true. Property
 	 * ignored for INDIVIDUAL recordings and audio-only recordings<br>
 	 * <br>
-	 * 
+	 *
 	 * Default to 536870912 (512 MB)
 	 */
 	public Long shmSize() {
@@ -390,9 +390,9 @@ public class RecordingProperties {
 	 * If {@link io.openvidu.java.client.RecordingProperties#recordingLayout()} is
 	 * set to {@link io.openvidu.java.client.RecordingLayout#CUSTOM}, this property
 	 * defines the relative path to the specific custom layout you want to use.<br>
-	 * See <a href=
-	 * "https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts"
-	 * target="_blank">Custom recording layouts</a> to learn more
+	 * See <a href="https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts">
+	 *   Custom recording layouts
+	 * </a> to learn more
 	 */
 	public String customLayout() {
 		return this.customLayout;
@@ -415,7 +415,7 @@ public class RecordingProperties {
 	 * guarantee that all streams present at the beginning of a recording are
 	 * actually being recorded.<br>
 	 * <br>
-	 * 
+	 *
 	 * Default to false
 	 */
 	public Boolean ignoreFailedStreams() {
@@ -423,7 +423,7 @@ public class RecordingProperties {
 	}
 
 	/**
-	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank"
+	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/"
 	 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
 	 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
 	 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,

@@ -104,7 +104,7 @@ public class SessionProperties {
 		}
 
 		/**
-		 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank"
+		 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/"
 		 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
 		 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
 		 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
@@ -224,7 +224,7 @@ public class SessionProperties {
 	}
 
 	/**
-	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank"
+	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/"
 	 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
 	 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
 	 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,

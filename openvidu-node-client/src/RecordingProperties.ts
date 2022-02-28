@@ -32,21 +32,21 @@ export interface RecordingProperties {
 
     /**
      * Whether or not to record audio. Cannot be set to false at the same time as [[RecordingProperties.hasVideo]]
-     * 
+     *
      * Default to true
      */
     hasAudio?: boolean;
 
     /**
      * Whether or not to record video. Cannot be set to false at the same time as [[RecordingProperties.hasAudio]]
-     * 
+     *
      * Default to true
      */
     hasVideo?: boolean;
 
     /**
      * The mode of recording: COMPOSED for a single archive in a grid layout or INDIVIDUAL for one archive for each stream
-     * 
+     *
      * Default to [[Recording.OutputMode.COMPOSED]]
      */
     outputMode?: Recording.OutputMode;
@@ -54,7 +54,7 @@ export interface RecordingProperties {
     /**
      * The layout to be used in the recording.<br>
      * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
-     * 
+     *
      * Default to [[RecordingLayout.BEST_FIT]]
      */
     recordingLayout?: RecordingLayout;
@@ -64,7 +64,7 @@ export interface RecordingProperties {
      * being both WIDTH and HEIGHT the number of pixels between 100 and 1999.<br>
      * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
      * and [[RecordingProperties.hasVideo]] is set to true. For [[Recording.OutputMode.INDIVIDUAL]] all individual video files will have the native resolution of the published stream.
-     * 
+     *
      * Default to "1280x720"
      */
     resolution?: string;
@@ -73,7 +73,7 @@ export interface RecordingProperties {
      * Recording video file frame rate.<br>
      * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
      * and [[RecordingProperties.hasVideo]] is set to true. For [[Recording.OutputMode.INDIVIDUAL]] all individual video files will have the native frame rate of the published stream.
-     * 
+     *
      * Default to 25
      */
     frameRate?: number;
@@ -83,7 +83,7 @@ export interface RecordingProperties {
      * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
      * and [[RecordingProperties.hasVideo]] is set to true. Property ignored for INDIVIDUAL recordings and audio-only recordings.
      * Minimum 134217728 (128MB).
-     * 
+     *
      * Default to 536870912 (512 MB)
      */
     shmSize?: number;
@@ -101,17 +101,17 @@ export interface RecordingProperties {
      * For this type of recordings, when calling [[OpenVidu.startRecording]] by default all the streams available at the moment the recording process starts must be healthy
      * and properly sending media. If some stream that should be sending media is broken, then the recording process fails after a 10s timeout. In this way your application is notified
      * that some stream is not being recorded, so it can retry the process again.
-     * 
+     *
      * But you can disable this rollback behavior and simply ignore any failed stream, which will be susceptible to be recorded in the future if media starts flowing as expected at any point.
      * The downside of this behavior is that you will have no guarantee that all streams present at the beginning of a recording are actually being recorded.
-     * 
+     *
      * Default to false
      */
     ignoreFailedStreams?: boolean;
 
     /**
-     * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> 
-     * 
+     * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
+     *
      * The Media Node where to host the recording. The default option if this property is not defined is the same
      * Media Node hosting the Session to record. This object defines the following properties as Media Node selector:
      * - `id`: Media Node unique identifier

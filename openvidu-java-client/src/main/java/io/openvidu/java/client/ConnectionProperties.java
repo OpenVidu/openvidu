@@ -30,7 +30,7 @@ public class ConnectionProperties {
 	private List<IceServerProperties> customIceServers;
 
 	/**
-	 * 
+	 *
 	 * Builder for {@link io.openvidu.java.client.ConnectionProperties}
 	 *
 	 */
@@ -125,9 +125,10 @@ public class ConnectionProperties {
 
 		/**
 		 * Call this method to flag the streams published by this Connection to be
-		 * recorded or not. This only affects <a href=
-		 * "https://docs.openvidu.io/en/stable/advanced-features/recording/#individual-recording-selection"
-		 * target="_blank">INDIVIDUAL recording</a>. If not set by default will be true.
+		 * recorded or not. This only affects
+		 * <a href="https://docs.openvidu.io/en/stable/advanced-features/recording/#individual-recording-selection">
+		 *   INDIVIDUAL recording
+		 * </a>. If not set, by default will be true.
 		 */
 		public Builder record(boolean record) {
 			this.record = record;
@@ -138,7 +139,7 @@ public class ConnectionProperties {
 		 * Call this method to set the role assigned to this Connection. If not set by
 		 * default will be {@link io.openvidu.java.client.OpenViduRole#PUBLISHER
 		 * PUBLISHER}.
-		 * 
+		 *
 		 * <br>
 		 * <br>
 		 * <strong>Only for
@@ -152,7 +153,7 @@ public class ConnectionProperties {
 		/**
 		 * Call this method to set a {@link io.openvidu.java.client.KurentoOptions}
 		 * object for this Connection.
-		 * 
+		 *
 		 * <br>
 		 * <br>
 		 * <strong>Only for
@@ -166,7 +167,7 @@ public class ConnectionProperties {
 		/**
 		 * Call this method to set the RTSP URI of an IP camera. For example:
 		 * <code>rtsp://your.camera.ip:7777/path</code>
-		 * 
+		 *
 		 * <br>
 		 * <br>
 		 * <strong>Only for
@@ -184,7 +185,7 @@ public class ConnectionProperties {
 		 * if transcoding might be necessary, setting this property to false <strong>may
 		 * result in media connections not being established</strong>. Default to
 		 * <code>true</code>.
-		 * 
+		 *
 		 * <br>
 		 * <br>
 		 * <strong>Only for
@@ -202,7 +203,7 @@ public class ConnectionProperties {
 		 * camera's video. On the counterpart, first user subscribing to the IP camera
 		 * stream will take a little longer to receive its video. Default to
 		 * <code>true</code>.
-		 * 
+		 *
 		 * <br>
 		 * <br>
 		 * <strong>Only for
@@ -219,7 +220,7 @@ public class ConnectionProperties {
 		 * signal will have, but more problematic will be in unstable networks. Use
 		 * short buffers only if there is a quality connection between the IP camera and
 		 * OpenVidu Server. Default to <code>2000</code>.
-		 * 
+		 *
 		 * <br>
 		 * <br>
 		 * <strong>Only for
@@ -292,14 +293,15 @@ public class ConnectionProperties {
 	}
 
 	/**
-	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank"
+	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/"
 	 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
 	 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
 	 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
 	 * sans-serif">PRO</a> Whether the streams published by this Connection will be
-	 * recorded or not. This only affects <a href=
-	 * "https://docs.openvidu.io/en/stable/advanced-features/recording/#individual-recording-selection"
-	 * target="_blank">INDIVIDUAL recording</a>.
+	 * recorded or not. This only affects
+	 * <a href="https://docs.openvidu.io/en/stable/advanced-features/recording/#individual-recording-selection">
+	 *   INDIVIDUAL recording
+	 * </a>.
 	 */
 	public Boolean record() {
 		return this.record;
@@ -307,7 +309,7 @@ public class ConnectionProperties {
 
 	/**
 	 * Returns the role assigned to this Connection.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <strong>Only for
@@ -319,7 +321,7 @@ public class ConnectionProperties {
 
 	/**
 	 * Returns the KurentoOptions assigned to this Connection.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <strong>Only for
@@ -331,7 +333,7 @@ public class ConnectionProperties {
 
 	/**
 	 * Returns the RTSP URI of this Connection.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <strong>Only for
@@ -347,7 +349,7 @@ public class ConnectionProperties {
 	 * transcoding this can be disabled to save CPU power. If you are not sure if
 	 * transcoding might be necessary, setting this property to false <strong>may
 	 * result in media connections not being established</strong>.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <strong>Only for
@@ -363,7 +365,7 @@ public class ConnectionProperties {
 	 * server while nobody is asking to receive the camera's video. On the
 	 * counterpart, first user subscribing to the IP camera stream will take a
 	 * little longer to receive its video.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <strong>Only for
@@ -378,7 +380,7 @@ public class ConnectionProperties {
 	 * milliseconds. The smaller it is, the less delay the signal will have, but
 	 * more problematic will be in unstable networks. Use short buffers only if
 	 * there is a quality connection between the IP camera and OpenVidu Server.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <strong>Only for

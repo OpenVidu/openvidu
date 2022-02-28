@@ -63,7 +63,7 @@ export class Connection {
     role: string;
 
     /**
-     * Whether the streams published by this Connection will be recorded or not. This only affects [INDIVIDUAL recording](/en/stable/advanced-features/recording/#individual-recording-selection) <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
+     * Whether the streams published by this Connection will be recorded or not. This only affects [INDIVIDUAL recording](/en/stable/advanced-features/recording/#individual-recording-selection) <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
      *
      * **Only defined for the local connection. In remote connections will be `undefined`**
      */
@@ -174,7 +174,7 @@ export class Connection {
 
             this.addStream(stream);
         });
-        
+
         logger.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + '] is now configured for receiving Streams with options: ', this.stream!.inboundStreamOpts);
     }
 

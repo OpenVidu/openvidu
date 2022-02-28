@@ -21,11 +21,12 @@ import com.google.gson.JsonObject;
 
 /**
  * See {@link io.openvidu.java.client.Connection#getPublishers()}.
- * 
+ *
  * <br>
- * This is a backend representation of a published media stream (see <a href=
- * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
- * target="_blank"> OpenVidu Browser Stream class</a>).
+ * This is a backend representation of a published media stream (see
+ * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html">
+ *   OpenVidu Browser Stream class
+ * </a>).
  */
 public class Publisher {
 

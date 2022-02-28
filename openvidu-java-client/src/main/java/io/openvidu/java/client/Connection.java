@@ -112,9 +112,10 @@ public class Connection {
 
 	/**
 	 * Whether the streams published by this Connection will be recorded or not.
-	 * This only affects <a href=
-	 * "https://docs.openvidu.io/en/stable/advanced-features/recording/#individual-recording-selection"
-	 * target="_blank">INDIVIDUAL recording</a>.
+	 * This only affects
+	 * <a href="https://docs.openvidu.io/en/stable/advanced-features/recording/#individual-recording-selection">
+	 *   INDIVIDUAL recording
+	 * </a>.
 	 */
 	public boolean record() {
 		return this.connectionProperties.record();
@@ -122,7 +123,7 @@ public class Connection {
 
 	/**
 	 * Returns the role of the Connection.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <strong>Only for
@@ -134,7 +135,7 @@ public class Connection {
 
 	/**
 	 * Returns the RTSP URI of the Connection.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <strong>Only for
@@ -150,7 +151,7 @@ public class Connection {
 	 * transcoding this can be disabled to save CPU power. If you are not sure if
 	 * transcoding might be necessary, setting this property to false <strong>may
 	 * result in media connections not being established</strong>.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <strong>Only for
@@ -166,7 +167,7 @@ public class Connection {
 	 * consumption and network bandwidth in your server while nobody is asking to
 	 * receive the camera's video. On the counterpart, first user subscribing to the
 	 * IP camera stream will take a little longer to receive its video.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <strong>Only for
@@ -182,7 +183,7 @@ public class Connection {
 	 * have, but more problematic will be in unstable networks. Use short buffers
 	 * only if there is a quality connection between the IP camera and OpenVidu
 	 * Server.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <strong>Only for
@@ -208,21 +209,21 @@ public class Connection {
 	/**
 	 * Returns the token string associated to the Connection. This is the value that
 	 * must be sent to the client-side to be consumed in OpenVidu Browser method
-	 * <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html#connect"
-	 * target="_blank">Session.connect</a>.
+	 * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html#connect">
+	 *   Session.connect
+	 * </a>.
 	 */
 	public String getToken() {
 		return this.token;
 	}
 
 	/**
-	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank"
+	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/"
 	 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
 	 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
 	 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
 	 * sans-serif">PRO</a>
-	 * 
+	 *
 	 * Returns the geo location of the connection, with the following format:
 	 * <code>"CITY, COUNTRY"</code> (<code>"unknown"</code> if it wasn't possible to
 	 * locate it)
