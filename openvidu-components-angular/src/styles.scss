@@ -50,6 +50,11 @@ $openvidu-components-theme: mat.define-light-theme((
 
   --ov-light-color: #ffffff;
   --ov-light-dark-color: #f1f1f1;
+
+  --ov-buttons-radius: 50%; // border-radius property
+  --ov-leave-button-radius: 10px;
+  --ov-video-radius: 5px;
+  --ov-panel-radius: 5px;
 }
 
 

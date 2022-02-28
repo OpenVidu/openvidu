@@ -53,8 +53,10 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	}
 
 	sendMessage(): void {
-		this.chatService.sendMessage(this.message);
-		this.message = '';
+		if(!!this.message) {
+			this.chatService.sendMessage(this.message);
+			this.message = '';
+		}
 	}
 
 	scrollToBottom(): void {

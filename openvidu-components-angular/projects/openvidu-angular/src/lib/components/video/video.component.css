@@ -8,11 +8,11 @@ video {
 	padding: 0;
 	border: 0;
 	font-size: 100%;
-	border-radius: 5px;
+	border-radius: var(--ov-video-radius);
 	background-color: #000000;
 }
 
-.poster_img {
+.poster {
 	position: absolute;
 	z-index: 888;
 	max-width: 60%;

@@ -29,7 +29,7 @@
 	max-height: 15px;
 	height: 15px;
 	width: 15px;
-	border-radius: 50%;
+	border-radius: var(--ov-buttons-radius);
 	display: flex;
 	justify-content: space-between;
 }

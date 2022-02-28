@@ -9,7 +9,7 @@
 	padding: 0px;
 	position: absolute;
 	z-index: 999;
-	border-radius: 5px;
+	border-radius: var(--ov-panel-radius);
 	color: #ffffff;
 	font-family: 'Roboto','RobotoDraft',Helvetica,Arial,sans-serif;
   }
@@ -18,12 +18,12 @@
 	padding: 5px;
 	color: #ffffff;
 	font-weight: bold;
-	border-radius: 2px;
+	border-radius: var(--ov-panel-radius);
   }
 
   #dialogNickname {
 	background-color:  #0000005e;
-	border-radius: 3px;
+	border-radius: var(--ov-panel-radius);
   }
 
   #closeButton {
@@ -81,6 +81,7 @@
 	width: 26px;
 	height: 26px;
 	margin: 5px;
+	border-radius: var(--ov-buttons-radius);
   }
 
   .status-icons button {
@@ -110,7 +111,7 @@
 	position: absolute;
 	overflow: hidden;
 	background-color: #000000;
-	border-radius: 5px;
+	border-radius: var(--ov-video-radius);
   }
 
   mat-error,

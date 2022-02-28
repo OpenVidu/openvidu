@@ -54,7 +54,6 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	isFullscreenActive: boolean = false;
 	isChatOpened: boolean = false;
 	isParticipantsOpened: boolean = false;
-	logoUrl = 'assets/images/openvidu_globe.png';
 
 	protected log: ILogger;
 	protected menuTogglingSubscription: Subscription;

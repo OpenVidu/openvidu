@@ -1,6 +1,6 @@
 .card-header {
 	background-color: var(--ov-primary-color);
-	border-radius: 10px 10px 0px 0px;
+	border-radius: var(--ov-panel-radius) var(--ov-panel-radius) 0px 0px;
 	text-align: center;
 	height: 50px;
   }
@@ -67,6 +67,7 @@
   }
   .deviceButton {
 	box-shadow: none;
+	border-radius: var(--ov-buttons-radius);
 	background-color: var(--ov-secondary-color) !important;
 	color: var(--ov-light-color) !important;
   }
@@ -965,7 +966,7 @@
 	background-clip: padding-box;
 	border: 1px solid #999999;
 	border: 1px solid rgba(0, 0, 0, 0.2);
-	border-radius: 10px;
+	border-radius: var(--ov-panel-radius);
 	-webkit-box-shadow: 0 3px 9px rgba(0, 0, 0, 0.5);
 	box-shadow: 0 3px 9px rgba(0, 0, 0, 0.5);
 	outline: 0;

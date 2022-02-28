@@ -10,7 +10,6 @@ import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { LayoutService } from '../../services/layout/layout.service';
 import { StorageService } from '../../services/storage/storage.service';
 import { Signal } from '../../models/signal.model';
-import { LayoutClass } from '../../models/layout.model';
 import { PublisherProperties } from 'openvidu-browser';
 import { StreamModel } from '../../models/participant.model';
 import { ParticipantService } from '../../services/participant/participant.service';
