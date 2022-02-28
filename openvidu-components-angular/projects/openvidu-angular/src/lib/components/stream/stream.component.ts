@@ -1,5 +1,4 @@
 import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
-import { FormControl, Validators } from '@angular/forms';
 import { MatMenuPanel, MatMenuTrigger } from '@angular/material/menu';
 import { NicknameMatcher } from '../../matchers/nickname.matcher';
 import { VideoSizeIcon } from '../../models/icon.model';
@@ -24,9 +23,8 @@ export class StreamComponent implements OnInit {
 	videoTypeEnum = VideoType;
 	videoSizeIcon: VideoSizeIcon = VideoSizeIcon.BIG;
 	toggleNickname: boolean;
-	nicknameFormControl: FormControl;
-	matcher: NicknameMatcher;
 	_stream: StreamModel;
+	nickname: string;
 	private _streamContainer: ElementRef;
 	@ViewChild(MatMenuTrigger) public menuTrigger: MatMenuTrigger;
 	@ViewChild('menu') menu: MatMenuPanel;
@@ -61,7 +59,7 @@ export class StreamComponent implements OnInit {
 		this._stream = stream;
 		this.checkVideoEnlarged();
 		if(this._stream.participant) {
-			this.nicknameFormControl = new FormControl(this._stream.participant.nickname, [Validators.maxLength(25), Validators.required]);
+			this.nickname = this._stream.participant.nickname;
 		}
 	}
 
@@ -73,7 +71,6 @@ export class StreamComponent implements OnInit {
 	}
 
 	ngOnInit() {
-		this.matcher = new NicknameMatcher();
 	}
 
 	ngOnDestroy() {
@@ -111,12 +108,13 @@ export class StreamComponent implements OnInit {
 		}
 	}
 
-	eventKeyPress(event) {
-		if (event && event.keyCode === 13 && this.nicknameFormControl.valid) {
-			const nickname = this.nicknameFormControl.value;
-			this.participantService.setNickname(this._stream.connectionId, nickname);
-			this.storageService.setNickname(nickname);
-			this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, undefined, { clientData: nickname });
+	updateNickname(event) {
+		if (event?.keyCode === 13 || event?.type === 'focusout') {
+			if(!!this.nickname){
+				this.participantService.setMyNickname(this.nickname);
+				this.storageService.setNickname(this.nickname);
+				this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, undefined, { clientData: this.nickname });
+			}
 			this.toggleNicknameForm();
 		}
 	}

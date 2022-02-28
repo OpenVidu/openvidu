@@ -100,17 +100,9 @@ export class ParticipantService {
 		this.updateLocalParticipant();
 	}
 
-	setNickname(connectionId: string, nickname: string) {
-		if (this.localParticipant.hasConnectionId(connectionId)) {
-			this.localParticipant.setNickname(nickname);
-			// this.updateLocalParticipant();
-		} else {
-			const participant = this.getRemoteParticipantByConnectionId(connectionId);
-			if (participant) {
-				participant.setNickname(nickname);
-				// this.updateRemoteParticipants();
-			}
-		}
+	setMyNickname(nickname: string) {
+		this.localParticipant.setNickname(nickname);
+		// this.updateLocalParticipant();
 	}
 
 	getMyNickname(): string {
@@ -283,6 +275,14 @@ export class ParticipantService {
 			return JSON.parse(data).clientData;
 		} catch (error) {
 			return 'OpenVidu_User';
+		}
+	}
+
+	setRemoteNickname(connectionId: string, nickname: string) {
+		const participant = this.getRemoteParticipantByConnectionId(connectionId);
+		if (participant) {
+			participant.setNickname(nickname);
+			// this.updateRemoteParticipants();
 		}
 	}
 

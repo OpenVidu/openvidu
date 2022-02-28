@@ -21,9 +21,10 @@
 	border-radius: var(--ov-panel-radius);
   }
 
-  #dialogNickname {
+  #nickname-input-container {
 	background-color:  #0000005e;
 	border-radius: var(--ov-panel-radius);
+
   }
 
   #closeButton {

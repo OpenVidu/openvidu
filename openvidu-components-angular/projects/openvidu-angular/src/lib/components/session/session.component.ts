@@ -252,7 +252,7 @@ export class SessionComponent implements OnInit {
 
 			if (isRemoteConnection) {
 				const nickname = this.participantService.getNicknameFromConnectionData(event.data);
-				this.participantService.setNickname(connectionId, nickname);
+				this.participantService.setRemoteNickname(connectionId, nickname);
 			}
 		});
 	}

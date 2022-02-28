@@ -42,7 +42,7 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 	localParticipant: ParticipantAbstractModel;
 	columns: number;
 
-	nicknameFormControl = new FormControl('', [Validators.maxLength(25), Validators.required]);
+	nicknameFormControl = new FormControl('', [Validators.maxLength(20), Validators.required]);
 	matcher = new NicknameMatcher();
 	hasVideoDevices: boolean;
 	hasAudioDevices: boolean;
@@ -223,7 +223,7 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 	joinSession() {
 		if (this.nicknameFormControl.valid) {
 			const nickname = this.nicknameFormControl.value;
-			this.participantService.setNickname(this.participantService.getMyCameraConnectionId(), nickname);
+			this.participantService.setMyNickname(nickname);
 			this.storageSrv.setNickname(nickname);
 			return this.onJoinClicked.emit();
 		}

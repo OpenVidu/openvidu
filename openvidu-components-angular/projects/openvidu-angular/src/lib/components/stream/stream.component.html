@@ -8,26 +8,17 @@
 		<div (click)="toggleNicknameForm()" class="nicknameContainer" selected *ngIf="!toggleNickname">
 			<span id="nickname" *ngIf="this._stream.type === 'CAMERA'">{{ this._stream.participant.nickname }}</span>
 			<span id="nickname" *ngIf="this._stream.type === 'SCREEN'">{{ this._stream.participant.nickname }}_SCREEN</span>
-
-			<span *ngIf="_stream.local || (_stream.streamManager && !_stream.streamManager?.remote)"> (edit)</span>
 		</div>
-		<div *ngIf="toggleNickname && !this._stream.streamManager?.remote" [class.fullscreen]="isFullscreen" id="dialogNickname">
-			<form id="nicknameForm">
-				<mat-form-field color="primary">
-					<input
-						matInput
-						#nicknameInput
-						placeholder="Nick: {{ this._stream.nickname }}"
-						[formControl]="nicknameFormControl"
-						[errorStateMatcher]="matcher"
-						(keypress)="eventKeyPress($event)"
-						autocomplete="off"
-						(focusout)="toggleNicknameForm()"
-					/>
-					<mat-error *ngIf="nicknameFormControl.hasError('required')"> Nickname is <strong>required</strong> </mat-error>
-					<mat-error *ngIf="nicknameFormControl.hasError('maxlength')"> Nickname is <strong>too long!</strong> </mat-error>
-				</mat-form-field>
-			</form>
+		<div *ngIf="toggleNickname && !this._stream.streamManager?.remote" [class.fullscreen]="isFullscreen" id="nickname-input-container">
+			<input
+				matInput
+				#nicknameInput
+				autocomplete="off"
+				maxlength="20"
+				[(ngModel)]="this.nickname"
+				(keypress)="updateNickname($event)"
+				(focusout)="updateNickname($event)"
+			/>
 		</div>
 	</div>
 
@@ -41,16 +32,13 @@
 		[mutedSound]="_stream?.participant?.isMutedForcibly"
 	></ov-video>
 
-
 	<div class="status-icons">
-
 		<button mat-icon-button id="statusMic" *ngIf="!this._stream.streamManager?.stream?.audioActive" disabled>
 			<mat-icon>mic_off</mat-icon>
 		</button>
 	</div>
 
 	<div class="videoButtons" *ngIf="showSettings">
-
 		<button mat-icon-button (click)="toggleVideoMenu($event)" matTooltip="Settings" aria-label="Video settings menu">
 			<mat-icon>more_vert</mat-icon>
 		</button>
