@@ -60,7 +60,9 @@ export class StreamComponent implements OnInit {
 	set stream(stream: StreamModel) {
 		this._stream = stream;
 		this.checkVideoEnlarged();
-		this.nicknameFormControl = new FormControl(this._stream.nickname, [Validators.maxLength(25), Validators.required]);
+		if(this._stream.participant) {
+			this.nicknameFormControl = new FormControl(this._stream.participant.nickname, [Validators.maxLength(25), Validators.required]);
+		}
 	}
 
 	@ViewChild('nicknameInput')
@@ -104,7 +106,7 @@ export class StreamComponent implements OnInit {
 	}
 
 	toggleNicknameForm() {
-		if (this._stream.local) {
+		if (this._stream.participant.local) {
 			this.toggleNickname = !this.toggleNickname;
 		}
 	}

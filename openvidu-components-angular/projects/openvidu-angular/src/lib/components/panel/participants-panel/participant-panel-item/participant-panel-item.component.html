@@ -1,13 +1,19 @@
 <mat-list>
 	<mat-list-item>
 		<mat-icon matListAvatar class="participant-avatar">person</mat-icon>
-		<h3 matLine class="participant-nickname">{{ _participant | nickname }}</h3>
+		<h3 matLine class="participant-nickname">{{ _participant.nickname }}</h3>
 		<p matLine class="participant-subtitle">{{ _participant | streamsEnabled }}</p>
 		<!-- <p matLine>
 			<span class="participant-subtitle"></span>
 		</p> -->
 
-		<button mat-icon-button id="action-btn" [class.warn-btn]="_participant.isMutedForcibly" (click)="toggleMuteForcibly()">
+		<button
+			mat-icon-button
+			id="action-btn"
+			*ngIf="!_participant.local"
+			[class.warn-btn]="_participant.isMutedForcibly"
+			(click)="toggleMuteForcibly()"
+		>
 			<mat-icon *ngIf="!_participant.isMutedForcibly">volume_up</mat-icon>
 			<mat-icon *ngIf="_participant.isMutedForcibly">volume_off</mat-icon>
 		</button>

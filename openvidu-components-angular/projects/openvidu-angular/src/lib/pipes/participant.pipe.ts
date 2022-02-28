@@ -26,11 +26,3 @@ export class StreamsEnabledPipe implements PipeTransform {
 		return `(${participant?.getConnectionTypesActive().toString().replace(',', ', ')})`;
 	}
 }
-
-@Pipe({ name: 'nickname', pure: false })
-export class NicknamePipe implements PipeTransform {
-	constructor() {}
-	transform(participant: ParticipantAbstractModel): string {
-		return participant?.getCameraNickname();
-	}
-}

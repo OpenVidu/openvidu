@@ -2,9 +2,7 @@ import { Publisher, StreamManager } from 'openvidu-browser';
 import { VideoType } from './video-type.model';
 
 export interface StreamModel {
-	local: boolean;
 	connected: boolean;
-	nickname: string;
 	type: VideoType;
 	streamManager: StreamManager;
 	videoEnlarged: boolean;
@@ -15,13 +13,17 @@ export interface StreamModel {
 export abstract class ParticipantAbstractModel {
 	streams: Map<VideoType, StreamModel> = new Map();
 	id: string;
+	local: boolean;
+	nickname: string;
 	isMutedForcibly: boolean;
 
-	constructor(model?: StreamModel, id?: string) {
+	constructor(model?: StreamModel, id?: string, local?: boolean, nickname?: string) {
+		this.id = id ? id : new Date().getTime().toString();
+		this.local = local ? local : true,
+		this.nickname = nickname ? nickname : 'OpenVidu_User',
+		this.isMutedForcibly = false;
 		let streamModel: StreamModel = {
-			local: model ? model.local : true,
 			connected: true,
-			nickname: model ? model.nickname : 'OpenVidu_User',
 			type: model ? model.type : VideoType.CAMERA,
 			streamManager: model ? model.streamManager : null,
 			videoEnlarged: model ? model.videoEnlarged : false,
@@ -29,11 +31,10 @@ export abstract class ParticipantAbstractModel {
 			participant: this
 		};
 		this.streams.set(streamModel.type, streamModel);
-		this.id = id ? id : new Date().getTime().toString();
-		this.isMutedForcibly = false;
 	}
 
 	addConnection(streamModel: StreamModel) {
+		streamModel.participant = this;
 		this.streams.set(streamModel.type, streamModel);
 	}
 
@@ -103,26 +104,32 @@ export abstract class ParticipantAbstractModel {
 	}
 
 	isLocal(): boolean {
-		return Array.from(this.streams.values()).every((conn) => conn.local);
+		return this.local;
+		// return Array.from(this.streams.values()).every((conn) => conn.local);
 	}
 
 	setNickname(nickname: string) {
-		this.streams.forEach((conn) => {
-			if (conn.type === VideoType.CAMERA) {
-				conn.nickname = nickname;
-			} else {
-				conn.nickname = `${nickname}_${conn.type}`;
-			}
-		});
+		this.nickname = nickname;
+		// this.streams.forEach((conn) => {
+		// 	if (conn.type === VideoType.CAMERA) {
+		// 		conn.nickname = nickname;
+		// 	} else {
+		// 		conn.nickname = `${nickname}_${conn.type}`;
+		// 	}
+		// });
 	}
 
-	getCameraNickname(): string {
-		return this.getCameraConnection()?.nickname;
+	getNickname() {
+		return this.nickname;
 	}
 
-	getScreenNickname(): string {
-		return this.getScreenConnection()?.nickname;
-	}
+	// getCameraNickname(): string {
+	// 	return this.getCameraConnection()?.nickname;
+	// }
+
+	// getScreenNickname(): string {
+	// 	return this.getScreenConnection()?.nickname;
+	// }
 
 	setCameraPublisher(publisher: Publisher) {
 		const cameraConnection = this.getCameraConnection();

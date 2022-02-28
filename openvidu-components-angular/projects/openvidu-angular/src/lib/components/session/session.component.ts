@@ -197,7 +197,7 @@ export class SessionComponent implements OnInit {
 
 				//Sending nicnkanme signal to new participants
 				if (this.openviduService.needSendNicknameSignal()) {
-					const data = { clientData: this.participantService.getWebcamNickname() };
+					const data = { clientData: this.participantService.getMyNickname() };
 					this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, [event.connection], data);
 				}
 			}

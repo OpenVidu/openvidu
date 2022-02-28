@@ -78,7 +78,7 @@ export class OpenViduService {
 
 	async connectSession(session: Session, token: string): Promise<void> {
 		if (!!token && session) {
-			const nickname = this.participantService.getWebcamNickname();
+			const nickname = this.participantService.getMyNickname();
 			const participantId = this.participantService.getMyParticipantId();
 			if (session === this.webcamSession) {
 				this.log.d('Connecting webcam session');
@@ -248,10 +248,11 @@ export class OpenViduService {
 		};
 		this.webcamSession.signal(signalOptions);
 
-		if (type === Signal.NICKNAME_CHANGED && !!this.getScreenSession().connection) {
-			signalOptions.data = JSON.stringify({ clientData: this.participantService.getScreenNickname() });
-			this.getScreenSession()?.signal(signalOptions);
-		}
+		// TODO: Check if it is necessary
+		// if (type === Signal.NICKNAME_CHANGED && !!this.getScreenSession().connection) {
+		// 	signalOptions.data = JSON.stringify({ clientData: this.participantService.getScreenNickname() });
+		// 	this.getScreenSession()?.signal(signalOptions);
+		// }
 	}
 
 	async replaceTrack(videoType: VideoType, props: PublisherProperties) {
@@ -353,7 +354,7 @@ export class OpenViduService {
 		} catch (error) {
 			this.log.e(error);
 		}
-		return oldNickname !== this.participantService.getWebcamNickname();
+		return oldNickname !== this.participantService.getMyNickname();
 	}
 
 	isMyOwnConnection(connectionId: string): boolean {

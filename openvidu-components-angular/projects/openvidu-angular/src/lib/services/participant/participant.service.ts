@@ -82,11 +82,9 @@ export class ParticipantService {
 		this.log.d('Enabling screen publisher');
 
 		const steramModel: StreamModel = {
-			local: true,
 			type: VideoType.SCREEN,
 			videoEnlarged: true,
 			streamManager: screenPublisher,
-			nickname: `${this.localParticipant.getCameraNickname()}_${VideoType.SCREEN}`,
 			connected: true,
 			connectionId: null
 		};
@@ -115,13 +113,16 @@ export class ParticipantService {
 		}
 	}
 
-	getWebcamNickname(): string {
-		return this.localParticipant.getCameraNickname();
+	getMyNickname(): string {
+		return this.localParticipant.nickname;
 	}
+	// getWebcamNickname(): string {
+	// 	return this.localParticipant.getCameraNickname();
+	// }
 
-	getScreenNickname(): string {
-		return this.localParticipant.getScreenNickname();
-	}
+	// getScreenNickname(): string {
+	// 	return this.localParticipant.getScreenNickname();
+	// }
 
 
 	toggleMyVideoEnlarged(connectionId: string) {
@@ -195,11 +196,9 @@ export class ParticipantService {
 
 		const type: VideoType = this.getTypeConnectionData(data);
 		const streamModel: StreamModel = {
-			local: false,
 			type,
 			videoEnlarged: type === VideoType.SCREEN,
 			streamManager: subscriber,
-			nickname: this.getNicknameFromConnectionData(data),
 			connected: true,
 			connectionId
 		};
@@ -219,7 +218,9 @@ export class ParticipantService {
 			}
 		} else {
 			this.log.w('Creating new participant with id: ', participantId);
-			const remoteParticipant = this.newParticipant(streamModel, participantId);
+			const nickname = this.getNicknameFromConnectionData(data);
+			const local = false;
+			const remoteParticipant = this.newParticipant(streamModel, participantId, local, nickname);
 			this.remoteParticipants.push(remoteParticipant);
 		}
 		this.updateRemoteParticipants();
@@ -305,11 +306,11 @@ export class ParticipantService {
 		}
 	}
 
-	protected newParticipant(streamModel?: StreamModel, participantId?: string) {
+	protected newParticipant(streamModel?: StreamModel, participantId?: string, local?: boolean, nickname?: string) {
 
 		if(this.openviduAngularConfigSrv.hasParticipantFactory()){
-			return this.openviduAngularConfigSrv.getParticipantFactory().apply(this, [streamModel, participantId]);
+			return this.openviduAngularConfigSrv.getParticipantFactory().apply(this, [streamModel, participantId, local, nickname]);
 		}
-		return new ParticipantModel(streamModel, participantId);
+		return new ParticipantModel(streamModel, participantId, local, nickname);
 	}
 }

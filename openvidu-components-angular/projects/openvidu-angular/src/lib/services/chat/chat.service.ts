@@ -66,7 +66,7 @@ export class ChatService {
 		if (message !== '' && message !== ' ') {
 			const data = {
 				message: message,
-				nickname: this.participantService.getWebcamNickname()
+				nickname: this.participantService.getMyNickname()
 			};
 
 			this.openviduService.sendSignal(Signal.CHAT, undefined, data);
