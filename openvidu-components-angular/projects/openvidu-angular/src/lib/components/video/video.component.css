@@ -11,14 +11,3 @@ video {
 	border-radius: var(--ov-video-radius);
 	background-color: #000000;
 }
-
-.poster {
-	position: absolute;
-	z-index: 888;
-	max-width: 60%;
-	max-height: 60%;
-	bottom: 25%;
-	margin: auto;
-	right: 0;
-	left: 0;
-}

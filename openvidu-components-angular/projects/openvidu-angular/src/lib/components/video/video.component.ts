@@ -5,12 +5,8 @@ import { VideoType } from '../../models/video-type.model';
 @Component({
 	selector: 'ov-video',
 	template: `
-		<img
-			*ngIf="!_streamManager?.stream?.videoActive && (type === 'CAMERA' || !type)"
-			class="poster_img"
-			alt="OpenVidu Logo"
-			src="assets/images/poster.png"
-		/>
+		<ov-avatar-profile *ngIf="!_streamManager?.stream?.videoActive && (type === 'CAMERA' || !type)" [letter]="'K'"></ov-avatar-profile>
+
 		<video
 			class="OT_video-element"
 			#videoElement
@@ -43,7 +39,7 @@ export class VideoComponent implements AfterViewInit {
 
 	@Input()
 	set streamManager(streamManager: StreamManager) {
-		if(streamManager) {
+		if (streamManager) {
 			this._streamManager = streamManager;
 			if (!!this._videoElement && this._streamManager) {
 				this.type = <VideoType>this._streamManager?.stream?.typeOfVideo;
