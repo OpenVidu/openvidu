@@ -31,6 +31,8 @@ services:
             - ${OPENVIDU_RECORDING_PATH}:${OPENVIDU_RECORDING_PATH}
             - ${OPENVIDU_RECORDING_CUSTOM_LAYOUT}:${OPENVIDU_RECORDING_CUSTOM_LAYOUT}
             - ${OPENVIDU_CDR_PATH}:${OPENVIDU_CDR_PATH}
+            - /etc/timezone:/etc/timezone:ro
+            - /etc/localtime:/etc/localtime:ro
         env_file:
             - .env
         environment:
@@ -55,6 +57,8 @@ services:
             - /opt/openvidu/kms-crashes:/opt/openvidu/kms-crashes
             - ${OPENVIDU_RECORDING_PATH}:${OPENVIDU_RECORDING_PATH}
             - /opt/openvidu/kurento-logs:/opt/openvidu/kurento-logs
+            - /etc/timezone:/etc/timezone:ro
+            - /etc/localtime:/etc/localtime:ro
         environment:
             - KMS_MIN_PORT=40000
             - KMS_MAX_PORT=57000
@@ -106,6 +110,8 @@ services:
             - ./custom-nginx-vhosts:/etc/nginx/vhost.d/
             - ./custom-nginx-locations:/custom-nginx-locations
             - ${OPENVIDU_RECORDING_CUSTOM_LAYOUT}:/opt/openvidu/custom-layout
+            - /etc/timezone:/etc/timezone:ro
+            - /etc/localtime:/etc/localtime:ro
         environment:
             - DOMAIN_OR_PUBLIC_IP=${DOMAIN_OR_PUBLIC_IP}
             - CERTIFICATE_TYPE=${CERTIFICATE_TYPE}
