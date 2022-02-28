@@ -36,7 +36,7 @@
 	<ov-video
 		(dblclick)="toggleVideoEnlarged()"
 		[streamManager]="_stream.streamManager"
-		[mutedSound]="mutedSound"
+		[mutedSound]="_stream.participant.isMutedForcibly"
 	></ov-video>
 
 
@@ -59,12 +59,12 @@
 				<span *ngIf="videoSizeIcon === videoSizeIconEnum.NORMAL">Zoom out</span>
 				<span *ngIf="videoSizeIcon === videoSizeIconEnum.BIG">Zoom in</span>
 			</button>
-			<button mat-menu-item id="volumeButton" *ngIf="this._stream.streamManager?.remote" (click)="toggleSound()">
-				<mat-icon *ngIf="!mutedSound">volume_up</mat-icon>
-				<span *ngIf="!mutedSound">Mute sound</span>
+			<button mat-menu-item id="volumeButton" *ngIf="!this._stream.local" (click)="toggleSound()">
+				<mat-icon *ngIf="!_stream.participant.isMutedForcibly">volume_up</mat-icon>
+				<span *ngIf="!_stream.participant.isMutedForcibly">Mute sound</span>
 
-				<mat-icon *ngIf="mutedSound">volume_off</mat-icon>
-				<span *ngIf="mutedSound">Unmute sound</span>
+				<mat-icon *ngIf="_stream.participant.isMutedForcibly">volume_off</mat-icon>
+				<span *ngIf="_stream.participant.isMutedForcibly">Unmute sound</span>
 			</button>
 			<!-- <button mat-menu-item *ngIf="this._stream.streamManager?.stream?.videoActive" id="fullscreenButton" (click)="toggleFullscreen()">
 				<mat-icon *ngIf="!isFullscreenEnabled">fullscreen</mat-icon>

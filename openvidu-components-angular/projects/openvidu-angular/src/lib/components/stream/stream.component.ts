@@ -23,7 +23,6 @@ export class StreamComponent implements OnInit {
 	videoSizeIconEnum = VideoSizeIcon;
 	videoTypeEnum = VideoType;
 	videoSizeIcon: VideoSizeIcon = VideoSizeIcon.BIG;
-	mutedSound: boolean;
 	toggleNickname: boolean;
 	nicknameFormControl: FormControl;
 	matcher: NicknameMatcher;
@@ -100,7 +99,8 @@ export class StreamComponent implements OnInit {
 	}
 
 	toggleSound() {
-		this.mutedSound = !this.mutedSound;
+		this._stream.participant.setMutedForcibly(!this._stream.participant.isMutedForcibly);
+
 	}
 
 	toggleNicknameForm() {

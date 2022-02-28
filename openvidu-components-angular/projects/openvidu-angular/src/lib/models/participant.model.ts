@@ -15,6 +15,7 @@ export interface StreamModel {
 export abstract class ParticipantAbstractModel {
 	streams: Map<VideoType, StreamModel> = new Map();
 	id: string;
+	isMutedForcibly: boolean;
 
 	constructor(model?: StreamModel, id?: string) {
 		let streamModel: StreamModel = {
@@ -29,6 +30,7 @@ export abstract class ParticipantAbstractModel {
 		};
 		this.streams.set(streamModel.type, streamModel);
 		this.id = id ? id : new Date().getTime().toString();
+		this.isMutedForcibly = false;
 	}
 
 	addConnection(streamModel: StreamModel) {
@@ -189,6 +191,10 @@ export abstract class ParticipantAbstractModel {
 
 	someHasVideoEnlarged(): boolean {
 		return Array.from(this.streams.values()).some((conn) => conn.videoEnlarged);
+	}
+
+	setMutedForcibly(muted: boolean){
+		this.isMutedForcibly = muted;
 	}
 }
 

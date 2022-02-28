@@ -23,3 +23,11 @@ mat-list {
 	display: contents;
 }
 
+#action-btn {
+	border-radius: var(--ov-buttons-radius);
+}
+
+.warn-btn {
+	/* background-color: var(--ov-warn-color) !important; */
+	color: var(--ov-warn-color);
+}

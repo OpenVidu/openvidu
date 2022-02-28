@@ -15,4 +15,8 @@ export class ParticipantPanelItemComponent {
 	_participant: ParticipantAbstractModel;
 	constructor() {}
 
+	toggleMuteForcibly() {
+		this._participant.setMutedForcibly(!this._participant.isMutedForcibly);
+	}
+
 }

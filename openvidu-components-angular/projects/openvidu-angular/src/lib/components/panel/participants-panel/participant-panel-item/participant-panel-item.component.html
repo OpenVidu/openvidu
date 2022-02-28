@@ -6,5 +6,10 @@
 		<!-- <p matLine>
 			<span class="participant-subtitle"></span>
 		</p> -->
+
+		<button mat-icon-button id="action-btn" [class.warn-btn]="_participant.isMutedForcibly" (click)="toggleMuteForcibly()">
+			<mat-icon *ngIf="!_participant.isMutedForcibly">volume_up</mat-icon>
+			<mat-icon *ngIf="_participant.isMutedForcibly">volume_off</mat-icon>
+		</button>
 	</mat-list-item>
 </mat-list>
