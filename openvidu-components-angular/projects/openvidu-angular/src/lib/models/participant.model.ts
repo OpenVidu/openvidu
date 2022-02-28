@@ -17,9 +17,9 @@ export abstract class ParticipantAbstractModel {
 	nickname: string;
 	isMutedForcibly: boolean;
 
-	constructor(model?: StreamModel, id?: string, local?: boolean, nickname?: string) {
+	constructor(model?: StreamModel, id?: string, local: boolean = true, nickname?: string) {
 		this.id = id ? id : new Date().getTime().toString();
-		this.local = local ? local : true,
+		this.local = local,
 		this.nickname = nickname ? nickname : 'OpenVidu_User',
 		this.isMutedForcibly = false;
 		let streamModel: StreamModel = {
