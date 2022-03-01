@@ -300,6 +300,8 @@ Metadata:
       # OpenVidu configuration
       OpenViduLicense:
         default: "OpenVidu Pro License key"
+      OpenViduEdition:
+        default: "Which OpenVidu Edition you want to deploy: PRO or ENTERPRISE"
       MediaNodesStartNumber:
         default: "Initial number of Media Node in your cluster"
       OpenViduSecret:
