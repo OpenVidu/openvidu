@@ -59,13 +59,20 @@ Parameters:
     Type: String
 
   # OpenVidu Configuration
-
   OpenViduLicense:
     Description: "Visit https://openvidu.io/account"
     Type: String
     AllowedPattern: ^(?!\s*$).+$
     NoEcho: true
     ConstraintDescription: OpenVidu Pro License is mandatory
+
+  OpenViduEdition:
+    Description: "Visit https://docs.openvidu.io/en/stable/deployment/#openvidu-editions"
+    Type: String
+    AllowedValues:
+      - pro
+      - enterprise
+    Default: pro
 
   OpenViduSecret:
     Description: "Secret to connect to this OpenVidu Platform. Cannot be empty and must contain only alphanumeric characters [a-zA-Z0-9], hypens ('-') and underscores ('_')"
@@ -241,6 +248,7 @@ Metadata:
           default: OpenVidu configuration
         Parameters:
           - OpenViduLicense
+          - OpenViduEdition
           - OpenViduSecret
           - MediaNodesStartNumber
       - Label:
@@ -467,6 +475,9 @@ Resources:
 
                 # Pro License
                 sed -i "s/OPENVIDU_PRO_LICENSE=/OPENVIDU_PRO_LICENSE=${OpenViduLicense}/" $WORKINGDIR/.env
+
+                # OpenVidu Edition
+                sed -i "s/OPENVIDU_EDITION=pro/OPENVIDU_EDITION=${OpenViduEdition}/" $WORKINGDIR/.env
 
                 # Replace secret
                 sed -i "s/OPENVIDU_SECRET=/OPENVIDU_SECRET=${OpenViduSecret}/" $WORKINGDIR/.env
