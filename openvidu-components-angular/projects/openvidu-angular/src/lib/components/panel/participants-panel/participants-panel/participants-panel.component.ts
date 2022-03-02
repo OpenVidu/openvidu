@@ -33,13 +33,13 @@ export class ParticipantsPanelComponent implements OnInit {
 	ngOnInit(): void {
 		this.participantService.localParticipantObs.subscribe((p: ParticipantModel) => {
 			this.localParticipant = p;
-			// Mark for re-rendering using an impure pipe 'streamsEnabled'
+			// Mark for re-rendering using an impure pipe 'streamsTypesEnabled'
 			this.cd.markForCheck();
 		});
 
 		this.participantService.remoteParticipantsObs.subscribe((p: ParticipantModel[]) => {
 			this.remoteParticipants = p;
-			// Mark for re-rendering using an impure pipe 'streamsEnabled'
+			// Mark for re-rendering using an impure pipe 'streamsTypesEnabled'
 			this.cd.markForCheck();
 		});
 	}

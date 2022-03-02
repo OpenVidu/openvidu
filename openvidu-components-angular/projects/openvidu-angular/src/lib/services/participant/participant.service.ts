@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Publisher, Subscriber } from 'openvidu-browser';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
-import { StreamModel, ParticipantAbstractModel, ParticipantModel } from '../../models/participant.model';
+import { StreamModel, ParticipantAbstractModel, ParticipantModel, ParticipantProperties } from '../../models/participant.model';
 import { VideoType } from '../../models/video-type.model';
 import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.service';
 import { LoggerService } from '../logger/logger.service';
@@ -29,8 +29,10 @@ export class ParticipantService {
 
 		this.localParticipantObs = this._localParticipant.asObservable();
 		this.remoteParticipantsObs = this._remoteParticipants.asObservable();
+	}
 
-		this.localParticipant = this.newParticipant();
+	initLocalParticipant(props: ParticipantProperties)  {
+		this.localParticipant = this.newParticipant(props);
 		this.updateLocalParticipant();
 	}
 
@@ -131,7 +133,7 @@ export class ParticipantService {
 
 	clear() {
 		this.disableScreenUser();
-		this.localParticipant = this.newParticipant();
+		// this.localParticipant = this.newParticipant();
 		// this._screensharing.next(false);
 		this.remoteParticipants = [];
 		this._remoteParticipants = <BehaviorSubject<ParticipantAbstractModel[]>>new BehaviorSubject([]);
@@ -172,12 +174,7 @@ export class ParticipantService {
 	}
 
 	updateLocalParticipant() {
-		// Cloning localParticipant object for not applying changes on the global variable
-		let participantsWithConnectionAvailable: ParticipantAbstractModel = Object.assign(this.newParticipant(), this.localParticipant);
-		const availableConnections = participantsWithConnectionAvailable.getAvailableConnections();
-		const availableConnectionsMap = new Map(availableConnections.map((conn) => [conn.type, conn]));
-		participantsWithConnectionAvailable.streams = availableConnectionsMap;
-		this._localParticipant.next(participantsWithConnectionAvailable);
+		this._localParticipant.next(this.localParticipant);
 	}
 
 	/**
@@ -210,9 +207,12 @@ export class ParticipantService {
 			}
 		} else {
 			this.log.w('Creating new participant with id: ', participantId);
-			const nickname = this.getNicknameFromConnectionData(data);
-			const local = false;
-			const remoteParticipant = this.newParticipant(streamModel, participantId, local, nickname);
+			const props: ParticipantProperties = {
+				nickname: this.getNicknameFromConnectionData(data),
+				local: false,
+				id: participantId
+			}
+			const remoteParticipant = this.newParticipant(props, streamModel);
 			this.remoteParticipants.push(remoteParticipant);
 		}
 		this.updateRemoteParticipants();
@@ -306,11 +306,11 @@ export class ParticipantService {
 		}
 	}
 
-	protected newParticipant(streamModel?: StreamModel, participantId?: string, local?: boolean, nickname?: string) {
+	protected newParticipant(props: ParticipantProperties, streamModel?: StreamModel) {
 
 		if(this.openviduAngularConfigSrv.hasParticipantFactory()){
-			return this.openviduAngularConfigSrv.getParticipantFactory().apply(this, [streamModel, participantId, local, nickname]);
+			return this.openviduAngularConfigSrv.getParticipantFactory().apply(this, [props, streamModel]);
 		}
-		return new ParticipantModel(streamModel, participantId, local, nickname);
+		return new ParticipantModel(props, streamModel);
 	}
 }

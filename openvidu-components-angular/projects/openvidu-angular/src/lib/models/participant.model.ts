@@ -10,6 +10,14 @@ export interface StreamModel {
 	participant?: ParticipantAbstractModel
 }
 
+export interface ParticipantProperties {
+	local: boolean;
+	nickname: string;
+	id?: string;
+	colorProfile?: string;
+	isMutedForcibly?: boolean;
+}
+
 export abstract class ParticipantAbstractModel {
 	streams: Map<VideoType, StreamModel> = new Map();
 	id: string;
@@ -18,12 +26,12 @@ export abstract class ParticipantAbstractModel {
 	colorProfile: string;
 	isMutedForcibly: boolean;
 
-	constructor(model?: StreamModel, id?: string, local: boolean = true, nickname?: string) {
-		this.id = id ? id : new Date().getTime().toString();
-		this.local = local,
-		this.nickname = nickname ? nickname : 'OpenVidu_User';
-		this.colorProfile = `hsl(${Math.random()*360}, 100%, 80%)`;
-		this.isMutedForcibly = false;
+	constructor(props: ParticipantProperties, model?: StreamModel) {
+		this.id = props.id ? props.id : new Date().getTime().toString();
+		this.local = props.local;
+		this.nickname = props.nickname;
+		this.colorProfile = !!props.colorProfile ? props.colorProfile : `hsl(${Math.random()*360}, 100%, 80%)`;
+		this.isMutedForcibly = typeof props.isMutedForcibly === 'boolean' ? props.isMutedForcibly : false;
 		let streamModel: StreamModel = {
 			connected: true,
 			type: model ? model.type : VideoType.CAMERA,

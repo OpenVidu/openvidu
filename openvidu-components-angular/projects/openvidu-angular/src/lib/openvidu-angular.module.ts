@@ -36,7 +36,7 @@ import { StreamComponent } from './components/stream/stream.component';
 import { DialogTemplateComponent } from './components/material/dialog.component';
 
 import { LinkifyPipe } from './pipes/linkify.pipe';
-import { StreamsEnabledPipe, ParticipantStreamsPipe } from './pipes/participant.pipe';
+import { StreamTypesEnabledPipe, ParticipantStreamsPipe } from './pipes/participant.pipe';
 
 import { OpenViduAngularConfig } from './config/openvidu-angular.config';
 import { CdkOverlayContainer } from './config/custom-cdk-overlay';
@@ -83,7 +83,7 @@ import { AvatarProfileComponent } from './components/avatar-profile/avatar-profi
 		DialogTemplateComponent,
 		LinkifyPipe,
 		ParticipantStreamsPipe,
-		StreamsEnabledPipe,
+		StreamTypesEnabledPipe,
 		ParticipantPanelItemComponent,
 		ParticipantsPanelComponent,
 		VideoconferenceComponent,
@@ -157,7 +157,7 @@ import { AvatarProfileComponent } from './components/avatar-profile/avatar-profi
 		AudioWaveComponent,
 		PreJoinComponent,
 		ParticipantStreamsPipe,
-		StreamsEnabledPipe,
+		StreamTypesEnabledPipe,
 		CommonModule,
 		ToolbarDirective,
 		PanelDirective,

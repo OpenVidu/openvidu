@@ -31,7 +31,7 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	constructor(protected layoutService: LayoutService, protected participantService: ParticipantService, private cd: ChangeDetectorRef) {}
 
 	ngOnInit(): void {
-		this.subscribeToUsers();
+		this.subscribeToParticipants();
 	}
 
 	ngAfterViewInit() {
@@ -47,9 +47,10 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.layoutService.clear();
 	}
 
-	protected subscribeToUsers() {
+	protected subscribeToParticipants() {
 		this.localParticipantSubs = this.participantService.localParticipantObs.subscribe((p) => {
-			this.localParticipant = p;
+			// We need to update the object reference doing a deep copy for update the view
+			this.localParticipant = Object.assign(Object.create(p), p)
 			this.layoutService.update();
 			this.cd.markForCheck();
 		});

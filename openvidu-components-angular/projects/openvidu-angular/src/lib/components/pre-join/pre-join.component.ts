@@ -4,7 +4,7 @@ import { OpenViduErrorName } from 'openvidu-browser/lib/OpenViduInternal/Enums/O
 import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../models/device.model';
 import { ILogger } from '../../models/logger.model';
-import { ParticipantAbstractModel } from '../../models/participant.model';
+import { ParticipantAbstractModel, ParticipantProperties } from '../../models/participant.model';
 import { ActionService } from '../../services/action/action.service';
 import { DeviceService } from '../../services/device/device.service';
 import { LayoutService } from '../../services/layout/layout.service';
@@ -57,10 +57,15 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 
 	async ngOnInit() {
 		await this.deviceSrv.initializeDevices();
+		this.nickname = this.storageSrv.getNickname() || this.generateRandomNickname();
+		const props: ParticipantProperties = {
+			local: true,
+			nickname: this.nickname
+		};
+		this.participantService.initLocalParticipant(props);
 
 		this.subscribeToLocalParticipantEvents();
 		this.openviduService.initialize();
-		this.nickname = this.storageSrv.getNickname() || this.generateRandomNickname();
 		this.windowSize = window.innerWidth;
 		this.setDevicesInfo();
 		if (this.hasAudioDevices || this.hasVideoDevices) {
