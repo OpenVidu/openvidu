@@ -74,10 +74,11 @@ public class CallDetailRecord {
 		this.log(e);
 	}
 
-	public void recordSessionDestroyed(String sessionId, EndReason reason) {
+	public void recordSessionDestroyed(Session session, EndReason reason) {
+		String sessionId = session.getSessionId();
 		CDREventSession e = this.sessions.remove(sessionId);
 		if (e != null) {
-			CDREventSession eventSessionEnd = new CDREventSession(e, RecordingManager.finalReason(reason),
+			CDREventSession eventSessionEnd = new CDREventSession(e, session, RecordingManager.finalReason(reason),
 					System.currentTimeMillis());
 			this.log(eventSessionEnd);
 

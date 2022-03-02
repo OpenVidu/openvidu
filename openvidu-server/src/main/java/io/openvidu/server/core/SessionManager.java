@@ -19,8 +19,8 @@ package io.openvidu.server.core;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -48,11 +48,11 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.ConnectionProperties;
+import io.openvidu.java.client.IceServerProperties;
 import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.SessionProperties;
-import io.openvidu.java.client.IceServerProperties;
 import io.openvidu.server.cdr.CDREventRecordingStatusChanged;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
@@ -344,7 +344,8 @@ public abstract class SessionManager {
 			try {
 				JsonObject serverMetadataJson = JsonParser.parseString(serverMetadata).getAsJsonObject();
 				String customConnectionId = serverMetadataJson.get("openviduCustomConnectionId").getAsString();
-				customConnectionId = customConnectionId.replaceAll("\\W", ""); // Remove all non-word characters: [^A-Za-z0-9_]
+				// Remove all non-word characters: [^A-Za-z0-9_]
+				customConnectionId = customConnectionId.replaceAll("\\W", "");
 				customConnectionId = customConnectionId.replaceAll(IdentifierPrefixes.PARTICIPANT_PUBLIC_ID, "");
 				tokenObj.setConnectionId(IdentifierPrefixes.PARTICIPANT_PUBLIC_ID + customConnectionId);
 			} catch (Exception e) {
@@ -634,7 +635,7 @@ public abstract class SessionManager {
 
 		if (session.close(reason)) {
 			try {
-				sessionEventsHandler.onSessionClosed(session.getSessionId(), reason);
+				sessionEventsHandler.onSessionClosed(session, reason);
 			} catch (Exception e) {
 				log.error("Error recording 'sessionDestroyed' event for session {}: {} - {}", session.getSessionId(),
 						e.getClass().getName(), e.getMessage());

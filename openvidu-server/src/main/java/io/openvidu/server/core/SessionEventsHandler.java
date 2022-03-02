@@ -71,8 +71,8 @@ public class SessionEventsHandler {
 		CDR.recordSessionCreated(session);
 	}
 
-	public void onSessionClosed(String sessionId, EndReason reason) {
-		CDR.recordSessionDestroyed(sessionId, reason);
+	public void onSessionClosed(Session session, EndReason reason) {
+		CDR.recordSessionDestroyed(session, reason);
 	}
 
 	public void onParticipantJoined(Participant participant, String sessionId, Set<Participant> existingParticipants,
