@@ -15,12 +15,14 @@ export abstract class ParticipantAbstractModel {
 	id: string;
 	local: boolean;
 	nickname: string;
+	colorProfile: string;
 	isMutedForcibly: boolean;
 
 	constructor(model?: StreamModel, id?: string, local: boolean = true, nickname?: string) {
 		this.id = id ? id : new Date().getTime().toString();
 		this.local = local,
-		this.nickname = nickname ? nickname : 'OpenVidu_User',
+		this.nickname = nickname ? nickname : 'OpenVidu_User';
+		this.colorProfile = `hsl(${Math.random()*360}, 100%, 80%)`;
 		this.isMutedForcibly = false;
 		let streamModel: StreamModel = {
 			connected: true,

@@ -5,8 +5,6 @@ import { VideoType } from '../../models/video-type.model';
 @Component({
 	selector: 'ov-video',
 	template: `
-		<ov-avatar-profile *ngIf="!_streamManager?.stream?.videoActive && (type === 'CAMERA' || !type)" [letter]="'K'"></ov-avatar-profile>
-
 		<video
 			class="OT_video-element"
 			#videoElement
@@ -18,9 +16,7 @@ import { VideoType } from '../../models/video-type.model';
 })
 export class VideoComponent implements AfterViewInit {
 	@Input() mutedSound: boolean;
-
 	_streamManager: StreamManager;
-
 	_videoElement: ElementRef;
 	type: VideoType = VideoType.CAMERA;
 

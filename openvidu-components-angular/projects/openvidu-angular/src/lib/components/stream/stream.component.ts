@@ -1,6 +1,5 @@
 import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { MatMenuPanel, MatMenuTrigger } from '@angular/material/menu';
-import { NicknameMatcher } from '../../matchers/nickname.matcher';
 import { VideoSizeIcon } from '../../models/icon.model';
 import { ScreenType, VideoType } from '../../models/video-type.model';
 import { DocumentService } from '../../services/document/document.service';

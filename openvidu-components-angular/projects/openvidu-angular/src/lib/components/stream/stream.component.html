@@ -26,6 +26,12 @@
 		<ov-audio-wave [streamManager]="_stream.streamManager"></ov-audio-wave>
 	</div>
 
+	<ov-avatar-profile
+		*ngIf="!_stream.streamManager?.stream?.videoActive && _stream.type === 'CAMERA'"
+		[name]="_stream.participant.nickname"
+		[color]="_stream.participant.colorProfile"
+	></ov-avatar-profile>
+
 	<ov-video
 		(dblclick)="toggleVideoEnlarged()"
 		[streamManager]="_stream.streamManager"

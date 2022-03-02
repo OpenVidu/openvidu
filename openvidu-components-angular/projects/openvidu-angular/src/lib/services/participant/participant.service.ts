@@ -102,7 +102,7 @@ export class ParticipantService {
 
 	setMyNickname(nickname: string) {
 		this.localParticipant.setNickname(nickname);
-		// this.updateLocalParticipant();
+		this.updateLocalParticipant();
 	}
 
 	getMyNickname(): string {

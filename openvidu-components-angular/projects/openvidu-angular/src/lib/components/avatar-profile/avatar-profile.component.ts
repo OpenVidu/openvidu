@@ -1,24 +1,22 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
-  selector: 'ov-avatar-profile',
+	selector: 'ov-avatar-profile',
 	template: `
-    <div class="poster" [ngStyle]="{ 'background-color': color }">
-      <span id="poster-text">{{letter}}</span>
-    </div>
-  `,
-  styleUrls: ['./avatar-profile.component.css']
+		<div class="poster" [ngStyle]="{ 'background-color': color }">
+			<span id="poster-text">{{ letter }}</span>
+		</div>
+	`,
+	styleUrls: ['./avatar-profile.component.css']
 })
-export class AvatarProfileComponent implements OnInit {
+export class AvatarProfileComponent {
+	letter: string;
 
-  color: string;
-
-  @Input() letter;
-
-  constructor() { }
-
-  ngOnInit(): void {
-		this.color = `hsl(${Math.random() * 360}, 100%, 75%)`;
+	@Input()
+	set name(nickname: string) {
+		this.letter = nickname[0];
 	}
+	@Input() color;
 
+	constructor() {}
 }
