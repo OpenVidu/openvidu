@@ -58,7 +58,6 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 					webcam: tokens.webcam,
 					screen: tokens.screen
 				};
-				this.joinSessionClicked = true;
 				this.isSessionAlive = true;
 			}
 		}
@@ -68,7 +67,7 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 	@Output() onCloseClicked = new EventEmitter<any>();
 
 	joinSessionClicked: boolean = false;
-	closeClicked: boolean = false;
+	// closeClicked: boolean = false;
 	isSessionAlive: boolean = false;
 	_tokens: { webcam: string; screen: string };
 	error: boolean = false;
@@ -140,10 +139,11 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 	ngOnInit() {}
 
 	async _onJoinClicked() {
+		this.joinSessionClicked = true;
 		this.onJoinClicked.emit();
 	}
-	onLeaveSessionClicked() {
-		this.isSessionAlive = false;
-		this.closeClicked = true;
-	}
+	// onLeaveSessionClicked() {
+	// 	this.isSessionAlive = false;
+	// 	this.closeClicked = true;
+	// }
 }

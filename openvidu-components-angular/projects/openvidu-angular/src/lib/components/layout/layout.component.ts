@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, OnDestroy, OnInit, TemplateRef } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, OnDestroy, OnInit, TemplateRef } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { ParticipantAbstractModel } from '../../models/participant.model';
@@ -11,7 +11,7 @@ import { StreamDirective } from '../../directives/openvidu-angular.directive';
 	styleUrls: ['./layout.component.css'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class LayoutComponent implements OnInit, OnDestroy {
+export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	@ContentChild('stream', { read: TemplateRef }) streamTemplate: TemplateRef<any>;
 
 	@ContentChild(StreamDirective)
@@ -32,6 +32,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
 	ngOnInit(): void {
 		this.subscribeToUsers();
+	}
+
+	ngAfterViewInit() {
 		this.layoutService.initialize();
 		this.layoutService.update();
 	}

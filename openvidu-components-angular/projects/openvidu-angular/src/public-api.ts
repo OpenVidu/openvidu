@@ -22,7 +22,7 @@ export * from './lib/services/storage/storage.service';
 
 // Components
 export * from './lib/components/videoconference/videoconference.component';
-export * from './lib/components/user-settings/user-settings.component';
+// export * from './lib/components/user-settings/user-settings.component';
 export * from './lib/components/toolbar/toolbar.component';
 export * from './lib/components/panel/panel.component';
 export * from './lib/components/panel/chat-panel/chat-panel.component';
@@ -33,6 +33,7 @@ export * from './lib/components/layout/layout.component';
 export * from './lib/components/stream/stream.component';
 export * from './lib/components/video/video.component';
 export * from './lib/components/audio-wave/audio-wave.component';
+export * from './lib/components/pre-join/pre-join.component';
 
 // Models
 export * from './lib/models/participant.model';

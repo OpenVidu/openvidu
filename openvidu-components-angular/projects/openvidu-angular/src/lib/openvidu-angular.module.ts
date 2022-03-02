@@ -26,7 +26,7 @@ import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 
-import { UserSettingsComponent } from './components/user-settings/user-settings.component';
+// import { UserSettingsComponent } from './components/user-settings/user-settings.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { VideoComponent } from './components/video/video.component';
 import { ChatPanelComponent } from './components/panel/chat-panel/chat-panel.component';
@@ -58,12 +58,22 @@ import { ParticipantsPanelComponent } from './components/panel/participants-pane
 import { VideoconferenceComponent } from './components/videoconference/videoconference.component';
 import { PanelComponent } from './components/panel/panel.component';
 import { AudioWaveComponent } from './components/audio-wave/audio-wave.component';
+import { PreJoinComponent } from './components/pre-join/pre-join.component';
 
-import { ChatPanelDirective, LayoutDirective, PanelDirective, ParticipantPanelItemDirective, ParticipantsPanelDirective, StreamDirective, ToolbarDirective } from './directives/openvidu-angular.directive';
+import {
+	ChatPanelDirective,
+	LayoutDirective,
+	PanelDirective,
+	ParticipantPanelItemDirective,
+	ParticipantsPanelDirective,
+	StreamDirective,
+	ToolbarDirective
+} from './directives/openvidu-angular.directive';
+import { AvatarProfileComponent } from './components/avatar-profile/avatar-profile.component';
 
 @NgModule({
 	declarations: [
-		UserSettingsComponent,
+		// UserSettingsComponent,
 		VideoComponent,
 		ToolbarComponent,
 		ChatPanelComponent,
@@ -77,7 +87,7 @@ import { ChatPanelDirective, LayoutDirective, PanelDirective, ParticipantPanelIt
 		ParticipantPanelItemComponent,
 		ParticipantsPanelComponent,
 		VideoconferenceComponent,
-  		AudioWaveComponent,
+		AudioWaveComponent,
 		PanelComponent,
 		ToolbarDirective,
 		PanelDirective,
@@ -85,7 +95,9 @@ import { ChatPanelDirective, LayoutDirective, PanelDirective, ParticipantPanelIt
 		ParticipantsPanelDirective,
 		ParticipantPanelItemDirective,
 		LayoutDirective,
-		StreamDirective
+		StreamDirective,
+		PreJoinComponent,
+		AvatarProfileComponent
 	],
 	imports: [
 		CommonModule,
@@ -132,7 +144,7 @@ import { ChatPanelDirective, LayoutDirective, PanelDirective, ParticipantPanelIt
 	],
 	exports: [
 		VideoconferenceComponent,
-		UserSettingsComponent,
+		// UserSettingsComponent,
 		ToolbarComponent,
 		PanelComponent,
 		ParticipantsPanelComponent,
@@ -143,6 +155,7 @@ import { ChatPanelDirective, LayoutDirective, PanelDirective, ParticipantPanelIt
 		StreamComponent,
 		VideoComponent,
 		AudioWaveComponent,
+		PreJoinComponent,
 		ParticipantStreamsPipe,
 		StreamsEnabledPipe,
 		CommonModule,

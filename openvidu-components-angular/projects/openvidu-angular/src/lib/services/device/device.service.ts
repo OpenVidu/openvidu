@@ -194,7 +194,7 @@ export class DeviceService {
 	}
 
 	clear() {
-		this.OV = new OpenVidu();
+		// this.OV = new OpenVidu();
 		this.devices = [];
 		this.cameras = [];
 		this.microphones = [];

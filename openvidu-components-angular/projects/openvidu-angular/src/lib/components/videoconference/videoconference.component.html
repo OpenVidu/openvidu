@@ -1,6 +1,8 @@
 <div id="call-container">
-	<div id="user-settings-container" *ngIf="!joinSessionClicked && !closeClicked">
-		<ov-user-settings (onJoinClicked)="_onJoinClicked()" (onCloseClicked)="onLeaveSessionClicked()"></ov-user-settings>
+	<div id="pre-join-container" *ngIf="!joinSessionClicked">
+		<ov-pre-join (onJoinClicked)="_onJoinClicked()"></ov-pre-join>
+		<!-- <ov-user-settings (onJoinClicked)="_onJoinClicked()" (onCloseClicked)="onLeaveSessionClicked()"></ov-user-settings> -->
+
 	</div>
 
 	<div id="spinner" *ngIf="joinSessionClicked && !isSessionAlive && !error">
