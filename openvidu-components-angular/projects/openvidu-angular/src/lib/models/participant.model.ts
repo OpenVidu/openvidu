@@ -33,7 +33,7 @@ export abstract class ParticipantAbstractModel {
 		this.colorProfile = !!props.colorProfile ? props.colorProfile : `hsl(${Math.random()*360}, 100%, 80%)`;
 		this.isMutedForcibly = typeof props.isMutedForcibly === 'boolean' ? props.isMutedForcibly : false;
 		let streamModel: StreamModel = {
-			connected: true,
+			connected: model ? model.connected : true,
 			type: model ? model.type : VideoType.CAMERA,
 			streamManager: model ? model.streamManager : null,
 			videoEnlarged: model ? model.videoEnlarged : false,

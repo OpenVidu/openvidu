@@ -27,6 +27,8 @@
 }
 
 .scrollable {
+	height: calc(100% - 60px);
+	max-height: calc(100% - 60px);
 	overflow: auto;
 }
 

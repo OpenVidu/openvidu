@@ -8,14 +8,14 @@
 
 	<div class="scrollable">
 
-		<div class="local-participant-container">
+		<div class="local-participant-container" *ngIf="localParticipant">
 			<ng-container *ngTemplateOutlet="participantPanelItemTemplate; context: { $implicit: localParticipant }"></ng-container>
 			<mat-divider *ngIf="true"></mat-divider>
 		</div>
 
 		<div class="remote-participants-container" *ngIf="remoteParticipants.length > 0">
 
-			<div *ngFor="let participant of remoteParticipants; let lastItem = last">
+			<div *ngFor="let participant of this.remoteParticipants">
 				<ng-container *ngTemplateOutlet="participantPanelItemTemplate; context: { $implicit: participant }"></ng-container>
 			</div>
 		</div>

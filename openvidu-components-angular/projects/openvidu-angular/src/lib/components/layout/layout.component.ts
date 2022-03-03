@@ -49,14 +49,13 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	protected subscribeToParticipants() {
 		this.localParticipantSubs = this.participantService.localParticipantObs.subscribe((p) => {
-			// We need to update the object reference doing a deep copy for update the view
-			this.localParticipant = Object.assign(Object.create(p), p)
+			this.localParticipant = p;
 			this.layoutService.update();
 			this.cd.markForCheck();
 		});
 
 		this.remoteParticipantsSubs = this.participantService.remoteParticipantsObs.subscribe((participants) => {
-			this.remoteParticipants = [...participants];
+			this.remoteParticipants = participants;
 			this.layoutService.update();
 			this.cd.markForCheck();
 		});

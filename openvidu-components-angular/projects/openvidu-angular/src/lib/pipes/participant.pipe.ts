@@ -1,15 +1,13 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { StreamModel, ParticipantAbstractModel } from '../models/participant.model';
 
-@Pipe({ name: 'streams', pure: true })
+@Pipe({ name: 'streams' })
 export class ParticipantStreamsPipe implements PipeTransform {
 	constructor() {}
 
 	transform(participants: ParticipantAbstractModel[] | ParticipantAbstractModel): StreamModel[] {
 		let streams: StreamModel[] = [];
-		console.log('STREAM PIPE')
-		debugger
-		if(Object.keys(participants).length > 0){
+		if(participants && Object.keys(participants).length > 0){
 			if (Array.isArray(participants)) {
 				participants.forEach((p) => {
 					streams = streams.concat(p.getAvailableConnections());
@@ -23,11 +21,12 @@ export class ParticipantStreamsPipe implements PipeTransform {
 	}
 }
 
-@Pipe({ name: 'streamTypesEnabled', pure: false })
+@Pipe({ name: 'streamTypesEnabled' })
 export class StreamTypesEnabledPipe implements PipeTransform {
 	constructor() {}
 
 	transform(participant: ParticipantAbstractModel): string {
-		return `(${participant?.getConnectionTypesActive().toString().replace(',', ', ')})`;
+		const activeStreams = participant?.getConnectionTypesActive().toString();
+		return `(${activeStreams.replace(',', ', ')})`;
 	}
 }

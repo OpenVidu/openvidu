@@ -174,7 +174,7 @@ export class ParticipantService {
 	}
 
 	updateLocalParticipant() {
-		this._localParticipant.next(this.localParticipant);
+		this._localParticipant.next(Object.assign(Object.create(this.localParticipant),this.localParticipant));
 	}
 
 	/**
@@ -188,7 +188,7 @@ export class ParticipantService {
 			type,
 			videoEnlarged: type === VideoType.SCREEN,
 			streamManager: subscriber,
-			connected: true,
+			connected:  true,
 			connectionId
 		};
 
@@ -287,7 +287,7 @@ export class ParticipantService {
 	}
 
 	updateRemoteParticipants() {
-		this._remoteParticipants.next(this.remoteParticipants);
+		this._remoteParticipants.next([...this.remoteParticipants]);
 	}
 
 	protected getTypeConnectionData(data: string): VideoType {
