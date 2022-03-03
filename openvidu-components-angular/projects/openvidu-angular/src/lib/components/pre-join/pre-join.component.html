@@ -6,7 +6,7 @@
 			</ng-template>
 		</ov-layout>
 	</div>
-	<div fxFlex.gt-sm="35%" fxFlex.lt-md="45%" fxLayoutAlign="center center" class="media-panel">
+	<div fxFlex.gt-sm="35%" fxFlex.lt-md="45%" fxLayoutAlign="center center" class="media-panel" *ngIf="localParticipant">
 		<div fxLayout="column" fxLayoutGap="10px" class="media-panel-container">
 			<div fxLayout.gt-sm="column" fxLayout.lt-md="column" fxLayoutGap="10px" fxFlex="33%">
 				<div fxFlex.gt-sm="100%" fxFlex.lt-md="33%" fxLayoutAlign="center center" fxFlexFill class="nickname-container">
