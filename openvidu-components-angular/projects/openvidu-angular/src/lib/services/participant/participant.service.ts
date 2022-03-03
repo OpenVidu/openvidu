@@ -201,8 +201,10 @@ export class ParticipantService {
 				participantAdded.setPublisher(streamModel.type, subscriber);
 			} else {
 				this.log.d('Participant has not publisher, adding it');
-				this.resetRemoteStreamsToNormalSize();
-				this.resetMyStreamsToNormalSize();
+				if(streamModel.type === VideoType.SCREEN) {
+					this.resetRemoteStreamsToNormalSize();
+					this.resetMyStreamsToNormalSize();
+				}
 				participantAdded.addConnection(streamModel);
 			}
 		} else {
