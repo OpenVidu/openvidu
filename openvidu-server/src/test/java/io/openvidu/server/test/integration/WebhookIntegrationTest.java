@@ -137,7 +137,7 @@ public class WebhookIntegrationTest {
 				CustomWebhook.waitForEvent("sessionCreated", 250, TimeUnit.MILLISECONDS);
 			});
 			// Now webhook response for event "sessionCreated" should be received
-			CustomWebhook.waitForEvent("sessionCreated", 750, TimeUnit.MILLISECONDS);
+			CustomWebhook.waitForEvent("sessionCreated", 1000, TimeUnit.MILLISECONDS);
 
 			this.sessionRestController.initializeConnection(sessionId, Map.of());
 
@@ -160,7 +160,7 @@ public class WebhookIntegrationTest {
 					anyInt(), refEq(null));
 
 			// Now webhook response for event "participantJoined" should be received
-			CustomWebhook.waitForEvent("participantJoined", 750, TimeUnit.MILLISECONDS);
+			CustomWebhook.waitForEvent("participantJoined", 1000, TimeUnit.MILLISECONDS);
 
 			setHttpClientDelay(1);
 			// These events will be received immediately
@@ -190,7 +190,7 @@ public class WebhookIntegrationTest {
 				CustomWebhook.waitForEvent("signalSent", 25, TimeUnit.MILLISECONDS);
 			});
 			// Events now received after timeout
-			JsonObject signal3 = CustomWebhook.waitForEvent("signalSent", 500, TimeUnit.MILLISECONDS);
+			JsonObject signal3 = CustomWebhook.waitForEvent("signalSent", 1000, TimeUnit.MILLISECONDS);
 			JsonObject signal4 = CustomWebhook.waitForEvent("signalSent", 25, TimeUnit.MILLISECONDS);
 			JsonObject signal5 = CustomWebhook.waitForEvent("signalSent", 25, TimeUnit.MILLISECONDS);
 
@@ -208,7 +208,7 @@ public class WebhookIntegrationTest {
 
 			// Webhook is NOT configured to receive "sessionDestroyed" event
 			assertThrows(TimeoutException.class, () -> {
-				CustomWebhook.waitForEvent("sessionDestroyed", 500, TimeUnit.MILLISECONDS);
+				CustomWebhook.waitForEvent("sessionDestroyed", 1000, TimeUnit.MILLISECONDS);
 			});
 
 		} finally {
