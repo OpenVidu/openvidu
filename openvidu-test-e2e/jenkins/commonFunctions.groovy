@@ -26,6 +26,9 @@ def prepareTestingEnvironment() {
         'Removing stranded containers': {
             removeStrandedContainers(true)
         }
+        'All permissions for /opt/openvidu/recordings': {
+            sh 'mkdir -p /opt/openvidu/recordings && chmod 777 /opt/openvidu/recordings'
+        }
     )
 
     println('Pulling containers and downloading files')
