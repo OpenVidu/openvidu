@@ -120,8 +120,7 @@ node('container') {
     try {
       stage ('OpenVidu Kurento E2E tests') {
         try {
-          // openViduE2ETest("kurento/kurento-media-server:${KURENTO_MEDIA_SERVER_VERSION}")
-          echo 'Ignore Kurento'
+          openViduE2ETest("kurento/kurento-media-server:${KURENTO_MEDIA_SERVER_VERSION}")
         } catch (err) {
           // In case of error, fail the stage
           sh 'exit 1'
