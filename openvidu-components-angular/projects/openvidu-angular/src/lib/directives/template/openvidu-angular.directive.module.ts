@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import {
 	ChatPanelDirective,
 	LayoutDirective,
-	OvImageDirective,
 	PanelDirective,
 	ParticipantPanelItemDirective,
 	ParticipantsPanelDirective,
@@ -14,7 +13,6 @@ import {
 	declarations: [
 		ChatPanelDirective,
 		LayoutDirective,
-		OvImageDirective,
 		PanelDirective,
 		ParticipantPanelItemDirective,
 		ParticipantsPanelDirective,
@@ -24,7 +22,6 @@ import {
 	exports: [
 		ChatPanelDirective,
 		LayoutDirective,
-		OvImageDirective,
 		PanelDirective,
 		ParticipantPanelItemDirective,
 		ParticipantsPanelDirective,

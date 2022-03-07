@@ -11,7 +11,8 @@ import {
 	ToolbarParticipantsPanelButtonDirective,
 	ToolbarChatPanelButtonDirective,
 	ToolbarDisplaySessionNameDirective,
-	ToolbarDisplayLogoDirective
+	ToolbarDisplayLogoDirective,
+	LogoDirective
 } from './toolbar.directive';
 import { AudioMutedDirective, MinimalDirective, VideoMutedDirective } from './videoconference.directive';
 
@@ -30,6 +31,7 @@ import { AudioMutedDirective, MinimalDirective, VideoMutedDirective } from './vi
 		StreamDisplayParticipantNameDirective,
 		StreamDisplayAudioDetectionDirective,
 		StreamSettingsButtonDirective,
+		LogoDirective
 	],
 	exports: [
 		MinimalDirective,
@@ -44,7 +46,8 @@ import { AudioMutedDirective, MinimalDirective, VideoMutedDirective } from './vi
 		ToolbarDisplayLogoDirective,
 		StreamDisplayParticipantNameDirective,
 		StreamDisplayAudioDetectionDirective,
-		StreamSettingsButtonDirective
+		StreamSettingsButtonDirective,
+		LogoDirective
 	]
 })
 export class ApiDirectiveModule {}

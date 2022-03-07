@@ -81,7 +81,6 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 	// Event sent when session has been created
 	@Output() onSessionCreated = new EventEmitter<any>();
 
-
 	joinSessionClicked: boolean = false;
 	// closeClicked: boolean = false;
 	isSessionAlive: boolean = false;
