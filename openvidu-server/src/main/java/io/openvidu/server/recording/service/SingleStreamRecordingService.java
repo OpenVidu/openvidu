@@ -104,22 +104,26 @@ public class SingleStreamRecordingService extends RecordingService {
 		int activePublishersToRecord = session.getActiveIndividualRecordedPublishers();
 		final CountDownLatch recordingStartedCountdown = new CountDownLatch(activePublishersToRecord);
 
-		for (Participant p : session.getParticipants()) {
-			if (p.isStreaming() && p.getToken().record()) {
+		try {
+			for (Participant p : session.getParticipants()) {
+				if (p.isStreaming() && p.getToken().record()) {
 
-				MediaProfileSpecType profile = null;
-				try {
-					profile = generateMediaProfile(properties, p);
-				} catch (OpenViduException e) {
-					log.error(
-							"Cannot start single stream recorder for stream {} in session {}: {}. Skipping to next stream being published",
-							p.getPublisherStreamId(), session.getSessionId(), e.getMessage());
-					recordingStartedCountdown.countDown();
-					continue;
+					MediaProfileSpecType profile = null;
+					try {
+						profile = generateMediaProfile(properties, p);
+					} catch (OpenViduException e) {
+						log.error(
+								"Cannot start single stream recorder for stream {} in session {}: {}. Skipping to next stream being published",
+								p.getPublisherStreamId(), session.getSessionId(), e.getMessage());
+						recordingStartedCountdown.countDown();
+						continue;
+					}
+					this.startRecorderEndpointForPublisherEndpoint(recording.getId(), profile, p,
+							recordingStartedCountdown);
 				}
-				this.startRecorderEndpointForPublisherEndpoint(recording.getId(), profile, p,
-						recordingStartedCountdown);
 			}
+		} catch (RecorderEndpointException e) {
+			throw this.failStartRecording(session, recording, "Couldn't initialize some RecorderEndpoint");
 		}
 
 		try {
@@ -127,7 +131,8 @@ public class SingleStreamRecordingService extends RecordingService {
 				if (!recordingStartedCountdown.await(10, TimeUnit.SECONDS)) {
 					log.error("Error waiting for some recorder endpoint to start in session {}",
 							session.getSessionId());
-					throw this.failStartRecording(session, recording, "Couldn't initialize some RecorderEndpoint");
+					throw this.failStartRecording(session, recording,
+							"Some RecorderEndpoint did not trigger RecordingEvent in time");
 				}
 			} else {
 				log.info(
@@ -247,8 +252,7 @@ public class SingleStreamRecordingService extends RecordingService {
 
 					RecorderEndpoint recorder = new RecorderEndpoint.Builder(pipeline,
 							"file://" + openviduConfig.getOpenViduRemoteRecordingPath() + recordingId + "/" + fileName
-									+ fileExtension).withMediaProfile(profile)
-											.build();
+									+ fileExtension).withMediaProfile(profile).build();
 
 					recorder.addRecordingListener(new EventListener<RecordingEvent>() {
 						@Override
@@ -263,10 +267,9 @@ public class SingleStreamRecordingService extends RecordingService {
 					recorder.addErrorListener(new EventListener<ErrorEvent>() {
 						@Override
 						public void onEvent(ErrorEvent event) {
-							final String msg = "Event [" + event.getType() + "] endpoint: "
-									+ recorder.getName() + " | errorCode: " + event.getErrorCode()
-									+ " | description: " + event.getDescription() + " | timestamp: "
-									+ event.getTimestampMillis();
+							final String msg = "Event [" + event.getType() + "] endpoint: " + recorder.getName()
+									+ " | errorCode: " + event.getErrorCode() + " | description: "
+									+ event.getDescription() + " | timestamp: " + event.getTimestampMillis();
 							log.error(msg);
 						}
 					});
@@ -282,7 +285,12 @@ public class SingleStreamRecordingService extends RecordingService {
 
 					connectAccordingToProfile(kurentoParticipant.getPublisher(), recorder, profile);
 
-					wrapper.getRecorder().record();
+					try {
+						wrapper.getRecorder().record();
+					} catch (Exception e) {
+						log.error("Error on RecorderEndpoint: " + e.getMessage());
+						throw new RecorderEndpointException();
+					}
 
 				} finally {
 					participant.singleRecordingLock.unlock();
@@ -376,29 +384,26 @@ public class SingleStreamRecordingService extends RecordingService {
 
 		if (!streamHasAudio && !streamHasVideo) {
 			// ERROR: Stream has no track at all. This branch should never be reachable
-			throw new OpenViduException(
-					Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
+			throw new OpenViduException(Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
 					"Stream has no track at all. Cannot be recorded");
 		}
 
 		if (!propertiesHasAudio && !propertiesHasVideo) {
-			// ERROR: Properties don't enable any track. This branch should never be reachable
-			throw new OpenViduException(
-					Code.MEDIA_TYPE_RECORDING_PROPERTIES_ERROR_CODE,
+			// ERROR: Properties don't enable any track. This branch should never be
+			// reachable
+			throw new OpenViduException(Code.MEDIA_TYPE_RECORDING_PROPERTIES_ERROR_CODE,
 					"RecordingProperties cannot set both \"hasAudio(false)\" and \"hasVideo(false)\"");
 		}
 
 		boolean streamOnlyAudio = streamHasAudio && !streamHasVideo;
 		if (streamOnlyAudio && !propertiesHasAudio) {
-			throw new OpenViduException(
-					Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
+			throw new OpenViduException(Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
 					"RecordingProperties set to \"hasAudio(false)\" but stream is audio-only");
 		}
 
 		boolean streamOnlyVideo = !streamHasAudio && streamHasVideo;
 		if (streamOnlyVideo & !propertiesHasVideo) {
-			throw new OpenViduException(
-					Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
+			throw new OpenViduException(Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
 					"RecordingProperties set to \"hasVideo(false)\" but stream is video-only");
 		}
 
@@ -408,11 +413,9 @@ public class SingleStreamRecordingService extends RecordingService {
 		boolean recordVideo = streamHasVideo && propertiesHasVideo;
 		if (recordAudio && recordVideo) {
 			profile = openviduConfig.getMediaServer().getRecordingProfile();
-		}
-		else if (recordAudio) {
+		} else if (recordAudio) {
 			profile = openviduConfig.getMediaServer().getRecordingProfileAudioOnly();
-		}
-		else if (recordVideo) {
+		} else if (recordVideo) {
 			profile = openviduConfig.getMediaServer().getRecordingProfileVideoOnly();
 		}
 
@@ -425,11 +428,9 @@ public class SingleStreamRecordingService extends RecordingService {
 		// already connected when `RecorderEndpoint.record()` is called.
 		if (profile.name().contains("AUDIO_ONLY")) {
 			publisherEndpoint.connect(recorder, MediaType.AUDIO, true);
-		}
-		else if (profile.name().contains("VIDEO_ONLY")) {
+		} else if (profile.name().contains("VIDEO_ONLY")) {
 			publisherEndpoint.connect(recorder, MediaType.VIDEO, true);
-		}
-		else {
+		} else {
 			publisherEndpoint.connect(recorder, MediaType.AUDIO, true);
 			publisherEndpoint.connect(recorder, MediaType.VIDEO, true);
 		}
@@ -576,6 +577,10 @@ public class SingleStreamRecordingService extends RecordingService {
 	private void cleanRecordingWrappers(Recording recording) {
 		this.storedRecorders.remove(recording.getId());
 		this.activeRecorders.remove(recording.getId());
+	}
+
+	class RecorderEndpointException extends RuntimeException {
+		private static final long serialVersionUID = 1L;
 	}
 
 }
