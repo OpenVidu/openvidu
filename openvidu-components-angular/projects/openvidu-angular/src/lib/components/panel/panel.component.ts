@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, OnInit, TemplateRef } from '@angular/core';
 import { skip, Subscription } from 'rxjs';
-import { ChatPanelDirective, ParticipantsPanelDirective } from '../../directives/openvidu-angular.directive';
+import { ChatPanelDirective, ParticipantsPanelDirective } from '../../directives/template/openvidu-angular.directive';
 import { MenuType } from '../../models/menu.model';
 import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.service';
 

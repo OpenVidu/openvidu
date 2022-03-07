@@ -60,16 +60,9 @@ import { PanelComponent } from './components/panel/panel.component';
 import { AudioWaveComponent } from './components/audio-wave/audio-wave.component';
 import { PreJoinComponent } from './components/pre-join/pre-join.component';
 
-import {
-	ChatPanelDirective,
-	LayoutDirective,
-	PanelDirective,
-	ParticipantPanelItemDirective,
-	ParticipantsPanelDirective,
-	StreamDirective,
-	ToolbarDirective
-} from './directives/openvidu-angular.directive';
 import { AvatarProfileComponent } from './components/avatar-profile/avatar-profile.component';
+import { OpenViduAngularDirectiveModule } from './directives/template/openvidu-angular.directive.module';
+import { ApiDirectiveModule } from './directives/api/api.directive.module';
 
 @NgModule({
 	declarations: [
@@ -89,15 +82,8 @@ import { AvatarProfileComponent } from './components/avatar-profile/avatar-profi
 		VideoconferenceComponent,
 		AudioWaveComponent,
 		PanelComponent,
-		ToolbarDirective,
-		PanelDirective,
-		ChatPanelDirective,
-		ParticipantsPanelDirective,
-		ParticipantPanelItemDirective,
-		LayoutDirective,
-		StreamDirective,
+		AvatarProfileComponent,
 		PreJoinComponent,
-		AvatarProfileComponent
 	],
 	imports: [
 		CommonModule,
@@ -124,7 +110,9 @@ import { AvatarProfileComponent } from './components/avatar-profile/avatar-profi
 		FlexLayoutModule,
 		MatMenuModule,
 		MatDividerModule,
-		MatListModule
+		MatListModule,
+		OpenViduAngularDirectiveModule,
+		ApiDirectiveModule
 	],
 	providers: [
 		ActionService,
@@ -159,13 +147,8 @@ import { AvatarProfileComponent } from './components/avatar-profile/avatar-profi
 		ParticipantStreamsPipe,
 		StreamTypesEnabledPipe,
 		CommonModule,
-		ToolbarDirective,
-		PanelDirective,
-		ChatPanelDirective,
-		ParticipantsPanelDirective,
-		ParticipantPanelItemDirective,
-		LayoutDirective,
-		StreamDirective
+		OpenViduAngularDirectiveModule,
+		ApiDirectiveModule
 	],
 	entryComponents: [DialogTemplateComponent]
 })

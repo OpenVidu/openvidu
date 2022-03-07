@@ -7,7 +7,7 @@ import {
 	ParticipantsPanelDirective,
 	StreamDirective,
 	ToolbarDirective
-} from '../../directives/openvidu-angular.directive';
+} from '../../directives/template/openvidu-angular.directive';
 import { ILogger } from '../../models/logger.model';
 import { LoggerService } from '../../services/logger/logger.service';
 
@@ -17,13 +17,16 @@ import { LoggerService } from '../../services/logger/logger.service';
 	styleUrls: ['./videoconference.component.css']
 })
 export class VideoconferenceComponent implements OnInit, AfterViewInit {
-	//Toolbar
+	// *** Toolbar ***
 	@ContentChild(ToolbarDirective) externalToolbar: ToolbarDirective;
-	// Panels
+
+	// *** Panels ***
 	@ContentChild(PanelDirective) externalPanel: PanelDirective;
 	@ContentChild(ChatPanelDirective) externalChatPanel: ChatPanelDirective;
 	@ContentChild(ParticipantsPanelDirective) externalParticipantsPanel: ParticipantsPanelDirective;
 	@ContentChild(ParticipantPanelItemDirective) externalParticipantPanelItem: ParticipantPanelItemDirective;
+
+	// *** Layout ***
 	@ContentChild(LayoutDirective) externalLayout: LayoutDirective;
 	@ContentChild(StreamDirective) externalStream: StreamDirective;
 
@@ -43,8 +46,9 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 	openviduAngularLayoutTemplate: TemplateRef<any>;
 	openviduAngularStreamTemplate: TemplateRef<any>;
 
+	// *** Parameters ***
 	@Input() sessionName: string;
-	@Input() userName: string;
+	@Input() participantName: string;
 
 	@Input()
 	set tokens(tokens: { webcam: string; screen: string }) {
@@ -63,8 +67,20 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 		}
 	}
 
-	@Output() onJoinClicked = new EventEmitter<any>();
-	@Output() onCloseClicked = new EventEmitter<any>();
+	// *** Events ***
+
+	// Event sent when user click on the join button in pre-join page
+	@Output() onJoinSessionClicked = new EventEmitter<any>();
+
+	// Event sent when participant has joined the session
+	@Output() onParticipantJoined = new EventEmitter<any>();
+
+	// Event sent when participant has left the session
+	@Output() onParticipantLeft = new EventEmitter<any>();
+
+	// Event sent when session has been created
+	@Output() onSessionCreated = new EventEmitter<any>();
+
 
 	joinSessionClicked: boolean = false;
 	// closeClicked: boolean = false;
@@ -140,7 +156,7 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 
 	async _onJoinClicked() {
 		this.joinSessionClicked = true;
-		this.onJoinClicked.emit();
+		this.onJoinSessionClicked.emit();
 	}
 	// onLeaveSessionClicked() {
 	// 	this.isSessionAlive = false;

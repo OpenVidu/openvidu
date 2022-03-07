@@ -3,6 +3,7 @@ import { Device, OpenVidu, OpenViduError, OpenViduErrorName } from 'openvidu-bro
 
 import { CameraType, DeviceType, CustomDevice } from '../../models/device.model';
 import { ILogger } from '../../models/logger.model';
+import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.service';
 
 import { LoggerService } from '../logger/logger.service';
 import { PlatformService } from '../platform/platform.service';
@@ -28,7 +29,12 @@ export class DeviceService {
 	private _isAudioMuted: boolean;
 	private deviceAccessDeniedError: boolean = false;
 
-	constructor(private loggerSrv: LoggerService, private platformSrv: PlatformService, private storageSrv: StorageService) {
+	constructor(
+		private loggerSrv: LoggerService,
+		private platformSrv: PlatformService,
+		private storageSrv: StorageService,
+		private libSrv: OpenViduAngularConfigService
+	) {
 		this.log = this.loggerSrv.get('DevicesService');
 		this.OV = new OpenVidu();
 	}
@@ -38,7 +44,6 @@ export class DeviceService {
 	}
 
 	async initializeDevices() {
-
 		try {
 			// Forcing media permissions request.
 			// Sometimes, browser doens't launch the media permissions modal.
@@ -54,8 +59,8 @@ export class DeviceService {
 		this.cameras = customDevices.cameras;
 		this.microphones = customDevices.microphones;
 
-		this._isVideoMuted = this.storageSrv.isVideoMuted();
-		this._isAudioMuted = this.storageSrv.isAudioMuted();
+		this._isVideoMuted = this.storageSrv.isVideoMuted() || this.libSrv.videoMuted.getValue();
+		this._isAudioMuted = this.storageSrv.isAudioMuted() || this.libSrv.audioMuted.getValue();;
 
 		this.log.d('Media devices', customDevices);
 	}
@@ -79,7 +84,7 @@ export class DeviceService {
 			if (!!storageMicrophone) {
 				this.microphoneSelected = storageMicrophone;
 			} else if (customDevices.microphones.length > 0) {
-				if(this.deviceAccessDeniedError && customDevices.microphones.length > 1){
+				if (this.deviceAccessDeniedError && customDevices.microphones.length > 1) {
 					// We assume that the default device is already in use
 					// Assign an alternative device with the aim of avoiding the DEVICE_ALREADY_IN_USE error
 					this.microphoneSelected = customDevices.microphones[1];
@@ -115,7 +120,7 @@ export class DeviceService {
 			if (!!storageCamera) {
 				this.cameraSelected = storageCamera;
 			} else if (customDevices.cameras.length > 0) {
-				if(this.deviceAccessDeniedError && customDevices.cameras.length > 1){
+				if (this.deviceAccessDeniedError && customDevices.cameras.length > 1) {
 					// We assume that the default device is already in use
 					// Assign an alternative device with the aim of avoiding the DEVICE_ALREADY_IN_USE error
 					this.cameraSelected = customDevices.cameras[1];

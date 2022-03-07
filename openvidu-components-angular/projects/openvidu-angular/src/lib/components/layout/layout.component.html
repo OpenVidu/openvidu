@@ -1,6 +1,6 @@
 <div id="layout" class="layout">
 	<div
-		class="OT_root OT_publisher"
+		class="OT_root OT_publisher ovStream"
 		*ngFor="let stream of localParticipant | streams"
 		[ngClass]="{ OV_big: stream.videoEnlarged }"
 	>
@@ -9,7 +9,7 @@
 
 	<div
 		*ngFor="let stream of remoteParticipants | streams"
-		class="OT_root OT_publisher"
+		class="OT_root OT_publisher ovStream"
 		id="remote-participant"
 		[ngClass]="{ OV_big: stream.videoEnlarged }"
 	>

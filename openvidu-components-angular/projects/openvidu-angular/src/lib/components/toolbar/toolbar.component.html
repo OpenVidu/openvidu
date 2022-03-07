@@ -1,8 +1,8 @@
 <mat-toolbar id="toolbar" role="heading" fxLayout fxLayoutAlign="center" fxLayoutGap="10px">
 	<div fxFlex="20%" fxLayoutAlign="start center">
 		<div id="img-container">
-			<img id="branding-logo" src='assets/images/openvidu_globe.png'/>
-			<span id="session-title" *ngIf="session && session.sessionId">{{ session.sessionId }}</span>
+			<img *ngIf="!isMinimal && showLogo" id="branding-logo" src="assets/images/ov_company_logo.png" ovImage />
+			<span id="session-title" *ngIf="!isMinimal && session && session.sessionId && showSessionName">{{ session.sessionId }}</span>
 		</div>
 	</div>
 	<div fxFlex="60%" fxFlexOrder="2" fxLayoutAlign="center center" id="media-buttons-container">
@@ -32,8 +32,9 @@
 
 		<!-- Screenshare button -->
 		<button
-			id="navScreenButton"
 			mat-icon-button
+			*ngIf="!isMinimal && showScreenshareButton"
+			id="navScreenButton"
 			(click)="toggleScreenShare()"
 			[disabled]="isConnectionLost"
 			[class.active-btn]="isScreenShareActive"
@@ -43,7 +44,13 @@
 		</button>
 
 		<!-- Fullscreen button -->
-		<button mat-icon-button (click)="toggleFullscreen()" [disabled]="isConnectionLost" [class.active-btn]="isFullscreenActive">
+		<button
+			mat-icon-button
+			*ngIf="!isMinimal && showFullscreenButton"
+			(click)="toggleFullscreen()"
+			[disabled]="isConnectionLost"
+			[class.active-btn]="isFullscreenActive"
+		>
 			<mat-icon *ngIf="isFullscreenActive" matTooltip="Exit Fullscreen">fullscreen_exit</mat-icon>
 			<mat-icon *ngIf="!isFullscreenActive" matTooltip="Fullscreen">fullscreen</mat-icon>
 		</button>
@@ -52,7 +59,7 @@
 		<ng-content select="[toolbar-btn]"></ng-content>
 
 		<!-- Leave session button -->
-		<button mat-icon-button (click)="leaveSession()" id="leave-btn">
+		<button mat-icon-button *ngIf="showLeaveButton" (click)="leaveSession()" id="leave-btn">
 			<mat-icon matTooltip="Leave the session">call_end</mat-icon>
 		</button>
 	</div>
@@ -60,6 +67,7 @@
 		<!-- Default participants button -->
 		<button
 			mat-icon-button
+			*ngIf="!isMinimal && showParticipantsPanelButton"
 			matTooltip="Show articipants"
 			(click)="toggleMenu('participants')"
 			[disabled]="isConnectionLost"
@@ -68,14 +76,10 @@
 			<mat-icon>people</mat-icon>
 		</button>
 
-		<div #customMenuButton>
-			<ng-content select="[menu-button]"></ng-content>
-		</div>
-
 		<!-- Default chat button -->
 		<button
 			mat-icon-button
-			*ngIf="!customMenuButton.innerHTML"
+			*ngIf="!isMinimal && showChatPanelButton"
 			(click)="toggleMenu('chat')"
 			[disabled]="isConnectionLost"
 			[class.active-btn]="isChatOpened"

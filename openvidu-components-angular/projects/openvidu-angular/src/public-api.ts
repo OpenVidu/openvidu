@@ -46,4 +46,10 @@ export * from './lib/models/notification-options.model';
 export * from './lib/pipes/participant.pipe';
 
 // Directives
-export * from './lib/directives/openvidu-angular.directive';
+export * from './lib/directives/api/api.directive.module';
+export * from './lib/directives/template/openvidu-angular.directive.module';
+
+export * from './lib/directives/template/openvidu-angular.directive';
+export * from './lib/directives/api/toolbar.directive';
+export * from './lib/directives/api/stream.directive';
+export * from './lib/directives/api/videoconference.directive';

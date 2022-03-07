@@ -3,7 +3,7 @@ import { Subscription } from 'rxjs';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { ParticipantAbstractModel } from '../../models/participant.model';
 import { LayoutService } from '../../services/layout/layout.service';
-import { StreamDirective } from '../../directives/openvidu-angular.directive';
+import { StreamDirective } from '../../directives/template/openvidu-angular.directive';
 
 @Component({
 	selector: 'ov-layout',

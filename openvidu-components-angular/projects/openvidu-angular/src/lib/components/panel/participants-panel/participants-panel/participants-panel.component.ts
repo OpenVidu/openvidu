@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, On
 import { ParticipantAbstractModel } from '../../../../models/participant.model';
 import { ParticipantService } from '../../../../services/participant/participant.service';
 import { SidenavMenuService } from '../../../..//services/sidenav-menu/sidenav-menu.service';
-import { ParticipantPanelItemDirective } from '../../../../directives/openvidu-angular.directive';
+import { ParticipantPanelItemDirective } from '../../../../directives/template/openvidu-angular.directive';
 import { Subscription } from 'rxjs';
 
 @Component({

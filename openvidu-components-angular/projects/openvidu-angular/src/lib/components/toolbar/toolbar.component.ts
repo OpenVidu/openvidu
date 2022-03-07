@@ -26,6 +26,7 @@ import { DeviceService } from '../../services/device/device.service';
 import { ChatMessage } from '../../models/chat.model';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { MenuType } from '../../models/menu.model';
+import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 
 @Component({
 	selector: 'ov-toolbar',
@@ -55,11 +56,47 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	isChatOpened: boolean = false;
 	isParticipantsOpened: boolean = false;
 
-	protected log: ILogger;
-	protected menuTogglingSubscription: Subscription;
-	protected chatMessagesSubscription: Subscription;
-	protected localParticipantSubscription: Subscription;
+	isMinimal: boolean = false;
+	showScreenshareButton = true;
+	showFullscreenButton: boolean = true;
+	showLeaveButton: boolean = true;
+	showParticipantsPanelButton: boolean = true;
+	showChatPanelButton: boolean = true;
+	showLogo: boolean = true;
+	showSessionName: boolean = true;
+
+	private log: ILogger;
+	private minimalSub: Subscription;
+	private menuTogglingSubscription: Subscription;
+	private chatMessagesSubscription: Subscription;
+	private localParticipantSubscription: Subscription;
+	private screenshareButtonSub: Subscription;
+	private fullscreenButtonSub: Subscription;
+	private leaveButtonSub: Subscription;
+	private participantsPanelButtonSub: Subscription;
+	private chatPanelButtonSub: Subscription;
+	private displayLogoSub: Subscription;
+	private displaySessionNameSub: Subscription;
 	private currentWindowHeight = window.innerHeight;
+
+	@HostListener('window:resize', ['$event'])
+	sizeChange(event) {
+		if (this.currentWindowHeight >= window.innerHeight) {
+			// The user has exit the fullscreen mode
+			this.isFullscreenActive = false;
+			this.currentWindowHeight = window.innerHeight;
+		}
+	}
+
+	@HostListener('document:keydown', ['$event'])
+	keyDown(event: KeyboardEvent) {
+		if (event.key === 'F11') {
+			event.preventDefault();
+			this.toggleFullscreen();
+			this.currentWindowHeight = window.innerHeight;
+			return false;
+		}
+	}
 
 	constructor(
 		protected documentService: DocumentService,
@@ -71,43 +108,15 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		protected oVDevicesService: DeviceService,
 		protected actionService: ActionService,
 		protected loggerSrv: LoggerService,
-		private cd: ChangeDetectorRef
+		private cd: ChangeDetectorRef,
+		private libService: OpenViduAngularConfigService
 	) {
 		this.log = this.loggerSrv.get('ToolbarComponent');
 	}
 
-	ngOnDestroy(): void {
-		if (this.menuTogglingSubscription) {
-			this.menuTogglingSubscription.unsubscribe();
-		}
-		if (this.chatMessagesSubscription) {
-			this.chatMessagesSubscription.unsubscribe();
-		}
-		if (this.localParticipantSubscription) {
-			this.localParticipantSubscription.unsubscribe();
-		}
-	}
-
-	@HostListener('window:resize', ['$event'])
-	sizeChange(event) {
-		if(this.currentWindowHeight >= window.innerHeight) {
-			// The user has exit the fullscreen mode
-			this.isFullscreenActive = false;
-			this.currentWindowHeight = window.innerHeight;
-		}
-	}
-
-	@HostListener('document:keydown', ['$event'])
-	keyDown(event: KeyboardEvent) {
-		if(event.key === 'F11'){
-			event.preventDefault();
-			this.toggleFullscreen();
-			this.currentWindowHeight = window.innerHeight;
-			return false;
-		}
-	}
-
 	async ngOnInit() {
+		this.subscribeToToolbarDirectives();
+
 		await this.oVDevicesService.initializeDevices();
 		this.hasVideoDevices = this.oVDevicesService.hasVideoDeviceAvailable();
 		this.hasAudioDevices = this.oVDevicesService.hasAudioDeviceAvailable();
@@ -117,6 +126,19 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		this.subscribeToReconnection();
 		this.subscribeToMenuToggling();
 		this.subscribeToChatMessages();
+	}
+
+	ngOnDestroy(): void {
+		if (this.menuTogglingSubscription) this.menuTogglingSubscription.unsubscribe();
+		if (this.chatMessagesSubscription) this.chatMessagesSubscription.unsubscribe();
+		if (this.localParticipantSubscription) this.localParticipantSubscription.unsubscribe();
+		if (this.screenshareButtonSub) this.screenshareButtonSub.unsubscribe();
+		if (this.fullscreenButtonSub) this.fullscreenButtonSub.unsubscribe();
+		if (this.leaveButtonSub) this.leaveButtonSub.unsubscribe();
+		if (this.participantsPanelButtonSub) this.participantsPanelButtonSub.unsubscribe();
+		if (this.chatPanelButtonSub) this.chatPanelButtonSub.unsubscribe();
+		if (this.displayLogoSub) this.displayLogoSub.unsubscribe();
+		if (this.displaySessionNameSub) this.displaySessionNameSub.unsubscribe();
 	}
 
 	toggleMicrophone() {
@@ -294,6 +316,41 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 			this.isWebcamVideoActive = p.isCameraVideoActive();
 			this.isWebcamAudioActive = p.isCameraAudioActive();
 			this.isScreenShareActive = p.isScreenActive();
+			this.cd.markForCheck();
+		});
+	}
+
+	private subscribeToToolbarDirectives() {
+		this.minimalSub = this.libService.minimalObs.subscribe((value: boolean) => {
+			this.isMinimal = value;
+			this.cd.markForCheck();
+		});
+		this.screenshareButtonSub = this.libService.screenshareButtonObs.subscribe((value: boolean) => {
+			this.showScreenshareButton = value;
+			this.cd.markForCheck();
+		});
+		this.fullscreenButtonSub = this.libService.fullscreenButtonObs.subscribe((value: boolean) => {
+			this.showFullscreenButton = value;
+			this.cd.markForCheck();
+		});
+		this.leaveButtonSub = this.libService.leaveButtonObs.subscribe((value: boolean) => {
+			this.showLeaveButton = value;
+			this.cd.markForCheck();
+		});
+		this.chatPanelButtonSub = this.libService.chatPanelButtonObs.subscribe((value: boolean) => {
+			this.showChatPanelButton = value;
+			this.cd.markForCheck();
+		});
+		this.participantsPanelButtonSub = this.libService.participantsPanelButtonObs.subscribe((value: boolean) => {
+			this.showParticipantsPanelButton = value;
+			this.cd.markForCheck();
+		});
+		this.displayLogoSub = this.libService.displayLogoObs.subscribe((value: boolean) => {
+			this.showLogo = value;
+			this.cd.markForCheck();
+		});
+		this.displaySessionNameSub = this.libService.displaySessionNameObs.subscribe((value: boolean) => {
+			this.showSessionName = value;
 			this.cd.markForCheck();
 		});
 	}

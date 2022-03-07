@@ -1,4 +1,5 @@
 import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { MatMenuPanel, MatMenuTrigger } from '@angular/material/menu';
 import { VideoSizeIcon } from '../../models/icon.model';
 import { ScreenType, VideoType } from '../../models/video-type.model';
@@ -11,6 +12,7 @@ import { Signal } from '../../models/signal.model';
 import { PublisherProperties } from 'openvidu-browser';
 import { StreamModel } from '../../models/participant.model';
 import { ParticipantService } from '../../services/participant/participant.service';
+import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 
 @Component({
 	selector: 'ov-stream',
@@ -18,19 +20,27 @@ import { ParticipantService } from '../../services/participant/participant.servi
 	styleUrls: ['./stream.component.css']
 })
 export class StreamComponent implements OnInit {
+	@ViewChild(MatMenuTrigger) public menuTrigger: MatMenuTrigger;
+	@ViewChild('menu') menu: MatMenuPanel;
+
 	videoSizeIconEnum = VideoSizeIcon;
 	videoTypeEnum = VideoType;
 	videoSizeIcon: VideoSizeIcon = VideoSizeIcon.BIG;
 	toggleNickname: boolean;
 	_stream: StreamModel;
 	nickname: string;
-	private _streamContainer: ElementRef;
-	@ViewChild(MatMenuTrigger) public menuTrigger: MatMenuTrigger;
-	@ViewChild('menu') menu: MatMenuPanel;
 
-	@Input() showNickname: boolean = true;
-	@Input() showAudioDetection: boolean = true;
-	@Input() showSettings: boolean = true;
+	isMinimal: boolean = false;
+	showNickname: boolean = true;
+	showAudioDetection: boolean = true;
+	showSettingsButton: boolean = true;
+
+	private _streamContainer: ElementRef;
+
+	private minimalSub: Subscription;
+	private displayParticipantNameSub: Subscription;
+	private displayAudioDetectionSub: Subscription;
+	private settingsButtonSub: Subscription;
 
 	constructor(
 		protected documentService: DocumentService,
@@ -38,7 +48,8 @@ export class StreamComponent implements OnInit {
 		protected layoutService: LayoutService,
 		protected participantService: ParticipantService,
 		protected storageService: StorageService,
-		protected cdkSrv: CdkOverlayService
+		protected cdkSrv: CdkOverlayService,
+		private libService: OpenViduAngularConfigService
 	) {}
 
 	@ViewChild('streamContainer', { static: false, read: ElementRef })
@@ -57,7 +68,7 @@ export class StreamComponent implements OnInit {
 	set stream(stream: StreamModel) {
 		this._stream = stream;
 		this.checkVideoEnlarged();
-		if(this._stream.participant) {
+		if (this._stream.participant) {
 			this.nickname = this._stream.participant.nickname;
 		}
 	}
@@ -70,10 +81,14 @@ export class StreamComponent implements OnInit {
 	}
 
 	ngOnInit() {
+		this.subscribeToStreamDirectives();
 	}
 
 	ngOnDestroy() {
 		this.cdkSrv.setSelector('body');
+		if (this.settingsButtonSub) this.settingsButtonSub.unsubscribe();
+		if (this.displayAudioDetectionSub) this.displayAudioDetectionSub.unsubscribe();
+		if (this.displayParticipantNameSub) this.displayParticipantNameSub.unsubscribe();
 	}
 
 	toggleVideoEnlarged() {
@@ -98,7 +113,6 @@ export class StreamComponent implements OnInit {
 
 	toggleSound() {
 		this._stream.participant.setMutedForcibly(!this._stream.participant.isMutedForcibly);
-
 	}
 
 	toggleNicknameForm() {
@@ -109,7 +123,7 @@ export class StreamComponent implements OnInit {
 
 	updateNickname(event) {
 		if (event?.keyCode === 13 || event?.type === 'focusout') {
-			if(!!this.nickname){
+			if (!!this.nickname) {
 				this.participantService.setMyNickname(this.nickname);
 				this.storageService.setNickname(this.nickname);
 				this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, undefined, { clientData: this.nickname });
@@ -128,7 +142,26 @@ export class StreamComponent implements OnInit {
 		await this.openviduService.replaceTrack(VideoType.SCREEN, properties);
 	}
 
-	protected checkVideoEnlarged() {
+	private checkVideoEnlarged() {
 		this.videoSizeIcon = this._stream.videoEnlarged ? VideoSizeIcon.NORMAL : VideoSizeIcon.BIG;
+	}
+
+	private subscribeToStreamDirectives() {
+
+		this.minimalSub = this.libService.minimalObs.subscribe((value: boolean) => {
+			this.isMinimal = value;
+		});
+		this.displayParticipantNameSub = this.libService.displayParticipantNameObs.subscribe((value: boolean) => {
+			this.showNickname = value;
+			// this.cd.markForCheck();
+		});
+		this.displayAudioDetectionSub = this.libService.displayAudioDetectionObs.subscribe((value: boolean) => {
+			this.showAudioDetection = value;
+			// this.cd.markForCheck();
+		});
+		this.settingsButtonSub = this.libService.settingsButtonObs.subscribe((value: boolean) => {
+			this.showSettingsButton = value;
+			// this.cd.markForCheck();
+		});
 	}
 }
