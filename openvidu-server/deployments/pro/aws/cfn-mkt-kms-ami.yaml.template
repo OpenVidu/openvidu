@@ -117,6 +117,11 @@ Resources:
                   ELAPSED=$((ELAPSED+1))
                 done
 
+                # Cache ffmpeg binary
+                INSTALLATION_DIR="/opt/kms"
+                MEDIASOUP_IMAGE="$(grep MEDIASOUP_IMAGE "${INSTALLATION_DIR}"/docker-compose.yml | cut -d'=' -f2)"
+                docker run --entrypoint /ffmpeg "${MEDIASOUP_IMAGE}" -version
+
                 # Sleep 30 seconds
                 sleep 30
 
@@ -124,10 +129,6 @@ Resources:
                 docker rm -f test-recording
                 rm -rf "${TEST_RECORDING_DIR}"
 
-                # Cache ffmpeg binary
-                INSTALLATION_DIR="/opt/kms"
-                MEDIASOUP_IMAGE="$(grep MEDIASOUP_IMAGE "${INSTALLATION_DIR}"/docker-compose.yml | cut -d'=' -f2)"
-                docker run -it --entrypoint /ffmpeg "${MEDIASOUP_IMAGE}" -version
               mode: "000755"
               owner: "root"
               group: "root"
