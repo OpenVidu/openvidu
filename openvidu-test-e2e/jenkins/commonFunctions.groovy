@@ -2,8 +2,9 @@
 def prepareTestingEnvironment() {
     println('Cleaning environment')
     parallel (
-        'Deleting folder /opt/openvidu': {
+        'Deleting folder /opt/openvidu and create permissions': {
             sh 'sudo rm -rf /opt/openvidu/* || true'
+            sh 'sudo mkdir -p /opt/openvidu/recordings && sudo chmod 777 /opt/openvidu/recordings'
         },
         'Deleting repository openvidu': {
             sh 'sudo rm -rf openvidu || true'
@@ -26,9 +27,6 @@ def prepareTestingEnvironment() {
         'Removing stranded containers': {
             removeStrandedContainers(true)
         },
-        'All permissions for recordings': {
-            sh 'sudo mkdir -p /opt/openvidu/recordings && sudo chmod 777 /opt/openvidu/recordings'
-        }
     )
 
     println('Pulling containers and downloading files')
