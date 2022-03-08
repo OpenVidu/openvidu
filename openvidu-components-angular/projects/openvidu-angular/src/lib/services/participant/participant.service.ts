@@ -192,7 +192,10 @@ export class ParticipantService {
 			connectionId
 		};
 
-		const participantId = this.getParticipantIdFromData(data);
+		// Avoiding create a new participant if participantId param is not exist in connection data
+		// participant Id is necessary for allowing to have multiple connection in one participant
+		const participantId = this.getParticipantIdFromData(data) || connectionId;
+
 		const participantAdded = this.getRemoteParticipantById(participantId);
 		if (!!participantAdded) {
 			this.log.d('Adding connection to existing participant: ', participantId);
