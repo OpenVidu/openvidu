@@ -45,13 +45,14 @@ public class Publisher {
 	}
 
 	/**
-	 * Returns the unique identifier of the <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
-	 * target= "_blank">Stream</a> associated to this Publisher. Each Publisher is
+	 * Returns the unique identifier of the
+	 * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html">
+	 *   Stream
+	 * </a> associated to this Publisher. Each Publisher is
 	 * paired with only one Stream, so you can identify each Publisher by its
-	 * <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html#streamId"
-	 * target= "_blank"><code>Stream.streamId</code></a>
+	 * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html#streamId">
+	 *   <code>Stream.streamId</code>
+	 * </a>
 	 */
 	public String getStreamId() {
 		return streamId;
@@ -66,70 +67,69 @@ public class Publisher {
 	}
 
 	/**
-	 * See properties of <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
-	 * target= "_blank">Stream</a> object in OpenVidu Browser library to find out
-	 * more
+	 * See properties of <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html">
+	 *   Stream
+	 * </a> object in OpenVidu Browser library to find out more
 	 */
 	public boolean hasVideo() {
 		return this.hasVideo;
 	}
 
 	/**
-	 * See properties of <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
-	 * target= "_blank">Stream</a> object in OpenVidu Browser library to find out
-	 * more
+	 * See properties of
+	 * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html">
+	 *   Stream
+	 * </a> object in OpenVidu Browser library to find out more
 	 */
 	public boolean hasAudio() {
 		return this.hasAudio;
 	}
 
 	/**
-	 * See properties of <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
-	 * target= "_blank">Stream</a> object in OpenVidu Browser library to find out
-	 * more
+	 * See properties of
+	 * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html">
+	 *   Stream
+	 * </a> object in OpenVidu Browser library to find out more
 	 */
 	public Boolean isAudioActive() {
 		return this.audioActive;
 	}
 
 	/**
-	 * See properties of <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
-	 * target= "_blank">Stream</a> object in OpenVidu Browser library to find out
-	 * more
+	 * See properties of
+	 * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html">
+	 *   Stream
+	 * </a> object in OpenVidu Browser library to find out more
 	 */
 	public Boolean isVideoActive() {
 		return this.videoActive;
 	}
 
 	/**
-	 * See properties of <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
-	 * target= "_blank">Stream</a> object in OpenVidu Browser library to find out
-	 * more
+	 * See properties of
+	 * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html">
+	 *   Stream
+	 * </a> object in OpenVidu Browser library to find out more
 	 */
 	public Integer getFrameRate() {
 		return this.frameRate;
 	}
 
 	/**
-	 * See properties of <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
-	 * target= "_blank">Stream</a> object in OpenVidu Browser library to find out
-	 * more
+	 * See properties of
+	 * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html">
+	 *   Stream
+	 * </a> object in OpenVidu Browser library to find out more
 	 */
 	public String getTypeOfVideo() {
 		return this.typeOfVideo;
 	}
 
 	/**
-	 * See properties of <a href=
-	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html"
-	 * target= "_blank">Stream</a> object in OpenVidu Browser library to find out
-	 * more
+	 * See properties of
+	 * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Stream.html">
+	 *   Stream
+	 * </a> object in OpenVidu Browser library to find out more
 	 */
 	public String getVideoDimensions() {
 		return this.videoDimensions;
