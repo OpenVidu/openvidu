@@ -1,26 +1,17 @@
-import { AfterViewInit, Directive, ElementRef, HostListener, Input } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, HostListener, Input, OnDestroy } from '@angular/core';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 
-const VIDEOCONFERENCE_COMPONENT_NAME = 'ov-videoconference';
-const OV_TOOLBAR_CLASS = 'ovToolbar';
-
 @Directive({
-	selector: 'ov-videoconference[toolbarScreenshareButton], [screenshareButton]'
+	selector: 'ov-videoconference[toolbarScreenshareButton], ov-toolbar[screenshareButton]'
 })
-export class ToolbarScreenshareButtonDirective implements AfterViewInit {
+export class ToolbarScreenshareButtonDirective implements AfterViewInit, OnDestroy {
 	@Input() set toolbarScreenshareButton(value: boolean) {
 		this.screenshareValue = value;
 		this.update(this.screenshareValue);
 	}
 	@Input() set screenshareButton(value: boolean) {
-		const element = <HTMLElement>this.elementRef.nativeElement;
-		// Checking if element is injected inside of an element with ovToolbar class
-		const isExternalComponentInput = element.parentElement?.classList.contains(OV_TOOLBAR_CLASS);
-
-		if (isExternalComponentInput) {
-			this.screenshareValue = value;
-			this.update(this.screenshareValue);
-		}
+		this.screenshareValue = value;
+		this.update(this.screenshareValue);
 	}
 
 	screenshareValue: boolean = true;
@@ -28,16 +19,15 @@ export class ToolbarScreenshareButtonDirective implements AfterViewInit {
 	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
 
 	ngAfterViewInit() {
-		const element = <HTMLElement>this.elementRef.nativeElement;
-		// We need to distinguish where the directive is being used
-		// Checking if 'screenButton' attribute is in the 'ov-videoconference' element
-		const isGlobalInput = element.localName === VIDEOCONFERENCE_COMPONENT_NAME;
-		// Checking if element is injected inside of an element with ovToolbar class
-		const isExternalComponentInput = element.parentElement?.classList.contains(OV_TOOLBAR_CLASS);
+		this.update(this.screenshareValue);
+	}
 
-		if (isGlobalInput || isExternalComponentInput) {
-			this.update(this.screenshareValue);
-		}
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.screenshareValue = true;
+		this.update(true);
 	}
 
 	update(value: boolean) {
@@ -48,22 +38,16 @@ export class ToolbarScreenshareButtonDirective implements AfterViewInit {
 }
 
 @Directive({
-	selector: 'ov-videoconference[toolbarFullscreenButton], [fullscreenButton]'
+	selector: 'ov-videoconference[toolbarFullscreenButton], ov-toolbar[fullscreenButton]'
 })
-export class ToolbarFullscreenButtonDirective implements AfterViewInit {
+export class ToolbarFullscreenButtonDirective implements AfterViewInit, OnDestroy {
 	@Input() set toolbarFullscreenButton(value: boolean) {
 		this.fullscreenValue = value;
 		this.update(this.fullscreenValue);
 	}
 	@Input() set fullscreenButton(value: boolean) {
-		const element = <HTMLElement>this.elementRef.nativeElement;
-		// Checking if element is injected inside of an element with ovToolbar class
-		const isExternalComponentInput = element.parentElement?.classList.contains(OV_TOOLBAR_CLASS);
-
-		if (isExternalComponentInput) {
-			this.fullscreenValue = value;
-			this.update(this.fullscreenValue);
-		}
+		this.fullscreenValue = value;
+		this.update(this.fullscreenValue);
 	}
 
 	fullscreenValue: boolean = true;
@@ -71,16 +55,14 @@ export class ToolbarFullscreenButtonDirective implements AfterViewInit {
 	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
 
 	ngAfterViewInit() {
-		const element = <HTMLElement>this.elementRef.nativeElement;
-		// We need to distinguish where the directive is being used
-		// Checking if 'screenButton' attribute is in the 'ov-videoconference' element
-		const isGlobalInput = element.localName === VIDEOCONFERENCE_COMPONENT_NAME;
-		// Checking if element is injected inside of an element with ovToolbar class
-		const isExternalComponentInput = element.parentElement?.classList.contains(OV_TOOLBAR_CLASS);
-
-		if (isGlobalInput || isExternalComponentInput) {
-			this.update(this.fullscreenValue);
-		}
+		this.update(this.fullscreenValue);
+	}
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.fullscreenValue = true;
+		this.update(true);
 	}
 
 	update(value: boolean) {
@@ -91,38 +73,32 @@ export class ToolbarFullscreenButtonDirective implements AfterViewInit {
 }
 
 @Directive({
-	selector: 'ov-videoconference[toolbarLeaveButton], [leaveButton]'
+	selector: 'ov-videoconference[toolbarLeaveButton], ov-toolbar[leaveButton]'
 })
-export class ToolbarLeaveButtonDirective implements AfterViewInit {
+export class ToolbarLeaveButtonDirective implements AfterViewInit, OnDestroy {
 	@Input() set toolbarLeaveButton(value: boolean) {
 		this.leaveValue = value;
 		this.update(this.leaveValue);
 	}
 	@Input() set leaveButton(value: boolean) {
-		const element = <HTMLElement>this.elementRef.nativeElement;
-		// Checking if element is injected inside of an element with ovToolbar class
-		const isExternalComponentInput = element.parentElement?.classList.contains(OV_TOOLBAR_CLASS);
-
-		if (isExternalComponentInput) {
-			this.leaveValue = value;
-			this.update(this.leaveValue);
-		}
+		this.leaveValue = value;
+		this.update(this.leaveValue);
 	}
 
-	leaveValue: boolean;
+	leaveValue: boolean = true;
 
 	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
 
 	ngAfterViewInit() {
-		const element = <HTMLElement>this.elementRef.nativeElement;
-		// Checking if 'screenButton' attribute is in the 'ov-videoconference' element
-		const isGlobalInput = element.localName === VIDEOCONFERENCE_COMPONENT_NAME;
-		// Checking if element is injected inside of an element with ovToolbar class
-		const isExternalComponentInput = element.parentElement?.classList.contains(OV_TOOLBAR_CLASS);
+		this.update(this.leaveValue);
+	}
 
-		if (isGlobalInput || isExternalComponentInput) {
-			this.update(this.leaveValue);
-		}
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.leaveValue = true;
+		this.update(true);
 	}
 
 	update(value: boolean) {
@@ -133,38 +109,32 @@ export class ToolbarLeaveButtonDirective implements AfterViewInit {
 }
 
 @Directive({
-	selector: 'ov-videoconference[toolbarParticipantsPanelButton], [participantsPanelButton]'
+	selector: 'ov-videoconference[toolbarParticipantsPanelButton], ov-toolbar[participantsPanelButton]'
 })
-export class ToolbarParticipantsPanelButtonDirective implements AfterViewInit {
+export class ToolbarParticipantsPanelButtonDirective implements AfterViewInit, OnDestroy {
 	@Input() set toolbarParticipantsPanelButton(value: boolean) {
 		this.participantsPanelValue = value;
 		this.update(this.participantsPanelValue);
 	}
 	@Input() set participantsPanelButton(value: boolean) {
-		const element = <HTMLElement>this.elementRef.nativeElement;
-		// Checking if element is injected inside of an element with ovToolbar class
-		const isExternalComponentInput = element.parentElement?.classList.contains(OV_TOOLBAR_CLASS);
-
-		if (isExternalComponentInput) {
-			this.participantsPanelValue = value;
-			this.update(this.participantsPanelValue);
-		}
+		this.participantsPanelValue = value;
+		this.update(this.participantsPanelValue);
 	}
 
-	participantsPanelValue: boolean;
+	participantsPanelValue: boolean = true;
 
 	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
 
 	ngAfterViewInit() {
-		const element = <HTMLElement>this.elementRef.nativeElement;
-		// Checking if 'screenButton' attribute is in the 'ov-videoconference' element
-		const isGlobalInput = element.localName === VIDEOCONFERENCE_COMPONENT_NAME;
-		// Checking if element is injected inside of an element with ovToolbar class
-		const isExternalComponentInput = element.parentElement?.classList.contains(OV_TOOLBAR_CLASS);
+		this.update(this.participantsPanelValue);
+	}
 
-		if (isGlobalInput || isExternalComponentInput) {
-			this.update(this.participantsPanelValue);
-		}
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.participantsPanelValue = true;
+		this.update(true);
 	}
 
 	update(value: boolean) {
@@ -175,37 +145,31 @@ export class ToolbarParticipantsPanelButtonDirective implements AfterViewInit {
 }
 
 @Directive({
-	selector: 'ov-videoconference[toolbarChatPanelButton], [chatPanelButton]'
+	selector: 'ov-videoconference[toolbarChatPanelButton], ov-toolbar[chatPanelButton]'
 })
-export class ToolbarChatPanelButtonDirective implements AfterViewInit {
+export class ToolbarChatPanelButtonDirective implements AfterViewInit, OnDestroy {
 	@Input() set toolbarChatPanelButton(value: boolean) {
 		this.toolbarChatPanelValue = value;
 		this.update(this.toolbarChatPanelValue);
 	}
 	@Input() set chatPanelButton(value: boolean) {
-		const element = <HTMLElement>this.elementRef.nativeElement;
-		// Checking if element is injected inside of an element with ovToolbar class
-		const isExternalComponentInput = element.parentElement?.classList.contains(OV_TOOLBAR_CLASS);
-
-		if (isExternalComponentInput) {
-			this.toolbarChatPanelValue = value;
-			this.update(this.toolbarChatPanelValue);
-		}
+		this.toolbarChatPanelValue = value;
+		this.update(this.toolbarChatPanelValue);
 	}
-	toolbarChatPanelValue: boolean;
+	toolbarChatPanelValue: boolean = true;
 
 	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
 
 	ngAfterViewInit() {
-		const element = <HTMLElement>this.elementRef.nativeElement;
-		// Checking if 'screenButton' attribute is in the 'ov-videoconference' element
-		const isGlobalInput = element.localName === VIDEOCONFERENCE_COMPONENT_NAME;
-		// Checking if element is injected inside of an element with ovToolbar class
-		const isExternalComponentInput = element.parentElement?.classList.contains(OV_TOOLBAR_CLASS);
+		this.update(this.toolbarChatPanelValue);
+	}
 
-		if (isGlobalInput || isExternalComponentInput) {
-			this.update(this.toolbarChatPanelValue);
-		}
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.toolbarChatPanelValue = true;
+		this.update(true);
 	}
 
 	update(value: boolean) {
@@ -216,38 +180,32 @@ export class ToolbarChatPanelButtonDirective implements AfterViewInit {
 }
 
 @Directive({
-	selector: 'ov-videoconference[toolbarDisplaySessionName], [displaySessionName]'
+	selector: 'ov-videoconference[toolbarDisplaySessionName], ov-toolbar[displaySessionName]'
 })
-export class ToolbarDisplaySessionNameDirective implements AfterViewInit {
+export class ToolbarDisplaySessionNameDirective implements AfterViewInit, OnDestroy {
 	@Input() set toolbarDisplaySessionName(value: boolean) {
 		this.displaySessionValue = value;
 		this.update(this.displaySessionValue);
 	}
 	@Input() set displaySessionName(value: boolean) {
-		const element = <HTMLElement>this.elementRef.nativeElement;
-		// Checking if element is injected inside of an element with ovToolbar class
-		const isExternalComponentInput = element.parentElement?.classList.contains(OV_TOOLBAR_CLASS);
-
-		if (isExternalComponentInput) {
-			this.displaySessionValue = value;
-			this.update(this.displaySessionValue);
-		}
+		this.displaySessionValue = value;
+		this.update(this.displaySessionValue);
 	}
 
-	displaySessionValue: boolean;
+	displaySessionValue: boolean = true;
 
 	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
 
 	ngAfterViewInit() {
-		const element = <HTMLElement>this.elementRef.nativeElement;
-		// Checking if 'screenButton' attribute is in the 'ov-videoconference' element
-		const isGlobalInput = element.localName === VIDEOCONFERENCE_COMPONENT_NAME;
-		// Checking if element is injected inside of an element with ovToolbar class
-		const isExternalComponentInput = element.parentElement?.classList.contains(OV_TOOLBAR_CLASS);
+		this.update(this.displaySessionValue);
+	}
 
-		if (isGlobalInput || isExternalComponentInput) {
-			this.update(this.displaySessionValue);
-		}
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.displaySessionValue = true;
+		this.update(true);
 	}
 
 	update(value: boolean) {
@@ -258,38 +216,32 @@ export class ToolbarDisplaySessionNameDirective implements AfterViewInit {
 }
 
 @Directive({
-	selector: 'ov-videoconference[toolbarDisplayLogo], [displayLogo]'
+	selector: 'ov-videoconference[toolbarDisplayLogo], ov-toolbar[displayLogo]'
 })
-export class ToolbarDisplayLogoDirective implements AfterViewInit {
+export class ToolbarDisplayLogoDirective implements AfterViewInit, OnDestroy {
 	@Input() set toolbarDisplayLogo(value: boolean) {
 		this.displayLogoValue = value;
 		this.update(this.displayLogoValue);
 	}
 	@Input() set displayLogo(value: boolean) {
-		const element = <HTMLElement>this.elementRef.nativeElement;
-		// Checking if element is injected inside of an element with ovToolbar class
-		const isExternalComponentInput = element.parentElement?.classList.contains(OV_TOOLBAR_CLASS);
-
-		if (isExternalComponentInput) {
-			this.displayLogoValue = value;
-			this.update(this.displayLogoValue);
-		}
+		this.displayLogoValue = value;
+		this.update(this.displayLogoValue);
 	}
 
-	displayLogoValue: boolean;
+	displayLogoValue: boolean = true;
 
 	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
 
 	ngAfterViewInit() {
-		const element = <HTMLElement>this.elementRef.nativeElement;
-		// Checking if 'screenButton' attribute is in the 'ov-videoconference' element
-		const isGlobalInput = element.localName === VIDEOCONFERENCE_COMPONENT_NAME;
-		// Checking if element is injected inside of an element with ovToolbar class
-		const isExternalComponentInput = element.parentElement?.classList.contains(OV_TOOLBAR_CLASS);
+		this.update(this.displayLogoValue);
+	}
 
-		if (isGlobalInput || isExternalComponentInput) {
-			this.update(this.displayLogoValue);
-		}
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.displayLogoValue = true;
+		this.update(true);
 	}
 
 	update(value: boolean) {
