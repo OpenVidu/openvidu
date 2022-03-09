@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ChatMessage } from '../../../models/chat.model';
 import { MenuType } from '../../../models/menu.model';
@@ -20,7 +20,7 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 
 	private chatMessageSubscription: Subscription;
 
-	constructor(private chatService: ChatService, private menuService: SidenavMenuService) {}
+	constructor(private chatService: ChatService, private menuService: SidenavMenuService, private cd: ChangeDetectorRef) {}
 
 	@HostListener('document:keydown.escape', ['$event'])
 	onKeydownHandler(event: KeyboardEvent) {
@@ -76,6 +76,7 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 			this.messageList = messages;
 			if (this.menuService.isMenuOpened()) {
 				this.scrollToBottom();
+				this.cd.markForCheck();
 			}
 		});
 	}
