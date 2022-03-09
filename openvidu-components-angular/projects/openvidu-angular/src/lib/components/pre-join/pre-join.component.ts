@@ -19,7 +19,7 @@ import { StorageService } from '../../services/storage/storage.service';
 	styleUrls: ['./pre-join.component.css']
 })
 export class PreJoinComponent implements OnInit, OnDestroy {
-	@Output() onJoinClicked = new EventEmitter<any>();
+	@Output() onJoinButtonClicked = new EventEmitter<any>();
 	cameras: CustomDevice[];
 	microphones: CustomDevice[];
 	cameraSelected: CustomDevice;
@@ -207,7 +207,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	joinSession() {
-		this.onJoinClicked.emit();
+		this.onJoinButtonClicked.emit();
 	}
 
 	private setDevicesInfo() {

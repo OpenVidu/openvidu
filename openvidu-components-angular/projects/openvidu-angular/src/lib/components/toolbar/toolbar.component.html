@@ -69,7 +69,7 @@
 			mat-icon-button
 			*ngIf="!isMinimal && showParticipantsPanelButton"
 			matTooltip="Show articipants"
-			(click)="toggleMenu('participants')"
+			(click)="toggleParticipantsPanel()"
 			[disabled]="isConnectionLost"
 			[class.active-btn]="isParticipantsOpened"
 		>
@@ -80,7 +80,7 @@
 		<button
 			mat-icon-button
 			*ngIf="!isMinimal && showChatPanelButton"
-			(click)="toggleMenu('chat')"
+			(click)="toggleChatPanel()"
 			[disabled]="isConnectionLost"
 			[class.active-btn]="isChatOpened"
 		>

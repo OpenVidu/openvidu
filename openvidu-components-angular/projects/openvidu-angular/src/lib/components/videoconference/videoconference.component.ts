@@ -70,19 +70,26 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 	// *** Events ***
 
 	// Event sent when user click on the join button in pre-join page
-	@Output() onJoinSessionClicked = new EventEmitter<any>();
+	@Output() onJoinButtonClicked = new EventEmitter<any>();
+	// Event sent when user click on the join button in pre-join page
+	@Output() onToolbarLeaveButtonClicked = new EventEmitter<any>();
+	@Output() onToolbarCameraButtonClicked = new EventEmitter<any>();
+	@Output() onToolbarMicrophoneButtonClicked = new EventEmitter<any>();
+	@Output() onToolbarScreenshareButtonClicked = new EventEmitter<any>();
+	@Output() onToolbarFullscreenButtonClicked = new EventEmitter<any>();
+	@Output() onToolbarParticipantsPanelButtonClicked = new EventEmitter<any>();
+	@Output() onToolbarChatPanelButtonClicked = new EventEmitter<any>();
 
 	// Event sent when participant has joined the session
 	@Output() onParticipantJoined = new EventEmitter<any>();
 
 	// Event sent when participant has left the session
-	@Output() onParticipantLeft = new EventEmitter<any>();
+	// @Output() onParticipantLeft = new EventEmitter<any>();
 
 	// Event sent when session has been created
 	@Output() onSessionCreated = new EventEmitter<any>();
 
 	joinSessionClicked: boolean = false;
-	// closeClicked: boolean = false;
 	isSessionAlive: boolean = false;
 	_tokens: { webcam: string; screen: string };
 	error: boolean = false;
@@ -153,12 +160,32 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 
 	ngOnInit() {}
 
-	async _onJoinClicked() {
+	_onJoinButtonClicked() {
 		this.joinSessionClicked = true;
-		this.onJoinSessionClicked.emit();
+		this.onJoinButtonClicked.emit();
 	}
-	// onLeaveSessionClicked() {
-	// 	this.isSessionAlive = false;
-	// 	this.closeClicked = true;
-	// }
+	onLeaveButtonClicked() {
+		this.joinSessionClicked = false;
+		this.isSessionAlive = false;
+		this.onToolbarLeaveButtonClicked.emit();
+	}
+	onCameraButtonClicked() {
+		this.onToolbarCameraButtonClicked.emit();
+	}
+
+	onMicrophoneButtonClicked() {
+		this.onToolbarMicrophoneButtonClicked.emit();
+	}
+	onScreenshareButtonClicked() {
+		this.onToolbarScreenshareButtonClicked.emit();
+	}
+	onFullscreenButtonClicked() {
+		this.onToolbarFullscreenButtonClicked.emit();
+	}
+	onParticipantsPanelButtonClicked() {
+		this.onToolbarParticipantsPanelButtonClicked.emit();
+	}
+	onChatPanelButtonClicked() {
+		this.onToolbarChatPanelButtonClicked.emit();
+	}
 }

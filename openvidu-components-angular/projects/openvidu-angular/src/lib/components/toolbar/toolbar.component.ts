@@ -36,12 +36,13 @@ import { OpenViduAngularConfigService } from '../../services/config/openvidu-ang
 })
 export class ToolbarComponent implements OnInit, OnDestroy {
 	@ContentChild('centeredButtons', { read: TemplateRef }) centeredButtonsTemplate: TemplateRef<any>;
-
-	@Output() onMicClicked = new EventEmitter<any>();
-	@Output() onCamClicked = new EventEmitter<any>();
-	@Output() onScreenShareClicked = new EventEmitter<any>();
-	@Output() onLeaveSessionClicked = new EventEmitter<any>();
-	@Output() onChatClicked = new EventEmitter<any>();
+	@Output() onLeaveButtonClicked = new EventEmitter<any>();
+	@Output() onCameraButtonClicked = new EventEmitter<any>();
+	@Output() onMicrophoneButtonClicked = new EventEmitter<any>();
+	@Output() onFullscreenButtonClicked = new EventEmitter<any>();
+	@Output() onScreenshareButtonClicked = new EventEmitter<any>();
+	@Output() onParticipantsPanelButtonClicked = new EventEmitter<any>();
+	@Output() onChatPanelButtonClicked = new EventEmitter<any>();
 
 	session: Session;
 	unreadMessages: number = 0;
@@ -142,7 +143,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	}
 
 	toggleMicrophone() {
-		this.onMicClicked.emit();
+		this.onMicrophoneButtonClicked.emit();
 
 		if (this.participantService.isMyCameraActive()) {
 			this.openviduService.publishAudio(
@@ -155,7 +156,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	}
 
 	async toggleCamera() {
-		this.onCamClicked.emit();
+		this.onCameraButtonClicked.emit();
 
 		try {
 			const publishVideo = !this.participantService.hasCameraVideoActive();
@@ -189,7 +190,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	}
 
 	async toggleScreenShare() {
-		this.onScreenShareClicked.emit();
+		this.onScreenshareButtonClicked.emit();
 
 		try {
 			// Disabling screenShare
@@ -268,17 +269,23 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	leaveSession() {
 		this.log.d('Leaving session...');
 		this.openviduService.disconnect();
-		this.onLeaveSessionClicked.emit();
+		this.onLeaveButtonClicked.emit();
 	}
 
-	toggleMenu(type: string) {
-		this.menuService.toggleMenu(<MenuType>type);
-		this.onChatClicked.emit();
+	toggleParticipantsPanel() {
+		this.onParticipantsPanelButtonClicked.emit();
+		this.menuService.toggleMenu(MenuType.PARTICIPANTS);
+	}
+
+	toggleChatPanel() {
+		this.onChatPanelButtonClicked.emit();
+		this.menuService.toggleMenu(MenuType.CHAT);
 	}
 
 	toggleFullscreen() {
 		this.isFullscreenActive = !this.isFullscreenActive;
 		this.documentService.toggleFullscreen('session-container');
+		this.onFullscreenButtonClicked.emit();
 	}
 
 	protected subscribeToReconnection() {

@@ -1,8 +1,7 @@
 <div id="call-container">
 	<div id="pre-join-container" *ngIf="!joinSessionClicked">
-		<ov-pre-join (onJoinClicked)="_onJoinClicked()"></ov-pre-join>
+		<ov-pre-join (onJoinButtonClicked)="_onJoinButtonClicked()"></ov-pre-join>
 		<!-- <ov-user-settings (onJoinClicked)="_onJoinClicked()" (onCloseClicked)="onLeaveSessionClicked()"></ov-user-settings> -->
-
 	</div>
 
 	<div id="spinner" *ngIf="joinSessionClicked && !isSessionAlive && !error">
@@ -39,7 +38,15 @@
 </div>
 
 <ng-template #defaultToolbar>
-	<ov-toolbar></ov-toolbar>
+	<ov-toolbar
+		(onLeaveButtonClicked)="onLeaveButtonClicked()"
+		(onCameraButtonClicked)="onCameraButtonClicked()"
+		(onMicrophoneButtonClicked)="onMicrophoneButtonClicked()"
+		(onScreenshareButtonClicked)="onScreenshareButtonClicked()"
+		(onFullscreenButtonClicked)="onFullscreenButtonClicked()"
+		(onParticipantsPanelButtonClicked)="onParticipantsPanelButtonClicked()"
+		(onChatPanelButtonClicked)="onChatPanelButtonClicked()"
+	></ov-toolbar>
 </ng-template>
 
 <ng-template #defaultPanel>
