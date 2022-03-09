@@ -74,3 +74,10 @@ $openvidu-components-theme: mat.define-light-theme((
 
 html, body { height: 100%; overflow: hidden;}
 body { margin: 0; font-family: 'Roboto','RobotoDraft',Helvetica,Arial,sans-serif;}
+
+#poster-text {
+	padding: 0px !important;
+}
+ov-chat-panel .text-info {
+	margin: 3px auto !important;
+}

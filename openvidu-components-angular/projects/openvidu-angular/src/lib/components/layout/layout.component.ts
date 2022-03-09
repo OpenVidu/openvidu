@@ -1,9 +1,19 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, OnDestroy, OnInit, TemplateRef } from '@angular/core';
+import {
+	AfterViewInit,
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	ContentChild,
+	OnDestroy,
+	OnInit,
+	TemplateRef
+} from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { ParticipantAbstractModel } from '../../models/participant.model';
 import { LayoutService } from '../../services/layout/layout.service';
 import { StreamDirective } from '../../directives/template/openvidu-angular.directive';
+import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 
 @Component({
 	selector: 'ov-layout',
@@ -15,10 +25,10 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	@ContentChild('stream', { read: TemplateRef }) streamTemplate: TemplateRef<any>;
 
 	@ContentChild(StreamDirective)
-	set externalStream (externalStream: StreamDirective) {
+	set externalStream(externalStream: StreamDirective) {
 		// This directive will has value only when STREAM component tagget with '*ovStream' directive
 		// is inside of the layout component tagged with '*ovLayout' directive
-		if(externalStream) {
+		if (externalStream) {
 			this.streamTemplate = externalStream.template;
 		}
 	}
@@ -28,15 +38,25 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	protected localParticipantSubs: Subscription;
 	protected remoteParticipantsSubs: Subscription;
 
-	constructor(protected layoutService: LayoutService, protected participantService: ParticipantService, private cd: ChangeDetectorRef) {}
+	constructor(
+		protected layoutService: LayoutService,
+		protected participantService: ParticipantService,
+		private libService: OpenViduAngularConfigService,
+		private cd: ChangeDetectorRef
+	) {}
 
 	ngOnInit(): void {
 		this.subscribeToParticipants();
 	}
 
 	ngAfterViewInit() {
-		this.layoutService.initialize();
-		this.layoutService.update();
+		let timeout: number = null;
+		if (this.libService.isWebcomponent()) {
+			timeout = 0;
+		}
+
+		this.layoutService.initialize(timeout);
+		this.layoutService.update(timeout);
 	}
 
 	ngOnDestroy() {

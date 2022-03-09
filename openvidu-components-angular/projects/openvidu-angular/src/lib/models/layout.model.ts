@@ -141,7 +141,7 @@ export class OpenViduLayout {
 	}
 
 	getLayoutContainer(): HTMLElement {
-		return this.layoutContainer
+		return this.layoutContainer;
 	}
 
 	/**

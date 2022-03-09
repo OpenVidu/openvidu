@@ -70,6 +70,10 @@ export class OpenViduAngularConfigService {
 		return this.configuration?.production;
 	}
 
+	isWebcomponent(): boolean {
+		return this.configuration?.webcomponent;
+	}
+
 	hasParticipantFactory(): boolean {
 		return typeof this.getConfig().participantFactory === "function";
 	}

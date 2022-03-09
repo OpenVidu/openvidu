@@ -17,23 +17,25 @@ export class LayoutService {
 	}
 
 	initialize(timeout: number = null) {
-		if (!!timeout) {
+		if (typeof timeout === 'number' && timeout >= 0) {
 			setTimeout(() => {
 				this._initialize();
+				this.sendLayoutWidthEvent();
 			}, timeout);
 		} else {
 			this._initialize();
+			this.sendLayoutWidthEvent();
 		}
-		this.sendLayoutWidthEvent();
 	}
 
 	private _initialize() {
 		this.openviduLayout = new OpenViduLayout();
 		this.openviduLayoutOptions = this.getOptions();
-		this.openviduLayout.initLayoutContainer(document.getElementById('layout'), this.openviduLayoutOptions);
+		const element = document.getElementById('layout');
+		this.openviduLayout.initLayoutContainer(element, this.openviduLayoutOptions);
 	}
 
-	getOptions(): OpenViduLayoutOptions {
+	private getOptions(): OpenViduLayoutOptions {
 		const options = {
 			maxRatio: 3 / 2, // The narrowest ratio that will be used (default 2x3)
 			minRatio: 9 / 16, // The widest ratio that will be used (default 16x9)
@@ -51,16 +53,17 @@ export class LayoutService {
 		return options;
 	}
 
-	update(timeout?: number) {
-		if (!!this.openviduLayout) {
-			if (!timeout) {
+	update(timeout: number = null) {
+		const updateAux = () => {
+			if (!!this.openviduLayout) {
 				this.openviduLayout.updateLayout();
-			} else {
-				setTimeout(() => {
-					this.openviduLayout.updateLayout();
-				}, timeout);
+				this.sendLayoutWidthEvent();
 			}
-			this.sendLayoutWidthEvent();
+		};
+		if (typeof timeout === 'number' && timeout >= 0) {
+			setTimeout(() => updateAux(), timeout);
+		} else {
+			updateAux();
 		}
 	}
 
@@ -74,10 +77,10 @@ export class LayoutService {
 
 	private sendLayoutWidthEvent() {
 		const sidenavLayoutElement = this.documentService.getHTMLElementByClassName(
-			this.openviduLayout.getLayoutContainer(),
+			this.openviduLayout?.getLayoutContainer(),
 			LayoutClass.SIDENAV_CONTAINER
 		);
-		if(sidenavLayoutElement && sidenavLayoutElement.clientWidth) {
+		if (sidenavLayoutElement && sidenavLayoutElement.clientWidth) {
 			this._layoutWidthObs.next(sidenavLayoutElement.clientWidth);
 		}
 	}

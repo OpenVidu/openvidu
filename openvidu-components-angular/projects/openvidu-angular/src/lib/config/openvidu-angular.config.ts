@@ -1,6 +1,7 @@
 export interface OpenViduAngularConfig {
 	production?: boolean,
 	participantFactory?: ParticipantFactoryFunction,
+	webcomponent?: boolean
 
 }
 
