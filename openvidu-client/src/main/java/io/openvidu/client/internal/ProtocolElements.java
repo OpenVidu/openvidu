@@ -136,9 +136,7 @@ public class ProtocolElements {
 	public static final String RECONNECTSTREAM_STREAM_PARAM = "stream";
 	public static final String RECONNECTSTREAM_SDPSTRING_PARAM = "sdpString";
 	public static final String RECONNECTSTREAM_FORCIBLYRECONNECT_PARAM = "forciblyReconnect";
-	// TODO: REMOVE ON 2.18.0
 	public static final String RECONNECTSTREAM_SDPOFFER_PARAM = "sdpOffer";
-	// ENDTODO
 
 	public static final String VIDEODATA_METHOD = "videoData";
 
