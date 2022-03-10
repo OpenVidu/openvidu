@@ -1,3 +1,5 @@
+import { ParticipantProperties, StreamModel } from '../models/participant.model';
+
 export interface OpenViduAngularConfig {
 	production?: boolean,
 	participantFactory?: ParticipantFactoryFunction,
@@ -5,4 +7,4 @@ export interface OpenViduAngularConfig {
 
 }
 
-export type ParticipantFactoryFunction = (connWrapper: any, participantId: string) => any;
+export type ParticipantFactoryFunction = (props: ParticipantProperties, streamModel: StreamModel) => any;
