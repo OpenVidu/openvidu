@@ -217,7 +217,7 @@
 	position: relative;
 	min-width: 0px;
 	min-height: 0px;
-	margin: 1px;
+	margin: 3px;
 	transition-duration: 0.1s;
 	transition-timing-function: ease-in-out;
   }
