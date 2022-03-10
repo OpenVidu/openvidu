@@ -32,6 +32,7 @@ import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { StorageService } from '../../services/storage/storage.service';
+import { TokenService } from '../../services/token/token.service';
 
 @Component({
 	selector: 'ov-videoconference',
@@ -84,10 +85,9 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 			this.log.w('No tokens received');
 		} else {
 			if (tokens.webcam || tokens.screen) {
-				this._tokens = {
-					webcam: tokens.webcam,
-					screen: tokens.screen
-				};
+				this.tokenService.setWebcamToken(tokens.webcam);
+				this.tokenService.setScreenToken(tokens.screen);
+				this.canPublish = true;
 			}
 		}
 	}
@@ -116,7 +116,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 
 	joinSessionClicked: boolean = false;
 	participantReady: boolean = false;
-	_tokens: { webcam: string; screen: string };
+	canPublish: boolean = false;
 	error: boolean = false;
 	errorMessage: string = '';
 	showPrejoin: boolean = true;
@@ -130,7 +130,8 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		private deviceSrv: DeviceService,
 		private openviduService: OpenViduService,
 		private actionService: ActionService,
-		private libService: OpenViduAngularConfigService
+		private libService: OpenViduAngularConfigService,
+		private tokenService: TokenService,
 	) {
 		this.log = this.loggerSrv.get('VideoconferenceComponent');
 	}

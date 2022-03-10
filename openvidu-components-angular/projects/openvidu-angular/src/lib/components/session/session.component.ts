@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, ContentChild, EventEmitter, HostListener, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	ContentChild,
+	EventEmitter,
+	HostListener,
+	OnInit,
+	Output,
+	TemplateRef,
+	ViewChild
+} from '@angular/core';
 import { Subscriber, Session, StreamEvent, StreamPropertyChangedEvent, SessionDisconnectedEvent, ConnectionEvent } from 'openvidu-browser';
 
 import { VideoType } from '../../models/video-type.model';
@@ -29,7 +39,6 @@ export class SessionComponent implements OnInit {
 	@ContentChild('panel', { read: TemplateRef }) panelTemplate: TemplateRef<any>;
 	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
 
-	@Input() tokens: { webcam: string; screen: string };
 	@Output() _session = new EventEmitter<any>();
 	@Output() _publisher = new EventEmitter<any>();
 	@Output() _error = new EventEmitter<any>();
@@ -59,7 +68,7 @@ export class SessionComponent implements OnInit {
 		protected chatService: ChatService,
 		protected tokenService: TokenService,
 		protected layoutService: LayoutService,
-		protected menuService: SidenavMenuService,
+		protected menuService: SidenavMenuService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
 	}
@@ -85,7 +94,6 @@ export class SessionComponent implements OnInit {
 	}
 
 	async ngOnInit() {
-
 		this.session = this.openviduService.getWebcamSession();
 		this.sessionScreen = this.openviduService.getScreenSession();
 		this.subscribeToConnectionCreatedAndDestroyed();
@@ -95,9 +103,6 @@ export class SessionComponent implements OnInit {
 		this.subscribeToNicknameChanged();
 		this.chatService.subscribeToChat();
 		this.subscribeToReconnection();
-
-		this.tokenService.setWebcamToken(this.tokens.webcam);
-		this.tokenService.setScreenToken(this.tokens.screen);
 
 		await this.connectToSession();
 		// Workaround, firefox does not have audio when publisher join with muted camera
