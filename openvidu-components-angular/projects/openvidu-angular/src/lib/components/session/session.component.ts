@@ -39,9 +39,9 @@ export class SessionComponent implements OnInit {
 	@ContentChild('panel', { read: TemplateRef }) panelTemplate: TemplateRef<any>;
 	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
 
-	@Output() _session = new EventEmitter<any>();
-	@Output() _publisher = new EventEmitter<any>();
-	@Output() _error = new EventEmitter<any>();
+	@Output() onSessionCreated = new EventEmitter<any>();
+	// @Output() _publisher = new EventEmitter<any>();
+	// @Output() _error = new EventEmitter<any>();
 
 	session: Session;
 	sessionScreen: Session;
@@ -103,6 +103,7 @@ export class SessionComponent implements OnInit {
 		this.subscribeToNicknameChanged();
 		this.chatService.subscribeToChat();
 		this.subscribeToReconnection();
+		this.onSessionCreated.emit(this.session);
 
 		await this.connectToSession();
 		// Workaround, firefox does not have audio when publisher join with muted camera
@@ -110,8 +111,6 @@ export class SessionComponent implements OnInit {
 		// 	this.openviduService.publishVideo(this.localUserService.getMyCameraPublisher(), true);
 		// 	this.openviduService.publishVideo(this.localUserService.getMyCameraPublisher(), false);
 		// }
-
-		this._session.emit(this.session);
 	}
 
 	ngOnDestroy() {
@@ -178,7 +177,7 @@ export class SessionComponent implements OnInit {
 				await this.openviduService.publish(this.participantService.getMyCameraPublisher());
 			}
 		} catch (error) {
-			this._error.emit({ error: error.error, messgae: error.message, code: error.code, status: error.status });
+			// this._error.emit({ error: error.error, messgae: error.message, code: error.code, status: error.status });
 			this.log.e('There was an error connecting to the session:', error.code, error.message);
 			this.actionService.openDialog('There was an error connecting to the session:', error?.error || error?.message);
 		}

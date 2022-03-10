@@ -266,6 +266,9 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	onChatPanelButtonClicked() {
 		this.onToolbarChatPanelButtonClicked.emit();
 	}
+	_onSessionCreated(event: any) {
+		this.onSessionCreated.emit(event);
+	}
 
 	private handlePublisherError(e: any) {
 		let message: string;

@@ -15,7 +15,7 @@
 	</div>
 
 	<div id="session-container" *ngIf="(joinSessionClicked || !showPrejoin) && participantReady && canPublish && !error">
-		<ov-session>
+		<ov-session (onSessionCreated)="_onSessionCreated($event)">
 			<ng-template #toolbar>
 				<ng-container *ngIf="openviduAngularToolbarTemplate">
 					<ng-container *ngTemplateOutlet="openviduAngularToolbarTemplate"></ng-container>
