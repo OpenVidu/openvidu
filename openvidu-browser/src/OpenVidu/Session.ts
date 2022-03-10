@@ -171,7 +171,7 @@ export class Session extends EventDispatcher {
                     metadata: !!metadata ? this.stringClientMetadata(metadata) : ''
                 };
                 this.connectAux(token)
-                    .then(() =>resolve())
+                    .then(() => resolve())
                     .catch(error => reject(error));
             } else {
                 return reject(new OpenViduError(OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.getName() + ' (version ' + platform.getVersion() + ') for ' + platform.getFamily() + ' is not supported in OpenVidu'));
@@ -1088,9 +1088,18 @@ export class Session extends EventDispatcher {
         const connectionId: string = event.connectionId;
         this.getConnection(connectionId, 'No connection found for connectionId ' + connectionId)
             .then(connection => {
-                logger.info('Filter event dispatched');
+                logger.info(`Filter event of type "${event.eventType}" dispatched`);
                 const stream: Stream = connection.stream!;
-                stream.filter!.handlers.get(event.eventType)?.call(this, new FilterEvent(stream.filter!, event.eventType, event.data));
+                if (!stream || !stream.filter) {
+                    return logger.error(`Filter event of type "${event.eventType}" dispatched for stream ${stream.streamId} but there is no ${!stream ? 'stream' : 'filter'} defined`);
+                }
+                const eventHandler = stream.filter.handlers.get(event.eventType);
+                if (!eventHandler || typeof eventHandler !== 'function') {
+                    const actualHandlers: string[] = Array.from(stream.filter.handlers.keys());
+                    return logger.error(`Filter event of type "${event.eventType}" not handled or not a function! Active filter events: ${actualHandlers.join(',')}`);
+                } else {
+                    eventHandler.call(this, new FilterEvent(stream.filter, event.eventType, event.data));
+                }
             });
     }
 
@@ -1503,9 +1512,9 @@ export class Session extends EventDispatcher {
         this.sessionId = opts.session;
         if (opts.customIceServers != null && opts.customIceServers.length > 0) {
             this.openvidu.iceServers = [];
-            for(const iceServer of opts.customIceServers) {
+            for (const iceServer of opts.customIceServers) {
                 let rtcIceServer: RTCIceServer = {
-                    urls: [ iceServer.url ]
+                    urls: [iceServer.url]
                 }
                 logger.log("STUN/TURN server IP: " + iceServer.url);
                 if (iceServer.username != null && iceServer.credential != null) {
