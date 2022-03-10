@@ -43,6 +43,13 @@ export class ParticipantPanelItemDirective {
 }
 
 @Directive({
+	selector: '[ovParticipantPanelItemElements]'
+})
+export class ParticipantPanelItemElementsDirective {
+	constructor(public template: TemplateRef<any>, public viewContainer: ViewContainerRef) {}
+}
+
+@Directive({
 	selector: '[ovLayout]'
 })
 export class LayoutDirective {

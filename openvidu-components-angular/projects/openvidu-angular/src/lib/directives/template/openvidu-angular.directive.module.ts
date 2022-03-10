@@ -3,6 +3,7 @@ import {
 	ChatPanelDirective,
 	LayoutDirective,
 	PanelDirective,
+	ParticipantPanelItemElementsDirective,
 	ParticipantPanelItemDirective,
 	ParticipantsPanelDirective,
 	StreamDirective,
@@ -19,7 +20,8 @@ import {
 		ParticipantsPanelDirective,
 		StreamDirective,
 		ToolbarDirective,
-		ToolbarAdditionalButtonsDirective
+		ToolbarAdditionalButtonsDirective,
+		ParticipantPanelItemElementsDirective
 	],
 	exports: [
 		ChatPanelDirective,
@@ -29,7 +31,8 @@ import {
 		ParticipantsPanelDirective,
 		StreamDirective,
 		ToolbarDirective,
-		ToolbarAdditionalButtonsDirective
+		ToolbarAdditionalButtonsDirective,
+		ParticipantPanelItemElementsDirective
 	]
 })
 export class OpenViduAngularDirectiveModule {}

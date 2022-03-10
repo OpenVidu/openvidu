@@ -7,15 +7,22 @@
 			<span class="participant-subtitle"></span>
 		</p> -->
 
-		<button
-			mat-icon-button
-			id="action-btn"
-			*ngIf="!_participant.local"
-			[class.warn-btn]="_participant.isMutedForcibly"
-			(click)="toggleMuteForcibly()"
-		>
-			<mat-icon *ngIf="!_participant.isMutedForcibly">volume_up</mat-icon>
-			<mat-icon *ngIf="_participant.isMutedForcibly">volume_off</mat-icon>
-		</button>
+		<div class="participant-action-buttons">
+			<button
+				mat-icon-button
+				id="action-btn"
+				*ngIf="!_participant.local"
+				[class.warn-btn]="_participant.isMutedForcibly"
+				(click)="toggleMuteForcibly()"
+			>
+				<mat-icon *ngIf="!_participant.isMutedForcibly">volume_up</mat-icon>
+				<mat-icon *ngIf="_participant.isMutedForcibly">volume_off</mat-icon>
+			</button>
+
+			<!-- External item elements  -->
+			<ng-container *ngIf="participantPanelItemElementsTemplate">
+				<ng-container *ngTemplateOutlet="participantPanelItemElementsTemplate"></ng-container>
+			</ng-container>
+		</div>
 	</mat-list-item>
 </mat-list>

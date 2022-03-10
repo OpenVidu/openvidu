@@ -82,7 +82,13 @@
 </ng-template>
 
 <ng-template #defaultParticipantPanelItem let-participant>
-	<ov-participant-panel-item [participant]="participant"></ov-participant-panel-item>
+	<ov-participant-panel-item [participant]="participant">
+
+		<ng-template #participantPanelItemElements>
+			<ng-container *ngTemplateOutlet="openviduAngularParticipantPanelItemElementsTemplate;  context: { $implicit: participant }"></ng-container>
+		</ng-template>
+
+	</ov-participant-panel-item>
 </ng-template>
 
 <ng-template #defaultLayout>

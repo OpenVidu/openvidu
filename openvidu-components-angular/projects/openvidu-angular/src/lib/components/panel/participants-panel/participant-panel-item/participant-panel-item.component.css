@@ -5,9 +5,18 @@
 .participant-nickname {
 	font-weight: bold !important;
 }
+
 .participant-action-buttons{
 	display: flex;
-	padding-top: 0px;
+}
+
+ ::ng-deep .participant-action-buttons > *:not(#action-btn) {
+	display: contents;
+}
+
+::ng-deep .participant-action-buttons > *:not(#action-btn) > * {
+	margin: auto;
+
 }
 
 mat-list-item {

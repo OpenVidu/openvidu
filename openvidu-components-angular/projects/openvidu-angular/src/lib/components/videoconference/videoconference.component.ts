@@ -4,6 +4,7 @@ import {
 	LayoutDirective,
 	PanelDirective,
 	ParticipantPanelItemDirective,
+	ParticipantPanelItemElementsDirective,
 	ParticipantsPanelDirective,
 	StreamDirective,
 	ToolbarAdditionalButtonsDirective,
@@ -27,6 +28,8 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 	@ContentChild(ChatPanelDirective) externalChatPanel: ChatPanelDirective;
 	@ContentChild(ParticipantsPanelDirective) externalParticipantsPanel: ParticipantsPanelDirective;
 	@ContentChild(ParticipantPanelItemDirective) externalParticipantPanelItem: ParticipantPanelItemDirective;
+	@ContentChild(ParticipantPanelItemElementsDirective) externalParticipantPanelItemElements: ParticipantPanelItemElementsDirective;
+
 
 	// *** Layout ***
 	@ContentChild(LayoutDirective) externalLayout: LayoutDirective;
@@ -46,6 +49,7 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 	openviduAngularChatPanelTemplate: TemplateRef<any>;
 	openviduAngularParticipantsPanelTemplate: TemplateRef<any>;
 	openviduAngularParticipantPanelItemTemplate: TemplateRef<any>;
+	openviduAngularParticipantPanelItemElementsTemplate: TemplateRef<any>;
 	openviduAngularLayoutTemplate: TemplateRef<any>;
 	openviduAngularStreamTemplate: TemplateRef<any>;
 
@@ -110,7 +114,7 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 			this.log.d('Setting EXTERNAL TOOLBAR');
 		} else {
 			if (this.externalToolbarAdditionalButtons) {
-				this.log.d('Setting EXTERNAL TOOLBAR ADDITIONAL BUTTONS', this.externalToolbarAdditionalButtons.template);
+				this.log.d('Setting EXTERNAL TOOLBAR ADDITIONAL BUTTONS');
 				this.openviduAngularToolbarAdditionalButtonsTemplate = this.externalToolbarAdditionalButtons.template;
 			}
 			this.openviduAngularToolbarTemplate = this.defaultToolbarTemplate;
@@ -132,6 +136,10 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 					this.openviduAngularParticipantPanelItemTemplate = this.externalParticipantPanelItem.template;
 					this.log.d('Setting EXTERNAL P ITEM');
 				} else {
+					if (this.externalParticipantPanelItemElements) {
+						this.log.d('Setting EXTERNAL PARTICIPANT PANEL ITEM ELEMENT');
+						this.openviduAngularParticipantPanelItemElementsTemplate = this.externalParticipantPanelItemElements.template;
+					}
 					this.openviduAngularParticipantPanelItemTemplate = this.defaultParticipantPanelItemTemplate;
 					this.log.d('Setting DEFAULT P ITEM');
 				}
