@@ -18,7 +18,8 @@
 package io.openvidu.java.client;
 
 /**
- * Defines error responses from OpenVidu Server
+ * Defines error responses from OpenVidu Server. See error codes at
+ * https://docs.openvidu.io/en/stable/reference-docs/REST-API/
  */
 public class OpenViduHttpException extends OpenViduException {
 

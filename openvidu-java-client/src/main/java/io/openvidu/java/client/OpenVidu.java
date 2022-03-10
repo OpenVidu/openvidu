@@ -203,14 +203,10 @@ public class OpenVidu {
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 		request.setEntity(params);
 
-		HttpResponse response;
+		HttpResponse response = null;
 		try {
 			response = this.httpClient.execute(request);
-		} catch (IOException e2) {
-			throw new OpenViduJavaClientException(e2.getMessage(), e2.getCause());
-		}
 
-		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
 				Recording r = new Recording(httpResponseToJson(response));
@@ -226,8 +222,13 @@ public class OpenVidu {
 			} else {
 				throw new OpenViduHttpException(statusCode);
 			}
+
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		} finally {
-			EntityUtils.consumeQuietly(response.getEntity());
+			if (response != null) {
+				EntityUtils.consumeQuietly(response.getEntity());
+			}
 		}
 	}
 
@@ -334,14 +335,10 @@ public class OpenVidu {
 	 */
 	public Recording stopRecording(String recordingId) throws OpenViduJavaClientException, OpenViduHttpException {
 		HttpPost request = new HttpPost(this.hostname + API_RECORDINGS_STOP + "/" + recordingId);
-		HttpResponse response;
+		HttpResponse response = null;
 		try {
 			response = this.httpClient.execute(request);
-		} catch (IOException e) {
-			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
-		}
 
-		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
 				Recording r = new Recording(httpResponseToJson(response));
@@ -357,8 +354,12 @@ public class OpenVidu {
 			} else {
 				throw new OpenViduHttpException(statusCode);
 			}
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		} finally {
-			EntityUtils.consumeQuietly(response.getEntity());
+			if (response != null) {
+				EntityUtils.consumeQuietly(response.getEntity());
+			}
 		}
 	}
 
@@ -377,22 +378,23 @@ public class OpenVidu {
 	 */
 	public Recording getRecording(String recordingId) throws OpenViduJavaClientException, OpenViduHttpException {
 		HttpGet request = new HttpGet(this.hostname + API_RECORDINGS + "/" + recordingId);
-		HttpResponse response;
+		HttpResponse response = null;
 		try {
 			response = this.httpClient.execute(request);
-		} catch (IOException e) {
-			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
-		}
 
-		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
 				return new Recording(httpResponseToJson(response));
 			} else {
 				throw new OpenViduHttpException(statusCode);
 			}
+
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		} finally {
-			EntityUtils.consumeQuietly(response.getEntity());
+			if (response != null) {
+				EntityUtils.consumeQuietly(response.getEntity());
+			}
 		}
 	}
 
@@ -406,14 +408,10 @@ public class OpenVidu {
 	 */
 	public List<Recording> listRecordings() throws OpenViduJavaClientException, OpenViduHttpException {
 		HttpGet request = new HttpGet(this.hostname + API_RECORDINGS);
-		HttpResponse response;
+		HttpResponse response = null;
 		try {
 			response = this.httpClient.execute(request);
-		} catch (IOException e) {
-			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
-		}
 
-		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
 				List<Recording> recordings = new ArrayList<>();
@@ -426,8 +424,13 @@ public class OpenVidu {
 			} else {
 				throw new OpenViduHttpException(statusCode);
 			}
+
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		} finally {
-			EntityUtils.consumeQuietly(response.getEntity());
+			if (response != null) {
+				EntityUtils.consumeQuietly(response.getEntity());
+			}
 		}
 	}
 
@@ -452,20 +455,21 @@ public class OpenVidu {
 	 */
 	public void deleteRecording(String recordingId) throws OpenViduJavaClientException, OpenViduHttpException {
 		HttpDelete request = new HttpDelete(this.hostname + API_RECORDINGS + "/" + recordingId);
-		HttpResponse response;
+		HttpResponse response = null;
 		try {
 			response = this.httpClient.execute(request);
-		} catch (IOException e) {
-			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
-		}
 
-		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (!(statusCode == org.apache.http.HttpStatus.SC_NO_CONTENT)) {
 				throw new OpenViduHttpException(statusCode);
 			}
+
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		} finally {
-			EntityUtils.consumeQuietly(response.getEntity());
+			if (response != null) {
+				EntityUtils.consumeQuietly(response.getEntity());
+			}
 		}
 	}
 
@@ -519,14 +523,10 @@ public class OpenVidu {
 	public boolean fetch() throws OpenViduJavaClientException, OpenViduHttpException {
 		HttpGet request = new HttpGet(this.hostname + API_SESSIONS + "?pendingConnections=true");
 
-		HttpResponse response;
+		HttpResponse response = null;
 		try {
 			response = this.httpClient.execute(request);
-		} catch (IOException e) {
-			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
-		}
 
-		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
 
@@ -581,14 +581,20 @@ public class OpenVidu {
 			} else {
 				throw new OpenViduHttpException(statusCode);
 			}
+
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		} finally {
-			EntityUtils.consumeQuietly(response.getEntity());
+			if (response != null) {
+				EntityUtils.consumeQuietly(response.getEntity());
+			}
 		}
 	}
 
 	private JsonObject httpResponseToJson(HttpResponse response) throws OpenViduJavaClientException {
 		try {
-			JsonObject json = new Gson().fromJson(EntityUtils.toString(response.getEntity(), "UTF-8"), JsonObject.class);
+			JsonObject json = new Gson().fromJson(EntityUtils.toString(response.getEntity(), "UTF-8"),
+					JsonObject.class);
 			return json;
 		} catch (JsonSyntaxException | ParseException | IOException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
