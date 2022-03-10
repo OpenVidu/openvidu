@@ -47,9 +47,11 @@ export class ParticipantsPanelComponent implements OnInit, OnDestroy {
 		this.remoteParticipantsSubs = this.participantService.remoteParticipantsObs.subscribe((p: ParticipantAbstractModel[]) => {
 			// Workaround which forc the objects references update
 			// After one entirely day trying to make it works, this is the only way
-			p.forEach((par, index) => {
-				this.remoteParticipants[index] = Object.create(par);
+			const remoteParticipantsAux = [];
+			p.forEach((par) => {
+				remoteParticipantsAux.push(Object.create(par));
 			});
+			this.remoteParticipants = remoteParticipantsAux;
 			// Mark for re-rendering using an impure pipe 'streamsTypesEnabled'
 			this.cd.markForCheck();
 		});
