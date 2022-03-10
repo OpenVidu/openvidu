@@ -414,17 +414,17 @@ export class StreamManager extends EventDispatcher {
             }
         }
 
-        if (this.remote) {
-          // Do not mirror remote video.
-          // Remove the mirror if this video was currently associated with a local mirrored video.
-          this.removeMirrorVideo(video);
-        }
-        else if (!this.stream.displayMyRemote()) {
+        if (this.remote && this.isMirroredVideo(video)) {
+            // Remote video associated to a previously mirrored video element
+            this.removeMirrorVideo(video);
+        } else if (!this.stream.displayMyRemote()) {
+            // Local video
             video.muted = true;
-            if (video.style.transform === 'rotateY(180deg)' && !this.stream.outboundStreamOpts.publisherProperties.mirror) {
+            if (this.isMirroredVideo(video) && !this.stream.outboundStreamOpts.publisherProperties.mirror) {
                 // If the video was already rotated and now is set to not mirror
                 this.removeMirrorVideo(video);
             } else if (this.stream.outboundStreamOpts.publisherProperties.mirror && !this.stream.isSendScreen()) {
+                // If the video is now set to mirror and is not screen share
                 this.mirrorVideo(video);
             }
         }
@@ -536,16 +536,20 @@ export class StreamManager extends EventDispatcher {
         }
     }
 
-    private mirrorVideo(video): void {
+    private mirrorVideo(video: HTMLVideoElement): void {
         if (!platform.isIonicIos()) {
             video.style.transform = 'rotateY(180deg)';
             video.style.webkitTransform = 'rotateY(180deg)';
         }
     }
 
-    private removeMirrorVideo(video): void {
+    private removeMirrorVideo(video: HTMLVideoElement): void {
         video.style.transform = 'unset';
         video.style.webkitTransform = 'unset';
+    }
+
+    private isMirroredVideo(video: HTMLVideoElement): boolean {
+        return video.style.transform === 'rotateY(180deg)' || video.style.webkitTransform === 'rotateY(180deg)';
     }
 
     private activateStreamPlayingEventExceptionTimeout() {
