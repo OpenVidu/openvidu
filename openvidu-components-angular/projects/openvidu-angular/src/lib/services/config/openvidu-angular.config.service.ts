@@ -11,6 +11,9 @@ export class OpenViduAngularConfigService {
 
 	minimal = <BehaviorSubject<boolean>>new BehaviorSubject(false);
 	minimalObs: Observable<boolean>;
+	prejoin = <BehaviorSubject<boolean>>new BehaviorSubject(true);
+	prejoinObs: Observable<boolean>;
+
 	videoMuted = <BehaviorSubject<boolean>>new BehaviorSubject(false);
 	videoMutedObs: Observable<boolean>;
 	audioMuted = <BehaviorSubject<boolean>>new BehaviorSubject(false);
@@ -49,6 +52,7 @@ export class OpenViduAngularConfigService {
 		console.log(this.configuration);
 		if(this.isProduction()) console.log('OpenVidu Angular Production Mode');
 		this.minimalObs = this.minimal.asObservable();
+		this.prejoinObs = this.prejoin.asObservable();
 		this.videoMutedObs = this.videoMuted.asObservable();
 		this.audioMutedObs = this.audioMuted.asObservable();
 		//Toolbar observables
@@ -74,9 +78,9 @@ export class OpenViduAngularConfigService {
 		return this.configuration?.production;
 	}
 
-	isWebcomponent(): boolean {
-		return this.configuration?.webcomponent;
-	}
+	// isWebcomponent(): boolean {
+	// 	return this.configuration?.webcomponent;
+	// }
 
 	hasParticipantFactory(): boolean {
 		return typeof this.getConfig().participantFactory === "function";

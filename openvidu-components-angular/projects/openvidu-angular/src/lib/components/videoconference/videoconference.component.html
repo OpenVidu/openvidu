@@ -1,20 +1,20 @@
 <div id="call-container">
-	<div id="pre-join-container" *ngIf="!joinSessionClicked">
+	<div id="pre-join-container" *ngIf="showPrejoin && participantReady && !joinSessionClicked">
 		<ov-pre-join (onJoinButtonClicked)="_onJoinButtonClicked()"></ov-pre-join>
 		<!-- <ov-user-settings (onJoinClicked)="_onJoinClicked()" (onCloseClicked)="onLeaveSessionClicked()"></ov-user-settings> -->
 	</div>
 
-	<div id="spinner" *ngIf="joinSessionClicked && !isSessionAlive && !error">
+	<div id="spinner" *ngIf="(joinSessionClicked || !showPrejoin) && !participantReady && !error">
 		<mat-spinner [diameter]="50"></mat-spinner>
 		<span>Joining the room ...</span>
 	</div>
 
-	<div id="spinner" *ngIf="joinSessionClicked && !isSessionAlive && error">
+	<div id="spinner" *ngIf="joinSessionClicked && !participantReady && error">
 		<mat-icon class="error-icon">error</mat-icon>
 		<span>{{ errorMessage }}</span>
 	</div>
 
-	<div id="session-container" *ngIf="joinSessionClicked && isSessionAlive && !error">
+	<div id="session-container" *ngIf="(joinSessionClicked || !showPrejoin) && participantReady && !error">
 		<ov-session [tokens]="_tokens">
 			<ng-template #toolbar>
 				<ng-container *ngIf="openviduAngularToolbarTemplate">

@@ -26,7 +26,6 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	microphoneSelected: CustomDevice;
 	isVideoMuted: boolean;
 	isAudioMuted: boolean;
-	screenShareEnabled: boolean;
 	localParticipant: ParticipantAbstractModel;
 	windowSize: number;
 	hasVideoDevices: boolean;
@@ -45,7 +44,6 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 
 	constructor(
 		private layoutService: LayoutService,
-		private actionService: ActionService,
 		private deviceSrv: DeviceService,
 		private loggerSrv: LoggerService,
 		private openviduService: OpenViduService,
@@ -55,22 +53,20 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		this.log = this.loggerSrv.get('PreJoinComponent');
 	}
 
-	async ngOnInit() {
-		await this.deviceSrv.initializeDevices();
-		this.nickname = this.storageSrv.getNickname() || this.generateRandomNickname();
-		const props: ParticipantProperties = {
-			local: true,
-			nickname: this.nickname
-		};
-		this.participantService.initLocalParticipant(props);
-
+	ngOnInit() {
 		this.subscribeToLocalParticipantEvents();
-		this.openviduService.initialize();
+
 		this.windowSize = window.innerWidth;
-		this.setDevicesInfo();
-		if (this.hasAudioDevices || this.hasVideoDevices) {
-			await this.initwebcamPublisher();
-		}
+		this.hasVideoDevices = this.deviceSrv.hasVideoDeviceAvailable();
+		this.hasAudioDevices = this.deviceSrv.hasAudioDeviceAvailable();
+		this.microphones = this.deviceSrv.getMicrophones();
+		this.cameras = this.deviceSrv.getCameras();
+		this.cameraSelected = this.deviceSrv.getCameraSelected();
+		this.microphoneSelected = this.deviceSrv.getMicrophoneSelected();
+
+		this.isVideoMuted = this.deviceSrv.isVideoMuted();
+		this.isAudioMuted = this.deviceSrv.isAudioMuted();
+
 		this.isLoading = false;
 	}
 
@@ -201,7 +197,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	updateNickname() {
-		this.nickname = this.nickname === '' ? this.generateRandomNickname() : this.nickname;
+		this.nickname = this.nickname === '' ? this.participantService.getMyNickname() : this.nickname;
 		this.participantService.setMyNickname(this.nickname);
 		this.storageSrv.setNickname(this.nickname);
 	}
@@ -210,31 +206,10 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		this.onJoinButtonClicked.emit();
 	}
 
-	private setDevicesInfo() {
-		this.hasVideoDevices = this.deviceSrv.hasVideoDeviceAvailable();
-		this.hasAudioDevices = this.deviceSrv.hasAudioDeviceAvailable();
-		this.microphones = this.deviceSrv.getMicrophones();
-		this.cameras = this.deviceSrv.getCameras();
-		this.cameraSelected = this.deviceSrv.getCameraSelected();
-		this.microphoneSelected = this.deviceSrv.getMicrophoneSelected();
-
-		this.isVideoMuted = this.deviceSrv.isVideoMuted();
-		this.isAudioMuted = this.deviceSrv.isAudioMuted();
-	}
-
 	private subscribeToLocalParticipantEvents() {
 		this.localParticipantSubscription = this.participantService.localParticipantObs.subscribe((p) => {
 			this.localParticipant = p;
-			this.screenShareEnabled = p.isScreenActive();
 		});
-	}
-
-	private async initwebcamPublisher() {
-		const publisher = await this.openviduService.initDefaultPublisher(undefined);
-		if (publisher) {
-			// this.handlePublisherSuccess(publisher);
-			this.handlePublisherError(publisher);
-		}
 	}
 
 	//? After test in Chrome and Firefox, the devices always have labels.
@@ -256,33 +231,4 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	// 		}
 	// 	});
 	// }
-
-	private handlePublisherError(publisher: Publisher) {
-		publisher.once('accessDenied', (e: any) => {
-			let message: string;
-			if (e.name === OpenViduErrorName.DEVICE_ALREADY_IN_USE) {
-				this.log.w('Video device already in use. Disabling video device...');
-				// Allow access to the room with only mic if camera device is already in use
-				this.hasVideoDevices = false;
-				this.deviceSrv.disableVideoDevices();
-				return this.initwebcamPublisher();
-			}
-			if (e.name === OpenViduErrorName.DEVICE_ACCESS_DENIED) {
-				message = 'Access to media devices was not allowed.';
-				this.hasVideoDevices = false;
-				this.hasAudioDevices = false;
-				this.deviceSrv.disableVideoDevices();
-				this.deviceSrv.disableAudioDevices();
-				return this.initwebcamPublisher();
-			} else if (e.name === OpenViduErrorName.NO_INPUT_SOURCE_SET) {
-				message = 'No video or audio devices have been found. Please, connect at least one.';
-			}
-			this.actionService.openDialog(e.name.replace(/_/g, ' '), message, true);
-			this.log.e(e.message);
-		});
-	}
-
-	private generateRandomNickname(): string {
-		return 'OpenVidu_User' + Math.floor(Math.random() * 100);
-	}
 }

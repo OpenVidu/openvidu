@@ -331,10 +331,12 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	}
 	protected subscribeToUserMediaProperties() {
 		this.localParticipantSubscription = this.participantService.localParticipantObs.subscribe((p) => {
-			this.isWebcamVideoActive = p.isCameraVideoActive();
-			this.isWebcamAudioActive = p.isCameraAudioActive();
-			this.isScreenShareActive = p.isScreenActive();
-			this.cd.markForCheck();
+			if(p) {
+				this.isWebcamVideoActive = p.isCameraVideoActive();
+				this.isWebcamAudioActive = p.isCameraAudioActive();
+				this.isScreenShareActive = p.isScreenActive();
+				this.cd.markForCheck();
+			}
 		});
 	}
 

@@ -24,6 +24,29 @@ export class MinimalDirective implements OnDestroy {
 }
 
 @Directive({
+	selector: 'ov-videoconference[prejoin]'
+})
+export class PrejoinDirective implements OnDestroy {
+	@Input() set prejoin(value: boolean) {
+		this.update(value);
+	}
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.update(true);
+	}
+	update(value: boolean) {
+		if (this.libService.prejoin.getValue() !== value) {
+			this.libService.prejoin.next(value);
+		}
+	}
+}
+
+
+@Directive({
 	selector: 'ov-videoconference[videoMuted]'
 })
 export class VideoMutedDirective implements OnDestroy {

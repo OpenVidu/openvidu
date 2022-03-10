@@ -86,10 +86,6 @@ export class SessionComponent implements OnInit {
 
 	async ngOnInit() {
 
-		if (this.openviduService.getWebcamSession() === null) {
-			this.openviduService.initialize();
-			await this.openviduService.initDefaultPublisher(undefined);
-		}
 		this.session = this.openviduService.getWebcamSession();
 		this.sessionScreen = this.openviduService.getScreenSession();
 		this.subscribeToConnectionCreatedAndDestroyed();

@@ -50,10 +50,10 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	ngAfterViewInit() {
-		let timeout: number = null;
-		if (this.libService.isWebcomponent()) {
-			timeout = 0;
-		}
+		let timeout: number = 0;
+		// if (this.libService.isWebcomponent()) {
+		// 	timeout = 0;
+		// }
 
 		this.layoutService.initialize(timeout);
 		this.layoutService.update(timeout);

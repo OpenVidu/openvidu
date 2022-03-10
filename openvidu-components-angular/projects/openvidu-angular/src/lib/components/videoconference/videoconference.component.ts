@@ -1,4 +1,17 @@
-import { AfterViewInit, Component, ContentChild, EventEmitter, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
+import {
+	AfterViewInit,
+	Component,
+	ContentChild,
+	EventEmitter,
+	Input,
+	OnDestroy,
+	OnInit,
+	Output,
+	TemplateRef,
+	ViewChild
+} from '@angular/core';
+import { OpenViduErrorName } from 'openvidu-browser';
+import { Subscription } from 'rxjs';
 import {
 	ChatPanelDirective,
 	LayoutDirective,
@@ -11,14 +24,21 @@ import {
 	ToolbarDirective
 } from '../../directives/template/openvidu-angular.directive';
 import { ILogger } from '../../models/logger.model';
+import { ParticipantProperties } from '../../models/participant.model';
+import { ActionService } from '../../services/action/action.service';
+import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
+import { DeviceService } from '../../services/device/device.service';
 import { LoggerService } from '../../services/logger/logger.service';
+import { OpenViduService } from '../../services/openvidu/openvidu.service';
+import { ParticipantService } from '../../services/participant/participant.service';
+import { StorageService } from '../../services/storage/storage.service';
 
 @Component({
 	selector: 'ov-videoconference',
 	templateUrl: './videoconference.component.html',
 	styleUrls: ['./videoconference.component.css']
 })
-export class VideoconferenceComponent implements OnInit, AfterViewInit {
+export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewInit {
 	// *** Toolbar ***
 	@ContentChild(ToolbarDirective) externalToolbar: ToolbarDirective;
 	@ContentChild(ToolbarAdditionalButtonsDirective) externalToolbarAdditionalButtons: ToolbarAdditionalButtonsDirective;
@@ -29,7 +49,6 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 	@ContentChild(ParticipantsPanelDirective) externalParticipantsPanel: ParticipantsPanelDirective;
 	@ContentChild(ParticipantPanelItemDirective) externalParticipantPanelItem: ParticipantPanelItemDirective;
 	@ContentChild(ParticipantPanelItemElementsDirective) externalParticipantPanelItemElements: ParticipantPanelItemElementsDirective;
-
 
 	// *** Layout ***
 	@ContentChild(LayoutDirective) externalLayout: LayoutDirective;
@@ -69,7 +88,6 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 					webcam: tokens.webcam,
 					screen: tokens.screen
 				};
-				this.isSessionAlive = true;
 			}
 		}
 	}
@@ -97,15 +115,61 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 	@Output() onSessionCreated = new EventEmitter<any>();
 
 	joinSessionClicked: boolean = false;
-	isSessionAlive: boolean = false;
+	participantReady: boolean = false;
 	_tokens: { webcam: string; screen: string };
 	error: boolean = false;
 	errorMessage: string = '';
-
+	showPrejoin: boolean = true;
+	private prejoinSub: Subscription;
 	private log: ILogger;
 
-	constructor(private loggerSrv: LoggerService) {
+	constructor(
+		private loggerSrv: LoggerService,
+		private storageSrv: StorageService,
+		private participantService: ParticipantService,
+		private deviceSrv: DeviceService,
+		private openviduService: OpenViduService,
+		private actionService: ActionService,
+		private libService: OpenViduAngularConfigService
+	) {
 		this.log = this.loggerSrv.get('VideoconferenceComponent');
+	}
+
+	async ngOnInit() {
+		this.subscribeToVideconferenceDirectives();
+		await this.deviceSrv.initializeDevices();
+		const nickname = this.storageSrv.getNickname() || 'OpenVidu_User' + Math.floor(Math.random() * 100);
+		const props: ParticipantProperties = {
+			local: true,
+			nickname
+		};
+		this.participantService.initLocalParticipant(props);
+		this.openviduService.initialize();
+
+		if (this.deviceSrv.hasVideoDeviceAvailable() || this.deviceSrv.hasAudioDeviceAvailable()) {
+			await this.initwebcamPublisher();
+		}
+	}
+
+	private async initwebcamPublisher() {
+		try {
+			const publisher = await this.openviduService.initDefaultPublisher(undefined);
+			if (publisher) {
+				publisher.once('accessDenied', (e: any) => {
+					this.handlePublisherError(e);
+				});
+				publisher.once('accessAllowed', () => {
+					this.participantReady = true;
+				});
+			}
+		} catch (error) {
+			this.actionService.openDialog(error.name.replace(/_/g, ' '), error.message, true);
+			this.log.e(error);
+		}
+	}
+
+	ngOnDestroy(): void {
+		if (this.prejoinSub) this.prejoinSub.unsubscribe();
 	}
 
 	ngAfterViewInit() {
@@ -173,15 +237,13 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 		}
 	}
 
-	ngOnInit() {}
-
 	_onJoinButtonClicked() {
 		this.joinSessionClicked = true;
 		this.onJoinButtonClicked.emit();
 	}
 	onLeaveButtonClicked() {
 		this.joinSessionClicked = false;
-		this.isSessionAlive = false;
+		this.participantReady = false;
 		this.onToolbarLeaveButtonClicked.emit();
 	}
 	onCameraButtonClicked() {
@@ -202,5 +264,32 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 	}
 	onChatPanelButtonClicked() {
 		this.onToolbarChatPanelButtonClicked.emit();
+	}
+
+	private handlePublisherError(e: any) {
+		let message: string;
+		if (e.name === OpenViduErrorName.DEVICE_ALREADY_IN_USE) {
+			this.log.w('Video device already in use. Disabling video device...');
+			// Allow access to the room with only mic if camera device is already in use
+			this.deviceSrv.disableVideoDevices();
+			return this.initwebcamPublisher();
+		}
+		if (e.name === OpenViduErrorName.DEVICE_ACCESS_DENIED) {
+			message = 'Access to media devices was not allowed.';
+			this.deviceSrv.disableVideoDevices();
+			this.deviceSrv.disableAudioDevices();
+			return this.initwebcamPublisher();
+		} else if (e.name === OpenViduErrorName.NO_INPUT_SOURCE_SET) {
+			message = 'No video or audio devices have been found. Please, connect at least one.';
+		}
+		this.actionService.openDialog(e.name.replace(/_/g, ' '), message, true);
+		this.log.e(e.message);
+	}
+
+	private subscribeToVideconferenceDirectives() {
+		this.prejoinSub = this.libService.prejoin.subscribe((value: boolean) => {
+			this.showPrejoin = value;
+			// this.cd.markForCheck();
+		});
 	}
 }

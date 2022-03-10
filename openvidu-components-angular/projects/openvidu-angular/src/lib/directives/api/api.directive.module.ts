@@ -15,11 +15,12 @@ import {
 	ToolbarDisplayLogoDirective,
 	LogoDirective
 } from './toolbar.directive';
-import { AudioMutedDirective, MinimalDirective, VideoMutedDirective } from './videoconference.directive';
+import { AudioMutedDirective, MinimalDirective, PrejoinDirective, VideoMutedDirective } from './videoconference.directive';
 
 @NgModule({
 	declarations: [
 		MinimalDirective,
+		PrejoinDirective,
 		VideoMutedDirective,
 		AudioMutedDirective,
 		ToolbarScreenshareButtonDirective,
@@ -37,6 +38,7 @@ import { AudioMutedDirective, MinimalDirective, VideoMutedDirective } from './vi
 	],
 	exports: [
 		MinimalDirective,
+		PrejoinDirective,
 		VideoMutedDirective,
 		AudioMutedDirective,
 		ToolbarScreenshareButtonDirective,

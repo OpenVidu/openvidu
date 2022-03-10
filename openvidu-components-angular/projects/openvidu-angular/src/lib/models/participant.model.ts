@@ -51,7 +51,7 @@ export abstract class ParticipantAbstractModel {
 	public isCameraAudioActive(): boolean {
 		const cameraConnection = this.getCameraConnection();
 		if(cameraConnection) {
-			return cameraConnection.connected && cameraConnection.streamManager.stream.audioActive;
+			return cameraConnection.connected && cameraConnection.streamManager?.stream?.audioActive;
 		}
 		return this.isScreenAudioActive();;
 	}
