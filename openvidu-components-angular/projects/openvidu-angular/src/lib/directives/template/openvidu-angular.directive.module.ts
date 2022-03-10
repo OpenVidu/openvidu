@@ -6,6 +6,7 @@ import {
 	ParticipantPanelItemDirective,
 	ParticipantsPanelDirective,
 	StreamDirective,
+	ToolbarAdditionalButtonsDirective,
 	ToolbarDirective
 } from './openvidu-angular.directive';
 
@@ -17,7 +18,8 @@ import {
 		ParticipantPanelItemDirective,
 		ParticipantsPanelDirective,
 		StreamDirective,
-		ToolbarDirective
+		ToolbarDirective,
+		ToolbarAdditionalButtonsDirective
 	],
 	exports: [
 		ChatPanelDirective,
@@ -26,7 +28,8 @@ import {
 		ParticipantPanelItemDirective,
 		ParticipantsPanelDirective,
 		StreamDirective,
-		ToolbarDirective
+		ToolbarDirective,
+		ToolbarAdditionalButtonsDirective
 	]
 })
 export class OpenViduAngularDirectiveModule {}

@@ -18,7 +18,11 @@
 	max-height: 100% !important;
 }
 
-#media-buttons-container > *, ::ng-deep #media-buttons-container > * {
+#media-buttons-container > button,
+::ng-deep #media-buttons-container > button,
+#media-buttons-container:not(#media-buttons-container > button) button,
+/* Applying css for external additional buttons*/
+::ng-deep #media-buttons-container:not(#media-buttons-container > button) button {
 	width: 40px;
 	height: 40px;
 	background-color: var(--ov-secondary-color);

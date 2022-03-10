@@ -6,6 +6,7 @@ import {
 	ParticipantPanelItemDirective,
 	ParticipantsPanelDirective,
 	StreamDirective,
+	ToolbarAdditionalButtonsDirective,
 	ToolbarDirective
 } from '../../directives/template/openvidu-angular.directive';
 import { ILogger } from '../../models/logger.model';
@@ -19,6 +20,7 @@ import { LoggerService } from '../../services/logger/logger.service';
 export class VideoconferenceComponent implements OnInit, AfterViewInit {
 	// *** Toolbar ***
 	@ContentChild(ToolbarDirective) externalToolbar: ToolbarDirective;
+	@ContentChild(ToolbarAdditionalButtonsDirective) externalToolbarAdditionalButtons: ToolbarAdditionalButtonsDirective;
 
 	// *** Panels ***
 	@ContentChild(PanelDirective) externalPanel: PanelDirective;
@@ -39,6 +41,7 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 	@ViewChild('defaultStream', { static: false, read: TemplateRef }) defaultStreamTemplate: TemplateRef<any>;
 
 	openviduAngularToolbarTemplate: TemplateRef<any>;
+	openviduAngularToolbarAdditionalButtonsTemplate: TemplateRef<any>;
 	openviduAngularPanelTemplate: TemplateRef<any>;
 	openviduAngularChatPanelTemplate: TemplateRef<any>;
 	openviduAngularParticipantsPanelTemplate: TemplateRef<any>;
@@ -106,6 +109,10 @@ export class VideoconferenceComponent implements OnInit, AfterViewInit {
 			this.openviduAngularToolbarTemplate = this.externalToolbar.template;
 			this.log.d('Setting EXTERNAL TOOLBAR');
 		} else {
+			if (this.externalToolbarAdditionalButtons) {
+				this.log.d('Setting EXTERNAL TOOLBAR ADDITIONAL BUTTONS', this.externalToolbarAdditionalButtons.template);
+				this.openviduAngularToolbarAdditionalButtonsTemplate = this.externalToolbarAdditionalButtons.template;
+			}
 			this.openviduAngularToolbarTemplate = this.defaultToolbarTemplate;
 			this.log.d('Setting  DEFAULT TOOLBAR');
 		}

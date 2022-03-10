@@ -27,6 +27,7 @@ import { ChatMessage } from '../../models/chat.model';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { MenuType } from '../../models/menu.model';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
+import { ToolbarAdditionalButtonsDirective } from '../../directives/template/openvidu-angular.directive';
 
 @Component({
 	selector: 'ov-toolbar',
@@ -35,7 +36,17 @@ import { OpenViduAngularConfigService } from '../../services/config/openvidu-ang
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolbarComponent implements OnInit, OnDestroy {
-	@ContentChild('centeredButtons', { read: TemplateRef }) centeredButtonsTemplate: TemplateRef<any>;
+	@ContentChild('toolbarAdditionalButtons', { read: TemplateRef }) toolbarAdditionalButtonsTemplate: TemplateRef<any>;
+
+	@ContentChild(ToolbarAdditionalButtonsDirective)
+	set externalAdditionalButtons(externalAdditionalButtons: ToolbarAdditionalButtonsDirective) {
+		// This directive will has value only when ADDITIONAL BUTTONS component tagget with '*ovToolbarAdditionalButtons' directive
+		// is inside of the TOOLBAR component tagged with '*ovToolbar' directive
+		if (externalAdditionalButtons) {
+			this.toolbarAdditionalButtonsTemplate = externalAdditionalButtons.template;
+		}
+	}
+
 	@Output() onLeaveButtonClicked = new EventEmitter<any>();
 	@Output() onCameraButtonClicked = new EventEmitter<any>();
 	@Output() onMicrophoneButtonClicked = new EventEmitter<any>();

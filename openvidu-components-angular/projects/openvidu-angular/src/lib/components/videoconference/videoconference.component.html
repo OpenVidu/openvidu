@@ -46,7 +46,13 @@
 		(onFullscreenButtonClicked)="onFullscreenButtonClicked()"
 		(onParticipantsPanelButtonClicked)="onParticipantsPanelButtonClicked()"
 		(onChatPanelButtonClicked)="onChatPanelButtonClicked()"
-	></ov-toolbar>
+	>
+
+	<ng-template #toolbarAdditionalButtons>
+		<ng-container *ngTemplateOutlet="openviduAngularToolbarAdditionalButtonsTemplate"></ng-container>
+	</ng-template>
+
+</ov-toolbar>
 </ng-template>
 
 <ng-template #defaultPanel>

@@ -55,8 +55,10 @@
 			<mat-icon *ngIf="!isFullscreenActive" matTooltip="Fullscreen">fullscreen</mat-icon>
 		</button>
 
-		<!-- Custom toolbar buttons -->
-		<ng-content select="[toolbar-btn]"></ng-content>
+		<!-- External additional buttons  -->
+		<ng-container *ngIf="toolbarAdditionalButtonsTemplate">
+			<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate"></ng-container>
+		</ng-container>
 
 		<!-- Leave session button -->
 		<button mat-icon-button *ngIf="showLeaveButton" (click)="leaveSession()" id="leave-btn">

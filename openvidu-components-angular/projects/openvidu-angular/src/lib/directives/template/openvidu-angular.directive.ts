@@ -8,6 +8,13 @@ export class ToolbarDirective {
 }
 
 @Directive({
+	selector: '[ovToolbarAdditionalButtons]'
+})
+export class ToolbarAdditionalButtonsDirective {
+	constructor(public template: TemplateRef<any>, public viewContainer: ViewContainerRef) {}
+}
+
+@Directive({
 	selector: '[ovPanel]'
 })
 export class PanelDirective {
