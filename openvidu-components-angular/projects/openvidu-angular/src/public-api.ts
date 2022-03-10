@@ -53,3 +53,4 @@ export * from './lib/directives/template/openvidu-angular.directive';
 export * from './lib/directives/api/toolbar.directive';
 export * from './lib/directives/api/stream.directive';
 export * from './lib/directives/api/videoconference.directive';
+export * from './lib/directives/api/participant-panel-item.directive';

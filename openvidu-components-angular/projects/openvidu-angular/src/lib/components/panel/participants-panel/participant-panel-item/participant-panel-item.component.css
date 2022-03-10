@@ -16,7 +16,6 @@
 
 ::ng-deep .participant-action-buttons > *:not(#action-btn) > * {
 	margin: auto;
-
 }
 
 mat-list-item {

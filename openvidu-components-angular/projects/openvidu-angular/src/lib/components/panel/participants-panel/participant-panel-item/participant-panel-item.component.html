@@ -11,7 +11,7 @@
 			<button
 				mat-icon-button
 				id="action-btn"
-				*ngIf="!_participant.local"
+				*ngIf="!_participant.local && showMuteButton"
 				[class.warn-btn]="_participant.isMutedForcibly"
 				(click)="toggleMuteForcibly()"
 			>

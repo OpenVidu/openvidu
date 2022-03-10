@@ -41,6 +41,8 @@ export class OpenViduAngularConfigService {
 	displayAudioDetectionObs: Observable<boolean>;
 	settingsButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	settingsButtonObs: Observable<boolean>;
+	participantItemMuteButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
+	participantItemMuteButtonObs: Observable<boolean>;
 
 	constructor(@Inject('OPENVIDU_ANGULAR_CONFIG') config: OpenViduAngularConfig) {
 		this.configuration = config;
@@ -61,6 +63,8 @@ export class OpenViduAngularConfigService {
 		this.displayParticipantNameObs = this.displayParticipantName.asObservable();
 		this.displayAudioDetectionObs = this.displayAudioDetection.asObservable();
 		this.settingsButtonObs = this.settingsButton.asObservable();
+		// Participant item observables
+		this.participantItemMuteButtonObs = this.participantItemMuteButton.asObservable();
 	}
 
 	getConfig(): OpenViduAngularConfig {

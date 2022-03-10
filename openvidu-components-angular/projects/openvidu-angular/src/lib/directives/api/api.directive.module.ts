@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { ParticipantPanelItemMuteButtonDirective } from './participant-panel-item.directive';
 import {
 	StreamDisplayParticipantNameDirective,
 	StreamDisplayAudioDetectionDirective,
@@ -31,7 +32,8 @@ import { AudioMutedDirective, MinimalDirective, VideoMutedDirective } from './vi
 		StreamDisplayParticipantNameDirective,
 		StreamDisplayAudioDetectionDirective,
 		StreamSettingsButtonDirective,
-		LogoDirective
+		LogoDirective,
+		ParticipantPanelItemMuteButtonDirective
 	],
 	exports: [
 		MinimalDirective,
@@ -47,7 +49,8 @@ import { AudioMutedDirective, MinimalDirective, VideoMutedDirective } from './vi
 		StreamDisplayParticipantNameDirective,
 		StreamDisplayAudioDetectionDirective,
 		StreamSettingsButtonDirective,
-		LogoDirective
+		LogoDirective,
+		ParticipantPanelItemMuteButtonDirective
 	]
 })
 export class ApiDirectiveModule {}
