@@ -36,9 +36,8 @@ $openvidu-components-theme: mat.define-light-theme((
 @include mat.all-component-themes($openvidu-components-theme);
 
 
-// Custom openvidu-components colors
+// Custom openvidu-components styles
 :root {
-
   --ov-primary-color: #303030;
   --ov-secondary-color: #586063;
   --ov-tertiary-color: #598eff;

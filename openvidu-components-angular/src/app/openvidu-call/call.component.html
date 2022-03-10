@@ -1,22 +1,95 @@
+<ov-videoconference
+	[tokens]="tokens"
+	(onJoinButtonClicked)="onJoinClicked()"
+	(onToolbarLeaveButtonClicked)="onToolbarLeaveButtonClicked()"
+	(onToolbarCameraButtonClicked)="onToolbarCameraButtonClicked()"
+	(onToolbarMicrophoneButtonClicked)="onToolbarMicrophoneButtonClicked()"
+	(onToolbarScreenshareButtonClicked)="onToolbarScreenshareButtonClicked()"
+	(onToolbarFullscreenButtonClicked)="onToolbarFullscreenButtonClicked()"
+	(onToolbarParticipantsPanelButtonClicked)="onToolbarParticipantsPanelButtonClicked()"
+	(onToolbarChatPanelButtonClicked)="onToolbarChatPanelButtonClicked()"
+	[prejoin]="false"
+>
 
-<ov-videoconference (onJoinClicked)="onJoinClicked()" [tokens]="tokens">
+<!-- <div *ovParticipantPanelItemElements>
+	<p>EXTRA INFO</p>
+</div> -->
+
+<!-- <div *ovParticipantPanelItemElements="let participant">
+	<p>N: {{participant?.nickname}}</p>
+</div>
+
+	 <ov-toolbar
+		*ovToolbar
+		[screenshareButton]="true"
+		(onLeaveButtonClicked)="onLeaveButtonClicked()"
+		(onCameraButtonClicked)="onCameraButtonClicked()"
+		(onMicrophoneButtonClicked)="onMicrophoneButtonClicked()"
+		(onScreenshareButtonClicked)="onScreenshareButtonClicked()"
+		(onFullscreenButtonClicked)="onFullscreenButtonClicked()"
+		(onParticipantsPanelButtonClicked)="onParticipantsPanelButtonClicked()"
+		(onChatPanelButtonClicked)="onChatPanelButtonClicked()"
+	>
+
+		<div *ovToolbarAdditionalButtons>
+			<button mat-icon-button>
+				<mat-icon matTooltip="Exit Fullscreen">fullscreen_exit</mat-icon>
+			</button>
+			<button mat-icon-button>
+				<mat-icon matTooltip="Exit Fullscreen">fullscreen_exit</mat-icon>
+			</button>
+		</div>
 
 
-	<!-- <ov-toolbar toolbar (onCamClicked)="onCamClicked()"></ov-toolbar> -->
+</ov-toolbar> -->
 
-
-	<!-- <ov-toolbar panel (onCamClicked)="onCamClicked()"></ov-toolbar> -->
-	<!-- <ov-toolbar chatPanel (onCamClicked)="onCamClicked()"></ov-toolbar> -->
-	<!-- <ov-toolbar participantsPanel (onCamClicked)="onCamClicked()"></ov-toolbar> -->
-
-
-	<!-- <ov-toolbar layout (onCamClicked)="onCamClicked()"></ov-toolbar> -->
-
-	<!-- <div *ovStream="let stream">
-
-		<p>{{stream.videoEnlarged}}</p>
-		<ov-stream [stream]="stream"></ov-stream>
+	<!-- <div *ovToolbar [screenshareButton]="value" [fullscreenButton]="value">
+		<ov-toolbar (onCamClicked)="onCamClicked()"></ov-toolbar>
 	</div> -->
 
+	<!--
+	<ov-panel *ovPanel>
 
+		<ov-chat-panel *ovChatPanel></ov-chat-panel>
+
+		<ov-participants-panel *ovParticipantsPanel>
+
+			<div *ovParticipantPanelItem="let participant">
+				<ov-participant-panel-item [participant]="participant"></ov-participant-panel-item>
+
+				<button mat-icon-button id="hand-notification" *ngIf="participant.hasHandRaised">
+					<mat-icon>front_hand</mat-icon>
+				</button>
+
+			</div>
+		</ov-participants-panel>
+	</ov-panel> -->
+
+	<!-- <ov-toolbar chatPanel (onCamClicked)="onCamClicked()"></ov-toolbar> -->
+
+	<!-- <div *ovParticipantPanelItem="let participant">
+		<ov-participant-panel-item [participant]="participant" [muteButton]="false">
+			<div *ovParticipantPanelItemElements>
+				<button mat-icon-button id="hand-notification" >
+					<mat-icon>front_hand</mat-icon>
+				</button>
+				<span> OK</span>
+			</div>
+		</ov-participant-panel-item>
+	</div> -->
+
+	<!-- <ov-layout *ovLayout >
+
+
+		<div *ovStream="let stream">
+			<p>EXTERNAL STREAM INSIDE OF LAYOUT</p>
+			<ov-stream [stream]="stream"></ov-stream>
+		</div>
+
+	</ov-layout> -->
+
+	<!-- <div *ovStream="let stream">
+		<p>EXTERNAL STREAM</p>
+		<ov-stream [stream]="stream"></ov-stream>
+	</div> -->
 </ov-videoconference>
