@@ -2,8 +2,8 @@
 	margin: 20px;
 	background-color: var(--ov-light-color);
 	border-radius: var(--ov-panel-radius);
-	height: -webkit-fill-available;
-	height: -moz-available;
+	max-height: calc(100% - 40px);
+	min-height: calc(100% - 40px);
 }
 
 .header-container {

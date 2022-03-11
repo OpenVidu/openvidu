@@ -45,8 +45,6 @@ export class ParticipantPanelItemComponent implements OnInit, OnDestroy {
 
 	private subscribeToParticipantPanelItemDirectives() {
 		this.muteButtonSub = this.libService.participantItemMuteButton.subscribe((value: boolean) => {
-			console.warn("show mute", value);
-
 			this.showMuteButton = value;
 			this.cd.markForCheck();
 		});

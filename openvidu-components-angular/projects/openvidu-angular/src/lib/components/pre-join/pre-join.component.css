@@ -4,6 +4,10 @@
 	background-color: var(--ov-light-dark-color);
 }
 
+#layout-container {
+	display: block !important;
+}
+
 h4 {
 	margin-bottom: 1px;
 	font-weight: bold;
