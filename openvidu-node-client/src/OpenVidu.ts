@@ -101,6 +101,12 @@ export class OpenVidu {
    * Creates an OpenVidu session. The session identifier will be available at property [[Session.sessionId]]
    *
    * @returns A Promise that is resolved to the [[Session]] if success and rejected with an Error object if not.
+   * This Error object has as `message` property with a status code carrying a specific meaning 
+   * (see [REST API](/en/stable/reference-docs/REST-API/#post-recording-start)).
+   * 
+   * This method will never return an Error with status `409`. If a session with the same `customSessionId` already
+   * exists in OpenVidu Server, a [[Session.fetch]] operation is performed in the background and the updated Session
+   * object is returned.
    */
   public createSession(properties?: SessionProperties): Promise<Session> {
     return new Promise<Session>((resolve, reject) => {
@@ -128,7 +134,7 @@ export class OpenVidu {
    * @param properties Custom RecordingProperties to apply to this Recording. This will override the global default values set to the Session with [[SessionProperties.defaultRecordingProperties]]
    *
    * @returns A Promise that is resolved to the [[Recording]] if it successfully started (the recording can be stopped with guarantees) and rejected with an Error
-   * object if not. This Error object has as `message` property with a status code with a specific meaning 
+   * object if not. This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#post-recording-start)).
    */
   public startRecording(sessionId: string, param2?: string | RecordingProperties): Promise<Recording> {
@@ -204,7 +210,7 @@ export class OpenVidu {
    * @param recordingId The `id` property of the [[Recording]] you want to stop
    *
    * @returns A Promise that is resolved to the [[Recording]] if it successfully stopped and rejected with an Error object if not.
-   * This Error object has as `message` property with a status code with a specific meaning 
+   * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#post-recording-stop)).
    */
   public stopRecording(recordingId: string): Promise<Recording> {
@@ -247,7 +253,7 @@ export class OpenVidu {
    * @param recordingId The `id` property of the [[Recording]] you want to retrieve
    *
    * @returns A Promise that is resolved to the [[Recording]] if it successfully stopped and rejected with an Error object if not.
-   * This Error object has as `message` property with a status code with a specific meaning 
+   * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#get-recording)).
    */
   public getRecording(recordingId: string): Promise<Recording> {
@@ -319,7 +325,7 @@ export class OpenVidu {
    * @param recordingId
    *
    * @returns A Promise that is resolved if the Recording was successfully deleted and rejected with an Error object if not.
-   * This Error object has as `message` property with a status code with a specific meaning 
+   * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#delete-recording)).
    */
   public deleteRecording(recordingId: string): Promise<Error> {

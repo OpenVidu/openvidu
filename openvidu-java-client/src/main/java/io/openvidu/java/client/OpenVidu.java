@@ -147,7 +147,15 @@ public class OpenVidu {
 	 *                                     {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
 	 *                                     (see <a href=
 	 *                                     "/en/stable/reference-docs/REST-API/#post-session">REST
-	 *                                     API</a>)
+	 *                                     API</a>). This method will never return a
+	 *                                     {@link io.openvidu.java.client.OpenViduHttpException}
+	 *                                     with status 409. If a session with the
+	 *                                     same <code>customSessionId</code> already
+	 *                                     exists in OpenVidu Server, a
+	 *                                     {@link io.openvidu.java.client.Session#fetch()}
+	 *                                     operation is performed in the background
+	 *                                     and the updated Session object is
+	 *                                     returned.
 	 */
 	public Session createSession(SessionProperties properties)
 			throws OpenViduJavaClientException, OpenViduHttpException {
