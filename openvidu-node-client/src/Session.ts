@@ -16,7 +16,6 @@
  */
 
 import axios, { AxiosError } from 'axios';
-import { VideoCodec } from './VideoCodec';
 import { Connection } from './Connection';
 import { ConnectionProperties } from './ConnectionProperties';
 import { MediaMode } from './MediaMode';
@@ -128,7 +127,7 @@ export class Session {
                         reject(new Error(res.status.toString()));
                     }
                 }).catch(error => {
-                    this.handleError(error, reject);
+                    this.ov.handleError(error, reject);
                 });
         });
     }
@@ -178,7 +177,7 @@ export class Session {
                         reject(new Error(res.status.toString()));
                     }
                 }).catch(error => {
-                    this.handleError(error, reject);
+                    this.ov.handleError(error, reject);
                 });
         });
     }
@@ -210,7 +209,7 @@ export class Session {
                         reject(new Error(res.status.toString()));
                     }
                 }).catch(error => {
-                    this.handleError(error, reject);
+                    this.ov.handleError(error, reject);
                 });
         });
     }
@@ -250,7 +249,7 @@ export class Session {
                         reject(new Error(res.status.toString()));
                     }
                 }).catch(error => {
-                    this.handleError(error, reject);
+                    this.ov.handleError(error, reject);
                 });
         });
     }
@@ -324,7 +323,7 @@ export class Session {
                     }
                 })
                 .catch(error => {
-                    this.handleError(error, reject);
+                    this.ov.handleError(error, reject);
                 });
         });
     }
@@ -382,7 +381,7 @@ export class Session {
                         reject(new Error(res.status.toString()));
                     }
                 }).catch(error => {
-                    this.handleError(error, reject);
+                    this.ov.handleError(error, reject);
                 });
         });
     }
@@ -443,7 +442,7 @@ export class Session {
                         resolve(existingConnection);
                     }
                 }).catch(error => {
-                    this.handleError(error, reject);
+                    this.ov.handleError(error, reject);
                 });
         });
     }
@@ -501,23 +500,12 @@ export class Session {
                         reject(new Error(res.status.toString()));
                     }
                 }).catch(error => {
-                    if (error.response) {
-                        // The request was made and the server responded with a status code (not 2xx)
-                        if (error.response.status === 409) {
-                            // 'customSessionId' already existed
-                            this.sessionId = this.properties.customSessionId;
-                            resolve(this.sessionId);
-                        } else {
-                            reject(new Error(error.response.status.toString()));
-                        }
-                    } else if (error.request) {
-                        // The request was made but no response was received
-                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-                        // http.ClientRequest in node.js
-                        reject(new Error(error.request));
+                    if (!!error.response && error.response.status === 409) {
+                        // 'customSessionId' already existed
+                        this.sessionId = this.properties.customSessionId;
+                        this.fetch().then(() => resolve(this.sessionId));
                     } else {
-                        // Something happened in setting up the request that triggered an Error
-                        reject(new Error(error.message));
+                        this.ov.handleError(error, reject);
                     }
                 });
         });
@@ -589,10 +577,10 @@ export class Session {
         this.connections.forEach(connection => {
             if (connection.connectionProperties.customIceServers != null &&
                 connection.connectionProperties.customIceServers.length > 0) {
-                    // Order alphabetically Ice servers using url just to keep the same list order.
-                    const simpleIceComparator = (a: IceServerProperties, b: IceServerProperties) => (a.url > b.url) ? 1 : -1
-                    connection.connectionProperties.customIceServers.sort(simpleIceComparator);
-                }
+                // Order alphabetically Ice servers using url just to keep the same list order.
+                const simpleIceComparator = (a: IceServerProperties, b: IceServerProperties) => (a.url > b.url) ? 1 : -1
+                connection.connectionProperties.customIceServers.sort(simpleIceComparator);
+            }
         });
         // Populate activeConnections array
         this.updateActiveConnectionsArray();
@@ -643,24 +631,6 @@ export class Session {
                 this.activeConnections.push(con);
             }
         });
-    }
-
-    /**
-     * @hidden
-     */
-    private handleError(error: AxiosError, reject: (reason?: any) => void) {
-        if (error.response) {
-            // The request was made and the server responded with a status code (not 2xx)
-            reject(new Error(error.response.status.toString()));
-        } else if (error.request) {
-            // The request was made but no response was received
-            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-            // http.ClientRequest in node.js
-            reject(new Error(error.request));
-        } else {
-            // Something happened in setting up the request that triggered an Error
-            reject(new Error(error.message));
-        }
     }
 
     /**

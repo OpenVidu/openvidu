@@ -480,7 +480,7 @@ public class Session {
 	 *
 	 * The affected client will trigger one <a href=
 	 * "/en/stable/api/openvidu-browser/classes/ConnectionPropertyChangedEvent.html">
-	 * ConnectionPropertyChangedEvent </a> for each modified property.
+	 * ConnectionPropertyChangedEvent</a> for each modified property.
 	 *
 	 * @param connectionId         The Connection to modify
 	 * @param connectionProperties A ConnectionProperties object with the new values
@@ -678,6 +678,10 @@ public class Session {
 
 				this.properties = responseProperties;
 				log.info("Session '{}' created", this.sessionId);
+			} else if (statusCode == org.apache.http.HttpStatus.SC_CONFLICT) {
+				// 'customSessionId' already existed
+				this.sessionId = properties.customSessionId();
+				this.fetch();
 			} else {
 				throw new OpenViduHttpException(statusCode);
 			}

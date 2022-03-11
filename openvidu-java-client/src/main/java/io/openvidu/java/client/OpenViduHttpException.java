@@ -19,7 +19,7 @@ package io.openvidu.java.client;
 
 /**
  * Defines error responses from OpenVidu Server. See error codes at
- * https://docs.openvidu.io/en/stable/reference-docs/REST-API/
+ * <a href="/en/stable/reference-docs/REST-API">REST API docs</a>
  */
 public class OpenViduHttpException extends OpenViduException {
 
@@ -32,7 +32,8 @@ public class OpenViduHttpException extends OpenViduException {
 	}
 
 	/**
-	 * @return The unexpected status of the HTTP request
+	 * @return The unexpected status of the HTTP request. See error codes meaning at
+	 *         <a href="/en/stable/reference-docs/REST-API">REST API docs</a>
 	 */
 	public int getStatus() {
 		return this.status;
