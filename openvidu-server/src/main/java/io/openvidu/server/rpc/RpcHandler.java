@@ -889,36 +889,45 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	}
 
 	private void checkSdkVersionCompliancy(Request<JsonObject> request, Participant participant) {
-		// TODO: remove try-catch after release 2.21.0
-		String clientVersion = null;
-		try {
-			clientVersion = getStringParam(request, ProtocolElements.JOINROOM_SDKVERSION_PARAM);
-		} catch (RuntimeException e) {
-			// This empty catch is here to support client SDK 2.20.0 with server 2.21.0
-			// TODO: remove try-catch after release 2.21.0
-			return;
-		}
+		String clientVersion = getStringParam(request, ProtocolElements.JOINROOM_SDKVERSION_PARAM);
 		final String serverVersion = openviduBuildConfig.getOpenViduServerVersion();
 		try {
 			new VersionComparator().checkVersionCompatibility(clientVersion, serverVersion);
 		} catch (VersionMismatchException e) {
 			if (e.isIncompatible()) {
-				log.error(
-						"Participant {} with IP {} and platform {} has an incompatible version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). This may cause the system to malfunction",
-						participant.getParticipantPublicId(), participant.getLocation().getIp(),
-						participant.getPlatform(), clientVersion, serverVersion);
-				log.error(e.getMessage());
-				log.error(
-						"openvidu-browser SDK is only compatible with the same version or the immediately following minor version of an OpenVidu deployment");
+
+				if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+					log.error(
+							"The COMPOSED recording layout is using an incompatible version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). This may cause the system to malfunction",
+							clientVersion, serverVersion);
+				} else {
+					log.error(
+							"Participant {} with IP {} and platform {} has an incompatible version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). This may cause the system to malfunction",
+							participant.getParticipantPublicId(), participant.getLocation().getIp(),
+							participant.getPlatform(), clientVersion, serverVersion);
+					log.error(e.getMessage());
+					log.error(
+							"openvidu-browser SDK is only compatible with the same version or the immediately following minor version of an OpenVidu deployment");
+				}
+
 			} else {
 				DefaultArtifactVersion v = new DefaultArtifactVersion(serverVersion);
-				log.warn(
-						"Participant {} with IP {} and platform {} has an older version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). "
-								+ "These versions are still compatible with each other, but client SDK must be updated as soon as possible to {}.x. This client using "
-								+ "openvidu-browser {} will become incompatible with the next release of openvidu-server",
-						participant.getParticipantPublicId(), participant.getLocation().getIp(),
-						participant.getPlatform(), clientVersion, serverVersion,
-						(v.getMajorVersion() + "." + v.getMinorVersion()), clientVersion);
+
+				if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+					log.warn(
+							"The COMPOSED recording layout has an older version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). These versions are still compatible with each other, "
+									+ "but client SDK must be updated as soon as possible to {}.x. This recording layout using openvidu-browser {} will become incompatible with the next release of openvidu-server",
+							clientVersion, serverVersion, (v.getMajorVersion() + "." + v.getMinorVersion()),
+							clientVersion);
+				} else {
+					log.warn(
+							"Participant {} with IP {} and platform {} has an older version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). "
+									+ "These versions are still compatible with each other, but client SDK must be updated as soon as possible to {}.x. This client using "
+									+ "openvidu-browser {} will become incompatible with the next release of openvidu-server",
+							participant.getParticipantPublicId(), participant.getLocation().getIp(),
+							participant.getPlatform(), clientVersion, serverVersion,
+							(v.getMajorVersion() + "." + v.getMinorVersion()), clientVersion);
+				}
 			}
 		}
 	}
