@@ -35,8 +35,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-import com.google.gson.*;
-import io.openvidu.java.client.*;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
@@ -51,15 +49,37 @@ import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mashape.unirest.http.HttpMethod;
 
 import io.appium.java_client.AppiumDriver;
+import io.openvidu.java.client.Connection;
+import io.openvidu.java.client.ConnectionProperties;
+import io.openvidu.java.client.ConnectionType;
+import io.openvidu.java.client.IceServerProperties;
+import io.openvidu.java.client.KurentoOptions;
+import io.openvidu.java.client.MediaMode;
+import io.openvidu.java.client.OpenVidu;
+import io.openvidu.java.client.OpenViduHttpException;
+import io.openvidu.java.client.OpenViduJavaClientException;
+import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.java.client.Publisher;
+import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.Recording.OutputMode;
+import io.openvidu.java.client.RecordingLayout;
+import io.openvidu.java.client.RecordingMode;
+import io.openvidu.java.client.RecordingProperties;
+import io.openvidu.java.client.Session;
+import io.openvidu.java.client.SessionProperties;
+import io.openvidu.java.client.VideoCodec;
 import io.openvidu.test.browsers.BrowserUser;
 import io.openvidu.test.browsers.utils.BrowserNames;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
@@ -2339,11 +2359,23 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		List<Session> sessions = OV.getActiveSessions();
 		Assert.assertEquals("Expected no active sessions but found " + sessions.size(), 0, sessions.size());
 
+		OpenVidu OV2 = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
+		SessionProperties props = new SessionProperties.Builder().customSessionId("OTHER_SESSION")
+				.recordingMode(RecordingMode.ALWAYS).build();
+		OV2.createSession(props);
+		Assert.assertEquals(0, OV.getActiveSessions().size());
+		Session session = OV.createSession(new SessionProperties.Builder().customSessionId("OTHER_SESSION")
+				.recordingMode(RecordingMode.MANUAL).build());
+		Assert.assertEquals("OpenVidu#createSession should fetch remote session if it already exists",
+				RecordingMode.ALWAYS, session.getProperties().recordingMode());
+		Assert.assertFalse("OpenVidu.fetch() should return false after Session.getActiveSession()", OV.fetch());
+		session.close();
+
 		SessionProperties properties = new SessionProperties.Builder().customSessionId(customSessionId)
 				.mediaMode(MediaMode.ROUTED).recordingMode(RecordingMode.ALWAYS)
 				.defaultRecordingProperties(new RecordingProperties.Builder().outputMode(OutputMode.INDIVIDUAL).build())
 				.build();
-		Session session = OV.createSession(properties);
+		session = OV.createSession(properties);
 
 		Assert.assertFalse("Session.fetch() should return false after OpenVidu.createSession()", session.fetch());
 		Assert.assertFalse("OpenVidu.fetch() should return false after OpenVidu.createSession()", OV.fetch());
@@ -3013,8 +3045,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		String goodStun = "{'url': 'stun:valid-domain.es:1234'}";
 		body = "{ 'customIceServers': [" + goodTurn + "," + goodStun + "]}";
 		res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body,
-				HttpStatus.SC_OK, true, false, true,
-				mergeJson(DEFAULT_JSON_PENDING_CONNECTION, "{ 'customIceServers': [" + goodTurn + "," + goodStun+ "] }", new String[0]));
+				HttpStatus.SC_OK, true, false, true, mergeJson(DEFAULT_JSON_PENDING_CONNECTION,
+						"{ 'customIceServers': [" + goodTurn + "," + goodStun + "] }", new String[0]));
 		restClient.rest(HttpMethod.DELETE,
 				"/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + res.get("id").getAsString(),
 				HttpStatus.SC_NO_CONTENT);
@@ -4382,7 +4414,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assert.assertTrue("Wrong token Connection property",
 				connectionJson.get("token").getAsString().contains(session.getSessionId()));
 		Assert.assertEquals("Wrong number of keys in connectionProperties", 10, connectionProperties.keySet().size());
-		Assert.assertTrue("Wrong customIceServer property", connectionProperties.get("customIceServers").getAsJsonArray().size() == 0);
+		Assert.assertTrue("Wrong customIceServer property",
+				connectionProperties.get("customIceServers").getAsJsonArray().size() == 0);
 		Assert.assertEquals("Wrong type property", ConnectionType.WEBRTC.name(),
 				connectionProperties.get("type").getAsString());
 		Assert.assertEquals("Wrong data property", "MY_SERVER_DATA", connectionProperties.get("data").getAsString());
@@ -4552,27 +4585,31 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
-		user.getDriver().findElements(By.className("join-btn"))
-				.stream().filter(el -> el.isEnabled()).forEach(el -> el.sendKeys(Keys.ENTER));
+		user.getDriver().findElements(By.className("join-btn")).stream().filter(el -> el.isEnabled())
+				.forEach(el -> el.sendKeys(Keys.ENTER));
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
 		// ------
-		// 2. Check that the IceServer is correctly setup on RTCPeerConnections created. This will ensure that the property
+		// 2. Check that the IceServer is correctly setup on RTCPeerConnections created.
+		// This will ensure that the property
 		// is reached in WebRTC browser related objects
 		// ------
-		List<WebElement> iceConfiguredButtons = user.getDriver().findElements(By.className("ice-config-button-" + connection1.getConnectionId()));
+		List<WebElement> iceConfiguredButtons = user.getDriver()
+				.findElements(By.className("ice-config-button-" + connection1.getConnectionId()));
 		for (WebElement iceConfigured : iceConfiguredButtons) {
 			iceConfigured.click();
 			Thread.sleep(1000);
-			for(int i = 0; i < connection1.getCustomIceServers().size(); i++) {
+			for (int i = 0; i < connection1.getCustomIceServers().size(); i++) {
 				IceServerProperties customIceServer = connection1.getCustomIceServers().get(i);
 				String foundIceUrl = user.getDriver().findElement(By.id("ice-server-url-" + i)).getText();
 				String foundIceUsername = null, foundIceCred = null;
-				List<WebElement> foundIceUsernameWebElem = user.getDriver().findElements(By.id("ice-server-username-" + i));
-				List<WebElement> foundIceCredWebElem = user.getDriver().findElements(By.id("ice-server-credential-" + i));
+				List<WebElement> foundIceUsernameWebElem = user.getDriver()
+						.findElements(By.id("ice-server-username-" + i));
+				List<WebElement> foundIceCredWebElem = user.getDriver()
+						.findElements(By.id("ice-server-credential-" + i));
 				if (foundIceUsernameWebElem.size() == 1) {
 					foundIceUsername = foundIceUsernameWebElem.get(0).getText();
 				}
@@ -4610,22 +4647,25 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		JsonArray connectionsJsonArray = res.get("connections").getAsJsonArray();
 		boolean foundConnection = false;
-		for (JsonElement connectionJson: connectionsJsonArray) {
-			// 4.2. Of all connections, get only the one created with openvidu-java-client with customIceServers added
+		for (JsonElement connectionJson : connectionsJsonArray) {
+			// 4.2. Of all connections, get only the one created with openvidu-java-client
+			// with customIceServers added
 			// Check if connection is the one configured from java client
 			String connectionId = connectionJson.getAsJsonObject().get("connectionId").getAsString();
 			if (connectionId.equals(connection1.getConnectionId())) {
-				// 4.3. If connection with custom ice server is found, get the property with all customIceServers
+				// 4.3. If connection with custom ice server is found, get the property with all
+				// customIceServers
 				foundConnection = true;
-				JsonArray customIceServersJsonArray = connectionJson.getAsJsonObject()
-						.get("connectionProperties").getAsJsonObject()
-						.get("customIceServers").getAsJsonArray();
-				for (IceServerProperties customIceServer: connection1.getCustomIceServers()) {
-					// 4.4 Compare both list, the one created with openvidu-java-client with the one received from openvidu-node-client
+				JsonArray customIceServersJsonArray = connectionJson.getAsJsonObject().get("connectionProperties")
+						.getAsJsonObject().get("customIceServers").getAsJsonArray();
+				for (IceServerProperties customIceServer : connection1.getCustomIceServers()) {
+					// 4.4 Compare both list, the one created with openvidu-java-client with the one
+					// received from openvidu-node-client
 					boolean foundIceServer = false;
 					Iterator<JsonElement> customIceServersJsonIterator = customIceServersJsonArray.iterator();
-					while(customIceServersJsonIterator.hasNext() && !foundIceServer) {
-						// 4.5 When the custom ICE server is found in the openvidu-node-client object, compare it with the
+					while (customIceServersJsonIterator.hasNext() && !foundIceServer) {
+						// 4.5 When the custom ICE server is found in the openvidu-node-client object,
+						// compare it with the
 						// openvidu-java-client object
 						JsonObject customIceJsonObject = customIceServersJsonIterator.next().getAsJsonObject();
 						String url = customIceJsonObject.get("url").getAsString();
@@ -4633,38 +4673,36 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 							foundIceServer = true;
 							Assert.assertEquals(customIceServer.getUrl(), customIceJsonObject.get("url").getAsString());
 							if (customIceJsonObject.get("username") != null) {
-								Assert.assertEquals(customIceServer.getUsername(), customIceJsonObject.get("username").getAsString());
+								Assert.assertEquals(customIceServer.getUsername(),
+										customIceJsonObject.get("username").getAsString());
 							}
 							if (customIceJsonObject.get("credential") != null) {
-								Assert.assertEquals(customIceServer.getCredential(), customIceJsonObject.get("credential").getAsString());
+								Assert.assertEquals(customIceServer.getCredential(),
+										customIceJsonObject.get("credential").getAsString());
 							}
 						}
 					}
-					// 4.6 Assert that the custom Ice Server was found on the openvidu-node-client connection object
+					// 4.6 Assert that the custom Ice Server was found on the openvidu-node-client
+					// connection object
 					Assert.assertTrue(foundIceServer);
 				}
 			}
 
 		}
-		// 4.7 Assert that the connection was found on the openvidu-node-client session object, to fail in case it was not registered
+		// 4.7 Assert that the connection was found on the openvidu-node-client session
+		// object, to fail in case it was not registered
 		Assert.assertTrue(foundConnection);
 	}
 
 	private Connection createConnWithCustomIceServer(Session session, OpenViduTestappUser user, String fromClient)
 			throws OpenViduJavaClientException, OpenViduHttpException, InterruptedException {
 		if (fromClient.equals("openvidu-java-client")) {
-			IceServerProperties iceServerProperties1 = new IceServerProperties.Builder()
-					.url("turn:turn-server.com")
-					.username("usertest")
-					.credential("credtest")
-					.build();
-			IceServerProperties iceServerProperties2 = new IceServerProperties.Builder()
-					.url("stun:1.2.3.4:1234")
+			IceServerProperties iceServerProperties1 = new IceServerProperties.Builder().url("turn:turn-server.com")
+					.username("usertest").credential("credtest").build();
+			IceServerProperties iceServerProperties2 = new IceServerProperties.Builder().url("stun:1.2.3.4:1234")
 					.build();
 			ConnectionProperties connectionProperties = new ConnectionProperties.Builder()
-					.addCustomIceServer(iceServerProperties1)
-					.addCustomIceServer(iceServerProperties2)
-					.build();
+					.addCustomIceServer(iceServerProperties1).addCustomIceServer(iceServerProperties2).build();
 			return session.createConnection(connectionProperties);
 		} else if (fromClient.equals("openvidu-node-client")) {
 			user.getDriver().findElement(By.id("session-api-btn-0")).click();
@@ -4689,7 +4727,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			// Create connection
 			user.getDriver().findElement(By.id("crate-connection-api-btn")).click();
 			Thread.sleep(1000);
-			String responseAreaText = user.getDriver().findElement(By.id("api-response-text-area")).getAttribute("value");
+			String responseAreaText = user.getDriver().findElement(By.id("api-response-text-area"))
+					.getAttribute("value");
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
 			String connectionCreatedPrefix = "Connection created: ";
 			Assert.assertTrue(responseAreaText.startsWith(connectionCreatedPrefix));
@@ -4699,7 +4738,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assert.assertTrue(session.fetch());
 			Assert.assertFalse(session.fetch());
 			Assert.assertFalse(OV.fetch());
-			for (Connection connection: session.getConnections()) {
+			for (Connection connection : session.getConnections()) {
 				if (connection.getConnectionId().equals(connectionId)) {
 					return connection;
 				}
@@ -4893,14 +4932,15 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		VideoCodec codecToCheck = (codec != null) ? codec : defaultForcedVideoCodec;
 
 		// Validate the codec to check for special cases:
-		// * MEDIA_SERVER_PREFERRED means to use the codec that is preferred by the media server.
+		// * MEDIA_SERVER_PREFERRED means to use the codec that is preferred by the
+		// media server.
 		// * NONE means to use the codec that is preferred by the web browser.
-		// Because this test is always run only for Kurento and Chrome, we know what to select here.
+		// Because this test is always run only for Kurento and Chrome, we know what to
+		// select here.
 		if (codecToCheck == VideoCodec.MEDIA_SERVER_PREFERRED) {
 			// Kurento preferred video codec is VP8.
 			codecToCheck = VideoCodec.VP8;
-		}
-		else if (codecToCheck == VideoCodec.NONE) {
+		} else if (codecToCheck == VideoCodec.NONE) {
 			// Chrome preferred video codec is VP8.
 			codecToCheck = VideoCodec.VP8;
 		}
