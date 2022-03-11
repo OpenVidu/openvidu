@@ -56,21 +56,6 @@ $openvidu-components-theme: mat.define-light-theme((
 	-webkit-font-smoothing: antialiased;
 }
 
-// Default openvidu-webcomponent colors
-:root {
-
-	--ov-primary-color: #303030;
-	--ov-secondary-color: #586063;
-	--ov-tertiary-color: #598eff;
-	--ov-warn-color: #EB5144;
-	--ov-accent-color: #ffae35;
-
-	--ov-dark-color: #1d1d1d;
-	--ov-dark-light-color: #43484A;
-
-	--ov-light-color: #ffffff;
-	--ov-light-dark-color: #f1f1f1;
-}
 
 html, body { height: 100%; overflow: hidden;}
 body { margin: 0; font-family: 'Roboto','RobotoDraft',Helvetica,Arial,sans-serif;}
