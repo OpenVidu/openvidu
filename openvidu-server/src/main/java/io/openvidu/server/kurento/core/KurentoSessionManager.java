@@ -757,14 +757,8 @@ public class KurentoSessionManager extends SessionManager {
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
 			log.debug("Request [ICE_CANDIDATE] endpoint={} candidate={} " + "sdpMLineIdx={} sdpMid={} ({})",
 					endpointName, candidate, sdpMLineIndex, sdpMid, participant.getParticipantPublicId());
-			if (kParticipant.isPublisherEndpointDefined()) {
-				kParticipant.addIceCandidate(endpointName, new IceCandidate(candidate, sdpMid, sdpMLineIndex));
-				sessionEventsHandler.onRecvIceCandidate(participant, transactionId, null);
-			} else {
-				throw new OpenViduException(Code.PUBLISHER_ENDPOINT_NOT_FOUND_ERROR_CODE,
-						"Request to onIceCandidate for connection " + endpointName
-								+ " gone wrong. There is no publisher endpoint available");
-			}
+			kParticipant.addIceCandidate(endpointName, new IceCandidate(candidate, sdpMid, sdpMLineIndex));
+			sessionEventsHandler.onRecvIceCandidate(participant, transactionId, null);
 		} catch (OpenViduException e) {
 			log.error("PARTICIPANT {}: Error receiving ICE " + "candidate (epName={}, candidate={})",
 					participant.getParticipantPublicId(), endpointName, candidate, e);
