@@ -10,7 +10,7 @@ import {
 	TemplateRef,
 	ViewChild
 } from '@angular/core';
-import { OpenViduErrorName } from 'openvidu-browser';
+import { OpenViduErrorName, Session } from 'openvidu-browser';
 import { Subscription } from 'rxjs';
 import {
 	ChatPanelDirective,
@@ -102,13 +102,13 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	@Output() onToolbarChatPanelButtonClicked = new EventEmitter<any>();
 
 	// Event sent when participant has joined the session
-	@Output() onParticipantJoined = new EventEmitter<any>();
-
-	// Event sent when participant has left the session
-	// @Output() onParticipantLeft = new EventEmitter<any>();
+	// @Output() onParticipantJoined = new EventEmitter<any>();
 
 	// Event sent when session has been created
 	@Output() onSessionCreated = new EventEmitter<any>();
+	// Event sent when participant has been created
+	@Output() onParticipantCreated = new EventEmitter<any>();
+
 
 	joinSessionClicked: boolean = false;
 	participantReady: boolean = false;
@@ -148,6 +148,8 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		if (this.deviceSrv.hasVideoDeviceAvailable() || this.deviceSrv.hasAudioDeviceAvailable()) {
 			await this.initwebcamPublisher();
 		}
+
+		this.onParticipantCreated.emit(this.participantService.getLocalParticipant());
 	}
 
 	private async initwebcamPublisher() {
@@ -265,7 +267,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	onChatPanelButtonClicked() {
 		this.onToolbarChatPanelButtonClicked.emit();
 	}
-	_onSessionCreated(event: any) {
+	_onSessionCreated(event: Session) {
 		this.onSessionCreated.emit(event);
 	}
 

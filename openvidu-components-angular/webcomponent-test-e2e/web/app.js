@@ -18,10 +18,13 @@ var PARTICIPANTS_PANEL_BUTTON;
 
 var SESSION_NAME;
 
+var PARTICIPANT_NAME;
+
 $(document).ready(() => {
 
     var url = new URL(window.location.href);
 	MINIMAL = url.searchParams.get("minimal") === null ? false : url.searchParams.get("minimal") === 'true';
+    PARTICIPANT_NAME = url.searchParams.get("participantName") || 'TEST_USER';
     PREJOIN = url.searchParams.get("prejoin") === null ? true : url.searchParams.get("prejoin") === 'true';
     VIDEO_MUTED = url.searchParams.get("videoMuted") === null ? false : url.searchParams.get("videoMuted")  === 'true';
     console.log("video muted", url.searchParams.get("videoMuted"));
@@ -61,56 +64,28 @@ $(document).ready(() => {
         // You can see the session documentation here
         // https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html
 
-        // session.on('connectionCreated', (e) => {
-        //     console.error("connectionCreated", e);
-        //     var user = JSON.parse(e.connection.data).clientData;
-        //     appendElement(user + '-connectionCreated');
-        // });
-
-        // session.on('streamDestroyed', (e) => {
-        //     console.log("streamDestroyed", e);
-        //     var user = JSON.parse(e.stream.connection.data).clientData;
-        //     appendElement(user + '-streamDestroyed');
-        // });
-
-        // session.on('streamCreated', (e) => {
-        //     console.log("streamCreated", e);
-        //     var user = JSON.parse(e.stream.connection.data).clientData;
-        //     appendElement(user + '-streamCreated');
-        // });
-
-        // session.on('sessionDisconnected', (e) => {
-        //     console.warn("sessionDisconnected ", e);
-        //     var user = JSON.parse(e.target.connection.data).clientData;
-        //     appendElement(user + '-sessionDisconnected');
-        // });
-    });
-
-    webComponent.addEventListener('publisherCreated', (event) => {
-        var publisher = event.detail;
-        appendElement('publisherCreated')
-
-        // You can see the publisher documentation here
-        // https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/publisher.html
-
-        publisher.on('streamCreated', (e) => {
-            console.warn("Publisher streamCreated", e);
-            appendElement('publisher-streamCreated');
+        session.on('connectionCreated', (e) => {
+            var user = JSON.parse(e.connection.data).clientData;
+            appendElement(`${user}-connectionCreated`);
         });
 
-        publisher.on('streamPlaying', (e) => {
-            appendElement('publisher-streamPlaying');
-
+        session.on('sessionDisconnected', (e) => {
+            var user = JSON.parse(e.target.connection.data).clientData;
+            appendElement(user + '-sessionDisconnected');
         });
     });
 
+    webComponent.addEventListener('onParticipantCreated', (event) => {
+        var participant = event.detail;
+        appendElement(`${participant.nickname}-onParticipantCreated`);
 
-    webComponent.addEventListener('error', (event) => {
-        console.log('Error event', event.detail);
     });
 
-    var user = 'user' + Math.floor(Math.random() * 100);
-    joinSession(SESSION_NAME, user);
+    // webComponent.addEventListener('error', (event) => {
+    //     console.log('Error event', event.detail);
+    // });
+
+    joinSession(SESSION_NAME, PARTICIPANT_NAME);
 });
 
 
@@ -143,7 +118,8 @@ async function joinSession(sessionName, participantName) {
 	webComponent.streamSettingsButton = SETTINGS_BUTTON;
 	webComponent.participantPanelItemMuteButton = PARTICIPANT_MUTE_BUTTON;
 
-    webComponent.sessionConfig = { sessionName, participantName, tokens };
+    webComponent.participantName = participantName;
+    webComponent.tokens = tokens;
 }
 
 /**

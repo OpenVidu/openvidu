@@ -1,6 +1,7 @@
 import { Component, ElementRef, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import { ILogger, LoggerService, OpenViduService } from 'openvidu-angular';
 import { Session } from 'openvidu-browser';
+import { ParticipantAbstractModel } from '../../../projects/openvidu-angular/src/lib/models/participant.model';
 
 export interface TokenModel {
 	webcam: string;
@@ -37,6 +38,7 @@ export interface TokenModel {
 			(onToolbarChatPanelButtonClicked)="_onToolbarChatPanelButtonClicked()"
 			(onToolbarFullscreenButtonClicked)="_onToolbarFullscreenButtonClicked()"
 			(onSessionCreated)="_onSessionCreated($event)"
+			(onParticipantCreated)="_onParticipantCreated($event)"
 		></ov-videoconference>
 	`
 })
@@ -113,15 +115,14 @@ export class OpenviduWebComponentComponent implements OnInit {
 	@Output() onToolbarLeaveButtonClicked = new EventEmitter<any>();
 	@Output() onToolbarCameraButtonClicked = new EventEmitter<any>();
 	@Output() onToolbarMicrophoneButtonClicked = new EventEmitter<any>();
-	@Output() onSessionCreated = new EventEmitter<any>();
 	@Output() onToolbarScreenshareButtonClicked = new EventEmitter<any>();
 	@Output() onToolbarParticipantsPanelButtonClicked = new EventEmitter<any>();
 	@Output() onToolbarChatPanelButtonClicked = new EventEmitter<any>();
 	@Output() onToolbarFullscreenButtonClicked = new EventEmitter<any>();
+	@Output() onSessionCreated = new EventEmitter<any>();
+	@Output() onParticipantCreated = new EventEmitter<any>();
 
 	success: boolean = false;
-	// _sessionConfig: SessionConfig;
-
 	private log: ILogger;
 
 	constructor(private loggerService: LoggerService, private host: ElementRef, private openviduService: OpenViduService) {
@@ -177,17 +178,13 @@ export class OpenviduWebComponentComponent implements OnInit {
 		this.onSessionCreated.emit(event);
 	}
 
+	_onParticipantCreated(event: ParticipantAbstractModel) {
+		this.onParticipantCreated.emit(event);
+	}
+
 	leaveSession() {
 		this.openviduService.disconnect();
 	}
-
-	// private isCorrectParams(config: SessionConfig): boolean {
-	// 	return !!config.tokens?.webcam && !!config.tokens?.screen /*&& !!config.participantName && !!config.sessionName*/;
-	// }
-
-	// private isEmpty(config: SessionConfig): boolean {
-	// 	return Object.keys(config).length === 0;
-	// }
 
 	private castToBoolean(value: string | boolean): boolean {
 		if (typeof value === 'boolean') {

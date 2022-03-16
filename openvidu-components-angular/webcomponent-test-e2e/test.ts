@@ -1,17 +1,10 @@
-// require('chromedriver');
-// const assert = require('assert');
-// const webdriver = require('selenium-webdriver');
-const chrome = require('selenium-webdriver/chrome');
-// const firefox = require('selenium-webdriver/firefox');
-// const { Builder, By, Key, promise, until } = require('selenium-webdriver');
-
-import { Builder, By, Capabilities, until, WebDriver, logging, Key } from 'selenium-webdriver';
+import { Builder, By, Capabilities, until, WebDriver, logging } from 'selenium-webdriver';
+import * as chrome from 'selenium-webdriver/chrome';
 import { expect } from 'chai';
 
 const url = 'http://127.0.0.1:8080/';
 const FIVE_SECONDS = 5000;
 const ONE_SECONDS = 5000;
-const sleepTimeout = 500;
 
 describe('Checkout localhost app', () => {
 	let browser: WebDriver;
@@ -555,135 +548,40 @@ describe('Checkout localhost app', () => {
 
 	// * PUBLISHER EVENTS
 
-	// it('should receive publisherCreated event', async () => {
-	// 	try {
-	// 		await browser.wait(until.elementLocated(By.id('publisherCreated')), FIVE_SECONDS);
-	// 		await browser.wait(until.elementLocated(By.id('navLeaveButton')), FIVE_SECONDS).click();
-	// 	} catch (error) {
-	// 		console.log(error);
-	// 	} finally {
-	// 		await browser.quit();
-	// 	}
-	// });
-
-	// it('should receive Publisher streamCreated event', async function () {
-	// 	try {
-	// 		// await browser.get(url);
-	// 		await browser.wait(until.elementLocated(By.id('publisherCreated')), FIVE_SECONDS);
-
-	// 		await browser.wait(until.elementLocated(By.id('publisher-streamCreated')), FIVE_SECONDS);
-	// 		await browser.wait(until.elementLocated(By.id('navLeaveButton')), FIVE_SECONDS).click();
-	// 	} catch (error) {
-	// 		console.log(error);
-	// 	} finally {
-	// 		await browser.quit();
-	// 	}
-	// });
-
-	// it('should receive Publisher streamPlaying event', async function () {
-	// 	try {
-	// 		// await browser.get(url);
-	// 		await browser.wait(until.elementLocated(By.id('publisherCreated')), FIVE_SECONDS);
-
-	// 		await browser.wait(until.elementLocated(By.id('publisher-streamPlaying')), FIVE_SECONDS);
-	// 		await browser.wait(until.elementLocated(By.id('navLeaveButton')), FIVE_SECONDS).click();
-	// 	} catch (error) {
-	// 		console.log(error);
-	// 	} finally {
-	// 		await browser.quit();
-	// 	}
-	// });
+	it('should receive onParticipantCreated event from LOCAL participant', async () => {
+		const participantName = 'TEST_USER';
+		let element;
+		await browser.get(`${url}?participantName=${participantName}`);
+		element = await browser.wait(until.elementLocated(By.id(`${participantName}-onParticipantCreated`)), FIVE_SECONDS);
+		expect(await element.isDisplayed()).to.be.true;
+	});
 
 	// * SESSION EVENTS
 
-	// it('should receive REMOTE connectionCreated event', async () => {
-	// 	try {
-	// 		// await browser.get(url);
-	// 		await browser.wait(until.elementLocated(By.id('publisherCreated')), FIVE_SECONDS);
+	it('should receive connectionCreated event from LOCAL participant', async () => {
+		const participantName = 'TEST_USER';
+		let element;
+		await browser.get(`${url}?prejoin=false&participantName=${participantName}`);
+		element = await browser.wait(until.elementLocated(By.id(`${participantName}-connectionCreated`)), FIVE_SECONDS);
+		expect(await element.isDisplayed()).to.be.true;
+	});
 
-	// 		browser2 = await createFirefoxBrowser();
-	// 		await browser2.get(url);
-	// 		await browser2.wait(until.elementLocated(By.id('publisherCreated')), FIVE_SECONDS);
-	// 		await browser2.sleep(sleepTimeout);
-	// 		var user2 = await (await browser2.wait(until.elementLocated(By.id('nickname')), FIVE_SECONDS)).getText();
-	// 		await browser.wait(until.elementLocated(By.id(user2 + '-connectionCreated')), FIVE_SECONDS);
-	// 		await browser.wait(until.elementLocated(By.id('navLeaveButton')), FIVE_SECONDS).click();
-	// 		await browser2.wait(until.elementLocated(By.id('navLeaveButton')), FIVE_SECONDS).click();
-	// 	} catch (error) {
-	// 		console.log(error);
-	// 	} finally {
-	// 		await browser.quit();
-	// 		await browser2.quit();
-	// 	}
-	// });
+	it('should receive sessionDisconnected event from LOCAL participant', async () => {
+		const participantName = 'TEST_USER';
+		let element;
+		await browser.get(`${url}?prejoin=false&participantName=${participantName}`);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		expect(await element.isDisplayed()).to.be.true;
 
-	// it('should receive REMOTE streamDestroyed event', async function () {
-	// 	try {
-	// 		// await browser.get(url);
-	// 		await browser.wait(until.elementLocated(By.id('publisherCreated')), FIVE_SECONDS);
+		// Checking if toolbar is present
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), FIVE_SECONDS);
+		expect(await element.isDisplayed()).to.be.true;
 
-	// 		browser2 = await createFirefoxBrowser();
-	// 		await browser2.get(url);
-	// 		await browser2.wait(until.elementLocated(By.id('publisherCreated')), FIVE_SECONDS);
-	// 		await browser2.wait(until.elementLocated(By.id('publisher-streamPlaying')), FIVE_SECONDS);
+		// Checking if leave button is not present
+		element = await browser.wait(until.elementLocated(By.id('leave-btn')), FIVE_SECONDS);
+		await element.click();
 
-	// 		await browser2.sleep(sleepTimeout);
-	// 		var user2 = await (await browser2.wait(until.elementLocated(By.id('nickname')), FIVE_SECONDS)).getText();
-
-	// 		await browser2.wait(until.elementLocated(By.id('navLeaveButton')), FIVE_SECONDS).click();
-
-	// 		await browser.wait(until.elementLocated(By.id(user2 + '-streamDestroyed')), FIVE_SECONDS);
-	// 		await browser.wait(until.elementLocated(By.id('navLeaveButton')), FIVE_SECONDS).click();
-	// 	} catch (error) {
-	// 		console.log(error);
-	// 	} finally {
-	// 		await browser.quit();
-	// 		await browser2.quit();
-	// 	}
-	// });
-
-	// it('should receive Session sessionDisconnected event', async function () {
-	// 	try {
-	// 		// await browser.get(url);
-	// 		await browser.wait(until.elementLocated(By.id('publisherCreated')), FIVE_SECONDS);
-	// 		await browser.wait(until.elementLocated(By.id('publisher-streamPlaying')), FIVE_SECONDS);
-
-	// 		await browser.sleep(sleepTimeout);
-	// 		var user = await (await browser.wait(until.elementLocated(By.id('nickname')), FIVE_SECONDS)).getText();
-
-	// 		await browser.wait(until.elementLocated(By.id('navLeaveButton')), FIVE_SECONDS).click();
-
-	// 		await browser.wait(until.elementLocated(By.id(user + '-sessionDisconnected')), FIVE_SECONDS);
-	// 	} catch (error) {
-	// 		console.log(error);
-	// 	} finally {
-	// 		await browser.quit();
-	// 	}
-	// });
-
-	// it('should receive REMOTE streamCreated event', async function () {
-	// 	try {
-	// 		// await browser.get(url);
-	// 		await browser.wait(until.elementLocated(By.id('publisherCreated')), FIVE_SECONDS);
-
-	// 		browser2 = await createFirefoxBrowser();
-	// 		await browser2.get(url);
-	// 		await browser2.wait(until.elementLocated(By.id('publisherCreated')), FIVE_SECONDS);
-	// 		await browser2.wait(until.elementLocated(By.id('publisher-streamPlaying')), FIVE_SECONDS);
-
-	// 		await browser2.sleep(sleepTimeout);
-	// 		var user2 = await (await browser2.wait(until.elementLocated(By.id('nickname')), FIVE_SECONDS)).getText();
-
-	// 		await browser.wait(until.elementLocated(By.id(user2 + '-streamCreated')), FIVE_SECONDS);
-
-	// 		await browser2.wait(until.elementLocated(By.id('navLeaveButton')), FIVE_SECONDS).click();
-
-	// 		await browser.wait(until.elementLocated(By.id('navLeaveButton')), FIVE_SECONDS).click();
-	// 	} catch (error) {
-	// 		console.log(error);
-	// 	} finally {
-	// 		await browser.quit();
-	// 		await browser2.quit();
-	// 	}
-	// });
+		element = await browser.wait(until.elementLocated(By.id(`${participantName}-sessionDisconnected`)), FIVE_SECONDS);
+		expect(await element.isDisplayed()).to.be.true;
+	});
 });
