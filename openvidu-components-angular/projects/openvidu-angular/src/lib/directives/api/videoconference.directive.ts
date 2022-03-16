@@ -1,4 +1,4 @@
-import { Directive, Input, ElementRef, OnDestroy } from '@angular/core';
+import { Directive, Input, ElementRef, OnDestroy, OnInit } from '@angular/core';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 
 @Directive({
@@ -24,6 +24,29 @@ export class MinimalDirective implements OnDestroy {
 }
 
 @Directive({
+	selector: 'ov-videoconference[participantName]'
+})
+export class ParticipantNameDirective implements OnInit {
+	// Avoiding update participantName dynamically.
+	// The participantName must be updated from UI
+	@Input() participantName: string;
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+	ngOnInit(): void {
+		this.update(this.participantName);
+	}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.update('');
+	}
+	update(value: string) {
+		this.libService.participantName.next(value);
+	}
+}
+
+@Directive({
 	selector: 'ov-videoconference[prejoin]'
 })
 export class PrejoinDirective implements OnDestroy {
@@ -44,7 +67,6 @@ export class PrejoinDirective implements OnDestroy {
 		}
 	}
 }
-
 
 @Directive({
 	selector: 'ov-videoconference[videoMuted]'

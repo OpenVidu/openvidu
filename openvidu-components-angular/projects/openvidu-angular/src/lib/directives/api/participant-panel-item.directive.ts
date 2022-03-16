@@ -30,8 +30,6 @@ export class ParticipantPanelItemMuteButtonDirective implements AfterViewInit, O
 	}
 
 	update(value: boolean) {
-		console.warn('directive mute ', value);
-
 		if (this.libService.participantItemMuteButton.getValue() !== value) {
 			this.libService.participantItemMuteButton.next(value);
 		}

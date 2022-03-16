@@ -2,19 +2,17 @@ import { Component, ElementRef, Input, OnInit, Output, EventEmitter } from '@ang
 import { ILogger, LoggerService, OpenViduService } from 'openvidu-angular';
 import { Session } from 'openvidu-browser';
 
-export interface SessionConfig {
-	sessionName: string;
-	participantName: string;
-	tokens: { webcam: string; screen: string };
+export interface TokenModel {
+	webcam: string;
+	screen: string;
 }
 
 @Component({
 	template: `
 		<ov-videoconference
-			*ngIf="successParams"
-			[sessionName]="_sessionConfig.sessionName"
-			[userName]="_sessionConfig.userName"
-			[tokens]="_sessionConfig.tokens"
+			*ngIf="success"
+			[participantName]="_participantName"
+			[tokens]="_tokens"
 			[minimal]="_minimal"
 			[prejoin]="_prejoin"
 			[videoMuted]="_videoMuted"
@@ -43,7 +41,9 @@ export interface SessionConfig {
 	`
 })
 export class OpenviduWebComponentComponent implements OnInit {
+	_tokens: TokenModel;
 	_minimal: boolean = false;
+	_participantName: string;
 	_prejoin: boolean = true;
 	_videoMuted: boolean = false;
 	_audioMuted: boolean = false;
@@ -61,6 +61,9 @@ export class OpenviduWebComponentComponent implements OnInit {
 
 	@Input() set minimal(value: string | boolean) {
 		this._minimal = this.castToBoolean(value);
+	}
+	@Input() set participantName(value: string) {
+		this._participantName = value;
 	}
 	@Input() set prejoin(value: string | boolean) {
 		this._prejoin = this.castToBoolean(value);
@@ -116,8 +119,8 @@ export class OpenviduWebComponentComponent implements OnInit {
 	@Output() onToolbarChatPanelButtonClicked = new EventEmitter<any>();
 	@Output() onToolbarFullscreenButtonClicked = new EventEmitter<any>();
 
-	successParams: boolean = false;
-	_sessionConfig: SessionConfig;
+	success: boolean = false;
+	// _sessionConfig: SessionConfig;
 
 	private log: ILogger;
 
@@ -128,16 +131,18 @@ export class OpenviduWebComponentComponent implements OnInit {
 
 	ngOnInit(): void {}
 
-	@Input('sessionConfig')
-	set sessionConfig(config: SessionConfig | string) {
-		this.log.d('Webcomponent sessionConfig: ', config);
-
-		config = this.castToJson(config);
-		this.successParams = this.isCorrectParams(<SessionConfig>config);
-		this._sessionConfig = <SessionConfig>config;
-		if (!this.successParams) {
-			this.log.e('Parameters received are incorrect: ', config);
-			this.log.e('Session cannot start');
+	@Input('tokens')
+	set tokens(value: TokenModel | string) {
+		this.log.d('Webcomponent tokens: ', value);
+		try {
+			this._tokens = this.castToJson(value);
+			this.success = !!this._tokens?.webcam && !!this._tokens?.screen;
+		} catch (error) {
+			this.log.e(error);
+			if (!this.success) {
+				this.log.e('Parameters received are incorrect: ', value);
+				this.log.e('Session cannot start');
+			}
 		}
 	}
 
@@ -156,16 +161,16 @@ export class OpenviduWebComponentComponent implements OnInit {
 	_onToolbarMicrophoneButtonClicked() {
 		this.onToolbarMicrophoneButtonClicked.emit();
 	}
-	_onToolbarScreenshareButtonClicked(){
+	_onToolbarScreenshareButtonClicked() {
 		this.onToolbarScreenshareButtonClicked.emit();
 	}
-	_onToolbarParticipantsPanelButtonClicked(){
+	_onToolbarParticipantsPanelButtonClicked() {
 		this.onToolbarParticipantsPanelButtonClicked.emit();
 	}
-	_onToolbarChatPanelButtonClicked(){
+	_onToolbarChatPanelButtonClicked() {
 		this.onToolbarChatPanelButtonClicked.emit();
 	}
-	_onToolbarFullscreenButtonClicked(){
+	_onToolbarFullscreenButtonClicked() {
 		this.onToolbarFullscreenButtonClicked.emit();
 	}
 	_onSessionCreated(event: Session) {
@@ -176,13 +181,13 @@ export class OpenviduWebComponentComponent implements OnInit {
 		this.openviduService.disconnect();
 	}
 
-	private isCorrectParams(config: SessionConfig): boolean {
-		return !!config.tokens?.webcam && !!config.tokens?.screen && !!config.participantName && !!config.sessionName;
-	}
+	// private isCorrectParams(config: SessionConfig): boolean {
+	// 	return !!config.tokens?.webcam && !!config.tokens?.screen /*&& !!config.participantName && !!config.sessionName*/;
+	// }
 
-	private isEmpty(config: SessionConfig): boolean {
-		return Object.keys(config).length === 0;
-	}
+	// private isEmpty(config: SessionConfig): boolean {
+	// 	return Object.keys(config).length === 0;
+	// }
 
 	private castToBoolean(value: string | boolean): boolean {
 		if (typeof value === 'boolean') {
@@ -197,7 +202,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 		}
 	}
 
-	private castToJson(value: SessionConfig | string) {
+	private castToJson(value: TokenModel | string) {
 		if (typeof value === 'string') {
 			try {
 				return JSON.parse(value);
@@ -208,7 +213,9 @@ export class OpenviduWebComponentComponent implements OnInit {
 		} else if (typeof value === 'object') {
 			return value;
 		} else {
-			throw new Error('Parameter has not a valid type. The parameters must to be string or SessionConfig.');
+			throw new Error(
+				'Parameter has not a valid type. The parameters must to be string or TokenModel {webcam:string, screen: string}.'
+			);
 		}
 	}
 }

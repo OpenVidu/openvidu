@@ -15,7 +15,13 @@ import {
 	ToolbarDisplayLogoDirective,
 	LogoDirective
 } from './toolbar.directive';
-import { AudioMutedDirective, MinimalDirective, PrejoinDirective, VideoMutedDirective } from './videoconference.directive';
+import {
+	AudioMutedDirective,
+	MinimalDirective,
+	PrejoinDirective,
+	VideoMutedDirective,
+	ParticipantNameDirective
+} from './videoconference.directive';
 
 @NgModule({
 	declarations: [
@@ -34,7 +40,8 @@ import { AudioMutedDirective, MinimalDirective, PrejoinDirective, VideoMutedDire
 		StreamDisplayAudioDetectionDirective,
 		StreamSettingsButtonDirective,
 		LogoDirective,
-		ParticipantPanelItemMuteButtonDirective
+		ParticipantPanelItemMuteButtonDirective,
+		ParticipantNameDirective
 	],
 	exports: [
 		MinimalDirective,
@@ -52,7 +59,8 @@ import { AudioMutedDirective, MinimalDirective, PrejoinDirective, VideoMutedDire
 		StreamDisplayAudioDetectionDirective,
 		StreamSettingsButtonDirective,
 		LogoDirective,
-		ParticipantPanelItemMuteButtonDirective
+		ParticipantPanelItemMuteButtonDirective,
+		ParticipantNameDirective
 	]
 })
 export class ApiDirectiveModule {}

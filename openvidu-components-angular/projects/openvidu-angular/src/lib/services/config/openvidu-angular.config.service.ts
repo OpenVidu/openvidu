@@ -8,9 +8,10 @@ import { OpenViduAngularConfig, ParticipantFactoryFunction } from '../../config/
 @Injectable()
 export class OpenViduAngularConfigService {
 	private configuration: OpenViduAngularConfig;
-
 	minimal = <BehaviorSubject<boolean>>new BehaviorSubject(false);
 	minimalObs: Observable<boolean>;
+	participantName = <BehaviorSubject<string>>new BehaviorSubject('');
+	participantNameObs: Observable<string>;
 	prejoin = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	prejoinObs: Observable<boolean>;
 
@@ -52,6 +53,7 @@ export class OpenViduAngularConfigService {
 		console.log(this.configuration);
 		if(this.isProduction()) console.log('OpenVidu Angular Production Mode');
 		this.minimalObs = this.minimal.asObservable();
+		this.participantNameObs = this.participantName.asObservable();
 		this.prejoinObs = this.prejoin.asObservable();
 		this.videoMutedObs = this.videoMuted.asObservable();
 		this.audioMutedObs = this.audioMuted.asObservable();

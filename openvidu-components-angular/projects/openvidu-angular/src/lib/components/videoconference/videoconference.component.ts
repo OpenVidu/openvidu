@@ -73,10 +73,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	openviduAngularLayoutTemplate: TemplateRef<any>;
 	openviduAngularStreamTemplate: TemplateRef<any>;
 
-	// *** Parameters ***
-	@Input() sessionName: string;
-	@Input() participantName: string;
-
 	@Input()
 	set tokens(tokens: { webcam: string; screen: string }) {
 		if (!tokens || (!tokens.webcam && !tokens.screen)) {
@@ -120,7 +116,9 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	error: boolean = false;
 	errorMessage: string = '';
 	showPrejoin: boolean = true;
+	private externalParticipantName: string;
 	private prejoinSub: Subscription;
+	private participantNameSub: Subscription;
 	private log: ILogger;
 
 	constructor(
@@ -131,7 +129,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		private openviduService: OpenViduService,
 		private actionService: ActionService,
 		private libService: OpenViduAngularConfigService,
-		private tokenService: TokenService,
+		private tokenService: TokenService
 	) {
 		this.log = this.loggerSrv.get('VideoconferenceComponent');
 	}
@@ -139,7 +137,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	async ngOnInit() {
 		this.subscribeToVideconferenceDirectives();
 		await this.deviceSrv.initializeDevices();
-		const nickname = this.storageSrv.getNickname() || 'OpenVidu_User' + Math.floor(Math.random() * 100);
+		const nickname = this.externalParticipantName || this.storageSrv.getNickname() || `OpenVidu_User${Math.floor(Math.random() * 100)}`;
 		const props: ParticipantProperties = {
 			local: true,
 			nickname
@@ -171,6 +169,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 
 	ngOnDestroy(): void {
 		if (this.prejoinSub) this.prejoinSub.unsubscribe();
+		if (this.participantNameSub) this.participantNameSub.unsubscribe();
 	}
 
 	ngAfterViewInit() {
@@ -294,6 +293,10 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		this.prejoinSub = this.libService.prejoin.subscribe((value: boolean) => {
 			this.showPrejoin = value;
 			// this.cd.markForCheck();
+		});
+
+		this.participantNameSub = this.libService.participantName.subscribe((nickname: string) => {
+			this.externalParticipantName = nickname;
 		});
 	}
 }
