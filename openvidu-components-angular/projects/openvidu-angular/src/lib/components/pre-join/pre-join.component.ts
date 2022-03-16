@@ -209,6 +209,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	private subscribeToLocalParticipantEvents() {
 		this.localParticipantSubscription = this.participantService.localParticipantObs.subscribe((p) => {
 			this.localParticipant = p;
+			this.nickname = this.localParticipant.getNickname();
 		});
 	}
 
