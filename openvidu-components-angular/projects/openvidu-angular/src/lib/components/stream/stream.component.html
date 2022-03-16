@@ -4,7 +4,7 @@
 	[id]="'container-' + this._stream.streamManager?.stream?.streamId"
 	#streamContainer
 >
-	<div *ngIf="!isMinimal && showNickname" class="nickname" [class.fullscreen]="isFullscreen">
+	<div *ngIf="!isMinimal && showNickname" id="nickname-container" class="nickname" [class.fullscreen]="isFullscreen">
 		<div (click)="toggleNicknameForm()" class="nicknameContainer" selected *ngIf="!toggleNickname">
 			<span id="nickname" *ngIf="this._stream.type === 'CAMERA'">{{ this._stream.participant.nickname }}</span>
 			<span id="nickname" *ngIf="this._stream.type === 'SCREEN'">{{ this._stream.participant.nickname }}_SCREEN</span>
@@ -44,7 +44,7 @@
 		</button>
 	</div>
 
-	<div *ngIf="!isMinimal && showSettingsButton" class="videoButtons">
+	<div *ngIf="!isMinimal && showSettingsButton" id="settings-container" class="videoButtons">
 		<button mat-icon-button (click)="toggleVideoMenu($event)" matTooltip="Settings" aria-label="Video settings menu">
 			<mat-icon>more_vert</mat-icon>
 		</button>

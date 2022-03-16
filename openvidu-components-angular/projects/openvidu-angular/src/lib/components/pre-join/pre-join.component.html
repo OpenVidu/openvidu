@@ -1,4 +1,4 @@
-<div class="container" fxLayout.gt-sm="row" fxLayout.lt-md="column">
+<div class="container" id="prejoin-container" fxLayout.gt-sm="row" fxLayout.lt-md="column">
 	<div fxFlex.gt-sm="65%" fxFlex.lt-md="55%" fxLayoutAlign="center center" id="layout-container">
 		<ov-layout>
 			<ng-template #stream let-stream>
@@ -49,8 +49,8 @@
 							[class.warn-btn]="isVideoMuted"
 							(click)="toggleCam()"
 						>
-							<mat-icon *ngIf="!isVideoMuted" matTooltip="Mute Camera">videocam</mat-icon>
-							<mat-icon *ngIf="isVideoMuted" matTooltip="Unmute Camera">videocam_off</mat-icon>
+							<mat-icon *ngIf="!isVideoMuted" matTooltip="Mute Camera" id="videocam">videocam</mat-icon>
+							<mat-icon *ngIf="isVideoMuted" matTooltip="Unmute Camera" id="videocam_off">videocam_off</mat-icon>
 						</button>
 						<mat-form-field>
 							<mat-label>Video devices</mat-label>
@@ -71,8 +71,8 @@
 							[class.warn-btn]="isAudioMuted"
 							(click)="toggleMic()"
 						>
-							<mat-icon *ngIf="!isAudioMuted" matTooltip="Mute Audio">mic</mat-icon>
-							<mat-icon *ngIf="isAudioMuted" matTooltip="Unmute Audio">mic_off</mat-icon>
+							<mat-icon *ngIf="!isAudioMuted" matTooltip="Mute Audio" id="mic">mic</mat-icon>
+							<mat-icon *ngIf="isAudioMuted" matTooltip="Unmute Audio" id="mic_off">mic_off</mat-icon>
 						</button>
 						<mat-form-field>
 							<mat-label>Audio devices</mat-label>

@@ -1,4 +1,4 @@
-<div class="participants-container">
+<div class="participants-container" id="participants-container">
 	<div class="header-container">
 		<h3>Participants</h3>
 		<button mat-icon-button matTooltip="Close" (click)="close()">
@@ -13,9 +13,9 @@
 			<mat-divider *ngIf="true"></mat-divider>
 		</div>
 
-		<div class="remote-participants-container" *ngIf="remoteParticipants.length > 0">
+		<div class="remote-participants-container" id="remote-participants-container" *ngIf="remoteParticipants.length > 0">
 
-			<div *ngFor="let participant of this.remoteParticipants">
+			<div *ngFor="let participant of this.remoteParticipants" id="remote-participant-item">
 				<ng-container *ngTemplateOutlet="participantPanelItemTemplate; context: { $implicit: participant }"></ng-container>
 			</div>
 		</div>

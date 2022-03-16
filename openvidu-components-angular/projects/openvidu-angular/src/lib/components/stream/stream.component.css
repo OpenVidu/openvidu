@@ -66,7 +66,7 @@
 	font-size: 100%;
   }
 
-  .status-icons, .videoButtons {
+  .status-icons, #settings-container {
 	position: absolute;
 	bottom: 0;
 	z-index: 10;
@@ -77,7 +77,7 @@
 	left: 0;
   }
 
-  .status-icons button, .videoButtons button {
+  .status-icons button, #settings-container button {
 	color: #ffffff;
 	width: 26px;
 	height: 26px;
@@ -89,19 +89,19 @@
 	background-color: var(--ov-warn-color);
   }
 
-  .status-icons .mat-icon-button, .videoButtons .mat-icon-button{
+  .status-icons .mat-icon-button, #settings-container .mat-icon-button{
 	line-height: 0px;
   }
 
-  .status-icons mat-icon, .videoButtons mat-icon {
+  .status-icons mat-icon, #settings-container mat-icon {
 	font-size: 18px;
   }
 
-  .videoButtons{
+  #settings-container{
 	right: 0;
   }
 
-  .videoButtons button {
+  #settings-container button {
 	background-color: var(--ov-dark-color);
   }
 

@@ -9,6 +9,8 @@
     "lib:copy": "cp dist/openvidu-angular/openvidu-angular-*.tgz ../openvidu-tutorials/openvidu-angular-components",
     "lib:test": "ng test openvidu-angular --no-watch --code-coverage",
     "webcomponent:build": "./node_modules/@angular/cli/bin/ng.js build openvidu-webcomponent --configuration production && node ./openvidu-webcomponent-build.js",
+    "webcomponent:prepare-test-e2e": "npm run lib:build && npm run webcomponent:build",
+    "webcomponent:e2e": "npm run --prefix webcomponent-test-e2e test",
     "bundle-report": "ng build openvidu-webcomponent --stats-json --configuration production && webpack-bundle-analyzer dist/openvidu-webcomponent/stats.json",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -27,13 +29,13 @@
     "@angular/router": "13.0.0",
     "autolinker": "3.14.3",
     "buffer": "^6.0.3",
-    "openvidu-browser": "2.21.0-beta1",
+    "openvidu-browser": "^2.21.0",
     "rxjs": "7.4.0",
     "tslib": "2.3.1",
     "zone.js": "0.11.4"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "13.0.1",
+    "@angular-devkit/build-angular": "13.2.5",
     "@angular/cli": "13.0.1",
     "@angular/compiler": "13.0.0",
     "@angular/compiler-cli": "13.0.0",

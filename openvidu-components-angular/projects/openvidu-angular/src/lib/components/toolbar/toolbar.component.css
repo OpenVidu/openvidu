@@ -10,7 +10,7 @@
 	right: 0;
 }
 
-#img-container {
+#info-container {
 	display: flex;
 	align-items: center;
 }
@@ -53,7 +53,7 @@
 	padding: 10px;
 }
 
-  #session-title {
+  #session-name {
 	font-family: 'Ubuntu', sans-serif;
 	font-weight: bold;
 	font-size: 15px;
@@ -97,7 +97,7 @@
 	color: #fff;
   }
   @media (max-width: 750px) {
-	#session-title {
+	#session-name {
 	  display: none;
 	}
   }

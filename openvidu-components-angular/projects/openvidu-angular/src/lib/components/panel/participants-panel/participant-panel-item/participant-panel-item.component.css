@@ -10,11 +10,11 @@
 	display: flex;
 }
 
- ::ng-deep .participant-action-buttons > *:not(#action-btn) {
+ ::ng-deep .participant-action-buttons > *:not(#mute-btn) {
 	display: contents;
 }
 
-::ng-deep .participant-action-buttons > *:not(#action-btn) > * {
+::ng-deep .participant-action-buttons > *:not(#mute-btn) > * {
 	margin: auto;
 }
 
@@ -31,7 +31,7 @@ mat-list {
 	display: contents;
 }
 
-#action-btn {
+#mute-btn {
 	border-radius: var(--ov-buttons-radius);
 }
 
