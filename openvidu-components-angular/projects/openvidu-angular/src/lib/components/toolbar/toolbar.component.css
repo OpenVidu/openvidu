@@ -10,12 +10,19 @@
 	right: 0;
 }
 
-#img-container {
+#info-container {
 	display: flex;
 	align-items: center;
 }
+#media-buttons-container {
+	max-height: 100% !important;
+}
 
-#media-buttons-container button, ::ng-deep #media-buttons-container>.ng-star-inserted {
+#media-buttons-container > button,
+::ng-deep #media-buttons-container > button,
+#media-buttons-container:not(#media-buttons-container > button) button,
+/* Applying css for external additional buttons*/
+::ng-deep #media-buttons-container:not(#media-buttons-container > button) button {
 	width: 40px;
 	height: 40px;
 	background-color: var(--ov-secondary-color);
@@ -26,7 +33,7 @@
 	background-color: var(--ov-warn-color) !important;
 }
 
-.active-btn {
+.active-btn, ::ng-deep .active-btn {
 	background-color: var(--ov-tertiary-color) !important;
 }
 
@@ -34,15 +41,19 @@
 	font-size: 24px;
 }
 
-  #company-logo {
+#media-buttons-container button, #menu-buttons-container button {
+	border-radius: var(--ov-buttons-radius);
+}
+
+#branding-logo {
 	background-color: var(--ov-dark-color);
-	border-radius: 5px;
+	border-radius: var(--ov-panel-radius);
 	max-width: 35px;
 	max-height: 35px;
 	padding: 10px;
-  }
+}
 
-  #session-title {
+  #session-name {
 	font-family: 'Ubuntu', sans-serif;
 	font-weight: bold;
 	font-size: 15px;
@@ -56,7 +67,7 @@
 	position: absolute;
 	top: 12px;
 	right: 33px;
-	border-radius: 50%;
+	border-radius: var(--ov-buttons-radius);
 	background-color: #ffa600;
 	border: 1px solid #000;
 	z-index: 99999;
@@ -64,7 +75,7 @@
 
   #leave-btn {
 	  background-color: var(--ov-warn-color) !important;
-	  border-radius: 10px !important;
+	  border-radius: var(--ov-leave-button-radius) !important;
 	  width: 60px !important;
   }
 
@@ -86,13 +97,13 @@
 	color: #fff;
   }
   @media (max-width: 750px) {
-	#session-title {
+	#session-name {
 	  display: none;
 	}
   }
 
   @media (max-width: 850px) {
-	#company-logo {
+	#branding-logo {
 	  display: none;
 	}
   }

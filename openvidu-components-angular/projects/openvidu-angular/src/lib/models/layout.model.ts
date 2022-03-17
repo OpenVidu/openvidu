@@ -2,7 +2,8 @@ export enum LayoutClass {
 	ROOT_ELEMENT = 'OT_root',
 	BIG_ELEMENT = 'OV_big',
 	SMALL_ELEMENT = 'OV_small',
-	SIDENAV_CONTAINER = 'sidenav-container'
+	SIDENAV_CONTAINER = 'sidenav-container',
+	NO_SIZE_ELEMENT = 'no-size'
 }
 
 export enum SidenavMode {
@@ -140,7 +141,7 @@ export class OpenViduLayout {
 	}
 
 	getLayoutContainer(): HTMLElement {
-		return this.layoutContainer
+		return this.layoutContainer;
 	}
 
 	/**

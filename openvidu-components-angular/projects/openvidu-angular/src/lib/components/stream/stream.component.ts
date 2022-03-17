@@ -1,20 +1,18 @@
-import { Component, ElementRef, HostListener, Input, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
-import { FormControl, Validators } from '@angular/forms';
+import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { MatMenuPanel, MatMenuTrigger } from '@angular/material/menu';
-import { NicknameMatcher } from '../../matchers/nickname.matcher';
 import { VideoSizeIcon } from '../../models/icon.model';
 import { ScreenType, VideoType } from '../../models/video-type.model';
-import { Storage } from '../../models/storage.model';
 import { DocumentService } from '../../services/document/document.service';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
-import { WebrtcService } from '../../services/webrtc/webrtc.service';
+import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { LayoutService } from '../../services/layout/layout.service';
 import { StorageService } from '../../services/storage/storage.service';
 import { Signal } from '../../models/signal.model';
-import { LayoutClass } from '../../models/layout.model';
 import { PublisherProperties } from 'openvidu-browser';
 import { StreamModel } from '../../models/participant.model';
 import { ParticipantService } from '../../services/participant/participant.service';
+import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 
 @Component({
 	selector: 'ov-stream',
@@ -22,41 +20,57 @@ import { ParticipantService } from '../../services/participant/participant.servi
 	styleUrls: ['./stream.component.css']
 })
 export class StreamComponent implements OnInit {
-	videoSizeIconEnum = VideoSizeIcon;
-	videoTypeEnum = VideoType;
-	videoSizeIcon: VideoSizeIcon = VideoSizeIcon.BIG;
-	mutedSound: boolean;
-	toggleNickname: boolean;
-	nicknameFormControl: FormControl;
-	matcher: NicknameMatcher;
-	_participant: StreamModel;
-
-	@ViewChild('streamComponent', { read: ViewContainerRef }) streamComponent: ViewContainerRef;
 	@ViewChild(MatMenuTrigger) public menuTrigger: MatMenuTrigger;
 	@ViewChild('menu') menu: MatMenuPanel;
 
+	videoSizeIconEnum = VideoSizeIcon;
+	videoTypeEnum = VideoType;
+	videoSizeIcon: VideoSizeIcon = VideoSizeIcon.BIG;
+	toggleNickname: boolean;
+	_stream: StreamModel;
+	nickname: string;
+
+	isMinimal: boolean = false;
+	showNickname: boolean = true;
+	showAudioDetection: boolean = true;
+	showSettingsButton: boolean = true;
+
+	private _streamContainer: ElementRef;
+
+	private minimalSub: Subscription;
+	private displayParticipantNameSub: Subscription;
+	private displayAudioDetectionSub: Subscription;
+	private settingsButtonSub: Subscription;
+
 	constructor(
 		protected documentService: DocumentService,
-		protected openViduWebRTCService: WebrtcService,
+		protected openviduService: OpenViduService,
 		protected layoutService: LayoutService,
 		protected participantService: ParticipantService,
 		protected storageService: StorageService,
-		protected cdkSrv: CdkOverlayService
+		protected cdkSrv: CdkOverlayService,
+		private libService: OpenViduAngularConfigService
 	) {}
 
-	// @HostListener('document:fullscreenchange', ['$event'])
-	// @HostListener('document:webkitfullscreenchange', ['$event'])
-	// @HostListener('document:mozfullscreenchange', ['$event'])
-	// @HostListener('document:MSFullscreenChange', ['$event'])
-	// onFullscreenHandler(event) {
-	// 	this.isFullscreenEnabled = !this.isFullscreenEnabled;
-	// }
+	@ViewChild('streamContainer', { static: false, read: ElementRef })
+	set streamContainer(streamContainer: ElementRef) {
+		setTimeout(() => {
+			if (streamContainer) {
+				this._streamContainer = streamContainer;
+				// Remove 'no-size' css class for showing the element in the view.
+				// This is a workaround for fixing a layout bug which provide a bad UX with each new elements created.
+				this.documentService.removeNoSizeElementClass(this._streamContainer.nativeElement);
+			}
+		}, 0);
+	}
 
 	@Input()
-	set participant(participant: StreamModel) {
-		this._participant = participant;
-		this.checkVideoSizeBigIcon(this._participant.videoEnlarged);
-		this.nicknameFormControl = new FormControl(this._participant.nickname, [Validators.maxLength(25), Validators.required]);
+	set stream(stream: StreamModel) {
+		this._stream = stream;
+		this.checkVideoEnlarged();
+		if (this._stream.participant) {
+			this.nickname = this._stream.participant.nickname;
+		}
 	}
 
 	@ViewChild('nicknameInput')
@@ -67,28 +81,22 @@ export class StreamComponent implements OnInit {
 	}
 
 	ngOnInit() {
-		this.matcher = new NicknameMatcher();
+		this.subscribeToStreamDirectives();
 	}
 
 	ngOnDestroy() {
 		this.cdkSrv.setSelector('body');
+		if (this.settingsButtonSub) this.settingsButtonSub.unsubscribe();
+		if (this.displayAudioDetectionSub) this.displayAudioDetectionSub.unsubscribe();
+		if (this.displayParticipantNameSub) this.displayParticipantNameSub.unsubscribe();
 	}
 
-	toggleVideoSize(resetAll?) {
-		const element = this.documentService.getHTMLElementByClassName(this.streamComponent.element.nativeElement, LayoutClass.ROOT_ELEMENT);
-		if (!!resetAll) {
-			this.documentService.removeAllBigElementClass();
-			this.participantService.resetUsersZoom();
-			this.participantService.resetUsersZoom();
-		}
-
-		this.documentService.toggleBigElementClass(element);
-
-		if (!!this._participant.streamManager?.stream?.connection?.connectionId) {
-			if (this.openViduWebRTCService.isMyOwnConnection(this._participant.streamManager?.stream?.connection?.connectionId)) {
-				this.participantService.toggleZoom(this._participant.streamManager?.stream?.connection?.connectionId);
+	toggleVideoEnlarged() {
+		if (!!this._stream.streamManager?.stream?.connection?.connectionId) {
+			if (this.openviduService.isMyOwnConnection(this._stream.streamManager?.stream?.connection?.connectionId)) {
+				this.participantService.toggleMyVideoEnlarged(this._stream.streamManager?.stream?.connection?.connectionId);
 			} else {
-				this.participantService.toggleUserZoom(this._participant.streamManager?.stream?.connection?.connectionId);
+				this.participantService.toggleRemoteVideoEnlarged(this._stream.streamManager?.stream?.connection?.connectionId);
 			}
 		}
 		this.layoutService.update();
@@ -99,26 +107,27 @@ export class StreamComponent implements OnInit {
 			this.menuTrigger.closeMenu();
 			return;
 		}
-		this.cdkSrv.setSelector('#container-' + this._participant.streamManager?.stream?.streamId);
+		this.cdkSrv.setSelector('#container-' + this._stream.streamManager?.stream?.streamId);
 		this.menuTrigger.openMenu();
 	}
 
 	toggleSound() {
-		this.mutedSound = !this.mutedSound;
+		this._stream.participant.setMutedForcibly(!this._stream.participant.isMutedForcibly);
 	}
 
 	toggleNicknameForm() {
-		if (this._participant.local) {
+		if (this._stream.participant.local) {
 			this.toggleNickname = !this.toggleNickname;
 		}
 	}
 
-	eventKeyPress(event) {
-		if (event && event.keyCode === 13 && this.nicknameFormControl.valid) {
-			const nickname = this.nicknameFormControl.value;
-			this.participantService.setNickname(this._participant.connectionId, nickname);
-			this.storageService.set(Storage.USER_NICKNAME, nickname);
-			this.openViduWebRTCService.sendSignal(Signal.NICKNAME_CHANGED, undefined, {clientData: nickname});
+	updateNickname(event) {
+		if (event?.keyCode === 13 || event?.type === 'focusout') {
+			if (!!this.nickname) {
+				this.participantService.setMyNickname(this.nickname);
+				this.storageService.setNickname(this.nickname);
+				this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, undefined, { clientData: this.nickname });
+			}
 			this.toggleNicknameForm();
 		}
 	}
@@ -127,14 +136,32 @@ export class StreamComponent implements OnInit {
 		const properties: PublisherProperties = {
 			videoSource: ScreenType.SCREEN,
 			publishVideo: true,
-			publishAudio: !this.participantService.isMyCameraEnabled(),
+			publishAudio: !this.participantService.isMyCameraActive(),
 			mirror: false
 		};
-		await this.openViduWebRTCService.replaceTrack(this.participantService.getMyScreenPublisher(), properties);
+		await this.openviduService.replaceTrack(VideoType.SCREEN, properties);
 	}
 
-	protected checkVideoSizeBigIcon(videoEnlarged: boolean) {
-		this.videoSizeIcon = videoEnlarged ? VideoSizeIcon.NORMAL : VideoSizeIcon.BIG;
+	private checkVideoEnlarged() {
+		this.videoSizeIcon = this._stream.videoEnlarged ? VideoSizeIcon.NORMAL : VideoSizeIcon.BIG;
 	}
 
+	private subscribeToStreamDirectives() {
+
+		this.minimalSub = this.libService.minimalObs.subscribe((value: boolean) => {
+			this.isMinimal = value;
+		});
+		this.displayParticipantNameSub = this.libService.displayParticipantNameObs.subscribe((value: boolean) => {
+			this.showNickname = value;
+			// this.cd.markForCheck();
+		});
+		this.displayAudioDetectionSub = this.libService.displayAudioDetectionObs.subscribe((value: boolean) => {
+			this.showAudioDetection = value;
+			// this.cd.markForCheck();
+		});
+		this.settingsButtonSub = this.libService.settingsButtonObs.subscribe((value: boolean) => {
+			this.showSettingsButton = value;
+			// this.cd.markForCheck();
+		});
+	}
 }

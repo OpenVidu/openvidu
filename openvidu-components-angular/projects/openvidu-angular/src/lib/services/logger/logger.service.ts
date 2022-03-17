@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ILogService } from '../../models/logger.model';
 
-import { LibraryConfigService } from '../library-config/library-config.service';
+import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -15,7 +15,7 @@ export class LoggerService implements ILogService {
 		['[', '] ERROR: ']
 	];
 
-	constructor(private libraryConfigSrv: LibraryConfigService) {
+	constructor(private openviduAngularConfigSrv: OpenViduAngularConfigService) {
 	}
 
 	private getLoggerFns(prefix: string) {
@@ -28,7 +28,7 @@ export class LoggerService implements ILogService {
 	}
 
 	public get(prefix: string) {
-		const prodMode = this.libraryConfigSrv.isProduction();
+		const prodMode = this.openviduAngularConfigSrv.isProduction();
 		const loggerService = this;
 		return {
 			d: function(...args: any[]) {

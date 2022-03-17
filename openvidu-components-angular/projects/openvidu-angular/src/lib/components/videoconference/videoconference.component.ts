@@ -1,135 +1,304 @@
 import {
+	AfterViewInit,
 	Component,
+	ContentChild,
+	EventEmitter,
 	Input,
+	OnDestroy,
 	OnInit,
 	Output,
-	EventEmitter,
-	ViewChild,
-	ChangeDetectorRef,
-	AfterViewInit,
-	ViewContainerRef
+	TemplateRef,
+	ViewChild
 } from '@angular/core';
-import { LibraryConfigService } from '../../services/library-config/library-config.service';
-import { ToolbarComponent } from '../toolbar/toolbar.component';
+import { OpenViduErrorName, Session } from 'openvidu-browser';
+import { Subscription } from 'rxjs';
+import {
+	ChatPanelDirective,
+	LayoutDirective,
+	PanelDirective,
+	ParticipantPanelItemDirective,
+	ParticipantPanelItemElementsDirective,
+	ParticipantsPanelDirective,
+	StreamDirective,
+	ToolbarAdditionalButtonsDirective,
+	ToolbarDirective
+} from '../../directives/template/openvidu-angular.directive';
+import { ILogger } from '../../models/logger.model';
+import { ParticipantProperties } from '../../models/participant.model';
+import { ActionService } from '../../services/action/action.service';
+import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
+import { DeviceService } from '../../services/device/device.service';
+import { LoggerService } from '../../services/logger/logger.service';
+import { OpenViduService } from '../../services/openvidu/openvidu.service';
+import { ParticipantService } from '../../services/participant/participant.service';
+import { StorageService } from '../../services/storage/storage.service';
+import { TokenService } from '../../services/token/token.service';
 
 @Component({
 	selector: 'ov-videoconference',
 	templateUrl: './videoconference.component.html',
 	styleUrls: ['./videoconference.component.css']
 })
-export class VideoconferenceComponent implements OnInit, AfterViewInit {
-	@Input() sessionName: string;
-	@Input() userName: string;
-	@Input() openviduServerUrl: string;
-	@Input() openviduSecret: string;
-	// @Input() tokens: { webcam: string; screen: string };
+export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewInit {
+	// *** Toolbar ***
+	@ContentChild(ToolbarDirective) externalToolbar: ToolbarDirective;
+	@ContentChild(ToolbarAdditionalButtonsDirective) externalToolbarAdditionalButtons: ToolbarAdditionalButtonsDirective;
 
-	@Output() onJoinClicked = new EventEmitter<any>();
-	@Output() onCloseClicked = new EventEmitter<any>();
+	// *** Panels ***
+	@ContentChild(PanelDirective) externalPanel: PanelDirective;
+	@ContentChild(ChatPanelDirective) externalChatPanel: ChatPanelDirective;
+	@ContentChild(ParticipantsPanelDirective) externalParticipantsPanel: ParticipantsPanelDirective;
+	@ContentChild(ParticipantPanelItemDirective) externalParticipantPanelItem: ParticipantPanelItemDirective;
+	@ContentChild(ParticipantPanelItemElementsDirective) externalParticipantPanelItemElements: ParticipantPanelItemElementsDirective;
 
-	joinSessionClicked: boolean = false;
-	closeClicked: boolean = false;
-	isSessionAlive: boolean = false;
-	_tokens: { webcam: string; screen: string };
-	error: boolean = false;
-	errorMessage: string = '';
+	// *** Layout ***
+	@ContentChild(LayoutDirective) externalLayout: LayoutDirective;
+	@ContentChild(StreamDirective) externalStream: StreamDirective;
 
-	_toolbar: ViewContainerRef;
+	@ViewChild('defaultToolbar', { static: false, read: TemplateRef }) defaultToolbarTemplate: TemplateRef<any>;
+	@ViewChild('defaultPanel', { static: false, read: TemplateRef }) defaultPanelTemplate: TemplateRef<any>;
+	@ViewChild('defaultChatPanel', { static: false, read: TemplateRef }) defaultChatPanelTemplate: TemplateRef<any>;
+	@ViewChild('defaultParticipantsPanel', { static: false, read: TemplateRef }) defaultParticipantsPanelTemplate: TemplateRef<any>;
+	@ViewChild('defaultParticipantPanelItem', { static: false, read: TemplateRef }) defaultParticipantPanelItemTemplate: TemplateRef<any>;
+	@ViewChild('defaultLayout', { static: false, read: TemplateRef }) defaultLayoutTemplate: TemplateRef<any>;
+	@ViewChild('defaultStream', { static: false, read: TemplateRef }) defaultStreamTemplate: TemplateRef<any>;
 
-	constructor(protected libraryConfigSrv: LibraryConfigService, private cd: ChangeDetectorRef) {}
+	openviduAngularToolbarTemplate: TemplateRef<any>;
+	openviduAngularToolbarAdditionalButtonsTemplate: TemplateRef<any>;
+	openviduAngularPanelTemplate: TemplateRef<any>;
+	openviduAngularChatPanelTemplate: TemplateRef<any>;
+	openviduAngularParticipantsPanelTemplate: TemplateRef<any>;
+	openviduAngularParticipantPanelItemTemplate: TemplateRef<any>;
+	openviduAngularParticipantPanelItemElementsTemplate: TemplateRef<any>;
+	openviduAngularLayoutTemplate: TemplateRef<any>;
+	openviduAngularStreamTemplate: TemplateRef<any>;
 
-	// @ViewChild('toolbar', { static: false, read: ViewContainerRef })
-	// set toolbar(reference: ViewContainerRef) {
-	// 	setTimeout(() => {
-	// 		console.log('setting ref', reference);
-	// 		this._toolbar = reference;
-
-	// 		if (this._toolbar) {
-	// 			let component = ToolbarComponent;
-	// 			if (this.libraryConfigSrv.isCustomComponentDefined('ov-toolbar')) {
-	// 				component = this.libraryConfigSrv.getToolbarComponent();
-	// 			}
-	// 			this._toolbar?.clear();
-	// 			this._toolbar.createComponent(component);
-	// 		}
-	// 	}, 100);
-	// }
-
-	ngAfterViewInit() {
-		// if(this.customToolbar && this.libraryConfigSrv.isCustomComponentDefined('ov-toolbar')){
-		// 	const viewContainerRef = this.customToolbar.viewContainerRef;
-		// 	viewContainerRef.clear();
-		// 	const componentRef = viewContainerRef.createComponent<any>(this.libraryConfigSrv.getToolbarComponent());
-		// } else {
-		// 	this.customToolbar.viewContainerRef.clear();
-		// 	const viewContainerRef = this.toolbar.viewContainerRef;
-		// 	viewContainerRef.clear();
-		// 	viewContainerRef.createComponent<any>(ToolbarComponent);
-		// }
-	}
-
-	ngOnInit() {
-	}
-
-	@Input('tokens')
+	@Input()
 	set tokens(tokens: { webcam: string; screen: string }) {
-		if (!!tokens?.webcam || !!this.tokens?.screen) {
-			// 1 token received
-			this.cd.detectChanges();
-			// this.cd.markForCheck();
-			this._tokens = tokens;
-			this.joinSessionClicked = true;
-			this.isSessionAlive = true;
-		} else {
+		if (!tokens || (!tokens.webcam && !tokens.screen)) {
 			//No tokens received
-			throw new Error('No tokens received');
+			// throw new Error('No tokens received');
+			this.log.w('No tokens received');
+		} else {
+			if (tokens.webcam || tokens.screen) {
+				this.tokenService.setWebcamToken(tokens.webcam);
+				this.tokenService.setScreenToken(tokens.screen);
+				this.canPublish = true;
+			}
 		}
 	}
 
-	async _onJoinClicked() {
-		this.onJoinClicked.emit();
-		// if (!this.tokens || (!this.tokens?.webcam && !this.tokens?.screen)) {
-		// 	//No tokens received
+	// *** Events ***
 
-		// 	if (!!this.sessionName && !!this.openviduServerUrl && !!this.openviduSecret) {
-		// 		// Generate tokens
-		// 		this._tokens = {
-		// 			webcam: await this.restService.getToken(this.sessionName, this.openviduServerUrl, this.openviduSecret),
-		// 			screen: await this.restService.getToken(this.sessionName, this.openviduServerUrl, this.openviduSecret)
-		// 		};
-		// 	} else {
-		// 		// No tokens received and can't generate them
-		// 		this.error = true;
-		// 		this.errorMessage = `Cannot access to OpenVidu Server with url '${this.openviduServerUrl}' to genere tokens for session '${this.sessionName}'`;
-		// 		throw this.errorMessage;
-		// 	}
-		// } else if (!this.tokens?.webcam || !this.tokens?.screen) {
-		// 	// 1 token received
-		// 	const aditionalToken = await this.restService.getToken(this.sessionName, this.openviduServerUrl, this.openviduSecret);
-		// 	this._tokens = {
-		// 		webcam: !!this.tokens.webcam ? this.tokens.webcam : aditionalToken,
-		// 		screen: !!this.tokens.screen ? this.tokens.screen : aditionalToken
-		// 	};
-		// } else {
-		// 	// 2 tokens received.
-		// 	this._tokens = {
-		// 		webcam: this.tokens.webcam,
-		// 		screen: this.tokens.screen
-		// 	};
-		// }
-		// this.joinSessionClicked = true;
-		// this.isSessionAlive = true;
+	// Event sent when user click on the join button in pre-join page
+	@Output() onJoinButtonClicked = new EventEmitter<any>();
+	// Event sent when user click on the join button in pre-join page
+	@Output() onToolbarLeaveButtonClicked = new EventEmitter<any>();
+	@Output() onToolbarCameraButtonClicked = new EventEmitter<any>();
+	@Output() onToolbarMicrophoneButtonClicked = new EventEmitter<any>();
+	@Output() onToolbarScreenshareButtonClicked = new EventEmitter<any>();
+	@Output() onToolbarFullscreenButtonClicked = new EventEmitter<any>();
+	@Output() onToolbarParticipantsPanelButtonClicked = new EventEmitter<any>();
+	@Output() onToolbarChatPanelButtonClicked = new EventEmitter<any>();
+
+	// Event sent when participant has joined the session
+	// @Output() onParticipantJoined = new EventEmitter<any>();
+
+	// Event sent when session has been created
+	@Output() onSessionCreated = new EventEmitter<any>();
+	// Event sent when participant has been created
+	@Output() onParticipantCreated = new EventEmitter<any>();
+
+
+	joinSessionClicked: boolean = false;
+	participantReady: boolean = false;
+	canPublish: boolean = false;
+	error: boolean = false;
+	errorMessage: string = '';
+	showPrejoin: boolean = true;
+	private externalParticipantName: string;
+	private prejoinSub: Subscription;
+	private participantNameSub: Subscription;
+	private log: ILogger;
+
+	constructor(
+		private loggerSrv: LoggerService,
+		private storageSrv: StorageService,
+		private participantService: ParticipantService,
+		private deviceSrv: DeviceService,
+		private openviduService: OpenViduService,
+		private actionService: ActionService,
+		private libService: OpenViduAngularConfigService,
+		private tokenService: TokenService
+	) {
+		this.log = this.loggerSrv.get('VideoconferenceComponent');
 	}
-	onLeaveSessionClicked() {
-		this.isSessionAlive = false;
-		this.closeClicked = true;
+
+	async ngOnInit() {
+		this.subscribeToVideconferenceDirectives();
+		await this.deviceSrv.initializeDevices();
+		const nickname = this.externalParticipantName || this.storageSrv.getNickname() || `OpenVidu_User${Math.floor(Math.random() * 100)}`;
+		const props: ParticipantProperties = {
+			local: true,
+			nickname
+		};
+		this.participantService.initLocalParticipant(props);
+		this.openviduService.initialize();
+
+		if (this.deviceSrv.hasVideoDeviceAvailable() || this.deviceSrv.hasAudioDeviceAvailable()) {
+			await this.initwebcamPublisher();
+		}
+
+		this.onParticipantCreated.emit(this.participantService.getLocalParticipant());
 	}
 
-	onMicClicked() {}
+	private async initwebcamPublisher() {
+		try {
+			const publisher = await this.openviduService.initDefaultPublisher(undefined);
+			if (publisher) {
+				publisher.once('accessDenied', (e: any) => {
+					this.handlePublisherError(e);
+				});
+				publisher.once('accessAllowed', () => {
+					this.participantReady = true;
+				});
+			}
+		} catch (error) {
+			this.actionService.openDialog(error.name.replace(/_/g, ' '), error.message, true);
+			this.log.e(error);
+		}
+	}
 
-	onCamClicked() {}
+	ngOnDestroy(): void {
+		if (this.prejoinSub) this.prejoinSub.unsubscribe();
+		if (this.participantNameSub) this.participantNameSub.unsubscribe();
+	}
 
-	onScreenShareClicked() {}
+	ngAfterViewInit() {
+		if (this.externalToolbar) {
+			this.openviduAngularToolbarTemplate = this.externalToolbar.template;
+			this.log.d('Setting EXTERNAL TOOLBAR');
+		} else {
+			if (this.externalToolbarAdditionalButtons) {
+				this.log.d('Setting EXTERNAL TOOLBAR ADDITIONAL BUTTONS');
+				this.openviduAngularToolbarAdditionalButtonsTemplate = this.externalToolbarAdditionalButtons.template;
+			}
+			this.openviduAngularToolbarTemplate = this.defaultToolbarTemplate;
+			this.log.d('Setting  DEFAULT TOOLBAR');
+		}
 
-	onSpeakerLayoutClicked() {}
+		if (this.externalPanel) {
+			this.openviduAngularPanelTemplate = this.externalPanel.template;
+			this.log.d('Setting EXTERNAL PANEL');
+		} else {
+			this.log.d('Setting DEFAULT PANEL');
+
+			if (this.externalParticipantsPanel) {
+				this.openviduAngularParticipantsPanelTemplate = this.externalParticipantsPanel.template;
+				this.log.d('Setting EXTERNAL PARTICIPANTS PANEL');
+			} else {
+				this.log.d('Setting DEFAULT PARTICIPANTS PANEL');
+				if (this.externalParticipantPanelItem) {
+					this.openviduAngularParticipantPanelItemTemplate = this.externalParticipantPanelItem.template;
+					this.log.d('Setting EXTERNAL P ITEM');
+				} else {
+					if (this.externalParticipantPanelItemElements) {
+						this.log.d('Setting EXTERNAL PARTICIPANT PANEL ITEM ELEMENT');
+						this.openviduAngularParticipantPanelItemElementsTemplate = this.externalParticipantPanelItemElements.template;
+					}
+					this.openviduAngularParticipantPanelItemTemplate = this.defaultParticipantPanelItemTemplate;
+					this.log.d('Setting DEFAULT P ITEM');
+				}
+				this.openviduAngularParticipantsPanelTemplate = this.defaultParticipantsPanelTemplate;
+			}
+
+			if (this.externalChatPanel) {
+				this.openviduAngularChatPanelTemplate = this.externalChatPanel.template;
+				this.log.d('Setting EXTERNAL CHAT PANEL');
+			} else {
+				this.openviduAngularChatPanelTemplate = this.defaultChatPanelTemplate;
+				this.log.d('Setting DEFAULT CHAT PANEL');
+			}
+			this.openviduAngularPanelTemplate = this.defaultPanelTemplate;
+		}
+
+		if (this.externalLayout) {
+			this.openviduAngularLayoutTemplate = this.externalLayout.template;
+			this.log.d('Setting EXTERNAL LAYOUT');
+		} else {
+			this.log.d('Setting DEAFULT LAYOUT');
+
+			if (this.externalStream) {
+				this.openviduAngularStreamTemplate = this.externalStream.template;
+				this.log.d('Setting EXTERNAL STREAM');
+			} else {
+				this.openviduAngularStreamTemplate = this.defaultStreamTemplate;
+				this.log.d('Setting DEFAULT STREAM');
+			}
+			this.openviduAngularLayoutTemplate = this.defaultLayoutTemplate;
+		}
+	}
+
+	_onJoinButtonClicked() {
+		this.joinSessionClicked = true;
+		this.onJoinButtonClicked.emit();
+	}
+	onLeaveButtonClicked() {
+		this.joinSessionClicked = false;
+		this.participantReady = false;
+		this.onToolbarLeaveButtonClicked.emit();
+	}
+	onCameraButtonClicked() {
+		this.onToolbarCameraButtonClicked.emit();
+	}
+
+	onMicrophoneButtonClicked() {
+		this.onToolbarMicrophoneButtonClicked.emit();
+	}
+	onScreenshareButtonClicked() {
+		this.onToolbarScreenshareButtonClicked.emit();
+	}
+	onFullscreenButtonClicked() {
+		this.onToolbarFullscreenButtonClicked.emit();
+	}
+	onParticipantsPanelButtonClicked() {
+		this.onToolbarParticipantsPanelButtonClicked.emit();
+	}
+	onChatPanelButtonClicked() {
+		this.onToolbarChatPanelButtonClicked.emit();
+	}
+	_onSessionCreated(event: Session) {
+		this.onSessionCreated.emit(event);
+	}
+
+	private handlePublisherError(e: any) {
+		let message: string;
+		if (e.name === OpenViduErrorName.DEVICE_ALREADY_IN_USE) {
+			this.log.w('Video device already in use. Disabling video device...');
+			// Allow access to the room with only mic if camera device is already in use
+			this.deviceSrv.disableVideoDevices();
+			return this.initwebcamPublisher();
+		}
+		if (e.name === OpenViduErrorName.DEVICE_ACCESS_DENIED) {
+			message = 'Access to media devices was not allowed.';
+			this.deviceSrv.disableVideoDevices();
+			this.deviceSrv.disableAudioDevices();
+			return this.initwebcamPublisher();
+		} else if (e.name === OpenViduErrorName.NO_INPUT_SOURCE_SET) {
+			message = 'No video or audio devices have been found. Please, connect at least one.';
+		}
+		this.actionService.openDialog(e.name.replace(/_/g, ' '), message, true);
+		this.log.e(e.message);
+	}
+
+	private subscribeToVideconferenceDirectives() {
+		this.prejoinSub = this.libService.prejoin.subscribe((value: boolean) => {
+			this.showPrejoin = value;
+			// this.cd.markForCheck();
+		});
+
+		this.participantNameSub = this.libService.participantName.subscribe((nickname: string) => {
+			this.externalParticipantName = nickname;
+		});
+	}
 }

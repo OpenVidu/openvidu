@@ -36,9 +36,8 @@ $openvidu-components-theme: mat.define-light-theme((
 @include mat.all-component-themes($openvidu-components-theme);
 
 
-// Custom openvidu-components colors
+// Custom openvidu-components styles
 :root {
-
   --ov-primary-color: #303030;
   --ov-secondary-color: #586063;
   --ov-tertiary-color: #598eff;
@@ -50,6 +49,11 @@ $openvidu-components-theme: mat.define-light-theme((
 
   --ov-light-color: #ffffff;
   --ov-light-dark-color: #f1f1f1;
+
+  --ov-buttons-radius: 50%; // border-radius property
+  --ov-leave-button-radius: 10px;
+  --ov-video-radius: 5px;
+  --ov-panel-radius: 5px;
 }
 
 

@@ -26,7 +26,7 @@ import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 
-import { UserSettingsComponent } from './components/user-settings/user-settings.component';
+// import { UserSettingsComponent } from './components/user-settings/user-settings.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { VideoComponent } from './components/video/video.component';
 import { ChatPanelComponent } from './components/panel/chat-panel/chat-panel.component';
@@ -36,36 +36,37 @@ import { StreamComponent } from './components/stream/stream.component';
 import { DialogTemplateComponent } from './components/material/dialog.component';
 
 import { LinkifyPipe } from './pipes/linkify.pipe';
-import { TooltipListPipe } from './pipes/tooltip-list.pipe';
-import { ConnectionsEnabledPipe, NicknamePipe, ParticipantConnectionsPipe } from './pipes/participant-connections.pipe';
+import { StreamTypesEnabledPipe, ParticipantStreamsPipe } from './pipes/participant.pipe';
 
-import { LibConfig } from './config/lib.config';
+import { OpenViduAngularConfig } from './config/openvidu-angular.config';
 import { CdkOverlayContainer } from './config/custom-cdk-overlay';
 import { DeviceService } from './services/device/device.service';
 import { LoggerService } from './services/logger/logger.service';
 import { PlatformService } from './services/platform/platform.service';
 import { StorageService } from './services/storage/storage.service';
 import { TokenService } from './services/token/token.service';
-import { LibraryConfigService } from './services/library-config/library-config.service';
-import { WebrtcService } from './services/webrtc/webrtc.service';
+import { OpenViduAngularConfigService } from './services/config/openvidu-angular.config.service';
+import { OpenViduService } from './services/openvidu/openvidu.service';
 import { ActionService } from './services/action/action.service';
 import { ChatService } from './services/chat/chat.service';
 import { DocumentService } from './services/document/document.service';
 import { LayoutService } from './services/layout/layout.service';
 import { SidenavMenuService } from './services/sidenav-menu/sidenav-menu.service';
 import { ParticipantService } from './services/participant/participant.service';
-import { ParticipantItemComponent } from './components/panel/participants-panel/participant-item/participant-item.component';
+import { ParticipantPanelItemComponent } from './components/panel/participants-panel/participant-panel-item/participant-panel-item.component';
 import { ParticipantsPanelComponent } from './components/panel/participants-panel/participants-panel/participants-panel.component';
 import { VideoconferenceComponent } from './components/videoconference/videoconference.component';
 import { PanelComponent } from './components/panel/panel.component';
+import { AudioWaveComponent } from './components/audio-wave/audio-wave.component';
+import { PreJoinComponent } from './components/pre-join/pre-join.component';
 
-// Used for loading dynamic components because of Inputs and Outputs are not supported in the official Angular way
-// https://github.com/angular/angular/issues/15360
-import { DynamicIoModule } from 'ng-dynamic-component';
+import { AvatarProfileComponent } from './components/avatar-profile/avatar-profile.component';
+import { OpenViduAngularDirectiveModule } from './directives/template/openvidu-angular.directive.module';
+import { ApiDirectiveModule } from './directives/api/api.directive.module';
 
 @NgModule({
 	declarations: [
-		UserSettingsComponent,
+		// UserSettingsComponent,
 		VideoComponent,
 		ToolbarComponent,
 		ChatPanelComponent,
@@ -74,14 +75,15 @@ import { DynamicIoModule } from 'ng-dynamic-component';
 		StreamComponent,
 		DialogTemplateComponent,
 		LinkifyPipe,
-		TooltipListPipe,
-		ParticipantConnectionsPipe,
-		ConnectionsEnabledPipe,
-		NicknamePipe,
-		ParticipantItemComponent,
+		ParticipantStreamsPipe,
+		StreamTypesEnabledPipe,
+		ParticipantPanelItemComponent,
 		ParticipantsPanelComponent,
 		VideoconferenceComponent,
-  PanelComponent,
+		AudioWaveComponent,
+		PanelComponent,
+		AvatarProfileComponent,
+		PreJoinComponent,
 	],
 	imports: [
 		CommonModule,
@@ -109,7 +111,8 @@ import { DynamicIoModule } from 'ng-dynamic-component';
 		MatMenuModule,
 		MatDividerModule,
 		MatListModule,
-		DynamicIoModule
+		OpenViduAngularDirectiveModule,
+		ApiDirectiveModule
 	],
 	providers: [
 		ActionService,
@@ -125,29 +128,37 @@ import { DynamicIoModule } from 'ng-dynamic-component';
 		ParticipantService,
 		StorageService,
 		TokenService,
-		WebrtcService
+		OpenViduService
 	],
 	exports: [
 		VideoconferenceComponent,
-		UserSettingsComponent,
+		// UserSettingsComponent,
 		ToolbarComponent,
+		PanelComponent,
+		ParticipantsPanelComponent,
+		ParticipantPanelItemComponent,
 		ChatPanelComponent,
 		SessionComponent,
 		LayoutComponent,
 		StreamComponent,
 		VideoComponent,
-		ParticipantConnectionsPipe,
-		CommonModule
+		AudioWaveComponent,
+		PreJoinComponent,
+		ParticipantStreamsPipe,
+		StreamTypesEnabledPipe,
+		CommonModule,
+		OpenViduAngularDirectiveModule,
+		ApiDirectiveModule
 	],
 	entryComponents: [DialogTemplateComponent]
 })
-export class OpenviduAngularModule {
-	static forRoot(environment): ModuleWithProviders<OpenviduAngularModule> {
+export class OpenViduAngularModule {
+	static forRoot(config): ModuleWithProviders<OpenViduAngularModule> {
 		// console.log(`${library.name} config: ${environment}`);
-		const libConfig: LibConfig = { environment };
+		const libConfig: OpenViduAngularConfig = config;
 		return {
-			ngModule: OpenviduAngularModule,
-			providers: [LibraryConfigService, { provide: 'LIB_CONFIG', useValue: libConfig }]
+			ngModule: OpenViduAngularModule,
+			providers: [OpenViduAngularConfigService, { provide: 'OPENVIDU_ANGULAR_CONFIG', useValue: libConfig }]
 		};
 	}
 }

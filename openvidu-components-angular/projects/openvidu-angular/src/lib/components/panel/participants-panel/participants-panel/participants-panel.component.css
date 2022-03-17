@@ -1,9 +1,9 @@
 .participants-container {
 	margin: 20px;
 	background-color: var(--ov-light-color);
-	border-radius: 5px;
-	height: -webkit-fill-available;
-	height: -moz-available;
+	border-radius: var(--ov-panel-radius);
+	max-height: calc(100% - 40px);
+	min-height: calc(100% - 40px);
 }
 
 .header-container {
@@ -19,6 +19,7 @@
 
 .header-container button {
 	margin-left: auto;
+	border-radius: var(--ov-buttons-radius);
 }
 
 .local-participant-container, .remote-participants-container {
@@ -26,6 +27,8 @@
 }
 
 .scrollable {
+	height: calc(100% - 60px);
+	max-height: calc(100% - 60px);
 	overflow: auto;
 }
 

@@ -1,32 +1,104 @@
 <div id="call-container">
-	<div id="user-settings-container" *ngIf="!joinSessionClicked && !closeClicked">
-		<ov-user-settings (onJoinClicked)="_onJoinClicked()" (onCloseClicked)="onLeaveSessionClicked()"></ov-user-settings>
+	<div id="pre-join-container" *ngIf="showPrejoin && participantReady && !joinSessionClicked">
+		<ov-pre-join (onJoinButtonClicked)="_onJoinButtonClicked()"></ov-pre-join>
+		<!-- <ov-user-settings (onJoinClicked)="_onJoinClicked()" (onCloseClicked)="onLeaveSessionClicked()"></ov-user-settings> -->
 	</div>
 
-	<div id="spinner" *ngIf="joinSessionClicked && !isSessionAlive && !error">
+	<div id="spinner" *ngIf="(joinSessionClicked || !showPrejoin) && !participantReady && !error">
 		<mat-spinner [diameter]="50"></mat-spinner>
 		<span>Joining the room ...</span>
 	</div>
 
-	<div id="spinner" *ngIf="joinSessionClicked && !isSessionAlive && error">
+	<div id="spinner" *ngIf="joinSessionClicked && !participantReady && error">
 		<mat-icon class="error-icon">error</mat-icon>
 		<span>{{ errorMessage }}</span>
 	</div>
 
-	<div id="session-container" *ngIf="joinSessionClicked && isSessionAlive && !error">
-		<ov-session [tokens]="_tokens">
+	<div id="session-container" *ngIf="(joinSessionClicked || !showPrejoin) && participantReady && canPublish && !error">
+		<ov-session (onSessionCreated)="_onSessionCreated($event)">
+			<ng-template #toolbar>
+				<ng-container *ngIf="openviduAngularToolbarTemplate">
+					<ng-container *ngTemplateOutlet="openviduAngularToolbarTemplate"></ng-container>
+				</ng-container>
+			</ng-template>
 
-			<!-- Default toolbar -->
-			<!--<ng-template #toolbar toolbar>
-				 <ov-toolbar
-					(onCamClicked)="onCamClicked()"
-					(onMicClicked)="onMicClicked()"
-					(onScreenShareClicked)="onScreenShareClicked()"
-					(onLeaveSessionClicked)="onLeaveSessionClicked()"
-				></ov-toolbar>
-			</ng-template>-->
+			<ng-template #panel>
+				<ng-container *ngIf="openviduAngularPanelTemplate">
+					<ng-container *ngTemplateOutlet="openviduAngularPanelTemplate"></ng-container>
+				</ng-container>
+			</ng-template>
 
-			<!-- <ov-layout layout></ov-layout> -->
+			<ng-template #layout>
+				<ng-container *ngIf="openviduAngularLayoutTemplate">
+					<ng-container *ngTemplateOutlet="openviduAngularLayoutTemplate"></ng-container>
+				</ng-container>
+			</ng-template>
 		</ov-session>
 	</div>
 </div>
+
+<ng-template #defaultToolbar>
+	<ov-toolbar
+		(onLeaveButtonClicked)="onLeaveButtonClicked()"
+		(onCameraButtonClicked)="onCameraButtonClicked()"
+		(onMicrophoneButtonClicked)="onMicrophoneButtonClicked()"
+		(onScreenshareButtonClicked)="onScreenshareButtonClicked()"
+		(onFullscreenButtonClicked)="onFullscreenButtonClicked()"
+		(onParticipantsPanelButtonClicked)="onParticipantsPanelButtonClicked()"
+		(onChatPanelButtonClicked)="onChatPanelButtonClicked()"
+	>
+
+	<ng-template #toolbarAdditionalButtons>
+		<ng-container *ngTemplateOutlet="openviduAngularToolbarAdditionalButtonsTemplate"></ng-container>
+	</ng-template>
+
+</ov-toolbar>
+</ng-template>
+
+<ng-template #defaultPanel>
+	<ov-panel>
+		<ng-template #chatPanel>
+			<ng-container *ngTemplateOutlet="openviduAngularChatPanelTemplate"></ng-container>
+		</ng-template>
+
+		<ng-template #participantsPanel>
+			<ng-container *ngTemplateOutlet="openviduAngularParticipantsPanelTemplate"></ng-container>
+		</ng-template>
+	</ov-panel>
+</ng-template>
+
+<ng-template #defaultChatPanel>
+	<ov-chat-panel></ov-chat-panel>
+</ng-template>
+
+<ng-template #defaultParticipantsPanel>
+	<ov-participants-panel>
+		<ng-template #participantPanelItem let-participant>
+			<ng-container
+				*ngTemplateOutlet="openviduAngularParticipantPanelItemTemplate; context: { $implicit: participant }"
+			></ng-container>
+		</ng-template>
+	</ov-participants-panel>
+</ng-template>
+
+<ng-template #defaultParticipantPanelItem let-participant>
+	<ov-participant-panel-item [participant]="participant">
+
+		<ng-template #participantPanelItemElements>
+			<ng-container *ngTemplateOutlet="openviduAngularParticipantPanelItemElementsTemplate;  context: { $implicit: participant }"></ng-container>
+		</ng-template>
+
+	</ov-participant-panel-item>
+</ng-template>
+
+<ng-template #defaultLayout>
+	<ov-layout>
+		<ng-template #stream let-stream>
+			<ng-container *ngTemplateOutlet="openviduAngularStreamTemplate; context: { $implicit: stream }"> </ng-container>
+		</ng-template>
+	</ov-layout>
+</ng-template>
+
+<ng-template #defaultStream let-stream>
+	<ov-stream [stream]="stream"></ov-stream>
+</ng-template>

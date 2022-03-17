@@ -2,40 +2,58 @@ import { Publisher, StreamManager } from 'openvidu-browser';
 import { VideoType } from './video-type.model';
 
 export interface StreamModel {
-	local: boolean;
 	connected: boolean;
-	nickname: string;
 	type: VideoType;
 	streamManager: StreamManager;
 	videoEnlarged: boolean;
 	connectionId: string;
+	participant?: ParticipantAbstractModel
+}
+
+export interface ParticipantProperties {
+	local: boolean;
+	nickname: string;
+	id?: string;
+	colorProfile?: string;
+	isMutedForcibly?: boolean;
 }
 
 export abstract class ParticipantAbstractModel {
-	connections: Map<VideoType, StreamModel> = new Map();
+	streams: Map<VideoType, StreamModel> = new Map();
 	id: string;
+	local: boolean;
+	nickname: string;
+	colorProfile: string;
+	isMutedForcibly: boolean;
 
-	constructor(model?: StreamModel, id?: string) {
+	constructor(props: ParticipantProperties, model?: StreamModel) {
+		this.id = props.id ? props.id : new Date().getTime().toString();
+		this.local = props.local;
+		this.nickname = props.nickname;
+		this.colorProfile = !!props.colorProfile ? props.colorProfile : `hsl(${Math.random()*360}, 100%, 80%)`;
+		this.isMutedForcibly = typeof props.isMutedForcibly === 'boolean' ? props.isMutedForcibly : false;
 		let streamModel: StreamModel = {
-			local: model ? model.local : true,
-			connected: true,
-			nickname: model ? model.nickname : 'OpenVidu_User',
+			connected: model ? model.connected : true,
 			type: model ? model.type : VideoType.CAMERA,
 			streamManager: model ? model.streamManager : null,
 			videoEnlarged: model ? model.videoEnlarged : false,
-			connectionId: model ? model.connectionId : null
+			connectionId: model ? model.connectionId : null,
+			participant: this
 		};
-		this.connections.set(streamModel.type, streamModel);
-		this.id = id ? id : new Date().getTime().toString();
+		this.streams.set(streamModel.type, streamModel);
 	}
 
 	addConnection(streamModel: StreamModel) {
-		this.connections.set(streamModel.type, streamModel);
+		streamModel.participant = this;
+		this.streams.set(streamModel.type, streamModel);
 	}
 
 	public isCameraAudioActive(): boolean {
 		const cameraConnection = this.getCameraConnection();
-		return cameraConnection.connected && cameraConnection.streamManager.stream.audioActive;
+		if(cameraConnection) {
+			return cameraConnection.connected && cameraConnection.streamManager?.stream?.audioActive;
+		}
+		return this.isScreenAudioActive();;
 	}
 
 	public isCameraVideoActive(): boolean {
@@ -44,25 +62,28 @@ export abstract class ParticipantAbstractModel {
 	}
 	isScreenAudioActive(): boolean {
 		const screenConnection = this.getScreenConnection();
-		return screenConnection?.connected && screenConnection?.streamManager?.stream?.audioActive;
+		if(screenConnection){
+			return screenConnection?.connected && screenConnection?.streamManager?.stream?.audioActive;
+		}
+		return false;
 	}
 
 	hasConnectionType(type: VideoType): boolean {
-		return this.connections.has(type);
+		return this.streams.has(type);
 	}
 
 	public getCameraConnection(): StreamModel {
-		return this.connections.get(VideoType.CAMERA);
+		return this.streams.get(VideoType.CAMERA);
 	}
 
 	public getScreenConnection(): StreamModel {
-		return this.connections.get(VideoType.SCREEN);
+		return this.streams.get(VideoType.SCREEN);
 	}
 
-	getConnectionTypesEnabled(): VideoType[] {
+	getConnectionTypesActive(): VideoType[] {
 		let connType = [];
-		if (this.isCameraEnabled()) connType.push(VideoType.CAMERA);
-		if (this.isScreenEnabled()) connType.push(VideoType.SCREEN);
+		if (this.isCameraActive()) connType.push(VideoType.CAMERA);
+		if (this.isScreenActive()) connType.push(VideoType.SCREEN);
 
 		return connType;
 	}
@@ -74,43 +95,51 @@ export abstract class ParticipantAbstractModel {
 		this.getScreenConnection().connectionId = connectionId;
 	}
 
-	removeConnection(connectionId: string) {
-		this.connections.delete(this.getConnectionById(connectionId).type);
+	removeConnection(connectionId: string): StreamModel {
+		const removeStream = this.getConnectionById(connectionId);
+		this.streams.delete(removeStream.type);
+		return removeStream;
 	}
 
 	hasConnectionId(connectionId: string): boolean {
-		return Array.from(this.connections.values()).some((conn) => conn.connectionId === connectionId);
+		return Array.from(this.streams.values()).some((conn) => conn.connectionId === connectionId);
 	}
 
 	getConnectionById(connectionId: string): StreamModel {
-		return Array.from(this.connections.values()).find((conn) => conn.connectionId === connectionId);
+		return Array.from(this.streams.values()).find((conn) => conn.connectionId === connectionId);
 	}
 
 	getAvailableConnections(): StreamModel[] {
-		return Array.from(this.connections.values()).filter((conn) => conn.connected);
+		return Array.from(this.streams.values()).filter((conn) => conn.connected);
 	}
 
 	isLocal(): boolean {
-		return Array.from(this.connections.values()).every((conn) => conn.local);
+		return this.local;
+		// return Array.from(this.streams.values()).every((conn) => conn.local);
 	}
 
 	setNickname(nickname: string) {
-		this.connections.forEach((conn) => {
-			if (conn.type === VideoType.CAMERA) {
-				conn.nickname = nickname;
-			} else {
-				conn.nickname = `${nickname}_${conn.type}`;
-			}
-		});
+		this.nickname = nickname;
+		// this.streams.forEach((conn) => {
+		// 	if (conn.type === VideoType.CAMERA) {
+		// 		conn.nickname = nickname;
+		// 	} else {
+		// 		conn.nickname = `${nickname}_${conn.type}`;
+		// 	}
+		// });
 	}
 
-	getCameraNickname(): string {
-		return this.getCameraConnection()?.nickname;
+	getNickname() {
+		return this.nickname;
 	}
 
-	getScreenNickname(): string {
-		return this.getScreenConnection()?.nickname;
-	}
+	// getCameraNickname(): string {
+	// 	return this.getCameraConnection()?.nickname;
+	// }
+
+	// getScreenNickname(): string {
+	// 	return this.getScreenConnection()?.nickname;
+	// }
 
 	setCameraPublisher(publisher: Publisher) {
 		const cameraConnection = this.getCameraConnection();
@@ -123,13 +152,13 @@ export abstract class ParticipantAbstractModel {
 	}
 
 	setPublisher(connType: VideoType, publisher: StreamManager) {
-		const connection = this.connections.get(connType);
+		const connection = this.streams.get(connType);
 		if(connection) {
 			connection.streamManager = publisher;
 		}
 	}
 
-	isCameraEnabled(): boolean {
+	isCameraActive(): boolean {
 		return this.getCameraConnection()?.connected;
 	}
 
@@ -143,11 +172,11 @@ export abstract class ParticipantAbstractModel {
 		if (cameraConnection) cameraConnection.connected = false;
 	}
 
-	isScreenEnabled(): boolean {
+	isScreenActive(): boolean {
 		return this.getScreenConnection()?.connected;
 	}
 
-	enablescreen() {
+	enableScreen() {
 		const screenConnection = this.getScreenConnection();
 		if (screenConnection) screenConnection.connected = true;
 	}
@@ -156,12 +185,21 @@ export abstract class ParticipantAbstractModel {
 		const screenConnection = this.getScreenConnection();
 		if (screenConnection) screenConnection.connected = false;
 	}
+
 	setAllVideoEnlarged(enlarged: boolean) {
-		this.connections.forEach((conn) => (conn.videoEnlarged = enlarged));
+		this.streams.forEach((conn) => (conn.videoEnlarged = enlarged));
 	}
 
+	setCameraEnlarged(enlarged: boolean) {
+		this.streams.get(VideoType.CAMERA).videoEnlarged = enlarged;
+	}
+	setScreenEnlarged(enlarged: boolean) {
+		this.streams.get(VideoType.SCREEN).videoEnlarged = enlarged;
+	}
+
+
 	toggleVideoEnlarged(connectionId: string) {
-		this.connections.forEach((conn) => {
+		this.streams.forEach((conn) => {
 			if (conn.connectionId === connectionId) {
 				conn.videoEnlarged = !conn.videoEnlarged;
 			}
@@ -169,7 +207,11 @@ export abstract class ParticipantAbstractModel {
 	}
 
 	someHasVideoEnlarged(): boolean {
-		return Array.from(this.connections.values()).some((conn) => conn.videoEnlarged);
+		return Array.from(this.streams.values()).some((conn) => conn.videoEnlarged);
+	}
+
+	setMutedForcibly(muted: boolean){
+		this.isMutedForcibly = muted;
 	}
 }
 

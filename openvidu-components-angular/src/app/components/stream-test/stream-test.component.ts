@@ -8,11 +8,11 @@ import { ParticipantModel } from 'openvidu-angular';
 })
 export class StreamTestComponent implements OnInit {
 
-  participant: ParticipantModel;
+  stream: ParticipantModel;
   constructor() { }
 
   ngOnInit(): void {
-    this.participant = new ParticipantModel();
+    this.stream = new ParticipantModel();
   }
 
 }

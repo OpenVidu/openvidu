@@ -1,6 +1,5 @@
 <div id="session-container">
 	<mat-sidenav-container class="sidenav-container">
-		<!-- OPENVIDU PANELS -->
 		<mat-sidenav
 			#sidenav
 			mode="{{ sidenavMode }}"
@@ -10,15 +9,17 @@
 			fixedTopGap="0"
 			fixedBottomGap="0"
 		>
-			<ng-template #panel></ng-template>
+			<ng-container *ngTemplateOutlet="panelTemplate"></ng-container>
 		</mat-sidenav>
 
-		<!-- OPENVIDU LAYOUT -->
 		<mat-sidenav-content class="sidenav-main">
-			<!-- Dynamic layout injection -->
-			<ng-template #layout></ng-template>
+			<div id="layout-container">
+				<ng-container *ngTemplateOutlet="layoutTemplate"></ng-container>
+			</div>
 		</mat-sidenav-content>
 	</mat-sidenav-container>
 
-	<ng-template #toolbar></ng-template>
+	<div id="footer-container">
+		<ng-container *ngTemplateOutlet="toolbarTemplate"></ng-container>
+	</div>
 </div>

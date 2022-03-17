@@ -26,10 +26,16 @@ nbactions.xml
 */.settings/*
 */.tscache/*
 
-openvidu-components-angular/node_modules/
-
-openvidu-components-angular/.angular/
-
+**/node_modules/
+**/.angular/
+**/.vscode
 openvidu-components-angular/dist/
-
+openvidu-components-angular/coverage/**
 openvidu-components-angular/openvidu-webcomponent/
+openvidu-components-angular/openvidu-angular-doc/
+
+openvidu-components-angular/webcomponent-test-e2e/dist/
+
+openvidu-components-angular/webcomponent-test-e2e/web/openvidu-webcomponent-dev.css
+
+openvidu-components-angular/webcomponent-test-e2e/web/openvidu-webcomponent-dev.js

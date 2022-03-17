@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 import { Publisher, Subscriber } from 'openvidu-browser';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
-import { StreamModel, ParticipantAbstractModel, ParticipantModel } from '../../models/participant.model';
+import { StreamModel, ParticipantAbstractModel, ParticipantModel, ParticipantProperties } from '../../models/participant.model';
 import { VideoType } from '../../models/video-type.model';
+import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.service';
 import { LoggerService } from '../logger/logger.service';
 
 @Injectable({
@@ -12,13 +13,7 @@ import { LoggerService } from '../logger/logger.service';
 export class ParticipantService {
 	//Local participants observables
 	localParticipantObs: Observable<ParticipantAbstractModel>;
-	screenShareState: Observable<boolean>;
-	webcamVideoActive: Observable<boolean>;
-	webcamAudioActive: Observable<boolean>;
 	protected _localParticipant = <BehaviorSubject<ParticipantAbstractModel>>new BehaviorSubject(null);
-	protected _screensharing = <BehaviorSubject<boolean>>new BehaviorSubject(false);
-	protected _cameraVideoActive = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	protected _cameraAudioActive = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 
 	//Remote participants observable
 	remoteParticipantsObs: Observable<ParticipantAbstractModel[]>;
@@ -29,20 +24,21 @@ export class ParticipantService {
 
 	protected log: ILogger;
 
-	constructor(protected loggerSrv: LoggerService) {
+	constructor(protected openviduAngularConfigSrv: OpenViduAngularConfigService, protected loggerSrv: LoggerService) {
 		this.log = this.loggerSrv.get('ParticipantService');
-		// this.participantsObs = this._participants.asObservable();
 
 		this.localParticipantObs = this._localParticipant.asObservable();
 		this.remoteParticipantsObs = this._remoteParticipants.asObservable();
-		this.screenShareState = this._screensharing.asObservable();
-		this.webcamVideoActive = this._cameraVideoActive.asObservable();
-		this.webcamAudioActive = this._cameraAudioActive.asObservable();
+	}
 
-		this.localParticipant = this.newParticipant();
+	initLocalParticipant(props: ParticipantProperties)  {
+		this.localParticipant = this.newParticipant(props);
 		this.updateLocalParticipant();
 	}
 
+	getLocalParticipant(): ParticipantAbstractModel {
+		return this.localParticipant;
+	}
 	getMyParticipantId(): string {
 		return this.localParticipant.id;
 	}
@@ -84,98 +80,85 @@ export class ParticipantService {
 		this.updateLocalParticipant();
 	}
 
-	enableScreenUser(screenPublisher: Publisher) {
+	activeMyScreenShare(screenPublisher: Publisher) {
 		this.log.d('Enabling screen publisher');
 
 		const steramModel: StreamModel = {
-			local: true,
 			type: VideoType.SCREEN,
 			videoEnlarged: true,
 			streamManager: screenPublisher,
-			nickname: `${this.localParticipant.getCameraNickname()}_${VideoType.SCREEN}`,
 			connected: true,
 			connectionId: null
 		};
 
+		this.resetRemoteStreamsToNormalSize();
+		this.resetMyStreamsToNormalSize();
 		this.localParticipant.addConnection(steramModel);
-
-		this._screensharing.next(true);
-
 		this.updateLocalParticipant();
 	}
 
 	disableScreenUser() {
 		this.localParticipant.disableScreen();
 		this.updateLocalParticipant();
-		this._screensharing.next(false);
 	}
 
-	updateUsersStatus() {
-		this._cameraVideoActive.next(this.localParticipant.isCameraVideoActive());
-		if (this.isMyCameraEnabled()) {
-			this._cameraAudioActive.next(this.localParticipant.isCameraAudioActive());
-		} else {
-			this._cameraAudioActive.next(this.hasScreenAudioActive());
-		}
+	setMyNickname(nickname: string) {
+		this.localParticipant.setNickname(nickname);
+		this.updateLocalParticipant();
 	}
 
-	setNickname(connectionId: string, nickname: string) {
-		if (this.localParticipant.hasConnectionId(connectionId)) {
-			this.localParticipant.setNickname(nickname);
-			// this.updateLocalParticipant();
-		} else {
-			const participant = this.getRemoteParticipantByConnectionId(connectionId);
-			if (participant) {
-				participant.setNickname(nickname);
-				// this.updateRemoteParticipants();
-			}
-		}
+	getMyNickname(): string {
+		return this.localParticipant.nickname;
 	}
+	// getWebcamNickname(): string {
+	// 	return this.localParticipant.getCameraNickname();
+	// }
 
-	getWebcamNickname(): string {
-		return this.localParticipant.getCameraNickname();
-	}
+	// getScreenNickname(): string {
+	// 	return this.localParticipant.getScreenNickname();
+	// }
 
-	getScreenNickname(): string {
-		return this.localParticipant.getScreenNickname();
-	}
 
-	resetUsersZoom() {
-		this.localParticipant?.setAllVideoEnlarged(false);
-	}
-
-	toggleZoom(connectionId: string) {
+	toggleMyVideoEnlarged(connectionId: string) {
 		this.localParticipant.toggleVideoEnlarged(connectionId);
+	}
+
+
+	resetMyStreamsToNormalSize() {
+		if(this.localParticipant.someHasVideoEnlarged()){
+			this.localParticipant.setAllVideoEnlarged(false);
+			this.updateLocalParticipant();
+		}
 	}
 
 	clear() {
 		this.disableScreenUser();
-		this.localParticipant = this.newParticipant();
-		this._screensharing.next(false);
+		// this.localParticipant = this.newParticipant();
+		// this._screensharing.next(false);
 		this.remoteParticipants = [];
 		this._remoteParticipants = <BehaviorSubject<ParticipantAbstractModel[]>>new BehaviorSubject([]);
 		this.remoteParticipantsObs = this._remoteParticipants.asObservable();
 		this.updateLocalParticipant();
 	}
 
-	isMyCameraEnabled(): boolean {
-		return this.localParticipant.isCameraEnabled();
+	isMyCameraActive(): boolean {
+		return this.localParticipant.isCameraActive();
 	}
 
-	isMyScreenEnabled(): boolean {
-		return this.localParticipant.isScreenEnabled();
+	isMyScreenActive(): boolean {
+		return this.localParticipant.isScreenActive();
 	}
 
-	isOnlyMyCameraEnabled(): boolean {
-		return this.isMyCameraEnabled() && !this.isMyScreenEnabled();
+	isOnlyMyCameraActive(): boolean {
+		return this.isMyCameraActive() && !this.isMyScreenActive();
 	}
 
-	isOnlyMyScreenEnabled(): boolean {
-		return this.isMyScreenEnabled() && !this.isMyCameraEnabled();
+	isOnlyMyScreenActive(): boolean {
+		return this.isMyScreenActive() && !this.isMyCameraActive();
 	}
 
-	areBothEnabled(): boolean {
-		return this.isMyCameraEnabled() && this.isMyScreenEnabled();
+	haveICameraAndScreenActive(): boolean {
+		return this.isMyCameraActive() && this.isMyScreenActive();
 	}
 
 	hasCameraVideoActive(): boolean {
@@ -190,13 +173,8 @@ export class ParticipantService {
 		return this.localParticipant.isScreenAudioActive();
 	}
 
-	protected updateLocalParticipant() {
-		// Cloning localParticipant object for not applying changes on the global variable
-		let participantsWithConnectionAvailable: ParticipantAbstractModel = Object.assign(this.newParticipant(), this.localParticipant);
-		const availableConnections = participantsWithConnectionAvailable.getAvailableConnections();
-		const availableConnectionsMap = new Map(availableConnections.map((conn) => [conn.type, conn]));
-		participantsWithConnectionAvailable.connections = availableConnectionsMap;
-		this._localParticipant.next(participantsWithConnectionAvailable);
+	updateLocalParticipant() {
+		this._localParticipant.next(Object.assign(Object.create(this.localParticipant),this.localParticipant));
 	}
 
 	/**
@@ -205,32 +183,48 @@ export class ParticipantService {
 
 	addRemoteConnection(connectionId:string, data: string, subscriber: Subscriber) {
 
-		const steramModel: StreamModel = {
-			local: false,
-			type: this.getTypeConnectionData(data),
-			videoEnlarged: false,
+		const type: VideoType = this.getTypeConnectionData(data);
+		const streamModel: StreamModel = {
+			type,
+			videoEnlarged: type === VideoType.SCREEN,
 			streamManager: subscriber,
-			nickname: this.getNicknameFromConnectionData(data),
-			connected: true,
+			connected:  true,
 			connectionId
 		};
 
-		const participantId = this.getParticipantIdFromData(data);
+		// Avoiding create a new participant if participantId param is not exist in connection data
+		// participant Id is necessary for allowing to have multiple connection in one participant
+		const participantId = this.getParticipantIdFromData(data) || connectionId;
+
 		const participantAdded = this.getRemoteParticipantById(participantId);
 		if (!!participantAdded) {
 			this.log.d('Adding connection to existing participant: ', participantId);
-			if(participantAdded.hasConnectionType(steramModel.type)) {
+			if(participantAdded.hasConnectionType(streamModel.type)) {
 				this.log.d('Participant has publisher, updating it');
-				participantAdded.setPublisher(steramModel.type, subscriber);
+				participantAdded.setPublisher(streamModel.type, subscriber);
 			} else {
 				this.log.d('Participant has not publisher, adding it');
-				participantAdded.addConnection(steramModel);
+				if(streamModel.type === VideoType.SCREEN) {
+					this.resetRemoteStreamsToNormalSize();
+					this.resetMyStreamsToNormalSize();
+				}
+				participantAdded.addConnection(streamModel);
 			}
 		} else {
-			this.log.d('Creating new participant with id: ', participantId);
-			const remoteParticipant = this.newParticipant(steramModel, participantId);
+			this.log.w('Creating new participant with id: ', participantId);
+			const props: ParticipantProperties = {
+				nickname: this.getNicknameFromConnectionData(data),
+				local: false,
+				id: participantId
+			}
+			const remoteParticipant = this.newParticipant(props, streamModel);
 			this.remoteParticipants.push(remoteParticipant);
 		}
+		this.updateRemoteParticipants();
+	}
+
+	resetRemoteStreamsToNormalSize() {
+		this.remoteParticipants.forEach(participant => participant.setAllVideoEnlarged(false));
 		this.updateRemoteParticipants();
 	}
 
@@ -244,16 +238,28 @@ export class ParticipantService {
 		}
 
 		if (participant) {
-			participant.removeConnection(connectionId);
+			const removeStream: StreamModel = participant.removeConnection(connectionId);
 			//TODO: Timeout of X seconds?? Its possible sometimes the connections map was empty but must not be deleted
-			if (participant.connections.size === 0) {
+			if (participant.streams.size === 0) {
 				// Remove participants without connections
 				this.remoteParticipants = this.remoteParticipants.filter((p) => p !== participant);
 			}
+			if(removeStream.type === VideoType.SCREEN){
+				const remoteScreens = this.remoteParticipants.filter(p => p.isScreenActive());
+				if(remoteScreens.length > 0){
+					// Enlarging the last screen connection active
+					const lastScreenActive = remoteScreens[remoteScreens.length -1];
+					lastScreenActive.setScreenEnlarged(true);
+				} else if(this.localParticipant.isScreenActive()) {
+					// Enlarging my screen if thereare not any remote screen active
+					this.localParticipant.setScreenEnlarged(true);
+				}
+			}
+
 			this.updateRemoteParticipants();
 		}
 	}
-	protected getRemoteParticipantByConnectionId(connectionId: string): ParticipantAbstractModel {
+	getRemoteParticipantByConnectionId(connectionId: string): ParticipantAbstractModel {
 		return this.remoteParticipants.find((p) => p.hasConnectionId(connectionId));
 	}
 
@@ -264,13 +270,9 @@ export class ParticipantService {
 		return this.remoteParticipants.some((p) => p.someHasVideoEnlarged());
 	}
 
-	toggleUserZoom(connectionId: string) {
+	toggleRemoteVideoEnlarged(connectionId: string) {
 		const p = this.getRemoteParticipantByConnectionId(connectionId);
 		p.toggleVideoEnlarged(connectionId);
-	}
-
-	resetRemotesZoom() {
-		this.remoteParticipants.forEach((u) => u.setAllVideoEnlarged(false));
 	}
 
 	getNicknameFromConnectionData(data: string): string {
@@ -279,6 +281,18 @@ export class ParticipantService {
 		} catch (error) {
 			return 'OpenVidu_User';
 		}
+	}
+
+	setRemoteNickname(connectionId: string, nickname: string) {
+		const participant = this.getRemoteParticipantByConnectionId(connectionId);
+		if (participant) {
+			participant.setNickname(nickname);
+			// this.updateRemoteParticipants();
+		}
+	}
+
+	updateRemoteParticipants() {
+		this._remoteParticipants.next([...this.remoteParticipants]);
 	}
 
 	protected getTypeConnectionData(data: string): VideoType {
@@ -297,10 +311,11 @@ export class ParticipantService {
 		}
 	}
 
-	protected updateRemoteParticipants() {
-		this._remoteParticipants.next(this.remoteParticipants);
-	}
-	protected newParticipant(steramModel?: StreamModel, participantId?: string) {
-		return new ParticipantModel(steramModel, participantId);
+	protected newParticipant(props: ParticipantProperties, streamModel?: StreamModel) {
+
+		if(this.openviduAngularConfigSrv.hasParticipantFactory()){
+			return this.openviduAngularConfigSrv.getParticipantFactory().apply(this, [props, streamModel]);
+		}
+		return new ParticipantModel(props, streamModel);
 	}
 }

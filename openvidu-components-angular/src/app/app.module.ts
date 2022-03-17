@@ -17,7 +17,7 @@ import { LayoutTestComponent } from './components/layout-test/layout-test.compon
 import { StreamTestComponent } from './components/stream-test/stream-test.component';
 
 import {
-	OpenviduAngularModule,
+	OpenViduAngularModule,
 	UserSettingsComponent,
 	ChatPanelComponent,
 	ToolbarComponent,
@@ -41,7 +41,7 @@ import { MatButtonModule } from '@angular/material/button';
 		BrowserModule,
 		MatButtonModule,
 		BrowserAnimationsModule,
-		OpenviduAngularModule.forRoot(environment),
+		OpenViduAngularModule.forRoot(environment),
 		AppRoutingModule // Order is important, AppRoutingModule must be the last import for useHash working
 	],
 	providers: [VideoconferenceComponent, UserSettingsComponent, ToolbarComponent, ChatPanelComponent, SessionComponent, LayoutComponent],

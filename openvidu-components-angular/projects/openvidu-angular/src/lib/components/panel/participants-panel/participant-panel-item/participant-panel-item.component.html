@@ -1,0 +1,28 @@
+<mat-list>
+	<mat-list-item>
+		<mat-icon matListAvatar class="participant-avatar">person</mat-icon>
+		<h3 matLine class="participant-nickname">{{ _participant.nickname }}</h3>
+		<p matLine class="participant-subtitle">{{ _participant | streamTypesEnabled }}</p>
+		<!-- <p matLine>
+			<span class="participant-subtitle"></span>
+		</p> -->
+
+		<div class="participant-action-buttons">
+			<button
+				mat-icon-button
+				id="mute-btn"
+				*ngIf="!_participant.local && showMuteButton"
+				[class.warn-btn]="_participant.isMutedForcibly"
+				(click)="toggleMuteForcibly()"
+			>
+				<mat-icon *ngIf="!_participant.isMutedForcibly">volume_up</mat-icon>
+				<mat-icon *ngIf="_participant.isMutedForcibly">volume_off</mat-icon>
+			</button>
+
+			<!-- External item elements  -->
+			<ng-container *ngIf="participantPanelItemElementsTemplate">
+				<ng-container *ngTemplateOutlet="participantPanelItemElementsTemplate"></ng-container>
+			</ng-container>
+		</div>
+	</mat-list-item>
+</mat-list>

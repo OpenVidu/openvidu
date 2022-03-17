@@ -1,4 +1,4 @@
-<div class="participants-container">
+<div class="participants-container" id="participants-container">
 	<div class="header-container">
 		<h3>Participants</h3>
 		<button mat-icon-button matTooltip="Close" (click)="close()">
@@ -8,26 +8,16 @@
 
 	<div class="scrollable">
 
-		<div class="local-participant-container">
-			<ov-participant-item
-				[name]="localParticipant | nickname"
-				[connections]="localParticipant | connectionsEnabled"
-				[showDividerLine]="true"
-			></ov-participant-item>
+		<div class="local-participant-container" *ngIf="localParticipant">
+			<ng-container *ngTemplateOutlet="participantPanelItemTemplate; context: { $implicit: localParticipant }"></ng-container>
+			<mat-divider *ngIf="true"></mat-divider>
 		</div>
 
-		<!-- <div class="message-container">
-			<p *ngIf="remoteParticipants.length === 0" class="text-info">No remote participants connected</p>
-			<p *ngIf="remoteParticipants.length > 0" class="text-info">{{ remoteParticipants.length }} remote participants connected</p>
-		</div> -->
+		<div class="remote-participants-container" id="remote-participants-container" *ngIf="remoteParticipants.length > 0">
 
-		<div class="remote-participants-container" *ngIf="remoteParticipants.length > 0">
-			<ov-participant-item
-				*ngFor="let p of remoteParticipants; let lastItem = last"
-				[name]="p | nickname"
-				[connections]="p | connectionsEnabled"
-				[showDividerLine]="!lastItem"
-			></ov-participant-item>
+			<div *ngFor="let participant of this.remoteParticipants" id="remote-participant-item">
+				<ng-container *ngTemplateOutlet="participantPanelItemTemplate; context: { $implicit: participant }"></ng-container>
+			</div>
 		</div>
 
 	</div>

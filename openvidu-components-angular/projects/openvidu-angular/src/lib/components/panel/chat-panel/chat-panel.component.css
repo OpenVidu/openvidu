@@ -1,9 +1,9 @@
 #chat-container {
 	margin: 20px;
 	background-color: var(--ov-light-color);
-	border-radius: 5px;
-	height: -webkit-fill-available;
-	height: -moz-available;
+	border-radius: var(--ov-panel-radius);
+	max-height: calc(100% - 40px);
+	min-height: calc(100% - 40px);
 }
 
 .header-container {
@@ -19,6 +19,7 @@
 
 .header-container button {
 	margin-left: auto;
+	border-radius: var(--ov-buttons-radius);
 }
 
 .text-container{
@@ -43,7 +44,7 @@
 	background-color: var(--ov-light-dark-color);
 	padding: 10px;
 	margin: 10px;
-	border-radius: 5px;
+	border-radius: var(--ov-panel-radius);
 }
 
 .input-container textarea {
@@ -89,14 +90,17 @@
 
   .msg-content {
 	position: relative;
-	border-radius: 5px;
+	border-radius: var(--ov-panel-radius);
 	padding: 8px;
 	color: #000000;
 	width: auto;
 	max-width: 95%;
 	font-size: 13px;
 	word-break: break-all;
+  }
 
+  #send-btn {
+	border-radius: var(--ov-buttons-radius);
   }
 
 

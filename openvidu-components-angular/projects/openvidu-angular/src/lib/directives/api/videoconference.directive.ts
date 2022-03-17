@@ -1,0 +1,112 @@
+import { Directive, Input, ElementRef, OnDestroy, OnInit } from '@angular/core';
+import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
+
+@Directive({
+	selector: 'ov-videoconference[minimal]'
+})
+export class MinimalDirective implements OnDestroy {
+	@Input() set minimal(value: boolean) {
+		this.update(value);
+	}
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.update(false);
+	}
+	update(value: boolean) {
+		if (this.libService.minimal.getValue() !== value) {
+			this.libService.minimal.next(value);
+		}
+	}
+}
+
+@Directive({
+	selector: 'ov-videoconference[participantName]'
+})
+export class ParticipantNameDirective implements OnInit {
+	// Avoiding update participantName dynamically.
+	// The participantName must be updated from UI
+	@Input() participantName: string;
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+	ngOnInit(): void {
+		this.update(this.participantName);
+	}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.update('');
+	}
+	update(value: string) {
+		this.libService.participantName.next(value);
+	}
+}
+
+@Directive({
+	selector: 'ov-videoconference[prejoin]'
+})
+export class PrejoinDirective implements OnDestroy {
+	@Input() set prejoin(value: boolean) {
+		this.update(value);
+	}
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.update(true);
+	}
+	update(value: boolean) {
+		if (this.libService.prejoin.getValue() !== value) {
+			this.libService.prejoin.next(value);
+		}
+	}
+}
+
+@Directive({
+	selector: 'ov-videoconference[videoMuted]'
+})
+export class VideoMutedDirective implements OnDestroy {
+	@Input() set videoMuted(value: boolean) {
+		this.update(value);
+	}
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.update(false);
+	}
+	update(value: boolean) {
+		if (this.libService.videoMuted.getValue() !== value) {
+			this.libService.videoMuted.next(value);
+		}
+	}
+}
+
+@Directive({
+	selector: 'ov-videoconference[audioMuted]'
+})
+export class AudioMutedDirective implements OnDestroy {
+	@Input() set audioMuted(value: boolean) {
+		this.update(value);
+	}
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.update(false);
+	}
+	update(value: boolean) {
+		if (this.libService.audioMuted.getValue() !== value) {
+			this.libService.audioMuted.next(value);
+		}
+	}
+}

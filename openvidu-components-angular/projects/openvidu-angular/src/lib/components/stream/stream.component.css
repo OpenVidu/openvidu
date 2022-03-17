@@ -1,8 +1,15 @@
+   /* Fixes layout bug. The OT_root is created with the entire layout width and it has a weird UX behaviour */
+   .no-size {
+	height: 0px !important;
+	width: 0px !important;
+  }
+
+
 .nickname {
 	padding: 0px;
 	position: absolute;
 	z-index: 999;
-	border-radius: 5px;
+	border-radius: var(--ov-panel-radius);
 	color: #ffffff;
 	font-family: 'Roboto','RobotoDraft',Helvetica,Arial,sans-serif;
   }
@@ -11,12 +18,13 @@
 	padding: 5px;
 	color: #ffffff;
 	font-weight: bold;
-	border-radius: 2px;
+	border-radius: var(--ov-panel-radius);
   }
 
-  #dialogNickname {
+  #nickname-input-container {
 	background-color:  #0000005e;
-	border-radius: 3px;
+	border-radius: var(--ov-panel-radius);
+
   }
 
   #closeButton {
@@ -28,6 +36,13 @@
 
   #nicknameForm {
 	padding: 10px;
+  }
+
+  #audio-wave-container {
+	position: absolute;
+    right: 0;
+    z-index: 1;
+    padding: 5px;
   }
 
   .fullscreen {
@@ -51,7 +66,7 @@
 	font-size: 100%;
   }
 
-  .status-icons, .videoButtons {
+  .status-icons, #settings-container {
 	position: absolute;
 	bottom: 0;
 	z-index: 10;
@@ -62,30 +77,31 @@
 	left: 0;
   }
 
-  .status-icons button, .videoButtons button {
+  .status-icons button, #settings-container button {
 	color: #ffffff;
 	width: 26px;
 	height: 26px;
 	margin: 5px;
+	border-radius: var(--ov-buttons-radius);
   }
 
   .status-icons button {
 	background-color: var(--ov-warn-color);
   }
 
-  .status-icons .mat-icon-button, .videoButtons .mat-icon-button{
+  .status-icons .mat-icon-button, #settings-container .mat-icon-button{
 	line-height: 0px;
   }
 
-  .status-icons mat-icon, .videoButtons mat-icon {
+  .status-icons mat-icon, #settings-container mat-icon {
 	font-size: 18px;
   }
 
-  .videoButtons{
+  #settings-container{
 	right: 0;
   }
 
-  .videoButtons button {
+  #settings-container button {
 	background-color: var(--ov-dark-color);
   }
 
@@ -96,7 +112,7 @@
 	position: absolute;
 	overflow: hidden;
 	background-color: #000000;
-	border-radius: 5px;
+	border-radius: var(--ov-video-radius);
   }
 
   mat-error,

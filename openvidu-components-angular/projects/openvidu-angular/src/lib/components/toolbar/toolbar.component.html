@@ -1,73 +1,68 @@
 <mat-toolbar id="toolbar" role="heading" fxLayout fxLayoutAlign="center" fxLayoutGap="10px">
 	<div fxFlex="20%" fxLayoutAlign="start center">
-		<div id="img-container">
-			<img id="company-logo" alt="OpenVidu Logo" [src]="logoUrl" />
-			<span id="session-title" *ngIf="session && session.sessionId">{{ session.sessionId }}</span>
+		<div id="info-container">
+			<img *ngIf="!isMinimal && showLogo" id="branding-logo" src="assets/images/logo.png" ovLogo />
+			<span id="session-name" *ngIf="!isMinimal && session && session.sessionId && showSessionName">{{ session.sessionId }}</span>
 		</div>
 	</div>
 	<div fxFlex="60%" fxFlexOrder="2" fxLayoutAlign="center center" id="media-buttons-container">
 		<!-- Microphone button -->
 		<button
-			id="navMicrophoneButton"
+			id="mic-btn"
 			mat-icon-button
 			(click)="toggleMicrophone()"
-			[disabled]="isConnectionLost"
-			*ngIf="hasAudioDevices"
-			[class.warn-btn]="!isWebcamAudioEnabled"
+			[disabled]="isConnectionLost || !hasAudioDevices"
+			[class.warn-btn]="!isWebcamAudioActive"
 		>
-			<mat-icon *ngIf="isWebcamAudioEnabled" matTooltip="Mute your audio">mic</mat-icon>
-			<mat-icon *ngIf="!isWebcamAudioEnabled" matTooltip="Unmute your audio">mic_off</mat-icon>
+			<mat-icon *ngIf="isWebcamAudioActive" matTooltip="Mute your audio" id="mic">mic</mat-icon>
+			<mat-icon *ngIf="!isWebcamAudioActive" matTooltip="Unmute your audio" id="mic_off">mic_off</mat-icon>
 		</button>
 
 		<!-- Camera button -->
 		<button
-			id="navCameraButton"
+			id="camera-btn"
 			mat-icon-button
 			(click)="toggleCamera()"
-			[disabled]="isConnectionLost"
-			*ngIf="hasVideoDevices"
-			[class.warn-btn]="!isWebcamVideoEnabled"
+			[disabled]="isConnectionLost || !hasVideoDevices"
+			[class.warn-btn]="!isWebcamVideoActive"
 		>
-			<mat-icon *ngIf="isWebcamVideoEnabled" matTooltip="Mute your cam">videocam</mat-icon>
-			<mat-icon *ngIf="!isWebcamVideoEnabled" matTooltip="Unmute your cam">videocam_off</mat-icon>
+			<mat-icon *ngIf="isWebcamVideoActive" matTooltip="Mute your cam" id="videocam">videocam</mat-icon>
+			<mat-icon *ngIf="!isWebcamVideoActive" matTooltip="Unmute your cam" id="videocam_off">videocam_off</mat-icon>
 		</button>
 
 		<!-- Screenshare button -->
 		<button
-			id="navScreenButton"
 			mat-icon-button
+			*ngIf="!isMinimal && showScreenshareButton"
+			id="screenshare-btn"
 			(click)="toggleScreenShare()"
 			[disabled]="isConnectionLost"
-			[class.active-btn]="isScreenShareEnabled"
+			[class.active-btn]="isScreenShareActive"
 		>
-			<mat-icon *ngIf="!isScreenShareEnabled" matTooltip="Enable screen share">screen_share</mat-icon>
-			<mat-icon *ngIf="isScreenShareEnabled" matTooltip="Disable screen share">screen_share</mat-icon>
+			<mat-icon *ngIf="!isScreenShareActive" matTooltip="Enable screen share">screen_share</mat-icon>
+			<mat-icon *ngIf="isScreenShareActive" matTooltip="Disable screen share">screen_share</mat-icon>
 		</button>
-
-		<!-- Replace Screen track button -->
-		<!-- <button
-			id="navReplaceScreenButton"
-			mat-icon-button
-			*ngIf="isScreenShareEnabled"
-			(click)="replaceScreenTrack()"
-			[disabled]="isConnectionLost"
-		>
-			<mat-icon matTooltip="Replace screen track">picture_in_picture</mat-icon>
-		</button> -->
 
 		<!-- Fullscreen button -->
-		<button mat-icon-button (click)="toggleFullscreen()" [disabled]="isConnectionLost" [class.active-btn]="isFullscreenEnabled">
-			<mat-icon *ngIf="isFullscreenEnabled" matTooltip="Exit Fullscreen">fullscreen_exit</mat-icon>
-			<mat-icon *ngIf="!isFullscreenEnabled" matTooltip="Fullscreen">fullscreen</mat-icon>
+		<button
+			mat-icon-button
+			id="fullscreen-btn"
+			*ngIf="!isMinimal && showFullscreenButton"
+			(click)="toggleFullscreen()"
+			[disabled]="isConnectionLost"
+			[class.active-btn]="isFullscreenActive"
+		>
+			<mat-icon *ngIf="isFullscreenActive" matTooltip="Exit Fullscreen">fullscreen_exit</mat-icon>
+			<mat-icon *ngIf="!isFullscreenActive" matTooltip="Fullscreen">fullscreen</mat-icon>
 		</button>
 
-		<!-- Custom centered buttons -->
-		<ng-container *ngIf="centeredButtonsTemplate">
-			<ng-container *ngTemplateOutlet="centeredButtonsTemplate"></ng-container>
+		<!-- External additional buttons  -->
+		<ng-container *ngIf="toolbarAdditionalButtonsTemplate">
+			<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate"></ng-container>
 		</ng-container>
 
 		<!-- Leave session button -->
-		<button mat-icon-button (click)="leaveSession()" id="leave-btn">
+		<button mat-icon-button *ngIf="showLeaveButton" (click)="leaveSession()" id="leave-btn">
 			<mat-icon matTooltip="Leave the session">call_end</mat-icon>
 		</button>
 	</div>
@@ -75,23 +70,22 @@
 		<!-- Default participants button -->
 		<button
 			mat-icon-button
+			id="participants-panel-btn"
+			*ngIf="!isMinimal && showParticipantsPanelButton"
 			matTooltip="Show articipants"
-			(click)="toggleMenu('participants')"
+			(click)="toggleParticipantsPanel()"
 			[disabled]="isConnectionLost"
 			[class.active-btn]="isParticipantsOpened"
 		>
 			<mat-icon>people</mat-icon>
 		</button>
 
-		<div #customMenuButton>
-			<ng-content select="[menu-button]"></ng-content>
-		</div>
-
 		<!-- Default chat button -->
 		<button
 			mat-icon-button
-			*ngIf="!customMenuButton.innerHTML"
-			(click)="toggleMenu('chat')"
+			id="chat-panel-btn"
+			*ngIf="!isMinimal && showChatPanelButton"
+			(click)="toggleChatPanel()"
 			[disabled]="isConnectionLost"
 			[class.active-btn]="isChatOpened"
 		>

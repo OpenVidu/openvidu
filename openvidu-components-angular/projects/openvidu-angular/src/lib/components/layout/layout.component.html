@@ -1,22 +1,18 @@
-<div id="layout" class="bounds">
+<div id="layout" class="layout">
 	<div
 		class="OT_root OT_publisher"
-		id="localUser"
-		*ngFor="let connection of localParticipant | connections"
-		[ngClass]="{ OV_small: !connection.streamManager?.stream?.videoActive }"
+		*ngFor="let stream of localParticipant | streams"
+		[ngClass]="{ OV_big: stream.videoEnlarged }"
 	>
-		<ng-template #localStream [ngComponentOutlet]="_localStreamComponent" [ndcDynamicInputs]="{ participant: connection }">
-		</ng-template>
+		<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: stream }"></ng-container>
 	</div>
 
 	<div
-		*ngFor="let connection of remoteParticipants | connections"
+		*ngFor="let stream of remoteParticipants | streams"
 		class="OT_root OT_publisher"
 		id="remote-participant"
-		[ngClass]="{ OV_small: !connection.streamManager?.stream?.videoActive }"
+		[ngClass]="{ OV_big: stream.videoEnlarged }"
 	>
-		<!-- Dynamic ov-stream component injected -->
-		<ng-template #remoteStream [ngComponentOutlet]="_remoteStreamComponent" [ndcDynamicInputs]="{ participant: connection }">
-		</ng-template>
+		<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: stream }"></ng-container>
 	</div>
 </div>

@@ -1,43 +1,41 @@
-import { Component, OnDestroy, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, OnInit, TemplateRef } from '@angular/core';
 import { skip, Subscription } from 'rxjs';
-import { LibraryComponents } from '../../config/lib.config';
+import { ChatPanelDirective, ParticipantsPanelDirective } from '../../directives/template/openvidu-angular.directive';
 import { MenuType } from '../../models/menu.model';
-import { LibraryConfigService } from '../../services/library-config/library-config.service';
 import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.service';
 
 @Component({
 	selector: 'ov-panel',
 	templateUrl: './panel.component.html',
-	styleUrls: ['./panel.component.css']
+	styleUrls: ['./panel.component.css'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PanelComponent implements OnInit, OnDestroy {
+export class PanelComponent implements OnInit {
+	@ContentChild('participantsPanel', { read: TemplateRef }) participantsPanelTemplate: TemplateRef<any>;
+	@ContentChild('chatPanel', { read: TemplateRef }) chatPanelTemplate: TemplateRef<any>;
+
+	@ContentChild(ParticipantsPanelDirective)
+	set externalParticipantPanel(externalParticipantsPanel: ParticipantsPanelDirective) {
+		// This directive will has value only when PARTICIPANTS PANEL component tagged with '*ovParticipantsPanel'
+		// is inside of the PANEL component tagged with '*ovPanel'
+		if (externalParticipantsPanel) {
+			this.participantsPanelTemplate = externalParticipantsPanel.template;
+		}
+	}
+
+	@ContentChild(ChatPanelDirective)
+	set externalChatPanel(externalChatPanel: ChatPanelDirective) {
+		// This directive will has value only when CHAT PANEL component tagged with '*ovChatPanel'
+		// is inside of the PANEL component tagged with '*ovPanel'
+		if (externalChatPanel) {
+			this.chatPanelTemplate = externalChatPanel.template;
+		}
+	}
+
 	isParticipantsPanelOpened: boolean;
 	isChatPanelOpened: boolean;
 	menuSubscription: Subscription;
-
-	@ViewChild('chat', { static: false, read: ViewContainerRef })
-	set chat(reference: ViewContainerRef) {
-		setTimeout(() => {
-			if (reference) {
-				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.CHAT_PANEL);
-				reference.clear();
-				reference.createComponent(component);
-			}
-		}, 0);
-	}
-
-	@ViewChild('participants', { static: false, read: ViewContainerRef })
-	set participants(reference: ViewContainerRef) {
-		setTimeout(() => {
-			if (reference) {
-				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.PARTICIPANTS_PANEL);
-				reference.clear();
-				reference.createComponent(component);
-			}
-		}, 0);
-	}
-
-	constructor(protected libraryConfigSrv: LibraryConfigService, protected menuService: SidenavMenuService) {}
+	constructor(protected menuService: SidenavMenuService, private cd: ChangeDetectorRef) {}
 
 	ngOnInit(): void {
 		this.subscribeToPanelToggling();
@@ -46,6 +44,7 @@ export class PanelComponent implements OnInit, OnDestroy {
 		this.menuSubscription = this.menuService.menuOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
 			this.isChatPanelOpened = ev.opened && ev.type === MenuType.CHAT;
 			this.isParticipantsPanelOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
+			this.cd.markForCheck();
 		});
 	}
 

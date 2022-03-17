@@ -19,20 +19,23 @@
 				<div class="row align-items-center">
 					<div class="col-sm-6 col-md-6 col-lg-6 leftSection">
 						<div class="spinner-container" *ngIf="isLoading">
-							<mat-spinner></mat-spinner>
+							<mat-spinner [diameter]="50"></mat-spinner>
 						</div>
 						<div class="videoContainer" *ngIf="!isLoading">
-							<div *ngFor="let connection of localParticipant | connections">
+							<div *ngFor="let stream of localParticipant | streams">
 								<!-- Only webcam video will be shown if webcamera is available -->
 								<ov-video
-									*ngIf="(connection.type === 'CAMERA' && hasVideoDevices) || connection.type === 'SCREEN'"
-									[streamManager]="connection.streamManager"
-									[ngClass]="{ ovVideoSmall: localParticipant.connections.size > 1 && connection.type === 'CAMERA' }"
+									*ngIf="(stream.type === 'CAMERA' && hasVideoDevices) || stream.type === 'SCREEN'"
+									[streamManager]="stream.streamManager"
+									[ngClass]="{ ovVideoSmall: localParticipant.streams.size > 1 && stream.type === 'CAMERA' }"
 								></ov-video>
-								<div class="cameraMessageContainer" *ngIf="connection.type === 'CAMERA' && !hasVideoDevices">
+								<div class="cameraMessageContainer" *ngIf="stream.type === 'CAMERA' && !hasVideoDevices">
 									<span *ngIf="!hasVideoDevices && !hasAudioDevices">Oops! Camera and microphone are not available</span>
 									<span *ngIf="!hasVideoDevices && hasAudioDevices">Oops! Camera is not available</span>
 									<span *ngIf="hasVideoDevices && !hasAudioDevices">Oops! Microphone is not available</span>
+								</div>
+								<div id="audio-wave-container" *ngIf="stream.type === 'CAMERA'">
+									<ov-audio-wave [streamManager]="stream.streamManager"></ov-audio-wave>
 								</div>
 							</div>
 						</div>
@@ -48,19 +51,16 @@
 										(click)="toggleCam()"
 										class="deviceButton"
 										id="configCardCameraButton"
-										[class.warn-btn]="!isVideoActive"
+										[class.warn-btn]="isVideoMuted"
 									>
-										<mat-icon *ngIf="isVideoActive" matTooltip="Camera Enabled">videocam</mat-icon>
-										<mat-icon *ngIf="!isVideoActive" matTooltip="Camera Disabled">videocam_off</mat-icon>
+										<mat-icon *ngIf="!isVideoMuted" matTooltip="Camera Enabled">videocam</mat-icon>
+										<mat-icon *ngIf="isVideoMuted" matTooltip="Camera Disabled">videocam_off</mat-icon>
 									</button>
 								</div>
 								<div class="two" fxFlex="80" fxLayoutAlign="center center">
 									<mat-form-field class="alternate-theme">
-										<mat-select
-											placeholder="Camera Options"
-											[ngModel]="isVideoActive && !!cameraSelected ? cameraSelected.device : 'None'"
-											(selectionChange)="onCameraSelected($event)"
-										>
+										<mat-label>Camera Options</mat-label>
+										<mat-select [disabled]="isVideoMuted" (selectionChange)="onCameraSelected($event)">
 											<mat-option *ngFor="let camera of cameras" [value]="camera.device">
 												{{ camera.label }}
 											</mat-option>
@@ -78,19 +78,16 @@
 										(click)="toggleMic()"
 										class="deviceButton"
 										id="configCardMicrophoneButton"
-										[class.warn-btn]="!isAudioActive"
+										[class.warn-btn]="isAudioMuted"
 									>
-										<mat-icon *ngIf="isAudioActive" matTooltip="Microphone Enabled">mic</mat-icon>
-										<mat-icon *ngIf="!isAudioActive" matTooltip="Microphone Disabled">mic_off</mat-icon>
+										<mat-icon *ngIf="!isAudioMuted" matTooltip="Microphone Enabled">mic</mat-icon>
+										<mat-icon *ngIf="isAudioMuted" matTooltip="Microphone Disabled">mic_off</mat-icon>
 									</button>
 								</div>
 								<div class="two" fxFlex="80" fxLayoutAlign="center center">
 									<mat-form-field class="alternate-theme">
-										<mat-select
-											placeholder="Microphone Options"
-											[ngModel]="isAudioActive && microphoneSelected ? microphoneSelected.device : 'None'"
-											(selectionChange)="onMicrophoneSelected($event)"
-										>
+										<mat-label>Microphone Options</mat-label>
+										<mat-select [disabled]="isAudioMuted" (selectionChange)="onMicrophoneSelected($event)">
 											<mat-option *ngFor="let microphone of microphones" [value]="microphone.device">
 												{{ microphone.label }}
 											</mat-option>

@@ -5,12 +5,13 @@ const VERSION = require("./package.json").version;
 module.exports.buildWebcomponent = async () => {
 	console.log("Building OpenVidu Web Component (" + VERSION + ")");
 	const tutorialWcPath = "../../openvidu-tutorials/openvidu-webcomponent/web";
-	const e2eWcPath = "../webcomponent-test-e2e/web";
+	const e2eWcPath = "./webcomponent-test-e2e/web";
 
 	try {
 		await buildElement();
 		await copyFiles(tutorialWcPath);
 		await copyFiles(e2eWcPath);
+		await renameWebComponentTestName(e2eWcPath);
 
 		console.log("OpenVidu Web Component (" + VERSION + ") built");
 	} catch (error) {
@@ -20,14 +21,9 @@ module.exports.buildWebcomponent = async () => {
 
 async function buildElement() {
 	const files = [
-		// "./dist/openvidu-call/runtime.js",
-		// "./dist/openvidu-call/polyfills.js",
-		// "./dist/openvidu-call/scripts.js",
-		// "./dist/openvidu-call/main.js",
 		"./dist/openvidu-webcomponent/runtime.js",
 		"./dist/openvidu-webcomponent/main.js",
-		"./dist/openvidu-webcomponent/polyfills.js",
-		// "./dist/openvidu-webcomponent/scripts.js",
+		"./dist/openvidu-webcomponent/polyfills.js"
 	];
 
 	try {
@@ -48,6 +44,11 @@ async function buildElement() {
 		console.error("Error executing build function in webcomponent-builds.js");
 		throw err;
 	}
+}
+
+function renameWebComponentTestName(dir) {
+	fs.renameSync(`${dir}/openvidu-webcomponent-${VERSION}.js`, `${dir}/openvidu-webcomponent-dev.js`);
+	fs.renameSync(`${dir}/openvidu-webcomponent-${VERSION}.css`, `${dir}/openvidu-webcomponent-dev.css`);
 }
 
 async function copyFiles(destination) {
