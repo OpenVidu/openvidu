@@ -284,7 +284,7 @@ Resources:
               owner: "root"
               group: "root"
     Properties:
-      ImageId: !FindInMap [OVAMIMAP, !Ref 'AWS::Region', AMI]
+      ImageId: !GetAtt LambdaCopyAmiInvoke.ImageId
       InstanceType: !Ref InstanceType
       SecurityGroups:
         - !Ref WebServerSecurityGroup
@@ -418,6 +418,119 @@ Resources:
           FromPort: 40000
           ToPort: 57000
           CidrIpv6: ::/0
+
+  ##########
+  # Lambda to Copy original AMI to the deployment region
+  ##########
+  LambdaCopyAmiRole:
+    Type: 'AWS::IAM::Role'
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: !Join ['', [ !Ref AWS::StackName, '-lambda-policy-ami-copy'] ]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ec2:DescribeImages'
+                  - 'ec2:CopyImage'
+                Resource: '*'
+      RoleName: !Join ['', [ !Ref AWS::StackName, '-lambda-role-ami-copy'] ]
+
+  LambdaCopyAmi:
+    Type: AWS::Lambda::Function
+    DeletionPolicy: Delete
+    Properties:
+      FunctionName: !Join ['', [ !Ref AWS::StackName, '-lambda-ami-copy'] ]
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          from botocore.config import Config
+
+          def handler(event, context):
+              try:
+                  if (event['RequestType'] == 'Create'):
+                      copy_ami(event, context)
+                      return
+                  else:
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+              except Exception:
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {})
+
+          def copy_ami(event, context):
+              new_images=[]
+              cfn_output = {}
+              source_image_id = event['ResourceProperties']['AmiSourceId']
+              source_region = event['ResourceProperties']['AmiSourceRegion']
+              deployment_region = event['ResourceProperties']['DeploymentRegion']
+
+              # Clients init
+              ec2_client = boto3.client('ec2', config = Config(region_name=deployment_region))
+              ec2_client_ov = boto3.client('ec2', config = Config(region_name=source_region))
+              img_exists_waiter= ec2_client.get_waiter('image_exists')
+              img_avail_waiter = ec2_client.get_waiter('image_available')
+
+              # Get original ami name
+              public_ami_filter = [{ 'Name': 'image-id', 'Values': [ source_image_id ] }]
+
+              response = ec2_client_ov.describe_images(Filters=public_ami_filter)
+              new_ami_name= "[ OpenVidu AMI Copy ] - " + response['Images'][0]['Name']
+
+              own_ami_filter = [{ 'Name': 'name', 'Values': [new_ami_name] }]
+              response = ec2_client.describe_images(Filters=own_ami_filter)
+              if (len(response['Images']) == 1):
+                  # If AMI exists, don't copy
+                  new_images.append(response['Images'][0]['ImageId'])
+                  cfn_output['ImageId'] = response['Images'][0]['ImageId']
+              else:
+                  # If AMI does not exist, copy
+                  response = ec2_client.copy_image(
+                      SourceImageId=source_image_id,
+                      SourceRegion=source_region,
+                      Name=new_ami_name
+                  )
+                  new_images.append(response['ImageId'])
+                  cfn_output['ImageId'] = response['ImageId']
+
+              # Wait images to be available
+              waiter_config = {'Delay': 15, 'MaxAttempts': 59
+              }
+              # Wait image to exist
+              response = img_exists_waiter.wait(ImageIds=new_images, WaiterConfig=waiter_config
+              )
+              # Wait image to be available
+              response = img_avail_waiter.wait(ImageIds=new_images, WaiterConfig=waiter_config)
+
+              # Return AMI
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, cfn_output)
+
+      Handler: index.handler
+      Role:
+        !GetAtt LambdaCopyAmiRole.Arn
+      Runtime: python3.7
+      Timeout: 900
+
+  LambdaCopyAmiInvoke:
+    Type: AWS::CloudFormation::CustomResource
+    DeletionPolicy: Delete
+    Version: "1.0"
+    Properties:
+      ServiceToken: !GetAtt LambdaCopyAmi.Arn
+      AmiSourceRegion: 'eu-west-1'
+      AmiSourceId: !FindInMap [OVAMIMAP, 'eu-west-1', AMI]
+      DeploymentRegion: !Ref AWS::Region
 
 Outputs:
   OpenViduServerURL:
