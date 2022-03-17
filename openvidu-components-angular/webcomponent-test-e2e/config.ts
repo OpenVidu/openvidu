@@ -1,1 +1,1 @@
-export const SELENIUM_SERVER_URL = process.env.SELENIUM_SERVER_URL || '';
+export const LAUNCH_MODE = process.env.LAUNCH_MODE || 'DEV';

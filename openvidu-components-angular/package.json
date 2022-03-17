@@ -10,7 +10,6 @@
     "lib:test": "ng test openvidu-angular --no-watch --code-coverage",
     "webcomponent:build": "./node_modules/@angular/cli/bin/ng.js build openvidu-webcomponent --configuration production && node ./openvidu-webcomponent-build.js",
     "webcomponent:prepare-test-e2e": "npm run lib:build && npm run webcomponent:build",
-    "webcomponent:e2e": "npm run --prefix webcomponent-test-e2e test",
     "bundle-report": "ng build openvidu-webcomponent --stats-json --configuration production && webpack-bundle-analyzer dist/openvidu-webcomponent/stats.json",
     "lint": "ng lint",
     "e2e": "ng e2e"

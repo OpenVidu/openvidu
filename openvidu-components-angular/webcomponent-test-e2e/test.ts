@@ -1,11 +1,12 @@
 import { Builder, By, Capabilities, until, WebDriver, logging } from 'selenium-webdriver';
 import * as chrome from 'selenium-webdriver/chrome';
 import { expect } from 'chai';
-import { SELENIUM_SERVER_URL } from './config';
+import { LAUNCH_MODE } from './config';
 
 const url = 'http://localhost:8080/';
 const FIVE_SECONDS = 5000;
-const ONE_SECONDS = 5000;
+
+let SELENIUM_SERVER_URL = '';
 
 describe('Checkout localhost app', () => {
 	let browser: WebDriver;
@@ -13,7 +14,11 @@ describe('Checkout localhost app', () => {
 	const chromeOptions = new chrome.Options();
 	const chromeCapabilities = Capabilities.chrome();
 
-	chromeOptions.addArguments('--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream');
+	chromeOptions.addArguments('--window-size=1024,768', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream');
+	if(LAUNCH_MODE === 'CI') {
+		SELENIUM_SERVER_URL = 'http://localhost:4444/wd/hub';
+		chromeOptions.addArguments('--headless', '--disable-dev-shm-usage');
+	}
 	const prefs = new logging.Preferences();
 	prefs.setLevel(logging.Type.BROWSER, logging.Level.DEBUG);
 	chromeCapabilities.set('acceptInsecureCerts', true);
@@ -59,11 +64,17 @@ describe('Checkout localhost app', () => {
 		let element;
 		await browser.get(`${url}?minimal=true`);
 		// Checking if prejoin page exist
-		element = await browser.wait(until.elementLocated(By.id('prejoin-container')), ONE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('prejoin-container')), FIVE_SECONDS);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Checking if layout is present
+		element = await browser.wait(until.elementLocated(By.id('layout-container')), FIVE_SECONDS);
+		expect(await element.isDisplayed()).to.be.true;
+		element = await browser.wait(until.elementLocated(By.id('layout')), FIVE_SECONDS);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if stream component is present
-		element = await browser.wait(until.elementLocated(By.className('OT_widget-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.css('.OT_widget-container')), FIVE_SECONDS);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if audio detection is not displayed
@@ -117,13 +128,13 @@ describe('Checkout localhost app', () => {
 
 	it('should show the PREJOIN page', async () => {
 		await browser.get(`${url}?prejoin=true`);
-		const element = await browser.wait(until.elementLocated(By.id('prejoin-container')), ONE_SECONDS);
+		const element = await browser.wait(until.elementLocated(By.id('prejoin-container')), FIVE_SECONDS);
 		expect(await element.isDisplayed()).to.be.true;
 	});
 	it('should not show the PREJOIN page', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), ONE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
 		expect(await element.isDisplayed()).to.be.true;
 	});
 
@@ -164,7 +175,7 @@ describe('Checkout localhost app', () => {
 
 		await browser.get(`${url}?prejoin=false&videoMuted=true`);
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), ONE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if video is displayed
@@ -218,7 +229,7 @@ describe('Checkout localhost app', () => {
 
 		await browser.get(`${url}?prejoin=false&audioMuted=true`);
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), ONE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if video is displayed

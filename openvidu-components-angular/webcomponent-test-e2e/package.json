@@ -6,7 +6,7 @@
   "scripts": {
     "serve": "npx http-server web/",
     "test": "tsc && mocha --recursive --timeout 30000 ./dist/test.js",
-    "test-ci": "cross-env SELENIUM_SERVER_URL=http://localhost:4444/wd/hub npm run test"
+    "test-ci": "cross-env LAUNCH_MODE=CI npm run test"
   },
   "author": "Carlos Santos Morales",
   "license": "Apache-2.0",
