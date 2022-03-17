@@ -27,11 +27,6 @@ import { LayoutService } from '../../services/layout/layout.service';
 import { Subscription, skip } from 'rxjs';
 import { MenuType } from '../../models/menu.model';
 import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.service';
-import { ToolbarComponent } from '../toolbar/toolbar.component';
-import { LibraryConfigService } from '../../services/library-config/library-config.service';
-import { LayoutComponent } from '../layout/layout.component';
-import { PanelComponent } from '../panel/panel.component';
-import { LibraryComponents } from '../../config/lib.config';
 
 @Component({
 	selector: 'ov-session',
@@ -54,7 +49,8 @@ export class SessionComponent implements OnInit {
 	sideMenu: MatSidenav;
 
 	sidenavMode: SidenavMode = SidenavMode.SIDE;
-
+	isParticipantsPanelOpened: boolean;
+	isChatPanelOpened: boolean;
 	protected readonly SIDENAV_WIDTH_LIMIT_MODE = 790;
 
 	protected menuSubscription: Subscription;
@@ -75,40 +71,6 @@ export class SessionComponent implements OnInit {
 		protected menuService: SidenavMenuService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
-	}
-
-	@ViewChild('toolbar', { static: false, read: ViewContainerRef })
-	set toolbar(reference: ViewContainerRef) {
-		setTimeout(() => {
-			if (reference) {
-				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.TOOLBAR);
-				reference.clear();
-				reference.createComponent(component);
-			}
-		}, 0);
-	}
-
-	@ViewChild('layout', { static: false, read: ViewContainerRef })
-	set layout(reference: ViewContainerRef) {
-		setTimeout(() => {
-			if (reference) {
-				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.LAYOUT);
-				reference.clear();
-				reference.createComponent(component);
-				this.layoutService.initialize();
-			}
-		}, 0);
-	}
-
-	@ViewChild('panel', { static: false, read: ViewContainerRef })
-	set panel(reference: ViewContainerRef) {
-		setTimeout(() => {
-			if (reference) {
-				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.PANEL);
-				reference.clear();
-				reference.createComponent(component);
-			}
-		}, 0);
 	}
 
 	@HostListener('window:beforeunload')
@@ -186,7 +148,11 @@ export class SessionComponent implements OnInit {
 		});
 
 		this.menuSubscription = this.menuService.menuOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
-			this.sideMenu && ev.opened ? this.sideMenu.open() : this.sideMenu.close();
+			if (this.sideMenu) {
+				this.isChatPanelOpened = ev.opened && ev.type === MenuType.CHAT;
+				this.isParticipantsPanelOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
+				ev.opened ? this.sideMenu.open() : this.sideMenu.close();
+			}
 		});
 	}
 

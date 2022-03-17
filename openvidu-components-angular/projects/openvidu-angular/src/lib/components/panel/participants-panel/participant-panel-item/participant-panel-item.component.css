@@ -1,0 +1,41 @@
+.participant-subtitle {
+	font-style: italic;
+	font-size: 11px !important;
+}
+.participant-nickname {
+	font-weight: bold !important;
+}
+
+.participant-action-buttons{
+	display: flex;
+}
+
+ ::ng-deep .participant-action-buttons > *:not(#mute-btn) {
+	display: contents;
+}
+
+::ng-deep .participant-action-buttons > *:not(#mute-btn) > * {
+	margin: auto;
+}
+
+mat-list-item {
+	height: max-content !important;
+	padding-bottom: 10px !important;
+}
+
+mat-list {
+	padding: 3px;
+}
+
+.participant-avatar {
+	display: contents;
+}
+
+#mute-btn {
+	border-radius: var(--ov-buttons-radius);
+}
+
+.warn-btn {
+	/* background-color: var(--ov-warn-color) !important; */
+	color: var(--ov-warn-color);
+}

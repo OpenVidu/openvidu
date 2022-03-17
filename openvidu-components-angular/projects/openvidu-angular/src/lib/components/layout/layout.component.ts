@@ -45,31 +45,6 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 		private cd: ChangeDetectorRef
 	) {}
 
-	@ViewChild('localStream', { static: false, read: ViewContainerRef })
-	set stream(reference: ViewContainerRef) {
-		setTimeout(() => {
-			if (reference) {
-				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.STREAM);
-				//reference.clear();
-				this._localStreamComponent = component;
-				// reference.createComponent(component);
-			}
-		}, 0);
-	}
-
-	@ViewChild('remoteStream', { static: false, read: ViewContainerRef })
-	set remoteStream(reference: ViewContainerRef) {
-		setTimeout(() => {
-			if (reference) {
-
-				const component = this.libraryConfigSrv.getDynamicComponent(LibraryComponents.STREAM);
-				// reference.clear();
-				this._remoteStreamComponent = component;
-				// reference.createComponent(component);
-			}
-		}, 0);
-	}
-
 	ngOnInit(): void {
 		this.subscribeToParticipants();
 	}
