@@ -538,42 +538,41 @@ public abstract class SessionManager {
 		if (session == null) {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "Session '" + sessionId + "' not found");
 		}
-		if (session.isClosed()) {
-			this.cleanCollections(sessionId);
-			throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE, "Session '" + sessionId + "' already closed");
-		}
-		Set<Participant> participants = getParticipants(sessionId);
 
-		boolean sessionClosedByLastParticipant = false;
-
-		for (Participant p : participants) {
-			try {
-				sessionClosedByLastParticipant = this.evictParticipant(p, null, null, reason);
-			} catch (OpenViduException e) {
-				log.warn("Error evicting participant '{}' from session '{}'", p.getParticipantPublicId(), sessionId, e);
-			}
-		}
-
-		if (!sessionClosedByLastParticipant) {
-			// This code should only be executed when there were no participants connected
-			// to the session. That is: if the session was in the automatic recording stop
-			// timeout with INDIVIDUAL recording (no docker participant connected)
-			try {
-				if (session.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
-					try {
-						if (session.isClosed()) {
-							return;
-						}
-						this.closeSessionAndEmptyCollections(session, reason, true);
-					} finally {
-						session.closingLock.writeLock().unlock();
+		try {
+			if (session.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
+				try {
+					if (session.isClosed()) {
+						this.cleanCollections(sessionId);
+						throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE,
+								"Session '" + sessionId + "' already closed");
 					}
-				} else {
-					log.error("Timeout waiting for Session {} closing lock to be available", sessionId);
+
+					boolean sessionClosedByLastParticipant = false;
+					Set<Participant> participants = getParticipants(sessionId);
+					for (Participant p : participants) {
+						try {
+							sessionClosedByLastParticipant = this.evictParticipant(p, null, null, reason);
+						} catch (OpenViduException e) {
+							log.warn("Error evicting participant '{}' from session '{}'", p.getParticipantPublicId(),
+									sessionId, e);
+						}
+					}
+					if (!sessionClosedByLastParticipant) {
+						// This code should only be executed when there were no participants connected
+						// to the session. That is: if the session was in the automatic recording stop
+						// timeout with INDIVIDUAL recording (no docker participant connected)
+						this.closeSessionAndEmptyCollections(session, reason, true);
+					}
+
+				} finally {
+					session.closingLock.writeLock().unlock();
 				}
-			} catch (InterruptedException e) {
-				log.error("InterruptedException while waiting for Session {} closing lock to be available", sessionId);
+			} else {
+				log.error("Timeout waiting for Session {} closing lock to be available", sessionId);
 			}
+		} catch (InterruptedException e) {
+			log.error("InterruptedException while waiting for Session {} closing lock to be available", sessionId);
 		}
 	}
 
@@ -669,14 +668,14 @@ public abstract class SessionManager {
 	}
 
 	public void closeAllSessionsAndRecordingsOfKms(Kms kms, EndReason reason) {
-		// Close all active sessions
-		kms.getKurentoSessions().forEach(kSession -> {
-			this.closeSession(kSession.getSessionId(), reason);
-		});
 		// Close all non active sessions configured with this Media Node
 		this.closeNonActiveSessions(sessionNotActive -> {
 			return (sessionNotActive.getSessionProperties().mediaNode() != null
 					&& kms.getId().equals(sessionNotActive.getSessionProperties().mediaNode()));
+		});
+		// Close all active sessions
+		kms.getKurentoSessions().forEach(kSession -> {
+			this.closeSession(kSession.getSessionId(), reason);
 		});
 		// Stop all external recordings
 		kms.getActiveRecordings().forEach(recordingIdSessionId -> {

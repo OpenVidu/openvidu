@@ -186,6 +186,13 @@ public abstract class KmsManager {
 			public void disconnected() {
 				final Kms kms = kmss.get(kmsId);
 
+				// TODO: take a look at this
+//				if (kms.getTimeOfKurentoClientDisconnection() > 0) {
+//					log.warn("Event disconnected of KurentoClient {} is already being processed by other thread",
+//							kms.getKurentoClient().toString());
+//					return;
+//				}
+
 				kms.setKurentoClientConnected(false);
 				kms.setTimeOfKurentoClientDisconnection(System.currentTimeMillis());
 
@@ -225,7 +232,11 @@ public abstract class KmsManager {
 						log.warn("Removing Media Node {} after crash", kms.getId());
 						String environmentId = removeMediaNodeUponCrash(kms.getId());
 
-						// 2. Close all sessions and recordings with reason "nodeCrashed"
+						// 2. Send nodeCrashed webhook event
+						sessionEventsHandler.onMediaNodeCrashed(kms, environmentId, timeOfKurentoDisconnection,
+								affectedSessionIds, affectedRecordingIds);
+
+						// 3. Close all sessions and recordings with reason "nodeCrashed"
 						log.warn("Closing {} sessions hosted by KMS with uri {}: {}", kms.getKurentoSessions().size(),
 								kms.getUri(), kms.getKurentoSessions().stream().map(s -> s.getSessionId())
 										.collect(Collectors.joining(",", "[", "]")));
@@ -236,10 +247,6 @@ public abstract class KmsManager {
 						} finally {
 							RemoteOperationUtils.revertToRunRemoteOperations();
 						}
-
-						// 3. Send nodeCrashed webhook event
-						sessionEventsHandler.onMediaNodeCrashed(kms, environmentId, timeOfKurentoDisconnection,
-								affectedSessionIds, affectedRecordingIds);
 
 						if (infiniteRetry()) {
 							disconnected();

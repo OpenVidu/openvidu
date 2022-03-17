@@ -322,7 +322,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		} else {
 			log.error("ERROR: token not valid");
 			throw new OpenViduException(Code.USER_UNAUTHORIZED_ERROR_CODE,
-					"Unable to join session " + sessionId + ". Token " + token + "is not valid");
+					"Unable to join session " + sessionId + ". Token " + token + " is not valid");
 		}
 	}
 
