@@ -1,8 +1,9 @@
 import { Builder, By, Capabilities, until, WebDriver, logging } from 'selenium-webdriver';
 import * as chrome from 'selenium-webdriver/chrome';
 import { expect } from 'chai';
+import { SELENIUM_SERVER_URL } from './config';
 
-const url = 'http://127.0.0.1:8080/';
+const url = 'http://localhost:8080/';
 const FIVE_SECONDS = 5000;
 const ONE_SECONDS = 5000;
 
@@ -25,7 +26,13 @@ describe('Checkout localhost app', () => {
 	// firefoxCapabilities.setAcceptInsecureCerts(true);
 
 	async function createChromeBrowser(name: string): Promise<WebDriver> {
-		return await new Builder().forBrowser(name).withCapabilities(chromeCapabilities).setChromeOptions(chromeOptions).build();
+
+		return await new Builder()
+			.forBrowser(name)
+			.withCapabilities(chromeCapabilities)
+			.setChromeOptions(chromeOptions)
+			.usingServer(SELENIUM_SERVER_URL)
+			.build();
 	}
 
 	// async function createFirefoxBrowser() {
