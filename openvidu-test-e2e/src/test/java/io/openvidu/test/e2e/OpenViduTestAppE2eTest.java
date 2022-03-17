@@ -3345,7 +3345,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getWaiter().until(ExpectedConditions.alertIsPresent());
 			Alert alert = user.getDriver().switchTo().alert();
 			Assert.assertTrue("Alert does not contain expected text",
-					alert.getText().contains("Token " + tokenA + "is not valid"));
+					alert.getText().contains("Token " + tokenA + " is not valid"));
 			alert.accept();
 		} catch (Exception e) {
 			Assert.fail("Alert exception");
