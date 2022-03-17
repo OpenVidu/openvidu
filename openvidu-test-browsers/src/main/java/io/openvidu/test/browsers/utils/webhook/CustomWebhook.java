@@ -46,21 +46,25 @@ public class CustomWebhook {
 	private static ConfigurableApplicationContext context;
 
 	public static CountDownLatch initLatch;
+	public static int accumulatedNumberOfEvents = 0;
 	static ConcurrentMap<String, BlockingQueue<JsonObject>> events = new ConcurrentHashMap<>();
 
 	public static void main(String[] args, CountDownLatch initLatch) {
 		CustomWebhook.initLatch = initLatch;
+		accumulatedNumberOfEvents = 0;
 		CustomWebhook.events.clear();
 		CustomWebhook.context = new SpringApplicationBuilder(CustomWebhook.class)
 				.properties("spring.config.location:classpath:aplication-pro-webhook.properties").build().run(args);
 	}
 
 	public static void shutDown() {
+		accumulatedNumberOfEvents = 0;
 		CustomWebhook.events.clear();
 		CustomWebhook.context.close();
 	}
 
 	public static void clean() {
+		accumulatedNumberOfEvents = 0;
 		CustomWebhook.events.clear();
 	}
 
@@ -88,6 +92,7 @@ public class CustomWebhook {
 		public void webhook(@RequestBody String eventString) {
 			JsonObject event = JsonParser.parseString(eventString).getAsJsonObject();
 			System.out.println("Webhook event: " + event.toString());
+			accumulatedNumberOfEvents++;
 			final String eventName = event.get("event").getAsString();
 			final BlockingQueue<JsonObject> queue = new LinkedBlockingDeque<>();
 			if (!CustomWebhook.events.computeIfAbsent(eventName, e -> {
