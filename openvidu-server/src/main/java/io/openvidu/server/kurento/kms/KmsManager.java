@@ -176,6 +176,32 @@ public abstract class KmsManager {
 		return new JsonRpcWSConnectionListener() {
 
 			@Override
+			public void connected() {
+				final Kms kms = kmss.get(kmsId);
+				log.info("Kurento Client \"connected\" event for KMS {} [{}]", kms.getUri(),
+						kms.getKurentoClient().toString());
+				// TODO: This should be done here, not after KurentoClient#create method
+				// returns, but it seems that this event is never triggered
+				// kms.setKurentoClientConnected(true);
+				// kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
+			}
+
+			@Override
+			public void connectionFailed() {
+				final Kms kms = kmss.get(kmsId);
+				log.error("Kurento Client \"connectionFailed\" event for KMS {} [{}]", kms.getUri(),
+						kms.getKurentoClient().toString());
+				kms.setKurentoClientConnected(false);
+			}
+
+			@Override
+			public void reconnecting() {
+				final Kms kms = kmss.get(kmsId);
+				log.info("Kurento Client \"reconnecting\" event for KMS {} [{}]", kms.getUri(),
+						kms.getKurentoClient().toString());
+			}
+
+			@Override
 			public void reconnected(boolean sameServer) {
 				final Kms kms = kmss.get(kmsId);
 				log.info("Kurento Client \"reconnected\" event for KMS {} (sameServer: {}) [{}]", kms.getUri(),
@@ -316,32 +342,6 @@ public abstract class KmsManager {
 
 				kms.setKurentoClientReconnectTimer(kurentoClientReconnectTimer);
 				kurentoClientReconnectTimer.updateTimer();
-			}
-
-			@Override
-			public void connectionFailed() {
-				final Kms kms = kmss.get(kmsId);
-				log.error("Kurento Client \"connectionFailed\" event for KMS {} [{}]", kms.getUri(),
-						kms.getKurentoClient().toString());
-				kms.setKurentoClientConnected(false);
-			}
-
-			@Override
-			public void connected() {
-				final Kms kms = kmss.get(kmsId);
-				log.info("Kurento Client \"connected\" event for KMS {} [{}]", kms.getUri(),
-						kms.getKurentoClient().toString());
-				// TODO: This should be done here, not after KurentoClient#create method
-				// returns, but it seems that this event is never triggered
-				// kms.setKurentoClientConnected(true);
-				// kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
-			}
-
-			@Override
-			public void reconnecting() {
-				final Kms kms = kmss.get(kmsId);
-				log.info("Kurento Client \"reconnecting\" event for KMS {} [{}]", kms.getUri(),
-						kms.getKurentoClient().toString());
 			}
 
 		};
