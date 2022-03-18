@@ -184,28 +184,26 @@ public abstract class KmsManager {
 
 			@Override
 			public void disconnected() {
+
 				final Kms kms = kmss.get(kmsId);
 
-				// TODO: take a look at this
-//				if (kms.getTimeOfKurentoClientDisconnection() > 0) {
-//					log.warn("Event disconnected of KurentoClient {} is already being processed by other thread",
-//							kms.getKurentoClient().toString());
-//					return;
-//				}
+				if (kms.getKurentoClient().isDestroyed()) {
+					log.info(
+							"Kurento Client \"disconnected\" event for KMS {} [{}]. Closed explicitly by openvidu-server. No reconnection process",
+							kms.getUri(), kms.getKurentoClient().toString());
+					return;
+				} else {
+					log.info("Kurento Client \"disconnected\" event for KMS {} [{}]. Reconnecting", kms.getUri(),
+							kms.getKurentoClient().toString());
+				}
 
 				kms.setKurentoClientConnected(false);
 				kms.setTimeOfKurentoClientDisconnection(System.currentTimeMillis());
 
-				if (kms.getKurentoClient().isDestroyed()) {
-					log.info(
-							"Kurento Client \"disconnected\" event for KMS {} [{}]. Closed explicitly by openvidu-server",
-							kms.getUri(), kms.getKurentoClient().toString());
-					return;
-				} else {
-					log.info("Kurento Client \"disconnected\" event for KMS {} [{}]. Waiting reconnection",
-							kms.getUri(), kms.getKurentoClient().toString());
-				}
+				disconnectionHandler(kms);
+			}
 
+			private void disconnectionHandler(Kms kms) {
 				// 6 attempts, 2 times per second (3 seconds total)
 				final int maxReconnectTimeMillis = 3000;
 				final int intervalWaitMs = 500;
@@ -217,49 +215,60 @@ public abstract class KmsManager {
 				final UpdatableTimerTask kurentoClientReconnectTimer = new UpdatableTimerTask(() -> {
 					if (iteration.decrementAndGet() < 0) {
 
-						log.error(
-								"OpenVidu Server [{}] could not reconnect to Media Node {} with IP {} in {} seconds. Media Node crashed",
-								kms.getKurentoClient().toString(), kms.getId(), kms.getIp(),
-								(intervalWaitMs * loops / 1000));
 						kms.getKurentoClientReconnectTimer().cancelTimer();
 
-						final long timeOfKurentoDisconnection = kms.getTimeOfKurentoClientDisconnection();
-						final List<String> affectedSessionIds = kms.getKurentoSessions().stream()
-								.map(session -> session.getSessionId()).collect(Collectors.toUnmodifiableList());
-						final List<String> affectedRecordingIds = kms.getActiveRecordings().stream()
-								.map(entry -> entry.getKey()).collect(Collectors.toUnmodifiableList());
+						if (kms.isFirstReconnectionAttempt()) {
 
-						// 1. Remove Media Node from cluster
-						log.warn("Removing Media Node {} with IP {} after crash", kms.getId(), kms.getIp());
-						String environmentId = removeMediaNodeUponCrash(kms.getId());
+							log.error(
+									"OpenVidu Server [{}] could not reconnect to Media Node {} with IP {} in {} seconds. Media Node crashed",
+									kms.getKurentoClient().toString(), kms.getId(), kms.getIp(),
+									(intervalWaitMs * loops / 1000));
 
-						// 2. Send nodeCrashed webhook event
-						sessionEventsHandler.onMediaNodeCrashed(kms, environmentId, timeOfKurentoDisconnection,
-								affectedSessionIds, affectedRecordingIds);
+							kms.setFirstReconnectionAttempt(false);
 
-						// 3. Close all sessions and recordings with reason "nodeCrashed"
-						log.warn("Closing {} sessions hosted by Media Node {} with IP {}: {}",
-								kms.getKurentoSessions().size(), kms.getId(), kms.getIp(),
-								kms.getKurentoSessions().stream().map(s -> s.getSessionId())
-										.collect(Collectors.joining(",", "[", "]")));
-						try {
-							// Flag the thread to skip remote operations to KMS
-							RemoteOperationUtils.setToSkipRemoteOperations();
-							sessionManager.closeAllSessionsAndRecordingsOfKms(kms, EndReason.nodeCrashed);
-						} finally {
-							RemoteOperationUtils.revertToRunRemoteOperations();
+							final long timeOfKurentoDisconnection = kms.getTimeOfKurentoClientDisconnection();
+							final List<String> affectedSessionIds = kms.getKurentoSessions().stream()
+									.map(session -> session.getSessionId()).collect(Collectors.toUnmodifiableList());
+							final List<String> affectedRecordingIds = kms.getActiveRecordings().stream()
+									.map(entry -> entry.getKey()).collect(Collectors.toUnmodifiableList());
+
+							// 1. Remove Media Node from cluster
+							log.warn("Removing Media Node {} with IP {} after crash", kms.getId(), kms.getIp());
+							String environmentId = removeMediaNodeUponCrash(kms.getId());
+
+							// 2. Send nodeCrashed webhook event
+							sessionEventsHandler.onMediaNodeCrashed(kms, environmentId, timeOfKurentoDisconnection,
+									affectedSessionIds, affectedRecordingIds);
+
+							// 3. Close all sessions and recordings with reason "nodeCrashed"
+							log.warn("Closing {} sessions hosted by Media Node {} with IP {}: {}",
+									kms.getKurentoSessions().size(), kms.getId(), kms.getIp(),
+									kms.getKurentoSessions().stream().map(s -> s.getSessionId())
+											.collect(Collectors.joining(",", "[", "]")));
+							try {
+								// Flag the thread to skip remote operations to KMS
+								RemoteOperationUtils.setToSkipRemoteOperations();
+								sessionManager.closeAllSessionsAndRecordingsOfKms(kms, EndReason.nodeCrashed);
+							} finally {
+								RemoteOperationUtils.revertToRunRemoteOperations();
+							}
+						} else {
+							log.error(
+									"Retry error. OpenVidu Server [{}] could not connect to Media Node {} with IP {} in {} seconds",
+									kms.getKurentoClient().toString(), kms.getId(), kms.getIp(),
+									(intervalWaitMs * loops / 1000));
 						}
 
 						if (infiniteRetry()) {
 							log.info("Retrying reconnection to Media Node {} with IP {}", kms.getId(), kms.getIp());
-							disconnected();
+							disconnectionHandler(kms);
 						}
 
 					} else {
 
 						if ((System.currentTimeMillis() - initTime) > maxReconnectTimeMillis) {
-							// KurentoClient connection timeout exceeds the limit. This happens if not only
-							// media server process has crashed, but the instance itself is not reachable
+							// KurentoClient connection timeout exceeds the limit. This prevents a
+							// single reconnection attempt to exceed the total timeout limit
 							iteration.set(0);
 							return;
 						}
@@ -275,7 +284,10 @@ public abstract class KmsManager {
 
 						log.info("According to Timer KMS with uri {} and KurentoClient [{}] is now reconnected",
 								kms.getUri(), kms.getKurentoClient().toString());
+
+						kms.setFirstReconnectionAttempt(true);
 						kms.getKurentoClientReconnectTimer().cancelTimer();
+
 						kms.setKurentoClientConnected(true);
 						kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
 
@@ -319,13 +331,17 @@ public abstract class KmsManager {
 				final Kms kms = kmss.get(kmsId);
 				log.info("Kurento Client \"connected\" event for KMS {} [{}]", kms.getUri(),
 						kms.getKurentoClient().toString());
-				// TODO: This should be done here, not after KurentoClient#create method returns
+				// TODO: This should be done here, not after KurentoClient#create method
+				// returns, but it seems that this event is never triggered
 				// kms.setKurentoClientConnected(true);
 				// kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
 			}
 
 			@Override
 			public void reconnecting() {
+				final Kms kms = kmss.get(kmsId);
+				log.info("Kurento Client \"reconnecting\" event for KMS {} [{}]", kms.getUri(),
+						kms.getKurentoClient().toString());
 			}
 
 		};

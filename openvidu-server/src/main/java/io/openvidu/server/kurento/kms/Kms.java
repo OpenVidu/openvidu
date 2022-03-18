@@ -67,6 +67,7 @@ public class Kms {
 	private LoadManager loadManager;
 	private QuarantineKiller quarantineKiller;
 
+	private boolean isFirstReconnectionAttempt = true;
 	private AtomicBoolean isKurentoClientConnected = new AtomicBoolean(false);
 	private AtomicLong timeOfKurentoClientConnection = new AtomicLong(0);
 	private AtomicLong timeOfKurentoClientDisconnection = new AtomicLong(0);
@@ -126,6 +127,14 @@ public class Kms {
 
 	public boolean allowMoreElements() {
 		return true; // loadManager.allowMoreElements(this);
+	}
+
+	public boolean isFirstReconnectionAttempt() {
+		return this.isFirstReconnectionAttempt;
+	}
+
+	public void setFirstReconnectionAttempt(boolean isFirst) {
+		this.isFirstReconnectionAttempt = isFirst;
 	}
 
 	public boolean isKurentoClientConnected() {
