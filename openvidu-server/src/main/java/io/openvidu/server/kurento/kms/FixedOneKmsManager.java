@@ -30,6 +30,7 @@ import org.kurento.jsonrpc.client.JsonRpcClientNettyWebSocket;
 import org.kurento.jsonrpc.client.JsonRpcWSConnectionListener;
 
 import io.openvidu.java.client.RecordingProperties;
+import io.openvidu.server.core.MediaServer;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
 
@@ -57,9 +58,10 @@ public class FixedOneKmsManager extends KmsManager {
 			// TODO: This should be done in KurentoClient connected event
 			kms.setKurentoClientConnected(true);
 			kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
+			MediaServer mediaServer = kms.fetchMediaServerType();
 
 			// Set Media Server in OpenVidu configuration
-			this.openviduConfig.setMediaServer(kms.getMediaServer());
+			this.openviduConfig.setMediaServer(mediaServer);
 
 		} catch (KurentoException e) {
 			log.error("KMS in {} is not reachable by OpenVidu Server", firstProps.getUri());

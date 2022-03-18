@@ -12,7 +12,9 @@ import java.util.Random;
 import org.kurento.client.Continuation;
 import org.kurento.client.KurentoClient;
 import org.kurento.client.MediaPipeline;
+import org.kurento.client.ServerInfo;
 import org.kurento.client.ServerManager;
+import org.kurento.client.ServerType;
 import org.mockito.Mockito;
 import org.powermock.reflect.Whitebox;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -50,12 +52,16 @@ public class IntegrationTestConfiguration {
 				}).when(kClient).createMediaPipeline((Continuation<MediaPipeline>) any());
 
 				ServerManager serverManagerMock = mock(ServerManager.class);
+				ServerInfo serverInfoMock = new ServerInfo("6.16.0", new ArrayList<>(), ServerType.KMS,
+						new ArrayList<>());
+				when(serverManagerMock.getInfo()).thenReturn(serverInfoMock);
 				when(serverManagerMock.getCpuCount()).thenReturn(new Random().nextInt(32) + 1);
 				when(kClient.getServerManager()).thenReturn(serverManagerMock);
 
 				kms.setKurentoClient(kClient);
 				kms.setKurentoClientConnected(true);
 				kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
+				kms.fetchMediaServerType();
 
 				spy.addKms(kms);
 				successfullyConnectedKmss.add(kms);

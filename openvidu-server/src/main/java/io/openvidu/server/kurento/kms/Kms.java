@@ -37,11 +37,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.RecordingProperties;
+import io.openvidu.server.core.MediaServer;
 import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.utils.QuarantineKiller;
 import io.openvidu.server.utils.RecordingUtils;
 import io.openvidu.server.utils.UpdatableTimerTask;
-import io.openvidu.server.core.MediaServer;
 
 /**
  * Abstraction of a KMS instance: an object of this class corresponds to a KMS
@@ -62,6 +62,7 @@ public class Kms {
 	private String uri;
 	private String ip;
 	private KurentoClient client;
+	private MediaServer mediaServer;
 	private UpdatableTimerTask clientReconnectTimer;
 	private LoadManager loadManager;
 	private QuarantineKiller quarantineKiller;
@@ -201,8 +202,7 @@ public class Kms {
 	public JsonObject toJsonExtended(boolean withSessions, boolean withRecordings, boolean withExtraInfo) {
 
 		JsonObject json = this.toJson();
-		MediaServer mediaServer = getMediaServer();
-		json.addProperty("mediaServer", mediaServer.name());
+		json.addProperty("mediaServer", this.mediaServer.name());
 
 		if (withSessions) {
 			JsonArray sessions = new JsonArray();
@@ -227,7 +227,7 @@ public class Kms {
 				JsonObject kurentoExtraInfo = new JsonObject();
 
 				try {
-					if (MediaServer.kurento.equals(mediaServer)) {
+					if (MediaServer.kurento.equals(this.mediaServer)) {
 						kurentoExtraInfo.addProperty("memory", this.client.getServerManager().getUsedMemory() / 1024);
 
 						ServerInfo info = this.client.getServerManager().getInfo();
@@ -281,13 +281,14 @@ public class Kms {
 		return this.activeComposedRecordings.intValue();
 	}
 
-	public MediaServer getMediaServer() {
+	public MediaServer fetchMediaServerType() {
 		ServerInfo serverInfo = this.client.getServerManager().getInfo();
 		if (serverInfo.getVersion().startsWith("openvidu/mediasoup-controller")) {
-			return MediaServer.mediasoup;
+			this.mediaServer = MediaServer.mediasoup;
 		} else {
-			return MediaServer.kurento;
+			this.mediaServer = MediaServer.kurento;
 		}
+		return this.mediaServer;
 	}
 
 }
