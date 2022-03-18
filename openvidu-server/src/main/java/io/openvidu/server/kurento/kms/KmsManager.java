@@ -218,8 +218,9 @@ public abstract class KmsManager {
 					if (iteration.decrementAndGet() < 0) {
 
 						log.error(
-								"KurentoClient [{}] could not reconnect to KMS with uri {} in {} seconds. Media Node crashed",
-								kms.getKurentoClient().toString(), kms.getUri(), (intervalWaitMs * loops / 1000));
+								"OpenVidu Server [{}] could not reconnect to Media Node {} with IP {} in {} seconds. Media Node crashed",
+								kms.getKurentoClient().toString(), kms.getId(), kms.getIp(),
+								(intervalWaitMs * loops / 1000));
 						kms.getKurentoClientReconnectTimer().cancelTimer();
 
 						final long timeOfKurentoDisconnection = kms.getTimeOfKurentoClientDisconnection();
@@ -229,7 +230,7 @@ public abstract class KmsManager {
 								.map(entry -> entry.getKey()).collect(Collectors.toUnmodifiableList());
 
 						// 1. Remove Media Node from cluster
-						log.warn("Removing Media Node {} after crash", kms.getId());
+						log.warn("Removing Media Node {} with IP {} after crash", kms.getId(), kms.getIp());
 						String environmentId = removeMediaNodeUponCrash(kms.getId());
 
 						// 2. Send nodeCrashed webhook event
@@ -237,8 +238,9 @@ public abstract class KmsManager {
 								affectedSessionIds, affectedRecordingIds);
 
 						// 3. Close all sessions and recordings with reason "nodeCrashed"
-						log.warn("Closing {} sessions hosted by KMS with uri {}: {}", kms.getKurentoSessions().size(),
-								kms.getUri(), kms.getKurentoSessions().stream().map(s -> s.getSessionId())
+						log.warn("Closing {} sessions hosted by Media Node {} with IP {}: {}",
+								kms.getKurentoSessions().size(), kms.getId(), kms.getIp(),
+								kms.getKurentoSessions().stream().map(s -> s.getSessionId())
 										.collect(Collectors.joining(",", "[", "]")));
 						try {
 							// Flag the thread to skip remote operations to KMS
@@ -249,6 +251,7 @@ public abstract class KmsManager {
 						}
 
 						if (infiniteRetry()) {
+							log.info("Retrying reconnection to Media Node {} with IP {}", kms.getId(), kms.getIp());
 							disconnected();
 						}
 
