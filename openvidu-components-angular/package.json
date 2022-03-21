@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --configuration development",
-    "start-prod": "npx http-server ./dist/openvidu-components-testapp/",
+    "start-prod": "npx http-server ./dist/openvidu-components-testapp/ --port 4200",
     "build": "ng build openvidu-components-testapp --configuration production",
     "lib:serve": "ng build openvidu-angular --watch",
     "lib:build": "ng build openvidu-angular --configuration production && cd ./dist/openvidu-angular && npm pack",
