@@ -301,7 +301,7 @@ public class Kms {
 		return this.activeComposedRecordings.intValue();
 	}
 
-	public MediaServer getMediaServer() {
+	public MediaServer getMediaServerType() {
 		if (this.mediaServer == null) {
 			this.fetchMediaServerType();
 		}
