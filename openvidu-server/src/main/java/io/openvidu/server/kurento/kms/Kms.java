@@ -147,6 +147,9 @@ public class Kms {
 		if (isConnected) {
 			this.setTimeOfKurentoClientConnection(timestamp);
 			this.mediaNodeManager.mediaNodeUsageRegistration(this, timestamp);
+			if (this.mediaServer == null) {
+				this.fetchMediaServerType();
+			}
 		} else {
 			this.setTimeOfKurentoClientDisconnection(timestamp);
 			this.mediaNodeManager.mediaNodeUsageDeregistration(this, timestamp);
@@ -296,6 +299,13 @@ public class Kms {
 
 	public int getNumberOfComposedRecordings() {
 		return this.activeComposedRecordings.intValue();
+	}
+
+	public MediaServer getMediaServer() {
+		if (this.mediaServer == null) {
+			this.fetchMediaServerType();
+		}
+		return this.mediaServer;
 	}
 
 	public MediaServer fetchMediaServerType() {

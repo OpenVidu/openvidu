@@ -56,12 +56,11 @@ public class FixedOneKmsManager extends KmsManager {
 
 			// TODO: This should be done in KurentoClient connected event
 			kms.setKurentoClientConnected(true);
-			MediaServer mediaServer = kms.fetchMediaServerType();
 
 			this.addKms(kms);
 
 			// Set Media Server in OpenVidu configuration
-			this.openviduConfig.setMediaServer(mediaServer);
+			this.openviduConfig.setMediaServer(kms.getMediaServer());
 
 		} catch (KurentoException e) {
 			log.error("KMS in {} is not reachable by OpenVidu Server", firstProps.getUri());

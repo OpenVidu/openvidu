@@ -62,7 +62,6 @@ public class IntegrationTestConfiguration {
 
 				kms.setKurentoClient(kClient);
 				kms.setKurentoClientConnected(true);
-				kms.fetchMediaServerType();
 
 				spy.addKms(kms);
 				successfullyConnectedKmss.add(kms);
