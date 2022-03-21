@@ -39,7 +39,7 @@ import com.google.gson.JsonObject;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.core.MediaServer;
 import io.openvidu.server.kurento.core.KurentoSession;
-import io.openvidu.server.utils.QuarantineKiller;
+import io.openvidu.server.utils.MediaNodeManager;
 import io.openvidu.server.utils.RecordingUtils;
 import io.openvidu.server.utils.UpdatableTimerTask;
 
@@ -65,7 +65,7 @@ public class Kms {
 	private MediaServer mediaServer;
 	private UpdatableTimerTask clientReconnectTimer;
 	private LoadManager loadManager;
-	private QuarantineKiller quarantineKiller;
+	private MediaNodeManager mediaNodeManager;
 
 	private boolean isFirstReconnectionAttempt = true;
 	private AtomicBoolean isKurentoClientConnected = new AtomicBoolean(false);
@@ -76,7 +76,7 @@ public class Kms {
 	private Map<String, String> activeRecordings = new ConcurrentHashMap<>();
 	private AtomicLong activeComposedRecordings = new AtomicLong();
 
-	public Kms(KmsProperties props, LoadManager loadManager, QuarantineKiller quarantineKiller) {
+	public Kms(KmsProperties props, LoadManager loadManager, MediaNodeManager mediaNodeManager) {
 		this.id = props.getId();
 		this.uri = props.getUri();
 
@@ -90,7 +90,7 @@ public class Kms {
 		this.ip = url.getHost();
 
 		this.loadManager = loadManager;
-		this.quarantineKiller = quarantineKiller;
+		this.mediaNodeManager = mediaNodeManager;
 	}
 
 	public KurentoClient getKurentoClient() {
@@ -142,7 +142,15 @@ public class Kms {
 	}
 
 	public void setKurentoClientConnected(boolean isConnected) {
+		final long timestamp = System.currentTimeMillis();
 		this.isKurentoClientConnected.set(isConnected);
+		if (isConnected) {
+			this.setTimeOfKurentoClientConnection(timestamp);
+			this.mediaNodeManager.mediaNodeUsageRegistration(this, timestamp);
+		} else {
+			this.setTimeOfKurentoClientDisconnection(timestamp);
+			this.mediaNodeManager.mediaNodeUsageDeregistration(this, timestamp);
+		}
 	}
 
 	public long getTimeOfKurentoClientConnection() {
@@ -190,7 +198,7 @@ public class Kms {
 		if (RecordingUtils.IS_COMPOSED(properties.outputMode())) {
 			this.activeComposedRecordings.decrementAndGet();
 		}
-		this.quarantineKiller.dropMediaNode(this.id);
+		this.mediaNodeManager.dropIdleMediaNode(this.id);
 	}
 
 	public JsonObject toJson() {

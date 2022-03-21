@@ -36,8 +36,8 @@ import io.openvidu.server.core.SessionManager;
 
 public class FixedOneKmsManager extends KmsManager {
 
-	public FixedOneKmsManager(SessionManager sessionManager) {
-		super(sessionManager);
+	public FixedOneKmsManager(SessionManager sessionManager, LoadManager loadManager) {
+		super(sessionManager, loadManager);
 	}
 
 	@Override
@@ -45,20 +45,20 @@ public class FixedOneKmsManager extends KmsManager {
 			throws Exception {
 		KmsProperties firstProps = kmsProperties.get(0);
 		KurentoClient kClient = null;
-		Kms kms = new Kms(firstProps, loadManager, quarantineKiller);
+		Kms kms = new Kms(firstProps, loadManager, mediaNodeManager);
 		try {
 			JsonRpcWSConnectionListener listener = this.generateKurentoConnectionListener(kms.getId());
 			JsonRpcClientNettyWebSocket client = new JsonRpcClientNettyWebSocket(firstProps.getUri(), listener);
 			client.setTryReconnectingMaxTime(0);
 			client.setTryReconnectingForever(false);
 			kClient = KurentoClient.createFromJsonRpcClient(client);
-			this.addKms(kms);
 			kms.setKurentoClient(kClient);
 
 			// TODO: This should be done in KurentoClient connected event
 			kms.setKurentoClientConnected(true);
-			kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
 			MediaServer mediaServer = kms.fetchMediaServerType();
+
+			this.addKms(kms);
 
 			// Set Media Server in OpenVidu configuration
 			this.openviduConfig.setMediaServer(mediaServer);

@@ -1,6 +1,14 @@
 package io.openvidu.server.utils;
 
-public interface MediaNodeStatusManager {
+import io.openvidu.server.kurento.kms.Kms;
+
+public interface MediaNodeManager {
+
+	public void mediaNodeUsageRegistration(Kms kms, long timeOfConnection);
+
+	public void mediaNodeUsageDeregistration(Kms kms, long timeOfDisconnection);
+
+	public void dropIdleMediaNode(String mediaNodeId);
 
 	public boolean isLaunching(String mediaNodeId);
 

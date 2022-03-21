@@ -62,7 +62,7 @@ import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.FormatChecker;
 import io.openvidu.server.utils.GeoLocation;
 import io.openvidu.server.utils.GeoLocationByIp;
-import io.openvidu.server.utils.QuarantineKiller;
+import io.openvidu.server.utils.MediaNodeManager;
 import io.openvidu.server.utils.UpdatableTimerTask;
 
 public abstract class SessionManager {
@@ -88,7 +88,7 @@ public abstract class SessionManager {
 	protected TokenRegister tokenRegister;
 
 	@Autowired
-	protected QuarantineKiller quarantineKiller;
+	protected MediaNodeManager mediaNodeManager;
 
 	@Autowired
 	protected GeoLocationByIp geoLocationByIp;
@@ -646,7 +646,7 @@ public abstract class SessionManager {
 		log.info("Session '{}' removed and closed", session.getSessionId());
 
 		if (mediaNodeId != null) {
-			this.quarantineKiller.dropMediaNode(mediaNodeId);
+			this.mediaNodeManager.dropIdleMediaNode(mediaNodeId);
 		}
 	}
 

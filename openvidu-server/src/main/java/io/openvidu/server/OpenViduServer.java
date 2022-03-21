@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
-import io.openvidu.server.core.TokenRegister;
 import org.bouncycastle.util.Arrays;
 import org.kurento.jsonrpc.internal.server.config.JsonRpcConfiguration;
 import org.kurento.jsonrpc.server.JsonRpcConfigurer;
@@ -53,6 +52,7 @@ import io.openvidu.server.config.OpenviduConfig.Error;
 import io.openvidu.server.core.SessionEventsHandler;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.TokenGenerator;
+import io.openvidu.server.core.TokenRegister;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.coturn.CoturnCredentialsServiceFactory;
 import io.openvidu.server.kurento.core.KurentoParticipantEndpointConfig;
@@ -78,10 +78,8 @@ import io.openvidu.server.utils.GeoLocationByIp;
 import io.openvidu.server.utils.GeoLocationByIpDummy;
 import io.openvidu.server.utils.LocalCustomFileManager;
 import io.openvidu.server.utils.LocalDockerManager;
-import io.openvidu.server.utils.MediaNodeStatusManager;
-import io.openvidu.server.utils.MediaNodeStatusManagerDummy;
-import io.openvidu.server.utils.QuarantineKiller;
-import io.openvidu.server.utils.QuarantineKillerDummy;
+import io.openvidu.server.utils.MediaNodeManager;
+import io.openvidu.server.utils.MediaNodeManagerDummy;
 import io.openvidu.server.utils.SDPMunging;
 import io.openvidu.server.webhook.CDRLoggerWebhook;
 
@@ -139,14 +137,15 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
-	@DependsOn({ "openviduConfig", "sessionManager", "mediaNodeStatusManager" })
-	public KmsManager kmsManager(OpenviduConfig openviduConfig, SessionManager sessionManager) {
+	@DependsOn({ "openviduConfig", "sessionManager", "loadManager" })
+	public KmsManager kmsManager(OpenviduConfig openviduConfig, SessionManager sessionManager,
+			LoadManager loadManager) {
 		if (openviduConfig.getKmsUris().isEmpty()) {
 			throw new IllegalArgumentException("'KMS_URIS' should contain at least one KMS url");
 		}
 		String firstKmsWsUri = openviduConfig.getKmsUris().get(0);
 		log.info("OpenVidu Server using one KMS: {}", firstKmsWsUri);
-		return new FixedOneKmsManager(sessionManager);
+		return new FixedOneKmsManager(sessionManager, loadManager);
 	}
 
 	@Bean
@@ -236,14 +235,8 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public QuarantineKiller quarantineKiller() {
-		return new QuarantineKillerDummy();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public MediaNodeStatusManager mediaNodeStatusManager() {
-		return new MediaNodeStatusManagerDummy();
+	public MediaNodeManager mediaNodeManager() {
+		return new MediaNodeManagerDummy();
 	}
 
 	@Bean

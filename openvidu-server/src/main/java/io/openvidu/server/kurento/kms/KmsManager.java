@@ -48,8 +48,7 @@ import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionEventsHandler;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.core.KurentoSession;
-import io.openvidu.server.utils.MediaNodeStatusManager;
-import io.openvidu.server.utils.QuarantineKiller;
+import io.openvidu.server.utils.MediaNodeManager;
 import io.openvidu.server.utils.RemoteOperationUtils;
 import io.openvidu.server.utils.UpdatableTimerTask;
 
@@ -100,13 +99,7 @@ public abstract class KmsManager {
 	protected OpenviduConfig openviduConfig;
 
 	@Autowired
-	protected LoadManager loadManager;
-
-	@Autowired
-	protected QuarantineKiller quarantineKiller;
-
-	@Autowired
-	protected MediaNodeStatusManager mediaNodeStatusManager;
+	protected MediaNodeManager mediaNodeManager;
 
 	@Autowired
 	protected SessionEventsHandler sessionEventsHandler;
@@ -114,9 +107,11 @@ public abstract class KmsManager {
 	final protected Map<String, Kms> kmss = new ConcurrentHashMap<>();
 
 	protected SessionManager sessionManager;
+	protected LoadManager loadManager;
 
-	public KmsManager(SessionManager sessionManager) {
+	public KmsManager(SessionManager sessionManager, LoadManager loadManager) {
 		this.sessionManager = sessionManager;
+		this.loadManager = loadManager;
 	}
 
 	public synchronized void addKms(Kms kms) {
@@ -128,8 +123,9 @@ public abstract class KmsManager {
 	}
 
 	public synchronized Kms getLessLoadedConnectedAndRunningKms() throws NoSuchElementException {
-		List<KmsLoad> kmsLoads = getKmsLoads().stream().filter(kmsLoad -> kmsLoad.kms.isKurentoClientConnected()
-				&& mediaNodeStatusManager.isRunning(kmsLoad.kms.getId())).collect(Collectors.toList());
+		List<KmsLoad> kmsLoads = getKmsLoads().stream().filter(
+				kmsLoad -> kmsLoad.kms.isKurentoClientConnected() && mediaNodeManager.isRunning(kmsLoad.kms.getId()))
+				.collect(Collectors.toList());
 		if (kmsLoads.isEmpty()) {
 			throw new NoSuchElementException();
 		} else {
@@ -139,8 +135,7 @@ public abstract class KmsManager {
 
 	public synchronized boolean atLeastOneConnectedAndRunningKms() {
 		Optional<Kms> optional = this.kmss.values().stream()
-				.filter(kms -> kms.isKurentoClientConnected() && mediaNodeStatusManager.isRunning(kms.getId()))
-				.findFirst();
+				.filter(kms -> kms.isKurentoClientConnected() && mediaNodeManager.isRunning(kms.getId())).findFirst();
 		return optional.isPresent();
 	}
 
@@ -183,7 +178,7 @@ public abstract class KmsManager {
 				// TODO: This should be done here, not after KurentoClient#create method
 				// returns, but it seems that this event is never triggered
 				// kms.setKurentoClientConnected(true);
-				// kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
+				// kms.fetchMediaServerType();
 			}
 
 			@Override
@@ -191,7 +186,6 @@ public abstract class KmsManager {
 				final Kms kms = kmss.get(kmsId);
 				log.error("Kurento Client \"connectionFailed\" event for KMS {} [{}]", kms.getUri(),
 						kms.getKurentoClient().toString());
-				kms.setKurentoClientConnected(false);
 			}
 
 			@Override
@@ -224,7 +218,6 @@ public abstract class KmsManager {
 				}
 
 				kms.setKurentoClientConnected(false);
-				kms.setTimeOfKurentoClientDisconnection(System.currentTimeMillis());
 
 				disconnectionHandler(kms);
 			}
@@ -315,7 +308,6 @@ public abstract class KmsManager {
 						kms.getKurentoClientReconnectTimer().cancelTimer();
 
 						kms.setKurentoClientConnected(true);
-						kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
 
 						final long timeOfKurentoDisconnection = kms.getTimeOfKurentoClientDisconnection();
 
