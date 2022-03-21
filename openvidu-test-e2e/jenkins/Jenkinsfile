@@ -120,7 +120,7 @@ node('container') {
     try {
       stage ('OpenVidu Kurento E2E tests') {
         try {
-          openViduE2ETest("kurento/kurento-media-server:${KURENTO_MEDIA_SERVER_VERSION}")
+          openViduE2ETest("${KURENTO_MEDIA_SERVER_IMAGE}")
         } catch (err) {
           // In case of error, fail the stage
           sh 'exit 1'
@@ -168,7 +168,7 @@ def environmentLaunch(mediaServer) {
   sh 'cd /opt/openvidu/testapp && http-server -S -p 4200 &> /opt/openvidu/testapp.log &'
   if (mediaServer == 'kurento') {
     sh(script: '''#!/bin/bash -xe
-      docker run -e KMS_UID=$(id -u) --network=host --detach=true --volume=/opt/openvidu/recordings:/opt/openvidu/recordings kurento/kurento-media-server:${KURENTO_MEDIA_SERVER_VERSION}
+      docker run -e KMS_UID=$(id -u) --network=host --detach=true --volume=/opt/openvidu/recordings:/opt/openvidu/recordings ${KURENTO_MEDIA_SERVER_IMAGE}
     '''.stripIndent())
   } else if (mediaServer == 'mediasoup') {
     sh(script: '''#!/bin/bash -xe
@@ -206,7 +206,7 @@ def environmentStop() {
   // Kill media server
   sh(script: '''#!/bin/bash -xe
     declare -a arr=("openvidu/mediasoup-controller:"
-                    "kurento/kurento-media-server:")
+                    "kurento/kurento-media-server")
     for image in "${arr[@]}"
     do
         docker ps -a | awk '{ print $1,$2 }' | grep "${image}" | awk '{ print $1 }' | xargs -I {} docker rm -f {}

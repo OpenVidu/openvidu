@@ -78,8 +78,8 @@ def prepareTestingEnvironment() {
             }
         },
         'Pull kurento/kurento-media-server': {
-            if (env.KURENTO_MEDIA_SERVER_VERSION) {
-                docker.image("kurento/kurento-media-server:${KURENTO_MEDIA_SERVER_VERSION}").pull()
+            if (env.KURENTO_MEDIA_SERVER_IMAGE) {
+                docker.image("${KURENTO_MEDIA_SERVER_IMAGE}").pull()
             }
         },
         'Download fake video': {
@@ -131,7 +131,7 @@ def removeStrandedContainers(removeTestingContainers) {
                             "docker.elastic.co/beats/metricbeat-oss:"
                             "docker.elastic.co/beats/filebeat-oss:"
                             "openvidu/openvidu-pro-dind-media-node:"
-                            "kurento/kurento-media-server:"
+                            "kurento/kurento-media-server"
                             "openvidu/media-node-controller:")
             if [ "${removeTestingContainers}" == "true" ]; then
                 arr+=("openvidu/openvidu-test-e2e:")
