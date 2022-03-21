@@ -5,7 +5,7 @@ const VERSION = require("./package.json").version;
 module.exports.buildWebcomponent = async () => {
 	console.log("Building OpenVidu Web Component (" + VERSION + ")");
 	const tutorialWcPath = "../../openvidu-tutorials/openvidu-webcomponent/web";
-	const e2eWcPath = "./webcomponent-test-e2e/web";
+	const e2eWcPath = "./e2e/webcomponent-app";
 
 	try {
 		await buildElement();

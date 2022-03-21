@@ -1,0 +1,28 @@
+section {
+	display: flex;
+    justify-content: center;
+}
+
+ul {
+	list-style-type: none;
+	margin-top: 4px;
+  }
+
+  .parent-directive {
+	  font-weight: bold;
+	  padding: 5px;
+	  background-color: rgb(255, 238, 153);
+  }
+
+  .directive-container {
+	  border: 1px solid;
+	  border-top: 0px;
+	  margin: 10px;
+	  padding: 5px;
+  }
+
+  h4 {
+	  text-align: center;
+	  font-size: larger;
+	  color: rgb(0, 81, 83);
+  }

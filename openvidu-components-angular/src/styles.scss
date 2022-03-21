@@ -63,18 +63,7 @@ $openvidu-components-theme: mat.define-light-theme((
 html, body { height: 100%; overflow: hidden;}
 body { margin: 0; font-family: 'Roboto','RobotoDraft',Helvetica,Arial,sans-serif;}
 
-.toolbar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  background-color: #2aa762;
-  color: white;
-  font-weight: 600;
-}
+
 .spacer {
   flex: 1;
 }

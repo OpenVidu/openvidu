@@ -12,7 +12,7 @@ export class StreamTestComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
-    this.stream = new ParticipantModel();
+    // this.stream = new ParticipantModel();
   }
 
 }

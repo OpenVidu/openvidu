@@ -39,6 +39,7 @@
 
 <ng-template #defaultToolbar>
 	<ov-toolbar
+		id="default-toolbar"
 		(onLeaveButtonClicked)="onLeaveButtonClicked()"
 		(onCameraButtonClicked)="onCameraButtonClicked()"
 		(onMicrophoneButtonClicked)="onMicrophoneButtonClicked()"
@@ -56,7 +57,7 @@
 </ng-template>
 
 <ng-template #defaultPanel>
-	<ov-panel>
+	<ov-panel id="default-panel">
 		<ng-template #chatPanel>
 			<ng-container *ngTemplateOutlet="openviduAngularChatPanelTemplate"></ng-container>
 		</ng-template>
@@ -68,11 +69,11 @@
 </ng-template>
 
 <ng-template #defaultChatPanel>
-	<ov-chat-panel></ov-chat-panel>
+	<ov-chat-panel id="default-chat-panel"></ov-chat-panel>
 </ng-template>
 
 <ng-template #defaultParticipantsPanel>
-	<ov-participants-panel>
+	<ov-participants-panel id="default-participants-panel">
 		<ng-template #participantPanelItem let-participant>
 			<ng-container
 				*ngTemplateOutlet="openviduAngularParticipantPanelItemTemplate; context: { $implicit: participant }"
@@ -82,7 +83,7 @@
 </ng-template>
 
 <ng-template #defaultParticipantPanelItem let-participant>
-	<ov-participant-panel-item [participant]="participant">
+	<ov-participant-panel-item [participant]="participant" id="default-participant-panel-item">
 
 		<ng-template #participantPanelItemElements>
 			<ng-container *ngTemplateOutlet="openviduAngularParticipantPanelItemElementsTemplate;  context: { $implicit: participant }"></ng-container>
@@ -92,7 +93,7 @@
 </ng-template>
 
 <ng-template #defaultLayout>
-	<ov-layout>
+	<ov-layout id="default-layout">
 		<ng-template #stream let-stream>
 			<ng-container *ngTemplateOutlet="openviduAngularStreamTemplate; context: { $implicit: stream }"> </ng-container>
 		</ng-template>
@@ -100,5 +101,5 @@
 </ng-template>
 
 <ng-template #defaultStream let-stream>
-	<ov-stream [stream]="stream"></ov-stream>
+	<ov-stream [stream]="stream" id="default-stream"></ov-stream>
 </ng-template>

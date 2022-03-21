@@ -20,13 +20,56 @@
     margin: 0;
   }
 
+  .toolbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    background-color: #3c3f3e;
+    color: white;
+    font-weight: 600;
+  }
+
   .content {
     display: flex;
-    margin: 82px auto 32px;
-    padding: 0 16px;
+    margin: 62px auto;
+    padding: 0px;
     max-width: 960px;
     flex-direction: column;
     align-items: center;
+  }
+
+  .dashboard-section {
+    height: 45%; width: 100%; text-align: center;
+  }
+
+  #call-app, #testing-app {
+    height: 95%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #call-app {
+    border-bottom: 3px solid;
+
+  }
+
+  #call-app-btn {
+    background-color: #0088AA;
+    color: #ffffff;
+    font-weight: bold;
+
+  }
+
+  #testing-app-btn {
+    background-color: #FFCC00;
+    color: #080808;
+    font-weight: bold;
   }
 
   svg.material-icons {

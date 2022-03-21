@@ -39,3 +39,5 @@ openvidu-components-angular/webcomponent-test-e2e/dist/
 openvidu-components-angular/webcomponent-test-e2e/web/openvidu-webcomponent-dev.css
 
 openvidu-components-angular/webcomponent-test-e2e/web/openvidu-webcomponent-dev.js
+
+openvidu-components-angular/e2e/dist/

@@ -15,7 +15,7 @@ export class CallComponent implements OnInit {
 	closeClicked: boolean = false;
 	isSessionAlive: boolean = false;
 
-	constructor(private restService: RestService, private router: Router) {}
+	constructor(private restService: RestService) {}
 
 	async ngOnInit() {
 		this.tokens = {

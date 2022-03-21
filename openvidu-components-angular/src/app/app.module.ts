@@ -1,4 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { NgModule } from '@angular/core';
 
 import { AppRoutingModule } from './app.routing.module';
@@ -18,7 +19,6 @@ import { StreamTestComponent } from './components/stream-test/stream-test.compon
 
 import {
 	OpenViduAngularModule,
-	UserSettingsComponent,
 	ChatPanelComponent,
 	ToolbarComponent,
 	SessionComponent,
@@ -26,6 +26,8 @@ import {
 	VideoconferenceComponent
 } from 'openvidu-angular';
 import { MatButtonModule } from '@angular/material/button';
+import { TestingComponent } from './testing-app/testing.component';
+import { MatIconModule } from '@angular/material/icon';
 
 @NgModule({
 	declarations: [
@@ -35,16 +37,19 @@ import { MatButtonModule } from '@angular/material/button';
 		ToolbarTestComponent,
 		ChatTestComponent,
 		LayoutTestComponent,
-		StreamTestComponent
+		StreamTestComponent,
+		TestingComponent
 	],
 	imports: [
 		BrowserModule,
+		MatCheckboxModule,
 		MatButtonModule,
+		MatIconModule,
 		BrowserAnimationsModule,
 		OpenViduAngularModule.forRoot(environment),
 		AppRoutingModule // Order is important, AppRoutingModule must be the last import for useHash working
 	],
-	providers: [VideoconferenceComponent, UserSettingsComponent, ToolbarComponent, ChatPanelComponent, SessionComponent, LayoutComponent],
+	providers: [VideoconferenceComponent, ToolbarComponent, ChatPanelComponent, SessionComponent, LayoutComponent],
 	bootstrap: [AppComponent]
 })
 export class AppModule {}

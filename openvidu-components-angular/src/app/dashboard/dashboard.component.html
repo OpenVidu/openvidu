@@ -14,43 +14,52 @@
 	</a>
 </div>
 
-<div class="content" role="main">
-	<!-- Resources -->
-	<h2>OpenVidu Call APP</h2>
-	<p>Test the OpenVidu Call app using <b>{{title}}</b>:</p>
+<div class="content" role="main" style="height: 100%;">
 
-	<div class="card-container">
-		<a class="card" (click)="goTo('call')">
 
-			<span>OpenVidu Call APP</span>
+	<div class="dashboard-section">
 
-			<svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-				<path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
-			</svg>
-		</a>
+		<div id="call-app">
+
+			<h2>OpenVidu Call APP</h2>
+			<p>Test the OpenVidu Call app using <b>{{title}}</b>:</p>
+
+			<div class="card-container">
+				<a id="call-app-btn" class="card" (click)="goTo('call')">
+
+					<span>OpenVidu Call APP</span>
+
+					<svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+						<path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+					</svg>
+				</a>
+			</div>
+
+		</div>
+
 	</div>
 
-	<!-- Next Steps -->
-	<h2>Components</h2>
-	<p>What component do you want to see?</p>
 
-	<input type="hidden" #selection />
+	<div class="dashboard-section">
+		<div id="testing-app">
 
-	<div class="card-container">
-		<div class="card card-small" (click)="goTo('toolbar')" tabindex="0">
-			<span>Toolbar Component</span>
+			<h2>Testing APP</h2>
+			<p>App for testing openvidu-angular</p>
+
+			<input type="hidden" #selection />
+
+			<div class="card-container">
+				<a class="card" id="testing-app-btn" (click)="goTo('testing')">
+
+					<span>Testing App</span>
+
+					<svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+						<path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+					</svg>
+				</a>
+			</div>
+
 		</div>
 
-		<div class="card card-small" (click)="goTo('layout')" tabindex="0">
-			<span>Layout Component</span>
-		</div>
-
-		<div class="card card-small" (click)="goTo('stream')" tabindex="0">
-			<span>Stream Component</span>
-		</div>
-
-		<div class="card card-small" (click)="goTo('chat')" tabindex="0">
-			<span>Chat Component</span>
-		</div>
 	</div>
 </div>

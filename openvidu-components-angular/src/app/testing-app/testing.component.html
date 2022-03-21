@@ -1,0 +1,217 @@
+<section style="padding: 20px" class="example-section" *ngIf="showDirectives">
+	<div *ngFor="let directive of directives; let i = index" class="directive-container">
+		<mat-checkbox
+			class="parent-directive"
+			[id]="directive.name + '-checkbox'"
+			[checked]="directive.complete"
+			(change)="updateSelection(directive.name, $event.checked)"
+		>
+			{{ directive.name }}
+		</mat-checkbox>
+
+		<span>
+			<ul>
+				<li *ngFor="let sub of directive.subDirectives">
+					<mat-checkbox [id]="sub.name + '-checkbox'" (change)="updateSelection(sub.name, $event.checked)">
+						{{ sub.name }}
+					</mat-checkbox>
+					<ul>
+						<li *ngFor="let subSub of sub.subDirectives">
+							<mat-checkbox [id]="subSub.name + '-checkbox'" (change)="updateSelection(subSub.name, $event.checked)">
+								{{ subSub.name }}
+							</mat-checkbox>
+							<ul>
+								<li *ngFor="let subSubSub of subSub.subDirectives">
+									<mat-checkbox
+										[id]="subSubSub.name + '-checkbox'"
+										(change)="updateSelection(subSubSub.name, $event.checked)"
+									>
+										{{ subSubSub.name }}
+									</mat-checkbox>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</span>
+	</div>
+</section>
+<div style="text-align: center" *ngIf="showDirectives">
+	<button mat-flat-button color="warn" (click)="apply()" id="apply-btn">Apply</button>
+</div>
+
+<div id="events"></div>
+
+<ov-videoconference *ngIf="!showDirectives" [tokens]="tokens" [prejoin]="false">
+	<!-- <div *ovParticipantPanelItemElements>
+	<p>EXTRA INFO</p>
+</div> -->
+
+	<!-- <div *ovParticipantPanelItemElements="let participant">
+	<p>N: {{participant?.nickname}}</p>
+</div> -->
+
+	<!-- TOOLBAR -->
+	<ng-template [ngIf]="ovToolbarSelected">
+		<ov-toolbar
+			*ovToolbar
+			id="custom-toolbar"
+			(onLeaveButtonClicked)="appendElement('onLeaveButtonClicked')"
+			(onCameraButtonClicked)="appendElement('onCameraButtonClicked')"
+			(onMicrophoneButtonClicked)="appendElement('onMicrophoneButtonClicked')"
+			(onScreenshareButtonClicked)="appendElement('onScreenshareButtonClicked')"
+			(onFullscreenButtonClicked)="appendElement('onFullscreenButtonClicked')"
+			(onParticipantsPanelButtonClicked)="appendElement('onParticipantsPanelButtonClicked')"
+			(onChatPanelButtonClicked)="appendElement('onChatPanelButtonClicked')"
+		>
+			<ng-template [ngIf]="ovToolbarAdditionalButtonsSelected">
+				<div *ovToolbarAdditionalButtons id="custom-toolbar-additional-buttons">
+					<button mat-icon-button id="toolbar-additional-btn">
+						<mat-icon>fullscreen_exit</mat-icon>
+					</button>
+					<button mat-icon-button id="toolbar-additional-btn">
+						<mat-icon>fullscreen_exit</mat-icon>
+					</button>
+				</div>
+			</ng-template>
+		</ov-toolbar>
+	</ng-template>
+
+	<ng-template [ngIf]="ovToolbarAdditionalButtonsSelected && !ovToolbarSelected">
+		<div *ovToolbarAdditionalButtons id="custom-toolbar-additional-buttons">
+			<button mat-icon-button id="toolbar-additional-btn">
+				<mat-icon>fullscreen_exit</mat-icon>
+			</button>
+			<button mat-icon-button id="toolbar-additional-btn">
+				<mat-icon>fullscreen_exit</mat-icon>
+			</button>
+			<button mat-icon-button id="toolbar-additional-btn">
+				<mat-icon>star</mat-icon>
+			</button>
+		</div>
+	</ng-template>
+
+	<!-- END TOOLBAR -->
+
+	<!-- PANELS -->
+	<ng-template [ngIf]="ovPanelSelected">
+		<ov-panel *ovPanel id="custom-panels">
+			<ng-template [ngIf]="ovChatPanelSelected">
+				<ov-chat-panel *ovChatPanel id="custom-chat-panel"></ov-chat-panel>
+			</ng-template>
+
+			<ng-template [ngIf]="ovParticipantsPanelSelected">
+				<ov-participants-panel *ovParticipantsPanel id="custom-participants-panel">
+					<ng-template [ngIf]="ovParticipantPanelItemSelected">
+						<div *ovParticipantPanelItem="let participant" id="custom-participants-panel-item">
+							<ov-participant-panel-item [participant]="participant">
+								<ng-template [ngIf]="ovParticipantPanelItemElementsSelected">
+									<div *ovParticipantPanelItemElements id="custom-participants-panel-item-element">
+										<button mat-icon-button id="hand-notification">
+											<mat-icon>front_hand</mat-icon>
+										</button>
+										<span> OK</span>
+									</div>
+								</ng-template>
+							</ov-participant-panel-item>
+						</div>
+					</ng-template>
+
+					<ng-template [ngIf]="!ovParticipantPanelItemSelected && ovParticipantPanelItemElementsSelected">
+						<div *ovParticipantPanelItemElements id="custom-participants-panel-item-element">
+							<button mat-icon-button id="hand-notification">
+								<mat-icon>front_hand</mat-icon>
+							</button>
+							<span> OK</span>
+						</div>
+					</ng-template>
+				</ov-participants-panel>
+			</ng-template>
+		</ov-panel>
+	</ng-template>
+
+	<ng-template [ngIf]="!ovPanelSelected && ovChatPanelSelected">
+		<ov-chat-panel *ovChatPanel id="custom-chat-panel"></ov-chat-panel>
+	</ng-template>
+
+	<ng-template [ngIf]="!ovPanelSelected && ovParticipantsPanelSelected">
+		<ov-participants-panel *ovParticipantsPanel id="custom-participants-panel">
+			<ng-template [ngIf]="ovParticipantPanelItemSelected">
+				<div *ovParticipantPanelItem="let participant" id="custom-participants-panel-item">
+					<ov-participant-panel-item [participant]="participant">
+						<ng-template [ngIf]="ovParticipantPanelItemElementsSelected">
+							<div *ovParticipantPanelItemElements id="custom-participants-panel-item-element">
+								<button mat-icon-button id="hand-notification">
+									<mat-icon>front_hand</mat-icon>
+								</button>
+								<span> OK</span>
+							</div>
+						</ng-template>
+					</ov-participant-panel-item>
+				</div>
+			</ng-template>
+
+			<ng-template [ngIf]="!ovParticipantPanelItemSelected && ovParticipantPanelItemElementsSelected">
+				<div *ovParticipantPanelItemElements id="custom-participants-panel-item-element">
+					<button mat-icon-button id="hand-notification">
+						<mat-icon>front_hand</mat-icon>
+					</button>
+					<span> OK</span>
+				</div>
+			</ng-template>
+		</ov-participants-panel>
+	</ng-template>
+
+	<ng-template [ngIf]="!ovPanelSelected && !ovParticipantsPanelSelected && ovParticipantPanelItemSelected">
+		<div *ovParticipantPanelItem="let participant" id="custom-participants-panel-item">
+			<ov-participant-panel-item [participant]="participant">
+				<ng-template [ngIf]="ovParticipantPanelItemElementsSelected">
+					<div *ovParticipantPanelItemElements id="custom-participants-panel-item-element">
+						<button mat-icon-button id="hand-notification">
+							<mat-icon>front_hand</mat-icon>
+						</button>
+						<span> OK</span>
+					</div>
+				</ng-template>
+			</ov-participant-panel-item>
+		</div>
+	</ng-template>
+
+	<ng-template
+		[ngIf]="
+			!ovPanelSelected && !ovParticipantsPanelSelected && !ovParticipantPanelItemSelected && ovParticipantPanelItemElementsSelected
+		"
+	>
+		<div *ovParticipantPanelItemElements id="custom-participants-panel-item-element">
+			<button mat-icon-button id="hand-notification">
+				<mat-icon>front_hand</mat-icon>
+			</button>
+			<span> OK</span>
+		</div>
+	</ng-template>
+
+	<!-- END PANELS -->
+
+	<!-- LAYOUT -->
+
+	<ng-template [ngIf]="ovLayoutSelected">
+		<ov-layout *ovLayout id="custom-layout">
+			<ng-template [ngIf]="ovStreamSelected">
+				<div *ovStream="let stream" id="custom-stream">
+					<p>EXTERNAL STREAM INSIDE OF LAYOUT</p>
+					<ov-stream [stream]="stream"></ov-stream>
+				</div>
+			</ng-template>
+		</ov-layout>
+	</ng-template>
+
+	<ng-template [ngIf]="!ovLayoutSelected && ovStreamSelected">
+		<div *ovStream="let stream" id="custom-stream">
+			<p>EXTERNAL STREAM INSIDE OF LAYOUT</p>
+			<ov-stream [stream]="stream"></ov-stream>
+		</div>
+	</ng-template>
+
+	<!-- END LAYOUT -->
+</ov-videoconference>
