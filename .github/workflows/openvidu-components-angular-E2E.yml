@@ -31,11 +31,11 @@ jobs:
       run: npm run webcomponent:build --prefix openvidu-components-angular
     - name: Build openvidu-angular-testapp
       run: npm run build --prefix openvidu-components-angular
+    - name: Run Angular Testapp
+      run: npm run start-prod --prefix openvidu-components-angular &
     - name: Run Angular E2E
-      run: |
-        npm run start-prod --prefix openvidu-components-angular &
-        npm run lib:e2e-ci --prefix openvidu-components-angular
+      run: npm run lib:e2e-ci --prefix openvidu-components-angular
+    - name: Run Webcomponent Testapp
+      run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
     - name: Run Webcomponent E2E
-      run: |
-        npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
-        npm run webcomponent:e2e-ci --prefix openvidu-components-angular
+      run:  npm run webcomponent:e2e-ci --prefix openvidu-components-angular
