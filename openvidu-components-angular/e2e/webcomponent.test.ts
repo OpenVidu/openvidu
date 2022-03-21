@@ -1,57 +1,24 @@
-import { Builder, By, Capabilities, until, WebDriver, logging } from 'selenium-webdriver';
-import * as chrome from 'selenium-webdriver/chrome';
+import { Builder, By, until, WebDriver } from 'selenium-webdriver';
 import { expect } from 'chai';
-import { LAUNCH_MODE } from './config';
+import { WebComponentConfig } from './selenium.conf';
 
-const url = 'http://localhost:8080/';
-const FIVE_SECONDS = 5000;
-
-let SELENIUM_SERVER_URL = '';
+const url = WebComponentConfig.appUrl;
+const TIMEOUT = 5000;
 
 describe('Checkout localhost app', () => {
 	let browser: WebDriver;
-
-	const chromeOptions = new chrome.Options();
-	const chromeCapabilities = Capabilities.chrome();
-
-	chromeOptions.addArguments('--window-size=1024,768', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream');
-	if(LAUNCH_MODE === 'CI') {
-		SELENIUM_SERVER_URL = 'http://localhost:4444/wd/hub';
-		chromeOptions.addArguments('--headless', '--disable-dev-shm-usage');
-	}
-	const prefs = new logging.Preferences();
-	prefs.setLevel(logging.Type.BROWSER, logging.Level.DEBUG);
-	chromeCapabilities.set('acceptInsecureCerts', true);
-
-	// var firefoxOptions = new firefox.Options();
-	// var firefoxCapabilities = webdriver.Capabilities.firefox();
-	// firefoxOptions.addArguments('--headless');
-	// firefoxOptions.setPreference('media.navigator.permission.disabled', true);
-	// firefoxOptions.setPreference('media.navigator.streams.fake', true);
-	// firefoxCapabilities.setAcceptInsecureCerts(true);
-
-	async function createChromeBrowser(name: string): Promise<WebDriver> {
+	async function createChromeBrowser(): Promise<WebDriver> {
 
 		return await new Builder()
-			.forBrowser(name)
-			.withCapabilities(chromeCapabilities)
-			.setChromeOptions(chromeOptions)
-			.usingServer(SELENIUM_SERVER_URL)
+			.forBrowser(WebComponentConfig.browserName)
+			.withCapabilities(WebComponentConfig.browserCapabilities)
+			.setChromeOptions(WebComponentConfig.browserOptions)
+			.usingServer(WebComponentConfig.seleniumAddress)
 			.build();
 	}
 
-	// async function createFirefoxBrowser() {
-	// 	return await new Builder()
-	// 		.forBrowser('firefox')
-	// 		.withCapabilities(firefoxCapabilities)
-	// 		.setFirefoxOptions(firefoxOptions)
-	// 		.build();
-
-	// 	return await new Builder().forBrowser('chrome2').withCapabilities(chromeCapabilities).setChromeOptions(chromeOptions).build();
-	// }
-
 	beforeEach(async () => {
-		browser = await createChromeBrowser('Chrome');
+		browser = await createChromeBrowser();
 	});
 
 	afterEach(async () => {
@@ -64,17 +31,17 @@ describe('Checkout localhost app', () => {
 		let element;
 		await browser.get(`${url}?minimal=true`);
 		// Checking if prejoin page exist
-		element = await browser.wait(until.elementLocated(By.id('prejoin-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('prejoin-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if layout is present
-		element = await browser.wait(until.elementLocated(By.id('layout-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('layout-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
-		element = await browser.wait(until.elementLocated(By.id('layout')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if stream component is present
-		element = await browser.wait(until.elementLocated(By.css('.OT_widget-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.css('.OT_widget-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if audio detection is not displayed
@@ -86,11 +53,11 @@ describe('Checkout localhost app', () => {
 		await joinButton.click();
 
 		// Checking if session container is present
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if screenshare button is not present
@@ -128,13 +95,13 @@ describe('Checkout localhost app', () => {
 
 	it('should show the PREJOIN page', async () => {
 		await browser.get(`${url}?prejoin=true`);
-		const element = await browser.wait(until.elementLocated(By.id('prejoin-container')), FIVE_SECONDS);
+		const element = await browser.wait(until.elementLocated(By.id('prejoin-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
 	it('should not show the PREJOIN page', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
 
@@ -145,9 +112,9 @@ describe('Checkout localhost app', () => {
 		await browser.get(`${url}?prejoin=true&videoMuted=true`);
 
 		// Checking if video is displayed
-		await browser.wait(until.elementLocated(By.css('video')), FIVE_SECONDS);
+		await browser.wait(until.elementLocated(By.css('video')), TIMEOUT);
 		element = await browser.findElement(By.css('video'));
-		await browser.wait(until.elementIsVisible(element), FIVE_SECONDS);
+		await browser.wait(until.elementIsVisible(element), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if video track is disabled/muted
@@ -175,13 +142,13 @@ describe('Checkout localhost app', () => {
 
 		await browser.get(`${url}?prejoin=false&videoMuted=true`);
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if video is displayed
-		await browser.wait(until.elementLocated(By.css('video')), FIVE_SECONDS);
+		await browser.wait(until.elementLocated(By.css('video')), TIMEOUT);
 		element = await browser.findElement(By.css('video'));
-		await browser.wait(until.elementIsVisible(element), FIVE_SECONDS);
+		await browser.wait(until.elementIsVisible(element), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if video track is disabled/muted
@@ -199,9 +166,9 @@ describe('Checkout localhost app', () => {
 		await browser.get(`${url}?audioMuted=true`);
 
 		// Checking if video is displayed
-		await browser.wait(until.elementLocated(By.css('video')), FIVE_SECONDS);
+		await browser.wait(until.elementLocated(By.css('video')), TIMEOUT);
 		element = await browser.findElement(By.css('video'));
-		await browser.wait(until.elementIsVisible(element), FIVE_SECONDS);
+		await browser.wait(until.elementIsVisible(element), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if audio track is disabled/muted
@@ -229,13 +196,13 @@ describe('Checkout localhost app', () => {
 
 		await browser.get(`${url}?prejoin=false&audioMuted=true`);
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if video is displayed
-		await browser.wait(until.elementLocated(By.css('video')), FIVE_SECONDS);
+		await browser.wait(until.elementLocated(By.css('video')), TIMEOUT);
 		element = await browser.findElement(By.css('video'));
-		await browser.wait(until.elementIsVisible(element), FIVE_SECONDS);
+		await browser.wait(until.elementIsVisible(element), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if audio track is disabled/muted
@@ -249,11 +216,11 @@ describe('Checkout localhost app', () => {
 	it('should HIDE the SCREENSHARE button', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&screenshareBtn=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if screenshare button is not present
@@ -264,11 +231,11 @@ describe('Checkout localhost app', () => {
 	it('should HIDE the FULLSCREEN button', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&fullscreenBtn=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if fullscreen button is not present
@@ -279,11 +246,11 @@ describe('Checkout localhost app', () => {
 	it('should HIDE the LEAVE button', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&leaveBtn=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if leave button is not present
@@ -294,11 +261,11 @@ describe('Checkout localhost app', () => {
 	it('should HIDE the CHAT PANEL button', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&chatPanelBtn=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if chat panel button is not present
@@ -309,11 +276,11 @@ describe('Checkout localhost app', () => {
 	it('should HIDE the PARTICIPANTS PANEL button', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&participantsPanelBtn=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if participants panel button is not present
@@ -324,11 +291,11 @@ describe('Checkout localhost app', () => {
 	it('should HIDE the LOGO', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&displayLogo=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('info-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('info-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if logo is not displayed
@@ -339,11 +306,11 @@ describe('Checkout localhost app', () => {
 	it('should HIDE the SESSION NAME', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&displaySessionName=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('info-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('info-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if session name is not displayed
@@ -354,11 +321,11 @@ describe('Checkout localhost app', () => {
 	it('should HIDE the PARTICIPANT NAME', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&displayParticipantName=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if stream component is present
-		element = await browser.wait(until.elementLocated(By.className('OT_widget-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.className('OT_widget-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if nickname is not displayed
@@ -369,11 +336,11 @@ describe('Checkout localhost app', () => {
 	it('should HIDE the AUDIO DETECTION element', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&displayAudioDetection=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if stream component is present
-		element = await browser.wait(until.elementLocated(By.className('OT_widget-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.className('OT_widget-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if audio detection is not displayed
@@ -384,11 +351,11 @@ describe('Checkout localhost app', () => {
 	it('should HIDE the SETTINGS button', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&settingsBtn=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if stream component is present
-		element = await browser.wait(until.elementLocated(By.className('OT_widget-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.className('OT_widget-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if settings button is not displayed
@@ -401,17 +368,17 @@ describe('Checkout localhost app', () => {
 		const sessionName = 'e2etest';
 		const fixedUrl = `${url}?prejoin=false&participantMuteBtn=false&sessionName=${sessionName}`;
 		await browser.get(fixedUrl);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present and opening the participants panel
-		element = await browser.wait(until.elementLocated(By.id('menu-buttons-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('menu-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 		const participantsButton = await browser.findElement(By.id('participants-panel-btn'));
 		await participantsButton.click();
 
 		// Checking if participatns panel is displayed
-		element = await browser.wait(until.elementLocated(By.id('participants-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('participants-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 		// Checking remote participants item
 		remoteParticipantItems = await browser.findElements(By.id('remote-participant-item'));
@@ -426,7 +393,7 @@ describe('Checkout localhost app', () => {
 		browser.switchTo().window(tabs[0]);
 
 		// Checking if mute button is not displayed in participant item
-		remoteParticipantItems = await browser.wait(until.elementsLocated(By.id('remote-participant-item')), FIVE_SECONDS);
+		remoteParticipantItems = await browser.wait(until.elementsLocated(By.id('remote-participant-item')), TIMEOUT);
 		expect(remoteParticipantItems.length).equals(1);
 		element = await browser.findElements(By.id('mute-btn'));
 		expect(element.length).equals(0);
@@ -437,7 +404,7 @@ describe('Checkout localhost app', () => {
 	it('should receive the onJoinButtonClicked event', async () => {
 		let element;
 		await browser.get(`${url}`);
-		element = await browser.wait(until.elementLocated(By.id('prejoin-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('prejoin-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Clicking to join button
@@ -446,7 +413,7 @@ describe('Checkout localhost app', () => {
 		await joinButton.click();
 
 		// Checking if onJoinButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onJoinButtonClicked')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('onJoinButtonClicked')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
 
@@ -454,11 +421,11 @@ describe('Checkout localhost app', () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Clicking to leave button
@@ -467,7 +434,7 @@ describe('Checkout localhost app', () => {
 		await leaveButton.click();
 
 		// Checking if onToolbarLeaveButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onToolbarLeaveButtonClicked')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('onToolbarLeaveButtonClicked')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
 
@@ -475,11 +442,11 @@ describe('Checkout localhost app', () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Clicking to leave button
@@ -488,7 +455,7 @@ describe('Checkout localhost app', () => {
 		await cameraButton.click();
 
 		// Checking if onToolbarCameraButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onToolbarCameraButtonClicked')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('onToolbarCameraButtonClicked')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
 
@@ -496,11 +463,11 @@ describe('Checkout localhost app', () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Clicking to leave button
@@ -509,7 +476,7 @@ describe('Checkout localhost app', () => {
 		await cameraButton.click();
 
 		// Checking if onToolbarMicrophoneButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onToolbarMicrophoneButtonClicked')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('onToolbarMicrophoneButtonClicked')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
 
@@ -517,11 +484,11 @@ describe('Checkout localhost app', () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Clicking to leave button
@@ -530,7 +497,7 @@ describe('Checkout localhost app', () => {
 		await screenshareButton.click();
 
 		// Checking if onToolbarScreenshareButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onToolbarScreenshareButtonClicked')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('onToolbarScreenshareButtonClicked')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
 
@@ -538,11 +505,11 @@ describe('Checkout localhost app', () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Clicking to leave button
@@ -551,14 +518,14 @@ describe('Checkout localhost app', () => {
 		await fullscreenButton.click();
 
 		// Checking if onToolbarFullscreenButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onToolbarFullscreenButtonClicked')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('onToolbarFullscreenButtonClicked')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
 
 	it('should receive the onSessionCreated event', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('onSessionCreated')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('onSessionCreated')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 		element = await browser.findElements(By.id('onJoinButtonClicked'));
 		expect(element.length).equals(0);
@@ -570,7 +537,7 @@ describe('Checkout localhost app', () => {
 		const participantName = 'TEST_USER';
 		let element;
 		await browser.get(`${url}?participantName=${participantName}`);
-		element = await browser.wait(until.elementLocated(By.id(`${participantName}-onParticipantCreated`)), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id(`${participantName}-onParticipantCreated`)), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
 
@@ -580,7 +547,7 @@ describe('Checkout localhost app', () => {
 		const participantName = 'TEST_USER';
 		let element;
 		await browser.get(`${url}?prejoin=false&participantName=${participantName}`);
-		element = await browser.wait(until.elementLocated(By.id(`${participantName}-connectionCreated`)), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id(`${participantName}-connectionCreated`)), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
 
@@ -588,18 +555,18 @@ describe('Checkout localhost app', () => {
 		const participantName = 'TEST_USER';
 		let element;
 		await browser.get(`${url}?prejoin=false&participantName=${participantName}`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if leave button is not present
-		element = await browser.wait(until.elementLocated(By.id('leave-btn')), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id('leave-btn')), TIMEOUT);
 		await element.click();
 
-		element = await browser.wait(until.elementLocated(By.id(`${participantName}-sessionDisconnected`)), FIVE_SECONDS);
+		element = await browser.wait(until.elementLocated(By.id(`${participantName}-sessionDisconnected`)), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
 });
