@@ -23,13 +23,15 @@ jobs:
       run: npm run lib:build --prefix openvidu-components-angular
     - name: Build openvidu-webcomponent
       run: npm run webcomponent:build --prefix openvidu-components-angular
+    - name: Build openvidu-angular-testapp
+      run: npm run build --prefix openvidu-components-angular
     - name: Run Selenium Chromedriver
       run: docker run -d --shm-size="2g" --network host selenium/standalone-chrome:latest
     - name: Run openvidu-server-kms
       run: docker run -p 4443:4443 --rm -d -e OPENVIDU_SECRET=MY_SECRET openvidu/openvidu-server-kms:latest
     - name: Run Angular E2E
       run: |
-        npm run ng serve --prefix openvidu-components-angular &
+        npm run start-prod --prefix openvidu-components-angular &
         npm run lib:e2e-ci --prefix openvidu-components-angular
     - name: Run Webcomponent E2E
       run: |

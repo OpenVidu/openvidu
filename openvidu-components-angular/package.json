@@ -4,6 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --configuration development",
+    "start-prod": "npx http-server ./dist/openvidu-components-testapp/",
+    "build": "ng build openvidu-components-testapp --configuration production",
     "lib:serve": "ng build openvidu-angular --watch",
     "lib:build": "ng build openvidu-angular --configuration production && cd ./dist/openvidu-angular && npm pack",
     "lib:copy": "cp dist/openvidu-angular/openvidu-angular-*.tgz ../openvidu-tutorials/openvidu-angular-components",
