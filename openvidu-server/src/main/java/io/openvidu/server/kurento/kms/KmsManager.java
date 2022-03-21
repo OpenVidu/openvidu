@@ -178,7 +178,6 @@ public abstract class KmsManager {
 				// TODO: This should be done here, not after KurentoClient#create method
 				// returns, but it seems that this event is never triggered
 				// kms.setKurentoClientConnected(true);
-				// kms.fetchMediaServerType();
 			}
 
 			@Override
