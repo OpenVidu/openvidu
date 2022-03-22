@@ -26,7 +26,6 @@ import io.openvidu.server.kurento.kms.FixedOneKmsManager;
 import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.kurento.kms.KmsProperties;
-import io.openvidu.server.utils.MediaNodeManager;
 
 /**
  * KmsManager bean mock
@@ -43,8 +42,7 @@ public class IntegrationTestConfiguration {
 			List<Kms> successfullyConnectedKmss = new ArrayList<>();
 			List<KmsProperties> kmsProperties = invocation.getArgument(0);
 			for (KmsProperties kmsProp : kmsProperties) {
-				Kms kms = new Kms(kmsProp, Whitebox.getInternalState(spy, "loadManager"),
-						Whitebox.getInternalState(spy, "mediaNodeManager"));
+				Kms kms = new Kms(kmsProp, Whitebox.getInternalState(spy, "loadManager"), spy);
 				KurentoClient kClient = mock(KurentoClient.class);
 
 				doAnswer(i -> {
