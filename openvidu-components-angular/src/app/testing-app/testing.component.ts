@@ -1,25 +1,49 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-import { RestService } from '../services/rest.service';
-import { throwError as observableThrowError } from 'rxjs';
+import { Subscription, throwError as observableThrowError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { ActivatedRoute } from '@angular/router';
 
 interface TemplateDirectives {
 	name: string;
 	subDirectives?: TemplateDirectives[];
 }
 
-enum DirectiveId {
+interface APIDirectives {
+	component: string;
+	directives: AttributeDirective[];
+}
+
+enum StructuralDirectives {
 	TOOLBAR = 'ovToolbar',
 	TOOLBAR_BUTTONS = 'ovToolbarAdditionalButtons',
 	PANEL = 'ovPanel',
 	CHAT_PANEL = 'ovChatPanel',
 	PARTICIPANTS_PANEL = 'ovParticipantsPanel',
 	PARTICIPANTS_PANEL_ITEM = 'ovParticipantPanelItem',
-	PARTICIPANTS_PANEL_ITEM_ELEMENT = 'ovParticipantPanelItemElements',
+	PARTICIPANTS_PANEL_ITEM_ELEMENTS = 'ovParticipantPanelItemElements',
 	LAYOUT = 'ovLayout',
 	STREAM = 'ovStream'
+}
+
+export enum AttributeDirective {
+	// MINIMAL = 'minimal',
+	// PARTICIPANT_NAME = 'participantName',
+	// PREJOIN = 'prejoin',
+	// VIDEO_MUTED = 'videoMuted',
+	// AUDIO_MUTED = 'audioMuted',
+	TOOLBAR_SCREENSHARE = 'screenshareButton',
+	TOOLBAR_FULLSCREEN = 'fullscreenButton',
+	TOOLBAR_LEAVE = 'leaveButton',
+	TOOLBAR_PARTICIPANTS_PANEL = 'participantsPanelButton',
+	TOOLBAR_CHAT_PANEL = 'chatPanelButton',
+	TOOLBAR_DISPLAY_SESSION = 'displaySessionName',
+	TOOLBAR_DISPLAY_LOGO = 'displayLogo',
+	STREAM_PARTICIPANT_NAME = 'displayParticipantName',
+	STREAM_AUDIO_DETECTION = 'displayAudioDetection',
+	STREAM_SETTINGS = 'settingsButton',
+	PARTICIPANT_ITEM_MUTE = 'muteButton'
 }
 
 @Component({
@@ -31,30 +55,56 @@ export class TestingComponent implements OnInit {
 	OPENVIDU_SERVER_URL = 'https://localhost:4443';
 	OPENVIDU_SERVER_SECRET = 'MY_SECRET';
 	sessionId: string;
-	directives: TemplateDirectives[] = [
+	templateDirectives: TemplateDirectives[] = [
 		{
-			name: 'ovToolbar',
-			subDirectives: [{ name: 'ovToolbarAdditionalButtons' }]
+			name: StructuralDirectives.TOOLBAR,
+			subDirectives: [{ name: StructuralDirectives.TOOLBAR_BUTTONS }]
 		},
-
 		{
-			name: 'ovPanel',
+			name: StructuralDirectives.PANEL,
 			subDirectives: [
-				{ name: 'ovChatPanel' },
+				{ name: StructuralDirectives.CHAT_PANEL },
 				{
-					name: 'ovParticipantsPanel',
+					name: StructuralDirectives.PARTICIPANTS_PANEL,
 					subDirectives: [
 						{
-							name: 'ovParticipantPanelItem',
-							subDirectives: [{ name: 'ovParticipantPanelItemElements' }]
+							name: StructuralDirectives.PARTICIPANTS_PANEL_ITEM,
+							subDirectives: [{ name: StructuralDirectives.PARTICIPANTS_PANEL_ITEM_ELEMENTS }]
 						}
 					]
 				}
 			]
 		},
 		{
-			name: 'ovLayout',
-			subDirectives: [{ name: 'ovStream' }]
+			name: StructuralDirectives.LAYOUT,
+			subDirectives: [{ name: StructuralDirectives.STREAM }]
+		}
+	];
+
+	apiDirectives: APIDirectives[] = [
+		{
+			component: StructuralDirectives.TOOLBAR,
+			directives: [
+				AttributeDirective.TOOLBAR_CHAT_PANEL,
+				AttributeDirective.TOOLBAR_DISPLAY_LOGO,
+				AttributeDirective.TOOLBAR_DISPLAY_SESSION,
+				AttributeDirective.TOOLBAR_FULLSCREEN,
+				AttributeDirective.TOOLBAR_LEAVE,
+				AttributeDirective.TOOLBAR_PARTICIPANTS_PANEL,
+				AttributeDirective.TOOLBAR_SCREENSHARE
+			]
+		},
+		{
+			component: StructuralDirectives.STREAM,
+			directives: [
+				AttributeDirective.STREAM_AUDIO_DETECTION,
+				AttributeDirective.STREAM_PARTICIPANT_NAME,
+				AttributeDirective.STREAM_SETTINGS
+			]
+		},
+		{
+			component: StructuralDirectives.PARTICIPANTS_PANEL_ITEM,
+			directives: [AttributeDirective.PARTICIPANT_ITEM_MUTE]
 		}
 	];
 
@@ -68,17 +118,43 @@ export class TestingComponent implements OnInit {
 	ovParticipantPanelItemElementsSelected = false;
 	ovLayoutSelected = false;
 	ovStreamSelected = false;
+
+	displayLogo = true;
+	chatPanelBtn = true;
+	displaySessionId = true;
+	fullscreenBtn = true;
+	leaveBtn = true;
+	participantsPanelBtn = true;
+	screenshareBtn = true;
+
+	audioDetection = true;
+	participantName = true;
+	settingsBtn = true;
+	participantItemMuteBtn = true;
+
 	tokens: { webcam: any; screen: any };
 
-	constructor(private httpClient: HttpClient) {}
+	subscription: Subscription;
 
-	async ngOnInit() {
-		this.sessionId = `testingSession-${(Math.random() + 1).toString(36).substring(7)}`;
+	constructor(private httpClient: HttpClient, private route: ActivatedRoute) {}
 
-		this.tokens = {
-			webcam: await this.getToken(this.sessionId),
-			screen: await this.getToken(this.sessionId)
-		};
+	ngOnInit() {
+		this.subscription = this.route.queryParams.subscribe(async (params) => {
+
+			console.warn(params);
+			if(params?.sessionId) {
+				this.sessionId = params.sessionId
+			} else {
+				this.sessionId = `testingSession-${(Math.random() + 1).toString(36).substring(7)}`;
+			}
+
+			console.warn('SESSION ID', this.sessionId)
+			this.tokens = {
+				webcam: await this.getToken(this.sessionId),
+				screen: await this.getToken(this.sessionId)
+			};
+		});
+		this.subscription.unsubscribe();
 	}
 
 	appendElement(id: string) {
@@ -87,45 +163,88 @@ export class TestingComponent implements OnInit {
 		const element = document.createElement('div');
 		element.setAttribute('id', id);
 		element.setAttribute('style', 'height: 1px;');
-		eventsDiv.appendChild(element);
+		eventsDiv?.appendChild(element);
 	}
 
 	updateSelection(id: string, value: boolean) {
 		switch (id) {
-			case DirectiveId.TOOLBAR:
+			case StructuralDirectives.TOOLBAR:
 				this.ovToolbarSelected = value;
 				break;
 
-			case DirectiveId.TOOLBAR_BUTTONS:
+			case StructuralDirectives.TOOLBAR_BUTTONS:
 				this.ovToolbarAdditionalButtonsSelected = value;
 				break;
 
-			case DirectiveId.PANEL:
+			case StructuralDirectives.PANEL:
 				this.ovPanelSelected = value;
 				break;
 
-			case DirectiveId.CHAT_PANEL:
+			case StructuralDirectives.CHAT_PANEL:
 				this.ovChatPanelSelected = value;
 				break;
 
-			case DirectiveId.PARTICIPANTS_PANEL:
+			case StructuralDirectives.PARTICIPANTS_PANEL:
 				this.ovParticipantsPanelSelected = value;
 				break;
 
-			case DirectiveId.PARTICIPANTS_PANEL_ITEM:
+			case StructuralDirectives.PARTICIPANTS_PANEL_ITEM:
 				this.ovParticipantPanelItemSelected = value;
 				break;
 
-			case DirectiveId.PARTICIPANTS_PANEL_ITEM_ELEMENT:
+			case StructuralDirectives.PARTICIPANTS_PANEL_ITEM_ELEMENTS:
 				this.ovParticipantPanelItemElementsSelected = value;
 				break;
 
-			case DirectiveId.LAYOUT:
+			case StructuralDirectives.LAYOUT:
 				this.ovLayoutSelected = value;
 				break;
 
-			case DirectiveId.STREAM:
+			case StructuralDirectives.STREAM:
 				this.ovStreamSelected = value;
+				break;
+		}
+	}
+
+	updateApiDirective(id: string, value: boolean) {
+		switch (id) {
+			case AttributeDirective.TOOLBAR_CHAT_PANEL:
+				this.chatPanelBtn = value;
+				break;
+
+			case AttributeDirective.TOOLBAR_DISPLAY_LOGO:
+				this.displayLogo = value;
+				break;
+
+			case AttributeDirective.TOOLBAR_DISPLAY_SESSION:
+				this.displaySessionId = value;
+				break;
+
+			case AttributeDirective.TOOLBAR_FULLSCREEN:
+				this.fullscreenBtn = value;
+				break;
+
+			case AttributeDirective.TOOLBAR_LEAVE:
+				this.leaveBtn = value;
+				break;
+			case AttributeDirective.TOOLBAR_PARTICIPANTS_PANEL:
+				this.participantsPanelBtn = value;
+				break;
+			case AttributeDirective.TOOLBAR_SCREENSHARE:
+				this.screenshareBtn = value;
+				break;
+			case AttributeDirective.STREAM_AUDIO_DETECTION:
+				this.audioDetection = value;
+				break;
+			case AttributeDirective.STREAM_PARTICIPANT_NAME:
+				this.participantName = value;
+				break;
+
+			case AttributeDirective.STREAM_SETTINGS:
+				this.settingsBtn = value;
+				break;
+			case AttributeDirective.PARTICIPANT_ITEM_MUTE:
+				this.participantItemMuteBtn = value;
 				break;
 		}
 	}
@@ -151,7 +270,7 @@ export class TestingComponent implements OnInit {
 		return await this.createToken(id);
 	}
 
-	createSession(sessionId) {
+	createSession(sessionId: string) {
 		return new Promise((resolve, reject) => {
 			const body = JSON.stringify({ customSessionId: sessionId });
 			const options = {

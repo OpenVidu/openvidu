@@ -1,5 +1,6 @@
 <section style="padding: 20px" class="example-section" *ngIf="showDirectives">
-	<div *ngFor="let directive of directives; let i = index" class="directive-container">
+	<h2>Structural directives</h2>
+	<div *ngFor="let directive of templateDirectives; let i = index" class="directive-container">
 		<mat-checkbox
 			class="parent-directive"
 			[id]="directive.name + '-checkbox'"
@@ -37,6 +38,28 @@
 		</span>
 	</div>
 </section>
+<hr *ngIf="showDirectives"/>
+
+<section  *ngIf="showDirectives">
+	<div>
+		<h2>Attribute directives</h2>
+	</div>
+	<div *ngFor="let directive of apiDirectives; let i = index" class="directive-container">
+		<h3 style="background-color: rgb(172, 201, 255); font-weight: bold">
+			{{ directive.component }}
+		</h3>
+		<span>
+			<ul>
+				<li *ngFor="let dir of directive.directives">
+					<mat-checkbox [id]="dir + '-checkbox'" (change)="updateApiDirective(dir, $event.checked)" [checked]="true">
+						{{ dir }}
+					</mat-checkbox>
+				</li>
+			</ul>
+		</span>
+	</div>
+</section>
+
 <div style="text-align: center" *ngIf="showDirectives">
 	<button mat-flat-button color="warn" (click)="apply()" id="apply-btn">Apply</button>
 </div>
@@ -57,6 +80,13 @@
 		<ov-toolbar
 			*ovToolbar
 			id="custom-toolbar"
+			[screenshareButton]="screenshareBtn"
+			[fullscreenButton]="fullscreenBtn"
+			[leaveButton]="leaveBtn"
+			[participantsPanelButton]="participantsPanelBtn"
+			[chatPanelButton]="chatPanelBtn"
+			[displaySessionName]="displaySessionId"
+			[displayLogo]="displayLogo"
 			(onLeaveButtonClicked)="appendElement('onLeaveButtonClicked')"
 			(onCameraButtonClicked)="appendElement('onCameraButtonClicked')"
 			(onMicrophoneButtonClicked)="appendElement('onMicrophoneButtonClicked')"
@@ -165,7 +195,7 @@
 
 	<ng-template [ngIf]="!ovPanelSelected && !ovParticipantsPanelSelected && ovParticipantPanelItemSelected">
 		<div *ovParticipantPanelItem="let participant" id="custom-participants-panel-item">
-			<ov-participant-panel-item [participant]="participant">
+			<ov-participant-panel-item [participant]="participant" [muteButton]="participantItemMuteBtn">
 				<ng-template [ngIf]="ovParticipantPanelItemElementsSelected">
 					<div *ovParticipantPanelItemElements id="custom-participants-panel-item-element">
 						<button mat-icon-button id="hand-notification">
@@ -209,7 +239,12 @@
 	<ng-template [ngIf]="!ovLayoutSelected && ovStreamSelected">
 		<div *ovStream="let stream" id="custom-stream">
 			<p>EXTERNAL STREAM INSIDE OF LAYOUT</p>
-			<ov-stream [stream]="stream"></ov-stream>
+			<ov-stream
+				[stream]="stream"
+				[settingsButton]="settingsBtn"
+				[displayAudioDetection]="audioDetection"
+				[displayParticipantName]="participantName"
+			></ov-stream>
 		</div>
 	</ng-template>
 

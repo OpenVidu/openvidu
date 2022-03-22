@@ -105,7 +105,7 @@ describe('Checkout localhost app', () => {
 		expect(element.length).equals(0);
 	});
 
-	//* PANELS
+	// //* PANELS
 
 	it('should inject the CUSTOM PANEL without children', async () => {
 		let element;
@@ -733,22 +733,291 @@ describe('Checkout localhost app', () => {
 		expect(element.length).equals(1);
 	});
 
+	// * Attribute directives
+
+	it('should HIDE the CHAT PANEL BUTTON', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovToolbar-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('chatPanelButton-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('toolbar')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.wait(until.elementLocated(By.id('menu-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Check if chat button does not exist
+		element = await browser.findElements(By.id('chat-panel-btn'));
+		expect(element.length).equals(0);
+	});
+
+	it('should HIDE the PARTICIPANTS PANEL BUTTON', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovToolbar-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('participantsPanelButton-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('toolbar')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.wait(until.elementLocated(By.id('menu-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Check if participants button does not exist
+		element = await browser.findElements(By.id('participants-panel-btn'));
+		expect(element.length).equals(0);
+	});
+
+	it('should HIDE the DISPLAY LOGO', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovToolbar-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('displayLogo-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('toolbar')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.wait(until.elementLocated(By.id('info-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.findElements(By.id('branding-logo'));
+		expect(element.length).equals(0);
+	});
+
+	it('should HIDE the DISPLAY SESSION name', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovToolbar-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('displaySessionName-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('toolbar')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.wait(until.elementLocated(By.id('info-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.findElements(By.id('session-name'));
+		expect(element.length).equals(0);
+	});
+
+	it('should HIDE the FULLSCREEN button', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovToolbar-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('fullscreenButton-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('toolbar')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.findElements(By.id('fullscreen-btn'));
+		expect(element.length).equals(0);
+	});
+
+	it('should HIDE the LEAVE button', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovToolbar-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('leaveButton-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('toolbar')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.findElements(By.id('leave-btn'));
+		expect(element.length).equals(0);
+	});
+
+	it('should HIDE the SCREENSHARE button', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovToolbar-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('screenshareButton-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('toolbar')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.findElements(By.id('screenshare-btn'));
+		expect(element.length).equals(0);
+	});
+
+	it('should HIDE the AUDIO detector', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovStream-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('displayAudioDetection-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('custom-stream')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.findElements(By.id('audio-wave-container'));
+		expect(element.length).equals(0);
+	});
+
+	it('should HIDE the PARTICIPANT NAME', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovStream-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('displayParticipantName-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('custom-stream')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.findElements(By.id('nickname-container'));
+		expect(element.length).equals(0);
+	});
+
+	it('should HIDE the SETTINGS button', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovStream-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('settingsButton-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('custom-stream')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.findElements(By.id('settings-container'));
+		expect(element.length).equals(0);
+	});
+
+	it('should HIDE the participant MUTE button', async () => {
+		let element;
+		const fixedSession = `${url}?sessionId=fixedNameTesting`;
+		await browser.get(`${fixedSession}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovParticipantPanelItem-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('muteButton-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.wait(until.elementLocated(By.id('menu-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.findElement(By.id('participants-panel-btn'));
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('participants-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Starting new browser for adding a new participant
+		const newTabScript = `window.open("${fixedSession}")`;
+		await browser.executeScript(newTabScript);
+
+		// Get tabs opened
+		const tabs = await browser.getAllWindowHandles();
+		// Focus on the last tab
+		browser.switchTo().window(tabs[1]);
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		// Switch to first tab
+		browser.switchTo().window(tabs[0]);
+
+		element = await browser.wait(until.elementsLocated(By.id('remote-participant-item')), TIMEOUT);
+		expect(element.length).equals(1);
+		element = await browser.findElements(By.id('mute-btn'));
+		expect(element.length).equals(0);
+	});
+
 	// * EVENTS
-	// it('should receive the onJoinButtonClicked event', async () => {
-	// 	let element;
-	// 	await browser.get(`${url}`);
-	// 	element = await browser.wait(until.elementLocated(By.id('prejoin-container')), TIMEOUT);
-	// 	expect(await element.isDisplayed()).to.be.true;
-
-	// 	// Clicking to join button
-	// 	const joinButton = await browser.findElement(By.id('join-button'));
-	// 	expect(await joinButton.isDisplayed()).to.be.true;
-	// 	await joinButton.click();
-
-	// 	// Checking if onJoinButtonClicked has been received
-	// 	element = await browser.wait(until.elementLocated(By.id('onJoinButtonClicked')), TIMEOUT);
-	// 	expect(await element.isDisplayed()).to.be.true;
-	// });
 
 	it('should receive the onLeaveButtonClicked event', async () => {
 		let element;
@@ -889,6 +1158,4 @@ describe('Checkout localhost app', () => {
 		element = await browser.wait(until.elementLocated(By.id('onFullscreenButtonClicked')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
-
-
 });

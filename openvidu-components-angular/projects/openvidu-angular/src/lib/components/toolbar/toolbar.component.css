@@ -10,7 +10,7 @@
 	right: 0;
 }
 
-#info-container {
+#info-container>div {
 	display: flex;
 	align-items: center;
 }
