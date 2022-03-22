@@ -44,7 +44,7 @@ public class FixedOneKmsManager extends KmsManager {
 			throws Exception {
 		KmsProperties firstProps = kmsProperties.get(0);
 		KurentoClient kClient = null;
-		Kms kms = new Kms(firstProps, loadManager, mediaNodeManager);
+		Kms kms = new Kms(firstProps, loadManager, this);
 		try {
 			JsonRpcWSConnectionListener listener = this.generateKurentoConnectionListener(kms.getId());
 			JsonRpcClientNettyWebSocket client = new JsonRpcClientNettyWebSocket(firstProps.getUri(), listener);
@@ -90,13 +90,8 @@ public class FixedOneKmsManager extends KmsManager {
 	}
 
 	@Override
-	protected String removeMediaNodeUponCrash(String mediaNodeId) {
+	protected String removeMediaNodeUponCrash(String mediaNodeId, boolean followedByReconnection, String message) {
 		return null;
-	}
-
-	@Override
-	protected boolean infiniteRetry() {
-		return true;
 	}
 
 	@Override

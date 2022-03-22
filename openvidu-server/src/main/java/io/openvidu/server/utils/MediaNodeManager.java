@@ -1,10 +1,12 @@
 package io.openvidu.server.utils;
 
+import java.util.Collection;
+
 import io.openvidu.server.kurento.kms.Kms;
 
 public interface MediaNodeManager {
 
-	public void mediaNodeUsageRegistration(Kms kms, long timeOfConnection);
+	public void mediaNodeUsageRegistration(Kms kms, long timeOfConnection, Collection<Kms> existingKmss);
 
 	public void mediaNodeUsageDeregistration(Kms kms, long timeOfDisconnection);
 

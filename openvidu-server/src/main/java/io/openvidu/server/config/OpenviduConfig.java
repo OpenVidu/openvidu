@@ -38,7 +38,6 @@ import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 
-import io.openvidu.java.client.IceServerProperties;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.DomainValidator;
@@ -59,6 +58,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
+import io.openvidu.java.client.IceServerProperties;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.VideoCodec;
 import io.openvidu.server.OpenViduServer;
@@ -469,6 +469,10 @@ public class OpenviduConfig {
 		return RequestMappings.FRONTEND_CE;
 	}
 
+	public int getReconnectionTimeout() {
+		return 2000000000;
+	}
+
 	// Properties management methods
 
 	public OpenviduConfig deriveWithAdditionalPropertiesSource(Map<String, ?> propertiesSource) {
@@ -544,7 +548,7 @@ public class OpenviduConfig {
 		postProcessConfigProps();
 		userConfigProps = new ArrayList<>(configProps.keySet());
 		userConfigProps.removeAll(getNonUserProperties());
-		for (String notShowEmptyConfigKey: getNonPrintablePropertiesIfEmpty()) {
+		for (String notShowEmptyConfigKey : getNonPrintablePropertiesIfEmpty()) {
 			String value = configProps.get(notShowEmptyConfigKey);
 			if (value == null || value.isEmpty() || value.equals(new JsonArray().toString())) {
 				userConfigProps.remove(notShowEmptyConfigKey);
@@ -902,7 +906,6 @@ public class OpenviduConfig {
 			addError(property, "Cannot be empty");
 			return false;
 		}
-
 		if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
 			return Boolean.parseBoolean(value);
 		} else {
@@ -914,9 +917,31 @@ public class OpenviduConfig {
 	protected Integer asNonNegativeInteger(String property) {
 		try {
 			Integer integerValue = Integer.parseInt(getValue(property));
-
 			if (integerValue < 0) {
 				addError(property, "Is not a non negative integer");
+			}
+			return integerValue;
+		} catch (NumberFormatException e) {
+			addError(property, "Is not a non negative integer");
+			return 0;
+		}
+	}
+
+	protected Integer asOptionalNonNegativeInteger(String property, int min, int max) {
+		try {
+			String value = getValue(property);
+			if (value == null || value.isEmpty()) {
+				return null;
+			}
+			Integer integerValue = Integer.parseInt(getValue(property));
+			if (integerValue < 0) {
+				addError(property, "Is not a non negative integer");
+			}
+			if (integerValue < min) {
+				addError(property, "Must be >= " + min);
+			}
+			if (integerValue >= max) {
+				addError(property, "Must be < " + max);
 			}
 			return integerValue;
 		} catch (NumberFormatException e) {
@@ -1191,7 +1216,7 @@ public class OpenviduConfig {
 	private IceServerProperties.Builder readIceServer(String property, String iceServerString) {
 		String url = null, username = null, credential = null, staticAuthSecret = null;
 		String[] iceServerPropList = iceServerString.split(",");
-		for (String iceServerProp: iceServerPropList) {
+		for (String iceServerProp : iceServerPropList) {
 			if (iceServerProp.startsWith("url=")) {
 				url = StringUtils.substringAfter(iceServerProp, "url=");
 			} else if (iceServerProp.startsWith("username=")) {

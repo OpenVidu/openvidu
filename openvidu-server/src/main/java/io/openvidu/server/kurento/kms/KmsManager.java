@@ -109,6 +109,11 @@ public abstract class KmsManager {
 	protected SessionManager sessionManager;
 	protected LoadManager loadManager;
 
+	// Media Node reconnection cycle: 6 attempts, 2 times per second (3s total)
+	final int MAX_RECONNECT_TIME_MILLIS = 3000;
+	final int INTERVAL_WAIT_MS = 500;
+	final int RECONNECTION_LOOPS = MAX_RECONNECT_TIME_MILLIS / INTERVAL_WAIT_MS;
+
 	public KmsManager(SessionManager sessionManager, LoadManager loadManager) {
 		this.sessionManager = sessionManager;
 		this.loadManager = loadManager;
@@ -167,6 +172,10 @@ public abstract class KmsManager {
 		return kmsLoads;
 	}
 
+	public MediaNodeManager getMediaNodeManager() {
+		return this.mediaNodeManager;
+	}
+
 	protected JsonRpcWSConnectionListener generateKurentoConnectionListener(final String kmsId) {
 		return new JsonRpcWSConnectionListener() {
 
@@ -218,29 +227,28 @@ public abstract class KmsManager {
 
 				kms.setKurentoClientConnected(false);
 
-				disconnectionHandler(kms);
+				disconnectionHandler(kms, 0);
 			}
 
-			private void disconnectionHandler(Kms kms) {
-				// 6 attempts, 2 times per second (3 seconds total)
-				final int maxReconnectTimeMillis = 3000;
-				final int intervalWaitMs = 500;
-				final int loops = maxReconnectTimeMillis / intervalWaitMs;
-				final AtomicInteger iteration = new AtomicInteger(loops);
+			private void disconnectionHandler(Kms kms, int reconnectionSecondsConsumed) {
 
+				final AtomicInteger iteration = new AtomicInteger(RECONNECTION_LOOPS);
 				final long initTime = System.currentTimeMillis();
+
+				final int accumulatedTimeout = reconnectionSecondsConsumed + (MAX_RECONNECT_TIME_MILLIS / 1000);
 
 				final UpdatableTimerTask kurentoClientReconnectTimer = new UpdatableTimerTask(() -> {
 					if (iteration.decrementAndGet() < 0) {
 
 						kms.getKurentoClientReconnectTimer().cancelTimer();
+						boolean mustRetryReconnection = accumulatedTimeout < openviduConfig.getReconnectionTimeout();
 
 						if (kms.isFirstReconnectionAttempt()) {
 
 							log.error(
 									"OpenVidu Server [{}] could not reconnect to Media Node {} with IP {} in {} seconds. Media Node crashed",
 									kms.getKurentoClient().toString(), kms.getId(), kms.getIp(),
-									(intervalWaitMs * loops / 1000));
+									(INTERVAL_WAIT_MS * RECONNECTION_LOOPS / 1000));
 
 							kms.setFirstReconnectionAttempt(false);
 
@@ -251,8 +259,8 @@ public abstract class KmsManager {
 									.map(entry -> entry.getKey()).collect(Collectors.toUnmodifiableList());
 
 							// 1. Remove Media Node from cluster
-							log.warn("Removing Media Node {} with IP {} after crash", kms.getId(), kms.getIp());
-							String environmentId = removeMediaNodeUponCrash(kms.getId());
+							String environmentId = removeMediaNodeUponCrash(kms.getId(), mustRetryReconnection,
+									"Removing Media Node " + kms.getId() + " after node crash");
 
 							// 2. Send nodeCrashed webhook event
 							sessionEventsHandler.onMediaNodeCrashed(kms, environmentId, timeOfKurentoDisconnection,
@@ -274,17 +282,27 @@ public abstract class KmsManager {
 							log.error(
 									"Retry error. OpenVidu Server [{}] could not connect to Media Node {} with IP {} in {} seconds",
 									kms.getKurentoClient().toString(), kms.getId(), kms.getIp(),
-									(intervalWaitMs * loops / 1000));
+									(INTERVAL_WAIT_MS * RECONNECTION_LOOPS / 1000));
 						}
 
-						if (infiniteRetry()) {
-							log.info("Retrying reconnection to Media Node {} with IP {}", kms.getId(), kms.getIp());
-							disconnectionHandler(kms);
+						if (mustRetryReconnection) {
+							log.info(
+									"Retrying reconnection to Media Node {} with IP {}. {} seconds consumed of a maximum of {}",
+									kms.getId(), kms.getIp(), accumulatedTimeout,
+									openviduConfig.getReconnectionTimeout());
+							disconnectionHandler(kms, accumulatedTimeout);
+						} else {
+							log.warn(
+									"Reconnection process to Media Node {} with IP {} aborted. {} seconds have been consumed and the upper limit is {} seconds",
+									kms.getId(), kms.getIp(), accumulatedTimeout,
+									openviduConfig.getReconnectionTimeout());
+							removeMediaNodeUponCrash(kms.getId(), mustRetryReconnection, "Removing Media Node "
+									+ kms.getId() + " with IP " + kms.getIp() + " after reconnection abort");
 						}
 
 					} else {
 
-						if ((System.currentTimeMillis() - initTime) > maxReconnectTimeMillis) {
+						if ((System.currentTimeMillis() - initTime) > MAX_RECONNECT_TIME_MILLIS) {
 							// KurentoClient connection timeout exceeds the limit. This prevents a
 							// single reconnection attempt to exceed the total timeout limit
 							iteration.set(0);
@@ -329,7 +347,7 @@ public abstract class KmsManager {
 
 						kms.setTimeOfKurentoClientDisconnection(0);
 					}
-				}, () -> Long.valueOf(intervalWaitMs)); // Try 2 times per seconds
+				}, () -> Long.valueOf(INTERVAL_WAIT_MS)); // Try 2 times per second
 
 				kms.setKurentoClientReconnectTimer(kurentoClientReconnectTimer);
 				kurentoClientReconnectTimer.updateTimer();
@@ -359,12 +377,11 @@ public abstract class KmsManager {
 	public abstract void decrementActiveRecordings(RecordingProperties recordingProperties, String recordingId,
 			Session session);
 
-	protected abstract String removeMediaNodeUponCrash(String mediaNodeId);
+	protected abstract String removeMediaNodeUponCrash(String mediaNodeId, boolean followedByReconnection,
+			String message);
 
 	@PostConstruct
 	protected abstract void postConstructInitKurentoClients();
-
-	protected abstract boolean infiniteRetry();
 
 	public void closeAllKurentoClients() {
 		log.info("Closing all KurentoClients");
