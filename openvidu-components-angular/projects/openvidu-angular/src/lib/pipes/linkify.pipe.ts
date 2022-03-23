@@ -1,6 +1,9 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { Linkifier } from '../models/linkifier.model';
 
+/**
+ * @internal
+ */
 @Pipe({ name: 'linkify' })
 export class LinkifyPipe implements PipeTransform {
 	private linkifer: Linkifier;

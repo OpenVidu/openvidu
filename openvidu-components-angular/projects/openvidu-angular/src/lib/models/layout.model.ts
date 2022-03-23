@@ -1,3 +1,6 @@
+/**
+ * @internal
+ */
 export enum LayoutClass {
 	ROOT_ELEMENT = 'OT_root',
 	BIG_ELEMENT = 'OV_big',
@@ -6,15 +9,17 @@ export enum LayoutClass {
 	NO_SIZE_ELEMENT = 'no-size'
 }
 
+/**
+ * @internal
+ */
 export enum SidenavMode {
 	OVER = 'over',
 	SIDE =  'side'
 }
 
 /**
- * @hidden
+ * @internal
  */
-
 export interface OpenViduLayoutOptions {
 	/**
 	 * The narrowest ratio that will be used (*2x3* by default)
@@ -70,6 +75,9 @@ export interface OpenViduLayoutOptions {
 	bigFirst: any;
 }
 
+/**
+ * @internal
+ */
 export class OpenViduLayout {
 	/**
 	 * @hidden

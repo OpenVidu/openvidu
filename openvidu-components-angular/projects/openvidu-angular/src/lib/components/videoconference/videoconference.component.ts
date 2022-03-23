@@ -25,6 +25,7 @@ import {
 } from '../../directives/template/openvidu-angular.directive';
 import { ILogger } from '../../models/logger.model';
 import { ParticipantProperties } from '../../models/participant.model';
+import { TokenModel } from '../../models/token.model';
 import { ActionService } from '../../services/action/action.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import { DeviceService } from '../../services/device/device.service';
@@ -34,6 +35,68 @@ import { ParticipantService } from '../../services/participant/participant.servi
 import { StorageService } from '../../services/storage/storage.service';
 import { TokenService } from '../../services/token/token.service';
 
+/**
+ * The **VideoconferenceComponent** is the parent of all OpenVidu components.
+ * It allow us to create a modern, useful and powerful videoconference apps with ease.
+ *
+ * <div class="custom-table-container">
+ * <div>
+ *  <h3>API Directives</h3>
+ *
+ * This component allows us to show or hide certain HTML elements with the following {@link https://angular.io/guide/attribute-directives Angular attribute directives}
+ * with the aim of fully customizing the videoconference application.
+ *
+ * | **Parameter**                  | **Type**  | **Reference**                                   |
+ * | :----------------------------: | :-------: | :---------------------------------------------: |
+ * | **minimal**                        | `boolean` | {@link MinimalDirective}                        |
+ * | **prejoin**                        | `boolean` | {@link PrejoinDirective}                        |
+ * | **participantName**                | `string`  | {@link ParticipantNameDirective}                |
+ * | **videoMuted**                     | `boolean` | {@link VideoMutedDirective}                     |
+ * | **audioMuted**                     | `boolean` | {@link AudioMutedDirective}                     |
+ * | **toolbarScreenshareButton**       | `boolean` | {@link ToolbarScreenshareButtonDirective}       |
+ * | **toolbarFullscreenButton**        | `boolean` | {@link ToolbarFullscreenButtonDirective}        |
+ * | **toolbarLeaveButton**             | `boolean` | {@link ToolbarLeaveButtonDirective}             |
+ * | **toolbarChatPanelButton**         | `boolean` | {@link ToolbarChatPanelButtonDirective}         |
+ * | **toolbarParticipantsPanelButton** | `boolean` | {@link ToolbarParticipantsPanelButtonDirective} |
+ * | **toolbarDisplayLogo**             | `boolean` | {@link ToolbarDisplayLogoDirective}             |
+ * | **toolbarDisplaySessionName**      | `boolean` | {@link ToolbarDisplaySessionNameDirective}      |
+ * | **streamDisplayParticipantName**   | `boolean` | {@link StreamDisplayParticipantNameDirective}   |
+ * | **streamDisplayAudioDetection**    | `boolean` | {@link StreamDisplayAudioDetectionDirective}    |
+ * | **streamSettingsButton**           | `boolean` | {@link StreamSettingsButtonDirective}           |
+ * | **participantPanelItemMuteButton** | `boolean` | {@link ParticipantPanelItemMuteButtonDirective} |
+ *
+ * <p class="component-link-text">
+ * <span class="italic">See all {@link ApiDirectiveModule API Directives}</span>
+ * </p>
+ * </div>
+ *
+ * <div>
+ *
+ * <h3>OpenVidu Angular Directives</h3>
+ *
+ *
+ * The VideoconferenceComponent is also providing us a way to **replace the default templates** with a custom one.
+ * It will recognise the following {@link https://angular.io/guide/structural-directives Angular structural directives}
+ * in the elements added as children.
+ *
+ * |            **Directive**           |                 **Reference**                 |
+ * |:----------------------------------:|:---------------------------------------------:|
+ * |           ***ovToolbar**           |            {@link ToolbarDirective}           |
+ * |   ***ovToolbarAdditionalButtons**   |   {@link ToolbarAdditionalButtonsDirective}   |
+ * |             ***ovPanel**            |             {@link PanelDirective}            |
+ * |           ***ovChatPanel**          |           {@link ChatPanelDirective}          |
+ * |       ***ovParticipantsPanel**      |       {@link ParticipantsPanelDirective}      |
+ * |     ***ovParticipantPanelItem**     |     {@link ParticipantPanelItemDirective}     |
+ * | ***ovParticipantPanelItemElements** | {@link ParticipantPanelItemElementsDirective} |
+ * |            ***ovLayout**            |            {@link LayoutDirective}            |
+ * |            ***ovStream**            |            {@link StreamDirective}            |
+ *
+ * <p class="component-link-text">
+ * 	<span class="italic">See all {@link OpenViduAngularDirectiveModule OpenVidu Angular Directives}</span>
+ * </p>
+ * </div>
+ * </div>
+ */
 @Component({
 	selector: 'ov-videoconference',
 	templateUrl: './videoconference.component.html',
@@ -41,40 +104,124 @@ import { TokenService } from '../../services/token/token.service';
 })
 export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewInit {
 	// *** Toolbar ***
+	/**
+	 * @internal
+	 */
 	@ContentChild(ToolbarDirective) externalToolbar: ToolbarDirective;
+	/**
+	 * @internal
+	 */
 	@ContentChild(ToolbarAdditionalButtonsDirective) externalToolbarAdditionalButtons: ToolbarAdditionalButtonsDirective;
 
 	// *** Panels ***
+
+	/**
+	 * @internal
+	 */
 	@ContentChild(PanelDirective) externalPanel: PanelDirective;
+	/**
+	 * @internal
+	 */
 	@ContentChild(ChatPanelDirective) externalChatPanel: ChatPanelDirective;
+	/**
+	 * @internal
+	 */
 	@ContentChild(ParticipantsPanelDirective) externalParticipantsPanel: ParticipantsPanelDirective;
+	/**
+	 * @internal
+	 */
 	@ContentChild(ParticipantPanelItemDirective) externalParticipantPanelItem: ParticipantPanelItemDirective;
+	/**
+	 * @internal
+	 */
 	@ContentChild(ParticipantPanelItemElementsDirective) externalParticipantPanelItemElements: ParticipantPanelItemElementsDirective;
 
 	// *** Layout ***
+	/**
+	 * @internal
+	 */
 	@ContentChild(LayoutDirective) externalLayout: LayoutDirective;
+	/**
+	 * @internal
+	 */
 	@ContentChild(StreamDirective) externalStream: StreamDirective;
 
+	/**
+	 * @internal
+	 */
 	@ViewChild('defaultToolbar', { static: false, read: TemplateRef }) defaultToolbarTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	@ViewChild('defaultPanel', { static: false, read: TemplateRef }) defaultPanelTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	@ViewChild('defaultChatPanel', { static: false, read: TemplateRef }) defaultChatPanelTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	@ViewChild('defaultParticipantsPanel', { static: false, read: TemplateRef }) defaultParticipantsPanelTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	@ViewChild('defaultParticipantPanelItem', { static: false, read: TemplateRef }) defaultParticipantPanelItemTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	@ViewChild('defaultLayout', { static: false, read: TemplateRef }) defaultLayoutTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	@ViewChild('defaultStream', { static: false, read: TemplateRef }) defaultStreamTemplate: TemplateRef<any>;
 
+	/**
+	 * @internal
+	 */
 	openviduAngularToolbarTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	openviduAngularToolbarAdditionalButtonsTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	openviduAngularPanelTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	openviduAngularChatPanelTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	openviduAngularParticipantsPanelTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	openviduAngularParticipantPanelItemTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	openviduAngularParticipantPanelItemElementsTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	openviduAngularLayoutTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	openviduAngularStreamTemplate: TemplateRef<any>;
 
+	// *** Parameters ***
+	// @Input() sessionName: string;
+	// @Input() participantName: string;
+
+	/**
+	 * @param {TokenModel} tokens  The tokens parameter must be an object with `webcam` and `screen` fields.
+	 *  Both of them are `string` type. See {@link TokenModel}
+	 */
 	@Input()
-	set tokens(tokens: { webcam: string; screen: string }) {
+	set tokens(tokens: TokenModel) {
 		if (!tokens || (!tokens.webcam && !tokens.screen)) {
 			//No tokens received
 			// throw new Error('No tokens received');
@@ -109,18 +256,38 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	// Event sent when participant has been created
 	@Output() onParticipantCreated = new EventEmitter<any>();
 
-
+	/**
+	 * @internal
+	 */
 	joinSessionClicked: boolean = false;
+	/**
+	 * @internal
+	 */
 	participantReady: boolean = false;
+	/**
+	 * @internal
+	 */
 	canPublish: boolean = false;
+	/**
+	 * @internal
+	 */
 	error: boolean = false;
+	/**
+	 * @internal
+	 */
 	errorMessage: string = '';
+	/**
+	 * @internal
+	 */
 	showPrejoin: boolean = true;
 	private externalParticipantName: string;
 	private prejoinSub: Subscription;
 	private participantNameSub: Subscription;
 	private log: ILogger;
 
+	/**
+	 * @internal
+	 */
 	constructor(
 		private loggerSrv: LoggerService,
 		private storageSrv: StorageService,
@@ -174,6 +341,9 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		if (this.participantNameSub) this.participantNameSub.unsubscribe();
 	}
 
+	/**
+	 * @internal
+	 */
 	ngAfterViewInit() {
 		if (this.externalToolbar) {
 			this.openviduAngularToolbarTemplate = this.externalToolbar.template;
@@ -239,34 +409,60 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		}
 	}
 
+	/**
+	 * @internal
+	 */
 	_onJoinButtonClicked() {
 		this.joinSessionClicked = true;
 		this.onJoinButtonClicked.emit();
 	}
+	/**
+	 * @internal
+	 */
 	onLeaveButtonClicked() {
 		this.joinSessionClicked = false;
 		this.participantReady = false;
 		this.onToolbarLeaveButtonClicked.emit();
 	}
+	/**
+	 * @internal
+	 */
 	onCameraButtonClicked() {
 		this.onToolbarCameraButtonClicked.emit();
 	}
-
+	/**
+	 * @internal
+	 */
 	onMicrophoneButtonClicked() {
 		this.onToolbarMicrophoneButtonClicked.emit();
 	}
+	/**
+	 * @internal
+	 */
 	onScreenshareButtonClicked() {
 		this.onToolbarScreenshareButtonClicked.emit();
 	}
+	/**
+	 * @internal
+	 */
 	onFullscreenButtonClicked() {
 		this.onToolbarFullscreenButtonClicked.emit();
 	}
+	/**
+	 * @internal
+	 */
 	onParticipantsPanelButtonClicked() {
 		this.onToolbarParticipantsPanelButtonClicked.emit();
 	}
+	/**
+	 * @internal
+	 */
 	onChatPanelButtonClicked() {
 		this.onToolbarChatPanelButtonClicked.emit();
 	}
+	/**
+	 * @internal
+	 */
 	_onSessionCreated(event: Session) {
 		this.onSessionCreated.emit(event);
 	}

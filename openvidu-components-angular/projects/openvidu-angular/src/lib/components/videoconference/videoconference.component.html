@@ -48,12 +48,10 @@
 		(onParticipantsPanelButtonClicked)="onParticipantsPanelButtonClicked()"
 		(onChatPanelButtonClicked)="onChatPanelButtonClicked()"
 	>
-
-	<ng-template #toolbarAdditionalButtons>
-		<ng-container *ngTemplateOutlet="openviduAngularToolbarAdditionalButtonsTemplate"></ng-container>
-	</ng-template>
-
-</ov-toolbar>
+		<ng-template #toolbarAdditionalButtons>
+			<ng-container *ngTemplateOutlet="openviduAngularToolbarAdditionalButtonsTemplate"></ng-container>
+		</ng-template>
+	</ov-toolbar>
 </ng-template>
 
 <ng-template #defaultPanel>
@@ -84,11 +82,11 @@
 
 <ng-template #defaultParticipantPanelItem let-participant>
 	<ov-participant-panel-item [participant]="participant" id="default-participant-panel-item">
-
 		<ng-template #participantPanelItemElements>
-			<ng-container *ngTemplateOutlet="openviduAngularParticipantPanelItemElementsTemplate;  context: { $implicit: participant }"></ng-container>
+			<ng-container
+				*ngTemplateOutlet="openviduAngularParticipantPanelItemElementsTemplate; context: { $implicit: participant }"
+			></ng-container>
 		</ng-template>
-
 	</ov-participant-panel-item>
 </ng-template>
 

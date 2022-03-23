@@ -3,6 +3,9 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { LayoutClass, OpenViduLayout, OpenViduLayoutOptions } from '../../models/layout.model';
 import { DocumentService } from '../document/document.service';
 
+/**
+ * @internal
+ */
 @Injectable({
 	providedIn: 'root'
 })

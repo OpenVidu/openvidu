@@ -1,17 +1,17 @@
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { Publisher } from 'openvidu-browser/lib/OpenVidu/Publisher';
-import { UserModel } from '../../models/user.model';
+import { ParticipantAbstractModel } from '../../models/participant.model';
 
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ParticipantServiceMock {
-	OVUsers: Observable<UserModel[]>;
+	OVUsers: Observable<ParticipantAbstractModel[]>;
 	screenShareState: Observable<boolean>;
 	webcamVideoActive: Observable<boolean>;
-	private _OVUsers = <BehaviorSubject<UserModel[]>>new BehaviorSubject([]);
+	private _OVUsers = <BehaviorSubject<ParticipantAbstractModel[]>>new BehaviorSubject([]);
 	private _screenShareState = <BehaviorSubject<boolean>>new BehaviorSubject(false);
 	private _webcamVideoActive = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 

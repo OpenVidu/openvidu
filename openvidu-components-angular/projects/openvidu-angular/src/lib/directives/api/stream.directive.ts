@@ -1,6 +1,21 @@
 import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular/core';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 
+/**
+ * The **displayParticipantName** directive allows show/hide the participants name in stream component.
+ *
+ * Default: `true`
+ *
+ * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `stream` component:
+ *
+ * @example
+ * <ov-videoconference [streamDisplayParticipantName]="false"></ov-videoconference>
+ *
+ * \
+ * And it also can be used in the {@link StreamComponent}.
+ * @example
+ * <ov-stream [displayParticipantName]="false"></ov-stream>
+ */
 @Directive({
 	selector: 'ov-videoconference[streamDisplayParticipantName], ov-stream[displayParticipantName]'
 })
@@ -37,6 +52,21 @@ export class StreamDisplayParticipantNameDirective implements AfterViewInit, OnD
 	}
 }
 
+/**
+ * The **displayAudioDetection** directive allows show/hide the participants audio detection in stream component.
+ *
+ * Default: `true`
+ *
+ * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `stream` component:
+ *
+ * @example
+ * <ov-videoconference [streamDisplayAudioDetection]="false"></ov-videoconference>
+ *
+ * \
+ * And it also can be used in the {@link StreamComponent}.
+ * @example
+ * <ov-stream [displayAudioDetection]="false"></ov-stream>
+ */
 @Directive({
 	selector: 'ov-videoconference[streamDisplayAudioDetection], ov-stream[displayAudioDetection]'
 })
@@ -71,6 +101,21 @@ export class StreamDisplayAudioDetectionDirective implements AfterViewInit, OnDe
 	}
 }
 
+/**
+ * The **settingsButton** directive allows show/hide the participants settings button in stream component.
+ *
+ * Default: `true`
+ *
+ * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `stream` component:
+ *
+ * @example
+ * <ov-videoconference [streamSettingsButton]="false"></ov-videoconference>
+ *
+ * \
+ * And it also can be used in the {@link StreamComponent}.
+ * @example
+ * <ov-stream [settingsButton]="false"></ov-stream>
+ */
 @Directive({
 	selector: 'ov-videoconference[streamSettingsButton], ov-stream[settingsButton]'
 })

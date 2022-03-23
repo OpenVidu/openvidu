@@ -2,6 +2,9 @@ import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular
 import { StreamManager } from 'openvidu-browser';
 import { VideoType } from '../../models/video-type.model';
 
+/**
+ * @internal
+ */
 @Component({
 	selector: 'ov-video',
 	template: `

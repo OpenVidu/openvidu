@@ -1,0 +1,19 @@
+{
+	"name": "OpenVidu Angular Documentation",
+	"output": "docs/openvidu-angular",
+	"hideGenerator": true,
+	"disableLifeCycleHooks": true,
+	"disableProtected": true,
+	"disableInternal": true,
+	"disablePrivate": true,
+	"disableCoverage": true,
+	"disableRoutesGraph": true,
+	"disableSourceCode": true,
+	"disableTemplateTab": true,
+	"disableDomTree": true,
+	"disableStyleTab": true,
+	"disableDependencies": true,
+	"theme": "gitbook",
+	"customFavicon": "src/favicon.ico",
+	"extTheme": "src/doc/"
+}

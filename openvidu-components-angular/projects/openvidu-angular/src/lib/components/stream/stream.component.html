@@ -55,7 +55,7 @@
 				<span *ngIf="videoSizeIcon === videoSizeIconEnum.NORMAL">Zoom out</span>
 				<span *ngIf="videoSizeIcon === videoSizeIconEnum.BIG">Zoom in</span>
 			</button>
-			<button mat-menu-item id="volumeButton" *ngIf="!this._stream.local" (click)="toggleSound()">
+			<button mat-menu-item id="volumeButton" *ngIf="!this._stream.local" (click)="toggleMuteForcibly()">
 				<mat-icon *ngIf="!_stream.participant.isMutedForcibly">volume_up</mat-icon>
 				<span *ngIf="!_stream.participant.isMutedForcibly">Mute sound</span>
 

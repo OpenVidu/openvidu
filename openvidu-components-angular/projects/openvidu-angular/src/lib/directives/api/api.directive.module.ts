@@ -23,6 +23,7 @@ import {
 	ParticipantNameDirective
 } from './videoconference.directive';
 
+
 @NgModule({
 	declarations: [
 		MinimalDirective,

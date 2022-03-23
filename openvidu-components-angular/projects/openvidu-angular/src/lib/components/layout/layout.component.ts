@@ -13,8 +13,40 @@ import { ParticipantService } from '../../services/participant/participant.servi
 import { ParticipantAbstractModel } from '../../models/participant.model';
 import { LayoutService } from '../../services/layout/layout.service';
 import { StreamDirective } from '../../directives/template/openvidu-angular.directive';
-import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 
+/**
+ *
+ * The **LayoutComponent** is hosted inside of the {@link VideoconferenceComponent}.
+ * It is in charge of displaying the participants streams layout.
+ *
+ * <div class="custom-table-container">
+ *
+ * <div>
+ * <h3>OpenVidu Angular Directives</h3>
+ *
+ * The LayoutComponent can be replaced with a custom component. It provides us the following {@link https://angular.io/guide/structural-directives Angular structural directives}
+ * for doing this.
+ *
+ * |            **Directive**           |                 **Reference**                 |
+ * |:----------------------------------:|:---------------------------------------------:|
+ * |            ***ovLayout**            |            {@link LayoutDirective}            |
+ *
+ * </br>
+ *
+ * It is also providing us a way to **replace the {@link StreamComponent Stream Component}** (<span class="italic">which is hosted inside of it</span>) with a custom one.
+ * It will recognise the following directive in a child element.
+ *
+ *
+ * |            **Directive**           |                 **Reference**                 |
+ * |:----------------------------------:|:---------------------------------------------:|
+ * |            ***ovStream**            |            {@link StreamDirective}            |
+ *
+ * <p class="component-link-text">
+ * 	<span class="italic">See all {@link OpenViduAngularDirectiveModule OpenVidu Angular Directives}</span>
+ * </p>
+ * </div>
+ * </div>
+ */
 @Component({
 	selector: 'ov-layout',
 	templateUrl: './layout.component.html',
@@ -22,8 +54,14 @@ import { OpenViduAngularConfigService } from '../../services/config/openvidu-ang
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
+	/**
+	 * @ignore
+	 */
 	@ContentChild('stream', { read: TemplateRef }) streamTemplate: TemplateRef<any>;
 
+	/**
+	 * @ignore
+	 */
 	@ContentChild(StreamDirective)
 	set externalStream(externalStream: StreamDirective) {
 		// This directive will has value only when STREAM component tagget with '*ovStream' directive
@@ -38,12 +76,10 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	protected localParticipantSubs: Subscription;
 	protected remoteParticipantsSubs: Subscription;
 
-	constructor(
-		protected layoutService: LayoutService,
-		protected participantService: ParticipantService,
-		private libService: OpenViduAngularConfigService,
-		private cd: ChangeDetectorRef
-	) {}
+	/**
+	 * @ignore
+	 */
+	constructor(protected layoutService: LayoutService, protected participantService: ParticipantService, private cd: ChangeDetectorRef) {}
 
 	ngOnInit(): void {
 		this.subscribeToParticipants();
@@ -51,10 +87,6 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	ngAfterViewInit() {
 		let timeout: number = 0;
-		// if (this.libService.isWebcomponent()) {
-		// 	timeout = 0;
-		// }
-
 		this.layoutService.initialize(timeout);
 		this.layoutService.update(timeout);
 	}
@@ -67,7 +99,7 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.layoutService.clear();
 	}
 
-	protected subscribeToParticipants() {
+	private subscribeToParticipants() {
 		this.localParticipantSubs = this.participantService.localParticipantObs.subscribe((p) => {
 			this.localParticipant = p;
 			this.layoutService.update();

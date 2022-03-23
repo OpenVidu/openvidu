@@ -4,6 +4,9 @@ import { ILogger } from '../../models/logger.model';
 import { MenuType } from '../../models/menu.model';
 import { LoggerService } from '../logger/logger.service';
 
+/**
+ * @internal
+ */
 @Injectable({
 	providedIn: 'root'
 })

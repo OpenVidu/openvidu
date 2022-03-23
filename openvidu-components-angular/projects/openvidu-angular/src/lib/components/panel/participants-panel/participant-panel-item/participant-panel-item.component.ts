@@ -4,6 +4,54 @@ import { ParticipantPanelItemElementsDirective } from '../../../../directives/te
 import { ParticipantAbstractModel } from '../../../../models/participant.model';
 import { OpenViduAngularConfigService } from '../../../../services/config/openvidu-angular.config.service';
 
+/**
+ *
+ * The **ParticipantPanelItemComponent** is hosted inside of the {@link ParticipantsPanelComponent}.
+ * It is in charge of displaying the participants information inside of the ParticipansPanelComponent.
+ *
+ * <div class="custom-table-container">
+ * <div>
+ *  <h3>API Directives</h3>
+ *
+ * This component allows us to show or hide certain HTML elements with the following {@link https://angular.io/guide/attribute-directives Angular attribute directives}
+ * with the aim of fully customizing the ToolbarComponent.
+ *
+ * | **Name**                  | **Type**  | **Reference**                                   |
+ * | :----------------------------: | :-------: | :---------------------------------------------: |
+ * | **muteButton** | `boolean` | {@link ParticipantPanelItemMuteButtonDirective} |
+ *
+ * <p class="component-link-text">
+ * <span class="italic">See all {@link ApiDirectiveModule API Directives}</span>
+ * </p>
+ *
+ * </div>
+ * <div>
+ *
+ * <h3>OpenVidu Angular Directives</h3>
+ *
+ * The ParticipantPanelItemComponent can be replaced with a custom component. It provides us the following {@link https://angular.io/guide/structural-directives Angular structural directives}
+ * for doing this.
+ *
+ * |            **Directive**           |                 **Reference**                 |
+ * |:----------------------------------:|:---------------------------------------------:|
+ * |     ***ovParticipantPanelItem**     |     {@link ParticipantPanelItemDirective}     |
+ *
+ * </br>
+ *
+ * It is also providing us a way to **add additional buttons** to the default participant panel item.
+ * It will recognise the following directive in a child element.
+ *
+ * |            **Directive**           |                 **Reference**                 |
+ * |:----------------------------------:|:---------------------------------------------:|
+ * | ***ovParticipantPanelItemElements** | {@link ParticipantPanelItemElementsDirective} |
+ *
+ * <p class="component-link-text">
+ * 	<span class="italic">See all {@link OpenViduAngularDirectiveModule OpenVidu Angular Directives}</span>
+ * </p>
+ * </div>
+ * </div>
+ */
+
 @Component({
 	selector: 'ov-participant-panel-item',
 	templateUrl: './participant-panel-item.component.html',
@@ -11,10 +59,20 @@ import { OpenViduAngularConfigService } from '../../../../services/config/openvi
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ParticipantPanelItemComponent implements OnInit, OnDestroy {
+	/**
+	 * @ignore
+	 */
 	@ContentChild('participantPanelItemElements', { read: TemplateRef }) participantPanelItemElementsTemplate: TemplateRef<any>;
+
+	/**
+     * @ignore
+     */
 	showMuteButton: boolean = true;
 	private muteButtonSub: Subscription;
 
+	/**
+	 * @ignore
+	 */
 	@ContentChild(ParticipantPanelItemElementsDirective)
 	set externalItemElements(externalItemElements: ParticipantPanelItemElementsDirective) {
 		// This directive will has value only when ITEM ELEMENTS component tagget with '*ovParticipantPanelItemElements' directive
@@ -25,11 +83,18 @@ export class ParticipantPanelItemComponent implements OnInit, OnDestroy {
 	}
 
 	@Input()
-	set participant(p: ParticipantAbstractModel) {
-		this._participant = p;
+	set participant(participant: ParticipantAbstractModel) {
+		this._participant = participant;
 	}
 
+	/**
+     * @ignore
+     */
 	_participant: ParticipantAbstractModel;
+
+	/**
+     * @ignore
+     */
 	constructor(private libService: OpenViduAngularConfigService, private cd: ChangeDetectorRef) {}
 
 	ngOnInit(): void {
@@ -39,6 +104,9 @@ export class ParticipantPanelItemComponent implements OnInit, OnDestroy {
 		if (this.muteButtonSub) this.muteButtonSub.unsubscribe();
 	}
 
+	/**
+	 * @ignore
+	 */
 	toggleMuteForcibly() {
 		this._participant.setMutedForcibly(!this._participant.isMutedForcibly);
 	}

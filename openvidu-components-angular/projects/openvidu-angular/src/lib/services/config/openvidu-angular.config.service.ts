@@ -4,7 +4,9 @@ import { OpenViduAngularConfig, ParticipantFactoryFunction } from '../../config/
 
 // import { version } from '../../../../package.json';
 
-
+/**
+ * @internal
+ */
 @Injectable()
 export class OpenViduAngularConfigService {
 	private configuration: OpenViduAngularConfig;
@@ -51,7 +53,7 @@ export class OpenViduAngularConfigService {
 	constructor(@Inject('OPENVIDU_ANGULAR_CONFIG') config: OpenViduAngularConfig) {
 		this.configuration = config;
 		console.log(this.configuration);
-		if(this.isProduction()) console.log('OpenVidu Angular Production Mode');
+		if (this.isProduction()) console.log('OpenVidu Angular Production Mode');
 		this.minimalObs = this.minimal.asObservable();
 		this.participantNameObs = this.participantName.asObservable();
 		this.prejoinObs = this.prejoin.asObservable();
@@ -85,7 +87,7 @@ export class OpenViduAngularConfigService {
 	// }
 
 	hasParticipantFactory(): boolean {
-		return typeof this.getConfig().participantFactory === "function";
+		return typeof this.getConfig().participantFactory === 'function';
 	}
 
 	getParticipantFactory(): ParticipantFactoryFunction {

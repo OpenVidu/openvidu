@@ -4,6 +4,42 @@ import { ChatPanelDirective, ParticipantsPanelDirective } from '../../directives
 import { MenuType } from '../../models/menu.model';
 import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.service';
 
+/**
+ *
+ * The **PanelComponent** is hosted inside of the {@link VideoconferenceComponent}.
+ * It is in charge of displaying the videoconference panels providing functionalities to the videoconference app
+ * such as the chat ({@link ChatPanelComponent}) and list of participants ({@link ParticipantsPanelComponent}) .
+ *
+ * <div class="custom-table-container">
+
+ * <div>
+ *
+ * <h3>OpenVidu Angular Directives</h3>
+ *
+ * The PanelComponent can be replaced with a custom component. It provides us the following {@link https://angular.io/guide/structural-directives Angular structural directives}
+ * for doing this.
+ *
+ * |            **Directive**           |                 **Reference**                 |
+ * |:----------------------------------:|:---------------------------------------------:|
+ * |           ***ovPanel**           |            {@link PanelDirective}           |
+ *
+ * </br>
+ *
+ * It is also providing us a way to **replace the children panels** to the default panel.
+ * It will recognise the following directive in a child element.
+ *
+ * |            **Directive**           |                 **Reference**                 |
+ * |:----------------------------------:|:---------------------------------------------:|
+ * |           ***ovChatPanel**          |           {@link ChatPanelDirective}          |
+ * |       ***ovParticipantsPanel**      |       {@link ParticipantsPanelDirective}      |
+ *
+ * <p class="component-link-text">
+ * 	<span class="italic">See all {@link OpenViduAngularDirectiveModule OpenVidu Angular Directives}</span>
+ * </p>
+ * </div>
+ * </div>
+ */
+
 @Component({
 	selector: 'ov-panel',
 	templateUrl: './panel.component.html',
@@ -11,7 +47,14 @@ import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.ser
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PanelComponent implements OnInit {
+	/**
+     * @ignore
+     */
 	@ContentChild('participantsPanel', { read: TemplateRef }) participantsPanelTemplate: TemplateRef<any>;
+
+	/**
+     * @ignore
+     */
 	@ContentChild('chatPanel', { read: TemplateRef }) chatPanelTemplate: TemplateRef<any>;
 
 	@ContentChild(ParticipantsPanelDirective)
@@ -34,23 +77,28 @@ export class PanelComponent implements OnInit {
 
 	isParticipantsPanelOpened: boolean;
 	isChatPanelOpened: boolean;
-	menuSubscription: Subscription;
+	private menuSubscription: Subscription;
+
+	/**
+     * @ignore
+     */
 	constructor(protected menuService: SidenavMenuService, private cd: ChangeDetectorRef) {}
 
 	ngOnInit(): void {
 		this.subscribeToPanelToggling();
-	}
-	subscribeToPanelToggling() {
-		this.menuSubscription = this.menuService.menuOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
-			this.isChatPanelOpened = ev.opened && ev.type === MenuType.CHAT;
-			this.isParticipantsPanelOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
-			this.cd.markForCheck();
-		});
 	}
 
 	ngOnDestroy() {
 		this.isChatPanelOpened = false;
 		this.isParticipantsPanelOpened = false;
 		if (this.menuSubscription) this.menuSubscription.unsubscribe();
+	}
+
+	private subscribeToPanelToggling() {
+		this.menuSubscription = this.menuService.menuOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
+			this.isChatPanelOpened = ev.opened && ev.type === MenuType.CHAT;
+			this.isParticipantsPanelOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
+			this.cd.markForCheck();
+		});
 	}
 }

@@ -13,6 +13,9 @@ import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { StorageService } from '../../services/storage/storage.service';
 
+/**
+ * @internal
+ */
 @Component({
 	selector: 'ov-pre-join',
 	templateUrl: './pre-join.component.html',

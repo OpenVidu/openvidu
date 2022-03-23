@@ -3,6 +3,9 @@ import { ILogger } from '../../models/logger.model';
 import { LoggerService } from '../logger/logger.service';
 import { Storage } from '../../models/storage.model';
 
+/**
+ * @internal
+ */
 @Injectable({
 	providedIn: 'root'
 })

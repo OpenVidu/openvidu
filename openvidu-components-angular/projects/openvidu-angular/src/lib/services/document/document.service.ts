@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { LayoutClass } from '../../models/layout.model';
 
+/**
+ * @internal
+ */
 @Injectable({
 	providedIn: 'root'
 })

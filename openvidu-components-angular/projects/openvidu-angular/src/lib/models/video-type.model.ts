@@ -4,6 +4,9 @@ export enum VideoType {
 	CUSTOM = 'CUSTOM'
 }
 
+/**
+ * @internal
+ */
 export enum ScreenType {
 	WINDOW = 'window',
 	SCREEN = 'screen'

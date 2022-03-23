@@ -33,6 +33,9 @@ export class OpenViduService {
 	protected audioSource = undefined;
 	protected log: ILogger;
 
+	/**
+	 * @internal
+	 */
 	constructor(
 		protected openviduAngularConfigSrv: OpenViduAngularConfigService,
 		protected platformService: PlatformService,
@@ -43,6 +46,9 @@ export class OpenViduService {
 		this.log = this.loggerSrv.get('OpenViduService');
 	}
 
+	/**
+	 * @internal
+	 */
 	initialize() {
 		this.OV = new OpenVidu();
 		if (this.openviduAngularConfigSrv.isProduction()) this.OV.enableProdMode();
@@ -60,22 +66,37 @@ export class OpenViduService {
 		return this.getWebcamSession();
 	}
 
+	/**
+	 * @internal
+	 */
 	getWebcamSession(): Session {
 		return this.webcamSession;
 	}
 
+	/**
+	 * @internal
+	 */
 	isWebcamSessionConnected(): boolean {
 		return !!this.webcamSession.capabilities;
 	}
 
+	/**
+	 * @internal
+	 */
 	getScreenSession(): Session {
 		return this.screenSession;
 	}
 
+	/**
+	 * @internal
+	 */
 	isScreenSessionConnected(): boolean {
 		return !!this.screenSession.capabilities;
 	}
 
+	/**
+	 * @internal
+	 */
 	async connectSession(session: Session, token: string): Promise<void> {
 		if (!!token && session) {
 			const nickname = this.participantService.getMyNickname();
@@ -101,6 +122,9 @@ export class OpenViduService {
 		}
 	}
 
+	/**
+	 * @internal
+	 */
 	disconnect() {
 		this.disconnectSession(this.webcamSession);
 		this.disconnectSession(this.screenSession);
@@ -111,6 +135,7 @@ export class OpenViduService {
 	}
 
 	/**
+	 * @internal
 	 * Initialize a publisher checking devices saved on storage or if participant have devices available.
 	 */
 	async initDefaultPublisher(targetElement: string | HTMLElement): Promise<Publisher> {
@@ -158,11 +183,17 @@ export class OpenViduService {
 		}
 	}
 
+	/**
+	 * @internal
+	 */
 	async initPublisher(targetElement: string | HTMLElement, properties: PublisherProperties): Promise<Publisher> {
 		this.log.d('Initializing publisher with properties: ', properties);
 		return await this.OV.initPublisherAsync(targetElement, properties);
 	}
 
+	/**
+	 * @internal
+	 */
 	async publish(publisher: Publisher): Promise<void> {
 		if (!!publisher) {
 			if (publisher === this.participantService.getMyCameraPublisher()) {
@@ -179,6 +210,9 @@ export class OpenViduService {
 		}
 	}
 
+	/**
+	 * @internal
+	 */
 	unpublish(publisher: Publisher): void {
 		if (!!publisher) {
 			if (publisher === this.participantService.getMyCameraPublisher()) {
@@ -190,6 +224,9 @@ export class OpenViduService {
 		}
 	}
 
+	/**
+	 * @internal
+	 */
 	publishVideo(publisher: Publisher, value: boolean): void {
 		if (!!publisher) {
 			publisher.publishVideo(value);
@@ -197,6 +234,9 @@ export class OpenViduService {
 		}
 	}
 
+	/**
+	 * @internal
+	 */
 	publishAudio(publisher: Publisher, value: boolean): void {
 		if (!!publisher) {
 			publisher.publishAudio(value);
@@ -204,8 +244,11 @@ export class OpenViduService {
 		}
 	}
 
-	// TODO: Remove this method when replaceTrack issue is fixed
-	// https://github.com/OpenVidu/openvidu/pull/700
+	/**
+	 * TODO: Remove this method when replaceTrack issue is fixed
+	 * https://github.com/OpenVidu/openvidu/pull/700
+	 * @internal
+	 */
 	republishTrack(properties: PublisherProperties): Promise<void> {
 		const { videoSource, audioSource, mirror } = properties;
 		return new Promise(async (resolve, reject) => {
@@ -240,6 +283,9 @@ export class OpenViduService {
 		});
 	}
 
+	/**
+	 * @internal
+	 */
 	sendSignal(type: Signal, connections?: Connection[], data?: any): void {
 		const signalOptions: SignalOptions = {
 			data: JSON.stringify(data),
@@ -255,6 +301,9 @@ export class OpenViduService {
 		// }
 	}
 
+	/**
+	 * @internal
+	 */
 	async replaceTrack(videoType: VideoType, props: PublisherProperties) {
 		try {
 			this.log.d(`Replacing ${videoType} track`, props);
@@ -346,6 +395,9 @@ export class OpenViduService {
 		}
 	}
 
+	/**
+	 * @internal
+	 */
 	needSendNicknameSignal(): boolean {
 		let oldNickname: string;
 		try {
@@ -357,6 +409,9 @@ export class OpenViduService {
 		return oldNickname !== this.participantService.getMyNickname();
 	}
 
+	/**
+	 * @internal
+	 */
 	isMyOwnConnection(connectionId: string): boolean {
 		return (
 			this.webcamSession?.connection?.connectionId === connectionId || this.screenSession?.connection?.connectionId === connectionId

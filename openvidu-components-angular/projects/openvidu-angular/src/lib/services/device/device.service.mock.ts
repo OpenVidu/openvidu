@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
-import { CameraType, IDevice } from '../../models/device.model';
+import { CameraType, CustomDevice } from '../../models/device.model';
 
 @Injectable()
 export class DeviceServiceMock {
-	audioDevice: IDevice = {
+	audioDevice: CustomDevice = {
 		label: 'audio',
 		device: 'mockDevice'
 	};
-	videodevice: IDevice = {
+	videodevice: CustomDevice = {
 		label: 'video',
 		device: 'mockDevice',
 		type: CameraType.FRONT
@@ -17,11 +17,11 @@ export class DeviceServiceMock {
 
 	async initDevices() {}
 
-	getCamSelected(): IDevice {
+	getCamSelected(): CustomDevice {
 		return this.videodevice;
 	}
 
-	getMicSelected(): IDevice {
+	getMicSelected(): CustomDevice {
 		return this.audioDevice;
 	}
 
@@ -37,11 +37,11 @@ export class DeviceServiceMock {
 		return false;
 	}
 
-	getCameras(): IDevice[] {
+	getCameras(): CustomDevice[] {
 		return [this.videodevice];
 	}
 
-	getMicrophones(): IDevice[] {
+	getMicrophones(): CustomDevice[] {
 		return [this.audioDevice];
 	}
 

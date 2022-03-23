@@ -1,5 +1,8 @@
 import { Autolinker, AutolinkerConfig, HashtagMatch } from 'autolinker';
 
+/**
+ * @internal
+ */
 const AUTOLINKER_CFGS: AutolinkerConfig = {
 	urls: {
 		schemeMatches: true,
@@ -20,6 +23,9 @@ const AUTOLINKER_CFGS: AutolinkerConfig = {
 	decodePercentEncoding: true
 };
 
+/**
+ * @internal
+ */
 export class Linkifier {
 	private autolinker: Autolinker;
 

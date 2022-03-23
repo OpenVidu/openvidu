@@ -27,6 +27,11 @@ import { LayoutService } from '../../services/layout/layout.service';
 import { Subscription, skip } from 'rxjs';
 import { MenuType } from '../../models/menu.model';
 import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.service';
+import { PlatformService } from '../../services/platform/platform.service';
+
+/**
+ * @internal
+ */
 
 @Component({
 	selector: 'ov-session',
@@ -68,7 +73,8 @@ export class SessionComponent implements OnInit {
 		protected chatService: ChatService,
 		protected tokenService: TokenService,
 		protected layoutService: LayoutService,
-		protected menuService: SidenavMenuService
+		protected menuService: SidenavMenuService,
+		private platformService: PlatformService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
 	}
@@ -107,9 +113,9 @@ export class SessionComponent implements OnInit {
 
 		await this.connectToSession();
 		// Workaround, firefox does not have audio when publisher join with muted camera
-		// if (this.platformService.isFirefox() && !this.localUserService.hasCameraVideoActive()) {
-		// 	this.openviduService.publishVideo(this.localUserService.getMyCameraPublisher(), true);
-		// 	this.openviduService.publishVideo(this.localUserService.getMyCameraPublisher(), false);
+		// if (this.platformService.isFirefox() && !this.participantService.hasCameraVideoActive()) {
+		// 	this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), true);
+		// 	this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), false);
 		// }
 	}
 

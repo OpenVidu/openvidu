@@ -1,0 +1,93 @@
+@import "./reset.css";
+@import "./bootstrap.min.css";
+@import "./bootstrap-card.css";
+@import "./prism.css";
+@import "./ionicons.min.css";
+@import "./compodoc.css";
+@import "./tablesort.css";
+
+.title {
+	font-weight: bold;
+}
+/* .getting-started {
+	display: none;
+} */
+
+.token.property, .token.tag, .token.constant, .token.symbol, .token.deleted {
+	color: rgb(0, 204, 255);
+
+}
+.token.selector, .token.attr-name, .token.string, .token.char, .token.builtin, .token.inserted {
+	color: #d3ff7c;
+}
+
+.token.atrule, .token.attr-value, .token.function, .token.class-name {
+	color: rgb(255, 170, 72);
+}
+
+.italic {
+	font-style: italic;
+}
+.component-link-text {
+	padding-top: 5px;
+	text-align: center;
+	font-size: 14px;
+}
+div>p {
+	font-size: 16px;
+}
+
+code {
+
+	background-color: rgb(233, 245, 255);
+	font-weight: bold;
+	padding: 2px;
+}
+
+.directive section, .module-graph-container, .card-module>.card-block>p,
+ nav a[href*="license.html"],
+ nav a[href*="properties.html"],
+ nav a[href*="overview.html"],
+ nav a[href*="index.html"] {
+	display: none !important;
+}
+
+.card-module {
+	min-height: 0;
+}
+
+.custom-table-container {
+	display: flex;
+}
+
+.custom-table-container table {
+	margin: auto;
+}
+
+.custom-table-container>div {
+	padding: 10px;
+}
+
+.warn-container, .info-container {
+	display: table;
+    border-radius: 5px;
+    width: 100%;
+    margin-top: 30px;
+    margin-bottom: 25px;
+    padding: 5px 0 5px 0;
+}
+
+.info-container > span, .warn-container >span {
+	font-weight: bold;
+	padding-left: 5px;
+}
+
+.warn-container {
+	border: 2px solid #ffb600;
+    background-color: #FFFBF1;
+}
+
+.info-container {
+    border: 2px solid #0077ff;
+    background-color: #f1feff;
+}

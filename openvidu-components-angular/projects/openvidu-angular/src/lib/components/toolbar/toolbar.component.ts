@@ -29,6 +29,60 @@ import { MenuType } from '../../models/menu.model';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import { ToolbarAdditionalButtonsDirective } from '../../directives/template/openvidu-angular.directive';
 
+/**
+ *
+ * The **ToolbarComponent** is hosted inside of the {@link VideoconferenceComponent}.
+ * It is in charge of displaying the participants controlls for handling the media, panels and more videoconference features.
+ *
+ * <div class="custom-table-container">
+ * <div>
+ *  <h3>API Directives</h3>
+ *
+ * This component allows us to show or hide certain HTML elements with the following {@link https://angular.io/guide/attribute-directives Angular attribute directives}
+ * with the aim of fully customizing the ToolbarComponent.
+ *
+ * | **Name**                  | **Type**  | **Reference**                                   |
+ * | :----------------------------: | :-------: | :---------------------------------------------: |
+ * | **screenshareButton**       | `boolean` | {@link ToolbarScreenshareButtonDirective}       |
+ * | **fullscreenButton**        | `boolean` | {@link ToolbarFullscreenButtonDirective}        |
+ * | **leaveButton**             | `boolean` | {@link ToolbarLeaveButtonDirective}             |
+ * | **chatPanelButton**         | `boolean` | {@link ToolbarChatPanelButtonDirective}         |
+ * | **participantsPanelButton** | `boolean` | {@link ToolbarParticipantsPanelButtonDirective} |
+ * | **displayLogo**             | `boolean` | {@link ToolbarDisplayLogoDirective}             |
+ * | **displaySessionName**      | `boolean` | {@link ToolbarDisplaySessionNameDirective}      |
+ *
+ * <p class="component-link-text">
+ * <span class="italic">See all {@link ApiDirectiveModule API Directives}</span>
+ * </p>
+ *
+ * </div>
+ * <div>
+ *
+ * <h3>OpenVidu Angular Directives</h3>
+ *
+ * The ToolbarComponent can be replaced with a custom component. It provides us the following {@link https://angular.io/guide/structural-directives Angular structural directives}
+ * for doing this.
+ *
+ * |            **Directive**           |                 **Reference**                 |
+ * |:----------------------------------:|:---------------------------------------------:|
+ * |           ***ovToolbar**           |            {@link ToolbarDirective}           |
+ *
+ * </br>
+ *
+ * It is also providing us a way to **add additional buttons** to the default toolbar.
+ * It will recognise the following directive in a child element.
+ *
+ * |            **Directive**           |                 **Reference**                 |
+ * |:----------------------------------:|:---------------------------------------------:|
+ * |   ***ovToolbarAdditionalButtons**   |   {@link ToolbarAdditionalButtonsDirective}   |
+ *
+ * <p class="component-link-text">
+ * 	<span class="italic">See all {@link OpenViduAngularDirectiveModule OpenVidu Angular Directives}</span>
+ * </p>
+ * </div>
+ * </div>
+ */
+
 @Component({
 	selector: 'ov-toolbar',
 	templateUrl: './toolbar.component.html',
@@ -36,8 +90,14 @@ import { ToolbarAdditionalButtonsDirective } from '../../directives/template/ope
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolbarComponent implements OnInit, OnDestroy {
+	/**
+	 * @ignore
+	 */
 	@ContentChild('toolbarAdditionalButtons', { read: TemplateRef }) toolbarAdditionalButtonsTemplate: TemplateRef<any>;
 
+	/**
+	 * @ignore
+	 */
 	@ContentChild(ToolbarAdditionalButtonsDirective)
 	set externalAdditionalButtons(externalAdditionalButtons: ToolbarAdditionalButtonsDirective) {
 		// This directive will has value only when ADDITIONAL BUTTONS component tagget with '*ovToolbarAdditionalButtons' directive
@@ -55,26 +115,86 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	@Output() onParticipantsPanelButtonClicked = new EventEmitter<any>();
 	@Output() onChatPanelButtonClicked = new EventEmitter<any>();
 
+	/**
+	 * @ignore
+	 */
 	session: Session;
+	/**
+	 * @ignore
+	 */
 	unreadMessages: number = 0;
+	/**
+	 * @ignore
+	 */
 	messageList: ChatMessage[] = [];
+	/**
+	 * @ignore
+	 */
 	isScreenShareActive: boolean;
+	/**
+	 * @ignore
+	 */
 	isWebcamVideoActive: boolean;
+	/**
+	 * @ignore
+	 */
 	isWebcamAudioActive: boolean;
+	/**
+	 * @ignore
+	 */
 	isConnectionLost: boolean;
+	/**
+	 * @ignore
+	 */
 	hasVideoDevices: boolean;
+	/**
+	 * @ignore
+	 */
 	hasAudioDevices: boolean;
+	/**
+	 * @ignore
+	 */
 	isFullscreenActive: boolean = false;
+	/**
+	 * @ignore
+	 */
 	isChatOpened: boolean = false;
+	/**
+	 * @ignore
+	 */
 	isParticipantsOpened: boolean = false;
 
+	/**
+	 * @ignore
+	 */
 	isMinimal: boolean = false;
+	/**
+	 * @ignore
+	 */
 	showScreenshareButton = true;
+	/**
+	 * @ignore
+	 */
 	showFullscreenButton: boolean = true;
+	/**
+	 * @ignore
+	 */
 	showLeaveButton: boolean = true;
+	/**
+	 * @ignore
+	 */
 	showParticipantsPanelButton: boolean = true;
+	/**
+	 * @ignore
+	 */
 	showChatPanelButton: boolean = true;
+	/**
+	 * @ignore
+	 */
 	showLogo: boolean = true;
+	/**
+	 * @ignore
+	 */
 	showSessionName: boolean = true;
 
 	private log: ILogger;
@@ -91,25 +211,9 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	private displaySessionNameSub: Subscription;
 	private currentWindowHeight = window.innerHeight;
 
-	@HostListener('window:resize', ['$event'])
-	sizeChange(event) {
-		if (this.currentWindowHeight >= window.innerHeight) {
-			// The user has exit the fullscreen mode
-			this.isFullscreenActive = false;
-			this.currentWindowHeight = window.innerHeight;
-		}
-	}
-
-	@HostListener('document:keydown', ['$event'])
-	keyDown(event: KeyboardEvent) {
-		if (event.key === 'F11') {
-			event.preventDefault();
-			this.toggleFullscreen();
-			this.currentWindowHeight = window.innerHeight;
-			return false;
-		}
-	}
-
+	/**
+	 * @ignore
+	 */
 	constructor(
 		protected documentService: DocumentService,
 		protected chatService: ChatService,
@@ -124,6 +228,30 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		private libService: OpenViduAngularConfigService
 	) {
 		this.log = this.loggerSrv.get('ToolbarComponent');
+	}
+	/**
+	 * @ignore
+	 */
+	@HostListener('window:resize', ['$event'])
+	sizeChange(event) {
+		if (this.currentWindowHeight >= window.innerHeight) {
+			// The user has exit the fullscreen mode
+			this.isFullscreenActive = false;
+			this.currentWindowHeight = window.innerHeight;
+		}
+	}
+
+	/**
+	 * @ignore
+	 */
+	@HostListener('document:keydown', ['$event'])
+	keyDown(event: KeyboardEvent) {
+		if (event.key === 'F11') {
+			event.preventDefault();
+			this.toggleFullscreen();
+			this.currentWindowHeight = window.innerHeight;
+			return false;
+		}
 	}
 
 	async ngOnInit() {
@@ -151,8 +279,12 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		if (this.chatPanelButtonSub) this.chatPanelButtonSub.unsubscribe();
 		if (this.displayLogoSub) this.displayLogoSub.unsubscribe();
 		if (this.displaySessionNameSub) this.displaySessionNameSub.unsubscribe();
+		if (this.minimalSub) this.minimalSub.unsubscribe();
 	}
 
+	/**
+	 * @ignore
+	 */
 	toggleMicrophone() {
 		this.onMicrophoneButtonClicked.emit();
 
@@ -166,6 +298,9 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), !this.participantService.hasScreenAudioActive());
 	}
 
+	/**
+	 * @ignore
+	 */
 	async toggleCamera() {
 		this.onCameraButtonClicked.emit();
 
@@ -200,6 +335,9 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		}
 	}
 
+	/**
+	 * @ignore
+	 */
 	async toggleScreenShare() {
 		this.onScreenshareButtonClicked.emit();
 
@@ -277,22 +415,34 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		}
 	}
 
+	/**
+	 * @ignore
+	 */
 	leaveSession() {
 		this.log.d('Leaving session...');
 		this.openviduService.disconnect();
 		this.onLeaveButtonClicked.emit();
 	}
 
+	/**
+	 * @ignore
+	 */
 	toggleParticipantsPanel() {
 		this.onParticipantsPanelButtonClicked.emit();
 		this.menuService.toggleMenu(MenuType.PARTICIPANTS);
 	}
 
+	/**
+	 * @ignore
+	 */
 	toggleChatPanel() {
 		this.onChatPanelButtonClicked.emit();
 		this.menuService.toggleMenu(MenuType.CHAT);
 	}
 
+	/**
+	 * @ignore
+	 */
 	toggleFullscreen() {
 		this.isFullscreenActive = !this.isFullscreenActive;
 		this.documentService.toggleFullscreen('session-container');

@@ -1,5 +1,9 @@
 import { Component, Input } from '@angular/core';
 
+/**
+ * @internal
+ */
+
 @Component({
 	selector: 'ov-avatar-profile',
 	template: `

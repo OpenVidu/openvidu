@@ -8,57 +8,81 @@ export interface TokenModel {
 	screen: string;
 }
 
+/**
+ *
+ * **OpenviduWebComponentComponent** is a wrapped of the {@link VideoconferenceComponent} which allows to generate and export the OpenVidu Webcomponent
+ */
 @Component({
-	template: `
-		<ov-videoconference
-			*ngIf="success"
-			[participantName]="_participantName"
-			[tokens]="_tokens"
-			[minimal]="_minimal"
-			[prejoin]="_prejoin"
-			[videoMuted]="_videoMuted"
-			[audioMuted]="_audioMuted"
-			[toolbarScreenshareButton]="_toolbarScreenshareButton"
-			[toolbarFullscreenButton]="_toolbarFullscreenButton"
-			[toolbarLeaveButton]="_toolbarLeaveButton"
-			[toolbarChatPanelButton]="_toolbarChatPanelButton"
-			[toolbarParticipantsPanelButton]="_toolbarParticipantsPanelButton"
-			[toolbarDisplayLogo]="_toolbarDisplayLogo"
-			[toolbarDisplaySessionName]="_toolbarDisplaySessionName"
-			[streamDisplayParticipantName]="_streamDisplayParticipantName"
-			[streamDisplayAudioDetection]="_streamDisplayAudioDetection"
-			[streamSettingsButton]="_streamSettingsButton"
-			[participantPanelItemMuteButton]="_participantPanelItemMuteButton"
-			(onJoinButtonClicked)="_onJoinButtonClicked()"
-			(onToolbarLeaveButtonClicked)="_onToolbarLeaveButtonClicked()"
-			(onToolbarCameraButtonClicked)="_onToolbarCameraButtonClicked()"
-			(onToolbarMicrophoneButtonClicked)="_onToolbarMicrophoneButtonClicked()"
-			(onToolbarScreenshareButtonClicked)="_onToolbarScreenshareButtonClicked()"
-			(onToolbarParticipantsPanelButtonClicked)="_onToolbarParticipantsPanelButtonClicked()"
-			(onToolbarChatPanelButtonClicked)="_onToolbarChatPanelButtonClicked()"
-			(onToolbarFullscreenButtonClicked)="_onToolbarFullscreenButtonClicked()"
-			(onSessionCreated)="_onSessionCreated($event)"
-			(onParticipantCreated)="_onParticipantCreated($event)"
-		></ov-videoconference>
-	`
+	templateUrl: './openvidu-webcomponent.component.html'
 })
 export class OpenviduWebComponentComponent implements OnInit {
+	/**
+	 * @internal
+	 */
 	_tokens: TokenModel;
+	/**
+	 * @internal
+	 */
 	_minimal: boolean = false;
+	/**
+	 * @internal
+	 */
 	_participantName: string;
+	/**
+	 * @internal
+	 */
 	_prejoin: boolean = true;
+	/**
+	 * @internal
+	 */
 	_videoMuted: boolean = false;
+	/**
+	 * @internal
+	 */
 	_audioMuted: boolean = false;
+	/**
+	 * @internal
+	 */
 	_toolbarScreenshareButton: boolean = true;
+	/**
+	 * @internal
+	 */
 	_toolbarFullscreenButton: boolean = true;
+	/**
+	 * @internal
+	 */
 	_toolbarLeaveButton: boolean = true;
+	/**
+	 * @internal
+	 */
 	_toolbarChatPanelButton: boolean = true;
+	/**
+	 * @internal
+	 */
 	_toolbarParticipantsPanelButton: boolean = true;
+	/**
+	 * @internal
+	 */
 	_toolbarDisplayLogo: boolean = true;
+	/**
+	 * @internal
+	 */
 	_toolbarDisplaySessionName: boolean = true;
+	/**
+	 * @internal
+	 */
 	_streamDisplayParticipantName: boolean = true;
+	/**
+	 * @internal
+	 */
 	_streamDisplayAudioDetection: boolean = true;
+	/**
+	 * @internal
+	 */
 	_streamSettingsButton: boolean = true;
+	/**
+	 * @internal
+	 */
 	_participantPanelItemMuteButton: boolean = true;
 
 	@Input() set minimal(value: string | boolean) {
@@ -122,9 +146,15 @@ export class OpenviduWebComponentComponent implements OnInit {
 	@Output() onSessionCreated = new EventEmitter<any>();
 	@Output() onParticipantCreated = new EventEmitter<any>();
 
+	/**
+	 * @internal
+	 */
 	success: boolean = false;
 	private log: ILogger;
 
+	/**
+	 * @internal
+	 */
 	constructor(private loggerService: LoggerService, private host: ElementRef, private openviduService: OpenViduService) {
 		this.log = this.loggerService.get('WebComponent');
 		this.host.nativeElement.leaveSession = this.leaveSession.bind(this);
@@ -147,37 +177,68 @@ export class OpenviduWebComponentComponent implements OnInit {
 		}
 	}
 
+	/**
+	 * @internal
+	 */
 	_onJoinButtonClicked() {
 		this.onJoinButtonClicked.emit();
 	}
 
+	/**
+	 * @internal
+	 */
 	_onToolbarLeaveButtonClicked() {
+		this.success = false;
 		this.onToolbarLeaveButtonClicked.emit();
 	}
 
+	/**
+	 * @internal
+	 */
 	_onToolbarCameraButtonClicked() {
 		this.onToolbarCameraButtonClicked.emit();
 	}
 
+	/**
+	 * @internal
+	 */
 	_onToolbarMicrophoneButtonClicked() {
 		this.onToolbarMicrophoneButtonClicked.emit();
 	}
+	/**
+	 * @internal
+	 */
 	_onToolbarScreenshareButtonClicked() {
 		this.onToolbarScreenshareButtonClicked.emit();
 	}
+	/**
+	 * @internal
+	 */
 	_onToolbarParticipantsPanelButtonClicked() {
 		this.onToolbarParticipantsPanelButtonClicked.emit();
 	}
+	/**
+	 * @internal
+	 */
 	_onToolbarChatPanelButtonClicked() {
 		this.onToolbarChatPanelButtonClicked.emit();
 	}
+	/**
+	 * @internal
+	 */
 	_onToolbarFullscreenButtonClicked() {
 		this.onToolbarFullscreenButtonClicked.emit();
 	}
+	/**
+	 * @internal
+	 */
 	_onSessionCreated(event: Session) {
 		this.onSessionCreated.emit(event);
 	}
 
+	/**
+	 * @internal
+	 */
 	_onParticipantCreated(event: ParticipantAbstractModel) {
 		this.onParticipantCreated.emit(event);
 	}

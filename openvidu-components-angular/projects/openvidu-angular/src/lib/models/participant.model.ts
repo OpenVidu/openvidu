@@ -2,19 +2,52 @@ import { Publisher, StreamManager } from 'openvidu-browser';
 import { VideoType } from './video-type.model';
 
 export interface StreamModel {
+	/**
+	 * Whether the stream is available or not
+	 */
 	connected: boolean;
+	/**
+	 * The stream type.{@link VideoType}
+	 */
 	type: VideoType;
+	/**
+	 * The streamManager object from openvidu-browser library.{@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/StreamManager.html}
+	 */
 	streamManager: StreamManager;
+	/**
+	 * Whether the stream is enlarged or not
+	 */
 	videoEnlarged: boolean;
+	/**
+	 * Unique identifier of the stream
+	 */
 	connectionId: string;
-	participant?: ParticipantAbstractModel
+	/**
+	 * The participant object
+	 */
+	participant?: ParticipantAbstractModel;
 }
 
 export interface ParticipantProperties {
+	/**
+	 * Whether the participant is local or not
+	 */
 	local: boolean;
+	/**
+	 * The participant nickname
+	 */
 	nickname: string;
+	/**
+	 * Unique identifier of the participant
+	 */
 	id?: string;
+	/**
+	 * The participant color profile
+	 */
 	colorProfile?: string;
+	/**
+	 * Whether the participant is muted forcibly or not
+	 */
 	isMutedForcibly?: boolean;
 }
 
@@ -30,7 +63,7 @@ export abstract class ParticipantAbstractModel {
 		this.id = props.id ? props.id : new Date().getTime().toString();
 		this.local = props.local;
 		this.nickname = props.nickname;
-		this.colorProfile = !!props.colorProfile ? props.colorProfile : `hsl(${Math.random()*360}, 100%, 80%)`;
+		this.colorProfile = !!props.colorProfile ? props.colorProfile : `hsl(${Math.random() * 360}, 100%, 80%)`;
 		this.isMutedForcibly = typeof props.isMutedForcibly === 'boolean' ? props.isMutedForcibly : false;
 		let streamModel: StreamModel = {
 			connected: model ? model.connected : true,
@@ -43,43 +76,68 @@ export abstract class ParticipantAbstractModel {
 		this.streams.set(streamModel.type, streamModel);
 	}
 
+	/**
+	 * @internal
+	 */
 	addConnection(streamModel: StreamModel) {
 		streamModel.participant = this;
 		this.streams.set(streamModel.type, streamModel);
 	}
 
+	/**
+	 * @internal
+	 */
 	public isCameraAudioActive(): boolean {
 		const cameraConnection = this.getCameraConnection();
-		if(cameraConnection) {
+		if (cameraConnection) {
 			return cameraConnection.connected && cameraConnection.streamManager?.stream?.audioActive;
 		}
-		return this.isScreenAudioActive();;
+		return this.isScreenAudioActive();
 	}
 
+	/**
+	 * @internal
+	 */
 	public isCameraVideoActive(): boolean {
 		const cameraConnection = this.getCameraConnection();
 		return cameraConnection?.connected && cameraConnection?.streamManager?.stream?.videoActive;
 	}
+
+	/**
+	 * @internal
+	 */
 	isScreenAudioActive(): boolean {
 		const screenConnection = this.getScreenConnection();
-		if(screenConnection){
+		if (screenConnection) {
 			return screenConnection?.connected && screenConnection?.streamManager?.stream?.audioActive;
 		}
 		return false;
 	}
 
+	/**
+	 * @internal
+	 */
 	hasConnectionType(type: VideoType): boolean {
 		return this.streams.has(type);
 	}
 
+	/**
+	 * @internal
+	 */
 	public getCameraConnection(): StreamModel {
 		return this.streams.get(VideoType.CAMERA);
 	}
 
+	/**
+	 * @internal
+	 */
 	public getScreenConnection(): StreamModel {
 		return this.streams.get(VideoType.SCREEN);
 	}
 
+	/**
+	 * @internal
+	 */
 	getConnectionTypesActive(): VideoType[] {
 		let connType = [];
 		if (this.isCameraActive()) connType.push(VideoType.CAMERA);
@@ -88,116 +146,168 @@ export abstract class ParticipantAbstractModel {
 		return connType;
 	}
 
+	/**
+	 * @internal
+	 */
 	setCameraConnectionId(connectionId: string) {
 		this.getCameraConnection().connectionId = connectionId;
 	}
+
+	/**
+	 * @internal
+	 */
 	setScreenConnectionId(connectionId: string) {
 		this.getScreenConnection().connectionId = connectionId;
 	}
 
+	/**
+	 * @internal
+	 */
 	removeConnection(connectionId: string): StreamModel {
 		const removeStream = this.getConnectionById(connectionId);
 		this.streams.delete(removeStream.type);
 		return removeStream;
 	}
 
+	/**
+	 * @internal
+	 */
 	hasConnectionId(connectionId: string): boolean {
 		return Array.from(this.streams.values()).some((conn) => conn.connectionId === connectionId);
 	}
 
+	/**
+	 * @internal
+	 */
 	getConnectionById(connectionId: string): StreamModel {
 		return Array.from(this.streams.values()).find((conn) => conn.connectionId === connectionId);
 	}
 
+	/**
+	 * @internal
+	 */
 	getAvailableConnections(): StreamModel[] {
 		return Array.from(this.streams.values()).filter((conn) => conn.connected);
 	}
 
+	/**
+	 * @internal
+	 */
 	isLocal(): boolean {
 		return this.local;
 		// return Array.from(this.streams.values()).every((conn) => conn.local);
 	}
 
+	/**
+	 * @internal
+	 */
 	setNickname(nickname: string) {
 		this.nickname = nickname;
-		// this.streams.forEach((conn) => {
-		// 	if (conn.type === VideoType.CAMERA) {
-		// 		conn.nickname = nickname;
-		// 	} else {
-		// 		conn.nickname = `${nickname}_${conn.type}`;
-		// 	}
-		// });
 	}
 
+	/**
+	 * @internal
+	 */
 	getNickname() {
 		return this.nickname;
 	}
 
-	// getCameraNickname(): string {
-	// 	return this.getCameraConnection()?.nickname;
-	// }
-
-	// getScreenNickname(): string {
-	// 	return this.getScreenConnection()?.nickname;
-	// }
-
+	/**
+	 * @internal
+	 */
 	setCameraPublisher(publisher: Publisher) {
 		const cameraConnection = this.getCameraConnection();
 		if (cameraConnection) cameraConnection.streamManager = publisher;
 	}
 
+	/**
+	 * @internal
+	 */
 	setScreenPublisher(publisher: Publisher) {
 		const screenConnection = this.getScreenConnection();
 		if (screenConnection) screenConnection.streamManager = publisher;
 	}
 
+	/**
+	 * @internal
+	 */
 	setPublisher(connType: VideoType, publisher: StreamManager) {
 		const connection = this.streams.get(connType);
-		if(connection) {
+		if (connection) {
 			connection.streamManager = publisher;
 		}
 	}
 
+	/**
+	 * @internal
+	 */
 	isCameraActive(): boolean {
 		return this.getCameraConnection()?.connected;
 	}
 
+	/**
+	 * @internal
+	 */
 	enableCamera() {
 		const cameraConnection = this.getCameraConnection();
 		if (cameraConnection) cameraConnection.connected = true;
 	}
 
+	/**
+	 * @internal
+	 */
 	disableCamera() {
 		const cameraConnection = this.getCameraConnection();
 		if (cameraConnection) cameraConnection.connected = false;
 	}
 
+	/**
+	 * @internal
+	 */
 	isScreenActive(): boolean {
 		return this.getScreenConnection()?.connected;
 	}
 
+	/**
+	 * @internal
+	 */
 	enableScreen() {
 		const screenConnection = this.getScreenConnection();
 		if (screenConnection) screenConnection.connected = true;
 	}
 
+	/**
+	 * @internal
+	 */
 	disableScreen() {
 		const screenConnection = this.getScreenConnection();
 		if (screenConnection) screenConnection.connected = false;
 	}
 
+	/**
+	 * @internal
+	 */
 	setAllVideoEnlarged(enlarged: boolean) {
 		this.streams.forEach((conn) => (conn.videoEnlarged = enlarged));
 	}
 
+	/**
+	 * @internal
+	 */
 	setCameraEnlarged(enlarged: boolean) {
 		this.streams.get(VideoType.CAMERA).videoEnlarged = enlarged;
 	}
+
+	/**
+	 * @internal
+	 */
 	setScreenEnlarged(enlarged: boolean) {
 		this.streams.get(VideoType.SCREEN).videoEnlarged = enlarged;
 	}
 
-
+	/**
+	 * @internal
+	 */
 	toggleVideoEnlarged(connectionId: string) {
 		this.streams.forEach((conn) => {
 			if (conn.connectionId === connectionId) {
@@ -206,17 +316,22 @@ export abstract class ParticipantAbstractModel {
 		});
 	}
 
+	/**
+	 * @internal
+	 */
 	someHasVideoEnlarged(): boolean {
 		return Array.from(this.streams.values()).some((conn) => conn.videoEnlarged);
 	}
 
-	setMutedForcibly(muted: boolean){
+	/**
+	 * @internal
+	 */
+	setMutedForcibly(muted: boolean) {
 		this.isMutedForcibly = muted;
 	}
 }
 
-export class ParticipantModel extends ParticipantAbstractModel {
-
-
-}
-
+/**
+ * @internal
+ */
+export class ParticipantModel extends ParticipantAbstractModel {}

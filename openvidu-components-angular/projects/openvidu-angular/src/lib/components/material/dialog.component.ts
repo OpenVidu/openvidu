@@ -1,11 +1,17 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
+/**
+ * @internal
+ */
 export interface DialogData {
 	title: string;
 	description: string;
 	showActionButtons: boolean;
 }
+/**
+ * @internal
+ */
 
 @Component({
 	selector: 'ov-dialog-template',

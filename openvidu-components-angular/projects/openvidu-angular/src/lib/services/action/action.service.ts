@@ -5,6 +5,9 @@ import { DialogTemplateComponent } from '../../components/material/dialog.compon
 
 import { INotificationOptions } from '../../models/notification-options.model';
 
+/**
+ * @internal
+ */
 @Injectable({
 	providedIn: 'root'
 })

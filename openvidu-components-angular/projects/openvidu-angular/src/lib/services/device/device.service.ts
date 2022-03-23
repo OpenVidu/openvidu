@@ -9,6 +9,9 @@ import { LoggerService } from '../logger/logger.service';
 import { PlatformService } from '../platform/platform.service';
 import { StorageService } from '../storage/storage.service';
 
+/**
+ * @internal
+ */
 @Injectable({
 	providedIn: 'root'
 })
@@ -60,7 +63,7 @@ export class DeviceService {
 		this.microphones = customDevices.microphones;
 
 		this._isVideoMuted = this.storageSrv.isVideoMuted() || this.libSrv.videoMuted.getValue();
-		this._isAudioMuted = this.storageSrv.isAudioMuted() || this.libSrv.audioMuted.getValue();;
+		this._isAudioMuted = this.storageSrv.isAudioMuted() || this.libSrv.audioMuted.getValue();
 
 		this.log.d('Media devices', customDevices);
 	}

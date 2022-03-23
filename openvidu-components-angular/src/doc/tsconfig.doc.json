@@ -1,0 +1,14 @@
+{
+	"include": [
+		"../../projects/openvidu-angular/src/lib/components/**/*.ts",
+		"../../projects/openvidu-angular/src/lib/directives/**/*.ts",
+		"../../projects/openvidu-angular/src/lib/services/**/*.ts",
+		"../../projects/openvidu-angular/src/lib/models/**/*.ts",
+		"../app/openvidu-webcomponent/openvidu-webcomponent.component.ts"
+	],
+	"exclude": [
+		"src/test.ts",
+		"../../projects/openvidu-angular/src/lib/**/*.mock.ts",
+		"../../projects/openvidu-angular/src/lib/**/*.spec.ts"
+	],
+}

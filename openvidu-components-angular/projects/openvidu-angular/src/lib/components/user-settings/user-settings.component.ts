@@ -19,6 +19,9 @@ import { ActionService } from '../../services/action/action.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { ParticipantAbstractModel } from '../../models/participant.model';
 
+/**
+ * @internal
+ */
 @Component({
 	selector: 'ov-user-settings',
 	templateUrl: './user-settings.component.html',

@@ -11,11 +11,17 @@ import { LoggerService } from '../logger/logger.service';
 	providedIn: 'root'
 })
 export class ParticipantService {
-	//Local participants observables
+	/**
+	 * @internal
+	 * Local participants observables
+	 */
 	localParticipantObs: Observable<ParticipantAbstractModel>;
 	protected _localParticipant = <BehaviorSubject<ParticipantAbstractModel>>new BehaviorSubject(null);
 
-	//Remote participants observable
+	/**
+	 * @internal
+	 * Remote participants observables
+	 */
 	remoteParticipantsObs: Observable<ParticipantAbstractModel[]>;
 	protected _remoteParticipants = <BehaviorSubject<ParticipantAbstractModel[]>>new BehaviorSubject([]);
 
@@ -24,6 +30,9 @@ export class ParticipantService {
 
 	protected log: ILogger;
 
+	/**
+	 * @internal
+	 */
 	constructor(protected openviduAngularConfigSrv: OpenViduAngularConfigService, protected loggerSrv: LoggerService) {
 		this.log = this.loggerSrv.get('ParticipantService');
 
@@ -31,7 +40,10 @@ export class ParticipantService {
 		this.remoteParticipantsObs = this._remoteParticipants.asObservable();
 	}
 
-	initLocalParticipant(props: ParticipantProperties)  {
+	/**
+	 * @internal
+	 */
+	initLocalParticipant(props: ParticipantProperties) {
 		this.localParticipant = this.newParticipant(props);
 		this.updateLocalParticipant();
 	}
@@ -40,13 +52,22 @@ export class ParticipantService {
 		return this.localParticipant;
 	}
 
+	/**
+	 * @internal
+	 */
 	getMyCameraPublisher(): Publisher {
 		return <Publisher>this.localParticipant.getCameraConnection().streamManager;
 	}
 
+	/**
+	 * @internal
+	 */
 	setMyCameraPublisher(publisher: Publisher) {
 		this.localParticipant.setCameraPublisher(publisher);
 	}
+	/**
+	 * @internal
+	 */
 	setMyCameraConnectionId(connectionId: string) {
 		this.localParticipant.setCameraConnectionId(connectionId);
 	}
@@ -58,26 +79,39 @@ export class ParticipantService {
 		return <Publisher>this.localParticipant.getScreenConnection()?.streamManager;
 	}
 
+	/**
+	 * @internal
+	 */
 	setMyScreenPublisher(publisher: Publisher) {
 		this.localParticipant.setScreenPublisher(publisher);
 	}
 
+	/**
+	 * @internal
+	 */
 	setMyScreenConnectionId(connectionId: string) {
 		this.localParticipant.setScreenConnectionId(connectionId);
 	}
 
 	/**
+	 * @internal
+	 */
 	enableWebcamStream() {
 		this.localParticipant.enableCamera();
 		this.updateLocalParticipant();
 	}
 
 	/**
+	 * @internal
+	 */
 	disableWebcamStream() {
 		this.localParticipant.disableCamera();
 		this.updateLocalParticipant();
 	}
 
+	/**
+	 * @internal
+	 */
 	activeMyScreenShare(screenPublisher: Publisher) {
 		this.log.d('Enabling screen publisher');
 
@@ -96,16 +130,24 @@ export class ParticipantService {
 	}
 
 	/**
+	 * @internal
+	 */
 	disableScreenStream() {
 		this.localParticipant.disableScreen();
 		this.updateLocalParticipant();
 	}
 
+	/**
+	 * @internal
+	 */
 	setMyNickname(nickname: string) {
 		this.localParticipant.setNickname(nickname);
 		this.updateLocalParticipant();
 	}
 
+	/**
+	 * @internal
+	 */
 	getMyNickname(): string {
 		return this.localParticipant.nickname;
 	}
@@ -113,13 +155,13 @@ export class ParticipantService {
 	/**
 	 * @internal
 	 */
-
-
 	toggleMyVideoEnlarged(connectionId: string) {
 		this.localParticipant.toggleVideoEnlarged(connectionId);
 	}
 
-
+	/**
+	 * @internal
+	 */
 	resetMyStreamsToNormalSize() {
 		if (this.localParticipant.someHasVideoEnlarged()) {
 			this.localParticipant.setAllVideoEnlarged(false);
@@ -127,6 +169,9 @@ export class ParticipantService {
 		}
 	}
 
+	/**
+	 * @internal
+	 */
 	clear() {
 		this.disableScreenStream();
 		// this.localParticipant = this.newParticipant();
@@ -137,34 +182,58 @@ export class ParticipantService {
 		this.updateLocalParticipant();
 	}
 
+	/**
+	 * @internal
+	 */
 	isMyCameraActive(): boolean {
 		return this.localParticipant.isCameraActive();
 	}
 
+	/**
+	 * @internal
+	 */
 	isMyScreenActive(): boolean {
 		return this.localParticipant.isScreenActive();
 	}
 
+	/**
+	 * @internal
+	 */
 	isOnlyMyCameraActive(): boolean {
 		return this.isMyCameraActive() && !this.isMyScreenActive();
 	}
 
+	/**
+	 * @internal
+	 */
 	isOnlyMyScreenActive(): boolean {
 		return this.isMyScreenActive() && !this.isMyCameraActive();
 	}
 
+	/**
+	 * @internal
+	 */
 	haveICameraAndScreenActive(): boolean {
 		return this.isMyCameraActive() && this.isMyScreenActive();
 	}
 
+	/**
+	 * @internal
+	 */
 	hasCameraVideoActive(): boolean {
 		return this.localParticipant.isCameraVideoActive();
 	}
 
+	/**
+	 * @internal
+	 */
 	hasCameraAudioActive(): boolean {
 		return this.localParticipant?.isCameraAudioActive();
 	}
 
+	/**
+	 * @internal
+	 */
 	hasScreenAudioActive(): boolean {
 		return this.localParticipant.isScreenAudioActive();
 	}
@@ -177,14 +246,16 @@ export class ParticipantService {
 	 * REMOTE USERS
 	 */
 
-	addRemoteConnection(connectionId:string, data: string, subscriber: Subscriber) {
-
+	/**
+	 * @internal
+	 */
+	addRemoteConnection(connectionId: string, data: string, subscriber: Subscriber) {
 		const type: VideoType = this.getTypeConnectionData(data);
 		const streamModel: StreamModel = {
 			type,
 			videoEnlarged: type === VideoType.SCREEN,
 			streamManager: subscriber,
-			connected:  true,
+			connected: true,
 			connectionId
 		};
 
@@ -195,12 +266,12 @@ export class ParticipantService {
 		const participantAdded = this.getRemoteParticipantById(participantId);
 		if (!!participantAdded) {
 			this.log.d('Adding connection to existing participant: ', participantId);
-			if(participantAdded.hasConnectionType(streamModel.type)) {
+			if (participantAdded.hasConnectionType(streamModel.type)) {
 				this.log.d('Participant has publisher, updating it');
 				participantAdded.setPublisher(streamModel.type, subscriber);
 			} else {
 				this.log.d('Participant has not publisher, adding it');
-				if(streamModel.type === VideoType.SCREEN) {
+				if (streamModel.type === VideoType.SCREEN) {
 					this.resetRemoteStreamsToNormalSize();
 					this.resetMyStreamsToNormalSize();
 				}
@@ -212,18 +283,28 @@ export class ParticipantService {
 				nickname: this.getNicknameFromConnectionData(data),
 				local: false,
 				id: participantId
-			}
+			};
 			const remoteParticipant = this.newParticipant(props, streamModel);
 			this.remoteParticipants.push(remoteParticipant);
 		}
 		this.updateRemoteParticipants();
 	}
 
+	getRemoteParticipants(): ParticipantAbstractModel[] {
+		return this.remoteParticipants;
+	}
+
+	/**
+	 * @internal
+	 */
 	resetRemoteStreamsToNormalSize() {
-		this.remoteParticipants.forEach(participant => participant.setAllVideoEnlarged(false));
+		this.remoteParticipants.forEach((participant) => participant.setAllVideoEnlarged(false));
 		this.updateRemoteParticipants();
 	}
 
+	/**
+	 * @internal
+	 */
 	removeConnectionByConnectionId(connectionId: string) {
 		this.log.w('Deleting connection: ', connectionId);
 		let participant = null;
@@ -240,13 +321,13 @@ export class ParticipantService {
 				// Remove participants without connections
 				this.remoteParticipants = this.remoteParticipants.filter((p) => p !== participant);
 			}
-			if(removeStream.type === VideoType.SCREEN){
-				const remoteScreens = this.remoteParticipants.filter(p => p.isScreenActive());
-				if(remoteScreens.length > 0){
+			if (removeStream.type === VideoType.SCREEN) {
+				const remoteScreens = this.remoteParticipants.filter((p) => p.isScreenActive());
+				if (remoteScreens.length > 0) {
 					// Enlarging the last screen connection active
-					const lastScreenActive = remoteScreens[remoteScreens.length -1];
+					const lastScreenActive = remoteScreens[remoteScreens.length - 1];
 					lastScreenActive.setScreenEnlarged(true);
-				} else if(this.localParticipant.isScreenActive()) {
+				} else if (this.localParticipant.isScreenActive()) {
 					// Enlarging my screen if thereare not any remote screen active
 					this.localParticipant.setScreenEnlarged(true);
 				}
@@ -255,6 +336,9 @@ export class ParticipantService {
 			this.updateRemoteParticipants();
 		}
 	}
+	/**
+	 * @internal
+	 */
 	getRemoteParticipantByConnectionId(connectionId: string): ParticipantAbstractModel {
 		return this.remoteParticipants.find((p) => p.hasConnectionId(connectionId));
 	}
@@ -262,15 +346,24 @@ export class ParticipantService {
 	protected getRemoteParticipantById(id: string): ParticipantAbstractModel {
 		return this.remoteParticipants.find((p) => p.id === id);
 	}
+	/**
+	 * @internal
+	 */
 	someoneIsSharingScreen(): boolean {
 		return this.remoteParticipants.some((p) => p.someHasVideoEnlarged());
 	}
 
+	/**
+	 * @internal
+	 */
 	toggleRemoteVideoEnlarged(connectionId: string) {
 		const p = this.getRemoteParticipantByConnectionId(connectionId);
 		p.toggleVideoEnlarged(connectionId);
 	}
 
+	/**
+	 * @internal
+	 */
 	getNicknameFromConnectionData(data: string): string {
 		try {
 			return JSON.parse(data).clientData;
@@ -279,6 +372,9 @@ export class ParticipantService {
 		}
 	}
 
+	/**
+	 * @internal
+	 */
 	setRemoteNickname(connectionId: string, nickname: string) {
 		const participant = this.getRemoteParticipantByConnectionId(connectionId);
 		if (participant) {
@@ -308,8 +404,7 @@ export class ParticipantService {
 	}
 
 	protected newParticipant(props: ParticipantProperties, streamModel?: StreamModel) {
-
-		if(this.openviduAngularConfigSrv.hasParticipantFactory()){
+		if (this.openviduAngularConfigSrv.hasParticipantFactory()) {
 			return this.openviduAngularConfigSrv.getParticipantFactory().apply(this, [props, streamModel]);
 		}
 		return new ParticipantModel(props, streamModel);

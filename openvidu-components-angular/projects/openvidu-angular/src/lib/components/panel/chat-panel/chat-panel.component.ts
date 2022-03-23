@@ -1,10 +1,43 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import {
+	AfterViewInit,
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	ElementRef,
+	HostListener,
+	OnInit,
+	ViewChild
+} from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ChatMessage } from '../../../models/chat.model';
 import { MenuType } from '../../../models/menu.model';
 import { ChatService } from '../../../services/chat/chat.service';
 import { SidenavMenuService } from '../../../services/sidenav-menu/sidenav-menu.service';
 
+/**
+ *
+ * The **ChatPanelComponent** is hosted inside of the {@link PanelComponent}.
+ * It is in charge of displaying the session chat.
+ *
+ * <div class="custom-table-container">
+
+ * <div>
+ *
+ * <h3>OpenVidu Angular Directives</h3>
+ *
+ * The ChatPanelComponent can be replaced with a custom component. It provides us the following {@link https://angular.io/guide/structural-directives Angular structural directives}
+ * for doing this.
+ *
+ * |            **Directive**           |                 **Reference**                 |
+ * |:----------------------------------:|:---------------------------------------------:|
+ * |           ***ovChatPanel**          |           {@link ChatPanelDirective}          |
+ *
+ * <p class="component-link-text">
+ * 	<span class="italic">See all {@link OpenViduAngularDirectiveModule OpenVidu Angular Directives}</span>
+ * </p>
+ * </div>
+ * </div>
+ */
 @Component({
 	selector: 'ov-chat-panel',
 	templateUrl: './chat-panel.component.html',
@@ -12,16 +45,31 @@ import { SidenavMenuService } from '../../../services/sidenav-menu/sidenav-menu.
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ChatPanelComponent implements OnInit, AfterViewInit {
+	/**
+	 * @ignore
+	 */
 	@ViewChild('chatScroll') chatScroll: ElementRef;
+	/**
+	 * @ignore
+	 */
 	@ViewChild('chatInput') chatInput: ElementRef;
+	/**
+	 * @ignore
+	 */
 	message: string;
+
 	messageList: ChatMessage[] = [];
-	isMenuOpened: boolean;
 
 	private chatMessageSubscription: Subscription;
 
+	/**
+	 * @ignore
+	 */
 	constructor(private chatService: ChatService, private menuService: SidenavMenuService, private cd: ChangeDetectorRef) {}
 
+	/**
+	 * @ignore
+	 */
 	@HostListener('document:keydown.escape', ['$event'])
 	onKeydownHandler(event: KeyboardEvent) {
 		if (this.menuService.isMenuOpened()) {
@@ -44,6 +92,9 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 		if (this.chatMessageSubscription) this.chatMessageSubscription.unsubscribe();
 	}
 
+	/**
+	 * @ignore
+	 */
 	eventKeyPress(event) {
 		// Pressed 'Enter' key
 		if (event && event.keyCode === 13) {
@@ -53,7 +104,7 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	}
 
 	sendMessage(): void {
-		if(!!this.message) {
+		if (!!this.message) {
 			this.chatService.sendMessage(this.message);
 			this.message = '';
 		}

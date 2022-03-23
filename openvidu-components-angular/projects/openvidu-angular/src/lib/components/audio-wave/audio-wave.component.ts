@@ -2,6 +2,10 @@ import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 
 import { PublisherSpeakingEvent, StreamManager } from 'openvidu-browser';
 
+/**
+ * @internal
+ */
+
 @Component({
 	selector: 'ov-audio-wave',
 	templateUrl: './audio-wave.component.html',
@@ -9,7 +13,7 @@ import { PublisherSpeakingEvent, StreamManager } from 'openvidu-browser';
 })
 export class AudioWaveComponent implements OnInit, OnDestroy {
 	isSpeaking: boolean = false;
-	audioVolume: number = 0;
+	// audioVolume: number = 0;
 
 	private _streamManager: StreamManager;
 
@@ -17,7 +21,7 @@ export class AudioWaveComponent implements OnInit, OnDestroy {
 	set streamManager(streamManager: StreamManager) {
 		this._streamManager = streamManager;
 
-		if(this._streamManager) {
+		if (this._streamManager) {
 			this._streamManager.on('publisherStartSpeaking', (event: PublisherSpeakingEvent) => {
 				this.isSpeaking = true;
 			});
@@ -34,12 +38,11 @@ export class AudioWaveComponent implements OnInit, OnDestroy {
 			// 	console.log('AUDIO VOLUME', this.audioVolume);
 			// });
 		}
-
 	}
 
 	constructor() {}
 	ngOnDestroy(): void {
-		if(this._streamManager){
+		if (this._streamManager) {
 			this._streamManager.off('publisherStartSpeaking');
 			this._streamManager.off('publisherStopSpeaking');
 		}

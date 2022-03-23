@@ -3,6 +3,9 @@ import { ILogService } from '../../models/logger.model';
 
 import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.service';
 
+/**
+ * @internal
+ */
 @Injectable({
 	providedIn: 'root'
 })

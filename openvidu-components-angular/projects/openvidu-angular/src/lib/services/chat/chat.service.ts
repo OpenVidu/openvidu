@@ -14,6 +14,9 @@ import { SidenavMenuService } from '../sidenav-menu/sidenav-menu.service';
 import { ParticipantService } from '../participant/participant.service';
 import { MenuType } from '../../models/menu.model';
 
+/**
+ * @internal
+ */
 @Injectable({
 	providedIn: 'root'
 })
