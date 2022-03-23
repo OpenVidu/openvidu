@@ -43,7 +43,7 @@ export class LayoutService {
       and minRatio and maxRatio are ignored (default false) */,
 			bigClass: LayoutClass.BIG_ELEMENT, // The class to add to elements that should be sized bigger
 			smallClass: LayoutClass.SMALL_ELEMENT,
-			bigPercentage: 0.7, // The maximum percentage of space the big ones should take up
+			bigPercentage: 0.8, // The maximum percentage of space the big ones should take up
 			bigFixedRatio: false, // fixedRatio for the big ones
 			bigMaxRatio: 9 / 16, // The narrowest ratio to use for the big elements (default 2x3)
 			bigMinRatio: 9 / 16, // The widest ratio to use for the big elements (default 16x9)
