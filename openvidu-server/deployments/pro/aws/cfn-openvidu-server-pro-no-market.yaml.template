@@ -651,6 +651,9 @@ Resources:
             DeleteOnTermination: true
             VolumeSize: 200
 
+  ##########
+  # Security groups
+  ##########
   KMSSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -813,7 +816,9 @@ Resources:
       EIP: !Ref PublicElasticIP
 
   ##########
-  # Lambda to Copy original AMI to the deployment region
+  # Lambda which complements Cloudformation to:
+  # 1. On create: Copy original AMIs from eu-west-1 to the deployment region
+  # 2. On Delete: Removes media nodes created by OpenVidu Server PRO
   ##########
   CloudformationLambdaRole:
     Type: 'AWS::IAM::Role'
