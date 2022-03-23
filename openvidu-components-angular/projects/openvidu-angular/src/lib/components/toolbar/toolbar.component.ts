@@ -175,7 +175,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 			// Disabling webcam
 			if (this.participantService.haveICameraAndScreenActive()) {
 				this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), publishVideo);
-				this.participantService.disableWebcamUser();
+				this.participantService.disableWebcamStream();
 				this.openviduService.unpublish(this.participantService.getMyCameraPublisher());
 				this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), publishAudio);
 				return;
@@ -190,7 +190,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 				await this.openviduService.publish(this.participantService.getMyCameraPublisher());
 				this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), false);
 				this.openviduService.publishAudio(this.participantService.getMyCameraPublisher(), hasAudio);
-				this.participantService.enableWebcamUser();
+				this.participantService.enableWebcamStream();
 			}
 			// Muting/unmuting webcam
 			this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), publishVideo);
@@ -206,7 +206,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		try {
 			// Disabling screenShare
 			if (this.participantService.haveICameraAndScreenActive()) {
-				this.participantService.disableScreenUser();
+				this.participantService.disableScreenStream();
 				this.openviduService.unpublish(this.participantService.getMyScreenPublisher());
 				return;
 			}
@@ -246,7 +246,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 					// this.openviduService.sendNicknameSignal();
 					if (!this.participantService.hasCameraVideoActive()) {
 						// Disabling webcam
-						this.participantService.disableWebcamUser();
+						this.participantService.disableWebcamStream();
 						this.openviduService.unpublish(this.participantService.getMyCameraPublisher());
 					}
 				});
@@ -268,8 +268,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 			await this.openviduService.publish(this.participantService.getMyCameraPublisher());
 			this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), false);
 			this.openviduService.publishAudio(this.participantService.getMyCameraPublisher(), hasAudio);
-			this.participantService.enableWebcamUser();
-			this.participantService.disableScreenUser();
+			this.participantService.enableWebcamStream();
+			this.participantService.disableScreenStream();
 			this.openviduService.unpublish(this.participantService.getMyScreenPublisher());
 		} catch (error) {
 			this.log.e('There was an error toggling screen share:', error.code, error.message);
@@ -331,7 +331,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	}
 	protected subscribeToUserMediaProperties() {
 		this.localParticipantSubscription = this.participantService.localParticipantObs.subscribe((p) => {
-			if(p) {
+			if (p) {
 				this.isWebcamVideoActive = p.isCameraVideoActive();
 				this.isWebcamAudioActive = p.isCameraAudioActive();
 				this.isScreenShareActive = p.isScreenActive();

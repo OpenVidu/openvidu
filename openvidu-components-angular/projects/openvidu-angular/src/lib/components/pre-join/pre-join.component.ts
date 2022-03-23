@@ -131,11 +131,11 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 
 		if (this.participantService.haveICameraAndScreenActive()) {
 			// Cam will not published, disable webcam with screensharing active
-			this.participantService.disableWebcamUser();
+			this.participantService.disableWebcamStream();
 			this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), publish);
 		} else if (this.participantService.isOnlyMyScreenActive()) {
 			// Cam will be published, enable webcam
-			this.participantService.enableWebcamUser();
+			this.participantService.enableWebcamStream();
 		}
 
 		this.isVideoMuted = !this.isVideoMuted;

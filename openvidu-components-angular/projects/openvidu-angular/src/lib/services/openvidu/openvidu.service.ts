@@ -79,7 +79,7 @@ export class OpenViduService {
 	async connectSession(session: Session, token: string): Promise<void> {
 		if (!!token && session) {
 			const nickname = this.participantService.getMyNickname();
-			const participantId = this.participantService.getMyParticipantId();
+			const participantId = this.participantService.getLocalParticipant().id;
 			if (session === this.webcamSession) {
 				this.log.d('Connecting webcam session');
 				await this.webcamSession.connect(token, {
@@ -207,7 +207,7 @@ export class OpenViduService {
 	// TODO: Remove this method when replaceTrack issue is fixed
 	// https://github.com/OpenVidu/openvidu/pull/700
 	republishTrack(properties: PublisherProperties): Promise<void> {
-		const {videoSource, audioSource, mirror} = properties;
+		const { videoSource, audioSource, mirror } = properties;
 		return new Promise(async (resolve, reject) => {
 			if (!!videoSource) {
 				this.log.d('Replacing video track ' + videoSource);
@@ -262,7 +262,7 @@ export class OpenViduService {
 			if (videoType === VideoType.CAMERA) {
 				//TODO: Uncomment this section when replaceTrack issue is fixed
 				// https://github.com/OpenVidu/openvidu/pull/700
-				throw('Replace track feature has a bug. We are trying to fix it');
+				throw 'Replace track feature has a bug. We are trying to fix it';
 				// let mediaStream: MediaStream;
 				// const oldMediaStream = this.participantService.getMyCameraPublisher().stream.getMediaStream();
 				// const isFirefoxPlatform = this.platformService.isFirefox();
@@ -363,7 +363,7 @@ export class OpenViduService {
 		);
 	}
 
-	getRemoteCameraConnections(): Connection[] {
+	getRemoteConnections(): Connection[] {
 		// Avoid screen connections
 		const remoteCameraConnections: Connection[] = Array.from(this.webcamSession.remoteConnections.values()).filter((conn) => {
 			let type: VideoType;

@@ -39,9 +39,6 @@ export class ParticipantService {
 	getLocalParticipant(): ParticipantAbstractModel {
 		return this.localParticipant;
 	}
-	getMyParticipantId(): string {
-		return this.localParticipant.id;
-	}
 
 	getMyCameraPublisher(): Publisher {
 		return <Publisher>this.localParticipant.getCameraConnection().streamManager;
@@ -54,10 +51,9 @@ export class ParticipantService {
 		this.localParticipant.setCameraConnectionId(connectionId);
 	}
 
-	getMyCameraConnectionId(): string {
-		return this.localParticipant.getCameraConnection().connectionId;
-	}
-
+	/**
+	 * @internal
+	 */
 	getMyScreenPublisher(): Publisher {
 		return <Publisher>this.localParticipant.getScreenConnection()?.streamManager;
 	}
@@ -70,12 +66,14 @@ export class ParticipantService {
 		this.localParticipant.setScreenConnectionId(connectionId);
 	}
 
-	enableWebcamUser() {
+	/**
+	enableWebcamStream() {
 		this.localParticipant.enableCamera();
 		this.updateLocalParticipant();
 	}
 
-	disableWebcamUser() {
+	/**
+	disableWebcamStream() {
 		this.localParticipant.disableCamera();
 		this.updateLocalParticipant();
 	}
@@ -97,7 +95,8 @@ export class ParticipantService {
 		this.updateLocalParticipant();
 	}
 
-	disableScreenUser() {
+	/**
+	disableScreenStream() {
 		this.localParticipant.disableScreen();
 		this.updateLocalParticipant();
 	}
@@ -110,13 +109,10 @@ export class ParticipantService {
 	getMyNickname(): string {
 		return this.localParticipant.nickname;
 	}
-	// getWebcamNickname(): string {
-	// 	return this.localParticipant.getCameraNickname();
-	// }
 
-	// getScreenNickname(): string {
-	// 	return this.localParticipant.getScreenNickname();
-	// }
+	/**
+	 * @internal
+	 */
 
 
 	toggleMyVideoEnlarged(connectionId: string) {
@@ -125,14 +121,14 @@ export class ParticipantService {
 
 
 	resetMyStreamsToNormalSize() {
-		if(this.localParticipant.someHasVideoEnlarged()){
+		if (this.localParticipant.someHasVideoEnlarged()) {
 			this.localParticipant.setAllVideoEnlarged(false);
 			this.updateLocalParticipant();
 		}
 	}
 
 	clear() {
-		this.disableScreenUser();
+		this.disableScreenStream();
 		// this.localParticipant = this.newParticipant();
 		// this._screensharing.next(false);
 		this.remoteParticipants = [];
@@ -174,7 +170,7 @@ export class ParticipantService {
 	}
 
 	updateLocalParticipant() {
-		this._localParticipant.next(Object.assign(Object.create(this.localParticipant),this.localParticipant));
+		this._localParticipant.next(Object.assign(Object.create(this.localParticipant), this.localParticipant));
 	}
 
 	/**
