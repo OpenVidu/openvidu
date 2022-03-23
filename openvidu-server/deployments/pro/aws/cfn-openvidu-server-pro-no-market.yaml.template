@@ -376,7 +376,6 @@ Resources:
                   - 'ec2:TerminateInstances'
                   - 'ec2:CreateTags'
                   - 'ec2:DescribeSecurityGroups'
-                  - 'ec2:AuthorizeSecurityGroupIngress'
                   - 'ec2:DescribeSubnets'
                   - 'iam:PassRole'
                   - 'route53:ChangeResourceRecordSets'
@@ -553,7 +552,7 @@ Resources:
                     sed -i "s/#OPENVIDU_PRO_AWS_S3_BUCKET=/OPENVIDU_PRO_AWS_S3_BUCKET=${s3BucketName}/" $WORKINGDIR/.env
                   fi
                 fi
-              - kmsAmi: !FindInMap [KMSAMIMAP, !Ref 'AWS::Region', AMI]
+              - kmsAmi: !GetAtt CloudformationLambdaInvoke.MediaNodeImageId
                 ### Unique bucket name using Stack ID
                 s3BucketName: !Join ["" , [ 'openvidu-recordings-', !Select [0, !Split ["-", !Select [2, !Split [/, !Ref AWS::StackId ]]]]]]
               mode: "000755"
@@ -580,47 +579,6 @@ Resources:
               mode: "000755"
               owner: "root"
               group: "root"
-            '/usr/local/bin/getSecurityGroupOpenVidu.sh':
-              content: !Sub |
-                #!/bin/bash -x
-                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 describe-security-groups \
-                               --region ${AWS::Region} \
-                               --output text \
-                               --filters "Name=tag:aws:cloudformation:logical-id,Values=OpenViduSecurityGroup" \
-                                         "Name=tag:aws:cloudformation:stack-id,Values=${AWS::StackId}" \
-                               --query 'SecurityGroups[].GroupId[]'
-              mode: "000755"
-              owner: "root"
-              group: "root"
-            '/usr/local/bin/getCidrBlocKSubnet.sh':
-              content: !Sub |
-                #!/bin/bash -x
-                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 describe-subnets \
-                                --region ${AWS::Region} \
-                                --output text \
-                                --filters "Name=subnet-id,Values=${OpenViduSubnet}" \
-                                --query 'Subnets[].CidrBlock[]'
-              mode: "000755"
-              owner: "root"
-              group: "root"
-            '/usr/local/bin/create_security_group_rules.sh':
-              content: |
-                #!/bin/bash -x
-                SECGRPIDKMS=$(/usr/local/bin/getSecurityGroupKms.sh)
-                SECGRPIDOV=$(/usr/local/bin/getSecurityGroupOpenVidu.sh)
-                SUBNET_CIDR=$(/usr/local/bin/getCidrBlocKSubnet.sh)
-
-                # Create Security group rules OpenVidu
-                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 authorize-security-group-ingress --group-id $SECGRPIDOV --protocol tcp --port 5044 --cidr $SUBNET_CIDR
-                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 authorize-security-group-ingress --group-id $SECGRPIDOV --protocol tcp --port 9200 --cidr $SUBNET_CIDR
-
-                # Create security group rules for KMS
-                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 authorize-security-group-ingress --group-id $SECGRPIDKMS --protocol tcp --port 8888 --cidr $SUBNET_CIDR
-                docker run --rm amazon/aws-cli:AWS_DOCKER_TAG ec2 authorize-security-group-ingress --group-id $SECGRPIDKMS --protocol tcp --port 3000 --cidr $SUBNET_CIDR
-
-              mode: "000755"
-              owner: "root"
-              group: "root"
             '/usr/local/bin/restartPRO.sh':
               content: |
                 #!/bin/bash -x
@@ -642,7 +600,7 @@ Resources:
               owner: "root"
               group: "root"
     Properties:
-      ImageId: !FindInMap [OVAMIMAP, !Ref 'AWS::Region', AMI]
+      ImageId: !GetAtt CloudformationLambdaInvoke.MasterNodeImageId
       InstanceType: !Ref AwsInstanceTypeOV
       KeyName: !Ref KeyName
       IamInstanceProfile: !Ref OpenviduInstancesProfile
@@ -665,9 +623,6 @@ Resources:
 
             # Replace .env variables
             /usr/local/bin/feedGroupVars.sh || { echo "[OpenVidu] Parameters incorrect/insufficient"; exit 1; }
-
-            # Create security groups
-            /usr/local/bin/create_security_group_rules.sh || { echo "[OpenVidu] Error creating security groups"; exit 1; }
 
             # Launch on reboot
             echo "@reboot /usr/local/bin/restartPRO.sh" | crontab
@@ -711,6 +666,14 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIpv6: ::/0
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          SourceSecurityGroupId: !Ref OpenViduSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 8888
+          ToPort: 8888
+          SourceSecurityGroupId: !Ref OpenViduSecurityGroup
         - IpProtocol: udp
           FromPort: 40000
           ToPort: 65535
@@ -826,6 +789,15 @@ Resources:
           ToPort: 65535
           CidrIpv6: ::/0
 
+  OpenViduSecurityGroupIngressELK:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+        GroupId: !Ref OpenViduSecurityGroup
+        IpProtocol: tcp
+        FromPort: 9200
+        ToPort: 9200
+        SourceSecurityGroupId: !Ref KMSSecurityGroup
+
   WaitCondition:
     Type: AWS::CloudFormation::WaitCondition
     CreationPolicy:
@@ -839,6 +811,171 @@ Resources:
     Properties:
       InstanceId: !Ref OpenViduServer
       EIP: !Ref PublicElasticIP
+
+  ##########
+  # Lambda to Copy original AMI to the deployment region
+  ##########
+  CloudformationLambdaRole:
+    Type: 'AWS::IAM::Role'
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: !Join ['', [ !Ref AWS::StackName, '-lambda-policy-ami-copy'] ]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              # Permissions to copy original Lambda to the region where it is being deployed
+              - Effect: Allow
+                Action:
+                  - 'ec2:DescribeImages'
+                  - 'ec2:CopyImage'
+                Resource: '*'
+              # Describe instances to get instances which OpenVidu PRO creates
+              - Effect: Allow
+                Action:
+                  - 'ec2:DescribeInstances'
+                Resource: '*'
+              # Permissions to remove media nodes while destroying the Cloudformation
+              # Only those created by OpenVidu PRO can be deleted
+              - Effect: Allow
+                Action:
+                  - 'ec2:TerminateInstances'
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    'aws:ResourceTag/ov-cluster-member': 'kms'
+                    'aws:ResourceTag/ov-stack-name': !Ref AWS::StackName
+                    'aws:ResourceTag/ov-stack-region': !Ref AWS::Region
+      RoleName: !Join ['', [ !Ref AWS::StackName, '-lambda-role-ami-copy'] ]
+
+  CloudformationLambda:
+    Type: AWS::Lambda::Function
+    DeletionPolicy: Delete
+    Properties:
+      FunctionName: !Join ['', [ !Ref AWS::StackName, '-lambda-ami-copy'] ]
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          from botocore.config import Config
+
+          def handler(event, context):
+            try:
+              if (event['RequestType'] == 'Create'):
+                copy_ami(event, context)
+                return
+              elif (event['RequestType'] == 'Delete'):
+                removeMediaNodes(event, context)
+              else:
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+            except Exception:
+              cfnresponse.send(event, context, cfnresponse.FAILED, {})
+
+          def copy_ami_operation(source_image_id, source_region, new_ami_name, ec2_client):
+            own_ami_filter = [{ 'Name': 'name', 'Values': [new_ami_name] }]
+            amis_response = ec2_client.describe_images(Filters=own_ami_filter)
+            if (len(amis_response['Images']) == 1):
+              # If AMI exists, don't copy
+              return amis_response['Images'][0]['ImageId']
+            else:
+              # If AMI does not exist, copy
+              new_amis_response = ec2_client.copy_image(
+                SourceImageId=source_image_id,
+                SourceRegion=source_region,
+                Name=new_ami_name
+              )
+              return new_amis_response['ImageId']
+
+          def copy_ami(event, context):
+            new_images=[]
+            cfn_output = {}
+            source_image_id_master_node = event['ResourceProperties']['MasterNodeAmiSourceId']
+            source_image_id_media_node = event['ResourceProperties']['MediaNodeAmiSourceId']
+            source_region = event['ResourceProperties']['AmiSourceRegion']
+            deployment_region = event['ResourceProperties']['DeploymentRegion']
+
+            # Clients init
+            ec2_client = boto3.client('ec2', config = Config(region_name=deployment_region))
+            ec2_client_ov = boto3.client('ec2', config = Config(region_name=source_region))
+            img_exists_waiter= ec2_client.get_waiter('image_exists')
+            img_avail_waiter = ec2_client.get_waiter('image_available')
+
+            # Get original ami name
+            public_ami_master_node_filter = [{ 'Name': 'image-id', 'Values': [ source_image_id_master_node ] }]
+            public_ami_media_node_filter = [{ 'Name': 'image-id', 'Values': [ source_image_id_media_node ] }]
+
+            response = ec2_client_ov.describe_images(Filters=public_ami_master_node_filter)
+            new_ami_name_master_node = "[ OpenVidu PRO Master Node AMI Copy ] - " + response['Images'][0]['Name']
+            response = ec2_client_ov.describe_images(Filters=public_ami_media_node_filter)
+            new_ami_name_media_node = "[ OpenVidu PRO/ENTERPRISE Media Node AMI Copy ] - " + response['Images'][0]['Name']
+
+            # Copy master node AMI and media node AMI
+            master_node_ami_id = copy_ami_operation(source_image_id_master_node, source_region, new_ami_name_master_node, ec2_client)
+            new_images.append(master_node_ami_id)
+            cfn_output['MasterNodeImageId'] = master_node_ami_id
+            media_node_ami_id = copy_ami_operation(source_image_id_media_node, source_region, new_ami_name_media_node, ec2_client)
+            new_images.append(media_node_ami_id)
+            cfn_output['MediaNodeImageId'] = media_node_ami_id
+
+            # Wait images to be available
+            waiter_config = {'Delay': 15, 'MaxAttempts': 59 }
+            response = img_exists_waiter.wait(ImageIds=new_images, WaiterConfig=waiter_config)
+            response = img_avail_waiter.wait(ImageIds=new_images, WaiterConfig=waiter_config)
+
+            # Return AMIs
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, cfn_output)
+
+          def removeMediaNodes(event, context):
+            cluster_stack_name = event['ResourceProperties']['StackName']
+            deployment_region = event['ResourceProperties']['DeploymentRegion']
+
+            # Clients init
+            ec2_client = boto3.client('ec2', config = Config(region_name=deployment_region))
+            ec2_media_node_filter = [
+                { 'Name': 'tag:ov-cluster-member', 'Values': [ 'kms' ] },
+                { 'Name': 'tag:ov-stack-region', 'Values': [ deployment_region ] },
+                { 'Name': 'tag:ov-stack-name', 'Values': [ cluster_stack_name ] }
+            ]
+
+            # Get instances to remove
+            response_media_nodes = ec2_client.describe_instances(Filters=ec2_media_node_filter, MaxResults=1000)
+
+            # Remove instances
+            instance_ids_to_remove = []
+            for reservation in response_media_nodes['Reservations']:
+                for instance in reservation['Instances']:
+                    instance_ids_to_remove.append(instance['InstanceId'])
+            print(instance_ids_to_remove)
+            ec2_client.terminate_instances(InstanceIds=instance_ids_to_remove)
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+
+      Handler: index.handler
+      Role:
+        !GetAtt CloudformationLambdaRole.Arn
+      Runtime: python3.7
+      Timeout: 900
+
+  CloudformationLambdaInvoke:
+    Type: AWS::CloudFormation::CustomResource
+    DeletionPolicy: Delete
+    Version: "1.0"
+    Properties:
+      ServiceToken: !GetAtt CloudformationLambda.Arn
+      AmiSourceRegion: 'eu-west-1'
+      MasterNodeAmiSourceId: !FindInMap [OVAMIMAP, 'eu-west-1', AMI]
+      MediaNodeAmiSourceId: !FindInMap [KMSAMIMAP, 'eu-west-1', AMI]
+      StackName: !Ref AWS::StackName
+      DeploymentRegion: !Ref AWS::Region
 
 Outputs:
   OpenViduInspector:
