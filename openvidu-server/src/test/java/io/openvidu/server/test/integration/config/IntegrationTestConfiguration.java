@@ -40,14 +40,25 @@ public class IntegrationTestConfiguration {
 		final KmsManager spy = Mockito.spy(new FixedOneKmsManager(new KurentoSessionManager(), new DummyLoadManager()));
 		doAnswer(invocation -> {
 			List<Kms> successfullyConnectedKmss = new ArrayList<>();
-			List<KmsProperties> kmsProperties = invocation.getArgument(0);
+			List<KmsProperties> kmsProperties = null;
+			try {
+				kmsProperties = invocation.getArgument(0);
+			} catch (Exception e) {
+				System.err.println("Error getting argument from stubbed method: " + e.getMessage());
+			}
 			for (KmsProperties kmsProp : kmsProperties) {
 				Kms kms = new Kms(kmsProp, Whitebox.getInternalState(spy, "loadManager"), spy);
 				KurentoClient kClient = mock(KurentoClient.class);
 
 				doAnswer(i -> {
 					Thread.sleep((long) (Math.random() * 1000));
-					((Continuation<MediaPipeline>) i.getArgument(0)).onSuccess(mock(MediaPipeline.class));
+					Continuation<MediaPipeline> continuation = null;
+					try {
+						continuation = i.getArgument(0);
+					} catch (Exception e) {
+						System.err.println("Error getting argument from stubbed method: " + e.getMessage());
+					}
+					continuation.onSuccess(mock(MediaPipeline.class));
 					return null;
 				}).when(kClient).createMediaPipeline((Continuation<MediaPipeline>) any());
 
