@@ -1,0 +1,16 @@
+
+# Output of 'npm pack'
+*.tgz
+
+**/node_modules/
+**/.angular/
+**/.vscode
+
+
+node_modules
+dist/
+docs/
+openvidu-webcomponent/
+coverage/**
+e2e/webcomponent-app/openvidu-webcomponent-*.css
+e2e/webcomponent-app/openvidu-webcomponent-*.js
