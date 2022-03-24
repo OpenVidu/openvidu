@@ -284,7 +284,7 @@ Resources:
               owner: "root"
               group: "root"
     Properties:
-      ImageId: !GetAtt LambdaCopyAmiInvoke.ImageId
+      ImageId: !GetAtt CloudformationLambdaInvoke.ImageId
       InstanceType: !Ref InstanceType
       SecurityGroups:
         - !Ref WebServerSecurityGroup
@@ -422,7 +422,7 @@ Resources:
   ##########
   # Lambda to Copy original AMI to the deployment region
   ##########
-  LambdaCopyAmiRole:
+  CloudformationLambdaRole:
     Type: 'AWS::IAM::Role'
     DeletionPolicy: Delete
     Properties:
@@ -437,7 +437,7 @@ Resources:
               - 'sts:AssumeRole'
       Path: /
       Policies:
-        - PolicyName: !Join ['', [ !Ref AWS::StackName, '-lambda-policy-ami-copy'] ]
+        - PolicyName: !Join ['', [ !Ref AWS::StackName, '-cf-lambda-policy'] ]
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -446,13 +446,13 @@ Resources:
                   - 'ec2:DescribeImages'
                   - 'ec2:CopyImage'
                 Resource: '*'
-      RoleName: !Join ['', [ !Ref AWS::StackName, '-lambda-role-ami-copy'] ]
+      RoleName: !Join ['', [ !Ref AWS::StackName, '-cf-lambda-role'] ]
 
-  LambdaCopyAmi:
+  CloudformationLambda:
     Type: AWS::Lambda::Function
     DeletionPolicy: Delete
     Properties:
-      FunctionName: !Join ['', [ !Ref AWS::StackName, '-lambda-ami-copy'] ]
+      FunctionName: !Join ['', [ !Ref AWS::StackName, '-cf-lambda'] ]
       Code:
         ZipFile: |
           import boto3
@@ -518,16 +518,16 @@ Resources:
 
       Handler: index.handler
       Role:
-        !GetAtt LambdaCopyAmiRole.Arn
+        !GetAtt CloudformationLambdaRole.Arn
       Runtime: python3.7
       Timeout: 900
 
-  LambdaCopyAmiInvoke:
+  CloudformationLambdaInvoke:
     Type: AWS::CloudFormation::CustomResource
     DeletionPolicy: Delete
     Version: "1.0"
     Properties:
-      ServiceToken: !GetAtt LambdaCopyAmi.Arn
+      ServiceToken: !GetAtt CloudformationLambda.Arn
       AmiSourceRegion: 'eu-west-1'
       AmiSourceId: !FindInMap [OVAMIMAP, 'eu-west-1', AMI]
       DeploymentRegion: !Ref AWS::Region

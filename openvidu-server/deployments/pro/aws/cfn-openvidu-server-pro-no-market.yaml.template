@@ -835,7 +835,7 @@ Resources:
               - 'sts:AssumeRole'
       Path: /
       Policies:
-        - PolicyName: !Join ['', [ !Ref AWS::StackName, '-lambda-policy-ami-copy'] ]
+        - PolicyName: !Join ['', [ !Ref AWS::StackName, '-cf-lambda-policy'] ]
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -861,13 +861,13 @@ Resources:
                     'aws:ResourceTag/ov-cluster-member': 'kms'
                     'aws:ResourceTag/ov-stack-name': !Ref AWS::StackName
                     'aws:ResourceTag/ov-stack-region': !Ref AWS::Region
-      RoleName: !Join ['', [ !Ref AWS::StackName, '-lambda-role-ami-copy'] ]
+      RoleName: !Join ['', [ !Ref AWS::StackName, '-cf-lambda-role'] ]
 
   CloudformationLambda:
     Type: AWS::Lambda::Function
     DeletionPolicy: Delete
     Properties:
-      FunctionName: !Join ['', [ !Ref AWS::StackName, '-lambda-ami-copy'] ]
+      FunctionName: !Join ['', [ !Ref AWS::StackName, '-cf-lambda'] ]
       Code:
         ZipFile: |
           import boto3
@@ -878,7 +878,6 @@ Resources:
             try:
               if (event['RequestType'] == 'Create'):
                 copy_ami(event, context)
-                return
               elif (event['RequestType'] == 'Delete'):
                 removeMediaNodes(event, context)
               else:
