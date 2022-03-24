@@ -66,7 +66,7 @@ public class Kms {
 	private LoadManager loadManager;
 	private KmsManager kmsManager;
 
-	private boolean isFirstReconnectionAttempt = true;
+	private boolean hasTriggeredNodeCrashedEvent = false;
 	private AtomicBoolean isKurentoClientConnected = new AtomicBoolean(false);
 	private AtomicLong timeOfKurentoClientConnection = new AtomicLong(0);
 	private AtomicLong timeOfKurentoClientDisconnection = new AtomicLong(0);
@@ -128,30 +128,33 @@ public class Kms {
 		return true; // loadManager.allowMoreElements(this);
 	}
 
-	public boolean isFirstReconnectionAttempt() {
-		return this.isFirstReconnectionAttempt;
+	public boolean hasTriggeredNodeCrashedEvent() {
+		return this.hasTriggeredNodeCrashedEvent;
 	}
 
-	public void setFirstReconnectionAttempt(boolean isFirst) {
-		this.isFirstReconnectionAttempt = isFirst;
+	public void setHasTriggeredNodeCrashedEvent(boolean hasTriggeredNodeCrashedEvent) {
+		this.hasTriggeredNodeCrashedEvent = hasTriggeredNodeCrashedEvent;
 	}
 
 	public boolean isKurentoClientConnected() {
 		return this.isKurentoClientConnected.get();
 	}
 
-	public void setKurentoClientConnected(boolean isConnected) {
+	public void setKurentoClientConnected(boolean isConnected, boolean reconnection) {
 		final long timestamp = System.currentTimeMillis();
 		this.isKurentoClientConnected.set(isConnected);
 		if (isConnected) {
 			this.setTimeOfKurentoClientConnection(timestamp);
-			kmsManager.getMediaNodeManager().mediaNodeUsageRegistration(this, timestamp, kmsManager.getKmss());
+			this.setTimeOfKurentoClientDisconnection(0);
+			this.setHasTriggeredNodeCrashedEvent(false);
+			if (!reconnection) {
+				kmsManager.getMediaNodeManager().mediaNodeUsageRegistration(this, timestamp, kmsManager.getKmss());
+			}
 			if (this.mediaServer == null) {
 				this.fetchMediaServerType();
 			}
 		} else {
 			this.setTimeOfKurentoClientDisconnection(timestamp);
-			kmsManager.getMediaNodeManager().mediaNodeUsageDeregistration(this, timestamp);
 		}
 	}
 

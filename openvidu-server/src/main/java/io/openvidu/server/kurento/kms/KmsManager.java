@@ -109,10 +109,12 @@ public abstract class KmsManager {
 	protected SessionManager sessionManager;
 	protected LoadManager loadManager;
 
+	protected final int MAX_REQUEST_TIMEOUT = 10000;
+	protected final int MAX_CONNECT_TIME_MILLIS = 3000;
+
 	// Media Node reconnection cycle: 6 attempts, 2 times per second (3s total)
-	final int MAX_RECONNECT_TIME_MILLIS = 3000;
 	final int INTERVAL_WAIT_MS = 500;
-	final int RECONNECTION_LOOPS = MAX_RECONNECT_TIME_MILLIS / INTERVAL_WAIT_MS;
+	final int RECONNECTION_LOOPS = MAX_CONNECT_TIME_MILLIS / INTERVAL_WAIT_MS;
 
 	public KmsManager(SessionManager sessionManager, LoadManager loadManager) {
 		this.sessionManager = sessionManager;
@@ -186,7 +188,7 @@ public abstract class KmsManager {
 						kms.getKurentoClient().toString());
 				// TODO: This should be done here, not after KurentoClient#create method
 				// returns, but it seems that this event is never triggered
-				// kms.setKurentoClientConnected(true);
+				// kms.setKurentoClientConnected(true, false);
 			}
 
 			@Override
@@ -225,7 +227,7 @@ public abstract class KmsManager {
 							kms.getKurentoClient().toString());
 				}
 
-				kms.setKurentoClientConnected(false);
+				kms.setKurentoClientConnected(false, false);
 
 				disconnectionHandler(kms, 0);
 			}
@@ -235,22 +237,23 @@ public abstract class KmsManager {
 				final AtomicInteger iteration = new AtomicInteger(RECONNECTION_LOOPS);
 				final long initTime = System.currentTimeMillis();
 
-				final int accumulatedTimeout = reconnectionSecondsConsumed + (MAX_RECONNECT_TIME_MILLIS / 1000);
+				final int accumulatedTimeout = reconnectionSecondsConsumed + (MAX_CONNECT_TIME_MILLIS / 1000);
 
 				final UpdatableTimerTask kurentoClientReconnectTimer = new UpdatableTimerTask(() -> {
 					if (iteration.decrementAndGet() < 0) {
 
 						kms.getKurentoClientReconnectTimer().cancelTimer();
 						boolean mustRetryReconnection = accumulatedTimeout < openviduConfig.getReconnectionTimeout();
+						boolean mustRemoveMediaNode = true;
 
-						if (kms.isFirstReconnectionAttempt()) {
+						if (!kms.hasTriggeredNodeCrashedEvent()) {
 
 							log.error(
 									"OpenVidu Server [{}] could not reconnect to Media Node {} with IP {} in {} seconds. Media Node crashed",
 									kms.getKurentoClient().toString(), kms.getId(), kms.getIp(),
 									(INTERVAL_WAIT_MS * RECONNECTION_LOOPS / 1000));
 
-							kms.setFirstReconnectionAttempt(false);
+							kms.setHasTriggeredNodeCrashedEvent(true);
 
 							final long timeOfKurentoDisconnection = kms.getTimeOfKurentoClientDisconnection();
 							final List<String> affectedSessionIds = kms.getKurentoSessions().stream()
@@ -258,13 +261,16 @@ public abstract class KmsManager {
 							final List<String> affectedRecordingIds = kms.getActiveRecordings().stream()
 									.map(entry -> entry.getKey()).collect(Collectors.toUnmodifiableList());
 
-							// 1. Remove Media Node from cluster
-							String environmentId = removeMediaNodeUponCrash(kms.getId(), mustRetryReconnection,
-									"Removing Media Node " + kms.getId() + " after node crash");
-
-							// 2. Send nodeCrashed webhook event
+							// 1. Send nodeCrashed webhook event
+							String environmentId = getEnvironmentId(kms.getId());
 							sessionEventsHandler.onMediaNodeCrashed(kms, environmentId, timeOfKurentoDisconnection,
 									affectedSessionIds, affectedRecordingIds);
+
+							// 2. Remove Media Node from cluster
+							if (!mustRetryReconnection) {
+								mustRemoveMediaNode = false;
+								removeMediaNodeUponCrash(kms.getId());
+							}
 
 							// 3. Close all sessions and recordings with reason "nodeCrashed"
 							log.warn("Closing {} sessions hosted by Media Node {} with IP {}: {}",
@@ -296,15 +302,17 @@ public abstract class KmsManager {
 									"Reconnection process to Media Node {} with IP {} aborted. {} seconds have been consumed and the upper limit is {} seconds",
 									kms.getId(), kms.getIp(), accumulatedTimeout,
 									openviduConfig.getReconnectionTimeout());
-							removeMediaNodeUponCrash(kms.getId(), mustRetryReconnection, "Removing Media Node "
-									+ kms.getId() + " with IP " + kms.getIp() + " after reconnection abort");
+							if (mustRemoveMediaNode) {
+								removeMediaNodeUponCrash(kms.getId());
+							}
 						}
 
 					} else {
 
-						if ((System.currentTimeMillis() - initTime) > MAX_RECONNECT_TIME_MILLIS) {
+						if ((System.currentTimeMillis() - initTime) > MAX_CONNECT_TIME_MILLIS) {
 							// KurentoClient connection timeout exceeds the limit. This prevents a
-							// single reconnection attempt to exceed the total timeout limit
+							// single reconnection attempt to exceed the total timeout limit if the
+							// connection gets stuck
 							iteration.set(0);
 							return;
 						}
@@ -321,12 +329,12 @@ public abstract class KmsManager {
 						log.info("According to Timer KMS with uri {} and KurentoClient [{}] is now reconnected",
 								kms.getUri(), kms.getKurentoClient().toString());
 
-						kms.setFirstReconnectionAttempt(true);
 						kms.getKurentoClientReconnectTimer().cancelTimer();
 
-						kms.setKurentoClientConnected(true);
-
+						final boolean mustTriggerNodeRecoveredEvent = kms.hasTriggeredNodeCrashedEvent();
 						final long timeOfKurentoDisconnection = kms.getTimeOfKurentoClientDisconnection();
+
+						kms.setKurentoClientConnected(true, true);
 
 						if (kms.getKurentoSessions().isEmpty()) {
 							log.info("There were no sessions in the KMS with uri {}. Nothing must be done",
@@ -345,7 +353,13 @@ public abstract class KmsManager {
 							}
 						}
 
-						kms.setTimeOfKurentoClientDisconnection(0);
+						if (mustTriggerNodeRecoveredEvent) {
+							// Send nodeRecovered webhook event
+							String environmentId = getEnvironmentId(kms.getId());
+							long timeOfConnection = kms.getTimeOfKurentoClientConnection();
+							sessionEventsHandler.onMediaNodeRecovered(kms, environmentId, timeOfConnection);
+						}
+
 					}
 				}, () -> Long.valueOf(INTERVAL_WAIT_MS)); // Try 2 times per second
 
@@ -377,8 +391,9 @@ public abstract class KmsManager {
 	public abstract void decrementActiveRecordings(RecordingProperties recordingProperties, String recordingId,
 			Session session);
 
-	protected abstract String removeMediaNodeUponCrash(String mediaNodeId, boolean followedByReconnection,
-			String message);
+	protected abstract void removeMediaNodeUponCrash(String mediaNodeId);
+
+	protected abstract String getEnvironmentId(String mediaNodeId);
 
 	@PostConstruct
 	protected abstract void postConstructInitKurentoClients();

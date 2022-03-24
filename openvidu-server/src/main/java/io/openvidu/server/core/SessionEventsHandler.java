@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import io.openvidu.java.client.IceServerProperties;
 import org.kurento.client.GenericMediaEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,8 +37,8 @@ import com.google.gson.JsonObject;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.IceServerProperties;
 import io.openvidu.java.client.OpenViduRole;
-import io.openvidu.server.cdr.CDREventNodeCrashed;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduBuildInfo;
 import io.openvidu.server.config.OpenviduConfig;
@@ -167,16 +166,16 @@ public class SessionEventsHandler {
 				this.openviduConfig.getMediaServer().name());
 
 		switch (this.openviduConfig.getMediaServer()) {
-			case mediasoup:
-				// mediasoup supports simulcast
-				result.addProperty(ProtocolElements.PARTICIPANTJOINED_SIMULCAST_PARAM,
-						this.openviduConfig.isWebrtcSimulcast());
-				break;
-			case kurento:
-			default:
-				// Kurento does not support simulcast
-				result.addProperty(ProtocolElements.PARTICIPANTJOINED_SIMULCAST_PARAM, false);
-				break;
+		case mediasoup:
+			// mediasoup supports simulcast
+			result.addProperty(ProtocolElements.PARTICIPANTJOINED_SIMULCAST_PARAM,
+					this.openviduConfig.isWebrtcSimulcast());
+			break;
+		case kurento:
+		default:
+			// Kurento does not support simulcast
+			result.addProperty(ProtocolElements.PARTICIPANTJOINED_SIMULCAST_PARAM, false);
+			break;
 		}
 
 		if (participant.getToken() != null) {
@@ -188,7 +187,7 @@ public class SessionEventsHandler {
 			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNIP_PARAM, openviduConfig.getCoturnIp());
 			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNPORT_PARAM, openviduConfig.getCoturnPort());
 			List<IceServerProperties> customIceServers = participant.getToken().getCustomIceServers();
-			if (customIceServers!= null && !customIceServers.isEmpty()) {
+			if (customIceServers != null && !customIceServers.isEmpty()) {
 				result.add(ProtocolElements.PARTICIPANTJOINED_CUSTOM_ICE_SERVERS,
 						participant.getToken().getCustomIceServersAsJson());
 			}
@@ -669,11 +668,11 @@ public class SessionEventsHandler {
 	 * This handler must be called before cleaning any sessions or recordings hosted
 	 * by the crashed Media Node
 	 */
-	public void onMediaNodeCrashed(Kms kms, String environmentId, long timeOfKurentoDisconnection,
-			List<String> sessionIds, List<String> recordingIds) {
+	public void onMediaNodeCrashed(Kms kms, String environmentId, long timeOfDisconnection, List<String> sessionIds,
+			List<String> recordingIds) {
 	}
 
-	public void onMasterNodeCrashed(CDREventNodeCrashed event) {
+	public void onMediaNodeRecovered(Kms kms, String environmentId, long timeOfConnection) {
 	}
 
 	public void storeRecordingToSendClientEvent(Recording recording) {

@@ -11,7 +11,7 @@ public class MediaNodeManagerDummy implements MediaNodeManager {
 	}
 
 	@Override
-	public void mediaNodeUsageDeregistration(Kms kms, long timeOfDisconnection) {
+	public void mediaNodeUsageDeregistration(String mediaNodeId, long timeOfDisconnection) {
 	}
 
 	@Override

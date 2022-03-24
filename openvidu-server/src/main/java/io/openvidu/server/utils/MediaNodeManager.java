@@ -8,7 +8,7 @@ public interface MediaNodeManager {
 
 	public void mediaNodeUsageRegistration(Kms kms, long timeOfConnection, Collection<Kms> existingKmss);
 
-	public void mediaNodeUsageDeregistration(Kms kms, long timeOfDisconnection);
+	public void mediaNodeUsageDeregistration(String mediaNodeId, long timeOfDisconnection);
 
 	public void dropIdleMediaNode(String mediaNodeId);
 

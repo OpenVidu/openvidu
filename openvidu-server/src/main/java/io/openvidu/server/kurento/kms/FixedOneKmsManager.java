@@ -50,11 +50,13 @@ public class FixedOneKmsManager extends KmsManager {
 			JsonRpcClientNettyWebSocket client = new JsonRpcClientNettyWebSocket(firstProps.getUri(), listener);
 			client.setTryReconnectingMaxTime(0);
 			client.setTryReconnectingForever(false);
-			kClient = KurentoClient.createFromJsonRpcClient(client);
+			client.setConnectionTimeout(MAX_CONNECT_TIME_MILLIS);
+			client.setRequestTimeout(MAX_REQUEST_TIMEOUT);
+			kClient = KurentoClient.createFromJsonRpcClientHonoringClientTimeouts(client);
 			kms.setKurentoClient(kClient);
 
 			// TODO: This should be done in KurentoClient connected event
-			kms.setKurentoClientConnected(true);
+			kms.setKurentoClientConnected(true, false);
 
 			this.addKms(kms);
 
@@ -90,7 +92,11 @@ public class FixedOneKmsManager extends KmsManager {
 	}
 
 	@Override
-	protected String removeMediaNodeUponCrash(String mediaNodeId, boolean followedByReconnection, String message) {
+	protected void removeMediaNodeUponCrash(String mediaNodeId) {
+	}
+
+	@Override
+	protected String getEnvironmentId(String mediaNodeId) {
 		return null;
 	}
 

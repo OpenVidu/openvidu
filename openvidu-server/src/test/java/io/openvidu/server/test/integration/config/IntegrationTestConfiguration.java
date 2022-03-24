@@ -59,7 +59,7 @@ public class IntegrationTestConfiguration {
 				when(kClient.getServerManager()).thenReturn(serverManagerMock);
 
 				kms.setKurentoClient(kClient);
-				kms.setKurentoClientConnected(true);
+				kms.setKurentoClientConnected(true, false);
 
 				spy.addKms(kms);
 				successfullyConnectedKmss.add(kms);

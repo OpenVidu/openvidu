@@ -35,7 +35,7 @@ public class CDREventEnd extends CDREvent {
 			EndReason reason, Long timestamp) {
 		super(eventName, sessionId, uniqueSessionId, timestamp);
 		this.startTime = startTime;
-		this.duration = (int) ((this.timeStamp - this.startTime) / 1000);
+		this.duration = (int) ((this.timestamp - this.startTime) / 1000);
 		this.reason = reason;
 	}
 
