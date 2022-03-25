@@ -52,7 +52,7 @@ export class MinimalDirective implements OnDestroy {
 }
 
 /**
- * The **participantName** directive sets the participant name. It can be useful for aplications which doesn't need the prejoin page or applications which uses the **openvidu-webcomponent**
+ * The **participantName** directive sets the participant name. It can be useful for aplications which doesn't need the prejoin page.
  *
  * It is only available for {@link VideoconferenceComponent}.
  *
