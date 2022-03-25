@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.junit.Assert;
 import org.kurento.client.Continuation;
 import org.kurento.client.KurentoClient;
 import org.kurento.client.MediaPipeline;
@@ -26,6 +27,7 @@ import io.openvidu.server.kurento.kms.FixedOneKmsManager;
 import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.kurento.kms.KmsProperties;
+import io.openvidu.server.kurento.kms.LoadManager;
 
 /**
  * KmsManager bean mock
@@ -44,10 +46,17 @@ public class IntegrationTestConfiguration {
 			try {
 				kmsProperties = invocation.getArgument(0);
 			} catch (Exception e) {
-				System.err.println("Error getting argument from stubbed method: " + e.getMessage());
+				Assert.fail("Error getting argument from stubbed method: " + e.getMessage());
 			}
 			for (KmsProperties kmsProp : kmsProperties) {
-				Kms kms = new Kms(kmsProp, Whitebox.getInternalState(spy, "loadManager"), spy);
+
+				LoadManager loadManager = null;
+				try {
+					loadManager = Whitebox.getInternalState(spy, "loadManager");
+				} catch (Exception e) {
+					System.err.println("Error getting private property from stubbed object: " + e.getMessage());
+				}
+				Kms kms = new Kms(kmsProp, loadManager, spy);
 				KurentoClient kClient = mock(KurentoClient.class);
 
 				doAnswer(i -> {

@@ -89,7 +89,12 @@ public class WebhookIntegrationTest {
 	private void mockWebhookHttpClient(int millisecondsDelayOnResponse) throws ClientProtocolException, IOException {
 		CDRLoggerWebhook cdrLoggerWebhook = (CDRLoggerWebhook) cdr.getLoggers().stream()
 				.filter(logger -> logger instanceof CDRLoggerWebhook).findFirst().get();
-		this.webhook = Whitebox.getInternalState(cdrLoggerWebhook, "webhookSender");
+
+		try {
+			this.webhook = Whitebox.getInternalState(cdrLoggerWebhook, "webhookSender");
+		} catch (Exception e) {
+			Assert.fail("Error getting private property from stubbed object: " + e.getMessage());
+		}
 
 		CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
 		StatusLine statusLine = mock(StatusLine.class);
@@ -100,7 +105,13 @@ public class WebhookIntegrationTest {
 	}
 
 	private void setHttpClientDelay(int millisecondsDelayOnResponse) throws ClientProtocolException, IOException {
-		HttpClient httpClient = PowerMockito.spy((HttpClient) Whitebox.getInternalState(webhook, "httpClient"));
+		HttpClient httpClient = null;
+		try {
+			httpClient = Whitebox.getInternalState(webhook, "httpClient");
+		} catch (Exception e) {
+			Assert.fail("Error getting private property from stubbed object: " + e.getMessage());
+		}
+		httpClient = PowerMockito.spy(httpClient);
 		doAnswer(invocationOnMock -> {
 			Thread.sleep(millisecondsDelayOnResponse);
 			return invocationOnMock.callRealMethod();
