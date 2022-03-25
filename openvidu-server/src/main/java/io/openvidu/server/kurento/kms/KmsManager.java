@@ -244,7 +244,7 @@ public abstract class KmsManager {
 
 						kms.getKurentoClientReconnectTimer().cancelTimer();
 						boolean mustRetryReconnection = accumulatedTimeout < openviduConfig.getReconnectionTimeout();
-						boolean mustRemoveMediaNode = true;
+						boolean mustRemoveMediaNode = !mustRetryReconnection;
 
 						if (!kms.hasTriggeredNodeCrashedEvent()) {
 
@@ -252,8 +252,8 @@ public abstract class KmsManager {
 									"OpenVidu Server [{}] could not reconnect to Media Node {} with IP {} in {} seconds. Media Node crashed",
 									kms.getKurentoClient().toString(), kms.getId(), kms.getIp(),
 									(INTERVAL_WAIT_MS * RECONNECTION_LOOPS / 1000));
-							mustRemoveMediaNode = !mustRetryReconnection;
-							nodeCrashedHandler(kms, mustRetryReconnection);
+							nodeCrashedHandler(kms, mustRemoveMediaNode);
+							mustRemoveMediaNode = false; // nodeCrashed handler will have taken care of it
 
 						} else {
 
@@ -312,7 +312,7 @@ public abstract class KmsManager {
 				kurentoClientReconnectTimer.updateTimer();
 			}
 
-			private void nodeCrashedHandler(Kms kms, boolean mustRetryReconnection) {
+			private void nodeCrashedHandler(Kms kms, boolean mustRemoveMediaNode) {
 
 				kms.setHasTriggeredNodeCrashedEvent(true);
 
@@ -327,8 +327,8 @@ public abstract class KmsManager {
 				sessionEventsHandler.onMediaNodeCrashed(kms, environmentId, timeOfKurentoDisconnection,
 						affectedSessionIds, affectedRecordingIds);
 
-				// 2. Remove Media Node from cluster
-				if (!mustRetryReconnection) {
+				// 2. Remove Media Node from cluster if necessary
+				if (mustRemoveMediaNode) {
 					removeMediaNodeUponCrash(kms.getId());
 				}
 
