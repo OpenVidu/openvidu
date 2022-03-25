@@ -54,7 +54,7 @@ public class IntegrationTestConfiguration {
 				try {
 					loadManager = Whitebox.getInternalState(spy, "loadManager");
 				} catch (Exception e) {
-					System.err.println("Error getting private property from stubbed object: " + e.getMessage());
+					Assert.fail("Error getting private property from stubbed object: " + e.getMessage());
 				}
 				Kms kms = new Kms(kmsProp, loadManager, spy);
 				KurentoClient kClient = mock(KurentoClient.class);
