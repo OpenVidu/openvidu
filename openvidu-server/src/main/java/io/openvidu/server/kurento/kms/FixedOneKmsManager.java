@@ -92,7 +92,7 @@ public class FixedOneKmsManager extends KmsManager {
 	}
 
 	@Override
-	protected void removeMediaNodeUponCrash(String mediaNodeId) {
+	public void removeMediaNodeUponCrash(String mediaNodeId) {
 	}
 
 	@Override

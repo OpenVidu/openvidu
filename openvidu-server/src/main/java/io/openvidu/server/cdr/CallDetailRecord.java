@@ -181,7 +181,7 @@ public class CallDetailRecord {
 		this.log(new CDREventSignal(sessionId, uniqueSessionId, from, to, type, data));
 	}
 
-	protected void log(CDREvent event) {
+	public void log(CDREvent event) {
 		this.loggers.forEach(logger -> {
 			logger.log(event);
 		});
