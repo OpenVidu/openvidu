@@ -39,7 +39,7 @@ public class UpdatableTimerTask extends TimerTask {
 		this.oldP = oldP;
 	}
 
-	public final void updateTimer() {
+	public void updateTimer() {
 		Long p = period.get();
 		Objects.requireNonNull(p);
 		if (oldP == null || !oldP.equals(p)) {
@@ -54,8 +54,8 @@ public class UpdatableTimerTask extends TimerTask {
 		}
 	}
 
-	public final void cancelTimer() {
-		cancel();
+	public void cancelTimer() {
+		super.cancel();
 		timer.cancel();
 		timer.purge();
 	}
