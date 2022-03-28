@@ -101,6 +101,11 @@ public class CustomWebhook {
 				throw new Exception("Wrong event type receieved. Excpeceted " + eventName + " but got " + ev);
 			} else {
 				// Remove the very same event from the map of events
+				long maxWait = System.currentTimeMillis();
+				do {
+					Thread.sleep(25);
+				} while (!CustomWebhook.events.containsKey(eventName)
+						|| (System.currentTimeMillis() - maxWait) < (maxSecondsWait * 1000));
 				if (!CustomWebhook.events.get(eventName).contains(event)) {
 					throw new Exception("Lack of event " + eventName);
 				} else {
