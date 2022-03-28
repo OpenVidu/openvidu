@@ -48,18 +48,18 @@ ov-layout {
 
 
 #nickname-input-container button.mat-button-disabled {
-	color: var(--ov-text-color) !important;
+	color: #000000 !important;
 }
 
 
 #nickname-input-container mat-form-field, .device-container-element mat-form-field {
 	width: 100%;
 	margin-top: 10px;
-	color: var(--ov-text-color);
+	color: #000000;
 }
 
 #nickname-input-container mat-form-field {
-	color: var(--ov-text-color);
+	color: #000000;
 }
 
 .mat-form-field-appearance-fill .mat-form-field-flex {
@@ -114,10 +114,10 @@ ov-layout {
 }
 
 ::ng-deep .mat-input-element {
-	caret-color: var(--ov-text-color) !important;
+	caret-color: #000000;
 }
 ::ng-deep .mat-primary .mat-option.mat-selected:not(.mat-option-disabled) {
-	color: var(--ov-text-color) !important;
+	color: #000000;
 }
 
 
