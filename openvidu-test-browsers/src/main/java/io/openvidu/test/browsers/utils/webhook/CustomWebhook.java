@@ -49,9 +49,9 @@ public class CustomWebhook {
 
 	public static CountDownLatch initLatch;
 	public static int accumulatedNumberOfEvents = 0;
-	public static ConcurrentMap<String, AtomicInteger> accumulatedEvents = new ConcurrentHashMap<>();
-	static ConcurrentMap<String, BlockingQueue<JsonObject>> events = new ConcurrentHashMap<>();
-	static BlockingQueue<JsonObject> eventsInOrder = new LinkedBlockingDeque<>();
+	public final static ConcurrentMap<String, AtomicInteger> accumulatedEvents = new ConcurrentHashMap<>();
+	static final ConcurrentMap<String, BlockingQueue<JsonObject>> events = new ConcurrentHashMap<>();
+	static final BlockingQueue<JsonObject> eventsInOrder = new LinkedBlockingDeque<>();
 
 	public static void main(String[] args, CountDownLatch initLatch) {
 		CustomWebhook.initLatch = initLatch;
