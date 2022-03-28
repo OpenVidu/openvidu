@@ -6,6 +6,33 @@ This library is an Angular library based on Angular projections
 
 ## Code scaffolding
 
+## Architechture
+
+```
+openvidu-components-angular
+│
+└─── src (openvidu-components-testapp)
+│
+└───projects
+    │
+	└─── openvidu-angular
+```
+
+## Development server
+
+Run `ng serve` for a dev server.
+
+Run, in a new terminal, `npm run lib:serve` for serving the openvidu-angular library with live reload
+
+## Code scaffolding
+
+For generate new components in openvidu-angular:
+
+```bash
+ng g component components/component-name --project=openvidu-angular
+```
+
+
 ## Build
 
 ```bash

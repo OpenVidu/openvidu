@@ -15,5 +15,6 @@
 	"disableDependencies": true,
 	"theme": "gitbook",
 	"customFavicon": "src/favicon.ico",
-	"extTheme": "src/doc/"
+	"extTheme": "src/doc/",
+	"assetsFolder": "src/assets/images/app.gif"
 }
