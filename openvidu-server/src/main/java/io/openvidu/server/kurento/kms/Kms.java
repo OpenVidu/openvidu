@@ -140,16 +140,15 @@ public class Kms {
 		return this.isKurentoClientConnected.get();
 	}
 
-	public void setKurentoClientConnected(boolean isConnected, boolean reconnection) {
+	public void setKurentoClientConnected(boolean isConnected, boolean nodeRecovered) {
 		final long timestamp = System.currentTimeMillis();
 		this.isKurentoClientConnected.set(isConnected);
 		if (isConnected) {
 			this.setTimeOfKurentoClientConnection(timestamp);
 			this.setTimeOfKurentoClientDisconnection(0);
 			this.setHasTriggeredNodeCrashedEvent(false);
-			if (!reconnection) {
-				kmsManager.getMediaNodeManager().mediaNodeUsageRegistration(this, timestamp, kmsManager.getKmss());
-			}
+			kmsManager.getMediaNodeManager().mediaNodeUsageRegistration(this, timestamp, kmsManager.getKmss(),
+					nodeRecovered);
 			if (this.mediaServer == null) {
 				this.fetchMediaServerType();
 			}

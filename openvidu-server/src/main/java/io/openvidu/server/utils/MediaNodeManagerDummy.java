@@ -7,7 +7,8 @@ import io.openvidu.server.kurento.kms.Kms;
 public class MediaNodeManagerDummy implements MediaNodeManager {
 
 	@Override
-	public void mediaNodeUsageRegistration(Kms kms, long timeOfConnection, Collection<Kms> existingKmss) {
+	public void mediaNodeUsageRegistration(Kms kms, long timeOfConnection, Collection<Kms> existingKmss,
+			boolean nodeRecovered) {
 	}
 
 	@Override
