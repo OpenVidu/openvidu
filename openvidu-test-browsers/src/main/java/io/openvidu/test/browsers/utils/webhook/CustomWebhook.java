@@ -25,6 +25,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -48,29 +49,31 @@ public class CustomWebhook {
 
 	public static CountDownLatch initLatch;
 	public static int accumulatedNumberOfEvents = 0;
+	public static ConcurrentMap<String, AtomicInteger> accumulatedEvents = new ConcurrentHashMap<>();
 	static ConcurrentMap<String, BlockingQueue<JsonObject>> events = new ConcurrentHashMap<>();
 	static BlockingQueue<JsonObject> eventsInOrder = new LinkedBlockingDeque<>();
 
 	public static void main(String[] args, CountDownLatch initLatch) {
 		CustomWebhook.initLatch = initLatch;
-		accumulatedNumberOfEvents = 0;
-		CustomWebhook.eventsInOrder.clear();
-		CustomWebhook.events.clear();
+		CustomWebhook.clean();
 		CustomWebhook.context = new SpringApplicationBuilder(CustomWebhook.class)
 				.properties("spring.config.location:classpath:aplication-pro-webhook.properties").build().run(args);
 	}
 
 	public static void shutDown() {
-		accumulatedNumberOfEvents = 0;
-		CustomWebhook.eventsInOrder.clear();
-		CustomWebhook.events.clear();
+		CustomWebhook.clean();
 		CustomWebhook.context.close();
 	}
 
 	public static void clean() {
-		accumulatedNumberOfEvents = 0;
+		CustomWebhook.accumulatedNumberOfEvents = 0;
+		CustomWebhook.accumulatedEvents.clear();
 		CustomWebhook.eventsInOrder.clear();
 		CustomWebhook.events.clear();
+	}
+
+	public static void cleanEventsInOrder() {
+		CustomWebhook.eventsInOrder.clear();
 	}
 
 	public synchronized static JsonObject waitForEvent(String eventName, int maxSecondsWait) throws Exception {
@@ -98,7 +101,8 @@ public class CustomWebhook {
 		} else {
 			String ev = event.get("event").getAsString();
 			if (!eventName.equals(ev)) {
-				throw new Exception("Wrong event type receieved. Excpeceted " + eventName + " but got " + ev);
+				throw new Exception("Wrong event type receieved. Excpeceted " + eventName + " but got " + ev + ": "
+						+ event.toString());
 			} else {
 				// Remove the very same event from the map of events
 				long maxWait = System.currentTimeMillis();
@@ -152,6 +156,9 @@ public class CustomWebhook {
 			accumulatedNumberOfEvents++;
 			eventsInOrder.add(event);
 			final String eventName = event.get("event").getAsString();
+			if (accumulatedEvents.putIfAbsent(eventName, new AtomicInteger(1)) != null) {
+				accumulatedEvents.get(eventName).incrementAndGet();
+			}
 			final BlockingQueue<JsonObject> queue = new LinkedBlockingDeque<>();
 			if (!CustomWebhook.events.computeIfAbsent(eventName, e -> {
 				queue.add(event);
