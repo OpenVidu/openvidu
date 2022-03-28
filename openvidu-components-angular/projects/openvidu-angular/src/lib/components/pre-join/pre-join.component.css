@@ -1,7 +1,7 @@
 .container {
 	height: 100%;
 	padding: 80px;
-	background-color: var(--ov-light-dark-color);
+	background-color: var(--ov-secondary-light-color);
 }
 
 #layout-container {
@@ -24,7 +24,7 @@ ov-layout {
 }
 
 .media-panel {
-	background-color: var(--ov-light-dark-color);
+	background-color: var(--ov-secondary-light-color);
 }
 .media-panel-container {
 	width: 100%;
@@ -48,22 +48,22 @@ ov-layout {
 
 
 #nickname-input-container button.mat-button-disabled {
-	color: #000000 !important;
+	color: var(--ov-text-color) !important;
 }
 
 
 #nickname-input-container mat-form-field, .device-container-element mat-form-field {
 	width: 100%;
 	margin-top: 10px;
-	color: var(--ov-primary-color);
+	color: var(--ov-text-color);
 }
 
 #nickname-input-container mat-form-field {
-	color: var(--ov-primary-color);
+	color: var(--ov-text-color);
 }
 
 .mat-form-field-appearance-fill .mat-form-field-flex {
-	background-color: var(--ov-light-color);
+	/* background-color: var(--ov-text-color); */
 	border-radius: var(--ov-video-radius);
 }
 
@@ -78,7 +78,7 @@ ov-layout {
 #camera-button {
 	border-radius: var(--ov-buttons-radius);
 	/* background-color: var(--ov-secondary-color) !important; */
-	/* color: var(--ov-light-color) !important; */
+	/* color: var(--ov-text-color) !important; */
 
 }
 
@@ -90,19 +90,19 @@ ov-layout {
 #join-button {
 	width: 100%;
 	font-weight: bold;
-	color: var(--ov-light-color);
+	color: var(--ov-text-color);
 	background-color: var(--ov-tertiary-color);
 	border-radius: var(--ov-video-radius);
 
 }
 
 .warn-btn {
-	color: var(--ov-light-color);
+	color: var(--ov-text-color);
 	background-color: var(--ov-warn-color) !important;
 }
 
 .active-btn {
-	color: var(--ov-light-color);
+	color: var(--ov-text-color);
 	background-color: var(--ov-tertiary-color) !important;
 }
 .media-btn {
@@ -114,10 +114,10 @@ ov-layout {
 }
 
 ::ng-deep .mat-input-element {
-	caret-color: #000000;
+	caret-color: var(--ov-text-color) !important;
 }
 ::ng-deep .mat-primary .mat-option.mat-selected:not(.mat-option-disabled) {
-	color: #000000;
+	color: var(--ov-text-color) !important;
 }
 
 
@@ -137,7 +137,7 @@ ov-layout {
 	}
 }
 
-@media only screen and (min-width: 480px) and (max-width: 960px) {
+@media only screen and (min-width: 480px) and (max-width: 959px) {
 	.container, .media-panel-container, .buttons-container  {
 		padding: 0;
 	}

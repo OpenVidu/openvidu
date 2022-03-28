@@ -69,7 +69,7 @@
 	box-shadow: none;
 	border-radius: var(--ov-buttons-radius);
 	background-color: var(--ov-secondary-color) !important;
-	color: var(--ov-light-color) !important;
+	color: var(--ov-text-color) !important;
   }
 
   .rightSection {
@@ -83,7 +83,7 @@
 	right: 7px;
 	box-shadow: none;
 	background-color: transparent;
-	color: var(--ov-light-color);
+	color: var(--ov-text-color);
   }
 
   #header_img {
@@ -151,12 +151,12 @@
 
 
 .warn-btn {
-	color: var(--ov-light-color);
+	color: var(--ov-text-color);
 	background-color: var(--ov-warn-color) !important;
 }
 
 .active-btn {
-	color: var(--ov-light-color);
+	color: var(--ov-text-color);
 	background-color: var(--ov-tertiary-color) !important;
 }
 
@@ -927,7 +927,7 @@
   .modal {
 	height: 100%;
 	max-width: 100%;
-	background-color: var(--ov-light-dark-color);
+	background-color: var(--ov-secondary-light-color);
 
   }
   .modal.fade .modal-dialog {

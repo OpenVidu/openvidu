@@ -1,6 +1,6 @@
 #chat-container {
 	margin: 20px;
-	background-color: var(--ov-light-color);
+	background-color: var(--ov-panel-background);
 	border-radius: var(--ov-panel-radius);
 	max-height: calc(100% - 40px);
 	min-height: calc(100% - 40px);
@@ -24,8 +24,8 @@
 
 .text-container{
 	/* padding: 5px; */
-	background-color: var(--ov-light-dark-color);
-	color: var(--ov-dark-color);
+	background-color: var(--ov-secondary-light-color);
+	color: var(--ov-panel-text-color);
 	text-align: center;
 	/* margin: 5px 5px; */
 	font-size: 12px;
@@ -41,7 +41,7 @@
 .input-container {
 	height: 25px;
 	display: flex;
-	background-color: var(--ov-light-dark-color);
+	background-color: var(--ov-secondary-light-color);
 	padding: 10px;
 	margin: 10px;
 	border-radius: var(--ov-panel-radius);
@@ -85,7 +85,7 @@
   .nickname-container p {
 	font-size: 13px;
 	font-weight: bold;
-	color: var(--ov-dark-color);
+	color: var(--ov-panel-text-color);
   }
 
   .msg-content {

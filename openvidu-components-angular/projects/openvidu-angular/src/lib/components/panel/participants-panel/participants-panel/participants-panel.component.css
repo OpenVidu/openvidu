@@ -1,6 +1,6 @@
 .participants-container {
 	margin: 20px;
-	background-color: var(--ov-light-color);
+	background-color: var(--ov-panel-background);
 	border-radius: var(--ov-panel-radius);
 	max-height: calc(100% - 40px);
 	min-height: calc(100% - 40px);
@@ -34,8 +34,8 @@
 
 .message-container{
 	padding: 5px;
-	background-color: var(--ov-light-dark-color);
-	color: var(--ov-dark-color);
+	background-color: var(--ov-secondary-light-color);
+	color: var(--ov-panel-text-color);
 	text-align: center;
 	margin: 5px 5px;
 	font-size: 12px;

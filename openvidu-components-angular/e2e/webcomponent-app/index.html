@@ -1,45 +1,43 @@
 <!DOCTYPE html>
 <html>
+	<head>
+		<title>openvidu-web-component</title>
+		<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+		<script
+			src="https://code.jquery.com/jquery-3.3.1.min.js"
+			integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+			crossorigin="anonymous"
+		></script>
 
-<head>
-    <title>openvidu-web-component</title>
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-        crossorigin="anonymous"></script>
+		<script src="app.js"></script>
+		<script src="openvidu-webcomponent-dev.js"></script>
+		<link rel="stylesheet" href="openvidu-webcomponent-dev.css" />
 
-    <script src="app.js"></script>
-    <script src="openvidu-webcomponent-dev.js"></script>
-    <link rel="stylesheet" href="openvidu-webcomponent-dev.css">
+		<style>
+			:root {
+				--ov-primary-color: #303030;
+				--ov-secondary-color: #3e3f3f;
+				--ov-secondary-light-color: #e6e6e6;
+				--ov-tertiary-color: #598eff;
+				--ov-warn-color: #eb5144;
+				--ov-accent-color: #ffae35;
 
-    <style>
+				--ov-text-color: #ffffff;
 
-:root {
-	--ov-primary-color: #303030;
-	--ov-secondary-color: #586063;
-	--ov-tertiary-color: #598eff;
-	--ov-warn-color: #EB5144;
-	--ov-accent-color: #ffae35;
+				--ov-panel-text-color: #1d1d1d;
+				--ov-panel-background: #ffffff;
 
-	--ov-dark-color: #1d1d1d;
-	--ov-dark-light-color: #43484A;
+				--ov-buttons-radius: 50%;
+				--ov-leave-button-radius: 10px;
+				--ov-video-radius: 5px;
+				--ov-panel-radius: 5px;
+			}
+		</style>
+	</head>
 
-	--ov-light-color: #ffffff;
-	--ov-light-dark-color: #f1f1f1;
-
-	--ov-buttons-radius: 50%;
-	--ov-leave-button-radius: 10px;
-	--ov-video-radius: 5px;
-	--ov-panel-radius: 5px;
-  }
-    </style>
-</head>
-
-<body>
-
-    <div id="events"></div>
-    <!-- OpenVidu Web Component -->
-    <openvidu-webcomponent></openvidu-webcomponent>
-
-</body>
-
+	<body>
+		<div id="events"></div>
+		<!-- OpenVidu Web Component -->
+		<openvidu-webcomponent></openvidu-webcomponent>
+	</body>
 </html>

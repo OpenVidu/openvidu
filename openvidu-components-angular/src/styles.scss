@@ -39,16 +39,16 @@ $openvidu-components-theme: mat.define-light-theme((
 // Custom openvidu-components styles
 :root {
   --ov-primary-color: #303030;
-  --ov-secondary-color: #586063;
+  --ov-secondary-color: #3e3f3f;
+  --ov-secondary-light-color: #e6e6e6;
   --ov-tertiary-color: #598eff;
   --ov-warn-color: #EB5144;
   --ov-accent-color: #ffae35;
 
-  --ov-dark-color: #1d1d1d;
-  --ov-dark-light-color: #43484A;
+  --ov-text-color: #ffffff;
 
-  --ov-light-color: #ffffff;
-  --ov-light-dark-color: #f1f1f1;
+  --ov-panel-text-color: #1d1d1d;
+  --ov-panel-background: #ffffff;
 
   --ov-buttons-radius: 50%; // border-radius property
   --ov-leave-button-radius: 10px;
