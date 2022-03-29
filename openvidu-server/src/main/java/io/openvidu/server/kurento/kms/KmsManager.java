@@ -243,7 +243,8 @@ public abstract class KmsManager {
 					if (iteration.decrementAndGet() < 0) {
 
 						kms.getKurentoClientReconnectTimer().cancelTimer();
-						boolean mustRetryReconnection = accumulatedTimeout < openviduConfig.getReconnectionTimeout();
+						boolean mustRetryReconnection = accumulatedTimeout < openviduConfig
+								.getAppliedReconnectionTimeout();
 						boolean mustRemoveMediaNode = !mustRetryReconnection;
 
 						if (!kms.hasTriggeredNodeCrashedEvent()) {
@@ -266,10 +267,10 @@ public abstract class KmsManager {
 
 						if (mustRetryReconnection) {
 
-							log.info(
-									"Retrying reconnection to Media Node {} with IP {}. {} seconds consumed of a maximum of {}",
-									kms.getId(), kms.getIp(), accumulatedTimeout,
-									openviduConfig.getReconnectionTimeout());
+							log.info("Retrying reconnection to Media Node {} with IP {}. {}", kms.getId(), kms.getIp(),
+									openviduConfig.getReconnectionTimeout() == -1 ? "Infinite retry"
+											: (accumulatedTimeout + " seconds consumed of a maximum of "
+													+ openviduConfig.getReconnectionTimeout()));
 							disconnectionHandler(kms, accumulatedTimeout);
 
 						} else {

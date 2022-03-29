@@ -39,6 +39,7 @@ import java.util.Map.Entry;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.DomainValidator;
 import org.apache.commons.validator.routines.InetAddressValidator;
@@ -470,7 +471,11 @@ public class OpenviduConfig {
 	}
 
 	public int getReconnectionTimeout() {
-		return 2000000000;
+		return -1;
+	}
+
+	public int getAppliedReconnectionTimeout() {
+		return Integer.MAX_VALUE;
 	}
 
 	// Properties management methods
@@ -927,25 +932,28 @@ public class OpenviduConfig {
 		}
 	}
 
-	protected Integer asOptionalNonNegativeInteger(String property, int min, int max) {
+	protected Integer asOptionalIntegerBetweenRanges(String property, Range<Integer>... ranges) {
 		try {
 			String value = getValue(property);
 			if (value == null || value.isEmpty()) {
 				return null;
 			}
 			Integer integerValue = Integer.parseInt(getValue(property));
-			if (integerValue < 0) {
-				addError(property, "Is not a non negative integer");
+			boolean belognsToRanges = false;
+			for (int i = 0; i < ranges.length; i++) {
+				if (ranges[i].contains(integerValue)) {
+					belognsToRanges = true;
+					break;
+				}
 			}
-			if (integerValue < min) {
-				addError(property, "Must be >= " + min);
+			if (!belognsToRanges) {
+				addError(property, "It does not belong to the accepted ranges");
+				return 0;
+			} else {
+				return integerValue;
 			}
-			if (integerValue >= max) {
-				addError(property, "Must be < " + max);
-			}
-			return integerValue;
 		} catch (NumberFormatException e) {
-			addError(property, "Is not a non negative integer");
+			addError(property, "Is not an integer");
 			return 0;
 		}
 	}
