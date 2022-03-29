@@ -144,6 +144,10 @@ export class Publisher extends StreamManager {
     }
 
 
+    publishVideo(value: boolean): void;
+    publishVideo(value: false, freeResource?: boolean): void;
+    publishVideo(value: true, track?: MediaStreamTrack): void;
+
     /**
      * Publish or unpublish the video stream (if available). Calling this method twice in a row passing same value will have no effect
      *
@@ -160,13 +164,53 @@ export class Publisher extends StreamManager {
      * See [[StreamPropertyChangedEvent]] to learn more.
      *
      * @param value `true` to publish the video stream, `false` to unpublish it
+     * @param freeResource `true` to free the hardware resource associated to the video track, `false` to keep access to it. Not freeing the resource makes the operation much more efficient, but depending on
+     * the platform two side-effects can be introduced: the video device may not be accessible by other applications and the access light of webcams may remain on. This is platform-dependent: some browsers
+     * will not present the side-effects even when not freeing the resource. openvidu-browser will try to restore the video track automatically calling [[publishVideo]] again with parameter `value` to `true`,
+     * but if that is not possible parameter `track` can be provided to force a specific `MediaStreamTrack`.
+     * @param track A `MediaStreamTrack` to be used when restoring the video track. This parameter can be useful if the Publisher was unpublished with parameter `freeResource` to true, and openvidu-browser is
+     * not able to successfully re-create the video track as it was before unpublishing. In this way previous track settings will be ignored and this track will be used instead.
      */
-    publishVideo(value: boolean): void {
+    publishVideo(value: boolean, param?: boolean | MediaStreamTrack): void {
+
         if (this.stream.videoActive !== value) {
+
             const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
+            let mustRestartMediaStream = false;
             affectedMediaStream.getVideoTracks().forEach((track) => {
                 track.enabled = value;
+                if (!value && param === true) {
+                    track.stop();
+                } else if (value && track.readyState === 'ended') {
+                    // Resource was freed
+                    mustRestartMediaStream = true;
+                }
             });
+
+            if (mustRestartMediaStream) {
+                const oldVideoTrack = affectedMediaStream.getVideoTracks()[0];
+                affectedMediaStream.removeTrack(oldVideoTrack);
+
+                const replaceVideoTrack = (tr: MediaStreamTrack) => {
+                    affectedMediaStream.addTrack(tr);
+                    if (this.stream.isLocalStreamPublished) {
+                        this.replaceTrackInRtcRtpSender(tr);
+                    }
+                }
+
+                if (!!param && param instanceof MediaStreamTrack) {
+                    replaceVideoTrack(param);
+                } else {
+                    navigator.mediaDevices.getUserMedia({ audio: false, video: this.stream.lastVideoTrackConstraints })
+                        .then(mediaStream => {
+                            replaceVideoTrack(mediaStream.getVideoTracks()[0]);
+                        })
+                        .catch(error => {
+                            console.error(error);
+                        });
+                }
+            }
+
             if (!!this.session && !!this.stream.streamId) {
                 this.session.openvidu.sendRequest(
                     'streamPropertyChanged',
@@ -295,6 +339,7 @@ export class Publisher extends StreamManager {
                 let removedTrack: MediaStreamTrack;
                 if (track.kind === 'video') {
                     removedTrack = mediaStream.getVideoTracks()[0];
+                    this.stream.lastVideoTrackConstraints = track.getConstraints();
                 } else {
                     removedTrack = mediaStream.getAudioTracks()[0];
                 }
@@ -309,29 +354,6 @@ export class Publisher extends StreamManager {
             });
         }
 
-        const replaceTrackInRtcRtpSender = (): Promise<void> => {
-            return new Promise((resolve, reject) => {
-                const senders: RTCRtpSender[] = this.stream.getRTCPeerConnection().getSenders();
-                let sender: RTCRtpSender | undefined;
-                if (track.kind === 'video') {
-                    sender = senders.find(s => !!s.track && s.track.kind === 'video');
-                    if (!sender) {
-                        return reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'));
-                    }
-                } else if (track.kind === 'audio') {
-                    sender = senders.find(s => !!s.track && s.track.kind === 'audio');
-                    if (!sender) {
-                        return reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'));
-                    }
-                } else {
-                    return reject(new Error('Unknown track kind ' + track.kind));
-                }
-                (sender as RTCRtpSender).replaceTrack(track)
-                    .then(() => resolve())
-                    .catch(error => reject(error));
-            });
-        }
-
         // Set field "enabled" of the new track to the previous value
         const trackOriginalEnabledValue: boolean = track.enabled;
         if (track.kind === 'video') {
@@ -343,7 +365,7 @@ export class Publisher extends StreamManager {
             if (this.stream.isLocalStreamPublished) {
                 // Only if the Publisher has been published is necessary to call native Web API RTCRtpSender.replaceTrack
                 // If it has not been published yet, replacing it on the MediaStream object is enough
-                await replaceTrackInRtcRtpSender();
+                await this.replaceTrackInRtcRtpSender(track);
                 return await replaceTrackInMediaStream();
             } else {
                 // Publisher not published. Simply replace the track on the local MediaStream
@@ -404,7 +426,7 @@ export class Publisher extends StreamManager {
                     if (!track.contentHint?.length) {
                         // contentHint for audio: "", "speech", "speech-recognition", "music".
                         // https://w3c.github.io/mst-content-hint/#audio-content-hints
-                        track.contentHint = "";
+                        track.contentHint = '';
                         logger.info(`Audio track Content Hint set: '${track.contentHint}'`);
                     }
                 }
@@ -453,8 +475,9 @@ export class Publisher extends StreamManager {
                                 const settings: MediaTrackSettings = mediaStream.getVideoTracks()[0].getSettings();
                                 const newWidth = settings.width;
                                 const newHeight = settings.height;
-                                if (this.stream.isLocalStreamPublished &&
-                                    (newWidth !== this.stream.videoDimensions.width || newHeight !== this.stream.videoDimensions.height)) {
+                                const widthChanged = newWidth != null && newWidth !== this.stream.videoDimensions.width;
+                                const heightChanged = newHeight != null && newHeight !== this.stream.videoDimensions.height;
+                                if (this.stream.isLocalStreamPublished && (widthChanged || heightChanged)) {
                                     this.openvidu.sendVideoDimensionsChangedEvent(
                                         this,
                                         'screenResized',
@@ -591,7 +614,7 @@ export class Publisher extends StreamManager {
                         !!myConstraints.audioTrack && myConstraints.constraints?.video === false ||
                         !!myConstraints.videoTrack && myConstraints.constraints?.audio === false) {
                         // No need to call getUserMedia at all. MediaStreamTracks already provided
-                        successCallback(this.openvidu.addAlreadyProvidedTracks(myConstraints, new MediaStream()));
+                        successCallback(this.openvidu.addAlreadyProvidedTracks(myConstraints, new MediaStream(), this.stream));
                         // Return as we do not need to process further
                         return;
                     }
@@ -620,9 +643,10 @@ export class Publisher extends StreamManager {
                                 getMediaError(error);
                             });
                     } else {
+                        this.stream.lastVideoTrackConstraints = constraintsAux.video;
                         navigator.mediaDevices.getUserMedia(constraintsAux)
                             .then(mediaStream => {
-                                this.openvidu.addAlreadyProvidedTracks(myConstraints, mediaStream);
+                                this.openvidu.addAlreadyProvidedTracks(myConstraints, mediaStream, this.stream);
                                 getMediaSuccess(mediaStream, definedAudioConstraint);
                             })
                             .catch(error => {
@@ -742,6 +766,29 @@ export class Publisher extends StreamManager {
             // Permission dialog was shown and now is closed
             this.emitEvent('accessDialogClosed', []);
         }
+    }
+
+    private replaceTrackInRtcRtpSender(track: MediaStreamTrack): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const senders: RTCRtpSender[] = this.stream.getRTCPeerConnection().getSenders();
+            let sender: RTCRtpSender | undefined;
+            if (track.kind === 'video') {
+                sender = senders.find(s => !!s.track && s.track.kind === 'video');
+                if (!sender) {
+                    return reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'));
+                }
+            } else if (track.kind === 'audio') {
+                sender = senders.find(s => !!s.track && s.track.kind === 'audio');
+                if (!sender) {
+                    return reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'));
+                }
+            } else {
+                return reject(new Error('Unknown track kind ' + track.kind));
+            }
+            (sender as RTCRtpSender).replaceTrack(track)
+                .then(() => resolve())
+                .catch(error => reject(error));
+        });
     }
 
 }

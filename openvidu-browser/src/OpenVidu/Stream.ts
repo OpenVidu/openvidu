@@ -219,6 +219,10 @@ export class Stream {
      * @hidden
      */
     reconnectionEventEmitter: EventEmitter | undefined;
+    /**
+     * @hidden
+     */
+    lastVideoTrackConstraints: MediaTrackConstraints | boolean | undefined;
 
 
     /**

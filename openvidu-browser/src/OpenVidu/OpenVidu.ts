@@ -885,9 +885,16 @@ export class OpenVidu {
   /**
    * @hidden
    */
-  addAlreadyProvidedTracks(myConstraints: CustomMediaStreamConstraints, mediaStream: MediaStream) {
+  addAlreadyProvidedTracks(myConstraints: CustomMediaStreamConstraints, mediaStream: MediaStream, stream?: Stream) {
     if (!!myConstraints.videoTrack) {
       mediaStream.addTrack(myConstraints.videoTrack);
+      if (!!stream) {
+        if (!!myConstraints.constraints.video) {
+          stream.lastVideoTrackConstraints = myConstraints.constraints.video;
+        } else {
+          stream.lastVideoTrackConstraints = myConstraints.videoTrack.getConstraints();
+        }
+      }
     }
     if (!!myConstraints.audioTrack) {
       mediaStream.addTrack(myConstraints.audioTrack);
