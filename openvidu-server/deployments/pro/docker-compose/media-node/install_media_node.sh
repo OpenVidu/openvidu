@@ -18,7 +18,7 @@ fatal_error() {
      printf "\n     =======¡ERROR!======="
      printf "\n     %s" "$1"
      printf "\n"
-     exit 0
+     exit 1
 }
 
 docker_command_by_container_image() {

@@ -10,7 +10,7 @@ fatal_error() {
     printf "\n     =======¡ERROR!======="
     printf "\n     %s" "$1"
     printf "\n"
-    exit 0
+    exit 1
 }
 
 new_coturn_installation() {
