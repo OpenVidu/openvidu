@@ -12,10 +12,10 @@
 			mat-icon-button
 			(click)="toggleMicrophone()"
 			[disabled]="isConnectionLost || !hasAudioDevices"
-			[class.warn-btn]="!isWebcamAudioActive"
+			[class.warn-btn]="!isAudioActive"
 		>
-			<mat-icon *ngIf="isWebcamAudioActive" matTooltip="Mute your audio" id="mic">mic</mat-icon>
-			<mat-icon *ngIf="!isWebcamAudioActive" matTooltip="Unmute your audio" id="mic_off">mic_off</mat-icon>
+			<mat-icon *ngIf="isAudioActive" matTooltip="Mute your audio" id="mic">mic</mat-icon>
+			<mat-icon *ngIf="!isAudioActive" matTooltip="Unmute your audio" id="mic_off">mic_off</mat-icon>
 		</button>
 
 		<!-- Camera button -->

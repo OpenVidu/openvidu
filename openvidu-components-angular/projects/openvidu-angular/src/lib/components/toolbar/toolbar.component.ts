@@ -28,6 +28,7 @@ import { ParticipantService } from '../../services/participant/participant.servi
 import { MenuType } from '../../models/menu.model';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import { ToolbarAdditionalButtonsDirective } from '../../directives/template/openvidu-angular.directive';
+import { ParticipantAbstractModel } from '../../models/participant.model';
 
 /**
  *
@@ -138,7 +139,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	/**
 	 * @ignore
 	 */
-	isWebcamAudioActive: boolean;
+	isAudioActive: boolean;
 	/**
 	 * @ignore
 	 */
@@ -293,9 +294,9 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 				this.participantService.getMyCameraPublisher(),
 				!this.participantService.hasCameraAudioActive()
 			);
-			return;
+		} else {
+			this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), !this.participantService.hasScreenAudioActive());
 		}
-		this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), !this.participantService.hasScreenAudioActive());
 	}
 
 	/**
@@ -480,10 +481,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		});
 	}
 	protected subscribeToUserMediaProperties() {
-		this.localParticipantSubscription = this.participantService.localParticipantObs.subscribe((p) => {
+		this.localParticipantSubscription = this.participantService.localParticipantObs.subscribe((p: ParticipantAbstractModel) => {
 			if (p) {
 				this.isWebcamVideoActive = p.isCameraVideoActive();
-				this.isWebcamAudioActive = p.isCameraAudioActive();
+				this.isAudioActive = p.isCameraAudioActive() || p.isScreenAudioActive();
 				this.isScreenShareActive = p.isScreenActive();
 				this.cd.markForCheck();
 			}
