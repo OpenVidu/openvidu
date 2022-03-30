@@ -26,12 +26,13 @@ export class VideoComponent implements AfterViewInit {
 	ngAfterViewInit() {
 		setTimeout(() => {
 			if (this._streamManager && this._videoElement) {
+				this.updateVideoStyles();
 				this._streamManager.addVideoElement(this._videoElement.nativeElement);
 			}
 		});
 	}
 
-	@ViewChild('videoElement')
+	@ViewChild('videoElement', {static:false})
 	set videoElement(element: ElementRef) {
 		this._videoElement = element;
 	}
@@ -41,15 +42,20 @@ export class VideoComponent implements AfterViewInit {
 		if (streamManager) {
 			this._streamManager = streamManager;
 			if (!!this._videoElement && this._streamManager) {
-				this.type = <VideoType>this._streamManager?.stream?.typeOfVideo;
-				if (this.type === VideoType.SCREEN) {
-					this._videoElement.nativeElement.style.objectFit = 'contain';
-					// this._videoElement.nativeElement.style.background = '#272727';
-				} else {
-					this._videoElement.nativeElement.style.objectFit = 'cover';
-				}
+				this.updateVideoStyles();
 				this._streamManager.addVideoElement(this._videoElement.nativeElement);
 			}
 		}
+	}
+
+	private updateVideoStyles() {
+
+		this.type = <VideoType>this._streamManager?.stream?.typeOfVideo;
+		if (this.type === VideoType.SCREEN) {
+			this._videoElement.nativeElement.style.objectFit = 'contain';
+		} else {
+			this._videoElement.nativeElement.style.objectFit = 'cover';
+		}
+
 	}
 }
