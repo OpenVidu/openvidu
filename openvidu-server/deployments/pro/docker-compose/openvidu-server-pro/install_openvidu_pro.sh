@@ -189,7 +189,7 @@ upgrade_ov() {
      NEW_AMI_ID="${1:-}"
      AWS_REGION=$(get_previous_env_variable AWS_DEFAULT_REGION)
      if [[ -n ${AWS_REGION} ]]; then
-          [[ -z ${NEW_AMI_ID} ]] && fatal_error "You need to copy and specify an AMI Id for Media Nodes. Check https://docs.openvidu.io/en/${OPENVIDU_VERSION}/deployment/pro/upgrading/#option-2-update-current-deployment-to-2220"
+          [[ -z ${NEW_AMI_ID} ]] && fatal_error "You need to copy and specify an AMI Id for Media Nodes. Check https://docs.openvidu.io/en/${OPENVIDU_VERSION}/deployment/pro/upgrading/#option-2-update-current-deployment-to-${OPENVIDU_VERSION//.}"
      fi
 
      printf '\n'
