@@ -576,10 +576,10 @@ public class OpenViduTestE2e {
 		String grep = null;
 		if (MEDIA_SERVER_IMAGE.startsWith(KURENTO_IMAGE)) {
 			log.info("Stopping kurento");
-			grep = KURENTO_IMAGE + ":";
+			grep = KURENTO_IMAGE;
 		} else if (MEDIA_SERVER_IMAGE.startsWith(MEDIASOUP_IMAGE)) {
 			log.info("Stopping mediasoup");
-			grep = MEDIASOUP_IMAGE + ":";
+			grep = MEDIASOUP_IMAGE;
 		} else {
 			log.error("Unrecognized MEDIA_SERVER_IMAGE: {}", MEDIA_SERVER_IMAGE);
 			System.exit(1);
