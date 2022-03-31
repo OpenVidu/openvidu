@@ -1,14 +1,5 @@
 import { Injectable } from '@angular/core';
-import {
-	Connection,
-	OpenVidu,
-	OpenViduError,
-	OpenViduErrorName,
-	Publisher,
-	PublisherProperties,
-	Session,
-	SignalOptions
-} from 'openvidu-browser';
+import { Connection, OpenVidu, Publisher, PublisherProperties, Session, SignalOptions } from 'openvidu-browser';
 
 import { LoggerService } from '../logger/logger.service';
 
@@ -18,8 +9,9 @@ import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.
 import { PlatformService } from '../platform/platform.service';
 import { DeviceService } from '../device/device.service';
 import { CameraType } from '../../models/device.model';
-import { VideoType } from '../../models/video-type.model';
+import { ScreenType, VideoType } from '../../models/video-type.model';
 import { ParticipantService } from '../participant/participant.service';
+import { TokenService } from '../token/token.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -41,7 +33,8 @@ export class OpenViduService {
 		protected platformService: PlatformService,
 		protected loggerSrv: LoggerService,
 		private participantService: ParticipantService,
-		protected deviceService: DeviceService
+		protected deviceService: DeviceService,
+		protected tokenService: TokenService
 	) {
 		this.log = this.loggerSrv.get('OpenViduService');
 	}
@@ -51,6 +44,11 @@ export class OpenViduService {
 	 */
 	initialize() {
 		this.OV = new OpenVidu();
+		this.OV.setAdvancedConfiguration({
+			publisherSpeakingEventsOptions: {
+				interval: 50
+			}
+		});
 		if (this.openviduAngularConfigSrv.isProduction()) this.OV.enableProdMode();
 		this.webcamSession = this.OV.initSession();
 
@@ -163,8 +161,6 @@ export class OpenViduService {
 			// audioSource = undefined;
 		}
 
-		// const videoSource = publishVideo ? this.deviceService.getCameraSelected().device : false;
-		// const audioSource = publishAudio ? this.deviceService.getMicrophoneSelected().device : false;
 		const mirror = this.deviceService.getCameraSelected() && this.deviceService.getCameraSelected().type === CameraType.FRONT;
 		const properties: PublisherProperties = {
 			videoSource,
@@ -213,10 +209,10 @@ export class OpenViduService {
 	/**
 	 * @internal
 	 */
-	unpublish(publisher: Publisher): void {
+	private unpublish(publisher: Publisher): void {
 		if (!!publisher) {
 			if (publisher === this.participantService.getMyCameraPublisher()) {
-				this.publishAudio(this.participantService.getMyScreenPublisher(), this.participantService.hasCameraAudioActive());
+				this.publishAudioAux(this.participantService.getMyScreenPublisher(), this.participantService.hasCameraAudioActive());
 				this.webcamSession.unpublish(publisher);
 			} else if (publisher === this.participantService.getMyScreenPublisher()) {
 				this.screenSession.unpublish(publisher);
@@ -224,20 +220,127 @@ export class OpenViduService {
 		}
 	}
 
-	/**
-	 * @internal
-	 */
-	publishVideo(publisher: Publisher, value: boolean): void {
-		if (!!publisher) {
-			publisher.publishVideo(value);
-			this.participantService.updateLocalParticipant();
+	async muteVideo(mute: boolean): Promise<void> {
+		const publishAudio = this.participantService.hasCameraAudioActive();
+		// const publishVideo = !this.participantService.hasCameraVideoActive();
+
+		// Disabling webcam
+		if (this.participantService.haveICameraAndScreenActive()) {
+			this.publishVideoAux(this.participantService.getMyCameraPublisher(), mute);
+			this.participantService.disableWebcamStream();
+			this.unpublish(this.participantService.getMyCameraPublisher());
+			this.publishAudioAux(this.participantService.getMyScreenPublisher(), publishAudio);
+		} else if (this.participantService.isOnlyMyScreenActive()) {
+			// Enabling webcam
+			const hasAudio = this.participantService.hasScreenAudioActive();
+			console.warn('Es audio activo?', hasAudio);
+			if (!this.isWebcamSessionConnected()) {
+				//TODO: should be the token in th participant?
+				await this.connectSession(this.getWebcamSession(), this.tokenService.getWebcamToken());
+			}
+			await this.publish(this.participantService.getMyCameraPublisher());
+			this.publishVideoAux(this.participantService.getMyCameraPublisher(), true);
+			this.publishAudioAux(this.participantService.getMyScreenPublisher(), false);
+			this.publishAudioAux(this.participantService.getMyCameraPublisher(), hasAudio);
+			this.participantService.enableWebcamStream();
+		} else {
+			// Muting/unmuting webcam
+			this.publishVideoAux(this.participantService.getMyCameraPublisher(), mute);
 		}
 	}
 
 	/**
 	 * @internal
 	 */
-	publishAudio(publisher: Publisher, value: boolean): void {
+	private publishVideoAux(publisher: Publisher, value: boolean): void {
+		if (!!publisher) {
+			publisher.publishVideo(value);
+			this.participantService.updateLocalParticipant();
+		}
+	}
+
+	async muteAudio(value: boolean): Promise<void> {
+		if (this.participantService.isMyCameraActive()) {
+			if (this.participantService.isMyScreenActive() && this.participantService.hasScreenAudioActive()) {
+				this.publishAudioAux(this.participantService.getMyScreenPublisher(), false);
+			}
+
+			this.publishAudioAux(this.participantService.getMyCameraPublisher(), value);
+		} else {
+			this.publishAudioAux(this.participantService.getMyScreenPublisher(), value);
+		}
+	}
+
+	async toggleScreenshare() {
+		if (this.participantService.haveICameraAndScreenActive()) {
+			// Disabling screenShare
+			this.participantService.disableScreenStream();
+			this.unpublish(this.participantService.getMyScreenPublisher());
+		} else if (this.participantService.isOnlyMyCameraActive()) {
+			// I only have the camera published
+			const hasAudioDevicesAvailable = this.deviceService.hasAudioDeviceAvailable();
+			const willWebcamBePresent = this.participantService.isMyCameraActive() && this.participantService.hasCameraVideoActive();
+			const hasAudio = willWebcamBePresent ? false : hasAudioDevicesAvailable && this.participantService.hasCameraAudioActive();
+
+			console.warn('will be audio active', hasAudio);
+			const properties: PublisherProperties = {
+				videoSource: ScreenType.SCREEN,
+				audioSource: hasAudioDevicesAvailable ? this.deviceService.getMicrophoneSelected().device : null,
+				publishVideo: true,
+				publishAudio: hasAudio,
+				mirror: false
+			};
+			const screenPublisher = await this.initPublisher(undefined, properties);
+
+			screenPublisher.once('accessAllowed', async () => {
+				// Listen to event fired when native stop button is clicked
+				screenPublisher.stream
+					.getMediaStream()
+					.getVideoTracks()[0]
+					.addEventListener('ended', async () => {
+						this.log.d('Clicked native stop button. Stopping screen sharing');
+						await this.toggleScreenshare();
+					});
+
+				// Enabling screenShare
+				this.participantService.activeMyScreenShare(screenPublisher);
+
+				if (!this.isScreenSessionConnected()) {
+					await this.connectSession(this.getScreenSession(), this.tokenService.getScreenToken());
+				}
+				await this.publish(this.participantService.getMyScreenPublisher());
+				if (!this.participantService.hasCameraVideoActive()) {
+					// Disabling webcam
+					this.participantService.disableWebcamStream();
+					this.unpublish(this.participantService.getMyCameraPublisher());
+				}
+			});
+
+			screenPublisher.once('accessDenied', (error: any) => {
+				return Promise.reject(error);
+			});
+		} else {
+			// I only have my screenshare active and I have no camera or it is muted
+			const hasAudio = this.participantService.hasScreenAudioActive();
+
+			// Enable webcam
+			if (!this.isWebcamSessionConnected()) {
+				await this.connectSession(this.getWebcamSession(), this.tokenService.getWebcamToken());
+			}
+			await this.publish(this.participantService.getMyCameraPublisher());
+			this.publishAudioAux(this.participantService.getMyCameraPublisher(), hasAudio);
+			this.participantService.enableWebcamStream();
+
+			// Disabling screenshare
+			this.participantService.disableScreenStream();
+			this.unpublish(this.participantService.getMyScreenPublisher());
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	private publishAudioAux(publisher: Publisher, value: boolean): void {
 		if (!!publisher) {
 			publisher.publishAudio(value);
 			this.participantService.updateLocalParticipant();
@@ -368,32 +471,33 @@ export class OpenViduService {
 		}
 	}
 
-	private async createMediaStream(pp: PublisherProperties): Promise<MediaStream> {
-		let mediaStream: MediaStream;
-		const isFirefoxPlatform = this.platformService.isFirefox();
-		const isReplacingAudio = !!pp.audioSource;
-		const isReplacingVideo = !!pp.videoSource;
+	//TODO: Uncomment this section when replaceTrack issue is fixed
+	// private async createMediaStream(pp: PublisherProperties): Promise<MediaStream> {
+	// 	let mediaStream: MediaStream;
+	// 	const isFirefoxPlatform = this.platformService.isFirefox();
+	// 	const isReplacingAudio = !!pp.audioSource;
+	// 	const isReplacingVideo = !!pp.videoSource;
 
-		try {
-			mediaStream = await this.OV.getUserMedia(pp);
-		} catch (error) {
-			if ((<OpenViduError>error).name === OpenViduErrorName.DEVICE_ACCESS_DENIED) {
-				if (isFirefoxPlatform) {
-					this.log.w('The device requested is not available. Restoring the older one');
-					// The track requested is not available so we are getting the old tracks ids for recovering the track
-					if (isReplacingVideo) {
-						pp.videoSource = this.deviceService.getCameraSelected().device;
-					} else if (isReplacingAudio) {
-						pp.audioSource = this.deviceService.getMicrophoneSelected().device;
-					}
-					mediaStream = await this.OV.getUserMedia(pp);
-					// TODO show error alert informing that the new device is not available
-				}
-			}
-		} finally {
-			return mediaStream;
-		}
-	}
+	// 	try {
+	// 		mediaStream = await this.OV.getUserMedia(pp);
+	// 	} catch (error) {
+	// 		if ((<OpenViduError>error).name === OpenViduErrorName.DEVICE_ACCESS_DENIED) {
+	// 			if (isFirefoxPlatform) {
+	// 				this.log.w('The device requested is not available. Restoring the older one');
+	// 				// The track requested is not available so we are getting the old tracks ids for recovering the track
+	// 				if (isReplacingVideo) {
+	// 					pp.videoSource = this.deviceService.getCameraSelected().device;
+	// 				} else if (isReplacingAudio) {
+	// 					pp.audioSource = this.deviceService.getMicrophoneSelected().device;
+	// 				}
+	// 				mediaStream = await this.OV.getUserMedia(pp);
+	// 				// TODO show error alert informing that the new device is not available
+	// 			}
+	// 		}
+	// 	} finally {
+	// 		return mediaStream;
+	// 	}
+	// }
 
 	/**
 	 * @internal

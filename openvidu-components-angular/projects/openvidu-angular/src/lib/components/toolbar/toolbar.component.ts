@@ -19,8 +19,7 @@ import { DocumentService } from '../../services/document/document.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { ILogger } from '../../models/logger.model';
-import { ScreenType } from '../../models/video-type.model';
-import { PublisherProperties, Session } from 'openvidu-browser';
+import { Session } from 'openvidu-browser';
 import { ActionService } from '../../services/action/action.service';
 import { DeviceService } from '../../services/device/device.service';
 import { ChatMessage } from '../../models/chat.model';
@@ -286,16 +285,13 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	/**
 	 * @ignore
 	 */
-	toggleMicrophone() {
+	async toggleMicrophone() {
 		this.onMicrophoneButtonClicked.emit();
-
-		if (this.participantService.isMyCameraActive()) {
-			this.openviduService.publishAudio(
-				this.participantService.getMyCameraPublisher(),
-				!this.participantService.hasCameraAudioActive()
-			);
-		} else {
-			this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), !this.participantService.hasScreenAudioActive());
+		try {
+			await this.openviduService.muteAudio(!this.isAudioActive);
+		} catch (error) {
+			this.log.e('There was an error toggling microphone:', error.code, error.message);
+			this.actionService.openDialog('There was an error toggling camera', error?.error || error?.message);
 		}
 	}
 
@@ -307,32 +303,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
 		try {
 			const publishVideo = !this.participantService.hasCameraVideoActive();
-			const publishAudio = this.participantService.hasCameraAudioActive();
-			// Disabling webcam
-			if (this.participantService.haveICameraAndScreenActive()) {
-				this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), publishVideo);
-				this.participantService.disableWebcamStream();
-				this.openviduService.unpublish(this.participantService.getMyCameraPublisher());
-				this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), publishAudio);
-				return;
-			}
-			// Enabling webcam
-			if (this.participantService.isOnlyMyScreenActive()) {
-				const hasAudio = this.participantService.hasScreenAudioActive();
-
-				if (!this.openviduService.isWebcamSessionConnected()) {
-					await this.openviduService.connectSession(this.openviduService.getWebcamSession(), this.tokenService.getWebcamToken());
-				}
-				await this.openviduService.publish(this.participantService.getMyCameraPublisher());
-				this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), false);
-				this.openviduService.publishAudio(this.participantService.getMyCameraPublisher(), hasAudio);
-				this.participantService.enableWebcamStream();
-			}
-			// Muting/unmuting webcam
-			this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), publishVideo);
+			await this.openviduService.muteVideo(publishVideo);
 		} catch (error) {
 			this.log.e('There was an error toggling camera:', error.code, error.message);
-			this.actionService.openDialog('There was an error toggling camera:', error?.error || error?.message);
+			this.actionService.openDialog('There was an error toggling camera', error?.error || error?.message);
 		}
 	}
 
@@ -343,76 +317,12 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		this.onScreenshareButtonClicked.emit();
 
 		try {
-			// Disabling screenShare
-			if (this.participantService.haveICameraAndScreenActive()) {
-				this.participantService.disableScreenStream();
-				this.openviduService.unpublish(this.participantService.getMyScreenPublisher());
-				return;
-			}
-
-			// Enabling screenShare
-			if (this.participantService.isOnlyMyCameraActive()) {
-				const willThereBeWebcam = this.participantService.isMyCameraActive() && this.participantService.hasCameraVideoActive();
-				const hasAudio = willThereBeWebcam ? false : this.hasAudioDevices && this.participantService.hasCameraAudioActive();
-				const properties: PublisherProperties = {
-					videoSource: ScreenType.SCREEN,
-					audioSource: this.hasAudioDevices ? undefined : null,
-					publishVideo: true,
-					publishAudio: hasAudio,
-					mirror: false
-				};
-				const screenPublisher = await this.openviduService.initPublisher(undefined, properties);
-
-				screenPublisher.once('accessAllowed', async (event) => {
-					// Listen to event fired when native stop button is clicked
-					screenPublisher.stream
-						.getMediaStream()
-						.getVideoTracks()[0]
-						.addEventListener('ended', () => {
-							this.log.d('Clicked native stop button. Stopping screen sharing');
-							this.toggleScreenShare();
-						});
-					this.log.d('ACCESS ALOWED screenPublisher');
-					this.participantService.activeMyScreenShare(screenPublisher);
-
-					if (!this.openviduService.isScreenSessionConnected()) {
-						await this.openviduService.connectSession(
-							this.openviduService.getScreenSession(),
-							this.tokenService.getScreenToken()
-						);
-					}
-					await this.openviduService.publish(this.participantService.getMyScreenPublisher());
-					// this.openviduService.sendNicknameSignal();
-					if (!this.participantService.hasCameraVideoActive()) {
-						// Disabling webcam
-						this.participantService.disableWebcamStream();
-						this.openviduService.unpublish(this.participantService.getMyCameraPublisher());
-					}
-				});
-
-				screenPublisher.once('accessDenied', (error: any) => {
-					this.log.e(error);
-					if (error && error.name === 'SCREEN_SHARING_NOT_SUPPORTED') {
-						this.actionService.openDialog('Error sharing screen', 'Your browser does not support screen sharing');
-					}
-				});
-				return;
-			}
-
-			// Disabling screnShare and enabling webcam
-			const hasAudio = this.participantService.hasScreenAudioActive();
-			if (!this.openviduService.isWebcamSessionConnected()) {
-				await this.openviduService.connectSession(this.openviduService.getWebcamSession(), this.tokenService.getWebcamToken());
-			}
-			await this.openviduService.publish(this.participantService.getMyCameraPublisher());
-			this.openviduService.publishAudio(this.participantService.getMyScreenPublisher(), false);
-			this.openviduService.publishAudio(this.participantService.getMyCameraPublisher(), hasAudio);
-			this.participantService.enableWebcamStream();
-			this.participantService.disableScreenStream();
-			this.openviduService.unpublish(this.participantService.getMyScreenPublisher());
+			await this.openviduService.toggleScreenshare();
 		} catch (error) {
-			this.log.e('There was an error toggling screen share:', error.code, error.message);
-			this.actionService.openDialog('There was an error toggling screen share:', error?.error || error?.message);
+			this.log.e('There was an error toggling screen share', error.code, error.message);
+			if (error && error.name === 'SCREEN_SHARING_NOT_SUPPORTED') {
+				this.actionService.openDialog('Error sharing screen', 'Your browser does not support screen sharing');
+			}
 		}
 	}
 

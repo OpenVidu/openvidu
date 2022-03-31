@@ -41,6 +41,7 @@ export * from './lib/config/openvidu-angular.config';
 export * from './lib/models/logger.model';
 export * from './lib/models/video-type.model';
 export * from './lib/models/notification-options.model';
+export * from './lib/models/token.model';
 
 // Pipes
 export * from './lib/pipes/participant.pipe';
