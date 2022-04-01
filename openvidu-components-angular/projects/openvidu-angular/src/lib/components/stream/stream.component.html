@@ -22,7 +22,10 @@
 		</div>
 	</div>
 
-	<div *ngIf="!isMinimal && showAudioDetection && _stream.type === 'CAMERA'" id="audio-wave-container">
+	<div
+		*ngIf="!isMinimal && showAudioDetection && _stream.type === 'CAMERA' && _stream.streamManager?.stream?.audioActive"
+		id="audio-wave-container"
+	>
 		<ov-audio-wave [streamManager]="_stream.streamManager"></ov-audio-wave>
 	</div>
 
