@@ -288,7 +288,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	async toggleMicrophone() {
 		this.onMicrophoneButtonClicked.emit();
 		try {
-			await this.openviduService.muteAudio(!this.isAudioActive);
+			await this.openviduService.publishAudio(!this.isAudioActive);
 		} catch (error) {
 			this.log.e('There was an error toggling microphone:', error.code, error.message);
 			this.actionService.openDialog('There was an error toggling camera', error?.error || error?.message);
@@ -303,7 +303,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
 		try {
 			const publishVideo = !this.participantService.hasCameraVideoActive();
-			await this.openviduService.muteVideo(publishVideo);
+			await this.openviduService.publishVideo(publishVideo);
 		} catch (error) {
 			this.log.e('There was an error toggling camera:', error.code, error.message);
 			this.actionService.openDialog('There was an error toggling camera', error?.error || error?.message);

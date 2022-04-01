@@ -220,13 +220,13 @@ export class OpenViduService {
 		}
 	}
 
-	async muteVideo(mute: boolean): Promise<void> {
+	async publishVideo(publish: boolean): Promise<void> {
 		const publishAudio = this.participantService.hasCameraAudioActive();
 		// const publishVideo = !this.participantService.hasCameraVideoActive();
 
 		// Disabling webcam
 		if (this.participantService.haveICameraAndScreenActive()) {
-			this.publishVideoAux(this.participantService.getMyCameraPublisher(), mute);
+			this.publishVideoAux(this.participantService.getMyCameraPublisher(), publish);
 			this.participantService.disableWebcamStream();
 			this.unpublish(this.participantService.getMyCameraPublisher());
 			this.publishAudioAux(this.participantService.getMyScreenPublisher(), publishAudio);
@@ -245,7 +245,7 @@ export class OpenViduService {
 			this.participantService.enableWebcamStream();
 		} else {
 			// Muting/unmuting webcam
-			this.publishVideoAux(this.participantService.getMyCameraPublisher(), mute);
+			this.publishVideoAux(this.participantService.getMyCameraPublisher(), publish);
 		}
 	}
 
@@ -259,15 +259,15 @@ export class OpenViduService {
 		}
 	}
 
-	async muteAudio(value: boolean): Promise<void> {
+	async publishAudio(publish: boolean): Promise<void> {
 		if (this.participantService.isMyCameraActive()) {
 			if (this.participantService.isMyScreenActive() && this.participantService.hasScreenAudioActive()) {
 				this.publishAudioAux(this.participantService.getMyScreenPublisher(), false);
 			}
 
-			this.publishAudioAux(this.participantService.getMyCameraPublisher(), value);
+			this.publishAudioAux(this.participantService.getMyCameraPublisher(), publish);
 		} else {
-			this.publishAudioAux(this.participantService.getMyScreenPublisher(), value);
+			this.publishAudioAux(this.participantService.getMyScreenPublisher(), publish);
 		}
 	}
 

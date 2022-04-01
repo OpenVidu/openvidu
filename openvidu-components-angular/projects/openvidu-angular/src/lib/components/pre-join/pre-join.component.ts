@@ -117,14 +117,14 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 
 	async toggleCam() {
 		const publish = this.isVideoMuted;
-		await this.openviduService.muteVideo(publish);
+		await this.openviduService.publishVideo(publish);
 		this.isVideoMuted = !this.isVideoMuted;
 		this.storageSrv.setVideoMuted(this.isVideoMuted);
 	}
 
 	toggleMic() {
 		const publish = this.isAudioMuted;
-		this.openviduService.muteAudio(publish);
+		this.openviduService.publishAudio(publish);
 		this.isAudioMuted = !this.isAudioMuted;
 		this.storageSrv.setAudioMuted(this.isAudioMuted);
 	}
