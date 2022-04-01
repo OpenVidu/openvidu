@@ -379,7 +379,15 @@ export class ParticipantService {
 		const participant = this.getRemoteParticipantByConnectionId(connectionId);
 		if (participant) {
 			participant.setNickname(nickname);
-			// this.updateRemoteParticipants();
+			this.updateRemoteParticipants();
+		}
+	}
+
+	setRemoteMutedForcibly(id: string, value: boolean) {
+		const participant = this.getRemoteParticipantById(id);
+		if (participant) {
+			participant.setMutedForcibly(value);
+			this.updateRemoteParticipants();
 		}
 	}
 

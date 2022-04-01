@@ -3,6 +3,7 @@ import { Subscription } from 'rxjs';
 import { ParticipantPanelItemElementsDirective } from '../../../../directives/template/openvidu-angular.directive';
 import { ParticipantAbstractModel } from '../../../../models/participant.model';
 import { OpenViduAngularConfigService } from '../../../../services/config/openvidu-angular.config.service';
+import { ParticipantService } from '../../../../services/participant/participant.service';
 
 /**
  *
@@ -95,7 +96,7 @@ export class ParticipantPanelItemComponent implements OnInit, OnDestroy {
 	/**
      * @ignore
      */
-	constructor(private libService: OpenViduAngularConfigService, private cd: ChangeDetectorRef) {}
+	constructor(private libService: OpenViduAngularConfigService, protected participantService: ParticipantService, private cd: ChangeDetectorRef) {}
 
 	ngOnInit(): void {
 		this.subscribeToParticipantPanelItemDirectives();
@@ -108,7 +109,7 @@ export class ParticipantPanelItemComponent implements OnInit, OnDestroy {
 	 * @ignore
 	 */
 	toggleMuteForcibly() {
-		this._participant.setMutedForcibly(!this._participant.isMutedForcibly);
+		this.participantService.setRemoteMutedForcibly(this._participant.id, !this._participant.isMutedForcibly);
 	}
 
 	private subscribeToParticipantPanelItemDirectives() {
