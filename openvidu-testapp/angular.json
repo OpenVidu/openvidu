@@ -51,7 +51,12 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "openvidu-testapp:build"
+            "browserTarget": "openvidu-testapp:build",
+            "sourceMap": {
+              "scripts": true,
+              "styles": true,
+              "vendor": true
+            }
           },
           "configurations": {
             "production": {
