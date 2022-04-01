@@ -5,7 +5,7 @@ import { WebComponentConfig } from './selenium.conf';
 const url = WebComponentConfig.appUrl;
 const TIMEOUT = 5000;
 
-describe('Checkout localhost app', () => {
+describe('Testing API Directives', () => {
 	let browser: WebDriver;
 	async function createChromeBrowser(): Promise<WebDriver> {
 
@@ -24,8 +24,6 @@ describe('Checkout localhost app', () => {
 	afterEach(async () => {
 		await browser.quit();
 	});
-
-	// ** API Directives
 
 	it('should set the MINIMAL UI', async () => {
 		let element;
@@ -398,8 +396,27 @@ describe('Checkout localhost app', () => {
 		element = await browser.findElements(By.id('mute-btn'));
 		expect(element.length).equals(0);
 	});
+});
 
-	//* ---- Webcomponent events ----
+describe('Testing videoconference EVENTS', () => {
+	let browser: WebDriver;
+	async function createChromeBrowser(): Promise<WebDriver> {
+
+		return await new Builder()
+			.forBrowser(WebComponentConfig.browserName)
+			.withCapabilities(WebComponentConfig.browserCapabilities)
+			.setChromeOptions(WebComponentConfig.browserOptions)
+			.usingServer(WebComponentConfig.seleniumAddress)
+			.build();
+	}
+
+	beforeEach(async () => {
+		browser = await createChromeBrowser();
+	});
+
+	afterEach(async () => {
+		await browser.quit();
+	});
 
 	it('should receive the onJoinButtonClicked event', async () => {
 		let element;
@@ -568,5 +585,214 @@ describe('Checkout localhost app', () => {
 
 		element = await browser.wait(until.elementLocated(By.id(`${participantName}-sessionDisconnected`)), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
+	});
+
+});
+
+describe('Testing screenshare features', () => {
+	let browser: WebDriver;
+	async function createChromeBrowser(): Promise<WebDriver> {
+		return await new Builder()
+			.forBrowser(WebComponentConfig.browserName)
+			.withCapabilities(WebComponentConfig.browserCapabilities)
+			.setChromeOptions(WebComponentConfig.browserOptions)
+			.usingServer(WebComponentConfig.seleniumAddress)
+			.build();
+	}
+
+	beforeEach(async () => {
+		browser = await createChromeBrowser();
+	});
+
+	afterEach(async () => {
+		await browser.quit();
+	});
+
+	it('should toggle screensharing', async () => {
+		let element;
+		await browser.get(`${url}?prejoin=false`);
+		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Clicking to screensharing button
+		const screenshareButton = await browser.findElement(By.id('screenshare-btn'));
+		expect(await screenshareButton.isDisplayed()).to.be.true;
+		await screenshareButton.click();
+
+		element = await browser.wait(until.elementLocated(By.className('OV_big')), TIMEOUT);
+		element = await browser.findElements(By.css('video'));
+		expect(element.length).equals(2);
+
+		// Clicking to screensharing button
+		await screenshareButton.click();
+
+		element = await browser.findElements(By.css('video'));
+		expect(element.length).equals(1);
+	});
+
+	it('should screensharing with audio muted', async () => {
+		let element, isAudioEnabled;
+		const getAudioScript = (className: string) => {
+			return `return document.getElementsByClassName('${className}')[0].srcObject.getAudioTracks()[0].enabled;`;
+		};
+		await browser.get(`${url}?prejoin=false`);
+		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
+		const micButton = await browser.findElement(By.id('mic-btn'));
+		expect(await micButton.isDisplayed()).to.be.true;
+		await micButton.click();
+
+		// Clicking to screensharing button
+		const screenshareButton = await browser.findElement(By.id('screenshare-btn'));
+		expect(await screenshareButton.isDisplayed()).to.be.true;
+		await screenshareButton.click();
+
+		element = await browser.wait(until.elementLocated(By.className('screen-type')), TIMEOUT);
+		element = await browser.findElements(By.css('video'));
+		expect(element.length).equals(2);
+
+		isAudioEnabled = await browser.executeScript(getAudioScript('screen-type'));
+		expect(isAudioEnabled).to.be.false;
+
+		await browser.wait(until.elementLocated(By.id('statusMic')), TIMEOUT);
+		element = await browser.findElements(By.id('statusMic'));
+		expect(element.length).equals(2);
+
+		// Clicking to screensharing button
+		await screenshareButton.click();
+
+		element = await browser.findElements(By.css('video'));
+		expect(element.length).equals(1);
+	});
+
+	it('should show and hide CAMERA stream when muting video with screensharing', async () => {
+		let element;
+		await browser.get(`${url}?prejoin=false`);
+		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Clicking to screensharing button
+		const screenshareButton = await browser.findElement(By.id('screenshare-btn'));
+		expect(await screenshareButton.isDisplayed()).to.be.true;
+		await screenshareButton.click();
+
+		element = await browser.wait(until.elementLocated(By.className('OV_big')), TIMEOUT);
+		element = await browser.findElements(By.css('video'));
+		expect(element.length).equals(2);
+
+		const muteVideoButton = await browser.findElement(By.id('camera-btn'));
+		await muteVideoButton.click();
+
+		element = await browser.findElements(By.css('video'));
+		expect(element.length).equals(1);
+	});
+
+	it('should screenshare has audio active when camera is muted', async () => {
+		let element, isAudioEnabled;
+		const audioEnableScript = 'return document.getElementsByTagName("video")[0].srcObject.getAudioTracks()[0].enabled;';
+
+		await browser.get(`${url}?prejoin=false`);
+		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Clicking to screensharing button
+		const screenshareButton = await browser.findElement(By.id('screenshare-btn'));
+		expect(await screenshareButton.isDisplayed()).to.be.true;
+		await screenshareButton.click();
+
+		element = await browser.wait(until.elementLocated(By.className('OV_big')), TIMEOUT);
+		element = await browser.findElements(By.css('video'));
+		expect(element.length).equals(2);
+
+		element = await browser.findElements(By.id('statusMic'));
+		expect(element.length).equals(1);
+
+		// Muting camera video
+		const muteVideoButton = await browser.findElement(By.id('camera-btn'));
+		await muteVideoButton.click();
+
+		element = await browser.findElements(By.css('video'));
+		expect(element.length).equals(1);
+		await browser.sleep(500);
+		element = await browser.findElements(By.id('statusMic'));
+		expect(element.length).equals(0);
+
+		// Checking if audio is muted after join the room
+		isAudioEnabled = await browser.executeScript(audioEnableScript);
+		expect(isAudioEnabled).to.be.true;
+
+		// Unmuting camera
+		await muteVideoButton.click();
+
+		element = await browser.wait(until.elementLocated(By.className('camera-type')), TIMEOUT);
+		element = await browser.findElements(By.css('video'));
+		expect(element.length).equals(2);
+
+		element = await browser.findElements(By.id('statusMic'));
+		expect(element.length).equals(1);
+	});
+
+	it('should camera come back with audio muted when screensharing', async () => {
+		let element, isAudioEnabled;
+
+		const getAudioScript = (className: string) => {
+			return `return document.getElementsByClassName('${className}')[0].srcObject.getAudioTracks()[0].enabled;`;
+		};
+
+		await browser.get(`${url}?prejoin=false`);
+		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Clicking to screensharing button
+		const screenshareButton = await browser.findElement(By.id('screenshare-btn'));
+		expect(await screenshareButton.isDisplayed()).to.be.true;
+		await screenshareButton.click();
+
+		element = await browser.wait(until.elementLocated(By.className('screen-type')), TIMEOUT);
+		element = await browser.findElements(By.css('video'));
+		expect(element.length).equals(2);
+
+		element = await browser.findElements(By.id('statusMic'));
+		expect(element.length).equals(1);
+
+		// Mute camera
+		const muteVideoButton = await browser.findElement(By.id('camera-btn'));
+		await muteVideoButton.click();
+
+		element = await browser.findElements(By.css('video'));
+		expect(element.length).equals(1);
+
+		element = await browser.findElements(By.id('statusMic'));
+		expect(element.length).equals(0);
+
+		// Checking if audio is muted after join the room
+		isAudioEnabled = await browser.executeScript(getAudioScript('screen-type'));
+		expect(isAudioEnabled).to.be.true;
+
+		// Mute audio
+		const muteAudioButton = await browser.findElement(By.id('mic-btn'));
+		await muteAudioButton.click();
+
+		await browser.wait(until.elementLocated(By.id('statusMic')), TIMEOUT);
+		element = await browser.findElements(By.id('statusMic'));
+		expect(element.length).equals(1);
+
+		isAudioEnabled = await browser.executeScript(getAudioScript('screen-type'));
+		expect(isAudioEnabled).to.be.false;
+
+		// Unmute camera
+		await muteVideoButton.click();
+
+		element = await browser.wait(until.elementLocated(By.className('camera-type')), TIMEOUT);
+		element = await browser.findElements(By.css('video'));
+		expect(element.length).equals(2);
+
+		element = await browser.findElements(By.id('statusMic'));
+		expect(element.length).equals(2);
+
+		isAudioEnabled = await browser.executeScript(getAudioScript('camera-type'));
+		expect(isAudioEnabled).to.be.false;
 	});
 });

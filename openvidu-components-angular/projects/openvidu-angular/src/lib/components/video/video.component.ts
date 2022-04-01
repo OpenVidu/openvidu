@@ -53,8 +53,10 @@ export class VideoComponent implements AfterViewInit {
 		this.type = <VideoType>this._streamManager?.stream?.typeOfVideo;
 		if (this.type === VideoType.SCREEN) {
 			this._videoElement.nativeElement.style.objectFit = 'contain';
+			this._videoElement.nativeElement.classList.add('screen-type');
 		} else {
 			this._videoElement.nativeElement.style.objectFit = 'cover';
+			this._videoElement.nativeElement.classList.add('camera-type');
 		}
 
 	}
