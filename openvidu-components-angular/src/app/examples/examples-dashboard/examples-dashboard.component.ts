@@ -13,7 +13,7 @@ export class ExamplesDashboardComponent implements OnInit {
   ngOnInit(): void {}
 
   goTo(path: string) {
-    this.router.navigate([`/${path}`]);
+    this.router.navigate([`examples/${path}`]);
   }
 
 }

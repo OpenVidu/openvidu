@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { OpenViduService, ParticipantService, TokenModel } from 'openvidu-angular';
+import { OpenViduService, TokenModel } from 'openvidu-angular';
 import { RestService } from 'src/app/services/rest.service';
 
 @Component({
@@ -7,8 +7,8 @@ import { RestService } from 'src/app/services/rest.service';
 	template: `
 		<ov-videoconference (onJoinButtonClicked)="onJoinButtonClicked()" [tokens]="tokens">
 			<div *ovToolbar style="text-align: center;">
-				<button (click)="toggleVideo()">Mute Video</button>
-				<button>Mute Audio</button>
+				<button (click)="toggleVideo()">Toggle Video</button>
+				<button (click)="toggleAudio()">Toggle Audio</button>
 			</div>
 		</ov-videoconference>
 	`
@@ -18,11 +18,9 @@ export class ToolbarDirectiveComponent implements OnInit {
 	sessionId = 'toolbar-directive-example';
 	OPENVIDU_URL = 'https://localhost:4443';
 	OPENVIDU_SECRET = 'MY_SECRET';
-	constructor(
-		private restService: RestService,
-		private participantService: ParticipantService,
-		private openviduService: OpenViduService
-	) {}
+	publishVideo = true;
+	publishAudio = true;
+	constructor(private restService: RestService, private openviduService: OpenViduService) {}
 
 	ngOnInit(): void {}
 
@@ -34,7 +32,12 @@ export class ToolbarDirectiveComponent implements OnInit {
 	}
 
 	toggleVideo() {
-		const publishVideo = !this.participantService.hasCameraVideoActive();
-		// this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), publishVideo);
+		this.publishVideo = !this.publishVideo;
+		this.openviduService.publishVideo(this.publishVideo);
+	}
+
+	toggleAudio() {
+		this.publishAudio = !this.publishAudio;
+		this.openviduService.publishAudio(this.publishAudio);
 	}
 }

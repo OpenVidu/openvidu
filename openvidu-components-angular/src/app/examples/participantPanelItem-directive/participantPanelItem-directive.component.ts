@@ -1,40 +1,26 @@
-import { Component, OnDestroy, OnInit,  } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ParticipantAbstractModel, ParticipantService, TokenModel } from 'openvidu-angular';
 import { Subscription } from 'rxjs';
 import { RestService } from 'src/app/services/rest.service';
 
 @Component({
-	selector: 'app-participantsPanel-directive',
+	selector: 'app-participantPanelItem-directive',
 	template: `
 		<ov-videoconference (onJoinButtonClicked)="onJoinButtonClicked()" [tokens]="tokens" [toolbarDisplaySessionName]="false">
-			<div *ovParticipantsPanel id="my-panel">
-				<ul id="local">
-					<li>{{localParticipant.nickname}}</li>
-				</ul>
+			<div *ovParticipantPanelItem="let participant">
+				<ov-participant-panel-item [participant]="participant"></ov-participant-panel-item>
 
-				<ul id="remote">
-					<li *ngFor="let p of remoteParticipants">{{p.nickname}}</li>
-				</ul>
+				<button mat-icon-button [matMenuTriggerFor]="menu"><mat-icon>more_vert</mat-icon></button>
+				<mat-menu #menu="matMenu">
+					<button mat-menu-item>Item 1</button>
+					<button mat-menu-item>Item 2</button>
+				</mat-menu>
 			</div>
 		</ov-videoconference>
 	`,
-	styles: [
-		`
-			#my-panel {
-				background: #faff7f;
-				height: 100%;
-				overflow: hidden;
-			}
-			#my-panel > #local {
-				background: #a184ff;
-			}
-			#my-panel > #remote {
-				background: #7fb8ff;
-			}
-		`
-	]
+	styles: [``]
 })
-export class ParticipantsPanelDirectiveComponent implements OnInit, OnDestroy {
+export class ParticipantPanelItemDirectiveComponent implements OnInit, OnDestroy {
 	tokens: TokenModel;
 	sessionId = 'participants-panel-directive-example';
 	OPENVIDU_URL = 'https://localhost:4443';
@@ -44,10 +30,7 @@ export class ParticipantsPanelDirectiveComponent implements OnInit, OnDestroy {
 	localParticipantSubs: Subscription;
 	remoteParticipantsSubs: Subscription;
 
-	constructor(
-		private restService: RestService,
-		private participantService: ParticipantService
-	) {}
+	constructor(private restService: RestService, private participantService: ParticipantService) {}
 
 	ngOnInit(): void {
 		this.subscribeToParticipants();

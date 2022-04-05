@@ -1,7 +1,12 @@
 # Openvidu Angular
 
-The easier way to build powerfull OpenVidu videoconference frontend applications.
+The easier way to build powerful OpenVidu videoconference frontend applications.
 
-![OpenVidu application](app.gif)
+How to install:
+
+```
+npm install openvidu-angular
+```
+
 
 

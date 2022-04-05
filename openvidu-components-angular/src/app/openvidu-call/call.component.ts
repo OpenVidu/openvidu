@@ -8,7 +8,9 @@ import { Router } from '@angular/router';
 })
 export class CallComponent implements OnInit {
 	value = true;
-	sessionId = 'qqqq';
+	sessionId = 'daily-call';
+	OPENVIDU_URL = 'https://localhost:4443';
+	OPENVIDU_SECRET = 'MY_SECRET';
 	tokens: { webcam: string; screen: string };
 
 	joinSessionClicked: boolean = false;
@@ -19,18 +21,22 @@ export class CallComponent implements OnInit {
 
 	async ngOnInit() {
 		this.tokens = {
-			webcam: await this.restService.getToken(this.sessionId),
-			screen: await this.restService.getToken(this.sessionId)
+			webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
+			screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
 		};
 	}
 
 	async onJoinClicked() {
 		console.warn('VC JOIN BUTTON CLICKED');
 
-		this.tokens = {
-			webcam: await this.restService.getToken(this.sessionId),
-			screen: await this.restService.getToken(this.sessionId)
-		};
+		// this.tokens = {
+		// 	webcam: await this.restService.getToken(this.sessionId),
+		// 	screen: await this.restService.getToken(this.sessionId)
+		// };
+
+		console.log(await this.restService.getToken(this.sessionId))
+
+
 
 		// setInterval(() => {
 		// 	this.value = !this.value;
