@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, OnDestroy, OnInit, TemplateRef } from '@angular/core';
 import { ParticipantAbstractModel } from '../../../../models/participant.model';
 import { ParticipantService } from '../../../../services/participant/participant.service';
-import { SidenavMenuService } from '../../../..//services/sidenav-menu/sidenav-menu.service';
+import { PanelService } from '../../../..//services/panel/panel.service';
 import { ParticipantPanelItemDirective } from '../../../../directives/template/openvidu-angular.directive';
 import { Subscription } from 'rxjs';
 
@@ -70,7 +70,7 @@ export class ParticipantsPanelComponent implements OnInit, OnDestroy {
 	 */
 	constructor(
 		protected participantService: ParticipantService,
-		protected menuService: SidenavMenuService,
+		protected PanelService: PanelService,
 		private cd: ChangeDetectorRef
 	) {}
 
@@ -100,6 +100,6 @@ export class ParticipantsPanelComponent implements OnInit, OnDestroy {
 	}
 
 	close() {
-		this.menuService.closeMenu();
+		this.PanelService.closeMenu();
 	}
 }

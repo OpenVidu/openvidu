@@ -10,7 +10,7 @@ import { LoggerService } from '../logger/logger.service';
 @Injectable({
 	providedIn: 'root'
 })
-export class SidenavMenuService {
+export class PanelService {
 	menuOpenedObs: Observable<{ opened: boolean; type?: MenuType }>;
 	protected log: ILogger;
 	protected isChatMenuOpened: boolean = false;
@@ -18,7 +18,7 @@ export class SidenavMenuService {
 	protected _menuOpened = <BehaviorSubject<{ opened: boolean; type?: MenuType }>>new BehaviorSubject({ opened: false });
 
 	constructor(protected loggerSrv: LoggerService) {
-		this.log = this.loggerSrv.get('SidenavMenuService');
+		this.log = this.loggerSrv.get('PanelService');
 		this.menuOpenedObs = this._menuOpened.asObservable();
 	}
 

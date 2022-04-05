@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, On
 import { skip, Subscription } from 'rxjs';
 import { ChatPanelDirective, ParticipantsPanelDirective } from '../../directives/template/openvidu-angular.directive';
 import { MenuType } from '../../models/menu.model';
-import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.service';
+import { PanelService } from '../../services/panel/panel.service';
 
 /**
  *
@@ -82,7 +82,7 @@ export class PanelComponent implements OnInit {
 	/**
      * @ignore
      */
-	constructor(protected menuService: SidenavMenuService, private cd: ChangeDetectorRef) {}
+	constructor(protected panelService: PanelService, private cd: ChangeDetectorRef) {}
 
 	ngOnInit(): void {
 		this.subscribeToPanelToggling();
@@ -95,7 +95,7 @@ export class PanelComponent implements OnInit {
 	}
 
 	private subscribeToPanelToggling() {
-		this.menuSubscription = this.menuService.menuOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
+		this.menuSubscription = this.panelService.menuOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
 			this.isChatPanelOpened = ev.opened && ev.type === MenuType.CHAT;
 			this.isParticipantsPanelOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
 			this.cd.markForCheck();

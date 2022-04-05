@@ -26,7 +26,7 @@ import { SidenavMode } from '../../models/layout.model';
 import { LayoutService } from '../../services/layout/layout.service';
 import { Subscription, skip } from 'rxjs';
 import { MenuType } from '../../models/menu.model';
-import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.service';
+import { PanelService } from '../../services/panel/panel.service';
 import { PlatformService } from '../../services/platform/platform.service';
 
 /**
@@ -73,7 +73,7 @@ export class SessionComponent implements OnInit {
 		protected chatService: ChatService,
 		protected tokenService: TokenService,
 		protected layoutService: LayoutService,
-		protected menuService: SidenavMenuService,
+		protected panelService: PanelService,
 		private platformService: PlatformService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
@@ -153,7 +153,7 @@ export class SessionComponent implements OnInit {
 			this.updateLayoutInterval = setInterval(() => this.layoutService.update(), 50);
 		});
 
-		this.menuSubscription = this.menuService.menuOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
+		this.menuSubscription = this.panelService.menuOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
 			if (this.sideMenu) {
 				this.isChatPanelOpened = ev.opened && ev.type === MenuType.CHAT;
 				this.isParticipantsPanelOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;

@@ -13,7 +13,7 @@ import {
 import { skip, Subscription } from 'rxjs';
 import { TokenService } from '../../services/token/token.service';
 import { ChatService } from '../../services/chat/chat.service';
-import { SidenavMenuService } from '../../services/sidenav-menu/sidenav-menu.service';
+import { PanelService } from '../../services/panel/panel.service';
 import { DocumentService } from '../../services/document/document.service';
 
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
@@ -217,7 +217,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	constructor(
 		protected documentService: DocumentService,
 		protected chatService: ChatService,
-		protected menuService: SidenavMenuService,
+		protected panelService: PanelService,
 		protected tokenService: TokenService,
 		protected participantService: ParticipantService,
 		protected openviduService: OpenViduService,
@@ -302,7 +302,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		this.onCameraButtonClicked.emit();
 
 		try {
-			const publishVideo = !this.participantService.hasCameraVideoActive();
+			const publishVideo = !this.participantService.isMyVideoActive();
 			await this.openviduService.publishVideo(publishVideo);
 		} catch (error) {
 			this.log.e('There was an error toggling camera:', error.code, error.message);
@@ -340,7 +340,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	 */
 	toggleParticipantsPanel() {
 		this.onParticipantsPanelButtonClicked.emit();
-		this.menuService.toggleMenu(MenuType.PARTICIPANTS);
+		this.panelService.toggleMenu(MenuType.PARTICIPANTS);
 	}
 
 	/**
@@ -348,7 +348,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	 */
 	toggleChatPanel() {
 		this.onChatPanelButtonClicked.emit();
-		this.menuService.toggleMenu(MenuType.CHAT);
+		this.panelService.toggleMenu(MenuType.CHAT);
 	}
 
 	/**
@@ -362,8 +362,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
 	protected subscribeToReconnection() {
 		this.session.on('reconnecting', () => {
-			if (this.menuService.isMenuOpened()) {
-				this.menuService.closeMenu();
+			if (this.panelService.isMenuOpened()) {
+				this.panelService.closeMenu();
 			}
 			this.isConnectionLost = true;
 		});
@@ -372,7 +372,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		});
 	}
 	protected subscribeToMenuToggling() {
-		this.menuTogglingSubscription = this.menuService.menuOpenedObs.subscribe((ev: { opened: boolean; type?: MenuType }) => {
+		this.menuTogglingSubscription = this.panelService.menuOpenedObs.subscribe((ev: { opened: boolean; type?: MenuType }) => {
 			this.isChatOpened = ev.opened && ev.type === MenuType.CHAT;
 			this.isParticipantsOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
 			if (this.isChatOpened) {
@@ -383,7 +383,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
 	protected subscribeToChatMessages() {
 		this.chatMessagesSubscription = this.chatService.messagesObs.pipe(skip(1)).subscribe((messages) => {
-			if (!this.menuService.isMenuOpened()) {
+			if (!this.panelService.isMenuOpened()) {
 				this.unreadMessages++;
 			}
 			this.messageList = messages;

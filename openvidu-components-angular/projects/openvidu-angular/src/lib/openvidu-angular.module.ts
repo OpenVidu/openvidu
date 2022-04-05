@@ -51,7 +51,7 @@ import { ActionService } from './services/action/action.service';
 import { ChatService } from './services/chat/chat.service';
 import { DocumentService } from './services/document/document.service';
 import { LayoutService } from './services/layout/layout.service';
-import { SidenavMenuService } from './services/sidenav-menu/sidenav-menu.service';
+import { PanelService } from './services/panel/panel.service';
 import { ParticipantService } from './services/participant/participant.service';
 import { ParticipantPanelItemComponent } from './components/panel/participants-panel/participant-panel-item/participant-panel-item.component';
 import { ParticipantsPanelComponent } from './components/panel/participants-panel/participants-panel/participants-panel.component';
@@ -119,7 +119,7 @@ import { ApiDirectiveModule } from './directives/api/api.directive.module';
 		CdkOverlayContainer,
 		{ provide: OverlayContainer, useClass: CdkOverlayContainer },
 		ChatService,
-		SidenavMenuService,
+		PanelService,
 		DeviceService,
 		DocumentService,
 		LayoutService,

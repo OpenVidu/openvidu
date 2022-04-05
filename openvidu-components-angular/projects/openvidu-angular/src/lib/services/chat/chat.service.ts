@@ -10,7 +10,7 @@ import { ActionService } from '../action/action.service';
 import { OpenViduService } from '../openvidu/openvidu.service';
 import { LoggerService } from '../logger/logger.service';
 import { Signal } from '../../models/signal.model';
-import { SidenavMenuService } from '../sidenav-menu/sidenav-menu.service';
+import { PanelService } from '../panel/panel.service';
 import { ParticipantService } from '../participant/participant.service';
 import { MenuType } from '../../models/menu.model';
 
@@ -30,7 +30,7 @@ export class ChatService {
 		protected loggerSrv: LoggerService,
 		protected openviduService: OpenViduService,
 		protected participantService: ParticipantService,
-		protected menuService: SidenavMenuService,
+		protected panelService: PanelService,
 		protected actionService: ActionService
 	) {
 		this.log = this.loggerSrv.get('ChatService');
@@ -50,7 +50,7 @@ export class ChatService {
 				nickname: data.nickname,
 				message: data.message
 			});
-			if (!this.menuService.isMenuOpened()) {
+			if (!this.panelService.isMenuOpened()) {
 				const notificationOptions: INotificationOptions = {
 					message: `${data.nickname.toUpperCase()} sent a message`,
 					cssClassName: 'messageSnackbar',
@@ -77,6 +77,6 @@ export class ChatService {
 	}
 
 	protected launchNotification(options: INotificationOptions) {
-		this.actionService.launchNotification(options, this.menuService.toggleMenu.bind(this.menuService, MenuType.CHAT));
+		this.actionService.launchNotification(options, this.panelService.toggleMenu.bind(this.panelService, MenuType.CHAT));
 	}
 }

@@ -16,7 +16,7 @@ export * from './lib/services/token/token.service';
 export * from './lib/services/device/device.service';
 export * from './lib/services/action/action.service';
 export * from './lib/services/layout/layout.service';
-export * from './lib/services/sidenav-menu/sidenav-menu.service';
+export * from './lib/services/panel/panel.service';
 export * from './lib/services/cdk-overlay/cdk-overlay.service';
 export * from './lib/services/storage/storage.service';
 
