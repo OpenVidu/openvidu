@@ -50,7 +50,7 @@ export class ChatService {
 				nickname: data.nickname,
 				message: data.message
 			});
-			if (!this.panelService.isMenuOpened()) {
+			if (!this.panelService.isPanelOpened()) {
 				const notificationOptions: INotificationOptions = {
 					message: `${data.nickname.toUpperCase()} sent a message`,
 					cssClassName: 'messageSnackbar',
@@ -77,6 +77,6 @@ export class ChatService {
 	}
 
 	protected launchNotification(options: INotificationOptions) {
-		this.actionService.launchNotification(options, this.panelService.toggleMenu.bind(this.panelService, MenuType.CHAT));
+		this.actionService.launchNotification(options, this.panelService.togglePanel.bind(this.panelService, MenuType.CHAT));
 	}
 }

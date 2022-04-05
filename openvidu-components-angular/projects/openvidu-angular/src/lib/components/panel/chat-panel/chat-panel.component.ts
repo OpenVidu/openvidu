@@ -72,7 +72,7 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	 */
 	@HostListener('document:keydown.escape', ['$event'])
 	onKeydownHandler(event: KeyboardEvent) {
-		if (this.PanelService.isMenuOpened()) {
+		if (this.PanelService.isPanelOpened()) {
 			this.close();
 		}
 	}
@@ -119,13 +119,13 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	}
 
 	close() {
-		this.PanelService.toggleMenu(MenuType.CHAT);
+		this.PanelService.togglePanel(MenuType.CHAT);
 	}
 
 	private subscribeToMessages() {
 		this.chatMessageSubscription = this.chatService.messagesObs.subscribe((messages: ChatMessage[]) => {
 			this.messageList = messages;
-			if (this.PanelService.isMenuOpened()) {
+			if (this.PanelService.isPanelOpened()) {
 				this.scrollToBottom();
 				this.cd.markForCheck();
 			}

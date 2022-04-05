@@ -11,59 +11,59 @@ import { LoggerService } from '../logger/logger.service';
 	providedIn: 'root'
 })
 export class PanelService {
-	menuOpenedObs: Observable<{ opened: boolean; type?: MenuType }>;
+	panelOpenedObs: Observable<{ opened: boolean; type?: MenuType }>;
 	protected log: ILogger;
-	protected isChatMenuOpened: boolean = false;
-	protected isParticipantsMenuOpened: boolean = false;
-	protected _menuOpened = <BehaviorSubject<{ opened: boolean; type?: MenuType }>>new BehaviorSubject({ opened: false });
+	protected isChatPanelOpened: boolean = false;
+	protected isParticipantsPanelOpened: boolean = false;
+	protected _panelOpened = <BehaviorSubject<{ opened: boolean; type?: MenuType }>>new BehaviorSubject({ opened: false });
 
 	constructor(protected loggerSrv: LoggerService) {
 		this.log = this.loggerSrv.get('PanelService');
-		this.menuOpenedObs = this._menuOpened.asObservable();
+		this.panelOpenedObs = this._panelOpened.asObservable();
 	}
 
-	isMenuOpened(): boolean {
+	isPanelOpened(): boolean {
 		return this.isChatOpened() || this.isParticipantsOpened();
 	}
 
-	toggleMenu(type: MenuType) {
+	togglePanel(type: MenuType) {
 		this.log.d(`Toggling ${type} menu`);
 		if (type === MenuType.CHAT) {
-			if (this.isChatMenuOpened) {
+			if (this.isChatPanelOpened) {
 				// Close chat and side menu
-				this.isChatMenuOpened = false;
-				this._menuOpened.next({ opened: false });
+				this.isChatPanelOpened = false;
+				this._panelOpened.next({ opened: false });
 			} else {
 				// Open chat
-				this.isChatMenuOpened = true;
-				this.isParticipantsMenuOpened = false;
-				this._menuOpened.next({ opened: true, type: MenuType.CHAT });
+				this.isChatPanelOpened = true;
+				this.isParticipantsPanelOpened = false;
+				this._panelOpened.next({ opened: true, type: MenuType.CHAT });
 			}
 		} else if (type === MenuType.PARTICIPANTS) {
-			if (this.isParticipantsMenuOpened) {
+			if (this.isParticipantsPanelOpened) {
 				// Close participants menu and side menu
-				this.isParticipantsMenuOpened = false;
-				this._menuOpened.next({ opened: false });
+				this.isParticipantsPanelOpened = false;
+				this._panelOpened.next({ opened: false });
 			} else {
 				// Open participants menu
-				this.isParticipantsMenuOpened = true;
-				this.isChatMenuOpened = false;
-				this._menuOpened.next({ opened: true, type: MenuType.PARTICIPANTS });
+				this.isParticipantsPanelOpened = true;
+				this.isChatPanelOpened = false;
+				this._panelOpened.next({ opened: true, type: MenuType.PARTICIPANTS });
 			}
 		}
 	}
 
 	closeMenu() {
-		this.isParticipantsMenuOpened = false;
-		this.isChatMenuOpened = false;
-		this._menuOpened.next({ opened: false });
+		this.isParticipantsPanelOpened = false;
+		this.isChatPanelOpened = false;
+		this._panelOpened.next({ opened: false });
 	}
 
 	isChatOpened() {
-		return this.isChatMenuOpened;
+		return this.isChatPanelOpened;
 	}
 
 	isParticipantsOpened() {
-		return this.isParticipantsMenuOpened;
+		return this.isParticipantsPanelOpened;
 	}
 }

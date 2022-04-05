@@ -95,7 +95,7 @@ export class PanelComponent implements OnInit {
 	}
 
 	private subscribeToPanelToggling() {
-		this.menuSubscription = this.panelService.menuOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
+		this.menuSubscription = this.panelService.panelOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
 			this.isChatPanelOpened = ev.opened && ev.type === MenuType.CHAT;
 			this.isParticipantsPanelOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
 			this.cd.markForCheck();

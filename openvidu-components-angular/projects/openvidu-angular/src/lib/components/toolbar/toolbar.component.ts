@@ -340,7 +340,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	 */
 	toggleParticipantsPanel() {
 		this.onParticipantsPanelButtonClicked.emit();
-		this.panelService.toggleMenu(MenuType.PARTICIPANTS);
+		this.panelService.togglePanel(MenuType.PARTICIPANTS);
 	}
 
 	/**
@@ -348,7 +348,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	 */
 	toggleChatPanel() {
 		this.onChatPanelButtonClicked.emit();
-		this.panelService.toggleMenu(MenuType.CHAT);
+		this.panelService.togglePanel(MenuType.CHAT);
 	}
 
 	/**
@@ -362,7 +362,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
 	protected subscribeToReconnection() {
 		this.session.on('reconnecting', () => {
-			if (this.panelService.isMenuOpened()) {
+			if (this.panelService.isPanelOpened()) {
 				this.panelService.closeMenu();
 			}
 			this.isConnectionLost = true;
@@ -372,7 +372,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		});
 	}
 	protected subscribeToMenuToggling() {
-		this.menuTogglingSubscription = this.panelService.menuOpenedObs.subscribe((ev: { opened: boolean; type?: MenuType }) => {
+		this.menuTogglingSubscription = this.panelService.panelOpenedObs.subscribe((ev: { opened: boolean; type?: MenuType }) => {
 			this.isChatOpened = ev.opened && ev.type === MenuType.CHAT;
 			this.isParticipantsOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
 			if (this.isChatOpened) {
@@ -383,7 +383,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
 	protected subscribeToChatMessages() {
 		this.chatMessagesSubscription = this.chatService.messagesObs.pipe(skip(1)).subscribe((messages) => {
-			if (!this.panelService.isMenuOpened()) {
+			if (!this.panelService.isPanelOpened()) {
 				this.unreadMessages++;
 			}
 			this.messageList = messages;
