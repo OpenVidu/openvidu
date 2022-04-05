@@ -21,6 +21,7 @@
 	background-color: var(--ov-primary-color);
 	border-left: none;
 	position: absolute;
+	z-index: 1;
 }
 
 .sidenav-main {

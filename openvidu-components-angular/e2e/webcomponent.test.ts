@@ -39,7 +39,7 @@ describe('Testing API Directives', () => {
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if stream component is present
-		element = await browser.wait(until.elementLocated(By.css('.OT_widget-container')), TIMEOUT);
+		element = await browser.wait(until.elementLocated(By.css('.OV_stream')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if audio detection is not displayed
@@ -323,7 +323,7 @@ describe('Testing API Directives', () => {
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if stream component is present
-		element = await browser.wait(until.elementLocated(By.className('OT_widget-container')), TIMEOUT);
+		element = await browser.wait(until.elementLocated(By.className('OV_stream')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if nickname is not displayed
@@ -338,7 +338,7 @@ describe('Testing API Directives', () => {
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if stream component is present
-		element = await browser.wait(until.elementLocated(By.className('OT_widget-container')), TIMEOUT);
+		element = await browser.wait(until.elementLocated(By.className('OV_stream')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if audio detection is not displayed
@@ -353,7 +353,7 @@ describe('Testing API Directives', () => {
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if stream component is present
-		element = await browser.wait(until.elementLocated(By.className('OT_widget-container')), TIMEOUT);
+		element = await browser.wait(until.elementLocated(By.className('OV_stream')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if settings button is not displayed
