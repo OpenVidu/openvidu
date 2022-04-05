@@ -4,6 +4,7 @@
 		"../../projects/openvidu-angular/src/lib/directives/**/*.ts",
 		"../../projects/openvidu-angular/src/lib/services/**/*.ts",
 		"../../projects/openvidu-angular/src/lib/models/**/*.ts",
+		"../../projects/openvidu-angular/src/lib/pipes/**/*.ts",
 		"../app/openvidu-webcomponent/**/*.ts"
 	],
 	"exclude": [

@@ -212,7 +212,7 @@ export class OpenViduService {
 	private unpublish(publisher: Publisher): void {
 		if (!!publisher) {
 			if (publisher === this.participantService.getMyCameraPublisher()) {
-				this.publishAudioAux(this.participantService.getMyScreenPublisher(), this.participantService.hasCameraAudioActive());
+				this.publishAudioAux(this.participantService.getMyScreenPublisher(), this.participantService.isMyAudioActive());
 				this.webcamSession.unpublish(publisher);
 			} else if (publisher === this.participantService.getMyScreenPublisher()) {
 				this.screenSession.unpublish(publisher);
@@ -221,8 +221,7 @@ export class OpenViduService {
 	}
 
 	async publishVideo(publish: boolean): Promise<void> {
-		const publishAudio = this.participantService.hasCameraAudioActive();
-		// const publishVideo = !this.participantService.hasCameraVideoActive();
+		const publishAudio = this.participantService.isMyAudioActive();
 
 		// Disabling webcam
 		if (this.participantService.haveICameraAndScreenActive()) {
@@ -279,8 +278,8 @@ export class OpenViduService {
 		} else if (this.participantService.isOnlyMyCameraActive()) {
 			// I only have the camera published
 			const hasAudioDevicesAvailable = this.deviceService.hasAudioDeviceAvailable();
-			const willWebcamBePresent = this.participantService.isMyCameraActive() && this.participantService.hasCameraVideoActive();
-			const hasAudio = willWebcamBePresent ? false : hasAudioDevicesAvailable && this.participantService.hasCameraAudioActive();
+			const willWebcamBePresent = this.participantService.isMyCameraActive() && this.participantService.isMyVideoActive();
+			const hasAudio = willWebcamBePresent ? false : hasAudioDevicesAvailable && this.participantService.isMyAudioActive();
 
 			console.warn('will be audio active', hasAudio);
 			const properties: PublisherProperties = {
@@ -309,7 +308,7 @@ export class OpenViduService {
 					await this.connectSession(this.getScreenSession(), this.tokenService.getScreenToken());
 				}
 				await this.publish(this.participantService.getMyScreenPublisher());
-				if (!this.participantService.hasCameraVideoActive()) {
+				if (!this.participantService.isMyVideoActive()) {
 					// Disabling webcam
 					this.participantService.disableWebcamStream();
 					this.unpublish(this.participantService.getMyCameraPublisher());
@@ -367,8 +366,8 @@ export class OpenViduService {
 			const properties: PublisherProperties = {
 				videoSource: this.videoSource,
 				audioSource: this.audioSource,
-				publishVideo: this.participantService.hasCameraVideoActive(),
-				publishAudio: this.participantService.hasCameraAudioActive(),
+				publishVideo: this.participantService.isMyVideoActive(),
+				publishAudio: this.participantService.isMyAudioActive(),
 				mirror
 			};
 
@@ -392,7 +391,7 @@ export class OpenViduService {
 	sendSignal(type: Signal, connections?: Connection[], data?: any): void {
 		const signalOptions: SignalOptions = {
 			data: JSON.stringify(data),
-			type: type,
+			type,
 			to: connections && connections.length > 0 ? connections : undefined
 		};
 		this.webcamSession.signal(signalOptions);

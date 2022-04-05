@@ -1,9 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { StreamModel, ParticipantAbstractModel } from '../models/participant.model';
 
-/**
- * @internal
- */
 @Pipe({ name: 'streams' })
 export class ParticipantStreamsPipe implements PipeTransform {
 	constructor() {}

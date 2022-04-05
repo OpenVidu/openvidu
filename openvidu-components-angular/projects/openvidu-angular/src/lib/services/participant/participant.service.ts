@@ -11,17 +11,9 @@ import { LoggerService } from '../logger/logger.service';
 	providedIn: 'root'
 })
 export class ParticipantService {
-	/**
-	 * @internal
-	 * Local participants observables
-	 */
 	localParticipantObs: Observable<ParticipantAbstractModel>;
 	protected _localParticipant = <BehaviorSubject<ParticipantAbstractModel>>new BehaviorSubject(null);
 
-	/**
-	 * @internal
-	 * Remote participants observables
-	 */
 	remoteParticipantsObs: Observable<ParticipantAbstractModel[]>;
 	protected _remoteParticipants = <BehaviorSubject<ParticipantAbstractModel[]>>new BehaviorSubject([]);
 
@@ -189,6 +181,14 @@ export class ParticipantService {
 		return this.localParticipant.isCameraActive();
 	}
 
+	isMyVideoActive(): boolean {
+		return this.localParticipant.isCameraVideoActive();
+	}
+
+	isMyAudioActive(): boolean {
+		return this.localParticipant?.isCameraAudioActive() || this.localParticipant?.isScreenAudioActive();
+	}
+
 	/**
 	 * @internal
 	 */
@@ -217,19 +217,6 @@ export class ParticipantService {
 		return this.isMyCameraActive() && this.isMyScreenActive();
 	}
 
-	/**
-	 * @internal
-	 */
-	hasCameraVideoActive(): boolean {
-		return this.localParticipant.isCameraVideoActive();
-	}
-
-	/**
-	 * @internal
-	 */
-	hasCameraAudioActive(): boolean {
-		return this.localParticipant?.isCameraAudioActive();
-	}
 
 	/**
 	 * @internal
@@ -383,6 +370,9 @@ export class ParticipantService {
 		}
 	}
 
+	/**
+	 * @internal
+	 */
 	setRemoteMutedForcibly(id: string, value: boolean) {
 		const participant = this.getRemoteParticipantById(id);
 		if (participant) {

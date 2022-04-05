@@ -16,5 +16,5 @@
 	"theme": "gitbook",
 	"customFavicon": "src/favicon.ico",
 	"extTheme": "src/doc/",
-	"assetsFolder": "src/assets/images/app.gif"
+	"assetsFolder": "src/assets/doc"
 }
