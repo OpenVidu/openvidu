@@ -73,4 +73,23 @@ export class Subscriber extends StreamManager {
         return this;
     }
 
+    /* Hidden methods */
+
+    /**
+     * @hidden
+     */
+    async replaceTrackInMediaStream(track: MediaStreamTrack): Promise<void> {
+        const mediaStream: MediaStream = this.stream.getMediaStream();
+        let removedTrack: MediaStreamTrack;
+        if (track.kind === 'video') {
+            removedTrack = mediaStream.getVideoTracks()[0];
+            this.stream.lastVideoTrackConstraints = track.getConstraints();
+        } else {
+            removedTrack = mediaStream.getAudioTracks()[0];
+        }
+        mediaStream.removeTrack(removedTrack);
+        removedTrack.stop();
+        mediaStream.addTrack(track);
+    }
+
 }

@@ -1486,6 +1486,7 @@ export class Session extends EventDispatcher {
             const recorder = queryParams['recorder'];
             const webrtcStatsInterval = queryParams['webrtcStatsInterval'];
             const sendBrowserLogs = queryParams['sendBrowserLogs'];
+            const edition = queryParams['edition'];
 
             if (!!secret) {
                 this.openvidu.secret = secret;
@@ -1500,6 +1501,7 @@ export class Session extends EventDispatcher {
                 this.openvidu.sendBrowserLogs = sendBrowserLogs;
             }
             this.openvidu.isPro = !!webrtcStatsInterval && !!sendBrowserLogs;
+            this.openvidu.isEnterprise = edition === 'enterprise';
 
             this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
             this.openvidu.httpUri = 'https://' + url.host;

@@ -136,6 +136,10 @@ export class OpenVidu {
   /**
    * @hidden
    */
+  isEnterprise: boolean = false;
+  /**
+   * @hidden
+   */
   libraryVersion: string;
   /**
    * @hidden

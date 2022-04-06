@@ -17,6 +17,7 @@
 
 import { Connection } from './Connection';
 import { Filter } from './Filter';
+import { Publisher } from './Publisher';
 import { Session } from './Session';
 import { StreamManager } from './StreamManager';
 import { Subscriber } from './Subscriber';
@@ -32,6 +33,8 @@ import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/Open
 import { TypeOfVideo } from '../OpenViduInternal/Enums/TypeOfVideo';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
+
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * @hidden
@@ -150,6 +153,9 @@ export class Stream {
     private webRtcStats: WebRtcStats;
 
     private isSubscribeToRemote = false;
+
+    private virtualBackgroundSourceElements: { videoClone: HTMLVideoElement, mediaStreamClone: MediaStream };
+    private virtualBackgroundSinkElements: { VB: any, video: HTMLVideoElement, canvas: HTMLCanvasElement };
 
     /**
      * @hidden
@@ -308,40 +314,132 @@ export class Stream {
      * @returns A Promise (to which you can optionally subscribe to) that is resolved to the applied filter if success and rejected with an Error object if not
      */
     applyFilter(type: string, options: Object): Promise<Filter> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
 
-            if (!this.session.sessionConnected()) {
-                return reject(this.session.notConnectedError());
-            }
-
-            logger.info('Applying filter to stream ' + this.streamId);
-            options = options != null ? options : {};
-            let optionsString = options;
-            if (typeof optionsString !== 'string') {
-                optionsString = JSON.stringify(optionsString);
-            }
-            this.session.openvidu.sendRequest(
-                'applyFilter',
-                { streamId: this.streamId, type, options: optionsString },
-                (error, response) => {
-                    if (error) {
-                        logger.error('Error applying filter for Stream ' + this.streamId, error);
-                        if (error.code === 401) {
-                            return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to apply a filter"));
-                        } else {
-                            return reject(error);
-                        }
+            const resolveApplyFilter = (error) => {
+                if (error) {
+                    logger.error('Error applying filter for Stream ' + this.streamId, error);
+                    if (error.code === 401) {
+                        return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to apply a filter"));
                     } else {
-                        logger.info('Filter successfully applied on Stream ' + this.streamId);
-                        const oldValue: Filter = this.filter!;
-                        this.filter = new Filter(type, options);
-                        this.filter.stream = this;
-                        this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter, oldValue, 'applyFilter')]);
-                        this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter, oldValue, 'applyFilter')]);
-                        return resolve(this.filter);
+                        return reject(error);
+                    }
+                } else {
+                    logger.info('Filter successfully applied on Stream ' + this.streamId);
+                    const oldValue: Filter = this.filter!;
+                    this.filter = new Filter(type, options);
+                    this.filter.stream = this;
+                    this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter, oldValue, 'applyFilter')]);
+                    this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter, oldValue, 'applyFilter')]);
+                    return resolve(this.filter);
+                }
+            }
+
+            if (type === 'VB:blur') {
+
+                // Client filters
+
+                if (!this.session.openvidu.httpUri) {
+                    return reject(this.session.notConnectedError());
+                }
+                if (!this.session.openvidu.isEnterprise) {
+                    return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_EDITION_NOT_SUPPORTED, 'OpenVidu Virtual Background API is part of OpenVidu Enterprise edition'));
+                }
+                if (!this.hasVideo) {
+                    return reject(new OpenViduError(OpenViduErrorName.NO_VIDEO_TRACK, 'The Virtual Background filter requires a video track to be applied'));
+                }
+                if (!this.mediaStream || this.streamManager.videos.length === 0) {
+                    return reject(new OpenViduError(OpenViduErrorName.STREAM_MANAGER_HAS_NO_VIDEO_ELEMENT, 'The StreamManager requires some video element to be attached to it in order to apply a Virtual Background filter'));
+                }
+
+                logger.info('Applying client filter to stream ' + this.streamId);
+
+                const afterScriptLoaded = async () => {
+                    try {
+                        const id = this.streamId + '_' + uuidv4();
+                        const mediaStreamClone = this.mediaStream!.clone();
+                        const videoClone = this.streamManager.videos[0].video.cloneNode(false) as HTMLVideoElement;
+                        videoClone.id = 'source_video_' + id;
+                        videoClone.srcObject = mediaStreamClone;
+                        this.virtualBackgroundSourceElements = { videoClone, mediaStreamClone };
+
+                        // @ts-ignore
+                        VirtualBackground.VirtualBackground.hideHtmlElement(videoClone, false);
+                        // @ts-ignore
+                        VirtualBackground.VirtualBackground.appendHtmlElementToHiddenContainer(videoClone);
+
+                        await videoClone.play();
+
+                        // @ts-ignore
+                        const VB = new VirtualBackground.VirtualBackground({
+                            id,
+                            openviduServerUrl: new URL(this.session.openvidu.httpUri),
+                            inputVideo: videoClone,
+                            inputResolution: '160x96',
+                            outputFramerate: 30
+                        });
+                        const response: { video: HTMLVideoElement, canvas: HTMLCanvasElement } = await VB.backgroundBlur({
+                            maskRadius: 0.1,
+                            backgroundCoverage: 0.6,
+                            lightWrapping: 0.3
+                        });
+                        this.virtualBackgroundSinkElements = { VB, ...response };
+
+                        videoClone.style.display = 'none';
+
+                        if (this.streamManager.remote) {
+                            this.streamManager.replaceTrackInMediaStream((this.virtualBackgroundSinkElements.video.srcObject as MediaStream).getVideoTracks()[0]);
+                        } else {
+                            (this.streamManager as Publisher).replaceTrack((this.virtualBackgroundSinkElements.video.srcObject as MediaStream).getVideoTracks()[0]);
+                        }
+
+                        resolveApplyFilter(undefined);
+
+                    } catch (error) {
+                        resolveApplyFilter(error);
                     }
                 }
-            );
+
+                // @ts-ignore
+                if (typeof VirtualBackground === "undefined") {
+                    let script: HTMLScriptElement = document.createElement("script");
+                    script.type = "text/javascript";
+                    script.src = this.session.openvidu.httpUri + '/virtual-background/openvidu-virtual-background.js';
+                    script.onload = async () => {
+                        await afterScriptLoaded();
+                        resolve(new Filter(type, options));
+                    };
+                    document.body.appendChild(script);
+                } else {
+                    afterScriptLoaded()
+                        .then(() => resolve(new Filter(type, options)))
+                        .catch(error => reject(error));
+                }
+
+            } else {
+
+                // Server filters
+
+                if (!this.session.sessionConnected()) {
+                    return reject(this.session.notConnectedError());
+                }
+
+                logger.info('Applying server filter to stream ' + this.streamId);
+                options = options != null ? options : {};
+                let optionsString = options;
+                if (typeof optionsString !== 'string') {
+                    optionsString = JSON.stringify(optionsString);
+                }
+                this.session.openvidu.sendRequest(
+                    'applyFilter',
+                    { streamId: this.streamId, type, options: optionsString },
+                    (error, response) => {
+                        resolveApplyFilter(error);
+                    }
+                );
+
+            }
+
         });
     }
 
@@ -351,34 +449,71 @@ export class Stream {
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the previously applied filter has been successfully removed and rejected with an Error object in other case
      */
     removeFilter(): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
 
-            if (!this.session.sessionConnected()) {
-                return reject(this.session.notConnectedError());
+            const resolveRemoveFilter = (error) => {
+                if (error) {
+                    logger.error('Error removing filter for Stream ' + this.streamId, error);
+                    if (error.code === 401) {
+                        return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to remove a filter"));
+                    } else {
+                        return reject(error);
+                    }
+                } else {
+                    logger.info('Filter successfully removed from Stream ' + this.streamId);
+                    const oldValue = this.filter!;
+                    delete this.filter;
+                    this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
+                    this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
+                    return resolve();
+                }
             }
 
-            logger.info('Removing filter of stream ' + this.streamId);
-            this.session.openvidu.sendRequest(
-                'removeFilter',
-                { streamId: this.streamId },
-                (error, response) => {
-                    if (error) {
-                        logger.error('Error removing filter for Stream ' + this.streamId, error);
-                        if (error.code === 401) {
-                            return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to remove a filter"));
-                        } else {
-                            return reject(error);
-                        }
-                    } else {
-                        logger.info('Filter successfully removed from Stream ' + this.streamId);
-                        const oldValue = this.filter!;
-                        delete this.filter;
-                        this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
-                        this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
-                        return resolve();
+            if (!!this.filter && this.filter?.type.startsWith('VB:')) {
+
+                // Client filters
+
+                try {
+
+                    this.virtualBackgroundSinkElements.VB.cleanUp();
+                    const parent = this.virtualBackgroundSourceElements.videoClone.parentElement;
+                    this.virtualBackgroundSourceElements.videoClone.remove();
+                    if (parent!.children.length === 0) {
+                        // @ts-ignore
+                        VirtualBackground.VirtualBackground.removeHiddenContainer();
                     }
+
+                    if (this.streamManager.remote) {
+                        await this.streamManager.replaceTrackInMediaStream(this.virtualBackgroundSourceElements.mediaStreamClone.getVideoTracks()[0]);
+                    } else {
+                        await (this.streamManager as Publisher).replaceTrack(this.virtualBackgroundSourceElements.mediaStreamClone.getVideoTracks()[0]);
+                    }
+
+                    return resolveRemoveFilter(undefined);
+
+                } catch (error) {
+                    return resolveRemoveFilter(error);
                 }
-            );
+
+            } else {
+
+                // Server filters
+
+                if (!this.session.sessionConnected()) {
+                    return reject(this.session.notConnectedError());
+                }
+
+                logger.info('Removing filter of stream ' + this.streamId);
+                this.session.openvidu.sendRequest(
+                    'removeFilter',
+                    { streamId: this.streamId },
+                    (error, response) => {
+                        return resolveRemoveFilter(error);
+                    }
+                );
+
+            }
+
         });
     }
 

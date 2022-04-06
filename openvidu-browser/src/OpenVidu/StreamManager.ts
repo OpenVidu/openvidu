@@ -47,7 +47,7 @@ let platform: PlatformUtils;
  *
  * See available event listeners at [[StreamManagerEventMap]].
  */
-export class StreamManager extends EventDispatcher {
+export abstract class StreamManager extends EventDispatcher {
 
     /**
      * The Stream represented in the DOM by the Publisher/Subscriber
@@ -525,6 +525,11 @@ export class StreamManager extends EventDispatcher {
         streamManagerVideo.video.srcObject = null;
         this.deactivateStreamPlayingEventExceptionTimeout();
     }
+
+    /**
+     * @hidden
+     */
+    abstract replaceTrackInMediaStream(track: MediaStreamTrack): Promise<void>;
 
     /* Private methods */
 
