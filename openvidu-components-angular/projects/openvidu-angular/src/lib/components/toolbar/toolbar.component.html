@@ -72,7 +72,7 @@
 			mat-icon-button
 			id="participants-panel-btn"
 			*ngIf="!isMinimal && showParticipantsPanelButton"
-			matTooltip="Show articipants"
+			matTooltip="Participants"
 			(click)="toggleParticipantsPanel()"
 			[disabled]="isConnectionLost"
 			[class.active-btn]="isParticipantsOpened"
@@ -85,6 +85,7 @@
 			mat-icon-button
 			id="chat-panel-btn"
 			*ngIf="!isMinimal && showChatPanelButton"
+			matTooltip="Chat"
 			(click)="toggleChatPanel()"
 			[disabled]="isConnectionLost"
 			[class.active-btn]="isChatOpened"
@@ -99,5 +100,10 @@
 				chat
 			</mat-icon>
 		</button>
+
+		<!-- External additional panel buttons  -->
+		<ng-container *ngIf="toolbarAdditionalPanelButtonsTemplate">
+			<ng-container *ngTemplateOutlet="toolbarAdditionalPanelButtonsTemplate"></ng-container>
+		</ng-container>
 	</div>
 </mat-toolbar>

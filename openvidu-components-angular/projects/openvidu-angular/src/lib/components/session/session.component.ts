@@ -25,7 +25,7 @@ import { MatSidenav } from '@angular/material/sidenav';
 import { SidenavMode } from '../../models/layout.model';
 import { LayoutService } from '../../services/layout/layout.service';
 import { Subscription, skip } from 'rxjs';
-import { MenuType } from '../../models/menu.model';
+import { PanelType } from '../../models/panel.model';
 import { PanelService } from '../../services/panel/panel.service';
 import { PlatformService } from '../../services/platform/platform.service';
 
@@ -45,8 +45,6 @@ export class SessionComponent implements OnInit {
 	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
 
 	@Output() onSessionCreated = new EventEmitter<any>();
-	// @Output() _publisher = new EventEmitter<any>();
-	// @Output() _error = new EventEmitter<any>();
 
 	session: Session;
 	sessionScreen: Session;
@@ -54,8 +52,6 @@ export class SessionComponent implements OnInit {
 	sideMenu: MatSidenav;
 
 	sidenavMode: SidenavMode = SidenavMode.SIDE;
-	isParticipantsPanelOpened: boolean;
-	isChatPanelOpened: boolean;
 	protected readonly SIDENAV_WIDTH_LIMIT_MODE = 790;
 
 	protected menuSubscription: Subscription;
@@ -73,8 +69,7 @@ export class SessionComponent implements OnInit {
 		protected chatService: ChatService,
 		protected tokenService: TokenService,
 		protected layoutService: LayoutService,
-		protected panelService: PanelService,
-		private platformService: PlatformService
+		protected panelService: PanelService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
 	}
@@ -126,8 +121,6 @@ export class SessionComponent implements OnInit {
 		this.participantService.clear();
 		this.session = null;
 		this.sessionScreen = null;
-		this.isChatPanelOpened = false;
-		this.isParticipantsPanelOpened = false;
 		if (this.menuSubscription) this.menuSubscription.unsubscribe();
 		if (this.layoutWidthSubscription) this.layoutWidthSubscription.unsubscribe();
 	}
@@ -153,10 +146,8 @@ export class SessionComponent implements OnInit {
 			this.updateLayoutInterval = setInterval(() => this.layoutService.update(), 50);
 		});
 
-		this.menuSubscription = this.panelService.panelOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
+		this.menuSubscription = this.panelService.panelOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean, type?: PanelType }) => {
 			if (this.sideMenu) {
-				this.isChatPanelOpened = ev.opened && ev.type === MenuType.CHAT;
-				this.isParticipantsPanelOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
 				ev.opened ? this.sideMenu.open() : this.sideMenu.close();
 			}
 		});

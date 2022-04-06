@@ -9,4 +9,9 @@
 	<ng-container *ngTemplateOutlet="participantsPanelTemplate"></ng-container>
 </ng-container>
 
+<!-- External additional panels  -->
+<ng-container *ngIf="additionalPanelsTemplate && isExternalPanelOpened">
+	<ng-container *ngTemplateOutlet="additionalPanelsTemplate"></ng-container>
+</ng-container>
+
 

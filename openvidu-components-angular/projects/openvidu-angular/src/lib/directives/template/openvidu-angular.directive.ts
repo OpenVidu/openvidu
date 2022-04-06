@@ -124,11 +124,35 @@ export class ToolbarAdditionalButtonsDirective {
 	constructor(public template: TemplateRef<any>, public viewContainer: ViewContainerRef) {}
 }
 
+@Directive({
+	selector: '[ovToolbarAdditionalPanelButtons]'
+})
+export class ToolbarAdditionalPanelButtonsDirective {
+	/**
+	 * @ignore
+	 */
+	constructor(public template: TemplateRef<any>, public viewContainer: ViewContainerRef) {}
+}
+
 
 @Directive({
 	selector: '[ovPanel]'
 })
 export class PanelDirective {
+	/**
+	 * @ignore
+	 */
+	constructor(public template: TemplateRef<any>, public viewContainer: ViewContainerRef) {}
+}
+
+
+@Directive({
+	selector: '[ovAdditionalPanels]'
+})
+export class AdditionalPanelsDirective {
+	/**
+	 * @ignore
+	 */
 	constructor(public template: TemplateRef<any>, public viewContainer: ViewContainerRef) {}
 }
 

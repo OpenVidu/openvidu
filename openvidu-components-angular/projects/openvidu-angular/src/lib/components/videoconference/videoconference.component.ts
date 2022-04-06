@@ -15,12 +15,14 @@ import { Subscription } from 'rxjs';
 import {
 	ChatPanelDirective,
 	LayoutDirective,
+	AdditionalPanelsDirective,
 	PanelDirective,
 	ParticipantPanelItemDirective,
 	ParticipantPanelItemElementsDirective,
 	ParticipantsPanelDirective,
 	StreamDirective,
 	ToolbarAdditionalButtonsDirective,
+	ToolbarAdditionalPanelButtonsDirective,
 	ToolbarDirective
 } from '../../directives/template/openvidu-angular.directive';
 import { ILogger } from '../../models/logger.model';
@@ -79,11 +81,13 @@ import { TokenService } from '../../services/token/token.service';
  * It will recognise the following {@link https://angular.io/guide/structural-directives Angular structural directives}
  * in the elements added as children.
  *
- * |            **Directive**           |                 **Reference**                 |
- * |:----------------------------------:|:---------------------------------------------:|
- * |           ***ovToolbar**           |            {@link ToolbarDirective}           |
+ * |             **Directive**           |                 **Reference**                 |
+ * |:-----------------------------------:|:---------------------------------------------:|
+ * |            ***ovToolbar**           |            {@link ToolbarDirective}           |
  * |   ***ovToolbarAdditionalButtons**   |   {@link ToolbarAdditionalButtonsDirective}   |
+ * |***ovToolbarAdditionalPanelButtons**   |   {@link ToolbarAdditionalPanelButtonsDirective}   |
  * |             ***ovPanel**            |             {@link PanelDirective}            |
+ * |        ***ovAdditionalPanels**      |       {@link AdditionalPanelsDirective}       |
  * |           ***ovChatPanel**          |           {@link ChatPanelDirective}          |
  * |       ***ovParticipantsPanel**      |       {@link ParticipantsPanelDirective}      |
  * |     ***ovParticipantPanelItem**     |     {@link ParticipantPanelItemDirective}     |
@@ -112,6 +116,14 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 * @internal
 	 */
 	@ContentChild(ToolbarAdditionalButtonsDirective) externalToolbarAdditionalButtons: ToolbarAdditionalButtonsDirective;
+	/**
+	 * @internal
+	 */
+	@ContentChild(ToolbarAdditionalPanelButtonsDirective) externalToolbarAdditionalPanelButtons: ToolbarAdditionalPanelButtonsDirective;
+	/**
+	 * @internal
+	 */
+	@ContentChild(AdditionalPanelsDirective) externalAdditionalPanels: AdditionalPanelsDirective;
 
 	// *** Panels ***
 
@@ -186,6 +198,10 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	/**
 	 * @internal
 	 */
+	openviduAngularToolbarAdditionalPanelButtonsTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
 	openviduAngularPanelTemplate: TemplateRef<any>;
 	/**
 	 * @internal
@@ -195,6 +211,10 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 * @internal
 	 */
 	openviduAngularParticipantsPanelTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
+	openviduAngularAdditionalPanelsTemplate: TemplateRef<any>;
 	/**
 	 * @internal
 	 */
@@ -346,20 +366,24 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 */
 	ngAfterViewInit() {
 		if (this.externalToolbar) {
-			this.openviduAngularToolbarTemplate = this.externalToolbar.template;
 			this.log.d('Setting EXTERNAL TOOLBAR');
+			this.openviduAngularToolbarTemplate = this.externalToolbar.template;
 		} else {
+			this.log.d('Setting  DEFAULT TOOLBAR');
 			if (this.externalToolbarAdditionalButtons) {
 				this.log.d('Setting EXTERNAL TOOLBAR ADDITIONAL BUTTONS');
 				this.openviduAngularToolbarAdditionalButtonsTemplate = this.externalToolbarAdditionalButtons.template;
 			}
+			if (this.externalToolbarAdditionalPanelButtons) {
+				this.log.d('Setting EXTERNAL TOOLBAR ADDITIONAL PANEL BUTTONS');
+				this.openviduAngularToolbarAdditionalPanelButtonsTemplate = this.externalToolbarAdditionalPanelButtons.template;
+			}
 			this.openviduAngularToolbarTemplate = this.defaultToolbarTemplate;
-			this.log.d('Setting  DEFAULT TOOLBAR');
 		}
 
 		if (this.externalPanel) {
-			this.openviduAngularPanelTemplate = this.externalPanel.template;
 			this.log.d('Setting EXTERNAL PANEL');
+			this.openviduAngularPanelTemplate = this.externalPanel.template;
 		} else {
 			this.log.d('Setting DEFAULT PANEL');
 
@@ -369,8 +393,8 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 			} else {
 				this.log.d('Setting DEFAULT PARTICIPANTS PANEL');
 				if (this.externalParticipantPanelItem) {
-					this.openviduAngularParticipantPanelItemTemplate = this.externalParticipantPanelItem.template;
 					this.log.d('Setting EXTERNAL P ITEM');
+					this.openviduAngularParticipantPanelItemTemplate = this.externalParticipantPanelItem.template;
 				} else {
 					if (this.externalParticipantPanelItemElements) {
 						this.log.d('Setting EXTERNAL PARTICIPANT PANEL ITEM ELEMENT');
@@ -383,27 +407,32 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 			}
 
 			if (this.externalChatPanel) {
-				this.openviduAngularChatPanelTemplate = this.externalChatPanel.template;
 				this.log.d('Setting EXTERNAL CHAT PANEL');
+				this.openviduAngularChatPanelTemplate = this.externalChatPanel.template;
 			} else {
-				this.openviduAngularChatPanelTemplate = this.defaultChatPanelTemplate;
 				this.log.d('Setting DEFAULT CHAT PANEL');
+				this.openviduAngularChatPanelTemplate = this.defaultChatPanelTemplate;
+			}
+
+			if (this.externalAdditionalPanels) {
+				this.log.d('Setting EXTERNAL ADDITIONAL PANELS');
+				this.openviduAngularAdditionalPanelsTemplate = this.externalAdditionalPanels.template;
 			}
 			this.openviduAngularPanelTemplate = this.defaultPanelTemplate;
 		}
 
 		if (this.externalLayout) {
-			this.openviduAngularLayoutTemplate = this.externalLayout.template;
 			this.log.d('Setting EXTERNAL LAYOUT');
+			this.openviduAngularLayoutTemplate = this.externalLayout.template;
 		} else {
 			this.log.d('Setting DEAFULT LAYOUT');
 
 			if (this.externalStream) {
-				this.openviduAngularStreamTemplate = this.externalStream.template;
 				this.log.d('Setting EXTERNAL STREAM');
+				this.openviduAngularStreamTemplate = this.externalStream.template;
 			} else {
-				this.openviduAngularStreamTemplate = this.defaultStreamTemplate;
 				this.log.d('Setting DEFAULT STREAM');
+				this.openviduAngularStreamTemplate = this.defaultStreamTemplate;
 			}
 			this.openviduAngularLayoutTemplate = this.defaultLayoutTemplate;
 		}

@@ -1,69 +1,78 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
-import { MenuType } from '../../models/menu.model';
+import { PanelType } from '../../models/panel.model';
 import { LoggerService } from '../logger/logger.service';
 
-/**
- * @internal
- */
 @Injectable({
 	providedIn: 'root'
 })
 export class PanelService {
-	panelOpenedObs: Observable<{ opened: boolean; type?: MenuType }>;
+	panelOpenedObs: Observable<{ opened: boolean; type?: PanelType | string }>;
 	protected log: ILogger;
-	protected isChatPanelOpened: boolean = false;
-	protected isParticipantsPanelOpened: boolean = false;
-	protected _panelOpened = <BehaviorSubject<{ opened: boolean; type?: MenuType }>>new BehaviorSubject({ opened: false });
+	protected isChatOpened: boolean = false;
+	protected isParticipantsOpened: boolean = false;
+	private isExternalOpened: boolean = false;
+	private externalType: string;
+	protected _panelOpened = <BehaviorSubject<{ opened: boolean; type?: PanelType | string }>>new BehaviorSubject({ opened: false });
 
+	/**
+	 * @internal
+	 */
 	constructor(protected loggerSrv: LoggerService) {
 		this.log = this.loggerSrv.get('PanelService');
 		this.panelOpenedObs = this._panelOpened.asObservable();
 	}
 
-	isPanelOpened(): boolean {
-		return this.isChatOpened() || this.isParticipantsOpened();
-	}
-
-	togglePanel(type: MenuType) {
+	togglePanel(type: PanelType | string) {
 		this.log.d(`Toggling ${type} menu`);
-		if (type === MenuType.CHAT) {
-			if (this.isChatPanelOpened) {
-				// Close chat and side menu
-				this.isChatPanelOpened = false;
-				this._panelOpened.next({ opened: false });
-			} else {
-				// Open chat
-				this.isChatPanelOpened = true;
-				this.isParticipantsPanelOpened = false;
-				this._panelOpened.next({ opened: true, type: MenuType.CHAT });
-			}
-		} else if (type === MenuType.PARTICIPANTS) {
-			if (this.isParticipantsPanelOpened) {
-				// Close participants menu and side menu
-				this.isParticipantsPanelOpened = false;
-				this._panelOpened.next({ opened: false });
-			} else {
-				// Open participants menu
-				this.isParticipantsPanelOpened = true;
-				this.isChatPanelOpened = false;
-				this._panelOpened.next({ opened: true, type: MenuType.PARTICIPANTS });
-			}
+		let opened: boolean;
+		if (type === PanelType.CHAT) {
+			this.isChatOpened = !this.isChatOpened;
+			this.isParticipantsOpened = false;
+			this.isExternalOpened = false;
+			opened = this.isChatOpened;
+		} else if (type === PanelType.PARTICIPANTS) {
+			this.isParticipantsOpened = !this.isParticipantsOpened;
+			this.isChatOpened = false;
+			this.isExternalOpened = false;
+			opened = this.isParticipantsOpened;
+		} else {
+			this.log.d('Toggling external panel');
+			this.isChatOpened = false;
+			this.isParticipantsOpened = false;
+			// Open when is close or is opened with another type
+			this.isExternalOpened = !this.isExternalOpened || this.externalType !== type;
+			this.externalType = !this.isExternalOpened ? '' : type;
+			opened = this.isExternalOpened;
 		}
+
+		this._panelOpened.next({ opened, type });
 	}
 
-	closeMenu() {
-		this.isParticipantsPanelOpened = false;
-		this.isChatPanelOpened = false;
+	/**
+	 * @internal
+	 */
+	isPanelOpened(): boolean {
+		return this.isChatPanelOpened() || this.isParticipantsPanelOpened() || this.isExternalPanelOpened();
+	}
+
+	closePanel(): void {
+		this.isParticipantsOpened = false;
+		this.isChatOpened = false;
+		this.isExternalOpened = false;
 		this._panelOpened.next({ opened: false });
 	}
 
-	isChatOpened() {
-		return this.isChatPanelOpened;
+	isChatPanelOpened(): boolean {
+		return this.isChatOpened;
 	}
 
-	isParticipantsOpened() {
-		return this.isParticipantsPanelOpened;
+	isParticipantsPanelOpened(): boolean {
+		return this.isParticipantsOpened;
+	}
+
+	private isExternalPanelOpened(): boolean {
+		return this.isExternalOpened;
 	}
 }

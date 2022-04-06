@@ -24,9 +24,9 @@ import { ActionService } from '../../services/action/action.service';
 import { DeviceService } from '../../services/device/device.service';
 import { ChatMessage } from '../../models/chat.model';
 import { ParticipantService } from '../../services/participant/participant.service';
-import { MenuType } from '../../models/menu.model';
+import { PanelType } from '../../models/panel.model';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
-import { ToolbarAdditionalButtonsDirective } from '../../directives/template/openvidu-angular.directive';
+import { ToolbarAdditionalButtonsDirective, ToolbarAdditionalPanelButtonsDirective } from '../../directives/template/openvidu-angular.directive';
 import { ParticipantAbstractModel } from '../../models/participant.model';
 
 /**
@@ -75,6 +75,7 @@ import { ParticipantAbstractModel } from '../../models/participant.model';
  * |            **Directive**           |                 **Reference**                 |
  * |:----------------------------------:|:---------------------------------------------:|
  * |   ***ovToolbarAdditionalButtons**   |   {@link ToolbarAdditionalButtonsDirective}   |
+ * |***ovToolbarAdditionalPanelButtons**   |   {@link ToolbarAdditionalPanelButtonsDirective}   |
  *
  * <p class="component-link-text">
  * 	<span class="italic">See all {@link OpenViduAngularDirectiveModule OpenVidu Angular Directives}</span>
@@ -98,6 +99,11 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	/**
 	 * @ignore
 	 */
+	@ContentChild('toolbarAdditionalPanelButtons', { read: TemplateRef }) toolbarAdditionalPanelButtonsTemplate: TemplateRef<any>;
+
+	/**
+	 * @ignore
+	 */
 	@ContentChild(ToolbarAdditionalButtonsDirective)
 	set externalAdditionalButtons(externalAdditionalButtons: ToolbarAdditionalButtonsDirective) {
 		// This directive will has value only when ADDITIONAL BUTTONS component tagget with '*ovToolbarAdditionalButtons' directive
@@ -106,6 +112,18 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 			this.toolbarAdditionalButtonsTemplate = externalAdditionalButtons.template;
 		}
 	}
+
+	/**
+	 * @ignore
+	 */
+	 @ContentChild(ToolbarAdditionalPanelButtonsDirective)
+	 set externalAdditionalPanelButtons(externalAdditionalPanelButtons: ToolbarAdditionalPanelButtonsDirective) {
+		 // This directive will has value only when ADDITIONAL PANEL BUTTONS component tagget with '*ovToolbarAdditionalPanelButtons' directive
+		 // is inside of the TOOLBAR component tagged with '*ovToolbar' directive
+		 if (externalAdditionalPanelButtons) {
+			 this.toolbarAdditionalPanelButtonsTemplate = externalAdditionalPanelButtons.template;
+		 }
+	 }
 
 	@Output() onLeaveButtonClicked = new EventEmitter<any>();
 	@Output() onCameraButtonClicked = new EventEmitter<any>();
@@ -199,7 +217,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 
 	private log: ILogger;
 	private minimalSub: Subscription;
-	private menuTogglingSubscription: Subscription;
+	private panelTogglingSubscription: Subscription;
 	private chatMessagesSubscription: Subscription;
 	private localParticipantSubscription: Subscription;
 	private screenshareButtonSub: Subscription;
@@ -269,7 +287,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		if (this.menuTogglingSubscription) this.menuTogglingSubscription.unsubscribe();
+		if (this.panelTogglingSubscription) this.panelTogglingSubscription.unsubscribe();
 		if (this.chatMessagesSubscription) this.chatMessagesSubscription.unsubscribe();
 		if (this.localParticipantSubscription) this.localParticipantSubscription.unsubscribe();
 		if (this.screenshareButtonSub) this.screenshareButtonSub.unsubscribe();
@@ -340,7 +358,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	 */
 	toggleParticipantsPanel() {
 		this.onParticipantsPanelButtonClicked.emit();
-		this.panelService.togglePanel(MenuType.PARTICIPANTS);
+		this.panelService.togglePanel(PanelType.PARTICIPANTS);
 	}
 
 	/**
@@ -348,7 +366,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	 */
 	toggleChatPanel() {
 		this.onChatPanelButtonClicked.emit();
-		this.panelService.togglePanel(MenuType.CHAT);
+		this.panelService.togglePanel(PanelType.CHAT);
 	}
 
 	/**
@@ -363,7 +381,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	protected subscribeToReconnection() {
 		this.session.on('reconnecting', () => {
 			if (this.panelService.isPanelOpened()) {
-				this.panelService.closeMenu();
+				this.panelService.closePanel();
 			}
 			this.isConnectionLost = true;
 		});
@@ -372,9 +390,9 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		});
 	}
 	protected subscribeToMenuToggling() {
-		this.menuTogglingSubscription = this.panelService.panelOpenedObs.subscribe((ev: { opened: boolean; type?: MenuType }) => {
-			this.isChatOpened = ev.opened && ev.type === MenuType.CHAT;
-			this.isParticipantsOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
+		this.panelTogglingSubscription = this.panelService.panelOpenedObs.subscribe((ev: { opened: boolean; type?: PanelType }) => {
+			this.isChatOpened = ev.opened && ev.type === PanelType.CHAT;
+			this.isParticipantsOpened = ev.opened && ev.type === PanelType.PARTICIPANTS;
 			if (this.isChatOpened) {
 				this.unreadMessages = 0;
 			}

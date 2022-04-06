@@ -8,7 +8,9 @@ import {
 	ParticipantsPanelDirective,
 	StreamDirective,
 	ToolbarAdditionalButtonsDirective,
-	ToolbarDirective
+	ToolbarDirective,
+	ToolbarAdditionalPanelButtonsDirective,
+	AdditionalPanelsDirective
 } from './openvidu-angular.directive';
 
 @NgModule({
@@ -16,22 +18,26 @@ import {
 		ChatPanelDirective,
 		LayoutDirective,
 		PanelDirective,
+		AdditionalPanelsDirective,
 		ParticipantPanelItemDirective,
 		ParticipantsPanelDirective,
 		StreamDirective,
 		ToolbarDirective,
 		ToolbarAdditionalButtonsDirective,
+		ToolbarAdditionalPanelButtonsDirective,
 		ParticipantPanelItemElementsDirective
 	],
 	exports: [
 		ChatPanelDirective,
 		LayoutDirective,
 		PanelDirective,
+		AdditionalPanelsDirective,
 		ParticipantPanelItemDirective,
 		ParticipantsPanelDirective,
 		StreamDirective,
 		ToolbarDirective,
 		ToolbarAdditionalButtonsDirective,
+		ToolbarAdditionalPanelButtonsDirective,
 		ParticipantPanelItemElementsDirective
 	]
 })

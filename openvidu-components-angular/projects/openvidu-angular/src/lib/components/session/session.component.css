@@ -24,6 +24,10 @@
 	z-index: 1;
 }
 
+.mat-drawer.mat-drawer-side {
+	z-index: 1;
+}
+
 .sidenav-main {
 	height: 100%;
 	overflow: hidden;

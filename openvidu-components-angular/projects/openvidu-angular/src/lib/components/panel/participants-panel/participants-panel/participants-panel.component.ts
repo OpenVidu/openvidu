@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, OnDestroy, OnInit, TemplateRef } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, OnDestroy, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { ParticipantAbstractModel } from '../../../../models/participant.model';
 import { ParticipantService } from '../../../../services/participant/participant.service';
 import { PanelService } from '../../../..//services/panel/panel.service';
@@ -44,9 +44,14 @@ import { Subscription } from 'rxjs';
 	styleUrls: ['./participants-panel.component.css'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ParticipantsPanelComponent implements OnInit, OnDestroy {
+export class ParticipantsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
 	localParticipant: any;
 	remoteParticipants: ParticipantAbstractModel[] = [];
+
+	/**
+	 * @ignore
+	 */
+	@ViewChild('defaultParticipantPanelItem', { static: false, read: TemplateRef }) defaultParticipantPanelItemTemplate: TemplateRef<any>;
 
 	/**
 	 * @ignore
@@ -70,7 +75,7 @@ export class ParticipantsPanelComponent implements OnInit, OnDestroy {
 	 */
 	constructor(
 		protected participantService: ParticipantService,
-		protected PanelService: PanelService,
+		protected panelService: PanelService,
 		private cd: ChangeDetectorRef
 	) {}
 
@@ -99,7 +104,16 @@ export class ParticipantsPanelComponent implements OnInit, OnDestroy {
 		if (this.remoteParticipantsSubs) this.remoteParticipantsSubs.unsubscribe;
 	}
 
+	ngAfterViewInit(){
+		if(!this.participantPanelItemTemplate) {
+			// the user has override the default participants panel but not the 'participant-panel-item'
+			// so the default component must be injected
+			this.participantPanelItemTemplate = this.defaultParticipantPanelItemTemplate
+			this.cd.markForCheck();
+		}
+	}
+
 	close() {
-		this.PanelService.closeMenu();
+		this.panelService.closePanel();
 	}
 }

@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ChatMessage } from '../../../models/chat.model';
-import { MenuType } from '../../../models/menu.model';
+import { PanelType } from '../../../models/panel.model';
 import { ChatService } from '../../../services/chat/chat.service';
 import { PanelService } from '../../../services/panel/panel.service';
 
@@ -65,14 +65,14 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	/**
 	 * @ignore
 	 */
-	constructor(private chatService: ChatService, private PanelService: PanelService, private cd: ChangeDetectorRef) {}
+	constructor(private chatService: ChatService, private panelService: PanelService, private cd: ChangeDetectorRef) {}
 
 	/**
 	 * @ignore
 	 */
 	@HostListener('document:keydown.escape', ['$event'])
 	onKeydownHandler(event: KeyboardEvent) {
-		if (this.PanelService.isPanelOpened()) {
+		if (this.panelService.isPanelOpened()) {
 			this.close();
 		}
 	}
@@ -119,13 +119,13 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	}
 
 	close() {
-		this.PanelService.togglePanel(MenuType.CHAT);
+		this.panelService.togglePanel(PanelType.CHAT);
 	}
 
 	private subscribeToMessages() {
 		this.chatMessageSubscription = this.chatService.messagesObs.subscribe((messages: ChatMessage[]) => {
 			this.messageList = messages;
-			if (this.PanelService.isPanelOpened()) {
+			if (this.panelService.isPanelOpened()) {
 				this.scrollToBottom();
 				this.cd.markForCheck();
 			}

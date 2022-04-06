@@ -19,6 +19,9 @@
 				<ng-container *ngTemplateOutlet="participantPanelItemTemplate; context: { $implicit: participant }"></ng-container>
 			</div>
 		</div>
-
 	</div>
 </div>
+
+<ng-template #defaultParticipantPanelItem let-participant>
+	<ov-participant-panel-item [participant]="participant" id="default-participant-panel-item"></ov-participant-panel-item>
+</ng-template>

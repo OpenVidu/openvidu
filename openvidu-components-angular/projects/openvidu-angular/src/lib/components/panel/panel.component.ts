@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, OnInit, TemplateRef } from '@angular/core';
 import { skip, Subscription } from 'rxjs';
-import { ChatPanelDirective, ParticipantsPanelDirective } from '../../directives/template/openvidu-angular.directive';
-import { MenuType } from '../../models/menu.model';
+import { ChatPanelDirective, AdditionalPanelsDirective, ParticipantsPanelDirective } from '../../directives/template/openvidu-angular.directive';
+import { PanelType } from '../../models/panel.model';
 import { PanelService } from '../../services/panel/panel.service';
 
 /**
@@ -32,6 +32,7 @@ import { PanelService } from '../../services/panel/panel.service';
  * |:----------------------------------:|:---------------------------------------------:|
  * |           ***ovChatPanel**          |           {@link ChatPanelDirective}          |
  * |       ***ovParticipantsPanel**      |       {@link ParticipantsPanelDirective}      |
+ * |        ***ovAdditionalPanels**      |       {@link AdditionalPanelsDirective}       |
  *
  * <p class="component-link-text">
  * 	<span class="italic">See all {@link OpenViduAngularDirectiveModule OpenVidu Angular Directives}</span>
@@ -57,6 +58,11 @@ export class PanelComponent implements OnInit {
      */
 	@ContentChild('chatPanel', { read: TemplateRef }) chatPanelTemplate: TemplateRef<any>;
 
+	/**
+     * @ignore
+     */
+	 @ContentChild('additionalPanels', { read: TemplateRef }) additionalPanelsTemplate: TemplateRef<any>;
+
 	@ContentChild(ParticipantsPanelDirective)
 	set externalParticipantPanel(externalParticipantsPanel: ParticipantsPanelDirective) {
 		// This directive will has value only when PARTICIPANTS PANEL component tagged with '*ovParticipantsPanel'
@@ -75,9 +81,23 @@ export class PanelComponent implements OnInit {
 		}
 	}
 
+	@ContentChild(AdditionalPanelsDirective)
+	set externalAdditionalPanels(externalAdditionalPanels: AdditionalPanelsDirective) {
+		// This directive will has value only when ADDITIONAL PANELS component tagged with '*ovPanelAdditionalPanels'
+		// is inside of the PANEL component tagged with '*ovPanel'
+		if (externalAdditionalPanels) {
+			this.additionalPanelsTemplate = externalAdditionalPanels.template;
+		}
+	}
+
 	isParticipantsPanelOpened: boolean;
 	isChatPanelOpened: boolean;
-	private menuSubscription: Subscription;
+
+	/**
+     * @internal
+     */
+	isExternalPanelOpened: boolean;
+	private panelSubscription: Subscription;
 
 	/**
      * @ignore
@@ -91,13 +111,14 @@ export class PanelComponent implements OnInit {
 	ngOnDestroy() {
 		this.isChatPanelOpened = false;
 		this.isParticipantsPanelOpened = false;
-		if (this.menuSubscription) this.menuSubscription.unsubscribe();
+		if (this.panelSubscription) this.panelSubscription.unsubscribe();
 	}
 
 	private subscribeToPanelToggling() {
-		this.menuSubscription = this.panelService.panelOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: MenuType }) => {
-			this.isChatPanelOpened = ev.opened && ev.type === MenuType.CHAT;
-			this.isParticipantsPanelOpened = ev.opened && ev.type === MenuType.PARTICIPANTS;
+		this.panelSubscription = this.panelService.panelOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: PanelType | string }) => {
+			this.isChatPanelOpened = ev.opened && ev.type === PanelType.CHAT;
+			this.isParticipantsPanelOpened = ev.opened && ev.type === PanelType.PARTICIPANTS;
+			this.isExternalPanelOpened = ev.opened && ev.type !== PanelType.PARTICIPANTS && ev.type !== PanelType.CHAT;
 			this.cd.markForCheck();
 		});
 	}

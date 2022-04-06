@@ -51,6 +51,10 @@
 		<ng-template #toolbarAdditionalButtons>
 			<ng-container *ngTemplateOutlet="openviduAngularToolbarAdditionalButtonsTemplate"></ng-container>
 		</ng-template>
+
+		<ng-template #toolbarAdditionalPanelButtons>
+			<ng-container *ngTemplateOutlet="openviduAngularToolbarAdditionalPanelButtonsTemplate"></ng-container>
+		</ng-template>
 	</ov-toolbar>
 </ng-template>
 
@@ -62,6 +66,10 @@
 
 		<ng-template #participantsPanel>
 			<ng-container *ngTemplateOutlet="openviduAngularParticipantsPanelTemplate"></ng-container>
+		</ng-template>
+
+		<ng-template #additionalPanels>
+			<ng-container *ngTemplateOutlet="openviduAngularAdditionalPanelsTemplate"></ng-container>
 		</ng-template>
 	</ov-panel>
 </ng-template>

@@ -12,7 +12,7 @@ import { LoggerService } from '../logger/logger.service';
 import { Signal } from '../../models/signal.model';
 import { PanelService } from '../panel/panel.service';
 import { ParticipantService } from '../participant/participant.service';
-import { MenuType } from '../../models/menu.model';
+import { PanelType } from '../../models/panel.model';
 
 /**
  * @internal
@@ -77,6 +77,6 @@ export class ChatService {
 	}
 
 	protected launchNotification(options: INotificationOptions) {
-		this.actionService.launchNotification(options, this.panelService.togglePanel.bind(this.panelService, MenuType.CHAT));
+		this.actionService.launchNotification(options, this.panelService.togglePanel.bind(this.panelService, PanelType.CHAT));
 	}
 }

@@ -1,7 +1,4 @@
-/**
- * @internal
- */
-export enum MenuType {
+export enum PanelType {
 	CHAT = 'chat',
 	PARTICIPANTS = 'participants'
 }
