@@ -21,6 +21,7 @@ import { Publisher } from './Publisher';
 import { Session } from './Session';
 import { StreamManager } from './StreamManager';
 import { Subscriber } from './Subscriber';
+import { VirtualBackgroundOptions } from '../OpenViduInternal/Interfaces/Public/VirtualBackgroundOptions';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
 import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv, WebRtcPeerConfiguration } from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
@@ -378,11 +379,10 @@ export class Stream {
                             inputResolution: '160x96',
                             outputFramerate: 30
                         });
-                        const response: { video: HTMLVideoElement, canvas: HTMLCanvasElement } = await VB.backgroundBlur({
-                            maskRadius: 0.1,
-                            backgroundCoverage: 0.6,
-                            lightWrapping: 0.3
-                        });
+
+                        const optionsVB = options as VirtualBackgroundOptions;
+
+                        const response: { video: HTMLVideoElement, canvas: HTMLCanvasElement } = await VB.backgroundBlur(optionsVB);
                         this.virtualBackgroundSinkElements = { VB, ...response };
 
                         videoClone.style.display = 'none';
