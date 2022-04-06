@@ -26,7 +26,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.net.Inet6Address;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -95,6 +94,7 @@ public class IceServerProperties {
         private String username;
         private String credential;
         private String staticAuthSecret;
+        private boolean ignoreEmptyUrl = false;
 
         /**
          * Set the url for the ICE Server you want to use.
@@ -141,6 +141,11 @@ public class IceServerProperties {
             return this;
         }
 
+        public IceServerProperties.Builder ignoreEmptyUrl(boolean ignore) {
+            this.ignoreEmptyUrl = true;
+            return this;
+        }
+
         public IceServerProperties.Builder clone() {
             return new Builder().url(this.url)
                     .username(this.username)
@@ -158,6 +163,18 @@ public class IceServerProperties {
          * </ul>
          */
         public IceServerProperties build() throws IllegalArgumentException {
+            if (this.ignoreEmptyUrl) {
+                if (this.staticAuthSecret != null && this.username == null && this.credential == null) {
+                    try {
+                        this.generateTURNCredentials();
+                        return new IceServerProperties(this.url, this.username, this.credential);
+                    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+                        throw new IllegalArgumentException("Error while generating credentials: " + e.getMessage());
+                    }
+                } else {
+                    throw new IllegalArgumentException("ignoreEmptyUrl=true can only be used with staticAuthSecret defined");
+                }
+            }
             if (this.url == null) {
                 throw new IllegalArgumentException("External turn url cannot be null");
             }

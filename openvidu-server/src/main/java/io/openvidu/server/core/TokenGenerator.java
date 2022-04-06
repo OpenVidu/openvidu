@@ -50,10 +50,7 @@ public class TokenGenerator {
 		token += "?sessionId=" + sessionId;
 		token += "&token=" + IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 				+ RandomStringUtils.randomAlphanumeric(15);
-		TurnCredentials turnCredentials = null;
-		if (this.openviduConfig.isTurnadminAvailable()) {
-			turnCredentials = coturnCredentialsService.createUser();
-		}
+		TurnCredentials turnCredentials = coturnCredentialsService.createUser();
 		ConnectionProperties.Builder connectionPropertiesBuilder = new ConnectionProperties.Builder()
 				.type(ConnectionType.WEBRTC).data(serverMetadata).record(record).role(role)
 				.kurentoOptions(kurentoOptions);

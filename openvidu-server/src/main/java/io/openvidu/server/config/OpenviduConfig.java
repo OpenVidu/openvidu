@@ -216,8 +216,6 @@ public class OpenviduConfig {
 
 	public static String finalUrl;
 
-	private boolean isTurnadminAvailable = false;
-
 	// Media Server properties
 
 	private MediaServer mediaServerInfo = MediaServer.kurento;
@@ -414,14 +412,6 @@ public class OpenviduConfig {
 
 	public void setFinalUrl(String finalUrlParam) {
 		finalUrl = finalUrlParam.endsWith("/") ? (finalUrlParam) : (finalUrlParam + "/");
-	}
-
-	public boolean isTurnadminAvailable() {
-		return this.isTurnadminAvailable;
-	}
-
-	public void setTurnadminAvailable(boolean available) {
-		this.isTurnadminAvailable = available;
 	}
 
 	public boolean areMediaNodesPublicIpsDefined() {

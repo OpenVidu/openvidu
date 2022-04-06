@@ -122,7 +122,7 @@ def removeStrandedContainers(removeTestingContainers) {
                             "budtmo/docker-android"
                             "openvidu/mediasoup-controller:"
                             "openvidu/openvidu-server-pro:"
-                            "openvidu/openvidu-redis:"
+                            "redis:"
                             "openvidu/openvidu-coturn:"
                             "openvidu/openvidu-proxy:"
                             "openvidu/replication-manager:"

@@ -300,8 +300,7 @@ public abstract class MediaEndpoint {
 				public void onSuccess(WebRtcEndpoint result) throws Exception {
 					webEndpoint = result;
 
-					if (openviduConfig.getCoturnIp() != null && !openviduConfig.getCoturnIp().isEmpty()
-							&& openviduConfig.isTurnadminAvailable()) {
+					if (openviduConfig.getCoturnIp() != null && !openviduConfig.getCoturnIp().isEmpty()) {
 						webEndpoint.setStunServerAddress(openviduConfig.getCoturnIp());
 						webEndpoint.setStunServerPort(openviduConfig.getCoturnPort());
 					}

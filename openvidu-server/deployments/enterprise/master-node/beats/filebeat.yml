@@ -37,10 +37,6 @@ output:
   elasticsearch:
     hosts: ["${OPENVIDU_PRO_ELASTICSEARCH_HOST}"]
     indices:
-      - index: "filebeat-redis-%{+yyyy.MM.dd}"
-        when.or:
-          - contains:
-              container.image.name: openvidu/openvidu-redis
       - index: "filebeat-replication-manager-%{+yyyy.MM.dd}"
         when.or:
           - contains:

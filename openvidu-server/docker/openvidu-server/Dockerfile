@@ -6,8 +6,6 @@ RUN apt-get update && apt-get install -y \
   curl \
   wget \
   openjdk-11-jre \
-  coturn \
-  redis-tools \
   dnsutils \
 && rm -rf /var/lib/apt/lists/*
 

@@ -361,8 +361,7 @@ public abstract class SessionManager {
 
 	public Token newTokenForInsecureUser(Session session, String token, ConnectionProperties connectionProperties)
 			throws Exception {
-		Token tokenObj = new Token(token, session.getSessionId(), connectionProperties,
-				this.openviduConfig.isTurnadminAvailable() ? this.coturnCredentialsService.createUser() : null);
+		Token tokenObj = new Token(token, session.getSessionId(), connectionProperties, this.coturnCredentialsService.createUser());
 		session.storeToken(tokenObj);
 		return tokenObj;
 	}

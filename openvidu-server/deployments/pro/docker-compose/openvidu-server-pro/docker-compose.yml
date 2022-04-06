@@ -52,27 +52,12 @@ services:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
-    redis:
-        image: openvidu/openvidu-redis:4.0.0
-        restart: always
-        network_mode: host
-        environment:
-            - REDIS_PASSWORD=${OPENVIDU_SECRET}
-            - REDIS_BINDING=127.0.0.1
-        logging:
-            options:
-                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
-
     coturn:
         image: openvidu/openvidu-coturn:6.0.0
         restart: on-failure
         network_mode: host
         env_file:
             - .env
-        environment:
-            - REDIS_IP=127.0.0.1
-            - DB_NAME=0
-            - DB_PASSWORD=${OPENVIDU_SECRET}
         command:
             - --log-file=stdout
             - --external-ip=$$(detect-external-ip)
@@ -83,6 +68,8 @@ services:
             - --max-port=${COTURN_MAX_PORT:-65535}
             - --realm=openvidu
             - --verbose
+            - --use-auth-secret
+            - --static-auth-secret=${OPENVIDU_SECRET}
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
