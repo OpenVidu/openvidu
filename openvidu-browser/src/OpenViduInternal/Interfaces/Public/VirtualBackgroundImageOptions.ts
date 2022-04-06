@@ -18,7 +18,7 @@
 import { VirtualBackgroundOptions } from './VirtualBackgroundOptions';
 
 /**
- * See [[Stream.applyFilter]]
+ * Options to apply to a Virtual Background Image filter. See [[Stream.applyFilter]]
  */
 export interface VirtualBackgroundImageOptions extends VirtualBackgroundOptions {
   /**

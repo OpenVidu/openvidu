@@ -16,7 +16,7 @@
  */
 
 /**
- * See [[Stream.applyFilter]]
+ * Options to apply to a Virtual Background filter. See [[Stream.applyFilter]]
  */
 export interface VirtualBackgroundOptions {
     /**

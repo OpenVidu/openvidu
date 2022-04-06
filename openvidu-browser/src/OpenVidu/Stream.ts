@@ -336,7 +336,7 @@ export class Stream {
                 }
             }
 
-            if (type === 'VB:blur') {
+            if (type.startsWith('VB:')) {
 
                 // Client filters
 
@@ -353,7 +353,7 @@ export class Stream {
                     return reject(new OpenViduError(OpenViduErrorName.STREAM_MANAGER_HAS_NO_VIDEO_ELEMENT, 'The StreamManager requires some video element to be attached to it in order to apply a Virtual Background filter'));
                 }
 
-                logger.info('Applying client filter to stream ' + this.streamId);
+                logger.info('Applying Virtual Background to stream ' + this.streamId);
 
                 const afterScriptLoaded = async () => {
                     try {
@@ -382,7 +382,20 @@ export class Stream {
 
                         const optionsVB = options as VirtualBackgroundOptions;
 
-                        const response: { video: HTMLVideoElement, canvas: HTMLCanvasElement } = await VB.backgroundBlur(optionsVB);
+                        let response: { video: HTMLVideoElement, canvas: HTMLCanvasElement };
+                        switch (type) {
+                            case 'VB:blur': {
+                                response = await VB.backgroundBlur(optionsVB);
+                                break;
+                            }
+                            case 'VB:image': {
+                                response = await VB.backgroundImage(optionsVB);
+                                break;
+                            }
+                            default:
+                                throw new Error('Unknown Virtual Background filter: ' + type);
+                        }
+
                         this.virtualBackgroundSinkElements = { VB, ...response };
 
                         videoClone.style.display = 'none';
