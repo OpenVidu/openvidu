@@ -1500,7 +1500,7 @@ export class Session extends EventDispatcher {
             if (!!sendBrowserLogs) {
                 this.openvidu.sendBrowserLogs = sendBrowserLogs;
             }
-            this.openvidu.isPro = !!webrtcStatsInterval && !!sendBrowserLogs;
+            this.openvidu.isAtLeastPro = !!webrtcStatsInterval && !!sendBrowserLogs;
             this.openvidu.isEnterprise = edition === 'enterprise';
 
             this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';

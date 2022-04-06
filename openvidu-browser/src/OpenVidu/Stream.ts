@@ -343,8 +343,8 @@ export class Stream {
                 if (!this.session.openvidu.httpUri) {
                     return reject(this.session.notConnectedError());
                 }
-                if (!this.session.openvidu.isEnterprise) {
-                    return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_EDITION_NOT_SUPPORTED, 'OpenVidu Virtual Background API is part of OpenVidu Enterprise edition'));
+                if (!this.session.openvidu.isAtLeastPro) {
+                    return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_EDITION_NOT_SUPPORTED, 'OpenVidu Virtual Background API is available from OpenVidu Pro edition onwards'));
                 }
                 if (!this.hasVideo) {
                     return reject(new OpenViduError(OpenViduErrorName.NO_VIDEO_TRACK, 'The Virtual Background filter requires a video track to be applied'));

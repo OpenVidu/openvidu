@@ -31,7 +31,7 @@ export class OpenViduLogger {
 			// If dev mode or...
 			if ((window['LOG_JSNLOG_RESULTS']) ||
 				// If instance is created and it is OpenVidu Pro
-				(this.instance && openVidu.isPro
+				(this.instance && openVidu.isAtLeastPro
 					// If logs are enabled
 					&& this.instance.isOpenViduBrowserLogsDebugActive(openVidu)
 					// Only reconfigure it if session or finalUserId has changed

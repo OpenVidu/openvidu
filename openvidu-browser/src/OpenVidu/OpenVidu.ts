@@ -132,7 +132,7 @@ export class OpenVidu {
   /**
    * @hidden
    */
-  isPro: boolean = false;
+  isAtLeastPro: boolean = false;
   /**
    * @hidden
    */
