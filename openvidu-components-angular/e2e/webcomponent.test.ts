@@ -8,7 +8,6 @@ const TIMEOUT = 5000;
 describe('Testing API Directives', () => {
 	let browser: WebDriver;
 	async function createChromeBrowser(): Promise<WebDriver> {
-
 		return await new Builder()
 			.forBrowser(WebComponentConfig.browserName)
 			.withCapabilities(WebComponentConfig.browserCapabilities)
@@ -401,7 +400,6 @@ describe('Testing API Directives', () => {
 describe('Testing videoconference EVENTS', () => {
 	let browser: WebDriver;
 	async function createChromeBrowser(): Promise<WebDriver> {
-
 		return await new Builder()
 			.forBrowser(WebComponentConfig.browserName)
 			.withCapabilities(WebComponentConfig.browserCapabilities)
@@ -586,7 +584,6 @@ describe('Testing videoconference EVENTS', () => {
 		element = await browser.wait(until.elementLocated(By.id(`${participantName}-sessionDisconnected`)), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
-
 });
 
 describe('Testing screenshare features', () => {
@@ -794,5 +791,123 @@ describe('Testing screenshare features', () => {
 
 		isAudioEnabled = await browser.executeScript(getAudioScript('camera-type'));
 		expect(isAudioEnabled).to.be.false;
+	});
+});
+
+describe('Testing panel toggling', () => {
+	let browser: WebDriver;
+	async function createChromeBrowser(): Promise<WebDriver> {
+		return await new Builder()
+			.forBrowser(WebComponentConfig.browserName)
+			.withCapabilities(WebComponentConfig.browserCapabilities)
+			.setChromeOptions(WebComponentConfig.browserOptions)
+			.usingServer(WebComponentConfig.seleniumAddress)
+			.build();
+	}
+
+	beforeEach(async () => {
+		browser = await createChromeBrowser();
+	});
+
+	afterEach(async () => {
+		await browser.quit();
+	});
+
+	it('should toggle CHAT panel', async () => {
+		let element;
+		await browser.get(`${url}?prejoin=false`);
+		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		const chatButton = await browser.findElement(By.id('chat-panel-btn'));
+		expect(await chatButton.isDisplayed()).to.be.true;
+		await chatButton.click();
+
+		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
+		element = await browser.findElements(By.className('input-container'));
+		expect(element.length).equals(1);
+		element = await browser.findElement(By.className('messages-container'));
+		expect(await element.isDisplayed()).to.be.true;
+
+		await chatButton.click();
+
+		element = await browser.findElements(By.className('input-container'));
+		expect(element.length).equals(0);
+		element = await browser.findElements(By.css('messages-container'));
+		expect(element.length).equals(0);
+	});
+
+	it('should toggle PARTICIPANTS panel', async () => {
+		let element;
+		await browser.get(`${url}?prejoin=false`);
+		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		const participantBtn = await browser.findElement(By.id('participants-panel-btn'));
+		expect(await participantBtn.isDisplayed()).to.be.true;
+		await participantBtn.click();
+
+		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
+		element = await browser.findElements(By.className('local-participant-container'));
+		expect(element.length).equals(1);
+		element = await browser.findElement(By.css('ov-participant-panel-item'));
+		expect(await element.isDisplayed()).to.be.true;
+
+		await participantBtn.click();
+
+		element = await browser.findElements(By.className('local-participant-container'));
+		expect(element.length).equals(0);
+		element = await browser.findElements(By.css('ov-participant-panel-item'));
+		expect(element.length).equals(0);
+	});
+
+	it('should switching between PARTICIPANTS and CHAT panels', async () => {
+		let element;
+		await browser.get(`${url}?prejoin=false`);
+		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Open chat panel
+		const chatButton = await browser.findElement(By.id('chat-panel-btn'));
+		expect(await chatButton.isDisplayed()).to.be.true;
+		await chatButton.click();
+
+		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
+		element = await browser.findElements(By.className('input-container'));
+		expect(element.length).equals(1);
+		element = await browser.findElement(By.className('messages-container'));
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Open participants panel
+		const participantBtn = await browser.findElement(By.id('participants-panel-btn'));
+		expect(await participantBtn.isDisplayed()).to.be.true;
+		await participantBtn.click();
+
+		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
+		element = await browser.findElements(By.className('local-participant-container'));
+		expect(element.length).equals(1);
+		element = await browser.findElement(By.css('ov-participant-panel-item'));
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Switch to chat panel
+		await chatButton.click();
+
+		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
+		element = await browser.findElements(By.className('input-container'));
+		expect(element.length).equals(1);
+		element = await browser.findElement(By.className('messages-container'));
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.findElements(By.className('local-participant-container'));
+		expect(element.length).equals(0);
+		element = await browser.findElements(By.css('ov-participant-panel-item'));
+		expect(element.length).equals(0);
+
+		// Close chat panel
+		await chatButton.click();
+		element = await browser.findElements(By.className('input-container'));
+		expect(element.length).equals(0);
+		element = await browser.findElements(By.css('messages-container'));
+		expect(element.length).equals(0);
 	});
 });
