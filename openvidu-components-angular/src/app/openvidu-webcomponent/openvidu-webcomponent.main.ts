@@ -7,5 +7,9 @@ import { environment } from "../../environments/environment";
     enableProdMode();
   }
 
+  /**
+   *
+   * @internal
+   */
   const bootstrap = () => platformBrowserDynamic().bootstrapModule(OpenviduWebComponentModule);
   bootstrap().catch(err => console.error(err));

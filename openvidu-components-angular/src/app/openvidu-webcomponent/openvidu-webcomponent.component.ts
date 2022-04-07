@@ -326,7 +326,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 */
 	constructor(private loggerService: LoggerService, private host: ElementRef, private openviduService: OpenViduService) {
 		this.log = this.loggerService.get('WebComponent');
-		this.host.nativeElement.leaveSession = this.leaveSession.bind(this);
+		this.host.nativeElement.disconnect = this.disconnect.bind(this);
 	}
 
 	ngOnInit(): void {}
@@ -416,7 +416,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 		this.onParticipantCreated.emit(event);
 	}
 
-	leaveSession() {
+	disconnect() {
 		this.openviduService.disconnect();
 	}
 
