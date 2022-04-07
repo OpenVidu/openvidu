@@ -87,7 +87,15 @@ code {
     background-color: #FFFBF1;
 }
 
+.dark .warn-container {
+	background-color: #6b6045;
+}
+
 .info-container {
     border: 2px solid #0077ff;
     background-color: #f1feff;
+}
+
+.dark .info-container {
+    background-color: #556d6e;
 }

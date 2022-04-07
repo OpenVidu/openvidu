@@ -48,7 +48,7 @@ import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
  * ```
  *
  *  <div style="text-align: center">
- * 	<img src="../doc/toolbardirective-example.png"/>
+ * 	<img src="../assets/toolbardirective-example.png"/>
  * </div>
  *
  */
@@ -63,8 +63,9 @@ export class ToolbarDirective {
 }
 
 /**
- * The ***ovToolbarAdditionalButtons** directive allows to add additional buttons to the toolbar. We've added the same buttons as the {@link ToolbarDirective}.
- *	Here we are using the {@link ParticipantService} fror checking the audio or video status.
+ * The ***ovToolbarAdditionalButtons** directive allows to add additional buttons to center buttons group.
+ * We've added the same buttons as the {@link ToolbarDirective}.
+ * Here we are using the {@link ParticipantService} fror checking the audio or video status.
  *
  * _You can check the sample [here]()_.
  *
@@ -111,7 +112,7 @@ export class ToolbarDirective {
  * }
  * ```
  * <div style="text-align: center">
- * 	<img src="../doc/toolbarAdditionalButtonsDirective-example.png"/>
+ * 	<img src="../assets/toolbarAdditionalButtonsDirective-example.png"/>
  * </div>
  */
 @Directive({
@@ -124,6 +125,43 @@ export class ToolbarAdditionalButtonsDirective {
 	constructor(public template: TemplateRef<any>, public viewContainer: ViewContainerRef) {}
 }
 
+
+/**
+ * The ***ovToolbarAdditionalPanelButtons** directive allows to add additional **panel buttons** to the toolbar.
+ * We've added a simple button without any functionality. For being able to toggle the panel you can see the {@link AdditionalPanelsDirective}.
+ *
+ * _You can check the sample [here]()_.
+ *
+ *
+ *```html
+ * <ov-videoconference (onJoinButtonClicked)="onJoinButtonClicked()" [tokens]="tokens">
+ * 	<div *ovToolbarAdditionalPanelButtons style="text-align: center;">
+ * 		<button>MY PANEL</button>
+ * 	</div>
+ * </ov-videoconference>
+ * ```
+ *
+ * ```javascript
+ * export class ToolbarAdditionalPanelButtonsDirectiveComponent {
+ * 	tokens: TokenModel;
+ * 	sessionId = 'toolbar-additionalPanelbtn';
+ * 	OPENVIDU_URL = 'https://localhost:4443';
+ * 	OPENVIDU_SECRET = 'MY_SECRET';
+ *
+ * 	constructor(private restService: RestService) {}
+ *
+ * 	async onJoinButtonClicked() {
+ * 	 this.tokens = {
+ * 	 	webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
+ * 	 	screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ * 	 };
+ * 	}
+ * }
+ * ```
+ * <div style="text-align: center">
+ * 	<img src="../assets/toolbarAdditionalPanelButtonsDirective-example.png"/>
+ * </div>
+ */
 @Directive({
 	selector: '[ovToolbarAdditionalPanelButtons]'
 })
@@ -135,6 +173,47 @@ export class ToolbarAdditionalPanelButtonsDirective {
 }
 
 
+/**
+ * The ***ovPanel** directive allows to replace the default panels with yours. This directive also allows us insert elements
+ * tagged with the {@link ChatPanelDirective}, {@link ParticipantsPanelDirective} and {@link AdditionalPanelsDirective}.
+ *
+ * In this example we're going to replace the entire {@link PanelComponent} using the ***ovPanel** directive. Inside of it, we're customizing
+ * the {@link ParticipantsPanelComponent} and {@link ChatPanelcomponent} using theirs directives.
+ *
+ * _You can check the sample [here]()_.
+ *
+ *
+ *```html
+ * <ov-videoconference (onJoinButtonClicked)="onJoinButtonClicked()" [tokens]="tokens">
+ * 	<ov-panel *ovPanel>
+ *	 <div *ovChatPanel>This is my custom chat panel</div>
+ *	 <div *ovParticipantsPanel id="my-participants-panel">This is my custom participants panel</div>
+ *	</ov-panel>
+ * </ov-videoconference>
+ * ```
+ *
+ * ```javascript
+ * export class PanelDirectiveComponent {
+ * 	tokens: TokenModel;
+ * 	sessionId = 'panel-directive-example';
+ *
+ * 	OPENVIDU_URL = 'https://localhost:4443';
+ * 	OPENVIDU_SECRET = 'MY_SECRET';
+ *
+ *	constructor(private restService: RestService) {}
+ *
+ * 	async onJoinButtonClicked() {
+ * 		this.tokens = {
+ * 			webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
+ * 			screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ * 		};
+ * 	}
+ * }
+ * ```
+ * <div style="text-align: center">
+ * 	<img src="../assets/panelDirective.gif"/>
+ * </div>
+ */
 @Directive({
 	selector: '[ovPanel]'
 })
@@ -146,6 +225,73 @@ export class PanelDirective {
 }
 
 
+/**
+ * The ***ovAdditionalPanels** directive allows to add more extra panels to the {@link PanelComponent}. In this example we've added a new
+ * panel besides the defaults.
+ *
+ * As we want to toggle this new panel as the others, we need to add a new button in the {@link ToolbarComponent}
+ * using the {@link ToolbarAdditionalPanelButtonsDirective}.
+ *
+ * _You can check the sample [here]()_.
+ *
+ *
+ *```html
+ * <ov-videoconference (onJoinButtonClicked)="onJoinButtonClicked()" [tokens]="tokens">
+ * 	<div *ovToolbarAdditionalPanelButtons style="text-align: center;">
+ *		<button (click)="toggleMyPanel('my-panel')">MY PANEL</button>
+ *		<button (click)="toggleMyPanel('my-panel2')">OTHER PANEL</button>
+ *	</div>
+ *	<div *ovAdditionalPanels id="my-panels">
+ *		<div id="my-panel1" *ngIf="showExternalPanel">
+ *			<h2>NEW PANEL</h2>
+ *			<p>This is my new additional panel</p>
+ *		</div>
+ *		<div id="my-panel2" *ngIf="showExternalPanel2">
+ *			<h2>NEW PANEL 2</h2>
+ *			<p>This is other new panel</p>
+ *		</div>
+ *	</div>
+ * </ov-videoconference>
+ * ```
+ * <br/>
+ *
+ * We need to subscribe to the {@link ../injectables/PanelService.html#panelOpenedObs panelOpenedObs} Observable for listening the panel status and update our boolean variables
+ * (`showExternalPanel` and `showExternalPanel2`) for show and hide our panels.
+ *
+ * ```javascript
+ * export class AdditionalPanelsDirectiveComponent implements OnInit {
+ * 	tokens: TokenModel;
+ * 	sessionId = 'chat-panel-directive-example';
+ * 	OPENVIDU_URL = 'https://localhost:4443';
+ * 	OPENVIDU_SECRET = 'MY_SECRET';
+ * 	showExternalPanel: boolean = false;
+ * 	showExternalPanel2: boolean = false;
+ * 	constructor(private restService: RestService, private panelService: PanelService) {}
+ *
+ * 	ngOnInit() {
+ * 		this.subscribeToPanelToggling();
+ * 	}
+ * 	subscribeToPanelToggling() {
+ * 		this.panelService.panelOpenedObs.subscribe((ev: { opened: boolean; type?: PanelType | string }) => {
+ * 			this.showExternalPanel = ev.opened && ev.type === 'my-panel';
+ * 			this.showExternalPanel2 = ev.opened && ev.type === 'my-panel2';
+ * 		});
+ * 	}
+ * 	async onJoinButtonClicked() {
+ * 		this.tokens = {
+ * 			webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
+ * 			screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ * 		};
+ * 	}
+ * 	toggleMyPanel(type: string) {
+ * 		this.panelService.togglePanel(type);
+ * 	}
+ * }
+ * ```
+ * <div style="text-align: center">
+ * 	<img src="../assets/additionalPanelsDirective-example.gif"/>
+ * </div>
+ */
 @Directive({
 	selector: '[ovAdditionalPanels]'
 })
@@ -181,14 +327,14 @@ export class AdditionalPanelsDirective {
  *	</div>
  * </ov-videoconference>
  *```
+ * <br/>
  *
+ * As we need to get the **openvidu-browser [Session](https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html)**
+ * for sending messages to others, we can get it from the `onSessionCreated` event fired by the {@link VideoconferenceComponent}
+ * when the session has been created.
  *
- * As we need to get the OpenVidu Browser [Session](https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html)
- * for sending messages to others, we can get it from the `onSessionCreated` event fired by the {@link VideoconferenceComponent} when the session has been created.
- *
- * Once we have the session created, we can use the `signal` method for sending our messages.
- *
- *
+ * Once we have the session created, we can use the
+ * [signal](https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html#signal) method for sending our messages.
  *
  * ```javascript
  * export class ChatPanelDirectiveComponent {
@@ -227,7 +373,7 @@ export class AdditionalPanelsDirective {
  * ```
  *
  * <div style="text-align: center">
- * 	<img src="../doc/chatPanelDirective-example.png"/>
+ * 	<img src="../assets/chatPanelDirective-example.png"/>
  * </div>
  */
 @Directive({
@@ -307,7 +453,7 @@ export class ChatPanelDirective {
  * ```
  *
  * <div style="text-align: center">
- * 	<img src="../doc/participantsPanelDirective-example.png"/>
+ * 	<img src="../assets/participantsPanelDirective-example.png"/>
  * </div>
  */
 @Directive({
@@ -317,12 +463,108 @@ export class ParticipantsPanelDirective {
 	constructor(public template: TemplateRef<any>, public viewContainer: ViewContainerRef) {}
 }
 
+
+/**
+ * The ***ovParticipantPanelItem** directive allows to replace the default participant panel item template in the {@link ParticipantsPanelComponent} injecting your own component.
+ *
+ * With ***ovParticipantPanelItem** directive we can access to the participant object from its context using
+ * the `let` keyword and referencing to the `participant` variable: `*ovParticipantPanelItem="let participant"`.
+ *  Now we can access to the {@link ParticipantAbstractModel} object.
+ *
+ * _You can check the sample [here]()_.
+ *
+ * ```html
+ * <ov-videoconference (onJoinButtonClicked)="onJoinButtonClicked()" [tokens]="tokens">
+ * 	<div *ovParticipantPanelItem="let participant" style="display: flex">
+ *		<p>{{ participant.nickname }}</p>
+ *		<button mat-icon-button [matMenuTriggerFor]="menu"><mat-icon>more_vert</mat-icon></button>
+ *		<mat-menu #menu="matMenu">
+ *			<button mat-menu-item>Button 1</button>
+ *			<button mat-menu-item>Button 2</button>
+ *		</mat-menu>
+ *	</div>
+ * </ov-videoconference>
+ *```
+ *
+ *
+ *
+ * ```javascript
+ * export class ParticipantPanelItemDirectiveComponent {
+ * 	tokens: TokenModel;
+ * 	sessionId = 'participants-panel-directive-example';
+ * 	OPENVIDU_URL = 'https://localhost:4443';
+ * 	OPENVIDU_SECRET = 'MY_SECRET';
+ *
+ * 	constructor(private restService: RestService) {}
+ *
+ * 	async onJoinButtonClicked() {
+ * 	 this.tokens = {
+ * 	  webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
+ * 	  screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ * 	 };
+ * 	}
+ * }
+ *
+ * ```
+ *
+ * <div style="text-align: center">
+ * 	<img src="../assets/participantPanelItemDirective-example.gif"/>
+ * </div>
+ */
 @Directive({
 	selector: '[ovParticipantPanelItem]'
 })
 export class ParticipantPanelItemDirective {
 	constructor(public template: TemplateRef<any>, public viewContainer: ViewContainerRef) {}
 }
+
+/**
+ * The ***ovParticipantPanelItemElements** directive allows to add elements to the {@link ParticipantsPanelItemComponent}.
+ * Here we're going to add a simple button for disconnecting to the session.
+ *
+ * With ***ovParticipantPanelItemElements** directive we can access to the participant object from its context using
+ * the `let` keyword and referencing to the `participant` variable: `*ovParticipantPanelItem="let participant"`.
+ *  Now we can access to the {@link ParticipantAbstractModel} object and enable the button just for local participants.
+ *
+ *
+ * _You can check the sample [here]()_.
+ *
+ * ```html
+ * <ov-videoconference (onJoinButtonClicked)="onJoinButtonClicked()" [tokens]="tokens">
+ * 	<div *ovParticipantPanelItemElements="let participant">
+ *		<button *ngIf="participant.local" (click)="leaveSession()">Leave</button>
+ *	</div>
+ * </ov-videoconference>
+ *```
+ *
+ *
+ *
+ * ```javascript
+ * export class ParticipantPanelItemElementsDirectiveComponent {
+ * 	tokens: TokenModel;
+ * 	sessionId = 'participants-panel-directive-example';
+ * 	OPENVIDU_URL = 'https://localhost:4443';
+ * 	OPENVIDU_SECRET = 'MY_SECRET';
+ *
+ * 	constructor(private restService: RestService, private openviduService: OpenViduService) {}
+ *
+ * 	async onJoinButtonClicked() {
+ * 		this.tokens = {
+ * 			webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
+ * 			screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ * 		};
+ * 	}
+ *
+ * 	leaveSession() {
+ * 		this.openviduService.disconnect();
+ * 	}
+ * }
+ * ```
+ *
+ * <div style="text-align: center">
+ * 	<img src="../assets/participantPanelItemElementsDirective-example.gif"/>
+ * </div>
+ */
 
 @Directive({
 	selector: '[ovParticipantPanelItemElements]'
@@ -402,7 +644,7 @@ export class ParticipantPanelItemElementsDirective {
  * ```
  *
  * <div style="text-align: center">
- * 	<img src="../doc/layoutDirective-example.png"/>
+ * 	<img src="../assets/layoutDirective-example.png"/>
  * </div>
  */
 @Directive({
@@ -448,7 +690,7 @@ export class LayoutDirective {
  * }
  * ```
  * <div style="text-align: center">
- * 	<img src="../doc/streamDirective-example.png"/>
+ * 	<img src="../assets/streamDirective-example.png"/>
  * </div>
  *
  */

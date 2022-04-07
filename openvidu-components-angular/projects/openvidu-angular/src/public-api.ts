@@ -43,6 +43,7 @@ export * from './lib/models/video-type.model';
 export * from './lib/models/notification-options.model';
 export * from './lib/models/token.model';
 export * from './lib/models/signal.model';
+export * from './lib/models/panel.model';
 
 // Pipes
 export * from './lib/pipes/participant.pipe';

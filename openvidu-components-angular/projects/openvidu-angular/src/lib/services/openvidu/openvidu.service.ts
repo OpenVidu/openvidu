@@ -60,6 +60,10 @@ export class OpenViduService {
 		}
 	}
 
+	/**
+	 *
+	 * Returns the local Session. See {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html  Session} object.
+	 */
 	getSession(): Session {
 		return this.getWebcamSession();
 	}
@@ -121,7 +125,7 @@ export class OpenViduService {
 	}
 
 	/**
-	 * @internal
+	 * Leaves the session, destroying all local streams and clean all participant data.
 	 */
 	disconnect() {
 		this.disconnectSession(this.webcamSession);
@@ -220,6 +224,11 @@ export class OpenViduService {
 		}
 	}
 
+	/**
+	 * Publish or unpublish the video stream (if available).
+	 * It hides the camera muted stream if screen is sharing.
+	 * See openvidu-browser {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Publisher.html#publishVideo publishVideo}
+	 */
 	async publishVideo(publish: boolean): Promise<void> {
 		const publishAudio = this.participantService.isMyAudioActive();
 
@@ -258,6 +267,10 @@ export class OpenViduService {
 		}
 	}
 
+	/**
+	 * Publish or unpublish the audio stream (if available).
+	 * See openvidu-browser {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Publisher.html#publishAudio publishAudio}.
+	 */
 	async publishAudio(publish: boolean): Promise<void> {
 		if (this.participantService.isMyCameraActive()) {
 			if (this.participantService.isMyScreenActive() && this.participantService.hasScreenAudioActive()) {
@@ -270,6 +283,10 @@ export class OpenViduService {
 		}
 	}
 
+	/**
+	 * Share or unshare the screen.
+	 * Hide the camera muted stream when screen is sharing.
+	 */
 	async toggleScreenshare() {
 		if (this.participantService.haveICameraAndScreenActive()) {
 			// Disabling screenShare
@@ -521,6 +538,11 @@ export class OpenViduService {
 		);
 	}
 
+	/**
+	 *
+	 * Returns the remote connections of the Session.
+	 * See {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Connection.html  Connection} object.
+	 */
 	getRemoteConnections(): Connection[] {
 		// Avoid screen connections
 		const remoteCameraConnections: Connection[] = Array.from(this.webcamSession.remoteConnections.values()).filter((conn) => {

@@ -8,6 +8,9 @@ import { LoggerService } from '../logger/logger.service';
 	providedIn: 'root'
 })
 export class PanelService {
+	/**
+	 * Panel Observable which pushes the panel status in every update.
+	 */
 	panelOpenedObs: Observable<{ opened: boolean; type?: PanelType | string }>;
 	protected log: ILogger;
 	protected isChatOpened: boolean = false;
@@ -24,6 +27,10 @@ export class PanelService {
 		this.panelOpenedObs = this._panelOpened.asObservable();
 	}
 
+	/**
+	 * Open or close the panel type received. Calling this method with the panel opened and the same type panel, will closes the panel.
+	 * If the type is differente, it will switch to the properly panel.
+	 */
 	togglePanel(type: PanelType | string) {
 		this.log.d(`Toggling ${type} menu`);
 		let opened: boolean;
@@ -57,6 +64,9 @@ export class PanelService {
 		return this.isChatPanelOpened() || this.isParticipantsPanelOpened() || this.isExternalPanelOpened();
 	}
 
+	/**
+	 * Closes the panel (if opened)
+	 */
 	closePanel(): void {
 		this.isParticipantsOpened = false;
 		this.isChatOpened = false;
@@ -64,10 +74,16 @@ export class PanelService {
 		this._panelOpened.next({ opened: false });
 	}
 
+	/**
+	 * Whether the chat panel is opened or not.
+	 */
 	isChatPanelOpened(): boolean {
 		return this.isChatOpened;
 	}
 
+	/**
+	 * Whether the participants panel is opened or not.
+	 */
 	isParticipantsPanelOpened(): boolean {
 		return this.isParticipantsOpened;
 	}

@@ -11,9 +11,15 @@ import { LoggerService } from '../logger/logger.service';
 	providedIn: 'root'
 })
 export class ParticipantService {
+	/**
+	 * Local participant Observable which pushes the local participant object in every update.
+	 */
 	localParticipantObs: Observable<ParticipantAbstractModel>;
 	protected _localParticipant = <BehaviorSubject<ParticipantAbstractModel>>new BehaviorSubject(null);
 
+	/**
+	 * Remote participants Observable which pushes the remote participants array in every update.
+	 */
 	remoteParticipantsObs: Observable<ParticipantAbstractModel[]>;
 	protected _remoteParticipants = <BehaviorSubject<ParticipantAbstractModel[]>>new BehaviorSubject([]);
 
@@ -217,7 +223,6 @@ export class ParticipantService {
 		return this.isMyCameraActive() && this.isMyScreenActive();
 	}
 
-
 	/**
 	 * @internal
 	 */
@@ -225,6 +230,9 @@ export class ParticipantService {
 		return this.localParticipant.isScreenAudioActive();
 	}
 
+	/**
+	 * Force to update the local participant object and fire a new {@link localParticipantObs} Observable event.
+	 */
 	updateLocalParticipant() {
 		this._localParticipant.next(Object.assign(Object.create(this.localParticipant), this.localParticipant));
 	}
@@ -381,6 +389,9 @@ export class ParticipantService {
 		}
 	}
 
+	/**
+	 * Force to update the remote participants object and fire a new {@link remoteParticipantsObs} Observable event.
+	 */
 	updateRemoteParticipants() {
 		this._remoteParticipants.next([...this.remoteParticipants]);
 	}
