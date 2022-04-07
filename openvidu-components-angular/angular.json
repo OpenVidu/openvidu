@@ -163,13 +163,13 @@
 				"build": {
 					"builder": "@angular-devkit/build-angular:browser",
 					"options": {
-						"outputPath": "dist/openvidu-webcomponent",
+						"outputPath": "dist/openvidu-webcomponent-rc",
 						"index": "src/index.html",
 						"main": "src/app/openvidu-webcomponent/openvidu-webcomponent.main.ts",
 						"polyfills": "src/polyfills.ts",
 						"tsConfig": "src/app/openvidu-webcomponent/tsconfig.openvidu-webcomponent.json",
 						"aot": true,
-						"assets": ["src/favicon.ico", "src/assets"],
+						"assets": ["src/favicon.ico"],
 						"styles": [
 							"src/app/openvidu-webcomponent/openvidu-webcomponent.component.scss"
 						],
