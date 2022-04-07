@@ -4,6 +4,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Subscription, throwError as observableThrowError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ActivatedRoute } from '@angular/router';
+import { PanelService } from 'openvidu-angular';
 
 interface TemplateDirectives {
 	name: string;
@@ -18,7 +19,9 @@ interface APIDirectives {
 enum StructuralDirectives {
 	TOOLBAR = 'ovToolbar',
 	TOOLBAR_BUTTONS = 'ovToolbarAdditionalButtons',
+	TOOLBAR_PANEL_BUTTONS = 'ovToolbarAdditionalPanelButtons',
 	PANEL = 'ovPanel',
+	ADDITIONAL_PANELS = 'ovAdditionalPanels',
 	CHAT_PANEL = 'ovChatPanel',
 	PARTICIPANTS_PANEL = 'ovParticipantsPanel',
 	PARTICIPANTS_PANEL_ITEM = 'ovParticipantPanelItem',
@@ -58,11 +61,12 @@ export class TestingComponent implements OnInit {
 	templateDirectives: TemplateDirectives[] = [
 		{
 			name: StructuralDirectives.TOOLBAR,
-			subDirectives: [{ name: StructuralDirectives.TOOLBAR_BUTTONS }]
+			subDirectives: [{ name: StructuralDirectives.TOOLBAR_BUTTONS }, { name: StructuralDirectives.TOOLBAR_PANEL_BUTTONS }]
 		},
 		{
 			name: StructuralDirectives.PANEL,
 			subDirectives: [
+				{ name: StructuralDirectives.ADDITIONAL_PANELS },
 				{ name: StructuralDirectives.CHAT_PANEL },
 				{
 					name: StructuralDirectives.PARTICIPANTS_PANEL,
@@ -111,7 +115,9 @@ export class TestingComponent implements OnInit {
 	showDirectives: boolean = true;
 	ovToolbarSelected = false;
 	ovToolbarAdditionalButtonsSelected = false;
+	ovToolbarAdditionalPanelButtonsSelected = false;
 	ovPanelSelected = false;
+	ovAdditionalPanelsSelected = false;
 	ovChatPanelSelected = false;
 	ovParticipantsPanelSelected = false;
 	ovParticipantPanelItemSelected = false;
@@ -136,19 +142,18 @@ export class TestingComponent implements OnInit {
 
 	subscription: Subscription;
 
-	constructor(private httpClient: HttpClient, private route: ActivatedRoute) {}
+	constructor(private httpClient: HttpClient, private route: ActivatedRoute, private panelService: PanelService) {}
 
 	ngOnInit() {
 		this.subscription = this.route.queryParams.subscribe(async (params) => {
-
 			console.warn(params);
-			if(params?.sessionId) {
-				this.sessionId = params.sessionId
+			if (params?.sessionId) {
+				this.sessionId = params.sessionId;
 			} else {
 				this.sessionId = `testingSession-${(Math.random() + 1).toString(36).substring(7)}`;
 			}
 
-			console.warn('SESSION ID', this.sessionId)
+			console.warn('SESSION ID', this.sessionId);
 			this.tokens = {
 				webcam: await this.getToken(this.sessionId),
 				screen: await this.getToken(this.sessionId)
@@ -176,8 +181,17 @@ export class TestingComponent implements OnInit {
 				this.ovToolbarAdditionalButtonsSelected = value;
 				break;
 
+			case StructuralDirectives.TOOLBAR_PANEL_BUTTONS:
+				this.ovToolbarAdditionalPanelButtonsSelected = value;
+				break;
+
 			case StructuralDirectives.PANEL:
 				this.ovPanelSelected = value;
+				break;
+
+			case StructuralDirectives.ADDITIONAL_PANELS:
+				debugger
+				this.ovAdditionalPanelsSelected = value;
 				break;
 
 			case StructuralDirectives.CHAT_PANEL:
@@ -251,6 +265,10 @@ export class TestingComponent implements OnInit {
 
 	apply() {
 		this.showDirectives = false;
+	}
+
+	toggleMyPanel(type: string) {
+		this.panelService.togglePanel(type);
 	}
 
 	/**

@@ -6,7 +6,7 @@ import { AngularConfig } from './selenium.conf';
 const url = AngularConfig.appUrl;
 const TIMEOUT = 10000;
 
-describe('Checkout localhost app', () => {
+describe('Testing TOOLBAR STRUCTURAL DIRECTIVES', () => {
 	let browser: WebDriver;
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
@@ -24,8 +24,6 @@ describe('Checkout localhost app', () => {
 	afterEach(async () => {
 		await browser.quit();
 	});
-
-	// ** STRUCTURAL Directives
 
 	it('should inject the custom TOOLBAR without additional buttons', async () => {
 		await browser.get(`${url}`);
@@ -78,6 +76,34 @@ describe('Checkout localhost app', () => {
 		expect(element.length).equals(0);
 	});
 
+	it('should inject the custom TOOLBAR with additional PANEL buttons', async () => {
+		await browser.get(`${url}`);
+		let element: any = await browser.wait(until.elementLocated(By.id('ovToolbar-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('ovToolbarAdditionalPanelButtons-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		// Check if custom toolbar is present in DOM
+		element = await browser.wait(until.elementLocated(By.id('custom-toolbar')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Check if additional buttons element has been rendered
+		element = await browser.wait(until.elementLocated(By.id('custom-toolbar-additional-panel-buttons')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.findElements(By.id('toolbar-additional-panel-btn'));
+		expect(element.length).equals(1);
+
+		// Check if default toolbar is not present
+		element = await browser.findElements(By.id('default-toolbar'));
+		expect(element.length).equals(0);
+	});
+
 	it('should inject the TOOLBAR ADDITIONAL BUTTONS only', async () => {
 		let element;
 		await browser.get(`${url}`);
@@ -105,7 +131,52 @@ describe('Checkout localhost app', () => {
 		expect(element.length).equals(0);
 	});
 
-	// //* PANELS
+	it('should inject the TOOLBAR ADDITIONAL PANEL BUTTONS only', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovToolbarAdditionalPanelButtons-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		// Check if default toolbar is present
+		element = await browser.wait(until.elementLocated(By.id('default-toolbar')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Check if additional buttons are present
+		element = await browser.wait(until.elementLocated(By.id('custom-toolbar-additional-panel-buttons')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.findElements(By.id('toolbar-additional-panel-btn'));
+		expect(element.length).equals(2);
+
+		// Check if custom toolbar not is present
+		element = await browser.findElements(By.id('custom-toolbar'));
+		expect(element.length).equals(0);
+	});
+});
+
+describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
+	let browser: WebDriver;
+	async function createChromeBrowser(): Promise<WebDriver> {
+		return await new Builder()
+			.forBrowser(AngularConfig.browserName)
+			.withCapabilities(AngularConfig.browserCapabilities)
+			.setChromeOptions(AngularConfig.browserOptions)
+			.usingServer(AngularConfig.seleniumAddress)
+			.build();
+	}
+
+	beforeEach(async () => {
+		browser = await createChromeBrowser();
+	});
+
+	afterEach(async () => {
+		await browser.quit();
+	});
 
 	it('should inject the CUSTOM PANEL without children', async () => {
 		let element;
@@ -154,6 +225,42 @@ describe('Checkout localhost app', () => {
 
 		// Check if custom chat panel is not present
 		element = await browser.findElements(By.id('custom-chat-panel'));
+		expect(element.length).equals(0);
+	});
+
+	it('should inject the CUSTOM PANEL with ADDITIONAL PANEL only', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovPanel-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('ovAdditionalPanels-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		// Check if toolbar panel buttons are present
+		element = await browser.wait(until.elementLocated(By.id('menu-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Click on button for opening additional panel
+		const panelBtn = await browser.wait(until.elementLocated(By.id('toolbar-additional-panel-btn')), TIMEOUT);
+		expect(await panelBtn.isDisplayed()).to.be.true;
+		await panelBtn.click();
+
+		// Check if custom panel is present
+		element = await browser.findElements(By.id('custom-additional-panel'));
+		expect(element.length).equals(1);
+		element = await browser.wait(until.elementLocated(By.id('additional-panel-title')), TIMEOUT);
+		await browser.wait(until.elementTextMatches(element, /NEW PANEL/), TIMEOUT);
+		expect(await element.getAttribute("innerText")).equals('NEW PANEL');
+
+		await panelBtn.click();
+
+		element = await browser.findElements(By.id('custom-additional-panel'));
 		expect(element.length).equals(0);
 	});
 
@@ -369,6 +476,40 @@ describe('Checkout localhost app', () => {
 
 		// Check if default participant panel item is not present
 		element = await browser.findElements(By.id('default-participant-panel-item'));
+		expect(element.length).equals(0);
+	});
+
+
+	it('should inject an ADDITIONAL PANEL only', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovAdditionalPanels-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		// Check if toolbar panel buttons are present
+		element = await browser.wait(until.elementLocated(By.id('menu-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Click on button for opening additional panel
+		const panelBtn = await browser.wait(until.elementLocated(By.id('toolbar-additional-panel-btn')), TIMEOUT);
+		expect(await panelBtn.isDisplayed()).to.be.true;
+		await panelBtn.click();
+
+		// Check if custom panel is present
+		element = await browser.findElements(By.id('custom-additional-panel'));
+		expect(element.length).equals(1);
+		element = await browser.wait(until.elementLocated(By.id('additional-panel-title')), TIMEOUT);
+		await browser.wait(until.elementTextMatches(element, /NEW PANEL/), TIMEOUT);
+		expect(await element.getAttribute("innerText")).equals('NEW PANEL');
+
+		await panelBtn.click();
+
+		element = await browser.findElements(By.id('custom-additional-panel'));
 		expect(element.length).equals(0);
 	});
 
@@ -639,8 +780,26 @@ describe('Checkout localhost app', () => {
 		element = await browser.wait(until.elementLocated(By.id('custom-chat-panel')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
+});
 
-	//* LAYOUT
+describe('Testing LAYOUT STRUCTURAL DIRECTIVES', () => {
+	let browser: WebDriver;
+	async function createChromeBrowser(): Promise<WebDriver> {
+		return await new Builder()
+			.forBrowser(AngularConfig.browserName)
+			.withCapabilities(AngularConfig.browserCapabilities)
+			.setChromeOptions(AngularConfig.browserOptions)
+			.usingServer(AngularConfig.seleniumAddress)
+			.build();
+	}
+
+	beforeEach(async () => {
+		browser = await createChromeBrowser();
+	});
+
+	afterEach(async () => {
+		await browser.quit();
+	});
 
 	it('should inject the custom LAYOUT WITHOUT STREAM', async () => {
 		await browser.get(`${url}`);
@@ -732,8 +891,26 @@ describe('Checkout localhost app', () => {
 		element = await browser.findElements(By.css('video'));
 		expect(element.length).equals(1);
 	});
+});
 
-	// * Attribute directives
+describe('Testing ATTRIBUTE DIRECTIVES', () => {
+	let browser: WebDriver;
+	async function createChromeBrowser(): Promise<WebDriver> {
+		return await new Builder()
+			.forBrowser(AngularConfig.browserName)
+			.withCapabilities(AngularConfig.browserCapabilities)
+			.setChromeOptions(AngularConfig.browserOptions)
+			.usingServer(AngularConfig.seleniumAddress)
+			.build();
+	}
+
+	beforeEach(async () => {
+		browser = await createChromeBrowser();
+	});
+
+	afterEach(async () => {
+		await browser.quit();
+	});
 
 	it('should HIDE the CHAT PANEL BUTTON', async () => {
 		let element;
@@ -1016,8 +1193,26 @@ describe('Checkout localhost app', () => {
 		element = await browser.findElements(By.id('mute-btn'));
 		expect(element.length).equals(0);
 	});
+});
 
-	// * EVENTS
+describe('Testing EVENTS', () => {
+	let browser: WebDriver;
+	async function createChromeBrowser(): Promise<WebDriver> {
+		return await new Builder()
+			.forBrowser(AngularConfig.browserName)
+			.withCapabilities(AngularConfig.browserCapabilities)
+			.setChromeOptions(AngularConfig.browserOptions)
+			.usingServer(AngularConfig.seleniumAddress)
+			.build();
+	}
+
+	beforeEach(async () => {
+		browser = await createChromeBrowser();
+	});
+
+	afterEach(async () => {
+		await browser.quit();
+	});
 
 	it('should receive the onLeaveButtonClicked event', async () => {
 		let element;

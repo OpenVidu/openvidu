@@ -105,6 +105,14 @@
 					</button>
 				</div>
 			</ng-template>
+
+			<ng-template [ngIf]="ovToolbarAdditionalPanelButtonsSelected">
+				<div *ovToolbarAdditionalPanelButtons id="custom-toolbar-additional-panel-buttons">
+					<button mat-icon-button id="toolbar-additional-panel-btn">
+						<mat-icon>star</mat-icon>
+					</button>
+				</div>
+			</ng-template>
 		</ov-toolbar>
 	</ng-template>
 
@@ -122,11 +130,29 @@
 		</div>
 	</ng-template>
 
+	<ng-template [ngIf]="(ovToolbarAdditionalPanelButtonsSelected && !ovToolbarSelected) || ovAdditionalPanelsSelected">
+		<div *ovToolbarAdditionalPanelButtons id="custom-toolbar-additional-panel-buttons">
+			<button mat-icon-button id="toolbar-additional-panel-btn" (click)="toggleMyPanel('my-panel')">
+				<mat-icon>fullscreen_exit</mat-icon>
+			</button>
+			<button mat-icon-button id="toolbar-additional-panel-btn" (click)="toggleMyPanel('my-panel')">
+				<mat-icon>star</mat-icon>
+			</button>
+		</div>
+	</ng-template>
+
 	<!-- END TOOLBAR -->
 
 	<!-- PANELS -->
 	<ng-template [ngIf]="ovPanelSelected">
 		<ov-panel *ovPanel id="custom-panels">
+
+			<ng-template [ngIf]="ovAdditionalPanelsSelected">
+				<div *ovAdditionalPanels id="custom-additional-panel">
+					<h1 id="additional-panel-title">NEW PANEL</h1>
+				</div>
+			</ng-template>
+
 			<ng-template [ngIf]="ovChatPanelSelected">
 				<ov-chat-panel *ovChatPanel id="custom-chat-panel"></ov-chat-panel>
 			</ng-template>
@@ -159,6 +185,12 @@
 				</ov-participants-panel>
 			</ng-template>
 		</ov-panel>
+	</ng-template>
+
+	<ng-template [ngIf]="!ovPanelSelected && ovAdditionalPanelsSelected">
+		<div *ovAdditionalPanels id="custom-additional-panel">
+			<h1 id="additional-panel-title">NEW PANEL</h1>
+		</div>
 	</ng-template>
 
 	<ng-template [ngIf]="!ovPanelSelected && ovChatPanelSelected">
