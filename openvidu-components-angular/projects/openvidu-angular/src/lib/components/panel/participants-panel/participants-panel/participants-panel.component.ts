@@ -109,7 +109,7 @@ export class ParticipantsPanelComponent implements OnInit, OnDestroy, AfterViewI
 			// the user has override the default participants panel but not the 'participant-panel-item'
 			// so the default component must be injected
 			this.participantPanelItemTemplate = this.defaultParticipantPanelItemTemplate
-			this.cd.markForCheck();
+			this.cd.detectChanges();
 		}
 	}
 
