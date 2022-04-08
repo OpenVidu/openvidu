@@ -1,6 +1,6 @@
 {
 	"name": "OpenVidu Angular Documentation",
-	"output": "docs/openvidu-angular",
+	"output": "../../docs/openvidu-angular",
 	"hideGenerator": true,
 	"disableLifeCycleHooks": true,
 	"disableProtected": true,
@@ -14,7 +14,8 @@
 	"disableStyleTab": true,
 	"disableDependencies": true,
 	"theme": "gitbook",
-	"customFavicon": "src/favicon.ico",
-	"extTheme": "src/doc/",
-	"assetsFolder": "src/doc/assets"
+	"customFavicon": "doc/favicon.ico",
+	"extTheme": "doc/",
+	"assetsFolder": "doc/assets"
+
 }
