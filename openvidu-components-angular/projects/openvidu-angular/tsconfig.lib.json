@@ -10,6 +10,7 @@
   },
   "exclude": [
     "src/test.ts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "**/*.mock.ts"
   ]
 }

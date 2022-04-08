@@ -1,50 +1,30 @@
 # openvidu-angular
 
-openvidu-angular is a library generated with the aim of facilitate the customization of videconference app provides by OpenVidu, providing powerful ready-to-use components.
+The easier way to build powerful OpenVidu videoconference frontend applications.
 
-This library is an Angular library based on Angular projections
-
-## Code scaffolding
-
-## Architechture
+## How to install
 
 ```
-openvidu-components-angular
-│
-└─── src (openvidu-components-testapp)
-│
-└───projects
-    │
-	└─── openvidu-angular
+npm install openvidu-angular@latest
 ```
 
-## Development server
+## Usage
 
-Run `ng serve` for a dev server.
+In your `app.module.ts`:
 
-Run, in a new terminal, `npm run lib:serve` for serving the openvidu-angular library with live reload
+```typescript
+import { OpenViduAngularConfig, OpenViduAngularModule } from 'openvidu-angular';
 
-## Code scaffolding
+const config: OpenViduAngularConfig = {
+    production: environment.production
+};
 
-For generate new components in openvidu-angular:
-
-```bash
-ng g component components/component-name --project=openvidu-angular
-```
-
-
-## Build
-
-```bash
-npm run lib:build
-```
-
-## Publishing
-
-After the library is built, tun the following command:
-
-```bash
-cd dist/ && npm publish
+@NgModule({
+    imports: [
+        ...
+        OpenViduAngularModule.forRoot(config)
+    ]
+})
 ```
 
 ## How to use in an Angular project
