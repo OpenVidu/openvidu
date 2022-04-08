@@ -28,6 +28,7 @@ import { PanelType } from '../../models/panel.model';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import { ToolbarAdditionalButtonsDirective, ToolbarAdditionalPanelButtonsDirective } from '../../directives/template/openvidu-angular.directive';
 import { ParticipantAbstractModel } from '../../models/participant.model';
+import { PlatformService } from '../../services/platform/platform.service';
 
 /**
  *
@@ -243,7 +244,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		protected actionService: ActionService,
 		protected loggerSrv: LoggerService,
 		private cd: ChangeDetectorRef,
-		private libService: OpenViduAngularConfigService
+		private libService: OpenViduAngularConfigService,
+		private platformService: PlatformService
 	) {
 		this.log = this.loggerSrv.get('ToolbarComponent');
 	}
@@ -425,7 +427,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 			this.cd.markForCheck();
 		});
 		this.screenshareButtonSub = this.libService.screenshareButtonObs.subscribe((value: boolean) => {
-			this.showScreenshareButton = value;
+			this.showScreenshareButton = value && !this.platformService.isMobile();
 			this.cd.markForCheck();
 		});
 		this.fullscreenButtonSub = this.libService.fullscreenButtonObs.subscribe((value: boolean) => {
