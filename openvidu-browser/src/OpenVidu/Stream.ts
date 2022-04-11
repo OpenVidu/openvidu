@@ -22,6 +22,8 @@ import { Session } from './Session';
 import { StreamManager } from './StreamManager';
 import { Subscriber } from './Subscriber';
 import { VirtualBackgroundOptions } from '../OpenViduInternal/Interfaces/Public/VirtualBackgroundOptions';
+import { VirtualBackgroundImageOptions } from '../OpenViduInternal/Interfaces/Public/VirtualBackgroundImageOptions';
+import { VirtualBackgroundChromaOptions } from '../OpenViduInternal/Interfaces/Public/VirtualBackgroundChromaOptions';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
 import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv, WebRtcPeerConfiguration } from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
@@ -380,16 +382,22 @@ export class Stream {
                             outputFramerate: 30
                         });
 
-                        const optionsVB = options as VirtualBackgroundOptions;
 
                         let response: { video: HTMLVideoElement, canvas: HTMLCanvasElement };
                         switch (type) {
                             case 'VB:blur': {
+                                const optionsVB = options as VirtualBackgroundOptions;
                                 response = await VB.backgroundBlur(optionsVB);
                                 break;
                             }
                             case 'VB:image': {
+                                const optionsVB = options as VirtualBackgroundImageOptions;
                                 response = await VB.backgroundImage(optionsVB);
+                                break;
+                            }
+                            case 'VB:chroma': {
+                                const optionsVB = options as VirtualBackgroundChromaOptions;
+                                response = await VB.backgroundChroma(optionsVB);
                                 break;
                             }
                             default:
@@ -632,6 +640,11 @@ export class Stream {
      * @hidden
      */
     disposeMediaStream(): void {
+        if (!!this.filter && this.filter.type.startsWith('VB:')) {
+            this.removeFilter()
+                .then(() => console.debug(`Success removing Virtual Background filter for stream ${this.streamId}`))
+                .catch(error => console.error(`Error removing Virtual Background filter for stream ${this.streamId}`, error));
+        }
         if (this.mediaStream) {
             this.mediaStream.getAudioTracks().forEach((track) => {
                 track.stop();
