@@ -4,7 +4,7 @@ import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
  * The ***ovToolbar** directive allows to replace the default toolbar component injecting your custom template.
  * In the example below we've replaced the default toolbar and added the **toggleAudio** and **toggleVide** features.
  *
- * *You can run the sample [here]()*.
+ * You can run the sample [here](components/openvidu-custom-toolbar#run-this-tutorial).
  *
  *
  *```html
@@ -46,10 +46,6 @@ import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
  * 	}
  * }
  * ```
- *
- *  <div style="text-align: center">
- * 	<img src="../assets/toolbardirective-example.png"/>
- * </div>
  *
  */
 @Directive({
@@ -111,9 +107,6 @@ export class ToolbarDirective {
  * 	}
  * }
  * ```
- * <div style="text-align: center">
- * 	<img src="../assets/toolbarAdditionalButtonsDirective-example.png"/>
- * </div>
  */
 @Directive({
 	selector: '[ovToolbarAdditionalButtons]'
@@ -158,9 +151,6 @@ export class ToolbarAdditionalButtonsDirective {
  * 	}
  * }
  * ```
- * <div style="text-align: center">
- * 	<img src="../assets/toolbarAdditionalPanelButtonsDirective-example.png"/>
- * </div>
  */
 @Directive({
 	selector: '[ovToolbarAdditionalPanelButtons]'
@@ -174,7 +164,7 @@ export class ToolbarAdditionalPanelButtonsDirective {
 
 
 /**
- * The ***ovPanel** directive allows to replace the default panels with yours. This directive also allows us insert elements
+ * The ***ovPanel** directive allows to replace the default panels with your own. This directive also allows us insert elements
  * tagged with the {@link ChatPanelDirective}, {@link ParticipantsPanelDirective} and {@link AdditionalPanelsDirective}.
  *
  * In this example we're going to replace the entire {@link PanelComponent} using the ***ovPanel** directive. Inside of it, we're customizing
@@ -210,9 +200,6 @@ export class ToolbarAdditionalPanelButtonsDirective {
  * 	}
  * }
  * ```
- * <div style="text-align: center">
- * 	<img src="../assets/panelDirective.gif"/>
- * </div>
  */
 @Directive({
 	selector: '[ovPanel]'
@@ -288,9 +275,6 @@ export class PanelDirective {
  * 	}
  * }
  * ```
- * <div style="text-align: center">
- * 	<img src="../assets/additionalPanelsDirective-example.gif"/>
- * </div>
  */
 @Directive({
 	selector: '[ovAdditionalPanels]'
@@ -372,9 +356,6 @@ export class AdditionalPanelsDirective {
  *}
  * ```
  *
- * <div style="text-align: center">
- * 	<img src="../assets/chatPanelDirective-example.png"/>
- * </div>
  */
 @Directive({
 	selector: '[ovChatPanel]'
@@ -452,9 +433,6 @@ export class ChatPanelDirective {
  *
  * ```
  *
- * <div style="text-align: center">
- * 	<img src="../assets/participantsPanelDirective-example.png"/>
- * </div>
  */
 @Directive({
 	selector: '[ovParticipantsPanel]'
@@ -507,9 +485,6 @@ export class ParticipantsPanelDirective {
  *
  * ```
  *
- * <div style="text-align: center">
- * 	<img src="../assets/participantPanelItemDirective-example.gif"/>
- * </div>
  */
 @Directive({
 	selector: '[ovParticipantPanelItem]'
@@ -561,9 +536,6 @@ export class ParticipantPanelItemDirective {
  * }
  * ```
  *
- * <div style="text-align: center">
- * 	<img src="../assets/participantPanelItemElementsDirective-example.gif"/>
- * </div>
  */
 
 @Directive({
@@ -643,9 +615,6 @@ export class ParticipantPanelItemElementsDirective {
  *
  * ```
  *
- * <div style="text-align: center">
- * 	<img src="../assets/layoutDirective-example.png"/>
- * </div>
  */
 @Directive({
 	selector: '[ovLayout]'
@@ -689,9 +658,6 @@ export class LayoutDirective {
  * 	}
  * }
  * ```
- * <div style="text-align: center">
- * 	<img src="../assets/streamDirective-example.png"/>
- * </div>
  *
  */
 
