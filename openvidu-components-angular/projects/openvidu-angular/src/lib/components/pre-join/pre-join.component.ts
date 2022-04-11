@@ -79,7 +79,6 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		if (this.screenShareStateSubscription) {
 			this.screenShareStateSubscription.unsubscribe();
 		}
-		this.deviceSrv.clear();
 	}
 
 	async onCameraSelected(event: any) {

@@ -61,6 +61,16 @@ export class OpenViduService {
 	}
 
 	/**
+	 * @internal
+	 */
+	clear() {
+		this.videoSource = undefined;
+		this.audioSource = undefined;
+		this.stopTracks(this.participantService.getMyCameraPublisher()?.stream?.getMediaStream());
+		this.stopTracks(this.participantService.getMyScreenPublisher()?.stream?.getMediaStream());
+	}
+
+	/**
 	 *
 	 * Returns the local Session. See {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html  Session} object.
 	 */
@@ -130,10 +140,6 @@ export class OpenViduService {
 	disconnect() {
 		this.disconnectSession(this.webcamSession);
 		this.disconnectSession(this.screenSession);
-		this.videoSource = undefined;
-		this.audioSource = undefined;
-		// this.stopTracks(this.participantService.getMyCameraPublisher()?.stream?.getMediaStream());
-		// this.stopTracks(this.participantService.getMyScreenPublisher()?.stream?.getMediaStream());
 	}
 
 	/**
@@ -567,11 +573,11 @@ export class OpenViduService {
 		}
 	}
 
-	// private stopTracks(mediaStream: MediaStream) {
-	// 	if (mediaStream) {
-	// 		mediaStream?.getAudioTracks().forEach((track) => track.stop());
-	// 		mediaStream?.getVideoTracks().forEach((track) => track.stop());
-	// 		// this.webcamMediaStream?.getAudioTracks().forEach((track) => track.stop());
-	// 	}
-	// }
+	private stopTracks(mediaStream: MediaStream) {
+		if (mediaStream) {
+			mediaStream?.getAudioTracks().forEach((track) => track.stop());
+			mediaStream?.getVideoTracks().forEach((track) => track.stop());
+			// this.webcamMediaStream?.getAudioTracks().forEach((track) => track.stop());
+		}
+	}
 }
