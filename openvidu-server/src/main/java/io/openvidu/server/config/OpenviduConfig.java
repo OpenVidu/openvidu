@@ -163,7 +163,7 @@ public class OpenviduConfig {
 
 	private int coturnPort;
 
-	private String coturnRedisIp;
+	private String coturnSharedSecretKey;
 
 	// If true, coturn relay ips will come with the private IP of the machine
 	private boolean coturnInternalRelay;
@@ -187,12 +187,6 @@ public class OpenviduConfig {
 	private String openviduSecret;
 
 	private String openviduRecordingComposedUrl;
-
-	private String coturnRedisDbname;
-
-	private String coturnRedisPassword;
-
-	private String coturnRedisConnectTimeout;
 
 	private String certificateType;
 
@@ -227,14 +221,6 @@ public class OpenviduConfig {
 	private List<IceServerProperties.Builder> webrtcIceServersBuilders;
 
 	// Plain config properties getters
-
-	public String getCoturnDatabaseDbname() {
-		return this.coturnRedisDbname;
-	}
-
-	public String getCoturnDatabasePassword() {
-		return this.coturnRedisPassword;
-	}
 
 	public boolean isCoturnUsingInternalRelay() {
 		return this.coturnInternalRelay;
@@ -356,6 +342,10 @@ public class OpenviduConfig {
 		return this.coturnPort;
 	}
 
+	public String getCoturnSharedSecretKey() {
+		return this.coturnSharedSecretKey;
+	}
+
 	public RecordingNotification getOpenViduRecordingNotification() {
 		return this.openviduRecordingNotification;
 	}
@@ -445,11 +435,6 @@ public class OpenviduConfig {
 
 	public boolean isOpenViduSecret(String secret) {
 		return secret.equals(this.getOpenViduSecret());
-	}
-
-	public String getCoturnDatabaseString() {
-		return "\"ip=" + this.coturnRedisIp + " dbname=" + this.coturnRedisDbname + " password="
-				+ this.coturnRedisPassword + " connect_timeout=" + this.coturnRedisConnectTimeout + "\"";
 	}
 
 	public boolean openviduRecordingCustomLayoutChanged(String path) {
@@ -560,9 +545,8 @@ public class OpenviduConfig {
 	}
 
 	protected List<String> getNonUserProperties() {
-		return Arrays.asList("server.port", "SERVER_PORT", "DOTENV_PATH", "COTURN_IP", "COTURN_PORT", "COTURN_REDIS_IP",
-				"COTURN_REDIS_DBNAME", "COTURN_REDIS_PASSWORD", "COTURN_REDIS_CONNECT_TIMEOUT", "COTURN_INTERNAL_RELAY",
-				"OPENVIDU_RECORDING_IMAGE", "OPENVIDU_RECORDING_ENABLE_GPU");
+		return Arrays.asList("server.port", "SERVER_PORT", "DOTENV_PATH", "COTURN_IP", "COTURN_PORT",
+				"COTURN_INTERNAL_RELAY", "COTURN_SHARED_SECRET_KEY", "OPENVIDU_RECORDING_IMAGE", "OPENVIDU_RECORDING_ENABLE_GPU");
 	}
 
 	protected List<String> getNonPrintablePropertiesIfEmpty() {
@@ -582,18 +566,21 @@ public class OpenviduConfig {
 		checkDomainOrPublicIp();
 		populateSpringServerPort();
 
-		coturnRedisDbname = getValue("COTURN_REDIS_DBNAME");
-
-		coturnRedisPassword = getValue("COTURN_REDIS_PASSWORD");
-
-		coturnRedisConnectTimeout = getValue("COTURN_REDIS_CONNECT_TIMEOUT");
-
 		// If true, coturn is using private IPs as relay IPs to enable relay connections
 		// pass through internal network
 		coturnInternalRelay = asBoolean("COTURN_INTERNAL_RELAY");
 
 		openviduSecret = asNonEmptyAlphanumericString("OPENVIDU_SECRET",
 				"Cannot be empty and must contain only alphanumeric characters [a-zA-Z0-9], hypens (\"-\") and underscores (\"_\")");
+
+		// Read coturn shared key
+		coturnSharedSecretKey = asOptionalString("COTURN_SHARED_SECRET_KEY");
+		if (coturnSharedSecretKey == null || coturnSharedSecretKey.isEmpty()) {
+			log.warn("COTURN_SHARED_SECRET_KEY is not defined. Using OPENVIDU_SECRET");
+			this.coturnSharedSecretKey = this.openviduSecret;
+		} else {
+			log.info("COTURN_SHARED_SECRET_KEY used to generate TURN users: {}", this.coturnSharedSecretKey);
+		}
 
 		openviduCdr = asBoolean("OPENVIDU_CDR");
 		openviduCdrPath = openviduCdr ? asWritableFileSystemPath("OPENVIDU_CDR_PATH")
@@ -632,8 +619,6 @@ public class OpenviduConfig {
 		checkCoturnIp();
 
 		checkCoturnPort();
-
-		coturnRedisIp = asOptionalInetAddress("COTURN_REDIS_IP");
 
 		checkWebhook();
 

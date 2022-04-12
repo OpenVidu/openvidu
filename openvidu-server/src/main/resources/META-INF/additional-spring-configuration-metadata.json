@@ -183,30 +183,6 @@
 			"description": "Coturn IP of a deployed coturn server"
 		},
 		{
-			"name": "COTURN_REDIS_IP",
-			"type": "java.lang.String",
-			"description": "Redis IP where OpenVidu Server should connect to store TURN credentials",
-			"defaultValue": "127.0.0.1"
-		},
-		{
-			"name": "COTURN_REDIS_DBNAME",
-			"type": "java.lang.String",
-			"description": "Redis database where to store TURN credentials",
-			"defaultValue": "0"
-		},
-		{
-			"name": "COTURN_REDIS_PASSWORD",
-			"type": "java.lang.String",
-			"description": "Password to connect OpenVidu Server to Redis database to store TURN credentials",
-			"defaultValue": "turn"
-		},
-		{
-			"name": "COTURN_REDIS_CONNECT_TIMEOUT",
-			"type": "java.lang.Integer",
-			"description": "Timeout in seconds when OpenVidu Server is connecting to Redis database to store TURN credentials",
-			"defaultValue": 30
-		},
-		{
 			"name": "CERTIFICATE_TYPE",
 			"type": "java.lang.String",
 			"description": "Which kind of certificate shall be used by OpenVidu in production mode [selfsigned,letsencrypt,owncert]"
@@ -220,6 +196,11 @@
 			"name": "COTURN_INTERNAL_RELAY",
 			"type": "java.lang.String",
 			"description": "If true, coturn is returning the private IP on relayed candidates. This can be useful to know which candidates must be sent when MEDIA_NODES_PUBLIC_IPS is defined"
+		},
+		{
+			"name": "COTURN_SHARED_SECRET_KEY",
+			"type": "java.lang.String",
+			"description": "If defined, COTURN_SHARED_SECRET_KEY will be used to generate TURN valid users. The same secret should be configured at 'static-auth-secret' to be valid. If empty, OpenVidu Secret is used. (For security, in official deployments for CE/PRO/ENTERPRISE a random string is generated)"
 		},
 		{
 			"name": "jsonRpcClientWebSocket.reconnectionDelay",

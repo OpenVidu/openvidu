@@ -27,6 +27,7 @@ services:
         network_mode: host
         entrypoint: ['/usr/local/bin/entrypoint.sh']
         volumes:
+            - ./coturn:/run/secrets/coturn
             - /var/run/docker.sock:/var/run/docker.sock
             - ${OPENVIDU_RECORDING_PATH}:${OPENVIDU_RECORDING_PATH}
             - ${OPENVIDU_RECORDING_CUSTOM_LAYOUT}:${OPENVIDU_RECORDING_CUSTOM_LAYOUT}
@@ -39,8 +40,6 @@ services:
             - SERVER_SSL_ENABLED=false
             - SERVER_PORT=5443
             - KMS_URIS=[]
-            - COTURN_REDIS_IP=127.0.0.1
-            - COTURN_REDIS_PASSWORD=${OPENVIDU_SECRET}
             - COTURN_IP=${COTURN_IP:-auto-ipv4}
             - COTURN_PORT=${COTURN_PORT:-3478}
             - OPENVIDU_PRO_CLUSTER=true
@@ -58,18 +57,19 @@ services:
         network_mode: host
         env_file:
             - .env
+        volumes:
+            - ./coturn:/run/secrets/coturn
         command:
             - --log-file=stdout
             - --external-ip=$$(detect-external-ip)
             - --listening-port=${COTURN_PORT:-3478}
             - --fingerprint
-            - --lt-cred-mech
             - --min-port=${COTURN_MIN_PORT:-40000}
             - --max-port=${COTURN_MAX_PORT:-65535}
             - --realm=openvidu
             - --verbose
             - --use-auth-secret
-            - --static-auth-secret=${OPENVIDU_SECRET}
+            - --static-auth-secret=$${COTURN_SHARED_SECRET_KEY}
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
