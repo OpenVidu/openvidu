@@ -31,6 +31,11 @@
 	font-size: 12px;
 }
 
+.text-info {
+	margin: 3px;
+
+}
+
 .messages-container {
 	display: block !important;
 	overflow-y: auto;

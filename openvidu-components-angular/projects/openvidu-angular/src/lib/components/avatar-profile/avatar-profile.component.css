@@ -15,7 +15,7 @@
 }
 
 #poster-text {
-	padding: 20px;
+	padding: 0px !important;
 	font-weight: bold;
 	font-size: 40px;
 	margin: auto;
