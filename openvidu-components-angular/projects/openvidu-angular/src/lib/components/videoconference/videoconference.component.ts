@@ -238,16 +238,20 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 */
 	@Input()
 	set tokens(tokens: TokenModel) {
-		if (!tokens || (!tokens.webcam && !tokens.screen)) {
-			//No tokens received
-			// throw new Error('No tokens received');
+		if (!tokens || !tokens.webcam) {
 			this.log.w('No tokens received');
 		} else {
-			if (tokens.webcam || tokens.screen) {
-				this.tokenService.setWebcamToken(tokens.webcam);
+			this.log.w('Tokens received');
+			this.tokenService.setWebcamToken(tokens.webcam);
+
+			if(tokens.screen) {
 				this.tokenService.setScreenToken(tokens.screen);
-				this.canPublish = true;
+			} else {
+				// Hide screenshare button if screen token does not exist
+				this.libService.screenshareButton.next(false);
+				this.log.w('No screen token found. Screenshare feature will be disabled');
 			}
+			this.canPublish = true;
 		}
 	}
 
