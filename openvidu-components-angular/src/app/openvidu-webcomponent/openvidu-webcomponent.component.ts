@@ -304,16 +304,56 @@ export class OpenviduWebComponentComponent implements OnInit {
 		this._participantPanelItemMuteButton = this.castToBoolean(value);
 	}
 
-	@Output() onJoinButtonClicked = new EventEmitter<any>();
-	@Output() onToolbarLeaveButtonClicked = new EventEmitter<any>();
-	@Output() onToolbarCameraButtonClicked = new EventEmitter<any>();
-	@Output() onToolbarMicrophoneButtonClicked = new EventEmitter<any>();
-	@Output() onToolbarScreenshareButtonClicked = new EventEmitter<any>();
-	@Output() onToolbarParticipantsPanelButtonClicked = new EventEmitter<any>();
-	@Output() onToolbarChatPanelButtonClicked = new EventEmitter<any>();
-	@Output() onToolbarFullscreenButtonClicked = new EventEmitter<any>();
-	@Output() onSessionCreated = new EventEmitter<any>();
-	@Output() onParticipantCreated = new EventEmitter<any>();
+	/**
+	 * Provides event notifications that fire when join button (in prejoin page) has been clicked.
+	 */
+	@Output() onJoinButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when leave button has been clicked.
+	 */
+	@Output() onToolbarLeaveButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when camera toolbar button has been clicked.
+	 */
+	@Output() onToolbarCameraButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when microphone toolbar button has been clicked.
+	 */
+	@Output() onToolbarMicrophoneButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when screenshare toolbar button has been clicked.
+	 */
+	@Output() onToolbarScreenshareButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when fullscreen toolbar button has been clicked.
+	 */
+	@Output() onToolbarFullscreenButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when participants panel button has been clicked.
+	 */
+	@Output() onToolbarParticipantsPanelButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when chat panel button has been clicked.
+	 */
+	@Output() onToolbarChatPanelButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when OpenVidu Session is created.
+	 * See {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html openvidu-browser Session}.
+	 */
+	@Output() onSessionCreated: EventEmitter<Session> = new EventEmitter<Session>();
+
+	/**
+	 * Provides event notifications that fire when local participant is created.
+	 */
+	@Output() onParticipantCreated: EventEmitter<ParticipantAbstractModel> = new EventEmitter<ParticipantAbstractModel>();
 
 	/**
 	 * @internal
@@ -405,15 +445,15 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
-	_onSessionCreated(event: Session) {
-		this.onSessionCreated.emit(event);
+	_onSessionCreated(session: Session) {
+		this.onSessionCreated.emit(session);
 	}
 
 	/**
 	 * @internal
 	 */
-	_onParticipantCreated(event: ParticipantAbstractModel) {
-		this.onParticipantCreated.emit(event);
+	_onParticipantCreated(participant: ParticipantAbstractModel) {
+		this.onParticipantCreated.emit(participant);
 	}
 
 	disconnect() {

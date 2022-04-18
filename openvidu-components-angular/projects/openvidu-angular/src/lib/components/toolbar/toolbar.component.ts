@@ -26,7 +26,10 @@ import { ChatMessage } from '../../models/chat.model';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { PanelType } from '../../models/panel.model';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
-import { ToolbarAdditionalButtonsDirective, ToolbarAdditionalPanelButtonsDirective } from '../../directives/template/openvidu-angular.directive';
+import {
+	ToolbarAdditionalButtonsDirective,
+	ToolbarAdditionalPanelButtonsDirective
+} from '../../directives/template/openvidu-angular.directive';
 import { ParticipantAbstractModel } from '../../models/participant.model';
 import { PlatformService } from '../../services/platform/platform.service';
 
@@ -117,22 +120,49 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	/**
 	 * @ignore
 	 */
-	 @ContentChild(ToolbarAdditionalPanelButtonsDirective)
-	 set externalAdditionalPanelButtons(externalAdditionalPanelButtons: ToolbarAdditionalPanelButtonsDirective) {
-		 // This directive will has value only when ADDITIONAL PANEL BUTTONS component tagget with '*ovToolbarAdditionalPanelButtons' directive
-		 // is inside of the TOOLBAR component tagged with '*ovToolbar' directive
-		 if (externalAdditionalPanelButtons) {
-			 this.toolbarAdditionalPanelButtonsTemplate = externalAdditionalPanelButtons.template;
-		 }
-	 }
+	@ContentChild(ToolbarAdditionalPanelButtonsDirective)
+	set externalAdditionalPanelButtons(externalAdditionalPanelButtons: ToolbarAdditionalPanelButtonsDirective) {
+		// This directive will has value only when ADDITIONAL PANEL BUTTONS component tagget with '*ovToolbarAdditionalPanelButtons' directive
+		// is inside of the TOOLBAR component tagged with '*ovToolbar' directive
+		if (externalAdditionalPanelButtons) {
+			this.toolbarAdditionalPanelButtonsTemplate = externalAdditionalPanelButtons.template;
+		}
+	}
 
-	@Output() onLeaveButtonClicked = new EventEmitter<any>();
-	@Output() onCameraButtonClicked = new EventEmitter<any>();
-	@Output() onMicrophoneButtonClicked = new EventEmitter<any>();
-	@Output() onFullscreenButtonClicked = new EventEmitter<any>();
-	@Output() onScreenshareButtonClicked = new EventEmitter<any>();
-	@Output() onParticipantsPanelButtonClicked = new EventEmitter<any>();
-	@Output() onChatPanelButtonClicked = new EventEmitter<any>();
+	/**
+	 * Provides event notifications that fire when leave button has been clicked.
+	 */
+	@Output() onLeaveButtonClicked: EventEmitter<void> = new EventEmitter<any>();
+
+	/**
+	 * Provides event notifications that fire when camera toolbar button has been clicked.
+	 */
+	@Output() onCameraButtonClicked: EventEmitter<void> = new EventEmitter<any>();
+
+	/**
+	 * Provides event notifications that fire when microphone toolbar button has been clicked.
+	 */
+	@Output() onMicrophoneButtonClicked: EventEmitter<void> = new EventEmitter<any>();
+
+	/**
+	 * Provides event notifications that fire when fullscreen toolbar button has been clicked.
+	 */
+	@Output() onFullscreenButtonClicked: EventEmitter<void> = new EventEmitter<any>();
+
+	/**
+	 * Provides event notifications that fire when screenshare toolbar button has been clicked.
+	 */
+	@Output() onScreenshareButtonClicked: EventEmitter<void> = new EventEmitter<any>();
+
+	/**
+	 * Provides event notifications that fire when participants panel button has been clicked.
+	 */
+	@Output() onParticipantsPanelButtonClicked: EventEmitter<void> = new EventEmitter<any>();
+
+	/**
+	 * Provides event notifications that fire when chat panel button has been clicked.
+	 */
+	@Output() onChatPanelButtonClicked: EventEmitter<void> = new EventEmitter<any>();
 
 	/**
 	 * @ignore

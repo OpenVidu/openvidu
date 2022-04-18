@@ -26,7 +26,7 @@ import {
 	ToolbarDirective
 } from '../../directives/template/openvidu-angular.directive';
 import { ILogger } from '../../models/logger.model';
-import { ParticipantProperties } from '../../models/participant.model';
+import { ParticipantAbstractModel, ParticipantProperties } from '../../models/participant.model';
 import { TokenModel } from '../../models/token.model';
 import { ActionService } from '../../services/action/action.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
@@ -232,10 +232,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 */
 	openviduAngularStreamTemplate: TemplateRef<any>;
 
-	// *** Parameters ***
-	// @Input() sessionName: string;
-	// @Input() participantName: string;
-
 	/**
 	 * @param {TokenModel} tokens  The tokens parameter must be an object with `webcam` and `screen` fields.
 	 *  Both of them are `string` type. See {@link TokenModel}
@@ -255,26 +251,56 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		}
 	}
 
-	// *** Events ***
+	/**
+	 * Provides event notifications that fire when join button (in prejoin page) has been clicked.
+	 */
+	@Output() onJoinButtonClicked: EventEmitter<void> = new EventEmitter<void>();
 
-	// Event sent when user click on the join button in pre-join page
-	@Output() onJoinButtonClicked = new EventEmitter<any>();
-	// Event sent when user click on the join button in pre-join page
-	@Output() onToolbarLeaveButtonClicked = new EventEmitter<any>();
-	@Output() onToolbarCameraButtonClicked = new EventEmitter<any>();
-	@Output() onToolbarMicrophoneButtonClicked = new EventEmitter<any>();
-	@Output() onToolbarScreenshareButtonClicked = new EventEmitter<any>();
-	@Output() onToolbarFullscreenButtonClicked = new EventEmitter<any>();
-	@Output() onToolbarParticipantsPanelButtonClicked = new EventEmitter<any>();
-	@Output() onToolbarChatPanelButtonClicked = new EventEmitter<any>();
+	/**
+	 * Provides event notifications that fire when leave button has been clicked.
+	 */
+	@Output() onToolbarLeaveButtonClicked: EventEmitter<void> = new EventEmitter<void>();
 
-	// Event sent when participant has joined the session
-	// @Output() onParticipantJoined = new EventEmitter<any>();
+	/**
+	 * Provides event notifications that fire when camera toolbar button has been clicked.
+	 */
+	@Output() onToolbarCameraButtonClicked: EventEmitter<void> = new EventEmitter<void>();
 
-	// Event sent when session has been created
-	@Output() onSessionCreated = new EventEmitter<any>();
-	// Event sent when participant has been created
-	@Output() onParticipantCreated = new EventEmitter<any>();
+	/**
+	 * Provides event notifications that fire when microphone toolbar button has been clicked.
+	 */
+	@Output() onToolbarMicrophoneButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when screenshare toolbar button has been clicked.
+	 */
+	@Output() onToolbarScreenshareButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when fullscreen toolbar button has been clicked.
+	 */
+	@Output() onToolbarFullscreenButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when participants panel button has been clicked.
+	 */
+	@Output() onToolbarParticipantsPanelButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when chat panel button has been clicked.
+	 */
+	@Output() onToolbarChatPanelButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when OpenVidu Session is created.
+	 * See {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html openvidu-browser Session}.
+	 */
+	@Output() onSessionCreated: EventEmitter<Session> = new EventEmitter<Session>();
+
+	/**
+	 * Provides event notifications that fire when local participant is created.
+	 */
+	@Output() onParticipantCreated: EventEmitter<ParticipantAbstractModel> = new EventEmitter<ParticipantAbstractModel>();
 
 	/**
 	 * @internal
@@ -494,8 +520,8 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	/**
 	 * @internal
 	 */
-	_onSessionCreated(event: Session) {
-		this.onSessionCreated.emit(event);
+	_onSessionCreated(session: Session) {
+		this.onSessionCreated.emit(session);
 	}
 
 	private handlePublisherError(e: any) {
