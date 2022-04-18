@@ -15,7 +15,7 @@ npm -v
 ng v
 ```
 
-## How to install
+## How to install it
 
 1. You need to install the openvidu-angular library in your Angular application:
 
@@ -29,13 +29,14 @@ npm install openvidu-angular
 ng add @angular/material
 ```
 
-## How to use it
+## Configure it
 
 
 You need import the openvidu-angular module in your `app.module.ts`:
 
 ```typescript
 import { OpenViduAngularConfig, OpenViduAngularModule } from 'openvidu-angular';
+import { environment } from 'src/environments/environment';
 
 const config: OpenViduAngularConfig = {
     production: environment.production
@@ -47,4 +48,27 @@ const config: OpenViduAngularConfig = {
         OpenViduAngularModule.forRoot(config)
     ]
 })
+```
+
+You also can add the default styles in your `styles.scss` file:
+
+```css
+:root {
+  --ov-primary-color: #303030;
+  --ov-secondary-color: #3e3f3f;
+  --ov-secondary-light-color: #e6e6e6;
+  --ov-tertiary-color: #598eff;
+  --ov-warn-color: #EB5144;
+  --ov-accent-color: #ffae35;
+
+  --ov-text-color: #ffffff;
+
+  --ov-panel-text-color: #1d1d1d;
+  --ov-panel-background: #ffffff;
+
+  --ov-buttons-radius: 50%;
+  --ov-leave-button-radius: 10px;
+  --ov-video-radius: 5px;
+  --ov-panel-radius: 5px;
+}
 ```

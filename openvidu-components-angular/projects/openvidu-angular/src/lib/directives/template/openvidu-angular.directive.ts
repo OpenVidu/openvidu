@@ -2,9 +2,9 @@ import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
 
 /**
  * The ***ovToolbar** directive allows to replace the default toolbar component injecting your custom template.
- * In the example below we've replaced the default toolbar and added the **toggleAudio** and **toggleVide** features.
+ * In the example below we've replaced the default toolbar and added the **toggleAudio** and **toggleVideo** features.
  *
- * You can run the sample [here](components/openvidu-custom-toolbar#run-this-tutorial).
+ * You can run the __openvidu-custom-toolbar__ sample [here](https://docs.openvidu.io/en/stable/components/openvidu-custom-toolbar#run-this-tutorial).
  *
  *
  *```html
@@ -26,12 +26,12 @@ import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
  * 	OPENVIDU_SECRET = 'MY_SECRET';
  * 	publishVideo = true;
  * 	publishAudio = true;
- * 	constructor(private restService: RestService, private openviduService: OpenViduService) {}
+ * 	constructor(private httpClient: HttpClient, private openviduService: OpenViduService) {}
  *
  * 	async onJoinButtonClicked() {
  * 		this.tokens = {
- * 			webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
- * 			screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ * 			webcam: await this.getToken(),
+ * 			screen: await this.getToken()
  * 		};
  * 	}
  *
@@ -63,7 +63,7 @@ export class ToolbarDirective {
  * We've added the same buttons as the {@link ToolbarDirective}.
  * Here we are using the {@link ParticipantService} fror checking the audio or video status.
  *
- * _You can check the sample [here]()_.
+ * You can run the sample [here](https://docs.openvidu.io/en/stable/components/openvidu-toolbar-buttons#run-this-tutorial).
  *
  *
  *```html
@@ -84,15 +84,15 @@ export class ToolbarDirective {
  * 	OPENVIDU_SECRET = 'MY_SECRET';
  *
  *	constructor(
- *		private restService: RestService,
+ *		private httpClient: HttpClient,
  *		private openviduService: OpenViduService,
  *		private participantService: ParticipantService
  *	) {}
  *
  * 	async onJoinButtonClicked() {
  * 		this.tokens = {
- * 			webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
- * 			screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ * 			webcam: await this.getToken(),
+ * 			screen: await this.getToken()
  * 		};
  * 	}
  *
@@ -123,7 +123,7 @@ export class ToolbarAdditionalButtonsDirective {
  * The ***ovToolbarAdditionalPanelButtons** directive allows to add additional **panel buttons** to the toolbar.
  * We've added a simple button without any functionality. For being able to toggle the panel you can see the {@link AdditionalPanelsDirective}.
  *
- * _You can check the sample [here]()_.
+ * You can run the sample [here](https://docs.openvidu.io/en/stable/components/openvidu-toolbar-panel-buttons#run-this-tutorial).
  *
  *
  *```html
@@ -141,12 +141,12 @@ export class ToolbarAdditionalButtonsDirective {
  * 	OPENVIDU_URL = 'https://localhost:4443';
  * 	OPENVIDU_SECRET = 'MY_SECRET';
  *
- * 	constructor(private restService: RestService) {}
+ * 	constructor(private httpClient: HttpClient) {}
  *
  * 	async onJoinButtonClicked() {
  * 	 this.tokens = {
- * 	 	webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
- * 	 	screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ * 	 	webcam: await this.getToken(),
+ * 	 	screen: await this.getToken()
  * 	 };
  * 	}
  * }
@@ -170,7 +170,7 @@ export class ToolbarAdditionalPanelButtonsDirective {
  * In this example we're going to replace the entire {@link PanelComponent} using the ***ovPanel** directive. Inside of it, we're customizing
  * the {@link ParticipantsPanelComponent} and {@link ChatPanelcomponent} using theirs directives.
  *
- * _You can check the sample [here]()_.
+ * You can run the sample [here](https://docs.openvidu.io/en/stable/components/openvidu-custom-panels#run-this-tutorial).
  *
  *
  *```html
@@ -190,12 +190,12 @@ export class ToolbarAdditionalPanelButtonsDirective {
  * 	OPENVIDU_URL = 'https://localhost:4443';
  * 	OPENVIDU_SECRET = 'MY_SECRET';
  *
- *	constructor(private restService: RestService) {}
+ *	constructor(private httpClient: HttpClient) {}
  *
  * 	async onJoinButtonClicked() {
  * 		this.tokens = {
- * 			webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
- * 			screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ * 			webcam: await this.getToken(),
+ * 			screen: await this.getToken()
  * 		};
  * 	}
  * }
@@ -219,7 +219,7 @@ export class PanelDirective {
  * As we want to toggle this new panel as the others, we need to add a new button in the {@link ToolbarComponent}
  * using the {@link ToolbarAdditionalPanelButtonsDirective}.
  *
- * _You can check the sample [here]()_.
+ * You can run the sample [here](https://docs.openvidu.io/en/stable/components/openvidu-additional-panels#run-this-tutorial).
  *
  *
  *```html
@@ -253,7 +253,7 @@ export class PanelDirective {
  * 	OPENVIDU_SECRET = 'MY_SECRET';
  * 	showExternalPanel: boolean = false;
  * 	showExternalPanel2: boolean = false;
- * 	constructor(private restService: RestService, private panelService: PanelService) {}
+ * 	constructor(private httpClient: HttpClient, private panelService: PanelService) {}
  *
  * 	ngOnInit() {
  * 		this.subscribeToPanelToggling();
@@ -266,8 +266,8 @@ export class PanelDirective {
  * 	}
  * 	async onJoinButtonClicked() {
  * 		this.tokens = {
- * 			webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
- * 			screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ * 			webcam: await this.getToken(),
+ * 			screen: await this.getToken()
  * 		};
  * 	}
  * 	toggleMyPanel(type: string) {
@@ -291,7 +291,7 @@ export class AdditionalPanelsDirective {
  * The ***ovChatPanel** directive allows to replace the default chat panel template injecting your own component.
  * Here we're going to redefine the chat template in a few code lines.
  *
- * _You can check the sample [here]()_.
+ * You can run the sample [here](https://docs.openvidu.io/en/stable/components/openvidu-custom-chat-panel#run-this-tutorial).
  *
  * ```html
  * <ov-videoconference
@@ -328,12 +328,12 @@ export class AdditionalPanelsDirective {
  *	OPENVIDU_SECRET = 'MY_SECRET';
  *	session: Session;
  *	messages: string[] = [];
- *	constructor(private restService: RestService) {}
+ *	constructor(private httpClient: HttpClient) {}
  *
  *	async onJoinButtonClicked() {
  *		this.tokens = {
- *			webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
- *			screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ *			webcam: await this.getToken(),
+ *			screen: await this.getToken()
  *		};
  *	}
  *
@@ -368,7 +368,7 @@ export class ChatPanelDirective {
  * The ***ovParticipantsPanel** directive allows to replace the default participants panel template injecting your own component.
  * Here we're going to redefine the participants template in a few code lines.
  *
- * _You can check the sample [here]()_.
+ * You can run the sample [here](https://docs.openvidu.io/en/stable/components/openvidu-custom-participants-panel#run-this-tutorial).
  *
  * ```html
  * <ov-videoconference (onJoinButtonClicked)="onJoinButtonClicked()" [tokens]="tokens">
@@ -401,7 +401,7 @@ export class ChatPanelDirective {
  *	remoteParticipantsSubs: Subscription;
  *
  *	constructor(
- *		private restService: RestService,
+ *		private httpClient: HttpClient,
  *		private participantService: ParticipantService
  *	) {}
  *
@@ -416,8 +416,8 @@ export class ChatPanelDirective {
  *
  *	async onJoinButtonClicked() {
  *		this.tokens = {
- *			webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
- *			screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ *			webcam: await this.getToken(),
+ *			screen: await this.getToken()
  *		};
  *	}
  *	subscribeToParticipants() {
@@ -449,7 +449,7 @@ export class ParticipantsPanelDirective {
  * the `let` keyword and referencing to the `participant` variable: `*ovParticipantPanelItem="let participant"`.
  *  Now we can access to the {@link ParticipantAbstractModel} object.
  *
- * _You can check the sample [here]()_.
+ * You can run the sample [here](https://docs.openvidu.io/en/stable/components/openvidu-custom-participant-panel-item#run-this-tutorial).
  *
  * ```html
  * <ov-videoconference (onJoinButtonClicked)="onJoinButtonClicked()" [tokens]="tokens">
@@ -473,12 +473,12 @@ export class ParticipantsPanelDirective {
  * 	OPENVIDU_URL = 'https://localhost:4443';
  * 	OPENVIDU_SECRET = 'MY_SECRET';
  *
- * 	constructor(private restService: RestService) {}
+ * 	constructor(private httpClient: HttpClient) {}
  *
  * 	async onJoinButtonClicked() {
  * 	 this.tokens = {
- * 	  webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
- * 	  screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ * 	  webcam: await this.getToken(),
+ * 	  screen: await this.getToken()
  * 	 };
  * 	}
  * }
@@ -502,7 +502,7 @@ export class ParticipantPanelItemDirective {
  *  Now we can access to the {@link ParticipantAbstractModel} object and enable the button just for local participants.
  *
  *
- * _You can check the sample [here]()_.
+ * You can run the sample [here](https://docs.openvidu.io/en/stable/components/openvidu-custom-participant-panel-item-element#run-this-tutorial).
  *
  * ```html
  * <ov-videoconference (onJoinButtonClicked)="onJoinButtonClicked()" [tokens]="tokens">
@@ -521,12 +521,12 @@ export class ParticipantPanelItemDirective {
  * 	OPENVIDU_URL = 'https://localhost:4443';
  * 	OPENVIDU_SECRET = 'MY_SECRET';
  *
- * 	constructor(private restService: RestService, private openviduService: OpenViduService) {}
+ * 	constructor(private httpClient: HttpClient, private openviduService: OpenViduService) {}
  *
  * 	async onJoinButtonClicked() {
  * 		this.tokens = {
- * 			webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
- * 			screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ * 			webcam: await this.getToken(),
+ * 			screen: await this.getToken()
  * 		};
  * 	}
  *
@@ -554,7 +554,7 @@ export class ParticipantPanelItemElementsDirective {
  * As the deafult {@link StreamComponent} needs the participant stream, and as the participants streams extraction is not trivial,
  * openvidu-angular provides us a {@link ParticipantStreamsPipe}for extracting the streams of each participant with ease.
  *
- * _You can check the sample [here]()_.
+ * You can run the sample [here](https://docs.openvidu.io/en/stable/components/openvidu-custom-layout#run-this-tutorial).
  *
  * ```html
  * <ov-videoconference (onJoinButtonClicked)="onJoinButtonClicked()" [tokens]="tokens">
@@ -583,7 +583,7 @@ export class ParticipantPanelItemElementsDirective {
  *	remoteParticipantsSubs: Subscription;
  *
  *	constructor(
- *		private restService: RestService,
+ *		private httpClient: HttpClient,
  *		private participantService: ParticipantService
  *	) {}
  *
@@ -598,8 +598,8 @@ export class ParticipantPanelItemElementsDirective {
  *
  *	async onJoinButtonClicked() {
  *		this.tokens = {
- *			webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
- *			screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ *			webcam: await this.getToken(),
+ *			screen: await this.getToken()
  *		};
  *	}
  *	subscribeToParticipants() {
@@ -630,7 +630,7 @@ export class LayoutDirective {
  * With ***ovStream** directive we can access to the stream object from its context using the `let` keyword and
  * referencing to the `stream` variable: `*ovStream="let stream"`. Now we can access to the {@link StreamModel} object.
  *
- * _You can check the sample [here]()_.
+ * You can run the sample [here](https://docs.openvidu.io/en/stable/components/openvidu-custom-stream#run-this-tutorial).
  *
  * ```html
  * <ov-videoconference (onJoinButtonClicked)="onJoinButtonClicked()" [tokens]="tokens">
@@ -648,12 +648,12 @@ export class LayoutDirective {
  * 	OPENVIDU_URL = 'https://localhost:4443';
  * 	OPENVIDU_SECRET = 'MY_SECRET';
  *
- * 	constructor(private restService: RestService) {}
+ * 	constructor(private httpClient: HttpClient) {}
  *
  * 	async onJoinButtonClicked() {
  * 		this.tokens = {
- * 			webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
- * 			screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
+ * 			webcam: await this.getToken(),
+ * 			screen: await this.getToken()
  * 		};
  * 	}
  * }
