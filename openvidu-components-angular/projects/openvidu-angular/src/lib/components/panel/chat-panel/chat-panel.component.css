@@ -24,7 +24,7 @@
 
 .text-container{
 	/* padding: 5px; */
-	background-color: var(--ov-secondary-light-color);
+	background-color: var(--ov-light-color);
 	color: var(--ov-panel-text-color);
 	text-align: center;
 	/* margin: 5px 5px; */
@@ -46,7 +46,7 @@
 .input-container {
 	height: 25px;
 	display: flex;
-	background-color: var(--ov-secondary-light-color);
+	background-color: var(--ov-light-color);
 	padding: 10px;
 	margin: 10px;
 	border-radius: var(--ov-panel-radius);

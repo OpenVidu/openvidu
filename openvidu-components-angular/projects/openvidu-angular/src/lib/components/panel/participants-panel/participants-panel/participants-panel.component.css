@@ -34,7 +34,7 @@
 
 .message-container{
 	padding: 5px;
-	background-color: var(--ov-secondary-light-color);
+	background-color: var(--ov-light-color);
 	color: var(--ov-panel-text-color);
 	text-align: center;
 	margin: 5px 5px;

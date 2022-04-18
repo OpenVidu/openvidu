@@ -927,7 +927,7 @@
   .modal {
 	height: 100%;
 	max-width: 100%;
-	background-color: var(--ov-secondary-light-color);
+	background-color: var(--ov-light-color);
 
   }
   .modal.fade .modal-dialog {

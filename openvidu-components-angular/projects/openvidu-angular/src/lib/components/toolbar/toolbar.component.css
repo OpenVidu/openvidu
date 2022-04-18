@@ -46,7 +46,7 @@
 }
 
 #branding-logo {
-	background-color: var(--ov-secondary-color);
+	background-color: var(--ov-logo-background-color);
 	border-radius: var(--ov-panel-radius);
 	max-width: 35px;
 	max-height: 35px;

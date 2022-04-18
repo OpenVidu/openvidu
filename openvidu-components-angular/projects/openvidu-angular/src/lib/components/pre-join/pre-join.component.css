@@ -1,7 +1,7 @@
 .container {
 	height: 100%;
 	padding: 80px;
-	background-color: var(--ov-secondary-light-color);
+	background-color: var(--ov-light-color);
 }
 
 #layout-container {
@@ -24,7 +24,7 @@ ov-layout {
 }
 
 .media-panel {
-	background-color: var(--ov-secondary-light-color);
+	background-color: var(--ov-light-color);
 }
 .media-panel-container {
 	width: 100%;

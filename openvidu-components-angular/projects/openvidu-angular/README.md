@@ -56,10 +56,12 @@ You also can add the default styles in your `styles.scss` file:
 :root {
   --ov-primary-color: #303030;
   --ov-secondary-color: #3e3f3f;
-  --ov-secondary-light-color: #e6e6e6;
   --ov-tertiary-color: #598eff;
   --ov-warn-color: #EB5144;
   --ov-accent-color: #ffae35;
+  --ov-light-color: #e6e6e6;
+
+  --ov-logo-background-color: #3a3d3d;
 
   --ov-text-color: #ffffff;
 
