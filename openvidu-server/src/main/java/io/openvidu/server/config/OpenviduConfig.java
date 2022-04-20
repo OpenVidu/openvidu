@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 
@@ -159,7 +160,12 @@ public class OpenviduConfig {
 
 	private Integer openviduStreamsVideoMinSendBandwidth;
 
-	private String coturnIp;
+	/**
+	 * Map which relates used Coturn IP per Media Node.
+	 * Depending on which media node will be used for the session,
+	 * a coturn IP should be sent to the browser and Kurento.
+	 */
+	private ConcurrentHashMap<String, String> mapKmsUriCoturnIp = new ConcurrentHashMap<>();
 
 	private int coturnPort;
 
@@ -334,8 +340,8 @@ public class OpenviduConfig {
 		return this.openviduStreamsVideoMinSendBandwidth;
 	}
 
-	public String getCoturnIp() {
-		return this.coturnIp;
+	public String getCoturnIp(String kmsUri) {
+		return this.mapKmsUriCoturnIp.get(kmsUri);
 	}
 
 	public int getCoturnPort() {
@@ -641,15 +647,21 @@ public class OpenviduConfig {
 	}
 
 	private void checkCoturnIp() {
+		if (this.getKmsUris().isEmpty()) {
+			throw new IllegalArgumentException("'KMS_URIS' should contain at least one KMS url");
+		}
+		String firstKmsWsUri = this.getKmsUris().get(0);
 		String property = "COTURN_IP";
-		coturnIp = asOptionalIPv4OrIPv6(property);
-
-		if (coturnIp == null || this.coturnIp.isEmpty()) {
+		String coturnIp = asOptionalIPv4OrIPv6(property);
+		if (coturnIp == null || coturnIp.isEmpty()) {
 			try {
-				this.coturnIp = new URL(this.getFinalUrl()).getHost();
+				coturnIp = new URL(this.getFinalUrl()).getHost();
+				this.mapKmsUriCoturnIp.put(firstKmsWsUri, coturnIp);
 			} catch (MalformedURLException e) {
 				log.error("Can't get Domain name from OpenVidu public Url: " + e.getMessage());
 			}
+		} else {
+			this.mapKmsUriCoturnIp.put(firstKmsWsUri, coturnIp);
 		}
 	}
 

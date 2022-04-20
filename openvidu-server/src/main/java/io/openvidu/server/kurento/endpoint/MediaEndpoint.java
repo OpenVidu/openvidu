@@ -299,9 +299,10 @@ public abstract class MediaEndpoint {
 				@Override
 				public void onSuccess(WebRtcEndpoint result) throws Exception {
 					webEndpoint = result;
-
-					if (openviduConfig.getCoturnIp() != null && !openviduConfig.getCoturnIp().isEmpty()) {
-						webEndpoint.setStunServerAddress(openviduConfig.getCoturnIp());
+					String kmsUri = owner.getSession().getKms().getUri();
+					String coturnIp = openviduConfig.getCoturnIp(kmsUri);
+					if (coturnIp != null && !coturnIp.isEmpty()) {
+						webEndpoint.setStunServerAddress(coturnIp);
 						webEndpoint.setStunServerPort(openviduConfig.getCoturnPort());
 					}
 

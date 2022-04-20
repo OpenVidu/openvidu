@@ -74,7 +74,7 @@ public class SessionEventsHandler {
 		CDR.recordSessionDestroyed(session, reason);
 	}
 
-	public void onParticipantJoined(Participant participant, String sessionId, Set<Participant> existingParticipants,
+	public void onParticipantJoined(Participant participant, String sessionId, String coturnIp, Set<Participant> existingParticipants,
 			Integer transactionId, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
@@ -184,7 +184,8 @@ public class SessionEventsHandler {
 				result.addProperty(ProtocolElements.PARTICIPANTJOINED_ROLE_PARAM,
 						participant.getToken().getRole().name());
 			}
-			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNIP_PARAM, openviduConfig.getCoturnIp());
+
+			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNIP_PARAM, coturnIp);
 			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNPORT_PARAM, openviduConfig.getCoturnPort());
 			List<IceServerProperties> customIceServers = participant.getToken().getCustomIceServers();
 			if (customIceServers != null && !customIceServers.isEmpty()) {

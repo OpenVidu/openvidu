@@ -136,7 +136,7 @@ public class KurentoSessionManager extends SessionManager {
 						String error = "Timeout of " + KmsManager.MAX_SECONDS_LOCK_WAIT
 								+ " seconds waiting to acquire lock";
 						log.error(error);
-						sessionEventsHandler.onParticipantJoined(participant, sessionId, null, transactionId,
+						sessionEventsHandler.onParticipantJoined(participant, sessionId, null, null, transactionId,
 								new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE, error));
 						return;
 					}
@@ -168,7 +168,8 @@ public class KurentoSessionManager extends SessionManager {
 					try {
 						existingParticipants = getParticipants(sessionId);
 						kSession.join(participant);
-						sessionEventsHandler.onParticipantJoined(participant, sessionId, existingParticipants,
+						String coturnIp = openviduConfig.getCoturnIp(kSession.getKms().getUri());
+						sessionEventsHandler.onParticipantJoined(participant, sessionId, coturnIp, existingParticipants,
 								transactionId, null);
 					} finally {
 						kSession.joinLeaveLock.unlock();
@@ -177,21 +178,21 @@ public class KurentoSessionManager extends SessionManager {
 					log.error(
 							"Timeout waiting for join-leave Session lock to be available for participant {} of session {} in joinRoom",
 							participant.getParticipantPublicId(), sessionId);
-					sessionEventsHandler.onParticipantJoined(participant, sessionId, null, transactionId,
+					sessionEventsHandler.onParticipantJoined(participant, sessionId, null, null, transactionId,
 							new OpenViduException(Code.GENERIC_ERROR_CODE, "Timeout waiting for Session lock"));
 				}
 			} catch (InterruptedException e) {
 				log.error(
 						"InterruptedException waiting for join-leave Session lock to be available for participant {} of session {} in joinRoom",
 						participant.getParticipantPublicId(), sessionId);
-				sessionEventsHandler.onParticipantJoined(participant, sessionId, null, transactionId,
+				sessionEventsHandler.onParticipantJoined(participant, sessionId, null,null, transactionId,
 						new OpenViduException(Code.GENERIC_ERROR_CODE,
 								"InterruptedException waiting for Session lock"));
 			}
 		} catch (OpenViduException e) {
 			log.error("PARTICIPANT {}: Error joining/creating session {}", participant.getParticipantPublicId(),
 					sessionId, e);
-			sessionEventsHandler.onParticipantJoined(participant, sessionId, null, transactionId, e);
+			sessionEventsHandler.onParticipantJoined(participant, sessionId, null,null, transactionId, e);
 		}
 	}
 

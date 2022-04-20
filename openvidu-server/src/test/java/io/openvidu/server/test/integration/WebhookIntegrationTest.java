@@ -167,7 +167,7 @@ public class WebhookIntegrationTest {
 
 			// Client should have already received "connectionCreated" RPC response
 			// nonetheless
-			verify(sessionEventsHandler, times(1)).onParticipantJoined(refEq(participant), anyString(), anySet(),
+			verify(sessionEventsHandler, times(1)).onParticipantJoined(refEq(participant), anyString(), anyString(), anySet(),
 					anyInt(), refEq(null));
 
 			// Now webhook response for event "participantJoined" should be received
