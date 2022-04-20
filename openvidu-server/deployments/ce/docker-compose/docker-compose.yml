@@ -67,7 +67,9 @@ services:
     coturn:
         image: openvidu/openvidu-coturn:7.0.0-dev1
         restart: on-failure
-        network_mode: host
+        ports:
+            - "${COTURN_PORT:-3478}:${COTURN_PORT:-3478}/tcp"
+            - "${COTURN_PORT:-3478}:${COTURN_PORT:-3478}/udp"
         env_file:
             - .env
         volumes:
