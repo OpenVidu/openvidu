@@ -330,9 +330,6 @@ Resources:
           # Wait for the app
           /usr/local/bin/check_app_ready.sh
 
-          # Start up the cfn-hup daemon to listen for changes to the Web Server metadata
-          /usr/local/bin/cfn-hup -v || { echo "[OpenVidu] Failed to start cfn-hup"; exit 1; }
-
           # sending the finish call
           /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource WaitCondition --region ${AWS::Region}
 
