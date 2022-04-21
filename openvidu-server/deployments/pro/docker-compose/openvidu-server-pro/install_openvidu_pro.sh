@@ -9,6 +9,17 @@ ELASTICSEARCH_FOLDER=${OPENVIDU_FOLDER}/elasticsearch
 BEATS_FOLDER=${OPENVIDU_FOLDER}/beats
 DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}
 
+# Support docker compose v1 and v2
+shopt -s expand_aliases
+alias docker-compose='docker compose'
+if ! docker compose version &> /dev/null; then
+    unalias docker-compose
+fi
+
+# Change default http timeout for slow networks
+export COMPOSE_HTTP_TIMEOUT=500
+export DOCKER_CLIENT_TIMEOUT=500
+
 fatal_error() {
     printf "\n     =======¡ERROR!======="
     printf "\n     %s" "$1"
