@@ -1,6 +1,8 @@
 FROM ubuntu:20.04
 MAINTAINER info@openvidu.io
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Install main components
 RUN apt-get update && apt-get install -y \
   curl \
