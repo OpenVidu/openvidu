@@ -319,6 +319,10 @@ export class Stream {
     applyFilter(type: string, options: Object): Promise<Filter> {
         return new Promise(async (resolve, reject) => {
 
+            if (!!this.filter) {
+                return reject(new OpenViduError(OpenViduErrorName.GENERIC_ERROR, 'There is already a filter applied to Stream ' + this.streamId));
+            }
+
             const resolveApplyFilter = (error) => {
                 if (error) {
                     logger.error('Error applying filter for Stream ' + this.streamId, error);
@@ -477,6 +481,7 @@ export class Stream {
 
             const resolveRemoveFilter = (error) => {
                 if (error) {
+                    delete this.filter;
                     logger.error('Error removing filter for Stream ' + this.streamId, error);
                     if (error.code === 401) {
                         return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to remove a filter"));
