@@ -19,7 +19,7 @@ TEMPJSON=$(mktemp -t cloudformation-XXX --suffix .json)
 getUbuntuAmiId() {
     local AMI_ID=$(
         aws --region ${1} ec2 describe-images \
-        --filters "Name=name,Values=*ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*" \
+        --filters "Name=name,Values=*ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*" \
         --query "sort_by(Images, &CreationDate)" \
         | jq -r 'del(.[] | select(.ImageOwnerAlias != null)) | .[-1].ImageId'
     )
