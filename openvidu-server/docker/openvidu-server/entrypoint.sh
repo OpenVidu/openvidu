@@ -21,7 +21,7 @@ if [[ -z "${COTURN_SHARED_SECRET_KEY}" ]]; then
         mkdir -p /run/secrets/coturn
 
         # Generate random coturn secret
-        RANDOM_COTURN_SECRET="$(tr -dc '[:alnum:]' </dev/urandom | head -c 35)"
+        RANDOM_COTURN_SECRET="$(shuf --echo --repeat --zero-terminated --head-count=35  {A..Z} {a..z} {0..9})"
 
         # Replace value and generate shared-secret-key file
         sed "s|{{COTURN_SHARED_SECRET_KEY}}|${RANDOM_COTURN_SECRET}|g" \

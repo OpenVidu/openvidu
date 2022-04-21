@@ -18,7 +18,7 @@ if [[ -z "${COTURN_SHARED_SECRET_KEY}" ]]; then
         mkdir -p /run/secrets/coturn
 
         # Generate random coturn secret
-        RANDOM_COTURN_SECRET="$(tr -dc '[:alnum:]' </dev/urandom | head -c 35)"
+        RANDOM_COTURN_SECRET="$(shuf --echo --repeat --zero-terminated --head-count=35  {A..Z} {a..z} {0..9})"
 
         # Replace value and generate shared-secret-key file
         sed "s|{{COTURN_SHARED_SECRET_KEY}}|${RANDOM_COTURN_SECRET}|g" \
@@ -34,13 +34,13 @@ fi
 if [ -n "${WAIT_KIBANA_URL}" ]; then
   printf "\n"
   printf "\n  ======================================="
-  printf "\n  Waiting for Kibana service."
+  printf "\n      Waiting for Kibana service."
   printf "\n  ======================================="
   printf "\n"
 
-  until "$(curl --insecure --output /dev/null --silent --head --fail --max-time 10 --connect-timeout 10 "${WAIT_KIBANA_URL}")"
+  until curl --insecure --output /dev/null --silent --head --fail --max-time 10 --connect-timeout 10 "${WAIT_KIBANA_URL}" &> /dev/null
   do
-    printf "\n  Waiting for kibana in '%s' 'URL'. This may take some minutes, please be patient" "${WAIT_KIBANA_URL}"
+    printf "\n  Waiting for kibana in '%s' 'URL'. This may take some minutes, please be patient..." "${WAIT_KIBANA_URL}"
     sleep 1
   done
   printf "\n  ==== Kibana is Ready ===="
