@@ -108,19 +108,9 @@ export enum OpenViduErrorName {
     OPENVIDU_NOT_CONNECTED = 'OPENVIDU_NOT_CONNECTED',
 
     /**
-     * The action performed is not supported for this OpenVidu edition.
+     * Error related to [Virtual Background](/en/stable/advanced-features/virtual-background/)
      */
-    OPENVIDU_EDITION_NOT_SUPPORTED = 'OPENVIDU_EDITION_NOT_SUPPORTED',
-
-    /**
-     * The action performed requires a video track to be present.
-     */
-    NO_VIDEO_TRACK = 'NO_VIDEO_TRACK',
-
-    /**
-     * The action performed requires some video element to be attached to the [[StreamManager]].
-     */
-    STREAM_MANAGER_HAS_NO_VIDEO_ELEMENT = 'STREAM_MANAGER_HAS_NO_VIDEO_ELEMENT',
+    VIRTUAL_BACKGROUND_ERROR = 'VIRTUAL_BACKGROUND_ERROR',
 
     /**
      * Generic error

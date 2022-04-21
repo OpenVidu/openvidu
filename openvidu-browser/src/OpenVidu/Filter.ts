@@ -92,39 +92,67 @@ export class Filter {
     execMethod(method: string, params: Object): Promise<void> {
         return new Promise((resolve, reject) => {
             logger.info('Executing filter method to stream ' + this.stream.streamId);
-            let stringParams;
-            if (typeof params !== 'string') {
-                try {
-                    stringParams = JSON.stringify(params);
-                } catch (error) {
-                    const errorMsg = "'params' property must be a JSON formatted object";
-                    logger.error(errorMsg);
-                    return reject(errorMsg);
-                }
-            } else {
-                stringParams = <string>params;
-            }
-            this.stream.session.openvidu.sendRequest(
-                'execFilterMethod',
-                { streamId: this.stream.streamId, method, params: stringParams },
-                (error, response) => {
-                    if (error) {
-                        logger.error('Error executing filter method for Stream ' + this.stream.streamId, error);
-                        if (error.code === 401) {
-                            return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to execute a filter method"));
-                        } else {
-                            return reject(error);
-                        }
-                    } else {
-                        logger.info('Filter method successfully executed on Stream ' + this.stream.streamId);
-                        const oldValue = (<any>Object).assign({}, this.stream.filter);
-                        this.stream.filter!.lastExecMethod = { method, params: JSON.parse(stringParams) };
-                        this.stream.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.session, this.stream, 'filter', this.stream.filter!, oldValue, 'execFilterMethod')]);
-                        this.stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.streamManager, this.stream, 'filter', this.stream.filter!, oldValue, 'execFilterMethod')]);
-                        return resolve();
+
+            if (this.type.startsWith('VB:')) {
+
+                if (typeof params === 'string') {
+                    try {
+                        params = JSON.parse(params);
+                    } catch (error) {
+                        return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'Wrong params syntax: ' + error));
                     }
                 }
-            );
+
+                if (method === 'update') {
+                    if (!this.stream.virtualBackgroundSinkElements?.VB) {
+                        return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'There is no Virtual Background filter applied'));
+                    } else {
+                        try {
+                            this.stream.virtualBackgroundSinkElements.VB.updateValues(params);
+                        } catch (error) {
+                            reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'Error updating values on Virtual Background filter: ' + error));
+                        }
+                    }
+                } else {
+                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, `Unknown Virtual Background method "${method}"`));
+                }
+            } else {
+
+                let stringParams;
+                if (typeof params !== 'string') {
+                    try {
+                        stringParams = JSON.stringify(params);
+                    } catch (error) {
+                        const errorMsg = "'params' property must be a JSON formatted object";
+                        logger.error(errorMsg);
+                        return reject(errorMsg);
+                    }
+                } else {
+                    stringParams = <string>params;
+                }
+
+                this.stream.session.openvidu.sendRequest(
+                    'execFilterMethod',
+                    { streamId: this.stream.streamId, method, params: stringParams },
+                    (error, response) => {
+                        if (error) {
+                            logger.error('Error executing filter method for Stream ' + this.stream.streamId, error);
+                            if (error.code === 401) {
+                                return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to execute a filter method"));
+                            } else {
+                                return reject(error);
+                            }
+                        } else {
+                            logger.info('Filter method successfully executed on Stream ' + this.stream.streamId);
+                            const oldValue = (<any>Object).assign({}, this.stream.filter);
+                            this.stream.filter!.lastExecMethod = { method, params: JSON.parse(stringParams) };
+                            this.stream.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.session, this.stream, 'filter', this.stream.filter!, oldValue, 'execFilterMethod')]);
+                            this.stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.streamManager, this.stream, 'filter', this.stream.filter!, oldValue, 'execFilterMethod')]);
+                            return resolve();
+                        }
+                    }
+                );
+            }
         });
     }
 

@@ -21,9 +21,6 @@ import { Publisher } from './Publisher';
 import { Session } from './Session';
 import { StreamManager } from './StreamManager';
 import { Subscriber } from './Subscriber';
-import { VirtualBackgroundOptions } from '../OpenViduInternal/Interfaces/Public/VirtualBackgroundOptions';
-import { VirtualBackgroundImageOptions } from '../OpenViduInternal/Interfaces/Public/VirtualBackgroundImageOptions';
-import { VirtualBackgroundChromaOptions } from '../OpenViduInternal/Interfaces/Public/VirtualBackgroundChromaOptions';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
 import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv, WebRtcPeerConfiguration } from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
@@ -157,8 +154,11 @@ export class Stream {
 
     private isSubscribeToRemote = false;
 
-    private virtualBackgroundSourceElements: { videoClone: HTMLVideoElement, mediaStreamClone: MediaStream };
-    private virtualBackgroundSinkElements: { VB: any, video: HTMLVideoElement, canvas: HTMLCanvasElement };
+    private virtualBackgroundSourceElements?: { videoClone: HTMLVideoElement, mediaStreamClone: MediaStream };
+    /**
+     * @hidden
+     */
+    virtualBackgroundSinkElements?: { VB: any, video: HTMLVideoElement, canvas: HTMLCanvasElement };
 
     /**
      * @hidden
@@ -346,13 +346,16 @@ export class Stream {
                     return reject(this.session.notConnectedError());
                 }
                 if (!this.session.openvidu.isAtLeastPro) {
-                    return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_EDITION_NOT_SUPPORTED, 'OpenVidu Virtual Background API is available from OpenVidu Pro edition onwards'));
+                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'OpenVidu Virtual Background API is available from OpenVidu Pro edition onwards'));
                 }
                 if (!this.hasVideo) {
-                    return reject(new OpenViduError(OpenViduErrorName.NO_VIDEO_TRACK, 'The Virtual Background filter requires a video track to be applied'));
+                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'The Virtual Background filter requires a video track to be applied'));
                 }
                 if (!this.mediaStream || this.streamManager.videos.length === 0) {
-                    return reject(new OpenViduError(OpenViduErrorName.STREAM_MANAGER_HAS_NO_VIDEO_ELEMENT, 'The StreamManager requires some video element to be attached to it in order to apply a Virtual Background filter'));
+                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'The StreamManager requires some video element to be attached to it in order to apply a Virtual Background filter'));
+                }
+                if (!!this.virtualBackgroundSinkElements && !!this.virtualBackgroundSourceElements) {
+                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'There is already a Virtual Background filter applied to Stream ' + this.streamId));
                 }
 
                 logger.info('Applying Virtual Background to stream ' + this.streamId);
@@ -379,25 +382,17 @@ export class Stream {
                             openviduServerUrl: new URL(this.session.openvidu.httpUri),
                             inputVideo: videoClone,
                             inputResolution: '160x96',
-                            outputFramerate: 30
+                            outputFramerate: 24
                         });
-
 
                         let response: { video: HTMLVideoElement, canvas: HTMLCanvasElement };
                         switch (type) {
                             case 'VB:blur': {
-                                const optionsVB = options as VirtualBackgroundOptions;
-                                response = await VB.backgroundBlur(optionsVB);
+                                response = await VB.backgroundBlur(options);
                                 break;
                             }
                             case 'VB:image': {
-                                const optionsVB = options as VirtualBackgroundImageOptions;
-                                response = await VB.backgroundImage(optionsVB);
-                                break;
-                            }
-                            case 'VB:chroma': {
-                                const optionsVB = options as VirtualBackgroundChromaOptions;
-                                response = await VB.backgroundChroma(optionsVB);
+                                response = await VB.backgroundImage(options);
                                 break;
                             }
                             default:
@@ -417,7 +412,11 @@ export class Stream {
                         resolveApplyFilter(undefined);
 
                     } catch (error) {
-                        resolveApplyFilter(error);
+                        if (error.name === OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR) {
+                            resolveApplyFilter(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, error.message));
+                        } else {
+                            resolveApplyFilter(error);
+                        }
                     }
                 }
 
@@ -427,8 +426,12 @@ export class Stream {
                     script.type = "text/javascript";
                     script.src = this.session.openvidu.httpUri + '/virtual-background/openvidu-virtual-background.js';
                     script.onload = async () => {
-                        await afterScriptLoaded();
-                        resolve(new Filter(type, options));
+                        try {
+                            await afterScriptLoaded();
+                            resolve(new Filter(type, options));
+                        } catch (error) {
+                            reject(error);
+                        }
                     };
                     document.body.appendChild(script);
                 } else {
@@ -496,19 +499,22 @@ export class Stream {
 
                 try {
 
-                    this.virtualBackgroundSinkElements.VB.cleanUp();
-                    const parent = this.virtualBackgroundSourceElements.videoClone.parentElement;
-                    this.virtualBackgroundSourceElements.videoClone.remove();
+                    this.virtualBackgroundSinkElements!.VB.cleanUp();
+                    const parent = this.virtualBackgroundSourceElements!.videoClone.parentElement;
+                    this.virtualBackgroundSourceElements!.videoClone.remove();
                     if (parent!.children.length === 0) {
                         // @ts-ignore
                         VirtualBackground.VirtualBackground.removeHiddenContainer();
                     }
 
                     if (this.streamManager.remote) {
-                        await this.streamManager.replaceTrackInMediaStream(this.virtualBackgroundSourceElements.mediaStreamClone.getVideoTracks()[0]);
+                        await this.streamManager.replaceTrackInMediaStream(this.virtualBackgroundSourceElements!.mediaStreamClone.getVideoTracks()[0]);
                     } else {
-                        await (this.streamManager as Publisher).replaceTrack(this.virtualBackgroundSourceElements.mediaStreamClone.getVideoTracks()[0]);
+                        await (this.streamManager as Publisher).replaceTrack(this.virtualBackgroundSourceElements!.mediaStreamClone.getVideoTracks()[0]);
                     }
+
+                    delete this.virtualBackgroundSinkElements;
+                    delete this.virtualBackgroundSourceElements;
 
                     return resolveRemoveFilter(undefined);
 
