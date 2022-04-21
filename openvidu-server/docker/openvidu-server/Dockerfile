@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 MAINTAINER info@openvidu.io
 
 # Install Java, supervisor and netstat
