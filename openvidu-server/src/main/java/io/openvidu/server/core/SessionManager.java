@@ -361,7 +361,8 @@ public abstract class SessionManager {
 
 	public Token newTokenForInsecureUser(Session session, String token, ConnectionProperties connectionProperties)
 			throws Exception {
-		Token tokenObj = new Token(token, session.getSessionId(), connectionProperties, this.coturnCredentialsService.createUser());
+		Token tokenObj = new Token(token, session.getSessionId(), connectionProperties,
+				this.coturnCredentialsService.createUser());
 		session.storeToken(tokenObj);
 		return tokenObj;
 	}
@@ -409,13 +410,9 @@ public abstract class SessionManager {
 		String sessionId = session.getSessionId();
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 
-			Participant p = new Participant(finalUserId, participantPrivateId, token.getConnectionId(), sessionId,
-					session.getUniqueSessionId(), token, clientMetadata, location, platform,
-					EndpointType.WEBRTC_ENDPOINT, null);
-
-			this.tokenRegister.registerToken(sessionId, p, token);
-
-			this.sessionidParticipantpublicidParticipant.get(sessionId).put(p.getParticipantPublicId(), p);
+			Participant p = newParticipantAux(sessionId, session.getUniqueSessionId(), finalUserId,
+					participantPrivateId, token.getConnectionId(), token, clientMetadata, location, platform,
+					EndpointType.WEBRTC_ENDPOINT);
 
 			this.sessionidFinalUsers.get(sessionId).computeIfAbsent(finalUserId, k -> {
 				log.info("Participant {} of session {} is a final user connecting to this session for the first time",
@@ -434,13 +431,9 @@ public abstract class SessionManager {
 			String clientMetadata) {
 		String sessionId = session.getSessionId();
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = new Participant(null, participantPrivateId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
-					sessionId, session.getUniqueSessionId(), token, clientMetadata, null, null,
-					EndpointType.WEBRTC_ENDPOINT, null);
-			this.tokenRegister.registerToken(sessionId, p, token);
-			this.sessionidParticipantpublicidParticipant.get(sessionId)
-					.put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
-			return p;
+			return newParticipantAux(sessionId, session.getUniqueSessionId(), null, participantPrivateId,
+					ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, token, clientMetadata, null, null,
+					EndpointType.WEBRTC_ENDPOINT);
 		} else {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);
 		}
@@ -450,11 +443,8 @@ public abstract class SessionManager {
 			String platform) {
 		String sessionId = session.getSessionId();
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = new Participant(ipcamId, ipcamId, ipcamId, sessionId, session.getUniqueSessionId(), token,
-					null, location, platform, EndpointType.PLAYER_ENDPOINT, null);
-			this.tokenRegister.registerToken(sessionId, p, token);
-			this.sessionidParticipantpublicidParticipant.get(sessionId).put(ipcamId, p);
-			return p;
+			return newParticipantAux(sessionId, session.getUniqueSessionId(), ipcamId, ipcamId, ipcamId, token, null,
+					location, platform, EndpointType.PLAYER_ENDPOINT);
 		} else {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);
 		}
@@ -693,6 +683,16 @@ public abstract class SessionManager {
 				}
 			}
 		});
+	}
+
+	private Participant newParticipantAux(String sessionId, String uniqueSessionId, String finalUserId,
+			String participantPrivateId, String participantPublicId, Token token, String clientMetadata,
+			GeoLocation location, String platform, EndpointType endpointType) {
+		Participant p = new Participant(finalUserId, participantPrivateId, participantPublicId, sessionId,
+				uniqueSessionId, token, clientMetadata, location, platform, endpointType, null);
+		this.tokenRegister.registerToken(sessionId, p, token);
+		this.sessionidParticipantpublicidParticipant.get(sessionId).put(p.getParticipantPublicId(), p);
+		return p;
 	}
 
 }
