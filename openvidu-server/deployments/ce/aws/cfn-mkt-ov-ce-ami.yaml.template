@@ -162,7 +162,7 @@ Resources:
             #!/bin/bash -x
             set -eu -o pipefail
             apt-get update && apt-get install -y \
-                python-pip python3-pip \
+                python3-pip \
                 ec2-instance-connect
             pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
 
