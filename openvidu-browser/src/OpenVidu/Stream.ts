@@ -364,6 +364,17 @@ export class Stream {
 
                 logger.info('Applying Virtual Background to stream ' + this.streamId);
 
+                let openviduToken: string;
+                if (!!this.session.token) {
+                    openviduToken = this.session.token;
+                } else {
+                    openviduToken = options['token'];
+                }
+                if (!openviduToken) {
+                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'Virtual Background requires the client to be connected to a Session or to have a "token" property available in "options" parameter with a valid OpenVidu token'));
+                }
+                openviduToken = encodeURIComponent(btoa(openviduToken));
+
                 const afterScriptLoaded = async () => {
                     try {
                         const id = this.streamId + '_' + uuidv4();
@@ -385,7 +396,7 @@ export class Stream {
                         const VB = new VirtualBackground.VirtualBackground({
                             id,
                             openviduServerUrl: new URL(this.session.openvidu.httpUri),
-                            openviduToken: this.session.token,
+                            openviduToken,
                             inputVideo: videoClone,
                             inputResolution: '160x96',
                             outputFramerate: 24
@@ -430,7 +441,7 @@ export class Stream {
                 if (typeof VirtualBackground === "undefined") {
                     let script: HTMLScriptElement = document.createElement("script");
                     script.type = "text/javascript";
-                    script.src = this.session.openvidu.httpUri + '/openvidu/virtual-background/openvidu-virtual-background.js?token=' + encodeURIComponent(this.session.token);
+                    script.src = this.session.openvidu.httpUri + '/openvidu/virtual-background/openvidu-virtual-background.js?token=' + openviduToken;
                     script.onload = async () => {
                         try {
                             await afterScriptLoaded();
