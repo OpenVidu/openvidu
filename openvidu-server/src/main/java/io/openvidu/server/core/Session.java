@@ -193,6 +193,10 @@ public class Session implements SessionInterface {
 		return this.tokens.entrySet().iterator();
 	}
 
+	public boolean hasToken(String token) {
+		return this.tokens.containsKey(token);
+	}
+
 	public boolean isClosed() {
 		return closed;
 	}

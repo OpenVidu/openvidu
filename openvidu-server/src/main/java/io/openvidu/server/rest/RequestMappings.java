@@ -14,6 +14,7 @@ public class RequestMappings {
 	// Static resources
 	final public static String RECORDINGS = "/openvidu/recordings";
 	final public static String CUSTOM_LAYOUTS = "/openvidu/layouts";
+	final public static String VIRTUAL_BACKGROUND = "/openvidu/virtual-background";
 	final public static String FRONTEND_CE = "/dashboard";
 	final public static String FRONTEND_PRO = "/inspector";
 

@@ -384,6 +384,7 @@ export class Stream {
                         const VB = new VirtualBackground.VirtualBackground({
                             id,
                             openviduServerUrl: new URL(this.session.openvidu.httpUri),
+                            openviduToken: this.session.token,
                             inputVideo: videoClone,
                             inputResolution: '160x96',
                             outputFramerate: 24
@@ -428,7 +429,7 @@ export class Stream {
                 if (typeof VirtualBackground === "undefined") {
                     let script: HTMLScriptElement = document.createElement("script");
                     script.type = "text/javascript";
-                    script.src = this.session.openvidu.httpUri + '/virtual-background/openvidu-virtual-background.js';
+                    script.src = this.session.openvidu.httpUri + '/openvidu/virtual-background/openvidu-virtual-background.js?token=' + encodeURIComponent(this.session.token);
                     script.onload = async () => {
                         try {
                             await afterScriptLoaded();

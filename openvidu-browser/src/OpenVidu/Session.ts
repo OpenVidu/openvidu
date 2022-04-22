@@ -111,6 +111,10 @@ export class Session extends EventDispatcher {
      */
     options: SessionOptions;
     /**
+     * @hidden 
+     */
+    token: string;
+    /**
      * @hidden
      */
     private videoDataInterval: NodeJS.Timeout;
@@ -1357,10 +1361,7 @@ export class Session extends EventDispatcher {
                         } else {
 
                             // Process join room response
-                            this.processJoinRoomResponse(response);
-
-                            // Configure JSNLogs
-                            OpenViduLogger.configureJSNLog(this.openvidu, token);
+                            this.processJoinRoomResponse(response, token);
 
                             // Initialize local Connection object with values returned by openvidu-server
                             this.connection = new Connection(this, response);
@@ -1510,7 +1511,7 @@ export class Session extends EventDispatcher {
         }
     }
 
-    private processJoinRoomResponse(opts: LocalConnectionOptions) {
+    private processJoinRoomResponse(opts: LocalConnectionOptions, token: string) {
         this.sessionId = opts.session;
         if (opts.customIceServers != null && opts.customIceServers.length > 0) {
             this.openvidu.iceServers = [];
@@ -1557,6 +1558,12 @@ export class Session extends EventDispatcher {
                 + `These versions are still compatible with each other, but openvidu-browser version must be updated as soon as possible to ${semverMajor(opts.version)}.${semverMinor(opts.version)}.x. `
                 + `This client using openvidu-browser ${this.openvidu.libraryVersion} will become incompatible with the next release of openvidu-server`);
         }
+
+        // Configure JSNLogs
+        OpenViduLogger.configureJSNLog(this.openvidu, token);
+
+        // Store token
+        this.token = token;
     }
 
 }
