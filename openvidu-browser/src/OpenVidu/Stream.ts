@@ -158,7 +158,7 @@ export class Stream {
     /**
      * @hidden
      */
-    virtualBackgroundSinkElements?: { VB: any, video: HTMLVideoElement, canvas: HTMLCanvasElement };
+    virtualBackgroundSinkElements?: { VB: any, video: HTMLVideoElement };
 
     /**
      * @hidden
@@ -369,14 +369,15 @@ export class Stream {
                         const id = this.streamId + '_' + uuidv4();
                         const mediaStreamClone = this.mediaStream!.clone();
                         const videoClone = this.streamManager.videos[0].video.cloneNode(false) as HTMLVideoElement;
-                        videoClone.id = 'source_video_' + id;
+                        // @ts-ignore
+                        videoClone.id = VirtualBackground.VirtualBackground.SOURCE_VIDEO_PREFIX + id;
                         videoClone.srcObject = mediaStreamClone;
                         this.virtualBackgroundSourceElements = { videoClone, mediaStreamClone };
 
                         // @ts-ignore
                         VirtualBackground.VirtualBackground.hideHtmlElement(videoClone, false);
                         // @ts-ignore
-                        VirtualBackground.VirtualBackground.appendHtmlElementToHiddenContainer(videoClone);
+                        VirtualBackground.VirtualBackground.appendHtmlElementToHiddenContainer(videoClone, id);
 
                         await videoClone.play();
 
@@ -390,21 +391,21 @@ export class Stream {
                             outputFramerate: 24
                         });
 
-                        let response: { video: HTMLVideoElement, canvas: HTMLCanvasElement };
+                        let filteredVideo: HTMLVideoElement;
                         switch (type) {
                             case 'VB:blur': {
-                                response = await VB.backgroundBlur(options);
+                                filteredVideo = await VB.backgroundBlur(options);
                                 break;
                             }
                             case 'VB:image': {
-                                response = await VB.backgroundImage(options);
+                                filteredVideo = await VB.backgroundImage(options);
                                 break;
                             }
                             default:
                                 throw new Error('Unknown Virtual Background filter: ' + type);
                         }
 
-                        this.virtualBackgroundSinkElements = { VB, ...response };
+                        this.virtualBackgroundSinkElements = { VB, video: filteredVideo };
 
                         videoClone.style.display = 'none';
 
@@ -477,7 +478,34 @@ export class Stream {
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the previously applied filter has been successfully removed and rejected with an Error object in other case
      */
-    removeFilter(): Promise<void> {
+    async removeFilter(): Promise<void> {
+        return await this.removeFilterAux(false);
+    }
+
+    /**
+     * Returns the internal RTCPeerConnection object associated to this stream (https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection)
+     *
+     * @returns Native RTCPeerConnection Web API object
+     */
+    getRTCPeerConnection(): RTCPeerConnection {
+        return this.webRtcPeer.pc;
+    }
+
+    /**
+     * Returns the internal MediaStream object associated to this stream (https://developer.mozilla.org/en-US/docs/Web/API/MediaStream)
+     *
+     * @returns Native MediaStream Web API object
+     */
+    getMediaStream(): MediaStream {
+        return this.mediaStream!;
+    }
+
+    /* Hidden methods */
+
+    /**
+     * @hidden
+     */
+    removeFilterAux(isDisposing: boolean): Promise<void> {
         return new Promise(async (resolve, reject) => {
 
             const resolveRemoveFilter = (error) => {
@@ -505,19 +533,18 @@ export class Stream {
 
                 try {
 
-                    this.virtualBackgroundSinkElements!.VB.cleanUp();
-                    const parent = this.virtualBackgroundSourceElements!.videoClone.parentElement;
-                    this.virtualBackgroundSourceElements!.videoClone.remove();
-                    if (parent!.children.length === 0) {
-                        // @ts-ignore
-                        VirtualBackground.VirtualBackground.removeHiddenContainer();
+                    const mediaStreamClone = this.virtualBackgroundSourceElements!.mediaStreamClone;
+                    if (!isDisposing) {
+                        if (this.streamManager.remote) {
+                            await this.streamManager.replaceTrackInMediaStream(mediaStreamClone.getVideoTracks()[0]);
+                        } else {
+                            await (this.streamManager as Publisher).replaceTrack(mediaStreamClone.getVideoTracks()[0]);
+                        }
+                    } else {
+                        mediaStreamClone.getTracks().forEach((track) => track.stop());
                     }
 
-                    if (this.streamManager.remote) {
-                        await this.streamManager.replaceTrackInMediaStream(this.virtualBackgroundSourceElements!.mediaStreamClone.getVideoTracks()[0]);
-                    } else {
-                        await (this.streamManager as Publisher).replaceTrack(this.virtualBackgroundSourceElements!.mediaStreamClone.getVideoTracks()[0]);
-                    }
+                    this.virtualBackgroundSinkElements!.VB.cleanUp();
 
                     delete this.virtualBackgroundSinkElements;
                     delete this.virtualBackgroundSourceElements;
@@ -546,29 +573,8 @@ export class Stream {
                 );
 
             }
-
         });
     }
-
-    /**
-     * Returns the internal RTCPeerConnection object associated to this stream (https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection)
-     *
-     * @returns Native RTCPeerConnection Web API object
-     */
-    getRTCPeerConnection(): RTCPeerConnection {
-        return this.webRtcPeer.pc;
-    }
-
-    /**
-     * Returns the internal MediaStream object associated to this stream (https://developer.mozilla.org/en-US/docs/Web/API/MediaStream)
-     *
-     * @returns Native MediaStream Web API object
-     */
-    getMediaStream(): MediaStream {
-        return this.mediaStream!;
-    }
-
-    /* Hidden methods */
 
     /**
      * @hidden
@@ -651,11 +657,14 @@ export class Stream {
     /**
      * @hidden
      */
-    disposeMediaStream(): void {
+    async disposeMediaStream(): Promise<void> {
         if (!!this.filter && this.filter.type.startsWith('VB:')) {
-            this.removeFilter()
-                .then(() => console.debug(`Success removing Virtual Background filter for stream ${this.streamId}`))
-                .catch(error => console.error(`Error removing Virtual Background filter for stream ${this.streamId}`, error));
+            try {
+                await this.removeFilterAux(true);
+                console.debug(`Success removing Virtual Background filter for stream ${this.streamId}`);
+            } catch (error) {
+                console.error(`Error removing Virtual Background filter for stream ${this.streamId}`, error);
+            }
         }
         if (this.mediaStream) {
             this.mediaStream.getAudioTracks().forEach((track) => {

@@ -343,8 +343,8 @@ export class Publisher extends StreamManager {
             if (this.stream.isLocalStreamPublished) {
                 // Only if the Publisher has been published is necessary to call native Web API RTCRtpSender.replaceTrack
                 // If it has not been published yet, replacing it on the MediaStream object is enough
-                await this.replaceTrackInRtcRtpSender(track);
-                return await this.replaceTrackInMediaStream(track);
+                await this.replaceTrackInMediaStream(track);
+                return await this.replaceTrackInRtcRtpSender(track);
             } else {
                 // Publisher not published. Simply replace the track on the local MediaStream
                 return await this.replaceTrackInMediaStream(track);
