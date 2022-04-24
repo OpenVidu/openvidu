@@ -18,6 +18,7 @@ IMAGES=(
   "docker.elastic.co/beats/metricbeat"
   "openvidu/media-node-controller"
   "openvidu/mediasoup-controller"
+  "openvidu/openvidu-coturn"
 )
 
 docker_command_by_container_image() {

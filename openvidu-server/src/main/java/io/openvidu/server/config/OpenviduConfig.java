@@ -160,14 +160,9 @@ public class OpenviduConfig {
 
 	private Integer openviduStreamsVideoMinSendBandwidth;
 
-	/**
-	 * Map which relates used Coturn IP per Media Node.
-	 * Depending on which media node will be used for the session,
-	 * a coturn IP should be sent to the browser and Kurento.
-	 */
-	private ConcurrentHashMap<String, String> mapKmsUriCoturnIp = new ConcurrentHashMap<>();
+	protected String coturnIp;
 
-	private int coturnPort;
+	protected int coturnPort;
 
 	private String coturnSharedSecretKey;
 
@@ -341,7 +336,7 @@ public class OpenviduConfig {
 	}
 
 	public String getCoturnIp(String kmsUri) {
-		return this.mapKmsUriCoturnIp.get(kmsUri);
+		return this.coturnIp;
 	}
 
 	public int getCoturnPort() {
@@ -623,8 +618,7 @@ public class OpenviduConfig {
 		kmsUrisList = checkKmsUris();
 
 		checkCoturnIp();
-
-		checkCoturnPort();
+		coturnPort = checkPort("COTURN_PORT");
 
 		checkWebhook();
 
@@ -647,30 +641,28 @@ public class OpenviduConfig {
 	}
 
 	private void checkCoturnIp() {
-		if (this.getKmsUris().isEmpty()) {
-			throw new IllegalArgumentException("'KMS_URIS' should contain at least one KMS url");
-		}
-		String firstKmsWsUri = this.getKmsUris().get(0);
 		String property = "COTURN_IP";
-		String coturnIp = asOptionalIPv4OrIPv6(property);
-		if (coturnIp == null || coturnIp.isEmpty()) {
+		coturnIp = checkIp(property);
+
+		if (coturnIp == null || this.coturnIp.isEmpty()) {
 			try {
-				coturnIp = new URL(this.getFinalUrl()).getHost();
-				this.mapKmsUriCoturnIp.put(firstKmsWsUri, coturnIp);
+				this.coturnIp = new URL(this.getFinalUrl()).getHost();
 			} catch (MalformedURLException e) {
 				log.error("Can't get Domain name from OpenVidu public Url: " + e.getMessage());
 			}
-		} else {
-			this.mapKmsUriCoturnIp.put(firstKmsWsUri, coturnIp);
 		}
 	}
 
-	private void checkCoturnPort() {
-		String property = "COTURN_PORT";
-		coturnPort = this.asNonNegativeInteger(property);
-		if (coturnPort <= 0 || coturnPort > 65535) {
-			addError("COTURN_PORT", "COTURN PORT is out of valid ports range (0-65535)");
+	protected String checkIp(String property) {
+		return asOptionalIPv4OrIPv6(property);
+	}
+
+	protected int checkPort(String property) {
+		int port = this.asNonNegativeInteger(property);
+		if (port <= 0 || port > 65535) {
+			addError(property, property + " is out of valid ports range (0-65535)");
 		}
+		return port;
 	}
 
 	private void checkWebhook() {

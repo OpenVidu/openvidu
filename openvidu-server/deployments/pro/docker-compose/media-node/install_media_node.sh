@@ -12,6 +12,7 @@ IMAGES=(
   "docker.elastic.co/beats/metricbeat"
   "openvidu/media-node-controller"
   "openvidu/mediasoup-controller"
+  "openvidu/openvidu-coturn"
 )
 
 # Support docker compose v1 and v2
@@ -247,11 +248,13 @@ upgrade_media_node() {
      METRICBEAT_IMAGE="$(grep METRICBEAT_IMAGE docker-compose.yml | cut -d"=" -f2)"
      FILEBEAT_IMAGE="$(grep FILEBEAT_IMAGE docker-compose.yml | cut -d"=" -f2)"
      OPENVIDU_RECORDING_IMAGE="$(grep OPENVIDU_RECORDING_IMAGE docker-compose.yml | cut -d"=" -f2)"
+     COTURN_IMAGE="$(grep COTURN_IMAGE docker-compose.yml | cut -d"=" -f2)"
      docker pull "$KMS_IMAGE" || fatal "Error while pulling docker image: $KMS_IMAGE"
      docker pull "$MEDIASOUP_IMAGE" || fatal "Error while pulling docker image: $MEDIASOUP_IMAGE"
      docker pull "$METRICBEAT_IMAGE" || fatal "Error while pulling docker image: $METRICBEAT_IMAGE"
      docker pull "$FILEBEAT_IMAGE" || fatal "Error while pulling docker image: $FILEBEAT_IMAGE"
      docker pull "$OPENVIDU_RECORDING_IMAGE" || fatal "Error while pulling docker image: $OPENVIDU_RECORDING_IMAGE"
+     docker pull "$COTURN_IMAGE" || fatal "Error while pulling docker image: $COTURN_IMAGE"
      docker-compose pull || true
 
      printf '\n     => Stopping Media Node...'
