@@ -1,0 +1,14 @@
+<div class="panel" id="activities-container" fxLayout="column" fxLayoutAlign="space-evenly none">
+	<div class="header-container" fxFlex="55px" fxLayoutAlign="start center">
+		<h3>Activities</h3>
+		<button mat-icon-button matTooltip="Close" (click)="close()">
+			<mat-icon>close</mat-icon>
+		</button>
+	</div>
+
+	<div class="activities-body-container" fxFlex="75%" fxLayoutAlign="space-evenly none">
+		<mat-accordion>
+			<ov-recording-activity></ov-recording-activity>
+		</mat-accordion>
+	</div>
+</div>

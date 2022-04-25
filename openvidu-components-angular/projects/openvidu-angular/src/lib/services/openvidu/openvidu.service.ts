@@ -13,10 +13,17 @@ import { ScreenType, VideoType } from '../../models/video-type.model';
 import { ParticipantService } from '../participant/participant.service';
 import { TokenService } from '../token/token.service';
 
+export enum OpenViduEdition {
+	CE = 'CE',
+	PRO = 'PRO',
+	ENTERPRISE = 'ENTERPRISE'
+}
+
 @Injectable({
 	providedIn: 'root'
 })
 export class OpenViduService {
+	private ovEdition: OpenViduEdition;
 	protected OV: OpenVidu = null;
 	protected OVScreen: OpenVidu = null;
 	protected webcamSession: Session = null;
@@ -58,6 +65,20 @@ export class OpenViduService {
 			if (this.openviduAngularConfigSrv.isProduction()) this.OVScreen.enableProdMode();
 			this.screenSession = this.OVScreen.initSession();
 		}
+	}
+
+	/**
+	 * @internal
+	 */
+	isOpenViduCE(): boolean {
+		return this.ovEdition === OpenViduEdition.CE;
+	}
+
+	/**
+	 * @internal
+	 */
+	setOpenViduEdition(edition: OpenViduEdition) {
+		this.ovEdition = edition;
 	}
 
 	/**

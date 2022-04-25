@@ -10,7 +10,9 @@ import {
 	ToolbarAdditionalButtonsDirective,
 	ToolbarDirective,
 	ToolbarAdditionalPanelButtonsDirective,
-	AdditionalPanelsDirective
+	AdditionalPanelsDirective,
+	ActivitiesPanelDirective,
+	BackgroundEffectsPanelDirective
 } from './openvidu-angular.directive';
 
 @NgModule({
@@ -25,7 +27,9 @@ import {
 		ToolbarDirective,
 		ToolbarAdditionalButtonsDirective,
 		ToolbarAdditionalPanelButtonsDirective,
-		ParticipantPanelItemElementsDirective
+		ParticipantPanelItemElementsDirective,
+		ActivitiesPanelDirective,
+		BackgroundEffectsPanelDirective
 	],
 	exports: [
 		ChatPanelDirective,
@@ -38,7 +42,9 @@ import {
 		ToolbarDirective,
 		ToolbarAdditionalButtonsDirective,
 		ToolbarAdditionalPanelButtonsDirective,
-		ParticipantPanelItemElementsDirective
+		ParticipantPanelItemElementsDirective,
+		ActivitiesPanelDirective,
+		BackgroundEffectsPanelDirective
 	]
 })
 export class OpenViduAngularDirectiveModule {}

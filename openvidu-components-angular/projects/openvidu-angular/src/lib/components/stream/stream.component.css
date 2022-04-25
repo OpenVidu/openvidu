@@ -49,10 +49,6 @@
 	top: 40px;
   }
 
-  mat-error {
-	text-align: center;
-	color: #353535;
-  }
 
   video {
 	-o-object-fit: cover;
@@ -113,17 +109,6 @@
 	overflow: hidden;
 	background-color: #000000;
 	border-radius: var(--ov-video-radius);
-  }
-
-  mat-error,
-  ::ng-deep .mat-focused .mat-form-field-label,
-  ::ng-deep .mat-form-field-appearance-legacy .mat-form-field-label {
-	color: #cacaca !important;
-  }
-
-  ::ng-deep .mat-form-field-appearance-legacy .mat-form-field-underline,
-  ::ng-deep .mat-form-field.mat-focused .mat-form-field-ripple {
-	background-color: #cacaca !important;
   }
 
   input {

@@ -1,6 +1,12 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, OnInit, TemplateRef } from '@angular/core';
 import { skip, Subscription } from 'rxjs';
-import { ChatPanelDirective, AdditionalPanelsDirective, ParticipantsPanelDirective } from '../../directives/template/openvidu-angular.directive';
+import {
+	ChatPanelDirective,
+	AdditionalPanelsDirective,
+	ParticipantsPanelDirective,
+	BackgroundEffectsPanelDirective,
+	ActivitiesPanelDirective
+} from '../../directives/template/openvidu-angular.directive';
 import { PanelType } from '../../models/panel.model';
 import { PanelService } from '../../services/panel/panel.service';
 
@@ -49,19 +55,28 @@ import { PanelService } from '../../services/panel/panel.service';
 })
 export class PanelComponent implements OnInit {
 	/**
-     * @ignore
-     */
+	 * @ignore
+	 */
 	@ContentChild('participantsPanel', { read: TemplateRef }) participantsPanelTemplate: TemplateRef<any>;
 
 	/**
-     * @ignore
-     */
+	 * @ignore
+	 */
+	@ContentChild('backgroundEffectsPanel', { read: TemplateRef }) backgroundEffectsPanelTemplate: TemplateRef<any>;
+
+	/**
+	 * @ignore
+	 */
+	@ContentChild('activitiesPanel', { read: TemplateRef }) activitiesPanelTemplate: TemplateRef<any>;
+	/**
+	 * @ignore
+	 */
 	@ContentChild('chatPanel', { read: TemplateRef }) chatPanelTemplate: TemplateRef<any>;
 
 	/**
-     * @ignore
-     */
-	 @ContentChild('additionalPanels', { read: TemplateRef }) additionalPanelsTemplate: TemplateRef<any>;
+	 * @ignore
+	 */
+	@ContentChild('additionalPanels', { read: TemplateRef }) additionalPanelsTemplate: TemplateRef<any>;
 
 	@ContentChild(ParticipantsPanelDirective)
 	set externalParticipantPanel(externalParticipantsPanel: ParticipantsPanelDirective) {
@@ -69,6 +84,24 @@ export class PanelComponent implements OnInit {
 		// is inside of the PANEL component tagged with '*ovPanel'
 		if (externalParticipantsPanel) {
 			this.participantsPanelTemplate = externalParticipantsPanel.template;
+		}
+	}
+
+	@ContentChild(BackgroundEffectsPanelDirective)
+	set externalBackgroundEffectsPanel(externalBackgroundEffectsPanel: BackgroundEffectsPanelDirective) {
+		// This directive will has value only when BACKGROUND EFFECTS PANEL component tagged with '*ovBackgroundEffectsPanel'
+		// is inside of the PANEL component tagged with '*ovPanel'
+		if (externalBackgroundEffectsPanel) {
+			this.backgroundEffectsPanelTemplate = externalBackgroundEffectsPanel.template;
+		}
+	}
+
+	@ContentChild(ActivitiesPanelDirective)
+	set externalActivitiesPanel(externalActivitiesPanel: ActivitiesPanelDirective) {
+		// This directive will has value only when ACTIVITIES PANEL component tagged with '*ovActivitiesPanel'
+		// is inside of the PANEL component tagged with '*ovPanel'
+		if (externalActivitiesPanel) {
+			this.activitiesPanelTemplate = externalActivitiesPanel.template;
 		}
 	}
 
@@ -92,16 +125,18 @@ export class PanelComponent implements OnInit {
 
 	isParticipantsPanelOpened: boolean;
 	isChatPanelOpened: boolean;
+	isBackgroundEffectsPanelOpened: boolean;
+	isActivitiesPanelOpened: boolean;
 
 	/**
-     * @internal
-     */
+	 * @internal
+	 */
 	isExternalPanelOpened: boolean;
 	private panelSubscription: Subscription;
 
 	/**
-     * @ignore
-     */
+	 * @ignore
+	 */
 	constructor(protected panelService: PanelService, private cd: ChangeDetectorRef) {}
 
 	ngOnInit(): void {
@@ -115,11 +150,15 @@ export class PanelComponent implements OnInit {
 	}
 
 	private subscribeToPanelToggling() {
-		this.panelSubscription = this.panelService.panelOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: PanelType | string }) => {
-			this.isChatPanelOpened = ev.opened && ev.type === PanelType.CHAT;
-			this.isParticipantsPanelOpened = ev.opened && ev.type === PanelType.PARTICIPANTS;
-			this.isExternalPanelOpened = ev.opened && ev.type !== PanelType.PARTICIPANTS && ev.type !== PanelType.CHAT;
-			this.cd.markForCheck();
-		});
+		this.panelSubscription = this.panelService.panelOpenedObs
+			.pipe(skip(1))
+			.subscribe((ev: { opened: boolean; type?: PanelType | string }) => {
+				this.isChatPanelOpened = ev.opened && ev.type === PanelType.CHAT;
+				this.isParticipantsPanelOpened = ev.opened && ev.type === PanelType.PARTICIPANTS;
+				this.isBackgroundEffectsPanelOpened = ev.opened && ev.type === PanelType.BACKGROUND_EFFECTS;
+				this.isActivitiesPanelOpened = ev.opened && ev.type === PanelType.ACTIVITIES;
+				this.isExternalPanelOpened = ev.opened && ev.type !== PanelType.PARTICIPANTS && ev.type !== PanelType.CHAT;
+				this.cd.markForCheck();
+			});
 	}
 }

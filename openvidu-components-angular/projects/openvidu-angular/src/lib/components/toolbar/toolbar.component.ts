@@ -8,7 +8,8 @@ import {
 	OnDestroy,
 	OnInit,
 	Output,
-	TemplateRef
+	TemplateRef,
+	ViewChild
 } from '@angular/core';
 import { skip, Subscription } from 'rxjs';
 import { TokenService } from '../../services/token/token.service';
@@ -32,6 +33,9 @@ import {
 } from '../../directives/template/openvidu-angular.directive';
 import { ParticipantAbstractModel } from '../../models/participant.model';
 import { PlatformService } from '../../services/platform/platform.service';
+import { MatMenuTrigger } from '@angular/material/menu';
+import { RecordingInfo, RecordingService } from '../../services/recording/recording.service';
+import { RecordingStatus } from '../../models/recording.model';
 
 /**
  *
@@ -49,6 +53,7 @@ import { PlatformService } from '../../services/platform/platform.service';
  * | :----------------------------: | :-------: | :---------------------------------------------: |
  * | **screenshareButton**       | `boolean` | {@link ToolbarScreenshareButtonDirective}       |
  * | **fullscreenButton**        | `boolean` | {@link ToolbarFullscreenButtonDirective}        |
+ * | **backgroundEffectsButton** | `boolean` | {@link ToolbarBackgroundEffectsButtonDirective} |
  * | **leaveButton**             | `boolean` | {@link ToolbarLeaveButtonDirective}             |
  * | **chatPanelButton**         | `boolean` | {@link ToolbarChatPanelButtonDirective}         |
  * | **participantsPanelButton** | `boolean` | {@link ToolbarParticipantsPanelButtonDirective} |
@@ -160,9 +165,20 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	@Output() onParticipantsPanelButtonClicked: EventEmitter<void> = new EventEmitter<any>();
 
 	/**
+	 * @internal
+	 * TODO: WIP
+	 * Provides event notifications that fire when background effects button has been clicked.
+	 */
+	// @Output() onBackgroundEffectsButtonClicked: EventEmitter<void> = new EventEmitter<any>();
+
+	/**
 	 * Provides event notifications that fire when chat panel button has been clicked.
 	 */
 	@Output() onChatPanelButtonClicked: EventEmitter<void> = new EventEmitter<any>();
+	/**
+	 * @ignore
+	 */
+	@ViewChild(MatMenuTrigger) public menuTrigger: MatMenuTrigger;
 
 	/**
 	 * @ignore
@@ -216,6 +232,11 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	/**
 	 * @ignore
 	 */
+	isActivitiesOpened: boolean = false;
+
+	/**
+	 * @ignore
+	 */
 	isMinimal: boolean = false;
 	/**
 	 * @ignore
@@ -225,6 +246,12 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	 * @ignore
 	 */
 	showFullscreenButton: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	showBackgroundEffectsButton: boolean = true;
+
 	/**
 	 * @ignore
 	 */
@@ -233,6 +260,11 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	 * @ignore
 	 */
 	showParticipantsPanelButton: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	showActivitiesPanelButton: boolean = true;
 	/**
 	 * @ignore
 	 */
@@ -246,6 +278,16 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	 */
 	showSessionName: boolean = true;
 
+	/**
+	 * @ignore
+	 */
+	isRecording: boolean = false;
+
+	/**
+	 * @ignore
+	 */
+	isOpenViduCE: boolean;
+
 	private log: ILogger;
 	private minimalSub: Subscription;
 	private panelTogglingSubscription: Subscription;
@@ -253,7 +295,11 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	private localParticipantSubscription: Subscription;
 	private screenshareButtonSub: Subscription;
 	private fullscreenButtonSub: Subscription;
+	private backgroundEffectsButtonSub: Subscription;
 	private leaveButtonSub: Subscription;
+	private recordingSubscription: Subscription;
+
+	private activitiesPanelButtonSub: Subscription;
 	private participantsPanelButtonSub: Subscription;
 	private chatPanelButtonSub: Subscription;
 	private displayLogoSub: Subscription;
@@ -275,7 +321,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		protected loggerSrv: LoggerService,
 		private cd: ChangeDetectorRef,
 		private libService: OpenViduAngularConfigService,
-		private platformService: PlatformService
+		private platformService: PlatformService,
+		private recordingService: RecordingService
 	) {
 		this.log = this.loggerSrv.get('ToolbarComponent');
 	}
@@ -310,12 +357,14 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		await this.oVDevicesService.initializeDevices();
 		this.hasVideoDevices = this.oVDevicesService.hasVideoDeviceAvailable();
 		this.hasAudioDevices = this.oVDevicesService.hasAudioDeviceAvailable();
+		this.isOpenViduCE = this.openviduService.isOpenViduCE();
 		this.session = this.openviduService.getWebcamSession();
 
 		this.subscribeToUserMediaProperties();
 		this.subscribeToReconnection();
 		this.subscribeToMenuToggling();
 		this.subscribeToChatMessages();
+		this.subscribeToRecordingStatus();
 	}
 
 	ngOnDestroy(): void {
@@ -324,12 +373,15 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		if (this.localParticipantSubscription) this.localParticipantSubscription.unsubscribe();
 		if (this.screenshareButtonSub) this.screenshareButtonSub.unsubscribe();
 		if (this.fullscreenButtonSub) this.fullscreenButtonSub.unsubscribe();
+		if (this.backgroundEffectsButtonSub) this.backgroundEffectsButtonSub.unsubscribe();
 		if (this.leaveButtonSub) this.leaveButtonSub.unsubscribe();
 		if (this.participantsPanelButtonSub) this.participantsPanelButtonSub.unsubscribe();
 		if (this.chatPanelButtonSub) this.chatPanelButtonSub.unsubscribe();
 		if (this.displayLogoSub) this.displayLogoSub.unsubscribe();
 		if (this.displaySessionNameSub) this.displaySessionNameSub.unsubscribe();
 		if (this.minimalSub) this.minimalSub.unsubscribe();
+		if (this.activitiesPanelButtonSub) this.activitiesPanelButtonSub.unsubscribe();
+		if (this.recordingSubscription) this.recordingSubscription.unsubscribe();
 	}
 
 	/**
@@ -386,6 +438,23 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	}
 
 	/**
+	 * TODO: WIP
+	 * @ignore
+	 */
+	toggleActivitiesPanel(expandPanel: string) {
+		// this.onActivitiesPanelButtonClicked.emit();
+		// this.panelService.togglePanel(PanelType.ACTIVITIES);
+	}
+
+	/**
+	 * @ignore
+	 */
+	toggleBackgroundEffects() {
+		// this.onBackgroundEffectsButtonClicked.emit();
+		this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
+	}
+
+	/**
 	 * @ignore
 	 */
 	toggleParticipantsPanel() {
@@ -425,6 +494,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		this.panelTogglingSubscription = this.panelService.panelOpenedObs.subscribe((ev: { opened: boolean; type?: PanelType }) => {
 			this.isChatOpened = ev.opened && ev.type === PanelType.CHAT;
 			this.isParticipantsOpened = ev.opened && ev.type === PanelType.PARTICIPANTS;
+			this.isActivitiesOpened = ev.opened && ev.type === PanelType.ACTIVITIES;
 			if (this.isChatOpened) {
 				this.unreadMessages = 0;
 			}
@@ -451,6 +521,14 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		});
 	}
 
+	subscribeToRecordingStatus() {
+		//TODO: WIP
+		// this.recordingSubscription = this.recordingService.recordingStatusObs.pipe(skip(1)).subscribe((info: RecordingInfo) => {
+		// 	this.isRecording = info.status === RecordingStatus.STARTED;
+		// 	this.cd.markForCheck();
+		// });
+	}
+
 	private subscribeToToolbarDirectives() {
 		this.minimalSub = this.libService.minimalObs.subscribe((value: boolean) => {
 			this.isMinimal = value;
@@ -474,6 +552,14 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		});
 		this.participantsPanelButtonSub = this.libService.participantsPanelButtonObs.subscribe((value: boolean) => {
 			this.showParticipantsPanelButton = value;
+			this.cd.markForCheck();
+		});
+		// this.activitiesPanelButtonSub = this.libService.activitiesPanelButtonObs.subscribe((value: boolean) => {
+		// 	this.showActivitiesPanelButton = value;
+		// 	this.cd.markForCheck();
+		// });
+		this.backgroundEffectsButtonSub = this.libService.backgroundEffectsButton.subscribe((value: boolean) => {
+			this.showBackgroundEffectsButton = value;
 			this.cd.markForCheck();
 		});
 		this.displayLogoSub = this.libService.displayLogoObs.subscribe((value: boolean) => {

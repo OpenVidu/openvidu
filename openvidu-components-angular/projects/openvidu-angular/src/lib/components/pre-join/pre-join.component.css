@@ -16,11 +16,28 @@ hr {
 	margin: 0;
 }
 
-ov-layout {
-	height: -webkit-fill-available;
-	height: -moz-available;
-	width: -webkit-fill-available;
-	width: -moz-available;
+#prejoin-container ::ng-deep .sidenav-container {
+	padding-top: 0px !important;
+}
+#prejoin-container ::ng-deep #background-effects-container {
+	margin: 0px !important;
+	max-height: 100% !important;
+	height: 100% !important;
+}
+
+#prejoin-container ::ng-deep .mat-drawer-container, #prejoin-container ::ng-deep .sidenav-menu {
+	background-color: var(--ov-light-color) !important;
+}
+#prejoin-container ::ng-deep .sidenav-menu {
+	width: 320px;
+}
+
+#background-effects-btn {
+	position: absolute;
+    z-index: 1;
+	background-color: var(--ov-secondary-color);
+    bottom: 5px;
+    right: 5px;
 }
 
 .media-panel {

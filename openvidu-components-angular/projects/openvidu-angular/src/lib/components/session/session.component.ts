@@ -2,14 +2,16 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	ContentChild,
+	ElementRef,
 	EventEmitter,
 	HostListener,
+	Input,
 	OnInit,
 	Output,
 	TemplateRef,
 	ViewChild
 } from '@angular/core';
-import { Subscriber, Session, StreamEvent, StreamPropertyChangedEvent, SessionDisconnectedEvent, ConnectionEvent } from 'openvidu-browser';
+import { Subscriber, Session, StreamEvent, StreamPropertyChangedEvent, SessionDisconnectedEvent, ConnectionEvent, RecordingEvent } from 'openvidu-browser';
 
 import { VideoType } from '../../models/video-type.model';
 import { ILogger } from '../../models/logger.model';
@@ -27,7 +29,7 @@ import { LayoutService } from '../../services/layout/layout.service';
 import { Subscription, skip } from 'rxjs';
 import { PanelType } from '../../models/panel.model';
 import { PanelService } from '../../services/panel/panel.service';
-import { PlatformService } from '../../services/platform/platform.service';
+import { RecordingService } from '../../services/recording/recording.service';
 
 /**
  * @internal
@@ -44,6 +46,7 @@ export class SessionComponent implements OnInit {
 	@ContentChild('panel', { read: TemplateRef }) panelTemplate: TemplateRef<any>;
 	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
 
+	@Input() usedInPrejoinPage = false;
 	@Output() onSessionCreated = new EventEmitter<any>();
 
 	session: Session;
@@ -69,7 +72,8 @@ export class SessionComponent implements OnInit {
 		protected chatService: ChatService,
 		protected tokenService: TokenService,
 		protected layoutService: LayoutService,
-		protected panelService: PanelService
+		protected panelService: PanelService,
+		private recordingService: RecordingService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
 	}
@@ -94,24 +98,40 @@ export class SessionComponent implements OnInit {
 		}, 0);
 	}
 
-	async ngOnInit() {
-		this.session = this.openviduService.getWebcamSession();
-		this.sessionScreen = this.openviduService.getScreenSession();
-		this.subscribeToConnectionCreatedAndDestroyed();
-		this.subscribeToStreamCreated();
-		this.subscribeToStreamDestroyed();
-		this.subscribeToStreamPropertyChange();
-		this.subscribeToNicknameChanged();
-		this.chatService.subscribeToChat();
-		this.subscribeToReconnection();
-		this.onSessionCreated.emit(this.session);
+	@ViewChild('videoContainer',  {static:false, read: ElementRef })
+	set videoContainer(container: ElementRef) {
+		setTimeout(() => {
+			if (container && !this.toolbarTemplate) {
+				container.nativeElement.style.height = '100%';
+				container.nativeElement.style.minHeight = '100%';
+				this.layoutService.update();
+			}
+		}, 0);
+	}
 
-		await this.connectToSession();
-		// Workaround, firefox does not have audio when publisher join with muted camera
-		// if (this.platformService.isFirefox() && !this.participantService.hasCameraVideoActive()) {
-		// 	this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), true);
-		// 	this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), false);
-		// }
+	async ngOnInit() {
+		if(!this.usedInPrejoinPage){
+			this.session = this.openviduService.getWebcamSession();
+			this.sessionScreen = this.openviduService.getScreenSession();
+			this.subscribeToConnectionCreatedAndDestroyed();
+			this.subscribeToStreamCreated();
+			this.subscribeToStreamDestroyed();
+			this.subscribeToStreamPropertyChange();
+			this.subscribeToNicknameChanged();
+			this.chatService.subscribeToChat();
+			this.subscribeToReconnection();
+			// if(RecordingEnabled){
+				this.subscribeToRecordingEvents();
+			// }
+			this.onSessionCreated.emit(this.session);
+
+			await this.connectToSession();
+			// Workaround, firefox does not have audio when publisher join with muted camera
+			// if (this.platformService.isFirefox() && !this.participantService.hasCameraVideoActive()) {
+			// 	this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), true);
+			// 	this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), false);
+			// }
+		}
 	}
 
 	ngOnDestroy() {
@@ -268,6 +288,16 @@ export class SessionComponent implements OnInit {
 				this.actionService.closeDialog();
 				this.leaveSession();
 			}
+		});
+	}
+
+	private subscribeToRecordingEvents() {
+		this.session.on('recordingStarted', (event: RecordingEvent) => {
+			this.recordingService.startRecording(event);
+		});
+
+		this.session.on('recordingStopped', (event: RecordingEvent) => {
+			this.recordingService.stopRecording(event);
 		});
 	}
 }

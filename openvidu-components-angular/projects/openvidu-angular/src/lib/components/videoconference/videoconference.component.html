@@ -1,5 +1,5 @@
 <div id="call-container">
-	<div id="pre-join-container" *ngIf="showPrejoin && participantReady && !joinSessionClicked">
+	<div id="pre-join-container" *ngIf="showPrejoin && tokensReceived && participantReady && !joinSessionClicked">
 		<ov-pre-join (onJoinButtonClicked)="_onJoinButtonClicked()"></ov-pre-join>
 		<!-- <ov-user-settings (onJoinClicked)="_onJoinClicked()" (onCloseClicked)="onLeaveSessionClicked()"></ov-user-settings> -->
 	</div>
@@ -14,7 +14,7 @@
 		<span>{{ errorMessage }}</span>
 	</div>
 
-	<div id="session-container" *ngIf="(joinSessionClicked || !showPrejoin) && participantReady && canPublish && !error">
+	<div id="session-container" *ngIf="(joinSessionClicked || !showPrejoin) && participantReady && tokensReceived && !error">
 		<ov-session (onSessionCreated)="_onSessionCreated($event)">
 			<ng-template #toolbar>
 				<ng-container *ngIf="openviduAngularToolbarTemplate">
@@ -68,6 +68,14 @@
 			<ng-container *ngTemplateOutlet="openviduAngularParticipantsPanelTemplate"></ng-container>
 		</ng-template>
 
+		<ng-template #backgroundEffectsPanel>
+			<ov-background-effects-panel id="default-background-effects-panel"></ov-background-effects-panel>
+		</ng-template>
+
+		<ng-template #activitiesPanel>
+			<ng-container *ngTemplateOutlet="openviduAngularActivitiesPanelTemplate"></ng-container>
+		</ng-template>
+
 		<ng-template #additionalPanels>
 			<ng-container *ngTemplateOutlet="openviduAngularAdditionalPanelsTemplate"></ng-container>
 		</ng-template>
@@ -76,6 +84,14 @@
 
 <ng-template #defaultChatPanel>
 	<ov-chat-panel id="default-chat-panel"></ov-chat-panel>
+</ng-template>
+
+<ng-template #defaultActivitiesPanel>
+	<!-- <ov-activities-panel
+		id="default-activities-panel"
+		(onStartRecordingClicked)="onStartRecordingClicked()"
+		(onStopRecordingClicked)="onStopRecordingClicked()"
+	></ov-activities-panel> -->
 </ng-template>
 
 <ng-template #defaultParticipantsPanel>

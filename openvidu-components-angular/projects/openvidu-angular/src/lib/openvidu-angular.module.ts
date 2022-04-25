@@ -20,6 +20,7 @@ import { OverlayContainer } from '@angular/cdk/overlay';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
+import {MatExpansionModule} from '@angular/material/expansion';
 
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -63,6 +64,9 @@ import { PreJoinComponent } from './components/pre-join/pre-join.component';
 import { AvatarProfileComponent } from './components/avatar-profile/avatar-profile.component';
 import { OpenViduAngularDirectiveModule } from './directives/template/openvidu-angular.directive.module';
 import { ApiDirectiveModule } from './directives/api/api.directive.module';
+import { BackgroundEffectsPanelComponent } from './components/panel/background-effects-panel/background-effects-panel.component';
+import { ActivitiesPanelComponent } from './components/panel/activities-panel/activities-panel.component';
+import { RecordingActivityComponent } from './components/panel/activities-panel/recording-activity-panel/recording-activity.component';
 
 @NgModule({
 	declarations: [
@@ -84,6 +88,9 @@ import { ApiDirectiveModule } from './directives/api/api.directive.module';
 		PanelComponent,
 		AvatarProfileComponent,
 		PreJoinComponent,
+		BackgroundEffectsPanelComponent,
+  		ActivitiesPanelComponent,
+    	RecordingActivityComponent,
 	],
 	imports: [
 		CommonModule,
@@ -111,6 +118,7 @@ import { ApiDirectiveModule } from './directives/api/api.directive.module';
 		MatMenuModule,
 		MatDividerModule,
 		MatListModule,
+		MatExpansionModule,
 		OpenViduAngularDirectiveModule,
 		ApiDirectiveModule
 	],
@@ -137,6 +145,8 @@ import { ApiDirectiveModule } from './directives/api/api.directive.module';
 		PanelComponent,
 		ParticipantsPanelComponent,
 		ParticipantPanelItemComponent,
+		BackgroundEffectsPanelComponent,
+		ActivitiesPanelComponent,
 		ChatPanelComponent,
 		SessionComponent,
 		LayoutComponent,

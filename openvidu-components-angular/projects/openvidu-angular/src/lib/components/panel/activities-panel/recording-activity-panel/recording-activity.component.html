@@ -1,0 +1,62 @@
+<mat-expansion-panel (opened)="panelOpened()" (closed)="panelClosed()">
+	<mat-expansion-panel-header>
+		<mat-list>
+			<mat-list-item>
+				<div matListAvatar class="activity-icon">
+					<mat-icon  >video_camera_front</mat-icon>
+
+				</div>
+				<h3 matLine class="activity-title">Recording</h3>
+				<p matLine class="activity-subtitle">Record your meeting for posterity</p>
+				<div class="activity-action-buttons">
+					<div
+						id="recording-status"
+						[ngClass]="{
+							started: recordingStatus === recStatusEnum.STARTED,
+							stopped: recordingStatus === recStatusEnum.STOPPED
+						}"
+					>
+						<span>{{ recordingStatus }}</span>
+					</div>
+				</div>
+			</mat-list-item>
+		</mat-list>
+	</mat-expansion-panel-header>
+	<div *ngIf="opened">
+		<mat-list *ngIf="isSessionCreator" id="recording-file-item">
+			<mat-list-item>
+				<mat-icon *ngIf="recording" matListAvatar class="participant-avatar"> video_file </mat-icon>
+				<h3 *ngIf="recording" matLine class="participant-nickname">{{ recording.name }}</h3>
+				<p *ngIf="recording" matLine class="participant-subtitle">
+					{{ recording.id }}
+				</p>
+
+				<div class="recording-action-buttons">
+					<button
+						*ngIf="recording"
+						mat-stroked-button
+						id="stop-recording-btn"
+						matTooltip="Stop recording"
+						(click)="stopRecording()"
+					>
+						Stop recording
+					</button>
+
+					<button
+						*ngIf="recordingStatus === recStatusEnum.STOPPED"
+						mat-stroked-button
+						id="start-recording-btn"
+						matTooltip="Start recording"
+						(click)="startRecording()"
+					>
+						Start recording
+					</button>
+				</div>
+			</mat-list-item>
+			<hr />
+		</mat-list>
+
+		<!-- Visalizador de recordings -->
+		<div>NO RECORDINGS FOUND</div>
+	</div>
+</mat-expansion-panel>

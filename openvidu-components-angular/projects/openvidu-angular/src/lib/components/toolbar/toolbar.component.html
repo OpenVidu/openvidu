@@ -1,8 +1,14 @@
 <mat-toolbar id="toolbar" role="heading" fxLayout fxLayoutAlign="center" fxLayoutGap="10px">
 	<div fxFlex="20%" fxLayoutAlign="start center" id="info-container">
-		<div >
+		<div>
 			<img *ngIf="!isMinimal && showLogo" id="branding-logo" src="assets/images/logo.png" ovLogo />
-			<span id="session-name" *ngIf="!isMinimal && session && session.sessionId && showSessionName">{{ session.sessionId }}</span>
+			<div id="session-info-container" [class.colapsed]="isRecording">
+				<span id="session-name" *ngIf="!isMinimal && session && session.sessionId && showSessionName">{{ session.sessionId }}</span>
+				<div id="recording-tag" *ngIf="isRecording">
+					<mat-icon>radio_button_checked</mat-icon>
+					<span>REC</span>
+				</div>
+			</div>
 		</div>
 	</div>
 	<div fxFlex="60%" fxFlexOrder="2" fxLayoutAlign="center center" id="media-buttons-container">
@@ -47,7 +53,7 @@
 		<button
 			mat-icon-button
 			id="fullscreen-btn"
-			*ngIf="!isMinimal && showFullscreenButton"
+			*ngIf="!isMinimal && showFullscreenButton && !showBackgroundEffectsButton"
 			(click)="toggleFullscreen()"
 			[disabled]="isConnectionLost"
 			[class.active-btn]="isFullscreenActive"
@@ -55,6 +61,43 @@
 			<mat-icon *ngIf="isFullscreenActive" matTooltip="Exit Fullscreen">fullscreen_exit</mat-icon>
 			<mat-icon *ngIf="!isFullscreenActive" matTooltip="Fullscreen">fullscreen</mat-icon>
 		</button>
+
+		<button
+			mat-icon-button
+			id="more-options-btn"
+			*ngIf="!isMinimal && !isOpenViduCE && showBackgroundEffectsButton"
+			[matMenuTriggerFor]="menu"
+			[disabled]="isConnectionLost"
+		>
+			<mat-icon matTooltip="More options">more_vert</mat-icon>
+		</button>
+		<mat-menu #menu="matMenu">
+			<!-- Fullscreen button -->
+			<button mat-menu-item id="fullscreen-btn" (click)="toggleFullscreen()">
+				<mat-icon *ngIf="!isFullscreenActive">fullscreen</mat-icon>
+				<span *ngIf="!isFullscreenActive">Fullscreen</span>
+
+				<mat-icon *ngIf="isFullscreenActive">fullscreen_exit</mat-icon>
+				<span *ngIf="isFullscreenActive">Exit fullscreen</span>
+			</button>
+
+			<!-- Recording button -->
+			<!-- <button
+				*ngIf="!isMinimal && showActivitiesPanelButton"
+				mat-menu-item
+				id="recording-btn"
+				(click)="toggleActivitiesPanel('recording')"
+			>
+				<mat-icon color="warn">radio_button_checked</mat-icon>
+				<span>Recording</span>
+			</button> -->
+
+			<!-- Virtual background button -->
+			<button *ngIf="!isMinimal && showBackgroundEffectsButton" mat-menu-item id="virtual-bg-btn" (click)="toggleBackgroundEffects()">
+				<mat-icon>auto_awesome</mat-icon>
+				<span>Background effects</span>
+			</button>
+		</mat-menu>
 
 		<!-- External additional buttons  -->
 		<ng-container *ngIf="toolbarAdditionalButtonsTemplate">
@@ -67,6 +110,19 @@
 		</button>
 	</div>
 	<div fxFlex="20%" fxFlexOrder="3" fxLayoutAlign="end center" id="menu-buttons-container">
+		<!-- Default activities button -->
+		<!-- <button
+			mat-icon-button
+			id="activities-panel-btn"
+			*ngIf="!isMinimal && showActivitiesPanelButton"
+			matTooltip="Activities"
+			(click)="toggleActivitiesPanel()"
+			[disabled]="isConnectionLost"
+			[class.active-btn]="isActivitiesOpened"
+		>
+			<mat-icon>category</mat-icon>
+		</button> -->
+
 		<!-- Default participants button -->
 		<button
 			mat-icon-button

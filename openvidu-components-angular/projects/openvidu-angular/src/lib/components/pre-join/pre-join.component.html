@@ -1,24 +1,51 @@
 <div class="container" id="prejoin-container" fxLayout.gt-sm="row" fxLayout.lt-md="column">
 	<div fxFlex.gt-sm="65%" fxFlex.lt-md="55%" fxLayoutAlign="center center" id="layout-container">
-		<ov-layout>
-			<ng-template #stream let-stream>
-				<ov-stream [stream]="stream" [displayParticipantName]="false" [settingsButton]="false"></ov-stream>
+		<ov-session [usedInPrejoinPage]="true">
+			<ng-template #panel *ngIf="!isMinimal && showBackgroundEffectsButton">
+				<ov-panel>
+					<ng-template #backgroundEffectsPanel>
+						<ov-background-effects-panel></ov-background-effects-panel>
+					</ng-template>
+				</ov-panel>
 			</ng-template>
-		</ov-layout>
+
+			<ng-template #layout>
+				<ov-layout>
+					<ng-template #stream let-stream>
+						<button
+							*ngIf="!isMinimal && !isOpenViduCE && showBackgroundEffectsButton"
+							mat-icon-button
+							id="background-effects-btn"
+							(click)="toggleBackgroundEffects()"
+						>
+							<mat-icon>auto_awesome</mat-icon>
+						</button>
+						<ov-stream [stream]="stream" [displayParticipantName]="false" [settingsButton]="false"></ov-stream>
+					</ng-template>
+				</ov-layout>
+			</ng-template>
+		</ov-session>
 	</div>
 	<div fxFlex.gt-sm="35%" fxFlex.lt-md="45%" fxLayoutAlign="center center" class="media-panel" *ngIf="localParticipant">
 		<div fxLayout="column" fxLayoutGap="10px" class="media-panel-container">
 			<div fxLayout.gt-sm="column" fxLayout.lt-md="column" fxLayoutGap="10px" fxFlex="33%">
 				<div fxFlex.gt-sm="100%" fxFlex.lt-md="33%" fxLayoutAlign="center center" fxFlexFill class="nickname-container">
 					<h4 *ngIf="windowSize >= 960">Set your name</h4>
-					<hr *ngIf="windowSize >= 960"/>
+					<hr *ngIf="windowSize >= 960" />
 					<div id="nickname-input-container">
-						<button	mat-icon-button disabled>
+						<button mat-icon-button disabled>
 							<mat-icon>person</mat-icon>
 						</button>
 						<mat-form-field appearance="standard">
 							<mat-label>Nickname</mat-label>
-							<input matInput type="text" maxlength="20" [(ngModel)]="nickname" (change)="updateNickname()" autocomplete="off" />
+							<input
+								matInput
+								type="text"
+								maxlength="20"
+								[(ngModel)]="nickname"
+								(change)="updateNickname()"
+								autocomplete="off"
+							/>
 						</mat-form-field>
 					</div>
 					<!-- <mat-button-toggle-group style="border-radius: 20px">
@@ -39,7 +66,7 @@
 
 				<div fxFlex.gt-sm="100%" fxFlex.lt-md="33%" fxLayoutAlign="center center" fxFlexFill class="buttons-container">
 					<h4 *ngIf="windowSize >= 960">Choose your devices</h4>
-					<hr *ngIf="windowSize >= 960"/>
+					<hr *ngIf="windowSize >= 960" />
 					<!-- Camera -->
 					<div class="device-container-element">
 						<button
@@ -54,7 +81,11 @@
 						</button>
 						<mat-form-field>
 							<mat-label>Video devices</mat-label>
-							<mat-select [disabled]="isVideoMuted || !hasVideoDevices" [value]="cameraSelected?.device" (selectionChange)="onCameraSelected($event)">
+							<mat-select
+								[disabled]="isVideoMuted || !hasVideoDevices"
+								[value]="cameraSelected?.device"
+								(selectionChange)="onCameraSelected($event)"
+							>
 								<mat-option *ngFor="let camera of cameras" [value]="camera.device">
 									{{ camera.label }}
 								</mat-option>
@@ -76,7 +107,11 @@
 						</button>
 						<mat-form-field>
 							<mat-label>Audio devices</mat-label>
-							<mat-select [disabled]="isAudioMuted || !hasAudioDevices" [value]="microphoneSelected?.device" (selectionChange)="onMicrophoneSelected($event)">
+							<mat-select
+								[disabled]="isAudioMuted || !hasAudioDevices"
+								[value]="microphoneSelected?.device"
+								(selectionChange)="onMicrophoneSelected($event)"
+							>
 								<mat-option *ngFor="let microphone of microphones" [value]="microphone.device">
 									{{ microphone.label }}
 								</mat-option>

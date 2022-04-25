@@ -1,13 +1,23 @@
-import { Component, HostListener, OnDestroy, OnInit, Output, EventEmitter } from '@angular/core';
+import {
+	Component,
+	HostListener,
+	OnDestroy,
+	OnInit,
+	Output,
+	EventEmitter
+} from '@angular/core';
 import { PublisherProperties } from 'openvidu-browser';
 import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../models/device.model';
 import { ILogger } from '../../models/logger.model';
+import { PanelType } from '../../models/panel.model';
 import { ParticipantAbstractModel } from '../../models/participant.model';
+import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import { DeviceService } from '../../services/device/device.service';
 import { LayoutService } from '../../services/layout/layout.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
+import { PanelService } from '../../services/panel/panel.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { StorageService } from '../../services/storage/storage.service';
 
@@ -33,9 +43,21 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	hasAudioDevices: boolean;
 	isLoading = true;
 	nickname: string;
+	isOpenViduCE: boolean;
+	/**
+	 * @ignore
+	 */
+	showBackgroundEffectsButton: boolean = true;
+	/**
+	 * @ignore
+	 */
+	isMinimal: boolean = false;
+
 	private log: ILogger;
 	private localParticipantSubscription: Subscription;
 	private screenShareStateSubscription: Subscription;
+	private minimalSub: Subscription;
+	private backgroundEffectsButtonSub: Subscription;
 
 	@HostListener('window:resize')
 	sizeChange() {
@@ -49,13 +71,17 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		private loggerSrv: LoggerService,
 		private openviduService: OpenViduService,
 		private participantService: ParticipantService,
+		protected panelService: PanelService,
+		private libService: OpenViduAngularConfigService,
 		private storageSrv: StorageService
 	) {
 		this.log = this.loggerSrv.get('PreJoinComponent');
 	}
 
 	ngOnInit() {
+		this.subscribeToPrejoinDirectives();
 		this.subscribeToLocalParticipantEvents();
+		this.isOpenViduCE = this.openviduService.isOpenViduCE();
 
 		this.windowSize = window.innerWidth;
 		this.hasVideoDevices = this.deviceSrv.hasVideoDeviceAvailable();
@@ -79,6 +105,9 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		if (this.screenShareStateSubscription) {
 			this.screenShareStateSubscription.unsubscribe();
 		}
+
+		if (this.backgroundEffectsButtonSub) this.backgroundEffectsButtonSub.unsubscribe();
+		if (this.minimalSub) this.minimalSub.unsubscribe();
 	}
 
 	async onCameraSelected(event: any) {
@@ -138,10 +167,25 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		this.onJoinButtonClicked.emit();
 	}
 
+	toggleBackgroundEffects() {
+		this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
+	}
+
 	private subscribeToLocalParticipantEvents() {
 		this.localParticipantSubscription = this.participantService.localParticipantObs.subscribe((p) => {
 			this.localParticipant = p;
 			this.nickname = this.localParticipant.getNickname();
+		});
+	}
+
+	private subscribeToPrejoinDirectives() {
+		this.minimalSub = this.libService.minimalObs.subscribe((value: boolean) => {
+			this.isMinimal = value;
+			// this.cd.markForCheck();
+		});
+		this.backgroundEffectsButtonSub = this.libService.backgroundEffectsButton.subscribe((value: boolean) => {
+			this.showBackgroundEffectsButton = value;
+			// this.cd.markForCheck();
 		});
 	}
 

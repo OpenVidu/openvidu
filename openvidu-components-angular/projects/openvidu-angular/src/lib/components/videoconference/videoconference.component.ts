@@ -23,7 +23,8 @@ import {
 	StreamDirective,
 	ToolbarAdditionalButtonsDirective,
 	ToolbarAdditionalPanelButtonsDirective,
-	ToolbarDirective
+	ToolbarDirective,
+	ActivitiesPanelDirective
 } from '../../directives/template/openvidu-angular.directive';
 import { ILogger } from '../../models/logger.model';
 import { ParticipantAbstractModel, ParticipantProperties } from '../../models/participant.model';
@@ -32,7 +33,7 @@ import { ActionService } from '../../services/action/action.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import { DeviceService } from '../../services/device/device.service';
 import { LoggerService } from '../../services/logger/logger.service';
-import { OpenViduService } from '../../services/openvidu/openvidu.service';
+import { OpenViduEdition, OpenViduService } from '../../services/openvidu/openvidu.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { StorageService } from '../../services/storage/storage.service';
 import { TokenService } from '../../services/token/token.service';
@@ -57,6 +58,7 @@ import { TokenService } from '../../services/token/token.service';
  * | **audioMuted**                     | `boolean` | {@link AudioMutedDirective}                     |
  * | **toolbarScreenshareButton**       | `boolean` | {@link ToolbarScreenshareButtonDirective}       |
  * | **toolbarFullscreenButton**        | `boolean` | {@link ToolbarFullscreenButtonDirective}        |
+ * | **toolbarBackgroundEffectsButton** | `boolean` | {@link ToolbarBackgroundEffectsButtonDirective} |
  * | **toolbarLeaveButton**             | `boolean` | {@link ToolbarLeaveButtonDirective}             |
  * | **toolbarChatPanelButton**         | `boolean` | {@link ToolbarChatPanelButtonDirective}         |
  * | **toolbarParticipantsPanelButton** | `boolean` | {@link ToolbarParticipantsPanelButtonDirective} |
@@ -138,6 +140,11 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	/**
 	 * @internal
 	 */
+	@ContentChild(ActivitiesPanelDirective) externalActivitiesPanel: ActivitiesPanelDirective;
+
+	/**
+	 * @internal
+	 */
 	@ContentChild(ParticipantsPanelDirective) externalParticipantsPanel: ParticipantsPanelDirective;
 	/**
 	 * @internal
@@ -175,6 +182,13 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 */
 	@ViewChild('defaultParticipantsPanel', { static: false, read: TemplateRef }) defaultParticipantsPanelTemplate: TemplateRef<any>;
 	/**
+	 * TODO: WIP
+	 * @internal
+	 */
+	@ViewChild('defaultActivitiesPanel', { static: false, read: TemplateRef })
+	defaultActivitiesPanelTemplate: TemplateRef<any>;
+
+	/**
 	 * @internal
 	 */
 	@ViewChild('defaultParticipantPanelItem', { static: false, read: TemplateRef }) defaultParticipantPanelItemTemplate: TemplateRef<any>;
@@ -195,6 +209,12 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 * @internal
 	 */
 	openviduAngularToolbarAdditionalButtonsTemplate: TemplateRef<any>;
+	/**
+	 * TODO: WIP
+	 * @internal
+	 */
+	openviduAngularActivitiesPanelTemplate: TemplateRef<any>;
+
 	/**
 	 * @internal
 	 */
@@ -244,14 +264,21 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 			this.log.w('Tokens received');
 			this.tokenService.setWebcamToken(tokens.webcam);
 
-			if(tokens.screen) {
+			const openviduEdition = new URL(tokens.webcam).searchParams.get('edition');
+			if (!!openviduEdition) {
+				this.openviduService.setOpenViduEdition(OpenViduEdition.PRO);
+			} else {
+				this.openviduService.setOpenViduEdition(OpenViduEdition.CE);
+			}
+
+			if (tokens.screen) {
 				this.tokenService.setScreenToken(tokens.screen);
 			} else {
 				// Hide screenshare button if screen token does not exist
 				this.libService.screenshareButton.next(false);
 				this.log.w('No screen token found. Screenshare feature will be disabled');
 			}
-			this.canPublish = true;
+			this.tokensReceived = true;
 		}
 	}
 
@@ -317,7 +344,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	/**
 	 * @internal
 	 */
-	canPublish: boolean = false;
+	 tokensReceived: boolean = false;
 	/**
 	 * @internal
 	 */
@@ -445,6 +472,15 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 				this.log.d('Setting DEFAULT CHAT PANEL');
 				this.openviduAngularChatPanelTemplate = this.defaultChatPanelTemplate;
 			}
+
+			// TODO: WIP
+			// if (this.externalActivitiesPanel) {
+			// 	this.log.d('Setting EXTERNAL ACTIVITIES PANEL');
+			// 	this.openviduAngularActivitiesPanelTemplate = this.externalActivitiesPanel.template;
+			// } else {
+			// 	this.log.d('Setting DEFAULT ACTIVITIES PANEL');
+			// 	this.openviduAngularActivitiesPanelTemplate = this.defaultActivitiesPanelTemplate;
+			// }
 
 			if (this.externalAdditionalPanels) {
 				this.log.d('Setting EXTERNAL ADDITIONAL PANELS');

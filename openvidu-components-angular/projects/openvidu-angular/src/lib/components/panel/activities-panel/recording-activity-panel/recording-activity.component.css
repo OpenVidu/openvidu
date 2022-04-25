@@ -1,0 +1,37 @@
+#recording-status {
+	color: var(--ov-text-color);
+	display: inline;
+	padding: 3px;
+	font-size: 11px;
+	border-radius: var(--ov-panel-radius);
+}
+.started {
+	background-color: #005704;
+}
+.stopped {
+	background-color: var(--ov-light-color);
+	color: var(--ov-panel-text-color) !important;
+}
+
+
+#recording-file-item {
+	padding: 0px 16px;
+}
+
+.recording-action-buttons{
+	margin: auto;
+}
+
+#start-recording-btn {
+	background-color: var(--ov-tertiary-color);
+	color: var(--ov-text-color);
+}
+
+#stop-recording-btn {
+	background-color: var(--ov-warn-color);
+	color: var(--ov-text-color);
+}
+
+mat-expansion-panel {
+	margin: 0pc 0px 15px 0px;
+}

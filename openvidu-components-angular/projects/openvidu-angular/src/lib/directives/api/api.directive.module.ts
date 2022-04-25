@@ -13,7 +13,9 @@ import {
 	ToolbarChatPanelButtonDirective,
 	ToolbarDisplaySessionNameDirective,
 	ToolbarDisplayLogoDirective,
-	LogoDirective
+	LogoDirective,
+	ToolbarActivitiesPanelButtonDirective,
+	ToolbarBackgroundEffectsButtonDirective
 } from './toolbar.directive';
 import {
 	AudioMutedDirective,
@@ -32,9 +34,11 @@ import {
 		AudioMutedDirective,
 		ToolbarScreenshareButtonDirective,
 		ToolbarFullscreenButtonDirective,
+		ToolbarBackgroundEffectsButtonDirective,
 		ToolbarLeaveButtonDirective,
 		ToolbarParticipantsPanelButtonDirective,
 		ToolbarChatPanelButtonDirective,
+		ToolbarActivitiesPanelButtonDirective,
 		ToolbarDisplaySessionNameDirective,
 		ToolbarDisplayLogoDirective,
 		StreamDisplayParticipantNameDirective,
@@ -51,9 +55,11 @@ import {
 		AudioMutedDirective,
 		ToolbarScreenshareButtonDirective,
 		ToolbarFullscreenButtonDirective,
+		ToolbarBackgroundEffectsButtonDirective,
 		ToolbarLeaveButtonDirective,
 		ToolbarParticipantsPanelButtonDirective,
 		ToolbarChatPanelButtonDirective,
+		ToolbarActivitiesPanelButtonDirective,
 		ToolbarDisplaySessionNameDirective,
 		ToolbarDisplayLogoDirective,
 		StreamDisplayParticipantNameDirective,

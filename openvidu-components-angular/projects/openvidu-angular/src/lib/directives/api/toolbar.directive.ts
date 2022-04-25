@@ -123,6 +123,65 @@ export class ToolbarFullscreenButtonDirective implements AfterViewInit, OnDestro
 }
 
 /**
+ * The **backgroundEffectsButton** directive allows show/hide the background effects toolbar button.
+ *
+ * Default: `true`
+ *
+ * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `toolbar` component:
+ *
+ * @example
+ * <ov-videoconference [toolbarBackgroundEffectsButton]="false"></ov-videoconference>
+ *
+ * \
+ * And it also can be used in the {@link ToolbarComponent}.
+ * @example
+ * <ov-toolbar [backgroundEffectsButton]="false"></ov-toolbar>
+ */
+ @Directive({
+	selector: 'ov-videoconference[toolbarBackgroundEffectsButton], ov-toolbar[backgroundEffectsButton]'
+})
+export class ToolbarBackgroundEffectsButtonDirective implements AfterViewInit, OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set toolbarBackgroundEffectsButton(value: boolean) {
+		this.backgroundEffectsValue = value;
+		this.update(this.backgroundEffectsValue);
+	}
+	/**
+	 * @ignore
+	 */
+	@Input() set backgroundEffectsButton(value: boolean) {
+		this.backgroundEffectsValue = value;
+		this.update(this.backgroundEffectsValue);
+	}
+
+	private backgroundEffectsValue: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+
+	ngAfterViewInit() {
+		this.update(this.backgroundEffectsValue);
+	}
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	private clear() {
+		this.backgroundEffectsValue = true;
+		this.update(true);
+	}
+
+	private update(value: boolean) {
+		if (this.libService.backgroundEffectsButton.getValue() !== value) {
+			this.libService.backgroundEffectsButton.next(value);
+		}
+	}
+}
+
+/**
  * The **leaveButton** directive allows show/hide the leave toolbar button.
  *
  * Default: `true`
@@ -301,6 +360,68 @@ export class ToolbarChatPanelButtonDirective implements AfterViewInit, OnDestroy
 		}
 	}
 }
+
+/**
+ * The **activitiesPanelButton** directive allows show/hide the activities panel toolbar button.
+ *
+ * Default: `true`
+ *
+ * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `toolbar` component:
+ *
+ * @example
+ * <ov-videoconference [toolbarActivitiesPanelButton]="false"></ov-videoconference>
+ *
+ * \
+ * And it also can be used in the {@link ToolbarComponent}.
+ * @example
+ * <ov-toolbar [activitiesPanelButton]="false"></ov-toolbar>
+ *
+ * @internal
+ */
+ @Directive({
+	selector: 'ov-videoconference[toolbarActivitiesPanelButton], ov-toolbar[activitiesPanelButton]'
+})
+export class ToolbarActivitiesPanelButtonDirective implements AfterViewInit, OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set toolbarActivitiesPanelButton(value: boolean) {
+		this.toolbarActivitiesPanelValue = value;
+		this.update(this.toolbarActivitiesPanelValue);
+	}
+	/**
+	 * @ignore
+	 */
+	@Input() set chatPanelButton(value: boolean) {
+		this.toolbarActivitiesPanelValue = value;
+		this.update(this.toolbarActivitiesPanelValue);
+	}
+	private toolbarActivitiesPanelValue: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+
+	ngAfterViewInit() {
+		this.update(this.toolbarActivitiesPanelValue);
+	}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	private clear() {
+		this.toolbarActivitiesPanelValue = true;
+		this.update(true);
+	}
+
+	private update(value: boolean) {
+		if (this.libService.activitiesPanelButton.getValue() !== value) {
+			this.libService.activitiesPanelButton.next(value);
+		}
+	}
+}
+
 
 /**
  * The **displaySessionName** directive allows show/hide the session name.

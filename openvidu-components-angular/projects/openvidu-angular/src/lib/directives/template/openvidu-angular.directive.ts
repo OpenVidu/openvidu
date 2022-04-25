@@ -365,6 +365,29 @@ export class ChatPanelDirective {
 }
 
 /**
+ * TODO: WIP. backgroundEffectsPanel does not provides customization
+ * @internal
+ */
+@Directive({
+	selector: '[ovBackgroundEffectsPanel]'
+})
+export class BackgroundEffectsPanelDirective {
+	constructor(public template: TemplateRef<any>, public viewContainer: ViewContainerRef) {}
+}
+
+
+/**
+ * TODO: WIP
+ * @internal
+ */
+@Directive({
+	selector: '[ovActivitiesPanel]'
+})
+export class ActivitiesPanelDirective {
+	constructor(public template: TemplateRef<any>, public viewContainer: ViewContainerRef) {}
+}
+
+/**
  * The ***ovParticipantsPanel** directive allows to replace the default participants panel template injecting your own component.
  * Here we're going to redefine the participants template in a few code lines.
  *

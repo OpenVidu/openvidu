@@ -9,9 +9,19 @@
 	<ng-container *ngTemplateOutlet="participantsPanelTemplate"></ng-container>
 </ng-container>
 
+<!-- Background effects panel -->
+<ng-container *ngIf="isBackgroundEffectsPanelOpened">
+	<ng-container *ngTemplateOutlet="backgroundEffectsPanelTemplate"></ng-container>
+</ng-container>
+
+<!-- Activities panel -->
+<ng-container *ngIf="isActivitiesPanelOpened">
+	<ng-container *ngTemplateOutlet="activitiesPanelTemplate"></ng-container>
+</ng-container>
+<!-- <ov-activities-panel *ngIf="isActivitiesPanelOpened"></ov-activities-panel> -->
+
+
 <!-- External additional panels  -->
 <ng-container *ngIf="additionalPanelsTemplate && isExternalPanelOpened">
 	<ng-container *ngTemplateOutlet="additionalPanelsTemplate"></ng-container>
 </ng-container>
-
-

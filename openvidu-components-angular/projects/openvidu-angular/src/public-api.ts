@@ -26,6 +26,8 @@ export * from './lib/components/videoconference/videoconference.component';
 export * from './lib/components/toolbar/toolbar.component';
 export * from './lib/components/panel/panel.component';
 export * from './lib/components/panel/chat-panel/chat-panel.component';
+export * from './lib/components/panel/background-effects-panel/background-effects-panel.component';
+export * from './lib/components/panel/activities-panel/activities-panel.component';
 export * from './lib/components/panel/participants-panel/participants-panel/participants-panel.component';
 export * from './lib/components/panel/participants-panel/participant-panel-item/participant-panel-item.component';
 export * from './lib/components/session/session.component';

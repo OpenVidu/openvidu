@@ -36,6 +36,9 @@ export class OpenViduAngularConfigService {
 	chatPanelButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	chatPanelButtonObs: Observable<boolean>;
 
+	activitiesPanelButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
+	activitiesPanelButtonObs: Observable<boolean>;
+
 	displaySessionName = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	displaySessionNameObs: Observable<boolean>;
 
@@ -49,6 +52,8 @@ export class OpenViduAngularConfigService {
 	settingsButtonObs: Observable<boolean>;
 	participantItemMuteButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	participantItemMuteButtonObs: Observable<boolean>;
+	backgroundEffectsButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
+	backgroundEffectsButtonObs: Observable<boolean>;
 
 	constructor(@Inject('OPENVIDU_ANGULAR_CONFIG') config: OpenViduAngularConfig) {
 		this.configuration = config;
@@ -62,9 +67,11 @@ export class OpenViduAngularConfigService {
 		//Toolbar observables
 		this.screenshareButtonObs = this.screenshareButton.asObservable();
 		this.fullscreenButtonObs = this.fullscreenButton.asObservable();
+		this.backgroundEffectsButtonObs = this.backgroundEffectsButton.asObservable();
 		this.leaveButtonObs = this.leaveButton.asObservable();
 		this.participantsPanelButtonObs = this.participantsPanelButton.asObservable();
 		this.chatPanelButtonObs = this.chatPanelButton.asObservable();
+		this.activitiesPanelButtonObs = this.activitiesPanelButton.asObservable();
 		this.displaySessionNameObs = this.displaySessionName.asObservable();
 		this.displayLogoObs = this.displayLogo.asObservable();
 		//Stream observables
@@ -81,10 +88,6 @@ export class OpenViduAngularConfigService {
 	isProduction(): boolean {
 		return this.configuration?.production;
 	}
-
-	// isWebcomponent(): boolean {
-	// 	return this.configuration?.webcomponent;
-	// }
 
 	hasParticipantFactory(): boolean {
 		return typeof this.getConfig().participantFactory === 'function';

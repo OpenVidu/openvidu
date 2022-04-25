@@ -1,5 +1,5 @@
 <div id="session-container">
-	<mat-sidenav-container class="sidenav-container">
+	<mat-sidenav-container #videoContainer class="sidenav-container">
 		<mat-sidenav
 			#sidenav
 			mode="{{ sidenavMode }}"
@@ -19,7 +19,7 @@
 		</mat-sidenav-content>
 	</mat-sidenav-container>
 
-	<div id="footer-container">
+	<div id="footer-container" *ngIf="toolbarTemplate">
 		<ng-container *ngTemplateOutlet="toolbarTemplate"></ng-container>
 	</div>
 </div>

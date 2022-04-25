@@ -1,0 +1,47 @@
+#background-effects-container {
+	margin: 20px;
+	background-color: var(--ov-panel-background);
+	border-radius: var(--ov-panel-radius);
+	max-height: calc(100% - 40px);
+	min-height: calc(100% - 40px);
+}
+
+.header-container {
+	padding: 10px;
+	display: flex;
+}
+
+.header-container h3 {
+	margin-left: 5px;
+	margin-top: auto;
+	margin-bottom: auto;
+	font-weight: bold;
+}
+
+.header-container button {
+	margin-left: auto;
+	border-radius: var(--ov-buttons-radius);
+}
+
+.effects-container {
+	display: block !important;
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding: 10px;
+}
+
+.effect-button {
+	margin: 5px;
+	border-radius: var(--ov-panel-radius);
+	background-color: var(--ov-light-color);
+	width: 50px;
+	height: 50px;
+}
+
+.active-effect-btn {
+	border: 2px solid;
+}
+
+#hard-blur-btn .mat-icon {
+	font-weight: bold !important;
+}

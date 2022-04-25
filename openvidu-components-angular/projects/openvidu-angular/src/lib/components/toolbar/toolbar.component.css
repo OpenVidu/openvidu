@@ -10,7 +10,7 @@
 	right: 0;
 }
 
-#info-container>div {
+#info-container > div {
 	display: flex;
 	align-items: center;
 }
@@ -33,7 +33,8 @@
 	background-color: var(--ov-warn-color) !important;
 }
 
-.active-btn, ::ng-deep .active-btn {
+.active-btn,
+::ng-deep .active-btn {
 	background-color: var(--ov-tertiary-color) !important;
 }
 
@@ -41,7 +42,8 @@
 	font-size: 24px;
 }
 
-#media-buttons-container button, #menu-buttons-container button {
+#media-buttons-container button,
+#menu-buttons-container button {
 	border-radius: var(--ov-buttons-radius);
 }
 
@@ -53,15 +55,42 @@
 	padding: 10px;
 }
 
-  #session-name {
+#session-name {
 	font-family: 'Ubuntu', sans-serif;
 	font-weight: bold;
 	font-size: 15px;
 	height: fit-content;
 	padding: 0px 15px;
-  }
+}
+#session-info-container {
+	display: flex;
+}
 
-  #point {
+.colapsed {
+	flex-direction: column;
+}
+
+#recording-tag {
+	padding: 0 15px;
+	background-color: var(--ov-warn-color);
+	border-radius: var(--ov-panel-radius);
+	width: fit-content;
+	font-size: 12px;
+	text-align: center;
+	line-height: 20px;
+	margin: auto;
+	animation: blinker 1.5s linear infinite;
+
+
+}
+#recording-tag mat-icon {
+	font-size: 16px;
+	display: inline;
+    vertical-align: sub;
+    margin-right: 5px;
+}
+
+#point {
 	width: 10px;
 	height: 10px;
 	position: absolute;
@@ -71,39 +100,45 @@
 	background-color: #ffa600;
 	border: 1px solid #000;
 	z-index: 99999;
-  }
+}
 
-  #leave-btn {
-	  background-color: var(--ov-warn-color) !important;
-	  border-radius: var(--ov-leave-button-radius) !important;
-	  width: 60px !important;
-  }
+#leave-btn {
+	background-color: var(--ov-warn-color) !important;
+	border-radius: var(--ov-leave-button-radius) !important;
+	width: 60px !important;
+}
 
-
-  .tooltipList {
+.tooltipList {
 	white-space: pre;
-  }
+}
 
-
-  #navChatButton .mat-badge-medium.mat-badge-overlap.mat-badge-before .mat-badge-content {
+#navChatButton .mat-badge-medium.mat-badge-overlap.mat-badge-before .mat-badge-content {
 	left: -17px;
-  }
+}
 
-  #navChatButton .mat-badge-medium.mat-badge-above .mat-badge-content {
+#navChatButton .mat-badge-medium.mat-badge-above .mat-badge-content {
 	top: -6px;
-  }
+}
 
-  .mat-icon-button[disabled] {
+.mat-icon-button[disabled] {
 	color: #fff;
-  }
-  @media (max-width: 750px) {
+}
+@media (max-width: 750px) {
 	#session-name {
-	  display: none;
+		display: none;
 	}
-  }
+}
 
-  @media (max-width: 850px) {
+@media (max-width: 850px) {
 	#branding-logo {
-	  display: none;
+		display: none;
 	}
+}
+
+::ng-deep .mat-menu-panel {
+	margin-bottom: 10px;
+}
+
+@keyframes blinker {
+	50% { opacity: 0.2; }
   }
