@@ -1,6 +1,6 @@
 {
   "name": "openvidu-components-testapp",
-  "version": "0.0.0",
+  "version": "2.21.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --configuration development",
