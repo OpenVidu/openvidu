@@ -97,7 +97,7 @@ export class Publisher extends StreamManager {
 
 
     /**
-     * Publish or unpublish the audio stream (if available). Calling this method twice in a row passing same value will have no effect
+     * Publish or unpublish the audio stream (if available). Calling this method twice in a row passing same `enabled` value will have no effect
      *
      * #### Events dispatched
      *
@@ -111,13 +111,13 @@ export class Publisher extends StreamManager {
      *
      * See [[StreamPropertyChangedEvent]] to learn more.
      *
-     * @param value `true` to publish the audio stream, `false` to unpublish it
+     * @param enabled `true` to publish the audio stream, `false` to unpublish it
      */
-    publishAudio(value: boolean): void {
-        if (this.stream.audioActive !== value) {
+    publishAudio(enabled: boolean): void {
+        if (this.stream.audioActive !== enabled) {
             const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
             affectedMediaStream.getAudioTracks().forEach((track) => {
-                track.enabled = value;
+                track.enabled = enabled;
             });
             if (!!this.session && !!this.stream.streamId) {
                 this.session.openvidu.sendRequest(
@@ -125,31 +125,30 @@ export class Publisher extends StreamManager {
                     {
                         streamId: this.stream.streamId,
                         property: 'audioActive',
-                        newValue: value,
+                        newValue: enabled,
                         reason: 'publishAudio'
                     },
                     (error, response) => {
                         if (error) {
                             logger.error("Error sending 'streamPropertyChanged' event", error);
                         } else {
-                            this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'audioActive', value, !value, 'publishAudio')]);
-                            this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'audioActive', value, !value, 'publishAudio')]);
+                            this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'audioActive', enabled, !enabled, 'publishAudio')]);
+                            this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'audioActive', enabled, !enabled, 'publishAudio')]);
                             this.session.sendVideoData(this.stream.streamManager);
                         }
                     });
             }
-            this.stream.audioActive = value;
-            logger.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its audio stream');
+            this.stream.audioActive = enabled;
+            logger.info("'Publisher' has " + (enabled ? 'published' : 'unpublished') + ' its audio stream');
         }
     }
 
-
-    publishVideo(value: boolean): void;
-    publishVideo(value: false, freeResource?: boolean): void;
-    publishVideo(value: true, track?: MediaStreamTrack): void;
+    publishVideo(enabled: boolean): void;
+    publishVideo(enabled: false, freeResource?: boolean): void;
+    publishVideo(enabled: true, track?: MediaStreamTrack): void;
 
     /**
-     * Publish or unpublish the video stream (if available). Calling this method twice in a row passing same value will have no effect
+     * Publish or unpublish the video stream (if available). Calling this method twice in a row passing same `enabled` value will have no effect
      *
      * #### Events dispatched
      *
@@ -163,25 +162,25 @@ export class Publisher extends StreamManager {
      *
      * See [[StreamPropertyChangedEvent]] to learn more.
      *
-     * @param value `true` to publish the video stream, `false` to unpublish it
+     * @param enabled `true` to publish the video stream, `false` to unpublish it
      * @param freeResource `true` to free the hardware resource associated to the video track, `false` to keep access to it. Not freeing the resource makes the operation much more efficient, but depending on
      * the platform two side-effects can be introduced: the video device may not be accessible by other applications and the access light of webcams may remain on. This is platform-dependent: some browsers
-     * will not present the side-effects even when not freeing the resource. openvidu-browser will try to restore the video track automatically calling [[publishVideo]] again with parameter `value` to `true`,
+     * will not present the side-effects even when not freeing the resource. openvidu-browser will try to restore the video track automatically calling [[publishVideo]] again with parameter `enabled` to `true`,
      * but if that is not possible parameter `track` can be provided to force a specific `MediaStreamTrack`.
      * @param track A `MediaStreamTrack` to be used when restoring the video track. This parameter can be useful if the Publisher was unpublished with parameter `freeResource` to true, and openvidu-browser is
      * not able to successfully re-create the video track as it was before unpublishing. In this way previous track settings will be ignored and this track will be used instead.
      */
-    publishVideo(value: boolean, param?: boolean | MediaStreamTrack): void {
+    publishVideo(enabled: boolean, param?: boolean | MediaStreamTrack): void {
 
-        if (this.stream.videoActive !== value) {
+        if (this.stream.videoActive !== enabled) {
 
             const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
             let mustRestartMediaStream = false;
             affectedMediaStream.getVideoTracks().forEach((track) => {
-                track.enabled = value;
-                if (!value && param === true) {
+                track.enabled = enabled;
+                if (!enabled && param === true) {
                     track.stop();
-                } else if (value && track.readyState === 'ended') {
+                } else if (enabled && track.readyState === 'ended') {
                     // Resource was freed
                     mustRestartMediaStream = true;
                 }
@@ -217,21 +216,21 @@ export class Publisher extends StreamManager {
                     {
                         streamId: this.stream.streamId,
                         property: 'videoActive',
-                        newValue: value,
+                        newValue: enabled,
                         reason: 'publishVideo'
                     },
                     (error, response) => {
                         if (error) {
                             logger.error("Error sending 'streamPropertyChanged' event", error);
                         } else {
-                            this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoActive', value, !value, 'publishVideo')]);
-                            this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoActive', value, !value, 'publishVideo')]);
+                            this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoActive', enabled, !enabled, 'publishVideo')]);
+                            this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoActive', enabled, !enabled, 'publishVideo')]);
                             this.session.sendVideoData(this.stream.streamManager);
                         }
                     });
             }
-            this.stream.videoActive = value;
-            logger.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its video stream');
+            this.stream.videoActive = enabled;
+            logger.info("'Publisher' has " + (enabled ? 'published' : 'unpublished') + ' its video stream');
         }
     }
 
