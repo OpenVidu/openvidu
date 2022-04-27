@@ -143,9 +143,6 @@ export class Publisher extends StreamManager {
         }
     }
 
-    publishVideo(enabled: boolean): void;
-    publishVideo(enabled: false, freeResource?: boolean): void;
-    publishVideo(enabled: true, track?: MediaStreamTrack): void;
 
     /**
      * Publish or unpublish the video stream (if available). Calling this method twice in a row passing same `enabled` value will have no effect
@@ -163,14 +160,15 @@ export class Publisher extends StreamManager {
      * See [[StreamPropertyChangedEvent]] to learn more.
      *
      * @param enabled `true` to publish the video stream, `false` to unpublish it
-     * @param freeResource `true` to free the hardware resource associated to the video track, `false` to keep access to it. Not freeing the resource makes the operation much more efficient, but depending on
-     * the platform two side-effects can be introduced: the video device may not be accessible by other applications and the access light of webcams may remain on. This is platform-dependent: some browsers
-     * will not present the side-effects even when not freeing the resource. openvidu-browser will try to restore the video track automatically calling [[publishVideo]] again with parameter `enabled` to `true`,
-     * but if that is not possible parameter `track` can be provided to force a specific `MediaStreamTrack`.
-     * @param track A `MediaStreamTrack` to be used when restoring the video track. This parameter can be useful if the Publisher was unpublished with parameter `freeResource` to true, and openvidu-browser is
-     * not able to successfully re-create the video track as it was before unpublishing. In this way previous track settings will be ignored and this track will be used instead.
+     * @param resource
+     * - If parameter **`enabled`** is `false`, this optional parameter is of type boolean. It can be set to `true` to forcibly free the hardware resource associated to the video track, or can be set to `false` to keep the access to the hardware resource.
+     * Not freeing the resource makes the operation much more efficient, but depending on the platform two side-effects can be introduced: the video device may not be accessible by other applications and the access light of
+     * webcams may remain on. This is platform-dependent: some browsers will not present the side-effects even when not freeing the resource.</li>
+     * - If parameter **`enabled`** is `true`, this optional parameter is of type [MediaStreamTrack](https://developer.mozilla.org/docs/Web/API/MediaStreamTrack). It can be set to force the restoration of the video track with a custom track. This may be
+     * useful if the Publisher was unpublished freeing the hardware resource, and openvidu-browser is not able to successfully re-create the video track as it was before unpublishing. In this way previous track settings will be ignored and this MediaStreamTrack
+     * will be used instead.
      */
-    publishVideo(enabled: boolean, param?: boolean | MediaStreamTrack): void {
+     publishVideo<T extends boolean>(enabled: T, resource?: T extends false ? boolean : MediaStreamTrack): void {
 
         if (this.stream.videoActive !== enabled) {
 
@@ -178,7 +176,7 @@ export class Publisher extends StreamManager {
             let mustRestartMediaStream = false;
             affectedMediaStream.getVideoTracks().forEach((track) => {
                 track.enabled = enabled;
-                if (!enabled && param === true) {
+                if (!enabled && resource === true) {
                     track.stop();
                 } else if (enabled && track.readyState === 'ended') {
                     // Resource was freed
@@ -197,8 +195,8 @@ export class Publisher extends StreamManager {
                     }
                 }
 
-                if (!!param && param instanceof MediaStreamTrack) {
-                    replaceVideoTrack(param);
+                if (!!resource && resource instanceof MediaStreamTrack) {
+                    replaceVideoTrack(resource);
                 } else {
                     navigator.mediaDevices.getUserMedia({ audio: false, video: this.stream.lastVideoTrackConstraints })
                         .then(mediaStream => {
