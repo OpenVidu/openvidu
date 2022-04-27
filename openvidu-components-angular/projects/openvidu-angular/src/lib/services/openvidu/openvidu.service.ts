@@ -287,9 +287,9 @@ export class OpenViduService {
 	/**
 	 * @internal
 	 */
-	private publishVideoAux(publisher: Publisher, value: boolean): void {
+	private publishVideoAux(publisher: Publisher, publish: boolean): void {
 		if (!!publisher) {
-			publisher.publishVideo(value);
+			publisher.publishVideo(publish, true);
 			this.participantService.updateLocalParticipant();
 		}
 	}
