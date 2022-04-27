@@ -91,7 +91,21 @@ export class Filter {
      */
     execMethod(method: string, params: Object): Promise<void> {
         return new Promise((resolve, reject) => {
+
             logger.info('Executing filter method to stream ' + this.stream.streamId);
+
+            let finalParams;
+
+            const successExecMethod = triggerEvent => {
+                logger.info('Filter method successfully executed on Stream ' + this.stream.streamId);
+                const oldValue = (<any>Object).assign({}, this.stream.filter);
+                this.stream.filter!.lastExecMethod = { method, params: finalParams };
+                if (triggerEvent) {
+                    this.stream.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.session, this.stream, 'filter', this.stream.filter!, oldValue, 'execFilterMethod')]);
+                    this.stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.streamManager, this.stream, 'filter', this.stream.filter!, oldValue, 'execFilterMethod')]);
+                }
+                return resolve();
+            }
 
             if (this.type.startsWith('VB:')) {
 
@@ -103,15 +117,21 @@ export class Filter {
                     }
                 }
 
+                finalParams = params;
+
                 if (method === 'update') {
                     if (!this.stream.virtualBackgroundSinkElements?.VB) {
                         return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'There is no Virtual Background filter applied'));
                     } else {
-                        try {
-                            this.stream.virtualBackgroundSinkElements.VB.updateValues(params);
-                        } catch (error) {
-                            reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'Error updating values on Virtual Background filter: ' + error));
-                        }
+                        this.stream.virtualBackgroundSinkElements.VB.updateValues(params)
+                            .then(() => successExecMethod(false))
+                            .catch(error => {
+                                if (error.name === OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR) {
+                                    return reject(new OpenViduError(error.name, error.message));
+                                } else {
+                                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'Error updating values on Virtual Background filter: ' + error));
+                                }
+                            });
                     }
                 } else {
                     return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, `Unknown Virtual Background method "${method}"`));
@@ -131,6 +151,8 @@ export class Filter {
                     stringParams = <string>params;
                 }
 
+                finalParams = stringParams;
+
                 this.stream.session.openvidu.sendRequest(
                     'execFilterMethod',
                     { streamId: this.stream.streamId, method, params: stringParams },
@@ -143,12 +165,7 @@ export class Filter {
                                 return reject(error);
                             }
                         } else {
-                            logger.info('Filter method successfully executed on Stream ' + this.stream.streamId);
-                            const oldValue = (<any>Object).assign({}, this.stream.filter);
-                            this.stream.filter!.lastExecMethod = { method, params: JSON.parse(stringParams) };
-                            this.stream.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.session, this.stream, 'filter', this.stream.filter!, oldValue, 'execFilterMethod')]);
-                            this.stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.streamManager, this.stream, 'filter', this.stream.filter!, oldValue, 'execFilterMethod')]);
-                            return resolve();
+                            return successExecMethod(true);
                         }
                     }
                 );

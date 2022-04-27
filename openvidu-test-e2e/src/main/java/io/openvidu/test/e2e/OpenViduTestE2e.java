@@ -75,7 +75,7 @@ public class OpenViduTestE2e {
 
 	protected static String OPENVIDU_SECRET = "MY_SECRET";
 	protected static String OPENVIDU_URL = "https://localhost:4443/";
-	protected static String APP_URL = "http://localhost:4200/";
+	protected static String APP_URL = "https://localhost:4200/";
 	protected static String EXTERNAL_CUSTOM_LAYOUT_URL = "http://localhost:4114";
 	protected static String OPENVIDU_PRO_LICENSE = "not_valid";
 	protected static String OPENVIDU_PRO_LICENSE_API = "not_valid";
@@ -334,6 +334,11 @@ public class OpenViduTestE2e {
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
 			setupBrowserAux(BrowserNames.CHROME, container, false);
 			browserUser = new ChromeUser("TestUser", 50, Paths.get("/opt/openvidu/barcode.y4m"));
+			break;
+		case "chromeVirtualBackgroundFakeVideo":
+			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
+			setupBrowserAux(BrowserNames.CHROME, container, false);
+			browserUser = new ChromeUser("TestUser", 50, Paths.get("/opt/openvidu/girl.mjpeg"));
 			break;
 		case "firefox":
 			container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, true);

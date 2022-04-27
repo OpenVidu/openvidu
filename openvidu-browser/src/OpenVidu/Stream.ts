@@ -323,7 +323,7 @@ export class Stream {
                 return reject(new OpenViduError(OpenViduErrorName.GENERIC_ERROR, 'There is already a filter applied to Stream ' + this.streamId));
             }
 
-            const resolveApplyFilter = (error) => {
+            const resolveApplyFilter = (error, triggerEvent) => {
                 if (error) {
                     logger.error('Error applying filter for Stream ' + this.streamId, error);
                     if (error.code === 401) {
@@ -336,8 +336,10 @@ export class Stream {
                     const oldValue: Filter = this.filter!;
                     this.filter = new Filter(type, options);
                     this.filter.stream = this;
-                    this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter, oldValue, 'applyFilter')]);
-                    this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter, oldValue, 'applyFilter')]);
+                    if (triggerEvent) {
+                        this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter, oldValue, 'applyFilter')]);
+                        this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter, oldValue, 'applyFilter')]);
+                    }
                     return resolve(this.filter);
                 }
             }
@@ -357,9 +359,6 @@ export class Stream {
                 }
                 if (!this.mediaStream || this.streamManager.videos.length === 0) {
                     return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'The StreamManager requires some video element to be attached to it in order to apply a Virtual Background filter'));
-                }
-                if (!!this.virtualBackgroundSinkElements && !!this.virtualBackgroundSourceElements) {
-                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'There is already a Virtual Background filter applied to Stream ' + this.streamId));
                 }
 
                 logger.info('Applying Virtual Background to stream ' + this.streamId);
@@ -426,13 +425,13 @@ export class Stream {
                             (this.streamManager as Publisher).replaceTrack((this.virtualBackgroundSinkElements.video.srcObject as MediaStream).getVideoTracks()[0]);
                         }
 
-                        resolveApplyFilter(undefined);
+                        resolveApplyFilter(undefined, false);
 
                     } catch (error) {
                         if (error.name === OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR) {
-                            resolveApplyFilter(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, error.message));
+                            resolveApplyFilter(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, error.message), false);
                         } else {
-                            resolveApplyFilter(error);
+                            resolveApplyFilter(error, false);
                         }
                     }
                 }
@@ -475,7 +474,7 @@ export class Stream {
                     'applyFilter',
                     { streamId: this.streamId, type, options: optionsString },
                     (error, response) => {
-                        resolveApplyFilter(error);
+                        resolveApplyFilter(error, true);
                     }
                 );
 
@@ -519,7 +518,7 @@ export class Stream {
     removeFilterAux(isDisposing: boolean): Promise<void> {
         return new Promise(async (resolve, reject) => {
 
-            const resolveRemoveFilter = (error) => {
+            const resolveRemoveFilter = (error, triggerEvent) => {
                 if (error) {
                     delete this.filter;
                     logger.error('Error removing filter for Stream ' + this.streamId, error);
@@ -532,8 +531,10 @@ export class Stream {
                     logger.info('Filter successfully removed from Stream ' + this.streamId);
                     const oldValue = this.filter!;
                     delete this.filter;
-                    this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
-                    this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
+                    if (triggerEvent) {
+                        this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
+                        this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
+                    }
                     return resolve();
                 }
             }
@@ -560,10 +561,10 @@ export class Stream {
                     delete this.virtualBackgroundSinkElements;
                     delete this.virtualBackgroundSourceElements;
 
-                    return resolveRemoveFilter(undefined);
+                    return resolveRemoveFilter(undefined, false);
 
                 } catch (error) {
-                    return resolveRemoveFilter(error);
+                    return resolveRemoveFilter(error, false);
                 }
 
             } else {
@@ -579,7 +580,7 @@ export class Stream {
                     'removeFilter',
                     { streamId: this.streamId },
                     (error, response) => {
-                        return resolveRemoveFilter(error);
+                        return resolveRemoveFilter(error, true);
                     }
                 );
 

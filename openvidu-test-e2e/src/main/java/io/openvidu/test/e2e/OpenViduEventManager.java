@@ -19,9 +19,12 @@ package io.openvidu.test.e2e;
 
 import static org.openqa.selenium.OutputType.BASE64;
 
+import java.awt.Point;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -323,22 +326,49 @@ public class OpenViduEventManager {
 				+ "var blockSize = 5;" + "var defaultRGB = { r: 0, g: 0, b: 0 };"
 				+ "context.drawImage(video, 0, 0, 220, 150);" + "var dataURL = canvas.toDataURL();"
 				+ "imgEl.onload = function () {" + "let i = -4;" + "var rgb = { r: 0, g: 0, b: 0 };" + "let count = 0;"
-				+ "if (!context) {" + "  return defaultRGB;" + "}" +
-
-				"var height = canvas.height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;"
+				+ "if (!context) {" + "  return defaultRGB;" + "}"
+				+ "var height = canvas.height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;"
 				+ "var width = canvas.width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;" + "let data;"
-				+ "context.drawImage(imgEl, 0, 0);" +
-
-				"try {" + "data = context.getImageData(0, 0, width, height);" + "} catch (e) {" + "return defaultRGB;"
-				+ "}" +
-
-				"length = data.data.length;" + "while ((i += blockSize * 4) < length) {" + "++count;"
-				+ "rgb.r += data.data[i];" + "rgb.g += data.data[i + 1];" + "rgb.b += data.data[i + 2];" + "}" +
-
-				"rgb.r = ~~(rgb.r / count);" + "rgb.g = ~~(rgb.g / count);" + "rgb.b = ~~(rgb.b / count);" +
-
-				"console.warn(rgb);" + "callback(rgb);" + "};";
+				+ "context.drawImage(imgEl, 0, 0);" + "try {" + "data = context.getImageData(0, 0, width, height);"
+				+ "} catch (e) {" + "return defaultRGB;" + "}" + "length = data.data.length;"
+				+ "while ((i += blockSize * 4) < length) {" + "++count;" + "rgb.r += data.data[i];"
+				+ "rgb.g += data.data[i + 1];" + "rgb.b += data.data[i + 2];" + "}" + "rgb.r = ~~(rgb.r / count);"
+				+ "rgb.g = ~~(rgb.g / count);" + "rgb.b = ~~(rgb.b / count);" + "callback(rgb);" + "};";
 		Object averageRgb = ((JavascriptExecutor) driver).executeAsyncScript(script);
+		return (Map<String, Long>) averageRgb;
+	}
+
+	public Map<String, Long> getAverageColorFromPixels(WebElement videoElement, List<Point> pixelPercentagePositions) {
+		String script = "var callback = arguments[arguments.length - 1];"
+				+ "var points = arguments[arguments.length - 2];" + "points = JSON.parse(points);"
+				+ "var video = document.getElementById('local-video-undefined');"
+				+ "var canvas = document.createElement('canvas');" + "canvas.height = video.videoHeight;"
+				+ "canvas.width = video.videoWidth;" + "var context = canvas.getContext('2d');"
+				+ "context.drawImage(video, 0, 0, canvas.width, canvas.height);"
+				+ "var imgEl = document.createElement('img');" + "imgEl.src = canvas.toDataURL();"
+				+ "var blockSize = 5;" + "var defaultRGB = {r:0,g:0,b:0};" + "context.drawImage(video, 0, 0, 220, 150);"
+				+ "var dataURL = canvas.toDataURL();" + "imgEl.onload = function() {" + "    var rgb = {r:0,g:0,b:0};"
+				+ "    if (!context) {" + "        return defaultRGB;" + "    }"
+				+ "    var height = canvas.height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;"
+				+ "    var width = canvas.width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;"
+				+ "    let data;" + "    context.drawImage(imgEl, 0, 0);" + "    for (var p of points) {"
+				+ "        var xFromPercentage = width * (p.x / 100);"
+				+ "        var yFromPercentage = height * (p.y / 100);"
+				+ "        data = context.getImageData(xFromPercentage, yFromPercentage, 1, 1).data;"
+				+ "        rgb.r += data[0];" + "        rgb.g += data[1];" + "        rgb.b += data[2];" + "    }"
+				+ "    rgb.r = ~~(rgb.r / points.length);" + "    rgb.g = ~~(rgb.g / points.length);"
+				+ "    rgb.b = ~~(rgb.b / points.length);" + "    callback(rgb);" + "};";
+		String points = "[";
+		Iterator<Point> it = pixelPercentagePositions.iterator();
+		while (it.hasNext()) {
+			Point p = it.next();
+			points += "{\"x\":" + p.getX() + ",\"y\":" + p.getY() + "}";
+			if (it.hasNext()) {
+				points += ",";
+			}
+		}
+		points += "]";
+		Object averageRgb = ((JavascriptExecutor) driver).executeAsyncScript(script, points);
 		return (Map<String, Long>) averageRgb;
 	}
 

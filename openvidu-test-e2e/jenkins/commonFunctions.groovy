@@ -82,15 +82,22 @@ def prepareTestingEnvironment() {
                 docker.image("${KURENTO_MEDIA_SERVER_IMAGE}").pull()
             }
         },
-        'Download fake video': {
+        'Download fake videos': {
             sh(script: '''#!/bin/bash -xe
-                FAKE_VIDEO=/opt/openvidu-cache/barcode.y4m
-                if [ ! -f ${FAKE_VIDEO} ]; then
+                FAKE_VIDEO1=/opt/openvidu-cache/barcode.y4m
+                FAKE_VIDEO2=/opt/openvidu-cache/girl.mjpeg
+                if [ ! -f ${FAKE_VIDEO1} ]; then
                     sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m --create-dirs --output /opt/openvidu-cache/barcode.y4m
                 else
-                    echo "File ${FAKE_VIDEO} already exists"
+                    echo "File ${FAKE_VIDEO1} already exists"
+                fi
+                if [ ! -f ${FAKE_VIDEO2} ]; then
+                    sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/girl.mjpeg --create-dirs --output /opt/openvidu-cache/girl.mjpeg
+                else
+                    echo "File ${FAKE_VIDEO2} already exists"
                 fi
                 sudo cp /opt/openvidu-cache/barcode.y4m /opt/openvidu/barcode.y4m
+                sudo cp /opt/openvidu-cache/girl.mjpeg /opt/openvidu/girl.mjpeg
             '''.stripIndent())
         },
         'Download fake audio': {
@@ -101,7 +108,7 @@ def prepareTestingEnvironment() {
                 else
                     echo "File ${FAKE_AUDIO} already exists"
                 fi
-                sudo cp /opt/openvidu-cache/barcode.y4m /opt/openvidu/fakeaudio.wav
+                sudo cp /opt/openvidu-cache/fakeaudio.wav /opt/openvidu/fakeaudio.wav
             '''.stripIndent())
         },
         'Download custom layout': {

@@ -2106,7 +2106,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Analyze Chrome fake video stream without gray filter (GREEN color)
 		Map<String, Long> rgb = user.getEventManager().getAverageRgbFromVideo(subscriberVideo);
-		System.out.println(rgb.toString());
 		Assert.assertTrue("Video is not average green", RecordingUtils.checkVideoAverageRgbGreen(rgb));
 
 		// Try to apply none allowed filter
@@ -2139,7 +2138,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Try to apply another filter
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
-				"already has a filter applied in session"));
+				"Error [There is already a filter applied"));
 
 		// Analyze Chrome fake video stream with gray filter (GRAY color)
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);

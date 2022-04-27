@@ -2,11 +2,13 @@ package io.openvidu.test.e2e;
 
 import static org.junit.Assert.fail;
 
+import java.awt.Point;
 import java.io.File;
 import java.io.FileReader;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -628,6 +630,130 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				.getAttribute("textContent").contains(connectionId));
 
 		gracefullyLeaveParticipants(user, 1);
+	}
+
+	@Test
+	@DisplayName("Virtual Background test")
+	void virtualBackgroundTest() throws Exception {
+
+		log.info("Virtual Background test");
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeVirtualBackgroundFakeVideo");
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publish-checkbox")).click();
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		user.getDriver().findElement(By.cssSelector(".filter-btn")).click();
+		Thread.sleep(1000);
+
+		WebElement filterTypeInput = user.getDriver().findElement(By.id("filter-type-field"));
+		filterTypeInput.clear();
+
+		// Blur filter
+		filterTypeInput.sendKeys("VB:blur");
+		user.getDriver().findElement(By.id("apply-filter-btn")).click();
+		user.getWaiter().until(
+				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter applied"));
+		user.getDriver().findElement(By.id("remove-filter-btn")).click();
+		user.getWaiter().until(
+				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter removed"));
+		user.getDriver().findElement(By.id("apply-filter-btn")).click();
+		user.getWaiter().until(
+				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter applied"));
+		user.getDriver().findElement(By.id("apply-filter-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+				"Error [There is already a filter applied"));
+		user.getDriver().findElement(By.id("remove-filter-btn")).click();
+		user.getWaiter().until(
+				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter removed"));
+		user.getDriver().findElement(By.id("remove-filter-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+				"has no filter applied"));
+		user.getDriver().findElement(By.id("exec-filter-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+				"has no filter applied"));
+
+		// Image filter
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video"));
+		Map<String, Long> rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
+				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
+
+		// Green
+		Assert.assertTrue((rgb.get("r") < 150) && (rgb.get("g") > 240) && (rgb.get("b") < 100));
+
+		filterTypeInput.clear();
+		filterTypeInput.sendKeys("VB:image");
+		WebElement filterOptionsInput = user.getDriver().findElement(By.id("filter-options-field"));
+		filterOptionsInput.clear();
+		filterOptionsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/not_exists.jpg\"}");
+		user.getDriver().findElement(By.id("apply-filter-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+				"Error loading background image"));
+
+		filterOptionsInput = user.getDriver().findElement(By.id("filter-options-field"));
+		filterOptionsInput.clear();
+		filterOptionsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/red.jpg\"}");
+		user.getDriver().findElement(By.id("apply-filter-btn")).click();
+		user.getWaiter().until(
+				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter applied"));
+
+		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
+				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
+
+		// Red
+		Assert.assertTrue((rgb.get("r") > 250) && (rgb.get("g") < 10) && (rgb.get("b") < 40));
+
+		// Fail exec method
+		WebElement filterMethodInput = user.getDriver().findElement(By.id("filter-method-field"));
+		filterMethodInput.clear();
+		filterMethodInput.sendKeys("no_existing_method");
+		user.getDriver().findElement(By.id("exec-filter-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+				"Unknown Virtual Background method"));
+
+		// Fail exec method params
+		filterMethodInput.clear();
+		filterMethodInput.sendKeys("update");
+		WebElement filterParamsInput = user.getDriver().findElement(By.id("filter-params-field"));
+		filterParamsInput.clear();
+		filterParamsInput.sendKeys("wrong_params");
+		user.getDriver().findElement(By.id("exec-filter-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+				"Wrong params syntax"));
+		filterParamsInput.clear();
+		filterParamsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/not_exists.jpg\"}");
+		user.getDriver().findElement(By.id("exec-filter-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+				"Error loading background image"));
+
+		// Blue
+		filterParamsInput.clear();
+		filterParamsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/blue.jpg\"}");
+		user.getDriver().findElement(By.id("exec-filter-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+				"Filter method executed"));
+		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
+				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
+		Assert.assertTrue((rgb.get("r") < 10) && (rgb.get("g") < 10) && (rgb.get("b") > 240));
+
+		user.getDriver().findElement(By.id("remove-filter-btn")).click();
+		user.getWaiter().until(
+				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter removed"));
+
+		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
+				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
+
+		// Green
+		Assert.assertTrue((rgb.get("r") < 150) && (rgb.get("g") > 240) && (rgb.get("b") < 100));
+
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	private void waitUntilOpenViduRestarted(int maxSecondsWait) throws Exception {
