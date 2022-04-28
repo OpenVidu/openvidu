@@ -1,19 +1,13 @@
 import { Component } from '@angular/core';
-import { ParticipantService, TokenModel } from 'openvidu-angular';
+import { OpenViduService, TokenModel } from 'openvidu-angular';
 import { RestService } from 'src/app/services/rest.service';
 
 @Component({
 	selector: 'app-participantPanelItemElements-directive',
 	template: `
 		<ov-videoconference (onJoinButtonClicked)="onJoinButtonClicked()" [tokens]="tokens" [toolbarDisplaySessionName]="false">
-			<div *ovParticipantsPanel id="my-panel">
-				<ul id="local">
-					<li>{{ localParticipant.nickname }}</li>
-				</ul>
-
-				<ul id="remote">
-					<li *ngFor="let p of remoteParticipants">{{ p.nickname }}</li>
-				</ul>
+			<div *ovParticipantPanelItemElements="let participant">
+				<button *ngIf="participant.local" (click)="leaveSession()">Leave</button>
 			</div>
 		</ov-videoconference>
 	`,
@@ -25,9 +19,7 @@ export class ParticipantPanelItemElementsDirectiveComponent {
 	OPENVIDU_URL = 'https://localhost:4443';
 	OPENVIDU_SECRET = 'MY_SECRET';
 
-	constructor(private restService: RestService, private participantService: ParticipantService) {}
-
-
+	constructor(private restService: RestService, private openviduService: OpenViduService) {}
 
 	async onJoinButtonClicked() {
 		this.tokens = {
@@ -36,5 +28,7 @@ export class ParticipantPanelItemElementsDirectiveComponent {
 		};
 	}
 
-
+	leaveSession() {
+		this.openviduService.disconnect();
+	}
 }

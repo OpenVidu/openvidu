@@ -14,6 +14,8 @@ import { ChatPanelDirectiveComponent } from './examples/chatPanel-directive/chat
 
 import { ParticipantPanelItemElementsDirectiveComponent } from './examples/participantPanelItemElements-directive/participantPanelItemElements-directive.component';
 import { ParticipantPanelItemDirectiveComponent } from './examples/participantPanelItem-directive/participantPanelItem-directive.component';
+import { ToolbarAdditionalPanelButtonsDirectiveComponent } from './examples/toolbarAdditionalPanelButtons-directive/toolbarAdditionalPanelButtons-directive.component';
+import { AdditionalPanelsDirectiveComponent } from './examples/additionalPanels-directive/additionalPanels-directive.component';
 
 const routes: Routes = [
 	{ path: '', component: DashboardComponent },
@@ -23,9 +25,13 @@ const routes: Routes = [
 	{ path: 'examples', component: ExamplesDashboardComponent},
 	{ path: 'examples/toolbarDirective', component: ToolbarDirectiveComponent },
 	{ path: 'examples/toolbarAdditionalButtonsDirective', component: ToolbarAdditionalButtonsDirectiveComponent },
+	{ path: 'examples/toolbarAdditionalPanelButtonsDirective', component: ToolbarAdditionalPanelButtonsDirectiveComponent },
+
 	{ path: 'examples/layoutDirective', component: LayoutDirectiveComponent },
 	{ path: 'examples/streamDirective', component: StreamDirectiveComponent },
+
 	{ path: 'examples/panelDirective', component: PanelDirectiveComponent },
+	{ path: 'examples/additionalPanelsDirective', component: AdditionalPanelsDirectiveComponent },
 	{ path: 'examples/participantsPanelDirective', component: ParticipantsPanelDirectiveComponent },
 	{ path: 'examples/chatPanelDirective', component: ChatPanelDirectiveComponent },
 	{ path: 'examples/participantPanelItemDirective', component: ParticipantPanelItemDirectiveComponent },

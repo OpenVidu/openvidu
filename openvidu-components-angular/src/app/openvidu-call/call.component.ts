@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { TokenModel } from 'dist/openvidu-angular/public-api';
 import { RestService } from '../services/rest.service';
-import { Router } from '@angular/router';
+
 @Component({
 	selector: 'app-call',
 	templateUrl: './call.component.html',
@@ -11,7 +12,7 @@ export class CallComponent implements OnInit {
 	sessionId = 'daily-call';
 	OPENVIDU_URL = 'https://localhost:4443';
 	OPENVIDU_SECRET = 'MY_SECRET';
-	tokens: { webcam: string; screen: string };
+	tokens: TokenModel;
 
 	joinSessionClicked: boolean = false;
 	closeClicked: boolean = false;
@@ -24,23 +25,13 @@ export class CallComponent implements OnInit {
 			webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
 			screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
 		};
+
+		console.log(this.tokens)
+
 	}
 
-	async onJoinClicked() {
+	onJoinClicked() {
 		console.warn('VC JOIN BUTTON CLICKED');
-
-		// this.tokens = {
-		// 	webcam: await this.restService.getToken(this.sessionId),
-		// 	screen: await this.restService.getToken(this.sessionId)
-		// };
-
-		console.log(await this.restService.getToken(this.sessionId))
-
-
-
-		// setInterval(() => {
-		// 	this.value = !this.value;
-		// }, 1000);
 	}
 
 	onToolbarCameraButtonClicked() {

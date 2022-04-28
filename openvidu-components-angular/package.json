@@ -13,7 +13,7 @@
     "lib:e2e": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/angular.test.js",
     "lib:e2e-ci": "cross-env LAUNCH_MODE=CI npm run lib:e2e",
     "doc:build": "cd projects/openvidu-angular && npx compodoc -p ./doc/tsconfig.doc.json -c ./doc/.compodocrc.json",
-    "doc:clean-copy":  "rm -rf ../../openvidu.io-docs/docs/api/openvidu-angular && cp -r ./docs/openvidu-angular/ ../../openvidu.io-docs/docs/api/openvidu-angular",
+    "doc:clean-copy": "rm -rf ../../openvidu.io-docs/docs/api/openvidu-angular && cp -r ./docs/openvidu-angular/ ../../openvidu.io-docs/docs/api/openvidu-angular",
     "doc:serve": "cd projects/openvidu-angular && npx compodoc -p ./doc/tsconfig.doc.json --watch --serve -c ./doc/.compodocrc.json",
     "webcomponent:build": "./node_modules/@angular/cli/bin/ng.js build openvidu-webcomponent --configuration production && node ./openvidu-webcomponent-build.js",
     "webcomponent:serve-testapp": "npx http-server ./e2e/webcomponent-app/",
@@ -35,7 +35,7 @@
     "@angular/platform-browser-dynamic": "13.0.0",
     "@angular/router": "13.0.0",
     "autolinker": "3.14.3",
-    "openvidu-browser": "^2.21.0",
+    "openvidu-browser": "file:openvidu-browser-2.21.0.tgz",
     "rxjs": "7.5.4",
     "tslib": "2.3.1",
     "zone.js": "0.11.4"
