@@ -365,15 +365,9 @@ export class Stream {
                     return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'Virtual Background requires the client to be connected to a Session or to have a "token" property available in "options" parameter with a valid OpenVidu token'));
                 }
 
-                if (!!this.session.token && !this.session.openvidu.isAtLeastPro) {
-                    // Check OpenVidu edition after connection to the Session
+                const tokenParams = this.session.getTokenParams(openviduToken);
+                if (tokenParams.edition !== 'pro' && tokenParams.edition !== 'enterprise') {
                     return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'OpenVidu Virtual Background API is available from OpenVidu Pro edition onwards'));
-                } else {
-                    // Check OpenVidu edition with the token
-                    const tokenParams = this.session.getTokenParams(openviduToken);
-                    if (tokenParams.edition !== 'pro' && tokenParams.edition !== 'enterprise') {
-                        return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'OpenVidu Virtual Background API is available from OpenVidu Pro edition onwards'));
-                    }
                 }
 
                 openviduToken = encodeURIComponent(btoa(openviduToken));
@@ -400,7 +394,7 @@ export class Stream {
                         // @ts-ignore
                         const VB = new VirtualBackground.VirtualBackground({
                             id,
-                            openviduServerUrl: new URL(this.session.openvidu.httpUri),
+                            openviduServerUrl: new URL(tokenParams.httpUri),
                             openviduToken,
                             inputVideo: videoClone,
                             inputResolution: '160x96',

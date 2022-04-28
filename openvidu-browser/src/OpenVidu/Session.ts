@@ -1370,13 +1370,14 @@ export class Session extends EventDispatcher {
                 }, {});
 
             return {
-                url,
                 sessionId: queryParams['sessionId'],
                 secret: queryParams['secret'],
                 recorder: queryParams['recorder'],
                 webrtcStatsInterval: queryParams['webrtcStatsInterval'],
                 sendBrowserLogs: queryParams['sendBrowserLogs'],
-                edition: queryParams['edition']
+                edition: queryParams['edition'],
+                wsUri = 'wss://' + url.host + '/openvidu',
+                httpUri = 'https://' + url.host
             };
 
         } else {
@@ -1519,8 +1520,8 @@ export class Session extends EventDispatcher {
         this.openvidu.isAtLeastPro = tokenParams.edition === 'pro' || tokenParams.edition === 'enterprise';
         this.openvidu.isEnterprise = tokenParams.edition === 'enterprise';
 
-        this.openvidu.wsUri = 'wss://' + tokenParams.url.host + '/openvidu';
-        this.openvidu.httpUri = 'https://' + tokenParams.url.host;
+        this.openvidu.wsUri = tokenParams.wsUri;
+        this.openvidu.httpUri = tokenParams.httpUri;
     }
 
     private processJoinRoomResponse(opts: LocalConnectionOptions, token: string) {
