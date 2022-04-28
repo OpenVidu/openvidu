@@ -1376,8 +1376,8 @@ export class Session extends EventDispatcher {
                 webrtcStatsInterval: queryParams['webrtcStatsInterval'],
                 sendBrowserLogs: queryParams['sendBrowserLogs'],
                 edition: queryParams['edition'],
-                wsUri = 'wss://' + url.host + '/openvidu',
-                httpUri = 'https://' + url.host
+                wsUri: 'wss://' + url.host + '/openvidu',
+                httpUri: 'https://' + url.host
             };
 
         } else {
