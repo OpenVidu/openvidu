@@ -348,9 +348,6 @@ export class Stream {
 
                 // Client filters
 
-                if (!this.session.openvidu.httpUri) {
-                    return reject(this.session.notConnectedError());
-                }
                 if (!this.session.openvidu.isAtLeastPro) {
                     return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'OpenVidu Virtual Background API is available from OpenVidu Pro edition onwards'));
                 }
