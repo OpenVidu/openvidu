@@ -382,6 +382,7 @@ export class Stream {
                         // @ts-ignore
                         videoClone.id = VirtualBackground.VirtualBackground.SOURCE_VIDEO_PREFIX + id;
                         videoClone.srcObject = mediaStreamClone;
+                        videoClone.muted = true;
                         this.virtualBackgroundSourceElements = { videoClone, mediaStreamClone };
 
                         // @ts-ignore
