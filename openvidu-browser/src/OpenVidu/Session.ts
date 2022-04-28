@@ -111,7 +111,7 @@ export class Session extends EventDispatcher {
      */
     options: SessionOptions;
     /**
-     * @hidden 
+     * @hidden
      */
     token: string;
     /**
@@ -1501,7 +1501,7 @@ export class Session extends EventDispatcher {
     }
 
     private processToken(token: string): void {
-        const tokenParams = this.getTokenParams(token;
+        const tokenParams = this.getTokenParams(token);
         this.sessionId = tokenParams.sessionId;
 
         if (!!tokenParams.secret) {
