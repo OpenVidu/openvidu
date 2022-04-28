@@ -348,17 +348,12 @@ export class Stream {
 
                 // Client filters
 
-                if (!this.session.openvidu.isAtLeastPro) {
-                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'OpenVidu Virtual Background API is available from OpenVidu Pro edition onwards'));
-                }
                 if (!this.hasVideo) {
                     return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'The Virtual Background filter requires a video track to be applied'));
                 }
                 if (!this.mediaStream || this.streamManager.videos.length === 0) {
                     return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'The StreamManager requires some video element to be attached to it in order to apply a Virtual Background filter'));
                 }
-
-                logger.info('Applying Virtual Background to stream ' + this.streamId);
 
                 let openviduToken: string;
                 if (!!this.session.token) {
@@ -369,7 +364,21 @@ export class Stream {
                 if (!openviduToken) {
                     return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'Virtual Background requires the client to be connected to a Session or to have a "token" property available in "options" parameter with a valid OpenVidu token'));
                 }
+
+                if (!!this.session.token && !this.session.openvidu.isAtLeastPro) {
+                    // Check OpenVidu edition after connection to the Session
+                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'OpenVidu Virtual Background API is available from OpenVidu Pro edition onwards'));
+                } else {
+                    // Check OpenVidu edition with the token
+                    const tokenParams = this.session.getTokenParams(openviduToken);
+                    if (tokenParams.edition !== 'pro' && tokenParams.edition !== 'enterprise') {
+                        return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'OpenVidu Virtual Background API is available from OpenVidu Pro edition onwards'));
+                    }
+                }
+
                 openviduToken = encodeURIComponent(btoa(openviduToken));
+
+                logger.info('Applying Virtual Background to stream ' + this.streamId);
 
                 const afterScriptLoaded = async () => {
                     try {

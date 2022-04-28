@@ -1344,6 +1344,46 @@ export class Session extends EventDispatcher {
         return listenersInStreamManager > 0;
     }
 
+    /**
+     * @hidden
+     */
+    getTokenParams(token: string) {
+        const match = token.match(/^(wss?\:)\/\/(([^:\/?#]*)(?:\:([0-9]+))?)([\/]{0,1}[^?#]*)(\?[^#]*|)(#.*|)$/);
+        if (!!match) {
+            const url = {
+                protocol: match[1],
+                host: match[2],
+                hostname: match[3],
+                port: match[4],
+                pathname: match[5],
+                search: match[6],
+                hash: match[7]
+            };
+
+            const params = token.split('?');
+            const queryParams = decodeURI(params[1])
+                .split('&')
+                .map(param => param.split('='))
+                .reduce((values, [key, value]) => {
+                    values[key] = value
+                    return values
+                }, {});
+
+            return {
+                url,
+                sessionId: queryParams['sessionId'],
+                secret: queryParams['secret'],
+                recorder: queryParams['recorder'],
+                webrtcStatsInterval: queryParams['webrtcStatsInterval'],
+                sendBrowserLogs: queryParams['sendBrowserLogs'],
+                edition: queryParams['edition']
+            };
+
+        } else {
+            throw new Error(`Token not valid: "${token}"`);
+        }
+    }
+
     /* Private methods */
 
     private connectAux(token: string): Promise<void> {
@@ -1461,54 +1501,26 @@ export class Session extends EventDispatcher {
     }
 
     private processToken(token: string): void {
-        const match = token.match(/^(wss?\:)\/\/(([^:\/?#]*)(?:\:([0-9]+))?)([\/]{0,1}[^?#]*)(\?[^#]*|)(#.*|)$/);
-        if (!!match) {
-            const url = {
-                protocol: match[1],
-                host: match[2],
-                hostname: match[3],
-                port: match[4],
-                pathname: match[5],
-                search: match[6],
-                hash: match[7]
-            };
+        const tokenParams = this.getTokenParams(token;
+        this.sessionId = tokenParams.sessionId;
 
-            const params = token.split('?');
-            const queryParams = decodeURI(params[1])
-                .split('&')
-                .map(param => param.split('='))
-                .reduce((values, [key, value]) => {
-                    values[key] = value
-                    return values
-                }, {});
-
-            this.sessionId = <string>queryParams['sessionId'];
-            const secret = queryParams['secret'];
-            const recorder = queryParams['recorder'];
-            const webrtcStatsInterval = queryParams['webrtcStatsInterval'];
-            const sendBrowserLogs = queryParams['sendBrowserLogs'];
-            const edition = queryParams['edition'];
-
-            if (!!secret) {
-                this.openvidu.secret = secret;
-            }
-            if (!!recorder) {
-                this.openvidu.recorder = true;
-            }
-            if (!!webrtcStatsInterval) {
-                this.openvidu.webrtcStatsInterval = +webrtcStatsInterval;
-            }
-            if (!!sendBrowserLogs) {
-                this.openvidu.sendBrowserLogs = sendBrowserLogs;
-            }
-            this.openvidu.isAtLeastPro = !!webrtcStatsInterval && !!sendBrowserLogs;
-            this.openvidu.isEnterprise = edition === 'enterprise';
-
-            this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
-            this.openvidu.httpUri = 'https://' + url.host;
-        } else {
-            logger.error('Token "' + token + '" is not valid')
+        if (!!tokenParams.secret) {
+            this.openvidu.secret = tokenParams.secret;
         }
+        if (!!tokenParams.recorder) {
+            this.openvidu.recorder = true;
+        }
+        if (!!tokenParams.webrtcStatsInterval) {
+            this.openvidu.webrtcStatsInterval = tokenParams.webrtcStatsInterval;
+        }
+        if (!!tokenParams.sendBrowserLogs) {
+            this.openvidu.sendBrowserLogs = tokenParams.sendBrowserLogs;
+        }
+        this.openvidu.isAtLeastPro = tokenParams.edition === 'pro' || tokenParams.edition === 'enterprise';
+        this.openvidu.isEnterprise = tokenParams.edition === 'enterprise';
+
+        this.openvidu.wsUri = 'wss://' + tokenParams.url.host + '/openvidu';
+        this.openvidu.httpUri = 'https://' + tokenParams.url.host;
     }
 
     private processJoinRoomResponse(opts: LocalConnectionOptions, token: string) {
