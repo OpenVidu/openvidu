@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { LogoDirective } from './internals.directive';
 import { ParticipantPanelItemMuteButtonDirective } from './participant-panel-item.directive';
 import {
 	StreamDisplayParticipantNameDirective,
@@ -13,7 +14,6 @@ import {
 	ToolbarChatPanelButtonDirective,
 	ToolbarDisplaySessionNameDirective,
 	ToolbarDisplayLogoDirective,
-	LogoDirective,
 	ToolbarActivitiesPanelButtonDirective,
 	ToolbarBackgroundEffectsButtonDirective
 } from './toolbar.directive';

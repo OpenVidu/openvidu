@@ -8,38 +8,42 @@
 
 	<div class="effects-container" fxFlex="100%" fxLayoutAlign="space-evenly none">
 		<div>
-			<h4>Blurred background</h4>
+			<h4>No effects and blurred background</h4>
 			<div>
 				<button
+					*ngFor="let effect of noEffectAndBlurredBackground"
 					mat-icon-button
 					class="effect-button"
-					[class.active-effect-btn]="effectActive === 'no_effect'"
-					(click)="effectActive = 'no_effect'"
+					[class.active-effect-btn]="backgroundSelectedId === effect.id"
+					(click)="applyBackground(effect)"
 				>
-					<mat-icon matTooltip="No background effect">block</mat-icon>
+					<mat-icon [matTooltip]="effect.description">{{effect.thumbnail}}</mat-icon>
 				</button>
-				<button
-					mat-icon-button
-					class="effect-button"
-					[class.active-effect-btn]="effectActive === 'soft_blur'"
-					(click)="effectActive = 'soft_blur'"
-				>
-					<mat-icon matTooltip="Soft blur effect">blur_on</mat-icon>
-				</button>
-				<button
+				<!-- <button
 					mat-icon-button
 					class="effect-button"
 					id="hard-blur-btn"
-					[class.active-effect-btn]="effectActive === 'hard_blur'"
-					(click)="effectActive = 'hard_blur'"
+					[class.active-effect-btn]="backgroundSelectedId === 'hard_blur'"
+					(click)="applyBackground('hard_blur')"
 				>
 					<mat-icon matTooltip="Hard blur effect">blur_on</mat-icon>
-				</button>
+				</button> -->
 			</div>
 		</div>
 		<hr />
 		<div>
 			<h4>Background images</h4>
+
+			<div class="grid">
+				<div
+					*ngFor="let effect of backgroundImages"
+					class="effect-button"
+					[class.active-effect-btn]="backgroundSelectedId === effect.id"
+					(click)="applyBackground(effect)"
+				>
+					<img [src]="effect.thumbnail" />
+				</div>
+			</div>
 		</div>
 	</div>
 </div>

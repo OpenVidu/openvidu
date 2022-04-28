@@ -32,6 +32,10 @@ hr {
 	width: 320px;
 }
 
+#prejoin-container ::ng-deep .layout {
+	min-width: 0px !important;
+}
+
 #background-effects-btn {
 	position: absolute;
     z-index: 1;

@@ -165,6 +165,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 
 	joinSession() {
 		this.onJoinButtonClicked.emit();
+		this.panelService.closePanel();
 	}
 
 	toggleBackgroundEffects() {

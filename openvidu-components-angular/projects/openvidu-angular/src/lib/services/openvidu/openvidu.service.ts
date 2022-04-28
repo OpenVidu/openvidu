@@ -268,9 +268,8 @@ export class OpenViduService {
 		} else if (this.participantService.isOnlyMyScreenActive()) {
 			// Enabling webcam
 			const hasAudio = this.participantService.hasScreenAudioActive();
-			console.warn('Es audio activo?', hasAudio);
 			if (!this.isWebcamSessionConnected()) {
-				//TODO: should be the token in th participant?
+				//TODO: should be the token in the participant?
 				await this.connectSession(this.getWebcamSession(), this.tokenService.getWebcamToken());
 			}
 			await this.publish(this.participantService.getMyCameraPublisher());

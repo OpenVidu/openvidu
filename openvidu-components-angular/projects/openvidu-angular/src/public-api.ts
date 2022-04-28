@@ -53,7 +53,7 @@ export * from './lib/pipes/participant.pipe';
 // Directives
 export * from './lib/directives/api/api.directive.module';
 export * from './lib/directives/template/openvidu-angular.directive.module';
-
+export * from './lib/directives/api/internals.directive';
 export * from './lib/directives/template/openvidu-angular.directive';
 export * from './lib/directives/api/toolbar.directive';
 export * from './lib/directives/api/stream.directive';
