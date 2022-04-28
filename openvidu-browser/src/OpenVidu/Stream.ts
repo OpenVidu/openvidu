@@ -540,50 +540,60 @@ export class Stream {
                 }
             }
 
-            if (!!this.filter && this.filter?.type.startsWith('VB:')) {
+            if (!!this.filter) {
+                
+                // There is a filter applied
 
-                // Client filters
+                if (this.filter?.type.startsWith('VB:')) {
 
-                try {
+                    // Client filters
 
-                    const mediaStreamClone = this.virtualBackgroundSourceElements!.mediaStreamClone;
-                    if (!isDisposing) {
-                        if (this.streamManager.remote) {
-                            await this.streamManager.replaceTrackInMediaStream(mediaStreamClone.getVideoTracks()[0]);
+                    try {
+
+                        const mediaStreamClone = this.virtualBackgroundSourceElements!.mediaStreamClone;
+                        if (!isDisposing) {
+                            if (this.streamManager.remote) {
+                                await this.streamManager.replaceTrackInMediaStream(mediaStreamClone.getVideoTracks()[0]);
+                            } else {
+                                await (this.streamManager as Publisher).replaceTrack(mediaStreamClone.getVideoTracks()[0]);
+                            }
                         } else {
-                            await (this.streamManager as Publisher).replaceTrack(mediaStreamClone.getVideoTracks()[0]);
+                            mediaStreamClone.getTracks().forEach((track) => track.stop());
                         }
-                    } else {
-                        mediaStreamClone.getTracks().forEach((track) => track.stop());
+
+                        this.virtualBackgroundSinkElements!.VB.cleanUp();
+
+                        delete this.virtualBackgroundSinkElements;
+                        delete this.virtualBackgroundSourceElements;
+
+                        return resolveRemoveFilter(undefined, false);
+
+                    } catch (error) {
+                        return resolveRemoveFilter(error, false);
                     }
 
-                    this.virtualBackgroundSinkElements!.VB.cleanUp();
+                } else {
 
-                    delete this.virtualBackgroundSinkElements;
-                    delete this.virtualBackgroundSourceElements;
+                    // Server filters
 
-                    return resolveRemoveFilter(undefined, false);
+                    if (!this.session.sessionConnected()) {
+                        return reject(this.session.notConnectedError());
+                    }
 
-                } catch (error) {
-                    return resolveRemoveFilter(error, false);
+                    logger.info('Removing filter of stream ' + this.streamId);
+                    this.session.openvidu.sendRequest(
+                        'removeFilter',
+                        { streamId: this.streamId },
+                        (error, response) => {
+                            return resolveRemoveFilter(error, true);
+                        }
+                    );
+
                 }
-
             } else {
-
-                // Server filters
-
-                if (!this.session.sessionConnected()) {
-                    return reject(this.session.notConnectedError());
-                }
-
-                logger.info('Removing filter of stream ' + this.streamId);
-                this.session.openvidu.sendRequest(
-                    'removeFilter',
-                    { streamId: this.streamId },
-                    (error, response) => {
-                        return resolveRemoveFilter(error, true);
-                    }
-                );
+                
+                // There is no filter applied
+                return reject(new OpenViduError(OpenViduErrorName.GENERIC_ERROR, "Stream " + this.streamId + " has no filter applied"));
 
             }
         });
