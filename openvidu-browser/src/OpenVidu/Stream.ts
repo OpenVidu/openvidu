@@ -440,7 +440,7 @@ export class Stream {
                 if (typeof VirtualBackground === "undefined") {
                     let script: HTMLScriptElement = document.createElement("script");
                     script.type = "text/javascript";
-                    script.src = this.session.openvidu.httpUri + '/openvidu/virtual-background/openvidu-virtual-background.js?token=' + openviduToken;
+                    script.src = tokenParams.httpUri + '/openvidu/virtual-background/openvidu-virtual-background.js?token=' + openviduToken;
                     script.onload = async () => {
                         try {
                             await afterScriptLoaded();
