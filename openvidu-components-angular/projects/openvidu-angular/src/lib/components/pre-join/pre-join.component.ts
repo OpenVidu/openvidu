@@ -43,7 +43,6 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	hasAudioDevices: boolean;
 	isLoading = true;
 	nickname: string;
-	isOpenViduCE: boolean;
 	/**
 	 * @ignore
 	 */
@@ -81,7 +80,6 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	ngOnInit() {
 		this.subscribeToPrejoinDirectives();
 		this.subscribeToLocalParticipantEvents();
-		this.isOpenViduCE = this.openviduService.isOpenViduCE();
 
 		this.windowSize = window.innerWidth;
 		this.hasVideoDevices = this.deviceSrv.hasVideoDeviceAvailable();

@@ -283,11 +283,6 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	 */
 	isRecording: boolean = false;
 
-	/**
-	 * @ignore
-	 */
-	isOpenViduCE: boolean;
-
 	private log: ILogger;
 	private minimalSub: Subscription;
 	private panelTogglingSubscription: Subscription;
@@ -357,7 +352,6 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		await this.oVDevicesService.initializeDevices();
 		this.hasVideoDevices = this.oVDevicesService.hasVideoDeviceAvailable();
 		this.hasAudioDevices = this.oVDevicesService.hasAudioDeviceAvailable();
-		this.isOpenViduCE = this.openviduService.isOpenViduCE();
 		this.session = this.openviduService.getWebcamSession();
 
 		this.subscribeToUserMediaProperties();
