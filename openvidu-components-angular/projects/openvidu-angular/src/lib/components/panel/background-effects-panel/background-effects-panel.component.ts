@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { BackgroundEffect, EffectType } from '../../../models/background-effect.model';
 import { PanelType } from '../../../models/panel.model';
@@ -19,7 +19,7 @@ export class BackgroundEffectsPanelComponent implements OnInit {
   private backgrounds: BackgroundEffect[];
   private backgroundSubs: Subscription;
 
-	constructor(private panelService: PanelService, private backgroundService: VirtualBackgroundService) {}
+	constructor(private panelService: PanelService, private backgroundService: VirtualBackgroundService, private cd: ChangeDetectorRef) {}
 
 	ngOnInit(): void {
     this.subscribeToBackgroundSelected();
@@ -32,7 +32,10 @@ export class BackgroundEffectsPanelComponent implements OnInit {
     if(this.backgroundSubs) this.backgroundSubs.unsubscribe();
   }
   subscribeToBackgroundSelected() {
-    this.backgroundSubs = this.backgroundService.backgroundSelectedObs.subscribe((id) => this.backgroundSelectedId = id);
+    this.backgroundSubs = this.backgroundService.backgroundSelectedObs.subscribe((id) => {
+      this.backgroundSelectedId = id;
+      this.cd.markForCheck();
+    });
   }
 
 	close() {

@@ -52,12 +52,39 @@
 
 .grid {
 	display: grid;
-    grid-template-columns: repeat(auto-fit, 70px);
+	grid-template-columns: repeat(auto-fit, 70px);
 }
 
 .grid img {
 	max-width: 100%;
 	max-height: 100%;
 	border-radius: var(--ov-panel-radius);
+}
 
+::ng-deep .mat-slider-thumb {
+	visibility: hidden;
+}
+
+::ng-deep .mat-slider-vertical .mat-slider-track-fill,
+::ng-deep .mat-slider-vertical .mat-slider-track-background,
+::ng-deep .mat-slider-vertical .mat-slider-track-wrapper {
+	width: 10px !important;
+}
+
+::-webkit-scrollbar {
+	width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #a7a7a7;
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #7c7c7c;
+}
+
+::-webkit-scrollbar-track {
+	background: var(--ov-light-color);
+	border-radius: 4px;
 }
