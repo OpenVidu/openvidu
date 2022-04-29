@@ -52,6 +52,10 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
+	_toolbarBackgroundEffectsButton: boolean = true;
+	/**
+	 * @internal
+	 */
 	_toolbarLeaveButton: boolean = true;
 	/**
 	 * @internal
@@ -176,6 +180,21 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 */
 	@Input() set toolbarFullscreenButton(value: string | boolean) {
 		this._toolbarFullscreenButton = this.castToBoolean(value);
+	}
+
+	/**
+	 * The **toolbarBackgroundEffectsButton** attribute allows show/hide the background effects toolbar button.
+	 *
+	 * Default: `true`
+	 *
+	 * <div class="warn-container">
+	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
+	 *
+	 * @example
+	 * <openvidu-webcomponent toolbar-background-effects-button="false"></openvidu-webcomponent>
+	 */
+	@Input() set toolbarBackgroundEffectsButton(value: string | boolean) {
+		this._toolbarBackgroundEffectsButton = this.castToBoolean(value);
 	}
 	/**
 	 * The **toolbarLeaveButton** attribute allows show/hide the leave toolbar button.
