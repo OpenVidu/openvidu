@@ -77,8 +77,8 @@ public class KurentoParticipantEndpointConfig {
 				log.info(msg);
 			});
 
-			finalEndpoint.addIceComponentStateChangeListener(event -> {
-				String msg = "KMS event [IceComponentStateChange]: -> endpoint: " + endpoint.getEndpointName() + " ("
+			finalEndpoint.addIceComponentStateChangedListener(event -> {
+				String msg = "KMS event [IceComponentStateChanged]: -> endpoint: " + endpoint.getEndpointName() + " ("
 						+ typeOfEndpoint + ") | state: " + event.getState().name() + " | componentId: "
 						+ event.getComponentId() + " | streamId: " + event.getStreamId() + " | timestamp: "
 						+ event.getTimestampMillis();
@@ -90,8 +90,8 @@ public class KurentoParticipantEndpointConfig {
 				log.info(msg);
 			});
 
-			finalEndpoint.addDataChannelOpenListener(event -> {
-				String msg = "KMS event [DataChannelOpenEvent]: -> endpoint: " + endpoint.getEndpointName() + " ("
+			finalEndpoint.addDataChannelOpenedListener(event -> {
+				String msg = "KMS event [DataChannelOpenedEvent]: -> endpoint: " + endpoint.getEndpointName() + " ("
 						+ typeOfEndpoint + ") | channelId: " + event.getChannelId() + " | timestamp: "
 						+ event.getTimestampMillis();
 				KmsEvent kmsEvent = new KmsEvent(event, endpoint.getOwner(), endpoint.getEndpointName(),
@@ -102,8 +102,8 @@ public class KurentoParticipantEndpointConfig {
 				log.info(msg);
 			});
 
-			finalEndpoint.addDataChannelCloseListener(event -> {
-				String msg = "KMS event [DataChannelCloseEvent]: -> endpoint: " + endpoint.getEndpointName() + " ("
+			finalEndpoint.addDataChannelClosedListener(event -> {
+				String msg = "KMS event [DataChannelClosedEvent]: -> endpoint: " + endpoint.getEndpointName() + " ("
 						+ typeOfEndpoint + ") | channelId: " + event.getChannelId() + " | timestamp: "
 						+ event.getTimestampMillis();
 				KmsEvent kmsEvent = new KmsEvent(event, endpoint.getOwner(), endpoint.getEndpointName(),
@@ -180,8 +180,8 @@ public class KurentoParticipantEndpointConfig {
 		// Endpoint events
 		final Endpoint finalEndpoint = endpoint.getEndpoint();
 
-		finalEndpoint.addMediaFlowInStateChangeListener(event -> {
-			String msg = "KMS event [MediaFlowInStateChange] -> endpoint: " + endpoint.getEndpointName() + " ("
+		finalEndpoint.addMediaFlowInStateChangedListener(event -> {
+			String msg = "KMS event [MediaFlowInStateChanged] -> endpoint: " + endpoint.getEndpointName() + " ("
 					+ typeOfEndpoint + ") | state: " + event.getState() + " | pad: " + event.getPadName()
 					+ " | mediaType: " + event.getMediaType() + " | timestamp: " + event.getTimestampMillis();
 			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getOwner(), endpoint.getEndpointName(),
@@ -192,8 +192,8 @@ public class KurentoParticipantEndpointConfig {
 			log.info(msg);
 		});
 
-		finalEndpoint.addMediaFlowOutStateChangeListener(event -> {
-			String msg = "KMS event [MediaFlowOutStateChange] -> endpoint: " + endpoint.getEndpointName() + " ("
+		finalEndpoint.addMediaFlowOutStateChangedListener(event -> {
+			String msg = "KMS event [MediaFlowOutStateChanged] -> endpoint: " + endpoint.getEndpointName() + " ("
 					+ typeOfEndpoint + ") | state: " + event.getState() + " | pad: " + event.getPadName()
 					+ " | mediaType: " + event.getMediaType() + " | timestamp: " + event.getTimestampMillis();
 			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getOwner(), endpoint.getEndpointName(),
@@ -216,8 +216,8 @@ public class KurentoParticipantEndpointConfig {
 			log.error(msg);
 		});
 
-		finalEndpoint.addMediaTranscodingStateChangeListener(event -> {
-			String msg = "KMS event [MediaTranscodingStateChange]: -> endpoint: " + endpoint.getEndpointName() + " ("
+		finalEndpoint.addMediaTranscodingStateChangedListener(event -> {
+			String msg = "KMS event [MediaTranscodingStateChanged]: -> endpoint: " + endpoint.getEndpointName() + " ("
 					+ typeOfEndpoint + ") | state: " + event.getState().name() + " | mediaType: " + event.getMediaType()
 					+ " | binName: " + event.getBinName() + " | timestamp: " + event.getTimestampMillis();
 			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getOwner(), endpoint.getEndpointName(),

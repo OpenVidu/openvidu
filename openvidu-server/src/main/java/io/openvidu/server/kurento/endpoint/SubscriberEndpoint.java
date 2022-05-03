@@ -48,7 +48,7 @@ public class SubscriberEndpoint extends MediaEndpoint {
 	}
 
 	public synchronized String prepareSubscription(PublisherEndpoint publisher) {
-		registerOnIceCandidateEventListener(publisher.getOwner().getParticipantPublicId());
+		registerIceCandidateFoundEventListener(publisher.getOwner().getParticipantPublicId());
 		publisher.connect(this.getEndpoint(), true);
 		this.createdAt = System.currentTimeMillis();
 		this.publisherStreamId = publisher.getStreamId();
@@ -65,7 +65,7 @@ public class SubscriberEndpoint extends MediaEndpoint {
 	public synchronized String subscribe(String sdpString, PublisherEndpoint publisher) {
 		if (this.publisherStreamId == null) {
 			// Client initiated negotiation
-			registerOnIceCandidateEventListener(publisher.getOwner().getParticipantPublicId());
+			registerIceCandidateFoundEventListener(publisher.getOwner().getParticipantPublicId());
 			this.createdAt = System.currentTimeMillis();
 			String realSdpAnswer = processOffer(sdpString);
 			gatherCandidates();
