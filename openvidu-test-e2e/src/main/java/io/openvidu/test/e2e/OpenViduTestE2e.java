@@ -336,9 +336,9 @@ public class OpenViduTestE2e {
 			browserUser = new ChromeUser("TestUser", 50, Paths.get("/opt/openvidu/barcode.y4m"));
 			break;
 		case "chromeVirtualBackgroundFakeVideo":
-			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
+			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
 			setupBrowserAux(BrowserNames.CHROME, container, false);
-			browserUser = new ChromeUser("TestUser", 50, Paths.get("/opt/openvidu/girl.mjpeg"));
+			browserUser = new ChromeUser("TestUser", 50, Paths.get("/opt/openvidu/girl.mjpeg"), false);
 			break;
 		case "firefox":
 			container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, true);

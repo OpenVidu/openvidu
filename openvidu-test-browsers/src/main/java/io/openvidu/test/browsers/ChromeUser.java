@@ -45,6 +45,10 @@ public class ChromeUser extends BrowserUser {
 		this(userName, timeOfWaitInSeconds, generateFakeVideoChromeOptions(fakeVideoLocation), true);
 	}
 
+	public ChromeUser(String userName, int timeOfWaitInSeconds, Path fakeVideoLocation, boolean headless) {
+		this(userName, timeOfWaitInSeconds, generateFakeVideoChromeOptions(fakeVideoLocation), headless);
+	}
+
 	private ChromeUser(String userName, int timeOfWaitInSeconds, ChromeOptions options, boolean headless) {
 		super(userName, timeOfWaitInSeconds);
 
