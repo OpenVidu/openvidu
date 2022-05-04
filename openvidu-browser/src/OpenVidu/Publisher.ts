@@ -168,7 +168,7 @@ export class Publisher extends StreamManager {
      * useful if the Publisher was unpublished freeing the hardware resource, and openvidu-browser is not able to successfully re-create the video track as it was before unpublishing. In this way previous track settings will be ignored and this MediaStreamTrack
      * will be used instead.
      */
-     publishVideo<T extends boolean>(enabled: T, resource?: T extends false ? boolean : MediaStreamTrack): void {
+    publishVideo<T extends boolean>(enabled: T, resource?: T extends false ? boolean : MediaStreamTrack): void {
 
         if (this.stream.videoActive !== enabled) {
 
@@ -329,27 +329,7 @@ export class Publisher extends StreamManager {
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the track was successfully replaced and rejected with an Error object in other case
      */
     async replaceTrack(track: MediaStreamTrack): Promise<void> {
-        // Set field "enabled" of the new track to the previous value
-        const trackOriginalEnabledValue: boolean = track.enabled;
-        if (track.kind === 'video') {
-            track.enabled = this.stream.videoActive;
-        } else if (track.kind === 'audio') {
-            track.enabled = this.stream.audioActive;
-        }
-        try {
-            if (this.stream.isLocalStreamPublished) {
-                // Only if the Publisher has been published is necessary to call native Web API RTCRtpSender.replaceTrack
-                // If it has not been published yet, replacing it on the MediaStream object is enough
-                await this.replaceTrackInMediaStream(track);
-                return await this.replaceTrackInRtcRtpSender(track);
-            } else {
-                // Publisher not published. Simply replace the track on the local MediaStream
-                return await this.replaceTrackInMediaStream(track);
-            }
-        } catch (error) {
-            track.enabled = trackOriginalEnabledValue;
-            throw error;
-        }
+        return this.replaceTrackAux(track, true);
     }
 
     /* Hidden methods */
@@ -638,6 +618,33 @@ export class Publisher extends StreamManager {
 
     /**
      * @hidden
+     */
+    async replaceTrackAux(track: MediaStreamTrack, updateLastConstraints: boolean): Promise<void> {
+        // Set field "enabled" of the new track to the previous value
+        const trackOriginalEnabledValue: boolean = track.enabled;
+        if (track.kind === 'video') {
+            track.enabled = this.stream.videoActive;
+        } else if (track.kind === 'audio') {
+            track.enabled = this.stream.audioActive;
+        }
+        try {
+            if (this.stream.isLocalStreamPublished) {
+                // Only if the Publisher has been published is necessary to call native Web API RTCRtpSender.replaceTrack
+                // If it has not been published yet, replacing it on the MediaStream object is enough
+                await this.replaceTrackInMediaStream(track, updateLastConstraints);
+                return await this.replaceTrackInRtcRtpSender(track);
+            } else {
+                // Publisher not published. Simply replace the track on the local MediaStream
+                return await this.replaceTrackInMediaStream(track, updateLastConstraints);
+            }
+        } catch (error) {
+            track.enabled = trackOriginalEnabledValue;
+            throw error;
+        }
+    }
+
+    /**
+     * @hidden
      *
      * To obtain the videoDimensions we wait for the video reference to have enough metadata
      * and then try to use MediaStreamTrack.getSettingsMethod(). If not available, then we
@@ -729,12 +736,14 @@ export class Publisher extends StreamManager {
     /**
      * @hidden
      */
-    async replaceTrackInMediaStream(track: MediaStreamTrack): Promise<void> {
+    async replaceTrackInMediaStream(track: MediaStreamTrack, updateLastConstraints: boolean): Promise<void> {
         const mediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
         let removedTrack: MediaStreamTrack;
         if (track.kind === 'video') {
             removedTrack = mediaStream.getVideoTracks()[0];
-            this.stream.lastVideoTrackConstraints = track.getConstraints();
+            if (updateLastConstraints) {
+                this.stream.lastVideoTrackConstraints = track.getConstraints();
+            }
         } else {
             removedTrack = mediaStream.getAudioTracks()[0];
         }
