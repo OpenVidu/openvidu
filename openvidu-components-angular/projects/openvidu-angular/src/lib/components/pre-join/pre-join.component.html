@@ -72,7 +72,7 @@
 						<button
 							mat-icon-button
 							id="camera-button"
-							[disabled]="!hasVideoDevices"
+							[disabled]="!hasVideoDevices || videoMuteChanging"
 							[class.warn-btn]="isVideoMuted"
 							(click)="toggleCam()"
 						>

@@ -29,7 +29,7 @@
 			id="camera-btn"
 			mat-icon-button
 			(click)="toggleCamera()"
-			[disabled]="isConnectionLost || !hasVideoDevices"
+			[disabled]="isConnectionLost || !hasVideoDevices || videoMuteChanging"
 			[class.warn-btn]="!isWebcamVideoActive"
 		>
 			<mat-icon *ngIf="isWebcamVideoActive" matTooltip="Mute your cam" id="videocam">videocam</mat-icon>

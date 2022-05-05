@@ -114,7 +114,7 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 		}
 		if (this.isVideoMuted) {
 			// Publish Webcam video
-			this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), true);
+			await this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), true);
 			this.isVideoMuted = false;
 		}
 	}
@@ -141,10 +141,10 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	toggleCam() {
+	async toggleCam() {
 
 		const publish = this.isVideoMuted;
-		this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), publish);
+		await this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), publish);
 
 		if (this.participantService.haveICameraAndScreenActive()) {
 			// Cam will not published, disable webcam with screensharing active

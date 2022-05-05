@@ -261,7 +261,7 @@ export class OpenViduService {
 
 		// Disabling webcam
 		if (this.participantService.haveICameraAndScreenActive()) {
-			this.publishVideoAux(this.participantService.getMyCameraPublisher(), publish);
+			await this.publishVideoAux(this.participantService.getMyCameraPublisher(), publish);
 			this.participantService.disableWebcamStream();
 			this.unpublish(this.participantService.getMyCameraPublisher());
 			this.publishAudioAux(this.participantService.getMyScreenPublisher(), publishAudio);
@@ -273,22 +273,22 @@ export class OpenViduService {
 				await this.connectSession(this.getWebcamSession(), this.tokenService.getWebcamToken());
 			}
 			await this.publish(this.participantService.getMyCameraPublisher());
-			this.publishVideoAux(this.participantService.getMyCameraPublisher(), true);
+			await this.publishVideoAux(this.participantService.getMyCameraPublisher(), true);
 			this.publishAudioAux(this.participantService.getMyScreenPublisher(), false);
 			this.publishAudioAux(this.participantService.getMyCameraPublisher(), hasAudio);
 			this.participantService.enableWebcamStream();
 		} else {
 			// Muting/unmuting webcam
-			this.publishVideoAux(this.participantService.getMyCameraPublisher(), publish);
+			await this.publishVideoAux(this.participantService.getMyCameraPublisher(), publish);
 		}
 	}
 
 	/**
 	 * @internal
 	 */
-	private publishVideoAux(publisher: Publisher, publish: boolean): void {
+	private async publishVideoAux(publisher: Publisher, publish: boolean): Promise<void> {
 		if (!!publisher) {
-			publisher.publishVideo(publish, true);
+			await publisher.publishVideo(publish, true);
 			this.participantService.updateLocalParticipant();
 		}
 	}

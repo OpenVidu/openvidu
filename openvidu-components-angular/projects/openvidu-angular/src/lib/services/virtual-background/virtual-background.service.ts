@@ -41,9 +41,11 @@ export class VirtualBackgroundService {
 	getBackgrounds(): any[] {
 		return this.backgrounds;
 	}
+
 	async applyBackground(effect: BackgroundEffect) {
 		if (effect.id !== this.backgroundSelected.getValue()) {
-			const isBackgroundSelected = !!this.backgroundSelected.getValue() && this.backgroundSelected.getValue() !== 'no_effect';
+			const filter = this.participantService.getMyCameraPublisher().stream.filter;
+			const isBackgroundSelected = !!filter && filter.type.startsWith('VB:');
 			let options = { token: this.tokenService.getWebcamToken(), url: '' };
 			if (effect.type === EffectType.IMAGE) {
 				options.url = effect.src;
