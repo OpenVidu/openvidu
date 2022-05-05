@@ -232,6 +232,10 @@ export class Stream {
      * @hidden
      */
     lastVideoTrackConstraints: MediaTrackConstraints | boolean | undefined;
+    /**
+     * @hidden
+     */
+    lastVBFilter?: Filter;
 
 
     /**
