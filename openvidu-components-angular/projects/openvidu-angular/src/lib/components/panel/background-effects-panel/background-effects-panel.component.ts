@@ -6,22 +6,22 @@ import { PanelService } from '../../../services/panel/panel.service';
 import { VirtualBackgroundService } from '../../../services/virtual-background/virtual-background.service';
 
 @Component({
-	selector: 'ov-background-effects-panel',
-	templateUrl: './background-effects-panel.component.html',
-	styleUrls: ['./background-effects-panel.component.css'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'ov-background-effects-panel',
+  templateUrl: './background-effects-panel.component.html',
+  styleUrls: ['./background-effects-panel.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BackgroundEffectsPanelComponent implements OnInit {
 
   backgroundSelectedId: string;
-	backgroundImages: BackgroundEffect[] = [];
+  backgroundImages: BackgroundEffect[] = [];
   noEffectAndBlurredBackground: BackgroundEffect[] = [];
   private backgrounds: BackgroundEffect[];
   private backgroundSubs: Subscription;
 
-	constructor(private panelService: PanelService, private backgroundService: VirtualBackgroundService, private cd: ChangeDetectorRef) {}
+  constructor(private panelService: PanelService, private backgroundService: VirtualBackgroundService, private cd: ChangeDetectorRef) { }
 
-	ngOnInit(): void {
+  ngOnInit(): void {
     this.subscribeToBackgroundSelected();
     this.backgrounds = this.backgroundService.getBackgrounds();
     this.noEffectAndBlurredBackground = this.backgrounds.filter(f => f.type === EffectType.BLUR || f.type === EffectType.NONE);
@@ -29,7 +29,7 @@ export class BackgroundEffectsPanelComponent implements OnInit {
   }
 
   ngOnDestroy() {
-    if(this.backgroundSubs) this.backgroundSubs.unsubscribe();
+    if (this.backgroundSubs) this.backgroundSubs.unsubscribe();
   }
   subscribeToBackgroundSelected() {
     this.backgroundSubs = this.backgroundService.backgroundSelectedObs.subscribe((id) => {
@@ -38,18 +38,16 @@ export class BackgroundEffectsPanelComponent implements OnInit {
     });
   }
 
-	close() {
-		this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
-	}
+  close() {
+    this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
+  }
 
   async applyBackground(effect: BackgroundEffect) {
-
-    if(effect.type === EffectType.NONE){
+    if (effect.type === EffectType.NONE) {
       await this.removeBackground();
     } else {
       await this.backgroundService.applyBackground(effect);
     }
-
   }
 
   async removeBackground() {

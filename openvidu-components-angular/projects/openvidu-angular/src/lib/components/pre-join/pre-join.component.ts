@@ -122,8 +122,16 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 			// TODO: Remove this when replaceTrack issue is fixed
 			const pp: PublisherProperties = { videoSource, audioSource: this.microphoneSelected.device, mirror };
 
-			await this.backgroundService.removeBackground();
+			// Reapply Virtual Background to new Publisher if necessary
+			const backgroundSelected = this.backgroundService.backgroundSelected.getValue();
+			const backgroundWasApplied = !!backgroundSelected && backgroundSelected !== 'no_effect';
+			if (backgroundWasApplied) {
+				await this.backgroundService.removeBackground();
+			}
 			await this.openviduService.republishTrack(pp);
+			if (backgroundWasApplied) {
+				await this.backgroundService.applyBackground(this.backgroundService.backgrounds.find(b => b.id === backgroundSelected));
+			}
 
 			this.deviceSrv.setCameraSelected(videoSource);
 			this.cameraSelected = this.deviceSrv.getCameraSelected();
@@ -152,6 +160,9 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		await this.openviduService.publishVideo(publish);
 		this.isVideoMuted = !this.isVideoMuted;
 		this.storageSrv.setVideoMuted(this.isVideoMuted);
+		if (this.isVideoMuted && this.panelService.isExternalPanelOpened()) {
+			this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
+		}
 		this.videoMuteChanging = false;
 	}
 

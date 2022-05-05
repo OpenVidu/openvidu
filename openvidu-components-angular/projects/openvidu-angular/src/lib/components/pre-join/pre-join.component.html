@@ -13,7 +13,7 @@
 				<ov-layout>
 					<ng-template #stream let-stream>
 						<button
-							*ngIf="!isMinimal && showBackgroundEffectsButton"
+							*ngIf="!isMinimal && !isVideoMuted && showBackgroundEffectsButton"
 							mat-icon-button
 							id="background-effects-btn"
 							(click)="toggleBackgroundEffects()"
