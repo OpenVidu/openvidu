@@ -80,10 +80,6 @@ new_ov_installation() {
           --output "${OPENVIDU_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
      printf '\n          - .env'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/master-node/docker-compose.override.yml \
-          --output "${OPENVIDU_FOLDER}/docker-compose.override.yml" || fatal_error "Error when downloading the file 'docker-compose.override.yml'"
-     printf '\n          - docker-compose.override.yml'
-
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/master-node/docker-compose.yml \
           --output "${OPENVIDU_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
@@ -205,7 +201,6 @@ upgrade_ov() {
      ROLL_BACK_FOLDER="${OPENVIDU_PREVIOUS_FOLDER}/.old-${OPENVIDU_PREVIOUS_VERSION}"
      TMP_FOLDER="${OPENVIDU_PREVIOUS_FOLDER}/tmp"
      ACTUAL_FOLDER="${PWD}"
-     USE_OV_CALL=$(grep -E '^        image: openvidu/openvidu-call:.*$' "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.override.yml" | tr -d '[:space:]')
 
      printf "\n     Creating rollback folder '%s'..." ".old-${OPENVIDU_PREVIOUS_VERSION}"
      mkdir "${ROLL_BACK_FOLDER}" || fatal_error "Error while creating the folder '.old-${OPENVIDU_PREVIOUS_VERSION}'"
@@ -239,10 +234,6 @@ upgrade_ov() {
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/master-node/.env \
           --output "${TMP_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
      printf '\n          - .env'
-
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/master-node/docker-compose.override.yml \
-          --output "${TMP_FOLDER}/docker-compose.override.yml" || fatal_error "Error when downloading the file 'docker-compose.override.yml'"
-     printf '\n          - docker-compose.override.yml'
 
      curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/master-node/docker-compose.yml \
           --output "${TMP_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
@@ -283,11 +274,6 @@ upgrade_ov() {
      mv "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     if [ -n "${USE_OV_CALL}" ]; then
-          mv "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.override.yml" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'docker-compose.override.yml'"
-          printf '\n          - docker-compose.override.yml'
-     fi
-
      mv "${OPENVIDU_PREVIOUS_FOLDER}/openvidu" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'openvidu'"
      printf '\n          - openvidu'
 
@@ -315,14 +301,6 @@ upgrade_ov() {
 
      mv "${TMP_FOLDER}/docker-compose.yml" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
-
-     if [ -n "${USE_OV_CALL}" ]; then
-          mv "${TMP_FOLDER}/docker-compose.override.yml" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'docker-compose.override.yml'"
-          printf '\n          - docker-compose.override.yml'
-     else
-          mv "${TMP_FOLDER}/docker-compose.override.yml" "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.override.yml-${OPENVIDU_VERSION}" || fatal_error "Error while updating 'docker-compose.override.yml'"
-          printf '\n          - docker-compose.override.yml-%s' "${OPENVIDU_VERSION}"
-     fi
 
      mv "${TMP_FOLDER}/.env" "${OPENVIDU_PREVIOUS_FOLDER}/.env-${OPENVIDU_VERSION}" || fatal_error "Error while moving previous '.env'"
      printf '\n          - .env-%s' "${OPENVIDU_VERSION}"
@@ -427,11 +405,7 @@ upgrade_ov() {
      printf "\n     Transfer any configuration you wish to keep in the upgraded version from '.env' to '.env-%s'." "${OPENVIDU_VERSION}"
      printf "\n     When you are OK with it, rename and leave as the only '.env' file of the folder the new '.env-%s'." "${OPENVIDU_VERSION}"
      printf '\n'
-     printf "\n     3. If you were using Openvidu Call application, it has been automatically updated in file 'docker-compose.override.yml'."
-     printf "\n     However, if you were using your own application, a file called 'docker-compose.override.yml-%s'" "${OPENVIDU_VERSION}"
-     printf "\n     has been created with the latest version of Openvidu Call. If you don't plan to use it you can delete it."
-     printf '\n'
-     printf '\n     4. Start new version of Openvidu'
+     printf '\n     3. Start new version of Openvidu'
      printf '\n     $ ./openvidu start'
      printf '\n'
      printf "\n     If you want to rollback, all the files from the previous installation have been copied to folder '.old-%s'" "${OPENVIDU_PREVIOUS_VERSION}"
