@@ -93,7 +93,7 @@ Resources:
 
                   # Environment variables from docker-compose.yml
                   sed -i "s|MEDIASOUP_IMAGE=openvidu/mediasoup-controller.*|MEDIASOUP_IMAGE=openvidu/mediasoup-controller:master|g" docker-compose.yml
-                  sed -i "s|COTURN_IMAGE=openvidu/openvidu-coturn.*|MEDIASOUP_IMAGE=openvidu/openvidu-coturn:master|g" docker-compose.yml
+                  sed -i "s|COTURN_IMAGE=openvidu/openvidu-coturn.*|COTURN_IMAGE=openvidu/openvidu-coturn:master|g" docker-compose.yml
                   popd
                 fi
 
