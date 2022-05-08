@@ -64,6 +64,7 @@ services:
         network_mode: host
         volumes:
             - ./:/opt/openvidu
+            - /var/run/docker.sock:/var/run/docker.sock
         environment:
             - SERVER_PORT=4443
             - SERVER_SSL_ENABLED=false
