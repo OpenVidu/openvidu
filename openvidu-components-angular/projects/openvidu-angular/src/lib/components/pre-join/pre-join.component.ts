@@ -103,6 +103,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		if (this.screenShareStateSubscription) this.screenShareStateSubscription.unsubscribe();
 		if (this.backgroundEffectsButtonSub) this.backgroundEffectsButtonSub.unsubscribe();
 		if (this.minimalSub) this.minimalSub.unsubscribe();
+		this.panelService.closePanel();
 	}
 
 	async onCameraSelected(event: any) {
