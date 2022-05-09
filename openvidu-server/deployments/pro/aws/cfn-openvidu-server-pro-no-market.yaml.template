@@ -222,7 +222,7 @@ Parameters:
     Default: true
 
   CoturnInMediaNodes:
-    Description: "Choose if you want to deploy Coturn in media nodes. (Experimental)"
+    Description: "If true, Coturn will be deployed on media nodes. Otherwise it will be deployed in master nodes."
     Type: String
     AllowedValues:
       - true
