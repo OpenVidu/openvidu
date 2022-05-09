@@ -42,6 +42,11 @@ export class VirtualBackgroundService {
 		return this.backgrounds;
 	}
 
+	isBackgroundApplied(): boolean {
+		const bgSelected = this.backgroundSelected.getValue();
+		return !!bgSelected && bgSelected !== 'no_effect';
+	}
+
 	async applyBackground(effect: BackgroundEffect) {
 		if (effect.id !== this.backgroundSelected.getValue()) {
 			const filter = this.participantService.getMyCameraPublisher().stream.filter;
@@ -62,7 +67,7 @@ export class VirtualBackgroundService {
 	}
 
 	async removeBackground() {
-		if (!!this.backgroundSelected.getValue() && this.backgroundSelected.getValue() !== 'no_effect') {
+		if (!!this.isBackgroundApplied()) {
 			this.backgroundSelected.next('no_effect');
 			await this.participantService.getMyCameraPublisher().stream.removeFilter();
 		}

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Connection, OpenVidu, Publisher, PublisherProperties, Session, SignalOptions } from 'openvidu-browser';
+import { Connection, OpenVidu, Publisher, PublisherProperties, Session, SignalOptions, Stream } from 'openvidu-browser';
 
 import { LoggerService } from '../logger/logger.service';
 
@@ -84,11 +84,11 @@ export class OpenViduService {
 	/**
 	 * @internal
 	 */
-	clear() {
+	async clear() {
 		this.videoSource = undefined;
 		this.audioSource = undefined;
-		this.stopTracks(this.participantService.getMyCameraPublisher()?.stream?.getMediaStream());
-		this.stopTracks(this.participantService.getMyScreenPublisher()?.stream?.getMediaStream());
+		await this.participantService.getMyCameraPublisher()?.stream?.disposeMediaStream();
+		await this.participantService.getMyScreenPublisher()?.stream?.disposeMediaStream();
 	}
 
 	/**
@@ -590,14 +590,6 @@ export class OpenViduService {
 				this.screenSession?.disconnect();
 				this.screenSession = null;
 			}
-		}
-	}
-
-	private stopTracks(mediaStream: MediaStream) {
-		if (mediaStream) {
-			mediaStream?.getAudioTracks().forEach((track) => track.stop());
-			mediaStream?.getVideoTracks().forEach((track) => track.stop());
-			// this.webcamMediaStream?.getAudioTracks().forEach((track) => track.stop());
 		}
 	}
 }

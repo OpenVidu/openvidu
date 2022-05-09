@@ -98,15 +98,9 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		this.isLoading = false;
 	}
 
-	ngOnDestroy() {
-		if (this.localParticipantSubscription) {
-			this.localParticipantSubscription.unsubscribe();
-		}
-
-		if (this.screenShareStateSubscription) {
-			this.screenShareStateSubscription.unsubscribe();
-		}
-
+	async ngOnDestroy() {
+		if (this.localParticipantSubscription) this.localParticipantSubscription.unsubscribe();
+		if (this.screenShareStateSubscription) this.screenShareStateSubscription.unsubscribe();
 		if (this.backgroundEffectsButtonSub) this.backgroundEffectsButtonSub.unsubscribe();
 		if (this.minimalSub) this.minimalSub.unsubscribe();
 	}
@@ -124,12 +118,11 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 
 			// Reapply Virtual Background to new Publisher if necessary
 			const backgroundSelected = this.backgroundService.backgroundSelected.getValue();
-			const backgroundWasApplied = !!backgroundSelected && backgroundSelected !== 'no_effect';
-			if (backgroundWasApplied) {
+			if (this.backgroundService.isBackgroundApplied()) {
 				await this.backgroundService.removeBackground();
 			}
 			await this.openviduService.republishTrack(pp);
-			if (backgroundWasApplied) {
+			if (this.backgroundService.isBackgroundApplied()) {
 				await this.backgroundService.applyBackground(this.backgroundService.backgrounds.find(b => b.id === backgroundSelected));
 			}
 
