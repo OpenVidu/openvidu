@@ -212,7 +212,7 @@ start_openvidu() {
     COTURN_IN_MEDIA_NODES=false
   fi
   docker-compose up -d \
-    $(if [ "${COTURN_IN_MEDIA_NODES}" == "false" ]; then echo '--scale coturn=0'; fi)
+    $(if [ "${COTURN_IN_MEDIA_NODES}" == "true" ]; then echo '--scale coturn=0'; fi)
 }
 
 usage() {

@@ -232,7 +232,7 @@ start_openvidu() {
   docker-compose up -d \
     $(if [ "${RUN_LOCAL_ES}" == "false" ]; then echo '--scale elasticsearch=0'; fi) \
     $(if [ "${RUN_LOCAL_KIBANA}" == "false" ]; then echo '--scale kibana=0'; fi) \
-    $(if [ "${COTURN_IN_MEDIA_NODES}" == "false" ]; then echo '--scale coturn=0'; fi)
+    $(if [ "${COTURN_IN_MEDIA_NODES}" == "true" ]; then echo '--scale coturn=0'; fi)
 }
 
 usage() {
