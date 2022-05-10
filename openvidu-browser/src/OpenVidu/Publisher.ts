@@ -438,7 +438,7 @@ export class Publisher extends StreamManager {
 
                 if (this.stream.isSendVideo()) {
                     // Has video track
-                    this.getVideoDimensions(mediaStream).then(dimensions => {
+                    this.getVideoDimensions().then(dimensions => {
                         this.stream.videoDimensions = {
                             width: dimensions.width,
                             height: dimensions.height
@@ -670,7 +670,7 @@ export class Publisher extends StreamManager {
      * and then try to use MediaStreamTrack.getSettingsMethod(). If not available, then we
      * use the HTMLVideoElement properties videoWidth and videoHeight
      */
-    getVideoDimensions(mediaStream: MediaStream): Promise<{ width: number, height: number }> {
+    getVideoDimensions(): Promise<{ width: number, height: number }> {
         return new Promise((resolve, reject) => {
 
             // Ionic iOS and Safari iOS supposedly require the video element to actually exist inside the DOM
@@ -770,7 +770,7 @@ export class Publisher extends StreamManager {
         mediaStream.removeTrack(removedTrack);
         removedTrack.stop();
         mediaStream.addTrack(track);
-        if (track.kind === 'video' && this.stream.isLocalStreamPublished) {
+        if (track.kind === 'video' && this.stream.isLocalStreamPublished && updateLastConstraints) {
             this.openvidu.sendNewVideoDimensionsIfRequired(this, 'trackReplaced', 50, 30);
             this.session.sendVideoData(this.stream.streamManager, 5, true, 5);
         }
