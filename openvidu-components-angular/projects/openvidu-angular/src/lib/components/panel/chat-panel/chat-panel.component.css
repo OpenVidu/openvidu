@@ -1,28 +1,4 @@
-#chat-container {
-	margin: 20px;
-	background-color: var(--ov-panel-background);
-	border-radius: var(--ov-panel-radius);
-	max-height: calc(100% - 40px);
-	min-height: calc(100% - 40px);
-}
-
-.header-container {
-	padding: 10px;
-	display: flex;
-}
-
-.header-container h3 {
-	margin-left: 5px;
-	margin-top: auto;
-	margin-bottom: auto;
-}
-
-.header-container button {
-	margin-left: auto;
-	border-radius: var(--ov-buttons-radius);
-}
-
-.text-container{
+.text-container {
 	/* padding: 5px; */
 	background-color: var(--ov-light-color);
 	color: var(--ov-panel-text-color);
@@ -33,7 +9,6 @@
 
 .text-info {
 	margin: 3px;
-
 }
 
 .messages-container {
@@ -65,35 +40,34 @@
 	resize: none;
 	outline: none;
 
-    -webkit-box-shadow: none;
-    -moz-box-shadow: none;
-    box-shadow: none;
-	font-family: 'Roboto','RobotoDraft',Helvetica,Arial,sans-serif;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+	font-family: 'Roboto', 'RobotoDraft', Helvetica, Arial, sans-serif;
 }
 
-
-  .message {
+.message {
 	position: relative;
 	padding: 3px 0;
-  }
+}
 
-  .msg-detail {
+.msg-detail {
 	width: 95%;
 	display: inline-block;
-  }
+}
 
-  .msg-detail p {
+.msg-detail p {
 	margin: 0;
 	font-size: 14px;
-  }
+}
 
-  .nickname-container p {
+.nickname-container p {
 	font-size: 13px;
 	font-weight: bold;
 	color: var(--ov-panel-text-color);
-  }
+}
 
-  .msg-content {
+.msg-content {
 	position: relative;
 	border-radius: var(--ov-panel-radius);
 	padding: 8px;
@@ -102,12 +76,11 @@
 	max-width: 95%;
 	font-size: 13px;
 	word-break: break-all;
-  }
+}
 
-  #send-btn {
+#send-btn {
 	border-radius: var(--ov-buttons-radius);
-  }
-
+}
 
 /* Start message from other user */
 
@@ -119,30 +92,18 @@
 	float: left;
 }
 
+/* End message from other user */
 
-  /* End message from other user */
+/* Start my messages */
 
-  /* Start my messages */
-
-  .message.right .msg-detail .nickname-container {
+.message.right .msg-detail .nickname-container {
 	text-align: right;
-  }
+}
 
-  .message.right .msg-detail .msg-content {
+.message.right .msg-detail .msg-content {
 	float: right;
-  }
+}
 
-
-  /* End my messages */
-
-  ::-webkit-scrollbar {
-	width: 8px;
-  }
-
-  ::-webkit-scrollbar-thumb {
-	background-color: #6b6b6b;
-  }
-
-  ::ng-deep a:-webkit-any-link {
+::ng-deep a:-webkit-any-link {
 	color: #1a73e8;
 }

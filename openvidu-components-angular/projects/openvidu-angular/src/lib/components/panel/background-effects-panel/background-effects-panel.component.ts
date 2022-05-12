@@ -8,7 +8,7 @@ import { VirtualBackgroundService } from '../../../services/virtual-background/v
 @Component({
   selector: 'ov-background-effects-panel',
   templateUrl: './background-effects-panel.component.html',
-  styleUrls: ['./background-effects-panel.component.css'],
+  styleUrls: ['../panel.component.css','./background-effects-panel.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BackgroundEffectsPanelComponent implements OnInit {

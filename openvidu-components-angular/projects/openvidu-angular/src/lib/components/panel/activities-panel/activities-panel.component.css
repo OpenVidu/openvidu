@@ -1,28 +1,3 @@
-#activities-container {
-	margin: 20px;
-	background-color: var(--ov-panel-background);
-	border-radius: var(--ov-panel-radius);
-	max-height: calc(100% - 40px);
-	min-height: calc(100% - 40px);
-}
-
-.header-container {
-	padding: 10px;
-	display: flex;
-}
-
-.header-container h3 {
-	margin-left: 5px;
-	margin-top: auto;
-	margin-bottom: auto;
-	font-weight: bold;
-}
-
-.header-container button {
-	margin-left: auto;
-	border-radius: var(--ov-buttons-radius);
-}
-
 .activities-body-container {
 	display: block !important;
 	overflow-y: auto;
@@ -40,7 +15,6 @@
 	margin: auto;
 }
 
-
 .activity-subtitle {
 	font-style: italic;
 	font-size: 11px !important;
@@ -49,7 +23,7 @@
 	font-weight: bold !important;
 }
 
-.activity-action-buttons{
+.activity-action-buttons {
 	align-self: flex-start;
 	margin-top: 15px;
 	font-weight: 600;
@@ -63,7 +37,8 @@
 	padding: 0px 10px !important;
 }
 
-::ng-deep .mat-list-base .mat-list-item .mat-list-item-content, .mat-list-base .mat-list-option .mat-list-item-content {
+::ng-deep .mat-list-base .mat-list-item .mat-list-item-content,
+.mat-list-base .mat-list-option .mat-list-item-content {
 	padding: 0px !important;
 }
 
