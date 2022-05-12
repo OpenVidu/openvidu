@@ -20,6 +20,7 @@ import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { PanelService } from '../../services/panel/panel.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { StorageService } from '../../services/storage/storage.service';
+import { VirtualBackgroundService } from '../../services/virtual-background/virtual-background.service';
 
 /**
  * @internal
@@ -37,6 +38,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	microphoneSelected: CustomDevice;
 	isVideoMuted: boolean;
 	isAudioMuted: boolean;
+	videoMuteChanging: boolean;
 	localParticipant: ParticipantAbstractModel;
 	windowSize: number;
 	hasVideoDevices: boolean;
@@ -72,7 +74,8 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		private participantService: ParticipantService,
 		protected panelService: PanelService,
 		private libService: OpenViduAngularConfigService,
-		private storageSrv: StorageService
+		private storageSrv: StorageService,
+		private backgroundService: VirtualBackgroundService
 	) {
 		this.log = this.loggerSrv.get('PreJoinComponent');
 	}
@@ -95,17 +98,12 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		this.isLoading = false;
 	}
 
-	ngOnDestroy() {
-		if (this.localParticipantSubscription) {
-			this.localParticipantSubscription.unsubscribe();
-		}
-
-		if (this.screenShareStateSubscription) {
-			this.screenShareStateSubscription.unsubscribe();
-		}
-
+	async ngOnDestroy() {
+		if (this.localParticipantSubscription) this.localParticipantSubscription.unsubscribe();
+		if (this.screenShareStateSubscription) this.screenShareStateSubscription.unsubscribe();
 		if (this.backgroundEffectsButtonSub) this.backgroundEffectsButtonSub.unsubscribe();
 		if (this.minimalSub) this.minimalSub.unsubscribe();
+		this.panelService.closePanel();
 	}
 
 	async onCameraSelected(event: any) {
@@ -118,7 +116,16 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 			// await this.openviduService.replaceTrack(VideoType.CAMERA, pp);
 			// TODO: Remove this when replaceTrack issue is fixed
 			const pp: PublisherProperties = { videoSource, audioSource: this.microphoneSelected.device, mirror };
+
+			// Reapply Virtual Background to new Publisher if necessary
+			const backgroundSelected = this.backgroundService.backgroundSelected.getValue();
+			if (this.backgroundService.isBackgroundApplied()) {
+				await this.backgroundService.removeBackground();
+			}
 			await this.openviduService.republishTrack(pp);
+			if (this.backgroundService.isBackgroundApplied()) {
+				await this.backgroundService.applyBackground(this.backgroundService.backgrounds.find(b => b.id === backgroundSelected));
+			}
 
 			this.deviceSrv.setCameraSelected(videoSource);
 			this.cameraSelected = this.deviceSrv.getCameraSelected();
@@ -142,10 +149,15 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	async toggleCam() {
+		this.videoMuteChanging = true;
 		const publish = this.isVideoMuted;
 		await this.openviduService.publishVideo(publish);
 		this.isVideoMuted = !this.isVideoMuted;
 		this.storageSrv.setVideoMuted(this.isVideoMuted);
+		if (this.isVideoMuted && this.panelService.isExternalPanelOpened()) {
+			this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
+		}
+		this.videoMuteChanging = false;
 	}
 
 	toggleMic() {

@@ -41,7 +41,7 @@ import { PanelService } from '../../../services/panel/panel.service';
 @Component({
 	selector: 'ov-chat-panel',
 	templateUrl: './chat-panel.component.html',
-	styleUrls: ['./chat-panel.component.css'],
+	styleUrls: ['../panel.component.css','./chat-panel.component.css'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ChatPanelComponent implements OnInit, AfterViewInit {

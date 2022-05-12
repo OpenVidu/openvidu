@@ -41,7 +41,7 @@ import { Subscription } from 'rxjs';
 @Component({
 	selector: 'ov-participants-panel',
 	templateUrl: './participants-panel.component.html',
-	styleUrls: ['./participants-panel.component.css'],
+	styleUrls: ['../../panel.component.css','./participants-panel.component.css'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ParticipantsPanelComponent implements OnInit, OnDestroy, AfterViewInit {

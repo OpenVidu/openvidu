@@ -529,7 +529,7 @@ export abstract class StreamManager extends EventDispatcher {
     /**
      * @hidden
      */
-    abstract replaceTrackInMediaStream(track: MediaStreamTrack): Promise<void>;
+    abstract replaceTrackInMediaStream(track: MediaStreamTrack, updateLastConstraints: boolean): Promise<void>;
 
     /* Private methods */
 

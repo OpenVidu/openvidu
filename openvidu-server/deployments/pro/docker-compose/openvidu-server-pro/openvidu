@@ -213,8 +213,12 @@ start_openvidu() {
   local CONFIGURED_KIBANA_HOST
   CONFIGURED_ELASTICSEARCH_HOST=$(grep -v '^#' .env | grep OPENVIDU_PRO_ELASTICSEARCH_HOST | cut -d '=' -f2)
   CONFIGURED_KIBANA_HOST=$(grep -v '^#' .env | grep OPENVIDU_PRO_KIBANA_HOST | cut -d '=' -f2)
+  COTURN_IN_MEDIA_NODES=$(grep -v '^#' .env | grep COTURN_IN_MEDIA_NODES | cut -d '=' -f2)
   RUN_LOCAL_ES=true
   RUN_LOCAL_KIBANA=true
+  if [[ -z "${COTURN_IN_MEDIA_NODES}" ]]; then
+    COTURN_IN_MEDIA_NODES=false
+  fi
   if is_external_url "${CONFIGURED_ELASTICSEARCH_HOST}"; then
     printf "Configured external elasticsearch: %s" "${CONFIGURED_ELASTICSEARCH_HOST}"
     printf "\n"
@@ -227,7 +231,8 @@ start_openvidu() {
   fi
   docker-compose up -d \
     $(if [ "${RUN_LOCAL_ES}" == "false" ]; then echo '--scale elasticsearch=0'; fi) \
-    $(if [ "${RUN_LOCAL_KIBANA}" == "false" ]; then echo '--scale kibana=0'; fi)
+    $(if [ "${RUN_LOCAL_KIBANA}" == "false" ]; then echo '--scale kibana=0'; fi) \
+    $(if [ "${COTURN_IN_MEDIA_NODES}" == "true" ]; then echo '--scale coturn=0'; fi)
 }
 
 usage() {

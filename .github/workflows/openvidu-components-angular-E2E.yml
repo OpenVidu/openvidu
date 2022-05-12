@@ -1,8 +1,9 @@
-name: openvidu-angular E2E
+name: openvidu-components-angular E2E
 on:
   push:
     paths:
       - 'openvidu-components-angular/**'
+      - 'openvidu-browser/**'
   pull_request:
     branches:
       - master
@@ -23,6 +24,16 @@ jobs:
       run: docker run -d --shm-size="2g" --network host selenium/standalone-chrome:latest
     - name: Run openvidu-server-kms
       run: docker run -p 4443:4443 --rm -d -e OPENVIDU_SECRET=MY_SECRET openvidu/openvidu-server-kms:latest
+    - name: Build openvidu-browser
+      run: |
+        cd openvidu-browser
+        npm install
+        npm run build && npm pack
+        mv openvidu-browser-*.tgz ../openvidu-components-angular
+    - name: Install openvidu-browser
+      run: |
+        cd openvidu-components-angular
+        npm install openvidu-browser-*.tgz
     - name: Install dependencies
       run: npm install --prefix openvidu-components-angular
     - name: Build openvidu-angular
@@ -31,11 +42,11 @@ jobs:
       run: npm run webcomponent:build --prefix openvidu-components-angular
     - name: Build openvidu-angular-testapp
       run: npm run build --prefix openvidu-components-angular
-    - name: Run Angular Testapp
+    - name: Serve openvidu-angular-testapp
       run: npm run start-prod --prefix openvidu-components-angular &
-    - name: Run Angular E2E
+    - name: Run openvidu-angular E2E
       run: npm run lib:e2e-ci --prefix openvidu-components-angular
-    - name: Run Webcomponent Testapp
+    - name: Serve Webcomponent Testapp
       run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
     - name: Run Webcomponent E2E
       run:  npm run webcomponent:e2e-ci --prefix openvidu-components-angular

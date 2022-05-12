@@ -41,9 +41,16 @@ export class VirtualBackgroundService {
 	getBackgrounds(): any[] {
 		return this.backgrounds;
 	}
+
+	isBackgroundApplied(): boolean {
+		const bgSelected = this.backgroundSelected.getValue();
+		return !!bgSelected && bgSelected !== 'no_effect';
+	}
+
 	async applyBackground(effect: BackgroundEffect) {
 		if (effect.id !== this.backgroundSelected.getValue()) {
-			const isBackgroundSelected = !!this.backgroundSelected.getValue() && this.backgroundSelected.getValue() !== 'no_effect';
+			const filter = this.participantService.getMyCameraPublisher().stream.filter;
+			const isBackgroundSelected = !!filter && filter.type.startsWith('VB:');
 			let options = { token: this.tokenService.getWebcamToken(), url: '' };
 			if (effect.type === EffectType.IMAGE) {
 				options.url = effect.src;
@@ -60,7 +67,7 @@ export class VirtualBackgroundService {
 	}
 
 	async removeBackground() {
-		if (!!this.backgroundSelected.getValue() && this.backgroundSelected.getValue() !== 'no_effect') {
+		if (!!this.isBackgroundApplied()) {
 			this.backgroundSelected.next('no_effect');
 			await this.participantService.getMyCameraPublisher().stream.removeFilter();
 		}

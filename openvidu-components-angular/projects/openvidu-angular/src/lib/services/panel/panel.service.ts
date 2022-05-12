@@ -88,7 +88,7 @@ export class PanelService {
 		return this.isParticipantsOpened;
 	}
 
-	private isExternalPanelOpened(): boolean {
+	isExternalPanelOpened(): boolean {
 		return this.isExternalOpened;
 	}
 }

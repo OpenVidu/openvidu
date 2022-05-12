@@ -22,7 +22,7 @@ export class ToolbarAdditionalButtonsDirectiveComponent {
 		private restService: RestService,
 		private openviduService: OpenViduService,
 		private participantService: ParticipantService
-	) {}
+	) { }
 
 	async onJoinButtonClicked() {
 		this.tokens = {
@@ -31,13 +31,13 @@ export class ToolbarAdditionalButtonsDirectiveComponent {
 		};
 	}
 
-	toggleVideo() {
+	async toggleVideo() {
 		const publishVideo = !this.participantService.isMyVideoActive();
-		this.openviduService.publishVideo(publishVideo);
+		await this.openviduService.publishVideo(publishVideo);
 	}
 
-	toggleAudio() {
+	async toggleAudio() {
 		const publishAudio = !this.participantService.isMyAudioActive();
-		this.openviduService.publishAudio(publishAudio);
+		await this.openviduService.publishAudio(publishAudio);
 	}
 }

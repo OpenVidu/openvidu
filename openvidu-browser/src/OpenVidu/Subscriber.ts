@@ -78,12 +78,14 @@ export class Subscriber extends StreamManager {
     /**
      * @hidden
      */
-    async replaceTrackInMediaStream(track: MediaStreamTrack): Promise<void> {
+    async replaceTrackInMediaStream(track: MediaStreamTrack, updateLastConstraints: boolean): Promise<void> {
         const mediaStream: MediaStream = this.stream.getMediaStream();
         let removedTrack: MediaStreamTrack;
         if (track.kind === 'video') {
             removedTrack = mediaStream.getVideoTracks()[0];
-            this.stream.lastVideoTrackConstraints = track.getConstraints();
+            if (updateLastConstraints) {
+                this.stream.lastVideoTrackConstraints = track.getConstraints();
+            }
         } else {
             removedTrack = mediaStream.getAudioTracks()[0];
         }

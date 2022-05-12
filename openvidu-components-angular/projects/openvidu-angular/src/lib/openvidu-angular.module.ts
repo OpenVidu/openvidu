@@ -27,7 +27,6 @@ import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 
-// import { UserSettingsComponent } from './components/user-settings/user-settings.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { VideoComponent } from './components/video/video.component';
 import { ChatPanelComponent } from './components/panel/chat-panel/chat-panel.component';
@@ -70,7 +69,6 @@ import { RecordingActivityComponent } from './components/panel/activities-panel/
 
 @NgModule({
 	declarations: [
-		// UserSettingsComponent,
 		VideoComponent,
 		ToolbarComponent,
 		ChatPanelComponent,
@@ -140,7 +138,6 @@ import { RecordingActivityComponent } from './components/panel/activities-panel/
 	],
 	exports: [
 		VideoconferenceComponent,
-		// UserSettingsComponent,
 		ToolbarComponent,
 		PanelComponent,
 		ParticipantsPanelComponent,

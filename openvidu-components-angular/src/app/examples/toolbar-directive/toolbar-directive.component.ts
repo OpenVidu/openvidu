@@ -20,9 +20,9 @@ export class ToolbarDirectiveComponent implements OnInit {
 	OPENVIDU_SECRET = 'MY_SECRET';
 	publishVideo = true;
 	publishAudio = true;
-	constructor(private restService: RestService, private openviduService: OpenViduService) {}
+	constructor(private restService: RestService, private openviduService: OpenViduService) { }
 
-	ngOnInit(): void {}
+	ngOnInit(): void { }
 
 	async onJoinButtonClicked() {
 		this.tokens = {
@@ -31,13 +31,13 @@ export class ToolbarDirectiveComponent implements OnInit {
 		};
 	}
 
-	toggleVideo() {
+	async toggleVideo(): Promise<void> {
 		this.publishVideo = !this.publishVideo;
-		this.openviduService.publishVideo(this.publishVideo);
+		await this.openviduService.publishVideo(this.publishVideo);
 	}
 
-	toggleAudio() {
+	async toggleAudio(): Promise<void> {
 		this.publishAudio = !this.publishAudio;
-		this.openviduService.publishAudio(this.publishAudio);
+		await this.openviduService.publishAudio(this.publishAudio);
 	}
 }

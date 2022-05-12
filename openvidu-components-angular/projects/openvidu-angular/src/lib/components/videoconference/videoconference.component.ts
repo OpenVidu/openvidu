@@ -414,11 +414,11 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		}
 	}
 
-	ngOnDestroy(): void {
+	async ngOnDestroy() {
 		if (this.prejoinSub) this.prejoinSub.unsubscribe();
 		if (this.participantNameSub) this.participantNameSub.unsubscribe();
 		this.deviceSrv.clear();
-		this.openviduService.clear();
+		await this.openviduService.clear();
 	}
 
 	/**

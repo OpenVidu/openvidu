@@ -11,7 +11,7 @@
 #
 #    This file will be overridden when update OpenVidu Platform
 #
-#    Openvidu Version: 2.21.0
+#    Openvidu Version: 2.22.0
 #
 #    Installation Mode: On Premises
 #
@@ -64,6 +64,7 @@ services:
         network_mode: host
         volumes:
             - ./:/opt/openvidu
+            - /var/run/docker.sock:/var/run/docker.sock
         environment:
             - SERVER_PORT=4443
             - SERVER_SSL_ENABLED=false
@@ -81,6 +82,7 @@ services:
             - RM_S3_CONFIGURATION_BUCKET_REGION=${RM_S3_CONFIGURATION_BUCKET_REGION}
             - RM_MEDIA_NODES_AUTOSCALING_GROUP_NAME=${RM_MEDIA_NODES_AUTOSCALING_GROUP_NAME}
             - RM_MASTER_NODES_AUTOSCALING_GROUP_NAME=${RM_MASTER_NODES_AUTOSCALING_GROUP_NAME}
+            - RM_S3_CONFIG_AUTORESTART=${OPENVIDU_ENTERPRISE_S3_CONFIG_AUTORESTART:-true}
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"

@@ -232,6 +232,10 @@ export class Stream {
      * @hidden
      */
     lastVideoTrackConstraints: MediaTrackConstraints | boolean | undefined;
+    /**
+     * @hidden
+     */
+    lastVBFilter?: Filter;
 
 
     /**
@@ -421,9 +425,9 @@ export class Stream {
                         videoClone.style.display = 'none';
 
                         if (this.streamManager.remote) {
-                            this.streamManager.replaceTrackInMediaStream((this.virtualBackgroundSinkElements.video.srcObject as MediaStream).getVideoTracks()[0]);
+                            this.streamManager.replaceTrackInMediaStream((this.virtualBackgroundSinkElements.video.srcObject as MediaStream).getVideoTracks()[0], false);
                         } else {
-                            (this.streamManager as Publisher).replaceTrack((this.virtualBackgroundSinkElements.video.srcObject as MediaStream).getVideoTracks()[0]);
+                            (this.streamManager as Publisher).replaceTrackAux((this.virtualBackgroundSinkElements.video.srcObject as MediaStream).getVideoTracks()[0], false);
                         }
 
                         resolveApplyFilter(undefined, false);
@@ -541,7 +545,7 @@ export class Stream {
             }
 
             if (!!this.filter) {
-                
+
                 // There is a filter applied
 
                 if (this.filter?.type.startsWith('VB:')) {
@@ -553,9 +557,9 @@ export class Stream {
                         const mediaStreamClone = this.virtualBackgroundSourceElements!.mediaStreamClone;
                         if (!isDisposing) {
                             if (this.streamManager.remote) {
-                                await this.streamManager.replaceTrackInMediaStream(mediaStreamClone.getVideoTracks()[0]);
+                                await this.streamManager.replaceTrackInMediaStream(mediaStreamClone.getVideoTracks()[0], false);
                             } else {
-                                await (this.streamManager as Publisher).replaceTrack(mediaStreamClone.getVideoTracks()[0]);
+                                await (this.streamManager as Publisher).replaceTrackAux(mediaStreamClone.getVideoTracks()[0], false);
                             }
                         } else {
                             mediaStreamClone.getTracks().forEach((track) => track.stop());
@@ -591,7 +595,7 @@ export class Stream {
 
                 }
             } else {
-                
+
                 // There is no filter applied
                 return reject(new OpenViduError(OpenViduErrorName.GENERIC_ERROR, "Stream " + this.streamId + " has no filter applied"));
 

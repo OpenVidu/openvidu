@@ -14,6 +14,7 @@
 					<ng-template #stream let-stream>
 						<button
 							*ngIf="!isMinimal && showBackgroundEffectsButton"
+							[disabled]="isVideoMuted"
 							mat-icon-button
 							id="background-effects-btn"
 							(click)="toggleBackgroundEffects()"
@@ -72,7 +73,7 @@
 						<button
 							mat-icon-button
 							id="camera-button"
-							[disabled]="!hasVideoDevices"
+							[disabled]="!hasVideoDevices || videoMuteChanging"
 							[class.warn-btn]="isVideoMuted"
 							(click)="toggleCam()"
 						>

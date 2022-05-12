@@ -221,6 +221,14 @@ Parameters:
       - false
     Default: true
 
+  CoturnInMediaNodes:
+    Description: "If true, Coturn will be deployed on media nodes. Otherwise it will be deployed in master nodes."
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: false
+
 #start_mappings
 Mappings:
   OVAMIMAP:
@@ -278,6 +286,7 @@ Metadata:
           default: Other configuration
         Parameters:
           - WantToDeployDemos
+          - CoturnInMediaNodes
 
     ParameterLabels:
       # SSL certificate configuration
@@ -330,6 +339,8 @@ Metadata:
       # Other configuration
       WantToDeployDemos:
         default: "Deploy OpenVidu Call application"
+      CoturnInMediaNodes:
+        default: "Deploy Coturn in Media Nodes. (Experimental)"
 
 Conditions:
   WhichCertPresent: !Not [ !Equals [!Ref WhichCert, ''] ]
@@ -540,6 +551,11 @@ Resources:
                 if [ "${WantToDeployDemos}" == "false" ]; then
                   sed -i "s/WITH_APP=true/WITH_APP=false/" $WORKINGDIR/docker-compose.yml
                   rm $WORKINGDIR/docker-compose.override.yml
+                fi
+
+                # Deploy Coturn in media nodes
+                if [ "${CoturnInMediaNodes}" == "true" ]; then
+                  sed -i "s/OPENVIDU_PRO_COTURN_IN_MEDIA_NODES=false/OPENVIDU_PRO_COTURN_IN_MEDIA_NODES=true/" $WORKINGDIR/.env
                 fi
 
                 # Recording Configuration

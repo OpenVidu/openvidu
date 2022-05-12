@@ -277,6 +277,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	 * @ignore
 	 */
 	showSessionName: boolean = true;
+	/**
+	 * @ignore
+	 */
+	videoMuteChanging: boolean = false;
 
 	/**
 	 * @ignore
@@ -395,15 +399,19 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	 * @ignore
 	 */
 	async toggleCamera() {
+		this.videoMuteChanging = true;
 		this.onCameraButtonClicked.emit();
-
 		try {
 			const publishVideo = !this.participantService.isMyVideoActive();
+			if(this.panelService.isExternalPanelOpened() && !publishVideo) {
+				this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
+			}
 			await this.openviduService.publishVideo(publishVideo);
 		} catch (error) {
 			this.log.e('There was an error toggling camera:', error.code, error.message);
 			this.actionService.openDialog('There was an error toggling camera', error?.error || error?.message);
 		}
+		this.videoMuteChanging = false;
 	}
 
 	/**

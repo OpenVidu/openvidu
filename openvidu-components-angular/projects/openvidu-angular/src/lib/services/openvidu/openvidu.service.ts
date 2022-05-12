@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Connection, OpenVidu, Publisher, PublisherProperties, Session, SignalOptions } from 'openvidu-browser';
+import { Connection, OpenVidu, Publisher, PublisherProperties, Session, SignalOptions, Stream } from 'openvidu-browser';
 
 import { LoggerService } from '../logger/logger.service';
 
@@ -84,11 +84,11 @@ export class OpenViduService {
 	/**
 	 * @internal
 	 */
-	clear() {
+	async clear() {
 		this.videoSource = undefined;
 		this.audioSource = undefined;
-		this.stopTracks(this.participantService.getMyCameraPublisher()?.stream?.getMediaStream());
-		this.stopTracks(this.participantService.getMyScreenPublisher()?.stream?.getMediaStream());
+		await this.participantService.getMyCameraPublisher()?.stream?.disposeMediaStream();
+		await this.participantService.getMyScreenPublisher()?.stream?.disposeMediaStream();
 	}
 
 	/**
@@ -261,7 +261,7 @@ export class OpenViduService {
 
 		// Disabling webcam
 		if (this.participantService.haveICameraAndScreenActive()) {
-			this.publishVideoAux(this.participantService.getMyCameraPublisher(), publish);
+			await this.publishVideoAux(this.participantService.getMyCameraPublisher(), publish);
 			this.participantService.disableWebcamStream();
 			this.unpublish(this.participantService.getMyCameraPublisher());
 			this.publishAudioAux(this.participantService.getMyScreenPublisher(), publishAudio);
@@ -273,22 +273,22 @@ export class OpenViduService {
 				await this.connectSession(this.getWebcamSession(), this.tokenService.getWebcamToken());
 			}
 			await this.publish(this.participantService.getMyCameraPublisher());
-			this.publishVideoAux(this.participantService.getMyCameraPublisher(), true);
+			await this.publishVideoAux(this.participantService.getMyCameraPublisher(), true);
 			this.publishAudioAux(this.participantService.getMyScreenPublisher(), false);
 			this.publishAudioAux(this.participantService.getMyCameraPublisher(), hasAudio);
 			this.participantService.enableWebcamStream();
 		} else {
 			// Muting/unmuting webcam
-			this.publishVideoAux(this.participantService.getMyCameraPublisher(), publish);
+			await this.publishVideoAux(this.participantService.getMyCameraPublisher(), publish);
 		}
 	}
 
 	/**
 	 * @internal
 	 */
-	private publishVideoAux(publisher: Publisher, publish: boolean): void {
+	private async publishVideoAux(publisher: Publisher, publish: boolean): Promise<void> {
 		if (!!publisher) {
-			publisher.publishVideo(publish, true);
+			await publisher.publishVideo(publish, true);
 			this.participantService.updateLocalParticipant();
 		}
 	}
@@ -590,14 +590,6 @@ export class OpenViduService {
 				this.screenSession?.disconnect();
 				this.screenSession = null;
 			}
-		}
-	}
-
-	private stopTracks(mediaStream: MediaStream) {
-		if (mediaStream) {
-			mediaStream?.getAudioTracks().forEach((track) => track.stop());
-			mediaStream?.getVideoTracks().forEach((track) => track.stop());
-			// this.webcamMediaStream?.getAudioTracks().forEach((track) => track.stop());
 		}
 	}
 }

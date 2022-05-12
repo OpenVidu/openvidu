@@ -29,7 +29,7 @@
 			id="camera-btn"
 			mat-icon-button
 			(click)="toggleCamera()"
-			[disabled]="isConnectionLost || !hasVideoDevices"
+			[disabled]="isConnectionLost || !hasVideoDevices || videoMuteChanging"
 			[class.warn-btn]="!isWebcamVideoActive"
 		>
 			<mat-icon *ngIf="isWebcamVideoActive" matTooltip="Mute your cam" id="videocam">videocam</mat-icon>
@@ -93,7 +93,13 @@
 			</button> -->
 
 			<!-- Virtual background button -->
-			<button *ngIf="!isMinimal && showBackgroundEffectsButton" mat-menu-item id="virtual-bg-btn" (click)="toggleBackgroundEffects()">
+			<button
+				*ngIf="!isMinimal && showBackgroundEffectsButton"
+				[disabled]="!isWebcamVideoActive"
+				mat-menu-item
+				id="virtual-bg-btn"
+				(click)="toggleBackgroundEffects()"
+			>
 				<mat-icon>auto_awesome</mat-icon>
 				<span>Background effects</span>
 			</button>

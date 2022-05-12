@@ -1,0 +1,41 @@
+.panel-container {
+	margin: 20px;
+	background-color: var(--ov-panel-background);
+	border-radius: var(--ov-panel-radius);
+	max-height: calc(100% - 40px);
+	min-height: calc(100% - 40px);
+}
+
+.panel-header-container {
+	padding: 10px;
+	display: flex;
+}
+
+.panel-title {
+	margin-left: 5px;
+	margin-top: auto;
+	margin-bottom: auto;
+}
+
+.panel-close-button {
+	margin-left: auto;
+	border-radius: var(--ov-buttons-radius);
+}
+
+::-webkit-scrollbar {
+	width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #a7a7a7;
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #7c7c7c;
+}
+
+::-webkit-scrollbar-track {
+	background: var(--ov-light-color);
+	border-radius: 4px;
+}

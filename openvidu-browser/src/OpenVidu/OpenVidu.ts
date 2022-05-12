@@ -635,7 +635,7 @@ export class OpenVidu {
       if (attempts > MAX_ATTEMPTS) {
         clearTimeout(repeatUntilChangeOrMaxAttempts);
       }
-      publisher.getVideoDimensions(publisher.stream.getMediaStream()).then(newDimensions => {
+      publisher.getVideoDimensions().then(newDimensions => {
         if (newDimensions.width !== oldWidth || newDimensions.height !== oldHeight) {
           clearTimeout(repeatUntilChangeOrMaxAttempts);
           this.sendVideoDimensionsChangedEvent(publisher, reason, oldWidth, oldHeight, newDimensions.width, newDimensions.height);

@@ -168,68 +168,88 @@ export class Publisher extends StreamManager {
      * useful if the Publisher was unpublished freeing the hardware resource, and openvidu-browser is not able to successfully re-create the video track as it was before unpublishing. In this way previous track settings will be ignored and this MediaStreamTrack
      * will be used instead.
      */
-     publishVideo<T extends boolean>(enabled: T, resource?: T extends false ? boolean : MediaStreamTrack): void {
+    publishVideo<T extends boolean>(enabled: T, resource?: T extends false ? boolean : MediaStreamTrack): Promise<void> {
 
-        if (this.stream.videoActive !== enabled) {
+        return new Promise(async (resolve, reject) => {
 
-            const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
-            let mustRestartMediaStream = false;
-            affectedMediaStream.getVideoTracks().forEach((track) => {
-                track.enabled = enabled;
-                if (!enabled && resource === true) {
-                    track.stop();
-                } else if (enabled && track.readyState === 'ended') {
-                    // Resource was freed
-                    mustRestartMediaStream = true;
+            if (this.stream.videoActive !== enabled) {
+
+                const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
+                let mustRestartMediaStream = false;
+                affectedMediaStream.getVideoTracks().forEach((track) => {
+                    track.enabled = enabled;
+                    if (!enabled && resource === true) {
+                        track.stop();
+                    } else if (enabled && track.readyState === 'ended') {
+                        // Resource was freed
+                        mustRestartMediaStream = true;
+                    }
+                });
+
+                // There is a Virtual Background filter applied that must be removed in case the hardware must be freed 
+                if (!enabled && resource === true && !!this.stream.filter && this.stream.filter.type.startsWith('VB:')) {
+                    this.stream.lastVBFilter = this.stream.filter; // Save the filter to be re-applied in case of unmute
+                    await this.stream.removeFilterAux(true);
                 }
-            });
 
-            if (mustRestartMediaStream) {
-                const oldVideoTrack = affectedMediaStream.getVideoTracks()[0];
-                affectedMediaStream.removeTrack(oldVideoTrack);
+                if (mustRestartMediaStream) {
+                    const oldVideoTrack = affectedMediaStream.getVideoTracks()[0];
+                    affectedMediaStream.removeTrack(oldVideoTrack);
 
-                const replaceVideoTrack = (tr: MediaStreamTrack) => {
-                    affectedMediaStream.addTrack(tr);
-                    if (this.stream.isLocalStreamPublished) {
-                        this.replaceTrackInRtcRtpSender(tr);
+                    const replaceVideoTrack = async (tr: MediaStreamTrack) => {
+                        affectedMediaStream.addTrack(tr);
+                        if (this.stream.isLocalStreamPublished) {
+                            await this.replaceTrackInRtcRtpSender(tr);
+                        }
+                        if (!!this.stream.lastVBFilter) {
+                            setTimeout(async () => {
+                                let options = this.stream.lastVBFilter!.options;
+                                const lastExecMethod = this.stream.lastVBFilter!.lastExecMethod;
+                                if (!!lastExecMethod && lastExecMethod.method === 'update') {
+                                    options = Object.assign({}, options, lastExecMethod.params);
+                                }
+                                await this.stream.applyFilter(this.stream.lastVBFilter!.type, options);
+                                delete this.stream.lastVBFilter;
+                            }, 1);
+                        }
+                    }
+
+                    if (!!resource && resource instanceof MediaStreamTrack) {
+                        await replaceVideoTrack(resource);
+                    } else {
+                        try {
+                            const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: this.stream.lastVideoTrackConstraints });
+                            await replaceVideoTrack(mediaStream.getVideoTracks()[0]);
+                        } catch (error) {
+                            return reject(error);
+                        }
                     }
                 }
 
-                if (!!resource && resource instanceof MediaStreamTrack) {
-                    replaceVideoTrack(resource);
-                } else {
-                    navigator.mediaDevices.getUserMedia({ audio: false, video: this.stream.lastVideoTrackConstraints })
-                        .then(mediaStream => {
-                            replaceVideoTrack(mediaStream.getVideoTracks()[0]);
-                        })
-                        .catch(error => {
-                            console.error(error);
+                if (!!this.session && !!this.stream.streamId) {
+                    this.session.openvidu.sendRequest(
+                        'streamPropertyChanged',
+                        {
+                            streamId: this.stream.streamId,
+                            property: 'videoActive',
+                            newValue: enabled,
+                            reason: 'publishVideo'
+                        },
+                        (error, response) => {
+                            if (error) {
+                                logger.error("Error sending 'streamPropertyChanged' event", error);
+                            } else {
+                                this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoActive', enabled, !enabled, 'publishVideo')]);
+                                this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoActive', enabled, !enabled, 'publishVideo')]);
+                                this.session.sendVideoData(this.stream.streamManager);
+                            }
                         });
                 }
+                this.stream.videoActive = enabled;
+                logger.info("'Publisher' has " + (enabled ? 'published' : 'unpublished') + ' its video stream');
+                return resolve();
             }
-
-            if (!!this.session && !!this.stream.streamId) {
-                this.session.openvidu.sendRequest(
-                    'streamPropertyChanged',
-                    {
-                        streamId: this.stream.streamId,
-                        property: 'videoActive',
-                        newValue: enabled,
-                        reason: 'publishVideo'
-                    },
-                    (error, response) => {
-                        if (error) {
-                            logger.error("Error sending 'streamPropertyChanged' event", error);
-                        } else {
-                            this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoActive', enabled, !enabled, 'publishVideo')]);
-                            this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoActive', enabled, !enabled, 'publishVideo')]);
-                            this.session.sendVideoData(this.stream.streamManager);
-                        }
-                    });
-            }
-            this.stream.videoActive = enabled;
-            logger.info("'Publisher' has " + (enabled ? 'published' : 'unpublished') + ' its video stream');
-        }
+        });
     }
 
 
@@ -329,27 +349,7 @@ export class Publisher extends StreamManager {
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the track was successfully replaced and rejected with an Error object in other case
      */
     async replaceTrack(track: MediaStreamTrack): Promise<void> {
-        // Set field "enabled" of the new track to the previous value
-        const trackOriginalEnabledValue: boolean = track.enabled;
-        if (track.kind === 'video') {
-            track.enabled = this.stream.videoActive;
-        } else if (track.kind === 'audio') {
-            track.enabled = this.stream.audioActive;
-        }
-        try {
-            if (this.stream.isLocalStreamPublished) {
-                // Only if the Publisher has been published is necessary to call native Web API RTCRtpSender.replaceTrack
-                // If it has not been published yet, replacing it on the MediaStream object is enough
-                await this.replaceTrackInMediaStream(track);
-                return await this.replaceTrackInRtcRtpSender(track);
-            } else {
-                // Publisher not published. Simply replace the track on the local MediaStream
-                return await this.replaceTrackInMediaStream(track);
-            }
-        } catch (error) {
-            track.enabled = trackOriginalEnabledValue;
-            throw error;
-        }
+        return this.replaceTrackAux(track, true);
     }
 
     /* Hidden methods */
@@ -438,7 +438,7 @@ export class Publisher extends StreamManager {
 
                 if (this.stream.isSendVideo()) {
                     // Has video track
-                    this.getVideoDimensions(mediaStream).then(dimensions => {
+                    this.getVideoDimensions().then(dimensions => {
                         this.stream.videoDimensions = {
                             width: dimensions.width,
                             height: dimensions.height
@@ -638,12 +638,39 @@ export class Publisher extends StreamManager {
 
     /**
      * @hidden
+     */
+    async replaceTrackAux(track: MediaStreamTrack, updateLastConstraints: boolean): Promise<void> {
+        // Set field "enabled" of the new track to the previous value
+        const trackOriginalEnabledValue: boolean = track.enabled;
+        if (track.kind === 'video') {
+            track.enabled = this.stream.videoActive;
+        } else if (track.kind === 'audio') {
+            track.enabled = this.stream.audioActive;
+        }
+        try {
+            if (this.stream.isLocalStreamPublished) {
+                // Only if the Publisher has been published is necessary to call native Web API RTCRtpSender.replaceTrack
+                // If it has not been published yet, replacing it on the MediaStream object is enough
+                await this.replaceTrackInMediaStream(track, updateLastConstraints);
+                return await this.replaceTrackInRtcRtpSender(track);
+            } else {
+                // Publisher not published. Simply replace the track on the local MediaStream
+                return await this.replaceTrackInMediaStream(track, updateLastConstraints);
+            }
+        } catch (error) {
+            track.enabled = trackOriginalEnabledValue;
+            throw error;
+        }
+    }
+
+    /**
+     * @hidden
      *
      * To obtain the videoDimensions we wait for the video reference to have enough metadata
      * and then try to use MediaStreamTrack.getSettingsMethod(). If not available, then we
      * use the HTMLVideoElement properties videoWidth and videoHeight
      */
-    getVideoDimensions(mediaStream: MediaStream): Promise<{ width: number, height: number }> {
+    getVideoDimensions(): Promise<{ width: number, height: number }> {
         return new Promise((resolve, reject) => {
 
             // Ionic iOS and Safari iOS supposedly require the video element to actually exist inside the DOM
@@ -729,19 +756,21 @@ export class Publisher extends StreamManager {
     /**
      * @hidden
      */
-    async replaceTrackInMediaStream(track: MediaStreamTrack): Promise<void> {
+    async replaceTrackInMediaStream(track: MediaStreamTrack, updateLastConstraints: boolean): Promise<void> {
         const mediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
         let removedTrack: MediaStreamTrack;
         if (track.kind === 'video') {
             removedTrack = mediaStream.getVideoTracks()[0];
-            this.stream.lastVideoTrackConstraints = track.getConstraints();
+            if (updateLastConstraints) {
+                this.stream.lastVideoTrackConstraints = track.getConstraints();
+            }
         } else {
             removedTrack = mediaStream.getAudioTracks()[0];
         }
         mediaStream.removeTrack(removedTrack);
         removedTrack.stop();
         mediaStream.addTrack(track);
-        if (track.kind === 'video' && this.stream.isLocalStreamPublished) {
+        if (track.kind === 'video' && this.stream.isLocalStreamPublished && updateLastConstraints) {
             this.openvidu.sendNewVideoDimensionsIfRequired(this, 'trackReplaced', 50, 30);
             this.session.sendVideoData(this.stream.streamManager, 5, true, 5);
         }
