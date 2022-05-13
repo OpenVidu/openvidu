@@ -114,7 +114,7 @@ if [[ $CF_RELEASE == "true" ]]; then
    aws ec2 modify-image-attribute --image-id ${KMS_RAW_AMI_ID} --launch-permission "Add=[{Group=all}]"
    aws ec2 describe-images --image-ids ${KMS_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId'
    SNAPSHOT_ID=$(aws ec2 describe-images --image-ids ${KMS_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId')
-   aws ec2 modify-snapshot-attribute --snapshot-id ${SNAPSHOT_ID} --createVolumePermission "Add=[{Group=all}]"
+   aws ec2 modify-snapshot-attribute --snapshot-id ${SNAPSHOT_ID} --create-volume-permission "Add=[{Group=all}]"
 fi
 
 ## OpenVidu AMI
@@ -175,7 +175,7 @@ if [[ $CF_RELEASE == "true" ]]; then
    aws ec2 modify-image-attribute --image-id ${OV_RAW_AMI_ID} --launch-permission "Add=[{Group=all}]"
    aws ec2 describe-images --image-ids ${OV_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId'
    SNAPSHOT_ID=$(aws ec2 describe-images --image-ids ${OV_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId')
-   aws ec2 modify-snapshot-attribute --snapshot-id ${SNAPSHOT_ID} --createVolumePermission "Add=[{Group=all}]"
+   aws ec2 modify-snapshot-attribute --snapshot-id ${SNAPSHOT_ID} --create-volume-permission "Add=[{Group=all}]"
 fi
 
 
