@@ -1,6 +1,6 @@
 {
   "name": "openvidu-components-testapp",
-  "version": "2.21.0",
+  "version": "2.22.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --ssl --configuration development",
@@ -35,7 +35,7 @@
     "@angular/platform-browser-dynamic": "13.0.0",
     "@angular/router": "13.0.0",
     "autolinker": "3.14.3",
-    "openvidu-browser": "2.21.0",
+    "openvidu-browser": "2.22.0",
     "rxjs": "7.5.4",
     "tslib": "2.3.1",
     "zone.js": "0.11.4"
