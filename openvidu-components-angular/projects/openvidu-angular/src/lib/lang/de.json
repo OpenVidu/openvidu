@@ -1,0 +1,77 @@
+{
+	"PREJOIN": {
+		"NICKNAME_SECTION": "Legen Sie Ihren Spitznamen fest",
+		"NICKNAME": "Spitzname",
+		"DEVICE_SECTION": "Wählen Sie Ihre Geräte",
+		"VIDEO_DEVICE": "Videogerät",
+		"AUDIO_DEVICE": "Audiogerät",
+		"JOIN": "Sitzung beitreten",
+		"PREPARING": "Sitzung vorbereiten..."
+	},
+	"TOOLBAR": {
+		"MUTE_AUDIO": "Stummschalten des Audios",
+		"UNMUTE_AUDIO": "Stummschaltung für Audio aufheben",
+		"MUTE_VIDEO": "Stummschalten des Videos",
+		"UNMUTE_VIDEO": "Heben Sie die Stummschaltung Ihres Videos auf",
+		"ENABLE_SCREEN": "Bildschirmfreigabe aktivieren",
+		"DISABLE_SCREEN": "Bildschirmfreigabe deaktivieren",
+		"MORE_OPTIONS": "Weitere Optionen",
+		"FULLSCREEN": "Vollbild",
+		"EXIT_FULLSCREEN": "Vollbildmodus beenden",
+		"BACKGROUND": "Hintergrund-Effekte",
+		"START_RECORDING": "Aufzeichnung starten",
+		"STOP_RECORDING": "Aufzeichnung stoppen",
+		"LEAVE": "Die Sitzung verlassen",
+		"PARTICIPANTS": "Teilnehmer",
+		"CHAT": "Chat",
+		"ACTIVITIES": "Aktivitäten"
+	},
+	"STREAM": {
+		"SETTINGS": "Einstellungen",
+		"MUTE_SOUND": "Ton stummschalten",
+		"UNMUTE_SOUND": "Stummschaltung aufheben",
+		"ZOOM_IN": "Vergrößern",
+		"ZOOM_OUT": "Herauszoomen",
+		"REPLACE_SCREEN": "Bildschirm austauschen"
+	},
+	"PANEL": {
+		"CLOSE": "Schließen",
+		"CHAT": {
+			"TITLE": "Chat",
+			"YOU": "Sie",
+			"SUBTITLE": "Nachrichten werden am Ende der Sitzung entfernt",
+			"PLACEHOLDER": "Eine Nachricht senden...",
+			"SEND": "Senden"
+		},
+		"PARTICIPANTS": {
+			"TITLE": "Teilnehmer",
+			"CAMERA": "KAMERA",
+			"SCREEN": "BILDSCHIRM"
+		},
+		"BACKGROUND": {
+			"TITLE": "Hintergrund-Effekte",
+			"BLURRED_SECTION": "Keine Effekte und unscharfer Hintergrund",
+			"NO_EFFECTS": "Kein Hintergrundeffekt",
+			"BLURRED_EFFECT": "Unscharfer Hintergrund",
+			"IMAGES_SECTION": "Hintergrundbilder"
+		},
+		"RECORDING": {
+			"TITLE": "Aufnahme",
+			"SUBTITLE": "Zeichnen Sie Ihr Meeting für die Nachwelt auf",
+			"CONTENT_TITLE": "Ihr Videogespräch aufzeichnen",
+			"CONTENT_SUBTITLE": "Wenn die Aufzeichnung beendet ist, können Sie sie ganz einfach herunterladen",
+			"STARTING": "Aufzeichnung starten"
+		}
+	},
+	"ERRORS": {
+		"SESSION": "Es ist ein Fehler beim Verbinden mit der Sitzung aufgetreten",
+		"CONNECTION": "Verbindung verloren",
+		"RECONNECT": "Ich versuche, die Verbindung zur Sitzung wiederherzustellen...",
+		"TOGGLE_CAMERA": "Es gab einen Fehler beim Umschalten der Kamera",
+		"TOGGLE_MICROPHONE": "Es ist ein Fehler beim Umschalten des Mikrofons aufgetreten",
+		"SCREEN_SHARING": "Fehler beim Teilen des Bildschirms",
+		"SCREEN_SUPPORT": "Ihr Browser unterstützt keine Bildschirmfreigabe",
+		"MEDIA_ACCESS": "Der Zugriff auf Mediengeräte war nicht erlaubt.",
+		"DEVICE_NOT_FOUND": "Es wurden keine Video- oder Audiogeräte gefunden. Bitte schließen Sie mindestens eines an."
+	}
+}

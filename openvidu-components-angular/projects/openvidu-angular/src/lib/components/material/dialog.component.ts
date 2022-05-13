@@ -19,7 +19,7 @@ export interface DialogData {
 		<h1 mat-dialog-title>{{ data.title }}</h1>
 		<div mat-dialog-content>{{ data.description }}</div>
 		<div mat-dialog-actions *ngIf="data.showActionButtons">
-			<button mat-button (click)="close()">Close</button>
+			<button mat-button (click)="close()">{{'PANEL.CLOSE' | translate}}</button>
 		</div>
 	`
 })

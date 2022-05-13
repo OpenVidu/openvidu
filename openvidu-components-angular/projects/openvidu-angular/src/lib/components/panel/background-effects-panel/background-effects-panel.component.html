@@ -1,14 +1,14 @@
 <div class="panel-container" id="background-effects-container" fxLayout="column" fxLayoutAlign="space-evenly none">
 	<div class="panel-header-container" fxFlex="55px" fxLayoutAlign="start center">
-		<h3 class="panel-title">Background effects</h3>
-		<button class="panel-close-button" mat-icon-button matTooltip="Close" (click)="close()">
+		<h3 class="panel-title">{{ 'PANEL.BACKGROUND.TITLE' | translate }}</h3>
+		<button class="panel-close-button" mat-icon-button matTooltip="{{ 'PANEL.CLOSE' | translate }}" (click)="close()">
 			<mat-icon>close</mat-icon>
 		</button>
 	</div>
 
 	<div class="effects-container" fxFlex="100%" fxLayoutAlign="space-evenly none">
 		<div>
-			<h4>No effects and blurred background</h4>
+			<h4>{{ 'PANEL.BACKGROUND.BLURRED_SECTION' | translate }}</h4>
 			<div>
 				<button
 					*ngFor="let effect of noEffectAndBlurredBackground"
@@ -17,7 +17,14 @@
 					[class.active-effect-btn]="backgroundSelectedId === effect.id"
 					(click)="applyBackground(effect)"
 				>
-					<mat-icon [matTooltip]="effect.description">{{effect.thumbnail}}</mat-icon>
+					<mat-icon
+						[matTooltip]="
+							effect.type === effectType.NONE
+								? ('PANEL.BACKGROUND.NO_EFFECTS' | translate)
+								: ('PANEL.BACKGROUND.BLURRED_EFFECT' | translate)
+						"
+						>{{ effect.thumbnail }}</mat-icon
+					>
 				</button>
 				<!-- <button
 					mat-icon-button
@@ -32,7 +39,7 @@
 		</div>
 		<hr />
 		<div>
-			<h4>Background images</h4>
+			<h4>{{ 'PANEL.BACKGROUND.IMAGES_SECTION' | translate }}</h4>
 
 			<div class="grid">
 				<div

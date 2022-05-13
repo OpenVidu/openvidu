@@ -22,13 +22,15 @@ import {
 	MinimalDirective,
 	PrejoinDirective,
 	VideoMutedDirective,
-	ParticipantNameDirective
+	ParticipantNameDirective,
+	LangDirective
 } from './videoconference.directive';
 
 
 @NgModule({
 	declarations: [
 		MinimalDirective,
+		LangDirective,
 		PrejoinDirective,
 		VideoMutedDirective,
 		AudioMutedDirective,
@@ -50,6 +52,7 @@ import {
 	],
 	exports: [
 		MinimalDirective,
+		LangDirective,
 		PrejoinDirective,
 		VideoMutedDirective,
 		AudioMutedDirective,

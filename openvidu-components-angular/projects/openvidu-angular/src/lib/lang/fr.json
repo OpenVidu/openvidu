@@ -1,0 +1,77 @@
+{
+	"PREJOIN": {
+		"NICKNAME_SECTION": "Définir votre surnom",
+		"NICKNAME": "Surnom",
+		"DEVICE_SECTION": "Choisissez vos appareils",
+		"VIDEO_DEVICE": "Périphérique vidéo",
+		"AUDIO_DEVICE": "Périphérique audio",
+		"JOIN": "Joindre une session",
+		"PREPARING": "Préparation de la session ..."
+	},
+	"TOOLBAR": {
+		"MUTE_AUDIO": "Mettez votre audio en sourdine",
+		"UNMUTE_AUDIO": "Désactiver le son",
+		"MUTE_VIDEO": "Couper le son de votre vidéo",
+		"UNMUTE_VIDEO": "Unmute your video",
+		"ENABLE_SCREEN": "Activer le partage d'écran",
+		"DISABLE_SCREEN": "Désactiver le partage d'écran",
+		"MORE_OPTIONS": "Plus d'options",
+		"FULLSCREEN": "Plein écran",
+		"EXIT_FULLSCREEN": "Quitter le plein écran",
+		"BACKGROUND": "Effets de fond",
+		"START_RECORDING": "démarrer l'enregistrement",
+		"STOP_RECORDING": "Arrêter l'enregistrement",
+		"LEAVE": "Quitter la session",
+		"PARTICIPANTS": "Participants",
+		"CHAT": "Chat",
+		"ACTIVITES": "Activités"
+	},
+	"STREAM": {
+		"SETTINGS": "Paramètres",
+		"MUTE_SOUND": "Couper le son",
+		"UNMUTE_SOUND": "Désactiver le son",
+		"ZOOM_IN": "Zoom avant",
+		"ZOOM_OUT": "Zoom arrière",
+		"REPLACE_SCREEN": "Remplacer l'écran"
+	},
+	"PANEL": {
+		"CLOSE": "Fermer",
+		"CHAT": {
+			"TITLE": "Chat",
+			"YOU": "Vous",
+			"SUBTITLE": "Les messages seront supprimés à la fin de la session",
+			"PLACEHOLDER": "Envoyer un message...",
+			"SEND": "Envoyer"
+		},
+		"PARTICIPANTS": {
+			"TITLE": "Participants",
+			"CAMERA": "CAMÉRA",
+			"SCREEN": "ÉCRAN"
+		},
+		"BACKGROUND": {
+			"TITLE": "Effets de fond",
+			"BLURRED_SECTION": "Aucun effet et arrière-plan flou",
+			"NO_EFFECTS": "Aucun effet de fond",
+			"BLURRED_EFFECT": "Arrière-plan flou",
+			"IMAGES_SECTION": "Images d'arrière-plan"
+		},
+		"RECORDING": {
+			"TITLE": "Enregistrement",
+			"SUBTITLE": "Enregistrez votre réunion pour la postérité",
+			"CONTENT_TITLE": "Enregistrez votre appel vidéo",
+			"CONTENT_SUBTITLE": "Une fois l'enregistrement terminé, vous pourrez le télécharger facilement",
+			"STARTING": "Début de l'enregistrement"
+		}
+	},
+	"ERRORS": {
+		"SESSION": "There was an error connecting to the session",
+		"CONNECTION": "Connexion perdue",
+		"RECONNECT": "Oups ! Tentative de reconnexion à la session...",
+		"TOGGLE_CAMERA": "There was an error toggle camera",
+		"TOGGLE_MICROPHONE": "There was an error toggling microhpone",
+		"SCREEN_SHARING": "Erreur de partage d'écran",
+		"SCREEN_SUPPORT": "Votre navigateur ne prend pas en charge le partage d'écran",
+		"MEDIA_ACCESS": "L'accès aux périphériques médias n'a pas été autorisé",
+		"DEVICE_NOT_FOUND": "Aucun périphérique vidéo ou audio n'a été trouvé. Veuillez en connecter au moins un."
+	}
+}

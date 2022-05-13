@@ -1,0 +1,77 @@
+{
+	"PREJOIN": {
+		"NICKNAME_SECTION": "Stel je bijnaam in",
+		"NICKNAME": "Bijnaam",
+		"DEVICE_SECTION": "Kies je apparaten",
+		"VIDEO_DEVICE": "Videospeler",
+		"AUDIO_DEVICE": "Audiospeler",
+		"JOIN": "Deelnemen aan sessie",
+		"PREPARING": "Sessie voorbereiden ..."
+	},
+	"TOOLBAR": {
+		"MUTE_AUDIO": "Audio dempen",
+		"UNMUTE_AUDIO": "Audio niet meer dempen",
+		"MUTE_VIDEO": "Video dempen",
+		"UNMUTE_VIDEO": "Video niet meer dempen",
+		"ENABLE_SCREEN": "Scherm delen inschakelen",
+		"DISABLE_SCREEN": "Scherm delen uitschakelen",
+		"MORE_OPTIONS": "Meer opties",
+		"FULLSCREEN": "Volledig scherm",
+		"EXIT_FULLSCREEN": "Volledig scherm verlaten",
+		"BACKGROUND": "Achtergrondeffecten",
+        "START_RECORDING": "Start opname",
+		"STOP_RECORDING": "Stop opname",
+		"LEAVE": "Verlaat de sessie",
+		"PARTICIPANTS": "Deelnemers",
+		"CHAT": "Chat",
+        "ACTIVITIES": "Activiteiten"
+	},
+	"STREAM": {
+		"SETTINGS": "Instellingen",
+		"MUTE_SOUND": "Geluid dempen",
+		"UNMUTE_SOUND": "Geluid niet meer dempen",
+		"ZOOM_IN": "Inzoomen",
+		"ZOOM_OUT": "Uitzoomen",
+		"REPLACE_SCREEN": "Vervang scherm"
+	},
+	"PANEL": {
+		"CLOSE": "Sluiten",
+		"CHAT": {
+			"TITLE": "Chat",
+			"YOU": "Jij",
+			"SUBTITLE": "Berichten worden aan het einde van de sessie verwijderd",
+			"PLACEHOLDER": "Stuur een bericht ...",
+			"SEND": "Versturen"
+		},
+		"PARTICIPANTS": {
+			"TITLE": "Deelnemers",
+			"CAMERA": "CAMERA",
+			"SCREEN": "SCHERM"
+		},
+		"BACKGROUND": {
+			"TITLE": "Achtergrondeffecten",
+			"BLURRED_SECTION": "Geen effecten en onscherpe achtergrond",
+			"NO_EFFECTS": "Geen achtergrondeffect",
+			"BLURRED_EFFECT": "Onscherpe achtergrond",
+			"IMAGES_SECTION": "Achtergrondafbeeldingen"
+		},
+		"RECORDING": {
+			"TITLE": "Opname",
+			"SUBTITLE": "Neem uw vergadering op voor het nageslacht",
+			"CONTENT_TITLE": "Neem uw videogesprek op",
+			"CONTENT_SUBTITLE": "Als de opname klaar is kunt u deze met gemak downloaden",
+			"STARTING": "Beginnen met opnemen"
+		}
+	},
+	"ERRORS": {
+		"SESSION": "Er is een fout opgetreden bij het verbinden met de sessie",
+		"CONNECTION": "Verbinding verloren",
+		"RECONNECT": "Oeps! Proberen opnieuw verbinding te maken met de sessie...",
+		"TOGGLE_CAMERA": "Er is een fout opgetreden bij het overschakelen naar een andere camera",
+		"TOGGLE_MICROPHONE": "Er is een fout opgetreden bij het overschakelen naar een microfoon",
+		"SCREEN_SHARING": "Fout bij het delen van het scherm",
+		"SCREEN_SUPPORT": "Uw browser ondersteunt het delen van schermen niet",
+		"MEDIA_ACCESS": "Toegang tot media-apparaten was niet toegestaan.",
+		"DEVICE_NOT_FOUND": "Er zijn geen video- of audioapparaten gevonden. Sluit er alstublieft ten minste één aan."
+    }
+}

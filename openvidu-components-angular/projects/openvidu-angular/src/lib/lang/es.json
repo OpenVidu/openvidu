@@ -1,0 +1,66 @@
+{
+	"PREJOIN": {
+		"NICKNAME_SECTION": "Elige tu nombre",
+		"NICKNAME": "Nombre",
+		"DEVICE_SECTION": "Elige tus dispositivos",
+		"VIDEO_DEVICE": "Dispositivo de video",
+		"AUDIO_DEVICE": "Dispositivo de audio",
+		"PREPARING": "Preparando la session ...",
+		"JOIN": "Unirme ahora"
+	},
+	"TOOLBAR": {
+		"MUTE_AUDIO":"Silenciar tu audio",
+		"UNMUTE_AUDIO": "Activar tu audio",
+		"MUTE_VIDEO":"Silenciar tu video",
+		"UNMUTE_VIDEO": "Activar tu video",
+		"ENABLE_SCREEN": "Compartir pantalla",
+		"DISABLE_SCREEN": "Dejar de compartir pantalla",
+		"MORE_OPTIONS": "Más opciones",
+		"EXIT_FULLSCREEN": "Quitar pantalla completa",
+		"FULLSCREEN": "Pantalla completa",
+		"BACKGROUND": "Efectos de fondo",
+		"START_RECORDING": "Iniciar grabación",
+		"STOP_RECORDING": "Detener grabación",
+		"LEAVE": "Salir de la sesión",
+		"PARTICIPANTS": "Participantes",
+		"CHAT": "Chat",
+		"ACTIVITIES": "Actividades"
+	},
+	"STREAM": {
+		"SETTINGS": "Ajustes",
+		"MUTE_SOUND": "Silenciar sonido",
+		"UNMUTE_SOUND": "Activar sonido",
+		"ZOOM_IN": "Aumentar tamaño",
+		"ZOOM_OUT": "Disminuir tamaño",
+		"REPLACE_SCREEN": "Reemplazar pantalla"
+	},
+	"PANEL": {
+		"CLOSE": "Cerrar",
+		"CHAT": {
+			"TITLE": "Chat",
+			"YOU": "Tú",
+			"SUBTITLE": "Los mensajes se borrarán al finalizar la sesión",
+			"PLACEHOLDER": "Enviar mensaje...",
+			"SEND": "Enviar"
+		},
+		"PARTICIPANTS": {
+			"TITLE": "Participantes",
+			"CAMERA": "CÁMARA",
+			"SCREEN": "PANTALLA"
+		},
+		"BACKGROUND": {
+			"TITLE": "Efectos de fondo",
+			"BLURRED_SECTION": "Sin efectos y fondo desenfocado",
+			"NO_EFFECTS": "Sin efecto",
+			"BLURRED_EFFECT": "Fondo desenfocado",
+			"IMAGES_SECTION": "Imágenes de fondo"
+		},
+		"RECORDING": {
+			"TITLE": "Grabación",
+			"SUBTITLE": "Graba tus llamadas para la posteridad",
+			"CONTENT_TITLE": "Graba tu video conferencia",
+			"CONTENT_SUBTITLE": "Cuando la grabación haya finalizado, podrás descargarla con facilidad",
+			"STARTING": "Iniciar grabación"
+		}
+	}
+}

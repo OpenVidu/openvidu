@@ -1,0 +1,77 @@
+{
+    "PREJOIN": {
+        "NICKNAME_SECTION": "ニックネームを設定してください",
+        "NICKNAME": "ニックネーム",
+        "DEVICE_SECTION": "デバイスを選択してください",
+        "VIDEO_DEVICE": "ビデオデバイス",
+        "AUDIO_DEVICE": "オーディオデバイス",
+        "JOIN": "セッションに参加する",
+        "PREPARING": "セッションの準備中..."
+    },
+    "TOOLBAR": {
+        "MUTE_AUDIO": "オーディオをミュートする",
+        "UNMUTE_AUDIO": "オーディオをミュートしない",
+        "MUTE_VIDEO": "ビデオをミュートする",
+        "UNMUTE_VIDEO": "ビデオをミュートしない",
+        "ENABLE_SCREEN": "スクリーン共有を有効にする",
+        "DISABLE_SCREEN": "スクリーン共有を無効にする",
+        "MORE_OPTIONS": "その他のオプション",
+        "FULLSCREEN": "フルスクリーン",
+        "EXIT_FULLSCREEN": "フルスクリーンを終了する",
+        "BACKGROUND": "背景効果",
+        "START_RECORDING": "録画開始",
+		"STOP_RECORDING": "録画の停止",
+        "LEAVE": "セッションを終了する",
+        "PARTICIPANTS": "参加者",
+        "CHAT": "チャット",
+        "ACTIVITIES": "アクティビティ"
+    },
+    "STREAM": {
+        "SETTINGS": "設定",
+        "MUTE_SOUND": "サウンドをミュートする",
+        "UNMUTE_SOUND": "サウンドをミュートしない",
+        "ZOOM_IN": "拡大する",
+        "ZOOM_OUT": "縮小する",
+        "REPLACE_SCREEN": "スクリーンを入れ替える"
+    },
+    "PANEL": {
+        "CLOSE": "閉じる",
+        "CHAT": {
+            "TITLE": "チャット",
+            "YOU": "あなた",
+            "SUBTITLE": "メッセージはセッション終了時に削除されます",
+            "PLACEHOLDER": "メッセージを送信...",
+            "SEND": "送信する"
+        },
+        "PARTICIPANTS": {
+            "TITLE": "参加者",
+            "CAMERA": "カメラ",
+            "SCREEN": "スクリーン"
+        },
+        "BACKGROUND": {
+            "TITLE": "背景効果",
+            "BLURRED_SECTION": "エフェクトなし、ぼやけた背景",
+            "NO_EFFECTS": "背景エフェクトなし",
+            "BLURRED_EFFECT": "ぼやけた背景",
+            "IMAGES_SECTION": "背景画像"
+        },
+        "RECORDING": {
+			"TITLE": "レコーディング",
+			"SUBTITLE": "会議を録音して後世に残す",
+			"CONTENT_TITLE": "ビデオ通話を録音する",
+			"CONTENT_SUBTITLE": "録音が完了したら、簡単にダウンロードできます",
+			"STARTING": "録画開始"
+		}
+    },
+    "ERRORS": {
+		"SESSION": "セッションへの接続にエラーが発生しました",
+		"CONNECTION": "接続が失われました",
+		"RECONNECT": "セッションへの再接続を試みています",
+		"TOGGLE_CAMERA": "カメラのトグルエラーが発生しました",
+		"TOGGLE_MICROPHONE": "マイクロフォンのトグルにエラーが発生しました",
+		"SCREEN_SHARING": "画面共有にエラーが発生しました",
+		"SCREEN_SUPPORT": "お使いのブラウザは画面共有に対応していません",
+		"MEDIA_ACCESS": "メディアデバイスへのアクセスが許可されませんでした",
+		"DEVICE_NOT_FOUND": "ビデオまたはオーディオデバイスが見つかりませんでした 最低1台は接続してください"
+	}
+}

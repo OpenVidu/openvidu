@@ -1,7 +1,28 @@
 .container {
-	height: 100%;
-	padding: 80px;
+	height: calc(100% - 64px);
+	padding: 50px 80px;
 	background-color: var(--ov-light-color);
+}
+
+.prejoin-toolbar {
+	background-color: var(--ov-light-color);
+}
+.spacer {
+	flex: 1 1 auto;
+}
+
+.lang-button {
+	background-color: var(--ov-logo-background-color);
+	color: var(--ov-text-color);
+}
+
+#branding-logo {
+	background-color: var(--ov-logo-background-color);
+	border-radius: var(--ov-panel-radius);
+	max-width: 35px;
+	max-height: 35px;
+	padding: 10px;
+	margin-right: 10px;
 }
 
 #layout-container {
@@ -25,7 +46,8 @@ hr {
 	height: 100% !important;
 }
 
-#prejoin-container ::ng-deep .mat-drawer-container, #prejoin-container ::ng-deep .sidenav-menu {
+#prejoin-container ::ng-deep .mat-drawer-container,
+#prejoin-container ::ng-deep .sidenav-menu {
 	background-color: var(--ov-light-color) !important;
 }
 #prejoin-container ::ng-deep .sidenav-menu {
@@ -38,10 +60,10 @@ hr {
 
 #background-effects-btn {
 	position: absolute;
-    z-index: 1;
+	z-index: 1;
 	background-color: var(--ov-secondary-color);
-    bottom: 5px;
-    right: 5px;
+	bottom: 5px;
+	right: 5px;
 }
 
 .media-panel {
@@ -59,21 +81,22 @@ hr {
 	margin-bottom: 0px !important;
 }
 
-#nickname-input-container, .device-container-element {
+#nickname-input-container,
+.device-container-element {
 	display: flex;
 }
 
-#nickname-input-container button, .device-container-element button {
+#nickname-input-container button,
+.device-container-element button {
 	margin: auto 10px auto auto;
 }
-
 
 #nickname-input-container button.mat-button-disabled {
 	color: #000000 !important;
 }
 
-
-#nickname-input-container mat-form-field, .device-container-element mat-form-field {
+#nickname-input-container mat-form-field,
+.device-container-element mat-form-field {
 	width: 100%;
 	margin-top: 10px;
 	color: #000000;
@@ -88,11 +111,10 @@ hr {
 	border-radius: var(--ov-video-radius);
 }
 
-
-.buttons-container{
- 	border-radius: 5px;
- 	padding: 10px 0px;
- 	height: 100px;
+.buttons-container {
+	border-radius: 5px;
+	padding: 10px 0px;
+	height: 100px;
 	display: block !important;
 }
 
@@ -100,7 +122,6 @@ hr {
 	border-radius: var(--ov-buttons-radius);
 	/* background-color: var(--ov-secondary-color) !important; */
 	/* color: var(--ov-text-color) !important; */
-
 }
 
 .join-btn-container {
@@ -114,7 +135,6 @@ hr {
 	color: var(--ov-text-color);
 	background-color: var(--ov-tertiary-color);
 	border-radius: var(--ov-video-radius);
-
 }
 
 .warn-btn {
@@ -141,12 +161,15 @@ hr {
 	color: #000000;
 }
 
-
 @media only screen and (max-width: 480px) {
-	.container, .media-panel-container, .buttons-container {
+	.container,
+	.media-panel-container,
+	.buttons-container {
 		padding: 0;
 	}
-	.nickname-container, .buttons-container, .join-btn-container {
+	.nickname-container,
+	.buttons-container,
+	.join-btn-container {
 		width: 90% !important;
 		margin: auto;
 	}
@@ -159,19 +182,24 @@ hr {
 }
 
 @media only screen and (min-width: 480px) and (max-width: 959px) {
-	.container, .media-panel-container, .buttons-container  {
+	.container,
+	.media-panel-container,
+	.buttons-container {
 		padding: 0;
 	}
 
-	.nickname-container, .buttons-container, .join-btn-container{
-		  width: 80% !important;
-		  min-width: 80% !important;
-		  margin: auto;
+	.nickname-container,
+	.buttons-container,
+	.join-btn-container {
+		width: 80% !important;
+		min-width: 80% !important;
+		margin: auto;
 	}
 
-	.buttons-container, .media-panel-container {
-		  padding-top: 0px;
-		  max-width: 600px;
+	.buttons-container,
+	.media-panel-container {
+		padding-top: 0px;
+		max-width: 600px;
 	}
 
 	.media-panel {

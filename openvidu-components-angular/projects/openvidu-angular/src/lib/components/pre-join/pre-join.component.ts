@@ -20,6 +20,7 @@ import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { PanelService } from '../../services/panel/panel.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { StorageService } from '../../services/storage/storage.service';
+import { TranslateService } from '../../services/translate/translate.service';
 import { VirtualBackgroundService } from '../../services/virtual-background/virtual-background.service';
 
 /**
@@ -32,6 +33,8 @@ import { VirtualBackgroundService } from '../../services/virtual-background/virt
 })
 export class PreJoinComponent implements OnInit, OnDestroy {
 	@Output() onJoinButtonClicked = new EventEmitter<any>();
+	languages: {name: string, ISO: string}[] = [];
+	langSelected: {name: string, ISO: string};
 	cameras: CustomDevice[];
 	microphones: CustomDevice[];
 	cameraSelected: CustomDevice;
@@ -53,11 +56,13 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	 * @ignore
 	 */
 	isMinimal: boolean = false;
+	showLogo: boolean = true;
 
 	private log: ILogger;
 	private localParticipantSubscription: Subscription;
 	private screenShareStateSubscription: Subscription;
 	private minimalSub: Subscription;
+	private displayLogoSub: Subscription;
 	private backgroundEffectsButtonSub: Subscription;
 
 	@HostListener('window:resize')
@@ -75,7 +80,8 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		protected panelService: PanelService,
 		private libService: OpenViduAngularConfigService,
 		private storageSrv: StorageService,
-		private backgroundService: VirtualBackgroundService
+		private backgroundService: VirtualBackgroundService,
+		private translateService: TranslateService
 	) {
 		this.log = this.loggerSrv.get('PreJoinComponent');
 	}
@@ -83,6 +89,8 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	ngOnInit() {
 		this.subscribeToPrejoinDirectives();
 		this.subscribeToLocalParticipantEvents();
+		this.languages = this.translateService.getLanguagesInfo();
+		this.langSelected = this.translateService.getLangSelected();
 
 		this.windowSize = window.innerWidth;
 		this.hasVideoDevices = this.deviceSrv.hasVideoDeviceAvailable();
@@ -148,6 +156,12 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		}
 	}
 
+	onLangSelected(lang: string){
+		this.translateService.setLanguage(lang);
+		this.storageSrv.setLang(lang);
+		this.langSelected = this.translateService.getLangSelected();
+	}
+
 	async toggleCam() {
 		this.videoMuteChanging = true;
 		const publish = this.isVideoMuted;
@@ -192,6 +206,10 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	private subscribeToPrejoinDirectives() {
 		this.minimalSub = this.libService.minimalObs.subscribe((value: boolean) => {
 			this.isMinimal = value;
+			// this.cd.markForCheck();
+		});
+		this.displayLogoSub = this.libService.displayLogoObs.subscribe((value: boolean) => {
+			this.showLogo = value;
 			// this.cd.markForCheck();
 		});
 		this.backgroundEffectsButtonSub = this.libService.backgroundEffectsButton.subscribe((value: boolean) => {

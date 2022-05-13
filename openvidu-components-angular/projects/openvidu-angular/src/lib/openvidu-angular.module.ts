@@ -20,12 +20,13 @@ import { OverlayContainer } from '@angular/cdk/overlay';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
-import {MatExpansionModule} from '@angular/material/expansion';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
+
 
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { VideoComponent } from './components/video/video.component';
@@ -36,6 +37,7 @@ import { StreamComponent } from './components/stream/stream.component';
 import { DialogTemplateComponent } from './components/material/dialog.component';
 
 import { LinkifyPipe } from './pipes/linkify.pipe';
+import { TranslatePipe } from './pipes/translate.pipe';
 import { StreamTypesEnabledPipe, ParticipantStreamsPipe } from './pipes/participant.pipe';
 
 import { OpenViduAngularConfig } from './config/openvidu-angular.config';
@@ -79,6 +81,7 @@ import { RecordingActivityComponent } from './components/panel/activities-panel/
 		LinkifyPipe,
 		ParticipantStreamsPipe,
 		StreamTypesEnabledPipe,
+		TranslatePipe,
 		ParticipantPanelItemComponent,
 		ParticipantsPanelComponent,
 		VideoconferenceComponent,
@@ -87,8 +90,8 @@ import { RecordingActivityComponent } from './components/panel/activities-panel/
 		AvatarProfileComponent,
 		PreJoinComponent,
 		BackgroundEffectsPanelComponent,
-  		ActivitiesPanelComponent,
-    	RecordingActivityComponent,
+		ActivitiesPanelComponent,
+		RecordingActivityComponent
 	],
 	imports: [
 		CommonModule,

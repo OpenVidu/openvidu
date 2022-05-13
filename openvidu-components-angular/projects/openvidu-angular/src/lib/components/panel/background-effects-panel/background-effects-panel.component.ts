@@ -14,6 +14,7 @@ import { VirtualBackgroundService } from '../../../services/virtual-background/v
 export class BackgroundEffectsPanelComponent implements OnInit {
 
   backgroundSelectedId: string;
+  effectType = EffectType;
   backgroundImages: BackgroundEffect[] = [];
   noEffectAndBlurredBackground: BackgroundEffect[] = [];
   private backgrounds: BackgroundEffect[];

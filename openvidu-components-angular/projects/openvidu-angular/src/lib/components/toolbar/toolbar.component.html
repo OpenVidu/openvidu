@@ -20,8 +20,8 @@
 			[disabled]="isConnectionLost || !hasAudioDevices"
 			[class.warn-btn]="!isAudioActive"
 		>
-			<mat-icon *ngIf="isAudioActive" matTooltip="Mute your audio" id="mic">mic</mat-icon>
-			<mat-icon *ngIf="!isAudioActive" matTooltip="Unmute your audio" id="mic_off">mic_off</mat-icon>
+			<mat-icon *ngIf="isAudioActive" matTooltip="{{ 'TOOLBAR.MUTE_AUDIO' | translate }}" id="mic">mic</mat-icon>
+			<mat-icon *ngIf="!isAudioActive" matTooltip="{{ 'TOOLBAR.UNMUTE_AUDIO' | translate }}" id="mic_off">mic_off</mat-icon>
 		</button>
 
 		<!-- Camera button -->
@@ -32,8 +32,8 @@
 			[disabled]="isConnectionLost || !hasVideoDevices || videoMuteChanging"
 			[class.warn-btn]="!isWebcamVideoActive"
 		>
-			<mat-icon *ngIf="isWebcamVideoActive" matTooltip="Mute your cam" id="videocam">videocam</mat-icon>
-			<mat-icon *ngIf="!isWebcamVideoActive" matTooltip="Unmute your cam" id="videocam_off">videocam_off</mat-icon>
+			<mat-icon *ngIf="isWebcamVideoActive" matTooltip="{{ 'TOOLBAR.MUTE_VIDEO' | translate }}" id="videocam">videocam</mat-icon>
+			<mat-icon *ngIf="!isWebcamVideoActive" matTooltip="{{ 'TOOLBAR.UNMUTE_VIDEO' | translate }}" id="videocam_off">videocam_off</mat-icon>
 		</button>
 
 		<!-- Screenshare button -->
@@ -45,8 +45,8 @@
 			[disabled]="isConnectionLost"
 			[class.active-btn]="isScreenShareActive"
 		>
-			<mat-icon *ngIf="!isScreenShareActive" matTooltip="Enable screen share">screen_share</mat-icon>
-			<mat-icon *ngIf="isScreenShareActive" matTooltip="Disable screen share">screen_share</mat-icon>
+			<mat-icon *ngIf="!isScreenShareActive" matTooltip="{{ 'TOOLBAR.ENABLE_SCREEN' | translate }}">screen_share</mat-icon>
+			<mat-icon *ngIf="isScreenShareActive" matTooltip="{{ 'TOOLBAR.DISABLE_SCREEN' | translate }}">screen_share</mat-icon>
 		</button>
 
 		<!-- Fullscreen button -->
@@ -58,8 +58,8 @@
 			[disabled]="isConnectionLost"
 			[class.active-btn]="isFullscreenActive"
 		>
-			<mat-icon *ngIf="isFullscreenActive" matTooltip="Exit Fullscreen">fullscreen_exit</mat-icon>
-			<mat-icon *ngIf="!isFullscreenActive" matTooltip="Fullscreen">fullscreen</mat-icon>
+			<mat-icon *ngIf="isFullscreenActive" matTooltip="{{ 'TOOLBAR.EXIT_FULLSCREEN' | translate }}">fullscreen_exit</mat-icon>
+			<mat-icon *ngIf="!isFullscreenActive" matTooltip="{{ 'TOOLBAR.FULLSCREEN' | translate }}">fullscreen</mat-icon>
 		</button>
 
 		<button
@@ -69,16 +69,16 @@
 			[matMenuTriggerFor]="menu"
 			[disabled]="isConnectionLost"
 		>
-			<mat-icon matTooltip="More options">more_vert</mat-icon>
+			<mat-icon matTooltip="{{ 'TOOLBAR.MORE_OPTIONS' | translate }}">more_vert</mat-icon>
 		</button>
 		<mat-menu #menu="matMenu">
 			<!-- Fullscreen button -->
 			<button mat-menu-item id="fullscreen-btn" (click)="toggleFullscreen()">
 				<mat-icon *ngIf="!isFullscreenActive">fullscreen</mat-icon>
-				<span *ngIf="!isFullscreenActive">Fullscreen</span>
+				<span *ngIf="!isFullscreenActive">{{ 'TOOLBAR.FULLSCREEN' | translate }}</span>
 
 				<mat-icon *ngIf="isFullscreenActive">fullscreen_exit</mat-icon>
-				<span *ngIf="isFullscreenActive">Exit fullscreen</span>
+				<span *ngIf="isFullscreenActive">{{ 'TOOLBAR.EXIT_FULLSCREEN' | translate }}</span>
 			</button>
 
 			<!-- Recording button -->
@@ -101,7 +101,7 @@
 				(click)="toggleBackgroundEffects()"
 			>
 				<mat-icon>auto_awesome</mat-icon>
-				<span>Background effects</span>
+				<span>{{ 'TOOLBAR.BACKGROUND' | translate }}</span>
 			</button>
 		</mat-menu>
 
@@ -112,7 +112,7 @@
 
 		<!-- Leave session button -->
 		<button mat-icon-button *ngIf="showLeaveButton" (click)="leaveSession()" id="leave-btn">
-			<mat-icon matTooltip="Leave the session">call_end</mat-icon>
+			<mat-icon matTooltip="{{ 'TOOLBAR.LEAVE' | translate }}">call_end</mat-icon>
 		</button>
 	</div>
 	<div fxFlex="20%" fxFlexOrder="3" fxLayoutAlign="end center" id="menu-buttons-container">
@@ -134,7 +134,7 @@
 			mat-icon-button
 			id="participants-panel-btn"
 			*ngIf="!isMinimal && showParticipantsPanelButton"
-			matTooltip="Participants"
+			matTooltip="{{ 'TOOLBAR.PARTICIPANTS' | translate }}"
 			(click)="toggleParticipantsPanel()"
 			[disabled]="isConnectionLost"
 			[class.active-btn]="isParticipantsOpened"
@@ -147,7 +147,7 @@
 			mat-icon-button
 			id="chat-panel-btn"
 			*ngIf="!isMinimal && showChatPanelButton"
-			matTooltip="Chat"
+			matTooltip="{{ 'TOOLBAR.CHAT' | translate }}"
 			(click)="toggleChatPanel()"
 			[disabled]="isConnectionLost"
 			[class.active-btn]="isChatOpened"

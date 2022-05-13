@@ -1,7 +1,77 @@
 {
-	"Chat": "Chat",
-	"Close": "Close",
-	"You": "You",
-	"Send": "Send",
-	"Chat_warn_message": "Messages will be removed at the end of the session",
+	"PREJOIN": {
+		"NICKNAME_SECTION": "Set your nickname",
+		"NICKNAME": "Nickname",
+		"DEVICE_SECTION": "Choose your devices",
+		"VIDEO_DEVICE": "Video device",
+		"AUDIO_DEVICE": "Audio device",
+		"JOIN": "Join session",
+		"PREPARING": "Preparing session..."
+	},
+	"TOOLBAR": {
+		"MUTE_AUDIO":"Mute your audio",
+		"UNMUTE_AUDIO": "Unmute your audio",
+		"MUTE_VIDEO":"Mute your video",
+		"UNMUTE_VIDEO": "Unmute your video",
+		"ENABLE_SCREEN": "Enable screen share",
+		"DISABLE_SCREEN": "Disable screen share",
+		"MORE_OPTIONS": "More options",
+		"FULLSCREEN": "Fullscreen",
+		"EXIT_FULLSCREEN": "Exit fullscreen",
+		"BACKGROUND": "Background effects",
+		"START_RECORDING": "Start recording",
+		"STOP_RECORDING": "Stop recording",
+		"LEAVE": "Leave the session",
+		"PARTICIPANTS": "Participants",
+		"CHAT": "Chat",
+		"ACTIVITIES": "Activities"
+	},
+	"STREAM": {
+		"SETTINGS": "Settings",
+		"MUTE_SOUND": "Mute sound",
+		"UNMUTE_SOUND": "Unmute sound",
+		"ZOOM_IN": "Zoom in",
+		"ZOOM_OUT": "Zoom out",
+		"REPLACE_SCREEN": "Replace screen"
+	},
+	"PANEL": {
+		"CLOSE": "Close",
+		"CHAT": {
+			"TITLE": "Chat",
+			"YOU": "You",
+			"SUBTITLE": "Messages will be removed at the end of the session",
+			"PLACEHOLDER": "Send a message...",
+			"SEND": "Send"
+		},
+		"PARTICIPANTS": {
+			"TITLE": "Participants",
+			"CAMERA": "CAMERA",
+			"SCREEN": "SCREEN"
+		},
+		"BACKGROUND": {
+			"TITLE": "Background effects",
+			"BLURRED_SECTION": "No effects and blurred background",
+			"NO_EFFECTS": "No background effect",
+			"BLURRED_EFFECT": "Blurred background",
+			"IMAGES_SECTION": "Background images"
+		},
+		"RECORDING": {
+			"TITLE": "Recording",
+			"SUBTITLE": "Record your meeting for posterity",
+			"CONTENT_TITLE": "Record your video call",
+			"CONTENT_SUBTITLE": "When recording has finished you will can download it with ease",
+			"STARTING": "Starting recording"
+		}
+	},
+	"ERRORS": {
+		"SESSION": "There was an error connecting to the session",
+		"CONNECTION": "Connection lost",
+		"RECONNECT": "Oops! Trying to reconnect to the session...",
+		"TOGGLE_CAMERA": "There was an error toggling camera",
+		"TOGGLE_MICROPHONE": "There was an error toggling microhpone",
+		"SCREEN_SHARING": "Error sharing screen",
+		"SCREEN_SUPPORT": "Your browser does not support screen sharing",
+		"MEDIA_ACCESS": "Access to media devices was not allowed.",
+		"DEVICE_NOT_FOUND": "No video or audio devices have been found. Please, connect at least one."
+	}
 }

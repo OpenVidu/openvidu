@@ -37,6 +37,7 @@ import { OpenViduEdition, OpenViduService } from '../../services/openvidu/openvi
 import { ParticipantService } from '../../services/participant/participant.service';
 import { StorageService } from '../../services/storage/storage.service';
 import { TokenService } from '../../services/token/token.service';
+import { TranslateService } from '../../services/translate/translate.service';
 
 /**
  * The **VideoconferenceComponent** is the parent of all OpenVidu components.
@@ -52,6 +53,7 @@ import { TokenService } from '../../services/token/token.service';
  * | **Parameter**                  | **Type**  | **Reference**                                   |
  * | :----------------------------: | :-------: | :---------------------------------------------: |
  * | **minimal**                        | `boolean` | {@link MinimalDirective}                        |
+ * | **lang**                           | `string`  | {@link LangDirective}                           |
  * | **prejoin**                        | `boolean` | {@link PrejoinDirective}                        |
  * | **participantName**                | `string`  | {@link ParticipantNameDirective}                |
  * | **videoMuted**                     | `boolean` | {@link VideoMutedDirective}                     |
@@ -345,7 +347,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	/**
 	 * @internal
 	 */
-	 tokensReceived: boolean = false;
+	tokensReceived: boolean = false;
 	/**
 	 * @internal
 	 */
@@ -374,7 +376,8 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		private openviduService: OpenViduService,
 		private actionService: ActionService,
 		private libService: OpenViduAngularConfigService,
-		private tokenService: TokenService
+		private tokenService: TokenService,
+		private translateService: TranslateService
 	) {
 		this.log = this.loggerSrv.get('VideoconferenceComponent');
 	}
@@ -574,12 +577,12 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 			return this.initwebcamPublisher();
 		}
 		if (e.name === OpenViduErrorName.DEVICE_ACCESS_DENIED) {
-			message = 'Access to media devices was not allowed.';
+			message = this.translateService.translate('ERRORS.MEDIA_ACCESS');
 			this.deviceSrv.disableVideoDevices();
 			this.deviceSrv.disableAudioDevices();
 			return this.initwebcamPublisher();
 		} else if (e.name === OpenViduErrorName.NO_INPUT_SOURCE_SET) {
-			message = 'No video or audio devices have been found. Please, connect at least one.';
+			message = this.translateService.translate('ERRORS.DEVICE_NOT_FOUND');
 		}
 		this.actionService.openDialog(e.name.replace(/_/g, ' '), message, true);
 		this.log.e(e.message);

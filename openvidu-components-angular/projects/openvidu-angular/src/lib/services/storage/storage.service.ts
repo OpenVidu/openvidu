@@ -54,6 +54,14 @@ export class StorageService {
 		this.set(Storage.AUDIO_MUTED, `${muted}`);
 	}
 
+	setLang(lang: string){
+		this.set(Storage.LANG, lang);
+	}
+
+	getLang(): string {
+		return this.get(Storage.LANG);
+	}
+
 	private set(key: string, item: any) {
 		const value = JSON.stringify({ item: item });
 		// this.log.d('Storing on localStorage "' + key + '" with value "' + value + '"');

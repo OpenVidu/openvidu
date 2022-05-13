@@ -1,5 +1,6 @@
 import { Directive, Input, ElementRef, OnDestroy, OnInit } from '@angular/core';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
+import { TranslateService } from '../../services/translate/translate.service';
 
 /**
  * The **minimal** directive applies a minimal UI hiding all controls except for cam and mic.
@@ -48,6 +49,67 @@ export class MinimalDirective implements OnDestroy {
 		if (this.libService.minimal.getValue() !== value) {
 			this.libService.minimal.next(value);
 		}
+	}
+}
+
+/**
+ * The **lang** directive allows et the UI language to a default language.
+ *
+ * It is only available for {@link VideoconferenceComponent}.
+ *
+ * **Default:** English `en`
+ *
+ * **Available:**
+ *
+ * * English: `en`
+ * * Spanish: `es`
+ * * German: `de`
+ * * French: `fr`
+ * * Chinese: `cn`
+ * * Hindi: `hi`
+ * * Italian: `it`
+ * * Japanese: `ja`
+ * * Netherlands: `nl`
+ * * Portuguese: `pt`
+ *
+ * @example
+ * <ov-videoconference [lang]="es"></ov-videoconference>
+ */
+ @Directive({
+	selector: 'ov-videoconference[lang]'
+})
+export class LangDirective implements OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set lang(value: string) {
+		this.update(value);
+	}
+
+	/**
+	 * @ignore
+	 */
+	constructor(public elementRef: ElementRef, private translateService: TranslateService) {}
+
+	/**
+	 * @ignore
+	 */
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	/**
+	 * @ignore
+	 */
+	clear() {
+		this.update('en');
+	}
+
+	/**
+	 * @ignore
+	 */
+	update(value: string) {
+		this.translateService.setLanguage(value);
 	}
 }
 

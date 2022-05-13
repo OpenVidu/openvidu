@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { BackgroundEffect, EffectType } from '../../models/background-effect.model';
 import { ParticipantService } from '../participant/participant.service';
 import { TokenService } from '../token/token.service';
+import { TranslateService } from '../translate/translate.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -11,8 +12,8 @@ export class VirtualBackgroundService {
 	backgroundSelected = <BehaviorSubject<string>>new BehaviorSubject('');
 	backgroundSelectedObs: Observable<string>;
 	backgrounds: BackgroundEffect[] = [
-		{ id: 'no_effect', type: EffectType.NONE, thumbnail: 'block', description: 'No background effect' },
-		{ id: 'soft_blur', type: EffectType.BLUR, thumbnail: 'blur_on', description: 'Blur effect' },
+		{ id: 'no_effect', type: EffectType.NONE, thumbnail: 'block' },
+		{ id: 'soft_blur', type: EffectType.BLUR, thumbnail: 'blur_on' },
 		{ id: '1', type: EffectType.IMAGE, thumbnail: 'assets/backgrounds/thumbnails/bg-1.jpg', src: 'assets/backgrounds/bg-1.jpg' },
 		{ id: '2', type: EffectType.IMAGE, thumbnail: 'assets/backgrounds/thumbnails/bg-2.jpg', src: 'assets/backgrounds/bg-2.jpg' },
 		{ id: '3', type: EffectType.IMAGE, thumbnail: 'assets/backgrounds/thumbnails/bg-3.jpg', src: 'assets/backgrounds/bg-3.jpg' },
@@ -34,7 +35,7 @@ export class VirtualBackgroundService {
 		{ id: '18', type: EffectType.IMAGE, thumbnail: 'assets/backgrounds/thumbnails/bg-18.jpg', src: 'assets/backgrounds/bg-18.jpg' }
 	];
 
-	constructor(private participantService: ParticipantService, private tokenService: TokenService) {
+	constructor(private participantService: ParticipantService, private translateService: TranslateService, private tokenService: TokenService) {
 		this.backgroundSelectedObs = this.backgroundSelected.asObservable();
 	}
 

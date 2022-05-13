@@ -1,20 +1,20 @@
 <div class="panel-container" id="chat-container" fxLayout="column" fxLayoutAlign="space-evenly none" >
 	<div class="panel-header-container" fxFlex="55px" fxLayoutAlign="start center">
-		<h3 class="panel-title">Chat</h3>
-		<button class="panel-close-button" mat-icon-button matTooltip="Close" (click)="close()">
+		<h3 class="panel-title">{{ 'PANEL.CHAT.TITLE' | translate }}</h3>
+		<button class="panel-close-button" mat-icon-button matTooltip="{{ 'PANEL.CLOSE' | translate }}" (click)="close()">
 			<mat-icon>close</mat-icon>
 		</button>
 	</div>
 
 	<div class="text-container" fxFlex="20px">
-		<p class="text-info">Messages will be removed at the end of the session</p>
+		<p class="text-info">{{ 'PANEL.CHAT.SUBTITLE' | translate }}</p>
 	</div>
 
 	<div class="messages-container" fxFlex="75%" fxLayoutAlign="space-evenly none" #chatScroll>
 		<div *ngFor="let data of messageList" class="message" [ngClass]="data.isLocal ? 'right' : 'left'">
 			<div class="msg-detail">
 				<div class="nickname-container">
-					<p *ngIf="data.isLocal">You</p>
+					<p *ngIf="data.isLocal">{{ 'PANEL.CHAT.YOU' | translate }}</p>
 					<p *ngIf="!data.isLocal">{{ data.nickname }}</p>
 				</div>
 				<div class="msg-content">
@@ -29,14 +29,14 @@
 			#chatInput
 			maxlength="500"
 			rows="4"
-			placeholder="Send a message"
+			placeholder="{{ 'PANEL.CHAT.PLACEHOLDER' | translate }}"
 			autocomplete="off"
 			(keypress)="eventKeyPress($event)"
 			[(ngModel)]="message"
 			id="chat-input"
 		></textarea>
 		<button mat-icon-button id="send-btn" (click)="sendMessage()">
-			<mat-icon matTooltip="Send">send</mat-icon>
+			<mat-icon matTooltip="{{ 'PANEL.CHAT.SEND' | translate }}">send</mat-icon>
 		</button>
 	</div>
 </div>

@@ -1,0 +1,77 @@
+{
+	"PREJOIN": {
+		"NICKNAME_SECTION": "Defina seu apelido",
+		"NICKNAME": "Apelido",
+		"DEVICE_SECTION": "Escolha seus dispositivos",
+		"VIDEO_DEVICE": "Dispositivo de vídeo",
+		"AUDIO_DEVICE": "Dispositivo de áudio",
+		"JOIN": "Entrar na sessão",
+		"PREPARING": "Preparando sessão..."
+	},
+	"TOOLBAR": {
+		"MUTE_AUDIO": "Mute seu áudio",
+		"UNMUTE_AUDIO": "Desmute seu áudio",
+		"MUTE_VIDEO": "Mute seu vídeo",
+		"UNMUTE_VIDEO": "Desmute seu vídeo",
+		"ENABLE_SCREEN": "Habilitar compartilhamento de tela",
+		"DISABLE_SCREEN": "Desabilitar compartilhamento de tela",
+		"MORE_OPTIONS": "Mais opções",
+		"FULLSCREEN": "Tela cheia",
+		"EXIT_FULLSCREEN": "Sair da tela cheia",
+		"BACKGROUND": "Efeitos de fundo",
+		"START_RECORDING": "Iniciar_gravação",
+		"STOP_RECORDING": "Parar de gravar",
+		"LEAVE": "Sair da sessão",
+		"PARTICIPANTS": "Participantes",
+		"CHAT": "Chat",
+		"ACTIVITIES": "Actividades"
+	},
+	"STREAM": {
+		"SETTINGS": "Configurações",
+		"MUTE_SOUND": "Mudo",
+		"UNMUTE_SOUND": "Com som",
+		"ZOOM_IN": "Aumentar zoom",
+		"ZOOM_OUT": "Diminuir zoom",
+		"REPLACE_SCREEN": "Trocar tela"
+	},
+	"PANEL": {
+		"CLOSE": "Fechar",
+		"CHAT": {
+			"TITLE": "Chat",
+			"YOU": "Você",
+			"SUBTITLE": "As mensagens serão removidas no final da sessão",
+			"PLACEHOLDER": "Enviar uma mensagem...",
+			"SEND": "Enviar"
+		},
+		"PARTICIPANTS": {
+			"TITLE": "Participantes",
+			"CAMERA": "CÂMERA",
+			"SCREEN": "TELA"
+		},
+		"BACKGROUND": {
+			"TITLE": "Efeitos de fundo",
+			"BLURRED_SECTION": "Sem efeitos e fundo desfocado",
+			"NO_EFFECTS": "Sem efeito de fundo",
+			"BLURRED_EFFECT": "Fundo desfocado",
+			"IMAGES_SECTION": "Imagens de fundo"
+		},
+		"RECORDING": {
+			"TITLE": "Gravação",
+			"SUBTITLE": "Grave a sua reunião para a posteridade",
+			"CONTENT_TITLE": "Grave a sua videochamada",
+			"CONTENT_SUBTITLE": "Quando a gravação tiver terminado, poderá descarregá-la com facilidade",
+			"STARTING": "Começar a gravação"
+		}
+	},
+	"ERRORS": {
+		"SESSION": "Houve um erro de ligação à sessão",
+		"CONNECTION": "Ligação perdida",
+		"RECONNECT": "A tentar restabelecer a ligação à sessão...",
+		"TOGGLE_CAMERA": "Houve um erro ao alternar a câmara",
+		"TOGGLE_MICROPHONE": "Houve um erro ao alternar microhpone",
+		"SCREEN_SHARING": "ecrã_partilha de erros",
+		"SCREEN_SUPPORT": "O seu browser não suporta a partilha de ecrãs",
+		"MEDIA_ACCESS": "Não foi permitido o acesso a dispositivos de media",
+		"DEVICE_NOT_FOUND": "Nenhum dispositivo de vídeo ou áudio foi encontrado. Por favor, ligue pelo menos um"
+	}
+}

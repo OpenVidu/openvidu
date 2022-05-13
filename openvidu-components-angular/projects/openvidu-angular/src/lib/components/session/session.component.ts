@@ -11,7 +11,15 @@ import {
 	TemplateRef,
 	ViewChild
 } from '@angular/core';
-import { Subscriber, Session, StreamEvent, StreamPropertyChangedEvent, SessionDisconnectedEvent, ConnectionEvent, RecordingEvent } from 'openvidu-browser';
+import {
+	Subscriber,
+	Session,
+	StreamEvent,
+	StreamPropertyChangedEvent,
+	SessionDisconnectedEvent,
+	ConnectionEvent,
+	RecordingEvent
+} from 'openvidu-browser';
 
 import { VideoType } from '../../models/video-type.model';
 import { ILogger } from '../../models/logger.model';
@@ -30,6 +38,7 @@ import { Subscription, skip } from 'rxjs';
 import { PanelType } from '../../models/panel.model';
 import { PanelService } from '../../services/panel/panel.service';
 import { RecordingService } from '../../services/recording/recording.service';
+import { TranslateService } from '../../services/translate/translate.service';
 
 /**
  * @internal
@@ -73,7 +82,8 @@ export class SessionComponent implements OnInit {
 		protected tokenService: TokenService,
 		protected layoutService: LayoutService,
 		protected panelService: PanelService,
-		private recordingService: RecordingService
+		private recordingService: RecordingService,
+		private translateService: TranslateService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
 	}
@@ -98,7 +108,7 @@ export class SessionComponent implements OnInit {
 		}, 0);
 	}
 
-	@ViewChild('videoContainer',  {static:false, read: ElementRef })
+	@ViewChild('videoContainer', { static: false, read: ElementRef })
 	set videoContainer(container: ElementRef) {
 		setTimeout(() => {
 			if (container && !this.toolbarTemplate) {
@@ -110,7 +120,7 @@ export class SessionComponent implements OnInit {
 	}
 
 	async ngOnInit() {
-		if(!this.usedInPrejoinPage){
+		if (!this.usedInPrejoinPage) {
 			this.session = this.openviduService.getWebcamSession();
 			this.sessionScreen = this.openviduService.getScreenSession();
 			this.subscribeToConnectionCreatedAndDestroyed();
@@ -121,7 +131,7 @@ export class SessionComponent implements OnInit {
 			this.chatService.subscribeToChat();
 			this.subscribeToReconnection();
 			// if(RecordingEnabled){
-				this.subscribeToRecordingEvents();
+			this.subscribeToRecordingEvents();
 			// }
 			this.onSessionCreated.emit(this.session);
 
@@ -166,7 +176,7 @@ export class SessionComponent implements OnInit {
 			this.updateLayoutInterval = setInterval(() => this.layoutService.update(), 50);
 		});
 
-		this.menuSubscription = this.panelService.panelOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean, type?: PanelType }) => {
+		this.menuSubscription = this.panelService.panelOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: PanelType }) => {
 			if (this.sideMenu) {
 				ev.opened ? this.sideMenu.open() : this.sideMenu.close();
 			}
@@ -196,7 +206,7 @@ export class SessionComponent implements OnInit {
 		} catch (error) {
 			// this._error.emit({ error: error.error, messgae: error.message, code: error.code, status: error.status });
 			this.log.e('There was an error connecting to the session:', error.code, error.message);
-			this.actionService.openDialog('There was an error connecting to the session:', error?.error || error?.message);
+			this.actionService.openDialog(this.translateService.translate('ERRORS.SESSION'), error?.error || error?.message || error);
 		}
 	}
 
@@ -277,7 +287,11 @@ export class SessionComponent implements OnInit {
 	private subscribeToReconnection() {
 		this.session.on('reconnecting', () => {
 			this.log.w('Connection lost: Reconnecting');
-			this.actionService.openDialog('Connection Problem', 'Oops! Trying to reconnect to the session ...', false);
+			this.actionService.openDialog(
+				this.translateService.translate('ERRRORS.CONNECTION'),
+				this.translateService.translate('ERRRORS.RECONNECT'),
+				false
+			);
 		});
 		this.session.on('reconnected', () => {
 			this.log.w('Connection lost: Reconnected');

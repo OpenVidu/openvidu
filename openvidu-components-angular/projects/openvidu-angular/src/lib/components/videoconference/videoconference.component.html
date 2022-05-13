@@ -6,7 +6,7 @@
 
 	<div id="spinner" *ngIf="(joinSessionClicked || !showPrejoin) && !participantReady && !error">
 		<mat-spinner [diameter]="50"></mat-spinner>
-		<span>Joining the room ...</span>
+		<span>{{ 'PREJOIN.PREPARING' | translate }}</span>
 	</div>
 
 	<div id="spinner" *ngIf="joinSessionClicked && !participantReady && error">

@@ -36,6 +36,7 @@ import { PlatformService } from '../../services/platform/platform.service';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { RecordingInfo, RecordingService } from '../../services/recording/recording.service';
 import { RecordingStatus } from '../../models/recording.model';
+import { TranslateService } from '../../services/translate/translate.service';
 
 /**
  *
@@ -321,7 +322,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		private cd: ChangeDetectorRef,
 		private libService: OpenViduAngularConfigService,
 		private platformService: PlatformService,
-		private recordingService: RecordingService
+		private recordingService: RecordingService,
+		private translateService: TranslateService
 	) {
 		this.log = this.loggerSrv.get('ToolbarComponent');
 	}
@@ -391,7 +393,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 			await this.openviduService.publishAudio(!this.isAudioActive);
 		} catch (error) {
 			this.log.e('There was an error toggling microphone:', error.code, error.message);
-			this.actionService.openDialog('There was an error toggling camera', error?.error || error?.message);
+			this.actionService.openDialog(this.translateService.translate('ERRORS.TOGGLE_MICROPHONE'), error?.error || error?.message || error);
 		}
 	}
 
@@ -403,13 +405,13 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		this.onCameraButtonClicked.emit();
 		try {
 			const publishVideo = !this.participantService.isMyVideoActive();
-			if(this.panelService.isExternalPanelOpened() && !publishVideo) {
+			if (this.panelService.isExternalPanelOpened() && !publishVideo) {
 				this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
 			}
 			await this.openviduService.publishVideo(publishVideo);
 		} catch (error) {
 			this.log.e('There was an error toggling camera:', error.code, error.message);
-			this.actionService.openDialog('There was an error toggling camera', error?.error || error?.message);
+			this.actionService.openDialog(this.translateService.translate('ERRORS.TOGGLE_CAMERA'), error?.error || error?.message || error);
 		}
 		this.videoMuteChanging = false;
 	}
@@ -425,7 +427,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		} catch (error) {
 			this.log.e('There was an error toggling screen share', error.code, error.message);
 			if (error && error.name === 'SCREEN_SHARING_NOT_SUPPORTED') {
-				this.actionService.openDialog('Error sharing screen', 'Your browser does not support screen sharing');
+				this.actionService.openDialog(this.translateService.translate('ERRORS.SCREEN_SHARING'), this.translateService.translate('ERRORS.SCREEN_SUPPORT'));
 			}
 		}
 	}

@@ -1,5 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { StreamModel, ParticipantAbstractModel } from '../models/participant.model';
+import { TranslateService } from '../services/translate/translate.service';
 
 @Pipe({ name: 'streams' })
 export class ParticipantStreamsPipe implements PipeTransform {
@@ -26,10 +27,18 @@ export class ParticipantStreamsPipe implements PipeTransform {
  */
 @Pipe({ name: 'streamTypesEnabled' })
 export class StreamTypesEnabledPipe implements PipeTransform {
-	constructor() {}
+	constructor(private translateService: TranslateService) {}
 
 	transform(participant: ParticipantAbstractModel): string {
-		const activeStreams = participant?.getConnectionTypesActive().toString();
-		return `(${activeStreams.replace(',', ', ')})`;
+		let result = '';
+		let activeStreams = participant?.getConnectionTypesActive().toString();
+		const activeStreamsArr: string[] = activeStreams.split(',');
+		activeStreamsArr.forEach((type, index) => {
+			result += this.translateService.translate(`PANEL.PARTICIPANTS.${type}`)
+			if(activeStreamsArr.length > 0 && index < activeStreamsArr.length - 1){
+				result += ', ';
+			}
+		});
+		return `(${result})`;
 	}
 }

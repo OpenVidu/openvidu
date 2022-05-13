@@ -9,5 +9,4 @@ export interface BackgroundEffect {
 	type: EffectType;
 	thumbnail: string;
 	src?: string;
-	description?: string;
 }

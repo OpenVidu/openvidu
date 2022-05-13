@@ -1,0 +1,77 @@
+{
+	"PREJOIN": {
+		"NICKNAME_SECTION": "Imposta il tuo soprannome",
+		"NICKNAME": "Soprannome",
+		"DEVICE_SECTION": "Scegli i tuoi dispositivi",
+		"VIDEO_DEVICE": "Dispositivo video",
+		"AUDIO_DEVICE": "Dispositivo audio",
+		"JOIN": "Unisciti alla sessione",
+		"PREPARING": "Preparazione della sessione in corso..."
+	},
+	"TOOLBAR": {
+		"MUTE_AUDIO": "Disattiva l'audio",
+		"UNMUTE_AUDIO": "Attiva l'audio",
+		"MUTE_VIDEO": "Disattiva il video",
+		"UNMUTE_VIDEO": "Attiva il video",
+		"ENABLE_SCREEN": "Abilita la condivisione dello schermo",
+		"DISABLE_SCREEN": "Disabilita la condivisione dello schermo",
+		"MORE_OPTIONS": "Altre opzioni",
+		"FULLSCREEN": "Schermo intero",
+		"EXIT_FULLSCREEN": "Esci dallo schermo intero",
+		"BACKGROUND": "Effetti di sfondo",
+		"START_RECORDING": "Avvia registrazione",
+		"STOP_RECORDING": "Interrompi registrazione",
+		"LEAVE": "Abbandona la sessione",
+		"PARTICIPANTS": "Partecipanti",
+		"CHAT": "Chat",
+		"ACTIVITIES": "Attività"
+	},
+	"STREAM": {
+		"SETTINGS": "Impostazioni",
+		"MUTE_SOUND": "Disattiva l'audio",
+		"UNMUTE_SOUND": "Attiva l'audio",
+		"ZOOM_IN": "Ingrandisci",
+		"ZOOM_OUT": "Riduci",
+		"REPLACE_SCREEN": "Sostituisci lo schermo"
+	},
+	"PANEL": {
+		"CLOSE": "Chiudi",
+		"CHAT": {
+			"TITLE": "Chat",
+			"YOU": "Tu",
+			"SUBTITLE": "I messaggi verranno rimossi alla fine della sessione",
+			"PLACEHOLDER": "Invia un messaggio...",
+			"SEND": "Invia"
+		},
+		"PARTICIPANTS": {
+			"TITLE": "Partecipanti",
+			"CAMERA": "CAMERA",
+			"SCREEN": "SCREEN"
+		},
+		"BACKGROUND": {
+			"TITLE": "Effetti di sfondo",
+			"BLURRED_SECTION": "Nessun effetto e sfondo sfocato",
+			"NO_EFFECTS": "Nessun effetto di sfondo",
+			"BLURRED_EFFECT": "Sfondo sfocato",
+			"IMAGES_SECTION": "Immagini di sfondo"
+		},
+		"RECORDING": {
+			"TITLE": "Registrazione",
+			"SUBTITLE": "Registra la tua riunione per i posteri",
+			"CONTENT_TITLE": "Registra la tua videochiamata",
+			"CONTENT_SUBTITLE": "Al termine della registrazione potrete scaricarla con facilità",
+			"STARTING": "Avvio della registrazione"
+		}
+	},
+	"ERRORS": {
+		"SESSION": "Si è verificato un errore di connessione alla sessione",
+		"CONNECTION": "Connessione persa",
+		"RECONNECT": "Oops! Si sta cercando di riconnettersi alla sessione...",
+		"TOGGLE_CAMERA": "Si è verificato un errore nell'attivazione della telecamera",
+		"TOGGLE_MICROPHONE": "Si è verificato un errore nell'attivazione del microfono",
+		"SCREEN_SHARING": "Errore nella condivisione dello schermo",
+		"SCREEN_SUPPORT": "Il browser non supporta la condivisione dello schermo",
+		"MEDIA_ACCESS": "L'accesso ai dispositivi multimediali non è stato consentito",
+		"DEVICE_NOT_FOUND": "Non sono stati trovati dispositivi video o audio. Si prega di collegarne almeno uno"
+	}
+}

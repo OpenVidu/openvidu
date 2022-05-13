@@ -48,22 +48,22 @@
 	</div>
 
 	<div *ngIf="!isMinimal && showSettingsButton" id="settings-container" class="videoButtons">
-		<button mat-icon-button (click)="toggleVideoMenu($event)" matTooltip="Settings" aria-label="Video settings menu">
+		<button mat-icon-button (click)="toggleVideoMenu($event)" matTooltip="{{ 'STREAM.SETTINGS' | translate }}" aria-label="Video settings menu">
 			<mat-icon>more_vert</mat-icon>
 		</button>
 		<span [matMenuTriggerFor]="menu"></span>
 		<mat-menu #menu="matMenu" yPosition="above" xPosition="before">
 			<button mat-menu-item id="videoZoomButton" (click)="toggleVideoEnlarged()">
 				<mat-icon>{{ this.videoSizeIcon }}</mat-icon>
-				<span *ngIf="videoSizeIcon === videoSizeIconEnum.NORMAL">Zoom out</span>
-				<span *ngIf="videoSizeIcon === videoSizeIconEnum.BIG">Zoom in</span>
+				<span *ngIf="videoSizeIcon === videoSizeIconEnum.NORMAL">{{ 'STREAM.ZOOM_OUT' | translate }}</span>
+				<span *ngIf="videoSizeIcon === videoSizeIconEnum.BIG">{{ 'STREAM.ZOOM_IN' | translate }}</span>
 			</button>
 			<button mat-menu-item id="volumeButton" *ngIf="!this._stream.local" (click)="toggleMuteForcibly()">
 				<mat-icon *ngIf="!_stream.participant.isMutedForcibly">volume_up</mat-icon>
-				<span *ngIf="!_stream.participant.isMutedForcibly">Mute sound</span>
+				<span *ngIf="!_stream.participant.isMutedForcibly">{{ 'STREAM.MUTE_SOUND' | translate }}</span>
 
 				<mat-icon *ngIf="_stream.participant.isMutedForcibly">volume_off</mat-icon>
-				<span *ngIf="_stream.participant.isMutedForcibly">Unmute sound</span>
+				<span *ngIf="_stream.participant.isMutedForcibly">{{ 'STREAM.UNMUTE_SOUND' | translate }}</span>
 			</button>
 			<!-- <button mat-menu-item *ngIf="this._stream.streamManager?.stream?.videoActive" id="fullscreenButton" (click)="toggleFullscreen()">
 				<mat-icon *ngIf="!isFullscreenEnabled">fullscreen</mat-icon>
@@ -80,7 +80,7 @@
 				*ngIf="!this._stream.streamManager?.remote && this._stream.streamManager?.stream?.typeOfVideo === videoTypeEnum.SCREEN"
 			>
 				<mat-icon>picture_in_picture</mat-icon>
-				<span>Replace screen</span>
+				<span>{{ 'STREAM.REPLACE_SCREEN' | translate }}</span>
 			</button>
 		</mat-menu>
 	</div>

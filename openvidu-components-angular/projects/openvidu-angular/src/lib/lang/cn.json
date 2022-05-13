@@ -1,0 +1,77 @@
+{
+	"PREJOIN": {
+		"NICKNAME_SECTION": "设置你的绰号",
+		"NICKNAME": "昵称",
+		"DEVICE_SECTION": "选择你的设备",
+		"VIDEO_DEVICE": "视频设备",
+		"AUDIO_DEVICE": "音频设备",
+		"JOIN": "加入会话",
+		"PREPARING": "筹备会议"
+	},
+	"TOOLBAR": {
+		"MUTE_AUDIO":"将你的音频静音",
+		"UNMUTE_AUDIO": "取消音频静音",
+		"MUTE_VIDEO":  "将你的视频静音",
+		"UNMUTE_VIDEO": "取消你的视频静音",
+		"ENABLE_SCREEN":"启用屏幕共享",
+		"DISABLE_SCREEN":"禁用屏幕共享",
+		"MORE_OPTIONS":"更多选项",
+		"FULLSCREEN":"全屏",
+		"EXIT_FULLSCREEN": "退出全屏",
+		"BACKGROUND":"背景效果",
+		"START_RECORDING": "开始录音",
+		"STOP_RECORDING": "停止录制",
+		"LEAVE":"离开会议",
+		"PARTICIPANTS":"参与者",
+		"CHAT":"聊天",
+		"ACTIVITIES": "活动"
+	},
+	"STREAM": {
+		"SETTINGS":"设置",
+		"MUTE_SOUND":"静音",
+		"UNMUTE_SOUND":"取消静音",
+		"ZOOM_IN": "放大",
+		"ZOOM_OUT":"缩小",
+		"REPLACE_SCREEN": "更换屏幕"
+	},
+	"PANEL": {
+		"CLOSE": "关闭",
+		"CHAT": {
+			"TITLE":  "聊天",
+			"YOU": "你",
+			"SUBTITLE": "信息将在会议结束时被删除",
+			"PLACEHOLDER":  "发送消息...",
+			"SEND": "发送"
+		},
+		"PARTICIPANTS": {
+			"TITLE": "参与者",
+			"CAMERA": "摄像头",
+			"SCREEN": "屏幕"
+		},
+		"BACKGROUND": {
+			"TITLE": "背景效果",
+			"BLURRED_SECTION":  "没有效果和模糊的背景",
+			"NO_EFFECTS": "没有背景效果",
+			"BLURRED_EFFECT": "模糊的背景",
+			"IMAGES_SECTION": "背景图像"
+		},
+		"RECORDING": {
+			"TITLE": "录音",
+			"SUBTITLE": "为后人记录你的会议",
+			"CONTENT_TITLE": "记录你的视频通话",
+			"CONTENT_SUBTITLE": "当录音完成后，你将可以轻松地下载它",
+			"STARTING": "开始录音"
+		}
+	},
+	"ERRORS": {
+		"SESSION": "连接到会话时有错误",
+		"CONNECTION": "连接丢失",
+		"RECONNECT": "试图重新连接到会话",
+		"TOGGLE_CAMERA": "切换相机时出现错误",
+		"TOGGLE_MICROPHONE": "切换麦克风时出现错误",
+		"SCREEN_SHARING": "分享屏幕出错",
+		"SCREEN_SUPPORT": "您的浏览器不支持屏幕共享",
+		"MEDIA_ACCESS": "不允许访问媒体设备",
+		"DEVICE_NOT_FOUND": "没有找到视频或音频设备 请至少连接一个"
+	}
+}
