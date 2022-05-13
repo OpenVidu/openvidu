@@ -99,6 +99,24 @@ KMS_RAW_AMI_ID=$(aws ec2 create-image --instance-id ${INSTANCE_ID} --name KMS-ov
 echo "Cleaning up"
 aws cloudformation delete-stack --stack-name kms-${DATESTAMP}
 
+# Wait for the instance
+# Unfortunately, aws cli does not have a way to increase timeout
+WAIT_RETRIES=0
+WAIT_MAX_RETRIES=3
+until [ "${WAIT_RETRIES}" -ge "${WAIT_MAX_RETRIES}" ]
+do
+   aws ec2 wait image-available --image-ids ${KMS_RAW_AMI_ID} && break
+   WAIT_RETRIES=$((WAIT_RETRIES+1)) 
+   sleep 5
+done
+
+if [[ $CF_RELEASE == "true" ]]; then
+   aws ec2 modify-image-attribute --image-id ${KMS_RAW_AMI_ID} --launch-permission "Add=[{Group=all}]"
+   aws ec2 describe-images --image-ids ${KMS_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId'
+   SNAPSHOT_ID=$(aws ec2 describe-images --image-ids ${KMS_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId')
+   aws ec2 modify-snapshot-attribute --snapshot-id ${SNAPSHOT_ID} --createVolumePermission "Add=[{Group=all}]"
+fi
+
 ## OpenVidu AMI
 
 # Copy template to S3
@@ -152,6 +170,13 @@ do
    WAIT_RETRIES=$((WAIT_RETRIES+1)) 
    sleep 5
 done
+
+if [[ $CF_RELEASE == "true" ]]; then
+   aws ec2 modify-image-attribute --image-id ${OV_RAW_AMI_ID} --launch-permission "Add=[{Group=all}]"
+   aws ec2 describe-images --image-ids ${OV_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId'
+   SNAPSHOT_ID=$(aws ec2 describe-images --image-ids ${OV_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId')
+   aws ec2 modify-snapshot-attribute --snapshot-id ${SNAPSHOT_ID} --createVolumePermission "Add=[{Group=all}]"
+fi
 
 
 # Updating the template
