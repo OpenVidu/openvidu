@@ -13,7 +13,7 @@ services:
     #
     # --------------------------------------------------------------
     app:
-        image: openvidu/openvidu-call:2.21.0
+        image: openvidu/openvidu-call:2.22.0
         restart: on-failure
         network_mode: host
         environment:
