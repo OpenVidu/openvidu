@@ -3,7 +3,7 @@
   "version": "2.21.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --configuration development",
+    "start": "ng serve --ssl --configuration development",
     "start-prod": "npx http-server ./dist/openvidu-components-testapp/ --port 4200",
     "build": "ng build openvidu-components-testapp --configuration production",
     "lib:serve": "ng build openvidu-angular --watch",
@@ -35,7 +35,7 @@
     "@angular/platform-browser-dynamic": "13.0.0",
     "@angular/router": "13.0.0",
     "autolinker": "3.14.3",
-    "openvidu-browser": "file:openvidu-browser-2.21.0.tgz",
+    "openvidu-browser": "2.21.0",
     "rxjs": "7.5.4",
     "tslib": "2.3.1",
     "zone.js": "0.11.4"
