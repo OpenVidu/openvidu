@@ -28,7 +28,7 @@ export class PanelService {
 	}
 
 	/**
-	 * Open or close the panel type received. Calling this method with the panel opened and the same type panel, will closes the panel.
+	 * Open or close the panel type received. Calling this method with the panel opened and the same type panel, will close the panel.
 	 * If the type is differente, it will switch to the properly panel.
 	 */
 	togglePanel(type: PanelType | string) {
