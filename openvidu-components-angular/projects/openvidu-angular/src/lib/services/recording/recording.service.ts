@@ -3,6 +3,9 @@ import { RecordingEvent } from 'openvidu-browser';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { RecordingStatus } from '../../models/recording.model';
 
+/**
+ * @internal
+ */
 export interface RecordingInfo {
 	status: RecordingStatus;
 	id: string;
@@ -10,6 +13,9 @@ export interface RecordingInfo {
 	reason?: string;
 }
 
+/**
+ * @internal
+ */
 @Injectable({
 	providedIn: 'root'
 })

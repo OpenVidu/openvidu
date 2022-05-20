@@ -523,7 +523,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		});
 	}
 
-	subscribeToRecordingStatus() {
+	private subscribeToRecordingStatus() {
 		//TODO: WIP
 		// this.recordingSubscription = this.recordingService.recordingStatusObs.pipe(skip(1)).subscribe((info: RecordingInfo) => {
 		// 	this.isRecording = info.status === RecordingStatus.STARTED;

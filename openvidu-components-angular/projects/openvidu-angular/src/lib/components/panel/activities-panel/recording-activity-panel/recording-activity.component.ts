@@ -3,6 +3,9 @@ import { Subscription } from 'rxjs';
 import { RecordingStatus } from '../../../../models/recording.model';
 import { RecordingService, RecordingInfo } from '../../../../services/recording/recording.service';
 
+/**
+ * @internal
+ */
 @Component({
 	selector: 'ov-recording-activity',
 	templateUrl: './recording-activity.component.html',

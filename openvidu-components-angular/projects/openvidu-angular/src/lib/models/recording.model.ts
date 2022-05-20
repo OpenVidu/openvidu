@@ -1,4 +1,7 @@
-export enum  RecordingStatus {
+/**
+ * @internal
+ */
+export enum RecordingStatus {
 	STARTED = 'STARTED',
 	STOPPED = 'STOPPED'
 }

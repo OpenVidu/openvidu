@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { PanelType } from '../../../models/panel.model';
 import { PanelService } from '../../../services/panel/panel.service';
 
+/**
+ * @internal
+ */
 @Component({
 	selector: 'ov-activities-panel',
 	templateUrl: './activities-panel.component.html',
