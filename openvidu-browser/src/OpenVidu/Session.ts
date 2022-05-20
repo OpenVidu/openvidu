@@ -443,7 +443,7 @@ export class Session extends EventDispatcher {
             if (!stream.connection) {
                 return reject(new Error('The associated Connection object of this Publisher is null'));
             } else if (stream.connection !== this.connection) {
-                return reject(new Error('The associated Connection object of this Publisher is not your local Connection.' +
+                return reject(new Error('The associated Connection object of this Publisher is not your local Connection.  ' +
                     "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method"));
             } else {
 
