@@ -889,7 +889,14 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	}
 
 	private void checkSdkVersionCompliancy(Request<JsonObject> request, Participant participant) {
-		String clientVersion = getStringParam(request, ProtocolElements.JOINROOM_SDKVERSION_PARAM);
+		String clientVersion;
+		try {
+			clientVersion = getStringParam(request, ProtocolElements.JOINROOM_SDKVERSION_PARAM);
+		} catch (RuntimeException e) {
+			log.warn(
+					"Missing parameter 'sdkVersion'. Cannot check compatibility between openvidu-browser and openvidu-server");
+			return;
+		}
 		final String serverVersion = openviduBuildConfig.getOpenViduServerVersion();
 		try {
 			new VersionComparator().checkVersionCompatibility(clientVersion, serverVersion);
