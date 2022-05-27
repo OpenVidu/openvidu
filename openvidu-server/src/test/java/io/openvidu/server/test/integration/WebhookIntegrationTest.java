@@ -167,8 +167,8 @@ public class WebhookIntegrationTest {
 
 			// Client should have already received "connectionCreated" RPC response
 			// nonetheless
-			verify(sessionEventsHandler, times(1)).onParticipantJoined(refEq(participant), anyString(), anyString(), anySet(),
-					anyInt(), refEq(null));
+			verify(sessionEventsHandler, times(1)).onParticipantJoined(refEq(participant), refEq(null), anyString(),
+					anySet(), anyInt(), refEq(null));
 
 			// Now webhook response for event "participantJoined" should be received
 			CustomWebhook.waitForEvent("participantJoined", 1000, TimeUnit.MILLISECONDS);

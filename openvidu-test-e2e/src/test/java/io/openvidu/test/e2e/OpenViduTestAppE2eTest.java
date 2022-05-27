@@ -1185,7 +1185,43 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
 
-		Thread.sleep(5000);
+		Thread.sleep(3000);
+
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
+
+		// A new user with PUBLISHER role should trigger recordingStarted event
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("session-name-input-1")).clear();
+		user.getDriver().findElement(By.id("session-name-input-1")).sendKeys(sessionName);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publish-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .subscribe-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
+
+		// A new user with SUBSCRIBER role should not trigger recordingStarted event
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("session-name-input-2")).clear();
+		user.getDriver().findElement(By.id("session-name-input-2")).sendKeys(sessionName);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-2 .publish-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-2 .subscribe-checkbox")).click();
+		user.getDriver().findElement(By.id("session-settings-btn-2")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("radio-btn-sub")).click();
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-2 .join-btn")).click();
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 9);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 3);
+
+		// No third recordingStarted event should be triggered for the SUBSCRIBER user
+		Thread.sleep(3000);
+		Assert.assertEquals(user.getEventManager().getNumEvents("recordingStarted").intValue(), 2);
+
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(500);
 
 		user.getDriver().findElement(By.id("recording-id-field")).clear();
 		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(sessionName);
@@ -1256,7 +1292,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
 
-		gracefullyLeaveParticipants(user, 1);
+		gracefullyLeaveParticipants(user, 3);
 	}
 
 	@Test

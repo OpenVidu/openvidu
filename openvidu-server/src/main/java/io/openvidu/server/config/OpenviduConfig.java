@@ -32,10 +32,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
@@ -413,23 +414,26 @@ public class OpenviduConfig {
 		return this.mediaNodesPublicIps;
 	}
 
-	public OpenViduRole[] getRolesFromRecordingNotification() {
-		OpenViduRole[] roles;
+	public Set<OpenViduRole> getRolesFromRecordingNotification() {
+		Set<OpenViduRole> roles = new HashSet<>();
 		switch (this.openviduRecordingNotification) {
 		case none:
-			roles = new OpenViduRole[0];
 			break;
 		case moderator:
-			roles = new OpenViduRole[] { OpenViduRole.MODERATOR };
+			roles.add(OpenViduRole.MODERATOR);
 			break;
 		case publisher_moderator:
-			roles = new OpenViduRole[] { OpenViduRole.PUBLISHER, OpenViduRole.MODERATOR };
+			roles.add(OpenViduRole.PUBLISHER);
+			roles.add(OpenViduRole.MODERATOR);
 			break;
 		case all:
-			roles = new OpenViduRole[] { OpenViduRole.SUBSCRIBER, OpenViduRole.PUBLISHER, OpenViduRole.MODERATOR };
+			roles.add(OpenViduRole.SUBSCRIBER);
+			roles.add(OpenViduRole.PUBLISHER);
+			roles.add(OpenViduRole.MODERATOR);
 			break;
 		default:
-			roles = new OpenViduRole[] { OpenViduRole.PUBLISHER, OpenViduRole.MODERATOR };
+			roles.add(OpenViduRole.PUBLISHER);
+			roles.add(OpenViduRole.MODERATOR);
 		}
 		return roles;
 	}
@@ -547,7 +551,8 @@ public class OpenviduConfig {
 
 	protected List<String> getNonUserProperties() {
 		return Arrays.asList("server.port", "SERVER_PORT", "DOTENV_PATH", "COTURN_IP", "COTURN_PORT",
-				"COTURN_INTERNAL_RELAY", "COTURN_SHARED_SECRET_KEY", "OPENVIDU_RECORDING_IMAGE", "OPENVIDU_RECORDING_ENABLE_GPU");
+				"COTURN_INTERNAL_RELAY", "COTURN_SHARED_SECRET_KEY", "OPENVIDU_RECORDING_IMAGE",
+				"OPENVIDU_RECORDING_ENABLE_GPU");
 	}
 
 	protected List<String> getNonPrintablePropertiesIfEmpty() {

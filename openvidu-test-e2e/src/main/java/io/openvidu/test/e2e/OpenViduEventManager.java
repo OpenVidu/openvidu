@@ -255,7 +255,7 @@ public class OpenViduEventManager {
 		return success;
 	}
 
-	private AtomicInteger getNumEvents(String eventName) {
+	public AtomicInteger getNumEvents(String eventName) {
 		return this.eventNumbers.computeIfAbsent(eventName, k -> new AtomicInteger(0));
 	}
 

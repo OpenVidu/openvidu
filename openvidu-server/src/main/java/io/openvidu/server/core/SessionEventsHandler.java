@@ -74,8 +74,8 @@ public class SessionEventsHandler {
 		CDR.recordSessionDestroyed(session, reason);
 	}
 
-	public void onParticipantJoined(Participant participant, String sessionId, String coturnIp, Set<Participant> existingParticipants,
-			Integer transactionId, OpenViduException error) {
+	public void onParticipantJoined(Participant participant, Recording recording, String coturnIp,
+			Set<Participant> existingParticipants, Integer transactionId, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
@@ -179,7 +179,9 @@ public class SessionEventsHandler {
 		}
 
 		if (participant.getToken() != null) {
+
 			result.addProperty(ProtocolElements.PARTICIPANTJOINED_RECORD_PARAM, participant.getToken().record());
+
 			if (participant.getToken().getRole() != null) {
 				result.addProperty(ProtocolElements.PARTICIPANTJOINED_ROLE_PARAM,
 						participant.getToken().getRole().name());
@@ -198,6 +200,11 @@ public class SessionEventsHandler {
 				result.addProperty(ProtocolElements.PARTICIPANTJOINED_TURNCREDENTIAL_PARAM,
 						participant.getToken().getTurnCredentials().getCredential());
 			}
+			if (recording != null) {
+				result.addProperty(ProtocolElements.PARTICIPANTJOINED_RECORDINGID_PARAM, recording.getId());
+				result.addProperty(ProtocolElements.PARTICIPANTJOINED_RECORDINGNAME_PARAM, recording.getName());
+			}
+
 		}
 
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
@@ -680,18 +687,12 @@ public class SessionEventsHandler {
 		recordingsToSendClientEvents.put(recording.getSessionId(), recording);
 	}
 
-	protected Set<Participant> filterParticipantsByRole(OpenViduRole[] roles, Set<Participant> participants) {
+	protected Set<Participant> filterParticipantsByRole(Set<OpenViduRole> roles, Set<Participant> participants) {
 		return participants.stream().filter(part -> {
 			if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(part.getParticipantPublicId())) {
 				return false;
 			}
-			boolean isRole = false;
-			for (OpenViduRole role : roles) {
-				isRole = role.equals(part.getToken().getRole());
-				if (isRole)
-					break;
-			}
-			return isRole;
+			return roles.contains(part.getToken().getRole());
 		}).collect(Collectors.toSet());
 	}
 

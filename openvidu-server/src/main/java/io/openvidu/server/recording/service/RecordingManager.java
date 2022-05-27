@@ -492,6 +492,14 @@ public class RecordingManager {
 				|| this.sessionsRecordingsStarting.get(sessionId) != null);
 	}
 
+	public Recording getActiveRecordingForSession(String sessionId) {
+		Recording recording = this.sessionsRecordings.get(sessionId);
+		if (recording == null) {
+			recording = this.sessionsRecordingsStarting.get(sessionId);
+		}
+		return recording;
+	}
+
 	public boolean sessionIsBeingRecordedIndividual(String sessionId) {
 		if (!sessionIsBeingRecorded(sessionId)) {
 			return false;

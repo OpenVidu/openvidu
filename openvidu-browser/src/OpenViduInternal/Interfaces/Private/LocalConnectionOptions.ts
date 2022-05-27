@@ -36,5 +36,7 @@ export interface LocalConnectionOptions {
     mediaServer: string;
     videoSimulcast: boolean;
     life: number;
-    customIceServers?: IceServerProperties[]
+    customIceServers?: IceServerProperties[];
+    recordingId?: string; // Defined if the session is being recorded and the client must be notified
+    recordingName?: string; // Defined if the session is being recorded and the client must be notified
 }

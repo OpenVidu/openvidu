@@ -166,6 +166,8 @@ public class ProtocolElements {
 	public static final String PARTICIPANTJOINED_CUSTOM_ICE_SERVERS = "customIceServers";
 	public static final String PARTICIPANTJOINED_TURNUSERNAME_PARAM = "turnUsername";
 	public static final String PARTICIPANTJOINED_TURNCREDENTIAL_PARAM = "turnCredential";
+	public static final String PARTICIPANTJOINED_RECORDINGID_PARAM = "recordingId";
+	public static final String PARTICIPANTJOINED_RECORDINGNAME_PARAM = "recordingName";
 
 	public static final String PARTICIPANTLEFT_METHOD = "participantLeft";
 	public static final String PARTICIPANTLEFT_NAME_PARAM = "connectionId";

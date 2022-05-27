@@ -1436,6 +1436,10 @@ export class Session extends EventDispatcher {
                                 this.ee.emitEvent('streamCreated', [new StreamEvent(false, this, 'streamCreated', stream, '')]);
                             });
 
+                            if (!!response.recordingId && !!response.recordingName) {
+                                this.ee.emitEvent('recordingStarted', [new RecordingEvent(this, 'recordingStarted', response.recordingId, response.recordingName)]);
+                            }
+
                             return resolve();
                         }
                     });
