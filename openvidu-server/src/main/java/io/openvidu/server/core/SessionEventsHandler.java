@@ -189,9 +189,18 @@ public class SessionEventsHandler {
 
 			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNIP_PARAM, coturnIp);
 			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNPORT_PARAM, openviduConfig.getCoturnPort());
-			List<IceServerProperties> customIceServers = participant.getToken().getCustomIceServers();
+			if (participant.getToken().getTurnCredentials() != null) {
+				result.addProperty(ProtocolElements.PARTICIPANTJOINED_TURNUSERNAME_PARAM,
+						participant.getToken().getTurnCredentials().getUsername());
+				result.addProperty(ProtocolElements.PARTICIPANTJOINED_TURNCREDENTIAL_PARAM,
+						participant.getToken().getTurnCredentials().getCredential());
+			}
 
-			if (customIceServers == null || customIceServers.isEmpty()) {
+			List<IceServerProperties> customIceServers = participant.getToken().getCustomIceServers();
+			if (customIceServers != null && !customIceServers.isEmpty()) {
+				result.add(ProtocolElements.PARTICIPANTJOINED_CUSTOM_ICE_SERVERS,
+						participant.getToken().getCustomIceServersAsJson());
+			} else if (coturnIp != null && participant.getToken().getTurnCredentials() != null) {
 				JsonArray defaultCustomIceServers = new JsonArray();
 				IceServerProperties defaultIceServer = new IceServerProperties.Builder()
 						.url("turn:" + coturnIp + ":" + openviduConfig.getCoturnPort())
@@ -199,15 +208,6 @@ public class SessionEventsHandler {
 						.credential(participant.getToken().getTurnCredentials().getCredential())
 						.build();
 				defaultCustomIceServers.add(defaultIceServer.toJson());
-			} else {
-				result.add(ProtocolElements.PARTICIPANTJOINED_CUSTOM_ICE_SERVERS,
-						participant.getToken().getCustomIceServersAsJson());
-			}
-			if (participant.getToken().getTurnCredentials() != null) {
-				result.addProperty(ProtocolElements.PARTICIPANTJOINED_TURNUSERNAME_PARAM,
-						participant.getToken().getTurnCredentials().getUsername());
-				result.addProperty(ProtocolElements.PARTICIPANTJOINED_TURNCREDENTIAL_PARAM,
-						participant.getToken().getTurnCredentials().getCredential());
 			}
 			if (recording != null) {
 				result.addProperty(ProtocolElements.PARTICIPANTJOINED_RECORDINGID_PARAM, recording.getId());
