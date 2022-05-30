@@ -8,7 +8,7 @@
 
 ## Requirements:
 
-You will need angular-cli (and of course NPM) to serve the Angular frontend. You can check it with the following command:
+You will need NPM and Angular CLI to serve the Angular app. Check your installation with the following command:
 
 ```bash
 npm -v
@@ -32,7 +32,7 @@ ng add @angular/material
 ## Configure it
 
 
-You need import the openvidu-angular module in your `app.module.ts`:
+You need to import the openvidu-angular module in your `app.module.ts`:
 
 ```typescript
 import { OpenViduAngularConfig, OpenViduAngularModule } from 'openvidu-angular';
@@ -50,7 +50,7 @@ const config: OpenViduAngularConfig = {
 })
 ```
 
-You also can add the default styles in your `styles.scss` file:
+You can also add the default styles in your `styles.scss` file:
 
 ```css
 :root {
