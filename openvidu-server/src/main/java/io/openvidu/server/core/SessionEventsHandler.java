@@ -190,7 +190,16 @@ public class SessionEventsHandler {
 			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNIP_PARAM, coturnIp);
 			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNPORT_PARAM, openviduConfig.getCoturnPort());
 			List<IceServerProperties> customIceServers = participant.getToken().getCustomIceServers();
-			if (customIceServers != null && !customIceServers.isEmpty()) {
+
+			if (customIceServers == null || customIceServers.isEmpty()) {
+				JsonArray defaultCustomIceServers = new JsonArray();
+				IceServerProperties defaultIceServer = new IceServerProperties.Builder()
+						.url("turn:" + coturnIp + ":" + openviduConfig.getCoturnPort())
+						.username(participant.getToken().getTurnCredentials().getUsername())
+						.credential(participant.getToken().getTurnCredentials().getCredential())
+						.build();
+				defaultCustomIceServers.add(defaultIceServer.toJson());
+			} else {
 				result.add(ProtocolElements.PARTICIPANTJOINED_CUSTOM_ICE_SERVERS,
 						participant.getToken().getCustomIceServersAsJson());
 			}

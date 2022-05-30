@@ -1544,13 +1544,6 @@ export class Session extends EventDispatcher {
                 }
                 this.openvidu.iceServers.push(rtcIceServer);
             }
-        } else if (opts.coturnIp != null && opts.coturnPort != null && opts.turnUsername != null && opts.turnCredential != null) {
-            const turnUrl1 = 'turn:' + opts.coturnIp + ':' + opts.coturnPort;
-            this.openvidu.iceServers = [
-                { urls: [turnUrl1], username: opts.turnUsername, credential: opts.turnCredential }
-            ];
-            logger.log("STUN/TURN server IP: " + opts.coturnIp);
-            logger.log('TURN temp credentials [' + opts.turnUsername + ':' + opts.turnCredential + ']');
         }
         this.openvidu.role = opts.role;
         this.openvidu.finalUserId = opts.finalUserId;
