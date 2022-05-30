@@ -208,6 +208,7 @@ public class SessionEventsHandler {
 						.credential(participant.getToken().getTurnCredentials().getCredential())
 						.build();
 				defaultCustomIceServers.add(defaultIceServer.toJson());
+				result.add(ProtocolElements.PARTICIPANTJOINED_CUSTOM_ICE_SERVERS, defaultCustomIceServers);
 			}
 			if (recording != null) {
 				result.addProperty(ProtocolElements.PARTICIPANTJOINED_RECORDINGID_PARAM, recording.getId());
