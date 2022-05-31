@@ -89,7 +89,7 @@ export class OpenVidu {
   /**
    * @param hostname URL where your instance of OpenVidu Server is up an running.
    *                 It must be the full URL (e.g. `https://12.34.56.78:1234/`)
-   *
+   * 
    * @param secret Secret used on OpenVidu Server initialization
    */
   constructor(private hostname: string, secret: string) {
@@ -101,9 +101,9 @@ export class OpenVidu {
    * Creates an OpenVidu session. The session identifier will be available at property [[Session.sessionId]]
    *
    * @returns A Promise that is resolved to the [[Session]] if success and rejected with an Error object if not.
-   * This Error object has as `message` property with a status code carrying a specific meaning
+   * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#post-recording-start)).
-   *
+   * 
    * This method will never return an Error with status `409`. If a session with the same `customSessionId` already
    * exists in OpenVidu Server, a [[Session.fetch]] operation is performed in the background and the updated Session
    * object is returned.
@@ -134,7 +134,7 @@ export class OpenVidu {
    * @param properties Custom RecordingProperties to apply to this Recording. This will override the global default values set to the Session with [[SessionProperties.defaultRecordingProperties]]
    *
    * @returns A Promise that is resolved to the [[Recording]] if it successfully started (the recording can be stopped with guarantees) and rejected with an Error
-   * object if not. This Error object has as `message` property with a status code carrying a specific meaning
+   * object if not. This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#post-recording-start)).
    */
   public startRecording(sessionId: string, param2?: string | RecordingProperties): Promise<Recording> {
@@ -196,7 +196,7 @@ export class OpenVidu {
             resolve(r);
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
-            reject(res.status);
+            reject(new Error(res.status.toString()));
           }
         }).catch(error => {
           this.handleError(error, reject);
@@ -210,7 +210,7 @@ export class OpenVidu {
    * @param recordingId The `id` property of the [[Recording]] you want to stop
    *
    * @returns A Promise that is resolved to the [[Recording]] if it successfully stopped and rejected with an Error object if not.
-   * This Error object has as `message` property with a status code carrying a specific meaning
+   * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#post-recording-stop)).
    */
   public stopRecording(recordingId: string): Promise<Recording> {
@@ -239,7 +239,7 @@ export class OpenVidu {
             resolve(r);
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
-            reject(res.status);
+            reject(new Error(res.status.toString()));
           }
         }).catch(error => {
           this.handleError(error, reject);
@@ -253,7 +253,7 @@ export class OpenVidu {
    * @param recordingId The `id` property of the [[Recording]] you want to retrieve
    *
    * @returns A Promise that is resolved to the [[Recording]] if it successfully stopped and rejected with an Error object if not.
-   * This Error object has as `message` property with a status code carrying a specific meaning
+   * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#get-recording)).
    */
   public getRecording(recordingId: string): Promise<Recording> {
@@ -274,7 +274,7 @@ export class OpenVidu {
             resolve(new Recording(res.data));
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
-            reject(res.status);
+            reject(new Error(res.status.toString()));
           }
         }).catch(error => {
           this.handleError(error, reject);
@@ -311,7 +311,7 @@ export class OpenVidu {
             resolve(recordingArray);
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
-            reject(res.status);
+            reject(new Error(res.status.toString()));
           }
         }).catch(error => {
           this.handleError(error, reject);
@@ -325,7 +325,7 @@ export class OpenVidu {
    * @param recordingId
    *
    * @returns A Promise that is resolved if the Recording was successfully deleted and rejected with an Error object if not.
-   * This Error object has as `message` property with a status code carrying a specific meaning
+   * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#delete-recording)).
    */
   public deleteRecording(recordingId: string): Promise<Error> {
@@ -346,7 +346,7 @@ export class OpenVidu {
             resolve(undefined);
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
-            reject(res.status);
+            reject(new Error(res.status.toString()));
           }
         }).catch(error => {
           this.handleError(error, reject);
@@ -416,7 +416,7 @@ export class OpenVidu {
             resolve(hasChanged);
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
-            reject(res.status);
+            reject(new Error(res.status.toString()));
           }
         }).catch(error => {
           this.handleError(error, reject);
@@ -573,7 +573,7 @@ export class OpenVidu {
             resolve({ changes: globalChanges, sessionChanges });
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
-            reject(res.status);
+            reject(new Error(res.status.toString()));
           }
         }).catch(error => {
           this.handleError(error, reject);
@@ -602,15 +602,15 @@ export class OpenVidu {
   handleError(error: AxiosError, reject: (reason?: any) => void) {
     if (error.response) {
       // The request was made and the server responded with a status code (not 2xx)
-      reject(error.response.status);
+      reject(new Error(error.response.status.toString()));
     } else if (error.request) {
       // The request was made but no response was received
       // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
       // http.ClientRequest in node.js
-      reject(error.request);
+      reject(new Error(error.request));
     } else {
       // Something happened in setting up the request that triggered an Error
-      reject(error.message);
+      reject(new Error(error.message));
     }
   }
 
