@@ -556,11 +556,11 @@ public abstract class MediaEndpoint {
 	 * the remote User Agent as a notification using the messaging capabilities of
 	 * the {@link Participant}.
 	 *
-	 * @see WebRtcEndpoint#addOnIceCandidateListener(org.kurento.client.EventListener)
+	 * @see WebRtcEndpoint#addIceCandidateFoundListener(org.kurento.client.EventListener)
 	 * @see Participant#sendIceCandidate(String, IceCandidate)
 	 * @throws OpenViduException if thrown, unable to register the listener
 	 */
-	protected void registerOnIceCandidateEventListener(String senderPublicId) throws OpenViduException {
+	protected void registerIceCandidateFoundEventListener(String senderPublicId) throws OpenViduException {
 		if (!this.isWeb()) {
 			return;
 		}

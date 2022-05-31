@@ -84,7 +84,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 	 * This lock protects the following method with read lock:
 	 * KurentoParticipant#receiveMediaFrom. It uses tryLock, immediately failing if
 	 * written locked
-	 * 
+	 *
 	 * Lock is written-locked upon KurentoParticipant#releasePublisherEndpoint and
 	 * KurentoParticipant#cancelReceivingMedia
 	 */
@@ -189,7 +189,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 	 */
 	public synchronized String publish(String sdpOffer, boolean doLoopback) {
 		String sdpResponse = processOffer(sdpOffer);
-		registerOnIceCandidateEventListener(this.getOwner().getParticipantPublicId());
+		registerIceCandidateFoundEventListener(this.getOwner().getParticipantPublicId());
 		if (doLoopback) {
 			connect(this.getEndpoint(), false);
 		} else {
