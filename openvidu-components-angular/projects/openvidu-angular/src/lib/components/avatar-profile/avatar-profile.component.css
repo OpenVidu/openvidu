@@ -1,4 +1,10 @@
 .poster {
+	height: 100%;
+	width: 100%;
+	background-color: #000000;
+}
+
+.initial {
 	position: absolute;
 	display: inline-grid;
     z-index: 1;

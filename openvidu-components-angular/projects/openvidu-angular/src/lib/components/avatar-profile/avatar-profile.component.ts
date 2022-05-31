@@ -7,8 +7,10 @@ import { Component, Input } from '@angular/core';
 @Component({
 	selector: 'ov-avatar-profile',
 	template: `
-		<div class="poster" [ngStyle]="{ 'background-color': color }">
-			<span id="poster-text">{{ letter }}</span>
+		<div class="poster">
+			<div class="initial" [ngStyle]="{ 'background-color': color }">
+				<span id="poster-text">{{ letter }}</span>
+			</div>
 		</div>
 	`,
 	styleUrls: ['./avatar-profile.component.css']
