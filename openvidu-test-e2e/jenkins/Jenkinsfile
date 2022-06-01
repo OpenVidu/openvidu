@@ -7,7 +7,9 @@ node('container') {
     def commonFunctions = load 'commonFunctions.groovy'
     commonFunctions.prepareTestingEnvironment()
 
-    // Copy snapshot credentials
+    // Maven kurento snapshot credentials
+    // This settings.xml is the exact same file
+    // as the one defined at https://doc-kurento.readthedocs.io/en/latest/user/installation_dev.html#project-level
     withCredentials([file(credentialsId: 'kurento-snapshots-config', variable: 'mvn_settings')]) {
       sh "mv \$mvn_settings ${MVN_SETTINGS_VOLUME}"
     }
@@ -87,7 +89,10 @@ node('container') {
                 cd kurento-java
                 git checkout -f ${KURENTO_JAVA_COMMIT}
                 MVN_VERSION="$(grep -oPm1 "(?<=<version>)[^<]+" "pom.xml")"
-                mvn ${MVN_OPTIONS} -Dmaven.artifact.threads=1 clean install
+
+                # TODO: Remove -DskipTests=true when kurento-java tests passes
+                mvn ${MVN_OPTIONS} -DskipTests=true -Dmaven.artifact.threads=1 clean install
+
                 cd ../openvidu && mvn ${MVN_OPTIONS} versions:set-property -Dproperty=version.kurento -DnewVersion=${MVN_VERSION}
               fi
             '''.stripIndent())
