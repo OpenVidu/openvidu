@@ -9,7 +9,7 @@ node('container') {
 
     // Copy snapshot credentials
     withCredentials([file(credentialsId: 'kurento-snapshots-config', variable: 'mvn_settings')]) {
-      sh "cp \$mvn_settings ${MVN_SETTINGS_VOLUME}"
+      sh "mv \$mvn_settings ${MVN_SETTINGS_VOLUME}"
     }
 
     // Clone and checkout OpenVidu/openvidu repository
