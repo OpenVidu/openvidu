@@ -89,10 +89,7 @@ node('container') {
                 cd kurento-java
                 git checkout -f ${KURENTO_JAVA_COMMIT}
                 MVN_VERSION="$(grep -oPm1 "(?<=<version>)[^<]+" "pom.xml")"
-
-                # TODO: Remove -DskipTests=true when kurento-java tests passes
-                mvn ${MVN_OPTIONS} -DskipTests=true -Dmaven.artifact.threads=1 clean install
-
+                mvn ${MVN_OPTIONS} -Dmaven.artifact.threads=1 clean install
                 cd ../openvidu && mvn ${MVN_OPTIONS} versions:set-property -Dproperty=version.kurento -DnewVersion=${MVN_VERSION}
               fi
             '''.stripIndent())
