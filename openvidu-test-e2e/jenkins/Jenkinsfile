@@ -1,11 +1,16 @@
 node('container') {
 
   withEnv(["MVN_SETTINGS_VOLUME=/opt/openvidu-settings.xml",
-  'MVN_OPTIONS=--settings /opt/openvidu-settings.xml -B']){
+  'MVN_OPTIONS=--settings /opt/openvidu-settings.xml -B']) {
     // Load and execute common functions Groovy script
     sh 'curl -O https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/jenkins/commonFunctions.groovy'
     def commonFunctions = load 'commonFunctions.groovy'
     commonFunctions.prepareTestingEnvironment()
+
+    // Copy snapshot credentials
+    withCredentials([file(credentialsId: 'kurento-snapshots-config', variable: 'mvn_settings')]) {
+      sh "cp \$mvn_settings ${MVN_SETTINGS_VOLUME}"
+    }
 
     // Clone and checkout OpenVidu/openvidu repository
     def commitId = "${OPENVIDU_COMMIT}"
@@ -17,7 +22,7 @@ node('container') {
                       '-v /opt/openvidu:/opt/openvidu',
                       '-v /opt/openvidu-cache/test-layouts:/opt/openvidu/test-layouts',
                       '-v /opt/openvidu-cache/.m2:/root/.m2',
-                      "-v ${MAVEN_SETTINGS}:${MVN_SETTINGS_VOLUME}"].join(' ')
+                      "-v ${MVN_SETTINGS_VOLUME}:${MVN_SETTINGS_VOLUME}"].join(' ')
 
     // Run openvidu/openvidu-test-e2e container
     docker.image("openvidu/openvidu-test-e2e:${DISTRO}").inside('--privileged -p 4200:4200 -p 4443:4443 -p 4114:4114 -u root -e MY_UID=0 ' + "${bindsArray}") {
