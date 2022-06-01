@@ -1009,14 +1009,18 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Filter
 		final CountDownLatch latch3 = new CountDownLatch(2);
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
-			threadAssertions.add("filter".equals(event.get("changedProperty").getAsString()));
-			threadAssertions.add("applyFilter".equals(event.get("reason").getAsString()));
-			threadAssertions.add(!event.has("oldValue"));
-			JsonObject newValue = event.get("newValue").getAsJsonObject();
-			threadAssertions.add("GStreamerFilter".equals(newValue.get("type").getAsString()));
-			JsonObject options = newValue.get("options").getAsJsonObject();
-			threadAssertions.add("videobalance saturation=0.0".equals(options.get("command").getAsString()));
-			latch3.countDown();
+			// As chrome may change video dimensions, ignore video dimensions event
+			if (!"videoDimensions".equals(event.get("changedProperty").getAsString())) {
+				threadAssertions.add("filter".equals(event.get("changedProperty").getAsString()));
+				threadAssertions.add("applyFilter".equals(event.get("reason").getAsString()));
+				threadAssertions.add(!event.has("oldValue"));
+				JsonObject newValue = event.get("newValue").getAsJsonObject();
+				threadAssertions.add("GStreamerFilter".equals(newValue.get("type").getAsString()));
+				JsonObject options = newValue.get("options").getAsJsonObject();
+				threadAssertions.add("videobalance saturation=0.0".equals(options.get("command").getAsString()));
+				latch3.countDown();
+			}
+
 		});
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .filter-btn")).click();
 		Thread.sleep(1000);
