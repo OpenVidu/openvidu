@@ -1,164 +1,169 @@
 node('container') {
-  // Load and execute common functions Groovy script
-  sh 'curl -O https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/jenkins/commonFunctions.groovy'
-  def commonFunctions = load 'commonFunctions.groovy'
-  commonFunctions.prepareTestingEnvironment()
 
-  // Clone and checkout OpenVidu/openvidu repository
-  def commitId = "${OPENVIDU_COMMIT}"
-  checkout([$class: 'GitSCM', branches: [[name: commitId]], userRemoteConfigs: [[url: 'https://github.com/OpenVidu/openvidu']], extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'openvidu']]])
+  withEnv(["MVN_SETTINGS_VOLUME=/opt/openvidu-settings.xml",
+  'MVN_OPTIONS=--settings /opt/openvidu-settings.xml -B']){
+    // Load and execute common functions Groovy script
+    sh 'curl -O https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/jenkins/commonFunctions.groovy'
+    def commonFunctions = load 'commonFunctions.groovy'
+    commonFunctions.prepareTestingEnvironment()
 
-  // Volumes to use in container openvidu/openvidu-test-e2e
-  def bindsArray = ['-v /var/run/docker.sock:/var/run/docker.sock:rw',
-                    '-v /dev/shm:/dev/shm',
-                    '-v /opt/openvidu:/opt/openvidu',
-                    '-v /opt/openvidu-cache/test-layouts:/opt/openvidu/test-layouts',
-                    '-v /opt/openvidu-cache/.m2:/root/.m2'].join(' ')
+    // Clone and checkout OpenVidu/openvidu repository
+    def commitId = "${OPENVIDU_COMMIT}"
+    checkout([$class: 'GitSCM', branches: [[name: commitId]], userRemoteConfigs: [[url: 'https://github.com/OpenVidu/openvidu']], extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'openvidu']]])
 
-  // Run openvidu/openvidu-test-e2e container
-  docker.image("openvidu/openvidu-test-e2e:${DISTRO}").inside('--privileged -p 4200:4200 -p 4443:4443 -p 4114:4114 -u root -e MY_UID=0 ' + "${bindsArray}") {
-    stage('Build 1') {
-      parallel 'OpenVidu Browser build': {
-        stage('OpenVidu Browser build') {
-          sh(script: '''#!/bin/bash -xe
-            cd openvidu/openvidu-browser
-            npm install --quiet --unsafe-perm
-            npm run build --quiet
-            npm pack --quiet
-            cp openvidu-browser-*.tgz /opt/openvidu
-          '''.stripIndent())
-        }
-      }, 'OpenVidu Node Client build': {
-        stage('OpenVidu Node Client build') {
-          sh(script: '''#!/bin/bash -xe
-            cd openvidu/openvidu-node-client
-            npm install --quiet --unsafe-perm
-            npm run build --quiet
-            npm pack --quiet
-            cp openvidu-node-client-*.tgz /opt/openvidu
-          '''.stripIndent())
-        }
-      }, 'OpenVidu Java Client build': {
-        stage('OpenVidu Java Client build') {
-          sh(script: '''#!/bin/bash -xe
-            cd openvidu/openvidu-java-client
-            mvn -B versions:set -DnewVersion=TEST
-            mvn -B clean compile package
-            mvn -B install:install-file -Dfile=target/openvidu-java-client-TEST.jar -DgroupId=io.openvidu -DartifactId=openvidu-java-client -Dversion=TEST -Dpackaging=jar
-          '''.stripIndent())
+    // Volumes to use in container openvidu/openvidu-test-e2e
+    def bindsArray = ['-v /var/run/docker.sock:/var/run/docker.sock:rw',
+                      '-v /dev/shm:/dev/shm',
+                      '-v /opt/openvidu:/opt/openvidu',
+                      '-v /opt/openvidu-cache/test-layouts:/opt/openvidu/test-layouts',
+                      '-v /opt/openvidu-cache/.m2:/root/.m2',
+                      "-v ${MAVEN_SETTINGS}:${MVN_SETTINGS_VOLUME}"].join(' ')
+
+    // Run openvidu/openvidu-test-e2e container
+    docker.image("openvidu/openvidu-test-e2e:${DISTRO}").inside('--privileged -p 4200:4200 -p 4443:4443 -p 4114:4114 -u root -e MY_UID=0 ' + "${bindsArray}") {
+      stage('Build 1') {
+        parallel 'OpenVidu Browser build': {
+          stage('OpenVidu Browser build') {
+            sh(script: '''#!/bin/bash -xe
+              cd openvidu/openvidu-browser
+              npm install --quiet --unsafe-perm
+              npm run build --quiet
+              npm pack --quiet
+              cp openvidu-browser-*.tgz /opt/openvidu
+            '''.stripIndent())
+          }
+        }, 'OpenVidu Node Client build': {
+          stage('OpenVidu Node Client build') {
+            sh(script: '''#!/bin/bash -xe
+              cd openvidu/openvidu-node-client
+              npm install --quiet --unsafe-perm
+              npm run build --quiet
+              npm pack --quiet
+              cp openvidu-node-client-*.tgz /opt/openvidu
+            '''.stripIndent())
+          }
+        }, 'OpenVidu Java Client build': {
+          stage('OpenVidu Java Client build') {
+            sh(script: '''#!/bin/bash -xe
+              cd openvidu/openvidu-java-client
+              mvn -B versions:set -DnewVersion=TEST
+              mvn -B clean compile package
+              mvn -B install:install-file -Dfile=target/openvidu-java-client-TEST.jar -DgroupId=io.openvidu -DartifactId=openvidu-java-client -Dversion=TEST -Dpackaging=jar
+            '''.stripIndent())
+          }
         }
       }
-    }
 
-    stage('Build 2') {
-      parallel 'OpenVidu TestApp build': {
-        stage('OpenVidu TestApp build') {
-          sh(script: '''#!/bin/bash -xe
-          cd openvidu/openvidu-testapp
-          npm install --force --unsafe-perm --quiet
-          npm install /opt/openvidu/openvidu-browser-*.tgz --quiet
-          npm install /opt/openvidu/openvidu-node-client-*.tgz --quiet
-          export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng build --prod --output-path=/opt/openvidu/testapp
-        '''.stripIndent())
-        }
-      }, 'OpenVidu Server dashboard build': {
-        stage('OpenVidu Server dashboard build') {
-          sh(script: '''#!/bin/bash -xe
-            cd openvidu/openvidu-server/src/dashboard
-            npm install --unsafe-perm --quiet
+      stage('Build 2') {
+        parallel 'OpenVidu TestApp build': {
+          stage('OpenVidu TestApp build') {
+            sh(script: '''#!/bin/bash -xe
+            cd openvidu/openvidu-testapp
+            npm install --force --unsafe-perm --quiet
             npm install /opt/openvidu/openvidu-browser-*.tgz --quiet
-            export NG_CLI_ANALYTICS="false" && npm run build-prod --quiet
+            npm install /opt/openvidu/openvidu-node-client-*.tgz --quiet
+            export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng build --prod --output-path=/opt/openvidu/testapp
           '''.stripIndent())
-        }
-      }, 'OpenVidu Server pre-build': {
-        stage('OpenVidu parent build') {
-          sh(script: '''#!/bin/bash -xe
-            if [[ ${KURENTO_JAVA_COMMIT} != "default" ]]; then
-              git clone https://github.com/Kurento/kurento-java.git
-              cd kurento-java
-              git checkout -f ${KURENTO_JAVA_COMMIT}
-              mvn -B clean install
-              MVN_VERSION=$(mvn -B -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
-              cd ../openvidu && mvn -B versions:set-property -Dproperty=version.kurento -DnewVersion=${MVN_VERSION}
-            fi
-          '''.stripIndent())
-          sh 'cd openvidu && mvn -B versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST'
-          sh 'cd openvidu && mvn -B -DskipTests=true clean install'
-        }
-        stage('OpenVidu Server unit tests') {
-          sh 'cd openvidu/openvidu-server && mvn -B -Dtest=io.openvidu.server.test.unit.*Test test'
-        }
-        stage('OpenVidu Server integration tests') {
-          sh 'cd openvidu/openvidu-server && mvn -B -Dtest=io.openvidu.server.test.integration.*Test test'
-        }
-        stage('OpenVidu Test E2E build') {
-          sh(script: '''#!/bin/bash -xe
-            cd openvidu/openvidu-test-browsers
-            mvn -B versions:set -DnewVersion=TEST && mvn -B clean install
-            cd ..
-            mvn -B versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST
-            mvn -B versions:set-property -Dproperty=version.openvidu.test.browsers -DnewVersion=TEST
-            cd openvidu-test-e2e
-            mvn -B -DskipTests=true clean install
-          '''.stripIndent())
+          }
+        }, 'OpenVidu Server dashboard build': {
+          stage('OpenVidu Server dashboard build') {
+            sh(script: '''#!/bin/bash -xe
+              cd openvidu/openvidu-server/src/dashboard
+              npm install --unsafe-perm --quiet
+              npm install /opt/openvidu/openvidu-browser-*.tgz --quiet
+              export NG_CLI_ANALYTICS="false" && npm run build-prod --quiet
+            '''.stripIndent())
+          }
+        }, 'OpenVidu Server pre-build': {
+          stage('OpenVidu parent build') {
+            sh(script: '''#!/bin/bash -xe
+              if [[ ${KURENTO_JAVA_COMMIT} != "default" ]]; then
+                git clone https://github.com/Kurento/kurento-java.git
+                cd kurento-java
+                git checkout -f ${KURENTO_JAVA_COMMIT}
+                MVN_VERSION="$(grep -oPm1 "(?<=<version>)[^<]+" "pom.xml")"
+                mvn ${MVN_OPTIONS} -Dmaven.artifact.threads=1 clean install
+                cd ../openvidu && mvn ${MVN_OPTIONS} versions:set-property -Dproperty=version.kurento -DnewVersion=${MVN_VERSION}
+              fi
+            '''.stripIndent())
+            sh 'cd openvidu && mvn ${MVN_OPTIONS} versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST'
+            sh 'cd openvidu && mvn ${MVN_OPTIONS} -DskipTests=true clean install'
+          }
+          stage('OpenVidu Server unit tests') {
+            sh 'cd openvidu/openvidu-server && mvn ${MVN_OPTIONS} -Dtest=io.openvidu.server.test.unit.*Test test'
+          }
+          stage('OpenVidu Server integration tests') {
+            sh 'cd openvidu/openvidu-server && mvn ${MVN_OPTIONS} -Dtest=io.openvidu.server.test.integration.*Test test'
+          }
+          stage('OpenVidu Test E2E build') {
+            sh(script: '''#!/bin/bash -xe
+              cd openvidu/openvidu-test-browsers
+              mvn ${MVN_OPTIONS} versions:set -DnewVersion=TEST && mvn ${MVN_OPTIONS} clean install
+              cd ..
+              mvn ${MVN_OPTIONS} versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST
+              mvn ${MVN_OPTIONS} versions:set-property -Dproperty=version.openvidu.test.browsers -DnewVersion=TEST
+              cd openvidu-test-e2e
+              mvn ${MVN_OPTIONS} -DskipTests=true clean install
+            '''.stripIndent())
+          }
         }
       }
-    }
 
-    stage('OpenVidu Server build') {
-      sh(script: '''#!/bin/bash -xe
-        cd openvidu/openvidu-server
-        mvn -B -DskipTests=true package
-        cp target/openvidu-server*.jar /opt/openvidu
-      '''.stripIndent())
-    }
-
-    // Kurento tests
-    stage ('Environment Launch Kurento') {
-      environmentLaunch('kurento')
-    }
-    try {
-      stage ('OpenVidu Kurento E2E tests') {
-        try {
-          openViduE2ETest("${KURENTO_MEDIA_SERVER_IMAGE}")
-        } catch (err) {
-          // In case of error, fail the stage
-          sh 'exit 1'
-        } finally {
-          junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
-          archiveArtifacts artifacts: '**/openvidu-server-*.log'
-        }
+      stage('OpenVidu Server build') {
+        sh(script: '''#!/bin/bash -xe
+          cd openvidu/openvidu-server
+          mvn ${MVN_OPTIONS} -DskipTests=true package
+          cp target/openvidu-server*.jar /opt/openvidu
+        '''.stripIndent())
       }
-    } catch (error) {
-      echo 'Test failed'
-      currentBuild.result = 'FAILURE'
-    } finally {
-      // Kill all environment for next test
-      environmentStop()
-    }
 
-    // Mediasoup tests
-    stage ('Environment Launch Mediasoup') {
-      environmentLaunch('mediasoup')
-    }
-    try {
-      stage ('OpenVidu Mediasoup E2E tests') {
-        try {
-          openViduE2ETest("openvidu/mediasoup-controller:${MEDIASOUP_CONTROLLER_VERSION}")
-        } catch (err) {
-          // In case of error, fail the stage
-          sh 'exit 1'
-        } finally {
-          junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
-          archiveArtifacts artifacts: '**/openvidu-server-*.log'
-        }
+      // Kurento tests
+      stage ('Environment Launch Kurento') {
+        environmentLaunch('kurento')
       }
-    } catch (error) {
-      echo 'Test failed'
-      currentBuild.result = 'FAILURE'
-    } finally {
-      environmentStop()
-      commonFunctions.removeStrandedContainers(false)
+      try {
+        stage ('OpenVidu Kurento E2E tests') {
+          try {
+            openViduE2ETest("${KURENTO_MEDIA_SERVER_IMAGE}")
+          } catch (err) {
+            // In case of error, fail the stage
+            sh 'exit 1'
+          } finally {
+            junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
+            archiveArtifacts artifacts: '**/openvidu-server-*.log'
+          }
+        }
+      } catch (error) {
+        echo 'Test failed'
+        currentBuild.result = 'FAILURE'
+      } finally {
+        // Kill all environment for next test
+        environmentStop()
+      }
+
+      // Mediasoup tests
+      stage ('Environment Launch Mediasoup') {
+        environmentLaunch('mediasoup')
+      }
+      try {
+        stage ('OpenVidu Mediasoup E2E tests') {
+          try {
+            openViduE2ETest("openvidu/mediasoup-controller:${MEDIASOUP_CONTROLLER_VERSION}")
+          } catch (err) {
+            // In case of error, fail the stage
+            sh 'exit 1'
+          } finally {
+            junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
+            archiveArtifacts artifacts: '**/openvidu-server-*.log'
+          }
+        }
+      } catch (error) {
+        echo 'Test failed'
+        currentBuild.result = 'FAILURE'
+      } finally {
+        environmentStop()
+        commonFunctions.removeStrandedContainers(false)
+      }
     }
   }
 }
@@ -229,7 +234,7 @@ def openViduE2ETest(mediaServerImage) {
         if [[ $mediaServerImage == *"openvidu/mediasoup-controller"* ]]; then
           ENV_VARS+=" -DOPENVIDU_PRO_LICENSE=${openviduProLicense} -DOPENVIDU_PRO_LICENSE_API=${openviduProLicenseApi}"
         fi
-        sudo mvn -B ${ENV_VARS} test
+        sudo mvn ${MVN_OPTIONS} ${ENV_VARS} test
       '''.stripIndent())
   }
 }
