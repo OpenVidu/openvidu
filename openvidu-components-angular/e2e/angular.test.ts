@@ -317,6 +317,41 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 		expect(await element.isDisplayed()).to.be.true;
 	});
 
+	it('should inject the CUSTOM PANEL with ACTIVITIES PANEL only', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovPanel-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('ovActivitiesPanel-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		// Check if toolbar panel buttons are present
+		element = await browser.wait(until.elementLocated(By.id('menu-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Click on button for opening chat panel
+		element = await browser.wait(until.elementLocated(By.id('activities-panel-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		// Check if default activities panel is not present
+		element = await browser.findElements(By.id('default-activities-panel'));
+		expect(element.length).equals(0);
+
+		// Check if custom chat panel is not present
+		element = await browser.findElements(By.id('custom-activities-panel'));
+		expect(element.length).equals(1);
+		element = await browser.wait(until.elementLocated(By.id('activities-panel-title')), TIMEOUT);
+		await browser.wait(until.elementTextMatches(element, /CUSTOM ACTIVITIES PANEL/), TIMEOUT);
+		expect(await element.getAttribute("innerText")).equals('CUSTOM ACTIVITIES PANEL');
+	});
+
 	it('should inject the CUSTOM PANEL with PARTICIPANTS PANEL only and without children', async () => {
 		let element;
 		await browser.get(`${url}`);
@@ -480,6 +515,35 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 	});
 
 
+	it('should inject an ACTIVITIES PANEL only', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovActivitiesPanel-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		// Check if toolbar panel buttons are present
+		element = await browser.wait(until.elementLocated(By.id('menu-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Click on button for opening additional panel
+		const panelBtn = await browser.wait(until.elementLocated(By.id('activities-panel-btn')), TIMEOUT);
+		expect(await panelBtn.isDisplayed()).to.be.true;
+		await panelBtn.click();
+
+		// Check if default panel is not present
+		element = await browser.findElements(By.id('default-activities-panel'));
+		expect(element.length).equals(0);
+
+		// Check if custom panel is present
+		element = await browser.findElements(By.id('custom-activities-panel'));
+		expect(element.length).equals(1);
+	});
+
 	it('should inject an ADDITIONAL PANEL only', async () => {
 		let element;
 		await browser.get(`${url}`);
@@ -558,7 +622,7 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 		element = await browser.findElements(By.id('default-chat-panel'));
 		expect(element.length).equals(0);
 
-		// Check if custom chat panel is not present
+		// Check if custom chat panel is present
 		element = await browser.wait(until.elementLocated(By.id('custom-chat-panel')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
@@ -962,6 +1026,31 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		expect(element.length).equals(0);
 	});
 
+	it('should HIDE the ACTIVITIES PANEL BUTTON', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovToolbar-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('activitiesPanelButton-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('toolbar')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.wait(until.elementLocated(By.id('menu-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Check if participants button does not exist
+		element = await browser.findElements(By.id('activities-panel-btn'));
+		expect(element.length).equals(0);
+	});
+
 	it('should HIDE the DISPLAY LOGO', async () => {
 		let element;
 		await browser.get(`${url}`);
@@ -1030,6 +1119,13 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
+		// Open more options menu
+		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
+		await element.click();
+
+		// Checking if fullscreen button is not present
+		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
 		element = await browser.findElements(By.id('fullscreen-btn'));
 		expect(element.length).equals(0);
 	});
@@ -1077,6 +1173,8 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
+
+
 
 		element = await browser.findElements(By.id('screenshare-btn'));
 		expect(element.length).equals(0);
@@ -1344,13 +1442,104 @@ describe('Testing EVENTS', () => {
 		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
-		// Clicking to leave button
+		// Open more options menu
+		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
+		await element.click();
+
+		// Checking if fullscreen button is not present
+		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
 		const fullscreenButton = await browser.findElement(By.id('fullscreen-btn'));
 		expect(await fullscreenButton.isDisplayed()).to.be.true;
 		await fullscreenButton.click();
 
+
 		// Checking if onFullscreenButtonClicked has been received
 		element = await browser.wait(until.elementLocated(By.id('onFullscreenButtonClicked')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+	});
+
+	it('should receive the onParticipantsPanelButtonClicked event', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovToolbar-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Checking if toolbar is present
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Clicking to participants button
+		const participantsButton = await browser.findElement(By.id('participants-panel-btn'));
+		expect(await participantsButton.isDisplayed()).to.be.true;
+		await participantsButton.click();
+
+		// Checking if onParticipantsPanelButtonClicked has been received
+		element = await browser.wait(until.elementLocated(By.id('onParticipantsPanelButtonClicked')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+	});
+
+	it('should receive the onChatPanelButtonClicked event', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovToolbar-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Checking if toolbar is present
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Clicking to chat button
+		const chatButton = await browser.findElement(By.id('chat-panel-btn'));
+		expect(await chatButton.isDisplayed()).to.be.true;
+		await chatButton.click();
+
+		// Checking if onChatPanelButtonClicked has been received
+		element = await browser.wait(until.elementLocated(By.id('onChatPanelButtonClicked')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+	});
+
+	it('should receive the onActivitiesPanelButtonClicked event', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		element = await browser.wait(until.elementLocated(By.id('ovToolbar-checkbox')), TIMEOUT);
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('apply-btn')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Checking if toolbar is present
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Clicking to activities button
+		const activitiesButton = await browser.findElement(By.id('activities-panel-btn'));
+		expect(await activitiesButton.isDisplayed()).to.be.true;
+		await activitiesButton.click();
+
+		// Checking if onActivitiesPanelButtonClicked has been received
+		element = await browser.wait(until.elementLocated(By.id('onActivitiesPanelButtonClicked')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 	});
 });

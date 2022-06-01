@@ -6,6 +6,8 @@ var AUDIO_MUTED;
 
 var SCREENSHARE_BUTTON;
 var FULLSCREEN_BUTTON;
+var ACTIVITIES_PANEL_BUTTON;
+var RECORDING_BUTTON;
 var CHAT_PANEL_BUTTON;
 var DISPLAY_LOGO;
 var DISPLAY_SESSION_NAME;
@@ -15,6 +17,8 @@ var SETTINGS_BUTTON;
 var LEAVE_BUTTON;
 var PARTICIPANT_MUTE_BUTTON;
 var PARTICIPANTS_PANEL_BUTTON;
+var ACTIVITIES_RECORDING_ACTIVITY;
+var RECORDING_ERROR;
 
 var SESSION_NAME;
 
@@ -27,13 +31,18 @@ $(document).ready(() => {
     PARTICIPANT_NAME = url.searchParams.get("participantName") || 'TEST_USER';
     PREJOIN = url.searchParams.get("prejoin") === null ? true : url.searchParams.get("prejoin") === 'true';
     VIDEO_MUTED = url.searchParams.get("videoMuted") === null ? false : url.searchParams.get("videoMuted")  === 'true';
-    console.log("video muted", url.searchParams.get("videoMuted"));
     AUDIO_MUTED = url.searchParams.get("audioMuted") === null ? false : url.searchParams.get("audioMuted") === 'true';
 	SCREENSHARE_BUTTON = url.searchParams.get("screenshareBtn") === null ? true : url.searchParams.get("screenshareBtn") === 'true';
+    RECORDING_BUTTON = url.searchParams.get("recordingBtn") === null ? true : url.searchParams.get("recordingBtn") === 'true';
 	FULLSCREEN_BUTTON = url.searchParams.get("fullscreenBtn") === null ? true : url.searchParams.get("fullscreenBtn") === 'true';
     LEAVE_BUTTON = url.searchParams.get("leaveBtn") === null ? true : url.searchParams.get("leaveBtn") === 'true';
+    ACTIVITIES_PANEL_BUTTON = url.searchParams.get("activitiesPanelBtn") === null ? true : url.searchParams.get("activitiesPanelBtn") === 'true';
 	CHAT_PANEL_BUTTON = url.searchParams.get("chatPanelBtn") === null ? true : url.searchParams.get("chatPanelBtn") === 'true';
     PARTICIPANTS_PANEL_BUTTON = url.searchParams.get("participantsPanelBtn") === null ? true : url.searchParams.get("participantsPanelBtn") === 'true';
+    ACTIVITIES_RECORDING_ACTIVITY = url.searchParams.get("activitiesPanelRecordingActivity") === null ? true : url.searchParams.get("activitiesPanelRecordingActivity") === 'true';
+    if(url.searchParams.get("recordingError") !== null) {
+        RECORDING_ERROR = url.searchParams.get("recordingError");
+    }
 
 	DISPLAY_LOGO = url.searchParams.get("displayLogo") === null ? true : url.searchParams.get("displayLogo") === 'true';
 	DISPLAY_SESSION_NAME = url.searchParams.get("displaySessionName") === null ? true : url.searchParams.get("displaySessionName") === 'true';
@@ -54,7 +63,32 @@ $(document).ready(() => {
     webComponent.addEventListener('onToolbarScreenshareButtonClicked', (event) => appendElement('onToolbarScreenshareButtonClicked'));
     webComponent.addEventListener('onToolbarParticipantsPanelButtonClicked', (event) => appendElement('onToolbarParticipantsPanelButtonClicked'));
     webComponent.addEventListener('onToolbarChatPanelButtonClicked', (event) => appendElement('onToolbarChatPanelButtonClicked'));
+    webComponent.addEventListener('onToolbarActivitiesPanelButtonClicked', (event) => appendElement('onToolbarActivitiesPanelButtonClicked'));
     webComponent.addEventListener('onToolbarFullscreenButtonClicked', (event) => appendElement('onToolbarFullscreenButtonClicked'));
+
+    webComponent.addEventListener('onToolbarStartRecordingClicked', async (event) => {
+        appendElement('onToolbarStartRecordingClicked');
+        RECORDING_ID = await startRecording(SESSION_NAME);
+
+    });
+    webComponent.addEventListener('onToolbarStopRecordingClicked', async (event) => {
+        appendElement('onToolbarStopRecordingClicked');
+        await stopRecording(RECORDING_ID);
+    });
+
+    webComponent.addEventListener('onActivitiesPanelStartRecordingClicked', async (event) => {
+        appendElement('onActivitiesPanelStartRecordingClicked');
+        RECORDING_ID = await startRecording(SESSION_NAME);
+    });
+
+    webComponent.addEventListener('onActivitiesPanelStopRecordingClicked', async (event) => {
+        appendElement('onActivitiesPanelStopRecordingClicked');
+        await stopRecording(RECORDING_ID);
+    });
+
+    webComponent.addEventListener('onActivitiesPanelDownloadRecordingClicked', (event) => appendElement('onActivitiesPanelDownloadRecordingClicked'));
+    webComponent.addEventListener('onActivitiesPanelDeleteRecordingClicked', (event) => appendElement('onActivitiesPanelDeleteRecordingClicked'));
+    webComponent.addEventListener('onActivitiesPanelPlayRecordingClicked', (event) => appendElement('onActivitiesPanelPlayRecordingClicked'));
 
     webComponent.addEventListener('onSessionCreated', (event) => {
         var session = event.detail;
@@ -109,6 +143,8 @@ async function joinSession(sessionName, participantName) {
 
     webComponent.toolbarFullscreenButton = FULLSCREEN_BUTTON;
 	webComponent.toolbarLeaveButton = LEAVE_BUTTON;
+    webComponent.toolbarRecordingButton = RECORDING_BUTTON;
+    webComponent.toolbarActivitiesPanelButton = ACTIVITIES_PANEL_BUTTON;
 	webComponent.toolbarChatPanelButton = CHAT_PANEL_BUTTON;
 	webComponent.toolbarParticipantsPanelButton = PARTICIPANTS_PANEL_BUTTON;
 	webComponent.toolbarDisplayLogo = DISPLAY_LOGO;
@@ -117,6 +153,10 @@ async function joinSession(sessionName, participantName) {
 	webComponent.streamDisplayAudioDetection = DISPLAY_AUDIO_DETECTION;
 	webComponent.streamSettingsButton = SETTINGS_BUTTON;
 	webComponent.participantPanelItemMuteButton = PARTICIPANT_MUTE_BUTTON;
+
+    webComponent.recordingActivityRecordingsList = [{status: 'ready'}];
+    webComponent.activitiesPanelRecordingActivity = ACTIVITIES_RECORDING_ACTIVITY;
+    webComponent.recordingActivityRecordingError = RECORDING_ERROR;
 
     webComponent.participantName = participantName;
     webComponent.tokens = tokens;
@@ -145,7 +185,7 @@ function createSession(sessionName) { // See https://docs.openvidu.io/en/stable/
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: OPENVIDU_SERVER_URL + '/api/sessions',
+            url: OPENVIDU_SERVER_URL + '/openvidu/api/sessions',
             data: JSON.stringify({ customSessionId: sessionName }),
             headers: {
                 Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
@@ -167,7 +207,7 @@ function createSession(sessionName) { // See https://docs.openvidu.io/en/stable/
                                 '"',
                         )
                     ) {
-                        location.assign(OPENVIDU_SERVER_URL + '/accept-certificate');
+                        location.assign(OPENVIDU_SERVER_URL + '/openvidu/accept-certificate');
                     }
                 }
             },
@@ -180,14 +220,50 @@ function createToken(sessionId) {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: OPENVIDU_SERVER_URL + '/api/tokens',
-            data: JSON.stringify({ session: sessionId }),
+            url: `${OPENVIDU_SERVER_URL}/openvidu/api/sessions/${sessionId}/connection`,
+            data: JSON.stringify({ session: sessionId, role: 'MODERATOR' }),
             headers: {
                 Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
                 'Content-Type': 'application/json',
             },
             success: (response) => resolve(response.token),
             error: (error) => reject(error),
+        });
+    });
+}
+
+function startRecording(sessionId) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${OPENVIDU_SERVER_URL}/openvidu/api/recordings/start`,
+            data: JSON.stringify({ session: sessionId }),
+            headers: {
+                Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
+                'Content-Type': 'application/json',
+            },
+            success: (response) => {console.log(response); resolve(response.id)},
+            error: (error) => {
+                reject(error)
+            },
+        });
+    });
+
+}
+
+function stopRecording(recordingId) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${OPENVIDU_SERVER_URL}/openvidu/api/recordings/stop/${recordingId}`,
+            headers: {
+                Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
+                'Content-Type': 'application/json',
+            },
+            success: (response) => resolve(response),
+            error: (error) => {
+                reject(error)
+            },
         });
     });
 }

@@ -26,6 +26,7 @@ enum StructuralDirectives {
 	PARTICIPANTS_PANEL = 'ovParticipantsPanel',
 	PARTICIPANTS_PANEL_ITEM = 'ovParticipantPanelItem',
 	PARTICIPANTS_PANEL_ITEM_ELEMENTS = 'ovParticipantPanelItemElements',
+	ACTIVITIES_PANEL = 'ovActivitiesPanel',
 	LAYOUT = 'ovLayout',
 	STREAM = 'ovStream'
 }
@@ -40,6 +41,7 @@ export enum AttributeDirective {
 	TOOLBAR_FULLSCREEN = 'fullscreenButton',
 	TOOLBAR_LEAVE = 'leaveButton',
 	TOOLBAR_PARTICIPANTS_PANEL = 'participantsPanelButton',
+	TOOLBAR_ACTIVITIES_PANEL = 'activitiesPanelButton',
 	TOOLBAR_CHAT_PANEL = 'chatPanelButton',
 	TOOLBAR_DISPLAY_SESSION = 'displaySessionName',
 	TOOLBAR_DISPLAY_LOGO = 'displayLogo',
@@ -66,6 +68,7 @@ export class TestingComponent implements OnInit {
 		{
 			name: StructuralDirectives.PANEL,
 			subDirectives: [
+				{ name: StructuralDirectives.ACTIVITIES_PANEL },
 				{ name: StructuralDirectives.ADDITIONAL_PANELS },
 				{ name: StructuralDirectives.CHAT_PANEL },
 				{
@@ -95,6 +98,7 @@ export class TestingComponent implements OnInit {
 				AttributeDirective.TOOLBAR_FULLSCREEN,
 				AttributeDirective.TOOLBAR_LEAVE,
 				AttributeDirective.TOOLBAR_PARTICIPANTS_PANEL,
+				AttributeDirective.TOOLBAR_ACTIVITIES_PANEL,
 				AttributeDirective.TOOLBAR_SCREENSHARE
 			]
 		},
@@ -117,6 +121,7 @@ export class TestingComponent implements OnInit {
 	ovToolbarAdditionalButtonsSelected = false;
 	ovToolbarAdditionalPanelButtonsSelected = false;
 	ovPanelSelected = false;
+	ovActivitiesPanelSelected = false;
 	ovAdditionalPanelsSelected = false;
 	ovChatPanelSelected = false;
 	ovParticipantsPanelSelected = false;
@@ -131,6 +136,7 @@ export class TestingComponent implements OnInit {
 	fullscreenBtn = true;
 	leaveBtn = true;
 	participantsPanelBtn = true;
+	activitiesPanelBtn = true;
 	screenshareBtn = true;
 
 	audioDetection = true;
@@ -194,6 +200,11 @@ export class TestingComponent implements OnInit {
 				this.ovAdditionalPanelsSelected = value;
 				break;
 
+			case StructuralDirectives.ACTIVITIES_PANEL:
+				debugger
+				this.ovActivitiesPanelSelected = value;
+				break;
+
 			case StructuralDirectives.CHAT_PANEL:
 				this.ovChatPanelSelected = value;
 				break;
@@ -221,6 +232,7 @@ export class TestingComponent implements OnInit {
 	}
 
 	updateApiDirective(id: string, value: boolean) {
+		console.log("AAAAAAAAAa", id + value)
 		switch (id) {
 			case AttributeDirective.TOOLBAR_CHAT_PANEL:
 				this.chatPanelBtn = value;
@@ -243,6 +255,10 @@ export class TestingComponent implements OnInit {
 				break;
 			case AttributeDirective.TOOLBAR_PARTICIPANTS_PANEL:
 				this.participantsPanelBtn = value;
+				break;
+			case AttributeDirective.TOOLBAR_ACTIVITIES_PANEL:
+				this.activitiesPanelBtn = value;
+				console.warn('valor del checkbox', this.activitiesPanelBtn)
 				break;
 			case AttributeDirective.TOOLBAR_SCREENSHARE:
 				this.screenshareBtn = value;

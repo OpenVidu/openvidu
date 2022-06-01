@@ -28,7 +28,7 @@ export const WebComponentConfig: BrowserConfig = {
 };
 
 export const AngularConfig: BrowserConfig = {
-	appUrl: 'http://localhost:4200/#/testing',
+	appUrl: 'https://localhost:4200/#/testing',
 	seleniumAddress: LAUNCH_MODE === 'CI' ? 'http://localhost:4444/wd/hub' : '',
 	browserName: 'Chrome',
 	browserCapabilities: Capabilities.chrome().set('acceptInsecureCerts', true),
