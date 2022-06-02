@@ -931,6 +931,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 
 		// Resize captured window
+		final CountDownLatch latchViewport = new CountDownLatch(1);
 		final CountDownLatch latch3 = new CountDownLatch(2);
 		int newWidth = 1000;
 		int newHeight = 700;
@@ -938,26 +939,37 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final long[] expectedWidthHeight = new long[2];
 
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
-			String expectedDimensions = "{\"width\":" + expectedWidthHeight[0] + ",\"height\":" + expectedWidthHeight[1]
-					+ "}";
-			System.out.println("Publisher dimensions: " + event.get("newValue").getAsJsonObject().toString());
-			System.out.println("Real dimensions of viewport: " + expectedDimensions);
-			if ("videoDimensions".equals(event.get("changedProperty").getAsString())
-					&& "screenResized".equals(event.get("reason").getAsString())
-					&& expectedDimensions.equals(event.get("newValue").getAsJsonObject().toString())) {
-				latch3.countDown();
+			try {
+				if (latchViewport.await(4000, TimeUnit.MILLISECONDS)) {
+					String expectedDimensions = "{\"width\":" + expectedWidthHeight[0] + ",\"height\":" + expectedWidthHeight[1]
+							+ "}";
+					System.out.println("Publisher dimensions: " + event.get("newValue").getAsJsonObject().toString());
+					System.out.println("Real dimensions of viewport: " + expectedDimensions);
+					if ("videoDimensions".equals(event.get("changedProperty").getAsString())
+							&& "screenResized".equals(event.get("reason").getAsString())
+							&& expectedDimensions.equals(event.get("newValue").getAsJsonObject().toString())) {
+						latch3.countDown();
+					}
+				}
+			} catch (InterruptedException e) {
+				log.error("Error waiting for viewport resolution");
 			}
 		});
 
 		user.getDriver().manage().window().setSize(new Dimension(newWidth, newHeight));
 
-		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
-		JsonObject obj = JsonParser.parseString(widthAndHeight).getAsJsonObject();
 
-		expectedWidthHeight[0] = obj.get("width").getAsLong();
-		expectedWidthHeight[1] = obj.get("height").getAsLong();
+		new Thread(() -> {
+			String widthAndHeight = user.getEventManager().getDimensionOfViewport();
+			JsonObject obj = JsonParser.parseString(widthAndHeight).getAsJsonObject();
 
-		System.out.println("New viewport dimension: " + obj.toString());
+			expectedWidthHeight[0] = obj.get("width").getAsLong();
+			expectedWidthHeight[1] = obj.get("height").getAsLong();
+
+			System.out.println("New viewport dimension: " + obj.toString());
+			latchViewport.countDown();
+
+		}).start();
 
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
 
