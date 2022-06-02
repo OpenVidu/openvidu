@@ -514,7 +514,10 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @example
 	 * <openvidu-webcomponent tokens='{"webcam":"TOKEN1", "screen":"TOKEN2"}'></openvidu-webcomponent>
-	 * * <openvidu-webcomponent tokens='TOKEN'></openvidu-webcomponent>
+	 *
+	 * or
+	 *
+	 * <openvidu-webcomponent tokens='TOKEN1'></openvidu-webcomponent>
 	 */
 	@Input('tokens')
 	set tokens(value: TokenModel | string) {
@@ -523,8 +526,12 @@ export class OpenviduWebComponentComponent implements OnInit {
 			this._tokens = this.castToJson(value);
 			this.success = !!this._tokens?.webcam && !!this._tokens?.screen;
 		} catch (error) {
-			this.log.e(error);
-			if (!this.success) {
+			if (typeof value === 'string' && value !== '') {
+				this.log.d('Sigle token received.');
+				this._tokens = { webcam: value };
+				this.success = true;
+			} else {
+				this.log.e(error);
 				this.log.e('Parameters received are incorrect: ', value);
 				this.log.e('Session cannot start');
 			}
@@ -663,8 +670,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 			try {
 				return JSON.parse(value);
 			} catch (error) {
-				this.log.e('Unexpected JSON', error);
-				throw 'Unexpected JSON';
+				throw 'Unexpected JSON' + error;
 			}
 		} else if (typeof value === 'object') {
 			return value;

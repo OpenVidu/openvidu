@@ -39,6 +39,7 @@ import { PanelType } from '../../models/panel.model';
 import { PanelService } from '../../services/panel/panel.service';
 import { RecordingService } from '../../services/recording/recording.service';
 import { TranslateService } from '../../services/translate/translate.service';
+import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 
 /**
  * @internal
@@ -80,6 +81,7 @@ export class SessionComponent implements OnInit {
 		protected loggerSrv: LoggerService,
 		protected chatService: ChatService,
 		protected tokenService: TokenService,
+		private libService: OpenViduAngularConfigService,
 		protected layoutService: LayoutService,
 		protected panelService: PanelService,
 		private recordingService: RecordingService,
@@ -121,6 +123,10 @@ export class SessionComponent implements OnInit {
 
 	async ngOnInit() {
 		if (!this.usedInPrejoinPage) {
+			if(!this.tokenService.getScreenToken()){
+				// Hide screenshare button if screen token does not exist
+				this.libService.screenshareButton.next(false);
+			}
 			this.session = this.openviduService.getWebcamSession();
 			this.sessionScreen = this.openviduService.getScreenSession();
 			this.subscribeToConnectionCreatedAndDestroyed();

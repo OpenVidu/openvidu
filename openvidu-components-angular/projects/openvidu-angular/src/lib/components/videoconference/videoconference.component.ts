@@ -279,8 +279,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 			if (tokens.screen) {
 				this.tokenService.setScreenToken(tokens.screen);
 			} else {
-				// Hide screenshare button if screen token does not exist
-				this.libService.screenshareButton.next(false);
 				this.log.w('No screen token found. Screenshare feature will be disabled');
 			}
 			this.tokensReceived = true;
