@@ -12,6 +12,7 @@ interface BrowserConfig {
 
 let chromeArguments = ['--window-size=1024,768', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'];
 let chromeArgumentsCI = [
+	'--headless',
 	'--disable-dev-shm-usage',
 	'--window-size=1024,768',
 	'--use-fake-ui-for-media-stream',

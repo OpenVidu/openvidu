@@ -68,23 +68,26 @@ $(document).ready(() => {
 
     webComponent.addEventListener('onToolbarStartRecordingClicked', async (event) => {
         appendElement('onToolbarStartRecordingClicked');
-        RECORDING_ID = await startRecording(SESSION_NAME);
+        // Can't test the recording
+        // RECORDING_ID = await startRecording(SESSION_NAME);
 
     });
-    webComponent.addEventListener('onToolbarStopRecordingClicked', async (event) => {
-        appendElement('onToolbarStopRecordingClicked');
-        await stopRecording(RECORDING_ID);
-    });
+    // Can't test the recording
+    // webComponent.addEventListener('onToolbarStopRecordingClicked', async (event) => {
+    //     appendElement('onToolbarStopRecordingClicked');
+    //     await stopRecording(RECORDING_ID);
+    // });
 
     webComponent.addEventListener('onActivitiesPanelStartRecordingClicked', async (event) => {
         appendElement('onActivitiesPanelStartRecordingClicked');
-        RECORDING_ID = await startRecording(SESSION_NAME);
+        // RECORDING_ID = await startRecording(SESSION_NAME);
     });
 
-    webComponent.addEventListener('onActivitiesPanelStopRecordingClicked', async (event) => {
-        appendElement('onActivitiesPanelStopRecordingClicked');
-        await stopRecording(RECORDING_ID);
-    });
+    // Can't test the recording
+    // webComponent.addEventListener('onActivitiesPanelStopRecordingClicked', async (event) => {
+    //     appendElement('onActivitiesPanelStopRecordingClicked');
+    //     await stopRecording(RECORDING_ID);
+    // });
 
     webComponent.addEventListener('onActivitiesPanelDownloadRecordingClicked', (event) => appendElement('onActivitiesPanelDownloadRecordingClicked'));
     webComponent.addEventListener('onActivitiesPanelDeleteRecordingClicked', (event) => appendElement('onActivitiesPanelDeleteRecordingClicked'));
@@ -232,38 +235,38 @@ function createToken(sessionId) {
     });
 }
 
-function startRecording(sessionId) {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            type: 'POST',
-            url: `${OPENVIDU_SERVER_URL}/openvidu/api/recordings/start`,
-            data: JSON.stringify({ session: sessionId }),
-            headers: {
-                Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
-                'Content-Type': 'application/json',
-            },
-            success: (response) => {console.log(response); resolve(response.id)},
-            error: (error) => {
-                reject(error)
-            },
-        });
-    });
+// function startRecording(sessionId) {
+//     return new Promise((resolve, reject) => {
+//         $.ajax({
+//             type: 'POST',
+//             url: `${OPENVIDU_SERVER_URL}/openvidu/api/recordings/start`,
+//             data: JSON.stringify({ session: sessionId }),
+//             headers: {
+//                 Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
+//                 'Content-Type': 'application/json',
+//             },
+//             success: (response) => {console.log(response); resolve(response.id)},
+//             error: (error) => {
+//                 reject(error)
+//             },
+//         });
+//     });
 
-}
+// }
 
-function stopRecording(recordingId) {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            type: 'POST',
-            url: `${OPENVIDU_SERVER_URL}/openvidu/api/recordings/stop/${recordingId}`,
-            headers: {
-                Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
-                'Content-Type': 'application/json',
-            },
-            success: (response) => resolve(response),
-            error: (error) => {
-                reject(error)
-            },
-        });
-    });
-}
+// function stopRecording(recordingId) {
+//     return new Promise((resolve, reject) => {
+//         $.ajax({
+//             type: 'POST',
+//             url: `${OPENVIDU_SERVER_URL}/openvidu/api/recordings/stop/${recordingId}`,
+//             headers: {
+//                 Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
+//                 'Content-Type': 'application/json',
+//             },
+//             success: (response) => resolve(response),
+//             error: (error) => {
+//                 reject(error)
+//             },
+//         });
+//     });
+// }

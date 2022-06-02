@@ -26,10 +26,6 @@ jobs:
       run: |
         docker run -p 4443:4443 --rm -d \
         -e OPENVIDU_SECRET=MY_SECRET \
-        -e OPENVIDU_RECORDING=true \
-        -e OPENVIDU_RECORDING_PATH=/home/openvidu/recordings \
-        -v /var/run/docker.sock:/var/run/docker.sock \
-        -v /home/openvidu/recordings:/home/openvidu/recordings \
         openvidu/openvidu-server-kms:latest
     - name: Build openvidu-browser
       run: |
