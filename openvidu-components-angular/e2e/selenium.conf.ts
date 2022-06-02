@@ -12,13 +12,10 @@ interface BrowserConfig {
 
 let chromeArguments = ['--window-size=1024,768', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'];
 let chromeArgumentsCI = [
-	'--headless',
 	'--disable-dev-shm-usage',
 	'--window-size=1024,768',
 	'--use-fake-ui-for-media-stream',
-	'--use-fake-device-for-media-stream',
-	'--allow-insecure-localhost',
-	'--ignore-certificate-errors'
+	'--use-fake-device-for-media-stream'
 ];
 
 export const WebComponentConfig: BrowserConfig = {
@@ -30,7 +27,7 @@ export const WebComponentConfig: BrowserConfig = {
 };
 
 export const AngularConfig: BrowserConfig = {
-	appUrl: 'https://localhost:4200/#/testing',
+	appUrl: 'http://localhost:4200/#/testing',
 	seleniumAddress: LAUNCH_MODE === 'CI' ? 'http://localhost:4444/wd/hub' : '',
 	browserName: 'Chrome',
 	browserCapabilities: Capabilities.chrome().set('acceptInsecureCerts', true),
