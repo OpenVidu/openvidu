@@ -12,12 +12,7 @@ import { CameraType } from '../../models/device.model';
 import { ScreenType, VideoType } from '../../models/video-type.model';
 import { ParticipantService } from '../participant/participant.service';
 import { TokenService } from '../token/token.service';
-
-export enum OpenViduEdition {
-	CE = 'CE',
-	PRO = 'PRO',
-	ENTERPRISE = 'ENTERPRISE'
-}
+import { OpenViduEdition } from '../../models/openvidu.model';
 
 @Injectable({
 	providedIn: 'root'

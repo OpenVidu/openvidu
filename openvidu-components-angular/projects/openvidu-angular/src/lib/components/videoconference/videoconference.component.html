@@ -1,20 +1,20 @@
 <div id="call-container">
-	<div id="pre-join-container" *ngIf="showPrejoin && tokensReceived && participantReady && !joinSessionClicked">
+
+	<div id="pre-join-container" *ngIf="showPrejoin && tokensReceived && participantReady">
 		<ov-pre-join (onJoinButtonClicked)="_onJoinButtonClicked()"></ov-pre-join>
-		<!-- <ov-user-settings (onJoinClicked)="_onJoinClicked()" (onCloseClicked)="onLeaveSessionClicked()"></ov-user-settings> -->
 	</div>
 
-	<div id="spinner" *ngIf="(joinSessionClicked || !showPrejoin) && !participantReady && !error">
+	<div id="spinner" *ngIf="!participantReady && !streamPlaying && !error">
 		<mat-spinner [diameter]="50"></mat-spinner>
 		<span>{{ 'PREJOIN.PREPARING' | translate }}</span>
 	</div>
 
-	<div id="spinner" *ngIf="joinSessionClicked && !participantReady && error">
+	<div id="spinner" *ngIf="!participantReady && error">
 		<mat-icon class="error-icon">error</mat-icon>
 		<span>{{ errorMessage }}</span>
 	</div>
 
-	<div id="session-container" *ngIf="(joinSessionClicked || !showPrejoin) && participantReady && tokensReceived && !error">
+	<div id="session-container" *ngIf="showVideoconference || (!showPrejoin && participantReady && tokensReceived && !error)">
 		<ov-session (onSessionCreated)="_onSessionCreated($event)">
 			<ng-template #toolbar>
 				<ng-container *ngIf="openviduAngularToolbarTemplate">
@@ -47,6 +47,9 @@
 		(onFullscreenButtonClicked)="onFullscreenButtonClicked()"
 		(onParticipantsPanelButtonClicked)="onParticipantsPanelButtonClicked()"
 		(onChatPanelButtonClicked)="onChatPanelButtonClicked()"
+		(onActivitiesPanelButtonClicked)="onActivitiesPanelButtonClicked()"
+		(onStartRecordingClicked)="onStartRecordingClicked('toolbar')"
+		(onStopRecordingClicked)="onStopRecordingClicked('toolbar')"
 	>
 		<ng-template #toolbarAdditionalButtons>
 			<ng-container *ngTemplateOutlet="openviduAngularToolbarAdditionalButtonsTemplate"></ng-container>
@@ -87,11 +90,14 @@
 </ng-template>
 
 <ng-template #defaultActivitiesPanel>
-	<!-- <ov-activities-panel
+	<ov-activities-panel
 		id="default-activities-panel"
-		(onStartRecordingClicked)="onStartRecordingClicked()"
-		(onStopRecordingClicked)="onStopRecordingClicked()"
-	></ov-activities-panel> -->
+		(onStartRecordingClicked)="onStartRecordingClicked('panel')"
+		(onStopRecordingClicked)="onStopRecordingClicked('panel')"
+		(onDownloadRecordingClicked)="onDownloadRecordingClicked($event)"
+		(onDeleteRecordingClicked)="onDeleteRecordingClicked($event)"
+		(onPlayRecordingClicked)="onPlayRecordingClicked($event)"
+	></ov-activities-panel>
 </ng-template>
 
 <ng-template #defaultParticipantsPanel>

@@ -1,6 +1,8 @@
 import { NgModule } from '@angular/core';
+import { ActivitiesPanelRecordingActivityDirective } from './activities-panel.directive';
 import { LogoDirective } from './internals.directive';
 import { ParticipantPanelItemMuteButtonDirective } from './participant-panel-item.directive';
+import { RecordingActivityRecordingErrorDirective, RecordingActivityRecordingsListDirective } from './recording-activity.directive';
 import {
 	StreamDisplayParticipantNameDirective,
 	StreamDisplayAudioDetectionDirective,
@@ -15,7 +17,8 @@ import {
 	ToolbarDisplaySessionNameDirective,
 	ToolbarDisplayLogoDirective,
 	ToolbarActivitiesPanelButtonDirective,
-	ToolbarBackgroundEffectsButtonDirective
+	ToolbarBackgroundEffectsButtonDirective,
+	ToolbarRecordingButtonDirective
 } from './toolbar.directive';
 import {
 	AudioMutedDirective,
@@ -38,6 +41,7 @@ import {
 		ToolbarFullscreenButtonDirective,
 		ToolbarBackgroundEffectsButtonDirective,
 		ToolbarLeaveButtonDirective,
+		ToolbarRecordingButtonDirective,
 		ToolbarParticipantsPanelButtonDirective,
 		ToolbarChatPanelButtonDirective,
 		ToolbarActivitiesPanelButtonDirective,
@@ -48,7 +52,10 @@ import {
 		StreamSettingsButtonDirective,
 		LogoDirective,
 		ParticipantPanelItemMuteButtonDirective,
-		ParticipantNameDirective
+		ParticipantNameDirective,
+		ActivitiesPanelRecordingActivityDirective,
+		RecordingActivityRecordingsListDirective,
+		RecordingActivityRecordingErrorDirective
 	],
 	exports: [
 		MinimalDirective,
@@ -60,6 +67,7 @@ import {
 		ToolbarFullscreenButtonDirective,
 		ToolbarBackgroundEffectsButtonDirective,
 		ToolbarLeaveButtonDirective,
+		ToolbarRecordingButtonDirective,
 		ToolbarParticipantsPanelButtonDirective,
 		ToolbarChatPanelButtonDirective,
 		ToolbarActivitiesPanelButtonDirective,
@@ -70,7 +78,10 @@ import {
 		StreamSettingsButtonDirective,
 		LogoDirective,
 		ParticipantPanelItemMuteButtonDirective,
-		ParticipantNameDirective
+		ParticipantNameDirective,
+		ActivitiesPanelRecordingActivityDirective,
+		RecordingActivityRecordingsListDirective,
+		RecordingActivityRecordingErrorDirective
 	]
 })
 export class ApiDirectiveModule {}

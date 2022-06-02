@@ -2,11 +2,12 @@
 	<div fxFlex="20%" fxLayoutAlign="start center" id="info-container">
 		<div>
 			<img *ngIf="!isMinimal && showLogo" id="branding-logo" src="assets/images/logo.png" ovLogo />
-			<div id="session-info-container" [class.colapsed]="isRecording">
+			<div id="session-info-container" [class.colapsed]="recordingStatus === _recordingStatus.STARTED">
 				<span id="session-name" *ngIf="!isMinimal && session && session.sessionId && showSessionName">{{ session.sessionId }}</span>
-				<div id="recording-tag" *ngIf="isRecording">
-					<mat-icon>radio_button_checked</mat-icon>
-					<span>REC</span>
+				<div *ngIf="recordingStatus === _recordingStatus.STARTED" id="recording-tag" class="recording-tag">
+					<mat-icon class="blink">radio_button_checked</mat-icon>
+					<span class="blink">REC</span>
+					<span> | {{ recordingTime | date: 'H:mm:ss' }}</span>
 				</div>
 			</div>
 		</div>
@@ -33,7 +34,9 @@
 			[class.warn-btn]="!isWebcamVideoActive"
 		>
 			<mat-icon *ngIf="isWebcamVideoActive" matTooltip="{{ 'TOOLBAR.MUTE_VIDEO' | translate }}" id="videocam">videocam</mat-icon>
-			<mat-icon *ngIf="!isWebcamVideoActive" matTooltip="{{ 'TOOLBAR.UNMUTE_VIDEO' | translate }}" id="videocam_off">videocam_off</mat-icon>
+			<mat-icon *ngIf="!isWebcamVideoActive" matTooltip="{{ 'TOOLBAR.UNMUTE_VIDEO' | translate }}" id="videocam_off"
+				>videocam_off</mat-icon
+			>
 		</button>
 
 		<!-- Screenshare button -->
@@ -49,31 +52,19 @@
 			<mat-icon *ngIf="isScreenShareActive" matTooltip="{{ 'TOOLBAR.DISABLE_SCREEN' | translate }}">screen_share</mat-icon>
 		</button>
 
-		<!-- Fullscreen button -->
-		<button
-			mat-icon-button
-			id="fullscreen-btn"
-			*ngIf="!isMinimal && showFullscreenButton && !showBackgroundEffectsButton"
-			(click)="toggleFullscreen()"
-			[disabled]="isConnectionLost"
-			[class.active-btn]="isFullscreenActive"
-		>
-			<mat-icon *ngIf="isFullscreenActive" matTooltip="{{ 'TOOLBAR.EXIT_FULLSCREEN' | translate }}">fullscreen_exit</mat-icon>
-			<mat-icon *ngIf="!isFullscreenActive" matTooltip="{{ 'TOOLBAR.FULLSCREEN' | translate }}">fullscreen</mat-icon>
-		</button>
-
+		<!-- More options button -->
 		<button
 			mat-icon-button
 			id="more-options-btn"
-			*ngIf="!isMinimal && showBackgroundEffectsButton"
+			*ngIf="!isMinimal && showMoreOptionsButton"
 			[matMenuTriggerFor]="menu"
 			[disabled]="isConnectionLost"
 		>
 			<mat-icon matTooltip="{{ 'TOOLBAR.MORE_OPTIONS' | translate }}">more_vert</mat-icon>
 		</button>
-		<mat-menu #menu="matMenu">
+		<mat-menu #menu="matMenu" id="more-options-menu">
 			<!-- Fullscreen button -->
-			<button mat-menu-item id="fullscreen-btn" (click)="toggleFullscreen()">
+			<button *ngIf="showFullscreenButton" mat-menu-item id="fullscreen-btn" (click)="toggleFullscreen()">
 				<mat-icon *ngIf="!isFullscreenActive">fullscreen</mat-icon>
 				<span *ngIf="!isFullscreenActive">{{ 'TOOLBAR.FULLSCREEN' | translate }}</span>
 
@@ -82,15 +73,23 @@
 			</button>
 
 			<!-- Recording button -->
-			<!-- <button
-				*ngIf="!isMinimal && showActivitiesPanelButton"
+			<button
+				*ngIf="!isMinimal && showRecordingButton"
 				mat-menu-item
 				id="recording-btn"
-				(click)="toggleActivitiesPanel('recording')"
+				[disabled]="
+					recordingStatus === _recordingStatus.STARTING || recordingStatus === _recordingStatus.STOPPING || !isSessionCreator
+				"
+				(click)="toggleRecording()"
 			>
 				<mat-icon color="warn">radio_button_checked</mat-icon>
-				<span>Recording</span>
-			</button> -->
+				<span *ngIf="recordingStatus === _recordingStatus.STOPPED || recordingStatus === _recordingStatus.STOPPING">
+					{{ 'TOOLBAR.START_RECORDING' | translate }}
+				</span>
+				<span *ngIf="recordingStatus === _recordingStatus.STARTED || recordingStatus === _recordingStatus.STARTING">
+					{{ 'TOOLBAR.STOP_RECORDING' | translate }}
+				</span>
+			</button>
 
 			<!-- Virtual background button -->
 			<button
@@ -117,17 +116,17 @@
 	</div>
 	<div fxFlex="20%" fxFlexOrder="3" fxLayoutAlign="end center" id="menu-buttons-container">
 		<!-- Default activities button -->
-		<!-- <button
+		<button
 			mat-icon-button
 			id="activities-panel-btn"
 			*ngIf="!isMinimal && showActivitiesPanelButton"
-			matTooltip="Activities"
+			matTooltip="{{ 'TOOLBAR.ACTIVITIES' | translate }}"
 			(click)="toggleActivitiesPanel()"
 			[disabled]="isConnectionLost"
 			[class.active-btn]="isActivitiesOpened"
 		>
 			<mat-icon>category</mat-icon>
-		</button> -->
+		</button>
 
 		<!-- Default participants button -->
 		<button

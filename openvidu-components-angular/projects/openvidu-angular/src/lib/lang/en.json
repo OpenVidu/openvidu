@@ -59,8 +59,16 @@
 			"TITLE": "Recording",
 			"SUBTITLE": "Record your meeting for posterity",
 			"CONTENT_TITLE": "Record your video call",
-			"CONTENT_SUBTITLE": "When recording has finished you will can download it with ease",
-			"STARTING": "Starting recording"
+			"CONTENT_SUBTITLE": "When recording has finished you will be able to download it with ease",
+			"STARTING": "Starting recording",
+			"STOPPING": "Stopping recording",
+			"PLAY": "Play",
+			"DELETE": "Delete",
+			"CANCEL": "Cancel",
+			"DELETE_QUESTION": "Are you sure you want to delete the recording?",
+			"DOWNLOAD": "Download",
+			"RECORDINGS": "RECORDINGS",
+			"NO_MODERATOR": "Only the MODERATOR can start the recording"
 		}
 	},
 	"ERRORS": {

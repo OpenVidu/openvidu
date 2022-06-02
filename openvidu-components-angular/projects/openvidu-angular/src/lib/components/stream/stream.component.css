@@ -114,15 +114,3 @@
   input {
 	caret-color: #ffffff !important;
   }
-
-  .poster_img {
-	position: absolute;
-	z-index: 888;
-	max-width: 70%;
-	max-height: 70%;
-	bottom: 0;
-	top: 0;
-	margin: auto;
-	right: 0;
-	left: 0;
-  }

@@ -60,7 +60,15 @@
 			"SUBTITLE": "Registra la tua riunione per i posteri",
 			"CONTENT_TITLE": "Registra la tua videochiamata",
 			"CONTENT_SUBTITLE": "Al termine della registrazione potrete scaricarla con facilità",
-			"STARTING": "Avvio della registrazione"
+			"STARTING": "Avvio della registrazione",
+			"STOPPING": "Interruzione della registrazione",
+			"PLAY": "Giocare a",
+			"DELETE": "Elimina",
+			"CANCEL": "Annulla",
+			"DELETE_QUESTION": "Sei sicuro di voler eliminare la registrazione?",
+			"DOWNLOAD": "Scarica",
+			"RECORDINGS": "REGISTRAZIONI",
+			"NO_MODERATOR": "Solo il MODERATORE può avviare la registrazione"
 		}
 	},
 	"ERRORS": {

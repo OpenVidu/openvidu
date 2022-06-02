@@ -20,6 +20,12 @@ export class BackgroundEffectsPanelComponent implements OnInit {
   private backgrounds: BackgroundEffect[];
   private backgroundSubs: Subscription;
 
+  /**
+   * @internal
+   * @param panelService
+   * @param backgroundService
+   * @param cd
+   */
   constructor(private panelService: PanelService, private backgroundService: VirtualBackgroundService, private cd: ChangeDetectorRef) { }
 
   ngOnInit(): void {

@@ -1,6 +1,14 @@
 import { Publisher, StreamManager } from 'openvidu-browser';
 import { VideoType } from './video-type.model';
 
+/**
+ * @internal
+ */
+export enum OpenViduRole {
+	MODERATOR = 'MODERATOR',
+	PUBLISHER = 'PUBLISHER'
+}
+
 export interface StreamModel {
 	/**
 	 * Whether the stream is available or not
@@ -328,6 +336,13 @@ export abstract class ParticipantAbstractModel {
 	 */
 	setMutedForcibly(muted: boolean) {
 		this.isMutedForcibly = muted;
+	}
+
+	/**
+	 * @internal
+	 */
+	getRole(): OpenViduRole {
+		return <OpenViduRole>this.streams.get(VideoType.CAMERA)?.streamManager?.stream?.connection?.role;
 	}
 }
 

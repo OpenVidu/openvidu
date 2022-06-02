@@ -60,7 +60,15 @@
 			"SUBTITLE": "为后人记录你的会议",
 			"CONTENT_TITLE": "记录你的视频通话",
 			"CONTENT_SUBTITLE": "当录音完成后，你将可以轻松地下载它",
-			"STARTING": "开始录音"
+			"STARTING": "开始录音",
+			"STOPPING": "停止录制",
+			"PLAY": "玩",
+			"DELETE": "删除",
+			"CANCEL": "取消",
+			"DELETE_QUESTION": "您确定要删除录音吗",
+			"DOWNLOAD": "下载",
+			"RECORDINGS": "录制",
+			"NO_MODERATOR": "只有主持人可以开始录音"
 		}
 	},
 	"ERRORS": {

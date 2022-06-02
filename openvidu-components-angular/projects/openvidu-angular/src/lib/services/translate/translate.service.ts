@@ -11,6 +11,9 @@ import * as nl from '../../lang/nl.json';
 import * as pt from '../../lang/pt.json';
 import { StorageService } from '../storage/storage.service';
 
+/**
+ * @internal
+ */
 @Injectable({
 	providedIn: 'root'
 })

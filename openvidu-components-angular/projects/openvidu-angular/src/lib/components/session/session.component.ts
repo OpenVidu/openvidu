@@ -176,11 +176,13 @@ export class SessionComponent implements OnInit {
 			this.updateLayoutInterval = setInterval(() => this.layoutService.update(), 50);
 		});
 
-		this.menuSubscription = this.panelService.panelOpenedObs.pipe(skip(1)).subscribe((ev: { opened: boolean; type?: PanelType }) => {
-			if (this.sideMenu) {
-				ev.opened ? this.sideMenu.open() : this.sideMenu.close();
-			}
-		});
+		this.menuSubscription = this.panelService.panelOpenedObs
+			.pipe(skip(1))
+			.subscribe((ev: { opened: boolean; type?: PanelType | string }) => {
+				if (this.sideMenu) {
+					ev.opened ? this.sideMenu.open() : this.sideMenu.close();
+				}
+			});
 	}
 
 	protected subscribeToLayoutWidth() {

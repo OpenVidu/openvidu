@@ -19,5 +19,5 @@
     margin: auto;
     text-align: -webkit-center;
 	text-align: -moz-center;
-	color: var(--ov-text-color);
+	color: var(--ov-panel-text-color);
 }

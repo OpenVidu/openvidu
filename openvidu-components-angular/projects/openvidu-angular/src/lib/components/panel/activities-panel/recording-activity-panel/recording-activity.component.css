@@ -1,25 +1,89 @@
 #recording-status {
 	color: var(--ov-text-color);
 	display: inline;
-	padding: 3px;
-	font-size: 11px;
+	padding: 5px;
+	font-size: 12px;
 	border-radius: var(--ov-panel-radius);
 }
+
+.time-container {
+	padding: 2px;
+}
+.recording-icon {
+	font-size: 32px !important;
+	height: 32px !important;
+	width: 32px !important;
+}
+
+.recording-duration {
+	background-color: var(--ov-light-color);
+	padding: 4px 8px;
+	border-radius: var(--ov-panel-radius);
+	font-weight: 500;
+}
+
+.recording-duration mat-icon {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+}
+
+
 .started {
-	background-color: #005704;
+	background-color: #3b7430 !important;
+	color: var(--ov-text-color);
+}
+
+.activity-icon.started, .failed {
+	background-color: var(--ov-warn-color) !important;
+	color: var(--ov-text-color);
 }
 .stopped {
 	background-color: var(--ov-light-color);
 	color: var(--ov-panel-text-color) !important;
 }
 
-
-#recording-file-item {
-	padding: 0px 16px;
+.pending {
+	background-color: #ffd79b !important;
+	color: var(--ov-panel-text-color) !important;
 }
 
-.recording-action-buttons{
-	margin: auto;
+.panel-body-container {
+	padding: 10px;
+}
+
+.panel-body-container > .content {
+	align-items: stretch;
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    box-flex: 1;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.recording-error {
+	color: var(--ov-warn-color);
+	font-weight: 600;
+}
+.recording-name {
+	font-size: 16px;
+	font-weight: bold;
+}
+
+.recording-date {
+	font-size: 12px !important;
+	font-style: italic;
+}
+
+.not-allowed-message {
+	margin-top: 10px;
+	font-weight: bold;
+}
+
+.recording-action-buttons {
+	margin-top: 20px;
+	margin-bottom: 20px;
 }
 
 #start-recording-btn {
@@ -32,6 +96,17 @@
 	color: var(--ov-text-color);
 }
 
+.delete-recording-btn {
+	color: var(--ov-warn-color);
+}
+
 mat-expansion-panel {
-	margin: 0pc 0px 15px 0px;
+	margin: 0px 0px 15px 0px;
+}
+
+.blink {
+	animation: blinker 1.5s linear infinite !important;
+}
+@keyframes blinker {
+	50% { opacity: 0.4; }
 }

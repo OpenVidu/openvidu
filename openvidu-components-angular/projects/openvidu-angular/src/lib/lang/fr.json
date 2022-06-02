@@ -60,7 +60,16 @@
 			"SUBTITLE": "Enregistrez votre réunion pour la postérité",
 			"CONTENT_TITLE": "Enregistrez votre appel vidéo",
 			"CONTENT_SUBTITLE": "Une fois l'enregistrement terminé, vous pourrez le télécharger facilement",
-			"STARTING": "Début de l'enregistrement"
+			"STARTING": "Début de l'enregistrement",
+			"STOPPING": "Arrêt de l'enregistrement",
+			"PLAY": "Jouer",
+			"DELETE": "Effacer",
+			"CANCEL": "Annuler",
+			"DELETE_QUESTION": "Voulez-vous vraiment supprimer l'enregistrement ?",
+			"DOWNLOAD": "Télécharger",
+			"RECORDINGS": "ENREGISTREMENTS",
+			"NO_MODERATOR": "Seul le MODERATEUR peut lancer l'enregistrement"
+
 		}
 	},
 	"ERRORS": {

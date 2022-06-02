@@ -1,89 +1,203 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { RecordingStatus } from '../../../../models/recording.model';
-import { RecordingService, RecordingInfo } from '../../../../services/recording/recording.service';
+import { OpenViduRole } from '../../../../models/participant.model';
+import { RecordingInfo, RecordingStatus } from '../../../../models/recording.model';
+import { ActionService } from '../../../../services/action/action.service';
+import { OpenViduAngularConfigService } from '../../../../services/config/openvidu-angular.config.service';
+import { ParticipantService } from '../../../../services/participant/participant.service';
+import { RecordingService } from '../../../../services/recording/recording.service';
 
-/**
- * @internal
- */
 @Component({
 	selector: 'ov-recording-activity',
 	templateUrl: './recording-activity.component.html',
-	styleUrls: ['./recording-activity.component.css', '../activities-panel.component.css']
+	styleUrls: ['./recording-activity.component.css', '../activities-panel.component.css'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RecordingActivityComponent implements OnInit {
+	/**
+	 * @internal
+	 */
+	@Input() expanded: boolean;
 
 	/**
 	 * Provides event notifications that fire when start recording button has been clicked.
+	 * The recording should be stopped using the REST API.
 	 */
-	@Output() startRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onStartRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
 	 * Provides event notifications that fire when stop recording button has been clicked.
+	 * The recording should be stopped using the REST API.
 	 */
-	@Output() stopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
-	recordingStatus: RecordingStatus = RecordingStatus.STOPPED;
-	recStatusEnum = RecordingStatus;
-	isSessionCreator = true;
-	recording: RecordingInfo;
-	recordingSubscription: Subscription;
+	@Output() onStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
 
+	/**
+	 * Provides event notifications that fire when download recording button has been clicked.
+	 * The recording should be downloaded using the REST API.
+	 */
+	@Output() onDownloadRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
+	 * Provides event notifications that fire when delete recording button has been clicked.
+	 * The recording should be deleted using the REST API.
+	 */
+	@Output() onDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
+	 * Provides event notifications that fire when play recording button has been clicked.
+	 */
+	@Output() onPlayRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+	/**
+	 * @internal
+	 */
+	recordingStatus: RecordingStatus = RecordingStatus.STOPPED;
+	/**
+	 * @internal
+	 */
 	opened: boolean = false;
 
-	constructor(private recordingService: RecordingService) {}
+	/**
+	 * @internal
+	 */
+	recStatusEnum = RecordingStatus;
 
+	/**
+	 * @internal
+	 */
+	isSessionCreator = false;
+
+	/**
+	 * @internal
+	 */
+	liveRecording: RecordingInfo;
+	/**
+	 * @internal
+	 */
+	recordingsList: RecordingInfo[] = [];
+
+	/**
+	 * @internal
+	 */
+	recordingError: any;
+
+	private recordingStatusSubscription: Subscription;
+	private recordingListSubscription: Subscription;
+	private recordingErrorSub: Subscription;
+
+	/**
+	 * @internal
+	 */
+	constructor(
+		private recordingService: RecordingService,
+		private participantService: ParticipantService,
+		private libService: OpenViduAngularConfigService,
+		private actionService: ActionService,
+		private cd: ChangeDetectorRef
+	) {}
+
+	/**
+	 * @internal
+	 */
 	ngOnInit(): void {
 		this.subscribeToRecordingStatus();
+		this.subscribeToRecordingActivityDirective();
+		this.isSessionCreator = this.participantService.getMyRole() === OpenViduRole.MODERATOR;
 	}
 
+	/**
+	 * @internal
+	 */
 	ngOnDestroy() {
-		if (this.recordingSubscription) this.recordingSubscription.unsubscribe();
+		if (this.recordingStatusSubscription) this.recordingStatusSubscription.unsubscribe();
+		if (this.recordingListSubscription) this.recordingListSubscription.unsubscribe();
+		if (this.recordingErrorSub) this.recordingErrorSub.unsubscribe();
 	}
 
+	/**
+	 * @internal
+	 */
 	panelOpened() {
-		//TODO EMITIR EVENTO
+		//TODO emit event
 		this.opened = true;
 	}
 
+	/**
+	 * @internal
+	 */
 	panelClosed() {
-		//TODO EMITIR EVENTO
+		//TODO emit event
 		this.opened = false;
 	}
 
+	/**
+	 * @internal
+	 */
 	startRecording() {
-		console.log('START RECORDING');
-		this.startRecordingClicked.emit();
-		//TODO: REMOVE
-		const info: RecordingInfo = {
-			status: RecordingStatus.STARTED,
-			id: '1',
-			name: 'akajo',
-			reason: null
-		};
-		this.recordingService.startRecording(<any>info);
-	}
-	stopRecording() {
-		console.log('STOP RECORDING');
-		this.stopRecordingClicked.emit();
-		//TODO: REMOVE
-		const info: RecordingInfo = {
-			status: RecordingStatus.STOPPED,
-			id: '1',
-			name: 'akajo',
-			reason: 'lalal'
-		};
-		this.recordingService.stopRecording(<any>info);
+		this.onStartRecordingClicked.emit();
+		this.recordingService.updateStatus(RecordingStatus.STARTING);
 	}
 
-	subscribeToRecordingStatus() {
-		this.recordingSubscription = this.recordingService.recordingStatusObs.subscribe((info: RecordingInfo) => {
-			if (info) {
-				this.recordingStatus = info.status;
-				if (info.status === RecordingStatus.STARTED) {
-					this.recording = info;
-				} else {
-					this.recording = null;
+	/**
+	 * @internal
+	 */
+	stopRecording() {
+		this.onStopRecordingClicked.emit();
+		this.recordingService.updateStatus(RecordingStatus.STOPPING);
+	}
+
+	/**
+	 * @internal
+	 */
+
+	deleteRecording(id: string) {
+		const succsessCallback = () => {
+			this.onDeleteRecordingClicked.emit(id);
+		};
+		this.actionService.openDeleteRecordingDialog(succsessCallback);
+	}
+
+	/**
+	 * @internal
+	 */
+	download(recordingId: string) {
+		this.onDownloadRecordingClicked.emit(recordingId);
+	}
+
+	/**
+	 * @internal
+	 */
+	play(recordingId: string) {
+		this.onPlayRecordingClicked.emit(recordingId);
+	}
+
+	private subscribeToRecordingStatus() {
+		this.recordingStatusSubscription = this.recordingService.recordingStatusObs.subscribe(
+			(ev: { info: RecordingInfo; time?: Date }) => {
+				if (ev?.info) {
+					this.recordingStatus = ev.info.status;
+					if (ev.info.status === RecordingStatus.STARTED) {
+						this.liveRecording = ev.info;
+					} else {
+						this.liveRecording = null;
+					}
 				}
+				this.cd.markForCheck();
+			}
+		);
+	}
+
+	private subscribeToRecordingActivityDirective() {
+		this.recordingListSubscription = this.libService.recordingsListObs.subscribe((recordingList: RecordingInfo[]) => {
+			this.recordingsList = recordingList;
+			this.cd.markForCheck();
+		});
+
+		this.recordingErrorSub = this.libService.recordingErrorObs.subscribe((error: any) => {
+			console.log(error);
+			if (error) {
+				this.recordingService.updateStatus(RecordingStatus.FAILED);
+				this.recordingError = error.error?.message || error.message || error;
+				console.log('REC ERROR', this.recordingError)
 			}
 		});
 	}

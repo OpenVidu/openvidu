@@ -27,18 +27,20 @@ import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 
-
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { VideoComponent } from './components/video/video.component';
 import { ChatPanelComponent } from './components/panel/chat-panel/chat-panel.component';
 import { SessionComponent } from './components/session/session.component';
 import { LayoutComponent } from './components/layout/layout.component';
 import { StreamComponent } from './components/stream/stream.component';
-import { DialogTemplateComponent } from './components/material/dialog.component';
+import { DialogTemplateComponent } from './components/dialogs/dialog.component';
+import { RecordingDialogComponent } from './components/dialogs/recording-dialog.component';
+import { DeleteDialogComponent } from './components/dialogs/delete-recording.component';
 
 import { LinkifyPipe } from './pipes/linkify.pipe';
 import { TranslatePipe } from './pipes/translate.pipe';
 import { StreamTypesEnabledPipe, ParticipantStreamsPipe } from './pipes/participant.pipe';
+import { DurationFromSecondsPipe } from './pipes/recording.pipe';
 
 import { OpenViduAngularConfig } from './config/openvidu-angular.config';
 import { CdkOverlayContainer } from './config/custom-cdk-overlay';
@@ -55,6 +57,8 @@ import { DocumentService } from './services/document/document.service';
 import { LayoutService } from './services/layout/layout.service';
 import { PanelService } from './services/panel/panel.service';
 import { ParticipantService } from './services/participant/participant.service';
+import { RecordingService } from './services/recording/recording.service';
+
 import { ParticipantPanelItemComponent } from './components/panel/participants-panel/participant-panel-item/participant-panel-item.component';
 import { ParticipantsPanelComponent } from './components/panel/participants-panel/participants-panel/participants-panel.component';
 import { VideoconferenceComponent } from './components/videoconference/videoconference.component';
@@ -78,8 +82,11 @@ import { RecordingActivityComponent } from './components/panel/activities-panel/
 		LayoutComponent,
 		StreamComponent,
 		DialogTemplateComponent,
+		RecordingDialogComponent,
+		DeleteDialogComponent,
 		LinkifyPipe,
 		ParticipantStreamsPipe,
+		DurationFromSecondsPipe,
 		StreamTypesEnabledPipe,
 		TranslatePipe,
 		ParticipantPanelItemComponent,
@@ -137,7 +144,8 @@ import { RecordingActivityComponent } from './components/panel/activities-panel/
 		ParticipantService,
 		StorageService,
 		TokenService,
-		OpenViduService
+		OpenViduService,
+		RecordingService
 	],
 	exports: [
 		VideoconferenceComponent,
@@ -155,12 +163,13 @@ import { RecordingActivityComponent } from './components/panel/activities-panel/
 		AudioWaveComponent,
 		PreJoinComponent,
 		ParticipantStreamsPipe,
+		DurationFromSecondsPipe,
 		StreamTypesEnabledPipe,
 		CommonModule,
 		OpenViduAngularDirectiveModule,
 		ApiDirectiveModule
 	],
-	entryComponents: [DialogTemplateComponent]
+	entryComponents: [DialogTemplateComponent, RecordingDialogComponent, DeleteDialogComponent]
 })
 export class OpenViduAngularModule {
 	static forRoot(config): ModuleWithProviders<OpenViduAngularModule> {

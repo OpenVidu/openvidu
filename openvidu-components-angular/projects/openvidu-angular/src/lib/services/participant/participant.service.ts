@@ -150,6 +150,10 @@ export class ParticipantService {
 		return this.localParticipant.nickname;
 	}
 
+	getMyRole(): string {
+		return this.localParticipant.getRole();
+	}
+
 	/**
 	 * @internal
 	 */

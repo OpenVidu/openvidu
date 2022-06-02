@@ -1,14 +1,23 @@
 <div class="panel-container" id="activities-container" fxLayout="column" fxLayoutAlign="space-evenly none">
 	<div class="panel-header-container" fxFlex="55px" fxLayoutAlign="start center">
 		<h3 class="panel-title">Activities</h3>
-		<button class="panel-close-button" mat-icon-button matTooltip="Close" (click)="close()">
+		<button class="panel-close-button" mat-icon-button matTooltip="{{ 'PANEL.CLOSE' | translate }}" (click)="close()">
 			<mat-icon>close</mat-icon>
 		</button>
 	</div>
 
 	<div class="activities-body-container" fxFlex="75%" fxLayoutAlign="space-evenly none">
 		<mat-accordion>
-			<ov-recording-activity></ov-recording-activity>
+			<ov-recording-activity
+				*ngIf="showRecordingActivity"
+				id="recording-activity"
+				[expanded]="expandedPanel === 'recording'"
+				(onStartRecordingClicked)="_onStartRecordingClicked()"
+				(onStopRecordingClicked)="_onStopRecordingClicked()"
+				(onDownloadRecordingClicked)="_onDownloadRecordingClicked($event)"
+				(onDeleteRecordingClicked)="_onDeleteRecordingClicked($event)"
+				(onPlayRecordingClicked)="_onPlayRecordingClicked($event)"
+			></ov-recording-activity>
 		</mat-accordion>
 	</div>
 </div>

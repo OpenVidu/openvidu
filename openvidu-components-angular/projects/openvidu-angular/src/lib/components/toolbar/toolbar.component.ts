@@ -31,11 +31,11 @@ import {
 	ToolbarAdditionalButtonsDirective,
 	ToolbarAdditionalPanelButtonsDirective
 } from '../../directives/template/openvidu-angular.directive';
-import { ParticipantAbstractModel } from '../../models/participant.model';
+import { OpenViduRole, ParticipantAbstractModel } from '../../models/participant.model';
 import { PlatformService } from '../../services/platform/platform.service';
 import { MatMenuTrigger } from '@angular/material/menu';
-import { RecordingInfo, RecordingService } from '../../services/recording/recording.service';
-import { RecordingStatus } from '../../models/recording.model';
+import { RecordingService } from '../../services/recording/recording.service';
+import { RecordingInfo, RecordingStatus } from '../../models/recording.model';
 import { TranslateService } from '../../services/translate/translate.service';
 
 /**
@@ -166,16 +166,23 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	@Output() onParticipantsPanelButtonClicked: EventEmitter<void> = new EventEmitter<any>();
 
 	/**
-	 * @internal
-	 * TODO: WIP
-	 * Provides event notifications that fire when background effects button has been clicked.
-	 */
-	// @Output() onBackgroundEffectsButtonClicked: EventEmitter<void> = new EventEmitter<any>();
-
-	/**
 	 * Provides event notifications that fire when chat panel button has been clicked.
 	 */
 	@Output() onChatPanelButtonClicked: EventEmitter<void> = new EventEmitter<any>();
+
+	/**
+	 * Provides event notifications that fire when activities panel button has been clicked.
+	 */
+	@Output() onActivitiesPanelButtonClicked: EventEmitter<void> = new EventEmitter<any>();
+	/**
+	 * Provides event notifications that fire when start recording button has been clicked.
+	 */
+	@Output() onStartRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when stop recording button has been clicked.
+	 */
+	@Output() onStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
 	/**
 	 * @ignore
 	 */
@@ -257,6 +264,17 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	 * @ignore
 	 */
 	showLeaveButton: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	showRecordingButton: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	showMoreOptionsButton: boolean = true;
+
 	/**
 	 * @ignore
 	 */
@@ -286,7 +304,21 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	/**
 	 * @ignore
 	 */
-	isRecording: boolean = false;
+	recordingStatus: RecordingStatus = RecordingStatus.STOPPED;
+	/**
+	 * @ignore
+	 */
+	_recordingStatus = RecordingStatus;
+
+	/**
+	 * @ignore
+	 */
+	recordingTime: Date;
+
+	/**
+	 * @ignore
+	 */
+	isSessionCreator: boolean = false;
 
 	private log: ILogger;
 	private minimalSub: Subscription;
@@ -297,8 +329,8 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	private fullscreenButtonSub: Subscription;
 	private backgroundEffectsButtonSub: Subscription;
 	private leaveButtonSub: Subscription;
+	private recordingButtonSub: Subscription;
 	private recordingSubscription: Subscription;
-
 	private activitiesPanelButtonSub: Subscription;
 	private participantsPanelButtonSub: Subscription;
 	private chatPanelButtonSub: Subscription;
@@ -375,6 +407,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		if (this.fullscreenButtonSub) this.fullscreenButtonSub.unsubscribe();
 		if (this.backgroundEffectsButtonSub) this.backgroundEffectsButtonSub.unsubscribe();
 		if (this.leaveButtonSub) this.leaveButtonSub.unsubscribe();
+		if (this.recordingButtonSub) this.recordingButtonSub.unsubscribe();
 		if (this.participantsPanelButtonSub) this.participantsPanelButtonSub.unsubscribe();
 		if (this.chatPanelButtonSub) this.chatPanelButtonSub.unsubscribe();
 		if (this.displayLogoSub) this.displayLogoSub.unsubscribe();
@@ -393,7 +426,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 			await this.openviduService.publishAudio(!this.isAudioActive);
 		} catch (error) {
 			this.log.e('There was an error toggling microphone:', error.code, error.message);
-			this.actionService.openDialog(this.translateService.translate('ERRORS.TOGGLE_MICROPHONE'), error?.error || error?.message || error);
+			this.actionService.openDialog(
+				this.translateService.translate('ERRORS.TOGGLE_MICROPHONE'),
+				error?.error || error?.message || error
+			);
 		}
 	}
 
@@ -427,7 +463,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		} catch (error) {
 			this.log.e('There was an error toggling screen share', error.code, error.message);
 			if (error && error.name === 'SCREEN_SHARING_NOT_SUPPORTED') {
-				this.actionService.openDialog(this.translateService.translate('ERRORS.SCREEN_SHARING'), this.translateService.translate('ERRORS.SCREEN_SUPPORT'));
+				this.actionService.openDialog(
+					this.translateService.translate('ERRORS.SCREEN_SHARING'),
+					this.translateService.translate('ERRORS.SCREEN_SUPPORT')
+				);
 			}
 		}
 	}
@@ -442,19 +481,27 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * TODO: WIP
 	 * @ignore
 	 */
-	toggleActivitiesPanel(expandPanel: string) {
-		// this.onActivitiesPanelButtonClicked.emit();
-		// this.panelService.togglePanel(PanelType.ACTIVITIES);
+	toggleRecording() {
+		if (this.recordingStatus === RecordingStatus.STARTED) {
+			this.log.d('Stopping recording');
+			this.onStopRecordingClicked.emit();
+			this.recordingService.updateStatus(RecordingStatus.STOPPING);
+		} else if (this.recordingStatus === RecordingStatus.STOPPED) {
+			this.onStartRecordingClicked.emit();
+			this.recordingService.updateStatus(RecordingStatus.STARTING);
+
+			if (this.showActivitiesPanelButton && !this.isActivitiesOpened) {
+				this.toggleActivitiesPanel('recording');
+			}
+		}
 	}
 
 	/**
 	 * @ignore
 	 */
 	toggleBackgroundEffects() {
-		// this.onBackgroundEffectsButtonClicked.emit();
 		this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
 	}
 
@@ -483,6 +530,11 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		this.onFullscreenButtonClicked.emit();
 	}
 
+	private toggleActivitiesPanel(expandPanel: string) {
+		this.onActivitiesPanelButtonClicked.emit();
+		this.panelService.togglePanel(PanelType.ACTIVITIES, expandPanel);
+	}
+
 	protected subscribeToReconnection() {
 		this.session.on('reconnecting', () => {
 			if (this.panelService.isPanelOpened()) {
@@ -495,14 +547,17 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		});
 	}
 	protected subscribeToMenuToggling() {
-		this.panelTogglingSubscription = this.panelService.panelOpenedObs.subscribe((ev: { opened: boolean; type?: PanelType }) => {
-			this.isChatOpened = ev.opened && ev.type === PanelType.CHAT;
-			this.isParticipantsOpened = ev.opened && ev.type === PanelType.PARTICIPANTS;
-			this.isActivitiesOpened = ev.opened && ev.type === PanelType.ACTIVITIES;
-			if (this.isChatOpened) {
-				this.unreadMessages = 0;
+		this.panelTogglingSubscription = this.panelService.panelOpenedObs.subscribe(
+			(ev: { opened: boolean; type?: PanelType | string }) => {
+				this.isChatOpened = ev.opened && ev.type === PanelType.CHAT;
+				this.isParticipantsOpened = ev.opened && ev.type === PanelType.PARTICIPANTS;
+				this.isActivitiesOpened = ev.opened && ev.type === PanelType.ACTIVITIES;
+				if (this.isChatOpened) {
+					this.unreadMessages = 0;
+				}
+				this.cd.markForCheck();
 			}
-		});
+		);
 	}
 
 	protected subscribeToChatMessages() {
@@ -520,17 +575,20 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 				this.isWebcamVideoActive = p.isCameraVideoActive();
 				this.isAudioActive = p.isCameraAudioActive() || p.isScreenAudioActive();
 				this.isScreenShareActive = p.isScreenActive();
+				this.isSessionCreator = p.getRole() === OpenViduRole.MODERATOR;
 				this.cd.markForCheck();
 			}
 		});
 	}
 
 	private subscribeToRecordingStatus() {
-		//TODO: WIP
-		// this.recordingSubscription = this.recordingService.recordingStatusObs.pipe(skip(1)).subscribe((info: RecordingInfo) => {
-		// 	this.isRecording = info.status === RecordingStatus.STARTED;
-		// 	this.cd.markForCheck();
-		// });
+		this.recordingSubscription = this.recordingService.recordingStatusObs
+			.pipe(skip(1))
+			.subscribe((ev: { info: RecordingInfo; time?: Date }) => {
+				this.recordingStatus = ev.info.status;
+				this.recordingTime = ev.time;
+				this.cd.markForCheck();
+			});
 	}
 
 	private subscribeToToolbarDirectives() {
@@ -544,10 +602,17 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		});
 		this.fullscreenButtonSub = this.libService.fullscreenButtonObs.subscribe((value: boolean) => {
 			this.showFullscreenButton = value;
+			this.checkDisplayMoreOptions();
 			this.cd.markForCheck();
 		});
 		this.leaveButtonSub = this.libService.leaveButtonObs.subscribe((value: boolean) => {
 			this.showLeaveButton = value;
+			this.cd.markForCheck();
+		});
+
+		this.recordingButtonSub = this.libService.recordingButton.subscribe((value: boolean) => {
+			this.showRecordingButton = value;
+			this.checkDisplayMoreOptions();
 			this.cd.markForCheck();
 		});
 		this.chatPanelButtonSub = this.libService.chatPanelButtonObs.subscribe((value: boolean) => {
@@ -558,12 +623,13 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 			this.showParticipantsPanelButton = value;
 			this.cd.markForCheck();
 		});
-		// this.activitiesPanelButtonSub = this.libService.activitiesPanelButtonObs.subscribe((value: boolean) => {
-		// 	this.showActivitiesPanelButton = value;
-		// 	this.cd.markForCheck();
-		// });
+		this.activitiesPanelButtonSub = this.libService.activitiesPanelButtonObs.subscribe((value: boolean) => {
+			this.showActivitiesPanelButton = value;
+			this.cd.markForCheck();
+		});
 		this.backgroundEffectsButtonSub = this.libService.backgroundEffectsButton.subscribe((value: boolean) => {
 			this.showBackgroundEffectsButton = value;
+			this.checkDisplayMoreOptions();
 			this.cd.markForCheck();
 		});
 		this.displayLogoSub = this.libService.displayLogoObs.subscribe((value: boolean) => {
@@ -574,5 +640,9 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 			this.showSessionName = value;
 			this.cd.markForCheck();
 		});
+	}
+
+	private checkDisplayMoreOptions() {
+		this.showMoreOptionsButton = this.showFullscreenButton || this.showBackgroundEffectsButton || this.showRecordingButton;
 	}
 }

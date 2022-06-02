@@ -1,4 +1,3 @@
-
 @use '@angular/material' as mat;
 @import '~@angular/material/theming';
 
@@ -20,13 +19,15 @@ $openvidu-components-warn: mat.define-palette(mat.$red-palette);
 
 // Create the theme object. A theme consists of configurations for individual
 // theming systems such as "color" or "typography".
-$openvidu-components-theme: mat.define-light-theme((
-  color: (
-    primary: $openvidu-components-primary,
-    accent: $openvidu-components-accent,
-    warn: $openvidu-components-warn,
-  )
-));
+$openvidu-components-theme: mat.define-light-theme(
+	(
+		color: (
+			primary: $openvidu-components-primary,
+			accent: $openvidu-components-accent,
+			warn: $openvidu-components-warn
+		)
+	)
+);
 
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
@@ -37,8 +38,8 @@ $openvidu-components-theme: mat.define-light-theme((
 	font-family: 'Material Icons';
 	font-style: normal;
 	font-weight: 400;
-	src: url(https://fonts.gstatic.com/s/materialicons/v38/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
-  }
+	src: url(https://fonts.gstatic.com/s/materialicons/v129/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+}
 
 .material-icons {
 	font-family: 'Material Icons';
@@ -56,9 +57,15 @@ $openvidu-components-theme: mat.define-light-theme((
 	-webkit-font-smoothing: antialiased;
 }
 
-
-html, body { height: 100%; overflow: hidden;}
-body { margin: 0; font-family: 'Roboto','RobotoDraft',Helvetica,Arial,sans-serif;}
+html,
+body {
+	height: 100%;
+	overflow: hidden;
+}
+body {
+	margin: 0;
+	font-family: 'Roboto', 'RobotoDraft', Helvetica, Arial, sans-serif;
+}
 
 #poster-text {
 	padding: 0px !important;

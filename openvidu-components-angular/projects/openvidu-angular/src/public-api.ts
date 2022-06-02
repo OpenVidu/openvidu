@@ -19,10 +19,10 @@ export * from './lib/services/layout/layout.service';
 export * from './lib/services/panel/panel.service';
 export * from './lib/services/cdk-overlay/cdk-overlay.service';
 export * from './lib/services/storage/storage.service';
+export * from './lib/services/recording/recording.service';
 
 // Components
 export * from './lib/components/videoconference/videoconference.component';
-// export * from './lib/components/user-settings/user-settings.component';
 export * from './lib/components/toolbar/toolbar.component';
 export * from './lib/components/panel/panel.component';
 export * from './lib/components/panel/chat-panel/chat-panel.component';
@@ -46,9 +46,11 @@ export * from './lib/models/notification-options.model';
 export * from './lib/models/token.model';
 export * from './lib/models/signal.model';
 export * from './lib/models/panel.model';
+export * from './lib/models/recording.model';
 
 // Pipes
 export * from './lib/pipes/participant.pipe';
+export * from './lib/pipes/recording.pipe';
 
 // Directives
 export * from './lib/directives/api/api.directive.module';
@@ -59,3 +61,5 @@ export * from './lib/directives/api/toolbar.directive';
 export * from './lib/directives/api/stream.directive';
 export * from './lib/directives/api/videoconference.directive';
 export * from './lib/directives/api/participant-panel-item.directive';
+export * from './lib/directives/api/activities-panel.directive';
+export * from './lib/directives/api/recording-activity.directive';

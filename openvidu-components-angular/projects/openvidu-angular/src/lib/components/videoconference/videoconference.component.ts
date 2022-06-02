@@ -27,13 +27,14 @@ import {
 	ActivitiesPanelDirective
 } from '../../directives/template/openvidu-angular.directive';
 import { ILogger } from '../../models/logger.model';
+import { OpenViduEdition } from '../../models/openvidu.model';
 import { ParticipantAbstractModel, ParticipantProperties } from '../../models/participant.model';
 import { TokenModel } from '../../models/token.model';
 import { ActionService } from '../../services/action/action.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import { DeviceService } from '../../services/device/device.service';
 import { LoggerService } from '../../services/logger/logger.service';
-import { OpenViduEdition, OpenViduService } from '../../services/openvidu/openvidu.service';
+import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { StorageService } from '../../services/storage/storage.service';
 import { TokenService } from '../../services/token/token.service';
@@ -70,6 +71,7 @@ import { TranslateService } from '../../services/translate/translate.service';
  * | **streamDisplayAudioDetection**    | `boolean` | {@link StreamDisplayAudioDetectionDirective}    |
  * | **streamSettingsButton**           | `boolean` | {@link StreamSettingsButtonDirective}           |
  * | **participantPanelItemMuteButton** | `boolean` | {@link ParticipantPanelItemMuteButtonDirective} |
+ * | **recordingActivityRecordingList** | `{@link RecordingInfo}[]` | {@link RecordingActivityRecordingListDirective} |
  *
  * <p class="component-link-text">
  * <span class="italic">See all {@link ApiDirectiveModule API Directives}</span>
@@ -326,6 +328,50 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	@Output() onToolbarChatPanelButtonClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
+	 * Provides event notifications that fire when activities panel button has been clicked.
+	 */
+	@Output() onToolbarActivitiesPanelButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when start recording button is clicked {@link ToolbarComponent}.
+	 *  The recording should be stopped using the REST API.
+	 */
+	@Output() onToolbarStartRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
+	/**
+	 * Provides event notifications that fire when stop recording button is clicked from {@link ToolbarComponent}.
+	 *  The recording should be stopped using the REST API.
+	 */
+	@Output() onToolbarStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when start recording button is clicked {@link ActivitiesPanelComponent}.
+	 *  The recording should be stopped using the REST API.
+	 */
+	@Output() onActivitiesPanelStartRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
+	/**
+	 * Provides event notifications that fire when stop recording button is clicked from {@link ActivitiesPanelComponent}.
+	 *  The recording should be stopped using the REST API.
+	 */
+	@Output() onActivitiesPanelStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when download recording button is clicked from {@link ActivitiesPanelComponent}.
+	 *  The recording should be downloaded using the REST API.
+	 */
+	@Output() onActivitiesPanelDownloadRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
+	 * Provides event notifications that fire when delete recording button is clicked from {@link ActivitiesPanelComponent}.
+	 *  The recording should be deleted using the REST API.
+	 */
+	@Output() onActivitiesPanelDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
+	 * Provides event notifications that fire when play recording button is clicked from {@link ActivitiesPanelComponent}.
+	 */
+	@Output() onActivitiesPanelPlayRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
 	 * Provides event notifications that fire when OpenVidu Session is created.
 	 * See {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html openvidu-browser Session}.
 	 */
@@ -339,7 +385,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	/**
 	 * @internal
 	 */
-	joinSessionClicked: boolean = false;
+	showVideoconference: boolean = false;
 	/**
 	 * @internal
 	 */
@@ -360,6 +406,8 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 * @internal
 	 */
 	showPrejoin: boolean = true;
+
+	streamPlaying = false;
 	private externalParticipantName: string;
 	private prejoinSub: Subscription;
 	private participantNameSub: Subscription;
@@ -404,12 +452,9 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		try {
 			const publisher = await this.openviduService.initDefaultPublisher(undefined);
 			if (publisher) {
-				publisher.once('accessDenied', (e: any) => {
-					this.handlePublisherError(e);
-				});
-				publisher.once('accessAllowed', () => {
-					this.participantReady = true;
-				});
+				publisher.once('accessDenied', (e: any) => this.handlePublisherError(e));
+				publisher.once('accessAllowed', () => (this.participantReady = true));
+				publisher.once('streamPlaying', () => (this.streamPlaying = true));
 			}
 		} catch (error) {
 			this.actionService.openDialog(error.name.replace(/_/g, ' '), error.message, true);
@@ -477,14 +522,13 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 				this.openviduAngularChatPanelTemplate = this.defaultChatPanelTemplate;
 			}
 
-			// TODO: WIP
-			// if (this.externalActivitiesPanel) {
-			// 	this.log.d('Setting EXTERNAL ACTIVITIES PANEL');
-			// 	this.openviduAngularActivitiesPanelTemplate = this.externalActivitiesPanel.template;
-			// } else {
-			// 	this.log.d('Setting DEFAULT ACTIVITIES PANEL');
-			// 	this.openviduAngularActivitiesPanelTemplate = this.defaultActivitiesPanelTemplate;
-			// }
+			if (this.externalActivitiesPanel) {
+				this.log.d('Setting EXTERNAL ACTIVITIES PANEL');
+				this.openviduAngularActivitiesPanelTemplate = this.externalActivitiesPanel.template;
+			} else {
+				this.log.d('Setting DEFAULT ACTIVITIES PANEL');
+				this.openviduAngularActivitiesPanelTemplate = this.defaultActivitiesPanelTemplate;
+			}
 
 			if (this.externalAdditionalPanels) {
 				this.log.d('Setting EXTERNAL ADDITIONAL PANELS');
@@ -514,14 +558,15 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 * @internal
 	 */
 	_onJoinButtonClicked() {
-		this.joinSessionClicked = true;
+		this.showVideoconference = true;
+		this.showPrejoin = false;
 		this.onJoinButtonClicked.emit();
 	}
 	/**
 	 * @internal
 	 */
 	onLeaveButtonClicked() {
-		this.joinSessionClicked = false;
+		this.showVideoconference = false;
 		this.participantReady = false;
 		this.onToolbarLeaveButtonClicked.emit();
 	}
@@ -561,6 +606,56 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	onChatPanelButtonClicked() {
 		this.onToolbarChatPanelButtonClicked.emit();
 	}
+	/**
+	 * @internal
+	 */
+	onActivitiesPanelButtonClicked() {
+		this.onToolbarActivitiesPanelButtonClicked.emit();
+	}
+
+	/**
+	 * @internal
+	 */
+	onStartRecordingClicked(from: string) {
+		if (from === 'toolbar') {
+			this.onToolbarStartRecordingClicked.emit();
+		} else if (from === 'panel') {
+			this.onActivitiesPanelStartRecordingClicked.emit();
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	onStopRecordingClicked(from: string) {
+		if (from === 'toolbar') {
+			this.onToolbarStopRecordingClicked.emit();
+		} else if (from === 'panel') {
+			this.onActivitiesPanelStopRecordingClicked.emit();
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	onDownloadRecordingClicked(recordingId: string) {
+		this.onActivitiesPanelDownloadRecordingClicked.emit(recordingId);
+	}
+
+	/**
+	 * @internal
+	 */
+	onDeleteRecordingClicked(recordingId: string) {
+		this.onActivitiesPanelDeleteRecordingClicked.emit(recordingId);
+	}
+
+	/**
+	 * @internal
+	 */
+	onPlayRecordingClicked(recordingId: string) {
+		this.onActivitiesPanelPlayRecordingClicked.emit(recordingId);
+	}
+
 	/**
 	 * @internal
 	 */

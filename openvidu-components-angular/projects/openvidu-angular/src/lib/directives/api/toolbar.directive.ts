@@ -64,6 +64,67 @@ export class ToolbarScreenshareButtonDirective implements AfterViewInit, OnDestr
 }
 
 /**
+ * The **recordingButton** directive allows show/hide the start/stop recording toolbar button.
+ *
+ * Default: `true`
+ *
+ * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `toolbar` component:
+ *
+ * @example
+ * <ov-videoconference [toolbarRecordingButton]="false"></ov-videoconference>
+ *
+ * \
+ * And it also can be used in the {@link ToolbarComponent}.
+ * @example
+ * <ov-toolbar [recordingButton]="false"></ov-toolbar>
+ *
+ * @internal
+ */
+ @Directive({
+	selector: 'ov-videoconference[toolbarRecordingButton], ov-toolbar[recordingButton]'
+})
+export class ToolbarRecordingButtonDirective implements AfterViewInit, OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set toolbarRecordingButton(value: boolean) {
+		this.recordingValue = value;
+		this.update(this.recordingValue);
+	}
+	/**
+	 * @ignore
+	 */
+	@Input() set recordingButton(value: boolean) {
+		this.recordingValue = value;
+		this.update(this.recordingValue);
+	}
+	private recordingValue: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+
+	ngAfterViewInit() {
+		this.update(this.recordingValue);
+	}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	private clear() {
+		this.recordingValue = true;
+		this.update(true);
+	}
+
+	private update(value: boolean) {
+		if (this.libService.recordingButton.getValue() !== value) {
+			this.libService.recordingButton.next(value);
+		}
+	}
+}
+
+/**
  * The **fullscreenButton** directive allows show/hide the fullscreen toolbar button.
  *
  * Default: `true`
@@ -392,7 +453,7 @@ export class ToolbarActivitiesPanelButtonDirective implements AfterViewInit, OnD
 	/**
 	 * @ignore
 	 */
-	@Input() set chatPanelButton(value: boolean) {
+	@Input() set activitiesPanelButton(value: boolean) {
 		this.toolbarActivitiesPanelValue = value;
 		this.update(this.toolbarActivitiesPanelValue);
 	}

@@ -60,7 +60,15 @@
 			"SUBTITLE": "会議を録音して後世に残す",
 			"CONTENT_TITLE": "ビデオ通話を録音する",
 			"CONTENT_SUBTITLE": "録音が完了したら、簡単にダウンロードできます",
-			"STARTING": "録画開始"
+			"STARTING": "録画開始",
+            "STOPPING": "録音を停止します",
+			"PLAY": "遊ぶ",
+			"DELETE": "消去",
+            "CANCEL": "キャンセル",
+			"DELETE_QUESTION": "録音を削除してもよろしいですか",
+			"DOWNLOAD": "ダウンロード",
+            "RECORDINGS": "録画",
+			"NO_MODERATOR": "録音を開始できるのは、モデレーターのみです"
 		}
     },
     "ERRORS": {

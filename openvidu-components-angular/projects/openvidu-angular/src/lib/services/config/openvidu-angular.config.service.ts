@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { OpenViduAngularConfig, ParticipantFactoryFunction } from '../../config/openvidu-angular.config';
+import { RecordingInfo } from '../../models/recording.model';
 
 // import { version } from '../../../../package.json';
 
@@ -54,6 +55,14 @@ export class OpenViduAngularConfigService {
 	participantItemMuteButtonObs: Observable<boolean>;
 	backgroundEffectsButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	backgroundEffectsButtonObs: Observable<boolean>;
+	recordingsList = <BehaviorSubject<RecordingInfo[]>>new BehaviorSubject([]);
+	recordingsListObs: Observable<RecordingInfo[]>;
+	recordingButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
+	recordingButtonObs: Observable<boolean>;
+	recordingActivity = <BehaviorSubject<boolean>>new BehaviorSubject(true);
+	recordingActivityObs: Observable<boolean>;
+	recordingError = <BehaviorSubject<any>>new BehaviorSubject(null);
+	recordingErrorObs: Observable<any>;
 
 	constructor(@Inject('OPENVIDU_ANGULAR_CONFIG') config: OpenViduAngularConfig) {
 		this.configuration = config;
@@ -74,12 +83,17 @@ export class OpenViduAngularConfigService {
 		this.activitiesPanelButtonObs = this.activitiesPanelButton.asObservable();
 		this.displaySessionNameObs = this.displaySessionName.asObservable();
 		this.displayLogoObs = this.displayLogo.asObservable();
+		this.recordingButtonObs = this.recordingButton.asObservable();
 		//Stream observables
 		this.displayParticipantNameObs = this.displayParticipantName.asObservable();
 		this.displayAudioDetectionObs = this.displayAudioDetection.asObservable();
 		this.settingsButtonObs = this.settingsButton.asObservable();
 		// Participant item observables
 		this.participantItemMuteButtonObs = this.participantItemMuteButton.asObservable();
+		// Recording activity observables
+		this.recordingActivityObs = this.recordingActivity.asObservable();
+		this.recordingsListObs = this.recordingsList.asObservable();
+		this.recordingErrorObs = this.recordingError.asObservable();
 	}
 
 	getConfig(): OpenViduAngularConfig {

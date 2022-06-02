@@ -60,7 +60,26 @@
 			"SUBTITLE": "Graba tus llamadas para la posteridad",
 			"CONTENT_TITLE": "Graba tu video conferencia",
 			"CONTENT_SUBTITLE": "Cuando la grabación haya finalizado, podrás descargarla con facilidad",
-			"STARTING": "Iniciar grabación"
+			"STARTING": "Iniciando grabación",
+			"STOPPING": "Parando grabación",
+			"PLAY": "Reproducir",
+			"DELETE": "Borrar",
+			"CANCEL": "Cancelar",
+			"DELETE_QUESTION": "¿Estás seguro/a de que deseas borrar la grabación?",
+			"DOWNLOAD": "Descargar",
+			"RECORDINGS": "GRABACIONES",
+			"NO_MODERATOR": "Sólo el MODERADOR puede iniciar la grabación"
 		}
+	},
+	"ERRORS": {
+		"SESSION": "Hubo un error al conectar a la sesión",
+		"CONNECTION": "Sin conexión",
+		"RECONNECT": "Intentando reconectar a la sesión...",
+		"TOGGLE_CAMERA": "Hubo un error cambiando la cámara",
+		"TOGGLE_MICROPHONE": "Hubo un error cambiando el micrófono",
+		"SCREEN_SHARING": "Hubo un error compartiendo pantalla",
+		"SCREEN_SUPPORT": "Tu navegador no soporta la pantalla compartida",
+		"MEDIA_ACCESS": "No se ha podido acceder a tus dispositivos",
+		"DEVICE_NOT_FOUND": "No se han encontrado dispositivos de audio o video. Por favor, conecta al menos uno."
 	}
 }

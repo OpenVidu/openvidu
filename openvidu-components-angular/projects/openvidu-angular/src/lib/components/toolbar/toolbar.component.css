@@ -70,8 +70,8 @@
 	flex-direction: column;
 }
 
-#recording-tag {
-	padding: 0 15px;
+.recording-tag {
+	padding: 0 10px;
 	background-color: var(--ov-warn-color);
 	border-radius: var(--ov-panel-radius);
 	width: fit-content;
@@ -79,15 +79,16 @@
 	text-align: center;
 	line-height: 20px;
 	margin: auto;
-	animation: blinker 1.5s linear infinite;
-
-
 }
-#recording-tag mat-icon {
+.recording-tag mat-icon {
 	font-size: 16px;
 	display: inline;
     vertical-align: sub;
     margin-right: 5px;
+}
+
+.blink {
+	animation: blinker 1.5s linear infinite;
 }
 
 #point {
@@ -140,5 +141,5 @@
 }
 
 @keyframes blinker {
-	50% { opacity: 0.2; }
-  }
+	50% { opacity: 0.3; }
+}

@@ -1,12 +1,6 @@
 import { Component, ElementRef, Input, OnInit, Output, EventEmitter } from '@angular/core';
-import { ILogger, LoggerService, OpenViduService } from 'openvidu-angular';
+import { ILogger, LoggerService, OpenViduService, TokenModel, ParticipantAbstractModel, RecordingInfo } from 'openvidu-angular';
 import { Session } from 'openvidu-browser';
-import { ParticipantAbstractModel } from '../../../projects/openvidu-angular/src/lib/models/participant.model';
-
-export interface TokenModel {
-	webcam: string;
-	screen: string;
-}
 
 /**
  *
@@ -48,6 +42,10 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
+	_toolbarRecordingButton: boolean = true;
+	/**
+	 * @internal
+	 */
 	_toolbarFullscreenButton: boolean = true;
 	/**
 	 * @internal
@@ -61,6 +59,10 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * @internal
 	 */
 	_toolbarChatPanelButton: boolean = true;
+	/**
+	 * @internal
+	 */
+	_toolbarActivitiesPanelButton: boolean = true;
 	/**
 	 * @internal
 	 */
@@ -89,6 +91,19 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * @internal
 	 */
 	_participantPanelItemMuteButton: boolean = true;
+	/**
+	 * @internal
+	 */
+	_recordingActivityRecordingError: any = null;
+	/**
+	 * @internal
+	 */
+	_activitiesPanelRecordingActivity: boolean = true;
+
+	/**
+	 * @internal
+	 */
+	_recordingActivityRecordingsList: RecordingInfo[] = [];
 
 	/**
 	 * The **minimal** attribute applies a minimal UI hiding all controls except for cam and mic.
@@ -167,6 +182,21 @@ export class OpenviduWebComponentComponent implements OnInit {
 	@Input() set toolbarScreenshareButton(value: string | boolean) {
 		this._toolbarScreenshareButton = this.castToBoolean(value);
 	}
+
+	/**
+	 * The **toolbarRecordingButton** attribute allows show/hide the start/stop recording toolbar button.
+	 *
+	 * Default: `true`
+	 *
+	 * <div class="warn-container">
+	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
+	 *
+	 * @example
+	 * <openvidu-webcomponent toolbar-recording-button="false"></openvidu-webcomponent>
+	 */
+	@Input() set toolbarRecordingButton(value: string | boolean) {
+		this._toolbarRecordingButton = this.castToBoolean(value);
+	}
 	/**
 	 * The **toolbarFullscreenButton** attribute allows show/hide the fullscreen toolbar button.
 	 *
@@ -223,6 +253,21 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 */
 	@Input() set toolbarChatPanelButton(value: string | boolean) {
 		this._toolbarChatPanelButton = this.castToBoolean(value);
+	}
+
+	/**
+	 * The **toolbarActivitiesPanelButton** attribute allows show/hide the activities panel toolbar button.
+	 *
+	 * Default: `true`
+	 *
+	 * <div class="warn-container">
+	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
+	 *
+	 * @example
+	 * <openvidu-webcomponent toolbar-activities-panel-button="false"></openvidu-webcomponent>
+	 */
+	@Input() set toolbarActivitiesPanelButton(value: string | boolean) {
+		this._toolbarActivitiesPanelButton = this.castToBoolean(value);
 	}
 	/**
 	 * The **toolbarParticipantsPanelButton** attribute allows show/hide the participants panel toolbar button.
@@ -324,6 +369,42 @@ export class OpenviduWebComponentComponent implements OnInit {
 	}
 
 	/**
+	 * The **recordingActivityRecordingError** attribute allows to show any possible error with the recording in the {@link RecordingActivityComponent}.
+	 *
+	 * Default: `true`
+	 *
+	 * @example
+	 * <openvidu-webcomponent recording-activity-recording-error="false"></openvidu-webcomponent>
+	 */
+	@Input() set recordingActivityRecordingError(value: any) {
+		this._recordingActivityRecordingError = value;
+	}
+
+	/**
+	 * The **activitiesPanelRecordingActivity** attribute allows show/hide the recording activity in {@link ActivitiesPanelComponent}.
+	 *
+	 * Default: `true`
+	 *
+	 * @example
+	 * <openvidu-webcomponent activity-panel-recording-activity="false"></openvidu-webcomponent>
+	 */
+	@Input() set activitiesPanelRecordingActivity(value: string | boolean) {
+		this._activitiesPanelRecordingActivity = this.castToBoolean(value);
+	}
+
+	/**
+	 * The **recordingActivityRecordingList** attribute allows show to show the recordings available for the session in {@link RecordingActivityComponent}.
+	 *
+	 * Default: `[]`
+	 *
+	 * @example
+	 * <openvidu-webcomponent recording-activity-recordings-list="recordingsList"></openvidu-webcomponent>
+	 */
+	@Input() set recordingActivityRecordingsList(value: RecordingInfo[]) {
+		this._recordingActivityRecordingsList = value;
+	}
+
+	/**
 	 * Provides event notifications that fire when join button (in prejoin page) has been clicked.
 	 */
 	@Output() onJoinButtonClicked: EventEmitter<void> = new EventEmitter<void>();
@@ -364,6 +445,46 @@ export class OpenviduWebComponentComponent implements OnInit {
 	@Output() onToolbarChatPanelButtonClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
+	 * Provides event notifications that fire when activities panel button has been clicked.
+	 */
+	@Output() onToolbarActivitiesPanelButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	@Output() onToolbarStartRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
+	/**
+	 * Provides event notifications that fire when stop recording button is clicked from {@link ToolbarComponent}.
+	 *  The recording should be stopped using the REST API.
+	 */
+	@Output() onToolbarStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when start recording button is clicked {@link ActivitiesPanelComponent}.
+	 *  The recording should be stopped using the REST API.
+	 */
+	@Output() onActivitiesPanelStartRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
+	/**
+	 * Provides event notifications that fire when stop recording button is clicked from {@link ActivitiesPanelComponent}.
+	 *  The recording should be stopped using the REST API.
+	 */
+	@Output() onActivitiesPanelStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when download recording button is clicked from {@link ActivitiesPanelComponent}.
+	 *  The recording should be downloaded using the REST API.
+	 */
+	@Output() onActivitiesPanelDownloadRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
+	 * Provides event notifications that fire when delete recording button is clicked from {@link ActivitiesPanelComponent}.
+	 *  The recording should be deleted using the REST API.
+	 */
+	@Output() onActivitiesPanelDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
+	 * Provides event notifications that fire when play recording button is clicked from {@link ActivitiesPanelComponent}.
+	 */
+	@Output() onActivitiesPanelPlayRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
 	 * Provides event notifications that fire when OpenVidu Session is created.
 	 * See {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html openvidu-browser Session}.
 	 */
@@ -393,6 +514,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @example
 	 * <openvidu-webcomponent tokens='{"webcam":"TOKEN1", "screen":"TOKEN2"}'></openvidu-webcomponent>
+	 * * <openvidu-webcomponent tokens='TOKEN'></openvidu-webcomponent>
 	 */
 	@Input('tokens')
 	set tokens(value: TokenModel | string) {
@@ -455,12 +577,56 @@ export class OpenviduWebComponentComponent implements OnInit {
 	_onToolbarChatPanelButtonClicked() {
 		this.onToolbarChatPanelButtonClicked.emit();
 	}
+
+	_onToolbarActivitiesPanelButtonClicked() {
+		this.onToolbarActivitiesPanelButtonClicked.emit();
+	}
 	/**
 	 * @internal
 	 */
 	_onToolbarFullscreenButtonClicked() {
 		this.onToolbarFullscreenButtonClicked.emit();
 	}
+	onStartRecordingClicked(from: string) {
+		if (from === 'toolbar') {
+			this.onToolbarStartRecordingClicked.emit();
+		} else if (from === 'panel') {
+			this.onActivitiesPanelStartRecordingClicked.emit();
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	onStopRecordingClicked(from: string) {
+		if (from === 'toolbar') {
+			this.onToolbarStopRecordingClicked.emit();
+		} else if (from === 'panel') {
+			this.onActivitiesPanelStopRecordingClicked.emit();
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	_onActivitiesDownloadRecordingClicked(recordingId: string) {
+		this.onActivitiesPanelDownloadRecordingClicked.emit(recordingId);
+	}
+
+	/**
+	 * @internal
+	 */
+	_onActivitiesDeleteRecordingClicked(recordingId: string) {
+		this.onActivitiesPanelDeleteRecordingClicked.emit(recordingId);
+	}
+
+	/**
+	 * @internal
+	 */
+	_onActivitiesPlayRecordingClicked(recordingId: string) {
+		this.onActivitiesPanelPlayRecordingClicked.emit(recordingId);
+	}
+
 	/**
 	 * @internal
 	 */

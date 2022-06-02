@@ -60,13 +60,21 @@
 			"SUBTITLE": "Neem uw vergadering op voor het nageslacht",
 			"CONTENT_TITLE": "Neem uw videogesprek op",
 			"CONTENT_SUBTITLE": "Als de opname klaar is kunt u deze met gemak downloaden",
-			"STARTING": "Beginnen met opnemen"
+			"STARTING": "Beginnen met opnemen",
+			"STOPPING": "Opname stoppen",
+			"PLAY": "Toneelstuk",
+			"DELETE": "Verwijderen",
+			"CANCEL": "Annuleren",
+			"DELETE_QUESTION": "Weet je zeker dat je de opname wilt verwijderen?",
+			"DOWNLOAD": "Downloaden",
+			"RECORDINGS": "OPNAME",
+			"NO_MODERATOR": "Alleen de MOEDERATOR kan de opname starten"
 		}
 	},
 	"ERRORS": {
 		"SESSION": "Er is een fout opgetreden bij het verbinden met de sessie",
 		"CONNECTION": "Verbinding verloren",
-		"RECONNECT": "Oeps! Proberen opnieuw verbinding te maken met de sessie...",
+		"RECONNECT": "Proberen opnieuw verbinding te maken met de sessie...",
 		"TOGGLE_CAMERA": "Er is een fout opgetreden bij het overschakelen naar een andere camera",
 		"TOGGLE_MICROPHONE": "Er is een fout opgetreden bij het overschakelen naar een microfoon",
 		"SCREEN_SHARING": "Fout bij het delen van het scherm",

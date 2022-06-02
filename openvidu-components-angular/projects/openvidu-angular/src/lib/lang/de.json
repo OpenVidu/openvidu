@@ -60,7 +60,15 @@
 			"SUBTITLE": "Zeichnen Sie Ihr Meeting für die Nachwelt auf",
 			"CONTENT_TITLE": "Ihr Videogespräch aufzeichnen",
 			"CONTENT_SUBTITLE": "Wenn die Aufzeichnung beendet ist, können Sie sie ganz einfach herunterladen",
-			"STARTING": "Aufzeichnung starten"
+			"STARTING": "Aufzeichnung starten",
+			"STOPPING": "Aufnahme stoppen",
+			"PLAY": "Spielen",
+			"DELETE": "Löschen",
+			"CANCEL": "Absagen",
+			"DELETE_QUESTION": "Möchten Sie die Aufzeichnung wirklich löschen?",
+			"DOWNLOAD": "Download",
+			"RECORDINGS": "AUFZEICHNUNGEN",
+			"NO_MODERATOR": "Nur der MODERATOR kann die Aufzeichnung starten"
 		}
 	},
 	"ERRORS": {

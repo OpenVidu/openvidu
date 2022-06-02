@@ -35,6 +35,7 @@
 
 ::ng-deep .mat-expansion-panel-header {
 	padding: 0px 10px !important;
+	height: 65px !important;
 }
 
 ::ng-deep .mat-list-base .mat-list-item .mat-list-item-content,
@@ -44,6 +45,7 @@
 
 ::ng-deep mat-expansion-panel .mat-expansion-panel-body {
 	padding: 0px !important;
+	min-height: 400px;
 }
 ::ng-deep .mat-expansion-panel-header-description {
 	flex-grow: 0 !important;
