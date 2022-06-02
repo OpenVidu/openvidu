@@ -243,6 +243,8 @@ describe('Testing API Directives', () => {
 		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
 		await element.click();
 
+		await browser.sleep(500);
+
 		// Checking if fullscreen button is not present
 		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
