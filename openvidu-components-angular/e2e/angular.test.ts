@@ -1119,9 +1119,12 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
+
 		// Open more options menu
 		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
 		await element.click();
+
+		await browser.sleep(500);
 
 		// Checking if fullscreen button is not present
 		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
@@ -1446,7 +1449,8 @@ describe('Testing EVENTS', () => {
 		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
 		await element.click();
 
-		// Checking if fullscreen button is not present
+		await browser.sleep(500);
+
 		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 		const fullscreenButton = await browser.findElement(By.id('fullscreen-btn'));
