@@ -193,11 +193,9 @@ export class RecordingActivityComponent implements OnInit {
 		});
 
 		this.recordingErrorSub = this.libService.recordingErrorObs.subscribe((error: any) => {
-			console.log(error);
 			if (error) {
 				this.recordingService.updateStatus(RecordingStatus.FAILED);
 				this.recordingError = error.error?.message || error.message || error;
-				console.log('REC ERROR', this.recordingError)
 			}
 		});
 	}

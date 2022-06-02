@@ -65,7 +65,8 @@
 
 				<span *ngIf="recordingStatus === recStatusEnum.STARTING">{{ 'PANEL.RECORDING.STARTING' | translate }} </span>
 				<span *ngIf="recordingStatus === recStatusEnum.STOPPING">{{ 'PANEL.RECORDING.STOPPING' | translate }} </span>
-				<span *ngIf="recordingStatus === recStatusEnum.FAILED" class="recording-error">Message: {{ recordingError | json }} </span>
+				<span *ngIf="recordingStatus === recStatusEnum.FAILED">Message: </span>
+				<span *ngIf="recordingStatus === recStatusEnum.FAILED" class="recording-error">{{ recordingError | json }} </span>
 			</div>
 
 			<!-- Message for no Moderators-->
