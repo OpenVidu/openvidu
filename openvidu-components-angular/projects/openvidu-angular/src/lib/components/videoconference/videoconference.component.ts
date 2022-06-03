@@ -451,7 +451,10 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 			const publisher = await this.openviduService.initDefaultPublisher(undefined);
 			if (publisher) {
 				publisher.once('accessDenied', (e: any) => this.handlePublisherError(e));
-				publisher.once('accessAllowed', () => (this.participantReady = true));
+				publisher.once('accessAllowed', async () => {
+					await this.handlePublisherSuccess();
+					this.participantReady = true;
+				});
 				publisher.once('streamPlaying', () => (this.streamPlaying = true));
 			}
 		} catch (error) {
@@ -679,6 +682,23 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		}
 		this.actionService.openDialog(e.name.replace(/_/g, ' '), message, true);
 		this.log.e(e.message);
+	}
+
+	private async handlePublisherSuccess() {
+		// The devices are initialized without labels in Firefox.
+		// We need to force an update after publisher is allowed.
+		if (this.deviceSrv.areEmptyLabels()) {
+			await this.deviceSrv.forceUpdate();
+			if (this.deviceSrv.hasAudioDeviceAvailable()) {
+				const audioLabel = this.participantService.getMyCameraPublisher()?.stream?.getMediaStream()?.getAudioTracks()[0]?.label;
+				this.deviceSrv.setMicSelected(audioLabel);
+			}
+
+			if (this.deviceSrv.hasVideoDeviceAvailable()) {
+				const videoLabel = this.participantService.getMyCameraPublisher()?.stream?.getMediaStream()?.getVideoTracks()[0]?.label;
+				this.deviceSrv.setCameraSelected(videoLabel);
+			}
+		}
 	}
 
 	private subscribeToVideconferenceDirectives() {

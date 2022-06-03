@@ -217,24 +217,4 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 			// this.cd.markForCheck();
 		});
 	}
-
-	//? After test in Chrome and Firefox, the devices always have labels.
-	//? It's not longer needed
-	// private handlePublisherSuccess(publisher: Publisher) {
-	// 	publisher.once('accessAllowed', async () => {
-	// 		if (this.deviceSrv.areEmptyLabels()) {
-	// 			await this.deviceSrv.forceUpdate();
-	// 			if (this.hasAudioDevices) {
-	// 				const audioLabel = publisher?.stream?.getMediaStream()?.getAudioTracks()[0]?.label;
-	// 				this.deviceSrv.setMicSelected(audioLabel);
-	// 			}
-
-	// 			if (this.hasVideoDevices) {
-	// 				const videoLabel = publisher?.stream?.getMediaStream()?.getVideoTracks()[0]?.label;
-	// 				this.deviceSrv.setCameraSelected(videoLabel);
-	// 			}
-	// 			this.setDevicesInfo();
-	// 		}
-	// 	});
-	// }
 }

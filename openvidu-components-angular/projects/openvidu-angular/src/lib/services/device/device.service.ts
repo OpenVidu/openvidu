@@ -43,6 +43,8 @@ export class DeviceService {
 	}
 
 	async forceUpdate() {
+		this.cameras = [];
+		this.microphones = [];
 		await this.initializeDevices();
 	}
 
