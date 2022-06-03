@@ -161,6 +161,14 @@ hr {
 	color: #000000;
 }
 
+::ng-deep .mat-form-field-label {
+	color: var(--ov-panel-text-color) !important;
+}
+
+::ng-deep .mat-form-field.mat-focused .mat-form-field-ripple {
+	background-color: var(--ov-panel-text-color) !important;
+}
+
 @media only screen and (max-width: 480px) {
 	.container,
 	.media-panel-container,
