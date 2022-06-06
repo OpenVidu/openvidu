@@ -237,7 +237,7 @@ case $1 in
   start)
     start_openvidu
     if [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]]; then
-      docker-compose logs -f openvidu-server
+      docker-compose logs -f --tail 10 openvidu-server
     fi
     ;;
 
@@ -249,12 +249,12 @@ case $1 in
     docker-compose down
     start_openvidu
     if [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]]; then
-      docker-compose logs -f openvidu-server
+      docker-compose logs -f --tail 10 openvidu-server
     fi
     ;;
 
   logs)
-    docker-compose logs -f openvidu-server
+    docker-compose logs -f --tail 10 openvidu-server
     ;;
 
   upgrade)

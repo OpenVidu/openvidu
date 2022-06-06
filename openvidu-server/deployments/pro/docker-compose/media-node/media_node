@@ -243,7 +243,7 @@ case $1 in
 
   start)
     docker-compose up -d
-    docker-compose logs -f media-node-controller
+    docker-compose logs -f --tail 10 media-node-controller
     ;;
 
   stop)
@@ -255,13 +255,13 @@ case $1 in
     docker-compose down
     stop_containers
     docker-compose up -d
-    docker-compose logs -f media-node-controller
+    docker-compose logs -f --tail 10 media-node-controller
     ;;
 
   logs)
     case $2 in
       "-f")
-        docker-compose logs -f media-node-controller
+        docker-compose logs -f --tail 10 media-node-controller
         ;;
       *)
         docker-compose logs media-node-controller
