@@ -52,14 +52,14 @@ jobs:
         - /opt/openvidu:/opt/openvidu
     env:
       KURENTO_SNAPSHOTS_URL: ${{ secrets.KURENTO_SNAPSHOTS_URL }}
-      KURENTO_MEDIA_SERVER_IMAGE: ${{ github.event.inputs.KURENTO_MEDIA_SERVER_IMAGE }}
-      MEDIASOUP_CONTROLLER_VERSION: ${{ github.event.inputs.MEDIASOUP_CONTROLLER_VERSION }}
-      KURENTO_JAVA_COMMIT: ${{ github.event.inputs.KURENTO_JAVA_COMMIT }}
-      DOCKER_RECORDING_VERSION: ${{ github.event.inputs.DOCKER_RECORDING_VERSION }}
-      CHROME_VERSION: ${{ github.event.inputs.CHROME_VERSION }}
-      FIREFOX_VERSION: ${{ github.event.inputs.FIREFOX_VERSION }}
-      OPERA_VERSION: ${{ github.event.inputs.OPERA_VERSION }}
-      EDGE_VERSION: ${{ github.event.inputs.EDGE_VERSION }}
+      KURENTO_MEDIA_SERVER_IMAGE: ${{ github.event.inputs.KURENTO_MEDIA_SERVER_IMAGE || github.event.inputs.KURENTO_MEDIA_SERVER_IMAGE.default }}
+      MEDIASOUP_CONTROLLER_VERSION: ${{ github.event.inputs.MEDIASOUP_CONTROLLER_VERSION || github.event.inputs.MEDIASOUP_CONTROLLER_VERSION.default }}
+      KURENTO_JAVA_COMMIT: ${{ github.event.inputs.KURENTO_JAVA_COMMIT || github.event.inputs.KURENTO_JAVA_COMMIT.default }}
+      DOCKER_RECORDING_VERSION: ${{ github.event.inputs.DOCKER_RECORDING_VERSION || github.event.inputs.DOCKER_RECORDING_VERSION.default }}
+      CHROME_VERSION: ${{ github.event.inputs.CHROME_VERSION || github.event.inputs.CHROME_VERSION.default }}
+      FIREFOX_VERSION: ${{ github.event.inputs.FIREFOX_VERSION || github.event.inputs.FIREFOX_VERSION.default }}
+      OPERA_VERSION: ${{ github.event.inputs.OPERA_VERSION || github.event.inputs.OPERA_VERSION.default }}
+      EDGE_VERSION: ${{ github.event.inputs.EDGE_VERSION || github.event.inputs.EDGE_VERSION.default }}
     steps:
       - uses: actions/checkout@v2
       - name: Setting up CI
