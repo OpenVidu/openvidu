@@ -254,7 +254,14 @@ case $1 in
     ;;
 
   logs)
-    docker-compose logs -f --tail 10 openvidu-server
+    case "${2-}" in
+      --follow|-f)
+        docker-compose logs -f --tail 10 openvidu-server
+        ;;
+      *)
+        docker-compose logs openvidu-server
+        ;;
+    esac
     ;;
 
   upgrade)
