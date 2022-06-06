@@ -1,0 +1,102 @@
+name: OpenVidu CE Tests
+on:
+  push:
+    paths:
+      - '!openvidu-components-angular/**'
+      - '!openvidu-server/docker/**'
+      - '!openvidu-server/deployments/**'
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      KURENTO_MEDIA_SERVER_IMAGE:
+        description: 'Docker image of kurento-media-server'
+        required: true
+        default: 'kurento/kurento-media-server:dev-6.18.0'
+      MEDIASOUP_CONTROLLER_VERSION:
+        description: 'Tag of image openvidu/mediasoup-controller'
+        required: true
+        default: 'master'
+      KURENTO_JAVA_COMMIT:
+        description: 'Commit to use in kurento-java dependencies. If "default" the release version declared in property "version.kurento" of openvidu-parent/pom.xml will be used'
+        required: true
+        default: 'master'
+      DOCKER_RECORDING_VERSION:
+        description: 'Force version of openvidu/openvidu-recording container'
+        required: true
+        default: 'default'
+      CHROME_VERSION:
+        description: 'Version of Chrome to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-chrome/tags'
+        required: true
+        default: latest
+      FIREFOX_VERSION:
+        description: 'Version of Firefox to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-firefox/tags'
+        required: true
+        default: latest
+      OPERA_VERSION:
+        description: 'Version of Opera to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-opera/tags'
+        required: true
+        default: latest
+      EDGE_VERSION:
+        description: 'Version of Edge to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-opera/tags'
+        required: true
+        default: latest
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    container:
+      image: openvidu/openvidu-test-e2e:focal
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /opt/openvidu:/opt/openvidu
+    env:
+      KURENTO_SNAPSHOTS_URL: ${{ secrets.KURENTO_SNAPSHOTS_URL }}
+      KURENTO_MEDIA_SERVER_IMAGE: ${{ github.event.inputs.KURENTO_MEDIA_SERVER_IMAGE }}
+      MEDIASOUP_CONTROLLER_VERSION: ${{ github.event.inputs.MEDIASOUP_CONTROLLER_VERSION }}
+      KURENTO_JAVA_COMMIT: ${{ github.event.inputs.KURENTO_JAVA_COMMIT }}
+      DOCKER_RECORDING_VERSION: ${{ github.event.inputs.DOCKER_RECORDING_VERSION }}
+      CHROME_VERSION: ${{ github.event.inputs.CHROME_VERSION }}
+      FIREFOX_VERSION: ${{ github.event.inputs.FIREFOX_VERSION }}
+      OPERA_VERSION: ${{ github.event.inputs.OPERA_VERSION }}
+      EDGE_VERSION: ${{ github.event.inputs.EDGE_VERSION }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setting up CI
+        run: ci-scripts/openvidu-e2e-tests.sh --prepare
+      - name: OpenVidu Browser build
+        run: ci-scripts/openvidu-e2e-tests.sh --build-openvidu-browser
+      - name: OpenVidu Node Client build
+        run: ci-scripts/openvidu-e2e-tests.sh --build-openvidu-node-client
+      - name: OpenVidu Java Client build
+        run: ci-scripts/openvidu-e2e-tests.sh --build-openvidu-java-client
+      - name: OpenVidu TestApp build
+        run: ci-scripts/openvidu-e2e-tests.sh --build-openvidu-testapp
+      - name: OpenVidu Server dashboard build
+        run: ci-scripts/openvidu-e2e-tests.sh --build-dashboard
+      - name: OpenVidu Server pre-build
+        run: ci-scripts/openvidu-e2e-tests.sh --openvidu-server-pre-build
+      - name: OpenVidu Server unit tests
+        run: ci-scripts/openvidu-e2e-tests.sh --openvidu-server-unit-tests
+      - name: OpenVidu Server integration tests
+        run: ci-scripts/openvidu-e2e-tests.sh --openvidu-server-integration-tests
+      - name: OpenVidu Server E2E build tests
+        run: ci-scripts/openvidu-e2e-tests.sh --openvidu-test-e2e-build
+      - name: OpenVidu Server Build
+        run: ci-scripts/openvidu-e2e-tests.sh --openvidu-server-build
+      - name: Environment launch Kurento
+        run: ci-scripts/openvidu-e2e-tests.sh --environment-launch-kurento
+      - name: OpenVidu E2E Tests Kurento
+        run: ci-scripts/openvidu-e2e-tests.sh --openvidu-e2e-tests-kurento
+      - name: Test reports
+        uses: mikepenz/action-junit-report@v3
+        if: always() # always run even if the previous step fails
+        with:
+          report_paths: '**/target/surefire-reports/TEST-*.xml'
+      - name: Upload logs
+        uses: actions/upload-artifact@v3
+        if: always() # always run even if the previous step fails
+        with:
+          name: Logs
+          path: |
+            /opt/openvidu/*.log
