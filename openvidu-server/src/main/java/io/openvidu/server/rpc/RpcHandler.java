@@ -806,34 +806,28 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	public static String getStringParam(Request<JsonObject> request, String key) throws RuntimeException {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
-			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request != null
-					? request.getMethod()
-					: "[NO REQUEST OBJECT]"
-							+ "'. Check that 'openvidu-server' AND 'openvidu-browser' versions are compatible with each other");
+			throw missingParamException(request, key);
 		}
 		return request.getParams().get(key).getAsString();
 	}
 
 	public static int getIntParam(Request<JsonObject> request, String key) throws RuntimeException {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
-			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod()
-					+ "'. Check that 'openvidu-server' AND 'openvidu-browser' versions are compatible with each other");
+			throw missingParamException(request, key);
 		}
 		return request.getParams().get(key).getAsInt();
 	}
 
 	public static boolean getBooleanParam(Request<JsonObject> request, String key) throws RuntimeException {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
-			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod()
-					+ "'. Check that 'openvidu-server' AND 'openvidu-browser' versions are compatible with each other");
+			throw missingParamException(request, key);
 		}
 		return request.getParams().get(key).getAsBoolean();
 	}
 
 	public static JsonElement getParam(Request<JsonObject> request, String key) throws RuntimeException {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
-			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod()
-					+ "'. Check that 'openvidu-server' AND 'openvidu-browser' versions are compatible with each other");
+			throw missingParamException(request, key);
 		}
 		return request.getParams().get(key);
 	}
@@ -937,6 +931,13 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 				}
 			}
 		}
+	}
+
+	private static RuntimeException missingParamException(Request<JsonObject> request, String key) {
+		String err = "Request element '" + key + "' is missing in RPC method ";
+		err += (request != null) ? ("'" + request.getMethod() + "'") : "[NO REQUEST OBJECT]";
+		err += ". Check that 'openvidu-server' and 'openvidu-browser' versions are compatible with each other";
+		throw new RuntimeException(err);
 	}
 
 }
