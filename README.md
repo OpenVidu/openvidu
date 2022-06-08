@@ -1,4 +1,6 @@
-[![Backers on Open Collective](https://opencollective.com/openvidu/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/openvidu/sponsors/badge.svg)](#sponsors) [![License badge](https://img.shields.io/badge/license-Apache2-orange.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![Backers on Open Collective](https://opencollective.com/openvidu/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/openvidu/sponsors/badge.svg)](#sponsors)
+[![License badge](https://img.shields.io/badge/license-Apache2-orange.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![OpenVidu Tests](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-ce-test.yml/badge.svg)](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-ce-test.yml)
 [![Npm version](https://img.shields.io/npm/v/openvidu-browser?label=npm-version)](https://npmjs.org/package/openvidu-browser)
 [![Npm downloads](https://img.shields.io/npm/dw/openvidu-browser?label=npm2-downloads)](https://npmjs.org/package/openvidu-browser)
 
