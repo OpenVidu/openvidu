@@ -61,7 +61,6 @@ import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording.OutputMode;
 import io.openvidu.java.client.RecordingLayout;
-import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.java.client.VideoCodec;
@@ -106,7 +105,7 @@ public class SessionRestController {
 
 		SessionProperties sessionProperties;
 		try {
-			sessionProperties = getSessionPropertiesFromParams(params).build();
+			sessionProperties = getSessionPropertiesFromParams((Map<String, ?>) params).build();
 		} catch (Exception e) {
 			return this.generateErrorResponse(e.getMessage(), "/sessions", HttpStatus.BAD_REQUEST);
 		}
@@ -780,22 +779,15 @@ public class SessionRestController {
 		}
 	}
 
-	protected SessionProperties.Builder getSessionPropertiesFromParams(Map<?, ?> params) throws Exception {
+	protected SessionProperties.Builder getSessionPropertiesFromParams(Map<String, ?> params) throws Exception {
 
-		SessionProperties.Builder builder = new SessionProperties.Builder();
-		String customSessionId = null;
+		SessionProperties.Builder builder = SessionProperties.fromJson(params);
 
 		if (params != null) {
 
-			// Obtain primitive values from the params map
-			String mediaModeString;
-			String recordingModeString;
 			String forcedVideoCodecStr;
 			Boolean allowTranscoding;
 			try {
-				mediaModeString = (String) params.get("mediaMode");
-				recordingModeString = (String) params.get("recordingMode");
-				customSessionId = (String) params.get("customSessionId");
 				forcedVideoCodecStr = (String) params.get("forcedVideoCodec");
 				allowTranscoding = (Boolean) params.get("allowTranscoding");
 			} catch (ClassCastException e) {
@@ -807,32 +799,12 @@ public class SessionRestController {
 			try {
 				forcedVideoCodec = VideoCodec.valueOf(forcedVideoCodecStr);
 			} catch (NullPointerException e) {
-				// Not an error: "forcedVideoCodec" was not provided in params.
+				// Not an error: "forcedVideoCodec" was not provided in params
 			} catch (IllegalArgumentException e) {
 				throw new Exception("Invalid value for parameter 'forcedVideoCodec': " + e.getMessage());
 			}
 
 			try {
-				// Safe parameter retrieval. Default values if not defined
-				if (recordingModeString != null) {
-					RecordingMode recordingMode = RecordingMode.valueOf(recordingModeString);
-					builder = builder.recordingMode(recordingMode);
-				} else {
-					builder = builder.recordingMode(RecordingMode.MANUAL);
-				}
-				if (mediaModeString != null) {
-					MediaMode mediaMode = MediaMode.valueOf(mediaModeString);
-					builder = builder.mediaMode(mediaMode);
-				} else {
-					builder = builder.mediaMode(MediaMode.ROUTED);
-				}
-				if (customSessionId != null && !customSessionId.isEmpty()) {
-					if (!sessionManager.formatChecker.isValidCustomSessionId(customSessionId)) {
-						throw new Exception(
-								"Parameter 'customSessionId' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-]");
-					}
-					builder = builder.customSessionId(customSessionId);
-				}
 
 				if (forcedVideoCodec == null) {
 					forcedVideoCodec = openviduConfig.getOpenviduForcedCodec();
@@ -856,28 +828,6 @@ public class SessionRestController {
 					builder = builder.allowTranscoding(allowTranscoding);
 				} else {
 					builder = builder.allowTranscoding(openviduConfig.isOpenviduAllowingTranscoding());
-				}
-
-				JsonObject defaultRecordingPropertiesJson = null;
-				if (params.get("defaultRecordingProperties") != null) {
-					try {
-						defaultRecordingPropertiesJson = new Gson()
-								.toJsonTree(params.get("defaultRecordingProperties"), Map.class).getAsJsonObject();
-					} catch (Exception e) {
-						throw new Exception(
-								"Error in parameter 'defaultRecordingProperties'. It is not a valid JSON object");
-					}
-				}
-				if (defaultRecordingPropertiesJson != null) {
-					try {
-						RecordingProperties defaultRecordingProperties = RecordingProperties
-								.fromJson(defaultRecordingPropertiesJson);
-						builder = builder.defaultRecordingProperties(defaultRecordingProperties);
-					} catch (Exception e) {
-						throw new Exception("Parameter 'defaultRecordingProperties' is not valid: " + e.getMessage());
-					}
-				} else {
-					builder.defaultRecordingProperties(new RecordingProperties.Builder().build());
 				}
 
 			} catch (IllegalArgumentException e) {

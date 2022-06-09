@@ -17,7 +17,11 @@
 
 package io.openvidu.java.client;
 
+import java.util.Map;
+
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 /**
  * See {@link io.openvidu.java.client.OpenVidu#createSession(SessionProperties)}
@@ -288,6 +292,141 @@ public class SessionProperties {
 			json.addProperty("allowTranscoding", this.allowTranscoding);
 		}
 		return json;
+	}
+
+	/**
+	 * Obtain a {@link SessionProperties.Builder} directly from a JSON object in the
+	 * form of a Map
+	 * 
+	 * @return A {@link SessionProperties.Builder}
+	 * @throws IllegalArgumentException If some parameter has a wrong type or an
+	 *                                  invalid value
+	 */
+	public static SessionProperties.Builder fromJson(Map<String, ?> params) throws IllegalArgumentException {
+
+		SessionProperties.Builder builder = new SessionProperties.Builder();
+		String customSessionId = null;
+
+		if (params != null) {
+
+			// Obtain primitive values from the params map
+			String mediaModeString;
+			String recordingModeString;
+			String forcedVideoCodecStr;
+			Boolean allowTranscoding;
+			try {
+				mediaModeString = (String) params.get("mediaMode");
+				recordingModeString = (String) params.get("recordingMode");
+				customSessionId = (String) params.get("customSessionId");
+				forcedVideoCodecStr = (String) params.get("forcedVideoCodec");
+				allowTranscoding = (Boolean) params.get("allowTranscoding");
+			} catch (ClassCastException e) {
+				throw new IllegalArgumentException("Type error in some parameter: " + e.getMessage());
+			}
+
+			// Parse obtained values into actual types
+			VideoCodec forcedVideoCodec = null;
+			try {
+				forcedVideoCodec = VideoCodec.valueOf(forcedVideoCodecStr);
+			} catch (NullPointerException e) {
+				// Not an error: "forcedVideoCodec" was not provided in params.
+			} catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException("Invalid value for parameter 'forcedVideoCodec': " + e.getMessage());
+			}
+
+			try {
+				// Safe parameter retrieval. Default values if not defined
+				if (recordingModeString != null) {
+					RecordingMode recordingMode = RecordingMode.valueOf(recordingModeString);
+					builder = builder.recordingMode(recordingMode);
+				} else {
+					builder = builder.recordingMode(RecordingMode.MANUAL);
+				}
+				if (mediaModeString != null) {
+					MediaMode mediaMode = MediaMode.valueOf(mediaModeString);
+					builder = builder.mediaMode(mediaMode);
+				} else {
+					builder = builder.mediaMode(MediaMode.ROUTED);
+				}
+				if (customSessionId != null && !customSessionId.isEmpty()) {
+					if (!isValidCustomSessionId(customSessionId)) {
+						throw new IllegalArgumentException(
+								"Parameter 'customSessionId' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-]");
+					}
+					builder = builder.customSessionId(customSessionId);
+				}
+
+				if (forcedVideoCodec != null) {
+					builder = builder.forcedVideoCodec(forcedVideoCodec);
+					builder = builder.forcedVideoCodecResolved(forcedVideoCodec);
+				}
+
+				if (allowTranscoding != null) {
+					builder = builder.allowTranscoding(allowTranscoding);
+				}
+
+				JsonObject defaultRecordingPropertiesJson = null;
+				if (params.get("defaultRecordingProperties") != null) {
+					try {
+						defaultRecordingPropertiesJson = new Gson()
+								.toJsonTree(params.get("defaultRecordingProperties"), Map.class).getAsJsonObject();
+					} catch (Exception e) {
+						throw new IllegalArgumentException(
+								"Error in parameter 'defaultRecordingProperties'. It is not a valid JSON object");
+					}
+				}
+				if (defaultRecordingPropertiesJson != null) {
+					try {
+						RecordingProperties defaultRecordingProperties = RecordingProperties
+								.fromJson(defaultRecordingPropertiesJson);
+						builder = builder.defaultRecordingProperties(defaultRecordingProperties);
+					} catch (Exception e) {
+						throw new IllegalArgumentException(
+								"Parameter 'defaultRecordingProperties' is not valid: " + e.getMessage());
+					}
+				} else {
+					builder.defaultRecordingProperties(new RecordingProperties.Builder().build());
+				}
+
+				String mediaNode = getMediaNodeProperty(params);
+				if (mediaNode != null) {
+					builder = builder.mediaNode(mediaNode);
+				}
+
+			} catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException("Some parameter is not valid. " + e.getMessage());
+			}
+		}
+		return builder;
+	}
+
+	/**
+	 * @hidden
+	 */
+	public static String getMediaNodeProperty(Map<?, ?> params) throws IllegalArgumentException {
+		if (params.containsKey("mediaNode") && params.get("mediaNode") != null) {
+			JsonObject mediaNodeJson;
+			try {
+				mediaNodeJson = JsonParser.parseString(params.get("mediaNode").toString()).getAsJsonObject();
+			} catch (Exception e) {
+				throw new IllegalArgumentException("Error in parameter 'mediaNode'. It is not a valid JSON object");
+			}
+			if (!mediaNodeJson.has("id")) {
+				throw new IllegalArgumentException("Error in parameter 'mediaNode'. Property 'id' not found");
+			}
+			String mediaNode;
+			try {
+				mediaNode = mediaNodeJson.get("id").getAsString();
+			} catch (ClassCastException e) {
+				throw new IllegalArgumentException("Type error in parameter 'mediaNode.id': " + e.getMessage());
+			}
+			return mediaNode;
+		}
+		return null;
+	}
+
+	private static boolean isValidCustomSessionId(String customSessionId) {
+		return customSessionId.matches("[a-zA-Z0-9_-]+");
 	}
 
 }

@@ -489,8 +489,10 @@ public class RecordingProperties {
 		}
 		if (json.has("outputMode")) {
 			outputModeAux = OutputMode.valueOf(json.get("outputMode").getAsString());
-			builder.outputMode(outputModeAux);
+		} else {
+			outputModeAux = DefaultValues.outputMode;
 		}
+		builder.outputMode(outputModeAux);
 		if ((OutputMode.COMPOSED.equals(outputModeAux) || OutputMode.COMPOSED_QUICK_START.equals(outputModeAux))
 				&& hasVideoAux) {
 			if (json.has("recordingLayout")) {
