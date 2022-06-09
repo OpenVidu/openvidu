@@ -1,17 +1,14 @@
-import {
-	Component,
-	HostListener,
-	OnDestroy,
-	OnInit,
-	Output,
-	EventEmitter
-} from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, Output, EventEmitter, ViewChild } from '@angular/core';
+import { MatMenuTrigger } from '@angular/material/menu';
+import { MatSelect } from '@angular/material/select';
+
 import { PublisherProperties } from 'openvidu-browser';
 import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../models/device.model';
 import { ILogger } from '../../models/logger.model';
 import { PanelType } from '../../models/panel.model';
 import { ParticipantAbstractModel } from '../../models/participant.model';
+import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import { DeviceService } from '../../services/device/device.service';
 import { LayoutService } from '../../services/layout/layout.service';
@@ -32,9 +29,18 @@ import { VirtualBackgroundService } from '../../services/virtual-background/virt
 	styleUrls: ['./pre-join.component.css']
 })
 export class PreJoinComponent implements OnInit, OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@ViewChild(MatMenuTrigger) public menuTrigger: MatMenuTrigger;
+	/**
+	 * @ignore
+	 */
+	@ViewChild(MatSelect) matSelect: MatSelect;
+
 	@Output() onJoinButtonClicked = new EventEmitter<any>();
-	languages: {name: string, ISO: string}[] = [];
-	langSelected: {name: string, ISO: string};
+	languages: { name: string; ISO: string }[] = [];
+	langSelected: { name: string; ISO: string };
 	cameras: CustomDevice[];
 	microphones: CustomDevice[];
 	cameraSelected: CustomDevice;
@@ -81,7 +87,8 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		private libService: OpenViduAngularConfigService,
 		private storageSrv: StorageService,
 		private backgroundService: VirtualBackgroundService,
-		private translateService: TranslateService
+		private translateService: TranslateService,
+		protected cdkSrv: CdkOverlayService
 	) {
 		this.log = this.loggerSrv.get('PreJoinComponent');
 	}
@@ -106,7 +113,19 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		this.isLoading = false;
 	}
 
+	ngAfterViewInit() {
+		// Some devices as iPhone do not show the menu panels correctly
+		// Updating the container where the panel is added fix the problem.
+		this.menuTrigger?.menuOpened.subscribe(() => {
+			this.cdkSrv.setSelector('#prejoin-container');
+		});
+		this.matSelect?.openedChange.subscribe(() => {
+			this.cdkSrv.setSelector('#prejoin-container');
+		});
+	}
+
 	async ngOnDestroy() {
+		this.cdkSrv.setSelector('body');
 		if (this.localParticipantSubscription) this.localParticipantSubscription.unsubscribe();
 		if (this.screenShareStateSubscription) this.screenShareStateSubscription.unsubscribe();
 		if (this.backgroundEffectsButtonSub) this.backgroundEffectsButtonSub.unsubscribe();
@@ -132,7 +151,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 			}
 			await this.openviduService.republishTrack(pp);
 			if (this.backgroundService.isBackgroundApplied()) {
-				await this.backgroundService.applyBackground(this.backgroundService.backgrounds.find(b => b.id === backgroundSelected));
+				await this.backgroundService.applyBackground(this.backgroundService.backgrounds.find((b) => b.id === backgroundSelected));
 			}
 
 			this.deviceSrv.setCameraSelected(videoSource);
@@ -156,7 +175,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	onLangSelected(lang: string){
+	onLangSelected(lang: string) {
 		this.translateService.setLanguage(lang);
 		this.storageSrv.setLang(lang);
 		this.langSelected = this.translateService.getLangSelected();
