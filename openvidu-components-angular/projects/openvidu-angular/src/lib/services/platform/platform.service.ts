@@ -17,12 +17,12 @@ export class PlatformService {
 		return /Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent);
 	}
 
-	private isAndroid(): boolean {
+	isAndroid(): boolean {
 		return /\b(\w*Android\w*)\b/.test(navigator.userAgent) && /\b(\w*Mobile\w*)\b/.test(navigator.userAgent);
 	}
 
-	private isIos(): boolean {
-		return this.isIPhoneOrIPad(navigator?.userAgent) && this.isIOSWithSafari(navigator?.userAgent);
+	isIos(): boolean {
+		return this.isIPhoneOrIPad(navigator?.userAgent);
 	}
 	private isIPhoneOrIPad(userAgent): boolean {
 		const isIPad = /\b(\w*Macintosh\w*)\b/.test(userAgent);
@@ -31,6 +31,10 @@ export class PlatformService {
 		const isTouchable = 'ontouchend' in document;
 
 		return (isIPad || isIPhone) && isTouchable;
+	}
+
+	private isSafariIos(): boolean {
+		return this.isIos() && this.isIOSWithSafari(navigator?.userAgent);
 	}
 
 	private isIOSWithSafari(userAgent): boolean {

@@ -40,6 +40,7 @@ import { PanelService } from '../../services/panel/panel.service';
 import { RecordingService } from '../../services/recording/recording.service';
 import { TranslateService } from '../../services/translate/translate.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
+import { PlatformService } from '../../services/platform/platform.service';
 
 /**
  * @internal
@@ -85,7 +86,8 @@ export class SessionComponent implements OnInit {
 		protected layoutService: LayoutService,
 		protected panelService: PanelService,
 		private recordingService: RecordingService,
-		private translateService: TranslateService
+		private translateService: TranslateService,
+		private platformService: PlatformService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
 	}
@@ -142,11 +144,11 @@ export class SessionComponent implements OnInit {
 			this.onSessionCreated.emit(this.session);
 
 			await this.connectToSession();
-			// Workaround, firefox does not have audio when publisher join with muted camera
-			// if (this.platformService.isFirefox() && !this.participantService.hasCameraVideoActive()) {
-			// 	this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), true);
-			// 	this.openviduService.publishVideo(this.participantService.getMyCameraPublisher(), false);
-			// }
+			// ios devices appear with blank video. Muting and unmuting it fix this problem
+			if (this.platformService.isIos() && this.participantService.isMyCameraActive()) {
+				await this.openviduService.publishVideo(false);
+				await this.openviduService.publishVideo(true);
+			}
 		}
 	}
 
