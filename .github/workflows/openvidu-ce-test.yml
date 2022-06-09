@@ -1,6 +1,8 @@
 name: OpenVidu CE Tests
 on:
   push:
+    branches:
+      - master
     paths-ignore:
       - 'openvidu-components-angular/**'
       - 'openvidu-server/docker/**'
