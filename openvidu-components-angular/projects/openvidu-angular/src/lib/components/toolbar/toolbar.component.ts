@@ -1,4 +1,5 @@
 import {
+	AfterViewInit,
 	ChangeDetectionStrategy,
 	ChangeDetectorRef,
 	Component,
@@ -100,7 +101,7 @@ import { TranslateService } from '../../services/translate/translate.service';
 	styleUrls: ['./toolbar.component.css'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ToolbarComponent implements OnInit, OnDestroy {
+export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
@@ -397,6 +398,13 @@ export class ToolbarComponent implements OnInit, OnDestroy {
 		this.subscribeToMenuToggling();
 		this.subscribeToChatMessages();
 		this.subscribeToRecordingStatus();
+	}
+
+	ngAfterViewInit() {
+		// Sometimes the connection is undefined so we have to check the role when the mat menu is opened
+		this.menuTrigger?.menuOpened.subscribe(() => {
+			this.isSessionCreator = this.participantService.getMyRole() === OpenViduRole.MODERATOR;
+		});
 	}
 
 	ngOnDestroy(): void {
