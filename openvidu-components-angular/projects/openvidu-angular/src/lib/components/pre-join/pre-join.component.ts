@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit, Output, EventEmitter, ViewChild } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, Output, EventEmitter, ViewChild, AfterViewInit } from '@angular/core';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { MatSelect } from '@angular/material/select';
 
@@ -28,7 +28,7 @@ import { VirtualBackgroundService } from '../../services/virtual-background/virt
 	templateUrl: './pre-join.component.html',
 	styleUrls: ['./pre-join.component.css']
 })
-export class PreJoinComponent implements OnInit, OnDestroy {
+export class PreJoinComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
