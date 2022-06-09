@@ -491,7 +491,6 @@ export class Session {
                         this.properties.defaultRecordingProperties = res.data.defaultRecordingProperties;
                         this.properties.mediaNode = res.data.mediaNode;
                         this.properties.forcedVideoCodec = res.data.forcedVideoCodec;
-                        this.properties.forcedVideoCodecResolved = res.data.forcedVideoCodecResolved;
                         this.properties.allowTranscoding = res.data.allowTranscoding;
                         this.sanitizeDefaultSessionProperties(this.properties);
                         resolve(this.sessionId);
@@ -524,7 +523,6 @@ export class Session {
             recordingMode: json.recordingMode,
             defaultRecordingProperties: json.defaultRecordingProperties,
             forcedVideoCodec: json.forcedVideoCodec,
-            forcedVideoCodecResolved: json.forcedVideoCodecResolved,
             allowTranscoding: json.allowTranscoding
         };
         this.sanitizeDefaultSessionProperties(this.properties);
@@ -539,9 +537,6 @@ export class Session {
         }
         if (json.forcedVideoCodec == null) {
             delete this.properties.forcedVideoCodec;
-        }
-        if (json.forcedVideoCodecResolved == null) {
-            delete this.properties.forcedVideoCodecResolved;
         }
         if (json.allowTranscoding == null) {
             delete this.properties.allowTranscoding;
@@ -645,7 +640,6 @@ export class Session {
         // Remove null values: either set, or undefined
         props.mediaNode = props.mediaNode ?? undefined;
         props.forcedVideoCodec = props.forcedVideoCodec ?? undefined;
-        props.forcedVideoCodecResolved = props.forcedVideoCodecResolved ?? undefined;
         props.allowTranscoding = props.allowTranscoding ?? undefined;
 
         if (!props.defaultRecordingProperties) {

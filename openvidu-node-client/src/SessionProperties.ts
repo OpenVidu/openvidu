@@ -83,17 +83,6 @@ export interface SessionProperties {
     forcedVideoCodec?: VideoCodec;
 
     /**
-     * Actual video codec that will be forcibly used for this session.
-     * This is the same as <code>forcedVideoCodec</code>, except when its value
-     * is [[VideoCodec.MEDIA_SERVER_PREFERRED]]: in that case, OpenVidu Server
-     * will fill this property with a resolved value, depending on what is the
-     * configured media server.
-     *
-     * @hidden
-     */
-     forcedVideoCodecResolved?: VideoCodec;
-
-    /**
      * It defines if you want to allow transcoding in the media server or not
      * when [[forcedVideoCodec]] is not compatible with the browser/client.
      *

@@ -249,6 +249,13 @@ public class SessionProperties {
 	 * Defines which video codec is being forced to be used in the browser/client.
 	 * This is the resolved value, for actual usage in the server.
 	 *
+	 * This is a server-only property, and as such, it doesn't need to be transmitted
+	 * over the wire between server and client. Thus it doesn't get serialized in
+	 * the `toJson()` method.
+	 *
+	 * If more server-only properties start to appear here, maybe a good idea
+	 * would be to refactor them all into a server-specific Properties class.
+	 *
 	 * @hidden
 	 */
 	public VideoCodec forcedVideoCodecResolved() {
@@ -276,9 +283,6 @@ public class SessionProperties {
 		}
 		if (this.forcedVideoCodec != null) {
 			json.addProperty("forcedVideoCodec", this.forcedVideoCodec.name());
-		}
-		if (this.forcedVideoCodecResolved != null) {
-			json.addProperty("forcedVideoCodecResolved", this.forcedVideoCodecResolved.name());
 		}
 		if (this.allowTranscoding != null) {
 			json.addProperty("allowTranscoding", this.allowTranscoding);

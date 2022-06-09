@@ -665,15 +665,13 @@ public class Session {
 				// Values that get filled by OpenVidu Server from its global or per-session
 				// configuration
 				VideoCodec forcedVideoCodec = VideoCodec.valueOf(responseJson.get("forcedVideoCodec").getAsString());
-				VideoCodec forcedVideoCodecResolved = VideoCodec
-						.valueOf(responseJson.get("forcedVideoCodecResolved").getAsString());
 				Boolean allowTranscoding = responseJson.get("allowTranscoding").getAsBoolean();
 
 				SessionProperties responseProperties = new SessionProperties.Builder().mediaMode(properties.mediaMode())
 						.recordingMode(properties.recordingMode())
 						.defaultRecordingProperties(properties.defaultRecordingProperties())
 						.customSessionId(properties.customSessionId()).mediaNode(properties.mediaNode())
-						.forcedVideoCodec(forcedVideoCodec).forcedVideoCodecResolved(forcedVideoCodecResolved)
+						.forcedVideoCodec(forcedVideoCodec)
 						.allowTranscoding(allowTranscoding).build();
 
 				this.properties = responseProperties;
@@ -726,9 +724,6 @@ public class Session {
 
 		if (json.has("forcedVideoCodec")) {
 			builder.forcedVideoCodec(VideoCodec.valueOf(json.get("forcedVideoCodec").getAsString()));
-		}
-		if (json.has("forcedVideoCodecResolved")) {
-			builder.forcedVideoCodecResolved(VideoCodec.valueOf(json.get("forcedVideoCodecResolved").getAsString()));
 		}
 		if (json.has("allowTranscoding")) {
 			builder.allowTranscoding(json.get("allowTranscoding").getAsBoolean());
