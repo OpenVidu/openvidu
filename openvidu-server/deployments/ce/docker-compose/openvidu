@@ -231,7 +231,7 @@ kurento_logs() {
 case $1 in
   start)
     docker-compose up -d
-    docker-compose logs -f openvidu-server
+    docker-compose logs -f --tail 10 openvidu-server
     ;;
 
   stop)
@@ -241,13 +241,13 @@ case $1 in
   restart)
     docker-compose down
     docker-compose up -d
-    docker-compose logs -f openvidu-server
+    docker-compose logs -f --tail 10 openvidu-server
     ;;
 
   logs)
-    case $2 in
-      "-f")
-        docker-compose logs -f openvidu-server
+    case "${2-}" in
+      --follow|-f)
+        docker-compose logs -f --tail 10 openvidu-server
         ;;
       *)
         docker-compose logs openvidu-server
