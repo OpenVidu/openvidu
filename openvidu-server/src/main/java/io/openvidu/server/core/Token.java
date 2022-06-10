@@ -17,17 +17,22 @@
 
 package io.openvidu.server.core;
 
-import com.google.gson.JsonArray;
-import io.openvidu.java.client.*;
+import java.net.MalformedURLException;
+import java.util.List;
+
 import org.apache.commons.lang3.RandomStringUtils;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
+import io.openvidu.java.client.ConnectionProperties;
+import io.openvidu.java.client.ConnectionType;
+import io.openvidu.java.client.IceServerProperties;
+import io.openvidu.java.client.KurentoOptions;
+import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.core.Participant.ParticipantStatus;
 import io.openvidu.server.coturn.TurnCredentials;
-
-import java.util.List;
 
 public class Token {
 
@@ -124,7 +129,7 @@ public class Token {
 	public List<IceServerProperties> getCustomIceServers() {
 		return this.connectionProperties.getCustomIceServers();
 	}
-	
+
 	public void setConnectionId(String connectionId) {
 		this.connectionId = connectionId;
 	}
@@ -212,7 +217,11 @@ public class Token {
 			builder.kurentoOptions(kurentoOptions);
 		}
 		if (rtspUri != null) {
-			builder.rtspUri(rtspUri);
+			try {
+				builder.rtspUri(rtspUri);
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			}
 		}
 		if (adaptativeBitrate != null) {
 			builder.adaptativeBitrate(adaptativeBitrate);
@@ -224,7 +233,7 @@ public class Token {
 			builder.networkCache(networkCache);
 		}
 		if (iceServerProperties != null) {
-			for (IceServerProperties customIceServer: iceServerProperties) {
+			for (IceServerProperties customIceServer : iceServerProperties) {
 				builder.addCustomIceServer(customIceServer);
 			}
 		}
