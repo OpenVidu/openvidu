@@ -63,6 +63,10 @@ export class OpenViduAngularConfigService {
 	recordingActivityObs: Observable<boolean>;
 	recordingError = <BehaviorSubject<any>>new BehaviorSubject(null);
 	recordingErrorObs: Observable<any>;
+	adminRecordingsList = <BehaviorSubject<RecordingInfo[]>>new BehaviorSubject([]);
+	adminRecordingsListObs: Observable<RecordingInfo[]>;
+	adminLoginError = <BehaviorSubject<any>>new BehaviorSubject(null);
+	adminLoginErrorObs: Observable<any>;
 
 	constructor(@Inject('OPENVIDU_ANGULAR_CONFIG') config: OpenViduAngularConfig) {
 		this.configuration = config;
@@ -94,6 +98,9 @@ export class OpenViduAngularConfigService {
 		this.recordingActivityObs = this.recordingActivity.asObservable();
 		this.recordingsListObs = this.recordingsList.asObservable();
 		this.recordingErrorObs = this.recordingError.asObservable();
+		// Admin dashboard
+		this.adminRecordingsListObs = this.adminRecordingsList.asObservable();
+		this.adminLoginErrorObs = this.adminLoginError.asObservable();
 	}
 
 	getConfig(): OpenViduAngularConfig {

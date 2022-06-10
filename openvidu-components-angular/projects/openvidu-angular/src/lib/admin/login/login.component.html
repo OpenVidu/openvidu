@@ -1,0 +1,44 @@
+<mat-toolbar class="header">
+</mat-toolbar>
+
+<div *ngIf="checkingLogged" class="outer">
+	<div class="middle">
+		<div class="inner">
+			<mat-spinner *ngIf="checkingLogged"></mat-spinner>
+		</div>
+	</div>
+</div>
+
+<mat-card *ngIf="!checkingLogged">
+	<mat-card-content>
+		<form ngNativeValidate #loginForm (ngSubmit)="login()">
+			<table class="full-width" cellspacing="0">
+				<tr>
+					<td>
+						<mat-form-field id="secret-field" class="full-width" appearance="outline">
+							<mat-label>{{ 'ADMIN.SECRET' | translate }}</mat-label>
+							<input
+								id="secret-input"
+								matInput
+								[(ngModel)]="secret"
+								[disabled]="showSpinner"
+								type="password"
+								name="secret"
+								autocomplete="current-password"
+								required
+							/>
+							<mat-error *ngIf="loginFormControl.hasError('required')"> {{ 'ADMIN.SECRET_REQURED' | translate }} </mat-error>
+						</mat-form-field>
+					</td>
+				</tr>
+			</table>
+			<input #submitBtn type="submit" [style.display]="'none'" />
+		</form>
+		<mat-spinner [style.display]="showSpinner ? 'block' : 'none'"></mat-spinner>
+	</mat-card-content>
+	<mat-card-actions>
+		<button mat-flat-button id="login-btn" type="submit" (click)="submitForm()" color="primary" class="full-width">
+			{{ 'ADMIN.LOGIN' | translate }}
+		</button>
+	</mat-card-actions>
+</mat-card>

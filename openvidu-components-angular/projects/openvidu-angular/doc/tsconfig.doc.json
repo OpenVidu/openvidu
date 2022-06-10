@@ -1,5 +1,6 @@
 {
 	"include": [
+		"../src/lib/admin/**/*.ts",
 		"../src/lib/components/**/*.ts",
 		"../src/lib/directives/**/*.ts",
 		"../src/lib/services/**/*.ts",

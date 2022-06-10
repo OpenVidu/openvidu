@@ -36,6 +36,8 @@ export * from './lib/components/stream/stream.component';
 export * from './lib/components/video/video.component';
 export * from './lib/components/audio-wave/audio-wave.component';
 export * from './lib/components/pre-join/pre-join.component';
+export * from './lib/admin/dashboard/dashboard.component';
+export * from './lib/admin/login/login.component';
 
 // Models
 export * from './lib/models/participant.model';
@@ -63,3 +65,4 @@ export * from './lib/directives/api/videoconference.directive';
 export * from './lib/directives/api/participant-panel-item.directive';
 export * from './lib/directives/api/activities-panel.directive';
 export * from './lib/directives/api/recording-activity.directive';
+export * from './lib/directives/api/admin.directive';

@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { ActivitiesPanelRecordingActivityDirective } from './activities-panel.directive';
+import { AdminLoginDirective, AdminRecordingsListDirective } from './admin.directive';
 import { LogoDirective } from './internals.directive';
 import { ParticipantPanelItemMuteButtonDirective } from './participant-panel-item.directive';
 import { RecordingActivityRecordingErrorDirective, RecordingActivityRecordingsListDirective } from './recording-activity.directive';
@@ -29,7 +30,6 @@ import {
 	LangDirective
 } from './videoconference.directive';
 
-
 @NgModule({
 	declarations: [
 		MinimalDirective,
@@ -55,7 +55,9 @@ import {
 		ParticipantNameDirective,
 		ActivitiesPanelRecordingActivityDirective,
 		RecordingActivityRecordingsListDirective,
-		RecordingActivityRecordingErrorDirective
+		RecordingActivityRecordingErrorDirective,
+		AdminRecordingsListDirective,
+		AdminLoginDirective
 	],
 	exports: [
 		MinimalDirective,
@@ -81,7 +83,9 @@ import {
 		ParticipantNameDirective,
 		ActivitiesPanelRecordingActivityDirective,
 		RecordingActivityRecordingsListDirective,
-		RecordingActivityRecordingErrorDirective
+		RecordingActivityRecordingErrorDirective,
+		AdminRecordingsListDirective,
+		AdminLoginDirective
 	]
 })
 export class ApiDirectiveModule {}

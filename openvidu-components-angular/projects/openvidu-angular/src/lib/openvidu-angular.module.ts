@@ -40,7 +40,7 @@ import { DeleteDialogComponent } from './components/dialogs/delete-recording.com
 import { LinkifyPipe } from './pipes/linkify.pipe';
 import { TranslatePipe } from './pipes/translate.pipe';
 import { StreamTypesEnabledPipe, ParticipantStreamsPipe } from './pipes/participant.pipe';
-import { DurationFromSecondsPipe } from './pipes/recording.pipe';
+import { DurationFromSecondsPipe, SearchByStringPropertyPipe } from './pipes/recording.pipe';
 
 import { OpenViduAngularConfig } from './config/openvidu-angular.config';
 import { CdkOverlayContainer } from './config/custom-cdk-overlay';
@@ -72,6 +72,8 @@ import { ApiDirectiveModule } from './directives/api/api.directive.module';
 import { BackgroundEffectsPanelComponent } from './components/panel/background-effects-panel/background-effects-panel.component';
 import { ActivitiesPanelComponent } from './components/panel/activities-panel/activities-panel.component';
 import { RecordingActivityComponent } from './components/panel/activities-panel/recording-activity-panel/recording-activity.component';
+import { AdminDashboardComponent } from './admin/dashboard/dashboard.component';
+import { AdminLoginComponent } from './admin/login/login.component';
 
 @NgModule({
 	declarations: [
@@ -87,6 +89,7 @@ import { RecordingActivityComponent } from './components/panel/activities-panel/
 		LinkifyPipe,
 		ParticipantStreamsPipe,
 		DurationFromSecondsPipe,
+		SearchByStringPropertyPipe,
 		StreamTypesEnabledPipe,
 		TranslatePipe,
 		ParticipantPanelItemComponent,
@@ -98,7 +101,9 @@ import { RecordingActivityComponent } from './components/panel/activities-panel/
 		PreJoinComponent,
 		BackgroundEffectsPanelComponent,
 		ActivitiesPanelComponent,
-		RecordingActivityComponent
+		RecordingActivityComponent,
+		AdminDashboardComponent,
+		AdminLoginComponent
 	],
 	imports: [
 		CommonModule,
@@ -162,6 +167,8 @@ import { RecordingActivityComponent } from './components/panel/activities-panel/
 		VideoComponent,
 		AudioWaveComponent,
 		PreJoinComponent,
+		AdminDashboardComponent,
+		AdminLoginComponent,
 		ParticipantStreamsPipe,
 		DurationFromSecondsPipe,
 		StreamTypesEnabledPipe,

@@ -1,0 +1,68 @@
+mat-card {
+	max-width: 220px;
+	margin: auto;
+	margin-top: 10vh;
+}
+
+mat-card-content {
+	margin-bottom: 8px;
+}
+
+mat-card-actions {
+	padding-top: 0px;
+}
+
+.header {
+	height: 50px;
+	background-color: var(--ov-secondary-color);
+	color: var(--ov-text-color);
+}
+
+mat-spinner {
+	margin: auto;
+}
+.mat-card-actions {
+	margin: 0;
+}
+
+.full-width {
+	width: 100%;
+}
+
+.outer {
+	display: table;
+	position: absolute;
+	height: 100%;
+	width: 100%;
+}
+
+.middle {
+	display: table-cell;
+	vertical-align: middle;
+}
+
+.inner {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#login-btn {
+	text-transform: none;
+	font-size: 17px;
+	width: 100%;
+}
+
+::ng-deep .mat-input-element {
+	caret-color: #000000;
+}
+::ng-deep .mat-primary .mat-option.mat-selected:not(.mat-option-disabled) {
+	color: #000000;
+}
+
+::ng-deep .mat-form-field-label {
+	color: var(--ov-panel-text-color) !important;
+}
+
+::ng-deep .mat-form-field.mat-focused .mat-form-field-ripple {
+	background-color: var(--ov-panel-text-color) !important;
+}
