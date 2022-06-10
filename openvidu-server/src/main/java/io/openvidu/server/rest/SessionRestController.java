@@ -21,7 +21,6 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -46,7 +45,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -56,9 +54,7 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.java.client.ConnectionType;
 import io.openvidu.java.client.IceServerProperties;
-import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.MediaMode;
-import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording.OutputMode;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
@@ -99,13 +95,13 @@ public class SessionRestController {
 	protected OpenviduConfig openviduConfig;
 
 	@RequestMapping(value = "/sessions", method = RequestMethod.POST)
-	public ResponseEntity<?> initializeSession(@RequestBody(required = false) Map<?, ?> params) {
+	public ResponseEntity<?> initializeSession(@RequestBody(required = false) Map<String, ?> params) {
 
 		log.info("REST API: POST {}/sessions {}", RequestMappings.API, params != null ? params.toString() : "{}");
 
 		SessionProperties sessionProperties;
 		try {
-			sessionProperties = getSessionPropertiesFromParams((Map<String, ?>) params).build();
+			sessionProperties = getSessionPropertiesFromParams(params).build();
 		} catch (Exception e) {
 			return this.generateErrorResponse(e.getMessage(), "/sessions", HttpStatus.BAD_REQUEST);
 		}
@@ -275,7 +271,7 @@ public class SessionRestController {
 
 	@RequestMapping(value = "/sessions/{sessionId}/connection", method = RequestMethod.POST)
 	public ResponseEntity<?> initializeConnection(@PathVariable("sessionId") String sessionId,
-			@RequestBody Map<?, ?> params) {
+			@RequestBody Map<String, ?> params) {
 
 		log.info("REST API: POST {} {}", RequestMappings.API + "/sessions/" + sessionId + "/connection",
 				params.toString());
@@ -374,7 +370,7 @@ public class SessionRestController {
 	}
 
 	@RequestMapping(value = "/recordings/start", method = RequestMethod.POST)
-	public ResponseEntity<?> startRecording(@RequestBody Map<?, ?> params) {
+	public ResponseEntity<?> startRecording(@RequestBody Map<String, ?> params) {
 
 		if (params == null) {
 			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/recordings/start",
@@ -559,7 +555,7 @@ public class SessionRestController {
 	}
 
 	@RequestMapping(value = "/tokens", method = RequestMethod.POST)
-	public ResponseEntity<String> newToken(@RequestBody Map<?, ?> params) {
+	public ResponseEntity<String> newToken(@RequestBody Map<String, ?> params) {
 
 		if (params == null) {
 			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/tokens",
@@ -642,7 +638,7 @@ public class SessionRestController {
 	}
 
 	@RequestMapping(value = "/signal", method = RequestMethod.POST)
-	public ResponseEntity<?> signal(@RequestBody Map<?, ?> params) {
+	public ResponseEntity<?> signal(@RequestBody Map<String, ?> params) {
 
 		if (params == null) {
 			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/signal",
@@ -837,158 +833,21 @@ public class SessionRestController {
 		return builder;
 	}
 
-	protected ConnectionProperties.Builder getConnectionPropertiesFromParams(Map<?, ?> params) throws Exception {
+	protected ConnectionProperties.Builder getConnectionPropertiesFromParams(Map<String, ?> params) throws Exception {
 
-		ConnectionProperties.Builder builder = new ConnectionProperties.Builder();
+		ConnectionProperties.Builder builder = ConnectionProperties.fromJson(params);
 
-		String typeString;
-		String data;
-		try {
-			typeString = (String) params.get("type");
-			data = (String) params.get("data");
-		} catch (ClassCastException e) {
-			throw new Exception("Type error in some parameter: " + e.getMessage());
-		}
-
-		ConnectionType type;
-		try {
-			if (typeString != null) {
-				type = ConnectionType.valueOf(typeString);
-			} else {
-				type = ConnectionType.WEBRTC;
-			}
-		} catch (IllegalArgumentException e) {
-			throw new Exception("Parameter 'type' " + typeString + " is not defined");
-		}
-		data = data != null ? data : "";
-
-		// Build COMMON options
-		builder.type(type).data(data).record(true);
-
-		OpenViduRole role = null;
-		KurentoOptions kurentoOptions = null;
+		ConnectionType type = ConnectionProperties.fromJson(params).build().getType();
 
 		if (ConnectionType.WEBRTC.equals(type)) {
-			String roleString;
-			try {
-				roleString = (String) params.get("role");
-			} catch (ClassCastException e) {
-				throw new Exception("Type error in parameter 'role': " + e.getMessage());
-			}
-			try {
-				if (roleString != null) {
-					role = OpenViduRole.valueOf(roleString);
-				} else {
-					role = OpenViduRole.PUBLISHER;
-				}
-			} catch (IllegalArgumentException e) {
-				throw new Exception("Parameter role " + params.get("role") + " is not defined");
-			}
-			JsonObject kurentoOptionsJson = null;
-			if (params.get("kurentoOptions") != null) {
-				try {
-					kurentoOptionsJson = new Gson().toJsonTree(params.get("kurentoOptions"), Map.class)
-							.getAsJsonObject();
-				} catch (Exception e) {
-					throw new Exception("Error in parameter 'kurentoOptions'. It is not a valid JSON object");
-				}
-			}
-			if (kurentoOptionsJson != null) {
-				try {
-					KurentoOptions.Builder builder2 = new KurentoOptions.Builder();
-					if (kurentoOptionsJson.has("videoMaxRecvBandwidth")) {
-						builder2.videoMaxRecvBandwidth(kurentoOptionsJson.get("videoMaxRecvBandwidth").getAsInt());
-					}
-					if (kurentoOptionsJson.has("videoMinRecvBandwidth")) {
-						builder2.videoMinRecvBandwidth(kurentoOptionsJson.get("videoMinRecvBandwidth").getAsInt());
-					}
-					if (kurentoOptionsJson.has("videoMaxSendBandwidth")) {
-						builder2.videoMaxSendBandwidth(kurentoOptionsJson.get("videoMaxSendBandwidth").getAsInt());
-					}
-					if (kurentoOptionsJson.has("videoMinSendBandwidth")) {
-						builder2.videoMinSendBandwidth(kurentoOptionsJson.get("videoMinSendBandwidth").getAsInt());
-					}
-					if (kurentoOptionsJson.has("allowedFilters")) {
-						JsonArray filters = kurentoOptionsJson.get("allowedFilters").getAsJsonArray();
-						String[] arrayOfFilters = new String[filters.size()];
-						Iterator<JsonElement> it = filters.iterator();
-						int index = 0;
-						while (it.hasNext()) {
-							arrayOfFilters[index] = it.next().getAsString();
-							index++;
-						}
-						builder2.allowedFilters(arrayOfFilters);
-					}
-					kurentoOptions = builder2.build();
-				} catch (Exception e) {
-					throw new Exception("Type error in some parameter of 'kurentoOptions': " + e.getMessage());
-				}
-			}
-
-			// Custom Ice Servers
-			JsonArray customIceServersJsonArray = null;
-			if (params.get("customIceServers") != null) {
-				try {
-					customIceServersJsonArray = new Gson().toJsonTree(params.get("customIceServers"), List.class)
-							.getAsJsonArray();
-				} catch (Exception e) {
-					throw new Exception("Error in parameter 'customIceServersJson'. It is not a valid JSON object");
-				}
-			}
-			if (customIceServersJsonArray != null) {
-				try {
-					for (int i = 0; i < customIceServersJsonArray.size(); i++) {
-						JsonObject customIceServerJson = customIceServersJsonArray.get(i).getAsJsonObject();
-						IceServerProperties.Builder iceServerPropertiesBuilder = new IceServerProperties.Builder();
-						iceServerPropertiesBuilder.url(customIceServerJson.get("url").getAsString());
-						if (customIceServerJson.has("staticAuthSecret")) {
-							iceServerPropertiesBuilder
-									.staticAuthSecret(customIceServerJson.get("staticAuthSecret").getAsString());
-						}
-						if (customIceServerJson.has("username")) {
-							iceServerPropertiesBuilder.username(customIceServerJson.get("username").getAsString());
-						}
-						if (customIceServerJson.has("credential")) {
-							iceServerPropertiesBuilder.credential(customIceServerJson.get("credential").getAsString());
-						}
-						IceServerProperties iceServerProperties = iceServerPropertiesBuilder.build();
-						builder.addCustomIceServer(iceServerProperties);
-					}
-				} catch (Exception e) {
-					throw new Exception("Type error in some parameter of 'customIceServers': " + e.getMessage());
-				}
-			} else if (!openviduConfig.getWebrtcIceServersBuilders().isEmpty()) {
-				// If not defined in connection, check if defined in openvidu config
+			if (params.get("customIceServers") == null && !openviduConfig.getWebrtcIceServersBuilders().isEmpty()) {
+				// If not defined in Connection, check if defined in OpenVidu global config
 				for (IceServerProperties.Builder iceServerPropertiesBuilder : openviduConfig
 						.getWebrtcIceServersBuilders()) {
 					IceServerProperties.Builder configIceBuilder = iceServerPropertiesBuilder.clone();
 					builder.addCustomIceServer(configIceBuilder.build());
 				}
 			}
-
-			// Build WEBRTC options
-			builder.role(role).kurentoOptions(kurentoOptions);
-
-		} else if (ConnectionType.IPCAM.equals(type)) {
-			String rtspUri;
-			Boolean adaptativeBitrate;
-			Boolean onlyPlayWithSubscribers;
-			Integer networkCache;
-			try {
-				rtspUri = (String) params.get("rtspUri");
-				adaptativeBitrate = (Boolean) params.get("adaptativeBitrate");
-				onlyPlayWithSubscribers = (Boolean) params.get("onlyPlayWithSubscribers");
-				networkCache = (Integer) params.get("networkCache");
-			} catch (ClassCastException e) {
-				throw new Exception("Type error in some parameter: " + e.getMessage());
-			}
-			adaptativeBitrate = adaptativeBitrate != null ? adaptativeBitrate : true;
-			onlyPlayWithSubscribers = onlyPlayWithSubscribers != null ? onlyPlayWithSubscribers : true;
-			networkCache = networkCache != null ? networkCache : 2000;
-
-			// Build IPCAM options
-			builder.rtspUri(rtspUri).adaptativeBitrate(adaptativeBitrate)
-					.onlyPlayWithSubscribers(onlyPlayWithSubscribers).networkCache(networkCache).build();
 		}
 
 		return builder;

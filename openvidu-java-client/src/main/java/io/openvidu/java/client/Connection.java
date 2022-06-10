@@ -17,6 +17,7 @@
 
 package io.openvidu.java.client;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -25,9 +26,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 /**
  * See {@link io.openvidu.java.client.Session#getConnections()}
@@ -328,9 +327,12 @@ public class Connection {
 			builder.record(this.connectionProperties.record());
 		}
 		// Keep old configuration in the rest of properties
-		builder.type(this.connectionProperties.getType()).data(this.connectionProperties.getData())
-				.kurentoOptions(this.connectionProperties.getKurentoOptions())
-				.rtspUri(this.connectionProperties.getRtspUri());
+		try {
+			builder.type(this.connectionProperties.getType()).data(this.connectionProperties.getData())
+					.kurentoOptions(this.connectionProperties.getKurentoOptions())
+					.rtspUri(this.connectionProperties.getRtspUri());
+		} catch (MalformedURLException e) {
+		}
 		if (this.connectionProperties.adaptativeBitrate() != null) {
 			builder.adaptativeBitrate(this.connectionProperties.adaptativeBitrate());
 		}
@@ -340,8 +342,9 @@ public class Connection {
 		if (this.connectionProperties.getNetworkCache() != null) {
 			builder.networkCache(this.connectionProperties.getNetworkCache());
 		}
-		if (this.connectionProperties.getCustomIceServers() != null && !this.connectionProperties.getCustomIceServers().isEmpty()) {
-			for (IceServerProperties iceServerProperties: this.connectionProperties.getCustomIceServers()) {
+		if (this.connectionProperties.getCustomIceServers() != null
+				&& !this.connectionProperties.getCustomIceServers().isEmpty()) {
+			for (IceServerProperties iceServerProperties : this.connectionProperties.getCustomIceServers()) {
 				builder.addCustomIceServer(iceServerProperties);
 			}
 		}
@@ -452,7 +455,8 @@ public class Connection {
 				String credential = (iceJsonObj.has("credential") && !iceJsonObj.get("credential").isJsonNull())
 						? iceJsonObj.get("credential").getAsString()
 						: null;
-				customIceServers.add(new IceServerProperties.Builder().url(url).username(username).credential(credential).build());
+				customIceServers.add(
+						new IceServerProperties.Builder().url(url).username(username).credential(credential).build());
 			});
 		}
 

@@ -19,8 +19,7 @@ package io.openvidu.server.kurento.core;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,8 +27,6 @@ import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.annotation.PreDestroy;
 
@@ -1134,25 +1131,12 @@ public class KurentoSessionManager extends SessionManager {
 
 		// Generate the location for the IpCam
 		GeoLocation location = null;
-		URL url = null;
+		URI uri = ConnectionProperties.checkRtspUri(kMediaOptions.rtspUri);
+		String protocol = uri.getScheme();
 		InetAddress ipAddress = null;
-		String protocol = null;
-		try {
-			Pattern pattern = Pattern.compile("^(file|rtsp|rtsps)://");
-			Matcher matcher = pattern.matcher(kMediaOptions.rtspUri);
-			if (matcher.find()) {
-				protocol = matcher.group(0).replaceAll("://$", "");
-			} else {
-				throw new MalformedURLException();
-			}
-			String parsedUrl = kMediaOptions.rtspUri.replaceAll("^.*?://", "http://");
-			url = new URL(parsedUrl);
-		} catch (Exception e) {
-			throw new MalformedURLException();
-		}
 
 		try {
-			ipAddress = InetAddress.getByName(url.getHost());
+			ipAddress = InetAddress.getByName(uri.getHost());
 			location = this.geoLocationByIp.getLocationByIp(ipAddress);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -1163,8 +1147,8 @@ public class KurentoSessionManager extends SessionManager {
 		}
 
 		String rtspConnectionId = kMediaOptions.getTypeOfVideo() + "_" + protocol + "_"
-				+ RandomStringUtils.randomAlphanumeric(4).toUpperCase() + "_" + url.getHost()
-				+ (url.getPort() != -1 ? (":" + url.getPort()) : "") + url.getPath();
+				+ RandomStringUtils.randomAlphanumeric(4).toUpperCase() + "_" + uri.getHost()
+				+ (uri.getPort() != -1 ? (":" + uri.getPort()) : "") + uri.getPath();
 		rtspConnectionId = rtspConnectionId.replace("/", "_").replace("-", "").replace(".", "_").replace(":", "_");
 		rtspConnectionId = IdentifierPrefixes.IPCAM_ID + rtspConnectionId;
 

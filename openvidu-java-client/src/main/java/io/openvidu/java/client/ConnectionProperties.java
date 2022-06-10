@@ -1,11 +1,18 @@
 package io.openvidu.java.client;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * See
@@ -172,8 +179,11 @@ public class ConnectionProperties {
 		 * <br>
 		 * <strong>Only for
 		 * {@link io.openvidu.java.client.ConnectionType#IPCAM}</strong>
+		 * 
+		 * @throws MalformedURLException
 		 */
-		public Builder rtspUri(String rtspUri) {
+		public Builder rtspUri(String rtspUri) throws MalformedURLException {
+			checkRtspUri(rtspUri);
 			this.rtspUri = rtspUri;
 			return this;
 		}
@@ -461,6 +471,205 @@ public class ConnectionProperties {
 			json.add("networkCache", JsonNull.INSTANCE);
 		}
 		return json;
+	}
+
+	/**
+	 * Obtain a {@link ConnectionProperties.Builder} directly from a JSON object in
+	 * the form of a Map
+	 * 
+	 * @return A {@link ConnectionProperties.Builder}
+	 * @throws IllegalArgumentException If some parameter has a wrong type or an
+	 *                                  invalid value
+	 */
+	public static ConnectionProperties.Builder fromJson(Map<String, ?> params) throws IllegalArgumentException {
+
+		ConnectionProperties.Builder builder = new ConnectionProperties.Builder();
+
+		String typeString;
+		String data;
+		try {
+			typeString = (String) params.get("type");
+			data = (String) params.get("data");
+		} catch (ClassCastException e) {
+			throw new IllegalArgumentException("Type error in some parameter: " + e.getMessage());
+		}
+
+		ConnectionType type;
+		try {
+			if (typeString != null) {
+				type = ConnectionType.valueOf(typeString);
+			} else {
+				type = ConnectionType.WEBRTC;
+			}
+		} catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException("Parameter 'type' " + typeString + " is not defined");
+		}
+		data = data != null ? data : "";
+
+		// Build COMMON options
+		builder.type(type).data(data).record(true);
+
+		OpenViduRole role = null;
+		KurentoOptions kurentoOptions = null;
+
+		if (ConnectionType.WEBRTC.equals(type)) {
+			String roleString;
+			try {
+				roleString = (String) params.get("role");
+			} catch (ClassCastException e) {
+				throw new IllegalArgumentException("Type error in parameter 'role': " + e.getMessage());
+			}
+			try {
+				if (roleString != null) {
+					role = OpenViduRole.valueOf(roleString);
+				} else {
+					role = OpenViduRole.PUBLISHER;
+				}
+			} catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException("Parameter role " + params.get("role") + " is not defined");
+			}
+			JsonObject kurentoOptionsJson = null;
+			if (params.get("kurentoOptions") != null) {
+				try {
+					kurentoOptionsJson = new Gson().toJsonTree(params.get("kurentoOptions"), Map.class)
+							.getAsJsonObject();
+				} catch (Exception e) {
+					throw new IllegalArgumentException(
+							"Error in parameter 'kurentoOptions'. It is not a valid JSON object");
+				}
+			}
+			if (kurentoOptionsJson != null) {
+				try {
+					KurentoOptions.Builder builder2 = new KurentoOptions.Builder();
+					if (kurentoOptionsJson.has("videoMaxRecvBandwidth")) {
+						builder2.videoMaxRecvBandwidth(kurentoOptionsJson.get("videoMaxRecvBandwidth").getAsInt());
+					}
+					if (kurentoOptionsJson.has("videoMinRecvBandwidth")) {
+						builder2.videoMinRecvBandwidth(kurentoOptionsJson.get("videoMinRecvBandwidth").getAsInt());
+					}
+					if (kurentoOptionsJson.has("videoMaxSendBandwidth")) {
+						builder2.videoMaxSendBandwidth(kurentoOptionsJson.get("videoMaxSendBandwidth").getAsInt());
+					}
+					if (kurentoOptionsJson.has("videoMinSendBandwidth")) {
+						builder2.videoMinSendBandwidth(kurentoOptionsJson.get("videoMinSendBandwidth").getAsInt());
+					}
+					if (kurentoOptionsJson.has("allowedFilters")) {
+						JsonArray filters = kurentoOptionsJson.get("allowedFilters").getAsJsonArray();
+						String[] arrayOfFilters = new String[filters.size()];
+						Iterator<JsonElement> it = filters.iterator();
+						int index = 0;
+						while (it.hasNext()) {
+							arrayOfFilters[index] = it.next().getAsString();
+							index++;
+						}
+						builder2.allowedFilters(arrayOfFilters);
+					}
+					kurentoOptions = builder2.build();
+				} catch (Exception e) {
+					throw new IllegalArgumentException(
+							"Type error in some parameter of 'kurentoOptions': " + e.getMessage());
+				}
+			}
+
+			// Custom Ice Servers
+			JsonArray customIceServersJsonArray = null;
+			if (params.get("customIceServers") != null) {
+				try {
+					customIceServersJsonArray = new Gson().toJsonTree(params.get("customIceServers"), List.class)
+							.getAsJsonArray();
+				} catch (Exception e) {
+					throw new IllegalArgumentException(
+							"Error in parameter 'customIceServersJson'. It is not a valid JSON object");
+				}
+			}
+			if (customIceServersJsonArray != null) {
+				try {
+					for (int i = 0; i < customIceServersJsonArray.size(); i++) {
+						JsonObject customIceServerJson = customIceServersJsonArray.get(i).getAsJsonObject();
+						IceServerProperties.Builder iceServerPropertiesBuilder = new IceServerProperties.Builder();
+						iceServerPropertiesBuilder.url(customIceServerJson.get("url").getAsString());
+						if (customIceServerJson.has("staticAuthSecret")) {
+							iceServerPropertiesBuilder
+									.staticAuthSecret(customIceServerJson.get("staticAuthSecret").getAsString());
+						}
+						if (customIceServerJson.has("username")) {
+							iceServerPropertiesBuilder.username(customIceServerJson.get("username").getAsString());
+						}
+						if (customIceServerJson.has("credential")) {
+							iceServerPropertiesBuilder.credential(customIceServerJson.get("credential").getAsString());
+						}
+						IceServerProperties iceServerProperties = iceServerPropertiesBuilder.build();
+						builder.addCustomIceServer(iceServerProperties);
+					}
+				} catch (Exception e) {
+					throw new IllegalArgumentException(
+							"Type error in some parameter of 'customIceServers': " + e.getMessage());
+				}
+			}
+
+			// Build WEBRTC options
+			builder.role(role).kurentoOptions(kurentoOptions);
+
+		} else if (ConnectionType.IPCAM.equals(type)) {
+			String rtspUri;
+			Boolean adaptativeBitrate;
+			Boolean onlyPlayWithSubscribers;
+			Number networkCache;
+			try {
+				rtspUri = (String) params.get("rtspUri");
+				adaptativeBitrate = (Boolean) params.get("adaptativeBitrate");
+				onlyPlayWithSubscribers = (Boolean) params.get("onlyPlayWithSubscribers");
+				networkCache = (Number) params.get("networkCache");
+			} catch (ClassCastException e) {
+				throw new IllegalArgumentException("Type error in some parameter: " + e.getMessage());
+			}
+			adaptativeBitrate = adaptativeBitrate != null ? adaptativeBitrate : true;
+			onlyPlayWithSubscribers = onlyPlayWithSubscribers != null ? onlyPlayWithSubscribers : true;
+			networkCache = networkCache != null ? networkCache : 2000;
+			if (rtspUri != null) {
+				try {
+					checkRtspUri(rtspUri);
+				} catch (MalformedURLException e) {
+					throw new IllegalArgumentException("Error in parameter 'rtspUri': " + e.getMessage());
+				}
+			}
+
+			// Build IPCAM options
+			try {
+				builder.rtspUri(rtspUri).adaptativeBitrate(adaptativeBitrate)
+						.onlyPlayWithSubscribers(onlyPlayWithSubscribers).networkCache(networkCache.intValue()).build();
+			} catch (MalformedURLException e) {
+				throw new IllegalArgumentException("Type error in some parameter: " + e.getMessage());
+			}
+		}
+
+		Boolean record;
+		try {
+			record = (Boolean) params.get("record");
+		} catch (ClassCastException e) {
+			throw new IllegalArgumentException("Type error in parameter 'record': " + e.getMessage());
+		}
+		record = record != null ? record : true;
+		builder.record(record);
+
+		return builder;
+	}
+
+	/**
+	 * @hidden
+	 */
+	public static URI checkRtspUri(String rtspUri) throws MalformedURLException {
+		try {
+			URI uri = new URI(rtspUri);
+			List<String> allowedSchemes = Arrays.asList("file", "rtsp", "rtsps");
+			if (!allowedSchemes.contains(uri.getScheme())) {
+				throw new MalformedURLException(
+						"RTSP URI does not contain a valid protocol " + allowedSchemes.toString());
+			}
+			return uri;
+		} catch (Exception e) {
+			throw new MalformedURLException(e.getMessage());
+		}
 	}
 
 }
