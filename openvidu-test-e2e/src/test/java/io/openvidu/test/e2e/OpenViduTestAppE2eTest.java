@@ -941,8 +941,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
 			try {
 				if (latchViewport.await(4000, TimeUnit.MILLISECONDS)) {
-					String expectedDimensions = "{\"width\":" + expectedWidthHeight[0] + ",\"height\":" + expectedWidthHeight[1]
-							+ "}";
+					String expectedDimensions = "{\"width\":" + expectedWidthHeight[0] + ",\"height\":"
+							+ expectedWidthHeight[1] + "}";
 					System.out.println("Publisher dimensions: " + event.get("newValue").getAsJsonObject().toString());
 					System.out.println("Real dimensions of viewport: " + expectedDimensions);
 					if ("videoDimensions".equals(event.get("changedProperty").getAsString())
@@ -957,7 +957,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		});
 
 		user.getDriver().manage().window().setSize(new Dimension(newWidth, newHeight));
-
 
 		new Thread(() -> {
 			String widthAndHeight = user.getEventManager().getDimensionOfViewport();
@@ -4470,7 +4469,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assert.assertEquals("Wrong type property", ConnectionType.WEBRTC.name(),
 				connectionProperties.get("type").getAsString());
 		Assert.assertEquals("Wrong data property", "MY_SERVER_DATA", connectionProperties.get("data").getAsString());
-		Assert.assertTrue("Wrong record property", connectionProperties.get("record").getAsBoolean()); // Is true in CE
+		Assert.assertFalse("Wrong record property", connectionProperties.get("record").getAsBoolean());
 		Assert.assertEquals("Wrong role property", OpenViduRole.MODERATOR.name(),
 				connectionProperties.get("role").getAsString());
 		Assert.assertTrue("Wrong kurentoOptions property", connectionProperties.get("kurentoOptions").isJsonNull());
