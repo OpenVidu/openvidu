@@ -47,6 +47,7 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.ConnectionProperties;
+import io.openvidu.java.client.utils.FormatChecker;
 import io.openvidu.server.config.OpenviduBuildInfo;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
@@ -277,7 +278,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		if (tokenObj != null) {
 
 			String clientMetadata = getStringParam(request, ProtocolElements.JOINROOM_METADATA_PARAM);
-			if (sessionManager.formatChecker.isServerMetadataFormatCorrect(clientMetadata)) {
+			if (FormatChecker.isServerMetadataFormatCorrect(clientMetadata)) {
 
 				// While closing a session users can't join
 				if (session.closingLock.readLock().tryLock()) {

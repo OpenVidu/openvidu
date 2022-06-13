@@ -671,8 +671,7 @@ public class Session {
 						.recordingMode(properties.recordingMode())
 						.defaultRecordingProperties(properties.defaultRecordingProperties())
 						.customSessionId(properties.customSessionId()).mediaNode(properties.mediaNode())
-						.forcedVideoCodec(forcedVideoCodec)
-						.allowTranscoding(allowTranscoding).build();
+						.forcedVideoCodec(forcedVideoCodec).allowTranscoding(allowTranscoding).build();
 
 				this.properties = responseProperties;
 				log.info("Session '{}' created", this.sessionId);
@@ -715,8 +714,10 @@ public class Session {
 				.mediaMode(MediaMode.valueOf(json.get("mediaMode").getAsString()))
 				.recordingMode(RecordingMode.valueOf(json.get("recordingMode").getAsString()));
 		if (json.has("defaultRecordingProperties")) {
-			builder.defaultRecordingProperties(
-					RecordingProperties.fromJson(json.get("defaultRecordingProperties").getAsJsonObject()));
+			String jsonString = json.get("defaultRecordingProperties").getAsJsonObject().toString();
+			RecordingProperties.Builder recBuilder = RecordingProperties
+					.fromJson(new Gson().fromJson(jsonString, Map.class), null);
+			builder.defaultRecordingProperties(recBuilder.build());
 		}
 		if (json.has("customSessionId")) {
 			builder.customSessionId(json.get("customSessionId").getAsString());

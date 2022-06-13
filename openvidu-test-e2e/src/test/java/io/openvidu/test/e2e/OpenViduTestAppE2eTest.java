@@ -3226,6 +3226,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session':'CUSTOM_SESSION_ID','name':999}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session':'CUSTOM_SESSION_ID','name':'notalphanumeric@'}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'NOT_EXISTS'}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'NOT_EXISTS'}";
@@ -3236,7 +3238,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
 
 		// 422
-		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':false,'hasVideo':false}";
+		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME~','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':false,'hasVideo':false}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
 		body = "{'session':'CUSTOM_SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'resolution':'1920x2000'}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
@@ -3848,8 +3850,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.id("session-settings-btn-0")).click();
 			Thread.sleep(1000);
 
-			String rareCharsName = "öæééEstoSi`+´çḈ€$";
-			user.getDriver().findElement(By.id("recording-name-field")).sendKeys(rareCharsName);
+			String recordingName = "1234abcABC_-~";
+			user.getDriver().findElement(By.id("recording-name-field")).sendKeys(recordingName);
 			user.getDriver().findElement(By.id("recording-mode-select")).click();
 			Thread.sleep(500);
 			user.getDriver().findElement(By.id("option-ALWAYS")).click();
@@ -3888,7 +3890,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assert.assertEquals("Wrong recording startTime/timestamp in webhook event",
 					event.get("startTime").getAsLong(), event.get("timestamp").getAsLong());
 			Assert.assertNull("Wrong recording reason in webhook event (should be null)", event.get("reason"));
-			Assert.assertEquals("Wrong recording name in webhook event", rareCharsName,
+			Assert.assertEquals("Wrong recording name in webhook event", recordingName,
 					event.get("name").getAsString());
 
 			user.getDriver().findElement(By.id("add-user-btn")).click();

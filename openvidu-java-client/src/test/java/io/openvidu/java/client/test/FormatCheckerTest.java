@@ -1,19 +1,24 @@
-package io.openvidu.server.test.unit;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+package io.openvidu.java.client.test;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
+import io.openvidu.java.client.utils.FormatChecker;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
-import io.openvidu.server.utils.FormatChecker;
+public class FormatCheckerTest extends TestCase {
 
-public class FormatCheckerTest {
+	public FormatCheckerTest(String testName) {
+		super(testName);
+	}
 
-	@Test
-	void customSessionIdFormatTest() {
+	public static Test suite() {
+		return new TestSuite(FormatCheckerTest.class);
+	}
+
+	public void testCustomSessionIdFormat() {
 
 		List<String> invalidCustomSessionIds = Arrays.asList("", "session#", "session!", "session*", "'session",
 				"\"session", "sess(ion", "sess_ion)", "session:session", ";session;", "session@session", "$",
@@ -24,40 +29,35 @@ public class FormatCheckerTest {
 				"0session10", "-session", "session-", "-session-", "_session", "session_", "_session_", "_-session",
 				"session-_", "123_session-1");
 
-		FormatChecker formatChecker = new FormatChecker();
 		for (String id : invalidCustomSessionIds)
-			assertFalse(formatChecker.isValidCustomSessionId(id));
+			assertFalse(FormatChecker.isValidCustomSessionId(id));
 		for (String id : validCustomSessionIds)
-			assertTrue(formatChecker.isValidCustomSessionId(id));
+			assertTrue(FormatChecker.isValidCustomSessionId(id));
 	}
 
-	@Test
-	void acceptableRecordingResolutionTest() {
+	public void testAcceptableRecordingResolution() {
 
 		List<String> invalidResolutions = Arrays.asList("", "a", "123", "true", "AXB", "AxB", "12x", "x12", "0920x1080",
 				"1080x0720", "720x2000", "99x720", "1920X1080");
 
 		List<String> validResolutions = Arrays.asList("1920x1080", "1280x720", "100x1999");
 
-		FormatChecker formatChecker = new FormatChecker();
 		for (String resolution : invalidResolutions)
-			assertFalse(formatChecker.isAcceptableRecordingResolution(resolution));
+			assertFalse(FormatChecker.isAcceptableRecordingResolution(resolution));
 		for (String resolution : validResolutions)
-			assertTrue(formatChecker.isAcceptableRecordingResolution(resolution));
+			assertTrue(FormatChecker.isAcceptableRecordingResolution(resolution));
 	}
 
-	@Test
-	void acceptableRecordingFrameRateTest() {
+	public void testAcceptableRecordingFrameRate() {
 
 		List<Integer> invalidFrameRates = Arrays.asList(-1, 0, 121, 9999);
 
 		List<Integer> validFramerates = Arrays.asList(1, 2, 30, 60, 119, 120);
 
-		FormatChecker formatChecker = new FormatChecker();
 		for (int framerate : invalidFrameRates)
-			assertFalse(formatChecker.isAcceptableRecordingFrameRate(framerate));
+			assertFalse(FormatChecker.isAcceptableRecordingFrameRate(framerate));
 		for (int framerate : validFramerates)
-			assertTrue(formatChecker.isAcceptableRecordingFrameRate(framerate));
+			assertTrue(FormatChecker.isAcceptableRecordingFrameRate(framerate));
 	}
 
 }

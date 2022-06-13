@@ -80,7 +80,6 @@ import io.openvidu.server.utils.DockerManager;
 import io.openvidu.server.utils.JsonUtils;
 import io.openvidu.server.utils.LocalCustomFileManager;
 import io.openvidu.server.utils.LocalDockerManager;
-import io.openvidu.server.utils.RecordingUtils;
 import io.openvidu.server.utils.RemoteOperationUtils;
 
 public class RecordingManager {
@@ -443,7 +442,7 @@ public class RecordingManager {
 
 			this.singleStreamRecordingService.startRecorderEndpointForPublisherEndpoint(recording.getId(), profile,
 					participant, new CountDownLatch(1));
-		} else if (RecordingUtils.IS_COMPOSED(recording.getOutputMode()) && !recording.hasVideo()) {
+		} else if (RecordingProperties.IS_COMPOSED(recording.getOutputMode()) && !recording.hasVideo()) {
 			// Connect this stream to existing Composite recorder
 			log.info("Joining PublisherEndpoint to existing Composite in session {} for new stream of participant {}",
 					session.getSessionId(), participant.getParticipantPublicId());
@@ -479,7 +478,7 @@ public class RecordingManager {
 			} catch (InterruptedException e) {
 				log.error("Exception while waiting for state change", e);
 			}
-		} else if (RecordingUtils.IS_COMPOSED(recording.getOutputMode()) && !recording.hasVideo()) {
+		} else if (RecordingProperties.IS_COMPOSED(recording.getOutputMode()) && !recording.hasVideo()) {
 			// Disconnect this stream from existing Composite recorder
 			log.info("Removing PublisherEndpoint from Composite in session {} for stream of participant {}",
 					session.getSessionId(), streamId);

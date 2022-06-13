@@ -17,6 +17,9 @@
 
 package io.openvidu.java.client;
 
+import java.util.Map;
+
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -120,7 +123,9 @@ public class Recording {
 		}
 		this.status = Recording.Status.valueOf(json.get("status").getAsString());
 
-		this.recordingProperties = RecordingProperties.fromJson(json);
+		RecordingProperties.Builder builder = RecordingProperties
+				.fromJson(new Gson().fromJson(json.toString(), Map.class), null);
+		this.recordingProperties = builder.build();
 	}
 
 	/**
@@ -233,9 +238,9 @@ public class Recording {
 	 * URL of the recording. You can access the file from there. It is
 	 * <code>null</code> until recording reaches "ready" or "failed" status. If
 	 * <a href="https://docs.openvidu.io/en/stable/reference-docs/openvidu-config/">
-	 *   OpenVidu Server configuration
-	 * </a> property <code>OPENVIDU_RECORDING_PUBLIC_ACCESS</code> is false,
-	 * this path will be secured with OpenVidu credentials
+	 * OpenVidu Server configuration </a> property
+	 * <code>OPENVIDU_RECORDING_PUBLIC_ACCESS</code> is false, this path will be
+	 * secured with OpenVidu credentials
 	 */
 	public String getUrl() {
 		return url;

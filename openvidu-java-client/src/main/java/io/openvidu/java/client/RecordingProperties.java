@@ -17,9 +17,12 @@
 
 package io.openvidu.java.client;
 
+import java.util.Map;
+
 import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.Recording.OutputMode;
+import io.openvidu.java.client.utils.FormatChecker;
 
 /**
  * See
@@ -28,6 +31,7 @@ import io.openvidu.java.client.Recording.OutputMode;
 public class RecordingProperties {
 
 	public static class DefaultValues {
+		public static final String name = "";
 		public static final Boolean hasAudio = true;
 		public static final Boolean hasVideo = true;
 		public static final Recording.OutputMode outputMode = Recording.OutputMode.COMPOSED;
@@ -35,14 +39,15 @@ public class RecordingProperties {
 		public static final String resolution = "1280x720";
 		public static final Integer frameRate = 25;
 		public static final Long shmSize = 536870912L;
+		public static final String customLayout = "";
 		public static final Boolean ignoreFailedStreams = false;
 	}
 
 	// For all
-	private String name = "";
-	private Boolean hasAudio = true;
-	private Boolean hasVideo = true;
-	private Recording.OutputMode outputMode = Recording.OutputMode.COMPOSED;
+	private String name = DefaultValues.name;
+	private Boolean hasAudio = DefaultValues.hasAudio;
+	private Boolean hasVideo = DefaultValues.hasVideo;
+	private Recording.OutputMode outputMode = DefaultValues.outputMode;
 	// For COMPOSED/COMPOSED_QUICK_START + hasVideo
 	private RecordingLayout recordingLayout;
 	private String resolution;
@@ -60,15 +65,15 @@ public class RecordingProperties {
 	 */
 	public static class Builder {
 
-		private String name = "";
+		private String name = DefaultValues.name;
 		private Boolean hasAudio = DefaultValues.hasAudio;
 		private Boolean hasVideo = DefaultValues.hasVideo;
 		private Recording.OutputMode outputMode = DefaultValues.outputMode;
-		private RecordingLayout recordingLayout;
-		private String resolution;
-		private Integer frameRate;
-		private Long shmSize;
-		private String customLayout;
+		private RecordingLayout recordingLayout = DefaultValues.recordingLayout;
+		private String resolution = DefaultValues.resolution;
+		private Integer frameRate = DefaultValues.frameRate;
+		private Long shmSize = DefaultValues.shmSize;
+		private String customLayout = DefaultValues.customLayout;
 		private Boolean ignoreFailedStreams = DefaultValues.ignoreFailedStreams;
 		private String mediaNode;
 
@@ -202,9 +207,9 @@ public class RecordingProperties {
 		 * to {@link io.openvidu.java.client.RecordingLayout#CUSTOM} you can call this
 		 * method to set the relative path to the specific custom layout you want to
 		 * use.<br>
-		 * See <a href="https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts">
-		 *   Custom recording layouts
-		 * </a> to learn more
+		 * See <a href=
+		 * "https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts">
+		 * Custom recording layouts </a> to learn more
 		 */
 		public RecordingProperties.Builder customLayout(String path) {
 			this.customLayout = path;
@@ -234,13 +239,13 @@ public class RecordingProperties {
 		}
 
 		/**
-		 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/"
-		 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
-		 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
-		 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
-		 * sans-serif">PRO</a> Call this method to force the recording to be hosted in
-		 * the Media Node with identifier <code>mediaNodeId</code>. This property only
-		 * applies to {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+		 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" style="display:
+		 * inline-block; background-color: rgb(0, 136, 170); color: white; font-weight:
+		 * bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size:
+		 * 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> Call
+		 * this method to force the recording to be hosted in the Media Node with
+		 * identifier <code>mediaNodeId</code>. This property only applies to
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
 		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
 		 * recordings with {@link RecordingProperties#hasVideo()} to true and is ignored
 		 * for {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL}
@@ -257,7 +262,7 @@ public class RecordingProperties {
 	protected RecordingProperties(String name, Boolean hasAudio, Boolean hasVideo, Recording.OutputMode outputMode,
 			RecordingLayout layout, String resolution, Integer frameRate, Long shmSize, String customLayout,
 			Boolean ignoreFailedStreams, String mediaNode) {
-		this.name = name != null ? name : "";
+		this.name = name != null ? name : DefaultValues.name;
 		this.hasAudio = hasAudio != null ? hasAudio : DefaultValues.hasAudio;
 		this.hasVideo = hasVideo != null ? hasVideo : DefaultValues.hasVideo;
 		this.outputMode = outputMode != null ? outputMode : DefaultValues.outputMode;
@@ -390,9 +395,9 @@ public class RecordingProperties {
 	 * If {@link io.openvidu.java.client.RecordingProperties#recordingLayout()} is
 	 * set to {@link io.openvidu.java.client.RecordingLayout#CUSTOM}, this property
 	 * defines the relative path to the specific custom layout you want to use.<br>
-	 * See <a href="https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts">
-	 *   Custom recording layouts
-	 * </a> to learn more
+	 * See <a href=
+	 * "https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts">
+	 * Custom recording layouts </a> to learn more
 	 */
 	public String customLayout() {
 		return this.customLayout;
@@ -423,15 +428,15 @@ public class RecordingProperties {
 	}
 
 	/**
-	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/"
-	 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
-	 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
-	 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
-	 * sans-serif">PRO</a> The Media Node where to host the recording. The default
-	 * option if this property is not defined is the same Media Node hosting the
-	 * Session to record. This property only applies to COMPOSED or
-	 * COMPOSED_QUICK_START recordings with {@link RecordingProperties#hasVideo()}
-	 * to true and is ignored for INDIVIDUAL recordings and audio-only recordings
+	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" style="display:
+	 * inline-block; background-color: rgb(0, 136, 170); color: white; font-weight:
+	 * bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size:
+	 * 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> The
+	 * Media Node where to host the recording. The default option if this property
+	 * is not defined is the same Media Node hosting the Session to record. This
+	 * property only applies to COMPOSED or COMPOSED_QUICK_START recordings with
+	 * {@link RecordingProperties#hasVideo()} to true and is ignored for INDIVIDUAL
+	 * recordings and audio-only recordings
 	 */
 	public String mediaNode() {
 		return this.mediaNode;
@@ -442,7 +447,7 @@ public class RecordingProperties {
 	 */
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
-		json.addProperty("name", name);
+		json.addProperty("name", name != null ? name : DefaultValues.name);
 		json.addProperty("hasAudio", hasAudio != null ? hasAudio : DefaultValues.hasAudio);
 		json.addProperty("hasVideo", hasVideo != null ? hasVideo : DefaultValues.hasVideo);
 		json.addProperty("outputMode", outputMode != null ? outputMode.name() : DefaultValues.outputMode.name());
@@ -454,7 +459,7 @@ public class RecordingProperties {
 			json.addProperty("frameRate", frameRate != null ? frameRate : DefaultValues.frameRate);
 			json.addProperty("shmSize", shmSize != null ? shmSize : DefaultValues.shmSize);
 			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {
-				json.addProperty("customLayout", customLayout != null ? customLayout : "");
+				json.addProperty("customLayout", customLayout != null ? customLayout : DefaultValues.customLayout);
 			}
 		}
 		if (OutputMode.INDIVIDUAL.equals(outputMode)) {
@@ -467,69 +472,226 @@ public class RecordingProperties {
 		return json;
 	}
 
+	public static RecordingProperties.Builder fromJson(Map<String, ?> params, RecordingProperties defaultProps)
+			throws RuntimeException {
+
+		// Final properties being used
+		String nameFinal = null;
+		Boolean hasAudioFinal = null;
+		Boolean hasVideoFinal = null;
+		OutputMode outputModeFinal = null;
+		RecordingLayout recordingLayoutFinal = null;
+		String resolutionFinal = null;
+		Integer frameRateFinal = null;
+		Long shmSizeFinal = null;
+		String customLayoutFinal = null;
+		Boolean ignoreFailedStreamsFinal = null;
+
+		// Defaults properties
+		String nameDefault = null;
+		Boolean hasAudioDefault = null;
+		Boolean hasVideoDefault = null;
+		OutputMode outputModeDefault = null;
+		RecordingLayout recordingLayoutDefault = null;
+		String resolutionDefault = null;
+		Integer frameRateDefault = null;
+		Long shmSizeDefault = null;
+		String customLayoutDefault = null;
+		Boolean ignoreFailedStreamsDefault = null;
+		String mediaNodeDefault = null;
+
+		if (defaultProps != null) {
+			nameDefault = defaultProps.name();
+			hasAudioDefault = defaultProps.hasAudio();
+			hasVideoDefault = defaultProps.hasVideo();
+			outputModeDefault = defaultProps.outputMode();
+			recordingLayoutDefault = defaultProps.recordingLayout();
+			resolutionDefault = defaultProps.resolution();
+			frameRateDefault = defaultProps.frameRate();
+			shmSizeDefault = defaultProps.shmSize();
+			customLayoutDefault = defaultProps.customLayout();
+			ignoreFailedStreamsDefault = defaultProps.ignoreFailedStreams();
+			mediaNodeDefault = defaultProps.mediaNode();
+		}
+
+		nameDefault = nameDefault != null ? nameDefault : DefaultValues.name;
+		hasAudioDefault = hasAudioDefault != null ? hasAudioDefault : DefaultValues.hasAudio;
+		hasVideoDefault = hasVideoDefault != null ? hasVideoDefault : DefaultValues.hasVideo;
+		outputModeDefault = outputModeDefault != null ? outputModeDefault : DefaultValues.outputMode;
+		recordingLayoutDefault = recordingLayoutDefault != null ? recordingLayoutDefault
+				: DefaultValues.recordingLayout;
+		resolutionDefault = resolutionDefault != null ? resolutionDefault : DefaultValues.resolution;
+		frameRateDefault = frameRateDefault != null ? frameRateDefault : DefaultValues.frameRate;
+		shmSizeDefault = shmSizeDefault != null ? shmSizeDefault : DefaultValues.shmSize;
+		customLayoutDefault = customLayoutDefault != null ? customLayoutDefault : DefaultValues.customLayout;
+		ignoreFailedStreamsDefault = ignoreFailedStreamsDefault != null ? ignoreFailedStreamsDefault
+				: DefaultValues.ignoreFailedStreams;
+
+		// Provided properties through params
+		String nameParam;
+		Boolean hasAudioParam;
+		Boolean hasVideoParam;
+		String outputModeStringParam;
+		String recordingLayoutStringParam;
+		String resolutionParam;
+		Number frameRateParam;
+		Long shmSizeParam = null;
+		String customLayoutParam;
+		Boolean ignoreFailedStreamsParam;
+
+		try {
+			nameParam = (String) params.get("name");
+			hasAudioParam = (Boolean) params.get("hasAudio");
+			hasVideoParam = (Boolean) params.get("hasVideo");
+			outputModeStringParam = (String) params.get("outputMode");
+			recordingLayoutStringParam = (String) params.get("recordingLayout");
+			resolutionParam = (String) params.get("resolution");
+			frameRateParam = (Number) params.get("frameRate");
+			if (params.get("shmSize") != null) {
+				Number shmSize = (Number) params.get("shmSize");
+				shmSizeParam = shmSize.longValue();
+			}
+			customLayoutParam = (String) params.get("customLayout");
+			ignoreFailedStreamsParam = (Boolean) params.get("ignoreFailedStreams");
+		} catch (ClassCastException | NumberFormatException e) {
+			throw new IllegalArgumentException("Type error in some parameter: " + e.getMessage());
+		}
+
+		if (nameParam != null && !nameParam.isEmpty()) {
+			if (!FormatChecker.isValidRecordingName(nameParam)) {
+				throw new IllegalArgumentException(
+						"Parameter 'name' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-~]+");
+			}
+			nameFinal = nameParam;
+		} else {
+			nameFinal = nameDefault;
+		}
+
+		if (hasAudioParam != null) {
+			hasAudioFinal = hasAudioParam;
+		} else {
+			hasAudioFinal = hasAudioDefault;
+		}
+
+		if (hasVideoParam != null) {
+			hasVideoFinal = hasVideoParam;
+		} else {
+			hasVideoFinal = hasVideoDefault;
+		}
+
+		if (!hasAudioFinal && !hasVideoFinal) {
+			// Cannot start a recording with both "hasAudio" and "hasVideo" to false
+			throw new IllegalStateException(
+					"Cannot start a recording with both \"hasAudio\" and \"hasVideo\" set to false");
+		}
+
+		if (outputModeStringParam != null) {
+			try {
+				outputModeFinal = OutputMode.valueOf(outputModeStringParam);
+
+				// If param outputMode is COMPOSED when default is COMPOSED_QUICK_START,
+				// change outputMode to COMPOSED_QUICK_START (and vice versa)
+				if (defaultProps != null && OutputMode.COMPOSED_QUICK_START.equals(defaultProps.outputMode())
+						&& OutputMode.COMPOSED.equals(outputModeFinal)) {
+					outputModeFinal = OutputMode.COMPOSED_QUICK_START;
+				} else if (defaultProps != null && OutputMode.COMPOSED.equals(defaultProps.outputMode())
+						&& OutputMode.COMPOSED_QUICK_START.equals(outputModeFinal)) {
+					outputModeFinal = OutputMode.COMPOSED;
+				}
+
+			} catch (Exception e) {
+				throw new IllegalArgumentException("Type error in parameter 'outputMode'");
+			}
+		} else {
+			outputModeFinal = outputModeDefault;
+		}
+
+		if (IS_COMPOSED(outputModeFinal)) {
+
+			if (recordingLayoutStringParam != null) {
+				try {
+					recordingLayoutFinal = RecordingLayout.valueOf(recordingLayoutStringParam);
+				} catch (Exception e) {
+					throw new IllegalArgumentException("Type error in parameter 'recordingLayout'");
+				}
+			} else {
+				recordingLayoutFinal = recordingLayoutDefault;
+			}
+
+			if (resolutionParam != null) {
+				if (!FormatChecker.isAcceptableRecordingResolution(resolutionParam)) {
+					throw new IllegalStateException(
+							"Wrong 'resolution' parameter. Acceptable values from 100 to 1999 for both width and height");
+				}
+				resolutionFinal = resolutionParam;
+			} else {
+				resolutionFinal = resolutionDefault;
+			}
+
+			if (frameRateParam != null) {
+				if (!FormatChecker.isAcceptableRecordingFrameRate(frameRateParam.intValue())) {
+					throw new IllegalStateException(
+							"Wrong 'resolution' parameter. Acceptable values from 100 to 1999 for both width and height");
+				}
+				frameRateFinal = frameRateParam.intValue();
+			} else {
+				frameRateFinal = frameRateDefault;
+			}
+
+			if (shmSizeParam != null) {
+				if (!FormatChecker.isAcceptableRecordingShmSize(shmSizeParam)) {
+					throw new IllegalStateException("Wrong \"shmSize\" parameter. Must be 134217728 (128 MB) minimum");
+				}
+				shmSizeFinal = shmSizeParam;
+			} else {
+				shmSizeFinal = shmSizeDefault;
+			}
+
+			if (RecordingLayout.CUSTOM.equals(recordingLayoutFinal)) {
+				if (customLayoutParam != null) {
+					customLayoutFinal = customLayoutParam;
+				} else {
+					customLayoutFinal = customLayoutDefault;
+				}
+			}
+		} else if (OutputMode.INDIVIDUAL.equals(outputModeFinal)) {
+			if (ignoreFailedStreamsParam != null) {
+				ignoreFailedStreamsFinal = ignoreFailedStreamsParam;
+			} else {
+				ignoreFailedStreamsFinal = ignoreFailedStreamsDefault;
+			}
+		}
+
+		RecordingProperties.Builder builder = new RecordingProperties.Builder();
+		builder.name(nameFinal).hasAudio(hasAudioFinal).hasVideo(hasVideoFinal).outputMode(outputModeFinal);
+		if (IS_COMPOSED(outputModeFinal) && hasVideoFinal) {
+			builder.recordingLayout(recordingLayoutFinal);
+			builder.resolution(resolutionFinal);
+			builder.frameRate(frameRateFinal);
+			builder.shmSize(shmSizeFinal);
+			if (RecordingLayout.CUSTOM.equals(recordingLayoutFinal)) {
+				builder.customLayout(customLayoutFinal);
+			}
+		}
+		if (OutputMode.INDIVIDUAL.equals(outputModeFinal)) {
+			builder.ignoreFailedStreams(ignoreFailedStreamsFinal);
+		}
+
+		if (mediaNodeDefault == null) {
+			mediaNodeDefault = SessionProperties.getMediaNodeProperty(params);
+		}
+		if (mediaNodeDefault != null && !mediaNodeDefault.isEmpty()) {
+			builder.mediaNode = mediaNodeDefault;
+		}
+
+		return builder;
+	}
+
 	/**
 	 * @hidden
 	 */
-	public static RecordingProperties fromJson(JsonObject json) {
-
-		Boolean hasVideoAux = true;
-		Recording.OutputMode outputModeAux = null;
-		RecordingLayout recordingLayoutAux = null;
-
-		Builder builder = new RecordingProperties.Builder();
-		if (json.has("name")) {
-			builder.name(json.get("name").getAsString());
-		}
-		if (json.has("hasAudio")) {
-			builder.hasAudio(json.get("hasAudio").getAsBoolean());
-		}
-		if (json.has("hasVideo")) {
-			hasVideoAux = json.get("hasVideo").getAsBoolean();
-			builder.hasVideo(hasVideoAux);
-		}
-		if (json.has("outputMode")) {
-			outputModeAux = OutputMode.valueOf(json.get("outputMode").getAsString());
-		} else {
-			outputModeAux = DefaultValues.outputMode;
-		}
-		builder.outputMode(outputModeAux);
-		if ((OutputMode.COMPOSED.equals(outputModeAux) || OutputMode.COMPOSED_QUICK_START.equals(outputModeAux))
-				&& hasVideoAux) {
-			if (json.has("recordingLayout")) {
-				recordingLayoutAux = RecordingLayout.valueOf(json.get("recordingLayout").getAsString());
-				builder.recordingLayout(recordingLayoutAux);
-			}
-			if (json.has("resolution")) {
-				builder.resolution(json.get("resolution").getAsString());
-			}
-			if (json.has("frameRate")) {
-				builder.frameRate(json.get("frameRate").getAsInt());
-			}
-			if (json.has("shmSize")) {
-				builder.shmSize(json.get("shmSize").getAsLong());
-			}
-			if (RecordingLayout.CUSTOM.equals(recordingLayoutAux)) {
-				if (json.has("customLayout")) {
-					builder.customLayout(json.get("customLayout").getAsString());
-				}
-			}
-		}
-		if (json.has("ignoreFailedStreams") && OutputMode.INDIVIDUAL.equals(outputModeAux)) {
-			builder.ignoreFailedStreams(json.get("ignoreFailedStreams").getAsBoolean());
-		}
-		if (json.has("mediaNode")) {
-			String mediaNodeId = null;
-			if (json.get("mediaNode").isJsonObject()) {
-				mediaNodeId = json.get("mediaNode").getAsJsonObject().get("id").getAsString();
-
-			} else if (json.get("mediaNode").isJsonPrimitive()) {
-				mediaNodeId = json.get("mediaNode").getAsString();
-			}
-			if (mediaNodeId != null && !mediaNodeId.isEmpty()) {
-				builder.mediaNode(mediaNodeId);
-			}
-		}
-		return builder.build();
+	public final static boolean IS_COMPOSED(OutputMode outputMode) {
+		return (OutputMode.COMPOSED.equals(outputMode) || OutputMode.COMPOSED_QUICK_START.equals(outputMode));
 	}
 
 }

@@ -21,9 +21,9 @@ import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.Recording.Status;
 import io.openvidu.java.client.RecordingLayout;
+import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.recording.Recording;
-import io.openvidu.server.utils.RecordingUtils;
 
 public class CDREventRecordingStatusChanged extends CDREventEnd {
 
@@ -44,7 +44,7 @@ public class CDREventRecordingStatusChanged extends CDREventEnd {
 		json.addProperty("id", this.recording.getId());
 		json.addProperty("name", this.recording.getName());
 		json.addProperty("outputMode", this.recording.getOutputMode().name());
-		if (RecordingUtils.IS_COMPOSED(this.recording.getOutputMode()) && this.recording.hasVideo()) {
+		if (RecordingProperties.IS_COMPOSED(this.recording.getOutputMode()) && this.recording.hasVideo()) {
 			json.addProperty("resolution", this.recording.getResolution());
 			json.addProperty("frameRate", this.recording.getFrameRate());
 			json.addProperty("recordingLayout", this.recording.getRecordingLayout().name());

@@ -53,13 +53,13 @@ import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.SessionProperties;
+import io.openvidu.java.client.utils.FormatChecker;
 import io.openvidu.server.cdr.CDREventRecordingStatusChanged;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.kurento.endpoint.EndpointType;
 import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.recording.service.RecordingManager;
-import io.openvidu.server.utils.FormatChecker;
 import io.openvidu.server.utils.GeoLocation;
 import io.openvidu.server.utils.GeoLocationByIp;
 import io.openvidu.server.utils.MediaNodeManager;
@@ -92,8 +92,6 @@ public abstract class SessionManager {
 
 	@Autowired
 	protected GeoLocationByIp geoLocationByIp;
-
-	public FormatChecker formatChecker = new FormatChecker();
 
 	private UpdatableTimerTask sessionGarbageCollectorTimer;
 
@@ -332,7 +330,7 @@ public abstract class SessionManager {
 
 	public Token newToken(Session session, OpenViduRole role, String serverMetadata, boolean record,
 			KurentoOptions kurentoOptions, List<IceServerProperties> customIceServers) throws Exception {
-		if (!formatChecker.isServerMetadataFormatCorrect(serverMetadata)) {
+		if (!FormatChecker.isServerMetadataFormatCorrect(serverMetadata)) {
 			log.error("Data invalid format");
 			throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Data invalid format");
 		}

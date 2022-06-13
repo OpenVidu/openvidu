@@ -39,7 +39,6 @@ import com.google.gson.JsonObject;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.core.MediaServer;
 import io.openvidu.server.kurento.core.KurentoSession;
-import io.openvidu.server.utils.RecordingUtils;
 import io.openvidu.server.utils.UpdatableTimerTask;
 
 /**
@@ -192,14 +191,14 @@ public class Kms {
 	public synchronized void incrementActiveRecordings(String sessionId, String recordingId,
 			RecordingProperties properties) {
 		this.activeRecordings.put(recordingId, sessionId);
-		if (RecordingUtils.IS_COMPOSED(properties.outputMode())) {
+		if (RecordingProperties.IS_COMPOSED(properties.outputMode())) {
 			this.activeComposedRecordings.incrementAndGet();
 		}
 	}
 
 	public synchronized void decrementActiveRecordings(String recordingId, RecordingProperties properties) {
 		this.activeRecordings.remove(recordingId);
-		if (RecordingUtils.IS_COMPOSED(properties.outputMode())) {
+		if (RecordingProperties.IS_COMPOSED(properties.outputMode())) {
 			this.activeComposedRecordings.decrementAndGet();
 		}
 		kmsManager.getMediaNodeManager().dropIdleMediaNode(this.id);

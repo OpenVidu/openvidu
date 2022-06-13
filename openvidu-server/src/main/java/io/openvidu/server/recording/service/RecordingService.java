@@ -38,7 +38,6 @@ import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.utils.CommandExecutor;
 import io.openvidu.server.utils.CustomFileManager;
-import io.openvidu.server.utils.RecordingUtils;
 
 public abstract class RecordingService {
 
@@ -160,7 +159,7 @@ public abstract class RecordingService {
 			RecordingProperties.Builder builder = new RecordingProperties.Builder().name(recordingId)
 					.outputMode(properties.outputMode()).hasAudio(properties.hasAudio()).hasVideo(properties.hasVideo())
 					.mediaNode(properties.mediaNode());
-			if (RecordingUtils.IS_COMPOSED(properties.outputMode()) && properties.hasVideo()) {
+			if (RecordingProperties.IS_COMPOSED(properties.outputMode()) && properties.hasVideo()) {
 				builder.resolution(properties.resolution());
 				builder.frameRate(properties.frameRate());
 				builder.recordingLayout(properties.recordingLayout());

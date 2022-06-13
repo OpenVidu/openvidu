@@ -23,7 +23,6 @@ import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
-import io.openvidu.server.utils.RecordingUtils;
 
 public class Recording {
 
@@ -77,7 +76,7 @@ public class Recording {
 				.valueOf(json.get("outputMode").getAsString());
 		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(json.get("name").getAsString())
 				.outputMode(outputMode).hasAudio(hasAudio).hasVideo(hasVideo);
-		if (RecordingUtils.IS_COMPOSED(outputMode) && hasVideo) {
+		if (RecordingProperties.IS_COMPOSED(outputMode) && hasVideo) {
 			if (json.has("resolution")) {
 				builder.resolution(json.get("resolution").getAsString());
 			}
@@ -193,7 +192,8 @@ public class Recording {
 		json.addProperty("object", "recording");
 		json.addProperty("name", this.recordingProperties.name());
 		json.addProperty("outputMode", this.getOutputMode().name());
-		if (RecordingUtils.IS_COMPOSED(this.recordingProperties.outputMode()) && this.recordingProperties.hasVideo()) {
+		if (RecordingProperties.IS_COMPOSED(this.recordingProperties.outputMode())
+				&& this.recordingProperties.hasVideo()) {
 			json.addProperty("resolution", this.recordingProperties.resolution());
 			json.addProperty("frameRate", this.recordingProperties.frameRate());
 			json.addProperty("recordingLayout", this.recordingProperties.recordingLayout().name());

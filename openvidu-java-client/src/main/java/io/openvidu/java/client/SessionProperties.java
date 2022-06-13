@@ -17,11 +17,14 @@
 
 package io.openvidu.java.client;
 
+import java.lang.reflect.Type;
 import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * See {@link io.openvidu.java.client.OpenVidu#createSession(SessionProperties)}
@@ -108,12 +111,12 @@ public class SessionProperties {
 		}
 
 		/**
-		 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/"
-		 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
-		 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
-		 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
-		 * sans-serif">PRO</a> Call this method to force the session to be hosted in the
-		 * Media Node with identifier <code>mediaNodeId</code>
+		 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" style="display:
+		 * inline-block; background-color: rgb(0, 136, 170); color: white; font-weight:
+		 * bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size:
+		 * 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> Call
+		 * this method to force the session to be hosted in the Media Node with
+		 * identifier <code>mediaNodeId</code>
 		 */
 		public SessionProperties.Builder mediaNode(String mediaNodeId) {
 			this.mediaNode = mediaNodeId;
@@ -121,14 +124,14 @@ public class SessionProperties {
 		}
 
 		/**
-		 * Define which video codec will be forcibly used for this session.
-		 * This forces all browsers/clients to use the same codec, which would
-		 * avoid transcoding in the media server (Kurento only). If
-		 * <code>forcedVideoCodec</code> is set to NONE, no codec will be forced.
+		 * Define which video codec will be forcibly used for this session. This forces
+		 * all browsers/clients to use the same codec, which would avoid transcoding in
+		 * the media server (Kurento only). If <code>forcedVideoCodec</code> is set to
+		 * NONE, no codec will be forced.
 		 *
 		 * If the browser/client is not compatible with the specified codec, and
-		 * {@link #allowTranscoding(Boolean)} is <code>false</code>, an
-		 * exception will occur.
+		 * {@link #allowTranscoding(Boolean)} is <code>false</code>, an exception will
+		 * occur.
 		 *
 		 * If defined here, this parameter has prevalence over
 		 * OPENVIDU_STREAMS_FORCED_VIDEO_CODEC.
@@ -141,11 +144,11 @@ public class SessionProperties {
 		}
 
 		/**
-		 * Actual video codec that will be forcibly used for this session.
-		 * This is the same as <code>forcedVideoCodec</code>, except when its
-		 * value is {@link VideoCodec#MEDIA_SERVER_PREFERRED}: in that case,
-		 * OpenVidu Server will fill this property with a resolved value,
-		 * depending on what is the configured media server.
+		 * Actual video codec that will be forcibly used for this session. This is the
+		 * same as <code>forcedVideoCodec</code>, except when its value is
+		 * {@link VideoCodec#MEDIA_SERVER_PREFERRED}: in that case, OpenVidu Server will
+		 * fill this property with a resolved value, depending on what is the configured
+		 * media server.
 		 */
 		public SessionProperties.Builder forcedVideoCodecResolved(VideoCodec forcedVideoCodec) {
 			this.forcedVideoCodecResolved = forcedVideoCodec;
@@ -228,13 +231,13 @@ public class SessionProperties {
 	}
 
 	/**
-	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/"
-	 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
-	 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
-	 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
-	 * sans-serif">PRO</a> The Media Node where to host the session. The default
-	 * option if this property is not defined is the less loaded Media Node at the
-	 * moment the first user joins the session.
+	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" style="display:
+	 * inline-block; background-color: rgb(0, 136, 170); color: white; font-weight:
+	 * bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size:
+	 * 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> The
+	 * Media Node where to host the session. The default option if this property is
+	 * not defined is the less loaded Media Node at the moment the first user joins
+	 * the session.
 	 */
 	public String mediaNode() {
 		return this.mediaNode;
@@ -253,12 +256,12 @@ public class SessionProperties {
 	 * Defines which video codec is being forced to be used in the browser/client.
 	 * This is the resolved value, for actual usage in the server.
 	 *
-	 * This is a server-only property, and as such, it doesn't need to be transmitted
-	 * over the wire between server and client. Thus it doesn't get serialized in
-	 * the `toJson()` method.
+	 * This is a server-only property, and as such, it doesn't need to be
+	 * transmitted over the wire between server and client. Thus it doesn't get
+	 * serialized in the `toJson()` method.
 	 *
-	 * If more server-only properties start to appear here, maybe a good idea
-	 * would be to refactor them all into a server-specific Properties class.
+	 * If more server-only properties start to appear here, maybe a good idea would
+	 * be to refactor them all into a server-specific Properties class.
 	 *
 	 * @hidden
 	 */
@@ -377,8 +380,11 @@ public class SessionProperties {
 				}
 				if (defaultRecordingPropertiesJson != null) {
 					try {
-						RecordingProperties defaultRecordingProperties = RecordingProperties
-								.fromJson(defaultRecordingPropertiesJson);
+
+						String jsonString = defaultRecordingPropertiesJson.toString();
+						RecordingProperties.Builder recBuilder = RecordingProperties
+								.fromJson(new Gson().fromJson(jsonString, Map.class), null);
+						RecordingProperties defaultRecordingProperties = recBuilder.build();
 						builder = builder.defaultRecordingProperties(defaultRecordingProperties);
 					} catch (Exception e) {
 						throw new IllegalArgumentException(
@@ -408,8 +414,17 @@ public class SessionProperties {
 			JsonObject mediaNodeJson;
 			try {
 				mediaNodeJson = JsonParser.parseString(params.get("mediaNode").toString()).getAsJsonObject();
-			} catch (Exception e) {
-				throw new IllegalArgumentException("Error in parameter 'mediaNode'. It is not a valid JSON object");
+			} catch (JsonSyntaxException e) {
+				try {
+					Gson gson = new Gson();
+					Type gsonType = new TypeToken<Map>() {
+					}.getType();
+					String gsonString = gson.toJson(params.get("mediaNode"), gsonType);
+					mediaNodeJson = JsonParser.parseString(gsonString).getAsJsonObject();
+				} catch (Exception e2) {
+					throw new IllegalArgumentException("Error in parameter 'mediaNode'. It is not a valid JSON object");
+
+				}
 			}
 			if (!mediaNodeJson.has("id")) {
 				throw new IllegalArgumentException("Error in parameter 'mediaNode'. Property 'id' not found");

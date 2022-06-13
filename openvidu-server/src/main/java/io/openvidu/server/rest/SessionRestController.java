@@ -56,7 +56,6 @@ import io.openvidu.java.client.ConnectionType;
 import io.openvidu.java.client.IceServerProperties;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.Recording.OutputMode;
-import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.java.client.VideoCodec;
@@ -70,7 +69,6 @@ import io.openvidu.server.core.Token;
 import io.openvidu.server.kurento.core.KurentoMediaOptions;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
-import io.openvidu.server.utils.RecordingUtils;
 import io.openvidu.server.utils.RestUtils;
 
 /**
@@ -427,9 +425,9 @@ public class SessionRestController {
 		RecordingProperties recordingProperties;
 		try {
 			recordingProperties = getRecordingPropertiesFromParams(params, session).build();
-		} catch (RuntimeException e) {
+		} catch (IllegalStateException e) {
 			return this.generateErrorResponse(e.getMessage(), "/sessions", HttpStatus.UNPROCESSABLE_ENTITY);
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
 			return this.generateErrorResponse(e.getMessage(), "/sessions", HttpStatus.BAD_REQUEST);
 		}
 
@@ -853,208 +851,10 @@ public class SessionRestController {
 		return builder;
 	}
 
-	protected RecordingProperties.Builder getRecordingPropertiesFromParams(Map<?, ?> params, Session session)
-			throws Exception {
-
-		// Final properties being used
-		String nameFinal = null;
-		Boolean hasAudioFinal = null;
-		Boolean hasVideoFinal = null;
-		OutputMode outputModeFinal = null;
-		RecordingLayout recordingLayoutFinal = null;
-		String resolutionFinal = null;
-		Integer frameRateFinal = null;
-		Long shmSizeFinal = null;
-		String customLayoutFinal = null;
-		Boolean ignoreFailedStreamsFinal = null;
-
-		RecordingProperties defaultProps = session.getSessionProperties().defaultRecordingProperties();
-
-		// Default properties configured in Session
-		String nameDefault = defaultProps.name();
-		Boolean hasAudioDefault = defaultProps.hasAudio();
-		Boolean hasVideoDefault = defaultProps.hasVideo();
-		OutputMode outputModeDefault = defaultProps.outputMode();
-		RecordingLayout recordingLayoutDefault = defaultProps.recordingLayout();
-		String resolutionDefault = defaultProps.resolution();
-		Integer frameRateDefault = defaultProps.frameRate();
-		Long shmSizeDefault = defaultProps.shmSize();
-		String customLayoutDefault = defaultProps.customLayout();
-		Boolean ignoreFailedStreamsDefault = defaultProps.ignoreFailedStreams();
-
-		// Provided properties through params
-		String sessionIdParam;
-		String nameParam;
-		Boolean hasAudioParam;
-		Boolean hasVideoParam;
-		String outputModeStringParam;
-		String recordingLayoutStringParam;
-		String resolutionParam;
-		Integer frameRateParam;
-		Long shmSizeParam = null;
-		String customLayoutParam;
-		Boolean ignoreFailedStreamsParam;
-
-		try {
-			sessionIdParam = (String) params.get("session");
-			nameParam = (String) params.get("name");
-			hasAudioParam = (Boolean) params.get("hasAudio");
-			hasVideoParam = (Boolean) params.get("hasVideo");
-			outputModeStringParam = (String) params.get("outputMode");
-			recordingLayoutStringParam = (String) params.get("recordingLayout");
-			resolutionParam = (String) params.get("resolution");
-			frameRateParam = (Integer) params.get("frameRate");
-			if (params.get("shmSize") != null) {
-				shmSizeParam = Long.parseLong(params.get("shmSize").toString());
-			}
-			customLayoutParam = (String) params.get("customLayout");
-			ignoreFailedStreamsParam = (Boolean) params.get("ignoreFailedStreams");
-		} catch (ClassCastException | NumberFormatException e) {
-			throw new Exception("Type error in some parameter: " + e.getMessage());
-		}
-
-		if (sessionIdParam == null) {
-			// "session" parameter not found
-			throw new Exception("\"session\" parameter is mandatory");
-		}
-
-		if (nameParam != null && !nameParam.isEmpty()) {
-			if (!sessionManager.formatChecker.isValidRecordingName(nameParam)) {
-				throw new Exception("Parameter 'name' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-]+");
-			}
-			nameFinal = nameParam;
-		} else if (nameDefault != null) {
-			nameFinal = nameDefault;
-		} else {
-			nameFinal = "";
-		}
-
-		if (hasAudioParam != null) {
-			hasAudioFinal = hasAudioParam;
-		} else if (hasAudioDefault != null) {
-			hasAudioFinal = hasAudioDefault;
-		} else {
-			hasAudioFinal = RecordingProperties.DefaultValues.hasAudio;
-		}
-
-		if (hasVideoParam != null) {
-			hasVideoFinal = hasVideoParam;
-		} else if (hasAudioDefault != null) {
-			hasVideoFinal = hasVideoDefault;
-		} else {
-			hasVideoFinal = RecordingProperties.DefaultValues.hasVideo;
-		}
-
-		if (!hasAudioFinal && !hasVideoFinal) {
-			// Cannot start a recording with both "hasAudio" and "hasVideo" to false
-			throw new RuntimeException("Cannot start a recording with both \"hasAudio\" and \"hasVideo\" set to false");
-		}
-
-		if (outputModeStringParam != null) {
-			try {
-				outputModeFinal = OutputMode.valueOf(outputModeStringParam);
-
-				// If param outputMode is COMPOSED when default is COMPOSED_QUICK_START,
-				// change outputMode to COMPOSED_QUICK_START (and vice versa)
-				if (OutputMode.COMPOSED_QUICK_START.equals(outputModeDefault)
-						&& OutputMode.COMPOSED.equals(outputModeFinal)) {
-					outputModeFinal = OutputMode.COMPOSED_QUICK_START;
-				} else if (OutputMode.COMPOSED.equals(outputModeDefault)
-						&& OutputMode.COMPOSED_QUICK_START.equals(outputModeFinal)) {
-					outputModeFinal = OutputMode.COMPOSED;
-				}
-
-			} catch (Exception e) {
-				throw new Exception("Type error in parameter 'outputMode'");
-			}
-		} else if (outputModeDefault != null) {
-			outputModeFinal = outputModeDefault;
-		} else {
-			outputModeFinal = RecordingProperties.DefaultValues.outputMode;
-		}
-
-		if (RecordingUtils.IS_COMPOSED(outputModeFinal)) {
-
-			if (recordingLayoutStringParam != null) {
-				try {
-					recordingLayoutFinal = RecordingLayout.valueOf(recordingLayoutStringParam);
-				} catch (Exception e) {
-					throw new Exception("Type error in parameter 'recordingLayout'");
-				}
-			} else if (recordingLayoutDefault != null) {
-				recordingLayoutFinal = recordingLayoutDefault;
-			} else {
-				recordingLayoutFinal = RecordingProperties.DefaultValues.recordingLayout;
-			}
-
-			if (resolutionParam != null) {
-				if (!sessionManager.formatChecker.isAcceptableRecordingResolution(resolutionParam)) {
-					throw new RuntimeException(
-							"Wrong 'resolution' parameter. Acceptable values from 100 to 1999 for both width and height");
-				}
-				resolutionFinal = resolutionParam;
-			} else if (resolutionDefault != null) {
-				resolutionFinal = resolutionDefault;
-			} else {
-				resolutionFinal = RecordingProperties.DefaultValues.resolution;
-			}
-
-			if (frameRateParam != null) {
-				if (!sessionManager.formatChecker.isAcceptableRecordingFrameRate(frameRateParam)) {
-					throw new RuntimeException(
-							"Wrong 'resolution' parameter. Acceptable values from 100 to 1999 for both width and height");
-				}
-				frameRateFinal = frameRateParam;
-			} else if (frameRateDefault != null) {
-				frameRateFinal = frameRateDefault;
-			} else {
-				frameRateFinal = RecordingProperties.DefaultValues.frameRate;
-			}
-
-			if (shmSizeParam != null) {
-				if (!sessionManager.formatChecker.isAcceptableRecordingShmSize(shmSizeParam)) {
-					throw new RuntimeException("Wrong \"shmSize\" parameter. Must be 134217728 (128 MB) minimum");
-				}
-				shmSizeFinal = shmSizeParam;
-			} else if (shmSizeDefault != null) {
-				shmSizeFinal = shmSizeDefault;
-			} else {
-				shmSizeFinal = RecordingProperties.DefaultValues.shmSize;
-			}
-
-			if (RecordingLayout.CUSTOM.equals(recordingLayoutFinal)) {
-				if (customLayoutParam != null) {
-					customLayoutFinal = customLayoutParam;
-				} else if (customLayoutDefault != null) {
-					customLayoutFinal = customLayoutDefault;
-				} else {
-					customLayoutFinal = "";
-				}
-			}
-		} else if (OutputMode.INDIVIDUAL.equals(outputModeFinal)) {
-			if (ignoreFailedStreamsParam != null) {
-				ignoreFailedStreamsFinal = ignoreFailedStreamsParam;
-			} else if (ignoreFailedStreamsDefault != null) {
-				ignoreFailedStreamsFinal = ignoreFailedStreamsDefault;
-			} else {
-				ignoreFailedStreamsFinal = RecordingProperties.DefaultValues.ignoreFailedStreams;
-			}
-		}
-
-		RecordingProperties.Builder builder = new RecordingProperties.Builder();
-		builder.name(nameFinal).hasAudio(hasAudioFinal).hasVideo(hasVideoFinal).outputMode(outputModeFinal);
-		if (RecordingUtils.IS_COMPOSED(outputModeFinal) && hasVideoFinal) {
-			builder.recordingLayout(recordingLayoutFinal);
-			builder.resolution(resolutionFinal);
-			builder.frameRate(frameRateFinal);
-			builder.shmSize(shmSizeFinal);
-			if (RecordingLayout.CUSTOM.equals(recordingLayoutFinal)) {
-				builder.customLayout(customLayoutFinal);
-			}
-		}
-		if (OutputMode.INDIVIDUAL.equals(outputModeFinal)) {
-			builder.ignoreFailedStreams(ignoreFailedStreamsFinal);
-		}
+	protected RecordingProperties.Builder getRecordingPropertiesFromParams(Map<String, ?> params, Session session)
+			throws RuntimeException {
+		RecordingProperties.Builder builder = RecordingProperties.fromJson(params,
+				session.getSessionProperties().defaultRecordingProperties());
 		return builder;
 	}
 
