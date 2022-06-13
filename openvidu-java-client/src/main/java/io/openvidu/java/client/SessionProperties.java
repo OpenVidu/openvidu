@@ -23,7 +23,6 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 /**
@@ -414,7 +413,7 @@ public class SessionProperties {
 			JsonObject mediaNodeJson;
 			try {
 				mediaNodeJson = JsonParser.parseString(params.get("mediaNode").toString()).getAsJsonObject();
-			} catch (JsonSyntaxException e) {
+			} catch (Exception e) {
 				try {
 					Gson gson = new Gson();
 					Type gsonType = new TypeToken<Map>() {
