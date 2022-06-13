@@ -2,6 +2,7 @@
 
 [![License badge](https://img.shields.io/badge/license-Apache2-orange.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![OpenVidu Tests](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-ce-test.yml/badge.svg)](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-ce-test.yml)
+[![OpenVidu Tests](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-components-angular-E2E.yml/badge.svg)](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-components-angular-E2E.yml)
 [![Npm version](https://img.shields.io/npm/v/openvidu-angular?label=npm-version)](https://npmjs.org/package/openvidu-angular)
 [![Npm downloads](https://img.shields.io/npm/dw/openvidu-angular?label=npm2-downloads)](https://npmjs.org/package/openvidu-angular)
 
