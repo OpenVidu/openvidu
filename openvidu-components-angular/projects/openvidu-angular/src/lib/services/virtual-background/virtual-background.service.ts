@@ -5,6 +5,9 @@ import { ParticipantService } from '../participant/participant.service';
 import { TokenService } from '../token/token.service';
 import { TranslateService } from '../translate/translate.service';
 
+/**
+ * @internal
+ */
 @Injectable({
 	providedIn: 'root'
 })
