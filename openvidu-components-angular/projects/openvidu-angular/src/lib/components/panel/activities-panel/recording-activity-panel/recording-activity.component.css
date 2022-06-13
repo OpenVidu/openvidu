@@ -28,13 +28,13 @@
 	height: 18px;
 }
 
-
 .started {
 	background-color: #3b7430 !important;
 	color: var(--ov-text-color);
 }
 
-.activity-icon.started, .failed {
+.activity-icon.started,
+.failed {
 	background-color: var(--ov-warn-color) !important;
 	color: var(--ov-text-color);
 }
@@ -54,12 +54,12 @@
 
 .panel-body-container > .content {
 	align-items: stretch;
-    justify-content: center;
-    display: flex;
-    flex-direction: column;
-    box-flex: 1;
-    flex-grow: 1;
-    text-align: center;
+	justify-content: center;
+	display: flex;
+	flex-direction: column;
+	box-flex: 1;
+	flex-grow: 1;
+	text-align: center;
 }
 
 .recording-error {
@@ -87,17 +87,24 @@
 }
 
 #start-recording-btn {
+	width: 100%;
 	background-color: var(--ov-tertiary-color);
 	color: var(--ov-text-color);
 }
 
 #stop-recording-btn {
+	width: 100%;
 	background-color: var(--ov-warn-color);
 	color: var(--ov-text-color);
 }
 
 .delete-recording-btn {
 	color: var(--ov-warn-color);
+}
+
+#reset-recording-status-btn {
+	width: 100%;
+	background-color: var(--ov-light-color);
 }
 
 mat-expansion-panel {
@@ -108,5 +115,7 @@ mat-expansion-panel {
 	animation: blinker 1.5s linear infinite !important;
 }
 @keyframes blinker {
-	50% { opacity: 0.4; }
+	50% {
+		opacity: 0.4;
+	}
 }

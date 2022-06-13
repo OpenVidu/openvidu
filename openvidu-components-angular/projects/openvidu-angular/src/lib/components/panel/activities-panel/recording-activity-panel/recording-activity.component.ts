@@ -51,6 +51,7 @@ export class RecordingActivityComponent implements OnInit {
 	 * @internal
 	 */
 	recordingStatus: RecordingStatus = RecordingStatus.STOPPED;
+	oldRecordingStatus: RecordingStatus;
 	/**
 	 * @internal
 	 */
@@ -69,7 +70,7 @@ export class RecordingActivityComponent implements OnInit {
 	/**
 	 * @internal
 	 */
-	liveRecording: RecordingInfo;
+	recordingAlive: boolean = false;
 	/**
 	 * @internal
 	 */
@@ -117,7 +118,6 @@ export class RecordingActivityComponent implements OnInit {
 	 * @internal
 	 */
 	panelOpened() {
-		//TODO emit event
 		this.opened = true;
 	}
 
@@ -125,8 +125,20 @@ export class RecordingActivityComponent implements OnInit {
 	 * @internal
 	 */
 	panelClosed() {
-		//TODO emit event
 		this.opened = false;
+	}
+
+	/**
+	 * @internal
+	 */
+	resetStatus() {
+		let status: RecordingStatus = this.oldRecordingStatus;
+		if (this.oldRecordingStatus === RecordingStatus.STARTING) {
+			status = RecordingStatus.STOPPED;
+		} else if (this.oldRecordingStatus === RecordingStatus.STOPPING) {
+			status = RecordingStatus.STARTED;
+		}
+		this.recordingService.updateStatus(status);
 	}
 
 	/**
@@ -168,18 +180,18 @@ export class RecordingActivityComponent implements OnInit {
 	 */
 	play(recordingId: string) {
 		this.onPlayRecordingClicked.emit(recordingId);
+		// this.recordingService.playRecording2(this.recordingsList.find(rec => rec.id === recordingId).url)
 	}
 
 	private subscribeToRecordingStatus() {
 		this.recordingStatusSubscription = this.recordingService.recordingStatusObs.subscribe(
 			(ev: { info: RecordingInfo; time?: Date }) => {
 				if (ev?.info) {
-					this.recordingStatus = ev.info.status;
-					if (ev.info.status === RecordingStatus.STARTED) {
-						this.liveRecording = ev.info;
-					} else {
-						this.liveRecording = null;
+					if (this.recordingStatus !== RecordingStatus.FAILED) {
+						this.oldRecordingStatus = this.recordingStatus;
 					}
+					this.recordingStatus = ev.info.status;
+					this.recordingAlive = ev.info.status === RecordingStatus.STARTED;
 				}
 				this.cd.markForCheck();
 			}

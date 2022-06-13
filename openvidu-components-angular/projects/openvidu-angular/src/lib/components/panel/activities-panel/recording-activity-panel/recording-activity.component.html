@@ -50,13 +50,13 @@
 
 			<!-- Recording button -->
 			<div *ngIf="isSessionCreator" class="item recording-action-buttons">
-				<button *ngIf="liveRecording" mat-stroked-button id="stop-recording-btn" (click)="stopRecording()">
+				<button *ngIf="recordingAlive" mat-flat-button id="stop-recording-btn" (click)="stopRecording()">
 					<span>{{ 'TOOLBAR.STOP_RECORDING' | translate }}</span>
 				</button>
 
 				<button
 					*ngIf="recordingStatus === recStatusEnum.STOPPED"
-					mat-stroked-button
+					mat-flat-button
 					id="start-recording-btn"
 					(click)="startRecording()"
 				>
@@ -67,6 +67,16 @@
 				<span *ngIf="recordingStatus === recStatusEnum.STOPPING">{{ 'PANEL.RECORDING.STOPPING' | translate }} </span>
 				<span *ngIf="recordingStatus === recStatusEnum.FAILED">Message: </span>
 				<span *ngIf="recordingStatus === recStatusEnum.FAILED" class="recording-error">{{ recordingError | json }} </span>
+				<div>
+					<button
+						*ngIf="recordingStatus === recStatusEnum.FAILED"
+						mat-flat-button
+						id="reset-recording-status-btn"
+						(click)="resetStatus()"
+					>
+						<span>{{ 'PANEL.RECORDING.RESTORE' | translate }}</span>
+					</button>
+				</div>
 			</div>
 
 			<!-- Message for no Moderators-->
@@ -89,10 +99,20 @@
 					</div>
 					<div mat-line class="recording-date">{{ recording.createdAt | date: 'HH:mm - dd/MM/yyyy' }}</div>
 
-					<button mat-icon-button (click)="play(recording.id)" id="play-recording-btn" matTooltip="{{ 'PANEL.RECORDING.PLAY' | translate }}">
+					<button
+						mat-icon-button
+						(click)="play(recording.id)"
+						id="play-recording-btn"
+						matTooltip="{{ 'PANEL.RECORDING.PLAY' | translate }}"
+					>
 						<mat-icon>play_arrow</mat-icon>
 					</button>
-					<button mat-icon-button (click)="download(recording.id)" id="download-recording-btn" matTooltip="{{ 'PANEL.RECORDING.DOWNLOAD' | translate }}">
+					<button
+						mat-icon-button
+						(click)="download(recording.id)"
+						id="download-recording-btn"
+						matTooltip="{{ 'PANEL.RECORDING.DOWNLOAD' | translate }}"
+					>
 						<mat-icon>download</mat-icon>
 					</button>
 
