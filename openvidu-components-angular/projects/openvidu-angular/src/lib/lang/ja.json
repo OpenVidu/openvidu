@@ -1,4 +1,20 @@
 {
+    "ADMIN": {
+		"LOGIN": "ログイン",
+		"SECRET": "ひみつ",
+		"SECRET_REQURED": "秘密が必要です",
+		"DASHBOARD": "ダッシュボード",
+		"NO_RECORDINGS": "録音はありません",
+		"SEARCH": "録音を検索する",
+		"DATE": "日にち",
+		"DURATION": "間隔",
+		"SIZE": "サイズ",
+		"STATUS": "状態",
+		"NAME": "名前",
+		"SESSION": "セッション",
+		"OUTPUT": "出力モード",
+		"POWERED_BY": "搭載"
+	},
     "PREJOIN": {
         "NICKNAME_SECTION": "ニックネームを設定してください",
         "NICKNAME": "ニックネーム",

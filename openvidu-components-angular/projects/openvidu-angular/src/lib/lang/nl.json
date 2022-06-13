@@ -1,4 +1,20 @@
 {
+	"ADMIN": {
+		"LOGIN": "Log in",
+		"SECRET": "Geheim",
+		"SECRET_REQURED": "Geheim is vereist",
+		"DASHBOARD": "Dashboard",
+		"NO_RECORDINGS": "Er zijn geen opnames",
+		"SEARCH": "Een opname zoeken",
+		"DATE": "Datum",
+		"DURATION": "Looptijd",
+		"SIZE": "Maat",
+		"STATUS": "Toestand",
+		"NAME": "Naam",
+		"SESSION": "Sessie",
+		"OUTPUT": "Uitgangsmodus",
+		"POWERED_BY": "Aangedreven door"
+	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Stel je bijnaam in",
 		"NICKNAME": "Bijnaam",

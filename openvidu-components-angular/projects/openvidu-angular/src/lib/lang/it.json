@@ -1,4 +1,20 @@
 {
+	"ADMIN": {
+		"LOGIN": "Login",
+		"SECRET": "Segreto",
+		"SECRET_REQURED": "Il segreto è richiesto",
+		"DASHBOARD": "Pannello di controllo",
+		"NO_RECORDINGS": "Non ci sono registrazioni",
+		"SEARCH": "Cerca una registrazione",
+		"DATE": "Data",
+		"DURATION": "Durata",
+		"SIZE": "Dimensione",
+		"STATUS": "Stato",
+		"NAME": "Nome",
+		"SESSION": "Sessione",
+		"OUTPUT": "Modalità di uscita",
+		"POWERED_BY": "Offerto da"
+	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Imposta il tuo soprannome",
 		"NICKNAME": "Soprannome",

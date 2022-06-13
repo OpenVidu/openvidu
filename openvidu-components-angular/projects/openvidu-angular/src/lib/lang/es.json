@@ -1,4 +1,20 @@
 {
+	"ADMIN": {
+		"LOGIN": "Iniciar sesión",
+		"SECRET": "Contraseña",
+		"SECRET_REQURED": "Contraseña obligatoria",
+		"DASHBOARD": "Panel",
+		"NO_RECORDINGS": "No se han encontrado grabaciones",
+		"SEARCH": "Busca una grabación",
+		"DATE": "Fecha",
+		"DURATION": "Duración",
+		"SIZE": "Tamaño",
+		"STATUS": "Estado",
+		"NAME": "Nombre",
+		"SESSION": "Sesión",
+		"OUTPUT": "Modo",
+		"POWERED_BY": "Construido por"
+	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Elige tu nombre",
 		"NICKNAME": "Nombre",

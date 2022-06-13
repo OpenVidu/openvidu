@@ -9,7 +9,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 	template: `
 		<div mat-dialog-content>{{'PANEL.RECORDING.DELETE_QUESTION' | translate}}</div>
 		<div mat-dialog-actions>
-			<button mat-button (click)="close()">CANCEL</button>
+			<button mat-button (click)="close()">{{'PANEL.RECORDING.CANCEL' | translate }}</button>
 			<button mat-button cdkFocusInitial (click)="close(true)" id="delete-recording-confirm-btn">{{'PANEL.RECORDING.DELETE' | translate}}</button>
 		</div>
 	`,

@@ -1,4 +1,20 @@
 {
+	"ADMIN": {
+		"LOGIN": "लॉग इन करें",
+		"SECRET": "गुप्त",
+		"SECRET_REQURED": "रहस्य की आवश्यकता है",
+		"DASHBOARD": "डैशबोर्ड",
+		"NO_RECORDINGS": "रिकॉर्डिंग नहीं हैं",
+		"SEARCH": "एक रिकॉर्डिंग खोजें",
+		"DATE": "दिनांक",
+		"DURATION": "अवधि",
+		"SIZE": "आकार",
+		"STATUS": "दर्जा",
+		"NAME": "नाम",
+		"SESSION": "सत्र",
+		"OUTPUT": "आउटपुट मोड",
+		"POWERED_BY": "द्वारा संचालित"
+	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "अपना निकनेम सेट करें",
 		"NICKNAME": "निकनेम",

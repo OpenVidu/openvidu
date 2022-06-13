@@ -1,4 +1,20 @@
 {
+	"ADMIN": {
+		"LOGIN": "Connexion",
+		"SECRET": "Secret",
+		"SECRET_REQURED": "Le secret est requis",
+		"DASHBOARD": "Tableau de bord",
+		"NO_RECORDINGS": "Il n'y a pas d'enregistrements",
+		"SEARCH": "Rechercher un enregistrement",
+		"DATE": "Date",
+		"DURATION": "Durée",
+		"SIZE": "Taille",
+		"STATUS": "Statut",
+		"NAME": "Nom",
+		"SESSION": "Session",
+		"OUTPUT": "Mode de sortie",
+		"POWERED_BY": "Alimenté par"
+	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Définir votre surnom",
 		"NICKNAME": "Surnom",

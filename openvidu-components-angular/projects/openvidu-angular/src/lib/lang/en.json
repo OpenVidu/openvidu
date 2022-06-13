@@ -1,4 +1,21 @@
 {
+	"ADMIN": {
+		"LOGIN": "Login",
+		"SECRET": "Secret",
+		"SECRET_REQURED": "Secret is required",
+		"DASHBOARD": "Dashboard",
+		"NO_RECORDINGS": "There are not recordings",
+		"SEARCH": "Search a recording",
+		"DATE": "Date",
+		"DURATION": "Duration",
+		"SIZE": "Size",
+		"STATUS": "Status",
+		"NAME": "Name",
+		"SESSION": "Session",
+		"OUTPUT": "Output mode",
+		"POWERED_BY": "Powered by"
+
+	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Set your nickname",
 		"NICKNAME": "Nickname",
@@ -65,6 +82,7 @@
 			"PLAY": "Play",
 			"DELETE": "Delete",
 			"CANCEL": "Cancel",
+			"RESTORE": "Restore",
 			"DELETE_QUESTION": "Are you sure you want to delete the recording?",
 			"DOWNLOAD": "Download",
 			"RECORDINGS": "RECORDINGS",

@@ -1,4 +1,20 @@
 {
+	"ADMIN": {
+		"LOGIN": "登录",
+		"SECRET": "秘密",
+		"SECRET_REQURED": "必须提供秘密",
+		"DASHBOARD": "仪表板",
+		"NO_RECORDINGS": "没有录音",
+		"SEARCH": "搜索录音",
+		"DATE": "日期",
+		"DURATION": "期间",
+		"SIZE": "尺寸",
+		"STATUS": "地位",
+		"NAME": "姓名",
+		"SESSION": "会议",
+		"OUTPUT": "输出方式",
+		"POWERED_BY": "动力 b"
+	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "设置你的绰号",
 		"NICKNAME": "昵称",

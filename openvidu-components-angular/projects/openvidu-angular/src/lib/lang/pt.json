@@ -1,4 +1,20 @@
 {
+	"ADMIN": {
+		"LOGIN": "Conecte-se",
+		"SECRET": "Segredo",
+		"SECRET_REQURED": "O segredo é obrigatório",
+		"DASHBOARD": "Painel",
+		"NO_RECORDINGS": "Não há gravações",
+		"SEARCH": "Pesquisar uma gravação",
+		"DATE": "Encontro",
+		"DURATION": "Duração",
+		"SIZE": "Tamanho",
+		"STATUS": "Status",
+		"NAME": "Nome",
+		"SESSION": "Sessão",
+		"OUTPUT": "Modo de saída",
+		"POWERED_BY": "Distribuído por"
+	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Defina seu apelido",
 		"NICKNAME": "Apelido",

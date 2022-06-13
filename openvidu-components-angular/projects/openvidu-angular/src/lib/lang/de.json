@@ -1,4 +1,20 @@
 {
+	"ADMIN": {
+		"LOGIN": "Anmeldung",
+		"SECRET": "Geheimnis",
+		"SECRET_REQURED": "Geheimnis ist erforderlich",
+		"DASHBOARD": "Armaturenbrett",
+		"NO_RECORDINGS": "Aufnahmen gibt es nicht",
+		"SEARCH": "Suchen Sie eine Aufzeichnung",
+		"DATE": "Datum",
+		"DURATION": "Dauer",
+		"SIZE": "Größe",
+		"STATUS": "Status",
+		"NAME": "Name",
+		"SESSION": "Sitzung",
+		"OUTPUT": "Ausgabemodus",
+		"POWERED_BY": "Unterstützt von"
+	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Legen Sie Ihren Spitznamen fest",
 		"NICKNAME": "Spitzname",
