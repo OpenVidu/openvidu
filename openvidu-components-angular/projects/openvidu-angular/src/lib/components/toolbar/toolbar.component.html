@@ -1,5 +1,5 @@
-<mat-toolbar id="toolbar" role="heading" fxLayout fxLayoutAlign="center" fxLayoutGap="10px">
-	<div fxFlex="20%" fxLayoutAlign="start center" id="info-container">
+<mat-toolbar id="toolbar" role="heading" fxLayout fxLayoutAlign="center" fxLayoutGap="40px">
+	<div fxFlex="20%" fxLayoutAlign="start center" id="info-container" *ngIf="screenSize !== 'xs'">
 		<div>
 			<img *ngIf="!isMinimal && showLogo" id="branding-logo" src="assets/images/logo.png" ovLogo />
 			<div id="session-info-container" [class.colapsed]="recordingStatus === _recordingStatus.STARTED">

@@ -12,7 +12,7 @@ import {
 	TemplateRef,
 	ViewChild
 } from '@angular/core';
-import { skip, Subscription } from 'rxjs';
+import { first, skip, Subscription } from 'rxjs';
 import { TokenService } from '../../services/token/token.service';
 import { ChatService } from '../../services/chat/chat.service';
 import { PanelService } from '../../services/panel/panel.service';
@@ -38,6 +38,7 @@ import { MatMenuTrigger } from '@angular/material/menu';
 import { RecordingService } from '../../services/recording/recording.service';
 import { RecordingInfo, RecordingStatus } from '../../models/recording.model';
 import { TranslateService } from '../../services/translate/translate.service';
+import { MediaChange } from '@angular/flex-layout';
 
 /**
  *
@@ -321,6 +322,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 */
 	isSessionCreator: boolean = false;
 
+	/**
+	 * @ignore
+	 */
+	screenSize: string;
+
 	private log: ILogger;
 	private minimalSub: Subscription;
 	private panelTogglingSubscription: Subscription;
@@ -337,6 +343,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	private chatPanelButtonSub: Subscription;
 	private displayLogoSub: Subscription;
 	private displaySessionNameSub: Subscription;
+	private screenSizeSub: Subscription;
 	private currentWindowHeight = window.innerHeight;
 
 	/**
@@ -398,6 +405,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.subscribeToMenuToggling();
 		this.subscribeToChatMessages();
 		this.subscribeToRecordingStatus();
+		this.subscribeToScreenSize();
 	}
 
 	ngAfterViewInit() {
@@ -423,6 +431,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		if (this.minimalSub) this.minimalSub.unsubscribe();
 		if (this.activitiesPanelButtonSub) this.activitiesPanelButtonSub.unsubscribe();
 		if (this.recordingSubscription) this.recordingSubscription.unsubscribe();
+		if (this.screenSizeSub) this.screenSizeSub.unsubscribe();
 	}
 
 	/**
@@ -647,6 +656,13 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.displaySessionNameSub = this.libService.displaySessionNameObs.subscribe((value: boolean) => {
 			this.showSessionName = value;
 			this.cd.markForCheck();
+		});
+	}
+
+	private subscribeToScreenSize() {
+		this.screenSizeSub = this.documentService.screenSizeObs.subscribe((change: MediaChange[]) => {
+			console.log(change[0].mqAlias)
+			this.screenSize = change[0].mqAlias;
 		});
 	}
 

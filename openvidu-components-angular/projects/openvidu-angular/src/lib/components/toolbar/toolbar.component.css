@@ -136,6 +136,13 @@
 	}
 }
 
+@media (max-width: 550px) {
+	#toolbar {
+		padding: 0px;
+		place-content: space-evenly;
+	}
+}
+
 ::ng-deep .mat-menu-panel {
 	margin-bottom: 10px;
 }
