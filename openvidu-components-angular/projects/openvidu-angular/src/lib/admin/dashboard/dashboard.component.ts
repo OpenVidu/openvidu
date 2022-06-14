@@ -14,19 +14,27 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	/**
 	 * Provides event notifications that fire when download recording button has been clicked.
 	 * The recording should be downloaded using the REST API.
+	 * @param recordingId
 	 */
 	@Output() onDownloadRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
 	 * Provides event notifications that fire when delete recording button has been clicked.
 	 * The recording should be deleted using the REST API.
+	 * @param recordingId
 	 */
 	@Output() onDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
 	 * Provides event notifications that fire when play recording button has been clicked.
+	 * @param recordingId
 	 */
 	@Output() onPlayRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
+	 * Provides event notifications that fire when refresh recordings button has been clicked.
+	 */
+	@Output() onRefreshRecordingsClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
 	 * @internal
@@ -116,7 +124,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	 * @internal
 	 */
 	getThumbnailSrc(recording: RecordingInfo): string {
-		return !recording.url ? undefined : recording.url.substring(0, recording.url.lastIndexOf('/')) + '/' + recording.id + '.jpg';
+		return !recording.url ? '' : recording.url.substring(0, recording.url.lastIndexOf('/')) + '/' + recording.id + '.jpg';
 	}
 
 	/**
@@ -136,6 +144,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 		//TODO solucionar el tema del login.
 		// TODO Si soy capaz de loguearme en openvidu al hacer login en el dashboard, no necesitaria emitir evento
 		this.onDownloadRecordingClicked.emit(recordingId);
+	}
+
+	/**
+	 * @internal
+	 */
+	refreshRecordings() {
+		this.onRefreshRecordingsClicked.emit();
 	}
 
 	/**
