@@ -23,6 +23,7 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
 
 /**
@@ -430,7 +431,12 @@ public class SessionProperties {
 			}
 			String mediaNode;
 			try {
-				mediaNode = mediaNodeJson.get("id").getAsString();
+				JsonPrimitive primitive = mediaNodeJson.get("id").getAsJsonPrimitive();
+				if (!primitive.isString()) {
+					throw new IllegalArgumentException("Type error in parameter 'mediaNode.id': not a String");
+				} else {
+					mediaNode = primitive.getAsString();
+				}
 			} catch (ClassCastException e) {
 				throw new IllegalArgumentException("Type error in parameter 'mediaNode.id': " + e.getMessage());
 			}

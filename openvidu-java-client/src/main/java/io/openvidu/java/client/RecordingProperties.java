@@ -540,6 +540,7 @@ public class RecordingProperties {
 		Boolean ignoreFailedStreamsParam;
 
 		try {
+			String session = (String) params.get("session");
 			nameParam = (String) params.get("name");
 			hasAudioParam = (Boolean) params.get("hasAudio");
 			hasVideoParam = (Boolean) params.get("hasVideo");
@@ -631,7 +632,7 @@ public class RecordingProperties {
 			if (frameRateParam != null) {
 				if (!FormatChecker.isAcceptableRecordingFrameRate(frameRateParam.intValue())) {
 					throw new IllegalStateException(
-							"Wrong 'resolution' parameter. Acceptable values from 100 to 1999 for both width and height");
+							"Wrong 'frameRate' parameter. Acceptable values are within range [1,120]");
 				}
 				frameRateFinal = frameRateParam.intValue();
 			} else {
@@ -640,7 +641,7 @@ public class RecordingProperties {
 
 			if (shmSizeParam != null) {
 				if (!FormatChecker.isAcceptableRecordingShmSize(shmSizeParam)) {
-					throw new IllegalStateException("Wrong \"shmSize\" parameter. Must be 134217728 (128 MB) minimum");
+					throw new IllegalStateException("Wrong 'shmSize' parameter. Must be 134217728 (128 MB) minimum");
 				}
 				shmSizeFinal = shmSizeParam;
 			} else {
@@ -684,7 +685,11 @@ public class RecordingProperties {
 				} catch (IllegalArgumentException e) {
 					// Not a json object
 					if (params.containsKey("mediaNode")) {
-						mediaNodeDefault = (String) params.get("mediaNode");
+						try {
+							mediaNodeDefault = (String) params.get("mediaNode");
+						} catch (Exception e2) {
+							throw new IllegalArgumentException("Wrong 'mediaNode' parameter. Wrong type");
+						}
 					}
 				}
 			}
