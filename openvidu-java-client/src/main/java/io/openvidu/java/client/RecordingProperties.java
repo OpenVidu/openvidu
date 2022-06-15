@@ -677,11 +677,20 @@ public class RecordingProperties {
 			builder.ignoreFailedStreams(ignoreFailedStreamsFinal);
 		}
 
-		if (mediaNodeDefault == null) {
-			mediaNodeDefault = SessionProperties.getMediaNodeProperty(params);
-		}
-		if (mediaNodeDefault != null && !mediaNodeDefault.isEmpty()) {
-			builder.mediaNode = mediaNodeDefault;
+		if (IS_COMPOSED(outputModeFinal)) {
+			if (mediaNodeDefault == null) {
+				try {
+					mediaNodeDefault = SessionProperties.getMediaNodeProperty(params);
+				} catch (IllegalArgumentException e) {
+					// Not a json object
+					if (params.containsKey("mediaNode")) {
+						mediaNodeDefault = (String) params.get("mediaNode");
+					}
+				}
+			}
+			if (mediaNodeDefault != null && !mediaNodeDefault.isEmpty()) {
+				builder.mediaNode = mediaNodeDefault;
+			}
 		}
 
 		return builder;
