@@ -19,6 +19,7 @@ var PARTICIPANT_MUTE_BUTTON;
 var PARTICIPANTS_PANEL_BUTTON;
 var ACTIVITIES_RECORDING_ACTIVITY;
 var RECORDING_ERROR;
+var TOOLBAR_SETTINGS_BUTTON;
 
 var SESSION_NAME;
 
@@ -35,6 +36,8 @@ $(document).ready(() => {
 	SCREENSHARE_BUTTON = url.searchParams.get("screenshareBtn") === null ? true : url.searchParams.get("screenshareBtn") === 'true';
     RECORDING_BUTTON = url.searchParams.get("recordingBtn") === null ? true : url.searchParams.get("recordingBtn") === 'true';
 	FULLSCREEN_BUTTON = url.searchParams.get("fullscreenBtn") === null ? true : url.searchParams.get("fullscreenBtn") === 'true';
+    TOOLBAR_SETTINGS_BUTTON = url.searchParams.get("toolbarSettingsBtn") === null ? true : url.searchParams.get("toolbarSettingsBtn") === 'true';
+
     LEAVE_BUTTON = url.searchParams.get("leaveBtn") === null ? true : url.searchParams.get("leaveBtn") === 'true';
     ACTIVITIES_PANEL_BUTTON = url.searchParams.get("activitiesPanelBtn") === null ? true : url.searchParams.get("activitiesPanelBtn") === 'true';
 	CHAT_PANEL_BUTTON = url.searchParams.get("chatPanelBtn") === null ? true : url.searchParams.get("chatPanelBtn") === 'true';
@@ -52,7 +55,7 @@ $(document).ready(() => {
 	PARTICIPANT_MUTE_BUTTON = url.searchParams.get("participantMuteBtn") === null ? true : url.searchParams.get("participantMuteBtn") === 'true';
 
 
-    SESSION_NAME = url.searchParams.get("sessionName") === null ? `E2ESession${Math.floor(Math.random()*100)}` : url.searchParams.get("sessionName");
+    SESSION_NAME = url.searchParams.get("sessionName") === null ? `E2ESession${Math.floor(Date.now())}` : url.searchParams.get("sessionName");
 
     var webComponent = document.querySelector('openvidu-webcomponent');
 
@@ -145,6 +148,7 @@ async function joinSession(sessionName, participantName) {
     webComponent.toolbarScreenshareButton = SCREENSHARE_BUTTON;
 
     webComponent.toolbarFullscreenButton = FULLSCREEN_BUTTON;
+    webComponent.toolbarSettingsButton = TOOLBAR_SETTINGS_BUTTON;
 	webComponent.toolbarLeaveButton = LEAVE_BUTTON;
     webComponent.toolbarRecordingButton = RECORDING_BUTTON;
     webComponent.toolbarActivitiesPanelButton = ACTIVITIES_PANEL_BUTTON;

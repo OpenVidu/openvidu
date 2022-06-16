@@ -252,6 +252,29 @@ describe('Testing API Directives', () => {
 		expect(element.length).equals(0);
 	});
 
+	it('should HIDE the TOOLBAR SETTINGS button', async () => {
+		let element;
+		await browser.get(`${url}?prejoin=false&toolbarSettingsBtn=false`);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Checking if toolbar is present
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Open more options menu
+		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
+		await element.click();
+
+		await browser.sleep(500);
+
+		// Checking if fullscreen button is not present
+		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		element = await browser.findElements(By.id('toolbar-settings-btn'));
+		expect(element.length).equals(0);
+	});
+
 	it('should HIDE the LEAVE button', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&leaveBtn=false`);
@@ -372,7 +395,7 @@ describe('Testing API Directives', () => {
 		expect(element.length).equals(0);
 	});
 
-	it('should HIDE the SETTINGS button', async () => {
+	it('should HIDE the STREAM SETTINGS button', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&settingsBtn=false`);
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
@@ -1176,6 +1199,37 @@ describe('Testing panel toggling', () => {
 		expect(element.length).equals(0);
 		element = await browser.findElements(By.id('recording-activity'));
 		expect(element.length).equals(0);
+	});
+
+	it('should toggle SETTINGS panel', async () => {
+		let element;
+		await browser.get(`${url}?prejoin=false`);
+		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Checking if toolbar is present
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Open more options menu
+		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
+		await element.click();
+
+		await browser.sleep(500);
+
+		// Checking if mat menu is  present
+		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Get settings button and click into it
+		const activitiesBtn = await browser.findElement(By.id('toolbar-settings-btn'));
+		expect(await activitiesBtn.isDisplayed()).to.be.true;
+		await activitiesBtn.click();
+
+		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
+		element = await browser.findElements(By.id('default-settings-panel'));
+		expect(element.length).equals(1);
+
 	});
 
 	it('should switching between PARTICIPANTS and CHAT panels', async () => {
