@@ -259,7 +259,7 @@ export class PanelDirective {
  * 		this.subscribeToPanelToggling();
  * 	}
  * 	subscribeToPanelToggling() {
- * 		this.panelService.panelOpenedObs.subscribe((ev: { opened: boolean; type?: PanelType | string }) => {
+ * 		this.panelService.panelOpenedObs.subscribe((ev: PanelEvent) => {
  * 			this.showExternalPanel = ev.opened && ev.type === 'my-panel';
  * 			this.showExternalPanel2 = ev.opened && ev.type === 'my-panel2';
  * 		});

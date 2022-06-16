@@ -243,6 +243,65 @@ export class ToolbarBackgroundEffectsButtonDirective implements AfterViewInit, O
 }
 
 /**
+ * The **settingsButton** directive allows show/hide the settings toolbar button.
+ *
+ * Default: `true`
+ *
+ * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `toolbar` component:
+ *
+ * @example
+ * <ov-videoconference [toolbarSettingsButton]="false"></ov-videoconference>
+ *
+ * \
+ * And it also can be used in the {@link ToolbarComponent}.
+ * @example
+ * <ov-toolbar [settingsButton]="false"></ov-toolbar>
+ */
+ @Directive({
+	selector: 'ov-videoconference[toolbarSettingsButton], ov-toolbar[settingsButton]'
+})
+export class ToolbarSettingsButtonDirective implements AfterViewInit, OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set toolbarSettingsButton(value: boolean) {
+		this.settingsValue = value;
+		this.update(this.settingsValue);
+	}
+	/**
+	 * @ignore
+	 */
+	@Input() set settingsButton(value: boolean) {
+		this.settingsValue = value;
+		this.update(this.settingsValue);
+	}
+
+	private settingsValue: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+
+	ngAfterViewInit() {
+		this.update(this.settingsValue);
+	}
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	private clear() {
+		this.settingsValue = true;
+		this.update(true);
+	}
+
+	private update(value: boolean) {
+		if (this.libService.toolbarSettingsButton.getValue() !== value) {
+			this.libService.toolbarSettingsButton.next(value);
+		}
+	}
+}
+
+/**
  * The **leaveButton** directive allows show/hide the leave toolbar button.
  *
  * Default: `true`

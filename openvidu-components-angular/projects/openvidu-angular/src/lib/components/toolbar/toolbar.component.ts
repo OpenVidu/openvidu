@@ -15,7 +15,7 @@ import {
 import { first, skip, Subscription } from 'rxjs';
 import { TokenService } from '../../services/token/token.service';
 import { ChatService } from '../../services/chat/chat.service';
-import { PanelService } from '../../services/panel/panel.service';
+import { PanelEvent, PanelService } from '../../services/panel/panel.service';
 import { DocumentService } from '../../services/document/document.service';
 
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
@@ -275,6 +275,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
+	showSettingsButton: boolean = true;
+
+	/**
+	 * @ignore
+	 */
 	showMoreOptionsButton: boolean = true;
 
 	/**
@@ -344,6 +349,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	private displayLogoSub: Subscription;
 	private displaySessionNameSub: Subscription;
 	private screenSizeSub: Subscription;
+	private settingsButtonSub: Subscription;
 	private currentWindowHeight = window.innerHeight;
 
 	/**
@@ -432,6 +438,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		if (this.activitiesPanelButtonSub) this.activitiesPanelButtonSub.unsubscribe();
 		if (this.recordingSubscription) this.recordingSubscription.unsubscribe();
 		if (this.screenSizeSub) this.screenSizeSub.unsubscribe();
+		if (this.settingsButtonSub) this.settingsButtonSub.unsubscribe();
 	}
 
 	/**
@@ -525,6 +532,13 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
+	toggleSettings() {
+		this.panelService.togglePanel(PanelType.SETTINGS);
+	}
+
+	/**
+	 * @ignore
+	 */
 	toggleParticipantsPanel() {
 		this.onParticipantsPanelButtonClicked.emit();
 		this.panelService.togglePanel(PanelType.PARTICIPANTS);
@@ -564,17 +578,15 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		});
 	}
 	protected subscribeToMenuToggling() {
-		this.panelTogglingSubscription = this.panelService.panelOpenedObs.subscribe(
-			(ev: { opened: boolean; type?: PanelType | string }) => {
-				this.isChatOpened = ev.opened && ev.type === PanelType.CHAT;
-				this.isParticipantsOpened = ev.opened && ev.type === PanelType.PARTICIPANTS;
-				this.isActivitiesOpened = ev.opened && ev.type === PanelType.ACTIVITIES;
-				if (this.isChatOpened) {
-					this.unreadMessages = 0;
-				}
-				this.cd.markForCheck();
+		this.panelTogglingSubscription = this.panelService.panelOpenedObs.subscribe((ev: PanelEvent) => {
+			this.isChatOpened = ev.opened && ev.type === PanelType.CHAT;
+			this.isParticipantsOpened = ev.opened && ev.type === PanelType.PARTICIPANTS;
+			this.isActivitiesOpened = ev.opened && ev.type === PanelType.ACTIVITIES;
+			if (this.isChatOpened) {
+				this.unreadMessages = 0;
 			}
-		);
+			this.cd.markForCheck();
+		});
 	}
 
 	protected subscribeToChatMessages() {
@@ -590,7 +602,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.localParticipantSubscription = this.participantService.localParticipantObs.subscribe((p: ParticipantAbstractModel) => {
 			if (p) {
 				this.isWebcamVideoActive = p.isCameraVideoActive();
-				this.isAudioActive = p.isCameraAudioActive() || p.isScreenAudioActive();
+				this.isAudioActive = p.hasAudioActive();
 				this.isScreenShareActive = p.isScreenActive();
 				this.isSessionCreator = p.getRole() === OpenViduRole.MODERATOR;
 				this.cd.markForCheck();
@@ -627,8 +639,14 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.cd.markForCheck();
 		});
 
-		this.recordingButtonSub = this.libService.recordingButton.subscribe((value: boolean) => {
+		this.recordingButtonSub = this.libService.recordingButtonObs.subscribe((value: boolean) => {
 			this.showRecordingButton = value;
+			this.checkDisplayMoreOptions();
+			this.cd.markForCheck();
+		});
+
+		this.settingsButtonSub = this.libService.toolbarSettingsButtonObs.subscribe((value: boolean) => {
+			this.showSettingsButton = value;
 			this.checkDisplayMoreOptions();
 			this.cd.markForCheck();
 		});
@@ -661,12 +679,12 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	private subscribeToScreenSize() {
 		this.screenSizeSub = this.documentService.screenSizeObs.subscribe((change: MediaChange[]) => {
-			console.log(change[0].mqAlias)
 			this.screenSize = change[0].mqAlias;
 		});
 	}
 
 	private checkDisplayMoreOptions() {
-		this.showMoreOptionsButton = this.showFullscreenButton || this.showBackgroundEffectsButton || this.showRecordingButton;
+		this.showMoreOptionsButton =
+			this.showFullscreenButton || this.showBackgroundEffectsButton || this.showRecordingButton || this.showSettingsButton;
 	}
 }

@@ -142,8 +142,8 @@ export class StreamSettingsButtonDirective implements AfterViewInit, OnDestroy {
 	}
 
 	update(value: boolean) {
-		if (this.libService.settingsButton.getValue() !== value) {
-			this.libService.settingsButton.next(value);
+		if (this.libService.streamSettingsButton.getValue() !== value) {
+			this.libService.streamSettingsButton.next(value);
 		}
 	}
 

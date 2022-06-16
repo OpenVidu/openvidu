@@ -37,6 +37,7 @@
 		"BACKGROUND": "पृष्ठभूमि प्रभाव",
 		"START_RECORDING": "रिकॉर्डिंग प्रारंभ करें",
 		"STOP_RECORDING": "रिकॉर्डिंग रोकें",
+		"SETTINGS": "सेटिंग्स",
 		"LEAVE": "सत्र छोड़ें",
 		"PARTICIPANTS": "सदस्य",
 		"CHAT": "बातचीत",
@@ -63,6 +64,13 @@
 			"TITLE": "सदस्य",
 			"CAMERA": "कैमरा",
 			"SCREEN": "स्क्रीन"
+		},
+		"SETTINGS": {
+			"TITLE": "सेटिंग्स",
+			"GENERAL": "सामान्य",
+			"VIDEO": "वीडियो",
+			"AUDIO": "ऑडियो",
+			"LANGUAGE": "भाषा"
 		},
 		"BACKGROUND": {
 			"TITLE": "पृष्ठभूमि प्रभाव",

@@ -2,7 +2,7 @@ import { Component, OnInit, Output, EventEmitter, ChangeDetectionStrategy, Chang
 import { Subscription } from 'rxjs';
 import { PanelType } from '../../../models/panel.model';
 import { OpenViduAngularConfigService } from '../../../services/config/openvidu-angular.config.service';
-import { PanelService } from '../../../services/panel/panel.service';
+import { PanelEvent, PanelService } from '../../../services/panel/panel.service';
 
 @Component({
 	selector: 'ov-activities-panel',
@@ -114,8 +114,8 @@ export class ActivitiesPanelComponent implements OnInit {
 
 	private subscribeToPanelToggling() {
 		this.panelSubscription = this.panelService.panelOpenedObs.subscribe(
-			(ev: { opened: boolean; type?: PanelType | string; expand?: string }) => {
-				if (ev.type === PanelType.ACTIVITIES) {
+			(ev: PanelEvent) => {
+				if (ev.type === PanelType.ACTIVITIES && !!ev.expand) {
 					this.expandedPanel = ev.expand;
 				}
 			}

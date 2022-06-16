@@ -1,0 +1,16 @@
+<div id="nickname-input-container">
+	<button mat-icon-button disabled>
+		<mat-icon>person</mat-icon>
+	</button>
+	<mat-form-field appearance="standard">
+		<mat-label>{{ 'PREJOIN.NICKNAME' | translate }}</mat-label>
+		<input
+			matInput
+			type="text"
+			maxlength="20"
+			[(ngModel)]="nickname"
+			(change)="updateNickname()"
+			autocomplete="off"
+		/>
+	</mat-form-field>
+</div>

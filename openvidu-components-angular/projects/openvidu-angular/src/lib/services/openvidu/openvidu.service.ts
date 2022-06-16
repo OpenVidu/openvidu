@@ -76,6 +76,10 @@ export class OpenViduService {
 		this.ovEdition = edition;
 	}
 
+	isSessionConnected(): boolean {
+		return !!this.webcamSession.connection;
+	}
+
 	/**
 	 * @internal
 	 */

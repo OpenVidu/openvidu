@@ -37,6 +37,7 @@
 		"BACKGROUND": "Effetti di sfondo",
 		"START_RECORDING": "Avvia registrazione",
 		"STOP_RECORDING": "Interrompi registrazione",
+		"SETTINGS": "Impostazioni",
 		"LEAVE": "Abbandona la sessione",
 		"PARTICIPANTS": "Partecipanti",
 		"CHAT": "Chat",
@@ -63,6 +64,13 @@
 			"TITLE": "Partecipanti",
 			"CAMERA": "CAMERA",
 			"SCREEN": "SCREEN"
+		},
+		"SETTINGS": {
+			"TITLE": "Impostazioni",
+			"GENERAL": "Generale",
+			"VIDEO": "video",
+			"AUDIO": "Audio",
+			"LANGUAGE":"Lingua"
 		},
 		"BACKGROUND": {
 			"TITLE": "Effetti di sfondo",

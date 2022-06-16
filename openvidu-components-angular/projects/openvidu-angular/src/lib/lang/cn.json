@@ -37,6 +37,7 @@
 		"BACKGROUND":"背景效果",
 		"START_RECORDING": "开始录音",
 		"STOP_RECORDING": "停止录制",
+		"SETTINGS":"设置",
 		"LEAVE":"离开会议",
 		"PARTICIPANTS":"参与者",
 		"CHAT":"聊天",
@@ -63,6 +64,13 @@
 			"TITLE": "参与者",
 			"CAMERA": "摄像头",
 			"SCREEN": "屏幕"
+		},
+		"SETTINGS": {
+			"TITLE": "设置",
+			"GENERAL": "一般的",
+			"VIDEO": "视频",
+			"AUDIO": "声音的",
+			"LANGUAGE": "语"
 		},
 		"BACKGROUND": {
 			"TITLE": "背景效果",

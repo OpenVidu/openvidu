@@ -48,11 +48,16 @@ import { AvatarProfileComponent } from './components/avatar-profile/avatar-profi
 import { OpenViduAngularDirectiveModule } from './directives/template/openvidu-angular.directive.module';
 import { ApiDirectiveModule } from './directives/api/api.directive.module';
 import { BackgroundEffectsPanelComponent } from './components/panel/background-effects-panel/background-effects-panel.component';
+import { SettingsPanelComponent } from './components/panel/settings-panel/settings-panel.component';
 import { ActivitiesPanelComponent } from './components/panel/activities-panel/activities-panel.component';
 import { RecordingActivityComponent } from './components/panel/activities-panel/recording-activity-panel/recording-activity.component';
 import { AdminDashboardComponent } from './admin/dashboard/dashboard.component';
 import { AdminLoginComponent } from './admin/login/login.component';
 import { AppMaterialModule } from './openvidu-angular.material.module';
+import { VideoDevicesComponent } from './components/settings/video-devices/video-devices.component';
+import { AudioDevicesComponent } from './components/settings/audio-devices/audio-devices.component';
+import { NicknameInputComponent } from './components/settings/nickname-input/nickname-input.component';
+import { LangSelectorComponent } from './components/settings/lang-selector/lang-selector.component';
 
 @NgModule({
 	declarations: [
@@ -78,7 +83,12 @@ import { AppMaterialModule } from './openvidu-angular.material.module';
 		PanelComponent,
 		AvatarProfileComponent,
 		PreJoinComponent,
+		VideoDevicesComponent,
+		AudioDevicesComponent,
+		NicknameInputComponent,
+		LangSelectorComponent,
 		BackgroundEffectsPanelComponent,
+		SettingsPanelComponent,
 		ActivitiesPanelComponent,
 		RecordingActivityComponent,
 		AdminDashboardComponent,
@@ -118,6 +128,7 @@ import { AppMaterialModule } from './openvidu-angular.material.module';
 		ParticipantsPanelComponent,
 		ParticipantPanelItemComponent,
 		BackgroundEffectsPanelComponent,
+		SettingsPanelComponent,
 		ActivitiesPanelComponent,
 		ChatPanelComponent,
 		SessionComponent,

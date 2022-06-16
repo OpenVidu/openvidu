@@ -37,6 +37,7 @@
 		"BACKGROUND": "Hintergrund-Effekte",
 		"START_RECORDING": "Aufzeichnung starten",
 		"STOP_RECORDING": "Aufzeichnung stoppen",
+		"SETTINGS": "Einstellungen",
 		"LEAVE": "Die Sitzung verlassen",
 		"PARTICIPANTS": "Teilnehmer",
 		"CHAT": "Chat",
@@ -63,6 +64,13 @@
 			"TITLE": "Teilnehmer",
 			"CAMERA": "KAMERA",
 			"SCREEN": "BILDSCHIRM"
+		},
+		"SETTINGS": {
+			"TITLE": "Einstellungen",
+			"GENERAL": "Allgemein",
+			"VIDEO": "Video",
+			"AUDIO": "Audio",
+			"LANGUAGE": "Sprache"
 		},
 		"BACKGROUND": {
 			"TITLE": "Hintergrund-Effekte",

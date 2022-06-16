@@ -95,12 +95,27 @@ export abstract class ParticipantAbstractModel {
 	/**
 	 * @internal
 	 */
-	public isCameraAudioActive(): boolean {
+	hasAudioActive(): boolean {
 		const cameraConnection = this.getCameraConnection();
-		if (cameraConnection) {
-			return cameraConnection.connected && cameraConnection.streamManager?.stream?.audioActive;
+		const screenConnection = this.getScreenConnection();
+
+		if (cameraConnection.connected) {
+			return this.isCameraAudioActive();
+		} else if (screenConnection.connected) {
+			return this.isScreenAudioActive();
 		}
-		return this.isScreenAudioActive();
+		return false;
+	}
+
+	/**
+	 * @internal
+	 */
+	private isCameraAudioActive(): boolean {
+		const cameraConnection = this.getCameraConnection();
+		if (cameraConnection?.connected) {
+			return cameraConnection.streamManager?.stream?.audioActive;
+		}
+		return false;
 	}
 
 	/**
@@ -116,8 +131,8 @@ export abstract class ParticipantAbstractModel {
 	 */
 	isScreenAudioActive(): boolean {
 		const screenConnection = this.getScreenConnection();
-		if (screenConnection) {
-			return screenConnection?.connected && screenConnection?.streamManager?.stream?.audioActive;
+		if (screenConnection?.connected) {
+			return screenConnection?.streamManager?.stream?.audioActive;
 		}
 		return false;
 	}

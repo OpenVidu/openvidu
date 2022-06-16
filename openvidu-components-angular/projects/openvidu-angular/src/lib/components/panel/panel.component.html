@@ -14,6 +14,11 @@
 	<ng-container *ngTemplateOutlet="backgroundEffectsPanelTemplate"></ng-container>
 </ng-container>
 
+<!-- Settings panel -->
+<ng-container *ngIf="isSettingsPanelOpened">
+	<ng-container *ngTemplateOutlet="settingsPanelTemplate"></ng-container>
+</ng-container>
+
 <!-- Activities panel -->
 <ng-container *ngIf="isActivitiesPanelOpened">
 	<ng-container *ngTemplateOutlet="activitiesPanelTemplate"></ng-container>

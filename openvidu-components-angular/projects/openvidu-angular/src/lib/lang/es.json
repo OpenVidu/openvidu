@@ -37,6 +37,7 @@
 		"BACKGROUND": "Efectos de fondo",
 		"START_RECORDING": "Iniciar grabación",
 		"STOP_RECORDING": "Detener grabación",
+		"SETTINGS": "Configuración",
 		"LEAVE": "Salir de la sesión",
 		"PARTICIPANTS": "Participantes",
 		"CHAT": "Chat",
@@ -63,6 +64,13 @@
 			"TITLE": "Participantes",
 			"CAMERA": "CÁMARA",
 			"SCREEN": "PANTALLA"
+		},
+		"SETTINGS": {
+			"TITLE": "Configuración",
+			"GENERAL": "General",
+			"VIDEO": "Video",
+			"AUDIO": "Audio",
+			"LANGUAGE": "Idioma"
 		},
 		"BACKGROUND": {
 			"TITLE": "Efectos de fondo",

@@ -37,6 +37,7 @@
 		"BACKGROUND": "Achtergrondeffecten",
         "START_RECORDING": "Start opname",
 		"STOP_RECORDING": "Stop opname",
+		"SETTINGS": "Instellingen",
 		"LEAVE": "Verlaat de sessie",
 		"PARTICIPANTS": "Deelnemers",
 		"CHAT": "Chat",
@@ -63,6 +64,13 @@
 			"TITLE": "Deelnemers",
 			"CAMERA": "CAMERA",
 			"SCREEN": "SCHERM"
+		},
+		"SETTINGS": {
+			"TITLE": "Instellingen",
+			"GENERAL": "Algemeen",
+			"VIDEO": "Video",
+			"AUDIO": "Audio",
+			"LANGUAGE":"Taal"
 		},
 		"BACKGROUND": {
 			"TITLE": "Achtergrondeffecten",

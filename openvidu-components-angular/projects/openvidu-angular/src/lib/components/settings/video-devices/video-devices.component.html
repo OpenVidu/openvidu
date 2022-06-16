@@ -1,0 +1,24 @@
+<div class="device-container-element">
+	<button
+		mat-icon-button
+		id="camera-button"
+		[disabled]="!hasVideoDevices || videoMuteChanging"
+		[class.warn-btn]="isVideoMuted"
+		(click)="toggleCam()"
+	>
+		<mat-icon *ngIf="!isVideoMuted" matTooltip="{{ 'TOOLBAR.MUTE_VIDEO' | translate }}" id="videocam">videocam</mat-icon>
+		<mat-icon *ngIf="isVideoMuted" matTooltip="{{ 'TOOLBAR.UNMUTE_VIDEO' | translate }}" id="videocam_off">videocam_off</mat-icon>
+	</button>
+	<mat-form-field>
+		<mat-label>{{ 'PREJOIN.VIDEO_DEVICE' | translate }}</mat-label>
+		<mat-select
+			[disabled]="isVideoMuted || !hasVideoDevices"
+			[value]="cameraSelected?.device"
+			(selectionChange)="onCameraSelected($event)"
+		>
+			<mat-option *ngFor="let camera of cameras" [value]="camera.device">
+				{{ camera.label }}
+			</mat-option>
+		</mat-select>
+	</mat-form-field>
+</div>

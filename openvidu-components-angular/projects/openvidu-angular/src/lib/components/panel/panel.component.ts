@@ -8,7 +8,7 @@ import {
 	ActivitiesPanelDirective
 } from '../../directives/template/openvidu-angular.directive';
 import { PanelType } from '../../models/panel.model';
-import { PanelService } from '../../services/panel/panel.service';
+import { PanelEvent, PanelService } from '../../services/panel/panel.service';
 
 /**
  *
@@ -67,6 +67,11 @@ export class PanelComponent implements OnInit {
 	/**
 	 * @ignore
 	 */
+	@ContentChild('settingsPanel', { read: TemplateRef }) settingsPanelTemplate: TemplateRef<any>;
+
+	/**
+	 * @ignore
+	 */
 	@ContentChild('activitiesPanel', { read: TemplateRef }) activitiesPanelTemplate: TemplateRef<any>;
 	/**
 	 * @ignore
@@ -91,10 +96,21 @@ export class PanelComponent implements OnInit {
 	set externalBackgroundEffectsPanel(externalBackgroundEffectsPanel: BackgroundEffectsPanelDirective) {
 		// This directive will has value only when BACKGROUND EFFECTS PANEL component tagged with '*ovBackgroundEffectsPanel'
 		// is inside of the PANEL component tagged with '*ovPanel'
-		if (externalBackgroundEffectsPanel) {
-			this.backgroundEffectsPanelTemplate = externalBackgroundEffectsPanel.template;
-		}
+		// TODO: backgroundEffectsPanel does not provides customization
+		// if (externalBackgroundEffectsPanel) {
+		// 	this.backgroundEffectsPanelTemplate = externalBackgroundEffectsPanel.template;
+		// }
 	}
+
+	// TODO: settingsPanel does not provides customization
+	// @ContentChild(SettingsPanelDirective)
+	// set externalSettingsPanel(externalSettingsPanel: SettingsPanelDirective) {
+		// This directive will has value only when SETTINGS PANEL component tagged with '*ovSettingsPanel'
+		// is inside of the PANEL component tagged with '*ovPanel'
+		// if (externalSettingsPanel) {
+		// 	this.settingsPanelTemplate = externalSettingsPanel.template;
+		// }
+	// }
 
 	@ContentChild(ActivitiesPanelDirective)
 	set externalActivitiesPanel(externalActivitiesPanel: ActivitiesPanelDirective) {
@@ -126,6 +142,7 @@ export class PanelComponent implements OnInit {
 	isParticipantsPanelOpened: boolean;
 	isChatPanelOpened: boolean;
 	isBackgroundEffectsPanelOpened: boolean;
+	isSettingsPanelOpened: boolean;
 	isActivitiesPanelOpened: boolean;
 
 	/**
@@ -150,15 +167,14 @@ export class PanelComponent implements OnInit {
 	}
 
 	private subscribeToPanelToggling() {
-		this.panelSubscription = this.panelService.panelOpenedObs
-			.pipe(skip(1))
-			.subscribe((ev: { opened: boolean; type?: PanelType | string }) => {
-				this.isChatPanelOpened = ev.opened && ev.type === PanelType.CHAT;
-				this.isParticipantsPanelOpened = ev.opened && ev.type === PanelType.PARTICIPANTS;
-				this.isBackgroundEffectsPanelOpened = ev.opened && ev.type === PanelType.BACKGROUND_EFFECTS;
-				this.isActivitiesPanelOpened = ev.opened && ev.type === PanelType.ACTIVITIES;
-				this.isExternalPanelOpened = ev.opened && ev.type !== PanelType.PARTICIPANTS && ev.type !== PanelType.CHAT;
-				this.cd.markForCheck();
-			});
+		this.panelSubscription = this.panelService.panelOpenedObs.pipe(skip(1)).subscribe((ev: PanelEvent) => {
+			this.isChatPanelOpened = ev.opened && ev.type === PanelType.CHAT;
+			this.isParticipantsPanelOpened = ev.opened && ev.type === PanelType.PARTICIPANTS;
+			this.isBackgroundEffectsPanelOpened = ev.opened && ev.type === PanelType.BACKGROUND_EFFECTS;
+			this.isSettingsPanelOpened = ev.opened && ev.type === PanelType.SETTINGS;
+			this.isActivitiesPanelOpened = ev.opened && ev.type === PanelType.ACTIVITIES;
+			this.isExternalPanelOpened = ev.opened && ev.type !== PanelType.PARTICIPANTS && ev.type !== PanelType.CHAT;
+			this.cd.markForCheck();
+		});
 	}
 }

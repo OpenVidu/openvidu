@@ -37,6 +37,7 @@
         "BACKGROUND": "背景効果",
         "START_RECORDING": "録画開始",
 		"STOP_RECORDING": "録画の停止",
+        "SETTINGS": "設定",
         "LEAVE": "セッションを終了する",
         "PARTICIPANTS": "参加者",
         "CHAT": "チャット",
@@ -64,6 +65,13 @@
             "CAMERA": "カメラ",
             "SCREEN": "スクリーン"
         },
+        "SETTINGS": {
+			"TITLE": "設定",
+			"GENERAL": "全般的",
+			"VIDEO": "ビデオ",
+			"AUDIO": "オーディオ",
+			"LANGUAGE":"言語"
+		},
         "BACKGROUND": {
             "TITLE": "背景効果",
             "BLURRED_SECTION": "エフェクトなし、ぼやけた背景",

@@ -688,7 +688,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		// The devices are initialized without labels in Firefox.
 		// We need to force an update after publisher is allowed.
 		if (this.deviceSrv.areEmptyLabels()) {
-			await this.deviceSrv.forceUpdate();
+			await this.deviceSrv.initializeDevices();
 			if (this.deviceSrv.hasAudioDeviceAvailable()) {
 				const audioLabel = this.participantService.getMyCameraPublisher()?.stream?.getMediaStream()?.getAudioTracks()[0]?.label;
 				this.deviceSrv.setMicSelected(audioLabel);

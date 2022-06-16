@@ -28,6 +28,9 @@ export class OpenViduAngularConfigService {
 	fullscreenButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	fullscreenButtonObs: Observable<boolean>;
 
+	toolbarSettingsButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
+	toolbarSettingsButtonObs: Observable<boolean>;
+
 	leaveButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	leaveButtonObs: Observable<boolean>;
 
@@ -49,8 +52,8 @@ export class OpenViduAngularConfigService {
 	displayParticipantNameObs: Observable<boolean>;
 	displayAudioDetection = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	displayAudioDetectionObs: Observable<boolean>;
-	settingsButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	settingsButtonObs: Observable<boolean>;
+	streamSettingsButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
+	streamSettingsButtonObs: Observable<boolean>;
 	participantItemMuteButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	participantItemMuteButtonObs: Observable<boolean>;
 	backgroundEffectsButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
@@ -88,10 +91,11 @@ export class OpenViduAngularConfigService {
 		this.displaySessionNameObs = this.displaySessionName.asObservable();
 		this.displayLogoObs = this.displayLogo.asObservable();
 		this.recordingButtonObs = this.recordingButton.asObservable();
+		this.toolbarSettingsButtonObs = this.toolbarSettingsButton.asObservable();
 		//Stream observables
 		this.displayParticipantNameObs = this.displayParticipantName.asObservable();
 		this.displayAudioDetectionObs = this.displayAudioDetection.asObservable();
-		this.settingsButtonObs = this.settingsButton.asObservable();
+		this.streamSettingsButtonObs = this.streamSettingsButton.asObservable();
 		// Participant item observables
 		this.participantItemMuteButtonObs = this.participantItemMuteButton.asObservable();
 		// Recording activity observables
@@ -107,7 +111,7 @@ export class OpenViduAngularConfigService {
 		return this.configuration;
 	}
 	isProduction(): boolean {
-		return this.configuration?.production;
+		return this.configuration?.production || false;
 	}
 
 	hasParticipantFactory(): boolean {

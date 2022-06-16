@@ -102,6 +102,14 @@
 				<mat-icon>auto_awesome</mat-icon>
 				<span>{{ 'TOOLBAR.BACKGROUND' | translate }}</span>
 			</button>
+
+			<mat-divider class="divider" *ngIf="!isMinimal && showSettingsButton"></mat-divider>
+
+			<!-- Settings button -->
+			<button *ngIf="!isMinimal && showSettingsButton" mat-menu-item id="settings-btn" (click)="toggleSettings()">
+				<mat-icon>settings</mat-icon>
+				<span>{{ 'TOOLBAR.SETTINGS' | translate }}</span>
+			</button>
 		</mat-menu>
 
 		<!-- External additional buttons  -->

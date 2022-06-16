@@ -1,0 +1,29 @@
+.settings-container {
+	display: flex;
+	padding: 10px;
+}
+
+.item-menu {
+	padding-right: 5px;
+	border-right: 1px solid var(--ov-secondary-color);
+	width: 200px;
+}
+
+.item-content {
+	padding: 16px;
+	flex-grow: 1;
+}
+
+.option {
+	border-radius: var(--ov-panel-radius);
+}
+.lang-container button {
+	width: 100%;
+}
+
+mat-list-option[aria-selected='true'] {
+	background: var(--ov-light-color);
+}
+::ng-deep .mat-list-item-content {
+	padding: 5px !important;
+}

@@ -1,0 +1,21 @@
+#nickname-input-container {
+	display: flex;
+}
+
+#nickname-input-container button {
+	margin: auto 10px auto auto;
+}
+
+#nickname-input-container button.mat-button-disabled {
+	color: #000000 !important;
+}
+
+#nickname-input-container mat-form-field {
+	width: 100%;
+	margin-top: 10px;
+	color: #000000;
+}
+
+#nickname-input-container mat-form-field {
+	color: #000000;
+}

@@ -11,11 +11,6 @@
 	flex: 1 1 auto;
 }
 
-.lang-button {
-	background-color: var(--ov-logo-background-color);
-	color: var(--ov-text-color);
-}
-
 #branding-logo {
 	background-color: var(--ov-logo-background-color);
 	border-radius: var(--ov-panel-radius);
@@ -81,31 +76,6 @@ hr {
 	margin-bottom: 0px !important;
 }
 
-#nickname-input-container,
-.device-container-element {
-	display: flex;
-}
-
-#nickname-input-container button,
-.device-container-element button {
-	margin: auto 10px auto auto;
-}
-
-#nickname-input-container button.mat-button-disabled {
-	color: #000000 !important;
-}
-
-#nickname-input-container mat-form-field,
-.device-container-element mat-form-field {
-	width: 100%;
-	margin-top: 10px;
-	color: #000000;
-}
-
-#nickname-input-container mat-form-field {
-	color: #000000;
-}
-
 .mat-form-field-appearance-fill .mat-form-field-flex {
 	/* background-color: var(--ov-text-color); */
 	border-radius: var(--ov-video-radius);
@@ -118,11 +88,6 @@ hr {
 	display: block !important;
 }
 
-#camera-button {
-	border-radius: var(--ov-buttons-radius);
-	/* background-color: var(--ov-secondary-color) !important; */
-	/* color: var(--ov-text-color) !important; */
-}
 
 .join-btn-container {
 	width: inherit;
@@ -137,37 +102,6 @@ hr {
 	border-radius: var(--ov-video-radius);
 }
 
-.warn-btn {
-	color: var(--ov-text-color);
-	background-color: var(--ov-warn-color) !important;
-}
-
-.active-btn {
-	color: var(--ov-text-color);
-	background-color: var(--ov-tertiary-color) !important;
-}
-.media-btn {
-	margin: auto;
-}
-
-::ng-deep .mat-button-toggle-appearance-standard .mat-button-toggle-label-content {
-	padding: 1px !important;
-}
-
-::ng-deep .mat-input-element {
-	caret-color: #000000;
-}
-::ng-deep .mat-primary .mat-option.mat-selected:not(.mat-option-disabled) {
-	color: #000000;
-}
-
-::ng-deep .mat-form-field-label {
-	color: var(--ov-panel-text-color) !important;
-}
-
-::ng-deep .mat-form-field.mat-focused .mat-form-field-ripple {
-	background-color: var(--ov-panel-text-color) !important;
-}
 
 @media only screen and (max-width: 480px) {
 	.container,

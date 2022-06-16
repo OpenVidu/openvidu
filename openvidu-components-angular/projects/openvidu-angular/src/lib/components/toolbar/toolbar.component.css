@@ -83,8 +83,8 @@
 .recording-tag mat-icon {
 	font-size: 16px;
 	display: inline;
-    vertical-align: sub;
-    margin-right: 5px;
+	vertical-align: sub;
+	margin-right: 5px;
 }
 
 .blink {
@@ -124,6 +124,15 @@
 .mat-icon-button[disabled] {
 	color: #fff;
 }
+.divider {
+	margin: 8px 0px;
+}
+::ng-deep .mat-menu-item {
+	/* margin-bottom: 10px; */
+	height: 40px;
+	line-height: 40px;
+}
+
 @media (max-width: 750px) {
 	#session-name {
 		display: none;
@@ -143,10 +152,8 @@
 	}
 }
 
-::ng-deep .mat-menu-panel {
-	margin-bottom: 10px;
-}
-
 @keyframes blinker {
-	50% { opacity: 0.3; }
+	50% {
+		opacity: 0.3;
+	}
 }

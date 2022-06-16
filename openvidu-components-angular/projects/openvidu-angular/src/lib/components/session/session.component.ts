@@ -1,5 +1,6 @@
 import {
 	ChangeDetectionStrategy,
+	ChangeDetectorRef,
 	Component,
 	ContentChild,
 	ElementRef,
@@ -31,12 +32,12 @@ import { TokenService } from '../../services/token/token.service';
 import { ActionService } from '../../services/action/action.service';
 import { Signal } from '../../models/signal.model';
 import { ParticipantService } from '../../services/participant/participant.service';
-import { MatSidenav } from '@angular/material/sidenav';
+import { MatDrawerContainer, MatSidenav } from '@angular/material/sidenav';
 import { SidenavMode } from '../../models/layout.model';
 import { LayoutService } from '../../services/layout/layout.service';
 import { Subscription, skip } from 'rxjs';
 import { PanelType } from '../../models/panel.model';
-import { PanelService } from '../../services/panel/panel.service';
+import { PanelEvent, PanelService } from '../../services/panel/panel.service';
 import { RecordingService } from '../../services/recording/recording.service';
 import { TranslateService } from '../../services/translate/translate.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
@@ -66,6 +67,9 @@ export class SessionComponent implements OnInit {
 	sideMenu: MatSidenav;
 
 	sidenavMode: SidenavMode = SidenavMode.SIDE;
+	settingsPanelOpened: boolean;
+	drawer: MatDrawerContainer;
+
 	protected readonly SIDENAV_WIDTH_LIMIT_MODE = 790;
 
 	protected menuSubscription: Subscription;
@@ -87,7 +91,8 @@ export class SessionComponent implements OnInit {
 		protected panelService: PanelService,
 		private recordingService: RecordingService,
 		private translateService: TranslateService,
-		private platformService: PlatformService
+		private platformService: PlatformService,
+		private cd: ChangeDetectorRef
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
 	}
@@ -123,9 +128,25 @@ export class SessionComponent implements OnInit {
 		}, 0);
 	}
 
+	@ViewChild('container')
+	set container(container: MatDrawerContainer) {
+		setTimeout(() => {
+			if (container) {
+				this.drawer = container;
+				this.drawer._contentMarginChanges.subscribe(() => {
+					setTimeout(() => {
+						this.stopUpdateLayoutInterval();
+						this.layoutService.update();
+						this.drawer.autosize = false;
+					}, 250);
+				});
+			}
+		}, 0);
+	}
+
 	async ngOnInit() {
 		if (!this.usedInPrejoinPage) {
-			if(!this.tokenService.getScreenToken()){
+			if (!this.tokenService.getScreenToken()) {
 				// Hide screenshare button if screen token does not exist
 				this.libService.screenshareButton.next(false);
 			}
@@ -170,27 +191,34 @@ export class SessionComponent implements OnInit {
 
 	protected subscribeToTogglingMenu() {
 		this.sideMenu.openedChange.subscribe(() => {
-			if (this.updateLayoutInterval) {
-				clearInterval(this.updateLayoutInterval);
-			}
+			this.stopUpdateLayoutInterval();
 			this.layoutService.update();
 		});
 
 		this.sideMenu.openedStart.subscribe(() => {
-			this.updateLayoutInterval = setInterval(() => this.layoutService.update(), 50);
+			this.startUpdateLayoutInterval();
 		});
 
 		this.sideMenu.closedStart.subscribe(() => {
-			this.updateLayoutInterval = setInterval(() => this.layoutService.update(), 50);
+			this.startUpdateLayoutInterval();
 		});
 
-		this.menuSubscription = this.panelService.panelOpenedObs
-			.pipe(skip(1))
-			.subscribe((ev: { opened: boolean; type?: PanelType | string }) => {
-				if (this.sideMenu) {
-					ev.opened ? this.sideMenu.open() : this.sideMenu.close();
+		this.menuSubscription = this.panelService.panelOpenedObs.pipe(skip(1)).subscribe((ev: PanelEvent) => {
+			if (this.sideMenu) {
+				this.settingsPanelOpened = ev.opened && ev.type === PanelType.SETTINGS;
+
+				if (this.sideMenu.opened && ev.opened) {
+					if (ev.type === PanelType.SETTINGS || ev.oldType === PanelType.SETTINGS) {
+						// Switch from SETTINGS to another panel and vice versa.
+						// As the SETTINGS panel will be bigger than others, the sidenav container must be updated.
+						// Setting autosize to 'true' allows update it.
+						this.drawer.autosize = true;
+						this.startUpdateLayoutInterval();
+					}
 				}
-			});
+				ev.opened ? this.sideMenu.open() : this.sideMenu.close();
+			}
+		});
 	}
 
 	protected subscribeToLayoutWidth() {
@@ -323,5 +351,17 @@ export class SessionComponent implements OnInit {
 		this.session.on('recordingStopped', (event: RecordingEvent) => {
 			this.recordingService.stopRecording(event);
 		});
+	}
+
+	private startUpdateLayoutInterval() {
+		this.updateLayoutInterval = setInterval(() => {
+			this.layoutService.update();
+		}, 50);
+	}
+
+	private stopUpdateLayoutInterval() {
+		if (this.updateLayoutInterval) {
+			clearInterval(this.updateLayoutInterval);
+		}
 	}
 }

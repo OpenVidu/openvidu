@@ -212,7 +212,7 @@ export class StreamComponent implements OnInit {
 	 * @ignore
 	 */
 	toggleNicknameForm() {
-		if (this._stream.participant.local) {
+		if (this._stream?.participant?.local) {
 			this.toggleNickname = !this.toggleNickname;
 		}
 	}
@@ -260,7 +260,7 @@ export class StreamComponent implements OnInit {
 			this.showAudioDetection = value;
 			// this.cd.markForCheck();
 		});
-		this.settingsButtonSub = this.libService.settingsButtonObs.subscribe((value: boolean) => {
+		this.settingsButtonSub = this.libService.streamSettingsButtonObs.subscribe((value: boolean) => {
 			this.showSettingsButton = value;
 			// this.cd.markForCheck();
 		});

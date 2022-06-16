@@ -1,0 +1,43 @@
+<div class="panel-container" id="background-effects-container" fxLayout="column" fxLayoutAlign="space-evenly none">
+	<div class="panel-header-container" fxFlex="55px" fxLayoutAlign="start center">
+		<h3 class="panel-title">{{ 'PANEL.SETTINGS.TITLE' | translate }}</h3>
+		<button class="panel-close-button" mat-icon-button matTooltip="{{ 'PANEL.CLOSE' | translate }}" (click)="close()">
+			<mat-icon>close</mat-icon>
+		</button>
+	</div>
+
+	<div class="settings-container" fxFlex="100%" fxLayoutAlign="space-evenly none">
+		<div class="item-menu">
+			<mat-selection-list #settings [multiple]="false">
+				<mat-list-option class="option" [selected]="true" value="general">
+					<mat-icon mat-list-icon>manage_accounts</mat-icon>
+					<div mat-line>{{ 'PANEL.SETTINGS.GENERAL' | translate }}</div>
+				</mat-list-option>
+				<mat-list-option class="option" value="video">
+					<mat-icon mat-list-icon>videocam</mat-icon>
+					<div mat-line>{{ 'PANEL.SETTINGS.VIDEO' | translate }}</div>
+				</mat-list-option>
+				<mat-list-option class="option" value="audio">
+					<mat-icon mat-list-icon>mic</mat-icon>
+					<div mat-line>{{ 'PANEL.SETTINGS.AUDIO' | translate }}</div>
+				</mat-list-option>
+			</mat-selection-list>
+		</div>
+
+		<div class="item-content">
+			<div *ngIf="settings.selectedOptions.selected[0]?.value === 'general'">
+				<ov-nickname-input></ov-nickname-input>
+
+				<mat-list>
+					<mat-list-item>
+						<mat-icon mat-list-icon>language</mat-icon>
+						<div mat-line>{{ 'PANEL.SETTINGS.LANGUAGE' | translate }}:</div>
+						<ov-lang-selector></ov-lang-selector>
+					</mat-list-item>
+				</mat-list>
+			</div>
+			<ov-video-devices-select *ngIf="settings.selectedOptions.selected[0]?.value === 'video'"></ov-video-devices-select>
+			<ov-audio-devices-select *ngIf="settings.selectedOptions.selected[0]?.value === 'audio'"></ov-audio-devices-select>
+		</div>
+	</div>
+</div>

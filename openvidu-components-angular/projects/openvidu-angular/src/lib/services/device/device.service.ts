@@ -39,16 +39,15 @@ export class DeviceService {
 		private libSrv: OpenViduAngularConfigService
 	) {
 		this.log = this.loggerSrv.get('DevicesService');
-
 	}
 
-	async forceUpdate() {
-		this.cameras = [];
-		this.microphones = [];
-		await this.initializeDevices();
-	}
+	// async forceUpdate() {
+	// 	await this.initializeDevices();
+	// }
 
 	async initializeDevices() {
+		this.cameras = [];
+		this.microphones = [];
 		try {
 			this.OV = new OpenVidu();
 			// Forcing media permissions request.

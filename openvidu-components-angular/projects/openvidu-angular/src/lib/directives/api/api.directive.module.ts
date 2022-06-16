@@ -19,7 +19,8 @@ import {
 	ToolbarDisplayLogoDirective,
 	ToolbarActivitiesPanelButtonDirective,
 	ToolbarBackgroundEffectsButtonDirective,
-	ToolbarRecordingButtonDirective
+	ToolbarRecordingButtonDirective,
+	ToolbarSettingsButtonDirective
 } from './toolbar.directive';
 import {
 	AudioMutedDirective,
@@ -47,6 +48,7 @@ import {
 		ToolbarActivitiesPanelButtonDirective,
 		ToolbarDisplaySessionNameDirective,
 		ToolbarDisplayLogoDirective,
+		ToolbarSettingsButtonDirective,
 		StreamDisplayParticipantNameDirective,
 		StreamDisplayAudioDetectionDirective,
 		StreamSettingsButtonDirective,
@@ -75,6 +77,7 @@ import {
 		ToolbarActivitiesPanelButtonDirective,
 		ToolbarDisplaySessionNameDirective,
 		ToolbarDisplayLogoDirective,
+		ToolbarSettingsButtonDirective,
 		StreamDisplayParticipantNameDirective,
 		StreamDisplayAudioDetectionDirective,
 		StreamSettingsButtonDirective,

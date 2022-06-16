@@ -4,6 +4,13 @@ import { ILogger } from '../../models/logger.model';
 import { PanelType } from '../../models/panel.model';
 import { LoggerService } from '../logger/logger.service';
 
+export interface PanelEvent {
+	opened: boolean;
+	type?: PanelType | string;
+	expand?: string;
+	oldType?: PanelType | string;
+}
+
 @Injectable({
 	providedIn: 'root'
 })
@@ -11,14 +18,15 @@ export class PanelService {
 	/**
 	 * Panel Observable which pushes the panel status in every update.
 	 */
-	panelOpenedObs: Observable<{ opened: boolean; type?: PanelType | string }>;
+	panelOpenedObs: Observable<PanelEvent>;
 	protected log: ILogger;
 	protected isChatOpened: boolean = false;
 	protected isParticipantsOpened: boolean = false;
 	protected isActivitiesOpened: boolean = false;
 	private isExternalOpened: boolean = false;
 	private externalType: string;
-	protected _panelOpened = <BehaviorSubject<{ opened: boolean; type?: PanelType | string, expand?: string }>>new BehaviorSubject({ opened: false });
+	protected _panelOpened = <BehaviorSubject<PanelEvent>>new BehaviorSubject({ opened: false });
+	private panelMap: Map<string, boolean> = new Map();
 
 	/**
 	 * @internal
@@ -26,6 +34,7 @@ export class PanelService {
 	constructor(protected loggerSrv: LoggerService) {
 		this.log = this.loggerSrv.get('PanelService');
 		this.panelOpenedObs = this._panelOpened.asObservable();
+		Object.values(PanelType).forEach((panel) => this.panelMap.set(panel, false));
 	}
 
 	/**
@@ -33,45 +42,43 @@ export class PanelService {
 	 * If the type is differente, it will switch to the properly panel.
 	 */
 	togglePanel(type: PanelType | string, expand?: string) {
-		this.log.d(`Toggling ${type} menu`);
-		let opened: boolean;
-		if (type === PanelType.CHAT) {
-			this.isChatOpened = !this.isChatOpened;
-			this.isParticipantsOpened = false;
-			this.isExternalOpened = false;
-			this.isActivitiesOpened = false
-			opened = this.isChatOpened;
-		} else if (type === PanelType.PARTICIPANTS) {
-			this.isParticipantsOpened = !this.isParticipantsOpened;
-			this.isChatOpened = false;
-			this.isExternalOpened = false;
-			this.isActivitiesOpened = false;
-			opened = this.isParticipantsOpened;
-		} else if (type === PanelType.ACTIVITIES) {
-			this.isActivitiesOpened = !this.isActivitiesOpened;
-			this.isChatOpened = false;
-			this.isExternalOpened = false;
-			this.isParticipantsOpened = false;
-			opened = this.isActivitiesOpened;
+		let nextOpenedValue: boolean = false;
+		if (this.panelMap.has(type)) {
+			this.log.d(`Toggling ${type} menu`);
+
+			this.panelMap.forEach((opened: boolean, panel: string) => {
+				if (panel === type) {
+					// Toggle panel
+					this.panelMap.set(panel, !opened);
+					nextOpenedValue = !opened;
+				} else {
+					// Close others
+					this.panelMap.set(panel, false);
+				}
+			});
 		} else {
+			// Panel is external
 			this.log.d('Toggling external panel');
 			this.isChatOpened = false;
 			this.isParticipantsOpened = false;
 			this.isActivitiesOpened = false;
-			// Open when is close or is opened with another type
+			// Open when is closed or is opened with another type
 			this.isExternalOpened = !this.isExternalOpened || this.externalType !== type;
 			this.externalType = !this.isExternalOpened ? '' : type;
-			opened = this.isExternalOpened;
+			nextOpenedValue = this.isExternalOpened;
 		}
 
-		this._panelOpened.next({ opened, type, expand });
+		const oldType = this._panelOpened.getValue().type;
+		this._panelOpened.next({ opened: nextOpenedValue, type, expand, oldType });
 	}
 
 	/**
 	 * @internal
 	 */
 	isPanelOpened(): boolean {
-		return this.isChatPanelOpened() || this.isParticipantsPanelOpened() || this.isActivitiesPanelOpened() || this.isExternalPanelOpened();
+		return (
+			this.isChatPanelOpened() || this.isParticipantsPanelOpened() || this.isActivitiesPanelOpened() || this.isExternalPanelOpened()
+		);
 	}
 
 	/**
@@ -102,7 +109,7 @@ export class PanelService {
 	/**
 	 * Whether the activities panel is opened or not.
 	 */
-	 isActivitiesPanelOpened(): boolean {
+	isActivitiesPanelOpened(): boolean {
 		return this.isActivitiesOpened;
 	}
 

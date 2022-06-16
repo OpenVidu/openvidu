@@ -196,7 +196,7 @@ export class ParticipantService {
 	}
 
 	isMyAudioActive(): boolean {
-		return this.localParticipant?.isCameraAudioActive() || this.localParticipant?.isScreenAudioActive();
+		return this.localParticipant?.hasAudioActive();
 	}
 
 	/**

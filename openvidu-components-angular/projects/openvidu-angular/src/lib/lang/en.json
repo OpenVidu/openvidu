@@ -38,6 +38,7 @@
 		"BACKGROUND": "Background effects",
 		"START_RECORDING": "Start recording",
 		"STOP_RECORDING": "Stop recording",
+		"SETTINGS": "Settings",
 		"LEAVE": "Leave the session",
 		"PARTICIPANTS": "Participants",
 		"CHAT": "Chat",
@@ -64,6 +65,13 @@
 			"TITLE": "Participants",
 			"CAMERA": "CAMERA",
 			"SCREEN": "SCREEN"
+		},
+		"SETTINGS": {
+			"TITLE": "Settings",
+			"GENERAL": "General",
+			"VIDEO": "Video",
+			"AUDIO": "Audio",
+			"LANGUAGE": "Language"
 		},
 		"BACKGROUND": {
 			"TITLE": "Background effects",

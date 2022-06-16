@@ -1,0 +1,17 @@
+.device-container-element mat-form-field {
+	width: 100%;
+	margin-top: 10px;
+	color: #000000;
+}
+.device-container-element button {
+	margin: auto 10px auto auto;
+}
+
+.device-container-element {
+	display: flex;
+}
+
+.warn-btn {
+	color: var(--ov-text-color);
+	background-color: var(--ov-warn-color) !important;
+}

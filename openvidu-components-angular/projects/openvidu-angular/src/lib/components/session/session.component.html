@@ -1,10 +1,11 @@
 <div id="session-container">
-	<mat-sidenav-container #videoContainer class="sidenav-container">
+	<mat-sidenav-container #container #videoContainer class="sidenav-container">
 		<mat-sidenav
 			#sidenav
 			mode="{{ sidenavMode }}"
 			position="end"
 			class="sidenav-menu"
+			[ngClass]="{big: settingsPanelOpened}"
 			fixedInViewport="true"
 			fixedTopGap="0"
 			fixedBottomGap="0"
