@@ -269,10 +269,10 @@ public class SessionRestController {
 
 	@RequestMapping(value = "/sessions/{sessionId}/connection", method = RequestMethod.POST)
 	public ResponseEntity<?> initializeConnection(@PathVariable("sessionId") String sessionId,
-			@RequestBody Map<String, ?> params) {
+			@RequestBody(required = false) Map<String, ?> params) {
 
 		log.info("REST API: POST {} {}", RequestMappings.API + "/sessions/" + sessionId + "/connection",
-				params.toString());
+				params != null ? params.toString() : "{}");
 
 		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
 		if (session == null) {
@@ -838,7 +838,8 @@ public class SessionRestController {
 		ConnectionType type = ConnectionProperties.fromJson(params).build().getType();
 
 		if (ConnectionType.WEBRTC.equals(type)) {
-			if (params.get("customIceServers") == null && !openviduConfig.getWebrtcIceServersBuilders().isEmpty()) {
+			if (params != null && params.get("customIceServers") == null
+					&& !openviduConfig.getWebrtcIceServersBuilders().isEmpty()) {
 				// If not defined in Connection, check if defined in OpenVidu global config
 				for (IceServerProperties.Builder iceServerPropertiesBuilder : openviduConfig
 						.getWebrtcIceServersBuilders()) {

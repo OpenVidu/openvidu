@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,19 @@ import com.google.gson.JsonObject;
  * {@link io.openvidu.java.client.Session#createConnection(ConnectionProperties)}
  */
 public class ConnectionProperties {
+
+	public static class DefaultValues {
+		public static final ConnectionType type = ConnectionType.WEBRTC;
+		public static final String data = "";
+		public static final Boolean record = true;
+		public static final OpenViduRole role = OpenViduRole.PUBLISHER;
+		public static final KurentoOptions kurentoOptions = null;
+		public static final String rtspUri = null;
+		public static final Boolean adaptativeBitrate = true;
+		public static final Boolean onlyPlayWithSubscribers = true;
+		public static final Integer networkCache = 2000;
+		public static final List<IceServerProperties> customIceServers = null;
+	}
 
 	private ConnectionType type;
 	// COMMON
@@ -56,7 +70,6 @@ public class ConnectionProperties {
 		private Boolean adaptativeBitrate;
 		private Boolean onlyPlayWithSubscribers;
 		private Integer networkCache;
-
 
 		/**
 		 * Builder for {@link io.openvidu.java.client.ConnectionProperties}.
@@ -132,10 +145,9 @@ public class ConnectionProperties {
 
 		/**
 		 * Call this method to flag the streams published by this Connection to be
-		 * recorded or not. This only affects
-		 * <a href="https://docs.openvidu.io/en/stable/advanced-features/recording/#individual-recording-selection">
-		 *   INDIVIDUAL recording
-		 * </a>. If not set, by default will be true.
+		 * recorded or not. This only affects <a href=
+		 * "https://docs.openvidu.io/en/stable/advanced-features/recording/#individual-recording-selection">
+		 * INDIVIDUAL recording </a>. If not set, by default will be true.
 		 */
 		public Builder record(boolean record) {
 			this.record = record;
@@ -242,28 +254,34 @@ public class ConnectionProperties {
 		}
 
 		/**
-		 * On certain type of networks, clients using default OpenVidu STUN/TURN server can not be reached it because
-		 * firewall rules and network topologies at the client side. This method allows you to configure your
-		 * own ICE Server for specific connections if you need it. This is usually not necessary, only it is usefull for
-		 * OpenVidu users behind firewalls which allows traffic from/to specific ports which may need a custom
-		 * ICE Server configuration
+		 * On certain type of networks, clients using default OpenVidu STUN/TURN server
+		 * can not be reached it because firewall rules and network topologies at the
+		 * client side. This method allows you to configure your own ICE Server for
+		 * specific connections if you need it. This is usually not necessary, only it
+		 * is usefull for OpenVidu users behind firewalls which allows traffic from/to
+		 * specific ports which may need a custom ICE Server configuration
 		 *
-		 * Add an ICE Server if in your use case you need this connection to use your own ICE Server deployment.
-		 * When the user uses this connection, it will use the specified ICE Servers defined here.
+		 * Add an ICE Server if in your use case you need this connection to use your
+		 * own ICE Server deployment. When the user uses this connection, it will use
+		 * the specified ICE Servers defined here.
 		 *
-		 * The level of precedence for ICE Server configuration on every OpenVidu connection is:
-	 	 * <ol>
-		 * <li>Configured ICE Server using Openvidu.setAdvancedCofiguration() at openvidu-browser.</li>
+		 * The level of precedence for ICE Server configuration on every OpenVidu
+		 * connection is:
+		 * <ol>
+		 * <li>Configured ICE Server using Openvidu.setAdvancedCofiguration() at
+		 * openvidu-browser.</li>
 		 * <li>Configured ICE server at
-		 * {@link io.openvidu.java.client.ConnectionProperties#customIceServers ConnectionProperties.customIceServers}</li>
-		 * <li>Configured ICE Server at global configuration parameter: OPENVIDU_WEBRTC_ICE_SERVERS</li>
+		 * {@link io.openvidu.java.client.ConnectionProperties#customIceServers
+		 * ConnectionProperties.customIceServers}</li>
+		 * <li>Configured ICE Server at global configuration parameter:
+		 * OPENVIDU_WEBRTC_ICE_SERVERS</li>
 		 * <li>Default deployed Coturn within OpenVidu deployment</li>
 		 * </ol>
 		 * <br>
-		 * If no value is found at level 1, level 2 will be used, and so on until level 4.
+		 * If no value is found at level 1, level 2 will be used, and so on until level
+		 * 4. <br>
+		 * This method is equivalent to level 2 of precedence. <br>
 		 * <br>
-		 * This method is equivalent to level 2 of precedence.
-		 * <br><br>
 		 * <strong>Only for
 		 * {@link io.openvidu.java.client.ConnectionType#WEBRTC}</strong>
 		 */
@@ -303,15 +321,14 @@ public class ConnectionProperties {
 	}
 
 	/**
-	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/"
-	 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
-	 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
-	 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
-	 * sans-serif">PRO</a> Whether the streams published by this Connection will be
-	 * recorded or not. This only affects
-	 * <a href="https://docs.openvidu.io/en/stable/advanced-features/recording/#individual-recording-selection">
-	 *   INDIVIDUAL recording
-	 * </a>.
+	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" style="display:
+	 * inline-block; background-color: rgb(0, 136, 170); color: white; font-weight:
+	 * bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size:
+	 * 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> Whether
+	 * the streams published by this Connection will be recorded or not. This only
+	 * affects <a href=
+	 * "https://docs.openvidu.io/en/stable/advanced-features/recording/#individual-recording-selection">
+	 * INDIVIDUAL recording </a>.
 	 */
 	public Boolean record() {
 		return this.record;
@@ -401,11 +418,12 @@ public class ConnectionProperties {
 	}
 
 	/**
-	 * Returns a list of custom ICE Servers configured for this connection.
-	 * <br><br>
-	 * See {@link io.openvidu.java.client.ConnectionProperties.Builder#addCustomIceServer(IceServerProperties)} for more
-	 * information.
-	 * <br><br>
+	 * Returns a list of custom ICE Servers configured for this connection. <br>
+	 * <br>
+	 * See
+	 * {@link io.openvidu.java.client.ConnectionProperties.Builder#addCustomIceServer(IceServerProperties)}
+	 * for more information. <br>
+	 * <br>
 	 * <strong>Only for
 	 * {@link io.openvidu.java.client.ConnectionType#WEBRTC}</strong>
 	 */
@@ -485,6 +503,10 @@ public class ConnectionProperties {
 
 		ConnectionProperties.Builder builder = new ConnectionProperties.Builder();
 
+		if (params == null) {
+			params = new HashMap<>();
+		}
+
 		String typeString;
 		String data;
 		try {
@@ -499,12 +521,12 @@ public class ConnectionProperties {
 			if (typeString != null) {
 				type = ConnectionType.valueOf(typeString);
 			} else {
-				type = ConnectionType.WEBRTC;
+				type = DefaultValues.type;
 			}
 		} catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException("Parameter 'type' " + typeString + " is not defined");
 		}
-		data = data != null ? data : "";
+		data = data != null ? data : DefaultValues.data;
 
 		// Build COMMON options
 		builder.type(type).data(data).record(true);
@@ -523,7 +545,7 @@ public class ConnectionProperties {
 				if (roleString != null) {
 					role = OpenViduRole.valueOf(roleString);
 				} else {
-					role = OpenViduRole.PUBLISHER;
+					role = DefaultValues.role;
 				}
 			} catch (IllegalArgumentException e) {
 				throw new IllegalArgumentException("Parameter role " + params.get("role") + " is not defined");
@@ -623,9 +645,10 @@ public class ConnectionProperties {
 			} catch (ClassCastException e) {
 				throw new IllegalArgumentException("Type error in some parameter: " + e.getMessage());
 			}
-			adaptativeBitrate = adaptativeBitrate != null ? adaptativeBitrate : true;
-			onlyPlayWithSubscribers = onlyPlayWithSubscribers != null ? onlyPlayWithSubscribers : true;
-			networkCache = networkCache != null ? networkCache : 2000;
+			adaptativeBitrate = adaptativeBitrate != null ? adaptativeBitrate : DefaultValues.adaptativeBitrate;
+			onlyPlayWithSubscribers = onlyPlayWithSubscribers != null ? onlyPlayWithSubscribers
+					: DefaultValues.onlyPlayWithSubscribers;
+			networkCache = networkCache != null ? networkCache : DefaultValues.networkCache;
 			if (rtspUri != null) {
 				try {
 					checkRtspUri(rtspUri);
@@ -649,7 +672,7 @@ public class ConnectionProperties {
 		} catch (ClassCastException e) {
 			throw new IllegalArgumentException("Type error in parameter 'record': " + e.getMessage());
 		}
-		record = record != null ? record : true;
+		record = record != null ? record : DefaultValues.record;
 		builder.record(record);
 
 		return builder;

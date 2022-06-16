@@ -31,6 +31,17 @@ import com.google.gson.reflect.TypeToken;
  */
 public class SessionProperties {
 
+	public static class DefaultValues {
+		public static final MediaMode mediaMode = MediaMode.ROUTED;
+		public static final RecordingMode recordingMode = RecordingMode.MANUAL;
+		public static final RecordingProperties defaultRecordingProperties = new RecordingProperties.Builder().build();
+		public static final String customSessionId = "";
+		public static final String mediaNode = null;
+		public static final VideoCodec forcedVideoCodec = VideoCodec.MEDIA_SERVER_PREFERRED;
+		public static final VideoCodec forcedVideoCodecResolved = VideoCodec.NONE;
+		public static final Boolean allowTranscoding = false;
+	}
+
 	private MediaMode mediaMode;
 	private RecordingMode recordingMode;
 	private RecordingProperties defaultRecordingProperties;
@@ -45,14 +56,14 @@ public class SessionProperties {
 	 */
 	public static class Builder {
 
-		private MediaMode mediaMode = MediaMode.ROUTED;
-		private RecordingMode recordingMode = RecordingMode.MANUAL;
-		private RecordingProperties defaultRecordingProperties = new RecordingProperties.Builder().build();
-		private String customSessionId = "";
-		private String mediaNode;
-		private VideoCodec forcedVideoCodec = VideoCodec.MEDIA_SERVER_PREFERRED;
-		private VideoCodec forcedVideoCodecResolved = VideoCodec.NONE;
-		private Boolean allowTranscoding = false;
+		private MediaMode mediaMode = DefaultValues.mediaMode;
+		private RecordingMode recordingMode = DefaultValues.recordingMode;
+		private RecordingProperties defaultRecordingProperties = DefaultValues.defaultRecordingProperties;
+		private String customSessionId = DefaultValues.customSessionId;
+		private String mediaNode = DefaultValues.mediaNode;
+		private VideoCodec forcedVideoCodec = DefaultValues.forcedVideoCodec;
+		private VideoCodec forcedVideoCodecResolved = DefaultValues.forcedVideoCodecResolved;
+		private Boolean allowTranscoding = DefaultValues.allowTranscoding;
 
 		/**
 		 * Returns the {@link io.openvidu.java.client.SessionProperties} object properly
@@ -338,18 +349,14 @@ public class SessionProperties {
 			}
 
 			try {
-				// Safe parameter retrieval. Default values if not defined
+				// Safe parameter retrieval. Let default values if not defined
 				if (recordingModeString != null) {
 					RecordingMode recordingMode = RecordingMode.valueOf(recordingModeString);
 					builder = builder.recordingMode(recordingMode);
-				} else {
-					builder = builder.recordingMode(RecordingMode.MANUAL);
 				}
 				if (mediaModeString != null) {
 					MediaMode mediaMode = MediaMode.valueOf(mediaModeString);
 					builder = builder.mediaMode(mediaMode);
-				} else {
-					builder = builder.mediaMode(MediaMode.ROUTED);
 				}
 				if (customSessionId != null && !customSessionId.isEmpty()) {
 					if (!isValidCustomSessionId(customSessionId)) {
@@ -358,12 +365,10 @@ public class SessionProperties {
 					}
 					builder = builder.customSessionId(customSessionId);
 				}
-
 				if (forcedVideoCodec != null) {
 					builder = builder.forcedVideoCodec(forcedVideoCodec);
 					builder = builder.forcedVideoCodecResolved(forcedVideoCodec);
 				}
-
 				if (allowTranscoding != null) {
 					builder = builder.allowTranscoding(allowTranscoding);
 				}
@@ -380,7 +385,6 @@ public class SessionProperties {
 				}
 				if (defaultRecordingPropertiesJson != null) {
 					try {
-
 						String jsonString = defaultRecordingPropertiesJson.toString();
 						RecordingProperties.Builder recBuilder = RecordingProperties
 								.fromJson(new Gson().fromJson(jsonString, Map.class), null);
@@ -390,8 +394,6 @@ public class SessionProperties {
 						throw new IllegalArgumentException(
 								"Parameter 'defaultRecordingProperties' is not valid: " + e.getMessage());
 					}
-				} else {
-					builder.defaultRecordingProperties(new RecordingProperties.Builder().build());
 				}
 
 				String mediaNode = getMediaNodeProperty(params);
