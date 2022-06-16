@@ -106,7 +106,7 @@
 			<mat-divider class="divider" *ngIf="!isMinimal && showSettingsButton"></mat-divider>
 
 			<!-- Settings button -->
-			<button *ngIf="!isMinimal && showSettingsButton" mat-menu-item id="settings-btn" (click)="toggleSettings()">
+			<button *ngIf="!isMinimal && showSettingsButton" mat-menu-item id="toolbar-settings-btn" (click)="toggleSettings()">
 				<mat-icon>settings</mat-icon>
 				<span>{{ 'TOOLBAR.SETTINGS' | translate }}</span>
 			</button>
