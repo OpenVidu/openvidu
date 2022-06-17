@@ -326,8 +326,8 @@ export class SessionComponent implements OnInit {
 		this.session.on('reconnecting', () => {
 			this.log.w('Connection lost: Reconnecting');
 			this.actionService.openDialog(
-				this.translateService.translate('ERRRORS.CONNECTION'),
-				this.translateService.translate('ERRRORS.RECONNECT'),
+				this.translateService.translate('ERRORS.CONNECTION'),
+				this.translateService.translate('ERRORS.RECONNECT'),
 				false
 			);
 		});
