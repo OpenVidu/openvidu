@@ -30,9 +30,12 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 		protected participantService: ParticipantService
 	) {}
 
-	ngOnInit(): void {
+	async ngOnInit() {
 		this.subscribeToParticipantMediaProperties();
-
+		if (this.openviduService.isSessionConnected()) {
+			// Updating devices only with session connected
+			await this.deviceSrv.initializeDevices();
+		}
 		this.hasAudioDevices = this.deviceSrv.hasAudioDeviceAvailable();
 		this.microphones = this.deviceSrv.getMicrophones();
 		this.microphoneSelected = this.deviceSrv.getMicrophoneSelected();

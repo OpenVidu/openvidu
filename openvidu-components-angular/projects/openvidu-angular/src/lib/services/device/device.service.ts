@@ -41,13 +41,12 @@ export class DeviceService {
 		this.log = this.loggerSrv.get('DevicesService');
 	}
 
-	// async forceUpdate() {
-	// 	await this.initializeDevices();
-	// }
-
-	async initializeDevices() {
-		this.cameras = [];
-		this.microphones = [];
+	/**
+	 * Initialize media devices and devices selected checking in local storage (if exists) or
+	 * first devices found by default
+	 */
+	async forceInitDevices() {
+		this.clear();
 		try {
 			this.OV = new OpenVidu();
 			// Forcing media permissions request.
@@ -59,8 +58,9 @@ export class DeviceService {
 			this.deviceAccessDeniedError = (<OpenViduError>error).name === OpenViduErrorName.DEVICE_ACCESS_DENIED;
 		}
 
-		this.devices = await this.OV.getDevices();
-		this.initializeCustomDevices(this.devices);
+		await this.initializeDevices();
+		this.updateAudioDeviceSelected();
+		this.updateVideoDeviceSelected();
 
 		this._isVideoMuted = this.storageSrv.isVideoMuted() || this.libSrv.videoMuted.getValue();
 		this._isAudioMuted = this.storageSrv.isAudioMuted() || this.libSrv.audioMuted.getValue();
@@ -68,32 +68,28 @@ export class DeviceService {
 		this.log.d('Media devices', this.cameras, this.microphones);
 	}
 
-	private initializeCustomDevices(defaultVDevices: Device[]): void {
+	/**
+	 * Initialize only the media devices available
+	 */
+	async initializeDevices() {
+		this.devices = await this.OV.getDevices();
+		this.initializeCustomDevices();
+	}
+
+	private initializeCustomDevices(updateSelected: boolean = true): void {
 		const FIRST_POSITION = 0;
-		const defaultMicrophones: Device[] = defaultVDevices.filter((device) => device.kind === DeviceType.AUDIO_INPUT);
-		const defaultCameras: Device[] = defaultVDevices.filter((device) => device.kind === DeviceType.VIDEO_INPUT);
+		const defaultMicrophones: Device[] = this.devices.filter((device) => device.kind === DeviceType.AUDIO_INPUT);
+		const defaultCameras: Device[] = this.devices.filter((device) => device.kind === DeviceType.VIDEO_INPUT);
 
 		if (defaultMicrophones.length > 0) {
+			this.microphones = [];
 			defaultMicrophones.forEach((device: Device) => {
 				this.microphones.push({ label: device.label, device: device.deviceId });
 			});
-
-			// Setting microphone selected
-			const storageMicrophone = this.getMicrophoneFromStogare();
-			if (!!storageMicrophone) {
-				this.microphoneSelected = storageMicrophone;
-			} else if (this.microphones.length > 0) {
-				if (this.deviceAccessDeniedError && this.microphones.length > 1) {
-					// We assume that the default device is already in use
-					// Assign an alternative device with the aim of avoiding the DEVICE_ALREADY_IN_USE error
-					this.microphoneSelected = this.microphones[1];
-				} else {
-					this.microphoneSelected = this.microphones[0];
-				}
-			}
 		}
 
 		if (defaultCameras.length > 0) {
+			this.cameras = [];
 			defaultCameras.forEach((device: Device, index: number) => {
 				const myDevice: CustomDevice = {
 					label: device.label,
@@ -113,8 +109,30 @@ export class DeviceService {
 				}
 				this.cameras.push(myDevice);
 			});
+		}
+	}
 
-			// Setting camera selected
+	private updateAudioDeviceSelected() {
+		// Setting microphone selected
+		if (this.microphones.length > 0) {
+			const storageMicrophone = this.getMicrophoneFromStogare();
+			if (!!storageMicrophone) {
+				this.microphoneSelected = storageMicrophone;
+			} else if (this.microphones.length > 0) {
+				if (this.deviceAccessDeniedError && this.microphones.length > 1) {
+					// We assume that the default device is already in use
+					// Assign an alternative device with the aim of avoiding the DEVICE_ALREADY_IN_USE error
+					this.microphoneSelected = this.microphones[1];
+				} else {
+					this.microphoneSelected = this.microphones[0];
+				}
+			}
+		}
+	}
+
+	private updateVideoDeviceSelected() {
+		// Setting camera selected
+		if (this.cameras.length > 0) {
 			const storageCamera = this.getCameraFromStorage();
 			if (!!storageCamera) {
 				this.cameraSelected = storageCamera;

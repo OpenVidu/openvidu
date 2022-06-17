@@ -401,7 +401,6 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	async ngOnInit() {
 		this.subscribeToToolbarDirectives();
 
-		await this.oVDevicesService.initializeDevices();
 		this.hasVideoDevices = this.oVDevicesService.hasVideoDeviceAvailable();
 		this.hasAudioDevices = this.oVDevicesService.hasAudioDeviceAvailable();
 		this.session = this.openviduService.getWebcamSession();

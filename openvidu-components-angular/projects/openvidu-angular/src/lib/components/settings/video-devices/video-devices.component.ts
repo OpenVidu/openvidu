@@ -36,8 +36,12 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 		private backgroundService: VirtualBackgroundService
 	) {}
 
-	ngOnInit(): void {
+	async ngOnInit() {
 		this.subscribeToParticipantMediaProperties();
+		if (this.openviduService.isSessionConnected()) {
+			// Updating devices only with session connected
+			await this.deviceSrv.initializeDevices();
+		}
 		this.hasVideoDevices = this.deviceSrv.hasVideoDeviceAvailable();
 		this.cameras = this.deviceSrv.getCameras();
 		this.cameraSelected = this.deviceSrv.getCameraSelected();
