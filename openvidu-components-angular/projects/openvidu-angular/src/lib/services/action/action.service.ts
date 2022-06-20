@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { MatDialog, MatDialogConfig, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { SafeResourceUrl } from '@angular/platform-browser';
+import { SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 import { DeleteDialogComponent } from '../../components/dialogs/delete-recording.component';
 import { RecordingDialogComponent } from '../../components/dialogs/recording-dialog.component';
@@ -68,7 +68,7 @@ export class ActionService {
 		}
 	}
 
-	openRecordingPlayerDialog(src: SafeResourceUrl, type: string, allowClose = true) {
+	openRecordingPlayerDialog(src: SafeUrl, type: string, allowClose = true) {
 		try {
 			this.closeDialog();
 		} catch (error) {

@@ -69,9 +69,9 @@ export class RecordingService {
 	 * Play the recording blob received as parameter. This parameter must be obtained from backend using the OpenVidu REST API
 	 * @param blob
 	 */
-	playRecording(blob: Blob) {
-		const src = URL.createObjectURL(blob);
-		this.actionService.openRecordingPlayerDialog(this.sanitizer.bypassSecurityTrustResourceUrl(src), blob.type, true);
+	playRecording(file: Blob) {
+		const src = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(file));
+		this.actionService.openRecordingPlayerDialog(src, file.type, true);
 	}
 
 	/**
@@ -81,7 +81,7 @@ export class RecordingService {
 	 * @param blob
 	 */
 	downloadRecording(fileName: string, blob: Blob) {
-		const data = window.URL.createObjectURL(blob);
+		const data = URL.createObjectURL(blob);
 		const link = document.createElement('a');
 		link.href = data;
 		link.download = `${fileName}.mp4`;

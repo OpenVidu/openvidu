@@ -3,7 +3,6 @@ import { Subscription } from 'rxjs';
 import { RecordingInfo } from '../../models/recording.model';
 import { ActionService } from '../../services/action/action.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
-import { RecordingService } from '../../services/recording/recording.service';
 
 @Component({
 	selector: 'ov-admin-dashboard',
@@ -37,6 +36,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	@Output() onRefreshRecordingsClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
+	 * Provides event notifications that fire when logout button has been clicked.
+	 */
+	@Output() onLogoutClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
 	 * @internal
 	 */
 	recordings: RecordingInfo[] = [];
@@ -58,7 +62,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	 */
 	constructor(
 		private actionService: ActionService,
-		private recordingService: RecordingService,
+
 		private libService: OpenViduAngularConfigService
 	) {}
 
@@ -68,8 +72,19 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	ngOnInit(): void {
 		this.subscribeToAdminDirectives();
 	}
+
+	/**
+	 * @internal
+	 */
 	ngOnDestroy() {
 		if (this.adminSubscription) this.adminSubscription.unsubscribe();
+	}
+
+	/**
+	 * @internal
+	 */
+	logout() {
+		this.onLogoutClicked.emit();
 	}
 
 	/**
@@ -123,13 +138,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	/**
 	 * @internal
 	 */
-	getThumbnailSrc(recording: RecordingInfo): string {
-		return !recording.url ? '' : recording.url.substring(0, recording.url.lastIndexOf('/')) + '/' + recording.id + '.jpg';
-	}
-
-	/**
-	 * @internal
-	 */
 	deleteRecording(recordingId: string) {
 		const succsessCallback = () => {
 			this.onDeleteRecordingClicked.emit(recordingId);
@@ -141,8 +149,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	 * @internal
 	 */
 	download(recordingId: string) {
-		//TODO solucionar el tema del login.
-		// TODO Si soy capaz de loguearme en openvidu al hacer login en el dashboard, no necesitaria emitir evento
 		this.onDownloadRecordingClicked.emit(recordingId);
 	}
 
@@ -156,8 +162,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	/**
 	 * @internal
 	 */
-	async play(recording: RecordingInfo) {
-		this.actionService.openRecordingPlayerDialog(recording.url, 'video/mp4', true);
+	async play(recordingId: string) {
+		this.onPlayRecordingClicked.emit(recordingId);
 	}
 
 	private subscribeToAdminDirectives() {
