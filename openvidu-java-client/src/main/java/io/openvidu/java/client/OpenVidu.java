@@ -463,6 +463,18 @@ public class OpenVidu {
 	}
 
 	/**
+	 * Returns an active session. This method has the same behavior and restrictions
+	 * as {@link io.openvidu.java.client.OpenVidu#getActiveSessions()}, but it just
+	 * returns a single Session instead of the complete list of Sessions
+	 * 
+	 * @param sessionId
+	 * @return
+	 */
+	public Session getActiveSession(String sessionId) {
+		return this.activeSessions.get(sessionId);
+	}
+
+	/**
 	 * Updates every property of every active Session with the current status they
 	 * have in OpenVidu Server. After calling this method you can access the updated
 	 * list of active sessions by calling
