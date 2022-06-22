@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { MatDialog, MatDialogConfig, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 import { DeleteDialogComponent } from '../../components/dialogs/delete-recording.component';
 import { RecordingDialogComponent } from '../../components/dialogs/recording-dialog.component';
@@ -68,14 +67,14 @@ export class ActionService {
 		}
 	}
 
-	openRecordingPlayerDialog(src: SafeUrl, type: string, allowClose = true) {
+	openRecordingPlayerDialog(src: string, allowClose = true) {
 		try {
 			this.closeDialog();
 		} catch (error) {
 		} finally {
 			const config: MatDialogConfig = {
 				minWidth: '250px',
-				data: { src, type, showActionButtons: allowClose },
+				data: { src, showActionButtons: allowClose },
 				disableClose: !allowClose
 			};
 			this.dialogRef = this.dialog.open(RecordingDialogComponent, config);

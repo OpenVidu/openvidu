@@ -33,10 +33,7 @@ export class ActivitiesPanelComponent implements OnInit {
 	 * The recording should be deleted using the OpenVidu REST API.
 	 */
 	@Output() onDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
-	/**
-	 * Provides event notifications that fire when play recording button has been clicked.
-	 */
-	@Output() onPlayRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+
 
 	/**
 	 * @internal
@@ -103,13 +100,6 @@ export class ActivitiesPanelComponent implements OnInit {
 	 */
 	_onDeleteRecordingClicked(recordingId: string) {
 		this.onDeleteRecordingClicked.emit(recordingId);
-	}
-
-	/**
-	 * @internal
-	 */
-	_onPlayRecordingClicked(recordingId: string) {
-		this.onPlayRecordingClicked.emit(recordingId);
 	}
 
 	private subscribeToPanelToggling() {

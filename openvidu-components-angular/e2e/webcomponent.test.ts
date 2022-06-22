@@ -844,12 +844,6 @@ describe('Testing videoconference EVENTS', () => {
 		element = await browser.wait(until.elementLocated(By.id('onActivitiesPanelDeleteRecordingClicked')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
-		// Play event
-		element = await browser.findElement(By.id('play-recording-btn'));
-		expect(await element.isDisplayed()).to.be.true;
-		await element.click();
-		element = await browser.wait(until.elementLocated(By.id('onActivitiesPanelPlayRecordingClicked')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
 	});
 
 	it('should receive the onSessionCreated event', async () => {

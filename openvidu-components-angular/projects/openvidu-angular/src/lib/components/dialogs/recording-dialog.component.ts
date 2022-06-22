@@ -8,9 +8,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 	selector: 'app-recording-dialog',
 	template: `
 		<div mat-dialog-content>
-			<video controls autoplay>
-				<source [src]="src" [type]="type" />
-			</video>
+			<video controls autoplay [src]="src"></video>
 		</div>
 		<div mat-dialog-actions *ngIf="data.showActionButtons" align="end">
 			<button mat-button (click)="close()">{{ 'PANEL.CLOSE' | translate }}</button>
@@ -31,7 +29,6 @@ export class RecordingDialogComponent {
 
 	constructor(public dialogRef: MatDialogRef<RecordingDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: any) {
 		this.src = data.src;
-		this.type = data.type;
 	}
 	close() {
 		this.dialogRef.close();

@@ -3,6 +3,7 @@ import { Subscription } from 'rxjs';
 import { RecordingInfo } from '../../models/recording.model';
 import { ActionService } from '../../services/action/action.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
+import { RecordingService } from '../../services/recording/recording.service';
 
 @Component({
 	selector: 'ov-admin-dashboard',
@@ -23,12 +24,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	 * @param recordingId
 	 */
 	@Output() onDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
-
-	/**
-	 * Provides event notifications that fire when play recording button has been clicked.
-	 * @param recordingId
-	 */
-	@Output() onPlayRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
 	 * Provides event notifications that fire when refresh recordings button has been clicked.
@@ -62,7 +57,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	 */
 	constructor(
 		private actionService: ActionService,
-
+		private recordingService: RecordingService,
 		private libService: OpenViduAngularConfigService
 	) {}
 
@@ -163,7 +158,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	 * @internal
 	 */
 	async play(recordingId: string) {
-		this.onPlayRecordingClicked.emit(recordingId);
+		this.recordingService.playRecording(recordingId);
 	}
 
 	private subscribeToAdminDirectives() {

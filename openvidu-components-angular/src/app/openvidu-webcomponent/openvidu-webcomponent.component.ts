@@ -499,11 +499,6 @@ export class OpenviduWebComponentComponent implements OnInit {
 	@Output() onActivitiesPanelDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
-	 * Provides event notifications that fire when play recording button is clicked from {@link ActivitiesPanelComponent}.
-	 */
-	@Output() onActivitiesPanelPlayRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
-
-	/**
 	 * Provides event notifications that fire when OpenVidu Session is created.
 	 * See {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html openvidu-browser Session}.
 	 */
@@ -644,13 +639,6 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 */
 	_onActivitiesDeleteRecordingClicked(recordingId: string) {
 		this.onActivitiesPanelDeleteRecordingClicked.emit(recordingId);
-	}
-
-	/**
-	 * @internal
-	 */
-	_onActivitiesPlayRecordingClicked(recordingId: string) {
-		this.onActivitiesPanelPlayRecordingClicked.emit(recordingId);
 	}
 
 	/**

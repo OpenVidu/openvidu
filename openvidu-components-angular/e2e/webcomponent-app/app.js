@@ -94,7 +94,6 @@ $(document).ready(() => {
 
     webComponent.addEventListener('onActivitiesPanelDownloadRecordingClicked', (event) => appendElement('onActivitiesPanelDownloadRecordingClicked'));
     webComponent.addEventListener('onActivitiesPanelDeleteRecordingClicked', (event) => appendElement('onActivitiesPanelDeleteRecordingClicked'));
-    webComponent.addEventListener('onActivitiesPanelPlayRecordingClicked', (event) => appendElement('onActivitiesPanelPlayRecordingClicked'));
 
     webComponent.addEventListener('onSessionCreated', (event) => {
         var session = event.detail;

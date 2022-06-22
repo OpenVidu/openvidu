@@ -653,13 +653,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	/**
 	 * @internal
 	 */
-	onPlayRecordingClicked(recordingId: string) {
-		this.onActivitiesPanelPlayRecordingClicked.emit(recordingId);
-	}
-
-	/**
-	 * @internal
-	 */
 	_onSessionCreated(session: Session) {
 		this.onSessionCreated.emit(session);
 	}

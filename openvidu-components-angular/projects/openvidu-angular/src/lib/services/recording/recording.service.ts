@@ -18,6 +18,8 @@ export class RecordingService {
 	private recordingTimeInterval: NodeJS.Timer;
 	private currentRecording: RecordingInfo = { status: RecordingStatus.STOPPED };
 	private recordingStatus = <BehaviorSubject<{ info: RecordingInfo; time?: Date }>>new BehaviorSubject(null);
+	private baseUrl = '/' + (!!window.location.pathname.split('/')[1] ? window.location.pathname.split('/')[1] + '/' : '');
+
 
 	/**
 	 * @internal
@@ -66,12 +68,11 @@ export class RecordingService {
 	}
 
 	/**
+	 * @internal
 	 * Play the recording blob received as parameter. This parameter must be obtained from backend using the OpenVidu REST API
-	 * @param blob
 	 */
-	playRecording(file: Blob) {
-		const src = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(file));
-		this.actionService.openRecordingPlayerDialog(src, file.type, true);
+	playRecording(recordingId: string) {
+		this.actionService.openRecordingPlayerDialog(`${this.baseUrl}recordings/${recordingId}`);
 	}
 
 	/**
@@ -85,8 +86,6 @@ export class RecordingService {
 		const link = document.createElement('a');
 		link.href = data;
 		link.download = `${fileName}.mp4`;
-
-		// this is necessary as link.click() does not work on the latest firefox
 		link.dispatchEvent(
 			new MouseEvent('click', {
 				bubbles: true,

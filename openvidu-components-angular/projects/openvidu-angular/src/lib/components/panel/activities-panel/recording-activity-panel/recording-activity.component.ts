@@ -43,10 +43,7 @@ export class RecordingActivityComponent implements OnInit {
 	 */
 	@Output() onDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
-	/**
-	 * Provides event notifications that fire when play recording button has been clicked.
-	 */
-	@Output() onPlayRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+
 	/**
 	 * @internal
 	 */
@@ -179,8 +176,7 @@ export class RecordingActivityComponent implements OnInit {
 	 * @internal
 	 */
 	play(recordingId: string) {
-		this.onPlayRecordingClicked.emit(recordingId);
-		// this.recordingService.playRecording2(this.recordingsList.find(rec => rec.id === recordingId).url)
+		this.recordingService.playRecording(recordingId);
 	}
 
 	private subscribeToRecordingStatus() {
