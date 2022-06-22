@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, lastValueFrom } from 'rxjs';
 import { throwError as observableThrowError } from 'rxjs/internal/observable/throwError';
+import { RecordingInfo } from 'openvidu-angular';
 
 @Injectable({
 	providedIn: 'root'
@@ -17,14 +18,117 @@ export class RestService {
 			const _sessionId = await this.createSession(sessionId, openviduServerUrl, openviduSecret);
 			return await this.createToken(_sessionId, openviduServerUrl, openviduSecret);
 		}
-		// try {
-		// 	return lastValueFrom(this.http.post<any>(this.baseHref + 'call', { sessionId }));
-		// } catch (error) {
-		// 	if (error.status === 404) {
-		// 		throw { status: error.status, message: 'Cannot connect with backend. ' + error.url + ' not found' };
-		// 	}
-		// 	throw error;
-		// }
+	}
+	async getTokensFromBackend(sessionId: string): Promise<{ cameraToken: string; screenToken: string; recordings?: RecordingInfo[] }> {
+		try {
+			return lastValueFrom(this.http.post<any>(this.baseHref + 'sessions', { sessionId }));
+		} catch (error) {
+			if (error.status === 404) {
+				throw { status: error.status, message: 'Cannot connect with backend. ' + error.url + ' not found' };
+			}
+			throw error;
+		}
+	}
+
+	async startRecording(sessionId: string) {
+		try {
+			return lastValueFrom(this.http.post<any>(this.baseHref + 'recordings/start', { sessionId }));
+		} catch (error) {
+			if (error.status === 404) {
+				throw { status: error.status, message: 'Cannot connect with backend. ' + error.url + ' not found' };
+			}
+			throw error;
+		}
+	}
+
+	async stopRecording(sessionId: string) {
+		try {
+			return lastValueFrom(this.http.post<any>(this.baseHref + 'recordings/stop', { sessionId }));
+		} catch (error) {
+			if (error.status === 404) {
+				throw { status: error.status, message: 'Cannot connect with backend. ' + error.url + ' not found' };
+			}
+			throw error;
+		}
+	}
+
+	async login(password: string): Promise<any[]> {
+		try {
+			return lastValueFrom(
+				this.http.post<any>(`${this.baseHref}admin/login`, {
+					password
+				})
+			);
+		} catch (error) {
+			console.log(error);
+			if (error.status === 404) {
+				throw { status: error.status, message: 'Cannot connect with backend. ' + error.url + ' not found' };
+			}
+			throw error;
+		}
+	}
+
+	async logout(): Promise<void> {
+		try {
+			return lastValueFrom(
+				this.http.post<any>(`${this.baseHref}admin/logout`, {})
+			);
+		} catch (error) {
+			console.log(error);
+			if (error.status === 404) {
+				throw { status: error.status, message: 'Cannot connect with backend. ' + error.url + ' not found' };
+			}
+			throw error;
+		}
+	}
+
+
+	async deleteRecording(id: string): Promise<any[]> {
+		try {
+			return lastValueFrom(this.http.delete<any>(`${this.baseHref}recordings/delete/${id}`));
+		} catch (error) {
+			console.log(error);
+			if (error.status === 404) {
+				throw { status: error.status, message: 'Cannot connect with backend. ' + error.url + ' not found' };
+			}
+			throw error;
+		}
+	}
+
+	getRecordings(): Promise<any[]> {
+		return lastValueFrom(
+			this.http.get<any>(`${this.baseHref}recordings`)
+		);
+	}
+
+	getRecording(recordingId: string) {
+		try {
+			return lastValueFrom(
+				this.http.get(`${this.baseHref}recordings/${recordingId}`, {
+					responseType: 'blob'
+				})
+			);
+		} catch (error) {
+			if (error.status === 404) {
+				throw { status: error.status, message: 'Cannot connect with backend. ' + error.url + ' not found' };
+			}
+			throw error;
+		}
+	}
+
+	getRecording2(recordingId: string) {
+		try {
+			return lastValueFrom(
+				this.http.get(`${this.baseHref}recordings/${recordingId}`,{
+					responseType: 'blob'
+				})
+			);
+		} catch (error) {
+			if (error.status === 404) {
+				throw { status: error.status, message: 'Cannot connect with backend. ' + error.url + ' not found' };
+			}
+			throw error;
+		}
 	}
 
 	/**
@@ -79,7 +183,6 @@ export class RestService {
 					})
 				)
 				.subscribe((response) => {
-
 					console.warn(response);
 
 					resolve(response.token);

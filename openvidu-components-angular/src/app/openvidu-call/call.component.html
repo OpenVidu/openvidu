@@ -8,6 +8,21 @@
 	(onToolbarFullscreenButtonClicked)="onToolbarFullscreenButtonClicked()"
 	(onToolbarParticipantsPanelButtonClicked)="onToolbarParticipantsPanelButtonClicked()"
 	(onToolbarChatPanelButtonClicked)="onToolbarChatPanelButtonClicked()"
+	(onToolbarStartRecordingClicked)="onStartRecordingClicked()"
+	(onToolbarStopRecordingClicked)="onStopRecordingClicked()"
+	(onActivitiesPanelStartRecordingClicked)="onStartRecordingClicked()"
+	(onActivitiesPanelStopRecordingClicked)="onStopRecordingClicked()"
+	(onActivitiesPanelDeleteRecordingClicked)="onDeleteRecordingClicked($event)"
+	(onActivitiesPanelDownloadRecordingClicked)="onDownloadRecordingClicked($event)"
 	[minimal]="false"
+	[prejoin]="true"
+	[activitiesPanelRecordingActivity]="true"
+	[recordingActivityRecordingsList]="recordingList"
+	[recordingActivityRecordingError]="recordingError"
+	[toolbarSettingsButton]="true"
 >
+	<!-- <div *ovActivitiesPanel>HOLA</div> -->
+
+	<!-- <ov-toolbar *ovToolbar [activitiesPanelButton]="false"
+	[chatPanelButton]="false"></ov-toolbar> -->
 </ov-videoconference>

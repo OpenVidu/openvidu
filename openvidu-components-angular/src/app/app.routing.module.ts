@@ -16,11 +16,13 @@ import { ParticipantPanelItemElementsDirectiveComponent } from './examples/parti
 import { ParticipantPanelItemDirectiveComponent } from './examples/participantPanelItem-directive/participantPanelItem-directive.component';
 import { ToolbarAdditionalPanelButtonsDirectiveComponent } from './examples/toolbarAdditionalPanelButtons-directive/toolbarAdditionalPanelButtons-directive.component';
 import { AdditionalPanelsDirectiveComponent } from './examples/additionalPanels-directive/additionalPanels-directive.component';
+import { AdminDashboardComponent } from './admin/admin-dashboard/admin-dashboard.component';
 
 const routes: Routes = [
 	{ path: '', component: DashboardComponent },
 	{ path: 'call', component: CallComponent },
 	{ path: 'testing', component: TestingComponent },
+	{ path: 'admin', component: AdminDashboardComponent },
 
 	{ path: 'examples', component: ExamplesDashboardComponent},
 	{ path: 'examples/toolbarDirective', component: ToolbarDirectiveComponent },

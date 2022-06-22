@@ -35,7 +35,7 @@
     "@angular/platform-browser-dynamic": "13.0.0",
     "@angular/router": "13.0.0",
     "autolinker": "3.14.3",
-    "openvidu-browser": "2.22.0",
+    "openvidu-browser": "^2.22.0",
     "rxjs": "7.5.4",
     "tslib": "2.3.1",
     "zone.js": "0.11.4"
@@ -70,7 +70,7 @@
     "karma-notify-reporter": "1.3.0",
     "mocha": "9.2.2",
     "ng-packagr": "13.0.3",
-    "selenium-webdriver": "4.1.2",
+    "selenium-webdriver": "4.2.0",
     "ts-node": "10.4.0",
     "tslint": "6.1.3",
     "typescript": "4.4.4",

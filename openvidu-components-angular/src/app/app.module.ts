@@ -25,7 +25,7 @@ import { ParticipantsPanelDirectiveComponent } from './examples/participantsPane
 import { ParticipantPanelItemDirectiveComponent } from './examples/participantPanelItem-directive/participantPanelItem-directive.component';
 import { ParticipantPanelItemElementsDirectiveComponent } from './examples/participantPanelItemElements-directive/participantPanelItemElements-directive.component';
 import { ChatPanelDirectiveComponent } from './examples/chatPanel-directive/chatPanel-directive.component';
-
+import { AdminDashboardComponent } from './admin/admin-dashboard/admin-dashboard.component';
 // openvidu-angular
 import { OpenViduAngularModule } from 'openvidu-angular';
 import { ExamplesDashboardComponent } from './examples/examples-dashboard/examples-dashboard.component';
@@ -34,6 +34,7 @@ import { ExamplesDashboardComponent } from './examples/examples-dashboard/exampl
 	declarations: [
 		AppComponent,
 		DashboardComponent,
+		AdminDashboardComponent,
 		CallComponent,
 		TestingComponent,
 		ExamplesDashboardComponent,
