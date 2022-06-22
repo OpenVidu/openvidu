@@ -91,8 +91,7 @@ export class SessionComponent implements OnInit {
 		protected panelService: PanelService,
 		private recordingService: RecordingService,
 		private translateService: TranslateService,
-		private platformService: PlatformService,
-		private cd: ChangeDetectorRef
+		private platformService: PlatformService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
 	}
@@ -159,9 +158,10 @@ export class SessionComponent implements OnInit {
 			this.subscribeToNicknameChanged();
 			this.chatService.subscribeToChat();
 			this.subscribeToReconnection();
-			// if(RecordingEnabled){
-			this.subscribeToRecordingEvents();
-			// }
+			const recordingEnabled = this.libService.recordingButton.getValue() && this.libService.recordingActivity.getValue();
+			if (recordingEnabled) {
+				this.subscribeToRecordingEvents();
+			}
 			this.onSessionCreated.emit(this.session);
 
 			await this.connectToSession();
