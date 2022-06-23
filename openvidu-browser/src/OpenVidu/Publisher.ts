@@ -746,7 +746,7 @@ export class Publisher extends StreamManager {
         this.videoReference.autoplay = true;
         this.videoReference.controls = false;
         if (platform.isSafariBrowser() || (platform.isIPhoneOrIPad() && (platform.isChromeMobileBrowser() || platform.isEdgeMobileBrowser() || platform.isOperaMobileBrowser() || platform.isFirefoxMobileBrowser()))) {
-            this.videoReference.setAttribute('playsinline', 'true');
+            this.videoReference.playsInline = true;
         }
         this.stream.setMediaStream(mediaStream);
         if (!!this.firstVideoElement) {

@@ -217,7 +217,7 @@ export class LocalRecorder {
         this.videoPreview.autoplay = true;
 
         if (platform.isSafariBrowser()) {
-            this.videoPreview.setAttribute('playsinline', 'true');
+            this.videoPreview.playsInline = true;
         }
 
         if (typeof parentElement === 'string') {

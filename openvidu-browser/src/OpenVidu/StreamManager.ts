@@ -127,7 +127,7 @@ export abstract class StreamManager extends EventDispatcher {
                     canplayListenerAdded: false
                 };
                 if (platform.isSafariBrowser() || (platform.isIPhoneOrIPad() && (platform.isChromeMobileBrowser() || platform.isEdgeMobileBrowser() || platform.isOperaMobileBrowser() || platform.isFirefoxMobileBrowser()))) {
-                    this.firstVideoElement.video.setAttribute('playsinline', 'true');
+                    this.firstVideoElement.video.playsInline = true;
                 }
                 this.targetElement = targEl;
                 this.element = targEl;
@@ -403,7 +403,7 @@ export abstract class StreamManager extends EventDispatcher {
         video.controls = false;
 
         if (platform.isSafariBrowser() || (platform.isIPhoneOrIPad() && (platform.isChromeMobileBrowser() || platform.isEdgeMobileBrowser() || platform.isOperaMobileBrowser() || platform.isFirefoxMobileBrowser()))) {
-            video.setAttribute('playsinline', 'true');
+            video.playsInline = true;
         }
 
         if (!video.id) {
