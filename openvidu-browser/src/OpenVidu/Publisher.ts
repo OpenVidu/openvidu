@@ -741,8 +741,10 @@ export class Publisher extends StreamManager {
      */
     initializeVideoReference(mediaStream: MediaStream) {
         this.videoReference = document.createElement('video');
-        this.videoReference.setAttribute('muted', 'true');
         this.videoReference.style.display = 'none';
+        this.videoReference.muted = true;
+        this.videoReference.autoplay = true;
+        this.videoReference.controls = false;
         if (platform.isSafariBrowser() || (platform.isIPhoneOrIPad() && (platform.isChromeMobileBrowser() || platform.isEdgeMobileBrowser() || platform.isOperaMobileBrowser() || platform.isFirefoxMobileBrowser()))) {
             this.videoReference.setAttribute('playsinline', 'true');
         }
@@ -750,13 +752,13 @@ export class Publisher extends StreamManager {
         if (!!this.firstVideoElement) {
             this.createVideoElement(this.firstVideoElement.targetElement, <VideoInsertMode>this.properties.insertMode);
         }
-        this.videoReference.srcObject = mediaStream;
+        this.videoReference.srcObject = this.stream.getMediaStream();
     }
 
     /**
      * @hidden
      */
-    async replaceTrackInMediaStream(track: MediaStreamTrack, updateLastConstraints: boolean): Promise<void> {
+    replaceTrackInMediaStream(track: MediaStreamTrack, updateLastConstraints: boolean): void {
         const mediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
         let removedTrack: MediaStreamTrack;
         if (track.kind === 'video') {
@@ -767,8 +769,9 @@ export class Publisher extends StreamManager {
         } else {
             removedTrack = mediaStream.getAudioTracks()[0];
         }
-        mediaStream.removeTrack(removedTrack);
+        removedTrack.enabled = false;
         removedTrack.stop();
+        mediaStream.removeTrack(removedTrack);
         mediaStream.addTrack(track);
         if (track.kind === 'video' && this.stream.isLocalStreamPublished && updateLastConstraints) {
             this.openvidu.sendNewVideoDimensionsIfRequired(this, 'trackReplaced', 50, 30);

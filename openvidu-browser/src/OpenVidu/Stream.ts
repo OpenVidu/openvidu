@@ -557,7 +557,7 @@ export class Stream {
                         const mediaStreamClone = this.virtualBackgroundSourceElements!.mediaStreamClone;
                         if (!isDisposing) {
                             if (this.streamManager.remote) {
-                                await this.streamManager.replaceTrackInMediaStream(mediaStreamClone.getVideoTracks()[0], false);
+                                this.streamManager.replaceTrackInMediaStream(mediaStreamClone.getVideoTracks()[0], false);
                             } else {
                                 await (this.streamManager as Publisher).replaceTrackAux(mediaStreamClone.getVideoTracks()[0], false);
                             }
