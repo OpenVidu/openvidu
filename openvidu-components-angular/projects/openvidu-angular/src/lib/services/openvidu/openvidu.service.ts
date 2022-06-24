@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Connection, OpenVidu, Publisher, PublisherProperties, Session, SignalOptions, Stream } from 'openvidu-browser';
+import { Connection, OpenVidu, OpenViduError, OpenViduErrorName, Publisher, PublisherProperties, Session, SignalOptions, Stream } from 'openvidu-browser';
 
 import { LoggerService } from '../logger/logger.service';
 
@@ -323,7 +323,6 @@ export class OpenViduService {
 			const willWebcamBePresent = this.participantService.isMyCameraActive() && this.participantService.isMyVideoActive();
 			const hasAudio = willWebcamBePresent ? false : hasAudioDevicesAvailable && this.participantService.isMyAudioActive();
 
-			console.warn('will be audio active', hasAudio);
 			const properties: PublisherProperties = {
 				videoSource: ScreenType.SCREEN,
 				audioSource: hasAudioDevicesAvailable ? this.deviceService.getMicrophoneSelected().device : null,
@@ -389,45 +388,6 @@ export class OpenViduService {
 	}
 
 	/**
-	 * TODO: Remove this method when replaceTrack issue is fixed
-	 * https://github.com/OpenVidu/openvidu/pull/700
-	 * @internal
-	 */
-	republishTrack(properties: PublisherProperties): Promise<void> {
-		const { videoSource, audioSource, mirror } = properties;
-		return new Promise(async (resolve, reject) => {
-			if (!!videoSource) {
-				this.log.d('Replacing video track ' + videoSource);
-				this.videoSource = videoSource;
-			}
-			if (!!audioSource) {
-				this.log.d('Replacing audio track ' + audioSource);
-				this.audioSource = audioSource;
-			}
-			this.destroyPublisher(this.participantService.getMyCameraPublisher());
-			const properties: PublisherProperties = {
-				videoSource: this.videoSource,
-				audioSource: this.audioSource,
-				publishVideo: this.participantService.isMyVideoActive(),
-				publishAudio: this.participantService.isMyAudioActive(),
-				mirror
-			};
-
-			const publisher = await this.initPublisher(undefined, properties);
-			this.participantService.setMyCameraPublisher(publisher);
-
-			publisher.once('streamPlaying', () => {
-				this.participantService.setMyCameraPublisher(publisher);
-				resolve();
-			});
-
-			publisher.once('accessDenied', () => {
-				reject();
-			});
-		});
-	}
-
-	/**
 	 * @internal
 	 */
 	sendSignal(type: Signal, connections?: Connection[], data?: any): void {
@@ -437,12 +397,6 @@ export class OpenViduService {
 			to: connections && connections.length > 0 ? connections : undefined
 		};
 		this.webcamSession.signal(signalOptions);
-
-		// TODO: Check if it is necessary
-		// if (type === Signal.NICKNAME_CHANGED && !!this.getScreenSession().connection) {
-		// 	signalOptions.data = JSON.stringify({ clientData: this.participantService.getScreenNickname() });
-		// 	this.getScreenSession()?.signal(signalOptions);
-		// }
 	}
 
 	/**
@@ -453,40 +407,24 @@ export class OpenViduService {
 			this.log.d(`Replacing ${videoType} track`, props);
 
 			if (videoType === VideoType.CAMERA) {
-				//TODO: Uncomment this section when replaceTrack issue is fixed
-				// https://github.com/OpenVidu/openvidu/pull/700
-				throw 'Replace track feature has a bug. We are trying to fix it';
-				// let mediaStream: MediaStream;
-				// const oldMediaStream = this.participantService.getMyCameraPublisher().stream.getMediaStream();
-				// const isFirefoxPlatform = this.platformService.isFirefox();
-				// const isReplacingAudio = !!props.audioSource;
-				// const isReplacingVideo = !!props.videoSource;
+				let mediaStream: MediaStream;
+				const isReplacingAudio = !!props.audioSource;
+				const isReplacingVideo = !!props.videoSource;
 
-				// if (isReplacingVideo) {
-				// 	if (isFirefoxPlatform) {
-				// 		// Firefox throw an exception trying to get a new MediaStreamTrack if the older one is not stopped
-				// 		// NotReadableError: Concurrent mic process limit. Stopping tracks before call to getUserMedia
-				// 		oldMediaStream.getVideoTracks()[0].stop();
-				// 	}
-				// 	mediaStream = await this.createMediaStream(props);
-				// 	// Replace video track
-				// 	const videoTrack: MediaStreamTrack = mediaStream.getVideoTracks()[0];
-				// 	await this.participantService.getMyCameraPublisher().replaceTrack(videoTrack);
-				// } else if (isReplacingAudio) {
-				// 	if (isFirefoxPlatform) {
-				// 		// Firefox throw an exception trying to get a new MediaStreamTrack if the older one is not stopped
-				// 		// NotReadableError: Concurrent mic process limit. Stopping tracks before call to getUserMedia
-				// 		oldMediaStream.getAudioTracks()[0].stop();
-				// 	}
-				// 	mediaStream = await this.createMediaStream(props);
-				// 	// Replace audio track
-				// 	const audioTrack: MediaStreamTrack = mediaStream.getAudioTracks()[0];
-				// 	await this.participantService.getMyCameraPublisher().replaceTrack(audioTrack);
-				// }
+				if (isReplacingVideo) {
+					mediaStream = await this.createMediaStream(props);
+					// Replace video track
+					const videoTrack: MediaStreamTrack = mediaStream.getVideoTracks()[0];
+					await this.participantService.getMyCameraPublisher().replaceTrack(videoTrack);
+				} else if (isReplacingAudio) {
+					mediaStream = await this.createMediaStream(props);
+					// Replace audio track
+					const audioTrack: MediaStreamTrack = mediaStream.getAudioTracks()[0];
+					await this.participantService.getMyCameraPublisher().replaceTrack(audioTrack);
+				}
 			} else if (videoType === VideoType.SCREEN) {
-				let newScreenMediaStream;
 				try {
-					newScreenMediaStream = await this.OVScreen.getUserMedia(props);
+					let newScreenMediaStream = await this.OVScreen.getUserMedia(props);
 					this.participantService.getMyScreenPublisher().stream.getMediaStream().getVideoTracks()[0].stop();
 					await this.participantService.getMyScreenPublisher().replaceTrack(newScreenMediaStream.getVideoTracks()[0]);
 				} catch (error) {
@@ -513,32 +451,32 @@ export class OpenViduService {
 	}
 
 	//TODO: Uncomment this section when replaceTrack issue is fixed
-	// private async createMediaStream(pp: PublisherProperties): Promise<MediaStream> {
-	// 	let mediaStream: MediaStream;
-	// 	const isFirefoxPlatform = this.platformService.isFirefox();
-	// 	const isReplacingAudio = !!pp.audioSource;
-	// 	const isReplacingVideo = !!pp.videoSource;
+	private async createMediaStream(pp: PublisherProperties): Promise<MediaStream> {
+		let mediaStream: MediaStream;
+		const isFirefoxPlatform = this.platformService.isFirefox();
+		const isReplacingAudio = !!pp.audioSource;
+		const isReplacingVideo = !!pp.videoSource;
 
-	// 	try {
-	// 		mediaStream = await this.OV.getUserMedia(pp);
-	// 	} catch (error) {
-	// 		if ((<OpenViduError>error).name === OpenViduErrorName.DEVICE_ACCESS_DENIED) {
-	// 			if (isFirefoxPlatform) {
-	// 				this.log.w('The device requested is not available. Restoring the older one');
-	// 				// The track requested is not available so we are getting the old tracks ids for recovering the track
-	// 				if (isReplacingVideo) {
-	// 					pp.videoSource = this.deviceService.getCameraSelected().device;
-	// 				} else if (isReplacingAudio) {
-	// 					pp.audioSource = this.deviceService.getMicrophoneSelected().device;
-	// 				}
-	// 				mediaStream = await this.OV.getUserMedia(pp);
-	// 				// TODO show error alert informing that the new device is not available
-	// 			}
-	// 		}
-	// 	} finally {
-	// 		return mediaStream;
-	// 	}
-	// }
+		try {
+			mediaStream = await this.OV.getUserMedia(pp);
+		} catch (error) {
+			if ((<OpenViduError>error).name === OpenViduErrorName.DEVICE_ACCESS_DENIED) {
+				if (isFirefoxPlatform) {
+					this.log.w('The device requested is not available. Restoring the older one');
+					// The track requested is not available so we are getting the old tracks ids for recovering the track
+					if (isReplacingVideo) {
+						pp.videoSource = this.deviceService.getCameraSelected().device;
+					} else if (isReplacingAudio) {
+						pp.audioSource = this.deviceService.getMicrophoneSelected().device;
+					}
+					mediaStream = await this.OV.getUserMedia(pp);
+					// TODO show error alert informing that the new device is not available
+				}
+			}
+		} finally {
+			return mediaStream;
+		}
+	}
 
 	/**
 	 * @internal

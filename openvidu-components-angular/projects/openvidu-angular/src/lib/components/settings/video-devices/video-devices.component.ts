@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../../models/device.model';
 import { PanelType } from '../../../models/panel.model';
 import { ParticipantAbstractModel } from '../../../models/participant.model';
+import { VideoType } from '../../../models/video-type.model';
 import { DeviceService } from '../../../services/device/device.service';
 import { OpenViduService } from '../../../services/openvidu/openvidu.service';
 import { PanelService } from '../../../services/panel/panel.service';
@@ -72,18 +73,14 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 		// Is New deviceId different from the old one?
 		if (this.deviceSrv.needUpdateVideoTrack(videoSource)) {
 			const mirror = this.deviceSrv.cameraNeedsMirror(videoSource);
-			//TODO: Uncomment this when replaceTrack issue is fixed
-			// const pp: PublisherProperties = { videoSource, audioSource: false, mirror };
-			// await this.openviduService.replaceTrack(VideoType.CAMERA, pp);
-			// TODO: Remove this when replaceTrack issue is fixed
-			const pp: PublisherProperties = { videoSource, audioSource: this.deviceSrv.getMicrophoneSelected().device, mirror };
-
 			// Reapply Virtual Background to new Publisher if necessary
 			const backgroundSelected = this.backgroundService.backgroundSelected.getValue();
 			if (this.backgroundService.isBackgroundApplied()) {
 				await this.backgroundService.removeBackground();
 			}
-			await this.openviduService.republishTrack(pp);
+			const pp: PublisherProperties = { videoSource, audioSource: false, mirror };
+			await this.openviduService.replaceTrack(VideoType.CAMERA, pp);
+
 			if (this.backgroundService.isBackgroundApplied()) {
 				const bgSelected = this.backgroundService.backgrounds.find((b) => b.id === backgroundSelected);
 				if (bgSelected) {

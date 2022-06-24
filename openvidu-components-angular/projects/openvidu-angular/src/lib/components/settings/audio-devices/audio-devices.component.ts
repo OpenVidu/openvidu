@@ -7,6 +7,7 @@ import { CustomDevice } from '../../../models/device.model';
 import { ParticipantAbstractModel } from '../../../models/participant.model';
 import { ParticipantService } from '../../../services/participant/participant.service';
 import { Subscription } from 'rxjs';
+import { VideoType } from '../../../models/video-type.model';
 
 /**
  * @internal
@@ -59,14 +60,8 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 	async onMicrophoneSelected(event: any) {
 		const audioSource = event?.value;
 		if (this.deviceSrv.needUpdateAudioTrack(audioSource)) {
-			//TODO: Uncomment this when replaceTrack issue is fixed
-			// const pp: PublisherProperties = { audioSource, videoSource: false };
-			// await this.openviduService.replaceTrack(VideoType.CAMERA, pp);
-			// TODO: Remove this when replaceTrack issue is fixed
-			const mirror = this.deviceSrv.cameraNeedsMirror(this.deviceSrv.getCameraSelected().device);
-			const pp: PublisherProperties = { videoSource: this.deviceSrv.getCameraSelected().device, audioSource, mirror };
-			await this.openviduService.republishTrack(pp);
-
+			const pp: PublisherProperties = { audioSource, videoSource: false };
+			await this.openviduService.replaceTrack(VideoType.CAMERA, pp);
 			this.deviceSrv.setMicSelected(audioSource);
 			this.microphoneSelected = this.deviceSrv.getMicrophoneSelected();
 		}
