@@ -67,16 +67,6 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	 */
 	constructor(private chatService: ChatService, private panelService: PanelService, private cd: ChangeDetectorRef) {}
 
-	/**
-	 * @ignore
-	 */
-	@HostListener('document:keydown.escape', ['$event'])
-	onKeydownHandler(event: KeyboardEvent) {
-		if (this.panelService.isPanelOpened()) {
-			this.close();
-		}
-	}
-
 	ngOnInit() {
 		this.subscribeToMessages();
 	}
@@ -125,7 +115,7 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	private subscribeToMessages() {
 		this.chatMessageSubscription = this.chatService.messagesObs.subscribe((messages: ChatMessage[]) => {
 			this.messageList = messages;
-			if (this.panelService.isPanelOpened()) {
+			if (this.panelService.isChatPanelOpened()) {
 				this.scrollToBottom();
 				this.cd.markForCheck();
 			}

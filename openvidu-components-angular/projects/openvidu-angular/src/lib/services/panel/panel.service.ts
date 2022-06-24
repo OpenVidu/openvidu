@@ -20,9 +20,6 @@ export class PanelService {
 	 */
 	panelOpenedObs: Observable<PanelEvent>;
 	protected log: ILogger;
-	protected isChatOpened: boolean = false;
-	protected isParticipantsOpened: boolean = false;
-	protected isActivitiesOpened: boolean = false;
 	private isExternalOpened: boolean = false;
 	private externalType: string;
 	protected _panelOpened = <BehaviorSubject<PanelEvent>>new BehaviorSubject({ opened: false });
@@ -59,10 +56,9 @@ export class PanelService {
 		} else {
 			// Panel is external
 			this.log.d('Toggling external panel');
-			this.isChatOpened = false;
-			this.isParticipantsOpened = false;
-			this.isActivitiesOpened = false;
-			// Open when is closed or is opened with another type
+			// Close all panels
+			this.panelMap.forEach((_, panel: string) => this.panelMap.set(panel, false));
+			// Opening when external panel is closed or is opened with another type
 			this.isExternalOpened = !this.isExternalOpened || this.externalType !== type;
 			this.externalType = !this.isExternalOpened ? '' : type;
 			nextOpenedValue = this.isExternalOpened;
@@ -76,19 +72,15 @@ export class PanelService {
 	 * @internal
 	 */
 	isPanelOpened(): boolean {
-		return (
-			this.isChatPanelOpened() || this.isParticipantsPanelOpened() || this.isActivitiesPanelOpened() || this.isExternalPanelOpened()
-		);
+		const anyOpened = Array.from(this.panelMap.values()).some((opened) => opened);
+		return anyOpened || this.isExternalPanelOpened();
 	}
 
 	/**
 	 * Closes the panel (if opened)
 	 */
 	closePanel(): void {
-		this.isParticipantsOpened = false;
-		this.isChatOpened = false;
-		this.isExternalOpened = false;
-		this.isActivitiesOpened = false;
+		this.panelMap.forEach((_, panel: string) => this.panelMap.set(panel, false));
 		this._panelOpened.next({ opened: false });
 	}
 
@@ -96,21 +88,35 @@ export class PanelService {
 	 * Whether the chat panel is opened or not.
 	 */
 	isChatPanelOpened(): boolean {
-		return this.isChatOpened;
+		return !!this.panelMap.get(PanelType.CHAT);
 	}
 
 	/**
 	 * Whether the participants panel is opened or not.
 	 */
 	isParticipantsPanelOpened(): boolean {
-		return this.isParticipantsOpened;
+		return !!this.panelMap.get(PanelType.PARTICIPANTS);
 	}
 
 	/**
 	 * Whether the activities panel is opened or not.
 	 */
 	isActivitiesPanelOpened(): boolean {
-		return this.isActivitiesOpened;
+		return !!this.panelMap.get(PanelType.ACTIVITIES);
+	}
+
+	/**
+	 * Whether the settings panel is opened or not.
+	 */
+	isSettingsPanelOpened(): boolean {
+		return !!this.panelMap.get(PanelType.SETTINGS);
+	}
+
+	/**
+	 * Whether the background effects panel is opened or not.
+	 */
+	isBackgroundEffectsPanelOpened(): boolean {
+		return !!this.panelMap.get(PanelType.BACKGROUND_EFFECTS);
 	}
 
 	isExternalPanelOpened(): boolean {

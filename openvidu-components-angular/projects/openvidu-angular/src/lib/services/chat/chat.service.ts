@@ -50,7 +50,7 @@ export class ChatService {
 				nickname: data.nickname,
 				message: data.message
 			});
-			if (!this.panelService.isPanelOpened()) {
+			if (!this.panelService.isChatPanelOpened()) {
 				const notificationOptions: INotificationOptions = {
 					message: `${data.nickname.toUpperCase()} sent a message`,
 					cssClassName: 'messageSnackbar',
