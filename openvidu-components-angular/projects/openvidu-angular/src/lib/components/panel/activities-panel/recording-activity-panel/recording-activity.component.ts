@@ -32,12 +32,6 @@ export class RecordingActivityComponent implements OnInit {
 	@Output() onStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when download recording button has been clicked.
-	 * The recording should be downloaded using the REST API.
-	 */
-	@Output() onDownloadRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
-
-	/**
 	 * Provides event notifications that fire when delete recording button has been clicked.
 	 * The recording should be deleted using the REST API.
 	 */
@@ -168,15 +162,15 @@ export class RecordingActivityComponent implements OnInit {
 	/**
 	 * @internal
 	 */
-	download(recordingId: string) {
-		this.onDownloadRecordingClicked.emit(recordingId);
+	download(recording: RecordingInfo) {
+		this.recordingService.downloadRecording(recording);
 	}
 
 	/**
 	 * @internal
 	 */
-	play(recordingId: string) {
-		this.recordingService.playRecording(recordingId);
+	play(recording: RecordingInfo) {
+		this.recordingService.playRecording(recording);
 	}
 
 	private subscribeToRecordingStatus() {

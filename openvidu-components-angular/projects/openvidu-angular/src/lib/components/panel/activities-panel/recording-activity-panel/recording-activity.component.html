@@ -101,7 +101,7 @@
 
 					<button
 						mat-icon-button
-						(click)="play(recording.id)"
+						(click)="play(recording)"
 						id="play-recording-btn"
 						matTooltip="{{ 'PANEL.RECORDING.PLAY' | translate }}"
 					>
@@ -109,7 +109,7 @@
 					</button>
 					<button
 						mat-icon-button
-						(click)="download(recording.id)"
+						(click)="download(recording)"
 						id="download-recording-btn"
 						matTooltip="{{ 'PANEL.RECORDING.DOWNLOAD' | translate }}"
 					>

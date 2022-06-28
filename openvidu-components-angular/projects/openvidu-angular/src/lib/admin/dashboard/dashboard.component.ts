@@ -11,12 +11,6 @@ import { RecordingService } from '../../services/recording/recording.service';
 	styleUrls: ['./dashboard.component.css']
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
-	/**
-	 * Provides event notifications that fire when download recording button has been clicked.
-	 * The recording should be downloaded using the REST API.
-	 * @param recordingId
-	 */
-	@Output() onDownloadRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
 	 * Provides event notifications that fire when delete recording button has been clicked.
@@ -143,8 +137,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	/**
 	 * @internal
 	 */
-	download(recordingId: string) {
-		this.onDownloadRecordingClicked.emit(recordingId);
+	download(recording: RecordingInfo) {
+		this.recordingService.downloadRecording(recording);
 	}
 
 	/**
@@ -157,8 +151,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	/**
 	 * @internal
 	 */
-	async play(recordingId: string) {
-		this.recordingService.playRecording(recordingId);
+	async play(recording: RecordingInfo) {
+		this.recordingService.playRecording(recording);
 	}
 
 	private subscribeToAdminDirectives() {

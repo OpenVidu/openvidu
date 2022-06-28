@@ -71,21 +71,24 @@ export class RecordingService {
 	 * @internal
 	 * Play the recording blob received as parameter. This parameter must be obtained from backend using the OpenVidu REST API
 	 */
-	playRecording(recordingId: string) {
-		this.actionService.openRecordingPlayerDialog(`${this.baseUrl}recordings/${recordingId}`);
+	playRecording(recording: RecordingInfo) {
+		const recordingId = recording.id;
+		const extension = recording.url?.split('.').pop();
+		this.actionService.openRecordingPlayerDialog(`${this.baseUrl}recordings/${recordingId}/${recordingId}.${extension}`);
 	}
 
 	/**
-	 * Download the the recording blob received as second parameter and renamed with the value of the firts parameter.
-	 * This parameter must be obtained from backend using the OpenVidu REST API
-	 * @param fileName
-	 * @param blob
+	 * @internal
+	 * Download the the recording file received .
+	 * @param recording
 	 */
-	downloadRecording(fileName: string, blob: Blob) {
-		const data = URL.createObjectURL(blob);
+	downloadRecording(recording: RecordingInfo) {
+		const recordingId = recording.id;
+		const extension = recording.url?.split('.').pop();
+
 		const link = document.createElement('a');
-		link.href = data;
-		link.download = `${fileName}.mp4`;
+		link.href = `/recordings/${recordingId}/${recordingId}.${extension}`;
+		link.download = `${recordingId}.${extension}`;
 		link.dispatchEvent(
 			new MouseEvent('click', {
 				bubbles: true,
@@ -96,7 +99,6 @@ export class RecordingService {
 
 		setTimeout(() => {
 			// For Firefox it is necessary to delay revoking the ObjectURL
-			window.URL.revokeObjectURL(data);
 			link.remove();
 		}, 100);
 	}

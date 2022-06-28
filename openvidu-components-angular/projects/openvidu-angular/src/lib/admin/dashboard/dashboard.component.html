@@ -82,7 +82,7 @@
 										recording.properties.outputMode !== 'INDIVIDUAL'
 									"
 									mat-icon-button
-									(click)="play(recording.id)"
+									(click)="play(recording)"
 								>
 									<mat-icon id="play" aria-label="Play" title="{{ 'PANEL.RECORDING.PLAY' | translate }}"
 										>play_arrow</mat-icon
@@ -90,7 +90,7 @@
 								</button>
 
 								<button
-									(click)="download(recording.id)"
+									(click)="download(recording)"
 									*ngIf="!!recording.url && recording.status !== 'failed' && recording.status !== 'stopped'"
 									mat-icon-button
 									aria-label="Download"

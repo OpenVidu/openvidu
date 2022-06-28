@@ -24,11 +24,6 @@ export class ActivitiesPanelComponent implements OnInit {
 	@Output() onStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when download recording button has been clicked.
-	 * The recording should be downloaded using the OpenVidu REST API.
-	 */
-	@Output() onDownloadRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
-	/**
 	 * Provides event notifications that fire when delete recording button has been clicked.
 	 * The recording should be deleted using the OpenVidu REST API.
 	 */
@@ -86,13 +81,6 @@ export class ActivitiesPanelComponent implements OnInit {
 	 */
 	_onStopRecordingClicked() {
 		this.onStopRecordingClicked.emit();
-	}
-
-	/**
-	 * @internal
-	 */
-	_onDownloadRecordingClicked(recordingId: string) {
-		this.onDownloadRecordingClicked.emit(recordingId);
 	}
 
 	/**

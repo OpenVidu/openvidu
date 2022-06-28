@@ -353,12 +353,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	@Output() onActivitiesPanelStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when download recording button is clicked from {@link ActivitiesPanelComponent}.
-	 *  The recording should be downloaded using the REST API.
-	 */
-	@Output() onActivitiesPanelDownloadRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
-
-	/**
 	 * Provides event notifications that fire when delete recording button is clicked from {@link ActivitiesPanelComponent}.
 	 *  The recording should be deleted using the REST API.
 	 */
@@ -634,13 +628,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		} else if (from === 'panel') {
 			this.onActivitiesPanelStopRecordingClicked.emit();
 		}
-	}
-
-	/**
-	 * @internal
-	 */
-	onDownloadRecordingClicked(recordingId: string) {
-		this.onActivitiesPanelDownloadRecordingClicked.emit(recordingId);
 	}
 
 	/**
