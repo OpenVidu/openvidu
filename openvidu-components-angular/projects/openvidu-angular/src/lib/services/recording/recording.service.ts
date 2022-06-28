@@ -84,7 +84,7 @@ export class RecordingService {
 	 */
 	downloadRecording(recording: RecordingInfo) {
 		const recordingId = recording.id;
-		const extension = recording.url?.split('.').pop();
+		const extension = recording.url?.split('.').pop() || 'mp4';
 
 		const link = document.createElement('a');
 		link.href = `/recordings/${recordingId}/${recordingId}.${extension}`;
