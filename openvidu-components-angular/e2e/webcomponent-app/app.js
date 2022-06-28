@@ -92,7 +92,6 @@ $(document).ready(() => {
     //     await stopRecording(RECORDING_ID);
     // });
 
-    webComponent.addEventListener('onActivitiesPanelDownloadRecordingClicked', (event) => appendElement('onActivitiesPanelDownloadRecordingClicked'));
     webComponent.addEventListener('onActivitiesPanelDeleteRecordingClicked', (event) => appendElement('onActivitiesPanelDeleteRecordingClicked'));
 
     webComponent.addEventListener('onSessionCreated', (event) => {

@@ -803,7 +803,7 @@ describe('Testing videoconference EVENTS', () => {
 		// expect(await element.isDisplayed()).to.be.true;
 	});
 
-	it('should receive the PLAY, DOWNLOAD and DELETE recording events', async () => {
+	it('should receive the PLAY and DELETE recording events', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
@@ -826,13 +826,6 @@ describe('Testing videoconference EVENTS', () => {
 		await element.click();
 
 		await browser.sleep(1000);
-
-		// Download event
-		element = await browser.findElement(By.id('download-recording-btn'));
-		expect(await element.isDisplayed()).to.be.true;
-		await element.click();
-		element = await browser.wait(until.elementLocated(By.id('onActivitiesPanelDownloadRecordingClicked')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
 
 		// Delete event
 		element = await browser.findElement(By.id('delete-recording-btn'));
