@@ -123,17 +123,7 @@ export class CallComponent implements OnInit {
 
 		} catch (error) {
 			this.recordingError = error;
-
-			console.error('?', error)
 		}
 	}
 
-	async onDownloadRecordingClicked(recordingId: string) {
-		try {
-			const file = await this.restService.getRecording(recordingId);
-			this.recordingService.downloadRecording(recordingId, file);
-		} catch (error) {
-			this.recordingError = error;
-		}
-	}
 }
