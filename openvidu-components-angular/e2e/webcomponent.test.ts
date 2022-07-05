@@ -578,6 +578,9 @@ describe('Testing videoconference EVENTS', () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
+		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
@@ -598,6 +601,9 @@ describe('Testing videoconference EVENTS', () => {
 	it('should receive the onToolbarCameraButtonClicked event', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
+
+		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
 
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
@@ -620,6 +626,9 @@ describe('Testing videoconference EVENTS', () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
+		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
@@ -641,6 +650,9 @@ describe('Testing videoconference EVENTS', () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
+		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
@@ -661,6 +673,9 @@ describe('Testing videoconference EVENTS', () => {
 	it('should receive the onToolbarFullscreenButtonClicked event', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
+
+		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
 
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
@@ -688,6 +703,9 @@ describe('Testing videoconference EVENTS', () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
+		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
@@ -708,6 +726,9 @@ describe('Testing videoconference EVENTS', () => {
 	it('should receive the onToolbarParticipantsPanelButtonClicked event', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
+
+		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
 
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
@@ -730,6 +751,9 @@ describe('Testing videoconference EVENTS', () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
+		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
@@ -750,6 +774,9 @@ describe('Testing videoconference EVENTS', () => {
 	it('should receive the onToolbarStartRecordingClicked event', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
+
+		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
 
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
@@ -795,6 +822,9 @@ describe('Testing videoconference EVENTS', () => {
 	it('should receive the onActivitiesPanelStartRecordingClicked event', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
+
+		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
 
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
@@ -842,6 +872,9 @@ describe('Testing videoconference EVENTS', () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
+		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
@@ -877,6 +910,10 @@ describe('Testing videoconference EVENTS', () => {
 	it('should receive the onSessionCreated event', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
+
+		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
 		element = await browser.wait(until.elementLocated(By.id('onSessionCreated')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 		element = await browser.findElements(By.id('onJoinButtonClicked'));

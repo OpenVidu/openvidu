@@ -14,7 +14,7 @@
 		<span>{{ errorMessage }}</span>
 	</div>
 
-	<div [@inOutAnimation] id="session-container" *ngIf="showVideoconference || (!showPrejoin && !loading && !error)">
+	<div [@inOutAnimation] id="vc-container" *ngIf="showVideoconference || (!showPrejoin && !loading && !error)">
 		<ov-session (onSessionCreated)="_onSessionCreated($event)" *ngIf="isSessionInitialized">
 			<ng-template #toolbar>
 				<ng-container *ngIf="openviduAngularToolbarTemplate">

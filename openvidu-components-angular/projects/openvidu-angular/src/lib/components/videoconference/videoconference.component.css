@@ -1,7 +1,7 @@
-#call-container, #session-container {
+#call-container, #vc-container {
 	height: 100%;
 }
-#session-container {
+#vc-container {
 	background-color: var(--ov-primary-color);
 }
 
