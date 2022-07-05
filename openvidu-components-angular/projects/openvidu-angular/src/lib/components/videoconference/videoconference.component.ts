@@ -404,6 +404,11 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	/**
 	 * @internal
 	 */
+	isSessionInitialized: boolean = false;
+
+	/**
+	 * @internal
+	 */
 	loading = true;
 	private externalParticipantName: string;
 	private prejoinSub: Subscription;
@@ -431,17 +436,12 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		this.subscribeToVideconferenceDirectives();
 		await this.deviceSrv.forceInitDevices();
 		const nickname = this.externalParticipantName || this.storageSrv.getNickname() || `OpenVidu_User${Math.floor(Math.random() * 100)}`;
-		const props: ParticipantProperties = {
-			local: true,
-			nickname
-		};
-		this.participantService.initLocalParticipant(props);
+		this.participantService.initLocalParticipant({local: true, nickname});
 		this.openviduService.initialize();
-
 		if (this.deviceSrv.hasVideoDeviceAvailable() || this.deviceSrv.hasAudioDeviceAvailable()) {
 			await this.initwebcamPublisher();
 		}
-
+		this.isSessionInitialized = true;
 		this.onParticipantCreated.emit(this.participantService.getLocalParticipant());
 	}
 
