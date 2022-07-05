@@ -25,25 +25,14 @@ export class LayoutService {
 		this.subtitlesTogglingObs = this.subtitlesToggling.asObservable();
 	}
 
-	initialize(timeout: number = null) {
-		if (typeof timeout === 'number' && timeout >= 0) {
-			setTimeout(() => {
-				this._initialize();
-				this.sendLayoutWidthEvent();
-			}, timeout);
-		} else {
-			this._initialize();
-			this.sendLayoutWidthEvent();
-		}
-	}
-
-	private _initialize() {
+	initialize(container: HTMLElement) {
+		this.layoutContainer = container;
 		this.openviduLayout = new OpenViduLayout();
 		this.openviduLayoutOptions = this.getOptions();
-		this.layoutContainer = document.getElementById('layout');
 		if(this.layoutContainer){
 			this.openviduLayout.initLayoutContainer(this.layoutContainer, this.openviduLayoutOptions);
 		}
+		this.sendLayoutWidthEvent();
 	}
 
 	private getOptions(): OpenViduLayoutOptions {

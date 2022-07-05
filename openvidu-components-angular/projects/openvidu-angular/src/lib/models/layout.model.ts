@@ -233,6 +233,7 @@ export class OpenViduLayout {
 		// });
 		this.opts = opts;
 		this.layoutContainer = container;
+		this.updateLayout(container, opts);
 	}
 
 	getLayoutContainer(): HTMLElement {
@@ -243,9 +244,9 @@ export class OpenViduLayout {
 	 * Set the layout configuration
 	 * @param options
 	 */
-	private setLayoutOptions(options: OpenViduLayoutOptions) {
-		this.opts = options;
-	}
+	// private setLayoutOptions(options: OpenViduLayoutOptions) {
+	// 	this.opts = options;
+	// }
 
 	private css(el: HTMLVideoElement | HTMLElement, propertyName: any, value?: string) {
 		if (!!value) {

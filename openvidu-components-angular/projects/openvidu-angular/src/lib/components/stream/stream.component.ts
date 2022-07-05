@@ -3,7 +3,6 @@ import { Subscription } from 'rxjs';
 import { MatMenuPanel, MatMenuTrigger } from '@angular/material/menu';
 import { VideoSizeIcon } from '../../models/icon.model';
 import { ScreenType, VideoType } from '../../models/video-type.model';
-import { DocumentService } from '../../services/document/document.service';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { LayoutService } from '../../services/layout/layout.service';
@@ -109,6 +108,7 @@ export class StreamComponent implements OnInit {
 	 * @ignore
 	 */
 	showSettingsButton: boolean = true;
+	showVideo: boolean;
 
 	/**
 	 * @ignore
@@ -118,9 +118,10 @@ export class StreamComponent implements OnInit {
 		setTimeout(() => {
 			if (streamContainer) {
 				this._streamContainer = streamContainer;
-				// Remove 'no-size' css class for showing the element in the view.
 				// This is a workaround for fixing a layout bug which provide a bad UX with each new elements created.
-				this.documentService.removeNoSizeElementClass(this._streamContainer.nativeElement);
+				setTimeout(() => {
+					this.showVideo = true;
+				}, 100);
 			}
 		}, 0);
 	}
@@ -154,7 +155,6 @@ export class StreamComponent implements OnInit {
 	 * @ignore
 	 */
 	constructor(
-		protected documentService: DocumentService,
 		protected openviduService: OpenViduService,
 		protected layoutService: LayoutService,
 		protected participantService: ParticipantService,

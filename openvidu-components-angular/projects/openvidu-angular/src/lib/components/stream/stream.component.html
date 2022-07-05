@@ -1,6 +1,7 @@
 <div
 	*ngIf="this._stream"
-	class="OV_stream no-size"
+	class="OV_stream"
+	[ngClass]="{'no-size': !showVideo}"
 	[id]="'container-' + this._stream.streamManager?.stream?.streamId"
 	#streamContainer
 >
@@ -65,14 +66,6 @@
 				<mat-icon *ngIf="_stream.participant.isMutedForcibly">volume_off</mat-icon>
 				<span *ngIf="_stream.participant.isMutedForcibly">{{ 'STREAM.UNMUTE_SOUND' | translate }}</span>
 			</button>
-			<!-- <button mat-menu-item *ngIf="this._stream.streamManager?.stream?.videoActive" id="fullscreenButton" (click)="toggleFullscreen()">
-				<mat-icon *ngIf="!isFullscreenEnabled">fullscreen</mat-icon>
-				<span *ngIf="!isFullscreenEnabled">Fullscreen</span>
-
-				<mat-icon *ngIf="isFullscreenEnabled">fullscreen_exit</mat-icon>
-				<span *ngIf="isFullscreenEnabled">Exit fullscreen</span>
-			</button> -->
-
 			<button
 				mat-menu-item
 				(click)="replaceScreenTrack()"

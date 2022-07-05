@@ -1,3 +1,4 @@
+import { trigger, state, style, transition, animate } from '@angular/animations';
 import {
 	AfterViewInit,
 	Component,
@@ -110,7 +111,13 @@ import { TranslateService } from '../../services/translate/translate.service';
 @Component({
 	selector: 'ov-videoconference',
 	templateUrl: './videoconference.component.html',
-	styleUrls: ['./videoconference.component.css']
+	styleUrls: ['./videoconference.component.css'],
+	animations: [
+		trigger('inOutAnimation', [
+			transition(':enter', [style({ opacity: 0 }), animate('300ms ease-out', style({ opacity: 1 }))]),
+			// transition(':leave', [style({ opacity: 1 }), animate('50ms ease-in', style({ opacity: 0.9 }))])
+		])
+	]
 })
 export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewInit {
 	// *** Toolbar ***
@@ -186,7 +193,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 */
 	@ViewChild('defaultParticipantsPanel', { static: false, read: TemplateRef }) defaultParticipantsPanelTemplate: TemplateRef<any>;
 	/**
-	 * TODO: WIP
 	 * @internal
 	 */
 	@ViewChild('defaultActivitiesPanel', { static: false, read: TemplateRef })
@@ -214,7 +220,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 */
 	openviduAngularToolbarAdditionalButtonsTemplate: TemplateRef<any>;
 	/**
-	 * TODO: WIP
 	 * @internal
 	 */
 	openviduAngularActivitiesPanelTemplate: TemplateRef<any>;
@@ -281,7 +286,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 			} else {
 				this.log.w('No screen token found. Screenshare feature will be disabled');
 			}
-			this.tokensReceived = true;
+			this.loading = false;
 		}
 	}
 
@@ -382,10 +387,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 * @internal
 	 */
 	participantReady: boolean = false;
-	/**
-	 * @internal
-	 */
-	tokensReceived: boolean = false;
+
 	/**
 	 * @internal
 	 */
@@ -399,7 +401,10 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 */
 	showPrejoin: boolean = true;
 
-	streamPlaying = false;
+	/**
+	 * @internal
+	 */
+	loading = true;
 	private externalParticipantName: string;
 	private prejoinSub: Subscription;
 	private participantNameSub: Subscription;
@@ -449,7 +454,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 					await this.handlePublisherSuccess();
 					this.participantReady = true;
 				});
-				publisher.once('streamPlaying', () => (this.streamPlaying = true));
+				// publisher.once('streamPlaying', () => (this.streamPlaying = true));
 			}
 		} catch (error) {
 			this.actionService.openDialog(error.name.replace(/_/g, ' '), error.message, true);

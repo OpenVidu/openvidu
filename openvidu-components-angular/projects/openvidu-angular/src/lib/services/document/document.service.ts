@@ -58,10 +58,6 @@ export class DocumentService {
 		}
 	}
 
-	removeNoSizeElementClass(element: HTMLElement | Element) {
-		element?.classList.remove(LayoutClass.NO_SIZE_ELEMENT);
-	}
-
 	isSmallElement(element: HTMLElement | Element): boolean {
 		return element?.className.includes(LayoutClass.SMALL_ELEMENT);
 	}

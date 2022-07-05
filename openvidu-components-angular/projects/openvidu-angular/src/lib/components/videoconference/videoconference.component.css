@@ -1,6 +1,9 @@
 #call-container, #session-container {
 	height: 100%;
 }
+#session-container {
+	background-color: var(--ov-primary-color);
+}
 
 #pre-join-container {
     height: inherit;

@@ -1,20 +1,20 @@
 <div id="call-container">
 
-	<div id="pre-join-container" *ngIf="showPrejoin && tokensReceived && participantReady">
-		<ov-pre-join (onJoinButtonClicked)="_onJoinButtonClicked()"></ov-pre-join>
-	</div>
-
-	<div id="spinner" *ngIf="!participantReady && !streamPlaying && !error">
+	<div id="spinner" *ngIf="loading" >
 		<mat-spinner [diameter]="50"></mat-spinner>
 		<span>{{ 'PREJOIN.PREPARING' | translate }}</span>
 	</div>
 
-	<div id="spinner" *ngIf="!participantReady && error">
+	<div [@inOutAnimation] id="pre-join-container" *ngIf="showPrejoin && participantReady && !loading">
+		<ov-pre-join (onJoinButtonClicked)="_onJoinButtonClicked()"></ov-pre-join>
+	</div>
+
+	<div id="spinner" *ngIf="!loading && error">
 		<mat-icon class="error-icon">error</mat-icon>
 		<span>{{ errorMessage }}</span>
 	</div>
 
-	<div id="session-container" *ngIf="showVideoconference || (!showPrejoin && participantReady && tokensReceived && !error)">
+	<div [@inOutAnimation] id="session-container" *ngIf="showVideoconference || (!showPrejoin && !loading && !error)">
 		<ov-session (onSessionCreated)="_onSessionCreated($event)">
 			<ng-template #toolbar>
 				<ng-container *ngIf="openviduAngularToolbarTemplate">

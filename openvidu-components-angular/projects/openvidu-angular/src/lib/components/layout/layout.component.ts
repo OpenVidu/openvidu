@@ -6,7 +6,9 @@ import {
 	ContentChild,
 	OnDestroy,
 	OnInit,
-	TemplateRef
+	TemplateRef,
+	ViewChild,
+	ViewContainerRef
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ParticipantService } from '../../services/participant/participant.service';
@@ -62,6 +64,10 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
+	@ViewChild('layout', { static: false, read: ViewContainerRef }) layoutContainer: ViewContainerRef;
+	/**
+	 * @ignore
+	 */
 	@ContentChild(StreamDirective)
 	set externalStream(externalStream: StreamDirective) {
 		// This directive will has value only when STREAM component tagget with '*ovStream' directive
@@ -93,9 +99,7 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	ngAfterViewInit() {
-		let timeout: number = 100;
-		this.layoutService.initialize(timeout);
-		this.layoutService.update(timeout);
+		this.layoutService.initialize(this.layoutContainer.element.nativeElement);
 	}
 
 	ngOnDestroy() {
