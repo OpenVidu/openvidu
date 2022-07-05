@@ -28,6 +28,9 @@ export class OpenViduAngularConfigService {
 	fullscreenButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	fullscreenButtonObs: Observable<boolean>;
 
+	subtitlesButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
+	subtitlesButtonObs: Observable<boolean>;
+
 	toolbarSettingsButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	toolbarSettingsButtonObs: Observable<boolean>;
 
@@ -92,6 +95,7 @@ export class OpenViduAngularConfigService {
 		this.displayLogoObs = this.displayLogo.asObservable();
 		this.recordingButtonObs = this.recordingButton.asObservable();
 		this.toolbarSettingsButtonObs = this.toolbarSettingsButton.asObservable();
+		this.subtitlesButtonObs = this.subtitlesButton.asObservable();
 		//Stream observables
 		this.displayParticipantNameObs = this.displayParticipantName.asObservable();
 		this.displayAudioDetectionObs = this.displayAudioDetection.asObservable();

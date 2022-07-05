@@ -1,0 +1,21 @@
+<mat-list>
+	<mat-list-item>
+		<div mat-line>{{ 'PANEL.SETTINGS.SUBTITLE' | translate }}</div>
+		<mat-slide-toggle (change)="toggleSubtitles()" [checked]="subtitlesEnabled" [disableRipple]="true"></mat-slide-toggle>
+	</mat-list-item>
+	<mat-list-item>
+		<div mat-line>{{ 'PANEL.SETTINGS.LANGUAGE' | translate }}:</div>
+		<button mat-flat-button [matMenuTriggerFor]="menu" class="lang-button"  [disabled]="true">
+			<span>{{langSelected}}</span>
+			<mat-icon>expand_more</mat-icon>
+		</button>
+		<mat-menu #menu="matMenu">
+			<button mat-menu-item *ngFor="let lang of languagesAvailable" (click)="onLangSelected(lang)">
+				<span>{{lang}}</span>
+			</button>
+		</mat-menu>
+	</mat-list-item>
+</mat-list>
+
+
+

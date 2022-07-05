@@ -34,6 +34,8 @@
 		"MORE_OPTIONS": "Meer opties",
 		"FULLSCREEN": "Volledig scherm",
 		"EXIT_FULLSCREEN": "Volledig scherm verlaten",
+		"ENABLE_SUBTITLES": "Ondertiteling inschakelen",
+		"DISABLE_SUBTITLES": "Ondertiteling uitschakelen",
 		"BACKGROUND": "Achtergrondeffecten",
         "START_RECORDING": "Start opname",
 		"STOP_RECORDING": "Stop opname",
@@ -70,7 +72,8 @@
 			"GENERAL": "Algemeen",
 			"VIDEO": "Video",
 			"AUDIO": "Audio",
-			"LANGUAGE":"Taal"
+			"LANGUAGE":"Taal",
+			"SUBTITLE": "Ondertitels"
 		},
 		"BACKGROUND": {
 			"TITLE": "Achtergrondeffecten",

@@ -1,18 +1,18 @@
-<div id="layout" class="layout">
-	<div
-		class="OT_root OT_publisher"
-		*ngFor="let stream of localParticipant | streams"
-		[ngClass]="{ OV_big: stream.videoEnlarged }"
-	>
-		<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: stream }"></ng-container>
+<div class="container" [class.withSubtitles]="subtitlesEnabled">
+	<div id="layout" class="layout">
+		<div class="OT_root OT_publisher" *ngFor="let stream of localParticipant | streams" [ngClass]="{ OV_big: stream.videoEnlarged }">
+			<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: stream }"></ng-container>
+		</div>
+
+		<div
+			*ngFor="let stream of remoteParticipants | streams"
+			class="OT_root OT_publisher"
+			id="remote-participant"
+			[ngClass]="{ OV_big: stream.videoEnlarged }"
+		>
+			<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: stream }"></ng-container>
+		</div>
 	</div>
 
-	<div
-		*ngFor="let stream of remoteParticipants | streams"
-		class="OT_root OT_publisher"
-		id="remote-participant"
-		[ngClass]="{ OV_big: stream.videoEnlarged }"
-	>
-		<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: stream }"></ng-container>
-	</div>
+	<ov-subtitles *ngIf="subtitlesEnabled" class="OV_ignored"></ov-subtitles>
 </div>

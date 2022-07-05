@@ -73,8 +73,14 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	localParticipant: ParticipantAbstractModel;
 	remoteParticipants: ParticipantAbstractModel[] = [];
-	protected localParticipantSubs: Subscription;
-	protected remoteParticipantsSubs: Subscription;
+	/**
+	 * @ignore
+	 */
+	subtitlesEnabled = true;
+
+	private localParticipantSubs: Subscription;
+	private remoteParticipantsSubs: Subscription;
+	private subtitlesSubs: Subscription;
 
 	/**
 	 * @ignore
@@ -83,10 +89,11 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	ngOnInit(): void {
 		this.subscribeToParticipants();
+		this.subscribeToSubtitles();
 	}
 
 	ngAfterViewInit() {
-		let timeout: number = 0;
+		let timeout: number = 100;
 		this.layoutService.initialize(timeout);
 		this.layoutService.update(timeout);
 	}
@@ -96,7 +103,16 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.remoteParticipants = [];
 		if (this.localParticipantSubs) this.localParticipantSubs.unsubscribe();
 		if (this.remoteParticipantsSubs) this.remoteParticipantsSubs.unsubscribe();
+		if (this.subtitlesSubs) this.subtitlesSubs.unsubscribe();
 		this.layoutService.clear();
+	}
+
+	private subscribeToSubtitles() {
+		this.subtitlesSubs = this.layoutService.subtitlesTogglingObs.subscribe((value: boolean) => {
+			this.subtitlesEnabled = value;
+			this.cd.markForCheck();
+			this.layoutService.update();
+		});
 	}
 
 	private subscribeToParticipants() {

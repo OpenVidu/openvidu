@@ -34,6 +34,8 @@
 		"MORE_OPTIONS":"更多选项",
 		"FULLSCREEN":"全屏",
 		"EXIT_FULLSCREEN": "退出全屏",
+		"ENABLE_SUBTITLES": "启用字幕",
+		"DISABLE_SUBTITLES": "禁用字幕",
 		"BACKGROUND":"背景效果",
 		"START_RECORDING": "开始录音",
 		"STOP_RECORDING": "停止录制",
@@ -70,7 +72,8 @@
 			"GENERAL": "一般的",
 			"VIDEO": "视频",
 			"AUDIO": "声音的",
-			"LANGUAGE": "语"
+			"LANGUAGE": "语",
+			"SUBTITLE": "字幕"
 		},
 		"BACKGROUND": {
 			"TITLE": "背景效果",

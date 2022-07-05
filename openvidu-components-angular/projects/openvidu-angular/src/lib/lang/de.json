@@ -34,6 +34,8 @@
 		"MORE_OPTIONS": "Weitere Optionen",
 		"FULLSCREEN": "Vollbild",
 		"EXIT_FULLSCREEN": "Vollbildmodus beenden",
+		"ENABLE_SUBTITLES": "Untertitel aktivieren",
+		"DISABLE_SUBTITLES": "Untertitel deaktivieren",
 		"BACKGROUND": "Hintergrund-Effekte",
 		"START_RECORDING": "Aufzeichnung starten",
 		"STOP_RECORDING": "Aufzeichnung stoppen",
@@ -70,7 +72,8 @@
 			"GENERAL": "Allgemein",
 			"VIDEO": "Video",
 			"AUDIO": "Audio",
-			"LANGUAGE": "Sprache"
+			"LANGUAGE": "Sprache",
+			"SUBTITLE": "Untertitel"
 		},
 		"BACKGROUND": {
 			"TITLE": "Hintergrund-Effekte",

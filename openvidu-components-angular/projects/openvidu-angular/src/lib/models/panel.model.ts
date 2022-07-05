@@ -6,3 +6,10 @@ export enum PanelType {
 	SETTINGS = 'settings'
 
 }
+
+export enum PanelSettingsOptions {
+	GENERAL = 'general',
+	AUDIO = 'audio',
+	VIDEO = 'video',
+	SUBTITLES = 'subtitles'
+}

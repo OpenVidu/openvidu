@@ -35,6 +35,8 @@
 		"MORE_OPTIONS": "More options",
 		"FULLSCREEN": "Fullscreen",
 		"EXIT_FULLSCREEN": "Exit fullscreen",
+		"ENABLE_SUBTITLES": "Enable subtitles",
+		"DISABLE_SUBTITLES": "Disable subtitles",
 		"BACKGROUND": "Background effects",
 		"START_RECORDING": "Start recording",
 		"STOP_RECORDING": "Stop recording",
@@ -71,7 +73,8 @@
 			"GENERAL": "General",
 			"VIDEO": "Video",
 			"AUDIO": "Audio",
-			"LANGUAGE": "Language"
+			"LANGUAGE": "Language",
+			"SUBTITLE": "Subtitles"
 		},
 		"BACKGROUND": {
 			"TITLE": "Background effects",

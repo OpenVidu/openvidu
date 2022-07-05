@@ -1,0 +1,44 @@
+.subtitles-container {
+	/* padding: 5px; */
+	display: flex;
+	height: 75px;
+}
+.subtitles-offset {
+	height: 75px;
+	width: 115px;
+	text-align: center;
+}
+
+.subtitles-main-container {
+	flex-grow: 1;
+	text-align: center;
+	align-self: center;
+}
+
+.subtitles-offset + .subtitles-offset {
+	margin-left: 2%;
+}
+#subtitle-settings-btn {
+	color: var(--ov-text-color);
+	background-color: var(--ov-secondary-color);
+}
+#subtitle-settings-icon {
+	font-size: 15px;
+	height: 15px;
+	width: 15px;
+	padding-right: 5px;
+}
+
+#subtitle-text {
+	color: var(--ov-text-color);
+	background-color: var(--ov-logo-background-color);
+	font-size: 18px;
+	font-family: Arial, Helvetica, sans-serif;
+	padding: 4.5px;
+	line-height: 1.6;
+	word-break: break-word;
+}
+
+.small-text {
+	font-size: 14px !important;
+}

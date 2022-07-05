@@ -19,6 +19,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
 
@@ -47,6 +48,7 @@ import { NgModule } from '@angular/core';
 		MatDividerModule,
 		MatListModule,
 		MatExpansionModule,
+		MatSlideToggleModule
     ]
 })
 export class AppMaterialModule { }

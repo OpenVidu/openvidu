@@ -1,0 +1,8 @@
+
+::ng-deep .mat-slide-toggle.mat-checked .mat-slide-toggle-bar {
+	background-color: var(--ov-tertiary-color);
+}
+
+::ng-deep .mat-slide-toggle.mat-checked .mat-slide-toggle-thumb{
+	background-color: var(--ov-light-color);
+}

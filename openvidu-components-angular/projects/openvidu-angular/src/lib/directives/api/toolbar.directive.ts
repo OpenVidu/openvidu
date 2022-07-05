@@ -243,6 +243,65 @@ export class ToolbarBackgroundEffectsButtonDirective implements AfterViewInit, O
 }
 
 /**
+ * The **subtitleButton** directive allows show/hide the subtitle toolbar button.
+ *
+ * Default: `true`
+ *
+ * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `toolbar` component:
+ *
+ * @example
+ * <ov-videoconference [toolbarSubtitleButton]="false"></ov-videoconference>
+ *
+ * \
+ * And it also can be used in the {@link ToolbarComponent}.
+ * @example
+ * <ov-toolbar [subtitleButton]="false"></ov-toolbar>
+ */
+ @Directive({
+	selector: 'ov-videoconference[toolbarSubtitlesButton], ov-toolbar[subtitlesButton]'
+})
+export class ToolbarSubtitleButtonDirective implements AfterViewInit, OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set toolbarSubtitlesButton(value: boolean) {
+		this.subtitlesButtonValue = value;
+		this.update(this.subtitlesButtonValue);
+	}
+	/**
+	 * @ignore
+	 */
+	@Input() set subtitlesButton(value: boolean) {
+		this.subtitlesButtonValue = value;
+		this.update(this.subtitlesButtonValue);
+	}
+
+	private subtitlesButtonValue: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+
+	ngAfterViewInit() {
+		this.update(this.subtitlesButtonValue);
+	}
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	private clear() {
+		this.subtitlesButtonValue = true;
+		this.update(true);
+	}
+
+	private update(value: boolean) {
+		if (this.libService.subtitlesButton.getValue() !== value) {
+			this.libService.subtitlesButton.next(value);
+		}
+	}
+}
+
+/**
  * The **settingsButton** directive allows show/hide the settings toolbar button.
  *
  * Default: `true`

@@ -1,0 +1,12 @@
+<div class="subtitles-container">
+	<div *ngIf="screenSize !== 'sm' && screenSize !== 'xs' && !settingsPanelOpened" class="subtitles-offset">
+		<button (click)="onSettingsCliked()" id="subtitle-settings-btn" mat-flat-button>
+			<mat-icon id="subtitle-settings-icon">settings</mat-icon>
+			<span>English</span>
+		</button>
+	</div>
+	<div class="subtitles-main-container">
+		<span id="subtitle-text" [class.small-text]="screenSize === 'xs' ">(Demo preview): {{ subtitleText }}</span>
+	</div>
+	<div class="subtitles-offset" *ngIf="screenSize !== 'sm' && screenSize !== 'xs' && !settingsPanelOpened"></div>
+</div>

@@ -39,6 +39,7 @@ import { RecordingService } from '../../services/recording/recording.service';
 import { RecordingInfo, RecordingStatus } from '../../models/recording.model';
 import { TranslateService } from '../../services/translate/translate.service';
 import { MediaChange } from '@angular/flex-layout';
+import { LayoutService } from '../../services/layout/layout.service';
 
 /**
  *
@@ -303,6 +304,17 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 * @ignore
 	 */
 	showSessionName: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	showSubtitlesButton: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	subtitlesEnabled: boolean;
+
 	/**
 	 * @ignore
 	 */
@@ -350,6 +362,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	private displaySessionNameSub: Subscription;
 	private screenSizeSub: Subscription;
 	private settingsButtonSub: Subscription;
+	private subtitlesSubs: Subscription;
 	private currentWindowHeight = window.innerHeight;
 
 	/**
@@ -365,6 +378,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		protected oVDevicesService: DeviceService,
 		protected actionService: ActionService,
 		protected loggerSrv: LoggerService,
+		private layoutService: LayoutService,
 		private cd: ChangeDetectorRef,
 		private libService: OpenViduAngularConfigService,
 		private platformService: PlatformService,
@@ -411,6 +425,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.subscribeToChatMessages();
 		this.subscribeToRecordingStatus();
 		this.subscribeToScreenSize();
+		this.subscribeToSubtitlesToggling();
 	}
 
 	ngAfterViewInit() {
@@ -438,6 +453,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		if (this.recordingSubscription) this.recordingSubscription.unsubscribe();
 		if (this.screenSizeSub) this.screenSizeSub.unsubscribe();
 		if (this.settingsButtonSub) this.settingsButtonSub.unsubscribe();
+		if (this.subtitlesSubs) this.subtitlesSubs.unsubscribe();
 	}
 
 	/**
@@ -526,6 +542,13 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 */
 	toggleBackgroundEffects() {
 		this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
+	}
+
+	/**
+	 * @ignore
+	 */
+	toggleSubtitles() {
+		this.layoutService.toggleSubtitles();
 	}
 
 	/**
@@ -674,11 +697,22 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.showSessionName = value;
 			this.cd.markForCheck();
 		});
+		this.subtitlesSubs = this.libService.subtitlesButtonObs.subscribe((value: boolean) => {
+			this.showSubtitlesButton = value;
+			this.cd.markForCheck();
+		});
 	}
 
 	private subscribeToScreenSize() {
 		this.screenSizeSub = this.documentService.screenSizeObs.subscribe((change: MediaChange[]) => {
 			this.screenSize = change[0].mqAlias;
+		});
+	}
+
+	private subscribeToSubtitlesToggling() {
+		this.subtitlesSubs = this.layoutService.subtitlesTogglingObs.subscribe((value: boolean) => {
+			this.subtitlesEnabled = value;
+			this.cd.markForCheck();
 		});
 	}
 

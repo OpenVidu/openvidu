@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
-import { PanelType } from '../../models/panel.model';
+import { PanelSettingsOptions, PanelType } from '../../models/panel.model';
 import { LoggerService } from '../logger/logger.service';
 
 export interface PanelEvent {
@@ -38,7 +38,7 @@ export class PanelService {
 	 * Open or close the panel type received. Calling this method with the panel opened and the same type panel, will close the panel.
 	 * If the type is differente, it will switch to the properly panel.
 	 */
-	togglePanel(type: PanelType | string, expand?: string) {
+	togglePanel(type: PanelType | string, expand?: PanelSettingsOptions | string) {
 		let nextOpenedValue: boolean = false;
 		if (this.panelMap.has(type)) {
 			this.log.d(`Toggling ${type} menu`);

@@ -103,6 +103,19 @@
 				<span>{{ 'TOOLBAR.BACKGROUND' | translate }}</span>
 			</button>
 
+			<!-- Subtitles button -->
+			<button
+				*ngIf="!isMinimal && showSubtitlesButton"
+				[disabled]="isConnectionLost"
+				mat-menu-item
+				id="subtitles-btn"
+				(click)="toggleSubtitles()"
+			>
+				<mat-icon>closed_caption</mat-icon>
+				<span *ngIf="subtitlesEnabled">{{ 'TOOLBAR.DISABLE_SUBTITLES' | translate }}</span>
+				<span *ngIf="!subtitlesEnabled">{{ 'TOOLBAR.ENABLE_SUBTITLES' | translate }}</span>
+			</button>
+
 			<mat-divider class="divider" *ngIf="!isMinimal && showSettingsButton"></mat-divider>
 
 			<!-- Settings button -->

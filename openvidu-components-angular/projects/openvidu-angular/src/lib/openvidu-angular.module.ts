@@ -58,6 +58,8 @@ import { VideoDevicesComponent } from './components/settings/video-devices/video
 import { AudioDevicesComponent } from './components/settings/audio-devices/audio-devices.component';
 import { NicknameInputComponent } from './components/settings/nickname-input/nickname-input.component';
 import { LangSelectorComponent } from './components/settings/lang-selector/lang-selector.component';
+import { SubtitlesSettingComponent } from './components/settings/subtitles/subtitles.component';
+import { SubtitlesComponent } from './components/subtitles/subtitles.component';
 
 @NgModule({
 	declarations: [
@@ -66,6 +68,7 @@ import { LangSelectorComponent } from './components/settings/lang-selector/lang-
 		ChatPanelComponent,
 		SessionComponent,
 		LayoutComponent,
+		SubtitlesComponent,
 		StreamComponent,
 		DialogTemplateComponent,
 		RecordingDialogComponent,
@@ -87,6 +90,7 @@ import { LangSelectorComponent } from './components/settings/lang-selector/lang-
 		AudioDevicesComponent,
 		NicknameInputComponent,
 		LangSelectorComponent,
+		SubtitlesSettingComponent,
 		BackgroundEffectsPanelComponent,
 		SettingsPanelComponent,
 		ActivitiesPanelComponent,

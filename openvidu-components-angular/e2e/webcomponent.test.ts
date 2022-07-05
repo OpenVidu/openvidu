@@ -252,6 +252,41 @@ describe('Testing API Directives', () => {
 		expect(element.length).equals(0);
 	});
 
+	it('should HIDE the SUBTITLES button', async () => {
+		let element;
+		await browser.get(`${url}?prejoin=false&toolbarSubtitlesBtn=false`);
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Checking if toolbar is present
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Open more options menu
+		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
+		await element.click();
+
+		await browser.sleep(500);
+
+		// Checking if subtitles button is not present
+		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		element = await browser.findElements(By.id('subtitles-btn'));
+		expect(element.length).equals(0);
+
+		element = await browser.findElements(By.id('toolbar-settings-btn'));
+		expect(element.length).equals(1);
+		await element[0].click();
+
+		await browser.sleep(500);
+
+		element = await browser.wait(until.elementLocated(By.className('settings-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		element = await browser.findElements(By.id('subtitles-opt'));
+		expect(element.length).equals(0);
+
+	});
+
 	it('should HIDE the TOOLBAR SETTINGS button', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&toolbarSettingsBtn=false`);

@@ -8,7 +8,7 @@
 	position: relative;
 	height: calc(100% - 70px);
 	min-height: calc(100% - 70px);
-	padding-top: 10px;
+	padding-top: 0px;
 	width: 100%;
 	overflow: hidden;
 }

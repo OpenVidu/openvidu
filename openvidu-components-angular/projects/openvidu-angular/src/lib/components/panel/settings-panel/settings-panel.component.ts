@@ -1,7 +1,8 @@
-import { Component, HostListener, OnInit } from '@angular/core';
-import { MatOptionSelectionChange } from '@angular/material/core';
-import { PanelType } from '../../../models/panel.model';
-import { PanelService } from '../../../services/panel/panel.service';
+import { Component, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { PanelSettingsOptions, PanelType } from '../../../models/panel.model';
+import { OpenViduAngularConfigService } from '../../../services/config/openvidu-angular.config.service';
+import { PanelEvent, PanelService } from '../../../services/panel/panel.service';
 
 @Component({
 	selector: 'ov-settings-panel',
@@ -9,12 +10,41 @@ import { PanelService } from '../../../services/panel/panel.service';
 	styleUrls: ['../panel.component.css', './settings-panel.component.css']
 })
 export class SettingsPanelComponent implements OnInit {
+	settingsOptions: typeof PanelSettingsOptions = PanelSettingsOptions;
+	selectedOption: PanelSettingsOptions = PanelSettingsOptions.GENERAL;
+	showSubtitles: boolean = true;
+	private subtitlesSubs: Subscription;
+	panelSubscription: Subscription;
+	constructor(private panelService: PanelService, private libService: OpenViduAngularConfigService) {}
+	ngOnInit() {
+		this.subscribeToPanelToggling();
+		this.subscribeToDirectives();
+	}
 
-	selectedOption: string;
-	constructor(private panelService: PanelService) {}
-	ngOnInit() {}
+	ngOnDestroy() {
+		if (this.subtitlesSubs) this.subtitlesSubs.unsubscribe();
+	}
 
 	close() {
 		this.panelService.togglePanel(PanelType.SETTINGS);
+	}
+	onSelectionChanged(e: any){
+		this.selectedOption = e.option.value;
+	 }
+
+	private subscribeToDirectives() {
+		this.subtitlesSubs = this.libService.subtitlesButtonObs.subscribe((value: boolean) => {
+			this.showSubtitles = value;
+		});
+	}
+
+	private subscribeToPanelToggling() {
+		this.panelSubscription = this.panelService.panelOpenedObs.subscribe(
+			(ev: PanelEvent) => {
+				if (ev.type === PanelType.SETTINGS && !!ev.expand) {
+					this.selectedOption = ev.expand as PanelSettingsOptions;
+				}
+			}
+		);
 	}
 }

@@ -20,7 +20,8 @@ import {
 	ToolbarActivitiesPanelButtonDirective,
 	ToolbarBackgroundEffectsButtonDirective,
 	ToolbarRecordingButtonDirective,
-	ToolbarSettingsButtonDirective
+	ToolbarSettingsButtonDirective,
+	ToolbarSubtitleButtonDirective
 } from './toolbar.directive';
 import {
 	AudioMutedDirective,
@@ -41,6 +42,7 @@ import {
 		ToolbarScreenshareButtonDirective,
 		ToolbarFullscreenButtonDirective,
 		ToolbarBackgroundEffectsButtonDirective,
+		ToolbarSubtitleButtonDirective,
 		ToolbarLeaveButtonDirective,
 		ToolbarRecordingButtonDirective,
 		ToolbarParticipantsPanelButtonDirective,
@@ -70,6 +72,7 @@ import {
 		ToolbarScreenshareButtonDirective,
 		ToolbarFullscreenButtonDirective,
 		ToolbarBackgroundEffectsButtonDirective,
+		ToolbarSubtitleButtonDirective,
 		ToolbarLeaveButtonDirective,
 		ToolbarRecordingButtonDirective,
 		ToolbarParticipantsPanelButtonDirective,

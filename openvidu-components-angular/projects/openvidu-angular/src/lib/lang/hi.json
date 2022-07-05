@@ -34,6 +34,8 @@
 		"MORE_OPTIONS": "अधिक विकल्प",
 		"FULLSCREEN": "पूर्ण स्क्रीन",
 		"EXIT_FULLSCREEN": "पूर्ण स्क्रीन से बाहर निकलें",
+		"ENABLE_SUBTITLES": "उपशीर्षक सक्षम करें",
+		"DISABLE_SUBTITLES": "उपशीर्षक अक्षम करें",
 		"BACKGROUND": "पृष्ठभूमि प्रभाव",
 		"START_RECORDING": "रिकॉर्डिंग प्रारंभ करें",
 		"STOP_RECORDING": "रिकॉर्डिंग रोकें",
@@ -70,7 +72,8 @@
 			"GENERAL": "सामान्य",
 			"VIDEO": "वीडियो",
 			"AUDIO": "ऑडियो",
-			"LANGUAGE": "भाषा"
+			"LANGUAGE": "भाषा",
+			"SUBTITLE": "उपशीर्षक"
 		},
 		"BACKGROUND": {
 			"TITLE": "पृष्ठभूमि प्रभाव",

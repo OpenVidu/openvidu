@@ -30,7 +30,7 @@ export class AudioWaveComponent implements OnInit, OnDestroy {
 		if (this.streamManager) {
 			this.streamManager.on('streamPropertyChanged', (event: StreamPropertyChangedEvent) => {
 				if (event.reason === 'trackReplaced' && event.changedProperty === 'audioActive') {
-					// FIXUP: When the audio track is replaced, the startSpeakingEvents is not fired by openvidu-browser
+					// TODO: When the audio track is replaced, the startSpeakingEvents is not fired by openvidu-browser
 					this.unsubscribeSpeakingEvents();
 					this.subscribeSpeakingEvents();
 				}
