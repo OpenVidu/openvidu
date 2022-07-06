@@ -3,19 +3,6 @@ import { Routes, RouterModule } from '@angular/router';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { CallComponent } from './openvidu-call/call.component';
 import { TestingComponent } from './testing-app/testing.component';
-import { ExamplesDashboardComponent } from './examples/examples-dashboard/examples-dashboard.component';
-import { ToolbarDirectiveComponent } from './examples/toolbar-directive/toolbar-directive.component';
-import { ToolbarAdditionalButtonsDirectiveComponent } from './examples/toolbarAdditionalButtons-directive/toolbarAdditionalButtons-directive.component';
-import { LayoutDirectiveComponent } from './examples/layout-directive/layout-directive.component';
-import { StreamDirectiveComponent } from './examples/stream-directive/stream-directive.component';
-import { PanelDirectiveComponent } from './examples/panel-directive/panel-directive.component';
-import { ParticipantsPanelDirectiveComponent } from './examples/participantsPanel-directive/participantsPanel-directive.component';
-import { ChatPanelDirectiveComponent } from './examples/chatPanel-directive/chatPanel-directive.component';
-
-import { ParticipantPanelItemElementsDirectiveComponent } from './examples/participantPanelItemElements-directive/participantPanelItemElements-directive.component';
-import { ParticipantPanelItemDirectiveComponent } from './examples/participantPanelItem-directive/participantPanelItem-directive.component';
-import { ToolbarAdditionalPanelButtonsDirectiveComponent } from './examples/toolbarAdditionalPanelButtons-directive/toolbarAdditionalPanelButtons-directive.component';
-import { AdditionalPanelsDirectiveComponent } from './examples/additionalPanels-directive/additionalPanels-directive.component';
 import { AdminDashboardComponent } from './admin/admin-dashboard/admin-dashboard.component';
 
 const routes: Routes = [
@@ -23,21 +10,6 @@ const routes: Routes = [
 	{ path: 'call', component: CallComponent },
 	{ path: 'testing', component: TestingComponent },
 	{ path: 'admin', component: AdminDashboardComponent },
-
-	{ path: 'examples', component: ExamplesDashboardComponent},
-	{ path: 'examples/toolbarDirective', component: ToolbarDirectiveComponent },
-	{ path: 'examples/toolbarAdditionalButtonsDirective', component: ToolbarAdditionalButtonsDirectiveComponent },
-	{ path: 'examples/toolbarAdditionalPanelButtonsDirective', component: ToolbarAdditionalPanelButtonsDirectiveComponent },
-
-	{ path: 'examples/layoutDirective', component: LayoutDirectiveComponent },
-	{ path: 'examples/streamDirective', component: StreamDirectiveComponent },
-
-	{ path: 'examples/panelDirective', component: PanelDirectiveComponent },
-	{ path: 'examples/additionalPanelsDirective', component: AdditionalPanelsDirectiveComponent },
-	{ path: 'examples/participantsPanelDirective', component: ParticipantsPanelDirectiveComponent },
-	{ path: 'examples/chatPanelDirective', component: ChatPanelDirectiveComponent },
-	{ path: 'examples/participantPanelItemDirective', component: ParticipantPanelItemDirectiveComponent },
-	{ path: 'examples/participantPanelItemElementsDirective', component: ParticipantPanelItemElementsDirectiveComponent },
 ];
 @NgModule({
 	imports: [RouterModule.forRoot(routes, { useHash: true })],
