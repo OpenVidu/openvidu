@@ -20,7 +20,7 @@ var PARTICIPANTS_PANEL_BUTTON;
 var ACTIVITIES_RECORDING_ACTIVITY;
 var RECORDING_ERROR;
 var TOOLBAR_SETTINGS_BUTTON;
-var SUBTITLES_BUTTON;
+var CAPTIONS_BUTTON;
 
 var SESSION_NAME;
 
@@ -38,7 +38,7 @@ $(document).ready(() => {
     RECORDING_BUTTON = url.searchParams.get("recordingBtn") === null ? true : url.searchParams.get("recordingBtn") === 'true';
 	FULLSCREEN_BUTTON = url.searchParams.get("fullscreenBtn") === null ? true : url.searchParams.get("fullscreenBtn") === 'true';
     TOOLBAR_SETTINGS_BUTTON = url.searchParams.get("toolbarSettingsBtn") === null ? true : url.searchParams.get("toolbarSettingsBtn") === 'true';
-    SUBTITLES_BUTTON = url.searchParams.get("toolbarSubtitlesBtn") === null ? true : url.searchParams.get("toolbarSubtitlesBtn") === 'true';
+    CAPTIONS_BUTTON = url.searchParams.get("toolbarCaptionsBtn") === null ? true : url.searchParams.get("toolbarCaptionsBtn") === 'true';
 
     LEAVE_BUTTON = url.searchParams.get("leaveBtn") === null ? true : url.searchParams.get("leaveBtn") === 'true';
     ACTIVITIES_PANEL_BUTTON = url.searchParams.get("activitiesPanelBtn") === null ? true : url.searchParams.get("activitiesPanelBtn") === 'true';
@@ -149,7 +149,7 @@ async function joinSession(sessionName, participantName) {
 
     webComponent.toolbarFullscreenButton = FULLSCREEN_BUTTON;
     webComponent.toolbarSettingsButton = TOOLBAR_SETTINGS_BUTTON;
-    webComponent.toolbarSubtitlesButton = SUBTITLES_BUTTON;
+    webComponent.toolbarCaptionsButton = CAPTIONS_BUTTON;
 	webComponent.toolbarLeaveButton = LEAVE_BUTTON;
     webComponent.toolbarRecordingButton = RECORDING_BUTTON;
     webComponent.toolbarActivitiesPanelButton = ACTIVITIES_PANEL_BUTTON;

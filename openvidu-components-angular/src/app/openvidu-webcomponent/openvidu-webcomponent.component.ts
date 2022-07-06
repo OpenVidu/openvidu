@@ -82,7 +82,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
-	_toolbarSubtitlesButton: boolean = true;
+	_toolbarCaptionsButton: boolean = true;
 	/**
 	 * @internal
 	 */
@@ -335,7 +335,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 		this._toolbarDisplaySessionName = this.castToBoolean(value);
 	}
 	/**
-	 * The **toolbarDisplaySessionName** attribute allows show/hide the session name.
+	 * The **toolbarCaptionsButton** attribute allows show/hide the captions toolbar button.
 	 *
 	 * Default: `true`
 	 *
@@ -343,10 +343,10 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
 	 *
 	 * @example
-	 * <openvidu-webcomponent toolbar-display-session-name="false"></openvidu-webcomponent>
+	 * <openvidu-webcomponent toolbar-captions-button="false"></openvidu-webcomponent>
 	 */
-	 @Input() set toolbarSubtitlesButton(value: string | boolean) {
-		this._toolbarSubtitlesButton = this.castToBoolean(value);
+	 @Input() set toolbarCaptionsButton(value: string | boolean) {
+		this._toolbarCaptionsButton = this.castToBoolean(value);
 	}
 	/**
 	 * The **streamDisplayParticipantName** attribute allows show/hide the participants name in stream component.

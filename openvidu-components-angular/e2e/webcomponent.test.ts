@@ -254,7 +254,7 @@ describe('Testing API Directives', () => {
 
 	it('should HIDE the SUBTITLES button', async () => {
 		let element;
-		await browser.get(`${url}?prejoin=false&toolbarSubtitlesBtn=false`);
+		await browser.get(`${url}?prejoin=false&toolbarCaptionsBtn=false`);
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 

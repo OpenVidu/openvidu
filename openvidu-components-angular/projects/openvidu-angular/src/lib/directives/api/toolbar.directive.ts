@@ -243,40 +243,40 @@ export class ToolbarBackgroundEffectsButtonDirective implements AfterViewInit, O
 }
 
 /**
- * The **subtitleButton** directive allows show/hide the subtitle toolbar button.
+ * The **captionsButton** directive allows show/hide the captions toolbar button.
  *
  * Default: `true`
  *
  * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `toolbar` component:
  *
  * @example
- * <ov-videoconference [toolbarSubtitleButton]="false"></ov-videoconference>
+ * <ov-videoconference [toolbarCaptionsButton]="false"></ov-videoconference>
  *
  * \
  * And it also can be used in the {@link ToolbarComponent}.
  * @example
- * <ov-toolbar [subtitleButton]="false"></ov-toolbar>
+ * <ov-toolbar [captionsButton]="false"></ov-toolbar>
  */
  @Directive({
-	selector: 'ov-videoconference[toolbarSubtitlesButton], ov-toolbar[subtitlesButton]'
+	selector: 'ov-videoconference[toolbarCaptionsButton], ov-toolbar[captionsButton]'
 })
-export class ToolbarSubtitleButtonDirective implements AfterViewInit, OnDestroy {
+export class ToolbarCaptionsButtonDirective implements AfterViewInit, OnDestroy {
 	/**
 	 * @ignore
 	 */
-	@Input() set toolbarSubtitlesButton(value: boolean) {
-		this.subtitlesButtonValue = value;
-		this.update(this.subtitlesButtonValue);
+	@Input() set toolbarCaptionsButton(value: boolean) {
+		this.captionsButtonValue = value;
+		this.update(this.captionsButtonValue);
 	}
 	/**
 	 * @ignore
 	 */
-	@Input() set subtitlesButton(value: boolean) {
-		this.subtitlesButtonValue = value;
-		this.update(this.subtitlesButtonValue);
+	@Input() set captionsButton(value: boolean) {
+		this.captionsButtonValue = value;
+		this.update(this.captionsButtonValue);
 	}
 
-	private subtitlesButtonValue: boolean = true;
+	private captionsButtonValue: boolean = true;
 
 	/**
 	 * @ignore
@@ -284,13 +284,13 @@ export class ToolbarSubtitleButtonDirective implements AfterViewInit, OnDestroy 
 	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
 
 	ngAfterViewInit() {
-		this.update(this.subtitlesButtonValue);
+		this.update(this.captionsButtonValue);
 	}
 	ngOnDestroy(): void {
 		this.clear();
 	}
 	private clear() {
-		this.subtitlesButtonValue = true;
+		this.captionsButtonValue = true;
 		this.update(true);
 	}
 

@@ -12,12 +12,12 @@ import { LoremIpsum } from 'lorem-ipsum';
  * @internal
  */
 @Component({
-	selector: 'ov-subtitles',
-	templateUrl: './subtitles.component.html',
-	styleUrls: ['./subtitles.component.css'],
+	selector: 'ov-captions',
+	templateUrl: './captions.component.html',
+	styleUrls: ['./captions.component.css'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SubtitlesComponent implements OnInit {
+export class CaptionsComponent implements OnInit {
 	/**
 	 * @ignore
 	 */
