@@ -1388,7 +1388,10 @@ export class Stream {
         }
     }
 
-    private initHarkEvents(): void {
+    /**
+     * @hidden
+     */
+    initHarkEvents(): void {
         if (!!this.mediaStream!.getAudioTracks()[0]) {
             // Hark events can only be set if audio track is available
             if (this.session.anySpeechEventListenerEnabled('publisherStartSpeaking', true, this.streamManager)) {

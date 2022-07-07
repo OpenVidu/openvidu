@@ -786,6 +786,9 @@ export class Publisher extends StreamManager {
         } else if(track.kind === 'audio' && updateLastConstraints) {
             this.openvidu.sendTrackChangedEvent(this,'trackReplaced', trackInfo.oldLabel, trackInfo.newLabel, 'audioActive');
         }
+        if (track.kind === 'audio') {
+            this.stream.initHarkEvents();
+        }
     }
 
     /* Private methods */
