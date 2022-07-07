@@ -627,8 +627,8 @@ export class OpenVidu {
    */
   sendNewVideoDimensionsIfRequired(publisher: Publisher, reason: string, WAIT_INTERVAL: number, MAX_ATTEMPTS: number) {
     let attempts = 0;
-    const oldWidth = publisher.stream.videoDimensions.width;
-    const oldHeight = publisher.stream.videoDimensions.height;
+    const oldWidth = publisher?.stream?.videoDimensions?.width || 0;
+    const oldHeight = publisher?.stream?.videoDimensions?.height || 0;
 
     const repeatUntilChangeOrMaxAttempts: NodeJS.Timeout = setInterval(() => {
       attempts++;
@@ -670,6 +670,36 @@ export class OpenVidu {
         }
       });
   };
+
+  /**
+   * @hidden
+   */
+  sendTrackChangedEvent(publisher: Publisher, reason: string, oldLabel: string, newLabel: string, propertyType: string) {
+    const oldValue = {label: oldLabel};
+    const newValue = {label: newLabel};
+
+    if(publisher.stream.isLocalStreamPublished){
+      this.sendRequest(
+        'streamPropertyChanged',
+        {
+          streamId: publisher.stream.streamId,
+          property: propertyType,
+          newValue: JSON.stringify({newLabel}),
+          reason
+        },
+        (error, response) => {
+          if (error) {
+            logger.error("Error sending 'streamPropertyChanged' event", error);
+          } else {
+            this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, publisher.stream, propertyType, newValue, oldValue, reason)]);
+            publisher.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(publisher, publisher.stream, propertyType, newValue, oldValue, reason)]);
+          }
+        });
+    } else {
+      this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, publisher.stream, propertyType, newValue, oldValue, reason)]);
+      publisher.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(publisher, publisher.stream, propertyType, newValue, oldValue, reason)]);
+    }
+  }
 
   /**
    * @hidden
@@ -826,7 +856,7 @@ export class OpenVidu {
       params = {};
     }
     logger.debug('Sending request: {method:"' + method + '", params: ' + JSON.stringify(params) + '}');
-    this.jsonRpcClient.send(method, params, callback);
+    this.jsonRpcClient?.send(method, params, callback);
   }
 
   /**
@@ -1105,7 +1135,7 @@ export class OpenVidu {
 
           if (error.code === 40007 && error.message === 'reconnection error') {
             // Kurento error: invalid RPC sessionId. This means that the kurento-jsonrpc-server of openvidu-server where kurento-jsonrpc-client
-            // is trying to reconnect does not know about this sessionId. This can mean two things: 
+            // is trying to reconnect does not know about this sessionId. This can mean two things:
             // 1) openvidu-browser managed to reconnect after a while, but openvidu-server already evicted the user for not receiving ping.
             // 2) openvidu-server process is a different one because of a node crash.
             // Send a "sessionStatus" method to check the reason

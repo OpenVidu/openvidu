@@ -186,7 +186,7 @@ export class Publisher extends StreamManager {
                     }
                 });
 
-                // There is a Virtual Background filter applied that must be removed in case the hardware must be freed 
+                // There is a Virtual Background filter applied that must be removed in case the hardware must be freed
                 if (!enabled && resource === true && !!this.stream.filter && this.stream.filter.type.startsWith('VB:')) {
                     this.stream.lastVBFilter = this.stream.filter; // Save the filter to be re-applied in case of unmute
                     await this.stream.removeFilterAux(true);
@@ -651,11 +651,11 @@ export class Publisher extends StreamManager {
             if (this.stream.isLocalStreamPublished) {
                 // Only if the Publisher has been published is necessary to call native Web API RTCRtpSender.replaceTrack
                 // If it has not been published yet, replacing it on the MediaStream object is enough
-                await this.replaceTrackInMediaStream(track, updateLastConstraints);
+                this.replaceTrackInMediaStream(track, updateLastConstraints);
                 return await this.replaceTrackInRtcRtpSender(track);
             } else {
                 // Publisher not published. Simply replace the track on the local MediaStream
-                return await this.replaceTrackInMediaStream(track, updateLastConstraints);
+                return this.replaceTrackInMediaStream(track, updateLastConstraints);
             }
         } catch (error) {
             track.enabled = trackOriginalEnabledValue;
@@ -773,9 +773,18 @@ export class Publisher extends StreamManager {
         removedTrack.stop();
         mediaStream.removeTrack(removedTrack);
         mediaStream.addTrack(track);
-        if (track.kind === 'video' && this.stream.isLocalStreamPublished && updateLastConstraints) {
+        const trackInfo = {
+            oldLabel: removedTrack?.label || '',
+            newLabel: track?.label || ''
+        };
+        if (track.kind === 'video' && updateLastConstraints) {
             this.openvidu.sendNewVideoDimensionsIfRequired(this, 'trackReplaced', 50, 30);
-            this.session.sendVideoData(this.stream.streamManager, 5, true, 5);
+            this.openvidu.sendTrackChangedEvent(this,'trackReplaced', trackInfo.oldLabel, trackInfo.newLabel, 'videoActive');
+            if(this.stream.isLocalStreamPublished) {
+                this.session.sendVideoData(this.stream.streamManager, 5, true, 5);
+            }
+        } else if(track.kind === 'audio' && updateLastConstraints) {
+            this.openvidu.sendTrackChangedEvent(this,'trackReplaced', trackInfo.oldLabel, trackInfo.newLabel, 'audioActive');
         }
     }
 
