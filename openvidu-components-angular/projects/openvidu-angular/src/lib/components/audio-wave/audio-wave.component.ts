@@ -1,5 +1,5 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { PublisherSpeakingEvent, StreamManager, StreamPropertyChangedEvent } from 'openvidu-browser';
+import { PublisherSpeakingEvent, StreamManager } from 'openvidu-browser';
 
 /**
  * @internal
@@ -18,25 +18,12 @@ export class AudioWaveComponent implements OnInit, OnDestroy {
 
 	ngOnInit(): void {
 		this.subscribeSpeakingEvents();
-		this.subscribeToStreamPropertyChanged();
 	}
 
 	ngOnDestroy(): void {
 		this.unsubscribeSpeakingEvents();
-		this.unsubscribePropertyChangedEvents();
 	}
 
-	private subscribeToStreamPropertyChanged() {
-		if (this.streamManager) {
-			this.streamManager.on('streamPropertyChanged', (event: StreamPropertyChangedEvent) => {
-				if (event.reason === 'trackReplaced' && event.changedProperty === 'audioActive') {
-					// TODO: When the audio track is replaced, the startSpeakingEvents is not fired by openvidu-browser
-					this.unsubscribeSpeakingEvents();
-					this.subscribeSpeakingEvents();
-				}
-			});
-		}
-	}
 
 	private subscribeSpeakingEvents() {
 		if (this.streamManager) {
@@ -49,11 +36,6 @@ export class AudioWaveComponent implements OnInit, OnDestroy {
 		if (this.streamManager) {
 			this.streamManager.off('publisherStartSpeaking');
 			this.streamManager.off('publisherStopSpeaking');
-		}
-	}
-	private unsubscribePropertyChangedEvents() {
-		if (this.streamManager) {
-			this.streamManager.off('streamPropertyChanged');
 		}
 	}
 }
