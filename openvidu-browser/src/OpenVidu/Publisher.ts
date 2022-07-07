@@ -787,6 +787,9 @@ export class Publisher extends StreamManager {
             this.openvidu.sendTrackChangedEvent(this,'trackReplaced', trackInfo.oldLabel, trackInfo.newLabel, 'audioActive');
         }
         if (track.kind === 'audio') {
+            this.stream.disableHarkSpeakingEvent(false);
+            this.stream.disableHarkStoppedSpeakingEvent(false);
+            this.stream.disableHarkVolumeChangeEvent(false);
             this.stream.initHarkEvents();
         }
     }
