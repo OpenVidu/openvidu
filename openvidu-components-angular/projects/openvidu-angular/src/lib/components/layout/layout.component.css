@@ -6,7 +6,7 @@
 	height: 100%;
 }
 .withSubtitles {
-	height: calc(100% - 75px) !important;
+	height: calc(100% - var(--ov-captions-height, 200px)) !important;
 }
 
 .layout {

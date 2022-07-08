@@ -1,12 +1,36 @@
-<div class="subtitles-container">
+<div class="subtitles-container" #captionsContainer>
 	<div *ngIf="screenSize !== 'sm' && screenSize !== 'xs' && !settingsPanelOpened" class="subtitles-offset">
 		<button (click)="onSettingsCliked()" id="subtitle-settings-btn" mat-flat-button>
 			<mat-icon id="subtitle-settings-icon">settings</mat-icon>
 			<span>English</span>
 		</button>
 	</div>
-	<div class="subtitles-main-container">
-		<span id="subtitle-text" [class.small-text]="screenSize === 'xs' ">(Demo preview): {{ subtitleText }}</span>
+	<div class="subtitles-main-container" #textContainer>
+		<div class="element" *ngFor="let item of captionElements" #captionElement>
+			<p
+				id="author"
+				[ngClass]="{
+					'big-author': captionsContainer.offsetWidth >= 1000 || screenSize === 'lg' || screenSize === 'xl',
+					'medium-author': (captionsContainer.offsetWidth >= 960 && captionsContainer.offsetWidth < 1000) || screenSize === 'md',
+					'small-author': captionsContainer.offsetWidth < 600 || screenSize === 'xs' || screenSize === 'sm'
+				}"
+			>
+				{{ item.author }} ({{item.text.length}})
+			</p>
+			<span
+				id="subtitle-text"
+				[ngClass]="{
+					'big-text': captionsContainer.offsetWidth >= 1000 || screenSize === 'lg' || screenSize === 'xl',
+					'medium-text': (captionsContainer.offsetWidth >= 960 && captionsContainer.offsetWidth < 1000) || screenSize === 'md',
+					'small-text': (captionsContainer.offsetWidth >= 600 && captionsContainer.offsetWidth < 960) || screenSize === 'sm',
+					'extra-small-text': captionsContainer.offsetWidth < 600 || screenSize === 'xs'
+				}"
+			>
+				{{ item.text }}</span
+			>
+		</div>
 	</div>
-	<div class="subtitles-offset" *ngIf="screenSize !== 'sm' && screenSize !== 'xs' && !settingsPanelOpened"></div>
+
+	<div *ngIf="screenSize !== 'sm' && screenSize !== 'xs' && !settingsPanelOpened" class="subtitles-offset">
+	</div>
 </div>

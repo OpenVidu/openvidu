@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { MediaChange, MediaObserver } from '@angular/flex-layout';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { LayoutClass } from '../../models/layout.model';
 
 /**
@@ -11,7 +11,6 @@ import { LayoutClass } from '../../models/layout.model';
 })
 export class DocumentService {
 	screenSizeObs: Observable<MediaChange[]>;
-	private screenSize = <BehaviorSubject<MediaChange>><unknown>new BehaviorSubject(MediaChange);
 
 	constructor(private media: MediaObserver) {
 		this.screenSizeObs= this.media.asObservable();

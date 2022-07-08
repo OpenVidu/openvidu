@@ -24,3 +24,8 @@
 	text-align: -moz-center;
 	color: var(--ov-panel-text-color);
 }
+
+/* Private css variables */
+#call-container {
+    --ov-captions-height: 250px;
+}
