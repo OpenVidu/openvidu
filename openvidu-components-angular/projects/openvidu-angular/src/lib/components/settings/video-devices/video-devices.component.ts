@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { PublisherProperties } from 'openvidu-browser';
 import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../../models/device.model';
@@ -21,6 +21,8 @@ import { VirtualBackgroundService } from '../../../services/virtual-background/v
 	styleUrls: ['./video-devices.component.css']
 })
 export class VideoDevicesComponent implements OnInit, OnDestroy {
+	@Output()  onDeviceSelectorClicked = new EventEmitter<void>();
+
 	videoMuteChanging: boolean;
 	isVideoMuted: boolean;
 	cameraSelected: CustomDevice;

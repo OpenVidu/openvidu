@@ -14,6 +14,7 @@
 		<mat-select
 			[disabled]="isVideoMuted || !hasVideoDevices"
 			[value]="cameraSelected?.device"
+			(click)="onDeviceSelectorClicked.emit()"
 			(selectionChange)="onCameraSelected($event)"
 		>
 			<mat-option *ngFor="let camera of cameras" [value]="camera.device">

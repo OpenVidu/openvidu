@@ -16,6 +16,7 @@
 		<mat-select
 			[disabled]="isAudioMuted || !hasAudioDevices"
 			[value]="microphoneSelected?.device"
+			(click)="onDeviceSelectorClicked.emit()"
 			(selectionChange)="onMicrophoneSelected($event)"
 		>
 			<mat-option *ngFor="let microphone of microphones" [value]="microphone.device">

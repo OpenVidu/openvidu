@@ -1,6 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit, Output, EventEmitter, ViewChild, AfterViewInit } from '@angular/core';
-import { MatMenuTrigger } from '@angular/material/menu';
-import { MatSelect } from '@angular/material/select';
+import { Component, HostListener, OnDestroy, OnInit, Output, EventEmitter } from '@angular/core';
 
 import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../models/device.model';
@@ -22,16 +20,7 @@ import { ParticipantService } from '../../services/participant/participant.servi
 	templateUrl: './pre-join.component.html',
 	styleUrls: ['./pre-join.component.css']
 })
-export class PreJoinComponent implements OnInit, OnDestroy, AfterViewInit {
-	/**
-	 * @ignore
-	 */
-	@ViewChild(MatMenuTrigger) public menuTrigger: MatMenuTrigger;
-	/**
-	 * @ignore
-	 */
-	@ViewChild(MatSelect) matSelect: MatSelect;
-
+export class PreJoinComponent implements OnInit, OnDestroy {
 	@Output() onJoinButtonClicked = new EventEmitter<any>();
 	cameras: CustomDevice[];
 	microphones: CustomDevice[];
@@ -88,17 +77,6 @@ export class PreJoinComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.isLoading = false;
 	}
 
-	ngAfterViewInit() {
-		// Some devices as iPhone do not show the menu panels correctly
-		// Updating the container where the panel is added fix the problem.
-		this.menuTrigger?.menuOpened.subscribe(() => {
-			this.cdkSrv.setSelector('#prejoin-container');
-		});
-		this.matSelect?.openedChange.subscribe(() => {
-			this.cdkSrv.setSelector('#prejoin-container');
-		});
-	}
-
 	async ngOnDestroy() {
 		this.cdkSrv.setSelector('body');
 		if (this.localParticipantSubscription) this.localParticipantSubscription.unsubscribe();
@@ -106,6 +84,12 @@ export class PreJoinComponent implements OnInit, OnDestroy, AfterViewInit {
 		if (this.backgroundEffectsButtonSub) this.backgroundEffectsButtonSub.unsubscribe();
 		if (this.minimalSub) this.minimalSub.unsubscribe();
 		this.panelService.closePanel();
+	}
+
+	onDeviceSelectorClicked() {
+		// Some devices as iPhone do not show the menu panels correctly
+		// Updating the container where the panel is added fix the problem.
+		this.cdkSrv.setSelector('#prejoin-container');
 	}
 
 	joinSession() {

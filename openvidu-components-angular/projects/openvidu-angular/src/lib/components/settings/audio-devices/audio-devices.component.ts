@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { EventEmitter, Component, OnDestroy, OnInit, Output } from '@angular/core';
 import { PublisherProperties } from 'openvidu-browser';
 import { DeviceService } from '../../../services/device/device.service';
 import { OpenViduService } from '../../../services/openvidu/openvidu.service';
@@ -18,6 +18,7 @@ import { VideoType } from '../../../models/video-type.model';
 	styleUrls: ['./audio-devices.component.css']
 })
 export class AudioDevicesComponent implements OnInit, OnDestroy {
+	@Output() onDeviceSelectorClicked = new EventEmitter<void>();
 	hasAudioDevices: boolean;
 	isAudioMuted: boolean;
 	microphoneSelected: CustomDevice;
@@ -28,7 +29,7 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 		private openviduService: OpenViduService,
 		private deviceSrv: DeviceService,
 		private storageSrv: StorageService,
-		protected participantService: ParticipantService
+		private participantService: ParticipantService
 	) {}
 
 	async ngOnInit() {

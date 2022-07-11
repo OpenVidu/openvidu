@@ -3,8 +3,7 @@
 	<!-- <span>OpenVidu Call</span> -->
 	<span class="spacer"></span>
 
-	<ov-lang-selector *ngIf="!isMinimal"></ov-lang-selector>
-
+	<ov-lang-selector *ngIf="!isMinimal" (onLangSelectorClicked)="onDeviceSelectorClicked()"></ov-lang-selector>
 </mat-toolbar>
 
 <div class="container" id="prejoin-container" fxLayout.gt-sm="row" fxLayout.lt-md="column">
@@ -51,11 +50,10 @@
 					<hr *ngIf="windowSize >= 960" />
 
 					<!-- Camera -->
-					<ov-video-devices-select></ov-video-devices-select>
+					<ov-video-devices-select (onDeviceSelectorClicked)="onDeviceSelectorClicked()"></ov-video-devices-select>
 
 					<!-- Microphone -->
-					<ov-audio-devices-select></ov-audio-devices-select>
-
+					<ov-audio-devices-select (onDeviceSelectorClicked)="onDeviceSelectorClicked()"></ov-audio-devices-select>
 				</div>
 
 				<div fxFlex.gt-sm="60%" fxLayout.lt-md="column" fxLayoutAlign="center center" fxFlexFill class="join-btn-container">
