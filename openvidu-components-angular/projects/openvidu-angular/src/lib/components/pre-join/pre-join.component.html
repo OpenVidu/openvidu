@@ -1,10 +1,12 @@
-<mat-toolbar class="prejoin-toolbar">
-	<img *ngIf="!isMinimal && showLogo" id="branding-logo" src="assets/images/logo.png" ovLogo />
-	<!-- <span>OpenVidu Call</span> -->
-	<span class="spacer"></span>
+<div class="prejoin-toolbar">
+	<mat-toolbar id="toolbar">
+		<img *ngIf="!isMinimal && showLogo" id="branding-logo" src="assets/images/logo.png" ovLogo />
+		<!-- <span>OpenVidu Call</span> -->
+		<span class="spacer"></span>
 
-	<ov-lang-selector *ngIf="!isMinimal" (onLangSelectorClicked)="onDeviceSelectorClicked()"></ov-lang-selector>
-</mat-toolbar>
+		<ov-lang-selector *ngIf="!isMinimal" (onLangSelectorClicked)="onDeviceSelectorClicked()"></ov-lang-selector>
+	</mat-toolbar>
+</div>
 
 <div class="container" id="prejoin-container" fxLayout.gt-sm="row" fxLayout.lt-md="column">
 	<div fxFlex.gt-sm="65%" fxFlex.lt-md="55%" fxLayoutAlign="center center" id="layout-container">

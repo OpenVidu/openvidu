@@ -5,17 +5,29 @@
 }
 
 .prejoin-toolbar {
+	max-height: 40px;
+	height: 40px;
+}
+#toolbar {
 	background-color: var(--ov-light-color);
+	height: 100%;
+}
+#toolbar ::ng-deep .lang-button {
+	height: 25px !important;
+	font-size: 14px !important;
+	line-height: 0px;
+	align-items: unset !important;
 }
 .spacer {
 	flex: 1 1 auto;
 }
 
 #branding-logo {
-	background-color: var(--ov-logo-background-color);
 	border-radius: var(--ov-panel-radius);
 	max-width: 35px;
 	max-height: 35px;
+	height: -webkit-fill-available;
+	height: -moz-available;
 	padding: 10px;
 	margin-right: 10px;
 }
@@ -32,9 +44,13 @@ hr {
 	margin: 0;
 }
 
+#prejoin-container {
+	height: calc(100% - 40px);
+}
 #prejoin-container ::ng-deep .sidenav-container {
 	padding-top: 0px !important;
 }
+
 #prejoin-container ::ng-deep #background-effects-container {
 	margin: 0px !important;
 	max-height: 100% !important;
@@ -51,6 +67,10 @@ hr {
 
 #prejoin-container ::ng-deep .layout {
 	min-width: 0px !important;
+}
+
+#prejoin-container ::ng-deep .OT_root {
+	padding: 0px !important;
 }
 
 #background-effects-btn {
@@ -88,7 +108,6 @@ hr {
 	display: block !important;
 }
 
-
 .join-btn-container {
 	width: inherit;
 	text-align: center;
@@ -101,7 +120,6 @@ hr {
 	background-color: var(--ov-tertiary-color);
 	border-radius: var(--ov-video-radius);
 }
-
 
 @media only screen and (max-width: 480px) {
 	.container,
