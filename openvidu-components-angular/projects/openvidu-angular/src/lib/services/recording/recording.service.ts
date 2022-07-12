@@ -73,7 +73,7 @@ export class RecordingService {
 	 */
 	playRecording(recording: RecordingInfo) {
 		const recordingId = recording.id;
-		const extension = recording.url?.split('.').pop();
+		const extension = recording.url?.split('.').pop()  || 'mp4';
 		this.actionService.openRecordingPlayerDialog(`${this.baseUrl}recordings/${recordingId}/${recordingId}.${extension}`);
 	}
 
