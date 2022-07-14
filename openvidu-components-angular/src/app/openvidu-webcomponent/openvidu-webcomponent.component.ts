@@ -1,5 +1,5 @@
 import { Component, ElementRef, Input, OnInit, Output, EventEmitter } from '@angular/core';
-import { ILogger, LoggerService, OpenViduService, TokenModel, ParticipantAbstractModel, RecordingInfo } from 'openvidu-angular';
+import { OpenViduService, TokenModel, ParticipantAbstractModel, RecordingInfo } from 'openvidu-angular';
 import { Session } from 'openvidu-browser';
 
 /**
@@ -531,13 +531,11 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * @internal
 	 */
 	success: boolean = false;
-	private log: ILogger;
 
 	/**
 	 * @internal
 	 */
-	constructor(private loggerService: LoggerService, private host: ElementRef, private openviduService: OpenViduService) {
-		this.log = this.loggerService.get('WebComponent');
+	constructor(private host: ElementRef, private openviduService: OpenViduService) {
 		this.host.nativeElement.disconnect = this.disconnect.bind(this);
 	}
 
@@ -553,19 +551,19 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 */
 	@Input('tokens')
 	set tokens(value: TokenModel | string) {
-		this.log.d('Webcomponent tokens: ', value);
+		console.debug('Webcomponent tokens: ', value);
 		try {
 			this._tokens = this.castToJson(value);
 			this.success = !!this._tokens?.webcam && !!this._tokens?.screen;
 		} catch (error) {
 			if (typeof value === 'string' && value !== '') {
-				this.log.d('Sigle token received.');
+				console.debug('Sigle token received.');
 				this._tokens = { webcam: value };
 				this.success = true;
 			} else {
-				this.log.e(error);
-				this.log.e('Parameters received are incorrect: ', value);
-				this.log.e('Session cannot start');
+				console.error(error);
+				console.error('Parameters received are incorrect: ', value);
+				console.error('Session cannot start');
 			}
 		}
 	}
