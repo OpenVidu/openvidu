@@ -29,7 +29,7 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 /**
  * Triggered by:
  * - `streamCreated` (available for [Session](/en/stable/api/openvidu-browser/interfaces/SessionEventMap.html#streamCreated) and [Publisher](/en/stable/api/openvidu-browser/interfaces/PublisherEventMap.html#streamCreated) objects)
- * - `streamDestroyed]` (available for [Session](/en/stable/api/openvidu-browser/interfaces/SessionEventMap.html#streamDestroyed) and [Publisher](/en/stable/api/openvidu-browser/interfaces/PublisherEventMap.html#streamDestroyed) objects)
+ * - `streamDestroyed` (available for [Session](/en/stable/api/openvidu-browser/interfaces/SessionEventMap.html#streamDestroyed) and [Publisher](/en/stable/api/openvidu-browser/interfaces/PublisherEventMap.html#streamDestroyed) objects)
  */
 export class StreamEvent extends Event {
 

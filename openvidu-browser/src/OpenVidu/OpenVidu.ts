@@ -174,10 +174,10 @@ export class OpenVidu {
   }
 
 
-  initPublisher(targetElement: string | HTMLElement): Publisher;
-  initPublisher(targetElement: string | HTMLElement, properties: PublisherProperties): Publisher;
-  initPublisher(targetElement: string | HTMLElement, completionHandler: (error: Error | undefined) => void): Publisher;
-  initPublisher(targetElement: string | HTMLElement, properties: PublisherProperties, completionHandler: (error: Error | undefined) => void): Publisher;
+  initPublisher(targetElement: string | HTMLElement | undefined): Publisher;
+  initPublisher(targetElement: string | HTMLElement | undefined, properties: PublisherProperties): Publisher;
+  initPublisher(targetElement: string | HTMLElement | undefined, completionHandler: (error: Error | undefined) => void): Publisher;
+  initPublisher(targetElement: string | HTMLElement | undefined, properties: PublisherProperties, completionHandler: (error: Error | undefined) => void): Publisher;
 
   /**
    * Returns a new publisher
@@ -199,7 +199,7 @@ export class OpenVidu {
    * @param completionHandler `error` parameter is null if `initPublisher` succeeds, and is defined if it fails.
    *                          `completionHandler` function is called before the Publisher dispatches an `accessAllowed` or an `accessDenied` event
    */
-  initPublisher(targetElement: string | HTMLElement, param2?, param3?): Publisher {
+  initPublisher(targetElement: string | HTMLElement | undefined, param2?, param3?): Publisher {
 
     let properties: PublisherProperties;
 
@@ -266,10 +266,10 @@ export class OpenVidu {
    *
    * > WARNING: events `accessDialogOpened` and `accessDialogClosed` will not be dispatched if using this method instead of [[OpenVidu.initPublisher]]
    */
-  initPublisherAsync(targetElement: string | HTMLElement): Promise<Publisher>;
-  initPublisherAsync(targetElement: string | HTMLElement, properties: PublisherProperties): Promise<Publisher>;
+  initPublisherAsync(targetElement: string | HTMLElement | undefined): Promise<Publisher>;
+  initPublisherAsync(targetElement: string | HTMLElement | undefined, properties: PublisherProperties): Promise<Publisher>;
 
-  initPublisherAsync(targetElement: string | HTMLElement, properties?: PublisherProperties): Promise<Publisher> {
+  initPublisherAsync(targetElement: string | HTMLElement | undefined, properties?: PublisherProperties): Promise<Publisher> {
     return new Promise<Publisher>((resolve, reject) => {
 
       let publisher: Publisher;

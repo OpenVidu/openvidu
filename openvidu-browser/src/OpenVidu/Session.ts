@@ -214,10 +214,10 @@ export class Session extends EventDispatcher {
         this.leave(false, 'disconnect');
     }
 
-    subscribe(stream: Stream, targetElement: string | HTMLElement): Subscriber;
-    subscribe(stream: Stream, targetElement: string | HTMLElement, properties: SubscriberProperties): Subscriber;
-    subscribe(stream: Stream, targetElement: string | HTMLElement, completionHandler: (error: Error | undefined) => void): Subscriber;
-    subscribe(stream: Stream, targetElement: string | HTMLElement, properties: SubscriberProperties, completionHandler: (error: Error | undefined) => void): Subscriber;
+    subscribe(stream: Stream, targetElement: string | HTMLElement | undefined): Subscriber;
+    subscribe(stream: Stream, targetElement: string | HTMLElement | undefined, properties: SubscriberProperties): Subscriber;
+    subscribe(stream: Stream, targetElement: string | HTMLElement | undefined, completionHandler: (error: Error | undefined) => void): Subscriber;
+    subscribe(stream: Stream, targetElement: string | HTMLElement | undefined, properties: SubscriberProperties, completionHandler: (error: Error | undefined) => void): Subscriber;
 
     /**
      * Subscribes to a `stream`, adding a new HTML video element to DOM with `subscriberProperties` settings. This method is usually called in the callback of `streamCreated` event.
@@ -234,7 +234,7 @@ export class Session extends EventDispatcher {
      * You can always call method [[Subscriber.addVideoElement]] or [[Subscriber.createVideoElement]] to manage the video elements on your own (see [Manage video players](/en/stable/cheatsheet/manage-videos) section)
      * @param completionHandler `error` parameter is null if `subscribe` succeeds, and is defined if it fails.
      */
-    subscribe(stream: Stream, targetElement: string | HTMLElement, param3?: ((error: Error | undefined) => void) | SubscriberProperties, param4?: ((error: Error | undefined) => void)): Subscriber {
+    subscribe(stream: Stream, targetElement: string | HTMLElement | undefined, param3?: ((error: Error | undefined) => void) | SubscriberProperties, param4?: ((error: Error | undefined) => void)): Subscriber {
         let properties: SubscriberProperties = {};
         if (!!param3 && typeof param3 !== 'function') {
             properties = {
