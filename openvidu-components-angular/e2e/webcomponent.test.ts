@@ -24,6 +24,29 @@ describe('Testing API Directives', () => {
 		await browser.quit();
 	});
 
+	it('should join with ONLY ONE TOKEN', async () => {
+		let element;
+		await browser.get(`${url}?singleToken=true`);
+		// Checking if prejoin page exist
+		element = await browser.wait(until.elementLocated(By.id('prejoin-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		const joinButton = await browser.findElement(By.id('join-button'));
+		expect(await joinButton.isDisplayed()).to.be.true;
+		await joinButton.click();
+
+		// Checking if session container is present
+		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		// Checking if toolbar is present
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Checking if screenshare button is not present
+		element = await browser.findElements(By.id('screenshare-btn'));
+		expect(element.length).equals(0);
+	});
+
 	it('should set the MINIMAL UI', async () => {
 		let element;
 		await browser.get(`${url}?minimal=true`);
@@ -284,7 +307,6 @@ describe('Testing API Directives', () => {
 		expect(await element.isDisplayed()).to.be.true;
 		element = await browser.findElements(By.id('subtitles-opt'));
 		expect(element.length).equals(0);
-
 	});
 
 	it('should HIDE the TOOLBAR SETTINGS button', async () => {
@@ -904,7 +926,6 @@ describe('Testing videoconference EVENTS', () => {
 		await element.click();
 		element = await browser.wait(until.elementLocated(By.id('onActivitiesPanelDeleteRecordingClicked')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
-
 	});
 
 	it('should receive the onSessionCreated event', async () => {
@@ -1288,7 +1309,6 @@ describe('Testing panel toggling', () => {
 		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
 		element = await browser.findElements(By.id('default-settings-panel'));
 		expect(element.length).equals(1);
-
 	});
 
 	it('should switching between PARTICIPANTS and CHAT panels', async () => {

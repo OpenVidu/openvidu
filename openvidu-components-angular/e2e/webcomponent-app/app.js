@@ -22,6 +22,7 @@ var RECORDING_ERROR;
 var TOOLBAR_SETTINGS_BUTTON;
 var CAPTIONS_BUTTON;
 
+var SINGLE_TOKEN;
 var SESSION_NAME;
 
 var PARTICIPANT_NAME;
@@ -29,6 +30,11 @@ var PARTICIPANT_NAME;
 $(document).ready(() => {
 
     var url = new URL(window.location.href);
+
+    SINGLE_TOKEN = url.searchParams.get("singleToken") === null ? false : url.searchParams.get("singleToken") === 'true';
+
+
+    // Directives
 	MINIMAL = url.searchParams.get("minimal") === null ? false : url.searchParams.get("minimal") === 'true';
     PARTICIPANT_NAME = url.searchParams.get("participantName") || 'TEST_USER';
     PREJOIN = url.searchParams.get("prejoin") === null ? true : url.searchParams.get("prejoin") === 'true';
@@ -139,7 +145,14 @@ function appendElement(id) {
 
 async function joinSession(sessionName, participantName) {
     var webComponent = document.querySelector('openvidu-webcomponent');
-    var tokens = {webcam: await getToken(sessionName), screen: await getToken(sessionName)};
+    var tokens;
+    if (SINGLE_TOKEN){
+
+        tokens = await getToken(sessionName);
+    } else {
+        tokens = {webcam: await getToken(sessionName), screen: await getToken(sessionName)};
+
+    }
 
     webComponent.minimal = MINIMAL;
     webComponent.prejoin = PREJOIN;
