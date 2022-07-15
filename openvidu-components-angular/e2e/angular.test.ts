@@ -542,6 +542,10 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 		// Check if custom panel is present
 		element = await browser.findElements(By.id('custom-activities-panel'));
 		expect(element.length).equals(1);
+
+		// Check if activities panel is has content
+		element = await browser.findElements(By.id('activities-container'));
+		expect(element.length).equals(1);
 	});
 
 	it('should inject an ADDITIONAL PANEL only', async () => {
