@@ -40,7 +40,7 @@ export class Subscriber extends StreamManager {
     /**
      * @hidden
      */
-    constructor(stream: Stream, targEl: string | HTMLElement, properties: SubscriberProperties) {
+    constructor(stream: Stream, targEl: string | HTMLElement | undefined, properties: SubscriberProperties) {
         super(stream, targEl);
         this.element = this.targetElement;
         this.stream = stream;

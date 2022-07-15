@@ -81,7 +81,7 @@ export class Publisher extends StreamManager {
     /**
      * @hidden
      */
-    constructor(targEl: string | HTMLElement, properties: PublisherProperties, openvidu: OpenVidu) {
+    constructor(targEl: string | HTMLElement | undefined, properties: PublisherProperties, openvidu: OpenVidu) {
         super(new Stream((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl);
         platform = PlatformUtils.getInstance();
         this.properties = properties;
