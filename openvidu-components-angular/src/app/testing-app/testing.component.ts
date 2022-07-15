@@ -196,12 +196,10 @@ export class TestingComponent implements OnInit {
 				break;
 
 			case StructuralDirectives.ADDITIONAL_PANELS:
-				debugger
 				this.ovAdditionalPanelsSelected = value;
 				break;
 
 			case StructuralDirectives.ACTIVITIES_PANEL:
-				debugger
 				this.ovActivitiesPanelSelected = value;
 				break;
 
@@ -232,7 +230,6 @@ export class TestingComponent implements OnInit {
 	}
 
 	updateApiDirective(id: string, value: boolean) {
-		console.log("AAAAAAAAAa", id + value)
 		switch (id) {
 			case AttributeDirective.TOOLBAR_CHAT_PANEL:
 				this.chatPanelBtn = value;
@@ -258,7 +255,6 @@ export class TestingComponent implements OnInit {
 				break;
 			case AttributeDirective.TOOLBAR_ACTIVITIES_PANEL:
 				this.activitiesPanelBtn = value;
-				console.warn('valor del checkbox', this.activitiesPanelBtn)
 				break;
 			case AttributeDirective.TOOLBAR_SCREENSHARE:
 				this.screenshareBtn = value;
