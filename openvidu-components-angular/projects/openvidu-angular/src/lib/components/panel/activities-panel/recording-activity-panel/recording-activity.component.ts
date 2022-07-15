@@ -7,6 +7,9 @@ import { OpenViduAngularConfigService } from '../../../../services/config/openvi
 import { ParticipantService } from '../../../../services/participant/participant.service';
 import { RecordingService } from '../../../../services/recording/recording.service';
 
+/**
+ * @internal
+ */
 @Component({
 	selector: 'ov-recording-activity',
 	templateUrl: './recording-activity.component.html',

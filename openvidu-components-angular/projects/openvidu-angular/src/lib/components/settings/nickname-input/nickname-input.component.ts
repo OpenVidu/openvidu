@@ -4,6 +4,10 @@ import { ParticipantAbstractModel } from '../../../models/participant.model';
 import { ParticipantService } from '../../../services/participant/participant.service';
 import { StorageService } from '../../../services/storage/storage.service';
 
+
+/**
+ * @internal
+ */
 @Component({
 	selector: 'ov-nickname-input',
 	templateUrl: './nickname-input.component.html',

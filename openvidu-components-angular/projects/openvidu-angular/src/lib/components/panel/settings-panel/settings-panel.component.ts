@@ -4,6 +4,9 @@ import { PanelSettingsOptions, PanelType } from '../../../models/panel.model';
 import { OpenViduAngularConfigService } from '../../../services/config/openvidu-angular.config.service';
 import { PanelEvent, PanelService } from '../../../services/panel/panel.service';
 
+/**
+ * @internal
+ */
 @Component({
 	selector: 'ov-settings-panel',
 	templateUrl: './settings-panel.component.html',

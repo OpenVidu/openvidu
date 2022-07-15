@@ -5,6 +5,9 @@ import { PanelType } from '../../../models/panel.model';
 import { PanelService } from '../../../services/panel/panel.service';
 import { VirtualBackgroundService } from '../../../services/virtual-background/virtual-background.service';
 
+/**
+ * @internal
+ */
 @Component({
   selector: 'ov-background-effects-panel',
   templateUrl: './background-effects-panel.component.html',

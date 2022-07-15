@@ -2,6 +2,10 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { LayoutService } from '../../../services/layout/layout.service';
 
+
+/**
+ * @internal
+ */
 @Component({
 	selector: 'ov-subtitles-settings',
 	templateUrl: './subtitles.component.html',
@@ -23,7 +27,7 @@ export class SubtitlesSettingComponent implements OnInit, OnDestroy {
 		if (this.subtitlesSubs) this.subtitlesSubs.unsubscribe();
 	}
 
-	onLangSelected(lang: string){
+	onLangSelected(lang: string) {
 		this.langSelected = lang;
 	}
 

@@ -92,24 +92,24 @@ export class PanelComponent implements OnInit {
 		}
 	}
 
-	@ContentChild(BackgroundEffectsPanelDirective)
-	set externalBackgroundEffectsPanel(externalBackgroundEffectsPanel: BackgroundEffectsPanelDirective) {
-		// This directive will has value only when BACKGROUND EFFECTS PANEL component tagged with '*ovBackgroundEffectsPanel'
-		// is inside of the PANEL component tagged with '*ovPanel'
-		// TODO: backgroundEffectsPanel does not provides customization
-		// if (externalBackgroundEffectsPanel) {
-		// 	this.backgroundEffectsPanelTemplate = externalBackgroundEffectsPanel.template;
-		// }
-	}
+	// TODO: backgroundEffectsPanel does not provides customization
+	// @ContentChild(BackgroundEffectsPanelDirective)
+	// set externalBackgroundEffectsPanel(externalBackgroundEffectsPanel: BackgroundEffectsPanelDirective) {
+	// This directive will has value only when BACKGROUND EFFECTS PANEL component tagged with '*ovBackgroundEffectsPanel'
+	// is inside of the PANEL component tagged with '*ovPanel'
+	// if (externalBackgroundEffectsPanel) {
+	// 	this.backgroundEffectsPanelTemplate = externalBackgroundEffectsPanel.template;
+	// }
+	// }
 
 	// TODO: settingsPanel does not provides customization
 	// @ContentChild(SettingsPanelDirective)
 	// set externalSettingsPanel(externalSettingsPanel: SettingsPanelDirective) {
-		// This directive will has value only when SETTINGS PANEL component tagged with '*ovSettingsPanel'
-		// is inside of the PANEL component tagged with '*ovPanel'
-		// if (externalSettingsPanel) {
-		// 	this.settingsPanelTemplate = externalSettingsPanel.template;
-		// }
+	// This directive will has value only when SETTINGS PANEL component tagged with '*ovSettingsPanel'
+	// is inside of the PANEL component tagged with '*ovPanel'
+	// if (externalSettingsPanel) {
+	// 	this.settingsPanelTemplate = externalSettingsPanel.template;
+	// }
 	// }
 
 	@ContentChild(ActivitiesPanelDirective)

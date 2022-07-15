@@ -365,7 +365,7 @@ export class ChatPanelDirective {
 }
 
 /**
- * TODO: WIP. backgroundEffectsPanel does not provides customization
+ * backgroundEffectsPanel does not provides customization
  * @internal
  */
 @Directive({
@@ -377,8 +377,44 @@ export class BackgroundEffectsPanelDirective {
 
 
 /**
- * TODO: WIP
- * @internal
+ * The ***ovActivitiesPanel** directive allows to replace the default activities panel template injecting your own component.
+ * Here we're going to redefine the activities template in a few code lines.
+ *
+ * You can run the sample [here](https://docs.openvidu.io/en/stable/components/openvidu-custom-activities-panel#run-this-tutorial).
+ *
+ * ```html
+ * <ov-videoconference [tokens]="tokens">
+ *	<div *ovActivitiesPanel id="my-panel">
+ *		<h3>ACTIVITIES</h3>
+ *		<div>
+ *			CUSTOM ACTIVITIES
+ *		</div>
+ *	</div>
+ * </ov-videoconference>
+ *```
+ * <br/>
+ *
+ * As we need to assign the tokens to the  the {@link VideoconferenceComponent}, we can request the tokens on the ngOnInit Angular lifecycle.
+ *
+ * ```javascript
+ * export class AppComponent implements OnInit {
+ *	tokens: TokenModel;
+ *	sessionId = 'activities-panel-directive-example';
+ *	OPENVIDU_URL = 'https://localhost:4443';
+ *	OPENVIDU_SECRET = 'MY_SECRET';
+
+ *	constructor(private httpClient: HttpClient) {}
+ *
+ *	async ngOnInit() {
+ *		this.tokens = {
+ *			webcam: await this.getToken(),
+ *			screen: await this.getToken(),
+ *		};
+ *	}
+ *
+ *}
+ * ```
+ *
  */
 @Directive({
 	selector: '[ovActivitiesPanel]'

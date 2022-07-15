@@ -67,6 +67,7 @@ const publicComponents = [
 	VideoconferenceComponent,
 	ToolbarComponent,
 	PanelComponent,
+	ActivitiesPanelComponent,
 	ParticipantsPanelComponent,
 	ParticipantPanelItemComponent,
 	ChatPanelComponent,
@@ -76,7 +77,6 @@ const publicComponents = [
 const privateComponents = [
 	PreJoinComponent,
 	SessionComponent,
-	ActivitiesPanelComponent,
 	BackgroundEffectsPanelComponent,
 	SettingsPanelComponent,
 	AudioWaveComponent,
