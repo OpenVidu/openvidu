@@ -11,7 +11,7 @@ do
 	AMI_ID=$(echo "${line}" | cut -d":" -f2)
       export AWS_DEFAULT_REGION=${REGION}
 
-      mapfile -t SNAPSHOTS < <(aws ec2 describe-images --image-ids "$AMI_ID" --output text --query 'Images[*].BlockDeviceMappings[*].Ebs.SnapshotId')
+      mapfile -t SNAPSHOTS < <(aws ec2 describe-images --image-ids "$AMI_ID" --include-deprecated --output text --query 'Images[*].BlockDeviceMappings[*].Ebs.SnapshotId')
       echo "Deregistering $AMI_ID"
 	aws ec2 deregister-image --image-id "${AMI_ID}"
       sleep 1
