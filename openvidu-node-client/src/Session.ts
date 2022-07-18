@@ -98,7 +98,8 @@ export class Session {
     /**
      * @deprecated Use [[Session.createConnection]] instead to get a [[Connection]] object.
      *
-     * @returns A Promise that is resolved to the generated _token_ string if success and rejected with an Error object if not
+     * @returns A Promise that is resolved to the generated _token_ string if success and rejected with an
+     * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not
      */
     public generateToken(tokenOptions?: TokenOptions): Promise<string> {
         return new Promise<string>((resolve, reject) => {
@@ -137,7 +138,8 @@ export class Session {
      * `connectionProperties`. Each user connecting to the Session requires a Connection.
      * The token string value to send to the client side is available at [[Connection.token]].
      *
-     * @returns A Promise that is resolved to the generated [[Connection]] object if success and rejected with an Error object if not
+     * @returns A Promise that is resolved to the generated [[Connection]] object if success and rejected with an
+     * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not
      */
     public createConnection(connectionProperties?: ConnectionProperties): Promise<Connection> {
         return new Promise<Connection>((resolve, reject) => {
@@ -185,7 +187,8 @@ export class Session {
     /**
      * Gracefully closes the Session: unpublishes all streams and evicts every participant
      *
-     * @returns A Promise that is resolved if the session has been closed successfully and rejected with an Error object if not
+     * @returns A Promise that is resolved if the session has been closed successfully and rejected with an
+     * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not
      */
     public close(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
@@ -268,7 +271,8 @@ export class Session {
      *
      * @param connection The Connection object to remove from the session, or its `connectionId` property
      *
-     * @returns A Promise that is resolved if the Connection was successfully removed from the Session and rejected with an Error object if not
+     * @returns A Promise that is resolved if the Connection was successfully removed from the Session and rejected with an
+     * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not
      */
     public forceDisconnect(connection: string | Connection): Promise<void> {
         return new Promise<void>((resolve, reject) => {
@@ -340,7 +344,8 @@ export class Session {
      *
      * @param publisher The Publisher object to unpublish, or its `streamId` property
      *
-     * @returns A Promise that is resolved if the stream was successfully unpublished and rejected with an Error object if not
+     * @returns A Promise that is resolved if the stream was successfully unpublished and rejected with an
+     * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not
      */
     public forceUnpublish(publisher: string | Publisher): Promise<void> {
         return new Promise<void>((resolve, reject) => {
@@ -405,7 +410,7 @@ export class Session {
      * @param connectionProperties A new [[ConnectionProperties]] object with the updated values to apply
      *
      * @returns A Promise that is resolved to the updated [[Connection]] object if the operation was
-     *          successful and rejected with an Error object if not
+     *          successful and rejected with an [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not
      */
     public updateConnection(connectionId: string, connectionProperties: ConnectionProperties): Promise<Connection | undefined> {
         return new Promise<any>((resolve, reject) => {

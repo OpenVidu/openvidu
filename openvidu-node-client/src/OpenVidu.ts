@@ -100,7 +100,8 @@ export class OpenVidu {
   /**
    * Creates an OpenVidu session. The session identifier will be available at property [[Session.sessionId]]
    *
-   * @returns A Promise that is resolved to the [[Session]] if success and rejected with an Error object if not.
+   * @returns A Promise that is resolved to the [[Session]] if success and rejected with an
+   * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not.
    * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#post-recording-start)).
    * 
@@ -133,8 +134,9 @@ export class OpenVidu {
    * @param name The name you want to give to the video file. You can access this same value in your clients on recording events (`recordingStarted`, `recordingStopped`)
    * @param properties Custom RecordingProperties to apply to this Recording. This will override the global default values set to the Session with [[SessionProperties.defaultRecordingProperties]]
    *
-   * @returns A Promise that is resolved to the [[Recording]] if it successfully started (the recording can be stopped with guarantees) and rejected with an Error
-   * object if not. This Error object has as `message` property with a status code carrying a specific meaning 
+   * @returns A Promise that is resolved to the [[Recording]] if it successfully started (the recording can be stopped with guarantees) and rejected with an
+   * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not.
+   * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#post-recording-start)).
    */
   public startRecording(sessionId: string, param2?: string | RecordingProperties): Promise<Recording> {
@@ -209,7 +211,8 @@ export class OpenVidu {
    *
    * @param recordingId The `id` property of the [[Recording]] you want to stop
    *
-   * @returns A Promise that is resolved to the [[Recording]] if it successfully stopped and rejected with an Error object if not.
+   * @returns A Promise that is resolved to the [[Recording]] if it successfully stopped and rejected with an
+   * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not.
    * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#post-recording-stop)).
    */
@@ -252,7 +255,8 @@ export class OpenVidu {
    *
    * @param recordingId The `id` property of the [[Recording]] you want to retrieve
    *
-   * @returns A Promise that is resolved to the [[Recording]] if it successfully stopped and rejected with an Error object if not.
+   * @returns A Promise that is resolved to the [[Recording]] if it successfully stopped and rejected with an
+   * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not.
    * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#get-recording)).
    */
@@ -324,7 +328,8 @@ export class OpenVidu {
    *
    * @param recordingId
    *
-   * @returns A Promise that is resolved if the Recording was successfully deleted and rejected with an Error object if not.
+   * @returns A Promise that is resolved if the Recording was successfully deleted and rejected with an
+   * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not.
    * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#delete-recording)).
    */
