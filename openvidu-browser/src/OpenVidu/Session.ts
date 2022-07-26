@@ -1348,7 +1348,7 @@ export class Session extends EventDispatcher {
      * @hidden
      */
     getTokenParams(token: string) {
-        const match = token.match(/^(wss?\:)\/\/(([^:\/?#]*)(?:\:([0-9]+))?)([\/]{0,1}[^?#]*)(\?[^#]*|)(#.*|)$/);
+        const match = token.match(/^(wss?)\:\/\/(([^:\/?#]*)(?:\:([0-9]+))?)([\/]{0,1}[^?#]*)(\?[^#]*|)(#.*|)$/);
         if (!!match) {
             const url = {
                 protocol: match[1],
@@ -1376,7 +1376,7 @@ export class Session extends EventDispatcher {
                 webrtcStatsInterval: queryParams['webrtcStatsInterval'],
                 sendBrowserLogs: queryParams['sendBrowserLogs'],
                 edition: queryParams['edition'],
-                wsUri: 'wss://' + url.host + '/openvidu',
+                wsUri: url.protocol + '://' + url.host + '/openvidu',
                 httpUri: 'https://' + url.host
             };
 
