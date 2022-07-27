@@ -33,10 +33,10 @@ export class ConsoleLogger {
 
     constructor(console: Console) {
         this.logger = console;
-        this.log = window.console.log,
-        this.info = window.console.info,
-        this.debug = window.console.debug,
-        this.warn = window.console.warn,
-        this.error = window.console.error
+        this.log = console.log,
+        this.info = console.info,
+        this.debug = console.debug,
+        this.warn = console.warn,
+        this.error = console.error
     }
 }
