@@ -330,7 +330,8 @@ export class OpenVidu {
       platform.isSamsungBrowser() ||
       platform.isSafariBrowser() ||
       platform.isAndroidBrowser() || // Android WebView & Ionic apps for Android
-      platform.isElectron()
+      platform.isElectron() ||
+      platform.isNodeJs()
     );
   }
 

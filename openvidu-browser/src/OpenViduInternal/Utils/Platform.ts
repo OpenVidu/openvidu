@@ -90,6 +90,13 @@ export class PlatformUtils {
 	/**
 	 * @hidden
 	 */
+	public isNodeJs(): boolean {
+		return platform.name === "Node.js";
+	}
+
+	/**
+	 * @hidden
+	 */
 	public isSamsungBrowser(): boolean {
 		return (
 			platform.name === "Samsung Internet Mobile" ||
