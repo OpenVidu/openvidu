@@ -304,29 +304,34 @@ export class OpenVidu {
    * Checks if the browser supports OpenVidu
    * @returns 1 if the browser supports OpenVidu, 0 otherwise
    */
-  checkSystemRequirements(): number {
-
+  checkSystemRequirements(): boolean {
+    // Specific iOS platform support (iPhone, iPad)
     if (platform.isIPhoneOrIPad()) {
-      if (platform.isIOSWithSafari() || platform.isIonicIos() ||
-        platform.isChromeMobileBrowser() || platform.isEdgeMobileBrowser() || platform.isOperaMobileBrowser() || platform.isFirefoxMobileBrowser()) {
-        return 1;
-      }
-      return 0;
+      return (
+        platform.isIOSWithSafari() ||
+        platform.isChromeMobileBrowser() ||
+        platform.isFirefoxMobileBrowser() ||
+        platform.isOperaMobileBrowser() ||
+        platform.isEdgeMobileBrowser() ||
+        platform.isIonicIos() // Ionic apps for iOS
+      );
     }
 
-    // Accept: Chrome (desktop and Android), Firefox (desktop and Android), Opera (desktop and Android),
-    // Safari (OSX and iOS), Edge Chromium (>= 80), Ionic (Android and iOS), Samsung Internet Browser (Android)
-    if (platform.isChromeBrowser() || platform.isChromeMobileBrowser() ||
-      platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser() || platform.isOperaBrowser() ||
-      platform.isOperaMobileBrowser() || platform.isEdgeBrowser() || platform.isEdgeMobileBrowser() ||
-      platform.isSafariBrowser() || platform.isAndroidBrowser() || platform.isElectron() || platform.isSamsungBrowser()
-    ) {
-      return 1;
-    }
-    // Reject iPhones and iPads if not Safari ('Safari' also covers Ionic for iOS)
-    // Reject others browsers not mentioned above
-    return 0;
-
+    // General platform support for web clients (Desktop, Mobile)
+    return (
+      platform.isChromeBrowser() ||
+      platform.isChromeMobileBrowser() ||
+      platform.isFirefoxBrowser() ||
+      platform.isFirefoxMobileBrowser() ||
+      platform.isOperaBrowser() ||
+      platform.isOperaMobileBrowser() ||
+      platform.isEdgeBrowser() ||
+      platform.isEdgeMobileBrowser() ||
+      platform.isSamsungBrowser() ||
+      platform.isSafariBrowser() ||
+      platform.isAndroidBrowser() || // Android WebView & Ionic apps for Android
+      platform.isElectron()
+    );
   }
 
   /**
