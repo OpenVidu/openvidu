@@ -11,7 +11,7 @@ export class OpenviduParamsService {
 
   params: OpenviduParams =
     {
-      openviduUrl: 'https://' + window.location.hostname + ':4443/',
+      openviduUrl: window.location.protocol + '//' + window.location.hostname + ':4443/',
       openviduSecret: 'MY_SECRET'
     };
 

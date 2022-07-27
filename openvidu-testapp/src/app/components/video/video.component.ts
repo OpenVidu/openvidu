@@ -230,7 +230,11 @@ export class VideoComponent implements OnInit, OnDestroy {
       pubUnpubVideo() {
           const publisher: Publisher = <Publisher>this.streamManager;
           this.videoMuted = !this.videoMuted;
-          publisher.publishVideo(!this.videoMuted);
+          if (this.videoMuted === true) {
+            publisher.publishVideo(false, true);
+          } else {
+            publisher.publishVideo(true);
+          }
           this.pubSubVideoIcon = this.videoMuted ? 'videocam_off' : 'videocam';
       }
 
