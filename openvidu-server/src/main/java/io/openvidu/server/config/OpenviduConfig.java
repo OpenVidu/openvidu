@@ -125,6 +125,9 @@ public class OpenviduConfig {
 	@Value("#{'${spring.profiles.active:}'.length() > 0 ? '${spring.profiles.active:}'.split(',') : \"default\"}")
 	protected String springProfile;
 
+	@Value("${DEV_CONTAINER:false}")
+	private boolean devContainer;
+
 	// Config properties
 
 	private boolean openviduCdr;
@@ -704,7 +707,7 @@ public class OpenviduConfig {
 
 		if (domain != null && !domain.isEmpty()) {
 			this.domainOrPublicIp = domain;
-			this.openviduPublicUrl = "https://" + domain;
+			this.openviduPublicUrl = (devContainer ? "http://" : "https://") + domain;
 			if (this.httpsPort != null && this.httpsPort != 443) {
 				this.openviduPublicUrl += (":" + this.httpsPort);
 			}
@@ -756,7 +759,7 @@ public class OpenviduConfig {
 		if (publicUrl.startsWith("https://")) {
 			OpenViduServer.wsUrl = publicUrl.replace("https://", "wss://");
 		} else if (publicUrl.startsWith("http://")) {
-			OpenViduServer.wsUrl = publicUrl.replace("http://", "wss://");
+			OpenViduServer.wsUrl = publicUrl.replace("http://", "ws://");
 		}
 		if (OpenViduServer.wsUrl.endsWith("/")) {
 			OpenViduServer.wsUrl = OpenViduServer.wsUrl.substring(0, OpenViduServer.wsUrl.length() - 1);
