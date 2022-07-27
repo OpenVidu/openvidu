@@ -12,7 +12,7 @@ export class OpenViduLogger {
 	private MAX_MSECONDS_BATCH_MESSAGES: number = 5000;
 	private MAX_LENGTH_STRING_JSON: number = 1000;
 
-	private defaultConsoleLogger: ConsoleLogger = new ConsoleLogger(window.console);
+	private defaultConsoleLogger: ConsoleLogger = new ConsoleLogger(globalThis.console);
 
 	private currentAppender: any;
 
@@ -29,7 +29,7 @@ export class OpenViduLogger {
 	static configureJSNLog(openVidu: OpenVidu, token: string) {
 		try {
 			// If dev mode or...
-			if ((window['LOG_JSNLOG_RESULTS']) ||
+			if ((globalThis['LOG_JSNLOG_RESULTS']) ||
 				// If instance is created and it is OpenVidu Pro
 				(this.instance && openVidu.isAtLeastPro
 					// If logs are enabled
@@ -89,7 +89,7 @@ export class OpenViduLogger {
 						const seen = new WeakSet();
 						return (key, value) => {
 							if (typeof value === "object" && value != null) {
-								if (seen.has(value) || (HTMLElement && value instanceof HTMLElement)) {
+								if (seen.has(value) || (globalThis.HTMLElement && value instanceof HTMLElement)) {
 									return;
 								}
 								seen.add(value);
@@ -104,7 +104,7 @@ export class OpenViduLogger {
 						stringifyJson = `${stringifyJson.substring(0, this.instance.MAX_LENGTH_STRING_JSON)}...`;
 					}
 
-					if (window['LOG_JSNLOG_RESULTS']) {
+					if (globalThis['LOG_JSNLOG_RESULTS']) {
 						console.log(stringifyJson);
 					}
 
@@ -193,12 +193,12 @@ export class OpenViduLogger {
 	}
 
 	private replaceWindowConsole() {
-		window.console = this.defaultConsoleLogger.logger;
-		window.console.log = this.getConsoleWithJSNLog().log;
-		window.console.info = this.getConsoleWithJSNLog().info;
-		window.console.debug = this.getConsoleWithJSNLog().debug;
-		window.console.warn = this.getConsoleWithJSNLog().warn;
-		window.console.error = this.getConsoleWithJSNLog().error;
+		globalThis.console = this.defaultConsoleLogger.logger;
+		globalThis.console.log = this.getConsoleWithJSNLog().log;
+		globalThis.console.info = this.getConsoleWithJSNLog().info;
+		globalThis.console.debug = this.getConsoleWithJSNLog().debug;
+		globalThis.console.warn = this.getConsoleWithJSNLog().warn;
+		globalThis.console.error = this.getConsoleWithJSNLog().error;
 	}
 
 	private disableLogger() {
@@ -206,12 +206,12 @@ export class OpenViduLogger {
 		this.isJSNLogSetup = false;
 		this.loggingSessionId = undefined;
 		this.currentAppender = undefined;
-		window.console = this.defaultConsoleLogger.logger;
-		window.console.log = this.defaultConsoleLogger.log;
-		window.console.info = this.defaultConsoleLogger.info;
-		window.console.debug = this.defaultConsoleLogger.debug;
-		window.console.warn = this.defaultConsoleLogger.warn;
-		window.console.error = this.defaultConsoleLogger.error;
+		globalThis.console = this.defaultConsoleLogger.logger;
+		globalThis.console.log = this.defaultConsoleLogger.log;
+		globalThis.console.info = this.defaultConsoleLogger.info;
+		globalThis.console.debug = this.defaultConsoleLogger.debug;
+		globalThis.console.warn = this.defaultConsoleLogger.warn;
+		globalThis.console.error = this.defaultConsoleLogger.error;
 	}
 
 	/**

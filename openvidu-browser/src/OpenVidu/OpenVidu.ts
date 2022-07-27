@@ -624,7 +624,7 @@ export class OpenVidu {
    * @hidden
    */
   onOrientationChanged(handler): void {
-    (<any>window).addEventListener('orientationchange', handler);
+    (globalThis as any).addEventListener('orientationchange', handler);
   }
 
   /**

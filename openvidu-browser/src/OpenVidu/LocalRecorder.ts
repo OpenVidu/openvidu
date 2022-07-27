@@ -263,11 +263,11 @@ export class LocalRecorder {
             a.style.display = 'none';
             document.body.appendChild(a);
 
-            const url = window.URL.createObjectURL(<any>this.blob);
+            const url = globalThis.URL.createObjectURL(<any>this.blob);
             a.href = url;
             a.download = this.id + '.' + Mime.getExtension(this.blob!.type);
             a.click();
-            window.URL.revokeObjectURL(url);
+            globalThis.URL.revokeObjectURL(url);
 
             document.body.removeChild(a);
         }
@@ -377,7 +377,7 @@ export class LocalRecorder {
         this.blob = new Blob(this.chunks, { type: this.mediaRecorder.mimeType });
         this.chunks = [];
 
-        this.videoPreviewSrc = window.URL.createObjectURL(this.blob);
+        this.videoPreviewSrc = globalThis.URL.createObjectURL(this.blob);
 
         this.state = LocalRecorderState.FINISHED;
     }

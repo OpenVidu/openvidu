@@ -23,7 +23,7 @@ getScreenId(function (error, sourceId, screen_constraints) {
 }, 'pass second parameter only if you want system audio');
 */
 
-window.getScreenId = function (firefoxString, callback, custom_parameter) {
+globalThis.getScreenId = function (firefoxString, callback, custom_parameter) {
     if (navigator.userAgent.indexOf('Edge') !== -1 && (!!navigator.msSaveOrOpenBlob || !!navigator.msSaveBlob)) {
         // microsoft edge => navigator.getDisplayMedia(screen_constraints).then(onSuccess, onFailure);
         callback({
@@ -45,7 +45,7 @@ window.getScreenId = function (firefoxString, callback, custom_parameter) {
         return;
     }
 
-    window.addEventListener('message', onIFrameCallback);
+    globalThis.addEventListener('message', onIFrameCallback);
 
     function onIFrameCallback(event) {
         if (!event.data) return;
@@ -58,14 +58,14 @@ window.getScreenId = function (firefoxString, callback, custom_parameter) {
             }
 
             // this event listener is no more needed
-            window.removeEventListener('message', onIFrameCallback);
+            globalThis.removeEventListener('message', onIFrameCallback);
         }
 
         if (event.data.chromeExtensionStatus) {
             callback(event.data.chromeExtensionStatus, null, getScreenConstraints(event.data.chromeExtensionStatus));
 
             // this event listener is no more needed
-            window.removeEventListener('message', onIFrameCallback);
+            globalThis.removeEventListener('message', onIFrameCallback);
         }
     }
 
@@ -85,8 +85,8 @@ function getScreenConstraints(error, sourceId, canRequestAudioTrack) {
         video: {
             mandatory: {
                 chromeMediaSource: error ? 'screen' : 'desktop',
-                maxWidth: window.screen.width > 1920 ? window.screen.width : 1920,
-                maxHeight: window.screen.height > 1080 ? window.screen.height : 1080
+                maxWidth: globalThis.screen.width > 1920 ? globalThis.screen.width : 1920,
+                maxHeight: globalThis.screen.height > 1080 ? globalThis.screen.height : 1080
             },
             optional: []
         }
@@ -148,7 +148,7 @@ function postGetSourceIdMessage(custom_parameter) {
 var iframe;
 
 // this function is used in RTCMultiConnection v3
-window.getScreenConstraints = function (callback) {
+globalThis.getScreenConstraints = function (callback) {
     loadIFrame(function () {
         getScreenId(function (error, sourceId, screen_constraints) {
             if (!screen_constraints) {
@@ -178,14 +178,14 @@ function loadIFrame(loadCallback) {
     (document.body || document.documentElement).appendChild(iframe);
 }
 
-window.getChromeExtensionStatus = function (callback) {
+globalThis.getChromeExtensionStatus = function (callback) {
     // for Firefox:
     if (!!navigator.mozGetUserMedia) {
         callback('installed-enabled');
         return;
     }
 
-    window.addEventListener('message', onIFrameCallback);
+    globalThis.addEventListener('message', onIFrameCallback);
 
     function onIFrameCallback(event) {
         if (!event.data) return;
@@ -194,7 +194,7 @@ window.getChromeExtensionStatus = function (callback) {
             callback(event.data.chromeExtensionStatus);
 
             // this event listener is no more needed
-            window.removeEventListener('message', onIFrameCallback);
+            globalThis.removeEventListener('message', onIFrameCallback);
         }
     }
 
@@ -217,4 +217,4 @@ function postGetChromeExtensionStatusMessage() {
     }, '*');
 }
 
-exports.getScreenId = window.getScreenId;
+exports.getScreenId = globalThis.getScreenId;
