@@ -40,6 +40,12 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu focal stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
     apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
 
+# docker-compose
+RUN apt-get update && apt-get install docker-compose-plugin && \
+    curl -fL https://github.com/docker/compose-switch/releases/latest/download/docker-compose-linux-amd64 -o /usr/local/bin/compose-switch && \
+    chmod +x /usr/local/bin/compose-switch && \
+    update-alternatives --install /usr/local/bin/docker-compose docker-compose /usr/local/bin/compose-switch 99
+
 # Cleanup
 RUN rm -rf /var/lib/apt/lists/*
 RUN apt-get autoremove --purge -y && apt-get autoclean
