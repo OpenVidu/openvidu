@@ -50,3 +50,21 @@ export class SearchByStringPropertyPipe implements PipeTransform {
 		});
 	  }
 }
+
+/**
+ * @internal
+ */
+ @Pipe({
+	name: 'thumbnailUrl'
+})
+export class ThumbnailFromUrlPipe implements PipeTransform {
+	transform(url: string): string {
+		if(url.includes('.mp4')){
+			const lastPart = url.split('/').pop();
+			let thumbnailUrl = lastPart?.replace('mp4', 'jpg');
+			thumbnailUrl = `recordings/${thumbnailUrl?.split('.')[0]}/${thumbnailUrl}`;
+			return thumbnailUrl;
+		}
+		return '';
+	}
+}

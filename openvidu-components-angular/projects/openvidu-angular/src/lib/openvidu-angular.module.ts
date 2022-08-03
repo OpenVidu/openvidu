@@ -18,7 +18,7 @@ import { DeleteDialogComponent } from './components/dialogs/delete-recording.com
 import { LinkifyPipe } from './pipes/linkify.pipe';
 import { TranslatePipe } from './pipes/translate.pipe';
 import { StreamTypesEnabledPipe, ParticipantStreamsPipe } from './pipes/participant.pipe';
-import { DurationFromSecondsPipe, SearchByStringPropertyPipe } from './pipes/recording.pipe';
+import { DurationFromSecondsPipe, SearchByStringPropertyPipe, ThumbnailFromUrlPipe } from './pipes/recording.pipe';
 
 import { OpenViduAngularConfig } from './config/openvidu-angular.config';
 import { CdkOverlayContainer } from './config/custom-cdk-overlay';
@@ -102,6 +102,7 @@ const privateComponents = [
 		ParticipantStreamsPipe,
 		DurationFromSecondsPipe,
 		SearchByStringPropertyPipe,
+		ThumbnailFromUrlPipe,
 		StreamTypesEnabledPipe,
 		TranslatePipe
 	],

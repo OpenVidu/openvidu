@@ -72,7 +72,7 @@
 									(recording.properties.outputMode === 'COMPOSED' ||
 										recording.properties.outputMode === 'COMPOSED_QUICK_START')
 								"
-								[src]="recording.thumbnailB64"
+								[src]="recording.url | thumbnailUrl"
 							/>
 							<div class="video-btns">
 								<button
