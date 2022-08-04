@@ -21,6 +21,16 @@ import { StreamManagerEventMap } from './StreamManagerEventMap';
 /**
  * Events dispatched by [[Publisher]] object. Manage event listeners with
  * [[Publisher.on]], [[Publisher.once]] and [[Publisher.off]] methods.
+ * 
+ * Example:
+ * 
+ * ```javascript
+ * publisher.on('accessDenied', () => { 
+ *      console.error('Camera access has been denied!');
+ * }
+ * 
+ * publisher.off('accessDenied');
+ * ```
  */
 export interface PublisherEventMap extends StreamManagerEventMap {
 

@@ -24,6 +24,16 @@ import { VideoElementEvent } from '../VideoElementEvent';
 /**
  * Events dispatched by [[StreamManager]] object. Manage event listeners with 
  * [[StreamManager.on]], [[StreamManager.once]] and [[StreamManager.off]] methods.
+ * 
+ * Example:
+ * 
+ * ```javascript
+ * streamManager.on('videoElementCreated', (event) => { 
+ *      console.log('New video element created:', event.element);
+ * }
+ * 
+ * streamManager.off('videoElementCreated');
+ * ```
  */
 export interface StreamManagerEventMap extends EventMap {
 
