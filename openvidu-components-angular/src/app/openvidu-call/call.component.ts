@@ -8,10 +8,9 @@ import { RestService } from '../services/rest.service';
 	styleUrls: ['./call.component.scss']
 })
 export class CallComponent implements OnInit {
+
 	value = true;
 	sessionId = 'daily-call';
-	OPENVIDU_URL = 'https://localhost:4443';
-	OPENVIDU_SECRET = 'MY_SECRET';
 	tokens: TokenModel;
 
 	joinSessionClicked: boolean = false;
@@ -20,24 +19,15 @@ export class CallComponent implements OnInit {
 	recordingList: RecordingInfo[] = [];
 	recordingError: any;
 
-	constructor(private restService: RestService, private recordingService: RecordingService) {}
+	constructor(private restService: RestService, private recordingService: RecordingService) { }
 
 	async ngOnInit() {
-		// this.tokens = {
-		// 	webcam: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET),
-		// 	screen: await this.restService.getToken(this.sessionId, this.OPENVIDU_URL, this.OPENVIDU_SECRET)
-		// };
-
-		// console.log(this.tokens)
-
-
 		const response = await this.restService.getTokensFromBackend(this.sessionId);
 		this.recordingList = response.recordings;
 		this.tokens = {
 			webcam: response.cameraToken,
 			screen: response.screenToken
 		};
-
 		console.log(this.tokens);
 	}
 

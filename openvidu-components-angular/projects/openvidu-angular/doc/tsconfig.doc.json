@@ -12,6 +12,5 @@
 		"src/test.ts",
 		"../src/lib/**/*.mock.ts",
 		"../src/lib/**/*.spec.ts",
-
-	],
+	]
 }
