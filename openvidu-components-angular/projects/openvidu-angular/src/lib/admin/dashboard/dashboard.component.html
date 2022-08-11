@@ -58,29 +58,17 @@
 			<div
 				*ngFor="
 					let recording of recordings
-						| searchByStringProperty: { properties: ['sessionId', 'properties.name'], filter: searchValue }
+						| searchByStringProperty: { properties: ['sessionId', 'properties?.name || name'], filter: searchValue }
 				"
 				class="item"
 			>
 				<mat-card class="recording-card">
 					<mat-card-content>
 						<div class="video-div-container">
-							<img
-								*ngIf="
-									!!recording.url &&
-									recording.properties.hasVideo &&
-									(recording.properties.outputMode === 'COMPOSED' ||
-										recording.properties.outputMode === 'COMPOSED_QUICK_START')
-								"
-								[src]="recording.url | thumbnailUrl"
-							/>
+							<img *ngIf="!!recording.url" [src]="recording.url | thumbnailUrl" />
 							<div class="video-btns">
 								<button
-									*ngIf="
-										recording.status !== 'failed' &&
-										recording.status !== 'stopped' &&
-										recording.properties.outputMode !== 'INDIVIDUAL'
-									"
+									*ngIf="recording.status !== 'failed' && recording.status !== 'stopped'"
 									mat-icon-button
 									(click)="play(recording)"
 								>
@@ -109,7 +97,7 @@
 							<div>
 								<div class="video-div-tag">
 									<span class="video-card-tag">{{ 'ADMIN.NAME' | translate }}</span
-									><span class="video-card-value">{{ recording.properties.name }}</span>
+									><span class="video-card-value">{{ recording.properties?.name || recording.name }}</span>
 								</div>
 								<div class="video-div-tag">
 									<span class="video-card-tag">{{ 'ADMIN.SESSION' | translate }}</span
@@ -117,7 +105,7 @@
 								</div>
 								<div class="video-div-tag">
 									<span class="video-card-tag">{{ 'ADMIN.OUTPUT' | translate }}</span
-									><span class="video-card-value">{{ recording.properties.outputMode }}</span>
+									><span class="video-card-value">{{ recording.properties?.outputMode || recording.outputMode }}</span>
 								</div>
 								<div class="video-div-tag">
 									<span class="video-card-tag">{{ 'ADMIN.DATE' | translate }}</span

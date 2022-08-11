@@ -15,13 +15,15 @@ export class ParticipantService {
 	 * Local participant Observable which pushes the local participant object in every update.
 	 */
 	localParticipantObs: Observable<ParticipantAbstractModel>;
-	protected _localParticipant = <BehaviorSubject<ParticipantAbstractModel>>new BehaviorSubject(null);
+	protected _localParticipant: BehaviorSubject<ParticipantAbstractModel | null> = new BehaviorSubject<ParticipantAbstractModel | null>(
+		null
+	);
 
 	/**
 	 * Remote participants Observable which pushes the remote participants array in every update.
 	 */
 	remoteParticipantsObs: Observable<ParticipantAbstractModel[]>;
-	protected _remoteParticipants = <BehaviorSubject<ParticipantAbstractModel[]>>new BehaviorSubject([]);
+	protected _remoteParticipants: BehaviorSubject<ParticipantAbstractModel[]> = new BehaviorSubject<ParticipantAbstractModel[]>([]);
 
 	protected localParticipant: ParticipantAbstractModel;
 	protected remoteParticipants: ParticipantAbstractModel[] = [];
@@ -118,7 +120,7 @@ export class ParticipantService {
 			videoEnlarged: true,
 			streamManager: screenPublisher,
 			connected: true,
-			connectionId: null
+			connectionId: ''
 		};
 
 		this.resetRemoteStreamsToNormalSize();
@@ -176,11 +178,8 @@ export class ParticipantService {
 	 */
 	clear() {
 		this.disableScreenStream();
-		// this.localParticipant = this.newParticipant();
-		// this._screensharing.next(false);
 		this.remoteParticipants = [];
-		this._remoteParticipants = <BehaviorSubject<ParticipantAbstractModel[]>>new BehaviorSubject([]);
-		this.remoteParticipantsObs = this._remoteParticipants.asObservable();
+		this.updateRemoteParticipants();
 		this.updateLocalParticipant();
 	}
 
@@ -306,7 +305,7 @@ export class ParticipantService {
 	 */
 	removeConnectionByConnectionId(connectionId: string) {
 		this.log.w('Deleting connection: ', connectionId);
-		let participant = null;
+		let participant: ParticipantAbstractModel | undefined;
 		if (this.localParticipant.hasConnectionId(connectionId)) {
 			participant = this.localParticipant;
 		} else {
@@ -338,11 +337,11 @@ export class ParticipantService {
 	/**
 	 * @internal
 	 */
-	getRemoteParticipantByConnectionId(connectionId: string): ParticipantAbstractModel {
+	getRemoteParticipantByConnectionId(connectionId: string): ParticipantAbstractModel | undefined {
 		return this.remoteParticipants.find((p) => p.hasConnectionId(connectionId));
 	}
 
-	protected getRemoteParticipantById(id: string): ParticipantAbstractModel {
+	protected getRemoteParticipantById(id: string): ParticipantAbstractModel | undefined {
 		return this.remoteParticipants.find((p) => p.id === id);
 	}
 	/**
@@ -356,8 +355,8 @@ export class ParticipantService {
 	 * @internal
 	 */
 	toggleRemoteVideoEnlarged(connectionId: string) {
-		const p = this.getRemoteParticipantByConnectionId(connectionId);
-		p.toggleVideoEnlarged(connectionId);
+		const participant = this.getRemoteParticipantByConnectionId(connectionId);
+		participant?.toggleVideoEnlarged(connectionId);
 	}
 
 	/**
