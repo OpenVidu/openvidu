@@ -16,12 +16,12 @@ import { StorageService } from '../storage/storage.service';
 	providedIn: 'root'
 })
 export class DeviceService {
-	private OV: OpenVidu = null;
+	private OV: OpenVidu | null = null;
 	private devices: Device[];
 	private cameras: CustomDevice[] = [];
 	private microphones: CustomDevice[] = [];
-	private cameraSelected: CustomDevice;
-	private microphoneSelected: CustomDevice;
+	private cameraSelected: CustomDevice | null;
+	private microphoneSelected: CustomDevice | null;
 	private log: ILogger;
 	private videoDevicesDisabled: boolean;
 	private audioDevicesDisabled: boolean;
@@ -49,30 +49,33 @@ export class DeviceService {
 		this.clear();
 		try {
 			this.OV = new OpenVidu();
-			// Forcing media permissions request.
-			// Sometimes, browser doens't launch the media permissions modal.
-			const mediaStream = await this.OV.getUserMedia({ audioSource: undefined, videoSource: undefined });
-			mediaStream?.getAudioTracks().forEach((track) => track.stop());
-			mediaStream?.getVideoTracks().forEach((track) => track.stop());
+			this.devices = await this.OV.getDevices();
+			if(this.devices?.some(device => !device.deviceId || !device.label)){
+				// Forcing media permissions request.
+				// Sometimes, browser doesn't request the media permissions.
+				await this.OV.getUserMedia({ audioSource: undefined, videoSource: undefined });
+			}
+
+			await this.initializeDevices();
+			this.updateAudioDeviceSelected();
+			this.updateVideoDeviceSelected();
+
+			this._isVideoMuted = this.storageSrv.isVideoMuted() || this.libSrv.videoMuted.getValue();
+			this._isAudioMuted = this.storageSrv.isAudioMuted() || this.libSrv.audioMuted.getValue();
+
+			this.log.d('Media devices', this.cameras, this.microphones);
 		} catch (error) {
 			this.deviceAccessDeniedError = (<OpenViduError>error).name === OpenViduErrorName.DEVICE_ACCESS_DENIED;
 		}
-
-		await this.initializeDevices();
-		this.updateAudioDeviceSelected();
-		this.updateVideoDeviceSelected();
-
-		this._isVideoMuted = this.storageSrv.isVideoMuted() || this.libSrv.videoMuted.getValue();
-		this._isAudioMuted = this.storageSrv.isAudioMuted() || this.libSrv.audioMuted.getValue();
-
-		this.log.d('Media devices', this.cameras, this.microphones);
 	}
 
 	/**
 	 * Initialize only the media devices available
 	 */
 	async initializeDevices() {
-		this.devices = await this.OV.getDevices();
+		if(this.devices?.some(device => !device.deviceId || !device.label)){
+			this.devices = await this.OV?.getDevices() as Device [];
+		}
 		this.initializeCustomDevices();
 	}
 
@@ -156,11 +159,11 @@ export class DeviceService {
 		return this.hasAudioDeviceAvailable() && this._isAudioMuted;
 	}
 
-	getCameraSelected(): CustomDevice {
+	getCameraSelected(): CustomDevice | null {
 		return this.cameraSelected;
 	}
 
-	getMicrophoneSelected(): CustomDevice {
+	getMicrophoneSelected(): CustomDevice | null {
 		return this.microphoneSelected;
 	}
 
@@ -175,11 +178,11 @@ export class DeviceService {
 	}
 
 	needUpdateVideoTrack(newVideoSource: string): boolean {
-		return this.cameraSelected.device !== newVideoSource;
+		return this.cameraSelected?.device !== newVideoSource;
 	}
 
 	needUpdateAudioTrack(newAudioSource: string): boolean {
-		return this.microphoneSelected.device !== newAudioSource;
+		return this.microphoneSelected?.device !== newAudioSource;
 	}
 
 	getCameras(): CustomDevice[] {
@@ -226,14 +229,14 @@ export class DeviceService {
 	}
 
 	private getCameraByDeviceField(deviceField: any): CustomDevice {
-		return this.cameras.find((opt: CustomDevice) => opt.device === deviceField || opt.label === deviceField);
+		return <CustomDevice>this.cameras.find((opt: CustomDevice) => opt.device === deviceField || opt.label === deviceField);
 	}
 
 	private getMicrophoneByDeviceField(deviceField: any): CustomDevice {
-		return this.microphones.find((opt: CustomDevice) => opt.device === deviceField || opt.label === deviceField);
+		return <CustomDevice>this.microphones.find((opt: CustomDevice) => opt.device === deviceField || opt.label === deviceField);
 	}
 
-	private getMicrophoneFromStogare(): CustomDevice {
+	private getMicrophoneFromStogare(): CustomDevice | undefined {
 		const storageDevice: CustomDevice = this.storageSrv.getAudioDevice();
 		if (!!storageDevice && this.microphones.some((device) => device.device === storageDevice.device)) {
 			return storageDevice;
