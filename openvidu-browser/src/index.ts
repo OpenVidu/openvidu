@@ -45,4 +45,4 @@ export { StreamManagerEventMap } from './OpenViduInternal/Events/EventMap/Stream
 export { PublisherEventMap } from './OpenViduInternal/Events/EventMap/PublisherEventMap';
 
 // Disable jsnlog when library is loaded
-JL.setOptions({ enabled: false })
+JL.setOptions({ enabled: false });

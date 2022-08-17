@@ -18,12 +18,10 @@
 import { Event } from './Event';
 import { Filter } from '../../OpenVidu/Filter';
 
-
 /**
  * Defines every event dispatched by audio/video stream filters. You can subscribe to filter events by calling [[Filter.addEventListener]]
  */
 export class FilterEvent extends Event {
-
     /**
      * Data of the event
      */
@@ -41,6 +39,5 @@ export class FilterEvent extends Event {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    callDefaultBehavior() { }
-
+    callDefaultBehavior() {}
 }

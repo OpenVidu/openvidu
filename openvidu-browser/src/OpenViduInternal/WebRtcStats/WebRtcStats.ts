@@ -30,18 +30,18 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 let platform: PlatformUtils;
 
 interface WebrtcStatsConfig {
-    interval: number,
-    httpEndpoint: string
+    interval: number;
+    httpEndpoint: string;
 }
 
 interface JSONStatsResponse {
-    '@timestamp': string,
-    participant_id: string,
-    session_id: string,
-    platform: string,
-    platform_description: string,
-    stream: string,
-    webrtc_stats: IWebrtcStats
+    '@timestamp': string;
+    participant_id: string;
+    session_id: string;
+    platform: string;
+    platform_description: string;
+    stream: string;
+    webrtc_stats: IWebrtcStats;
 }
 
 /**
@@ -49,55 +49,62 @@ interface JSONStatsResponse {
  */
 interface IWebrtcStats {
     inbound?: {
-        audio: {
-            bytesReceived: number,
-            packetsReceived: number,
-            packetsLost: number,
-            jitter: number
-        } | {},
-        video: {
-            bytesReceived: number,
-            packetsReceived: number,
-            packetsLost: number,
-            jitter?: number, // Firefox
-            jitterBufferDelay?: number, // Chrome
-            framesDecoded: number,
-            firCount: number,
-            nackCount: number,
-            pliCount: number,
-            frameHeight?: number, // Chrome
-            frameWidth?: number, // Chrome
-            framesDropped?: number, // Chrome
-            framesReceived?: number // Chrome
-        } | {}
-    },
+        audio:
+            | {
+                  bytesReceived: number;
+                  packetsReceived: number;
+                  packetsLost: number;
+                  jitter: number;
+              }
+            | {};
+        video:
+            | {
+                  bytesReceived: number;
+                  packetsReceived: number;
+                  packetsLost: number;
+                  jitter?: number; // Firefox
+                  jitterBufferDelay?: number; // Chrome
+                  framesDecoded: number;
+                  firCount: number;
+                  nackCount: number;
+                  pliCount: number;
+                  frameHeight?: number; // Chrome
+                  frameWidth?: number; // Chrome
+                  framesDropped?: number; // Chrome
+                  framesReceived?: number; // Chrome
+              }
+            | {};
+    };
     outbound?: {
-        audio: {
-            bytesSent: number,
-            packetsSent: number,
-        } | {},
-        video: {
-            bytesSent: number,
-            packetsSent: number,
-            firCount: number,
-            framesEncoded: number,
-            nackCount: number,
-            pliCount: number,
-            qpSum: number,
-            frameHeight?: number, // Chrome
-            frameWidth?: number, // Chrome
-            framesSent?: number // Chrome
-        } | {}
-    },
+        audio:
+            | {
+                  bytesSent: number;
+                  packetsSent: number;
+              }
+            | {};
+        video:
+            | {
+                  bytesSent: number;
+                  packetsSent: number;
+                  firCount: number;
+                  framesEncoded: number;
+                  nackCount: number;
+                  pliCount: number;
+                  qpSum: number;
+                  frameHeight?: number; // Chrome
+                  frameWidth?: number; // Chrome
+                  framesSent?: number; // Chrome
+              }
+            | {};
+    };
     candidatepair?: {
-        currentRoundTripTime?: number // Chrome
-        availableOutgoingBitrate?: number //Chrome
+        currentRoundTripTime?: number; // Chrome
+        availableOutgoingBitrate?: number; //Chrome
         // availableIncomingBitrate?: number // No support for any browsers (https://developer.mozilla.org/en-US/docs/Web/API/RTCIceCandidatePairStats/availableIncomingBitrate)
-    }
-};
+    };
+}
 
 export class WebRtcStats {
-
     private readonly STATS_ITEM_NAME = 'webrtc-stats-config';
 
     private webRtcStatsEnabled = false;
@@ -114,23 +121,23 @@ export class WebRtcStats {
     }
 
     public initWebRtcStats(): void {
-
         const webrtcObj = localStorage.getItem(this.STATS_ITEM_NAME);
 
         if (!!webrtcObj) {
             this.webRtcStatsEnabled = true;
             const webrtcStatsConfig: WebrtcStatsConfig = JSON.parse(webrtcObj);
             // webrtc object found in local storage
-            logger.warn('WebRtc stats enabled for stream ' + this.stream.streamId + ' of connection ' + this.stream.connection.connectionId);
+            logger.warn(
+                'WebRtc stats enabled for stream ' + this.stream.streamId + ' of connection ' + this.stream.connection.connectionId
+            );
             logger.warn('localStorage item: ' + JSON.stringify(webrtcStatsConfig));
 
             this.POST_URL = webrtcStatsConfig.httpEndpoint;
-            this.statsInterval = webrtcStatsConfig.interval;  // Interval in seconds
+            this.statsInterval = webrtcStatsConfig.interval; // Interval in seconds
 
             this.webRtcStatsIntervalId = setInterval(async () => {
                 await this.sendStatsToHttpEndpoint();
             }, this.statsInterval * 1000);
-
         } else {
             logger.debug('WebRtc stats not enabled');
         }
@@ -206,7 +213,6 @@ export class WebRtcStats {
     //       - ¿React Native?
     public getSelectedIceCandidateInfo(): Promise<any> {
         return new Promise(async (resolve, reject) => {
-
             const statsReport: any = await this.stream.getRTCPeerConnection().getStats();
             let transportStat;
             const candidatePairs: Map<string, any> = new Map();
@@ -230,7 +236,7 @@ export class WebRtcStats {
             });
             let selectedCandidatePair;
             if (transportStat != null) {
-                const selectedCandidatePairId = transportStat.selectedCandidatePairId
+                const selectedCandidatePairId = transportStat.selectedCandidatePairId;
                 selectedCandidatePair = candidatePairs.get(selectedCandidatePairId);
             } else {
                 // This is basically Firefox
@@ -250,9 +256,11 @@ export class WebRtcStats {
             if (!!finalLocalCandidate) {
                 const candList = this.stream.getLocalIceCandidateList();
                 const cand = candList.filter((c: RTCIceCandidate) => {
-                    return (!!c.candidate &&
+                    return (
+                        !!c.candidate &&
                         (c.candidate.indexOf(finalLocalCandidate.ip) >= 0 || c.candidate.indexOf(finalLocalCandidate.address) >= 0) &&
-                        c.candidate.indexOf(finalLocalCandidate.port) >= 0);
+                        c.candidate.indexOf(finalLocalCandidate.port) >= 0
+                    );
                 });
                 finalLocalCandidate.raw = [];
                 for (let c of cand) {
@@ -266,9 +274,11 @@ export class WebRtcStats {
             if (!!finalRemoteCandidate) {
                 const candList = this.stream.getRemoteIceCandidateList();
                 const cand = candList.filter((c: RTCIceCandidate) => {
-                    return (!!c.candidate &&
+                    return (
+                        !!c.candidate &&
                         (c.candidate.indexOf(finalRemoteCandidate.ip) >= 0 || c.candidate.indexOf(finalRemoteCandidate.address) >= 0) &&
-                        c.candidate.indexOf(finalRemoteCandidate.port) >= 0);
+                        c.candidate.indexOf(finalRemoteCandidate.port) >= 0
+                    );
                 });
                 finalRemoteCandidate.raw = [];
                 for (let c of cand) {
@@ -288,7 +298,9 @@ export class WebRtcStats {
     public stopWebRtcStats() {
         if (this.webRtcStatsEnabled) {
             clearInterval(this.webRtcStatsIntervalId);
-            logger.warn('WebRtc stats stopped for disposed stream ' + this.stream.streamId + ' of connection ' + this.stream.connection.connectionId);
+            logger.warn(
+                'WebRtc stats stopped for disposed stream ' + this.stream.streamId + ' of connection ' + this.stream.connection.connectionId
+            );
         }
     }
 
@@ -299,10 +311,9 @@ export class WebRtcStats {
                     'Content-type': 'application/json'
                 },
                 body: JSON.stringify(response),
-                method: 'POST',
+                method: 'POST'
             };
             await fetch(url, configuration);
-
         } catch (error) {
             logger.error(`sendStats error: ${JSON.stringify(error)}`);
         }
@@ -350,9 +361,7 @@ export class WebRtcStats {
     //       - ¿Ionic?
     //       - ¿React Native?
     public async getCommonStats(): Promise<IWebrtcStats> {
-
         return new Promise(async (resolve, reject) => {
-
             try {
                 const statsReport: any = await this.stream.getRTCPeerConnection().getStats();
                 const response: IWebrtcStats = this.getWebRtcStatsResponseOutline();
@@ -360,24 +369,23 @@ export class WebRtcStats {
                 const candidatePairStats = ['availableOutgoingBitrate', 'currentRoundTripTime'];
 
                 statsReport.forEach((stat: any) => {
-
                     let mediaType = stat.mediaType != null ? stat.mediaType : stat.kind;
                     const addStat = (direction: string, key: string): void => {
                         if (stat[key] != null && response[direction] != null) {
-                            if (!mediaType && (videoTrackStats.indexOf(key) > -1)) {
+                            if (!mediaType && videoTrackStats.indexOf(key) > -1) {
                                 mediaType = 'video';
                             }
                             if (direction != null && mediaType != null && key != null && response[direction][mediaType] != null) {
                                 response[direction][mediaType][key] = Number(stat[key]);
-                            } else if(direction != null && key != null && candidatePairStats.includes(key)) {
+                            } else if (direction != null && key != null && candidatePairStats.includes(key)) {
                                 // candidate-pair-stats
                                 response[direction][key] = Number(stat[key]);
                             }
                         }
-                    }
+                    };
 
                     switch (stat.type) {
-                        case "outbound-rtp":
+                        case 'outbound-rtp':
                             addStat('outbound', 'bytesSent');
                             addStat('outbound', 'packetsSent');
                             addStat('outbound', 'framesEncoded');
@@ -386,7 +394,7 @@ export class WebRtcStats {
                             addStat('outbound', 'pliCount');
                             addStat('outbound', 'qpSum');
                             break;
-                        case "inbound-rtp":
+                        case 'inbound-rtp':
                             addStat('inbound', 'bytesReceived');
                             addStat('inbound', 'packetsReceived');
                             addStat('inbound', 'packetsLost');
@@ -412,7 +420,7 @@ export class WebRtcStats {
                 });
 
                 // Delete candidatepair from response if null
-                if(!response?.candidatepair || Object.keys(<Object>response.candidatepair).length === 0){
+                if (!response?.candidatepair || Object.keys(<Object>response.candidatepair).length === 0) {
                     delete response.candidatepair;
                 }
 
@@ -421,7 +429,6 @@ export class WebRtcStats {
                 logger.error('Error getting common stats: ', error);
                 return reject(error);
             }
-
         });
     }
 
@@ -455,5 +462,4 @@ export class WebRtcStats {
             };
         }
     }
-
 }

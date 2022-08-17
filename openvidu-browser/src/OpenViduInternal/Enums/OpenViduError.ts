@@ -19,7 +19,6 @@
  * Defines property [[OpenViduError.name]]
  */
 export enum OpenViduErrorName {
-
     /**
      * Browser is not supported by OpenVidu.
      * Returned upon unsuccessful [[Session.connect]]
@@ -38,7 +37,7 @@ export enum OpenViduErrorName {
      * error occurred at the OS, browser or web page level, which prevented access to the device.
      * Returned upon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
      */
-    DEVICE_ALREADY_IN_USE = "DEVICE_ALREADY_IN_USE",
+    DEVICE_ALREADY_IN_USE = 'DEVICE_ALREADY_IN_USE',
 
     /**
      * The user hasn't granted permissions to capture some desktop screen when the browser asked for them.
@@ -122,7 +121,6 @@ export enum OpenViduErrorName {
  * Simple object to identify runtime errors on the client side
  */
 export class OpenViduError {
-
     /**
      * Uniquely identifying name of the error
      */
@@ -140,5 +138,4 @@ export class OpenViduError {
         this.name = name;
         this.message = message;
     }
-
 }

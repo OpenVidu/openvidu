@@ -20,14 +20,12 @@ import { Connection } from '../../OpenVidu/Connection';
 import { Session } from '../../OpenVidu/Session';
 import { StreamManager } from '../../OpenVidu/StreamManager';
 
-
 /**
  * Triggered by:
  * - `publisherStartSpeaking` (available for [Session](/en/stable/api/openvidu-browser/interfaces/SessionEventMap.html#publisherStartSpeaking) and [StreamManager](/en/stable/api/openvidu-browser/interfaces/StreamManagerEventMap.html#publisherStartSpeaking) objects)
  * - `publisherStopSpeaking` (available for [Session](/en/stable/api/openvidu-browser/interfaces/SessionEventMap.html#publisherStopSpeaking) and [StreamManager](/en/stable/api/openvidu-browser/interfaces/StreamManagerEventMap.html#publisherStopSpeaking) objects)
  */
 export class PublisherSpeakingEvent extends Event {
-
     /**
      * The client that started or stopped speaking
      */
@@ -52,6 +50,5 @@ export class PublisherSpeakingEvent extends Event {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    callDefaultBehavior() { }
-
+    callDefaultBehavior() {}
 }

@@ -27,11 +27,10 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 /**
  * Packs remote media streams. Participants automatically receive them when others publish their streams. Initialized with [[Session.subscribe]] method
- * 
+ *
  * See available event listeners at [[StreamManagerEventMap]].
  */
 export class Subscriber extends StreamManager {
-
     /**
      * @hidden
      */
@@ -52,9 +51,12 @@ export class Subscriber extends StreamManager {
      * @param value `true` to subscribe to the audio stream, `false` to unsubscribe from it
      */
     subscribeToAudio(value: boolean): Subscriber {
-        this.stream.getMediaStream().getAudioTracks().forEach((track) => {
-            track.enabled = value;
-        });
+        this.stream
+            .getMediaStream()
+            .getAudioTracks()
+            .forEach((track) => {
+                track.enabled = value;
+            });
         this.stream.audioActive = value;
         logger.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its audio stream');
         return this;
@@ -65,9 +67,12 @@ export class Subscriber extends StreamManager {
      * @param value `true` to subscribe to the video stream, `false` to unsubscribe from it
      */
     subscribeToVideo(value: boolean): Subscriber {
-        this.stream.getMediaStream().getVideoTracks().forEach((track) => {
-            track.enabled = value;
-        });
+        this.stream
+            .getMediaStream()
+            .getVideoTracks()
+            .forEach((track) => {
+                track.enabled = value;
+            });
         this.stream.videoActive = value;
         logger.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its video stream');
         return this;
@@ -93,5 +98,4 @@ export class Subscriber extends StreamManager {
         removedTrack.stop();
         mediaStream.addTrack(track);
     }
-
 }

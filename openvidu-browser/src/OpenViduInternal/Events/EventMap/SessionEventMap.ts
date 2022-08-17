@@ -30,19 +30,18 @@ import { StreamPropertyChangedEvent } from '../StreamPropertyChangedEvent';
 /**
  * Events dispatched by [[Session]] object. Manage event listeners with
  * [[Session.on]], [[Session.once]] and [[Session.off]] methods.
- * 
+ *
  * Example:
- * 
+ *
  * ```javascript
- * session.on('connectionCreated', (event) => { 
+ * session.on('connectionCreated', (event) => {
  *      console.log('Connection ' + event.connection.connectionId + ' created');
  * }
- * 
+ *
  * session.off('connectionDestroyed');
  * ```
  */
 export interface SessionEventMap extends EventMap {
-
     /**
      * Event dispatched when a new user has connected to the session.
      *

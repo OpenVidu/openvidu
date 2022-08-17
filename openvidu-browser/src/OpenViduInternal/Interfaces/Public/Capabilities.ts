@@ -19,7 +19,6 @@
  * See [[Session.capabilities]]
  */
 export interface Capabilities {
-
     /**
      * `true` if the client can call [[Session.forceDisconnect]], `false` if not
      */
@@ -39,5 +38,4 @@ export interface Capabilities {
      * `true` if the client can call [[Session.subscribe]], `false` if not (true for every user for now)
      */
     subscribe: boolean;
-
 }

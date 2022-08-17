@@ -63,24 +63,17 @@ export class WebRtcPeer {
 
         this.configuration = {
             ...configuration,
-            iceServers:
-                !!configuration.iceServers &&
-                    configuration.iceServers.length > 0
-                    ? configuration.iceServers
-                    : freeice(),
-            mediaStream:
-                configuration.mediaStream !== undefined
-                    ? configuration.mediaStream
-                    : null,
-            mode: !!configuration.mode ? configuration.mode : "sendrecv",
-            id: !!configuration.id ? configuration.id : this.generateUniqueId(),
+            iceServers: !!configuration.iceServers && configuration.iceServers.length > 0 ? configuration.iceServers : freeice(),
+            mediaStream: configuration.mediaStream !== undefined ? configuration.mediaStream : null,
+            mode: !!configuration.mode ? configuration.mode : 'sendrecv',
+            id: !!configuration.id ? configuration.id : this.generateUniqueId()
         };
         // prettier-ignore
         logger.debug(`[WebRtcPeer] configuration:\n${JSON.stringify(this.configuration, null, 2)}`);
 
         this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });
 
-        this.pc.addEventListener("icecandidate", (event: RTCPeerConnectionIceEvent) => {
+        this.pc.addEventListener('icecandidate', (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate !== null) {
                 // `RTCPeerConnectionIceEvent.candidate` is supposed to be an RTCIceCandidate:
                 // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnectioniceevent-candidate
@@ -140,11 +133,11 @@ export class WebRtcPeer {
         const hasVideo = this.configuration.mediaConstraints.video;
 
         const options: RTCOfferOptions = {
-            offerToReceiveAudio: this.configuration.mode !== "sendonly" && hasAudio,
-            offerToReceiveVideo: this.configuration.mode !== "sendonly" && hasVideo,
+            offerToReceiveAudio: this.configuration.mode !== 'sendonly' && hasAudio,
+            offerToReceiveVideo: this.configuration.mode !== 'sendonly' && hasVideo
         };
 
-        logger.debug("[createOfferLegacy] RTCPeerConnection.createOffer() options:", JSON.stringify(options));
+        logger.debug('[createOfferLegacy] RTCPeerConnection.createOffer() options:', JSON.stringify(options));
 
         return this.pc.createOffer(options);
     }
@@ -156,18 +149,18 @@ export class WebRtcPeer {
     async createOffer(): Promise<RTCSessionDescriptionInit> {
         // TODO: Delete this conditional when all supported browsers are
         // modern enough to implement the Transceiver methods.
-        if (!("addTransceiver" in this.pc)) {
+        if (!('addTransceiver' in this.pc)) {
             logger.warn(
-                "[createOffer] Method RTCPeerConnection.addTransceiver() is NOT available; using LEGACY offerToReceive{Audio,Video}"
+                '[createOffer] Method RTCPeerConnection.addTransceiver() is NOT available; using LEGACY offerToReceive{Audio,Video}'
             );
             return this.createOfferLegacy();
         } else {
-            logger.debug("[createOffer] Method RTCPeerConnection.addTransceiver() is available; using it");
+            logger.debug('[createOffer] Method RTCPeerConnection.addTransceiver() is available; using it');
         }
 
         // Spec doc: https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-addtransceiver
 
-        if (this.configuration.mode !== "recvonly") {
+        if (this.configuration.mode !== 'recvonly') {
             // To send media, assume that all desired media tracks have been
             // already added by higher level code to our MediaStream.
 
@@ -180,24 +173,18 @@ export class WebRtcPeer {
             for (const track of this.configuration.mediaStream.getTracks()) {
                 const tcInit: RTCRtpTransceiverInit = {
                     direction: this.configuration.mode,
-                    streams: [this.configuration.mediaStream],
+                    streams: [this.configuration.mediaStream]
                 };
 
-                if (track.kind === "video" && this.configuration.simulcast) {
+                if (track.kind === 'video' && this.configuration.simulcast) {
                     // Check if the requested size is enough to ask for 3 layers.
                     const trackSettings = track.getSettings();
                     const trackConsts = track.getConstraints();
 
                     const trackWidth: number =
-                        trackSettings.width ??
-                        (trackConsts.width as ConstrainULongRange).ideal ??
-                        (trackConsts.width as number) ??
-                        0;
+                        trackSettings.width ?? (trackConsts.width as ConstrainULongRange).ideal ?? (trackConsts.width as number) ?? 0;
                     const trackHeight: number =
-                        trackSettings.height ??
-                        (trackConsts.height as ConstrainULongRange).ideal ??
-                        (trackConsts.height as number) ??
-                        0;
+                        trackSettings.height ?? (trackConsts.height as ConstrainULongRange).ideal ?? (trackConsts.height as number) ?? 0;
                     logger.info(`[createOffer] Video track dimensions: ${trackWidth}x${trackHeight}`);
 
                     const trackPixels = trackWidth * trackHeight;
@@ -215,13 +202,13 @@ export class WebRtcPeer {
                         const layerDiv = 2 ** (maxLayers - l - 1);
 
                         const encoding: RTCRtpEncodingParameters = {
-                            rid: "rdiv" + layerDiv.toString(),
+                            rid: 'rdiv' + layerDiv.toString(),
 
                             // @ts-ignore -- Property missing from DOM types.
-                            scalabilityMode: "L1T1",
+                            scalabilityMode: 'L1T1'
                         };
 
-                        if (["detail", "text"].includes(track.contentHint)) {
+                        if (['detail', 'text'].includes(track.contentHint)) {
                             // Prioritize best resolution, for maximum picture detail.
                             encoding.scaleResolutionDownBy = 1.0;
 
@@ -237,22 +224,20 @@ export class WebRtcPeer {
 
                 const tc = this.pc.addTransceiver(track, tcInit);
 
-                if (track.kind === "video") {
+                if (track.kind === 'video') {
                     let sendParams = tc.sender.getParameters();
                     let needSetParams = false;
 
                     if (!sendParams.degradationPreference?.length) {
                         // degradationPreference for video: "balanced", "maintain-framerate", "maintain-resolution".
                         // https://www.w3.org/TR/2018/CR-webrtc-20180927/#dom-rtcdegradationpreference
-                        if (["detail", "text"].includes(track.contentHint)) {
-                            sendParams.degradationPreference = "maintain-resolution";
+                        if (['detail', 'text'].includes(track.contentHint)) {
+                            sendParams.degradationPreference = 'maintain-resolution';
                         } else {
-                            sendParams.degradationPreference = "balanced";
+                            sendParams.degradationPreference = 'balanced';
                         }
 
-                        logger.info(
-                            `[createOffer] Video sender Degradation Preference set: ${sendParams.degradationPreference}`
-                        );
+                        logger.info(`[createOffer] Video sender Degradation Preference set: ${sendParams.degradationPreference}`);
 
                         // FIXME: Firefox implements degradationPreference on each individual encoding!
                         // (set it on every element of the sendParams.encodings array)
@@ -310,7 +295,7 @@ export class WebRtcPeer {
             }
         } else {
             // To just receive media, create new recvonly transceivers.
-            for (const kind of ["audio", "video"]) {
+            for (const kind of ['audio', 'video']) {
                 // Check if the media kind should be used.
                 if (!this.configuration.mediaConstraints[kind]) {
                     continue;
@@ -319,7 +304,7 @@ export class WebRtcPeer {
                 this.configuration.mediaStream = new MediaStream();
                 this.pc.addTransceiver(kind, {
                     direction: this.configuration.mode,
-                    streams: [this.configuration.mediaStream],
+                    streams: [this.configuration.mediaStream]
                 });
             }
         }
@@ -352,23 +337,21 @@ export class WebRtcPeer {
         return new Promise((resolve, reject) => {
             // TODO: Delete this conditional when all supported browsers are
             // modern enough to implement the Transceiver methods.
-            if ("getTransceivers" in this.pc) {
-                logger.debug("[createAnswer] Method RTCPeerConnection.getTransceivers() is available; using it");
+            if ('getTransceivers' in this.pc) {
+                logger.debug('[createAnswer] Method RTCPeerConnection.getTransceivers() is available; using it');
 
                 // Ensure that the PeerConnection already contains one Transceiver
                 // for each kind of media.
                 // The Transceivers should have been already created internally by
                 // the PC itself, when `pc.setRemoteDescription(sdpOffer)` was called.
 
-                for (const kind of ["audio", "video"]) {
+                for (const kind of ['audio', 'video']) {
                     // Check if the media kind should be used.
                     if (!this.configuration.mediaConstraints[kind]) {
                         continue;
                     }
 
-                    let tc = this.pc
-                        .getTransceivers()
-                        .find((tc) => tc.receiver.track.kind === kind);
+                    let tc = this.pc.getTransceivers().find((tc) => tc.receiver.track.kind === kind);
 
                     if (tc) {
                         // Enforce our desired direction.
@@ -382,27 +365,25 @@ export class WebRtcPeer {
                     .createAnswer()
                     .then((sdpAnswer) => resolve(sdpAnswer))
                     .catch((error) => reject(error));
-
             } else {
-
                 // TODO: Delete else branch when all supported browsers are
                 // modern enough to implement the Transceiver methods
 
-                let offerAudio, offerVideo = true;
+                let offerAudio,
+                    offerVideo = true;
                 if (!!this.configuration.mediaConstraints) {
-                    offerAudio = (typeof this.configuration.mediaConstraints.audio === 'boolean') ?
-                        this.configuration.mediaConstraints.audio : true;
-                    offerVideo = (typeof this.configuration.mediaConstraints.video === 'boolean') ?
-                        this.configuration.mediaConstraints.video : true;
+                    offerAudio =
+                        typeof this.configuration.mediaConstraints.audio === 'boolean' ? this.configuration.mediaConstraints.audio : true;
+                    offerVideo =
+                        typeof this.configuration.mediaConstraints.video === 'boolean' ? this.configuration.mediaConstraints.video : true;
                     const constraints: RTCOfferOptions = {
                         offerToReceiveAudio: offerAudio,
                         offerToReceiveVideo: offerVideo
                     };
                     this.pc!.createAnswer(constraints)
-                        .then(sdpAnswer => resolve(sdpAnswer))
-                        .catch(error => reject(error));
+                        .then((sdpAnswer) => resolve(sdpAnswer))
+                        .catch((error) => reject(error));
                 }
-
             }
 
             // else, there is nothing to do; the legacy createAnswer() options do
@@ -415,7 +396,8 @@ export class WebRtcPeer {
      */
     processLocalOffer(offer: RTCSessionDescriptionInit): Promise<void> {
         return new Promise((resolve, reject) => {
-            this.pc.setLocalDescription(offer)
+            this.pc
+                .setLocalDescription(offer)
                 .then(() => {
                     const localDescription = this.pc.localDescription;
                     if (!!localDescription) {
@@ -425,7 +407,7 @@ export class WebRtcPeer {
                         return reject('Local description is not defined');
                     }
                 })
-                .catch(error => reject(error));
+                .catch((error) => reject(error));
         });
     }
 
@@ -445,7 +427,7 @@ export class WebRtcPeer {
             }
             this.setRemoteDescription(offer)
                 .then(() => resolve())
-                .catch(error => reject(error));
+                .catch((error) => reject(error));
         });
     }
 
@@ -458,9 +440,10 @@ export class WebRtcPeer {
             if (this.pc.signalingState === 'closed') {
                 return reject('RTCPeerConnection is closed when trying to set local description');
             }
-            this.pc.setLocalDescription(answer)
+            this.pc
+                .setLocalDescription(answer)
                 .then(() => resolve())
-                .catch(error => reject(error));
+                .catch((error) => reject(error));
         });
     }
 
@@ -513,7 +496,10 @@ export class WebRtcPeer {
                     break;
                 case 'stable':
                     if (!!this.pc.remoteDescription) {
-                        this.pc.addIceCandidate(iceCandidate).then(() => resolve()).catch(error => reject(error));
+                        this.pc
+                            .addIceCandidate(iceCandidate)
+                            .then(() => resolve())
+                            .catch((error) => reject(error));
                     } else {
                         this.iceCandidateList.push(iceCandidate);
                         resolve();
@@ -532,7 +518,12 @@ export class WebRtcPeer {
             switch (iceConnectionState) {
                 case 'disconnected':
                     // Possible network disconnection
-                    const msg1 = 'IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection';
+                    const msg1 =
+                        'IceConnectionState of RTCPeerConnection ' +
+                        this.configuration.id +
+                        ' (' +
+                        otherId +
+                        ') change to "disconnected". Possible network disconnection';
                     logger.warn(msg1);
                     this.configuration.onIceConnectionStateException(ExceptionEventName.ICE_CONNECTION_DISCONNECTED, msg1);
                     break;
@@ -542,19 +533,27 @@ export class WebRtcPeer {
                     this.configuration.onIceConnectionStateException(ExceptionEventName.ICE_CONNECTION_FAILED, msg2);
                     break;
                 case 'closed':
-                    logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "closed"');
+                    logger.log(
+                        'IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "closed"'
+                    );
                     break;
                 case 'new':
                     logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "new"');
                     break;
                 case 'checking':
-                    logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "checking"');
+                    logger.log(
+                        'IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "checking"'
+                    );
                     break;
                 case 'connected':
-                    logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "connected"');
+                    logger.log(
+                        'IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "connected"'
+                    );
                     break;
                 case 'completed':
-                    logger.log('IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "completed"');
+                    logger.log(
+                        'IceConnectionState of RTCPeerConnection ' + this.configuration.id + ' (' + otherId + ') change to "completed"'
+                    );
                     break;
             }
         });
@@ -566,9 +565,7 @@ export class WebRtcPeer {
     generateUniqueId(): string {
         return uuidv4();
     }
-
 }
-
 
 export class WebRtcPeerRecvonly extends WebRtcPeer {
     constructor(configuration: WebRtcPeerConfiguration) {

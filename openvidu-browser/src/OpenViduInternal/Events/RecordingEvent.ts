@@ -18,14 +18,12 @@
 import { Event } from './Event';
 import { Session } from '../../OpenVidu/Session';
 
-
 /**
  * Triggered by:
  * - [[recordingStarted]]
  * - [[recordingStopped]]
  */
 export class RecordingEvent extends Event {
-
     /**
      * The recording ID generated in openvidu-server
      */
@@ -68,6 +66,5 @@ export class RecordingEvent extends Event {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    callDefaultBehavior() { }
-
+    callDefaultBehavior() {}
 }

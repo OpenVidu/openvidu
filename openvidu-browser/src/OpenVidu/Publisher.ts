@@ -45,7 +45,6 @@ let platform: PlatformUtils;
  * See available event listeners at [[PublisherEventMap]].
  */
 export class Publisher extends StreamManager {
-
     /**
      * Whether the Publisher has been granted access to the requested input devices or not
      */
@@ -82,7 +81,13 @@ export class Publisher extends StreamManager {
      * @hidden
      */
     constructor(targEl: string | HTMLElement | undefined, properties: PublisherProperties, openvidu: OpenVidu) {
-        super(new Stream((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl);
+        super(
+            new Stream(!!openvidu.session ? openvidu.session : new Session(openvidu), {
+                publisherProperties: properties,
+                mediaConstraints: {}
+            }),
+            targEl
+        );
         platform = PlatformUtils.getInstance();
         this.properties = properties;
         this.openvidu = openvidu;
@@ -94,7 +99,6 @@ export class Publisher extends StreamManager {
             streamEvent.callDefaultBehavior();
         });
     }
-
 
     /**
      * Publish or unpublish the audio stream (if available). Calling this method twice in a row passing same `enabled` value will have no effect
@@ -115,7 +119,9 @@ export class Publisher extends StreamManager {
      */
     publishAudio(enabled: boolean): void {
         if (this.stream.audioActive !== enabled) {
-            const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
+            const affectedMediaStream: MediaStream = this.stream.displayMyRemote()
+                ? this.stream.localMediaStreamWhenSubscribedToRemote!
+                : this.stream.getMediaStream();
             affectedMediaStream.getAudioTracks().forEach((track) => {
                 track.enabled = enabled;
             });
@@ -132,17 +138,21 @@ export class Publisher extends StreamManager {
                         if (error) {
                             logger.error("Error sending 'streamPropertyChanged' event", error);
                         } else {
-                            this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'audioActive', enabled, !enabled, 'publishAudio')]);
-                            this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'audioActive', enabled, !enabled, 'publishAudio')]);
+                            this.session.emitEvent('streamPropertyChanged', [
+                                new StreamPropertyChangedEvent(this.session, this.stream, 'audioActive', enabled, !enabled, 'publishAudio')
+                            ]);
+                            this.emitEvent('streamPropertyChanged', [
+                                new StreamPropertyChangedEvent(this, this.stream, 'audioActive', enabled, !enabled, 'publishAudio')
+                            ]);
                             this.session.sendVideoData(this.stream.streamManager);
                         }
-                    });
+                    }
+                );
             }
             this.stream.audioActive = enabled;
             logger.info("'Publisher' has " + (enabled ? 'published' : 'unpublished') + ' its audio stream');
         }
     }
-
 
     /**
      * Publish or unpublish the video stream (if available). Calling this method twice in a row passing same `enabled` value will have no effect
@@ -169,12 +179,11 @@ export class Publisher extends StreamManager {
      * will be used instead.
      */
     publishVideo<T extends boolean>(enabled: T, resource?: T extends false ? boolean : MediaStreamTrack): Promise<void> {
-
         return new Promise(async (resolve, reject) => {
-
             if (this.stream.videoActive !== enabled) {
-
-                const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
+                const affectedMediaStream: MediaStream = this.stream.displayMyRemote()
+                    ? this.stream.localMediaStreamWhenSubscribedToRemote!
+                    : this.stream.getMediaStream();
                 let mustRestartMediaStream = false;
                 affectedMediaStream.getVideoTracks().forEach((track) => {
                     track.enabled = enabled;
@@ -212,13 +221,16 @@ export class Publisher extends StreamManager {
                                 delete this.stream.lastVBFilter;
                             }, 1);
                         }
-                    }
+                    };
 
                     if (!!resource && resource instanceof MediaStreamTrack) {
                         await replaceVideoTrack(resource);
                     } else {
                         try {
-                            const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: this.stream.lastVideoTrackConstraints });
+                            const mediaStream = await navigator.mediaDevices.getUserMedia({
+                                audio: false,
+                                video: this.stream.lastVideoTrackConstraints
+                            });
                             await replaceVideoTrack(mediaStream.getVideoTracks()[0]);
                         } catch (error) {
                             return reject(error);
@@ -239,11 +251,23 @@ export class Publisher extends StreamManager {
                             if (error) {
                                 logger.error("Error sending 'streamPropertyChanged' event", error);
                             } else {
-                                this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoActive', enabled, !enabled, 'publishVideo')]);
-                                this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoActive', enabled, !enabled, 'publishVideo')]);
+                                this.session.emitEvent('streamPropertyChanged', [
+                                    new StreamPropertyChangedEvent(
+                                        this.session,
+                                        this.stream,
+                                        'videoActive',
+                                        enabled,
+                                        !enabled,
+                                        'publishVideo'
+                                    )
+                                ]);
+                                this.emitEvent('streamPropertyChanged', [
+                                    new StreamPropertyChangedEvent(this, this.stream, 'videoActive', enabled, !enabled, 'publishVideo')
+                                ]);
                                 this.session.sendVideoData(this.stream.streamManager);
                             }
-                        });
+                        }
+                    );
                 }
                 this.stream.videoActive = enabled;
                 logger.info("'Publisher' has " + (enabled ? 'published' : 'unpublished') + ' its video stream');
@@ -252,22 +276,19 @@ export class Publisher extends StreamManager {
         });
     }
 
-
     /**
      * Call this method before [[Session.publish]] if you prefer to subscribe to your Publisher's remote stream instead of using the local stream, as any other user would do.
      */
     subscribeToRemote(value?: boolean): void {
-        value = (value !== undefined) ? value : true;
+        value = value !== undefined ? value : true;
         this.isSubscribedToRemote = value;
         this.stream.subscribeToMyRemote(value);
     }
-
 
     /**
      * See [[EventDispatcher.on]]
      */
     on<K extends keyof PublisherEventMap>(type: K, handler: (event: PublisherEventMap[K]) => void): this {
-
         super.on(<any>type, handler);
 
         if (type === 'streamCreated') {
@@ -292,12 +313,10 @@ export class Publisher extends StreamManager {
         return this;
     }
 
-
     /**
      * See [[EventDispatcher.once]]
      */
     once<K extends keyof PublisherEventMap>(type: K, handler: (event: PublisherEventMap[K]) => void): this {
-
         super.once(<any>type, handler);
 
         if (type === 'streamCreated') {
@@ -322,7 +341,6 @@ export class Publisher extends StreamManager {
         return this;
     }
 
-
     /**
      * See [[EventDispatcher.off]]
      */
@@ -330,7 +348,6 @@ export class Publisher extends StreamManager {
         super.off(<any>type, handler);
         return this;
     }
-
 
     /**
      * Replaces the current video or audio track with a different one. This allows you to replace an ongoing track with a different one
@@ -359,7 +376,6 @@ export class Publisher extends StreamManager {
      */
     initialize(): Promise<void> {
         return new Promise(async (resolve, reject) => {
-
             let constraints: MediaStreamConstraints = {};
             let constraintsAux: MediaStreamConstraints = {};
             const timeForDialogEvent = 2000;
@@ -368,7 +384,7 @@ export class Publisher extends StreamManager {
             const errorCallback = (openViduError: OpenViduError) => {
                 this.accessDenied = true;
                 this.accessAllowed = false;
-                logger.error(`Publisher initialization failed. ${openViduError.name}: ${openViduError.message}`)
+                logger.error(`Publisher initialization failed. ${openViduError.name}: ${openViduError.message}`);
                 return reject(openViduError);
             };
 
@@ -378,21 +394,27 @@ export class Publisher extends StreamManager {
 
                 if (typeof MediaStreamTrack !== 'undefined' && this.properties.audioSource instanceof MediaStreamTrack) {
                     mediaStream.removeTrack(mediaStream.getAudioTracks()[0]);
-                    mediaStream.addTrack((<MediaStreamTrack>this.properties.audioSource));
+                    mediaStream.addTrack(<MediaStreamTrack>this.properties.audioSource);
                 }
 
                 if (typeof MediaStreamTrack !== 'undefined' && this.properties.videoSource instanceof MediaStreamTrack) {
                     mediaStream.removeTrack(mediaStream.getVideoTracks()[0]);
-                    mediaStream.addTrack((<MediaStreamTrack>this.properties.videoSource));
+                    mediaStream.addTrack(<MediaStreamTrack>this.properties.videoSource);
                 }
 
                 // Apply PublisherProperties.publishAudio and PublisherProperties.publishVideo
                 if (!!mediaStream.getAudioTracks()[0]) {
-                    const enabled = (this.stream.audioActive !== undefined && this.stream.audioActive !== null) ? this.stream.audioActive : !!this.stream.outboundStreamOpts.publisherProperties.publishAudio;
+                    const enabled =
+                        this.stream.audioActive !== undefined && this.stream.audioActive !== null
+                            ? this.stream.audioActive
+                            : !!this.stream.outboundStreamOpts.publisherProperties.publishAudio;
                     mediaStream.getAudioTracks()[0].enabled = enabled;
                 }
                 if (!!mediaStream.getVideoTracks()[0]) {
-                    const enabled = (this.stream.videoActive !== undefined && this.stream.videoActive !== null) ? this.stream.videoActive : !!this.stream.outboundStreamOpts.publisherProperties.publishVideo;
+                    const enabled =
+                        this.stream.videoActive !== undefined && this.stream.videoActive !== null
+                            ? this.stream.videoActive
+                            : !!this.stream.outboundStreamOpts.publisherProperties.publishVideo;
                     mediaStream.getVideoTracks()[0].enabled = enabled;
                 }
 
@@ -411,16 +433,16 @@ export class Publisher extends StreamManager {
                         // https://w3c.github.io/mst-content-hint/#video-content-hints
                         switch (this.stream.typeOfVideo) {
                             case TypeOfVideo.SCREEN:
-                                track.contentHint = "detail";
+                                track.contentHint = 'detail';
                                 break;
                             case TypeOfVideo.CUSTOM:
-                                logger.warn("CUSTOM type video track was provided without Content Hint!");
-                                track.contentHint = "motion";
+                                logger.warn('CUSTOM type video track was provided without Content Hint!');
+                                track.contentHint = 'motion';
                                 break;
                             case TypeOfVideo.CAMERA:
                             case TypeOfVideo.IPCAM:
                             default:
-                                track.contentHint = "motion";
+                                track.contentHint = 'motion';
                                 break;
                         }
                         logger.info(`Video track Content Hint set: '${track.contentHint}'`);
@@ -438,7 +460,7 @@ export class Publisher extends StreamManager {
 
                 if (this.stream.isSendVideo()) {
                     // Has video track
-                    this.getVideoDimensions().then(dimensions => {
+                    this.getVideoDimensions().then((dimensions) => {
                         this.stream.videoDimensions = {
                             width: dimensions.width,
                             height: dimensions.height
@@ -491,7 +513,6 @@ export class Publisher extends StreamManager {
                         this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
                         mediaStream.addTrack(audioOnlyStream.getAudioTracks()[0]);
                         successCallback(mediaStream);
-
                     } catch (error) {
                         this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
                         mediaStream.getAudioTracks().forEach((track) => {
@@ -529,7 +550,6 @@ export class Publisher extends StreamManager {
                             errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
                             errorMessage = error.toString();
                             errorCallback(new OpenViduError(errorName, errorMessage));
-
                         } catch (error) {
                             errorName = OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
                             errorMessage = error.toString();
@@ -538,12 +558,13 @@ export class Publisher extends StreamManager {
 
                         break;
                     case 'notallowederror':
-                        errorName = this.stream.isSendScreen() ? OpenViduErrorName.SCREEN_CAPTURE_DENIED : OpenViduErrorName.DEVICE_ACCESS_DENIED;
+                        errorName = this.stream.isSendScreen()
+                            ? OpenViduErrorName.SCREEN_CAPTURE_DENIED
+                            : OpenViduErrorName.DEVICE_ACCESS_DENIED;
                         errorMessage = error.toString();
                         errorCallback(new OpenViduError(errorName, errorMessage));
                         break;
                     case 'overconstrainederror':
-
                         try {
                             const mediaStream = await navigator.mediaDevices.getUserMedia({
                                 audio: false,
@@ -554,20 +575,27 @@ export class Publisher extends StreamManager {
                             });
                             if (error.constraint.toLowerCase() === 'deviceid') {
                                 errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
-                                errorMessage = "Audio input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.audio).deviceId!!).exact + "' not found";
+                                errorMessage =
+                                    "Audio input device with deviceId '" +
+                                    (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.audio).deviceId!!).exact +
+                                    "' not found";
                             } else {
                                 errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
-                                errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                                errorMessage =
+                                    "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
                             }
                             errorCallback(new OpenViduError(errorName, errorMessage));
-
                         } catch (error) {
                             if (error.constraint.toLowerCase() === 'deviceid') {
                                 errorName = OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
-                                errorMessage = "Video input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.video).deviceId!!).exact + "' not found";
+                                errorMessage =
+                                    "Video input device with deviceId '" +
+                                    (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.video).deviceId!!).exact +
+                                    "' not found";
                             } else {
                                 errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
-                                errorMessage = "Video input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                                errorMessage =
+                                    "Video input device doesn't support the value passed for constraint '" + error.constraint + "'";
                             }
                             errorCallback(new OpenViduError(errorName, errorMessage));
                         }
@@ -585,13 +613,15 @@ export class Publisher extends StreamManager {
                         errorCallback(new OpenViduError(errorName, errorMessage));
                         break;
                 }
-            }
+            };
 
             try {
-                const myConstraints =  await this.openvidu.generateMediaConstraints(this.properties);
-                if (!!myConstraints.videoTrack && !!myConstraints.audioTrack ||
-                    !!myConstraints.audioTrack && myConstraints.constraints?.video === false ||
-                    !!myConstraints.videoTrack && myConstraints.constraints?.audio === false) {
+                const myConstraints = await this.openvidu.generateMediaConstraints(this.properties);
+                if (
+                    (!!myConstraints.videoTrack && !!myConstraints.audioTrack) ||
+                    (!!myConstraints.audioTrack && myConstraints.constraints?.video === false) ||
+                    (!!myConstraints.videoTrack && myConstraints.constraints?.audio === false)
+                ) {
                     // No need to call getUserMedia at all. MediaStreamTracks already provided
                     successCallback(this.openvidu.addAlreadyProvidedTracks(myConstraints, new MediaStream(), this.stream));
                 } else {
@@ -603,7 +633,7 @@ export class Publisher extends StreamManager {
                     };
                     this.stream.setOutboundStreamOptions(outboundStreamOptions);
 
-                    const definedAudioConstraint = ((constraints.audio === undefined) ? true : constraints.audio);
+                    const definedAudioConstraint = constraints.audio === undefined ? true : constraints.audio;
                     constraintsAux.audio = this.stream.isSendScreen() ? false : definedAudioConstraint;
                     constraintsAux.video = constraints.video;
                     startTime = Date.now();
@@ -664,9 +694,8 @@ export class Publisher extends StreamManager {
      * and then try to use MediaStreamTrack.getSettingsMethod(). If not available, then we
      * use the HTMLVideoElement properties videoWidth and videoHeight
      */
-    getVideoDimensions(): Promise<{ width: number, height: number }> {
+    getVideoDimensions(): Promise<{ width: number; height: number }> {
         return new Promise((resolve, reject) => {
-
             // Ionic iOS and Safari iOS supposedly require the video element to actually exist inside the DOM
             const requiresDomInsertion: boolean = platform.isIonicIos() || platform.isIOSWithSafari();
 
@@ -692,7 +721,7 @@ export class Publisher extends StreamManager {
                 }
 
                 return resolve({ width, height });
-            }
+            };
 
             if (this.videoReference.readyState >= 1) {
                 // The video already has metadata available
@@ -739,7 +768,14 @@ export class Publisher extends StreamManager {
         this.videoReference.muted = true;
         this.videoReference.autoplay = true;
         this.videoReference.controls = false;
-        if (platform.isSafariBrowser() || (platform.isIPhoneOrIPad() && (platform.isChromeMobileBrowser() || platform.isEdgeMobileBrowser() || platform.isOperaMobileBrowser() || platform.isFirefoxMobileBrowser()))) {
+        if (
+            platform.isSafariBrowser() ||
+            (platform.isIPhoneOrIPad() &&
+                (platform.isChromeMobileBrowser() ||
+                    platform.isEdgeMobileBrowser() ||
+                    platform.isOperaMobileBrowser() ||
+                    platform.isFirefoxMobileBrowser()))
+        ) {
             this.videoReference.playsInline = true;
         }
         this.stream.setMediaStream(mediaStream);
@@ -753,7 +789,9 @@ export class Publisher extends StreamManager {
      * @hidden
      */
     replaceTrackInMediaStream(track: MediaStreamTrack, updateLastConstraints: boolean): void {
-        const mediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote! : this.stream.getMediaStream();
+        const mediaStream: MediaStream = this.stream.displayMyRemote()
+            ? this.stream.localMediaStreamWhenSubscribedToRemote!
+            : this.stream.getMediaStream();
         let removedTrack: MediaStreamTrack;
         if (track.kind === 'video') {
             removedTrack = mediaStream.getVideoTracks()[0];
@@ -773,12 +811,12 @@ export class Publisher extends StreamManager {
         };
         if (track.kind === 'video' && updateLastConstraints) {
             this.openvidu.sendNewVideoDimensionsIfRequired(this, 'trackReplaced', 50, 30);
-            this.openvidu.sendTrackChangedEvent(this,'trackReplaced', trackInfo.oldLabel, trackInfo.newLabel, 'videoActive');
-            if(this.stream.isLocalStreamPublished) {
+            this.openvidu.sendTrackChangedEvent(this, 'trackReplaced', trackInfo.oldLabel, trackInfo.newLabel, 'videoActive');
+            if (this.stream.isLocalStreamPublished) {
                 this.session.sendVideoData(this.stream.streamManager, 5, true, 5);
             }
-        } else if(track.kind === 'audio' && updateLastConstraints) {
-            this.openvidu.sendTrackChangedEvent(this,'trackReplaced', trackInfo.oldLabel, trackInfo.newLabel, 'audioActive');
+        } else if (track.kind === 'audio' && updateLastConstraints) {
+            this.openvidu.sendTrackChangedEvent(this, 'trackReplaced', trackInfo.oldLabel, trackInfo.newLabel, 'audioActive');
         }
         if (track.kind === 'audio') {
             this.stream.disableHarkSpeakingEvent(false);
@@ -798,7 +836,7 @@ export class Publisher extends StreamManager {
 
     private clearPermissionDialogTimer(startTime: number, waitTime: number): void {
         clearTimeout(this.permissionDialogTimeout);
-        if ((Date.now() - startTime) > waitTime) {
+        if (Date.now() - startTime > waitTime) {
             // Permission dialog was shown and now is closed
             this.emitEvent('accessDialogClosed', []);
         }
@@ -808,19 +846,18 @@ export class Publisher extends StreamManager {
         const senders: RTCRtpSender[] = this.stream.getRTCPeerConnection().getSenders();
         let sender: RTCRtpSender | undefined;
         if (track.kind === 'video') {
-            sender = senders.find(s => !!s.track && s.track.kind === 'video');
+            sender = senders.find((s) => !!s.track && s.track.kind === 'video');
             if (!sender) {
-                throw new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object');
+                throw new Error("There's no replaceable track for that kind of MediaStreamTrack in this Publisher object");
             }
         } else if (track.kind === 'audio') {
-            sender = senders.find(s => !!s.track && s.track.kind === 'audio');
+            sender = senders.find((s) => !!s.track && s.track.kind === 'audio');
             if (!sender) {
-                throw new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object');
+                throw new Error("There's no replaceable track for that kind of MediaStreamTrack in this Publisher object");
             }
         } else {
             throw new Error('Unknown track kind ' + track.kind);
         }
         await (sender as RTCRtpSender).replaceTrack(track);
     }
-
 }

@@ -48,7 +48,6 @@ let platform: PlatformUtils;
  * See available event listeners at [[StreamManagerEventMap]].
  */
 export abstract class StreamManager extends EventDispatcher {
-
     /**
      * The Stream represented in the DOM by the Publisher/Subscriber
      */
@@ -126,7 +125,14 @@ export abstract class StreamManager extends EventDispatcher {
                     id: '',
                     canplayListenerAdded: false
                 };
-                if (platform.isSafariBrowser() || (platform.isIPhoneOrIPad() && (platform.isChromeMobileBrowser() || platform.isEdgeMobileBrowser() || platform.isOperaMobileBrowser() || platform.isFirefoxMobileBrowser()))) {
+                if (
+                    platform.isSafariBrowser() ||
+                    (platform.isIPhoneOrIPad() &&
+                        (platform.isChromeMobileBrowser() ||
+                            platform.isEdgeMobileBrowser() ||
+                            platform.isOperaMobileBrowser() ||
+                            platform.isFirefoxMobileBrowser()))
+                ) {
                     this.firstVideoElement.video.playsInline = true;
                 }
                 this.targetElement = targEl;
@@ -144,7 +150,6 @@ export abstract class StreamManager extends EventDispatcher {
      * See [[EventDispatcher.on]]
      */
     on<K extends keyof StreamManagerEventMap>(type: K, handler: (event: StreamManagerEventMap[K]) => void): this {
-
         super.onAux(type, "Event '" + type + "' triggered by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", handler);
 
         if (type === 'videoElementCreated') {
@@ -154,11 +159,14 @@ export abstract class StreamManager extends EventDispatcher {
             }
         }
         if (type === 'streamPlaying') {
-            if (this.videos[0] && this.videos[0].video &&
+            if (
+                this.videos[0] &&
+                this.videos[0].video &&
                 this.videos[0].video.currentTime > 0 &&
                 this.videos[0].video.paused === false &&
                 this.videos[0].video.ended === false &&
-                this.videos[0].video.readyState === 4) {
+                this.videos[0].video.readyState === 4
+            ) {
                 this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this, 'streamPlaying', undefined)]);
             }
         }
@@ -180,7 +188,6 @@ export abstract class StreamManager extends EventDispatcher {
      * See [[EventDispatcher.once]]
      */
     once<K extends keyof StreamManagerEventMap>(type: K, handler: (event: StreamManagerEventMap[K]) => void): this {
-
         super.onceAux(type, "Event '" + type + "' triggered once by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", handler);
 
         if (type === 'videoElementCreated') {
@@ -189,11 +196,14 @@ export abstract class StreamManager extends EventDispatcher {
             }
         }
         if (type === 'streamPlaying') {
-            if (this.videos[0] && this.videos[0].video &&
+            if (
+                this.videos[0] &&
+                this.videos[0].video &&
                 this.videos[0].video.currentTime > 0 &&
                 this.videos[0].video.paused === false &&
                 this.videos[0].video.ended === false &&
-                this.videos[0].video.readyState === 4) {
+                this.videos[0].video.readyState === 4
+            ) {
                 this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this, 'streamPlaying', undefined)]);
             }
         }
@@ -215,19 +225,20 @@ export abstract class StreamManager extends EventDispatcher {
      * See [[EventDispatcher.off]]
      */
     off<K extends keyof StreamManagerEventMap>(type: K, handler?: (event: StreamManagerEventMap[K]) => void): this {
-
         super.offAux(type, handler);
 
         if (type === 'publisherStartSpeaking') {
             // Both StreamManager and Session can have "publisherStartSpeaking" event listeners
-            const remainingStartSpeakingEventListeners = this.ee.getListeners(type).length + this.stream.session.ee.getListeners(type).length;
+            const remainingStartSpeakingEventListeners =
+                this.ee.getListeners(type).length + this.stream.session.ee.getListeners(type).length;
             if (remainingStartSpeakingEventListeners === 0) {
                 this.stream.disableHarkSpeakingEvent(false);
             }
         }
         if (type === 'publisherStopSpeaking') {
             // Both StreamManager and Session can have "publisherStopSpeaking" event listeners
-            const remainingStopSpeakingEventListeners = this.ee.getListeners(type).length + this.stream.session.ee.getListeners(type).length;
+            const remainingStopSpeakingEventListeners =
+                this.ee.getListeners(type).length + this.stream.session.ee.getListeners(type).length;
             if (remainingStopSpeakingEventListeners === 0) {
                 this.stream.disableHarkStoppedSpeakingEvent(false);
             }
@@ -255,7 +266,6 @@ export abstract class StreamManager extends EventDispatcher {
      * Publisher/Subscriber and has been successfully disassociated from that one and properly added to this one.
      */
     addVideoElement(video: HTMLVideoElement): number {
-
         this.initializeVideoProperties(video);
 
         if (!this.remote && this.stream.displayMyRemote()) {
@@ -280,7 +290,7 @@ export abstract class StreamManager extends EventDispatcher {
             }
         }
 
-        this.stream.session.streamManagers.forEach(streamManager => {
+        this.stream.session.streamManagers.forEach((streamManager) => {
             streamManager.disassociateVideo(video);
         });
 
@@ -370,12 +380,22 @@ export abstract class StreamManager extends EventDispatcher {
      * - `interval`: (number) how frequently the analyser polls the audio stream to check if speaking has started/stopped or audio volume has changed. Default **100** (ms)
      * - `threshold`: (number) the volume at which _publisherStartSpeaking_, _publisherStopSpeaking_ events will be fired. Default **-50** (dB)
      */
-    updatePublisherSpeakingEventsOptions(publisherSpeakingEventsOptions: { interval?: number, threshold?: number }): void {
-        const currentHarkOptions = !!this.stream.harkOptions ? this.stream.harkOptions : (this.stream.session.openvidu.advancedConfiguration.publisherSpeakingEventsOptions || {});
-        const newInterval = (typeof publisherSpeakingEventsOptions.interval === 'number') ?
-            publisherSpeakingEventsOptions.interval : ((typeof currentHarkOptions.interval === 'number') ? currentHarkOptions.interval : 100);
-        const newThreshold = (typeof publisherSpeakingEventsOptions.threshold === 'number') ?
-            publisherSpeakingEventsOptions.threshold : ((typeof currentHarkOptions.threshold === 'number') ? currentHarkOptions.threshold : -50);
+    updatePublisherSpeakingEventsOptions(publisherSpeakingEventsOptions: { interval?: number; threshold?: number }): void {
+        const currentHarkOptions = !!this.stream.harkOptions
+            ? this.stream.harkOptions
+            : this.stream.session.openvidu.advancedConfiguration.publisherSpeakingEventsOptions || {};
+        const newInterval =
+            typeof publisherSpeakingEventsOptions.interval === 'number'
+                ? publisherSpeakingEventsOptions.interval
+                : typeof currentHarkOptions.interval === 'number'
+                ? currentHarkOptions.interval
+                : 100;
+        const newThreshold =
+            typeof publisherSpeakingEventsOptions.threshold === 'number'
+                ? publisherSpeakingEventsOptions.threshold
+                : typeof currentHarkOptions.threshold === 'number'
+                ? currentHarkOptions.threshold
+                : -50;
         this.stream.harkOptions = {
             interval: newInterval,
             threshold: newThreshold
@@ -402,7 +422,14 @@ export abstract class StreamManager extends EventDispatcher {
         video.autoplay = true;
         video.controls = false;
 
-        if (platform.isSafariBrowser() || (platform.isIPhoneOrIPad() && (platform.isChromeMobileBrowser() || platform.isEdgeMobileBrowser() || platform.isOperaMobileBrowser() || platform.isFirefoxMobileBrowser()))) {
+        if (
+            platform.isSafariBrowser() ||
+            (platform.isIPhoneOrIPad() &&
+                (platform.isChromeMobileBrowser() ||
+                    platform.isEdgeMobileBrowser() ||
+                    platform.isOperaMobileBrowser() ||
+                    platform.isFirefoxMobileBrowser()))
+        ) {
             video.playsInline = true;
         }
 
@@ -440,7 +467,7 @@ export abstract class StreamManager extends EventDispatcher {
             }
         }
 
-        this.videos.forEach(streamManagerVideo => {
+        this.videos.forEach((streamManagerVideo) => {
             // Remove oncanplay event listener (only OpenVidu browser listener, not the user ones)
             if (!!streamManagerVideo.video && !!streamManagerVideo.video.removeEventListener) {
                 streamManagerVideo.video.removeEventListener('canplay', this.canPlayListener);
@@ -450,12 +477,14 @@ export abstract class StreamManager extends EventDispatcher {
                 // Only remove from DOM videos created by OpenVidu Browser (those generated by passing a valid targetElement in OpenVidu.initPublisher
                 // and Session.subscribe or those created by StreamManager.createVideoElement). All this videos triggered a videoElementCreated event
                 streamManagerVideo.video.parentNode!.removeChild(streamManagerVideo.video);
-                this.ee.emitEvent('videoElementDestroyed', [new VideoElementEvent(streamManagerVideo.video, this, 'videoElementDestroyed')]);
+                this.ee.emitEvent('videoElementDestroyed', [
+                    new VideoElementEvent(streamManagerVideo.video, this, 'videoElementDestroyed')
+                ]);
             }
             // Remove srcObject from the video
             this.removeSrcObject(streamManagerVideo);
             // Remove from collection of videos every video managed by OpenVidu Browser
-            this.videos.filter(v => !v.targetElement);
+            this.videos.filter((v) => !v.targetElement);
         });
     }
 
@@ -480,7 +509,7 @@ export abstract class StreamManager extends EventDispatcher {
      * @hidden
      */
     addPlayEventToFirstVideo() {
-        if ((!!this.videos[0]) && (!!this.videos[0].video) && (!this.videos[0].canplayListenerAdded)) {
+        if (!!this.videos[0] && !!this.videos[0].video && !this.videos[0].canplayListenerAdded) {
             this.activateStreamPlayingEventExceptionTimeout();
             this.videos[0].video.addEventListener('canplay', this.canPlayListener);
             this.videos[0].canplayListenerAdded = true;
@@ -491,7 +520,7 @@ export abstract class StreamManager extends EventDispatcher {
      * @hidden
      */
     updateMediaStream(mediaStream: MediaStream) {
-        this.videos.forEach(streamManagerVideo => {
+        this.videos.forEach((streamManagerVideo) => {
             streamManagerVideo.video.srcObject = mediaStream;
             if (platform.isIonicIos()) {
                 // iOS Ionic. LIMITATION: must reinsert the video in the DOM for
@@ -512,8 +541,8 @@ export abstract class StreamManager extends EventDispatcher {
     }
 
     /**
-    * @hidden
-    */
+     * @hidden
+     */
     createVideo(): HTMLVideoElement {
         return document.createElement('video');
     }
@@ -569,9 +598,18 @@ export abstract class StreamManager extends EventDispatcher {
         // Trigger ExceptionEvent NO_STREAM_PLAYING_EVENT if after timeout there is no 'canplay' event
         const msTimeout = this.stream.session.openvidu.advancedConfiguration.noStreamPlayingEventExceptionTimeout || 4000;
         this.streamPlayingEventExceptionTimeout = setTimeout(() => {
-            const msg = 'StreamManager of Stream ' + this.stream.streamId + ' (' + (this.remote ? 'Subscriber' : 'Publisher') + ') did not trigger "streamPlaying" event in ' + msTimeout + ' ms';
+            const msg =
+                'StreamManager of Stream ' +
+                this.stream.streamId +
+                ' (' +
+                (this.remote ? 'Subscriber' : 'Publisher') +
+                ') did not trigger "streamPlaying" event in ' +
+                msTimeout +
+                ' ms';
             logger.warn(msg);
-            this.stream.session.emitEvent('exception', [new ExceptionEvent(this.stream.session, ExceptionEventName.NO_STREAM_PLAYING_EVENT, (<any>this) as Subscriber, msg)]);
+            this.stream.session.emitEvent('exception', [
+                new ExceptionEvent(this.stream.session, ExceptionEventName.NO_STREAM_PLAYING_EVENT, (<any>this) as Subscriber, msg)
+            ]);
             delete this.streamPlayingEventExceptionTimeout;
         }, msTimeout);
     }
@@ -580,5 +618,4 @@ export abstract class StreamManager extends EventDispatcher {
         clearTimeout(this.streamPlayingEventExceptionTimeout as any);
         delete this.streamPlayingEventExceptionTimeout;
     }
-
 }

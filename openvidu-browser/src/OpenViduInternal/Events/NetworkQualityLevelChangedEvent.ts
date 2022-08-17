@@ -23,7 +23,6 @@ import { Connection } from '../../OpenVidu/Connection';
  * Triggered by [[networkQualityLevelChanged]]
  */
 export class NetworkQualityLevelChangedEvent extends Event {
-
     /**
      * New value of the network quality level
      */
@@ -37,7 +36,7 @@ export class NetworkQualityLevelChangedEvent extends Event {
     /**
      * Connection for whom the network quality level changed
      */
-    connection: Connection
+    connection: Connection;
 
     /**
      * @hidden
@@ -53,6 +52,5 @@ export class NetworkQualityLevelChangedEvent extends Event {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    callDefaultBehavior() { }
-
+    callDefaultBehavior() {}
 }

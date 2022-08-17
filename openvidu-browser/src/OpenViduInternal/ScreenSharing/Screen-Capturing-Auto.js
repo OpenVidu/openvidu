@@ -54,7 +54,11 @@ globalThis.getScreenId = function (firefoxString, callback, custom_parameter) {
             if (event.data.chromeMediaSourceId === 'PermissionDeniedError') {
                 callback('permission-denied');
             } else {
-                callback(null, event.data.chromeMediaSourceId, getScreenConstraints(null, event.data.chromeMediaSourceId, event.data.canRequestAudioTrack));
+                callback(
+                    null,
+                    event.data.chromeMediaSourceId,
+                    getScreenConstraints(null, event.data.chromeMediaSourceId, event.data.canRequestAudioTrack)
+                );
             }
 
             // this event listener is no more needed
@@ -71,8 +75,7 @@ globalThis.getScreenId = function (firefoxString, callback, custom_parameter) {
 
     if (!custom_parameter) {
         setTimeout(postGetSourceIdMessage, 100);
-    }
-    else {
+    } else {
         setTimeout(function () {
             postGetSourceIdMessage(custom_parameter);
         }, 100);
@@ -95,7 +98,7 @@ function getScreenConstraints(error, sourceId, canRequestAudioTrack) {
     if (!!canRequestAudioTrack) {
         screen_constraints.audio = {
             mandatory: {
-                chromeMediaSource: error ? 'screen' : 'desktop',
+                chromeMediaSource: error ? 'screen' : 'desktop'
                 // echoCancellation: true
             },
             optional: []
@@ -129,19 +132,26 @@ function postGetSourceIdMessage(custom_parameter) {
     }
 
     if (!custom_parameter) {
-        iframe.contentWindow.postMessage({
-            captureSourceId: true
-        }, '*');
-    }
-    else if (!!custom_parameter.forEach) {
-        iframe.contentWindow.postMessage({
-            captureCustomSourceId: custom_parameter
-        }, '*');
-    }
-    else {
-        iframe.contentWindow.postMessage({
-            captureSourceIdWithAudio: true
-        }, '*');
+        iframe.contentWindow.postMessage(
+            {
+                captureSourceId: true
+            },
+            '*'
+        );
+    } else if (!!custom_parameter.forEach) {
+        iframe.contentWindow.postMessage(
+            {
+                captureCustomSourceId: custom_parameter
+            },
+            '*'
+        );
+    } else {
+        iframe.contentWindow.postMessage(
+            {
+                captureSourceIdWithAudio: true
+            },
+            '*'
+        );
     }
 }
 
@@ -212,9 +222,12 @@ function postGetChromeExtensionStatusMessage() {
         return;
     }
 
-    iframe.contentWindow.postMessage({
-        getChromeExtensionStatus: true
-    }, '*');
+    iframe.contentWindow.postMessage(
+        {
+            getChromeExtensionStatus: true
+        },
+        '*'
+    );
 }
 
 exports.getScreenId = globalThis.getScreenId;

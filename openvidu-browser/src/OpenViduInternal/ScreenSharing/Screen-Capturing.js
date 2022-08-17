@@ -3,7 +3,7 @@ var chromeMediaSource = 'screen';
 var sourceId;
 var screenCallback;
 
-if(typeof window !== 'undefined' && typeof navigator !== 'undefined' && typeof navigator.userAgent !== 'undefined'){
+if (typeof window !== 'undefined' && typeof navigator !== 'undefined' && typeof navigator.userAgent !== 'undefined') {
     var isFirefox = typeof window.InstallTrigger !== 'undefined';
     var isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
     var isChrome = !!window.chrome && !isOpera;
@@ -20,10 +20,8 @@ if(typeof window !== 'undefined' && typeof navigator !== 'undefined' && typeof n
 function onMessageCallback(data) {
     // "cancel" button is clicked
     if (data == 'PermissionDeniedError') {
-        if (screenCallback)
-            return screenCallback('PermissionDeniedError');
-        else
-            throw new Error('PermissionDeniedError');
+        if (screenCallback) return screenCallback('PermissionDeniedError');
+        else throw new Error('PermissionDeniedError');
     }
     // extension notified his presence
     if (data == 'rtcmulticonnection-extension-loaded') {
@@ -31,7 +29,7 @@ function onMessageCallback(data) {
     }
     // extension shared temp sourceId
     if (data.sourceId && screenCallback) {
-        screenCallback(sourceId = data.sourceId, data.canRequestAudioTrack === true);
+        screenCallback((sourceId = data.sourceId), data.canRequestAudioTrack === true);
     }
 }
 
@@ -51,10 +49,8 @@ function isChromeExtensionAvailable(callback) {
 
 // this function can be used to get "source-id" from the extension
 function getSourceId(callback) {
-    if (!callback)
-        throw '"callback" parameter is mandatory.';
-    if (sourceId)
-        return callback(sourceId);
+    if (!callback) throw '"callback" parameter is mandatory.';
+    if (sourceId) return callback(sourceId);
     screenCallback = callback;
     window.postMessage('get-sourceId', '*');
 }
@@ -67,9 +63,12 @@ function getCustomSourceId(arr, callback) {
     if (sourceId) return callback(sourceId);
 
     screenCallback = callback;
-    window.postMessage({
-        'get-custom-sourceId': arr
-    }, '*');
+    window.postMessage(
+        {
+            'get-custom-sourceId': arr
+        },
+        '*'
+    );
 }
 
 // this function can be used to get "source-id" from the extension
@@ -82,8 +81,7 @@ function getSourceIdWithAudio(callback) {
 }
 
 function getChromeExtensionStatus(extensionid, callback) {
-    if (isFirefox)
-        return callback('not-chrome');
+    if (isFirefox) return callback('not-chrome');
     if (arguments.length != 2) {
         callback = extensionid;
         extensionid = 'lfcgfepafnobdloecchnfaclibenjold'; // default extension-id
@@ -96,8 +94,7 @@ function getChromeExtensionStatus(extensionid, callback) {
         setTimeout(function () {
             if (chromeMediaSource == 'screen') {
                 callback('installed-disabled');
-            } else
-                callback('installed-enabled');
+            } else callback('installed-enabled');
         }, 2000);
     };
     image.onerror = function () {
@@ -116,8 +113,7 @@ function getScreenConstraints(callback, captureSourceIdWithAudio) {
         mozMediaSource: 'window',
         mediaSource: 'window'
     };
-    if (isFirefox)
-        return callback(null, firefoxScreenConstraints);
+    if (isFirefox) return callback(null, firefoxScreenConstraints);
     // this statement defines getUserMedia constraints
     // that will be used to capture content of screen
     var screen_constraints = {
@@ -141,8 +137,7 @@ function getScreenConstraints(callback, captureSourceIdWithAudio) {
                 }
                 callback(sourceId == 'PermissionDeniedError' ? sourceId : null, screen_constraints);
             });
-        }
-        else {
+        } else {
             getSourceId(function (sourceId) {
                 screen_constraints.mandatory.chromeMediaSourceId = sourceId;
                 callback(sourceId == 'PermissionDeniedError' ? sourceId : null, screen_constraints);

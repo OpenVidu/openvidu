@@ -19,7 +19,6 @@
  * See [[OpenVidu.getDevices]]
  */
 export interface Device {
-
     /**
      * `"videoinput"`, `"audioinput"`
      */

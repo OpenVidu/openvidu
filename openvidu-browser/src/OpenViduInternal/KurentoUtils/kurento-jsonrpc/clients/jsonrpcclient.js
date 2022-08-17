@@ -19,9 +19,11 @@ var RpcBuilder = require('../');
 var WebSocketWithReconnection = require('./transports/webSocketWithReconnection');
 var OpenViduLogger = require('../../../Logger/OpenViduLogger').OpenViduLogger;
 
-Date.now = Date.now || function () {
-    return +new Date;
-};
+Date.now =
+    Date.now ||
+    function () {
+        return +new Date();
+    };
 
 var PING_INTERVAL = 5000;
 
@@ -51,7 +53,6 @@ var Logger = OpenViduLogger.getInstance();
  * </pre>
  */
 function JsonRpcClient(configuration) {
-
     var self = this;
 
     var wsConfig = configuration.ws;
@@ -71,13 +72,13 @@ function JsonRpcClient(configuration) {
     var onerror = wsConfig.onerror;
 
     configuration.rpc.pull = function (params, request) {
-        request.reply(null, "push");
-    }
+        request.reply(null, 'push');
+    };
 
     wsConfig.onreconnecting = function () {
-        Logger.debug("--------- ONRECONNECTING -----------");
+        Logger.debug('--------- ONRECONNECTING -----------');
         if (status === RECONNECTING) {
-            Logger.error("Websocket already in RECONNECTING state when receiving a new ONRECONNECTING message. Ignoring it");
+            Logger.error('Websocket already in RECONNECTING state when receiving a new ONRECONNECTING message. Ignoring it');
             return;
         }
 
@@ -87,12 +88,12 @@ function JsonRpcClient(configuration) {
         if (onreconnecting) {
             onreconnecting();
         }
-    }
+    };
 
     wsConfig.onreconnected = function () {
-        Logger.debug("--------- ONRECONNECTED -----------");
+        Logger.debug('--------- ONRECONNECTED -----------');
         if (status === CONNECTED) {
-            Logger.error("Websocket already in CONNECTED state when receiving a new ONRECONNECTED message. Ignoring it");
+            Logger.error('Websocket already in CONNECTED state when receiving a new ONRECONNECTED message. Ignoring it');
             return;
         }
         status = CONNECTED;
@@ -102,12 +103,12 @@ function JsonRpcClient(configuration) {
         if (onreconnected) {
             onreconnected();
         }
-    }
+    };
 
     wsConfig.onconnected = function () {
-        Logger.debug("--------- ONCONNECTED -----------");
+        Logger.debug('--------- ONCONNECTED -----------');
         if (status === CONNECTED) {
-            Logger.error("Websocket already in CONNECTED state when receiving a new ONCONNECTED message. Ignoring it");
+            Logger.error('Websocket already in CONNECTED state when receiving a new ONCONNECTED message. Ignoring it');
             return;
         }
         status = CONNECTED;
@@ -118,10 +119,10 @@ function JsonRpcClient(configuration) {
         if (onconnected) {
             onconnected();
         }
-    }
+    };
 
     wsConfig.onerror = function (error) {
-        Logger.debug("--------- ONERROR -----------");
+        Logger.debug('--------- ONERROR -----------');
 
         status = DISCONNECTED;
 
@@ -130,7 +131,7 @@ function JsonRpcClient(configuration) {
         if (onerror) {
             onerror(error);
         }
-    }
+    };
 
     var ws = new WebSocketWithReconnection(wsConfig);
 
@@ -141,37 +142,41 @@ function JsonRpcClient(configuration) {
         ping_request_timeout: configuration.rpc.heartbeatRequestTimeout
     };
 
-    var rpc = new RpcBuilder(RpcBuilder.packers.JsonRPC, rpcBuilderOptions, ws,
-        function (request) {
+    var rpc = new RpcBuilder(RpcBuilder.packers.JsonRPC, rpcBuilderOptions, ws, function (request) {
+        Logger.debug('Received request: ' + JSON.stringify(request));
 
-            Logger.debug('Received request: ' + JSON.stringify(request));
+        try {
+            var func = configuration.rpc[request.method];
 
-            try {
-                var func = configuration.rpc[request.method];
-
-                if (func === undefined) {
-                    Logger.error("Method " + request.method + " not registered in client");
-                } else {
-                    func(request.params, request);
-                }
-            } catch (err) {
-                Logger.error('Exception processing request: ' + JSON.stringify(request));
-                Logger.error(err);
+            if (func === undefined) {
+                Logger.error('Method ' + request.method + ' not registered in client');
+            } else {
+                func(request.params, request);
             }
-        });
+        } catch (err) {
+            Logger.error('Exception processing request: ' + JSON.stringify(request));
+            Logger.error(err);
+        }
+    });
 
     this.send = function (method, params, callback) {
-
         var requestTime = Date.now();
 
         rpc.encode(method, params, function (error, result) {
             if (error) {
                 try {
-                    Logger.error("ERROR:" + error.message + " in Request: method:" +
-                        method + " params:" + JSON.stringify(params) + " request:" +
-                        error.request);
+                    Logger.error(
+                        'ERROR:' +
+                            error.message +
+                            ' in Request: method:' +
+                            method +
+                            ' params:' +
+                            JSON.stringify(params) +
+                            ' request:' +
+                            error.request
+                    );
                     if (error.data) {
-                        Logger.error("ERROR DATA:" + JSON.stringify(error.data));
+                        Logger.error('ERROR DATA:' + JSON.stringify(error.data));
                     }
                 } catch (e) {}
                 error.requestTime = requestTime;
@@ -183,11 +188,10 @@ function JsonRpcClient(configuration) {
                 callback(error, result);
             }
         });
-    }
+    };
 
     function updateNotReconnectIfLessThan() {
-        Logger.debug("notReconnectIfNumLessThan = " + pingNextNum + ' (old=' +
-            notReconnectIfNumLessThan + ')');
+        Logger.debug('notReconnectIfNumLessThan = ' + pingNextNum + ' (old=' + notReconnectIfNumLessThan + ')');
         notReconnectIfNumLessThan = pingNextNum;
     }
 
@@ -201,23 +205,25 @@ function JsonRpcClient(configuration) {
             }
             pingNextNum++;
 
-            self.send('ping', params, (function (pingNum) {
-                return function (error, result) {
-                    if (error) {
-                        Logger.debug("Error in ping request #" + pingNum + " (" +
-                            error.message + ")");
-                        if (pingNum > notReconnectIfNumLessThan) {
-                            enabledPings = false;
-                            updateNotReconnectIfLessThan();
-                            Logger.debug("Server did not respond to ping message #" +
-                                pingNum + ". Reconnecting... ");
-                            ws.reconnectWs();
+            self.send(
+                'ping',
+                params,
+                (function (pingNum) {
+                    return function (error, result) {
+                        if (error) {
+                            Logger.debug('Error in ping request #' + pingNum + ' (' + error.message + ')');
+                            if (pingNum > notReconnectIfNumLessThan) {
+                                enabledPings = false;
+                                updateNotReconnectIfLessThan();
+                                Logger.debug('Server did not respond to ping message #' + pingNum + '. Reconnecting... ');
+                                ws.reconnectWs();
+                            }
                         }
-                    }
-                }
-            })(pingNextNum));
+                    };
+                })(pingNextNum)
+            );
         } else {
-            Logger.debug("Trying to send ping, but ping is not enabled");
+            Logger.debug('Trying to send ping, but ping is not enabled');
         }
     }
 
@@ -227,7 +233,7 @@ function JsonRpcClient(configuration) {
      */
     function usePing() {
         if (!pingPongStarted) {
-            Logger.debug("Starting ping (if configured)")
+            Logger.debug('Starting ping (if configured)');
             pingPongStarted = true;
 
             if (configuration.heartbeat != undefined) {
@@ -246,30 +252,29 @@ function JsonRpcClient(configuration) {
     }
 
     this.close = function (code, reason) {
-        Logger.debug("Closing  with code: " + code + " because: " + reason);
+        Logger.debug('Closing  with code: ' + code + ' because: ' + reason);
         if (pingInterval != undefined) {
-            Logger.debug("Clearing ping interval");
+            Logger.debug('Clearing ping interval');
             clearInterval(pingInterval);
         }
         pingPongStarted = false;
         enabledPings = false;
         ws.close(code, reason);
-    }
+    };
 
     this.reconnect = function () {
         ws.reconnectWs();
-    }
+    };
 
     this.resetPing = function () {
         enabledPings = true;
         pingNextNum = 0;
         usePing();
-    }
+    };
 
     this.getReadyState = function () {
         return ws.getReadyState();
-    }
+    };
 }
-
 
 module.exports = JsonRpcClient;

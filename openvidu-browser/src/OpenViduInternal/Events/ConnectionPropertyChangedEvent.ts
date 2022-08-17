@@ -25,7 +25,6 @@ import { Event } from './Event';
  * Triggered by [[connectionPropertyChanged]]
  */
 export class ConnectionPropertyChangedEvent extends Event {
-
     /**
      * The Connection whose property has changed
      */
@@ -61,6 +60,5 @@ export class ConnectionPropertyChangedEvent extends Event {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    callDefaultBehavior() { }
-
+    callDefaultBehavior() {}
 }

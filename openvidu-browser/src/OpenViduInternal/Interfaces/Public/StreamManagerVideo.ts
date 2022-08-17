@@ -17,9 +17,7 @@
 
 import { VideoInsertMode } from '../../Enums/VideoInsertMode';
 
-
 export interface StreamManagerVideo {
-
     /**
      * DOM video element displaying the StreamManager's stream
      */
@@ -56,6 +54,4 @@ export interface StreamManagerVideo {
      * @hidden
      */
     canplayListenerAdded: boolean;
-
-
 }

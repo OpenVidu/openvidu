@@ -6,4 +6,4 @@ if (typeof globalThis !== 'undefined') {
 }
 
 // Disable jsnlog when library is loaded
-JL.setOptions({ enabled: false })
+JL.setOptions({ enabled: false });

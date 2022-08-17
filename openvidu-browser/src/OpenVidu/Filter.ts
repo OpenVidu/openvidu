@@ -32,7 +32,6 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
  * Video/audio filter applied to a Stream. See [[Stream.applyFilter]]
  */
 export class Filter {
-
     /**
      * Type of filter applied. This is the name of the remote class identifying the filter to apply in Kurento Media Server.
      * For example: `"FaceOverlayFilter"`, `"GStreamerFilter"`.
@@ -59,7 +58,8 @@ export class Filter {
      * You can use this value to know the current status of any applied filter
      */
     lastExecMethod?: {
-        method: string, params: Object
+        method: string;
+        params: Object;
     };
 
     /**
@@ -73,7 +73,6 @@ export class Filter {
     stream: Stream;
     private logger: OpenViduLogger;
 
-
     /**
      * @hidden
      */
@@ -81,7 +80,6 @@ export class Filter {
         this.type = type;
         this.options = options;
     }
-
 
     /**
      * Executes a filter method. Available methods are specific for each filter
@@ -91,24 +89,40 @@ export class Filter {
      */
     execMethod(method: string, params: Object): Promise<void> {
         return new Promise((resolve, reject) => {
-
             logger.info('Executing filter method to stream ' + this.stream.streamId);
 
             let finalParams;
 
-            const successExecMethod = triggerEvent => {
+            const successExecMethod = (triggerEvent) => {
                 logger.info('Filter method successfully executed on Stream ' + this.stream.streamId);
                 const oldValue = (<any>Object).assign({}, this.stream.filter);
                 this.stream.filter!.lastExecMethod = { method, params: finalParams };
                 if (triggerEvent) {
-                    this.stream.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.session, this.stream, 'filter', this.stream.filter!, oldValue, 'execFilterMethod')]);
-                    this.stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.streamManager, this.stream, 'filter', this.stream.filter!, oldValue, 'execFilterMethod')]);
+                    this.stream.session.emitEvent('streamPropertyChanged', [
+                        new StreamPropertyChangedEvent(
+                            this.stream.session,
+                            this.stream,
+                            'filter',
+                            this.stream.filter!,
+                            oldValue,
+                            'execFilterMethod'
+                        )
+                    ]);
+                    this.stream.streamManager.emitEvent('streamPropertyChanged', [
+                        new StreamPropertyChangedEvent(
+                            this.stream.streamManager,
+                            this.stream,
+                            'filter',
+                            this.stream.filter!,
+                            oldValue,
+                            'execFilterMethod'
+                        )
+                    ]);
                 }
                 return resolve();
-            }
+            };
 
             if (this.type.startsWith('VB:')) {
-
                 if (typeof params === 'string') {
                     try {
                         params = JSON.parse(params);
@@ -121,23 +135,31 @@ export class Filter {
 
                 if (method === 'update') {
                     if (!this.stream.virtualBackgroundSinkElements?.VB) {
-                        return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'There is no Virtual Background filter applied'));
+                        return reject(
+                            new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'There is no Virtual Background filter applied')
+                        );
                     } else {
                         this.stream.virtualBackgroundSinkElements.VB.updateValues(params)
                             .then(() => successExecMethod(false))
-                            .catch(error => {
+                            .catch((error) => {
                                 if (error.name === OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR) {
                                     return reject(new OpenViduError(error.name, error.message));
                                 } else {
-                                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'Error updating values on Virtual Background filter: ' + error));
+                                    return reject(
+                                        new OpenViduError(
+                                            OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR,
+                                            'Error updating values on Virtual Background filter: ' + error
+                                        )
+                                    );
                                 }
                             });
                     }
                 } else {
-                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, `Unknown Virtual Background method "${method}"`));
+                    return reject(
+                        new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, `Unknown Virtual Background method "${method}"`)
+                    );
                 }
             } else {
-
                 let stringParams;
                 if (typeof params !== 'string') {
                     try {
@@ -160,7 +182,12 @@ export class Filter {
                         if (error) {
                             logger.error('Error executing filter method for Stream ' + this.stream.streamId, error);
                             if (error.code === 401) {
-                                return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to execute a filter method"));
+                                return reject(
+                                    new OpenViduError(
+                                        OpenViduErrorName.OPENVIDU_PERMISSION_DENIED,
+                                        "You don't have permissions to execute a filter method"
+                                    )
+                                );
                             } else {
                                 return reject(error);
                             }
@@ -172,7 +199,6 @@ export class Filter {
             }
         });
     }
-
 
     /**
      * Subscribe to certain filter event. Available events are specific for each filter
@@ -190,22 +216,31 @@ export class Filter {
                 { streamId: this.stream.streamId, eventType },
                 (error, response) => {
                     if (error) {
-                        logger.error('Error adding filter event listener to event ' + eventType + 'for Stream ' + this.stream.streamId, error);
+                        logger.error(
+                            'Error adding filter event listener to event ' + eventType + 'for Stream ' + this.stream.streamId,
+                            error
+                        );
                         if (error.code === 401) {
-                            return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to add a filter event listener"));
+                            return reject(
+                                new OpenViduError(
+                                    OpenViduErrorName.OPENVIDU_PERMISSION_DENIED,
+                                    "You don't have permissions to add a filter event listener"
+                                )
+                            );
                         } else {
                             return reject(error);
                         }
                     } else {
                         this.handlers.set(eventType, handler);
-                        logger.info('Filter event listener to event ' + eventType + ' successfully applied on Stream ' + this.stream.streamId);
+                        logger.info(
+                            'Filter event listener to event ' + eventType + ' successfully applied on Stream ' + this.stream.streamId
+                        );
                         return resolve();
                     }
                 }
             );
         });
     }
-
 
     /**
      * Removes certain filter event listener previously set.
@@ -222,20 +257,29 @@ export class Filter {
                 { streamId: this.stream.streamId, eventType },
                 (error, response) => {
                     if (error) {
-                        logger.error('Error removing filter event listener to event ' + eventType + 'for Stream ' + this.stream.streamId, error);
+                        logger.error(
+                            'Error removing filter event listener to event ' + eventType + 'for Stream ' + this.stream.streamId,
+                            error
+                        );
                         if (error.code === 401) {
-                            return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to add a filter event listener"));
+                            return reject(
+                                new OpenViduError(
+                                    OpenViduErrorName.OPENVIDU_PERMISSION_DENIED,
+                                    "You don't have permissions to add a filter event listener"
+                                )
+                            );
                         } else {
                             return reject(error);
                         }
                     } else {
                         this.handlers.delete(eventType);
-                        logger.info('Filter event listener to event ' + eventType + ' successfully removed on Stream ' + this.stream.streamId);
+                        logger.info(
+                            'Filter event listener to event ' + eventType + ' successfully removed on Stream ' + this.stream.streamId
+                        );
                         return resolve();
                     }
                 }
             );
         });
     }
-
 }

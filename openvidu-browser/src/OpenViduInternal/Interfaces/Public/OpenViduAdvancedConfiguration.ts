@@ -19,7 +19,6 @@
  * See [[OpenVidu.setAdvancedConfiguration]]
  */
 export interface OpenViduAdvancedConfiguration {
-
     /**
      * Array of [RTCIceServer](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer) to be used by OpenVidu Browser. By default OpenVidu will generate the required credentials to use the COTURN server hosted along OpenVidu Server
      * You can also set this property to string 'freeice' to force the use of free STUN servers instead (got thanks to [freeice](https://github.com/DamonOehlman/freeice) library).
@@ -36,7 +35,7 @@ export interface OpenViduAdvancedConfiguration {
      * Custom configuration for the [[PublisherSpeakingEvent]] feature and the [StreamManagerEvent.streamAudioVolumeChange](/en/stable/api/openvidu-browser/classes/StreamManagerEvent.html) feature. It is an object which includes the following optional properties:
      * - `interval`: (number) how frequently the analyser polls the audio stream to check if speaking has started/stopped or audio volume has changed. Default **100** (ms)
      * - `threshold`: (number) the volume at which _publisherStartSpeaking_ and _publisherStopSpeaking_ events will be fired. Default **-50** (dB)
-     * 
+     *
      * This sets the global default configuration that will affect all streams, but you can later customize these values for each specific stream by calling [[StreamManager.updatePublisherSpeakingEventsOptions]]
      */
     publisherSpeakingEventsOptions?: {
@@ -47,10 +46,10 @@ export interface OpenViduAdvancedConfiguration {
     /**
      * Determines the automatic reconnection process policy. Whenever the client's network drops, OpenVidu Browser starts a reconnection process with OpenVidu Server. After network is recovered, OpenVidu Browser automatically
      * inspects all of its media streams to see their status. For any of them that are broken, it asks OpenVidu Server for a forced and silent reconnection.
-     * 
+     *
      * This policy is technically enough to recover any broken media connection after a network drop, but in practice it has been proven that OpenVidu Browser may think a media connection has properly recovered when in fact it has not.
      * This is not a common case, and it only affects Publisher streams, but it may occur. This property allows **forcing OpenVidu Browser to reconnect all of its outgoing media streams** after a network drop regardless of their supposed status.
-     * 
+     *
      * Default to `false`.
      */
     forceMediaReconnectionAfterNetworkDrop?: boolean;
@@ -59,16 +58,15 @@ export interface OpenViduAdvancedConfiguration {
      * The milliseconds that must elapse after triggering [[ExceptionEvent]] of name [`ICE_CONNECTION_DISCONNECTED`](/en/stable/api/openvidu-browser/enums/ExceptionEventName.html#ICE_CONNECTION_DISCONNECTED) to perform an automatic reconnection process of the affected media stream.
      * This automatic reconnection process can only take place if the client still has network connection to OpenVidu Server. If the ICE connection has broken because of a total network drop,
      * then no reconnection process will be possible at all.
-     * 
+     *
      * Default to `4000`.
      */
     iceConnectionDisconnectedExceptionTimeout?: number;
 
     /**
      * The milliseconds that must elapse for the [[ExceptionEvent]] of name [`NO_STREAM_PLAYING_EVENT`](/en/stable/api/openvidu-browser/enums/ExceptionEventName.html#NO_STREAM_PLAYING_EVENT) to be fired.
-     * 
+     *
      * Default to `4000`.
      */
     noStreamPlayingEventExceptionTimeout?: number;
-
 }

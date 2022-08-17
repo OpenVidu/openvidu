@@ -24,7 +24,6 @@ import { StreamManager } from '../../OpenVidu/StreamManager';
  * Triggered by `streamPropertyChanged` (available for [Session](/en/stable/api/openvidu-browser/interfaces/SessionEventMap.html#streamPropertyChanged) and [StreamManager](/en/stable/api/openvidu-browser/interfaces/StreamManagerEventMap.html#streamPropertyChanged) objects)
  */
 export class StreamPropertyChangedEvent extends Event {
-
     /**
      * The Stream whose property has changed. You can always identify the user publishing the changed stream by consulting property [[Stream.connection]]
      */
@@ -57,7 +56,14 @@ export class StreamPropertyChangedEvent extends Event {
     /**
      * @hidden
      */
-    constructor(target: Session | StreamManager, stream: Stream, changedProperty: string, newValue: Object, oldValue: Object, reason: string) {
+    constructor(
+        target: Session | StreamManager,
+        stream: Stream,
+        changedProperty: string,
+        newValue: Object,
+        oldValue: Object,
+        reason: string
+    ) {
         super(false, target, 'streamPropertyChanged');
         this.stream = stream;
         this.changedProperty = changedProperty;
@@ -70,6 +76,5 @@ export class StreamPropertyChangedEvent extends Event {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    callDefaultBehavior() { }
-
+    callDefaultBehavior() {}
 }

@@ -24,12 +24,10 @@ import { OpenViduLogger } from '../Logger/OpenViduLogger';
  */
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
-
 /**
  * Triggered by [[sessionDisconnected]]
  */
 export class SessionDisconnectedEvent extends Event {
-
     /**
      * - "disconnect": you have called `Session.disconnect()`
      * - "forceDisconnectByUser": you have been evicted from the Session by other user calling `Session.forceDisconnect()`
@@ -39,7 +37,7 @@ export class SessionDisconnectedEvent extends Event {
      *      Session object will always have previously dispatched a `reconnecting` event. If the reconnection process succeeds,
      *      Session object will dispatch a `reconnected` event. If it fails, Session object will dispatch a SessionDisconnectedEvent
      *      with reason "networkDisconnect"
-     * - "nodeCrashed": a node has crashed in the server side. You can use this reason to ask your application's backend to reconnect 
+     * - "nodeCrashed": a node has crashed in the server side. You can use this reason to ask your application's backend to reconnect
      * to a new session to replace the crashed one
      */
     reason: string;
@@ -56,13 +54,12 @@ export class SessionDisconnectedEvent extends Event {
      * @hidden
      */
     callDefaultBehavior() {
-
         logger.info("Calling default behavior upon '" + this.type + "' event dispatched by 'Session'");
 
         const session = <Session>this.target;
 
         // Dispose and delete all remote Connections
-        session.remoteConnections.forEach(remoteConnection => {
+        session.remoteConnections.forEach((remoteConnection) => {
             const connectionId = remoteConnection.connectionId;
             if (!!session.remoteConnections.get(connectionId)?.stream) {
                 session.remoteConnections.get(connectionId)?.stream!.disposeWebRtcPeer();
@@ -79,5 +76,4 @@ export class SessionDisconnectedEvent extends Event {
             session.remoteConnections.delete(connectionId);
         });
     }
-
 }

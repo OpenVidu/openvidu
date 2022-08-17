@@ -32,7 +32,6 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
  * - `streamDestroyed` (available for [Session](/en/stable/api/openvidu-browser/interfaces/SessionEventMap.html#streamDestroyed) and [Publisher](/en/stable/api/openvidu-browser/interfaces/PublisherEventMap.html#streamDestroyed) objects)
  */
 export class StreamEvent extends Event {
-
     /**
      * Stream object that was created or destroyed
      */
@@ -68,7 +67,6 @@ export class StreamEvent extends Event {
      */
     callDefaultBehavior() {
         if (this.type === 'streamDestroyed') {
-
             if (this.target instanceof Session) {
                 // Remote Stream
                 logger.info("Calling default behavior upon '" + this.type + "' event dispatched by 'Session'");
@@ -82,7 +80,7 @@ export class StreamEvent extends Event {
                 // Delete Publisher object from OpenVidu publishers array
                 const openviduPublishers = (<Publisher>this.target).openvidu.publishers;
                 for (let i = 0; i < openviduPublishers.length; i++) {
-                    if (openviduPublishers[i] === (<Publisher>this.target)) {
+                    if (openviduPublishers[i] === <Publisher>this.target) {
                         openviduPublishers.splice(i, 1);
                         break;
                     }
@@ -109,8 +107,6 @@ export class StreamEvent extends Event {
                     }
                 }
             }
-
         }
     }
-
 }

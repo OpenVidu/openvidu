@@ -19,7 +19,6 @@
  * How the video will be inserted in the DOM for Publishers and Subscribers. See [[PublisherProperties.insertMode]] and [[SubscriberProperties.insertMode]]
  */
 export enum VideoInsertMode {
-
     /**
      * Video inserted after the target element (as next sibling)
      */
@@ -40,5 +39,4 @@ export enum VideoInsertMode {
      * Video replaces target element
      */
     REPLACE = 'REPLACE'
-
 }

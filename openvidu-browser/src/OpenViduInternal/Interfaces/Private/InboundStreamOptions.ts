@@ -29,6 +29,6 @@ export interface InboundStreamOptions {
     videoActive: boolean;
     typeOfVideo: TypeOfVideo;
     frameRate: number;
-    videoDimensions: { width: number, height: number };
+    videoDimensions: { width: number; height: number };
     filter?: Filter;
 }

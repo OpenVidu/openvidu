@@ -23,7 +23,13 @@ import { StreamManager } from './StreamManager';
 import { Subscriber } from './Subscriber';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
-import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv, WebRtcPeerConfiguration } from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
+import {
+    WebRtcPeer,
+    WebRtcPeerSendonly,
+    WebRtcPeerRecvonly,
+    WebRtcPeerSendrecv,
+    WebRtcPeerConfiguration
+} from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
 import { WebRtcStats } from '../OpenViduInternal/WebRtcStats/WebRtcStats';
 import { ExceptionEvent, ExceptionEventName } from '../OpenViduInternal/Events/ExceptionEvent';
 import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpeakingEvent';
@@ -60,7 +66,6 @@ let platform: PlatformUtils;
  * to one of them (sending and receiving it, respectively)
  */
 export class Stream {
-
     /**
      * The Connection object that is publishing the stream
      */
@@ -137,7 +142,7 @@ export class Stream {
      *
      * Whenever this happens a [[StreamPropertyChangedEvent]] will be dispatched by the Session object as well as by the affected Subscriber/Publisher object
      */
-    videoDimensions: { width: number, height: number };
+    videoDimensions: { width: number; height: number };
 
     /**
      * **WARNING**: experimental option. This interface may change in the near future
@@ -154,11 +159,11 @@ export class Stream {
 
     private isSubscribeToRemote = false;
 
-    private virtualBackgroundSourceElements?: { videoClone: HTMLVideoElement, mediaStreamClone: MediaStream };
+    private virtualBackgroundSourceElements?: { videoClone: HTMLVideoElement; mediaStreamClone: MediaStream };
     /**
      * @hidden
      */
-    virtualBackgroundSinkElements?: { VB: any, video: HTMLVideoElement };
+    virtualBackgroundSinkElements?: { VB: any; video: HTMLVideoElement };
 
     /**
      * @hidden
@@ -237,12 +242,10 @@ export class Stream {
      */
     lastVBFilter?: Filter;
 
-
     /**
      * @hidden
      */
     constructor(session: Session, options: InboundStreamOptions | OutboundStreamOptions | {}) {
-
         platform = PlatformUtils.getInstance();
         this.session = session;
 
@@ -258,12 +261,15 @@ export class Stream {
             }
             if (this.hasVideo) {
                 this.videoActive = this.inboundStreamOpts.videoActive;
-                this.typeOfVideo = (!this.inboundStreamOpts.typeOfVideo) ? undefined : this.inboundStreamOpts.typeOfVideo;
-                this.frameRate = (this.inboundStreamOpts.frameRate === -1) ? undefined : this.inboundStreamOpts.frameRate;
+                this.typeOfVideo = !this.inboundStreamOpts.typeOfVideo ? undefined : this.inboundStreamOpts.typeOfVideo;
+                this.frameRate = this.inboundStreamOpts.frameRate === -1 ? undefined : this.inboundStreamOpts.frameRate;
                 this.videoDimensions = this.inboundStreamOpts.videoDimensions;
             }
-            if (!!this.inboundStreamOpts.filter && (Object.keys(this.inboundStreamOpts.filter).length > 0)) {
-                if (!!this.inboundStreamOpts.filter.lastExecMethod && Object.keys(this.inboundStreamOpts.filter.lastExecMethod).length === 0) {
+            if (!!this.inboundStreamOpts.filter && Object.keys(this.inboundStreamOpts.filter).length > 0) {
+                if (
+                    !!this.inboundStreamOpts.filter.lastExecMethod &&
+                    Object.keys(this.inboundStreamOpts.filter.lastExecMethod).length === 0
+                ) {
                     delete this.inboundStreamOpts.filter.lastExecMethod;
                 }
                 this.filter = this.inboundStreamOpts.filter;
@@ -281,7 +287,10 @@ export class Stream {
             if (this.hasVideo) {
                 this.videoActive = !!this.outboundStreamOpts.publisherProperties.publishVideo;
                 this.frameRate = this.outboundStreamOpts.publisherProperties.frameRate;
-                if (typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack) {
+                if (
+                    typeof MediaStreamTrack !== 'undefined' &&
+                    this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack
+                ) {
                     this.typeOfVideo = TypeOfVideo.CUSTOM;
                 } else {
                     this.typeOfVideo = this.isSendScreen() ? TypeOfVideo.SCREEN : TypeOfVideo.CAMERA;
@@ -297,7 +306,6 @@ export class Stream {
             logger.debug('Video srcObject [' + this.mediaStream?.id + '] updated in stream [' + this.streamId + ']');
         });
     }
-
 
     /**
      * Recreates the media connection with the server. This entails the disposal of the previous RTCPeerConnection and the re-negotiation
@@ -322,16 +330,19 @@ export class Stream {
      */
     applyFilter(type: string, options: Object): Promise<Filter> {
         return new Promise(async (resolve, reject) => {
-
             if (!!this.filter) {
-                return reject(new OpenViduError(OpenViduErrorName.GENERIC_ERROR, 'There is already a filter applied to Stream ' + this.streamId));
+                return reject(
+                    new OpenViduError(OpenViduErrorName.GENERIC_ERROR, 'There is already a filter applied to Stream ' + this.streamId)
+                );
             }
 
             const resolveApplyFilter = (error, triggerEvent) => {
                 if (error) {
                     logger.error('Error applying filter for Stream ' + this.streamId, error);
                     if (error.code === 401) {
-                        return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to apply a filter"));
+                        return reject(
+                            new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to apply a filter")
+                        );
                     } else {
                         return reject(error);
                     }
@@ -341,22 +352,35 @@ export class Stream {
                     this.filter = new Filter(type, options);
                     this.filter.stream = this;
                     if (triggerEvent) {
-                        this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter, oldValue, 'applyFilter')]);
-                        this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter, oldValue, 'applyFilter')]);
+                        this.session.emitEvent('streamPropertyChanged', [
+                            new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter, oldValue, 'applyFilter')
+                        ]);
+                        this.streamManager.emitEvent('streamPropertyChanged', [
+                            new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter, oldValue, 'applyFilter')
+                        ]);
                     }
                     return resolve(this.filter);
                 }
-            }
+            };
 
             if (type.startsWith('VB:')) {
-
                 // Client filters
 
                 if (!this.hasVideo) {
-                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'The Virtual Background filter requires a video track to be applied'));
+                    return reject(
+                        new OpenViduError(
+                            OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR,
+                            'The Virtual Background filter requires a video track to be applied'
+                        )
+                    );
                 }
                 if (!this.mediaStream || this.streamManager.videos.length === 0) {
-                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'The StreamManager requires some video element to be attached to it in order to apply a Virtual Background filter'));
+                    return reject(
+                        new OpenViduError(
+                            OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR,
+                            'The StreamManager requires some video element to be attached to it in order to apply a Virtual Background filter'
+                        )
+                    );
                 }
 
                 let openviduToken: string;
@@ -366,12 +390,22 @@ export class Stream {
                     openviduToken = options['token'];
                 }
                 if (!openviduToken) {
-                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'Virtual Background requires the client to be connected to a Session or to have a "token" property available in "options" parameter with a valid OpenVidu token'));
+                    return reject(
+                        new OpenViduError(
+                            OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR,
+                            'Virtual Background requires the client to be connected to a Session or to have a "token" property available in "options" parameter with a valid OpenVidu token'
+                        )
+                    );
                 }
 
                 const tokenParams = this.session.getTokenParams(openviduToken);
                 if (tokenParams.edition !== 'pro' && tokenParams.edition !== 'enterprise') {
-                    return reject(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, 'OpenVidu Virtual Background API is available from OpenVidu Pro edition onwards'));
+                    return reject(
+                        new OpenViduError(
+                            OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR,
+                            'OpenVidu Virtual Background API is available from OpenVidu Pro edition onwards'
+                        )
+                    );
                 }
 
                 openviduToken = encodeURIComponent(btoa(openviduToken));
@@ -425,13 +459,18 @@ export class Stream {
                         videoClone.style.display = 'none';
 
                         if (this.streamManager.remote) {
-                            this.streamManager.replaceTrackInMediaStream((this.virtualBackgroundSinkElements.video.srcObject as MediaStream).getVideoTracks()[0], false);
+                            this.streamManager.replaceTrackInMediaStream(
+                                (this.virtualBackgroundSinkElements.video.srcObject as MediaStream).getVideoTracks()[0],
+                                false
+                            );
                         } else {
-                            (this.streamManager as Publisher).replaceTrackAux((this.virtualBackgroundSinkElements.video.srcObject as MediaStream).getVideoTracks()[0], false);
+                            (this.streamManager as Publisher).replaceTrackAux(
+                                (this.virtualBackgroundSinkElements.video.srcObject as MediaStream).getVideoTracks()[0],
+                                false
+                            );
                         }
 
                         resolveApplyFilter(undefined, false);
-
                     } catch (error) {
                         if (error.name === OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR) {
                             resolveApplyFilter(new OpenViduError(OpenViduErrorName.VIRTUAL_BACKGROUND_ERROR, error.message), false);
@@ -439,12 +478,12 @@ export class Stream {
                             resolveApplyFilter(error, false);
                         }
                     }
-                }
+                };
 
                 // @ts-ignore
-                if (typeof VirtualBackground === "undefined") {
-                    let script: HTMLScriptElement = document.createElement("script");
-                    script.type = "text/javascript";
+                if (typeof VirtualBackground === 'undefined') {
+                    let script: HTMLScriptElement = document.createElement('script');
+                    script.type = 'text/javascript';
                     script.src = tokenParams.httpUri + '/openvidu/virtual-background/openvidu-virtual-background.js?token=' + openviduToken;
                     script.onload = async () => {
                         try {
@@ -458,11 +497,9 @@ export class Stream {
                 } else {
                     afterScriptLoaded()
                         .then(() => resolve(new Filter(type, options)))
-                        .catch(error => reject(error));
+                        .catch((error) => reject(error));
                 }
-
             } else {
-
                 // Server filters
 
                 if (!this.session.sessionConnected()) {
@@ -482,9 +519,7 @@ export class Stream {
                         resolveApplyFilter(error, true);
                     }
                 );
-
             }
-
         });
     }
 
@@ -522,13 +557,14 @@ export class Stream {
      */
     removeFilterAux(isDisposing: boolean): Promise<void> {
         return new Promise(async (resolve, reject) => {
-
             const resolveRemoveFilter = (error, triggerEvent) => {
                 if (error) {
                     delete this.filter;
                     logger.error('Error removing filter for Stream ' + this.streamId, error);
                     if (error.code === 401) {
-                        return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to remove a filter"));
+                        return reject(
+                            new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to remove a filter")
+                        );
                     } else {
                         return reject(error);
                     }
@@ -537,23 +573,24 @@ export class Stream {
                     const oldValue = this.filter!;
                     delete this.filter;
                     if (triggerEvent) {
-                        this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
-                        this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter!, oldValue, 'applyFilter')]);
+                        this.session.emitEvent('streamPropertyChanged', [
+                            new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter!, oldValue, 'applyFilter')
+                        ]);
+                        this.streamManager.emitEvent('streamPropertyChanged', [
+                            new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter!, oldValue, 'applyFilter')
+                        ]);
                     }
                     return resolve();
                 }
-            }
+            };
 
             if (!!this.filter) {
-
                 // There is a filter applied
 
                 if (this.filter?.type.startsWith('VB:')) {
-
                     // Client filters
 
                     try {
-
                         const mediaStreamClone = this.virtualBackgroundSourceElements!.mediaStreamClone;
                         if (!isDisposing) {
                             if (this.streamManager.remote) {
@@ -571,13 +608,10 @@ export class Stream {
                         delete this.virtualBackgroundSourceElements;
 
                         return resolveRemoveFilter(undefined, false);
-
                     } catch (error) {
                         return resolveRemoveFilter(error, false);
                     }
-
                 } else {
-
                     // Server filters
 
                     if (!this.session.sessionConnected()) {
@@ -585,20 +619,13 @@ export class Stream {
                     }
 
                     logger.info('Removing filter of stream ' + this.streamId);
-                    this.session.openvidu.sendRequest(
-                        'removeFilter',
-                        { streamId: this.streamId },
-                        (error, response) => {
-                            return resolveRemoveFilter(error, true);
-                        }
-                    );
-
+                    this.session.openvidu.sendRequest('removeFilter', { streamId: this.streamId }, (error, response) => {
+                        return resolveRemoveFilter(error, true);
+                    });
                 }
             } else {
-
                 // There is no filter applied
-                return reject(new OpenViduError(OpenViduErrorName.GENERIC_ERROR, "Stream " + this.streamId + " has no filter applied"));
-
+                return reject(new OpenViduError(OpenViduErrorName.GENERIC_ERROR, 'Stream ' + this.streamId + ' has no filter applied'));
             }
         });
     }
@@ -645,7 +672,7 @@ export class Stream {
         return new Promise((resolve, reject) => {
             this.initWebRtcPeerReceive(false)
                 .then(() => resolve())
-                .catch(error => reject(error));
+                .catch((error) => reject(error));
         });
     }
 
@@ -657,12 +684,12 @@ export class Stream {
             if (this.isLocalStreamReadyToPublish) {
                 this.initWebRtcPeerSend(false)
                     .then(() => resolve())
-                    .catch(error => reject(error));
+                    .catch((error) => reject(error));
             } else {
                 this.ee.once('stream-ready-to-publish', () => {
                     this.publish()
                         .then(() => resolve())
-                        .catch(error => reject(error));
+                        .catch((error) => reject(error));
                 });
             }
         });
@@ -678,7 +705,14 @@ export class Stream {
             webrtcId = this.webRtcPeer.getId();
         }
         this.stopWebRtcStats();
-        logger.info((!!this.outboundStreamOpts ? 'Outbound ' : 'Inbound ') + "RTCPeerConnection with id [" + webrtcId + "] from 'Stream' with id [" + this.streamId + '] is now closed');
+        logger.info(
+            (!!this.outboundStreamOpts ? 'Outbound ' : 'Inbound ') +
+                'RTCPeerConnection with id [' +
+                webrtcId +
+                "] from 'Stream' with id [" +
+                this.streamId +
+                '] is now closed'
+        );
     }
 
     /**
@@ -718,7 +752,9 @@ export class Stream {
             }
             delete this.speechEvent;
         }
-        logger.info((!!this.outboundStreamOpts ? 'Local ' : 'Remote ') + "MediaStream from 'Stream' with id [" + this.streamId + '] is now disposed');
+        logger.info(
+            (!!this.outboundStreamOpts ? 'Local ' : 'Remote ') + "MediaStream from 'Stream' with id [" + this.streamId + '] is now disposed'
+        );
     }
 
     /**
@@ -732,18 +768,22 @@ export class Stream {
      * @hidden
      */
     isSendAudio(): boolean {
-        return (!!this.outboundStreamOpts &&
+        return (
+            !!this.outboundStreamOpts &&
             this.outboundStreamOpts.publisherProperties.audioSource !== null &&
-            this.outboundStreamOpts.publisherProperties.audioSource !== false);
+            this.outboundStreamOpts.publisherProperties.audioSource !== false
+        );
     }
 
     /**
      * @hidden
      */
     isSendVideo(): boolean {
-        return (!!this.outboundStreamOpts &&
+        return (
+            !!this.outboundStreamOpts &&
             this.outboundStreamOpts.publisherProperties.videoSource !== null &&
-            this.outboundStreamOpts.publisherProperties.videoSource !== false);
+            this.outboundStreamOpts.publisherProperties.videoSource !== false
+        );
     }
 
     /**
@@ -752,7 +792,8 @@ export class Stream {
     isSendScreen(): boolean {
         let screen = this.outboundStreamOpts.publisherProperties.videoSource === 'screen';
         if (platform.isElectron()) {
-            screen = typeof this.outboundStreamOpts.publisherProperties.videoSource === 'string' &&
+            screen =
+                typeof this.outboundStreamOpts.publisherProperties.videoSource === 'string' &&
                 this.outboundStreamOpts.publisherProperties.videoSource.startsWith('screen:');
         }
         return !!this.outboundStreamOpts && screen;
@@ -766,8 +807,12 @@ export class Stream {
         if (!this.harkSpeakingEnabled && !!this.speechEvent) {
             this.harkSpeakingEnabled = true;
             this.speechEvent.on('speaking', () => {
-                this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStartSpeaking', this.connection, this.streamId)]);
-                this.streamManager.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.streamManager, 'publisherStartSpeaking', this.connection, this.streamId)]);
+                this.session.emitEvent('publisherStartSpeaking', [
+                    new PublisherSpeakingEvent(this.session, 'publisherStartSpeaking', this.connection, this.streamId)
+                ]);
+                this.streamManager.emitEvent('publisherStartSpeaking', [
+                    new PublisherSpeakingEvent(this.streamManager, 'publisherStartSpeaking', this.connection, this.streamId)
+                ]);
                 this.harkSpeakingEnabledOnce = false; // Disable 'once' version if 'on' version was triggered
             });
         }
@@ -783,8 +828,12 @@ export class Stream {
             this.speechEvent.once('speaking', () => {
                 if (this.harkSpeakingEnabledOnce) {
                     // If the listener has been disabled in the meantime (for example by the 'on' version) do not trigger the event
-                    this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStartSpeaking', this.connection, this.streamId)]);
-                    this.streamManager.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.streamManager, 'publisherStartSpeaking', this.connection, this.streamId)]);
+                    this.session.emitEvent('publisherStartSpeaking', [
+                        new PublisherSpeakingEvent(this.session, 'publisherStartSpeaking', this.connection, this.streamId)
+                    ]);
+                    this.streamManager.emitEvent('publisherStartSpeaking', [
+                        new PublisherSpeakingEvent(this.streamManager, 'publisherStartSpeaking', this.connection, this.streamId)
+                    ]);
                 }
                 this.disableHarkSpeakingEvent(true);
             });
@@ -806,10 +855,12 @@ export class Stream {
                 this.harkSpeakingEnabled = false;
             }
             // Shutting down the hark event
-            if (this.harkVolumeChangeEnabled ||
+            if (
+                this.harkVolumeChangeEnabled ||
                 this.harkVolumeChangeEnabledOnce ||
                 this.harkStoppedSpeakingEnabled ||
-                this.harkStoppedSpeakingEnabledOnce) {
+                this.harkStoppedSpeakingEnabledOnce
+            ) {
                 // Some other hark event is enabled. Cannot stop the hark process, just remove the specific listener
                 this.speechEvent.off('speaking');
             } else {
@@ -828,8 +879,12 @@ export class Stream {
         if (!this.harkStoppedSpeakingEnabled && !!this.speechEvent) {
             this.harkStoppedSpeakingEnabled = true;
             this.speechEvent.on('stopped_speaking', () => {
-                this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStopSpeaking', this.connection, this.streamId)]);
-                this.streamManager.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.streamManager, 'publisherStopSpeaking', this.connection, this.streamId)]);
+                this.session.emitEvent('publisherStopSpeaking', [
+                    new PublisherSpeakingEvent(this.session, 'publisherStopSpeaking', this.connection, this.streamId)
+                ]);
+                this.streamManager.emitEvent('publisherStopSpeaking', [
+                    new PublisherSpeakingEvent(this.streamManager, 'publisherStopSpeaking', this.connection, this.streamId)
+                ]);
                 this.harkStoppedSpeakingEnabledOnce = false; // Disable 'once' version if 'on' version was triggered
             });
         }
@@ -845,8 +900,12 @@ export class Stream {
             this.speechEvent.once('stopped_speaking', () => {
                 if (this.harkStoppedSpeakingEnabledOnce) {
                     // If the listener has been disabled in the meantime (for example by the 'on' version) do not trigger the event
-                    this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStopSpeaking', this.connection, this.streamId)]);
-                    this.streamManager.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.streamManager, 'publisherStopSpeaking', this.connection, this.streamId)]);
+                    this.session.emitEvent('publisherStopSpeaking', [
+                        new PublisherSpeakingEvent(this.session, 'publisherStopSpeaking', this.connection, this.streamId)
+                    ]);
+                    this.streamManager.emitEvent('publisherStopSpeaking', [
+                        new PublisherSpeakingEvent(this.streamManager, 'publisherStopSpeaking', this.connection, this.streamId)
+                    ]);
                 }
                 this.disableHarkStoppedSpeakingEvent(true);
             });
@@ -854,8 +913,8 @@ export class Stream {
     }
 
     /**
-    * @hidden
-    */
+     * @hidden
+     */
     disableHarkStoppedSpeakingEvent(disabledByOnce: boolean): void {
         if (!!this.speechEvent) {
             this.harkStoppedSpeakingEnabledOnce = false;
@@ -869,10 +928,12 @@ export class Stream {
                 this.harkStoppedSpeakingEnabled = false;
             }
             // Shutting down the hark event
-            if (this.harkVolumeChangeEnabled ||
+            if (
+                this.harkVolumeChangeEnabled ||
                 this.harkVolumeChangeEnabledOnce ||
                 this.harkSpeakingEnabled ||
-                this.harkSpeakingEnabledOnce) {
+                this.harkSpeakingEnabledOnce
+            ) {
                 // Some other hark event is enabled. Cannot stop the hark process, just remove the specific listener
                 this.speechEvent.off('stopped_speaking');
             } else {
@@ -890,11 +951,13 @@ export class Stream {
         if (this.setHarkListenerIfNotExists()) {
             if (!this.harkVolumeChangeEnabled || force) {
                 this.harkVolumeChangeEnabled = true;
-                this.speechEvent.on('volume_change', harkEvent => {
+                this.speechEvent.on('volume_change', (harkEvent) => {
                     const oldValue = this.speechEvent.oldVolumeValue;
                     const value = { newValue: harkEvent, oldValue };
                     this.speechEvent.oldVolumeValue = harkEvent;
-                    this.streamManager.emitEvent('streamAudioVolumeChange', [new StreamManagerEvent(this.streamManager, 'streamAudioVolumeChange', value)]);
+                    this.streamManager.emitEvent('streamAudioVolumeChange', [
+                        new StreamManagerEvent(this.streamManager, 'streamAudioVolumeChange', value)
+                    ]);
                 });
             }
         } else {
@@ -910,12 +973,14 @@ export class Stream {
         if (this.setHarkListenerIfNotExists()) {
             if (!this.harkVolumeChangeEnabledOnce || force) {
                 this.harkVolumeChangeEnabledOnce = true;
-                this.speechEvent.once('volume_change', harkEvent => {
+                this.speechEvent.once('volume_change', (harkEvent) => {
                     const oldValue = this.speechEvent.oldVolumeValue;
                     const value = { newValue: harkEvent, oldValue };
                     this.speechEvent.oldVolumeValue = harkEvent;
                     this.disableHarkVolumeChangeEvent(true);
-                    this.streamManager.emitEvent('streamAudioVolumeChange', [new StreamManagerEvent(this.streamManager, 'streamAudioVolumeChange', value)]);
+                    this.streamManager.emitEvent('streamAudioVolumeChange', [
+                        new StreamManagerEvent(this.streamManager, 'streamAudioVolumeChange', value)
+                    ]);
                 });
             }
         } else {
@@ -940,10 +1005,12 @@ export class Stream {
                 this.harkVolumeChangeEnabled = false;
             }
             // Shutting down the hark event
-            if (this.harkSpeakingEnabled ||
+            if (
+                this.harkSpeakingEnabled ||
                 this.harkSpeakingEnabledOnce ||
                 this.harkStoppedSpeakingEnabled ||
-                this.harkStoppedSpeakingEnabledOnce) {
+                this.harkStoppedSpeakingEnabledOnce
+            ) {
                 // Some other hark event is enabled. Cannot stop the hark process, just remove the specific listener
                 this.speechEvent.off('volume_change');
             } else {
@@ -959,7 +1026,7 @@ export class Stream {
      */
     isLocal(): boolean {
         // inbound options undefined and outbound options defined
-        return (!this.inboundStreamOpts && !!this.outboundStreamOpts);
+        return !this.inboundStreamOpts && !!this.outboundStreamOpts;
     }
 
     /**
@@ -967,9 +1034,10 @@ export class Stream {
      */
     getSelectedIceCandidate(): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.webRtcStats.getSelectedIceCandidateInfo()
-                .then(report => resolve(report))
-                .catch(error => reject(error));
+            this.webRtcStats
+                .getSelectedIceCandidateInfo()
+                .then((report) => resolve(report))
+                .catch((error) => reject(error));
         });
     }
 
@@ -995,7 +1063,11 @@ export class Stream {
             return false;
         }
         if (this.isLocal() && !!this.session.openvidu.advancedConfiguration.forceMediaReconnectionAfterNetworkDrop) {
-            logger.warn(`OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) will force a reconnection`);
+            logger.warn(
+                `OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Stream ${
+                    this.streamId
+                } (${this.isLocal() ? 'Publisher' : 'Subscriber'}) will force a reconnection`
+            );
             return true;
         }
         const iceConnectionState: RTCIceConnectionState = this.getRTCPeerConnection().iceConnectionState;
@@ -1007,9 +1079,11 @@ export class Stream {
     private setHarkListenerIfNotExists(): boolean {
         if (!!this.mediaStream) {
             if (!this.speechEvent) {
-                const harkOptions = !!this.harkOptions ? this.harkOptions : (this.session.openvidu.advancedConfiguration.publisherSpeakingEventsOptions || {});
-                harkOptions.interval = (typeof harkOptions.interval === 'number') ? harkOptions.interval : 100;
-                harkOptions.threshold = (typeof harkOptions.threshold === 'number') ? harkOptions.threshold : -50;
+                const harkOptions = !!this.harkOptions
+                    ? this.harkOptions
+                    : this.session.openvidu.advancedConfiguration.publisherSpeakingEventsOptions || {};
+                harkOptions.interval = typeof harkOptions.interval === 'number' ? harkOptions.interval : 100;
+                harkOptions.threshold = typeof harkOptions.threshold === 'number' ? harkOptions.threshold : -50;
                 this.speechEvent = hark(this.mediaStream, harkOptions);
             }
             return true;
@@ -1027,9 +1101,13 @@ export class Stream {
             return false;
         } else {
             // Ongoing reconnection
-            console.warn(`Trying to reconnect stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'}) but an ongoing reconnection process is active. Waiting for response...`);
+            console.warn(
+                `Trying to reconnect stream ${this.streamId} (${
+                    this.isLocal() ? 'Publisher' : 'Subscriber'
+                }) but an ongoing reconnection process is active. Waiting for response...`
+            );
             this.reconnectionEventEmitter.once('success', () => resolve());
-            this.reconnectionEventEmitter.once('error', error => reject(error));
+            this.reconnectionEventEmitter.once('error', (error) => reject(error));
             return true;
         }
     }
@@ -1039,7 +1117,6 @@ export class Stream {
      */
     initWebRtcPeerSend(reconnect: boolean): Promise<void> {
         return new Promise((resolve, reject) => {
-
             if (reconnect) {
                 if (this.setupReconnectionEventEmitter(resolve, reject)) {
                     // Ongoing reconnection
@@ -1056,19 +1133,18 @@ export class Stream {
                     delete this.reconnectionEventEmitter;
                 }
                 return resolve();
-            }
+            };
 
-            const finalReject = error => {
+            const finalReject = (error) => {
                 if (reconnect) {
                     this.reconnectionEventEmitter?.emitEvent('error', [error]);
                     delete this.reconnectionEventEmitter;
                 }
                 return reject(error);
-            }
+            };
 
             const successOfferCallback = (sdpOfferParam) => {
-                logger.debug('Sending SDP offer to publish as '
-                    + this.streamId, sdpOfferParam);
+                logger.debug('Sending SDP offer to publish as ' + this.streamId, sdpOfferParam);
 
                 const method = reconnect ? 'reconnectStream' : 'publishVideo';
                 let params;
@@ -1076,11 +1152,17 @@ export class Stream {
                     params = {
                         stream: this.streamId,
                         sdpString: sdpOfferParam
-                    }
+                    };
                 } else {
                     let typeOfVideo;
                     if (this.isSendVideo()) {
-                        typeOfVideo = (typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack) ? TypeOfVideo.CUSTOM : (this.isSendScreen() ? TypeOfVideo.SCREEN : TypeOfVideo.CAMERA);
+                        typeOfVideo =
+                            typeof MediaStreamTrack !== 'undefined' &&
+                            this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack
+                                ? TypeOfVideo.CUSTOM
+                                : this.isSendScreen()
+                                ? TypeOfVideo.SCREEN
+                                : TypeOfVideo.CAMERA;
                     }
                     params = {
                         doLoopback: this.displayMyRemote() || false,
@@ -1093,18 +1175,21 @@ export class Stream {
                         videoDimensions: JSON.stringify(this.videoDimensions),
                         filter: this.outboundStreamOpts.publisherProperties.filter,
                         sdpOffer: sdpOfferParam
-                    }
+                    };
                 }
 
                 this.session.openvidu.sendRequest(method, params, (error, response) => {
                     if (error) {
                         if (error.code === 401) {
-                            finalReject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to publish"));
+                            finalReject(
+                                new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to publish")
+                            );
                         } else {
                             finalReject('Error on publishVideo: ' + JSON.stringify(error));
                         }
                     } else {
-                        this.webRtcPeer.processRemoteAnswer(response.sdpAnswer)
+                        this.webRtcPeer
+                            .processRemoteAnswer(response.sdpAnswer)
                             .then(() => {
                                 this.streamId = response.id;
                                 this.creationTime = response.createdAt;
@@ -1120,11 +1205,17 @@ export class Stream {
                                     this.ee.emitEvent('stream-created-by-publisher', []);
                                 }
                                 this.initWebRtcStats();
-                                logger.info("'Publisher' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "published") + " to session");
+                                logger.info(
+                                    "'Publisher' (" +
+                                        this.streamId +
+                                        ') successfully ' +
+                                        (reconnect ? 'reconnected' : 'published') +
+                                        ' to session'
+                                );
 
                                 finalResolve();
                             })
-                            .catch(error => {
+                            .catch((error) => {
                                 finalReject(error);
                             });
                     }
@@ -1134,16 +1225,17 @@ export class Stream {
             const config: WebRtcPeerConfiguration = {
                 mediaConstraints: {
                     audio: this.hasAudio,
-                    video: this.hasVideo,
+                    video: this.hasVideo
                 },
-                simulcast:
-                    this.outboundStreamOpts.publisherProperties.videoSimulcast ?? this.session.openvidu.videoSimulcast,
+                simulcast: this.outboundStreamOpts.publisherProperties.videoSimulcast ?? this.session.openvidu.videoSimulcast,
                 onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
-                onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
+                onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => {
+                    this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]);
+                },
                 iceServers: this.getIceServersConf(),
                 mediaStream: this.mediaStream,
                 mediaServer: this.session.openvidu.mediaServer,
-                typeOfVideo: this.typeOfVideo ? TypeOfVideo[this.typeOfVideo] : undefined,
+                typeOfVideo: this.typeOfVideo ? TypeOfVideo[this.typeOfVideo] : undefined
             };
 
             if (this.session.openvidu.mediaServer !== 'mediasoup') {
@@ -1160,16 +1252,21 @@ export class Stream {
                 this.webRtcPeer = new WebRtcPeerSendonly(config);
             }
             this.webRtcPeer.addIceConnectionStateChangeListener('publisher of ' + this.connection.connectionId);
-            this.webRtcPeer.createOffer().then(sdpOffer => {
-                this.webRtcPeer.processLocalOffer(sdpOffer)
-                    .then(() => {
-                        successOfferCallback(sdpOffer.sdp);
-                    }).catch(error => {
-                        finalReject(new Error('(publish) SDP process local offer error: ' + JSON.stringify(error)));
-                    });
-            }).catch(error => {
-                finalReject(new Error('(publish) SDP create offer error: ' + JSON.stringify(error)));
-            });
+            this.webRtcPeer
+                .createOffer()
+                .then((sdpOffer) => {
+                    this.webRtcPeer
+                        .processLocalOffer(sdpOffer)
+                        .then(() => {
+                            successOfferCallback(sdpOffer.sdp);
+                        })
+                        .catch((error) => {
+                            finalReject(new Error('(publish) SDP process local offer error: ' + JSON.stringify(error)));
+                        });
+                })
+                .catch((error) => {
+                    finalReject(new Error('(publish) SDP create offer error: ' + JSON.stringify(error)));
+                });
         });
     }
 
@@ -1177,7 +1274,7 @@ export class Stream {
      * @hidden
      */
     finalResolveForSubscription(reconnect: boolean, resolve: (value: void | PromiseLike<void>) => void) {
-        logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
+        logger.info("'Subscriber' (" + this.streamId + ') successfully ' + (reconnect ? 'reconnected' : 'subscribed'));
         this.remotePeerSuccessfullyEstablished(reconnect);
         this.initWebRtcStats();
         if (reconnect) {
@@ -1191,7 +1288,14 @@ export class Stream {
      * @hidden
      */
     finalRejectForSubscription(reconnect: boolean, error: any, reject: (reason?: any) => void) {
-        logger.error("Error for 'Subscriber' (" + this.streamId + ") while trying to " + (reconnect ? "reconnect" : "subscribe") + ": " + error.toString());
+        logger.error(
+            "Error for 'Subscriber' (" +
+                this.streamId +
+                ') while trying to ' +
+                (reconnect ? 'reconnect' : 'subscribe') +
+                ': ' +
+                error.toString()
+        );
         if (reconnect) {
             this.reconnectionEventEmitter?.emitEvent('error', [error]);
             delete this.reconnectionEventEmitter;
@@ -1204,7 +1308,6 @@ export class Stream {
      */
     initWebRtcPeerReceive(reconnect: boolean): Promise<void> {
         return new Promise((resolve, reject) => {
-
             if (reconnect) {
                 if (this.setupReconnectionEventEmitter(resolve, reject)) {
                     // Ongoing reconnection
@@ -1213,21 +1316,17 @@ export class Stream {
             }
 
             if (this.session.openvidu.mediaServer === 'mediasoup') {
-
                 // Server initiates negotiation
 
                 this.initWebRtcPeerReceiveFromServer(reconnect)
                     .then(() => this.finalResolveForSubscription(reconnect, resolve))
-                    .catch(error => this.finalRejectForSubscription(reconnect, error, reject));
-
+                    .catch((error) => this.finalRejectForSubscription(reconnect, error, reject));
             } else {
-
                 // Client initiates negotiation
 
                 this.initWebRtcPeerReceiveFromClient(reconnect)
                     .then(() => this.finalResolveForSubscription(reconnect, resolve))
-                    .catch(error => this.finalRejectForSubscription(reconnect, error, reject));
-
+                    .catch((error) => this.finalRejectForSubscription(reconnect, error, reject));
             }
         });
     }
@@ -1238,12 +1337,13 @@ export class Stream {
     initWebRtcPeerReceiveFromClient(reconnect: boolean): Promise<void> {
         return new Promise((resolve, reject) => {
             this.completeWebRtcPeerReceive(reconnect, false)
-                .then(response => {
-                    this.webRtcPeer.processRemoteAnswer(response.sdpAnswer)
+                .then((response) => {
+                    this.webRtcPeer
+                        .processRemoteAnswer(response.sdpAnswer)
                         .then(() => resolve())
-                        .catch(error => reject(error));
+                        .catch((error) => reject(error));
                 })
-                .catch(error => reject(error));
+                .catch((error) => reject(error));
         });
     }
 
@@ -1259,7 +1359,7 @@ export class Stream {
                 } else {
                     this.completeWebRtcPeerReceive(reconnect, false, response.sdpOffer)
                         .then(() => resolve())
-                        .catch(error => reject(error));
+                        .catch((error) => reject(error));
                 }
             });
         });
@@ -1270,12 +1370,10 @@ export class Stream {
      */
     completeWebRtcPeerReceive(reconnect: boolean, forciblyReconnect: boolean, sdpOfferByServer?: string): Promise<any> {
         return new Promise((resolve, reject) => {
-
             logger.debug("'Session.subscribe(Stream)' called");
 
             const sendSdpToServer = (sdpString: string) => {
-
-                logger.debug(`Sending local SDP ${(!!sdpOfferByServer ? 'answer' : 'offer')} to subscribe to ${this.streamId}`, sdpString);
+                logger.debug(`Sending local SDP ${!!sdpOfferByServer ? 'answer' : 'offer'} to subscribe to ${this.streamId}`, sdpString);
 
                 const method = reconnect ? 'reconnectStream' : 'receiveVideoFrom';
                 const params = {};
@@ -1301,14 +1399,16 @@ export class Stream {
             const config: WebRtcPeerConfiguration = {
                 mediaConstraints: {
                     audio: this.hasAudio,
-                    video: this.hasVideo,
+                    video: this.hasVideo
                 },
                 simulcast: false,
                 onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
-                onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => { this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]) },
+                onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => {
+                    this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]);
+                },
                 iceServers: this.getIceServersConf(),
                 mediaServer: this.session.openvidu.mediaServer,
-                typeOfVideo: this.typeOfVideo ? TypeOfVideo[this.typeOfVideo] : undefined,
+                typeOfVideo: this.typeOfVideo ? TypeOfVideo[this.typeOfVideo] : undefined
             };
 
             if (reconnect) {
@@ -1319,33 +1419,44 @@ export class Stream {
             this.webRtcPeer.addIceConnectionStateChangeListener(this.streamId);
 
             if (!!sdpOfferByServer) {
-
-                this.webRtcPeer.processRemoteOffer(sdpOfferByServer).then(() => {
-                    this.webRtcPeer.createAnswer().then(sdpAnswer => {
-                        this.webRtcPeer.processLocalAnswer(sdpAnswer).then(() => {
-                            sendSdpToServer(sdpAnswer.sdp!);
-                        }).catch(error => {
-                            return reject(new Error('(subscribe) SDP process local answer error: ' + JSON.stringify(error)));
-                        });
-                    }).catch(error => {
-                        return reject(new Error('(subscribe) SDP create answer error: ' + JSON.stringify(error)));
+                this.webRtcPeer
+                    .processRemoteOffer(sdpOfferByServer)
+                    .then(() => {
+                        this.webRtcPeer
+                            .createAnswer()
+                            .then((sdpAnswer) => {
+                                this.webRtcPeer
+                                    .processLocalAnswer(sdpAnswer)
+                                    .then(() => {
+                                        sendSdpToServer(sdpAnswer.sdp!);
+                                    })
+                                    .catch((error) => {
+                                        return reject(new Error('(subscribe) SDP process local answer error: ' + JSON.stringify(error)));
+                                    });
+                            })
+                            .catch((error) => {
+                                return reject(new Error('(subscribe) SDP create answer error: ' + JSON.stringify(error)));
+                            });
+                    })
+                    .catch((error) => {
+                        return reject(new Error('(subscribe) SDP process remote offer error: ' + JSON.stringify(error)));
                     });
-                }).catch(error => {
-                    return reject(new Error('(subscribe) SDP process remote offer error: ' + JSON.stringify(error)));
-                });
-
             } else {
-
-                this.webRtcPeer.createOffer().then(sdpOffer => {
-                    this.webRtcPeer.processLocalOffer(sdpOffer).then(() => {
-                        sendSdpToServer(sdpOffer.sdp!);
-                    }).catch(error => {
-                        return reject(new Error('(subscribe) SDP process local offer error: ' + JSON.stringify(error)));
+                this.webRtcPeer
+                    .createOffer()
+                    .then((sdpOffer) => {
+                        this.webRtcPeer
+                            .processLocalOffer(sdpOffer)
+                            .then(() => {
+                                sendSdpToServer(sdpOffer.sdp!);
+                            })
+                            .catch((error) => {
+                                return reject(new Error('(subscribe) SDP process local offer error: ' + JSON.stringify(error)));
+                            });
+                    })
+                    .catch((error) => {
+                        return reject(new Error('(subscribe) SDP create offer error: ' + JSON.stringify(error)));
                     });
-                }).catch(error => {
-                    return reject(new Error('(subscribe) SDP create offer error: ' + JSON.stringify(error)));
-                });
-
             }
         });
     }
@@ -1354,7 +1465,6 @@ export class Stream {
      * @hidden
      */
     remotePeerSuccessfullyEstablished(reconnect: boolean): void {
-
         if (reconnect && this.mediaStream != null) {
             // Now we can destroy the existing MediaStream
             this.disposeMediaStream();
@@ -1370,15 +1480,14 @@ export class Stream {
         logger.debug('Peer remote stream', this.mediaStream);
 
         if (!!this.mediaStream) {
-
             if (this.streamManager instanceof Subscriber) {
                 // Apply SubscriberProperties.subscribeToAudio and SubscriberProperties.subscribeToVideo
                 if (!!this.mediaStream.getAudioTracks()[0]) {
-                    const enabled = reconnect ? this.audioActive : !!((this.streamManager as Subscriber).properties.subscribeToAudio);
+                    const enabled = reconnect ? this.audioActive : !!(this.streamManager as Subscriber).properties.subscribeToAudio;
                     this.mediaStream.getAudioTracks()[0].enabled = enabled;
                 }
                 if (!!this.mediaStream.getVideoTracks()[0]) {
-                    const enabled = reconnect ? this.videoActive : !!((this.streamManager as Subscriber).properties.subscribeToVideo);
+                    const enabled = reconnect ? this.videoActive : !!(this.streamManager as Subscriber).properties.subscribeToVideo;
                     this.mediaStream.getVideoTracks()[0].enabled = enabled;
                 }
             }
@@ -1429,30 +1538,50 @@ export class Stream {
 
     private onIceConnectionFailed() {
         // Immediately reconnect, as this is a terminal error
-        logger.log(`[ICE_CONNECTION_FAILED] Handling ICE_CONNECTION_FAILED event. Reconnecting stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')})`);
+        logger.log(
+            `[ICE_CONNECTION_FAILED] Handling ICE_CONNECTION_FAILED event. Reconnecting stream ${this.streamId} (${
+                this.isLocal() ? 'Publisher' : 'Subscriber'
+            })`
+        );
         this.reconnectStreamAndLogResultingIceConnectionState(ExceptionEventName.ICE_CONNECTION_FAILED);
     }
 
     private onIceConnectionDisconnected() {
         // Wait to see if the ICE connection is able to reconnect
-        logger.log(`[ICE_CONNECTION_DISCONNECTED] Handling ICE_CONNECTION_DISCONNECTED event. Waiting for ICE to be restored and reconnect stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) if not possible`);
+        logger.log(
+            `[ICE_CONNECTION_DISCONNECTED] Handling ICE_CONNECTION_DISCONNECTED event. Waiting for ICE to be restored and reconnect stream ${
+                this.streamId
+            } (${this.isLocal() ? 'Publisher' : 'Subscriber'}) if not possible`
+        );
         const timeout = this.session.openvidu.advancedConfiguration.iceConnectionDisconnectedExceptionTimeout || 4000;
-        this.awaitWebRtcPeerConnectionState(timeout).then(state => {
+        this.awaitWebRtcPeerConnectionState(timeout).then((state) => {
             switch (state) {
                 case 'failed':
                     // Do nothing, as an ICE_CONNECTION_FAILED event will have already raised
-                    logger.warn(`[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) is now failed after ICE_CONNECTION_DISCONNECTED`);
+                    logger.warn(
+                        `[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${
+                            this.isLocal() ? 'Publisher' : 'Subscriber'
+                        }) is now failed after ICE_CONNECTION_DISCONNECTED`
+                    );
                     break;
                 case 'connected':
                 case 'completed':
-                    logger.log(`[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) automatically restored after ICE_CONNECTION_DISCONNECTED. Current ICE connection state: ${state}`);
+                    logger.log(
+                        `[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${
+                            this.isLocal() ? 'Publisher' : 'Subscriber'
+                        }) automatically restored after ICE_CONNECTION_DISCONNECTED. Current ICE connection state: ${state}`
+                    );
                     break;
                 case 'closed':
                 case 'checking':
                 case 'new':
                 case 'disconnected':
                     // Rest of states
-                    logger.warn(`[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) couldn't be restored after ICE_CONNECTION_DISCONNECTED event. Current ICE connection state after ${timeout} ms: ${state}`);
+                    logger.warn(
+                        `[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${
+                            this.isLocal() ? 'Publisher' : 'Subscriber'
+                        }) couldn't be restored after ICE_CONNECTION_DISCONNECTED event. Current ICE connection state after ${timeout} ms: ${state}`
+                    );
                     this.reconnectStreamAndLogResultingIceConnectionState(ExceptionEventName.ICE_CONNECTION_DISCONNECTED);
                     break;
             }
@@ -1465,25 +1594,39 @@ export class Stream {
             switch (finalIceStateAfterReconnection) {
                 case 'connected':
                 case 'completed':
-                    logger.log(`[${event}] Stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) successfully reconnected after ${event}. Current ICE connection state: ${finalIceStateAfterReconnection}`);
+                    logger.log(
+                        `[${event}] Stream ${this.streamId} (${
+                            this.isLocal() ? 'Publisher' : 'Subscriber'
+                        }) successfully reconnected after ${event}. Current ICE connection state: ${finalIceStateAfterReconnection}`
+                    );
                     break;
                 default:
-                    logger.error(`[${event}] Stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) failed to reconnect after ${event}. Current ICE connection state: ${finalIceStateAfterReconnection}`);
+                    logger.error(
+                        `[${event}] Stream ${this.streamId} (${
+                            this.isLocal() ? 'Publisher' : 'Subscriber'
+                        }) failed to reconnect after ${event}. Current ICE connection state: ${finalIceStateAfterReconnection}`
+                    );
                     break;
             }
         } catch (error) {
-            logger.error(`[${event}] Error reconnecting stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) after ${event}: ${error}`);
+            logger.error(
+                `[${event}] Error reconnecting stream ${this.streamId} (${
+                    this.isLocal() ? 'Publisher' : 'Subscriber'
+                }) after ${event}: ${error}`
+            );
         }
     }
 
     private async reconnectStreamAndReturnIceConnectionState(event: string): Promise<RTCIceConnectionState> {
-        logger.log(`[${event}] Reconnecting stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) after event ${event}`);
+        logger.log(`[${event}] Reconnecting stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'}) after event ${event}`);
         try {
             await this.reconnectStream(event);
             const timeout = this.session.openvidu.advancedConfiguration.iceConnectionDisconnectedExceptionTimeout || 4000;
             return this.awaitWebRtcPeerConnectionState(timeout);
         } catch (error) {
-            logger.warn(`[${event}] Error reconnecting stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}). Reason: ${error}`);
+            logger.warn(
+                `[${event}] Error reconnecting stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'}). Reason: ${error}`
+            );
             return this.awaitWebRtcPeerConnectionState(1);
         }
     }
@@ -1492,7 +1635,11 @@ export class Stream {
         const isWsConnected = await this.isWebsocketConnected(event, 3000);
         if (isWsConnected) {
             // There is connection to openvidu-server. The RTCPeerConnection is the only one broken
-            logger.log(`[${event}] Trying to reconnect stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) and the websocket is opened`);
+            logger.log(
+                `[${event}] Trying to reconnect stream ${this.streamId} (${
+                    this.isLocal() ? 'Publisher' : 'Subscriber'
+                }) and the websocket is opened`
+            );
             if (this.isLocal()) {
                 return this.initWebRtcPeerSend(true);
             } else {
@@ -1501,7 +1648,9 @@ export class Stream {
         } else {
             // There is no connection to openvidu-server. Nothing can be done. The automatic reconnection
             // feature should handle a possible reconnection of RTCPeerConnection in case network comes back
-            const errorMsg = `[${event}] Trying to reconnect stream ${this.streamId} (${(this.isLocal() ? 'Publisher' : 'Subscriber')}) but the websocket wasn't opened`;
+            const errorMsg = `[${event}] Trying to reconnect stream ${this.streamId} (${
+                this.isLocal() ? 'Publisher' : 'Subscriber'
+            }) but the websocket wasn't opened`;
             logger.error(errorMsg);
             throw Error(errorMsg);
         }
@@ -1580,9 +1729,10 @@ export class Stream {
     private getIceServersConf(): RTCIceServer[] | undefined {
         let returnValue;
         if (!!this.session.openvidu.advancedConfiguration.iceServers) {
-            returnValue = this.session.openvidu.advancedConfiguration.iceServers === 'freeice' ?
-                undefined :
-                this.session.openvidu.advancedConfiguration.iceServers;
+            returnValue =
+                this.session.openvidu.advancedConfiguration.iceServers === 'freeice'
+                    ? undefined
+                    : this.session.openvidu.advancedConfiguration.iceServers;
         } else if (this.session.openvidu.iceServers) {
             returnValue = this.session.openvidu.iceServers;
         } else {
@@ -1594,16 +1744,14 @@ export class Stream {
     private gatherStatsForPeer(): Promise<any> {
         return new Promise((resolve, reject) => {
             if (this.isLocal()) {
-
                 // Publisher stream stats
 
-                this.getRTCPeerConnection().getSenders().forEach(sender => sender.getStats()
-                    .then(
-                        response => {
-                            response.forEach(report => {
-
+                this.getRTCPeerConnection()
+                    .getSenders()
+                    .forEach((sender) =>
+                        sender.getStats().then((response) => {
+                            response.forEach((report) => {
                                 if (this.isReportWanted(report)) {
-
                                     const finalReport = {};
 
                                     finalReport['type'] = report.type;
@@ -1625,7 +1773,7 @@ export class Stream {
                                             finalReport['mediaType'] = report.mediaType;
                                         } else {
                                             // Safari does not have 'mediaType' defined for inbound-rtp. Must be inferred from 'id' field
-                                            finalReport['mediaType'] = (report.id.indexOf('VideoStream') !== -1) ? 'video' : 'audio';
+                                            finalReport['mediaType'] = report.id.indexOf('VideoStream') !== -1 ? 'video' : 'audio';
                                         }
 
                                         if (finalReport['mediaType'] === 'video') {
@@ -1646,24 +1794,22 @@ export class Stream {
 
                                     // Only for Firefox >= 66.0
                                     if (report.type === 'remote-inbound-rtp' || report.type === 'remote-outbound-rtp') {
-
                                     }
 
                                     logger.log(finalReport);
                                 }
                             });
-                        }));
+                        })
+                    );
             } else {
-
                 // Subscriber stream stats
 
-                this.getRTCPeerConnection().getReceivers().forEach(receiver => receiver.getStats()
-                    .then(
-                        response => {
-                            response.forEach(report => {
-
+                this.getRTCPeerConnection()
+                    .getReceivers()
+                    .forEach((receiver) =>
+                        receiver.getStats().then((response) => {
+                            response.forEach((report) => {
                                 if (this.isReportWanted(report)) {
-
                                     const finalReport = {};
 
                                     finalReport['type'] = report.type;
@@ -1685,7 +1831,7 @@ export class Stream {
                                             finalReport['mediaType'] = report.mediaType;
                                         } else {
                                             // Safari does not have 'mediaType' defined for inbound-rtp. Must be inferred from 'id' field
-                                            finalReport['mediaType'] = (report.id.indexOf('VideoStream') !== -1) ? 'video' : 'audio';
+                                            finalReport['mediaType'] = report.id.indexOf('VideoStream') !== -1 ? 'video' : 'audio';
                                         }
 
                                         if (finalReport['mediaType'] === 'video') {
@@ -1708,21 +1854,21 @@ export class Stream {
 
                                     // Only for Firefox >= 66.0
                                     if (report.type === 'remote-inbound-rtp' || report.type === 'remote-outbound-rtp') {
-
                                     }
                                     logger.log(finalReport);
                                 }
-                            })
+                            });
                         })
-                )
+                    );
             }
         });
     }
 
     private isReportWanted(report: any): boolean {
-        return report.type === 'inbound-rtp' && !this.isLocal() ||
-            report.type === 'outbound-rtp' && this.isLocal() ||
-            (report.type === 'candidate-pair' && report.nominated && report.bytesSent > 0);
+        return (
+            (report.type === 'inbound-rtp' && !this.isLocal()) ||
+            (report.type === 'outbound-rtp' && this.isLocal()) ||
+            (report.type === 'candidate-pair' && report.nominated && report.bytesSent > 0)
+        );
     }
-
 }

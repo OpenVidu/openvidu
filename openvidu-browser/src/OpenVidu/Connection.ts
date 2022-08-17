@@ -29,13 +29,11 @@ import { ExceptionEvent, ExceptionEventName } from '../OpenViduInternal/Events/E
  */
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
-
 /**
  * Represents each one of the user's connection to the session (the local one and other user's connections).
  * Therefore each [[Session]] and [[Stream]] object has an attribute of type Connection
  */
 export class Connection {
-
     /**
      * Unique identifier of the connection
      */
@@ -125,38 +123,46 @@ export class Connection {
         logger.info(msg);
     }
 
-
     /* Hidden methods */
 
     /**
      * @hidden
      */
     sendIceCandidate(candidate: RTCIceCandidate): void {
+        logger.debug((!!this.stream!.outboundStreamOpts ? 'Local' : 'Remote') + 'candidate for' + this.connectionId, candidate);
 
-        logger.debug((!!this.stream!.outboundStreamOpts ? 'Local' : 'Remote') + 'candidate for' +
-            this.connectionId, candidate);
-
-        this.session.openvidu.sendRequest('onIceCandidate', {
-            endpointName: this.connectionId,
-            candidate: candidate.candidate,
-            sdpMid: candidate.sdpMid,
-            sdpMLineIndex: candidate.sdpMLineIndex
-        }, (error, response) => {
-            if (error) {
-                logger.error('Error sending ICE candidate: ' + JSON.stringify(error));
-                this.session.emitEvent('exception', [new ExceptionEvent(this.session, ExceptionEventName.ICE_CANDIDATE_ERROR, this.session, "There was an unexpected error on the server-side processing an ICE candidate generated and sent by the client-side", error)]);
+        this.session.openvidu.sendRequest(
+            'onIceCandidate',
+            {
+                endpointName: this.connectionId,
+                candidate: candidate.candidate,
+                sdpMid: candidate.sdpMid,
+                sdpMLineIndex: candidate.sdpMLineIndex
+            },
+            (error, response) => {
+                if (error) {
+                    logger.error('Error sending ICE candidate: ' + JSON.stringify(error));
+                    this.session.emitEvent('exception', [
+                        new ExceptionEvent(
+                            this.session,
+                            ExceptionEventName.ICE_CANDIDATE_ERROR,
+                            this.session,
+                            'There was an unexpected error on the server-side processing an ICE candidate generated and sent by the client-side',
+                            error
+                        )
+                    ]);
+                }
             }
-        });
+        );
     }
 
     /**
      * @hidden
      */
     initRemoteStreams(options: StreamOptionsServer[]): void {
-
         // This is ready for supporting multiple streams per Connection object. Right now the loop will always run just once
         // this.stream should also be replaced by a collection of streams to support multiple streams per Connection
-        options.forEach(opts => {
+        options.forEach((opts) => {
             const streamOptions: InboundStreamOptions = {
                 id: opts.id,
                 createdAt: opts.createdAt,
@@ -175,7 +181,10 @@ export class Connection {
             this.addStream(stream);
         });
 
-        logger.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + '] is now configured for receiving Streams with options: ', this.stream!.inboundStreamOpts);
+        logger.info(
+            "Remote 'Connection' with 'connectionId' [" + this.connectionId + '] is now configured for receiving Streams with options: ',
+            this.stream!.inboundStreamOpts
+        );
     }
 
     /**
@@ -202,5 +211,4 @@ export class Connection {
         }
         this.disposed = true;
     }
-
 }

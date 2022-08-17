@@ -21,7 +21,6 @@ import { Connection } from '../../../OpenVidu/Connection';
  * See [[Session.signal]]
  */
 export interface SignalOptions {
-
     /**
      * The actual message of the signal.
      */

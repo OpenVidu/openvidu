@@ -22,7 +22,6 @@ import { VideoInsertMode } from '../../Enums/VideoInsertMode';
  * See [[OpenVidu.initPublisher]]
  */
 export interface PublisherProperties {
-
     /**
      * Which device should provide the audio source. Can be:
      * - Property `deviceId` of a [[Device]]
@@ -98,5 +97,4 @@ export interface PublisherProperties {
      * Define a filter to apply in the Publisher's stream
      */
     filter?: Filter;
-
 }

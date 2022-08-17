@@ -18,14 +18,12 @@
 import { Event } from './Event';
 import { StreamManager } from '../../OpenVidu/StreamManager';
 
-
 /**
  * Triggered by:
  * - [[videoElementCreated]]
  * - [[videoElementDestroyed]]
  */
 export class VideoElementEvent extends Event {
-
     /**
      * Video element that was created or destroyed
      */
@@ -43,6 +41,5 @@ export class VideoElementEvent extends Event {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    callDefaultBehavior() { }
-
+    callDefaultBehavior() {}
 }

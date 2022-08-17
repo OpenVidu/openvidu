@@ -19,14 +19,12 @@ import { Event } from './Event';
 import { Connection } from '../../OpenVidu/Connection';
 import { Session } from '../../OpenVidu/Session';
 
-
 /**
  * Triggered by:
  * - [[connectionCreated]]
  * - [[connectionDestroyed]]
  */
 export class ConnectionEvent extends Event {
-
     /**
      * Connection object that was created or destroyed
      */
@@ -58,6 +56,5 @@ export class ConnectionEvent extends Event {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    callDefaultBehavior() { }
-
+    callDefaultBehavior() {}
 }

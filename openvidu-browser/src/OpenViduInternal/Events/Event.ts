@@ -20,7 +20,6 @@ import { StreamManager } from '../../OpenVidu/StreamManager';
 import { Session } from '../../OpenVidu/Session';
 
 export abstract class Event {
-
     /**
      * Whether the event has a default behavior that may be prevented by calling [[Event.preventDefault]]
      */
@@ -73,7 +72,7 @@ export abstract class Event {
      */
     preventDefault() {
         // tslint:disable-next-line:no-empty
-        this.callDefaultBehavior = () => { };
+        this.callDefaultBehavior = () => {};
         this.hasBeenPrevented = true;
     }
 
@@ -81,5 +80,4 @@ export abstract class Event {
      * @hidden
      */
     abstract callDefaultBehavior();
-
 }

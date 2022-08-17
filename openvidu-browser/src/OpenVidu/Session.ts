@@ -70,7 +70,6 @@ let platform: PlatformUtils;
  * See available event listeners at [[SessionEventMap]].
  */
 export class Session extends EventDispatcher {
-
     /**
      * Local connection to the Session. This object is defined only after [[Session.connect]] has been successfully executed, and can be retrieved subscribing to `connectionCreated` event
      */
@@ -164,7 +163,6 @@ export class Session extends EventDispatcher {
      */
     connect(token: string, metadata?: any): Promise<void> {
         return new Promise((resolve, reject) => {
-
             this.processToken(token);
 
             if (this.openvidu.checkSystemRequirements()) {
@@ -176,9 +174,20 @@ export class Session extends EventDispatcher {
                 };
                 this.connectAux(token)
                     .then(() => resolve())
-                    .catch(error => reject(error));
+                    .catch((error) => reject(error));
             } else {
-                return reject(new OpenViduError(OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.getName() + ' (version ' + platform.getVersion() + ') for ' + platform.getFamily() + ' is not supported in OpenVidu'));
+                return reject(
+                    new OpenViduError(
+                        OpenViduErrorName.BROWSER_NOT_SUPPORTED,
+                        'Browser ' +
+                            platform.getName() +
+                            ' (version ' +
+                            platform.getVersion() +
+                            ') for ' +
+                            platform.getFamily() +
+                            ' is not supported in OpenVidu'
+                    )
+                );
             }
         });
     }
@@ -216,8 +225,17 @@ export class Session extends EventDispatcher {
 
     subscribe(stream: Stream, targetElement: string | HTMLElement | undefined): Subscriber;
     subscribe(stream: Stream, targetElement: string | HTMLElement | undefined, properties: SubscriberProperties): Subscriber;
-    subscribe(stream: Stream, targetElement: string | HTMLElement | undefined, completionHandler: (error: Error | undefined) => void): Subscriber;
-    subscribe(stream: Stream, targetElement: string | HTMLElement | undefined, properties: SubscriberProperties, completionHandler: (error: Error | undefined) => void): Subscriber;
+    subscribe(
+        stream: Stream,
+        targetElement: string | HTMLElement | undefined,
+        completionHandler: (error: Error | undefined) => void
+    ): Subscriber;
+    subscribe(
+        stream: Stream,
+        targetElement: string | HTMLElement | undefined,
+        properties: SubscriberProperties,
+        completionHandler: (error: Error | undefined) => void
+    ): Subscriber;
 
     /**
      * Subscribes to a `stream`, adding a new HTML video element to DOM with `subscriberProperties` settings. This method is usually called in the callback of `streamCreated` event.
@@ -234,13 +252,23 @@ export class Session extends EventDispatcher {
      * You can always call method [[Subscriber.addVideoElement]] or [[Subscriber.createVideoElement]] to manage the video elements on your own (see [Manage video players](/en/stable/cheatsheet/manage-videos) section)
      * @param completionHandler `error` parameter is null if `subscribe` succeeds, and is defined if it fails.
      */
-    subscribe(stream: Stream, targetElement: string | HTMLElement | undefined, param3?: ((error: Error | undefined) => void) | SubscriberProperties, param4?: ((error: Error | undefined) => void)): Subscriber {
+    subscribe(
+        stream: Stream,
+        targetElement: string | HTMLElement | undefined,
+        param3?: ((error: Error | undefined) => void) | SubscriberProperties,
+        param4?: (error: Error | undefined) => void
+    ): Subscriber {
         let properties: SubscriberProperties = {};
         if (!!param3 && typeof param3 !== 'function') {
             properties = {
-                insertMode: (typeof param3.insertMode !== 'undefined') ? ((typeof param3.insertMode === 'string') ? VideoInsertMode[param3.insertMode] : properties.insertMode) : VideoInsertMode.APPEND,
-                subscribeToAudio: (typeof param3.subscribeToAudio !== 'undefined') ? param3.subscribeToAudio : true,
-                subscribeToVideo: (typeof param3.subscribeToVideo !== 'undefined') ? param3.subscribeToVideo : true
+                insertMode:
+                    typeof param3.insertMode !== 'undefined'
+                        ? typeof param3.insertMode === 'string'
+                            ? VideoInsertMode[param3.insertMode]
+                            : properties.insertMode
+                        : VideoInsertMode.APPEND,
+                subscribeToAudio: typeof param3.subscribeToAudio !== 'undefined' ? param3.subscribeToAudio : true,
+                subscribeToVideo: typeof param3.subscribeToVideo !== 'undefined' ? param3.subscribeToVideo : true
             };
         } else {
             properties = {
@@ -251,7 +279,7 @@ export class Session extends EventDispatcher {
         }
 
         let completionHandler: ((error: Error | undefined) => void) | undefined = undefined;
-        if (!!param3 && (typeof param3 === 'function')) {
+        if (!!param3 && typeof param3 === 'function') {
             completionHandler = param3;
         } else if (!!param4) {
             completionHandler = param4;
@@ -266,14 +294,15 @@ export class Session extends EventDispatcher {
 
         logger.info('Subscribing to ' + stream.connection.connectionId);
 
-        stream.subscribe()
+        stream
+            .subscribe()
             .then(() => {
                 logger.info('Subscribed correctly to ' + stream.connection.connectionId);
                 if (completionHandler !== undefined) {
                     completionHandler(undefined);
                 }
             })
-            .catch(error => {
+            .catch((error) => {
                 if (completionHandler !== undefined) {
                     completionHandler(error);
                 }
@@ -285,7 +314,6 @@ export class Session extends EventDispatcher {
         return subscriber;
     }
 
-
     /**
      * Promisified version of [[Session.subscribe]]
      */
@@ -294,7 +322,6 @@ export class Session extends EventDispatcher {
 
     subscribeAsync(stream: Stream, targetElement: string | HTMLElement, properties?: SubscriberProperties): Promise<Subscriber> {
         return new Promise<Subscriber>((resolve, reject) => {
-
             if (!this.sessionConnected()) {
                 return reject(this.notConnectedError());
             }
@@ -314,10 +341,8 @@ export class Session extends EventDispatcher {
             } else {
                 subscriber = this.subscribe(stream, targetElement, callback);
             }
-
         });
     }
-
 
     /**
      * Unsubscribes from `subscriber`, automatically removing its associated HTML video elements.
@@ -330,9 +355,7 @@ export class Session extends EventDispatcher {
      * See [[VideoElementEvent]] to learn more
      */
     unsubscribe(subscriber: Subscriber): Promise<void> {
-
         return new Promise((resolve, reject) => {
-
             if (!this.sessionConnected()) {
                 return reject(this.notConnectedError());
             } else {
@@ -360,7 +383,6 @@ export class Session extends EventDispatcher {
         });
     }
 
-
     /**
      * Publishes to the Session the Publisher object
      *
@@ -376,7 +398,6 @@ export class Session extends EventDispatcher {
      */
     publish(publisher: Publisher): Promise<void> {
         return new Promise((resolve, reject) => {
-
             if (!this.sessionConnected()) {
                 return reject(this.notConnectedError());
             }
@@ -387,29 +408,32 @@ export class Session extends EventDispatcher {
             if (!publisher.stream.publishedOnce) {
                 // 'Session.unpublish(Publisher)' has NOT been called
                 this.connection.addStream(publisher.stream);
-                publisher.stream.publish()
+                publisher.stream
+                    .publish()
                     .then(() => {
                         this.sendVideoData(publisher, 8, true, 5);
                         return resolve();
                     })
-                    .catch(error => reject(error));
+                    .catch((error) => reject(error));
             } else {
                 // 'Session.unpublish(Publisher)' has been called. Must initialize again Publisher
-                publisher.initialize()
+                publisher
+                    .initialize()
                     .then(() => {
                         this.connection.addStream(publisher.stream);
                         publisher.reestablishStreamPlayingEvent();
-                        publisher.stream.publish()
+                        publisher.stream
+                            .publish()
                             .then(() => {
                                 this.sendVideoData(publisher, 8, true, 5);
                                 return resolve();
                             })
-                            .catch(error => reject(error));
-                    }).catch(error => reject(error));
+                            .catch((error) => reject(error));
+                    })
+                    .catch((error) => reject(error));
             }
         });
     }
-
 
     /**
      * Unpublishes from the Session the Publisher object.
@@ -431,11 +455,9 @@ export class Session extends EventDispatcher {
      * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      */
     unpublish(publisher: Publisher): Promise<void> {
-
         return new Promise((resolve, reject) => {
-
             if (!this.sessionConnected()) {
-                throw this.notConnectedError()
+                throw this.notConnectedError();
             }
 
             const stream = publisher.stream;
@@ -443,10 +465,13 @@ export class Session extends EventDispatcher {
             if (!stream.connection) {
                 return reject(new Error('The associated Connection object of this Publisher is null'));
             } else if (stream.connection !== this.connection) {
-                return reject(new Error('The associated Connection object of this Publisher is not your local Connection.  ' +
-                    "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method"));
+                return reject(
+                    new Error(
+                        'The associated Connection object of this Publisher is not your local Connection.  ' +
+                            "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method"
+                    )
+                );
             } else {
-
                 logger.info('Unpublishing local media (' + stream.connection.connectionId + ')');
 
                 this.openvidu.sendRequest('unpublishVideo', (error, response) => {
@@ -473,7 +498,6 @@ export class Session extends EventDispatcher {
         });
     }
 
-
     /**
      * Forces some user to leave the session
      *
@@ -493,32 +517,31 @@ export class Session extends EventDispatcher {
      */
     forceDisconnect(connection: Connection): Promise<void> {
         return new Promise((resolve, reject) => {
-
             if (!this.sessionConnected()) {
                 return reject(this.notConnectedError());
             }
 
             logger.info('Forcing disconnect for connection ' + connection.connectionId);
-            this.openvidu.sendRequest(
-                'forceDisconnect',
-                { connectionId: connection.connectionId },
-                (error, response) => {
-                    if (error) {
-                        logger.error('Error forcing disconnect for Connection ' + connection.connectionId, error);
-                        if (error.code === 401) {
-                            return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to force a disconnection"));
-                        } else {
-                            return reject(error);
-                        }
+            this.openvidu.sendRequest('forceDisconnect', { connectionId: connection.connectionId }, (error, response) => {
+                if (error) {
+                    logger.error('Error forcing disconnect for Connection ' + connection.connectionId, error);
+                    if (error.code === 401) {
+                        return reject(
+                            new OpenViduError(
+                                OpenViduErrorName.OPENVIDU_PERMISSION_DENIED,
+                                "You don't have permissions to force a disconnection"
+                            )
+                        );
                     } else {
-                        logger.info('Forcing disconnect correctly for Connection ' + connection.connectionId);
-                        return resolve();
+                        return reject(error);
                     }
+                } else {
+                    logger.info('Forcing disconnect correctly for Connection ' + connection.connectionId);
+                    return resolve();
                 }
-            );
+            });
         });
     }
-
 
     /**
      * Forces some user to unpublish a Stream
@@ -537,32 +560,31 @@ export class Session extends EventDispatcher {
      */
     forceUnpublish(stream: Stream): Promise<void> {
         return new Promise((resolve, reject) => {
-
             if (!this.sessionConnected()) {
                 return reject(this.notConnectedError());
             }
 
             logger.info('Forcing unpublish for stream ' + stream.streamId);
-            this.openvidu.sendRequest(
-                'forceUnpublish',
-                { streamId: stream.streamId },
-                (error, response) => {
-                    if (error) {
-                        logger.error('Error forcing unpublish for Stream ' + stream.streamId, error);
-                        if (error.code === 401) {
-                            return reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to force an unpublishing"));
-                        } else {
-                            return reject(error);
-                        }
+            this.openvidu.sendRequest('forceUnpublish', { streamId: stream.streamId }, (error, response) => {
+                if (error) {
+                    logger.error('Error forcing unpublish for Stream ' + stream.streamId, error);
+                    if (error.code === 401) {
+                        return reject(
+                            new OpenViduError(
+                                OpenViduErrorName.OPENVIDU_PERMISSION_DENIED,
+                                "You don't have permissions to force an unpublishing"
+                            )
+                        );
                     } else {
-                        logger.info('Forcing unpublish correctly for Stream ' + stream.streamId);
-                        return resolve();
+                        return reject(error);
                     }
+                } else {
+                    logger.info('Forcing unpublish correctly for Stream ' + stream.streamId);
+                    return resolve();
                 }
-            );
+            });
         });
     }
-
 
     /**
      * Sends one signal. `signal` object has the following optional properties:
@@ -578,7 +600,6 @@ export class Session extends EventDispatcher {
     /* tslint:disable:no-string-literal */
     signal(signal: SignalOptions): Promise<void> {
         return new Promise((resolve, reject) => {
-
             if (!this.sessionConnected()) {
                 return reject(this.notConnectedError());
             }
@@ -587,7 +608,7 @@ export class Session extends EventDispatcher {
 
             if (signal.to && signal.to.length > 0) {
                 const connectionIds: string[] = [];
-                signal.to.forEach(connection => {
+                signal.to.forEach((connection) => {
                     if (!!connection.connectionId) {
                         connectionIds.push(connection.connectionId);
                     }
@@ -607,30 +628,32 @@ export class Session extends EventDispatcher {
             }
             signalMessage['type'] = typeAux;
 
-            this.openvidu.sendRequest('sendMessage', {
-                message: JSON.stringify(signalMessage)
-            }, (error, response) => {
-                if (!!error) {
-                    return reject(error);
-                } else {
-                    return resolve();
+            this.openvidu.sendRequest(
+                'sendMessage',
+                {
+                    message: JSON.stringify(signalMessage)
+                },
+                (error, response) => {
+                    if (!!error) {
+                        return reject(error);
+                    } else {
+                        return resolve();
+                    }
                 }
-            });
+            );
         });
     }
     /* tslint:enable:no-string-literal */
-
 
     /**
      * See [[EventDispatcher.on]]
      */
     on<K extends keyof SessionEventMap>(type: K, handler: (event: SessionEventMap[K]) => void): this {
-
         super.onAux(type, "Event '" + type + "' triggered by 'Session'", handler);
 
         if (type === 'publisherStartSpeaking') {
             // If there are already available remote streams with audio, enable hark 'speaking' event in all of them
-            this.remoteConnections.forEach(remoteConnection => {
+            this.remoteConnections.forEach((remoteConnection) => {
                 if (!!remoteConnection.stream?.hasAudio) {
                     remoteConnection.stream.enableHarkSpeakingEvent();
                 }
@@ -642,7 +665,7 @@ export class Session extends EventDispatcher {
         }
         if (type === 'publisherStopSpeaking') {
             // If there are already available remote streams with audio, enable hark 'stopped_speaking' event in all of them
-            this.remoteConnections.forEach(remoteConnection => {
+            this.remoteConnections.forEach((remoteConnection) => {
                 if (!!remoteConnection.stream?.hasAudio) {
                     remoteConnection.stream.enableHarkStoppedSpeakingEvent();
                 }
@@ -656,17 +679,15 @@ export class Session extends EventDispatcher {
         return this;
     }
 
-
     /**
      * See [[EventDispatcher.once]]
      */
     once<K extends keyof SessionEventMap>(type: K, handler: (event: SessionEventMap[K]) => void): this {
-
         super.onceAux(type, "Event '" + type + "' triggered once by 'Session'", handler);
 
         if (type === 'publisherStartSpeaking') {
             // If there are already available remote streams with audio, enable hark 'speaking' event (once) in all of them once
-            this.remoteConnections.forEach(remoteConnection => {
+            this.remoteConnections.forEach((remoteConnection) => {
                 if (!!remoteConnection.stream?.hasAudio) {
                     remoteConnection.stream.enableOnceHarkSpeakingEvent();
                 }
@@ -678,7 +699,7 @@ export class Session extends EventDispatcher {
         }
         if (type === 'publisherStopSpeaking') {
             // If there are already available remote streams with audio, enable hark 'stopped_speaking' event (once) in all of them once
-            this.remoteConnections.forEach(remoteConnection => {
+            this.remoteConnections.forEach((remoteConnection) => {
                 if (!!remoteConnection.stream?.hasAudio) {
                     remoteConnection.stream.enableOnceHarkStoppedSpeakingEvent();
                 }
@@ -692,18 +713,16 @@ export class Session extends EventDispatcher {
         return this;
     }
 
-
     /**
      * See [[EventDispatcher.off]]
      */
     off<K extends keyof SessionEventMap>(type: K, handler?: (event: SessionEventMap[K]) => void): this {
-
         super.offAux(type, handler);
 
         if (type === 'publisherStartSpeaking') {
             // Check if Session object still has some listener for the event
             if (!this.anySpeechEventListenerEnabled('publisherStartSpeaking', false)) {
-                this.remoteConnections.forEach(remoteConnection => {
+                this.remoteConnections.forEach((remoteConnection) => {
                     if (!!remoteConnection.stream?.streamManager) {
                         // Check if Subscriber object still has some listener for the event
                         if (!this.anySpeechEventListenerEnabled('publisherStartSpeaking', false, remoteConnection.stream.streamManager)) {
@@ -722,7 +741,7 @@ export class Session extends EventDispatcher {
         if (type === 'publisherStopSpeaking') {
             // Check if Session object still has some listener for the event
             if (!this.anySpeechEventListenerEnabled('publisherStopSpeaking', false)) {
-                this.remoteConnections.forEach(remoteConnection => {
+                this.remoteConnections.forEach((remoteConnection) => {
                     if (!!remoteConnection.stream?.streamManager) {
                         // Check if Subscriber object still has some listener for the event
                         if (!this.anySpeechEventListenerEnabled('publisherStopSpeaking', false, remoteConnection.stream.streamManager)) {
@@ -741,7 +760,6 @@ export class Session extends EventDispatcher {
         return this;
     }
 
-
     /* Hidden methods */
 
     /**
@@ -750,10 +768,10 @@ export class Session extends EventDispatcher {
     onParticipantJoined(event: RemoteConnectionOptions): void {
         // Connection shouldn't exist
         this.getConnection(event.id, '')
-            .then(connection => {
+            .then((connection) => {
                 logger.warn('Connection ' + connection.connectionId + ' already exists in connections list');
             })
-            .catch(openViduError => {
+            .catch((openViduError) => {
                 const connection = new Connection(this, event);
                 this.remoteConnections.set(event.id, connection);
                 this.ee.emitEvent('connectionCreated', [new ConnectionEvent(false, this, 'connectionCreated', connection, '')]);
@@ -763,21 +781,24 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onParticipantLeft(event: { connectionId: string, reason: string }): void {
-        this.getRemoteConnection(event.connectionId, 'onParticipantLeft').then(connection => {
-            if (!!connection.stream) {
-                const stream = connection.stream;
+    onParticipantLeft(event: { connectionId: string; reason: string }): void {
+        this.getRemoteConnection(event.connectionId, 'onParticipantLeft')
+            .then((connection) => {
+                if (!!connection.stream) {
+                    const stream = connection.stream;
 
-                const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, event.reason);
-                this.ee.emitEvent('streamDestroyed', [streamEvent]);
-                streamEvent.callDefaultBehavior();
+                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, event.reason);
+                    this.ee.emitEvent('streamDestroyed', [streamEvent]);
+                    streamEvent.callDefaultBehavior();
 
-                this.remoteStreamsCreated.delete(stream.streamId);
-            }
-            this.remoteConnections.delete(connection.connectionId);
-            this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, event.reason)]);
-        })
-            .catch(openViduError => {
+                    this.remoteStreamsCreated.delete(stream.streamId);
+                }
+                this.remoteConnections.delete(connection.connectionId);
+                this.ee.emitEvent('connectionDestroyed', [
+                    new ConnectionEvent(false, this, 'connectionDestroyed', connection, event.reason)
+                ]);
+            })
+            .catch((openViduError) => {
                 logger.error(openViduError);
             });
     }
@@ -786,9 +807,7 @@ export class Session extends EventDispatcher {
      * @hidden
      */
     onParticipantPublished(event: RemoteConnectionOptions): void {
-
         const afterConnectionFound = (connection) => {
-
             this.remoteConnections.set(connection.connectionId, connection);
 
             if (!this.remoteStreamsCreated.get(connection.stream.streamId)) {
@@ -807,7 +826,7 @@ export class Session extends EventDispatcher {
         let connection: Connection;
         this.getRemoteConnection(event.id, 'onParticipantPublished')
 
-            .then(con => {
+            .then((con) => {
                 // Update existing Connection
                 connection = con;
                 event.metadata = con.data;
@@ -815,7 +834,7 @@ export class Session extends EventDispatcher {
                 connection.initRemoteStreams(event.streams);
                 afterConnectionFound(connection);
             })
-            .catch(openViduError => {
+            .catch((openViduError) => {
                 // Create new Connection
                 connection = new Connection(this, event);
                 afterConnectionFound(connection);
@@ -825,15 +844,14 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onParticipantUnpublished(event: { connectionId: string, reason: string }): void {
+    onParticipantUnpublished(event: { connectionId: string; reason: string }): void {
         if (event.connectionId === this.connection.connectionId) {
             // Your stream has been forcedly unpublished from the session
             this.stopPublisherStream(event.reason);
         } else {
             this.getRemoteConnection(event.connectionId, 'onParticipantUnpublished')
 
-                .then(connection => {
-
+                .then((connection) => {
                     const streamEvent = new StreamEvent(true, this, 'streamDestroyed', connection.stream!, event.reason);
                     this.ee.emitEvent('streamDestroyed', [streamEvent]);
                     streamEvent.callDefaultBehavior();
@@ -844,7 +862,7 @@ export class Session extends EventDispatcher {
 
                     connection.removeStream(streamId);
                 })
-                .catch(openViduError => {
+                .catch((openViduError) => {
                     logger.error(openViduError);
                 });
         }
@@ -853,7 +871,7 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onParticipantEvicted(event: { connectionId: string, reason: string }): void {
+    onParticipantEvicted(event: { connectionId: string; reason: string }): void {
         if (event.connectionId === this.connection.connectionId) {
             // You have been evicted from the session
             if (!!this.sessionId && !this.connection.disposed) {
@@ -865,24 +883,30 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onNewMessage(event: { type?: string, data?: string, from?: string }): void {
-
+    onNewMessage(event: { type?: string; data?: string; from?: string }): void {
         logger.info('New signal: ' + JSON.stringify(event));
 
         const strippedType = !!event.type ? event.type.replace(/^(signal:)/, '') : undefined;
 
         if (!!event.from) {
             // Signal sent by other client
-            this.getConnection(event.from, "Connection '" + event.from + "' unknown when 'onNewMessage'. Existing remote connections: "
-                + JSON.stringify(this.remoteConnections.keys()) + '. Existing local connection: ' + this.connection.connectionId)
+            this.getConnection(
+                event.from,
+                "Connection '" +
+                    event.from +
+                    "' unknown when 'onNewMessage'. Existing remote connections: " +
+                    JSON.stringify(this.remoteConnections.keys()) +
+                    '. Existing local connection: ' +
+                    this.connection.connectionId
+            )
 
-                .then(connection => {
+                .then((connection) => {
                     this.ee.emitEvent('signal', [new SignalEvent(this, strippedType, event.data, connection)]);
                     if (!!event.type && event.type !== 'signal') {
                         this.ee.emitEvent(event.type, [new SignalEvent(this, strippedType, event.data, connection)]);
                     }
                 })
-                .catch(openViduError => {
+                .catch((openViduError) => {
                     logger.error(openViduError);
                 });
         } else {
@@ -897,8 +921,7 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onStreamPropertyChanged(event: { connectionId: string, streamId: string, property: string, newValue: any, reason: string }): void {
-
+    onStreamPropertyChanged(event: { connectionId: string; streamId: string; property: string; newValue: any; reason: string }): void {
         const callback = (connection: Connection) => {
             if (!!connection.stream && connection.stream.streamId === event.streamId) {
                 const stream = connection.stream;
@@ -921,7 +944,7 @@ export class Session extends EventDispatcher {
                         break;
                     case 'filter':
                         oldValue = stream.filter;
-                        event.newValue = (Object.keys(event.newValue).length > 0) ? event.newValue : undefined;
+                        event.newValue = Object.keys(event.newValue).length > 0 ? event.newValue : undefined;
                         if (event.newValue !== undefined) {
                             stream.filter = new Filter(event.newValue.type, event.newValue.options);
                             stream.filter.stream = stream;
@@ -934,12 +957,22 @@ export class Session extends EventDispatcher {
                         event.newValue = stream.filter;
                         break;
                 }
-                this.ee.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, stream, event.property, event.newValue, oldValue, event.reason)]);
+                this.ee.emitEvent('streamPropertyChanged', [
+                    new StreamPropertyChangedEvent(this, stream, event.property, event.newValue, oldValue, event.reason)
+                ]);
                 if (!!stream.streamManager) {
-                    stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, event.property, event.newValue, oldValue, event.reason)]);
+                    stream.streamManager.emitEvent('streamPropertyChanged', [
+                        new StreamPropertyChangedEvent(stream.streamManager, stream, event.property, event.newValue, oldValue, event.reason)
+                    ]);
                 }
             } else {
-                logger.error("No stream with streamId '" + event.streamId + "' found for connection '" + event.connectionId + "' on 'streamPropertyChanged' event");
+                logger.error(
+                    "No stream with streamId '" +
+                        event.streamId +
+                        "' found for connection '" +
+                        event.connectionId +
+                        "' on 'streamPropertyChanged' event"
+                );
             }
         };
 
@@ -948,10 +981,10 @@ export class Session extends EventDispatcher {
             callback(this.connection);
         } else {
             this.getRemoteConnection(event.connectionId, 'onStreamPropertyChanged')
-                .then(connection => {
+                .then((connection) => {
                     callback(connection);
                 })
-                .catch(openViduError => {
+                .catch((openViduError) => {
                     logger.error(openViduError);
                 });
         }
@@ -960,7 +993,7 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onConnectionPropertyChanged(event: { property: string, newValue: any }): void {
+    onConnectionPropertyChanged(event: { property: string; newValue: any }): void {
         let oldValue;
         switch (event.property) {
             case 'role':
@@ -975,21 +1008,27 @@ export class Session extends EventDispatcher {
                 this.connection.localOptions!.record = event.newValue;
                 break;
         }
-        this.ee.emitEvent('connectionPropertyChanged', [new ConnectionPropertyChangedEvent(this, this.connection, event.property, event.newValue, oldValue)]);
+        this.ee.emitEvent('connectionPropertyChanged', [
+            new ConnectionPropertyChangedEvent(this, this.connection, event.property, event.newValue, oldValue)
+        ]);
     }
 
     /**
      * @hidden
      */
-    onNetworkQualityLevelChangedChanged(event: { connectionId: string, newValue: number, oldValue: number }): void {
+    onNetworkQualityLevelChangedChanged(event: { connectionId: string; newValue: number; oldValue: number }): void {
         if (event.connectionId === this.connection.connectionId) {
-            this.ee.emitEvent('networkQualityLevelChanged', [new NetworkQualityLevelChangedEvent(this, event.newValue, event.oldValue, this.connection)]);
+            this.ee.emitEvent('networkQualityLevelChanged', [
+                new NetworkQualityLevelChangedEvent(this, event.newValue, event.oldValue, this.connection)
+            ]);
         } else {
             this.getConnection(event.connectionId, 'Connection not found for connectionId ' + event.connectionId)
                 .then((connection: Connection) => {
-                    this.ee.emitEvent('networkQualityLevelChanged', [new NetworkQualityLevelChangedEvent(this, event.newValue, event.oldValue, connection)]);
+                    this.ee.emitEvent('networkQualityLevelChanged', [
+                        new NetworkQualityLevelChangedEvent(this, event.newValue, event.oldValue, connection)
+                    ]);
                 })
-                .catch(openViduError => {
+                .catch((openViduError) => {
                     logger.error(openViduError);
                 });
         }
@@ -998,26 +1037,44 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    recvIceCandidate(event: { senderConnectionId: string, endpointName: string, sdpMLineIndex: number, sdpMid: string, candidate: string }): void {
+    recvIceCandidate(event: {
+        senderConnectionId: string;
+        endpointName: string;
+        sdpMLineIndex: number;
+        sdpMid: string;
+        candidate: string;
+    }): void {
         // The event contains fields that can be used to obtain a proper candidate,
         // using the RTCIceCandidate constructor:
         // https://w3c.github.io/webrtc-pc/#dom-rtcicecandidate-constructor
         const candidateInit: RTCIceCandidateInit = {
             candidate: event.candidate,
             sdpMLineIndex: event.sdpMLineIndex,
-            sdpMid: event.sdpMid,
+            sdpMid: event.sdpMid
         };
         const iceCandidate = new RTCIceCandidate(candidateInit);
 
-        this.getConnection(event.senderConnectionId, 'Connection not found for connectionId ' + event.senderConnectionId + ' owning endpoint ' + event.endpointName + '. Ice candidate will be ignored: ' + iceCandidate)
-            .then(connection => {
+        this.getConnection(
+            event.senderConnectionId,
+            'Connection not found for connectionId ' +
+                event.senderConnectionId +
+                ' owning endpoint ' +
+                event.endpointName +
+                '. Ice candidate will be ignored: ' +
+                iceCandidate
+        )
+            .then((connection) => {
                 const stream: Stream = connection.stream!;
-                stream.getWebRtcPeer().addIceCandidate(iceCandidate).catch(error => {
-                    logger.error('Error adding candidate for ' + stream!.streamId
-                        + ' stream of endpoint ' + event.endpointName + ': ' + error);
-                });
+                stream
+                    .getWebRtcPeer()
+                    .addIceCandidate(iceCandidate)
+                    .catch((error) => {
+                        logger.error(
+                            'Error adding candidate for ' + stream!.streamId + ' stream of endpoint ' + event.endpointName + ': ' + error
+                        );
+                    });
             })
-            .catch(openViduError => {
+            .catch((openViduError) => {
                 logger.error(openViduError);
             });
     }
@@ -1029,9 +1086,11 @@ export class Session extends EventDispatcher {
         logger.info('Session closed: ' + JSON.stringify(msg));
         const s = msg.sessionId;
         if (s !== undefined) {
-            this.ee.emitEvent('session-closed', [{
-                session: s
-            }]);
+            this.ee.emitEvent('session-closed', [
+                {
+                    session: s
+                }
+            ]);
         } else {
             logger.warn('Session undefined on session closed', msg);
         }
@@ -1063,9 +1122,11 @@ export class Session extends EventDispatcher {
         logger.error('Media error: ' + JSON.stringify(event));
         const err = event.error;
         if (err) {
-            this.ee.emitEvent('error-media', [{
-                error: err
-            }]);
+            this.ee.emitEvent('error-media', [
+                {
+                    error: err
+                }
+            ]);
         } else {
             logger.warn('Received undefined media error:', event);
         }
@@ -1074,46 +1135,53 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onRecordingStarted(event: { id: string, name: string }): void {
+    onRecordingStarted(event: { id: string; name: string }): void {
         this.ee.emitEvent('recordingStarted', [new RecordingEvent(this, 'recordingStarted', event.id, event.name)]);
     }
 
     /**
      * @hidden
      */
-    onRecordingStopped(event: { id: string, name: string, reason: string }): void {
+    onRecordingStopped(event: { id: string; name: string; reason: string }): void {
         this.ee.emitEvent('recordingStopped', [new RecordingEvent(this, 'recordingStopped', event.id, event.name, event.reason)]);
     }
 
     /**
      * @hidden
      */
-    onFilterEventDispatched(event: { connectionId: string, streamId: string, filterType: string, eventType: string, data: string }): void {
+    onFilterEventDispatched(event: { connectionId: string; streamId: string; filterType: string; eventType: string; data: string }): void {
         const connectionId: string = event.connectionId;
-        this.getConnection(connectionId, 'No connection found for connectionId ' + connectionId)
-            .then(connection => {
-                logger.info(`Filter event of type "${event.eventType}" dispatched`);
-                const stream: Stream = connection.stream!;
-                if (!stream || !stream.filter) {
-                    return logger.error(`Filter event of type "${event.eventType}" dispatched for stream ${stream.streamId} but there is no ${!stream ? 'stream' : 'filter'} defined`);
-                }
-                const eventHandler = stream.filter.handlers.get(event.eventType);
-                if (!eventHandler || typeof eventHandler !== 'function') {
-                    const actualHandlers: string[] = Array.from(stream.filter.handlers.keys());
-                    return logger.error(`Filter event of type "${event.eventType}" not handled or not a function! Active filter events: ${actualHandlers.join(',')}`);
-                } else {
-                    eventHandler.call(this, new FilterEvent(stream.filter, event.eventType, event.data));
-                }
-            });
+        this.getConnection(connectionId, 'No connection found for connectionId ' + connectionId).then((connection) => {
+            logger.info(`Filter event of type "${event.eventType}" dispatched`);
+            const stream: Stream = connection.stream!;
+            if (!stream || !stream.filter) {
+                return logger.error(
+                    `Filter event of type "${event.eventType}" dispatched for stream ${stream.streamId} but there is no ${
+                        !stream ? 'stream' : 'filter'
+                    } defined`
+                );
+            }
+            const eventHandler = stream.filter.handlers.get(event.eventType);
+            if (!eventHandler || typeof eventHandler !== 'function') {
+                const actualHandlers: string[] = Array.from(stream.filter.handlers.keys());
+                return logger.error(
+                    `Filter event of type "${event.eventType}" not handled or not a function! Active filter events: ${actualHandlers.join(
+                        ','
+                    )}`
+                );
+            } else {
+                eventHandler.call(this, new FilterEvent(stream.filter, event.eventType, event.data));
+            }
+        });
     }
 
     /**
      * @hidden
      */
-    onForciblyReconnectSubscriber(event: { connectionId: string, streamId: string, sdpOffer: string }): Promise<void> {
+    onForciblyReconnectSubscriber(event: { connectionId: string; streamId: string; sdpOffer: string }): Promise<void> {
         return new Promise((resolve, reject) => {
             this.getRemoteConnection(event.connectionId, 'onForciblyReconnectSubscriber')
-                .then(connection => {
+                .then((connection) => {
                     if (!!connection.stream && connection.stream.streamId === event.streamId) {
                         const stream = connection.stream;
 
@@ -1135,7 +1203,7 @@ export class Session extends EventDispatcher {
                                     const eventAux = stream.reconnectionEventEmitter!['onForciblyReconnectSubscriberLastEvent'];
                                     delete stream.reconnectionEventEmitter!['onForciblyReconnectSubscriberLastEvent'];
                                     this.onForciblyReconnectSubscriber(eventAux);
-                                }
+                                };
                                 stream.reconnectionEventEmitter!.once('success', () => {
                                     callback();
                                 });
@@ -1146,16 +1214,28 @@ export class Session extends EventDispatcher {
                             return;
                         }
 
-                        stream.completeWebRtcPeerReceive(true, true, event.sdpOffer)
+                        stream
+                            .completeWebRtcPeerReceive(true, true, event.sdpOffer)
                             .then(() => stream.finalResolveForSubscription(true, resolve))
-                            .catch(error => stream.finalRejectForSubscription(true, `Error while forcibly reconnecting remote stream ${event.streamId}: ${error.toString()}`, reject));
+                            .catch((error) =>
+                                stream.finalRejectForSubscription(
+                                    true,
+                                    `Error while forcibly reconnecting remote stream ${event.streamId}: ${error.toString()}`,
+                                    reject
+                                )
+                            );
                     } else {
-                        const errMsg = "No stream with streamId '" + event.streamId + "' found for connection '" + event.connectionId + "' on 'streamPropertyChanged' event";
+                        const errMsg =
+                            "No stream with streamId '" +
+                            event.streamId +
+                            "' found for connection '" +
+                            event.connectionId +
+                            "' on 'streamPropertyChanged' event";
                         logger.error(errMsg);
                         return reject(errMsg);
                     }
                 })
-                .catch(openViduError => {
+                .catch((openViduError) => {
                     logger.error(openViduError);
                     return reject(openViduError);
                 });
@@ -1175,7 +1255,7 @@ export class Session extends EventDispatcher {
             someReconnection = true;
         }
         // Re-establish Subscriber streams
-        this.remoteConnections.forEach(remoteConnection => {
+        this.remoteConnections.forEach((remoteConnection) => {
             if (!!remoteConnection.stream && remoteConnection.stream.streamIceConnectionStateBroken()) {
                 logger.warn('Re-establishing Subscriber ' + remoteConnection.stream.streamId);
                 remoteConnection.stream.initWebRtcPeerReceive(true);
@@ -1198,7 +1278,6 @@ export class Session extends EventDispatcher {
      * @hidden
      */
     leave(forced: boolean, reason: string): void {
-
         forced = !!forced;
         logger.info('Leaving Session (forced=' + forced + ')');
         this.stopVideoDataIntervals();
@@ -1234,7 +1313,7 @@ export class Session extends EventDispatcher {
      */
     initializeParams(token: string) {
         const joinParams = {
-            token: (!!token) ? token : '',
+            token: !!token ? token : '',
             session: this.sessionId,
             platform: !!platform.getDescription() ? platform.getDescription() : 'unknown',
             sdkVersion: this.openvidu.libraryVersion,
@@ -1250,35 +1329,47 @@ export class Session extends EventDispatcher {
      */
     sendVideoData(streamManager: StreamManager, intervalSeconds: number = 1, doInterval: boolean = false, maxLoops: number = 1) {
         if (
-            platform.isChromeBrowser() || platform.isChromeMobileBrowser() || platform.isOperaBrowser() ||
-            platform.isOperaMobileBrowser() || platform.isEdgeBrowser() || platform.isEdgeMobileBrowser() || platform.isElectron() ||
-            (platform.isSafariBrowser() && !platform.isIonicIos()) || platform.isAndroidBrowser() ||
-            platform.isSamsungBrowser() || platform.isIonicAndroid() || platform.isIOSWithSafari()
+            platform.isChromeBrowser() ||
+            platform.isChromeMobileBrowser() ||
+            platform.isOperaBrowser() ||
+            platform.isOperaMobileBrowser() ||
+            platform.isEdgeBrowser() ||
+            platform.isEdgeMobileBrowser() ||
+            platform.isElectron() ||
+            (platform.isSafariBrowser() && !platform.isIonicIos()) ||
+            platform.isAndroidBrowser() ||
+            platform.isSamsungBrowser() ||
+            platform.isIonicAndroid() ||
+            platform.isIOSWithSafari()
         ) {
             const obtainAndSendVideo = async () => {
                 const pc = streamManager.stream.getRTCPeerConnection();
                 if (pc.connectionState === 'connected') {
                     const statsMap = await pc.getStats();
                     const arr: any[] = [];
-                    statsMap.forEach(stats => {
-                        if (("frameWidth" in stats) && ("frameHeight" in stats) && (arr.length === 0)) {
+                    statsMap.forEach((stats) => {
+                        if ('frameWidth' in stats && 'frameHeight' in stats && arr.length === 0) {
                             arr.push(stats);
                         }
                     });
                     if (arr.length > 0) {
-                        this.openvidu.sendRequest('videoData', {
-                            height: arr[0].frameHeight,
-                            width: arr[0].frameWidth,
-                            videoActive: streamManager.stream.videoActive != null ? streamManager.stream.videoActive : false,
-                            audioActive: streamManager.stream.audioActive != null ? streamManager.stream.audioActive : false
-                        }, (error, response) => {
-                            if (error) {
-                                logger.error("Error sending 'videoData' event", error);
+                        this.openvidu.sendRequest(
+                            'videoData',
+                            {
+                                height: arr[0].frameHeight,
+                                width: arr[0].frameWidth,
+                                videoActive: streamManager.stream.videoActive != null ? streamManager.stream.videoActive : false,
+                                audioActive: streamManager.stream.audioActive != null ? streamManager.stream.audioActive : false
+                            },
+                            (error, response) => {
+                                if (error) {
+                                    logger.error("Error sending 'videoData' event", error);
+                                }
                             }
-                        });
+                        );
                     }
                 }
-            }
+            };
             if (doInterval) {
                 let loops = 1;
                 this.videoDataInterval = setInterval(() => {
@@ -1294,18 +1385,30 @@ export class Session extends EventDispatcher {
             }
         } else if (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser() || platform.isIonicIos() || platform.isReactNative()) {
             // Basic version for Firefox and Ionic iOS. They do not support stats
-            this.openvidu.sendRequest('videoData', {
-                height: streamManager.stream.videoDimensions?.height || 0,
-                width: streamManager.stream.videoDimensions?.width || 0,
-                videoActive: streamManager.stream.videoActive != null ? streamManager.stream.videoActive : false,
-                audioActive: streamManager.stream.audioActive != null ? streamManager.stream.audioActive : false
-            }, (error, response) => {
-                if (error) {
-                    logger.error("Error sending 'videoData' event", error);
+            this.openvidu.sendRequest(
+                'videoData',
+                {
+                    height: streamManager.stream.videoDimensions?.height || 0,
+                    width: streamManager.stream.videoDimensions?.width || 0,
+                    videoActive: streamManager.stream.videoActive != null ? streamManager.stream.videoActive : false,
+                    audioActive: streamManager.stream.audioActive != null ? streamManager.stream.audioActive : false
+                },
+                (error, response) => {
+                    if (error) {
+                        logger.error("Error sending 'videoData' event", error);
+                    }
                 }
-            });
+            );
         } else {
-            logger.error('Browser ' + platform.getName() + ' (version ' + platform.getVersion() + ') for ' + platform.getFamily() + ' is not supported in OpenVidu for Network Quality');
+            logger.error(
+                'Browser ' +
+                    platform.getName() +
+                    ' (version ' +
+                    platform.getVersion() +
+                    ') for ' +
+                    platform.getFamily() +
+                    ' is not supported in OpenVidu for Network Quality'
+            );
         }
     }
 
@@ -1320,7 +1423,10 @@ export class Session extends EventDispatcher {
      * @hidden
      */
     notConnectedError(): OpenViduError {
-        return new OpenViduError(OpenViduErrorName.OPENVIDU_NOT_CONNECTED, "There is no connection to the session. Method 'Session.connect' must be successfully completed first");
+        return new OpenViduError(
+            OpenViduErrorName.OPENVIDU_NOT_CONNECTED,
+            "There is no connection to the session. Method 'Session.connect' must be successfully completed first"
+        );
     }
 
     /**
@@ -1329,7 +1435,7 @@ export class Session extends EventDispatcher {
     anySpeechEventListenerEnabled(event: string, onlyOnce: boolean, streamManager?: StreamManager): boolean {
         let handlersInSession = this.ee.getListeners(event);
         if (onlyOnce) {
-            handlersInSession = handlersInSession.filter(h => (h as any).once);
+            handlersInSession = handlersInSession.filter((h) => (h as any).once);
         }
         let listenersInSession = handlersInSession.length;
         if (listenersInSession > 0) return true;
@@ -1337,7 +1443,7 @@ export class Session extends EventDispatcher {
         if (!!streamManager) {
             let handlersInStreamManager = streamManager.ee.getListeners(event);
             if (onlyOnce) {
-                handlersInStreamManager = handlersInStreamManager.filter(h => (h as any).once);
+                handlersInStreamManager = handlersInStreamManager.filter((h) => (h as any).once);
             }
             listenersInStreamManager = handlersInStreamManager.length;
         }
@@ -1363,10 +1469,10 @@ export class Session extends EventDispatcher {
             const params = token.split('?');
             const queryParams = decodeURI(params[1])
                 .split('&')
-                .map(param => param.split('='))
+                .map((param) => param.split('='))
                 .reduce((values, [key, value]) => {
-                    values[key] = value
-                    return values
+                    values[key] = value;
+                    return values;
                 }, {});
 
             return {
@@ -1379,7 +1485,6 @@ export class Session extends EventDispatcher {
                 wsUri: url.protocol + '://' + url.host + '/openvidu',
                 httpUri: 'https://' + url.host
             };
-
         } else {
             throw new Error(`Token not valid: "${token}"`);
         }
@@ -1393,14 +1498,12 @@ export class Session extends EventDispatcher {
                 if (!!error) {
                     return reject(error);
                 } else {
-
                     const joinParams = this.initializeParams(token);
 
                     this.openvidu.sendRequest('joinRoom', joinParams, (error, response: LocalConnectionOptions) => {
                         if (!!error) {
                             return reject(error);
                         } else {
-
                             // Process join room response
                             this.processJoinRoomResponse(response, token);
 
@@ -1424,20 +1527,26 @@ export class Session extends EventDispatcher {
                             });
 
                             // Own 'connectionCreated' event
-                            this.ee.emitEvent('connectionCreated', [new ConnectionEvent(false, this, 'connectionCreated', this.connection, '')]);
+                            this.ee.emitEvent('connectionCreated', [
+                                new ConnectionEvent(false, this, 'connectionCreated', this.connection, '')
+                            ]);
 
                             // One 'connectionCreated' event for each existing connection in the session
-                            events.connections.forEach(connection => {
-                                this.ee.emitEvent('connectionCreated', [new ConnectionEvent(false, this, 'connectionCreated', connection, '')]);
+                            events.connections.forEach((connection) => {
+                                this.ee.emitEvent('connectionCreated', [
+                                    new ConnectionEvent(false, this, 'connectionCreated', connection, '')
+                                ]);
                             });
 
                             // One 'streamCreated' event for each active stream in the session
-                            events.streams.forEach(stream => {
+                            events.streams.forEach((stream) => {
                                 this.ee.emitEvent('streamCreated', [new StreamEvent(false, this, 'streamCreated', stream, '')]);
                             });
 
                             if (!!response.recordingId && !!response.recordingName) {
-                                this.ee.emitEvent('recordingStarted', [new RecordingEvent(this, 'recordingStarted', response.recordingId, response.recordingName)]);
+                                this.ee.emitEvent('recordingStarted', [
+                                    new RecordingEvent(this, 'recordingStarted', response.recordingId, response.recordingName)
+                                ]);
                             }
 
                             return resolve();
@@ -1498,8 +1607,14 @@ export class Session extends EventDispatcher {
                 return resolve(connection);
             } else {
                 // Remote connection not found. Reject with OpenViduError
-                const errorMessage = 'Remote connection ' + connectionId + " unknown when '" + operation + "'. " +
-                    'Existing remote connections: ' + JSON.stringify(this.remoteConnections.keys());
+                const errorMessage =
+                    'Remote connection ' +
+                    connectionId +
+                    " unknown when '" +
+                    operation +
+                    "'. " +
+                    'Existing remote connections: ' +
+                    JSON.stringify(this.remoteConnections.keys());
                 return reject(new OpenViduError(OpenViduErrorName.GENERIC_ERROR, errorMessage));
             }
         });
@@ -1535,8 +1650,8 @@ export class Session extends EventDispatcher {
             for (const iceServer of opts.customIceServers) {
                 let rtcIceServer: RTCIceServer = {
                     urls: [iceServer.url]
-                }
-                logger.log("STUN/TURN server IP: " + iceServer.url);
+                };
+                logger.log('STUN/TURN server IP: ' + iceServer.url);
                 if (iceServer.username != null && iceServer.credential != null) {
                     rtcIceServer.username = iceServer.username;
                     rtcIceServer.credential = iceServer.credential;
@@ -1555,18 +1670,24 @@ export class Session extends EventDispatcher {
             forceUnpublish: this.openvidu.role === 'MODERATOR',
             forceDisconnect: this.openvidu.role === 'MODERATOR'
         };
-        logger.info("openvidu-server version: " + opts.version);
+        logger.info('openvidu-server version: ' + opts.version);
         if (opts.life != null) {
             this.openvidu.life = opts.life;
         }
         const minorDifference: number = semverMinor(opts.version) - semverMinor(this.openvidu.libraryVersion);
-        if ((semverMajor(opts.version) !== semverMajor(this.openvidu.libraryVersion)) || !(minorDifference == 0 || minorDifference == 1)) {
-            logger.error(`openvidu-browser (${this.openvidu.libraryVersion}) and openvidu-server (${opts.version}) versions are incompatible. `
-                + 'Errors are likely to occur. openvidu-browser SDK is only compatible with the same version or the immediately following minor version of an OpenVidu deployment');
+        if (semverMajor(opts.version) !== semverMajor(this.openvidu.libraryVersion) || !(minorDifference == 0 || minorDifference == 1)) {
+            logger.error(
+                `openvidu-browser (${this.openvidu.libraryVersion}) and openvidu-server (${opts.version}) versions are incompatible. ` +
+                    'Errors are likely to occur. openvidu-browser SDK is only compatible with the same version or the immediately following minor version of an OpenVidu deployment'
+            );
         } else if (minorDifference == 1) {
-            logger.warn(`openvidu-browser version ${this.openvidu.libraryVersion} does not match openvidu-server version ${opts.version}. `
-                + `These versions are still compatible with each other, but openvidu-browser version must be updated as soon as possible to ${semverMajor(opts.version)}.${semverMinor(opts.version)}.x. `
-                + `This client using openvidu-browser ${this.openvidu.libraryVersion} will become incompatible with the next release of openvidu-server`);
+            logger.warn(
+                `openvidu-browser version ${this.openvidu.libraryVersion} does not match openvidu-server version ${opts.version}. ` +
+                    `These versions are still compatible with each other, but openvidu-browser version must be updated as soon as possible to ${semverMajor(
+                        opts.version
+                    )}.${semverMinor(opts.version)}.x. ` +
+                    `This client using openvidu-browser ${this.openvidu.libraryVersion} will become incompatible with the next release of openvidu-server`
+            );
         }
 
         // Configure JSNLogs
@@ -1575,5 +1696,4 @@ export class Session extends EventDispatcher {
         // Store token
         this.token = token;
     }
-
 }

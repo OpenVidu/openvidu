@@ -21,7 +21,6 @@ import { VideoInsertMode } from '../../Enums/VideoInsertMode';
  * See [[Session.subscribe]]
  */
 export interface SubscriberProperties {
-
     /**
      * How the video element of the subscriber should be inserted in the DOM
      * @default VideoInsertMode.APPEND
@@ -39,5 +38,4 @@ export interface SubscriberProperties {
      * @default true
      */
     subscribeToVideo?: boolean;
-
 }

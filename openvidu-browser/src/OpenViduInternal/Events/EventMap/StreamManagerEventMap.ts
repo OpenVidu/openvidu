@@ -22,21 +22,20 @@ import { StreamPropertyChangedEvent } from '../StreamPropertyChangedEvent';
 import { VideoElementEvent } from '../VideoElementEvent';
 
 /**
- * Events dispatched by [[StreamManager]] object. Manage event listeners with 
+ * Events dispatched by [[StreamManager]] object. Manage event listeners with
  * [[StreamManager.on]], [[StreamManager.once]] and [[StreamManager.off]] methods.
- * 
+ *
  * Example:
- * 
+ *
  * ```javascript
- * streamManager.on('videoElementCreated', (event) => { 
+ * streamManager.on('videoElementCreated', (event) => {
  *      console.log('New video element created:', event.element);
  * }
- * 
+ *
  * streamManager.off('videoElementCreated');
  * ```
  */
 export interface StreamManagerEventMap extends EventMap {
-
     /**
      * Event dispatched when a new HTML video element has been inserted into DOM by OpenVidu Browser library. See
      * [Manage video players](/en/stable/cheatsheet/manage-videos) section.
@@ -73,7 +72,7 @@ export interface StreamManagerEventMap extends EventMap {
 
     /**
      * Event dispatched when the user owning the stream has started speaking.
-     * 
+     *
      * Extra information:
      * - This event will only be triggered for **streams that have audio tracks** ([[Stream.hasAudio]] must be true).
      * - Further configuration can be applied on how the event is dispatched by setting property `publisherSpeakingEventsOptions` in the call of [[OpenVidu.setAdvancedConfiguration]].
@@ -82,7 +81,7 @@ export interface StreamManagerEventMap extends EventMap {
 
     /**
      * Event dispatched when the user owning the stream has stopped speaking.
-     * 
+     *
      * Extra information:
      * - This event will only be triggered for **streams that have audio tracks** ([[Stream.hasAudio]] must be true).
      * - Further configuration can be applied on how the event is dispatched by setting property `publisherSpeakingEventsOptions` in the call of [[OpenVidu.setAdvancedConfiguration]].

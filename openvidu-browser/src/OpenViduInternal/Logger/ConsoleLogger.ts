@@ -1,42 +1,41 @@
 type ConsoleFunction = (...data: any) => void;
 export class ConsoleLogger {
+    /**
+     * @hidden
+     */
+    logger: Console;
 
     /**
      * @hidden
      */
-    logger: Console
+    log: ConsoleFunction;
 
     /**
      * @hidden
      */
-    log: ConsoleFunction
+    info: ConsoleFunction;
 
     /**
      * @hidden
      */
-    info: ConsoleFunction
+    debug: ConsoleFunction;
 
     /**
      * @hidden
      */
-    debug: ConsoleFunction
+    warn: ConsoleFunction;
 
     /**
      * @hidden
      */
-    warn: ConsoleFunction
-
-    /**
-     * @hidden
-     */
-    error: ConsoleFunction
+    error: ConsoleFunction;
 
     constructor(console: Console) {
         this.logger = console;
-        this.log = console.log,
-        this.info = console.info,
-        this.debug = console.debug,
-        this.warn = console.warn,
-        this.error = console.error
+        (this.log = console.log),
+            (this.info = console.info),
+            (this.debug = console.debug),
+            (this.warn = console.warn),
+            (this.error = console.error);
     }
 }

@@ -27,7 +27,6 @@ import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 export abstract class EventDispatcher {
-
     /**
      * @hidden
      */
@@ -42,27 +41,27 @@ export abstract class EventDispatcher {
      *
      * @returns The EventDispatcher object
      */
-    abstract on<K extends keyof (EventMap)>(type: K, handler: (event: (EventMap)[K]) => void): this;
+    abstract on<K extends keyof EventMap>(type: K, handler: (event: EventMap[K]) => void): this;
 
     /**
      * Adds function `handler` to handle event `type` just once. The handler will be automatically removed after first execution
      *
      * @returns The object that dispatched the event
      */
-    abstract once<K extends keyof (EventMap)>(type: K, handler: (event: (EventMap)[K]) => void): this;
+    abstract once<K extends keyof EventMap>(type: K, handler: (event: EventMap[K]) => void): this;
 
     /**
      * Removes a `handler` from event `type`. If no handler is provided, all handlers will be removed from the event
      *
      * @returns The object that dispatched the event
      */
-    abstract off<K extends keyof (EventMap)>(type: K, handler?: (event: (EventMap)[K]) => void): this;
+    abstract off<K extends keyof EventMap>(type: K, handler?: (event: EventMap[K]) => void): this;
 
     /**
      * @hidden
      */
     onAux(type: string, message: string, handler: (event: Event) => void): EventDispatcher {
-        const arrowHandler = event => {
+        const arrowHandler = (event) => {
             if (event) {
                 logger.info(message, event);
             } else {
@@ -79,7 +78,7 @@ export abstract class EventDispatcher {
      * @hidden
      */
     onceAux(type: string, message: string, handler: (event: Event) => void): EventDispatcher {
-        const arrowHandler = event => {
+        const arrowHandler = (event) => {
             if (event) {
                 logger.info(message, event);
             } else {
@@ -110,5 +109,4 @@ export abstract class EventDispatcher {
         }
         return this;
     }
-
 }
