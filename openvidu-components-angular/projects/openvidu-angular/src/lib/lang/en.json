@@ -4,7 +4,7 @@
 		"SECRET": "Secret",
 		"SECRET_REQURED": "Secret is required",
 		"DASHBOARD": "Dashboard",
-		"NO_RECORDINGS": "There are not recordings",
+		"NO_RECORDINGS": "There are no recordings",
 		"SEARCH": "Search a recording",
 		"DATE": "Date",
 		"DURATION": "Duration",
