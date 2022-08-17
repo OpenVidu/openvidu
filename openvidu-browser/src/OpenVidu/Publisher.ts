@@ -358,7 +358,7 @@ export class Publisher extends StreamManager {
      * @hidden
      */
     initialize(): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
 
             let constraints: MediaStreamConstraints = {};
             let constraintsAux: MediaStreamConstraints = {};
@@ -477,7 +477,7 @@ export class Publisher extends StreamManager {
                 return resolve();
             };
 
-            const getMediaSuccess = (mediaStream: MediaStream, definedAudioConstraint) => {
+            const getMediaSuccess = async (mediaStream: MediaStream, definedAudioConstraint) => {
                 this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
                 if (this.stream.isSendScreen() && this.stream.isSendAudio()) {
                     // When getting desktop as user media audio constraint must be false. Now we can ask for it if required
@@ -486,29 +486,29 @@ export class Publisher extends StreamManager {
                     startTime = Date.now();
                     this.setPermissionDialogTimer(timeForDialogEvent);
 
-                    navigator.mediaDevices.getUserMedia(constraintsAux)
-                        .then(audioOnlyStream => {
-                            this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
-                            mediaStream.addTrack(audioOnlyStream.getAudioTracks()[0]);
-                            successCallback(mediaStream);
-                        })
-                        .catch(error => {
-                            this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
-                            mediaStream.getAudioTracks().forEach((track) => {
-                                track.stop();
-                            });
-                            mediaStream.getVideoTracks().forEach((track) => {
-                                track.stop();
-                            });
-                            errorCallback(this.openvidu.generateAudioDeviceError(error, constraints));
-                            return;
+                    try {
+                        const audioOnlyStream = await navigator.mediaDevices.getUserMedia(constraintsAux);
+                        this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
+                        mediaStream.addTrack(audioOnlyStream.getAudioTracks()[0]);
+                        successCallback(mediaStream);
+
+                    } catch (error) {
+                        this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
+                        mediaStream.getAudioTracks().forEach((track) => {
+                            track.stop();
                         });
+                        mediaStream.getVideoTracks().forEach((track) => {
+                            track.stop();
+                        });
+                        errorCallback(this.openvidu.generateAudioDeviceError(error, constraints));
+                        return;
+                    }
                 } else {
                     successCallback(mediaStream);
                 }
             };
 
-            const getMediaError = error => {
+            const getMediaError = async (error) => {
                 logger.error(`getMediaError: ${error.toString()}`);
                 this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
                 if (error.name === 'Error') {
@@ -518,22 +518,24 @@ export class Publisher extends StreamManager {
                 let errorName, errorMessage;
                 switch (error.name.toLowerCase()) {
                     case 'notfounderror':
-                        navigator.mediaDevices.getUserMedia({
-                            audio: false,
-                            video: constraints.video
-                        })
-                            .then(mediaStream => {
-                                mediaStream.getVideoTracks().forEach((track) => {
-                                    track.stop();
-                                });
-                                errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
-                                errorMessage = error.toString();
-                                errorCallback(new OpenViduError(errorName, errorMessage));
-                            }).catch(e => {
-                                errorName = OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
-                                errorMessage = error.toString();
-                                errorCallback(new OpenViduError(errorName, errorMessage));
+                        try {
+                            const mediaStream = await navigator.mediaDevices.getUserMedia({
+                                audio: false,
+                                video: constraints.video
                             });
+                            mediaStream.getVideoTracks().forEach((track) => {
+                                track.stop();
+                            });
+                            errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
+                            errorMessage = error.toString();
+                            errorCallback(new OpenViduError(errorName, errorMessage));
+
+                        } catch (error) {
+                            errorName = OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
+                            errorMessage = error.toString();
+                            errorCallback(new OpenViduError(errorName, errorMessage));
+                        }
+
                         break;
                     case 'notallowederror':
                         errorName = this.stream.isSendScreen() ? OpenViduErrorName.SCREEN_CAPTURE_DENIED : OpenViduErrorName.DEVICE_ACCESS_DENIED;
@@ -541,32 +543,35 @@ export class Publisher extends StreamManager {
                         errorCallback(new OpenViduError(errorName, errorMessage));
                         break;
                     case 'overconstrainederror':
-                        navigator.mediaDevices.getUserMedia({
-                            audio: false,
-                            video: constraints.video
-                        })
-                            .then(mediaStream => {
-                                mediaStream.getVideoTracks().forEach((track) => {
-                                    track.stop();
-                                });
-                                if (error.constraint.toLowerCase() === 'deviceid') {
-                                    errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
-                                    errorMessage = "Audio input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.audio).deviceId!!).exact + "' not found";
-                                } else {
-                                    errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
-                                    errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
-                                }
-                                errorCallback(new OpenViduError(errorName, errorMessage));
-                            }).catch(e => {
-                                if (error.constraint.toLowerCase() === 'deviceid') {
-                                    errorName = OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
-                                    errorMessage = "Video input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.video).deviceId!!).exact + "' not found";
-                                } else {
-                                    errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
-                                    errorMessage = "Video input device doesn't support the value passed for constraint '" + error.constraint + "'";
-                                }
-                                errorCallback(new OpenViduError(errorName, errorMessage));
+
+                        try {
+                            const mediaStream = await navigator.mediaDevices.getUserMedia({
+                                audio: false,
+                                video: constraints.video
                             });
+                            mediaStream.getVideoTracks().forEach((track) => {
+                                track.stop();
+                            });
+                            if (error.constraint.toLowerCase() === 'deviceid') {
+                                errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
+                                errorMessage = "Audio input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.audio).deviceId!!).exact + "' not found";
+                            } else {
+                                errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
+                                errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                            }
+                            errorCallback(new OpenViduError(errorName, errorMessage));
+
+                        } catch (error) {
+                            if (error.constraint.toLowerCase() === 'deviceid') {
+                                errorName = OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
+                                errorMessage = "Video input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.video).deviceId!!).exact + "' not found";
+                            } else {
+                                errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
+                                errorMessage = "Video input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                            }
+                            errorCallback(new OpenViduError(errorName, errorMessage));
+                        }
+
                         break;
                     case 'aborterror':
                     case 'notreadableerror':
@@ -582,18 +587,14 @@ export class Publisher extends StreamManager {
                 }
             }
 
-            this.openvidu.generateMediaConstraints(this.properties)
-                .then(myConstraints => {
-
-                    if (!!myConstraints.videoTrack && !!myConstraints.audioTrack ||
-                        !!myConstraints.audioTrack && myConstraints.constraints?.video === false ||
-                        !!myConstraints.videoTrack && myConstraints.constraints?.audio === false) {
-                        // No need to call getUserMedia at all. MediaStreamTracks already provided
-                        successCallback(this.openvidu.addAlreadyProvidedTracks(myConstraints, new MediaStream(), this.stream));
-                        // Return as we do not need to process further
-                        return;
-                    }
-
+            try {
+                const myConstraints =  await this.openvidu.generateMediaConstraints(this.properties);
+                if (!!myConstraints.videoTrack && !!myConstraints.audioTrack ||
+                    !!myConstraints.audioTrack && myConstraints.constraints?.video === false ||
+                    !!myConstraints.videoTrack && myConstraints.constraints?.audio === false) {
+                    // No need to call getUserMedia at all. MediaStreamTracks already provided
+                    successCallback(this.openvidu.addAlreadyProvidedTracks(myConstraints, new MediaStream(), this.stream));
+                } else {
                     constraints = myConstraints.constraints;
 
                     const outboundStreamOptions = {
@@ -608,31 +609,24 @@ export class Publisher extends StreamManager {
                     startTime = Date.now();
                     this.setPermissionDialogTimer(timeForDialogEvent);
 
-                    if (this.stream.isSendScreen() && navigator.mediaDevices['getDisplayMedia'] && !platform.isElectron()) {
-                        navigator.mediaDevices['getDisplayMedia']({ video: true })
-                            .then(mediaStream => {
-                                this.openvidu.addAlreadyProvidedTracks(myConstraints, mediaStream);
-                                getMediaSuccess(mediaStream, definedAudioConstraint);
-                            })
-                            .catch(error => {
-                                getMediaError(error);
-                            });
-                    } else {
-                        this.stream.lastVideoTrackConstraints = constraintsAux.video;
-                        navigator.mediaDevices.getUserMedia(constraintsAux)
-                            .then(mediaStream => {
-                                this.openvidu.addAlreadyProvidedTracks(myConstraints, mediaStream, this.stream);
-                                getMediaSuccess(mediaStream, definedAudioConstraint);
-                            })
-                            .catch(error => {
-                                getMediaError(error);
-                            });
+                    try {
+                        if (this.stream.isSendScreen() && navigator.mediaDevices['getDisplayMedia'] && !platform.isElectron()) {
+                            const mediaStream = await navigator.mediaDevices['getDisplayMedia']({ video: true });
+                            this.openvidu.addAlreadyProvidedTracks(myConstraints, mediaStream);
+                            await getMediaSuccess(mediaStream, definedAudioConstraint);
+                        } else {
+                            this.stream.lastVideoTrackConstraints = constraintsAux.video;
+                            const mediaStream = await navigator.mediaDevices.getUserMedia(constraintsAux);
+                            this.openvidu.addAlreadyProvidedTracks(myConstraints, mediaStream, this.stream);
+                            await getMediaSuccess(mediaStream, definedAudioConstraint);
+                        }
+                    } catch (error) {
+                        await getMediaError(error);
                     }
-
-                })
-                .catch((error: OpenViduError) => {
-                    errorCallback(error);
-                });
+                }
+            } catch (error) {
+                errorCallback(error);
+            }
         });
     }
 
