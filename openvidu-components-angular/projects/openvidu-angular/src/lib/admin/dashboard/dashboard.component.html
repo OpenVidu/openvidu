@@ -50,7 +50,7 @@
 			</div>
 		</div>
 
-		<div *ngIf="recordings.length === 0" class="no-recordings-warn">
+		<div *ngIf="!recordings || recordings.length === 0" class="no-recordings-warn">
 			<span>{{ 'ADMIN.NO_RECORDINGS' | translate }}</span>
 		</div>
 
