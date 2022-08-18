@@ -565,6 +565,7 @@ export class OpenVidu {
                                     this.addAlreadyProvidedTracks(myConstraints, mediaStream);
                                     if (mustAskForAudioTrackLater) {
                                         await askForAudioStreamOnly(mediaStream, <MediaStreamConstraints>myConstraints.constraints);
+                                        return;
                                     } else {
                                         return resolve(mediaStream);
                                     }
