@@ -287,7 +287,15 @@ export class OpenViduService {
 	 */
 	private async publishVideoAux(publisher: Publisher, publish: boolean): Promise<void> {
 		if (!!publisher) {
-			await publisher.publishVideo(publish, true);
+			let resource: boolean | MediaStreamTrack = true;
+			if(publish){
+				// Forcing restoration with a custom media stream (the older one instead the default)
+				const currentDeviceId = this.deviceService.getCameraSelected()?.device;
+				const mediaStream =	await this.createMediaStream({videoSource: currentDeviceId, audioSource: false});
+				resource = mediaStream.getVideoTracks()[0];
+			}
+
+			await publisher.publishVideo(publish, resource);
 			this.participantService.updateLocalParticipant();
 		}
 	}
