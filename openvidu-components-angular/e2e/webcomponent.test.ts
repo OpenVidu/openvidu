@@ -909,13 +909,13 @@ describe('Testing videoconference EVENTS', () => {
 		expect(await activitiesButton.isDisplayed()).to.be.true;
 		await activitiesButton.click();
 
-		await browser.sleep(1000);
+		await browser.sleep(1500);
 
 		// Open recording
 		element = await browser.wait(until.elementLocated(By.css('ov-recording-activity')), TIMEOUT);
 		await element.click();
 
-		await browser.sleep(1000);
+		await browser.sleep(1500);
 
 		// Delete event
 		element = await browser.findElement(By.id('delete-recording-btn'));
