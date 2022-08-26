@@ -125,8 +125,8 @@ public class OpenviduConfig {
 	@Value("#{'${spring.profiles.active:}'.length() > 0 ? '${spring.profiles.active:}'.split(',') : \"default\"}")
 	protected String springProfile;
 
-	@Value("${DEV_CONTAINER:false}")
-	private boolean devContainer;
+	@Value("${FORCE_PLAIN_HTTP:false}")
+	private boolean forcePlainHttp;
 
 	// Config properties
 
@@ -700,7 +700,7 @@ public class OpenviduConfig {
 
 		if (domain != null && !domain.isEmpty()) {
 			this.domainOrPublicIp = domain;
-			this.openviduPublicUrl = (devContainer ? "http://" : "https://") + domain;
+			this.openviduPublicUrl = (forcePlainHttp ? "http://" : "https://") + domain;
 			if (this.httpsPort != null && this.httpsPort != 443) {
 				this.openviduPublicUrl += (":" + this.httpsPort);
 			}
