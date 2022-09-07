@@ -1,6 +1,6 @@
 .container {
 	height: calc(100% - 64px);
-	padding: 50px 80px;
+	padding: 30px 60px;
 	background-color: var(--ov-light-color);
 }
 
@@ -58,9 +58,11 @@ hr {
 }
 
 #prejoin-container ::ng-deep .mat-drawer-container,
-#prejoin-container ::ng-deep .sidenav-menu {
-	background-color: var(--ov-light-color) !important;
+#prejoin-container ::ng-deep .sidenav-menu,
+#prejoin-container ::ng-deep #session-container {
+	background-color: transparent !important;
 }
+
 #prejoin-container ::ng-deep .sidenav-menu {
 	width: 320px;
 }
@@ -121,7 +123,7 @@ hr {
 	border-radius: var(--ov-video-radius);
 }
 
-@media only screen and (max-width: 480px) {
+ @media only screen and (max-width: 480px) {
 	.container,
 	.media-panel-container,
 	.buttons-container {
@@ -142,7 +144,7 @@ hr {
 }
 
 @media only screen and (min-width: 480px) and (max-width: 959px) {
-	.container,
+	/* .container, */
 	.media-panel-container,
 	.buttons-container {
 		padding: 0;
@@ -160,9 +162,5 @@ hr {
 	.media-panel-container {
 		padding-top: 0px;
 		max-width: 600px;
-	}
-
-	.media-panel {
-		align-items: flex-start !important;
 	}
 }

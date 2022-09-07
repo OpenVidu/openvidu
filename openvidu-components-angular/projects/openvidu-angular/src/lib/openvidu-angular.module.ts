@@ -60,6 +60,7 @@ import { NicknameInputComponent } from './components/settings/nickname-input/nic
 import { LangSelectorComponent } from './components/settings/lang-selector/lang-selector.component';
 import { SubtitlesSettingComponent } from './components/settings/subtitles/subtitles.component';
 import { CaptionsComponent } from './components/captions/captions.component';
+import { CustomBreakPointsProvider, CustomLayoutExtensionDirective } from './config/custom-flexlayout-breakpoints';
 
 const publicComponents = [
 	AdminDashboardComponent,
@@ -104,7 +105,8 @@ const privateComponents = [
 		SearchByStringPropertyPipe,
 		ThumbnailFromUrlPipe,
 		StreamTypesEnabledPipe,
-		TranslatePipe
+		TranslatePipe,
+		CustomLayoutExtensionDirective,
 	],
 	imports: [
 		CommonModule,
@@ -120,6 +122,7 @@ const privateComponents = [
 		ActionService,
 		CdkOverlayContainer,
 		{ provide: OverlayContainer, useClass: CdkOverlayContainer },
+		CustomBreakPointsProvider,
 		ChatService,
 		PanelService,
 		DeviceService,

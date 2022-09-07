@@ -103,3 +103,7 @@
 ::ng-deep .mat-form-field.mat-focused .mat-form-field-ripple {
 	background-color: var(--ov-panel-text-color) !important;
 }
+
+::ng-deep .mat-drawer {
+	background-color: transparent !important;
+}

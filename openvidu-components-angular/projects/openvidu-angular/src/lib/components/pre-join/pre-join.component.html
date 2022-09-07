@@ -8,9 +8,9 @@
 	</mat-toolbar>
 </div>
 
-<div class="container" id="prejoin-container" fxLayout.gt-sm="row" fxLayout.lt-md="column">
-	<div fxFlex.gt-sm="65%" fxFlex.lt-md="55%" fxLayoutAlign="center center" id="layout-container">
-		<ov-session [usedInPrejoinPage]="true">
+<div class="container" id="prejoin-container" fxLayout.landscape="row" fxLayout.lt-md="column" fxLayout.md="row" fxLayout.gt-md="row">
+	<div fxFlex.lt-sm="50%" fxFlex.lt-md="50%" fxFlex.md="45%" fxFlex.gt-md="45%" fxLayoutAlign="center center" id="layout-container">
+		<ov-session [usedInPrejoinPage]="true" class="ov-session">
 			<ng-template #panel *ngIf="!isMinimal && showBackgroundEffectsButton">
 				<ov-panel>
 					<ng-template #backgroundEffectsPanel>
@@ -38,7 +38,7 @@
 			</ng-template>
 		</ov-session>
 	</div>
-	<div fxFlex.gt-sm="35%" fxFlex.lt-md="45%" fxLayoutAlign="center center" class="media-panel" *ngIf="localParticipant">
+	<div fxFlex.lt-md="50%" fxFlex.md="55%" fxFlex.gt-md="55%" fxLayoutAlign="center center" class="media-panel" *ngIf="localParticipant">
 		<div fxLayout="column" fxLayoutGap="10px" class="media-panel-container">
 			<div fxLayout.gt-sm="column" fxLayout.lt-md="column" fxLayoutGap="10px" fxFlex="33%">
 				<div fxFlex.gt-sm="100%" fxFlex.lt-md="33%" fxLayoutAlign="center center" fxFlexFill class="nickname-container">
