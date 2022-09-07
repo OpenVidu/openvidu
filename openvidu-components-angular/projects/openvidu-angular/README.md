@@ -25,11 +25,8 @@ ng v
 npm install openvidu-angular
 ```
 
-2. Also you need Angular Material:
+2. Also you need Angular Material. Check the [Angular Material documentation](https://material.angular.io/guide/getting-started){:target="_blank"} for installing it.
 
-```
-ng add @angular/material
-```
 
 ## Configure it
 
