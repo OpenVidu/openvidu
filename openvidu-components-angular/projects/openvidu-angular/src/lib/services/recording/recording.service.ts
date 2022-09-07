@@ -73,7 +73,8 @@ export class RecordingService {
 	 */
 	playRecording(recording: RecordingInfo) {
 		const recordingId = recording.id;
-		const extension = recording.url?.split('.').pop()  || 'mp4';
+		// Only COMPOSED recording is supported. The extension will allways be 'mp4'.
+		const extension = 'mp4'; //recording.url?.split('.').pop()  || 'mp4';
 		this.actionService.openRecordingPlayerDialog(`${this.baseUrl}recordings/${recordingId}/${recordingId}.${extension}`);
 	}
 
@@ -84,7 +85,8 @@ export class RecordingService {
 	 */
 	downloadRecording(recording: RecordingInfo) {
 		const recordingId = recording.id;
-		const extension = recording.url?.split('.').pop() || 'mp4';
+		// Only COMPOSED recording is supported. The extension will allways be 'mp4'.
+		const extension = 'mp4'; //recording.url?.split('.').pop()  || 'mp4';
 
 		const link = document.createElement('a');
 		link.href = `/recordings/${recordingId}/${recordingId}.${extension}`;
