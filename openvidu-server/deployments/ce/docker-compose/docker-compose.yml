@@ -111,7 +111,7 @@ services:
             - ALLOWED_ACCESS_TO_RESTAPI=${ALLOWED_ACCESS_TO_RESTAPI:-}
             - PROXY_MODE=CE
             - WITH_APP=true
-            - SUPPORT_DEPRECATED_API=${SUPPORT_DEPRECATED_API:-true}
+            - SUPPORT_DEPRECATED_API=${SUPPORT_DEPRECATED_API:-false}
             - REDIRECT_WWW=${REDIRECT_WWW:-false}
             - WORKER_CONNECTIONS=${WORKER_CONNECTIONS:-10240}
             - PUBLIC_IP=${PROXY_PUBLIC_IP:-auto-ipv4}
