@@ -196,6 +196,14 @@ upgrade_ov() {
           fatal_error "You can't update from version ${OPENVIDU_PREVIOUS_VERSION} to ${OPENVIDU_VERSION}.\nNever upgrade across multiple major versions."
      fi
 
+     # Check installation is a valid OpenVidu edition
+     if grep -q '.*image:.*\/openvidu-server:.*' "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml"; then
+          fatal_error "You can't upgrade. Installed version is OpenVidu CE"
+     fi
+     if grep -q '.*image:.*\/replication-manager:.*' "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml"; then
+          fatal_error "You can't upgrade. Installed version is OpenVidu ENTERPRISE"
+     fi
+
      # If deployment has AWS_DEFAULT_REGION defined (deployed with cloudformation), check if new AMI of the media node is present as argument
      NEW_AMI_ID="${1:-}"
      AWS_REGION=$(get_previous_env_variable AWS_DEFAULT_REGION)
@@ -317,6 +325,10 @@ upgrade_ov() {
      if [ -d "${OPENVIDU_PREVIOUS_FOLDER}/custom-nginx-locations" ]; then
           mv "${OPENVIDU_PREVIOUS_FOLDER}/custom-nginx-locations" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous directory 'custom-nginx-locations'"
           printf '\n          - custom-nginx-locations'
+     fi
+
+     if [ -d "${OPENVIDU_PREVIOUS_FOLDER}/coturn" ]; then
+          mv "${OPENVIDU_PREVIOUS_FOLDER}/coturn" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous directory 'coturn'"
      fi
 
      # Move tmp files to Openvidu
