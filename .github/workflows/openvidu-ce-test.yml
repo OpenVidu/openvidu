@@ -23,7 +23,7 @@ on:
       KURENTO_JAVA_COMMIT:
         description: 'Commit to use in kurento-java dependencies. If "default" the release version declared in property "version.kurento" of openvidu-parent/pom.xml will be used'
         required: true
-        default: 'master'
+        default: 'default'
       DOCKER_RECORDING_VERSION:
         description: 'Force version of openvidu/openvidu-recording container'
         required: true
@@ -56,7 +56,7 @@ jobs:
       KURENTO_SNAPSHOTS_URL: ${{ secrets.KURENTO_SNAPSHOTS_URL }}
       KURENTO_MEDIA_SERVER_IMAGE: ${{ github.event.inputs.KURENTO_MEDIA_SERVER_IMAGE || 'kurento/kurento-media-server:6.18.0' }}
       MEDIASOUP_CONTROLLER_VERSION: ${{ github.event.inputs.MEDIASOUP_CONTROLLER_VERSION || 'master' }}
-      KURENTO_JAVA_COMMIT: ${{ github.event.inputs.KURENTO_JAVA_COMMIT || 'master' }}
+      KURENTO_JAVA_COMMIT: ${{ github.event.inputs.KURENTO_JAVA_COMMIT || 'default' }}
       DOCKER_RECORDING_VERSION: ${{ github.event.inputs.DOCKER_RECORDING_VERSION || 'default' }}
       CHROME_VERSION: ${{ github.event.inputs.CHROME_VERSION || 'latest' }}
       FIREFOX_VERSION: ${{ github.event.inputs.FIREFOX_VERSION || 'latest' }}
