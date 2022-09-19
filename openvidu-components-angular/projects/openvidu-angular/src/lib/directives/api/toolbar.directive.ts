@@ -256,6 +256,9 @@ export class ToolbarBackgroundEffectsButtonDirective implements AfterViewInit, O
  * And it also can be used in the {@link ToolbarComponent}.
  * @example
  * <ov-toolbar [captionsButton]="false"></ov-toolbar>
+ *
+ * TODO: Make it public when speech to text is integrated
+ * @internal
  */
  @Directive({
 	selector: 'ov-videoconference[toolbarCaptionsButton], ov-toolbar[captionsButton]'

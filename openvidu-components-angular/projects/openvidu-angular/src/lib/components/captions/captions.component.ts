@@ -14,8 +14,8 @@ import { PanelEvent, PanelService } from '../../services/panel/panel.service';
 import { DocumentService } from '../../services/document/document.service';
 import { MediaChange } from '@angular/flex-layout';
 
-//TODO: BORRAR
-import { LoremIpsum } from 'lorem-ipsum';
+//TODO: Remove when speech to text is integrated
+// import { LoremIpsum } from 'lorem-ipsum';
 
 /**
  * @internal
@@ -50,7 +50,7 @@ export class CaptionsComponent implements OnInit {
 
 	captionElements: { connectionId: string; author: string; text: string }[] = [];
 
-	//TODO: Delete
+	//TODO: Remove when speech to text is integrated
 	private sample = [
 		{ connectionId: '1', partial: 'frente' },
 		{ connectionId: '1', partial: 'friends' },
@@ -1393,7 +1393,7 @@ export class CaptionsComponent implements OnInit {
 		});
 	}
 	private updateCaption(connectionId: string, text: string) {
-		//TODO: Delete
+		//TODO: Remove when speech to text is integrated
 		const nicknames = new Map();
 		nicknames.set('1', 'Pepe');
 		nicknames.set('2', 'Mario');
@@ -1453,7 +1453,7 @@ export class CaptionsComponent implements OnInit {
 		this.captionElements = [...newCaptionElements];
 	}
 
-	// TODO Delete when feature is enabled
+	//TODO: Remove when speech to text is integrated
 	private startFakeEventWithSample() {
 		let index = 0;
 		let event = <{ connectionId: string; partial: string; text?: string }>this.sample[index];
@@ -1475,22 +1475,24 @@ export class CaptionsComponent implements OnInit {
 
 		this.interval = eventLoop();
 
-		setInterval(() => {
-			clearInterval(this.interval);
-			const lorem = new LoremIpsum();
-			let times = 5;
-			let partial = 'BLA BLA BLA ';
-			const interval2 = setInterval(() => {
-				fakeEventBS.next({ connectionId: '5', partial });
-				partial += lorem.generateWords(2);
-				if (times <= 0) {
-					fakeEventBS.next({ connectionId: '5', partial, text: partial });
-					clearInterval(interval2);
-					this.interval = eventLoop();
-				}
-				times--;
-			}, 400);
-		}, 6000);
+		//TODO: Simulating an speech event
+		//TODO: Remove when speech to text is integrated
+		// setInterval(() => {
+		// 	clearInterval(this.interval);
+		// 	const lorem = new LoremIpsum();
+		// 	let times = 5;
+		// 	let partial = 'BLA BLA BLA ';
+		// 	const interval2 = setInterval(() => {
+		// 		fakeEventBS.next({ connectionId: '5', partial });
+		// 		partial += lorem.generateWords(2);
+		// 		if (times <= 0) {
+		// 			fakeEventBS.next({ connectionId: '5', partial, text: partial });
+		// 			clearInterval(interval2);
+		// 			this.interval = eventLoop();
+		// 		}
+		// 		times--;
+		// 	}, 400);
+		// }, 6000);
 	}
 
 	private subscribeToPanelToggling() {
