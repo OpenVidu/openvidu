@@ -7,7 +7,7 @@ RUN apt-get update && apt-get -y upgrade && \
 	rm -rf /var/lib/apt/lists/*
 
 # Install Kurento Media Server (KMS)
-RUN echo "deb [arch=amd64] http://ubuntu.openvidu.io/dev bionic kms6" | tee /etc/apt/sources.list.d/kurento.list && \
+RUN echo "deb [arch=amd64] http://ubuntu.openvidu.io/6.18.0 bionic kms6" | tee /etc/apt/sources.list.d/kurento.list && \
 	apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5AFA7A83 && \
 	apt-get update && \
 	apt-get -y install kurento-media-server && \

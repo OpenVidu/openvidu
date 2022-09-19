@@ -1,3 +1,4 @@
+#!/bin/bash
 VERSION=$1
 if [[ ! -z $VERSION ]]; then
     cp ../../target/openvidu-server-*.jar ./openvidu-server.jar
