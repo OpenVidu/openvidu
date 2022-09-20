@@ -366,6 +366,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 				+ "----------------------------------------------------\n";
 		// @formatter:on
 
+		if (config.isOpenViduDev()) {
+			// @formatter:off
+			msg += "\n\n    WARNING!! THIS OPENVIDU DEPLOYMENT IS NOT SUITABLE FOR PRODUCTION ENVIRONMENTS\n"
+					+ "    To deploy in production visit https://docs.openvidu.io/en/stable/deployment\n\n";
+			// @formatter:on
+		}
+
 		log.info(msg);
 	}
 

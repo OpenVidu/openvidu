@@ -205,6 +205,8 @@ public class OpenviduConfig {
 
 	private String dotenvPath;
 
+	private boolean openviduDev = false;
+
 	// Media Nodes private IPs and Public IPs
 	// If defined, they will be configured as public IPs of Kurento or Mediasoup
 	// Key: Private IP
@@ -445,6 +447,10 @@ public class OpenviduConfig {
 		return secret.equals(this.getOpenViduSecret());
 	}
 
+	public boolean isOpenViduDev() {
+		return this.openviduDev;
+	}
+
 	public boolean openviduRecordingCustomLayoutChanged(String path) {
 		return !"/opt/openvidu/custom-layout".equals(path);
 	}
@@ -634,6 +640,10 @@ public class OpenviduConfig {
 
 		webrtcIceServersBuilders = loadWebrtcIceServers("OPENVIDU_WEBRTC_ICE_SERVERS");
 
+		Boolean openviduDevAux = asOptionalBoolean("OPENVIDU_DEV");
+		if (openviduDevAux != null) {
+			openviduDev = openviduDevAux;
+		}
 	}
 
 	private void checkCertificateType() {
@@ -875,6 +885,15 @@ public class OpenviduConfig {
 
 	protected String asOptionalString(String property) {
 		return getValue(property);
+	}
+
+	protected Boolean asOptionalBoolean(String property) {
+		Boolean value = null;
+		String strValue = this.getValue(property, false);
+		if (strValue != null) {
+			value = Boolean.parseBoolean(strValue);
+		}
+		return value;
 	}
 
 	protected String asOptionalStringAndNullIfBlank(String property) {
