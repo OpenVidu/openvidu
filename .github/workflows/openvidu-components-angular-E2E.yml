@@ -21,7 +21,7 @@ jobs:
       with:
         node-version: '16'
     - name: Run Selenium Chromedriver
-      run: docker run -d --shm-size="2g" --network host selenium/standalone-chrome:latest
+      run: docker run -d --shm-size="2g" --network host selenium/standalone-chrome:104.0
     - name: Run openvidu-server-kms
       run: |
         docker run -p 4443:4443 --rm -d \
