@@ -76,5 +76,5 @@
         "webcomponent:e2e-ci": "cross-env LAUNCH_MODE=CI npm run webcomponent:e2e", 
         "webcomponent:serve-testapp": "npx http-server ./e2e/webcomponent-app/"
     }, 
-    "version": "2.23.0"
+    "version": "2.23.1"
 }
