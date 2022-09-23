@@ -1189,7 +1189,7 @@ describe('Testing screenshare features', () => {
 	});
 });
 
-describe('Testing panel toggling', () => {
+describe('Testing panels', () => {
 	let browser: WebDriver;
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
@@ -1302,9 +1302,9 @@ describe('Testing panel toggling', () => {
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Get settings button and click into it
-		const activitiesBtn = await browser.findElement(By.id('toolbar-settings-btn'));
-		expect(await activitiesBtn.isDisplayed()).to.be.true;
-		await activitiesBtn.click();
+		const settingsBtn = await browser.findElement(By.id('toolbar-settings-btn'));
+		expect(await settingsBtn.isDisplayed()).to.be.true;
+		await settingsBtn.click();
 
 		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
 		element = await browser.findElements(By.id('default-settings-panel'));
@@ -1359,5 +1359,53 @@ describe('Testing panel toggling', () => {
 		expect(element.length).equals(0);
 		element = await browser.findElements(By.css('messages-container'));
 		expect(element.length).equals(0);
+	});
+
+	it('should switching between sections in SETTINGS PANEL', async () => {
+		let element;
+		await browser.get(`${url}?prejoin=false`);
+		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Checking if toolbar is present
+		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Open more options menu
+		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
+		await element.click();
+
+		await browser.sleep(500);
+
+		// Checking if mat menu is  present
+		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		// Get settings button and click into it
+		const settingsBtn = await browser.findElement(By.id('toolbar-settings-btn'));
+		expect(await settingsBtn.isDisplayed()).to.be.true;
+		await settingsBtn.click();
+
+		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
+		element = await browser.findElements(By.id('default-settings-panel'));
+		expect(element.length).equals(1);
+
+		// Check if general section is shown
+		element = await browser.findElement(By.id('general-opt'));
+		await element.click();
+		element = await browser.findElement(By.css('ov-nickname-input'));
+		expect(element.isDisplayed());
+
+		// Check if video section is shown
+		element = await browser.findElement(By.id('video-opt'));
+		await element.click();
+		element = await browser.findElement(By.css('ov-video-devices-select'));
+		expect(element.isDisplayed());
+
+		// Check if audio section is shown
+		element = await browser.findElement(By.id('audio-opt'));
+		await element.click();
+		element = await browser.findElement(By.css('ov-audio-devices-select'));
+		expect(element.isDisplayed());
 	});
 });
