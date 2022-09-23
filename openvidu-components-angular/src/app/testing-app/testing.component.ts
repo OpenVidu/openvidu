@@ -57,7 +57,7 @@ export enum AttributeDirective {
 	styleUrls: ['./testing.component.scss']
 })
 export class TestingComponent implements OnInit {
-	OPENVIDU_SERVER_URL = 'https://localhost:4443';
+	OPENVIDU_SERVER_URL = 'http://localhost:4443';
 	OPENVIDU_SERVER_SECRET = 'MY_SECRET';
 	sessionId: string;
 	templateDirectives: TemplateDirectives[] = [
