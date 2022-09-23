@@ -10,7 +10,7 @@
     "@angular/flex-layout": "^13.0.0-beta.36",
     "autolinker": "^3.14.3",
     "buffer": "^6.0.3",
-    "openvidu-browser": "2.22.0"
+    "openvidu-browser": "2.23.0"
   },
   "dependencies": {
     "tslib": "^2.3.0"
