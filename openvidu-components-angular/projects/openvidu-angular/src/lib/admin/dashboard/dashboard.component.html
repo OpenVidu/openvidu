@@ -50,11 +50,11 @@
 			</div>
 		</div>
 
-		<div *ngIf="!recordings || recordings.length === 0" class="no-recordings-warn">
-			<span>{{ 'ADMIN.NO_RECORDINGS' | translate }}</span>
-		</div>
-
 		<div class="recordings-container">
+			<div *ngIf="!recordings || recordings.length === 0" class="no-recordings-warn">
+				<span>{{ 'ADMIN.NO_RECORDINGS' | translate }}</span>
+			</div>
+
 			<div
 				*ngFor="
 					let recording of recordings
