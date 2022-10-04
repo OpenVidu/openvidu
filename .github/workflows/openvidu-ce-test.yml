@@ -4,6 +4,7 @@ on:
     branches:
       - master
     paths-ignore:
+      - '.github/workflows/openvidu-components-angular-E2E.yml'
       - 'openvidu-components-angular/**'
       - 'openvidu-server/docker/**'
       - 'openvidu-server/deployments/**'
