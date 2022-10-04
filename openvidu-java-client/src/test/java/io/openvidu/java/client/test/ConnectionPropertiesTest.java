@@ -51,6 +51,12 @@ public class ConnectionPropertiesTest extends TestCase {
 
 		jsonString = "{'type':'IPCAM','rtspUri':'file://your.camera.ip.sdp'}";
 		ConnectionProperties.fromJson(mapFromJsonString(jsonString)).build();
+
+		jsonString = "{'type':'IPCAM','rtspUri':'http://your.camera.ip.sdp'}";
+		ConnectionProperties.fromJson(mapFromJsonString(jsonString)).build();
+
+		jsonString = "{'type':'IPCAM','rtspUri':'https://your.camera.ip.sdp'}";
+		ConnectionProperties.fromJson(mapFromJsonString(jsonString)).build();
 	}
 
 	public void testFromJsonError() {

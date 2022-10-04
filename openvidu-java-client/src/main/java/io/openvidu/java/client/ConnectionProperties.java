@@ -684,7 +684,7 @@ public class ConnectionProperties {
 	public static URI checkRtspUri(String rtspUri) throws MalformedURLException {
 		try {
 			URI uri = new URI(rtspUri);
-			List<String> allowedSchemes = Arrays.asList("file", "rtsp", "rtsps");
+			List<String> allowedSchemes = Arrays.asList("file", "rtsp", "rtsps", "http", "https");
 			if (!allowedSchemes.contains(uri.getScheme())) {
 				throw new MalformedURLException(
 						"RTSP URI does not contain a valid protocol " + allowedSchemes.toString());
