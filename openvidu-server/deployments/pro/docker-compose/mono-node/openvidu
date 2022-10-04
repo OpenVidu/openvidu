@@ -11,6 +11,29 @@ fi
 export COMPOSE_HTTP_TIMEOUT=500
 export DOCKER_CLIENT_TIMEOUT=500
 
+# Deployed images by media-node-controller
+IMAGES=(
+  "kurento-media-server"
+  "docker.elastic.co/beats/filebeat"
+  "docker.elastic.co/beats/metricbeat"
+  "openvidu/media-node-controller"
+  "openvidu/mediasoup-controller"
+  "openvidu/openvidu-coturn"
+)
+
+docker_command_by_container_image() {
+  IMAGE_NAME=$1
+  COMMAND=$2
+  if  [[ -n "${IMAGE_NAME}" ]]; then
+    CONTAINERS="$(docker ps -a | grep "${IMAGE_NAME}" | awk '{print $1}')"
+    for CONTAINER_ID in $CONTAINERS; do
+      if [[ -n "${CONTAINER_ID}" ]] && [[ -n "${COMMAND}" ]]; then
+        bash -c "docker ${COMMAND} ${CONTAINER_ID}"
+      fi
+    done
+  fi
+}
+
 upgrade_ov() {
   UPGRADE_SCRIPT_URL="https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/install_openvidu_pro_OVVERSION.sh"
   HTTP_STATUS=$(curl -s -o /dev/null -I -w "%{http_code}" ${UPGRADE_SCRIPT_URL//OVVERSION/$1})
@@ -235,6 +258,13 @@ start_openvidu() {
     $(if [ "${COTURN_IN_MEDIA_NODES}" == "true" ]; then echo '--scale coturn=0'; fi)
 }
 
+stop_containers() {
+  printf "Stopping containers..."
+  for IMAGE in "${IMAGES[@]}"; do
+    docker_command_by_container_image "${IMAGE}" "rm -f"
+  done
+}
+
 usage() {
     printf "Usage: \n\t openvidu [command]"
     printf "\n\nAvailable Commands:"
@@ -263,10 +293,12 @@ case $1 in
 
   stop)
     docker-compose down
+    stop_containers
     ;;
 
   restart)
     docker-compose down
+    stop_containers
     start_openvidu
     if [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]]; then
       docker-compose logs -f --tail 10 openvidu-server

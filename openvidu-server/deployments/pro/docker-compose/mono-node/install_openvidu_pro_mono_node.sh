@@ -6,7 +6,7 @@ OPENVIDU_VERSION=master
 OPENVIDU_UPGRADABLE_VERSION="2.23"
 ELASTICSEARCH_FOLDER=${OPENVIDU_FOLDER}/elasticsearch
 BEATS_FOLDER=${OPENVIDU_FOLDER}/beats
-DOWNLOAD_URL=http://172.18.0.1:8888
+DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}
 IMAGES_MEDIA_NODE_CONTROLLER=(
      "kurento-media-server"
      "docker.elastic.co/beats/filebeat"
