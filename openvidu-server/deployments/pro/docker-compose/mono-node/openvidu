@@ -1,0 +1,324 @@
+#!/bin/bash
+
+# Support docker compose v1 and v2
+shopt -s expand_aliases
+alias docker-compose='docker compose'
+if ! docker compose version &> /dev/null; then
+    unalias docker-compose
+fi
+
+# Change default http timeout for slow networks
+export COMPOSE_HTTP_TIMEOUT=500
+export DOCKER_CLIENT_TIMEOUT=500
+
+upgrade_ov() {
+  UPGRADE_SCRIPT_URL="https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/install_openvidu_pro_OVVERSION.sh"
+  HTTP_STATUS=$(curl -s -o /dev/null -I -w "%{http_code}" ${UPGRADE_SCRIPT_URL//OVVERSION/$1})
+
+  printf "  => Upgrading OpenVidu Pro to '%s' version" "$1"
+
+  if [ "$HTTP_STATUS" == "200" ]; then
+    printf "\n    => Downloading and upgrading new version"
+    printf "\n"
+
+    curl --silent ${UPGRADE_SCRIPT_URL//OVVERSION/$1} | bash -s upgrade
+  else
+     printf "\n     =======¡ERROR!======="
+     printf "\n     OpenVidu Pro Version '%s' not exist" "$1"
+     printf "\n"
+     exit 0
+  fi
+}
+
+collect_basic_information() {
+  LINUX_VERSION=$(lsb_release -d)
+  DOCKER_PS=$(docker ps)
+  DOCKER_VERSION=$(docker version --format '{{.Server.Version}}')
+  DOCKER_COMPOSE_VERSION=$(docker-compose version --short)
+  OV_FOLDER="${PWD}"
+  OV_VERSION=$(grep 'Openvidu Version:' "${OV_FOLDER}/docker-compose.yml" | awk '{ print $4 }')
+  CONTAINERS=$(docker ps | awk '{if(NR>1) print $NF}')
+
+  if [ -n "$(grep -E '^        image: openvidu/openvidu-call:.*$' "${OV_FOLDER}/docker-compose.override.yml" | tr -d '[:space:]')" ]; then
+    OV_CALL_VERSION=$(grep -E 'Openvidu-Call Version:' "${OV_FOLDER}/docker-compose.override.yml" | awk '{ print $4 }')
+  fi
+  [ -z "${OV_CALL_VERSION}" ] && OV_CALL_VERSION="No present"
+
+  OV_TYPE_INSTALLATION=$(grep 'Installation Mode:' "${OV_FOLDER}/docker-compose.yml" | awk '{ print $4,$5 }')
+  TREE_OV_DIRECTORY=$(find "." ! -path '*/0/*' | sed -e "s/[^-][^\/]*\// |/g" -e "s/|\([^ ]\)/|-\1/")
+}
+
+version_ov() {
+  collect_basic_information
+
+  printf '\nOpenvidu Information:'
+  printf '\n'
+  printf '\n  Installation Type: %s' "${OV_TYPE_INSTALLATION}"
+  printf '\n  Openvidu Version: %s' "${OV_VERSION}"
+  printf '\n  Openvidu Call Version: %s' "${OV_CALL_VERSION}"
+  printf '\n'
+  printf '\nSystem Information:'
+  printf '\n'
+  printf '\n  Linux Version:'
+  printf '\n    - %s' "${LINUX_VERSION}"
+  printf '\n  Docker Version: %s' "${DOCKER_VERSION}"
+  printf '\n  Docker Compose Version: %s' "${DOCKER_COMPOSE_VERSION}"
+  printf '\n'
+  printf '\nInstallation Information:'
+  printf '\n'
+  printf '\n  Installation Folder: %s' "${OV_FOLDER}"
+  printf '\n  Installation Folder Tree:'
+  printf '\n%s' "$(echo "${TREE_OV_DIRECTORY}" | sed -e 's/.//' -e ':a' -e 'N;$!ba' -e 's/\n/\n\t/g')"
+  printf '\n'
+  printf '\nDocker Running Services:'
+  printf '\n'
+  printf '\n  %s' "$(echo "${DOCKER_PS}" | sed -e ':a' -e 'N;$!ba' -e 's/\n/\n\t/g')"
+  printf '\n'
+}
+
+generate_report() {
+  collect_basic_information
+
+  REPORT_CREATION_DATE=$(date +"%d-%m-%Y")
+  REPORT_CREATION_TIME=$(date +"%H:%M:%S")
+  REPORT_NAME="openvidu-report-${REPORT_CREATION_DATE}-$(date +"%H-%M").txt"
+  REPORT_OUTPUT="${OV_FOLDER}/${REPORT_NAME}"
+
+  {
+    printf "\n  ======================================="
+    printf "\n  =         REPORT INFORMATION          ="
+    printf "\n  ======================================="
+    printf '\n'
+    printf '\n  Creation Date: %s' "${REPORT_CREATION_DATE}"
+    printf '\n  Creation Time: %s' "${REPORT_CREATION_TIME}"
+    printf '\n'
+    printf "\n  ======================================="
+    printf "\n  =       OPENVIDU INFORMATION          ="
+    printf "\n  ======================================="
+    printf '\n'
+    printf '\n  Installation Type: %s' "${OV_TYPE_INSTALLATION}"
+    printf '\n  Openvidu Version: %s' "${OV_VERSION}"
+    printf '\n  Openvidu Call Version: %s' "${OV_CALL_VERSION}"
+    printf '\n'
+    printf "\n  ======================================="
+    printf "\n  =         SYSTEM INFORMATION          ="
+    printf "\n  ======================================="
+    printf '\n'
+    printf '\n  Linux Version:'
+    printf '\n    - %s' "${LINUX_VERSION}"
+    printf '\n  Docker Version: %s' "${DOCKER_VERSION}"
+    printf '\n  Docker Compose Version: %s' "${DOCKER_COMPOSE_VERSION}"
+    printf '\n'
+    printf "\n  ======================================="
+    printf "\n  =     INSTALLATION INFORMATION        ="
+    printf "\n  ======================================="
+    printf '\n'
+    printf '\n  Installation Folder: %s' "${OV_FOLDER}"
+    printf '\n  Installation Folder Tree:'
+    printf '\n%s' "$(echo "${TREE_OV_DIRECTORY}" | sed -e 's/.//' -e ':a' -e 'N;$!ba' -e 's/\n/\n\t/g')"
+    printf '\n'
+    printf "\n  ======================================="
+    printf "\n  =      DOCKER RUNNING SERVICES        ="
+    printf "\n  ======================================="
+    printf '\n'
+    printf '\n  %s' "$(echo "${DOCKER_PS}" | sed -e ':a' -e 'N;$!ba' -e 's/\n/\n\t/g')"
+    printf '\n'
+    printf "\n  ======================================="
+    printf "\n  =        CONFIGURATION FILES          ="
+    printf "\n  ======================================="
+    printf '\n'
+    printf '\n  ================ .env ================='
+    printf '\n'
+    printf '\n'
+
+    cat < "${OV_FOLDER}/.env" | sed -r -e "s/OPENVIDU_SECRET=.+/OPENVIDU_SECRET=****/" -e "s/OPENVIDU_PRO_LICENSE=.+/OPENVIDU_PRO_LICENSE=****/" -e "s/ELASTICSEARCH_PASSWORD=.+/ELASTICSEARCH_PASSWORD=****/"
+
+    printf '\n'
+    printf '\n  ========= docker-compose.yml =========='
+    printf '\n'
+    printf '\n'
+
+    cat "${OV_FOLDER}/docker-compose.yml"
+
+    printf '\n'
+    printf '\n  ==== docker-compose.override.yml ===='
+    printf '\n'
+    printf '\n'
+
+    if [ -f "${OV_FOLDER}/docker-compose.override.yml" ]; then
+      cat < "${OV_FOLDER}/docker-compose.override.yml"
+    else
+      printf '\n  The docker-compose.override.yml file is not present'
+    fi
+
+    printf '\n'
+    printf '\n'
+    printf "\n  ======================================="
+    printf "\n  =                LOGS                 ="
+    printf "\n  ======================================="
+
+    for CONTAINER in $CONTAINERS
+    do
+      printf '\n'
+      printf "\n  ---------------------------------------"
+      printf "\n  %s" "$CONTAINER"
+      printf "\n  ---------------------------------------"
+      printf '\n'
+      docker logs "$CONTAINER"
+      printf "\n  ---------------------------------------"
+      printf '\n'
+      printf '\n'
+    done
+
+    printf "\n  ======================================="
+    printf "\n  =       CONTAINER ENVS VARIABLES      ="
+    printf "\n  ======================================="
+
+    for CONTAINER in $CONTAINERS
+    do
+      printf '\n'
+      printf "\n  ======================================="
+      printf "\n  %s" "$CONTAINER"
+      printf "\n  ---------------------------------------"
+      printf '\n'
+      docker exec "$CONTAINER" env
+      printf "\n  ---------------------------------------"
+      printf '\n'
+      printf '\n'
+    done
+
+  } >> "${REPORT_OUTPUT}" 2>&1
+
+  printf "\n  Generation of the report completed with success"
+  printf "\n  You can get your report at path '%s'" "${REPORT_OUTPUT}"
+  printf "\n"
+}
+
+is_external_url() {
+  local URL=$1
+  if [[ -z "$URL" ]]; then
+    return 1
+  fi
+  if [[ "${URL}" == *"localhost"* ]] || [[ "${URL}" == *"127.0.0.1"* ]] || [[ "${URL}" == *"::1"* ]]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+start_openvidu() {
+  local RUN_LOCAL_ES
+  local RUN_LOCAL_KIBANA
+  local CONFIGURED_ELASTICSEARCH_HOST
+  local CONFIGURED_KIBANA_HOST
+  CONFIGURED_ELASTICSEARCH_HOST=$(grep -v '^#' .env | grep OPENVIDU_PRO_ELASTICSEARCH_HOST | cut -d '=' -f2)
+  CONFIGURED_KIBANA_HOST=$(grep -v '^#' .env | grep OPENVIDU_PRO_KIBANA_HOST | cut -d '=' -f2)
+  COTURN_IN_MEDIA_NODES=$(grep -v '^#' .env | grep COTURN_IN_MEDIA_NODES | cut -d '=' -f2)
+  RUN_LOCAL_ES=true
+  RUN_LOCAL_KIBANA=true
+  if [[ -z "${COTURN_IN_MEDIA_NODES}" ]]; then
+    COTURN_IN_MEDIA_NODES=false
+  fi
+  if is_external_url "${CONFIGURED_ELASTICSEARCH_HOST}"; then
+    printf "Configured external elasticsearch: %s" "${CONFIGURED_ELASTICSEARCH_HOST}"
+    printf "\n"
+    RUN_LOCAL_ES=false
+  fi
+  if is_external_url "${CONFIGURED_KIBANA_HOST}"; then
+    printf "Configured external kibana: %s" "${CONFIGURED_KIBANA_HOST}"
+    printf "\n"
+    RUN_LOCAL_KIBANA=false
+  fi
+  docker-compose up -d \
+    $(if [ "${RUN_LOCAL_ES}" == "false" ]; then echo '--scale elasticsearch=0'; fi) \
+    $(if [ "${RUN_LOCAL_KIBANA}" == "false" ]; then echo '--scale kibana=0'; fi) \
+    $(if [ "${COTURN_IN_MEDIA_NODES}" == "true" ]; then echo '--scale coturn=0'; fi)
+}
+
+usage() {
+    printf "Usage: \n\t openvidu [command]"
+    printf "\n\nAvailable Commands:"
+    printf "\n\tstart\t\t\tStart all services"
+    printf "\n\tstop\t\t\tStop all services"
+    printf "\n\trestart\t\t\tRestart all stopped and running services"
+    printf "\n\tlogs\t\t\tShow openvidu-server logs"
+    printf "\n\tupgrade\t\t\tUpgrade to the latest Openvidu version"
+    printf "\n\tupgrade [version]\tUpgrade to the specific Openvidu version"
+    printf "\n\tversion\t\t\tShow version of Openvidu Server"
+    printf "\n\treport\t\t\tGenerate a report with the current status of Openvidu"
+    printf "\n\thelp\t\t\tShow help for openvidu command"
+    printf "\n"
+}
+
+[[ -z "${FOLLOW_OPENVIDU_LOGS}" ]] && FOLLOW_OPENVIDU_LOGS=true
+
+case $1 in
+
+  start)
+    start_openvidu
+    if [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]]; then
+      docker-compose logs -f --tail 10 openvidu-server
+    fi
+    ;;
+
+  stop)
+    docker-compose down
+    ;;
+
+  restart)
+    docker-compose down
+    start_openvidu
+    if [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]]; then
+      docker-compose logs -f --tail 10 openvidu-server
+    fi
+    ;;
+
+  logs)
+    case "${2-}" in
+      --follow|-f)
+        docker-compose logs -f --tail 10 openvidu-server
+        ;;
+      *)
+        docker-compose logs openvidu-server
+        ;;
+    esac
+    ;;
+
+  upgrade)
+    if [ -z "$2" ]; then
+      UPGRADE_VERSION="latest"
+    else
+      UPGRADE_VERSION="$2"
+    fi
+
+    read -r -p "  You're about to update OpenVidu Pro to '${UPGRADE_VERSION}' version. Are you sure? [y/N]: " response
+    case "$response" in
+      [yY][eE][sS]|[yY])
+        upgrade_ov "${UPGRADE_VERSION}"
+        ;;
+      *)
+        exit 0
+        ;;
+    esac
+    ;;
+
+  version)
+    version_ov
+    ;;
+
+  report)
+    read -r -p "  You are about to generate a report on the current status of Openvidu, this may take some time. Do you want to continue? [y/N]: " response
+    case "$response" in
+      [yY][eE][sS]|[yY])
+        generate_report
+        ;;
+      *)
+        exit 0
+        ;;
+    esac
+    ;;
+
+  *)
+    usage
+    ;;
+esac
