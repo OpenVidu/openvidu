@@ -21,6 +21,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
 	/**
 	 * Provides event notifications that fire when refresh recordings button has been clicked.
+	 * The recordings should be updated using the REST API.
 	 */
 	@Output() onRefreshRecordingsClicked: EventEmitter<void> = new EventEmitter<void>();
 

@@ -65,6 +65,6 @@ export class ThumbnailFromUrlPipe implements PipeTransform {
 			thumbnailUrl = `recordings/${thumbnailUrl?.split('.')[0]}/${thumbnailUrl}`;
 			return thumbnailUrl;
 		}
-		return '';
+		return url;
 	}
 }

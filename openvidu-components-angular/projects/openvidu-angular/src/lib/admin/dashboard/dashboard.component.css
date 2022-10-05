@@ -29,6 +29,7 @@
 #sort-menu-btn {
 	margin-left: 5px;
 	background-color: var(--ov-panel-background);
+	color: var(--ov-panel-text-color);
 }
 
 .search-bar {
