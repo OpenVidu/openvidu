@@ -24,10 +24,15 @@ jobs:
     - name: Send repository dispatch event
       env:
         GITHUB_TOKEN: ${{ secrets.OPENVIDU_DISPATCH_EVENT_GA }}
+        COMMIT_MESSAGE: ${{ github.event.head_commit.message || 'Manually' }}
+        COMMIT_SHA: ${{ github.event.head_commit.sha || 'Manually' }}
       run: |
-        gh api repos/OpenVidu/openvidu-call/dispatches \
-        -f event_type='openvidu-components-angular' \
-        -F client_payload={"commit-message": "${{ github.event.head_commit.message || 'Manually run' }}"}
+        curl \
+        -X POST \
+        -H "Accept: application/vnd.github+json" \
+        -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+        https://api.github.com/repos/OpenVidu/openvidu-call/dispatches \
+        -d '{"event_type":"openvidu-components-angular","client_payload":{"commit-message":"'$COMMIT_MESSAGE'","commit-ref":"'$COMMIT_SHA'"}}'
     - name: Run Selenium Chromedriver
       run: docker run -d --shm-size="2g" --network host selenium/standalone-chrome:104.0
     - name: Run openvidu-server-kms
