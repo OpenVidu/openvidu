@@ -4,6 +4,7 @@ on:
     paths:
       - 'openvidu-components-angular/**'
       - 'openvidu-browser/**'
+      - '.github/workflows/openvidu-components-angular-E2E.yml'
   pull_request:
     branches:
       - master
