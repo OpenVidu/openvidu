@@ -81,9 +81,6 @@ public class ConnectionPropertiesTest extends TestCase {
 		map = mapFromJsonString("{'type':'IPCAM','rtspUri':'NOT_A_VALID_RTSP_URI'}");
 		assertException(map, "rtspUri");
 
-		map = mapFromJsonString("{'type':'IPCAM','rtspUri':'https://domain.com'}");
-		assertException(map, "rtspUri");
-
 		map = mapFromJsonString("{'type':'IPCAM','rtspUri':'filse://your.camera.ip.sdp'}");
 		assertException(map, "rtspUri");
 	}
