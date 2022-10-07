@@ -1,5 +1,5 @@
-import { Builder, By, until, WebDriver } from 'selenium-webdriver';
 import { expect } from 'chai';
+import { Builder, By, until, WebDriver } from 'selenium-webdriver';
 import { WebComponentConfig } from './selenium.conf';
 
 const url = WebComponentConfig.appUrl;
@@ -425,6 +425,7 @@ describe('Testing API Directives', () => {
 	it('should HIDE the PARTICIPANT NAME', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&displayParticipantName=false`);
+		await browser.sleep(1000);
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
@@ -440,6 +441,8 @@ describe('Testing API Directives', () => {
 	it('should HIDE the AUDIO DETECTION element', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&displayAudioDetection=false`);
+		await browser.sleep(1000);
+
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
@@ -455,6 +458,8 @@ describe('Testing API Directives', () => {
 	it('should HIDE the STREAM SETTINGS button', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&settingsBtn=false`);
+		await browser.sleep(1000);
+
 		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
