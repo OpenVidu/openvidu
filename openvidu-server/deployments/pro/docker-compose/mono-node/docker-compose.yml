@@ -22,7 +22,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server-pro:2.23.0
+        image: openvidu/openvidu-server-pro:2.24.0-beta1
         restart: on-failure
         network_mode: host
         entrypoint: ['/usr/local/bin/entrypoint.sh']
@@ -123,7 +123,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     media-node-controller:
-        image: openvidu/media-node-controller:2.23.0
+        image: openvidu/media-node-controller:2.24.0-beta1
         restart: always
         ulimits:
             core: -1
