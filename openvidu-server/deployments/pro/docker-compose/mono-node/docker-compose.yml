@@ -128,6 +128,7 @@ services:
         ulimits:
             core: -1
         environment:
+            - MEDIA_NODE_CONTROLLER_RECORDINGS_PATH=/opt/openvidu/mncontroller/recordings
             - KMS_IMAGE=kurento/kurento-media-server:6.18.0
             - MEDIASOUP_IMAGE=openvidu/mediasoup-controller:2.23.0
             - METRICBEAT_IMAGE=docker.elastic.co/beats/metricbeat-oss:7.8.0
@@ -138,7 +139,7 @@ services:
         ports:
             - 3000:3000
         volumes:
-            - /opt/openvidu/recordings:/opt/openvidu/recordings
+            - /opt/openvidu/mncontroller/recordings:/opt/openvidu/mncontroller/recordings
             - /opt/openvidu/beats:/opt/openvidu/beats
             - /var/run/docker.sock:/var/run/docker.sock
             - /opt/openvidu/kurento-logs:/opt/openvidu/kurento-logs

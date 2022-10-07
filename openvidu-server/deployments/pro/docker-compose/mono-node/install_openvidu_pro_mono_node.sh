@@ -105,9 +105,11 @@ new_ov_installation() {
      chmod +x "${OPENVIDU_FOLDER}/openvidu" || fatal_error "Error while adding permission to 'openvidu' program"
      printf '\n          - openvidu'
 
-     # Change recording folder with all permissions
+     # Change recording folders with all permissions
      printf "\n     => Adding permission to 'recordings' folder..."
      mkdir -p "${OPENVIDU_FOLDER}/recordings"
+     mkdir -p "${OPENVIDU_FOLDER}/mncontroller/recordings"
+     chmod 777 "${OPENVIDU_FOLDER}/mncontroller/recordings"
 
      # Create own certificated folder
      printf "\n     => Creating folder 'owncert'..."
