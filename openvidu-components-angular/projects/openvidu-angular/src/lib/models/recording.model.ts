@@ -1,16 +1,13 @@
-export enum  RecordingStatus {
+export enum RecordingStatus {
 	STARTING = 'starting',
 	STARTED = 'started',
 	STOPPING = 'stopping',
 	STOPPED = 'stopped',
 	FAILED = 'failed',
 	READY = 'ready'
-};
+}
 
-/**
- * @internal
- */
- export interface RecordingInfo {
+export interface RecordingInfo {
 	status: RecordingStatus;
 	id?: string;
 	name?: string;
@@ -18,5 +15,5 @@ export enum  RecordingStatus {
 	createdAt?: number;
 	duration?: number;
 	size?: string;
-	url?: string
+	url?: string;
 }

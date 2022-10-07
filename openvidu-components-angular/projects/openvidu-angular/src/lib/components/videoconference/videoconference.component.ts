@@ -1,4 +1,4 @@
-import { trigger, state, style, transition, animate } from '@angular/animations';
+import { animate, style, transition, trigger } from '@angular/animations';
 import {
 	AfterViewInit,
 	Component,
@@ -14,9 +14,10 @@ import {
 import { OpenViduErrorName, Session } from 'openvidu-browser';
 import { Subscription } from 'rxjs';
 import {
+	ActivitiesPanelDirective,
+	AdditionalPanelsDirective,
 	ChatPanelDirective,
 	LayoutDirective,
-	AdditionalPanelsDirective,
 	PanelDirective,
 	ParticipantPanelItemDirective,
 	ParticipantPanelItemElementsDirective,
@@ -24,12 +25,11 @@ import {
 	StreamDirective,
 	ToolbarAdditionalButtonsDirective,
 	ToolbarAdditionalPanelButtonsDirective,
-	ToolbarDirective,
-	ActivitiesPanelDirective
+	ToolbarDirective
 } from '../../directives/template/openvidu-angular.directive';
 import { ILogger } from '../../models/logger.model';
 import { OpenViduEdition } from '../../models/openvidu.model';
-import { ParticipantAbstractModel, ParticipantProperties } from '../../models/participant.model';
+import { ParticipantAbstractModel } from '../../models/participant.model';
 import { TokenModel } from '../../models/token.model';
 import { ActionService } from '../../services/action/action.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
@@ -72,7 +72,8 @@ import { TranslateService } from '../../services/translate/translate.service';
  * | **streamDisplayAudioDetection**    | `boolean` | {@link StreamDisplayAudioDetectionDirective}    |
  * | **streamSettingsButton**           | `boolean` | {@link StreamSettingsButtonDirective}           |
  * | **participantPanelItemMuteButton** | `boolean` | {@link ParticipantPanelItemMuteButtonDirective} |
- * | **recordingActivityRecordingList** | `{@link RecordingInfo}[]` | {@link RecordingActivityRecordingListDirective} |
+ * | **recordingActivityRecordingList** | `{@link RecordingInfo}[]` | {@link RecordingActivityRecordingsListDirective} |
+ * | **recordingActivityRecordingError** | `any` | {@link RecordingActivityRecordingErrorDirective} |
  *
  * <p class="component-link-text">
  * <span class="italic">See all {@link ApiDirectiveModule API Directives}</span>

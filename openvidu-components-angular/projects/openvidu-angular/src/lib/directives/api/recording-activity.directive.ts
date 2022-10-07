@@ -1,4 +1,4 @@
-import { Directive, AfterViewInit, OnDestroy, Input, ElementRef } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular/core';
 import { RecordingInfo } from '../../models/recording.model';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 
@@ -30,7 +30,7 @@ export class RecordingActivityRecordingsListDirective implements AfterViewInit, 
 		this.update(this.recordingsValue);
 	}
 
-	recordingsValue: RecordingInfo [] = [];
+	recordingsValue: RecordingInfo[] = [];
 
 	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
 
@@ -41,8 +41,8 @@ export class RecordingActivityRecordingsListDirective implements AfterViewInit, 
 		this.clear();
 	}
 	clear() {
-		this.recordingsValue = null;
-		this.update(null);
+		this.recordingsValue = [];
+		this.update([]);
 	}
 
 	update(value: RecordingInfo[]) {
@@ -67,7 +67,7 @@ export class RecordingActivityRecordingsListDirective implements AfterViewInit, 
  * @example
  * <ov-recording-activity [recordingError]="error"></ov-recording-activity>
  */
- @Directive({
+@Directive({
 	selector: 'ov-videoconference[recordingActivityRecordingError], ov-recording-activity[recordingError]'
 })
 export class RecordingActivityRecordingErrorDirective implements AfterViewInit, OnDestroy {
@@ -80,7 +80,7 @@ export class RecordingActivityRecordingErrorDirective implements AfterViewInit, 
 		this.update(this.recordingErrorValue);
 	}
 
-	recordingErrorValue: RecordingInfo [] = [];
+	recordingErrorValue: any = null;
 
 	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { OpenViduRole } from '../../../../models/participant.model';
 import { RecordingInfo, RecordingStatus } from '../../../../models/recording.model';
@@ -7,9 +7,6 @@ import { OpenViduAngularConfigService } from '../../../../services/config/openvi
 import { ParticipantService } from '../../../../services/participant/participant.service';
 import { RecordingService } from '../../../../services/recording/recording.service';
 
-/**
- * @internal
- */
 @Component({
 	selector: 'ov-recording-activity',
 	templateUrl: './recording-activity.component.html',
@@ -40,11 +37,13 @@ export class RecordingActivityComponent implements OnInit {
 	 */
 	@Output() onDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
-
 	/**
 	 * @internal
 	 */
 	recordingStatus: RecordingStatus = RecordingStatus.STOPPED;
+	/**
+	 * @internal
+	 */
 	oldRecordingStatus: RecordingStatus;
 	/**
 	 * @internal
