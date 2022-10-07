@@ -169,7 +169,7 @@ public class ComposedRecordingService extends RecordingService {
 			Volume volume1 = new Volume("/recordings");
 			List<Volume> volumes = new ArrayList<>();
 			volumes.add(volume1);
-			Bind bind1 = new Bind(openviduConfig.getOpenViduRecordingPath(), volume1);
+			Bind bind1 = new Bind(openviduConfig.getOpenViduRecordingPath(properties.mediaNode()), volume1);
 			List<Bind> binds = new ArrayList<>();
 			binds.add(bind1);
 			containerId = dockerManager.runContainer(properties.mediaNode(), container, containerName, null, volumes,
@@ -205,7 +205,7 @@ public class ComposedRecordingService extends RecordingService {
 				recording.getSessionId());
 
 		CompositeWrapper compositeWrapper = new CompositeWrapper((KurentoSession) session,
-				"file://" + this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/" + properties.name()
+				"file://" + this.openviduConfig.getOpenViduRecordingPath(properties.mediaNode()) + recording.getId() + "/" + properties.name()
 						+ ".webm");
 		this.composites.put(session.getSessionId(), compositeWrapper);
 
@@ -431,7 +431,7 @@ public class ComposedRecordingService extends RecordingService {
 	}
 
 	protected void waitForVideoFileNotEmpty(Recording recording) throws Exception {
-		final String VIDEO_FILE = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
+		final String VIDEO_FILE = this.openviduConfig.getOpenViduRecordingPath(recording.getRecordingProperties().mediaNode()) + recording.getId() + "/"
 				+ recording.getName() + RecordingService.COMPOSED_RECORDING_EXTENSION;
 		this.fileManager.waitForFileToExistAndNotEmpty(recording.getRecordingProperties().mediaNode(), VIDEO_FILE);
 		log.info("File {} exists and is not empty", VIDEO_FILE);

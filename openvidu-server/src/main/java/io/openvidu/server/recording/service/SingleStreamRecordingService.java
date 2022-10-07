@@ -249,9 +249,10 @@ public class SingleStreamRecordingService extends RecordingService {
 
 					KurentoParticipant kurentoParticipant = (KurentoParticipant) participant;
 					MediaPipeline pipeline = kurentoParticipant.getPublisher().getPipeline();
+					String kmsUri = kurentoParticipant.getSession().getKms().getUri();
 
 					RecorderEndpoint recorder = new RecorderEndpoint.Builder(pipeline,
-							"file://" + openviduConfig.getOpenViduRemoteRecordingPath() + recordingId + "/" + fileName
+							"file://" + openviduConfig.getOpenViduRecordingPath(kmsUri) + recordingId + "/" + fileName
 									+ fileExtension).withMediaProfile(profile).build();
 
 					recorder.addRecordingListener(new EventListener<RecordingEvent>() {

@@ -224,7 +224,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 			Volume volume1 = new Volume("/recordings");
 			List<Volume> volumes = new ArrayList<>();
 			volumes.add(volume1);
-			Bind bind1 = new Bind(openviduConfig.getOpenViduRecordingPath(), volume1);
+			Bind bind1 = new Bind(openviduConfig.getOpenViduRecordingPath(properties.mediaNode()), volume1);
 			List<Bind> binds = new ArrayList<>();
 			binds.add(bind1);
 			containerId = dockerManager.runContainer(properties.mediaNode(), container, containerName, null, volumes,
@@ -245,7 +245,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 	private void waitForComposedQuickStartFiles(Recording recording) throws Exception {
 
 		final int SECONDS_MAX_WAIT = fileManager.maxSecondsWaitForFile();
-		final String PATH = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
+		final String PATH = this.openviduConfig.getOpenViduRecordingPath(recording.getRecordingProperties().mediaNode()) + recording.getId() + "/";
 
 		// Waiting for the files generated at the end of the stopping process: the
 		// ffprobe info and the thumbnail
