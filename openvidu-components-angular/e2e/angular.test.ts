@@ -1,5 +1,5 @@
-import { Builder, By, until, WebDriver } from 'selenium-webdriver';
 import { expect } from 'chai';
+import { Builder, By, until, WebDriver } from 'selenium-webdriver';
 
 import { AngularConfig } from './selenium.conf';
 
@@ -256,7 +256,7 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 		expect(element.length).equals(1);
 		element = await browser.wait(until.elementLocated(By.id('additional-panel-title')), TIMEOUT);
 		await browser.wait(until.elementTextMatches(element, /NEW PANEL/), TIMEOUT);
-		expect(await element.getAttribute("innerText")).equals('NEW PANEL');
+		expect(await element.getAttribute('innerText')).equals('NEW PANEL');
 
 		await panelBtn.click();
 
@@ -349,7 +349,7 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 		expect(element.length).equals(1);
 		element = await browser.wait(until.elementLocated(By.id('activities-panel-title')), TIMEOUT);
 		await browser.wait(until.elementTextMatches(element, /CUSTOM ACTIVITIES PANEL/), TIMEOUT);
-		expect(await element.getAttribute("innerText")).equals('CUSTOM ACTIVITIES PANEL');
+		expect(await element.getAttribute('innerText')).equals('CUSTOM ACTIVITIES PANEL');
 	});
 
 	it('should inject the CUSTOM PANEL with PARTICIPANTS PANEL only and without children', async () => {
@@ -514,7 +514,6 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 		expect(element.length).equals(0);
 	});
 
-
 	it('should inject an ACTIVITIES PANEL only', async () => {
 		let element;
 		await browser.get(`${url}`);
@@ -573,7 +572,7 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 		expect(element.length).equals(1);
 		element = await browser.wait(until.elementLocated(By.id('additional-panel-title')), TIMEOUT);
 		await browser.wait(until.elementTextMatches(element, /NEW PANEL/), TIMEOUT);
-		expect(await element.getAttribute("innerText")).equals('NEW PANEL');
+		expect(await element.getAttribute('innerText')).equals('NEW PANEL');
 
 		await panelBtn.click();
 
@@ -697,8 +696,10 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Click on button for opening participants panel
+		await browser.sleep(500);
 		element = await browser.wait(until.elementLocated(By.id('participants-panel-btn')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
+		expect(await element.isEnabled()).to.be.true;
 		await element.click();
 
 		// Check if custom panel is not present
@@ -1123,7 +1124,6 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
-
 		// Open more options menu
 		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
 		await element.click();
@@ -1180,8 +1180,6 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
-
-
 
 		element = await browser.findElements(By.id('screenshare-btn'));
 		expect(element.length).equals(0);
@@ -1291,7 +1289,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		await element.click();
 
 		// Switch to first tab
-		browser.switchTo().window(tabs[0]);
+		await browser.switchTo().window(tabs[0]);
 
 		element = await browser.wait(until.elementsLocated(By.id('remote-participant-item')), TIMEOUT);
 		expect(element.length).equals(1);
@@ -1460,7 +1458,6 @@ describe('Testing EVENTS', () => {
 		const fullscreenButton = await browser.findElement(By.id('fullscreen-btn'));
 		expect(await fullscreenButton.isDisplayed()).to.be.true;
 		await fullscreenButton.click();
-
 
 		// Checking if onFullscreenButtonClicked has been received
 		element = await browser.wait(until.elementLocated(By.id('onFullscreenButtonClicked')), TIMEOUT);
