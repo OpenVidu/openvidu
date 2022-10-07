@@ -34,7 +34,7 @@ jobs:
         https://api.github.com/repos/OpenVidu/openvidu-call/dispatches \
         -d '{"event_type":"openvidu-components-angular","client_payload":{"commit-message":"'"$COMMIT_MESSAGE"'","commit-ref":"'"$COMMIT_URL"'"}}'
     - name: Run Selenium Chromedriver
-      run: docker run -d --shm-size="2g" --network host selenium/standalone-chrome:104.0
+      run: docker run -d --shm-size="2g" --network host selenium/standalone-chrome:106.0
     - name: Run openvidu-server-kms
       run: |
         docker run -p 4443:4443 --rm -d \
