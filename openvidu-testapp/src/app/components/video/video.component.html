@@ -35,6 +35,9 @@
             <button *ngIf="!this.unpublished" class="video-btn reconnect-publisher-btn" title="Reconnect publisher" (click)="reconnect()">
                 <mat-icon aria-label="Reconnect publisher" class="mat-icon material-icons" role="img" aria-hidden="true">refresh</mat-icon>
             </button>
+            <button *ngIf="streamManager.stream.hasAudio && !this.unpublished" class="video-btn stt-btn" title="Speech To Text" (click)="speechToText()">
+                <mat-icon aria-label="Speech To Text" class="mat-icon material-icons" role="img" aria-hidden="true">{{captionIcon}}</mat-icon>
+            </button>
             <button *ngIf="!this.unpublished" class="video-btn rec-btn publisher-rec-btn" title="Record" (click)="record()">
                 <mat-icon aria-label="Start/Stop local recording" class="mat-icon material-icons" role="img" aria-hidden="true">
                     {{recordIcon}}</mat-icon>
@@ -78,6 +81,9 @@
             </button>
             <button *ngIf="!!pubSubVideoIcon" class="video-btn reconnect-subscriber-btn" title="Reconnect subscriber" (click)="reconnect()">
                 <mat-icon aria-label="Reconnect subscriber" class="mat-icon material-icons" role="img" aria-hidden="true">refresh</mat-icon>
+            </button>
+            <button *ngIf="streamManager.stream.hasAudio && !!captionIcon" class="video-btn stt-btn" title="Speech To Text" (click)="speechToText()">
+                <mat-icon aria-label="Speech To Text" class="mat-icon material-icons" role="img" aria-hidden="true">{{captionIcon}}</mat-icon>
             </button>
             <button *ngIf="OV.session.capabilities.forceUnpublish" class="video-btn force-unpub-btn" title="Force Unpublish" (click)="forceUnpublish()">
                 <mat-icon aria-label="Force unpublish" class="mat-icon material-icons" role="img" aria-hidden="true">voice_over_off</mat-icon>
