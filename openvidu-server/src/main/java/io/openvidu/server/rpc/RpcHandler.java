@@ -48,6 +48,8 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.ConnectionProperties;
+import io.openvidu.java.client.ConnectionType;
+import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.utils.FormatChecker;
 import io.openvidu.server.config.OpenviduBuildInfo;
 import io.openvidu.server.config.OpenviduConfig;
@@ -257,27 +259,42 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 
 		boolean recorder = false;
-
 		try {
 			recorder = getBooleanParam(request, ProtocolElements.JOINROOM_RECORDER_PARAM);
 		} catch (RuntimeException e) {
 			// Nothing happens. 'recorder' param to false
 		}
 
+		boolean stt = false;
+		try {
+			stt = getBooleanParam(request, ProtocolElements.JOINROOM_STT_PARAM);
+		} catch (RuntimeException e) {
+			// Nothing happens. 'stt' param to false
+		}
+
 		boolean generateRecorderParticipant = false;
+		boolean generateSttParticipant = false;
 
 		if (openviduConfig.isOpenViduSecret(secret)) {
+
+			if (recorder) {
+				generateRecorderParticipant = true;
+			} else if (stt) {
+				generateSttParticipant = true;
+			}
+
 			sessionManager.newInsecureParticipant(participantPrivateId);
+
 			token = IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 					+ RandomStringUtils.randomAlphanumeric(15);
+			ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
+					.role(OpenViduRole.SUBSCRIBER).build();
+
 			try {
-				sessionManager.newTokenForInsecureUser(session, token, new ConnectionProperties.Builder().build());
+				sessionManager.newTokenForInsecureUser(session, token, connectionProperties);
 			} catch (Exception e) {
 				throw new OpenViduException(Code.TOKEN_CANNOT_BE_CREATED_ERROR_CODE,
 						"Unable to create token for session " + sessionId + ": " + e.getMessage());
-			}
-			if (recorder) {
-				generateRecorderParticipant = true;
 			}
 		}
 
@@ -298,12 +315,16 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 						if (generateRecorderParticipant) {
 							participant = sessionManager.newRecorderParticipant(session, participantPrivateId, tokenObj,
 									clientMetadata);
+						} else if (generateSttParticipant) {
+							participant = sessionManager.newSttParticipant(session, participantPrivateId, tokenObj,
+									clientMetadata);
 						} else {
 							participant = sessionManager.newParticipant(session, participantPrivateId, tokenObj,
 									clientMetadata, location, platform,
 									httpSession.getId().substring(0, Math.min(16, httpSession.getId().length())));
 							log.info("New Connection {} in Session {} with IP {} and platform {}",
-									participant.getParticipantPublicId(), sessionId, remoteAddress.getHostAddress(),
+									participant.getParticipantPublicId(), sessionId,
+									remoteAddress != null ? remoteAddress.getHostAddress() : "UNKNOWN",
 									participant.getPlatform());
 						}
 
@@ -919,7 +940,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		} catch (VersionMismatchException e) {
 			if (e.isIncompatible()) {
 
-				if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+				if (participant.isRecorderParticipant()) {
 					log.error(
 							"The COMPOSED recording layout is using an incompatible version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). This may cause the system to malfunction",
 							clientVersion, serverVersion);
@@ -936,7 +957,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			} else {
 				DefaultArtifactVersion v = new DefaultArtifactVersion(serverVersion);
 
-				if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+				if (participant.isRecorderParticipant()) {
 					log.warn(
 							"The COMPOSED recording layout has an older version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). These versions are still compatible with each other, "
 									+ "but client SDK must be updated as soon as possible to {}.x. This recording layout using openvidu-browser {} will become incompatible with the next release of openvidu-server",

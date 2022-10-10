@@ -23,7 +23,7 @@ public class OpenViduException extends JsonRpcErrorException {
 	private static final long serialVersionUID = 1L;
 
 	public static enum Code {
-		GENERIC_ERROR_CODE(999), WRONG_PATH_CODE(998),
+		GENERIC_ERROR_CODE(999), WRONG_PATH_CODE(998), WRONG_OPENVIDU_EDITION(997),
 
 		TRANSPORT_ERROR_CODE(803), TRANSPORT_RESPONSE_ERROR_CODE(802), TRANSPORT_REQUEST_ERROR_CODE(801),
 
@@ -55,7 +55,7 @@ public class OpenViduException extends JsonRpcErrorException {
 
 		FORCED_CODEC_NOT_FOUND_IN_SDPOFFER(800),
 
-		MEDIA_NODE_NOT_FOUND(900), MEDIA_NODE_STATUS_WRONG(901);
+		MEDIA_NODE_NOT_FOUND(900), MEDIA_NODE_STATUS_WRONG(901), MEDIA_NODE_CONNECTION_ERROR_CODE(902);
 
 		private int value;
 

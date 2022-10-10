@@ -95,6 +95,10 @@ export class OpenVidu {
     /**
      * @hidden
      */
+    stt = false;
+    /**
+     * @hidden
+     */
     iceServers: RTCIceServer[];
     /**
      * @hidden
@@ -930,6 +934,13 @@ export class OpenVidu {
      */
     getRecorder(): boolean {
         return this.recorder;
+    }
+
+    /**
+     * @hidden
+     */
+    getStt(): boolean {
+        return this.stt;
     }
 
     /**

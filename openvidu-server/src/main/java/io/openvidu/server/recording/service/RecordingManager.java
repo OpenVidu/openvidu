@@ -673,8 +673,9 @@ public class RecordingManager {
 								if (session.isClosed()) {
 									return;
 								}
-								if (session.getParticipants().size() == 0 || session.onlyRecorderParticipant()) {
-									// Close session if there are no participants connected (RECORDER does not
+								if (session.getParticipants().size() == 0
+										|| session.onlyRecorderAndOrSttParticipant()) {
+									// Close session if there are no participants connected (RECORDER or STT do not
 									// count) and publishing
 									log.info("Closing session {} after automatic stop of recording {}",
 											session.getSessionId(), recordingId);
@@ -726,10 +727,10 @@ public class RecordingManager {
 						if (session.isClosed()) {
 							return false;
 						}
-						if (session.getParticipants().size() == 0 || session.onlyRecorderParticipant()) {
-							// Close session if there are no participants connected (except for RECORDER).
-							// This code will only be executed if recording is manually stopped during the
-							// automatic stop timeout, so the session must be also closed
+						if (session.getParticipants().size() == 0 || session.onlyRecorderAndOrSttParticipant()) {
+							// Close session if there are no participants connected (except for RECORDER or
+							// STT). This code will only be executed if recording is manually stopped during
+							// the automatic stop timeout, so the session must be also closed
 							log.info(
 									"Ongoing recording of session {} was explicetly stopped within timeout for automatic recording stop. Closing session",
 									session.getSessionId());

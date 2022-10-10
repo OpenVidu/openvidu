@@ -38,7 +38,6 @@ import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
-import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.recording.service.RecordingManager;
@@ -140,9 +139,13 @@ public class Session implements SessionInterface {
 		return null;
 	}
 
-	public boolean onlyRecorderParticipant() {
-		return this.participants.size() == 1 && ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
-				.equals(this.participants.values().iterator().next().getParticipantPublicId());
+	public boolean onlyRecorderAndOrSttParticipant() {
+		if (this.participants.size() == 1) {
+			return this.participants.values().iterator().next().isRecorderOrSttParticipant();
+		} else if (this.participants.size() == 2) {
+			return this.participants.values().stream().allMatch(p -> p.isRecorderOrSttParticipant());
+		}
+		return false;
 	}
 
 	public int getActivePublishers() {
@@ -216,8 +219,8 @@ public class Session implements SessionInterface {
 		Set<Participant> snapshotOfActiveConnections = this.getParticipants().stream().collect(Collectors.toSet());
 		JsonArray jsonArray = new JsonArray();
 		snapshotOfActiveConnections.forEach(participant -> {
-			// Filter recorder participant
-			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+			// Filter RECORDER and STT participants
+			if (!participant.isRecorderOrSttParticipant()) {
 				jsonArray.add(withWebrtcStats ? participant.withStatsToJson() : participant.toJson());
 			}
 		});

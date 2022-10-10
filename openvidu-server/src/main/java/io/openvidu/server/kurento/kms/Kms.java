@@ -59,6 +59,7 @@ public class Kms {
 	private String id; // Dynamic ID
 	private String uri;
 	private String ip;
+	private String masterNodePrivateIp;
 	private KurentoClient client;
 	private MediaServer mediaServer;
 	private UpdatableTimerTask clientReconnectTimer;
@@ -117,6 +118,14 @@ public class Kms {
 
 	public String getIp() {
 		return ip;
+	}
+
+	public String getMasterNodePrivateIp() {
+		return masterNodePrivateIp;
+	}
+
+	public void setMasterNodePrivateIp(String masterNodePrivateIp) {
+		this.masterNodePrivateIp = masterNodePrivateIp;
 	}
 
 	public double getLoad() {

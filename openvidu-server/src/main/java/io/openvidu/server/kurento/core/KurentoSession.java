@@ -37,7 +37,6 @@ import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
-import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.MediaOptions;
@@ -87,7 +86,7 @@ public class KurentoSession extends Session {
 
 		log.info("SESSION {}: Added participant {}", sessionId, participant);
 
-		if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+		if (!participant.isRecorderOrSttParticipant()) {
 			kurentoEndpointConfig.getCdr().recordParticipantJoined(participant, sessionId);
 		}
 	}
@@ -381,9 +380,9 @@ public class KurentoSession extends Session {
 	}
 
 	public int getNumberOfWebrtcConnections() {
-		return this.getActivePublishers() + this.participants.values().stream()
-				.filter(p -> !ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(p.getParticipantPublicId()))
-				.mapToInt(p -> ((KurentoParticipant) p).getSubscribers().size()).reduce(0, Integer::sum);
+		return this.getActivePublishers()
+				+ this.participants.values().stream().filter(p -> !p.isRecorderOrSttParticipant())
+						.mapToInt(p -> ((KurentoParticipant) p).getSubscribers().size()).reduce(0, Integer::sum);
 	}
 
 }

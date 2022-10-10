@@ -262,6 +262,12 @@ public class KurentoSessionManager extends SessionManager {
 						// If session is closed by a call to "DELETE /api/sessions" do NOT stop the
 						// recording. Will be stopped after in method
 						// "SessionManager.closeSessionAndEmptyCollections"
+
+						boolean recordingParticipantLeft = (remainingParticipants.size() == 1
+								&& remainingParticipants.iterator().next().isRecorderParticipant())
+								|| (remainingParticipants.size() == 2 && remainingParticipants.stream()
+										.allMatch(p -> p.isRecorderOrSttParticipant()));
+
 						if (remainingParticipants.isEmpty()) {
 							if (openviduConfig.isRecordingModuleEnabled()
 									&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
@@ -297,23 +303,19 @@ public class KurentoSessionManager extends SessionManager {
 											sessionId);
 								}
 							}
-						} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
+						} else if (recordingParticipantLeft && openviduConfig.isRecordingModuleEnabled()
 								&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-								&& this.recordingManager.sessionIsBeingRecorded(sessionId)
-								&& ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
-										.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
-							// RECORDER participant is the last one standing. Start countdown
+								&& this.recordingManager.sessionIsBeingRecorded(sessionId)) {
+							// RECORDER or STT participant is the last one standing. Start countdown
 							log.info(
 									"Last participant left. Starting {} seconds countdown for stopping recording of session {}",
 									this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
 							recordingManager.initAutomaticRecordingStopThread(session);
 
-						} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
+						} else if (recordingParticipantLeft && openviduConfig.isRecordingModuleEnabled()
 								&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
 								&& session.getSessionProperties().defaultRecordingProperties().outputMode()
-										.equals(Recording.OutputMode.COMPOSED_QUICK_START)
-								&& ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
-										.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
+										.equals(Recording.OutputMode.COMPOSED_QUICK_START)) {
 							// If no recordings are active in COMPOSED_QUICK_START output mode, stop
 							// container
 							recordingManager.stopComposedQuickStartContainer(session, reason);
@@ -1200,10 +1202,14 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Override
 	public void onSubscribeToSpeechToText(Participant participant, Integer transactionId, JsonArray connectionIds) {
+		sessionEventsHandler.onUnsubscribeToSpeechToText(participant, transactionId, new OpenViduException(
+				Code.WRONG_OPENVIDU_EDITION, "Speech To text requires OpenVidu Pro/Enterprise edition"));
 	}
 
 	@Override
 	public void onUnsubscribeFromSpeechToText(Participant participant, Integer transactionId, JsonArray connectionIds) {
+		sessionEventsHandler.onUnsubscribeToSpeechToText(participant, transactionId, new OpenViduException(
+				Code.WRONG_OPENVIDU_EDITION, "Speech To text requires OpenVidu Pro/Enterprise edition"));
 	}
 
 	private String mungeSdpOffer(Session kSession, Participant participant, String sdpOffer, boolean isPublisher) {

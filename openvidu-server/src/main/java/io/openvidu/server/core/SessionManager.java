@@ -444,6 +444,17 @@ public abstract class SessionManager {
 		}
 	}
 
+	public Participant newSttParticipant(Session session, String participantPrivateId, Token token, String clientMetadata) {
+		String sessionId = session.getSessionId();
+		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
+			return newParticipantAux(sessionId, session.getUniqueSessionId(), null, participantPrivateId,
+					ProtocolElements.STT_PARTICIPANT_PUBLICID, token, clientMetadata, null, null,
+					EndpointType.WEBRTC_ENDPOINT);
+		} else {
+			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);
+		}
+	}
+
 	public Participant newIpcamParticipant(Session session, String ipcamId, Token token, GeoLocation location,
 			String platform) {
 		String sessionId = session.getSessionId();

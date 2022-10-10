@@ -40,6 +40,7 @@ public class ProtocolElements {
 	public static final String JOINROOM_PLATFORM_PARAM = "platform";
 	public static final String JOINROOM_SDKVERSION_PARAM = "sdkVersion";
 	public static final String JOINROOM_RECORDER_PARAM = "recorder";
+	public static final String JOINROOM_STT_PARAM = "stt";
 
 	public static final String JOINROOM_PEERID_PARAM = "id";
 	public static final String JOINROOM_PEERCREATEDAT_PARAM = "createdAt";
@@ -236,4 +237,5 @@ public class ProtocolElements {
 	public static final String CUSTOM_NOTIFICATION = "customNotification";
 
 	public static final String RECORDER_PARTICIPANT_PUBLICID = "RECORDER";
+	public static final String STT_PARTICIPANT_PUBLICID = "SPEECH_TO_TEXT";
 }

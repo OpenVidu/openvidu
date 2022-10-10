@@ -46,7 +46,6 @@ import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
-import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.cdr.WebrtcDebugEvent;
 import io.openvidu.server.config.OpenviduConfig;
@@ -284,8 +283,7 @@ public class KurentoParticipant extends Participant {
 						String sdpAnswer = subscriber.subscribe(sdpString, kSender.getPublisher());
 						log.info("PARTICIPANT {}: Is now receiving video from {} in room {}",
 								this.getParticipantPublicId(), senderName, this.session.getSessionId());
-						if (!silent && !ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
-								.equals(this.getParticipantPublicId())) {
+						if (!silent && !this.isRecorderOrSttParticipant()) {
 							endpointConfig.getCdr().recordNewSubscriber(this, sender.getPublisherStreamId(),
 									sender.getParticipantPublicId(), subscriber.createdAt());
 						}
@@ -591,7 +589,7 @@ public class KurentoParticipant extends Participant {
 					}
 				}
 
-				if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
+				if (!this.isRecorderOrSttParticipant()) {
 					endpointConfig.getCdr().stopSubscriber(this.getParticipantPublicId(), senderName,
 							subscriber.getStreamId(), reason);
 				}

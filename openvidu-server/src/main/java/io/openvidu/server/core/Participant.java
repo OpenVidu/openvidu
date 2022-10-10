@@ -22,6 +22,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.gson.JsonObject;
 
+import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.server.kurento.endpoint.EndpointType;
 import io.openvidu.server.utils.GeoLocation;
 
@@ -218,6 +219,18 @@ public class Participant {
 	public boolean isIpcam() {
 		return this.platform != null && this.platform.equals("IPCAM")
 				&& this.participantPrivateId.startsWith(IdentifierPrefixes.IPCAM_ID);
+	}
+
+	public boolean isRecorderParticipant() {
+		return ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.participantPublicId);
+	}
+
+	public boolean isSttParticipant() {
+		return ProtocolElements.STT_PARTICIPANT_PUBLICID.equals(this.participantPublicId);
+	}
+
+	public boolean isRecorderOrSttParticipant() {
+		return (this.isRecorderParticipant() || this.isSttParticipant());
 	}
 
 	public String getPublisherStreamId() {

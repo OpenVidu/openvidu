@@ -1378,7 +1378,8 @@ export class Session extends EventDispatcher {
             sdkVersion: this.openvidu.libraryVersion,
             metadata: !!this.options.metadata ? this.options.metadata : '',
             secret: this.openvidu.getSecret(),
-            recorder: this.openvidu.getRecorder()
+            recorder: this.openvidu.getRecorder(),
+            stt: this.openvidu.getStt()
         };
         return joinParams;
     }
@@ -1538,6 +1539,7 @@ export class Session extends EventDispatcher {
                 sessionId: queryParams['sessionId'],
                 secret: queryParams['secret'],
                 recorder: queryParams['recorder'],
+                stt: queryParams['stt'],
                 webrtcStatsInterval: queryParams['webrtcStatsInterval'],
                 sendBrowserLogs: queryParams['sendBrowserLogs'],
                 edition: queryParams['edition'],
@@ -1688,6 +1690,9 @@ export class Session extends EventDispatcher {
         }
         if (!!tokenParams.recorder) {
             this.openvidu.recorder = true;
+        }
+        if (!!tokenParams.stt) {
+            this.openvidu.stt = true;
         }
         if (!!tokenParams.webrtcStatsInterval) {
             this.openvidu.webrtcStatsInterval = tokenParams.webrtcStatsInterval;
