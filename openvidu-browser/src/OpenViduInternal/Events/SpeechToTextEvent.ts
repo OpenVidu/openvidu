@@ -42,7 +42,7 @@ export class SpeechToTextEvent extends Event {
      * @hidden
      */
     constructor(target: Session, connection: Connection, timestamp: number, raw: string) {
-        super(false, target, 'speechToText');
+        super(false, target, 'speechToTextMessage');
         this.connection = connection;
         this.timestamp = timestamp;
         this.raw = raw;

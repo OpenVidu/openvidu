@@ -6,7 +6,7 @@ import {
 import {
   OpenVidu, Session, Subscriber, Publisher, Event, StreamEvent, ConnectionEvent,
   SessionDisconnectedEvent, SignalEvent, RecordingEvent,
-  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, ConnectionPropertyChangedEvent, OpenViduError, NetworkQualityLevelChangedEvent, ExceptionEvent, OpenViduAdvancedConfiguration
+  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, ConnectionPropertyChangedEvent, OpenViduError, NetworkQualityLevelChangedEvent, ExceptionEvent, OpenViduAdvancedConfiguration, SpeechToTextEvent
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,
@@ -141,6 +141,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     signal: true,
     publisherStartSpeaking: false,
     publisherStopSpeaking: false,
+    speechToTextMessage: true,
     reconnecting: true,
     reconnected: true,
     exception: true
@@ -255,6 +256,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       signal: false,
       publisherStartSpeaking: true,
       publisherStopSpeaking: true,
+      speechToTextMessage: false,
       reconnecting: false,
       reconnected: false,
       exception: false
@@ -515,6 +517,17 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       }
     }
 
+    if (this.sessionEvents.speechToTextMessage !== oldValues.speechToTextMessage || firstTime) {
+      if (!this.sessionEvents.speechToTextMessage) {
+        this.session.off('speechToTextMessage');
+      }
+      if (this.sessionEvents.speechToTextMessage) {
+        this.session.on('speechToTextMessage', (event: SpeechToTextEvent) => {
+          this.updateEventList('speechToTextMessage', event.connection.connectionId, event);
+        });
+      }
+    }
+
     if (this.sessionEvents.reconnecting !== oldValues.reconnecting || firstTime) {
       this.session.off('reconnecting');
       if (this.sessionEvents.reconnecting) {
@@ -700,6 +713,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       signal: this.sessionEvents.signal,
       publisherStartSpeaking: this.sessionEvents.publisherStartSpeaking,
       publisherStopSpeaking: this.sessionEvents.publisherStopSpeaking,
+      speechToTextMessage: this.sessionEvents.speechToTextMessage,
       reconnecting: this.sessionEvents.reconnecting,
       reconnected: this.sessionEvents.reconnected,
       exception: this.sessionEvents.exception
@@ -735,6 +749,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         signal: result.signal,
         publisherStartSpeaking: result.publisherStartSpeaking,
         publisherStopSpeaking: result.publisherStopSpeaking,
+        speechToTextMessage: result.speechToTextMessage,
         reconnecting: result.reconnecting,
         reconnected: result.reconnected,
         exception: result.exception

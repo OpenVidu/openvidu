@@ -1320,7 +1320,7 @@ export class Session extends EventDispatcher {
     async onSpeechToTextMessage(event: { streamId: string; connectionId: string; sessionId: string, timestamp: number, raw: string }): Promise<void> {
         const connection = await this.getConnection(event.connectionId, 'No connection found for connectionId ' + event.connectionId);
         const ev = new SpeechToTextEvent(this, connection, event.timestamp, event.raw);
-        this.ee.emitEvent('speechToText', [ev]);
+        this.ee.emitEvent('speechToTextMessage', [ev]);
         if (ev.raw.includes('text')) {
             console.log(ev);
         }
