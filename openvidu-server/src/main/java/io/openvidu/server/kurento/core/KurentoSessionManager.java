@@ -654,7 +654,7 @@ public class KurentoSessionManager extends SessionManager {
 						WebrtcDebugEventOperation.subscribe, WebrtcDebugEventType.sdpAnswer, sdpString));
 
 				kParticipant.receiveMedia(senderParticipant, sdpString, false, true);
-				sessionEventsHandler.onSubscribe(participant, session, transactionId, null);
+				sessionEventsHandler.onSubscribeServerInitiatedNegotiation(participant, session, transactionId, null);
 
 			} else {
 
@@ -682,12 +682,13 @@ public class KurentoSessionManager extends SessionManager {
 
 				CDR.log(new WebrtcDebugEvent(participant, subscriberEndpointName, WebrtcDebugEventIssuer.server,
 						WebrtcDebugEventOperation.subscribe, WebrtcDebugEventType.sdpAnswer, sdpAnswer));
-				sessionEventsHandler.onSubscribe(participant, session, sdpAnswer, transactionId, null);
+				sessionEventsHandler.onSubscribeClientInitiatedNegotiation(participant, session, sdpAnswer,
+						transactionId, null);
 			}
 
 		} catch (OpenViduException e) {
 			log.error("PARTICIPANT {}: Error subscribing to {}", participant.getParticipantPublicId(), senderName, e);
-			sessionEventsHandler.onSubscribe(participant, session, null, transactionId, e);
+			sessionEventsHandler.onSubscribeServerInitiatedNegotiation(participant, session, transactionId, e);
 		}
 	}
 
@@ -1275,7 +1276,7 @@ public class KurentoSessionManager extends SessionManager {
 				log.debug("SDP Answer for subscribing reconnection PARTICIPANT {}: {}",
 						kParticipant.getParticipantPublicId(), sdpAnswer);
 
-				sessionEventsHandler.onSubscribe(kParticipant, kSession, sdpAnswer, transactionId, null);
+				sessionEventsHandler.onSubscribeServerInitiatedNegotiation(kParticipant, kSession, transactionId, null);
 
 			} else {
 
@@ -1306,7 +1307,8 @@ public class KurentoSessionManager extends SessionManager {
 				CDR.log(new WebrtcDebugEvent(kParticipant, subscriberEndpointName, WebrtcDebugEventIssuer.server,
 						operation, WebrtcDebugEventType.sdpAnswer, sdpAnswer));
 
-				sessionEventsHandler.onSubscribe(kParticipant, kSession, sdpAnswer, transactionId, null);
+				sessionEventsHandler.onSubscribeClientInitiatedNegotiation(kParticipant, kSession, sdpAnswer,
+						transactionId, null);
 
 			}
 

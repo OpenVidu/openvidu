@@ -355,9 +355,8 @@ public class SessionEventsHandler {
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
 	}
 
-	// TODO: REMOVE ON 2.18.0
-	public void onSubscribe(Participant participant, Session session, String sdpAnswer, Integer transactionId,
-			OpenViduException error) {
+	public void onSubscribeClientInitiatedNegotiation(Participant participant, Session session, String sdpAnswer,
+			Integer transactionId, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
@@ -373,9 +372,9 @@ public class SessionEventsHandler {
 			});
 		}
 	}
-	// END TODO
 
-	public void onSubscribe(Participant participant, Session session, Integer transactionId, OpenViduException error) {
+	public void onSubscribeServerInitiatedNegotiation(Participant participant, Session session, Integer transactionId,
+			OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
