@@ -24,6 +24,7 @@ import { PublisherSpeakingEvent } from '../PublisherSpeakingEvent';
 import { RecordingEvent } from '../RecordingEvent';
 import { SessionDisconnectedEvent } from '../SessionDisconnectedEvent';
 import { SignalEvent } from '../SignalEvent';
+import { SpeechToTextEvent } from '../SpeechToTextEvent';
 import { StreamEvent } from '../StreamEvent';
 import { StreamPropertyChangedEvent } from '../StreamPropertyChangedEvent';
 
@@ -157,6 +158,13 @@ export interface SessionEventMap extends EventMap {
      * Event dispatched when the network quality level of a [[Connection]] changes. See [network quality](/en/stable/advanced-features/network-quality/).
      */
     networkQualityLevelChanged: NetworkQualityLevelChangedEvent;
+
+    /**
+     * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
+     *
+     * Event dispatched when a speech-to-text message has been received for certain Stream. See [Speech To Text](/en/stable/advanced-features/speech-to-text/).
+     */
+    speechToTextMessage: SpeechToTextEvent;
 
     /**
      * Event dispatched when the local user has lost its connection to the session, and starts the automatic reconnection process.

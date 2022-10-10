@@ -28,6 +28,7 @@ export { StreamPropertyChangedEvent } from './OpenViduInternal/Events/StreamProp
 export { ConnectionPropertyChangedEvent } from './OpenViduInternal/Events/ConnectionPropertyChangedEvent';
 export { FilterEvent } from './OpenViduInternal/Events/FilterEvent';
 export { NetworkQualityLevelChangedEvent } from './OpenViduInternal/Events/NetworkQualityLevelChangedEvent';
+export { SpeechToTextEvent } from './OpenViduInternal/Events/SpeechToTextEvent';
 export { ExceptionEvent, ExceptionEventName } from './OpenViduInternal/Events/ExceptionEvent';
 
 export { Capabilities } from './OpenViduInternal/Interfaces/Public/Capabilities';

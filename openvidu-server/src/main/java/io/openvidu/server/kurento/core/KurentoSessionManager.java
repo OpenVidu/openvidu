@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -1194,6 +1195,14 @@ public class KurentoSessionManager extends SessionManager {
 		KurentoSession kSession = kParticipant.getSession();
 		reconnectSubscriber(kSession, kParticipant, streamId, sdpString, transactionId, initByServer,
 				forciblyReconnect);
+	}
+
+	@Override
+	public void onSubscribeToSpeechToText(Participant participant, Integer transactionId, JsonArray connectionIds) {
+	}
+
+	@Override
+	public void onUnsubscribeFromSpeechToText(Participant participant, Integer transactionId, JsonArray connectionIds) {
 	}
 
 	private String mungeSdpOffer(Session kSession, Participant participant, String sdpOffer, boolean isPublisher) {

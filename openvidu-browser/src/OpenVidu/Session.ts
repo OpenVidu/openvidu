@@ -35,6 +35,7 @@ import { FilterEvent } from '../OpenViduInternal/Events/FilterEvent';
 import { RecordingEvent } from '../OpenViduInternal/Events/RecordingEvent';
 import { SessionDisconnectedEvent } from '../OpenViduInternal/Events/SessionDisconnectedEvent';
 import { SignalEvent } from '../OpenViduInternal/Events/SignalEvent';
+import { SpeechToTextEvent } from '../OpenViduInternal/Events/SpeechToTextEvent';
 import { StreamEvent } from '../OpenViduInternal/Events/StreamEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 import { ConnectionPropertyChangedEvent } from '../OpenViduInternal/Events/ConnectionPropertyChangedEvent';
@@ -180,12 +181,12 @@ export class Session extends EventDispatcher {
                     new OpenViduError(
                         OpenViduErrorName.BROWSER_NOT_SUPPORTED,
                         'Browser ' +
-                            platform.getName() +
-                            ' (version ' +
-                            platform.getVersion() +
-                            ') for ' +
-                            platform.getFamily() +
-                            ' is not supported in OpenVidu'
+                        platform.getName() +
+                        ' (version ' +
+                        platform.getVersion() +
+                        ') for ' +
+                        platform.getFamily() +
+                        ' is not supported in OpenVidu'
                     )
                 );
             }
@@ -468,7 +469,7 @@ export class Session extends EventDispatcher {
                 return reject(
                     new Error(
                         'The associated Connection object of this Publisher is not your local Connection.  ' +
-                            "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method"
+                        "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method"
                     )
                 );
             } else {
@@ -597,7 +598,6 @@ export class Session extends EventDispatcher {
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the message successfully reached openvidu-server and rejected with an Error object if not. _This doesn't
      * mean that openvidu-server could resend the message to all the listed receivers._
      */
-    /* tslint:disable:no-string-literal */
     signal(signal: SignalOptions): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!this.sessionConnected()) {
@@ -643,7 +643,55 @@ export class Session extends EventDispatcher {
             );
         });
     }
-    /* tslint:enable:no-string-literal */
+
+    /**
+     * Subscribe to the Speech-To-Text events for this [[Stream]]. The Session object will emit [[SpeechToTextEvent]] for the Stream
+     * when speech is detected in its audio track.
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the speech-to-text subscription
+     * was successful and rejected with an Error object if not.
+     */
+    subscribeToSpeechToText(stream: Stream): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.openvidu.sendRequest(
+                'subscribeToSpeechToText',
+                {
+                    connectionIds: [stream.connection.connectionId]
+                },
+                (error, response) => {
+                    if (!!error) {
+                        return reject(error);
+                    } else {
+                        return resolve();
+                    }
+                }
+            );
+        });
+    }
+
+    /**
+     * Unsubscribe from the Speech-To-Text events for this [[Stream]].
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the speech-to-text subscription
+     * was successful and rejected with an Error object if not.
+     */
+    unsubscribeFromSpeechToText(stream: Stream): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.openvidu.sendRequest(
+                'unsubscribeFromSpeechToText',
+                {
+                    connectionIds: [stream.connection.connectionId]
+                },
+                (error, response) => {
+                    if (!!error) {
+                        return reject(error);
+                    } else {
+                        return resolve();
+                    }
+                }
+            );
+        });
+    }
 
     /**
      * See [[EventDispatcher.on]]
@@ -893,11 +941,11 @@ export class Session extends EventDispatcher {
             this.getConnection(
                 event.from,
                 "Connection '" +
-                    event.from +
-                    "' unknown when 'onNewMessage'. Existing remote connections: " +
-                    JSON.stringify(this.remoteConnections.keys()) +
-                    '. Existing local connection: ' +
-                    this.connection.connectionId
+                event.from +
+                "' unknown when 'onNewMessage'. Existing remote connections: " +
+                JSON.stringify(this.remoteConnections.keys()) +
+                '. Existing local connection: ' +
+                this.connection.connectionId
             )
 
                 .then((connection) => {
@@ -968,10 +1016,10 @@ export class Session extends EventDispatcher {
             } else {
                 logger.error(
                     "No stream with streamId '" +
-                        event.streamId +
-                        "' found for connection '" +
-                        event.connectionId +
-                        "' on 'streamPropertyChanged' event"
+                    event.streamId +
+                    "' found for connection '" +
+                    event.connectionId +
+                    "' on 'streamPropertyChanged' event"
                 );
             }
         };
@@ -1057,11 +1105,11 @@ export class Session extends EventDispatcher {
         this.getConnection(
             event.senderConnectionId,
             'Connection not found for connectionId ' +
-                event.senderConnectionId +
-                ' owning endpoint ' +
-                event.endpointName +
-                '. Ice candidate will be ignored: ' +
-                iceCandidate
+            event.senderConnectionId +
+            ' owning endpoint ' +
+            event.endpointName +
+            '. Ice candidate will be ignored: ' +
+            iceCandidate
         )
             .then((connection) => {
                 const stream: Stream = connection.stream!;
@@ -1156,8 +1204,7 @@ export class Session extends EventDispatcher {
             const stream: Stream = connection.stream!;
             if (!stream || !stream.filter) {
                 return logger.error(
-                    `Filter event of type "${event.eventType}" dispatched for stream ${stream.streamId} but there is no ${
-                        !stream ? 'stream' : 'filter'
+                    `Filter event of type "${event.eventType}" dispatched for stream ${stream.streamId} but there is no ${!stream ? 'stream' : 'filter'
                     } defined`
                 );
             }
@@ -1264,6 +1311,18 @@ export class Session extends EventDispatcher {
         });
         if (!someReconnection) {
             logger.info('There were no media streams in need of a reconnection');
+        }
+    }
+
+    /**
+     * @hidden
+     */
+    async onSpeechToTextMessage(event: { streamId: string; connectionId: string; sessionId: string, timestamp: number, raw: string }): Promise<void> {
+        const connection = await this.getConnection(event.connectionId, 'No connection found for connectionId ' + event.connectionId);
+        const ev = new SpeechToTextEvent(this, connection, event.timestamp, event.raw);
+        this.ee.emitEvent('speechToText', [ev]);
+        if (ev.raw.includes('text')) {
+            console.log(ev);
         }
     }
 
@@ -1402,12 +1461,12 @@ export class Session extends EventDispatcher {
         } else {
             logger.error(
                 'Browser ' +
-                    platform.getName() +
-                    ' (version ' +
-                    platform.getVersion() +
-                    ') for ' +
-                    platform.getFamily() +
-                    ' is not supported in OpenVidu for Network Quality'
+                platform.getName() +
+                ' (version ' +
+                platform.getVersion() +
+                ') for ' +
+                platform.getFamily() +
+                ' is not supported in OpenVidu for Network Quality'
             );
         }
     }
@@ -1678,15 +1737,15 @@ export class Session extends EventDispatcher {
         if (semverMajor(opts.version) !== semverMajor(this.openvidu.libraryVersion) || !(minorDifference == 0 || minorDifference == 1)) {
             logger.error(
                 `openvidu-browser (${this.openvidu.libraryVersion}) and openvidu-server (${opts.version}) versions are incompatible. ` +
-                    'Errors are likely to occur. openvidu-browser SDK is only compatible with the same version or the immediately following minor version of an OpenVidu deployment'
+                'Errors are likely to occur. openvidu-browser SDK is only compatible with the same version or the immediately following minor version of an OpenVidu deployment'
             );
         } else if (minorDifference == 1) {
             logger.warn(
                 `openvidu-browser version ${this.openvidu.libraryVersion} does not match openvidu-server version ${opts.version}. ` +
-                    `These versions are still compatible with each other, but openvidu-browser version must be updated as soon as possible to ${semverMajor(
-                        opts.version
-                    )}.${semverMinor(opts.version)}.x. ` +
-                    `This client using openvidu-browser ${this.openvidu.libraryVersion} will become incompatible with the next release of openvidu-server`
+                `These versions are still compatible with each other, but openvidu-browser version must be updated as soon as possible to ${semverMajor(
+                    opts.version
+                )}.${semverMinor(opts.version)}.x. ` +
+                `This client using openvidu-browser ${this.openvidu.libraryVersion} will become incompatible with the next release of openvidu-server`
             );
         }
 

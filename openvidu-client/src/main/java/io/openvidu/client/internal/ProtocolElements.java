@@ -147,6 +147,12 @@ public class ProtocolElements {
 	public static final String FORCIBLYRECONNECTSUBSCRIBER_STREAMID_PARAM = "streamId";
 	public static final String FORCIBLYRECONNECTSUBSCRIBER_SDPOFFER_PARAM = "sdpOffer";
 
+	public static final String SUBSCRIBETOSPEECHTOTEXT_METHOD = "subscribeToSpeechToText";
+	public static final String SUBSCRIBETOSPEECHTOTEXT_CONNECTIONIDS_PARAM = "connectionIds";
+
+	public static final String UNSUBSCRIBEFROMSPEECHTOTEXT_METHOD = "unsubscribeFromSpeechToText";
+	public static final String UNSUBSCRIBEFROMSPEECHTOTEXT_CONNECTIONIDS_PARAM = "connectionIds";
+
 	// ---------------------------- SERVER RESPONSES & EVENTS -----------------
 
 	public static final String PARTICIPANTJOINED_METHOD = "participantJoined";
@@ -221,7 +227,13 @@ public class ProtocolElements {
 	public static final String RECORDINGSTOPPED_METHOD = "recordingStopped";
 	public static final String RECORDINGSTOPPED_ID_PARAM = "id";
 
-	public static final String CUSTOM_NOTIFICATION = "custonNotification";
+	public static final String SPEECHTOTEXTMESSAGE_METHOD = "speechToTextMessage";
+	public static final String SPEECHTOTEXTMESSAGE_TIMESTAMP_PARAM = "timestamp";
+	public static final String SPEECHTOTEXTMESSAGE_SESSIONID_PARAM = "sessionId";
+	public static final String SPEECHTOTEXTMESSAGE_CONNECTIONID_PARAM = "connectionId";
+	public static final String SPEECHTOTEXTMESSAGE_RAW_PARAM = "raw";
+
+	public static final String CUSTOM_NOTIFICATION = "customNotification";
 
 	public static final String RECORDER_PARTICIPANT_PUBLICID = "RECORDER";
 }

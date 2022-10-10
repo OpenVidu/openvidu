@@ -205,8 +205,7 @@ public class SessionEventsHandler {
 				IceServerProperties defaultIceServer = new IceServerProperties.Builder()
 						.url("turn:" + coturnIp + ":" + openviduConfig.getCoturnPort())
 						.username(participant.getToken().getTurnCredentials().getUsername())
-						.credential(participant.getToken().getTurnCredentials().getCredential())
-						.build();
+						.credential(participant.getToken().getTurnCredentials().getCredential()).build();
 				defaultCustomIceServers.add(defaultIceServer.toJson());
 				result.add(ProtocolElements.PARTICIPANTJOINED_CUSTOM_ICE_SERVERS, defaultCustomIceServers);
 			}
@@ -691,6 +690,10 @@ public class SessionEventsHandler {
 	}
 
 	public void onMediaNodeRecovered(Kms kms, String environmentId, long timeOfConnection) {
+	}
+
+	public void onSpeechToTextMessage(String sessionId, String connectionId, long timestamp, String text,
+			Set<Participant> subscribedParticipants) {
 	}
 
 	public void storeRecordingToSendClientEvent(Recording recording) {

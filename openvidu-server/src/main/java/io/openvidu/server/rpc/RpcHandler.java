@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -179,6 +180,12 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			break;
 		case ProtocolElements.VIDEODATA_METHOD:
 			updateVideoData(rpcConnection, request);
+			break;
+		case ProtocolElements.SUBSCRIBETOSPEECHTOTEXT_METHOD:
+			subscribeToSpeechToText(rpcConnection, request);
+			break;
+		case ProtocolElements.UNSUBSCRIBEFROMSPEECHTOTEXT_METHOD:
+			unsubscribeFromSpeechToText(rpcConnection, request);
 			break;
 		case ProtocolElements.ECHO_METHOD:
 			echo(rpcConnection, request);
@@ -698,6 +705,20 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		} catch (OpenViduException e) {
 			log.error("Error getting video data: {}", e.toString());
 		}
+	}
+
+	private void subscribeToSpeechToText(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant = sanityCheckOfSession(rpcConnection, "subscribeToSpeechToText");
+		JsonArray connectionIds = (JsonArray) RpcHandler.getParam(request,
+				ProtocolElements.SUBSCRIBETOSPEECHTOTEXT_CONNECTIONIDS_PARAM);
+		sessionManager.onSubscribeToSpeechToText(participant, request.getId(), connectionIds);
+	}
+
+	private void unsubscribeFromSpeechToText(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant = sanityCheckOfSession(rpcConnection, "unsubscribeFromSpeechToText");
+		JsonArray connectionIds = (JsonArray) RpcHandler.getParam(request,
+				ProtocolElements.UNSUBSCRIBEFROMSPEECHTOTEXT_CONNECTIONIDS_PARAM);
+		sessionManager.onUnsubscribeFromSpeechToText(participant, request.getId(), connectionIds);
 	}
 
 	private void echo(RpcConnection rpcConnection, Request<JsonObject> request) {
