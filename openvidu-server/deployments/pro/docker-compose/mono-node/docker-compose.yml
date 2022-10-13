@@ -56,6 +56,33 @@ services:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
+    coturn:
+        image: openvidu/openvidu-coturn:2.23.0
+        restart: on-failure
+        env_file:
+            - .env
+        ports:
+          - 3478:3478/tcp
+          - 3478:3478/udp
+        environment:
+            - COTURN_INTERNAL_RELAY=${COTURN_INTERNAL_RELAY:-true}
+        volumes:
+            - ./coturn:/run/secrets/coturn
+        command:
+            - --log-file=stdout
+            - --external-ip=$$(detect-external-ip)
+            - --listening-port=${COTURN_PORT:-3478}
+            - --fingerprint
+            - --min-port=${COTURN_MIN_PORT:-40000}
+            - --max-port=${COTURN_MAX_PORT:-65535}
+            - --realm=openvidu
+            - --verbose
+            - --use-auth-secret
+            - --static-auth-secret=$${COTURN_SHARED_SECRET_KEY}
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
+
     nginx:
         image: openvidu/openvidu-proxy:2.23.0
         restart: always
