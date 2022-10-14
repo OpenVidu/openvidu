@@ -1,17 +1,18 @@
+import { animate, style, transition, trigger } from '@angular/animations';
 import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
-import { Subscription } from 'rxjs';
 import { MatMenuPanel, MatMenuTrigger } from '@angular/material/menu';
+import { PublisherProperties } from 'openvidu-browser';
+import { Subscription } from 'rxjs';
 import { VideoSizeIcon } from '../../models/icon.model';
+import { StreamModel } from '../../models/participant.model';
+import { Signal } from '../../models/signal.model';
 import { ScreenType, VideoType } from '../../models/video-type.model';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
-import { OpenViduService } from '../../services/openvidu/openvidu.service';
-import { LayoutService } from '../../services/layout/layout.service';
-import { StorageService } from '../../services/storage/storage.service';
-import { Signal } from '../../models/signal.model';
-import { PublisherProperties } from 'openvidu-browser';
-import { StreamModel } from '../../models/participant.model';
-import { ParticipantService } from '../../services/participant/participant.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
+import { LayoutService } from '../../services/layout/layout.service';
+import { OpenViduService } from '../../services/openvidu/openvidu.service';
+import { ParticipantService } from '../../services/participant/participant.service';
+import { StorageService } from '../../services/storage/storage.service';
 
 /**
  * The **StreamComponent** is hosted inside of the {@link LayoutComponent}.
@@ -55,7 +56,13 @@ import { OpenViduAngularConfigService } from '../../services/config/openvidu-ang
 @Component({
 	selector: 'ov-stream',
 	templateUrl: './stream.component.html',
-	styleUrls: ['./stream.component.css']
+	styleUrls: ['./stream.component.css'],
+	animations: [
+		trigger('posterAnimation', [
+			transition(':enter', [style({ opacity: 0 }), animate('400ms', style({ opacity: 1 }))]),
+			transition(':leave', [style({ opacity: 1 }), animate('200ms', style({ opacity: 0 }))]),
+		])
+	]
 })
 export class StreamComponent implements OnInit {
 	/**

@@ -31,6 +31,7 @@
 	</div>
 
 	<ov-avatar-profile
+		@posterAnimation
 		*ngIf="!_stream.streamManager?.stream?.videoActive && _stream.type === 'CAMERA'"
 		[name]="_stream.participant.nickname"
 		[color]="_stream.participant.colorProfile"
