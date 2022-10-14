@@ -77,7 +77,7 @@ hr {
 
 #background-effects-btn {
 	position: absolute;
-	z-index: 1;
+	z-index: 2;
 	background-color: var(--ov-secondary-color);
 	bottom: 5px;
 	right: 5px;

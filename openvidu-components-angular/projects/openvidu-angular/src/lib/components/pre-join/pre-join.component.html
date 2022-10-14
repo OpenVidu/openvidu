@@ -24,7 +24,7 @@
 					<ng-template #stream let-stream>
 						<button
 							*ngIf="!isMinimal && showBackgroundEffectsButton"
-							[disabled]="isVideoMuted"
+							[disabled]="!stream.streamManager?.stream?.videoActive"
 							matTooltip="{{ 'TOOLBAR.BACKGROUND' | translate }}"
 							mat-icon-button
 							id="background-effects-btn"
@@ -52,7 +52,10 @@
 					<hr *ngIf="windowSize >= 960" />
 
 					<!-- Camera -->
-					<ov-video-devices-select (onDeviceSelectorClicked)="onDeviceSelectorClicked()"></ov-video-devices-select>
+					<ov-video-devices-select
+						(onDeviceSelectorClicked)="onDeviceSelectorClicked()"
+						(onVideoMutedClicked)="onVideoMutedClicked($event)"
+					></ov-video-devices-select>
 
 					<!-- Microphone -->
 					<ov-audio-devices-select (onDeviceSelectorClicked)="onDeviceSelectorClicked()"></ov-audio-devices-select>

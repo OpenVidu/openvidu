@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
 import { PublisherProperties } from 'openvidu-browser';
 import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../../models/device.model';
@@ -22,6 +22,7 @@ import { VirtualBackgroundService } from '../../../services/virtual-background/v
 })
 export class VideoDevicesComponent implements OnInit, OnDestroy {
 	@Output()  onDeviceSelectorClicked = new EventEmitter<void>();
+	@Output()  onVideoMutedClicked = new EventEmitter<boolean>();
 
 	videoMuteChanging: boolean;
 	isVideoMuted: boolean;
@@ -68,6 +69,7 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 			this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
 		}
 		this.videoMuteChanging = false;
+		this.onVideoMutedClicked.emit(publish);
 	}
 
 	async onCameraSelected(event: any) {

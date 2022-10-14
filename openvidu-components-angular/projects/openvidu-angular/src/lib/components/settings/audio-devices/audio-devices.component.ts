@@ -1,13 +1,13 @@
-import { EventEmitter, Component, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
 import { PublisherProperties } from 'openvidu-browser';
-import { DeviceService } from '../../../services/device/device.service';
-import { OpenViduService } from '../../../services/openvidu/openvidu.service';
-import { StorageService } from '../../../services/storage/storage.service';
+import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../../models/device.model';
 import { ParticipantAbstractModel } from '../../../models/participant.model';
-import { ParticipantService } from '../../../services/participant/participant.service';
-import { Subscription } from 'rxjs';
 import { VideoType } from '../../../models/video-type.model';
+import { DeviceService } from '../../../services/device/device.service';
+import { OpenViduService } from '../../../services/openvidu/openvidu.service';
+import { ParticipantService } from '../../../services/participant/participant.service';
+import { StorageService } from '../../../services/storage/storage.service';
 
 /**
  * @internal
@@ -19,6 +19,7 @@ import { VideoType } from '../../../models/video-type.model';
 })
 export class AudioDevicesComponent implements OnInit, OnDestroy {
 	@Output() onDeviceSelectorClicked = new EventEmitter<void>();
+	@Output() onAudioMutedClicked = new EventEmitter<boolean>();
 	hasAudioDevices: boolean;
 	isAudioMuted: boolean;
 	microphoneSelected: CustomDevice;
@@ -56,6 +57,7 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 	toggleMic() {
 		const publish = this.isAudioMuted;
 		this.openviduService.publishAudio(publish);
+		this.onAudioMutedClicked.emit(publish);
 	}
 
 	async onMicrophoneSelected(event: any) {

@@ -1,7 +1,6 @@
-import { Component, HostListener, OnDestroy, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, EventEmitter, HostListener, OnDestroy, OnInit, Output } from '@angular/core';
 
 import { Subscription } from 'rxjs';
-import { CustomDevice } from '../../models/device.model';
 import { ILogger } from '../../models/logger.model';
 import { PanelType } from '../../models/panel.model';
 import { ParticipantAbstractModel } from '../../models/participant.model';
@@ -22,17 +21,9 @@ import { ParticipantService } from '../../services/participant/participant.servi
 })
 export class PreJoinComponent implements OnInit, OnDestroy {
 	@Output() onJoinButtonClicked = new EventEmitter<any>();
-	cameras: CustomDevice[];
-	microphones: CustomDevice[];
-	cameraSelected: CustomDevice;
-	microphoneSelected: CustomDevice;
-	isVideoMuted: boolean;
-	isAudioMuted: boolean;
-	videoMuteChanging: boolean;
+
 	localParticipant: ParticipantAbstractModel;
 	windowSize: number;
-	hasVideoDevices: boolean;
-	hasAudioDevices: boolean;
 	isLoading = true;
 	nickname: string;
 	/**
@@ -90,6 +81,12 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		// Some devices as iPhone do not show the menu panels correctly
 		// Updating the container where the panel is added fix the problem.
 		this.cdkSrv.setSelector('#prejoin-container');
+	}
+
+	onVideoMutedClicked(hasVideo: boolean) {
+		if (!hasVideo) {
+			this.panelService.closePanel();
+		}
 	}
 
 	joinSession() {
