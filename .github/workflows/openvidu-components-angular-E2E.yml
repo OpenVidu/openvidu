@@ -13,12 +13,12 @@ on:
 
 jobs:
 
-  openvidu_angular_e2e:
-    name: E2E tests
+  test_setup:
+    name: Test setup
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-node@v2
+    - uses: actions/setup-node@v3
       with:
         node-version: '16'
     - name: Send repository dispatch event
@@ -33,6 +33,31 @@ jobs:
         -H "Authorization: Bearer ${GITHUB_TOKEN}" \
         https://api.github.com/repos/OpenVidu/openvidu-call/dispatches \
         -d '{"event_type":"openvidu-components-angular","client_payload":{"commit-message":"'"$COMMIT_MESSAGE"'","commit-ref":"'"$COMMIT_URL"'"}}'
+    - name: Build openvidu-browser
+      run: |
+        cd openvidu-browser
+        npm install
+        npm run build && \
+        npm pack
+    - uses: actions/upload-artifact@v3
+      with:
+        name: openvidu-browser
+        path: openvidu-browser/openvidu-browser-*.tgz
+
+
+  openvidu_angular_e2e:
+    needs: test_setup
+    name: OpenVidu Angular E2E tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+    - uses: actions/download-artifact@v3
+      with:
+        name: openvidu-browser
+        path: openvidu-components-angular
     - name: Run Selenium Chromedriver
       run: docker run -d --shm-size="2g" --network host selenium/standalone-chrome:106.0
     - name: Run openvidu-server-kms
@@ -40,28 +65,47 @@ jobs:
         docker run -p 4443:4443 --rm -d \
         -e OPENVIDU_SECRET=MY_SECRET \
         openvidu/openvidu-dev:latest
-    - name: Build openvidu-browser
-      run: |
-        cd openvidu-browser
-        npm install
-        npm run build && npm pack
-        mv openvidu-browser-*.tgz ../openvidu-components-angular
-    - name: Install openvidu-browser
+    - name: Install openvidu-browser and dependencies
       run: |
         cd openvidu-components-angular
         npm install openvidu-browser-*.tgz
-    - name: Install dependencies
-      run: npm install --prefix openvidu-components-angular
     - name: Build openvidu-angular
       run: npm run lib:build --prefix openvidu-components-angular
-    - name: Build openvidu-webcomponent
-      run: npm run webcomponent:build --prefix openvidu-components-angular
     - name: Build openvidu-angular-testapp
       run: npm run build --prefix openvidu-components-angular
     - name: Serve openvidu-angular-testapp
       run: npm run start-prod --prefix openvidu-components-angular &
     - name: Run openvidu-angular E2E
       run: npm run lib:e2e-ci --prefix openvidu-components-angular
+
+  webcomponent_e2e:
+    needs: test_setup
+    name: Webcomponent E2E tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+    - uses: actions/download-artifact@v3
+      with:
+        name: openvidu-browser
+        path: openvidu-components-angular
+    - name: Run Selenium Chromedriver
+      run: docker run -d --shm-size="4g" --network host selenium/standalone-chrome:106.0
+    - name: Run openvidu-server-kms
+      run: |
+        docker run -p 4443:4443 --rm -d \
+        -e OPENVIDU_SECRET=MY_SECRET \
+        openvidu/openvidu-dev:latest
+    - name: Install openvidu-browser and dependencies
+      run: |
+        cd openvidu-components-angular
+        npm install openvidu-browser-*.tgz
+    - name: Build openvidu-angular
+      run: npm run lib:build --prefix openvidu-components-angular
+    - name: Build openvidu-webcomponent
+      run: npm run webcomponent:build --prefix openvidu-components-angular
     - name: Serve Webcomponent Testapp
       run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
     - name: Run Webcomponent E2E
