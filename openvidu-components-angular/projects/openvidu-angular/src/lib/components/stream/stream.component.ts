@@ -59,7 +59,7 @@ import { StorageService } from '../../services/storage/storage.service';
 	styleUrls: ['./stream.component.css'],
 	animations: [
 		trigger('posterAnimation', [
-			transition(':enter', [style({ opacity: 0 }), animate('400ms', style({ opacity: 1 }))]),
+			transition(':enter', [style({ opacity: 0 }), animate('100ms', style({ opacity: 1 }))]),
 			transition(':leave', [style({ opacity: 1 }), animate('200ms', style({ opacity: 0 }))]),
 		])
 	]

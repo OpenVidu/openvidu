@@ -12,34 +12,34 @@ import {
 	TemplateRef,
 	ViewChild
 } from '@angular/core';
-import { first, skip, Subscription } from 'rxjs';
-import { TokenService } from '../../services/token/token.service';
+import { skip, Subscription } from 'rxjs';
 import { ChatService } from '../../services/chat/chat.service';
-import { PanelEvent, PanelService } from '../../services/panel/panel.service';
 import { DocumentService } from '../../services/document/document.service';
+import { PanelEvent, PanelService } from '../../services/panel/panel.service';
+import { TokenService } from '../../services/token/token.service';
 
-import { OpenViduService } from '../../services/openvidu/openvidu.service';
-import { LoggerService } from '../../services/logger/logger.service';
-import { ILogger } from '../../models/logger.model';
+import { MediaChange } from '@angular/flex-layout';
+import { MatMenuTrigger } from '@angular/material/menu';
 import { Session } from 'openvidu-browser';
-import { ActionService } from '../../services/action/action.service';
-import { DeviceService } from '../../services/device/device.service';
-import { ChatMessage } from '../../models/chat.model';
-import { ParticipantService } from '../../services/participant/participant.service';
-import { PanelType } from '../../models/panel.model';
-import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import {
 	ToolbarAdditionalButtonsDirective,
 	ToolbarAdditionalPanelButtonsDirective
 } from '../../directives/template/openvidu-angular.directive';
+import { ChatMessage } from '../../models/chat.model';
+import { ILogger } from '../../models/logger.model';
+import { PanelType } from '../../models/panel.model';
 import { OpenViduRole, ParticipantAbstractModel } from '../../models/participant.model';
-import { PlatformService } from '../../services/platform/platform.service';
-import { MatMenuTrigger } from '@angular/material/menu';
-import { RecordingService } from '../../services/recording/recording.service';
 import { RecordingInfo, RecordingStatus } from '../../models/recording.model';
-import { TranslateService } from '../../services/translate/translate.service';
-import { MediaChange } from '@angular/flex-layout';
+import { ActionService } from '../../services/action/action.service';
+import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
+import { DeviceService } from '../../services/device/device.service';
 import { LayoutService } from '../../services/layout/layout.service';
+import { LoggerService } from '../../services/logger/logger.service';
+import { OpenViduService } from '../../services/openvidu/openvidu.service';
+import { ParticipantService } from '../../services/participant/participant.service';
+import { PlatformService } from '../../services/platform/platform.service';
+import { RecordingService } from '../../services/recording/recording.service';
+import { TranslateService } from '../../services/translate/translate.service';
 
 /**
  *
@@ -706,6 +706,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	private subscribeToScreenSize() {
 		this.screenSizeSub = this.documentService.screenSizeObs.subscribe((change: MediaChange[]) => {
 			this.screenSize = change[0].mqAlias;
+			this.cd.markForCheck();
 		});
 	}
 

@@ -1,4 +1,4 @@
-<div id="session-container">
+<div id="session-container" *ngIf="!preparing" @sessionAnimation>
 	<mat-sidenav-container #container #videoContainer class="sidenav-container">
 		<mat-sidenav
 			#sidenav

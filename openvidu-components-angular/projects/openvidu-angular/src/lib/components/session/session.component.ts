@@ -1,7 +1,5 @@
 import {
-	ChangeDetectionStrategy,
-	ChangeDetectorRef,
-	Component,
+	ChangeDetectionStrategy, ChangeDetectorRef, Component,
 	ContentChild,
 	ElementRef,
 	EventEmitter,
@@ -13,35 +11,32 @@ import {
 	ViewChild
 } from '@angular/core';
 import {
-	Subscriber,
-	Session,
-	StreamEvent,
-	StreamPropertyChangedEvent,
-	SessionDisconnectedEvent,
 	ConnectionEvent,
-	RecordingEvent
+	RecordingEvent, Session, SessionDisconnectedEvent, StreamEvent,
+	StreamPropertyChangedEvent, Subscriber
 } from 'openvidu-browser';
 
-import { VideoType } from '../../models/video-type.model';
 import { ILogger } from '../../models/logger.model';
+import { VideoType } from '../../models/video-type.model';
 
+import { animate, style, transition, trigger } from '@angular/animations';
+import { MatDrawerContainer, MatSidenav } from '@angular/material/sidenav';
+import { skip, Subscription } from 'rxjs';
+import { SidenavMode } from '../../models/layout.model';
+import { PanelType } from '../../models/panel.model';
+import { Signal } from '../../models/signal.model';
+import { ActionService } from '../../services/action/action.service';
 import { ChatService } from '../../services/chat/chat.service';
+import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
+import { LayoutService } from '../../services/layout/layout.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
-import { TokenService } from '../../services/token/token.service';
-import { ActionService } from '../../services/action/action.service';
-import { Signal } from '../../models/signal.model';
-import { ParticipantService } from '../../services/participant/participant.service';
-import { MatDrawerContainer, MatSidenav } from '@angular/material/sidenav';
-import { SidenavMode } from '../../models/layout.model';
-import { LayoutService } from '../../services/layout/layout.service';
-import { Subscription, skip } from 'rxjs';
-import { PanelType } from '../../models/panel.model';
 import { PanelEvent, PanelService } from '../../services/panel/panel.service';
-import { RecordingService } from '../../services/recording/recording.service';
-import { TranslateService } from '../../services/translate/translate.service';
-import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
+import { ParticipantService } from '../../services/participant/participant.service';
 import { PlatformService } from '../../services/platform/platform.service';
+import { RecordingService } from '../../services/recording/recording.service';
+import { TokenService } from '../../services/token/token.service';
+import { TranslateService } from '../../services/translate/translate.service';
 
 /**
  * @internal
@@ -51,6 +46,11 @@ import { PlatformService } from '../../services/platform/platform.service';
 	selector: 'ov-session',
 	templateUrl: './session.component.html',
 	styleUrls: ['./session.component.css'],
+	animations: [
+		trigger('sessionAnimation', [
+			transition(':enter', [style({ opacity: 0 }), animate('400ms', style({ opacity: 1 }))]),
+		])
+	],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SessionComponent implements OnInit {
@@ -69,6 +69,7 @@ export class SessionComponent implements OnInit {
 	sidenavMode: SidenavMode = SidenavMode.SIDE;
 	settingsPanelOpened: boolean;
 	drawer: MatDrawerContainer;
+	preparing: boolean = true;
 
 	protected readonly SIDENAV_WIDTH_LIMIT_MODE = 790;
 
@@ -91,7 +92,8 @@ export class SessionComponent implements OnInit {
 		protected panelService: PanelService,
 		private recordingService: RecordingService,
 		private translateService: TranslateService,
-		private platformService: PlatformService
+		private platformService: PlatformService,
+		private cd: ChangeDetectorRef
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
 	}
@@ -171,6 +173,8 @@ export class SessionComponent implements OnInit {
 				await this.openviduService.publishVideo(true);
 			}
 		}
+		this.preparing = false;
+		this.cd.markForCheck();
 	}
 
 	ngOnDestroy() {
