@@ -4,7 +4,7 @@ import { Builder, By, until, WebDriver } from 'selenium-webdriver';
 import { AngularConfig } from './selenium.conf';
 
 const url = AngularConfig.appUrl;
-const TIMEOUT = 10000;
+const TIMEOUT = 30000;
 
 describe('Testing TOOLBAR STRUCTURAL DIRECTIVES', () => {
 	let browser: WebDriver;
@@ -1199,6 +1199,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		expect(await element.isDisplayed()).to.be.true;
 		await element.click();
 
+		await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
 		element = await browser.wait(until.elementLocated(By.id('custom-stream')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 

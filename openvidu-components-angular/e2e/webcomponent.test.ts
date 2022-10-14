@@ -130,8 +130,9 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should run the app with VIDEO MUTED in prejoin page', async () => {
-		let element, isVideoEnabled, icon;
-		const videoEnableScript = 'return document.getElementsByTagName("video")[0].srcObject.getVideoTracks()[0].enabled;';
+		let element, idVideoEnabled, icon;
+		const script = 'return document.getElementsByTagName("video")[0].srcObject.getVideoTracks()[0].enabled;';
+
 
 		await browser.get(`${url}?prejoin=true&videoMuted=true`);
 
@@ -142,8 +143,8 @@ describe('Testing API Directives', () => {
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if video track is disabled/muted
-		isVideoEnabled = await browser.executeScript(videoEnableScript);
-		expect(isVideoEnabled).to.be.false;
+		idVideoEnabled = await browser.executeScript<boolean>(script);
+		expect(idVideoEnabled).to.be.false;
 
 		icon = await browser.findElement(By.id('videocam_off'));
 		expect(await icon.isDisplayed()).to.be.true;
@@ -153,8 +154,9 @@ describe('Testing API Directives', () => {
 		await joinButton.click();
 
 		// Checking if video is muted after join the room
-		isVideoEnabled = await browser.executeScript(videoEnableScript);
-		expect(isVideoEnabled).to.be.false;
+		await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
+		idVideoEnabled = await browser.executeScript<boolean>(script);
+		expect(idVideoEnabled).to.be.false;
 
 		icon = await browser.findElement(By.id('videocam_off'));
 		expect(await icon.isDisplayed()).to.be.true;
@@ -185,7 +187,7 @@ describe('Testing API Directives', () => {
 
 	it('should run the app with AUDIO MUTED in prejoin page', async () => {
 		let element, isAudioEnabled, icon;
-		const audioEnableScript = 'return document.getElementsByTagName("video")[0].srcObject.getAudioTracks()[0].enabled;';
+		const script = 'return document.getElementsByTagName("video")[0].srcObject.getAudioTracks()[0].enabled;';
 
 		await browser.get(`${url}?audioMuted=true`);
 
@@ -196,7 +198,7 @@ describe('Testing API Directives', () => {
 		expect(await element.isDisplayed()).to.be.true;
 
 		// Checking if audio track is disabled/muted
-		isAudioEnabled = await browser.executeScript(audioEnableScript);
+		isAudioEnabled = await browser.executeScript(script);
 		expect(isAudioEnabled).to.be.false;
 
 		icon = await browser.findElement(By.id('mic_off'));
@@ -207,7 +209,8 @@ describe('Testing API Directives', () => {
 		await joinButton.click();
 
 		// Checking if audio is muted after join the room
-		isAudioEnabled = await browser.executeScript(audioEnableScript);
+		await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
+		isAudioEnabled = await browser.executeScript(script);
 		expect(isAudioEnabled).to.be.false;
 
 		icon = await browser.findElement(By.id('mic_off'));
@@ -1223,6 +1226,7 @@ describe('Testing panels', () => {
 		expect(await backgroundButton.isDisplayed()).to.be.true;
 		expect(await backgroundButton.isEnabled()).to.be.true;
 		await backgroundButton.click();
+		await browser.sleep(500);
 
 		element = await browser.wait(until.elementLocated(By.id('background-effects-container')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
@@ -1232,6 +1236,7 @@ describe('Testing panels', () => {
 		expect(await element.isEnabled()).to.be.true;
 		await element.click();
 
+		await browser.sleep(500);
 		element = await browser.wait(until.elementLocated(By.id('video-poster')), TIMEOUT);
 		expect(await element.isDisplayed()).to.be.true;
 
