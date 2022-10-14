@@ -1213,6 +1213,36 @@ describe('Testing panels', () => {
 		await browser.quit();
 	});
 
+	it('should toggle BACKGROUND panel on prejoin page when VIDEO is MUTED', async () => {
+		let element;
+		await browser.get(`${url}`);
+		element = await browser.wait(until.elementLocated(By.id('pre-join-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		const backgroundButton = await browser.findElement(By.id('background-effects-btn'));
+		expect(await backgroundButton.isDisplayed()).to.be.true;
+		expect(await backgroundButton.isEnabled()).to.be.true;
+		await backgroundButton.click();
+
+		element = await browser.wait(until.elementLocated(By.id('background-effects-container')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		element = await browser.wait(until.elementLocated(By.id('camera-button')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+		expect(await element.isEnabled()).to.be.true;
+		await element.click();
+
+		element = await browser.wait(until.elementLocated(By.id('video-poster')), TIMEOUT);
+		expect(await element.isDisplayed()).to.be.true;
+
+		expect(await backgroundButton.isDisplayed()).to.be.true;
+		expect(await backgroundButton.isEnabled()).to.be.false;
+
+		element = await browser.findElements(By.id('background-effects-container'));
+		expect(element.length).equals(0);
+
+	});
+
 	it('should toggle CHAT panel', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);

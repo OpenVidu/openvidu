@@ -7,7 +7,7 @@ import { Component, Input } from '@angular/core';
 @Component({
 	selector: 'ov-avatar-profile',
 	template: `
-		<div class="poster">
+		<div class="poster" id="video-poster">
 			<div class="initial" [ngStyle]="{ 'background-color': color }">
 				<span id="poster-text">{{ letter }}</span>
 			</div>
