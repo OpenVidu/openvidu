@@ -1,12 +1,13 @@
 import { expect } from 'chai';
-import { Builder, By, until, WebDriver } from 'selenium-webdriver';
+import { Builder, By, WebDriver } from 'selenium-webdriver';
 import { WebComponentConfig } from './selenium.conf';
+import { OpenViduComponentsPO } from './utils.po.test';
 
 const url = WebComponentConfig.appUrl;
-const TIMEOUT = 30000;
 
 describe('Testing API Directives', () => {
 	let browser: WebDriver;
+	let utils: OpenViduComponentsPO;
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
 			.forBrowser(WebComponentConfig.browserName)
@@ -18,483 +19,435 @@ describe('Testing API Directives', () => {
 
 	beforeEach(async () => {
 		browser = await createChromeBrowser();
+		utils = new OpenViduComponentsPO(browser);
 	});
 
 	afterEach(async () => {
+		// console.log('data:image/png;base64,' + await browser.takeScreenshot());
 		await browser.quit();
 	});
 
 	it('should join with ONLY ONE TOKEN', async () => {
 		let element;
 		await browser.get(`${url}?singleToken=true`);
-		// Checking if prejoin page exist
-		element = await browser.wait(until.elementLocated(By.id('prejoin-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
 
-		const joinButton = await browser.findElement(By.id('join-button'));
-		expect(await joinButton.isDisplayed()).to.be.true;
+		// Checking if prejoin page exist
+		await utils.checkPrejoinIsPresent();
+
+		const joinButton = await utils.waitForElement('#join-button');
 		await joinButton.click();
 
 		// Checking if session container is present
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
+
+		await utils.checkToolbarIsPresent();
 
 		// Checking if screenshare button is not present
-		element = await browser.findElements(By.id('screenshare-btn'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#screenshare-btn')).to.be.false;
 	});
 
 	it('should set the MINIMAL UI', async () => {
 		let element;
 		await browser.get(`${url}?minimal=true`);
 		// Checking if prejoin page exist
-		element = await browser.wait(until.elementLocated(By.id('prejoin-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkPrejoinIsPresent();
 
 		// Checking if layout is present
-		element = await browser.wait(until.elementLocated(By.id('layout-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkLayoutPresent();
 
 		// Checking if stream component is present
-		element = await browser.wait(until.elementLocated(By.css('.OV_stream')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		utils.checkStreamIsPresent();
 
 		// Checking if audio detection is not displayed
-		element = await browser.findElements(By.id('audio-wave-container'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#audio-wave-container')).to.be.false;
 
-		const joinButton = await browser.findElement(By.id('join-button'));
-		expect(await joinButton.isDisplayed()).to.be.true;
+		const joinButton = await utils.waitForElement('#join-button');
 		await joinButton.click();
 
 		// Checking if session container is present
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Checking if screenshare button is not present
-		element = await browser.findElements(By.id('screenshare-btn'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#screenshare-btn')).to.be.false;
 
 		// Checking if more options button is not present
-		element = await browser.findElements(By.id('more-options-btn'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#more-options-btn')).to.be.false;
 
 		// Checking if participants panel button is not present
-		element = await browser.findElements(By.id('participants-panel-btn'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#participants-panel-btn')).to.be.false;
 
 		// Checking if activities panel button is not present
-		element = await browser.findElements(By.id('activities-panel-btn'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#activities-panel-btn')).to.be.false;
 
 		// Checking if logo is not displayed
-		element = await browser.findElements(By.id('branding-logo'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#branding-logo')).to.be.false;
 
 		// Checking if session name is not displayed
-		element = await browser.findElements(By.id('session-name'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#session-name')).to.be.false;
 
 		// Checking if nickname is not displayed
 		element = await browser.findElements(By.id('nickname-container'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#nickname-container')).to.be.false;
 
 		// Checking if audio detection is not displayed
-		element = await browser.findElements(By.id('audio-wave-container'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#audio-wave-container')).to.be.false;
 
 		// Checking if settings button is not displayed
-		element = await browser.findElements(By.id('settings-container'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#settings-container')).to.be.false;
 	});
 
 	it('should show the PREJOIN page', async () => {
 		await browser.get(`${url}?prejoin=true`);
-		const element = await browser.wait(until.elementLocated(By.id('prejoin-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkPrejoinIsPresent();
 	});
+
 	it('should not show the PREJOIN page', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkSessionIsPresent();
 	});
 
 	it('should run the app with VIDEO MUTED in prejoin page', async () => {
-		let element, idVideoEnabled, icon;
+		let idVideoEnabled;
 		const script = 'return document.getElementsByTagName("video")[0].srcObject.getVideoTracks()[0].enabled;';
-
 
 		await browser.get(`${url}?prejoin=true&videoMuted=true`);
 
+		await utils.checkPrejoinIsPresent();
+
 		// Checking if video is displayed
-		await browser.wait(until.elementLocated(By.css('video')), TIMEOUT);
-		element = await browser.findElement(By.css('video'));
-		await browser.wait(until.elementIsVisible(element), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkVideoElementIsPresent();
 
 		// Checking if video track is disabled/muted
 		idVideoEnabled = await browser.executeScript<boolean>(script);
 		expect(idVideoEnabled).to.be.false;
 
-		icon = await browser.findElement(By.id('videocam_off'));
-		expect(await icon.isDisplayed()).to.be.true;
+		await utils.waitForElement('#videocam_off');
 
-		const joinButton = await browser.findElement(By.id('join-button'));
-		expect(await joinButton.isDisplayed()).to.be.true;
+		const joinButton = await utils.waitForElement('#join-button');
 		await joinButton.click();
 
 		// Checking if video is muted after join the room
-		await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
+		await utils.checkSessionIsPresent();
+
 		idVideoEnabled = await browser.executeScript<boolean>(script);
 		expect(idVideoEnabled).to.be.false;
 
-		icon = await browser.findElement(By.id('videocam_off'));
-		expect(await icon.isDisplayed()).to.be.true;
+		await utils.waitForElement('#videocam_off');
+		expect(await utils.isPresent('#videocam_off')).to.be.true;
 	});
 
 	it('should run the app with VIDEO MUTED and WITHOUT PREJOIN page', async () => {
-		let element, isVideoEnabled, icon;
+		let isVideoEnabled;
 		const videoEnableScript = 'return document.getElementsByTagName("video")[0].srcObject.getVideoTracks()[0].enabled;';
 
 		await browser.get(`${url}?prejoin=false&videoMuted=true`);
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
+
+		await utils.checkLayoutPresent();
 
 		// Checking if video is displayed
-		await browser.wait(until.elementLocated(By.css('video')), TIMEOUT);
-		element = await browser.findElement(By.css('video'));
-		await browser.wait(until.elementIsVisible(element), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkVideoElementIsPresent();
 
 		// Checking if video track is disabled/muted
 		isVideoEnabled = await browser.executeScript(videoEnableScript);
 		expect(isVideoEnabled).to.be.false;
 
-		icon = await browser.findElement(By.id('videocam_off'));
-		expect(await icon.isDisplayed()).to.be.true;
+		await utils.waitForElement('#videocam_off');
+		expect(await utils.isPresent('#videocam_off')).to.be.true;
 	});
 
 	it('should run the app with AUDIO MUTED in prejoin page', async () => {
-		let element, isAudioEnabled, icon;
+		let isAudioEnabled;
 		const script = 'return document.getElementsByTagName("video")[0].srcObject.getAudioTracks()[0].enabled;';
 
 		await browser.get(`${url}?audioMuted=true`);
 
+		await utils.checkPrejoinIsPresent();
+
 		// Checking if video is displayed
-		await browser.wait(until.elementLocated(By.css('video')), TIMEOUT);
-		element = await browser.findElement(By.css('video'));
-		await browser.wait(until.elementIsVisible(element), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkVideoElementIsPresent();
 
 		// Checking if audio track is disabled/muted
 		isAudioEnabled = await browser.executeScript(script);
 		expect(isAudioEnabled).to.be.false;
 
-		icon = await browser.findElement(By.id('mic_off'));
-		expect(await icon.isDisplayed()).to.be.true;
+		await utils.waitForElement('#mic_off');
+		expect(await utils.isPresent('#mic_off')).to.be.true;
 
-		const joinButton = await browser.findElement(By.id('join-button'));
-		expect(await joinButton.isDisplayed()).to.be.true;
+		const joinButton = await utils.waitForElement('#join-button');
 		await joinButton.click();
 
 		// Checking if audio is muted after join the room
-		await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
+		await utils.checkSessionIsPresent();
 		isAudioEnabled = await browser.executeScript(script);
 		expect(isAudioEnabled).to.be.false;
 
-		icon = await browser.findElement(By.id('mic_off'));
-		expect(await icon.isDisplayed()).to.be.true;
+		await utils.waitForElement('#mic_off');
+		expect(await utils.isPresent('#mic_off')).to.be.true;
 	});
 
 	it('should run the app with VIDEO MUTED and WITHOUT PREJOIN page', async () => {
-		let element, isAudioEnabled, icon;
+		let isAudioEnabled;
 		const audioEnableScript = 'return document.getElementsByTagName("video")[0].srcObject.getAudioTracks()[0].enabled;';
 
 		await browser.get(`${url}?prejoin=false&audioMuted=true`);
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
 
 		// Checking if video is displayed
-		await browser.wait(until.elementLocated(By.css('video')), TIMEOUT);
-		element = await browser.findElement(By.css('video'));
-		await browser.wait(until.elementIsVisible(element), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkVideoElementIsPresent();
 
 		// Checking if audio track is disabled/muted
 		isAudioEnabled = await browser.executeScript(audioEnableScript);
 		expect(isAudioEnabled).to.be.false;
 
-		icon = await browser.findElement(By.id('mic_off'));
-		expect(await icon.isDisplayed()).to.be.true;
+		await utils.waitForElement('#mic_off');
+		expect(await utils.isPresent('#mic_off')).to.be.true;
 	});
 
 	it('should HIDE the SCREENSHARE button', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false&screenshareBtn=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkSessionIsPresent();
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Checking if screenshare button is not present
-		element = await browser.findElements(By.id('screenshare-btn'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#screenshare-btn')).to.be.false;
 	});
 
 	it('should HIDE the FULLSCREEN button', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&fullscreenBtn=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkSessionIsPresent();
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Open more options menu
-		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
+		element = await utils.waitForElement('#more-options-btn');
 		await element.click();
 
 		await browser.sleep(500);
 
 		// Checking if fullscreen button is not present
-		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-		element = await browser.findElements(By.id('fullscreen-btn'));
-		expect(element.length).equals(0);
+		await utils.waitForElement('.mat-menu-content');
+		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+
+		await browser.findElements(By.id('fullscreen-btn'));
+		expect(await utils.isPresent('#fullscreen-btn')).to.be.false;
 	});
 
 	it('should HIDE the SUBTITLES button', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&toolbarCaptionsBtn=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkSessionIsPresent();
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Open more options menu
-		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
+		element = await utils.waitForElement('#more-options-btn');
 		await element.click();
 
 		await browser.sleep(500);
 
-		// Checking if subtitles button is not present
-		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-		element = await browser.findElements(By.id('subtitles-btn'));
-		expect(element.length).equals(0);
+		// Checking if button panel is present
+		await utils.waitForElement('.mat-menu-content');
+		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
 
-		element = await browser.findElements(By.id('toolbar-settings-btn'));
-		expect(element.length).equals(1);
-		await element[0].click();
+		// Checking if subtitles button is not present
+		expect(await utils.isPresent('#subtitles-btn')).to.be.false;
+
+		element = await utils.waitForElement('#toolbar-settings-btn');
+		expect(await utils.isPresent('#toolbar-settings-btn')).to.be.true;
+		await element.click();
 
 		await browser.sleep(500);
 
-		element = await browser.wait(until.elementLocated(By.className('settings-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-		element = await browser.findElements(By.id('subtitles-opt'));
-		expect(element.length).equals(0);
+		element = await utils.waitForElement('.settings-container');
+		expect(await utils.isPresent('.settings-container')).to.be.true;
+
+		expect(await utils.isPresent('#subtitles-opt')).to.be.false;
 	});
 
 	it('should HIDE the TOOLBAR SETTINGS button', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&toolbarSettingsBtn=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkSessionIsPresent();
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Open more options menu
-		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
+		element = await utils.waitForElement('#more-options-btn');
 		await element.click();
 
 		await browser.sleep(500);
 
 		// Checking if fullscreen button is not present
-		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-		element = await browser.findElements(By.id('toolbar-settings-btn'));
-		expect(element.length).equals(0);
+		await utils.waitForElement('.mat-menu-content');
+		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+
+		expect(await utils.isPresent('#toolbar-settings-btn')).to.be.false;
 	});
 
 	it('should HIDE the LEAVE button', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false&leaveBtn=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkSessionIsPresent();
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Checking if leave button is not present
 		element = await browser.findElements(By.id('leave-btn'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#leave-btn')).to.be.false;
 	});
 
 	it('should HIDE the ACTIVITIES PANEL button', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false&activitiesPanelBtn=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkSessionIsPresent();
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Checking if activities panel button is not present
-		element = await browser.findElements(By.id('activities-panel-btn'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#activities-panel-btn')).to.be.false;
 	});
 
 	it('should HIDE the CHAT PANEL button', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false&chatPanelBtn=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkSessionIsPresent();
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Checking if chat panel button is not present
-		element = await browser.findElements(By.id('chat-panel-btn'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#chat-panel-btn')).to.be.false;
 	});
 
 	it('should HIDE the PARTICIPANTS PANEL button', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false&participantsPanelBtn=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkSessionIsPresent();
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Checking if participants panel button is not present
-		element = await browser.findElements(By.id('participants-panel-btn'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#participants-panel-btn')).to.be.false;
 	});
 
 	it('should HIDE the LOGO', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false&displayLogo=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkSessionIsPresent();
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('info-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
+
+		// Checking if toolbar is present
+		await utils.waitForElement('#info-container');
+		expect(await utils.isPresent('#info-container')).to.be.true;
 
 		// Checking if logo is not displayed
-		element = await browser.findElements(By.id('branding-logo'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#branding-logo')).to.be.false;
 	});
 
 	it('should HIDE the SESSION NAME', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false&displaySessionName=false`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkSessionIsPresent();
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('info-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
+
+		// Checking if toolbar is present
+		await utils.waitForElement('#info-container');
+		expect(await utils.isPresent('#info-container')).to.be.true;
 
 		// Checking if session name is not displayed
-		element = await browser.findElements(By.id('session-name'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#session-name')).to.be.false;
 	});
 
 	it('should HIDE the PARTICIPANT NAME', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false&displayParticipantName=false`);
-		await browser.sleep(1000);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
 
 		// Checking if stream component is present
-		element = await browser.wait(until.elementLocated(By.className('OV_stream')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkStreamIsPresent();
 
-		// Checking if nickname is not displayed
-		element = await browser.findElements(By.id('nickname-container'));
-		expect(element.length).equals(0);
+		// Checking if nickname is not present
+		expect(await utils.isPresent('#nickname-container')).to.be.false;
 	});
 
 	it('should HIDE the AUDIO DETECTION element', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false&displayAudioDetection=false`);
-		await browser.sleep(1000);
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
 
 		// Checking if stream component is present
-		element = await browser.wait(until.elementLocated(By.className('OV_stream')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkStreamIsPresent();
 
-		// Checking if audio detection is not displayed
-		element = await browser.findElements(By.id('audio-wave-container'));
-		expect(element.length).equals(0);
+		// Checking if audio detection is not present
+		expect(await utils.isPresent('#audio-wave-container')).to.be.false;
 	});
 
 	it('should HIDE the STREAM SETTINGS button', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false&settingsBtn=false`);
-		await browser.sleep(1000);
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
 
 		// Checking if stream component is present
-		element = await browser.wait(until.elementLocated(By.className('OV_stream')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkStreamIsPresent();
 
-		// Checking if settings button is not displayed
-		element = await browser.findElements(By.id('settings-container'));
-		expect(element.length).equals(0);
+		// Checking if settings button is not present
+		expect(await utils.isPresent('#settings-container')).to.be.false;
 	});
 
 	it('should HIDE the MUTE button in participants panel', async () => {
-		let element, remoteParticipantItems;
 		const sessionName = 'e2etest';
 		const fixedUrl = `${url}?prejoin=false&participantMuteBtn=false&sessionName=${sessionName}`;
 		await browser.get(fixedUrl);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
 
-		// Checking if toolbar is present and opening the participants panel
-		element = await browser.wait(until.elementLocated(By.id('menu-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-		const participantsButton = await browser.findElement(By.id('participants-panel-btn'));
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
+
+		const participantsButton = await utils.waitForElement('#participants-panel-btn');
 		await participantsButton.click();
 
 		// Checking if participatns panel is displayed
-		element = await browser.wait(until.elementLocated(By.id('participants-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#participants-container');
+		expect(await utils.isPresent('#participants-container')).to.be.true;
+
 		// Checking remote participants item
-		remoteParticipantItems = await browser.findElements(By.id('remote-participant-item'));
-		expect(remoteParticipantItems.length).equals(0);
+		expect(await utils.isPresent('#remote-participant-item')).to.be.false;
 
 		// Starting new browser for adding a new participant
 		const newTabScript = `window.open("${fixedUrl}")`;
@@ -505,72 +458,77 @@ describe('Testing API Directives', () => {
 		browser.switchTo().window(tabs[0]);
 
 		// Checking if mute button is not displayed in participant item
-		remoteParticipantItems = await browser.wait(until.elementsLocated(By.id('remote-participant-item')), TIMEOUT);
-		expect(remoteParticipantItems.length).equals(1);
-		element = await browser.findElements(By.id('mute-btn'));
-		expect(element.length).equals(0);
+		await utils.waitForElement('#remote-participant-item');
+		expect(await utils.isPresent('#remote-participant-item')).to.be.true;
+
+		expect(await utils.isPresent('#mute-btn')).to.be.false;
 	});
 
 	it('should HIDE the RECORDING ACTIVITY in activities panel', async () => {
 		let element;
 		const fixedUrl = `${url}?prejoin=false&activitiesPanelRecordingActivity=false`;
 		await browser.get(fixedUrl);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
 
-		// Checking if toolbar is present and opening the activities panel
-		element = await browser.wait(until.elementLocated(By.id('menu-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-		element = await browser.findElement(By.id('activities-panel-btn'));
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
+
+		element = await utils.waitForElement('#activities-panel-btn');
 		await element.click();
 
 		// Checking if participatns panel is displayed
-		element = await browser.wait(until.elementLocated(By.id('default-activities-panel')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#default-activities-panel');
+		expect(await utils.isPresent('#default-activities-panel')).to.be.true;
 
-		await browser.sleep(1000);
+		// await browser.sleep(1000);
+
 		// Checking if recording activity exists
-		element = await browser.findElements(By.css('ov-recording-activity'));
-		expect(element.length).equals(0);
+		await utils.waitForElement('.activities-body-container');
+		expect(await utils.isPresent('ov-recording-activity')).to.be.false;
 	});
 
 	it('should SHOW a RECORDING ERROR in activities panel', async () => {
 		let element;
-		const fixedUrl = `${url}?prejoin=false&recordingError='TEST ERROR'`;
+		const fixedUrl = `${url}?prejoin=false&recordingError=TEST_ERROR`;
 		await browser.get(fixedUrl);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
 
-		// Checking if toolbar is present and opening the activities panel
-		element = await browser.wait(until.elementLocated(By.id('menu-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-		element = await browser.findElement(By.id('activities-panel-btn'));
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
+
+		element = await utils.waitForElement('#activities-panel-btn');
 		await element.click();
 
 		// Checking if participatns panel is displayed
-		element = await browser.wait(until.elementLocated(By.id('default-activities-panel')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#default-activities-panel');
+		expect(await utils.isPresent('#default-activities-panel')).to.be.true;
 
-		await browser.sleep(1000);
 		// Checking if recording activity exists
-		element = await browser.findElements(By.css('ov-recording-activity'));
-		expect(element.length).equals(1);
+		await utils.waitForElement('#activities-container');
+		await utils.waitForElement('.activities-body-container');
 
-		element = await browser.findElements(By.className('failed'));
-		expect(element.length).equals(2);
+		await utils.waitForElement('ov-recording-activity');
+		expect(await utils.isPresent('ov-recording-activity')).to.be.true;
+
+		await utils.waitForElement('.failed');
+		expect(await utils.isPresent('.failed')).to.be.true;
 
 		// Open recording
-		element = await browser.wait(until.elementLocated(By.css('ov-recording-activity')), TIMEOUT);
+		await browser.sleep(1000);
+		element = await utils.waitForElement('ov-recording-activity');
 		await element.click();
 
-		await browser.sleep(1000);
-		element = await browser.findElements(By.className('recording-error'));
-		expect(element.length).equals(1);
+		element = await utils.waitForElement('.recording-error');
+		expect(await element.getAttribute('innerText')).equal('"TEST_ERROR"');
+		expect(await utils.isPresent('.recording-error')).to.be.true;
 	});
 });
 
 describe('Testing videoconference EVENTS', () => {
 	let browser: WebDriver;
+	let utils: OpenViduComponentsPO;
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
 			.forBrowser(WebComponentConfig.browserName)
@@ -582,6 +540,7 @@ describe('Testing videoconference EVENTS', () => {
 
 	beforeEach(async () => {
 		browser = await createChromeBrowser();
+		utils = new OpenViduComponentsPO(browser);
 	});
 
 	afterEach(async () => {
@@ -589,408 +548,308 @@ describe('Testing videoconference EVENTS', () => {
 	});
 
 	it('should receive the onJoinButtonClicked event', async () => {
-		let element;
 		await browser.get(`${url}`);
-		element = await browser.wait(until.elementLocated(By.id('prejoin-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.waitForElement('#prejoin-container');
+		expect(await utils.isPresent('#prejoin-container')).to.be.true;
 
 		// Clicking to join button
-		const joinButton = await browser.findElement(By.id('join-button'));
-		expect(await joinButton.isDisplayed()).to.be.true;
+		const joinButton = await utils.waitForElement('#join-button');
+		expect(await utils.isPresent('#join-button')).to.be.true;
+		expect(await joinButton.isEnabled()).to.be.true;
 		await joinButton.click();
 
 		// Checking if onJoinButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onJoinButtonClicked')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#onJoinButtonClicked');
+		expect(await utils.isPresent('#onJoinButtonClicked')).to.be.true;
 	});
 
 	it('should receive the onToolbarLeaveButtonClicked event', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-
-		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Clicking to leave button
-		const leaveButton = await browser.findElement(By.id('leave-btn'));
-		expect(await leaveButton.isDisplayed()).to.be.true;
+		const leaveButton = await utils.waitForElement('#leave-btn');
+		expect(await utils.isPresent('#leave-btn')).to.be.true;
 		await leaveButton.click();
 
 		// Checking if onToolbarLeaveButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onToolbarLeaveButtonClicked')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#onToolbarLeaveButtonClicked');
+		expect(await utils.isPresent('#onToolbarLeaveButtonClicked')).to.be.true;
 	});
 
 	it('should receive the onToolbarCameraButtonClicked event', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-
-		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Clicking to leave button
-		const cameraButton = await browser.findElement(By.id('camera-btn'));
-		expect(await cameraButton.isDisplayed()).to.be.true;
+		const cameraButton = await utils.waitForElement('#camera-btn');
+		expect(await utils.isPresent('#camera-btn')).to.be.true;
 		await cameraButton.click();
 
 		// Checking if onToolbarCameraButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onToolbarCameraButtonClicked')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#onToolbarCameraButtonClicked');
+		expect(await utils.isPresent('#onToolbarCameraButtonClicked')).to.be.true;
 	});
 
 	it('should receive the onToolbarMicrophoneButtonClicked event', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
-		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-
-		// Clicking to leave button
-		const cameraButton = await browser.findElement(By.id('mic-btn'));
-		expect(await cameraButton.isDisplayed()).to.be.true;
-		await cameraButton.click();
+		// Clicking to mic button
+		const micButton = await utils.waitForElement('#mic-btn');
+		expect(await utils.isPresent('#mic-btn')).to.be.true;
+		await micButton.click();
 
 		// Checking if onToolbarMicrophoneButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onToolbarMicrophoneButtonClicked')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#onToolbarMicrophoneButtonClicked');
+		expect(await utils.isPresent('#onToolbarMicrophoneButtonClicked')).to.be.true;
 	});
 
 	it('should receive the onToolbarScreenshareButtonClicked event', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-
-		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Clicking to leave button
-		const screenshareButton = await browser.findElement(By.id('screenshare-btn'));
-		expect(await screenshareButton.isDisplayed()).to.be.true;
+		const screenshareButton = await utils.waitForElement('#screenshare-btn');
+		expect(await utils.isPresent('#screenshare-btn')).to.be.true;
 		await screenshareButton.click();
 
 		// Checking if onToolbarScreenshareButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onToolbarScreenshareButtonClicked')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#onToolbarScreenshareButtonClicked');
+		expect(await utils.isPresent('#onToolbarScreenshareButtonClicked')).to.be.true;
 	});
 
 	it('should receive the onToolbarFullscreenButtonClicked event', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-
-		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Open more options menu
-		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
+		element = await utils.waitForElement('#more-options-btn');
+		expect(await utils.isPresent('#more-options-btn')).to.be.true;
 		await element.click();
 
 		// Clicking to fullscreen button
-		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
-		const fullscreenButton = await browser.findElement(By.id('fullscreen-btn'));
-		expect(await fullscreenButton.isDisplayed()).to.be.true;
+		await utils.waitForElement('.mat-menu-content');
+
+		const fullscreenButton = await utils.waitForElement('#fullscreen-btn');
+		expect(await utils.isPresent('#fullscreen-btn')).to.be.true;
 		await fullscreenButton.click();
 
 		// Checking if onToolbarFullscreenButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onToolbarFullscreenButtonClicked')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#onToolbarFullscreenButtonClicked');
+		expect(await utils.isPresent('#onToolbarFullscreenButtonClicked')).to.be.true;
 	});
 
 	it('should receive the onToolbarChatPanelButtonClicked event', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-
-		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Clicking to chat button
-		const chatButton = await browser.findElement(By.id('chat-panel-btn'));
-		expect(await chatButton.isDisplayed()).to.be.true;
+		const chatButton = await utils.waitForElement('#chat-panel-btn');
 		await chatButton.click();
 
 		// Checking if onToolbarChatPanelButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onToolbarChatPanelButtonClicked')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#onToolbarChatPanelButtonClicked');
+		expect(await utils.isPresent('#onToolbarChatPanelButtonClicked')).to.be.true;
 	});
 
 	it('should receive the onToolbarParticipantsPanelButtonClicked event', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-
-		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Clicking to participants button
-		const participantsButton = await browser.findElement(By.id('participants-panel-btn'));
-		expect(await participantsButton.isDisplayed()).to.be.true;
+		const participantsButton = await utils.waitForElement('#participants-panel-btn');
 		await participantsButton.click();
 
 		// Checking if onToolbarParticipantsPanelButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onToolbarParticipantsPanelButtonClicked')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#onToolbarParticipantsPanelButtonClicked');
+		expect(await utils.isPresent('#onToolbarParticipantsPanelButtonClicked')).to.be.true;
 	});
 
 	it('should receive the onToolbarActivitiesPanelButtonClicked event', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-
-		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Clicking to activities button
-		const activitiesButton = await browser.findElement(By.id('activities-panel-btn'));
-		expect(await activitiesButton.isDisplayed()).to.be.true;
+		const activitiesButton = await utils.waitForElement('#activities-panel-btn');
 		await activitiesButton.click();
 
 		// Checking if onToolbarActivitiesPanelButtonClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onToolbarActivitiesPanelButtonClicked')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#onToolbarActivitiesPanelButtonClicked');
+		expect(await utils.isPresent('#onToolbarActivitiesPanelButtonClicked')).to.be.true;
 	});
 
 	it('should receive the onToolbarStartRecordingClicked event', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-
-		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Open more options menu
-		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
+		element = await utils.waitForElement('#more-options-btn');
+		expect(await utils.isPresent('#more-options-btn')).to.be.true;
 		await element.click();
 
 		await browser.sleep(500);
 
 		// Clicking to recording button
-		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
-		const recordingButton = await browser.findElement(By.id('recording-btn'));
-		expect(await recordingButton.isDisplayed()).to.be.true;
+		await utils.waitForElement('.mat-menu-content');
+
+		const recordingButton = await utils.waitForElement('#recording-btn');
+		expect(await utils.isPresent('#recording-btn')).to.be.true;
 		await recordingButton.click();
 
 		// Checking if onToolbarStartRecordingClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onToolbarStartRecordingClicked')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-
-		// Can't test the recording
-		// element = await browser.wait(until.elementLocated(By.id('recording-tag')), TIMEOUT);
-
-		// Open more options menu
-		// element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
-		// await element.click();
-
-		// // Clicking to recording button
-		// element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
-		// element = await browser.findElement(By.id('recording-btn'));
-		// expect(await recordingButton.isDisplayed()).to.be.true;
-		// await recordingButton.click();
-
-		// // Checking if onToolbarStopRecordingClicked has been received
-		// element = await browser.wait(until.elementLocated(By.id('onToolbarStopRecordingClicked')), TIMEOUT);
-		// expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#onToolbarStartRecordingClicked');
+		expect(await utils.isPresent('#onToolbarStartRecordingClicked')).to.be.true;
 	});
 
 	it('should receive the onActivitiesPanelStartRecordingClicked event', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-
-		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Open activities panel
-		element = await browser.wait(until.elementLocated(By.id('activities-panel-btn')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		element = await utils.waitForElement('#activities-panel-btn');
+		expect(await utils.isPresent('#activities-panel-btn')).to.be.true;
 		await element.click();
 
 		await browser.sleep(1000);
 
 		// Open recording
-		element = await browser.wait(until.elementLocated(By.css('ov-recording-activity')), TIMEOUT);
+		element = await utils.waitForElement('ov-recording-activity');
 		await element.click();
 
 		await browser.sleep(1000);
 
 		// Clicking to recording button
-		element = await browser.wait(until.elementLocated(By.id('start-recording-btn')), TIMEOUT);
+		element = await utils.waitForElement('#start-recording-btn');
+		expect(await element.isEnabled()).to.be.true;
+
 		await element.click();
 
 		// Checking if onActivitiesPanelStartRecordingClicked has been received
-		element = await browser.wait(until.elementLocated(By.id('onActivitiesPanelStartRecordingClicked')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-
-		/// Can't test the recording
-		// Wait until recording ready
-		// element = await browser.wait(until.elementLocated(By.id('recording-tag')), TIMEOUT);
-
-		// Clicking to recording button
-		// element = await browser.findElement(By.id('stop-recording-btn'));
-		// expect(await element.isDisplayed()).to.be.true;
-		// await element.click();
-
-		// // Checking if onActivitiesPanelStopRecordingClicked has been received
-		// element = await browser.wait(until.elementLocated(By.id('onActivitiesPanelStopRecordingClicked')), TIMEOUT);
-		// expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#onActivitiesPanelStartRecordingClicked');
+		expect(await utils.isPresent('#onActivitiesPanelStartRecordingClicked')).to.be.true;
 	});
 
 	it('should receive the PLAY and DELETE recording events', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
 
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-
-		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Clicking to activities button
-		const activitiesButton = await browser.findElement(By.id('activities-panel-btn'));
-		expect(await activitiesButton.isDisplayed()).to.be.true;
+		const activitiesButton = await utils.waitForElement('#activities-panel-btn');
+		expect(await utils.isPresent('#activities-panel-btn')).to.be.true;
 		await activitiesButton.click();
 
 		await browser.sleep(1500);
-
 		// Open recording
-		element = await browser.wait(until.elementLocated(By.css('ov-recording-activity')), TIMEOUT);
+		element = await utils.waitForElement('ov-recording-activity');
 		await element.click();
 
 		await browser.sleep(1500);
 
 		// Delete event
-		element = await browser.findElement(By.id('delete-recording-btn'));
-		expect(await element.isDisplayed()).to.be.true;
+		element = await utils.waitForElement('#delete-recording-btn');
+		expect(await utils.isPresent('#delete-recording-btn')).to.be.true;
 		await element.click();
-		element = await browser.findElement(By.id('delete-recording-confirm-btn'));
-		expect(await element.isDisplayed()).to.be.true;
+
+		element = await utils.waitForElement('#delete-recording-confirm-btn');
+		expect(await utils.isPresent('#delete-recording-confirm-btn')).to.be.true;
 		await element.click();
-		element = await browser.wait(until.elementLocated(By.id('onActivitiesPanelDeleteRecordingClicked')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.waitForElement('#onActivitiesPanelDeleteRecordingClicked');
+		expect(await utils.isPresent('#onActivitiesPanelDeleteRecordingClicked')).to.be.true;
 	});
 
 	it('should receive the onSessionCreated event', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false`);
 
-		element = await browser.wait(until.elementLocated(By.id('call-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
 
-		element = await browser.wait(until.elementLocated(By.id('onSessionCreated')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
-		element = await browser.findElements(By.id('onJoinButtonClicked'));
-		expect(element.length).equals(0);
+		await utils.checkToolbarIsPresent();
+
+		await utils.waitForElement('#onSessionCreated');
+		expect(await utils.isPresent('#onSessionCreated')).to.be.true;
+
+		expect(await utils.isPresent('#onJoinButtonClicked')).to.be.false;
 	});
 
 	// * PUBLISHER EVENTS
 
 	it('should receive onParticipantCreated event from LOCAL participant', async () => {
 		const participantName = 'TEST_USER';
-		let element;
 		await browser.get(`${url}?participantName=${participantName}`);
-		element = await browser.wait(until.elementLocated(By.id(`${participantName}-onParticipantCreated`)), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement(`#${participantName}-onParticipantCreated`);
+		expect(await utils.isPresent(`#${participantName}-onParticipantCreated`)).to.be.true;
 	});
 
 	// * SESSION EVENTS
 
 	it('should receive connectionCreated event from LOCAL participant', async () => {
 		const participantName = 'TEST_USER';
-		let element;
 		await browser.get(`${url}?prejoin=false&participantName=${participantName}`);
-		element = await browser.wait(until.elementLocated(By.id(`${participantName}-connectionCreated`)), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.waitForElement(`#${participantName}-connectionCreated`);
+		expect(await utils.isPresent(`#${participantName}-connectionCreated`)).to.be.true;
 	});
 
 	it('should receive sessionDisconnected event from LOCAL participant', async () => {
 		const participantName = 'TEST_USER';
 		let element;
 		await browser.get(`${url}?prejoin=false&participantName=${participantName}`);
-		element = await browser.wait(until.elementLocated(By.id('session-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
 
-		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkSessionIsPresent();
+
+		await utils.checkToolbarIsPresent();
 
 		// Checking if leave button is not present
-		element = await browser.wait(until.elementLocated(By.id('leave-btn')), TIMEOUT);
+		element = await utils.waitForElement('#leave-btn');
 		await element.click();
 
-		element = await browser.wait(until.elementLocated(By.id(`${participantName}-sessionDisconnected`)), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement(`#${participantName}-sessionDisconnected`);
+		expect(await utils.isPresent(`#${participantName}-sessionDisconnected`)).to.be.true;
 	});
 });
 
 describe('Testing screenshare features', () => {
 	let browser: WebDriver;
+	let utils: OpenViduComponentsPO;
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
 			.forBrowser(WebComponentConfig.browserName)
@@ -1002,6 +861,7 @@ describe('Testing screenshare features', () => {
 
 	beforeEach(async () => {
 		browser = await createChromeBrowser();
+		utils = new OpenViduComponentsPO(browser);
 	});
 
 	afterEach(async () => {
@@ -1011,15 +871,15 @@ describe('Testing screenshare features', () => {
 	it('should toggle screensharing', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkLayoutPresent();
 
 		// Clicking to screensharing button
-		const screenshareButton = await browser.findElement(By.id('screenshare-btn'));
+		const screenshareButton = await utils.waitForElement('#screenshare-btn');
 		expect(await screenshareButton.isDisplayed()).to.be.true;
 		await screenshareButton.click();
 
-		element = await browser.wait(until.elementLocated(By.className('OV_big')), TIMEOUT);
+		await utils.waitForElement('.OV_big');
 		element = await browser.findElements(By.css('video'));
 		expect(element.length).equals(2);
 
@@ -1036,27 +896,25 @@ describe('Testing screenshare features', () => {
 			return `return document.getElementsByClassName('${className}')[0].srcObject.getAudioTracks()[0].enabled;`;
 		};
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
 
-		await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
-		const micButton = await browser.findElement(By.id('mic-btn'));
-		expect(await micButton.isDisplayed()).to.be.true;
+		await utils.checkLayoutPresent();
+
+		const micButton = await utils.waitForElement('#mic-btn');
 		await micButton.click();
 
 		// Clicking to screensharing button
-		const screenshareButton = await browser.findElement(By.id('screenshare-btn'));
-		expect(await screenshareButton.isDisplayed()).to.be.true;
+		const screenshareButton = await utils.waitForElement('#screenshare-btn');
+		expect(await utils.isPresent('#screenshare-btn')).to.be.true;
 		await screenshareButton.click();
 
-		element = await browser.wait(until.elementLocated(By.className('screen-type')), TIMEOUT);
+		await utils.waitForElement('.screen-type');
 		element = await browser.findElements(By.css('video'));
 		expect(element.length).equals(2);
 
 		isAudioEnabled = await browser.executeScript(getAudioScript('screen-type'));
 		expect(isAudioEnabled).to.be.false;
 
-		await browser.wait(until.elementLocated(By.id('statusMic')), TIMEOUT);
+		await utils.waitForElement('#statusMic');
 		element = await browser.findElements(By.id('statusMic'));
 		expect(element.length).equals(2);
 
@@ -1070,19 +928,19 @@ describe('Testing screenshare features', () => {
 	it('should show and hide CAMERA stream when muting video with screensharing', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkLayoutPresent();
 
 		// Clicking to screensharing button
-		const screenshareButton = await browser.findElement(By.id('screenshare-btn'));
+		const screenshareButton = await utils.waitForElement('#screenshare-btn');
 		expect(await screenshareButton.isDisplayed()).to.be.true;
 		await screenshareButton.click();
 
-		element = await browser.wait(until.elementLocated(By.className('OV_big')), TIMEOUT);
+		await utils.waitForElement('.OV_big');
 		element = await browser.findElements(By.css('video'));
 		expect(element.length).equals(2);
 
-		const muteVideoButton = await browser.findElement(By.id('camera-btn'));
+		const muteVideoButton = await utils.waitForElement('#camera-btn');
 		await muteVideoButton.click();
 
 		element = await browser.findElements(By.css('video'));
@@ -1094,15 +952,15 @@ describe('Testing screenshare features', () => {
 		const audioEnableScript = 'return document.getElementsByTagName("video")[0].srcObject.getAudioTracks()[0].enabled;';
 
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkLayoutPresent();
 
 		// Clicking to screensharing button
-		const screenshareButton = await browser.findElement(By.id('screenshare-btn'));
-		expect(await screenshareButton.isDisplayed()).to.be.true;
+		const screenshareButton = await utils.waitForElement('#screenshare-btn');
+		expect(await utils.isPresent('#screenshare-btn')).to.be.true;
 		await screenshareButton.click();
 
-		element = await browser.wait(until.elementLocated(By.className('OV_big')), TIMEOUT);
+		element = await utils.waitForElement('.OV_big');
 		element = await browser.findElements(By.css('video'));
 		expect(element.length).equals(2);
 
@@ -1110,14 +968,14 @@ describe('Testing screenshare features', () => {
 		expect(element.length).equals(1);
 
 		// Muting camera video
-		const muteVideoButton = await browser.findElement(By.id('camera-btn'));
+		const muteVideoButton = await utils.waitForElement('#camera-btn');
 		await muteVideoButton.click();
 
 		element = await browser.findElements(By.css('video'));
 		expect(element.length).equals(1);
+
 		await browser.sleep(500);
-		element = await browser.findElements(By.id('statusMic'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#statusMic')).to.be.false;
 
 		// Checking if audio is muted after join the room
 		isAudioEnabled = await browser.executeScript(audioEnableScript);
@@ -1126,7 +984,7 @@ describe('Testing screenshare features', () => {
 		// Unmuting camera
 		await muteVideoButton.click();
 
-		element = await browser.wait(until.elementLocated(By.className('camera-type')), TIMEOUT);
+		element = await utils.waitForElement('.camera-type');
 		element = await browser.findElements(By.css('video'));
 		expect(element.length).equals(2);
 
@@ -1142,15 +1000,14 @@ describe('Testing screenshare features', () => {
 		};
 
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkLayoutPresent();
 
 		// Clicking to screensharing button
-		const screenshareButton = await browser.findElement(By.id('screenshare-btn'));
-		expect(await screenshareButton.isDisplayed()).to.be.true;
+		const screenshareButton = await utils.waitForElement('#screenshare-btn');
 		await screenshareButton.click();
 
-		element = await browser.wait(until.elementLocated(By.className('screen-type')), TIMEOUT);
+		await utils.waitForElement('.screen-type');
 		element = await browser.findElements(By.css('video'));
 		expect(element.length).equals(2);
 
@@ -1158,24 +1015,23 @@ describe('Testing screenshare features', () => {
 		expect(element.length).equals(1);
 
 		// Mute camera
-		const muteVideoButton = await browser.findElement(By.id('camera-btn'));
+		const muteVideoButton = await utils.waitForElement('#camera-btn');
 		await muteVideoButton.click();
 
 		element = await browser.findElements(By.css('video'));
 		expect(element.length).equals(1);
 
-		element = await browser.findElements(By.id('statusMic'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#statusMic')).to.be.false;
 
 		// Checking if audio is muted after join the room
 		isAudioEnabled = await browser.executeScript(getAudioScript('screen-type'));
 		expect(isAudioEnabled).to.be.true;
 
 		// Mute audio
-		const muteAudioButton = await browser.findElement(By.id('mic-btn'));
+		const muteAudioButton = await utils.waitForElement('#mic-btn');
 		await muteAudioButton.click();
 
-		await browser.wait(until.elementLocated(By.id('statusMic')), TIMEOUT);
+		await utils.waitForElement('#statusMic');
 		element = await browser.findElements(By.id('statusMic'));
 		expect(element.length).equals(1);
 
@@ -1185,7 +1041,7 @@ describe('Testing screenshare features', () => {
 		// Unmute camera
 		await muteVideoButton.click();
 
-		element = await browser.wait(until.elementLocated(By.className('camera-type')), TIMEOUT);
+		await utils.waitForElement('.camera-type');
 		element = await browser.findElements(By.css('video'));
 		expect(element.length).equals(2);
 
@@ -1199,6 +1055,8 @@ describe('Testing screenshare features', () => {
 
 describe('Testing panels', () => {
 	let browser: WebDriver;
+	let utils: OpenViduComponentsPO;
+
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
 			.forBrowser(WebComponentConfig.browserName)
@@ -1210,6 +1068,7 @@ describe('Testing panels', () => {
 
 	beforeEach(async () => {
 		browser = await createChromeBrowser();
+		utils = new OpenViduComponentsPO(browser);
 	});
 
 	afterEach(async () => {
@@ -1219,233 +1078,216 @@ describe('Testing panels', () => {
 	it('should toggle BACKGROUND panel on prejoin page when VIDEO is MUTED', async () => {
 		let element;
 		await browser.get(`${url}`);
-		element = await browser.wait(until.elementLocated(By.id('pre-join-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		element = await utils.waitForElement('#pre-join-container');
+		expect(await utils.isPresent('#pre-join-container')).to.be.true;
 
-		const backgroundButton = await browser.findElement(By.id('background-effects-btn'));
-		expect(await backgroundButton.isDisplayed()).to.be.true;
+		const backgroundButton = await utils.waitForElement('#background-effects-btn');
+		expect(await utils.isPresent('#background-effects-btn')).to.be.true;
 		expect(await backgroundButton.isEnabled()).to.be.true;
 		await backgroundButton.click();
 		await browser.sleep(500);
 
-		element = await browser.wait(until.elementLocated(By.id('background-effects-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('#background-effects-container');
+		expect(await utils.isPresent('#background-effects-container')).to.be.true;
 
-		element = await browser.wait(until.elementLocated(By.id('camera-button')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		element = await utils.waitForElement('#camera-button');
+		expect(await utils.isPresent('#camera-button')).to.be.true;
 		expect(await element.isEnabled()).to.be.true;
 		await element.click();
 
 		await browser.sleep(500);
-		element = await browser.wait(until.elementLocated(By.id('video-poster')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		element = await utils.waitForElement('#video-poster');
+		expect(await utils.isPresent('#video-poster')).to.be.true;
 
 		expect(await backgroundButton.isDisplayed()).to.be.true;
 		expect(await backgroundButton.isEnabled()).to.be.false;
 
-		element = await browser.findElements(By.id('background-effects-container'));
-		expect(element.length).equals(0);
-
+		expect(await utils.isPresent('#background-effects-container')).to.be.false;
 	});
 
 	it('should toggle CHAT panel', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
 
-		const chatButton = await browser.findElement(By.id('chat-panel-btn'));
-		expect(await chatButton.isDisplayed()).to.be.true;
+		await utils.checkLayoutPresent();
+
+		const chatButton = await utils.waitForElement('#chat-panel-btn');
 		await chatButton.click();
 
-		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
-		element = await browser.findElements(By.className('input-container'));
-		expect(element.length).equals(1);
-		element = await browser.findElement(By.className('messages-container'));
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('.sidenav-menu');
+		await utils.waitForElement('.input-container');
+		expect(await utils.isPresent('.input-container')).to.be.true;
+
+		await utils.waitForElement('.messages-container');
+		expect(await utils.isPresent('.messages-container')).to.be.true;
 
 		await chatButton.click();
 
-		element = await browser.findElements(By.className('input-container'));
-		expect(element.length).equals(0);
-		element = await browser.findElements(By.css('messages-container'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('.input-container')).to.be.false;
+		expect(await utils.isPresent('.messages-container')).to.be.false;
 	});
 
 	it('should toggle PARTICIPANTS panel', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
 
-		const participantBtn = await browser.findElement(By.id('participants-panel-btn'));
-		expect(await participantBtn.isDisplayed()).to.be.true;
+		await utils.checkLayoutPresent();
+
+		const participantBtn = await utils.waitForElement('#participants-panel-btn');
 		await participantBtn.click();
 
-		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
-		element = await browser.findElements(By.className('local-participant-container'));
-		expect(element.length).equals(1);
-		element = await browser.findElement(By.css('ov-participant-panel-item'));
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('.sidenav-menu');
+
+		await utils.waitForElement('.local-participant-container');
+		expect(await utils.isPresent('.local-participant-container')).to.be.true;
+
+		await utils.waitForElement('ov-participant-panel-item');
+		expect(await utils.isPresent('ov-participant-panel-item')).to.be.true;
 
 		await participantBtn.click();
 
-		element = await browser.findElements(By.className('local-participant-container'));
-		expect(element.length).equals(0);
-		element = await browser.findElements(By.css('ov-participant-panel-item'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('.local-participant-container')).to.be.false;
+		expect(await utils.isPresent('ov-participant-panel-item')).to.be.false;
 	});
 
 	it('should toggle ACTIVITIES panel', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkLayoutPresent();
 
 		// Get activities button and click into it
-		const activitiesBtn = await browser.findElement(By.id('activities-panel-btn'));
-		expect(await activitiesBtn.isDisplayed()).to.be.true;
+		const activitiesBtn = await utils.waitForElement('#activities-panel-btn');
 		await activitiesBtn.click();
 
-		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
-		element = await browser.findElements(By.id('activities-container'));
-		expect(element.length).equals(1);
-		element = await browser.findElement(By.id('recording-activity'));
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('.sidenav-menu');
+		await utils.waitForElement('#activities-container');
+		expect(await utils.isPresent('#activities-container')).to.be.true;
 
+		await utils.waitForElement('#recording-activity');
+		expect(await utils.isPresent('#recording-activity')).to.be.true;
 		await activitiesBtn.click();
 
-		element = await browser.findElements(By.className('activities-container'));
-		expect(element.length).equals(0);
-		element = await browser.findElements(By.id('recording-activity'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('#activities-container')).to.be.false;
+		expect(await utils.isPresent('#recording-activity')).to.be.false;
 	});
 
 	it('should toggle SETTINGS panel', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkLayoutPresent();
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Open more options menu
-		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
+		element = await utils.waitForElement('#more-options-btn');
 		await element.click();
 
 		await browser.sleep(500);
 
 		// Checking if mat menu is  present
-		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		element = await utils.waitForElement('.mat-menu-content');
+		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
 
 		// Get settings button and click into it
-		const settingsBtn = await browser.findElement(By.id('toolbar-settings-btn'));
-		expect(await settingsBtn.isDisplayed()).to.be.true;
+		const settingsBtn = await utils.waitForElement('#toolbar-settings-btn');
 		await settingsBtn.click();
 
-		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
-		element = await browser.findElements(By.id('default-settings-panel'));
-		expect(element.length).equals(1);
+		element = await utils.waitForElement('.sidenav-menu');
+		expect(await utils.isPresent('#default-settings-panel')).to.be.true;
 	});
 
 	it('should switching between PARTICIPANTS and CHAT panels', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkSessionIsPresent();
+
+		await utils.checkToolbarIsPresent();
 
 		// Open chat panel
-		const chatButton = await browser.findElement(By.id('chat-panel-btn'));
-		expect(await chatButton.isDisplayed()).to.be.true;
+		const chatButton = await utils.waitForElement('#chat-panel-btn');
 		await chatButton.click();
 
-		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
-		element = await browser.findElements(By.className('input-container'));
-		expect(element.length).equals(1);
-		element = await browser.findElement(By.className('messages-container'));
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('.sidenav-menu');
+		expect(await utils.isPresent('.sidenav-menu')).to.be.true;
+
+		await utils.waitForElement('.input-container');
+		expect(await utils.isPresent('.input-container')).to.be.true;
+
+		expect(await utils.isPresent('.messages-container')).to.be.true;
 
 		// Open participants panel
-		const participantBtn = await browser.findElement(By.id('participants-panel-btn'));
-		expect(await participantBtn.isDisplayed()).to.be.true;
+		const participantBtn = await utils.waitForElement('#participants-panel-btn');
 		await participantBtn.click();
 
-		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
-		element = await browser.findElements(By.className('local-participant-container'));
-		expect(element.length).equals(1);
-		element = await browser.findElement(By.css('ov-participant-panel-item'));
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('.sidenav-menu');
+
+		expect(await utils.isPresent('.local-participant-container')).to.be.true;
+
+		expect(await utils.isPresent('ov-participant-panel-item')).to.be.true;
 
 		// Switch to chat panel
 		await chatButton.click();
 
-		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
-		element = await browser.findElements(By.className('input-container'));
-		expect(element.length).equals(1);
-		element = await browser.findElement(By.className('messages-container'));
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('.sidenav-menu');
 
-		element = await browser.findElements(By.className('local-participant-container'));
-		expect(element.length).equals(0);
-		element = await browser.findElements(By.css('ov-participant-panel-item'));
-		expect(element.length).equals(0);
+		expect(await utils.isPresent('.input-container')).to.be.true;
+
+		expect(await utils.isPresent('.messages-container')).to.be.true;
+
+		expect(await utils.isPresent('.local-participant-container')).to.be.false;
+
+		expect(await utils.isPresent('ov-participant-panel-item')).to.be.false;
 
 		// Close chat panel
 		await chatButton.click();
-		element = await browser.findElements(By.className('input-container'));
-		expect(element.length).equals(0);
-		element = await browser.findElements(By.css('messages-container'));
-		expect(element.length).equals(0);
+		await browser.findElements(By.className('input-container'));
+		expect(await utils.isPresent('.input-container')).to.be.false;
+
+		expect(await utils.isPresent('messages-container')).to.be.false;
 	});
 
 	it('should switching between sections in SETTINGS PANEL', async () => {
 		let element;
 		await browser.get(`${url}?prejoin=false`);
-		element = await browser.wait(until.elementLocated(By.id('layout')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+
+		await utils.checkToolbarIsPresent();
 
 		// Checking if toolbar is present
-		element = await browser.wait(until.elementLocated(By.id('media-buttons-container')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.checkToolbarIsPresent();
 
 		// Open more options menu
-		element = await browser.wait(until.elementLocated(By.id('more-options-btn')), TIMEOUT);
+		element = await utils.waitForElement('#more-options-btn');
 		await element.click();
 
 		await browser.sleep(500);
 
 		// Checking if mat menu is  present
-		element = await browser.wait(until.elementLocated(By.className('mat-menu-content')), TIMEOUT);
-		expect(await element.isDisplayed()).to.be.true;
+		await utils.waitForElement('.mat-menu-content');
+		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
 
 		// Get settings button and click into it
-		const settingsBtn = await browser.findElement(By.id('toolbar-settings-btn'));
-		expect(await settingsBtn.isDisplayed()).to.be.true;
+		const settingsBtn = await utils.waitForElement('#toolbar-settings-btn');
 		await settingsBtn.click();
 
-		element = await browser.wait(until.elementLocated(By.className('sidenav-menu')), TIMEOUT);
-		element = await browser.findElements(By.id('default-settings-panel'));
-		expect(element.length).equals(1);
+		await utils.waitForElement('.sidenav-menu');
+		expect(await utils.isPresent('.sidenav-menu')).to.be.true;
 
 		// Check if general section is shown
-		element = await browser.findElement(By.id('general-opt'));
+		element = await utils.waitForElement('#general-opt');
 		await element.click();
-		element = await browser.findElement(By.css('ov-nickname-input'));
-		expect(element.isDisplayed());
+
+		expect(await utils.isPresent('ov-nickname-input')).to.be.true;
 
 		// Check if video section is shown
-		element = await browser.findElement(By.id('video-opt'));
+		element = await utils.waitForElement('#video-opt');
 		await element.click();
-		element = await browser.findElement(By.css('ov-video-devices-select'));
-		expect(element.isDisplayed());
+
+		expect(await utils.isPresent('ov-video-devices-select')).to.be.true;
 
 		// Check if audio section is shown
-		element = await browser.findElement(By.id('audio-opt'));
+		element = await utils.waitForElement('#audio-opt');
 		await element.click();
-		element = await browser.findElement(By.css('ov-audio-devices-select'));
-		expect(element.isDisplayed());
+
+		expect(await utils.isPresent('ov-audio-devices-select')).to.be.true;
 	});
 });
