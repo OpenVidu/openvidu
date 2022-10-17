@@ -1317,13 +1317,10 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    async onSpeechToTextMessage(event: { streamId: string; connectionId: string; sessionId: string, timestamp: number, raw: string }): Promise<void> {
+    async onSpeechToTextMessage(event: { streamId: string; connectionId: string; sessionId: string, text: string, reason: string, raw: string }): Promise<void> {
         const connection = await this.getConnection(event.connectionId, 'No connection found for connectionId ' + event.connectionId);
-        const ev = new SpeechToTextEvent(this, connection, event.timestamp, event.raw);
+        const ev = new SpeechToTextEvent(this, connection, event.text, <any>event.reason.toLowerCase(), event.raw);
         this.ee.emitEvent('speechToTextMessage', [ev]);
-        if (ev.raw.includes('text')) {
-            console.log(ev);
-        }
     }
 
     /**

@@ -640,7 +640,7 @@ public class OpenviduConfig {
 
 		webrtcIceServersBuilders = loadWebrtcIceServers("OPENVIDU_WEBRTC_ICE_SERVERS");
 
-		Boolean openviduDevAux = asOptionalBoolean("OPENVIDU_DEV");
+		Boolean openviduDevAux = asOptionalBoolean("OPENVIDU_DEV", false);
 		if (openviduDevAux != null) {
 			openviduDev = openviduDevAux;
 		}
@@ -887,9 +887,9 @@ public class OpenviduConfig {
 		return getValue(property);
 	}
 
-	protected Boolean asOptionalBoolean(String property) {
+	protected Boolean asOptionalBoolean(String property, boolean storeInConfigProps) {
 		Boolean value = null;
-		String strValue = this.getValue(property, false);
+		String strValue = this.getValue(property, storeInConfigProps);
 		if (strValue != null) {
 			value = Boolean.parseBoolean(strValue);
 		}

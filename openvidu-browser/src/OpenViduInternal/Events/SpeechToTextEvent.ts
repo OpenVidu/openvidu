@@ -20,18 +20,25 @@ import { Connection } from '../../OpenVidu/Connection';
 import { Session } from '../../OpenVidu/Session';
 
 /**
- * Triggered by [[SessionEventMap.signal]]
+ * Triggered by [[SessionEventMap.speechToTextMessage]]
  */
 export class SpeechToTextEvent extends Event {
+
     /**
-     * The connectionId of the 
+     * The [[Connection]] owning the Stream that produced the speech-to-text event.
+     * In other words, this is the participant that spoke and produced this transcription event.
      */
     connection: Connection;
 
     /**
-     * 
+     * The text of the event. This is the transcription for this specific piece of audio stream
      */
-    timestamp: number;
+    text: string;
+
+    /**
+     * All speech-to-text events are generated 
+     */
+    reason: 'recognizing' | 'recognized';
 
     /**
      * The original event from the speech to text engine. This can vary depending on the engine
@@ -41,10 +48,11 @@ export class SpeechToTextEvent extends Event {
     /**
      * @hidden
      */
-    constructor(target: Session, connection: Connection, timestamp: number, raw: string) {
+    constructor(target: Session, connection: Connection, text: string, reason: 'recognizing' | 'recognized', raw: string) {
         super(false, target, 'speechToTextMessage');
         this.connection = connection;
-        this.timestamp = timestamp;
+        this.text = text;
+        this.reason = reason;
         this.raw = raw;
     }
 
