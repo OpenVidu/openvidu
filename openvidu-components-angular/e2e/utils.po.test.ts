@@ -57,4 +57,12 @@ export class OpenViduComponentsPO {
 		await this.waitForElement('#media-buttons-container');
 		expect(await this.isPresent('#media-buttons-container')).to.be.true;
 	}
+
+
+	// Angular library
+
+	async clickOn(selector: string): Promise<void> {
+		const element = await this.waitForElement(selector);
+		await element.click();
+	}
 }
