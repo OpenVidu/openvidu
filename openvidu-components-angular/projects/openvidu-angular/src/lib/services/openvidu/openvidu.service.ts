@@ -1,18 +1,18 @@
 import { Injectable } from '@angular/core';
-import { Connection, OpenVidu, OpenViduError, OpenViduErrorName, Publisher, PublisherProperties, Session, SignalOptions, Stream } from 'openvidu-browser';
+import { Connection, OpenVidu, OpenViduError, OpenViduErrorName, Publisher, PublisherProperties, Session, SignalOptions } from 'openvidu-browser';
 
 import { LoggerService } from '../logger/logger.service';
 
-import { ILogger } from '../../models/logger.model';
-import { Signal } from '../../models/signal.model';
-import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.service';
-import { PlatformService } from '../platform/platform.service';
-import { DeviceService } from '../device/device.service';
 import { CameraType } from '../../models/device.model';
-import { ScreenType, VideoType } from '../../models/video-type.model';
-import { ParticipantService } from '../participant/participant.service';
-import { TokenService } from '../token/token.service';
+import { ILogger } from '../../models/logger.model';
 import { OpenViduEdition } from '../../models/openvidu.model';
+import { Signal } from '../../models/signal.model';
+import { ScreenType, VideoType } from '../../models/video-type.model';
+import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.service';
+import { DeviceService } from '../device/device.service';
+import { ParticipantService } from '../participant/participant.service';
+import { PlatformService } from '../platform/platform.service';
+import { TokenService } from '../token/token.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -444,19 +444,19 @@ export class OpenViduService {
 		}
 	}
 
-	private destroyPublisher(publisher: Publisher): void {
-		if (!!publisher) {
-			if (publisher.stream.getWebRtcPeer()) {
-				publisher.stream.disposeWebRtcPeer();
-			}
-			publisher.stream.disposeMediaStream();
-			if (publisher.id === this.participantService.getMyCameraPublisher().id) {
-				this.participantService.setMyCameraPublisher(publisher);
-			} else if (publisher.id === this.participantService.getMyScreenPublisher().id) {
-				this.participantService.setMyScreenPublisher(publisher);
-			}
-		}
-	}
+	// private destroyPublisher(publisher: Publisher): void {
+	// 	if (!!publisher) {
+	// 		if (publisher.stream.getWebRtcPeer()) {
+	// 			publisher.stream.disposeWebRtcPeer();
+	// 		}
+	// 		publisher.stream.disposeMediaStream();
+	// 		if (publisher.id === this.participantService.getMyCameraPublisher().id) {
+	// 			this.participantService.setMyCameraPublisher(publisher);
+	// 		} else if (publisher.id === this.participantService.getMyScreenPublisher().id) {
+	// 			this.participantService.setMyScreenPublisher(publisher);
+	// 		}
+	// 	}
+	// }
 
 	private async createMediaStream(pp: PublisherProperties): Promise<MediaStream> {
 		let mediaStream: MediaStream;
