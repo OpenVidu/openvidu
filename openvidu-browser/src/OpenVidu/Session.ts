@@ -904,11 +904,12 @@ export class Session extends EventDispatcher {
                     this.ee.emitEvent('streamDestroyed', [streamEvent]);
                     streamEvent.callDefaultBehavior();
 
-                    // Deleting the remote stream
-                    const streamId: string = connection.stream!.streamId;
-                    this.remoteStreamsCreated.delete(streamId);
-
-                    connection.removeStream(streamId);
+                    // Deleting the remote stream if it exists
+                    if (connection.stream != null) {
+                        const streamId: string = connection.stream!.streamId;
+                        this.remoteStreamsCreated.delete(streamId);
+                        connection.removeStream(streamId);
+                    }
                 })
                 .catch((openViduError) => {
                     logger.error(openViduError);
