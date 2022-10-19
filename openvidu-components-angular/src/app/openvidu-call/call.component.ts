@@ -9,7 +9,6 @@ import { RestService } from '../services/rest.service';
 })
 export class CallComponent implements OnInit {
 
-	value = true;
 	sessionId = 'daily-call';
 	tokens: TokenModel;
 

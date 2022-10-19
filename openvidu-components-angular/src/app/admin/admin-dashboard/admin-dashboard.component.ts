@@ -18,7 +18,10 @@ export class AdminDashboardComponent implements OnInit {
 			const resp: any = await this.restService.login('');
 			this.logged = true;
 			this.recordings = resp.recordings;
-		} catch (error) {}
+		} catch (error) {
+
+			this.logged = true;
+		}
 	}
 
 	async login(pass: string) {
