@@ -60,6 +60,7 @@
 		<version.unirest>1.4.9</version.unirest>
 		<version.jcodec>0.2.5</version.jcodec>
 		<version.commons-validator>1.7</version.commons-validator>
+		<version.commons-text>1.10.0</version.commons-text>
 		<version.testcontainers>1.16.2</version.testcontainers>
 		<version.appium>7.6.0</version.appium>
 

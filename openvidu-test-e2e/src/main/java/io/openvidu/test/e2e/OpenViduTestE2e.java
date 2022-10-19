@@ -335,6 +335,11 @@ public class OpenViduTestE2e {
 			setupBrowserAux(BrowserNames.CHROME, container, false);
 			browserUser = new ChromeUser("TestUser", 50, Paths.get("/opt/openvidu/barcode.y4m"));
 			break;
+		case "chromeFakeAudio":
+		    container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
+            setupBrowserAux(BrowserNames.CHROME, container, false);
+            browserUser = new ChromeUser("TestUser", 50, null, Paths.get("/opt/openvidu/stt-test2.wav"));
+            break;
 		case "chromeVirtualBackgroundFakeVideo":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
 			setupBrowserAux(BrowserNames.CHROME, container, false);
