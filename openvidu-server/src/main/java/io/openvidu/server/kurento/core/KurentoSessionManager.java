@@ -1161,7 +1161,7 @@ public class KurentoSessionManager extends SessionManager {
 		String token = IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 				+ RandomStringUtils.randomAlphanumeric(15);
 
-		this.newTokenForInsecureUser(session, token, connectionProperties);
+		this.newTokenForInsecureUser(session, token, connectionProperties, null);
 		final Token tokenObj = session.consumeToken(token);
 
 		Participant ipcamParticipant = this.newIpcamParticipant(session, rtspConnectionId, tokenObj, location,

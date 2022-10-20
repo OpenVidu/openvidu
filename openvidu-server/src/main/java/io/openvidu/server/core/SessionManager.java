@@ -364,10 +364,13 @@ public abstract class SessionManager {
 		return tokenObj;
 	}
 
-	public Token newTokenForInsecureUser(Session session, String token, ConnectionProperties connectionProperties)
-			throws Exception {
+	public Token newTokenForInsecureUser(Session session, String token, ConnectionProperties connectionProperties,
+			String connectionId) throws Exception {
 		Token tokenObj = new Token(token, session.getSessionId(), connectionProperties,
 				this.coturnCredentialsService.createUser());
+		if (connectionId != null) {
+			tokenObj.setConnectionId(connectionId);
+		}
 		session.storeToken(tokenObj);
 		return tokenObj;
 	}
@@ -444,7 +447,8 @@ public abstract class SessionManager {
 		}
 	}
 
-	public Participant newSttParticipant(Session session, String participantPrivateId, Token token, String clientMetadata) {
+	public Participant newSttParticipant(Session session, String participantPrivateId, Token token,
+			String clientMetadata) {
 		String sessionId = session.getSessionId();
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			return newParticipantAux(sessionId, session.getUniqueSessionId(), null, participantPrivateId,

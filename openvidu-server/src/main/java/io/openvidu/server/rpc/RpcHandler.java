@@ -277,12 +277,6 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 		if (openviduConfig.isOpenViduSecret(secret)) {
 
-			if (recorder) {
-				generateRecorderParticipant = true;
-			} else if (stt) {
-				generateSttParticipant = true;
-			}
-
 			sessionManager.newInsecureParticipant(participantPrivateId);
 
 			token = IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
@@ -290,8 +284,17 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
 					.role(OpenViduRole.SUBSCRIBER).build();
 
+			String connectionId = null;
+			if (recorder) {
+				generateRecorderParticipant = true;
+				connectionId = ProtocolElements.RECORDER_PARTICIPANT_PUBLICID;
+			} else if (stt) {
+				generateSttParticipant = true;
+				connectionId = ProtocolElements.STT_PARTICIPANT_PUBLICID;
+			}
+
 			try {
-				sessionManager.newTokenForInsecureUser(session, token, connectionProperties);
+				sessionManager.newTokenForInsecureUser(session, token, connectionProperties, connectionId);
 			} catch (Exception e) {
 				throw new OpenViduException(Code.TOKEN_CANNOT_BE_CREATED_ERROR_CODE,
 						"Unable to create token for session " + sessionId + ": " + e.getMessage());
@@ -890,9 +893,10 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			// Sanity check: don't call RPC method unless the id checks out
 			Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
 			if (participant != null) {
-				errorMsg = "Participant " + participant.getParticipantPublicId() + " is calling method '" + methodName
-						+ "' in session " + sessionId;
-				log.info(errorMsg);
+				if (methodName != "videoData") {
+					log.info("Participant {} is calling method '{}' in session {}",
+							participant.getParticipantPublicId(), methodName, sessionId);
+				}
 				return participant;
 			} else {
 				errorMsg = "Participant with private id " + participantPrivateId + " not found in session " + sessionId

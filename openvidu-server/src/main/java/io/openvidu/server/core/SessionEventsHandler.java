@@ -227,18 +227,25 @@ public class SessionEventsHandler {
 			return;
 		}
 
-		if (participant.isRecorderOrSttParticipant()) {
+		// Return if recorder participant
+		if (participant.isRecorderParticipant()) {
 			this.rpcNotificationService.immediatelyCloseRpcSession(participant.getParticipantPrivateId());
 			return;
 		}
 
-		JsonObject params = new JsonObject();
-		params.addProperty(ProtocolElements.PARTICIPANTLEFT_NAME_PARAM, participant.getParticipantPublicId());
-		params.addProperty(ProtocolElements.PARTICIPANTLEFT_REASON_PARAM, reason != null ? reason.name() : "");
+		if (!participant.isSttParticipant()) {
 
-		for (Participant p : remainingParticipants) {
-			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
-					ProtocolElements.PARTICIPANTLEFT_METHOD, params);
+			JsonObject params = new JsonObject();
+			params.addProperty(ProtocolElements.PARTICIPANTLEFT_NAME_PARAM, participant.getParticipantPublicId());
+			params.addProperty(ProtocolElements.PARTICIPANTLEFT_REASON_PARAM, reason != null ? reason.name() : "");
+
+			for (Participant p : remainingParticipants) {
+				rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+						ProtocolElements.PARTICIPANTLEFT_METHOD, params);
+			}
+
+			CDR.recordParticipantLeft(participant, sessionId, reason);
+
 		}
 
 		if (transactionId != null) {
@@ -254,7 +261,6 @@ public class SessionEventsHandler {
 			this.rpcNotificationService.scheduleCloseRpcSession(participant.getParticipantPrivateId(), 10000);
 		}
 
-		CDR.recordParticipantLeft(participant, sessionId, reason);
 	}
 
 	public void onPublishMedia(Participant participant, String streamId, Long createdAt, String sessionId,
