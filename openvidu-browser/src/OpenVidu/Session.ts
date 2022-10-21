@@ -648,6 +648,9 @@ export class Session extends EventDispatcher {
      * Subscribe to the Speech-To-Text events for this [[Stream]]. The Session object will emit [[SpeechToTextEvent]] for the Stream
      * when speech is detected in its audio track.
      *
+     * @param stream - The Stream for which you want to start receiving [[SpeechToTextEvent]].
+     * @þaram lang - The language of the Stream's audio track. It must be a valid [BCP-47](https://tools.ietf.org/html/bcp47) language tag like "en-US" or "es-ES".
+     * 
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the speech-to-text subscription
      * was successful and rejected with an Error object if not.
      */
