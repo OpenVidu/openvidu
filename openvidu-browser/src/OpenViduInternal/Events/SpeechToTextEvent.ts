@@ -46,14 +46,21 @@ export class SpeechToTextEvent extends Event {
     raw: string;
 
     /**
+     * Language ISO 639-1 code of the recognized text. This will be the same as the language provided
+     * in method [[Session.subscribeToSpeechToText]] method
+     */
+    lang: string;
+
+    /**
      * @hidden
      */
-    constructor(target: Session, connection: Connection, text: string, reason: 'recognizing' | 'recognized', raw: string) {
+    constructor(target: Session, connection: Connection, text: string, reason: 'recognizing' | 'recognized', raw: string, lang: string) {
         super(false, target, 'speechToTextMessage');
         this.connection = connection;
         this.text = text;
         this.reason = reason;
         this.raw = raw;
+        this.lang = lang;
     }
 
     /**

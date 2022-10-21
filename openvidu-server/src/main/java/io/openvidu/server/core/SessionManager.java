@@ -188,7 +188,7 @@ public abstract class SessionManager {
 	public abstract void onVideoData(Participant participant, Integer transactionId, Integer height, Integer width,
 			Boolean videoActive, Boolean audioActive);
 
-	public abstract void onSubscribeToSpeechToText(Participant participant, Integer transactionId,
+	public abstract void onSubscribeToSpeechToText(Participant participant, Integer transactionId, String lang,
 			JsonArray connectionIds);
 
 	public abstract void onUnsubscribeFromSpeechToText(Participant participant, Integer transactionId,

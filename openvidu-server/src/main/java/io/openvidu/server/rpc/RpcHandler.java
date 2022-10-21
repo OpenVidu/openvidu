@@ -735,7 +735,8 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		Participant participant = sanityCheckOfSession(rpcConnection, "subscribeToSpeechToText");
 		JsonArray connectionIds = (JsonArray) RpcHandler.getParam(request,
 				ProtocolElements.SUBSCRIBETOSPEECHTOTEXT_CONNECTIONIDS_PARAM);
-		sessionManager.onSubscribeToSpeechToText(participant, request.getId(), connectionIds);
+		String lang = RpcHandler.getStringParam(request, ProtocolElements.SUBSCRIBETOSPEECHTOTEXT_LANG_PARAM);
+		sessionManager.onSubscribeToSpeechToText(participant, request.getId(), lang, connectionIds);
 	}
 
 	private void unsubscribeFromSpeechToText(RpcConnection rpcConnection, Request<JsonObject> request) {

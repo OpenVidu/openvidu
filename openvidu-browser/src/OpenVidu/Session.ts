@@ -651,12 +651,13 @@ export class Session extends EventDispatcher {
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the speech-to-text subscription
      * was successful and rejected with an Error object if not.
      */
-    subscribeToSpeechToText(stream: Stream): Promise<void> {
+    subscribeToSpeechToText(stream: Stream, lang: string): Promise<void> {
         return new Promise((resolve, reject) => {
             this.openvidu.sendRequest(
                 'subscribeToSpeechToText',
                 {
-                    connectionIds: [stream.connection.connectionId]
+                    connectionIds: [stream.connection.connectionId],
+                    lang
                 },
                 (error, response) => {
                     if (!!error) {
@@ -1318,9 +1319,18 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    async onSpeechToTextMessage(event: { streamId: string; connectionId: string; sessionId: string, text: string, reason: string, raw: string }): Promise<void> {
+    async onSpeechToTextMessage(event: {
+        timestamp?: Date;
+        streamId: string;
+        connectionId: string;
+        sessionId: string;
+        text: string;
+        reason: string;
+        raw: string;
+        lang: string;
+    }): Promise<void> {
         const connection = await this.getConnection(event.connectionId, 'No connection found for connectionId ' + event.connectionId);
-        const ev = new SpeechToTextEvent(this, connection, event.text, <any>event.reason.toLowerCase(), event.raw);
+        const ev = new SpeechToTextEvent(this, connection, event.text, <any>(event.reason).toLowerCase(), event.raw, event.lang);
         this.ee.emitEvent('speechToTextMessage', [ev]);
     }
 
