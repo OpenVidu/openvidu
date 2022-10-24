@@ -34,8 +34,8 @@
 		"MORE_OPTIONS": "Weitere Optionen",
 		"FULLSCREEN": "Vollbild",
 		"EXIT_FULLSCREEN": "Vollbildmodus beenden",
-		"ENABLE_SUBTITLES": "Untertitel aktivieren",
-		"DISABLE_SUBTITLES": "Untertitel deaktivieren",
+		"ENABLE_CAPTIONS": "Untertitel aktivieren",
+		"DISABLE_CAPTIONS": "Untertitel deaktivieren",
 		"BACKGROUND": "Hintergrund-Effekte",
 		"START_RECORDING": "Aufzeichnung starten",
 		"STOP_RECORDING": "Aufzeichnung stoppen",
@@ -73,7 +73,7 @@
 			"VIDEO": "Video",
 			"AUDIO": "Audio",
 			"LANGUAGE": "Sprache",
-			"SUBTITLE": "Untertitel"
+			"CAPTIONS": "Untertitel"
 		},
 		"BACKGROUND": {
 			"TITLE": "Hintergrund-Effekte",

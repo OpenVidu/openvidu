@@ -34,8 +34,8 @@
         "MORE_OPTIONS": "その他のオプション",
         "FULLSCREEN": "フルスクリーン",
         "EXIT_FULLSCREEN": "フルスクリーンを終了する",
-        "ENABLE_SUBTITLES": "字幕を有効にする",
-		"DISABLE_SUBTITLES": "字幕を無効にする",
+        "ENABLE_CAPTIONS": "字幕を有効にする",
+		"DISABLE_CAPTIONS": "字幕を無効にする",
         "BACKGROUND": "背景効果",
         "START_RECORDING": "録画開始",
 		"STOP_RECORDING": "録画の停止",
@@ -73,7 +73,7 @@
 			"VIDEO": "ビデオ",
 			"AUDIO": "オーディオ",
 			"LANGUAGE":"言語",
-            "SUBTITLE": "字幕"
+            "CAPTIONS": "字幕"
 		},
         "BACKGROUND": {
             "TITLE": "背景効果",

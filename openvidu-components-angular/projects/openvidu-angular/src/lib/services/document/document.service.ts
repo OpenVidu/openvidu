@@ -13,17 +13,7 @@ export class DocumentService {
 	screenSizeObs: Observable<MediaChange[]>;
 
 	constructor(private media: MediaObserver) {
-		this.screenSizeObs= this.media.asObservable();
-	}
-
-	getHTMLElementByClassName(element: HTMLElement, className: string): HTMLElement {
-		while (!!element && element !== document.body) {
-			if (element.className.includes(className)) {
-				return element;
-			}
-			element = element.parentElement;
-		}
-		return null;
+		this.screenSizeObs = this.media.asObservable();
 	}
 
 	toggleFullscreen(elementId: string) {

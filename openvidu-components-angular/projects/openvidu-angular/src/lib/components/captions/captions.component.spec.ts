@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SubtitlesComponent } from './subtitles.component';
+import { CaptionsComponent } from './captions.component';
 
-describe('SubtitlesComponent', () => {
-  let component: SubtitlesComponent;
-  let fixture: ComponentFixture<SubtitlesComponent>;
+describe('CaptionsComponent', () => {
+  let component: CaptionsComponent;
+  let fixture: ComponentFixture<CaptionsComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ SubtitlesComponent ]
+      declarations: [ CaptionsComponent ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SubtitlesComponent);
+    fixture = TestBed.createComponent(CaptionsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

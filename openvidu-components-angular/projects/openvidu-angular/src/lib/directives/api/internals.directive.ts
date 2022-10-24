@@ -6,7 +6,7 @@ import { Directive, ElementRef, HostListener, Input } from '@angular/core';
  * Load default OpenVidu logo if custom one is not exist
  * @internal
  */
- @Directive({
+@Directive({
 	selector: 'img[ovLogo]'
 })
 export class LogoDirective {

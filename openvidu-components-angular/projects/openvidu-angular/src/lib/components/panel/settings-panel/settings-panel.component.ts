@@ -15,8 +15,8 @@ import { PanelEvent, PanelService } from '../../../services/panel/panel.service'
 export class SettingsPanelComponent implements OnInit {
 	settingsOptions: typeof PanelSettingsOptions = PanelSettingsOptions;
 	selectedOption: PanelSettingsOptions = PanelSettingsOptions.GENERAL;
-	showSubtitles: boolean = true;
-	private subtitlesSubs: Subscription;
+	showCaptions: boolean = true;
+	private captionsSubs: Subscription;
 	panelSubscription: Subscription;
 	constructor(private panelService: PanelService, private libService: OpenViduAngularConfigService) {}
 	ngOnInit() {
@@ -25,7 +25,7 @@ export class SettingsPanelComponent implements OnInit {
 	}
 
 	ngOnDestroy() {
-		if (this.subtitlesSubs) this.subtitlesSubs.unsubscribe();
+		if (this.captionsSubs) this.captionsSubs.unsubscribe();
 	}
 
 	close() {
@@ -36,8 +36,8 @@ export class SettingsPanelComponent implements OnInit {
 	 }
 
 	private subscribeToDirectives() {
-		this.subtitlesSubs = this.libService.subtitlesButtonObs.subscribe((value: boolean) => {
-			this.showSubtitles = value;
+		this.captionsSubs = this.libService.captionsButtonObs.subscribe((value: boolean) => {
+			this.showCaptions = value;
 		});
 	}
 

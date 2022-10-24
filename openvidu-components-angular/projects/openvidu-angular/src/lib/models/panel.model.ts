@@ -11,5 +11,5 @@ export enum PanelSettingsOptions {
 	GENERAL = 'general',
 	AUDIO = 'audio',
 	VIDEO = 'video',
-	SUBTITLES = 'subtitles'
+	CAPTIONS = 'captions'
 }

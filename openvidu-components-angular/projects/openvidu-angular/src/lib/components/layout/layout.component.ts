@@ -11,10 +11,10 @@ import {
 	ViewContainerRef
 } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { ParticipantService } from '../../services/participant/participant.service';
+import { StreamDirective } from '../../directives/template/openvidu-angular.directive';
 import { ParticipantAbstractModel } from '../../models/participant.model';
 import { LayoutService } from '../../services/layout/layout.service';
-import { StreamDirective } from '../../directives/template/openvidu-angular.directive';
+import { ParticipantService } from '../../services/participant/participant.service';
 
 /**
  *
@@ -82,11 +82,11 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
-	subtitlesEnabled = true;
+	captionsEnabled = true;
 
 	private localParticipantSubs: Subscription;
 	private remoteParticipantsSubs: Subscription;
-	private subtitlesSubs: Subscription;
+	private captionsSubs: Subscription;
 
 	/**
 	 * @ignore
@@ -95,7 +95,7 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	ngOnInit(): void {
 		this.subscribeToParticipants();
-		this.subscribeToSubtitles();
+		this.subscribeToCaptions();
 	}
 
 	ngAfterViewInit() {
@@ -107,13 +107,13 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.remoteParticipants = [];
 		if (this.localParticipantSubs) this.localParticipantSubs.unsubscribe();
 		if (this.remoteParticipantsSubs) this.remoteParticipantsSubs.unsubscribe();
-		if (this.subtitlesSubs) this.subtitlesSubs.unsubscribe();
+		if (this.captionsSubs) this.captionsSubs.unsubscribe();
 		this.layoutService.clear();
 	}
 
-	private subscribeToSubtitles() {
-		this.subtitlesSubs = this.layoutService.subtitlesTogglingObs.subscribe((value: boolean) => {
-			this.subtitlesEnabled = value;
+	private subscribeToCaptions() {
+		this.captionsSubs = this.layoutService.captionsTogglingObs.subscribe((value: boolean) => {
+			this.captionsEnabled = value;
 			this.cd.markForCheck();
 			this.layoutService.update();
 		});

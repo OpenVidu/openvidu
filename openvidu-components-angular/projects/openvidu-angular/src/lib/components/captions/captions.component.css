@@ -1,78 +1,193 @@
-.subtitles-container {
+.captions-container {
 	/* padding: 5px; */
 	display: flex;
-	height: var(--ov-captions-height, 200px);
+	height: var(--ov-captions-height, 230px);
 	margin: 0px 10px;
 }
-.subtitles-offset {
-	height: var(--ov-captions-height, 200px);
+.captions-offset {
+	height: var(--ov-captions-height, 230px);
 	width: 15%;
 	text-align: center;
 }
 
-.subtitles-main-container {
-	flex-grow: 1;
-	align-self: center;
-	margin-left: 15px;
-	max-height: var(--ov-captions-height, 200px);
-	width: 70%;
-	overflow: hidden;
+.captions-offset-xl {
+	width: 25% !important;
 }
 
-/* .subtitles-offset + .subtitles-offset {
-	margin-left: 2%;
-} */
-#subtitle-settings-btn {
+.captions-center-container {
+	flex-grow: 1;
+	align-self: center;
+	/* margin-left: 15px; */
+	max-height: var(--ov-captions-height, 230px);
+	width: 70%;
+	overflow: hidden;
+
+	height: var(--ov-captions-height, 230px);
+	padding: 0px 10vw 0px;
+}
+
+
+/*
+* Screen XL
+*/
+.captions-center-container.screen-xl {
+	padding: 0px 14vw;
+}
+
+.captions-center-container.screen-xl .caption-event>span {
+	font-size: 22px;
+}
+
+.captions-center-container.screen-xl #speaker {
+	font-size: 16px;
+}
+
+/* captions div*/
+.captions-center-container.screen-xl.events-one .caption-event {
+	max-height: 140px;
+}
+
+.captions-center-container.screen-xl.events-two .caption-event {
+	max-height: 69px;
+}
+
+.captions-center-container.screen-xl.events-three .caption-event {
+	max-height: 35px;
+}
+
+
+/*
+* Screen MD
+*/
+.captions-center-container.screen-md .caption-event>span {
+	font-size: 20px;
+}
+
+.captions-center-container.screen-md #speaker {
+	font-size: 14px;
+}
+
+/* captions div*/
+.captions-center-container.screen-md.events-one .caption-event {
+	max-height: 140px;
+}
+
+.captions-center-container.screen-md.events-two .caption-event {
+	max-height: 69px;
+}
+
+.captions-center-container.screen-md.events-three .caption-event {
+	max-height: 35px;
+}
+
+/*
+* Screen SM
+*/
+
+.captions-center-container.screen-sm {
+	padding: 0px 2vw;
+}
+.captions-center-container.screen-sm .caption-event>span {
+	font-size: 20px;
+}
+
+.captions-center-container.screen-sm #speaker {
+	font-size: 12px;
+}
+
+/* captions div*/
+
+.captions-center-container.screen-sm.events-one .caption-event {
+	max-height: 127px;
+}
+
+.captions-center-container.screen-sm.events-two .caption-event {
+	max-height: 64px;
+}
+
+.captions-center-container.screen-sm.events-three .caption-event {
+	max-height: 33px;
+}
+
+/*
+* Screen XS
+*/
+
+.captions-center-container.screen-xs {
+	padding: 0px 2vw 0px;
+}
+
+.captions-center-container.screen-xs .caption-event>span {
+	font-size: 20px;
+}
+.captions-center-container.screen-xs #speaker {
+	font-size: 12px;
+}
+
+/* captions div*/
+.captions-center-container.screen-xs.events-one .caption-event {
+	max-height: 130px;
+}
+
+.captions-center-container.screen-xs.events-two .caption-event {
+	max-height: 69px;
+}
+
+.captions-center-container.screen-xs.events-three .caption-event {
+	max-height: 35px;
+}
+
+.captions-center-container .going-to-disappear{
+	max-height: 30px !important;
+}
+
+
+
+#caption-settings-btn {
 	color: var(--ov-text-color);
 	background-color: var(--ov-secondary-color);
 }
-#subtitle-settings-icon {
+#caption-settings-icon {
 	font-size: 15px;
 	height: 15px;
 	width: 15px;
 	padding-right: 5px;
 }
 
-#author {
-	margin-bottom: 3px;
+#speaker {
+	margin-bottom: 2px;
 	font-weight: bold;
+	/* padding: 5px; */
+	margin-left: -5px;
+	width: fit-content;
 }
 
-#subtitle-text,
-#author {
+.captions-center-container .element {
+	margin: 8px 0px;
+}
+
+.caption-event {
+	/* background-color: beige; */
+	overflow: auto;
+	pointer-events: none;
+}
+
+
+.caption-text,
+#speaker {
 	color: var(--ov-text-color);
-	font-family: "Roboto",arial,sans-serif
+	font-family: 'Roboto', arial, sans-serif;
 }
 
-.subtitles-main-container .element {
-	margin: 5px;
-}
-#subtitle-text {
+.caption-text {
 	background-color: var(--ov-logo-background-color);
 	padding: 4.5px;
 	line-height: 1.6;
 	word-break: break-word;
 }
 
-.big-text {
-	font-size: 22px;
-}
-.medium-text {
-	font-size: 20px;
-}
-.small-text {
-	font-size: 18px;
-}
-.extra-small-text {
-	font-size: 16px;
-}
 
-.big-author {
-	font-size: 16px;
-}
-.medium-author {
-	font-size: 14px;
-}
-.small-author {
-	font-size: 12px;
+
+::-webkit-scrollbar {
+	display: none;
 }

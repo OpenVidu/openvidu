@@ -1,6 +1,8 @@
-import { Directive, Input, ElementRef, OnDestroy, OnInit } from '@angular/core';
+import { Directive, ElementRef, Input, OnDestroy, OnInit } from '@angular/core';
+import { CaptionService } from '../../services/caption/caption.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import { TranslateService } from '../../services/translate/translate.service';
+
 
 /**
  * The **minimal** directive applies a minimal UI hiding all controls except for cam and mic.
@@ -53,7 +55,7 @@ export class MinimalDirective implements OnDestroy {
 }
 
 /**
- * The **lang** directive allows et the UI language to a default language.
+ * The **lang** directive allows set the UI language to a default language.
  *
  * It is only available for {@link VideoconferenceComponent}.
  *
@@ -112,6 +114,70 @@ export class LangDirective implements OnDestroy {
 		this.translateService.setLanguage(value);
 	}
 }
+
+/**
+ * The **captions-lang** directive allows specify the language of room's members
+ *
+ * It is only available for {@link VideoconferenceComponent}.
+ *
+ * It must be a valid [BCP-47](https://tools.ietf.org/html/bcp47) language tag like "en-US" or "es-ES".
+ *
+ *
+ * **Default:** English `en-US`
+ *
+ * **Available:**
+ *
+ * * English: `en-US`
+ * * Spanish: `es-ES`
+ * * German: `de-DE`
+ * * French: `fr-FR`
+ * * Chinese: `zh-CN`
+ * * Hindi: `hi-IN`
+ * * Italian: `it-IT`
+ * * Japanese: `jp-JP`
+ * * Portuguese: `pt-PT`
+ *
+ * @example
+ * <ov-videoconference [captionsLang]="es-ES"></ov-videoconference>
+ */
+ @Directive({
+	selector: 'ov-videoconference[captionsLang]'
+})
+export class CaptionsLangDirective implements OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set captionsLang(value: string) {
+		this.update(value);
+	}
+
+	/**
+	 * @ignore
+	 */
+	constructor(public elementRef: ElementRef, private captionService: CaptionService) {}
+
+	/**
+	 * @ignore
+	 */
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	/**
+	 * @ignore
+	 */
+	clear() {
+		this.update('en-US');
+	}
+
+	/**
+	 * @ignore
+	 */
+	update(value: string) {
+		this.captionService.setLanguage(value);
+	}
+}
+
 
 /**
  * The **participantName** directive sets the participant name. It can be useful for aplications which doesn't need the prejoin page.

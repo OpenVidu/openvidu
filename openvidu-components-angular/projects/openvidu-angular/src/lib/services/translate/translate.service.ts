@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
+import * as cn from '../../lang/cn.json';
+import * as de from '../../lang/de.json';
 import * as en from '../../lang/en.json';
 import * as es from '../../lang/es.json';
-import * as de from '../../lang/de.json';
 import * as fr from '../../lang/fr.json';
-import * as cn from '../../lang/cn.json';
 import * as hi from '../../lang/hi.json';
-import * as ja from '../../lang/ja.json';
 import * as it from '../../lang/it.json';
+import * as ja from '../../lang/ja.json';
 import * as nl from '../../lang/nl.json';
 import * as pt from '../../lang/pt.json';
 import { StorageService } from '../storage/storage.service';
@@ -36,7 +36,7 @@ export class TranslateService {
 
 	constructor(private storageService: StorageService) {
 		const iso = this.storageService.getLang() || 'en';
-		this.langSelected = this.langTitles.find((lang) => lang.ISO === iso);
+		this.langSelected = this.langTitles.find((lang) => lang.ISO === iso) || this.langTitles[0];
 		this.currentLang = this.availableLanguages[this.langSelected.ISO];
 	}
 

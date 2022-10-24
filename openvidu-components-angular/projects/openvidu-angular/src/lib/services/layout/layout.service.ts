@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { LayoutAlignment, LayoutClass, OpenViduLayout, OpenViduLayoutOptions } from '../../models/layout.model';
-import { DocumentService } from '../document/document.service';
 
 /**
  * @internal
@@ -10,26 +9,24 @@ import { DocumentService } from '../document/document.service';
 	providedIn: 'root'
 })
 export class LayoutService {
-
 	layoutContainer: HTMLElement | null = null;
 	layoutWidthObs: Observable<number>;
-	subtitlesTogglingObs: Observable<boolean>;
+	captionsTogglingObs: Observable<boolean>;
 	private layoutWidth: BehaviorSubject<number> = new BehaviorSubject(0);
 	private openviduLayout: OpenViduLayout;
 	private openviduLayoutOptions: OpenViduLayoutOptions;
-	private subtitlesToggling: BehaviorSubject<boolean> = new BehaviorSubject(false);
+	private captionsToggling: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
-
-	constructor(private documentService: DocumentService) {
+	constructor() {
 		this.layoutWidthObs = this.layoutWidth.asObservable();
-		this.subtitlesTogglingObs = this.subtitlesToggling.asObservable();
+		this.captionsTogglingObs = this.captionsToggling.asObservable();
 	}
 
 	initialize(container: HTMLElement) {
 		this.layoutContainer = container;
 		this.openviduLayout = new OpenViduLayout();
 		this.openviduLayoutOptions = this.getOptions();
-		if(this.layoutContainer){
+		if (this.layoutContainer) {
 			this.openviduLayout.initLayoutContainer(this.layoutContainer, this.openviduLayoutOptions);
 		}
 		this.sendLayoutWidthEvent();
@@ -66,8 +63,8 @@ export class LayoutService {
 		return options;
 	}
 
-	toggleSubtitles() {
-		this.subtitlesToggling.next(!this.subtitlesToggling.getValue());
+	toggleCaptions() {
+		this.captionsToggling.next(!this.captionsToggling.getValue());
 	}
 
 	update(timeout: number = null) {
@@ -93,12 +90,22 @@ export class LayoutService {
 	}
 
 	private sendLayoutWidthEvent() {
-		const sidenavLayoutElement = this.documentService.getHTMLElementByClassName(
+		const sidenavLayoutElement = this.getHTMLElementByClassName(
 			this.openviduLayout?.getLayoutContainer(),
 			LayoutClass.SIDENAV_CONTAINER
 		);
 		if (sidenavLayoutElement && sidenavLayoutElement.clientWidth) {
 			this.layoutWidth.next(sidenavLayoutElement.clientWidth);
 		}
+	}
+
+	private getHTMLElementByClassName(element: HTMLElement | null, className: string): HTMLElement | null {
+		while (!!element && element !== document.body) {
+			if (element.className.includes(className)) {
+				return element;
+			}
+			element = element.parentElement;
+		}
+		return null;
 	}
 }

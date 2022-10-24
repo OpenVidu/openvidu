@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ILogger } from '../../models/logger.model';
-import { LoggerService } from '../logger/logger.service';
 import { Storage } from '../../models/storage.model';
+import { LoggerService } from '../logger/logger.service';
 
 /**
  * @internal
@@ -60,6 +60,14 @@ export class StorageService {
 
 	getLang(): string {
 		return this.get(Storage.LANG);
+	}
+
+	setCaptionLang(lang: string){
+		this.set(Storage.CAPTION_LANG, lang);
+	}
+
+	getCaptionsLang(): string {
+		return this.get(Storage.CAPTION_LANG);
 	}
 
 	private set(key: string, item: any) {

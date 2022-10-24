@@ -56,12 +56,14 @@ import { TranslateService } from '../../services/translate/translate.service';
  * | :----------------------------: | :-------: | :---------------------------------------------: |
  * | **minimal**                        | `boolean` | {@link MinimalDirective}                        |
  * | **lang**                           | `string`  | {@link LangDirective}                           |
+ * | **captionsLang**                   | `string`  | {@link CaptionsLangDirective}                   |
  * | **prejoin**                        | `boolean` | {@link PrejoinDirective}                        |
  * | **participantName**                | `string`  | {@link ParticipantNameDirective}                |
  * | **videoMuted**                     | `boolean` | {@link VideoMutedDirective}                     |
  * | **audioMuted**                     | `boolean` | {@link AudioMutedDirective}                     |
  * | **toolbarScreenshareButton**       | `boolean` | {@link ToolbarScreenshareButtonDirective}       |
  * | **toolbarFullscreenButton**        | `boolean` | {@link ToolbarFullscreenButtonDirective}        |
+ * | **toolbarCaptionsButton** 			| `boolean` | {@link ToolbarCaptionsButtonDirective} 		  |
  * | **toolbarBackgroundEffectsButton** | `boolean` | {@link ToolbarBackgroundEffectsButtonDirective} |
  * | **toolbarLeaveButton**             | `boolean` | {@link ToolbarLeaveButtonDirective}             |
  * | **toolbarChatPanelButton**         | `boolean` | {@link ToolbarChatPanelButtonDirective}         |
@@ -457,8 +459,8 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 				const publisher = await this.openviduService.initDefaultPublisher();
 
 				if (publisher) {
-					publisher.once('accessDenied', (e: any) => {
-						this.handlePublisherError(e);
+					publisher.once('accessDenied', async (e: any) => {
+						await this.handlePublisherError(e);
 						resolve();
 					});
 					publisher.once('accessAllowed', async () => {
@@ -662,20 +664,20 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		this.onSessionCreated.emit(session);
 	}
 
-	private handlePublisherError(e: any): Promise<void> {
+	private async handlePublisherError(e: any): Promise<void> {
 		let message: string = '';
 		console.log('ERROR!', e);
 		if (e.name === OpenViduErrorName.DEVICE_ALREADY_IN_USE) {
 			this.log.w('Video device already in use. Disabling video device...');
 			// Allow access to the room with only mic if camera device is already in use
 			this.deviceSrv.disableVideoDevices();
-			return this.initwebcamPublisher();
+			return await this.initwebcamPublisher();
 		}
 		if (e.name === OpenViduErrorName.DEVICE_ACCESS_DENIED) {
 			message = this.translateService.translate('ERRORS.MEDIA_ACCESS');
 			this.deviceSrv.disableVideoDevices();
 			this.deviceSrv.disableAudioDevices();
-			return this.initwebcamPublisher();
+			return await this.initwebcamPublisher();
 		} else if (e.name === OpenViduErrorName.NO_INPUT_SOURCE_SET) {
 			message = this.translateService.translate('ERRORS.DEVICE_NOT_FOUND');
 		}

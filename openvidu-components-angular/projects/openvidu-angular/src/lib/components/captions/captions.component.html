@@ -1,36 +1,40 @@
-<div class="subtitles-container" #captionsContainer>
-	<div *ngIf="screenSize !== 'sm' && screenSize !== 'xs' && !settingsPanelOpened" class="subtitles-offset">
-		<button (click)="onSettingsCliked()" id="subtitle-settings-btn" mat-flat-button>
+<div class="captions-container" #captionsContainer>
+	<div
+		*ngIf="captionsContainer.offsetWidth >= 600 && !settingsPanelOpened"
+		class="captions-offset"
+		[ngClass]="{ 'captions-offset': captionsContainer.offsetWidth >= 1000 }"
+	>
+		<button (click)="onSettingsCliked()" id="caption-settings-btn" mat-flat-button>
 			<mat-icon id="subtitle-settings-icon">settings</mat-icon>
-			<span>English</span>
+			<span>{{ captionLangSelected.name }}</span>
 		</button>
 	</div>
-	<div class="subtitles-main-container" #textContainer>
-		<div class="element" *ngFor="let item of captionElements" #captionElement>
-			<p
-				id="author"
-				[ngClass]="{
-					'big-author': captionsContainer.offsetWidth >= 1000 || screenSize === 'lg' || screenSize === 'xl',
-					'medium-author': (captionsContainer.offsetWidth >= 960 && captionsContainer.offsetWidth < 1000) || screenSize === 'md',
-					'small-author': captionsContainer.offsetWidth < 600 || screenSize === 'xs' || screenSize === 'sm'
-				}"
-			>
-				{{ item.author }} ({{item.text.length}})
+	<div
+		class="captions-center-container"
+		[ngClass]="{
+			'events-one': captionEvents.length === 1,
+			'events-two': captionEvents.length === 2,
+			'events-three': captionEvents.length === 3,
+			'screen-xl': captionsContainer.offsetWidth >= 1000,
+			'screen-md': captionsContainer.offsetWidth >= 960 && captionsContainer.offsetWidth < 1000,
+			'screen-sm': captionsContainer.offsetWidth >= 600 && captionsContainer.offsetWidth < 960,
+			'screen-xs': captionsContainer.offsetWidth < 600
+		}"
+	>
+		<div class="element" *ngFor="let caption of captionEvents; let i = index" @captionAnimation>
+			<p id="speaker" [ngStyle]="{ color: caption.color }">
+				{{ caption.nickname }}
 			</p>
-			<span
-				id="subtitle-text"
-				[ngClass]="{
-					'big-text': captionsContainer.offsetWidth >= 1000 || screenSize === 'lg' || screenSize === 'xl',
-					'medium-text': (captionsContainer.offsetWidth >= 960 && captionsContainer.offsetWidth < 1000) || screenSize === 'md',
-					'small-text': (captionsContainer.offsetWidth >= 600 && captionsContainer.offsetWidth < 960) || screenSize === 'sm',
-					'extra-small-text': captionsContainer.offsetWidth < 600 || screenSize === 'xs'
-				}"
+			<div
+				id="caption-event"
+				class="caption-event"
+				[ngClass]="{ 'going-to-disappear': i === 0 && captionEvents.length === MAX_EVENTS_LIMIT }"
+				#captionEventElement
 			>
-				{{ item.text }}</span
-			>
+				<span id="caption-text" class="caption-text">{{ caption.text }}</span>
+			</div>
 		</div>
 	</div>
 
-	<div *ngIf="screenSize !== 'sm' && screenSize !== 'xs' && !settingsPanelOpened" class="subtitles-offset">
-	</div>
+	<div *ngIf="captionsContainer.offsetWidth >= 600 && !settingsPanelOpened" class="captions-offset"></div>
 </div>

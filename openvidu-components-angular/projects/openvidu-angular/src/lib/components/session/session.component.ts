@@ -1,5 +1,7 @@
 import {
-	ChangeDetectionStrategy, ChangeDetectorRef, Component,
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
 	ContentChild,
 	ElementRef,
 	EventEmitter,
@@ -12,8 +14,12 @@ import {
 } from '@angular/core';
 import {
 	ConnectionEvent,
-	RecordingEvent, Session, SessionDisconnectedEvent, StreamEvent,
-	StreamPropertyChangedEvent, Subscriber
+	RecordingEvent,
+	Session,
+	SessionDisconnectedEvent,
+	StreamEvent,
+	StreamPropertyChangedEvent,
+	Subscriber
 } from 'openvidu-browser';
 
 import { ILogger } from '../../models/logger.model';
@@ -26,6 +32,7 @@ import { SidenavMode } from '../../models/layout.model';
 import { PanelType } from '../../models/panel.model';
 import { Signal } from '../../models/signal.model';
 import { ActionService } from '../../services/action/action.service';
+import { CaptionService } from '../../services/caption/caption.service';
 import { ChatService } from '../../services/chat/chat.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import { LayoutService } from '../../services/layout/layout.service';
@@ -46,11 +53,7 @@ import { TranslateService } from '../../services/translate/translate.service';
 	selector: 'ov-session',
 	templateUrl: './session.component.html',
 	styleUrls: ['./session.component.css'],
-	animations: [
-		trigger('sessionAnimation', [
-			transition(':enter', [style({ opacity: 0 }), animate('400ms', style({ opacity: 1 }))]),
-		])
-	],
+	animations: [trigger('sessionAnimation', [transition(':enter', [style({ opacity: 0 }), animate('400ms', style({ opacity: 1 }))])])],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SessionComponent implements OnInit {
@@ -77,6 +80,7 @@ export class SessionComponent implements OnInit {
 	protected layoutWidthSubscription: Subscription;
 
 	protected updateLayoutInterval: NodeJS.Timer;
+	private captionLanguageSubscription: Subscription;
 
 	protected log: ILogger;
 
@@ -92,6 +96,7 @@ export class SessionComponent implements OnInit {
 		protected panelService: PanelService,
 		private recordingService: RecordingService,
 		private translateService: TranslateService,
+		private captionService: CaptionService,
 		private platformService: PlatformService,
 		private cd: ChangeDetectorRef
 	) {
@@ -153,6 +158,7 @@ export class SessionComponent implements OnInit {
 			}
 			this.session = this.openviduService.getWebcamSession();
 			this.sessionScreen = this.openviduService.getScreenSession();
+			this.subscribeToCaptionLanguage();
 			this.subscribeToConnectionCreatedAndDestroyed();
 			this.subscribeToStreamCreated();
 			this.subscribeToStreamDestroyed();
@@ -284,7 +290,7 @@ export class SessionComponent implements OnInit {
 	}
 
 	private subscribeToStreamCreated() {
-		this.session.on('streamCreated', (event: StreamEvent) => {
+		this.session.on('streamCreated', async (event: StreamEvent) => {
 			const connectionId = event.stream?.connection?.connectionId;
 			const data = event.stream?.connection?.data;
 
@@ -293,14 +299,39 @@ export class SessionComponent implements OnInit {
 				const subscriber: Subscriber = this.session.subscribe(event.stream, undefined);
 				this.participantService.addRemoteConnection(connectionId, data, subscriber);
 				// this.oVSessionService.sendNicknameSignal(event.stream.connection);
+				try {
+					await this.session.subscribeToSpeechToText(event.stream, this.captionService.getLangSelected().ISO);
+				} catch (error) {
+					this.log.e('Error subscribing from STT: ', error);
+				}
 			}
 		});
 	}
 
 	private subscribeToStreamDestroyed() {
-		this.session.on('streamDestroyed', (event: StreamEvent) => {
+		this.session.on('streamDestroyed', async (event: StreamEvent) => {
 			const connectionId = event.stream.connection.connectionId;
 			this.participantService.removeConnectionByConnectionId(connectionId);
+			try {
+				await this.session.unsubscribeFromSpeechToText(event.stream);
+			} catch (error) {
+				this.log.e('Error unsubscribing from STT: ', error);
+			}
+		});
+	}
+
+	private subscribeToCaptionLanguage() {
+		this.captionLanguageSubscription = this.captionService.captionLangObs.subscribe(async (lang) => {
+			// Unsubscribe all streams from speech to text and re-subscribe with new language
+			this.log.d('Re-subscribe from STT because of language changed to ', lang.ISO);
+			for (const participant of this.participantService.getRemoteParticipants()) {
+				try {
+					await this.session.unsubscribeFromSpeechToText(participant.getCameraConnection().streamManager.stream);
+					await this.session.subscribeToSpeechToText(participant.getCameraConnection().streamManager.stream, lang.ISO);
+				} catch (error) {
+					this.log.e('Error re-subscribing to STT: ', error);
+				}
+			}
 		});
 	}
 

@@ -34,8 +34,8 @@
 		"MORE_OPTIONS": "Más opciones",
 		"EXIT_FULLSCREEN": "Quitar pantalla completa",
 		"FULLSCREEN": "Pantalla completa",
-		"ENABLE_SUBTITLES": "Activar subtítulos",
-		"DISABLE_SUBTITLES": "Desactivar subtítulos",
+		"ENABLE_CAPTIONS": "Activar subtítulos",
+		"DISABLE_CAPTIONS": "Desactivar subtítulos",
 		"BACKGROUND": "Efectos de fondo",
 		"START_RECORDING": "Iniciar grabación",
 		"STOP_RECORDING": "Detener grabación",
@@ -73,7 +73,7 @@
 			"VIDEO": "Video",
 			"AUDIO": "Audio",
 			"LANGUAGE": "Idioma",
-			"SUBTITLE": "Subtítulos"
+			"CAPTIONS": "Subtítulos"
 		},
 		"BACKGROUND": {
 			"TITLE": "Efectos de fondo",

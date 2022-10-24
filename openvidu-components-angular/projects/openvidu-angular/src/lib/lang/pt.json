@@ -34,8 +34,8 @@
 		"MORE_OPTIONS": "Mais opções",
 		"FULLSCREEN": "Tela cheia",
 		"EXIT_FULLSCREEN": "Sair da tela cheia",
-		"ENABLE_SUBTITLES": "Ativar legendas",
-		"DISABLE_SUBTITLES": "Desativar legendas",
+		"ENABLE_CAPTIONS": "Ativar legendas",
+		"DISABLE_CAPTIONS": "Desativar legendas",
 		"BACKGROUND": "Efeitos de fundo",
 		"START_RECORDING": "Iniciar_gravação",
 		"STOP_RECORDING": "Parar de gravar",
@@ -73,7 +73,7 @@
 			"VIDEO": "Vídeo",
 			"AUDIO": "Áudio",
 			"LANGUAGE":"Linguagem",
-			"SUBTITLE": "Legendas"
+			"CAPTIONS": "Legendas"
 		},
 		"BACKGROUND": {
 			"TITLE": "Efeitos de fundo",

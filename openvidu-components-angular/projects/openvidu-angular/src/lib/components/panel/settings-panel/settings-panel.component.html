@@ -22,14 +22,14 @@
 					<div mat-line>{{ 'PANEL.SETTINGS.AUDIO' | translate }}</div>
 				</mat-list-option>
 				<mat-list-option
-					*ngIf="showSubtitles && false"
+					*ngIf="showCaptions"
 					class="option"
-					[selected]="selectedOption === settingsOptions.SUBTITLES"
-					[value]="settingsOptions.SUBTITLES"
-					id="subtitles-opt"
+					[selected]="selectedOption === settingsOptions.CAPTIONS"
+					[value]="settingsOptions.CAPTIONS"
+					id="captions-opt"
 				>
 					<mat-icon mat-list-icon>closed_caption</mat-icon>
-					<div mat-line>{{ 'PANEL.SETTINGS.SUBTITLE' | translate }}</div>
+					<div mat-line>{{ 'PANEL.SETTINGS.CAPTIONS' | translate }}</div>
 				</mat-list-option>
 			</mat-selection-list>
 		</div>
@@ -47,7 +47,7 @@
 			</div>
 			<ov-video-devices-select *ngIf="selectedOption === settingsOptions.VIDEO"></ov-video-devices-select>
 			<ov-audio-devices-select *ngIf="selectedOption === settingsOptions.AUDIO"></ov-audio-devices-select>
-			<ov-subtitles-settings *ngIf="selectedOption === settingsOptions.SUBTITLES && showSubtitles && false"></ov-subtitles-settings>
+			<ov-captions-settings *ngIf="selectedOption === settingsOptions.CAPTIONS && showCaptions"></ov-captions-settings>
 		</div>
 	</div>
 </div>

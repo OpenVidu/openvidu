@@ -1,4 +1,4 @@
-<div class="container" [class.withSubtitles]="subtitlesEnabled">
+<div class="container" [class.withCaptions]="captionsEnabled">
 	<div id="layout" class="layout" #layout>
 		<div *ngFor="let stream of localParticipant | streams"  [ngClass]="{ OV_big: stream.videoEnlarged }" class="OT_root OT_publisher">
 			<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: stream }"></ng-container>
@@ -14,5 +14,5 @@
 		</div>
 	</div>
 
-	<ov-captions *ngIf="subtitlesEnabled" class="OV_ignored"></ov-captions>
+	<ov-captions *ngIf="captionsEnabled" class="OV_ignored"></ov-captions>
 </div>

@@ -5,37 +5,39 @@ import { LogoDirective } from './internals.directive';
 import { ParticipantPanelItemMuteButtonDirective } from './participant-panel-item.directive';
 import { RecordingActivityRecordingErrorDirective, RecordingActivityRecordingsListDirective } from './recording-activity.directive';
 import {
-	StreamDisplayParticipantNameDirective,
 	StreamDisplayAudioDetectionDirective,
+	StreamDisplayParticipantNameDirective,
 	StreamSettingsButtonDirective
 } from './stream.directive';
 import {
-	ToolbarScreenshareButtonDirective,
+	ToolbarActivitiesPanelButtonDirective,
+	ToolbarBackgroundEffectsButtonDirective,
+	ToolbarCaptionsButtonDirective,
+	ToolbarChatPanelButtonDirective,
+	ToolbarDisplayLogoDirective,
+	ToolbarDisplaySessionNameDirective,
 	ToolbarFullscreenButtonDirective,
 	ToolbarLeaveButtonDirective,
 	ToolbarParticipantsPanelButtonDirective,
-	ToolbarChatPanelButtonDirective,
-	ToolbarDisplaySessionNameDirective,
-	ToolbarDisplayLogoDirective,
-	ToolbarActivitiesPanelButtonDirective,
-	ToolbarBackgroundEffectsButtonDirective,
 	ToolbarRecordingButtonDirective,
-	ToolbarSettingsButtonDirective,
-	ToolbarCaptionsButtonDirective
+	ToolbarScreenshareButtonDirective,
+	ToolbarSettingsButtonDirective
 } from './toolbar.directive';
 import {
 	AudioMutedDirective,
+	CaptionsLangDirective,
+	LangDirective,
 	MinimalDirective,
-	PrejoinDirective,
-	VideoMutedDirective,
 	ParticipantNameDirective,
-	LangDirective
+	PrejoinDirective,
+	VideoMutedDirective
 } from './videoconference.directive';
 
 @NgModule({
 	declarations: [
 		MinimalDirective,
 		LangDirective,
+		CaptionsLangDirective,
 		PrejoinDirective,
 		VideoMutedDirective,
 		AudioMutedDirective,
@@ -66,6 +68,7 @@ import {
 	exports: [
 		MinimalDirective,
 		LangDirective,
+		CaptionsLangDirective,
 		PrejoinDirective,
 		VideoMutedDirective,
 		AudioMutedDirective,

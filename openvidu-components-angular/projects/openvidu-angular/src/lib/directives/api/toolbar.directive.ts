@@ -1,4 +1,4 @@
-import { AfterViewInit, Directive, ElementRef, HostListener, Input, OnDestroy } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular/core';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 
 /**
@@ -256,9 +256,6 @@ export class ToolbarBackgroundEffectsButtonDirective implements AfterViewInit, O
  * And it also can be used in the {@link ToolbarComponent}.
  * @example
  * <ov-toolbar [captionsButton]="false"></ov-toolbar>
- *
- * TODO: Make it public when speech to text is integrated
- * @internal
  */
  @Directive({
 	selector: 'ov-videoconference[toolbarCaptionsButton], ov-toolbar[captionsButton]'
@@ -298,8 +295,8 @@ export class ToolbarCaptionsButtonDirective implements AfterViewInit, OnDestroy 
 	}
 
 	private update(value: boolean) {
-		if (this.libService.subtitlesButton.getValue() !== value) {
-			this.libService.subtitlesButton.next(value);
+		if (this.libService.captionsButton.getValue() !== value) {
+			this.libService.captionsButton.next(value);
 		}
 	}
 }

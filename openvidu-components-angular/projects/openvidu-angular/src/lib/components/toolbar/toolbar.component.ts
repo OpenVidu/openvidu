@@ -308,12 +308,12 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
-	showSubtitlesButton: boolean = true;
+	showCaptionsButton: boolean = true;
 
 	/**
 	 * @ignore
 	 */
-	subtitlesEnabled: boolean;
+	captionsEnabled: boolean;
 
 	/**
 	 * @ignore
@@ -362,7 +362,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	private displaySessionNameSub: Subscription;
 	private screenSizeSub: Subscription;
 	private settingsButtonSub: Subscription;
-	private subtitlesSubs: Subscription;
+	private captionsSubs: Subscription;
 	private currentWindowHeight = window.innerHeight;
 
 	/**
@@ -425,7 +425,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.subscribeToChatMessages();
 		this.subscribeToRecordingStatus();
 		this.subscribeToScreenSize();
-		this.subscribeToSubtitlesToggling();
+		this.subscribeToCaptionsToggling();
 	}
 
 	ngAfterViewInit() {
@@ -453,7 +453,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		if (this.recordingSubscription) this.recordingSubscription.unsubscribe();
 		if (this.screenSizeSub) this.screenSizeSub.unsubscribe();
 		if (this.settingsButtonSub) this.settingsButtonSub.unsubscribe();
-		if (this.subtitlesSubs) this.subtitlesSubs.unsubscribe();
+		if (this.captionsSubs) this.captionsSubs.unsubscribe();
 	}
 
 	/**
@@ -547,8 +547,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
-	toggleSubtitles() {
-		this.layoutService.toggleSubtitles();
+	toggleCaptions() {
+		this.layoutService.toggleCaptions();
 	}
 
 	/**
@@ -697,8 +697,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.showSessionName = value;
 			this.cd.markForCheck();
 		});
-		this.subtitlesSubs = this.libService.subtitlesButtonObs.subscribe((value: boolean) => {
-			this.showSubtitlesButton = value;
+		this.captionsSubs = this.libService.captionsButtonObs.subscribe((value: boolean) => {
+			this.showCaptionsButton = value;
 			this.cd.markForCheck();
 		});
 	}
@@ -710,9 +710,9 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		});
 	}
 
-	private subscribeToSubtitlesToggling() {
-		this.subtitlesSubs = this.layoutService.subtitlesTogglingObs.subscribe((value: boolean) => {
-			this.subtitlesEnabled = value;
+	private subscribeToCaptionsToggling() {
+		this.captionsSubs = this.layoutService.captionsTogglingObs.subscribe((value: boolean) => {
+			this.captionsEnabled = value;
 			this.cd.markForCheck();
 		});
 	}

@@ -7,5 +7,6 @@ export enum Storage {
 	AUDIO_DEVICE = 'openviduCallAudioDevice',
 	AUDIO_MUTED = 'openviduCallAudioMuted',
 	VIDEO_MUTED = 'openviduCallVideoMuted',
-	LANG = "openviduCallLang"
+	LANG = 'openviduCallLang',
+	CAPTION_LANG = 'openviduCallCaptionLang'
 }
