@@ -339,7 +339,7 @@ export class VideoComponent implements OnInit, OnDestroy {
 
     async speechToText() {
         if (this.captionIcon === 'closed_caption') {
-            await this.streamManager.stream.session.subscribeToSpeechToText(this.streamManager.stream, 'es');
+            await this.streamManager.stream.session.subscribeToSpeechToText(this.streamManager.stream, 'en-US');
         } else {
             await this.streamManager.stream.session.unsubscribeFromSpeechToText(this.streamManager.stream);
         }
