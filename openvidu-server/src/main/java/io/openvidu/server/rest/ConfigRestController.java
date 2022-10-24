@@ -152,4 +152,11 @@ public class ConfigRestController {
 		return new ResponseEntity<>(json.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 	}
 
+	protected String hideSecret(final String originalString, String charToReplace, int numberOfVisibleChars) {
+		String hiddenString = originalString.substring(originalString.length() - numberOfVisibleChars,
+				originalString.length());
+		hiddenString = charToReplace.repeat(originalString.length() - numberOfVisibleChars) + hiddenString;
+		return hiddenString;
+	}
+
 }
