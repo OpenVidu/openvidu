@@ -69,7 +69,7 @@ export class VideoComponent implements OnInit, OnDestroy {
     pubSubAudioIcon = 'mic';
     recordIcon = 'fiber_manual_record';
     pauseRecordIcon = '';
-    captionIcon = 'closed_caption';
+    captionIcon = 'closed_caption_disabled';
 
     // Stats
     usedVideoCodec: string;
@@ -187,7 +187,7 @@ export class VideoComponent implements OnInit, OnDestroy {
 
             this.pubSubVideoIcon = 'videocam';
             this.pubSubAudioIcon = 'mic';
-            this.captionIcon = 'closed_caption';
+            this.captionIcon = 'closed_caption_disabled';
             this.recordIcon = 'fiber_manual_record';
             this.pauseRecordIcon = '';
             this.pubSubIcon = 'stop';
@@ -338,12 +338,12 @@ export class VideoComponent implements OnInit, OnDestroy {
     }
 
     async speechToText() {
-        if (this.captionIcon === 'closed_caption') {
+        if (this.captionIcon === 'closed_caption_disabled') {
             await this.streamManager.stream.session.subscribeToSpeechToText(this.streamManager.stream, 'en-US');
         } else {
             await this.streamManager.stream.session.unsubscribeFromSpeechToText(this.streamManager.stream);
         }
-        this.captionIcon = this.captionIcon === 'closed_caption' ? 'closed_caption_disabled' : 'closed_caption';
+        this.captionIcon = this.captionIcon === 'closed_caption_disabled' ? 'closed_caption' : 'closed_caption_disabled';
     }
 
     updateSubscriberEvents(oldValues) {
