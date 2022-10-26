@@ -28,7 +28,6 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should join with ONLY ONE TOKEN', async () => {
-		let element;
 		await browser.get(`${url}?singleToken=true`);
 
 		// Checking if prejoin page exist
@@ -47,7 +46,6 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should set the MINIMAL UI', async () => {
-		let element;
 		await browser.get(`${url}?minimal=true`);
 		// Checking if prejoin page exist
 		await utils.checkPrejoinIsPresent();
@@ -89,7 +87,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#session-name')).to.be.false;
 
 		// Checking if nickname is not displayed
-		element = await browser.findElements(By.id('nickname-container'));
+		await browser.findElements(By.id('nickname-container'));
 		expect(await utils.isPresent('#nickname-container')).to.be.false;
 
 		// Checking if audio detection is not displayed
@@ -180,8 +178,7 @@ describe('Testing API Directives', () => {
 		await utils.waitForElement('#mic_off');
 		expect(await utils.isPresent('#mic_off')).to.be.true;
 
-		const joinButton = await utils.waitForElement('#join-button');
-		await joinButton.click();
+		await utils.clickOn('#join-button');
 
 		// Checking if audio is muted after join the room
 		await utils.checkSessionIsPresent();
@@ -224,7 +221,6 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the FULLSCREEN button', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false&fullscreenBtn=false`);
 
 		await utils.checkSessionIsPresent();
@@ -233,8 +229,7 @@ describe('Testing API Directives', () => {
 		await utils.checkToolbarIsPresent();
 
 		// Open more options menu
-		element = await utils.waitForElement('#more-options-btn');
-		await element.click();
+		await utils.clickOn('#more-options-btn');
 
 		await browser.sleep(500);
 
@@ -246,8 +241,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#fullscreen-btn')).to.be.false;
 	});
 
-	it('should HIDE the SUBTITLES button', async () => {
-		let element;
+	it('should HIDE the CAPTIONS button', async () => {
 		await browser.get(`${url}?prejoin=false&toolbarCaptionsBtn=false`);
 
 		await utils.checkSessionIsPresent();
@@ -256,8 +250,7 @@ describe('Testing API Directives', () => {
 		await utils.checkToolbarIsPresent();
 
 		// Open more options menu
-		element = await utils.waitForElement('#more-options-btn');
-		await element.click();
+		await utils.clickOn('#more-options-btn');
 
 		await browser.sleep(500);
 
@@ -265,23 +258,20 @@ describe('Testing API Directives', () => {
 		await utils.waitForElement('.mat-menu-content');
 		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
 
-		// Checking if subtitles button is not present
-		expect(await utils.isPresent('#subtitles-btn')).to.be.false;
+		// Checking if captions button is not present
+		expect(await utils.isPresent('#captions-btn')).to.be.false;
 
-		element = await utils.waitForElement('#toolbar-settings-btn');
-		expect(await utils.isPresent('#toolbar-settings-btn')).to.be.true;
-		await element.click();
+		await utils.clickOn('#toolbar-settings-btn');
 
 		await browser.sleep(500);
 
-		element = await utils.waitForElement('.settings-container');
+		await utils.waitForElement('.settings-container');
 		expect(await utils.isPresent('.settings-container')).to.be.true;
 
-		expect(await utils.isPresent('#subtitles-opt')).to.be.false;
+		expect(await utils.isPresent('#captions-opt')).to.be.false;
 	});
 
 	it('should HIDE the TOOLBAR SETTINGS button', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false&toolbarSettingsBtn=false`);
 
 		await utils.checkSessionIsPresent();
@@ -290,8 +280,7 @@ describe('Testing API Directives', () => {
 		await utils.checkToolbarIsPresent();
 
 		// Open more options menu
-		element = await utils.waitForElement('#more-options-btn');
-		await element.click();
+		await utils.clickOn('#more-options-btn');
 
 		await browser.sleep(500);
 
@@ -303,7 +292,6 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the LEAVE button', async () => {
-		let element;
 		await browser.get(`${url}?prejoin=false&leaveBtn=false`);
 
 		await utils.checkSessionIsPresent();
@@ -312,7 +300,7 @@ describe('Testing API Directives', () => {
 		await utils.checkToolbarIsPresent();
 
 		// Checking if leave button is not present
-		element = await browser.findElements(By.id('leave-btn'));
+		await browser.findElements(By.id('leave-btn'));
 		expect(await utils.isPresent('#leave-btn')).to.be.false;
 	});
 
@@ -1289,5 +1277,178 @@ describe('Testing panels', () => {
 		await element.click();
 
 		expect(await utils.isPresent('ov-audio-devices-select')).to.be.true;
+	});
+});
+
+describe('Testing captions features', () => {
+	let browser: WebDriver;
+	let utils: OpenViduComponentsPO;
+	async function createChromeBrowser(): Promise<WebDriver> {
+		return await new Builder()
+			.forBrowser(WebComponentConfig.browserName)
+			.withCapabilities(WebComponentConfig.browserCapabilities)
+			.setChromeOptions(WebComponentConfig.browserOptions)
+			.usingServer(WebComponentConfig.seleniumAddress)
+			.build();
+	}
+
+	beforeEach(async () => {
+		browser = await createChromeBrowser();
+		utils = new OpenViduComponentsPO(browser);
+	});
+
+	afterEach(async () => {
+		await browser.quit();
+	});
+
+	it('should OPEN the CAPTIONS container', async () => {
+		await browser.get(`${url}?prejoin=false`);
+
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
+
+		// Open more options menu
+		await utils.clickOn('#more-options-btn');
+
+		await browser.sleep(500);
+
+		// Checking if button panel is present
+		await utils.waitForElement('.mat-menu-content');
+		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+
+		// Checking if captions button is present
+		await utils.waitForElement('#captions-btn');
+		expect(await utils.isPresent('#captions-btn')).to.be.true;
+		await utils.clickOn('#captions-btn');
+
+		await utils.waitForElement('.captions-container');
+	});
+
+	it('should OPEN the SETTINGS panel from captions button', async () => {
+		await browser.get(`${url}?prejoin=false`);
+
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
+
+		// Open more options menu
+		await utils.clickOn('#more-options-btn');
+
+		await browser.sleep(500);
+
+		// Checking if button panel is present
+		await utils.waitForElement('.mat-menu-content');
+		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+
+		// Checking if captions button is present
+		await utils.waitForElement('#captions-btn');
+		expect(await utils.isPresent('#captions-btn')).to.be.true;
+		await utils.clickOn('#captions-btn');
+
+		await utils.waitForElement('.captions-container');
+		await utils.waitForElement('#caption-settings-btn');
+		await utils.clickOn('#caption-settings-btn');
+
+		await browser.sleep(500);
+
+		await utils.waitForElement('.settings-container');
+		expect(await utils.isPresent('.settings-container')).to.be.true;
+
+		await utils.waitForElement('ov-captions-settings');
+
+		// Expect caption button is not present
+		expect(await utils.isPresent('#caption-settings-btn')).to.be.false;
+	});
+
+	it('should TOGGLE the CAPTIONS container from settings panel', async () => {
+		await browser.get(`${url}?prejoin=false`);
+
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
+
+		// Open more options menu
+		await utils.clickOn('#more-options-btn');
+
+		await browser.sleep(500);
+
+		// Checking if button panel is present
+		await utils.waitForElement('.mat-menu-content');
+		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+
+		// Checking if captions button is present
+		await utils.waitForElement('#captions-btn');
+		expect(await utils.isPresent('#captions-btn')).to.be.true;
+		await utils.clickOn('#captions-btn');
+
+		await utils.waitForElement('.captions-container');
+		await utils.waitForElement('#caption-settings-btn');
+		await utils.clickOn('#caption-settings-btn');
+
+		await browser.sleep(500);
+
+		await utils.waitForElement('.settings-container');
+		expect(await utils.isPresent('.settings-container')).to.be.true;
+
+		await utils.waitForElement('ov-captions-settings');
+
+		expect(await utils.isPresent('.captions-container')).to.be.true;
+		await utils.clickOn('#captions-toggle-slide');
+		expect(await utils.isPresent('.captions-container')).to.be.false;
+
+		await browser.sleep(200);
+
+		await utils.clickOn('#captions-toggle-slide');
+		expect(await utils.isPresent('.captions-container')).to.be.true;
+	});
+
+	it('should change the CAPTIONS language', async () => {
+		await browser.get(`${url}?prejoin=false`);
+
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
+
+		// Open more options menu
+		await utils.clickOn('#more-options-btn');
+
+		await browser.sleep(500);
+
+		// Checking if button panel is present
+		await utils.waitForElement('.mat-menu-content');
+		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+
+		// Checking if captions button is present
+		await utils.waitForElement('#captions-btn');
+		expect(await utils.isPresent('#captions-btn')).to.be.true;
+		await utils.clickOn('#captions-btn');
+
+		await utils.waitForElement('.captions-container');
+		await utils.waitForElement('#caption-settings-btn');
+		await utils.clickOn('#caption-settings-btn');
+
+		await browser.sleep(500);
+
+		await utils.waitForElement('.settings-container');
+		expect(await utils.isPresent('.settings-container')).to.be.true;
+
+		await utils.waitForElement('ov-captions-settings');
+
+		expect(await utils.isPresent('.captions-container')).to.be.true;
+
+		await utils.clickOn('.lang-button');
+		await browser.sleep(500);
+
+		await utils.clickOn('#es-ES');
+		await utils.clickOn('.panel-close-button');
+
+		const button = await utils.waitForElement('#caption-settings-btn');
+		expect(await button.getText()).equals('settingsEspañol');
+
 	});
 });
