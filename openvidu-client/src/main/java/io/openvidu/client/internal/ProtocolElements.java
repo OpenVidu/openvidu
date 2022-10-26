@@ -236,6 +236,7 @@ public class ProtocolElements {
     public static final String SPEECHTOTEXTMESSAGE_TEXT_PARAM = "text";
     public static final String SPEECHTOTEXTMESSAGE_REASON_PARAM = "reason";
     public static final String SPEECHTOTEXTMESSAGE_RAW_PARAM = "raw";
+    public static final String SPEECHTOTEXTMESSAGE_LANG_PARAM = "lang";
 
     public static final String CUSTOM_NOTIFICATION = "customNotification";
 
