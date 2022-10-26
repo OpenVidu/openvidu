@@ -21,6 +21,11 @@ services:
             - OPENVIDU_URL=http://localhost:5443
             - OPENVIDU_SECRET=${OPENVIDU_SECRET}
             - CALL_OPENVIDU_CERTTYPE=${CERTIFICATE_TYPE}
+            - CALL_PRIVATE_ACCESS=${CALL_PRIVATE_ACCESS:-}
+            - CALL_USER=${CALL_USER:-}
+            - CALL_SECRET=${CALL_SECRET:-}
+            - CALL_ADMIN_SECRET=${CALL_ADMIN_SECRET:-}
+            - CALL_RECORDING=${CALL_RECORDING:-}
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
