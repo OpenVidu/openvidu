@@ -21,6 +21,8 @@
 		"DEVICE_SECTION": "Choisissez vos appareils",
 		"VIDEO_DEVICE": "Périphérique vidéo",
 		"AUDIO_DEVICE": "Périphérique audio",
+		"NO_VIDEO_DEVICE": "Appareil vidéo introuvable",
+		"NO_AUDIO_DEVICE": "Appareil audio introuvable",
 		"JOIN": "Joindre une session",
 		"PREPARING": "Préparation de la session ..."
 	},
@@ -96,7 +98,6 @@
 			"DOWNLOAD": "Télécharger",
 			"RECORDINGS": "ENREGISTREMENTS",
 			"NO_MODERATOR": "Seul le MODERATEUR peut lancer l'enregistrement"
-
 		}
 	},
 	"ERRORS": {

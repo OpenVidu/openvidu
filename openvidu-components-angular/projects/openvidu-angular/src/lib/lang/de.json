@@ -21,6 +21,8 @@
 		"DEVICE_SECTION": "Wählen Sie Ihre Geräte",
 		"VIDEO_DEVICE": "Videogerät",
 		"AUDIO_DEVICE": "Audiogerät",
+		"NO_VIDEO_DEVICE": "Video-Gerät nicht gefunden",
+		"NO_AUDIO_DEVICE": "Audio-Gerät nicht gefunden",
 		"JOIN": "Sitzung beitreten",
 		"PREPARING": "Sitzung vorbereiten..."
 	},

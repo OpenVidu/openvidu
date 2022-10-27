@@ -21,13 +21,15 @@
 		"DEVICE_SECTION": "Elige tus dispositivos",
 		"VIDEO_DEVICE": "Dispositivo de video",
 		"AUDIO_DEVICE": "Dispositivo de audio",
+		"NO_VIDEO_DEVICE": "Dispositivo de vídeo no encontrado",
+		"NO_AUDIO_DEVICE": "Dispositivo de audio no encontrado",
 		"PREPARING": "Preparando la session ...",
 		"JOIN": "Unirme ahora"
 	},
 	"TOOLBAR": {
-		"MUTE_AUDIO":"Silenciar tu audio",
+		"MUTE_AUDIO": "Silenciar tu audio",
 		"UNMUTE_AUDIO": "Activar tu audio",
-		"MUTE_VIDEO":"Silenciar tu video",
+		"MUTE_VIDEO": "Silenciar tu video",
 		"UNMUTE_VIDEO": "Activar tu video",
 		"ENABLE_SCREEN": "Compartir pantalla",
 		"DISABLE_SCREEN": "Dejar de compartir pantalla",

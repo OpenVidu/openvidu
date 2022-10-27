@@ -21,6 +21,8 @@
 		"DEVICE_SECTION": "Kies je apparaten",
 		"VIDEO_DEVICE": "Videospeler",
 		"AUDIO_DEVICE": "Audiospeler",
+		"NO_VIDEO_DEVICE": "Videoapparaat niet gevonden",
+		"NO_AUDIO_DEVICE": "Audioapparaat niet gevonden",
 		"JOIN": "Deelnemen aan sessie",
 		"PREPARING": "Sessie voorbereiden ..."
 	},
@@ -37,13 +39,13 @@
 		"ENABLE_CAPTIONS": "Ondertiteling inschakelen",
 		"DISABLE_CAPTIONS": "Ondertiteling uitschakelen",
 		"BACKGROUND": "Achtergrondeffecten",
-        "START_RECORDING": "Start opname",
+		"START_RECORDING": "Start opname",
 		"STOP_RECORDING": "Stop opname",
 		"SETTINGS": "Instellingen",
 		"LEAVE": "Verlaat de sessie",
 		"PARTICIPANTS": "Deelnemers",
 		"CHAT": "Chat",
-        "ACTIVITIES": "Activiteiten"
+		"ACTIVITIES": "Activiteiten"
 	},
 	"STREAM": {
 		"SETTINGS": "Instellingen",
@@ -72,7 +74,7 @@
 			"GENERAL": "Algemeen",
 			"VIDEO": "Video",
 			"AUDIO": "Audio",
-			"LANGUAGE":"Taal",
+			"LANGUAGE": "Taal",
 			"CAPTIONS": "Ondertitels"
 		},
 		"BACKGROUND": {
@@ -108,5 +110,5 @@
 		"SCREEN_SUPPORT": "Uw browser ondersteunt het delen van schermen niet",
 		"MEDIA_ACCESS": "Toegang tot media-apparaten was niet toegestaan.",
 		"DEVICE_NOT_FOUND": "Er zijn geen video- of audioapparaten gevonden. Sluit er alstublieft ten minste één aan."
-    }
+	}
 }

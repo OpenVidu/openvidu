@@ -26,9 +26,9 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 
 	videoMuteChanging: boolean;
 	isVideoMuted: boolean;
-	cameraSelected: CustomDevice;
+	cameraSelected: CustomDevice | null;
 	hasVideoDevices: boolean;
-	cameras: CustomDevice[];
+	cameras: CustomDevice[] = [];
 	localParticipantSubscription: Subscription;
 
 	constructor(
@@ -47,8 +47,10 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 			await this.deviceSrv.initializeDevices();
 		}
 		this.hasVideoDevices = this.deviceSrv.hasVideoDeviceAvailable();
-		this.cameras = this.deviceSrv.getCameras();
-		this.cameraSelected = this.deviceSrv.getCameraSelected();
+		if(this.hasVideoDevices){
+			this.cameras = this.deviceSrv.getCameras();
+			this.cameraSelected = this.deviceSrv.getCameraSelected();
+		}
 		if (this.openviduService.isSessionConnected()) {
 			this.isVideoMuted = !this.participantService.getLocalParticipant().isCameraVideoActive();
 		} else {

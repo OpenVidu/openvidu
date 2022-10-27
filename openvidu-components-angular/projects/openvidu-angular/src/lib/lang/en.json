@@ -14,7 +14,6 @@
 		"SESSION": "Session",
 		"OUTPUT": "Output mode",
 		"POWERED_BY": "Powered by"
-
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Set your nickname",
@@ -22,13 +21,15 @@
 		"DEVICE_SECTION": "Choose your devices",
 		"VIDEO_DEVICE": "Video device",
 		"AUDIO_DEVICE": "Audio device",
+		"NO_VIDEO_DEVICE": "Video device not found",
+		"NO_AUDIO_DEVICE": "Audio device not found",
 		"JOIN": "Join session",
 		"PREPARING": "Preparing session..."
 	},
 	"TOOLBAR": {
-		"MUTE_AUDIO":"Mute your audio",
+		"MUTE_AUDIO": "Mute your audio",
 		"UNMUTE_AUDIO": "Unmute your audio",
-		"MUTE_VIDEO":"Mute your video",
+		"MUTE_VIDEO": "Mute your video",
 		"UNMUTE_VIDEO": "Unmute your video",
 		"ENABLE_SCREEN": "Enable screen share",
 		"DISABLE_SCREEN": "Disable screen share",

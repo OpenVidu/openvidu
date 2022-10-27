@@ -21,8 +21,22 @@
 			[disabled]="isConnectionLost || !hasAudioDevices"
 			[class.warn-btn]="!isAudioActive"
 		>
-			<mat-icon *ngIf="isAudioActive" matTooltip="{{ 'TOOLBAR.MUTE_AUDIO' | translate }}" id="mic">mic</mat-icon>
-			<mat-icon *ngIf="!isAudioActive" matTooltip="{{ 'TOOLBAR.UNMUTE_AUDIO' | translate }}" id="mic_off">mic_off</mat-icon>
+			<mat-icon
+				*ngIf="isAudioActive"
+				[matTooltipDisabled]="!hasAudioDevices"
+				matTooltip="{{ 'TOOLBAR.MUTE_AUDIO' | translate }}"
+				id="mic"
+			>
+				mic
+			</mat-icon>
+			<mat-icon
+				*ngIf="!isAudioActive"
+				[matTooltipDisabled]="!hasAudioDevices"
+				matTooltip="{{ 'TOOLBAR.UNMUTE_AUDIO' | translate }}"
+				id="mic_off"
+			>
+				mic_off
+			</mat-icon>
 		</button>
 
 		<!-- Camera button -->
@@ -33,10 +47,22 @@
 			[disabled]="isConnectionLost || !hasVideoDevices || videoMuteChanging"
 			[class.warn-btn]="!isWebcamVideoActive"
 		>
-			<mat-icon *ngIf="isWebcamVideoActive" matTooltip="{{ 'TOOLBAR.MUTE_VIDEO' | translate }}" id="videocam">videocam</mat-icon>
-			<mat-icon *ngIf="!isWebcamVideoActive" matTooltip="{{ 'TOOLBAR.UNMUTE_VIDEO' | translate }}" id="videocam_off"
-				>videocam_off</mat-icon
+			<mat-icon
+				*ngIf="isWebcamVideoActive"
+				[matTooltipDisabled]="!hasVideoDevices"
+				matTooltip="{{ 'TOOLBAR.MUTE_VIDEO' | translate }}"
+				id="videocam"
 			>
+				videocam
+			</mat-icon>
+			<mat-icon
+				*ngIf="!isWebcamVideoActive"
+				[matTooltipDisabled]="!hasVideoDevices"
+				matTooltip="{{ 'TOOLBAR.UNMUTE_VIDEO' | translate }}"
+				id="videocam_off"
+			>
+				videocam_off
+			</mat-icon>
 		</button>
 
 		<!-- Screenshare button -->

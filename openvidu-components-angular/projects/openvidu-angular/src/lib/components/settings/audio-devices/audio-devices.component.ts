@@ -22,7 +22,7 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 	@Output() onAudioMutedClicked = new EventEmitter<boolean>();
 	hasAudioDevices: boolean;
 	isAudioMuted: boolean;
-	microphoneSelected: CustomDevice;
+	microphoneSelected: CustomDevice | null;
 	microphones: CustomDevice[] = [];
 	private localParticipantSubscription: Subscription;
 
@@ -40,8 +40,10 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 			await this.deviceSrv.initializeDevices();
 		}
 		this.hasAudioDevices = this.deviceSrv.hasAudioDeviceAvailable();
-		this.microphones = this.deviceSrv.getMicrophones();
-		this.microphoneSelected = this.deviceSrv.getMicrophoneSelected();
+		if(this.hasAudioDevices) {
+			this.microphones = this.deviceSrv.getMicrophones();
+			this.microphoneSelected = this.deviceSrv.getMicrophoneSelected();
+		}
 		this.isAudioMuted = this.deviceSrv.isAudioMuted();
 		if (this.openviduService.isSessionConnected()) {
 			this.isAudioMuted = !this.participantService.isMyAudioActive();

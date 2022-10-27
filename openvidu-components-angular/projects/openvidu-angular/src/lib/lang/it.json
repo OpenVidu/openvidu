@@ -21,6 +21,8 @@
 		"DEVICE_SECTION": "Scegli i tuoi dispositivi",
 		"VIDEO_DEVICE": "Dispositivo video",
 		"AUDIO_DEVICE": "Dispositivo audio",
+		"NO_VIDEO_DEVICE": "Dispositivo video non trovato",
+		"NO_AUDIO_DEVICE": "Dispositivo audio non trovato",
 		"JOIN": "Unisciti alla sessione",
 		"PREPARING": "Preparazione della sessione in corso..."
 	},
@@ -72,7 +74,7 @@
 			"GENERAL": "Generale",
 			"VIDEO": "video",
 			"AUDIO": "Audio",
-			"LANGUAGE":"Lingua",
+			"LANGUAGE": "Lingua",
 			"CAPTIONS": "Sottotitoli"
 		},
 		"BACKGROUND": {
