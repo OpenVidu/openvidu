@@ -1201,15 +1201,16 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public void onSubscribeToSpeechToText(Participant participant, Integer transactionId, String lang, JsonArray connectionIds) {
+	public void onSubscribeToSpeechToText(Participant participant, Integer transactionId, String lang,
+			JsonArray connectionIds) {
 		sessionEventsHandler.onUnsubscribeToSpeechToText(participant, transactionId, new OpenViduException(
-				Code.WRONG_OPENVIDU_EDITION, "Speech To text requires OpenVidu Pro/Enterprise edition"));
+				Code.WRONG_OPENVIDU_EDITION_ERROR_CODE, "Speech To Text requires OpenVidu Pro/Enterprise edition"));
 	}
 
 	@Override
 	public void onUnsubscribeFromSpeechToText(Participant participant, Integer transactionId, JsonArray connectionIds) {
 		sessionEventsHandler.onUnsubscribeToSpeechToText(participant, transactionId, new OpenViduException(
-				Code.WRONG_OPENVIDU_EDITION, "Speech To text requires OpenVidu Pro/Enterprise edition"));
+				Code.WRONG_OPENVIDU_EDITION_ERROR_CODE, "Speech To Text requires OpenVidu Pro/Enterprise edition"));
 	}
 
 	private String mungeSdpOffer(Session kSession, Participant participant, String sdpOffer, boolean isPublisher) {
