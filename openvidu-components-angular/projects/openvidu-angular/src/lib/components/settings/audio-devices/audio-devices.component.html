@@ -1,5 +1,5 @@
 <div class="device-container-element">
-	<button mat-icon-button id="microhpone-button" [disabled]="!hasAudioDevices" [class.warn-btn]="isAudioMuted" (click)="toggleMic()">
+	<button mat-icon-button id="microphone-button" [disabled]="!hasAudioDevices" [class.warn-btn]="isAudioMuted" (click)="toggleMic()">
 		<mat-icon
 			*ngIf="!isAudioMuted"
 			[matTooltipDisabled]="!hasAudioDevices"
