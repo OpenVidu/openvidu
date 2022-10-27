@@ -44,8 +44,10 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 		this.subscribeToParticipantMediaProperties();
 		if (this.openviduService.isSessionConnected()) {
 			// Updating devices only with session connected
-			await this.deviceSrv.initializeDevices();
+			await this.deviceSrv.refreshDevices();
 		}
+
+
 		this.hasVideoDevices = this.deviceSrv.hasVideoDeviceAvailable();
 		if(this.hasVideoDevices){
 			this.cameras = this.deviceSrv.getCameras();

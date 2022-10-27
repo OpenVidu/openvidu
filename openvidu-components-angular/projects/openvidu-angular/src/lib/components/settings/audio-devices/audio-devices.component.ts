@@ -37,7 +37,7 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 		this.subscribeToParticipantMediaProperties();
 		if (this.openviduService.isSessionConnected()) {
 			// Updating devices only with session connected
-			await this.deviceSrv.initializeDevices();
+			await this.deviceSrv.refreshDevices();
 		}
 		this.hasAudioDevices = this.deviceSrv.hasAudioDeviceAvailable();
 		if(this.hasAudioDevices) {

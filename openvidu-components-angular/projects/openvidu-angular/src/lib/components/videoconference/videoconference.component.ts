@@ -464,10 +464,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 						await this.handlePublisherError(e);
 						resolve();
 					});
-					publisher.once('accessAllowed', async () => {
-						await this.handlePublisherSuccess();
-						resolve();
-					});
+					publisher.once('accessAllowed', () => resolve());
 				}
 			} catch (error) {
 				this.actionService.openDialog(error.name.replace(/_/g, ' '), error.message, true);
@@ -668,37 +665,16 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		let message: string = '';
 		if (e.name === OpenViduErrorName.DEVICE_ALREADY_IN_USE) {
 			this.log.w('Video device already in use. Disabling video device...');
-			// Allow access to the room with only mic if camera device is already in use
+			// Disabling video device
+			// Allow access to the room with only mic
 			this.deviceSrv.disableVideoDevices();
 			return await this.initwebcamPublisher();
 		}
-		if (e.name === OpenViduErrorName.DEVICE_ACCESS_DENIED) {
-			message = this.translateService.translate('ERRORS.MEDIA_ACCESS');
-			this.deviceSrv.disableVideoDevices();
-			this.deviceSrv.disableAudioDevices();
-			return await this.initwebcamPublisher();
-		} else if (e.name === OpenViduErrorName.NO_INPUT_SOURCE_SET) {
+		if (e.name === OpenViduErrorName.NO_INPUT_SOURCE_SET) {
 			message = this.translateService.translate('ERRORS.DEVICE_NOT_FOUND');
 		}
 		this.actionService.openDialog(e.name.replace(/_/g, ' '), message, true);
 		this.log.e(e.message);
-	}
-
-	private async handlePublisherSuccess() {
-		// The devices are initialized without labels in Firefox.
-		// We need to force an update after publisher is allowed.
-		if (this.deviceSrv.areEmptyLabels()) {
-			await this.deviceSrv.forceInitDevices();
-			if (this.deviceSrv.hasAudioDeviceAvailable()) {
-				const audioLabel = this.participantService.getMyCameraPublisher()?.stream?.getMediaStream()?.getAudioTracks()[0]?.label;
-				this.deviceSrv.setMicSelected(audioLabel);
-			}
-
-			if (this.deviceSrv.hasVideoDeviceAvailable()) {
-				const videoLabel = this.participantService.getMyCameraPublisher()?.stream?.getMediaStream()?.getVideoTracks()[0]?.label;
-				this.deviceSrv.setCameraSelected(videoLabel);
-			}
-		}
 	}
 
 	private subscribeToVideconferenceDirectives() {
