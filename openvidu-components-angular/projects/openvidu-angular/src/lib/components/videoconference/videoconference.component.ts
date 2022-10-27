@@ -451,6 +451,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		this.isSessionInitialized = true;
 		this.onParticipantCreated.emit(this.participantService.getLocalParticipant());
 		this.loading = false;
+		this.participantReady = true;
 	}
 
 	private async initwebcamPublisher(): Promise<void> {
@@ -465,7 +466,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 					});
 					publisher.once('accessAllowed', async () => {
 						await this.handlePublisherSuccess();
-						this.participantReady = true;
 						resolve();
 					});
 				}
@@ -666,7 +666,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 
 	private async handlePublisherError(e: any): Promise<void> {
 		let message: string = '';
-		console.log('ERROR!', e);
 		if (e.name === OpenViduErrorName.DEVICE_ALREADY_IN_USE) {
 			this.log.w('Video device already in use. Disabling video device...');
 			// Allow access to the room with only mic if camera device is already in use
