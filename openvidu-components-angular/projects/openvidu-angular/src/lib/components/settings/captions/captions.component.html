@@ -1,18 +1,31 @@
-<mat-list>
-	<mat-list-item>
-		<div mat-line>{{ 'PANEL.SETTINGS.CAPTIONS' | translate }}</div>
-		<mat-slide-toggle id="captions-toggle-slide" (change)="toggleCaptions()" [checked]="captionsEnabled" [disableRipple]="true"></mat-slide-toggle>
-	</mat-list-item>
-	<mat-list-item>
-		<div mat-line>{{ 'PANEL.SETTINGS.LANGUAGE' | translate }}:</div>
-		<button mat-flat-button [matMenuTriggerFor]="menu" class="lang-button">
-			<span>{{ langSelected }}</span>
-			<mat-icon>expand_more</mat-icon>
-		</button>
-		<mat-menu #menu="matMenu">
-			<button *ngFor="let lang of languagesAvailable" mat-menu-item  [id]="lang.ISO" (click)="onLangSelected(lang)">
-				<span>{{ lang.name }}</span>
-			</button>
-		</mat-menu>
-	</mat-list-item>
-</mat-list>
+<div>
+	<mat-list>
+		<div>
+			<mat-list-item>
+				<div mat-line>{{ 'PANEL.SETTINGS.CAPTIONS' | translate }}</div>
+				<mat-slide-toggle
+					id="captions-toggle-slide"
+					(change)="toggleCaptions()"
+					[checked]="captionsEnabled"
+					[disableRipple]="true"
+				></mat-slide-toggle>
+			</mat-list-item>
+		</div>
+
+		<div id="lang-section">
+			<mat-list-item>
+				<div mat-line>{{ 'PANEL.SETTINGS.LANGUAGE' | translate }}</div>
+				<button mat-flat-button [matMenuTriggerFor]="menu" class="lang-button">
+					<span>{{ langSelected }}</span>
+					<mat-icon>expand_more</mat-icon>
+				</button>
+				<mat-menu #menu="matMenu">
+					<button *ngFor="let lang of languagesAvailable" mat-menu-item [id]="lang.ISO" (click)="onLangSelected(lang)">
+						<span>{{ lang.name }}</span>
+					</button>
+				</mat-menu>
+			</mat-list-item>
+			<span class="section-description">{{ 'PANEL.SETTINGS.CAPTIONS_LANG_TEXT' | translate }}</span>
+		</div>
+	</mat-list>
+</div>

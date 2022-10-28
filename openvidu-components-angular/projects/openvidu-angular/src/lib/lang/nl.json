@@ -75,7 +75,8 @@
 			"VIDEO": "Video",
 			"AUDIO": "Audio",
 			"LANGUAGE": "Taal",
-			"CAPTIONS": "Ondertitels"
+			"CAPTIONS": "Ondertitels",
+			"CAPTIONS_LANG_TEXT": "Selecteer de taal die de deelnemers van de sessie zullen gebruiken. De ondertiteling zal in die taal verschijnen."
 		},
 		"BACKGROUND": {
 			"TITLE": "Achtergrondeffecten",

@@ -75,7 +75,8 @@
 			"VIDEO": "Video",
 			"AUDIO": "Audio",
 			"LANGUAGE": "Sprache",
-			"CAPTIONS": "Untertitel"
+			"CAPTIONS": "Untertitel",
+			"CAPTIONS_LANG_TEXT": "Wählen Sie die Sprache, die die Teilnehmer der Sitzung verwenden. Die Untertitel werden in dieser Sprache angezeigt."
 		},
 		"BACKGROUND": {
 			"TITLE": "Hintergrund-Effekte",

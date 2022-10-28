@@ -1,8 +1,23 @@
+#lang-section {
+	margin-top: 10px;
+}
+
+.section-description {
+	color: var(--ov-panel-text-color);
+	font-size: 12px;
+	padding: 0px 5px;
+	display: block;
+}
+
+.lang-button {
+	background-color: var(--ov-logo-background-color);
+	color: var(--ov-text-color);
+}
 
 ::ng-deep .mat-slide-toggle.mat-checked .mat-slide-toggle-bar {
 	background-color: var(--ov-tertiary-color);
 }
 
-::ng-deep .mat-slide-toggle.mat-checked .mat-slide-toggle-thumb{
+::ng-deep .mat-slide-toggle.mat-checked .mat-slide-toggle-thumb {
 	background-color: var(--ov-light-color);
 }

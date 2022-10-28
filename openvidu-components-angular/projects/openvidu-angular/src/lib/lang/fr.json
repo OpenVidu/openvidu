@@ -75,7 +75,8 @@
 			"VIDEO": "Vidéo",
 			"AUDIO": "l'audio",
 			"LANGUAGE": "Langue",
-			"CAPTIONS": "Les sous-titres"
+			"CAPTIONS": "Les sous-titres",
+			"CAPTIONS_LANG_TEXT": "Sélectionnez la langue que les participants de la session utiliseront. Les sous-titres apparaîtront dans cette langue."
 		},
 		"BACKGROUND": {
 			"TITLE": "Effets de fond",

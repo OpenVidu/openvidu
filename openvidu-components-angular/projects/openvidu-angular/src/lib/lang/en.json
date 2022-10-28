@@ -75,7 +75,8 @@
 			"VIDEO": "Video",
 			"AUDIO": "Audio",
 			"LANGUAGE": "Language",
-			"CAPTIONS": "Captions"
+			"CAPTIONS": "Captions",
+			"CAPTIONS_LANG_TEXT": "Select the language that the participants of the session will use. The captions will appear in that language."
 		},
 		"BACKGROUND": {
 			"TITLE": "Background effects",

@@ -75,7 +75,8 @@
 			"VIDEO": "ビデオ",
 			"AUDIO": "オーディオ",
 			"LANGUAGE": "言語",
-			"CAPTIONS": "字幕"
+			"CAPTIONS": "字幕",
+			"CAPTIONS_LANG_TEXT": "セッションの参加者が使用する言語を選択します。キャプションはその言語で表示されます。"
 		},
 		"BACKGROUND": {
 			"TITLE": "背景効果",

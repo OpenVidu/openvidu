@@ -6,12 +6,13 @@
 .item-menu {
 	padding-right: 5px;
 	border-right: 1px solid var(--ov-secondary-color);
-	width: 200px;
+	width: 170px;
 }
 
 .item-content {
 	padding: 16px;
 	flex-grow: 1;
+	width: min-content;
 }
 
 .option {
@@ -22,7 +23,9 @@
 }
 
 mat-list-option[aria-selected='true'] {
-	background: var(--ov-light-color);
+	background: var(--ov-tertiary-color);
+	font-weight: bold !important;
+	color: var(--ov-panel-background);
 }
 ::ng-deep .mat-list-item-content {
 	padding: 5px !important;

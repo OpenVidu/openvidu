@@ -75,7 +75,8 @@
 			"VIDEO": "Vídeo",
 			"AUDIO": "Áudio",
 			"LANGUAGE": "Linguagem",
-			"CAPTIONS": "Legendas"
+			"CAPTIONS": "Legendas",
+			"CAPTIONS_LANG_TEXT": "Selecione o idioma que os participantes da sessão utilizarão. Os legendas aparecerão nesse idioma."
 		},
 		"BACKGROUND": {
 			"TITLE": "Efeitos de fundo",

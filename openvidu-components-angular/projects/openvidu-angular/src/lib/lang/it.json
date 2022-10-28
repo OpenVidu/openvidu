@@ -75,7 +75,8 @@
 			"VIDEO": "video",
 			"AUDIO": "Audio",
 			"LANGUAGE": "Lingua",
-			"CAPTIONS": "Sottotitoli"
+			"CAPTIONS": "Sottotitoli",
+			"CAPTIONS_LANG_TEXT": "Seleziona la lingua che i partecipanti della sessione useranno. I sottotitoli appariranno in quella lingua."
 		},
 		"BACKGROUND": {
 			"TITLE": "Effetti di sfondo",
