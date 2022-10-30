@@ -73,10 +73,10 @@ output:
         when.or:
           - contains:
               container.image.name: openvidu/openvidu-proxy
-      - index: "filebeat-openvidu-recording-%{+yyyy.MM.dd}"
+      - index: "filebeat-speech-to-text-%{+yyyy.MM.dd}"
         when.or:
           - contains:
-              container.image.name: openvidu/openvidu-recording
+              container.image.name: openvidu/speech-to-text
     pipelines:
       - pipeline: kurento-pipeline
         when.or:
