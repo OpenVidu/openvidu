@@ -76,7 +76,7 @@ output:
       - index: "filebeat-speech-to-text-%{+yyyy.MM.dd}"
         when.or:
           - contains:
-              container.image.name: openvidu/speech-to-text
+              container.image.name: openvidu/speech-to-text-service
     pipelines:
       - pipeline: kurento-pipeline
         when.or:

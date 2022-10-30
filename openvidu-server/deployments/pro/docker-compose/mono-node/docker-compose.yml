@@ -161,7 +161,7 @@ services:
             - METRICBEAT_IMAGE=docker.elastic.co/beats/metricbeat-oss:7.8.0
             - FILEBEAT_IMAGE=docker.elastic.co/beats/filebeat-oss:7.8.0
             - OPENVIDU_RECORDING_IMAGE=openvidu/openvidu-recording:2.23.0
-            - SPEECH_TO_TEXT_IMAGE=openvidu/speech-to-text:2.24.0-beta1
+            - SPEECH_TO_TEXT_IMAGE=openvidu/speech-to-text-service:2.24.0-beta1
             - COTURN_IMAGE=openvidu/openvidu-coturn:2.23.0
             - NO_COLOR=true
         ports:

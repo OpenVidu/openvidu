@@ -17,7 +17,7 @@ IMAGES=(
   "docker.elastic.co/beats/filebeat"
   "docker.elastic.co/beats/metricbeat"
   "openvidu/media-node-controller"
-  "openvidu/speech-to-text"
+  "openvidu/speech-to-text-service"
   "openvidu/mediasoup-controller"
   "openvidu/openvidu-coturn"
 )

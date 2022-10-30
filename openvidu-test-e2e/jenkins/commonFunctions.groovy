@@ -140,7 +140,7 @@ def removeStrandedContainers(removeTestingContainers) {
                             "openvidu/openvidu-pro-dind-media-node:"
                             "kurento/kurento-media-server"
                             "openvidu/media-node-controller:"
-                            "openvidu/speech-to-text:")
+                            "openvidu/speech-to-text-service:")
             if [ "${removeTestingContainers}" == "true" ]; then
                 arr+=("openvidu/openvidu-test-e2e:")
                 arr+=("openvidu/openvidu-pro-test-e2e:")
