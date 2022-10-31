@@ -299,10 +299,14 @@ export class SessionComponent implements OnInit {
 				const subscriber: Subscriber = this.session.subscribe(event.stream, undefined);
 				this.participantService.addRemoteConnection(connectionId, data, subscriber);
 				// this.oVSessionService.sendNicknameSignal(event.stream.connection);
-				try {
-					await this.session.subscribeToSpeechToText(event.stream, this.captionService.getLangSelected().ISO);
-				} catch (error) {
-					this.log.e('Error subscribing from STT: ', error);
+
+				if (this.participantService.getTypeConnectionData(data) === VideoType.CAMERA) {
+					// Only subscribe to STT when stream is CAMERA type and it is a remote stream
+					try {
+						await this.session.subscribeToSpeechToText(event.stream, this.captionService.getLangSelected().ISO);
+					} catch (error) {
+						this.log.e('Error subscribing from STT: ', error);
+					}
 				}
 			}
 		});

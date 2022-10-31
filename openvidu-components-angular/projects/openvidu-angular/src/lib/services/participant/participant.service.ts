@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Publisher, Subscriber } from 'openvidu-browser';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
-import { StreamModel, ParticipantAbstractModel, ParticipantModel, ParticipantProperties } from '../../models/participant.model';
+import { ParticipantAbstractModel, ParticipantModel, ParticipantProperties, StreamModel } from '../../models/participant.model';
 import { VideoType } from '../../models/video-type.model';
 import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.service';
 import { LoggerService } from '../logger/logger.service';
@@ -399,7 +399,12 @@ export class ParticipantService {
 		this._remoteParticipants.next([...this.remoteParticipants]);
 	}
 
-	protected getTypeConnectionData(data: string): VideoType {
+	/**
+	 * @internal
+	 * @param data
+	 * @returns Stream video type
+	 */
+	getTypeConnectionData(data: string): VideoType {
 		try {
 			return JSON.parse(data).type;
 		} catch (error) {
