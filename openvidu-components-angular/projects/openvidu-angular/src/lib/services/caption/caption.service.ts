@@ -24,16 +24,19 @@ export class CaptionService {
 	captionLangObs: Observable<{ name: string; ISO: string }>;
 	private _captionLangObs: Subject<{ name: string; ISO: string }> = new Subject();
 
-
 	constructor(private storageService: StorageService) {
+		const iso = this.storageService.getCaptionsLang();
+		if (iso) {
+			this.captionLangSelected = this.langTitles.find((lang) => lang.ISO === iso) || this.langTitles[0];
+		}
 		this.captionLangObs = this._captionLangObs.asObservable();
 	}
 
 	setLanguage(lang: string) {
 		if (this.langTitles.some((l) => l.ISO === lang)) {
 			this.captionLangSelected = this.langTitles.find((l) => l.ISO === lang);
-			this._captionLangObs.next(this.captionLangSelected);
 			this.storageService.setCaptionLang(lang);
+			this._captionLangObs.next(this.captionLangSelected);
 		}
 	}
 
