@@ -329,11 +329,14 @@ export class SessionComponent implements OnInit {
 			// Unsubscribe all streams from speech to text and re-subscribe with new language
 			this.log.d('Re-subscribe from STT because of language changed to ', lang.ISO);
 			for (const participant of this.participantService.getRemoteParticipants()) {
-				try {
-					await this.session.unsubscribeFromSpeechToText(participant.getCameraConnection().streamManager.stream);
-					await this.session.subscribeToSpeechToText(participant.getCameraConnection().streamManager.stream, lang.ISO);
-				} catch (error) {
-					this.log.e('Error re-subscribing to STT: ', error);
+				const streamManager = participant.getCameraConnection()?.streamManager;
+				if (!!streamManager?.stream) {
+					try {
+						await this.session.unsubscribeFromSpeechToText(streamManager.stream);
+						await this.session.subscribeToSpeechToText(streamManager.stream, lang.ISO);
+					} catch (error) {
+						this.log.e('Error re-subscribing to STT: ', error);
+					}
 				}
 			}
 		});
