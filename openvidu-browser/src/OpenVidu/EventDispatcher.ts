@@ -15,11 +15,11 @@
  *
  */
 
-import { Event as Event } from '../OpenViduInternal/Events/Event';
+import { Event } from '../OpenViduInternal/Events/Event';
 import { EventMap } from '../OpenViduInternal/Events/EventMap/EventMap';
+import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 
 import EventEmitter = require('wolfy87-eventemitter');
-import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 
 /**
  * @hidden
@@ -63,9 +63,9 @@ export abstract class EventDispatcher {
     onAux(type: string, message: string, handler: (event: Event) => void): EventDispatcher {
         const arrowHandler = (event) => {
             if (event) {
-                logger.info(message, event);
+                logger.debug(message, event);
             } else {
-                logger.info(message);
+                logger.debug(message);
             }
             handler(event);
         };
@@ -80,9 +80,9 @@ export abstract class EventDispatcher {
     onceAux(type: string, message: string, handler: (event: Event) => void): EventDispatcher {
         const arrowHandler = (event) => {
             if (event) {
-                logger.info(message, event);
+                logger.debug(message, event);
             } else {
-                logger.info(message);
+                logger.debug(message);
             }
             handler(event);
             // Remove handler from map after first and only execution
