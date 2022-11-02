@@ -1,4 +1,4 @@
-import { Autolinker, AutolinkerConfig, HashtagMatch } from 'autolinker';
+import { Autolinker, AutolinkerConfig } from 'autolinker';
 
 /**
  * @internal
@@ -6,7 +6,6 @@ import { Autolinker, AutolinkerConfig, HashtagMatch } from 'autolinker';
 const AUTOLINKER_CFGS: AutolinkerConfig = {
 	urls: {
 		schemeMatches: true,
-		wwwMatches: true,
 		tldMatches: true
 	},
 	email: true,

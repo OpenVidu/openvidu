@@ -96,56 +96,55 @@ const privateComponents = [
 ];
 
 @NgModule({
-	declarations: [
-		publicComponents,
-		privateComponents,
-		LinkifyPipe,
-		ParticipantStreamsPipe,
-		DurationFromSecondsPipe,
-		SearchByStringPropertyPipe,
-		ThumbnailFromUrlPipe,
-		StreamTypesEnabledPipe,
-		TranslatePipe,
-		CustomLayoutExtensionDirective,
-	],
-	imports: [
-		CommonModule,
-		HttpClientModule,
-		FormsModule,
-		ReactiveFormsModule,
-		RouterModule.forRoot([]),
-		AppMaterialModule,
-		OpenViduAngularDirectiveModule,
-		ApiDirectiveModule
-	],
-	providers: [
-		ActionService,
-		CdkOverlayContainer,
-		{ provide: OverlayContainer, useClass: CdkOverlayContainer },
-		CustomBreakPointsProvider,
-		ChatService,
-		PanelService,
-		DeviceService,
-		DocumentService,
-		LayoutService,
-		LoggerService,
-		PlatformService,
-		ParticipantService,
-		StorageService,
-		TokenService,
-		OpenViduService,
-		RecordingService
-	],
-	exports: [
-		publicComponents,
-		ParticipantStreamsPipe,
-		DurationFromSecondsPipe,
-		StreamTypesEnabledPipe,
-		CommonModule,
-		OpenViduAngularDirectiveModule,
-		ApiDirectiveModule
-	],
-	entryComponents: [DialogTemplateComponent, RecordingDialogComponent, DeleteDialogComponent]
+    declarations: [
+        publicComponents,
+        privateComponents,
+        LinkifyPipe,
+        ParticipantStreamsPipe,
+        DurationFromSecondsPipe,
+        SearchByStringPropertyPipe,
+        ThumbnailFromUrlPipe,
+        StreamTypesEnabledPipe,
+        TranslatePipe,
+        CustomLayoutExtensionDirective,
+    ],
+    imports: [
+        CommonModule,
+        HttpClientModule,
+        FormsModule,
+        ReactiveFormsModule,
+        RouterModule.forRoot([]),
+        AppMaterialModule,
+        OpenViduAngularDirectiveModule,
+        ApiDirectiveModule
+    ],
+    providers: [
+        ActionService,
+        CdkOverlayContainer,
+        { provide: OverlayContainer, useClass: CdkOverlayContainer },
+        CustomBreakPointsProvider,
+        ChatService,
+        PanelService,
+        DeviceService,
+        DocumentService,
+        LayoutService,
+        LoggerService,
+        PlatformService,
+        ParticipantService,
+        StorageService,
+        TokenService,
+        OpenViduService,
+        RecordingService
+    ],
+    exports: [
+        publicComponents,
+        ParticipantStreamsPipe,
+        DurationFromSecondsPipe,
+        StreamTypesEnabledPipe,
+        CommonModule,
+        OpenViduAngularDirectiveModule,
+        ApiDirectiveModule
+    ]
 })
 export class OpenViduAngularModule {
 	static forRoot(config): ModuleWithProviders<OpenViduAngularModule> {
