@@ -811,12 +811,12 @@ export class Publisher extends StreamManager {
         };
         if (track.kind === 'video' && updateLastConstraints) {
             this.openvidu.sendNewVideoDimensionsIfRequired(this, 'trackReplaced', 50, 30);
-            this.openvidu.sendTrackChangedEvent(this, 'trackReplaced', trackInfo.oldLabel, trackInfo.newLabel, 'videoActive');
+            this.openvidu.sendTrackChangedEvent(this, trackInfo.oldLabel, trackInfo.newLabel, 'videoTrack');
             if (this.stream.isLocalStreamPublished) {
                 this.session.sendVideoData(this.stream.streamManager, 5, true, 5);
             }
         } else if (track.kind === 'audio' && updateLastConstraints) {
-            this.openvidu.sendTrackChangedEvent(this, 'trackReplaced', trackInfo.oldLabel, trackInfo.newLabel, 'audioActive');
+            this.openvidu.sendTrackChangedEvent(this, trackInfo.oldLabel, trackInfo.newLabel, 'audioTrack');
         }
         if (track.kind === 'audio') {
             this.stream.disableHarkSpeakingEvent(false);

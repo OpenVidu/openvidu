@@ -649,7 +649,7 @@ export class Session extends EventDispatcher {
      * when speech is detected in its audio track.
      *
      * @param stream - The Stream for which you want to start receiving [[SpeechToTextEvent]].
-     * @þaram lang - The language of the Stream's audio track. It must be a valid [BCP-47](https://tools.ietf.org/html/bcp47) language tag like "en-US" or "es-ES".
+     * @param lang - The language of the Stream's audio track. It must be a valid [BCP-47](https://tools.ietf.org/html/bcp47) language tag like "en-US" or "es-ES".
      * 
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the speech-to-text subscription
      * was successful and rejected with an Error object if not.
@@ -989,6 +989,12 @@ export class Session extends EventDispatcher {
                         oldValue = stream.videoActive;
                         event.newValue = event.newValue === 'true';
                         stream.videoActive = event.newValue;
+                        break;
+                    case 'videoTrack':
+                        event.newValue = JSON.parse(event.newValue);
+                        break;
+                    case 'audioTrack':
+                        event.newValue = JSON.parse(event.newValue);
                         break;
                     case 'videoDimensions':
                         oldValue = stream.videoDimensions;

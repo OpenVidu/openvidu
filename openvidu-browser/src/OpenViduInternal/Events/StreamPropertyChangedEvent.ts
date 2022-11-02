@@ -30,7 +30,7 @@ export class StreamPropertyChangedEvent extends Event {
     stream: Stream;
 
     /**
-     * The property of the stream that changed. This value is either `"videoActive"`, `"audioActive"`, `"videoDimensions"` or `"filter"`
+     * The property of the stream that changed. This value is either `"videoActive"`, `"audioActive"`, `"videoTrack"`, `"audioTrack"`, `"videoDimensions"` or `"filter"`
      */
     changedProperty: string;
 
@@ -38,6 +38,8 @@ export class StreamPropertyChangedEvent extends Event {
      * Cause of the change on the stream's property:
      * - For `videoActive`: `"publishVideo"`
      * - For `audioActive`: `"publishAudio"`
+     * - For `videoTrack`: `"trackReplaced"`
+     * - For `audioTrack`: `"trackReplaced"`
      * - For `videoDimensions`: `"deviceRotated"`, `"screenResized"` or `"trackReplaced"`
      * - For `filter`: `"applyFilter"`, `"execFilterMethod"` or `"removeFilter"`
      */

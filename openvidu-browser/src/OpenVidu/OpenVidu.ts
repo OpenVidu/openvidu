@@ -717,9 +717,10 @@ export class OpenVidu {
     /**
      * @hidden
      */
-    sendTrackChangedEvent(publisher: Publisher, reason: string, oldLabel: string, newLabel: string, propertyType: string) {
+    sendTrackChangedEvent(publisher: Publisher, oldLabel: string, newLabel: string, propertyType: string) {
         const oldValue = { label: oldLabel };
         const newValue = { label: newLabel };
+        const reason = 'trackReplaced';
 
         if (publisher.stream.isLocalStreamPublished) {
             this.sendRequest(
@@ -727,7 +728,7 @@ export class OpenVidu {
                 {
                     streamId: publisher.stream.streamId,
                     property: propertyType,
-                    newValue: JSON.stringify({ newLabel }),
+                    newValue: newValue,
                     reason
                 },
                 (error, response) => {
