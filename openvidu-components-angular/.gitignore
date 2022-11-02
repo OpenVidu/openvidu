@@ -14,3 +14,5 @@ openvidu-webcomponent/
 coverage/**
 e2e/webcomponent-app/openvidu-webcomponent-*.css
 e2e/webcomponent-app/openvidu-webcomponent-*.js
+
+e2e/assets/*
