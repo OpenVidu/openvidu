@@ -46,7 +46,7 @@ export class SpeechToTextEvent extends Event {
     raw: string;
 
     /**
-     * Language ISO 639-1 code of the recognized text. This will be the same as the language provided
+     * [BCP-47](https://tools.ietf.org/html/bcp47) language tag (like "en-US" or "es-ES") of the recognized text. This will be the same as the language provided
      * in method [[Session.subscribeToSpeechToText]] method
      */
     lang: string;
