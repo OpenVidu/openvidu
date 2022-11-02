@@ -83,13 +83,15 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 			const mirror = this.deviceSrv.cameraNeedsMirror(videoSource);
 			// Reapply Virtual Background to new Publisher if necessary
 			const backgroundSelected = this.backgroundService.backgroundSelected.getValue();
-			if (this.backgroundService.isBackgroundApplied()) {
+			const isBackgroundApplied = this.backgroundService.isBackgroundApplied()
+
+			if (isBackgroundApplied) {
 				await this.backgroundService.removeBackground();
 			}
 			const pp: PublisherProperties = { videoSource, audioSource: false, mirror };
 			await this.openviduService.replaceTrack(VideoType.CAMERA, pp);
 
-			if (this.backgroundService.isBackgroundApplied()) {
+			if (isBackgroundApplied) {
 				const bgSelected = this.backgroundService.backgrounds.find((b) => b.id === backgroundSelected);
 				if (bgSelected) {
 					await this.backgroundService.applyBackground(bgSelected);
