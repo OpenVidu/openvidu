@@ -1,5 +1,5 @@
 import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild } from '@angular/core';
-import { FormControl, Validators, FormGroupDirective, NgForm } from '@angular/forms';
+import { UntypedFormControl, Validators, FormGroupDirective, NgForm } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { Subscription } from 'rxjs';
 import { ActionService } from '../../services/action/action.service';
@@ -33,7 +33,7 @@ export class AdminLoginComponent implements OnInit {
 	/**
 	 * @internal
 	 */
-	loginFormControl = new FormControl('', [Validators.required]);
+	loginFormControl = new UntypedFormControl('', [Validators.required]);
 	/**
 	 * @internal
 	 */
@@ -103,7 +103,7 @@ export class AdminLoginComponent implements OnInit {
  * @internal
  */
 export class FormErrorStateMatcher implements ErrorStateMatcher {
-	isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
+	isErrorState(control: UntypedFormControl | null, form: FormGroupDirective | NgForm | null): boolean {
 		const isSubmitted = form && form.submitted;
 		return !!(control && control.invalid && (control.dirty || control.touched || isSubmitted));
 	}
