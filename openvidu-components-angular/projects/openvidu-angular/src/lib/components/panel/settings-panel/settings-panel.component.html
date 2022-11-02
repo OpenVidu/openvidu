@@ -8,7 +8,7 @@
 
 	<div class="settings-container" fxFlex="100%" fxLayoutAlign="space-evenly none">
 		<div class="item-menu">
-			<mat-selection-list (selectionChange)="onSelectionChanged($event)" [multiple]="false">
+			<mat-selection-list #optionList (selectionChange)="onSelectionChanged(optionList.selectedOptions.selected[0]?.value)" [multiple]="false">
 				<mat-list-option class="option" id="general-opt" [selected]="selectedOption === settingsOptions.GENERAL" [value]="settingsOptions.GENERAL">
 					<mat-icon mat-list-icon>manage_accounts</mat-icon>
 					<div mat-line>{{ 'PANEL.SETTINGS.GENERAL' | translate }}</div>

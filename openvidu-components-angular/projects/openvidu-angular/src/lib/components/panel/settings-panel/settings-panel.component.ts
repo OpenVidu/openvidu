@@ -31,8 +31,8 @@ export class SettingsPanelComponent implements OnInit {
 	close() {
 		this.panelService.togglePanel(PanelType.SETTINGS);
 	}
-	onSelectionChanged(e: any){
-		this.selectedOption = e.option.value;
+	onSelectionChanged(option: PanelSettingsOptions){
+		this.selectedOption = option;
 	 }
 
 	private subscribeToDirectives() {
