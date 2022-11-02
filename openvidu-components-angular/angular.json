@@ -102,11 +102,7 @@
 				"lint": {
 					"builder": "@angular-devkit/build-angular:tslint",
 					"options": {
-						"tsConfig": [
-							"tsconfig.app.json",
-							"tsconfig.spec.json",
-							"e2e/tsconfig.json"
-						],
+						"tsConfig": ["tsconfig.app.json", "tsconfig.spec.json", "e2e/tsconfig.json"],
 						"exclude": ["**/node_modules/**"]
 					}
 				},
@@ -170,9 +166,7 @@
 						"tsConfig": "src/app/openvidu-webcomponent/tsconfig.openvidu-webcomponent.json",
 						"aot": true,
 						"assets": ["src/favicon.ico"],
-						"styles": [
-							"src/app/openvidu-webcomponent/openvidu-webcomponent.component.scss"
-						],
+						"styles": ["src/app/openvidu-webcomponent/openvidu-webcomponent.component.scss"],
 						"scripts": []
 					},
 					"configurations": {
@@ -207,6 +201,5 @@
 				}
 			}
 		}
-	},
-	"defaultProject": "openvidu-components-testapp"
+	}
 }
