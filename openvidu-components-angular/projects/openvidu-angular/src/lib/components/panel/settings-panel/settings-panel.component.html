@@ -7,19 +7,38 @@
 	</div>
 
 	<div class="settings-container" fxFlex="100%" fxLayoutAlign="space-evenly none">
-		<div class="item-menu">
-			<mat-selection-list #optionList (selectionChange)="onSelectionChanged(optionList.selectedOptions.selected[0]?.value)" [multiple]="false">
-				<mat-list-option class="option" id="general-opt" [selected]="selectedOption === settingsOptions.GENERAL" [value]="settingsOptions.GENERAL">
+		<div class="item-menu" [ngClass]="{ mobile: isMobile }">
+			<mat-selection-list
+				#optionList
+				(selectionChange)="onSelectionChanged(optionList.selectedOptions.selected[0]?.value)"
+				[multiple]="false"
+			>
+				<mat-list-option
+					class="option"
+					id="general-opt"
+					[selected]="selectedOption === settingsOptions.GENERAL"
+					[value]="settingsOptions.GENERAL"
+				>
 					<mat-icon mat-list-icon>manage_accounts</mat-icon>
-					<div mat-line>{{ 'PANEL.SETTINGS.GENERAL' | translate }}</div>
+					<div mat-line *ngIf="!isMobile">{{ 'PANEL.SETTINGS.GENERAL' | translate }}</div>
 				</mat-list-option>
-				<mat-list-option class="option" id="video-opt" [selected]="selectedOption === settingsOptions.VIDEO" [value]="settingsOptions.VIDEO">
+				<mat-list-option
+					class="option"
+					id="video-opt"
+					[selected]="selectedOption === settingsOptions.VIDEO"
+					[value]="settingsOptions.VIDEO"
+				>
 					<mat-icon mat-list-icon>videocam</mat-icon>
-					<div mat-line>{{ 'PANEL.SETTINGS.VIDEO' | translate }}</div>
+					<div mat-line *ngIf="!isMobile">{{ 'PANEL.SETTINGS.VIDEO' | translate }}</div>
 				</mat-list-option>
-				<mat-list-option class="option" id="audio-opt" [selected]="selectedOption === settingsOptions.AUDIO" [value]="settingsOptions.AUDIO">
+				<mat-list-option
+					class="option"
+					id="audio-opt"
+					[selected]="selectedOption === settingsOptions.AUDIO"
+					[value]="settingsOptions.AUDIO"
+				>
 					<mat-icon mat-list-icon>mic</mat-icon>
-					<div mat-line>{{ 'PANEL.SETTINGS.AUDIO' | translate }}</div>
+					<div mat-line *ngIf="!isMobile">{{ 'PANEL.SETTINGS.AUDIO' | translate }}</div>
 				</mat-list-option>
 				<mat-list-option
 					*ngIf="showCaptions"
@@ -29,7 +48,7 @@
 					id="captions-opt"
 				>
 					<mat-icon mat-list-icon>closed_caption</mat-icon>
-					<div mat-line>{{ 'PANEL.SETTINGS.CAPTIONS' | translate }}</div>
+					<div mat-line *ngIf="!isMobile">{{ 'PANEL.SETTINGS.CAPTIONS' | translate }}</div>
 				</mat-list-option>
 			</mat-selection-list>
 		</div>

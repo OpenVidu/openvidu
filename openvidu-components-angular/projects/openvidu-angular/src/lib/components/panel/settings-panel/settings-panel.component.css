@@ -8,6 +8,9 @@
 	border-right: 1px solid var(--ov-secondary-color);
 	width: 170px;
 }
+.item-menu.mobile {
+	width: 50px !important;
+}
 
 .item-content {
 	padding: 16px;
