@@ -1280,6 +1280,52 @@ describe('Testing panels', () => {
 	});
 });
 
+describe('Testing CHAT features', () => {
+	let browser: WebDriver;
+	let utils: OpenViduComponentsPO;
+
+	async function createChromeBrowser(): Promise<WebDriver> {
+		return await new Builder()
+			.forBrowser(WebComponentConfig.browserName)
+			.withCapabilities(WebComponentConfig.browserCapabilities)
+			.setChromeOptions(WebComponentConfig.browserOptions)
+			.usingServer(WebComponentConfig.seleniumAddress)
+			.build();
+	}
+
+	beforeEach(async () => {
+		browser = await createChromeBrowser();
+		utils = new OpenViduComponentsPO(browser);
+	});
+
+	afterEach(async () => {
+		await browser.quit();
+	});
+
+	it('should send an url message and converts in a link', async () => {
+		await browser.get(`${url}?prejoin=false`);
+
+		await utils.checkLayoutPresent();
+
+		const chatButton = await utils.waitForElement('#chat-panel-btn');
+		await chatButton.click();
+
+		await utils.waitForElement('.sidenav-menu');
+		await utils.waitForElement('.input-container');
+		expect(await utils.isPresent('.input-container')).to.be.true;
+
+
+		const input = await utils.waitForElement('#chat-input');
+		await input.sendKeys('demos.openvidu.io');
+
+		await utils.clickOn('#send-btn');
+
+		await utils.waitForElement('.msg-content a');
+		expect(await utils.isPresent('.msg-content a')).to.be.true;
+	});
+});
+
+
 describe('Testing captions features', () => {
 	let browser: WebDriver;
 	let utils: OpenViduComponentsPO;
