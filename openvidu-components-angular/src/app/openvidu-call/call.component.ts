@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { RecordingInfo, TokenModel, RecordingService } from 'openvidu-angular';
+import { RecordingInfo, RecordingService, TokenModel } from 'openvidu-angular';
 import { RestService } from '../services/rest.service';
 
 @Component({
@@ -21,13 +21,12 @@ export class CallComponent implements OnInit {
 	constructor(private restService: RestService, private recordingService: RecordingService) { }
 
 	async ngOnInit() {
-		const response = await this.restService.getTokensFromBackend(this.sessionId);
-		this.recordingList = response.recordings;
-		this.tokens = {
-			webcam: response.cameraToken,
-			screen: response.screenToken
-		};
-		console.log(this.tokens);
+		await this.requestForTokens();
+	}
+
+	async onNodeCrashed() {
+		// Request the tokens again for reconnect to the session
+		await this.requestForTokens();
 	}
 
 	onJoinClicked() {
@@ -113,6 +112,18 @@ export class CallComponent implements OnInit {
 		} catch (error) {
 			this.recordingError = error;
 		}
+	}
+
+	private async requestForTokens() {
+		const response = await this.restService.getTokensFromBackend(this.sessionId);
+		this.recordingList = response.recordings;
+		this.tokens = {
+			webcam: response.cameraToken,
+			screen: response.screenToken
+		};
+
+		console.log('Token requested: ', this.tokens);
+
 	}
 
 }

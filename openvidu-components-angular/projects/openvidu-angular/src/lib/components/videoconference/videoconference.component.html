@@ -15,7 +15,7 @@
 	</div>
 
 	<div [@inOutAnimation] id="vc-container" *ngIf="showVideoconference || (!showPrejoin && !loading && !error)">
-		<ov-session (onSessionCreated)="_onSessionCreated($event)" *ngIf="isSessionInitialized">
+		<ov-session  *ngIf="isSessionInitialized && !nodeCrashed" (onSessionCreated)="_onSessionCreated($event)" (onNodeCrashed)="_onNodeCrashed()">
 			<ng-template #toolbar>
 				<ng-container *ngIf="openviduAngularToolbarTemplate">
 					<ng-container *ngTemplateOutlet="openviduAngularToolbarTemplate"></ng-container>

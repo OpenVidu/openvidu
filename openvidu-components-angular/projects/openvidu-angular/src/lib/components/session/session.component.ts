@@ -64,6 +64,8 @@ export class SessionComponent implements OnInit {
 	@Input() usedInPrejoinPage = false;
 	@Output() onSessionCreated = new EventEmitter<any>();
 
+	@Output() onNodeCrashed = new EventEmitter<any>();
+
 	session: Session;
 	sessionScreen: Session;
 
@@ -378,7 +380,14 @@ export class SessionComponent implements OnInit {
 			this.actionService.closeDialog();
 		});
 		this.session.on('sessionDisconnected', (event: SessionDisconnectedEvent) => {
-			if (event.reason === 'networkDisconnect') {
+			if (event.reason === 'nodeCrashed') {
+				this.actionService.openDialog(
+					this.translateService.translate('ERRORS.CONNECTION'),
+					this.translateService.translate('ERRORS.RECONNECT'),
+					false
+				);
+				this.onNodeCrashed.emit();
+			} else if (event.reason === 'networkDisconnect') {
 				this.actionService.closeDialog();
 				this.leaveSession();
 			}

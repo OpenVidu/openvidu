@@ -39,6 +39,7 @@ import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { PlatformService } from '../../services/platform/platform.service';
 import { RecordingService } from '../../services/recording/recording.service';
+import { StorageService } from '../../services/storage/storage.service';
 import { TranslateService } from '../../services/translate/translate.service';
 
 /**
@@ -383,7 +384,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		private libService: OpenViduAngularConfigService,
 		private platformService: PlatformService,
 		private recordingService: RecordingService,
-		private translateService: TranslateService
+		private translateService: TranslateService,
+		private storageSrv: StorageService
 	) {
 		this.log = this.loggerSrv.get('ToolbarComponent');
 	}
@@ -627,6 +629,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 				this.isAudioActive = p.hasAudioActive();
 				this.isScreenShareActive = p.isScreenActive();
 				this.isSessionCreator = p.getRole() === OpenViduRole.MODERATOR;
+				this.storageSrv.setAudioMuted(!this.isAudioActive);
+				this.storageSrv.setVideoMuted(!this.isWebcamVideoActive);
 				this.cd.markForCheck();
 			}
 		});
@@ -637,7 +641,9 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			.pipe(skip(1))
 			.subscribe((ev: { info: RecordingInfo; time?: Date }) => {
 				this.recordingStatus = ev.info.status;
-				this.recordingTime = ev.time;
+				if (ev.time) {
+					this.recordingTime = ev.time;
+				}
 				this.cd.markForCheck();
 			});
 	}

@@ -68,7 +68,6 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 		this.videoMuteChanging = true;
 		const publish = this.isVideoMuted;
 		await this.openviduService.publishVideo(publish);
-		this.storageSrv.setVideoMuted(this.isVideoMuted);
 		if (this.isVideoMuted && this.panelService.isExternalPanelOpened()) {
 			this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
 		}
@@ -107,6 +106,7 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 		this.localParticipantSubscription = this.participantService.localParticipantObs.subscribe((p: ParticipantAbstractModel) => {
 			if (p) {
 				this.isVideoMuted = !p.isCameraVideoActive();
+				this.storageSrv.setVideoMuted(this.isVideoMuted);
 			}
 		});
 	}

@@ -384,6 +384,13 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	@Output() onParticipantCreated: EventEmitter<ParticipantAbstractModel> = new EventEmitter<ParticipantAbstractModel>();
 
 	/**
+	 * Provides event notifications that fire when Media Node crash OpenVidu Pro from the OpenVidu Pro cluster.
+	 * OpenVidu Pro delegates the recovery of the sessions to the application in the event of a Media Node crash.
+	 * See {@link https://docs.openvidu.io/en/stable/openvidu-pro/fault-tolerance/ OpenVidu Pro Fault tolerance}.
+	 */
+	@Output() onNodeCrashed: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
 	 * @internal
 	 */
 	showVideoconference: boolean = false;
@@ -414,6 +421,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 * @internal
 	 */
 	loading = true;
+	private nodeCrashed: boolean = false;
 	private externalParticipantName: string;
 	private prejoinSub: Subscription;
 	private participantNameSub: Subscription;
@@ -438,40 +446,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 
 	async ngOnInit() {
 		this.subscribeToVideconferenceDirectives();
-	}
-
-	private async start() {
-		await this.deviceSrv.forceInitDevices();
-		const nickname = this.externalParticipantName || this.storageSrv.getNickname() || `OpenVidu_User${Math.floor(Math.random() * 100)}`;
-		this.participantService.initLocalParticipant({ local: true, nickname });
-		this.openviduService.initialize();
-		if (this.deviceSrv.hasVideoDeviceAvailable() || this.deviceSrv.hasAudioDeviceAvailable()) {
-			await this.initwebcamPublisher();
-		}
-		this.isSessionInitialized = true;
-		this.onParticipantCreated.emit(this.participantService.getLocalParticipant());
-		this.loading = false;
-		this.participantReady = true;
-	}
-
-	private async initwebcamPublisher(): Promise<void> {
-		return new Promise(async (resolve, reject) => {
-			try {
-				const publisher = await this.openviduService.initDefaultPublisher();
-
-				if (publisher) {
-					publisher.once('accessDenied', async (e: any) => {
-						await this.handlePublisherError(e);
-						resolve();
-					});
-					publisher.once('accessAllowed', () => resolve());
-				}
-			} catch (error) {
-				this.actionService.openDialog(error.name.replace(/_/g, ' '), error.message, true);
-				this.log.e(error);
-				reject();
-			}
-		});
 	}
 
 	async ngOnDestroy() {
@@ -564,6 +538,44 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 			}
 			this.openviduAngularLayoutTemplate = this.defaultLayoutTemplate;
 		}
+	}
+
+	private async start() {
+		await this.deviceSrv.forceInitDevices();
+		const nickname = this.externalParticipantName || this.storageSrv.getNickname() || `OpenVidu_User${Math.floor(Math.random() * 100)}`;
+		this.participantService.initLocalParticipant({ local: true, nickname });
+		this.openviduService.initialize();
+		if (this.deviceSrv.hasVideoDeviceAvailable() || this.deviceSrv.hasAudioDeviceAvailable()) {
+			await this.initwebcamPublisher();
+		}
+		this.isSessionInitialized = true;
+		this.onParticipantCreated.emit(this.participantService.getLocalParticipant());
+		this.loading = false;
+		this.participantReady = true;
+		if (this.nodeCrashed) {
+			this.nodeCrashed = false;
+			this.actionService.closeDialog();
+		}
+	}
+
+	private async initwebcamPublisher(): Promise<void> {
+		return new Promise(async (resolve, reject) => {
+			try {
+				const publisher = await this.openviduService.initDefaultPublisher();
+
+				if (publisher) {
+					publisher.once('accessDenied', async (e: any) => {
+						await this.handlePublisherError(e);
+						resolve();
+					});
+					publisher.once('accessAllowed', () => resolve());
+				}
+			} catch (error) {
+				this.actionService.openDialog(error.name.replace(/_/g, ' '), error.message, true);
+				this.log.e(error);
+				reject();
+			}
+		});
 	}
 
 	/**
@@ -659,6 +671,14 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 */
 	_onSessionCreated(session: Session) {
 		this.onSessionCreated.emit(session);
+	}
+
+	/**
+	 * @internal
+	 */
+	_onNodeCrashed() {
+		this.nodeCrashed = true;
+		this.onNodeCrashed.emit();
 	}
 
 	private async handlePublisherError(e: any): Promise<void> {
