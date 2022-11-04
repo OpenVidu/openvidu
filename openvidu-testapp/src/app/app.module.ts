@@ -24,7 +24,7 @@ import { SessionApiDialogComponent } from './components/dialogs/session-api-dial
 import { EventsDialogComponent } from './components/dialogs/events-dialog/events-dialog.component';
 import { PublisherPropertiesDialogComponent } from './components/dialogs/publisher-properties-dialog/publisher-properties-dialog.component';
 import { ScenarioPropertiesDialogComponent } from './components/dialogs/scenario-properties-dialog/scenario-properties-dialog.component';
-import { FilterDialogComponent } from './components/dialogs/filter-dialog/filter-dialog.component';
+import { OtherStreamOperationsDialogComponent } from './components/dialogs/other-stream-operations-dialog/other-stream-operations-dialog.component';
 import { ShowCodecDialogComponent } from './components/dialogs/show-codec-dialog/show-codec-dialog.component';
 import { RecordingPropertiesComponent } from './components/dialogs/recording-properties/recording-properties.component';
 
@@ -52,7 +52,7 @@ import { ShowIceServerConfiguredDialog } from './components/dialogs/show-configu
     LocalRecordingDialogComponent,
     PublisherPropertiesDialogComponent,
     ScenarioPropertiesDialogComponent,
-    FilterDialogComponent,
+    OtherStreamOperationsDialogComponent,
     ShowCodecDialogComponent,
     ShowIceServerConfiguredDialog,
     SessionInfoDialogComponent,
@@ -82,7 +82,7 @@ import { ShowIceServerConfiguredDialog } from './components/dialogs/show-configu
     LocalRecordingDialogComponent,
     PublisherPropertiesDialogComponent,
     ScenarioPropertiesDialogComponent,
-    FilterDialogComponent,
+    OtherStreamOperationsDialogComponent,
     ShowCodecDialogComponent,
     ShowIceServerConfiguredDialog,
     SessionInfoDialogComponent

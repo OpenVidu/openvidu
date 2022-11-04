@@ -21,7 +21,7 @@ import { MuteSubscribersService } from '../../services/mute-subscribers.service'
 import { Subscription } from 'rxjs';
 import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog/local-recording-dialog.component';
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
-import { FilterDialogComponent } from '../dialogs/filter-dialog/filter-dialog.component';
+import { OtherStreamOperationsDialogComponent } from '../dialogs/other-stream-operations-dialog/other-stream-operations-dialog.component';
 import { OpenViduEvent } from '../openvidu-instance/openvidu-instance.component';
 import { ShowIceServerConfiguredDialog } from '../dialogs/show-configured-ice/show-configured-ice.component';
 
@@ -69,7 +69,6 @@ export class VideoComponent implements OnInit, OnDestroy {
     pubSubAudioIcon = 'mic';
     recordIcon = 'fiber_manual_record';
     pauseRecordIcon = '';
-    captionIcon = 'closed_caption_disabled';
 
     // Stats
     usedVideoCodec: string;
@@ -166,7 +165,6 @@ export class VideoComponent implements OnInit, OnDestroy {
 
             this.pubSubVideoIcon = '';
             this.pubSubAudioIcon = '';
-            this.captionIcon = '';
             this.recordIcon = '';
             this.pauseRecordIcon = '';
             this.pubSubIcon = 'play_arrow';
@@ -187,7 +185,6 @@ export class VideoComponent implements OnInit, OnDestroy {
 
             this.pubSubVideoIcon = 'videocam';
             this.pubSubAudioIcon = 'mic';
-            this.captionIcon = 'closed_caption_disabled';
             this.recordIcon = 'fiber_manual_record';
             this.pauseRecordIcon = '';
             this.pubSubIcon = 'stop';
@@ -335,15 +332,6 @@ export class VideoComponent implements OnInit, OnDestroy {
         this.streamManager.stream.reconnect()
             .then(() => console.log(`Stream ${this.streamManager.stream} (${this.streamManager.remote ? 'Subscriber' : 'Publisher'}) successfully reconnected`))
             .catch(error => console.error(`Error while reconnecting stream ${this.streamManager.stream} (${this.streamManager.remote ? 'Subscriber' : 'Publisher'})`, error));
-    }
-
-    async speechToText() {
-        if (this.captionIcon === 'closed_caption_disabled') {
-            await this.streamManager.stream.session.subscribeToSpeechToText(this.streamManager.stream, 'en-US');
-        } else {
-            await this.streamManager.stream.session.unsubscribeFromSpeechToText(this.streamManager.stream);
-        }
-        this.captionIcon = this.captionIcon === 'closed_caption_disabled' ? 'closed_caption' : 'closed_caption_disabled';
     }
 
     updateSubscriberEvents(oldValues) {
@@ -806,8 +794,8 @@ export class VideoComponent implements OnInit, OnDestroy {
         this.OV.session.forceDisconnect(this.streamManager.stream.connection);
     }
 
-    filterConfig() {
-        this.dialog.open(FilterDialogComponent, {
+    otherOperations() {
+        this.dialog.open(OtherStreamOperationsDialogComponent, {
             data: {
                 session: this.streamManager.stream.session,
                 stream: this.streamManager.stream,

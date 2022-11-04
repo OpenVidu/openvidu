@@ -1,0 +1,61 @@
+<div>
+    <div fxLayout="row" fxLayoutGap="20px">
+        <div *ngIf="session.connection == stream.connection || session.capabilities.forceDisconnect">
+            <h2 mat-dialog-title>Filter application</h2>
+            <mat-dialog-content>
+                <label class="label">Apply filter</label>
+                <button mat-button id="apply-filter-btn" (click)="applyFilter()">Apply</button>
+                <mat-form-field>
+                    <input matInput id="filter-type-field" placeholder="Type" [(ngModel)]="filterType">
+                </mat-form-field>
+                <mat-form-field>
+                    <input matInput id="filter-options-field" placeholder="Options" [(ngModel)]="filterOptions">
+                </mat-form-field>
+                <mat-divider></mat-divider>
+                <label class="label">Exec filter method</label>
+                <button mat-button id="exec-filter-btn" (click)="execMethod()">Exec</button>
+                <mat-form-field>
+                    <input matInput id="filter-method-field" placeholder="Method" [(ngModel)]="filterMethod">
+                </mat-form-field>
+                <mat-form-field>
+                    <input matInput id="filter-params-field" placeholder="Params" [(ngModel)]="filterParams">
+                </mat-form-field>
+                <mat-divider></mat-divider>
+                <label class="label">Remove filter</label>
+                <button mat-button id="remove-filter-btn" (click)="remove()">Remove</button>
+                <mat-form-field *ngIf="!!response" id="response-text-area" appearance="fill">
+                    <textarea id="filter-response-text-area" [(ngModel)]="response" matInput readonly></textarea>
+                </mat-form-field>
+            </mat-dialog-content>
+        </div>
+        <div>
+            <div *ngIf="session.connection == stream.connection || session.capabilities.forceDisconnect">
+                <h2 mat-dialog-title>Filter events</h2>
+                <mat-dialog-content>
+                    <mat-form-field>
+                        <input matInput id="filter-event-type-field" placeholder="Event type" [(ngModel)]="eventType">
+                    </mat-form-field>
+                    <label class="label">Add listener to filter event</label>
+                    <button mat-button id="sub-filter-event-btn" (click)="subFilterEvent()">Add listener</button>
+                    <mat-divider></mat-divider>
+                    <label class="label">Remove listener of filter event</label>
+                    <button mat-button id="unsub-filter-event-btn" (click)="unsubFilterEvent()">Remove listener</button>
+                </mat-dialog-content>
+                <mat-divider style="margin: 25px 0"></mat-divider>
+            </div>
+            <h2 mat-dialog-title>Speech To Text</h2>
+            <mat-dialog-content>
+                <mat-form-field>
+                    <input matInput id="stt-lang-field" placeholder="Language" [(ngModel)]="sttLang">
+                </mat-form-field>
+                <label class="label">Subscribe to Speech To Text</label>
+                <button mat-button id="sub-stt-btn" (click)="subStt()">Subscribe</button>
+                <label class="label">Unsubscribe from Speech To Text</label>
+                <button mat-button id="unsub-stt-btn" (click)="unsubStt()">Unsubscribe</button>
+            </mat-dialog-content>
+        </div>
+    </div>
+    <mat-dialog-actions>
+        <button mat-button id="close-dialog-btn" [mat-dialog-close]="{session: session}">CLOSE</button>
+    </mat-dialog-actions>
+</div>

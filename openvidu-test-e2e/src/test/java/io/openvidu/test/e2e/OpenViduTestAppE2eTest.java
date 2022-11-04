@@ -1033,7 +1033,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			}
 
 		});
-		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .filter-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .other-operations-btn")).click();
 		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
@@ -2160,7 +2160,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assert.assertTrue("Video is not average green", RecordingUtils.checkVideoAverageRgbGreen(rgb));
 
 		// Try to apply none allowed filter
-		user.getDriver().findElement(By.cssSelector(".filter-btn")).click();
+		user.getDriver().findElement(By.cssSelector(".other-operations-btn")).click();
 		Thread.sleep(1000);
 
 		WebElement filterTypeInput = user.getDriver().findElement(By.id("filter-type-field"));
@@ -2242,7 +2242,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assert.assertTrue("Video is not average gray", RecordingUtils.checkVideoAverageRgbGray(rgb));
 
 		// Remove filter
-		user.getDriver().findElement(By.cssSelector(".filter-btn")).click();
+		user.getDriver().findElement(By.cssSelector(".other-operations-btn")).click();
 		Thread.sleep(500);
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
 		user.getWaiter().until(
@@ -2308,7 +2308,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true));
 
 		// Publisher applies ZBarCode filter to itself
-		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .filter-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .other-operations-btn")).click();
 		Thread.sleep(500);
 		WebElement input = user.getDriver().findElement(By.id("filter-type-field"));
 		input.clear();
@@ -2353,7 +2353,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Thread.sleep(500);
 
 		// Moderator subscribes to CodeFound event for the Publisher's stream
-		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .filter-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .other-operations-btn")).click();
 		Thread.sleep(500);
 		input = user.getDriver().findElement(By.id("filter-event-type-field"));
 		input.clear();
@@ -4052,7 +4052,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					event.keySet().size());
 
 			// Filter event webhook
-			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .filter-btn")).click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .other-operations-btn")).click();
 			Thread.sleep(500);
 			WebElement input = user.getDriver().findElement(By.id("filter-type-field"));
 			input.clear();
