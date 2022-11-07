@@ -23,9 +23,6 @@
                 <mat-divider></mat-divider>
                 <label class="label">Remove filter</label>
                 <button mat-button id="remove-filter-btn" (click)="remove()">Remove</button>
-                <mat-form-field *ngIf="!!response" id="response-text-area" appearance="fill">
-                    <textarea id="filter-response-text-area" [(ngModel)]="response" matInput readonly></textarea>
-                </mat-form-field>
             </mat-dialog-content>
         </div>
         <div>
@@ -55,6 +52,10 @@
             </mat-dialog-content>
         </div>
     </div>
+    <mat-form-field id="response-text-area" appearance="fill">
+        <textarea id="operation-response-text-area" [(ngModel)]="response" matInput readonly></textarea>
+        <button mat-button id="clear-response-text-area-btn" (click)="response=''">Clear</button>
+    </mat-form-field>
     <mat-dialog-actions>
         <button mat-button id="close-dialog-btn" [mat-dialog-close]="{session: session}">CLOSE</button>
     </mat-dialog-actions>

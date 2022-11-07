@@ -338,7 +338,7 @@ public class OpenViduTestE2e {
 		case "chromeFakeAudio":
 		    container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
             setupBrowserAux(BrowserNames.CHROME, container, false);
-            browserUser = new ChromeUser("TestUser", 50, null, Paths.get("/opt/openvidu/stt-test2.wav"));
+            browserUser = new ChromeUser("TestUser", 50, null, Paths.get("/opt/openvidu/stt-test.wav"));
             break;
 		case "chromeVirtualBackgroundFakeVideo":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);

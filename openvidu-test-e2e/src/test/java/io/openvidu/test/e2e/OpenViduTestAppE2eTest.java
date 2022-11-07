@@ -2168,12 +2168,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterTypeInput.sendKeys("NotAllowedFilter");
 
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Error [You don't have permissions to apply a filter]"));
 
 		// Try to execute method over not applied filter
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"has no filter applied in session"));
 
 		// Apply allowed video filter
@@ -2184,11 +2184,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterOptionsInput.sendKeys("{\"command\": \"videobalance saturation=0.0\"}");
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter applied"));
+				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
 
 		// Try to apply another filter
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Error [There is already a filter applied"));
 
 		// Analyze Chrome fake video stream with gray filter (GRAY color)
@@ -2206,7 +2206,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterParamsInput.clear();
 		filterParamsInput.sendKeys("{\"propertyName\":\"saturation\",\"propertyValue\":\"1.0\"}");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Filter method executed"));
 
 		// Analyze Chrome fake video stream without gray filter (GREEN color)
@@ -2246,7 +2246,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Thread.sleep(500);
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
 		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter removed"));
+				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
 		Thread.sleep(1000);
 
@@ -2318,7 +2318,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		input.sendKeys("{}");
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter applied"));
+				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
 
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);
 
@@ -2327,14 +2327,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		input.clear();
 		input.sendKeys("CodeFound");
 		user.getDriver().findElement(By.id("sub-filter-event-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Filter event listener added"));
 
 		user.getEventManager().waitUntilEventReaches("CodeFound", 2);
 
 		// Publisher unsubscribes from "CodeFound" filter event
 		user.getDriver().findElement(By.id("unsub-filter-event-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Filter event listener removed"));
 
 		// In case some filter event was receive while waiting for unsubscription
@@ -2359,7 +2359,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		input.clear();
 		input.sendKeys("CodeFound");
 		user.getDriver().findElement(By.id("sub-filter-event-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Filter event listener added"));
 
 		user.getEventManager().waitUntilEventReaches("CodeFound", 1);
@@ -2367,7 +2367,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Moderator removes the Publisher's filter
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
 		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter removed"));
+				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
 
 		// In case some filter event was receive while waiting for filter removal
 		user.getEventManager().clearCurrentEvents("CodeFound");
@@ -4068,7 +4068,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			input.clear();
 			input.sendKeys("CodeFound");
 			user.getDriver().findElement(By.id("sub-filter-event-btn")).click();
-			user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+			user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 					"Filter event listener added"));
 			CustomWebhook.waitForEvent("filterEventDispatched", 2);
 			user.getDriver().findElement(By.id("unsub-filter-event-btn")).click();

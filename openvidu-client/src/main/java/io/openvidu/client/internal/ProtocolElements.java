@@ -149,11 +149,12 @@ public class ProtocolElements {
     public static final String FORCIBLYRECONNECTSUBSCRIBER_SDPOFFER_PARAM = "sdpOffer";
 
     public static final String SUBSCRIBETOSPEECHTOTEXT_METHOD = "subscribeToSpeechToText";
-    public static final String SUBSCRIBETOSPEECHTOTEXT_CONNECTIONIDS_PARAM = "connectionIds";
+    public static final String SUBSCRIBETOSPEECHTOTEXT_CONNECTIONID_PARAM = "connectionId";
     public static final String SUBSCRIBETOSPEECHTOTEXT_LANG_PARAM = "lang";
 
     public static final String UNSUBSCRIBEFROMSPEECHTOTEXT_METHOD = "unsubscribeFromSpeechToText";
-    public static final String UNSUBSCRIBEFROMSPEECHTOTEXT_CONNECTIONIDS_PARAM = "connectionIds";
+    public static final String UNSUBSCRIBEFROMSPEECHTOTEXT_CONNECTIONID_PARAM = "connectionId";
+
 
     // ---------------------------- SERVER RESPONSES & EVENTS -----------------
 

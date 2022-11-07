@@ -42,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -1202,13 +1201,13 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Override
 	public void onSubscribeToSpeechToText(Participant participant, Integer transactionId, String lang,
-			JsonArray connectionIds) {
+			String connectionId) {
 		sessionEventsHandler.onUnsubscribeToSpeechToText(participant, transactionId, new OpenViduException(
 				Code.WRONG_OPENVIDU_EDITION_ERROR_CODE, "Speech To Text requires OpenVidu Pro/Enterprise edition"));
 	}
 
 	@Override
-	public void onUnsubscribeFromSpeechToText(Participant participant, Integer transactionId, JsonArray connectionIds) {
+	public void onUnsubscribeFromSpeechToText(Participant participant, Integer transactionId, String connectionId) {
 		sessionEventsHandler.onUnsubscribeToSpeechToText(participant, transactionId, new OpenViduException(
 				Code.WRONG_OPENVIDU_EDITION_ERROR_CODE, "Speech To Text requires OpenVidu Pro/Enterprise edition"));
 	}

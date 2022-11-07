@@ -39,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -189,10 +188,10 @@ public abstract class SessionManager {
 			Boolean videoActive, Boolean audioActive);
 
 	public abstract void onSubscribeToSpeechToText(Participant participant, Integer transactionId, String lang,
-			JsonArray connectionIds);
+			String connectionId);
 
 	public abstract void onUnsubscribeFromSpeechToText(Participant participant, Integer transactionId,
-			JsonArray connectionIds);
+			String connectionId);
 
 	public void onEcho(String participantPrivateId, Integer requestId) {
 		sessionEventsHandler.onEcho(participantPrivateId, requestId);

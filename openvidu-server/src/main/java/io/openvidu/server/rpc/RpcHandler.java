@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -733,17 +732,17 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	private void subscribeToSpeechToText(RpcConnection rpcConnection, Request<JsonObject> request) {
 		Participant participant = sanityCheckOfSession(rpcConnection, "subscribeToSpeechToText");
-		JsonArray connectionIds = (JsonArray) RpcHandler.getParam(request,
-				ProtocolElements.SUBSCRIBETOSPEECHTOTEXT_CONNECTIONIDS_PARAM);
+		String connectionId = RpcHandler.getStringParam(request,
+				ProtocolElements.SUBSCRIBETOSPEECHTOTEXT_CONNECTIONID_PARAM);
 		String lang = RpcHandler.getStringParam(request, ProtocolElements.SUBSCRIBETOSPEECHTOTEXT_LANG_PARAM);
-		sessionManager.onSubscribeToSpeechToText(participant, request.getId(), lang, connectionIds);
+		sessionManager.onSubscribeToSpeechToText(participant, request.getId(), lang, connectionId);
 	}
 
 	private void unsubscribeFromSpeechToText(RpcConnection rpcConnection, Request<JsonObject> request) {
 		Participant participant = sanityCheckOfSession(rpcConnection, "unsubscribeFromSpeechToText");
-		JsonArray connectionIds = (JsonArray) RpcHandler.getParam(request,
-				ProtocolElements.UNSUBSCRIBEFROMSPEECHTOTEXT_CONNECTIONIDS_PARAM);
-		sessionManager.onUnsubscribeFromSpeechToText(participant, request.getId(), connectionIds);
+		String connectionId = RpcHandler.getStringParam(request,
+				ProtocolElements.UNSUBSCRIBEFROMSPEECHTOTEXT_CONNECTIONID_PARAM);
+		sessionManager.onUnsubscribeFromSpeechToText(participant, request.getId(), connectionId);
 	}
 
 	private void echo(RpcConnection rpcConnection, Request<JsonObject> request) {
