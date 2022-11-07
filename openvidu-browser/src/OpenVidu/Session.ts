@@ -659,7 +659,7 @@ export class Session extends EventDispatcher {
             this.openvidu.sendRequest(
                 'subscribeToSpeechToText',
                 {
-                    connectionIds: [stream.connection.connectionId],
+                    connectionId: stream.connection.connectionId,
                     lang
                 },
                 (error, response) => {
@@ -684,7 +684,7 @@ export class Session extends EventDispatcher {
             this.openvidu.sendRequest(
                 'unsubscribeFromSpeechToText',
                 {
-                    connectionIds: [stream.connection.connectionId]
+                    connectionId: stream.connection.connectionId
                 },
                 (error, response) => {
                     if (!!error) {
