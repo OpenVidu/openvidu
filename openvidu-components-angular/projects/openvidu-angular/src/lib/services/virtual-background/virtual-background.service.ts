@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { BackgroundEffect, EffectType } from '../../models/background-effect.model';
 import { ParticipantService } from '../participant/participant.service';
+import { StorageService } from '../storage/storage.service';
 import { TokenService } from '../token/token.service';
-import { TranslateService } from '../translate/translate.service';
 
 /**
  * @internal
@@ -38,7 +38,11 @@ export class VirtualBackgroundService {
 		{ id: '18', type: EffectType.IMAGE, thumbnail: 'assets/backgrounds/thumbnails/bg-18.jpg', src: 'assets/backgrounds/bg-18.jpg' }
 	];
 
-	constructor(private participantService: ParticipantService, private translateService: TranslateService, private tokenService: TokenService) {
+	constructor(
+		private participantService: ParticipantService,
+		private storageService: StorageService,
+		private tokenService: TokenService
+	) {
 		this.backgroundSelectedObs = this.backgroundSelected.asObservable();
 	}
 
@@ -51,22 +55,33 @@ export class VirtualBackgroundService {
 		return !!bgSelected && bgSelected !== 'no_effect';
 	}
 
-	async applyBackground(effect: BackgroundEffect) {
-		if (effect.id !== this.backgroundSelected.getValue()) {
+	async applyBackgroundFromStorage() {
+		const bgId = this.storageService.getBackground();
+		if (!!bgId) {
+			const background = this.backgrounds.find((bg) => bg.id === bgId);
+			if (background) {
+				this.applyBackground(background);
+			}
+		}
+	}
+
+	async applyBackground(bg: BackgroundEffect) {
+		if (bg.id !== this.backgroundSelected.getValue()) {
 			const filter = this.participantService.getMyCameraPublisher().stream.filter;
 			const isBackgroundSelected = !!filter && filter.type.startsWith('VB:');
 			let options = { token: this.tokenService.getWebcamToken(), url: '' };
-			if (effect.type === EffectType.IMAGE) {
-				options.url = effect.src;
+			if (bg.type === EffectType.IMAGE) {
+				options.url = bg.src;
 			}
 
-			if (isBackgroundSelected && this.hasSameTypeAsAbove(effect.type)) {
-				this.replaceBackground(effect);
+			if (isBackgroundSelected && this.hasSameTypeAsAbove(bg.type)) {
+				this.replaceBackground(bg);
 			} else {
 				await this.removeBackground();
-				await this.participantService.getMyCameraPublisher().stream.applyFilter(`VB:${effect.type.toLowerCase()}`, options);
+				await this.participantService.getMyCameraPublisher().stream.applyFilter(`VB:${bg.type.toLowerCase()}`, options);
 			}
-			this.backgroundSelected.next(effect.id);
+			this.storageService.setBackground(bg.id);
+			this.backgroundSelected.next(bg.id);
 		}
 	}
 
@@ -74,6 +89,7 @@ export class VirtualBackgroundService {
 		if (!!this.isBackgroundApplied()) {
 			this.backgroundSelected.next('no_effect');
 			await this.participantService.getMyCameraPublisher().stream.removeFilter();
+			this.storageService.removeBackground();
 		}
 	}
 

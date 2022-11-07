@@ -7,6 +7,7 @@ import {
 	EventEmitter,
 	HostListener,
 	Input,
+	OnDestroy,
 	OnInit,
 	Output,
 	TemplateRef,
@@ -44,6 +45,7 @@ import { PlatformService } from '../../services/platform/platform.service';
 import { RecordingService } from '../../services/recording/recording.service';
 import { TokenService } from '../../services/token/token.service';
 import { TranslateService } from '../../services/translate/translate.service';
+import { VirtualBackgroundService } from '../../services/virtual-background/virtual-background.service';
 
 /**
  * @internal
@@ -53,10 +55,10 @@ import { TranslateService } from '../../services/translate/translate.service';
 	selector: 'ov-session',
 	templateUrl: './session.component.html',
 	styleUrls: ['./session.component.css'],
-	animations: [trigger('sessionAnimation', [transition(':enter', [style({ opacity: 0 }), animate('400ms', style({ opacity: 1 }))])])],
+	animations: [trigger('sessionAnimation', [transition(':enter', [style({ opacity: 0 }), animate('50ms', style({ opacity: 1 }))])])],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SessionComponent implements OnInit {
+export class SessionComponent implements OnInit, OnDestroy {
 	@ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any>;
 	@ContentChild('panel', { read: TemplateRef }) panelTemplate: TemplateRef<any>;
 	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
@@ -100,6 +102,7 @@ export class SessionComponent implements OnInit {
 		private translateService: TranslateService,
 		private captionService: CaptionService,
 		private platformService: PlatformService,
+		private backgroundService: VirtualBackgroundService,
 		private cd: ChangeDetectorRef
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
@@ -148,6 +151,16 @@ export class SessionComponent implements OnInit {
 						this.drawer.autosize = false;
 					}, 250);
 				});
+			}
+		}, 0);
+	}
+
+	@ViewChild('layoutContainer')
+	set layoutContainer(container: ElementRef) {
+		setTimeout(async () => {
+			if (container) {
+				// Apply background from storage when layout container is in DOM
+				await this.backgroundService.applyBackgroundFromStorage();
 			}
 		}, 0);
 	}

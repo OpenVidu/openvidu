@@ -21,7 +21,7 @@ export class StorageService {
 		return this.get(Storage.USER_NICKNAME);
 	}
 
-	setNickname(name: string){
+	setNickname(name: string) {
 		this.set(Storage.USER_NICKNAME, name);
 	}
 	getVideoDevice() {
@@ -54,7 +54,7 @@ export class StorageService {
 		this.set(Storage.AUDIO_MUTED, `${muted}`);
 	}
 
-	setLang(lang: string){
+	setLang(lang: string) {
 		this.set(Storage.LANG, lang);
 	}
 
@@ -62,12 +62,24 @@ export class StorageService {
 		return this.get(Storage.LANG);
 	}
 
-	setCaptionLang(lang: string){
+	setCaptionLang(lang: string) {
 		this.set(Storage.CAPTION_LANG, lang);
 	}
 
 	getCaptionsLang(): string {
 		return this.get(Storage.CAPTION_LANG);
+	}
+
+	setBackground(id: string) {
+		this.set(Storage.BACKGROUND, id);
+	}
+
+	getBackground(): string {
+		return this.get(Storage.BACKGROUND);
+	}
+
+	removeBackground() {
+		this.remove(Storage.BACKGROUND);
 	}
 
 	private set(key: string, item: any) {
@@ -76,9 +88,17 @@ export class StorageService {
 		this.storage.setItem(key, value);
 	}
 	private get(key: string): any {
-		const value = JSON.parse(this.storage.getItem(key));
-		return value?.item ? value.item : null;
+		const str = this.storage.getItem(key);
+		if (!!str) {
+			return JSON.parse(str).item;
+		}
+		return null;
 	}
+
+	private remove(key: string) {
+		this.storage.removeItem(key);
+	}
+
 	public clear() {
 		this.log.d('Clearing localStorage');
 		this.storage.clear();
