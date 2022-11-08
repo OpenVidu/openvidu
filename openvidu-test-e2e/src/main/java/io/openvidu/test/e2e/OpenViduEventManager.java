@@ -296,7 +296,7 @@ public class OpenViduEventManager {
 		    final JsonObject event = userAndEvent.get("event").getAsJsonObject();
 			final String eventType = event.get("type").getAsString();
 
-			this.eventQueue.add(event);
+			this.eventQueue.add(userAndEvent);
 			getNumEvents(eventType).incrementAndGet();
 
 			if (this.eventCountdowns.get(eventType) != null) {
