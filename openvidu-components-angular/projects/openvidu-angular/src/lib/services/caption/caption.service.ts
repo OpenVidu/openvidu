@@ -9,6 +9,7 @@ import { StorageService } from '../storage/storage.service';
 	providedIn: 'root'
 })
 export class CaptionService {
+
 	private langTitles = [
 		{ name: 'English', ISO: 'en-US' },
 		{ name: 'Español', ISO: 'es-ES' },
@@ -23,6 +24,7 @@ export class CaptionService {
 	captionLangSelected: { name: string; ISO: string };
 	captionLangObs: Observable<{ name: string; ISO: string }>;
 	private _captionLangObs: Subject<{ name: string; ISO: string }> = new Subject();
+	private captionsEnabled: boolean = false;
 
 	constructor(private storageService: StorageService) {
 		const iso = this.storageService.getCaptionsLang();
@@ -30,6 +32,14 @@ export class CaptionService {
 			this.captionLangSelected = this.langTitles.find((lang) => lang.ISO === iso) || this.langTitles[0];
 		}
 		this.captionLangObs = this._captionLangObs.asObservable();
+	}
+
+	setCaptionsEnabled(value: boolean) {
+		this.captionsEnabled = value;
+	}
+
+	areCaptionsEnabled(): boolean {
+		return this.captionsEnabled;
 	}
 
 	setLanguage(lang: string) {

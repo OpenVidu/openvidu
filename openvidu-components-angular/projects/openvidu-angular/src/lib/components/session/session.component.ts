@@ -315,7 +315,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 				this.participantService.addRemoteConnection(connectionId, data, subscriber);
 				// this.oVSessionService.sendNicknameSignal(event.stream.connection);
 
-				if (this.participantService.getTypeConnectionData(data) === VideoType.CAMERA) {
+				if (this.captionService.areCaptionsEnabled() && this.participantService.getTypeConnectionData(data) === VideoType.CAMERA) {
 					// Only subscribe to STT when stream is CAMERA type and it is a remote stream
 					try {
 						await this.session.subscribeToSpeechToText(event.stream, this.captionService.getLangSelected().ISO);
@@ -331,10 +331,12 @@ export class SessionComponent implements OnInit, OnDestroy {
 		this.session.on('streamDestroyed', async (event: StreamEvent) => {
 			const connectionId = event.stream.connection.connectionId;
 			this.participantService.removeConnectionByConnectionId(connectionId);
-			try {
-				await this.session.unsubscribeFromSpeechToText(event.stream);
-			} catch (error) {
-				this.log.e('Error unsubscribing from STT: ', error);
+			if(this.captionService.areCaptionsEnabled()){
+				try {
+					await this.session.unsubscribeFromSpeechToText(event.stream);
+				} catch (error) {
+					this.log.e('Error unsubscribing from STT: ', error);
+				}
 			}
 		});
 	}

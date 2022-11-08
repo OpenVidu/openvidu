@@ -51,6 +51,7 @@ export class CaptionsComponent implements OnInit {
 	session: Session;
 
 	private deleteTimeout: NodeJS.Timeout;
+	private deleteAllTimeout: NodeJS.Timeout;
 
 	private DELETE_TIMEOUT = 5 * 1000;
 	private MAX_EVENTS_LIMIT = 3;
@@ -67,16 +68,29 @@ export class CaptionsComponent implements OnInit {
 		private cd: ChangeDetectorRef
 	) {}
 
-	ngOnInit(): void {
+	async ngOnInit(): Promise<void> {
+		this.captionService.setCaptionsEnabled(true);
 		this.captionLangSelected = this.captionService.getLangSelected();
 		this.session = this.openviduService.getWebcamSession();
+
+		for (const p of this.participantService.getRemoteParticipants()) {
+			const stream = p.getCameraConnection().streamManager.stream;
+			await this.session.subscribeToSpeechToText(stream, this.captionLangSelected.ISO);
+		}
 
 		this.subscribeToCaptionLanguage();
 		this.subscribeToPanelToggling();
 		this.subscribeToTranscription();
 	}
 
-	ngOnDestroy() {
+	async ngOnDestroy() {
+		this.captionService.setCaptionsEnabled(false);
+
+		for (const p of this.participantService.getRemoteParticipants()) {
+			const stream = p.getCameraConnection().streamManager.stream;
+			await this.session.unsubscribeFromSpeechToText(stream);
+		}
+
 		if (this.screenSizeSub) this.screenSizeSub.unsubscribe();
 		if (this.panelTogglingSubscription) this.panelTogglingSubscription.unsubscribe();
 		this.session.off('speechToTextMessage');
@@ -89,6 +103,7 @@ export class CaptionsComponent implements OnInit {
 
 	private subscribeToTranscription() {
 		this.session.on('speechToTextMessage', (event: SpeechToTextEvent) => {
+			clearInterval(this.deleteAllTimeout);
 			const { connectionId, data } = event.connection;
 			const nickname: string = this.participantService.getNicknameFromConnectionData(data);
 			const color = this.participantService.getRemoteParticipantByConnectionId(connectionId)?.colorProfile || '';
@@ -101,6 +116,8 @@ export class CaptionsComponent implements OnInit {
 				type: event.reason
 			};
 			this.updateCaption(caption);
+			// Delete all events when there are no more events for a period of time
+			this.deleteAllEventsAfterDelay(this.DELETE_TIMEOUT);
 			this.cd.markForCheck();
 		});
 	}
@@ -127,7 +144,7 @@ export class CaptionsComponent implements OnInit {
 						clearInterval(this.deleteTimeout);
 					}
 					captionEventsCopy.push(caption);
-					this.deleteEventAfterDelay(this.DELETE_TIMEOUT);
+					this.deleteFirstEventAfterDelay(this.DELETE_TIMEOUT);
 				} else {
 					lastCaption.text = caption.text;
 					lastCaption.type = caption.type;
@@ -139,7 +156,7 @@ export class CaptionsComponent implements OnInit {
 					clearInterval(this.deleteTimeout);
 				}
 				captionEventsCopy.push(caption);
-				this.deleteEventAfterDelay(this.DELETE_TIMEOUT);
+				this.deleteFirstEventAfterDelay(this.DELETE_TIMEOUT);
 			}
 		}
 
@@ -147,9 +164,16 @@ export class CaptionsComponent implements OnInit {
 		this.scrollToBottom();
 	}
 
-	private deleteEventAfterDelay(timeout: number) {
+	private deleteFirstEventAfterDelay(timeout: number) {
 		this.deleteTimeout = setTimeout(() => {
 			this.captionEvents.shift();
+			this.cd.markForCheck();
+		}, timeout);
+	}
+
+	private deleteAllEventsAfterDelay(timeout: number) {
+		this.deleteAllTimeout = setTimeout(() => {
+			this.captionEvents = [];
 			this.cd.markForCheck();
 		}, timeout);
 	}
