@@ -4,8 +4,6 @@ import { OpenviduParamsService } from '../../services/openvidu-params.service';
 import { TestFeedService } from '../../services/test-feed.service';
 import { SessionConf } from '../openvidu-instance/openvidu-instance.component';
 
-var stringify = require('json-stringify-safe');
-
 @Component({
   selector: 'app-test-sessions',
   templateUrl: './test-sessions.component.html',
@@ -41,7 +39,7 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
 
     this.eventsInfoSubscription = this.testFeedService.newLastEvent$.subscribe(
       newEvent => {
-        (window as any).myEvents += ('<br>' + this.stringifyEventNoCircularDependencies(newEvent));
+        (window as any).myEvents += ('<br>' + this.testFeedService.stringifyEventNoCircularDependencies(newEvent));
       });
   }
 
@@ -101,17 +99,6 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
     this.loadSubsPubs(subsPubs);
     this.loadPubs(pubs);
     this.loadSubs(subs);
-  }
-
-  stringifyEventNoCircularDependencies(event: Event): string {
-    return stringify(event, (key, value) => {
-      // Remove unnecessary properties
-      if (key == 'ee' || key == 'openvidu' || key == 'userHandlerArrowHandler' || key == 'handlers') {
-        return
-      } else {
-        return value;
-      }
-    });
   }
 
 }

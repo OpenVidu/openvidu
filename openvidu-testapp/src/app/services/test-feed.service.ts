@@ -3,10 +3,12 @@ import { Subject } from 'rxjs';
 
 import { Event } from 'openvidu-browser';
 
+var stringify = require('json-stringify-safe');
+
 @Injectable()
 export class TestFeedService {
 
-  lastEvent: Event;
+  lastEvent: { user: number, event: Event };
   newLastEvent$ = new Subject<any>();
 
   constructor() { }
@@ -15,9 +17,20 @@ export class TestFeedService {
     return this.lastEvent;
   }
 
-  pushNewEvent(event: Event) {
-    this.lastEvent = event;
+  pushNewEvent({ user: number, event: Event }) {
+    this.lastEvent = { user: number, event: Event };
     this.newLastEvent$.next(this.lastEvent);
+  }
+
+  stringifyEventNoCircularDependencies(event: Event): string {
+    return stringify(event, (key, value) => {
+      // Remove unnecessary properties
+      if (key == 'ee' || key == 'openvidu' || key == 'userHandlerArrowHandler' || key == 'handlers') {
+        return
+      } else {
+        return value;
+      }
+    });
   }
 
 }

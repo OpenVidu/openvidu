@@ -108,7 +108,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
 
     this.eventsInfoSubscription = this.testFeedService.newLastEvent$.subscribe(
       newEvent => {
-        (window as any).myEvents += ('<br>' + JSON.stringify(newEvent));
+        (window as any).myEvents += ('<br>' + this.testFeedService.stringifyEventNoCircularDependencies(newEvent));
       });
   }
 
@@ -409,7 +409,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
           };
           report.serverEvents = streamInRemoteInfo.events;
           for (const ev of report.serverEvents) {
-           ev.timestamp = Number(ev.timestamp) - report.startTime;
+            ev.timestamp = Number(ev.timestamp) - report.startTime;
           }
         });
 

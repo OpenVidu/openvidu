@@ -298,7 +298,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   updateEventList(eventName: string, eventContent: string, event: Event) {
     const eventInterface: OpenViduEvent = { eventName, eventContent, event };
     this.events.push(eventInterface);
-    this.testFeedService.pushNewEvent(event);
+    this.testFeedService.pushNewEvent({user: this.index, event});
   }
 
   toggleSubscribeTo(): void {
@@ -523,7 +523,16 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       }
       if (this.sessionEvents.speechToTextMessage) {
         this.session.on('speechToTextMessage', (event: SpeechToTextEvent) => {
-          this.updateEventList('speechToTextMessage', event.connection.connectionId, event);
+          const displayedContent = {
+            connection: event.connection.connectionId,
+            text: event.text,
+            reason: event.reason,
+            lang: event.lang
+          }
+          this.updateEventList('speechToTextMessage', JSON.stringify(displayedContent), event);
+          if (event.reason === 'recognized') {
+            console.warn(event);
+          }
         });
       }
     }

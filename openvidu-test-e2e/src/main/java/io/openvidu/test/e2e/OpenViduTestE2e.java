@@ -24,6 +24,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
+import org.openqa.selenium.By;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -685,5 +686,20 @@ public class OpenViduTestE2e {
 					+ " KBs)");
 		}
 	}
+
+    protected void waitUntilUserHasEventsPresent(BrowserUser user, int numberOfUser, String eventType,
+            int numberOfEvents) {
+        user.getWaiter().until(d -> {
+            List<WebElement> elements = d.findElements(By.cssSelector("#openvidu-instance-" + numberOfUser
+                    + " .mat-expansion-panel .mat-expansion-panel-header .mat-content"));
+            long numberOfEventsOfRequiredType = elements.stream().filter(e -> eventType.equals(e.getText().trim()))
+                    .count();
+            if (numberOfEvents == numberOfEventsOfRequiredType) {
+                return true;
+            } else {
+                return null;
+            }
+        });
+    }
 
 }

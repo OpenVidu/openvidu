@@ -268,8 +268,9 @@ public class OpenViduEventManager {
 
 	private void emitEvents() {
 		while (!this.eventQueue.isEmpty()) {
-			JsonObject event = this.eventQueue.poll();
-			final String eventType = event.get("type").getAsString();
+		    JsonObject userAndEvent = this.eventQueue.poll();
+		    final JsonObject event = userAndEvent.get("event").getAsJsonObject();
+		    final String eventType = event.get("type").getAsString();
 
 			log.info(eventType);
 
@@ -291,7 +292,8 @@ public class OpenViduEventManager {
 
 		String[] events = rawEvents.replaceFirst("^<br>", "").split("<br>");
 		for (String e : events) {
-			JsonObject event = JsonParser.parseString(e).getAsJsonObject();
+		    JsonObject userAndEvent = JsonParser.parseString(e).getAsJsonObject();
+		    final JsonObject event = userAndEvent.get("event").getAsJsonObject();
 			final String eventType = event.get("type").getAsString();
 
 			this.eventQueue.add(event);
