@@ -309,14 +309,15 @@ export class SessionComponent implements OnInit, OnDestroy {
 		this.session.on('streamCreated', async (event: StreamEvent) => {
 			const connectionId = event.stream?.connection?.connectionId;
 			const data = event.stream?.connection?.data;
-
+			const isCameraType: boolean = this.participantService.getTypeConnectionData(data) === VideoType.CAMERA;
 			const isRemoteConnection: boolean = !this.openviduService.isMyOwnConnection(connectionId);
+
 			if (isRemoteConnection) {
 				const subscriber: Subscriber = this.session.subscribe(event.stream, undefined);
 				this.participantService.addRemoteConnection(connectionId, data, subscriber);
 				// this.oVSessionService.sendNicknameSignal(event.stream.connection);
 
-				if (this.captionService.areCaptionsEnabled() && this.participantService.getTypeConnectionData(data) === VideoType.CAMERA) {
+				if (this.captionService.areCaptionsEnabled() && isCameraType) {
 					// Only subscribe to STT when stream is CAMERA type and it is a remote stream
 					try {
 						await this.session.subscribeToSpeechToText(event.stream, this.captionService.getLangSelected().ISO);
@@ -331,12 +332,18 @@ export class SessionComponent implements OnInit, OnDestroy {
 	private subscribeToStreamDestroyed() {
 		this.session.on('streamDestroyed', async (event: StreamEvent) => {
 			const connectionId = event.stream.connection.connectionId;
+			const data = event.stream?.connection?.data;
+			const isRemoteConnection: boolean = !this.openviduService.isMyOwnConnection(connectionId);
+			const isCameraType: boolean = this.participantService.getTypeConnectionData(data) === VideoType.CAMERA;
+
 			this.participantService.removeConnectionByConnectionId(connectionId);
-			if(this.captionService.areCaptionsEnabled()){
-				try {
-					await this.session.unsubscribeFromSpeechToText(event.stream);
-				} catch (error) {
-					this.log.e('Error unsubscribing from STT: ', error);
+			if (isRemoteConnection) {
+				if (this.captionService.areCaptionsEnabled() && isCameraType) {
+					try {
+						await this.session.unsubscribeFromSpeechToText(event.stream);
+					} catch (error) {
+						this.log.e('Error unsubscribing from STT: ', error);
+					}
 				}
 			}
 		});
