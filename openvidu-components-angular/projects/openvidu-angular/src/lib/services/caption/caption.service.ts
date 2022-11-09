@@ -9,8 +9,7 @@ import { StorageService } from '../storage/storage.service';
 	providedIn: 'root'
 })
 export class CaptionService {
-
-	private langTitles = [
+	private langs = [
 		{ name: 'English', ISO: 'en-US' },
 		{ name: 'Español', ISO: 'es-ES' },
 		{ name: 'Deutsch', ISO: 'de-DE' },
@@ -21,15 +20,18 @@ export class CaptionService {
 		{ name: 'やまと', ISO: 'jp-JP' },
 		{ name: 'Português', ISO: 'pt-PT' }
 	];
-	captionLangSelected: { name: string; ISO: string };
+	captionLangSelected: { name: string; ISO: string } = { name: 'English', ISO: 'en-US' };
 	captionLangObs: Observable<{ name: string; ISO: string }>;
 	private _captionLangObs: Subject<{ name: string; ISO: string }> = new Subject();
 	private captionsEnabled: boolean = false;
 
 	constructor(private storageService: StorageService) {
 		const iso = this.storageService.getCaptionsLang();
-		if (iso) {
-			this.captionLangSelected = this.langTitles.find((lang) => lang.ISO === iso) || this.langTitles[0];
+		const lang = this.langs.find((lang) => lang.ISO === iso);
+		if (iso && lang) {
+			this.captionLangSelected = lang;
+		} else {
+			this.captionLangSelected = this.langs[0];
 		}
 		this.captionLangObs = this._captionLangObs.asObservable();
 	}
@@ -43,8 +45,8 @@ export class CaptionService {
 	}
 
 	setLanguage(lang: string) {
-		const newLang = this.langTitles.find((l) => l.ISO === lang);
-		if(!!newLang && newLang.ISO !== this.captionLangSelected.ISO){
+		const newLang = this.langs.find((l) => l.ISO === lang);
+		if (!!newLang && newLang.ISO !== this.captionLangSelected.ISO) {
 			this.captionLangSelected = newLang;
 			this.storageService.setCaptionLang(lang);
 			this._captionLangObs.next(this.captionLangSelected);
@@ -52,10 +54,10 @@ export class CaptionService {
 	}
 
 	getLangSelected(): { name: string; ISO: string } {
-		return this.captionLangSelected || this.langTitles[0];
+		return this.captionLangSelected;
 	}
 
 	getCaptionLanguages(): { name: string; ISO: string }[] {
-		return this.langTitles;
+		return this.langs;
 	}
 }
