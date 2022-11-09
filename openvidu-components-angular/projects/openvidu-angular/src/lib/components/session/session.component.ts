@@ -343,16 +343,18 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 	private subscribeToCaptionLanguage() {
 		this.captionLanguageSubscription = this.captionService.captionLangObs.subscribe(async (lang) => {
-			// Unsubscribe all streams from speech to text and re-subscribe with new language
-			this.log.d('Re-subscribe from STT because of language changed to ', lang.ISO);
-			for (const participant of this.participantService.getRemoteParticipants()) {
-				const streamManager = participant.getCameraConnection()?.streamManager;
-				if (!!streamManager?.stream) {
-					try {
-						await this.session.unsubscribeFromSpeechToText(streamManager.stream);
-						await this.session.subscribeToSpeechToText(streamManager.stream, lang.ISO);
-					} catch (error) {
-						this.log.e('Error re-subscribing to STT: ', error);
+			if (this.captionService.areCaptionsEnabled()) {
+				// Unsubscribe all streams from speech to text and re-subscribe with new language
+				this.log.d('Re-subscribe from STT because of language changed to ', lang.ISO);
+				for (const participant of this.participantService.getRemoteParticipants()) {
+					const streamManager = participant.getCameraConnection()?.streamManager;
+					if (!!streamManager?.stream) {
+						try {
+							await this.session.unsubscribeFromSpeechToText(streamManager.stream);
+							await this.session.subscribeToSpeechToText(streamManager.stream, lang.ISO);
+						} catch (error) {
+							this.log.e('Error re-subscribing to STT: ', error);
+						}
 					}
 				}
 			}
