@@ -38,7 +38,6 @@ import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { StorageService } from '../../services/storage/storage.service';
-import { TokenService } from '../../services/token/token.service';
 import { TranslateService } from '../../services/translate/translate.service';
 
 /**
@@ -274,7 +273,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 			this.log.w('No tokens received');
 		} else {
 			this.log.w('Tokens received');
-			this.tokenService.setWebcamToken(tokens.webcam);
+			this.openviduService.setWebcamToken(tokens.webcam);
 
 			const openviduEdition = new URL(tokens.webcam).searchParams.get('edition');
 			if (!!openviduEdition) {
@@ -285,7 +284,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 			}
 
 			if (tokens.screen) {
-				this.tokenService.setScreenToken(tokens.screen);
+				this.openviduService.setScreenToken(tokens.screen);
 			} else {
 				this.log.w('No screen token found. Screenshare feature will be disabled');
 			}
@@ -438,7 +437,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		private openviduService: OpenViduService,
 		private actionService: ActionService,
 		private libService: OpenViduAngularConfigService,
-		private tokenService: TokenService,
 		private translateService: TranslateService
 	) {
 		this.log = this.loggerSrv.get('VideoconferenceComponent');

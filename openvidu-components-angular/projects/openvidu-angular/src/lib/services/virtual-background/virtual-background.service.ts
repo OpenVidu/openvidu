@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { BackgroundEffect, EffectType } from '../../models/background-effect.model';
+import { OpenViduService } from '../openvidu/openvidu.service';
 import { ParticipantService } from '../participant/participant.service';
 import { StorageService } from '../storage/storage.service';
-import { TokenService } from '../token/token.service';
 
 /**
  * @internal
@@ -41,7 +41,7 @@ export class VirtualBackgroundService {
 	constructor(
 		private participantService: ParticipantService,
 		private storageService: StorageService,
-		private tokenService: TokenService
+		private openviduService: OpenViduService
 	) {
 		this.backgroundSelectedObs = this.backgroundSelected.asObservable();
 	}
@@ -69,7 +69,7 @@ export class VirtualBackgroundService {
 		if (bg.id !== this.backgroundSelected.getValue()) {
 			const filter = this.participantService.getMyCameraPublisher().stream.filter;
 			const isBackgroundSelected = !!filter && filter.type.startsWith('VB:');
-			let options = { token: this.tokenService.getWebcamToken(), url: '' };
+			let options = { token: this.openviduService.getWebcamToken(), url: '' };
 			if (bg.type === EffectType.IMAGE) {
 				options.url = bg.src;
 			}

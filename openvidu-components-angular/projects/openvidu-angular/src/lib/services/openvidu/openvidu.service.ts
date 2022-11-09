@@ -1,5 +1,14 @@
 import { Injectable } from '@angular/core';
-import { Connection, OpenVidu, OpenViduError, OpenViduErrorName, Publisher, PublisherProperties, Session, SignalOptions } from 'openvidu-browser';
+import {
+	Connection,
+	OpenVidu,
+	OpenViduError,
+	OpenViduErrorName,
+	Publisher,
+	PublisherProperties,
+	Session,
+	SignalOptions
+} from 'openvidu-browser';
 
 import { LoggerService } from '../logger/logger.service';
 
@@ -12,13 +21,14 @@ import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.
 import { DeviceService } from '../device/device.service';
 import { ParticipantService } from '../participant/participant.service';
 import { PlatformService } from '../platform/platform.service';
-import { TokenService } from '../token/token.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class OpenViduService {
 	private ovEdition: OpenViduEdition;
+	private webcamToken = '';
+	private screenToken = '';
 	protected OV: OpenVidu;
 	protected OVScreen: OpenVidu;
 	protected webcamSession: Session;
@@ -35,8 +45,7 @@ export class OpenViduService {
 		protected platformService: PlatformService,
 		protected loggerSrv: LoggerService,
 		private participantService: ParticipantService,
-		protected deviceService: DeviceService,
-		protected tokenService: TokenService
+		protected deviceService: DeviceService
 	) {
 		this.log = this.loggerSrv.get('OpenViduService');
 	}
@@ -60,6 +69,34 @@ export class OpenViduService {
 			if (this.openviduAngularConfigSrv.isProduction()) this.OVScreen.enableProdMode();
 			this.screenSession = this.OVScreen.initSession();
 		}
+	}
+
+	/**
+	 * @internal
+	 */
+	setWebcamToken(token: string) {
+		this.webcamToken = token;
+	}
+
+	/**
+	 * @internal
+	 */
+	setScreenToken(token: string) {
+		this.screenToken = token;
+	}
+
+	/**
+	 * @internal
+	 */
+	getWebcamToken(): string {
+		return this.webcamToken;
+	}
+
+	/**
+	 * @internal
+	 */
+	getScreenToken(): string {
+		return this.screenToken;
 	}
 
 	/**
@@ -268,8 +305,7 @@ export class OpenViduService {
 			// Enabling webcam
 			const hasAudio = this.participantService.hasScreenAudioActive();
 			if (!this.isWebcamSessionConnected()) {
-				//TODO: should be the token in the participant?
-				await this.connectSession(this.getWebcamSession(), this.tokenService.getWebcamToken());
+				await this.connectSession(this.getWebcamSession(), this.getWebcamToken());
 			}
 			await this.publish(this.participantService.getMyCameraPublisher());
 			await this.publishVideoAux(this.participantService.getMyCameraPublisher(), true);
@@ -288,10 +324,10 @@ export class OpenViduService {
 	private async publishVideoAux(publisher: Publisher, publish: boolean): Promise<void> {
 		if (!!publisher) {
 			let resource: boolean | MediaStreamTrack = true;
-			if(publish){
+			if (publish) {
 				// Forcing restoration with a custom media stream (the older one instead the default)
 				const currentDeviceId = this.deviceService.getCameraSelected()?.device;
-				const mediaStream =	await this.createMediaStream({videoSource: currentDeviceId, audioSource: false});
+				const mediaStream = await this.createMediaStream({ videoSource: currentDeviceId, audioSource: false });
 				resource = mediaStream.getVideoTracks()[0];
 			}
 
@@ -354,7 +390,7 @@ export class OpenViduService {
 				this.participantService.activeMyScreenShare(screenPublisher);
 
 				if (!this.isScreenSessionConnected()) {
-					await this.connectSession(this.getScreenSession(), this.tokenService.getScreenToken());
+					await this.connectSession(this.getScreenSession(), this.getScreenToken());
 				}
 				await this.publish(this.participantService.getMyScreenPublisher());
 				if (!this.participantService.isMyVideoActive()) {
@@ -373,7 +409,7 @@ export class OpenViduService {
 
 			// Enable webcam
 			if (!this.isWebcamSessionConnected()) {
-				await this.connectSession(this.getWebcamSession(), this.tokenService.getWebcamToken());
+				await this.connectSession(this.getWebcamSession(), this.getWebcamToken());
 			}
 			await this.publish(this.participantService.getMyCameraPublisher());
 			this.publishAudioAux(this.participantService.getMyCameraPublisher(), hasAudio);

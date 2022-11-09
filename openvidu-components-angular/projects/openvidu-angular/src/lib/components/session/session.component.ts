@@ -43,7 +43,6 @@ import { PanelEvent, PanelService } from '../../services/panel/panel.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { PlatformService } from '../../services/platform/platform.service';
 import { RecordingService } from '../../services/recording/recording.service';
-import { TokenService } from '../../services/token/token.service';
 import { TranslateService } from '../../services/translate/translate.service';
 import { VirtualBackgroundService } from '../../services/virtual-background/virtual-background.service';
 
@@ -94,7 +93,6 @@ export class SessionComponent implements OnInit, OnDestroy {
 		protected participantService: ParticipantService,
 		protected loggerSrv: LoggerService,
 		protected chatService: ChatService,
-		protected tokenService: TokenService,
 		private libService: OpenViduAngularConfigService,
 		protected layoutService: LayoutService,
 		protected panelService: PanelService,
@@ -167,7 +165,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 	async ngOnInit() {
 		if (!this.usedInPrejoinPage) {
-			if (!this.tokenService.getScreenToken()) {
+			if (!this.openviduService.getScreenToken()) {
 				// Hide screenshare button if screen token does not exist
 				this.libService.screenshareButton.next(false);
 			}
@@ -254,16 +252,19 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 	private async connectToSession(): Promise<void> {
 		try {
+			const webcamToken = this.openviduService.getWebcamToken();
+			const screenToken = this.openviduService.getScreenToken();
+
 			if (this.participantService.haveICameraAndScreenActive()) {
-				await this.openviduService.connectSession(this.openviduService.getWebcamSession(), this.tokenService.getWebcamToken());
-				await this.openviduService.connectSession(this.openviduService.getScreenSession(), this.tokenService.getScreenToken());
+				await this.openviduService.connectSession(this.openviduService.getWebcamSession(), webcamToken);
+				await this.openviduService.connectSession(this.openviduService.getScreenSession(), screenToken);
 				await this.openviduService.publish(this.participantService.getMyCameraPublisher());
 				await this.openviduService.publish(this.participantService.getMyScreenPublisher());
 			} else if (this.participantService.isOnlyMyScreenActive()) {
-				await this.openviduService.connectSession(this.openviduService.getScreenSession(), this.tokenService.getScreenToken());
+				await this.openviduService.connectSession(this.openviduService.getScreenSession(), screenToken);
 				await this.openviduService.publish(this.participantService.getMyScreenPublisher());
 			} else {
-				await this.openviduService.connectSession(this.openviduService.getWebcamSession(), this.tokenService.getWebcamToken());
+				await this.openviduService.connectSession(this.openviduService.getWebcamSession(), webcamToken);
 				await this.openviduService.publish(this.participantService.getMyCameraPublisher());
 			}
 		} catch (error) {

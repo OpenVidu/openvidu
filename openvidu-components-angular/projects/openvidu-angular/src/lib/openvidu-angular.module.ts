@@ -35,7 +35,6 @@ import { ParticipantService } from './services/participant/participant.service';
 import { PlatformService } from './services/platform/platform.service';
 import { RecordingService } from './services/recording/recording.service';
 import { StorageService } from './services/storage/storage.service';
-import { TokenService } from './services/token/token.service';
 
 import { AudioWaveComponent } from './components/audio-wave/audio-wave.component';
 import { PanelComponent } from './components/panel/panel.component';
@@ -132,7 +131,6 @@ const privateComponents = [
         PlatformService,
         ParticipantService,
         StorageService,
-        TokenService,
         OpenViduService,
         RecordingService
     ],

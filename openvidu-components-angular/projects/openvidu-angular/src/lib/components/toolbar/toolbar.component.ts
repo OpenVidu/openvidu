@@ -16,7 +16,6 @@ import { skip, Subscription } from 'rxjs';
 import { ChatService } from '../../services/chat/chat.service';
 import { DocumentService } from '../../services/document/document.service';
 import { PanelEvent, PanelService } from '../../services/panel/panel.service';
-import { TokenService } from '../../services/token/token.service';
 
 import { MediaChange } from '@angular/flex-layout';
 import { MatMenuTrigger } from '@angular/material/menu';
@@ -373,7 +372,6 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		protected documentService: DocumentService,
 		protected chatService: ChatService,
 		protected panelService: PanelService,
-		protected tokenService: TokenService,
 		protected participantService: ParticipantService,
 		protected openviduService: OpenViduService,
 		protected oVDevicesService: DeviceService,
