@@ -43,8 +43,9 @@ export class CaptionService {
 	}
 
 	setLanguage(lang: string) {
-		if (this.langTitles.some((l) => l.ISO === lang)) {
-			this.captionLangSelected = this.langTitles.find((l) => l.ISO === lang);
+		const newLang = this.langTitles.find((l) => l.ISO === lang);
+		if(!!newLang && newLang.ISO !== this.captionLangSelected.ISO){
+			this.captionLangSelected = newLang;
 			this.storageService.setCaptionLang(lang);
 			this._captionLangObs.next(this.captionLangSelected);
 		}
