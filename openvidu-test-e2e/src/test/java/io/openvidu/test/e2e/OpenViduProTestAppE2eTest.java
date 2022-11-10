@@ -5,9 +5,11 @@ import static org.junit.Assert.fail;
 import java.awt.Point;
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -21,7 +23,6 @@ import java.util.stream.Stream;
 
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
 import com.mashape.unirest.http.HttpMethod;
 
+import info.debatty.java.stringsimilarity.Cosine;
 import io.openvidu.java.client.Connection;
 import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.java.client.ConnectionType;
@@ -53,8 +55,6 @@ import io.openvidu.test.browsers.utils.Unzipper;
 
 public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
-	protected volatile static boolean isNetworkQualityTest;
-
 	@BeforeAll()
 	protected static void setupAll() {
 		checkFfmpegInstallation();
@@ -63,37 +63,17 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		cleanFoldersAndSetUpOpenViduJavaClient();
 	}
 
-	@Override
-	@AfterEach
-	protected void dispose() {
-		super.dispose();
-		if (isNetworkQualityTest) {
-			// Disable network quality API
-			try {
-				CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
-				if (restClient.rest(HttpMethod.GET, "/openvidu/api/config", 200).get("OPENVIDU_PRO_NETWORK_QUALITY")
-						.getAsBoolean()) {
-					String body = "{'OPENVIDU_PRO_NETWORK_QUALITY':false}";
-					restClient.rest(HttpMethod.POST, "/openvidu/api/restart", body, 200);
-					waitUntilOpenViduRestarted(30);
-				}
-			} catch (Exception e) {
-				log.error(e.getMessage());
-				Assert.fail("Error restarting OpenVidu Server to disable Network quality API");
-			} finally {
-				isNetworkQualityTest = false;
-			}
-		}
-	}
-
 	@Test
 	@DisplayName("Individual dynamic record")
 	void individualDynamicRecordTest() throws Exception {
+
 		isRecordingTest = true;
+
+		log.info("Individual dynamic record");
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
-		log.info("Individual dynamic record");
+		restartOpenViduServerIfNecessary(false, null, "disabled");
 
 		CustomHttpClient restClient = new CustomHttpClient(OpenViduTestAppE2eTest.OPENVIDU_URL, "OPENVIDUAPP",
 				OpenViduTestAppE2eTest.OPENVIDU_SECRET);
@@ -238,6 +218,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	void restApiProTest() throws Exception {
 
 		log.info("REST API PRO test");
+
+		restartOpenViduServerIfNecessary(false, null, "disabled");
 
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
@@ -436,7 +418,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 6);
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
-		Thread.sleep(1000);
+		Thread.sleep(500);
 
 		// Test with openvidu-java-client
 		Assert.assertFalse("Session object should not have changed", session.fetch());
@@ -518,6 +500,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("openvidu-java-client PRO test");
 
+		restartOpenViduServerIfNecessary(false, null, "disabled");
+
 		// Create default Connection
 		Session session = OV.createSession();
 		Assert.assertFalse(session.fetch());
@@ -565,14 +549,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@DisplayName("Network quality test")
 	void networkQualityTest() throws Exception {
 
-		isNetworkQualityTest = true;
-
 		log.info("Network quality test");
 
-		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
-		String body = "{'OPENVIDU_PRO_NETWORK_QUALITY':true, 'OPENVIDU_PRO_NETWORK_QUALITY_INTERVAL':5}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/restart", body, 200);
-		waitUntilOpenViduRestarted(30);
+		restartOpenViduServerIfNecessary(true, 5, "disabled");
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		user.getDriver().findElement(By.id("add-user-btn")).click();
@@ -580,6 +559,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 		JsonObject res = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/TestSession/connection",
 				HttpStatus.SC_OK);
 		final String connectionId = res.getAsJsonObject().get("content").getAsJsonArray().get(0).getAsJsonObject()
@@ -638,6 +619,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Virtual Background test");
 
+		restartOpenViduServerIfNecessary(false, null, "disabled");
+
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeVirtualBackgroundFakeVideo");
 
 		user.getDriver().findElement(By.id("add-user-btn")).click();
@@ -650,7 +633,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
-		user.getDriver().findElement(By.cssSelector(".filter-btn")).click();
+		user.getDriver().findElement(By.cssSelector(".other-operations-btn")).click();
 		Thread.sleep(1000);
 
 		WebElement filterTypeInput = user.getDriver().findElement(By.id("filter-type-field"));
@@ -660,24 +643,24 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterTypeInput.sendKeys("VB:blur");
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter applied"));
+				ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "Filter applied"));
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
 		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter removed"));
+				ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "Filter removed"));
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter applied"));
+				ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "Filter applied"));
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value",
 				"Error [There is already a filter applied"));
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
 		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter removed"));
+				ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "Filter removed"));
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value",
 				"has no filter applied"));
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value",
 				"has no filter applied"));
 
 		// Image filter
@@ -694,7 +677,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterOptionsInput.clear();
 		filterOptionsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/not_exists.jpg\"}");
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value",
 				"Error loading background image"));
 
 		filterOptionsInput = user.getDriver().findElement(By.id("filter-options-field"));
@@ -702,7 +685,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterOptionsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/red.jpg\"}");
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter applied"));
+				ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "Filter applied"));
 
 		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
@@ -715,7 +698,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterMethodInput.clear();
 		filterMethodInput.sendKeys("no_existing_method");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value",
 				"Unknown Virtual Background method"));
 
 		// Fail exec method params
@@ -725,19 +708,19 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterParamsInput.clear();
 		filterParamsInput.sendKeys("wrong_params");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value",
 				"Wrong params syntax"));
 		filterParamsInput.clear();
 		filterParamsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/not_exists.jpg\"}");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value",
 				"Error loading background image"));
 
 		// Blue
 		filterParamsInput.clear();
 		filterParamsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/blue.jpg\"}");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value",
 				"Filter method executed"));
 		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
@@ -745,7 +728,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
 		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter removed"));
+				ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "Filter removed"));
 
 		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
@@ -754,6 +737,734 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assert.assertTrue((rgb.get("r") < 150) && (rgb.get("g") > 240) && (rgb.get("b") < 100));
 
 		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("Speech To Text disabled test")
+	void speechToTextDisabledTest() throws Exception {
+
+		log.info("Speech To Text disabled test");
+
+		restartOpenViduServerIfNecessary(false, null, "disabled");
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+
+		user.getDriver().get(APP_URL);
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		user.getDriver().findElement(By.cssSelector(".other-operations-btn")).click();
+		Thread.sleep(500);
+
+		user.getDriver().findElement(By.cssSelector("#sub-stt-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
+				"Speech To Text service is not enabled"));
+
+		user.getDriver().findElement(By.id("clear-response-text-area-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value", ""));
+
+		user.getDriver().findElement(By.cssSelector("#unsub-stt-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
+				"Speech To Text service is not enabled"));
+	}
+
+	@Test
+	@DisplayName("Speech To Text simple transcription test")
+	void speechToTextSimpleTranscriptionTest() throws Exception {
+
+		log.info("Speech To Text simple transcription test");
+
+		restartOpenViduServerIfNecessary(false, null, "vosk");
+
+		List<String> expectedRecognitionList = Arrays.asList(
+				"for example we used to think that after childhood the brain didnt really could not change and it turns out nothing is farther from the truth",
+				"another misconception about the brain is that you only use parts of it at any given time and silent nothing",
+				"well this is also untrue it turns out that even at risk and thinking of nothing your brain is highly active");
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+
+		user.getDriver().get(APP_URL);
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		List<String> recognizingSttEvents = new ArrayList<String>();
+		List<String> recognizedSttEvents = new ArrayList<String>();
+		final CountDownLatch latch = new CountDownLatch(4);
+
+		user.getEventManager().on("speechToTextMessage", (event) -> {
+			String reason = event.get("reason").getAsString();
+			String text = event.get("text").getAsString();
+			if ("recognized".equals(reason)) {
+				recognizedSttEvents.add(text);
+				latch.countDown();
+			} else if ("recognizing".equals(reason)) {
+				recognizingSttEvents.add(text);
+			} else {
+				Assert.fail("Unknown SpeechToText event 'reason' property " + reason);
+			}
+		});
+
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .other-operations-btn")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.cssSelector("#sub-stt-btn")).click();
+
+		latch.await();
+
+		Assert.assertTrue("recognizing STT events should be greater than 0", recognizingSttEvents.size() > 0);
+		Assert.assertTrue("recognized STT events should be greater than 0",
+				recognizingSttEvents.size() > recognizedSttEvents.size());
+
+		// The expected text may be in just 2 recognized events instead of 3
+		int expectedCharCount = expectedRecognitionList.stream().mapToInt(w -> w.length()).sum();
+		int recognizedCharCount = recognizedSttEvents.stream().mapToInt(w -> w.length()).sum();
+		int maxAllowedCountDifference = 50;
+		if (recognizedCharCount > (expectedCharCount + maxAllowedCountDifference)) {
+			recognizedSttEvents.remove(recognizedSttEvents.size() - 1);
+			System.out.println("Removed one element of recognized collection!");
+		}
+		recognizedCharCount = recognizedSttEvents.stream().mapToInt(w -> w.length()).sum();
+		if (recognizedCharCount > (expectedCharCount + maxAllowedCountDifference)) {
+			recognizedSttEvents.remove(recognizedSttEvents.size() - 1);
+			System.out.println("Removed a second element of recognized collection!");
+		}
+
+		String finalRecognition = String.join(" ", recognizedSttEvents).toLowerCase().replaceAll("[^a-z ]", "");
+		String expectedRecognition = String.join(" ", expectedRecognitionList);
+
+		// Cosine similarity string comparison has been proven the most accurate one
+		double cosineSimilarity = new Cosine().distance(finalRecognition, expectedRecognition);
+
+		Assert.assertTrue("Wrong similarity between actual and expected recognized text", cosineSimilarity < 0.2);
+
+		gracefullyLeaveParticipants(user, 1);
+	}
+
+	@Test
+	@DisplayName("Speech To Text close session test")
+	void speechToTextCloseSessionTest() throws Exception {
+
+		log.info("Speech To Text close session");
+
+		restartOpenViduServerIfNecessary(false, null, "vosk");
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+
+		user.getDriver().get(APP_URL);
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .other-operations-btn")).click();
+		Thread.sleep(500);
+
+		user.getDriver().findElement(By.cssSelector("#sub-stt-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value",
+				"Subscribed to STT"));
+		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 5);
+
+		CustomHttpClient restClient = new CustomHttpClient(OpenViduTestAppE2eTest.OPENVIDU_URL, "OPENVIDUAPP",
+				OpenViduTestAppE2eTest.OPENVIDU_SECRET);
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/TestSession", HttpStatus.SC_NO_CONTENT);
+
+		user.getEventManager().waitUntilEventReaches("streamDestroyed", 1);
+		user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
+
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
+
+		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 2);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .other-operations-btn")).click();
+		Thread.sleep(500);
+
+		user.getDriver().findElement(By.cssSelector("#sub-stt-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value",
+				"Subscribed to STT"));
+		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 10);
+
+		gracefullyLeaveParticipants(user, 1);
+	}
+
+	@Test
+	@DisplayName("Speech To Text expected errors test")
+	void speechToTextExpectedErrorsTest() throws Exception {
+
+		log.info("Speech To Text expected errors");
+
+		restartOpenViduServerIfNecessary(false, null, "vosk");
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+
+		user.getDriver().get(APP_URL);
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		CustomHttpClient restClient = new CustomHttpClient(OpenViduTestAppE2eTest.OPENVIDU_URL, "OPENVIDUAPP",
+				OpenViduTestAppE2eTest.OPENVIDU_SECRET);
+		String connectionId = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/TestSession",
+				HttpStatus.SC_OK).get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0)
+				.getAsJsonObject().get("connectionId").getAsString();
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publish-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 3);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .other-operations-btn")).click();
+		Thread.sleep(500);
+
+		WebElement sttSubBtn = user.getDriver().findElement(By.cssSelector("#sub-stt-btn"));
+		WebElement sttUnsubBtn = user.getDriver().findElement(By.cssSelector("#unsub-stt-btn"));
+
+		sttSubBtn.click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value",
+				"Subscribed to STT"));
+
+		sttSubBtn.click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
+				"Already subscribed to Speech To Text events for Connection " + connectionId + " in language en-US"));
+
+		WebElement langInput = user.getDriver().findElement(By.cssSelector("#stt-lang-field"));
+		langInput.clear();
+		langInput.sendKeys("es-ES");
+
+		sttSubBtn.click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
+				"Already subscribed to Speech To Text events for Connection " + connectionId + " in language en-US"));
+
+		sttUnsubBtn.click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value",
+				"Unsubscribed from STT"));
+
+		sttUnsubBtn.click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
+				"Session TestSession has no speech to text subscriptions"));
+
+		sttSubBtn.click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value",
+				"Subscribed to STT"));
+
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
+
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .other-operations-btn")).click();
+		Thread.sleep(500);
+
+		sttSubBtn = user.getDriver().findElement(By.cssSelector("#sub-stt-btn"));
+		sttUnsubBtn = user.getDriver().findElement(By.cssSelector("#unsub-stt-btn"));
+
+		sttSubBtn.click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value",
+				"Subscribed to STT"));
+		sttSubBtn.click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
+				"Already subscribed to Speech To Text events for Connection " + connectionId + " in language en-US"));
+
+		sttUnsubBtn.click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value",
+				"Unsubscribed from STT"));
+		sttUnsubBtn.click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
+				"There is no active Speech To Text subscriptions for Connection"));
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("1 session 1 stream 2 subscriptions 1 language STT test")
+	void oneSessionOneStreamTwoSubscriptionsOneLanguageSttTest() throws Exception {
+
+		log.info("1 session 1 stream 2 subscriptions 1 language STT");
+
+		restartOpenViduServerIfNecessary(false, null, "vosk");
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+
+		user.getDriver().get(APP_URL);
+		WebElement oneToManyInput = user.getDriver().findElement(By.id("one2many-input"));
+		oneToManyInput.clear();
+		oneToManyInput.sendKeys("1");
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		user.getDriver().findElement(By.id("one2many-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches(0, "connectionCreated", 2);
+		user.getEventManager().waitUntilEventReaches(0, "accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches(0, "streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches(0, "streamPlaying", 1);
+
+		final String connectionId = getOwnConnectionId(user, 0);
+
+		user.getEventManager().waitUntilEventReaches(1, "connectionCreated", 2);
+		user.getEventManager().waitUntilEventReaches(1, "streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches(1, "streamPlaying", 1);
+
+		List<JsonObject> firstUserStts = new ArrayList<>();
+		List<JsonObject> secondUserStts = new ArrayList<>();
+		user.getEventManager().on(0, "speechToTextMessage", e -> {
+			firstUserStts.add(e);
+		});
+		user.getEventManager().on(1, "speechToTextMessage", e -> {
+			secondUserStts.add(e);
+		});
+
+		sttSubUser(user, 0, 0, "en-US", true, true);
+		sttSubUser(user, 1, 0, "en-US", true, false);
+
+		user.getEventManager().waitUntilEventReaches(0, "speechToTextMessage", 10);
+		user.getEventManager().waitUntilEventReaches(1, "speechToTextMessage", 10);
+
+		user.getEventManager().off(0, "speechToTextMessage");
+		user.getEventManager().off(1, "speechToTextMessage");
+
+		sttUnsubUser(user, 1, 0, false, true);
+		sttUnsubUser(user, 0, 0, true, false);
+
+		final List<JsonObject> finalFirstUserStts = new ArrayList<>();
+		final List<JsonObject> finalSecondUserStts = new ArrayList<>();
+		finalFirstUserStts.addAll(firstUserStts);
+		finalSecondUserStts.addAll(secondUserStts);
+
+		for (JsonObject event : finalFirstUserStts) {
+			Assert.assertEquals(connectionId,
+					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
+			Assert.assertEquals("en-US", event.get("lang").getAsString());
+			Assert.assertFalse(event.get("text").getAsString().isBlank());
+			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+		}
+		for (JsonObject event : finalSecondUserStts) {
+			Assert.assertEquals(connectionId,
+					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
+			Assert.assertEquals("en-US", event.get("lang").getAsString());
+			Assert.assertFalse(event.get("text").getAsString().isBlank());
+			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+		}
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("1 session 2 streams 2 subscriptions 1 language STT test")
+	void oneSessionTwoStreamsTwoSubscriptionsOneLanguageSttTest() throws Exception {
+
+		log.info("1 session 2 streams 2 subscriptions 1 language STT");
+
+		restartOpenViduServerIfNecessary(false, null, "vosk");
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+
+		user.getDriver().get(APP_URL);
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .subscribe-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .subscribe-checkbox")).click();
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		final String connectionId1 = getOwnConnectionId(user, 0);
+		final String connectionId2 = getOwnConnectionId(user, 1);
+
+		List<JsonObject> firstUserStts = new ArrayList<>();
+		List<JsonObject> secondUserStts = new ArrayList<>();
+		user.getEventManager().on(0, "speechToTextMessage", e -> {
+			firstUserStts.add(e);
+		});
+		user.getEventManager().on(1, "speechToTextMessage", e -> {
+			secondUserStts.add(e);
+		});
+
+		sttSubUser(user, 0, 0, "en-US", true, true);
+		sttSubUser(user, 1, 0, "en-US", true, false);
+
+		user.getEventManager().waitUntilEventReaches(0, "speechToTextMessage", 10);
+		user.getEventManager().waitUntilEventReaches(1, "speechToTextMessage", 10);
+
+		user.getEventManager().off(0, "speechToTextMessage");
+		user.getEventManager().off(1, "speechToTextMessage");
+
+		sttUnsubUser(user, 1, 0, false, true);
+		sttUnsubUser(user, 0, 0, true, false);
+
+		final List<JsonObject> finalFirstUserStts = new ArrayList<>();
+		final List<JsonObject> finalSecondUserStts = new ArrayList<>();
+		finalFirstUserStts.addAll(firstUserStts);
+		finalSecondUserStts.addAll(secondUserStts);
+
+		for (JsonObject event : finalFirstUserStts) {
+			Assert.assertEquals(connectionId1,
+					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
+			Assert.assertEquals("en-US", event.get("lang").getAsString());
+			Assert.assertFalse(event.get("text").getAsString().isBlank());
+			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+		}
+		for (JsonObject event : finalSecondUserStts) {
+			Assert.assertEquals(connectionId2,
+					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
+			Assert.assertEquals("en-US", event.get("lang").getAsString());
+			Assert.assertFalse(event.get("text").getAsString().isBlank());
+			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+		}
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("1 session 1 stream 2 subscriptions 2 languages STT test")
+	void oneSessionOneStreamTwoSubscriptionsTwoLanguageSttTest() throws Exception {
+
+		log.info("1 session 1 stream 2 subscriptions 2 languages STT");
+
+		restartOpenViduServerIfNecessary(false, null, "vosk");
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+
+		user.getDriver().get(APP_URL);
+		WebElement oneToManyInput = user.getDriver().findElement(By.id("one2many-input"));
+		oneToManyInput.clear();
+		oneToManyInput.sendKeys("1");
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		user.getDriver().findElement(By.id("one2many-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		final String connectionId = getOwnConnectionId(user, 0);
+
+		List<JsonObject> firstUserStts = new ArrayList<>();
+		List<JsonObject> secondUserStts = new ArrayList<>();
+		user.getEventManager().on(0, "speechToTextMessage", e -> {
+			firstUserStts.add(e);
+		});
+		user.getEventManager().on(1, "speechToTextMessage", e -> {
+			secondUserStts.add(e);
+		});
+
+		sttSubUser(user, 0, 0, "en-US", true, true);
+		sttSubUser(user, 1, 0, "es-ES", true, false);
+
+		user.getEventManager().waitUntilEventReaches(0, "speechToTextMessage", 10);
+		user.getEventManager().waitUntilEventReaches(1, "speechToTextMessage", 10);
+
+		user.getEventManager().off(0, "speechToTextMessage");
+		user.getEventManager().off(1, "speechToTextMessage");
+
+		sttUnsubUser(user, 1, 0, false, true);
+		sttUnsubUser(user, 0, 0, true, false);
+
+		final List<JsonObject> finalFirstUserStts = new ArrayList<>();
+		final List<JsonObject> finalSecondUserStts = new ArrayList<>();
+		finalFirstUserStts.addAll(firstUserStts);
+		finalSecondUserStts.addAll(secondUserStts);
+
+		for (JsonObject event : finalFirstUserStts) {
+			Assert.assertEquals(connectionId,
+					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
+			Assert.assertEquals("en-US", event.get("lang").getAsString());
+			Assert.assertFalse(event.get("text").getAsString().isBlank());
+			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+		}
+		for (JsonObject event : finalSecondUserStts) {
+			Assert.assertEquals(connectionId,
+					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
+			Assert.assertEquals("es-ES", event.get("lang").getAsString());
+			Assert.assertFalse(event.get("text").getAsString().isBlank());
+			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+		}
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("1 session 2 streams 2 subscriptions 2 languages STT test")
+	void oneSessionTwoStreamsTwoSubscriptionsTwoLanguagesSttTest() throws Exception {
+
+		log.info("1 session 2 streams 2 subscriptions 2 languages STT");
+
+		restartOpenViduServerIfNecessary(false, null, "vosk");
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+
+		user.getDriver().get(APP_URL);
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
+
+		final String connectionId1 = getOwnConnectionId(user, 0);
+		final String connectionId2 = getOwnConnectionId(user, 1);
+
+		List<JsonObject> firstUserStts = new ArrayList<>();
+		List<JsonObject> secondUserStts = new ArrayList<>();
+		user.getEventManager().on(0, "speechToTextMessage", e -> {
+			firstUserStts.add(e);
+		});
+		user.getEventManager().on(1, "speechToTextMessage", e -> {
+			secondUserStts.add(e);
+		});
+
+		sttSubUser(user, 0, 1, "es-ES", true, true);
+		sttSubUser(user, 1, 1, "en-US", true, false);
+
+		user.getEventManager().waitUntilEventReaches(0, "speechToTextMessage", 10);
+		user.getEventManager().waitUntilEventReaches(1, "speechToTextMessage", 10);
+
+		user.getEventManager().off(0, "speechToTextMessage");
+		user.getEventManager().off(1, "speechToTextMessage");
+
+		sttUnsubUser(user, 1, 1, false, true);
+		sttUnsubUser(user, 0, 1, true, false);
+
+		final List<JsonObject> finalFirstUserStts = new ArrayList<>();
+		final List<JsonObject> finalSecondUserStts = new ArrayList<>();
+		finalFirstUserStts.addAll(firstUserStts);
+		finalSecondUserStts.addAll(secondUserStts);
+
+		for (JsonObject event : finalFirstUserStts) {
+			Assert.assertEquals(connectionId2,
+					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
+			Assert.assertEquals("es-ES", event.get("lang").getAsString());
+			Assert.assertFalse(event.get("text").getAsString().isBlank());
+			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+		}
+		for (JsonObject event : finalSecondUserStts) {
+			Assert.assertEquals(connectionId1,
+					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
+			Assert.assertEquals("en-US", event.get("lang").getAsString());
+			Assert.assertFalse(event.get("text").getAsString().isBlank());
+			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+		}
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("2 sessions 2 streams 2 subscriptions 1 language STT test")
+	void twoSessionsTwoStreamsTwoSubscriptionsOneLanguageSttTest() throws Exception {
+
+		log.info("2 sessions 2 streams 2 subscriptions 1 language STT");
+
+		restartOpenViduServerIfNecessary(false, null, "vosk");
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+
+		user.getDriver().get(APP_URL);
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+
+		user.getDriver().findElement(By.id("session-name-input-1")).clear();
+		user.getDriver().findElement(By.id("session-name-input-1")).sendKeys("OtherSession");
+
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches(0, "connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches(0, "accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches(0, "streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches(0, "streamPlaying", 1);
+
+		user.getEventManager().waitUntilEventReaches(1, "connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches(1, "accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches(1, "streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches(1, "streamPlaying", 1);
+
+		final String connectionId1 = getOwnConnectionId(user, 0);
+		final String connectionId2 = getOwnConnectionId(user, 1);
+
+		List<JsonObject> firstUserStts = new ArrayList<>();
+		List<JsonObject> secondUserStts = new ArrayList<>();
+		user.getEventManager().on(0, "speechToTextMessage", e -> {
+			firstUserStts.add(e);
+		});
+		user.getEventManager().on(1, "speechToTextMessage", e -> {
+			secondUserStts.add(e);
+		});
+
+		sttSubUser(user, 0, 0, "en-US", true, true);
+		sttSubUser(user, 1, 0, "en-US", true, false);
+
+		user.getEventManager().waitUntilEventReaches(0, "speechToTextMessage", 5);
+		user.getEventManager().waitUntilEventReaches(1, "speechToTextMessage", 5);
+
+		final List<JsonObject> finalFirstUserStts = new ArrayList<>();
+		final List<JsonObject> finalSecondUserStts = new ArrayList<>();
+		finalFirstUserStts.addAll(firstUserStts);
+		finalSecondUserStts.addAll(secondUserStts);
+
+		for (JsonObject event : finalFirstUserStts) {
+			Assert.assertEquals(connectionId1,
+					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
+			Assert.assertEquals("en-US", event.get("lang").getAsString());
+			Assert.assertFalse(event.get("text").getAsString().isBlank());
+			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+		}
+		for (JsonObject event : finalSecondUserStts) {
+			Assert.assertEquals(connectionId2,
+					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
+			Assert.assertEquals("en-US", event.get("lang").getAsString());
+			Assert.assertFalse(event.get("text").getAsString().isBlank());
+			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+		}
+	}
+
+	@Test
+	@DisplayName("4 sessions 4 streams 4 subscriptions 4 languages STT test")
+	void fourSessionsFourStreamsFourSubscriptionsFourLanguageSttTest() throws Exception {
+
+		log.info("4 sessions 4 streams 4 subscriptions 4 languages STT");
+
+		restartOpenViduServerIfNecessary(false, null, "vosk");
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+
+		user.getDriver().get(APP_URL);
+
+		List<List<JsonObject>> stts = new ArrayList<>(4);
+		List<String> connectionIds = new ArrayList<>(4);
+		List<String> languages = Arrays.asList(new String[] { "en-US", "es-ES", "it-IT", "fr-FR" });
+
+		for (int i = 0; i < 4; i++) {
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.id("session-name-input-" + i)).clear();
+			user.getDriver().findElement(By.id("session-name-input-" + i)).sendKeys("TestSession" + i);
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-" + i + " .join-btn")).sendKeys(Keys.ENTER);
+			user.getEventManager().waitUntilEventReaches(i, "connectionCreated", 1);
+			user.getEventManager().waitUntilEventReaches(i, "accessAllowed", 1);
+			user.getEventManager().waitUntilEventReaches(i, "streamCreated", 1);
+			user.getEventManager().waitUntilEventReaches(i, "streamPlaying", 1);
+
+			connectionIds.add(i, getOwnConnectionId(user, i));
+		}
+
+		for (int i = 0; i < 4; i++) {
+			List<JsonObject> sttList = new ArrayList<>();
+			stts.add(i, sttList);
+			user.getEventManager().on(i, "speechToTextMessage", e -> {
+				sttList.add(e);
+			});
+			sttSubUser(user, i, 0, languages.get(i), true, true);
+		}
+
+		for (int i = 0; i < 4; i++) {
+			user.getEventManager().waitUntilEventReaches(i, "speechToTextMessage", 4);
+		}
+
+		for (int i = 0; i < 4; i++) {
+			final List<JsonObject> finalStts = new ArrayList<>();
+			finalStts.addAll(stts.get(i));
+			for (JsonObject event : finalStts) {
+				Assert.assertEquals(connectionIds.get(i),
+						event.get("connection").getAsJsonObject().get("connectionId").getAsString());
+				Assert.assertEquals(languages.get(i), event.get("lang").getAsString());
+				Assert.assertFalse(event.get("text").getAsString().isBlank());
+				Assert.assertFalse(event.get("raw").getAsString().isBlank());
+			}
+		}
+	}
+
+//    @Test
+//    @DisplayName("Mix STT test")
+//    void mixSttTest() throws Exception {
+//
+//    }
+//
+//    @Test
+//    @DisplayName("STT and COMPOSED recording test")
+//    void composedRecordingAndSttTest() throws Exception {
+//
+//    }
+//
+//    @Test
+//    @DisplayName("STT memory leak test")
+//    void memoryLeakSttTest() throws Exception {
+//
+//    }
+
+	protected void restartOpenViduServerIfNecessary(Boolean wantedNetworkQuality, Integer wantedNetworkQualityInterval,
+			String wantedSpeechToText) {
+		try {
+
+			CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+			JsonObject config = restClient.rest(HttpMethod.GET, "/openvidu/api/config", 200);
+
+			Boolean currentNetworkQuality = config.get("OPENVIDU_PRO_NETWORK_QUALITY").getAsBoolean();
+			Integer currentNetworkQualityInterval = null;
+			if (config.has("OPENVIDU_PRO_NETWORK_QUALITY_INTERVAL")) {
+				currentNetworkQualityInterval = config.get("OPENVIDU_PRO_NETWORK_QUALITY_INTERVAL").getAsInt();
+			}
+			String currentSpeechToText = config.get("OPENVIDU_PRO_SPEECH_TO_TEXT").getAsString();
+
+			boolean mustRestart = false;
+			if (wantedNetworkQuality != null && wantedNetworkQuality) {
+				mustRestart = !currentNetworkQuality;
+				mustRestart = mustRestart || (wantedNetworkQualityInterval != null
+						&& wantedNetworkQualityInterval != currentNetworkQualityInterval);
+			}
+			mustRestart = mustRestart
+					|| (wantedSpeechToText != null) && !currentSpeechToText.equals(wantedSpeechToText);
+
+			if (mustRestart) {
+				String body = "{";
+				if (wantedNetworkQuality != null) {
+					body += "'OPENVIDU_PRO_NETWORK_QUALITY':" + wantedNetworkQuality;
+				}
+				if (wantedNetworkQualityInterval != null) {
+					body += body.endsWith("{") ? "" : ",";
+					body += "'OPENVIDU_PRO_NETWORK_QUALITY_INTERVAL':" + wantedNetworkQualityInterval;
+				}
+				if (wantedSpeechToText != null) {
+					body += body.endsWith("{") ? "" : ",";
+					body += "'OPENVIDU_PRO_SPEECH_TO_TEXT':'" + wantedSpeechToText + "'";
+				}
+				body += "}";
+				restClient.rest(HttpMethod.POST, "/openvidu/api/restart", body, 200);
+				waitUntilOpenViduRestarted(30);
+			} else {
+				log.info("Restarting OpenVidu Server is not necessary");
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			Assert.fail("Error restarting OpenVidu Server");
+		}
 	}
 
 	private void waitUntilOpenViduRestarted(int maxSecondsWait) throws Exception {
@@ -779,6 +1490,65 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 		if (!restarted && attempts == maxAttempts) {
 			throw new TimeoutException();
+		}
+	}
+
+	private String getOwnConnectionId(OpenViduTestappUser user, int numberOfUser) {
+		return user.getWaiter().until(d -> {
+			List<WebElement> firstOpenviduEvent = d.findElements(By.cssSelector("#openvidu-instance-" + numberOfUser
+					+ " .event-list > .mat-expansion-panel:first-child"));
+			if (firstOpenviduEvent.size() == 0) {
+				return null;
+			}
+			String eventType = firstOpenviduEvent.get(0)
+					.findElement(By.cssSelector(".mat-expansion-panel-header .mat-content")).getAttribute("textContent")
+					.trim();
+			if (!"connectionCreated".equals(eventType)) {
+				return null;
+			}
+			String connectionId = firstOpenviduEvent.get(0)
+					.findElement(By.cssSelector(".mat-expansion-panel-content .event-content"))
+					.getAttribute("textContent").trim();
+			return connectionId;
+		});
+	}
+
+	private void sttSubUser(OpenViduTestappUser user, int numberOfUser, int numberOfVideo, String language,
+			boolean openDialog, boolean closeDialog) throws InterruptedException {
+		if (openDialog) {
+			List<WebElement> videos = user.getDriver()
+					.findElements(By.cssSelector("#openvidu-instance-" + numberOfUser + " app-video"));
+			WebElement video = videos.get(numberOfVideo);
+			video.findElement(By.cssSelector(".other-operations-btn")).click();
+			Thread.sleep(500);
+		}
+		WebElement langInput = user.getDriver().findElement(By.cssSelector("#stt-lang-field"));
+		langInput.clear();
+		langInput.sendKeys(language);
+		user.getDriver().findElement(By.cssSelector("#sub-stt-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value",
+				"Subscribed to STT"));
+		if (closeDialog) {
+			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			Thread.sleep(500);
+		}
+	}
+
+	private void sttUnsubUser(OpenViduTestappUser user, int numberOfUser, int numberOfVideo, boolean openDialog,
+			boolean closeDialog) throws InterruptedException {
+		if (openDialog) {
+			List<WebElement> videos = user.getDriver()
+					.findElements(By.cssSelector("#openvidu-instance-" + numberOfUser + " app-video"));
+			WebElement video = videos.get(numberOfVideo);
+			video.findElement(By.cssSelector(".other-operations-btn")).click();
+			Thread.sleep(400);
+		}
+		user.getDriver().findElement(By.cssSelector("#unsub-stt-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value",
+				"Unsubscribed from STT"));
+		if (closeDialog) {
+			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			Thread.sleep(400);
 		}
 	}
 
