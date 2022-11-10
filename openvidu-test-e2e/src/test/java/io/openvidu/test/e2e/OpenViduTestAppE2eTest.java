@@ -1937,6 +1937,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 1);
 		user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
 
 		String recordingsPath = "/opt/openvidu/recordings/" + SESSION_NAME + "/";
 		File file1 = new File(recordingsPath + SESSION_NAME + ".mp4");
@@ -1989,6 +1990,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
 			user.getEventManager().waitUntilEventReaches("sessionDisconnected", 2);
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			Thread.sleep(500);
 
 			recordingsPath = "/opt/openvidu/recordings/" + SESSION_NAME + "~1/";
 			file1 = new File(recordingsPath + SESSION_NAME + "~1.mp4");
@@ -4705,6 +4707,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("session-info-btn-0")).click();
+		Thread.sleep(500);
 
 		// 4.1. Get all session data
 		JsonObject res = JsonParser
@@ -4796,6 +4799,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			String responseAreaText = user.getDriver().findElement(By.id("api-response-text-area"))
 					.getAttribute("value");
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			Thread.sleep(500);
 			String connectionCreatedPrefix = "Connection created: ";
 			Assert.assertTrue(responseAreaText.startsWith(connectionCreatedPrefix));
 			String connectionStringResponse = responseAreaText.split(connectionCreatedPrefix, 2)[1];
@@ -4962,6 +4966,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Load properties from session object of node-client
 		user.getDriver().findElement(By.id("session-info-btn-0")).click();
+		Thread.sleep(500);
 		JsonObject res = JsonParser
 				.parseString(user.getDriver().findElement(By.id("session-text-area")).getAttribute("value"))
 				.getAsJsonObject();
@@ -4970,6 +4975,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		boolean sessionAllowTranscodingNodeClient = res.get("properties").getAsJsonObject().get("allowTranscoding")
 				.getAsBoolean();
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assert.assertEquals("Wrong number of videos", 4, numberOfVideos);
@@ -5018,6 +5024,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			String videoCodecUsed = user.getDriver().findElement(By.id("video-codec-used")).getText();
 			Assert.assertEquals("video/" + codecToCheck, videoCodecUsed);
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			Thread.sleep(500);
 		}
 
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/" + sessionName, HttpStatus.SC_NO_CONTENT);
