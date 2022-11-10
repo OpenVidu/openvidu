@@ -826,28 +826,27 @@ export class VideoComponent implements OnInit, OnDestroy {
 
     async showCodecUsed() {
         let stats = await this.streamManager.stream.getWebRtcPeer().pc.getStats();
-        let codecIdIndex = null;
+        let codecIdIndex: string = null;
         // Search codec Index
         stats.forEach(report => {
             console.log(report);
-            if (!this.streamManager.remote && report.id.includes("RTCOutboundRTPVideoStream")) {
+            if (!this.streamManager.remote && report.type === 'outbound-rtp' && report.mediaType === 'video') {
                 codecIdIndex = report.codecId;
-
-            } else if (this.streamManager.remote && report.id.includes("RTCInboundRTPVideoStream")) {
+            } else if (this.streamManager.remote && report.type === 'inbound-rtp' && report.mediaType === 'video') {
                 codecIdIndex = report.codecId;
             }
-        })
+        });
         // Search codec Info
         stats.forEach(report => {
             if (report.id === codecIdIndex) {
                 this.usedVideoCodec = report.mimeType;
             }
-        })
+        });
         this.dialog.open(ShowCodecDialogComponent, {
             data: {
                 usedVideoCodec: this.usedVideoCodec
             },
-            width: '450px'
+            width: '295px'
         });
     }
 }
