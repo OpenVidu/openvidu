@@ -22,6 +22,7 @@ import static org.openqa.selenium.OutputType.BASE64;
 import java.awt.Point;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -82,9 +83,15 @@ public class OpenViduEventManager {
 	private ExecutorService execService = Executors.newCachedThreadPool();
 	private WebDriver driver;
 	private Queue<JsonObject> eventQueue;
+	
 	private Map<String, Collection<RunnableCallback>> eventCallbacks;
 	private Map<String, AtomicInteger> eventNumbers;
 	private Map<String, CountDownLatch> eventCountdowns;
+	
+    private Map<Integer, Map<String, Collection<RunnableCallback>>> eventCallbacksByUser;
+    private Map<Integer, Map<String, AtomicInteger>> eventNumbersByUser;
+    private Map<Integer, Map<String, CountDownLatch>> eventCountdownsByUser;
+	
 	private AtomicBoolean isInterrupted = new AtomicBoolean(false);
 	private CountDownLatch pollingLatch = new CountDownLatch(1);
 	private int timeOfWaitInSeconds;
@@ -95,6 +102,9 @@ public class OpenViduEventManager {
 		this.eventCallbacks = new ConcurrentHashMap<>();
 		this.eventNumbers = new ConcurrentHashMap<>();
 		this.eventCountdowns = new ConcurrentHashMap<>();
+	    this.eventCallbacksByUser = new ConcurrentHashMap<>();
+        this.eventNumbersByUser = new ConcurrentHashMap<>();
+        this.eventCountdownsByUser = new ConcurrentHashMap<>();
 		this.timeOfWaitInSeconds = timeOfWaitInSeconds;
 	}
 
@@ -148,6 +158,9 @@ public class OpenViduEventManager {
 			this.eventCallbacks.clear();
 			this.eventCountdowns.clear();
 			this.eventNumbers.clear();
+			this.eventCallbacksByUser.clear();
+			this.eventCountdownsByUser.clear();
+			this.eventNumbersByUser.clear();
 		}
 	}
 
@@ -155,10 +168,25 @@ public class OpenViduEventManager {
 		this.eventCallbacks.putIfAbsent(eventName, new HashSet<>());
 		this.eventCallbacks.get(eventName).add(new RunnableCallback(callback));
 	}
+	
+	public void on(int numberOfUser, String eventName, Consumer<JsonObject> callback) {
+	    this.eventCallbacksByUser.putIfAbsent(numberOfUser, new HashMap<>());
+        this.eventCallbacksByUser.get(numberOfUser).putIfAbsent(eventName, new HashSet<>());
+        this.eventCallbacksByUser.get(numberOfUser).get(eventName).add(new RunnableCallback(callback));
+    }
 
 	public void off(String eventName) {
 		this.eventCallbacks.remove(eventName);
 	}
+	
+   public void off(int numberOfUser, String eventName) {
+       if (this.eventCallbacksByUser.containsKey(numberOfUser)) {
+           this.eventCallbacksByUser.get(numberOfUser).remove(eventName);
+           if (this.eventCallbacksByUser.get(numberOfUser).isEmpty()) {
+               this.eventCallbacksByUser.remove(numberOfUser);
+           }
+       }
+    }
 
 	// 'eventNumber' is accumulative for event 'eventName' for one page while it is
 	// not refreshed
@@ -187,17 +215,57 @@ public class OpenViduEventManager {
 		}
 	}
 
+   public void waitUntilEventReaches(int numberOfUser, String eventName, int eventNumber) throws Exception {
+        this.waitUntilEventReaches(numberOfUser, eventName, eventNumber, this.timeOfWaitInSeconds, true);
+    }
+
+    public void waitUntilEventReaches(int numberOfUser, String eventName, int eventNumber, int secondsOfWait, boolean printTimeoutError)
+            throws Exception {
+        CountDownLatch eventSignal = new CountDownLatch(eventNumber);
+        this.setCountDown(numberOfUser, eventName, eventSignal);
+        try {
+            if (!eventSignal.await(secondsOfWait * 1000, TimeUnit.MILLISECONDS)) {
+                if (printTimeoutError) {
+                    String screenshot = "data:image/png;base64," + ((TakesScreenshot) driver).getScreenshotAs(BASE64);
+                    System.out.println("TIMEOUT SCREENSHOT");
+                    System.out.println(screenshot);
+                }
+                throw (new TimeoutException());
+            }
+        } catch (InterruptedException | TimeoutException e) {
+            if (printTimeoutError) {
+                e.printStackTrace();
+            }
+            throw e;
+        }
+    }
+	
 	// Sets any event count to 0
 	public synchronized void clearCurrentEvents(String eventName) {
 		this.eventNumbers.put(eventName, new AtomicInteger(0));
 		this.setCountDown(eventName, new CountDownLatch(0));
 	}
+	
+	public synchronized void clearCurrentEvents(int numberOfUser, String eventName) {
+	    if (this.eventNumbersByUser.containsKey(numberOfUser)) {
+	        this.eventNumbersByUser.get(numberOfUser).put(eventName, new AtomicInteger(0));
+	        this.setCountDown(numberOfUser, eventName, new CountDownLatch(0));
+	    }
+    }
 
 	public synchronized void clearAllCurrentEvents() {
 		this.eventNumbers.keySet().forEach(eventName -> {
 			this.clearCurrentEvents(eventName);
 		});
 	}
+
+   public synchronized void clearAllCurrentEvents(int numberOfUser) {
+       if (this.eventNumbersByUser.containsKey(numberOfUser)) {
+            this.eventNumbersByUser.get(numberOfUser).keySet().forEach(eventName -> {
+                this.clearCurrentEvents(numberOfUser, eventName);
+            });
+       }
+    }
 
 	public void resetEventThread(boolean clearData) throws InterruptedException {
 		this.stopPolling(true, clearData);
@@ -208,6 +276,7 @@ public class OpenViduEventManager {
 		this.stopPolling(false, clearData);
 		if (clearData) {
 			this.clearAllCurrentEvents();
+			this.eventNumbersByUser.keySet().forEach(user -> this.clearAllCurrentEvents(user));
 		}
 		this.isInterrupted.set(false);
 		this.pollingLatch = new CountDownLatch(1);
@@ -258,174 +327,201 @@ public class OpenViduEventManager {
 	public AtomicInteger getNumEvents(String eventName) {
 		return this.eventNumbers.computeIfAbsent(eventName, k -> new AtomicInteger(0));
 	}
+	
+	public AtomicInteger getNumEvents(int numberOfUser, String eventName) {
+	       this.eventNumbersByUser.putIfAbsent(numberOfUser, new HashMap<>());
+	       return this.eventNumbersByUser.get(numberOfUser).computeIfAbsent(eventName, k -> new AtomicInteger(0));
+    }
 
-	private void setCountDown(String eventName, CountDownLatch cd) {
-		this.eventCountdowns.put(eventName, cd);
-		for (int i = 0; i < getNumEvents(eventName).get(); i++) {
-			cd.countDown();
-		}
-	}
+    private void setCountDown(String eventName, CountDownLatch cd) {
+        this.eventCountdowns.put(eventName, cd);
+        for (int i = 0; i < getNumEvents(eventName).get(); i++) {
+            cd.countDown();
+        }
+    }
 
-	private void emitEvents() {
-		while (!this.eventQueue.isEmpty()) {
-		    JsonObject userAndEvent = this.eventQueue.poll();
-		    final JsonObject event = userAndEvent.get("event").getAsJsonObject();
-		    final String eventType = event.get("type").getAsString();
+    private void setCountDown(int numberOfUser, String eventName, CountDownLatch cd) {
+        this.eventCountdownsByUser.putIfAbsent(numberOfUser, new HashMap<>());
+        this.eventCountdownsByUser.get(numberOfUser).put(eventName, cd);
+        for (int i = 0; i < getNumEvents(numberOfUser, eventName).get(); i++) {
+            cd.countDown();
+        }
+    }
 
-			log.info(eventType);
+    private void emitEvents() {
+        while (!this.eventQueue.isEmpty()) {
+            JsonObject userAndEvent = this.eventQueue.poll();
+            final JsonObject event = userAndEvent.get("event").getAsJsonObject();
+            final int numberOfUser = userAndEvent.get("user").getAsInt();
+            final String eventType = event.get("type").getAsString();
 
-			if (this.eventCallbacks.containsKey(eventType)) {
-				for (RunnableCallback callback : this.eventCallbacks.get(eventType)) {
-					callback.setEventResult(event);
-					execService.submit(callback);
-				}
-			}
-		}
-	}
+            log.info(eventType);
 
-	private synchronized void getEventsFromBrowser() {
-		String rawEvents = this.getAndClearEventsInBrowser();
+            if (this.eventCallbacks.containsKey(eventType)) {
+                for (RunnableCallback callback : this.eventCallbacks.get(eventType)) {
+                    callback.setEventResult(event);
+                    execService.submit(callback);
+                }
+            }
+            if (this.eventCallbacksByUser.containsKey(numberOfUser)) {
+                for (RunnableCallback callback : this.eventCallbacksByUser.get(numberOfUser).get(eventType)) {
+                    callback.setEventResult(event);
+                    execService.submit(callback);
+                }
+            }
+        }
+    }
 
-		if (rawEvents == null || rawEvents.length() == 0) {
-			return;
-		}
+    private synchronized void getEventsFromBrowser() {
+        String rawEvents = this.getAndClearEventsInBrowser();
 
-		String[] events = rawEvents.replaceFirst("^<br>", "").split("<br>");
-		for (String e : events) {
-		    JsonObject userAndEvent = JsonParser.parseString(e).getAsJsonObject();
-		    final JsonObject event = userAndEvent.get("event").getAsJsonObject();
-			final String eventType = event.get("type").getAsString();
+        if (rawEvents == null || rawEvents.length() == 0) {
+            return;
+        }
 
-			this.eventQueue.add(userAndEvent);
-			getNumEvents(eventType).incrementAndGet();
+        String[] events = rawEvents.replaceFirst("^<br>", "").split("<br>");
+        for (String e : events) {
+            JsonObject userAndEvent = JsonParser.parseString(e).getAsJsonObject();
+            final JsonObject event = userAndEvent.get("event").getAsJsonObject();
+            final int numberOfUser = userAndEvent.get("user").getAsInt();
+            final String eventType = event.get("type").getAsString();
 
-			if (this.eventCountdowns.get(eventType) != null) {
-				this.eventCountdowns.get(eventType).countDown();
-			}
-		}
-	}
+            this.eventQueue.add(userAndEvent);
 
-	private String getAndClearEventsInBrowser() {
-		String events = (String) ((JavascriptExecutor) driver)
-				.executeScript("var e = window.myEvents; window.myEvents = ''; return e;");
-		return events;
-	}
+            getNumEvents(eventType).incrementAndGet();
+            if (this.eventCountdowns.get(eventType) != null) {
+                this.eventCountdowns.get(eventType).countDown();
+            }
 
-	public boolean hasMediaStream(WebElement videoElement, String parentSelector) {
-		boolean hasMediaStream = (boolean) ((JavascriptExecutor) driver).executeScript(
-				"return (!!(document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
-						+ videoElement.getAttribute("id") + "').srcObject))");
-		return hasMediaStream;
-	}
+            getNumEvents(numberOfUser, eventType).incrementAndGet();
+            this.eventCountdownsByUser.putIfAbsent(numberOfUser, new HashMap<>());
+            if (this.eventCountdownsByUser.get(numberOfUser).get(eventType) != null) {
+                this.eventCountdownsByUser.get(numberOfUser).get(eventType).countDown();
+            }
+        }
+    }
 
-	public Map<String, Long> getAverageRgbFromVideo(WebElement videoElement) {
-		String script = "var callback = arguments[arguments.length - 1];" + "var video = document.getElementById('"
-				+ videoElement.getAttribute("id") + "');" + "var canvas = document.createElement('canvas');"
-				+ "canvas.height = video.videoHeight;" + "canvas.width = video.videoWidth;"
-				+ "var context = canvas.getContext('2d');"
-				+ "context.drawImage(video, 0, 0, canvas.width, canvas.height);"
-				+ "var imgEl = document.createElement('img');" + "imgEl.src = canvas.toDataURL();"
-				+ "var blockSize = 5;" + "var defaultRGB = { r: 0, g: 0, b: 0 };"
-				+ "context.drawImage(video, 0, 0, 220, 150);" + "var dataURL = canvas.toDataURL();"
-				+ "imgEl.onload = function () {" + "let i = -4;" + "var rgb = { r: 0, g: 0, b: 0 };" + "let count = 0;"
-				+ "if (!context) {" + "  return defaultRGB;" + "}"
-				+ "var height = canvas.height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;"
-				+ "var width = canvas.width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;" + "let data;"
-				+ "context.drawImage(imgEl, 0, 0);" + "try {" + "data = context.getImageData(0, 0, width, height);"
-				+ "} catch (e) {" + "return defaultRGB;" + "}" + "length = data.data.length;"
-				+ "while ((i += blockSize * 4) < length) {" + "++count;" + "rgb.r += data.data[i];"
-				+ "rgb.g += data.data[i + 1];" + "rgb.b += data.data[i + 2];" + "}" + "rgb.r = ~~(rgb.r / count);"
-				+ "rgb.g = ~~(rgb.g / count);" + "rgb.b = ~~(rgb.b / count);" + "callback(rgb);" + "};";
-		Object averageRgb = ((JavascriptExecutor) driver).executeAsyncScript(script);
-		return (Map<String, Long>) averageRgb;
-	}
+    private String getAndClearEventsInBrowser() {
+        String events = (String) ((JavascriptExecutor) driver)
+                .executeScript("var e = window.myEvents; window.myEvents = ''; return e;");
+        return events;
+    }
 
-	public Map<String, Long> getAverageColorFromPixels(WebElement videoElement, List<Point> pixelPercentagePositions) {
-		String script = "var callback = arguments[arguments.length - 1];"
-				+ "var points = arguments[arguments.length - 2];" + "points = JSON.parse(points);"
-				+ "var video = document.getElementById('local-video-undefined');"
-				+ "var canvas = document.createElement('canvas');" + "canvas.height = video.videoHeight;"
-				+ "canvas.width = video.videoWidth;" + "var context = canvas.getContext('2d');"
-				+ "context.drawImage(video, 0, 0, canvas.width, canvas.height);"
-				+ "var imgEl = document.createElement('img');" + "imgEl.src = canvas.toDataURL();"
-				+ "var blockSize = 5;" + "var defaultRGB = {r:0,g:0,b:0};" + "context.drawImage(video, 0, 0, 220, 150);"
-				+ "var dataURL = canvas.toDataURL();" + "imgEl.onload = function() {" + "    var rgb = {r:0,g:0,b:0};"
-				+ "    if (!context) {" + "        return defaultRGB;" + "    }"
-				+ "    var height = canvas.height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;"
-				+ "    var width = canvas.width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;"
-				+ "    let data;" + "    context.drawImage(imgEl, 0, 0);" + "    for (var p of points) {"
-				+ "        var xFromPercentage = width * (p.x / 100);"
-				+ "        var yFromPercentage = height * (p.y / 100);"
-				+ "        data = context.getImageData(xFromPercentage, yFromPercentage, 1, 1).data;"
-				+ "        rgb.r += data[0];" + "        rgb.g += data[1];" + "        rgb.b += data[2];" + "    }"
-				+ "    rgb.r = ~~(rgb.r / points.length);" + "    rgb.g = ~~(rgb.g / points.length);"
-				+ "    rgb.b = ~~(rgb.b / points.length);" + "    callback(rgb);" + "};";
-		String points = "[";
-		Iterator<Point> it = pixelPercentagePositions.iterator();
-		while (it.hasNext()) {
-			Point p = it.next();
-			points += "{\"x\":" + p.getX() + ",\"y\":" + p.getY() + "}";
-			if (it.hasNext()) {
-				points += ",";
-			}
-		}
-		points += "]";
-		Object averageRgb = ((JavascriptExecutor) driver).executeAsyncScript(script, points);
-		return (Map<String, Long>) averageRgb;
-	}
+    public boolean hasMediaStream(WebElement videoElement, String parentSelector) {
+        boolean hasMediaStream = (boolean) ((JavascriptExecutor) driver).executeScript(
+                "return (!!(document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
+                        + videoElement.getAttribute("id") + "').srcObject))");
+        return hasMediaStream;
+    }
 
-	public String getDimensionOfViewport() {
-		String dimension = (String) ((JavascriptExecutor) driver)
-				.executeScript("return (JSON.stringify({width: window.innerWidth, height: window.innerHeight - 1}))");
-		return dimension;
-	}
+    public Map<String, Long> getAverageRgbFromVideo(WebElement videoElement) {
+        String script = "var callback = arguments[arguments.length - 1];" + "var video = document.getElementById('"
+                + videoElement.getAttribute("id") + "');" + "var canvas = document.createElement('canvas');"
+                + "canvas.height = video.videoHeight;" + "canvas.width = video.videoWidth;"
+                + "var context = canvas.getContext('2d');"
+                + "context.drawImage(video, 0, 0, canvas.width, canvas.height);"
+                + "var imgEl = document.createElement('img');" + "imgEl.src = canvas.toDataURL();"
+                + "var blockSize = 5;" + "var defaultRGB = { r: 0, g: 0, b: 0 };"
+                + "context.drawImage(video, 0, 0, 220, 150);" + "var dataURL = canvas.toDataURL();"
+                + "imgEl.onload = function () {" + "let i = -4;" + "var rgb = { r: 0, g: 0, b: 0 };" + "let count = 0;"
+                + "if (!context) {" + "  return defaultRGB;" + "}"
+                + "var height = canvas.height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;"
+                + "var width = canvas.width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;" + "let data;"
+                + "context.drawImage(imgEl, 0, 0);" + "try {" + "data = context.getImageData(0, 0, width, height);"
+                + "} catch (e) {" + "return defaultRGB;" + "}" + "length = data.data.length;"
+                + "while ((i += blockSize * 4) < length) {" + "++count;" + "rgb.r += data.data[i];"
+                + "rgb.g += data.data[i + 1];" + "rgb.b += data.data[i + 2];" + "}" + "rgb.r = ~~(rgb.r / count);"
+                + "rgb.g = ~~(rgb.g / count);" + "rgb.b = ~~(rgb.b / count);" + "callback(rgb);" + "};";
+        Object averageRgb = ((JavascriptExecutor) driver).executeAsyncScript(script);
+        return (Map<String, Long>) averageRgb;
+    }
 
-	public void stopVideoTracksOfVideoElement(WebElement videoElement, String parentSelector) {
-		String script = "return (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
-				+ "#" + videoElement.getAttribute("id")
-				+ "').srcObject.getVideoTracks().forEach(track => track.stop()))";
-		((JavascriptExecutor) driver).executeScript(script);
-	}
+    public Map<String, Long> getAverageColorFromPixels(WebElement videoElement, List<Point> pixelPercentagePositions) {
+        String script = "var callback = arguments[arguments.length - 1];"
+                + "var points = arguments[arguments.length - 2];" + "points = JSON.parse(points);"
+                + "var video = document.getElementById('local-video-undefined');"
+                + "var canvas = document.createElement('canvas');" + "canvas.height = video.videoHeight;"
+                + "canvas.width = video.videoWidth;" + "var context = canvas.getContext('2d');"
+                + "context.drawImage(video, 0, 0, canvas.width, canvas.height);"
+                + "var imgEl = document.createElement('img');" + "imgEl.src = canvas.toDataURL();"
+                + "var blockSize = 5;" + "var defaultRGB = {r:0,g:0,b:0};" + "context.drawImage(video, 0, 0, 220, 150);"
+                + "var dataURL = canvas.toDataURL();" + "imgEl.onload = function() {" + "    var rgb = {r:0,g:0,b:0};"
+                + "    if (!context) {" + "        return defaultRGB;" + "    }"
+                + "    var height = canvas.height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;"
+                + "    var width = canvas.width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;"
+                + "    let data;" + "    context.drawImage(imgEl, 0, 0);" + "    for (var p of points) {"
+                + "        var xFromPercentage = width * (p.x / 100);"
+                + "        var yFromPercentage = height * (p.y / 100);"
+                + "        data = context.getImageData(xFromPercentage, yFromPercentage, 1, 1).data;"
+                + "        rgb.r += data[0];" + "        rgb.g += data[1];" + "        rgb.b += data[2];" + "    }"
+                + "    rgb.r = ~~(rgb.r / points.length);" + "    rgb.g = ~~(rgb.g / points.length);"
+                + "    rgb.b = ~~(rgb.b / points.length);" + "    callback(rgb);" + "};";
+        String points = "[";
+        Iterator<Point> it = pixelPercentagePositions.iterator();
+        while (it.hasNext()) {
+            Point p = it.next();
+            points += "{\"x\":" + p.getX() + ",\"y\":" + p.getY() + "}";
+            if (it.hasNext()) {
+                points += ",";
+            }
+        }
+        points += "]";
+        Object averageRgb = ((JavascriptExecutor) driver).executeAsyncScript(script, points);
+        return (Map<String, Long>) averageRgb;
+    }
 
-	private boolean hasAudioTracks(WebElement videoElement, String parentSelector) {
-		String script = "return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
-				+ "#" + videoElement.getAttribute("id") + "').srcObject.getAudioTracks().length > 0)"
-				+ " && (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
-				+ videoElement.getAttribute("id") + "').srcObject.getAudioTracks()[0].enabled))";
-		boolean audioTracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
-		return audioTracks;
-	}
+    public String getDimensionOfViewport() {
+        String dimension = (String) ((JavascriptExecutor) driver)
+                .executeScript("return (JSON.stringify({width: window.innerWidth, height: window.innerHeight - 1}))");
+        return dimension;
+    }
 
-	private boolean hasVideoTracks(WebElement videoElement, String parentSelector) {
-		String script = "return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
-				+ "#" + videoElement.getAttribute("id") + "').srcObject.getVideoTracks().length > 0)"
-				+ " && (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
-				+ videoElement.getAttribute("id") + "').srcObject.getVideoTracks()[0].enabled))";
-		boolean videoTracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
-		return videoTracks;
-	}
+    public void stopVideoTracksOfVideoElement(WebElement videoElement, String parentSelector) {
+        String script = "return (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
+                + "#" + videoElement.getAttribute("id")
+                + "').srcObject.getVideoTracks().forEach(track => track.stop()))";
+        ((JavascriptExecutor) driver).executeScript(script);
+    }
 
-	private boolean waitUntilSrcObjectDefined(WebElement videoElement, String parentSelector, int maxMsWait) {
-		final int sleepInterval = 50;
-		int maxIterations = maxMsWait / sleepInterval;
-		int counter = 0;
-		boolean defined = srcObjectDefined(videoElement, parentSelector);
-		while (!defined && counter < maxIterations) {
-			try {
-				Thread.sleep(sleepInterval);
-			} catch (InterruptedException e) {
-			}
-			defined = srcObjectDefined(videoElement, parentSelector);
-			counter++;
-		}
-		return defined;
-	}
+    private boolean hasAudioTracks(WebElement videoElement, String parentSelector) {
+        String script = "return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
+                + "#" + videoElement.getAttribute("id") + "').srcObject.getAudioTracks().length > 0)"
+                + " && (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
+                + videoElement.getAttribute("id") + "').srcObject.getAudioTracks()[0].enabled))";
+        boolean audioTracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
+        return audioTracks;
+    }
 
-	private boolean srcObjectDefined(WebElement videoElement, String parentSelector) {
-		String script = "return (!!(document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
-				+ "#" + videoElement.getAttribute("id") + "').srcObject))";
-		boolean defined = (boolean) ((JavascriptExecutor) driver).executeScript(script);
-		return defined;
-	}
+    private boolean hasVideoTracks(WebElement videoElement, String parentSelector) {
+        String script = "return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
+                + "#" + videoElement.getAttribute("id") + "').srcObject.getVideoTracks().length > 0)"
+                + " && (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
+                + videoElement.getAttribute("id") + "').srcObject.getVideoTracks()[0].enabled))";
+        boolean videoTracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
+        return videoTracks;
+    }
+
+    private boolean waitUntilSrcObjectDefined(WebElement videoElement, String parentSelector, int maxMsWait) {
+        final int sleepInterval = 50;
+        int maxIterations = maxMsWait / sleepInterval;
+        int counter = 0;
+        boolean defined = srcObjectDefined(videoElement, parentSelector);
+        while (!defined && counter < maxIterations) {
+            try {
+                Thread.sleep(sleepInterval);
+            } catch (InterruptedException e) {
+            }
+            defined = srcObjectDefined(videoElement, parentSelector);
+            counter++;
+        }
+        return defined;
+    }
+
+    private boolean srcObjectDefined(WebElement videoElement, String parentSelector) {
+        String script = "return (!!(document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
+                + "#" + videoElement.getAttribute("id") + "').srcObject))";
+        boolean defined = (boolean) ((JavascriptExecutor) driver).executeScript(script);
+        return defined;
+    }
 
 }

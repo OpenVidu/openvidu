@@ -523,13 +523,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       }
       if (this.sessionEvents.speechToTextMessage) {
         this.session.on('speechToTextMessage', (event: SpeechToTextEvent) => {
-          const displayedContent = {
-            connection: event.connection.connectionId,
-            text: event.text,
-            reason: event.reason,
-            lang: event.lang
-          }
-          this.updateEventList('speechToTextMessage', JSON.stringify(displayedContent), event);
+          this.updateEventList('speechToTextMessage', event.text, event);
           if (event.reason === 'recognized') {
             console.warn(event);
           }
