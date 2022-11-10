@@ -78,7 +78,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     nginx:
-        image: openvidu/openvidu-proxy:2.23.0
+        image: openvidu/openvidu-proxy:2.24.0-beta1
         restart: always
         network_mode: host
         volumes:
