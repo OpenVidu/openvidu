@@ -340,6 +340,9 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 			for (String property : configPropNames) {
 				String value = CONFIG_PROPS.get(property);
+				if (config.getSecretProperties().contains(property)) {
+					value = config.hideSecret(value, "*", 0);
+				}
 				msg += "   * " + config.getPropertyName(property) + "=" + (value == null ? "" : value) + "\n";
 			}
 			msg += "\n\n";

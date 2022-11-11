@@ -742,10 +742,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@DisplayName("Speech To Text disabled test")
-	void speechToTextDisabledTest() throws Exception {
+	@DisplayName("Service disabled STT test")
+	void serviceDisabledSttTest() throws Exception {
 
-		log.info("Speech To Text disabled test");
+		log.info("Service disabled STT test");
 
 		restartOpenViduServerIfNecessary(false, null, "disabled");
 
@@ -776,10 +776,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@DisplayName("Speech To Text simple transcription test")
-	void speechToTextSimpleTranscriptionTest() throws Exception {
+	@DisplayName("Simple transcription STT test")
+	void simpleTranscriptionSttTest() throws Exception {
 
-		log.info("Speech To Text simple transcription test");
+		log.info("Simple transcription STT test");
 
 		restartOpenViduServerIfNecessary(false, null, "vosk");
 
@@ -852,10 +852,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@DisplayName("Speech To Text close session test")
-	void speechToTextCloseSessionTest() throws Exception {
+	@DisplayName("Close session STT test")
+	void closeSessionSttTest() throws Exception {
 
-		log.info("Speech To Text close session");
+		log.info("Close session STT test");
 
 		restartOpenViduServerIfNecessary(false, null, "vosk");
 
@@ -907,10 +907,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@DisplayName("Speech To Text expected errors test")
-	void speechToTextExpectedErrorsTest() throws Exception {
+	@DisplayName("Expected errors STT test")
+	void expectedErrorsSttTest() throws Exception {
 
-		log.info("Speech To Text expected errors");
+		log.info("Expected errors STT test");
 
 		restartOpenViduServerIfNecessary(false, null, "vosk");
 
@@ -1541,7 +1541,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	protected void restartOpenViduServerIfNecessary(Boolean wantedNetworkQuality, Integer wantedNetworkQualityInterval,
 			String wantedSpeechToText) {
-		try {
+		
+		wantedSpeechToText = "azure";
+		
+				try {
 
 			CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 			JsonObject config = restClient.rest(HttpMethod.GET, "/openvidu/api/config", 200);

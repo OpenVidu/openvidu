@@ -115,6 +115,8 @@ public class OpenviduConfig {
 
 	private List<String> userConfigProps;
 
+	protected final Set<String> secretProps = new HashSet<>(Arrays.asList("OPENVIDU_SECRET"));
+
 	protected Map<String, ?> propertiesSource;
 
 	public static final String DEFAULT_RECORDING_IMAGE_REPO = "openvidu/openvidu-recording";
@@ -486,6 +488,10 @@ public class OpenviduConfig {
 
 	public Map<String, String> getConfigProps() {
 		return configProps;
+	}
+	
+	public Set<String> getSecretProperties() {
+		return secretProps;
 	}
 
 	public List<String> getUserProperties() {
@@ -1255,4 +1261,11 @@ public class OpenviduConfig {
 		return builder;
 	}
 
+	public String hideSecret(final String originalString, String charToReplace, int numberOfVisibleChars) {
+		String hiddenString = originalString.substring(originalString.length() - numberOfVisibleChars,
+				originalString.length());
+		hiddenString = charToReplace.repeat(originalString.length() - numberOfVisibleChars) + hiddenString;
+		return hiddenString;
+	}
+	
 }
