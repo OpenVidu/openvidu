@@ -80,6 +80,7 @@ public class OpenViduTestE2e {
 	protected static String EXTERNAL_CUSTOM_LAYOUT_URL = "http://localhost:4114";
 	protected static String OPENVIDU_PRO_LICENSE = "not_valid";
 	protected static String OPENVIDU_PRO_LICENSE_API = "not_valid";
+	protected static String OPENVIDU_PRO_SPEECH_TO_TEXT = "vosk";
 	protected static String EXTERNAL_CUSTOM_LAYOUT_PARAMS = "sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET";
 
 	// https://hub.docker.com/r/selenium/standalone-chrome/tags
@@ -308,6 +309,11 @@ public class OpenViduTestE2e {
 		if (openviduProLicenseApi != null) {
 			OPENVIDU_PRO_LICENSE_API = openviduProLicenseApi;
 		}
+
+		String openviduProSpeechToText = System.getProperty("OPENVIDU_PRO_SPEECH_TO_TEXT");
+		if (openviduProSpeechToText != null) {
+			OPENVIDU_PRO_SPEECH_TO_TEXT = openviduProSpeechToText;
+		}
 	}
 
 	protected BrowserUser setupBrowser(String browser) {
@@ -337,10 +343,10 @@ public class OpenViduTestE2e {
 			browserUser = new ChromeUser("TestUser", 50, Paths.get("/opt/openvidu/barcode.y4m"));
 			break;
 		case "chromeFakeAudio":
-		    container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
-            setupBrowserAux(BrowserNames.CHROME, container, false);
-            browserUser = new ChromeUser("TestUser", 50, null, Paths.get("/opt/openvidu/stt-test.wav"));
-            break;
+			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
+			setupBrowserAux(BrowserNames.CHROME, container, false);
+			browserUser = new ChromeUser("TestUser", 50, null, Paths.get("/opt/openvidu/stt-test.wav"));
+			break;
 		case "chromeVirtualBackgroundFakeVideo":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
 			setupBrowserAux(BrowserNames.CHROME, container, false);
@@ -687,19 +693,19 @@ public class OpenViduTestE2e {
 		}
 	}
 
-    protected void waitUntilUserHasEventsPresent(BrowserUser user, int numberOfUser, String eventType,
-            int numberOfEvents) {
-        user.getWaiter().until(d -> {
-            List<WebElement> elements = d.findElements(By.cssSelector("#openvidu-instance-" + numberOfUser
-                    + " .mat-expansion-panel .mat-expansion-panel-header .mat-content"));
-            long numberOfEventsOfRequiredType = elements.stream().filter(e -> eventType.equals(e.getText().trim()))
-                    .count();
-            if (numberOfEvents == numberOfEventsOfRequiredType) {
-                return true;
-            } else {
-                return null;
-            }
-        });
-    }
+	protected void waitUntilUserHasEventsPresent(BrowserUser user, int numberOfUser, String eventType,
+			int numberOfEvents) {
+		user.getWaiter().until(d -> {
+			List<WebElement> elements = d.findElements(By.cssSelector("#openvidu-instance-" + numberOfUser
+					+ " .mat-expansion-panel .mat-expansion-panel-header .mat-content"));
+			long numberOfEventsOfRequiredType = elements.stream().filter(e -> eventType.equals(e.getText().trim()))
+					.count();
+			if (numberOfEvents == numberOfEventsOfRequiredType) {
+				return true;
+			} else {
+				return null;
+			}
+		});
+	}
 
 }

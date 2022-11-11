@@ -781,7 +781,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Simple transcription STT test");
 
-		restartOpenViduServerIfNecessary(false, null, "vosk");
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
 
 		List<String> expectedRecognitionList = Arrays.asList(
 				"for example we used to think that after childhood the brain didnt really could not change and it turns out nothing is farther from the truth",
@@ -857,7 +857,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Close session STT test");
 
-		restartOpenViduServerIfNecessary(false, null, "vosk");
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -912,7 +912,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Expected errors STT test");
 
-		restartOpenViduServerIfNecessary(false, null, "vosk");
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1005,7 +1005,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("1 session 1 stream 2 subscriptions 1 language STT");
 
-		restartOpenViduServerIfNecessary(false, null, "vosk");
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1077,7 +1077,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("1 session 2 streams 2 subscriptions 1 language STT");
 
-		restartOpenViduServerIfNecessary(false, null, "vosk");
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1148,7 +1148,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("1 session 1 stream 2 subscriptions 2 languages STT");
 
-		restartOpenViduServerIfNecessary(false, null, "vosk");
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1216,7 +1216,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("1 session 2 streams 2 subscriptions 2 languages STT");
 
-		restartOpenViduServerIfNecessary(false, null, "vosk");
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1285,7 +1285,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("2 sessions 2 streams 2 subscriptions 1 language STT");
 
-		restartOpenViduServerIfNecessary(false, null, "vosk");
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1355,7 +1355,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("4 sessions 4 streams 4 subscriptions 4 languages STT");
 
-		restartOpenViduServerIfNecessary(false, null, "vosk");
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1412,7 +1412,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("COMPOSED recording and STT");
 
-		restartOpenViduServerIfNecessary(false, null, "vosk");
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1481,7 +1481,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Memory leak STT");
 
-		restartOpenViduServerIfNecessary(false, null, "vosk");
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1541,10 +1541,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	protected void restartOpenViduServerIfNecessary(Boolean wantedNetworkQuality, Integer wantedNetworkQualityInterval,
 			String wantedSpeechToText) {
-		
-		wantedSpeechToText = "azure";
-		
-				try {
+
+		try {
 
 			CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 			JsonObject config = restClient.rest(HttpMethod.GET, "/openvidu/api/config", 200);
