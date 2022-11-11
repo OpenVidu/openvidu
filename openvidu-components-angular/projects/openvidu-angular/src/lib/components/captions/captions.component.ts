@@ -1,11 +1,4 @@
-import {
-	ChangeDetectionStrategy,
-	ChangeDetectorRef,
-	Component,
-	ElementRef,
-	OnInit,
-	QueryList, ViewChildren
-} from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { PanelEvent, PanelService } from '../../services/panel/panel.service';
 
@@ -50,10 +43,10 @@ export class CaptionsComponent implements OnInit {
 
 	session: Session;
 
-	private deleteTimeout: NodeJS.Timeout;
+	private deleteFirstTimeout: NodeJS.Timeout;
 	private deleteAllTimeout: NodeJS.Timeout;
 
-	private DELETE_TIMEOUT = 5 * 1000;
+	private DELETE_TIMEOUT = 10 * 1000;
 	private MAX_EVENTS_LIMIT = 3;
 	private captionLanguageSubscription: Subscription;
 	private captionLangSelected: { name: string; ISO: string };
@@ -85,16 +78,15 @@ export class CaptionsComponent implements OnInit {
 
 	async ngOnDestroy() {
 		this.captionService.setCaptionsEnabled(false);
+		if (this.screenSizeSub) this.screenSizeSub.unsubscribe();
+		if (this.panelTogglingSubscription) this.panelTogglingSubscription.unsubscribe();
+		this.session.off('speechToTextMessage');
+		this.captionEvents = [];
 
 		for (const p of this.participantService.getRemoteParticipants()) {
 			const stream = p.getCameraConnection().streamManager.stream;
 			await this.session.unsubscribeFromSpeechToText(stream);
 		}
-
-		if (this.screenSizeSub) this.screenSizeSub.unsubscribe();
-		if (this.panelTogglingSubscription) this.panelTogglingSubscription.unsubscribe();
-		this.session.off('speechToTextMessage');
-		this.captionEvents = [];
 	}
 
 	onSettingsCliked() {
@@ -125,39 +117,56 @@ export class CaptionsComponent implements OnInit {
 		let captionEventsCopy = [...this.captionEvents];
 		let eventsNumber = captionEventsCopy.length;
 
-		if (eventsNumber === this.MAX_EVENTS_LIMIT) {
-			captionEventsCopy.shift();
-			eventsNumber--;
-		}
-
 		if (eventsNumber === 0) {
 			captionEventsCopy.push(caption);
 		} else {
-			const lastCaption: CaptionModel = captionEventsCopy.slice(-1)[0];
-			const sameAuthorAsAbove: boolean = lastCaption.connectionId === caption.connectionId;
-			const allEventsAreSameSpeaker = captionEventsCopy.every((e) => e.connectionId === caption.connectionId);
+			const lastCaption: CaptionModel | undefined = captionEventsCopy[eventsNumber - 1];
+			const sameSpeakerAsAbove: boolean = lastCaption.connectionId === caption.connectionId;
+			const lastSpeakerHasStoppedTalking = lastCaption.type === 'recognized';
 
-			if (sameAuthorAsAbove) {
-				if (lastCaption.type === 'recognized') {
-					if (eventsNumber === 2 && allEventsAreSameSpeaker) {
-						captionEventsCopy.shift();
-						clearInterval(this.deleteTimeout);
+			if (sameSpeakerAsAbove) {
+				if (lastSpeakerHasStoppedTalking) {
+					// Add event if different from previous one
+					if (caption.text !== lastCaption.text) {
+						this.deleteFirstEventAfterDelay(this.DELETE_TIMEOUT);
+						captionEventsCopy.push(caption);
 					}
-					captionEventsCopy.push(caption);
-					this.deleteFirstEventAfterDelay(this.DELETE_TIMEOUT);
 				} else {
+					//Updating last 'recognizing' caption
 					lastCaption.text = caption.text;
 					lastCaption.type = caption.type;
 				}
 			} else {
-				// TODO: Test when STT is able to work with multiple streams
-				if (eventsNumber === 2) {
-					captionEventsCopy.shift();
-					clearInterval(this.deleteTimeout);
+				// Different speaker is talking
+				const speakerExists: boolean = captionEventsCopy.some((ev) => ev.connectionId === caption.connectionId);
+				if (speakerExists) {
+					// Speaker is already showing
+					if (lastSpeakerHasStoppedTalking) {
+						this.deleteFirstEventAfterDelay(this.DELETE_TIMEOUT);
+						captionEventsCopy.push(caption);
+					} else {
+						// There was an interruption. Last event is still being 'recognizing' (speaker is talking)
+						// Update last speaker event.
+						const lastSpeakerCaption = captionEventsCopy.find((cap) => cap.connectionId === caption.connectionId);
+						if (lastSpeakerCaption) {
+							if (lastSpeakerCaption.type === 'recognized') {
+								captionEventsCopy.push(caption);
+							} else {
+								lastSpeakerCaption.text = caption.text;
+								lastSpeakerCaption.type = caption.type;
+							}
+						}
+					}
+				} else {
+					this.deleteFirstEventAfterDelay(this.DELETE_TIMEOUT);
+					captionEventsCopy.push(caption);
 				}
-				captionEventsCopy.push(caption);
-				this.deleteFirstEventAfterDelay(this.DELETE_TIMEOUT);
 			}
+		}
+
+		if (captionEventsCopy.length === this.MAX_EVENTS_LIMIT) {
+			clearInterval(this.deleteFirstTimeout);
+			captionEventsCopy.shift();
 		}
 
 		this.captionEvents = [...captionEventsCopy];
@@ -165,7 +174,7 @@ export class CaptionsComponent implements OnInit {
 	}
 
 	private deleteFirstEventAfterDelay(timeout: number) {
-		this.deleteTimeout = setTimeout(() => {
+		this.deleteFirstTimeout = setTimeout(() => {
 			this.captionEvents.shift();
 			this.cd.markForCheck();
 		}, timeout);
@@ -195,9 +204,9 @@ export class CaptionsComponent implements OnInit {
 	private scrollToBottom(): void {
 		setTimeout(() => {
 			try {
-				this.scrollContainer.forEach((el: ElementRef) => {
+				this.scrollContainer.forEach((el: ElementRef, index: number) => {
 					el.nativeElement.scroll({
-						top: this.scrollContainer.first.nativeElement.scrollHeight,
+						top: this.scrollContainer.get(index)?.nativeElement.scrollHeight,
 						left: 0
 						// behavior: 'smooth'
 					});
