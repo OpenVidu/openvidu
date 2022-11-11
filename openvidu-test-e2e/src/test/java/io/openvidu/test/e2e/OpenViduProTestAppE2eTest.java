@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Alert;
@@ -71,9 +72,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Individual dynamic record");
 
-		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
-
 		restartOpenViduServerIfNecessary(false, null, "disabled");
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		CustomHttpClient restClient = new CustomHttpClient(OpenViduTestAppE2eTest.OPENVIDU_URL, "OPENVIDUAPP",
 				OpenViduTestAppE2eTest.OPENVIDU_SECRET);
@@ -83,10 +84,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.id("add-user-btn")).click();
 			if (i > 0) {
 				user.getDriver().findElement(By.id("session-settings-btn-" + i)).click();
-				Thread.sleep(1000);
+				Thread.sleep(500);
 				user.getDriver().findElement(By.id("record-checkbox")).click();
 				user.getDriver().findElement(By.id("save-btn")).click();
-				Thread.sleep(1000);
+				Thread.sleep(500);
 			}
 		}
 
@@ -487,7 +488,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 						+ "'OPENVIDU_PRO_STATS_SESSION_INTERVAL':0,'OPENVIDU_PRO_STATS_SERVER_INTERVAL':0,'OPENVIDU_PRO_STATS_MONITORING_INTERVAL':0,'OPENVIDU_PRO_STATS_WEBRTC_INTERVAL':0,'OPENVIDU_PRO_CLUSTER_ID':'STR',"
 						+ "'OPENVIDU_PRO_CLUSTER_ENVIRONMENT':'STR','OPENVIDU_PRO_CLUSTER_MEDIA_NODES':0,'OPENVIDU_PRO_CLUSTER_PATH':'STR','OPENVIDU_PRO_CLUSTER_RECONNECTION_TIMEOUT':0,'OPENVIDU_PRO_CLUSTER_AUTOSCALING':false,"
 						+ "'OPENVIDU_PRO_ELASTICSEARCH':true,'OPENVIDU_PRO_ELASTICSEARCH_VERSION':'STR','OPENVIDU_PRO_ELASTICSEARCH_HOST':'STR','OPENVIDU_PRO_KIBANA':true,'OPENVIDU_PRO_KIBANA_VERSION':'STR',"
-						+ "'OPENVIDU_PRO_KIBANA_HOST':'STR','OPENVIDU_PRO_RECORDING_STORAGE':'STR','OPENVIDU_PRO_NETWORK_QUALITY':false,'OPENVIDU_STREAMS_ALLOW_TRANSCODING':false,'OPENVIDU_STREAMS_FORCED_VIDEO_CODEC':'STR'}");
+						+ "'OPENVIDU_PRO_KIBANA_HOST':'STR','OPENVIDU_PRO_RECORDING_STORAGE':'STR','OPENVIDU_PRO_NETWORK_QUALITY':false,'OPENVIDU_STREAMS_ALLOW_TRANSCODING':false,'OPENVIDU_STREAMS_FORCED_VIDEO_CODEC':'STR',"
+						+ "'OPENVIDU_PRO_SPEECH_TO_TEXT':'STR'}");
 
 		/** GET /openvidu/api/health **/
 		restClient.rest(HttpMethod.GET, "/openvidu/api/health", null, HttpStatus.SC_OK, true, true, true,
@@ -1348,6 +1350,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("4 sessions 4 streams 4 subscriptions 4 languages STT test")
+	@Disabled
 	void fourSessionsFourStreamsFourSubscriptionsFourLanguageSttTest() throws Exception {
 
 		log.info("4 sessions 4 streams 4 subscriptions 4 languages STT");
@@ -1401,17 +1404,76 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 	}
 
-//    @Test
-//    @DisplayName("Mix STT test")
-//    void mixSttTest() throws Exception {
-//
-//    }
-//
-//    @Test
-//    @DisplayName("STT and COMPOSED recording test")
-//    void composedRecordingAndSttTest() throws Exception {
-//
-//    }
+	@Test
+	@DisplayName("COMPOSED recording and STT test")
+	void composedRecordingAndSttTest() throws Exception {
+
+		isRecordingTest = true;
+
+		log.info("COMPOSED recording and STT");
+
+		restartOpenViduServerIfNecessary(false, null, "vosk");
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+
+		final String sessionName = "COMPOSED_RECORDED_SESSION";
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("session-name-input-0")).clear();
+		user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionName);
+
+		user.getDriver().findElement(By.className("join-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(500);
+
+		user.getDriver().findElement(By.id("start-recording-btn")).click();
+
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording started [" + sessionName + "]"));
+
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
+
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
+
+		this.sttSubUser(user, 0, 0, "en-US", true, true);
+
+		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 5);
+
+		Assert.assertEquals("Wrong number of connectionCreated events", 1,
+				user.getEventManager().getNumEvents("connectionCreated").get());
+
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(sessionName);
+		user.getDriver().findElement(By.id("stop-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording stopped [" + sessionName + "]"));
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
+
+		Assert.assertEquals("Wrong number of connectionCreated events", 1,
+				user.getEventManager().getNumEvents("connectionCreated").get());
+
+		// After stopping composed recording speechToText events should keep coming
+		user.getEventManager().clearAllCurrentEvents(0);
+		user.getEventManager().clearAllCurrentEvents();
+		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 4);
+
+		// After unsubscription no more STT events should be received
+		this.sttUnsubUser(user, 0, 0, true, true);
+		user.getEventManager().clearAllCurrentEvents(0);
+		user.getEventManager().clearAllCurrentEvents();
+		Thread.sleep(3000);
+		Assert.assertEquals(user.getEventManager().getNumEvents("speechToTextMessage").intValue(), 0);
+
+		gracefullyLeaveParticipants(user, 1);
+	}
 
 	@Test
 	@DisplayName("Memory leak STT test")
@@ -1470,6 +1532,12 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assert.assertFalse(event.get("raw").getAsString().isBlank());
 		}
 	}
+
+	// @Test
+	// @DisplayName("Mix STT test")
+	// void mixSttTest() throws Exception {
+	//
+	// }
 
 	protected void restartOpenViduServerIfNecessary(Boolean wantedNetworkQuality, Integer wantedNetworkQualityInterval,
 			String wantedSpeechToText) {
