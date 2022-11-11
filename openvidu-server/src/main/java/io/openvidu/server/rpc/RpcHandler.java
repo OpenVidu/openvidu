@@ -950,9 +950,11 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 							clientVersion, serverVersion);
 				} else {
 					log.error(
-							"Participant {} with IP {} and platform {} has an incompatible version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). This may cause the system to malfunction",
-							participant.getParticipantPublicId(), participant.getLocation().getIp(),
-							participant.getPlatform(), clientVersion, serverVersion);
+							"Participant {}{}{} has an incompatible version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). This may cause the system to malfunction",
+							participant.getParticipantPublicId(),
+							participant.getPlatform() != null ? (" with platform " + participant.getPlatform()) : "",
+							participant.getLocation() != null ? (" with IP " + participant.getLocation().getIp()) : "",
+							clientVersion, serverVersion);
 					log.error(e.getMessage());
 					log.error(
 							"openvidu-browser SDK is only compatible with the same version or the immediately following minor version of an OpenVidu deployment");
