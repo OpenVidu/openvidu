@@ -816,9 +816,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			}
 		});
 
-		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .other-operations-btn")).click();
-		Thread.sleep(500);
-		user.getDriver().findElement(By.cssSelector("#sub-stt-btn")).click();
+		this.sttSubUser(user, 0, 0, "en-US", true, true);
 
 		latch.await();
 
@@ -870,12 +868,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
-		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .other-operations-btn")).click();
-		Thread.sleep(500);
-
-		user.getDriver().findElement(By.cssSelector("#sub-stt-btn")).click();
-		user.getWaiter().until(
-				ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value", "Subscribed to STT"));
+		this.sttSubUser(user, 0, 0, "en-US", true, true);
 		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 5);
 
 		CustomHttpClient restClient = new CustomHttpClient(OpenViduTestAppE2eTest.OPENVIDU_URL, "OPENVIDUAPP",
@@ -885,9 +878,6 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 1);
 		user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
 
-		user.getDriver().findElement(By.id("close-dialog-btn")).click();
-		Thread.sleep(500);
-
 		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 2);
@@ -895,12 +885,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
-		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .other-operations-btn")).click();
-		Thread.sleep(500);
-
-		user.getDriver().findElement(By.cssSelector("#sub-stt-btn")).click();
-		user.getWaiter().until(
-				ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value", "Subscribed to STT"));
+		this.sttSubUser(user, 0, 0, "en-US", true, true);
 		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 10);
 
 		gracefullyLeaveParticipants(user, 1);
@@ -939,15 +924,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
-		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .other-operations-btn")).click();
-		Thread.sleep(500);
+		this.sttSubUser(user, 0, 0, "en-US", true, false);
 
 		WebElement sttSubBtn = user.getDriver().findElement(By.cssSelector("#sub-stt-btn"));
 		WebElement sttUnsubBtn = user.getDriver().findElement(By.cssSelector("#unsub-stt-btn"));
-
-		sttSubBtn.click();
-		user.getWaiter().until(
-				ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value", "Subscribed to STT"));
 
 		sttSubBtn.click();
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
@@ -976,15 +956,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
 
-		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .other-operations-btn")).click();
-		Thread.sleep(500);
+		this.sttSubUser(user, 1, 0, "en-US", true, false);
 
 		sttSubBtn = user.getDriver().findElement(By.cssSelector("#sub-stt-btn"));
 		sttUnsubBtn = user.getDriver().findElement(By.cssSelector("#unsub-stt-btn"));
 
-		sttSubBtn.click();
-		user.getWaiter().until(
-				ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value", "Subscribed to STT"));
 		sttSubBtn.click();
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Already subscribed to Speech To Text events for Connection " + connectionId + " in language en-US"));
@@ -1496,7 +1472,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		final String connectionId = getOwnConnectionId(user, 0);
 
-		final int LOOPS = 10;
+		final int LOOPS = 20;
 
 		this.sttSubUser(user, 0, 0, "en-US", true, false);
 		for (int i = 0; i < LOOPS; i++) {
