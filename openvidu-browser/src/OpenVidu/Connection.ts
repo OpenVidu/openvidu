@@ -129,31 +129,36 @@ export class Connection {
      * @hidden
      */
     sendIceCandidate(candidate: RTCIceCandidate): void {
-        logger.debug((!!this.stream!.outboundStreamOpts ? 'Local' : 'Remote') + 'candidate for' + this.connectionId, candidate);
 
-        this.session.openvidu.sendRequest(
-            'onIceCandidate',
-            {
-                endpointName: this.connectionId,
-                candidate: candidate.candidate,
-                sdpMid: candidate.sdpMid,
-                sdpMLineIndex: candidate.sdpMLineIndex
-            },
-            (error, response) => {
-                if (error) {
-                    logger.error('Error sending ICE candidate: ' + JSON.stringify(error));
-                    this.session.emitEvent('exception', [
-                        new ExceptionEvent(
-                            this.session,
-                            ExceptionEventName.ICE_CANDIDATE_ERROR,
-                            this.session,
-                            'There was an unexpected error on the server-side processing an ICE candidate generated and sent by the client-side',
-                            error
-                        )
-                    ]);
+        if (!this.disposed) {
+            logger.debug((!!this.stream!.outboundStreamOpts ? 'Local' : 'Remote') + 'candidate for' + this.connectionId, candidate);
+
+            this.session.openvidu.sendRequest(
+                'onIceCandidate',
+                {
+                    endpointName: this.connectionId,
+                    candidate: candidate.candidate,
+                    sdpMid: candidate.sdpMid,
+                    sdpMLineIndex: candidate.sdpMLineIndex
+                },
+                (error, response) => {
+                    if (error) {
+                        logger.error('Error sending ICE candidate: ' + JSON.stringify(error));
+                        this.session.emitEvent('exception', [
+                            new ExceptionEvent(
+                                this.session,
+                                ExceptionEventName.ICE_CANDIDATE_ERROR,
+                                this.session,
+                                'There was an unexpected error on the server-side processing an ICE candidate generated and sent by the client-side',
+                                error
+                            )
+                        ]);
+                    }
                 }
-            }
-        );
+            );
+        } else {
+            logger.warn(`Connection ${this.connectionId} disposed when trying to send an ICE candidate. ICE candidate not sent`);
+        }
     }
 
     /**
@@ -198,7 +203,7 @@ export class Connection {
     /**
      * @hidden
      */
-    removeStream(streamId: string): void {
+    removeStream(): void {
         delete this.stream;
     }
 
@@ -206,9 +211,7 @@ export class Connection {
      * @hidden
      */
     dispose(): void {
-        if (!!this.stream) {
-            delete this.stream;
-        }
         this.disposed = true;
+        this.removeStream();
     }
 }

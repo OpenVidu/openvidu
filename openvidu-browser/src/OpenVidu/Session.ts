@@ -845,6 +845,7 @@ export class Session extends EventDispatcher {
 
                     this.remoteStreamsCreated.delete(stream.streamId);
                 }
+                connection.dispose();
                 this.remoteConnections.delete(connection.connectionId);
                 this.ee.emitEvent('connectionDestroyed', [
                     new ConnectionEvent(false, this, 'connectionDestroyed', connection, event.reason)
@@ -912,7 +913,7 @@ export class Session extends EventDispatcher {
                     if (connection.stream != null) {
                         const streamId: string = connection.stream!.streamId;
                         this.remoteStreamsCreated.delete(streamId);
-                        connection.removeStream(streamId);
+                        connection.removeStream();
                     }
                 })
                 .catch((openViduError) => {
