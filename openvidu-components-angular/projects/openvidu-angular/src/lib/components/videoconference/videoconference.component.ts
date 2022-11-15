@@ -281,6 +281,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 			} else {
 				this.openviduService.setOpenViduEdition(OpenViduEdition.CE);
 				this.libService.backgroundEffectsButton.next(false);
+				this.libService.captionsButton.next(false);
 			}
 
 			if (tokens.screen) {
