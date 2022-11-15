@@ -78,7 +78,16 @@ export enum ExceptionEventName {
      *
      * [[ExceptionEvent]] objects with this [[ExceptionEvent.name]] will have as [[ExceptionEvent.origin]] property a [[Subscriber]] object.
      */
-    NO_STREAM_PLAYING_EVENT = 'NO_STREAM_PLAYING_EVENT'
+    NO_STREAM_PLAYING_EVENT = 'NO_STREAM_PLAYING_EVENT',
+
+    /**
+     * There has been a server-side disconnection of the Speech To Text module. From the moment this exception is fired to the moment method
+     * [[Session.subscribeToSpeechToText]] is called again, the transcription of the audio stream will not be available and no [[SpeechToTextEvent]]
+     * will be fired.
+     *
+     * [[ExceptionEvent]] objects with this [[ExceptionEvent.name]] will have as [[ExceptionEvent.origin]] property a [[Session]] object.
+     */
+    SPEECH_TO_TEXT_DISCONNECTED = 'SPEECH_TO_TEXT_DISCONNECTED',
 }
 
 /**
@@ -123,5 +132,5 @@ export class ExceptionEvent extends Event {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    callDefaultBehavior() {}
+    callDefaultBehavior() { }
 }

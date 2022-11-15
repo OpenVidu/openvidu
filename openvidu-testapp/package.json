@@ -38,12 +38,12 @@
     "name": "openvidu-testapp", 
     "private": true, 
     "scripts": {
-        "build": "ng build", 
+        "build": "NODE_OPTIONS=--openssl-legacy-provider ng build", 
         "e2e": "ng e2e", 
         "lint": "ng lint", 
         "ng": "ng", 
-        "start": "ng serve", 
-        "test": "ng test"
+        "start": "NODE_OPTIONS=--openssl-legacy-provider ng serve --host 0.0.0.0 --ssl", 
+        "test": "NODE_OPTIONS=--openssl-legacy-provider ng test"
     }, 
     "version": "2.23.0"
 }

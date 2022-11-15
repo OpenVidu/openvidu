@@ -53,6 +53,7 @@ import semverMajor = require('semver/functions/major');
  * @hidden
  */
 import semverMinor = require('semver/functions/minor');
+import { ExceptionEvent, ExceptionEventName } from '../OpenViduInternal/Events/ExceptionEvent';
 
 /**
  * @hidden
@@ -1343,6 +1344,13 @@ export class Session extends EventDispatcher {
         const connection = await this.getConnection(event.connectionId, 'No connection found for connectionId ' + event.connectionId);
         const ev = new SpeechToTextEvent(this, connection, event.text, <any>(event.reason).toLowerCase(), event.raw, event.lang);
         this.ee.emitEvent('speechToTextMessage', [ev]);
+    }
+
+    /**
+     * @hidden
+     */
+    async onSpeechToTextDisconnected(event: { message: string }): Promise<void> {
+        this.emitEvent('exception', [new ExceptionEvent(this, ExceptionEventName.SPEECH_TO_TEXT_DISCONNECTED, this, event.message)]);
     }
 
     /**

@@ -155,7 +155,6 @@ public class ProtocolElements {
     public static final String UNSUBSCRIBEFROMSPEECHTOTEXT_METHOD = "unsubscribeFromSpeechToText";
     public static final String UNSUBSCRIBEFROMSPEECHTOTEXT_CONNECTIONID_PARAM = "connectionId";
 
-
     // ---------------------------- SERVER RESPONSES & EVENTS -----------------
 
     public static final String PARTICIPANTJOINED_METHOD = "participantJoined";
@@ -238,6 +237,9 @@ public class ProtocolElements {
     public static final String SPEECHTOTEXTMESSAGE_REASON_PARAM = "reason";
     public static final String SPEECHTOTEXTMESSAGE_RAW_PARAM = "raw";
     public static final String SPEECHTOTEXTMESSAGE_LANG_PARAM = "lang";
+
+    public static final String SPEECHTOTEXTDISCONNECTED_METHOD = "speechToTextDisconnected";
+    public static final String SPEECHTOTEXTDISCONNECTED_MESSAGE_PARAM = "message";
 
     public static final String CUSTOM_NOTIFICATION = "customNotification";
 

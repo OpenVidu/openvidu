@@ -23,6 +23,9 @@ import java.util.concurrent.TimeUnit;
 
 public class CommandLineExecutor {
 
+	/**
+	 * WARNING: does not work with subshell. i.e: echo $(VARIABLE)
+	 */
 	public String executeCommand(String command, int secondsTimeout) {
 		String output = "";
 		Process p = null;

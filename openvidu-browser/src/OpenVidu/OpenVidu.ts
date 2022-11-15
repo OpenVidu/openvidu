@@ -875,7 +875,8 @@ export class OpenVidu {
                 mediaError: this.session.onMediaError.bind(this.session),
                 masterNodeCrashedNotification: this.onMasterNodeCrashedNotification.bind(this),
                 forciblyReconnectSubscriber: this.session.onForciblyReconnectSubscriber.bind(this.session),
-                speechToTextMessage: this.session.onSpeechToTextMessage.bind(this.session)
+                speechToTextMessage: this.session.onSpeechToTextMessage.bind(this.session),
+                speechToTextDisconnected: this.session.onSpeechToTextDisconnected.bind(this.session)
             }
         };
         this.jsonRpcClient = new RpcBuilder.clients.JsonRpcClient(config);
