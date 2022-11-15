@@ -20,9 +20,9 @@
  */
 export interface Device {
     /**
-     * `"videoinput"`, `"audioinput"`
+     * The kind of device
      */
-    kind: string;
+    kind: 'videoinput' | 'audioinput';
 
     /**
      * Unique ID for the device. Use it on `audioSource` or `videoSource` properties of [[PublisherProperties]]

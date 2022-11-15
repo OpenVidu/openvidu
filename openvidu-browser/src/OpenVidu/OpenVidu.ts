@@ -377,8 +377,8 @@ export class OpenVidu {
                             let videoDevices: Device[] = [];
                             let audioDevices: Device[] = [];
                             pluginAudioDevices = pluginDevices.filter((device: Device) => device.kind === 'audioinput');
-                            videoDevices = deviceInfos.filter((device: Device) => device.kind === 'videoinput');
-                            audioDevices = deviceInfos.filter((device: Device) => device.kind === 'audioinput');
+                            videoDevices = deviceInfos.filter((device: MediaDeviceInfo) => device.kind === 'videoinput') as any;
+                            audioDevices = deviceInfos.filter((device: MediaDeviceInfo) => device.kind === 'audioinput') as any;
                             videoDevices.forEach((deviceInfo, index) => {
                                 if (!deviceInfo.label) {
                                     let label = '';
