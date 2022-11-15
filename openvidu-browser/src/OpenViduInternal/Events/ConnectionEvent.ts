@@ -18,6 +18,7 @@
 import { Event } from './Event';
 import { Connection } from '../../OpenVidu/Connection';
 import { Session } from '../../OpenVidu/Session';
+import { ConnectionEventReason } from './Types/Types';
 
 /**
  * Triggered by:
@@ -41,12 +42,12 @@ export class ConnectionEvent extends Event {
      *
      * For `connectionCreated` event an empty string
      */
-    reason: string;
+    reason: ConnectionEventReason;
 
     /**
      * @hidden
      */
-    constructor(cancelable: boolean, target: Session, type: string, connection: Connection, reason: string) {
+    constructor(cancelable: boolean, target: Session, type: string, connection: Connection, reason: ConnectionEventReason) {
         super(cancelable, target, type);
         this.connection = connection;
         this.reason = reason;
@@ -56,5 +57,5 @@ export class ConnectionEvent extends Event {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    callDefaultBehavior() {}
+    callDefaultBehavior() { }
 }

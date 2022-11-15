@@ -17,6 +17,7 @@
 
 import { Event } from './Event';
 import { Session } from '../../OpenVidu/Session';
+import { RecordingEventReason } from './Types/Types';
 
 /**
  * Triggered by:
@@ -48,12 +49,12 @@ export class RecordingEvent extends Event {
      *
      * For 'recordingStarted' empty string
      */
-    reason?: string;
+    reason?: RecordingEventReason;
 
     /**
      * @hidden
      */
-    constructor(target: Session, type: string, id: string, name: string, reason?: string) {
+    constructor(target: Session, type: string, id: string, name: string, reason?: RecordingEventReason) {
         super(false, target, type);
         this.id = id;
         if (name !== id) {
@@ -66,5 +67,5 @@ export class RecordingEvent extends Event {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    callDefaultBehavior() {}
+    callDefaultBehavior() { }
 }

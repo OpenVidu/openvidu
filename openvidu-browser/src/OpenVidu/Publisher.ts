@@ -28,6 +28,7 @@ import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 import { TypeOfVideo } from '../OpenViduInternal/Enums/TypeOfVideo';
+import { StreamEventReason } from '../OpenViduInternal/Events/Types/Types';
 
 /**
  * @hidden
@@ -92,7 +93,7 @@ export class Publisher extends StreamManager {
         this.properties = properties;
         this.openvidu = openvidu;
 
-        this.stream.ee.on('local-stream-destroyed', (reason: string) => {
+        this.stream.ee.on('local-stream-destroyed', (reason: StreamEventReason) => {
             this.stream.isLocalStreamPublished = false;
             const streamEvent = new StreamEvent(true, this, 'streamDestroyed', this.stream, reason);
             this.emitEvent('streamDestroyed', [streamEvent]);

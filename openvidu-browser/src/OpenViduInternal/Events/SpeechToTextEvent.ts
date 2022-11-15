@@ -18,6 +18,7 @@
 import { Event } from './Event';
 import { Connection } from '../../OpenVidu/Connection';
 import { Session } from '../../OpenVidu/Session';
+import { SpeechToTextEventReason } from './Types/Types';
 
 /**
  * Triggered by [[SessionEventMap.speechToTextMessage]]
@@ -38,7 +39,7 @@ export class SpeechToTextEvent extends Event {
     /**
      * All speech-to-text events are generated 
      */
-    reason: 'recognizing' | 'recognized';
+    reason: SpeechToTextEventReason;
 
     /**
      * The original event from the speech to text engine. This can vary depending on the engine
@@ -54,7 +55,7 @@ export class SpeechToTextEvent extends Event {
     /**
      * @hidden
      */
-    constructor(target: Session, connection: Connection, text: string, reason: 'recognizing' | 'recognized', raw: string, lang: string) {
+    constructor(target: Session, connection: Connection, text: string, reason: SpeechToTextEventReason, raw: string, lang: string) {
         super(false, target, 'speechToTextMessage');
         this.connection = connection;
         this.text = text;

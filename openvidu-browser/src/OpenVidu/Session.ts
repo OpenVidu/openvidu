@@ -44,6 +44,7 @@ import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/Open
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
+import { StreamPropertyChangedEventReason, ChangedPropertyType, RecordingEventReason, ConnectionEventReason, StreamEventReason } from '../OpenViduInternal/Events/Types/Types';
 /**
  * @hidden
  */
@@ -833,7 +834,7 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onParticipantLeft(event: { connectionId: string; reason: string }): void {
+    onParticipantLeft(event: { connectionId: string; reason: ConnectionEventReason }): void {
         this.getRemoteConnection(event.connectionId, 'onParticipantLeft')
             .then((connection) => {
                 if (!!connection.stream) {
@@ -897,7 +898,7 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onParticipantUnpublished(event: { connectionId: string; reason: string }): void {
+    onParticipantUnpublished(event: { connectionId: string; reason: StreamEventReason }): void {
         if (event.connectionId === this.connection.connectionId) {
             // Your stream has been forcedly unpublished from the session
             this.stopPublisherStream(event.reason);
@@ -925,7 +926,7 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onParticipantEvicted(event: { connectionId: string; reason: string }): void {
+    onParticipantEvicted(event: { connectionId: string; reason: ConnectionEventReason }): void {
         if (event.connectionId === this.connection.connectionId) {
             // You have been evicted from the session
             if (!!this.sessionId && !this.connection.disposed) {
@@ -975,7 +976,7 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onStreamPropertyChanged(event: { connectionId: string; streamId: string; property: string; newValue: any; reason: string }): void {
+    onStreamPropertyChanged(event: { connectionId: string; streamId: string; property: ChangedPropertyType; newValue: any; reason: StreamPropertyChangedEventReason }): void {
         const callback = (connection: Connection) => {
             if (!!connection.stream && connection.stream.streamId === event.streamId) {
                 const stream = connection.stream;
@@ -1159,7 +1160,7 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onLostConnection(reason: string): void {
+    onLostConnection(reason: ConnectionEventReason): void {
         logger.warn('Lost connection in Session ' + this.sessionId);
         if (!!this.sessionId && !!this.connection && !this.connection.disposed) {
             this.leave(true, reason);
@@ -1202,7 +1203,7 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onRecordingStopped(event: { id: string; name: string; reason: string }): void {
+    onRecordingStopped(event: { id: string; name: string; reason: RecordingEventReason }): void {
         this.ee.emitEvent('recordingStopped', [new RecordingEvent(this, 'recordingStopped', event.id, event.name, event.reason)]);
     }
 
@@ -1354,7 +1355,7 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    leave(forced: boolean, reason: string): void {
+    leave(forced: boolean, reason: ConnectionEventReason): void {
         forced = !!forced;
         logger.info('Leaving Session (forced=' + forced + ')');
         this.stopVideoDataIntervals();
@@ -1636,7 +1637,7 @@ export class Session extends EventDispatcher {
         });
     }
 
-    private stopPublisherStream(reason: string) {
+    private stopPublisherStream(reason: StreamEventReason) {
         if (!!this.connection.stream) {
             // Dispose Publisher's  local stream
             this.connection.stream.disposeWebRtcPeer();

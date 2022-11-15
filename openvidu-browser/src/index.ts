@@ -45,5 +45,7 @@ export { SessionEventMap } from './OpenViduInternal/Events/EventMap/SessionEvent
 export { StreamManagerEventMap } from './OpenViduInternal/Events/EventMap/StreamManagerEventMap';
 export { PublisherEventMap } from './OpenViduInternal/Events/EventMap/PublisherEventMap';
 
+export * from './OpenViduInternal/Events/Types/Types';
+
 // Disable jsnlog when library is loaded
 JL.setOptions({ enabled: false });

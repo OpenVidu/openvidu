@@ -19,6 +19,7 @@ import { Event } from './Event';
 import { Session } from '../../OpenVidu/Session';
 import { Stream } from '../../OpenVidu/Stream';
 import { StreamManager } from '../../OpenVidu/StreamManager';
+import { StreamPropertyChangedEventReason, ChangedPropertyType } from './Types/Types';
 
 /**
  * Triggered by `streamPropertyChanged` (available for [Session](/en/stable/api/openvidu-browser/interfaces/SessionEventMap.html#streamPropertyChanged) and [StreamManager](/en/stable/api/openvidu-browser/interfaces/StreamManagerEventMap.html#streamPropertyChanged) objects)
@@ -32,7 +33,7 @@ export class StreamPropertyChangedEvent extends Event {
     /**
      * The property of the stream that changed. This value is either `"videoActive"`, `"audioActive"`, `"videoTrack"`, `"audioTrack"`, `"videoDimensions"` or `"filter"`
      */
-    changedProperty: string;
+    changedProperty: ChangedPropertyType;
 
     /**
      * Cause of the change on the stream's property:
@@ -43,7 +44,7 @@ export class StreamPropertyChangedEvent extends Event {
      * - For `videoDimensions`: `"deviceRotated"`, `"screenResized"` or `"trackReplaced"`
      * - For `filter`: `"applyFilter"`, `"execFilterMethod"` or `"removeFilter"`
      */
-    reason: string;
+    reason: StreamPropertyChangedEventReason;
 
     /**
      * New value of the property (after change, current value)
@@ -61,10 +62,10 @@ export class StreamPropertyChangedEvent extends Event {
     constructor(
         target: Session | StreamManager,
         stream: Stream,
-        changedProperty: string,
+        changedProperty: ChangedPropertyType,
         newValue: Object,
         oldValue: Object,
-        reason: string
+        reason: StreamPropertyChangedEventReason
     ) {
         super(false, target, 'streamPropertyChanged');
         this.stream = stream;
@@ -78,5 +79,5 @@ export class StreamPropertyChangedEvent extends Event {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    callDefaultBehavior() {}
+    callDefaultBehavior() { }
 }

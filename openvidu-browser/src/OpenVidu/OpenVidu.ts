@@ -29,6 +29,7 @@ import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/Open
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
+import { StreamPropertyChangedEventReason, ChangedPropertyType } from '../OpenViduInternal/Events/Types/Types';
 
 import * as screenSharingAuto from '../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto';
 import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturing';
@@ -219,8 +220,8 @@ export class OpenVidu {
                     typeof MediaStreamTrack !== 'undefined' && properties.videoSource instanceof MediaStreamTrack
                         ? undefined
                         : typeof properties.frameRate !== 'undefined'
-                        ? properties.frameRate
-                        : undefined,
+                            ? properties.frameRate
+                            : undefined,
                 insertMode:
                     typeof properties.insertMode !== 'undefined'
                         ? typeof properties.insertMode === 'string'
@@ -234,8 +235,8 @@ export class OpenVidu {
                     typeof MediaStreamTrack !== 'undefined' && properties.videoSource instanceof MediaStreamTrack
                         ? undefined
                         : typeof properties.resolution !== 'undefined'
-                        ? properties.resolution
-                        : '640x480',
+                            ? properties.resolution
+                            : '640x480',
                 videoSource: typeof properties.videoSource !== 'undefined' ? properties.videoSource : undefined,
                 videoSimulcast: properties.videoSimulcast,
                 filter: properties.filter
@@ -642,7 +643,7 @@ export class OpenVidu {
     /**
      * @hidden
      */
-    sendNewVideoDimensionsIfRequired(publisher: Publisher, reason: string, WAIT_INTERVAL: number, MAX_ATTEMPTS: number) {
+    sendNewVideoDimensionsIfRequired(publisher: Publisher, reason: StreamPropertyChangedEventReason, WAIT_INTERVAL: number, MAX_ATTEMPTS: number) {
         let attempts = 0;
         const oldWidth = publisher?.stream?.videoDimensions?.width || 0;
         const oldHeight = publisher?.stream?.videoDimensions?.height || 0;
@@ -666,7 +667,7 @@ export class OpenVidu {
      */
     sendVideoDimensionsChangedEvent(
         publisher: Publisher,
-        reason: string,
+        reason: StreamPropertyChangedEventReason,
         oldWidth: number,
         oldHeight: number,
         newWidth: number,
@@ -717,7 +718,7 @@ export class OpenVidu {
     /**
      * @hidden
      */
-    sendTrackChangedEvent(publisher: Publisher, oldLabel: string, newLabel: string, propertyType: string) {
+    sendTrackChangedEvent(publisher: Publisher, oldLabel: string, newLabel: string, propertyType: ChangedPropertyType) {
         const oldValue = { label: oldLabel };
         const newValue = { label: newLabel };
         const reason = 'trackReplaced';
@@ -1028,9 +1029,9 @@ export class OpenVidu {
                     const error = new OpenViduError(
                         OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED,
                         'You can only screen share in desktop Chrome, Firefox, Opera, Safari (>=13.0), Edge (>= 80) or Electron. Detected client: ' +
-                            platform.getName() +
-                            ' ' +
-                            platform.getVersion()
+                        platform.getName() +
+                        ' ' +
+                        platform.getVersion()
                     );
                     logger.error(error);
                     return reject(error);

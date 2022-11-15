@@ -18,6 +18,7 @@
 import { Event } from './Event';
 import { Session } from '../../OpenVidu/Session';
 import { OpenViduLogger } from '../Logger/OpenViduLogger';
+import { ConnectionEventReason } from './Types/Types';
 
 /**
  * @hidden
@@ -40,12 +41,12 @@ export class SessionDisconnectedEvent extends Event {
      * - "nodeCrashed": a node has crashed in the server side. You can use this reason to ask your application's backend to reconnect
      * to a new session to replace the crashed one
      */
-    reason: string;
+    reason: ConnectionEventReason;
 
     /**
      * @hidden
      */
-    constructor(target: Session, reason: string) {
+    constructor(target: Session, reason: ConnectionEventReason) {
         super(true, target, 'sessionDisconnected');
         this.reason = reason;
     }

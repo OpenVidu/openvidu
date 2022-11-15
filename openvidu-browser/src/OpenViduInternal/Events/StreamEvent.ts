@@ -20,6 +20,7 @@ import { Publisher } from '../../OpenVidu/Publisher';
 import { Session } from '../../OpenVidu/Session';
 import { Stream } from '../../OpenVidu/Stream';
 import { OpenViduLogger } from '../Logger/OpenViduLogger';
+import { StreamEventReason } from './Types/Types';
 
 /**
  * @hidden
@@ -51,12 +52,12 @@ export class StreamEvent extends Event {
      *
      * For 'streamCreated' empty string
      */
-    reason: string;
+    reason: StreamEventReason;
 
     /**
      * @hidden
      */
-    constructor(cancelable: boolean, target: Session | Publisher, type: string, stream: Stream, reason: string) {
+    constructor(cancelable: boolean, target: Session | Publisher, type: string, stream: Stream, reason: StreamEventReason) {
         super(cancelable, target, type);
         this.stream = stream;
         this.reason = reason;
