@@ -784,9 +784,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
 
 		List<String> expectedRecognitionList = Arrays.asList(
-				"for example we used to think that after childhood the brain didnt really could not change and it turns out nothing is farther from the truth",
-				"another misconception about the brain is that you only use parts of it at any given time and silent nothing",
-				"well this is also untrue it turns out that even at risk and thinking of nothing your brain is highly active");
+				"for example we used to think that after childhood the brain did not really could not change and it turns out that nothing could be farther from the truth",
+				"another misconception about the brain is that you only use parts of it at any given time and silent when you do nothing",
+				"well this is also untrue it turns out that even when you are at rest and thinking of nothing your brain is highly active");
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -801,24 +801,58 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		List<String> recognizingSttEvents = new ArrayList<String>();
 		List<String> recognizedSttEvents = new ArrayList<String>();
-		final CountDownLatch latch = new CountDownLatch(4);
+		final CountDownLatch latch = new CountDownLatch(3);
+
+		boolean[] previousSttEventWasRecognized = new boolean[1];
+		String[] previousSttRecognizedText = new String[1];
+		AssertionError[] exc = new AssertionError[1];
 
 		user.getEventManager().on("speechToTextMessage", (event) -> {
 			String reason = event.get("reason").getAsString();
 			String text = event.get("text").getAsString();
-			if ("recognized".equals(reason)) {
+			if ("recognizing".equals(reason)) {
+
+				previousSttEventWasRecognized[0] = false;
+				previousSttRecognizedText[0] = null;
+				recognizingSttEvents.add(text);
+
+			} else if ("recognized".equals(reason)) {
+
+				if (previousSttEventWasRecognized[0]) {
+					exc[0] = exc[0] == null
+							? new AssertionError("Two recognized events in a row should never happen. Present event: "
+									+ event.get("text") + " | Previous event: \"" + previousSttRecognizedText[0] + "\"")
+							: exc[0];
+					while (latch.getCount() > 0) {
+						latch.countDown();
+					}
+				}
+				previousSttEventWasRecognized[0] = true;
+				previousSttRecognizedText[0] = text;
+				log.info("Recognized: {}", text);
 				recognizedSttEvents.add(text);
 				latch.countDown();
-			} else if ("recognizing".equals(reason)) {
-				recognizingSttEvents.add(text);
+
 			} else {
-				Assert.fail("Unknown SpeechToText event 'reason' property " + reason);
+
+				exc[0] = exc[0] == null ? new AssertionError("Unknown SpeechToText event 'reason' property " + reason)
+						: exc[0];
+				while (latch.getCount() > 0) {
+					latch.countDown();
+				}
+
 			}
 		});
 
 		this.sttSubUser(user, 0, 0, "en-US", true, true);
 
-		latch.await();
+		if (!latch.await(80, TimeUnit.SECONDS)) {
+			Assert.fail("Timeout waiting for recognized STT events");
+		}
+
+		if (exc[0] != null) {
+			throw exc[0];
+		}
 
 		Assert.assertTrue("recognizing STT events should be greater than 0", recognizingSttEvents.size() > 0);
 		Assert.assertTrue("recognized STT events should be greater than 0",
@@ -830,12 +864,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		int maxAllowedCountDifference = 50;
 		if (recognizedCharCount > (expectedCharCount + maxAllowedCountDifference)) {
 			recognizedSttEvents.remove(recognizedSttEvents.size() - 1);
-			System.out.println("Removed one element of recognized collection!");
-		}
-		recognizedCharCount = recognizedSttEvents.stream().mapToInt(w -> w.length()).sum();
-		if (recognizedCharCount > (expectedCharCount + maxAllowedCountDifference)) {
-			recognizedSttEvents.remove(recognizedSttEvents.size() - 1);
-			System.out.println("Removed a second element of recognized collection!");
+			log.info("Removed one element of recognized collection!");
 		}
 
 		String finalRecognition = String.join(" ", recognizedSttEvents).toLowerCase().replaceAll("[^a-z ]", "");
@@ -844,7 +873,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Cosine similarity string comparison has been proven the most accurate one
 		double cosineSimilarity = new Cosine().distance(finalRecognition, expectedRecognition);
 
-		Assert.assertTrue("Wrong similarity between actual and expected recognized text", cosineSimilarity < 0.2);
+		log.info("Cosine similiarity: {}", cosineSimilarity);
+		log.info(expectedRecognition);
+		log.info(finalRecognition);
+		Assert.assertTrue("Wrong similarity between actual and expected recognized text. Got " + cosineSimilarity,
+				cosineSimilarity < 0.1);
 
 		gracefullyLeaveParticipants(user, 1);
 	}
@@ -885,8 +918,34 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
+		final CountDownLatch latch = new CountDownLatch(2);
+
+		List<JsonObject> sttEvents = new ArrayList<>();
+		user.getEventManager().on("speechToTextMessage", (event) -> {
+			sttEvents.add(event);
+			if ("recognized".equals(event.get("reason").getAsString())) {
+				latch.countDown();
+			}
+		});
+
 		this.sttSubUser(user, 0, 0, "en-US", true, true);
-		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 10);
+
+		if (!latch.await(80, TimeUnit.SECONDS)) {
+			Assert.fail("Timeout waiting for recognized STT events");
+		}
+
+		boolean twoConsecutiveRecognizedElements = false;
+		int i = 0;
+		while (!twoConsecutiveRecognizedElements && (i < (sttEvents.size() - 1))) {
+			twoConsecutiveRecognizedElements = "recognized".equals(sttEvents.get(i).get("reason").getAsString())
+					&& "recognized".equals(sttEvents.get(i + 1).get("reason").getAsString());
+			i++;
+		}
+		if (twoConsecutiveRecognizedElements) {
+			Assert.fail("There are two consecutive recognized STT events. First text: \""
+					+ sttEvents.get(i - 1).get("text").getAsString() + "\" | Second text: \""
+					+ sttEvents.get(i).get("text").getAsString() + "\"");
+		}
 
 		gracefullyLeaveParticipants(user, 1);
 	}
@@ -1495,7 +1554,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			}
 		});
 
-		latch.await();
+		if (!latch.await(80, TimeUnit.SECONDS)) {
+			Assert.fail("Timeout waiting for recognized STT events");
+		}
 
 		final List<JsonObject> finalStts = new ArrayList<>();
 		finalStts.addAll(stts);
