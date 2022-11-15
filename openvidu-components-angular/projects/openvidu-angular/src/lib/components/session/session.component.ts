@@ -15,6 +15,7 @@ import {
 } from '@angular/core';
 import {
 	ConnectionEvent,
+	ExceptionEvent,
 	RecordingEvent,
 	Session,
 	SessionDisconnectedEvent,
@@ -171,6 +172,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 			}
 			this.session = this.openviduService.getWebcamSession();
 			this.sessionScreen = this.openviduService.getScreenSession();
+			this.subscribeToOpenViduException();
 			this.subscribeToCaptionLanguage();
 			this.subscribeToConnectionCreatedAndDestroyed();
 			this.subscribeToStreamCreated();
@@ -272,6 +274,12 @@ export class SessionComponent implements OnInit, OnDestroy {
 			this.log.e('There was an error connecting to the session:', error.code, error.message);
 			this.actionService.openDialog(this.translateService.translate('ERRORS.SESSION'), error?.error || error?.message || error);
 		}
+	}
+
+	private subscribeToOpenViduException() {
+		this.session.on('exception', (event: ExceptionEvent) => {
+			this.log.e(event.name, event.message);
+		});
 	}
 
 	private subscribeToConnectionCreatedAndDestroyed() {
