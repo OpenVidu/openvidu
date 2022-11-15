@@ -1570,6 +1570,51 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 	}
 
+	@Test
+	@DisplayName("Crash STT service test")
+	void crashSttServiceTest() throws Exception {
+
+		log.info("Crash STT service test");
+
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+
+		user.getDriver().get(APP_URL);
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		this.sttSubUser(user, 0, 0, "en-US", true, false);
+
+		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 4);
+
+		CountDownLatch latch = new CountDownLatch(1);
+		JsonObject[] exceptionEvent = new JsonObject[1];
+
+		user.getEventManager().on("exception", e -> {
+			exceptionEvent[0] = e;
+			latch.countDown();
+		});
+
+		this.killSttService();
+
+		latch.await();
+
+		user.getEventManager().waitUntilEventReaches("exception", 1);
+
+		Assert.assertEquals("Wrong exception event name", "SPEECH_TO_TEXT_DISCONNECTED",
+				exceptionEvent[0].get("name").getAsString());
+		Assert.assertEquals("Wrong exception event message", "Network closed for unknown reason",
+				exceptionEvent[0].get("message").getAsString());
+
+		// TODO: test that after STT container restarts, STT is possible again
+	}
+
 	// @Test
 	// @DisplayName("Mix STT test")
 	// void mixSttTest() throws Exception {
@@ -1708,6 +1753,15 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
 			Thread.sleep(400);
 		}
+	}
+
+	private void killSttService() {
+		// For local run
+		// String killCommand = "ps axf | grep \"speech-to-text-service\" | grep -v grep
+		// | awk '{print $1}' | xargs -I {} kill -9 {}";
+		// For DIND run
+		String killCommand = "ps axf | grep \"dist/bin/speech-to-text-service\" | grep -v grep | awk '{print $1}' | xargs -I {} kill -9 {}";
+		commandLine.executeCommand(killCommand, 10);
 	}
 
 }
