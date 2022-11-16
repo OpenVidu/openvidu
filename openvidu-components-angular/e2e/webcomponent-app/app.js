@@ -33,7 +33,6 @@ $(document).ready(() => {
 
     SINGLE_TOKEN = url.searchParams.get("singleToken") === null ? false : url.searchParams.get("singleToken") === 'true';
 
-
     // Directives
 	MINIMAL = url.searchParams.get("minimal") === null ? false : url.searchParams.get("minimal") === 'true';
     PARTICIPANT_NAME = url.searchParams.get("participantName") || 'TEST_USER';
@@ -247,7 +246,9 @@ function createToken(sessionId) {
                 Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
                 'Content-Type': 'application/json',
             },
-            success: (response) => resolve(response.token),
+            success: (response) => {
+                resolve(response.token);
+            },
             error: (error) => reject(error),
         });
     });

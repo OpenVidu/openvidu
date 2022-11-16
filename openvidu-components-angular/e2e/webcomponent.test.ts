@@ -1347,7 +1347,7 @@ describe('Testing captions features', () => {
 		await browser.quit();
 	});
 
-	it('should OPEN the CAPTIONS container', async () => {
+	it('should SHOW the CAPTIONS PRO feature dialog', async () => {
 		await browser.get(`${url}?prejoin=false`);
 
 		await utils.checkSessionIsPresent();
@@ -1364,21 +1364,14 @@ describe('Testing captions features', () => {
 		await utils.waitForElement('.mat-menu-content');
 		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
 
-		// Checking if captions button is present
-		await utils.waitForElement('#captions-btn');
-		expect(await utils.isPresent('#captions-btn')).to.be.true;
-		await utils.clickOn('#captions-btn');
+		await utils.waitForElement('#toolbar-settings-btn');
+		expect(await utils.isPresent('#toolbar-settings-btn')).to.be.true;
+		await utils.clickOn('#toolbar-settings-btn');
 
-		await utils.waitForElement('.captions-container');
-	});
-
-	it('should OPEN the SETTINGS panel from captions button', async () => {
-		await browser.get(`${url}?prejoin=false`);
-
-		await utils.checkSessionIsPresent();
-
-		// Checking if toolbar is present
-		await utils.checkToolbarIsPresent();
+		// Expect captions panel shows the pro feature content
+		await utils.waitForElement('#settings-container');
+		await utils.clickOn('#captions-opt');
+		await utils.waitForElement('.pro-feature');
 
 		// Open more options menu
 		await utils.clickOn('#more-options-btn');
@@ -1394,109 +1387,165 @@ describe('Testing captions features', () => {
 		expect(await utils.isPresent('#captions-btn')).to.be.true;
 		await utils.clickOn('#captions-btn');
 
-		await utils.waitForElement('.captions-container');
-		await utils.waitForElement('#caption-settings-btn');
-		await utils.clickOn('#caption-settings-btn');
-
-		await browser.sleep(500);
-
-		await utils.waitForElement('.settings-container');
-		expect(await utils.isPresent('.settings-container')).to.be.true;
-
-		await utils.waitForElement('ov-captions-settings');
-
-		// Expect caption button is not present
-		expect(await utils.isPresent('#caption-settings-btn')).to.be.false;
-	});
-
-	it('should TOGGLE the CAPTIONS container from settings panel', async () => {
-		await browser.get(`${url}?prejoin=false`);
-
-		await utils.checkSessionIsPresent();
-
-		// Checking if toolbar is present
-		await utils.checkToolbarIsPresent();
-
-		// Open more options menu
-		await utils.clickOn('#more-options-btn');
-
-		await browser.sleep(500);
-
-		// Checking if button panel is present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
-
-		// Checking if captions button is present
-		await utils.waitForElement('#captions-btn');
-		expect(await utils.isPresent('#captions-btn')).to.be.true;
-		await utils.clickOn('#captions-btn');
-
-		await utils.waitForElement('.captions-container');
-		await utils.waitForElement('#caption-settings-btn');
-		await utils.clickOn('#caption-settings-btn');
-
-		await browser.sleep(500);
-
-		await utils.waitForElement('.settings-container');
-		expect(await utils.isPresent('.settings-container')).to.be.true;
-
-		await utils.waitForElement('ov-captions-settings');
-
-		expect(await utils.isPresent('.captions-container')).to.be.true;
-		await utils.clickOn('#captions-toggle-slide');
+		await utils.waitForElement('ov-pro-feature-template');
 		expect(await utils.isPresent('.captions-container')).to.be.false;
-
-		await browser.sleep(200);
-
-		await utils.clickOn('#captions-toggle-slide');
-		expect(await utils.isPresent('.captions-container')).to.be.true;
 	});
 
-	it('should change the CAPTIONS language', async () => {
-		await browser.get(`${url}?prejoin=false`);
+/**
+ *
+ *  The following E2E TESTS only work with OpenVidu PRO
+ */
 
-		await utils.checkSessionIsPresent();
+	// it('should OPEN the CAPTIONS container', async () => {
+	// 	await browser.get(`${url}?prejoin=false`);
 
-		// Checking if toolbar is present
-		await utils.checkToolbarIsPresent();
+	// 	await utils.checkSessionIsPresent();
 
-		// Open more options menu
-		await utils.clickOn('#more-options-btn');
+	// 	// Checking if toolbar is present
+	// 	await utils.checkToolbarIsPresent();
 
-		await browser.sleep(500);
+	// 	// Open more options menu
+	// 	await utils.clickOn('#more-options-btn');
 
-		// Checking if button panel is present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+	// 	await browser.sleep(500);
 
-		// Checking if captions button is present
-		await utils.waitForElement('#captions-btn');
-		expect(await utils.isPresent('#captions-btn')).to.be.true;
-		await utils.clickOn('#captions-btn');
+	// 	// Checking if button panel is present
+	// 	await utils.waitForElement('.mat-menu-content');
+	// 	expect(await utils.isPresent('.mat-menu-content')).to.be.true;
 
-		await utils.waitForElement('.captions-container');
-		await utils.waitForElement('#caption-settings-btn');
-		await utils.clickOn('#caption-settings-btn');
+	// 	// Checking if captions button is present
+	// 	await utils.waitForElement('#captions-btn');
+	// 	expect(await utils.isPresent('#captions-btn')).to.be.true;
+	// 	await utils.clickOn('#captions-btn');
 
-		await browser.sleep(500);
+	// 	await utils.waitForElement('.captions-container');
+	// });
 
-		await utils.waitForElement('.settings-container');
-		expect(await utils.isPresent('.settings-container')).to.be.true;
+	// it('should OPEN the SETTINGS panel from captions button', async () => {
+	// 	await browser.get(`${url}?prejoin=false`);
 
-		await utils.waitForElement('ov-captions-settings');
+	// 	await utils.checkSessionIsPresent();
 
-		expect(await utils.isPresent('.captions-container')).to.be.true;
+	// 	// Checking if toolbar is present
+	// 	await utils.checkToolbarIsPresent();
 
-		await utils.clickOn('.lang-button');
-		await browser.sleep(500);
+	// 	// Open more options menu
+	// 	await utils.clickOn('#more-options-btn');
 
-		await utils.clickOn('#es-ES');
-		await utils.clickOn('.panel-close-button');
+	// 	await browser.sleep(500);
 
-		const button = await utils.waitForElement('#caption-settings-btn');
-		expect(await button.getText()).equals('settingsEspañol');
+	// 	// Checking if button panel is present
+	// 	await utils.waitForElement('.mat-menu-content');
+	// 	expect(await utils.isPresent('.mat-menu-content')).to.be.true;
 
-	});
+	// 	// Checking if captions button is present
+	// 	await utils.waitForElement('#captions-btn');
+	// 	expect(await utils.isPresent('#captions-btn')).to.be.true;
+	// 	await utils.clickOn('#captions-btn');
+
+	// 	await utils.waitForElement('.captions-container');
+	// 	await utils.waitForElement('#caption-settings-btn');
+	// 	await utils.clickOn('#caption-settings-btn');
+
+	// 	await browser.sleep(500);
+
+	// 	await utils.waitForElement('.settings-container');
+	// 	expect(await utils.isPresent('.settings-container')).to.be.true;
+
+	// 	await utils.waitForElement('ov-captions-settings');
+
+	// 	// Expect caption button is not present
+	// 	expect(await utils.isPresent('#caption-settings-btn')).to.be.false;
+	// });
+
+	// it('should TOGGLE the CAPTIONS container from settings panel', async () => {
+	// 	await browser.get(`${url}?prejoin=false`);
+
+	// 	await utils.checkSessionIsPresent();
+
+	// 	// Checking if toolbar is present
+	// 	await utils.checkToolbarIsPresent();
+
+	// 	// Open more options menu
+	// 	await utils.clickOn('#more-options-btn');
+
+	// 	await browser.sleep(500);
+
+	// 	// Checking if button panel is present
+	// 	await utils.waitForElement('.mat-menu-content');
+	// 	expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+
+	// 	// Checking if captions button is present
+	// 	await utils.waitForElement('#captions-btn');
+	// 	expect(await utils.isPresent('#captions-btn')).to.be.true;
+	// 	await utils.clickOn('#captions-btn');
+
+	// 	await utils.waitForElement('.captions-container');
+	// 	await utils.waitForElement('#caption-settings-btn');
+	// 	await utils.clickOn('#caption-settings-btn');
+
+	// 	await browser.sleep(500);
+
+	// 	await utils.waitForElement('.settings-container');
+	// 	expect(await utils.isPresent('.settings-container')).to.be.true;
+
+	// 	await utils.waitForElement('ov-captions-settings');
+
+	// 	expect(await utils.isPresent('.captions-container')).to.be.true;
+	// 	await utils.clickOn('#captions-toggle-slide');
+	// 	expect(await utils.isPresent('.captions-container')).to.be.false;
+
+	// 	await browser.sleep(200);
+
+	// 	await utils.clickOn('#captions-toggle-slide');
+	// 	expect(await utils.isPresent('.captions-container')).to.be.true;
+	// });
+
+	// it('should change the CAPTIONS language', async () => {
+	// 	await browser.get(`${url}?prejoin=false`);
+
+	// 	await utils.checkSessionIsPresent();
+
+	// 	// Checking if toolbar is present
+	// 	await utils.checkToolbarIsPresent();
+
+	// 	// Open more options menu
+	// 	await utils.clickOn('#more-options-btn');
+
+	// 	await browser.sleep(500);
+
+	// 	// Checking if button panel is present
+	// 	await utils.waitForElement('.mat-menu-content');
+	// 	expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+
+	// 	// Checking if captions button is present
+	// 	await utils.waitForElement('#captions-btn');
+	// 	expect(await utils.isPresent('#captions-btn')).to.be.true;
+	// 	await utils.clickOn('#captions-btn');
+
+	// 	await utils.waitForElement('.captions-container');
+	// 	await utils.waitForElement('#caption-settings-btn');
+	// 	await utils.clickOn('#caption-settings-btn');
+
+	// 	await browser.sleep(500);
+
+	// 	await utils.waitForElement('.settings-container');
+	// 	expect(await utils.isPresent('.settings-container')).to.be.true;
+
+	// 	await utils.waitForElement('ov-captions-settings');
+
+	// 	expect(await utils.isPresent('.captions-container')).to.be.true;
+
+	// 	await utils.clickOn('.lang-button');
+	// 	await browser.sleep(500);
+
+	// 	await utils.clickOn('#es-ES');
+	// 	await utils.clickOn('.panel-close-button');
+
+	// 	const button = await utils.waitForElement('#caption-settings-btn');
+	// 	expect(await button.getText()).equals('settingsEspañol');
+
+	// });
 });
 
 describe('Testing WITHOUT MEDIA DEVICES permissions', () => {

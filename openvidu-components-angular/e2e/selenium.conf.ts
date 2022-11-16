@@ -45,7 +45,7 @@ export const WebComponentConfig: BrowserConfig = {
 	seleniumAddress: LAUNCH_MODE === 'CI' ? 'http://localhost:3000/webdriver' : '',
 	browserName: 'chrome',
 	browserCapabilities: Capabilities.chrome().set('acceptInsecureCerts', true),
-	browserOptions: new chrome.Options().excludeSwitches().addArguments(...(LAUNCH_MODE === 'CI' ? chromeArgumentsCI : chromeArguments))
+	browserOptions: new chrome.Options().addArguments(...(LAUNCH_MODE === 'CI' ? chromeArgumentsCI : chromeArguments))
 };
 
 export const AngularConfig: BrowserConfig = {
