@@ -1591,7 +1591,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		this.sttSubUser(user, 0, 0, "en-US", true, false);
 
-		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 4);
+		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 2);
 
 		CountDownLatch latch = new CountDownLatch(1);
 		JsonObject[] exceptionEvent = new JsonObject[1];
@@ -1605,6 +1605,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		latch.await();
 
+		WebElement sttSubBtn = user.getDriver().findElement(By.cssSelector("#sub-stt-btn"));
+		sttSubBtn.click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
+				"Error [io.grpc.StatusRuntimeException: UNAVAILABLE: io exception. Code: 201]"));
+
 		user.getEventManager().waitUntilEventReaches("exception", 1);
 
 		Assert.assertEquals("Wrong exception event name", "SPEECH_TO_TEXT_DISCONNECTED",
@@ -1612,7 +1617,36 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assert.assertEquals("Wrong exception event message", "Network closed for unknown reason",
 				exceptionEvent[0].get("message").getAsString());
 
-		// TODO: test that after STT container restarts, STT is possible again
+		user.getEventManager().clearAllCurrentEvents(0);
+		user.getEventManager().clearAllCurrentEvents();
+
+		int maxWaitMs = 15000;
+		int intervalWaitMs = 1000;
+		int maxLoops = maxWaitMs / intervalWaitMs;
+		int loop = 0;
+		boolean sttReconstructed = false;
+		By responseTextAreaBy = By.id("operation-response-text-area");
+		WebElement responseTextArea = user.getDriver().findElement(responseTextAreaBy);
+
+		while (loop < maxLoops && !sttReconstructed) {
+			loop++;
+			user.getDriver().findElement(By.id("clear-response-text-area-btn")).click();
+			user.getWaiter().until(ExpectedConditions.attributeToBe(responseTextAreaBy, "value", ""));
+			sttSubBtn.click();
+			user.getWaiter().until(ExpectedConditions.attributeToBeNotEmpty(responseTextArea, "value"));
+			String text = user.getDriver().findElement(responseTextAreaBy).getAttribute("value");
+			if (!"Subscribed to STT".equals(text)) {
+				Assert.assertEquals("Wrong error message on subscribe STT after STT crash",
+						"Error [io.grpc.StatusRuntimeException: UNAVAILABLE: io exception. Code: 201]", text);
+				Thread.sleep(intervalWaitMs);
+			} else {
+				sttReconstructed = true;
+			}
+		}
+
+		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 2);
+
+		gracefullyLeaveParticipants(user, 1);
 	}
 
 	// @Test
