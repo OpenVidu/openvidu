@@ -707,11 +707,11 @@ export class Stream {
         this.stopWebRtcStats();
         logger.info(
             (!!this.outboundStreamOpts ? 'Outbound ' : 'Inbound ') +
-                'RTCPeerConnection with id [' +
-                webrtcId +
-                "] from 'Stream' with id [" +
-                this.streamId +
-                '] is now closed'
+            'RTCPeerConnection with id [' +
+            webrtcId +
+            "] from 'Stream' with id [" +
+            this.streamId +
+            '] is now closed'
         );
     }
 
@@ -1064,8 +1064,7 @@ export class Stream {
         }
         if (this.isLocal() && !!this.session.openvidu.advancedConfiguration.forceMediaReconnectionAfterNetworkDrop) {
             logger.warn(
-                `OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Stream ${
-                    this.streamId
+                `OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Stream ${this.streamId
                 } (${this.isLocal() ? 'Publisher' : 'Subscriber'}) will force a reconnection`
             );
             return true;
@@ -1102,8 +1101,7 @@ export class Stream {
         } else {
             // Ongoing reconnection
             console.warn(
-                `Trying to reconnect stream ${this.streamId} (${
-                    this.isLocal() ? 'Publisher' : 'Subscriber'
+                `Trying to reconnect stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'
                 }) but an ongoing reconnection process is active. Waiting for response...`
             );
             this.reconnectionEventEmitter.once('success', () => resolve());
@@ -1158,11 +1156,11 @@ export class Stream {
                     if (this.isSendVideo()) {
                         typeOfVideo =
                             typeof MediaStreamTrack !== 'undefined' &&
-                            this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack
+                                this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack
                                 ? TypeOfVideo.CUSTOM
                                 : this.isSendScreen()
-                                ? TypeOfVideo.SCREEN
-                                : TypeOfVideo.CAMERA;
+                                    ? TypeOfVideo.SCREEN
+                                    : TypeOfVideo.CAMERA;
                     }
                     params = {
                         doLoopback: this.displayMyRemote() || false,
@@ -1207,10 +1205,10 @@ export class Stream {
                                 this.initWebRtcStats();
                                 logger.info(
                                     "'Publisher' (" +
-                                        this.streamId +
-                                        ') successfully ' +
-                                        (reconnect ? 'reconnected' : 'published') +
-                                        ' to session'
+                                    this.streamId +
+                                    ') successfully ' +
+                                    (reconnect ? 'reconnected' : 'published') +
+                                    ' to session'
                                 );
 
                                 finalResolve();
@@ -1229,9 +1227,7 @@ export class Stream {
                 },
                 simulcast: this.outboundStreamOpts.publisherProperties.videoSimulcast ?? this.session.openvidu.videoSimulcast,
                 onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
-                onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => {
-                    this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]);
-                },
+                onIceConnectionStateException: this.onIceConnectionStateExceptionHandler.bind(this),
                 iceServers: this.getIceServersConf(),
                 mediaStream: this.mediaStream,
                 mediaServer: this.session.openvidu.mediaServer,
@@ -1290,11 +1286,11 @@ export class Stream {
     finalRejectForSubscription(reconnect: boolean, error: any, reject: (reason?: any) => void) {
         logger.error(
             "Error for 'Subscriber' (" +
-                this.streamId +
-                ') while trying to ' +
-                (reconnect ? 'reconnect' : 'subscribe') +
-                ': ' +
-                error.toString()
+            this.streamId +
+            ') while trying to ' +
+            (reconnect ? 'reconnect' : 'subscribe') +
+            ': ' +
+            error.toString()
         );
         if (reconnect) {
             this.reconnectionEventEmitter?.emitEvent('error', [error]);
@@ -1403,9 +1399,7 @@ export class Stream {
                 },
                 simulcast: false,
                 onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
-                onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => {
-                    this.session.emitEvent('exception', [new ExceptionEvent(this.session, exceptionName, this, message, data)]);
-                },
+                onIceConnectionStateException: this.onIceConnectionStateExceptionHandler.bind(this),
                 iceServers: this.getIceServersConf(),
                 mediaServer: this.session.openvidu.mediaServer,
                 typeOfVideo: this.typeOfVideo ? TypeOfVideo[this.typeOfVideo] : undefined
@@ -1539,8 +1533,7 @@ export class Stream {
     private onIceConnectionFailed() {
         // Immediately reconnect, as this is a terminal error
         logger.log(
-            `[ICE_CONNECTION_FAILED] Handling ICE_CONNECTION_FAILED event. Reconnecting stream ${this.streamId} (${
-                this.isLocal() ? 'Publisher' : 'Subscriber'
+            `[ICE_CONNECTION_FAILED] Handling ICE_CONNECTION_FAILED event. Reconnecting stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'
             })`
         );
         this.reconnectStreamAndLogResultingIceConnectionState(ExceptionEventName.ICE_CONNECTION_FAILED);
@@ -1549,8 +1542,7 @@ export class Stream {
     private onIceConnectionDisconnected() {
         // Wait to see if the ICE connection is able to reconnect
         logger.log(
-            `[ICE_CONNECTION_DISCONNECTED] Handling ICE_CONNECTION_DISCONNECTED event. Waiting for ICE to be restored and reconnect stream ${
-                this.streamId
+            `[ICE_CONNECTION_DISCONNECTED] Handling ICE_CONNECTION_DISCONNECTED event. Waiting for ICE to be restored and reconnect stream ${this.streamId
             } (${this.isLocal() ? 'Publisher' : 'Subscriber'}) if not possible`
         );
         const timeout = this.session.openvidu.advancedConfiguration.iceConnectionDisconnectedExceptionTimeout || 4000;
@@ -1559,16 +1551,14 @@ export class Stream {
                 case 'failed':
                     // Do nothing, as an ICE_CONNECTION_FAILED event will have already raised
                     logger.warn(
-                        `[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${
-                            this.isLocal() ? 'Publisher' : 'Subscriber'
+                        `[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'
                         }) is now failed after ICE_CONNECTION_DISCONNECTED`
                     );
                     break;
                 case 'connected':
                 case 'completed':
                     logger.log(
-                        `[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${
-                            this.isLocal() ? 'Publisher' : 'Subscriber'
+                        `[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'
                         }) automatically restored after ICE_CONNECTION_DISCONNECTED. Current ICE connection state: ${state}`
                     );
                     break;
@@ -1578,8 +1568,7 @@ export class Stream {
                 case 'disconnected':
                     // Rest of states
                     logger.warn(
-                        `[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${
-                            this.isLocal() ? 'Publisher' : 'Subscriber'
+                        `[ICE_CONNECTION_DISCONNECTED] ICE connection of stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'
                         }) couldn't be restored after ICE_CONNECTION_DISCONNECTED event. Current ICE connection state after ${timeout} ms: ${state}`
                     );
                     this.reconnectStreamAndLogResultingIceConnectionState(ExceptionEventName.ICE_CONNECTION_DISCONNECTED);
@@ -1595,23 +1584,20 @@ export class Stream {
                 case 'connected':
                 case 'completed':
                     logger.log(
-                        `[${event}] Stream ${this.streamId} (${
-                            this.isLocal() ? 'Publisher' : 'Subscriber'
+                        `[${event}] Stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'
                         }) successfully reconnected after ${event}. Current ICE connection state: ${finalIceStateAfterReconnection}`
                     );
                     break;
                 default:
                     logger.error(
-                        `[${event}] Stream ${this.streamId} (${
-                            this.isLocal() ? 'Publisher' : 'Subscriber'
+                        `[${event}] Stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'
                         }) failed to reconnect after ${event}. Current ICE connection state: ${finalIceStateAfterReconnection}`
                     );
                     break;
             }
         } catch (error) {
             logger.error(
-                `[${event}] Error reconnecting stream ${this.streamId} (${
-                    this.isLocal() ? 'Publisher' : 'Subscriber'
+                `[${event}] Error reconnecting stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'
                 }) after ${event}: ${error}`
             );
         }
@@ -1631,13 +1617,27 @@ export class Stream {
         }
     }
 
+    private async awaitWebRtcPeerConnectionState(timeout: number): Promise<RTCIceConnectionState> {
+        let state = this.getRTCPeerConnection().iceConnectionState;
+        const interval = 150;
+        const intervals = Math.ceil(timeout / interval);
+        for (let i = 0; i < intervals; i++) {
+            state = this.getRTCPeerConnection().iceConnectionState;
+            if (state === 'connected' || state === 'completed') {
+                break;
+            }
+            // Sleep
+            await new Promise((resolve) => setTimeout(resolve, interval));
+        }
+        return state;
+    }
+
     private async reconnectStream(event: string) {
         const isWsConnected = await this.isWebsocketConnected(event, 3000);
         if (isWsConnected) {
             // There is connection to openvidu-server. The RTCPeerConnection is the only one broken
             logger.log(
-                `[${event}] Trying to reconnect stream ${this.streamId} (${
-                    this.isLocal() ? 'Publisher' : 'Subscriber'
+                `[${event}] Trying to reconnect stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'
                 }) and the websocket is opened`
             );
             if (this.isLocal()) {
@@ -1648,9 +1648,8 @@ export class Stream {
         } else {
             // There is no connection to openvidu-server. Nothing can be done. The automatic reconnection
             // feature should handle a possible reconnection of RTCPeerConnection in case network comes back
-            const errorMsg = `[${event}] Trying to reconnect stream ${this.streamId} (${
-                this.isLocal() ? 'Publisher' : 'Subscriber'
-            }) but the websocket wasn't opened`;
+            const errorMsg = `[${event}] Trying to reconnect stream ${this.streamId} (${this.isLocal() ? 'Publisher' : 'Subscriber'
+                }) but the websocket wasn't opened`;
             logger.error(errorMsg);
             throw Error(errorMsg);
         }
@@ -1678,21 +1677,6 @@ export class Stream {
                 return resolve(false);
             }
         });
-    }
-
-    private async awaitWebRtcPeerConnectionState(timeout: number): Promise<RTCIceConnectionState> {
-        let state = this.getRTCPeerConnection().iceConnectionState;
-        const interval = 150;
-        const intervals = Math.ceil(timeout / interval);
-        for (let i = 0; i < intervals; i++) {
-            state = this.getRTCPeerConnection().iceConnectionState;
-            if (state === 'connected' || state === 'completed') {
-                break;
-            }
-            // Sleep
-            await new Promise((resolve) => setTimeout(resolve, interval));
-        }
-        return state;
     }
 
     /**
