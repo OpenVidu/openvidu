@@ -57,6 +57,8 @@
 	},
 	"PANEL": {
 		"CLOSE": "閉じる",
+		"PRO_FEATURE": "この機能はOpenVidu PROの機能です",
+		"SEE_MORE": "もっと見る",
 		"CHAT": {
 			"TITLE": "チャット",
 			"YOU": "あなた",

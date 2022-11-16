@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { CaptionService } from '../../../services/caption/caption.service';
 import { LayoutService } from '../../../services/layout/layout.service';
+import { OpenViduService } from '../../../services/openvidu/openvidu.service';
 
 /**
  * @internal
@@ -16,13 +17,17 @@ export class CaptionsSettingComponent implements OnInit, OnDestroy {
 	languagesAvailable: { name: string; ISO: string }[] = [];
 	captionsSubscription: Subscription;
 	langSelected: string;
+	isOpenViduPro: boolean = false;
 
-	constructor(private layoutService: LayoutService, private captionService: CaptionService) {}
+	constructor(private layoutService: LayoutService, private captionService: CaptionService, private openviduService: OpenViduService) {}
 
 	ngOnInit(): void {
-		this.subscribeToCaptions();
-		this.langSelected = this.captionService.getLangSelected().name;
-		this.languagesAvailable = this.captionService.getCaptionLanguages();
+		this.isOpenViduPro = this.openviduService.isOpenViduPro();
+		if (this.isOpenViduPro) {
+			this.subscribeToCaptions();
+			this.langSelected = this.captionService.getLangSelected().name;
+			this.languagesAvailable = this.captionService.getCaptionLanguages();
+		}
 	}
 
 	ngOnDestroy() {

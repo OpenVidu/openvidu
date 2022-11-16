@@ -57,6 +57,8 @@
 	},
 	"PANEL": {
 		"CLOSE": "Fermer",
+		"SEE_MORE": "Voir plus",
+		"PRO_FEATURE": "Cette fonctionnalité fait partie de la gamme OpenVidu PRO",
 		"CHAT": {
 			"TITLE": "Chat",
 			"YOU": "Vous",

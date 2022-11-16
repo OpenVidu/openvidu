@@ -541,14 +541,28 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 * @ignore
 	 */
 	toggleBackgroundEffects() {
-		this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
+		if (this.openviduService.isOpenViduPro()) {
+			this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
+		} else {
+			this.actionService.openProFeatureDialog(
+				this.translateService.translate('PANEL.BACKGROUND.TITLE'),
+				this.translateService.translate('PANEL.PRO_FEATURE')
+			);
+		}
 	}
 
 	/**
 	 * @ignore
 	 */
 	toggleCaptions() {
-		this.layoutService.toggleCaptions();
+		if (this.openviduService.isOpenViduPro()) {
+			this.layoutService.toggleCaptions();
+		} else {
+			this.actionService.openProFeatureDialog(
+				this.translateService.translate('PANEL.SETTINGS.CAPTIONS'),
+				this.translateService.translate('PANEL.PRO_FEATURE')
+			);
+		}
 	}
 
 	/**

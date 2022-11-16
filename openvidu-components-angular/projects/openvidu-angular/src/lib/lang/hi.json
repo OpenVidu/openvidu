@@ -57,6 +57,8 @@
 	},
 	"PANEL": {
 		"CLOSE": "बंद करें",
+		"SEE_MORE": "और देखें",
+		"PRO_FEATURE": "यह सुविधा OpenVidu PRO टायर का हिस्सा है",
 		"CHAT": {
 			"TITLE": "बातचीत",
 			"YOU": "आप",

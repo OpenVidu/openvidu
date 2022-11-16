@@ -57,6 +57,8 @@
 	},
 	"PANEL": {
 		"CLOSE": "Sluiten",
+		"SEE_MORE": "Zie meer",
+		"PRO_FEATURE": "Deze functie is onderdeel van OpenVidu PRO tier",
 		"CHAT": {
 			"TITLE": "Chat",
 			"YOU": "Jij",

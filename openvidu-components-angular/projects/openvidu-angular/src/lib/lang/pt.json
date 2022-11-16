@@ -57,6 +57,8 @@
 	},
 	"PANEL": {
 		"CLOSE": "Fechar",
+		"SEE_MORE": "Ver mais",
+		"PRO_FEATURE": "Esta funcionalidade é parte do OpenVidu PRO tier",
 		"CHAT": {
 			"TITLE": "Chat",
 			"YOU": "Você",

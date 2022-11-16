@@ -57,6 +57,8 @@
 	},
 	"PANEL": {
 		"CLOSE": "Schließen",
+		"SEE_MORE": "Mehr sehen",
+		"PRO_FEATURE": "Diese Funktion ist Teil des OpenVidu PRO-Tiers",
 		"CHAT": {
 			"TITLE": "Chat",
 			"YOU": "Sie",

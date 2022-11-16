@@ -14,6 +14,14 @@
 	color: var(--ov-text-color);
 }
 
+.pro-feature {
+	text-align: center;
+}
+
+.pro-feture p  {
+	font-size: 14px;
+}
+
 ::ng-deep .mat-slide-toggle.mat-checked .mat-slide-toggle-bar {
 	background-color: var(--ov-tertiary-color);
 }

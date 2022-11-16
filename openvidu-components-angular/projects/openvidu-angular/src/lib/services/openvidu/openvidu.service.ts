@@ -109,6 +109,13 @@ export class OpenViduService {
 	/**
 	 * @internal
 	 */
+	 isOpenViduPro(): boolean {
+		return this.ovEdition === OpenViduEdition.PRO;
+	}
+
+	/**
+	 * @internal
+	 */
 	setOpenViduEdition(edition: OpenViduEdition) {
 		this.ovEdition = edition;
 	}

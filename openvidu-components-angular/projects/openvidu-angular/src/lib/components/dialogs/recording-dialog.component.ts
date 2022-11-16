@@ -1,5 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { RecordingDialogData } from '../../models/dialog.model';
 
 /**
  * @internal
@@ -25,9 +26,8 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 })
 export class RecordingDialogComponent {
 	src: string;
-	type: string;
 
-	constructor(public dialogRef: MatDialogRef<RecordingDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: any) {
+	constructor(public dialogRef: MatDialogRef<RecordingDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: RecordingDialogData) {
 		this.src = data.src;
 	}
 	close() {

@@ -47,6 +47,7 @@ import { AdminDashboardComponent } from './admin/dashboard/dashboard.component';
 import { AdminLoginComponent } from './admin/login/login.component';
 import { AvatarProfileComponent } from './components/avatar-profile/avatar-profile.component';
 import { CaptionsComponent } from './components/captions/captions.component';
+import { ProFeatureDialogTemplateComponent } from './components/dialogs/pro-feature-dialog.component';
 import { ActivitiesPanelComponent } from './components/panel/activities-panel/activities-panel.component';
 import { RecordingActivityComponent } from './components/panel/activities-panel/recording-activity-panel/recording-activity.component';
 import { BackgroundEffectsPanelComponent } from './components/panel/background-effects-panel/background-effects-panel.component';
@@ -82,6 +83,7 @@ const privateComponents = [
 	AudioWaveComponent,
 	CaptionsComponent,
 	DialogTemplateComponent,
+    ProFeatureDialogTemplateComponent,
 	RecordingDialogComponent,
 	DeleteDialogComponent,
 	AvatarProfileComponent,

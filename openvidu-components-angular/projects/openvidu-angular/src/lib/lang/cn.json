@@ -57,6 +57,8 @@
 	},
 	"PANEL": {
 		"CLOSE": "关闭",
+		"SEE_MORE": "查看更多",
+		"PRO_FEATURE": "此功能属于OpenVidu PRO级别",
 		"CHAT": {
 			"TITLE": "聊天",
 			"YOU": "你",

@@ -3,8 +3,9 @@ import { MatDialog, MatDialogConfig, MatDialogRef } from '@angular/material/dial
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subscription } from 'rxjs';
 import { DeleteDialogComponent } from '../../components/dialogs/delete-recording.component';
-import { RecordingDialogComponent } from '../../components/dialogs/recording-dialog.component';
 import { DialogTemplateComponent } from '../../components/dialogs/dialog.component';
+import { ProFeatureDialogTemplateComponent } from '../../components/dialogs/pro-feature-dialog.component';
+import { RecordingDialogComponent } from '../../components/dialogs/recording-dialog.component';
 import { INotificationOptions } from '../../models/notification-options.model';
 
 /**
@@ -14,7 +15,9 @@ import { INotificationOptions } from '../../models/notification-options.model';
 	providedIn: 'root'
 })
 export class ActionService {
-	private dialogRef: MatDialogRef<DialogTemplateComponent | RecordingDialogComponent | DeleteDialogComponent>;
+	private dialogRef:
+		| MatDialogRef<DialogTemplateComponent | RecordingDialogComponent | DeleteDialogComponent | ProFeatureDialogTemplateComponent>
+		| undefined;
 	private dialogSubscription: Subscription;
 	constructor(private snackBar: MatSnackBar, public dialog: MatDialog) {}
 
@@ -47,7 +50,24 @@ export class ActionService {
 			};
 			this.dialogRef = this.dialog.open(DialogTemplateComponent, config);
 			this.dialogSubscription = this.dialogRef.afterClosed().subscribe((result) => {
-				this.dialogRef = null;
+				this.dialogRef = undefined;
+			});
+		}
+	}
+
+	openProFeatureDialog(titleMessage: string, descriptionMessage: string, allowClose = true) {
+		try {
+			this.closeDialog();
+		} catch (error) {
+		} finally {
+			const config: MatDialogConfig = {
+				minWidth: '250px',
+				data: { title: titleMessage, description: descriptionMessage, showActionButtons: allowClose },
+				disableClose: !allowClose
+			};
+			this.dialogRef = this.dialog.open(ProFeatureDialogTemplateComponent, config);
+			this.dialogSubscription = this.dialogRef.afterClosed().subscribe((result) => {
+				this.dialogRef = undefined;
 			});
 		}
 	}
@@ -82,7 +102,7 @@ export class ActionService {
 	}
 
 	closeDialog() {
-		this.dialogRef.close();
+		this.dialogRef?.close();
 		if (this.dialogSubscription) this.dialogSubscription.unsubscribe();
 	}
 }
