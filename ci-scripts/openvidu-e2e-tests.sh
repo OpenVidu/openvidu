@@ -281,7 +281,6 @@ if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
     # Download fake videos
     FAKE_VIDEO1=/opt/openvidu/barcode.y4m
     FAKE_VIDEO2=/opt/openvidu/girl.mjpeg
-    FAKE_VIDEO3=/opt/openvidu/stt-test.wav
     if [ ! -f ${FAKE_VIDEO1} ]; then
         sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m --create-dirs --output /opt/openvidu/barcode.y4m
     else
@@ -292,20 +291,25 @@ if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
     else
         echo "File ${FAKE_VIDEO2} already exists"
     fi
-    if [ ! -f ${FAKE_VIDEO3} ]; then
-        sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/stt-test.wav --create-dirs --output /opt/openvidu/stt-test.wav
-    else
-        echo "File ${FAKE_VIDEO3} already exists"
-    fi
 
-    # Download fake audio
-    FAKE_AUDIO=/opt/openvidu/fakeaudio.wav
-    if [ ! -f ${FAKE_AUDIO} ]; then
+    # Download fake audios
+    FAKE_AUDIO1=/opt/openvidu/fakeaudio.wav
+    FAKE_AUDIO2=/opt/openvidu/stt-test.wav
+    if [ ! -f ${FAKE_AUDIO1} ]; then
         sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/fakeaudio.wav --create-dirs --output /opt/openvidu/fakeaudio.wav
     else
-        echo "File ${FAKE_AUDIO} already exists"
+        echo "File ${FAKE_AUDIO1} already exists"
     fi
-    curl --location https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/docker/my-custom-layout/index.html --create-dirs --output /opt/openvidu/test-layouts/layout1/index.html
+    if [ ! -f ${FAKE_AUDIO2} ]; then
+        sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/stt-test.wav --create-dirs --output /opt/openvidu/stt-test.wav
+    else
+        echo "File ${FAKE_AUDIO2} already exists"
+    fi
+
+    # Download recording custom layout
+    sudo curl --location https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/docker/my-custom-layout/index.html --create-dirs --output /opt/openvidu/test-layouts/layout1/index.html
+
+    # Open permissions for /opt/openvidu folder
     chmod -R 777 /opt/openvidu
 
 fi
