@@ -706,6 +706,10 @@ Resources:
           ToPort: 3000
           SourceSecurityGroupId: !Ref OpenViduSecurityGroup
         - IpProtocol: tcp
+          FromPort: 4000
+          ToPort: 4000
+          SourceSecurityGroupId: !Ref OpenViduSecurityGroup
+        - IpProtocol: tcp
           FromPort: 8888
           ToPort: 8888
           SourceSecurityGroupId: !Ref OpenViduSecurityGroup
