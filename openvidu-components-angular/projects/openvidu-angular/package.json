@@ -1,18 +1,18 @@
 {
-  "name": "openvidu-angular",
-  "version": "2.23.1",
-  "peerDependencies": {
-    "@angular/animations": "^14.0.0",
-    "@angular/common": "^14.0.0",
-    "@angular/core": "^14.0.0",
-    "@angular/material": "^14.0.0",
-    "@angular/forms": "^14.0.0",
-    "@angular/flex-layout": "^14.0.0-beta.40",
-    "autolinker": "^4.0.0",
-    "buffer": "^6.0.3",
-    "openvidu-browser": "2.23.0"
-  },
-  "dependencies": {
-    "tslib": "^2.3.0"
-  }
+    "dependencies": {
+        "tslib": "^2.3.0"
+    }, 
+    "name": "openvidu-angular", 
+    "peerDependencies": {
+        "@angular/animations": "^14.0.0", 
+        "@angular/common": "^14.0.0", 
+        "@angular/core": "^14.0.0", 
+        "@angular/flex-layout": "^14.0.0-beta.40", 
+        "@angular/forms": "^14.0.0", 
+        "@angular/material": "^14.0.0", 
+        "autolinker": "^4.0.0", 
+        "buffer": "^6.0.3", 
+        "openvidu-browser": "2.24.0"
+    }, 
+    "version": "2.24.0"
 }
