@@ -32,7 +32,7 @@ function environmentLaunch {
 
     # Kurento and mediasoup needs to run as network host, so we need Docker host IP.
     local DOCKER_HOST_IP
-    DOCKER_HOST_IP="$(docker network inspect bridge | grep Gateway | cut -d'"' -f4)"
+    DOCKER_HOST_IP="$(docker network inspect bridge | grep Subnet | cut -d'"' -f4 | cut -d'/' -f1 | sed 's/.$/1/')"
     openssl req -newkey rsa:2048 \
         -new -nodes -x509 -days 3650 \
         -subj "/CN=www.mydom.com/O=My Company LTD./C=US" \
@@ -111,7 +111,7 @@ function openviduE2ETests {
 
     # Kurento and mediasoup needs to run as network host, so we need Docker host IP.
     local DOCKER_HOST_IP
-    DOCKER_HOST_IP="$(docker network inspect bridge | grep Gateway | cut -d'"' -f4)"
+    DOCKER_HOST_IP="$(docker network inspect bridge | grep Subnet | cut -d'"' -f4 | cut -d'/' -f1 | sed 's/.$/1/')"
 
 
     pushd openvidu-test-e2e
