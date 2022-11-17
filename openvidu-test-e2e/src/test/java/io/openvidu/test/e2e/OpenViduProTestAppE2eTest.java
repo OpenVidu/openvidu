@@ -644,26 +644,26 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Blur filter
 		filterTypeInput.sendKeys("VB:blur");
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
-		user.getWaiter()
-				.until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
+		user.getWaiter().until(
+				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
-		user.getWaiter()
-				.until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
+		user.getWaiter().until(
+				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
-		user.getWaiter()
-				.until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
+		user.getWaiter().until(
+				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Error [There is already a filter applied"));
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
-		user.getWaiter()
-				.until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
+		user.getWaiter().until(
+				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
-		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "has no filter applied"));
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
+				"has no filter applied"));
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
-		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "has no filter applied"));
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
+				"has no filter applied"));
 
 		// Image filter
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video"));
@@ -686,8 +686,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterOptionsInput.clear();
 		filterOptionsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/red.jpg\"}");
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
-		user.getWaiter()
-				.until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
+		user.getWaiter().until(
+				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
 
 		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
@@ -710,8 +710,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterParamsInput.clear();
 		filterParamsInput.sendKeys("wrong_params");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
-		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Wrong params syntax"));
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
+				"Wrong params syntax"));
 		filterParamsInput.clear();
 		filterParamsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/not_exists.jpg\"}");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
@@ -722,15 +722,15 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterParamsInput.clear();
 		filterParamsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/blue.jpg\"}");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
-		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter method executed"));
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
+				"Filter method executed"));
 		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
 		Assert.assertTrue((rgb.get("r") < 10) && (rgb.get("g") < 10) && (rgb.get("b") > 240));
 
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
-		user.getWaiter()
-				.until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
+		user.getWaiter().until(
+				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
 
 		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
@@ -1789,12 +1789,16 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 	}
 
-	private void killSttService() {
+	private void killSttService() throws Exception {
 		// For local run
 		// String killCommand = "ps axf | grep \"speech-to-text-service\" | grep -v grep
 		// | awk '{print $1}' | xargs -I {} kill -9 {}";
 		// For DIND run
-		String killCommand = "ps axf | grep \"dist/bin/speech-to-text-service\" | grep -v grep | awk '{print $1}' | xargs -I {} kill -9 {}";
+		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+		String containerId = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpStatus.SC_OK)
+				.get("content").getAsJsonArray().get(0).getAsJsonObject().get("environmentId").getAsString();
+		String killCommand = "docker exec -i " + containerId
+				+ " /bin/sh -c \"ps axf | grep \\\"dist/bin/speech-to-text-service\\\" | grep -v grep | awk '{print \\$1}' | xargs -I {} kill -9 {}\"";
 		commandLine.executeCommand(killCommand, 10);
 	}
 
