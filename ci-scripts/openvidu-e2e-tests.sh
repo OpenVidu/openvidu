@@ -281,6 +281,7 @@ if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
     # Download fake videos
     FAKE_VIDEO1=/opt/openvidu/barcode.y4m
     FAKE_VIDEO2=/opt/openvidu/girl.mjpeg
+    FAKE_VIDEO3=/opt/openvidu/stt-test.wav
     if [ ! -f ${FAKE_VIDEO1} ]; then
         sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m --create-dirs --output /opt/openvidu/barcode.y4m
     else
@@ -290,6 +291,11 @@ if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
         sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/girl.mjpeg --create-dirs --output /opt/openvidu/girl.mjpeg
     else
         echo "File ${FAKE_VIDEO2} already exists"
+    fi
+    if [ ! -f ${FAKE_VIDEO3} ]; then
+        sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/stt-test.wav --create-dirs --output /opt/openvidu/stt-test.wav
+    else
+        echo "File ${FAKE_VIDEO3} already exists"
     fi
 
     # Download fake audio

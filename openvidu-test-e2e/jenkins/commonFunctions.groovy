@@ -86,6 +86,7 @@ def prepareTestingEnvironment() {
             sh(script: '''#!/bin/bash -xe
                 FAKE_VIDEO1=/opt/openvidu-cache/barcode.y4m
                 FAKE_VIDEO2=/opt/openvidu-cache/girl.mjpeg
+                FAKE_VIDEO3=/opt/openvidu-cache/stt-test.wav
                 if [ ! -f ${FAKE_VIDEO1} ]; then
                     sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m --create-dirs --output /opt/openvidu-cache/barcode.y4m
                 else
@@ -96,8 +97,14 @@ def prepareTestingEnvironment() {
                 else
                     echo "File ${FAKE_VIDEO2} already exists"
                 fi
+                if [ ! -f ${FAKE_VIDEO3} ]; then
+                    sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/stt-test.wav --create-dirs --output /opt/openvidu-cache/stt-test.wav
+                else
+                    echo "File ${FAKE_VIDEO3} already exists"
+                fi
                 sudo cp /opt/openvidu-cache/barcode.y4m /opt/openvidu/barcode.y4m
                 sudo cp /opt/openvidu-cache/girl.mjpeg /opt/openvidu/girl.mjpeg
+                sudo cp /opt/openvidu-cache/stt-test.wav /opt/openvidu/stt-test.wav
             '''.stripIndent())
         },
         'Download fake audio': {
