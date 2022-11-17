@@ -1798,7 +1798,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		String containerId = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpStatus.SC_OK)
 				.get("content").getAsJsonArray().get(0).getAsJsonObject().get("environmentId").getAsString();
 		String killCommand = "docker exec -i " + containerId
-				+ " /bin/sh -c \"ps axf | grep \\\"dist/bin/speech-to-text-service\\\" | grep -v grep | awk '{print \\$1}' | xargs -I {} kill -9 {}\"";
+				+ " /bin/sh -c \"ps axf | grep \\\"speech-to-text-service\\\" | grep -v grep | awk '{print \\$1}' | xargs -I {} kill -9 {}\"";
 		commandLine.executeCommand(killCommand, 10);
 	}
 
