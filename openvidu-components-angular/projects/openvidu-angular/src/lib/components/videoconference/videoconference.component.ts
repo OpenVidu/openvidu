@@ -382,8 +382,8 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	@Output() onParticipantCreated: EventEmitter<ParticipantAbstractModel> = new EventEmitter<ParticipantAbstractModel>();
 
 	/**
-	 * Provides event notifications that fire when Media Node crash OpenVidu Pro from the OpenVidu Pro cluster.
-	 * OpenVidu Pro delegates the recovery of the sessions to the application in the event of a Media Node crash.
+	 * Provides event notifications that fire in the case of a node crash in your OpenVidu deployment.
+	 * OpenVidu delegates the recovery of the sessions to the application in the event of a node crash.
 	 * See {@link https://docs.openvidu.io/en/stable/openvidu-pro/fault-tolerance/ OpenVidu Pro Fault tolerance}.
 	 */
 	@Output() onNodeCrashed: EventEmitter<void> = new EventEmitter<void>();
