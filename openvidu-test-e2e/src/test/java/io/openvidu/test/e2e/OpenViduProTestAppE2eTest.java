@@ -645,25 +645,25 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterTypeInput.sendKeys("VB:blur");
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter()
-				.until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "Filter applied"));
+				.until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
 		user.getWaiter()
-				.until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "Filter removed"));
+				.until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter()
-				.until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "Filter applied"));
+				.until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Error [There is already a filter applied"));
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
 		user.getWaiter()
-				.until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "Filter removed"));
+				.until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
 		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "has no filter applied"));
+				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "has no filter applied"));
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
 		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "has no filter applied"));
+				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "has no filter applied"));
 
 		// Image filter
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video"));
@@ -679,7 +679,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterOptionsInput.clear();
 		filterOptionsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/not_exists.jpg\"}");
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Error loading background image"));
 
 		filterOptionsInput = user.getDriver().findElement(By.id("filter-options-field"));
@@ -687,7 +687,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterOptionsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/red.jpg\"}");
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter()
-				.until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "Filter applied"));
+				.until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
 
 		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
@@ -700,7 +700,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterMethodInput.clear();
 		filterMethodInput.sendKeys("no_existing_method");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Unknown Virtual Background method"));
 
 		// Fail exec method params
@@ -711,11 +711,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterParamsInput.sendKeys("wrong_params");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
 		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "Wrong params syntax"));
+				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Wrong params syntax"));
 		filterParamsInput.clear();
 		filterParamsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/not_exists.jpg\"}");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value",
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Error loading background image"));
 
 		// Blue
@@ -723,14 +723,14 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterParamsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/blue.jpg\"}");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
 		user.getWaiter().until(
-				ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "Filter method executed"));
+				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter method executed"));
 		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
 		Assert.assertTrue((rgb.get("r") < 10) && (rgb.get("g") < 10) && (rgb.get("b") > 240));
 
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
 		user.getWaiter()
-				.until(ExpectedConditions.attributeContains(By.id("response-text-area"), "value", "Filter removed"));
+				.until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
 
 		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
