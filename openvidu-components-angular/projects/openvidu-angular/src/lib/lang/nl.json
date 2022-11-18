@@ -112,6 +112,7 @@
 		"SCREEN_SHARING": "Fout bij het delen van het scherm",
 		"SCREEN_SUPPORT": "Uw browser ondersteunt het delen van schermen niet",
 		"MEDIA_ACCESS": "Toegang tot media-apparaten was niet toegestaan.",
-		"DEVICE_NOT_FOUND": "Er zijn geen video- of audioapparaten gevonden. Sluit er alstublieft ten minste één aan."
+		"DEVICE_NOT_FOUND": "Er zijn geen video- of audioapparaten gevonden. Sluit er alstublieft ten minste één aan.",
+		"SST_CONNECTION": "Verbinding verbroken. Opnieuw verbinden met de spraak-naar-tekstservice..."
 	}
 }

@@ -16,6 +16,7 @@ import {
 import {
 	ConnectionEvent,
 	ExceptionEvent,
+	ExceptionEventName,
 	RecordingEvent,
 	Session,
 	SessionDisconnectedEvent,
@@ -84,6 +85,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 	protected layoutWidthSubscription: Subscription;
 
 	protected updateLayoutInterval: NodeJS.Timer;
+	// private sttReconnectionInterval: NodeJS.Timer;
 	private captionLanguageSubscription: Subscription;
 
 	protected log: ILogger;
@@ -277,8 +279,15 @@ export class SessionComponent implements OnInit, OnDestroy {
 	}
 
 	private subscribeToOpenViduException() {
-		this.session.on('exception', (event: ExceptionEvent) => {
-			this.log.e(event.name, event.message);
+		this.session.on('exception', async (event: ExceptionEvent) => {
+			if (event.name === ExceptionEventName.SPEECH_TO_TEXT_DISCONNECTED) {
+				this.log.w(event.name, event.message);
+				this.openviduService.setSTTReady(false);
+				// Try to re-subscribe to STT
+				await this.openviduService.subscribeRemotesToSTT(this.captionService.getLangSelected().ISO);
+			} else {
+				this.log.e(event.name, event.message);
+			}
 		});
 	}
 
@@ -319,18 +328,23 @@ export class SessionComponent implements OnInit, OnDestroy {
 			const data = event.stream?.connection?.data;
 			const isCameraType: boolean = this.participantService.getTypeConnectionData(data) === VideoType.CAMERA;
 			const isRemoteConnection: boolean = !this.openviduService.isMyOwnConnection(connectionId);
+			const lang = this.captionService.getLangSelected().ISO;
 
 			if (isRemoteConnection) {
 				const subscriber: Subscriber = this.session.subscribe(event.stream, undefined);
 				this.participantService.addRemoteConnection(connectionId, data, subscriber);
 				// this.oVSessionService.sendNicknameSignal(event.stream.connection);
 
-				if (this.captionService.areCaptionsEnabled() && isCameraType) {
-					// Only subscribe to STT when stream is CAMERA type and it is a remote stream
+				if (this.openviduService.isSttReady() && this.captionService.areCaptionsEnabled() && isCameraType) {
+					// Only subscribe to STT when is ready and stream is CAMERA type and it is a remote stream
 					try {
-						await this.session.subscribeToSpeechToText(event.stream, this.captionService.getLangSelected().ISO);
+						await this.openviduService.subscribeStreamToStt(event.stream, lang);
 					} catch (error) {
 						this.log.e('Error subscribing from STT: ', error);
+						// I assume the only reason of an STT error is a STT crash.
+						// It must be subscribed to all remotes again
+						// await this.openviduService.unsubscribeRemotesFromSTT();
+						await this.openviduService.subscribeRemotesToSTT(lang);
 					}
 				}
 			}
@@ -345,13 +359,11 @@ export class SessionComponent implements OnInit, OnDestroy {
 			const isCameraType: boolean = this.participantService.getTypeConnectionData(data) === VideoType.CAMERA;
 
 			this.participantService.removeConnectionByConnectionId(connectionId);
-			if (isRemoteConnection) {
-				if (this.captionService.areCaptionsEnabled() && isCameraType) {
-					try {
-						await this.session.unsubscribeFromSpeechToText(event.stream);
-					} catch (error) {
-						this.log.e('Error unsubscribing from STT: ', error);
-					}
+			if (this.openviduService.isSttReady() && this.captionService.areCaptionsEnabled() && isRemoteConnection && isCameraType) {
+				try {
+					await this.session.unsubscribeFromSpeechToText(event.stream);
+				} catch (error) {
+					this.log.e('Error unsubscribing from STT: ', error);
 				}
 			}
 		});
@@ -362,17 +374,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 			if (this.captionService.areCaptionsEnabled()) {
 				// Unsubscribe all streams from speech to text and re-subscribe with new language
 				this.log.d('Re-subscribe from STT because of language changed to ', lang.ISO);
-				for (const participant of this.participantService.getRemoteParticipants()) {
-					const streamManager = participant.getCameraConnection()?.streamManager;
-					if (!!streamManager?.stream) {
-						try {
-							await this.session.unsubscribeFromSpeechToText(streamManager.stream);
-							await this.session.subscribeToSpeechToText(streamManager.stream, lang.ISO);
-						} catch (error) {
-							this.log.e('Error re-subscribing to STT: ', error);
-						}
-					}
-				}
+				await this.openviduService.unsubscribeRemotesFromSTT();
+				await this.openviduService.subscribeRemotesToSTT(lang.ISO);
 			}
 		});
 	}

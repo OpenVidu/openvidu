@@ -112,6 +112,7 @@
 		"SCREEN_SHARING": "Erreur de partage d'écran",
 		"SCREEN_SUPPORT": "Votre navigateur ne prend pas en charge le partage d'écran",
 		"MEDIA_ACCESS": "L'accès aux périphériques médias n'a pas été autorisé",
-		"DEVICE_NOT_FOUND": "Aucun périphérique vidéo ou audio n'a été trouvé. Veuillez en connecter au moins un."
+		"DEVICE_NOT_FOUND": "Aucun périphérique vidéo ou audio n'a été trouvé. Veuillez en connecter au moins un.",
+		"SST_CONNECTION": "Connexion perdue. Reconnexion au service de reconnaissance vocale..."
 	}
 }

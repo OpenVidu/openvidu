@@ -26,6 +26,22 @@
 	padding: 0px 10vw 0px;
 }
 
+.error-container {
+	display: grid;
+	text-align: center;
+	color: var(--ov-text-color);
+	font-size: 18px;
+}
+
+mat-spinner {
+	position: relative;
+    top: 35%;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+}
+
 
 /*
 * Screen XL

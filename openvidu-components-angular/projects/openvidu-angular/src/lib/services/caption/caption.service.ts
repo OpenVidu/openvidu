@@ -22,7 +22,7 @@ export class CaptionService {
 	];
 	captionLangSelected: { name: string; ISO: string } = { name: 'English', ISO: 'en-US' };
 	captionLangObs: Observable<{ name: string; ISO: string }>;
-	private _captionLangObs: Subject<{ name: string; ISO: string }> = new Subject();
+	private _captionLang: Subject<{ name: string; ISO: string }> = new Subject();
 	private captionsEnabled: boolean = false;
 
 	constructor(private storageService: StorageService) {
@@ -33,7 +33,7 @@ export class CaptionService {
 		} else {
 			this.captionLangSelected = this.langs[0];
 		}
-		this.captionLangObs = this._captionLangObs.asObservable();
+		this.captionLangObs = this._captionLang.asObservable();
 	}
 
 	setCaptionsEnabled(value: boolean) {
@@ -49,7 +49,7 @@ export class CaptionService {
 		if (!!newLang && newLang.ISO !== this.captionLangSelected.ISO) {
 			this.captionLangSelected = newLang;
 			this.storageService.setCaptionLang(lang);
-			this._captionLangObs.next(this.captionLangSelected);
+			this._captionLang.next(this.captionLangSelected);
 		}
 	}
 

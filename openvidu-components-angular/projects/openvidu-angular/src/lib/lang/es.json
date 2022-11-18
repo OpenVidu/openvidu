@@ -112,6 +112,7 @@
 		"SCREEN_SHARING": "Hubo un error compartiendo pantalla",
 		"SCREEN_SUPPORT": "Tu navegador no soporta la pantalla compartida",
 		"MEDIA_ACCESS": "No se ha podido acceder a tus dispositivos",
-		"DEVICE_NOT_FOUND": "No se han encontrado dispositivos de audio o video. Por favor, conecta al menos uno."
+		"DEVICE_NOT_FOUND": "No se han encontrado dispositivos de audio o video. Por favor, conecta al menos uno.",
+		"SST_CONNECTION": "Conexión perdida. Reconectando al servicio de transcripción a texto..."
 	}
 }

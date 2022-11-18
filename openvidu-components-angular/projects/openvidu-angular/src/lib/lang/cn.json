@@ -112,6 +112,7 @@
 		"SCREEN_SHARING": "分享屏幕出错",
 		"SCREEN_SUPPORT": "您的浏览器不支持屏幕共享",
 		"MEDIA_ACCESS": "不允许访问媒体设备",
-		"DEVICE_NOT_FOUND": "没有找到视频或音频设备 请至少连接一个"
+		"DEVICE_NOT_FOUND": "没有找到视频或音频设备 请至少连接一个",
+		"SST_CONNECTION": "连接丢失。正在重新连接到语音到文本服务"
 	}
 }
