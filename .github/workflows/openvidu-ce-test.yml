@@ -13,6 +13,10 @@ on:
       - master
   workflow_dispatch:
     inputs:
+      TEST_IMAGE:
+        description: 'Docker image where to run the tests'
+        required: true
+        default: 'openvidu/openvidu-test-e2e:focal'
       KURENTO_MEDIA_SERVER_IMAGE:
         description: 'Docker image of kurento-media-server'
         required: true
@@ -49,7 +53,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     container:
-      image: openvidu/openvidu-test-e2e:focal
+      image: ${{ github.event.inputs.TEST_IMAGE || 'openvidu/openvidu-test-e2e:focal' }}
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
         - /opt/openvidu:/opt/openvidu
