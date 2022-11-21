@@ -57,9 +57,9 @@
     "scripts": {
         "build": "ng build openvidu-components-testapp --configuration production",
         "bundle-report": "ng build openvidu-webcomponent --stats-json --configuration production && webpack-bundle-analyzer dist/openvidu-webcomponent/stats.json",
-        "doc:build": "npx compodoc -p ./projects/openvidu-angular/doc/tsconfig.doc.json -c ./projects/openvidu-angular/doc/.compodocrc.json",
+        "doc:build": "npx compodoc -c ./projects/openvidu-angular/doc/.compodocrc.json",
         "doc:clean-copy": "rm -rf ../../openvidu.io-docs/docs/api/openvidu-angular && cp -r ./docs/openvidu-angular/ ../../openvidu.io-docs/docs/api/openvidu-angular",
-        "doc:serve": "npx compodoc --watch --serve --includes ./projects/openvidu-angular/doc/extends  -c ./projects/openvidu-angular/doc/.compodocrc.json",
+        "doc:serve": "npx compodoc --watch --serve -c ./projects/openvidu-angular/doc/.compodocrc.json",
         "lib:build": "ng build openvidu-angular --configuration production && cd ./dist/openvidu-angular && npm pack",
         "lib:copy": "cp dist/openvidu-angular/openvidu-angular-*.tgz ../../openvidu-tutorials/openvidu-call/openvidu-call-front",
         "lib:e2e": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/angular.test.js",
