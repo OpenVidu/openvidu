@@ -1,5 +1,5 @@
-import { Component, ElementRef, Input, OnInit, Output, EventEmitter } from '@angular/core';
-import { OpenViduService, TokenModel, ParticipantAbstractModel, RecordingInfo } from 'openvidu-angular';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { OpenViduService, ParticipantAbstractModel, RecordingInfo, TokenModel } from 'openvidu-angular';
 import { Session } from 'openvidu-browser';
 
 /**
@@ -345,7 +345,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * @example
 	 * <openvidu-webcomponent toolbar-captions-button="false"></openvidu-webcomponent>
 	 */
-	 @Input() set toolbarCaptionsButton(value: string | boolean) {
+	@Input() set toolbarCaptionsButton(value: string | boolean) {
 		this._toolbarCaptionsButton = this.castToBoolean(value);
 	}
 	/**
@@ -542,27 +542,33 @@ export class OpenviduWebComponentComponent implements OnInit {
 	ngOnInit(): void {}
 
 	/**
+	 * Tokens parameter is required to grant a participant access to a Session.
+	 * This OpenVidu token will be use by each participant when connecting to a Session.
+	 *
+	 * This input accepts a {@link TokenModel} object type or a string type.
+	 *
 	 * @example
 	 * <openvidu-webcomponent tokens='{"webcam":"TOKEN1", "screen":"TOKEN2"}'></openvidu-webcomponent>
 	 *
-	 * or
 	 *
+	 * @example
 	 * <openvidu-webcomponent tokens='TOKEN1'></openvidu-webcomponent>
+	 *
 	 */
 	@Input('tokens')
 	set tokens(value: TokenModel | string) {
-		console.debug('Webcomponent tokens: ', value);
+		// console.debug('Webcomponent tokens: ', value);
 		try {
 			this._tokens = this.castToJson(value);
 			this.success = !!this._tokens?.webcam && !!this._tokens?.screen;
 		} catch (error) {
 			if (typeof value === 'string' && value !== '') {
-				console.debug('Sigle token received.');
+				console.debug('Single token received.');
 				this._tokens = { webcam: value };
 				this.success = true;
 			} else {
 				console.error(error);
-				console.error('Parameters received are incorrect: ', value);
+				console.error('Tokens parameter received is incorrect: ', value);
 				console.error('Session cannot start');
 			}
 		}

@@ -1,6 +1,6 @@
 {
 	"name": "OpenVidu Angular Documentation",
-	"output": "../../docs/openvidu-angular",
+	"output": "./docs/openvidu-angular",
 	"hideGenerator": true,
 	"disableLifeCycleHooks": true,
 	"disableProtected": true,
@@ -14,7 +14,7 @@
 	"disableStyleTab": true,
 	"disableDependencies": true,
 	"theme": "gitbook",
-	"customFavicon": "doc/favicon.ico",
-	"extTheme": "doc/"
-
+	"customFavicon": "./projects/openvidu-angular/doc/favicon.ico",
+	"extTheme": "./projects/openvidu-angular/doc/",
+	"tsconfig": "./projects/openvidu-angular/doc/tsconfig.doc.json"
 }

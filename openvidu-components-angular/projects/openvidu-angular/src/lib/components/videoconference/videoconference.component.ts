@@ -264,32 +264,45 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	openviduAngularStreamTemplate: TemplateRef<any>;
 
 	/**
-	 * @param {TokenModel} tokens  The tokens parameter must be an object with `webcam` and `screen` fields.
-	 *  Both of them are `string` type. See {@link TokenModel}
+	 * Tokens parameter is required to grant a participant access to a Session.
+	 * This OpenVidu token will be use by each participant when connecting to a Session.
+	 *
+	 * This input accepts a {@link TokenModel} object type.
+	 *
+	 * @param {TokenModel} tokens  The tokens parameter must be a {@link TokenModel} object.
+	 *
 	 */
 	@Input()
 	set tokens(tokens: TokenModel) {
+		let openviduEdition;
 		if (!tokens || !tokens.webcam) {
-			this.log.w('No tokens received');
-		} else {
-			this.log.w('Tokens received');
-			this.openviduService.setWebcamToken(tokens.webcam);
-
-			const openviduEdition = new URL(tokens.webcam).searchParams.get('edition');
-			if (!!openviduEdition) {
-				this.openviduService.setOpenViduEdition(OpenViduEdition.PRO);
-			} else {
-				this.openviduService.setOpenViduEdition(OpenViduEdition.CE);
-			}
-
-			if (tokens.screen) {
-				this.openviduService.setScreenToken(tokens.screen);
-			} else {
-				this.log.w('No screen token found. Screenshare feature will be disabled');
-			}
-
-			this.start();
+			this.log.e('No tokens received');
+			throw new Error("No token(s) received.");
 		}
+
+		try {
+			openviduEdition = new URL(tokens.webcam).searchParams.get('edition');
+		} catch (error) {
+			this.log.e('Token received does not seem to be valid: ', tokens.webcam);
+			throw new Error(`Error validating token parameter ${error}`);
+		}
+
+		this.log.d('Tokens received');
+		if (!!openviduEdition) {
+			this.openviduService.setOpenViduEdition(OpenViduEdition.PRO);
+		} else {
+			this.openviduService.setOpenViduEdition(OpenViduEdition.CE);
+		}
+
+		this.openviduService.setWebcamToken(tokens.webcam);
+		if (tokens.screen) {
+			this.openviduService.setScreenToken(tokens.screen);
+		} else {
+			this.log.w('No screen token found. Screenshare feature will be disabled');
+		}
+
+		this.start();
+
 	}
 
 	/**

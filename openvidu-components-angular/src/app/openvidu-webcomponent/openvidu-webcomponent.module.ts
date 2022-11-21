@@ -1,6 +1,6 @@
-import { BrowserModule } from '@angular/platform-browser';
-import { DoBootstrap, Injector, NgModule } from '@angular/core';
 import { APP_BASE_HREF, CommonModule } from '@angular/common';
+import { DoBootstrap, Injector, NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { OpenviduWebComponentComponent } from './openvidu-webcomponent.component';
