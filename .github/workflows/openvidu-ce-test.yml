@@ -64,7 +64,7 @@ jobs:
       OPERA_VERSION: ${{ github.event.inputs.OPERA_VERSION || 'latest' }}
       EDGE_VERSION: ${{ github.event.inputs.EDGE_VERSION || 'latest' }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setting up CI
         run: ci-scripts/openvidu-e2e-tests.sh --prepare
       - name: OpenVidu Browser build
