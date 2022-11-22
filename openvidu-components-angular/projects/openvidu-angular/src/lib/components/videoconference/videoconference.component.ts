@@ -277,14 +277,14 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		let openviduEdition;
 		if (!tokens || !tokens.webcam) {
 			this.log.e('No tokens received');
-			throw new Error("No token(s) received.");
+			return;
 		}
 
 		try {
 			openviduEdition = new URL(tokens.webcam).searchParams.get('edition');
 		} catch (error) {
 			this.log.e('Token received does not seem to be valid: ', tokens.webcam);
-			throw new Error(`Error validating token parameter ${error}`);
+			return;
 		}
 
 		this.log.d('Tokens received');
