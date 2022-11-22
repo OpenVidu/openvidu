@@ -7,11 +7,13 @@ import {
 	Publisher,
 	PublisherProperties,
 	Session,
-	SignalOptions
+	SignalOptions,
+	Stream
 } from 'openvidu-browser';
 
 import { LoggerService } from '../logger/logger.service';
 
+import { BehaviorSubject, Observable } from 'rxjs';
 import { CameraType } from '../../models/device.model';
 import { ILogger } from '../../models/logger.model';
 import { OpenViduEdition } from '../../models/openvidu.model';
@@ -26,6 +28,7 @@ import { PlatformService } from '../platform/platform.service';
 	providedIn: 'root'
 })
 export class OpenViduService {
+	isSttReadyObs: Observable<boolean>;
 	private ovEdition: OpenViduEdition;
 	private webcamToken = '';
 	private screenToken = '';
@@ -35,6 +38,9 @@ export class OpenViduService {
 	protected screenSession: Session;
 	protected videoSource = undefined;
 	protected audioSource = undefined;
+	private STT_TIMEOUT_MS = 2 * 1000;
+	private sttReconnectionTimeout: NodeJS.Timeout;
+	private _isSttReady: BehaviorSubject<boolean> = new BehaviorSubject(true);
 	protected log: ILogger;
 
 	/**
@@ -48,6 +54,7 @@ export class OpenViduService {
 		protected deviceService: DeviceService
 	) {
 		this.log = this.loggerSrv.get('OpenViduService');
+		this.isSttReadyObs = this._isSttReady.asObservable();
 	}
 
 	/**
@@ -109,7 +116,7 @@ export class OpenViduService {
 	/**
 	 * @internal
 	 */
-	 isOpenViduPro(): boolean {
+	isOpenViduPro(): boolean {
 		return this.ovEdition === OpenViduEdition.PRO;
 	}
 
@@ -172,6 +179,25 @@ export class OpenViduService {
 
 	/**
 	 * @internal
+	 * Whether the STT service is ready or not
+	 * This will be `false` when the app receives a SPEECH_TO_TEXT_DISCONNECTED exception
+	 * and it cannot subscribe to STT
+	 */
+	isSttReady(): boolean {
+		return this._isSttReady.getValue();
+	}
+
+	/**
+	 * @internal
+	 */
+	setSTTReady(value: boolean): void {
+		if (this._isSttReady.getValue() !== value) {
+			this._isSttReady.next(value);
+		}
+	}
+
+	/**
+	 * @internal
 	 */
 	async connectSession(session: Session, token: string): Promise<void> {
 		if (!!token && session) {
@@ -210,7 +236,7 @@ export class OpenViduService {
 	 * @internal
 	 * Initialize a publisher checking devices saved on storage or if participant have devices available.
 	 */
-	async initDefaultPublisher(): Promise<Publisher> {
+	async initDefaultPublisher(): Promise<Publisher | undefined> {
 		const hasVideoDevices = this.deviceService.hasVideoDeviceAvailable();
 		const hasAudioDevices = this.deviceService.hasAudioDeviceAvailable();
 		const isVideoActive = !this.deviceService.isVideoMuted();
@@ -487,19 +513,67 @@ export class OpenViduService {
 		}
 	}
 
-	// private destroyPublisher(publisher: Publisher): void {
-	// 	if (!!publisher) {
-	// 		if (publisher.stream.getWebRtcPeer()) {
-	// 			publisher.stream.disposeWebRtcPeer();
-	// 		}
-	// 		publisher.stream.disposeMediaStream();
-	// 		if (publisher.id === this.participantService.getMyCameraPublisher().id) {
-	// 			this.participantService.setMyCameraPublisher(publisher);
-	// 		} else if (publisher.id === this.participantService.getMyScreenPublisher().id) {
-	// 			this.participantService.setMyScreenPublisher(publisher);
-	// 		}
-	// 	}
-	// }
+	/**
+	 * @internal
+	 * Subscribe all `CAMERA` stream types to speech-to-text
+	 * It will retry the subscription each `STT_TIMEOUT_MS`
+	 *
+	 * @param lang The language of the Stream's audio track.
+	 */
+	async subscribeRemotesToSTT(lang: string): Promise<void> {
+		const remoteParticipants = this.participantService.getRemoteParticipants();
+		let successNumber = 0;
+
+		for (const p of remoteParticipants) {
+			const stream = p.getCameraConnection()?.streamManager?.stream;
+			if (stream) {
+				try {
+					await this.subscribeStreamToStt(stream, lang);
+					successNumber++;
+				} catch (error) {
+					this.log.e(`Error subscribing ${stream.streamId} to STT:`, error);
+					break;
+				}
+			}
+		}
+
+		this.setSTTReady(successNumber === remoteParticipants.length);
+		if (!this.isSttReady()) {
+			this.log.w('STT is not ready. Retrying subscription...');
+			this.sttReconnectionTimeout = setTimeout(this.subscribeRemotesToSTT.bind(this, lang), this.STT_TIMEOUT_MS);
+		}
+	}
+
+	/**
+	 * @internal
+	 * Subscribe a stream to speech-to-text
+	 * @param stream
+	 * @param lang
+	 */
+	async subscribeStreamToStt(stream: Stream, lang: string): Promise<void> {
+		await this.getWebcamSession().subscribeToSpeechToText(stream, lang);
+		this.log.d(`Subscribed stream ${stream.streamId} to STT with ${lang} language.`);
+	}
+
+	/**
+	 * @internal
+	 * Unsubscribe to all `CAMERA` stream types to speech-to-text if STT is up(ready)
+	 */
+	async unsubscribeRemotesFromSTT(): Promise<void> {
+		clearTimeout(this.sttReconnectionTimeout);
+		if (this.isSttReady()) {
+			for (const p of this.participantService.getRemoteParticipants()) {
+				const stream = p.getCameraConnection().streamManager.stream;
+				if (stream) {
+					try {
+						await this.getWebcamSession().unsubscribeFromSpeechToText(stream);
+					} catch (error) {
+						this.log.e(`Error unsubscribing ${stream.streamId} from STT:`, error);
+					}
+				}
+			}
+		}
+	}
 
 	private async createMediaStream(pp: PublisherProperties): Promise<MediaStream> {
 		let mediaStream: MediaStream;

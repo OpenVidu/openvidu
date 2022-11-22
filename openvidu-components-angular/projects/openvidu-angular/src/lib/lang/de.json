@@ -112,6 +112,7 @@
 		"SCREEN_SHARING": "Fehler beim Teilen des Bildschirms",
 		"SCREEN_SUPPORT": "Ihr Browser unterstützt keine Bildschirmfreigabe",
 		"MEDIA_ACCESS": "Der Zugriff auf Mediengeräte war nicht erlaubt.",
-		"DEVICE_NOT_FOUND": "Es wurden keine Video- oder Audiogeräte gefunden. Bitte schließen Sie mindestens eines an."
+		"DEVICE_NOT_FOUND": "Es wurden keine Video- oder Audiogeräte gefunden. Bitte schließen Sie mindestens eines an.",
+		"SST_CONNECTION": "Verbindung verloren. Wiederverbindung zum Sprach zu Text Service..."
 	}
 }

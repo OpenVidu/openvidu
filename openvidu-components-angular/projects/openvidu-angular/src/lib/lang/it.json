@@ -112,6 +112,7 @@
 		"SCREEN_SHARING": "Errore nella condivisione dello schermo",
 		"SCREEN_SUPPORT": "Il browser non supporta la condivisione dello schermo",
 		"MEDIA_ACCESS": "L'accesso ai dispositivi multimediali non è stato consentito",
-		"DEVICE_NOT_FOUND": "Non sono stati trovati dispositivi video o audio. Si prega di collegarne almeno uno"
+		"DEVICE_NOT_FOUND": "Non sono stati trovati dispositivi video o audio. Si prega di collegarne almeno uno",
+		"SST_CONNECTION": "Connessione persa. Riconnessione al servizio di conversione testo da audio in corso..."
 	}
 }

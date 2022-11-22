@@ -10,6 +10,7 @@
 		</button>
 	</div>
 	<div
+		*ngIf="isSttReady"
 		class="captions-center-container"
 		[ngClass]="{
 			'events-one': captionEvents.length === 1,
@@ -34,6 +35,11 @@
 				<span id="caption-text" class="caption-text">{{ caption.text }}</span>
 			</div>
 		</div>
+	</div>
+	<div *ngIf="!isSttReady" class="captions-center-container error-container">
+		<mat-spinner [diameter]="20"></mat-spinner>
+		<span>{{'ERRORS.SST_CONNECTION' | translate}}</span>
+
 	</div>
 
 	<div *ngIf="captionsContainer.offsetWidth >= 600 && !settingsPanelOpened" class="captions-offset"></div>

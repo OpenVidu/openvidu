@@ -113,6 +113,7 @@
 		"SCREEN_SHARING": "Error sharing screen",
 		"SCREEN_SUPPORT": "Your browser does not support screen sharing",
 		"MEDIA_ACCESS": "Access to media devices was not allowed.",
-		"DEVICE_NOT_FOUND": "No video or audio devices have been found. Please, connect at least one."
+		"DEVICE_NOT_FOUND": "No video or audio devices have been found. Please, connect at least one.",
+		"SST_CONNECTION": "Connection lost. Reconnecting to the speech to text service ..."
 	}
 }

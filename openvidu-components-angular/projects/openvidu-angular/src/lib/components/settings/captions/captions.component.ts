@@ -13,25 +13,30 @@ import { OpenViduService } from '../../../services/openvidu/openvidu.service';
 	styleUrls: ['./captions.component.css']
 })
 export class CaptionsSettingComponent implements OnInit, OnDestroy {
+	isSttReady: boolean = true;
 	captionsEnabled: boolean;
 	languagesAvailable: { name: string; ISO: string }[] = [];
-	captionsSubscription: Subscription;
 	langSelected: string;
 	isOpenViduPro: boolean = false;
+	private captionsStatusSubs: Subscription;
+	private sttStatusSubs: Subscription;
+
 
 	constructor(private layoutService: LayoutService, private captionService: CaptionService, private openviduService: OpenViduService) {}
 
 	ngOnInit(): void {
 		this.isOpenViduPro = this.openviduService.isOpenViduPro();
 		if (this.isOpenViduPro) {
-			this.subscribeToCaptions();
+			this.subscribeToSttStatus();
+			this.subscribeToCaptionsStatus();
 			this.langSelected = this.captionService.getLangSelected().name;
 			this.languagesAvailable = this.captionService.getCaptionLanguages();
 		}
 	}
 
 	ngOnDestroy() {
-		if (this.captionsSubscription) this.captionsSubscription.unsubscribe();
+		if (this.captionsStatusSubs) this.captionsStatusSubs.unsubscribe();
+		if (this.sttStatusSubs) this.sttStatusSubs.unsubscribe();
 	}
 
 	onLangSelected(lang: { name: string; ISO: string }) {
@@ -43,8 +48,14 @@ export class CaptionsSettingComponent implements OnInit, OnDestroy {
 		this.layoutService.toggleCaptions();
 	}
 
-	private subscribeToCaptions() {
-		this.captionsSubscription = this.layoutService.captionsTogglingObs.subscribe((value: boolean) => {
+	private subscribeToSttStatus(){
+		this.sttStatusSubs = this.openviduService.isSttReadyObs.subscribe((ready: boolean) => {
+			this.isSttReady = ready;
+		});
+	}
+
+	private subscribeToCaptionsStatus() {
+		this.captionsStatusSubs = this.layoutService.captionsTogglingObs.subscribe((value: boolean) => {
 			this.captionsEnabled = value;
 			// this.cd.markForCheck();
 		});
