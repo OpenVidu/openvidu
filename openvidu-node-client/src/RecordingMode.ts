@@ -16,19 +16,19 @@
  */
 
 /**
- * See [[SessionProperties.recordingMode]]
+ * See {@link SessionProperties.recordingMode}
  */
 export enum RecordingMode {
 
     /**
      * The session is recorded automatically as soon as the first client publishes a stream to the session. It is automatically stopped
-     * after last user leaves the session (or until you call [[OpenVidu.stopRecording]]).
+     * after last user leaves the session (or until you call {@link OpenVidu.stopRecording}).
      */
     ALWAYS = 'ALWAYS',
 
     /**
-     * The session is not recorded automatically. To record the session, you must call [[OpenVidu.startRecording]] method. To stop the recording,
-     * you must call [[OpenVidu.stopRecording]].
+     * The session is not recorded automatically. To record the session, you must call {@link OpenVidu.startRecording} method. To stop the recording,
+     * you must call {@link OpenVidu.stopRecording}.
      */
     MANUAL = 'MANUAL'
 }

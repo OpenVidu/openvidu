@@ -1,5 +1,5 @@
 /**
- * See [[SessionProperties.forcedVideoCodec]]
+ * See {@link SessionProperties.forcedVideoCodec}
  */
 export enum VideoCodec {
     MEDIA_SERVER_PREFERRED = 'MEDIA_SERVER_PREFERRED',

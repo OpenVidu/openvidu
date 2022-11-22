@@ -21,13 +21,13 @@ import { OpenViduRole } from './OpenViduRole';
 import { IceServerProperties } from './IceServerProperties';
 
 /**
- * See [[Session.connections]]
+ * See {@link Session.connections}
  */
 export class Connection {
 
     /**
-     * Identifier of the Connection. You can call methods [[Session.forceDisconnect]]
-     * or [[Session.updateConnection]] passing this property as parameter
+     * Identifier of the Connection. You can call methods {@link Session.forceDisconnect}
+     * or {@link Session.updateConnection} passing this property as parameter
      */
     connectionId: string;
 
@@ -77,7 +77,7 @@ export class Connection {
     clientData: string;
 
     /**
-     * The [[ConnectionProperties]] assigned to the Connection
+     * The {@link ConnectionProperties} assigned to the Connection
      */
     connectionProperties: ConnectionProperties;
 
@@ -89,13 +89,13 @@ export class Connection {
 
     /**
      * Array of Publisher objects this particular Connection is publishing to the Session (each Publisher object has one Stream, uniquely
-     * identified by its `streamId`). You can call [[Session.forceUnpublish]] passing any of this values as parameter
+     * identified by its `streamId`). You can call {@link Session.forceUnpublish} passing any of this values as parameter
      */
     publishers: Publisher[] = [];
 
     /**
      * Array of streams (their `streamId` properties) this particular Connection is subscribed to. Each one always corresponds to one
-     * Publisher of some other Connection: each string of this array must be equal to one [[Publisher.streamId]] of other Connection
+     * Publisher of some other Connection: each string of this array must be equal to one {@link Publisher.streamId} of other Connection
      */
     subscribers: string[] = [];
 

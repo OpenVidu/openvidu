@@ -16,7 +16,7 @@
  */
 
 /**
- * See [[SessionProperties.mediaMode]]
+ * See {@link SessionProperties.mediaMode}
  */
 export enum MediaMode {
 

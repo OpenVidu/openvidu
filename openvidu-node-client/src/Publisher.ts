@@ -17,7 +17,7 @@
 
 
 /**
- * See [[Connection.publishers]]
+ * See {@link Connection.publishers}
  *
  * This is a backend representation of a published media stream (see [OpenVidu Browser Stream class](/en/stable/api/openvidu-browser/classes/Stream.html))
  */

@@ -22,10 +22,10 @@ import { OpenViduRole } from './OpenViduRole';
 export interface ConnectionProperties {
 
     /**
-     * Type of Connection. The [[ConnectionType]] dictates what properties will have effect:
+     * Type of Connection. The {@link ConnectionType} dictates what properties will have effect:
      *
-     * - **[[ConnectionType.WEBRTC]]**: [[data]], [[record]], [[role]], [[kurentoOptions]]
-     * - **[[ConnectionType.IPCAM]]**: [[data]], [[record]], [[rtspUri]], [[adaptativeBitrate]], [[onlyPlayWithSubscribers]], [[networkCache]]
+     * - **{@link ConnectionType.WEBRTC}**: {@link data}, {@link record}, {@link role}, {@link kurentoOptions}
+     * - **{@link ConnectionType.IPCAM}**: {@link data}, {@link record}, {@link rtspUri}, {@link adaptativeBitrate}, {@link onlyPlayWithSubscribers}, {@link networkCache}
      *
      * @default WEBRTC
      */
@@ -33,9 +33,9 @@ export interface ConnectionProperties {
 
     /**
      * Secure (server-side) data associated to this Connection. Every client will receive this data in property `Connection.data`. Object `Connection` can be retrieved by subscribing to event `connectionCreated` of Session object.
-     * - If you have provided no data in your clients when calling method `Session.connect(TOKEN, DATA)` (`DATA` not defined), then `Connection.data` will only have this [[ConnectionProperties.data]] property.
+     * - If you have provided no data in your clients when calling method `Session.connect(TOKEN, DATA)` (`DATA` not defined), then `Connection.data` will only have this {@link ConnectionProperties.data} property.
      * - If you have provided some data when calling `Session.connect(TOKEN, DATA)` (`DATA` defined), then `Connection.data` will have the following structure: `"CLIENT_DATA%/%SERVER_DATA"`, being `CLIENT_DATA` the second
-     * parameter passed in OpenVidu Browser in method `Session.connect` and `SERVER_DATA` this [[ConnectionProperties.data]] property.
+     * parameter passed in OpenVidu Browser in method `Session.connect` and `SERVER_DATA` this {@link ConnectionProperties.data} property.
      */
     data?: string;
 
@@ -55,7 +55,7 @@ export interface ConnectionProperties {
     /**
      * The role assigned to this Connection
      *
-     * **Only for [[ConnectionType.WEBRTC]]**
+     * **Only for {@link ConnectionType.WEBRTC}**
      *
      * @default PUBLISHER
      */
@@ -82,7 +82,7 @@ export interface ConnectionProperties {
      * (parameter `OPENVIDU_STREAMS_VIDEO_MIN_SEND_BANDWIDTH`) for every outgoing stream of the Connection.
      * - `allowedFilters`: names of the filters the Connection will be able to apply. See [Voice and video filters](/en/stable/advanced-features/filters/)
      *
-     * **Only for [[ConnectionType.WEBRTC]]**
+     * **Only for {@link ConnectionType.WEBRTC}**
      */
     kurentoOptions?: {
         videoMaxRecvBandwidth?: number,
@@ -95,7 +95,7 @@ export interface ConnectionProperties {
     /**
      * RTSP URI of an IP camera. For example: `rtsp://your.camera.ip:7777/path`
      *
-     * **Only for [[ConnectionType.IPCAM]]**
+     * **Only for {@link ConnectionType.IPCAM}**
      */
     rtspUri?: string;
 
@@ -104,7 +104,7 @@ export interface ConnectionProperties {
      * that do not require media transcoding this can be disabled to save CPU power. If you are not sure if transcoding
      * might be necessary, setting this property to false **may result in media connections not being established**.
      *
-     * **Only for [[ConnectionType.IPCAM]]**
+     * **Only for {@link ConnectionType.IPCAM}**
      *
      * @default true
      */
@@ -115,7 +115,7 @@ export interface ConnectionProperties {
      * power consumption and network bandwidth in your server while nobody is asking to receive the camera's video.
      * On the counterpart, first user subscribing to the IP camera stream will take a little longer to receive its video.
      *
-     * **Only for [[ConnectionType.IPCAM]]**
+     * **Only for {@link ConnectionType.IPCAM}**
      *
      * @default true
      */
@@ -126,7 +126,7 @@ export interface ConnectionProperties {
      * delay the signal will have, but more problematic will be in unstable networks. Use short buffers only if there is
      * a quality connection between the IP camera and OpenVidu Server.
      *
-     * **Only for [[ConnectionType.IPCAM]]**
+     * **Only for {@link ConnectionType.IPCAM}**
      *
      * @default 2000
      */
@@ -145,7 +145,7 @@ export interface ConnectionProperties {
      * The level of precedence for ICE Server configuration on every OpenVidu connection is:
      *
      * 1. Configured ICE Server using Openvidu.setAdvancedCofiguration() at openvidu-browser.
-     * 2. Configured ICE server at [[ConnectionProperties.customIceServers]].
+     * 2. Configured ICE server at {@link ConnectionProperties.customIceServers}.
      * 3. Configured ICE Server at global configuration parameter: `OPENVIDU_WEBRTC_ICE_SERVERS`.
      * 4. Default deployed Coturn within OpenVidu deployment.
      *
@@ -154,7 +154,7 @@ export interface ConnectionProperties {
      *
      * This method is equivalent to level 2 of precedence.
      *
-     * **Only for [[ConnectionType.WEBRTC]]**
+     * **Only for {@link ConnectionType.WEBRTC}**
      *
      */
     customIceServers?: IceServerProperties[];

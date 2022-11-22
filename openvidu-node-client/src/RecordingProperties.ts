@@ -19,7 +19,7 @@ import { Recording } from './Recording';
 import { RecordingLayout } from './RecordingLayout';
 
 /**
- * See [[OpenVidu.startRecording]]
+ * See {@link OpenVidu.startRecording}
  */
 export interface RecordingProperties {
 
@@ -31,14 +31,14 @@ export interface RecordingProperties {
     name?: string;
 
     /**
-     * Whether or not to record audio. Cannot be set to false at the same time as [[RecordingProperties.hasVideo]]
+     * Whether or not to record audio. Cannot be set to false at the same time as {@link RecordingProperties.hasVideo}
      *
      * Default to true
      */
     hasAudio?: boolean;
 
     /**
-     * Whether or not to record video. Cannot be set to false at the same time as [[RecordingProperties.hasAudio]]
+     * Whether or not to record video. Cannot be set to false at the same time as {@link RecordingProperties.hasAudio}
      *
      * Default to true
      */
@@ -47,23 +47,23 @@ export interface RecordingProperties {
     /**
      * The mode of recording: COMPOSED for a single archive in a grid layout or INDIVIDUAL for one archive for each stream
      *
-     * Default to [[Recording.OutputMode.COMPOSED]]
+     * Default to {@link Recording.OutputMode.COMPOSED}
      */
     outputMode?: Recording.OutputMode;
 
     /**
      * The layout to be used in the recording.<br>
-     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
+     * Will only have effect if {@link RecordingProperties.outputMode} is set to {@link Recording.OutputMode.COMPOSED} or {@link Recording.OutputMode.COMPOSED_QUICK_START}
      *
-     * Default to [[RecordingLayout.BEST_FIT]]
+     * Default to {@link RecordingLayout.BEST_FIT}
      */
     recordingLayout?: RecordingLayout;
 
     /**
      * Recording video file resolution. Must be a string with format "WIDTHxHEIGHT",
      * being both WIDTH and HEIGHT the number of pixels between 100 and 1999.<br>
-     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
-     * and [[RecordingProperties.hasVideo]] is set to true. For [[Recording.OutputMode.INDIVIDUAL]] all individual video files will have the native resolution of the published stream.
+     * Will only have effect if {@link RecordingProperties.outputMode} is set to {@link Recording.OutputMode.COMPOSED} or {@link Recording.OutputMode.COMPOSED_QUICK_START}
+     * and {@link RecordingProperties.hasVideo} is set to true. For {@link Recording.OutputMode.INDIVIDUAL} all individual video files will have the native resolution of the published stream.
      *
      * Default to "1280x720"
      */
@@ -71,8 +71,8 @@ export interface RecordingProperties {
 
     /**
      * Recording video file frame rate.<br>
-     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
-     * and [[RecordingProperties.hasVideo]] is set to true. For [[Recording.OutputMode.INDIVIDUAL]] all individual video files will have the native frame rate of the published stream.
+     * Will only have effect if {@link RecordingProperties.outputMode} is set to {@link Recording.OutputMode.COMPOSED} or {@link Recording.OutputMode.COMPOSED_QUICK_START}
+     * and {@link RecordingProperties.hasVideo} is set to true. For {@link Recording.OutputMode.INDIVIDUAL} all individual video files will have the native frame rate of the published stream.
      *
      * Default to 25
      */
@@ -80,8 +80,8 @@ export interface RecordingProperties {
 
     /**
      * The amount of shared memory reserved for the recording process in bytes.
-     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
-     * and [[RecordingProperties.hasVideo]] is set to true. Property ignored for INDIVIDUAL recordings and audio-only recordings.
+     * Will only have effect if {@link RecordingProperties.outputMode} is set to {@link Recording.OutputMode.COMPOSED} or {@link Recording.OutputMode.COMPOSED_QUICK_START}
+     * and {@link RecordingProperties.hasVideo} is set to true. Property ignored for INDIVIDUAL recordings and audio-only recordings.
      * Minimum 134217728 (128MB).
      *
      * Default to 536870912 (512 MB)
@@ -90,15 +90,15 @@ export interface RecordingProperties {
 
     /**
      * The relative path to the specific custom layout you want to use.<br>
-     * Will only have effect if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]]
-     * and [[RecordingProperties.recordingLayout]] is set to [[RecordingLayout.CUSTOM]]<br>
+     * Will only have effect if {@link RecordingProperties.outputMode} is set to {@link Recording.OutputMode.COMPOSED} or {@link Recording.OutputMode.COMPOSED_QUICK_START}
+     * and {@link RecordingProperties.recordingLayout} is set to {@link RecordingLayout.CUSTOM}<br>
      * See [Custom recording layouts](/en/stable/advanced-features/recording#custom-recording-layouts) to learn more.
      */
     customLayout?: string;
 
     /**
-     * Whether to ignore failed streams or not when starting the recording. This property only applies if [[RecordingProperties.outputMode]] is set to [[Recording.OutputMode.INDIVIDUAL]].
-     * For this type of recordings, when calling [[OpenVidu.startRecording]] by default all the streams available at the moment the recording process starts must be healthy
+     * Whether to ignore failed streams or not when starting the recording. This property only applies if {@link RecordingProperties.outputMode} is set to {@link Recording.OutputMode.INDIVIDUAL}.
+     * For this type of recordings, when calling {@link OpenVidu.startRecording} by default all the streams available at the moment the recording process starts must be healthy
      * and properly sending media. If some stream that should be sending media is broken, then the recording process fails after a 10s timeout. In this way your application is notified
      * that some stream is not being recorded, so it can retry the process again.
      *

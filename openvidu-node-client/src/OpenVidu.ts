@@ -70,19 +70,19 @@ export class OpenVidu {
 
 
   /**
-   * Array of active sessions. **This value will remain unchanged since the last time method [[OpenVidu.fetch]]
+   * Array of active sessions. **This value will remain unchanged since the last time method {@link OpenVidu.fetch}
    * was called**. Exceptions to this rule are:
    *
-   * - Calling [[OpenVidu.createSession]] automatically adds the new Session object to the local collection.
-   * - Calling [[Session.fetch]] updates that specific Session status
-   * - Calling [[Session.close]] automatically removes the Session from the list of active Sessions
-   * - Calling [[Session.forceDisconnect]] automatically updates the inner affected connections for that specific Session
-   * - Calling [[Session.forceUnpublish]] also automatically updates the inner affected connections for that specific Session
-   * - Calling [[Session.updateConnection]] automatically updates the inner affected connection for that specific Session
-   * - Calling [[OpenVidu.startRecording]] and [[OpenVidu.stopRecording]] automatically updates the recording status of the Session ([[Session.recording]])
+   * - Calling {@link OpenVidu.createSession} automatically adds the new Session object to the local collection.
+   * - Calling {@link Session.fetch} updates that specific Session status
+   * - Calling {@link Session.close} automatically removes the Session from the list of active Sessions
+   * - Calling {@link Session.forceDisconnect} automatically updates the inner affected connections for that specific Session
+   * - Calling {@link Session.forceUnpublish} also automatically updates the inner affected connections for that specific Session
+   * - Calling {@link Session.updateConnection} automatically updates the inner affected connection for that specific Session
+   * - Calling {@link OpenVidu.startRecording} and {@link OpenVidu.stopRecording} automatically updates the recording status of the Session ({@link Session.recording})
    *
-   * To get the array of active sessions with their current actual value, you must call [[OpenVidu.fetch]] before consulting
-   * property [[activeSessions]]
+   * To get the array of active sessions with their current actual value, you must call {@link OpenVidu.fetch} before consulting
+   * property {@link activeSessions}
    */
   activeSessions: Session[] = [];
 
@@ -98,15 +98,15 @@ export class OpenVidu {
   }
 
   /**
-   * Creates an OpenVidu session. The session identifier will be available at property [[Session.sessionId]]
+   * Creates an OpenVidu session. The session identifier will be available at property {@link Session.sessionId}
    *
-   * @returns A Promise that is resolved to the [[Session]] if success and rejected with an
+   * @returns A Promise that is resolved to the {@link Session} if success and rejected with an
    * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not.
    * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#post-recording-start)).
    * 
    * This method will never return an Error with status `409`. If a session with the same `customSessionId` already
-   * exists in OpenVidu Server, a [[Session.fetch]] operation is performed in the background and the updated Session
+   * exists in OpenVidu Server, a {@link Session.fetch} operation is performed in the background and the updated Session
    * object is returned.
    */
   public createSession(properties?: SessionProperties): Promise<Session> {
@@ -128,13 +128,13 @@ export class OpenVidu {
   public startRecording(sessionId: string, properties: RecordingProperties): Promise<Recording>;
 
   /**
-   * Starts the recording of a [[Session]]
+   * Starts the recording of a {@link Session}
    *
-   * @param sessionId The `sessionId` of the [[Session]] you want to start recording
+   * @param sessionId The `sessionId` of the {@link Session} you want to start recording
    * @param name The name you want to give to the video file. You can access this same value in your clients on recording events (`recordingStarted`, `recordingStopped`)
-   * @param properties Custom RecordingProperties to apply to this Recording. This will override the global default values set to the Session with [[SessionProperties.defaultRecordingProperties]]
+   * @param properties Custom RecordingProperties to apply to this Recording. This will override the global default values set to the Session with {@link SessionProperties.defaultRecordingProperties}
    *
-   * @returns A Promise that is resolved to the [[Recording]] if it successfully started (the recording can be stopped with guarantees) and rejected with an
+   * @returns A Promise that is resolved to the {@link Recording} if it successfully started (the recording can be stopped with guarantees) and rejected with an
    * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not.
    * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#post-recording-start)).
@@ -207,11 +207,11 @@ export class OpenVidu {
   }
 
   /**
-   * Stops the recording of a [[Session]]
+   * Stops the recording of a {@link Session}
    *
-   * @param recordingId The `id` property of the [[Recording]] you want to stop
+   * @param recordingId The `id` property of the {@link Recording} you want to stop
    *
-   * @returns A Promise that is resolved to the [[Recording]] if it successfully stopped and rejected with an
+   * @returns A Promise that is resolved to the {@link Recording} if it successfully stopped and rejected with an
    * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not.
    * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#post-recording-stop)).
@@ -251,11 +251,11 @@ export class OpenVidu {
   }
 
   /**
-   * Gets an existing [[Recording]]
+   * Gets an existing {@link Recording}
    *
-   * @param recordingId The `id` property of the [[Recording]] you want to retrieve
+   * @param recordingId The `id` property of the {@link Recording} you want to retrieve
    *
-   * @returns A Promise that is resolved to the [[Recording]] if it successfully stopped and rejected with an
+   * @returns A Promise that is resolved to the {@link Recording} if it successfully stopped and rejected with an
    * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not.
    * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#get-recording)).
@@ -324,7 +324,7 @@ export class OpenVidu {
   }
 
   /**
-   * Deletes a [[Recording]]. The recording must have status `stopped`, `ready` or `failed`
+   * Deletes a {@link Recording}. The recording must have status `stopped`, `ready` or `failed`
    *
    * @param recordingId
    *
@@ -361,7 +361,7 @@ export class OpenVidu {
 
   /**
    * Updates every property of every active Session with the current status they have in OpenVidu Server.
-   * After calling this method you can access the updated array of active sessions in [[activeSessions]]
+   * After calling this method you can access the updated array of active sessions in {@link activeSessions}
    *
    * @returns A promise resolved to true if any Session status has changed with respect to the server, or to false if not.
    * This applies to any property or sub-property of any of the sessions locally stored in OpenVidu Node Client

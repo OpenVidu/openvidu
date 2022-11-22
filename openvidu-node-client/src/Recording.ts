@@ -19,7 +19,7 @@ import { RecordingProperties } from './RecordingProperties';
 import { RecordingLayout } from './RecordingLayout';
 
 /**
- * See [[OpenVidu.startRecording]]
+ * See {@link OpenVidu.startRecording}
  */
 export class Recording {
 
@@ -104,7 +104,7 @@ export class Recording {
 export namespace Recording {
 
     /**
-     * See [[Recording.status]]
+     * See {@link Recording.status}
      */
     export enum Status {
 
@@ -127,7 +127,7 @@ export namespace Recording {
 
         /**
          * The recording has finished being processed and is available for download through
-         * property [[Recording.url]]
+         * property {@link Recording.url}
          */
         ready = 'ready',
 
@@ -139,7 +139,7 @@ export namespace Recording {
     }
 
     /**
-     * See [[RecordingProperties.outputMode]]
+     * See {@link RecordingProperties.outputMode}
      */
     export enum OutputMode {
 

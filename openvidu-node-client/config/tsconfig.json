@@ -1,0 +1,20 @@
+{
+    "include": ["../src"],
+    "exclude": ["../config", "../docs", "../lib", "../node_modules"],
+    "typedocOptions": {
+        "name": "OpenVidu Node Client",
+        "entryPoints": ["../src/index.ts"],
+        "out": "../docs",
+        "theme": "default",
+        "readme": "none",
+        "includeVersion": true,
+        "validation": {
+            "notExported": true,
+            "invalidLink": true
+        },
+        "excludeExternals": true,
+        "excludePrivate": true,
+        "excludeProtected": true,
+        "excludeInternal": true
+    }
+}

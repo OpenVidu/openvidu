@@ -16,7 +16,7 @@
  */
 
 /**
- * See [[RecordingProperties.recordingLayout]]
+ * See {@link RecordingProperties.recordingLayout}
  */
 export enum RecordingLayout {
 

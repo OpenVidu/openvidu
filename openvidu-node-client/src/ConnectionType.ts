@@ -16,7 +16,7 @@
  */
 
 /**
- * See [[Session.createConnection]]
+ * See {@link Session.createConnection}
  */
 export enum ConnectionType {
 

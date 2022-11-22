@@ -9,7 +9,7 @@ fi
 grep -rl '/en/stable/' src | xargs sed -i -e 's|/en/stable/|/en/'${BASEHREF_VERSION}'/|g'
 
 # Generate TypeDoc
-./node_modules/typedoc/bin/typedoc --options ./config/typedoc.js ./src
+./node_modules/typedoc/bin/typedoc --tsconfig ./config/tsconfig.json
 
 # Return links to "stable" version
 grep -rl '/en/'${BASEHREF_VERSION}'/' src | xargs sed -i -e 's|/en/'${BASEHREF_VERSION}'/|/en/stable/|g'

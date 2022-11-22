@@ -15,7 +15,7 @@
  *
  */
 
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { Connection } from './Connection';
 import { ConnectionProperties } from './ConnectionProperties';
 import { MediaMode } from './MediaMode';
@@ -26,8 +26,8 @@ import { RecordingLayout } from './RecordingLayout';
 import { RecordingMode } from './RecordingMode';
 import { SessionProperties } from './SessionProperties';
 import { TokenOptions } from './TokenOptions';
-import { RecordingProperties } from 'RecordingProperties';
-import { IceServerProperties } from 'IceServerProperties';
+import { RecordingProperties } from './RecordingProperties';
+import { IceServerProperties } from './IceServerProperties';
 
 export class Session {
 
@@ -48,25 +48,25 @@ export class Session {
 
     /**
      * Array of Connections to the Session. This property always initialize as an empty array and
-     * **will remain unchanged since the last time method [[Session.fetch]] or [[OpenVidu.fetch]] was called**.
+     * **will remain unchanged since the last time method {@link Session.fetch} or {@link OpenVidu.fetch} was called**.
      * Exceptions to this rule are:
      *
-     * - Calling [[Session.createConnection]] automatically adds the new Connection object to the local collection.
-     * - Calling [[Session.forceUnpublish]] automatically updates each affected local Connection object.
-     * - Calling [[Session.forceDisconnect]] automatically updates each affected local Connection object.
-     * - Calling [[Session.updateConnection]] automatically updates the attributes of the affected local Connection object.
+     * - Calling {@link Session.createConnection} automatically adds the new Connection object to the local collection.
+     * - Calling {@link Session.forceUnpublish} automatically updates each affected local Connection object.
+     * - Calling {@link Session.forceDisconnect} automatically updates each affected local Connection object.
+     * - Calling {@link Session.updateConnection} automatically updates the attributes of the affected local Connection object.
      *
-     * To get the array of Connections with their current actual value, you must call [[Session.fetch]] or [[OpenVidu.fetch]]
-     * before consulting property [[connections]]
+     * To get the array of Connections with their current actual value, you must call {@link Session.fetch} or {@link OpenVidu.fetch}
+     * before consulting property {@link connections}
      */
     connections: Connection[] = [];
 
     /**
-     * Array containing the active Connections of the Session. It is a subset of [[Session.connections]] array containing only
-     * those Connections with property [[Connection.status]] to `active`.
+     * Array containing the active Connections of the Session. It is a subset of {@link Session.connections} array containing only
+     * those Connections with property {@link Connection.status} to `active`.
      *
-     * To get the array of active Connections with their current actual value, you must call [[Session.fetch]] or [[OpenVidu.fetch]]
-     * before consulting property [[activeConnections]]
+     * To get the array of active Connections with their current actual value, you must call {@link Session.fetch} or {@link OpenVidu.fetch}
+     * before consulting property {@link activeConnections}
      */
     activeConnections: Connection[] = [];
 
@@ -96,7 +96,7 @@ export class Session {
     }
 
     /**
-     * @deprecated Use [[Session.createConnection]] instead to get a [[Connection]] object.
+     * @deprecated Use {@link Session.createConnection} instead to get a {@link Connection} object.
      *
      * @returns A Promise that is resolved to the generated _token_ string if success and rejected with an
      * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not
@@ -136,9 +136,9 @@ export class Session {
     /**
      * Creates a new Connection object associated to Session object and configured with
      * `connectionProperties`. Each user connecting to the Session requires a Connection.
-     * The token string value to send to the client side is available at [[Connection.token]].
+     * The token string value to send to the client side is available at {@link Connection.token}.
      *
-     * @returns A Promise that is resolved to the generated [[Connection]] object if success and rejected with an
+     * @returns A Promise that is resolved to the generated {@link Connection} object if success and rejected with an
      * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not
      */
     public createConnection(connectionProperties?: ConnectionProperties): Promise<Connection> {
@@ -219,10 +219,10 @@ export class Session {
 
     /**
      * Updates every property of the Session with the current status it has in OpenVidu Server. This is especially useful for accessing the list of
-     * Connections of the Session ([[Session.connections]], [[Session.activeConnections]]) and use those values to call [[Session.forceDisconnect]],
-     * [[Session.forceUnpublish]] or [[Session.updateConnection]].
+     * Connections of the Session ({@link Session.connections}, {@link Session.activeConnections}) and use those values to call {@link Session.forceDisconnect},
+     * {@link Session.forceUnpublish} or {@link Session.updateConnection}.
      *
-     * To update all Session objects owned by OpenVidu object at once, call [[OpenVidu.fetch]]
+     * To update all Session objects owned by OpenVidu object at once, call {@link OpenVidu.fetch}
      *
      * @returns A promise resolved to true if the Session status has changed with respect to the server, or to false if not.
      *          This applies to any property or sub-property of the Session object
@@ -267,7 +267,7 @@ export class Session {
      * In the second case, the token of the Connection will be invalidated and no user will be able to connect to the session with it.
      *
      * This method automatically updates the properties of the local affected objects. This means that there is no need to call
-     * [[Session.fetch]] or [[OpenVidu.fetch]]] to see the changes consequence of the execution of this method applied in the local objects.
+     * {@link Session.fetch} or {@link OpenVidu.fetch}] to see the changes consequence of the execution of this method applied in the local objects.
      *
      * @param connection The Connection object to remove from the session, or its `connectionId` property
      *
@@ -333,14 +333,14 @@ export class Session {
     }
 
     /**
-     * Forces some Connection to unpublish a Stream (identified by its `streamId` or the corresponding [[Publisher]] object owning it).
+     * Forces some Connection to unpublish a Stream (identified by its `streamId` or the corresponding {@link Publisher} object owning it).
      * OpenVidu Browser will trigger the proper events on the client-side (`streamDestroyed`) with reason set to `"forceUnpublishByServer"`.
      *
-     * You can get `publisher` parameter from [[Connection.publishers]] array ([[Publisher.streamId]] for getting each `streamId` property).
-     * Remember to call [[Session.fetch]] or [[OpenVidu.fetch]] before to fetch the current actual properties of the Session from OpenVidu Server
+     * You can get `publisher` parameter from {@link Connection.publishers} array ({@link Publisher.streamId} for getting each `streamId` property).
+     * Remember to call {@link Session.fetch} or {@link OpenVidu.fetch} before to fetch the current actual properties of the Session from OpenVidu Server
      *
      * This method automatically updates the properties of the local affected objects. This means that there is no need to call
-     * [[Session.fetch]] or [[OpenVidu.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
+     * {@link Session.fetch} or {@link OpenVidu.fetch} to see the changes consequence of the execution of this method applied in the local objects.
      *
      * @param publisher The Publisher object to unpublish, or its `streamId` property
      *
@@ -398,22 +398,22 @@ export class Session {
      * <a href="https://docs.openvidu.io/en/2.23.0/openvidu-enterprise/" style="display: inline-block; background-color: rgb(156, 39, 176); color: white; font-weight: bold; padding: 0px 5px; margin: 0 2px 0 2px; border-radius: 3px; font-size: 13px; line-height:21px; text-decoration: none; font-family: Montserrat, sans-serif">ENTERPRISE</a>
      * editions**
      *
-     * Updates the properties of a Connection  with a [[ConnectionProperties]] object.
+     * Updates the properties of a Connection  with a {@link ConnectionProperties} object.
      * Only these properties can be updated:
      *
-     * - [[ConnectionProperties.role]]
-     * - [[ConnectionProperties.record]]
+     * - {@link ConnectionProperties.role}
+     * - {@link ConnectionProperties.record}
      *
      * This method automatically updates the properties of the local affected objects. This means that there is no need to call
-     * [[Session.fetch]] or [[OpenVidu.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
+     * {@link Session.fetch} or {@link OpenVidu.fetch} to see the changes consequence of the execution of this method applied in the local objects.
      *
      * The affected client will trigger one [ConnectionPropertyChangedEvent](/en/stable/api/openvidu-browser/classes/ConnectionPropertyChangedEvent.html)
      * for each modified property.
      *
-     * @param connectionId The [[Connection.connectionId]] of the Connection object to modify
-     * @param connectionProperties A new [[ConnectionProperties]] object with the updated values to apply
+     * @param connectionId The {@link Connection.connectionId} of the Connection object to modify
+     * @param connectionProperties A new {@link ConnectionProperties} object with the updated values to apply
      *
-     * @returns A Promise that is resolved to the updated [[Connection]] object if the operation was
+     * @returns A Promise that is resolved to the updated {@link Connection} object if the operation was
      *          successful and rejected with an [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not
      */
     public updateConnection(connectionId: string, connectionProperties: ConnectionProperties): Promise<Connection | undefined> {

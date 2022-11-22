@@ -21,7 +21,7 @@ import { RecordingMode } from './RecordingMode';
 import { VideoCodec } from './VideoCodec';
 
 /**
- * See [[OpenVidu.createSession]]
+ * See {@link OpenVidu.createSession}
  */
 export interface SessionProperties {
 
@@ -29,22 +29,22 @@ export interface SessionProperties {
      * How the media streams will be sent and received by your clients: routed through OpenVidu Media Node
      * (`MediaMode.ROUTED`) or attempting direct p2p connections (`MediaMode.RELAYED`, _not available yet_)
      *
-     * Default to [[MediaMode.ROUTED]]
+     * Default to {@link MediaMode.ROUTED}
      */
     mediaMode?: MediaMode;
 
     /**
      * Whether the Session will be automatically recorded (`RecordingMode.ALWAYS`) or not (`RecordingMode.MANUAL`)
      *
-     * Default to [[RecordingMode.MANUAL]]
+     * Default to {@link RecordingMode.MANUAL}
      */
     recordingMode?: RecordingMode;
 
     /**
      * Default recording properties of this session. You can easily override this value later when starting a
-     * [[Recording]] by providing new [[RecordingProperties]]
+     * {@link Recording} by providing new {@link RecordingProperties}
      *
-     * Default values defined in [[RecordingProperties]] class
+     * Default values defined in {@link RecordingProperties} class
      */
     defaultRecordingProperties?: RecordingProperties;
 
@@ -77,18 +77,18 @@ export interface SessionProperties {
      * <code>forcedVideoCodec</code> is set to NONE, no codec will be forced.
      *
      * If the browser/client is not compatible with the specified codec, and
-     * [[allowTranscoding]] is <code>false</code>, an exception will occur.
+     * {@link allowTranscoding} is <code>false</code>, an exception will occur.
      *
      * If defined here, this parameter has prevalence over
      * OPENVIDU_STREAMS_FORCED_VIDEO_CODEC.
      *
-     * Default is [[VideoCodec.MEDIA_SERVER_PREFERRED]].
+     * Default is {@link VideoCodec.MEDIA_SERVER_PREFERRED}.
      */
     forcedVideoCodec?: VideoCodec;
 
     /**
      * It defines if you want to allow transcoding in the media server or not
-     * when [[forcedVideoCodec]] is not compatible with the browser/client.
+     * when {@link forcedVideoCodec} is not compatible with the browser/client.
      *
      * If defined here, this parameter has prevalence over OPENVIDU_STREAMS_ALLOW_TRANSCODING.
      * OPENVIDU_STREAMS_ALLOW_TRANSCODING default is 'false'
