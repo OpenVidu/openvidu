@@ -21,12 +21,12 @@ import { Session } from '../../OpenVidu/Session';
 import { SpeechToTextEventReason } from './Types/Types';
 
 /**
- * Triggered by [[SessionEventMap.speechToTextMessage]]
+ * Triggered by {@link SessionEventMap.speechToTextMessage}
  */
 export class SpeechToTextEvent extends Event {
 
     /**
-     * The [[Connection]] owning the Stream that produced the speech-to-text event.
+     * The {@link Connection} owning the Stream that produced the speech-to-text event.
      * In other words, this is the participant that spoke and produced this transcription event.
      */
     connection: Connection;
@@ -48,7 +48,7 @@ export class SpeechToTextEvent extends Event {
 
     /**
      * [BCP-47](https://tools.ietf.org/html/bcp47) language tag (like "en-US" or "es-ES") of the recognized text. This will be the same as the language provided
-     * in method [[Session.subscribeToSpeechToText]] method
+     * in method {@link Session.subscribeToSpeechToText} method
      */
     lang: string;
 

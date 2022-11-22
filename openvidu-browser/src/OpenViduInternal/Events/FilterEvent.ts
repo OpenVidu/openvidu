@@ -19,7 +19,7 @@ import { Event } from './Event';
 import { Filter } from '../../OpenVidu/Filter';
 
 /**
- * Defines every event dispatched by audio/video stream filters. You can subscribe to filter events by calling [[Filter.addEventListener]]
+ * Defines every event dispatched by audio/video stream filters. You can subscribe to filter events by calling {@link Filter.addEventListener}
  */
 export class FilterEvent extends Event {
     /**

@@ -26,7 +26,7 @@ import { StreamPropertyChangedEventReason, ChangedPropertyType } from './Types/T
  */
 export class StreamPropertyChangedEvent extends Event {
     /**
-     * The Stream whose property has changed. You can always identify the user publishing the changed stream by consulting property [[Stream.connection]]
+     * The Stream whose property has changed. You can always identify the user publishing the changed stream by consulting property {@link Stream.connection}
      */
     stream: Stream;
 

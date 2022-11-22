@@ -63,7 +63,7 @@ let platform: PlatformUtils;
 
 /**
  * Entrypoint of OpenVidu Browser library.
- * Use it to initialize objects of type [[Session]], [[Publisher]] and [[LocalRecorder]]
+ * Use it to initialize objects of type {@link Session}, {@link Publisher} and {@link LocalRecorder}
  */
 export class OpenVidu {
     private jsonRpcClient: any;
@@ -191,18 +191,18 @@ export class OpenVidu {
      *
      * #### Events dispatched
      *
-     * The [[Publisher]] object will dispatch an `accessDialogOpened` event, only if the pop-up shown by the browser to request permissions for the camera is opened. You can use this event to alert the user about granting permissions
+     * The {@link Publisher} object will dispatch an `accessDialogOpened` event, only if the pop-up shown by the browser to request permissions for the camera is opened. You can use this event to alert the user about granting permissions
      * for your website. An `accessDialogClosed` event will also be dispatched after user clicks on "Allow" or "Block" in the pop-up.
      *
-     * The [[Publisher]] object will dispatch an `accessAllowed` or `accessDenied` event once it has been granted access to the requested input devices or not.
+     * The {@link Publisher} object will dispatch an `accessAllowed` or `accessDenied` event once it has been granted access to the requested input devices or not.
      *
-     * The [[Publisher]] object will dispatch a `videoElementCreated` event once a HTML video element has been added to DOM (only if you
-     * [let OpenVidu take care of the video players](/en/stable/cheatsheet/manage-videos/#let-openvidu-take-care-of-the-video-players)). See [[VideoElementEvent]] to learn more.
+     * The {@link Publisher} object will dispatch a `videoElementCreated` event once a HTML video element has been added to DOM (only if you
+     * [let OpenVidu take care of the video players](/en/stable/cheatsheet/manage-videos/#let-openvidu-take-care-of-the-video-players)). See {@link VideoElementEvent} to learn more.
      *
-     * The [[Publisher]] object will dispatch a `streamPlaying` event once the local streams starts playing. See [[StreamManagerEvent]] to learn more.
+     * The {@link Publisher} object will dispatch a `streamPlaying` event once the local streams starts playing. See {@link StreamManagerEvent} to learn more.
      *
-     * @param targetElement  HTML DOM element (or its `id` attribute) in which the video element of the Publisher will be inserted (see [[PublisherProperties.insertMode]]). If *null* or *undefined* no default video will be created for this Publisher.
-     * You can always call method [[Publisher.addVideoElement]] or [[Publisher.createVideoElement]] to manage the video elements on your own (see [Manage video players](/en/stable/cheatsheet/manage-videos) section)
+     * @param targetElement  HTML DOM element (or its `id` attribute) in which the video element of the Publisher will be inserted (see {@link PublisherProperties.insertMode}). If *null* or *undefined* no default video will be created for this Publisher.
+     * You can always call method {@link Publisher.addVideoElement} or {@link Publisher.createVideoElement} to manage the video elements on your own (see [Manage video players](/en/stable/cheatsheet/manage-videos) section)
      * @param completionHandler `error` parameter is null if `initPublisher` succeeds, and is defined if it fails.
      *                          `completionHandler` function is called before the Publisher dispatches an `accessAllowed` or an `accessDenied` event
      */
@@ -282,9 +282,9 @@ export class OpenVidu {
     }
 
     /**
-     * Promisified version of [[OpenVidu.initPublisher]]
+     * Promisified version of {@link OpenVidu.initPublisher}
      *
-     * > WARNING: events `accessDialogOpened` and `accessDialogClosed` will not be dispatched if using this method instead of [[OpenVidu.initPublisher]]
+     * > WARNING: events `accessDialogOpened` and `accessDialogClosed` will not be dispatched if using this method instead of {@link OpenVidu.initPublisher}
      */
     initPublisherAsync(targetElement: string | HTMLElement | undefined): Promise<Publisher>;
     initPublisherAsync(targetElement: string | HTMLElement | undefined, properties: PublisherProperties): Promise<Publisher>;
@@ -361,7 +361,7 @@ export class OpenVidu {
     }
 
     /**
-     * Collects information about the media input devices available on the system. You can pass property `deviceId` of a [[Device]] object as value of `audioSource` or `videoSource` properties in [[initPublisher]] method
+     * Collects information about the media input devices available on the system. You can pass property `deviceId` of a {@link Device} object as value of `audioSource` or `videoSource` properties in {@link initPublisher} method
      */
     getDevices(): Promise<Device[]> {
         return new Promise<Device[]>((resolve, reject) => {
@@ -466,9 +466,9 @@ export class OpenVidu {
     }
 
     /**
-     * Get a MediaStream object that you can customize before calling [[initPublisher]] (pass _MediaStreamTrack_ property of the _MediaStream_ value resolved by the Promise as `audioSource` or `videoSource` properties in [[initPublisher]])
+     * Get a MediaStream object that you can customize before calling {@link initPublisher} (pass _MediaStreamTrack_ property of the _MediaStream_ value resolved by the Promise as `audioSource` or `videoSource` properties in {@link initPublisher})
      *
-     * Parameter `options` is the same as in [[initPublisher]] second parameter (of type [[PublisherProperties]]), but only the following properties will be applied: `audioSource`, `videoSource`, `frameRate`, `resolution`
+     * Parameter `options` is the same as in {@link initPublisher} second parameter (of type {@link PublisherProperties}), but only the following properties will be applied: `audioSource`, `videoSource`, `frameRate`, `resolution`
      *
      * To customize the Publisher's video, the API for HTMLCanvasElement is very useful. For example, to get a black-and-white video at 10 fps and HD resolution with no sound:
      * ```
@@ -625,7 +625,7 @@ export class OpenVidu {
     /* tslint:enable:no-empty */
 
     /**
-     * Set OpenVidu advanced configuration options. `configuration` is an object of type [[OpenViduAdvancedConfiguration]]. Call this method to override previous values at any moment.
+     * Set OpenVidu advanced configuration options. `configuration` is an object of type {@link OpenViduAdvancedConfiguration}. Call this method to override previous values at any moment.
      */
     setAdvancedConfiguration(configuration: OpenViduAdvancedConfiguration): void {
         this.advancedConfiguration = configuration;

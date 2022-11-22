@@ -22,8 +22,8 @@ import { ConnectionEventReason } from './Types/Types';
 
 /**
  * Triggered by:
- * - [[connectionCreated]]
- * - [[connectionDestroyed]]
+ * - {@link SessionEventMap.connectionCreated}
+ * - {@link SessionEventMap.connectionDestroyed}
  */
 export class ConnectionEvent extends Event {
     /**

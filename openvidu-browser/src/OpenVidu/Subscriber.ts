@@ -26,9 +26,9 @@ import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 /**
- * Packs remote media streams. Participants automatically receive them when others publish their streams. Initialized with [[Session.subscribe]] method
+ * Packs remote media streams. Participants automatically receive them when others publish their streams. Initialized with {@link Session.subscribe} method
  *
- * See available event listeners at [[StreamManagerEventMap]].
+ * See available event listeners at {@link StreamManagerEventMap}.
  */
 export class Subscriber extends StreamManager {
     /**

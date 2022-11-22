@@ -29,8 +29,8 @@ import { StreamEvent } from '../StreamEvent';
 import { StreamPropertyChangedEvent } from '../StreamPropertyChangedEvent';
 
 /**
- * Events dispatched by [[Session]] object. Manage event listeners with
- * [[Session.on]], [[Session.once]] and [[Session.off]] methods.
+ * Events dispatched by {@link Session} object. Manage event listeners with
+ * {@link Session.on}, {@link Session.once} and {@link Session.off} methods.
  *
  * Example:
  *
@@ -53,7 +53,7 @@ export interface SessionEventMap extends EventMap {
     /**
      * Event dispatched when a remote user has left the session.
      *
-     * For the local user see [[sessionDisconnected]].
+     * For the local user see {@link sessionDisconnected}.
      */
     connectionDestroyed: ConnectionEvent;
 
@@ -64,11 +64,11 @@ export interface SessionEventMap extends EventMap {
      * <a href="https://docs.openvidu.io/en/stable/openvidu-enterprise/" style="display: inline-block; background-color: rgb(156, 39, 176); color: white; font-weight: bold; padding: 0px 5px; margin: 0 2px 0 2px; border-radius: 3px; font-size: 13px; line-height:21px; text-decoration: none; font-family: Montserrat, sans-serif">ENTERPRISE</a>
      * editions**
      * 
-     * Event dispatched when a property of the local [[Connection]] object changes.
+     * Event dispatched when a property of the local {@link Connection} object changes.
      *
      * It is fired only for the local user.
      *
-     * The properties that may change are [[Connection.role]] and [[Connection.record]].
+     * The properties that may change are {@link Connection.role} and {@link Connection.record}.
      * The only way the Connection properties may change is by updating them through:
      *
      * - [API REST](/en/stable/reference-docs/REST-API/#patch-connection)
@@ -80,12 +80,12 @@ export interface SessionEventMap extends EventMap {
     /**
      * Event dispatched when the local user has left the session.
      *
-     * For remote users see [[connectionDestroyed]].
+     * For remote users see {@link connectionDestroyed}.
      */
     sessionDisconnected: SessionDisconnectedEvent;
 
     /**
-     * Event dispatched when a user has started publishing media to the session (see [[Session.publish]]).
+     * Event dispatched when a user has started publishing media to the session (see {@link Session.publish}).
      *
      * It is fired for both the local user and remote users.
      */
@@ -100,9 +100,9 @@ export interface SessionEventMap extends EventMap {
 
     /**
      * Event dispatched when a Stream undergoes any change in any of its mutable properties
-     * (see [[StreamPropertyChangedEvent.changedProperty]]).
+     * (see {@link StreamPropertyChangedEvent.changedProperty}).
      *
-     * It is fired for both remote streams (owned by a [[Subscriber]]) or local streams (owned by a [[Publisher]]).
+     * It is fired for both remote streams (owned by a {@link Subscriber}) or local streams (owned by a {@link Publisher}).
      */
     streamPropertyChanged: StreamPropertyChangedEvent;
 
@@ -112,8 +112,8 @@ export interface SessionEventMap extends EventMap {
      * It is fired for both the local user and remote users.
      *
      * Extra information:
-     * - This event will only be triggered for **streams that have audio tracks** ([[Stream.hasAudio]] must be true).
-     * - Further configuration can be applied on how the event is dispatched by setting property `publisherSpeakingEventsOptions` in the call of [[OpenVidu.setAdvancedConfiguration]].
+     * - This event will only be triggered for **streams that have audio tracks** ({@link Stream.hasAudio} must be true).
+     * - Further configuration can be applied on how the event is dispatched by setting property `publisherSpeakingEventsOptions` in the call of {@link OpenVidu.setAdvancedConfiguration}.
      */
     publisherStartSpeaking: PublisherSpeakingEvent;
 
@@ -123,8 +123,8 @@ export interface SessionEventMap extends EventMap {
      * It is fired for both the local user and remote users.
      *
      * Extra information:
-     * - This event will only be triggered for **streams that have audio tracks** ([[Stream.hasAudio]] must be true).
-     * - Further configuration can be applied on how the event is dispatched by setting property `publisherSpeakingEventsOptions` in the call of [[OpenVidu.setAdvancedConfiguration]].
+     * - This event will only be triggered for **streams that have audio tracks** ({@link Stream.hasAudio} must be true).
+     * - Further configuration can be applied on how the event is dispatched by setting property `publisherSpeakingEventsOptions` in the call of {@link OpenVidu.setAdvancedConfiguration}.
      */
     publisherStopSpeaking: PublisherSpeakingEvent;
 
@@ -163,7 +163,7 @@ export interface SessionEventMap extends EventMap {
      * <a href="https://docs.openvidu.io/en/stable/openvidu-enterprise/" style="display: inline-block; background-color: rgb(156, 39, 176); color: white; font-weight: bold; padding: 0px 5px; margin: 0 2px 0 2px; border-radius: 3px; font-size: 13px; line-height:21px; text-decoration: none; font-family: Montserrat, sans-serif">ENTERPRISE</a>
      * editions**
      *
-     * Event dispatched when the network quality level of a [[Connection]] changes. See [network quality](/en/stable/advanced-features/network-quality/).
+     * Event dispatched when the network quality level of a {@link Connection} changes. See [network quality](/en/stable/advanced-features/network-quality/).
      */
     networkQualityLevelChanged: NetworkQualityLevelChangedEvent;
 
@@ -189,7 +189,7 @@ export interface SessionEventMap extends EventMap {
      * Event dispatched when the local user has successfully recovered its connection to the session after losing it.
      *
      * If the connection was recovered but OpenVidu Server already evicted the user due to timeout, then this event will
-     * not be dispatched. A [[sessionDisconnected]] event with reason `networkDisconnect` will be triggered instead.
+     * not be dispatched. A {@link sessionDisconnected} event with reason `networkDisconnect` will be triggered instead.
      *
      * See [Reconnection events](/en/stable/advanced-features/automatic-reconnection/#reconnection-events).
      */
@@ -197,7 +197,7 @@ export interface SessionEventMap extends EventMap {
 
     /**
      * This event acts as a global handler for asynchronous errors that may be triggered for multiple reasons and from multiple origins.
-     * To see the different types of exceptions go to [[ExceptionEventName]].
+     * To see the different types of exceptions go to {@link ExceptionEventName}.
      */
     exception: ExceptionEvent;
 }

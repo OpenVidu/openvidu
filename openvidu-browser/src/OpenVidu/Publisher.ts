@@ -41,9 +41,9 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 let platform: PlatformUtils;
 
 /**
- * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method.
+ * Packs local media streams. Participants can publish it to a session. Initialized with {@link OpenVidu.initPublisher} method.
  *
- * See available event listeners at [[PublisherEventMap]].
+ * See available event listeners at {@link PublisherEventMap}.
  */
 export class Publisher extends StreamManager {
     /**
@@ -52,12 +52,12 @@ export class Publisher extends StreamManager {
     accessAllowed = false;
 
     /**
-     * Whether you have called [[Publisher.subscribeToRemote]] with value `true` or `false` (*false* by default)
+     * Whether you have called {@link Publisher.subscribeToRemote} with value `true` or `false` (*false* by default)
      */
     isSubscribedToRemote = false;
 
     /**
-     * The [[Session]] to which the Publisher belongs
+     * The {@link Session} to which the Publisher belongs
      */
     session: Session; // Initialized by Session.publish(Publisher)
 
@@ -108,13 +108,13 @@ export class Publisher extends StreamManager {
      *
      * > _Only if `Session.publish(Publisher)` has been called for this Publisher_
      *
-     * The [[Session]] object of the local participant will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"audioActive"` and `reason` set to `"publishAudio"`
-     * The [[Publisher]] object of the local participant will also dispatch the exact same event
+     * The {@link Session} object of the local participant will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"audioActive"` and `reason` set to `"publishAudio"`
+     * The {@link Publisher} object of the local participant will also dispatch the exact same event
      *
-     * The [[Session]] object of every other participant connected to the session will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"audioActive"` and `reason` set to `"publishAudio"`
-     * The respective [[Subscriber]] object of every other participant receiving this Publisher's stream will also dispatch the exact same event
+     * The {@link Session} object of every other participant connected to the session will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"audioActive"` and `reason` set to `"publishAudio"`
+     * The respective {@link Subscriber} object of every other participant receiving this Publisher's stream will also dispatch the exact same event
      *
-     * See [[StreamPropertyChangedEvent]] to learn more.
+     * See {@link StreamPropertyChangedEvent} to learn more.
      *
      * @param enabled `true` to publish the audio stream, `false` to unpublish it
      */
@@ -162,13 +162,13 @@ export class Publisher extends StreamManager {
      *
      * > _Only if `Session.publish(Publisher)` has been called for this Publisher_
      *
-     * The [[Session]] object of the local participant will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"videoActive"` and `reason` set to `"publishVideo"`
-     * The [[Publisher]] object of the local participant will also dispatch the exact same event
+     * The {@link Session} object of the local participant will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"videoActive"` and `reason` set to `"publishVideo"`
+     * The {@link Publisher} object of the local participant will also dispatch the exact same event
      *
-     * The [[Session]] object of every other participant connected to the session will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"videoActive"` and `reason` set to `"publishVideo"`
-     * The respective [[Subscriber]] object of every other participant receiving this Publisher's stream will also dispatch the exact same event
+     * The {@link Session} object of every other participant connected to the session will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"videoActive"` and `reason` set to `"publishVideo"`
+     * The respective {@link Subscriber} object of every other participant receiving this Publisher's stream will also dispatch the exact same event
      *
-     * See [[StreamPropertyChangedEvent]] to learn more.
+     * See {@link StreamPropertyChangedEvent} to learn more.
      *
      * @param enabled `true` to publish the video stream, `false` to unpublish it
      * @param resource
@@ -278,7 +278,7 @@ export class Publisher extends StreamManager {
     }
 
     /**
-     * Call this method before [[Session.publish]] if you prefer to subscribe to your Publisher's remote stream instead of using the local stream, as any other user would do.
+     * Call this method before {@link Session.publish} if you prefer to subscribe to your Publisher's remote stream instead of using the local stream, as any other user would do.
      */
     subscribeToRemote(value?: boolean): void {
         value = value !== undefined ? value : true;
@@ -287,7 +287,7 @@ export class Publisher extends StreamManager {
     }
 
     /**
-     * See [[EventDispatcher.on]]
+     * See {@link EventDispatcher.on}
      */
     on<K extends keyof PublisherEventMap>(type: K, handler: (event: PublisherEventMap[K]) => void): this {
         super.on(<any>type, handler);
@@ -315,7 +315,7 @@ export class Publisher extends StreamManager {
     }
 
     /**
-     * See [[EventDispatcher.once]]
+     * See {@link EventDispatcher.once}
      */
     once<K extends keyof PublisherEventMap>(type: K, handler: (event: PublisherEventMap[K]) => void): this {
         super.once(<any>type, handler);
@@ -343,7 +343,7 @@ export class Publisher extends StreamManager {
     }
 
     /**
-     * See [[EventDispatcher.off]]
+     * See {@link EventDispatcher.off}
      */
     off<K extends keyof PublisherEventMap>(type: K, handler?: (event: PublisherEventMap[K]) => void): this {
         super.off(<any>type, handler);
@@ -355,7 +355,7 @@ export class Publisher extends StreamManager {
      * without having to renegotiate the whole WebRTC connection (that is, initializing a new Publisher, unpublishing the previous one
      * and publishing the new one).
      *
-     * You can get this new MediaStreamTrack by using the native Web API or simply with [[OpenVidu.getUserMedia]] method.
+     * You can get this new MediaStreamTrack by using the native Web API or simply with {@link OpenVidu.getUserMedia} method.
      *
      * **WARNING: this method has been proven to work in the majority of cases, but there may be some combinations of published/replaced tracks that may be incompatible
      * between them and break the connection in OpenVidu Server. A complete renegotiation may be the only solution in this case.

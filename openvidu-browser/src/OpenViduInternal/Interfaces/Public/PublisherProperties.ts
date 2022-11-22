@@ -19,13 +19,13 @@ import { Filter } from '../../../OpenVidu/Filter';
 import { VideoInsertMode } from '../../Enums/VideoInsertMode';
 
 /**
- * See [[OpenVidu.initPublisher]]
+ * See {@link OpenVidu.initPublisher}
  */
 export interface PublisherProperties {
     /**
      * Which device should provide the audio source. Can be:
-     * - Property `deviceId` of a [[Device]]
-     * - A MediaStreamTrack obtained from a MediaStream object with [[OpenVidu.getUserMedia]]
+     * - Property `deviceId` of a {@link Device}
+     * - A MediaStreamTrack obtained from a MediaStream object with {@link OpenVidu.getUserMedia}
      * - `false` or null to have a video-only publisher
      * @default _Default microphone_
      */
@@ -51,13 +51,13 @@ export interface PublisherProperties {
     mirror?: boolean;
 
     /**
-     * Whether to initially publish to the session with the audio unmuted or muted. Only makes sense if property `audioSource` is NOT set to *false* or *null*. You can change the audio state later during the session with [[Publisher.publishAudio]]
+     * Whether to initially publish to the session with the audio unmuted or muted. Only makes sense if property `audioSource` is NOT set to *false* or *null*. You can change the audio state later during the session with {@link Publisher.publishAudio}
      * @default true
      */
     publishAudio?: boolean;
 
     /**
-     * Whether to initially publish to the session with the video enabled or disabled. Only makes sense if property `videoSource` is NOT set to *false* or *null*. You can change the video state later during the session with [[Publisher.publishVideo]]
+     * Whether to initially publish to the session with the video enabled or disabled. Only makes sense if property `videoSource` is NOT set to *false* or *null*. You can change the video state later during the session with {@link Publisher.publishVideo}
      * @default true
      */
     publishVideo?: boolean;
@@ -70,12 +70,12 @@ export interface PublisherProperties {
 
     /**
      * Which device should provide the video source. Can be:
-     * - Property `deviceId` of a [[Device]]
+     * - Property `deviceId` of a {@link Device}
      * - `"screen"` to screen-share. We provide a default screen-shraring extension for Chrome that can run in any domain, but you can customize it so it has your own icon, your own name, etc. Visit this
      * [GitHub repository](https://github.com/OpenVidu/openvidu-screen-sharing-chrome-extension/) to learn how. Once you have uploaded your own extension to Chrome Web Store,
      * simply call `OpenVidu.setAdvancedConfiguration({screenShareChromeExtension : "https://chrome.google.com/webstore/detail/YOUR_EXTENSION_NAME/YOUR_EXTENSION_ID"})` before calling `OpenVidu.initPublisher(targetElement, {videoSource: "screen"})`.
      * For Firefox (<66) `"screen"` string will ask for permissions to share the entire screen. To ask for a specific window or application, use `"window"` string instead (this only applies to Firefox).
-     * - A MediaStreamTrack obtained from a MediaStream object with [[OpenVidu.getUserMedia]]
+     * - A MediaStreamTrack obtained from a MediaStream object with {@link OpenVidu.getUserMedia}
      * - `false` or null to have an audio-only publisher
      * @default _Default camera_
      */

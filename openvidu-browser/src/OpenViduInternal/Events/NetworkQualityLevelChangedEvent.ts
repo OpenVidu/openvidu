@@ -20,7 +20,7 @@ import { Session } from '../../OpenVidu/Session';
 import { Connection } from '../../OpenVidu/Connection';
 
 /**
- * Triggered by [[networkQualityLevelChanged]]
+ * Triggered by {@link SessionEventMap.networkQualityLevelChanged}
  */
 export class NetworkQualityLevelChangedEvent extends Event {
     /**

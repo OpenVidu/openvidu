@@ -31,7 +31,7 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 /**
  * Represents each one of the user's connection to the session (the local one and other user's connections).
- * Therefore each [[Session]] and [[Stream]] object has an attribute of type Connection
+ * Therefore each {@link Session} and {@link Stream} object has an attribute of type Connection
  */
 export class Connection {
     /**
@@ -52,9 +52,9 @@ export class Connection {
 
     /**
      * Role of the connection.
-     * - `SUBSCRIBER`: can subscribe to published Streams of other users by calling [[Session.subscribe]]
-     * - `PUBLISHER`: SUBSCRIBER permissions + can publish their own Streams by calling [[Session.publish]]
-     * - `MODERATOR`: SUBSCRIBER + PUBLISHER permissions + can force the unpublishing or disconnection over a third-party Stream or Connection by call [[Session.forceUnpublish]] and [[Session.forceDisconnect]]
+     * - `SUBSCRIBER`: can subscribe to published Streams of other users by calling {@link Session.subscribe}
+     * - `PUBLISHER`: SUBSCRIBER permissions + can publish their own Streams by calling {@link Session.publish}
+     * - `MODERATOR`: SUBSCRIBER + PUBLISHER permissions + can force the unpublishing or disconnection over a third-party Stream or Connection by call {@link Session.forceUnpublish} and {@link Session.forceDisconnect}
      *
      * **Only defined for the local connection. In remote connections will be `undefined`**
      */

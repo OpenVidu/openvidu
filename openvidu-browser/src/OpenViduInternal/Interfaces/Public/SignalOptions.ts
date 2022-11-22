@@ -18,7 +18,7 @@
 import { Connection } from '../../../OpenVidu/Connection';
 
 /**
- * See [[Session.signal]]
+ * See {@link Session.signal}
  */
 export interface SignalOptions {
     /**

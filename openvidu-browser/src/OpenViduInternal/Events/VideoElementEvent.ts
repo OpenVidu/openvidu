@@ -20,8 +20,8 @@ import { StreamManager } from '../../OpenVidu/StreamManager';
 
 /**
  * Triggered by:
- * - [[videoElementCreated]]
- * - [[videoElementDestroyed]]
+ * - {@link StreamManagerEventMap.videoElementCreated}
+ * - {@link StreamManagerEventMap.videoElementDestroyed}
  */
 export class VideoElementEvent extends Event {
     /**

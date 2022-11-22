@@ -16,7 +16,7 @@
  */
 
 /**
- * How the video will be inserted in the DOM for Publishers and Subscribers. See [[PublisherProperties.insertMode]] and [[SubscriberProperties.insertMode]]
+ * How the video will be inserted in the DOM for Publishers and Subscribers. See {@link PublisherProperties.insertMode} and {@link SubscriberProperties.insertMode}
  */
 export enum VideoInsertMode {
     /**

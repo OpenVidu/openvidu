@@ -62,7 +62,7 @@ let platform: PlatformUtils;
 
 /**
  * Represents each one of the media streams available in OpenVidu Server for certain session.
- * Each [[Publisher]] and [[Subscriber]] has an attribute of type Stream, as they give access
+ * Each {@link Publisher} and {@link Subscriber} has an attribute of type Stream, as they give access
  * to one of them (sending and receiving it, respectively)
  */
 export class Stream {
@@ -72,8 +72,8 @@ export class Stream {
     connection: Connection;
 
     /**
-     * Frame rate of the video in frames per second. This property is only defined if the [[Publisher]] of
-     * the stream was initialized passing a _frameRate_ property on [[OpenVidu.initPublisher]] method
+     * Frame rate of the video in frames per second. This property is only defined if the {@link Publisher} of
+     * the stream was initialized passing a _frameRate_ property on {@link OpenVidu.initPublisher} method
      */
     frameRate?: number;
 
@@ -88,17 +88,17 @@ export class Stream {
     hasAudio: boolean;
 
     /**
-     * Whether the stream has the video track muted or unmuted. If [[hasVideo]] is false, this property is undefined.
+     * Whether the stream has the video track muted or unmuted. If {@link hasVideo} is false, this property is undefined.
      *
-     * This property may change if the Publisher publishing the stream calls [[Publisher.publishVideo]]. Whenever this happens a [[StreamPropertyChangedEvent]] will be dispatched
+     * This property may change if the Publisher publishing the stream calls {@link Publisher.publishVideo}. Whenever this happens a {@link StreamPropertyChangedEvent} will be dispatched
      * by the Session object as well as by the affected Subscriber/Publisher object
      */
     videoActive: boolean;
 
     /**
-     * Whether the stream has the audio track muted or unmuted. If [[hasAudio]] is false, this property is undefined
+     * Whether the stream has the audio track muted or unmuted. If {@link hasAudio} is false, this property is undefined
      *
-     * This property may change if the Publisher publishing the stream calls [[Publisher.publishAudio]]. Whenever this happens a [[StreamPropertyChangedEvent]] will be dispatched
+     * This property may change if the Publisher publishing the stream calls {@link Publisher.publishAudio}. Whenever this happens a {@link StreamPropertyChangedEvent} will be dispatched
      * by the Session object as well as by the affected Subscriber/Publisher object
      */
     audioActive: boolean;
@@ -106,14 +106,14 @@ export class Stream {
     /**
      * Unique identifier of the stream. If the stream belongs to a...
      * - Subscriber object: property `streamId` is always defined
-     * - Publisher object: property `streamId` is only defined after successful execution of [[Session.publish]]
+     * - Publisher object: property `streamId` is only defined after successful execution of {@link Session.publish}
      */
     streamId: string;
 
     /**
      * Time when this stream was created in OpenVidu Server (UTC milliseconds). Depending on the owner of this stream:
      * - Subscriber object: property `creationTime` is always defined
-     * - Publisher object: property `creationTime` is only defined after successful execution of [[Session.publish]]
+     * - Publisher object: property `creationTime` is only defined after successful execution of {@link Session.publish}
      */
     creationTime: number;
 
@@ -121,34 +121,34 @@ export class Stream {
      * Can be:
      * - `"CAMERA"`: when the video source comes from a webcam.
      * - `"SCREEN"`: when the video source comes from screen-sharing.
-     * - `"CUSTOM"`: when [[PublisherProperties.videoSource]] has been initialized in the Publisher side with a custom MediaStreamTrack when calling [[OpenVidu.initPublisher]]).
+     * - `"CUSTOM"`: when {@link PublisherProperties.videoSource} has been initialized in the Publisher side with a custom MediaStreamTrack when calling {@link OpenVidu.initPublisher}).
      * - `"IPCAM"`: when the video source comes from an IP camera participant instead of a regular participant (see [IP cameras](/en/stable/advanced-features/ip-cameras/)).
      *
-     * If [[hasVideo]] is false, this property is undefined
+     * If {@link hasVideo} is false, this property is undefined
      */
     typeOfVideo?: keyof typeof TypeOfVideo; // TODO: Change this type to enum TypeOfVideo on the next breaking-change release
 
     /**
-     * StreamManager object ([[Publisher]] or [[Subscriber]]) in charge of displaying this stream in the DOM
+     * StreamManager object ({@link Publisher} or {@link Subscriber}) in charge of displaying this stream in the DOM
      */
     streamManager: StreamManager;
 
     /**
-     * Width and height in pixels of the encoded video stream. If [[hasVideo]] is false, this property is undefined
+     * Width and height in pixels of the encoded video stream. If {@link hasVideo} is false, this property is undefined
      *
      * This property may change if the Publisher that is publishing:
      * - If it is a mobile device, whenever the user rotates the device.
      * - If it is screen-sharing, whenever the user changes the size of the captured window.
      *
-     * Whenever this happens a [[StreamPropertyChangedEvent]] will be dispatched by the Session object as well as by the affected Subscriber/Publisher object
+     * Whenever this happens a {@link StreamPropertyChangedEvent} will be dispatched by the Session object as well as by the affected Subscriber/Publisher object
      */
     videoDimensions: { width: number; height: number };
 
     /**
      * **WARNING**: experimental option. This interface may change in the near future
      *
-     * Filter applied to the Stream. You can apply filters by calling [[Stream.applyFilter]], execute methods of the applied filter with
-     * [[Filter.execMethod]] and remove it with [[Stream.removeFilter]]. Be aware that the client calling this methods must have the
+     * Filter applied to the Stream. You can apply filters by calling {@link Stream.applyFilter}, execute methods of the applied filter with
+     * {@link Filter.execMethod} and remove it with {@link Stream.removeFilter}. Be aware that the client calling this methods must have the
      * necessary permissions: the token owned by the client must have been initialized with the appropriated `allowedFilters` array.
      */
     filter?: Filter;
@@ -323,8 +323,8 @@ export class Stream {
     /**
      * Applies an audio/video filter to the stream.
      *
-     * @param type Type of filter applied. See [[Filter.type]]
-     * @param options Parameters used to initialize the filter. See [[Filter.options]]
+     * @param type Type of filter applied. See {@link Filter.type}
+     * @param options Parameters used to initialize the filter. See {@link Filter.options}
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved to the applied filter if success and rejected with an Error object if not
      */

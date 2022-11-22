@@ -38,14 +38,14 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 let platform: PlatformUtils;
 
 /**
- * Interface in charge of displaying the media streams in the HTML DOM. This wraps any [[Publisher]] and [[Subscriber]] object.
- * You can insert as many video players fo the same Stream as you want by calling [[StreamManager.addVideoElement]] or
- * [[StreamManager.createVideoElement]].
+ * Interface in charge of displaying the media streams in the HTML DOM. This wraps any {@link Publisher} and {@link Subscriber} object.
+ * You can insert as many video players fo the same Stream as you want by calling {@link StreamManager.addVideoElement} or
+ * {@link StreamManager.createVideoElement}.
  * The use of StreamManager wrapper is particularly useful when you don't need to differentiate between Publisher or Subscriber streams or just
  * want to directly manage your own video elements (even more than one video element per Stream). This scenario is pretty common in
  * declarative, MVC frontend frameworks such as Angular, React or Vue.js
  *
- * See available event listeners at [[StreamManagerEventMap]].
+ * See available event listeners at {@link StreamManagerEventMap}.
  */
 export abstract class StreamManager extends EventDispatcher {
     /**
@@ -60,22 +60,22 @@ export abstract class StreamManager extends EventDispatcher {
 
     /**
      * Whether the Stream represented in the DOM is local or remote
-     * - `false` for [[Publisher]]
-     * - `true` for [[Subscriber]]
+     * - `false` for {@link Publisher}
+     * - `true` for {@link Subscriber}
      */
     remote: boolean;
 
     /**
      * The DOM HTMLElement assigned as target element when creating the video for the Publisher/Subscriber. This property is only defined if:
-     * - [[Publisher]] has been initialized by calling method [[OpenVidu.initPublisher]] with a valid `targetElement` parameter
-     * - [[Subscriber]] has been initialized by calling method [[Session.subscribe]] with a valid `targetElement` parameter
+     * - {@link Publisher} has been initialized by calling method {@link OpenVidu.initPublisher} with a valid `targetElement` parameter
+     * - {@link Subscriber} has been initialized by calling method {@link Session.subscribe} with a valid `targetElement` parameter
      */
     targetElement: HTMLElement;
 
     /**
      * `id` attribute of the DOM video element displaying the Publisher/Subscriber's stream. This property is only defined if:
-     * - [[Publisher]] has been initialized by calling method [[OpenVidu.initPublisher]] with a valid `targetElement` parameter
-     * - [[Subscriber]] has been initialized by calling method [[Session.subscribe]] with a valid `targetElement` parameter
+     * - {@link Publisher} has been initialized by calling method {@link OpenVidu.initPublisher} with a valid `targetElement` parameter
+     * - {@link Subscriber} has been initialized by calling method {@link Session.subscribe} with a valid `targetElement` parameter
      */
     id: string;
 
@@ -147,7 +147,7 @@ export abstract class StreamManager extends EventDispatcher {
     }
 
     /**
-     * See [[EventDispatcher.on]]
+     * See {@link EventDispatcher.on}
      */
     on<K extends keyof StreamManagerEventMap>(type: K, handler: (event: StreamManagerEventMap[K]) => void): this {
         super.onAux(type, "Event '" + type + "' triggered by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", handler);
@@ -185,7 +185,7 @@ export abstract class StreamManager extends EventDispatcher {
     }
 
     /**
-     * See [[EventDispatcher.once]]
+     * See {@link EventDispatcher.once}
      */
     once<K extends keyof StreamManagerEventMap>(type: K, handler: (event: StreamManagerEventMap[K]) => void): this {
         super.onceAux(type, "Event '" + type + "' triggered once by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", handler);
@@ -222,7 +222,7 @@ export abstract class StreamManager extends EventDispatcher {
     }
 
     /**
-     * See [[EventDispatcher.off]]
+     * See {@link EventDispatcher.off}
      */
     off<K extends keyof StreamManagerEventMap>(type: K, handler?: (event: StreamManagerEventMap[K]) => void): this {
         super.offAux(type, handler);
@@ -255,7 +255,7 @@ export abstract class StreamManager extends EventDispatcher {
     }
 
     /**
-     * Makes `video` element parameter display this [[stream]]. This is useful when you are
+     * Makes `video` element parameter display this {@link stream}. This is useful when you are
      * [managing the video elements on your own](/en/stable/cheatsheet/manage-videos/#you-take-care-of-the-video-players)
      *
      * Calling this method with a video already added to other Publisher/Subscriber will cause the video element to be
@@ -306,11 +306,11 @@ export abstract class StreamManager extends EventDispatcher {
     }
 
     /**
-     * Creates a new video element displaying this [[stream]]. This allows you to have multiple video elements displaying the same media stream.
+     * Creates a new video element displaying this {@link stream}. This allows you to have multiple video elements displaying the same media stream.
      *
      * #### Events dispatched
      *
-     * The Publisher/Subscriber object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM. See [[VideoElementEvent]]
+     * The Publisher/Subscriber object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM. See {@link VideoElementEvent}
      *
      * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Publisher/Subscriber will be inserted
      * @param insertMode How the video element will be inserted accordingly to `targetElemet`
@@ -372,8 +372,8 @@ export abstract class StreamManager extends EventDispatcher {
     }
 
     /**
-     * Updates the current configuration for the [[PublisherSpeakingEvent]] feature and the [StreamManagerEvent.streamAudioVolumeChange](/en/stable/api/openvidu-browser/classes/StreamManagerEvent.html) feature for this specific
-     * StreamManager audio stream, overriding the global options set with [[OpenVidu.setAdvancedConfiguration]]. This way you can customize the audio events options
+     * Updates the current configuration for the {@link PublisherSpeakingEvent} feature and the [StreamManagerEvent.streamAudioVolumeChange](/en/stable/api/openvidu-browser/classes/StreamManagerEvent.html) feature for this specific
+     * StreamManager audio stream, overriding the global options set with {@link OpenVidu.setAdvancedConfiguration}. This way you can customize the audio events options
      * for each specific StreamManager and change them dynamically.
      *
      * @param publisherSpeakingEventsOptions New options to be applied to this StreamManager's audio stream. It is an object which includes the following optional properties:

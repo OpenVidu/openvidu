@@ -16,7 +16,7 @@
  */
 
 /**
- * See [[OpenVidu.getDevices]]
+ * See {@link OpenVidu.getDevices}
  */
 export interface Device {
     /**
@@ -25,7 +25,7 @@ export interface Device {
     kind: 'videoinput' | 'audioinput';
 
     /**
-     * Unique ID for the device. Use it on `audioSource` or `videoSource` properties of [[PublisherProperties]]
+     * Unique ID for the device. Use it on `audioSource` or `videoSource` properties of {@link PublisherProperties}
      */
     deviceId: string;
 

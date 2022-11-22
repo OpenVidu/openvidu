@@ -6,15 +6,15 @@
         "jsnlog": "2.30.0", 
         "mime": "3.0.0", 
         "platform": "1.3.6", 
-        "semver": "7.3.7", 
-        "uuid": "8.3.2", 
+        "semver": "7.3.8", 
+        "uuid": "9.0.0", 
         "wolfy87-eventemitter": "5.2.9", 
         "events": "3.3.0", 
         "inherits": "2.0.4"
     }, 
     "description": "OpenVidu Browser", 
     "devDependencies": {
-        "@types/node": "18.0.0", 
+        "@types/node": "18.11.9", 
         "@types/platform": "1.3.4", 
         "browserify": "17.0.0", 
         "grunt": "1.5.3", 
@@ -26,11 +26,11 @@
         "grunt-postcss": "0.9.0", 
         "grunt-string-replace": "1.3.3", 
         "grunt-ts": "6.0.0-beta.22", 
-        "terser": "5.14.1", 
+        "terser": "5.15.1", 
         "tsify": "5.0.4", 
         "tslint": "6.1.3", 
-        "typedoc": "0.22.17", 
-        "typescript": "4.5.4"
+        "typedoc": "0.23.21", 
+        "typescript": "4.9.3"
     }, 
     "license": "Apache-2.0", 
     "main": "lib/index.js", 

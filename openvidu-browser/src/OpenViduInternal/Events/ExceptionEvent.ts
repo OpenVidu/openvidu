@@ -21,13 +21,13 @@ import { Subscriber } from '../../OpenVidu/Subscriber';
 import { Event } from './Event';
 
 /**
- * Defines property [[ExceptionEvent.name]]
+ * Defines property {@link ExceptionEvent.name}
  */
 export enum ExceptionEventName {
     /**
      * There was an unexpected error on the server-side processing an ICE candidate generated and sent by the client-side.
      *
-     * [[ExceptionEvent]] objects with this [[ExceptionEvent.name]] will have as [[ExceptionEvent.origin]] property a [[Session]] object.
+     * {@link ExceptionEvent} objects with this {@link ExceptionEvent.name} will have as {@link ExceptionEvent.origin} property a {@link Session} object.
      */
     ICE_CANDIDATE_ERROR = 'ICE_CANDIDATE_ERROR',
 
@@ -39,7 +39,7 @@ export enum ExceptionEventName {
      * then an automatic reconnection process of the media stream is immediately performed. If the ICE connection has broken due to
      * a total network drop, then no automatic reconnection process will be possible.
      *
-     * [[ExceptionEvent]] objects with this [[ExceptionEvent.name]] will have as [[ExceptionEvent.origin]] property a [[Stream]] object.
+     * {@link ExceptionEvent} objects with this {@link ExceptionEvent.name} will have as {@link ExceptionEvent.origin} property a {@link Stream} object.
      */
     ICE_CONNECTION_FAILED = 'ICE_CONNECTION_FAILED',
 
@@ -52,46 +52,46 @@ export enum ExceptionEventName {
      * reconnection process of the media stream is performed. If the ICE connection has broken due to a total network drop, then no
      * automatic reconnection process will be possible.
      *
-     * You can customize the timeout for the reconnection attempt with property [[OpenViduAdvancedConfiguration.iceConnectionDisconnectedExceptionTimeout]],
+     * You can customize the timeout for the reconnection attempt with property {@link OpenViduAdvancedConfiguration.iceConnectionDisconnectedExceptionTimeout},
      * which by default is 4000 milliseconds.
      *
-     * [[ExceptionEvent]] objects with this [[ExceptionEvent.name]] will have as [[ExceptionEvent.origin]] property a [[Stream]] object.
+     * {@link ExceptionEvent} objects with this {@link ExceptionEvent.name} will have as {@link ExceptionEvent.origin} property a {@link Stream} object.
      */
     ICE_CONNECTION_DISCONNECTED = 'ICE_CONNECTION_DISCONNECTED',
 
     /**
-     * A [[Subscriber]] object has not fired event `streamPlaying` after certain timeout. `streamPlaying` event belongs to [[StreamManagerEvent]]
+     * A {@link Subscriber} object has not fired event `streamPlaying` after certain timeout. `streamPlaying` event belongs to {@link StreamManagerEvent}
      * category. It wraps Web API native event [canplay](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/canplay_event).
      *
      * OpenVidu Browser can take care of the video players (see [here](/en/stable/cheatsheet/manage-videos/#let-openvidu-take-care-of-the-video-players)),
      * or you can take care of video players on your own (see [here](/en/stable/cheatsheet/manage-videos/#you-take-care-of-the-video-players)).
-     * Either way, whenever a [[Subscriber]] object is commanded to attach its [[Stream]] to a video element, it is supposed to fire `streamPlaying`
+     * Either way, whenever a {@link Subscriber} object is commanded to attach its {@link Stream} to a video element, it is supposed to fire `streamPlaying`
      * event shortly after. If it does not, then we can safely assume that something wrong has happened while playing the remote video and the
      * application may be notified through this specific ExceptionEvent.
      *
-     * The timeout can be configured with property [[OpenViduAdvancedConfiguration.noStreamPlayingEventExceptionTimeout]]. By default it is 4000 milliseconds.
+     * The timeout can be configured with property {@link OpenViduAdvancedConfiguration.noStreamPlayingEventExceptionTimeout}. By default it is 4000 milliseconds.
      *
      * This is just an informative exception. It only means that a remote Stream that is supposed to be playing by a video player has not done so
      * in a reasonable time. But the lack of the event can be caused by multiple reasons. If a Subscriber is not playing its Stream, the origin
      * of the problem could be located at the Publisher side. Or may be caused by a transient network problem. But it also could be a problem with
      * autoplay permissions. Bottom line, the cause can be very varied, and depending on the application the lack of the event could even be expected.
      *
-     * [[ExceptionEvent]] objects with this [[ExceptionEvent.name]] will have as [[ExceptionEvent.origin]] property a [[Subscriber]] object.
+     * {@link ExceptionEvent} objects with this {@link ExceptionEvent.name} will have as {@link ExceptionEvent.origin} property a {@link Subscriber} object.
      */
     NO_STREAM_PLAYING_EVENT = 'NO_STREAM_PLAYING_EVENT',
 
     /**
      * There has been a server-side disconnection of the Speech To Text module. From the moment this exception is fired to the moment method
-     * [[Session.subscribeToSpeechToText]] is called again, the transcription of the audio stream will not be available and no [[SpeechToTextEvent]]
+     * {@link Session.subscribeToSpeechToText} is called again, the transcription of the audio stream will not be available and no {@link SpeechToTextEvent}
      * will be fired.
      *
-     * [[ExceptionEvent]] objects with this [[ExceptionEvent.name]] will have as [[ExceptionEvent.origin]] property a [[Session]] object.
+     * {@link ExceptionEvent} objects with this {@link ExceptionEvent.name} will have as {@link ExceptionEvent.origin} property a {@link Session} object.
      */
     SPEECH_TO_TEXT_DISCONNECTED = 'SPEECH_TO_TEXT_DISCONNECTED',
 }
 
 /**
- * Triggered by [[SessionEventMap.exception]]
+ * Triggered by {@link SessionEventMap.exception}
  */
 export class ExceptionEvent extends Event {
     /**
@@ -100,10 +100,10 @@ export class ExceptionEvent extends Event {
     name: ExceptionEventName;
 
     /**
-     * Object affected by the exception. Depending on the [[ExceptionEvent.name]] property:
-     * - [[Session]]: `ICE_CANDIDATE_ERROR`
-     * - [[Stream]]: `ICE_CONNECTION_FAILED`, `ICE_CONNECTION_DISCONNECTED`
-     * - [[Subscriber]]: `NO_STREAM_PLAYING_EVENT`
+     * Object affected by the exception. Depending on the {@link ExceptionEvent.name} property:
+     * - {@link Session}: `ICE_CANDIDATE_ERROR`
+     * - {@link Stream}: `ICE_CONNECTION_FAILED`, `ICE_CONNECTION_DISCONNECTED`
+     * - {@link Subscriber}: `NO_STREAM_PLAYING_EVENT`
      */
     origin: Session | Stream | Subscriber;
 

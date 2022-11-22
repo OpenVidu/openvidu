@@ -30,23 +30,23 @@ export interface StreamManagerVideo {
 
     /**
      * The DOM HTMLElement assigned as target element when creating a video for the StreamManager. This property is defined when:
-     * - [[OpenVidu.initPublisher]] or [[Session.subscribe]] methods have been called passing a valid `targetElement` parameter.
-     * - [[StreamManager.createVideoElement]] has been called.
+     * - {@link OpenVidu.initPublisher} or {@link Session.subscribe} methods have been called passing a valid `targetElement` parameter.
+     * - {@link StreamManager.createVideoElement} has been called.
      *
      * This property is undefined when:
-     * - [[OpenVidu.initPublisher]] or [[Session.subscribe]] methods have been called passing *null* or *undefined* as `targetElement` parameter.
-     * - [[StreamManager.addVideoElement]] has been called.
+     * - {@link OpenVidu.initPublisher} or {@link Session.subscribe} methods have been called passing *null* or *undefined* as `targetElement` parameter.
+     * - {@link StreamManager.addVideoElement} has been called.
      */
     targetElement?: HTMLElement;
 
     /**
      * How the DOM video element should be inserted with respect to `targetElement`. This property is defined when:
-     * - [[OpenVidu.initPublisher]] or [[Session.subscribe]] methods have been called passing a valid `targetElement` parameter.
-     * - [[StreamManager.createVideoElement]] has been called.
+     * - {@link OpenVidu.initPublisher} or {@link Session.subscribe} methods have been called passing a valid `targetElement` parameter.
+     * - {@link StreamManager.createVideoElement} has been called.
      *
      * This property is undefined when:
-     * - [[OpenVidu.initPublisher]] or [[Session.subscribe]] methods have been called passing *null* or *undefined* as `targetElement` parameter.
-     * - [[StreamManager.addVideoElement]] has been called.
+     * - {@link OpenVidu.initPublisher} or {@link Session.subscribe} methods have been called passing *null* or *undefined* as `targetElement` parameter.
+     * - {@link StreamManager.addVideoElement} has been called.
      */
     insertMode?: VideoInsertMode;
 

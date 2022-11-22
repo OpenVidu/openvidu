@@ -20,12 +20,12 @@ import { Connection } from '../../OpenVidu/Connection';
 import { Session } from '../../OpenVidu/Session';
 
 /**
- * Triggered by [[SessionEventMap.signal]]
+ * Triggered by {@link SessionEventMap.signal}
  */
 export class SignalEvent extends Event {
     /**
-     * The type of signal. It is string `"signal"` for those signals sent with no [[SignalOptions.type]] property, and `"signal:type"` if was sent with a
-     * valid [[SignalOptions.type]] property.
+     * The type of signal. It is string `"signal"` for those signals sent with no {@link SignalOptions.type} property, and `"signal:type"` if was sent with a
+     * valid {@link SignalOptions.type} property.
      *
      * The client must be specifically subscribed to `Session.on('signal:type', function(signalEvent) {...})` to trigger that type of signal.
      *

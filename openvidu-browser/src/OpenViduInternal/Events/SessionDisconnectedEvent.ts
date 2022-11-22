@@ -26,7 +26,7 @@ import { ConnectionEventReason } from './Types/Types';
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 /**
- * Triggered by [[sessionDisconnected]]
+ * Triggered by {@link SessionEventMap.sessionDisconnected}
  */
 export class SessionDisconnectedEvent extends Event {
     /**

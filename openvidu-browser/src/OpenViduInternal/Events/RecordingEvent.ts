@@ -21,8 +21,8 @@ import { RecordingEventReason } from './Types/Types';
 
 /**
  * Triggered by:
- * - [[recordingStarted]]
- * - [[recordingStopped]]
+ * - {@link SessionEventMap.recordingStarted}
+ * - {@link SessionEventMap.recordingStopped}
  */
 export class RecordingEvent extends Event {
     /**
@@ -36,7 +36,7 @@ export class RecordingEvent extends Event {
      * - With **openvidu-java-client**: `OpenVidu.startRecording(sessionId, "MY_RECORDING")` or `OpenVidu.startRecording(sessionId, new RecordingProperties.Builder().name("MY_RECORDING").build())`
      * - With **openvidu-node-client**: `OpenVidu.startRecording(sessionId, "MY_RECORDING")` or `OpenVidu.startRecording(sessionId, {name: "MY_RECORDING"})`
      *
-     * If no name is supplied, this property will be undefined and the recorded file will be named after property [[id]]
+     * If no name is supplied, this property will be undefined and the recorded file will be named after property {@link id}
      */
     name?: string;
 

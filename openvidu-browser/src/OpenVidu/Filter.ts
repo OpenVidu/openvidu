@@ -29,7 +29,7 @@ const logger: OpenViduLogger = OpenViduLogger.getInstance();
 /**
  * **WARNING**: experimental option. This interface may change in the near future
  *
- * Video/audio filter applied to a Stream. See [[Stream.applyFilter]]
+ * Video/audio filter applied to a Stream. See {@link Stream.applyFilter}
  */
 export class Filter {
     /**
@@ -53,7 +53,7 @@ export class Filter {
     options: Object;
 
     /**
-     * Value passed the last time [[Filter.execMethod]] was called. If `undefined` this method has not been called yet.
+     * Value passed the last time {@link Filter.execMethod} was called. If `undefined` this method has not been called yet.
      *
      * You can use this value to know the current status of any applied filter
      */
@@ -204,7 +204,7 @@ export class Filter {
      * Subscribe to certain filter event. Available events are specific for each filter
      *
      * @param eventType Event to which subscribe to.
-     * @param handler Function to execute upon event dispatched. It receives as parameter a [[FilterEvent]] object
+     * @param handler Function to execute upon event dispatched. It receives as parameter a {@link FilterEvent} object
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the event listener was successfully attached to the filter and rejected with an Error object if not
      */

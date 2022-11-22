@@ -22,8 +22,8 @@ import { StreamPropertyChangedEvent } from '../StreamPropertyChangedEvent';
 import { VideoElementEvent } from '../VideoElementEvent';
 
 /**
- * Events dispatched by [[StreamManager]] object. Manage event listeners with
- * [[StreamManager.on]], [[StreamManager.once]] and [[StreamManager.off]] methods.
+ * Events dispatched by {@link StreamManager} object. Manage event listeners with
+ * {@link StreamManager.on}, {@link StreamManager.once} and {@link StreamManager.off} methods.
  *
  * Example:
  *
@@ -58,15 +58,15 @@ export interface StreamManagerEventMap extends EventMap {
     streamPlaying: StreamManagerEvent;
 
     /**
-     * Event dispatched when the volume of the media stream's audio track changes. Only applies if [[Stream.hasAudio]] is `true`.
+     * Event dispatched when the volume of the media stream's audio track changes. Only applies if {@link Stream.hasAudio} is `true`.
      * The frequency this event is fired with is defined by property `interval` of
-     * [[OpenViduAdvancedConfiguration.publisherSpeakingEventsOptions]] (default 100ms)
+     * {@link OpenViduAdvancedConfiguration.publisherSpeakingEventsOptions} (default 100ms)
      */
     streamAudioVolumeChange: StreamManagerEvent;
 
     /**
      * Event dispatched when a Stream undergoes any change in any of its mutable properties
-     * (see [[StreamPropertyChangedEvent.changedProperty]]).
+     * (see {@link StreamPropertyChangedEvent.changedProperty}).
      */
     streamPropertyChanged: StreamPropertyChangedEvent;
 
@@ -74,8 +74,8 @@ export interface StreamManagerEventMap extends EventMap {
      * Event dispatched when the user owning the stream has started speaking.
      *
      * Extra information:
-     * - This event will only be triggered for **streams that have audio tracks** ([[Stream.hasAudio]] must be true).
-     * - Further configuration can be applied on how the event is dispatched by setting property `publisherSpeakingEventsOptions` in the call of [[OpenVidu.setAdvancedConfiguration]].
+     * - This event will only be triggered for **streams that have audio tracks** ({@link Stream.hasAudio} must be true).
+     * - Further configuration can be applied on how the event is dispatched by setting property `publisherSpeakingEventsOptions` in the call of {@link OpenVidu.setAdvancedConfiguration}.
      */
     publisherStartSpeaking: PublisherSpeakingEvent;
 
@@ -83,8 +83,8 @@ export interface StreamManagerEventMap extends EventMap {
      * Event dispatched when the user owning the stream has stopped speaking.
      *
      * Extra information:
-     * - This event will only be triggered for **streams that have audio tracks** ([[Stream.hasAudio]] must be true).
-     * - Further configuration can be applied on how the event is dispatched by setting property `publisherSpeakingEventsOptions` in the call of [[OpenVidu.setAdvancedConfiguration]].
+     * - This event will only be triggered for **streams that have audio tracks** ({@link Stream.hasAudio} must be true).
+     * - Further configuration can be applied on how the event is dispatched by setting property `publisherSpeakingEventsOptions` in the call of {@link OpenVidu.setAdvancedConfiguration}.
      */
     publisherStopSpeaking: PublisherSpeakingEvent;
 }

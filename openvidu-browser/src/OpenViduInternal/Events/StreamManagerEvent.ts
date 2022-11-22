@@ -20,8 +20,8 @@ import { StreamManager } from '../../OpenVidu/StreamManager';
 
 /**
  * Triggered by:
- * - [[streamPlaying]]
- * - [[streamAudioVolumeChange]]
+ * - {@link StreamManagerEventMap.streamPlaying}
+ * - {@link StreamManagerEventMap.streamAudioVolumeChange}
  */
 export class StreamManagerEvent extends Event {
     /**

@@ -68,13 +68,13 @@ let platform: PlatformUtils;
 /**
  * Represents a video call. It can also be seen as a videoconference room where multiple users can connect.
  * Participants who publish their videos to a session can be seen by the rest of users connected to that specific session.
- * Initialized with [[OpenVidu.initSession]] method.
+ * Initialized with {@link OpenVidu.initSession} method.
  *
- * See available event listeners at [[SessionEventMap]].
+ * See available event listeners at {@link SessionEventMap}.
  */
 export class Session extends EventDispatcher {
     /**
-     * Local connection to the Session. This object is defined only after [[Session.connect]] has been successfully executed, and can be retrieved subscribing to `connectionCreated` event
+     * Local connection to the Session. This object is defined only after {@link Session.connect} has been successfully executed, and can be retrieved subscribing to `connectionCreated` event
      */
     connection: Connection;
 
@@ -84,13 +84,13 @@ export class Session extends EventDispatcher {
     sessionId: string;
 
     /**
-     * Collection of all StreamManagers of this Session ([[Publisher]] and [[Subscriber]])
+     * Collection of all StreamManagers of this Session ({@link Publisher} and {@link Subscriber})
      */
     streamManagers: StreamManager[] = [];
 
     /**
-     * Object defining the methods that the client is able to call. These are defined by the [[Connection.role]].
-     * This object is only defined after [[Session.connect]] has been successfully resolved
+     * Object defining the methods that the client is able to call. These are defined by the {@link Connection.role}.
+     * This object is only defined after {@link Session.connect} has been successfully resolved
      */
     capabilities: Capabilities;
 
@@ -145,21 +145,21 @@ export class Session extends EventDispatcher {
      * This metadata is not considered secure, as it is generated in the client side. To pass secure data, add it as a parameter in the
      * token generation operation (through the API REST, openvidu-java-client or openvidu-node-client).
      *
-     * Only after the returned Promise is successfully resolved [[Session.connection]] object will be available and properly defined.
+     * Only after the returned Promise is successfully resolved {@link Session.connection} object will be available and properly defined.
      *
      * #### Events dispatched
      *
-     * The [[Session]] object of the local participant will first dispatch one or more `connectionCreated` events upon successful termination of this method:
-     * - First one for your own local Connection object, so you can retrieve [[Session.connection]] property.
+     * The {@link Session} object of the local participant will first dispatch one or more `connectionCreated` events upon successful termination of this method:
+     * - First one for your own local Connection object, so you can retrieve {@link Session.connection} property.
      * - Then one for each remote Connection previously connected to the Session, if any. Any other remote user connecting to the Session after you have
      * successfully connected will also dispatch a `connectionCreated` event when they do so.
      *
-     * The [[Session]] object of the local participant will also dispatch a `streamCreated` event for each remote active [[Publisher]] that was already streaming
+     * The {@link Session} object of the local participant will also dispatch a `streamCreated` event for each remote active {@link Publisher} that was already streaming
      * when connecting, just after dispatching all remote `connectionCreated` events.
      *
-     * The [[Session]] object of every other participant connected to the session will dispatch a `connectionCreated` event.
+     * The {@link Session} object of every other participant connected to the session will dispatch a `connectionCreated` event.
      *
-     * See [[ConnectionEvent]] and [[StreamEvent]] to learn more.
+     * See {@link ConnectionEvent} and {@link StreamEvent} to learn more.
      *
      * @returns A Promise to which you must subscribe that is resolved if the the connection to the Session was successful and rejected with an Error object if not
      *
@@ -200,27 +200,27 @@ export class Session extends EventDispatcher {
      *
      * #### Events dispatched
      *
-     * The [[Session]] object of the local participant will dispatch a `sessionDisconnected` event.
+     * The {@link Session} object of the local participant will dispatch a `sessionDisconnected` event.
      * This event will automatically unsubscribe the leaving participant from every Subscriber object of the session (this includes closing the RTCPeerConnection and disposing all MediaStreamTracks)
      * and also deletes any HTML video element associated to each Subscriber (only those [created by OpenVidu Browser](/en/stable/cheatsheet/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, each Subscriber object will dispatch a `videoElementDestroyed` event.
      * Call `event.preventDefault()` upon event `sessionDisconnected` to avoid this behavior and take care of disposing and cleaning all the Subscriber objects yourself.
-     * See [[SessionDisconnectedEvent]] and [[VideoElementEvent]] to learn more.
+     * See {@link SessionDisconnectedEvent} and {@link VideoElementEvent} to learn more.
      *
-     * The [[Publisher]] object of the local participant will dispatch a `streamDestroyed` event if there is a [[Publisher]] object publishing to the session.
+     * The {@link Publisher} object of the local participant will dispatch a `streamDestroyed` event if there is a {@link Publisher} object publishing to the session.
      * This event will automatically stop all media tracks and delete any HTML video element associated to it (only those [created by OpenVidu Browser](/en/stable/cheatsheet/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Publisher object will dispatch a `videoElementDestroyed` event.
      * Call `event.preventDefault()` upon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session (to do so it is a mandatory requirement to call `Session.unpublish()`
-     * or/and `Session.disconnect()` in the previous session). See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
+     * or/and `Session.disconnect()` in the previous session). See {@link StreamEvent} and {@link VideoElementEvent} to learn more.
      *
-     * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event if the disconnected participant was publishing.
+     * The {@link Session} object of every other participant connected to the session will dispatch a `streamDestroyed` event if the disconnected participant was publishing.
      * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the RTCPeerConnection and disposing all MediaStreamTracks)
      * and also deletes any HTML video element associated to that Subscriber (only those [created by OpenVidu Browser](/en/stable/cheatsheet/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
      * Call `event.preventDefault()` upon event `streamDestroyed` to avoid this default behavior and take care of disposing and cleaning the Subscriber object yourself.
-     * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
+     * See {@link StreamEvent} and {@link VideoElementEvent} to learn more.
      *
-     * The [[Session]] object of every other participant connected to the session will dispatch a `connectionDestroyed` event in any case. See [[ConnectionEvent]] to learn more.
+     * The {@link Session} object of every other participant connected to the session will dispatch a `connectionDestroyed` event in any case. See {@link ConnectionEvent} to learn more.
      */
     disconnect(): void {
         this.leave(false, 'disconnect');
@@ -245,14 +245,14 @@ export class Session extends EventDispatcher {
      *
      * #### Events dispatched
      *
-     * The [[Subscriber]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (only if you
-     * [let OpenVidu take care of the video players](/en/stable/cheatsheet/manage-videos/#let-openvidu-take-care-of-the-video-players)). See [[VideoElementEvent]] to learn more.
+     * The {@link Subscriber} object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (only if you
+     * [let OpenVidu take care of the video players](/en/stable/cheatsheet/manage-videos/#let-openvidu-take-care-of-the-video-players)). See {@link VideoElementEvent} to learn more.
      *
-     * The [[Subscriber]] object will dispatch a `streamPlaying` event once the remote stream starts playing. See [[StreamManagerEvent]] to learn more.
+     * The {@link Subscriber} object will dispatch a `streamPlaying` event once the remote stream starts playing. See {@link StreamManagerEvent} to learn more.
      *
      * @param stream Stream object to subscribe to
-     * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Subscriber will be inserted (see [[SubscriberProperties.insertMode]]). If *null* or *undefined* no default video will be created for this Subscriber.
-     * You can always call method [[Subscriber.addVideoElement]] or [[Subscriber.createVideoElement]] to manage the video elements on your own (see [Manage video players](/en/stable/cheatsheet/manage-videos) section)
+     * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Subscriber will be inserted (see {@link SubscriberProperties.insertMode}). If *null* or *undefined* no default video will be created for this Subscriber.
+     * You can always call method {@link Subscriber.addVideoElement} or {@link Subscriber.createVideoElement} to manage the video elements on your own (see [Manage video players](/en/stable/cheatsheet/manage-videos) section)
      * @param completionHandler `error` parameter is null if `subscribe` succeeds, and is defined if it fails.
      */
     subscribe(
@@ -318,7 +318,7 @@ export class Session extends EventDispatcher {
     }
 
     /**
-     * Promisified version of [[Session.subscribe]]
+     * Promisified version of {@link Session.subscribe}
      */
     subscribeAsync(stream: Stream, targetElement: string | HTMLElement): Promise<Subscriber>;
     subscribeAsync(stream: Stream, targetElement: string | HTMLElement, properties: SubscriberProperties): Promise<Subscriber>;
@@ -352,10 +352,10 @@ export class Session extends EventDispatcher {
      *
      * #### Events dispatched
      *
-     * The [[Subscriber]] object will dispatch a `videoElementDestroyed` event for each video associated to it that was removed from DOM.
+     * The {@link Subscriber} object will dispatch a `videoElementDestroyed` event for each video associated to it that was removed from DOM.
      * Only videos [created by OpenVidu Browser](/en/stable/cheatsheet/manage-videos/#let-openvidu-take-care-of-the-video-players)) will be automatically removed
      *
-     * See [[VideoElementEvent]] to learn more
+     * See {@link VideoElementEvent} to learn more
      */
     unsubscribe(subscriber: Subscriber): Promise<void> {
         return new Promise((resolve, reject) => {
@@ -391,11 +391,11 @@ export class Session extends EventDispatcher {
      *
      * #### Events dispatched
      *
-     * The local [[Publisher]] object will dispatch a `streamCreated` event upon successful termination of this method. See [[StreamEvent]] to learn more.
+     * The local {@link Publisher} object will dispatch a `streamCreated` event upon successful termination of this method. See {@link StreamEvent} to learn more.
      *
-     * The local [[Publisher]] object will dispatch a `streamPlaying` once the media stream starts playing. See [[StreamManagerEvent]] to learn more.
+     * The local {@link Publisher} object will dispatch a `streamPlaying` once the media stream starts playing. See {@link StreamManagerEvent} to learn more.
      *
-     * The [[Session]] object of every other participant connected to the session will dispatch a `streamCreated` event so they can subscribe to it. See [[StreamEvent]] to learn more.
+     * The {@link Session} object of every other participant connected to the session will dispatch a `streamCreated` event so they can subscribe to it. See {@link StreamEvent} to learn more.
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the publisher was successfully published and rejected with an Error object if not
      */
@@ -443,19 +443,19 @@ export class Session extends EventDispatcher {
      *
      * #### Events dispatched
      *
-     * The [[Publisher]] object of the local participant will dispatch a `streamDestroyed` event.
+     * The {@link Publisher} object of the local participant will dispatch a `streamDestroyed` event.
      * This event will automatically stop all media tracks and delete any HTML video element associated to this Publisher
      * (only those videos [created by OpenVidu Browser](/en/stable/cheatsheet/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Publisher object will dispatch a `videoElementDestroyed` event.
      * Call `event.preventDefault()` upon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session.
      *
-     * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event.
+     * The {@link Session} object of every other participant connected to the session will dispatch a `streamDestroyed` event.
      * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the RTCPeerConnection and disposing all MediaStreamTracks) and
      * delete any HTML video element associated to it (only those [created by OpenVidu Browser](/en/stable/cheatsheet/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
      * Call `event.preventDefault()` upon event `streamDestroyed` to avoid this default behavior and take care of disposing and cleaning the Subscriber object on your own.
      *
-     * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
+     * See {@link StreamEvent} and {@link VideoElementEvent} to learn more.
      */
     unpublish(publisher: Publisher): Promise<void> {
         return new Promise((resolve, reject) => {
@@ -506,15 +506,15 @@ export class Session extends EventDispatcher {
      *
      * #### Events dispatched
      *
-     * The behavior is the same as when some user calls [[Session.disconnect]], but `reason` property in all events will be `"forceDisconnectByUser"`.
+     * The behavior is the same as when some user calls {@link Session.disconnect}, but `reason` property in all events will be `"forceDisconnectByUser"`.
      *
-     * The [[Session]] object of every participant will dispatch a `streamDestroyed` event if the evicted user was publishing a stream, with property `reason` set to `"forceDisconnectByUser"`.
-     * The [[Session]] object of every participant except the evicted one will dispatch a `connectionDestroyed` event for the evicted user, with property `reason` set to `"forceDisconnectByUser"`.
+     * The {@link Session} object of every participant will dispatch a `streamDestroyed` event if the evicted user was publishing a stream, with property `reason` set to `"forceDisconnectByUser"`.
+     * The {@link Session} object of every participant except the evicted one will dispatch a `connectionDestroyed` event for the evicted user, with property `reason` set to `"forceDisconnectByUser"`.
      *
-     * If any, the [[Publisher]] object of the evicted participant will also dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`.
-     * The [[Session]] object of the evicted participant will dispatch a `sessionDisconnected` event with property `reason` set to `"forceDisconnectByUser"`.
+     * If any, the {@link Publisher} object of the evicted participant will also dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`.
+     * The {@link Session} object of the evicted participant will dispatch a `sessionDisconnected` event with property `reason` set to `"forceDisconnectByUser"`.
      *
-     * See [[StreamEvent]], [[ConnectionEvent]] and [[SessionDisconnectedEvent]] to learn more.
+     * See {@link StreamEvent}, {@link ConnectionEvent} and {@link SessionDisconnectedEvent} to learn more.
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the participant has been successfully evicted from the session and rejected with an Error object if not
      */
@@ -551,13 +551,13 @@ export class Session extends EventDispatcher {
      *
      * #### Events dispatched
      *
-     * The behavior is the same as when some user calls [[Session.unpublish]], but `reason` property in all events will be `"forceUnpublishByUser"`
+     * The behavior is the same as when some user calls {@link Session.unpublish}, but `reason` property in all events will be `"forceUnpublishByUser"`
      *
-     * The [[Session]] object of every participant will dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
+     * The {@link Session} object of every participant will dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
      *
-     * The [[Publisher]] object of the affected participant will also dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
+     * The {@link Publisher} object of the affected participant will also dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
      *
-     * See [[StreamEvent]] to learn more.
+     * See {@link StreamEvent} to learn more.
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the remote Stream has been successfully unpublished from the session and rejected with an Error object if not
      */
@@ -595,7 +595,7 @@ export class Session extends EventDispatcher {
      * {data:string, to:Connection[], type:string}
      * ```
      * All users subscribed to that signal (`session.on('signal:type', ...)` or `session.on('signal', ...)` for all signals) and whose Connection objects are in `to` array will receive it. Their local
-     * Session objects will dispatch a `signal` or `signal:type` event. See [[SignalEvent]] to learn more.
+     * Session objects will dispatch a `signal` or `signal:type` event. See {@link SignalEvent} to learn more.
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the message successfully reached openvidu-server and rejected with an Error object if not. _This doesn't
      * mean that openvidu-server could resend the message to all the listed receivers._
@@ -647,10 +647,10 @@ export class Session extends EventDispatcher {
     }
 
     /**
-     * Subscribe to the Speech-To-Text events for this [[Stream]]. The Session object will emit [[SpeechToTextEvent]] for the Stream
+     * Subscribe to the Speech-To-Text events for this {@link Stream}. The Session object will emit {@link SpeechToTextEvent} for the Stream
      * when speech is detected in its audio track.
      *
-     * @param stream - The Stream for which you want to start receiving [[SpeechToTextEvent]].
+     * @param stream - The Stream for which you want to start receiving {@link SpeechToTextEvent}.
      * @param lang - The language of the Stream's audio track. It must be a valid [BCP-47](https://tools.ietf.org/html/bcp47) language tag like "en-US" or "es-ES".
      * 
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the speech-to-text subscription
@@ -676,7 +676,7 @@ export class Session extends EventDispatcher {
     }
 
     /**
-     * Unsubscribe from the Speech-To-Text events for this [[Stream]].
+     * Unsubscribe from the Speech-To-Text events for this {@link Stream}.
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the speech-to-text subscription
      * was successful and rejected with an Error object if not.
@@ -700,7 +700,7 @@ export class Session extends EventDispatcher {
     }
 
     /**
-     * See [[EventDispatcher.on]]
+     * See {@link EventDispatcher.on}
      */
     on<K extends keyof SessionEventMap>(type: K, handler: (event: SessionEventMap[K]) => void): this {
         super.onAux(type, "Event '" + type + "' triggered by 'Session'", handler);
@@ -734,7 +734,7 @@ export class Session extends EventDispatcher {
     }
 
     /**
-     * See [[EventDispatcher.once]]
+     * See {@link EventDispatcher.once}
      */
     once<K extends keyof SessionEventMap>(type: K, handler: (event: SessionEventMap[K]) => void): this {
         super.onceAux(type, "Event '" + type + "' triggered once by 'Session'", handler);
@@ -768,7 +768,7 @@ export class Session extends EventDispatcher {
     }
 
     /**
-     * See [[EventDispatcher.off]]
+     * See {@link EventDispatcher.off}
      */
     off<K extends keyof SessionEventMap>(type: K, handler?: (event: SessionEventMap[K]) => void): this {
         super.offAux(type, handler);

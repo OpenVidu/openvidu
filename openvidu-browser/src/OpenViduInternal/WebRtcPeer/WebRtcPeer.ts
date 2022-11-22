@@ -380,7 +380,7 @@ export class WebRtcPeer {
                         offerToReceiveAudio: offerAudio,
                         offerToReceiveVideo: offerVideo
                     };
-                    this.pc!.createAnswer(constraints)
+                    (this.pc as RTCPeerConnection).createAnswer(constraints)
                         .then((sdpAnswer) => resolve(sdpAnswer))
                         .catch((error) => reject(error));
                 }
