@@ -955,6 +955,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 											.equals(event.get("newValue").getAsJsonObject().toString()))) {
 						latch3.countDown();
 					}
+				} else {
+					fail("Viewport resolution did not change in 4 seconds");
 				}
 			} catch (InterruptedException e) {
 				log.error("Error waiting for viewport resolution");
