@@ -25,9 +25,7 @@ import {
 } from './toolbar.directive';
 import {
 	AudioMutedDirective,
-	CaptionsLangDirective,
-	LangDirective,
-	MinimalDirective,
+	CaptionsLangDirective, CaptionsLangOptionsDirective, LangDirective, MinimalDirective,
 	ParticipantNameDirective,
 	PrejoinDirective,
 	VideoMutedDirective
@@ -37,6 +35,7 @@ import {
 	declarations: [
 		MinimalDirective,
 		LangDirective,
+		CaptionsLangOptionsDirective,
 		CaptionsLangDirective,
 		PrejoinDirective,
 		VideoMutedDirective,
@@ -68,6 +67,7 @@ import {
 	exports: [
 		MinimalDirective,
 		LangDirective,
+		CaptionsLangOptionsDirective,
 		CaptionsLangDirective,
 		PrejoinDirective,
 		VideoMutedDirective,

@@ -56,6 +56,7 @@ import { TranslateService } from '../../services/translate/translate.service';
  * | **minimal**                        | `boolean` | {@link MinimalDirective}                        |
  * | **lang**                           | `string`  | {@link LangDirective}                           |
  * | **captionsLang**                   | `string`  | {@link CaptionsLangDirective}                   |
+ * | **captionsLangOprions**            | `CaptionsLangOption []`  | {@link CaptionsLangOptionsDirective}                   |
  * | **prejoin**                        | `boolean` | {@link PrejoinDirective}                        |
  * | **participantName**                | `string`  | {@link ParticipantNameDirective}                |
  * | **videoMuted**                     | `boolean` | {@link VideoMutedDirective}                     |
@@ -302,7 +303,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		}
 
 		this.start();
-
 	}
 
 	/**

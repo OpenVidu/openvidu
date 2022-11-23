@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
+import { CaptionsLangOption } from '../../models/caption.model';
 import { StorageService } from '../storage/storage.service';
 
 /**
@@ -9,7 +10,7 @@ import { StorageService } from '../storage/storage.service';
 	providedIn: 'root'
 })
 export class CaptionService {
-	private langs = [
+	private langs: CaptionsLangOption [] = [
 		{ name: 'English', ISO: 'en-US' },
 		{ name: 'Español', ISO: 'es-ES' },
 		{ name: 'Deutsch', ISO: 'de-DE' },
@@ -20,20 +21,22 @@ export class CaptionService {
 		{ name: 'やまと', ISO: 'jp-JP' },
 		{ name: 'Português', ISO: 'pt-PT' }
 	];
-	captionLangSelected: { name: string; ISO: string } = { name: 'English', ISO: 'en-US' };
+	captionLangSelected: { name: string; ISO: string };
 	captionLangObs: Observable<{ name: string; ISO: string }>;
 	private _captionLang: Subject<{ name: string; ISO: string }> = new Subject();
 	private captionsEnabled: boolean = false;
 
 	constructor(private storageService: StorageService) {
-		const iso = this.storageService.getCaptionsLang();
-		const lang = this.langs.find((lang) => lang.ISO === iso);
-		if (iso && lang) {
-			this.captionLangSelected = lang;
-		} else {
-			this.captionLangSelected = this.langs[0];
-		}
+		this.updateLangSelected();
 		this.captionLangObs = this._captionLang.asObservable();
+
+	}
+
+	setLanguageOptions(options: CaptionsLangOption [] | undefined) {
+		if(options && options.length > 0) {
+			this.langs = options;
+			this.updateLangSelected();
+		}
 	}
 
 	setCaptionsEnabled(value: boolean) {
@@ -59,5 +62,15 @@ export class CaptionService {
 
 	getCaptionLanguages(): { name: string; ISO: string }[] {
 		return this.langs;
+	}
+
+	private updateLangSelected(): void {
+		const iso = this.storageService.getCaptionsLang();
+		const lang = this.langs.find((lang) => lang.ISO === iso);
+		if (iso && lang) {
+			this.captionLangSelected = lang;
+		} else {
+			this.captionLangSelected = this.langs[0];
+		}
 	}
 }

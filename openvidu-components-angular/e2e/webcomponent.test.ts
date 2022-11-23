@@ -149,7 +149,54 @@ describe('Testing API Directives', () => {
 	// 	expect(await utils.isPresent('.captions-container')).to.be.true;
 
 	// 	const element = await utils.waitForElement('.lang-button');
-	// 	expect(await element.getText()).equal('Españolexpand_more')
+	// 	expect(await element.getText()).equal('Españolexpand_more');
+	// });
+
+	/**
+	 * TODO:
+	 * This test is only available with OpenVidu PRO
+	 */
+	// it('should override the CAPTIONS LANG OPTIONS', async () => {
+	// 	await browser.get(`${url}?prejoin=false&captionsLangOptions=true`);
+
+	// 	await utils.checkSessionIsPresent();
+
+	// 	// Checking if toolbar is present
+	// 	await utils.checkToolbarIsPresent();
+
+	// 	// Open more options menu
+	// 	await utils.clickOn('#more-options-btn');
+
+	// 	await browser.sleep(500);
+
+	// 	// Checking if button panel is present
+	// 	await utils.waitForElement('.mat-menu-content');
+	// 	expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+
+	// 	// Checking if captions button is present
+	// 	await utils.waitForElement('#captions-btn');
+	// 	expect(await utils.isPresent('#captions-btn')).to.be.true;
+	// 	await utils.clickOn('#captions-btn');
+
+	// 	await utils.waitForElement('.captions-container');
+	// 	await utils.waitForElement('#caption-settings-btn');
+	// 	await utils.clickOn('#caption-settings-btn');
+
+	// 	await browser.sleep(500);
+
+	// 	await utils.waitForElement('.settings-container');
+	// 	expect(await utils.isPresent('.settings-container')).to.be.true;
+
+	// 	await utils.waitForElement('ov-captions-settings');
+
+	// 	expect(await utils.isPresent('.captions-container')).to.be.true;
+
+	// 	const element = await utils.waitForElement('.lang-button');
+	// 	expect(await element.getText()).equal('Espexpand_more');
+
+	// 	await element.click();
+
+	// 	expect(await utils.getNumberOfElements('.mat-menu-item')).equals(2);
 	// });
 
 	it('should show the PREJOIN page', async () => {

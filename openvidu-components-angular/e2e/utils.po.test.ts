@@ -16,6 +16,10 @@ export class OpenViduComponentsPO {
 		);
 	}
 
+	async getNumberOfElements(selector: string){
+		return (await this.browser.findElements(By.css(selector))).length;
+	}
+
 	async isPresent(selector: string): Promise<boolean> {
 		const elements = await this.browser.findElements(By.css(selector));
 		return elements.length > 0;

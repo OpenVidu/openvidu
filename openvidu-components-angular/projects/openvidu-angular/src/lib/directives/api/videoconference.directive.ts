@@ -1,4 +1,5 @@
 import { Directive, ElementRef, Input, OnDestroy, OnInit } from '@angular/core';
+import { CaptionsLangOption } from '../../models/caption.model';
 import { CaptionService } from '../../services/caption/caption.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import { TranslateService } from '../../services/translate/translate.service';
@@ -116,7 +117,7 @@ export class LangDirective implements OnDestroy {
 }
 
 /**
- * The **captions-lang** directive allows specify the language of room's members
+ * The **captionsLang** directive allows specify the deafult language that OpenVidu will try to recognise.
  *
  * It is only available for {@link VideoconferenceComponent}.
  *
@@ -175,6 +176,67 @@ export class CaptionsLangDirective implements OnDestroy {
 	 */
 	update(value: string) {
 		this.captionService.setLanguage(value);
+	}
+}
+
+/**
+ * The **captionsLangOptions** directive allows to set the language options for the captions.
+ * It will override the languages provided by default.
+ * This propety is an array of objects which must comply with the {@link CaptionsLangOption} interface.
+ *
+ * It is only available for {@link VideoconferenceComponent}.
+ *
+ * Default: ```
+ * [
+ * 	{ name: 'English', ISO: 'en-US' },
+ * 	{ name: 'Español', ISO: 'es-ES' },
+ * 	{ name: 'Deutsch', ISO: 'de-DE' },
+ * 	{ name: 'Français', ISO: 'fr-FR' },
+ * 	{ name: '中国', ISO: 'zh-CN' },
+ * 	{ name: 'हिन्दी', ISO: 'hi-IN' },
+ * 	{ name: 'Italiano', ISO: 'it-IT' },
+ * 	{ name: 'やまと', ISO: 'jp-JP' },
+ * 	{ name: 'Português', ISO: 'pt-PT' }
+ * ]```
+ *
+ * @example
+ * <ov-videoconference [captionsLangOptions]="[{name:'Spanish', ISO: 'es-ES'}]"></ov-videoconference>
+ */
+ @Directive({
+	selector: 'ov-videoconference[captionsLangOptions]'
+})
+export class CaptionsLangOptionsDirective implements OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set captionsLangOptions(value: CaptionsLangOption []) {
+		this.update(value);
+	}
+
+	/**
+	 * @ignore
+	 */
+	constructor(public elementRef: ElementRef, private captionService: CaptionService) {}
+
+	/**
+	 * @ignore
+	 */
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	/**
+	 * @ignore
+	 */
+	clear() {
+		this.update(undefined);
+	}
+
+	/**
+	 * @ignore
+	 */
+	update(value: CaptionsLangOption [] | undefined) {
+		this.captionService.setLanguageOptions(value);
 	}
 }
 

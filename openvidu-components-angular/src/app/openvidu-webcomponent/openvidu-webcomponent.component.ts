@@ -1,6 +1,7 @@
 import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { OpenViduService, ParticipantAbstractModel, RecordingInfo, TokenModel } from 'openvidu-angular';
 import { Session } from 'openvidu-browser';
+import { CaptionsLangOption } from '../../../projects/openvidu-angular/src/lib/models/caption.model';
 
 /**
  *
@@ -22,11 +23,21 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
+
+	/**
+	 * @internal
+	 */
 	_lang: string = '';
+
 	/**
 	 * @internal
 	 */
 	_captionsLang: string = '';
+
+	/**
+	 * @internal
+	 */
+	_captionsLangOptions: CaptionsLangOption;
 
 	/**
 	 * @internal
@@ -156,6 +167,30 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 */
 	@Input() set captionsLang(value: string) {
 		this._captionsLang = value;
+	}
+	/**
+	 * The captionsLangOptions attribute sets the language options for the captions.
+	 * It will override the languages provided by default.
+	 * This propety is an array of objects which must comply with the {@link CaptionsLangOption} interface.
+	 *
+	 * Default: ```
+	 * [
+	 * 	{ name: 'English', ISO: 'en-US' },
+	 * 	{ name: 'Español', ISO: 'es-ES' },
+	 * 	{ name: 'Deutsch', ISO: 'de-DE' },
+	 * 	{ name: 'Français', ISO: 'fr-FR' },
+	 * 	{ name: '中国', ISO: 'zh-CN' },
+	 * 	{ name: 'हिन्दी', ISO: 'hi-IN' },
+	 * 	{ name: 'Italiano', ISO: 'it-IT' },
+	 * 	{ name: 'やまと', ISO: 'jp-JP' },
+	 * 	{ name: 'Português', ISO: 'pt-PT' }
+	 * ]```
+	 *
+	 * @example
+	 * <openvidu-webcomponent captions-lang-options="[{name:'Spanish', ISO: 'es-ES'}]"></openvidu-webcomponent>
+	 */
+	@Input() set captionsLangOptions(value: string | CaptionsLangOption []) {
+		this._captionsLangOptions = this.castToArray(value);
 	}
 	/**
 	 * The **participantName** attribute sets the participant name. It can be useful for aplications which doesn't need the prejoin page.
@@ -739,6 +774,22 @@ export class OpenviduWebComponentComponent implements OnInit {
 		} else {
 			throw new Error(
 				'Parameter has not a valid type. The parameters must to be string or TokenModel {webcam:string, screen: string}.'
+			);
+		}
+	}
+
+	private castToArray(value: CaptionsLangOption [] | string) {
+		if (typeof value === 'string') {
+			try {
+				return JSON.parse(value);
+			} catch (error) {
+				throw 'Unexpected JSON' + error;
+			}
+		} else if (typeof value === 'object' && value.length > 0) {
+			return value;
+		} else {
+			throw new Error(
+				'Parameter has not a valid type. The parameters must to be string or CaptionsLangOptions [] [{name:string, ISO: string}].'
 			);
 		}
 	}

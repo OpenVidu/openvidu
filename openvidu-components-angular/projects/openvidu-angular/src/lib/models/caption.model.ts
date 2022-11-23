@@ -1,4 +1,7 @@
 
+/**
+ * @internal
+ */
 export interface CaptionModel {
 
 	connectionId: string;
@@ -6,5 +9,12 @@ export interface CaptionModel {
 	color: string;
 	type: 'recognizing' | 'recognized';
 	text: string;
+}
+
+export interface CaptionsLangOption {
+
+	name: string;
+	ISO: string;
+
 }
 
