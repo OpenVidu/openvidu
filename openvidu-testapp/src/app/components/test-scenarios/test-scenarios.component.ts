@@ -11,6 +11,7 @@ import { StreamManagerWrapper } from '../users-table/table-video.component';
 import { MatDialog } from '@angular/material/dialog';
 import {
   ConnectionEvent, OpenVidu, PublisherProperties, Session,
+  SessionDisconnectedEvent,
   StreamEvent,
   StreamManagerEvent
 } from 'openvidu-browser';
@@ -183,6 +184,10 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
 
         const OV = new OpenVidu();
 
+        OV.setAdvancedConfiguration({
+          noStreamPlayingEventExceptionTimeout: 50000
+        });
+
         if (this.turnConf === 'freeice') {
           OV.setAdvancedConfiguration({ iceServers: 'freeice' });
         } else if (this.turnConf === 'manual') {
@@ -199,8 +204,15 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
           }
         });
 
+        session.on('sessionDisconnected', (event: SessionDisconnectedEvent) => {
+          this.testFeedService.pushNewEvent({ user: 0, event });
+        });
+
         if (user.subscribeTo) {
           session.on('streamCreated', (event: StreamEvent) => {
+
+            this.testFeedService.pushNewEvent({ user: 0, event });
+
             const subscriber = session.subscribe(event.stream, undefined, (error) => {
               const subAux = this.subscribers
                 .find(s => s.connectionId === session.connection.connectionId).subs
@@ -233,6 +245,9 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
             }
 
             subscriber.on('streamPlaying', (e: StreamManagerEvent) => {
+
+              this.testFeedService.pushNewEvent({ user: 0, event: e });
+
               this.subscribers
                 .find(s => s.connectionId === session.connection.connectionId).subs
                 .find(s => s.streamManager.stream.connection.connectionId === subscriber.stream.connection.connectionId)
@@ -253,10 +268,12 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
                 state: { 'connecting': (Date.now() - startTimeForUser) }
               };
 
-              publisher.on('streamCreated', () => {
+              publisher.on('streamCreated', event => {
+                this.testFeedService.pushNewEvent({ user: 0, event });
                 publisherWrapper.state['connected'] = (Date.now() - startTimeForUser);
               });
-              publisher.on('streamPlaying', () => {
+              publisher.on('streamPlaying', event => {
+                this.testFeedService.pushNewEvent({ user: 0, event });
                 publisherWrapper.state['playing'] = (Date.now() - startTimeForUser);
               });
               session.publish(publisher).catch(() => {

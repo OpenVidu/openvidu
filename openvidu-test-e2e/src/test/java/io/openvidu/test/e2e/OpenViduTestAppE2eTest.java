@@ -403,6 +403,36 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@DisplayName("Massive session")
+	void massiveSessionTest() throws Exception {
+		isKurentoRestartTest = true;
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Massive session");
+
+		final Integer NUMBER_OF_USERS = 7;
+
+		user.getDriver().findElement(By.id("toolbar-scenarios")).sendKeys(Keys.ENTER);
+
+		WebElement one2ManyInput = user.getDriver().findElement(By.id("one2many-input"));
+		one2ManyInput.clear();
+		one2ManyInput.sendKeys(NUMBER_OF_USERS.toString());
+
+		user.getDriver().findElement(By.id("one2many-btn")).click();
+
+		user.getWaiter()
+				.until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), NUMBER_OF_USERS * NUMBER_OF_USERS));
+
+		user.getEventManager().waitUntilEventReaches("streamCreated", NUMBER_OF_USERS * NUMBER_OF_USERS);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", NUMBER_OF_USERS * NUMBER_OF_USERS);
+
+		this.stopMediaServer(false);
+
+		user.getEventManager().waitUntilEventReaches("sessionDisconnected", NUMBER_OF_USERS);
+	}
+
+	@Test
 	@DisplayName("Cross-Browser test")
 	void crossBrowserTest() throws Exception {
 

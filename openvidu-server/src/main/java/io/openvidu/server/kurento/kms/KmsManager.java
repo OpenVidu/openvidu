@@ -393,13 +393,15 @@ public abstract class KmsManager {
 	}
 
 	public void nodeRecoveredHandler(Kms kms) {
-		log.info("According to Timer KMS with uri {} and KurentoClient [{}] is now reconnected", kms.getUri(),
-				kms.getKurentoClient().toString());
-
-		kms.getKurentoClientReconnectTimer().cancelTimer();
 
 		final boolean mustTriggerNodeRecoveredEvent = kms.hasTriggeredNodeCrashedEvent();
 		final long timeOfKurentoDisconnection = kms.getTimeOfKurentoClientDisconnection();
+
+		log.info("According to Timer KMS with uri {} and KurentoClient [{}] is now reconnected after {} ms",
+				kms.getUri(), kms.getKurentoClient().toString(),
+				(System.currentTimeMillis() - timeOfKurentoDisconnection));
+
+		kms.getKurentoClientReconnectTimer().cancelTimer();
 
 		kms.setKurentoClientConnected(true, true);
 
