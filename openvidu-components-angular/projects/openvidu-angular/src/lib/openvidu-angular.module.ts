@@ -1,5 +1,6 @@
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { CommonModule } from '@angular/common';
+import { HttpClientModule } from '@angular/common/http';
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -110,6 +111,7 @@ const privateComponents = [
     ],
     imports: [
         CommonModule,
+        HttpClientModule,
         FormsModule,
         ReactiveFormsModule,
         RouterModule.forRoot([]),
