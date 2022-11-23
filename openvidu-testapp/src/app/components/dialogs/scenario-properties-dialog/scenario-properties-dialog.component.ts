@@ -1,15 +1,15 @@
 import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { PublisherProperties, OpenVidu } from 'openvidu-browser';
+import { OpenVidu, PublisherProperties } from 'openvidu-browser';
 
 @Component({
     selector: 'app-scenario-properties-dialog',
     templateUrl: './scenario-properties-dialog.component.html',
     styleUrls: ['./scenario-properties-dialog.component.css'],
-    providers: [
-        { provide: MAT_CHECKBOX_CLICK_ACTION, useValue: 'noop' }
-    ]
+    // providers: [
+    //     { provide: MAT_CHECKBOX_CLICK_ACTION, useValue: 'noop' }
+    // ]
 })
 export class ScenarioPropertiesDialogComponent {
 

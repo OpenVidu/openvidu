@@ -29,6 +29,6 @@
     <button *ngIf="!!textAreaValue && !isFocusedOnReport" id="update-report-btn" class="report-btn" mat-mini-fab color="primary" (click)="$event.stopPropagation(); updateRemoteStreamsInfo()">
       <mat-icon aria-label="Update stream info">replay</mat-icon>
     </button>
-    <textarea matInput readonly [value]="textAreaValue" [mat-autosize]="true" [disabled]="!textAreaValue"></textarea>
+    <textarea matInput readonly [value]="textAreaValue" [disabled]="!textAreaValue"></textarea>
   </mat-form-field>
 </div>
