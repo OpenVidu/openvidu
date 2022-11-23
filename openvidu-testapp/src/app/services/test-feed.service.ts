@@ -3,7 +3,7 @@ import { Subject } from 'rxjs';
 
 import { Event } from 'openvidu-browser';
 
-var stringify = require('json-stringify-safe');
+import * as stringify from 'json-stringify-safe';
 
 @Injectable()
 export class TestFeedService {
@@ -26,10 +26,10 @@ export class TestFeedService {
     return stringify(event, (key, value) => {
       // Remove unnecessary properties
       if (key == 'ee' || key == 'openvidu' || key == 'userHandlerArrowHandler' || key == 'handlers') {
-        return
-      } else {
-        return value;
+        return undefined;
       }
+
+      return value;
     });
   }
 

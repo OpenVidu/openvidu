@@ -1,15 +1,15 @@
 import { Component, Inject } from '@angular/core';
-import { MatDialogRef, MAT_CHECKBOX_CLICK_ACTION, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { PublisherProperties, OpenVidu, Filter } from 'openvidu-browser';
+import { Filter, OpenVidu, PublisherProperties } from 'openvidu-browser';
 
 @Component({
     selector: 'app-publisher-properties-dialog',
     templateUrl: './publisher-properties-dialog.component.html',
     styleUrls: ['./publisher-properties-dialog.component.css'],
-    providers: [
-        { provide: MAT_CHECKBOX_CLICK_ACTION, useValue: 'noop' }
-    ]
+    // providers: [
+    //     { provide: MAT_CHECKBOX_CLICK_ACTION, useValue: 'noop' }
+    // ]
 })
 export class PublisherPropertiesDialogComponent {
 

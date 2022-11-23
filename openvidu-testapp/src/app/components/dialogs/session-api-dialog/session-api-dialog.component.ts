@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { OpenVidu as OpenViduAPI, Session as SessionAPI, RecordingProperties, ConnectionProperties, OpenViduRole } from 'openvidu-node-client';
+import { ConnectionProperties, OpenVidu as OpenViduAPI, OpenViduRole, RecordingProperties, Session as SessionAPI } from 'openvidu-node-client';
 
 @Component({
     selector: 'app-session-api-dialog',

@@ -1,28 +1,21 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { MatDialog } from '@angular/material';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 
-import { SessionConf } from '../openvidu-instance/openvidu-instance.component';
 import { OpenviduParamsService } from '../../services/openvidu-params.service';
 import { TestFeedService } from '../../services/test-feed.service';
 import { ScenarioPropertiesDialogComponent } from '../dialogs/scenario-properties-dialog/scenario-properties-dialog.component';
+import { SessionConf } from '../openvidu-instance/openvidu-instance.component';
 import { StreamManagerWrapper } from '../users-table/table-video.component';
 
+import { MatDialog } from '@angular/material/dialog';
 import {
-  OpenVidu,
-  Session,
+  ConnectionEvent, OpenVidu, PublisherProperties, Session,
   StreamEvent,
-  StreamManagerEvent,
-  PublisherProperties,
-  ConnectionEvent
+  StreamManagerEvent
 } from 'openvidu-browser';
 import {
-  OpenVidu as OpenViduAPI,
-  SessionProperties as SessionPropertiesAPI,
-  MediaMode,
-  RecordingMode,
-  RecordingLayout
+  MediaMode, OpenVidu as OpenViduAPI, RecordingLayout, RecordingMode, SessionProperties as SessionPropertiesAPI
 } from 'openvidu-node-client';
 
 @Component({

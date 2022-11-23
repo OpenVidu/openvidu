@@ -1,34 +1,19 @@
-import {
-  Component, Input, HostListener, ChangeDetectorRef, SimpleChanges,
-  OnInit, OnDestroy, OnChanges
-} from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 
+import { ConnectionEvent, ConnectionPropertyChangedEvent, Event, ExceptionEvent, NetworkQualityLevelChangedEvent, OpenVidu, OpenViduAdvancedConfiguration, OpenViduError, Publisher, PublisherProperties, PublisherSpeakingEvent, RecordingEvent, Session, SessionDisconnectedEvent, SignalEvent, SpeechToTextEvent, StreamEvent, StreamPropertyChangedEvent, Subscriber } from 'openvidu-browser';
 import {
-  OpenVidu, Session, Subscriber, Publisher, Event, StreamEvent, ConnectionEvent,
-  SessionDisconnectedEvent, SignalEvent, RecordingEvent,
-  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, ConnectionPropertyChangedEvent, OpenViduError, NetworkQualityLevelChangedEvent, ExceptionEvent, OpenViduAdvancedConfiguration, SpeechToTextEvent
-} from 'openvidu-browser';
-import {
-  OpenVidu as OpenViduAPI,
-  Session as SessionAPI,
-  SessionProperties as SessionPropertiesAPI,
-  MediaMode,
-  RecordingMode,
-  RecordingLayout,
   Connection,
-  ConnectionProperties,
-  OpenViduRole,
-  RecordingProperties,
-  Recording,
+  ConnectionProperties, MediaMode, OpenVidu as OpenViduAPI, OpenViduRole, Recording, RecordingLayout, RecordingMode, RecordingProperties, Session as SessionAPI,
+  SessionProperties as SessionPropertiesAPI
 } from 'openvidu-node-client';
-import { MatDialog, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
-import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
 import { TestFeedService } from '../../services/test-feed.service';
 import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.component';
-import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-dialog/session-properties-dialog.component';
-import { SessionApiDialogComponent } from '../dialogs/session-api-dialog/session-api-dialog.component';
+import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
 import { PublisherPropertiesDialogComponent } from '../dialogs/publisher-properties-dialog/publisher-properties-dialog.component';
+import { SessionApiDialogComponent } from '../dialogs/session-api-dialog/session-api-dialog.component';
 import { SessionInfoDialogComponent } from "../dialogs/session-info-dialog/session-info-dialog.component";
+import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-dialog/session-properties-dialog.component';
 
 
 export interface SessionConf {
@@ -47,9 +32,9 @@ export interface OpenViduEvent {
   selector: 'app-openvidu-instance',
   templateUrl: './openvidu-instance.component.html',
   styleUrls: ['./openvidu-instance.component.css'],
-  providers: [
-    { provide: MAT_CHECKBOX_CLICK_ACTION, useValue: 'noop' }
-  ]
+  // providers: [
+  //   { provide: MAT_CHECKBOX_CLICK_ACTION, useValue: 'noop' }
+  // ]
 })
 export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 

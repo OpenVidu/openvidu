@@ -352,9 +352,9 @@ fi
 # -------------
 if [[ "${BUILD_OV_TESTAPP}" == true || "${EXECUTE_ALL}" == true ]]; then
     pushd openvidu-testapp
-    npm install --legacy-peer-deps
-    npm link --legacy-peer-deps openvidu-browser openvidu-node-client
-    export NG_CLI_ANALYTICS="false" && export NODE_OPTIONS=--openssl-legacy-provider && ./node_modules/@angular/cli/bin/ng build --prod --output-path=/opt/openvidu/testapp
+    npm install
+    npm link openvidu-browser openvidu-node-client
+    export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng.js build --configuration production --output-path=/opt/openvidu/testapp
     popd
 fi
 

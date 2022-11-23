@@ -1,29 +1,22 @@
-import { Component, Input, OnInit, Output, EventEmitter, OnDestroy } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ShowCodecDialogComponent } from '../dialogs/show-codec-dialog/show-codec-dialog.component';
 
 import {
-    StreamManager,
+    FilterEvent, OpenVidu,
+    Publisher, PublisherSpeakingEvent, StreamEvent, StreamManager,
     StreamManagerEvent,
-    StreamPropertyChangedEvent,
-    VideoElementEvent,
-    Subscriber,
-    OpenVidu,
-    Publisher,
-    StreamEvent,
-    VideoInsertMode,
-    FilterEvent,
-    PublisherSpeakingEvent
+    StreamPropertyChangedEvent, Subscriber, VideoElementEvent, VideoInsertMode
 } from 'openvidu-browser';
 
-import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.component';
-import { MuteSubscribersService } from '../../services/mute-subscribers.service';
 import { Subscription } from 'rxjs';
-import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog/local-recording-dialog.component';
+import { MuteSubscribersService } from '../../services/mute-subscribers.service';
+import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.component';
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
+import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog/local-recording-dialog.component';
 import { OtherStreamOperationsDialogComponent } from '../dialogs/other-stream-operations-dialog/other-stream-operations-dialog.component';
-import { OpenViduEvent } from '../openvidu-instance/openvidu-instance.component';
 import { ShowIceServerConfiguredDialog } from '../dialogs/show-configured-ice/show-configured-ice.component';
+import { OpenViduEvent } from '../openvidu-instance/openvidu-instance.component';
 
 @Component({
     selector: 'app-video',
@@ -750,7 +743,7 @@ export class VideoComponent implements OnInit, OnDestroy {
                     });
                     dialogRef.componentInstance.myReference = dialogRef;
 
-                    dialogRef.afterOpen().subscribe(() => {
+                    dialogRef.afterOpened().subscribe(() => {
                         this.muteSubscribersService.updateMuted(true);
                         this.recorder.preview('recorder-preview').controls = true;
                     });

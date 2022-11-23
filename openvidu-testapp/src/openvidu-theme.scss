@@ -1,10 +1,10 @@
-@import '~@angular/material/theming';
+@use '@angular/material' as mat;
 // Plus imports for other components in your app.
 
 // Include the common styles for Angular Material. We include this here so that you only
 // have to load a single css file for Angular Material in your app.
 // Be sure that you only ever include this mixin once!
-@include mat-core();
+@include mat.core();
 
 $mat-openvidu: (
     50:  #eaeaea,
@@ -42,16 +42,16 @@ $mat-openvidu: (
 // Define the palettes for your theme using the Material Design palettes available in palette.scss
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
 // hue.
-$openvidu-primary: mat-palette($mat-openvidu);
-$openvidu-accent:  mat-palette($mat-openvidu, A200, A100, A400);
+$openvidu-primary: mat.define-palette($mat-openvidu);
+$openvidu-accent:  mat.define-palette($mat-openvidu, A200, A100, A400);
 
 // The warn palette is optional (defaults to red).
-$openvidu-warn:    mat-palette($mat-red);
+$openvidu-warn:    mat.define-palette(mat.$red-palette);
 
 // Create the theme object (a Sass map containing all of the palettes).
-$openvidu-theme: mat-light-theme($openvidu-primary, $openvidu-accent, $openvidu-warn);
+$openvidu-theme: mat.define-light-theme($openvidu-primary, $openvidu-accent, $openvidu-warn);
 
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
-@include angular-material-theme($openvidu-theme);
+@include mat.all-component-themes($openvidu-theme);

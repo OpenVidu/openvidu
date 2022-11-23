@@ -1,9 +1,9 @@
-import { ModuleWithProviders } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
 
-import { TestSessionsComponent } from './components/test-sessions/test-sessions.component';
-import { TestScenariosComponent } from './components/test-scenarios/test-scenarios.component';
 import { TestApirestComponent } from './components/test-apirest/test-apirest.component';
+import { TestScenariosComponent } from './components/test-scenarios/test-scenarios.component';
+import { TestSessionsComponent } from './components/test-sessions/test-sessions.component';
 
 const appRoutes: Routes = [
   {
@@ -23,4 +23,9 @@ const appRoutes: Routes = [
   }
 ];
 
-export const routing: ModuleWithProviders = RouterModule.forRoot(appRoutes, { useHash: true });
+
+@NgModule({
+	imports: [RouterModule.forRoot(appRoutes, { useHash: true })],
+	exports: [RouterModule]
+})
+export class AppRoutingModule {}
