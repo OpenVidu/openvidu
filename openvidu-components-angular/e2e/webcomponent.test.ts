@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Builder, By, WebDriver } from 'selenium-webdriver';
+import { Builder, By, Key, WebDriver } from 'selenium-webdriver';
 import { getBrowserOptionsWithoutDevices, WebComponentConfig } from './selenium.conf';
 import { OpenViduComponentsPO } from './utils.po.test';
 
@@ -122,7 +122,7 @@ describe('Testing API Directives', () => {
 
 		// Checking if virtual background button is disabled
 		const button = await utils.waitForElement('#background-effects-btn');
-		expect(button.isEnabled()).to.be.false;
+		expect(await button.isEnabled()).to.be.false;
 
 		// Checking if video track is disabled/muted
 		idVideoEnabled = await browser.executeScript<boolean>(script);
@@ -1065,35 +1065,39 @@ describe('Testing panels', () => {
 		await browser.quit();
 	});
 
-	it('should toggle BACKGROUND panel on prejoin page when VIDEO is MUTED', async () => {
-		let element;
-		await browser.get(`${url}`);
-		element = await utils.waitForElement('#pre-join-container');
-		expect(await utils.isPresent('#pre-join-container')).to.be.true;
+	/**
+	 * TODO
+	 * It only works with OpenVidu PRO because this is a PRO feature
+	 */
+	// it('should toggle BACKGROUND panel on prejoin page when VIDEO is MUTED', async () => {
+	// 	let element;
+	// 	await browser.get(`${url}`);
+	// 	element = await utils.waitForElement('#pre-join-container');
+	// 	expect(await utils.isPresent('#pre-join-container')).to.be.true;
 
-		const backgroundButton = await utils.waitForElement('#background-effects-btn');
-		expect(await utils.isPresent('#background-effects-btn')).to.be.true;
-		expect(await backgroundButton.isEnabled()).to.be.true;
-		await backgroundButton.click();
-		await browser.sleep(500);
+	// 	const backgroundButton = await utils.waitForElement('#background-effects-btn');
+	// 	expect(await utils.isPresent('#background-effects-btn')).to.be.true;
+	// 	expect(await backgroundButton.isEnabled()).to.be.true;
+	// 	await backgroundButton.click();
+	// 	await browser.sleep(500);
 
-		await utils.waitForElement('#background-effects-container');
-		expect(await utils.isPresent('#background-effects-container')).to.be.true;
+	// 	await utils.waitForElement('#background-effects-container');
+	// 	expect(await utils.isPresent('#background-effects-container')).to.be.true;
 
-		element = await utils.waitForElement('#camera-button');
-		expect(await utils.isPresent('#camera-button')).to.be.true;
-		expect(await element.isEnabled()).to.be.true;
-		await element.click();
+	// 	element = await utils.waitForElement('#camera-button');
+	// 	expect(await utils.isPresent('#camera-button')).to.be.true;
+	// 	expect(await element.isEnabled()).to.be.true;
+	// 	await element.click();
 
-		await browser.sleep(500);
-		element = await utils.waitForElement('#video-poster');
-		expect(await utils.isPresent('#video-poster')).to.be.true;
+	// 	await browser.sleep(500);
+	// 	element = await utils.waitForElement('#video-poster');
+	// 	expect(await utils.isPresent('#video-poster')).to.be.true;
 
-		expect(await backgroundButton.isDisplayed()).to.be.true;
-		expect(await backgroundButton.isEnabled()).to.be.false;
+	// 	expect(await backgroundButton.isDisplayed()).to.be.true;
+	// 	expect(await backgroundButton.isEnabled()).to.be.false;
 
-		expect(await utils.isPresent('#background-effects-container')).to.be.false;
-	});
+	// 	expect(await utils.isPresent('#background-effects-container')).to.be.false;
+	// });
 
 	it('should toggle CHAT panel', async () => {
 		await browser.get(`${url}?prejoin=false`);
@@ -1357,6 +1361,9 @@ describe('Testing PRO features with OpenVidu CE', () => {
 		await utils.clickOn('#background-effects-btn');
 
 		await utils.chceckProFeatureAlertIsPresent();
+
+		// Close alert
+		await (await utils.waitForElement('html')).sendKeys(Key.ESCAPE);
 
 		// Join to room
 		await utils.clickOn('#join-button');
