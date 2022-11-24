@@ -4,12 +4,15 @@ import { Subscription } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
 import { PanelType } from '../../models/panel.model';
 import { ParticipantAbstractModel } from '../../models/participant.model';
+import { ActionService } from '../../services/action/action.service';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import { LayoutService } from '../../services/layout/layout.service';
 import { LoggerService } from '../../services/logger/logger.service';
+import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { PanelService } from '../../services/panel/panel.service';
 import { ParticipantService } from '../../services/participant/participant.service';
+import { TranslateService } from '../../services/translate/translate.service';
 
 /**
  * @internal
@@ -55,7 +58,10 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		private participantService: ParticipantService,
 		protected panelService: PanelService,
 		private libService: OpenViduAngularConfigService,
-		protected cdkSrv: CdkOverlayService
+		protected cdkSrv: CdkOverlayService,
+		private openviduService: OpenViduService,
+		private translateService: TranslateService,
+		private actionService: ActionService
 	) {
 		this.log = this.loggerSrv.get('PreJoinComponent');
 	}
@@ -95,7 +101,14 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	toggleBackgroundEffects() {
-		this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
+		if (this.openviduService.isOpenViduPro()) {
+			this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
+		} else {
+			this.actionService.openProFeatureDialog(
+				this.translateService.translate('PANEL.BACKGROUND.TITLE'),
+				this.translateService.translate('PANEL.PRO_FEATURE')
+			);
+		}
 	}
 
 	private subscribeToLocalParticipantEvents() {
