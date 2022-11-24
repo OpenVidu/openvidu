@@ -75,7 +75,7 @@ export class MinimalDirective implements OnDestroy {
  * * Portuguese: `pt`
  *
  * @example
- * <ov-videoconference [lang]="es"></ov-videoconference>
+ * <ov-videoconference [lang]="'es'"></ov-videoconference>
  */
  @Directive({
 	selector: 'ov-videoconference[lang]'
@@ -138,7 +138,7 @@ export class LangDirective implements OnDestroy {
  * * Portuguese: `pt-PT`
  *
  * @example
- * <ov-videoconference [captionsLang]="es-ES"></ov-videoconference>
+ * <ov-videoconference [captionsLang]="'es-ES'"></ov-videoconference>
  */
  @Directive({
 	selector: 'ov-videoconference[captionsLang]'

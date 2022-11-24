@@ -97,6 +97,61 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#settings-container')).to.be.false;
 	});
 
+	it('should change the UI LANG ', async () => {
+		await browser.get(`${url}?lang=es`);
+
+		await utils.checkPrejoinIsPresent();
+
+		let element = await utils.waitForElement('.lang-button');
+		expect(await element.getText()).equal('Españolexpand_more');
+
+		element = await utils.waitForElement('#join-button');
+		expect(await element.getText()).equal('Unirme ahora');
+	});
+
+	/**
+	 * TODO:
+	 * This test is only available with OpenVidu PRO
+	 */
+	// it('should change the captions LANG ', async () => {
+	// 	await browser.get(`${url}?prejoin=false&captionsLang=es-ES`);
+
+	// 	await utils.checkSessionIsPresent();
+
+	// 	// Checking if toolbar is present
+	// 	await utils.checkToolbarIsPresent();
+
+	// 	// Open more options menu
+	// 	await utils.clickOn('#more-options-btn');
+
+	// 	await browser.sleep(500);
+
+	// 	// Checking if button panel is present
+	// 	await utils.waitForElement('.mat-menu-content');
+	// 	expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+
+	// 	// Checking if captions button is present
+	// 	await utils.waitForElement('#captions-btn');
+	// 	expect(await utils.isPresent('#captions-btn')).to.be.true;
+	// 	await utils.clickOn('#captions-btn');
+
+	// 	await utils.waitForElement('.captions-container');
+	// 	await utils.waitForElement('#caption-settings-btn');
+	// 	await utils.clickOn('#caption-settings-btn');
+
+	// 	await browser.sleep(500);
+
+	// 	await utils.waitForElement('.settings-container');
+	// 	expect(await utils.isPresent('.settings-container')).to.be.true;
+
+	// 	await utils.waitForElement('ov-captions-settings');
+
+	// 	expect(await utils.isPresent('.captions-container')).to.be.true;
+
+	// 	const element = await utils.waitForElement('.lang-button');
+	// 	expect(await element.getText()).equal('Españolexpand_more')
+	// });
+
 	it('should show the PREJOIN page', async () => {
 		await browser.get(`${url}?prejoin=true`);
 

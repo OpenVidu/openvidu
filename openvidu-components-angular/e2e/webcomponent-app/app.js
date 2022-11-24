@@ -1,5 +1,7 @@
 
 var MINIMAL;
+var LANG;
+var CAPTIONS_LANG;
 var PREJOIN;
 var VIDEO_MUTED;
 var AUDIO_MUTED;
@@ -35,6 +37,8 @@ $(document).ready(() => {
 
     // Directives
 	MINIMAL = url.searchParams.get("minimal") === null ? false : url.searchParams.get("minimal") === 'true';
+    LANG = url.searchParams.get("lang") || 'en';
+    CAPTIONS_LANG = url.searchParams.get("captionsLang") || 'en-US';
     PARTICIPANT_NAME = url.searchParams.get("participantName") || 'TEST_USER';
     PREJOIN = url.searchParams.get("prejoin") === null ? true : url.searchParams.get("prejoin") === 'true';
     VIDEO_MUTED = url.searchParams.get("videoMuted") === null ? false : url.searchParams.get("videoMuted")  === 'true';
@@ -154,6 +158,8 @@ async function joinSession(sessionName, participantName) {
     }
 
     webComponent.minimal = MINIMAL;
+    webComponent.lang = LANG;
+    webComponent.captionsLang = CAPTIONS_LANG;
     webComponent.prejoin = PREJOIN;
     webComponent.videoMuted = VIDEO_MUTED;
     webComponent.audioMuted = AUDIO_MUTED;

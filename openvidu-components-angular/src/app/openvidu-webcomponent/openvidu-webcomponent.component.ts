@@ -22,6 +22,15 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
+	_lang: string = '';
+	/**
+	 * @internal
+	 */
+	_captionsLang: string = '';
+
+	/**
+	 * @internal
+	 */
 	_participantName: string;
 	/**
 	 * @internal
@@ -123,6 +132,30 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 */
 	@Input() set minimal(value: string | boolean) {
 		this._minimal = this.castToBoolean(value);
+	}
+	/**
+	 * The **lang** attribute sets the default UI language.
+	 *
+	 * Default: `en`
+	 *
+	 * @example
+	 * <openvidu-webcomponent lang="es"></openvidu-webcomponent>
+	 */
+	@Input() set lang(value: string) {
+		this._lang = value;
+	}
+	/**
+	 * The **captionsLang** attribute sets the deafult language that OpenVidu will try to recognise.
+	 *
+	 * It must be a valid [BCP-47](https://tools.ietf.org/html/bcp47) language tag like "en-US" or "es-ES".
+	 *
+	 * Default: `en-US`
+	 *
+	 * @example
+	 * <openvidu-webcomponent captions-lang="es-ES"></openvidu-webcomponent>
+	 */
+	@Input() set captionsLang(value: string) {
+		this._captionsLang = value;
 	}
 	/**
 	 * The **participantName** attribute sets the participant name. It can be useful for aplications which doesn't need the prejoin page.
