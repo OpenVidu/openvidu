@@ -58,6 +58,11 @@ export class OpenViduComponentsPO {
 		expect(await this.isPresent('#media-buttons-container')).to.be.true;
 	}
 
+	async chceckProFeatureAlertIsPresent(): Promise<void> {
+		await this.waitForElement('ov-pro-feature-template');
+		expect(await this.isPresent('ov-pro-feature-template')).to.be.true;
+	}
+
 	async clickOn(selector: string): Promise<void> {
 		const element = await this.waitForElement(selector);
 		await element.click();
