@@ -29,8 +29,16 @@ var SESSION_NAME;
 
 var PARTICIPANT_NAME;
 
+
+var OPENVIDU_SERVER_URL;
+var OPENVIDU_SECRET;
+
 $(document).ready(() => {
 	var url = new URL(window.location.href);
+
+    OPENVIDU_SERVER_URL = url.searchParams.get('OV_URL');
+    OPENVIDU_SECRET = url.searchParams.get('OV_SECRET')
+
 
 	SINGLE_TOKEN = url.searchParams.get('singleToken') === null ? false : url.searchParams.get('singleToken') === 'true';
 
@@ -214,8 +222,6 @@ async function joinSession(sessionName, participantName) {
  *   3) Configure OpenVidu Web Component in your client side with the token
  */
 
-var OPENVIDU_SERVER_URL = 'http://localhost:4443';
-var OPENVIDU_SERVER_SECRET = 'MY_SECRET';
 
 function getToken(sessionName) {
 	return createSession(sessionName).then((sessionId) => createToken(sessionId));
@@ -229,7 +235,7 @@ function createSession(sessionName) {
 			url: OPENVIDU_SERVER_URL + '/openvidu/api/sessions',
 			data: JSON.stringify({ customSessionId: sessionName }),
 			headers: {
-				Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
+				Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SECRET),
 				'Content-Type': 'application/json'
 			},
 			success: (response) => resolve(response.id),
@@ -264,7 +270,7 @@ function createToken(sessionId) {
 			url: `${OPENVIDU_SERVER_URL}/openvidu/api/sessions/${sessionId}/connection`,
 			data: JSON.stringify({ session: sessionId, role: 'MODERATOR' }),
 			headers: {
-				Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
+				Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SECRET),
 				'Content-Type': 'application/json'
 			},
 			success: (response) => {

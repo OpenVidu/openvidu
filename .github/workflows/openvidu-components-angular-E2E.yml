@@ -110,3 +110,34 @@ jobs:
       run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
     - name: Run Webcomponent E2E
       run:  npm run webcomponent:e2e-ci --prefix openvidu-components-angular
+
+  webcomponent_e2e_pro:
+    needs: test_setup
+    name: Webcomponent E2E PRO tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+    - uses: actions/download-artifact@v3
+      with:
+        name: openvidu-browser
+        path: openvidu-components-angular
+    - name: Run Browserless Chrome
+      run: docker run -d -p 3000:3000 --network host browserless/chrome:1.53-chrome-stable
+    - name: Install openvidu-browser and dependencies
+      run: |
+        cd openvidu-components-angular
+        npm install openvidu-browser-*.tgz
+    - name: Build openvidu-angular
+      run: npm run lib:build --prefix openvidu-components-angular
+    - name: Build openvidu-webcomponent
+      run: npm run webcomponent:build --prefix openvidu-components-angular
+    - name: Serve Webcomponent Testapp
+      run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
+    - name: Run Webcomponent E2E PRO
+      env:
+        OPENVIDU_SERVER_URL: ${{ secrets.OPENVIDU_CALL_NEXT_URL }}
+        OPENVIDU_SECRET: ${{ secrets.OPENVIDU_CALL_NEXT_SECRET }}
+      run: npm run webcomponent:e2e-pro-ci --prefix openvidu-components-angular
