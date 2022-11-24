@@ -44,7 +44,7 @@
 	<properties>
 		<version.kurento>6.18.0</version.kurento>
 		<version.spring-boot>2.3.12.RELEASE</version.spring-boot>
-		<version.junit>4.13.1</version.junit>
+		<version.junit>4.13.2</version.junit>
 		<version.junit.jupiter>5.8.1</version.junit.jupiter>
 		<version.junit.platform>1.8.1</version.junit.platform>
 		<version.selenium>3.141.59</version.selenium>
@@ -53,13 +53,12 @@
 		<version.hamcrest>2.2</version.hamcrest>
 		<version.httpclient>4.5.13</version.httpclient>
 		<version.janino>3.1.2</version.janino>
-		<version.commonslang>3.11</version.commonslang>
-		<version.dockerjava>3.2.12</version.dockerjava>
-		<version.slf4j>1.7.30</version.slf4j>
-		<version.gson>2.8.6</version.gson>
+		<version.commonslang>3.12.0</version.commonslang>
+		<version.dockerjava>3.2.13</version.dockerjava>
+		<version.slf4j>1.7.32</version.slf4j>
+		<version.gson>2.10</version.gson>
 		<version.unirest>1.4.9</version.unirest>
 		<version.jcodec>0.2.5</version.jcodec>
-		<version.commons-validator>1.7</version.commons-validator>
 		<version.commons-text>1.10.0</version.commons-text>
 		<version.testcontainers>1.16.2</version.testcontainers>
 		<version.appium>7.6.0</version.appium>
@@ -79,7 +78,7 @@
 		<version.nexus.staging.plugin>1.6.8</version.nexus.staging.plugin>
 		<version.exec.plugin>3.0.0</version.exec.plugin>
 		<version.javadoc.plugin>3.2.0</version.javadoc.plugin>
-		<version.maven.artifact>3.8.3</version.maven.artifact>
+		<version.maven.artifact>3.8.6</version.maven.artifact>
 
 		<maven.compiler.target>11</maven.compiler.target>
 		<maven.compiler.source>11</maven.compiler.source>
