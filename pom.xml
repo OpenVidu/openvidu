@@ -52,7 +52,7 @@
 		<version.powermock>2.0.9</version.powermock>
 		<version.hamcrest>2.2</version.hamcrest>
 		<version.httpclient>4.5.13</version.httpclient>
-		<version.janino>3.1.2</version.janino>
+		<version.janino>3.1.9</version.janino>
 		<version.commonslang>3.12.0</version.commonslang>
 		<version.dockerjava>3.2.13</version.dockerjava>
 		<version.slf4j>1.7.32</version.slf4j>
