@@ -51,6 +51,8 @@ import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
+import com.github.dockerjava.jaxrs.JerseyDockerHttpClient;
+import com.github.dockerjava.transport.DockerHttpClient;
 import com.google.common.collect.ImmutableList;
 
 import io.openvidu.client.OpenViduException;
@@ -71,8 +73,11 @@ public class LocalDockerManager implements DockerManager {
 
 	@Override
 	public DockerManager init() {
-		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
-		this.dockerClient = DockerClientBuilder.getInstance(config).build();
+		DockerClientConfig dockerClientConfig = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
+		DockerHttpClient dockerHttpClient = new JerseyDockerHttpClient.Builder()
+				.dockerHost(dockerClientConfig.getDockerHost()).sslConfig(dockerClientConfig.getSSLConfig()).build();
+		this.dockerClient = DockerClientBuilder.getInstance(dockerClientConfig).withDockerHttpClient(dockerHttpClient)
+				.build();
 		return this;
 	}
 
