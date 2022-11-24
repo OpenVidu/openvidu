@@ -1,9 +1,10 @@
 import { expect } from 'chai';
 import { Builder, By, Key, WebDriver } from 'selenium-webdriver';
+import { OPENVIDU_SECRET, OPENVIDU_SERVER_URL } from './config';
 import { getBrowserOptionsWithoutDevices, WebComponentConfig } from './selenium.conf';
 import { OpenViduComponentsPO } from './utils.po.test';
 
-const url = WebComponentConfig.appUrl;
+const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_SERVER_URL}&OV_SECRET=${OPENVIDU_SECRET}`;
 
 describe('Testing API Directives', () => {
 	let browser: WebDriver;
@@ -28,7 +29,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should join with ONLY ONE TOKEN', async () => {
-		await browser.get(`${url}?singleToken=true`);
+		await browser.get(`${url}&singleToken=true`);
 
 		// Checking if prejoin page exist
 		await utils.checkPrejoinIsPresent();
@@ -46,7 +47,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should set the MINIMAL UI', async () => {
-		await browser.get(`${url}?minimal=true`);
+		await browser.get(`${url}&minimal=true`);
 		// Checking if prejoin page exist
 		await utils.checkPrejoinIsPresent();
 
@@ -98,7 +99,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should change the UI LANG ', async () => {
-		await browser.get(`${url}?lang=es`);
+		await browser.get(`${url}&lang=es`);
 
 		await utils.checkPrejoinIsPresent();
 
@@ -114,7 +115,7 @@ describe('Testing API Directives', () => {
 	 * This test is only available with OpenVidu PRO
 	 */
 	// it('should change the captions LANG ', async () => {
-	// 	await browser.get(`${url}?prejoin=false&captionsLang=es-ES`);
+	// 	await browser.get(`${url}&prejoin=false&captionsLang=es-ES`);
 
 	// 	await utils.checkSessionIsPresent();
 
@@ -157,7 +158,7 @@ describe('Testing API Directives', () => {
 	 * This test is only available with OpenVidu PRO
 	 */
 	// it('should override the CAPTIONS LANG OPTIONS', async () => {
-	// 	await browser.get(`${url}?prejoin=false&captionsLangOptions=true`);
+	// 	await browser.get(`${url}&prejoin=false&captionsLangOptions=true`);
 
 	// 	await utils.checkSessionIsPresent();
 
@@ -200,13 +201,13 @@ describe('Testing API Directives', () => {
 	// });
 
 	it('should show the PREJOIN page', async () => {
-		await browser.get(`${url}?prejoin=true`);
+		await browser.get(`${url}&prejoin=true`);
 
 		await utils.checkPrejoinIsPresent();
 	});
 
 	it('should not show the PREJOIN page', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 	});
@@ -215,7 +216,7 @@ describe('Testing API Directives', () => {
 		let idVideoEnabled;
 		const script = 'return document.getElementsByTagName("video")[0].srcObject.getVideoTracks()[0].enabled;';
 
-		await browser.get(`${url}?prejoin=true&videoMuted=true`);
+		await browser.get(`${url}&prejoin=true&videoMuted=true`);
 
 		await utils.checkPrejoinIsPresent();
 
@@ -247,7 +248,7 @@ describe('Testing API Directives', () => {
 		let isVideoEnabled;
 		const videoEnableScript = 'return document.getElementsByTagName("video")[0].srcObject.getVideoTracks()[0].enabled;';
 
-		await browser.get(`${url}?prejoin=false&videoMuted=true`);
+		await browser.get(`${url}&prejoin=false&videoMuted=true`);
 
 		await utils.checkSessionIsPresent();
 
@@ -268,7 +269,7 @@ describe('Testing API Directives', () => {
 		let isAudioEnabled;
 		const script = 'return document.getElementsByTagName("video")[0].srcObject.getAudioTracks()[0].enabled;';
 
-		await browser.get(`${url}?audioMuted=true`);
+		await browser.get(`${url}&audioMuted=true`);
 
 		await utils.checkPrejoinIsPresent();
 
@@ -297,7 +298,7 @@ describe('Testing API Directives', () => {
 		let isAudioEnabled;
 		const audioEnableScript = 'return document.getElementsByTagName("video")[0].srcObject.getAudioTracks()[0].enabled;';
 
-		await browser.get(`${url}?prejoin=false&audioMuted=true`);
+		await browser.get(`${url}&prejoin=false&audioMuted=true`);
 
 		await utils.checkSessionIsPresent();
 
@@ -313,7 +314,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the SCREENSHARE button', async () => {
-		await browser.get(`${url}?prejoin=false&screenshareBtn=false`);
+		await browser.get(`${url}&prejoin=false&screenshareBtn=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -325,7 +326,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the FULLSCREEN button', async () => {
-		await browser.get(`${url}?prejoin=false&fullscreenBtn=false`);
+		await browser.get(`${url}&prejoin=false&fullscreenBtn=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -346,7 +347,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the CAPTIONS button', async () => {
-		await browser.get(`${url}?prejoin=false&toolbarCaptionsBtn=false`);
+		await browser.get(`${url}&prejoin=false&toolbarCaptionsBtn=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -376,7 +377,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the TOOLBAR SETTINGS button', async () => {
-		await browser.get(`${url}?prejoin=false&toolbarSettingsBtn=false`);
+		await browser.get(`${url}&prejoin=false&toolbarSettingsBtn=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -396,7 +397,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the LEAVE button', async () => {
-		await browser.get(`${url}?prejoin=false&leaveBtn=false`);
+		await browser.get(`${url}&prejoin=false&leaveBtn=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -409,7 +410,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the ACTIVITIES PANEL button', async () => {
-		await browser.get(`${url}?prejoin=false&activitiesPanelBtn=false`);
+		await browser.get(`${url}&prejoin=false&activitiesPanelBtn=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -421,7 +422,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the CHAT PANEL button', async () => {
-		await browser.get(`${url}?prejoin=false&chatPanelBtn=false`);
+		await browser.get(`${url}&prejoin=false&chatPanelBtn=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -433,7 +434,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the PARTICIPANTS PANEL button', async () => {
-		await browser.get(`${url}?prejoin=false&participantsPanelBtn=false`);
+		await browser.get(`${url}&prejoin=false&participantsPanelBtn=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -445,7 +446,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the LOGO', async () => {
-		await browser.get(`${url}?prejoin=false&displayLogo=false`);
+		await browser.get(`${url}&prejoin=false&displayLogo=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -461,7 +462,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the SESSION NAME', async () => {
-		await browser.get(`${url}?prejoin=false&displaySessionName=false`);
+		await browser.get(`${url}&prejoin=false&displaySessionName=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -477,7 +478,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the PARTICIPANT NAME', async () => {
-		await browser.get(`${url}?prejoin=false&displayParticipantName=false`);
+		await browser.get(`${url}&prejoin=false&displayParticipantName=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -492,7 +493,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the AUDIO DETECTION element', async () => {
-		await browser.get(`${url}?prejoin=false&displayAudioDetection=false`);
+		await browser.get(`${url}&prejoin=false&displayAudioDetection=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -507,7 +508,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the STREAM SETTINGS button', async () => {
-		await browser.get(`${url}?prejoin=false&settingsBtn=false`);
+		await browser.get(`${url}&prejoin=false&settingsBtn=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -523,7 +524,7 @@ describe('Testing API Directives', () => {
 
 	it('should HIDE the MUTE button in participants panel', async () => {
 		const sessionName = 'e2etest';
-		const fixedUrl = `${url}?prejoin=false&participantMuteBtn=false&sessionName=${sessionName}`;
+		const fixedUrl = `${url}&prejoin=false&participantMuteBtn=false&sessionName=${sessionName}`;
 		await browser.get(fixedUrl);
 
 		await utils.checkSessionIsPresent();
@@ -558,7 +559,7 @@ describe('Testing API Directives', () => {
 
 	it('should HIDE the RECORDING ACTIVITY in activities panel', async () => {
 		let element;
-		const fixedUrl = `${url}?prejoin=false&activitiesPanelRecordingActivity=false`;
+		const fixedUrl = `${url}&prejoin=false&activitiesPanelRecordingActivity=false`;
 		await browser.get(fixedUrl);
 
 		await utils.checkSessionIsPresent();
@@ -582,7 +583,7 @@ describe('Testing API Directives', () => {
 
 	it('should SHOW a RECORDING ERROR in activities panel', async () => {
 		let element;
-		const fixedUrl = `${url}?prejoin=false&recordingError=TEST_ERROR`;
+		const fixedUrl = `${url}&prejoin=false&recordingError=TEST_ERROR`;
 		await browser.get(fixedUrl);
 
 		await utils.checkSessionIsPresent();
@@ -657,7 +658,7 @@ describe('Testing videoconference EVENTS', () => {
 	});
 
 	it('should receive the onToolbarLeaveButtonClicked event', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -674,7 +675,7 @@ describe('Testing videoconference EVENTS', () => {
 	});
 
 	it('should receive the onToolbarCameraButtonClicked event', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -691,7 +692,7 @@ describe('Testing videoconference EVENTS', () => {
 	});
 
 	it('should receive the onToolbarMicrophoneButtonClicked event', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -708,7 +709,7 @@ describe('Testing videoconference EVENTS', () => {
 	});
 
 	it('should receive the onToolbarScreenshareButtonClicked event', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -726,7 +727,7 @@ describe('Testing videoconference EVENTS', () => {
 
 	it('should receive the onToolbarFullscreenButtonClicked event', async () => {
 		let element;
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -750,7 +751,7 @@ describe('Testing videoconference EVENTS', () => {
 	});
 
 	it('should receive the onToolbarChatPanelButtonClicked event', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -766,7 +767,7 @@ describe('Testing videoconference EVENTS', () => {
 	});
 
 	it('should receive the onToolbarParticipantsPanelButtonClicked event', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -782,7 +783,7 @@ describe('Testing videoconference EVENTS', () => {
 	});
 
 	it('should receive the onToolbarActivitiesPanelButtonClicked event', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -799,7 +800,7 @@ describe('Testing videoconference EVENTS', () => {
 
 	it('should receive the onToolbarStartRecordingClicked event', async () => {
 		let element;
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -826,7 +827,7 @@ describe('Testing videoconference EVENTS', () => {
 
 	it('should receive the onActivitiesPanelStartRecordingClicked event', async () => {
 		let element;
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -858,7 +859,7 @@ describe('Testing videoconference EVENTS', () => {
 
 	it('should receive the PLAY and DELETE recording events', async () => {
 		let element;
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -890,7 +891,7 @@ describe('Testing videoconference EVENTS', () => {
 	});
 
 	it('should receive the onSessionCreated event', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -906,7 +907,7 @@ describe('Testing videoconference EVENTS', () => {
 
 	it('should receive onParticipantCreated event from LOCAL participant', async () => {
 		const participantName = 'TEST_USER';
-		await browser.get(`${url}?participantName=${participantName}`);
+		await browser.get(`${url}&participantName=${participantName}`);
 		await utils.waitForElement(`#${participantName}-onParticipantCreated`);
 		expect(await utils.isPresent(`#${participantName}-onParticipantCreated`)).to.be.true;
 	});
@@ -915,7 +916,7 @@ describe('Testing videoconference EVENTS', () => {
 
 	it('should receive connectionCreated event from LOCAL participant', async () => {
 		const participantName = 'TEST_USER';
-		await browser.get(`${url}?prejoin=false&participantName=${participantName}`);
+		await browser.get(`${url}&prejoin=false&participantName=${participantName}`);
 
 		await utils.waitForElement(`#${participantName}-connectionCreated`);
 		expect(await utils.isPresent(`#${participantName}-connectionCreated`)).to.be.true;
@@ -924,7 +925,7 @@ describe('Testing videoconference EVENTS', () => {
 	it('should receive sessionDisconnected event from LOCAL participant', async () => {
 		const participantName = 'TEST_USER';
 		let element;
-		await browser.get(`${url}?prejoin=false&participantName=${participantName}`);
+		await browser.get(`${url}&prejoin=false&participantName=${participantName}`);
 
 		await utils.checkSessionIsPresent();
 
@@ -962,7 +963,7 @@ describe('Testing screenshare features', () => {
 
 	it('should toggle screensharing', async () => {
 		let element;
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkLayoutPresent();
 
@@ -987,7 +988,7 @@ describe('Testing screenshare features', () => {
 		const getAudioScript = (className: string) => {
 			return `return document.getElementsByClassName('${className}')[0].srcObject.getAudioTracks()[0].enabled;`;
 		};
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkLayoutPresent();
 
@@ -1019,7 +1020,7 @@ describe('Testing screenshare features', () => {
 
 	it('should show and hide CAMERA stream when muting video with screensharing', async () => {
 		let element;
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkLayoutPresent();
 
@@ -1043,7 +1044,7 @@ describe('Testing screenshare features', () => {
 		let element, isAudioEnabled;
 		const audioEnableScript = 'return document.getElementsByTagName("video")[0].srcObject.getAudioTracks()[0].enabled;';
 
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkLayoutPresent();
 
@@ -1091,7 +1092,7 @@ describe('Testing screenshare features', () => {
 			return `return document.getElementsByClassName('${className}')[0].srcObject.getAudioTracks()[0].enabled;`;
 		};
 
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkLayoutPresent();
 
@@ -1202,7 +1203,7 @@ describe('Testing panels', () => {
 	// });
 
 	it('should toggle CHAT panel', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkLayoutPresent();
 
@@ -1223,7 +1224,7 @@ describe('Testing panels', () => {
 	});
 
 	it('should toggle PARTICIPANTS panel', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkLayoutPresent();
 
@@ -1245,7 +1246,7 @@ describe('Testing panels', () => {
 	});
 
 	it('should toggle ACTIVITIES panel', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkLayoutPresent();
 
@@ -1267,7 +1268,7 @@ describe('Testing panels', () => {
 
 	it('should toggle SETTINGS panel', async () => {
 		let element;
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkLayoutPresent();
 
@@ -1293,7 +1294,7 @@ describe('Testing panels', () => {
 	});
 
 	it('should switching between PARTICIPANTS and CHAT panels', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -1344,7 +1345,7 @@ describe('Testing panels', () => {
 
 	it('should switching between sections in SETTINGS PANEL', async () => {
 		let element;
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkToolbarIsPresent();
 
@@ -1411,7 +1412,7 @@ describe('Testing CHAT features', () => {
 	});
 
 	it('should send an url message and converts in a link', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkLayoutPresent();
 
@@ -1455,7 +1456,7 @@ describe('Testing PRO features with OpenVidu CE', () => {
 	});
 
 	it('should SHOW the VIRTUAL BACKGROUND PRO feature dialog', async () => {
-		await browser.get(`${url}?prejoin=true`);
+		await browser.get(`${url}&prejoin=true`);
 
 		await utils.checkPrejoinIsPresent();
 
@@ -1493,7 +1494,7 @@ describe('Testing PRO features with OpenVidu CE', () => {
 	});
 
 	it('should SHOW the CAPTIONS PRO feature dialog', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -1565,7 +1566,7 @@ describe('Testing PRO features with OpenVidu CE', () => {
 // 	});
 
 // 	it('should OPEN the CAPTIONS container', async () => {
-// 		await browser.get(`${url}?prejoin=false`);
+// 		await browser.get(`${url}&prejoin=false`);
 
 // 		await utils.checkSessionIsPresent();
 
@@ -1590,7 +1591,7 @@ describe('Testing PRO features with OpenVidu CE', () => {
 // 	});
 
 // 	it('should OPEN the SETTINGS panel from captions button', async () => {
-// 		await browser.get(`${url}?prejoin=false`);
+// 		await browser.get(`${url}&prejoin=false`);
 
 // 		await utils.checkSessionIsPresent();
 
@@ -1627,7 +1628,7 @@ describe('Testing PRO features with OpenVidu CE', () => {
 // 	});
 
 // 	it('should TOGGLE the CAPTIONS container from settings panel', async () => {
-// 		await browser.get(`${url}?prejoin=false`);
+// 		await browser.get(`${url}&prejoin=false`);
 
 // 		await utils.checkSessionIsPresent();
 
@@ -1670,7 +1671,7 @@ describe('Testing PRO features with OpenVidu CE', () => {
 // 	});
 
 // 	it('should change the CAPTIONS language', async () => {
-// 		await browser.get(`${url}?prejoin=false`);
+// 		await browser.get(`${url}&prejoin=false`);
 
 // 		await utils.checkSessionIsPresent();
 
@@ -1768,7 +1769,7 @@ describe('Testing WITHOUT MEDIA DEVICES permissions', () => {
 	});
 
 	it('should be able to ACCESS to ROOM page without prejoin', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -1782,7 +1783,7 @@ describe('Testing WITHOUT MEDIA DEVICES permissions', () => {
 	});
 
 	it('should the settings buttons be disabled', async () => {
-		await browser.get(`${url}?prejoin=false`);
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkToolbarIsPresent();
 

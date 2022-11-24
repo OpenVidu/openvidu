@@ -80,7 +80,7 @@ jobs:
 
   webcomponent_e2e:
     needs: test_setup
-    name: Webcomponent E2E tests
+    name: Webcomponent E2E CE tests
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3

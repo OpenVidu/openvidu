@@ -37,7 +37,7 @@ $(document).ready(() => {
 	var url = new URL(window.location.href);
 
     OPENVIDU_SERVER_URL = url.searchParams.get('OV_URL');
-    OPENVIDU_SECRET = url.searchParams.get('OV_SECRET')
+    OPENVIDU_SECRET = url.searchParams.get('OV_SECRET');
 
 
 	SINGLE_TOKEN = url.searchParams.get('singleToken') === null ? false : url.searchParams.get('singleToken') === 'true';
