@@ -1,6 +1,6 @@
 package io.openvidu.test.e2e;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.awt.Point;
 import java.io.File;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.http.HttpStatus;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -176,20 +176,19 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			String fileStreamId = file.get("streamId").getAsString();
 			if (fileStreamId.equals(streamId1)) {
 				// Normal recorded user
-				Assert.assertEquals("Wrong connectionId file metadata property", connectionId1,
-						file.get("connectionId").getAsString());
+				Assertions.assertEquals(connectionId1, file.get("connectionId").getAsString(),
+						"Wrong connectionId file metadata property");
 				long msDuration = file.get("endTimeOffset").getAsLong() - file.get("startTimeOffset").getAsLong();
-				Assert.assertTrue("Wrong recording duration of individual file. Difference: " + (msDuration - 4000),
-						msDuration - 4000 < 750);
+				Assertions.assertTrue(msDuration - 4000 < 750,
+						"Wrong recording duration of individual file. Difference: " + (msDuration - 4000));
 				count1++;
 			} else if (fileStreamId.equals(streamId2)) {
 				// Dynamically recorded user
-				Assert.assertEquals("Wrong connectionId file metadata property", connectionId2,
-						file.get("connectionId").getAsString());
+				Assertions.assertEquals(connectionId2, file.get("connectionId").getAsString(),
+						"Wrong connectionId file metadata property");
 				long msDuration = file.get("endTimeOffset").getAsLong() - file.get("startTimeOffset").getAsLong();
-				Assert.assertTrue(
-						"Wrong recording duration of individual file. Difference: " + Math.abs(msDuration - 1000),
-						Math.abs(msDuration - 1000) < 150);
+				Assertions.assertTrue(Math.abs(msDuration - 1000) < 150,
+						"Wrong recording duration of individual file. Difference: " + Math.abs(msDuration - 1000));
 
 				String fileName = file.get("name").getAsString();
 
@@ -203,15 +202,16 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					}
 				}
 
-				Assert.assertTrue("File name " + fileName + " not found among regex " + regexNames.toString(), found);
+				Assertions.assertTrue(found,
+						"File name " + fileName + " not found among regex " + regexNames.toString());
 				count2++;
 			} else {
-				Assert.fail("Metadata file element does not belong to a known stream (" + fileStreamId + ")");
+				Assertions.fail("Metadata file element does not belong to a known stream (" + fileStreamId + ")");
 			}
 		}
-		Assert.assertEquals("Wrong number of recording files for stream " + streamId1, 1, count1);
-		Assert.assertEquals("Wrong number of recording files for stream " + streamId2, 3, count2);
-		Assert.assertTrue("Some expected file name didn't existed: " + regexNames.toString(), regexNames.isEmpty());
+		Assertions.assertEquals(1, count1, "Wrong number of recording files for stream " + streamId1);
+		Assertions.assertEquals(3, count2, "Wrong number of recording files for stream " + streamId2);
+		Assertions.assertTrue(regexNames.isEmpty(), "Some expected file name didn't existed: " + regexNames.toString());
 	}
 
 	@Test
@@ -280,20 +280,20 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Test with openvidu-java-client
 		OpenVidu OV = new OpenVidu(OpenViduTestAppE2eTest.OPENVIDU_URL, OpenViduTestAppE2eTest.OPENVIDU_SECRET);
-		Assert.assertTrue("OpenVidu object should have changed", OV.fetch());
+		Assertions.assertTrue(OV.fetch(), "OpenVidu object should have changed");
 		Session session = OV.getActiveSessions().get(0);
 		try {
 			session.updateConnection("WRONG_CONNECTION_ID", new ConnectionProperties.Builder().build());
-			Assert.fail("Expected OpenViduHttpException exception");
+			Assertions.fail("Expected OpenViduHttpException exception");
 		} catch (OpenViduHttpException exception) {
-			Assert.assertEquals("Wrong HTTP status", HttpStatus.SC_NOT_FOUND, exception.getStatus());
+			Assertions.assertEquals(HttpStatus.SC_NOT_FOUND, exception.getStatus(), "Wrong HTTP status");
 		}
-		Assert.assertFalse("Session object should not have changed", session.fetch());
+		Assertions.assertFalse(session.fetch(), "Session object should not have changed");
 		Connection connection = session.updateConnection(connectionId,
 				new ConnectionProperties.Builder().role(OpenViduRole.SUBSCRIBER).record(false).build());
-		Assert.assertEquals("Wrong role Connection property", OpenViduRole.SUBSCRIBER, connection.getRole());
-		Assert.assertFalse("Wrong record Connection property", connection.record());
-		Assert.assertEquals("Wrong data Connection property", "MY_SERVER_PRO_DATA", connection.getServerData());
+		Assertions.assertEquals(OpenViduRole.SUBSCRIBER, connection.getRole(), "Wrong role Connection property");
+		Assertions.assertFalse(connection.record(), "Wrong record Connection property");
+		Assertions.assertEquals("MY_SERVER_PRO_DATA", connection.getServerData(), "Wrong data Connection property");
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -315,11 +315,12 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		try {
 			user.getWaiter().until(ExpectedConditions.alertIsPresent());
 			Alert alert = user.getDriver().switchTo().alert();
-			Assert.assertTrue("Alert does not contain expected text",
-					alert.getText().equals("OPENVIDU_PERMISSION_DENIED: You don't have permissions to publish"));
+			Assertions.assertTrue(
+					alert.getText().equals("OPENVIDU_PERMISSION_DENIED: You don't have permissions to publish"),
+					"Alert does not contain expected text");
 			alert.accept();
 		} catch (Exception e) {
-			Assert.fail("Alert exception");
+			Assertions.fail("Alert exception");
 		} finally {
 			user.getEventManager().resetEventThread(false);
 		}
@@ -332,12 +333,12 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true, false,
 				true, mergeJson(DEFAULT_JSON_SESSION, "{'mediaNodeId':'STR'}", new String[0]));
 
-		Assert.assertTrue("Session object should have changed", session.fetch());
+		Assertions.assertTrue(session.fetch(), "Session object should have changed");
 		connection = session.getActiveConnections().get(0);
 		final Long activeAt = connection.activeAt();
-		Assert.assertTrue("activeAt should be greater than createdAt in Connection object", activeAt > createdAt);
-		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.SUBSCRIBER, connection.getRole());
-		Assert.assertFalse("Wrong record in Connection object", connection.record());
+		Assertions.assertTrue(activeAt > createdAt, "activeAt should be greater than createdAt in Connection object");
+		Assertions.assertEquals(OpenViduRole.SUBSCRIBER, connection.getRole(), "Wrong role in Connection object");
+		Assertions.assertFalse(connection.record(), "Wrong record in Connection object");
 
 		/** UPDATE ACTIVE CONNECTION **/
 
@@ -422,41 +423,41 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Thread.sleep(500);
 
 		// Test with openvidu-java-client
-		Assert.assertFalse("Session object should not have changed", session.fetch());
+		Assertions.assertFalse(session.fetch(), "Session object should not have changed");
 		try {
 			session.updateConnection("WRONG_CONNECTION_ID", new ConnectionProperties.Builder().build());
-			Assert.fail("Expected OpenViduHttpException exception");
+			Assertions.fail("Expected OpenViduHttpException exception");
 		} catch (OpenViduHttpException exception) {
-			Assert.assertEquals("Wrong HTTP status", HttpStatus.SC_NOT_FOUND, exception.getStatus());
+			Assertions.assertEquals(HttpStatus.SC_NOT_FOUND, exception.getStatus(), "Wrong HTTP status");
 		}
-		Assert.assertFalse("Session object should not have changed", session.fetch());
+		Assertions.assertFalse(session.fetch(), "Session object should not have changed");
 		connection = session.updateConnection(connectionId,
 				new ConnectionProperties.Builder().role(OpenViduRole.PUBLISHER).build());
 
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 7);
 
-		Assert.assertFalse("Session object should not have changed", session.fetch());
-		Assert.assertEquals("Wrong connectionId in Connection object", connectionId, connection.getConnectionId());
-		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.PUBLISHER, connection.getRole());
-		Assert.assertFalse("Wrong record in Connection object", connection.record());
-		Assert.assertEquals("Wrong status in Connection object", "active", connection.getStatus());
+		Assertions.assertFalse(session.fetch(), "Session object should not have changed");
+		Assertions.assertEquals(connectionId, connection.getConnectionId(), "Wrong connectionId in Connection object");
+		Assertions.assertEquals(OpenViduRole.PUBLISHER, connection.getRole(), "Wrong role in Connection object");
+		Assertions.assertFalse(connection.record(), "Wrong record in Connection object");
+		Assertions.assertEquals("active", connection.getStatus(), "Wrong status in Connection object");
 		connection = session.updateConnection(connectionId,
 				new ConnectionProperties.Builder().role(OpenViduRole.SUBSCRIBER).build());
 
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 8);
 
-		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.SUBSCRIBER, connection.getRole());
-		Assert.assertFalse("Session object should not have changed", session.fetch());
+		Assertions.assertEquals(OpenViduRole.SUBSCRIBER, connection.getRole(), "Wrong role in Connection object");
+		Assertions.assertFalse(session.fetch(), "Session object should not have changed");
 		connection = session.updateConnection(connectionId, new ConnectionProperties.Builder()
 				.role(OpenViduRole.MODERATOR).record(false).data("NO CHANGE").build());
 
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 9);
 
-		Assert.assertFalse("Session object should not have changed", session.fetch());
-		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.MODERATOR, connection.getRole());
-		Assert.assertFalse("Wrong record in Connection object", connection.record());
-		Assert.assertEquals("Wrong data in Connection object", "MY_SERVER_PRO_DATA", connection.getServerData());
-		Assert.assertEquals("Wrong status in Connection object", "active", connection.getStatus());
+		Assertions.assertFalse(session.fetch(), "Session object should not have changed");
+		Assertions.assertEquals(OpenViduRole.MODERATOR, connection.getRole(), "Wrong role in Connection object");
+		Assertions.assertFalse(connection.record(), "Wrong record in Connection object");
+		Assertions.assertEquals("MY_SERVER_PRO_DATA", connection.getServerData(), "Wrong data in Connection object");
+		Assertions.assertEquals("active", connection.getStatus(), "Wrong status in Connection object");
 
 		user.getEventManager().resetEventThread(true);
 
@@ -468,10 +469,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 
 		// connectionId should be equal to the one brought by the token
-		Assert.assertEquals("Wrong connectionId", connectionId,
+		Assertions.assertEquals(connectionId,
 				restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_OK)
 						.get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0).getAsJsonObject()
-						.get("connectionId").getAsString());
+						.get("connectionId").getAsString(),
+				"Wrong connectionId");
 
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
 
@@ -506,19 +508,19 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Create default Connection
 		Session session = OV.createSession();
-		Assert.assertFalse(session.fetch());
+		Assertions.assertFalse(session.fetch());
 		Connection connectionDefault = session.createConnection();
-		Assert.assertFalse(session.fetch());
-		Assert.assertEquals("Wrong role property", OpenViduRole.PUBLISHER, connectionDefault.getRole());
-		Assert.assertTrue("Wrong record property", connectionDefault.record());
-		Assert.assertEquals("Wrong data property", "", connectionDefault.getServerData());
+		Assertions.assertFalse(session.fetch());
+		Assertions.assertEquals(OpenViduRole.PUBLISHER, connectionDefault.getRole(), "Wrong role property");
+		Assertions.assertTrue(connectionDefault.record(), "Wrong record property");
+		Assertions.assertEquals("", connectionDefault.getServerData(), "Wrong data property");
 		// Update Connection
 		session.updateConnection(connectionDefault.getConnectionId(), new ConnectionProperties.Builder()
 				.role(OpenViduRole.SUBSCRIBER).record(false).data("WILL HAVE NO EFFECT").build());
-		Assert.assertEquals("Wrong role property", OpenViduRole.SUBSCRIBER, connectionDefault.getRole());
-		Assert.assertFalse("Wrong record property", connectionDefault.record());
-		Assert.assertEquals("Wrong data property", "", connectionDefault.getServerData());
-		Assert.assertFalse(session.fetch());
+		Assertions.assertEquals(OpenViduRole.SUBSCRIBER, connectionDefault.getRole(), "Wrong role property");
+		Assertions.assertFalse(connectionDefault.record(), "Wrong record property");
+		Assertions.assertEquals("", connectionDefault.getServerData(), "Wrong data property");
+		Assertions.assertFalse(session.fetch());
 
 		// Create custom properties Connection
 		long timestamp = System.currentTimeMillis();
@@ -528,23 +530,24 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 								.videoMinRecvBandwidth(555).videoMaxSendBandwidth(555).videoMinSendBandwidth(555)
 								.allowedFilters(new String[] { "555" }).build())
 						.build());
-		Assert.assertEquals("Wrong status Connection property", "pending", connection.getStatus());
-		Assert.assertTrue("Wrong timestamp Connection property", connection.createdAt() > timestamp);
-		Assert.assertTrue("Wrong activeAt Connection property", connection.activeAt() == null);
-		Assert.assertTrue("Wrong location Connection property", connection.getLocation() == null);
-		Assert.assertTrue("Wrong platform Connection property", connection.getPlatform() == null);
-		Assert.assertTrue("Wrong clientData Connection property", connection.getClientData() == null);
-		Assert.assertTrue("Wrong publishers Connection property", connection.getPublishers().size() == 0);
-		Assert.assertTrue("Wrong subscribers Connection property", connection.getSubscribers().size() == 0);
-		Assert.assertTrue("Wrong token Connection property", connection.getToken().contains(session.getSessionId()));
-		Assert.assertEquals("Wrong type property", ConnectionType.WEBRTC, connection.getType());
-		Assert.assertEquals("Wrong data property", "SERVER_SIDE_DATA", connection.getServerData());
-		Assert.assertFalse("Wrong record property", connection.record());
-		Assert.assertEquals("Wrong role property", OpenViduRole.MODERATOR, connection.getRole());
-		Assert.assertTrue("Wrong rtspUri property", connection.getRtspUri() == null);
-		Assert.assertTrue("Wrong adaptativeBitrate property", connection.adaptativeBitrate() == null);
-		Assert.assertTrue("Wrong onlyPlayWithSubscribers property", connection.onlyPlayWithSubscribers() == null);
-		Assert.assertTrue("Wrong networkCache property", connection.getNetworkCache() == null);
+		Assertions.assertEquals("pending", connection.getStatus(), "Wrong status Connection property");
+		Assertions.assertTrue(connection.createdAt() > timestamp, "Wrong createdAt Connection property");
+		Assertions.assertTrue(connection.activeAt() == null, "Wrong activeAt Connection property");
+		Assertions.assertTrue(connection.getLocation() == null, "Wrong location Connection property");
+		Assertions.assertTrue(connection.getPlatform() == null, "Wrong platform Connection property");
+		Assertions.assertTrue(connection.getClientData() == null, "Wrong clientData Connection property");
+		Assertions.assertTrue(connection.getPublishers().size() == 0, "Wrong publishers Connection property");
+		Assertions.assertTrue(connection.getSubscribers().size() == 0, "Wrong subscribers Connection property");
+		Assertions.assertTrue(connection.getToken().contains(session.getSessionId()),
+				"Wrong token Connection property");
+		Assertions.assertEquals(ConnectionType.WEBRTC, connection.getType(), "Wrong type property");
+		Assertions.assertEquals("SERVER_SIDE_DATA", connection.getServerData(), "Wrong data property");
+		Assertions.assertFalse(connection.record(), "Wrong record property");
+		Assertions.assertEquals(OpenViduRole.MODERATOR, connection.getRole(), "Wrong role property");
+		Assertions.assertTrue(connection.getRtspUri() == null, "Wrong rtspUri property");
+		Assertions.assertTrue(connection.adaptativeBitrate() == null, "Wrong adaptativeBitrate property");
+		Assertions.assertTrue(connection.onlyPlayWithSubscribers() == null, "Wrong onlyPlayWithSubscribers property");
+		Assertions.assertTrue(connection.getNetworkCache() == null, "Wrong networkCache property");
 	}
 
 	@Test
@@ -600,19 +603,27 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().off("networkQualityLevelChanged");
 		log.info("Thread assertions: {}", threadAssertions.toString());
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
-			Assert.assertTrue("Some Event property was wrong", iter.next());
+			Assertions.assertTrue(iter.next(), "Some Event property was wrong");
 			iter.remove();
 		}
 
 		// Both events should have publisher's connection ID
-		Assert.assertTrue("Wrong connectionId in event NetworkQualityLevelChangedEvent", user.getDriver()
-				.findElement(By.cssSelector("#openvidu-instance-0 .mat-expansion-panel:last-child .event-content"))
-				.getAttribute("textContent").contains(connectionId));
-		Assert.assertTrue("Wrong connectionId in event NetworkQualityLevelChangedEvent", user.getDriver()
-				.findElement(By.cssSelector("#openvidu-instance-1 .mat-expansion-panel:last-child .event-content"))
-				.getAttribute("textContent").contains(connectionId));
+		Assertions
+				.assertTrue(
+						user.getDriver()
+								.findElement(By.cssSelector(
+										"#openvidu-instance-0 .mat-expansion-panel:last-child .event-content"))
+								.getAttribute("textContent").contains(connectionId),
+						"Wrong connectionId in event NetworkQualityLevelChangedEvent");
+		Assertions
+				.assertTrue(
+						user.getDriver()
+								.findElement(By.cssSelector(
+										"#openvidu-instance-1 .mat-expansion-panel:last-child .event-content"))
+								.getAttribute("textContent").contains(connectionId),
+						"Wrong connectionId in event NetworkQualityLevelChangedEvent");
 
-		gracefullyLeaveParticipants(user, 1);
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
@@ -671,7 +682,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
 
 		// Green
-		Assert.assertTrue((rgb.get("r") < 150) && (rgb.get("g") > 240) && (rgb.get("b") < 100));
+		Assertions.assertTrue((rgb.get("r") < 150) && (rgb.get("g") > 240) && (rgb.get("b") < 100));
 
 		filterTypeInput.clear();
 		filterTypeInput.sendKeys("VB:image");
@@ -693,7 +704,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
 
 		// Red
-		Assert.assertTrue((rgb.get("r") > 250) && (rgb.get("g") < 10) && (rgb.get("b") < 40));
+		Assertions.assertTrue((rgb.get("r") > 250) && (rgb.get("g") < 10) && (rgb.get("b") < 40));
 
 		// Fail exec method
 		WebElement filterMethodInput = user.getDriver().findElement(By.id("filter-method-field"));
@@ -726,7 +737,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				"Filter method executed"));
 		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
-		Assert.assertTrue((rgb.get("r") < 10) && (rgb.get("g") < 10) && (rgb.get("b") > 240));
+		Assertions.assertTrue((rgb.get("r") < 10) && (rgb.get("g") < 10) && (rgb.get("b") > 240));
 
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
 		user.getWaiter().until(
@@ -736,7 +747,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
 
 		// Green
-		Assert.assertTrue((rgb.get("r") < 150) && (rgb.get("g") > 240) && (rgb.get("b") < 100));
+		Assertions.assertTrue((rgb.get("r") < 150) && (rgb.get("g") > 240) && (rgb.get("b") < 100));
 
 		gracefullyLeaveParticipants(user, 2);
 	}
@@ -847,16 +858,16 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		this.sttSubUser(user, 0, 0, "en-US", true, true);
 
 		if (!latch.await(80, TimeUnit.SECONDS)) {
-			Assert.fail("Timeout waiting for recognized STT events");
+			Assertions.fail("Timeout waiting for recognized STT events");
 		}
 
 		if (exc[0] != null) {
 			throw exc[0];
 		}
 
-		Assert.assertTrue("recognizing STT events should be greater than 0", recognizingSttEvents.size() > 0);
-		Assert.assertTrue("recognized STT events should be greater than 0",
-				recognizingSttEvents.size() > recognizedSttEvents.size());
+		Assertions.assertTrue(recognizingSttEvents.size() > 0, "recognizing STT events should be greater than 0");
+		Assertions.assertTrue(recognizingSttEvents.size() > recognizedSttEvents.size(),
+				"recognized STT events should be greater than 0");
 
 		// The expected text may be in just 2 recognized events instead of 3
 		int expectedCharCount = expectedRecognitionList.stream().mapToInt(w -> w.length()).sum();
@@ -876,8 +887,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		log.info("Cosine similiarity: {}", cosineSimilarity);
 		log.info(expectedRecognition);
 		log.info(finalRecognition);
-		Assert.assertTrue("Wrong similarity between actual and expected recognized text. Got " + cosineSimilarity,
-				cosineSimilarity < 0.1);
+		Assertions.assertTrue(cosineSimilarity < 0.1,
+				"Wrong similarity between actual and expected recognized text. Got " + cosineSimilarity);
 
 		gracefullyLeaveParticipants(user, 1);
 	}
@@ -931,7 +942,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		this.sttSubUser(user, 0, 0, "en-US", true, true);
 
 		if (!latch.await(80, TimeUnit.SECONDS)) {
-			Assert.fail("Timeout waiting for recognized STT events");
+			Assertions.fail("Timeout waiting for recognized STT events");
 		}
 
 		boolean twoConsecutiveRecognizedElements = false;
@@ -942,7 +953,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			i++;
 		}
 		if (twoConsecutiveRecognizedElements) {
-			Assert.fail("There are two consecutive recognized STT events. First text: \""
+			Assertions.fail("There are two consecutive recognized STT events. First text: \""
 					+ sttEvents.get(i - 1).get("text").getAsString() + "\" | Second text: \""
 					+ sttEvents.get(i).get("text").getAsString() + "\"");
 		}
@@ -1089,18 +1100,18 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		finalSecondUserStts.addAll(secondUserStts);
 
 		for (JsonObject event : finalFirstUserStts) {
-			Assert.assertEquals(connectionId,
+			Assertions.assertEquals(connectionId,
 					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
-			Assert.assertEquals("en-US", event.get("lang").getAsString());
-			Assert.assertFalse(event.get("text").getAsString().isBlank());
-			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+			Assertions.assertEquals("en-US", event.get("lang").getAsString());
+			Assertions.assertFalse(event.get("text").getAsString().isBlank());
+			Assertions.assertFalse(event.get("raw").getAsString().isBlank());
 		}
 		for (JsonObject event : finalSecondUserStts) {
-			Assert.assertEquals(connectionId,
+			Assertions.assertEquals(connectionId,
 					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
-			Assert.assertEquals("en-US", event.get("lang").getAsString());
-			Assert.assertFalse(event.get("text").getAsString().isBlank());
-			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+			Assertions.assertEquals("en-US", event.get("lang").getAsString());
+			Assertions.assertFalse(event.get("text").getAsString().isBlank());
+			Assertions.assertFalse(event.get("raw").getAsString().isBlank());
 		}
 
 		gracefullyLeaveParticipants(user, 2);
@@ -1160,18 +1171,18 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		finalSecondUserStts.addAll(secondUserStts);
 
 		for (JsonObject event : finalFirstUserStts) {
-			Assert.assertEquals(connectionId1,
+			Assertions.assertEquals(connectionId1,
 					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
-			Assert.assertEquals("en-US", event.get("lang").getAsString());
-			Assert.assertFalse(event.get("text").getAsString().isBlank());
-			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+			Assertions.assertEquals("en-US", event.get("lang").getAsString());
+			Assertions.assertFalse(event.get("text").getAsString().isBlank());
+			Assertions.assertFalse(event.get("raw").getAsString().isBlank());
 		}
 		for (JsonObject event : finalSecondUserStts) {
-			Assert.assertEquals(connectionId2,
+			Assertions.assertEquals(connectionId2,
 					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
-			Assert.assertEquals("en-US", event.get("lang").getAsString());
-			Assert.assertFalse(event.get("text").getAsString().isBlank());
-			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+			Assertions.assertEquals("en-US", event.get("lang").getAsString());
+			Assertions.assertFalse(event.get("text").getAsString().isBlank());
+			Assertions.assertFalse(event.get("raw").getAsString().isBlank());
 		}
 
 		gracefullyLeaveParticipants(user, 2);
@@ -1228,18 +1239,18 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		finalSecondUserStts.addAll(secondUserStts);
 
 		for (JsonObject event : finalFirstUserStts) {
-			Assert.assertEquals(connectionId,
+			Assertions.assertEquals(connectionId,
 					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
-			Assert.assertEquals("en-US", event.get("lang").getAsString());
-			Assert.assertFalse(event.get("text").getAsString().isBlank());
-			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+			Assertions.assertEquals("en-US", event.get("lang").getAsString());
+			Assertions.assertFalse(event.get("text").getAsString().isBlank());
+			Assertions.assertFalse(event.get("raw").getAsString().isBlank());
 		}
 		for (JsonObject event : finalSecondUserStts) {
-			Assert.assertEquals(connectionId,
+			Assertions.assertEquals(connectionId,
 					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
-			Assert.assertEquals("es-ES", event.get("lang").getAsString());
-			Assert.assertFalse(event.get("text").getAsString().isBlank());
-			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+			Assertions.assertEquals("es-ES", event.get("lang").getAsString());
+			Assertions.assertFalse(event.get("text").getAsString().isBlank());
+			Assertions.assertFalse(event.get("raw").getAsString().isBlank());
 		}
 
 		gracefullyLeaveParticipants(user, 2);
@@ -1297,18 +1308,18 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		finalSecondUserStts.addAll(secondUserStts);
 
 		for (JsonObject event : finalFirstUserStts) {
-			Assert.assertEquals(connectionId2,
+			Assertions.assertEquals(connectionId2,
 					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
-			Assert.assertEquals("es-ES", event.get("lang").getAsString());
-			Assert.assertFalse(event.get("text").getAsString().isBlank());
-			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+			Assertions.assertEquals("es-ES", event.get("lang").getAsString());
+			Assertions.assertFalse(event.get("text").getAsString().isBlank());
+			Assertions.assertFalse(event.get("raw").getAsString().isBlank());
 		}
 		for (JsonObject event : finalSecondUserStts) {
-			Assert.assertEquals(connectionId1,
+			Assertions.assertEquals(connectionId1,
 					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
-			Assert.assertEquals("en-US", event.get("lang").getAsString());
-			Assert.assertFalse(event.get("text").getAsString().isBlank());
-			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+			Assertions.assertEquals("en-US", event.get("lang").getAsString());
+			Assertions.assertFalse(event.get("text").getAsString().isBlank());
+			Assertions.assertFalse(event.get("raw").getAsString().isBlank());
 		}
 
 		gracefullyLeaveParticipants(user, 2);
@@ -1368,18 +1379,18 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		finalSecondUserStts.addAll(secondUserStts);
 
 		for (JsonObject event : finalFirstUserStts) {
-			Assert.assertEquals(connectionId1,
+			Assertions.assertEquals(connectionId1,
 					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
-			Assert.assertEquals("en-US", event.get("lang").getAsString());
-			Assert.assertFalse(event.get("text").getAsString().isBlank());
-			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+			Assertions.assertEquals("en-US", event.get("lang").getAsString());
+			Assertions.assertFalse(event.get("text").getAsString().isBlank());
+			Assertions.assertFalse(event.get("raw").getAsString().isBlank());
 		}
 		for (JsonObject event : finalSecondUserStts) {
-			Assert.assertEquals(connectionId2,
+			Assertions.assertEquals(connectionId2,
 					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
-			Assert.assertEquals("en-US", event.get("lang").getAsString());
-			Assert.assertFalse(event.get("text").getAsString().isBlank());
-			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+			Assertions.assertEquals("en-US", event.get("lang").getAsString());
+			Assertions.assertFalse(event.get("text").getAsString().isBlank());
+			Assertions.assertFalse(event.get("raw").getAsString().isBlank());
 		}
 	}
 
@@ -1430,11 +1441,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			final List<JsonObject> finalStts = new ArrayList<>();
 			finalStts.addAll(stts.get(i));
 			for (JsonObject event : finalStts) {
-				Assert.assertEquals(connectionIds.get(i),
+				Assertions.assertEquals(connectionIds.get(i),
 						event.get("connection").getAsJsonObject().get("connectionId").getAsString());
-				Assert.assertEquals(languages.get(i), event.get("lang").getAsString());
-				Assert.assertFalse(event.get("text").getAsString().isBlank());
-				Assert.assertFalse(event.get("raw").getAsString().isBlank());
+				Assertions.assertEquals(languages.get(i), event.get("lang").getAsString());
+				Assertions.assertFalse(event.get("text").getAsString().isBlank());
+				Assertions.assertFalse(event.get("raw").getAsString().isBlank());
 			}
 		}
 	}
@@ -1480,8 +1491,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 5);
 
-		Assert.assertEquals("Wrong number of connectionCreated events", 1,
-				user.getEventManager().getNumEvents("connectionCreated").get());
+		Assertions.assertEquals(1, user.getEventManager().getNumEvents("connectionCreated").get(),
+				"Wrong number of connectionCreated events");
 
 		user.getDriver().findElement(By.id("session-api-btn-0")).click();
 		Thread.sleep(500);
@@ -1492,8 +1503,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
 
-		Assert.assertEquals("Wrong number of connectionCreated events", 1,
-				user.getEventManager().getNumEvents("connectionCreated").get());
+		Assertions.assertEquals(1, user.getEventManager().getNumEvents("connectionCreated").get(),
+				"Wrong number of connectionCreated events");
 
 		// After stopping composed recording speechToText events should keep coming
 		user.getEventManager().clearAllCurrentEvents(0);
@@ -1505,7 +1516,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().clearAllCurrentEvents(0);
 		user.getEventManager().clearAllCurrentEvents();
 		Thread.sleep(3000);
-		Assert.assertEquals(user.getEventManager().getNumEvents("speechToTextMessage").intValue(), 0);
+		Assertions.assertEquals(user.getEventManager().getNumEvents("speechToTextMessage").intValue(), 0);
 
 		gracefullyLeaveParticipants(user, 1);
 	}
@@ -1539,8 +1550,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			this.sttSubUser(user, 0, 0, "en-US", false, false);
 		}
 
-		Assert.assertEquals("Wrong number of connectionCreated events", 1,
-				user.getEventManager().getNumEvents("connectionCreated").get());
+		Assertions.assertEquals(1, user.getEventManager().getNumEvents("connectionCreated").get(),
+				"Wrong number of connectionCreated events");
 
 		user.getEventManager().clearAllCurrentEvents(0);
 		user.getEventManager().clearAllCurrentEvents();
@@ -1555,18 +1566,18 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		});
 
 		if (!latch.await(80, TimeUnit.SECONDS)) {
-			Assert.fail("Timeout waiting for recognized STT events");
+			Assertions.fail("Timeout waiting for recognized STT events");
 		}
 
 		final List<JsonObject> finalStts = new ArrayList<>();
 		finalStts.addAll(stts);
 
 		for (JsonObject event : finalStts) {
-			Assert.assertEquals(connectionId,
+			Assertions.assertEquals(connectionId,
 					event.get("connection").getAsJsonObject().get("connectionId").getAsString());
-			Assert.assertEquals("en-US", event.get("lang").getAsString());
-			Assert.assertFalse(event.get("text").getAsString().isBlank());
-			Assert.assertFalse(event.get("raw").getAsString().isBlank());
+			Assertions.assertEquals("en-US", event.get("lang").getAsString());
+			Assertions.assertFalse(event.get("text").getAsString().isBlank());
+			Assertions.assertFalse(event.get("raw").getAsString().isBlank());
 		}
 	}
 
@@ -1612,10 +1623,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("exception", 1);
 
-		Assert.assertEquals("Wrong exception event name", "SPEECH_TO_TEXT_DISCONNECTED",
-				exceptionEvent[0].get("name").getAsString());
-		Assert.assertEquals("Wrong exception event message", "Network closed for unknown reason",
-				exceptionEvent[0].get("message").getAsString());
+		Assertions.assertEquals("SPEECH_TO_TEXT_DISCONNECTED", exceptionEvent[0].get("name").getAsString(),
+				"Wrong exception event name");
+		Assertions.assertEquals("Network closed for unknown reason", exceptionEvent[0].get("message").getAsString(),
+				"Wrong exception event message");
 
 		user.getEventManager().clearAllCurrentEvents(0);
 		user.getEventManager().clearAllCurrentEvents();
@@ -1636,8 +1647,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getWaiter().until(ExpectedConditions.attributeToBeNotEmpty(responseTextArea, "value"));
 			String text = user.getDriver().findElement(responseTextAreaBy).getAttribute("value");
 			if (!"Subscribed to STT".equals(text)) {
-				Assert.assertEquals("Wrong error message on subscribe STT after STT crash",
-						"Error [io.grpc.StatusRuntimeException: UNAVAILABLE: io exception. Code: 201]", text);
+				Assertions.assertEquals("Error [io.grpc.StatusRuntimeException: UNAVAILABLE: io exception. Code: 201]",
+						text, "Wrong error message on subscribe STT after STT crash");
 				Thread.sleep(intervalWaitMs);
 			} else {
 				sttReconstructed = true;
@@ -1700,7 +1711,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage());
-			Assert.fail("Error restarting OpenVidu Server");
+			Assertions.fail("Error restarting OpenVidu Server");
 		}
 	}
 
