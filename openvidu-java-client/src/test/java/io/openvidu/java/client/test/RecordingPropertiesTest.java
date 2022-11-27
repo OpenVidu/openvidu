@@ -1,26 +1,16 @@
 package io.openvidu.java.client.test;
 
-import static org.junit.Assert.assertThrows;
-
 import java.util.Map;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.RecordingProperties;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
-public class RecordingPropertiesTest extends TestCase {
-
-	public RecordingPropertiesTest(String testName) {
-		super(testName);
-	}
-
-	public static Test suite() {
-		return new TestSuite(RecordingPropertiesTest.class);
-	}
+public class RecordingPropertiesTest {
 
 	/**
 	 * { "session":"ses_YnDaGYNcd7", "name": "MyRecording", "hasAudio": true,
@@ -30,6 +20,7 @@ public class RecordingPropertiesTest extends TestCase {
 	 * "media_i-0c58bcdd26l11d0sd" } }
 	 */
 
+	@Test
 	public void testRecordingFromJsonSuccess() {
 		String jsonString = "{'session':'MY_CUSTOM_STRING','name':'MY_CUSTOM_STRING','hasAudio':false,'hasVideo':true,'outputMode':'COMPOSED','recordingLayout':'CUSTOM','customLayout':'MY_CUSTOM_STRING','resolution':'1000x1000','frameRate':33,'shmSize':333333333,'mediaNode':{'id':'MY_CUSTOM_STRING'}}";
 		Map<String, ?> map = mapFromJsonString(jsonString);
@@ -40,7 +31,7 @@ public class RecordingPropertiesTest extends TestCase {
 		JsonObject originalJson = new Gson().fromJson(jsonString, JsonObject.class);
 		originalJson = adaptProps(originalJson);
 
-		assertEquals(originalJson, finalJson);
+		Assertions.assertEquals(originalJson, finalJson);
 
 		jsonString = "{'session':'MY_CUSTOM_STRING','name':'MY_CUSTOM_STRING','hasAudio':false,'hasVideo':true,'outputMode':'INDIVIDUAL','ignoreFailedStreams':true}";
 		map = mapFromJsonString(jsonString);
@@ -51,9 +42,10 @@ public class RecordingPropertiesTest extends TestCase {
 		originalJson = new Gson().fromJson(jsonString, JsonObject.class);
 		originalJson = adaptProps(originalJson);
 
-		assertEquals(originalJson, finalJson);
+		Assertions.assertEquals(originalJson, finalJson);
 	}
 
+	@Test
 	public void testFromJsonError() {
 		Map<String, ?> map = mapFromJsonString("{'session':false}");
 		assertException(map, "Type error in some parameter", IllegalArgumentException.class);
@@ -138,12 +130,12 @@ public class RecordingPropertiesTest extends TestCase {
 	private <T extends Exception> void assertException(Map<String, ?> params, String containsError,
 			Class<T> exceptionClass) {
 		if (exceptionClass != null) {
-			T exception = assertThrows(exceptionClass, () -> RecordingProperties.fromJson(params, null));
-			assertTrue(exception.getMessage().contains(containsError));
+			T exception = Assertions.assertThrows(exceptionClass, () -> RecordingProperties.fromJson(params, null));
+			Assertions.assertTrue(exception.getMessage().contains(containsError));
 		} else {
-			Exception exception = assertThrows(RuntimeException.class,
+			Exception exception = Assertions.assertThrows(RuntimeException.class,
 					() -> RecordingProperties.fromJson(params, null));
-			assertTrue(exception.getMessage().contains(containsError));
+			Assertions.assertTrue(exception.getMessage().contains(containsError));
 		}
 	}
 

@@ -67,7 +67,8 @@ public class UpdatableTimerTask extends TimerTask {
 		try {
 			task.run();
 		} catch (Exception e) {
-			log.error("Exception running UpdatableTimerTask: {} - {}", e.getMessage(), e.getStackTrace());
+			log.error("Exception running UpdatableTimerTask ({}): {} - {}", e.getClass().getName(), e.getMessage(),
+					e.getStackTrace());
 		}
 		updateTimer();
 	}

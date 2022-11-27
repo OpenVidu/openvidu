@@ -33,6 +33,9 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.kurento.client.KurentoClient;
+import org.kurento.jsonrpc.JsonRpcClientClosedException;
+import org.kurento.jsonrpc.client.JsonRpcClientNettyWebSocket;
 import org.kurento.jsonrpc.client.JsonRpcWSConnectionListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -178,7 +181,18 @@ public abstract class KmsManager {
 		return this.mediaNodeManager;
 	}
 
+	protected KurentoClient createKurentoClient(String kmsId, String uri) {
+		JsonRpcWSConnectionListener listener = this.generateKurentoConnectionListener(kmsId);
+		JsonRpcClientNettyWebSocket client = new JsonRpcClientNettyWebSocket(uri, listener);
+		client.setTryReconnectingMaxTime(0);
+		client.setTryReconnectingForever(false);
+		client.setConnectionTimeout(MAX_CONNECT_TIME_MILLIS);
+		client.setRequestTimeout(MAX_REQUEST_TIMEOUT);
+		return KurentoClient.createFromJsonRpcClientHonoringClientTimeouts(client);
+	}
+
 	protected JsonRpcWSConnectionListener generateKurentoConnectionListener(final String kmsId) {
+
 		return new JsonRpcWSConnectionListener() {
 
 			@Override
@@ -295,16 +309,11 @@ public abstract class KmsManager {
 							return;
 						}
 
-						try {
-							kms.getKurentoClient().getServerManager().getInfo();
-						} catch (Exception e) {
-							log.error(
-									"According to Timer KMS with uri {} and KurentoClient [{}] is not reconnected yet. Exception {}",
-									kms.getUri(), kms.getKurentoClient().toString(), e.getClass().getName());
+						if (reconnectKurentoClient(kms)) {
+							nodeRecoveredHandler(kms);
+						} else {
 							return;
 						}
-
-						nodeRecoveredHandler(kms);
 
 					}
 				}, () -> Long.valueOf(INTERVAL_WAIT_MS)); // Try 2 times per second
@@ -314,6 +323,32 @@ public abstract class KmsManager {
 			}
 
 		};
+	}
+
+	private boolean reconnectKurentoClient(Kms kms) {
+		try {
+			kms.getKurentoClient().getServerManager().getInfo();
+			return true;
+		} catch (JsonRpcClientClosedException e) {
+			log.error(
+					"According to Timer KurentoClient [{}] of KMS with uri {} is closed ({}). Initializing a new KurentoClient",
+					kms.getKurentoClient().toString(), kms.getUri(), e.getClass().getName());
+			KurentoClient kClient = createKurentoClient(kms.getId(), kms.getUri());
+			try {
+				kClient.getServerManager().getInfo();
+				kms.setKurentoClient(kClient);
+				log.info("Success reconnecting to KMS with uri {} with a new KurentoClient", kms.getUri());
+				return true;
+			} catch (Exception e2) {
+				log.error("Error reconnecting to KMS with uri {} with a new KurentoClient. Exception {}: {}",
+						kms.getUri(), e2.getClass().getName(), e2.getMessage());
+				return false;
+			}
+		} catch (Exception e) {
+			log.error("According to Timer KMS with uri {} and KurentoClient [{}] is not reconnected yet. Exception {}",
+					kms.getUri(), kms.getKurentoClient().toString(), e.getClass().getName());
+			return false;
+		}
 	}
 
 	private boolean isNewKms(Kms kms) {

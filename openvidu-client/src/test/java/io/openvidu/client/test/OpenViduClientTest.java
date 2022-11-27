@@ -15,9 +15,11 @@
  */
 package io.openvidu.client.test;
 
-import static io.openvidu.client.internal.ProtocolElements.*;
+import static io.openvidu.client.internal.ProtocolElements.JOINROOM_METHOD;
+import static io.openvidu.client.internal.ProtocolElements.JOINROOM_ROOM_PARAM;
+import static io.openvidu.client.internal.ProtocolElements.JOINROOM_USER_PARAM;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -26,8 +28,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.kurento.jsonrpc.client.JsonRpcClient;
 
 import com.google.gson.JsonArray;
@@ -44,31 +46,31 @@ import io.openvidu.client.ServerJsonRpcHandler;
  */
 public class OpenViduClientTest {
 
-  private OpenViduClient client;
-  private ServerJsonRpcHandler serverHandler;
-  private JsonRpcClient jsonRpcClient;
+    private static OpenViduClient client;
+    private static ServerJsonRpcHandler serverHandler;
+    private static JsonRpcClient jsonRpcClient;
 
-  @Before
-  public void setup() {
-    jsonRpcClient = mock(JsonRpcClient.class);
-    serverHandler = new ServerJsonRpcHandler();
-    client = new OpenViduClient(jsonRpcClient, serverHandler);
-  }
+    @BeforeAll
+    public static void setup() {
+        jsonRpcClient = mock(JsonRpcClient.class);
+        serverHandler = new ServerJsonRpcHandler();
+        client = new OpenViduClient(jsonRpcClient, serverHandler);
+    }
 
-  @Test
-  public void testRoomJoin() throws IOException {
-    JsonObject params = new JsonObject();
-    params.addProperty(JOINROOM_ROOM_PARAM, "room");
-    params.addProperty(JOINROOM_USER_PARAM, "user");
+    @Test
+    public void testRoomJoin() throws IOException {
+        JsonObject params = new JsonObject();
+        params.addProperty(JOINROOM_ROOM_PARAM, "room");
+        params.addProperty(JOINROOM_USER_PARAM, "user");
 
-    JsonObject result = new JsonObject();
-    JsonArray value = new JsonArray();
-    result.add("value", value);
+        JsonObject result = new JsonObject();
+        JsonArray value = new JsonArray();
+        result.add("value", value);
 
-    Map<String, List<String>> joinResult = new HashMap<String, List<String>>();
+        Map<String, List<String>> joinResult = new HashMap<String, List<String>>();
 
-    when(jsonRpcClient.sendRequest(JOINROOM_METHOD, params)).thenReturn(result);
-    assertThat(client.joinRoom("room", "user"), is(joinResult));
+        when(jsonRpcClient.sendRequest(JOINROOM_METHOD, params)).thenReturn(result);
+        assertThat(client.joinRoom("room", "user"), is(joinResult));
 
-  }
+    }
 }

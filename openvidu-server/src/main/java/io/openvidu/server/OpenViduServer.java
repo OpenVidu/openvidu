@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
-import org.bouncycastle.util.Arrays;
 import org.kurento.jsonrpc.internal.server.config.JsonRpcConfiguration;
 import org.kurento.jsonrpc.server.JsonRpcConfigurer;
 import org.kurento.jsonrpc.server.JsonRpcHandlerRegistry;
@@ -289,7 +288,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 		log.info("Using /dev/urandom for secure random generation");
 		System.setProperty("java.security.egd", "file:/dev/./urandom");
-		SpringApplication.run(OpenViduServer.class, Arrays.append(args, "--spring.main.banner-mode=off"));
+
+		String[] argsAux = new String[args.length + 2];
+		System.arraycopy(args, 0, argsAux, 0, args.length);
+		argsAux[argsAux.length - 2] = "--spring.main.banner-mode=off";
+		argsAux[argsAux.length - 1] = "--spring.main.allow-circular-references=true";
+
+		SpringApplication.run(OpenViduServer.class, argsAux);
 
 	}
 

@@ -1,11 +1,15 @@
 package io.openvidu.java.client;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.junit.jupiter.api.Test;
 
 public class OpenViduJavaClientExceptionTest {
 
-    @Test(expected = OpenViduException.class)
-    public void shouldThrowGenericOpenViduException() throws OpenViduJavaClientException {
-        throw new OpenViduJavaClientException("message");
-    }
+	@Test
+	public void shouldThrowGenericOpenViduException() {
+		assertThrows(OpenViduException.class, () -> {
+			throw new OpenViduJavaClientException("message");
+		});
+	}
 }

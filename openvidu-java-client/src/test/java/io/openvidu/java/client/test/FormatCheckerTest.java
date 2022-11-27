@@ -3,21 +3,14 @@ package io.openvidu.java.client.test;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import io.openvidu.java.client.utils.FormatChecker;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
-public class FormatCheckerTest extends TestCase {
+public class FormatCheckerTest {
 
-	public FormatCheckerTest(String testName) {
-		super(testName);
-	}
-
-	public static Test suite() {
-		return new TestSuite(FormatCheckerTest.class);
-	}
-
+	@Test
 	public void testCustomSessionIdFormat() {
 
 		List<String> invalidCustomSessionIds = Arrays.asList("", "session#", "session!", "session*", "'session",
@@ -30,11 +23,12 @@ public class FormatCheckerTest extends TestCase {
 				"session-_", "123_session-1");
 
 		for (String id : invalidCustomSessionIds)
-			assertFalse(FormatChecker.isValidCustomSessionId(id));
+			Assertions.assertFalse(FormatChecker.isValidCustomSessionId(id));
 		for (String id : validCustomSessionIds)
-			assertTrue(FormatChecker.isValidCustomSessionId(id));
+			Assertions.assertTrue(FormatChecker.isValidCustomSessionId(id));
 	}
 
+	@Test
 	public void testAcceptableRecordingResolution() {
 
 		List<String> invalidResolutions = Arrays.asList("", "a", "123", "true", "AXB", "AxB", "12x", "x12", "0920x1080",
@@ -43,11 +37,12 @@ public class FormatCheckerTest extends TestCase {
 		List<String> validResolutions = Arrays.asList("1920x1080", "1280x720", "100x1999");
 
 		for (String resolution : invalidResolutions)
-			assertFalse(FormatChecker.isAcceptableRecordingResolution(resolution));
+			Assertions.assertFalse(FormatChecker.isAcceptableRecordingResolution(resolution));
 		for (String resolution : validResolutions)
-			assertTrue(FormatChecker.isAcceptableRecordingResolution(resolution));
+			Assertions.assertTrue(FormatChecker.isAcceptableRecordingResolution(resolution));
 	}
 
+	@Test
 	public void testAcceptableRecordingFrameRate() {
 
 		List<Integer> invalidFrameRates = Arrays.asList(-1, 0, 121, 9999);
@@ -55,9 +50,9 @@ public class FormatCheckerTest extends TestCase {
 		List<Integer> validFramerates = Arrays.asList(1, 2, 30, 60, 119, 120);
 
 		for (int framerate : invalidFrameRates)
-			assertFalse(FormatChecker.isAcceptableRecordingFrameRate(framerate));
+			Assertions.assertFalse(FormatChecker.isAcceptableRecordingFrameRate(framerate));
 		for (int framerate : validFramerates)
-			assertTrue(FormatChecker.isAcceptableRecordingFrameRate(framerate));
+			Assertions.assertTrue(FormatChecker.isAcceptableRecordingFrameRate(framerate));
 	}
 
 }

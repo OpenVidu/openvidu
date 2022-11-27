@@ -1,27 +1,18 @@
 package io.openvidu.java.client.test;
 
-import static org.junit.Assert.assertThrows;
-
 import java.util.Map;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.ConnectionProperties;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
-public class ConnectionPropertiesTest extends TestCase {
+public class ConnectionPropertiesTest {
 
-	public ConnectionPropertiesTest(String testName) {
-		super(testName);
-	}
-
-	public static Test suite() {
-		return new TestSuite(ConnectionPropertiesTest.class);
-	}
-
+	@Test
 	public void testWebrtcFromJsonSuccess() {
 		String jsonString = "{'type':'WEBRTC','data':'MY_CUSTOM_STRING','record':false,'role':'SUBSCRIBER','kurentoOptions':{'videoMaxRecvBandwidth':333,'videoMinRecvBandwidth':333,'videoMaxSendBandwidth':333,'videoMinSendBandwidth':333,'allowedFilters':['CustomFilter']},'customIceServers':[{'url':'turn:turn-domain.com:443','username':'MY_CUSTOM_STRING','credential':'MY_CUSTOM_STRING'}]}";
 		JsonObject originalJson = new Gson().fromJson(jsonString, JsonObject.class);
@@ -30,9 +21,10 @@ public class ConnectionPropertiesTest extends TestCase {
 		ConnectionProperties props = builder.build();
 		JsonObject finalJson = props.toJson("MY_CUSTOM_STRING");
 		finalJson = removeIpcamProps(finalJson);
-		assertEquals(originalJson, finalJson);
+		Assertions.assertEquals(originalJson, finalJson);
 	}
 
+	@Test
 	public void testIpcamFromJsonSuccess() {
 		String jsonString = "{'type':'IPCAM','data':'MY_CUSTOM_STRING','record':false,'rtspUri':'rtsp://your.camera.ip.sdp','adaptativeBitrate':false,'onlyPlayWithSubscribers':false,'networkCache':333}";
 		JsonObject originalJson = new Gson().fromJson(jsonString, JsonObject.class);
@@ -41,7 +33,7 @@ public class ConnectionPropertiesTest extends TestCase {
 		ConnectionProperties props = builder.build();
 		JsonObject finalJson = props.toJson("MY_CUSTOM_STRING");
 		finalJson = removeWebrtcProps(finalJson);
-		assertEquals(originalJson, finalJson);
+		Assertions.assertEquals(originalJson, finalJson);
 
 		jsonString = "{'type':'IPCAM','rtspUri':'rtsp://your.camera.ip.sdp'}";
 		ConnectionProperties.fromJson(mapFromJsonString(jsonString)).build();
@@ -59,6 +51,7 @@ public class ConnectionPropertiesTest extends TestCase {
 		ConnectionProperties.fromJson(mapFromJsonString(jsonString)).build();
 	}
 
+	@Test
 	public void testFromJsonError() {
 		Map<String, ?> map = mapFromJsonString("{'type':'NOT_EXISTS'}");
 		assertException(map, "type");
@@ -107,8 +100,8 @@ public class ConnectionPropertiesTest extends TestCase {
 	}
 
 	private void assertException(Map<String, ?> params, String containsError) {
-		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+		IllegalArgumentException exception = Assertions.assertThrows(IllegalArgumentException.class,
 				() -> ConnectionProperties.fromJson(params));
-		assertTrue(exception.getMessage().contains(containsError));
+		Assertions.assertTrue(exception.getMessage().contains(containsError));
 	}
 }

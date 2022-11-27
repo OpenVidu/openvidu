@@ -26,8 +26,6 @@ import javax.annotation.PostConstruct;
 
 import org.kurento.client.KurentoClient;
 import org.kurento.commons.exception.KurentoException;
-import org.kurento.jsonrpc.client.JsonRpcClientNettyWebSocket;
-import org.kurento.jsonrpc.client.JsonRpcWSConnectionListener;
 
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.core.Session;
@@ -46,13 +44,8 @@ public class FixedOneKmsManager extends KmsManager {
 		KurentoClient kClient = null;
 		Kms kms = new Kms(firstProps, loadManager, this);
 		try {
-			JsonRpcWSConnectionListener listener = this.generateKurentoConnectionListener(kms.getId());
-			JsonRpcClientNettyWebSocket client = new JsonRpcClientNettyWebSocket(firstProps.getUri(), listener);
-			client.setTryReconnectingMaxTime(0);
-			client.setTryReconnectingForever(false);
-			client.setConnectionTimeout(MAX_CONNECT_TIME_MILLIS);
-			client.setRequestTimeout(MAX_REQUEST_TIMEOUT);
-			kClient = KurentoClient.createFromJsonRpcClientHonoringClientTimeouts(client);
+
+			kClient = this.createKurentoClient(kms.getId(), firstProps.getUri());
 			kms.setKurentoClient(kClient);
 
 			// TODO: This should be done in KurentoClient connected event
