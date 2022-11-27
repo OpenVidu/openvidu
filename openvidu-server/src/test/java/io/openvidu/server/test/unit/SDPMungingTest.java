@@ -11,8 +11,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.java.client.VideoCodec;

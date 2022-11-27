@@ -23,7 +23,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -93,7 +93,7 @@ public class WebhookIntegrationTest {
 		try {
 			this.webhook = Whitebox.getInternalState(cdrLoggerWebhook, "webhookSender");
 		} catch (Exception e) {
-			Assert.fail("Error getting private property from stubbed object: " + e.getMessage());
+			Assertions.fail("Error getting private property from stubbed object: " + e.getMessage());
 		}
 
 		CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
@@ -109,7 +109,7 @@ public class WebhookIntegrationTest {
 		try {
 			httpClient = Whitebox.getInternalState(webhook, "httpClient");
 		} catch (Exception e) {
-			Assert.fail("Error getting private property from stubbed object: " + e.getMessage());
+			Assertions.fail("Error getting private property from stubbed object: " + e.getMessage());
 		}
 		httpClient = PowerMockito.spy(httpClient);
 		doAnswer(invocationOnMock -> {
@@ -133,7 +133,7 @@ public class WebhookIntegrationTest {
 		try {
 
 			if (!initLatch.await(30, TimeUnit.SECONDS)) {
-				Assert.fail("Timeout waiting for webhook springboot app to start");
+				Assertions.fail("Timeout waiting for webhook springboot app to start");
 				CustomWebhook.shutDown();
 				return;
 			}
@@ -206,11 +206,11 @@ public class WebhookIntegrationTest {
 			JsonObject signal5 = CustomWebhook.waitForEvent("signalSent", 25, TimeUnit.MILLISECONDS);
 
 			// Order of webhook events should be honored
-			Assert.assertEquals("Wrong signal type", "1", signal1.get("type").getAsString());
-			Assert.assertEquals("Wrong signal type", "2", signal2.get("type").getAsString());
-			Assert.assertEquals("Wrong signal type", "3", signal3.get("type").getAsString());
-			Assert.assertEquals("Wrong signal type", "4", signal4.get("type").getAsString());
-			Assert.assertEquals("Wrong signal type", "5", signal5.get("type").getAsString());
+			Assertions.assertEquals("1", signal1.get("type").getAsString(), "Wrong signal type");
+			Assertions.assertEquals("2", signal2.get("type").getAsString(), "Wrong signal type");
+			Assertions.assertEquals("3", signal3.get("type").getAsString(), "Wrong signal type");
+			Assertions.assertEquals("4", signal4.get("type").getAsString(), "Wrong signal type");
+			Assertions.assertEquals("5", signal5.get("type").getAsString(), "Wrong signal type");
 
 			this.sessionRestController.closeConnection(sessionId, participant.getParticipantPublicId());
 

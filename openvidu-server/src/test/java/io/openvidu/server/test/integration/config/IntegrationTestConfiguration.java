@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.kurento.client.Continuation;
 import org.kurento.client.KurentoClient;
 import org.kurento.client.MediaPipeline;
@@ -46,7 +46,7 @@ public class IntegrationTestConfiguration {
 			try {
 				kmsProperties = invocation.getArgument(0);
 			} catch (Exception e) {
-				Assert.fail("Error getting argument from stubbed method: " + e.getMessage());
+				Assertions.fail("Error getting argument from stubbed method: " + e.getMessage());
 			}
 			for (KmsProperties kmsProp : kmsProperties) {
 
@@ -54,7 +54,7 @@ public class IntegrationTestConfiguration {
 				try {
 					loadManager = Whitebox.getInternalState(spy, "loadManager");
 				} catch (Exception e) {
-					Assert.fail("Error getting private property from stubbed object: " + e.getMessage());
+					Assertions.fail("Error getting private property from stubbed object: " + e.getMessage());
 				}
 				Kms kms = new Kms(kmsProp, loadManager, spy);
 				KurentoClient kClient = mock(KurentoClient.class);

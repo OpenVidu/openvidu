@@ -20,7 +20,7 @@ package io.openvidu.server.test.integration;
 import java.util.HashMap;
 import java.util.UUID;
 
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -75,18 +75,18 @@ public class SessionGarbageCollectorIntegrationTest {
 		getSession();
 		jsonResponse = listSessions();
 
-		Assert.assertEquals("Wrong number of sessions", 1, jsonResponse.get("numberOfElements").getAsInt());
+		Assertions.assertEquals(1, jsonResponse.get("numberOfElements").getAsInt(), "Wrong number of sessions");
 
 		Thread.sleep(2000);
 
 		jsonResponse = listSessions();
-		Assert.assertEquals("Wrong number of sessions", 0, jsonResponse.get("numberOfElements").getAsInt());
+		Assertions.assertEquals(0, jsonResponse.get("numberOfElements").getAsInt(), "Wrong number of sessions");
 
 		getSession();
 		getSession();
 		Session session = getSession();
 		jsonResponse = listSessions();
-		Assert.assertEquals("Wrong number of sessions", 3, jsonResponse.get("numberOfElements").getAsInt());
+		Assertions.assertEquals(3, jsonResponse.get("numberOfElements").getAsInt(), "Wrong number of sessions");
 
 		String token = getToken(session);
 		joinParticipant(session, token);
@@ -94,7 +94,7 @@ public class SessionGarbageCollectorIntegrationTest {
 		Thread.sleep(2000);
 
 		jsonResponse = listSessions();
-		Assert.assertEquals("Wrong number of sessions", 1, jsonResponse.get("numberOfElements").getAsInt());
+		Assertions.assertEquals(1, jsonResponse.get("numberOfElements").getAsInt(), "Wrong number of sessions");
 	}
 
 	private Session getSession() {
