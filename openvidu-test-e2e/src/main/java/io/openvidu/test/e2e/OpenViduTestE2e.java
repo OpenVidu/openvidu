@@ -22,8 +22,8 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
-import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -115,7 +115,7 @@ public class OpenViduTestE2e {
 		String ffmpegOutput = commandLine.executeCommand("which ffmpeg", 60);
 		if (ffmpegOutput == null || ffmpegOutput.isEmpty()) {
 			log.error("ffmpeg package is not installed in the host machine");
-			Assert.fail();
+			Assertions.fail();
 			return;
 		} else {
 			log.info("ffmpeg is installed and accesible");
@@ -238,7 +238,7 @@ public class OpenViduTestE2e {
 			if (params.size() % 2 != 0) {
 				log.error(
 						"Wrong configuration property EXTERNAL_CUSTOM_LAYOUT_PARAMS. Must be a comma separated list with an even number of elements. e.g: EXTERNAL_CUSTOM_LAYOUT_PARAMS=param1,value1,param2,value2");
-				Assert.fail();
+				Assertions.fail();
 				return;
 			} else {
 				EXTERNAL_CUSTOM_LAYOUT_PARAMS = "";
@@ -316,11 +316,12 @@ public class OpenViduTestE2e {
 		}
 	}
 
-	protected BrowserUser setupBrowser(String browser) {
+	protected BrowserUser setupBrowser(String browser) throws Exception {
 
 		BrowserUser browserUser = null;
 		GenericContainer<?> container;
-
+		Path path;
+		
 		switch (browser) {
 		case "chrome":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
@@ -340,17 +341,23 @@ public class OpenViduTestE2e {
 		case "chromeAlternateFakeVideo":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
 			setupBrowserAux(BrowserNames.CHROME, container, false);
-			browserUser = new ChromeUser("TestUser", 50, Paths.get("/opt/openvidu/barcode.y4m"));
+			path = Paths.get("/opt/openvidu/barcode.y4m");
+			checkMediafilePath(path);
+			browserUser = new ChromeUser("TestUser", 50, path);
 			break;
 		case "chromeFakeAudio":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
 			setupBrowserAux(BrowserNames.CHROME, container, false);
-			browserUser = new ChromeUser("TestUser", 50, null, Paths.get("/opt/openvidu/stt-test.wav"));
+			path = Paths.get("/opt/openvidu/stt-test.wav");
+			checkMediafilePath(path);
+			browserUser = new ChromeUser("TestUser", 50, null, path);
 			break;
 		case "chromeVirtualBackgroundFakeVideo":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
 			setupBrowserAux(BrowserNames.CHROME, container, false);
-			browserUser = new ChromeUser("TestUser", 50, Paths.get("/opt/openvidu/girl.mjpeg"), false);
+			path = Paths.get("/opt/openvidu/girl.mjpeg");
+			checkMediafilePath(path);
+			browserUser = new ChromeUser("TestUser", 50, path, false);
 			break;
 		case "firefox":
 			container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, true);
@@ -613,7 +620,8 @@ public class OpenViduTestE2e {
 
 	protected void checkDockerContainerRunning(String imageName, int amount) {
 		int number = Integer.parseInt(commandLine.executeCommand("docker ps | grep " + imageName + " | wc -l", 60));
-		Assert.assertEquals("Wrong number of Docker containers for image " + imageName + " running", amount, number);
+		Assertions.assertEquals(amount, number,
+				"Wrong number of Docker containers for image " + imageName + " running");
 	}
 
 	protected void removeAllRecordingContiners() {
@@ -706,6 +714,14 @@ public class OpenViduTestE2e {
 				return null;
 			}
 		});
+	}
+	
+	private void checkMediafilePath(Path path) throws Exception {
+		if (!Files.exists(path)) {
+			throw new Exception("File " + path.toAbsolutePath().toString() + " does not exist");
+		} else if (!Files.isReadable(path)) {
+			throw new Exception("File " + path.toAbsolutePath().toString() + " exists but is not readable");
+		}
 	}
 
 }

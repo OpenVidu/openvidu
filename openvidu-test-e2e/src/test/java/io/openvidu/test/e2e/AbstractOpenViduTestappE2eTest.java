@@ -27,7 +27,7 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 		user.getEventManager().startPolling();
 	}
 
-	protected OpenViduTestappUser setupBrowserAndConnectToOpenViduTestapp(String browser) {
+	protected OpenViduTestappUser setupBrowserAndConnectToOpenViduTestapp(String browser) throws Exception {
 		BrowserUser browserUser = this.setupBrowser(browser);
 		OpenViduTestappUser testappUser = new OpenViduTestappUser(browserUser);
 		this.testappUsers.add(testappUser);
