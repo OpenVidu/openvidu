@@ -21,7 +21,7 @@ import org.jcodec.api.FrameGrab;
 import org.jcodec.api.JCodecException;
 import org.jcodec.common.model.Picture;
 import org.jcodec.scale.AWTUtil;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,10 +58,9 @@ public class RecordingUtils {
 			Map<String, Long> colorMap = this.averageColor(image);
 
 			String realResolution = image.getWidth() + "x" + image.getHeight();
-			Assert.assertEquals(
+			Assertions.assertEquals(recording.getResolution(), realResolution,
 					"Resolution (" + recording.getResolution()
-							+ ") of recording entity is not equal to real video resolution (" + realResolution + ")",
-					recording.getResolution(), realResolution);
+							+ ") of recording entity is not equal to real video resolution (" + realResolution + ")");
 
 			log.info("Recording map color: {}", colorMap.toString());
 			log.info("Recording frame below");
@@ -111,26 +110,27 @@ public class RecordingUtils {
 
 		// Should be only 2 files: zip and metadata
 		File folder = new File(recPath);
-		Assert.assertEquals("There are more than 2 files (ZIP and metadata) inside individual recording folder "
-				+ recPath + ": " + Arrays.toString(folder.listFiles()), 2, folder.listFiles().length);
+		Assertions.assertEquals(2, folder.listFiles().length,
+				"There are more than 2 files (ZIP and metadata) inside individual recording folder " + recPath + ": "
+						+ Arrays.toString(folder.listFiles()));
 
 		File file1 = new File(recPath + recording.getName() + ".zip");
 		File file2 = new File(recPath + ".recording." + recording.getId());
 
-		Assert.assertTrue("File " + file1.getAbsolutePath() + " does not exist or is empty",
-				file1.exists() && file1.length() > 0);
-		Assert.assertTrue("File " + file2.getAbsolutePath() + " does not exist or is empty",
-				file2.exists() && file2.length() > 0);
+		Assertions.assertTrue(file1.exists() && file1.length() > 0,
+				"File " + file1.getAbsolutePath() + " does not exist or is empty");
+		Assertions.assertTrue(file2.exists() && file2.length() > 0,
+				"File " + file2.getAbsolutePath() + " does not exist or is empty");
 
 		List<File> unzippedWebmFiles = new Unzipper().unzipFile(recPath, recording.getName() + ".zip");
 
-		Assert.assertEquals("Expecting " + numberOfVideoFiles + " videos inside ZIP file but "
-				+ unzippedWebmFiles.size() + " found: " + unzippedWebmFiles.toString(), numberOfVideoFiles,
-				unzippedWebmFiles.size());
+		Assertions.assertEquals(numberOfVideoFiles, unzippedWebmFiles.size(),
+				"Expecting " + numberOfVideoFiles + " videos inside ZIP file but " + unzippedWebmFiles.size()
+						+ " found: " + unzippedWebmFiles.toString());
 
 		File jsonSyncFile = new File(recPath + recording.getName() + ".json");
-		Assert.assertTrue("JSON sync file " + jsonSyncFile.getAbsolutePath() + "does not exist or is empty",
-				jsonSyncFile.exists() && jsonSyncFile.length() > 0);
+		Assertions.assertTrue(jsonSyncFile.exists() && jsonSyncFile.length() > 0,
+				"JSON sync file " + jsonSyncFile.getAbsolutePath() + "does not exist or is empty");
 
 		JsonObject jsonSyncMetadata;
 		try {
@@ -140,7 +140,7 @@ public class RecordingUtils {
 		} catch (Exception e) {
 			log.error("Cannot read JSON sync metadata file from {}. Error: {}", jsonSyncFile.getAbsolutePath(),
 					e.getMessage());
-			Assert.fail("Cannot read JSON sync metadata file from " + jsonSyncFile.getAbsolutePath());
+			Assertions.fail("Cannot read JSON sync metadata file from " + jsonSyncFile.getAbsolutePath());
 			return;
 		}
 
@@ -149,8 +149,8 @@ public class RecordingUtils {
 		for (File webmFile : unzippedWebmFiles) {
 			totalFileSize += webmFile.length();
 
-			Assert.assertTrue("WEBM file " + webmFile.getAbsolutePath() + " does not exist or is empty",
-					webmFile.exists() && webmFile.length() > 0);
+			Assertions.assertTrue(webmFile.exists() && webmFile.length() > 0,
+					"WEBM file " + webmFile.getAbsolutePath() + " does not exist or is empty");
 
 			double durationInSeconds = 0;
 			boolean found = false;
@@ -164,8 +164,8 @@ public class RecordingUtils {
 				}
 			}
 
-			Assert.assertTrue("Couldn't find in JSON sync object information for webm file " + webmFile.getName(),
-					found);
+			Assertions.assertTrue(found,
+					"Couldn't find in JSON sync object information for webm file " + webmFile.getName());
 
 			log.info("Duration of {} according to sync metadata json file: {} s", webmFile.getName(),
 					durationInSeconds);
@@ -174,8 +174,8 @@ public class RecordingUtils {
 			webmFile.delete();
 		}
 
-		Assert.assertEquals("Size of recording entity (" + recording.getSessionId()
-				+ ") is not equal to real file size (" + totalFileSize + ")", recording.getSize(), totalFileSize);
+		Assertions.assertEquals(recording.getSize(), totalFileSize, "Size of recording entity ("
+				+ recording.getSessionId() + ") is not equal to real file size (" + totalFileSize + ")");
 
 		jsonSyncFile.delete();
 	}
@@ -188,28 +188,28 @@ public class RecordingUtils {
 		if (hasVideo) {
 			if (checkAudio) {
 				if (hasAudio) {
-					Assert.assertTrue("Media file " + file.getAbsolutePath() + " should have audio",
-							metadata.hasAudio() && metadata.hasVideo());
-					Assert.assertTrue(metadata.getAudioDecoder().toLowerCase().contains(audioDecoder));
+					Assertions.assertTrue(metadata.hasAudio() && metadata.hasVideo(),
+							"Media file " + file.getAbsolutePath() + " should have audio");
+					Assertions.assertTrue(metadata.getAudioDecoder().toLowerCase().contains(audioDecoder));
 				} else {
-					Assert.assertTrue("Media file " + file.getAbsolutePath() + " should have video",
-							metadata.hasVideo());
-					Assert.assertFalse(metadata.hasAudio());
+					Assertions.assertTrue(metadata.hasVideo(),
+							"Media file " + file.getAbsolutePath() + " should have video");
+					Assertions.assertFalse(metadata.hasAudio());
 				}
 			}
 			if (resolution != null) {
-				Assert.assertEquals(resolution, metadata.getVideoWidth() + "x" + metadata.getVideoHeight());
+				Assertions.assertEquals(resolution, metadata.getVideoWidth() + "x" + metadata.getVideoHeight());
 			}
 			if (frameRate != null) {
-				Assert.assertEquals(frameRate.intValue(), metadata.getFrameRate());
+				Assertions.assertEquals(frameRate.intValue(), metadata.getFrameRate());
 			}
-			Assert.assertTrue(metadata.getVideoDecoder().toLowerCase().contains(videoDecoder));
+			Assertions.assertTrue(metadata.getVideoDecoder().toLowerCase().contains(videoDecoder));
 		} else if (hasAudio && checkAudio) {
-			Assert.assertTrue(metadata.hasAudio());
-			Assert.assertFalse(metadata.hasVideo());
-			Assert.assertTrue(metadata.getAudioDecoder().toLowerCase().contains(audioDecoder));
+			Assertions.assertTrue(metadata.hasAudio());
+			Assertions.assertFalse(metadata.hasVideo());
+			Assertions.assertTrue(metadata.getAudioDecoder().toLowerCase().contains(audioDecoder));
 		} else {
-			Assert.fail("Cannot check a file witho no audio and no video");
+			Assertions.fail("Cannot check a file witho no audio and no video");
 		}
 		// Check duration with 1 decimal precision
 		DecimalFormat df = new DecimalFormat("#0.0");
@@ -218,10 +218,9 @@ public class RecordingUtils {
 		log.info("Duration of {} according to 'duration' property: {} s", file.getName(), duration);
 		log.info("Difference in s duration: {}", Math.abs(metadata.getDuration() - duration));
 		final double difference = 10;
-		Assert.assertTrue(
+		Assertions.assertTrue(Math.abs((metadata.getDuration() - duration)) < difference,
 				"Difference between recording entity duration (" + duration + ") and real video duration ("
-						+ metadata.getDuration() + ") is greater than " + difference + "  in file " + file.getName(),
-				Math.abs((metadata.getDuration() - duration)) < difference);
+						+ metadata.getDuration() + ") is greater than " + difference + "  in file " + file.getName());
 	}
 
 	public boolean thumbnailIsFine(File file, Function<Map<String, Long>, Boolean> colorCheckFunction) {
