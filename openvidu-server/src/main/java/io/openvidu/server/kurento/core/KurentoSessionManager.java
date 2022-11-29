@@ -1125,8 +1125,8 @@ public class KurentoSessionManager extends SessionManager {
 		}
 	}
 
-	@Override
 	/* Protected by Session.closingLock.readLock */
+	@Override
 	public Participant publishIpcam(Session session, MediaOptions mediaOptions,
 			ConnectionProperties connectionProperties) throws Exception {
 		final String sessionId = session.getSessionId();

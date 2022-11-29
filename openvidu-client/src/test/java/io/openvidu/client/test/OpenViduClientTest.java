@@ -18,8 +18,6 @@ package io.openvidu.client.test;
 import static io.openvidu.client.internal.ProtocolElements.JOINROOM_METHOD;
 import static io.openvidu.client.internal.ProtocolElements.JOINROOM_ROOM_PARAM;
 import static io.openvidu.client.internal.ProtocolElements.JOINROOM_USER_PARAM;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -28,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kurento.jsonrpc.client.JsonRpcClient;
@@ -70,7 +69,6 @@ public class OpenViduClientTest {
         Map<String, List<String>> joinResult = new HashMap<String, List<String>>();
 
         when(jsonRpcClient.sendRequest(JOINROOM_METHOD, params)).thenReturn(result);
-        assertThat(client.joinRoom("room", "user"), is(joinResult));
-
+        Assertions.assertEquals(client.joinRoom("room", "user"), joinResult);
     }
 }

@@ -43,22 +43,17 @@
 
 	<properties>
 		<version.kurento>6.18.1-SNAPSHOT</version.kurento>
-		<version.spring-boot>2.7.5</version.spring-boot>
+		<version.spring-boot>2.7.6</version.spring-boot>
 		<version.junit>5.9.1</version.junit>
-		<version.junit.platform>1.9.1</version.junit.platform>
 		<version.selenium>3.141.59</version.selenium>
 		<version.mockito.core>4.9.0</version.mockito.core>
 		<version.powermock>2.0.9</version.powermock>
-		<version.hamcrest>2.2</version.hamcrest>
-		<version.httpclient>4.5.13</version.httpclient>
 		<version.janino>3.1.9</version.janino>
-		<version.commonslang>3.12.0</version.commonslang>
 		<version.dockerjava>3.2.13</version.dockerjava>
 		<version.slf4j>1.7.36</version.slf4j>
 		<version.gson>2.10</version.gson>
 		<version.unirest>1.4.9</version.unirest>
 		<version.jcodec>0.2.5</version.jcodec>
-		<version.commons-text>1.10.0</version.commons-text>
 		<version.testcontainers>1.16.2</version.testcontainers>
 		<version.appium>7.6.0</version.appium>
 
