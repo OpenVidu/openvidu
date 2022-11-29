@@ -1582,10 +1582,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@DisplayName("Crash STT service test")
-	void crashSttServiceTest() throws Exception {
+	@DisplayName("Crash service STT test")
+	void crashServiceSttTest() throws Exception {
 
-		log.info("Crash STT service test");
+		log.info("Crash service STT test");
 
 		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
 
