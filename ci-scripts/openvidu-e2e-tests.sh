@@ -385,7 +385,7 @@ if [[ "${OV_PRE_BUILD}" == true || "${EXECUTE_ALL}" == true ]]; then
     fi
 
     mvn -B versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST
-    mvn -B -DskipTests=true clean install
+    mvn -B -DskipTests=true -Dmaven.artifact.threads=1 clean install
 
 fi
 
