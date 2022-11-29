@@ -36,11 +36,6 @@ def prepareTestingEnvironment() {
                 docker.image("openvidu/openvidu-test-e2e:${DISTRO}").pull()
             }
         },
-        'Pull openvidu/openvidu-pro-test-e2e': {
-            if (env.DISTRO) {
-                docker.image("openvidu/openvidu-pro-test-e2e:${DISTRO}").pull()
-            }
-        },
         'Pull selenium/standalone-chrome': {
             if (env.CHROME_VERSION) {
                 docker.image("selenium/standalone-chrome:${CHROME_VERSION}").pull()
@@ -150,7 +145,6 @@ def removeStrandedContainers(removeTestingContainers) {
                             "openvidu/speech-to-text-service:")
             if [ "${removeTestingContainers}" == "true" ]; then
                 arr+=("openvidu/openvidu-test-e2e:")
-                arr+=("openvidu/openvidu-pro-test-e2e:")
             fi
             for image in "${arr[@]}"
             do
