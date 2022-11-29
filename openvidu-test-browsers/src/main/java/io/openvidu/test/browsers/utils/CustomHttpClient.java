@@ -28,27 +28,32 @@ import java.util.Map.Entry;
 
 import javax.net.ssl.SSLContext;
 
-import org.apache.http.client.HttpClient;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
-import com.mashape.unirest.http.HttpMethod;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import com.mashape.unirest.request.HttpRequest;
-import com.mashape.unirest.request.HttpRequestWithBody;
 
 public class CustomHttpClient {
 
@@ -56,6 +61,7 @@ public class CustomHttpClient {
 
 	private String openviduUrl;
 	private String headerAuth;
+	private CloseableHttpClient client;
 
 	public CustomHttpClient(String url, String user, String pass) throws Exception {
 		this.openviduUrl = url.replaceFirst("/*$", "");
@@ -71,14 +77,13 @@ public class CustomHttpClient {
 		} catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
 			throw new Exception("Error building custom HttpClient: " + e.getMessage());
 		}
-		HttpClient unsafeHttpClient = HttpClients.custom().setSSLContext(sslContext)
-				.setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
-		Unirest.setHttpClient(unsafeHttpClient);
+		client = HttpClients.custom().setSSLContext(sslContext).setSSLHostnameVerifier(new NoopHostnameVerifier())
+				.build();
 	}
 
 	public int getAndReturnStatus(String path, String credentials) throws Exception {
 		path = openviduUrl + (path.startsWith("/") ? path : ("/" + path));
-		return Unirest.get(path).header("Authorization", credentials).asJson().getStatus();
+		return client.execute(new HttpGet(path)).getStatusLine().getStatusCode();
 	}
 
 	public JsonObject rest(HttpMethod method, String path, int status) throws Exception {
@@ -230,80 +235,85 @@ public class CustomHttpClient {
 	}
 
 	public void shutdown() throws IOException {
-		Unirest.shutdown();
+		this.client.close();
 	}
 
 	private JsonObject commonRest(HttpMethod method, String path, String body, int status) throws Exception {
-		HttpResponse<?> jsonResponse = null;
+		HttpResponse jsonResponse = null;
 		JsonObject json = null;
 		path = openviduUrl + (path.startsWith("/") ? path : ("/" + path));
 
-		HttpRequest request = null;
+		HttpRequestBase request = null;
 		if (body != null && !body.isEmpty()) {
+			HttpEntityEnclosingRequestBase requestWithBody = (HttpEntityEnclosingRequestBase) request;
 			switch (method) {
 			case POST:
-				request = Unirest.post(path);
+				requestWithBody = new HttpPost(path);
 				break;
 			case PUT:
-				request = Unirest.put(path);
+				requestWithBody = new HttpPut(path);
 				break;
 			case PATCH:
 			default:
-				request = Unirest.patch(path);
+				requestWithBody = new HttpPatch(path);
 				break;
 			}
-			((HttpRequestWithBody) request).header("Content-Type", "application/json").body(body.replaceAll("'", "\""));
+			requestWithBody.addHeader("Content-Type", "application/json");
+			body = body.replaceAll("'", "\"");
+			requestWithBody.setEntity(new StringEntity(body));
+			request = requestWithBody;
 		} else {
 			switch (method) {
 			case GET:
-				request = Unirest.get(path);
-				request.header("Content-Type", "application/x-www-form-urlencoded");
+				request = new HttpGet(path);
+				request.addHeader("Content-Type", "application/x-www-form-urlencoded");
 				break;
 			case POST:
-				request = Unirest.post(path);
+				request = new HttpPost(path);
 				break;
 			case DELETE:
-				request = Unirest.delete(path);
-				request.header("Content-Type", "application/x-www-form-urlencoded");
+				request = new HttpDelete(path);
+				request.addHeader("Content-Type", "application/x-www-form-urlencoded");
 				break;
 			case PUT:
-				request = Unirest.put(path);
+				request = new HttpPut(path);
 			default:
 				break;
 			}
 		}
 
-		request = request.header("Authorization", this.headerAuth);
+		request.addHeader("Authorization", this.headerAuth);
 		try {
-			jsonResponse = request.asJson();
-			if (jsonResponse.getBody() != null) {
-				jsonResponse.getBody();
-				json = JsonParser.parseString(((JsonNode) jsonResponse.getBody()).getObject().toString())
-						.getAsJsonObject();
-			}
-		} catch (UnirestException e) {
+			jsonResponse = client.execute(request);
+		} catch (Exception e) {
+			throw new Exception("Error sending request to " + path + ": " + e.getMessage());
+		}
+		if (jsonResponse.getEntity() != null) {
+			String stringResponse = EntityUtils.toString(jsonResponse.getEntity(), "UTF-8");
+			JsonElement jsonElement = null;
 			try {
-				if (e.getCause().getCause().getCause() instanceof org.json.JSONException) {
-					try {
-						jsonResponse = request.asString();
-					} catch (UnirestException e1) {
-						throw new Exception("Error sending request to " + path + ": " + e.getMessage());
-					}
-				} else {
-					throw new Exception("Error sending request to " + path + ": " + e.getMessage());
+				jsonElement = JsonParser.parseString(stringResponse);
+			} catch (JsonParseException e) {
+				System.out.println("Response is not a JSON element: " + stringResponse);
+			}
+			if (jsonElement != null) {
+				try {
+					json = jsonElement.getAsJsonObject();
+				} catch (IllegalStateException e) {
+					System.out.println("Response is not a JSON object: " + stringResponse);
 				}
-			} catch (NullPointerException e2) {
-				throw new Exception("Error sending request to " + path + ": " + e.getMessage());
 			}
 		}
 
-		if (jsonResponse.getStatus() == 500) {
-			log.error("Internal Server Error: {}", jsonResponse.getBody().toString());
+		if (jsonResponse.getStatusLine().getStatusCode() == 500) {
+			log.error("Internal Server Error: {}", EntityUtils.toString(jsonResponse.getEntity(), "UTF-8"));
 		}
 
-		if (status != jsonResponse.getStatus()) {
-			System.err.println(jsonResponse.getBody().toString());
-			throw new Exception(path + " expected to return status " + status + " but got " + jsonResponse.getStatus());
+		if (status != jsonResponse.getStatusLine().getStatusCode()) {
+			String responseString = EntityUtils.toString(jsonResponse.getEntity(), "UTF-8");
+			System.err.println(responseString);
+			throw new Exception(path + " expected to return status " + status + " but got "
+					+ jsonResponse.getStatusLine().getStatusCode());
 		}
 
 		return json;

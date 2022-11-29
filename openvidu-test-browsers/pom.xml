@@ -83,11 +83,6 @@
 			<version>${version.gson}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.mashape.unirest</groupId>
-			<artifactId>unirest-java</artifactId>
-			<version>${version.unirest}</version>
-		</dependency>
-		<dependency>
 			<groupId>org.jcodec</groupId>
 			<artifactId>jcodec-javase</artifactId>
 			<version>${version.jcodec}</version>

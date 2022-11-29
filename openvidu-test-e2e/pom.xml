@@ -116,11 +116,6 @@
 			<version>${version.gson}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.mashape.unirest</groupId>
-			<artifactId>unirest-java</artifactId>
-			<version>${version.unirest}</version>
-		</dependency>
-		<dependency>
 			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-test-browsers</artifactId>
 			<version>${version.openvidu.test.browsers}</version>

@@ -52,7 +52,6 @@
 		<version.dockerjava>3.2.13</version.dockerjava>
 		<version.slf4j>1.7.36</version.slf4j>
 		<version.gson>2.10</version.gson>
-		<version.unirest>1.4.9</version.unirest>
 		<version.jcodec>0.2.5</version.jcodec>
 		<version.testcontainers>1.16.2</version.testcontainers>
 		<version.appium>7.6.0</version.appium>
