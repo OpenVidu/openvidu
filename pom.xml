@@ -65,14 +65,14 @@
 
 		<version.webdrivermanager>4.2.2</version.webdrivermanager>
 
-		<version.enforcer.plugin>3.0.0-M3</version.enforcer.plugin>
-		<version.extra.enforcer.rules.plugin>1.3</version.extra.enforcer.rules.plugin>
+		<version.enforcer.plugin>3.1.0</version.enforcer.plugin>
+		<version.extra.enforcer.rules.plugin>1.6.1</version.extra.enforcer.rules.plugin>
 		<version.source.plugin>3.2.1</version.source.plugin>
-		<version.surefire.plugin>3.0.0-M5</version.surefire.plugin>
+		<version.surefire.plugin>3.0.0-M7</version.surefire.plugin>
 		<version.gpg.plugin>1.6</version.gpg.plugin>
-		<version.nexus.staging.plugin>1.6.8</version.nexus.staging.plugin>
-		<version.exec.plugin>3.0.0</version.exec.plugin>
-		<version.javadoc.plugin>3.2.0</version.javadoc.plugin>
+		<version.nexus.staging.plugin>1.6.13</version.nexus.staging.plugin>
+		<version.exec.plugin>3.1.0</version.exec.plugin>
+		<version.javadoc.plugin>3.4.1</version.javadoc.plugin>
 		<version.maven.artifact>3.8.6</version.maven.artifact>
 
 		<maven.compiler.target>11</maven.compiler.target>
