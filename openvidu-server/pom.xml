@@ -182,8 +182,8 @@
 			<version>${version.kurento}</version>
 			<exclusions>
 				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-tomcat</artifactId>
+					<groupId>org.apache.tomcat.embed</groupId>
+					<artifactId>tomcat-embed-websocket</artifactId>
 				</exclusion>
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
@@ -192,10 +192,6 @@
 				<exclusion>
 					<groupId>org.springframework</groupId>
 					<artifactId>spring-websocket</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-api</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>

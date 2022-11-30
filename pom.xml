@@ -42,8 +42,14 @@
 	</developers>
 
 	<properties>
-		<version.kurento>6.18.1-SNAPSHOT</version.kurento>
+
 		<version.spring-boot>2.7.6</version.spring-boot>
+		<version.kurento>6.18.1-SNAPSHOT</version.kurento>
+		<version.openvidu.java.client>2.24.0</version.openvidu.java.client>
+		<version.openvidu.client>1.1.0</version.openvidu.client>
+		<version.openvidu.test.browsers>1.1.0</version.openvidu.test.browsers>
+		<version.openvidu.test.e2e>1.1.1</version.openvidu.test.e2e>
+
 		<version.junit>5.9.1</version.junit>
 		<version.selenium>3.141.59</version.selenium>
 		<version.mockito.core>4.9.0</version.mockito.core>
@@ -57,11 +63,6 @@
 		<version.appium>7.6.0</version.appium>
 
 		<version.webdrivermanager>4.2.2</version.webdrivermanager>
-
-		<version.openvidu.java.client>2.24.0</version.openvidu.java.client>
-		<version.openvidu.client>1.1.0</version.openvidu.client>
-		<version.openvidu.test.browsers>1.1.0</version.openvidu.test.browsers>
-		<version.openvidu.test.e2e>1.1.1</version.openvidu.test.e2e>
 
 		<version.enforcer.plugin>3.0.0-M3</version.enforcer.plugin>
 		<version.extra.enforcer.rules.plugin>1.3</version.extra.enforcer.rules.plugin>
