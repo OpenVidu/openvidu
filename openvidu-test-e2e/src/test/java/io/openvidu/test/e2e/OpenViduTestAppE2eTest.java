@@ -103,8 +103,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	protected static void setupAll() throws Exception {
 		checkFfmpegInstallation();
 		loadEnvironmentVariables();
-		prepareBrowserDrivers(new HashSet<>(Arrays.asList(BrowserNames.CHROME, BrowserNames.FIREFOX, BrowserNames.OPERA,
-				BrowserNames.EDGE, BrowserNames.ANDROID)));
+		prepareBrowserDrivers(new HashSet<>(Arrays.asList(BrowserNames.CHROME, BrowserNames.FIREFOX,
+				BrowserNames.EDGE /* , BrowserNames.OPERA, BrowserNames.ANDROID */)));
 		cleanFoldersAndSetUpOpenViduJavaClient();
 		getDefaultTranscodingValues();
 	}
@@ -127,6 +127,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("One2One Opera")
+	@Disabled
 	void oneToOneOpera() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("opera");
 		log.info("One2One Opera");
@@ -456,7 +457,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			}
 		};
 
-		final CountDownLatch latch = new CountDownLatch(4);
+		final CountDownLatch latch = new CountDownLatch(3);
 
 		final BiFunction<OpenViduTestappUser, String, Void> browserTest = (user, browserName) -> {
 
@@ -464,13 +465,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.className("join-btn")).click();
 
 			try {
-				user.getEventManager().waitUntilEventReaches("connectionCreated", 4, 100, true);
+				user.getEventManager().waitUntilEventReaches("connectionCreated", 3, 100, true);
 				user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
-				user.getEventManager().waitUntilEventReaches("streamCreated", 4);
-				user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
+				user.getEventManager().waitUntilEventReaches("streamCreated", 3);
+				user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
 
 				final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-				Assertions.assertEquals(4, numberOfVideos, "Wrong number of videos");
+				Assertions.assertEquals(3, numberOfVideos, "Wrong number of videos");
 				Assertions
 						.assertTrue(
 								user.getEventManager().assertMediaTracks(
@@ -515,16 +516,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Thread.currentThread().interrupt();
 			}
 		});
-		Thread threadOpera = new Thread(() -> {
-			try {
-				browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("opera"), "Opera");
-			} catch (Exception e) {
-				String errMsg = "Error setting up browser: " + e.getMessage();
-				System.err.println(errMsg);
-				Assertions.fail(errMsg);
-				Thread.currentThread().interrupt();
-			}
-		});
 		Thread threadEdge = new Thread(() -> {
 			try {
 				browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("edge"), "Edge");
@@ -535,19 +526,29 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Thread.currentThread().interrupt();
 			}
 		});
+		// Thread threadOpera = new Thread(() -> {
+		// try {
+		// browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("opera"), "Opera");
+		// } catch (Exception e) {
+		// String errMsg = "Error setting up browser: " + e.getMessage();
+		// System.err.println(errMsg);
+		// Assertions.fail(errMsg);
+		// Thread.currentThread().interrupt();
+		// }
+		// });
 
 		threadChrome.setUncaughtExceptionHandler(h);
 		threadFirefox.setUncaughtExceptionHandler(h);
-		threadOpera.setUncaughtExceptionHandler(h);
 		threadEdge.setUncaughtExceptionHandler(h);
+		// threadOpera.setUncaughtExceptionHandler(h);
 		threadChrome.start();
 		threadFirefox.start();
-		threadOpera.start();
 		threadEdge.start();
+		// threadOpera.start();
 		threadChrome.join();
 		threadFirefox.join();
-		threadOpera.join();
 		threadEdge.join();
+		// threadOpera.join();
 
 		synchronized (lock) {
 			if (OpenViduTestAppE2eTest.ex != null) {

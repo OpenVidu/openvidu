@@ -19,14 +19,11 @@ package io.openvidu.test.browsers;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.firefox.FirefoxProfile;
-import org.openqa.selenium.remote.CapabilityType;
-import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class FirefoxUser extends BrowserUser {
@@ -36,24 +33,19 @@ public class FirefoxUser extends BrowserUser {
 
 		String REMOTE_URL = System.getProperty("REMOTE_URL_FIREFOX");
 
-		DesiredCapabilities capabilities = DesiredCapabilities.firefox();
-		capabilities.setAcceptInsecureCerts(true);
-		capabilities.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, UnexpectedAlertBehaviour.IGNORE);
+		FirefoxOptions options = new FirefoxOptions();
 
-		FirefoxProfile profile = new FirefoxProfile();
+		options.setAcceptInsecureCerts(true);
+		options.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE);
 
 		// This flag avoids granting the access to the camera
-		profile.setPreference("media.navigator.permission.disabled", true);
+		options.addPreference("media.navigator.permission.disabled", true);
 		// This flag force to use fake user media (synthetic video of multiple color)
-		profile.setPreference("media.navigator.streams.fake", true);
+		options.addPreference("media.navigator.streams.fake", true);
 
 		if (disableOpenH264) {
-			profile.setPreference("media.gmp-gmpopenh264.enabled", false);
+			options.addPreference("media.gmp-gmpopenh264.enabled", false);
 		}
-
-		capabilities.setCapability(FirefoxDriver.PROFILE, profile);
-
-		FirefoxOptions options = new FirefoxOptions(capabilities);
 
 		if (REMOTE_URL != null) {
 			options.setHeadless(true);
@@ -68,7 +60,7 @@ public class FirefoxUser extends BrowserUser {
 			this.driver = new FirefoxDriver(options);
 		}
 
-		this.driver.manage().timeouts().setScriptTimeout(timeOfWaitInSeconds, TimeUnit.SECONDS);
+		this.driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(timeOfWaitInSeconds));
 		this.configureDriver(new org.openqa.selenium.Dimension(1920, 1080));
 	}
 

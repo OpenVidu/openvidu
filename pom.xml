@@ -51,7 +51,7 @@
 		<version.openvidu.test.e2e>1.1.1</version.openvidu.test.e2e>
 
 		<version.junit>5.9.1</version.junit>
-		<version.selenium>3.141.59</version.selenium>
+		<version.selenium>4.6.0</version.selenium>
 		<version.mockito.core>4.9.0</version.mockito.core>
 		<version.powermock>2.0.9</version.powermock>
 		<version.janino>3.1.9</version.janino>
@@ -62,8 +62,6 @@
 		<version.testcontainers>1.17.6</version.testcontainers>
 		<version.appium>7.6.0</version.appium>
 		<version.stringsimilarity>2.0.0</version.stringsimilarity>
-
-		<version.webdrivermanager>4.2.2</version.webdrivermanager>
 
 		<version.enforcer.plugin>3.1.0</version.enforcer.plugin>
 		<version.extra.enforcer.rules.plugin>1.6.1</version.extra.enforcer.rules.plugin>
