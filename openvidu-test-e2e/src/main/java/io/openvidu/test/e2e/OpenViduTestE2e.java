@@ -321,7 +321,7 @@ public class OpenViduTestE2e {
 		BrowserUser browserUser = null;
 		GenericContainer<?> container;
 		Path path;
-		
+
 		switch (browser) {
 		case "chrome":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
@@ -715,13 +715,17 @@ public class OpenViduTestE2e {
 			}
 		});
 	}
-	
+
 	private void checkMediafilePath(Path path) throws Exception {
 		if (!Files.exists(path)) {
 			throw new Exception("File " + path.toAbsolutePath().toString() + " does not exist");
 		} else if (!Files.isReadable(path)) {
 			throw new Exception("File " + path.toAbsolutePath().toString() + " exists but is not readable");
 		}
+	}
+
+	public static String getRandom(Set<String> set) {
+		return set.stream().skip((int) (set.size() * Math.random())).findFirst().get();
 	}
 
 }

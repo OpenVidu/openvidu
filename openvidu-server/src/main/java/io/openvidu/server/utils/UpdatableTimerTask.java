@@ -56,8 +56,10 @@ public class UpdatableTimerTask extends TimerTask {
 
 	public void cancelTimer() {
 		super.cancel();
-		timer.cancel();
-		timer.purge();
+		if (timer != null) {
+			timer.cancel();
+			timer.purge();
+		}
 	}
 
 	@Override
