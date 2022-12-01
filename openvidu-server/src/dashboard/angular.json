@@ -15,7 +15,6 @@
             "index": "src/index.html",
             "main": "src/main.ts",
             "tsConfig": "src/tsconfig.app.json",
-            "showCircularDependencies": false,
             "polyfills": "src/polyfills.ts",
             "assets": [
               "src/assets",
@@ -108,7 +107,6 @@
       }
     }
   },
-  "defaultProject": "openvidu-server-frontend",
   "schematics": {
     "@schematics/angular:component": {
       "prefix": "app",
