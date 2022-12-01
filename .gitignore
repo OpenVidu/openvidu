@@ -25,3 +25,5 @@ nbactions.xml
 */.classpath
 */.settings/*
 */.tscache/*
+
+.factorypath
