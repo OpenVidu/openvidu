@@ -2,7 +2,7 @@ package io.openvidu.test.browsers;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.edge.EdgeDriver;
@@ -36,7 +36,7 @@ public class EdgeUser extends BrowserUser {
 			this.driver = new EdgeDriver(options);
 		}
 
-		this.driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(timeOfWaitInSeconds));
+		this.driver.manage().timeouts().setScriptTimeout(timeOfWaitInSeconds, TimeUnit.SECONDS);
 		this.configureDriver(new org.openqa.selenium.Dimension(1920, 1080));
 	}
 
