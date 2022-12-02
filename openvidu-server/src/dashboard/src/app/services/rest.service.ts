@@ -60,14 +60,14 @@ export class RestService {
 
     createToken(session, secret): Promise<string> {
         return new Promise((resolve, reject) => {
-            const body = JSON.stringify({ session });
+            const body = {};
             const options = {
                 headers: new HttpHeaders({
                     'Authorization': 'Basic ' + btoa('OPENVIDUAPP:' + secret),
                     'Content-Type': 'application/json'
                 })
             };
-            this.httpClient.post(this.openviduPublicUrl + this.API_PATH + '/tokens', body, options)
+            this.httpClient.post(this.openviduPublicUrl + this.API_PATH + '/sessions/' + session + '/connection', body, options)
                 .pipe(
                     catchError(error => {
                         reject(error);
