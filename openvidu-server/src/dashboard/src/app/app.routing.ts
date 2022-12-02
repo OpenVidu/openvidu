@@ -41,4 +41,4 @@ const appRoutes: Routes = [
   }
 ];
 
-export const routing: ModuleWithProviders<RouterModule> = RouterModule.forRoot(appRoutes, { useHash: true, relativeLinkResolution: 'legacy' });
+export const routing: ModuleWithProviders<RouterModule> = RouterModule.forRoot(appRoutes, { useHash: true });
