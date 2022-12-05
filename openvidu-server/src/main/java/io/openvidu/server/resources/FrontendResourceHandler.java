@@ -20,7 +20,7 @@ package io.openvidu.server.resources;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import io.openvidu.server.config.OpenviduConfig;
 
@@ -35,7 +35,7 @@ import io.openvidu.server.config.OpenviduConfig;
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
  */
 @Configuration
-public class FrontendResourceHandler extends WebMvcConfigurerAdapter {
+public class FrontendResourceHandler implements WebMvcConfigurer {
 
 	@Autowired
 	OpenviduConfig openviduConfig;
@@ -46,7 +46,6 @@ public class FrontendResourceHandler extends WebMvcConfigurerAdapter {
 				.setViewName("redirect:" + openviduConfig.getOpenViduFrontendDefaultPath() + "/");
 		registry.addViewController(openviduConfig.getOpenViduFrontendDefaultPath() + "/")
 				.setViewName("forward:" + openviduConfig.getOpenViduFrontendDefaultPath() + "/index.html");
-		super.addViewControllers(registry);
 	}
 
 }
