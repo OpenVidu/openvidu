@@ -162,6 +162,11 @@ public class KurentoSession extends Session {
 		return this.kms.getId();
 	}
 
+	@Override
+	public String getMediaNodeIp() {
+		return this.kms.getIp();
+	}
+
 	public void sendIceCandidate(String participantPrivateId, String senderPublicId, String endpointName,
 			IceCandidate candidate) {
 		this.kurentoSessionHandler.onIceCandidate(sessionId, participantPrivateId, senderPublicId, endpointName,

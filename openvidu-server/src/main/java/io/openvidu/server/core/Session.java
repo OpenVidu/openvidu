@@ -207,6 +207,10 @@ public class Session implements SessionInterface {
 	public String getMediaNodeId() {
 		return null;
 	}
+	
+	public String getMediaNodeIp() {
+		return null;
+	}
 
 	protected void checkClosed() {
 		if (isClosed()) {
