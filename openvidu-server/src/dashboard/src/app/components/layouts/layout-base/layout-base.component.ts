@@ -106,7 +106,7 @@ export class LayoutBaseComponent implements OnInit, OnDestroy {
     });
 
     const p = !!this.port ? (':' + this.port) : (!!location.port ? (':' + location.port) : '');
-    const token = 'wss://' + location.hostname + p + '?sessionId=' + this.sessionId + '&secret=' + this.secret + '&recorder=true';
+    const token = (location.protocol === 'http' ? 'ws' : 'wss') + '://' + location.hostname + p + '?sessionId=' + this.sessionId + '&secret=' + this.secret + '&recorder=true';
     this.session.connect(token)
       .catch(error => {
         console.error(error);
