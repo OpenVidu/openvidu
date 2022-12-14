@@ -559,6 +559,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 			await this.initwebcamPublisher();
 		}
 		this.isSessionInitialized = true;
+		this.onSessionCreated.emit(this.openviduService.getWebcamSession());
 		this.onParticipantCreated.emit(this.participantService.getLocalParticipant());
 		this.loading = false;
 		this.participantReady = true;
@@ -674,13 +675,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 */
 	onDeleteRecordingClicked(recordingId: string) {
 		this.onActivitiesPanelDeleteRecordingClicked.emit(recordingId);
-	}
-
-	/**
-	 * @internal
-	 */
-	_onSessionCreated(session: Session) {
-		this.onSessionCreated.emit(session);
 	}
 
 	/**

@@ -65,7 +65,6 @@ export class SessionComponent implements OnInit, OnDestroy {
 	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
 
 	@Input() usedInPrejoinPage = false;
-	@Output() onSessionCreated = new EventEmitter<any>();
 
 	@Output() onNodeCrashed = new EventEmitter<any>();
 
@@ -187,7 +186,6 @@ export class SessionComponent implements OnInit, OnDestroy {
 			if (recordingEnabled) {
 				this.subscribeToRecordingEvents();
 			}
-			this.onSessionCreated.emit(this.session);
 
 			await this.connectToSession();
 			// ios devices appear with blank video. Muting and unmuting it fix this problem
