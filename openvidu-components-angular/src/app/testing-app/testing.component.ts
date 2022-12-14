@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Component, OnInit } from '@angular/core';
 
-import { Subscription, throwError as observableThrowError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 import { ActivatedRoute } from '@angular/router';
 import { PanelService } from 'openvidu-angular';
+import { Subscription, throwError as observableThrowError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 interface TemplateDirectives {
 	name: string;
@@ -48,7 +48,8 @@ export enum AttributeDirective {
 	STREAM_PARTICIPANT_NAME = 'displayParticipantName',
 	STREAM_AUDIO_DETECTION = 'displayAudioDetection',
 	STREAM_SETTINGS = 'settingsButton',
-	PARTICIPANT_ITEM_MUTE = 'muteButton'
+	PARTICIPANT_ITEM_MUTE = 'muteButton',
+	RECORDING_ACTIVITY = 'recordingActivity'
 }
 
 @Component({
@@ -113,6 +114,10 @@ export class TestingComponent implements OnInit {
 		{
 			component: StructuralDirectives.PARTICIPANTS_PANEL_ITEM,
 			directives: [AttributeDirective.PARTICIPANT_ITEM_MUTE]
+		},
+		{
+			component: StructuralDirectives.ACTIVITIES_PANEL,
+			directives: [AttributeDirective.RECORDING_ACTIVITY]
 		}
 	];
 
@@ -147,6 +152,8 @@ export class TestingComponent implements OnInit {
 	tokens: { webcam: any; screen: any };
 
 	subscription: Subscription;
+
+	recordingActivity = true;
 
 	constructor(private httpClient: HttpClient, private route: ActivatedRoute, private panelService: PanelService) {}
 
@@ -271,6 +278,9 @@ export class TestingComponent implements OnInit {
 				break;
 			case AttributeDirective.PARTICIPANT_ITEM_MUTE:
 				this.participantItemMuteBtn = value;
+				break;
+			case AttributeDirective.RECORDING_ACTIVITY:
+				this.recordingActivity = value;
 				break;
 		}
 	}

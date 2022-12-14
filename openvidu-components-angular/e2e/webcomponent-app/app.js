@@ -134,7 +134,7 @@ $(document).ready(() => {
 		appendElement('onSessionCreated');
 
 		// You can see the session documentation here
-		// https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html
+		// https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html
 
 		session.on('connectionCreated', (e) => {
 			var user = JSON.parse(e.connection.data).clientData;

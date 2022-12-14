@@ -38,9 +38,9 @@
 		</span>
 	</div>
 </section>
-<hr *ngIf="showDirectives"/>
+<hr *ngIf="showDirectives" />
 
-<section  *ngIf="showDirectives">
+<section *ngIf="showDirectives">
 	<div>
 		<h2>Attribute directives</h2>
 	</div>
@@ -67,7 +67,6 @@
 <div id="events"></div>
 
 <ov-videoconference *ngIf="!showDirectives" [tokens]="tokens" [prejoin]="false">
-
 	<!-- TOOLBAR -->
 	<ng-template [ngIf]="ovToolbarSelected">
 		<ov-toolbar
@@ -141,7 +140,6 @@
 	<!-- PANELS -->
 	<ng-template [ngIf]="ovPanelSelected">
 		<ov-panel *ovPanel id="custom-panels">
-
 			<ng-template [ngIf]="ovAdditionalPanelsSelected">
 				<div *ovAdditionalPanels id="custom-additional-panel">
 					<h1 id="additional-panel-title">NEW PANEL</h1>
@@ -199,7 +197,7 @@
 	</ng-template>
 
 	<ng-template [ngIf]="!ovPanelSelected && ovActivitiesPanelSelected">
-		<ov-activities-panel *ovActivitiesPanel id="custom-activities-panel"></ov-activities-panel>
+		<ov-activities-panel *ovActivitiesPanel [recordingActivity]="recordingActivity" id="custom-activities-panel"></ov-activities-panel>
 	</ng-template>
 
 	<ng-template [ngIf]="!ovPanelSelected && ovParticipantsPanelSelected">

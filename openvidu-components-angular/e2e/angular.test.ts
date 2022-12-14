@@ -985,6 +985,26 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		expect(await utils.isPresent('mute-btn')).to.be.false;
 	});
+
+	it('should HIDE the RECORDING activity', async () => {
+		await browser.get(`${url}`);
+
+		await utils.clickOn('#ovActivitiesPanel-checkbox');
+
+		await utils.clickOn('#recordingActivity-checkbox');
+
+		await utils.clickOn('#apply-btn');
+
+		await utils.checkToolbarIsPresent();
+
+		await utils.clickOn('#activities-panel-btn');
+
+		await browser.sleep(500);
+
+		await utils.waitForElement('#custom-activities-panel');
+
+		expect(await utils.isPresent('ov-recording-activity')).to.be.false;
+	});
 });
 
 describe('Testing EVENTS', () => {
