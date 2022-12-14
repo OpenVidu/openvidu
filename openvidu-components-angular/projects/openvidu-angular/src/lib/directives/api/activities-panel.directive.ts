@@ -2,7 +2,7 @@ import { Directive, AfterViewInit, OnDestroy, Input, ElementRef } from '@angular
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 
 /**
- * The **recordingActivity** directive allows show/hide the recording activity in {@link ActivitiesPanelComponent} activity panel component.
+ * The **recordingActivity** directive allows show/hide the recording activity in {@link ActivitiesPanelComponent}.
  *
  * Default: `true`
  *
@@ -14,9 +14,9 @@ import { OpenViduAngularConfigService } from '../../services/config/openvidu-ang
  * \
  * And it also can be used in the {@link ActivitiesPanelComponent}.
  * @example
- * <ov-activities-panel [recordingActivity]="false"></ov-activities-panel>
+ * <ov-activities-panel *ovActivitiesPanel [recordingActivity]="false"></ov-activities-panel>
  */
- @Directive({
+@Directive({
 	selector: 'ov-videoconference[activitiesPanelRecordingActivity], ov-activities-panel[recordingActivity]'
 })
 export class ActivitiesPanelRecordingActivityDirective implements AfterViewInit, OnDestroy {
@@ -24,7 +24,7 @@ export class ActivitiesPanelRecordingActivityDirective implements AfterViewInit,
 		this.recordingActivityValue = value;
 		this.update(this.recordingActivityValue);
 	}
-	@Input() set recordingList(value: boolean) {
+	@Input() set recordingActivity(value: boolean) {
 		this.recordingActivityValue = value;
 		this.update(this.recordingActivityValue);
 	}
