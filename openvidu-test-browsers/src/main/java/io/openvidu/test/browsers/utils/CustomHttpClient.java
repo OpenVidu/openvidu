@@ -310,8 +310,11 @@ public class CustomHttpClient {
 		}
 
 		if (status != jsonResponse.getStatusLine().getStatusCode()) {
-			String responseString = EntityUtils.toString(jsonResponse.getEntity(), "UTF-8");
-			System.err.println(responseString);
+			try {
+				String responseString = EntityUtils.toString(jsonResponse.getEntity(), "UTF-8");
+				System.err.println(responseString);
+			} catch (Exception e) {
+			}
 			throw new Exception(path + " expected to return status " + status + " but got "
 					+ jsonResponse.getStatusLine().getStatusCode());
 		}

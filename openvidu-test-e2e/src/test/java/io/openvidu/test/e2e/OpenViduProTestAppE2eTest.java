@@ -72,7 +72,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Individual dynamic record");
 
-		restartOpenViduServerIfNecessary(false, null, "disabled");
+		restartOpenViduServerIfNecessary(false, null, "disabled", null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -220,7 +220,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("REST API PRO test");
 
-		restartOpenViduServerIfNecessary(false, null, "disabled");
+		restartOpenViduServerIfNecessary(false, null, "disabled", null);
 
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
@@ -504,7 +504,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("openvidu-java-client PRO test");
 
-		restartOpenViduServerIfNecessary(false, null, "disabled");
+		restartOpenViduServerIfNecessary(false, null, "disabled", null);
 
 		// Create default Connection
 		Session session = OV.createSession();
@@ -556,7 +556,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Network quality test");
 
-		restartOpenViduServerIfNecessary(true, 5, "disabled");
+		restartOpenViduServerIfNecessary(true, 5, "disabled", null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		user.getDriver().findElement(By.id("add-user-btn")).click();
@@ -632,7 +632,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Virtual Background test");
 
-		restartOpenViduServerIfNecessary(false, null, "disabled");
+		restartOpenViduServerIfNecessary(false, null, "disabled", null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeVirtualBackgroundFakeVideo");
 
@@ -758,7 +758,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Service disabled STT test");
 
-		restartOpenViduServerIfNecessary(false, null, "disabled");
+		restartOpenViduServerIfNecessary(false, null, "disabled", null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -792,7 +792,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Simple transcription STT test");
 
-		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT, null);
 
 		List<String> expectedRecognitionList = Arrays.asList(
 				"for example we used to think that after childhood the brain did not really could not change and it turns out that nothing could be farther from the truth",
@@ -899,7 +899,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Close session STT test");
 
-		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT, null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -967,7 +967,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Expected errors STT test");
 
-		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT, null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1051,7 +1051,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("1 session 1 stream 2 subscriptions 1 language STT");
 
-		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT, null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1123,7 +1123,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("1 session 2 streams 2 subscriptions 1 language STT");
 
-		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT, null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1194,7 +1194,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("1 session 1 stream 2 subscriptions 2 languages STT");
 
-		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT, null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1262,7 +1262,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("1 session 2 streams 2 subscriptions 2 languages STT");
 
-		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT, null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1331,7 +1331,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("2 sessions 2 streams 2 subscriptions 1 language STT");
 
-		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT, null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1401,7 +1401,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("4 sessions 4 streams 4 subscriptions 4 languages STT");
 
-		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT, null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1458,7 +1458,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("COMPOSED recording and STT");
 
-		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT, null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1527,7 +1527,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Memory leak STT");
 
-		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT, null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1587,7 +1587,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Crash service STT test");
 
-		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT);
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT, null);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1660,14 +1660,215 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		gracefullyLeaveParticipants(user, 1);
 	}
 
-	// @Test
-	// @DisplayName("Mix STT test")
-	// void mixSttTest() throws Exception {
-	//
-	// }
+	@Test
+	@DisplayName("unpublishSttTest")
+	void unpublishSttTest() throws Exception {
+
+		log.info("Unpublish STT");
+
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT, null);
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+		user.getDriver().get(APP_URL);
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+
+		user.getEventManager().waitUntilEventReaches(0, "streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches(0, "streamPlaying", 1);
+
+		final String lang = "fr-FR";
+
+		CustomHttpClient restClient = new CustomHttpClient(OpenViduTestAppE2eTest.OPENVIDU_URL, "OPENVIDUAPP",
+				OpenViduTestAppE2eTest.OPENVIDU_SECRET);
+		String connectionId = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/TestSession", HttpStatus.SC_OK)
+				.get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0).getAsJsonObject()
+				.get("connectionId").getAsString();
+
+		sttSubUser(user, 0, 0, lang, true, true);
+
+		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 2);
+
+		WebElement publishButton = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .pub-btn"));
+
+		publishButton.click();
+		user.getEventManager().waitUntilEventReaches(0, "streamDestroyed", 1);
+		publishButton.click();
+		user.getEventManager().waitUntilEventReaches(0, "streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches(0, "streamPlaying", 2);
+
+		sttSubUser(user, 0, 0, lang, true, false, "Error [Already subscribed to Speech To Text events for Connection "
+				+ connectionId + " in language " + lang + ". Code: 201]");
+		sttUnsubUser(user, 0, 0, false, false);
+		sttSubUser(user, 0, 0, lang, false, true);
+
+		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 6);
+
+		gracefullyLeaveParticipants(user, 1);
+	}
+
+	@Test
+	@DisplayName("defaultLanguagesSttTest")
+	void defaultLanguagesSttTest() throws Exception {
+
+		log.info("Default languages STT");
+
+		restartOpenViduServerIfNecessary(false, null, OPENVIDU_PRO_SPEECH_TO_TEXT, null);
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+		user.getDriver().get(APP_URL);
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+
+		user.getEventManager().waitUntilEventReaches(0, "streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches(0, "streamPlaying", 1);
+
+		Set<String> defaultLangs = new HashSet<>(Arrays.asList("en-US", "es-ES", "fr-FR", "de-DE", "pt-PT", "it-IT",
+				"nl-NL", "ca-ES", "ja-JP", "zh-CN", "hi-IN"));
+
+		int index = -1;
+		for (String lang : defaultLangs) {
+			index++;
+			CountDownLatch latch = new CountDownLatch(1);
+			JsonObject[] ev = new JsonObject[1];
+			user.getEventManager().on("speechToTextMessage", event -> {
+				user.getEventManager().off("speechToTextMessage");
+				ev[0] = event;
+				latch.countDown();
+			});
+			sttSubUser(user, 0, 0, lang, index == 0, false);
+			if (!latch.await(10, TimeUnit.SECONDS)) {
+				fail("Error waiting for speech to text event for lang " + lang);
+				break;
+			}
+			Assertions.assertEquals(lang, ev[0].get("lang").getAsString());
+			sttUnsubUser(user, 0, 0, false, index == defaultLangs.size() - 1);
+			user.getEventManager().clearAllCurrentEvents();
+		}
+
+		gracefullyLeaveParticipants(user, 1);
+	}
+
+	@Test
+	@DisplayName("REST API STT Test")
+	void restApiSttTest() throws Exception {
+
+		log.info("REST API STT");
+
+		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+
+		// STT disabled
+		restartOpenViduServerIfNecessary(false, null, "disabled", null);
+		String body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_NOT_IMPLEMENTED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_NOT_IMPLEMENTED);
+
+		// STT not Vosk
+		restartOpenViduServerIfNecessary(false, null, "azure", "on_demand");
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_NOT_IMPLEMENTED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_NOT_IMPLEMENTED);
+
+		// STT Vosk
+		restartOpenViduServerIfNecessary(false, null, "vosk", "manual");
+
+		/**
+		 * POST /openvidu/api/speech-to-text/load ERROR
+		 **/
+		// No lang, no Media Node
+		body = "{}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_BAD_REQUEST);
+		// No Media Node
+		body = "{'lang': 'en-US'}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_BAD_REQUEST);
+		// Non-existing Media Node
+		body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_BAD_REQUEST);
+		// No lang
+		body = "{'mediaNode': {'id': 'NOT_EXISTS'}}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_BAD_REQUEST);
+		// Non-existing lang
+		body = "{'lang': 'not-EXISTS', 'mediaNode': {'id': 'loquesea'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_BAD_REQUEST);
+
+		/**
+		 * POST /openvidu/api/speech-to-text/unload ERROR
+		 **/
+		// No lang, no Media Node
+		body = "{}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_BAD_REQUEST);
+		// No Media Node
+		body = "{'lang': 'en-US'}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_BAD_REQUEST);
+		// Non-existing Media Node
+		body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_BAD_REQUEST);
+		// No lang
+		body = "{'mediaNode': {'id': 'NOT_EXISTS'}}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_BAD_REQUEST);
+		// Non-existing lang
+		body = "{'lang': 'not-EXISTS', 'mediaNode': {'id': 'loquesea'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_BAD_REQUEST);
+
+		JsonArray mediaNodes = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", null, HttpStatus.SC_OK)
+				.get("content").getAsJsonArray();
+		String mediaNodeId = mediaNodes.get(0).getAsJsonObject().get("id").getAsString();
+
+		/**
+		 * POST /openvidu/api/speech-to-text/load
+		 **/
+		// Existing Media Node but no lang
+		body = "{'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_BAD_REQUEST);
+		// Non-existing lang
+		body = "{'lang':'not-EXISTS', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_NOT_FOUND);
+		// OK
+		body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+		// lang already loaded
+		body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_CONFLICT);
+		// OK
+		body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+
+		/**
+		 * POST /openvidu/api/speech-to-text/unload
+		 **/
+		// Existing Media Node but no lang
+		body = "{'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_BAD_REQUEST);
+		// Non-existing lang
+		body = "{'lang':'not-EXISTS', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_NOT_FOUND);
+		// Existing lang but not loaded
+		body = "{'lang':'it-IT', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_CONFLICT);
+		// OK
+		body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+		// Existing lang but not loaded
+		body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_CONFLICT);
+		// OK
+		body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+		
+//		// With manual mode
+//		
+//		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+//		user.getDriver().get(APP_URL);
+//		user.getDriver().findElement(By.id("add-user-btn")).click();
+//		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+//		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+//		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+//		
+//		sttSubUser(user, 0, 0, "en-US", true, false, "");
+//		
+//		gracefullyLeaveParticipants(user, 1);
+	}
 
 	protected void restartOpenViduServerIfNecessary(Boolean wantedNetworkQuality, Integer wantedNetworkQualityInterval,
-			String wantedSpeechToText) {
+			String wantedSpeechToText, String wantedVoskModelLoadStrategy) {
 
 		try {
 
@@ -1680,6 +1881,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				currentNetworkQualityInterval = config.get("OPENVIDU_PRO_NETWORK_QUALITY_INTERVAL").getAsInt();
 			}
 			String currentSpeechToText = config.get("OPENVIDU_PRO_SPEECH_TO_TEXT").getAsString();
+			String currentVoskModelLoadStrategy = null;
+			if (wantedSpeechToText == "vosk" && config.has("OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY")) {
+				currentVoskModelLoadStrategy = config.get("OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY")
+						.getAsString();
+			}
 
 			boolean mustRestart = false;
 			if (wantedNetworkQuality != null && wantedNetworkQuality) {
@@ -1689,6 +1895,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			}
 			mustRestart = mustRestart
 					|| (wantedSpeechToText != null) && !currentSpeechToText.equals(wantedSpeechToText);
+			mustRestart = mustRestart || (wantedVoskModelLoadStrategy != null) && (wantedSpeechToText == "vosk")
+					&& !wantedVoskModelLoadStrategy.equals(currentVoskModelLoadStrategy);
 
 			if (mustRestart) {
 				String body = "{";
@@ -1702,6 +1910,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				if (wantedSpeechToText != null) {
 					body += body.endsWith("{") ? "" : ",";
 					body += "'OPENVIDU_PRO_SPEECH_TO_TEXT':'" + wantedSpeechToText + "'";
+					if (wantedVoskModelLoadStrategy != null) {
+						body += body.endsWith("{") ? "" : ",";
+						body += "'OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY':'" + wantedVoskModelLoadStrategy
+								+ "'";
+					}
 				}
 				body += "}";
 				restClient.rest(HttpMethod.POST, "/openvidu/api/restart", body, 200);
@@ -1763,6 +1976,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	private void sttSubUser(OpenViduTestappUser user, int numberOfUser, int numberOfVideo, String language,
 			boolean openDialog, boolean closeDialog) throws InterruptedException {
+		this.sttSubUser(user, numberOfUser, numberOfVideo, language, openDialog, closeDialog, "Subscribed to STT");
+	}
+
+	private void sttSubUser(OpenViduTestappUser user, int numberOfUser, int numberOfVideo, String language,
+			boolean openDialog, boolean closeDialog, String outputMessage) throws InterruptedException {
 		if (openDialog) {
 			List<WebElement> videos = user.getDriver()
 					.findElements(By.cssSelector("#openvidu-instance-" + numberOfUser + " app-video"));
@@ -1774,8 +1992,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		langInput.clear();
 		langInput.sendKeys(language);
 		user.getDriver().findElement(By.cssSelector("#sub-stt-btn")).click();
-		user.getWaiter().until(
-				ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value", "Subscribed to STT"));
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value", outputMessage));
 		if (closeDialog) {
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
 			Thread.sleep(500);
