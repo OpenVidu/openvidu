@@ -631,7 +631,10 @@ public class KurentoParticipant extends Participant {
 
 	@Override
 	public String getPublisherStreamId() {
-		return this.publisher.getStreamId();
+		if (this.publisher != null) {
+			return this.publisher.getStreamId();
+		}
+		return null;
 	}
 
 	public void resetPublisherEndpoint(MediaOptions mediaOptions, PassThrough passThru) {
