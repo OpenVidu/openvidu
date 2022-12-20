@@ -14,7 +14,7 @@ export interface CaptionModel {
 export interface CaptionsLangOption {
 
 	name: string;
-	ISO: string;
+	lang: string;
 
 }
 

@@ -4,7 +4,7 @@ import { PanelEvent, PanelService } from '../../services/panel/panel.service';
 
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Session, SpeechToTextEvent } from 'openvidu-browser';
-import { CaptionModel } from '../../models/caption.model';
+import { CaptionModel, CaptionsLangOption } from '../../models/caption.model';
 import { PanelSettingsOptions, PanelType } from '../../models/panel.model';
 import { CaptionService } from '../../services/caption/caption.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
@@ -50,7 +50,7 @@ export class CaptionsComponent implements OnInit {
 	private DELETE_TIMEOUT = 10 * 1000;
 	private MAX_EVENTS_LIMIT = 3;
 	private captionLanguageSubscription: Subscription;
-	private captionLangSelected: { name: string; ISO: string };
+	private captionLangSelected: CaptionsLangOption;
 	private screenSizeSub: Subscription;
 	private panelTogglingSubscription: Subscription;
 	private sttStatusSubscription: Subscription;
@@ -70,7 +70,7 @@ export class CaptionsComponent implements OnInit {
 		this.captionLangSelected = this.captionService.getLangSelected();
 		this.session = this.openviduService.getWebcamSession();
 
-		await this.openviduService.subscribeRemotesToSTT(this.captionLangSelected.ISO);
+		await this.openviduService.subscribeRemotesToSTT(this.captionLangSelected.lang);
 
 		this.subscribeToCaptionLanguage();
 		this.subscribeToPanelToggling();
@@ -196,8 +196,8 @@ export class CaptionsComponent implements OnInit {
 	}
 
 	private subscribeToCaptionLanguage() {
-		this.captionLanguageSubscription = this.captionService.captionLangObs.subscribe((lang) => {
-			this.captionLangSelected = lang;
+		this.captionLanguageSubscription = this.captionService.captionLangObs.subscribe((langOpt) => {
+			this.captionLangSelected = langOpt;
 			this.cd.markForCheck();
 		});
 	}

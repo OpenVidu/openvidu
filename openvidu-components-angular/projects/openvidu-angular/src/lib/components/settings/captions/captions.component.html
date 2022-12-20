@@ -20,8 +20,8 @@
 					<mat-icon>expand_more</mat-icon>
 				</button>
 				<mat-menu #menu="matMenu">
-					<button *ngFor="let lang of languagesAvailable" mat-menu-item [id]="lang.ISO" (click)="onLangSelected(lang)">
-						<span>{{ lang.name }}</span>
+					<button *ngFor="let langOpt of languagesAvailable" mat-menu-item [id]="langOpt.lang" (click)="onLangSelected(langOpt)">
+						<span>{{ langOpt.name }}</span>
 					</button>
 				</mat-menu>
 			</mat-list-item>

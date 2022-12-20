@@ -188,19 +188,19 @@ export class CaptionsLangDirective implements OnDestroy {
  *
  * Default: ```
  * [
- * 	{ name: 'English', ISO: 'en-US' },
- * 	{ name: 'Español', ISO: 'es-ES' },
- * 	{ name: 'Deutsch', ISO: 'de-DE' },
- * 	{ name: 'Français', ISO: 'fr-FR' },
- * 	{ name: '中国', ISO: 'zh-CN' },
- * 	{ name: 'हिन्दी', ISO: 'hi-IN' },
- * 	{ name: 'Italiano', ISO: 'it-IT' },
- * 	{ name: 'やまと', ISO: 'jp-JP' },
- * 	{ name: 'Português', ISO: 'pt-PT' }
+ * 	{ name: 'English', lang: 'en-US' },
+ * 	{ name: 'Español', lang: 'es-ES' },
+ * 	{ name: 'Deutsch', lang: 'de-DE' },
+ * 	{ name: 'Français', lang: 'fr-FR' },
+ * 	{ name: '中国', lang: 'zh-CN' },
+ * 	{ name: 'हिन्दी', lang: 'hi-IN' },
+ * 	{ name: 'Italiano', lang: 'it-IT' },
+ * 	{ name: 'やまと', lang: 'jp-JP' },
+ * 	{ name: 'Português', lang: 'pt-PT' }
  * ]```
  *
  * @example
- * <ov-videoconference [captionsLangOptions]="[{name:'Spanish', ISO: 'es-ES'}]"></ov-videoconference>
+ * <ov-videoconference [captionsLangOptions]="[{name:'Spanish', lang: 'es-ES'}]"></ov-videoconference>
  */
  @Directive({
 	selector: 'ov-videoconference[captionsLangOptions]'

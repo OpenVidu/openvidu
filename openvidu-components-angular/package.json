@@ -75,7 +75,7 @@
         "webcomponent:e2e-ci": "cross-env LAUNCH_MODE=CI npm run webcomponent:e2e",
         "webcomponent:e2e-pro": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/webcomponent.pro.test.js",
         "webcomponent:e2e-pro-ci": "cross-env LAUNCH_MODE=CI npm run webcomponent:e2e-pro",
-        "webcomponent:serve-testapp": "npx http-server ./e2e/webcomponent-app/"
+        "webcomponent:serve-testapp": "npx http-server ./e2e/webcomponent-app/ && echo http://localhost:8080/?OV_URL=https://localhost:4443&OV_SECRET=MY_SECRET&prejoin=false"
     },
     "version": "2.24.0"
 }

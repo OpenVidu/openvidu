@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { CaptionsLangOption } from '../../../models/caption.model';
 import { CaptionService } from '../../../services/caption/caption.service';
 import { LayoutService } from '../../../services/layout/layout.service';
 import { OpenViduService } from '../../../services/openvidu/openvidu.service';
@@ -15,7 +16,7 @@ import { OpenViduService } from '../../../services/openvidu/openvidu.service';
 export class CaptionsSettingComponent implements OnInit, OnDestroy {
 	isSttReady: boolean = true;
 	captionsEnabled: boolean;
-	languagesAvailable: { name: string; ISO: string }[] = [];
+	languagesAvailable: CaptionsLangOption[] = [];
 	langSelected: string;
 	isOpenViduPro: boolean = false;
 	private captionsStatusSubs: Subscription;
@@ -39,9 +40,9 @@ export class CaptionsSettingComponent implements OnInit, OnDestroy {
 		if (this.sttStatusSubs) this.sttStatusSubs.unsubscribe();
 	}
 
-	onLangSelected(lang: { name: string; ISO: string }) {
-		this.langSelected = lang.name;
-		this.captionService.setLanguage(lang.ISO);
+	onLangSelected(langOpt: CaptionsLangOption) {
+		this.langSelected = langOpt.name;
+		this.captionService.setLanguage(langOpt.lang);
 	}
 
 	toggleCaptions() {

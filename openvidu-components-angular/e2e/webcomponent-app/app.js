@@ -180,7 +180,7 @@ async function joinSession(sessionName, participantName) {
 	webComponent.lang = LANG;
 	webComponent.captionsLang = CAPTIONS_LANG;
 	if (CUSTOM_CAPTIONS_LANG_OPTIONS) {
-		webComponent.captionsLangOptions = [{ name: 'Esp', ISO: 'es-ES' }, { name: 'Eng', ISO: 'en-US' }];
+		webComponent.captionsLangOptions = [{ name: 'Esp', lang: 'es-ES' }, { name: 'Eng', lang: 'en-US' }];
 	}
 	webComponent.prejoin = PREJOIN;
 	webComponent.videoMuted = VIDEO_MUTED;

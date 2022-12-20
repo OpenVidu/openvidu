@@ -296,7 +296,7 @@ describe('Testing captions features', () => {
 		expect(await utils.isPresent('.captions-container')).to.be.true;
 	});
 
-	it('should change the CAPTIONS language', async () => {
+	it('should change the CAPTIONS language from settings panel', async () => {
 		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();

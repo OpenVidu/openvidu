@@ -282,7 +282,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 				this.log.w(event.name, event.message);
 				this.openviduService.setSTTReady(false);
 				// Try to re-subscribe to STT
-				await this.openviduService.subscribeRemotesToSTT(this.captionService.getLangSelected().ISO);
+				await this.openviduService.subscribeRemotesToSTT(this.captionService.getLangSelected().lang);
 			} else {
 				this.log.e(event.name, event.message);
 			}
@@ -326,7 +326,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 			const data = event.stream?.connection?.data;
 			const isCameraType: boolean = this.participantService.getTypeConnectionData(data) === VideoType.CAMERA;
 			const isRemoteConnection: boolean = !this.openviduService.isMyOwnConnection(connectionId);
-			const lang = this.captionService.getLangSelected().ISO;
+			const lang = this.captionService.getLangSelected().lang;
 
 			if (isRemoteConnection) {
 				const subscriber: Subscriber = this.session.subscribe(event.stream, undefined);
@@ -368,12 +368,12 @@ export class SessionComponent implements OnInit, OnDestroy {
 	}
 
 	private subscribeToCaptionLanguage() {
-		this.captionLanguageSubscription = this.captionService.captionLangObs.subscribe(async (lang) => {
+		this.captionLanguageSubscription = this.captionService.captionLangObs.subscribe(async (langOpt) => {
 			if (this.captionService.areCaptionsEnabled()) {
 				// Unsubscribe all streams from speech to text and re-subscribe with new language
-				this.log.d('Re-subscribe from STT because of language changed to ', lang.ISO);
+				this.log.d('Re-subscribe from STT because of language changed to ', langOpt.lang);
 				await this.openviduService.unsubscribeRemotesFromSTT();
-				await this.openviduService.subscribeRemotesToSTT(lang.ISO);
+				await this.openviduService.subscribeRemotesToSTT(langOpt.lang);
 			}
 		});
 	}

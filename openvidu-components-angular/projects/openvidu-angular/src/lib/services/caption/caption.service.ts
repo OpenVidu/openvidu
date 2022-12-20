@@ -10,20 +10,20 @@ import { StorageService } from '../storage/storage.service';
 	providedIn: 'root'
 })
 export class CaptionService {
-	private langs: CaptionsLangOption [] = [
-		{ name: 'English', ISO: 'en-US' },
-		{ name: 'Español', ISO: 'es-ES' },
-		{ name: 'Deutsch', ISO: 'de-DE' },
-		{ name: 'Français', ISO: 'fr-FR' },
-		{ name: '中国', ISO: 'zh-CN' },
-		{ name: 'हिन्दी', ISO: 'hi-IN' },
-		{ name: 'Italiano', ISO: 'it-IT' },
-		{ name: 'やまと', ISO: 'jp-JP' },
-		{ name: 'Português', ISO: 'pt-PT' }
+	private langsOptions: CaptionsLangOption [] = [
+		{ name: 'English', lang: 'en-US' },
+		{ name: 'Español', lang: 'es-ES' },
+		{ name: 'Deutsch', lang: 'de-DE' },
+		{ name: 'Français', lang: 'fr-FR' },
+		{ name: '中国', lang: 'zh-CN' },
+		{ name: 'हिन्दी', lang: 'hi-IN' },
+		{ name: 'Italiano', lang: 'it-IT' },
+		{ name: 'やまと', lang: 'jp-JP' },
+		{ name: 'Português', lang: 'pt-PT' }
 	];
-	captionLangSelected: { name: string; ISO: string };
-	captionLangObs: Observable<{ name: string; ISO: string }>;
-	private _captionLang: Subject<{ name: string; ISO: string }> = new Subject();
+	captionLangSelected: CaptionsLangOption;
+	captionLangObs: Observable<CaptionsLangOption>;
+	private _captionLang: Subject<CaptionsLangOption> = new Subject();
 	private captionsEnabled: boolean = false;
 
 	constructor(private storageService: StorageService) {
@@ -34,7 +34,7 @@ export class CaptionService {
 
 	setLanguageOptions(options: CaptionsLangOption [] | undefined) {
 		if(options && options.length > 0) {
-			this.langs = options;
+			this.langsOptions = options;
 			this.updateLangSelected();
 		}
 	}
@@ -48,29 +48,29 @@ export class CaptionService {
 	}
 
 	setLanguage(lang: string) {
-		const newLang = this.langs.find((l) => l.ISO === lang);
-		if (!!newLang && newLang.ISO !== this.captionLangSelected.ISO) {
-			this.captionLangSelected = newLang;
+		const newLangOpt = this.langsOptions.find((opt) => opt.lang === lang);
+		if (!!newLangOpt && newLangOpt.lang !== this.captionLangSelected.lang) {
+			this.captionLangSelected = newLangOpt;
 			this.storageService.setCaptionLang(lang);
 			this._captionLang.next(this.captionLangSelected);
 		}
 	}
 
-	getLangSelected(): { name: string; ISO: string } {
+	getLangSelected(): CaptionsLangOption {
 		return this.captionLangSelected;
 	}
 
-	getCaptionLanguages(): { name: string; ISO: string }[] {
-		return this.langs;
+	getCaptionLanguages(): CaptionsLangOption[] {
+		return this.langsOptions;
 	}
 
 	private updateLangSelected(): void {
-		const iso = this.storageService.getCaptionsLang();
-		const lang = this.langs.find((lang) => lang.ISO === iso);
-		if (iso && lang) {
-			this.captionLangSelected = lang;
+		const storageLang = this.storageService.getCaptionsLang();
+		const langOpt = this.langsOptions.find((opt) => opt.lang === storageLang);
+		if (storageLang && langOpt) {
+			this.captionLangSelected = langOpt;
 		} else {
-			this.captionLangSelected = this.langs[0];
+			this.captionLangSelected = this.langsOptions[0];
 		}
 	}
 }
