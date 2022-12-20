@@ -1859,6 +1859,26 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
 
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+		user.getDriver().get(APP_URL);
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		sttSubUser(user, 0, 0, "es-ES", true, true);
+
+		// 405
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_METHOD_NOT_ALLOWED);
+
+		gracefullyLeaveParticipants(user, 1);
+
+		// Wait some time for the STT subscription to be closed
+		Thread.sleep(1500);
+
+		// 409: "manual" does not automatic unload lang model
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_CONFLICT);
+
 		/**
 		 * POST /openvidu/api/speech-to-text/unload
 		 **/
@@ -1896,8 +1916,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
 
-		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
-		user.getDriver().get(APP_URL);
+		user.getEventManager().clearAllCurrentEvents();
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
@@ -1913,8 +1932,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Wait some time for the STT subscription to be closed
 		Thread.sleep(1500);
 
-		// 200 OK
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+		// 409: "on_demand" automatic unload of lang model
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_CONFLICT);
 	}
 
 	@Test
@@ -1942,7 +1961,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
 
 		sttSubUser(user, 0, 0, "en-US", true, false,
-				"Vosk model for language 'en-US' is not loaded and OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY is manual",
+				"Vosk model for language \"en-US\" is not loaded and OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY is \"manual\"",
 				false);
 
 		String body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
@@ -1953,7 +1972,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 2);
 
 		sttSubUser(user, 1, 1, "es-ES", true, false,
-				"Vosk model for language 'es-ES' is not loaded and OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY is manual",
+				"Vosk model for language \"es-ES\" is not loaded and OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY is \"manual\"",
 				false);
 
 		// First participant still receiving STT events
@@ -1970,19 +1989,17 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches(0, "speechToTextMessage", 4);
 		user.getEventManager().waitUntilEventReaches(1, "speechToTextMessage", 4);
 
-		// Unloading lang in use should not affect current STT subscriptions
+		// 405
 		body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_METHOD_NOT_ALLOWED);
 		body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_METHOD_NOT_ALLOWED);
 
 		user.getEventManager().clearAllCurrentEvents(0);
 		user.getEventManager().clearAllCurrentEvents(1);
 		user.getEventManager().waitUntilEventReaches(0, "speechToTextMessage", 4);
 		user.getEventManager().waitUntilEventReaches(1, "speechToTextMessage", 4);
 
-		// Subscriptions to an unloaded lang should fail even with active subscriptions
-		// with that lang previously unloaded from memory
 		sttSubUser(user, 1, 0, "en-US", true, true);
 
 		gracefullyLeaveParticipants(user, 2);
@@ -2218,7 +2235,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	private void restartSttContainer(String mediaNodeContainerId) throws Exception {
 		String restartCommand = "docker exec -i " + mediaNodeContainerId
-				+ " /bin/sh -c \"docker restart speech-to-text-services\"";
+				+ " /bin/sh -c \"docker restart speech-to-text-service\"";
 		commandLine.executeCommand(restartCommand, 30);
 	}
 
