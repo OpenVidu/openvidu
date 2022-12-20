@@ -22,9 +22,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Alert;
@@ -56,12 +56,41 @@ import io.openvidu.test.browsers.utils.Unzipper;
 
 public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
+	protected volatile static boolean isSttManualTest = false;
+
 	@BeforeAll()
 	protected static void setupAll() {
 		checkFfmpegInstallation();
 		loadEnvironmentVariables();
 		prepareBrowserDrivers(new HashSet<>(Arrays.asList(BrowserNames.CHROME)));
 		cleanFoldersAndSetUpOpenViduJavaClient();
+	}
+
+	@AfterEach
+	protected void dispose() {
+		// Unload STT models in all running Media Nodes
+		if (isSttManualTest) {
+			try {
+				CustomHttpClient restClient = new CustomHttpClient(OpenViduTestAppE2eTest.OPENVIDU_URL, "OPENVIDUAPP",
+						OpenViduTestAppE2eTest.OPENVIDU_SECRET);
+				JsonArray mediaNodes = restClient
+						.rest(HttpMethod.GET, "/openvidu/api/media-nodes", null, HttpStatus.SC_OK).get("content")
+						.getAsJsonArray();
+				mediaNodes.asList().parallelStream().forEach(mediaNode -> {
+					String containerId = mediaNode.getAsJsonObject().get("environmentId").getAsString();
+					try {
+						restartSttContainer(containerId);
+					} catch (Exception e) {
+						System.err.println(e);
+					}
+				});
+			} catch (Exception e) {
+				System.err.println(e);
+			} finally {
+				isSttManualTest = false;
+			}
+		}
+		super.dispose();
 	}
 
 	@Test
@@ -1611,7 +1640,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			latch.countDown();
 		});
 
-		this.killSttService();
+		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+		String containerId = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpStatus.SC_OK)
+				.get("content").getAsJsonArray().get(0).getAsJsonObject().get("environmentId").getAsString();
+		this.killSttService(containerId);
 
 		latch.await();
 
@@ -1751,6 +1783,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@DisplayName("REST API STT Test")
 	void restApiSttTest() throws Exception {
 
+		isSttManualTest = true;
+
 		log.info("REST API STT");
 
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
@@ -1851,20 +1885,86 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// OK
 		body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
-
-//		// With manual mode
-//		
-//		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
-//		user.getDriver().get(APP_URL);
-//		user.getDriver().findElement(By.id("add-user-btn")).click();
-//		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
-//		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
-//		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
-//		
-//		sttSubUser(user, 0, 0, "en-US", true, false, "");
-//		
-//		gracefullyLeaveParticipants(user, 1);
 	}
+
+	@Test
+	@DisplayName("Load Unload Model Error STT Test")
+	void loadUnloadModelErrorSttTest() throws Exception {
+
+		isSttManualTest = true;
+
+		log.info("Load Unload Model Error STT");
+
+		restartOpenViduServerIfNecessary(false, null, "vosk", "manual");
+
+		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+		JsonArray mediaNodes = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", null, HttpStatus.SC_OK)
+				.get("content").getAsJsonArray();
+		String mediaNodeId = mediaNodes.get(0).getAsJsonObject().get("id").getAsString();
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+		user.getDriver().get(APP_URL);
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publish-checkbox")).click();
+		user.getDriver().findElements(By.className("join-btn")).forEach(btn -> btn.sendKeys(Keys.ENTER));
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		sttSubUser(user, 0, 0, "en-US", true, false,
+				"Vosk model for language 'en-US' is not loaded and OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY is manual",
+				false);
+
+		String body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+
+		sttSubUser(user, 0, 0, "en-US", false, true);
+
+		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 2);
+
+		sttSubUser(user, 1, 0, "es-ES", true, false,
+				"Vosk model for language 'es-ES' is not loaded and OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY is manual",
+				false);
+
+		// First participant still receiving STT events
+		user.getEventManager().clearAllCurrentEvents(0);
+		user.getEventManager().waitUntilEventReaches(0, "speechToTextMessage", 4);
+
+		body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+
+		sttSubUser(user, 1, 0, "es-ES", false, true);
+
+		user.getEventManager().clearAllCurrentEvents(0);
+		user.getEventManager().clearAllCurrentEvents(1);
+		user.getEventManager().waitUntilEventReaches(0, "speechToTextMessage", 4);
+		user.getEventManager().waitUntilEventReaches(1, "speechToTextMessage", 4);
+
+		// Unloading lang in use should not affect current STT subscriptions
+		body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+		body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+
+		user.getEventManager().clearAllCurrentEvents(0);
+		user.getEventManager().clearAllCurrentEvents(1);
+		user.getEventManager().waitUntilEventReaches(0, "speechToTextMessage", 4);
+		user.getEventManager().waitUntilEventReaches(1, "speechToTextMessage", 4);
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	// Test de manual con fallo. Pasos, mismo test:
+	// 1. Intentar usar un idioma que no está cargado
+	// 2. Cargar el idioma e intentarlo. Ahora todo bien. Se reciben eventos
+	// 3. Intentar usar un segundo idioma sin carga sobre el mismo stream. Ahora
+	// fallo. Eventos del primero bien todavia
+	// 4. Cargar el segundo idioma, intentarlo. Ahora los 2 van bien, cada uno en su
+	// idioma
+
+	// Descarga en uso de un idioma? Qué pasa? Sigue funcionando y enviando eventos?
+	// Qué pasa si se intenta iniciar
+	// otro stream con ese idioma descargado pero en uso? Se carga 2 veces?
 
 	protected void restartOpenViduServerIfNecessary(Boolean wantedNetworkQuality, Integer wantedNetworkQualityInterval,
 			String wantedSpeechToText, String wantedVoskModelLoadStrategy) {
@@ -1980,6 +2080,12 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	private void sttSubUser(OpenViduTestappUser user, int numberOfUser, int numberOfVideo, String language,
 			boolean openDialog, boolean closeDialog, String outputMessage) throws InterruptedException {
+		this.sttSubUser(user, numberOfUser, numberOfVideo, language, openDialog, closeDialog, outputMessage, true);
+	}
+
+	private void sttSubUser(OpenViduTestappUser user, int numberOfUser, int numberOfVideo, String language,
+			boolean openDialog, boolean closeDialog, String outputMessage, boolean exactMatchOutputMessage)
+			throws InterruptedException {
 		if (openDialog) {
 			List<WebElement> videos = user.getDriver()
 					.findElements(By.cssSelector("#openvidu-instance-" + numberOfUser + " app-video"));
@@ -1991,8 +2097,14 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		langInput.clear();
 		langInput.sendKeys(language);
 		user.getDriver().findElement(By.cssSelector("#sub-stt-btn")).click();
-		user.getWaiter()
-				.until(ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value", outputMessage));
+		if (exactMatchOutputMessage) {
+			user.getWaiter().until(
+					ExpectedConditions.attributeToBe(By.id("operation-response-text-area"), "value", outputMessage));
+		} else {
+			user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
+					outputMessage));
+		}
+
 		if (closeDialog) {
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
 			Thread.sleep(500);
@@ -2017,17 +2129,20 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 	}
 
-	private void killSttService() throws Exception {
+	private void killSttService(String mediaNodeContainerId) throws Exception {
 		// For local run
 		// String killCommand = "ps axf | grep \"speech-to-text-service\" | grep -v grep
 		// | awk '{print $1}' | xargs -I {} kill -9 {}";
 		// For DIND run
-		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
-		String containerId = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpStatus.SC_OK)
-				.get("content").getAsJsonArray().get(0).getAsJsonObject().get("environmentId").getAsString();
-		String killCommand = "docker exec -i " + containerId
+		String killCommand = "docker exec -i " + mediaNodeContainerId
 				+ " /bin/sh -c \"ps axf | grep \\\"speech-to-text-service\\\" | grep -v grep | awk '{print \\$1}' | xargs -I {} kill -9 {}\"";
 		commandLine.executeCommand(killCommand, 10);
+	}
+
+	private void restartSttContainer(String mediaNodeContainerId) throws Exception {
+		String restartCommand = "docker exec -i " + mediaNodeContainerId
+				+ " /bin/sh -c \"docker restart speech-to-text-services\"";
+		commandLine.executeCommand(restartCommand, 30);
 	}
 
 }
