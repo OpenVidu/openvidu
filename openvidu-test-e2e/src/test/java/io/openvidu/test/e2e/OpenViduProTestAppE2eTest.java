@@ -1795,12 +1795,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_NOT_IMPLEMENTED);
 		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_NOT_IMPLEMENTED);
 
-		// STT not Vosk
-		restartOpenViduServerIfNecessary(false, null, "azure", "on_demand");
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_NOT_IMPLEMENTED);
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_NOT_IMPLEMENTED);
-
-		// STT Vosk
+		// STT Vosk manual
 		restartOpenViduServerIfNecessary(false, null, "vosk", "manual");
 
 		/**
@@ -1885,6 +1880,41 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// OK
 		body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+
+		// STT Vosk on_demand
+		restartOpenViduServerIfNecessary(false, null, "vosk", "on_demand");
+
+		// 200
+		body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+		// 409
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_CONFLICT);
+		// 200
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+		// 409
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_CONFLICT);
+
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+		user.getDriver().get(APP_URL);
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		sttSubUser(user, 0, 0, "en-US", true, true);
+
+		// 405
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_METHOD_NOT_ALLOWED);
+
+		gracefullyLeaveParticipants(user, 1);
+
+		// Wait some time for the STT subscription to be closed
+		Thread.sleep(1500);
+
+		// 200 OK
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
 	}
 
 	@Test
@@ -1905,11 +1935,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 		user.getDriver().get(APP_URL);
 		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .subscribe-checkbox")).click();
 		user.getDriver().findElement(By.id("add-user-btn")).click();
-		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publish-checkbox")).click();
 		user.getDriver().findElements(By.className("join-btn")).forEach(btn -> btn.sendKeys(Keys.ENTER));
-		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
-		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 3);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
 
 		sttSubUser(user, 0, 0, "en-US", true, false,
 				"Vosk model for language 'en-US' is not loaded and OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY is manual",
@@ -1922,7 +1952,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("speechToTextMessage", 2);
 
-		sttSubUser(user, 1, 0, "es-ES", true, false,
+		sttSubUser(user, 1, 1, "es-ES", true, false,
 				"Vosk model for language 'es-ES' is not loaded and OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY is manual",
 				false);
 
@@ -1933,7 +1963,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
 
-		sttSubUser(user, 1, 0, "es-ES", false, true);
+		sttSubUser(user, 1, 1, "es-ES", false, true);
 
 		user.getEventManager().clearAllCurrentEvents(0);
 		user.getEventManager().clearAllCurrentEvents(1);
@@ -1951,20 +1981,67 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches(0, "speechToTextMessage", 4);
 		user.getEventManager().waitUntilEventReaches(1, "speechToTextMessage", 4);
 
+		// Subscriptions to an unloaded lang should fail even with active subscriptions
+		// with that lang previously unloaded from memory
+		sttSubUser(user, 1, 0, "en-US", true, true);
+
 		gracefullyLeaveParticipants(user, 2);
 	}
 
-	// Test de manual con fallo. Pasos, mismo test:
-	// 1. Intentar usar un idioma que no está cargado
-	// 2. Cargar el idioma e intentarlo. Ahora todo bien. Se reciben eventos
-	// 3. Intentar usar un segundo idioma sin carga sobre el mismo stream. Ahora
-	// fallo. Eventos del primero bien todavia
-	// 4. Cargar el segundo idioma, intentarlo. Ahora los 2 van bien, cada uno en su
-	// idioma
+	// Try to unload via REST API a loaded model when on_demand. Should get a 405
 
-	// Descarga en uso de un idioma? Qué pasa? Sigue funcionando y enviando eventos?
-	// Qué pasa si se intenta iniciar
-	// otro stream con ese idioma descargado pero en uso? Se carga 2 veces?
+	@Test
+	@DisplayName("Wrong AWS lang STT Test")
+	void wrongAwsLangSttTest() throws Exception {
+
+		log.info("Wrong AWS lang STT");
+
+		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+
+		restartOpenViduServerIfNecessary(false, null, "aws", "on_demand");
+
+		String body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_NOT_IMPLEMENTED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_NOT_IMPLEMENTED);
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+		user.getDriver().get(APP_URL);
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		sttSubUser(user, 0, 0, "no-EXIST", true, false, "AWS Transcribe does not support language \"no-EXIST\"", false);
+
+		gracefullyLeaveParticipants(user, 1);
+	}
+
+	@Test
+	@DisplayName("Azure lang STT Test")
+	void wrongAzureLangSttTest() throws Exception {
+
+		log.info("Wrong AWS lang STT");
+
+		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+
+		restartOpenViduServerIfNecessary(false, null, "azure", "on_demand");
+
+		String body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_NOT_IMPLEMENTED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_NOT_IMPLEMENTED);
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+		user.getDriver().get(APP_URL);
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		sttSubUser(user, 0, 0, "no-EXIST", true, false, "Azure Speech to Text does not support language \"no-EXIST\"",
+				false);
+
+		gracefullyLeaveParticipants(user, 1);
+	}
 
 	protected void restartOpenViduServerIfNecessary(Boolean wantedNetworkQuality, Integer wantedNetworkQualityInterval,
 			String wantedSpeechToText, String wantedVoskModelLoadStrategy) {
