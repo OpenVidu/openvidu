@@ -2094,29 +2094,28 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			if (mustRestart) {
 				String body = "{";
 				if (wantedNetworkQuality != null) {
-					body += "'OPENVIDU_PRO_NETWORK_QUALITY':" + wantedNetworkQuality;
+					body += "'OPENVIDU_PRO_NETWORK_QUALITY':" + wantedNetworkQuality + ",";
 				}
 				if (wantedNetworkQualityInterval != null) {
-					body += body.endsWith("{") ? "" : ",";
-					body += "'OPENVIDU_PRO_NETWORK_QUALITY_INTERVAL':" + wantedNetworkQualityInterval;
+					body += "'OPENVIDU_PRO_NETWORK_QUALITY_INTERVAL':" + wantedNetworkQualityInterval + ",";
 				}
 				if (wantedSpeechToText != null) {
-					body += body.endsWith("{") ? "" : ",";
 					body += "'OPENVIDU_PRO_SPEECH_TO_TEXT':'" + wantedSpeechToText + "',";
 					if ("azure".equals(wantedSpeechToText)) {
 						body += "'OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_KEY':'fakekey',";
-						body += "'OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_REGION':'fakeregion'";
+						body += "'OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_REGION':'fakeregion',";
 					} else if ("aws".equals(wantedSpeechToText)) {
 						body += "'OPENVIDU_PRO_AWS_REGION':'fakeregion',";
 						body += "'OPENVIDU_PRO_AWS_ACCESS_KEY':'fakekey',";
-						body += "'OPENVIDU_PRO_AWS_SECRET_KEY':'fakekey'";
+						body += "'OPENVIDU_PRO_AWS_SECRET_KEY':'fakekey',";
 					} else if ("vosk".equals(wantedSpeechToText)) {
 						if (wantedVoskModelLoadStrategy != null) {
 							body += "'OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY':'"
-									+ wantedVoskModelLoadStrategy + "'";
+									+ wantedVoskModelLoadStrategy + "',";
 						}
 					}
 				}
+				body = body.endsWith(",") ? body.replaceAll(",$", "") : body;
 				body += "}";
 				restClient.rest(HttpMethod.POST, "/openvidu/api/restart", body, 200);
 				waitUntilOpenViduRestarted(60);
