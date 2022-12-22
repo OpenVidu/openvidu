@@ -2102,11 +2102,19 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				}
 				if (wantedSpeechToText != null) {
 					body += body.endsWith("{") ? "" : ",";
-					body += "'OPENVIDU_PRO_SPEECH_TO_TEXT':'" + wantedSpeechToText + "'";
-					if (wantedVoskModelLoadStrategy != null) {
-						body += body.endsWith("{") ? "" : ",";
-						body += "'OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY':'" + wantedVoskModelLoadStrategy
-								+ "'";
+					body += "'OPENVIDU_PRO_SPEECH_TO_TEXT':'" + wantedSpeechToText + "',";
+					if ("azure".equals(wantedSpeechToText)) {
+						body += "'OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_KEY':'fakekey',";
+						body += "'OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_REGION':'fakeregion'";
+					} else if ("aws".equals(wantedSpeechToText)) {
+						body += "'OPENVIDU_PRO_AWS_REGION':'fakeregion',";
+						body += "'OPENVIDU_PRO_AWS_ACCESS_KEY':'fakekey',";
+						body += "'OPENVIDU_PRO_AWS_SECRET_KEY':'fakekey'";
+					} else if ("vosk".equals(wantedSpeechToText)) {
+						if (wantedVoskModelLoadStrategy != null) {
+							body += "'OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY':'"
+									+ wantedVoskModelLoadStrategy + "'";
+						}
 					}
 				}
 				body += "}";
