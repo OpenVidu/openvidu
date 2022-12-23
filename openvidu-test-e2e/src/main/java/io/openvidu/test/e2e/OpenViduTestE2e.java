@@ -81,6 +81,7 @@ public class OpenViduTestE2e {
 	protected static String OPENVIDU_PRO_LICENSE = "not_valid";
 	protected static String OPENVIDU_PRO_LICENSE_API = "not_valid";
 	protected static String OPENVIDU_PRO_SPEECH_TO_TEXT = "vosk";
+	protected static String DOCKERHUB_PRIVATE_REGISTRY_PASSWORD = "not_valid";
 	protected static String EXTERNAL_CUSTOM_LAYOUT_PARAMS = "sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET";
 
 	// https://hub.docker.com/r/selenium/standalone-chrome/tags
@@ -313,6 +314,11 @@ public class OpenViduTestE2e {
 		String openviduProSpeechToText = System.getProperty("OPENVIDU_PRO_SPEECH_TO_TEXT");
 		if (openviduProSpeechToText != null) {
 			OPENVIDU_PRO_SPEECH_TO_TEXT = openviduProSpeechToText;
+		}
+
+		String dockerhubPrivateRegistryPassword = System.getProperty("DOCKERHUB_PRIVATE_REGISTRY_PASSWORD");
+		if (dockerhubPrivateRegistryPassword != null) {
+			DOCKERHUB_PRIVATE_REGISTRY_PASSWORD = dockerhubPrivateRegistryPassword;
 		}
 	}
 
