@@ -10,6 +10,7 @@ var SCREENSHARE_BUTTON;
 var FULLSCREEN_BUTTON;
 var ACTIVITIES_PANEL_BUTTON;
 var RECORDING_BUTTON;
+var STREAMING_BUTTON;
 var CHAT_PANEL_BUTTON;
 var DISPLAY_LOGO;
 var DISPLAY_SESSION_NAME;
@@ -20,7 +21,9 @@ var LEAVE_BUTTON;
 var PARTICIPANT_MUTE_BUTTON;
 var PARTICIPANTS_PANEL_BUTTON;
 var ACTIVITIES_RECORDING_ACTIVITY;
+var ACTIVITIES_STREAMING_ACTIVITY;
 var RECORDING_ERROR;
+var STREAMING_ERROR;
 var TOOLBAR_SETTINGS_BUTTON;
 var CAPTIONS_BUTTON;
 
@@ -29,16 +32,14 @@ var SESSION_NAME;
 
 var PARTICIPANT_NAME;
 
-
 var OPENVIDU_SERVER_URL;
 var OPENVIDU_SECRET;
 
 $(document).ready(() => {
 	var url = new URL(window.location.href);
 
-    OPENVIDU_SERVER_URL = url.searchParams.get('OV_URL');
-    OPENVIDU_SECRET = url.searchParams.get('OV_SECRET');
-
+	OPENVIDU_SERVER_URL = url.searchParams.get('OV_URL');
+	OPENVIDU_SECRET = url.searchParams.get('OV_SECRET');
 
 	SINGLE_TOKEN = url.searchParams.get('singleToken') === null ? false : url.searchParams.get('singleToken') === 'true';
 
@@ -53,8 +54,16 @@ $(document).ready(() => {
 	VIDEO_MUTED = url.searchParams.get('videoMuted') === null ? false : url.searchParams.get('videoMuted') === 'true';
 	AUDIO_MUTED = url.searchParams.get('audioMuted') === null ? false : url.searchParams.get('audioMuted') === 'true';
 	SCREENSHARE_BUTTON = url.searchParams.get('screenshareBtn') === null ? true : url.searchParams.get('screenshareBtn') === 'true';
-	RECORDING_BUTTON = url.searchParams.get('recordingBtn') === null ? true : url.searchParams.get('recordingBtn') === 'true';
+	RECORDING_BUTTON =
+		url.searchParams.get('toolbarRecordingButton') === null ? true : url.searchParams.get('toolbarRecordingButton') === 'true';
 	FULLSCREEN_BUTTON = url.searchParams.get('fullscreenBtn') === null ? true : url.searchParams.get('fullscreenBtn') === 'true';
+	STREAMING_BUTTON =
+		url.searchParams.get('toolbarStreamingButton') === null ? true : url.searchParams.get('toolbarStreamingButton') === 'true';
+
+	if (url.searchParams.get('streamingError') !== null) {
+		STREAMING_ERROR = url.searchParams.get('streamingError');
+	}
+
 	TOOLBAR_SETTINGS_BUTTON =
 		url.searchParams.get('toolbarSettingsBtn') === null ? true : url.searchParams.get('toolbarSettingsBtn') === 'true';
 	CAPTIONS_BUTTON = url.searchParams.get('toolbarCaptionsBtn') === null ? true : url.searchParams.get('toolbarCaptionsBtn') === 'true';
@@ -65,6 +74,10 @@ $(document).ready(() => {
 	CHAT_PANEL_BUTTON = url.searchParams.get('chatPanelBtn') === null ? true : url.searchParams.get('chatPanelBtn') === 'true';
 	PARTICIPANTS_PANEL_BUTTON =
 		url.searchParams.get('participantsPanelBtn') === null ? true : url.searchParams.get('participantsPanelBtn') === 'true';
+	ACTIVITIES_STREAMING_ACTIVITY =
+		url.searchParams.get('activitiesPanelStreamingActivity') === null
+			? true
+			: url.searchParams.get('activitiesPanelStreamingActivity') === 'true';
 	ACTIVITIES_RECORDING_ACTIVITY =
 		url.searchParams.get('activitiesPanelRecordingActivity') === null
 			? true
@@ -114,6 +127,11 @@ $(document).ready(() => {
 	//     await stopRecording(RECORDING_ID);
 	// });
 
+	webComponent.addEventListener('onToolbarStopStreamingClicked', async (event) => {
+		appendElement('onToolbarStopStreamingClicked');
+		webComponent.streamingActivityStreamingInfo = { status: 'stopped', id: '01' };
+	});
+
 	webComponent.addEventListener('onActivitiesPanelStartRecordingClicked', async (event) => {
 		appendElement('onActivitiesPanelStartRecordingClicked');
 		// RECORDING_ID = await startRecording(SESSION_NAME);
@@ -128,6 +146,16 @@ $(document).ready(() => {
 	webComponent.addEventListener('onActivitiesPanelDeleteRecordingClicked', (event) =>
 		appendElement('onActivitiesPanelDeleteRecordingClicked')
 	);
+
+	webComponent.addEventListener('onActivitiesPanelStartStreamingClicked', async (event) => {
+		appendElement('onActivitiesPanelStartStreamingClicked');
+		webComponent.streamingActivityStreamingInfo = { status: 'started', id: '01' };
+	});
+
+	webComponent.addEventListener('onActivitiesPanelStopStreamingClicked', async (event) => {
+		appendElement('onActivitiesPanelStopStreamingClicked');
+		webComponent.streamingActivityStreamingInfo = { status: 'stopped', id: '01' };
+	});
 
 	webComponent.addEventListener('onSessionCreated', (event) => {
 		var session = event.detail;
@@ -192,6 +220,7 @@ async function joinSession(sessionName, participantName) {
 	webComponent.toolbarCaptionsButton = CAPTIONS_BUTTON;
 	webComponent.toolbarLeaveButton = LEAVE_BUTTON;
 	webComponent.toolbarRecordingButton = RECORDING_BUTTON;
+	webComponent.toolbarStreamingButton = STREAMING_BUTTON;
 	webComponent.toolbarActivitiesPanelButton = ACTIVITIES_PANEL_BUTTON;
 	webComponent.toolbarChatPanelButton = CHAT_PANEL_BUTTON;
 	webComponent.toolbarParticipantsPanelButton = PARTICIPANTS_PANEL_BUTTON;
@@ -204,7 +233,10 @@ async function joinSession(sessionName, participantName) {
 
 	webComponent.recordingActivityRecordingsList = [{ status: 'ready' }];
 	webComponent.activitiesPanelRecordingActivity = ACTIVITIES_RECORDING_ACTIVITY;
+	webComponent.activitiesPanelStreamingActivity = ACTIVITIES_STREAMING_ACTIVITY;
 	webComponent.recordingActivityRecordingError = RECORDING_ERROR;
+
+	webComponent.streamingActivityStreamingError = {message: STREAMING_ERROR, rtmpAvailable: true};
 
 	webComponent.participantName = participantName;
 	webComponent.tokens = tokens;
@@ -221,7 +253,6 @@ async function joinSession(sessionName, participantName) {
  *   2) Generate a token in OpenVidu Server		(POST /api/tokens)
  *   3) Configure OpenVidu Web Component in your client side with the token
  */
-
 
 function getToken(sessionName) {
 	return createSession(sessionName).then((sessionId) => createToken(sessionId));

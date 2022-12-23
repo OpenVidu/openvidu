@@ -2,6 +2,7 @@ import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@ang
 import { OpenViduService, ParticipantAbstractModel, RecordingInfo, TokenModel } from 'openvidu-angular';
 import { Session } from 'openvidu-browser';
 import { CaptionsLangOption } from '../../../projects/openvidu-angular/src/lib/models/caption.model';
+import { StreamingInfo } from '../../../projects/openvidu-angular/src/lib/models/streaming.model';
 
 /**
  *
@@ -66,6 +67,10 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
+	_toolbarStreamingButton: boolean = true;
+	/**
+	 * @internal
+	 */
 	_toolbarFullscreenButton: boolean = true;
 	/**
 	 * @internal
@@ -127,11 +132,26 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * @internal
 	 */
 	_activitiesPanelRecordingActivity: boolean = true;
+	/**
+	 * @internal
+	 */
+	_activitiesPanelStreamingActivity: boolean = true;
 
 	/**
 	 * @internal
 	 */
 	_recordingActivityRecordingsList: RecordingInfo[] = [];
+
+	/**
+	 * @internal
+	 * TODO: Remove this directive when RTMP Exported was included on OV and streaming ready event was fired.
+	 */
+	_streamingActivityStreamingInfo: StreamingInfo;
+
+	/**
+	 * @internal
+	 */
+	_streamingActivityStreamingError: any;
 
 	/**
 	 * The **minimal** attribute applies a minimal UI hiding all controls except for cam and mic.
@@ -189,7 +209,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * @example
 	 * <openvidu-webcomponent captions-lang-options="[{name:'Spanish', ISO: 'es-ES'}]"></openvidu-webcomponent>
 	 */
-	@Input() set captionsLangOptions(value: string | CaptionsLangOption []) {
+	@Input() set captionsLangOptions(value: string | CaptionsLangOption[]) {
 		this._captionsLangOptions = this.castToArray(value);
 	}
 	/**
@@ -272,6 +292,21 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 */
 	@Input() set toolbarRecordingButton(value: string | boolean) {
 		this._toolbarRecordingButton = this.castToBoolean(value);
+	}
+
+	/**
+	 * The **toolbarStreamingButton** attribute allows show/hide the start/stop streaming toolbar button.
+	 *
+	 * Default: `true`
+	 *
+	 * <div class="warn-container">
+	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
+	 *
+	 * @example
+	 * <openvidu-webcomponent toolbar-streaming-button="false"></openvidu-webcomponent>
+	 */
+	@Input() set toolbarStreamingButton(value: string | boolean) {
+		this._toolbarStreamingButton = this.castToBoolean(value);
 	}
 	/**
 	 * The **toolbarFullscreenButton** attribute allows show/hide the fullscreen toolbar button.
@@ -498,6 +533,43 @@ export class OpenviduWebComponentComponent implements OnInit {
 	}
 
 	/**
+	 * The **activitiesPanelStreamingActivity** attribute allows show/hide the streaming activity in {@link ActivitiesPanelComponent}.
+	 *
+	 * Default: `true`
+	 *
+	 * @example
+	 * <openvidu-webcomponent activity-panel-streaming-activity="false"></openvidu-webcomponent>
+	 */
+	@Input() set activitiesPanelStreamingActivity(value: string | boolean) {
+		this._activitiesPanelStreamingActivity = this.castToBoolean(value);
+	}
+
+	/**
+	 * The **streamingActivityStreamingInfo** attribute allows show to show the live streaming info in {@link StreamingActivityComponent}.
+	 *
+	 * Default: `undefined`
+	 *
+	 * @example
+	 * <openvidu-webcomponent streaming-activity-streaming-info="streamingInfo"></openvidu-webcomponent>
+	 */
+	@Input() set streamingActivityStreamingInfo(value: StreamingInfo) {
+		this._streamingActivityStreamingInfo = value;
+	}
+
+
+	/**
+	 * The **streamingActivityStreamingError** attribute allows to show any possible error with the streaming in the {@link StreamingActivityComponent}.
+	 *
+	 * Default: `undefined`
+	 *
+	 * @example
+	 * <openvidu-webcomponent streaming-activity-streaming-error="streamingError"></openvidu-webcomponent>
+	 */
+	 @Input() set streamingActivityStreamingError(value: any) {
+		this._streamingActivityStreamingError = value;
+	}
+
+	/**
 	 * The **recordingActivityRecordingList** attribute allows show to show the recordings available for the session in {@link RecordingActivityComponent}.
 	 *
 	 * Default: `[]`
@@ -554,6 +626,10 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 */
 	@Output() onToolbarActivitiesPanelButtonClicked: EventEmitter<void> = new EventEmitter<void>();
 
+	/**
+	 * Provides event notifications that fire when start recording button is clicked from {@link ToolbarComponent}.
+	 *  The recording should be started using the REST API.
+	 */
 	@Output() onToolbarStartRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
 	/**
 	 * Provides event notifications that fire when stop recording button is clicked from {@link ToolbarComponent}.
@@ -562,8 +638,14 @@ export class OpenviduWebComponentComponent implements OnInit {
 	@Output() onToolbarStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when start recording button is clicked {@link ActivitiesPanelComponent}.
+	 * Provides event notifications that fire when stop streaming button is clicked from {@link ToolbarComponent}.
 	 *  The recording should be stopped using the REST API.
+	 */
+	@Output() onToolbarStopStreamingClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when start recording button is clicked {@link ActivitiesPanelComponent}.
+	 *  The recording should be started using the REST API.
 	 */
 	@Output() onActivitiesPanelStartRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
 	/**
@@ -583,6 +665,18 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 *  The recording should be deleted using the REST API.
 	 */
 	@Output() onActivitiesPanelDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
+	 * Provides event notifications that fire when start streaming button is clicked {@link ActivitiesPanelComponent}.
+	 *  The streaming should be started using the REST API.
+	 */
+	@Output() onActivitiesPanelStartStreamingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
+	 * Provides event notifications that fire when stop streaming button is clicked {@link ActivitiesPanelComponent}.
+	 *  The streaming should be stopped using the REST API.
+	 */
+	@Output() onActivitiesPanelStopStreamingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
 	 * Provides event notifications that fire when OpenVidu Session is created.
@@ -698,6 +792,9 @@ export class OpenviduWebComponentComponent implements OnInit {
 	_onToolbarFullscreenButtonClicked() {
 		this.onToolbarFullscreenButtonClicked.emit();
 	}
+	/**
+	 * @internal
+	 */
 	onStartRecordingClicked(from: string) {
 		if (from === 'toolbar') {
 			this.onToolbarStartRecordingClicked.emit();
@@ -729,6 +826,28 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 */
 	_onActivitiesDeleteRecordingClicked(recordingId: string) {
 		this.onActivitiesPanelDeleteRecordingClicked.emit(recordingId);
+	}
+
+	/**
+	 * @internal
+	 */
+	onStartStreamingClicked(rtmpUrl: string) {
+		// if (from === 'toolbar') {
+		// 	this.onToolbarStartRecordingClicked.emit();
+		// } else if (from === 'panel') {
+		this.onActivitiesPanelStartStreamingClicked.emit(rtmpUrl);
+		// }
+	}
+
+	/**
+	 * @internal
+	 */
+	onStopStreamingClicked(from: string) {
+		if (from === 'toolbar') {
+			this.onToolbarStopStreamingClicked.emit();
+		} else if (from === 'panel') {
+			this.onActivitiesPanelStopStreamingClicked.emit();
+		}
 	}
 
 	/**
@@ -778,7 +897,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 		}
 	}
 
-	private castToArray(value: CaptionsLangOption [] | string) {
+	private castToArray(value: CaptionsLangOption[] | string) {
 		if (typeof value === 'string') {
 			try {
 				return JSON.parse(value);

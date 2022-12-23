@@ -12,6 +12,7 @@ interface BrowserConfig {
 
 const chromeArguments = ['--window-size=1024,768', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'];
 const chromeArgumentsCI = [
+	'--window-size=1024,768',
 	'--headless',
 	'--no-sandbox',
 	'--disable-gpu',
@@ -25,9 +26,8 @@ const chromeArgumentsCI = [
 	'--use-fake-device-for-media-stream'
 ];
 const chromeArgumentsWithoutMediaDevices = ['--window-size=1024,768', '--deny-permission-prompts'];
-
-
 const chromeArgumentsWithoutMediaDevicesCI = [
+	'--window-size=1024,768',
 	'--headless',
 	'--no-sandbox',
 	'--disable-gpu',

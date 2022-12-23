@@ -110,96 +110,6 @@ describe('Testing API Directives', () => {
 		expect(await element.getText()).equal('Unirme ahora');
 	});
 
-	/**
-	 * TODO:
-	 * This test is only available with OpenVidu PRO
-	 */
-	// it('should change the captions LANG ', async () => {
-	// 	await browser.get(`${url}&prejoin=false&captionsLang=es-ES`);
-
-	// 	await utils.checkSessionIsPresent();
-
-	// 	// Checking if toolbar is present
-	// 	await utils.checkToolbarIsPresent();
-
-	// 	// Open more options menu
-	// 	await utils.clickOn('#more-options-btn');
-
-	// 	await browser.sleep(500);
-
-	// 	// Checking if button panel is present
-	// 	await utils.waitForElement('.mat-menu-content');
-	// 	expect(await utils.isPresent('.mat-menu-content')).to.be.true;
-
-	// 	// Checking if captions button is present
-	// 	await utils.waitForElement('#captions-btn');
-	// 	expect(await utils.isPresent('#captions-btn')).to.be.true;
-	// 	await utils.clickOn('#captions-btn');
-
-	// 	await utils.waitForElement('.captions-container');
-	// 	await utils.waitForElement('#caption-settings-btn');
-	// 	await utils.clickOn('#caption-settings-btn');
-
-	// 	await browser.sleep(500);
-
-	// 	await utils.waitForElement('.settings-container');
-	// 	expect(await utils.isPresent('.settings-container')).to.be.true;
-
-	// 	await utils.waitForElement('ov-captions-settings');
-
-	// 	expect(await utils.isPresent('.captions-container')).to.be.true;
-
-	// 	const element = await utils.waitForElement('.lang-button');
-	// 	expect(await element.getText()).equal('Españolexpand_more');
-	// });
-
-	/**
-	 * TODO:
-	 * This test is only available with OpenVidu PRO
-	 */
-	// it('should override the CAPTIONS LANG OPTIONS', async () => {
-	// 	await browser.get(`${url}&prejoin=false&captionsLangOptions=true`);
-
-	// 	await utils.checkSessionIsPresent();
-
-	// 	// Checking if toolbar is present
-	// 	await utils.checkToolbarIsPresent();
-
-	// 	// Open more options menu
-	// 	await utils.clickOn('#more-options-btn');
-
-	// 	await browser.sleep(500);
-
-	// 	// Checking if button panel is present
-	// 	await utils.waitForElement('.mat-menu-content');
-	// 	expect(await utils.isPresent('.mat-menu-content')).to.be.true;
-
-	// 	// Checking if captions button is present
-	// 	await utils.waitForElement('#captions-btn');
-	// 	expect(await utils.isPresent('#captions-btn')).to.be.true;
-	// 	await utils.clickOn('#captions-btn');
-
-	// 	await utils.waitForElement('.captions-container');
-	// 	await utils.waitForElement('#caption-settings-btn');
-	// 	await utils.clickOn('#caption-settings-btn');
-
-	// 	await browser.sleep(500);
-
-	// 	await utils.waitForElement('.settings-container');
-	// 	expect(await utils.isPresent('.settings-container')).to.be.true;
-
-	// 	await utils.waitForElement('ov-captions-settings');
-
-	// 	expect(await utils.isPresent('.captions-container')).to.be.true;
-
-	// 	const element = await utils.waitForElement('.lang-button');
-	// 	expect(await element.getText()).equal('Espexpand_more');
-
-	// 	await element.click();
-
-	// 	expect(await utils.getNumberOfElements('.mat-menu-item')).equals(2);
-	// });
-
 	it('should show the PREJOIN page', async () => {
 		await browser.get(`${url}&prejoin=true`);
 
@@ -374,6 +284,48 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('.settings-container')).to.be.true;
 
 		expect(await utils.isPresent('#captions-opt')).to.be.false;
+	});
+
+	it('should HIDE the TOOLBAR RECORDING button', async () => {
+		await browser.get(`${url}&prejoin=false&toolbarRecordingButton=false`);
+
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
+
+		// Open more options menu
+		await utils.clickOn('#more-options-btn');
+
+		await browser.sleep(500);
+
+		// Checking if button panel is present
+		await utils.waitForElement('.mat-menu-content');
+		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+
+		// Checking if recording button is not present
+		expect(await utils.isPresent('#recording-btn')).to.be.false;
+	});
+
+	it('should HIDE the TOOLBAR STREAMING button', async () => {
+		await browser.get(`${url}&prejoin=false&toolbarStreamingButton=false`);
+
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
+
+		// Open more options menu
+		await utils.clickOn('#more-options-btn');
+
+		await browser.sleep(500);
+
+		// Checking if button panel is present
+		await utils.waitForElement('.mat-menu-content');
+		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+
+		// Checking if streaming button is not present
+		expect(await utils.isPresent('#streaming-btn')).to.be.false;
 	});
 
 	it('should HIDE the TOOLBAR SETTINGS button', async () => {
@@ -617,6 +569,63 @@ describe('Testing API Directives', () => {
 		expect(await element.getAttribute('innerText')).equal('"TEST_ERROR"');
 		expect(await utils.isPresent('.recording-error')).to.be.true;
 	});
+
+	it('should SHOW a STREAMING ERROR in activities panel', async () => {
+		let element;
+		const fixedUrl = `${url}&prejoin=false&streamingError=TEST_ERROR`;
+		await browser.get(fixedUrl);
+
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
+
+		element = await utils.waitForElement('#activities-panel-btn');
+		await element.click();
+
+		// Checking if participatns panel is displayed
+		await utils.waitForElement('#default-activities-panel');
+		expect(await utils.isPresent('#default-activities-panel')).to.be.true;
+
+		// Checking if streaming activity exists
+		await utils.waitForElement('#activities-container');
+		await utils.waitForElement('.activities-body-container');
+
+		await utils.waitForElement('ov-streaming-activity');
+		expect(await utils.isPresent('ov-streaming-activity')).to.be.true;
+
+		const status = await utils.waitForElement('#streaming-status');
+		expect(await status.getAttribute('innerText')).equals('FAILED');
+
+		// Open streaming
+		await browser.sleep(1000);
+		await utils.clickOn('ov-streaming-activity');
+
+		element = await utils.waitForElement('#streaming-error');
+		expect(await element.getAttribute('innerText')).equal('TEST_ERROR');
+	});
+
+	it('should HIDE the STREAMING ACTIVITY in activities panel', async () => {
+		await browser.get(`${url}&prejoin=false&activitiesPanelStreamingActivity=false`);
+
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
+
+		await utils.waitForElement('#activities-panel-btn');
+		await utils.clickOn('#activities-panel-btn')
+
+		// Checking if participatns panel is displayed
+		await utils.waitForElement('#default-activities-panel');
+		expect(await utils.isPresent('#default-activities-panel')).to.be.true;
+
+		// await browser.sleep(1000);
+
+		// Checking if recording activity exists
+		await utils.waitForElement('.activities-body-container');
+		expect(await utils.isPresent('ov-streaming-activity')).to.be.false;
+	});
 });
 
 describe('Testing videoconference EVENTS', () => {
@@ -647,10 +656,8 @@ describe('Testing videoconference EVENTS', () => {
 		expect(await utils.isPresent('#prejoin-container')).to.be.true;
 
 		// Clicking to join button
-		const joinButton = await utils.waitForElement('#join-button');
-		expect(await utils.isPresent('#join-button')).to.be.true;
-		expect(await joinButton.isEnabled()).to.be.true;
-		await joinButton.click();
+		await utils.waitForElement('#join-button');
+		await utils.clickOn('#join-button');
 
 		// Checking if onJoinButtonClicked has been received
 		await utils.waitForElement('#onJoinButtonClicked');
@@ -799,30 +806,73 @@ describe('Testing videoconference EVENTS', () => {
 	});
 
 	it('should receive the onToolbarStartRecordingClicked event', async () => {
-		let element;
 		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
-
 		await utils.checkToolbarIsPresent();
 
 		// Open more options menu
-		element = await utils.waitForElement('#more-options-btn');
+		await utils.waitForElement('#more-options-btn');
 		expect(await utils.isPresent('#more-options-btn')).to.be.true;
-		await element.click();
+		await utils.clickOn('#more-options-btn');
 
 		await browser.sleep(500);
 
 		// Clicking to recording button
 		await utils.waitForElement('.mat-menu-content');
 
-		const recordingButton = await utils.waitForElement('#recording-btn');
+		await utils.waitForElement('#recording-btn');
 		expect(await utils.isPresent('#recording-btn')).to.be.true;
-		await recordingButton.click();
+		await utils.clickOn('#recording-btn');
 
 		// Checking if onToolbarStartRecordingClicked has been received
 		await utils.waitForElement('#onToolbarStartRecordingClicked');
 		expect(await utils.isPresent('#onToolbarStartRecordingClicked')).to.be.true;
+	});
+
+	it('should receive the onToolbarStopStreamingClicked event', async () => {
+		await browser.get(`${url}&prejoin=false`);
+
+		await utils.checkSessionIsPresent();
+		await utils.checkToolbarIsPresent();
+
+		// Open more options menu
+		await utils.waitForElement('#more-options-btn');
+		expect(await utils.isPresent('#more-options-btn')).to.be.true;
+		await utils.clickOn('#more-options-btn');
+
+		await browser.sleep(500);
+
+		await utils.waitForElement('.mat-menu-content');
+
+		await utils.waitForElement('#streaming-btn');
+		await utils.clickOn('#streaming-btn');
+
+		await browser.sleep(500);
+
+		await utils.waitForElement('.sidenav-menu');
+		await utils.waitForElement('#activities-container');
+
+		await utils.waitForElement('#streaming-url-input');
+		const input = await utils.waitForElement('#rtmp-url-input');
+		await input.sendKeys('RTMPurl');
+		await utils.clickOn('#streaming-btn');
+
+		// Open more options menu
+		await utils.waitForElement('#more-options-btn');
+		expect(await utils.isPresent('#more-options-btn')).to.be.true;
+		await utils.clickOn('#more-options-btn');
+
+		await browser.sleep(500);
+
+		await utils.waitForElement('.mat-menu-content');
+
+		await utils.waitForElement('#streaming-btn');
+		await utils.clickOn('#streaming-btn');
+
+		// Checking if onToolbarStopStreamingClicked has been received
+		await utils.waitForElement('#onToolbarStopStreamingClicked');
+		expect(await utils.isPresent('#onToolbarStopStreamingClicked')).to.be.true;
 	});
 
 	it('should receive the onActivitiesPanelStartRecordingClicked event', async () => {
@@ -888,6 +938,50 @@ describe('Testing videoconference EVENTS', () => {
 
 		await utils.waitForElement('#onActivitiesPanelDeleteRecordingClicked');
 		expect(await utils.isPresent('#onActivitiesPanelDeleteRecordingClicked')).to.be.true;
+	});
+
+	it('should receive the onActivitiesPanelStartStreaming and onActivitiesPanelStopStreamingClicked events', async () => {
+		await browser.get(`${url}&prejoin=false`);
+
+		await utils.checkSessionIsPresent();
+		await utils.checkToolbarIsPresent();
+
+		// Get activities button and click into it
+		await utils.waitForElement('#activities-panel-btn');
+		await utils.clickOn('#activities-panel-btn');
+		await browser.sleep(500);
+
+		await utils.waitForElement('.sidenav-menu');
+		await utils.waitForElement('#activities-container');
+		expect(await utils.isPresent('#activities-container')).to.be.true;
+
+		await utils.waitForElement('#streaming-activity');
+		await utils.clickOn('#streaming-activity');
+
+		await browser.sleep(1000);
+
+		const button = await utils.waitForElement('#streaming-btn');
+		expect(await button.isEnabled()).to.be.false;
+
+
+		const input = await utils.waitForElement('#rtmp-url-input');
+		await input.sendKeys('RTMPurl');
+
+		await utils.clickOn('#streaming-btn');
+
+		// Checking if onActivitiesPanelStartStreamingClicked has been received
+		await utils.waitForElement('#onActivitiesPanelStartStreamingClicked');
+		expect(await utils.isPresent('#onActivitiesPanelStartStreamingClicked')).to.be.true;
+		expect(await utils.isPresent('#streaming-tag')).to.be.true;
+
+		await utils.clickOn('#stop-streaming-btn');
+
+		// Checking if onActivitiesPanelStopStreamingClicked has been received
+		await utils.waitForElement('#onActivitiesPanelStopStreamingClicked');
+		expect(await utils.isPresent('#onActivitiesPanelStopStreamingClicked')).to.be.true;
+		expect(await utils.isPresent('#streaming-tag')).to.be.false;
+
+
 	});
 
 	it('should receive the onSessionCreated event', async () => {

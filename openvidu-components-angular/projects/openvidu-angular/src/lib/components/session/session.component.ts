@@ -32,8 +32,9 @@ import { animate, style, transition, trigger } from '@angular/animations';
 import { MatDrawerContainer, MatSidenav } from '@angular/material/sidenav';
 import { skip, Subscription } from 'rxjs';
 import { SidenavMode } from '../../models/layout.model';
-import { PanelType } from '../../models/panel.model';
+import { PanelEvent, PanelType } from '../../models/panel.model';
 import { Signal } from '../../models/signal.model';
+import { StreamingStatus } from '../../models/streaming.model';
 import { ActionService } from '../../services/action/action.service';
 import { CaptionService } from '../../services/caption/caption.service';
 import { ChatService } from '../../services/chat/chat.service';
@@ -41,10 +42,11 @@ import { OpenViduAngularConfigService } from '../../services/config/openvidu-ang
 import { LayoutService } from '../../services/layout/layout.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
-import { PanelEvent, PanelService } from '../../services/panel/panel.service';
+import { PanelService } from '../../services/panel/panel.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { PlatformService } from '../../services/platform/platform.service';
 import { RecordingService } from '../../services/recording/recording.service';
+import { StreamingService } from '../../services/streaming/streaming.service';
 import { TranslateService } from '../../services/translate/translate.service';
 import { VirtualBackgroundService } from '../../services/virtual-background/virtual-background.service';
 
@@ -99,6 +101,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 		protected layoutService: LayoutService,
 		protected panelService: PanelService,
 		private recordingService: RecordingService,
+		private streamingService: StreamingService,
 		private translateService: TranslateService,
 		private captionService: CaptionService,
 		private platformService: PlatformService,
@@ -182,16 +185,21 @@ export class SessionComponent implements OnInit, OnDestroy {
 			this.subscribeToNicknameChanged();
 			this.chatService.subscribeToChat();
 			this.subscribeToReconnection();
-			const recordingEnabled = this.libService.recordingButton.getValue() && this.libService.recordingActivity.getValue();
-			if (recordingEnabled) {
-				this.subscribeToRecordingEvents();
-			}
 
 			await this.connectToSession();
 			// ios devices appear with blank video. Muting and unmuting it fix this problem
 			if (this.platformService.isIos() && this.participantService.isMyCameraActive()) {
 				await this.openviduService.publishVideo(false);
 				await this.openviduService.publishVideo(true);
+			}
+
+			if (this.libService.isRecordingEnabled()) {
+				this.subscribeToRecordingEvents();
+			}
+
+			if (this.libService.isStreamingEnabled() && !this.participantService.amIModerator()) {
+				//TODO: Remove it when RTMP Exported was included on OV and streaming ready event was fired.
+				this.subscribeToStreamingEvents();
 			}
 		}
 		this.preparing = false;
@@ -435,6 +443,16 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 		this.session.on('recordingStopped', (event: RecordingEvent) => {
 			this.recordingService.stopRecording(event);
+		});
+	}
+
+	private subscribeToStreamingEvents() {
+		this.session.on(`signal:${Signal.STREAMING_STARTED}`, (event: any) => {
+			this.streamingService.updateStatus(StreamingStatus.STARTED);
+		});
+
+		this.session.on(`signal:${Signal.STREAMING_STOPPED}`, (event: any) => {
+			this.streamingService.updateStatus(StreamingStatus.STOPPED);
 		});
 	}
 

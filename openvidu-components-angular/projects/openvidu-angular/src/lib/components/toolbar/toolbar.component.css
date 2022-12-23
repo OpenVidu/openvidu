@@ -70,9 +70,9 @@
 	flex-direction: column;
 }
 
-.recording-tag {
+.recording-tag,
+.streaming-tag {
 	padding: 0 10px;
-	background-color: var(--ov-warn-color);
 	border-radius: var(--ov-panel-radius);
 	width: fit-content;
 	font-size: 12px;
@@ -80,11 +80,24 @@
 	line-height: 20px;
 	margin: auto;
 }
-.recording-tag mat-icon {
+
+.recording-tag {
+	background-color: var(--ov-warn-color);
+}
+.streaming-tag {
+	background-color: #5903ca;
+}
+
+.recording-tag mat-icon,
+.streaming-tag mat-icon {
 	font-size: 16px;
 	display: inline;
 	vertical-align: sub;
 	margin-right: 5px;
+}
+
+#streaming-btn > mat-icon {
+	color: #5903ca;
 }
 
 .blink {

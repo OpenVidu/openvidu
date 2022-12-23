@@ -1,15 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
-import { PanelSettingsOptions, PanelType } from '../../models/panel.model';
+import { PanelEvent, PanelSettingsOptions, PanelType } from '../../models/panel.model';
 import { LoggerService } from '../logger/logger.service';
-
-export interface PanelEvent {
-	opened: boolean;
-	type?: PanelType | string;
-	expand?: string;
-	oldType?: PanelType | string;
-}
 
 @Injectable({
 	providedIn: 'root'

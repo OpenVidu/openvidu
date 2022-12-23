@@ -55,7 +55,7 @@ export class TranslateService {
 		return this.langTitles;
 	}
 
-	translate(key: string) {
+	translate(key: string): string {
 		let result = this.currentLang;
 
 		key.split('.').forEach((prop) => {

@@ -59,6 +59,7 @@
 		"CLOSE": "Fermer",
 		"SEE_MORE": "Voir plus",
 		"PRO_FEATURE": "Cette fonctionnalité fait partie de la gamme OpenVidu PRO",
+		"PAID_FEATURE": "Cette fonctionnalité fait partie du service commercial d'OpenVidu. Veuillez nous contacter via commercial@openvidu.io pour plus d'informations.",
 		"CHAT": {
 			"TITLE": "Chat",
 			"YOU": "Vous",
@@ -101,6 +102,17 @@
 			"DOWNLOAD": "Télécharger",
 			"RECORDINGS": "ENREGISTREMENTS",
 			"NO_MODERATOR": "Seul le MODERATEUR peut lancer l'enregistrement"
+		},
+		"STREAMING": {
+			"TITLE": "Diffusion",
+			"SUBTITLE": "Diffusez votre réunion à votre public",
+			"CONTENT_SUBTITLE": "OpenVidu a besoin de l'URL RTMP de la plateforme de diffusion.",
+			"START": "Démarrer la diffusion",
+			"STOP": "Arrêter la diffusion",
+			"URL": "Insérez votre URL RTMP",
+			"CANCEL": "Annuler",
+			"REQUIRED_URL": "L'URL RTMP est obligatoire",
+			"NO_MODERATOR": "Seul le MODÉRATEUR peut démarrer le streaming"
 		}
 	},
 	"ERRORS": {

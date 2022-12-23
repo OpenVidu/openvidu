@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { RecordingInfo, RecordingService, TokenModel } from 'openvidu-angular';
+import { RecordingInfo, TokenModel } from 'openvidu-angular';
 import { RestService } from '../services/rest.service';
 
 @Component({
@@ -8,7 +8,6 @@ import { RestService } from '../services/rest.service';
 	styleUrls: ['./call.component.scss']
 })
 export class CallComponent implements OnInit {
-
 	sessionId = 'daily-call';
 	tokens: TokenModel;
 
@@ -17,8 +16,10 @@ export class CallComponent implements OnInit {
 	isSessionAlive: boolean = false;
 	recordingList: RecordingInfo[] = [];
 	recordingError: any;
+	streamingError: any;
+	streamingInfo: any;
 
-	constructor(private restService: RestService, private recordingService: RecordingService) { }
+	constructor(private restService: RestService) {}
 
 	async ngOnInit() {
 		await this.requestForTokens();
@@ -81,25 +82,45 @@ export class CallComponent implements OnInit {
 		console.log('TOOLBAR LEAVE CLICKED');
 	}
 
+	async onStartStreamingClicked(rtmpUrl: string) {
+		console.log('START STREAMING', rtmpUrl);
+		try {
+			this.streamingError = null;
+			this.streamingInfo = await this.restService.startStreaming(rtmpUrl);
+			console.log('Streaming response ', this.streamingInfo);
+		} catch (error) {
+			console.error(error);
+			this.streamingError = error.error;
+		}
+	}
+
+	async onStopStreamingClicked() {
+		console.log('STOP STREAMING');
+		try {
+			this.streamingError = null;
+			this.streamingInfo = await this.restService.stopStreaming();
+			console.log('Streaming response ', this.streamingInfo);
+		} catch (error) {
+			console.error(error);
+			this.streamingError = error.message || error;
+		}
+	}
+
 	async onStartRecordingClicked() {
 		console.warn('START RECORDING CLICKED');
 		try {
 			await this.restService.startRecording(this.sessionId);
 		} catch (error) {
 			this.recordingError = error;
-
 		}
 	}
 	async onStopRecordingClicked() {
 		console.warn('STOP RECORDING CLICKED');
 		try {
-			// await this.restService.startRecording(this.sessionId);
-
 			this.recordingList = await this.restService.stopRecording(this.sessionId);
 			console.log('RECORDING LIST ', this.recordingList);
 		} catch (error) {
 			this.recordingError = error;
-
 		}
 	}
 
@@ -108,7 +129,6 @@ export class CallComponent implements OnInit {
 
 		try {
 			this.recordingList = await this.restService.deleteRecording(recordingId);
-
 		} catch (error) {
 			this.recordingError = error;
 		}
@@ -123,7 +143,5 @@ export class CallComponent implements OnInit {
 		};
 
 		console.log('Token requested: ', this.tokens);
-
 	}
-
 }

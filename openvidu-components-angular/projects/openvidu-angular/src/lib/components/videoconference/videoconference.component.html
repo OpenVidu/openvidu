@@ -50,6 +50,7 @@
 		(onActivitiesPanelButtonClicked)="onActivitiesPanelButtonClicked()"
 		(onStartRecordingClicked)="onStartRecordingClicked('toolbar')"
 		(onStopRecordingClicked)="onStopRecordingClicked('toolbar')"
+		(onStopStreamingClicked)="onStopStreamingClicked('toolbar')"
 	>
 		<ng-template #toolbarAdditionalButtons>
 			<ng-container *ngTemplateOutlet="openviduAngularToolbarAdditionalButtonsTemplate"></ng-container>
@@ -99,6 +100,8 @@
 		(onStartRecordingClicked)="onStartRecordingClicked('panel')"
 		(onStopRecordingClicked)="onStopRecordingClicked('panel')"
 		(onDeleteRecordingClicked)="onDeleteRecordingClicked($event)"
+		(onStartStreamingClicked)="onStartStreamingClicked($event)"
+		(onStopStreamingClicked)="onStopStreamingClicked('panel')"
 	></ov-activities-panel>
 </ng-template>
 

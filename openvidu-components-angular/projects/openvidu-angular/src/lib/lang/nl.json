@@ -59,6 +59,7 @@
 		"CLOSE": "Sluiten",
 		"SEE_MORE": "Zie meer",
 		"PRO_FEATURE": "Deze functie is onderdeel van OpenVidu PRO tier",
+		"PAID_FEATURE": "Deze functie maakt deel uit van de commerciële service van OpenVidu. Neem voor meer informatie contact met ons op via commercial@openvidu.io.",
 		"CHAT": {
 			"TITLE": "Chat",
 			"YOU": "Jij",
@@ -101,6 +102,17 @@
 			"DOWNLOAD": "Downloaden",
 			"RECORDINGS": "OPNAME",
 			"NO_MODERATOR": "Alleen de MOEDERATOR kan de opname starten"
+		},
+		"STREAMING": {
+			"TITLE": "Streamen",
+			"SUBTITLE": "Stream je meeting naar je publiek",
+			"CONTENT_SUBTITLE": "OpenVidu heeft de RTMP url van de streaming platform nodig.",
+			"START": "Start streamen",
+			"STOP": "Stop streamen",
+			"URL": "Voer je RTMP url in",
+			"CANCEL": "Annuleren",
+			"REQUIRED_URL": "RTMP url is verplicht",
+			"NO_MODERATOR": "Alleen de moderator kan de streaming starten"
 		}
 	},
 	"ERRORS": {

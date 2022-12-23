@@ -1,4 +1,4 @@
-#recording-status {
+#streaming-status {
 	color: var(--ov-text-color);
 	display: inline;
 	padding: 3px;
@@ -9,31 +9,40 @@
 .time-container {
 	padding: 2px;
 }
-.recording-icon {
-	font-size: 32px !important;
-	height: 32px !important;
-	width: 32px !important;
+
+.error-text {
+	color: var(--ov-warn-color);
+	font-style: italic;
+	font-size: 14px;
 }
 
-.recording-duration {
+#streaming-icon {
+	color: #5903ca;
+}
+
+.streaming-duration {
 	background-color: var(--ov-light-color);
 	padding: 4px 8px;
 	border-radius: var(--ov-panel-radius);
 	font-weight: 500;
 }
 
-.recording-duration mat-icon {
+.streaming-duration mat-icon {
 	font-size: 18px;
 	width: 18px;
 	height: 18px;
 }
 
 .started {
-	background-color: #3b7430 !important;
+	background-color: #5903ca !important;
 	color: var(--ov-text-color);
 }
 
-.activity-icon.started,
+.activity-icon.started {
+	background-color: #5903ca !important;
+	color: var(--ov-text-color);
+}
+
 .failed {
 	background-color: var(--ov-warn-color) !important;
 	color: var(--ov-text-color);
@@ -62,18 +71,13 @@
 	text-align: center;
 }
 
-.recording-error {
+.streaming-error {
 	color: var(--ov-warn-color);
 	font-weight: 600;
 }
-.recording-name {
+.streaming-name {
 	font-size: 16px;
 	font-weight: bold;
-}
-
-.recording-date {
-	font-size: 12px !important;
-	font-style: italic;
 }
 
 .not-allowed-message {
@@ -81,28 +85,23 @@
 	font-weight: bold;
 }
 
-.recording-action-buttons {
+.streaming-action-buttons {
 	margin-top: 20px;
 	margin-bottom: 20px;
 }
 
-#start-recording-btn {
+/* #start-streaming-btn {
 	width: 100%;
 	background-color: var(--ov-tertiary-color);
 	color: var(--ov-text-color);
-}
+} */
 
-#stop-recording-btn {
-	width: 100%;
-	background-color: var(--ov-warn-color);
-	color: var(--ov-text-color);
-}
-
-.delete-recording-btn {
+#stop-streaming-btn {
+	/* background-color: var(--ov-warn-color); */
 	color: var(--ov-warn-color);
 }
 
-#reset-recording-status-btn {
+#reset-streaming-status-btn {
 	width: 100%;
 	background-color: var(--ov-light-color);
 }
@@ -118,4 +117,32 @@ mat-expansion-panel {
 	50% {
 		opacity: 0.4;
 	}
+}
+
+.input-container {
+	height: 25px;
+	display: flex;
+	background-color: var(--ov-light-color);
+	padding: 10px;
+	margin: 10px;
+	border-radius: var(--ov-panel-radius);
+}
+
+.input-container input {
+	width: 100%;
+	height: 16px;
+	margin: auto;
+	background-color: transparent;
+	display: block;
+	border: none;
+	padding: 0;
+	word-wrap: break-word;
+	white-space: pre-wrap;
+	resize: none;
+	outline: none;
+
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+	font-family: 'Roboto', 'RobotoDraft', Helvetica, Arial, sans-serif;
 }
