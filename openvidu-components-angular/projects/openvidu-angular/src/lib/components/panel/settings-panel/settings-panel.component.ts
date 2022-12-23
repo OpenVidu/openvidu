@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { PanelSettingsOptions, PanelType } from '../../../models/panel.model';
+import { PanelEvent, PanelSettingsOptions, PanelType } from '../../../models/panel.model';
 import { OpenViduAngularConfigService } from '../../../services/config/openvidu-angular.config.service';
-import { PanelEvent, PanelService } from '../../../services/panel/panel.service';
+import { PanelService } from '../../../services/panel/panel.service';
 import { PlatformService } from '../../../services/platform/platform.service';
 
 /**

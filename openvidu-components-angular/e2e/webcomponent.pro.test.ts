@@ -6,12 +6,6 @@ import { OpenViduComponentsPO } from './utils.po.test';
 
 const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_SERVER_URL}&OV_SECRET=${OPENVIDU_SECRET}`;
 
-/**
- *
- * Testing PRO features with OpenVidu PRO
- * TODO: Change the openvidu URL when openvidu-pro-dev exists
- */
-
 describe('Testing API Directives', () => {
 	let browser: WebDriver;
 	let utils: OpenViduComponentsPO;

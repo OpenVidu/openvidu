@@ -59,6 +59,7 @@
 		"CLOSE": "关闭",
 		"SEE_MORE": "查看更多",
 		"PRO_FEATURE": "此功能属于OpenVidu PRO级别",
+		"PAID_FEATURE": "此功能是 OpenVidu 商业服务的一部分。请通过 commercial@openvidu.io 联系我们了解更多信息。",
 		"CHAT": {
 			"TITLE": "聊天",
 			"YOU": "你",
@@ -101,6 +102,17 @@
 			"DOWNLOAD": "下载",
 			"RECORDINGS": "录制",
 			"NO_MODERATOR": "只有主持人可以开始录音"
+		},
+		"STREAMING": {
+			"TITLE": "直播",
+			"SUBTITLE": "将会议直播给观众",
+			"CONTENT_SUBTITLE": "OpenVidu需要RTMP直播平台的URL。",
+			"START": "开始直播",
+			"STOP": "结束直播",
+			"URL": "输入您的RTMP URL",
+			"CANCEL": "取消",
+			"REQUIRED_URL": "RTMP url 是必需的",
+			"NO_MODERATOR": "只有主持人才能开始流媒体"
 		}
 	},
 	"ERRORS": {

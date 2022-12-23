@@ -1,8 +1,8 @@
-import { Component, OnInit, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { PanelType } from '../../../models/panel.model';
+import { PanelEvent, PanelType } from '../../../models/panel.model';
 import { OpenViduAngularConfigService } from '../../../services/config/openvidu-angular.config.service';
-import { PanelEvent, PanelService } from '../../../services/panel/panel.service';
+import { PanelService } from '../../../services/panel/panel.service';
 
 @Component({
 	selector: 'ov-activities-panel',
@@ -13,7 +13,7 @@ import { PanelEvent, PanelService } from '../../../services/panel/panel.service'
 export class ActivitiesPanelComponent implements OnInit {
 	/**
 	 * Provides event notifications that fire when start recording button has been clicked.
-	 * The recording should be stated using the OpenVidu REST API.
+	 * The recording should be started using the OpenVidu REST API.
 	 */
 	@Output() onStartRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
 
@@ -29,6 +29,17 @@ export class ActivitiesPanelComponent implements OnInit {
 	 */
 	@Output() onDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
+	/**
+	 * Provides event notifications that fire when start streaming button has been clicked.
+	 * The streaming should be started using the REST API.
+	 */
+	@Output() onStartStreamingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
+	 * Provides event notifications that fire when stop streaming button has been clicked.
+	 * The streaming should be stopped using the REST API.
+	 */
+	@Output() onStopStreamingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
 	 * @internal
@@ -38,8 +49,10 @@ export class ActivitiesPanelComponent implements OnInit {
 	 * @internal
 	 */
 	showRecordingActivity: boolean = true;
+	showStreamingActivity: boolean = true;
 	private panelSubscription: Subscription;
 	private recordingActivitySub: Subscription;
+	private streamingActivitySub: Subscription;
 
 	/**
 	 * @internal
@@ -60,6 +73,7 @@ export class ActivitiesPanelComponent implements OnInit {
 	ngOnDestroy() {
 		if (this.panelSubscription) this.panelSubscription.unsubscribe();
 		if (this.recordingActivitySub) this.recordingActivitySub.unsubscribe();
+		if (this.streamingActivitySub) this.streamingActivitySub.unsubscribe();
 	}
 
 	/**
@@ -90,19 +104,30 @@ export class ActivitiesPanelComponent implements OnInit {
 		this.onDeleteRecordingClicked.emit(recordingId);
 	}
 
+	_onStartStreamingClicked(rtmpUrl: string) {
+		this.onStartStreamingClicked.emit(rtmpUrl);
+	}
+
+	_onStopStreamingClicked() {
+		this.onStopStreamingClicked.emit();
+	}
+
 	private subscribeToPanelToggling() {
-		this.panelSubscription = this.panelService.panelOpenedObs.subscribe(
-			(ev: PanelEvent) => {
-				if (ev.type === PanelType.ACTIVITIES && !!ev.expand) {
-					this.expandedPanel = ev.expand;
-				}
+		this.panelSubscription = this.panelService.panelOpenedObs.subscribe((ev: PanelEvent) => {
+			if (ev.type === PanelType.ACTIVITIES && !!ev.expand) {
+				this.expandedPanel = ev.expand;
 			}
-		);
+		});
 	}
 
 	private subscribeToActivitiesPanelDirective() {
 		this.recordingActivitySub = this.libService.recordingActivity.subscribe((value: boolean) => {
 			this.showRecordingActivity = value;
+			this.cd.markForCheck();
+		});
+
+		this.streamingActivitySub = this.libService.streamingActivity.subscribe((value: boolean) => {
+			this.showStreamingActivity = value;
 			this.cd.markForCheck();
 		});
 	}

@@ -384,6 +384,21 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	@Output() onActivitiesPanelPlayRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
+	 * Provides event notifications that fire when start streaming button is clicked from {@link ActivitiesPanelComponent}.
+	 */
+	@Output() onActivitiesPanelStartStreamingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
+	 * Provides event notifications that fire when start streaming button is clicked from {@link ActivitiesPanelComponent}.
+	 */
+	@Output() onActivitiesPanelStopStreamingClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when start streaming button is clicked from {@link ToolbarComponent}.
+	 */
+	@Output() onToolbarStopStreamingClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
 	 * Provides event notifications that fire when OpenVidu Session is created.
 	 * See {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html openvidu-browser Session}.
 	 */
@@ -675,6 +690,35 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 */
 	onDeleteRecordingClicked(recordingId: string) {
 		this.onActivitiesPanelDeleteRecordingClicked.emit(recordingId);
+	}
+
+	/**
+	 * @internal
+	 */
+	onStartStreamingClicked(rtmpUrl: string) {
+		// if (from === 'toolbar') {
+		// 	this.onToolbarStartRecordingClicked.emit();
+		// } else if (from === 'panel') {
+		this.onActivitiesPanelStartStreamingClicked.emit(rtmpUrl);
+		// }
+	}
+
+	/**
+	 * @internal
+	 */
+	onStopStreamingClicked(from: string) {
+		if (from === 'toolbar') {
+			this.onToolbarStopStreamingClicked.emit();
+		} else if (from === 'panel') {
+			this.onActivitiesPanelStopStreamingClicked.emit();
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	_onSessionCreated(session: Session) {
+		this.onSessionCreated.emit(session);
 	}
 
 	/**

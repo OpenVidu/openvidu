@@ -7,6 +7,13 @@ export enum PanelType {
 
 }
 
+export interface PanelEvent {
+	opened: boolean;
+	type?: PanelType | string;
+	expand?: string;
+	oldType?: PanelType | string;
+}
+
 export enum PanelSettingsOptions {
 	GENERAL = 'general',
 	AUDIO = 'audio',

@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { PanelEvent, PanelService } from '../../services/panel/panel.service';
+import { PanelService } from '../../services/panel/panel.service';
 
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Session, SpeechToTextEvent } from 'openvidu-browser';
 import { CaptionModel, CaptionsLangOption } from '../../models/caption.model';
-import { PanelSettingsOptions, PanelType } from '../../models/panel.model';
+import { PanelEvent, PanelSettingsOptions, PanelType } from '../../models/panel.model';
 import { CaptionService } from '../../services/caption/caption.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { ParticipantService } from '../../services/participant/participant.service';

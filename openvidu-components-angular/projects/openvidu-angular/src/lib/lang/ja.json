@@ -59,6 +59,7 @@
 		"CLOSE": "閉じる",
 		"PRO_FEATURE": "この機能はOpenVidu PROの機能です",
 		"SEE_MORE": "もっと見る",
+		"PAID_FEATURE": "この機能は、OpenVidu 商用サービスの一部です。詳細については、commercial@openvidu.io までお問い合わせください。",
 		"CHAT": {
 			"TITLE": "チャット",
 			"YOU": "あなた",
@@ -101,6 +102,18 @@
 			"DOWNLOAD": "ダウンロード",
 			"RECORDINGS": "録画",
 			"NO_MODERATOR": "録音を開始できるのは、モデレーターのみです"
+		},
+		"STREAMING": {
+			"TITLE": "ストリーミング",
+			"SUBTITLE": "会議を観客にストリーミング",
+			"CONTENT_SUBTITLE": "OpenViduはストリーミングプラットフォームのRTMP URLが必要です。",
+			"START": "ストリーミングを開始",
+			"STOP": "ストリーミングを終了",
+			"URL": "RTMP URLを入力してください",
+			"CANCEL": "キャンセル",
+			"REQUIRED_URL": "RTMP url は必須です",
+			"NO_MODERATOR": "モデレーターのみがストリーミングを開始できます"
+
 		}
 	},
 	"ERRORS": {

@@ -34,7 +34,7 @@
 }
 
 ::ng-deep .mat-expansion-panel-header {
-	padding: 0px 10px !important;
+	padding: 0px 5px !important;
 	height: 65px !important;
 }
 
@@ -53,4 +53,8 @@
 
 ::ng-deep .mat-expansion-panel {
 	box-shadow: none !important;
+}
+
+::ng-deep .no-body .mat-expansion-panel-content {
+	display: none !important;
 }

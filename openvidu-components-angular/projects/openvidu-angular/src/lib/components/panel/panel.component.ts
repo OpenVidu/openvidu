@@ -1,14 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, OnInit, TemplateRef } from '@angular/core';
 import { skip, Subscription } from 'rxjs';
 import {
-	ChatPanelDirective,
-	AdditionalPanelsDirective,
-	ParticipantsPanelDirective,
-	BackgroundEffectsPanelDirective,
-	ActivitiesPanelDirective
+	ActivitiesPanelDirective, AdditionalPanelsDirective, ChatPanelDirective, ParticipantsPanelDirective
 } from '../../directives/template/openvidu-angular.directive';
-import { PanelType } from '../../models/panel.model';
-import { PanelEvent, PanelService } from '../../services/panel/panel.service';
+import { PanelEvent, PanelType } from '../../models/panel.model';
+import { PanelService } from '../../services/panel/panel.service';
 
 /**
  *

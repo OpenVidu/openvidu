@@ -9,8 +9,13 @@ export class TranslatePipe implements PipeTransform {
 	constructor(private translateService: TranslateService) {}
 
 	transform(str: string): string {
-
 		const translation = this.translateService.translate(str);
-		return translation.replace('OpenVidu PRO', '<a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank">OpenVidu PRO</a>');
+		if (translation?.includes('OpenVidu PRO')) {
+			return translation.replace(
+				'OpenVidu PRO',
+				'<a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank">OpenVidu PRO</a>'
+			);
+		}
+		return translation;
 	}
 }

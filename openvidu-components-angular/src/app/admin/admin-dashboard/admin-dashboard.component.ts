@@ -19,8 +19,8 @@ export class AdminDashboardComponent implements OnInit {
 			this.logged = true;
 			this.recordings = resp.recordings;
 		} catch (error) {
-
-			this.logged = true;
+			this.logged = false;
+			console.log(error);
 		}
 	}
 

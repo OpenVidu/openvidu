@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { RecordingInfo } from 'openvidu-angular';
 import { catchError, lastValueFrom } from 'rxjs';
 import { throwError as observableThrowError } from 'rxjs/internal/observable/throwError';
-import { RecordingInfo } from 'openvidu-angular';
 
 @Injectable({
 	providedIn: 'root'
@@ -41,6 +41,22 @@ export class RestService {
 		}
 	}
 
+	async startStreaming(rtmpUrl: string) {
+		try {
+			const options = {
+				headers: new HttpHeaders({
+					'Content-Type': 'application/json'
+				})
+			};
+			return lastValueFrom(this.http.post<any>(this.baseHref + 'streamings/start', { rtmpUrl}, options));
+		} catch (error) {
+			if (error.status === 404) {
+				throw { status: error.status, message: 'Cannot connect with backend. ' + error.url + ' not found' };
+			}
+			throw error.error;
+		}
+	}
+
 	async stopRecording(sessionId: string) {
 		try {
 			return lastValueFrom(this.http.post<any>(this.baseHref + 'recordings/stop', { sessionId }));
@@ -52,10 +68,22 @@ export class RestService {
 		}
 	}
 
+
+	async stopStreaming() {
+		try {
+			return lastValueFrom(this.http.delete<any>(`${this.baseHref}streamings/stop`));
+		} catch (error) {
+			if (error.status === 404) {
+				throw { status: error.status, message: 'Cannot connect with backend. ' + error.url + ' not found' };
+			}
+			throw error;
+		}
+	}
+
 	async login(password: string): Promise<any[]> {
 		try {
 			return lastValueFrom(
-				this.http.post<any>(`${this.baseHref}admin/login`, {
+				this.http.post<any>(`${this.baseHref}auth/admin/login`, {
 					password
 				})
 			);

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Publisher, Subscriber } from 'openvidu-browser';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
-import { ParticipantAbstractModel, ParticipantModel, ParticipantProperties, StreamModel } from '../../models/participant.model';
+import { OpenViduRole, ParticipantAbstractModel, ParticipantModel, ParticipantProperties, StreamModel } from '../../models/participant.model';
 import { VideoType } from '../../models/video-type.model';
 import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.service';
 import { LoggerService } from '../logger/logger.service';
@@ -154,6 +154,10 @@ export class ParticipantService {
 
 	getMyRole(): string {
 		return this.localParticipant.getRole();
+	}
+
+	amIModerator(): boolean {
+		return this.getMyRole() === OpenViduRole.MODERATOR;
 	}
 
 	/**

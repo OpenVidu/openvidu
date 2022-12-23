@@ -15,7 +15,7 @@ import {
 import { skip, Subscription } from 'rxjs';
 import { ChatService } from '../../services/chat/chat.service';
 import { DocumentService } from '../../services/document/document.service';
-import { PanelEvent, PanelService } from '../../services/panel/panel.service';
+import { PanelService } from '../../services/panel/panel.service';
 
 import { MediaChange } from '@angular/flex-layout';
 import { MatMenuTrigger } from '@angular/material/menu';
@@ -26,9 +26,10 @@ import {
 } from '../../directives/template/openvidu-angular.directive';
 import { ChatMessage } from '../../models/chat.model';
 import { ILogger } from '../../models/logger.model';
-import { PanelType } from '../../models/panel.model';
+import { PanelEvent, PanelType } from '../../models/panel.model';
 import { OpenViduRole, ParticipantAbstractModel } from '../../models/participant.model';
 import { RecordingInfo, RecordingStatus } from '../../models/recording.model';
+import { StreamingStatus } from '../../models/streaming.model';
 import { ActionService } from '../../services/action/action.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import { DeviceService } from '../../services/device/device.service';
@@ -39,6 +40,7 @@ import { ParticipantService } from '../../services/participant/participant.servi
 import { PlatformService } from '../../services/platform/platform.service';
 import { RecordingService } from '../../services/recording/recording.service';
 import { StorageService } from '../../services/storage/storage.service';
+import { StreamingService } from '../../services/streaming/streaming.service';
 import { TranslateService } from '../../services/translate/translate.service';
 
 /**
@@ -183,6 +185,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	@Output() onStartRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
+	 * Provides event notifications that fire when start streaming button has been clicked.
+	 */
+	@Output() onStopStreamingClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
 	 * Provides event notifications that fire when stop recording button has been clicked.
 	 */
 	@Output() onStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
@@ -276,6 +283,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
+	showStreamingButton: boolean = true;
+
+	/**
+	 * @ignore
+	 */
 	showSettingsButton: boolean = true;
 
 	/**
@@ -324,15 +336,28 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 * @ignore
 	 */
 	recordingStatus: RecordingStatus = RecordingStatus.STOPPED;
+
+	/**
+	 * @ignore
+	 */
+	streamingStatus: StreamingStatus = StreamingStatus.STOPPED;
 	/**
 	 * @ignore
 	 */
 	_recordingStatus = RecordingStatus;
+	/**
+	 * @ignore
+	 */
+	_streamingStatus = StreamingStatus;
 
 	/**
 	 * @ignore
 	 */
 	recordingTime: Date;
+	/**
+	 * @ignore
+	 */
+	streamingTime: Date;
 
 	/**
 	 * @ignore
@@ -354,7 +379,9 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	private backgroundEffectsButtonSub: Subscription;
 	private leaveButtonSub: Subscription;
 	private recordingButtonSub: Subscription;
+	private streamingButtonSub: Subscription;
 	private recordingSubscription: Subscription;
+	private streamingSubscription: Subscription;
 	private activitiesPanelButtonSub: Subscription;
 	private participantsPanelButtonSub: Subscription;
 	private chatPanelButtonSub: Subscription;
@@ -382,6 +409,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		private libService: OpenViduAngularConfigService,
 		private platformService: PlatformService,
 		private recordingService: RecordingService,
+		private streamingService: StreamingService,
 		private translateService: TranslateService,
 		private storageSrv: StorageService
 	) {
@@ -424,6 +452,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.subscribeToMenuToggling();
 		this.subscribeToChatMessages();
 		this.subscribeToRecordingStatus();
+		this.subscribeToStreamingStatus();
 		this.subscribeToScreenSize();
 		this.subscribeToCaptionsToggling();
 	}
@@ -431,7 +460,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	ngAfterViewInit() {
 		// Sometimes the connection is undefined so we have to check the role when the mat menu is opened
 		this.menuTrigger?.menuOpened.subscribe(() => {
-			this.isSessionCreator = this.participantService.getMyRole() === OpenViduRole.MODERATOR;
+			this.isSessionCreator = this.participantService.amIModerator();
 		});
 	}
 
@@ -444,6 +473,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		if (this.backgroundEffectsButtonSub) this.backgroundEffectsButtonSub.unsubscribe();
 		if (this.leaveButtonSub) this.leaveButtonSub.unsubscribe();
 		if (this.recordingButtonSub) this.recordingButtonSub.unsubscribe();
+		if (this.streamingButtonSub) this.streamingButtonSub.unsubscribe();
 		if (this.participantsPanelButtonSub) this.participantsPanelButtonSub.unsubscribe();
 		if (this.chatPanelButtonSub) this.chatPanelButtonSub.unsubscribe();
 		if (this.displayLogoSub) this.displayLogoSub.unsubscribe();
@@ -451,6 +481,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		if (this.minimalSub) this.minimalSub.unsubscribe();
 		if (this.activitiesPanelButtonSub) this.activitiesPanelButtonSub.unsubscribe();
 		if (this.recordingSubscription) this.recordingSubscription.unsubscribe();
+		if (this.streamingSubscription) this.streamingSubscription.unsubscribe();
 		if (this.screenSizeSub) this.screenSizeSub.unsubscribe();
 		if (this.settingsButtonSub) this.settingsButtonSub.unsubscribe();
 		if (this.captionsSubs) this.captionsSubs.unsubscribe();
@@ -533,6 +564,21 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 
 			if (this.showActivitiesPanelButton && !this.isActivitiesOpened) {
 				this.toggleActivitiesPanel('recording');
+			}
+		}
+	}
+
+	/**
+	 * @ignore
+	 */
+	toggleStreaming() {
+		if (this.streamingStatus === StreamingStatus.STARTED) {
+			this.log.d('Stopping streaming');
+			this.onStopStreamingClicked.emit();
+			this.streamingService.updateStatus(StreamingStatus.STOPPING);
+		} else if (this.streamingStatus === StreamingStatus.STOPPED) {
+			if (this.showActivitiesPanelButton && !this.isActivitiesOpened) {
+				this.toggleActivitiesPanel('streaming');
 			}
 		}
 	}
@@ -660,6 +706,20 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			});
 	}
 
+	private subscribeToStreamingStatus() {
+		this.streamingSubscription = this.streamingService.streamingStatusObs
+			.pipe(skip(1))
+			.subscribe((ev: { status: StreamingStatus, time?: Date } | undefined) => {
+				if (!!ev) {
+					this.streamingStatus = ev.status;
+					if (ev.time) {
+						this.streamingTime = ev.time;
+					}
+					this.cd.markForCheck();
+				}
+			});
+	}
+
 	private subscribeToToolbarDirectives() {
 		this.minimalSub = this.libService.minimalObs.subscribe((value: boolean) => {
 			this.isMinimal = value;
@@ -681,6 +741,12 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 
 		this.recordingButtonSub = this.libService.recordingButtonObs.subscribe((value: boolean) => {
 			this.showRecordingButton = value;
+			this.checkDisplayMoreOptions();
+			this.cd.markForCheck();
+		});
+
+		this.streamingButtonSub = this.libService.streamingButtonObs.subscribe((value: boolean) => {
+			this.showStreamingButton = value;
 			this.checkDisplayMoreOptions();
 			this.cd.markForCheck();
 		});
@@ -737,6 +803,10 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	private checkDisplayMoreOptions() {
 		this.showMoreOptionsButton =
-			this.showFullscreenButton || this.showBackgroundEffectsButton || this.showRecordingButton || this.showSettingsButton;
+			this.showFullscreenButton ||
+			this.showBackgroundEffectsButton ||
+			this.showRecordingButton ||
+			this.showStreamingButton ||
+			this.showSettingsButton;
 	}
 }

@@ -26,13 +26,14 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.OPENVIDU_DISPATCH_EVENT_GA }}
         COMMIT_MESSAGE: ${{ github.event.head_commit.message || 'Manually' }}
         COMMIT_URL: ${{ github.event.commits[0].url || 'Manually' }}
+        BRANCH_NAME: ${{ github.ref_name }}
       run: |
         curl \
         -X POST \
         -H "Accept: application/vnd.github+json" \
         -H "Authorization: Bearer ${GITHUB_TOKEN}" \
         https://api.github.com/repos/OpenVidu/openvidu-call/dispatches \
-        -d '{"event_type":"openvidu-components-angular","client_payload":{"commit-message":"'"$COMMIT_MESSAGE"'","commit-ref":"'"$COMMIT_URL"'"}}'
+        -d '{"event_type":"openvidu-components-angular","client_payload":{"commit-message":"'"$COMMIT_MESSAGE"'","commit-ref":"'"$COMMIT_URL"'", "branch-name":"'"$BRANCH_NAME"'"}}'
     - name: Build openvidu-browser
       run: |
         cd openvidu-browser
@@ -112,6 +113,7 @@ jobs:
       run:  npm run webcomponent:e2e-ci --prefix openvidu-components-angular
 
   webcomponent_e2e_pro:
+    if: false #Skip PRO test because infra is unstable
     needs: test_setup
     name: Webcomponent E2E PRO tests
     runs-on: ubuntu-latest

@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { ActivitiesPanelRecordingActivityDirective } from './activities-panel.directive';
+import { ActivitiesPanelRecordingActivityDirective, ActivitiesPanelStreamingActivityDirective } from './activities-panel.directive';
 import { AdminLoginDirective, AdminRecordingsListDirective } from './admin.directive';
 import { LogoDirective } from './internals.directive';
 import { ParticipantPanelItemMuteButtonDirective } from './participant-panel-item.directive';
@@ -9,6 +9,7 @@ import {
 	StreamDisplayParticipantNameDirective,
 	StreamSettingsButtonDirective
 } from './stream.directive';
+import { StreamingActivityStreamingErrorDirective, StreamingActivityStreamingInfoDirective } from './streaming-activity.directive';
 import {
 	ToolbarActivitiesPanelButtonDirective,
 	ToolbarBackgroundEffectsButtonDirective,
@@ -21,11 +22,15 @@ import {
 	ToolbarParticipantsPanelButtonDirective,
 	ToolbarRecordingButtonDirective,
 	ToolbarScreenshareButtonDirective,
-	ToolbarSettingsButtonDirective
+	ToolbarSettingsButtonDirective,
+	ToolbarStreamingButtonDirective
 } from './toolbar.directive';
 import {
 	AudioMutedDirective,
-	CaptionsLangDirective, CaptionsLangOptionsDirective, LangDirective, MinimalDirective,
+	CaptionsLangDirective,
+	CaptionsLangOptionsDirective,
+	LangDirective,
+	MinimalDirective,
 	ParticipantNameDirective,
 	PrejoinDirective,
 	VideoMutedDirective
@@ -46,6 +51,7 @@ import {
 		ToolbarCaptionsButtonDirective,
 		ToolbarLeaveButtonDirective,
 		ToolbarRecordingButtonDirective,
+		ToolbarStreamingButtonDirective,
 		ToolbarParticipantsPanelButtonDirective,
 		ToolbarChatPanelButtonDirective,
 		ToolbarActivitiesPanelButtonDirective,
@@ -59,8 +65,11 @@ import {
 		ParticipantPanelItemMuteButtonDirective,
 		ParticipantNameDirective,
 		ActivitiesPanelRecordingActivityDirective,
+		ActivitiesPanelStreamingActivityDirective,
 		RecordingActivityRecordingsListDirective,
 		RecordingActivityRecordingErrorDirective,
+		StreamingActivityStreamingErrorDirective,
+		StreamingActivityStreamingInfoDirective,
 		AdminRecordingsListDirective,
 		AdminLoginDirective
 	],
@@ -78,6 +87,7 @@ import {
 		ToolbarCaptionsButtonDirective,
 		ToolbarLeaveButtonDirective,
 		ToolbarRecordingButtonDirective,
+		ToolbarStreamingButtonDirective,
 		ToolbarParticipantsPanelButtonDirective,
 		ToolbarChatPanelButtonDirective,
 		ToolbarActivitiesPanelButtonDirective,
@@ -91,8 +101,11 @@ import {
 		ParticipantPanelItemMuteButtonDirective,
 		ParticipantNameDirective,
 		ActivitiesPanelRecordingActivityDirective,
+		ActivitiesPanelStreamingActivityDirective,
 		RecordingActivityRecordingsListDirective,
 		RecordingActivityRecordingErrorDirective,
+		StreamingActivityStreamingErrorDirective,
+		StreamingActivityStreamingInfoDirective,
 		AdminRecordingsListDirective,
 		AdminLoginDirective
 	]

@@ -125,6 +125,66 @@ export class ToolbarRecordingButtonDirective implements AfterViewInit, OnDestroy
 }
 
 /**
+ * The **streamingButton** directive allows show/hide the start/stop streaming toolbar button.
+ *
+ * Default: `true`
+ *
+ * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `toolbar` component:
+ *
+ * @example
+ * <ov-videoconference [toolbarStreamingButton]="false"></ov-videoconference>
+ *
+ * \
+ * And it also can be used in the {@link ToolbarComponent}.
+ * @example
+ * <ov-toolbar [streamingButton]="false"></ov-toolbar>
+ *
+ */
+ @Directive({
+	selector: 'ov-videoconference[toolbarStreamingButton], ov-toolbar[streamingButton]'
+})
+export class ToolbarStreamingButtonDirective implements AfterViewInit, OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set toolbarStreamingButton(value: boolean) {
+		this.streamingValue = value;
+		this.update(this.streamingValue);
+	}
+	/**
+	 * @ignore
+	 */
+	@Input() set streamingButton(value: boolean) {
+		this.streamingValue = value;
+		this.update(this.streamingValue);
+	}
+	private streamingValue: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+
+	ngAfterViewInit() {
+		this.update(this.streamingValue);
+	}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	private clear() {
+		this.streamingValue = true;
+		this.update(true);
+	}
+
+	private update(value: boolean) {
+		if (this.libService.streamingButton.getValue() !== value) {
+			this.libService.streamingButton.next(value);
+		}
+	}
+}
+
+/**
  * The **fullscreenButton** directive allows show/hide the fullscreen toolbar button.
  *
  * Default: `true`

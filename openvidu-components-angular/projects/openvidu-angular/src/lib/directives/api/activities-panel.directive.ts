@@ -1,4 +1,4 @@
-import { Directive, AfterViewInit, OnDestroy, Input, ElementRef } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular/core';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 
 /**
@@ -50,3 +50,54 @@ export class ActivitiesPanelRecordingActivityDirective implements AfterViewInit,
 		}
 	}
 }
+
+/**
+ * The **streamingActivity** directive allows show/hide the streaming activity in {@link ActivitiesPanelComponent}.
+ *
+ * Default: `true`
+ *
+ * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `activitiesPanel` component:
+ *
+ * @example
+ * <ov-videoconference [activitiesPanelStreamingActivity]="false"></ov-videoconference>
+ *
+ * \
+ * And it also can be used in the {@link ActivitiesPanelComponent}.
+ * @example
+ * <ov-activities-panel *ovActivitiesPanel [streamingActivity]="false"></ov-activities-panel>
+ */
+ @Directive({
+	selector: 'ov-videoconference[activitiesPanelStreamingActivity], ov-activities-panel[streamingActivity]'
+})
+export class ActivitiesPanelStreamingActivityDirective implements AfterViewInit, OnDestroy {
+	@Input() set activitiesPanelStreamingActivity(value: boolean) {
+		this.streamingActivityValue = value;
+		this.update(this.streamingActivityValue);
+	}
+	@Input() set streamingActivity(value: boolean) {
+		this.streamingActivityValue = value;
+		this.update(this.streamingActivityValue);
+	}
+
+	streamingActivityValue: boolean = true;
+
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+
+	ngAfterViewInit() {
+		this.update(this.streamingActivityValue);
+	}
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.streamingActivityValue = true;
+		this.update(true);
+	}
+
+	update(value: boolean) {
+		if (this.libService.streamingActivity.getValue() !== value) {
+			this.libService.streamingActivity.next(value);
+		}
+	}
+}
+

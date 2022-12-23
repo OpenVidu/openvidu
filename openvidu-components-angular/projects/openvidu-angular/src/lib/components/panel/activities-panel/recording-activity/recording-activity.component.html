@@ -1,4 +1,4 @@
-<mat-expansion-panel (opened)="panelOpened()" (closed)="panelClosed()" [expanded]="expanded">
+<mat-expansion-panel (opened)="panelOpened()" (closed)="panelClosed()" [expanded]="expanded" [ngClass]="{'no-body': !opened}">
 	<mat-expansion-panel-header>
 		<mat-list>
 			<mat-list-item>
@@ -12,7 +12,7 @@
 						pending: recordingStatus === recStatusEnum.STARTING || recordingStatus === recStatusEnum.STOPPING
 					}"
 				>
-					<mat-icon *ngIf="recordingStatus !== recStatusEnum.FAILED && recordingStatus !== recStatusEnum.STARTED">
+					<mat-icon id="recording-icon" *ngIf="recordingStatus !== recStatusEnum.FAILED && recordingStatus !== recStatusEnum.STARTED">
 						video_camera_front
 					</mat-icon>
 					<mat-icon *ngIf="recordingStatus === recStatusEnum.FAILED">error</mat-icon>
