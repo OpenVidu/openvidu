@@ -70,7 +70,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setting up CI
-        run: ci-scripts/openvidu-e2e-tests.sh --prepare
+        run: ci-scripts/commons.sh --prepare
       - name: OpenVidu Browser build
         run: ci-scripts/openvidu-e2e-tests.sh --build-openvidu-browser
       - name: OpenVidu Node Client build
