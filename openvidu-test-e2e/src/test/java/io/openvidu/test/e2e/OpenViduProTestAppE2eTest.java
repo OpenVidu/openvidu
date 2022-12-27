@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -1855,9 +1856,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		final String CUSTOM_LANG = "vi-VN";
 
-		Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT",
-				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY", "on_demand",
-				"OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE", "openvidu/speech-to-text-custom:master");
+		Map<String, Object> config = new HashMap<>();
+		config.put("OPENVIDU_PRO_NETWORK_QUALITY", false);
+		config.put("OPENVIDU_PRO_SPEECH_TO_TEXT", OPENVIDU_PRO_SPEECH_TO_TEXT);
+		config.put("OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY", "on_demand");
+		config.put("OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE", "openvidu/speech-to-text-custom:master");
 
 		if (DOCKERHUB_PRIVATE_REGISTRY_PASSWORD != null && !"not_valid".equals(DOCKERHUB_PRIVATE_REGISTRY_PASSWORD)) {
 			config.put("OPENVIDU_PRO_DOCKER_REGISTRIES", "[\"serveraddress=docker.io,username=openvidu,password="
