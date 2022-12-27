@@ -16,7 +16,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,6 +39,7 @@ import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import org.testcontainers.utility.DockerImageName;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -732,6 +735,84 @@ public class OpenViduTestE2e {
 
 	public static String getRandom(Set<String> set) {
 		return set.stream().skip((int) (set.size() * Math.random())).findFirst().get();
+	}
+
+	protected JsonObject restartOpenViduServer(Map<String, Object> newConfig) {
+		return this.restartOpenViduServer(newConfig, false, HttpStatus.SC_OK);
+	}
+
+	protected JsonObject restartOpenViduServer(Map<String, Object> newConfig, boolean force, int status) {
+		CustomHttpClient restClient = null;
+		try {
+			restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+			Gson gson = new Gson();
+			String body = gson.toJson(newConfig);
+			JsonObject currentConfig = restClient.rest(HttpMethod.GET, "/openvidu/api/config", 200);
+			boolean mustRestart = false;
+
+			for (Entry<String, Object> newProp : newConfig.entrySet()) {
+				mustRestart = !currentConfig.has(newProp.getKey())
+						|| !currentConfig.get(newProp.getKey()).equals(gson.toJsonTree(newProp.getValue()));
+				if (mustRestart) {
+					break;
+				}
+			}
+
+			if (mustRestart || force) {
+				final int currentRestartCounter = restClient
+						.rest(HttpMethod.GET, "/openvidu/api/status", null, HttpStatus.SC_OK, true, false, true,
+								"{'startTime': 0, 'restartCounter': 0, 'lastRestartTime': 0}")
+						.get("restartCounter").getAsInt();
+				JsonObject response = restClient.rest(HttpMethod.POST, "/openvidu/api/restart", body, status);
+				if (HttpStatus.SC_OK == status) {
+					waitUntilOpenViduRestarted(restClient, currentRestartCounter, 120);
+				}
+				return response;
+			} else {
+				log.info("Restarting OpenVidu Server is not necessary and is \"force\" is false");
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			Assertions.fail("Error restarting OpenVidu Server");
+		} finally {
+			if (restClient != null) {
+				try {
+					restClient.shutdown();
+				} catch (IOException e) {
+					log.error("Error shutting down HTTP client: {}", e.getMessage());
+				}
+			}
+		}
+		return null;
+	}
+
+	protected void waitUntilOpenViduRestarted(CustomHttpClient restClient, int previouesRestartCounter,
+			int maxSecondsWait) throws Exception {
+		boolean restarted = false;
+		int msInterval = 500;
+		int attempts = 0;
+		final int maxAttempts = maxSecondsWait * 1000 / msInterval;
+		while (!restarted && attempts < maxAttempts) {
+			try {
+				JsonObject response = restClient.rest(HttpMethod.GET, "/openvidu/api/status", HttpStatus.SC_OK);
+				if (response.get("restartCounter").getAsInt() == (previouesRestartCounter + 1)) {
+					restarted = true;
+				} else {
+					throw new Exception("Wrong restartCounter");
+				}
+			} catch (Exception e) {
+				try {
+					log.error("Waiting for OpenVidu Server...");
+					Thread.sleep(msInterval);
+				} catch (InterruptedException e1) {
+					log.error("Sleep interrupted");
+				}
+				attempts++;
+			}
+		}
+		if (!restarted && attempts == maxAttempts) {
+			throw new TimeoutException();
+		}
 	}
 
 }
