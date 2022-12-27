@@ -7,6 +7,11 @@ GITHUB_ACTIONS_WORKING_DIR="${GITHUB_ACTIONS_WORKING_DIR:-}"
 PREPARE=false
 PREPARE_KURENTO_SNAPSHOT=false
 EXECUTE_ALL=false
+BUILD_OV_BROWSER=false
+BUILD_OV_NODE_CLIENT=false
+BUILD_OV_JAVA_CLIENT=false
+BUILD_OV_PARENT=false
+BUILD_OV_TESTAPP=false
 
 # cd to directory if GITHUB_ACTIONS_WORKING_DIR is set
 if [[ -n "${GITHUB_ACTIONS_WORKING_DIR:-}" ]]; then
@@ -26,6 +31,26 @@ if [[ -n ${1:-} ]]; then
                 PREPARE_KURENTO_SNAPSHOT=true
                 shift 1
                 ;;
+            --build-openvidu-browser )
+                BUILD_OV_BROWSER=true
+                shift 1
+                ;;
+            --build-openvidu-node-client )
+                BUILD_OV_NODE_CLIENT=true
+                shift 1
+                ;;
+            --build-openvidu-java-client )
+                BUILD_OV_JAVA_CLIENT=true
+                shift 1
+                ;;
+            --build-openvidu-parent )
+                BUILD_OV_PARENT=true
+                shift 1
+                ;;
+            --build-openvidu-testapp )
+                BUILD_OV_TESTAPP=true
+                shift 1
+                ;;
             *)
                 break
                 ;;
@@ -36,7 +61,7 @@ else
 fi
 
 # -------------
-# 1. Prepare build
+# Prepare build
 # -------------
 if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
 
@@ -126,7 +151,7 @@ if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
 fi
 
 # -------------
-# 2. Prepare Kurento Snapshots
+# Prepare Kurento Snapshots
 # -------------
 if [[ "${PREPARE_KURENTO_SNAPSHOT}" == true || "${EXECUTE_ALL}" == true ]]; then
 
@@ -134,9 +159,69 @@ if [[ "${PREPARE_KURENTO_SNAPSHOT}" == true || "${EXECUTE_ALL}" == true ]]; then
     if [[ $KURENTO_JAVA_COMMIT != "default" ]]; then
         git clone https://github.com/Kurento/kurento-java.git
         pushd kurento-java
-        git checkout -f "$KURENTO_JAVA_COMMIT"
+        git checkout -f "${KURENTO_JAVA_COMMIT}"
+        MVN_VERSION="$(grep -oPm1 "(?<=<version>)[^<]+" "pom.xml")"
         mvn -B -Dmaven.artifact.threads=1 clean install
         popd
+        rm -rf kurento-java
+        mvn -B versions:set-property \
+            -Dproperty=version.kurento \
+            -DnewVersion="${MVN_VERSION}"
     fi
 
+fi
+
+# -------------
+# OpenVidu Browser build
+# -------------
+if [[ "${BUILD_OV_BROWSER}" == true || "${EXECUTE_ALL}" == true ]]; then
+    pushd openvidu-browser || exit 1
+    npm install
+    npm run build
+    npm link
+    popd
+fi
+
+# -------------
+# OpenVidu Node client build
+# -------------
+if [[ "${BUILD_OV_NODE_CLIENT}" == true || "${EXECUTE_ALL}" == true ]]; then
+    pushd openvidu-node-client
+    npm install
+    npm run build
+    npm link
+    popd
+fi
+
+# -------------
+# OpenVidu Java client build
+# -------------
+if [[ "${BUILD_OV_JAVA_CLIENT}" == true || "${EXECUTE_ALL}" == true ]]; then
+    pushd openvidu-java-client
+    mvn -B versions:set -DnewVersion=TEST
+    mvn -B clean compile package
+    mvn -B install:install-file -Dfile=target/openvidu-java-client-TEST.jar \
+        -DgroupId=io.openvidu \
+        -DartifactId=openvidu-java-client \
+        -Dversion=TEST -Dpackaging=jar
+    popd
+fi
+
+# -------------
+# OpenVidu Parent build
+# -------------
+if [[ "${BUILD_OV_PARENT}" == true || "${EXECUTE_ALL}" == true ]]; then
+    mvn -B versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST
+    mvn -B -DskipTests=true -Dmaven.artifact.threads=1 clean install
+fi
+
+# -------------
+# OpenVidu Test App build
+# -------------
+if [[ "${BUILD_OV_TESTAPP}" == true || "${EXECUTE_ALL}" == true ]]; then
+    pushd openvidu-testapp
+    npm install
+    npm link openvidu-browser openvidu-node-client
+    export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng.js build --configuration production --output-path=/opt/openvidu/testapp
+    popd
 fi
