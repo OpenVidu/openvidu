@@ -11,7 +11,7 @@
         </mat-option>
       </mat-select>
     </mat-form-field>
-    <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+    <mat-form-field *ngIf="!!recordingProperties.mediaNode" class="inner-text-input" [style.fontSize.px]=14>
       <input matInput id="recording-media-node-field" placeholder="Media Node"
         [(ngModel)]="recordingProperties.mediaNode.id">
     </mat-form-field>

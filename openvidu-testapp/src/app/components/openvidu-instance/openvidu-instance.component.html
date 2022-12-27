@@ -39,9 +39,9 @@
 
           <div class="join-publish-div">
             <button class="join-btn" mat-button (click)="joinSession()" [disabled]="session">JOIN</button>
-            <mat-checkbox class="subscribe-checkbox" name="subscribeTo" (click)="toggleSubscribeTo()"
+            <mat-checkbox class="subscribe-checkbox" name="subscribeTo" (change)="toggleSubscribeTo()"
               [checked]="subscribeTo" [disabled]="session">Subscribe</mat-checkbox>
-            <mat-checkbox class="publish-checkbox" name="publishTo" (click)="togglePublishTo()" [checked]="publishTo"
+            <mat-checkbox class="publish-checkbox" name="publishTo" (change)="togglePublishTo()" [checked]="publishTo"
               [disabled]="session">Publish</mat-checkbox>
           </div>
 
@@ -51,10 +51,10 @@
               <div>
                 <h4>Send</h4>
                 <div>
-                  <mat-checkbox class="send-audio-checkbox" name="sendAudio" (click)="toggleSendAudio()"
+                  <mat-checkbox class="send-audio-checkbox" name="sendAudio" (change)="toggleSendAudio()"
                     [checked]="publisherProperties.audioSource !== false" [disabled]="session || !publishTo">Audio
                   </mat-checkbox>
-                  <mat-checkbox class="send-video-checkbox" name="sendVideo" (click)="toggleSendVideo()"
+                  <mat-checkbox class="send-video-checkbox" name="sendVideo" (change)="toggleSendVideo()"
                     [checked]="publisherProperties.videoSource !== false" [disabled]="session || !publishTo">Video
                   </mat-checkbox>
                 </div>
@@ -63,12 +63,12 @@
                 <h4>Enter active</h4>
                 <div>
                   <mat-checkbox class="active-audio-checkbox" name="activeAudio"
-                    [(ngModel)]="publisherProperties.publishAudio"
-                    (click)="publisherProperties.publishAudio = !publisherProperties.publishAudio"
+                    [checked]="publisherProperties.publishAudio"
+                    (change)="publisherProperties.publishAudio = !publisherProperties.publishAudio"
                     [disabled]="session || !publishTo">Audio</mat-checkbox>
                   <mat-checkbox class="active-video-checkbox" name="activeVideo"
-                    [(ngModel)]="publisherProperties.publishVideo"
-                    (click)="publisherProperties.publishVideo = !publisherProperties.publishVideo"
+                    [checked]="publisherProperties.publishVideo"
+                    (change)="publisherProperties.publishVideo = !publisherProperties.publishVideo"
                     [disabled]="session || !publishTo">Video</mat-checkbox>
                 </div>
               </div>
@@ -85,7 +85,7 @@
                 </div>
               </mat-radio-group>
               <mat-checkbox class="subscribe-remote-check" name="subscribeToRemote"
-                (click)="subscribeToRemote = !subscribeToRemote" [disabled]="!publishTo || session"
+                (change)="subscribeToRemote = !subscribeToRemote" [disabled]="!publishTo || session"
                 [checked]="publishTo && subscribeToRemote">Subscribe
                 <br>to remote</mat-checkbox>
             </div>

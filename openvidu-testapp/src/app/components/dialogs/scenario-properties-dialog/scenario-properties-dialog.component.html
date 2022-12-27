@@ -21,8 +21,8 @@
             </div>
         </div>
         <label class="conf-label">Publisher configuration</label>
-        <mat-checkbox (click)="toggleAudio()" [checked]="publisherProperties.audioSource !== false">Audio</mat-checkbox>
-        <mat-checkbox (click)="toggleVideo()" [checked]="publisherProperties.videoSource !== false">Video</mat-checkbox>
+        <mat-checkbox (change)="toggleAudio()" [checked]="publisherProperties.audioSource !== false">Audio</mat-checkbox>
+        <mat-checkbox (change)="toggleVideo()" [checked]="publisherProperties.videoSource !== false">Video</mat-checkbox>
         <mat-divider></mat-divider>
         <mat-form-field>
             <input matInput placeholder="Audio source" [(ngModel)]="audioSource" [disabled]="(publisherProperties.audioSource === false)">
