@@ -45,14 +45,30 @@ if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
     docker network connect bridge "${E2E_CONTAINER_ID}"
 
     # Pull browser images
-    docker pull selenium/standalone-chrome:"${CHROME_VERSION}"
-    docker pull selenium/standalone-firefox:"${FIREFOX_VERSION}"
-    docker pull selenium/standalone-opera:"${OPERA_VERSION}"
-    docker pull selenium/standalone-edge:"${EDGE_VERSION}"
+    # Pull chrome image if env variable CHROME_VERSION is set
+    if [[ -n "${CHROME_VERSION:-}" ]]; then
+        docker pull selenium/standalone-chrome:"${CHROME_VERSION}"
+    fi
+    # Pull firefox image if env variable FIREFOX_VERSION is set
+    if [[ -n "${FIREFOX_VERSION:-}" ]]; then
+        docker pull selenium/standalone-firefox:"${FIREFOX_VERSION}"
+    fi
+    # Pull opera image if env variable OPERA_VERSION is set
+    if [[ -n "${OPERA_VERSION:-}" ]]; then
+        docker pull selenium/standalone-opera:"${OPERA_VERSION}"
+    fi
+    # Pull edge image if env variable EDGE_VERSION is set
+    if [[ -n "${EDGE_VERSION:-}" ]]; then
+        docker pull selenium/standalone-edge:"${EDGE_VERSION}"
+    fi
 
     # Pull mediasoup and kurento
-    docker pull openvidu/mediasoup-controller:"${MEDIASOUP_CONTROLLER_VERSION}"
-    docker pull "${KURENTO_MEDIA_SERVER_IMAGE}"
+    if [[ -n "${MEDIASOUP_CONTROLLER_VERSION:-}" ]]; then
+        docker pull openvidu/mediasoup-controller:"${MEDIASOUP_CONTROLLER_VERSION}"
+    fi
+    if [[ -n "${KURENTO_MEDIA_SERVER_IMAGE:-}" ]]; then
+        docker pull "${KURENTO_MEDIA_SERVER_IMAGE}"
+    fi
 
     # Prepare directory Openvidu
     sudo mkdir -p /opt/openvidu/recordings && sudo chmod 777 /opt/openvidu/recordings
