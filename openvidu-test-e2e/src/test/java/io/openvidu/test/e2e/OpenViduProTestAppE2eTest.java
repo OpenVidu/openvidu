@@ -12,13 +12,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -105,7 +103,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT",
 				"disabled");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -255,7 +253,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT",
 				"disabled");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
@@ -541,7 +539,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT",
 				"disabled");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		// Create default Connection
 		Session session = OV.createSession();
@@ -595,7 +593,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", true,
 				"OPENVIDU_PRO_NETWORK_QUALITY_INTERVAL", 5, "OPENVIDU_PRO_SPEECH_TO_TEXT", "disabled");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		user.getDriver().findElement(By.id("add-user-btn")).click();
@@ -673,7 +671,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT",
 				"disabled");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeVirtualBackgroundFakeVideo");
 
@@ -801,7 +799,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT",
 				"disabled");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -839,7 +837,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		List<String> expectedRecognitionList = Arrays.asList(
 				"for example we used to think that after childhood the brain did not really could not change and it turns out that nothing could be farther from the truth",
@@ -950,7 +948,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1022,7 +1020,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1110,7 +1108,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1186,7 +1184,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1261,7 +1259,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1333,7 +1331,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1406,7 +1404,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1479,7 +1477,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1540,7 +1538,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1612,7 +1610,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1676,7 +1674,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
@@ -1762,7 +1760,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 		user.getDriver().get(APP_URL);
@@ -1812,7 +1810,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 		user.getDriver().get(APP_URL);
@@ -1867,7 +1865,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					+ DOCKERHUB_PRIVATE_REGISTRY_PASSWORD + "\"]");
 		}
 
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 		user.getDriver().get(APP_URL);
@@ -1909,7 +1907,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// STT disabled
 		Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT",
 				"disabled");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		String body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_NOT_IMPLEMENTED);
@@ -1920,7 +1918,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		config = Map.of("OPENVIDU_PRO_SPEECH_TO_TEXT", "vosk", "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
 				"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
 				"manual");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		/**
 		 * POST /openvidu/api/speech-to-text/load ERROR
@@ -2027,7 +2025,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// STT Vosk on_demand
 		config = Map.of("OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY", "on_demand");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		// 200
 		body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
@@ -2072,7 +2070,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT",
 				"vosk", "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE", "openvidu/speech-to-text-service:master",
 				"OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY", "manual");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 		JsonArray mediaNodes = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", null, HttpStatus.SC_OK)
@@ -2146,7 +2144,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT", "aws",
 				"OPENVIDU_PRO_AWS_ACCESS_KEY", "fakekey", "OPENVIDU_PRO_AWS_SECRET_KEY", "fakekey",
 				"OPENVIDU_PRO_AWS_REGION", "fakeregion");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		String body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_NOT_IMPLEMENTED);
@@ -2175,7 +2173,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT",
 				"azure", "OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_KEY", "fakekey", "OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_REGION",
 				"fakeregion");
-		restartOpenViduServerIfNecessary(config);
+		restartOpenViduServer(config);
 
 		String body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_NOT_IMPLEMENTED);
@@ -2194,57 +2192,117 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		gracefullyLeaveParticipants(user, 1);
 	}
 
-	protected void restartOpenViduServerIfNecessary(Map<String, Object> newConfig) {
+	@Test
+	@DisplayName("Multiple Media Nodes STT Test")
+	void multipleMediaNodesSttTest() throws Exception {
+
+		isSttManualTest = true;
+
+		log.info("Multiple Media Nodes STT Test");
+
 		try {
-			Gson gson = new Gson();
-			String body = gson.toJson(newConfig);
+
+			Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT",
+					OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
+					"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
+					"manual", "OPENVIDU_PRO_CLUSTER_MEDIA_NODES", 3);
+			restartOpenViduServer(config);
+
 			CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
-			JsonObject currentConfig = restClient.rest(HttpMethod.GET, "/openvidu/api/config", 200);
-			boolean mustRestart = false;
 
-			for (Entry<String, Object> newProp : newConfig.entrySet()) {
-				mustRestart = !currentConfig.has(newProp.getKey())
-						|| !currentConfig.get(newProp.getKey()).equals(gson.toJsonTree(newProp.getValue()));
-				if (mustRestart) {
-					break;
-				}
-			}
+			JsonArray mediaNodes = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", null, HttpStatus.SC_OK)
+					.get("content").getAsJsonArray();
+			final String mediaNode1 = mediaNodes.get(0).getAsJsonObject().get("id").getAsString();
+			final String mediaNode2 = mediaNodes.get(1).getAsJsonObject().get("id").getAsString();
+			final String mediaNode3 = mediaNodes.get(2).getAsJsonObject().get("id").getAsString();
 
-			if (mustRestart) {
-				restClient.rest(HttpMethod.POST, "/openvidu/api/restart", body, 200);
-				waitUntilOpenViduRestarted(60);
-			} else {
-				log.info("Restarting OpenVidu Server is not necessary");
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			Assertions.fail("Error restarting OpenVidu Server");
-		}
-	}
+			String body = "{'mediaNode':{'id':'" + mediaNode1 + "'}}";
+			final String sessionId1 = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK)
+					.get("id").getAsString();
+			body = "{'mediaNode':{'id':'" + mediaNode2 + "'}}";
+			final String sessionId2 = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK)
+					.get("id").getAsString();
+			body = "{'mediaNode':{'id':'" + mediaNode3 + "'}}";
+			final String sessionId3 = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK)
+					.get("id").getAsString();
 
-	private void waitUntilOpenViduRestarted(int maxSecondsWait) throws Exception {
-		boolean restarted = false;
-		int msInterval = 500;
-		int attempts = 0;
-		final int maxAttempts = maxSecondsWait * 1000 / msInterval;
-		Thread.sleep(500);
-		while (!restarted && attempts < maxAttempts) {
-			try {
-				CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
-				restClient.rest(HttpMethod.GET, "/openvidu/api/health", 200);
-				restarted = true;
-			} catch (Exception e) {
-				try {
-					log.warn("Waiting for OpenVidu Server...");
-					Thread.sleep(msInterval);
-				} catch (InterruptedException e1) {
-					log.error("Sleep interrupted");
-				}
-				attempts++;
-			}
-		}
-		if (!restarted && attempts == maxAttempts) {
-			throw new TimeoutException();
+			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+			user.getDriver().get(APP_URL);
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+
+			user.getDriver().findElement(By.id("session-name-input-0")).clear();
+			user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionId1);
+			user.getDriver().findElement(By.id("session-name-input-1")).clear();
+			user.getDriver().findElement(By.id("session-name-input-1")).sendKeys(sessionId2);
+			user.getDriver().findElement(By.id("session-name-input-2")).clear();
+			user.getDriver().findElement(By.id("session-name-input-2")).sendKeys(sessionId3);
+
+			user.getDriver().findElements(By.cssSelector(".join-btn")).forEach(btn -> btn.click());
+			user.getEventManager().waitUntilEventReaches(0, "streamCreated", 1);
+			user.getEventManager().waitUntilEventReaches(0, "streamPlaying", 1);
+			user.getEventManager().waitUntilEventReaches(1, "streamCreated", 1);
+			user.getEventManager().waitUntilEventReaches(1, "streamPlaying", 1);
+			user.getEventManager().waitUntilEventReaches(2, "streamCreated", 1);
+			user.getEventManager().waitUntilEventReaches(2, "streamPlaying", 1);
+
+			// No lang model loaded in any Media Node
+			sttSubUser(user, 0, 0, "en-US", true, true,
+					"Vosk model for language \"en-US\" is not loaded and OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY is \"manual\"",
+					false);
+			sttSubUser(user, 1, 0, "es-ES", true, true,
+					"Vosk model for language \"es-ES\" is not loaded and OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY is \"manual\"",
+					false);
+			sttSubUser(user, 2, 0, "fr-FR", true, true,
+					"Vosk model for language \"fr-FR\" is not loaded and OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY is \"manual\"",
+					false);
+
+			// Load lang model in all Media Nodes
+			body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNode1 + "'}}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+			body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNode2 + "'}}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+			body = "{'lang':'fr-FR', 'mediaNode': {'id': '" + mediaNode3 + "'}}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+
+			// Subscribe STT in all Media Nodes
+			sttSubUser(user, 0, 0, "en-US", true, true);
+			sttSubUser(user, 1, 0, "es-ES", true, true);
+			sttSubUser(user, 2, 0, "fr-FR", true, true);
+
+			user.getEventManager().waitUntilEventReaches(0, "speechToTextMessage", 4);
+			user.getEventManager().waitUntilEventReaches(1, "speechToTextMessage", 4);
+			user.getEventManager().waitUntilEventReaches(2, "speechToTextMessage", 4);
+
+			// Crash third Media Node STT service
+			String containerId3 = mediaNodes.get(2).getAsJsonObject().get("environmentId").getAsString();
+			this.killSttService(containerId3);
+			user.getEventManager().waitUntilEventReaches(2, "exception", 1);
+
+			// Other users should still receive STT events
+			user.getEventManager().clearCurrentEvents(0, "speechToTextMessage");
+			user.getEventManager().clearCurrentEvents(1, "speechToTextMessage");
+			user.getEventManager().waitUntilEventReaches(0, "speechToTextMessage", 4);
+			user.getEventManager().waitUntilEventReaches(1, "speechToTextMessage", 4);
+
+			body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNode1 + "'}}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+					HttpStatus.SC_METHOD_NOT_ALLOWED);
+			body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNode2 + "'}}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+					HttpStatus.SC_METHOD_NOT_ALLOWED);
+
+			sttUnsubUser(user, 0, 0, true, true);
+			sttUnsubUser(user, 1, 0, true, true);
+
+			body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNode1 + "'}}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+			body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNode2 + "'}}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+
+		} finally {
+			restartOpenViduServer(Map.of("OPENVIDU_PRO_CLUSTER_MEDIA_NODES", 1));
 		}
 	}
 
