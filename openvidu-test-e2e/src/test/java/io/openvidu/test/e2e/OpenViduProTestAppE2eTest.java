@@ -50,7 +50,6 @@ import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.Session;
-import io.openvidu.test.browsers.utils.BrowserNames;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.Unzipper;
 
@@ -62,7 +61,6 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	protected static void setupAll() {
 		checkFfmpegInstallation();
 		loadEnvironmentVariables();
-		prepareBrowserDrivers(new HashSet<>(Arrays.asList(BrowserNames.CHROME)));
 		cleanFoldersAndSetUpOpenViduJavaClient();
 	}
 

@@ -43,14 +43,12 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
 import io.openvidu.java.client.OpenVidu;
 import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduJavaClientException;
 import io.openvidu.java.client.VideoCodec;
 import io.openvidu.test.browsers.AndroidAppUser;
 import io.openvidu.test.browsers.AndroidChromeUser;
-import io.openvidu.test.browsers.AndroidFirefoxUser;
 import io.openvidu.test.browsers.BrowserUser;
 import io.openvidu.test.browsers.ChromeUser;
 import io.openvidu.test.browsers.EdgeUser;
@@ -195,21 +193,6 @@ public class OpenViduTestE2e {
 				.withFileSystemBind("/opt/openvidu-cache", "/opt/openvidu-cache");
 		android.setPortBindings(Arrays.asList("6080:6080", "5554:5554", "5555:5555", "4723:4723"));
 		return android;
-	}
-
-	protected static void prepareBrowserDrivers(Set<BrowserNames> browsers) {
-		if (browsers.contains(BrowserNames.CHROME) && !isRemote(BrowserNames.CHROME)) {
-			WebDriverManager.chromedriver().setup();
-		}
-		if (browsers.contains(BrowserNames.FIREFOX) && !isRemote(BrowserNames.FIREFOX)) {
-			WebDriverManager.firefoxdriver().setup();
-		}
-		if (browsers.contains(BrowserNames.OPERA) && !isRemote(BrowserNames.OPERA)) {
-			WebDriverManager.operadriver().setup();
-		}
-		if (browsers.contains(BrowserNames.EDGE) && !isRemote(BrowserNames.EDGE)) {
-			WebDriverManager.edgedriver().setup();
-		}
 	}
 
 	protected static void cleanFoldersAndSetUpOpenViduJavaClient() {
@@ -400,18 +383,6 @@ public class OpenViduTestE2e {
 				log.error("Error running command in Android container");
 			}
 			browserUser = new AndroidChromeUser("TestUser", 50);
-			break;
-		case "androidFirefox":
-			container = androidContainer("budtmo/docker-android-x86-12.0:latest", 4294967296L);
-			setupBrowserAux(BrowserNames.ANDROID, container, false);
-			try {
-				// Download geckodriver and place in PATH at /usr/bin/
-				container.execInContainer("bash", "-c",
-						"wget https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz && tar -xf geckodriver*.tar.gz && rm geckodriver*.tar.gz && mv geckodriver /usr/bin/.");
-			} catch (UnsupportedOperationException | IOException | InterruptedException e) {
-				log.error("Error running command in Android container");
-			}
-			browserUser = new AndroidFirefoxUser("TestUser", 50);
 			break;
 		case "androidApp":
 			container = androidContainer("budtmo/docker-android-x86-12.0:latest", 4294967296L);

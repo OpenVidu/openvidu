@@ -23,7 +23,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +80,6 @@ import io.openvidu.java.client.Session;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.java.client.VideoCodec;
 import io.openvidu.test.browsers.BrowserUser;
-import io.openvidu.test.browsers.utils.BrowserNames;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.RecordingUtils;
 import io.openvidu.test.browsers.utils.layout.CustomLayoutHandler;
@@ -103,8 +101,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	protected static void setupAll() throws Exception {
 		checkFfmpegInstallation();
 		loadEnvironmentVariables();
-		prepareBrowserDrivers(new HashSet<>(Arrays.asList(BrowserNames.CHROME, BrowserNames.FIREFOX,
-				BrowserNames.EDGE /* , BrowserNames.OPERA, BrowserNames.ANDROID */)));
 		cleanFoldersAndSetUpOpenViduJavaClient();
 		getDefaultTranscodingValues();
 	}
@@ -173,7 +169,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		log.info("Android emulator ready after {} seconds", (System.currentTimeMillis() - initTime) / 1000);
 		log.info("One2One Ionic Android");
 
-		AppiumDriver<WebElement> appiumDriver = (AppiumDriver) user.getDriver();
+		AppiumDriver appiumDriver = (AppiumDriver) user.getDriver();
 		appiumDriver.findElement(By.cssSelector("#settings-button")).click();
 		Thread.sleep(500);
 		WebElement urlInput = appiumDriver.findElement(By.cssSelector("#openvidu-url"));
