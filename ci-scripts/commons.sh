@@ -86,6 +86,10 @@ if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
     if [[ -n "${EDGE_VERSION:-}" ]]; then
         docker pull selenium/standalone-edge:"${EDGE_VERSION}"
     fi
+    # Pull Docker Android image if env variable DOCKER_ANDROID_IMAGE is set
+    if [[ -n "${DOCKER_ANDROID_IMAGE:-}" ]]; then
+        docker pull "${DOCKER_ANDROID_IMAGE}"
+    fi
 
     # Pull mediasoup and kurento
     if [[ -n "${MEDIASOUP_CONTROLLER_VERSION:-}" ]]; then
@@ -97,6 +101,8 @@ if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
 
     # Prepare directory for OpenVidu recordings
     sudo mkdir -p /opt/openvidu/recordings && sudo chmod 777 /opt/openvidu/recordings
+    # Prepare directory for OpenVidu Android apps
+    sudo mkdir -p /opt/openvidu/android && sudo chmod 777 /opt/openvidu/android
 
 
     # Configure Snapshots repository

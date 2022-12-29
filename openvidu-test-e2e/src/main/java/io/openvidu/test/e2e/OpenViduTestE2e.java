@@ -95,7 +95,7 @@ public class OpenViduTestE2e {
 	protected static String EDGE_VERSION = "latest";
 
 	protected static String OPENVIDU_DEPLOYMENT = "http://localhost:5000/";
-	final private static String DOCKER_ANDROID_IMAGE = "budtmo/docker-android-x86-12.0:latest";
+	protected static String DOCKER_ANDROID_IMAGE = "budtmo/docker-android-x86-12.0:latest";
 
 	protected static Exception ex = null;
 	protected final Object lock = new Object();
@@ -311,6 +311,12 @@ public class OpenViduTestE2e {
 		if (dockerhubPrivateRegistryPassword != null) {
 			DOCKERHUB_PRIVATE_REGISTRY_PASSWORD = dockerhubPrivateRegistryPassword;
 		}
+
+		String dockerAndroidImage = System.getProperty("DOCKER_ANDROID_IMAGE");
+		if (dockerAndroidImage != null && !dockerAndroidImage.isBlank()) {
+			DOCKER_ANDROID_IMAGE = dockerAndroidImage;
+		}
+		log.info("Using Docker Android image {}", DOCKER_ANDROID_IMAGE);
 
 		String openviduDeployment = System.getProperty("OPENVIDU_DEPLOYMENT");
 		if (openviduDeployment != null) {
