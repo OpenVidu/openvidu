@@ -251,13 +251,16 @@ public class CustomHttpClient {
 
 	private JsonObject commonRest(HttpMethod method, String path, String body, int status) throws Exception {
 		String stringResponse = this.commonRestString(method, path, body, status);
-		JsonObject json = null;
+		if (stringResponse == null) {
+			return null;
+		}
 		JsonElement jsonElement = null;
 		try {
 			jsonElement = JsonParser.parseString(stringResponse);
 		} catch (JsonParseException e) {
 			System.out.println("Response is not a JSON element: " + stringResponse);
 		}
+		JsonObject json = null;
 		if (jsonElement != null) {
 			try {
 				json = jsonElement.getAsJsonObject();
