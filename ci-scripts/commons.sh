@@ -95,7 +95,7 @@ if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
         docker pull "${KURENTO_MEDIA_SERVER_IMAGE}"
     fi
 
-    # Prepare directory Openvidu
+    # Prepare directory for OpenVidu recordings
     sudo mkdir -p /opt/openvidu/recordings && sudo chmod 777 /opt/openvidu/recordings
 
 

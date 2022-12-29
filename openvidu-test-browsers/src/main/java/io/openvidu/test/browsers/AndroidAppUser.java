@@ -3,7 +3,7 @@ package io.openvidu.test.browsers;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import io.appium.java_client.AppiumDriver;
+import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.options.UiAutomator2Options;
 
 public class AndroidAppUser extends BrowserUser {
@@ -12,10 +12,9 @@ public class AndroidAppUser extends BrowserUser {
 		super(userName, timeOfWaitInSeconds);
 
 		UiAutomator2Options options = new UiAutomator2Options();
-		options.setPlatformVersion("12.0");
-		options.setDeviceName("Android device");
 		options.setAutoWebview(true);
 		options.setApp(appPath);
+		options.setAutoGrantPermissions(true);
 
 		URL url = null;
 		try {
@@ -23,7 +22,8 @@ public class AndroidAppUser extends BrowserUser {
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
-		this.driver = new AppiumDriver(url, options);
+
+		this.driver = new AndroidDriver(url, options);
 
 		this.configureDriver();
 	}

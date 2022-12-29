@@ -715,7 +715,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Image filter
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video"));
-		Map<String, Long> rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
+		Map<String, Long> rgb = user.getBrowserUser().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
 
 		// Green
@@ -737,7 +737,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getWaiter().until(
 				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
 
-		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
+		rgb = user.getBrowserUser().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
 
 		// Red
@@ -772,7 +772,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Filter method executed"));
-		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
+		rgb = user.getBrowserUser().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
 		Assertions.assertTrue((rgb.get("r") < 10) && (rgb.get("g") < 10) && (rgb.get("b") > 240));
 
@@ -780,7 +780,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getWaiter().until(
 				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
 
-		rgb = user.getEventManager().getAverageColorFromPixels(subscriberVideo,
+		rgb = user.getBrowserUser().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
 
 		// Green

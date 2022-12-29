@@ -94,6 +94,9 @@ public class OpenViduTestE2e {
 	// https://hub.docker.com/r/selenium/standalone-edge/tags
 	protected static String EDGE_VERSION = "latest";
 
+	protected static String OPENVIDU_DEPLOYMENT = "http://localhost:5000/";
+	final private static String DOCKER_ANDROID_IMAGE = "budtmo/docker-android-x86-12.0:latest";
+
 	protected static Exception ex = null;
 	protected final Object lock = new Object();
 
@@ -102,9 +105,11 @@ public class OpenViduTestE2e {
 	protected static final String RECORDING_IMAGE = "openvidu/openvidu-recording";
 
 	protected Collection<BrowserUser> browserUsers = new HashSet<>();
-	protected Collection<GenericContainer<?>> containers = new HashSet<>();
+	protected static Collection<GenericContainer<?>> containers = new HashSet<>();
 	protected volatile static boolean isRecordingTest;
 	protected volatile static boolean isKurentoRestartTest;
+
+	protected volatile static boolean isAndroidTest;
 
 	protected static VideoCodec defaultForcedVideoCodec;
 	protected static boolean defaultAllowTranscoding;
@@ -185,12 +190,12 @@ public class OpenViduTestE2e {
 		return edge;
 	}
 
-	private GenericContainer<?> androidContainer(String image, long shmSize) {
+	private static GenericContainer<?> androidContainer(String image, long shmSize) {
 		GenericContainer<?> android = new GenericContainer<>(DockerImageName.parse(image)).withPrivilegedMode(true)
 				.withEnv(Map.of("DEVICE", "Samsung Galaxy S10", "APPIUM", "true", "APPIUM_HOST", "172.17.0.1",
 						"APPIUM_PORT", "4723", "MOBILE_WEB_TEST", "true", "RELAXED_SECURITY", "true"))
 				.withSharedMemorySize(shmSize).withExposedPorts(6080, 5554, 5555, 4723).waitingFor(waitAndroid)
-				.withFileSystemBind("/opt/openvidu-cache", "/opt/openvidu-cache");
+				.withFileSystemBind("/opt/openvidu/android", "/opt/openvidu/android").withReuse(true);
 		android.setPortBindings(Arrays.asList("6080:6080", "5554:5554", "5555:5555", "4723:4723"));
 		return android;
 	}
@@ -306,6 +311,12 @@ public class OpenViduTestE2e {
 		if (dockerhubPrivateRegistryPassword != null) {
 			DOCKERHUB_PRIVATE_REGISTRY_PASSWORD = dockerhubPrivateRegistryPassword;
 		}
+
+		String openviduDeployment = System.getProperty("OPENVIDU_DEPLOYMENT");
+		if (openviduDeployment != null) {
+			OPENVIDU_DEPLOYMENT = openviduDeployment;
+		}
+		log.info("Using URL {} to connect to OpenVidu deployment", OPENVIDU_DEPLOYMENT);
 	}
 
 	protected BrowserUser setupBrowser(String browser) throws Exception {
@@ -372,30 +383,20 @@ public class OpenViduTestE2e {
 			browserUser = new EdgeUser("TestUser", 50);
 			break;
 		case "androidChrome":
-			container = androidContainer("budtmo/docker-android-x86-12.0:latest", 4294967296L);
-			setupBrowserAux(BrowserNames.ANDROID, container, false);
-			try {
-				// TODO: remove this try-catch when possible. Fixes
-				// https://github.com/budtmo/docker-android/issues/309
-				container.execInContainer("bash", "-c",
-						"rm chromedriver && wget https://chromedriver.storage.googleapis.com/91.0.4472.101/chromedriver_linux64.zip && unzip chromedriver_linux64.zip && rm chromedriver_linux64.zip");
-			} catch (UnsupportedOperationException | IOException | InterruptedException e) {
-				log.error("Error running command in Android container");
-			}
+			container = setupDockerAndroidContainer();
 			browserUser = new AndroidChromeUser("TestUser", 50);
 			break;
+		case "ionicApp":
+			container = setupDockerAndroidContainer();
+			browserUser = new AndroidAppUser("TestUser", 50, "/opt/openvidu/android/openvidu-ionic.apk");
+			break;
+		case "reactNativeApp":
+			container = setupDockerAndroidContainer();
+			browserUser = new AndroidAppUser("TestUser", 50, "/opt/openvidu/android/openvidu-react-native.apk");
+			break;
 		case "androidApp":
-			container = androidContainer("budtmo/docker-android-x86-12.0:latest", 4294967296L);
-			setupBrowserAux(BrowserNames.ANDROID, container, false);
-			try {
-				// TODO: remove this try-catch when possible. Fixes
-				// https://github.com/budtmo/docker-android/issues/309
-				container.execInContainer("bash", "-c",
-						"rm chromedriver && wget https://chromedriver.storage.googleapis.com/91.0.4472.101/chromedriver_linux64.zip && unzip chromedriver_linux64.zip && rm chromedriver_linux64.zip");
-			} catch (UnsupportedOperationException | IOException | InterruptedException e) {
-				log.error("Error running command in Android container");
-			}
-			browserUser = new AndroidAppUser("TestUser", 50, "/opt/openvidu-cache/app-debug.apk");
+			container = setupDockerAndroidContainer();
+			browserUser = new AndroidAppUser("TestUser", 50, "/opt/openvidu/android/openvidu-android.apk");
 			break;
 		default:
 			log.error("Browser {} not recognized", browser);
@@ -405,7 +406,7 @@ public class OpenViduTestE2e {
 		return browserUser;
 	}
 
-	private void setupBrowserAux(BrowserNames browser, GenericContainer<?> container, boolean forceRestart) {
+	private static boolean setupBrowserAux(BrowserNames browser, GenericContainer<?> container, boolean forceRestart) {
 		if (isRemote(browser)) {
 			String dockerImage = container.getDockerImageName();
 			String ps = commandLine.executeCommand("docker ps | grep " + dockerImage, 30);
@@ -416,8 +417,33 @@ public class OpenViduTestE2e {
 			if (!containerAlreadyRunning) {
 				container.start();
 				containers.add(container);
+				return true;
 			}
 		}
+		return false;
+	}
+
+	protected static GenericContainer<?> setupDockerAndroidContainer() throws Exception {
+		GenericContainer<?> container = androidContainer(DOCKER_ANDROID_IMAGE, 4294967296L);
+		boolean newContainer = setupBrowserAux(BrowserNames.ANDROID, container, false);
+		if (newContainer) {
+			try {
+				// https://github.com/budtmo/docker-android/issues/309
+				// Stop default Appium Server
+				container.execInContainer("bash", "-c",
+						"ps axf | grep \"Appium Server\" | grep -v grep | awk '{print $1}' | xargs -I {} kill -9 {}");
+				// Run custom Appium Server
+				container.execInContainer("bash", "-c",
+						"xterm -T \"Appium Server\" -n \"Appium Server\" -e appium --log /var/log/supervisor/appium.log --relaxed-security --allow-insecure=chromedriver_autodownload &");
+			} catch (UnsupportedOperationException | IOException | InterruptedException e) {
+				log.error("Error running command in Android container");
+				throw e;
+			}
+		} else {
+			container = containers.stream().filter(c -> DOCKER_ANDROID_IMAGE.equals(c.getDockerImageName())).findFirst()
+					.get();
+		}
+		return container;
 	}
 
 	private static boolean isRemote(BrowserNames browser) {
@@ -450,19 +476,23 @@ public class OpenViduTestE2e {
 
 	@AfterEach
 	protected void dispose() {
+
 		// Close all remaining OpenVidu sessions
 		this.closeAllSessions(OV);
+
 		// Remove all recordings
 		if (isRecordingTest) {
 			deleteAllRecordings(OV);
 			isRecordingTest = false;
 		}
+
 		// Reset Media Server
 		if (isKurentoRestartTest) {
 			this.stopMediaServer(false);
 			this.startMediaServer(true);
 			isKurentoRestartTest = false;
 		}
+
 		// Dispose all browsers users
 		Iterator<BrowserUser> it1 = browserUsers.iterator();
 		while (it1.hasNext()) {
@@ -470,21 +500,30 @@ public class OpenViduTestE2e {
 			u.dispose();
 			it1.remove();
 		}
+
 		// Stop and remove all browser containers if necessary
 		Iterator<GenericContainer<?>> it2 = containers.iterator();
 		List<String> waitUntilContainerIsRemovedCommands = new ArrayList<>();
 		containers.forEach(c -> {
-			waitUntilContainerIsRemovedCommands
-					.add("while docker inspect " + c.getContainerId() + " >/dev/null 2>&1; do sleep 1; done");
+			if (isAndroidTest && DOCKER_ANDROID_IMAGE.equals(c.getDockerImageName())) {
+				log.info("Do not remove docker-android image");
+			} else {
+				waitUntilContainerIsRemovedCommands
+						.add("while docker inspect " + c.getContainerId() + " >/dev/null 2>&1; do sleep 1; done");
+			}
 		});
 		while (it2.hasNext()) {
 			GenericContainer<?> c = it2.next();
-			stopContainerIfPossible(c);
-			it2.remove();
+			if (!(isAndroidTest && DOCKER_ANDROID_IMAGE.equals(c.getDockerImageName()))) {
+				stopContainerIfPossible(c);
+				it2.remove();
+			}
 		}
 		waitUntilContainerIsRemovedCommands.forEach(command -> {
 			commandLine.executeCommand(command, 30);
 		});
+		isAndroidTest = false;
+
 		// Reset REST client
 		OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
 	}

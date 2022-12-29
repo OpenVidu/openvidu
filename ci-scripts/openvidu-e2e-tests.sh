@@ -290,7 +290,7 @@ if [[ "${LAUNCH_OV_MEDIASOUP}" == true || "${EXECUTE_ALL}" == true ]]; then
 fi
 
 # -------------
-# OpenVidu E2E Tests Kurento
+# OpenVidu E2E Tests mediasoup
 # -------------
 if [[ "${OV_E2E_MEDIASOUP}" == true || "${EXECUTE_ALL}" == true ]]; then
     openviduE2ETests "mediasoup"

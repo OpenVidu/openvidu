@@ -63,9 +63,16 @@ public class CustomHttpClient {
 	private String headerAuth;
 	private CloseableHttpClient client;
 
+	public CustomHttpClient(String url) throws Exception {
+		this(url, null, null);
+	}
+
 	public CustomHttpClient(String url, String user, String pass) throws Exception {
 		this.openviduUrl = url.replaceFirst("/*$", "");
-		this.headerAuth = "Basic " + Base64.getEncoder().encodeToString((user + ":" + pass).getBytes());
+
+		if (user != null && pass != null) {
+			this.headerAuth = "Basic " + Base64.getEncoder().encodeToString((user + ":" + pass).getBytes());
+		}
 
 		SSLContext sslContext = null;
 		try {
@@ -92,6 +99,10 @@ public class CustomHttpClient {
 
 	public JsonObject rest(HttpMethod method, String path, String body, int status) throws Exception {
 		return this.commonRest(method, path, body, status);
+	}
+
+	public String restString(HttpMethod method, String path, String body, int status) throws Exception {
+		return this.commonRestString(method, path, body, status);
 	}
 
 	/**
@@ -239,8 +250,26 @@ public class CustomHttpClient {
 	}
 
 	private JsonObject commonRest(HttpMethod method, String path, String body, int status) throws Exception {
-		HttpResponse jsonResponse = null;
+		String stringResponse = this.commonRestString(method, path, body, status);
 		JsonObject json = null;
+		JsonElement jsonElement = null;
+		try {
+			jsonElement = JsonParser.parseString(stringResponse);
+		} catch (JsonParseException e) {
+			System.out.println("Response is not a JSON element: " + stringResponse);
+		}
+		if (jsonElement != null) {
+			try {
+				json = jsonElement.getAsJsonObject();
+			} catch (IllegalStateException e) {
+				System.out.println("Response is not a JSON object: " + stringResponse);
+			}
+		}
+		return json;
+	}
+
+	private String commonRestString(HttpMethod method, String path, String body, int status) throws Exception {
+		HttpResponse jsonResponse = null;
 		path = openviduUrl + (path.startsWith("/") ? path : ("/" + path));
 
 		HttpRequestBase request = null;
@@ -282,27 +311,17 @@ public class CustomHttpClient {
 			}
 		}
 
-		request.addHeader("Authorization", this.headerAuth);
+		if (this.headerAuth != null) {
+			request.addHeader("Authorization", this.headerAuth);
+		}
 		try {
 			jsonResponse = client.execute(request);
 		} catch (Exception e) {
 			throw new Exception("Error sending request to " + path + ": " + e.getMessage());
 		}
+		String stringResponse = null;
 		if (jsonResponse.getEntity() != null) {
-			String stringResponse = EntityUtils.toString(jsonResponse.getEntity(), "UTF-8");
-			JsonElement jsonElement = null;
-			try {
-				jsonElement = JsonParser.parseString(stringResponse);
-			} catch (JsonParseException e) {
-				System.out.println("Response is not a JSON element: " + stringResponse);
-			}
-			if (jsonElement != null) {
-				try {
-					json = jsonElement.getAsJsonObject();
-				} catch (IllegalStateException e) {
-					System.out.println("Response is not a JSON object: " + stringResponse);
-				}
-			}
+			stringResponse = EntityUtils.toString(jsonResponse.getEntity(), "UTF-8");
 		}
 
 		if (jsonResponse.getStatusLine().getStatusCode() == 500) {
@@ -319,7 +338,7 @@ public class CustomHttpClient {
 					+ jsonResponse.getStatusLine().getStatusCode());
 		}
 
-		return json;
+		return stringResponse;
 	}
 
 }
