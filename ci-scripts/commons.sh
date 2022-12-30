@@ -106,7 +106,7 @@ if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
 
 
     # Configure Snapshots repository
-    if [[ -n "${KURENTO_SNAPSHOTS_URL}" ]]; then
+    if [[ -n "${KURENTO_SNAPSHOTS_URL:-}" ]]; then
         # Cd to GITHUB_ACTIONS_ORIGINAL_WORKING_DIR only if GITHUB_ACTIONS_WORKING_DIR is set
         if [[ -n "${GITHUB_ACTIONS_WORKING_DIR:-}" ]]; then
             pushd "${GITHUB_ACTIONS_ORIGINAL_WORKING_DIR}"/ci-scripts
