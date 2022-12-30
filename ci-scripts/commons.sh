@@ -185,6 +185,7 @@ if [[ "${BUILD_OV_BROWSER}" == true || "${EXECUTE_ALL}" == true ]]; then
     npm install
     npm run build
     npm link
+    npm pack && mv openvidu-browser-*.tgz /opt/openvidu/.
     popd
 fi
 
@@ -196,6 +197,7 @@ if [[ "${BUILD_OV_NODE_CLIENT}" == true || "${EXECUTE_ALL}" == true ]]; then
     npm install
     npm run build
     npm link
+    npm pack && mv openvidu-node-client-*.tgz /opt/openvidu/.
     popd
 fi
 
