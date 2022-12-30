@@ -99,7 +99,7 @@ export class RestService {
 	async logout(): Promise<void> {
 		try {
 			return lastValueFrom(
-				this.http.post<any>(`${this.baseHref}admin/logout`, {})
+				this.http.post<any>(`${this.baseHref}auth/admin/logout`, {})
 			);
 		} catch (error) {
 			console.log(error);
