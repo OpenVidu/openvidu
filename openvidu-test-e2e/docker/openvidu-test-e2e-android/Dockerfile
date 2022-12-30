@@ -11,7 +11,7 @@ RUN mkdir /usr/lib/android-sdk && cd /usr/lib/android-sdk && \
     mkdir latest && mv cmdline-tools/* ./latest && mv latest ./cmdline-tools/.
 
 # Install Android SDK using sdkmanager
-RUN yes | /usr/lib/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33"
+RUN yes | /usr/lib/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-32"
 
 # Export ANROID_HOME env variable
 ENV ANDROID_HOME /usr/lib/android-sdk
