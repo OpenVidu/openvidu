@@ -95,6 +95,8 @@ jobs:
         run: ci-scripts/openvidu-e2e-tests.sh --openvidu-server-build
       - name: Environment launch Kurento
         run: ci-scripts/openvidu-e2e-tests.sh --environment-launch-kurento
+      - name: Serve Testapp
+        run: ci-scripts/commons.sh --serve-openvidu-testapp
       - name: OpenVidu E2E Tests Kurento
         run: ci-scripts/openvidu-e2e-tests.sh --openvidu-e2e-tests-kurento
       - name: Test reports

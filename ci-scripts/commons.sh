@@ -12,6 +12,7 @@ BUILD_OV_NODE_CLIENT=false
 BUILD_OV_JAVA_CLIENT=false
 BUILD_OV_PARENT=false
 BUILD_OV_TESTAPP=false
+SERVE_OV_TESTAPP=false
 
 # cd to directory if GITHUB_ACTIONS_WORKING_DIR is set
 if [[ -n "${GITHUB_ACTIONS_WORKING_DIR:-}" ]]; then
@@ -49,6 +50,10 @@ if [[ -n ${1:-} ]]; then
                 ;;
             --build-openvidu-testapp )
                 BUILD_OV_TESTAPP=true
+                shift 1
+                ;;
+            --serve-openvidu-testapp )
+                SERVE_OV_TESTAPP=true
                 shift 1
                 ;;
             *)
@@ -231,5 +236,21 @@ if [[ "${BUILD_OV_TESTAPP}" == true || "${EXECUTE_ALL}" == true ]]; then
     npm install
     npm link openvidu-browser openvidu-node-client
     export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng.js build --configuration production --output-path=/opt/openvidu/testapp
+    popd
+fi
+
+# -------------
+# Serve OpenVidu TestApp
+# -------------
+if [[ "${SERVE_OV_TESTAPP}" == true || "${EXECUTE_ALL}" == true ]]; then
+    # Generate certificate
+    openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 \
+        -subj "/CN=www.mydom.com/O=My Company LTD./C=US" \
+        -keyout /opt/openvidu/testapp/key.pem \
+        -out /opt/openvidu/testapp/cert.pem
+
+    # Serve TestApp
+    pushd /opt/openvidu/testapp
+    http-server -S -p 4200 &> /opt/openvidu/testapp.log &
     popd
 fi
