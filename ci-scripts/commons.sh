@@ -74,9 +74,21 @@ fi
 # -------------
 if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
 
+    # Remove all running containers except test container and runner container
+    ids=$(docker ps -a -q)
+    for id in $ids
+    do
+        DOCKER_IMAGE=$(docker inspect --format='{{.Config.Image}}' $id)
+        if [[ "${DOCKER_IMAGE}" != *"openvidu/openvidu-test-e2e"* ]] && [[ "${DOCKER_IMAGE}" != *"runner-deployment"* ]]; then
+            echo "Removing container image '$DOCKER_IMAGE' with id '$id'"
+            docker stop $id && docker rm $id
+        fi
+    done
+    # Clean /opt/openvidu contents
+    rm -rf /opt/openvidu/*
+
     # Connect e2e test container to network bridge so it is vissible for browser and media server containers
     E2E_CONTAINER_ID="$(docker ps  | grep  "${TEST_IMAGE}":* | awk '{ print $1 }')"
-
 
     docker network connect bridge "${E2E_CONTAINER_ID}"
 
