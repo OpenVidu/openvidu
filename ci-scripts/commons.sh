@@ -5,6 +5,7 @@ set -eu -o pipefail
 GITHUB_ACTIONS_ORIGINAL_WORKING_DIR="${PWD}"
 GITHUB_ACTIONS_WORKING_DIR="${GITHUB_ACTIONS_WORKING_DIR:-}"
 PREPARE=false
+TEST_IMAGE="openvidu/openvidu-test-e2e"
 PREPARE_KURENTO_SNAPSHOT=false
 EXECUTE_ALL=false
 BUILD_OV_BROWSER=false
@@ -26,6 +27,9 @@ if [[ -n ${1:-} ]]; then
         case "${1:-}" in
             --prepare )
                 PREPARE=true
+                if [[ -n "${2:-}" ]]; then
+                    TEST_IMAGE="${2}"
+                fi
                 shift 1
                 ;;
             --prepare-kurento-snapshot )
@@ -71,7 +75,9 @@ fi
 if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
 
     # Connect e2e test container to network bridge so it is vissible for browser and media server containers
-    E2E_CONTAINER_ID="$(docker ps  | grep  'openvidu/openvidu-test-e2e:*' | awk '{ print $1 }')"
+    E2E_CONTAINER_ID="$(docker ps  | grep  "${TEST_IMAGE}":* | awk '{ print $1 }')"
+
+
     docker network connect bridge "${E2E_CONTAINER_ID}"
 
     # Pull browser images
