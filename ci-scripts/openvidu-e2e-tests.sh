@@ -83,7 +83,6 @@ function environmentLaunch {
             /opt/openvidu/openvidu-server-*.jar &> /opt/openvidu/openvidu-server-"${MEDIA_SERVER}".log &
     fi
     until $(curl --insecure --output /dev/null --silent --head --fail https://OPENVIDUAPP:MY_SECRET@localhost:4443/); do echo "Waiting for openvidu-server..."; sleep 2; done
-    popd
 }
 
 function openviduE2ETests {
@@ -100,7 +99,6 @@ function openviduE2ETests {
     # Kurento and mediasoup needs to run as network host, so we need Docker host IP.
     local DOCKER_HOST_IP
     DOCKER_HOST_IP="$(docker network inspect bridge | grep Subnet | cut -d'"' -f4 | cut -d'/' -f1 | sed 's/.$/1/')"
-
 
     pushd openvidu-test-e2e
     if [[ "${MEDIA_SERVER}" == "kurento" ]]; then
