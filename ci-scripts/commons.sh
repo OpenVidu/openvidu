@@ -93,6 +93,11 @@ if [[ "${CLEAN_ENVIRONMENT}" == true || "${EXECUTE_ALL}" == true ]]; then
     # Clean /opt/openvidu contents
     rm -rf /opt/openvidu/*
 
+    # Recreate working dir just in case it was placed under /opt/openvidu
+    if [[ -n "${GITHUB_ACTIONS_WORKING_DIR:-}" ]]; then
+        mkdir -p "${GITHUB_ACTIONS_WORKING_DIR}"
+    fi
+
 fi
 
 # -------------
