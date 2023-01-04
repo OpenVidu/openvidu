@@ -4,6 +4,7 @@ set -eu -o pipefail
 # CI flags
 GITHUB_ACTIONS_ORIGINAL_WORKING_DIR="${PWD}"
 GITHUB_ACTIONS_WORKING_DIR="${GITHUB_ACTIONS_WORKING_DIR:-}"
+CLEAN_ENVIRONMENT=false
 PREPARE=false
 TEST_IMAGE="openvidu/openvidu-test-e2e"
 PREPARE_KURENTO_SNAPSHOT=false
@@ -25,6 +26,10 @@ if [[ -n ${1:-} ]]; then
     while :
     do
         case "${1:-}" in
+            --clean-environment )
+                CLEAN_ENVIRONMENT=true
+                shift 1
+                ;;
             --prepare )
                 PREPARE=true
                 if [[ -n "${2:-}" ]]; then
@@ -70,9 +75,9 @@ else
 fi
 
 # -------------
-# Prepare build
+# Clean environment
 # -------------
-if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${CLEAN_ENVIRONMENT}" == true || "${EXECUTE_ALL}" == true ]]; then
 
     # Remove all running containers except test container and runner container
     ids=$(docker ps -a -q)
@@ -84,8 +89,16 @@ if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
             docker stop $id && docker rm $id
         fi
     done
+    
     # Clean /opt/openvidu contents
     rm -rf /opt/openvidu/*
+
+fi
+
+# -------------
+# Prepare build
+# -------------
+if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
 
     # Connect e2e test container to network bridge so it is vissible for browser and media server containers
     E2E_CONTAINER_ID="$(docker ps  | grep  "${TEST_IMAGE}":* | awk '{ print $1 }')"
