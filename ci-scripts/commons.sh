@@ -84,12 +84,14 @@ if [[ "${CLEAN_ENVIRONMENT}" == true || "${EXECUTE_ALL}" == true ]]; then
     for id in $ids
     do
         DOCKER_IMAGE=$(docker inspect --format='{{.Config.Image}}' $id)
-        if [[ "${DOCKER_IMAGE}" != *"openvidu/openvidu-test-e2e"* ]] && [[ "${DOCKER_IMAGE}" != *"runner-deployment"* ]]; then
+        if [[ "${DOCKER_IMAGE}" != *"openvidu/openvidu-test-e2e"* ]] &&
+            [[ "${DOCKER_IMAGE}" != *"runner-deployment"* ]] &&
+            [[ "${DOCKER_IMAGE}" != *"openvidu/openvidu-dev-generic"* ]]; then
             echo "Removing container image '$DOCKER_IMAGE' with id '$id'"
             docker stop $id && docker rm $id
         fi
     done
-    
+
     # Clean /opt/openvidu contents
     rm -rf /opt/openvidu/*
 
