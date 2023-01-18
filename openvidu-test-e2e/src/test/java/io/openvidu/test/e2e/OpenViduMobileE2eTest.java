@@ -414,7 +414,6 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 		// getScreenshotAs(OutputType.BYTES) when
 		// https://github.com/appium/java-client/issues/1783 is fixed
 		String base64 = driver.findElement(locator).getScreenshotAs(OutputType.BASE64);
-		System.out.println(base64);
 		base64 = base64.replaceAll("[\n\r]", "");
 		byte[] bytes = Base64.getDecoder().decode(base64);
 		InputStream is = new ByteArrayInputStream(bytes);

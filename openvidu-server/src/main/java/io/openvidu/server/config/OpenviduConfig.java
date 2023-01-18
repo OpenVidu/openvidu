@@ -27,12 +27,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,6 +48,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.DomainValidator;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.apache.http.Header;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicHeader;
 import org.kurento.jsonrpc.JsonUtils;
 import org.slf4j.Logger;
@@ -61,8 +65,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
+import io.openvidu.client.OpenViduException;
+import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.java.client.IceServerProperties;
 import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.java.client.RecordingLayout;
+import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.VideoCodec;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.cdr.CDREventName;
@@ -489,7 +497,7 @@ public class OpenviduConfig {
 	public Map<String, String> getConfigProps() {
 		return configProps;
 	}
-	
+
 	public Set<String> getSecretProperties() {
 		return secretProps;
 	}
@@ -1267,5 +1275,132 @@ public class OpenviduConfig {
 		hiddenString = charToReplace.repeat(originalString.length() - numberOfVisibleChars) + hiddenString;
 		return hiddenString;
 	}
-	
+
+	public String getLayoutUrl(RecordingProperties recordingProperties, String sessionId) throws OpenViduException {
+		String secret = this.getOpenViduSecret();
+
+		// Check if "customLayout" property defines a final URL
+		if (RecordingLayout.CUSTOM.equals(recordingProperties.recordingLayout())) {
+			String layout = recordingProperties.customLayout();
+			if (!layout.isEmpty()) {
+				try {
+					URL url = new URL(layout);
+					log.info("\"customLayout\" property has a URL format ({}). Using it to connect to custom layout",
+							url.toString());
+					return processCustomLayoutUrlFormat(url, sessionId);
+				} catch (MalformedURLException e) {
+					String layoutPath = this.getOpenviduRecordingCustomLayout() + layout;
+					layoutPath = layoutPath.endsWith("/") ? layoutPath : (layoutPath + "/");
+					log.info(
+							"\"customLayout\" property is defined as \"{}\". Using a different custom layout than the default one. Expected path: {}",
+							layout, layoutPath + "index.html");
+					try {
+						final File indexHtml = new File(layoutPath + "index.html");
+						if (!indexHtml.exists()) {
+							throw new IOException();
+						}
+						log.info("Custom layout path \"{}\" is valid. Found file {}", layout,
+								indexHtml.getAbsolutePath());
+					} catch (IOException e1) {
+						final String error = "Custom layout path " + layout + " is not valid. Expected file "
+								+ layoutPath + "index.html to exist and be readable";
+						log.error(error);
+						throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, error);
+					}
+				}
+			}
+		}
+
+		boolean recordingComposedUrlDefined = this.getOpenViduRecordingComposedUrl() != null
+				&& !this.getOpenViduRecordingComposedUrl().isEmpty();
+		String recordingUrl = recordingComposedUrlDefined ? this.getOpenViduRecordingComposedUrl() : this.getFinalUrl();
+		recordingUrl = recordingUrl.replaceFirst("https://", "");
+		boolean startsWithHttp = recordingUrl.startsWith("http://");
+
+		if (startsWithHttp) {
+			recordingUrl = recordingUrl.replaceFirst("http://", "");
+		}
+
+		if (recordingUrl.endsWith("/")) {
+			recordingUrl = recordingUrl.substring(0, recordingUrl.length() - 1);
+		}
+
+		String layout, finalUrl;
+		final String basicauth = this.isOpenviduRecordingComposedBasicauth() ? ("OPENVIDUAPP:" + secret + "@") : "";
+		if (RecordingLayout.CUSTOM.equals(recordingProperties.recordingLayout())) {
+			layout = recordingProperties.customLayout();
+			if (!layout.isEmpty()) {
+				layout = layout.startsWith("/") ? layout : ("/" + layout);
+				layout = layout.endsWith("/") ? layout.substring(0, layout.length() - 1) : layout;
+			}
+			layout += "/index.html";
+			finalUrl = (startsWithHttp ? "http" : "https") + "://" + basicauth + recordingUrl
+					+ RequestMappings.CUSTOM_LAYOUTS + layout + "?sessionId=" + sessionId + "&secret=" + secret;
+		} else {
+			layout = recordingProperties.recordingLayout().name().toLowerCase().replaceAll("_", "-");
+			int port = startsWithHttp ? 80 : 443;
+			try {
+				port = new URL(this.getFinalUrl()).getPort();
+			} catch (MalformedURLException e) {
+				log.error(e.getMessage());
+			}
+			String defaultPathForDefaultLayout = recordingComposedUrlDefined ? ""
+					: (this.getOpenViduFrontendDefaultPath());
+			finalUrl = (startsWithHttp ? "http" : "https") + "://" + basicauth + recordingUrl
+					+ defaultPathForDefaultLayout + "/#/layout-" + layout + "/" + sessionId + "/" + secret + "/" + port
+					+ "/" + !recordingProperties.hasAudio();
+		}
+
+		return finalUrl;
+	}
+
+	private String processCustomLayoutUrlFormat(URL url, String shortSessionId) {
+		String finalUrl = url.getProtocol() + "://" + url.getAuthority();
+		if (!url.getPath().isEmpty()) {
+			finalUrl += url.getPath();
+		}
+		finalUrl = finalUrl.endsWith("/") ? finalUrl.substring(0, finalUrl.length() - 1) : finalUrl;
+		if (url.getQuery() != null) {
+			URI uri;
+			try {
+				uri = url.toURI();
+				finalUrl += "?";
+			} catch (URISyntaxException e) {
+				String error = "\"customLayout\" property has URL format and query params (" + url.toString()
+						+ "), but does not comply with RFC2396 URI format";
+				log.error(error);
+				throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, error);
+			}
+			List<NameValuePair> params = URLEncodedUtils.parse(uri, Charset.forName("UTF-8"));
+			Iterator<NameValuePair> it = params.iterator();
+			boolean hasSessionId = false;
+			boolean hasSecret = false;
+			while (it.hasNext()) {
+				NameValuePair param = it.next();
+				finalUrl += param.getName() + "=" + param.getValue();
+				if (it.hasNext()) {
+					finalUrl += "&";
+				}
+				if (!hasSessionId) {
+					hasSessionId = param.getName().equals("sessionId");
+				}
+				if (!hasSecret) {
+					hasSecret = param.getName().equals("secret");
+				}
+			}
+			if (!hasSessionId) {
+				finalUrl += "&sessionId=" + shortSessionId;
+			}
+			if (!hasSecret) {
+				finalUrl += "&secret=" + this.getOpenViduSecret();
+			}
+		}
+
+		if (url.getRef() != null) {
+			finalUrl += "#" + url.getRef();
+		}
+
+		return finalUrl;
+	}
+
 }

@@ -130,16 +130,16 @@ public class SessionEventsHandler {
 				participantJson.add(ProtocolElements.JOINROOM_PEERSTREAMS_PARAM, streamsArray);
 			}
 
-			// Avoid emitting 'connectionCreated' event of existing RECORDER or STT
+			// Avoid emitting 'connectionCreated' event of existing RECORDER/STT/RTMP
 			// participant in openvidu-browser in newly joined participants
-			if (!existingParticipant.isRecorderOrSttParticipant()) {
+			if (!existingParticipant.isRecorderOrSttOrRtmpParticipant()) {
 				resultArray.add(participantJson);
 			}
 
-			// If RECORDER or STT participant has joined do NOT send 'participantJoined'
+			// If RECORDER/STT/RTMP participant has joined do NOT send 'participantJoined'
 			// notification to existing participants. 'recordingStarted' will be sent to all
 			// existing participants when recorder first subscribe to a stream
-			if (!participant.isRecorderOrSttParticipant()) {
+			if (!participant.isRecorderOrSttOrRtmpParticipant()) {
 				JsonObject notifParams = new JsonObject();
 
 				// Metadata associated to new participant
@@ -519,8 +519,8 @@ public class SessionEventsHandler {
 				evictedParticipant.getParticipantPublicId());
 		params.addProperty(ProtocolElements.PARTICIPANTEVICTED_REASON_PARAM, reason != null ? reason.name() : "");
 
-		if (evictedParticipant.isRecorderOrSttParticipant()) {
-			// Do not send a message when evicting RECORDER or STT participant
+		if (evictedParticipant.isRecorderOrSttOrRtmpParticipant()) {
+			// Do not send a message when evicting RECORDER/STT/RTMP participant
 			rpcNotificationService.sendNotification(evictedParticipant.getParticipantPrivateId(),
 					ProtocolElements.PARTICIPANTEVICTED_METHOD, params);
 		}
@@ -719,7 +719,7 @@ public class SessionEventsHandler {
 
 	protected Set<Participant> filterParticipantsByRole(Set<OpenViduRole> roles, Set<Participant> participants) {
 		return participants.stream().filter(part -> {
-			if (part.isRecorderOrSttParticipant()) {
+			if (part.isRecorderOrSttOrRtmpParticipant()) {
 				return false;
 			}
 			return roles.contains(part.getToken().getRole());

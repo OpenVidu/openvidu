@@ -202,14 +202,14 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 	}
 
 	private String runContainer(Session session, RecordingProperties properties) throws Exception {
+
 		log.info("Starting COMPOSED_QUICK_START container for session id: {}", session.getSessionId());
 
-		Recording recording = new Recording(session.getSessionId(), session.getUniqueSessionId(), null, properties);
-		String layoutUrl = this.getLayoutUrl(recording);
+		String layoutUrl = this.openviduConfig.getLayoutUrl(properties, session.getSessionId());
 
 		List<String> envs = new ArrayList<>();
 		envs.add("DEBUG_MODE=" + openviduConfig.isOpenViduRecordingDebug());
-		envs.add("RECORDING_TYPE=COMPOSED_QUICK_START");
+		envs.add("CONTAINER_WORKING_MODE=COMPOSED_QUICK_START");
 		envs.add("RESOLUTION=" + properties.resolution());
 		envs.add("FRAMERATE=" + properties.frameRate());
 		envs.add("URL=" + layoutUrl);
@@ -245,7 +245,8 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 	private void waitForComposedQuickStartFiles(Recording recording) throws Exception {
 
 		final int SECONDS_MAX_WAIT = fileManager.maxSecondsWaitForFile();
-		final String PATH = this.openviduConfig.getOpenViduRecordingPath(recording.getRecordingProperties().mediaNode()) + recording.getId() + "/";
+		final String PATH = this.openviduConfig.getOpenViduRecordingPath(recording.getRecordingProperties().mediaNode())
+				+ recording.getId() + "/";
 
 		// Waiting for the files generated at the end of the stopping process: the
 		// ffprobe info and the thumbnail

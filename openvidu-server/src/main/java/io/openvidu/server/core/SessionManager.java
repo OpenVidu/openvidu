@@ -193,6 +193,8 @@ public abstract class SessionManager {
 	public abstract void onUnsubscribeFromSpeechToText(Participant participant, Integer transactionId,
 			String connectionId);
 
+	public abstract void stopRtmpIfNecessary(Session session);
+	
 	public void onEcho(String participantPrivateId, Integer requestId) {
 		sessionEventsHandler.onEcho(participantPrivateId, requestId);
 	}

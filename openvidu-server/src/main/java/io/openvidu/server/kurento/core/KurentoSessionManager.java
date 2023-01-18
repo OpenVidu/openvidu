@@ -257,22 +257,16 @@ public class KurentoSessionManager extends SessionManager {
 					sessionEventsHandler.onParticipantLeft(participant, sessionId, remainingParticipants, transactionId,
 							null, reason, scheduleWebsocketClose);
 
+					// If session is closed by a call to "DELETE /api/sessions" do NOT stop the
+					// recording. Will be stopped after in method
+					// "SessionManager.closeSessionAndEmptyCollections"
 					if (!EndReason.sessionClosedByServer.equals(reason)) {
-						// If session is closed by a call to "DELETE /api/sessions" do NOT stop the
-						// recording. Will be stopped after in method
-						// "SessionManager.closeSessionAndEmptyCollections"
-
-						boolean recordingParticipantLeft = (remainingParticipants.size() == 1
-								&& remainingParticipants.iterator().next().isRecorderParticipant())
-								|| (remainingParticipants.size() == 2 && remainingParticipants.stream()
-										.allMatch(p -> p.isRecorderOrSttParticipant()));
 
 						if (remainingParticipants.isEmpty()) {
-							if (openviduConfig.isRecordingModuleEnabled()
-									&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-									&& (this.recordingManager.sessionIsBeingRecorded(sessionId))) {
+							if (this.recordingManager.sessionIsBeingRecorded(sessionId)) {
 								// Start countdown to stop recording. Will be aborted if a Publisher starts
-								// before timeout
+								// before timeout. This only applies to INDIVIDUAL recordings, as for COMPOSED
+								// recordings it would still remain a recorder participant
 								log.info(
 										"Last participant left. Starting {} seconds countdown for stopping recording of session {}",
 										this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
@@ -302,22 +296,41 @@ public class KurentoSessionManager extends SessionManager {
 											sessionId);
 								}
 							}
-						} else if (recordingParticipantLeft && openviduConfig.isRecordingModuleEnabled()
-								&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-								&& this.recordingManager.sessionIsBeingRecorded(sessionId)) {
-							// RECORDER or STT participant is the last one standing. Start countdown
-							log.info(
-									"Last participant left. Starting {} seconds countdown for stopping recording of session {}",
-									this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
-							recordingManager.initAutomaticRecordingStopThread(session);
+						} else {
 
-						} else if (recordingParticipantLeft && openviduConfig.isRecordingModuleEnabled()
-								&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-								&& session.getSessionProperties().defaultRecordingProperties().outputMode()
+							boolean recordingParticipantLeft = remainingParticipants.size() > 0
+									&& remainingParticipants.stream()
+											.allMatch(p -> p.isRecorderOrSttOrRtmpParticipant())
+									&& remainingParticipants.stream().anyMatch(p -> p.isRecorderParticipant());
+
+							if (recordingParticipantLeft) {
+
+								if (this.recordingManager.sessionIsBeingRecorded(sessionId)) {
+
+									// RECORDER or STT participant is the last one standing. Start countdown
+									log.info(
+											"Last participant left. Starting {} seconds countdown for stopping recording of session {}",
+											this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
+									recordingManager.initAutomaticRecordingStopThread(session);
+
+								} else if (session.getSessionProperties().defaultRecordingProperties().outputMode()
 										.equals(Recording.OutputMode.COMPOSED_QUICK_START)) {
-							// If no recordings are active in COMPOSED_QUICK_START output mode, stop
-							// container
-							recordingManager.stopComposedQuickStartContainer(session, reason);
+
+									// If no recordings are active in COMPOSED_QUICK_START output mode, stop
+									// container
+									recordingManager.stopComposedQuickStartContainer(session, reason);
+
+								}
+							}
+
+							boolean rtmpParticipantLeft = remainingParticipants.size() > 0
+									&& remainingParticipants.stream()
+											.allMatch(p -> p.isRecorderOrSttOrRtmpParticipant())
+									&& remainingParticipants.stream().anyMatch(p -> p.isRtmpParticipant());
+
+							if (rtmpParticipantLeft) {
+								this.stopRtmpIfNecessary(session);
+							}
 						}
 					}
 
@@ -1409,6 +1422,10 @@ public class KurentoSessionManager extends SessionManager {
 		}
 		log.info("KMS less loaded is {} with a load of {}", lessLoadedKms.getUri(), lessLoadedKms.getLoad());
 		return lessLoadedKms;
+	}
+
+	@Override
+	public void stopRtmpIfNecessary(Session session) {
 	}
 
 	private io.openvidu.server.recording.Recording getActiveRecordingIfAllowedByParticipantRole(
