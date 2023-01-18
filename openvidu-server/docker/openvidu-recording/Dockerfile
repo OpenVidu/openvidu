@@ -31,11 +31,12 @@ RUN adduser root pulse-access
 # Clean
 RUN apt clean && apt autoclean && apt autoremove
 
-COPY entrypoint.sh scripts/composed.sh scripts/composed_quick_start.sh ./
-COPY utils/xvfb-run-safe /usr/local/bin 
+COPY entrypoint.sh scripts/composed.sh scripts/composed_quick_start.sh scripts/rtmp.sh ./
+COPY utils/xvfb-run-safe /usr/local/bin
+COPY utils/headless-chrome.sh ./
 
 # Prepare scripts and folders
-RUN chmod +x /entrypoint.sh /composed.sh /composed_quick_start.sh \
+RUN chmod +x /entrypoint.sh /composed.sh /composed_quick_start.sh /rtmp.sh /headless-chrome.sh \
   && chmod +x /usr/local/bin/xvfb-run-safe \
   && mkdir /recordings \
   && chmod 777 /recordings

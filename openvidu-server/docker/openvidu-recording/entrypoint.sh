@@ -8,12 +8,14 @@ if [ "$HEADLESS_CHROME_ONLY" == true ]; then
 else
   ### Use container as OpenVidu recording module ###
 
-  RECORDING_TYPE=${RECORDING_TYPE:-COMPOSED}
+  CONTAINER_WORKING_MODE=${CONTAINER_WORKING_MODE:-COMPOSED}
 
-  if [[ "${RECORDING_TYPE}" ==  "COMPOSED" ]]; then
+  if [[ "${CONTAINER_WORKING_MODE}" ==  "COMPOSED" ]]; then
     ./composed.sh
-  elif [[ "${RECORDING_TYPE}" == "COMPOSED_QUICK_START" ]]; then
+  elif [[ "${CONTAINER_WORKING_MODE}" == "COMPOSED_QUICK_START" ]]; then
     ./composed_quick_start.sh
+  elif [[ "${CONTAINER_WORKING_MODE}" == "RTMP" ]]; then
+    ./rtmp.sh
   fi
 
 fi
