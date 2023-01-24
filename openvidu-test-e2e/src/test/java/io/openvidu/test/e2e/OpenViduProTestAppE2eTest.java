@@ -837,11 +837,6 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				"on_demand");
 		restartOpenViduServer(config);
 
-		List<String> expectedRecognitionList = Arrays.asList(
-				"for example we used to think that after childhood the brain did not really could not change and it turns out that nothing could be farther from the truth",
-				"another misconception about the brain is that you only use parts of it at any given time and silent when you do nothing",
-				"well this is also untrue it turns out that even when you are at rest and thinking of nothing your brain is highly active");
-
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 
 		user.getDriver().get(APP_URL);
@@ -853,85 +848,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
-		List<String> recognizingSttEvents = new ArrayList<String>();
-		List<String> recognizedSttEvents = new ArrayList<String>();
-		final CountDownLatch latch = new CountDownLatch(3);
-
-		boolean[] previousSttEventWasRecognized = new boolean[1];
-		String[] previousSttRecognizedText = new String[1];
-		AssertionError[] exc = new AssertionError[1];
-
-		user.getEventManager().on("speechToTextMessage", (event) -> {
-			String reason = event.get("reason").getAsString();
-			String text = event.get("text").getAsString();
-			if ("recognizing".equals(reason)) {
-
-				previousSttEventWasRecognized[0] = false;
-				previousSttRecognizedText[0] = null;
-				recognizingSttEvents.add(text);
-
-			} else if ("recognized".equals(reason)) {
-
-				if (previousSttEventWasRecognized[0]) {
-					exc[0] = exc[0] == null
-							? new AssertionError("Two recognized events in a row should never happen. Present event: "
-									+ event.get("text") + " | Previous event: \"" + previousSttRecognizedText[0] + "\"")
-							: exc[0];
-					while (latch.getCount() > 0) {
-						latch.countDown();
-					}
-				}
-				previousSttEventWasRecognized[0] = true;
-				previousSttRecognizedText[0] = text;
-				log.info("Recognized: {}", text);
-				recognizedSttEvents.add(text);
-				latch.countDown();
-
-			} else {
-
-				exc[0] = exc[0] == null ? new AssertionError("Unknown SpeechToText event 'reason' property " + reason)
-						: exc[0];
-				while (latch.getCount() > 0) {
-					latch.countDown();
-				}
-
-			}
-		});
-
-		this.sttSubUser(user, 0, 0, "en-US", true, true);
-
-		if (!latch.await(80, TimeUnit.SECONDS)) {
-			Assertions.fail("Timeout waiting for recognized STT events");
-		}
-
-		if (exc[0] != null) {
-			throw exc[0];
-		}
-
-		Assertions.assertTrue(recognizingSttEvents.size() > 0, "recognizing STT events should be greater than 0");
-		Assertions.assertTrue(recognizingSttEvents.size() > recognizedSttEvents.size(),
-				"recognized STT events should be greater than 0");
-
-		// The expected text may be in just 2 recognized events instead of 3
-		int expectedCharCount = expectedRecognitionList.stream().mapToInt(w -> w.length()).sum();
-		int recognizedCharCount = recognizedSttEvents.stream().mapToInt(w -> w.length()).sum();
-		int maxAllowedCountDifference = 50;
-		if (recognizedCharCount > (expectedCharCount + maxAllowedCountDifference)) {
-			recognizedSttEvents.remove(recognizedSttEvents.size() - 1);
-			log.info("Removed one element of recognized collection!");
-		}
-
-		String finalRecognition = String.join(" ", recognizedSttEvents).toLowerCase().replaceAll("[^a-z ]", "");
-		String expectedRecognition = String.join(" ", expectedRecognitionList);
-
-		// Cosine similarity string comparison has been proven the most accurate one
-		double cosineSimilarity = new Cosine().distance(finalRecognition, expectedRecognition);
-
-		log.info("Cosine similiarity: {}", cosineSimilarity);
-		log.info(expectedRecognition);
-		log.info(finalRecognition);
-		Assertions.assertTrue(cosineSimilarity < 0.1,
-				"Wrong similarity between actual and expected recognized text. Got " + cosineSimilarity);
+		commonEnUsTranscriptionTest(user);
 
 		gracefullyLeaveParticipants(user, 1);
 	}
@@ -2129,19 +2046,17 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		gracefullyLeaveParticipants(user, 2);
 	}
 
-	// Try to unload via REST API a loaded model when on_demand. Should get a 405
-
 	@Test
-	@DisplayName("Wrong AWS lang STT Test")
-	void wrongAwsLangSttTest() throws Exception {
+	@DisplayName("AWS lang STT Test")
+	void awsLangSttTest() throws Exception {
 
-		log.info("Wrong AWS lang STT");
+		log.info("AWS lang STT");
 
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
 		Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT", "aws",
-				"OPENVIDU_PRO_AWS_ACCESS_KEY", "fakekey", "OPENVIDU_PRO_AWS_SECRET_KEY", "fakekey",
-				"OPENVIDU_PRO_AWS_REGION", "fakeregion");
+				"OPENVIDU_PRO_AWS_ACCESS_KEY", AWS_ACCESS_KEY_ID, "OPENVIDU_PRO_AWS_SECRET_KEY", AWS_SECRET_ACCESS_KEY,
+				"OPENVIDU_PRO_AWS_REGION", AWS_REGION);
 		restartOpenViduServer(config);
 
 		String body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}";
@@ -2155,22 +2070,25 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
-		sttSubUser(user, 0, 0, "no-EXIST", true, false, "AWS Transcribe does not support language \"no-EXIST\"", false);
+		commonEnUsTranscriptionTest(user);
+
+		// Test non-existing language
+		sttSubUser(user, 0, 0, "no-EXIST", true, true, "AWS Transcribe does not support language \"no-EXIST\"", false);
 
 		gracefullyLeaveParticipants(user, 1);
 	}
 
 	@Test
 	@DisplayName("Azure lang STT Test")
-	void wrongAzureLangSttTest() throws Exception {
+	void azureLangSttTest() throws Exception {
 
-		log.info("Wrong AWS lang STT");
+		log.info("Azure lang STT");
 
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
 		Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT",
-				"azure", "OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_KEY", "fakekey", "OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_REGION",
-				"fakeregion");
+				"azure", "OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_KEY", OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_KEY,
+				"OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_REGION", OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_REGION);
 		restartOpenViduServer(config);
 
 		String body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}";
@@ -2184,7 +2102,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
-		sttSubUser(user, 0, 0, "no-EXIST", true, false, "Azure Speech to Text does not support language \"no-EXIST\"",
+		commonEnUsTranscriptionTest(user);
+
+		// Test non-existing language
+		sttSubUser(user, 0, 0, "no-EXIST", true, true, "Azure Speech to Text does not support language \"no-EXIST\"",
 				false);
 
 		gracefullyLeaveParticipants(user, 1);
@@ -2394,6 +2315,95 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		String restartCommand = "docker exec -i " + mediaNodeContainerId
 				+ " /bin/sh -c \"docker restart speech-to-text-service\"";
 		commandLine.executeCommand(restartCommand, 30);
+	}
+
+	private void commonEnUsTranscriptionTest(OpenViduTestappUser user) throws Exception {
+		List<String> expectedRecognitionList = Arrays.asList(
+				"for example we used to think that after childhood the brain did not really could not change and it turns out that nothing could be farther from the truth",
+				"another misconception about the brain is that you only use parts of it at any given time and silent when you do nothing",
+				"well this is also untrue it turns out that even when you are at rest and thinking of nothing your brain is highly active");
+
+		List<String> recognizingSttEvents = new ArrayList<String>();
+		List<String> recognizedSttEvents = new ArrayList<String>();
+		final CountDownLatch latch = new CountDownLatch(3);
+
+		boolean[] previousSttEventWasRecognized = new boolean[1];
+		String[] previousSttRecognizedText = new String[1];
+		AssertionError[] exc = new AssertionError[1];
+
+		user.getEventManager().on("speechToTextMessage", (event) -> {
+			String reason = event.get("reason").getAsString();
+			String text = event.get("text").getAsString();
+			if ("recognizing".equals(reason)) {
+
+				previousSttEventWasRecognized[0] = false;
+				previousSttRecognizedText[0] = null;
+				recognizingSttEvents.add(text);
+
+			} else if ("recognized".equals(reason)) {
+
+				if (previousSttEventWasRecognized[0]) {
+					exc[0] = exc[0] == null
+							? new AssertionError("Two recognized events in a row should never happen. Present event: "
+									+ event.get("text") + " | Previous event: \"" + previousSttRecognizedText[0] + "\"")
+							: exc[0];
+					while (latch.getCount() > 0) {
+						latch.countDown();
+					}
+				}
+				previousSttEventWasRecognized[0] = true;
+				previousSttRecognizedText[0] = text;
+				log.info("Recognized: {}", text);
+				recognizedSttEvents.add(text);
+				latch.countDown();
+
+			} else {
+
+				exc[0] = exc[0] == null ? new AssertionError("Unknown SpeechToText event 'reason' property " + reason)
+						: exc[0];
+				while (latch.getCount() > 0) {
+					latch.countDown();
+				}
+
+			}
+		});
+
+		this.sttSubUser(user, 0, 0, "en-US", true, false);
+
+		if (!latch.await(80, TimeUnit.SECONDS)) {
+			Assertions.fail("Timeout waiting for recognized STT events");
+		}
+
+		if (exc[0] != null) {
+			throw exc[0];
+		}
+
+		Assertions.assertTrue(recognizingSttEvents.size() > 0, "recognizing STT events should be greater than 0");
+		Assertions.assertTrue(recognizingSttEvents.size() > recognizedSttEvents.size(),
+				"recognized STT events should be greater than 0");
+
+		// The expected text may be in just 2 recognized events instead of 3
+		int expectedCharCount = expectedRecognitionList.stream().mapToInt(w -> w.length()).sum();
+		int recognizedCharCount = recognizedSttEvents.stream().mapToInt(w -> w.length()).sum();
+		int maxAllowedCountDifference = 50;
+		if (recognizedCharCount > (expectedCharCount + maxAllowedCountDifference)) {
+			recognizedSttEvents.remove(recognizedSttEvents.size() - 1);
+			log.info("Removed one element of recognized collection!");
+		}
+
+		String finalRecognition = String.join(" ", recognizedSttEvents).toLowerCase().replaceAll("[^a-z ]", "");
+		String expectedRecognition = String.join(" ", expectedRecognitionList);
+
+		// Cosine similarity string comparison has been proven the most accurate one
+		double cosineSimilarity = new Cosine().distance(finalRecognition, expectedRecognition);
+
+		log.info("Cosine similiarity: {}", cosineSimilarity);
+		log.info(expectedRecognition);
+		log.info(finalRecognition);
+		Assertions.assertTrue(cosineSimilarity < 0.1,
+				"Wrong similarity between actual and expected recognized text. Got " + cosineSimilarity);
+
+		sttUnsubUser(user, 0, 0, false, true);
 	}
 
 }

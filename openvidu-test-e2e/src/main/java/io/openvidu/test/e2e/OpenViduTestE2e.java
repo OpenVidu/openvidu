@@ -85,6 +85,13 @@ public class OpenViduTestE2e {
 	protected static String DOCKERHUB_PRIVATE_REGISTRY_PASSWORD = "not_valid";
 	protected static String EXTERNAL_CUSTOM_LAYOUT_PARAMS = "sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET";
 
+	protected static String AWS_REGION = "fakeRegion";
+	protected static String AWS_ACCESS_KEY_ID = "fakeKey";
+	protected static String AWS_SECRET_ACCESS_KEY = "fakeSecret";
+
+	protected static String OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_KEY = "fakeKey";
+	protected static String OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_REGION = "fakeRegion";
+
 	// https://hub.docker.com/r/selenium/standalone-chrome/tags
 	protected static String CHROME_VERSION = "latest";
 	// https://hub.docker.com/r/selenium/standalone-firefox/tags
@@ -193,7 +200,8 @@ public class OpenViduTestE2e {
 	private static GenericContainer<?> androidContainer(String image, long shmSize) {
 		GenericContainer<?> android = new GenericContainer<>(DockerImageName.parse(image)).withPrivilegedMode(true)
 				.withEnv(Map.of("DEVICE", "Samsung Galaxy S10", "APPIUM", "true", "APPIUM_HOST", "172.17.0.1",
-						"APPIUM_PORT", "4723", "MOBILE_WEB_TEST", "true", "RELAXED_SECURITY", "true", "DATAPARTITION", "2500m"))
+						"APPIUM_PORT", "4723", "MOBILE_WEB_TEST", "true", "RELAXED_SECURITY", "true", "DATAPARTITION",
+						"2500m"))
 				.withSharedMemorySize(shmSize).withExposedPorts(6080, 5554, 5555, 4723).waitingFor(waitAndroid)
 				.withFileSystemBind("/opt/openvidu/android", "/opt/openvidu/android").withReuse(true);
 		android.setPortBindings(Arrays.asList("6080:6080", "5554:5554", "5555:5555", "4723:4723"));
@@ -305,6 +313,31 @@ public class OpenViduTestE2e {
 		String openviduProSpeechToText = System.getProperty("OPENVIDU_PRO_SPEECH_TO_TEXT");
 		if (openviduProSpeechToText != null) {
 			OPENVIDU_PRO_SPEECH_TO_TEXT = openviduProSpeechToText;
+		}
+
+		String awsRegion = System.getProperty("AWS_REGION");
+		if (awsRegion != null) {
+			AWS_REGION = awsRegion;
+		}
+
+		String awsAccessKeyId = System.getProperty("AWS_ACCESS_KEY_ID");
+		if (awsAccessKeyId != null) {
+			AWS_ACCESS_KEY_ID = awsAccessKeyId;
+		}
+
+		String awsSecretAccessKey = System.getProperty("AWS_SECRET_ACCESS_KEY");
+		if (awsSecretAccessKey != null) {
+			AWS_SECRET_ACCESS_KEY = awsSecretAccessKey;
+		}
+
+		String azureKey = System.getProperty("OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_KEY");
+		if (azureKey != null) {
+			OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_KEY = azureKey;
+		}
+
+		String azureRegion = System.getProperty("OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_REGION");
+		if (azureRegion != null) {
+			OPENVIDU_PRO_SPEECH_TO_TEXT_AZURE_REGION = azureRegion;
 		}
 
 		String dockerhubPrivateRegistryPassword = System.getProperty("DOCKERHUB_PRIVATE_REGISTRY_PASSWORD");
