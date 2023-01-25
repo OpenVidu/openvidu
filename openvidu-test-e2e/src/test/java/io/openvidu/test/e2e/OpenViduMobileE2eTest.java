@@ -170,8 +170,14 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			// Check Ionic is properly receiving remote video from Chrome
 			WebElement subscriberVideo = ionicUser.getDriver().findElements(By.cssSelector("video")).get(1);
-			Map<String, Long> rgb = ionicUser.getAverageRgbFromVideo(subscriberVideo);
-			Assertions.assertTrue(checkAverageRgbGreen(rgb), "Video is not average green");
+			try {
+				Map<String, Long> rgb = ionicUser.getAverageRgbFromVideo(subscriberVideo);
+				Assertions.assertTrue(checkAverageRgbGreen(rgb), "Video is not average green");
+			} catch (Throwable e) {
+				log.error("Error checking average green of Ionic user");
+				System.out.println(getBase64Screenshot(ionicUser));
+				throw e;
+			}
 
 			gracefullyLeaveParticipants(chromeUser, 1);
 
