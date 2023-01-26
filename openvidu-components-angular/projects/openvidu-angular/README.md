@@ -75,3 +75,11 @@ You can also add the default styles in your `styles.scss` file:
 	--ov-panel-radius: 5px;
 }
 ```
+
+## How to use it
+OpenVidu team has created a few tutorials to help you to start using OpenVidu Angular components. You can find them [here](https://docs.openvidu.io/en/stable/components/#where-to-start).
+
+
+## openvidu-angular API
+
+openvidu-angular API documentation is available [here](https://docs.openvidu.io/en/stable/api/openvidu-angular/).
