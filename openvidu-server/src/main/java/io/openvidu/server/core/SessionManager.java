@@ -53,7 +53,6 @@ import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.SessionProperties;
-import io.openvidu.java.client.utils.FormatChecker;
 import io.openvidu.server.cdr.CDREventRecordingStatusChanged;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
@@ -194,7 +193,7 @@ public abstract class SessionManager {
 			String connectionId);
 
 	public abstract void stopRtmpIfNecessary(Session session);
-	
+
 	public void onEcho(String participantPrivateId, Integer requestId) {
 		sessionEventsHandler.onEcho(participantPrivateId, requestId);
 	}
@@ -338,7 +337,7 @@ public abstract class SessionManager {
 
 	public Token newToken(Session session, OpenViduRole role, String serverMetadata, boolean record,
 			KurentoOptions kurentoOptions, List<IceServerProperties> customIceServers) throws Exception {
-		if (!FormatChecker.isServerMetadataFormatCorrect(serverMetadata)) {
+		if (!io.openvidu.java.client.Utils.isServerMetadataFormatCorrect(serverMetadata)) {
 			log.error("Data invalid format");
 			throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Data invalid format");
 		}

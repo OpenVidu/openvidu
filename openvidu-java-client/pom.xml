@@ -64,11 +64,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.5.13</version>
-		</dependency>
-		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 			<version>2.10</version>
@@ -106,6 +101,7 @@
 						<version>${version.javadoc.plugin}</version>
 						<configuration>
 							<show>public</show>
+							<excludePackageNames>io.openvidu.java.client.utils</excludePackageNames>
 						</configuration>
 					</plugin>
 				</plugins>
@@ -142,6 +138,7 @@
 						<configuration>
 							<show>public</show>
 							<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+							<excludePackageNames>io.openvidu.java.client.utils</excludePackageNames>
 						</configuration>
 						<executions>
 							<execution>

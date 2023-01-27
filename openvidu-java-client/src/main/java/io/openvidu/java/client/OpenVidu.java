@@ -18,55 +18,49 @@
 package io.openvidu.java.client;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpClient.Builder;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.security.KeyManagementException;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509ExtendedTrustManager;
 
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
-import org.apache.http.ParseException;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.ssl.TrustStrategy;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
 
 public class OpenVidu {
 
 	private static final Logger log = LoggerFactory.getLogger(OpenVidu.class);
 
-	private String secret;
 	protected String hostname;
 	protected HttpClient httpClient;
 	protected Map<String, Session> activeSessions = new ConcurrentHashMap<>();
+	protected long requestTimeout = 30000;
+	protected Map<String, String> headers = new HashMap<>();
 
 	protected final static String API_PATH = "openvidu/api";
 	protected final static String API_SESSIONS = API_PATH + "/sessions";
@@ -75,49 +69,149 @@ public class OpenVidu {
 	protected final static String API_RECORDINGS_START = API_RECORDINGS + "/start";
 	protected final static String API_RECORDINGS_STOP = API_RECORDINGS + "/stop";
 
+	private String defaultBasicAuth;
+
 	/**
-	 * @param hostname URL where your instance of OpenVidu Server is up an running.
-	 *                 It must be the full URL (e.g.
-	 *                 <code>https://12.34.56.78:1234/</code>)
+	 * @param hostname URL where your OpenVidu deployment is up an running. It must
+	 *                 be the full URL (e.g. <code>https://12.34.56.78:1234/</code>)
 	 * 
-	 * @param secret   Secret used on OpenVidu Server initialization
+	 * @param secret   Secret configured in your OpenVidu deployment
 	 */
 	public OpenVidu(String hostname, String secret) {
 
-		this.hostname = hostname;
+		testHostname(hostname);
+		setDefaultBasicAuth(secret);
 
+		this.hostname = hostname;
 		if (!this.hostname.endsWith("/")) {
 			this.hostname += "/";
 		}
 
-		this.secret = secret;
-
-		TrustStrategy trustStrategy = new TrustStrategy() {
-			@Override
-			public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-				return true;
-			}
-		};
-
-		CredentialsProvider provider = new BasicCredentialsProvider();
-		UsernamePasswordCredentials credentials = new UsernamePasswordCredentials("OPENVIDUAPP", this.secret);
-		provider.setCredentials(AuthScope.ANY, credentials);
-
 		SSLContext sslContext;
-
 		try {
-			sslContext = new SSLContextBuilder().loadTrustMaterial(null, trustStrategy).build();
-		} catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
+			sslContext = SSLContext.getInstance("TLS");
+			sslContext.init(null, new TrustManager[] { new X509ExtendedTrustManager() {
+				public X509Certificate[] getAcceptedIssuers() {
+					return null;
+				}
+
+				public void checkClientTrusted(final X509Certificate[] a_certificates, final String a_auth_type) {
+				}
+
+				public void checkServerTrusted(final X509Certificate[] a_certificates, final String a_auth_type) {
+				}
+
+				public void checkClientTrusted(final X509Certificate[] a_certificates, final String a_auth_type,
+						final Socket a_socket) {
+				}
+
+				public void checkServerTrusted(final X509Certificate[] a_certificates, final String a_auth_type,
+						final Socket a_socket) {
+				}
+
+				public void checkClientTrusted(final X509Certificate[] a_certificates, final String a_auth_type,
+						final SSLEngine a_engine) {
+				}
+
+				public void checkServerTrusted(final X509Certificate[] a_certificates, final String a_auth_type,
+						final SSLEngine a_engine) {
+				}
+			} }, null);
+		} catch (KeyManagementException | NoSuchAlgorithmException e) {
 			throw new RuntimeException(e);
 		}
 
-		RequestConfig.Builder requestBuilder = RequestConfig.custom();
-		requestBuilder = requestBuilder.setConnectTimeout(30000);
-		requestBuilder = requestBuilder.setConnectionRequestTimeout(30000);
+		Builder b = HttpClient.newBuilder();
+		b.sslContext(sslContext);
+		b.connectTimeout(Duration.ofSeconds(30));
+		this.httpClient = b.build();
+	}
 
-		this.httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestBuilder.build())
-				.setConnectionTimeToLive(30, TimeUnit.SECONDS).setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
-				.setSSLContext(sslContext).setDefaultCredentialsProvider(provider).build();
+	/**
+	 * @param hostname   URL where your OpenVidu deployment is up an running. It
+	 *                   must be the full URL (e.g.
+	 *                   <code>https://12.34.56.78:1234/</code>)
+	 * @param httpClient Object of class <a target="_blank" href=
+	 *                   "https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpClient.html">java.net.http.HttpClient</a>.
+	 *                   This overrides the internal HTTP client in use. This method
+	 *                   allows you to custom configure the HTTP client to your
+	 *                   needs. This may be interesting for many reasons, including:
+	 *                   <ul>
+	 *                   <li>Adding proxy configuration</li>
+	 *                   <li>Customizing the SSLContext</li>
+	 *                   <li>Modifying the connection timeout</li>
+	 *                   <li>Adding a cookie handler</li>
+	 *                   </ul>
+	 */
+	public OpenVidu(String hostname, String secret, HttpClient httpClient) {
+
+		testHostname(hostname);
+		setDefaultBasicAuth(secret);
+
+		this.hostname = hostname;
+		if (!this.hostname.endsWith("/")) {
+			this.hostname += "/";
+		}
+
+		Builder b = HttpClient.newBuilder();
+		if (httpClient.authenticator().isPresent()) {
+			log.warn(
+					"The provided HttpClient contains a custom java.net.Authenticator. OpenVidu deployments require all HTTP requests to have an Authorization header with Basic Auth, with username \"OPENVIDUAPP\" and password your OpenVidu deployment's secret (configuration parameter OPENVIDU_SECRET). The default Authenticator adds this header. Make sure that your custom Authenticator does so as well or that you add it explicitly via OpenVidu#setRequestHeaders, or you will receive 401 responses");
+			b.authenticator(httpClient.authenticator().get());
+		}
+		if (httpClient.connectTimeout().isPresent()) {
+			b.connectTimeout(httpClient.connectTimeout().get());
+		}
+		if (httpClient.cookieHandler().isPresent()) {
+			b.cookieHandler(httpClient.cookieHandler().get());
+		}
+		if (httpClient.executor().isPresent()) {
+			b.executor(httpClient.executor().get());
+		}
+		if (httpClient.proxy().isPresent()) {
+			b.proxy(httpClient.proxy().get());
+		}
+		b.followRedirects(httpClient.followRedirects());
+		b.sslContext(httpClient.sslContext());
+		b.sslParameters(httpClient.sslParameters());
+		b.version(httpClient.version());
+
+		this.httpClient = b.build();
+	}
+
+	/**
+	 * Returns the current request timeout configured for all requests.
+	 */
+	public long getRequestTimeout() {
+		return this.requestTimeout;
+	}
+
+	/**
+	 * Sets the request timeout for all HTTP requests. This is the same as setting
+	 * the <a target="_blank" href=
+	 * "https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpRequest.html#timeout()">HttpRequest.timeout()</a>
+	 * property for all requests. The default value is 30000 ms.
+	 * 
+	 * @param requestTimeout Timeout in milliseconds
+	 */
+	public void setRequestTimeout(long requestTimeout) {
+		this.requestTimeout = requestTimeout;
+	}
+
+	/**
+	 * Returns the current collection of custom headers configured for all requests.
+	 */
+	public Map<String, String> getRequestHeaders() {
+		return this.headers;
+	}
+
+	/**
+	 * Sets custom HTTP headers for all requests. Will override any previous value.
+	 * 
+	 * @param headers Header names and values
+	 */
+	public void setRequestHeaders(Map<String, String> headers) {
+		this.headers = headers;
 	}
 
 	/**
@@ -183,23 +277,20 @@ public class OpenVidu {
 	public Recording startRecording(String sessionId, RecordingProperties properties)
 			throws OpenViduJavaClientException, OpenViduHttpException {
 
-		HttpPost request = new HttpPost(this.hostname + API_RECORDINGS_START);
-
-		JsonObject json = properties.toJson();
-		json.addProperty("session", sessionId);
-
-		StringEntity params = new StringEntity(json.toString(), "UTF-8");
-
-		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-		request.setEntity(params);
-
-		HttpResponse response = null;
 		try {
-			response = this.httpClient.execute(request);
+			JsonObject json = properties.toJson();
+			json.addProperty("session", sessionId);
 
-			int statusCode = response.getStatusLine().getStatusCode();
-			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				Recording r = new Recording(httpResponseToJson(response));
+			HttpRequest request = addHeaders(
+					HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.ofString(json.toString()))
+							.uri(new URI(this.hostname + API_RECORDINGS_START))
+							.setHeader("Content-Type", "application/json").timeout(Duration.ofMillis(requestTimeout)))
+					.build();
+
+			HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+			if ((response.statusCode() == HttpURLConnection.HTTP_OK)) {
+				Recording r = new Recording(Utils.httpResponseToJson(response));
 				Session activeSession = this.activeSessions.get(r.getSessionId());
 				if (activeSession != null) {
 					activeSession.setIsBeingRecorded(true);
@@ -210,15 +301,11 @@ public class OpenVidu {
 				}
 				return r;
 			} else {
-				throw new OpenViduHttpException(statusCode);
+				throw new OpenViduHttpException(response.statusCode());
 			}
 
-		} catch (IOException e) {
+		} catch (URISyntaxException | IOException | InterruptedException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
-		} finally {
-			if (response != null) {
-				EntityUtils.consumeQuietly(response.getEntity());
-			}
 		}
 	}
 
@@ -288,14 +375,16 @@ public class OpenVidu {
 	 *                                     API</a>)
 	 */
 	public Recording stopRecording(String recordingId) throws OpenViduJavaClientException, OpenViduHttpException {
-		HttpPost request = new HttpPost(this.hostname + API_RECORDINGS_STOP + "/" + recordingId);
-		HttpResponse response = null;
-		try {
-			response = this.httpClient.execute(request);
 
-			int statusCode = response.getStatusLine().getStatusCode();
-			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				Recording r = new Recording(httpResponseToJson(response));
+		try {
+			HttpRequest request = addHeaders(HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.noBody())
+					.uri(new URI(this.hostname + API_RECORDINGS_STOP + "/" + recordingId))
+					.timeout(Duration.ofMillis(requestTimeout))).build();
+
+			HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+			if (response.statusCode() == HttpURLConnection.HTTP_OK) {
+				Recording r = new Recording(Utils.httpResponseToJson(response));
 				Session activeSession = this.activeSessions.get(r.getSessionId());
 				if (activeSession != null) {
 					activeSession.setIsBeingRecorded(false);
@@ -306,14 +395,10 @@ public class OpenVidu {
 				}
 				return r;
 			} else {
-				throw new OpenViduHttpException(statusCode);
+				throw new OpenViduHttpException(response.statusCode());
 			}
-		} catch (IOException e) {
+		} catch (URISyntaxException | IOException | InterruptedException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
-		} finally {
-			if (response != null) {
-				EntityUtils.consumeQuietly(response.getEntity());
-			}
 		}
 	}
 
@@ -331,24 +416,22 @@ public class OpenVidu {
 	 *                                     API</a>)
 	 */
 	public Recording getRecording(String recordingId) throws OpenViduJavaClientException, OpenViduHttpException {
-		HttpGet request = new HttpGet(this.hostname + API_RECORDINGS + "/" + recordingId);
-		HttpResponse response = null;
+
 		try {
-			response = this.httpClient.execute(request);
+			HttpRequest request = addHeaders(
+					HttpRequest.newBuilder().GET().uri(new URI(this.hostname + API_RECORDINGS + "/" + recordingId))
+							.timeout(Duration.ofMillis(requestTimeout)))
+					.build();
 
-			int statusCode = response.getStatusLine().getStatusCode();
-			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				return new Recording(httpResponseToJson(response));
+			HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+			if (response.statusCode() == HttpURLConnection.HTTP_OK) {
+				return new Recording(Utils.httpResponseToJson(response));
 			} else {
-				throw new OpenViduHttpException(statusCode);
+				throw new OpenViduHttpException(response.statusCode());
 			}
-
-		} catch (IOException e) {
+		} catch (URISyntaxException | IOException | InterruptedException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
-		} finally {
-			if (response != null) {
-				EntityUtils.consumeQuietly(response.getEntity());
-			}
 		}
 	}
 
@@ -361,30 +444,26 @@ public class OpenVidu {
 	 * @throws OpenViduHttpException
 	 */
 	public List<Recording> listRecordings() throws OpenViduJavaClientException, OpenViduHttpException {
-		HttpGet request = new HttpGet(this.hostname + API_RECORDINGS);
-		HttpResponse response = null;
-		try {
-			response = this.httpClient.execute(request);
 
-			int statusCode = response.getStatusLine().getStatusCode();
-			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+		try {
+			HttpRequest request = addHeaders(HttpRequest.newBuilder().GET().uri(new URI(this.hostname + API_RECORDINGS))
+					.timeout(Duration.ofMillis(requestTimeout))).build();
+
+			HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+			if (response.statusCode() == HttpURLConnection.HTTP_OK) {
 				List<Recording> recordings = new ArrayList<>();
-				JsonObject json = httpResponseToJson(response);
+				JsonObject json = Utils.httpResponseToJson(response);
 				JsonArray array = json.get("items").getAsJsonArray();
 				array.forEach(item -> {
 					recordings.add(new Recording(item.getAsJsonObject()));
 				});
 				return recordings;
 			} else {
-				throw new OpenViduHttpException(statusCode);
+				throw new OpenViduHttpException(response.statusCode());
 			}
-
-		} catch (IOException e) {
+		} catch (URISyntaxException | IOException | InterruptedException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
-		} finally {
-			if (response != null) {
-				EntityUtils.consumeQuietly(response.getEntity());
-			}
 		}
 	}
 
@@ -405,22 +484,20 @@ public class OpenVidu {
 	 *                                     API</a>)
 	 */
 	public void deleteRecording(String recordingId) throws OpenViduJavaClientException, OpenViduHttpException {
-		HttpDelete request = new HttpDelete(this.hostname + API_RECORDINGS + "/" + recordingId);
-		HttpResponse response = null;
+
 		try {
-			response = this.httpClient.execute(request);
+			HttpRequest request = addHeaders(
+					HttpRequest.newBuilder().DELETE().uri(new URI(this.hostname + API_RECORDINGS + "/" + recordingId))
+							.timeout(Duration.ofMillis(requestTimeout)))
+					.build();
 
-			int statusCode = response.getStatusLine().getStatusCode();
-			if (!(statusCode == org.apache.http.HttpStatus.SC_NO_CONTENT)) {
-				throw new OpenViduHttpException(statusCode);
+			HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+			if (response.statusCode() != HttpURLConnection.HTTP_NO_CONTENT) {
+				throw new OpenViduHttpException(response.statusCode());
 			}
-
-		} catch (IOException e) {
+		} catch (URISyntaxException | IOException | InterruptedException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
-		} finally {
-			if (response != null) {
-				EntityUtils.consumeQuietly(response.getEntity());
-			}
 		}
 	}
 
@@ -488,16 +565,17 @@ public class OpenVidu {
 	 * @throws OpenViduJavaClientException
 	 */
 	public boolean fetch() throws OpenViduJavaClientException, OpenViduHttpException {
-		HttpGet request = new HttpGet(this.hostname + API_SESSIONS + "?pendingConnections=true");
 
-		HttpResponse response = null;
 		try {
-			response = this.httpClient.execute(request);
+			HttpRequest request = addHeaders(HttpRequest.newBuilder().GET()
+					.uri(new URI(this.hostname + API_SESSIONS + "?pendingConnections=true"))
+					.timeout(Duration.ofMillis(requestTimeout))).build();
 
-			int statusCode = response.getStatusLine().getStatusCode();
-			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+			HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-				JsonObject jsonSessions = httpResponseToJson(response);
+			if (response.statusCode() == HttpURLConnection.HTTP_OK) {
+
+				JsonObject jsonSessions = Utils.httpResponseToJson(response);
 				JsonArray jsonArraySessions = jsonSessions.get("content").getAsJsonArray();
 
 				// Boolean to store if any Session has changed
@@ -546,26 +624,35 @@ public class OpenVidu {
 				return hasChanged[0];
 
 			} else {
-				throw new OpenViduHttpException(statusCode);
+				throw new OpenViduHttpException(response.statusCode());
 			}
 
-		} catch (IOException e) {
+		} catch (URISyntaxException | IOException | InterruptedException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
-		} finally {
-			if (response != null) {
-				EntityUtils.consumeQuietly(response.getEntity());
-			}
 		}
 	}
 
-	private JsonObject httpResponseToJson(HttpResponse response) throws OpenViduJavaClientException {
+	protected HttpRequest.Builder addHeaders(HttpRequest.Builder builder) {
+		// HTTP header names are case insensitive
+		Map<String, String> headersLowerCase = new HashMap<>();
+		this.headers.forEach((k, v) -> headersLowerCase.put(k.toLowerCase(), v));
+		if (!headersLowerCase.containsKey("authorization")) {
+			// There is no custom Authorization header. Add default Basic Auth for OpenVidu
+			headersLowerCase.put("authorization", this.defaultBasicAuth);
+		}
+		headersLowerCase.forEach((k, v) -> builder.setHeader(k, v));
+		return builder;
+	}
+
+	private void testHostname(String hostnameStr) {
 		try {
-			JsonObject json = new Gson().fromJson(EntityUtils.toString(response.getEntity(), "UTF-8"),
-					JsonObject.class);
-			return json;
-		} catch (JsonSyntaxException | ParseException | IOException e) {
-			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
+			new URL(hostnameStr);
+		} catch (MalformedURLException e) {
+			throw new RuntimeException("The hostname \"" + hostnameStr + "\" is not a valid URL: " + e.getMessage());
 		}
 	}
 
+	private void setDefaultBasicAuth(String secret) {
+		this.defaultBasicAuth = "Basic " + Base64.getEncoder().encodeToString(("OPENVIDUAPP:" + secret).getBytes());
+	}
 }

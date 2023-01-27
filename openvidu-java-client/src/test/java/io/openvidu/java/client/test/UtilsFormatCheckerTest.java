@@ -6,9 +6,9 @@ import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import io.openvidu.java.client.utils.FormatChecker;
+import io.openvidu.java.client.Utils;
 
-public class FormatCheckerTest {
+public class UtilsFormatCheckerTest {
 
 	@Test
 	public void testCustomSessionIdFormat() {
@@ -23,9 +23,9 @@ public class FormatCheckerTest {
 				"session-_", "123_session-1");
 
 		for (String id : invalidCustomSessionIds)
-			Assertions.assertFalse(FormatChecker.isValidCustomSessionId(id));
+			Assertions.assertFalse(Utils.isValidCustomSessionId(id));
 		for (String id : validCustomSessionIds)
-			Assertions.assertTrue(FormatChecker.isValidCustomSessionId(id));
+			Assertions.assertTrue(Utils.isValidCustomSessionId(id));
 	}
 
 	@Test
@@ -37,9 +37,9 @@ public class FormatCheckerTest {
 		List<String> validResolutions = Arrays.asList("1920x1080", "1280x720", "100x1999");
 
 		for (String resolution : invalidResolutions)
-			Assertions.assertFalse(FormatChecker.isAcceptableRecordingResolution(resolution));
+			Assertions.assertFalse(Utils.isAcceptableRecordingResolution(resolution));
 		for (String resolution : validResolutions)
-			Assertions.assertTrue(FormatChecker.isAcceptableRecordingResolution(resolution));
+			Assertions.assertTrue(Utils.isAcceptableRecordingResolution(resolution));
 	}
 
 	@Test
@@ -50,9 +50,9 @@ public class FormatCheckerTest {
 		List<Integer> validFramerates = Arrays.asList(1, 2, 30, 60, 119, 120);
 
 		for (int framerate : invalidFrameRates)
-			Assertions.assertFalse(FormatChecker.isAcceptableRecordingFrameRate(framerate));
+			Assertions.assertFalse(Utils.isAcceptableRecordingFrameRate(framerate));
 		for (int framerate : validFramerates)
-			Assertions.assertTrue(FormatChecker.isAcceptableRecordingFrameRate(framerate));
+			Assertions.assertTrue(Utils.isAcceptableRecordingFrameRate(framerate));
 	}
 
 }

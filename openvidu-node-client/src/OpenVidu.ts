@@ -87,10 +87,10 @@ export class OpenVidu {
   activeSessions: Session[] = [];
 
   /**
-   * @param hostname URL where your instance of OpenVidu Server is up an running.
+   * @param hostname URL where your OpenVidu deployment is up an running.
    *                 It must be the full URL (e.g. `https://12.34.56.78:1234/`)
    * 
-   * @param secret Secret used on OpenVidu Server initialization
+   * @param secret Secret configured in your OpenVidu deployment
    */
   constructor(private hostname: string, secret: string) {
     this.setHostnameAndPort();
