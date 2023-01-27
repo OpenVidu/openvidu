@@ -4,6 +4,7 @@ import static org.openqa.selenium.OutputType.BASE64;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,7 +23,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.By;
@@ -508,7 +508,7 @@ public class OpenViduTestE2e {
 
 	protected static void getDefaultTranscodingValues() throws Exception {
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
-		JsonObject ovConfig = restClient.rest(HttpMethod.GET, "/openvidu/api/config", HttpStatus.SC_OK);
+		JsonObject ovConfig = restClient.rest(HttpMethod.GET, "/openvidu/api/config", HttpURLConnection.HTTP_OK);
 		defaultForcedVideoCodec = VideoCodec.valueOf(ovConfig.get("OPENVIDU_STREAMS_FORCED_VIDEO_CODEC").getAsString());
 		defaultAllowTranscoding = ovConfig.get("OPENVIDU_STREAMS_ALLOW_TRANSCODING").getAsBoolean();
 	}
@@ -787,7 +787,7 @@ public class OpenViduTestE2e {
 	}
 
 	protected JsonObject restartOpenViduServer(Map<String, Object> newConfig) {
-		return this.restartOpenViduServer(newConfig, false, HttpStatus.SC_OK);
+		return this.restartOpenViduServer(newConfig, false, HttpURLConnection.HTTP_OK);
 	}
 
 	protected JsonObject restartOpenViduServer(Map<String, Object> newConfig, boolean force, int status) {
@@ -809,11 +809,11 @@ public class OpenViduTestE2e {
 
 			if (mustRestart || force) {
 				final int currentRestartCounter = restClient
-						.rest(HttpMethod.GET, "/openvidu/api/status", null, HttpStatus.SC_OK, true, false, true,
-								"{'startTime': 0, 'restartCounter': 0, 'lastRestartTime': 0}")
+						.rest(HttpMethod.GET, "/openvidu/api/status", null, HttpURLConnection.HTTP_OK, true, false,
+								true, "{'startTime': 0, 'restartCounter': 0, 'lastRestartTime': 0}")
 						.get("restartCounter").getAsInt();
 				JsonObject response = restClient.rest(HttpMethod.POST, "/openvidu/api/restart", body, status);
-				if (HttpStatus.SC_OK == status) {
+				if (HttpURLConnection.HTTP_OK == status) {
 					waitUntilOpenViduRestarted(restClient, currentRestartCounter, 120);
 				}
 				return response;
@@ -835,7 +835,8 @@ public class OpenViduTestE2e {
 		final int maxAttempts = maxSecondsWait * 1000 / msInterval;
 		while (!restarted && attempts < maxAttempts) {
 			try {
-				JsonObject response = restClient.rest(HttpMethod.GET, "/openvidu/api/status", HttpStatus.SC_OK);
+				JsonObject response = restClient.rest(HttpMethod.GET, "/openvidu/api/status",
+						HttpURLConnection.HTTP_OK);
 				if (response.get("restartCounter").getAsInt() == (previouesRestartCounter + 1)) {
 					restarted = true;
 				} else {

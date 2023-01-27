@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,6 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -410,9 +410,9 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 	private String getToken(String sessionId) throws Exception {
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_DEPLOYMENT);
 		restClient.restString(HttpMethod.POST, "/api/sessions", "{'customSessionId': '" + sessionId + "'}",
-				HttpStatus.SC_OK);
+				HttpURLConnection.HTTP_OK);
 		return restClient.restString(HttpMethod.POST, "/api/sessions/" + sessionId + "/connections", "{}",
-				HttpStatus.SC_OK);
+				HttpURLConnection.HTTP_OK);
 	}
 
 	private Map<String, Long> getAverageColorOfElement(WebDriver driver, By locator) throws IOException {

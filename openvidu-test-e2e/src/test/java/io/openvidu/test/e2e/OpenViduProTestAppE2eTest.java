@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.awt.Point;
 import java.io.File;
 import java.io.FileReader;
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,7 +22,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -72,8 +72,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				CustomHttpClient restClient = new CustomHttpClient(OpenViduTestAppE2eTest.OPENVIDU_URL, "OPENVIDUAPP",
 						OpenViduTestAppE2eTest.OPENVIDU_SECRET);
 				JsonArray mediaNodes = restClient
-						.rest(HttpMethod.GET, "/openvidu/api/media-nodes", null, HttpStatus.SC_OK).get("content")
-						.getAsJsonArray();
+						.rest(HttpMethod.GET, "/openvidu/api/media-nodes", null, HttpURLConnection.HTTP_OK)
+						.get("content").getAsJsonArray();
 				mediaNodes.asList().parallelStream().forEach(mediaNode -> {
 					String containerId = mediaNode.getAsJsonObject().get("environmentId").getAsString();
 					try {
@@ -127,7 +127,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Get connectionId and streamId for the user configured to be recorded
 		JsonObject sessionInfo = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/" + sessionName,
-				HttpStatus.SC_OK);
+				HttpURLConnection.HTTP_OK);
 		JsonArray connections = sessionInfo.get("connections").getAsJsonObject().get("content").getAsJsonArray();
 		String connectionId1 = null;
 		String streamId1 = null;
@@ -142,13 +142,14 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Start the recording of the sessions
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start",
-				"{'session':'" + sessionName + "','outputMode':'INDIVIDUAL'}", HttpStatus.SC_OK);
+				"{'session':'" + sessionName + "','outputMode':'INDIVIDUAL'}", HttpURLConnection.HTTP_OK);
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 3);
 		Thread.sleep(1000);
 
 		// Get connectionId and streamId for one of the users configured to NOT be
 		// recorded
-		sessionInfo = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/" + sessionName, HttpStatus.SC_OK);
+		sessionInfo = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/" + sessionName,
+				HttpURLConnection.HTTP_OK);
 		connections = sessionInfo.get("connections").getAsJsonObject().get("content").getAsJsonArray();
 		String connectionId2 = null;
 		String streamId2 = null;
@@ -164,20 +165,20 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Generate 3 total recordings of 1 second length for the stream of the user
 		// configured to NOT be recorded
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
-				"{'record':true}", HttpStatus.SC_OK);
+				"{'record':true}", HttpURLConnection.HTTP_OK);
 		Thread.sleep(1000);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
-				"{'record':false}", HttpStatus.SC_OK);
+				"{'record':false}", HttpURLConnection.HTTP_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
-				"{'record':true}", HttpStatus.SC_OK);
+				"{'record':true}", HttpURLConnection.HTTP_OK);
 		Thread.sleep(1000);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
-				"{'record':false}", HttpStatus.SC_OK);
+				"{'record':false}", HttpURLConnection.HTTP_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
-				"{'record':true}", HttpStatus.SC_OK);
+				"{'record':true}", HttpURLConnection.HTTP_OK);
 		Thread.sleep(1000);
 
-		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/" + sessionName, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/" + sessionName, HttpURLConnection.HTTP_OK);
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 3);
 
 		gracefullyLeaveParticipants(user, 3);
@@ -259,11 +260,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		 * PATCH /openvidu/api/sessions/<SESSION_ID>/connection/<CONNECTION_ID>
 		 **/
 		String body = "{'customSessionId': 'CUSTOM_SESSION_ID'}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK, true, false, true,
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpURLConnection.HTTP_OK, true, false, true,
 				DEFAULT_JSON_SESSION);
 		body = "{'role':'PUBLISHER','record':false,'data':'MY_SERVER_PRO_DATA'}";
 		JsonObject res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body,
-				HttpStatus.SC_OK);
+				HttpURLConnection.HTTP_OK);
 		final String token = res.get("token").getAsString();
 		final String connectionId = res.get("connectionId").getAsString();
 		final long createdAt = res.get("createdAt").getAsLong();
@@ -272,29 +273,29 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Test with REST API
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'role':false}", HttpStatus.SC_BAD_REQUEST);
+				"{'role':false}", HttpURLConnection.HTTP_BAD_REQUEST);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'record':123}", HttpStatus.SC_BAD_REQUEST);
+				"{'record':123}", HttpURLConnection.HTTP_BAD_REQUEST);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'role':'PUBLISHER','record':'WRONG'}", HttpStatus.SC_BAD_REQUEST);
+				"{'role':'PUBLISHER','record':'WRONG'}", HttpURLConnection.HTTP_BAD_REQUEST);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/WRONG/connection/" + connectionId,
-				"{'role':'PUBLISHER','record':'WRONG'}", HttpStatus.SC_NOT_FOUND);
+				"{'role':'PUBLISHER','record':'WRONG'}", HttpURLConnection.HTTP_NOT_FOUND);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/WRONG",
-				"{'role':'PUBLISHER','record':true}", HttpStatus.SC_NOT_FOUND);
+				"{'role':'PUBLISHER','record':true}", HttpURLConnection.HTTP_NOT_FOUND);
 
 		// No change should return 200. At this point role=PUBLISHER and record=false
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId, "{}",
-				HttpStatus.SC_OK);
+				HttpURLConnection.HTTP_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'role':'PUBLISHER'}", HttpStatus.SC_OK);
+				"{'role':'PUBLISHER'}", HttpURLConnection.HTTP_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'record':false}", HttpStatus.SC_OK);
+				"{'record':false}", HttpURLConnection.HTTP_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'role':'PUBLISHER','record':false,'data':'OTHER_DATA'}", HttpStatus.SC_OK);
+				"{'role':'PUBLISHER','record':false,'data':'OTHER_DATA'}", HttpURLConnection.HTTP_OK);
 
 		// Updating only role should let record value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'role':'MODERATOR'}", HttpStatus.SC_OK, true, true, true,
+				"{'role':'MODERATOR'}", HttpURLConnection.HTTP_OK, true, true, true,
 				mergeJson(DEFAULT_JSON_PENDING_CONNECTION,
 						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'MODERATOR','serverData':'MY_SERVER_PRO_DATA','record':false,'token':'"
@@ -302,7 +303,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 						new String[0]));
 		// Updating only record should let role value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'record':true}", HttpStatus.SC_OK, true, true, true,
+				"{'record':true}", HttpURLConnection.HTTP_OK, true, true, true,
 				mergeJson(DEFAULT_JSON_PENDING_CONNECTION,
 						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'MODERATOR','serverData':'MY_SERVER_PRO_DATA','token':'" + token
@@ -317,7 +318,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			session.updateConnection("WRONG_CONNECTION_ID", new ConnectionProperties.Builder().build());
 			Assertions.fail("Expected OpenViduHttpException exception");
 		} catch (OpenViduHttpException exception) {
-			Assertions.assertEquals(HttpStatus.SC_NOT_FOUND, exception.getStatus(), "Wrong HTTP status");
+			Assertions.assertEquals(HttpURLConnection.HTTP_NOT_FOUND, exception.getStatus(), "Wrong HTTP status");
 		}
 		Assertions.assertFalse(session.fetch(), "Session object should not have changed");
 		Connection connection = session.updateConnection(connectionId,
@@ -361,8 +362,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 
 		// Session REST API entity should now have "mediaNodeId" property
-		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true, false,
-				true, mergeJson(DEFAULT_JSON_SESSION, "{'mediaNodeId':'STR'}", new String[0]));
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", null, HttpURLConnection.HTTP_OK,
+				true, false, true, mergeJson(DEFAULT_JSON_SESSION, "{'mediaNodeId':'STR'}", new String[0]));
 
 		Assertions.assertTrue(session.fetch(), "Session object should have changed");
 		connection = session.getActiveConnections().get(0);
@@ -377,17 +378,17 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// No change should return 200. At this point role=SUBSCRIBER and record=false
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId, "{}",
-				HttpStatus.SC_OK);
+				HttpURLConnection.HTTP_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'role':'SUBSCRIBER'}", HttpStatus.SC_OK);
+				"{'role':'SUBSCRIBER'}", HttpURLConnection.HTTP_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'record':false}", HttpStatus.SC_OK);
+				"{'record':false}", HttpURLConnection.HTTP_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'role':'SUBSCRIBER','record':false}", HttpStatus.SC_OK);
+				"{'role':'SUBSCRIBER','record':false}", HttpURLConnection.HTTP_OK);
 
 		// Updating only role should let record value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'role':'MODERATOR'}", HttpStatus.SC_OK, false, true, true,
+				"{'role':'MODERATOR'}", HttpURLConnection.HTTP_OK, false, true, true,
 				mergeJson(DEFAULT_JSON_ACTIVE_CONNECTION,
 						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'MODERATOR','record':false,'token':'" + token
@@ -399,7 +400,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Updating only record should let role value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'record':true}", HttpStatus.SC_OK, false, true, true,
+				"{'record':true}", HttpURLConnection.HTTP_OK, false, true, true,
 				mergeJson(DEFAULT_JSON_ACTIVE_CONNECTION,
 						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'MODERATOR','record':true,'token':'" + token
@@ -410,7 +411,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 2);
 
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'role':'SUBSCRIBER','record':true,'data':'OTHER DATA'}", HttpStatus.SC_OK, false, true, true,
+				"{'role':'SUBSCRIBER','record':true,'data':'OTHER DATA'}", HttpURLConnection.HTTP_OK, false, true, true,
 				mergeJson(DEFAULT_JSON_ACTIVE_CONNECTION,
 						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'SUBSCRIBER','record':true,'token':'" + token
@@ -421,7 +422,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 3);
 
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
-				"{'role':'PUBLISHER'}", HttpStatus.SC_OK, false, true, true,
+				"{'role':'PUBLISHER'}", HttpURLConnection.HTTP_OK, false, true, true,
 				mergeJson(DEFAULT_JSON_ACTIVE_CONNECTION,
 						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'PUBLISHER','record':true,'token':'" + token
@@ -459,7 +460,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			session.updateConnection("WRONG_CONNECTION_ID", new ConnectionProperties.Builder().build());
 			Assertions.fail("Expected OpenViduHttpException exception");
 		} catch (OpenViduHttpException exception) {
-			Assertions.assertEquals(HttpStatus.SC_NOT_FOUND, exception.getStatus(), "Wrong HTTP status");
+			Assertions.assertEquals(HttpURLConnection.HTTP_NOT_FOUND, exception.getStatus(), "Wrong HTTP status");
 		}
 		Assertions.assertFalse(session.fetch(), "Session object should not have changed");
 		connection = session.updateConnection(connectionId,
@@ -501,19 +502,20 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// connectionId should be equal to the one brought by the token
 		Assertions.assertEquals(connectionId,
-				restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_OK)
+				restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpURLConnection.HTTP_OK)
 						.get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0).getAsJsonObject()
 						.get("connectionId").getAsString(),
 				"Wrong connectionId");
 
-		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID",
+				HttpURLConnection.HTTP_NO_CONTENT);
 
 		// GET /openvidu/api/sessions should return empty again
-		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions", null, HttpStatus.SC_OK, true, true, true,
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions", null, HttpURLConnection.HTTP_OK, true, true, true,
 				"{'numberOfElements':0,'content':[]}");
 
 		/** GET /openvidu/api/config **/
-		restClient.rest(HttpMethod.GET, "/openvidu/api/config", null, HttpStatus.SC_OK, true, false, true,
+		restClient.rest(HttpMethod.GET, "/openvidu/api/config", null, HttpURLConnection.HTTP_OK, true, false, true,
 				"{'VERSION':'STR','DOMAIN_OR_PUBLIC_IP':'STR','HTTPS_PORT':0,'OPENVIDU_EDITION':'STR','OPENVIDU_PUBLICURL':'STR','OPENVIDU_CDR':false,'OPENVIDU_STREAMS_VIDEO_MAX_RECV_BANDWIDTH':0,'OPENVIDU_STREAMS_VIDEO_MIN_RECV_BANDWIDTH':0,"
 						+ "'OPENVIDU_STREAMS_VIDEO_MAX_SEND_BANDWIDTH':0,'OPENVIDU_STREAMS_VIDEO_MIN_SEND_BANDWIDTH':0,'OPENVIDU_WEBRTC_SIMULCAST':false,'OPENVIDU_SESSIONS_GARBAGE_INTERVAL':0,'OPENVIDU_SESSIONS_GARBAGE_THRESHOLD':0,"
 						+ "'OPENVIDU_RECORDING':false,'OPENVIDU_RECORDING_VERSION':'STR','OPENVIDU_RECORDING_PATH':'STR','OPENVIDU_RECORDING_PUBLIC_ACCESS':false,'OPENVIDU_RECORDING_NOTIFICATION':'STR',"
@@ -525,7 +527,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 						+ "'OPENVIDU_PRO_SPEECH_TO_TEXT':'STR'}");
 
 		/** GET /openvidu/api/health **/
-		restClient.rest(HttpMethod.GET, "/openvidu/api/health", null, HttpStatus.SC_OK, true, true, true,
+		restClient.rest(HttpMethod.GET, "/openvidu/api/health", null, HttpURLConnection.HTTP_OK, true, true, true,
 				"{'status':'UP'}");
 	}
 
@@ -602,7 +604,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 		JsonObject res = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/TestSession/connection",
-				HttpStatus.SC_OK);
+				HttpURLConnection.HTTP_OK);
 		final String connectionId = res.getAsJsonObject().get("content").getAsJsonArray().get(0).getAsJsonObject()
 				.get("id").getAsString();
 
@@ -881,7 +883,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		CustomHttpClient restClient = new CustomHttpClient(OpenViduTestAppE2eTest.OPENVIDU_URL, "OPENVIDUAPP",
 				OpenViduTestAppE2eTest.OPENVIDU_SECRET);
-		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/TestSession", HttpStatus.SC_NO_CONTENT);
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/TestSession", HttpURLConnection.HTTP_NO_CONTENT);
 
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 1);
 		user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
@@ -950,7 +952,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		CustomHttpClient restClient = new CustomHttpClient(OpenViduTestAppE2eTest.OPENVIDU_URL, "OPENVIDUAPP",
 				OpenViduTestAppE2eTest.OPENVIDU_SECRET);
-		String connectionId = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/TestSession", HttpStatus.SC_OK)
+		String connectionId = restClient
+				.rest(HttpMethod.GET, "/openvidu/api/sessions/TestSession", HttpURLConnection.HTTP_OK)
 				.get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0).getAsJsonObject()
 				.get("connectionId").getAsString();
 
@@ -1615,7 +1618,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		});
 
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
-		String containerId = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpStatus.SC_OK)
+		String containerId = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpURLConnection.HTTP_OK)
 				.get("content").getAsJsonArray().get(0).getAsJsonObject().get("environmentId").getAsString();
 		this.killSttService(containerId);
 
@@ -1689,7 +1692,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		CustomHttpClient restClient = new CustomHttpClient(OpenViduTestAppE2eTest.OPENVIDU_URL, "OPENVIDUAPP",
 				OpenViduTestAppE2eTest.OPENVIDU_SECRET);
-		String connectionId = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/TestSession", HttpStatus.SC_OK)
+		String connectionId = restClient
+				.rest(HttpMethod.GET, "/openvidu/api/sessions/TestSession", HttpURLConnection.HTTP_OK)
 				.get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0).getAsJsonObject()
 				.get("connectionId").getAsString();
 
@@ -1825,8 +1829,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		restartOpenViduServer(config);
 
 		String body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_NOT_IMPLEMENTED);
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_NOT_IMPLEMENTED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body,
+				HttpURLConnection.HTTP_NOT_IMPLEMENTED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+				HttpURLConnection.HTTP_NOT_IMPLEMENTED);
 
 		// STT Vosk manual
 
@@ -1840,41 +1846,47 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		 **/
 		// No lang, no Media Node
 		body = "{}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_BAD_REQUEST);
 		// No Media Node
 		body = "{'lang': 'en-US'}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_BAD_REQUEST);
 		// Non-existing Media Node
 		body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_BAD_REQUEST);
 		// No lang
 		body = "{'mediaNode': {'id': 'NOT_EXISTS'}}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_BAD_REQUEST);
 		// Non-existing lang
 		body = "{'lang': 'not-EXISTS', 'mediaNode': {'id': 'loquesea'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_BAD_REQUEST);
 
 		/**
 		 * POST /openvidu/api/speech-to-text/unload ERROR
 		 **/
 		// No lang, no Media Node
 		body = "{}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+				HttpURLConnection.HTTP_BAD_REQUEST);
 		// No Media Node
 		body = "{'lang': 'en-US'}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+				HttpURLConnection.HTTP_BAD_REQUEST);
 		// Non-existing Media Node
 		body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+				HttpURLConnection.HTTP_BAD_REQUEST);
 		// No lang
 		body = "{'mediaNode': {'id': 'NOT_EXISTS'}}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+				HttpURLConnection.HTTP_BAD_REQUEST);
 		// Non-existing lang
 		body = "{'lang': 'not-EXISTS', 'mediaNode': {'id': 'loquesea'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+				HttpURLConnection.HTTP_BAD_REQUEST);
 
-		JsonArray mediaNodes = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", null, HttpStatus.SC_OK)
-				.get("content").getAsJsonArray();
+		JsonArray mediaNodes = restClient
+				.rest(HttpMethod.GET, "/openvidu/api/media-nodes", null, HttpURLConnection.HTTP_OK).get("content")
+				.getAsJsonArray();
 		String mediaNodeId = mediaNodes.get(0).getAsJsonObject().get("id").getAsString();
 
 		/**
@@ -1882,19 +1894,19 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		 **/
 		// Existing Media Node but no lang
 		body = "{'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_BAD_REQUEST);
 		// Non-existing lang
 		body = "{'lang':'not-EXISTS', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_NOT_FOUND);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_NOT_FOUND);
 		// OK
 		body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_OK);
 		// lang already loaded
 		body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_CONFLICT);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_CONFLICT);
 		// OK
 		body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_OK);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 		user.getDriver().get(APP_URL);
@@ -1906,7 +1918,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		sttSubUser(user, 0, 0, "es-ES", true, true);
 
 		// 405
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_METHOD_NOT_ALLOWED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+				HttpURLConnection.HTTP_BAD_METHOD);
 
 		gracefullyLeaveParticipants(user, 1);
 
@@ -1914,29 +1927,30 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Thread.sleep(1500);
 
 		// 409: "manual" does not automatic unload lang model
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_CONFLICT);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_CONFLICT);
 
 		/**
 		 * POST /openvidu/api/speech-to-text/unload
 		 **/
 		// Existing Media Node but no lang
 		body = "{'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+				HttpURLConnection.HTTP_BAD_REQUEST);
 		// Non-existing lang
 		body = "{'lang':'not-EXISTS', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_NOT_FOUND);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpURLConnection.HTTP_NOT_FOUND);
 		// Existing lang but not loaded
 		body = "{'lang':'it-IT', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_CONFLICT);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpURLConnection.HTTP_CONFLICT);
 		// OK
 		body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpURLConnection.HTTP_OK);
 		// Existing lang but not loaded
 		body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_CONFLICT);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpURLConnection.HTTP_CONFLICT);
 		// OK
 		body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpURLConnection.HTTP_OK);
 
 		// STT Vosk on_demand
 		config = Map.of("OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY", "on_demand");
@@ -1944,15 +1958,15 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// 200
 		body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_OK);
 		// 409
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_CONFLICT);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_CONFLICT);
 		// 200
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpURLConnection.HTTP_OK);
 		// 409
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_CONFLICT);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpURLConnection.HTTP_CONFLICT);
 
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_OK);
 
 		user.getEventManager().clearAllCurrentEvents();
 		user.getDriver().findElement(By.id("add-user-btn")).click();
@@ -1963,7 +1977,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		sttSubUser(user, 0, 0, "en-US", true, true);
 
 		// 405
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_METHOD_NOT_ALLOWED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+				HttpURLConnection.HTTP_BAD_METHOD);
 
 		gracefullyLeaveParticipants(user, 1);
 
@@ -1971,7 +1986,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Thread.sleep(1500);
 
 		// 409: "on_demand" automatic unload of lang model
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_CONFLICT);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpURLConnection.HTTP_CONFLICT);
 	}
 
 	@Test
@@ -1988,8 +2003,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		restartOpenViduServer(config);
 
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
-		JsonArray mediaNodes = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", null, HttpStatus.SC_OK)
-				.get("content").getAsJsonArray();
+		JsonArray mediaNodes = restClient
+				.rest(HttpMethod.GET, "/openvidu/api/media-nodes", null, HttpURLConnection.HTTP_OK).get("content")
+				.getAsJsonArray();
 		String mediaNodeId = mediaNodes.get(0).getAsJsonObject().get("id").getAsString();
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
@@ -2006,7 +2022,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				false);
 
 		String body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_OK);
 
 		sttSubUser(user, 0, 0, "en-US", false, true);
 
@@ -2021,7 +2037,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches(0, "speechToTextMessage", 4);
 
 		body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_OK);
 
 		sttSubUser(user, 1, 1, "es-ES", false, true);
 
@@ -2032,9 +2048,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// 405
 		body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_METHOD_NOT_ALLOWED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+				HttpURLConnection.HTTP_BAD_METHOD);
 		body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNodeId + "'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_METHOD_NOT_ALLOWED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+				HttpURLConnection.HTTP_BAD_METHOD);
 
 		user.getEventManager().clearAllCurrentEvents(0);
 		user.getEventManager().clearAllCurrentEvents(1);
@@ -2060,8 +2078,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		restartOpenViduServer(config);
 
 		String body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_NOT_IMPLEMENTED);
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_NOT_IMPLEMENTED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body,
+				HttpURLConnection.HTTP_NOT_IMPLEMENTED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+				HttpURLConnection.HTTP_NOT_IMPLEMENTED);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 		user.getDriver().get(APP_URL);
@@ -2092,8 +2112,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		restartOpenViduServer(config);
 
 		String body = "{'lang': 'en-US', 'mediaNode': {'id': 'NOT_EXISTS'}}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_NOT_IMPLEMENTED);
-		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_NOT_IMPLEMENTED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body,
+				HttpURLConnection.HTTP_NOT_IMPLEMENTED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
+				HttpURLConnection.HTTP_NOT_IMPLEMENTED);
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 		user.getDriver().get(APP_URL);
@@ -2129,21 +2151,25 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
-			JsonArray mediaNodes = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", null, HttpStatus.SC_OK)
-					.get("content").getAsJsonArray();
+			JsonArray mediaNodes = restClient
+					.rest(HttpMethod.GET, "/openvidu/api/media-nodes", null, HttpURLConnection.HTTP_OK).get("content")
+					.getAsJsonArray();
 			final String mediaNode1 = mediaNodes.get(0).getAsJsonObject().get("id").getAsString();
 			final String mediaNode2 = mediaNodes.get(1).getAsJsonObject().get("id").getAsString();
 			final String mediaNode3 = mediaNodes.get(2).getAsJsonObject().get("id").getAsString();
 
 			String body = "{'mediaNode':{'id':'" + mediaNode1 + "'}}";
-			final String sessionId1 = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK)
-					.get("id").getAsString();
+			final String sessionId1 = restClient
+					.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpURLConnection.HTTP_OK).get("id")
+					.getAsString();
 			body = "{'mediaNode':{'id':'" + mediaNode2 + "'}}";
-			final String sessionId2 = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK)
-					.get("id").getAsString();
+			final String sessionId2 = restClient
+					.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpURLConnection.HTTP_OK).get("id")
+					.getAsString();
 			body = "{'mediaNode':{'id':'" + mediaNode3 + "'}}";
-			final String sessionId3 = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK)
-					.get("id").getAsString();
+			final String sessionId3 = restClient
+					.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpURLConnection.HTTP_OK).get("id")
+					.getAsString();
 
 			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 			user.getDriver().get(APP_URL);
@@ -2179,11 +2205,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			// Load lang model in all Media Nodes
 			body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNode1 + "'}}";
-			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_OK);
 			body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNode2 + "'}}";
-			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_OK);
 			body = "{'lang':'fr-FR', 'mediaNode': {'id': '" + mediaNode3 + "'}}";
-			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpStatus.SC_OK);
+			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_OK);
 
 			// Subscribe STT in all Media Nodes
 			sttSubUser(user, 0, 0, "en-US", true, true);
@@ -2207,18 +2233,18 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNode1 + "'}}";
 			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
-					HttpStatus.SC_METHOD_NOT_ALLOWED);
+					HttpURLConnection.HTTP_BAD_METHOD);
 			body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNode2 + "'}}";
 			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body,
-					HttpStatus.SC_METHOD_NOT_ALLOWED);
+					HttpURLConnection.HTTP_BAD_METHOD);
 
 			sttUnsubUser(user, 0, 0, true, true);
 			sttUnsubUser(user, 1, 0, true, true);
 
 			body = "{'lang':'en-US', 'mediaNode': {'id': '" + mediaNode1 + "'}}";
-			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpURLConnection.HTTP_OK);
 			body = "{'lang':'es-ES', 'mediaNode': {'id': '" + mediaNode2 + "'}}";
-			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpStatus.SC_OK);
+			restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpURLConnection.HTTP_OK);
 
 		} finally {
 			restartOpenViduServer(Map.of("OPENVIDU_PRO_CLUSTER_MEDIA_NODES", 1));
