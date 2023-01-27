@@ -823,14 +823,6 @@ public class OpenViduTestE2e {
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			Assertions.fail("Error restarting OpenVidu Server");
-		} finally {
-			if (restClient != null) {
-				try {
-					restClient.shutdown();
-				} catch (IOException e) {
-					log.error("Error shutting down HTTP client: {}", e.getMessage());
-				}
-			}
 		}
 		return null;
 	}

@@ -17,32 +17,23 @@
 
 package io.openvidu.test.browsers.utils;
 
-import java.io.IOException;
+import java.net.Socket;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublisher;
+import java.net.http.HttpResponse;
 import java.security.KeyManagementException;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Map.Entry;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509ExtendedTrustManager;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPatch;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
@@ -61,7 +52,7 @@ public class CustomHttpClient {
 
 	private String openviduUrl;
 	private String headerAuth;
-	private CloseableHttpClient client;
+	private HttpClient client;
 
 	public CustomHttpClient(String url) throws Exception {
 		this(url, null, null);
@@ -74,23 +65,48 @@ public class CustomHttpClient {
 			this.headerAuth = "Basic " + Base64.getEncoder().encodeToString((user + ":" + pass).getBytes());
 		}
 
-		SSLContext sslContext = null;
+		SSLContext sslContext;
 		try {
-			sslContext = new SSLContextBuilder().loadTrustMaterial(null, new TrustSelfSignedStrategy() {
-				public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-					return true;
+			sslContext = SSLContext.getInstance("TLS");
+			sslContext.init(null, new TrustManager[] { new X509ExtendedTrustManager() {
+				public X509Certificate[] getAcceptedIssuers() {
+					return null;
 				}
-			}).build();
-		} catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
-			throw new Exception("Error building custom HttpClient: " + e.getMessage());
+
+				public void checkClientTrusted(final X509Certificate[] a_certificates, final String a_auth_type) {
+				}
+
+				public void checkServerTrusted(final X509Certificate[] a_certificates, final String a_auth_type) {
+				}
+
+				public void checkClientTrusted(final X509Certificate[] a_certificates, final String a_auth_type,
+						final Socket a_socket) {
+				}
+
+				public void checkServerTrusted(final X509Certificate[] a_certificates, final String a_auth_type,
+						final Socket a_socket) {
+				}
+
+				public void checkClientTrusted(final X509Certificate[] a_certificates, final String a_auth_type,
+						final SSLEngine a_engine) {
+				}
+
+				public void checkServerTrusted(final X509Certificate[] a_certificates, final String a_auth_type,
+						final SSLEngine a_engine) {
+				}
+			} }, null);
+		} catch (KeyManagementException | NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
 		}
-		client = HttpClients.custom().setSSLContext(sslContext).setSSLHostnameVerifier(new NoopHostnameVerifier())
-				.build();
+
+		this.client = HttpClient.newBuilder().sslContext(sslContext).build();
 	}
 
 	public int getAndReturnStatus(String path, String credentials) throws Exception {
 		path = openviduUrl + (path.startsWith("/") ? path : ("/" + path));
-		return client.execute(new HttpGet(path)).getStatusLine().getStatusCode();
+		return client
+				.send(HttpRequest.newBuilder().GET().uri(new URI(path)).build(), HttpResponse.BodyHandlers.ofString())
+				.statusCode();
 	}
 
 	public JsonObject rest(HttpMethod method, String path, int status) throws Exception {
@@ -245,10 +261,6 @@ public class CustomHttpClient {
 		}
 	}
 
-	public void shutdown() throws IOException {
-		this.client.close();
-	}
-
 	private JsonObject commonRest(HttpMethod method, String path, String body, int status) throws Exception {
 		String stringResponse = this.commonRestString(method, path, body, status);
 		if (stringResponse == null) {
@@ -272,76 +284,68 @@ public class CustomHttpClient {
 	}
 
 	private String commonRestString(HttpMethod method, String path, String body, int status) throws Exception {
-		HttpResponse jsonResponse = null;
 		path = openviduUrl + (path.startsWith("/") ? path : ("/" + path));
 
-		HttpRequestBase request = null;
+		HttpRequest.Builder builder = HttpRequest.newBuilder().uri(new URI(path));
 		if (body != null && !body.isEmpty()) {
-			HttpEntityEnclosingRequestBase requestWithBody = (HttpEntityEnclosingRequestBase) request;
+			body = body.replaceAll("'", "\"");
+			BodyPublisher bodyPublisher = HttpRequest.BodyPublishers.ofString(body);
 			switch (method) {
 			case POST:
-				requestWithBody = new HttpPost(path);
+				builder = builder.POST(bodyPublisher);
 				break;
 			case PUT:
-				requestWithBody = new HttpPut(path);
+				builder = builder.PUT(bodyPublisher);
 				break;
 			case PATCH:
 			default:
-				requestWithBody = new HttpPatch(path);
+				builder = builder.method("PATCH", bodyPublisher);
 				break;
 			}
-			requestWithBody.addHeader("Content-Type", "application/json");
-			body = body.replaceAll("'", "\"");
-			requestWithBody.setEntity(new StringEntity(body));
-			request = requestWithBody;
+			builder.setHeader("Content-Type", "application/json");
 		} else {
 			switch (method) {
 			case GET:
-				request = new HttpGet(path);
-				request.addHeader("Content-Type", "application/x-www-form-urlencoded");
+				builder = builder.GET();
+				builder.setHeader("Content-Type", "application/x-www-form-urlencoded");
 				break;
 			case POST:
-				request = new HttpPost(path);
+				builder = builder.POST(HttpRequest.BodyPublishers.noBody());
 				break;
 			case DELETE:
-				request = new HttpDelete(path);
-				request.addHeader("Content-Type", "application/x-www-form-urlencoded");
+				builder = builder.DELETE();
+				builder.setHeader("Content-Type", "application/x-www-form-urlencoded");
 				break;
 			case PUT:
-				request = new HttpPut(path);
+				builder = builder.PUT(HttpRequest.BodyPublishers.noBody());
 			default:
 				break;
 			}
 		}
 
 		if (this.headerAuth != null) {
-			request.addHeader("Authorization", this.headerAuth);
+			builder.setHeader("Authorization", this.headerAuth);
 		}
+		HttpResponse<String> response;
 		try {
-			jsonResponse = client.execute(request);
+			response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
 		} catch (Exception e) {
 			throw new Exception("Error sending request to " + path + ": " + e.getMessage());
 		}
-		String stringResponse = null;
-		if (jsonResponse.getEntity() != null) {
-			stringResponse = EntityUtils.toString(jsonResponse.getEntity(), "UTF-8");
+
+		if (response.statusCode() == 500) {
+			log.error("Internal Server Error: {}", response.body());
 		}
 
-		if (jsonResponse.getStatusLine().getStatusCode() == 500) {
-			log.error("Internal Server Error: {}", EntityUtils.toString(jsonResponse.getEntity(), "UTF-8"));
-		}
-
-		if (status != jsonResponse.getStatusLine().getStatusCode()) {
+		if (status != response.statusCode()) {
 			try {
-				String responseString = EntityUtils.toString(jsonResponse.getEntity(), "UTF-8");
-				System.err.println(responseString);
+				System.err.println(response.body());
 			} catch (Exception e) {
 			}
-			throw new Exception(path + " expected to return status " + status + " but got "
-					+ jsonResponse.getStatusLine().getStatusCode());
+			throw new Exception(path + " expected to return status " + status + " but got " + response.statusCode());
 		}
 
-		return stringResponse;
+		return response.body();
 	}
 
 }
