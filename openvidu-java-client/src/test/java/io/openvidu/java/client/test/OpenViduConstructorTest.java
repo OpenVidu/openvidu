@@ -1,19 +1,28 @@
 package io.openvidu.java.client.test;
 
-import java.net.Authenticator;
-import java.net.CookieManager;
-import java.net.CookiePolicy;
-import java.net.InetSocketAddress;
-import java.net.PasswordAuthentication;
-import java.net.ProxySelector;
-import java.net.http.HttpClient;
-import java.net.http.HttpClient.Redirect;
-import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.Executors;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
+import org.apache.hc.client5.http.auth.AuthCache;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.auth.BasicAuthCache;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.client5.http.impl.auth.BasicScheme;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.impl.routing.DefaultProxyRoutePlanner;
+import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.message.BasicHeader;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -31,40 +40,57 @@ public class OpenViduConstructorTest {
 	}
 
 	@Test
-	public void buildWithHttpClientWithoutAuthenticator() {
-		HttpClient.Builder builder = HttpClient.newBuilder();
-		builder.connectTimeout(Duration.ofMillis(10000));
-		ProxySelector proxy = ProxySelector.of(new InetSocketAddress("https://my.proxy.hostname/", 4444));
-		builder.proxy(proxy);
-		builder.followRedirects(Redirect.ALWAYS);
+	public void buildWithCustomHttpClient() {
+
+		HttpClientBuilder builder = HttpClients.custom();
+
+		// Custom header
+		BasicHeader header = new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+		builder.setDefaultHeaders(List.of(header));
+
+		// Custom request timeout
+		RequestConfig requestConfig = RequestConfig.custom().setConnectionRequestTimeout(5, TimeUnit.SECONDS).build();
+		builder.setDefaultRequestConfig(requestConfig);
+
+		// Custom proxy to authenticate
+		HttpHost proxy = new HttpHost("https://localhost/", 8090);
+		DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
+
+		BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+		credentialsProvider.setCredentials(new AuthScope(proxy),
+				new UsernamePasswordCredentials("username_admin", "secret_password".toCharArray()));
+
+		AuthCache authCache = new BasicAuthCache();
+		BasicScheme basicAuth = new BasicScheme();
+		authCache.put(proxy, basicAuth);
+		HttpClientContext context = HttpClientContext.create();
+		context.setCredentialsProvider(credentialsProvider);
+		context.setAuthCache(authCache);
+
+		builder.setRoutePlanner(routePlanner);
+
+		// Custom SSLContext
 		SSLContext sslContext = null;
 		try {
 			sslContext = SSLContext.getInstance("TLSv1.2");
 			sslContext.init(null, null, null);
 		} catch (Exception e) {
 		}
-		builder.sslContext(sslContext);
-		builder.executor(Executors.newFixedThreadPool(1));
-		builder.cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ORIGINAL_SERVER));
-		OpenVidu OV = new OpenVidu("https://localhost:4443/", "MY_SECRET", builder.build());
-		Assertions.assertEquals(30000, OV.getRequestTimeout());
-		Assertions.assertTrue(OV.getRequestHeaders().isEmpty());
-		OV.setRequestTimeout(5000);
-		OV.setRequestHeaders(Map.of("header1", "value1", "header2", "value2"));
-		Assertions.assertEquals(5000, OV.getRequestTimeout());
-		Assertions.assertEquals(2, OV.getRequestHeaders().size());
-	}
+		final SSLConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
+				.setSslContext(sslContext).build();
+		final HttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+				.setSSLSocketFactory(sslSocketFactory).build();
+		builder.setConnectionManager(connectionManager);
 
-	@Test
-	public void buildWithHttpClientWithAuthenticator() {
-		Authenticator authenticator = new Authenticator() {
-			@Override
-			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication("OPENVIDUAPP", "secret".toCharArray());
-			}
-		};
-		HttpClient.Builder builder = HttpClient.newBuilder().authenticator(authenticator);
-		new OpenVidu("https://localhost:4443/", "MY_SECRET", builder.build());
+		// Custom CredentialsProvider
+		final BasicCredentialsProvider customCredentialsProvider = new BasicCredentialsProvider();
+		customCredentialsProvider.setCredentials(new AuthScope(null, -1),
+				new UsernamePasswordCredentials("OPENVIDUAPP", "MY_SECRET".toCharArray()));
+		builder.setDefaultCredentialsProvider(customCredentialsProvider);
+
+		new OpenVidu("https://localhost", "MY_SECRET");
+		new OpenVidu("https://localhost", "MY_SECRET", builder);
+		new OpenVidu("https://localhost", builder);
 	}
 
 }

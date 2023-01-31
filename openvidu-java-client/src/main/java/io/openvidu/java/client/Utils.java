@@ -1,24 +1,9 @@
 package io.openvidu.java.client;
 
-import java.net.http.HttpResponse;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
-
 /**
  * @hidden
  */
 public class Utils {
-
-	public static JsonObject httpResponseToJson(HttpResponse<String> response) throws OpenViduJavaClientException {
-		try {
-			JsonObject json = new Gson().fromJson(response.body(), JsonObject.class);
-			return json;
-		} catch (JsonSyntaxException e) {
-			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
-		}
-	}
 
 	public static boolean isAcceptableRecordingResolution(String stringResolution) {
 		// Matches every string with format "AxB", being A and B any number not starting

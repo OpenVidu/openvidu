@@ -20,13 +20,11 @@ package io.openvidu.test.e2e;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
-import java.net.Authenticator;
 import java.net.HttpURLConnection;
-import java.net.PasswordAuthentication;
-import java.net.Socket;
-import java.net.http.HttpClient;
 import java.security.KeyManagementException;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Base64;
@@ -43,11 +41,22 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509ExtendedTrustManager;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.message.BasicHeader;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
+import org.apache.hc.core5.ssl.TrustStrategy;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -2440,127 +2449,167 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		gracefullyLeaveParticipants(user, 2);
 	}
 
+	private HttpClientBuilder getHttpClientBuilder() {
+		HttpClientBuilder builder = HttpClients.custom();
+		TrustStrategy trustStrategy = new TrustStrategy() {
+			@Override
+			public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+				return true;
+			}
+		};
+		SSLContext sslContext;
+		try {
+			sslContext = new SSLContextBuilder().loadTrustMaterial(null, trustStrategy).build();
+		} catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
+			throw new RuntimeException(e);
+		}
+		final SSLConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
+				.setSslContext(sslContext).build();
+		final HttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+				.setSSLSocketFactory(sslSocketFactory).build();
+		builder.setConnectionManager(connectionManager);
+		return builder;
+	}
+
 	@Test
 	@DisplayName("openvidu-java-client custom HttpClient test")
 	void openViduJavaClientCustomHttpClientTest() throws Exception {
+
+		log.info("openvidu-java-client custom HttpClient test");
 
 		// Test all possible combinations: custom Authenticator present and valid,
 		// present and wrong and no present; in combination with custom Authorization
 		// header present and valid, present and wrong and no present
 
-		HttpClient.Builder builder = HttpClient.newBuilder();
-		SSLContext sslContext;
-		try {
-			sslContext = SSLContext.getInstance("TLS");
-			sslContext.init(null, new TrustManager[] { new X509ExtendedTrustManager() {
-				public X509Certificate[] getAcceptedIssuers() {
-					return null;
-				}
-
-				public void checkClientTrusted(final X509Certificate[] a_certificates, final String a_auth_type) {
-				}
-
-				public void checkServerTrusted(final X509Certificate[] a_certificates, final String a_auth_type) {
-				}
-
-				public void checkClientTrusted(final X509Certificate[] a_certificates, final String a_auth_type,
-						final Socket a_socket) {
-				}
-
-				public void checkServerTrusted(final X509Certificate[] a_certificates, final String a_auth_type,
-						final Socket a_socket) {
-				}
-
-				public void checkClientTrusted(final X509Certificate[] a_certificates, final String a_auth_type,
-						final SSLEngine a_engine) {
-				}
-
-				public void checkServerTrusted(final X509Certificate[] a_certificates, final String a_auth_type,
-						final SSLEngine a_engine) {
-				}
-			} }, null);
-		} catch (KeyManagementException | NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
-		}
-		builder.sslContext(sslContext);
-
-		final String BASIC_AUTH = "Basic "
-				+ Base64.getEncoder().encodeToString(("OPENVIDUAPP:" + OPENVIDU_SECRET).getBytes());
 		final String WRONG_SECRET = "WRONG_SECRET_" + RandomStringUtils.randomAlphanumeric(10);
 
-		// 1. No authenticator, no header, 200
-		OpenVidu customHttpClientOV1 = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET, builder.build());
-		customHttpClientOV1.fetch();
+		final String VALID_BASIC_AUTH = "Basic "
+				+ Base64.getEncoder().encodeToString(("OPENVIDUAPP:" + OPENVIDU_SECRET).getBytes());
+		final String WRONG_BASIC_AUTH = "Basic "
+				+ Base64.getEncoder().encodeToString(("OPENVIDUAPP:" + WRONG_SECRET).getBytes());
 
-		// 2. No authenticator, wrong header, 401
-		customHttpClientOV1.setRequestHeaders(Map.of("Authorization", "WRONG_AUTH_HEADER"));
+		final Collection<Header> VALID_AUTH_HEADER = List
+				.of(new BasicHeader(HttpHeaders.AUTHORIZATION, VALID_BASIC_AUTH));
+		final Collection<Header> WRONG_AUTH_HEADER = List
+				.of(new BasicHeader(HttpHeaders.AUTHORIZATION, WRONG_BASIC_AUTH));
+
+		// 1. No valid certificate with no forgiving SSLContext
+		OpenVidu[] customOV = { new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET, HttpClients.custom()) };
+		Assertions.assertThrows(OpenViduJavaClientException.class, () -> {
+			customOV[0].fetch();
+		});
+
+		// 2. No CredentialsProvider, no Authorization header, no secret, 401
+		customOV[0] = new OpenVidu(OPENVIDU_URL, getHttpClientBuilder());
 		OpenViduHttpException thrown = Assertions.assertThrows(OpenViduHttpException.class, () -> {
-			customHttpClientOV1.fetch();
+			customOV[0].fetch();
 		});
 		Assertions.assertEquals(401, thrown.getStatus());
 
-		// 3. No authenticator and valid header, 200
-		customHttpClientOV1.setRequestHeaders(Map.of("Authorization", BASIC_AUTH));
-		customHttpClientOV1.fetch();
+		// 3. No CredentialsProvider, no Authorization header, valid secret, 200
+		customOV[0] = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET, getHttpClientBuilder());
+		customOV[0].fetch();
 
-		// 4. Wrong authenticator and no header, 401
-		builder.authenticator(new Authenticator() {
-			@Override
-			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication("OPENVIDUAPP", WRONG_SECRET.toCharArray());
-			}
+		// 4. No CredentialsProvider, no Authorization header, wrong secret, 401
+		customOV[0] = new OpenVidu(OPENVIDU_URL, WRONG_SECRET, getHttpClientBuilder());
+		thrown = Assertions.assertThrows(OpenViduHttpException.class, () -> {
+			customOV[0].fetch();
 		});
-		OpenVidu customHttpClientOV2 = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET, builder.build());
-		OpenViduJavaClientException thrown2 = Assertions.assertThrows(OpenViduJavaClientException.class, () -> {
-			customHttpClientOV2.fetch();
+		Assertions.assertEquals(401, thrown.getStatus());
+
+		// 5. No CredentialsProvider, wrong Authorization header, no secret, 401
+		HttpClientBuilder builder = getHttpClientBuilder();
+		builder.setDefaultHeaders(WRONG_AUTH_HEADER);
+		customOV[0] = new OpenVidu(OPENVIDU_URL, builder);
+		thrown = Assertions.assertThrows(OpenViduHttpException.class, () -> {
+			customOV[0].fetch();
 		});
-		Assertions.assertTrue(thrown2.getMessage().contains("too many authentication attempts"));
+		Assertions.assertEquals(401, thrown.getStatus());
 
-		// 5. Wrong authenticator and wrong header, 401
-		customHttpClientOV2.setRequestHeaders(Map.of("Authorization", "WRONG_AUTH_HEADER"));
-		thrown2 = Assertions.assertThrows(OpenViduJavaClientException.class, () -> {
-			customHttpClientOV2.fetch();
+		// 6. No CredentialsProvider, wrong Authorization header, valid secret, 200
+		builder = getHttpClientBuilder();
+		builder.setDefaultHeaders(WRONG_AUTH_HEADER);
+		customOV[0] = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET, builder);
+		customOV[0].fetch();
+
+		// 7. No CredentialsProvider, wrong Authorization header, wrong secret, 401
+		builder = getHttpClientBuilder();
+		builder.setDefaultHeaders(WRONG_AUTH_HEADER);
+		customOV[0] = new OpenVidu(OPENVIDU_URL, WRONG_SECRET, builder);
+		thrown = Assertions.assertThrows(OpenViduHttpException.class, () -> {
+			customOV[0].fetch();
 		});
-		Assertions.assertTrue(thrown2.getMessage().contains("too many authentication attempts"));
+		Assertions.assertEquals(401, thrown.getStatus());
 
-		// 6. Wrong authenticator and valid header, 401
-		customHttpClientOV2.setRequestHeaders(Map.of("Authorization", BASIC_AUTH));
-		thrown2 = Assertions.assertThrows(OpenViduJavaClientException.class, () -> {
-			customHttpClientOV2.fetch();
+		// 8. No CredentialsProvider, valid Authorization header, no secret, 200
+		builder = getHttpClientBuilder();
+		builder.setDefaultHeaders(VALID_AUTH_HEADER);
+		customOV[0] = new OpenVidu(OPENVIDU_URL, builder);
+		customOV[0].fetch();
+
+		// 9. No CredentialsProvider, valid Authorization header, valid secret, 200
+		builder = getHttpClientBuilder();
+		builder.setDefaultHeaders(VALID_AUTH_HEADER);
+		customOV[0] = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET, builder);
+		customOV[0].fetch();
+
+		// 10. No CredentialsProvider, valid Authorization header, wrong secret, 200
+		builder = getHttpClientBuilder();
+		builder.setDefaultHeaders(VALID_AUTH_HEADER);
+		customOV[0] = new OpenVidu(OPENVIDU_URL, WRONG_SECRET, builder);
+		customOV[0].fetch();
+
+		// 11. Valid CredentialsProvider, no Authorization header, no secret, 200
+		final BasicCredentialsProvider validCredentialsProvider = new BasicCredentialsProvider();
+		validCredentialsProvider.setCredentials(new AuthScope(null, -1),
+				new UsernamePasswordCredentials("OPENVIDUAPP", OPENVIDU_SECRET.toCharArray()));
+		builder = getHttpClientBuilder();
+		builder.setDefaultCredentialsProvider(validCredentialsProvider);
+		customOV[0] = new OpenVidu(OPENVIDU_URL, builder);
+		customOV[0].fetch();
+
+		// 12. Valid CredentialsProvider, valid Authorization header, no secret, 200
+		builder = getHttpClientBuilder();
+		builder.setDefaultCredentialsProvider(validCredentialsProvider);
+		builder.setDefaultHeaders(VALID_AUTH_HEADER);
+		customOV[0] = new OpenVidu(OPENVIDU_URL, builder);
+		customOV[0].fetch();
+
+		// 13. Valid CredentialsProvider, wrong Authorization header, no secret, 200
+		builder = getHttpClientBuilder();
+		builder.setDefaultCredentialsProvider(validCredentialsProvider);
+		builder.setDefaultHeaders(WRONG_AUTH_HEADER);
+		customOV[0] = new OpenVidu(OPENVIDU_URL, builder);
+		customOV[0].fetch();
+
+		// 14. Wrong CredentialsProvider, no Authorization header, no secret, 401
+		final BasicCredentialsProvider wrongCredentialsProvider = new BasicCredentialsProvider();
+		validCredentialsProvider.setCredentials(new AuthScope(null, -1),
+				new UsernamePasswordCredentials("OPENVIDUAPP", WRONG_SECRET.toCharArray()));
+		builder = getHttpClientBuilder();
+		builder.setDefaultCredentialsProvider(wrongCredentialsProvider);
+		customOV[0] = new OpenVidu(OPENVIDU_URL, builder);
+		thrown = Assertions.assertThrows(OpenViduHttpException.class, () -> {
+			customOV[0].fetch();
 		});
-		Assertions.assertTrue(thrown2.getMessage().contains("too many authentication attempts"));
+		Assertions.assertEquals(401, thrown.getStatus());
 
-		// 7. Valid authenticator and no header, 200
-		builder.authenticator(new Authenticator() {
-			@Override
-			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication("OPENVIDUAPP", OPENVIDU_SECRET.toCharArray());
-			}
+		// 15. Wrong CredentialsProvider, valid Authorization header, no secret, 200
+		builder = getHttpClientBuilder();
+		builder.setDefaultCredentialsProvider(wrongCredentialsProvider);
+		builder.setDefaultHeaders(VALID_AUTH_HEADER);
+		customOV[0] = new OpenVidu(OPENVIDU_URL, builder);
+		customOV[0].fetch();
+
+		// 16. Wrong CredentialsProvider, wrong Authorization header, no secret
+		builder = getHttpClientBuilder();
+		builder.setDefaultCredentialsProvider(wrongCredentialsProvider);
+		builder.setDefaultHeaders(WRONG_AUTH_HEADER);
+		customOV[0] = new OpenVidu(OPENVIDU_URL, builder);
+		thrown = Assertions.assertThrows(OpenViduHttpException.class, () -> {
+			customOV[0].fetch();
 		});
-		OpenVidu customHttpClientOV3 = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET, builder.build());
-		customHttpClientOV3.fetch();
-
-		// 8. Valid authenticator and wrong header, 200
-		customHttpClientOV3.setRequestHeaders(Map.of("Authorization", "WRONG_AUTH_HEADER"));
-		customHttpClientOV3.fetch();
-
-		// 9. Valid authenticator and valid header, 200
-		customHttpClientOV3.setRequestHeaders(Map.of("Authorization", BASIC_AUTH));
-		customHttpClientOV3.fetch();
-
-		// 10. Wrong secret, valid authenticator, no header, 200
-		OpenVidu customHttpClientOV4 = new OpenVidu(OPENVIDU_URL, WRONG_SECRET, builder.build());
-		customHttpClientOV4.fetch();
-
-		// 11. Wrong secret, valid authenticator, wrong header, 200
-		customHttpClientOV4.setRequestHeaders(Map.of("Authorization", "WRONG_AUTH_HEADER"));
-		customHttpClientOV4.fetch();
-
-		// 12. Wrong secret, no authenticator, valid header, 200
-		builder = HttpClient.newBuilder().sslContext(sslContext);
-		customHttpClientOV4 = new OpenVidu(OPENVIDU_URL, WRONG_SECRET, builder.build());
-		customHttpClientOV4.setRequestHeaders(Map.of("Authorization", BASIC_AUTH));
-		customHttpClientOV4.fetch();
+		Assertions.assertEquals(401, thrown.getStatus());
 	}
 
 	@Test
