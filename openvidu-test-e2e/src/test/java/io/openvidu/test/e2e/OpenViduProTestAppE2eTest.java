@@ -2371,14 +2371,15 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				if (previousSttEventWasRecognized[0]) {
 					exc[0] = exc[0] == null
 							? new AssertionError("Two recognized events in a row should never happen. Present event: "
-									+ event.get("text") + " | Previous event: \"" + previousSttRecognizedText[0] + "\"")
+									+ event.get("raw").getAsString() + " | Previous event: \""
+									+ previousSttRecognizedText[0] + "\"")
 							: exc[0];
 					while (latch.getCount() > 0) {
 						latch.countDown();
 					}
 				}
 				previousSttEventWasRecognized[0] = true;
-				previousSttRecognizedText[0] = text;
+				previousSttRecognizedText[0] = event.get("raw").getAsString();
 				log.info("Recognized: {}", text);
 				recognizedSttEvents.add(text);
 				latch.countDown();
