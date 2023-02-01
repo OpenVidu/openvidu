@@ -528,7 +528,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		/** GET /openvidu/api/health **/
 		restClient.rest(HttpMethod.GET, "/openvidu/api/health", null, HttpURLConnection.HTTP_OK, true, true, true,
-				"{'status':'UP'}");
+				"{'status':'UP','disconnectedMediaNodes':[]}");
 	}
 
 	@Test
