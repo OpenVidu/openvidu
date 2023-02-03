@@ -60,12 +60,9 @@ public class OpenViduEventManager {
 		private final Consumer<JsonObject> callback;
 		private JsonObject eventResult;
 
-		public RunnableCallback(Consumer<JsonObject> callback) {
+		public RunnableCallback(Consumer<JsonObject> callback, JsonObject eventResult) {
 			this.callback = callback;
-		}
-
-		public void setEventResult(JsonObject json) {
-			this.eventResult = json;
+			this.eventResult = eventResult;
 		}
 
 		@Override
@@ -79,11 +76,11 @@ public class OpenViduEventManager {
 	private WebDriver driver;
 	private Queue<JsonObject> eventQueue;
 
-	private Map<String, Collection<RunnableCallback>> eventCallbacks;
+	private Map<String, Collection<Consumer<JsonObject>>> eventCallbacks;
 	private Map<String, AtomicInteger> eventNumbers;
 	private Map<String, CountDownLatch> eventCountdowns;
 
-	private Map<Integer, Map<String, Collection<RunnableCallback>>> eventCallbacksByUser;
+	private Map<Integer, Map<String, Collection<Consumer<JsonObject>>>> eventCallbacksByUser;
 	private Map<Integer, Map<String, AtomicInteger>> eventNumbersByUser;
 	private Map<Integer, Map<String, CountDownLatch>> eventCountdownsByUser;
 
@@ -161,13 +158,13 @@ public class OpenViduEventManager {
 
 	public void on(String eventName, Consumer<JsonObject> callback) {
 		this.eventCallbacks.putIfAbsent(eventName, new HashSet<>());
-		this.eventCallbacks.get(eventName).add(new RunnableCallback(callback));
+		this.eventCallbacks.get(eventName).add(callback);
 	}
 
 	public void on(int numberOfUser, String eventName, Consumer<JsonObject> callback) {
 		this.eventCallbacksByUser.putIfAbsent(numberOfUser, new HashMap<>());
 		this.eventCallbacksByUser.get(numberOfUser).putIfAbsent(eventName, new HashSet<>());
-		this.eventCallbacksByUser.get(numberOfUser).get(eventName).add(new RunnableCallback(callback));
+		this.eventCallbacksByUser.get(numberOfUser).get(eventName).add(callback);
 	}
 
 	public void off(String eventName) {
@@ -315,15 +312,15 @@ public class OpenViduEventManager {
 			log.info(eventType);
 
 			if (this.eventCallbacks.containsKey(eventType)) {
-				for (RunnableCallback callback : this.eventCallbacks.get(eventType)) {
-					callback.setEventResult(event);
-					execService.submit(callback);
+				for (Consumer<JsonObject> callback : this.eventCallbacks.get(eventType)) {
+					final RunnableCallback runnableCallback = new RunnableCallback(callback, event);
+					execService.submit(runnableCallback);
 				}
 			}
 			if (this.eventCallbacksByUser.containsKey(numberOfUser)) {
-				for (RunnableCallback callback : this.eventCallbacksByUser.get(numberOfUser).get(eventType)) {
-					callback.setEventResult(event);
-					execService.submit(callback);
+				for (Consumer<JsonObject> callback : this.eventCallbacksByUser.get(numberOfUser).get(eventType)) {
+					final RunnableCallback runnableCallback = new RunnableCallback(callback, event);
+					execService.submit(runnableCallback);
 				}
 			}
 		}
@@ -358,7 +355,7 @@ public class OpenViduEventManager {
 		}
 	}
 
-	private String getAndClearEventsInBrowser() {
+	private synchronized String getAndClearEventsInBrowser() {
 		String events = (String) ((JavascriptExecutor) driver)
 				.executeScript("var e = window.myEvents; window.myEvents = ''; return e;");
 		return events;
