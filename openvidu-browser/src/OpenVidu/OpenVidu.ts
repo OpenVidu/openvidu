@@ -866,6 +866,8 @@ export class OpenVidu {
                 participantEvicted: this.session.onParticipantEvicted.bind(this.session),
                 recordingStarted: this.session.onRecordingStarted.bind(this.session),
                 recordingStopped: this.session.onRecordingStopped.bind(this.session),
+                broadcastStarted: this.session.onBroadcastStarted.bind(this.session),
+                broadcastStopped: this.session.onBroadcastStopped.bind(this.session),
                 sendMessage: this.session.onNewMessage.bind(this.session),
                 streamPropertyChanged: this.session.onStreamPropertyChanged.bind(this.session),
                 connectionPropertyChanged: this.session.onConnectionPropertyChanged.bind(this.session),

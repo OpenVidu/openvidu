@@ -229,6 +229,10 @@ public class ProtocolElements {
     public static final String RECORDINGSTOPPED_METHOD = "recordingStopped";
     public static final String RECORDINGSTOPPED_ID_PARAM = "id";
 
+    public static final String BROADCASTSTARTED_METHOD = "broadcastStarted";
+
+    public static final String BROADCASTSTOPPED_METHOD = "broadcastStopped";
+
     public static final String SPEECHTOTEXTMESSAGE_METHOD = "speechToTextMessage";
     public static final String SPEECHTOTEXTMESSAGE_TIMESTAMP_PARAM = "timestamp";
     public static final String SPEECHTOTEXTMESSAGE_SESSIONID_PARAM = "sessionId";

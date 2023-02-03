@@ -300,7 +300,7 @@ public class KurentoSessionManager extends SessionManager {
 
 							boolean recordingParticipantLeft = remainingParticipants.size() > 0
 									&& remainingParticipants.stream()
-											.allMatch(p -> p.isRecorderOrSttOrRtmpParticipant())
+											.allMatch(p -> p.isRecorderOrSttOrBroadcastParticipant())
 									&& remainingParticipants.stream().anyMatch(p -> p.isRecorderParticipant());
 
 							if (recordingParticipantLeft) {
@@ -323,13 +323,13 @@ public class KurentoSessionManager extends SessionManager {
 								}
 							}
 
-							boolean rtmpParticipantLeft = remainingParticipants.size() > 0
+							boolean broadcastParticipantLeft = remainingParticipants.size() > 0
 									&& remainingParticipants.stream()
-											.allMatch(p -> p.isRecorderOrSttOrRtmpParticipant())
-									&& remainingParticipants.stream().anyMatch(p -> p.isRtmpParticipant());
+											.allMatch(p -> p.isRecorderOrSttOrBroadcastParticipant())
+									&& remainingParticipants.stream().anyMatch(p -> p.isBroadcastParticipant());
 
-							if (rtmpParticipantLeft) {
-								this.stopRtmpIfNecessary(session);
+							if (broadcastParticipantLeft) {
+								this.stopBroadcastIfNecessary(session);
 							}
 						}
 					}
@@ -1425,7 +1425,7 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public void stopRtmpIfNecessary(Session session) {
+	public void stopBroadcastIfNecessary(Session session) {
 	}
 
 	private io.openvidu.server.recording.Recording getActiveRecordingIfAllowedByParticipantRole(

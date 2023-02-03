@@ -14,8 +14,8 @@ else
     ./composed.sh
   elif [[ "${CONTAINER_WORKING_MODE}" == "COMPOSED_QUICK_START" ]]; then
     ./composed_quick_start.sh
-  elif [[ "${CONTAINER_WORKING_MODE}" == "RTMP" ]]; then
-    ./rtmp.sh
+  elif [[ "${CONTAINER_WORKING_MODE}" == "BROADCAST" ]]; then
+    ./broadcast.sh
   fi
 
 fi

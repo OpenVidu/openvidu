@@ -694,8 +694,8 @@ public class RecordingManager {
 									return;
 								}
 								if (session.getParticipants().size() == 0
-										|| session.onlyRecorderAndOrSttAndOrRtmpParticipant()) {
-									// Close session if there are no participants connected (RECORDER/STT/RTMP do
+										|| session.onlyRecorderAndOrSttAndOrBroadcastParticipant()) {
+									// Close session if there are no participants connected (RECORDER/STT/BROADCAST do
 									// not count) and publishing
 									log.info("Closing session {} after automatic stop of recording {}",
 											session.getSessionId(), recordingId);
@@ -748,9 +748,9 @@ public class RecordingManager {
 							return false;
 						}
 						if (session.getParticipants().size() == 0
-								|| session.onlyRecorderAndOrSttAndOrRtmpParticipant()) {
+								|| session.onlyRecorderAndOrSttAndOrBroadcastParticipant()) {
 							// Close session if there are no participants connected (except for
-							// RECORDER/STT/RTMP). This code will only be executed if recording is manually
+							// RECORDER/STT/BROADCAST). This code will only be executed if recording is manually
 							// stopped during the automatic stop timeout, so the session must be also closed
 							log.info(
 									"Ongoing recording of session {} was explicetly stopped within timeout for automatic recording stop. Closing session",

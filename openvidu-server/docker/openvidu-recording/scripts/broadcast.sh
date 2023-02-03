@@ -10,14 +10,14 @@ fi
 
   ### Variables ###
 
-  RTMP_URL=${RTMP_URL}
+  BROADCAST_URL=${BROADCAST_URL}
   URL=${URL:-https://www.youtube.com/watch?v=JMuzlEQz3uo}
   RESOLUTION=${RESOLUTION:-1920x1080}
   FRAMERATE=${FRAMERATE:-25}
   WIDTH="$(cut -d'x' -f1 <<<$RESOLUTION)"
   HEIGHT="$(cut -d'x' -f2 <<<$RESOLUTION)"
 
-  export RTMP_URL
+  export BROADCAST_URL
   export URL
   export RESOLUTION
   export FRAMERATE
@@ -34,9 +34,9 @@ fi
 
   source /headless-chrome.sh
 
-  ### Run RTMP command ###
+  ### Run broadcast command ###
 
-  eval "$RTMP_COMMAND"
+  eval "$BROADCAST_COMMAND"
 
 } 2>&1 | tee -a /tmp/container.log
 

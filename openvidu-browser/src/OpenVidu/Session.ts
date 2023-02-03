@@ -1184,11 +1184,7 @@ export class Session extends EventDispatcher {
         logger.error('Media error: ' + JSON.stringify(event));
         const err = event.error;
         if (err) {
-            this.ee.emitEvent('error-media', [
-                {
-                    error: err
-                }
-            ]);
+            this.ee.emitEvent('error-media', [{ error: err }]);
         } else {
             logger.warn('Received undefined media error:', event);
         }
@@ -1206,6 +1202,20 @@ export class Session extends EventDispatcher {
      */
     onRecordingStopped(event: { id: string; name: string; reason: RecordingEventReason }): void {
         this.ee.emitEvent('recordingStopped', [new RecordingEvent(this, 'recordingStopped', event.id, event.name, event.reason)]);
+    }
+
+    /**
+     * @hidden
+     */
+    onBroadcastStarted(): void {
+        this.ee.emitEvent('broadcastStarted', []);
+    }
+
+    /**
+     * @hidden
+     */
+    onBroadcastStopped(): void {
+        this.ee.emitEvent('broadcastStopped', []);
     }
 
     /**

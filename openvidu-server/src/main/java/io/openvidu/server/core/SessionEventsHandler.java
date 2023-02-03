@@ -130,16 +130,16 @@ public class SessionEventsHandler {
 				participantJson.add(ProtocolElements.JOINROOM_PEERSTREAMS_PARAM, streamsArray);
 			}
 
-			// Avoid emitting 'connectionCreated' event of existing RECORDER/STT/RTMP
+			// Avoid emitting 'connectionCreated' event of existing RECORDER/STT/BROADCAST
 			// participant in openvidu-browser in newly joined participants
-			if (!existingParticipant.isRecorderOrSttOrRtmpParticipant()) {
+			if (!existingParticipant.isRecorderOrSttOrBroadcastParticipant()) {
 				resultArray.add(participantJson);
 			}
 
-			// If RECORDER/STT/RTMP participant has joined do NOT send 'participantJoined'
+			// If RECORDER/STT/BROADCAST participant has joined do NOT send 'participantJoined'
 			// notification to existing participants. 'recordingStarted' will be sent to all
 			// existing participants when recorder first subscribe to a stream
-			if (!participant.isRecorderOrSttOrRtmpParticipant()) {
+			if (!participant.isRecorderOrSttOrBroadcastParticipant()) {
 				JsonObject notifParams = new JsonObject();
 
 				// Metadata associated to new participant
@@ -519,8 +519,8 @@ public class SessionEventsHandler {
 				evictedParticipant.getParticipantPublicId());
 		params.addProperty(ProtocolElements.PARTICIPANTEVICTED_REASON_PARAM, reason != null ? reason.name() : "");
 
-		if (evictedParticipant.isRecorderOrSttOrRtmpParticipant()) {
-			// Do not send a message when evicting RECORDER/STT/RTMP participant
+		if (evictedParticipant.isRecorderOrSttOrBroadcastParticipant()) {
+			// Do not send a message when evicting RECORDER/STT/BROADCAST participant
 			rpcNotificationService.sendNotification(evictedParticipant.getParticipantPrivateId(),
 					ProtocolElements.PARTICIPANTEVICTED_METHOD, params);
 		}
@@ -719,7 +719,7 @@ public class SessionEventsHandler {
 
 	protected Set<Participant> filterParticipantsByRole(Set<OpenViduRole> roles, Set<Participant> participants) {
 		return participants.stream().filter(part -> {
-			if (part.isRecorderOrSttOrRtmpParticipant()) {
+			if (part.isRecorderOrSttOrBroadcastParticipant()) {
 				return false;
 			}
 			return roles.contains(part.getToken().getRole());

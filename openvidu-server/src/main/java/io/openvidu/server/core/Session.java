@@ -139,8 +139,8 @@ public class Session implements SessionInterface {
 		return null;
 	}
 
-	public boolean onlyRecorderAndOrSttAndOrRtmpParticipant() {
-		return this.participants.values().stream().allMatch(p -> p.isRecorderOrSttOrRtmpParticipant());
+	public boolean onlyRecorderAndOrSttAndOrBroadcastParticipant() {
+		return this.participants.values().stream().allMatch(p -> p.isRecorderOrSttOrBroadcastParticipant());
 	}
 
 	public int getActivePublishers() {
@@ -218,8 +218,8 @@ public class Session implements SessionInterface {
 		Set<Participant> snapshotOfActiveConnections = this.getParticipants().stream().collect(Collectors.toSet());
 		JsonArray jsonArray = new JsonArray();
 		snapshotOfActiveConnections.forEach(participant -> {
-			// Filter RECORDER/STT/RTMP participants
-			if (!participant.isRecorderOrSttOrRtmpParticipant()) {
+			// Filter RECORDER/STT/BROADCAST participants
+			if (!participant.isRecorderOrSttOrBroadcastParticipant()) {
 				jsonArray.add(withWebrtcStats ? participant.withStatsToJson() : participant.toJson());
 			}
 		});

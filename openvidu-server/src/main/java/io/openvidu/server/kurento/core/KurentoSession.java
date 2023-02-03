@@ -86,7 +86,7 @@ public class KurentoSession extends Session {
 
 		log.info("SESSION {}: Added participant {}", sessionId, participant);
 
-		if (!participant.isRecorderOrSttOrRtmpParticipant()) {
+		if (!participant.isRecorderOrSttOrBroadcastParticipant()) {
 			kurentoEndpointConfig.getCdr().recordParticipantJoined(participant, sessionId);
 		}
 	}
@@ -386,7 +386,7 @@ public class KurentoSession extends Session {
 
 	public int getNumberOfWebrtcConnections() {
 		return this.getActivePublishers()
-				+ this.participants.values().stream().filter(p -> !p.isRecorderOrSttOrRtmpParticipant())
+				+ this.participants.values().stream().filter(p -> !p.isRecorderOrSttOrBroadcastParticipant())
 						.mapToInt(p -> ((KurentoParticipant) p).getSubscribers().size()).reduce(0, Integer::sum);
 	}
 

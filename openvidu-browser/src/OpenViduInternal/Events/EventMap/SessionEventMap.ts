@@ -143,7 +143,7 @@ export interface SessionEventMap extends EventMap {
     /**
      * Event dispatched when the session has started being recorded.
      *
-     * Property **`OPENVIDU_RECORDING_NOTIFICATION`** of [OpenVidu Server configuration](/en/stable/reference-docs/openvidu-config/)
+     * Property **`OPENVIDU_RECORDING_NOTIFICATION`** of [the OpenVidu deployment configuration](/en/stable/reference-docs/openvidu-config/)
      * defines which users should receive this events (by default, only users with role `PUBLISHER` or `MODERATOR`)
      */
     recordingStarted: RecordingEvent;
@@ -151,10 +151,32 @@ export interface SessionEventMap extends EventMap {
     /**
      * Event dispatched when the session has stopped being recorded.
      *
-     * Property **`OPENVIDU_RECORDING_NOTIFICATION`** of [OpenVidu Server configuration](/en/stable/reference-docs/openvidu-config/)
+     * Property **`OPENVIDU_RECORDING_NOTIFICATION`** of [the OpenVidu deployment configuration](/en/stable/reference-docs/openvidu-config/)
      * defines which users should receive this events (by default, only users with role `PUBLISHER` or `MODERATOR`)
      */
     recordingStopped: RecordingEvent;
+
+    /**
+     * **This feature is part of OpenVidu
+     * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin: 0 2px 0 2px; border-radius: 3px; font-size: 13px; line-height:21px; text-decoration: none; font-family: Montserrat, sans-serif">PRO</a>
+     * and
+     * <a href="https://docs.openvidu.io/en/stable/openvidu-enterprise/" style="display: inline-block; background-color: rgb(156, 39, 176); color: white; font-weight: bold; padding: 0px 5px; margin: 0 2px 0 2px; border-radius: 3px; font-size: 13px; line-height:21px; text-decoration: none; font-family: Montserrat, sans-serif">ENTERPRISE</a>
+     * editions**
+     * 
+     * Event dispatched when the session has started being broadcasted. See [Broadcasting to YouTube/Twitch](/en/stable/advanced-features/broadcasting/)
+     */
+    broadcastStarted: never;
+
+    /**
+     * **This feature is part of OpenVidu
+     * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin: 0 2px 0 2px; border-radius: 3px; font-size: 13px; line-height:21px; text-decoration: none; font-family: Montserrat, sans-serif">PRO</a>
+     * and
+     * <a href="https://docs.openvidu.io/en/stable/openvidu-enterprise/" style="display: inline-block; background-color: rgb(156, 39, 176); color: white; font-weight: bold; padding: 0px 5px; margin: 0 2px 0 2px; border-radius: 3px; font-size: 13px; line-height:21px; text-decoration: none; font-family: Montserrat, sans-serif">ENTERPRISE</a>
+     * editions**
+     * 
+     * Event dispatched when the session has stopped being broadcasted. See [Broadcasting to YouTube/Twitch](/en/stable/advanced-features/broadcasting/)
+     */
+    broadcastStopped: never;
 
     /**
      * **This feature is part of OpenVidu
