@@ -121,7 +121,7 @@
 			"name": "OPENVIDU_WEBHOOK_EVENTS",
 			"type": "java.lang.String",
 			"description": "List of events that will be sent by OpenVidu Webhook service",
-			"defaultValue": "[\"sessionCreated\",\"sessionDestroyed\",\"participantJoined\",\"participantLeft\",\"webrtcConnectionCreated\",\"webrtcConnectionDestroyed\",\"recordingStatusChanged\"]"
+			"defaultValue": "[\"sessionCreated\",\"sessionDestroyed\",\"participantJoined\",\"participantLeft\",\"webrtcConnectionCreated\",\"webrtcConnectionDestroyed\",\"recordingStatusChanged\",\"broadcastStarted\",\"broadcastStopped\"]"
 		},
 		{
 			"name": "OPENVIDU_STREAMS_VIDEO_MAX_RECV_BANDWIDTH",

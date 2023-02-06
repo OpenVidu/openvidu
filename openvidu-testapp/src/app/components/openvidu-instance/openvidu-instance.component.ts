@@ -123,6 +123,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     networkQualityLevelChanged: true,
     recordingStarted: true,
     recordingStopped: true,
+    broadcastStarted: true,
+    broadcastStopped: true,
     signal: true,
     publisherStartSpeaking: false,
     publisherStopSpeaking: false,
@@ -238,6 +240,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       networkQualityLevelChanged: false,
       recordingStarted: false,
       recordingStopped: false,
+      broadcastStarted: false,
+      broadcastStopped: false,
       signal: false,
       publisherStartSpeaking: true,
       publisherStopSpeaking: true,
@@ -482,6 +486,24 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       }
     }
 
+    if (this.sessionEvents.broadcastStarted !== oldValues.broadcastStarted || firstTime) {
+      this.session.off('broadcastStarted');
+      if (this.sessionEvents.broadcastStarted) {
+        this.session.on('broadcastStarted', () => {
+          this.updateEventList('broadcastStarted', undefined, undefined);
+        });
+      }
+    }
+
+    if (this.sessionEvents.broadcastStopped !== oldValues.broadcastStopped || firstTime) {
+      this.session.off('broadcastStopped');
+      if (this.sessionEvents.broadcastStopped) {
+        this.session.on('broadcastStopped', () => {
+          this.updateEventList('broadcastStopped', undefined, undefined);
+        });
+      }
+    }
+
     if (this.sessionEvents.publisherStartSpeaking !== oldValues.publisherStartSpeaking || firstTime) {
       this.session.off('publisherStartSpeaking');
       if (this.sessionEvents.publisherStartSpeaking) {
@@ -698,6 +720,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       networkQualityLevelChanged: this.sessionEvents.networkQualityLevelChanged,
       recordingStarted: this.sessionEvents.recordingStarted,
       recordingStopped: this.sessionEvents.recordingStopped,
+      broadcastStarted: this.sessionEvents.broadcastStarted,
+      broadcastStopped: this.sessionEvents.broadcastStopped,
       signal: this.sessionEvents.signal,
       publisherStartSpeaking: this.sessionEvents.publisherStartSpeaking,
       publisherStopSpeaking: this.sessionEvents.publisherStopSpeaking,
@@ -734,6 +758,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         networkQualityLevelChanged: result.networkQualityLevelChanged,
         recordingStarted: result.recordingStarted,
         recordingStopped: result.recordingStopped,
+        broadcastStarted: result.broadcastStarted,
+        broadcastStopped: result.broadcastStopped,
         signal: result.signal,
         publisherStartSpeaking: result.publisherStartSpeaking,
         publisherStopSpeaking: result.publisherStopSpeaking,

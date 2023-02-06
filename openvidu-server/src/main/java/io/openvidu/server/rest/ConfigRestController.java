@@ -110,6 +110,9 @@ public class ConfigRestController {
 		json.addProperty("HTTPS_PORT", openviduConfig.getHttpsPort());
 		json.addProperty("OPENVIDU_PUBLICURL", openviduConfig.getOpenViduPublicUrl());
 		json.addProperty("OPENVIDU_CDR", openviduConfig.isCdrEnabled());
+		if (openviduConfig.isCdrEnabled()) {
+			json.addProperty("OPENVIDU_CDR_PATH", openviduConfig.getOpenviduCdrPath());
+		}
 		json.addProperty("OPENVIDU_STREAMS_VIDEO_MAX_RECV_BANDWIDTH", openviduConfig.getVideoMaxRecvBandwidth());
 		json.addProperty("OPENVIDU_STREAMS_VIDEO_MIN_RECV_BANDWIDTH", openviduConfig.getVideoMinRecvBandwidth());
 		json.addProperty("OPENVIDU_STREAMS_VIDEO_MAX_SEND_BANDWIDTH", openviduConfig.getVideoMaxSendBandwidth());
