@@ -6,6 +6,9 @@ import java.awt.Point;
 import java.io.File;
 import java.io.FileReader;
 import java.net.HttpURLConnection;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -22,6 +25,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -38,6 +42,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 
 import info.debatty.java.stringsimilarity.Cosine;
@@ -52,6 +57,7 @@ import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.Session;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.Unzipper;
+import io.openvidu.test.browsers.utils.webhook.CustomWebhook;
 
 public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
@@ -89,6 +95,119 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			}
 		}
 		super.dispose();
+	}
+
+	@Test
+	@DisplayName("CDR")
+	void cdrTest() throws Exception {
+
+		log.info("CDR test");
+
+		CountDownLatch initLatch = new CountDownLatch(1);
+		io.openvidu.test.browsers.utils.webhook.CustomWebhook.main(new String[0], initLatch);
+
+		try {
+
+			if (!initLatch.await(30, TimeUnit.SECONDS)) {
+				Assertions.fail("Timeout waiting for webhook springboot app to start");
+				CustomWebhook.shutDown();
+				return;
+			}
+
+			CustomHttpClient restClient = new CustomHttpClient(OpenViduTestAppE2eTest.OPENVIDU_URL, "OPENVIDUAPP",
+					OpenViduTestAppE2eTest.OPENVIDU_SECRET);
+			JsonObject config = restClient.rest(HttpMethod.GET, "/openvidu/api/config", HttpURLConnection.HTTP_OK);
+
+			String defaultOpenViduCdrPath = null;
+			String defaultOpenViduWebhookEndpoint = null;
+			if (config.has("OPENVIDU_CDR_PATH")) {
+				defaultOpenViduCdrPath = config.get("OPENVIDU_CDR_PATH").getAsString();
+			}
+			if (config.has("OPENVIDU_WEBHOOK_ENDPOINT")) {
+				defaultOpenViduWebhookEndpoint = config.get("OPENVIDU_WEBHOOK_ENDPOINT").getAsString();
+			}
+
+			final String CDR_PATH = "/opt/openvidu/custom-cdr-path";
+
+			try {
+				FileUtils.deleteDirectory(new File(CDR_PATH));
+			} catch (Exception e) {
+				log.warn("Error trying to clean path " + CDR_PATH + ": " + e.getMessage());
+			}
+
+			try {
+				Map<String, Object> newConfig = Map.of("OPENVIDU_CDR", true, "OPENVIDU_CDR_PATH", CDR_PATH,
+						"OPENVIDU_WEBHOOK", true, "OPENVIDU_WEBHOOK_ENDPOINT", "http://127.0.0.1:7777/webhook");
+				restartOpenViduServer(newConfig);
+
+				Set<Path> cdrFiles = Files.list(Paths.get(CDR_PATH)).collect(Collectors.toSet());
+
+				Assertions.assertEquals(1, cdrFiles.size(), "Wrong number of CDR files");
+
+				Path cdrFile = cdrFiles.iterator().next();
+				String absolutePath = cdrFile.toAbsolutePath().toString();
+
+				if (!Files.exists(cdrFile)) {
+					Assertions.fail("CDR file does not exist at " + absolutePath);
+				} else if (!Files.isRegularFile(cdrFile)) {
+					Assertions.fail("CDR file is not a regular file at " + absolutePath);
+				} else if (!Files.isReadable(cdrFile)) {
+					Assertions.fail("CDR file is not readable at " + absolutePath);
+				}
+
+				OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+				user.getDriver().findElement(By.id("add-user-btn")).click();
+				user.getDriver().findElement(By.className("join-btn")).click();
+
+				user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+				user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+				user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+				user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+				gracefullyLeaveParticipants(user, 1);
+
+				CustomWebhook.waitForEvent("sessionDestroyed", 1);
+
+				List<String> lines = Files.readAllLines(cdrFile);
+				Map<String, List<JsonObject>> accumulatedWebhookEvents = CustomWebhook.accumulatedEvents;
+
+				Assertions.assertEquals(lines.size(),
+						accumulatedWebhookEvents.values().stream().mapToInt(i -> i.size()).sum(),
+						"CDR events and Webhook events should be equal size");
+
+				for (int i = lines.size() - 1; i >= 0; i--) {
+					JsonObject cdrEvent = JsonParser.parseString(lines.get(i)).getAsJsonObject();
+					Assertions.assertEquals(1, cdrEvent.entrySet().size(),
+							"A CDR event should only have 1 root property");
+					String cdrEventType = cdrEvent.entrySet().iterator().next().getKey();
+					JsonObject webhookEvent = accumulatedWebhookEvents.get(cdrEventType)
+							.remove(accumulatedWebhookEvents.get(cdrEventType).size() - 1);
+					cdrEvent = cdrEvent.remove(cdrEventType).getAsJsonObject();
+					webhookEvent.remove("event");
+					Assertions.assertEquals(webhookEvent, cdrEvent);
+				}
+				accumulatedWebhookEvents.entrySet().forEach(entry -> Assertions.assertTrue(entry.getValue().isEmpty()));
+
+			} finally {
+				Map<String, Object> oldConfig = new HashMap<>();
+				oldConfig.put("OPENVIDU_CDR", false);
+				oldConfig.put("OPENVIDU_WEBHOOK", false);
+				if (defaultOpenViduCdrPath != null) {
+					oldConfig.put("OPENVIDU_CDR_PATH", defaultOpenViduCdrPath);
+				}
+				if (defaultOpenViduWebhookEndpoint != null) {
+					oldConfig.put("OPENVIDU_WEBHOOK_ENDPOINT", defaultOpenViduWebhookEndpoint);
+				}
+				restartOpenViduServer(oldConfig);
+				try {
+					FileUtils.deleteDirectory(new File(CDR_PATH));
+				} catch (Exception e) {
+					log.warn("Error trying to clean path " + CDR_PATH + ": " + e.getMessage());
+				}
+			}
+		} finally {
+			CustomWebhook.shutDown();
+		}
 	}
 
 	@Test

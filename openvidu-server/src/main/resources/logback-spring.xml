@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
+	<springProperty scope="context" name="cdrEnabled" source="OPENVIDU_CDR" />
 	<springProperty scope="context" name="cdrPath" source="OPENVIDU_CDR_PATH" />
 	<timestamp key="myTimestamp" timeReference="contextBirth" datePattern="HH-mm-ss" />
 
-	<appender name="STDOUT"
-		class="ch.qos.logback.core.ConsoleAppender">
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-			<if
-				condition='property("logging.colors").equalsIgnoreCase("true")'>
+			<if condition='property("logging.colors").equalsIgnoreCase("true")'>
 				<then>
 					<pattern>%black(%highlight([%p]) %d{dd MMM HH:mm:ss.SSS} %magenta([%.80t]) \(%file:%line\) - %msg%n)</pattern>
 				</then>
 				<else>
-					<pattern>[%p] %d [%.80t] %c - %msg%n
-					</pattern>
+					<pattern>[%p] %d [%.80t] %c - %msg%n</pattern>
 				</else>
 			</if>
 		</encoder>
@@ -35,7 +33,7 @@
 	-->
 
 	<logger name="org.kurento.jsonrpc.client">
-		<level value="ERROR" ></level>
+		<level value="ERROR"></level>
 		<appender-ref ref="STDOUT" />
 	</logger>
 
@@ -44,12 +42,10 @@
 		<appender-ref ref="STDOUT" />
 	</root>
 
-	<if condition='property("OPENVIDU_CDR").equalsIgnoreCase("true")'>
+	<if condition='property("cdrEnabled").equalsIgnoreCase("true")'>
 		<then>
-			<appender name="CDR"
-				class="ch.qos.logback.core.rolling.RollingFileAppender">
-				<rollingPolicy
-					class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<appender name="CDR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+				<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 					<FileNamePattern>${cdrPath}/CDR.%d{yyyy-MM-dd}_${myTimestamp}.log
 					</FileNamePattern>
 					<MaxHistory>30</MaxHistory>
