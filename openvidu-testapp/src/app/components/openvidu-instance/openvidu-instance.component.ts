@@ -284,6 +284,11 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     this.subscribers = [];
   }
 
+  private simulateNetworkDrop(): void {
+    const jsonRpClient = (this.OV as any).jsonRpcClient;
+    jsonRpClient.close();
+  }
+
   updateEventList(eventName: string, eventContent: string, event: Event) {
     const eventInterface: OpenViduEvent = { eventName, eventContent, event };
     this.events.push(eventInterface);

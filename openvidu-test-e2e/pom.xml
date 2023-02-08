@@ -103,6 +103,11 @@
 			<version>${version.openvidu.java.client}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.github.docker-java</groupId>
+			<artifactId>docker-java</artifactId>
+			<version>${version.dockerjava}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>testcontainers</artifactId>
 			<version>${version.testcontainers}</version>

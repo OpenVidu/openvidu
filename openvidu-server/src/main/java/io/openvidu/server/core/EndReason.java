@@ -66,10 +66,9 @@ public enum EndReason {
 
 	/**
 	 * The last participant left the session, which caused the session to be closed.
-	 * Applies to events webrtcConnectionDestroyed, participantLeft,
-	 * recordingStatusChanged and sessionDestroyed. Can be triggered from other
-	 * events with other end reasons (disconnect, forceDisconnectByUser,
-	 * forceDisconnectByServer, networkDisconnect)
+	 * Applies to events recordingStatusChanged, broadcastStopped and
+	 * sessionDestroyed. Can be triggered from other events with other end reasons
+	 * (disconnect, forceDisconnectByServer, networkDisconnect)
 	 */
 	lastParticipantLeft,
 
@@ -80,9 +79,15 @@ public enum EndReason {
 	recordingStoppedByServer,
 
 	/**
+	 * The server application called the REST operation to stop a broadcast. Applies
+	 * to event broadcastStopped
+	 */
+	broadcastStoppedByServer,
+
+	/**
 	 * The server application called the REST operation to close a session. Applies
-	 * to events webrtcConnectionDestroyed, participantLeft, recordingStatusChanged
-	 * and sessionDestroyed
+	 * to events webrtcConnectionDestroyed, participantLeft, recordingStatusChanged,
+	 * broadcastStopped and sessionDestroyed
 	 */
 	sessionClosedByServer,
 
@@ -96,8 +101,8 @@ public enum EndReason {
 	/**
 	 * A media server disconnected. This is reserved for Media Nodes being
 	 * gracefully removed from an OpenVidu Pro cluster. Applies to events
-	 * webrtcConnectionDestroyed, participantLeft, recordingStatusChanged and
-	 * sessionDestroyed
+	 * webrtcConnectionDestroyed, participantLeft, recordingStatusChanged,
+	 * broadcastStopped and sessionDestroyed
 	 */
 	mediaServerDisconnect,
 
@@ -110,22 +115,24 @@ public enum EndReason {
 
 	/**
 	 * A node has crashed. For now this means a Media Node has crashed. Applies to
-	 * events webrtcConnectionDestroyed, participantLeft, recordingStatusChanged and
-	 * sessionDestroyed
+	 * events webrtcConnectionDestroyed, participantLeft, recordingStatusChanged,
+	 * broadcastStopped and sessionDestroyed
 	 */
 	nodeCrashed,
 
 	/**
 	 * OpenVidu Server has gracefully stopped. This is reserved for OpenVidu Pro
 	 * restart operation. Applies to events webrtcConnectionDestroyed,
-	 * participantLeft, recordingStatusChanged and sessionDestroyed
+	 * participantLeft, recordingStatusChanged, broadcastStopped and
+	 * sessionDestroyed
 	 */
 	openviduServerStopped,
 
 	/**
 	 * A recording has been stopped automatically
 	 * (https://docs.openvidu.io/en/stable/advanced-features/recording/#automatic-stop-of-recordings).
-	 * Applies to event recordingStatusChanged
+	 * Applies to event recordingStatusChanged and sessionDestroyed (in case the
+	 * session was inactive except for the recording)
 	 */
 	automaticStop
 

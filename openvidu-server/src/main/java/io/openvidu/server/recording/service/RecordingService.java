@@ -217,11 +217,9 @@ public abstract class RecordingService {
 
 	protected void uploadRecording(final Recording recording, EndReason reason) {
 		recordingUploader.uploadRecording(recording, () -> {
-			final long timestamp = System.currentTimeMillis();
-			cdr.recordRecordingStatusChanged(recording, reason, timestamp, recording.getStatus());
+			cdr.recordRecordingStatusChanged(recording, reason, System.currentTimeMillis(), recording.getStatus());
 		}, () -> {
-			final long timestamp = System.currentTimeMillis();
-			cdr.recordRecordingStatusChanged(recording, reason, timestamp,
+			cdr.recordRecordingStatusChanged(recording, reason, System.currentTimeMillis(),
 					io.openvidu.java.client.Recording.Status.failed);
 		});
 	}

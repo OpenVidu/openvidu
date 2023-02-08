@@ -262,6 +262,8 @@ public class KurentoSessionManager extends SessionManager {
 					// "SessionManager.closeSessionAndEmptyCollections"
 					if (!EndReason.sessionClosedByServer.equals(reason)) {
 
+						final long autoStopTimeout = this.openviduConfig.getOpenviduRecordingAutostopTimeout();
+
 						if (remainingParticipants.isEmpty()) {
 							if (this.recordingManager.sessionIsBeingRecorded(sessionId)) {
 								// Start countdown to stop recording. Will be aborted if a Publisher starts
@@ -269,8 +271,9 @@ public class KurentoSessionManager extends SessionManager {
 								// recordings it would still remain a recorder participant
 								log.info(
 										"Last participant left. Starting {} seconds countdown for stopping recording of session {}",
-										this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
-								recordingManager.initAutomaticRecordingStopThread(session);
+										autoStopTimeout, sessionId);
+								recordingManager.initAutomaticRecordingStopThread(session,
+										autoStopTimeout == 0 ? EndReason.lastParticipantLeft : EndReason.automaticStop);
 							} else {
 								try {
 									if (session.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
@@ -310,8 +313,10 @@ public class KurentoSessionManager extends SessionManager {
 									// RECORDER or STT participant is the last one standing. Start countdown
 									log.info(
 											"Last participant left. Starting {} seconds countdown for stopping recording of session {}",
-											this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
-									recordingManager.initAutomaticRecordingStopThread(session);
+											autoStopTimeout, sessionId);
+									recordingManager.initAutomaticRecordingStopThread(session,
+											autoStopTimeout == 0 ? EndReason.lastParticipantLeft
+													: EndReason.automaticStop);
 
 								} else if (session.getSessionProperties().defaultRecordingProperties().outputMode()
 										.equals(Recording.OutputMode.COMPOSED_QUICK_START)) {
@@ -329,7 +334,7 @@ public class KurentoSessionManager extends SessionManager {
 									&& remainingParticipants.stream().anyMatch(p -> p.isBroadcastParticipant());
 
 							if (broadcastParticipantLeft) {
-								this.stopBroadcastIfNecessary(session);
+								this.stopBroadcastIfNecessary(session, reason);
 							}
 						}
 					}
@@ -1425,7 +1430,7 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public void stopBroadcastIfNecessary(Session session) {
+	public void stopBroadcastIfNecessary(Session session, EndReason reason) {
 	}
 
 	private io.openvidu.server.recording.Recording getActiveRecordingIfAllowedByParticipantRole(

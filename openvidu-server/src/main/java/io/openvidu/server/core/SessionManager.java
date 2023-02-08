@@ -192,7 +192,7 @@ public abstract class SessionManager {
 	public abstract void onUnsubscribeFromSpeechToText(Participant participant, Integer transactionId,
 			String connectionId);
 
-	public abstract void stopBroadcastIfNecessary(Session session);
+	public abstract void stopBroadcastIfNecessary(Session session, EndReason reason);
 
 	public void onEcho(String participantPrivateId, Integer requestId) {
 		sessionEventsHandler.onEcho(participantPrivateId, requestId);

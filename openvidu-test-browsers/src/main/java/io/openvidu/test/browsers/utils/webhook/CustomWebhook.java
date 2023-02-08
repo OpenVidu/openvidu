@@ -51,7 +51,7 @@ public class CustomWebhook {
 	public static CountDownLatch initLatch;
 	public static int accumulatedNumberOfEvents = 0;
 	public final static ConcurrentMap<String, List<JsonObject>> accumulatedEvents = new ConcurrentHashMap<>();
-	static final ConcurrentMap<String, BlockingQueue<JsonObject>> events = new ConcurrentHashMap<>();
+	public static final ConcurrentMap<String, BlockingQueue<JsonObject>> events = new ConcurrentHashMap<>();
 	static final BlockingQueue<JsonObject> eventsInOrder = new LinkedBlockingDeque<>();
 
 	public static void main(String[] args, CountDownLatch initLatch) {
