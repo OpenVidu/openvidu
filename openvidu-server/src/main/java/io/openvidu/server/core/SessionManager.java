@@ -53,6 +53,7 @@ import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.SessionProperties;
+import io.openvidu.server.broadcast.BroadcastManager;
 import io.openvidu.server.cdr.CDREventRecordingStatusChanged;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
@@ -73,6 +74,9 @@ public abstract class SessionManager {
 
 	@Autowired
 	protected RecordingManager recordingManager;
+
+	@Autowired
+	protected BroadcastManager broadcastManager;
 
 	@Autowired
 	protected OpenviduConfig openviduConfig;
@@ -315,8 +319,8 @@ public abstract class SessionManager {
 	 * @return null if concurrent storing of session
 	 */
 	public Session storeSessionNotActive(String sessionId, SessionProperties sessionProperties) {
-		Session sessionNotActive = this
-				.storeSessionNotActive(new Session(sessionId, sessionProperties, openviduConfig, recordingManager));
+		Session sessionNotActive = this.storeSessionNotActive(
+				new Session(sessionId, sessionProperties, openviduConfig, recordingManager, broadcastManager));
 		if (sessionNotActive == null) {
 			return null;
 		} else {

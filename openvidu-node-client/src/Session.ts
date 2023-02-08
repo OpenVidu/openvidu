@@ -76,6 +76,11 @@ export class Session {
     recording = false;
 
     /**
+     * Whether the session is being broadcasted or not
+     */
+    broadcasting = false;
+
+    /**
      * @hidden
      */
     constructor(private ov: OpenVidu, propertiesOrJson?) {
@@ -526,6 +531,7 @@ export class Session {
         this.sessionId = json.sessionId;
         this.createdAt = json.createdAt;
         this.recording = json.recording;
+        this.broadcasting = json.broadcasting;
         this.properties = {
             customSessionId: json.customSessionId,
             mediaMode: json.mediaMode,
@@ -599,6 +605,7 @@ export class Session {
             this.sessionId === other.sessionId &&
             this.createdAt === other.createdAt &&
             this.recording === other.recording &&
+            this.broadcasting === other.broadcasting &&
             this.connections.length === other.connections.length &&
             JSON.stringify(this.properties) === JSON.stringify(other.properties)
         );

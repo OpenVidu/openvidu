@@ -39,6 +39,7 @@ import com.google.gson.JsonObject;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.java.client.SessionProperties;
+import io.openvidu.server.broadcast.BroadcastManager;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.recording.service.RecordingManager;
 
@@ -46,6 +47,7 @@ public class Session implements SessionInterface {
 
 	protected OpenviduConfig openviduConfig;
 	protected RecordingManager recordingManager;
+	protected BroadcastManager broadcastManager;
 
 	protected ConcurrentMap<String, Token> tokens = new ConcurrentHashMap<>();
 	protected final ConcurrentMap<String, Participant> participants = new ConcurrentHashMap<>();
@@ -90,17 +92,19 @@ public class Session implements SessionInterface {
 		this.sessionProperties = previousSession.getSessionProperties();
 		this.openviduConfig = previousSession.openviduConfig;
 		this.recordingManager = previousSession.recordingManager;
+		this.broadcastManager = previousSession.broadcastManager;
 		this.tokens = previousSession.tokens;
 	}
 
 	public Session(String sessionId, SessionProperties sessionProperties, OpenviduConfig openviduConfig,
-			RecordingManager recordingManager) {
+			RecordingManager recordingManager, BroadcastManager broadcastManager) {
 		this.sessionId = sessionId;
 		this.startTime = System.currentTimeMillis();
 		this.uniqueSessionId = sessionId + "_" + this.startTime;
 		this.sessionProperties = sessionProperties;
 		this.openviduConfig = openviduConfig;
 		this.recordingManager = recordingManager;
+		this.broadcastManager = broadcastManager;
 	}
 
 	public String getSessionId() {
@@ -243,6 +247,7 @@ public class Session implements SessionInterface {
 		json.addProperty("sessionId", this.sessionId); // TODO: deprecated. Better use only "id"
 		json.addProperty("createdAt", this.startTime);
 		json.addProperty("recording", this.recordingManager.sessionIsBeingRecorded(this.sessionId));
+		json.addProperty("broadcasting", this.broadcastManager.sessionIsBeingBroadcasted(this.sessionId));
 
 		// Add keys from SessionProperties
 		JsonObject sessionPropertiesJson = sessionProperties.toJson();

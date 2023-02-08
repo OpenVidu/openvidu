@@ -114,7 +114,8 @@ public class KurentoSessionManager extends SessionManager {
 					// Insecure user directly call joinRoom RPC method, without REST API use
 					SessionProperties.Builder builder = new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
 							.recordingMode(RecordingMode.ALWAYS);
-					sessionNotActive = new Session(sessionId, builder.build(), openviduConfig, recordingManager);
+					sessionNotActive = new Session(sessionId, builder.build(), openviduConfig, recordingManager,
+							broadcastManager);
 				}
 
 				try {

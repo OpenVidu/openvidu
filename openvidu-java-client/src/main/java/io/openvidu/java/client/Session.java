@@ -54,6 +54,7 @@ public class Session {
 	private SessionProperties properties;
 	private Map<String, Connection> connections = new ConcurrentHashMap<>();
 	private boolean recording = false;
+	private boolean broadcasting = false;
 
 	protected Session(OpenVidu openVidu) throws OpenViduJavaClientException, OpenViduHttpException {
 		this.openVidu = openVidu;
@@ -634,6 +635,13 @@ public class Session {
 	}
 
 	/**
+	 * Returns whether the session is being broadcasted or not.
+	 */
+	public boolean isBeingBroadcasted() {
+		return this.broadcasting;
+	}
+
+	/**
 	 * Returns the properties defining the session.
 	 */
 	public SessionProperties getProperties() {
@@ -705,10 +713,15 @@ public class Session {
 		this.recording = recording;
 	}
 
+	protected void setIsBeingBroadcasted(boolean broadcasting) {
+		this.broadcasting = broadcasting;
+	}
+
 	protected Session resetWithJson(JsonObject json) {
 		this.sessionId = json.get("sessionId").getAsString();
 		this.createdAt = json.get("createdAt").getAsLong();
 		this.recording = json.get("recording").getAsBoolean();
+		this.broadcasting = json.get("broadcasting").getAsBoolean();
 		SessionProperties.Builder builder = new SessionProperties.Builder()
 				.mediaMode(MediaMode.valueOf(json.get("mediaMode").getAsString()))
 				.recordingMode(RecordingMode.valueOf(json.get("recordingMode").getAsString()));
@@ -764,6 +777,7 @@ public class Session {
 		json.addProperty("sessionId", this.sessionId);
 		json.addProperty("createdAt", this.createdAt);
 		json.addProperty("recording", this.recording);
+		json.addProperty("broadcasting", this.broadcasting);
 
 		// Add keys from SessionProperties
 		JsonObject sessionPropertiesJson = this.properties.toJson();

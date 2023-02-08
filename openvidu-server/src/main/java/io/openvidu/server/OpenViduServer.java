@@ -42,6 +42,8 @@ import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.EventListener;
 
+import io.openvidu.server.broadcast.BroadcastManager;
+import io.openvidu.server.broadcast.BroadcastManagerDummy;
 import io.openvidu.server.cdr.CDRLogger;
 import io.openvidu.server.cdr.CDRLoggerFile;
 import io.openvidu.server.cdr.CallDetailRecord;
@@ -235,6 +237,12 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@ConditionalOnMissingBean
 	public MediaNodeManager mediaNodeManager() {
 		return new MediaNodeManagerDummy();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public BroadcastManager broadcastManager() {
+		return new BroadcastManagerDummy();
 	}
 
 	@Bean

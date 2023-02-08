@@ -844,7 +844,7 @@ public class OpenViduTestE2e {
 				}
 			} catch (Exception e) {
 				try {
-					log.error("Waiting for OpenVidu Server...");
+					log.warn("Waiting for OpenVidu Server...");
 					Thread.sleep(msInterval);
 				} catch (InterruptedException e1) {
 					log.error("Sleep interrupted");
