@@ -68,7 +68,7 @@ export abstract class ParticipantAbstractModel {
 	isMutedForcibly: boolean;
 
 	constructor(props: ParticipantProperties, model?: StreamModel) {
-		this.id = props.id ? props.id : new Date().getTime().toString();
+		this.id = props.id ? props.id : Math.random().toString(32).replace('.','_');
 		this.local = props.local;
 		this.nickname = props.nickname;
 		this.colorProfile = !!props.colorProfile ? props.colorProfile : `hsl(${Math.random() * 360}, 100%, 80%)`;
