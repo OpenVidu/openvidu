@@ -270,7 +270,7 @@ export class OpenViduService {
 			mirror
 		};
 		if (hasVideoDevices || hasAudioDevices) {
-			const publisher = await this.initPublisher(undefined, properties);
+			const publisher = await this.initPublisher(properties);
 			this.participantService.setMyCameraPublisher(publisher);
 			this.participantService.updateLocalParticipant();
 			return publisher;
@@ -282,9 +282,9 @@ export class OpenViduService {
 	/**
 	 * @internal
 	 */
-	async initPublisher(targetElement: string | HTMLElement, properties: PublisherProperties): Promise<Publisher> {
+	private async initPublisher(properties: PublisherProperties, targetElement?: string | HTMLElement): Promise<Publisher> {
 		this.log.d('Initializing publisher with properties: ', properties);
-		return await this.OV.initPublisherAsync(targetElement, properties);
+		return this.OV.initPublisherAsync(targetElement, properties);
 	}
 
 	/**
@@ -407,7 +407,7 @@ export class OpenViduService {
 				publishAudio: hasAudio,
 				mirror: false
 			};
-			const screenPublisher = await this.initPublisher(undefined, properties);
+			const screenPublisher = await this.initPublisher(properties);
 
 			screenPublisher.once('accessAllowed', async () => {
 				// Listen to event fired when native stop button is clicked
