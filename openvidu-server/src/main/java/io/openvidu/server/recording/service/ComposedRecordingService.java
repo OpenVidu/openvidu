@@ -164,7 +164,7 @@ public class ComposedRecordingService extends RecordingService {
 			List<Bind> binds = new ArrayList<>();
 			binds.add(bind1);
 			containerId = dockerManager.runContainer(properties.mediaNode(), container, containerName, null, volumes,
-					binds, "host", envs, null, properties.shmSize(), false, null,
+					binds, "host", envs, null, properties.shmSize(), false, null, true,
 					openviduConfig.isOpenviduRecordingGPUEnabled());
 		} catch (Exception e) {
 			this.cleanRecordingMaps(recording);
