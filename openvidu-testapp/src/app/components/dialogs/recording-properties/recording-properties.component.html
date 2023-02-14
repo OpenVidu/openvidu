@@ -1,10 +1,10 @@
 <div id="rec-properties-div">
   <label class="label">Recording properties</label>
   <div>
-    <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+    <mat-form-field *ngIf="!isBroadcast" class="inner-text-input" [style.fontSize.px]=14>
       <input matInput id="recording-name-field" placeholder="Recording name" [(ngModel)]="recordingProperties.name">
     </mat-form-field>
-    <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+    <mat-form-field *ngIf="!isBroadcast" class="inner-text-input" [style.fontSize.px]=14>
       <mat-select id="rec-outputmode-select" placeholder="Output mode" [(ngModel)]="recordingProperties.outputMode">
         <mat-option *ngFor="let enumerator of enumToArray(recMode)" [value]="enumerator">
           <span [attr.id]="'option-' + enumerator">{{ enumerator }}</span>
@@ -17,13 +17,14 @@
     </mat-form-field>
     <div class="inner-text-input mat-form-field">
       <mat-checkbox id="rec-hasaudio-checkbox" [(ngModel)]="recordingProperties.hasAudio">Has audio</mat-checkbox>
-      <mat-checkbox id="rec-hasvideo-checkbox" [(ngModel)]="recordingProperties.hasVideo">Has video</mat-checkbox>
+      <mat-checkbox *ngIf="!isBroadcast" id="rec-hasvideo-checkbox" [(ngModel)]="recordingProperties.hasVideo">Has
+        video</mat-checkbox>
       <mat-checkbox *ngIf="recordingProperties.outputMode === 'INDIVIDUAL'" id="rec-ignorefailedstreams-checkbox"
         [(ngModel)]="recordingProperties.ignoreFailedStreams">Ignore failed streams</mat-checkbox>
     </div>
   </div>
   <div
-    *ngIf="recordingProperties.hasVideo && (recordingProperties.outputMode === 'COMPOSED' || recordingProperties.outputMode === 'COMPOSED_QUICK_START')">
+    *ngIf="isBroadcast || (recordingProperties.hasVideo && (recordingProperties.outputMode === 'COMPOSED' || recordingProperties.outputMode === 'COMPOSED_QUICK_START'))">
     <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
       <mat-select placeholder="Recording layout" id="recording-layout-select"
         [(ngModel)]="recordingProperties.recordingLayout">

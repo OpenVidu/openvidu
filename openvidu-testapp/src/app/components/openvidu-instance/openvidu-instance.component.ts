@@ -67,6 +67,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   // Recording options
   recordingProperties: RecordingProperties;
 
+  // Broadcast options
+  broadcastProperties: RecordingProperties;
+
   // OpenVidu Browser objects
   OV: OpenVidu;
   session: Session;
@@ -292,7 +295,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   updateEventList(eventName: string, eventContent: string, event: Event) {
     const eventInterface: OpenViduEvent = { eventName, eventContent, event };
     this.events.push(eventInterface);
-    this.testFeedService.pushNewEvent({user: this.index, event});
+    this.testFeedService.pushNewEvent({ user: this.index, event });
   }
 
   toggleSubscribeTo(): void {
@@ -698,7 +701,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         openVidu: !!this.OV_NodeClient ? this.OV_NodeClient : new OpenViduAPI(this.openviduUrl, this.openviduSecret),
         session: this.sessionAPI,
         sessionId: !!this.session ? this.session.sessionId : this.sessionName,
-        recordingProperties: !!this.recordingProperties ? this.recordingProperties : this.sessionProperties.defaultRecordingProperties
+        recordingProperties: !!this.recordingProperties ? this.recordingProperties : this.sessionProperties.defaultRecordingProperties,
+        broadcastProperties: !!this.broadcastProperties ? this.broadcastProperties : this.sessionProperties.defaultRecordingProperties
       },
       disableClose: true
     });

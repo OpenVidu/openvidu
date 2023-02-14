@@ -19,13 +19,18 @@ export class SessionApiDialogComponent {
     response: string;
 
     recordingProperties: RecordingProperties;
-    openviduRoles = OpenViduRole;
-    customLayout = '';
     recPropertiesIcon = 'add_circle';
     showRecProperties = false;
+
+    broadcastProperties: RecordingProperties;
+    broadcastPropertiesIcon = 'add_circle';
+    showBroadcastProperties = false;
+    broadcastUrl: string = 'rtmp://172.17.0.1/live';
+
     numCustomIceServers = 0;
     configuredCustomIceServers = []
 
+    openviduRoles = OpenViduRole;
     connectionProperties: ConnectionProperties = {
         record: true,
         role: OpenViduRole.PUBLISHER,
@@ -40,6 +45,10 @@ export class SessionApiDialogComponent {
         this.recordingProperties = data.recordingProperties;
         if (!this.recordingProperties.mediaNode) {
             this.recordingProperties.mediaNode = { id: '' };
+        }
+        this.broadcastProperties = data.broadcastProperties;
+        if (!this.broadcastProperties.mediaNode) {
+            this.broadcastProperties.mediaNode = { id: '' };
         }
     }
 
@@ -241,6 +250,11 @@ export class SessionApiDialogComponent {
         this.recPropertiesIcon = this.showRecProperties ? 'remove_circle' : 'add_circle';
     }
 
+    toggleBroadcastProperties() {
+        this.showBroadcastProperties = !this.showBroadcastProperties;
+        this.broadcastPropertiesIcon = this.showBroadcastProperties ? 'remove_circle' : 'add_circle';
+    }
+
     changedNumIceServers(numIceServers: number) {
         // Save Previous Ice Servers
         let previousIceServers = [];
@@ -250,14 +264,44 @@ export class SessionApiDialogComponent {
 
         // Fill empty ice servers
         this.configuredCustomIceServers = []
-        for(let i = 1; i <= numIceServers; i++) {
+        for (let i = 1; i <= numIceServers; i++) {
             this.configuredCustomIceServers.push({});
         }
 
         // Add previous items
-        for(let i = 0; i < previousIceServers.length && i < this.configuredCustomIceServers.length; i++) {
+        for (let i = 0; i < previousIceServers.length && i < this.configuredCustomIceServers.length; i++) {
             this.configuredCustomIceServers[0] = previousIceServers[0];
         }
+    }
+
+    startBroadcast() {
+        console.log('Starting broadcast');
+        const finalBroadcastProperties = {
+            recordingLayout: this.broadcastProperties.recordingLayout,
+            customLayout: this.broadcastProperties.customLayout,
+            resolution: this.broadcastProperties.resolution,
+            frameRate: this.broadcastProperties.frameRate,
+            hasAudio: this.broadcastProperties.hasAudio,
+            shmSize: this.broadcastProperties.shmSize,
+            mediaNode: !this.broadcastProperties.mediaNode.id ? undefined : this.broadcastProperties.mediaNode
+        }
+        this.OV.startBroadcast(this.sessionId, this.broadcastUrl, finalBroadcastProperties)
+            .then(() => {
+                this.response = 'Broadcast started';
+            })
+            .catch(error => {
+                this.response = 'Error [' + error.message + ']';
+            });
+    }
+
+    stopBroadcast() {
+        this.OV.stopBroadcst(this.sessionId)
+            .then(() => {
+                this.response = 'Broadcast stopped';
+            })
+            .catch(error => {
+                this.response = 'Error [' + error.message + ']';
+            });
     }
 
 }

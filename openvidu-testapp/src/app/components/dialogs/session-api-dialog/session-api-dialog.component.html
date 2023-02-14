@@ -6,8 +6,9 @@
       <button mat-button id="get-session-btn" (click)="fetchActiveConnections()">Fetch</button>
       <button mat-button id="list-sessions-btn" (click)="fetchActiveSessions()">Fetch all</button>
       <button mat-button id="close-session-btn" (click)="closeSession()">Close this session</button>
-      <mat-divider></mat-divider>
     </div>
+
+    <mat-divider></mat-divider>
 
     <label class="label">Connections/Streams</label>
     <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
@@ -33,22 +34,25 @@
     <div>
       <mat-form-field class="inner-text-input" [style.fontSize.px]=14 style="width:33%">
         <mat-label>Custom Ice Servers</mat-label>
-        <mat-select [(ngModel)]="numCustomIceServers" id="num-ice-servers-select" (selectionChange)="changedNumIceServers(numCustomIceServers)">
+        <mat-select [(ngModel)]="numCustomIceServers" id="num-ice-servers-select"
+          (selectionChange)="changedNumIceServers(numCustomIceServers)">
           <mat-option *ngFor="let i of [0,1,2,3,4,5,6,7,8,9,10]" [value]="i">
             <span [attr.id]="'num-ice-servers-' + i">{{ i }}</span>
           </mat-option>
         </mat-select>
       </mat-form-field>
-        <div id="manual-turn-div" *ngFor="let configuredIce of configuredCustomIceServers; let i = index">
-          <mat-form-field style="width: 100%">
-            <input matInput id="ice-server-url-{{i}}" placeholder="url" type="text" [(ngModel)]="configuredIce.url">
-          </mat-form-field>
-          <mat-form-field style="width: 48%; padding-right: 2px">
-            <input matInput id="ice-server-username-{{i}}" placeholder="username" type="text" [(ngModel)]="configuredIce.username">
-          </mat-form-field>
-          <mat-form-field style="width: 48%; padding-left: 2px">
-            <input matInput id="ice-server-credential-{{i}}" placeholder="credential" type="text" [(ngModel)]="configuredIce.credential">
-          </mat-form-field>
+      <div id="manual-turn-div" *ngFor="let configuredIce of configuredCustomIceServers; let i = index">
+        <mat-form-field style="width: 100%">
+          <input matInput id="ice-server-url-{{i}}" placeholder="url" type="text" [(ngModel)]="configuredIce.url">
+        </mat-form-field>
+        <mat-form-field style="width: 48%; padding-right: 2px">
+          <input matInput id="ice-server-username-{{i}}" placeholder="username" type="text"
+            [(ngModel)]="configuredIce.username">
+        </mat-form-field>
+        <mat-form-field style="width: 48%; padding-left: 2px">
+          <input matInput id="ice-server-credential-{{i}}" placeholder="credential" type="text"
+            [(ngModel)]="configuredIce.credential">
+        </mat-form-field>
       </div>
     </div>
     <div>
@@ -59,8 +63,9 @@
         [disabled]="!connectionId">Disconnect</button>
       <button mat-button id="force-unpublish-api-btn" (click)="forceUnpublish()"
         [disabled]="!streamId">Unpublish</button>
-      <mat-divider></mat-divider>
     </div>
+
+    <mat-divider></mat-divider>
 
     <label class="label">Recordings</label>
     <div>
@@ -86,10 +91,32 @@
       <button mat-button id="delete-recording-btn" (click)="deleteRecording()" [disabled]="!recordingId">Delete
         recording</button>
     </div>
+
+    <mat-divider></mat-divider>
+
+    <label class="label">Broadcast</label>
+    <div>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <input matInput id="broadcasturl-id-field" placeholder="broadcastUrl" [(ngModel)]="broadcastUrl">
+      </mat-form-field>
+      <button mat-button id="start-broadcast-btn" (click)="startBroadcast()">Start broadcast</button>
+      <button mat-button id="stop-broadcast-btn" (click)="stopBroadcast()">Stop broadcast</button>
+      <button id="broadcast-properties-btn" mat-icon-button style="width: 24px; height: 24px; line-height: 24px;"
+        title="Broadcast properties" (click)="toggleBroadcastProperties()">
+        <mat-icon style="font-size: 18px; line-height: 18px; width: 18px; height: 18px"
+          aria-label="Broadcast properties">{{broadcastPropertiesIcon}}</mat-icon>
+      </button>
+      <app-recording-properties *ngIf="showBroadcastProperties" [isBroadcast]="true" [(recordingProperties)]="broadcastProperties">
+      </app-recording-properties>
+    </div>
+
+    <mat-divider></mat-divider>
+
     <mat-form-field id="response-text-area" appearance="fill">
       <textarea id="api-response-text-area" [(ngModel)]="response" matInput readonly></textarea>
       <button mat-button id="clear-response-text-area-btn" (click)="response=''">Clear</button>
     </mat-form-field>
+
   </mat-dialog-content>
   <mat-dialog-actions>
     <button mat-button id="close-dialog-btn"

@@ -1,6 +1,7 @@
 #response-text-area {
   width: 100%;
   color: #808080;
+  margin-top: 10px;
 }
 
 #response-text-area textarea {

@@ -8,6 +8,9 @@ import { Recording, RecordingLayout, RecordingProperties } from 'openvidu-node-c
 })
 export class RecordingPropertiesComponent {
 
+    @Input()
+    isBroadcast = false;
+
     recMode = Recording.OutputMode;
     recLayouts = RecordingLayout;
 
