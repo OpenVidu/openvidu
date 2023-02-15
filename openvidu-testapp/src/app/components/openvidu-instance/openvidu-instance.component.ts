@@ -498,7 +498,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.session.off('broadcastStarted');
       if (this.sessionEvents.broadcastStarted) {
         this.session.on('broadcastStarted', () => {
-          this.updateEventList('broadcastStarted', undefined, undefined);
+          this.updateEventList('broadcastStarted', '', { cancelable: false, target: this.session, type: 'broadcastStarted', hasBeenPrevented: false, isDefaultPrevented: undefined, preventDefault: undefined, callDefaultBehavior: undefined });
         });
       }
     }
@@ -507,7 +507,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.session.off('broadcastStopped');
       if (this.sessionEvents.broadcastStopped) {
         this.session.on('broadcastStopped', () => {
-          this.updateEventList('broadcastStopped', undefined, undefined);
+          this.updateEventList('broadcastStopped', '', { cancelable: false, target: this.session, type: 'broadcastStopped', hasBeenPrevented: false, isDefaultPrevented: undefined, preventDefault: undefined, callDefaultBehavior: undefined });
         });
       }
     }
