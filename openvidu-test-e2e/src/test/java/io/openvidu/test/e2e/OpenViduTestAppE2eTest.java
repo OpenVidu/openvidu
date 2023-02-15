@@ -1177,7 +1177,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// API REST test
 		user.getDriver().findElement(By.id("session-api-btn-0")).click();
-		Thread.sleep(1000);
+		Thread.sleep(750);
 
 		// Try to record a non-existing session
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
@@ -1207,7 +1207,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
-		Thread.sleep(1000);
+		Thread.sleep(750);
 
 		// Join the user to the session
 		user.getDriver().findElement(By.className("join-btn")).click();
@@ -1224,7 +1224,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				"Video was expected to have audio and video tracks");
 
 		user.getDriver().findElement(By.id("session-api-btn-0")).click();
-		Thread.sleep(1000);
+		Thread.sleep(750);
 		user.getDriver().findElement(By.id("rec-properties-btn")).click();
 		Thread.sleep(500);
 		WebElement resolutionField = user.getDriver().findElement(By.id("recording-resolution-field"));
