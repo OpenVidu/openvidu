@@ -456,7 +456,7 @@ export class OpenVidu {
    * This Error object has as `message` property with a status code carrying a specific meaning 
    * (see [REST API](/en/stable/reference-docs/REST-API/#stop-broadcast)).
    */
-  public stopBroadcst(sessionId: string): Promise<void> {
+  public stopBroadcast(sessionId: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       axios.post(
         this.host + OpenVidu.API_BROADCAST_STOP,
