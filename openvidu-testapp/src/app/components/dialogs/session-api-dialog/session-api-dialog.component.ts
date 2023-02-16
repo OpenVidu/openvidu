@@ -295,7 +295,7 @@ export class SessionApiDialogComponent {
     }
 
     stopBroadcast() {
-        this.OV.stopBroadcst(this.sessionId)
+        this.OV.stopBroadcast(this.sessionId)
             .then(() => {
                 this.response = 'Broadcast stopped';
             })
