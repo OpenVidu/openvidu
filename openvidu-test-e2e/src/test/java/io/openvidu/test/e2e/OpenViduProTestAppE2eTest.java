@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.awt.Point;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.net.HttpURLConnection;
 import java.nio.file.Files;
@@ -37,6 +38,7 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.springframework.http.HttpMethod;
+import org.springframework.util.ResourceUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -54,8 +56,10 @@ import io.openvidu.java.client.OpenVidu;
 import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
+import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.Session;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
+import io.openvidu.test.browsers.utils.RecordingUtils;
 import io.openvidu.test.browsers.utils.Unzipper;
 import io.openvidu.test.browsers.utils.webhook.CustomWebhook;
 
@@ -228,6 +232,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		io.openvidu.test.browsers.utils.webhook.CustomWebhook.main(new String[0], initLatch);
 
 		try {
+			startRtmpServer();
 
 			if (!initLatch.await(30, TimeUnit.SECONDS)) {
 				Assertions.fail("Timeout waiting for webhook springboot app to start");
@@ -250,8 +255,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			try {
 
-				Map<String, Object> newConfig = Map.of("OPENVIDU_WEBHOOK", true, "OPENVIDU_WEBHOOK_ENDPOINT",
-						"http://127.0.0.1:7777/webhook", "OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT", 0);
+				Map<String, Object> newConfig = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false,
+						"OPENVIDU_PRO_SPEECH_TO_TEXT", "disabled", "OPENVIDU_WEBHOOK", true,
+						"OPENVIDU_WEBHOOK_ENDPOINT", "http://127.0.0.1:7777/webhook",
+						"OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT", 0);
 				restartOpenViduServer(newConfig);
 
 				OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
@@ -274,7 +281,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 				// disconnect: webrtcConnectionDestroyed, participantLeft (and subsequent
 				// lastParticipantLeft triggered events for sessionDestroyed,
-				// recordingStatusChanged, [broadcastStopped])
+				// recordingStatusChanged, broadcastStopped)
 				this.connectTwoUsers(user, restClient, false, true, true);
 				// First user out
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .leave-btn")).click();
@@ -294,6 +301,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					Assertions.assertEquals("lastParticipantLeft",
 							CustomWebhook.waitForEvent("recordingStatusChanged", 2).get("reason").getAsString());
 				}
+				Assertions.assertEquals("lastParticipantLeft",
+						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
 				Assertions.assertEquals("lastParticipantLeft",
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
@@ -324,7 +333,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// forceDisconnectByUser: webrtcConnectionDestroyed, participantLeft
-				this.connectTwoUsers(user, restClient, true, true, true);
+				this.connectTwoUsers(user, restClient, true, false, false);
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .force-disconnect-btn")).click();
 				for (int i = 0; i < 3; i++) {
 					Assertions.assertEquals("forceDisconnectByUser",
@@ -336,7 +345,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 				// forceDisconnectByServer: webrtcConnectionDestroyed, participantLeft (and
 				// subsequent lastParticipantLeft triggered events for sessionDestroyed,
-				// recordingStatusChanged, [broadcastStopped])
+				// recordingStatusChanged, broadcastStopped)
 				this.connectTwoUsers(user, restClient, false, true, true);
 				String[] connectionIds = restClient
 						.rest(HttpMethod.GET, "/openvidu/api/sessions/TestSession", HttpURLConnection.HTTP_OK)
@@ -363,11 +372,13 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 							CustomWebhook.waitForEvent("recordingStatusChanged", 2).get("reason").getAsString());
 				}
 				Assertions.assertEquals("lastParticipantLeft",
+						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
+				Assertions.assertEquals("lastParticipantLeft",
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// sessionClosedByServer: webrtcConnectionDestroyed, participantLeft,
-				// sessionDestroyed, recordingStatusChanged
+				// sessionDestroyed, recordingStatusChanged, broadcastStopped
 				this.connectTwoUsers(user, restClient, false, true, true);
 				restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/TestSession",
 						HttpURLConnection.HTTP_NO_CONTENT);
@@ -384,12 +395,14 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 							CustomWebhook.waitForEvent("recordingStatusChanged", 2).get("reason").getAsString());
 				}
 				Assertions.assertEquals("sessionClosedByServer",
+						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
+				Assertions.assertEquals("sessionClosedByServer",
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// networkDisconnect: webrtcConnectionDestroyed, participantLeft (and
 				// subsequent lastParticipantLeft triggered events for sessionDestroyed,
-				// recordingStatusChanged, [broadcastStopped])
+				// recordingStatusChanged, broadcastStopped)
 				this.connectTwoUsers(user, restClient, false, true, true);
 				// First user out
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .network-drop-btn")).click();
@@ -410,11 +423,13 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 							CustomWebhook.waitForEvent("recordingStatusChanged", 2).get("reason").getAsString());
 				}
 				Assertions.assertEquals("lastParticipantLeft",
+						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
+				Assertions.assertEquals("lastParticipantLeft",
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// mediaServerDisconnect: webrtcConnectionDestroyed, participantLeft,
-				// sessionDestroyed, recordingStatusChanged, [broadcastStopped]
+				// sessionDestroyed, recordingStatusChanged, broadcastStopped
 				this.connectTwoUsers(user, restClient, false, true, true);
 				String mediaNodeId = restClient
 						.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpURLConnection.HTTP_OK).get("content")
@@ -436,6 +451,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 							CustomWebhook.waitForEvent("recordingStatusChanged", 4).get("reason").getAsString());
 				}
 				Assertions.assertEquals("mediaServerDisconnect",
+						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
+				Assertions.assertEquals("mediaServerDisconnect",
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
 				CustomWebhook.waitForEvent("mediaNodeStatusChanged", 5);
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
@@ -449,7 +466,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				MediaNodeDockerUtils.stopMediaServerInsideMediaNodeAndRecover(containerId, 400);
 				for (int i = 0; i < 4; i++) {
 					Assertions.assertEquals("mediaServerReconnect",
-							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
+							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 6).get("reason").getAsString());
 				}
 				for (int i = 0; i < 2; i++) {
 					Assertions.assertEquals("mediaServerReconnect",
@@ -458,7 +475,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// nodeCrashed: webrtcConnectionDestroyed, participantLeft, sessionDestroyed,
-				// recordingStatusChanged, [broadcastStopped]
+				// recordingStatusChanged, broadcastStopped
 				this.connectTwoUsers(user, restClient, false, true, true);
 				containerId = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpURLConnection.HTTP_OK)
 						.get("content").getAsJsonArray().get(0).getAsJsonObject().get("environmentId").getAsString();
@@ -475,7 +492,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				}
 				// Only status "stopped" for recording. Not "ready" if node crash
 				Assertions.assertEquals("nodeCrashed",
-						CustomWebhook.waitForEvent("recordingStatusChanged", 2).get("reason").getAsString());
+						CustomWebhook.waitForEvent("recordingStatusChanged", 10).get("reason").getAsString());
+				Assertions.assertEquals("nodeCrashed",
+						CustomWebhook.waitForEvent("broadcastStopped", 10).get("reason").getAsString());
 				Assertions.assertEquals("nodeCrashed",
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
 				CustomWebhook.waitForEvent("mediaNodeStatusChanged", 2);
@@ -483,7 +502,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				restartOpenViduServer(new HashMap<>(), true, HttpURLConnection.HTTP_OK);
 
 				// openviduServerStopped: webrtcConnectionDestroyed, participantLeft,
-				// sessionDestroyed, recordingStatusChanged, [broadcastStopped]
+				// sessionDestroyed, recordingStatusChanged, broadcastStopped
 				this.connectTwoUsers(user, restClient, false, true, true);
 				restartOpenViduServer(new HashMap<>(), true, HttpURLConnection.HTTP_OK);
 				for (int i = 0; i < 4; i++) {
@@ -498,6 +517,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					Assertions.assertEquals("openviduServerStopped",
 							CustomWebhook.waitForEvent("recordingStatusChanged", 4).get("reason").getAsString());
 				}
+				Assertions.assertEquals("openviduServerStopped",
+						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
 				Assertions.assertEquals("openviduServerStopped",
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
 				for (int i = 0; i < 2; i++) {
@@ -523,11 +544,13 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					Assertions.assertEquals("automaticStop",
 							CustomWebhook.waitForEvent("recordingStatusChanged", 4).get("reason").getAsString());
 				}
+				Assertions.assertEquals("lastParticipantLeft",
+						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
 				Assertions.assertEquals("automaticStop",
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
-				// recordingStoppedByServer
+				// recordingStoppedByServer: recordingStatusChanged
 				this.connectTwoUsers(user, restClient, false, true, true);
 				String recordingId = restClient
 						.rest(HttpMethod.GET, "/openvidu/api/recordings", HttpURLConnection.HTTP_OK).get("items")
@@ -541,8 +564,15 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					Assertions.assertEquals("recordingStoppedByServer",
 							CustomWebhook.waitForEvent("recordingStatusChanged", 4).get("reason").getAsString());
 				}
+				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
-				// [broadcastStoppedByServer]
+				// broadcastStoppedByServer: broadcastStopped
+				this.connectTwoUsers(user, restClient, false, true, true);
+				restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/stop", "{'session':'TestSession'}",
+						HttpURLConnection.HTTP_OK);
+				Assertions.assertEquals("broadcastStoppedByServer",
+						CustomWebhook.waitForEvent("broadcastStopped", 5).get("reason").getAsString());
+				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 			} finally {
 				Map<String, Object> oldConfig = new HashMap<>();
@@ -557,6 +587,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			}
 
 		} finally {
+			stopRtmpServer();
 			CustomWebhook.shutDown();
 		}
 	}
@@ -1053,6 +1084,54 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertTrue(connection.adaptativeBitrate() == null, "Wrong adaptativeBitrate property");
 		Assertions.assertTrue(connection.onlyPlayWithSubscribers() == null, "Wrong onlyPlayWithSubscribers property");
 		Assertions.assertTrue(connection.getNetworkCache() == null, "Wrong networkCache property");
+
+		try {
+			startRtmpServer();
+			// Start broadcast
+			try {
+				OV.startBroadcast("NOT_EXISTS", "rtmp://172.17.0.1/live");
+				Assertions.fail("Expected OpenViduHttpException exception");
+			} catch (OpenViduHttpException exception) {
+				Assertions.assertEquals(HttpURLConnection.HTTP_NOT_FOUND, exception.getStatus(), "Wrong HTTP status");
+			}
+			try {
+				OV.startBroadcast(session.getSessionId(), "rtmp://172.17.0.1/live");
+				Assertions.fail("Expected OpenViduHttpException exception");
+			} catch (OpenViduHttpException exception) {
+				Assertions.assertEquals(HttpURLConnection.HTTP_NOT_ACCEPTABLE, exception.getStatus(),
+						"Wrong HTTP status");
+			}
+			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.className("join-btn")).click();
+			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+			Assertions.assertTrue(OV.fetch());
+			session = OV.getActiveSession("TestSession");
+			Assertions.assertFalse(session.fetch());
+
+			OV.startBroadcast("TestSession", "rtmp://172.17.0.1/live",
+					new RecordingProperties.Builder().resolution("1280x800").build());
+			user.getEventManager().waitUntilEventReaches("broadcastStarted", 1);
+			Assertions.assertFalse(session.fetch());
+			Assertions.assertTrue(session.isBeingBroadcasted());
+
+			// Stop broadcast
+			try {
+				OV.stopBroadcast("NOT_EXISTS");
+				Assertions.fail("Expected OpenViduHttpException exception");
+			} catch (OpenViduHttpException exception) {
+				Assertions.assertEquals(HttpURLConnection.HTTP_NOT_FOUND, exception.getStatus(), "Wrong HTTP status");
+			}
+			OV.stopBroadcast("TestSession");
+			user.getEventManager().waitUntilEventReaches("broadcastStopped", 1);
+			Assertions.assertFalse(session.fetch());
+			Assertions.assertFalse(session.isBeingBroadcasted());
+
+		} finally {
+			stopRtmpServer();
+		}
 	}
 
 	@Test
@@ -1068,8 +1147,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.className("join-btn")).click();
-
-		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
@@ -2721,6 +2799,240 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 	}
 
+	@Test
+	@DisplayName("Successfull broadcast Test")
+	void sucessfullBroadcastTest() throws Exception {
+
+		log.info("Successfull broadcast Test");
+
+		try {
+			startRtmpServer();
+
+			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+
+			user.getDriver().findElement(By.id("session-api-btn-0")).click();
+			Thread.sleep(750);
+			WebElement broadcastUrlField = user.getDriver().findElement(By.id("broadcasturl-id-field"));
+			broadcastUrlField.clear();
+			broadcastUrlField.sendKeys("rtmp://172.17.0.1/live");
+			user.getDriver().findElement(By.id("start-broadcast-btn")).click();
+			user.getWaiter()
+					.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
+
+			user.getDriver().findElement(By.id("list-sessions-btn")).click();
+			user.getWaiter().until(ExpectedConditions.attributeContains(By.id("api-response-text-area"), "value",
+					"Number: 0. Changes: false"));
+
+			user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+			user.getDriver().findElement(By.id("list-sessions-btn")).click();
+			user.getWaiter().until(ExpectedConditions.attributeContains(By.id("api-response-text-area"), "value",
+					"Number: 1. Changes: true"));
+
+			user.getDriver().findElement(By.id("start-broadcast-btn")).click();
+			user.getWaiter().until(
+					ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Broadcast started"));
+			user.getEventManager().waitUntilEventReaches("broadcastStarted", 1);
+
+			user.getDriver().findElement(By.id("list-sessions-btn")).click();
+			user.getWaiter().until(ExpectedConditions.attributeContains(By.id("api-response-text-area"), "value",
+					"Number: 1. Changes: false"));
+
+			checkRtmpRecordingIsFine(30);
+
+			user.getDriver().findElement(By.id("stop-broadcast-btn")).click();
+			user.getWaiter().until(
+					ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Broadcast stopped"));
+			user.getEventManager().waitUntilEventReaches("broadcastStopped", 1);
+
+			user.getDriver().findElement(By.id("list-sessions-btn")).click();
+			user.getWaiter().until(ExpectedConditions.attributeContains(By.id("api-response-text-area"), "value",
+					"Number: 1. Changes: false"));
+
+			gracefullyLeaveParticipants(user, 1);
+
+		} finally {
+			stopRtmpServer();
+		}
+	}
+
+	@Test
+	@DisplayName("Wrong broadcast Test")
+	void wrongBroadcastTest() throws Exception {
+
+		log.info("Wrong broadcast Test");
+
+		try {
+			startRtmpServer();
+
+			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.className("join-btn")).click();
+			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+			/** Start broadcast **/
+			CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+			// 400
+			String body = "{}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, HttpURLConnection.HTTP_BAD_REQUEST);
+			body = "{'session':'TestSession'}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, HttpURLConnection.HTTP_BAD_REQUEST);
+			body = "{'broadcastUrl':'rtmp://172.17.0.1/live'}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, HttpURLConnection.HTTP_BAD_REQUEST);
+			body = "{'session':false,'broadcastUrl':'rtmp://172.17.0.1/live'}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, HttpURLConnection.HTTP_BAD_REQUEST);
+			body = "{'session':'TestSession','broadcastUrl':123}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, HttpURLConnection.HTTP_BAD_REQUEST);
+			body = "{'session':'TestSession','broadcastUrl':'NOT_A_URL'}";
+			restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
+					HttpURLConnection.HTTP_BAD_REQUEST);
+			// 404
+			body = "{'session':'NOT_EXISTS','broadcastUrl':'rtmp://172.17.0.1/live'}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, HttpURLConnection.HTTP_NOT_FOUND);
+			// 406
+			String notActiveSessionId = restClient
+					.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpURLConnection.HTTP_OK).get("id")
+					.getAsString();
+			body = "{'session':'" + notActiveSessionId + "','broadcastUrl':'rtmp://172.17.0.1/live'}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
+					HttpURLConnection.HTTP_NOT_ACCEPTABLE);
+			// 422
+			body = "{'session':'TestSession','broadcastUrl':'rtmp://172.17.0.1/live','resolution':'99x1280'}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, 422);
+			// 500 (Connection refused)
+			body = "{'session':'TestSession','broadcastUrl':'rtmps://172.17.0.1/live'}";
+			String errorResponse = restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
+					HttpURLConnection.HTTP_INTERNAL_ERROR);
+			Assertions.assertTrue(
+					errorResponse.contains("Cannot open connection")
+							&& errorResponse.contains("rtmps://172.17.0.1/live: Connection refused"),
+					"Broadcast error message does not contain expected message");
+			// 500 (Input/output error)
+			body = "{'session':'TestSession','broadcastUrl':'rtmp://not.exists'}";
+			errorResponse = restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
+					HttpURLConnection.HTTP_INTERNAL_ERROR);
+			Assertions.assertTrue(errorResponse.contains("rtmp://not.exists: Input/output error"),
+					"Broadcast error message does not contain expected message");
+			// 500 (Protocol not found)
+			body = "{'session':'TestSession','broadcastUrl':'schemefail://172.17.0.1/live'}";
+			errorResponse = restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
+					HttpURLConnection.HTTP_INTERNAL_ERROR);
+			Assertions.assertTrue(errorResponse.contains("schemefail://172.17.0.1/live: Protocol not found"),
+					"Broadcast error message does not contain expected message");
+			// Concurrent broadcast
+			final int PETITIONS = 10;
+			List<String> responses = new ArrayList<>();
+			List<Exception> exception = new ArrayList<>();
+			CountDownLatch latch = new CountDownLatch(PETITIONS);
+			body = "{'session':'TestSession','broadcastUrl':'rtmp://172.17.0.1/live'}";
+			for (int i = 0; i < PETITIONS; i++) {
+				new Thread(() -> {
+					try {
+						String response = restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start",
+								"{'session':'TestSession','broadcastUrl':'rtmp://172.17.0.1/live'}",
+								HttpURLConnection.HTTP_OK);
+						responses.add(response);
+					} catch (Exception e) {
+						// 409
+						exception.add(e);
+					}
+					latch.countDown();
+				}).start();
+			}
+			if (!latch.await(30, TimeUnit.SECONDS)) {
+				Assertions.fail("Concurrent start of broadcasts did not return in timeout");
+			}
+			Assertions.assertEquals(PETITIONS - 1, exception.size(), "Wrong number of councurrent started broadcasts");
+			// 409
+			restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
+					HttpURLConnection.HTTP_CONFLICT);
+
+			user.getEventManager().waitUntilEventReaches("broadcastStarted", 1);
+			checkRtmpRecordingIsFine(30);
+
+			/** Stop broadcast **/
+			// 400
+			body = "{}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/stop", body, HttpURLConnection.HTTP_BAD_REQUEST);
+			body = "{'session':123}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/stop", body, HttpURLConnection.HTTP_BAD_REQUEST);
+			// 404
+			body = "{'session':'NOT_EXISTS'}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/stop", body, HttpURLConnection.HTTP_NOT_FOUND);
+			// 200
+			body = "{'session':'TestSession'}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/stop", body, HttpURLConnection.HTTP_OK);
+			user.getEventManager().waitUntilEventReaches("broadcastStopped", 1);
+			// 409
+			body = "{'session':'TestSession'}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/stop", body, HttpURLConnection.HTTP_CONFLICT);
+
+			gracefullyLeaveParticipants(user, 1);
+
+		} finally {
+			stopRtmpServer();
+		}
+	}
+
+	@Test
+	@DisplayName("Broadcast and composed recording test")
+	void broadcastAndComposedRecordingTest() throws Exception {
+
+		log.info("Broadcast and composed recording test");
+
+		try {
+			startRtmpServer();
+
+		} finally {
+			stopRtmpServer();
+		}
+	}
+
+	// https://github.com/tiangolo/nginx-rtmp-docker
+	private void startRtmpServer() throws FileNotFoundException {
+		File file = ResourceUtils.getFile("classpath:broadcast-nginx.conf");
+		String dockerRunCommand = "docker run -d --name broadcast-nginx -p 1935:1935 -v " + file.getAbsolutePath()
+				+ ":/etc/nginx/nginx.conf tiangolo/nginx-rtmp";
+		commandLine.executeCommand(dockerRunCommand, 10);
+	}
+
+	private void stopRtmpServer() {
+		String dockerRemoveCommand = "docker rm -f broadcast-nginx";
+		commandLine.executeCommand(dockerRemoveCommand, 10);
+	}
+
+	private void checkRtmpRecordingIsFine(long secondsTimeout) throws InterruptedException {
+		final String broadcastRecordingPath = "/opt/openvidu/recordings";
+		final String cleanBroadcastPath = "rm -rf " + broadcastRecordingPath + "/tmp";
+		try {
+			final long startTime = System.currentTimeMillis();
+			while (false || ((System.currentTimeMillis() - startTime) < (secondsTimeout * 1000))) {
+				commandLine.executeCommand(cleanBroadcastPath, 10);
+				commandLine.executeCommand("docker cp broadcast-nginx:/tmp " + broadcastRecordingPath, 30);
+				commandLine.executeCommand("ffmpeg -i " + broadcastRecordingPath + "/tmp/*.flv -vframes 1 "
+						+ broadcastRecordingPath + "/tmp/rtmp-screenshot.jpg", 30);
+				File screenshot = new File(broadcastRecordingPath + "/tmp/rtmp-screenshot.jpg");
+				if (screenshot.exists() && screenshot.isFile() && screenshot.length() > 0 && screenshot.canRead()) {
+					Assertions.assertTrue(
+							this.recordingUtils.thumbnailIsFine(screenshot, RecordingUtils::checkVideoAverageRgbGreen),
+							"RTMP screenshot " + screenshot.getAbsolutePath() + " is not fine");
+					break;
+				}
+				log.info("RTMP screenshot could not be generated yet. Trying again");
+				Thread.sleep(1000);
+			}
+			if ((System.currentTimeMillis() - startTime) >= (secondsTimeout * 1000)) {
+				Assertions.fail("Timeout of " + secondsTimeout + " seconds elapsed waiting for RTMP sreenshot");
+			}
+		} finally {
+			commandLine.executeCommand(cleanBroadcastPath, 10);
+		}
+	}
+
 	private String getOwnConnectionId(OpenViduTestappUser user, int numberOfUser) {
 		return user.getWaiter().until(d -> {
 			List<WebElement> firstOpenviduEvent = d.findElements(By.cssSelector(
@@ -2935,7 +3247,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					CustomWebhook.waitForEvent("recordingStatusChanged", 3).get("status").getAsString());
 		}
 		if (startBroadcast) {
-
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start",
+					"{'session':'TestSession','broadcastUrl':'rtmp://172.17.0.1/live'}", HttpURLConnection.HTTP_OK);
+			user.getEventManager().waitUntilEventReaches("broadcastStarted", 2);
+			CustomWebhook.waitForEvent("broadcastStarted", 3);
 		}
 	}
 

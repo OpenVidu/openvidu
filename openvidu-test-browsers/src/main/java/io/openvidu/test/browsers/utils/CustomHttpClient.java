@@ -283,7 +283,7 @@ public class CustomHttpClient {
 		return json;
 	}
 
-	private String commonRestString(HttpMethod method, String path, String body, int status) throws Exception {
+	public String commonRestString(HttpMethod method, String path, String body, int status) throws Exception {
 		path = openviduUrl + (path.startsWith("/") ? path : ("/" + path));
 
 		HttpRequest.Builder builder = HttpRequest.newBuilder().uri(new URI(path));

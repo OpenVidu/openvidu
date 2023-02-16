@@ -292,8 +292,8 @@ public class SessionRestController {
 		case IPCAM:
 			return this.newIpcamConnection(session, connectionProperties);
 		default:
-			return SessionRestController.generateErrorResponse("Wrong type parameter", "/sessions/" + sessionId + "/connection",
-					HttpStatus.BAD_REQUEST);
+			return SessionRestController.generateErrorResponse("Wrong type parameter",
+					"/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
 		}
 	}
 
@@ -371,8 +371,8 @@ public class SessionRestController {
 	public ResponseEntity<?> startRecording(@RequestBody Map<String, ?> params) {
 
 		if (params == null) {
-			return SessionRestController.generateErrorResponse("Error in body parameters. Cannot be empty", "/recordings/start",
-					HttpStatus.BAD_REQUEST);
+			return SessionRestController.generateErrorResponse("Error in body parameters. Cannot be empty",
+					"/recordings/start", HttpStatus.BAD_REQUEST);
 		}
 
 		log.info("REST API: POST {}/recordings/start {}", RequestMappings.API, params.toString());
@@ -386,14 +386,14 @@ public class SessionRestController {
 		try {
 			sessionId = (String) params.get("session");
 		} catch (Exception e) {
-			return SessionRestController.generateErrorResponse("Type error in parameter \"session\"", "/recordings/start",
-					HttpStatus.BAD_REQUEST);
+			return SessionRestController.generateErrorResponse("Type error in parameter \"session\"",
+					"/recordings/start", HttpStatus.BAD_REQUEST);
 		}
 
 		if (sessionId == null) {
 			// "session" parameter not found
-			return SessionRestController.generateErrorResponse("\"session\" parameter is mandatory", "/recordings/start",
-					HttpStatus.BAD_REQUEST);
+			return SessionRestController.generateErrorResponse("\"session\" parameter is mandatory",
+					"/recordings/start", HttpStatus.BAD_REQUEST);
 		}
 
 		Session session = sessionManager.getSession(sessionId);
@@ -426,7 +426,8 @@ public class SessionRestController {
 		try {
 			recordingProperties = getRecordingPropertiesFromParams(params, session).build();
 		} catch (IllegalStateException e) {
-			return SessionRestController.generateErrorResponse(e.getMessage(), "/sessions", HttpStatus.UNPROCESSABLE_ENTITY);
+			return SessionRestController.generateErrorResponse(e.getMessage(), "/sessions",
+					HttpStatus.UNPROCESSABLE_ENTITY);
 		} catch (RuntimeException e) {
 			return SessionRestController.generateErrorResponse(e.getMessage(), "/sessions", HttpStatus.BAD_REQUEST);
 		}
@@ -566,11 +567,13 @@ public class SessionRestController {
 		try {
 			sessionId = (String) params.get("session");
 		} catch (ClassCastException e) {
-			return SessionRestController.generateErrorResponse("Type error in some parameter", "/tokens", HttpStatus.BAD_REQUEST);
+			return SessionRestController.generateErrorResponse("Type error in some parameter", "/tokens",
+					HttpStatus.BAD_REQUEST);
 		}
 
 		if (sessionId == null) {
-			return SessionRestController.generateErrorResponse("\"session\" parameter is mandatory", "/tokens", HttpStatus.BAD_REQUEST);
+			return SessionRestController.generateErrorResponse("\"session\" parameter is mandatory", "/tokens",
+					HttpStatus.BAD_REQUEST);
 		}
 
 		log.warn("Token API is deprecated. Use Connection API instead (POST {}/sessions/{}/connection)",
@@ -578,7 +581,8 @@ public class SessionRestController {
 
 		final Session session = this.sessionManager.getSessionWithNotActive(sessionId);
 		if (session == null) {
-			return SessionRestController.generateErrorResponse("Session " + sessionId + " not found", "/tokens", HttpStatus.NOT_FOUND);
+			return SessionRestController.generateErrorResponse("Session " + sessionId + " not found", "/tokens",
+					HttpStatus.NOT_FOUND);
 		}
 
 		ConnectionProperties connectionProperties;
@@ -655,14 +659,16 @@ public class SessionRestController {
 			type = (String) params.get("type");
 			data = (String) params.get("data");
 		} catch (ClassCastException e) {
-			return SessionRestController.generateErrorResponse("Type error in some parameter", "/signal", HttpStatus.BAD_REQUEST);
+			return SessionRestController.generateErrorResponse("Type error in some parameter", "/signal",
+					HttpStatus.BAD_REQUEST);
 		}
 
 		JsonObject completeMessage = new JsonObject();
 
 		if (sessionId == null) {
 			// "session" parameter not found
-			return SessionRestController.generateErrorResponse("\"session\" parameter is mandatory", "/signal", HttpStatus.BAD_REQUEST);
+			return SessionRestController.generateErrorResponse("\"session\" parameter is mandatory", "/signal",
+					HttpStatus.BAD_REQUEST);
 		}
 		Session session = sessionManager.getSession(sessionId);
 		if (session == null) {
@@ -689,16 +695,16 @@ public class SessionRestController {
 				JsonArray toArray = gson.toJsonTree(to).getAsJsonArray();
 				completeMessage.add("to", toArray);
 			} catch (IllegalStateException exception) {
-				return SessionRestController.generateErrorResponse("\"to\" parameter is not a valid JSON array", "/signal",
-						HttpStatus.BAD_REQUEST);
+				return SessionRestController.generateErrorResponse("\"to\" parameter is not a valid JSON array",
+						"/signal", HttpStatus.BAD_REQUEST);
 			}
 		}
 
 		try {
 			sessionManager.sendMessage(completeMessage.toString(), session);
 		} catch (OpenViduException e) {
-			return SessionRestController.generateErrorResponse("\"to\" array has no valid connection identifiers", "/signal",
-					HttpStatus.NOT_ACCEPTABLE);
+			return SessionRestController.generateErrorResponse("\"to\" array has no valid connection identifiers",
+					"/signal", HttpStatus.NOT_ACCEPTABLE);
 		}
 
 		return new ResponseEntity<>(HttpStatus.OK);
@@ -729,8 +735,8 @@ public class SessionRestController {
 		} else {
 			log.error("Session {} is in the process of closing. Connection couldn't be created",
 					session.getSessionId());
-			return SessionRestController.generateErrorResponse("Session " + session.getSessionId() + " not found", REQUEST_PATH,
-					HttpStatus.NOT_FOUND);
+			return SessionRestController.generateErrorResponse("Session " + session.getSessionId() + " not found",
+					REQUEST_PATH, HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -761,10 +767,11 @@ public class SessionRestController {
 				return new ResponseEntity<>(ipcamParticipant.toJson().toString(), RestUtils.getResponseHeaders(),
 						HttpStatus.OK);
 			} catch (MalformedURLException e) {
-				return SessionRestController.generateErrorResponse("\"rtspUri\" parameter is not a valid rtsp uri", REQUEST_PATH,
-						HttpStatus.BAD_REQUEST);
+				return SessionRestController.generateErrorResponse("\"rtspUri\" parameter is not a valid rtsp uri",
+						REQUEST_PATH, HttpStatus.BAD_REQUEST);
 			} catch (Exception e) {
-				return SessionRestController.generateErrorResponse(e.getMessage(), REQUEST_PATH, HttpStatus.INTERNAL_SERVER_ERROR);
+				return SessionRestController.generateErrorResponse(e.getMessage(), REQUEST_PATH,
+						HttpStatus.INTERNAL_SERVER_ERROR);
 			} finally {
 				session.closingLock.readLock().unlock();
 			}

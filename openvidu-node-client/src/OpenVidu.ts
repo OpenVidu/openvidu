@@ -65,7 +65,18 @@ export class OpenVidu {
    * @hidden
    */
   static readonly API_RECORDINGS_STOP: string = OpenVidu.API_RECORDINGS + '/stop';
-
+  /**
+   * @hidden
+   */
+  static readonly API_BROADCAST: string = OpenVidu.API_PATH + '/broadcast';
+  /**
+   * @hidden
+   */
+  static readonly API_BROADCAST_START: string = OpenVidu.API_BROADCAST + '/start';
+  /**
+   * @hidden
+   */
+  static readonly API_BROADCAST_STOP: string = OpenVidu.API_BROADCAST + '/stop';
 
 
 
@@ -349,6 +360,124 @@ export class OpenVidu {
           if (res.status === 204) {
             // SUCCESS response from openvidu-server. Resolve undefined
             resolve(undefined);
+          } else {
+            // ERROR response from openvidu-server. Resolve HTTP status
+            reject(new Error(res.status.toString()));
+          }
+        }).catch(error => {
+          this.handleError(error, reject);
+        });
+    });
+  }
+
+  public startBroadcast(sessionId: string, broadcastUrl: string): Promise<void>;
+  public startBroadcast(sessionId: string, broadcastUrl: string, properties: RecordingProperties): Promise<void>;
+
+  /**
+ * Starts the broadcast of a {@link Session}
+ *
+ * @param sessionId The `sessionId` of the {@link Session} you want to start broadcasting
+ * @param broadcastUrl The URL where to broadcast
+ * @param properties The configuration for this broadcast. It uses a subset of the {@link RecordingProperties}:
+ * - {@link RecordingProperties.hasAudio}
+ * - {@link RecordingProperties.resolution}
+ * - {@link RecordingProperties.frameRate}
+ * - {@link RecordingProperties.recordingLayout}
+ * - {@link RecordingProperties.customLayout}
+ * - {@link RecordingProperties.shmSize}
+ * - {@link RecordingProperties.mediaNode}
+ *
+ * @returns A Promise that is resolved if the broadcast successfully started and rejected with an
+ * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not.
+ * This Error object has as `message` property with a status code carrying a specific meaning 
+ * (see [REST API](/en/stable/reference-docs/REST-API/#start-broadcast)).
+ */
+  public startBroadcast(sessionId: string, broadcastUrl: string, properties?: RecordingProperties): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+
+      let data;
+
+      if (properties != undefined) {
+        data = {
+          session: sessionId,
+          broadcastUrl,
+          recordingLayout: properties.recordingLayout,
+          customLayout: properties.customLayout,
+          resolution: properties.resolution,
+          frameRate: properties.frameRate,
+          hasAudio: properties.hasAudio,
+          shmSize: properties.shmSize,
+          mediaNode: properties.mediaNode
+        };
+        data = JSON.stringify(data);
+      } else {
+        data = {
+          session: sessionId,
+          broadcastUrl
+        }
+      }
+
+      axios.post(
+        this.host + OpenVidu.API_BROADCAST_START,
+        data,
+        {
+          headers: {
+            'Authorization': this.basicAuth,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+        .then(res => {
+          if (res.status === 200) {
+            const activeSession = this.activeSessions.find(s => s.sessionId === sessionId);
+            if (!!activeSession) {
+              activeSession.broadcasting = true;
+            } else {
+              console.warn("No active session found for sessionId '" + sessionId + "'. This instance of OpenVidu Node Client didn't create this session");
+            }
+            resolve();
+          } else {
+            // ERROR response from openvidu-server. Resolve HTTP status
+            reject(new Error(res.status.toString()));
+          }
+        }).catch(error => {
+          this.handleError(error, reject);
+        });
+    });
+  }
+
+  /**
+   * Stops the broadcast of a {@link Session}
+   *
+   * @param sessionId The `sessionId` of the {@link Session} you want to stop broadcasting
+   *
+   * @returns A Promise that is resolved if the broadcast successfully stopped and rejected with an
+   * [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object if not.
+   * This Error object has as `message` property with a status code carrying a specific meaning 
+   * (see [REST API](/en/stable/reference-docs/REST-API/#stop-broadcast)).
+   */
+  public stopBroadcst(sessionId: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      axios.post(
+        this.host + OpenVidu.API_BROADCAST_STOP,
+        { session: sessionId },
+        {
+          headers: {
+            'Authorization': this.basicAuth,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+        .then(res => {
+          if (res.status === 200) {
+            // SUCCESS response from openvidu-server
+            const activeSession = this.activeSessions.find(s => s.sessionId === sessionId);
+            if (!!activeSession) {
+              activeSession.broadcasting = false;
+            } else {
+              console.warn("No active session found for sessionId '" + sessionId + "'. This instance of OpenVidu Node Client didn't create this session");
+            }
+            resolve();
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
             reject(new Error(res.status.toString()));

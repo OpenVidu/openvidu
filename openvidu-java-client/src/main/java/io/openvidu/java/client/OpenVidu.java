@@ -86,6 +86,9 @@ public class OpenVidu {
 	protected final static String API_RECORDINGS = API_PATH + "/recordings";
 	protected final static String API_RECORDINGS_START = API_RECORDINGS + "/start";
 	protected final static String API_RECORDINGS_STOP = API_RECORDINGS + "/stop";
+	protected final static String API_BROADCAST = API_PATH + "/broadcast";
+	protected final static String API_BROADCAST_START = API_BROADCAST + "/start";
+	protected final static String API_BROADCAST_STOP = API_BROADCAST + "/stop";
 
 	/**
 	 * @param hostname URL where your OpenVidu deployment is up an running. It must
@@ -507,6 +510,140 @@ public class OpenVidu {
 		};
 
 		HttpDelete request = new HttpDelete(this.hostname + API_RECORDINGS + "/" + recordingId);
+
+		try {
+			this.httpClient.execute(request, responseHandler);
+		} catch (IOException e) {
+			throw ioExceptionToOpenViduHttpException(e);
+		}
+	}
+
+	/**
+	 * Starts the broadcast of a {@link io.openvidu.java.client.Session}
+	 *
+	 * @param sessionId    The sessionId of the session you want to start
+	 *                     broadcasting
+	 * @param broadcastUrl The URL where to broadcast
+	 * 
+	 * @throws OpenViduJavaClientException
+	 * @throws OpenViduHttpException       The status code carries a specific
+	 *                                     meaning
+	 *                                     {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
+	 *                                     (see <a href=
+	 *                                     "/en/stable/reference-docs/REST-API/#start-broadcast">REST
+	 *                                     API</a>)
+	 */
+	public void startBroadcast(String sessionId, String broadcastUrl)
+			throws OpenViduJavaClientException, OpenViduHttpException {
+		this.startBroadcast(sessionId, broadcastUrl, new RecordingProperties.Builder().build());
+	}
+
+	/**
+	 * Starts the broadcast of a {@link io.openvidu.java.client.Session}
+	 *
+	 * @param sessionId    The sessionId of the session you want to start
+	 *                     broadcasting
+	 * @param broadcastUrl The URL where to broadcast
+	 * @param properties   The configuration for this broadcast. It uses a subset of
+	 *                     the {@link io.openvidu.java.client.RecordingProperties}:
+	 *                     <ul>
+	 *                     <li>{@link RecordingProperties.Builder#hasAudio(boolean)}</li>
+	 *                     <li>{@link RecordingProperties.Builder#resolution(String)}</li>
+	 *                     <li>{@link RecordingProperties.Builder#frameRate(int)}</li>
+	 *                     <li>{@link RecordingProperties.Builder#recordingLayout(RecordingLayout)}</li>
+	 *                     <li>{@link RecordingProperties.Builder#customLayout(String)}</li>
+	 *                     <li>{@link RecordingProperties.Builder#shmSize(long)}</li>
+	 *                     <li>{@link RecordingProperties.Builder#mediaNode(String)}</li>
+	 *                     </ul>
+	 * 
+	 * 
+	 * @throws OpenViduJavaClientException
+	 * @throws OpenViduHttpException       The status code carries a specific
+	 *                                     meaning
+	 *                                     {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
+	 *                                     (see <a href=
+	 *                                     "/en/stable/reference-docs/REST-API/#start-broadcast">REST
+	 *                                     API</a>)
+	 */
+	public void startBroadcast(String sessionId, String broadcastUrl, RecordingProperties properties)
+			throws OpenViduJavaClientException, OpenViduHttpException {
+		final HttpClientResponseHandler<Void> responseHandler = new HttpClientResponseHandler<Void>() {
+			@Override
+			public Void handleResponse(final ClassicHttpResponse response) throws IOException, HttpException {
+				final int status = response.getCode();
+				if (status == HttpStatus.SC_OK) {
+					Session activeSession = activeSessions.get(sessionId);
+					if (activeSession != null) {
+						activeSession.setIsBeingBroadcasted(true);
+					} else {
+						log.warn(
+								"No active session found for sessionId '{}'. This instance of OpenVidu Java Client didn't create this session",
+								sessionId);
+					}
+				} else {
+					throw openViduHttpException(status);
+				}
+				return null;
+			}
+		};
+
+		JsonObject json = properties.toJson();
+		json.addProperty("session", sessionId);
+		json.addProperty("broadcastUrl", broadcastUrl);
+		StringEntity params = new StringEntity(json.toString(), StandardCharsets.UTF_8);
+
+		HttpPost request = new HttpPost(this.hostname + API_BROADCAST_START);
+		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+		request.setEntity(params);
+
+		try {
+			this.httpClient.execute(request, responseHandler);
+		} catch (IOException e) {
+			throw ioExceptionToOpenViduHttpException(e);
+		}
+	}
+
+	/**
+	 * Stops the broadcast of a {@link io.openvidu.java.client.Session}
+	 *
+	 * @param sessionId The sessionId of the session you want to stop broadcasting
+	 * 
+	 * @throws OpenViduJavaClientException
+	 * @throws OpenViduHttpException       The status code carries a specific
+	 *                                     meaning
+	 *                                     {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
+	 *                                     (see <a href=
+	 *                                     "/en/stable/reference-docs/REST-API/#stop-broadcast">REST
+	 *                                     API</a>)
+	 */
+	public void stopBroadcast(String sessionId) throws OpenViduJavaClientException, OpenViduHttpException {
+		final HttpClientResponseHandler<Void> responseHandler = new HttpClientResponseHandler<Void>() {
+			@Override
+			public Void handleResponse(final ClassicHttpResponse response) throws IOException, HttpException {
+				final int status = response.getCode();
+				if (status == HttpStatus.SC_OK) {
+					Session activeSession = activeSessions.get(sessionId);
+					if (activeSession != null) {
+						activeSession.setIsBeingBroadcasted(false);
+					} else {
+						log.warn(
+								"No active session found for sessionId '{}'. This instance of OpenVidu Java Client didn't create this session",
+								sessionId);
+					}
+					return null;
+				} else {
+					throw openViduHttpException(status);
+				}
+			}
+		};
+
+		JsonObject json = new JsonObject();
+		json.addProperty("session", sessionId);
+		StringEntity params = new StringEntity(json.toString(), StandardCharsets.UTF_8);
+
+		HttpPost request = new HttpPost(this.hostname + API_BROADCAST_STOP);
+		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+		request.setEntity(params);
 
 		try {
 			this.httpClient.execute(request, responseHandler);
