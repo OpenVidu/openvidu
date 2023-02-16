@@ -1,9 +1,8 @@
-   /* Fixes layout bug. The OT_root is created with the entire layout width and it has a weird UX behaviour */
-   .no-size {
+/* Fixes layout bug. The OT_root is created with the entire layout width and it has a weird UX behaviour */
+.no-size {
 	height: 0px !important;
 	width: 0px !important;
-  }
-
+}
 
 .nickname {
 	padding: 0px;
@@ -11,46 +10,44 @@
 	z-index: 999;
 	border-radius: var(--ov-video-radius);
 	color: var(--ov-text-color);
-	font-family: 'Roboto','RobotoDraft',Helvetica,Arial,sans-serif;
-  }
-  .nicknameContainer {
+	font-family: 'Roboto', 'RobotoDraft', Helvetica, Arial, sans-serif;
+}
+.nicknameContainer {
 	background-color: var(--ov-secondary-color);
 	padding: 5px;
 	color: var(--ov-text-color);
 	font-weight: bold;
 	border-radius: var(--ov-video-radius);
-  }
+}
 
-  #nickname-input-container {
-	background-color:  var(--ov-secondary-color);
+#nickname-input-container {
+	background-color: var(--ov-secondary-color);
 	border-radius: var(--ov-video-radius);
+}
 
-  }
-
-  #closeButton {
+#closeButton {
 	position: absolute;
 	top: -3px;
 	right: 0;
 	z-index: 999;
-  }
+}
 
-  #nicknameForm {
+#nicknameForm {
 	padding: 10px;
-  }
+}
 
-  #audio-wave-container {
+#audio-wave-container {
 	position: absolute;
-    right: 0;
-    z-index: 999;
-    padding: 5px;
-  }
+	right: 0;
+	z-index: 2;
+	padding: 5px;
+}
 
-  .fullscreen {
+.fullscreen {
 	top: 40px;
-  }
+}
 
-
-  video {
+video {
 	-o-object-fit: cover;
 	object-fit: cover;
 	width: 100%;
@@ -60,57 +57,61 @@
 	padding: 0;
 	border: 0;
 	font-size: 100%;
-  }
+}
 
-  .status-icons, #settings-container {
+.status-icons,
+#settings-container {
 	position: absolute;
 	bottom: 0;
 	z-index: 9999;
 	text-align: center;
-  }
+}
 
-  .status-icons {
+.status-icons {
 	left: 0;
-  }
+}
 
-  .status-icons button, #settings-container button {
+.status-icons button,
+#settings-container button {
 	color: var(--ov-text-color);
 	width: 26px;
 	height: 26px;
 	margin: 5px;
 	border-radius: var(--ov-buttons-radius);
-  }
+}
 
-  .status-icons button {
+.status-icons button {
 	background-color: var(--ov-warn-color);
-  }
+}
 
-  .status-icons .mat-icon-button, #settings-container .mat-icon-button{
+.status-icons .mat-icon-button,
+#settings-container .mat-icon-button {
 	line-height: 0px;
-  }
+}
 
-  .status-icons mat-icon, #settings-container mat-icon {
+.status-icons mat-icon,
+#settings-container mat-icon {
 	font-size: 18px;
-  }
+}
 
-  #settings-container{
+#settings-container {
 	right: 0;
-  }
+}
 
-  #settings-container button {
+#settings-container button {
 	background-color: var(--ov-secondary-color);
-  }
+}
 
-  /* Contains the video element, used to fix video letter-boxing */
-  .OV_stream {
+/* Contains the video element, used to fix video letter-boxing */
+.OV_stream {
 	width: 100%;
 	height: 100%;
 	position: relative;
 	overflow: hidden;
 	background-color: transparent;
 	border-radius: var(--ov-video-radius);
-  }
+}
 
-  input {
+input {
 	caret-color: #ffffff !important;
-  }
+}
