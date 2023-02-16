@@ -228,7 +228,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 			List<Bind> binds = new ArrayList<>();
 			binds.add(bind1);
 			containerId = dockerManager.runContainer(properties.mediaNode(), container, containerName, null, volumes,
-					binds, "host", envs, null, properties.shmSize(), false, null, true,
+					binds, "host", envs, null, properties.shmSize(), false, null,
 					openviduConfig.isOpenviduRecordingGPUEnabled());
 			this.sessionsContainers.put(session.getSessionId(), containerId);
 		} catch (Exception e) {

@@ -13,7 +13,7 @@ public interface DockerManager {
 
 	public String runContainer(String mediaNodeId, String image, String containerName, String user,
 			List<Volume> volumes, List<Bind> binds, String networkMode, List<String> envs, List<String> command,
-			Long shmSize, boolean privileged, Map<String, String> labels, boolean autoremove, boolean enableGPU)
+			Long shmSize, boolean privileged, Map<String, String> labels, boolean enableGPU)
 			throws Exception;
 
 	public void removeContainer(String mediaNodeId, String containerId, boolean force);

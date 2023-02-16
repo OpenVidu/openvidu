@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 import com.github.dockerjava.api.async.ResultCallback;
+import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.WaitResponse;
 
 public class WaitForContainerStoppedCallback implements ResultCallback<WaitResponse> {
@@ -34,7 +35,6 @@ public class WaitForContainerStoppedCallback implements ResultCallback<WaitRespo
 
 	@Override
 	public void close() throws IOException {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -44,17 +44,19 @@ public class WaitForContainerStoppedCallback implements ResultCallback<WaitRespo
 
 	@Override
 	public void onError(Throwable arg0) {
-		// TODO Auto-generated method stub
+		if (arg0 instanceof NotFoundException) {
+			// The container cannot be found
+			System.err.println("Waiting for container stopped but it did not exist: " + arg0.getMessage());
+			latch.countDown();
+		}
 	}
 
 	@Override
 	public void onStart(Closeable arg0) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void onNext(WaitResponse arg0) {
-		// TODO Auto-generated method stub
 	}
 
 }

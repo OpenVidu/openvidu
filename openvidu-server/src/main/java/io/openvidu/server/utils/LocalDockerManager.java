@@ -127,8 +127,7 @@ public class LocalDockerManager implements DockerManager {
 	@Override
 	public String runContainer(String mediaNodeId, String image, String containerName, String user,
 			List<Volume> volumes, List<Bind> binds, String networkMode, List<String> envs, List<String> command,
-			Long shmSize, boolean privileged, Map<String, String> labels, boolean autoremove, boolean enableGPU)
-			throws Exception {
+			Long shmSize, boolean privileged, Map<String, String> labels, boolean enableGPU) throws Exception {
 
 		CreateContainerCmd cmd = dockerClient.createContainerCmd(image).withEnv(envs);
 		if (containerName != null) {
@@ -139,8 +138,7 @@ public class LocalDockerManager implements DockerManager {
 			cmd.withUser(user);
 		}
 
-		HostConfig hostConfig = new HostConfig().withNetworkMode(networkMode).withPrivileged(privileged)
-				.withAutoRemove(autoremove);
+		HostConfig hostConfig = new HostConfig().withNetworkMode(networkMode).withPrivileged(privileged);
 		if (shmSize != null) {
 			hostConfig.withShmSize(shmSize);
 		}
