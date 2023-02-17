@@ -28,6 +28,9 @@ import { PlatformService } from '../platform/platform.service';
 	providedIn: 'root'
 })
 export class OpenViduService {
+	/*
+	 * @internal
+	 */
 	isSttReadyObs: Observable<boolean>;
 	private ovEdition: OpenViduEdition;
 	private webcamToken = '';
