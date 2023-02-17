@@ -2,7 +2,6 @@ import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@ang
 import { OpenViduService, ParticipantAbstractModel, RecordingInfo, TokenModel } from 'openvidu-angular';
 import { Session } from 'openvidu-browser';
 import { CaptionsLangOption } from '../../../projects/openvidu-angular/src/lib/models/caption.model';
-import { StreamingInfo } from '../../../projects/openvidu-angular/src/lib/models/streaming.model';
 
 /**
  *
@@ -141,12 +140,6 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * @internal
 	 */
 	_recordingActivityRecordingsList: RecordingInfo[] = [];
-
-	/**
-	 * @internal
-	 * TODO: Remove this directive when RTMP Exported was included on OV and streaming ready event was fired.
-	 */
-	_streamingActivityStreamingInfo: StreamingInfo;
 
 	/**
 	 * @internal
@@ -545,19 +538,6 @@ export class OpenviduWebComponentComponent implements OnInit {
 	}
 
 	/**
-	 * The **streamingActivityStreamingInfo** attribute allows show to show the live streaming info in {@link StreamingActivityComponent}.
-	 *
-	 * Default: `undefined`
-	 *
-	 * @example
-	 * <openvidu-webcomponent streaming-activity-streaming-info="streamingInfo"></openvidu-webcomponent>
-	 */
-	@Input() set streamingActivityStreamingInfo(value: StreamingInfo) {
-		this._streamingActivityStreamingInfo = value;
-	}
-
-
-	/**
 	 * The **streamingActivityStreamingError** attribute allows to show any possible error with the streaming in the {@link StreamingActivityComponent}.
 	 *
 	 * Default: `undefined`
@@ -565,7 +545,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * @example
 	 * <openvidu-webcomponent streaming-activity-streaming-error="streamingError"></openvidu-webcomponent>
 	 */
-	 @Input() set streamingActivityStreamingError(value: any) {
+	@Input() set streamingActivityStreamingError(value: any) {
 		this._streamingActivityStreamingError = value;
 	}
 
