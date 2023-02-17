@@ -129,7 +129,6 @@ $(document).ready(() => {
 
 	webComponent.addEventListener('onToolbarStopStreamingClicked', async (event) => {
 		appendElement('onToolbarStopStreamingClicked');
-		webComponent.streamingActivityStreamingInfo = { status: 'stopped', id: '01' };
 	});
 
 	webComponent.addEventListener('onActivitiesPanelStartRecordingClicked', async (event) => {
@@ -144,17 +143,15 @@ $(document).ready(() => {
 	// });
 
 	webComponent.addEventListener('onActivitiesPanelDeleteRecordingClicked', (event) =>
-		appendElement('onActivitiesPanelDeleteRecordingClicked')
+		appendElement('onActivitiesPanelDeleteRecordingClicked');
 	);
 
 	webComponent.addEventListener('onActivitiesPanelStartStreamingClicked', async (event) => {
 		appendElement('onActivitiesPanelStartStreamingClicked');
-		webComponent.streamingActivityStreamingInfo = { status: 'started', id: '01' };
 	});
 
 	webComponent.addEventListener('onActivitiesPanelStopStreamingClicked', async (event) => {
 		appendElement('onActivitiesPanelStopStreamingClicked');
-		webComponent.streamingActivityStreamingInfo = { status: 'stopped', id: '01' };
 	});
 
 	webComponent.addEventListener('onSessionCreated', (event) => {

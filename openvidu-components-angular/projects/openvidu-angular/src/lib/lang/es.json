@@ -106,10 +106,10 @@
 		"STREAMING": {
 			"TITLE": "Streaming",
 			"SUBTITLE": "Comparte tu llamada con tu público",
-			"CONTENT_SUBTITLE": "OpenVidu necesita la url RTMP de tu plataforma de streaming.",
+			"CONTENT_SUBTITLE": "OpenVidu necesita la url de tu plataforma de streaming.",
 			"START": "Empezar streaming",
 			"STOP": "Finalizar streaming",
-			"URL": "Inserta tu url RTMP",
+			"URL": "Inserta tu url de streaming",
 			"CANCEL": "Cancelar",
 			"NO_MODERATOR": "Solo el MODERADOR puede iniciar el streaming"
 		}

@@ -105,14 +105,14 @@
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",
-			"SUBTITLE": "Trasmetti in streaming la tua riunione al tuo pubblico",
-			"CONTENT_SUBTITLE": "OpenVidu necessita dell'URL RTMP della piattaforma di streaming",
-			"START": "Avvia lo streaming",
+			"SUBTITLE": "Trasmetti la tua riunione al tuo pubblico",
+			"CONTENT_SUBTITLE": "OpenVidu ha bisogno dell'URL della piattaforma di streaming.",
+			"START": "Inizia lo streaming",
 			"STOP": "Termina lo streaming",
-			"URL": "Inserisci il tuo URL RTMP",
+			"URL": "Inserisci il tuo URL di streaming",
 			"CANCEL": "Annulla",
-			"REQUIRED_URL": "RTMP url è obbligatorio",
-			"NO_MODERATOR": "Solo il MODERATORE può iniziare la trasmissione"
+			"REQUIRED_URL": "L'URL di streaming è obbligatorio",
+			"NO_MODERATOR": "Solo il MODERATORE può avviare lo streaming"
 		}
 	},
 	"ERRORS": {

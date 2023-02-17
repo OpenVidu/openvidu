@@ -104,15 +104,15 @@
 			"NO_MODERATOR": "Alleen de MOEDERATOR kan de opname starten"
 		},
 		"STREAMING": {
-			"TITLE": "Streamen",
-			"SUBTITLE": "Stream je meeting naar je publiek",
-			"CONTENT_SUBTITLE": "OpenVidu heeft de RTMP url van de streaming platform nodig.",
-			"START": "Start streamen",
-			"STOP": "Stop streamen",
-			"URL": "Voer je RTMP url in",
+			"TITLE": "Streaming",
+			"SUBTITLE": "Stream uw vergadering naar uw publiek",
+			"CONTENT_SUBTITLE": "OpenVidu heeft de url van het streamingplatform nodig.",
+			"START": "Start met streamen",
+			"STOP": "Stop met streamen",
+			"URL": "Voeg uw stream-URL in",
 			"CANCEL": "Annuleren",
-			"REQUIRED_URL": "RTMP url is verplicht",
-			"NO_MODERATOR": "Alleen de moderator kan de streaming starten"
+			"REQUIRED_URL": "De stream-URL is vereist",
+			"NO_MODERATOR": "Alleen de MODERATOR kan beginnen met streamen"
 		}
 	},
 	"ERRORS": {

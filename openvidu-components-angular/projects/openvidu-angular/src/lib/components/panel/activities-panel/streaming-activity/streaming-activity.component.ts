@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { Signal } from '../../../../models/signal.model';
-import { StreamingError, StreamingInfo, StreamingStatus } from '../../../../models/streaming.model';
+import { StreamingError, StreamingStatus } from '../../../../models/streaming.model';
 import { OpenViduAngularConfigService } from '../../../../services/config/openvidu-angular.config.service';
 import { OpenViduService } from '../../../../services/openvidu/openvidu.service';
 import { ParticipantService } from '../../../../services/participant/participant.service';
@@ -71,7 +70,6 @@ export class StreamingActivityComponent implements OnInit {
 	 */
 	isRtmpModuleAvailable: boolean = true;
 	private streamingSub: Subscription;
-	private streamingInfoSub: Subscription;
 	private streamingErrorSub: Subscription;
 
 	/**
@@ -91,7 +89,6 @@ export class StreamingActivityComponent implements OnInit {
 	ngOnInit(): void {
 		this.isSessionCreator = this.participantService.amIModerator();
 		this.subscribeToStreamingStatus();
-		this.subscribeToStreamingInfo();
 		this.subscribeToStreamingError();
 	}
 
@@ -100,7 +97,6 @@ export class StreamingActivityComponent implements OnInit {
 	 */
 	ngOnDestroy() {
 		if (this.streamingSub) this.streamingSub.unsubscribe();
-		if (this.streamingInfoSub) this.streamingInfoSub.unsubscribe();
 		if (this.streamingErrorSub) this.streamingErrorSub.unsubscribe();
 	}
 
@@ -156,25 +152,9 @@ export class StreamingActivityComponent implements OnInit {
 				if (!!ev) {
 					this.streamingStatus = ev.status;
 					this.cd.markForCheck();
-					if (this.isSessionCreator) {
-						//TODO: Remove it when RTMP Exported was included on OV and streaming ready event was fired.
-						const signal =
-							this.streamingStatus === StreamingStatus.STARTED ? Signal.STREAMING_STARTED : Signal.STREAMING_STOPPED;
-						this.openviduService.sendSignal(signal);
-					}
 				}
 			}
 		);
-	}
-
-	//TODO: Remove this directive when RTMP Exported was included on OV and streaming ready event was fired.
-	private subscribeToStreamingInfo() {
-		this.streamingInfoSub = this.libService.streamingInfoObs.subscribe((info: StreamingInfo | undefined) => {
-			if (!!info) {
-				this.streamingService.updateStatus(info.status);
-				this.cd.markForCheck();
-			}
-		});
 	}
 
 	private subscribeToStreamingError() {

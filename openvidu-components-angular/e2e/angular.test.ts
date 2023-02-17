@@ -1050,30 +1050,6 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		expect(await utils.isPresent('ov-streaming-activity')).to.be.false;
 	});
 
-	it('should SHOW STARTING STREAMING status', async () => {
-		await browser.get(`${url}`);
-
-		await utils.clickOn('#ovActivitiesPanel-checkbox');
-
-		await utils.clickOn('#streamingInfo-checkbox');
-
-		await utils.clickOn('#apply-btn');
-
-		await utils.checkToolbarIsPresent();
-
-		// Open more options menu
-		await utils.clickOn('#activities-panel-btn');
-
-		await browser.sleep(500);
-
-		await utils.waitForElement('#custom-activities-panel');
-		console.log('before');
-
-		const status = await utils.waitForElement('#streaming-status');
-
-		expect(await status.getAttribute('innerText')).equals('STARTED');
-	});
-
 	it('should SHOW STREAMING ERROR', async () => {
 		await browser.get(`${url}`);
 
@@ -1099,7 +1075,6 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		await browser.sleep(500);
 		const error = await utils.waitForElement('#streaming-error');
 		expect(await error.getAttribute('innerText')).equals('TEST_ERROR');
-
 	});
 });
 
@@ -1258,6 +1233,5 @@ describe('Testing EVENTS', () => {
 
 		await utils.waitForElement('#onActivitiesPanelButtonClicked');
 		expect(await utils.isPresent('#onActivitiesPanelButtonClicked')).to.be.true;
-
 	});
 });

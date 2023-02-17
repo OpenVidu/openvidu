@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 
 import { ActivatedRoute } from '@angular/router';
-import { PanelService, StreamingError, StreamingInfo, StreamingStatus } from 'openvidu-angular';
+import { PanelService, StreamingError } from 'openvidu-angular';
 import { Subscription, throwError as observableThrowError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -31,7 +31,6 @@ enum StructuralDirectives {
 	STREAM = 'ovStream'
 }
 
-
 export enum AttributeDirective {
 	// MINIMAL = 'minimal',
 	// PARTICIPANT_NAME = 'participantName',
@@ -53,8 +52,7 @@ export enum AttributeDirective {
 	PARTICIPANT_ITEM_MUTE = 'muteButton',
 	ACTIVITIES_PANEL_RECORDING_ACTIVITY = 'recordingActivity',
 	ACTIVITIES_PANEL_STREAMING_ACTIVITY = 'streamingActivity',
-	ACTIVITIES_PANEL_STREAMING_INFO = 'streamingInfo',
-	ACTIVITIES_PANEL_STREAMING_ERROR = "streamingError"
+	ACTIVITIES_PANEL_STREAMING_ERROR = 'streamingError'
 }
 
 @Component({
@@ -126,7 +124,6 @@ export class TestingComponent implements OnInit {
 			directives: [
 				{ name: AttributeDirective.ACTIVITIES_PANEL_RECORDING_ACTIVITY, checked: true },
 				{ name: AttributeDirective.ACTIVITIES_PANEL_STREAMING_ACTIVITY, checked: true },
-				{ name: AttributeDirective.ACTIVITIES_PANEL_STREAMING_INFO, checked: false },
 				{ name: AttributeDirective.ACTIVITIES_PANEL_STREAMING_ERROR, checked: false }
 			]
 		}
@@ -160,7 +157,6 @@ export class TestingComponent implements OnInit {
 	participantItemMuteBtn = true;
 	streamingActivity = true;
 	streamingBtn = true;
-	streamingInfo: StreamingInfo = undefined;
 
 	tokens: { webcam: any; screen: any };
 
@@ -304,12 +300,8 @@ export class TestingComponent implements OnInit {
 				this.streamingActivity = value;
 				break;
 
-			case AttributeDirective.ACTIVITIES_PANEL_STREAMING_INFO:
-				this.streamingInfo = { status: StreamingStatus.STARTED, id: '01' };
-				break;
-
 			case AttributeDirective.ACTIVITIES_PANEL_STREAMING_ERROR:
-				this.streamingError = {message: 'TEST_ERROR', rtmpAvailable: true};
+				this.streamingError = { message: 'TEST_ERROR', rtmpAvailable: true };
 				break;
 			default:
 				break;
@@ -385,7 +377,7 @@ export class TestingComponent implements OnInit {
 
 	createConnection(sessionId): Promise<string> {
 		return new Promise((resolve, reject) => {
-			const body = {role: 'MODERATOR'};
+			const body = { role: 'MODERATOR' };
 			const options = {
 				headers: new HttpHeaders({
 					Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + this.OPENVIDU_SERVER_SECRET),

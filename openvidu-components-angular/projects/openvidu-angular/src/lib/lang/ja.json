@@ -105,15 +105,14 @@
 		},
 		"STREAMING": {
 			"TITLE": "ストリーミング",
-			"SUBTITLE": "会議を観客にストリーミング",
-			"CONTENT_SUBTITLE": "OpenViduはストリーミングプラットフォームのRTMP URLが必要です。",
-			"START": "ストリーミングを開始",
-			"STOP": "ストリーミングを終了",
-			"URL": "RTMP URLを入力してください",
+			"SUBTITLE": "ミーティングを視聴者にストリーミングする",
+			"CONTENT_SUBTITLE": "OpenViduはストリーミングプラットフォームのURLが必要です。",
+			"START": "ストリーミングを開始する",
+			"STOP": "ストリーミングを終了する",
+			"URL": "ストリーミングURLを挿入してください",
 			"CANCEL": "キャンセル",
-			"REQUIRED_URL": "RTMP url は必須です",
-			"NO_MODERATOR": "モデレーターのみがストリーミングを開始できます"
-
+			"REQUIRED_URL": "ストリーミングURLは必須です",
+			"NO_MODERATOR": "MODERATORのみがストリーミングを開始できます"
 		}
 	},
 	"ERRORS": {

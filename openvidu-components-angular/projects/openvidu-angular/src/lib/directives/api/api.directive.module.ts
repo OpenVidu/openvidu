@@ -9,7 +9,7 @@ import {
 	StreamDisplayParticipantNameDirective,
 	StreamSettingsButtonDirective
 } from './stream.directive';
-import { StreamingActivityStreamingErrorDirective, StreamingActivityStreamingInfoDirective } from './streaming-activity.directive';
+import { StreamingActivityStreamingErrorDirective } from './streaming-activity.directive';
 import {
 	ToolbarActivitiesPanelButtonDirective,
 	ToolbarBackgroundEffectsButtonDirective,
@@ -69,7 +69,6 @@ import {
 		RecordingActivityRecordingsListDirective,
 		RecordingActivityRecordingErrorDirective,
 		StreamingActivityStreamingErrorDirective,
-		StreamingActivityStreamingInfoDirective,
 		AdminRecordingsListDirective,
 		AdminLoginDirective
 	],
@@ -105,7 +104,6 @@ import {
 		RecordingActivityRecordingsListDirective,
 		RecordingActivityRecordingErrorDirective,
 		StreamingActivityStreamingErrorDirective,
-		StreamingActivityStreamingInfoDirective,
 		AdminRecordingsListDirective,
 		AdminLoginDirective
 	]

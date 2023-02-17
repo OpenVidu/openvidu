@@ -104,15 +104,15 @@
 			"NO_MODERATOR": "Seul le MODERATEUR peut lancer l'enregistrement"
 		},
 		"STREAMING": {
-			"TITLE": "Diffusion",
-			"SUBTITLE": "Diffusez votre réunion à votre public",
-			"CONTENT_SUBTITLE": "OpenVidu a besoin de l'URL RTMP de la plateforme de diffusion.",
-			"START": "Démarrer la diffusion",
-			"STOP": "Arrêter la diffusion",
-			"URL": "Insérez votre URL RTMP",
+			"TITLE": "Streaming",
+			"SUBTITLE": "Diffusez votre réunion en direct à votre public",
+			"CONTENT_SUBTITLE": "OpenVidu a besoin de l'URL de la plateforme de streaming.",
+			"START": "Commencer le streaming",
+			"STOP": "Arrêter le streaming",
+			"URL": "Insérez votre URL de streaming",
 			"CANCEL": "Annuler",
-			"REQUIRED_URL": "L'URL RTMP est obligatoire",
-			"NO_MODERATOR": "Seul le MODÉRATEUR peut démarrer le streaming"
+			"REQUIRED_URL": "L'URL de streaming est requise",
+			"NO_MODERATOR": "Seul le MODERATEUR peut démarrer le streaming"
 		}
 	},
 	"ERRORS": {

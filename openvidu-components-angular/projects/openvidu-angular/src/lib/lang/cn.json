@@ -105,14 +105,14 @@
 		},
 		"STREAMING": {
 			"TITLE": "直播",
-			"SUBTITLE": "将会议直播给观众",
-			"CONTENT_SUBTITLE": "OpenVidu需要RTMP直播平台的URL。",
+			"SUBTITLE": "向观众直播您的会议",
+			"CONTENT_SUBTITLE": "OpenVidu需要直播平台的网址。",
 			"START": "开始直播",
 			"STOP": "结束直播",
-			"URL": "输入您的RTMP URL",
+			"URL": "插入您的直播网址",
 			"CANCEL": "取消",
-			"REQUIRED_URL": "RTMP url 是必需的",
-			"NO_MODERATOR": "只有主持人才能开始流媒体"
+			"REQUIRED_URL": "需要提供直播网址",
+			"NO_MODERATOR": "只有MODERATOR才能开始直播"
 		}
 	},
 	"ERRORS": {

@@ -170,12 +170,14 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 	async ngOnInit() {
 		if (!this.usedInPrejoinPage) {
+
 			if (!this.openviduService.getScreenToken()) {
 				// Hide screenshare button if screen token does not exist
 				this.libService.screenshareButton.next(false);
 			}
 			this.session = this.openviduService.getWebcamSession();
 			this.sessionScreen = this.openviduService.getScreenSession();
+
 			this.subscribeToOpenViduException();
 			this.subscribeToCaptionLanguage();
 			this.subscribeToConnectionCreatedAndDestroyed();
@@ -197,8 +199,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 				this.subscribeToRecordingEvents();
 			}
 
-			if (this.libService.isStreamingEnabled() && !this.participantService.amIModerator()) {
-				//TODO: Remove it when RTMP Exported was included on OV and streaming ready event was fired.
+			if (this.libService.isStreamingEnabled()) {
 				this.subscribeToStreamingEvents();
 			}
 		}
@@ -447,13 +448,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 	}
 
 	private subscribeToStreamingEvents() {
-		this.session.on(`signal:${Signal.STREAMING_STARTED}`, (event: any) => {
-			this.streamingService.updateStatus(StreamingStatus.STARTED);
-		});
-
-		this.session.on(`signal:${Signal.STREAMING_STOPPED}`, (event: any) => {
-			this.streamingService.updateStatus(StreamingStatus.STOPPED);
-		});
+		this.session.on('broadcastStarted', () => this.streamingService.updateStatus(StreamingStatus.STARTED));
+		this.session.on('broadcastStopped', () => this.streamingService.updateStatus(StreamingStatus.STOPPED));
 	}
 
 	private startUpdateLayoutInterval() {

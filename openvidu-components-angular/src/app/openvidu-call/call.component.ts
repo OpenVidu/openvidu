@@ -17,7 +17,6 @@ export class CallComponent implements OnInit {
 	recordingList: RecordingInfo[] = [];
 	recordingError: any;
 	streamingError: any;
-	streamingInfo: any;
 
 	constructor(private restService: RestService) {}
 
@@ -86,8 +85,8 @@ export class CallComponent implements OnInit {
 		console.log('START STREAMING', rtmpUrl);
 		try {
 			this.streamingError = null;
-			this.streamingInfo = await this.restService.startStreaming(rtmpUrl);
-			console.log('Streaming response ', this.streamingInfo);
+			const resp = await this.restService.startStreaming(rtmpUrl);
+			console.log('Streaming response ', resp);
 		} catch (error) {
 			console.error(error);
 			this.streamingError = error.error;
@@ -98,8 +97,8 @@ export class CallComponent implements OnInit {
 		console.log('STOP STREAMING');
 		try {
 			this.streamingError = null;
-			this.streamingInfo = await this.restService.stopStreaming();
-			console.log('Streaming response ', this.streamingInfo);
+			const resp = await this.restService.stopStreaming();
+			console.log('Streaming response ', resp);
 		} catch (error) {
 			console.error(error);
 			this.streamingError = error.message || error;

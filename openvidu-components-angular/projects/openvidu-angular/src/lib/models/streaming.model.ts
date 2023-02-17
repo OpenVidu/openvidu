@@ -6,15 +6,8 @@ export enum StreamingStatus {
 	FAILED = 'failed'
 }
 
-
-export interface StreamingInfo {
-	id: string,
-	status: StreamingStatus
-}
-
-
 export interface StreamingError {
-	message: string,
+	message: string;
 	// If streaming service is available or not
-	rtmpAvailable: boolean
+	rtmpAvailable: boolean;
 }

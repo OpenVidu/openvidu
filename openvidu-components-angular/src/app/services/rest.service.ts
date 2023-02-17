@@ -41,14 +41,14 @@ export class RestService {
 		}
 	}
 
-	async startStreaming(rtmpUrl: string) {
+	async startStreaming(broadcastUrl: string) {
 		try {
 			const options = {
 				headers: new HttpHeaders({
 					'Content-Type': 'application/json'
 				})
 			};
-			return lastValueFrom(this.http.post<any>(this.baseHref + 'streamings/start', { rtmpUrl}, options));
+			return lastValueFrom(this.http.post<any>(this.baseHref + 'broadcasts/start', { broadcastUrl }, options));
 		} catch (error) {
 			if (error.status === 404) {
 				throw { status: error.status, message: 'Cannot connect with backend. ' + error.url + ' not found' };
@@ -68,10 +68,9 @@ export class RestService {
 		}
 	}
 
-
 	async stopStreaming() {
 		try {
-			return lastValueFrom(this.http.delete<any>(`${this.baseHref}streamings/stop`));
+			return lastValueFrom(this.http.delete<any>(`${this.baseHref}broadcasts/stop`));
 		} catch (error) {
 			if (error.status === 404) {
 				throw { status: error.status, message: 'Cannot connect with backend. ' + error.url + ' not found' };
@@ -98,9 +97,7 @@ export class RestService {
 
 	async logout(): Promise<void> {
 		try {
-			return lastValueFrom(
-				this.http.post<any>(`${this.baseHref}auth/admin/logout`, {})
-			);
+			return lastValueFrom(this.http.post<any>(`${this.baseHref}auth/admin/logout`, {}));
 		} catch (error) {
 			console.log(error);
 			if (error.status === 404) {
@@ -109,7 +106,6 @@ export class RestService {
 			throw error;
 		}
 	}
-
 
 	async deleteRecording(id: string): Promise<any[]> {
 		try {
@@ -124,9 +120,7 @@ export class RestService {
 	}
 
 	getRecordings(): Promise<any[]> {
-		return lastValueFrom(
-			this.http.get<any>(`${this.baseHref}recordings`)
-		);
+		return lastValueFrom(this.http.get<any>(`${this.baseHref}recordings`));
 	}
 
 	getRecording(recordingId: string) {
@@ -147,7 +141,7 @@ export class RestService {
 	getRecording2(recordingId: string) {
 		try {
 			return lastValueFrom(
-				this.http.get(`${this.baseHref}recordings/${recordingId}`,{
+				this.http.get(`${this.baseHref}recordings/${recordingId}`, {
 					responseType: 'blob'
 				})
 			);

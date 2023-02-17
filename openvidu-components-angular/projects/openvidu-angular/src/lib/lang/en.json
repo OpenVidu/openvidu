@@ -107,12 +107,12 @@
 		"STREAMING": {
 			"TITLE": "Streaming",
 			"SUBTITLE": "Stream your meeting to your audience",
-			"CONTENT_SUBTITLE": "OpenVidu need the RTMP url of the streaming platform.",
+			"CONTENT_SUBTITLE": "OpenVidu need the url of the streaming platform.",
 			"START": "Start streaming",
 			"STOP": "End streaming",
-			"URL": "Insert your RTMP url",
+			"URL": "Insert your streaming url",
 			"CANCEL": "Cancel",
-			"REQUIRED_URL": "The RTMP url is required",
+			"REQUIRED_URL": "The streaming url is required",
 			"NO_MODERATOR": "Only the MODERATOR can start the streaming"
 		}
 	},
