@@ -10,7 +10,7 @@ var SCREENSHARE_BUTTON;
 var FULLSCREEN_BUTTON;
 var ACTIVITIES_PANEL_BUTTON;
 var RECORDING_BUTTON;
-var STREAMING_BUTTON;
+var BROADCASTING_BUTTON;
 var CHAT_PANEL_BUTTON;
 var DISPLAY_LOGO;
 var DISPLAY_SESSION_NAME;
@@ -21,9 +21,9 @@ var LEAVE_BUTTON;
 var PARTICIPANT_MUTE_BUTTON;
 var PARTICIPANTS_PANEL_BUTTON;
 var ACTIVITIES_RECORDING_ACTIVITY;
-var ACTIVITIES_STREAMING_ACTIVITY;
+var ACTIVITIES_BROADCASTING_ACTIVITY;
 var RECORDING_ERROR;
-var STREAMING_ERROR;
+var BROADCASTING_ERROR;
 var TOOLBAR_SETTINGS_BUTTON;
 var CAPTIONS_BUTTON;
 
@@ -57,11 +57,11 @@ $(document).ready(() => {
 	RECORDING_BUTTON =
 		url.searchParams.get('toolbarRecordingButton') === null ? true : url.searchParams.get('toolbarRecordingButton') === 'true';
 	FULLSCREEN_BUTTON = url.searchParams.get('fullscreenBtn') === null ? true : url.searchParams.get('fullscreenBtn') === 'true';
-	STREAMING_BUTTON =
+	BROADCASTING_BUTTON =
 		url.searchParams.get('toolbarBroadcastingButton') === null ? true : url.searchParams.get('toolbarBroadcastingButton') === 'true';
 
 	if (url.searchParams.get('broadcastingError') !== null) {
-		STREAMING_ERROR = url.searchParams.get('broadcastingError');
+		BROADCASTING_ERROR = url.searchParams.get('broadcastingError');
 	}
 
 	TOOLBAR_SETTINGS_BUTTON =
@@ -74,7 +74,7 @@ $(document).ready(() => {
 	CHAT_PANEL_BUTTON = url.searchParams.get('chatPanelBtn') === null ? true : url.searchParams.get('chatPanelBtn') === 'true';
 	PARTICIPANTS_PANEL_BUTTON =
 		url.searchParams.get('participantsPanelBtn') === null ? true : url.searchParams.get('participantsPanelBtn') === 'true';
-	ACTIVITIES_STREAMING_ACTIVITY =
+	ACTIVITIES_BROADCASTING_ACTIVITY =
 		url.searchParams.get('activitiesPanelBroadcastingActivity') === null
 			? true
 			: url.searchParams.get('activitiesPanelBroadcastingActivity') === 'true';
@@ -220,7 +220,7 @@ async function joinSession(sessionName, participantName) {
 	webComponent.toolbarCaptionsButton = CAPTIONS_BUTTON;
 	webComponent.toolbarLeaveButton = LEAVE_BUTTON;
 	webComponent.toolbarRecordingButton = RECORDING_BUTTON;
-	webComponent.toolbarBroadcastingButton = STREAMING_BUTTON;
+	webComponent.toolbarBroadcastingButton = BROADCASTING_BUTTON;
 	webComponent.toolbarActivitiesPanelButton = ACTIVITIES_PANEL_BUTTON;
 	webComponent.toolbarChatPanelButton = CHAT_PANEL_BUTTON;
 	webComponent.toolbarParticipantsPanelButton = PARTICIPANTS_PANEL_BUTTON;
@@ -233,10 +233,10 @@ async function joinSession(sessionName, participantName) {
 
 	webComponent.recordingActivityRecordingsList = [{ status: 'ready' }];
 	webComponent.activitiesPanelRecordingActivity = ACTIVITIES_RECORDING_ACTIVITY;
-	webComponent.activitiesPanelBroadcastingActivity = ACTIVITIES_STREAMING_ACTIVITY;
+	webComponent.activitiesPanelBroadcastingActivity = ACTIVITIES_BROADCASTING_ACTIVITY;
 	webComponent.recordingActivityRecordingError = RECORDING_ERROR;
 
-	webComponent.broadcastingActivityBroadcastingError = { message: STREAMING_ERROR, broadcastAvailable: true };
+	webComponent.broadcastingActivityBroadcastingError = { message: BROADCASTING_ERROR, broadcastAvailable: true };
 
 	webComponent.participantName = participantName;
 	webComponent.tokens = tokens;

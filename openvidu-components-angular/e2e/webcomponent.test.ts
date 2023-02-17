@@ -307,7 +307,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#recording-btn')).to.be.false;
 	});
 
-	it('should HIDE the TOOLBAR STREAMING button', async () => {
+	it('should HIDE the TOOLBAR BROADCASTING button', async () => {
 		await browser.get(`${url}&prejoin=false&toolbarBroadcastingButton=false`);
 
 		await utils.checkSessionIsPresent();
@@ -570,7 +570,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('.recording-error')).to.be.true;
 	});
 
-	it('should SHOW a STREAMING ERROR in activities panel', async () => {
+	it('should SHOW a BROADCASTING ERROR in activities panel', async () => {
 		let element;
 		const fixedUrl = `${url}&prejoin=false&broadcastingError=TEST_ERROR`;
 		await browser.get(fixedUrl);
@@ -605,7 +605,7 @@ describe('Testing API Directives', () => {
 		expect(await element.getAttribute('innerText')).equal('TEST_ERROR');
 	});
 
-	it('should HIDE the STREAMING ACTIVITY in activities panel', async () => {
+	it('should HIDE the BROADCASTING ACTIVITY in activities panel', async () => {
 		await browser.get(`${url}&prejoin=false&activitiesPanelBroadcastingActivity=false`);
 
 		await utils.checkSessionIsPresent();

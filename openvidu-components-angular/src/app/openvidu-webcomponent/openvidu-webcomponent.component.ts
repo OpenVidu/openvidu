@@ -66,7 +66,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
-	_toolbarStreamingButton: boolean = true;
+	_toolbarBroadcastingButton: boolean = true;
 	/**
 	 * @internal
 	 */
@@ -134,7 +134,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
-	_activitiesPanelStreamingActivity: boolean = true;
+	_activitiesPanelBroadcastingActivity: boolean = true;
 
 	/**
 	 * @internal
@@ -144,7 +144,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
-	_streamingActivityStreamingError: any;
+	_broadcastingActivityBroadcastingError: any;
 
 	/**
 	 * The **minimal** attribute applies a minimal UI hiding all controls except for cam and mic.
@@ -288,7 +288,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 	}
 
 	/**
-	 * The **toolbarStreamingButton** attribute allows show/hide the start/stop streaming toolbar button.
+	 * The **toolbarBroadcastingButton** attribute allows show/hide the start/stop broadcasting toolbar button.
 	 *
 	 * Default: `true`
 	 *
@@ -296,10 +296,10 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
 	 *
 	 * @example
-	 * <openvidu-webcomponent toolbar-streaming-button="false"></openvidu-webcomponent>
+	 * <openvidu-webcomponent toolbar-broadcasting-button="false"></openvidu-webcomponent>
 	 */
-	@Input() set toolbarStreamingButton(value: string | boolean) {
-		this._toolbarStreamingButton = this.castToBoolean(value);
+	@Input() set toolbarBroadcastingButton(value: string | boolean) {
+		this._toolbarBroadcastingButton = this.castToBoolean(value);
 	}
 	/**
 	 * The **toolbarFullscreenButton** attribute allows show/hide the fullscreen toolbar button.
@@ -526,27 +526,27 @@ export class OpenviduWebComponentComponent implements OnInit {
 	}
 
 	/**
-	 * The **activitiesPanelStreamingActivity** attribute allows show/hide the streaming activity in {@link ActivitiesPanelComponent}.
+	 * The **activitiesPanelBroadcastingActivity** attribute allows show/hide the broadcasting activity in {@link ActivitiesPanelComponent}.
 	 *
 	 * Default: `true`
 	 *
 	 * @example
-	 * <openvidu-webcomponent activity-panel-streaming-activity="false"></openvidu-webcomponent>
+	 * <openvidu-webcomponent activity-panel-broadcasting-activity="false"></openvidu-webcomponent>
 	 */
-	@Input() set activitiesPanelStreamingActivity(value: string | boolean) {
-		this._activitiesPanelStreamingActivity = this.castToBoolean(value);
+	@Input() set activitiesPanelBroadcastingActivity(value: string | boolean) {
+		this._activitiesPanelBroadcastingActivity = this.castToBoolean(value);
 	}
 
 	/**
-	 * The **streamingActivityStreamingError** attribute allows to show any possible error with the streaming in the {@link StreamingActivityComponent}.
+	 * The **broadcastingActivityBroadcastingError** attribute allows to show any possible error with the broadcasting in the {@link BroadcastingActivityComponent}.
 	 *
 	 * Default: `undefined`
 	 *
 	 * @example
-	 * <openvidu-webcomponent streaming-activity-streaming-error="streamingError"></openvidu-webcomponent>
+	 * <openvidu-webcomponent broadcasting-activity-broadcasting-error="broadcastingError"></openvidu-webcomponent>
 	 */
-	@Input() set streamingActivityStreamingError(value: any) {
-		this._streamingActivityStreamingError = value;
+	@Input() set broadcastingActivityBroadcastingError(value: any) {
+		this._broadcastingActivityBroadcastingError = value;
 	}
 
 	/**
@@ -618,10 +618,10 @@ export class OpenviduWebComponentComponent implements OnInit {
 	@Output() onToolbarStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when stop streaming button is clicked from {@link ToolbarComponent}.
+	 * Provides event notifications that fire when stop broadcasting button is clicked from {@link ToolbarComponent}.
 	 *  The recording should be stopped using the REST API.
 	 */
-	@Output() onToolbarStopStreamingClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onToolbarStopBroadcastingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
 	 * Provides event notifications that fire when start recording button is clicked {@link ActivitiesPanelComponent}.
@@ -647,16 +647,16 @@ export class OpenviduWebComponentComponent implements OnInit {
 	@Output() onActivitiesPanelDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
-	 * Provides event notifications that fire when start streaming button is clicked {@link ActivitiesPanelComponent}.
-	 *  The streaming should be started using the REST API.
+	 * Provides event notifications that fire when start broadcasting button is clicked {@link ActivitiesPanelComponent}.
+	 *  The broadcasting should be started using the REST API.
 	 */
-	@Output() onActivitiesPanelStartStreamingClicked: EventEmitter<string> = new EventEmitter<string>();
+	@Output() onActivitiesPanelStartBroadcastingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
-	 * Provides event notifications that fire when stop streaming button is clicked {@link ActivitiesPanelComponent}.
-	 *  The streaming should be stopped using the REST API.
+	 * Provides event notifications that fire when stop broadcasting button is clicked {@link ActivitiesPanelComponent}.
+	 *  The broadcasting should be stopped using the REST API.
 	 */
-	@Output() onActivitiesPanelStopStreamingClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onActivitiesPanelStopBroadcastingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
 	 * Provides event notifications that fire when OpenVidu Session is created.
@@ -811,22 +811,22 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
-	onStartStreamingClicked(rtmpUrl: string) {
+	onStartBroadcastingClicked(rtmpUrl: string) {
 		// if (from === 'toolbar') {
 		// 	this.onToolbarStartRecordingClicked.emit();
 		// } else if (from === 'panel') {
-		this.onActivitiesPanelStartStreamingClicked.emit(rtmpUrl);
+		this.onActivitiesPanelStartBroadcastingClicked.emit(rtmpUrl);
 		// }
 	}
 
 	/**
 	 * @internal
 	 */
-	onStopStreamingClicked(from: string) {
+	onStopBroadcastingClicked(from: string) {
 		if (from === 'toolbar') {
-			this.onToolbarStopStreamingClicked.emit();
+			this.onToolbarStopBroadcastingClicked.emit();
 		} else if (from === 'panel') {
-			this.onActivitiesPanelStopStreamingClicked.emit();
+			this.onActivitiesPanelStopBroadcastingClicked.emit();
 		}
 	}
 
