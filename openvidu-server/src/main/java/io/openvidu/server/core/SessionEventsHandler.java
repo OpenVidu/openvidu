@@ -685,7 +685,7 @@ public class SessionEventsHandler {
 	 * by the crashed Media Node
 	 */
 	public void onMediaNodeCrashed(Kms kms, String environmentId, long timeOfDisconnection, List<String> sessionIds,
-			List<String> recordingIds) {
+			List<String> recordingIds, List<String> broadcasts) {
 	}
 
 	public void onMediaNodeRecovered(Kms kms, String environmentId, long timeOfConnection) {

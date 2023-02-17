@@ -707,6 +707,19 @@ public abstract class SessionManager {
 				}
 			}
 		});
+		// Stop all external broadcasts
+		kms.getActiveBroadcasts().forEach(sessionId -> {
+			Session session = this.getSession(sessionId);
+			if (session != null && !session.isClosed()) {
+				// This is a broadcast of a Session hosted on a different Media Node
+				try {
+					this.broadcastManager.stopBroadcast(session, null, RecordingManager.finalReason(reason));
+				} catch (OpenViduException e) {
+					log.error("Error stopping external broadcast of session {} in Media Node {}: {}", sessionId,
+							kms.getId(), e.getMessage());
+				}
+			}
+		});
 	}
 
 	private Participant newParticipantAux(String sessionId, String uniqueSessionId, String finalUserId,

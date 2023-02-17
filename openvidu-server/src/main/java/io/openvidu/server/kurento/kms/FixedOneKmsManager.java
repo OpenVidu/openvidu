@@ -85,6 +85,24 @@ public class FixedOneKmsManager extends KmsManager {
 	}
 
 	@Override
+	public void incrementActiveBroadcasts(RecordingProperties properties, Session session) {
+		try {
+			this.getKmss().iterator().next().incrementActiveBroadcasts(session.getSessionId());
+		} catch (NoSuchElementException e) {
+			log.error("There is no KMS available when incrementing active broadcasts");
+		}
+	}
+
+	@Override
+	public void decrementActiveBroadcasts(RecordingProperties properties, Session session) {
+		try {
+			this.getKmss().iterator().next().decrementActiveBroadcasts(session.getSessionId());
+		} catch (NoSuchElementException e) {
+			log.error("There is no KMS available when decrementing active broadcasts");
+		}
+	}
+
+	@Override
 	public void removeMediaNodeUponCrash(String mediaNodeId) {
 	}
 

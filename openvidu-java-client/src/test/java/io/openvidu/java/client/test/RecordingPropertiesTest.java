@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import io.openvidu.java.client.Recording.OutputMode;
 import io.openvidu.java.client.RecordingProperties;
 
 public class RecordingPropertiesTest {
@@ -113,6 +114,18 @@ public class RecordingPropertiesTest {
 
 		map = mapFromJsonString("{'mediaNode':{'id':false}}");
 		assertException(map, "Wrong 'mediaNode' parameter", IllegalArgumentException.class);
+	}
+
+	@Test
+	public void testNonBroadcastProperties() {
+		Map<String, ?> map = mapFromJsonString(
+				"{'outputMode':'INDIVIDUAL','name':'ABDCFG','hasVideo':false,'ignoreFailedStreams':true,'session':'TestSession','hasAudio':true,'recordingLayout':'CUSTOM','customLayout':'layout1','resolution':'920x600','frameRate':18,'shmSize':600000000,'mediaNode':{'id':'mediaNodeId'}}");
+		RecordingProperties.removeNonBroadcastProperties(map);
+		RecordingProperties props = RecordingProperties.fromJson(map, null).build();
+		Assertions.assertEquals(OutputMode.COMPOSED, props.outputMode());
+		Assertions.assertEquals("", props.name());
+		Assertions.assertEquals(true, props.hasVideo());
+		Assertions.assertNull(props.ignoreFailedStreams());
 	}
 
 	private JsonObject adaptProps(JsonObject json) {

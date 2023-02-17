@@ -17,6 +17,8 @@
 
 package io.openvidu.java.client;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import com.google.gson.JsonObject;
@@ -471,6 +473,9 @@ public class RecordingProperties {
 		return json;
 	}
 
+	/**
+	 * @hidden
+	 */
 	public static RecordingProperties.Builder fromJson(Map<String, ?> params, RecordingProperties defaultProps)
 			throws RuntimeException {
 
@@ -705,6 +710,16 @@ public class RecordingProperties {
 	 */
 	public final static boolean IS_COMPOSED(OutputMode outputMode) {
 		return (OutputMode.COMPOSED.equals(outputMode) || OutputMode.COMPOSED_QUICK_START.equals(outputMode));
+	}
+
+	/**
+	 * @hidden
+	 */
+	public final static Map<String, ?> removeNonBroadcastProperties(Map<String, ?> params) {
+		List<String> nonBroadcastProps = Arrays
+				.asList(new String[] { "outputMode", "name", "hasVideo", "ignoreFailedStreams" });
+		nonBroadcastProps.forEach(p -> params.remove(p));
+		return params;
 	}
 
 }

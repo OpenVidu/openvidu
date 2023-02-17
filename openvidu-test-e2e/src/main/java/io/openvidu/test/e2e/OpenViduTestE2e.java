@@ -3,6 +3,7 @@ package io.openvidu.test.e2e;
 import static org.openqa.selenium.OutputType.BASE64;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.file.Files;
@@ -857,4 +858,47 @@ public class OpenViduTestE2e {
 		}
 	}
 
+	// https://github.com/tiangolo/nginx-rtmp-docker
+	protected static void startRtmpServer() throws IOException {
+		File file = writeRtmpServerConfigInFile();
+		String dockerRunCommand = "docker run -d --name broadcast-nginx -p 1935:1935 -v " + file.getAbsolutePath()
+				+ ":/etc/nginx/nginx.conf tiangolo/nginx-rtmp";
+		commandLine.executeCommand(dockerRunCommand, 10);
+	}
+
+	protected static void stopRtmpServer() {
+		String dockerRemoveCommand = "docker rm -f broadcast-nginx";
+		commandLine.executeCommand(dockerRemoveCommand, 10);
+	}
+
+	private static File writeRtmpServerConfigInFile() throws IOException {
+		String newLine = System.getProperty("line.separator");
+		// @formatter:off
+		String config = String.join(newLine,
+                "worker_processes auto;",
+                "rtmp_auto_push on;",
+                "events {}",
+                "rtmp {",
+                "    server {",
+                "        listen 1935;",
+                "        listen [::]:1935 ipv6only=on;",
+                "        application live {",
+                "        	live on;",
+                "			recorder all {",
+                "				record video;",
+                "				record_path /tmp;",
+                "				record_max_size 100000K;",
+                "				record_unique on;",
+                "				record_suffix rtmp.flv;",
+                "			}",
+                "        }",
+                "    }",
+                "}");
+		// @formatter:on
+		File tmpFile = File.createTempFile("broadcast-nginx", ".conf");
+		FileWriter writer = new FileWriter(tmpFile);
+		writer.write(config);
+		writer.close();
+		return tmpFile;
+	}
 }

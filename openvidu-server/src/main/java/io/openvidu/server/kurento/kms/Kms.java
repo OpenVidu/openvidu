@@ -20,6 +20,7 @@ package io.openvidu.server.kurento.kms;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -73,6 +74,7 @@ public class Kms {
 
 	private Map<String, KurentoSession> kurentoSessions = new ConcurrentHashMap<>();
 	private Map<String, String> activeRecordings = new ConcurrentHashMap<>();
+	private Set<String> activeBroadcasts = ConcurrentHashMap.newKeySet();
 	private AtomicLong activeComposedRecordings = new AtomicLong();
 
 	public Kms(KmsProperties props, LoadManager loadManager, KmsManager kmsManager) {
@@ -197,6 +199,10 @@ public class Kms {
 		return this.activeRecordings.entrySet();
 	}
 
+	public synchronized Set<String> getActiveBroadcasts() {
+		return this.activeBroadcasts;
+	}
+
 	public synchronized void incrementActiveRecordings(String sessionId, String recordingId,
 			RecordingProperties properties) {
 		this.activeRecordings.put(recordingId, sessionId);
@@ -210,6 +216,15 @@ public class Kms {
 		if (RecordingProperties.IS_COMPOSED(properties.outputMode())) {
 			this.activeComposedRecordings.decrementAndGet();
 		}
+		kmsManager.getMediaNodeManager().dropIdleMediaNode(this.id);
+	}
+
+	public synchronized void incrementActiveBroadcasts(String sessionId) {
+		this.activeBroadcasts.add(sessionId);
+	}
+
+	public synchronized void decrementActiveBroadcasts(String sessionId) {
+		this.activeBroadcasts.remove(sessionId);
 		kmsManager.getMediaNodeManager().dropIdleMediaNode(this.id);
 	}
 
@@ -247,6 +262,11 @@ public class Kms {
 				activeRecordingsJson.add(recordingId);
 			}
 			json.add("recordingIds", activeRecordingsJson);
+			JsonArray activeBroadcastsJson = new JsonArray();
+			for (String sessionIdBroadcasted : this.activeBroadcasts) {
+				activeBroadcastsJson.add(sessionIdBroadcasted);
+			}
+			json.add("broadcasts", activeBroadcastsJson);
 		}
 
 		if (withExtraInfo) {
@@ -308,6 +328,10 @@ public class Kms {
 
 	public int getNumberOfComposedRecordings() {
 		return this.activeComposedRecordings.intValue();
+	}
+
+	public int getNumberOfBroadcasts() {
+		return this.activeBroadcasts.size();
 	}
 
 	public MediaServer getMediaServerType() {

@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.awt.Point;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.net.HttpURLConnection;
 import java.nio.file.Files;
@@ -38,7 +37,6 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.springframework.http.HttpMethod;
-import org.springframework.util.ResourceUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -480,7 +478,13 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				containerId = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpURLConnection.HTTP_OK)
 						.get("content").getAsJsonArray().get(0).getAsJsonObject().get("environmentId").getAsString();
 				MediaNodeDockerUtils.crashMediaNode(containerId);
-				CustomWebhook.waitForEvent("nodeCrashed", 10);
+				JsonObject nodeCrashedEvent = CustomWebhook.waitForEvent("nodeCrashed", 10);
+
+				Assertions.assertEquals(1, nodeCrashedEvent.get("recordingIds").getAsJsonArray().size());
+				JsonArray affectedBroadcasts = nodeCrashedEvent.get("broadcasts").getAsJsonArray();
+				Assertions.assertEquals(1, affectedBroadcasts.size());
+				Assertions.assertTrue(affectedBroadcasts.get(0).equals(JsonParser.parseString("TestSession")));
+
 				CustomWebhook.waitForEvent("mediaNodeStatusChanged", 2);
 				for (int i = 0; i < 4; i++) {
 					Assertions.assertEquals("nodeCrashed",
@@ -2983,10 +2987,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@DisplayName("Broadcast and composed recording test")
-	void broadcastAndComposedRecordingTest() throws Exception {
+	@DisplayName("Broadcast ad STT and composed recording test")
+	void broadcastAndSttAndComposedRecordingTest() throws Exception {
 
-		log.info("Broadcast and composed recording test");
+		log.info("Broadcast and STT and composed recording test");
 
 		try {
 			startRtmpServer();
@@ -2994,19 +2998,6 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		} finally {
 			stopRtmpServer();
 		}
-	}
-
-	// https://github.com/tiangolo/nginx-rtmp-docker
-	private void startRtmpServer() throws FileNotFoundException {
-		File file = ResourceUtils.getFile("classpath:broadcast-nginx.conf");
-		String dockerRunCommand = "docker run -d --name broadcast-nginx -p 1935:1935 -v " + file.getAbsolutePath()
-				+ ":/etc/nginx/nginx.conf tiangolo/nginx-rtmp";
-		commandLine.executeCommand(dockerRunCommand, 10);
-	}
-
-	private void stopRtmpServer() {
-		String dockerRemoveCommand = "docker rm -f broadcast-nginx";
-		commandLine.executeCommand(dockerRemoveCommand, 10);
 	}
 
 	private void checkRtmpRecordingIsFine(long secondsTimeout) throws InterruptedException {

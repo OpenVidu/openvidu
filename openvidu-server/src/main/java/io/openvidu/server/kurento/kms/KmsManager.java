@@ -44,12 +44,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.gson.JsonObject;
 
-import io.openvidu.client.OpenViduException;
-import io.openvidu.client.OpenViduException.Code;
-import io.openvidu.client.internal.ProtocolElements;
-import io.openvidu.java.client.ConnectionProperties;
-import io.openvidu.java.client.ConnectionType;
-import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
@@ -57,7 +51,6 @@ import io.openvidu.server.core.IdentifierPrefixes;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionEventsHandler;
 import io.openvidu.server.core.SessionManager;
-import io.openvidu.server.core.Token;
 import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.utils.MediaNodeManager;
 import io.openvidu.server.utils.RemoteOperationUtils;
@@ -393,6 +386,10 @@ public abstract class KmsManager {
 	public abstract void decrementActiveRecordings(RecordingProperties recordingProperties, String recordingId,
 			Session session);
 
+	public abstract void incrementActiveBroadcasts(RecordingProperties properties, Session session);
+
+	public abstract void decrementActiveBroadcasts(RecordingProperties properties, Session session);
+
 	public abstract void removeMediaNodeUponCrash(String mediaNodeId);
 
 	protected abstract String getEnvironmentId(String mediaNodeId);
@@ -424,11 +421,12 @@ public abstract class KmsManager {
 				.collect(Collectors.toUnmodifiableList());
 		final List<String> affectedRecordingIds = kms.getActiveRecordings().stream().map(entry -> entry.getKey())
 				.collect(Collectors.toUnmodifiableList());
+		final List<String> affectedBroadcasts = new ArrayList<>(kms.getActiveBroadcasts());
 
 		// 1. Send nodeCrashed webhook event
 		String environmentId = getEnvironmentId(kms.getId());
 		sessionEventsHandler.onMediaNodeCrashed(kms, environmentId, timeOfKurentoDisconnection, affectedSessionIds,
-				affectedRecordingIds);
+				affectedRecordingIds, affectedBroadcasts);
 
 		// 2. Remove Media Node from cluster if necessary
 		if (mustRemoveMediaNode) {
