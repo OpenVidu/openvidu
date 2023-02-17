@@ -2924,9 +2924,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assertions.assertTrue(errorResponse.contains("schemefail://172.17.0.1/live: Protocol not found"),
 					"Broadcast error message does not contain expected message");
 			// Concurrent broadcast
-			final int PETITIONS = 10;
+			final int PETITIONS = 20;
 			List<String> responses = new ArrayList<>();
-			List<Exception> exception = new ArrayList<>();
+			List<Exception> exceptions = new ArrayList<>();
 			CountDownLatch latch = new CountDownLatch(PETITIONS);
 			body = "{'session':'TestSession','broadcastUrl':'rtmp://172.17.0.1/live'}";
 			for (int i = 0; i < PETITIONS; i++) {
@@ -2938,7 +2938,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 						responses.add(response);
 					} catch (Exception e) {
 						// 409
-						exception.add(e);
+						exceptions.add(e);
 					}
 					latch.countDown();
 				}).start();
@@ -2946,7 +2946,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			if (!latch.await(30, TimeUnit.SECONDS)) {
 				Assertions.fail("Concurrent start of broadcasts did not return in timeout");
 			}
-			Assertions.assertEquals(PETITIONS - 1, exception.size(), "Wrong number of councurrent started broadcasts");
+			Assertions.assertEquals(PETITIONS - 1, exceptions.size(), "Wrong number of councurrent started broadcasts");
+			for (Exception e : exceptions) {
+				Assertions.assertTrue(e.getMessage().contains("expected to return status 200 but got 409"),
+						"Exception message wasn't 409. It was: " + e.getMessage());
+			}
 			// 409
 			restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
 					HttpURLConnection.HTTP_CONFLICT);
