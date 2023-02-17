@@ -125,40 +125,40 @@ export class ToolbarRecordingButtonDirective implements AfterViewInit, OnDestroy
 }
 
 /**
- * The **streamingButton** directive allows show/hide the start/stop streaming toolbar button.
+ * The **broadcastingButton** directive allows show/hide the start/stop broadcasting toolbar button.
  *
  * Default: `true`
  *
  * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `toolbar` component:
  *
  * @example
- * <ov-videoconference [toolbarStreamingButton]="false"></ov-videoconference>
+ * <ov-videoconference [toolbarBroadcastingButton]="false"></ov-videoconference>
  *
  * \
  * And it also can be used in the {@link ToolbarComponent}.
  * @example
- * <ov-toolbar [streamingButton]="false"></ov-toolbar>
+ * <ov-toolbar [broadcastingButton]="false"></ov-toolbar>
  *
  */
  @Directive({
-	selector: 'ov-videoconference[toolbarStreamingButton], ov-toolbar[streamingButton]'
+	selector: 'ov-videoconference[toolbarBroadcastingButton], ov-toolbar[broadcastingButton]'
 })
-export class ToolbarStreamingButtonDirective implements AfterViewInit, OnDestroy {
+export class ToolbarBroadcastingButtonDirective implements AfterViewInit, OnDestroy {
 	/**
 	 * @ignore
 	 */
-	@Input() set toolbarStreamingButton(value: boolean) {
-		this.streamingValue = value;
-		this.update(this.streamingValue);
+	@Input() set toolbarBroadcastingButton(value: boolean) {
+		this.broadcastingValue = value;
+		this.update(this.broadcastingValue);
 	}
 	/**
 	 * @ignore
 	 */
-	@Input() set streamingButton(value: boolean) {
-		this.streamingValue = value;
-		this.update(this.streamingValue);
+	@Input() set broadcastingButton(value: boolean) {
+		this.broadcastingValue = value;
+		this.update(this.broadcastingValue);
 	}
-	private streamingValue: boolean = true;
+	private broadcastingValue: boolean = true;
 
 	/**
 	 * @ignore
@@ -166,20 +166,20 @@ export class ToolbarStreamingButtonDirective implements AfterViewInit, OnDestroy
 	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
 
 	ngAfterViewInit() {
-		this.update(this.streamingValue);
+		this.update(this.broadcastingValue);
 	}
 
 	ngOnDestroy(): void {
 		this.clear();
 	}
 	private clear() {
-		this.streamingValue = true;
+		this.broadcastingValue = true;
 		this.update(true);
 	}
 
 	private update(value: boolean) {
-		if (this.libService.streamingButton.getValue() !== value) {
-			this.libService.streamingButton.next(value);
+		if (this.libService.broadcastingButton.getValue() !== value) {
+			this.libService.broadcastingButton.next(value);
 		}
 	}
 }

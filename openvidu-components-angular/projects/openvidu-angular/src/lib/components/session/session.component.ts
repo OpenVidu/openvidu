@@ -31,11 +31,12 @@ import { VideoType } from '../../models/video-type.model';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { MatDrawerContainer, MatSidenav } from '@angular/material/sidenav';
 import { skip, Subscription } from 'rxjs';
+import { BroadcastingStatus } from '../../models/broadcasting.model';
 import { SidenavMode } from '../../models/layout.model';
 import { PanelEvent, PanelType } from '../../models/panel.model';
 import { Signal } from '../../models/signal.model';
-import { StreamingStatus } from '../../models/streaming.model';
 import { ActionService } from '../../services/action/action.service';
+import { BroadcastingService } from '../../services/broadcasting/broadcasting.service';
 import { CaptionService } from '../../services/caption/caption.service';
 import { ChatService } from '../../services/chat/chat.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
@@ -46,7 +47,6 @@ import { PanelService } from '../../services/panel/panel.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { PlatformService } from '../../services/platform/platform.service';
 import { RecordingService } from '../../services/recording/recording.service';
-import { StreamingService } from '../../services/streaming/streaming.service';
 import { TranslateService } from '../../services/translate/translate.service';
 import { VirtualBackgroundService } from '../../services/virtual-background/virtual-background.service';
 
@@ -101,7 +101,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 		protected layoutService: LayoutService,
 		protected panelService: PanelService,
 		private recordingService: RecordingService,
-		private streamingService: StreamingService,
+		private broadcastingService: BroadcastingService,
 		private translateService: TranslateService,
 		private captionService: CaptionService,
 		private platformService: PlatformService,
@@ -170,7 +170,6 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 	async ngOnInit() {
 		if (!this.usedInPrejoinPage) {
-
 			if (!this.openviduService.getScreenToken()) {
 				// Hide screenshare button if screen token does not exist
 				this.libService.screenshareButton.next(false);
@@ -199,8 +198,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 				this.subscribeToRecordingEvents();
 			}
 
-			if (this.libService.isStreamingEnabled()) {
-				this.subscribeToStreamingEvents();
+			if (this.libService.isBroadcastingEnabled()) {
+				this.subscribeToBroadcastingEvents();
 			}
 		}
 		this.preparing = false;
@@ -438,18 +437,14 @@ export class SessionComponent implements OnInit, OnDestroy {
 	}
 
 	private subscribeToRecordingEvents() {
-		this.session.on('recordingStarted', (event: RecordingEvent) => {
-			this.recordingService.startRecording(event);
-		});
+		this.session.on('recordingStarted', (event: RecordingEvent) => this.recordingService.startRecording(event));
 
-		this.session.on('recordingStopped', (event: RecordingEvent) => {
-			this.recordingService.stopRecording(event);
-		});
+		this.session.on('recordingStopped', (event: RecordingEvent) => this.recordingService.stopRecording(event));
 	}
 
-	private subscribeToStreamingEvents() {
-		this.session.on('broadcastStarted', () => this.streamingService.updateStatus(StreamingStatus.STARTED));
-		this.session.on('broadcastStopped', () => this.streamingService.updateStatus(StreamingStatus.STOPPED));
+	private subscribeToBroadcastingEvents() {
+		this.session.on('broadcastStarted', () => this.broadcastingService.updateStatus(BroadcastingStatus.STARTED));
+		this.session.on('broadcastStopped', () => this.broadcastingService.updateStatus(BroadcastingStatus.STOPPED));
 	}
 
 	private startUpdateLayoutInterval() {

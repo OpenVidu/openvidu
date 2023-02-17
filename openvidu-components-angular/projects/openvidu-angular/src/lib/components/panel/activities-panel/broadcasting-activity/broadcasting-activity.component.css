@@ -1,4 +1,4 @@
-#streaming-status {
+#broadcasting-status {
 	color: var(--ov-text-color);
 	display: inline;
 	padding: 3px;
@@ -16,18 +16,18 @@
 	font-size: 14px;
 }
 
-#streaming-icon {
+#broadcasting-icon {
 	color: #5903ca;
 }
 
-.streaming-duration {
+.broadcasting-duration {
 	background-color: var(--ov-light-color);
 	padding: 4px 8px;
 	border-radius: var(--ov-panel-radius);
 	font-weight: 500;
 }
 
-.streaming-duration mat-icon {
+.broadcasting-duration mat-icon {
 	font-size: 18px;
 	width: 18px;
 	height: 18px;
@@ -71,11 +71,11 @@
 	text-align: center;
 }
 
-.streaming-error {
+.broadcasting-error {
 	color: var(--ov-warn-color);
 	font-weight: 600;
 }
-.streaming-name {
+.broadcasting-name {
 	font-size: 16px;
 	font-weight: bold;
 }
@@ -85,23 +85,23 @@
 	font-weight: bold;
 }
 
-.streaming-action-buttons {
+.broadcasting-action-buttons {
 	margin-top: 20px;
 	margin-bottom: 20px;
 }
 
-/* #start-streaming-btn {
+/* #start-broadcasting-btn {
 	width: 100%;
 	background-color: var(--ov-tertiary-color);
 	color: var(--ov-text-color);
 } */
 
-#stop-streaming-btn {
+#stop-broadcasting-btn {
 	/* background-color: var(--ov-warn-color); */
 	color: var(--ov-warn-color);
 }
 
-#reset-streaming-status-btn {
+#reset-broadcasting-status-btn {
 	width: 100%;
 	background-color: var(--ov-light-color);
 }

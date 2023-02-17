@@ -16,7 +16,7 @@ export class CallComponent implements OnInit {
 	isSessionAlive: boolean = false;
 	recordingList: RecordingInfo[] = [];
 	recordingError: any;
-	streamingError: any;
+	broadcastingError: any;
 
 	constructor(private restService: RestService) {}
 
@@ -81,27 +81,27 @@ export class CallComponent implements OnInit {
 		console.log('TOOLBAR LEAVE CLICKED');
 	}
 
-	async onStartStreamingClicked(rtmpUrl: string) {
-		console.log('START STREAMING', rtmpUrl);
+	async onStartBroadcastingClicked(broadcastUrl: string) {
+		console.log('START STREAMING', broadcastUrl);
 		try {
-			this.streamingError = null;
-			const resp = await this.restService.startStreaming(rtmpUrl);
-			console.log('Streaming response ', resp);
+			this.broadcastingError = null;
+			const resp = await this.restService.startBroadcasting(broadcastUrl);
+			console.log('Broadcasting response ', resp);
 		} catch (error) {
 			console.error(error);
-			this.streamingError = error.error;
+			this.broadcastingError = error.error;
 		}
 	}
 
-	async onStopStreamingClicked() {
+	async onStopBroadcastingClicked() {
 		console.log('STOP STREAMING');
 		try {
-			this.streamingError = null;
-			const resp = await this.restService.stopStreaming();
-			console.log('Streaming response ', resp);
+			this.broadcastingError = null;
+			const resp = await this.restService.stopBroadcasting();
+			console.log('Broadcasting response ', resp);
 		} catch (error) {
 			console.error(error);
-			this.streamingError = error.message || error;
+			this.broadcastingError = error.message || error;
 		}
 	}
 

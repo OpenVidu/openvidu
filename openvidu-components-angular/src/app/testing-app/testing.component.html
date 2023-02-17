@@ -84,7 +84,7 @@
 			[chatPanelButton]="chatPanelBtn"
 			[displaySessionName]="displaySessionId"
 			[displayLogo]="displayLogo"
-			[streamingButton]="streamingBtn"
+			[broadcastingButton]="broadcastingBtn"
 			(onLeaveButtonClicked)="appendElement('onLeaveButtonClicked')"
 			(onCameraButtonClicked)="appendElement('onCameraButtonClicked')"
 			(onMicrophoneButtonClicked)="appendElement('onMicrophoneButtonClicked')"
@@ -205,11 +205,11 @@
 		<ov-activities-panel
 			*ovActivitiesPanel
 			[recordingActivity]="recordingActivity"
-			[streamingActivity]="streamingActivity"
+			[broadcastingActivity]="broadcastingActivity"
 			id="custom-activities-panel"
 		>
 			<ov-recording-activity *ngIf="recordingActivity"></ov-recording-activity>
-			<ov-streaming-activity *ngIf="streamingActivity" [streamingError]="streamingError"></ov-streaming-activity>
+			<ov-broadcasting-activity *ngIf="broadcastingActivity" [broadcastingError]="broadcastingError"></ov-broadcasting-activity>
 		</ov-activities-panel>
 	</ng-template>
 

@@ -884,7 +884,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await utils.clickOn('#ovToolbar-checkbox');
 
-		await utils.clickOn('#streamingButton-checkbox');
+		await utils.clickOn('#broadcastingButton-checkbox');
 
 		await utils.clickOn('#apply-btn');
 
@@ -897,7 +897,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		await utils.waitForElement('.mat-menu-content');
 
 		// Checking if fullscreen button is not present
-		expect(await utils.isPresent('#streaming-btn')).to.be.false;
+		expect(await utils.isPresent('#broadcasting-btn')).to.be.false;
 	});
 
 	it('should HIDE the LEAVE button', async () => {
@@ -1033,7 +1033,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await utils.clickOn('#ovActivitiesPanel-checkbox');
 
-		await utils.clickOn('#streamingActivity-checkbox');
+		await utils.clickOn('#broadcastingActivity-checkbox');
 
 		await utils.clickOn('#apply-btn');
 
@@ -1047,7 +1047,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await utils.waitForElement('ov-recording-activity');
 
-		expect(await utils.isPresent('ov-streaming-activity')).to.be.false;
+		expect(await utils.isPresent('ov-broadcasting-activity')).to.be.false;
 	});
 
 	it('should SHOW STREAMING ERROR', async () => {
@@ -1055,7 +1055,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await utils.clickOn('#ovActivitiesPanel-checkbox');
 
-		await utils.clickOn('#streamingError-checkbox');
+		await utils.clickOn('#broadcastingError-checkbox');
 
 		await utils.clickOn('#apply-btn');
 
@@ -1067,13 +1067,13 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await utils.waitForElement('#custom-activities-panel');
 
-		const status = await utils.waitForElement('#streaming-status');
+		const status = await utils.waitForElement('#broadcasting-status');
 
 		expect(await status.getAttribute('innerText')).equals('FAILED');
 
-		await utils.clickOn('#streaming-activity');
+		await utils.clickOn('#broadcasting-activity');
 		await browser.sleep(500);
-		const error = await utils.waitForElement('#streaming-error');
+		const error = await utils.waitForElement('#broadcasting-error');
 		expect(await error.getAttribute('innerText')).equals('TEST_ERROR');
 	});
 });

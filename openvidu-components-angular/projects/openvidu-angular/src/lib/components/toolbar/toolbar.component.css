@@ -71,7 +71,7 @@
 }
 
 .recording-tag,
-.streaming-tag {
+.broadcasting-tag {
 	padding: 0 10px;
 	border-radius: var(--ov-panel-radius);
 	width: fit-content;
@@ -84,19 +84,19 @@
 .recording-tag {
 	background-color: var(--ov-warn-color);
 }
-.streaming-tag {
+.broadcasting-tag {
 	background-color: #5903ca;
 }
 
 .recording-tag mat-icon,
-.streaming-tag mat-icon {
+.broadcasting-tag mat-icon {
 	font-size: 16px;
 	display: inline;
 	vertical-align: sub;
 	margin-right: 5px;
 }
 
-#streaming-btn > mat-icon {
+#broadcasting-btn > mat-icon {
 	color: #5903ca;
 }
 

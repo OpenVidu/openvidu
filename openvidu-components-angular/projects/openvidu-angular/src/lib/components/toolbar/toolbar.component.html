@@ -9,10 +9,10 @@
 					<span class="blink">REC</span>
 					<span> | {{ recordingTime | date : 'H:mm:ss' }}</span>
 				</div>
-				<div *ngIf="streamingStatus === _streamingStatus.STARTED" id="streaming-tag" class="streaming-tag">
+				<div *ngIf="broadcastingStatus === _broadcastingStatus.STARTED" id="broadcasting-tag" class="broadcasting-tag">
 					<mat-icon class="blink">sensors</mat-icon>
 					<span class="blink">LIVE</span>
-					<span> | {{ streamingTime | date : 'H:mm:ss' }}</span>
+					<span> | {{ broadcastingTime | date : 'H:mm:ss' }}</span>
 				</div>
 			</div>
 		</div>
@@ -122,25 +122,25 @@
 				</span>
 			</button>
 
-			<!-- Streaming button -->
+			<!-- Broadcasting button -->
 			<button
-				*ngIf="!isMinimal && showStreamingButton"
+				*ngIf="!isMinimal && showBroadcastingButton"
 				mat-menu-item
-				id="streaming-btn"
-				[disabled]="streamingStatus === _streamingStatus.STARTING || recordingStatus === _streamingStatus.STOPPING"
-				(click)="toggleStreaming()"
+				id="broadcasting-btn"
+				[disabled]="broadcastingStatus === _broadcastingStatus.STARTING || recordingStatus === _broadcastingStatus.STOPPING"
+				(click)="toggleBroadcasting()"
 			>
 				<mat-icon>sensors</mat-icon>
 				<span
 					*ngIf="
-						streamingStatus === _streamingStatus.STOPPED ||
-						streamingStatus === _streamingStatus.STOPPING ||
-						streamingStatus === _streamingStatus.FAILED
+						broadcastingStatus === _broadcastingStatus.STOPPED ||
+						broadcastingStatus === _broadcastingStatus.STOPPING ||
+						broadcastingStatus === _broadcastingStatus.FAILED
 					"
 				>
 					{{ 'PANEL.STREAMING.START' | translate }}
 				</span>
-				<span *ngIf="streamingStatus === _streamingStatus.STARTED || streamingStatus === _streamingStatus.STARTING">
+				<span *ngIf="broadcastingStatus === _broadcastingStatus.STARTED || broadcastingStatus === _broadcastingStatus.STARTING">
 					{{ 'PANEL.STREAMING.STOP' | translate }}
 				</span>
 			</button>

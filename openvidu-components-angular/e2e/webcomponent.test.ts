@@ -308,7 +308,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should HIDE the TOOLBAR STREAMING button', async () => {
-		await browser.get(`${url}&prejoin=false&toolbarStreamingButton=false`);
+		await browser.get(`${url}&prejoin=false&toolbarBroadcastingButton=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -324,8 +324,8 @@ describe('Testing API Directives', () => {
 		await utils.waitForElement('.mat-menu-content');
 		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
 
-		// Checking if streaming button is not present
-		expect(await utils.isPresent('#streaming-btn')).to.be.false;
+		// Checking if broadcasting button is not present
+		expect(await utils.isPresent('#broadcasting-btn')).to.be.false;
 	});
 
 	it('should HIDE the TOOLBAR SETTINGS button', async () => {
@@ -572,7 +572,7 @@ describe('Testing API Directives', () => {
 
 	it('should SHOW a STREAMING ERROR in activities panel', async () => {
 		let element;
-		const fixedUrl = `${url}&prejoin=false&streamingError=TEST_ERROR`;
+		const fixedUrl = `${url}&prejoin=false&broadcastingError=TEST_ERROR`;
 		await browser.get(fixedUrl);
 
 		await utils.checkSessionIsPresent();
@@ -587,26 +587,26 @@ describe('Testing API Directives', () => {
 		await utils.waitForElement('#default-activities-panel');
 		expect(await utils.isPresent('#default-activities-panel')).to.be.true;
 
-		// Checking if streaming activity exists
+		// Checking if broadcasting activity exists
 		await utils.waitForElement('#activities-container');
 		await utils.waitForElement('.activities-body-container');
 
-		await utils.waitForElement('ov-streaming-activity');
-		expect(await utils.isPresent('ov-streaming-activity')).to.be.true;
+		await utils.waitForElement('ov-broadcasting-activity');
+		expect(await utils.isPresent('ov-broadcasting-activity')).to.be.true;
 
-		const status = await utils.waitForElement('#streaming-status');
+		const status = await utils.waitForElement('#broadcasting-status');
 		expect(await status.getAttribute('innerText')).equals('FAILED');
 
-		// Open streaming
+		// Open broadcasting
 		await browser.sleep(1000);
-		await utils.clickOn('ov-streaming-activity');
+		await utils.clickOn('ov-broadcasting-activity');
 
-		element = await utils.waitForElement('#streaming-error');
+		element = await utils.waitForElement('#broadcasting-error');
 		expect(await element.getAttribute('innerText')).equal('TEST_ERROR');
 	});
 
 	it('should HIDE the STREAMING ACTIVITY in activities panel', async () => {
-		await browser.get(`${url}&prejoin=false&activitiesPanelStreamingActivity=false`);
+		await browser.get(`${url}&prejoin=false&activitiesPanelBroadcastingActivity=false`);
 
 		await utils.checkSessionIsPresent();
 
@@ -624,7 +624,7 @@ describe('Testing API Directives', () => {
 
 		// Checking if recording activity exists
 		await utils.waitForElement('.activities-body-container');
-		expect(await utils.isPresent('ov-streaming-activity')).to.be.false;
+		expect(await utils.isPresent('ov-broadcasting-activity')).to.be.false;
 	});
 });
 
@@ -831,7 +831,7 @@ describe('Testing videoconference EVENTS', () => {
 	});
 
 	// TODO: it needs an OpenVidu PRO
-	// it('should receive the onToolbarStopStreamingClicked event', async () => {
+	// it('should receive the onToolbarStopBroadcastingClicked event', async () => {
 	// 	await browser.get(`${url}&prejoin=false`);
 
 	// 	await utils.checkSessionIsPresent();
@@ -846,18 +846,18 @@ describe('Testing videoconference EVENTS', () => {
 
 	// 	await utils.waitForElement('.mat-menu-content');
 
-	// 	await utils.waitForElement('#streaming-btn');
-	// 	await utils.clickOn('#streaming-btn');
+	// 	await utils.waitForElement('#broadcasting-btn');
+	// 	await utils.clickOn('#broadcasting-btn');
 
 	// 	await browser.sleep(500);
 
 	// 	await utils.waitForElement('.sidenav-menu');
 	// 	await utils.waitForElement('#activities-container');
 
-	// 	await utils.waitForElement('#streaming-url-input');
-	// 	const input = await utils.waitForElement('#rtmp-url-input');
-	// 	await input.sendKeys('RTMPurl');
-	// 	await utils.clickOn('#streaming-btn');
+	// 	await utils.waitForElement('#broadcasting-url-input');
+	// 	const input = await utils.waitForElement('#broadcast-url-input');
+	// 	await input.sendKeys('BroadcastUrl');
+	// 	await utils.clickOn('#broadcasting-btn');
 
 	// 	// Open more options menu
 	// 	await utils.waitForElement('#more-options-btn');
@@ -868,12 +868,12 @@ describe('Testing videoconference EVENTS', () => {
 
 	// 	await utils.waitForElement('.mat-menu-content');
 
-	// 	await utils.waitForElement('#streaming-btn');
-	// 	await utils.clickOn('#streaming-btn');
+	// 	await utils.waitForElement('#broadcasting-btn');
+	// 	await utils.clickOn('#broadcasting-btn');
 
-	// 	// Checking if onToolbarStopStreamingClicked has been received
-	// 	await utils.waitForElement('#onToolbarStopStreamingClicked');
-	// 	expect(await utils.isPresent('#onToolbarStopStreamingClicked')).to.be.true;
+	// 	// Checking if onToolbarStopBroadcastingClicked has been received
+	// 	await utils.waitForElement('#onToolbarStopBroadcastingClicked');
+	// 	expect(await utils.isPresent('#onToolbarStopBroadcastingClicked')).to.be.true;
 	// });
 
 	it('should receive the onActivitiesPanelStartRecordingClicked event', async () => {
@@ -941,7 +941,7 @@ describe('Testing videoconference EVENTS', () => {
 		expect(await utils.isPresent('#onActivitiesPanelDeleteRecordingClicked')).to.be.true;
 	});
 
-	it('should receive the onActivitiesPanelStartStreaming event', async () => {
+	it('should receive the onActivitiesPanelStartBroadcasting event', async () => {
 		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
@@ -956,35 +956,35 @@ describe('Testing videoconference EVENTS', () => {
 		await utils.waitForElement('#activities-container');
 		expect(await utils.isPresent('#activities-container')).to.be.true;
 
-		await utils.waitForElement('#streaming-activity');
-		await utils.clickOn('#streaming-activity');
+		await utils.waitForElement('#broadcasting-activity');
+		await utils.clickOn('#broadcasting-activity');
 
 		await browser.sleep(1000);
 
-		const button = await utils.waitForElement('#streaming-btn');
+		const button = await utils.waitForElement('#broadcasting-btn');
 		expect(await button.isEnabled()).to.be.false;
 
 
-		const input = await utils.waitForElement('#rtmp-url-input');
-		await input.sendKeys('RTMPurl');
+		const input = await utils.waitForElement('#broadcast-url-input');
+		await input.sendKeys('BroadcastUrl');
 
-		await utils.clickOn('#streaming-btn');
+		await utils.clickOn('#broadcasting-btn');
 
-		// Checking if onActivitiesPanelStartStreamingClicked has been received
-		await utils.waitForElement('#onActivitiesPanelStartStreamingClicked');
-		expect(await utils.isPresent('#onActivitiesPanelStartStreamingClicked')).to.be.true;
+		// Checking if onActivitiesPanelStartBroadcastingClicked has been received
+		await utils.waitForElement('#onActivitiesPanelStartBroadcastingClicked');
+		expect(await utils.isPresent('#onActivitiesPanelStartBroadcastingClicked')).to.be.true;
 
 
-		// TODO: it needs an OpenVidu PRO (onActivitiesPanelStopStreamingClicked event)
+		// TODO: it needs an OpenVidu PRO (onActivitiesPanelStopBroadcastingClicked event)
 
-		// expect(await utils.isPresent('#streaming-tag')).to.be.true;
+		// expect(await utils.isPresent('#broadcasting-tag')).to.be.true;
 
-		// await utils.clickOn('#stop-streaming-btn');
+		// await utils.clickOn('#stop-broadcasting-btn');
 
-		// // Checking if onActivitiesPanelStopStreamingClicked has been received
-		// await utils.waitForElement('#onActivitiesPanelStopStreamingClicked');
-		// expect(await utils.isPresent('#onActivitiesPanelStopStreamingClicked')).to.be.true;
-		// expect(await utils.isPresent('#streaming-tag')).to.be.false;
+		// // Checking if onActivitiesPanelStopBroadcastingClicked has been received
+		// await utils.waitForElement('#onActivitiesPanelStopBroadcastingClicked');
+		// expect(await utils.isPresent('#onActivitiesPanelStopBroadcastingClicked')).to.be.true;
+		// expect(await utils.isPresent('#broadcasting-tag')).to.be.false;
 	});
 
 	it('should receive the onSessionCreated event', async () => {

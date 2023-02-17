@@ -41,7 +41,7 @@ export class RestService {
 		}
 	}
 
-	async startStreaming(broadcastUrl: string) {
+	async startBroadcasting(broadcastUrl: string) {
 		try {
 			const options = {
 				headers: new HttpHeaders({
@@ -68,7 +68,7 @@ export class RestService {
 		}
 	}
 
-	async stopStreaming() {
+	async stopBroadcasting() {
 		try {
 			return lastValueFrom(this.http.delete<any>(`${this.baseHref}broadcasts/stop`));
 		} catch (error) {

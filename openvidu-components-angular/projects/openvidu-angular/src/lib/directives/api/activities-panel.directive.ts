@@ -52,51 +52,51 @@ export class ActivitiesPanelRecordingActivityDirective implements AfterViewInit,
 }
 
 /**
- * The **streamingActivity** directive allows show/hide the streaming activity in {@link ActivitiesPanelComponent}.
+ * The **broadcastingActivity** directive allows show/hide the broadcasting activity in {@link ActivitiesPanelComponent}.
  *
  * Default: `true`
  *
  * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `activitiesPanel` component:
  *
  * @example
- * <ov-videoconference [activitiesPanelStreamingActivity]="false"></ov-videoconference>
+ * <ov-videoconference [activitiesPanelBroadcastingActivity]="false"></ov-videoconference>
  *
  * \
  * And it also can be used in the {@link ActivitiesPanelComponent}.
  * @example
- * <ov-activities-panel *ovActivitiesPanel [streamingActivity]="false"></ov-activities-panel>
+ * <ov-activities-panel *ovActivitiesPanel [broadcastingActivity]="false"></ov-activities-panel>
  */
  @Directive({
-	selector: 'ov-videoconference[activitiesPanelStreamingActivity], ov-activities-panel[streamingActivity]'
+	selector: 'ov-videoconference[activitiesPanelBroadcastingActivity], ov-activities-panel[broadcastingActivity]'
 })
-export class ActivitiesPanelStreamingActivityDirective implements AfterViewInit, OnDestroy {
-	@Input() set activitiesPanelStreamingActivity(value: boolean) {
-		this.streamingActivityValue = value;
-		this.update(this.streamingActivityValue);
+export class ActivitiesPanelBroadcastingActivityDirective implements AfterViewInit, OnDestroy {
+	@Input() set activitiesPanelBroadcastingActivity(value: boolean) {
+		this.broadcastingActivityValue = value;
+		this.update(this.broadcastingActivityValue);
 	}
-	@Input() set streamingActivity(value: boolean) {
-		this.streamingActivityValue = value;
-		this.update(this.streamingActivityValue);
+	@Input() set broadcastingActivity(value: boolean) {
+		this.broadcastingActivityValue = value;
+		this.update(this.broadcastingActivityValue);
 	}
 
-	streamingActivityValue: boolean = true;
+	broadcastingActivityValue: boolean = true;
 
 	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
 
 	ngAfterViewInit() {
-		this.update(this.streamingActivityValue);
+		this.update(this.broadcastingActivityValue);
 	}
 	ngOnDestroy(): void {
 		this.clear();
 	}
 	clear() {
-		this.streamingActivityValue = true;
+		this.broadcastingActivityValue = true;
 		this.update(true);
 	}
 
 	update(value: boolean) {
-		if (this.libService.streamingActivity.getValue() !== value) {
-			this.libService.streamingActivity.next(value);
+		if (this.libService.broadcastingActivity.getValue() !== value) {
+			this.libService.broadcastingActivity.next(value);
 		}
 	}
 }

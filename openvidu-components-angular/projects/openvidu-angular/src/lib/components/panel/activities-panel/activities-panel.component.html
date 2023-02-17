@@ -16,13 +16,13 @@
 				(onStopRecordingClicked)="_onStopRecordingClicked()"
 				(onDeleteRecordingClicked)="_onDeleteRecordingClicked($event)"
 			></ov-recording-activity>
-			<ov-streaming-activity
-				*ngIf="showStreamingActivity"
-				id="streaming-activity"
-				[expanded]="expandedPanel === 'streaming'"
-				(onStartStreamingClicked)="_onStartStreamingClicked($event)"
-				(onStopStreamingClicked)="_onStopStreamingClicked()"
-			></ov-streaming-activity>
+			<ov-broadcasting-activity
+				*ngIf="showBroadcastingActivity"
+				id="broadcasting-activity"
+				[expanded]="expandedPanel === 'broadcasting'"
+				(onStartBroadcastingClicked)="_onStartBroadcastingClicked($event)"
+				(onStopBroadcastingClicked)="_onStopBroadcastingClicked()"
+			></ov-broadcasting-activity>
 		</mat-accordion>
 	</div>
 </div>

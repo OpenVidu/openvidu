@@ -58,10 +58,10 @@ $(document).ready(() => {
 		url.searchParams.get('toolbarRecordingButton') === null ? true : url.searchParams.get('toolbarRecordingButton') === 'true';
 	FULLSCREEN_BUTTON = url.searchParams.get('fullscreenBtn') === null ? true : url.searchParams.get('fullscreenBtn') === 'true';
 	STREAMING_BUTTON =
-		url.searchParams.get('toolbarStreamingButton') === null ? true : url.searchParams.get('toolbarStreamingButton') === 'true';
+		url.searchParams.get('toolbarBroadcastingButton') === null ? true : url.searchParams.get('toolbarBroadcastingButton') === 'true';
 
-	if (url.searchParams.get('streamingError') !== null) {
-		STREAMING_ERROR = url.searchParams.get('streamingError');
+	if (url.searchParams.get('broadcastingError') !== null) {
+		STREAMING_ERROR = url.searchParams.get('broadcastingError');
 	}
 
 	TOOLBAR_SETTINGS_BUTTON =
@@ -75,9 +75,9 @@ $(document).ready(() => {
 	PARTICIPANTS_PANEL_BUTTON =
 		url.searchParams.get('participantsPanelBtn') === null ? true : url.searchParams.get('participantsPanelBtn') === 'true';
 	ACTIVITIES_STREAMING_ACTIVITY =
-		url.searchParams.get('activitiesPanelStreamingActivity') === null
+		url.searchParams.get('activitiesPanelBroadcastingActivity') === null
 			? true
-			: url.searchParams.get('activitiesPanelStreamingActivity') === 'true';
+			: url.searchParams.get('activitiesPanelBroadcastingActivity') === 'true';
 	ACTIVITIES_RECORDING_ACTIVITY =
 		url.searchParams.get('activitiesPanelRecordingActivity') === null
 			? true
@@ -127,8 +127,8 @@ $(document).ready(() => {
 	//     await stopRecording(RECORDING_ID);
 	// });
 
-	webComponent.addEventListener('onToolbarStopStreamingClicked', async (event) => {
-		appendElement('onToolbarStopStreamingClicked');
+	webComponent.addEventListener('onToolbarStopBroadcastingClicked', async (event) => {
+		appendElement('onToolbarStopBroadcastingClicked');
 	});
 
 	webComponent.addEventListener('onActivitiesPanelStartRecordingClicked', async (event) => {
@@ -146,12 +146,12 @@ $(document).ready(() => {
 		appendElement('onActivitiesPanelDeleteRecordingClicked');
 	);
 
-	webComponent.addEventListener('onActivitiesPanelStartStreamingClicked', async (event) => {
-		appendElement('onActivitiesPanelStartStreamingClicked');
+	webComponent.addEventListener('onActivitiesPanelStartBroadcastingClicked', async (event) => {
+		appendElement('onActivitiesPanelStartBroadcastingClicked');
 	});
 
-	webComponent.addEventListener('onActivitiesPanelStopStreamingClicked', async (event) => {
-		appendElement('onActivitiesPanelStopStreamingClicked');
+	webComponent.addEventListener('onActivitiesPanelStopBroadcastingClicked', async (event) => {
+		appendElement('onActivitiesPanelStopBroadcastingClicked');
 	});
 
 	webComponent.addEventListener('onSessionCreated', (event) => {
@@ -217,7 +217,7 @@ async function joinSession(sessionName, participantName) {
 	webComponent.toolbarCaptionsButton = CAPTIONS_BUTTON;
 	webComponent.toolbarLeaveButton = LEAVE_BUTTON;
 	webComponent.toolbarRecordingButton = RECORDING_BUTTON;
-	webComponent.toolbarStreamingButton = STREAMING_BUTTON;
+	webComponent.toolbarBroadcastingButton = STREAMING_BUTTON;
 	webComponent.toolbarActivitiesPanelButton = ACTIVITIES_PANEL_BUTTON;
 	webComponent.toolbarChatPanelButton = CHAT_PANEL_BUTTON;
 	webComponent.toolbarParticipantsPanelButton = PARTICIPANTS_PANEL_BUTTON;
@@ -230,10 +230,10 @@ async function joinSession(sessionName, participantName) {
 
 	webComponent.recordingActivityRecordingsList = [{ status: 'ready' }];
 	webComponent.activitiesPanelRecordingActivity = ACTIVITIES_RECORDING_ACTIVITY;
-	webComponent.activitiesPanelStreamingActivity = ACTIVITIES_STREAMING_ACTIVITY;
+	webComponent.activitiesPanelBroadcastingActivity = ACTIVITIES_STREAMING_ACTIVITY;
 	webComponent.recordingActivityRecordingError = RECORDING_ERROR;
 
-	webComponent.streamingActivityStreamingError = {message: STREAMING_ERROR, rtmpAvailable: true};
+	webComponent.broadcastingActivityBroadcastingError = {message: STREAMING_ERROR, broadcastAvailable: true};
 
 	webComponent.participantName = participantName;
 	webComponent.tokens = tokens;

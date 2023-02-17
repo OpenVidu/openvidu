@@ -384,19 +384,19 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	@Output() onActivitiesPanelPlayRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
-	 * Provides event notifications that fire when start streaming button is clicked from {@link ActivitiesPanelComponent}.
+	 * Provides event notifications that fire when start broadcasting button is clicked from {@link ActivitiesPanelComponent}.
 	 */
-	@Output() onActivitiesPanelStartStreamingClicked: EventEmitter<string> = new EventEmitter<string>();
+	@Output() onActivitiesPanelStartBroadcastingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
-	 * Provides event notifications that fire when start streaming button is clicked from {@link ActivitiesPanelComponent}.
+	 * Provides event notifications that fire when start broadcasting button is clicked from {@link ActivitiesPanelComponent}.
 	 */
-	@Output() onActivitiesPanelStopStreamingClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onActivitiesPanelStopBroadcastingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when start streaming button is clicked from {@link ToolbarComponent}.
+	 * Provides event notifications that fire when start broadcasting button is clicked from {@link ToolbarComponent}.
 	 */
-	@Output() onToolbarStopStreamingClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onToolbarStopBroadcastingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
 	 * Provides event notifications that fire when OpenVidu Session is created.
@@ -695,22 +695,22 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	/**
 	 * @internal
 	 */
-	onStartStreamingClicked(rtmpUrl: string) {
+	onStartBroadcastingClicked(broadcastUrl: string) {
 		// if (from === 'toolbar') {
 		// 	this.onToolbarStartRecordingClicked.emit();
 		// } else if (from === 'panel') {
-		this.onActivitiesPanelStartStreamingClicked.emit(rtmpUrl);
+		this.onActivitiesPanelStartBroadcastingClicked.emit(broadcastUrl);
 		// }
 	}
 
 	/**
 	 * @internal
 	 */
-	onStopStreamingClicked(from: string) {
+	onStopBroadcastingClicked(from: string) {
 		if (from === 'toolbar') {
-			this.onToolbarStopStreamingClicked.emit();
+			this.onToolbarStopBroadcastingClicked.emit();
 		} else if (from === 'panel') {
-			this.onActivitiesPanelStopStreamingClicked.emit();
+			this.onActivitiesPanelStopBroadcastingClicked.emit();
 		}
 	}
 

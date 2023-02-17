@@ -30,16 +30,16 @@ export class ActivitiesPanelComponent implements OnInit {
 	@Output() onDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
-	 * Provides event notifications that fire when start streaming button has been clicked.
-	 * The streaming should be started using the REST API.
+	 * Provides event notifications that fire when start broadcasting button has been clicked.
+	 * The broadcasting should be started using the REST API.
 	 */
-	@Output() onStartStreamingClicked: EventEmitter<string> = new EventEmitter<string>();
+	@Output() onStartBroadcastingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
-	 * Provides event notifications that fire when stop streaming button has been clicked.
-	 * The streaming should be stopped using the REST API.
+	 * Provides event notifications that fire when stop broadcasting button has been clicked.
+	 * The broadcasting should be stopped using the REST API.
 	 */
-	@Output() onStopStreamingClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onStopBroadcastingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
 	 * @internal
@@ -49,10 +49,10 @@ export class ActivitiesPanelComponent implements OnInit {
 	 * @internal
 	 */
 	showRecordingActivity: boolean = true;
-	showStreamingActivity: boolean = true;
+	showBroadcastingActivity: boolean = true;
 	private panelSubscription: Subscription;
 	private recordingActivitySub: Subscription;
-	private streamingActivitySub: Subscription;
+	private broadcastingActivitySub: Subscription;
 
 	/**
 	 * @internal
@@ -73,7 +73,7 @@ export class ActivitiesPanelComponent implements OnInit {
 	ngOnDestroy() {
 		if (this.panelSubscription) this.panelSubscription.unsubscribe();
 		if (this.recordingActivitySub) this.recordingActivitySub.unsubscribe();
-		if (this.streamingActivitySub) this.streamingActivitySub.unsubscribe();
+		if (this.broadcastingActivitySub) this.broadcastingActivitySub.unsubscribe();
 	}
 
 	/**
@@ -104,12 +104,12 @@ export class ActivitiesPanelComponent implements OnInit {
 		this.onDeleteRecordingClicked.emit(recordingId);
 	}
 
-	_onStartStreamingClicked(rtmpUrl: string) {
-		this.onStartStreamingClicked.emit(rtmpUrl);
+	_onStartBroadcastingClicked(broadcastUrl: string) {
+		this.onStartBroadcastingClicked.emit(broadcastUrl);
 	}
 
-	_onStopStreamingClicked() {
-		this.onStopStreamingClicked.emit();
+	_onStopBroadcastingClicked() {
+		this.onStopBroadcastingClicked.emit();
 	}
 
 	private subscribeToPanelToggling() {
@@ -126,8 +126,8 @@ export class ActivitiesPanelComponent implements OnInit {
 			this.cd.markForCheck();
 		});
 
-		this.streamingActivitySub = this.libService.streamingActivity.subscribe((value: boolean) => {
-			this.showStreamingActivity = value;
+		this.broadcastingActivitySub = this.libService.broadcastingActivity.subscribe((value: boolean) => {
+			this.showBroadcastingActivity = value;
 			this.cd.markForCheck();
 		});
 	}
