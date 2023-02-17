@@ -142,9 +142,9 @@ $(document).ready(() => {
 	//     await stopRecording(RECORDING_ID);
 	// });
 
-	webComponent.addEventListener('onActivitiesPanelDeleteRecordingClicked', (event) =>
+	webComponent.addEventListener('onActivitiesPanelDeleteRecordingClicked', (event) => {
 		appendElement('onActivitiesPanelDeleteRecordingClicked');
-	);
+	});
 
 	webComponent.addEventListener('onActivitiesPanelStartBroadcastingClicked', async (event) => {
 		appendElement('onActivitiesPanelStartBroadcastingClicked');
@@ -205,7 +205,10 @@ async function joinSession(sessionName, participantName) {
 	webComponent.lang = LANG;
 	webComponent.captionsLang = CAPTIONS_LANG;
 	if (CUSTOM_CAPTIONS_LANG_OPTIONS) {
-		webComponent.captionsLangOptions = [{ name: 'Esp', lang: 'es-ES' }, { name: 'Eng', lang: 'en-US' }];
+		webComponent.captionsLangOptions = [
+			{ name: 'Esp', lang: 'es-ES' },
+			{ name: 'Eng', lang: 'en-US' }
+		];
 	}
 	webComponent.prejoin = PREJOIN;
 	webComponent.videoMuted = VIDEO_MUTED;
@@ -233,7 +236,7 @@ async function joinSession(sessionName, participantName) {
 	webComponent.activitiesPanelBroadcastingActivity = ACTIVITIES_STREAMING_ACTIVITY;
 	webComponent.recordingActivityRecordingError = RECORDING_ERROR;
 
-	webComponent.broadcastingActivityBroadcastingError = {message: STREAMING_ERROR, broadcastAvailable: true};
+	webComponent.broadcastingActivityBroadcastingError = { message: STREAMING_ERROR, broadcastAvailable: true };
 
 	webComponent.participantName = participantName;
 	webComponent.tokens = tokens;
