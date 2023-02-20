@@ -41,7 +41,6 @@ import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
 import org.apache.hc.client5.http.classic.methods.HttpDelete;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -63,6 +62,7 @@ import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.apache.hc.core5.ssl.TrustStrategy;
+import org.apache.hc.core5.util.TimeValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,18 +124,14 @@ public class OpenVidu {
 		final SSLConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
 				.setHostnameVerifier(NoopHostnameVerifier.INSTANCE).setSslContext(sslContext).build();
 
-		ConnectionConfig.Builder connectionConfigBuilder = ConnectionConfig.custom()
-				.setConnectTimeout(30, TimeUnit.SECONDS).setSocketTimeout(30, TimeUnit.SECONDS)
-				.setTimeToLive(30, TimeUnit.SECONDS);
-
 		final HttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
-				.setSSLSocketFactory(sslSocketFactory).setDefaultConnectionConfig(connectionConfigBuilder.build())
-				.build();
+				.setSSLSocketFactory(sslSocketFactory).setConnectionTimeToLive(TimeValue.ofSeconds(30)).build();
 
-		RequestConfig requestBuilder = RequestConfig.custom().setConnectionRequestTimeout(30, TimeUnit.SECONDS).build();
+		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(30, TimeUnit.SECONDS)
+				.setConnectionRequestTimeout(30, TimeUnit.SECONDS).setResponseTimeout(30, TimeUnit.SECONDS).build();
 
 		this.httpClient = HttpClients.custom().setConnectionManager(connectionManager)
-				.setDefaultRequestConfig(requestBuilder).setDefaultCredentialsProvider(credentialsProvider).build();
+				.setDefaultRequestConfig(requestConfig).setDefaultCredentialsProvider(credentialsProvider).build();
 	}
 
 	/**
