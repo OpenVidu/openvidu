@@ -85,6 +85,7 @@ public class OpenViduTestE2e {
 	protected static String OPENVIDU_PRO_SPEECH_TO_TEXT = "vosk";
 	protected static String DOCKERHUB_PRIVATE_REGISTRY_PASSWORD = "not_valid";
 	protected static String EXTERNAL_CUSTOM_LAYOUT_PARAMS = "sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET";
+	protected static String BROADCAST_IP = "172.17.0.1";
 
 	protected static String AWS_REGION = "fakeRegion";
 	protected static String AWS_ACCESS_KEY_ID = "fakeKey";
@@ -357,6 +358,12 @@ public class OpenViduTestE2e {
 			OPENVIDU_DEPLOYMENT = openviduDeployment;
 		}
 		log.info("Using URL {} to connect to OpenVidu deployment", OPENVIDU_DEPLOYMENT);
+
+		String broadcastIp = System.getProperty("BROADCAST_IP");
+		if (broadcastIp != null) {
+			BROADCAST_IP = broadcastIp;
+		}
+		log.info("Using IP {} to broadcast", BROADCAST_IP);
 	}
 
 	protected BrowserUser setupBrowser(String browser) throws Exception {

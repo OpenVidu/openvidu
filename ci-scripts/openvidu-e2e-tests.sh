@@ -116,7 +116,8 @@ function openviduE2ETests {
             -DREMOTE_URL_FIREFOX="http://${DOCKER_HOST_IP}:6667/wd/hub/" \
             -DREMOTE_URL_OPERA="http://${DOCKER_HOST_IP}:6668/wd/hub/" \
             -DREMOTE_URL_EDGE="http://${DOCKER_HOST_IP}:6669/wd/hub/" \
-            -DEXTERNAL_CUSTOM_LAYOUT_PARAMS="sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET" test
+            -DEXTERNAL_CUSTOM_LAYOUT_PARAMS="sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET" \
+        test
 
     elif [[ "${MEDIA_SERVER}" == "mediasoup" ]]; then
 
@@ -135,7 +136,8 @@ function openviduE2ETests {
             -DREMOTE_URL_EDGE="http://${DOCKER_HOST_IP}:6669/wd/hub/" \
             -DEXTERNAL_CUSTOM_LAYOUT_PARAMS="sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET" \
             -DOPENVIDU_PRO_LICENSE="${OPENVIDU_PRO_LICENSE}" \
-            -DOPENVIDU_PRO_LICENSE_API="${OPENVIDU_PRO_LICENSE_API}" test
+            -DOPENVIDU_PRO_LICENSE_API="${OPENVIDU_PRO_LICENSE_API}" \
+        test
 
     else
         echo "Not valid media server"

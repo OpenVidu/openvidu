@@ -1093,13 +1093,13 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			startRtmpServer();
 			// Start broadcast
 			try {
-				OV.startBroadcast("NOT_EXISTS", "rtmp://172.17.0.1/live");
+				OV.startBroadcast("NOT_EXISTS", "rtmp://" + BROADCAST_IP + "/live");
 				Assertions.fail("Expected OpenViduHttpException exception");
 			} catch (OpenViduHttpException exception) {
 				Assertions.assertEquals(HttpURLConnection.HTTP_NOT_FOUND, exception.getStatus(), "Wrong HTTP status");
 			}
 			try {
-				OV.startBroadcast(session.getSessionId(), "rtmp://172.17.0.1/live");
+				OV.startBroadcast(session.getSessionId(), "rtmp://" + BROADCAST_IP + "/live");
 				Assertions.fail("Expected OpenViduHttpException exception");
 			} catch (OpenViduHttpException exception) {
 				Assertions.assertEquals(HttpURLConnection.HTTP_NOT_ACCEPTABLE, exception.getStatus(),
@@ -1115,7 +1115,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			session = OV.getActiveSession("TestSession");
 			Assertions.assertFalse(session.fetch());
 
-			OV.startBroadcast("TestSession", "rtmp://172.17.0.1/live",
+			OV.startBroadcast("TestSession", "rtmp://" + BROADCAST_IP + "/live",
 					new RecordingProperties.Builder().resolution("1280x800").build());
 			user.getEventManager().waitUntilEventReaches("broadcastStarted", 1);
 			Assertions.assertFalse(session.fetch());
@@ -2819,7 +2819,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Thread.sleep(750);
 			WebElement broadcastUrlField = user.getDriver().findElement(By.id("broadcasturl-id-field"));
 			broadcastUrlField.clear();
-			broadcastUrlField.sendKeys("rtmp://172.17.0.1/live");
+			broadcastUrlField.sendKeys("rtmp://" + BROADCAST_IP + "/live");
 			user.getDriver().findElement(By.id("start-broadcast-btn")).click();
 			user.getWaiter()
 					.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
@@ -2885,9 +2885,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, HttpURLConnection.HTTP_BAD_REQUEST);
 			body = "{'session':'TestSession'}";
 			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, HttpURLConnection.HTTP_BAD_REQUEST);
-			body = "{'broadcastUrl':'rtmp://172.17.0.1/live'}";
+			body = "{'broadcastUrl':'rtmp://" + BROADCAST_IP + "/live'}";
 			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, HttpURLConnection.HTTP_BAD_REQUEST);
-			body = "{'session':false,'broadcastUrl':'rtmp://172.17.0.1/live'}";
+			body = "{'session':false,'broadcastUrl':'rtmp://" + BROADCAST_IP + "/live'}";
 			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, HttpURLConnection.HTTP_BAD_REQUEST);
 			body = "{'session':'TestSession','broadcastUrl':123}";
 			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, HttpURLConnection.HTTP_BAD_REQUEST);
@@ -2895,25 +2895,25 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
 					HttpURLConnection.HTTP_BAD_REQUEST);
 			// 404
-			body = "{'session':'NOT_EXISTS','broadcastUrl':'rtmp://172.17.0.1/live'}";
+			body = "{'session':'NOT_EXISTS','broadcastUrl':'rtmp://" + BROADCAST_IP + "/live'}";
 			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, HttpURLConnection.HTTP_NOT_FOUND);
 			// 406
 			String notActiveSessionId = restClient
 					.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpURLConnection.HTTP_OK).get("id")
 					.getAsString();
-			body = "{'session':'" + notActiveSessionId + "','broadcastUrl':'rtmp://172.17.0.1/live'}";
+			body = "{'session':'" + notActiveSessionId + "','broadcastUrl':'rtmp://" + BROADCAST_IP + "/live'}";
 			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
 					HttpURLConnection.HTTP_NOT_ACCEPTABLE);
 			// 422
-			body = "{'session':'TestSession','broadcastUrl':'rtmp://172.17.0.1/live','resolution':'99x1280'}";
+			body = "{'session':'TestSession','broadcastUrl':'rtmp://" + BROADCAST_IP + "/live','resolution':'99x1280'}";
 			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, 422);
 			// 500 (Connection refused)
-			body = "{'session':'TestSession','broadcastUrl':'rtmps://172.17.0.1/live'}";
+			body = "{'session':'TestSession','broadcastUrl':'rtmps://" + BROADCAST_IP + "/live'}";
 			String errorResponse = restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
 					HttpURLConnection.HTTP_INTERNAL_ERROR);
 			Assertions.assertTrue(
 					errorResponse.contains("Cannot open connection")
-							&& errorResponse.contains("rtmps://172.17.0.1/live: Connection refused"),
+							&& errorResponse.contains("rtmps://" + BROADCAST_IP + "/live: Connection refused"),
 					"Broadcast error message does not contain expected message");
 			// 500 (Input/output error)
 			body = "{'session':'TestSession','broadcastUrl':'rtmp://not.exists'}";
@@ -2922,22 +2922,22 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assertions.assertTrue(errorResponse.contains("rtmp://not.exists: Input/output error"),
 					"Broadcast error message does not contain expected message");
 			// 500 (Protocol not found)
-			body = "{'session':'TestSession','broadcastUrl':'schemefail://172.17.0.1/live'}";
+			body = "{'session':'TestSession','broadcastUrl':'schemefail://" + BROADCAST_IP + "/live'}";
 			errorResponse = restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
 					HttpURLConnection.HTTP_INTERNAL_ERROR);
-			Assertions.assertTrue(errorResponse.contains("schemefail://172.17.0.1/live: Protocol not found"),
+			Assertions.assertTrue(errorResponse.contains("schemefail://" + BROADCAST_IP + "/live: Protocol not found"),
 					"Broadcast error message does not contain expected message");
 			// Concurrent broadcast
 			final int PETITIONS = 20;
 			List<String> responses = new ArrayList<>();
 			List<Exception> exceptions = new ArrayList<>();
 			CountDownLatch latch = new CountDownLatch(PETITIONS);
-			body = "{'session':'TestSession','broadcastUrl':'rtmp://172.17.0.1/live'}";
+			body = "{'session':'TestSession','broadcastUrl':'rtmp://" + BROADCAST_IP + "/live'}";
 			for (int i = 0; i < PETITIONS; i++) {
 				new Thread(() -> {
 					try {
 						String response = restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start",
-								"{'session':'TestSession','broadcastUrl':'rtmp://172.17.0.1/live'}",
+								"{'session':'TestSession','broadcastUrl':'rtmp://" + BROADCAST_IP + "/live'}",
 								HttpURLConnection.HTTP_OK);
 						responses.add(response);
 					} catch (Exception e) {
@@ -2950,11 +2950,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			if (!latch.await(30, TimeUnit.SECONDS)) {
 				Assertions.fail("Concurrent start of broadcasts did not return in timeout");
 			}
-			Assertions.assertEquals(PETITIONS - 1, exceptions.size(), "Wrong number of councurrent started broadcasts");
 			for (Exception e : exceptions) {
 				Assertions.assertTrue(e.getMessage().contains("expected to return status 200 but got 409"),
 						"Exception message wasn't 409. It was: " + e.getMessage());
 			}
+			Assertions.assertEquals(PETITIONS - 1, exceptions.size(), "Wrong number of councurrent started broadcasts");
 			// 409
 			restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
 					HttpURLConnection.HTTP_CONFLICT);
@@ -3243,7 +3243,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 		if (startBroadcast) {
 			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start",
-					"{'session':'TestSession','broadcastUrl':'rtmp://172.17.0.1/live'}", HttpURLConnection.HTTP_OK);
+					"{'session':'TestSession','broadcastUrl':'rtmp://" + BROADCAST_IP + "/live'}",
+					HttpURLConnection.HTTP_OK);
 			user.getEventManager().waitUntilEventReaches("broadcastStarted", 2);
 			CustomWebhook.waitForEvent("broadcastStarted", 3);
 		}
