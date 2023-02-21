@@ -25,7 +25,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.validator.routines.InetAddressValidator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.By;
@@ -883,16 +882,24 @@ public class OpenViduTestE2e {
 			throws TimeoutException, UnknownHostException, InterruptedException {
 		long currentTime = System.currentTimeMillis();
 		long maxTime = currentTime + (secondsTimeout * 1000);
-		InetAddressValidator validator = InetAddressValidator.getInstance();
-		while (System.currentTimeMillis() < maxTime) {
-			try {
-				String ip = MediaNodeDockerUtils.getContainerIp(containerNameOrId);
-				if (validator.isValid(ip)) {
-					return ip;
+		try {
+			while (System.currentTimeMillis() < maxTime) {
+				try {
+					String ip = MediaNodeDockerUtils.getContainerIp(containerNameOrId);
+					if (ip.isBlank()) {
+						log.warn("Container IP address is empty for container {}", containerNameOrId);
+					} else {
+						return ip;
+					}
+				} catch (Exception e) {
+					log.error("Error obtaining container IP address for container {}: {}", containerNameOrId,
+							e.getMessage());
 				}
-			} catch (Exception e) {
+				Thread.sleep(50);
 			}
-			Thread.sleep(50);
+		} finally {
+			log.info("Logging docker inspect info");
+			log.info(commandLine.executeCommand("docker inspect " + containerNameOrId, 10));
 		}
 		throw new TimeoutException();
 	}
