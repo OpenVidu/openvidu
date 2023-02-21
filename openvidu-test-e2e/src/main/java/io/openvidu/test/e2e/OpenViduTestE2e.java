@@ -928,7 +928,8 @@ public class OpenViduTestE2e {
                 "    }",
                 "}");
 		// @formatter:on
-		File tmpFile = File.createTempFile("broadcast-nginx", ".conf");
+		Files.createDirectories(Paths.get("/opt/openvidu/tmp/"));
+		File tmpFile = File.createTempFile("broadcast-nginx", ".conf", new File("/opt/openvidu/tmp/"));
 		FileWriter writer = new FileWriter(tmpFile);
 		writer.write(config);
 		writer.close();
