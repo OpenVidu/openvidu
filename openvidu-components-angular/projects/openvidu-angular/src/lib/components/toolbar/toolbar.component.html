@@ -4,16 +4,19 @@
 			<img *ngIf="!isMinimal && showLogo" id="branding-logo" src="assets/images/logo.png" ovLogo />
 			<div id="session-info-container" [class.colapsed]="recordingStatus === _recordingStatus.STARTED">
 				<span id="session-name" *ngIf="!isMinimal && session && session.sessionId && showSessionName">{{ session.sessionId }}</span>
-				<div *ngIf="recordingStatus === _recordingStatus.STARTED" id="recording-tag" class="recording-tag">
-					<mat-icon class="blink">radio_button_checked</mat-icon>
-					<span class="blink">REC</span>
-					<span> | {{ recordingTime | date : 'H:mm:ss' }}</span>
+				<div id="activities-tag">
+					<div *ngIf="recordingStatus === _recordingStatus.STARTED" id="recording-tag" class="recording-tag">
+						<mat-icon class="blink">radio_button_checked</mat-icon>
+						<span class="blink">REC</span>
+						<span> | {{ recordingTime | date : 'H:mm:ss' }}</span>
+					</div>
+					<div *ngIf="broadcastingStatus === _broadcastingStatus.STARTED" id="broadcasting-tag" class="broadcasting-tag">
+						<mat-icon class="blink">sensors</mat-icon>
+						<span class="blink">LIVE</span>
+						<span> | {{ broadcastingTime | date : 'H:mm:ss' }}</span>
+					</div>
 				</div>
-				<div *ngIf="broadcastingStatus === _broadcastingStatus.STARTED" id="broadcasting-tag" class="broadcasting-tag">
-					<mat-icon class="blink">sensors</mat-icon>
-					<span class="blink">LIVE</span>
-					<span> | {{ broadcastingTime | date : 'H:mm:ss' }}</span>
-				</div>
+
 			</div>
 		</div>
 	</div>

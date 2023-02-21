@@ -70,6 +70,13 @@
 	flex-direction: column;
 }
 
+#activities-tag {
+	display: inline-flex;
+}
+
+#activities-tag > div {
+	margin-left: 5px;
+}
 .recording-tag,
 .broadcasting-tag {
 	padding: 0 10px;
