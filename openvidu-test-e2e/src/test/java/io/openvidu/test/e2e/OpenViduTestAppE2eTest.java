@@ -2531,16 +2531,19 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		builder = getHttpClientBuilder();
 		builder.setDefaultHeaders(WRONG_AUTH_HEADER);
 		customOV[0] = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET, builder);
-		customOV[0].fetch();
+		IllegalStateException thrown2 = Assertions.assertThrows(IllegalStateException.class, () -> {
+			customOV[0].fetch();
+		});
+		Assertions.assertEquals("AuthScheme is null", thrown2.getMessage());
 
 		// 7. No CredentialsProvider, wrong Authorization header, wrong secret, 401
 		builder = getHttpClientBuilder();
 		builder.setDefaultHeaders(WRONG_AUTH_HEADER);
 		customOV[0] = new OpenVidu(OPENVIDU_URL, WRONG_SECRET, builder);
-		thrown = Assertions.assertThrows(OpenViduHttpException.class, () -> {
+		thrown2 = Assertions.assertThrows(IllegalStateException.class, () -> {
 			customOV[0].fetch();
 		});
-		Assertions.assertEquals(401, thrown.getStatus());
+		Assertions.assertEquals("AuthScheme is null", thrown2.getMessage());
 
 		// 8. No CredentialsProvider, valid Authorization header, no secret, 200
 		builder = getHttpClientBuilder();
@@ -2581,7 +2584,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		builder.setDefaultCredentialsProvider(validCredentialsProvider);
 		builder.setDefaultHeaders(WRONG_AUTH_HEADER);
 		customOV[0] = new OpenVidu(OPENVIDU_URL, builder);
-		customOV[0].fetch();
+		thrown2 = Assertions.assertThrows(IllegalStateException.class, () -> {
+			customOV[0].fetch();
+		});
+		Assertions.assertEquals("AuthScheme is null", thrown2.getMessage());
 
 		// 14. Wrong CredentialsProvider, no Authorization header, no secret, 401
 		final BasicCredentialsProvider wrongCredentialsProvider = new BasicCredentialsProvider();
