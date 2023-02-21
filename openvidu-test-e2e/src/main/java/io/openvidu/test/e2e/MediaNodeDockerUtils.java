@@ -22,7 +22,7 @@ public class MediaNodeDockerUtils {
 		dockerClient.removeContainerCmd(containerId).withForce(true).exec();
 	}
 
-	public static String getMediaNodeIp(String containerId) {
+	public static String getContainerIp(String containerId) {
 		DockerClient dockerClient = getDockerClient();
 		return dockerClient.inspectContainerCmd(containerId).exec().getNetworkSettings().getNetworks().get("bridge")
 				.getIpAddress();

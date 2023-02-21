@@ -864,8 +864,9 @@ public class OpenViduTestE2e {
 	 * https://github.com/tiangolo/nginx-rtmp-docker
 	 * 
 	 * @return The IP address of the Docker container
+	 * @throws InterruptedException
 	 */
-	protected static String startRtmpServer() throws IOException, TimeoutException {
+	protected static String startRtmpServer() throws IOException, TimeoutException, InterruptedException {
 		File file = writeRtmpServerConfigInFile();
 		String dockerRunCommand = "docker run -d --name broadcast-nginx -p 1935:1935 -v " + file.getAbsolutePath()
 				+ ":/etc/nginx/nginx.conf tiangolo/nginx-rtmp";
@@ -879,16 +880,19 @@ public class OpenViduTestE2e {
 	}
 
 	protected static String waitForContainerIpAddress(String containerNameOrId, int secondsTimeout)
-			throws TimeoutException, UnknownHostException {
+			throws TimeoutException, UnknownHostException, InterruptedException {
 		long currentTime = System.currentTimeMillis();
 		long maxTime = currentTime + (secondsTimeout * 1000);
+		InetAddressValidator validator = InetAddressValidator.getInstance();
 		while (System.currentTimeMillis() < maxTime) {
-			String ip = commandLine.executeCommand(
-					"docker container inspect -f '{{ .NetworkSettings.IPAddress }}' " + containerNameOrId, 3);
-			InetAddressValidator validator = InetAddressValidator.getInstance();
-			if (validator.isValid(ip)) {
-				return ip;
+			try {
+				String ip = MediaNodeDockerUtils.getContainerIp(containerNameOrId);
+				if (validator.isValid(ip)) {
+					return ip;
+				}
+			} catch (Exception e) {
 			}
+			Thread.sleep(50);
 		}
 		throw new TimeoutException();
 	}
