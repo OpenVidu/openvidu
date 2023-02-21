@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,6 +25,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.validator.routines.InetAddressValidator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.By;
@@ -85,7 +87,6 @@ public class OpenViduTestE2e {
 	protected static String OPENVIDU_PRO_SPEECH_TO_TEXT = "vosk";
 	protected static String DOCKERHUB_PRIVATE_REGISTRY_PASSWORD = "not_valid";
 	protected static String EXTERNAL_CUSTOM_LAYOUT_PARAMS = "sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET";
-	protected static String BROADCAST_IP = "172.17.0.1";
 
 	protected static String AWS_REGION = "fakeRegion";
 	protected static String AWS_ACCESS_KEY_ID = "fakeKey";
@@ -358,12 +359,6 @@ public class OpenViduTestE2e {
 			OPENVIDU_DEPLOYMENT = openviduDeployment;
 		}
 		log.info("Using URL {} to connect to OpenVidu deployment", OPENVIDU_DEPLOYMENT);
-
-		String broadcastIp = System.getProperty("BROADCAST_IP");
-		if (broadcastIp != null) {
-			BROADCAST_IP = broadcastIp;
-		}
-		log.info("Using IP {} to broadcast", BROADCAST_IP);
 	}
 
 	protected BrowserUser setupBrowser(String browser) throws Exception {
@@ -865,17 +860,37 @@ public class OpenViduTestE2e {
 		}
 	}
 
-	// https://github.com/tiangolo/nginx-rtmp-docker
-	protected static void startRtmpServer() throws IOException {
+	/**
+	 * https://github.com/tiangolo/nginx-rtmp-docker
+	 * 
+	 * @return The IP address of the Docker container
+	 */
+	protected static String startRtmpServer() throws IOException, TimeoutException {
 		File file = writeRtmpServerConfigInFile();
 		String dockerRunCommand = "docker run -d --name broadcast-nginx -p 1935:1935 -v " + file.getAbsolutePath()
 				+ ":/etc/nginx/nginx.conf tiangolo/nginx-rtmp";
 		commandLine.executeCommand(dockerRunCommand, 10);
+		return waitForContainerIpAddress("broadcast-nginx", 10);
 	}
 
 	protected static void stopRtmpServer() {
 		String dockerRemoveCommand = "docker rm -f broadcast-nginx";
 		commandLine.executeCommand(dockerRemoveCommand, 10);
+	}
+
+	protected static String waitForContainerIpAddress(String containerNameOrId, int secondsTimeout)
+			throws TimeoutException, UnknownHostException {
+		long currentTime = System.currentTimeMillis();
+		long maxTime = currentTime + (secondsTimeout * 1000);
+		while (System.currentTimeMillis() < maxTime) {
+			String ip = commandLine.executeCommand(
+					"docker container inspect -f '{{ .NetworkSettings.IPAddress }}' " + containerNameOrId, 3);
+			InetAddressValidator validator = InetAddressValidator.getInstance();
+			if (validator.isValid(ip)) {
+				return ip;
+			}
+		}
+		throw new TimeoutException();
 	}
 
 	private static File writeRtmpServerConfigInFile() throws IOException {
