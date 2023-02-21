@@ -24,9 +24,15 @@
 }
 
 .activity-action-buttons {
-	align-self: flex-start;
-	margin-top: 15px;
 	font-weight: 600;
+	position: absolute;
+	right: 15px;
+	top: 15px;
+}
+
+::ng-deep .mat-content {
+	display: block !important;
+
 }
 
 ::ng-deep .mat-list-text {
