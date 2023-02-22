@@ -41,10 +41,10 @@ on:
         description: 'Version of Firefox to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-firefox/tags'
         required: true
         default: latest
-      OPERA_VERSION:
-        description: 'Version of Opera to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-opera/tags'
-        required: true
-        default: latest
+      # OPERA_VERSION:
+      #   description: 'Version of Opera to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-opera/tags'
+      #   required: true
+      #   default: latest
       EDGE_VERSION:
         description: 'Version of Edge to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-opera/tags'
         required: true
