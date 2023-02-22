@@ -2986,20 +2986,6 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 	}
 
-	@Test
-	@DisplayName("Broadcast ad STT and composed recording test")
-	void broadcastAndSttAndComposedRecordingTest() throws Exception {
-
-		log.info("Broadcast and STT and composed recording test");
-
-		try {
-			startRtmpServer();
-
-		} finally {
-			stopRtmpServer();
-		}
-	}
-
 	private void checkRtmpRecordingIsFine(long secondsTimeout) throws InterruptedException {
 		final String broadcastRecordingPath = "/opt/openvidu/recordings";
 		final String cleanBroadcastPath = "rm -rf " + broadcastRecordingPath + "/tmp";
