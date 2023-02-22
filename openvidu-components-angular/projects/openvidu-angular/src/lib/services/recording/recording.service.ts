@@ -11,12 +11,12 @@ export class RecordingService {
 	/**
 	 * Recording status Observable which pushes the recording state in every update.
 	 */
-	recordingStatusObs: Observable<{ info: RecordingInfo; time?: Date }>;
+	recordingStatusObs: Observable<{ info: RecordingInfo; time?: Date } | undefined>;
 
 	private recordingTime: Date | undefined;
 	private recordingTimeInterval: NodeJS.Timer;
 	private currentRecording: RecordingInfo = { status: RecordingStatus.STOPPED };
-	private recordingStatus = <BehaviorSubject<{ info: RecordingInfo; time?: Date | undefined } | undefined>>new BehaviorSubject(undefined);
+	private recordingStatus = <BehaviorSubject<{ info: RecordingInfo; time?: Date } | undefined>>new BehaviorSubject(undefined);
 	private baseUrl = '/' + (!!window.location.pathname.split('/')[1] ? window.location.pathname.split('/')[1] + '/' : '');
 
 
@@ -106,9 +106,11 @@ export class RecordingService {
 		this.recordingTime = new Date();
 		this.recordingTime.setHours(0, 0, 0, 0);
 		this.recordingTimeInterval = setInterval(() => {
-			this.recordingTime.setSeconds(this.recordingTime.getSeconds() + 1);
-			this.recordingTime = new Date(this.recordingTime.getTime());
-			this.recordingStatus.next({ info: this.currentRecording, time: this.recordingTime });
+			if(this.recordingTime) {
+				this.recordingTime.setSeconds(this.recordingTime.getSeconds() + 1);
+				this.recordingTime = new Date(this.recordingTime.getTime());
+				this.recordingStatus.next({ info: this.currentRecording, time: this.recordingTime });
+			}
 		}, 1000);
 	}
 

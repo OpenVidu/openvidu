@@ -176,15 +176,15 @@ export class RecordingActivityComponent implements OnInit {
 
 	private subscribeToRecordingStatus() {
 		this.recordingStatusSubscription = this.recordingService.recordingStatusObs.subscribe(
-			(ev: { info: RecordingInfo; time?: Date }) => {
+			(ev?: { info: RecordingInfo; time?: Date }) => {
 				if (ev?.info) {
 					if (this.recordingStatus !== RecordingStatus.FAILED) {
 						this.oldRecordingStatus = this.recordingStatus;
 					}
 					this.recordingStatus = ev.info.status;
 					this.recordingAlive = ev.info.status === RecordingStatus.STARTED;
+					this.cd.markForCheck();
 				}
-				this.cd.markForCheck();
 			}
 		);
 	}

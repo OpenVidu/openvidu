@@ -695,12 +695,15 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToRecordingStatus() {
-		this.recordingSubscription = this.recordingService.recordingStatusObs.subscribe((ev: { info: RecordingInfo; time?: Date }) => {
-			this.recordingStatus = ev.info.status;
-			if (ev.time) {
-				this.recordingTime = ev.time;
+		this.recordingSubscription = this.recordingService.recordingStatusObs.subscribe((ev?: { info: RecordingInfo; time?: Date }) => {
+			if (ev) {
+				this.recordingStatus = ev.info.status;
+
+				if (ev?.time) {
+					this.recordingTime = ev.time;
+				}
+				this.cd.markForCheck();
 			}
-			this.cd.markForCheck();
 		});
 	}
 
