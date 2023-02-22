@@ -2,15 +2,22 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../out-tsc/lib",
+    "outDir": "../../dist/openvidu-angular",
+    "module": "esnext",
+    "target": "ES2020",
+    "moduleResolution": "node",
+    "lib": ["ES2020", "dom"],
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
     "declaration": true,
+    "sourceMap": true,
     "declarationMap": true,
     "inlineSources": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
     "types": []
   },
   "exclude": [
+    "node_modules",
     "src/test.ts",
     "**/*.spec.ts",
     "**/*.mock.ts"
