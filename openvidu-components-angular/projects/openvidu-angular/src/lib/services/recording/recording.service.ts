@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
 import { RecordingEvent } from 'openvidu-browser';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { RecordingInfo, RecordingStatus } from '../../models/recording.model';
@@ -23,16 +22,14 @@ export class RecordingService {
 
 	/**
 	 * @internal
-	 * @param actionService
-	 * @param sanitizer
 	 */
-	constructor(private actionService: ActionService, private sanitizer: DomSanitizer) {
+	constructor(private actionService: ActionService) {
 		this.recordingStatusObs = this.recordingStatus.asObservable();
 	}
 
 	/**
-	 * @internal
-	 * @param status
+	 * @param status {@link RecordingStatus}
+	 * Update the recording status. This method is used by the OpenVidu Angular library to update the recording status.
 	 */
 	updateStatus(status: RecordingStatus) {
 		this.currentRecording = {

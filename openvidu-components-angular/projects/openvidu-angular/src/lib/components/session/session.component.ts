@@ -31,7 +31,6 @@ import { VideoType } from '../../models/video-type.model';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { MatDrawerContainer, MatSidenav } from '@angular/material/sidenav';
 import { skip, Subscription } from 'rxjs';
-import { BroadcastingStatus } from '../../models/broadcasting.model';
 import { SidenavMode } from '../../models/layout.model';
 import { PanelEvent, PanelType } from '../../models/panel.model';
 import { Signal } from '../../models/signal.model';
@@ -443,8 +442,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 	}
 
 	private subscribeToBroadcastingEvents() {
-		this.session.on('broadcastStarted', () => this.broadcastingService.updateStatus(BroadcastingStatus.STARTED));
-		this.session.on('broadcastStopped', () => this.broadcastingService.updateStatus(BroadcastingStatus.STOPPED));
+		this.session.on('broadcastStarted', () => this.broadcastingService.startBroadcasting());
+		this.session.on('broadcastStopped', () => this.broadcastingService.stopBroadcasting());
 	}
 
 	private startUpdateLayoutInterval() {

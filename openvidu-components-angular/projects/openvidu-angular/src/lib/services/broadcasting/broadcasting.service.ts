@@ -15,21 +15,29 @@ export class BroadcastingService {
 	private broadcastingTimeInterval: NodeJS.Timer;
 	private broadcastingStatus = <BehaviorSubject<{ status: BroadcastingStatus; time?: Date } | undefined>>new BehaviorSubject(undefined);
 
+	/**
+	 * @internal
+	 */
 	constructor() {
 		this.broadcastingStatusObs = this.broadcastingStatus.asObservable();
 	}
 
 	/**
-	 * @internal
-	 * @param status
+	 * Update the broadcasting status. This method is used by the OpenVidu Angular library to update the broadcasting status.
+	 * @param status {@link BroadcastingStatus}
 	 */
 	updateStatus(status: BroadcastingStatus) {
-		if (status === BroadcastingStatus.STARTED) {
-			this.startBroadcastingTime();
-		} else {
-			this.stopBroadcastingTime();
-		}
 		this.broadcastingStatus.next({ status, time: this.broadcastingTime });
+	}
+
+	startBroadcasting() {
+		this.startBroadcastingTime();
+		this.updateStatus(BroadcastingStatus.STARTED);
+	}
+
+	stopBroadcasting() {
+		this.stopBroadcastingTime();
+		this.updateStatus(BroadcastingStatus.STOPPED);
 	}
 
 	private startBroadcastingTime() {
