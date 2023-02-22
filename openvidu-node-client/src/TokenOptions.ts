@@ -21,10 +21,9 @@ import { OpenViduRole } from './OpenViduRole';
  * @deprecated Use {@link ConnectionProperties} instead
  */
 export interface TokenOptions {
-
     /**
      * The role assigned to this token
-     * 
+     *
      * @default PUBLISHER
      */
     role?: OpenViduRole;
@@ -59,10 +58,10 @@ export interface TokenOptions {
      * - `allowedFilters`: names of the filters the user owning the token will be able to apply. See [Voice and video filters](/en/stable/advanced-features/filters/)
      */
     kurentoOptions?: {
-        videoMaxRecvBandwidth?: number,
-        videoMinRecvBandwidth?: number,
-        videoMaxSendBandwidth?: number,
-        videoMinSendBandwidth?: number,
-        allowedFilters?: string[]
+        videoMaxRecvBandwidth?: number;
+        videoMinRecvBandwidth?: number;
+        videoMaxSendBandwidth?: number;
+        videoMinSendBandwidth?: number;
+        allowedFilters?: string[];
     };
 }

@@ -24,7 +24,6 @@ import { VideoCodec } from './VideoCodec';
  * See {@link OpenVidu.createSession}
  */
 export interface SessionProperties {
-
     /**
      * How the media streams will be sent and received by your clients: routed through OpenVidu Media Node
      * (`MediaMode.ROUTED`) or attempting direct p2p connections (`MediaMode.RELAYED`, _not available yet_)
@@ -68,7 +67,7 @@ export interface SessionProperties {
      */
     mediaNode?: {
         id: string;
-    }
+    };
 
     /**
      * Define which video codec will be forcibly used for this session.

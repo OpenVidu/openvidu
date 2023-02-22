@@ -19,7 +19,6 @@
  * See {@link Session.createConnection}
  */
 export enum ConnectionType {
-
     /**
      * WebRTC connection. This is the normal type of Connection for a regular user
      * connecting to a session from an application.

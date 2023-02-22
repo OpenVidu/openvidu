@@ -16,7 +16,6 @@
  */
 
 export interface IceServerProperties {
-
     /**
      * Set the url for the ICE Server you want to use.
      * It should follow a valid format:
@@ -46,5 +45,4 @@ export interface IceServerProperties {
      * This parameter should be defined only for TURN, not for STUN ICE Servers.
      */
     credential?: string;
-
 }

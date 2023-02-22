@@ -22,7 +22,6 @@ import { RecordingLayout } from './RecordingLayout';
  * See {@link OpenVidu.startRecording}
  */
 export class Recording {
-
     /**
      * Recording unique identifier
      */
@@ -63,7 +62,6 @@ export class Recording {
      */
     properties: RecordingProperties;
 
-
     /* tslint:disable:no-string-literal */
     /**
      * @hidden
@@ -77,37 +75,44 @@ export class Recording {
         this.url = json['url'];
         this.status = json['status'];
         this.properties = {
-            name: (json['name'] != null) ? json['name'] : this.id,
-            hasAudio: (json['hasAudio'] != null) ? !!json['hasAudio'] : Recording.DefaultRecordingPropertiesValues.hasAudio,
-            hasVideo: (json['hasVideo'] != null) ? !!json['hasVideo'] : Recording.DefaultRecordingPropertiesValues.hasVideo,
-            outputMode: (json['outputMode'] != null) ? json['outputMode'] : Recording.DefaultRecordingPropertiesValues.outputMode,
+            name: json['name'] != null ? json['name'] : this.id,
+            hasAudio: json['hasAudio'] != null ? !!json['hasAudio'] : Recording.DefaultRecordingPropertiesValues.hasAudio,
+            hasVideo: json['hasVideo'] != null ? !!json['hasVideo'] : Recording.DefaultRecordingPropertiesValues.hasVideo,
+            outputMode: json['outputMode'] != null ? json['outputMode'] : Recording.DefaultRecordingPropertiesValues.outputMode,
             mediaNode: json['mediaNode']
         };
-        if ((this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED]
-            || this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED_QUICK_START])
-            && this.properties.hasVideo) {
-            this.properties.recordingLayout = (json['recordingLayout'] != null) ? json['recordingLayout'] : Recording.DefaultRecordingPropertiesValues.recordingLayout;
-            this.properties.resolution = (json['resolution'] != null) ? json['resolution'] : Recording.DefaultRecordingPropertiesValues.resolution;
-            this.properties.frameRate = (json['frameRate'] != null) ? Number(json['frameRate']) : Recording.DefaultRecordingPropertiesValues.frameRate;
-            this.properties.shmSize = (json['shmSize'] != null) ? Number(json['shmSize']) : Recording.DefaultRecordingPropertiesValues.shmSize;
+        if (
+            (this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED] ||
+                this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED_QUICK_START]) &&
+            this.properties.hasVideo
+        ) {
+            this.properties.recordingLayout =
+                json['recordingLayout'] != null ? json['recordingLayout'] : Recording.DefaultRecordingPropertiesValues.recordingLayout;
+            this.properties.resolution =
+                json['resolution'] != null ? json['resolution'] : Recording.DefaultRecordingPropertiesValues.resolution;
+            this.properties.frameRate =
+                json['frameRate'] != null ? Number(json['frameRate']) : Recording.DefaultRecordingPropertiesValues.frameRate;
+            this.properties.shmSize =
+                json['shmSize'] != null ? Number(json['shmSize']) : Recording.DefaultRecordingPropertiesValues.shmSize;
             if (this.properties.recordingLayout.toString() === RecordingLayout[RecordingLayout.CUSTOM]) {
-                this.properties.customLayout = (json['customLayout'] != null) ? json['customLayout'] : '';
+                this.properties.customLayout = json['customLayout'] != null ? json['customLayout'] : '';
             }
         }
         if (this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.INDIVIDUAL]) {
-            this.properties.ignoreFailedStreams = (json['ignoreFailedStreams'] != null) ? !!json['ignoreFailedStreams'] : Recording.DefaultRecordingPropertiesValues.ignoreFailedStreams;
+            this.properties.ignoreFailedStreams =
+                json['ignoreFailedStreams'] != null
+                    ? !!json['ignoreFailedStreams']
+                    : Recording.DefaultRecordingPropertiesValues.ignoreFailedStreams;
         }
     }
     /* tslint:enable:no-string-literal */
 }
 
 export namespace Recording {
-
     /**
      * See {@link Recording.status}
      */
     export enum Status {
-
         /**
          * The recording is starting (cannot be stopped). Some recording may not go
          * through this status and directly reach "started" status
@@ -142,7 +147,6 @@ export namespace Recording {
      * See {@link RecordingProperties.outputMode}
      */
     export enum OutputMode {
-
         /**
          * Record all streams in a grid layout in a single archive
          */
@@ -153,7 +157,7 @@ export namespace Recording {
          * service module will start some time in advance and won't be terminated
          * once a specific session recording has ended. This module will remain
          * up and running as long as the session remains active.
-         * 
+         *
          * - **Pros vs COMPOSED**: the process of starting the recording will be noticeably
          * faster. This can be very useful in use cases where a session needs to be
          * recorded multiple times over time, when a better response time is usually
@@ -181,10 +185,9 @@ export namespace Recording {
         static readonly hasVideo: boolean = true;
         static readonly outputMode: Recording.OutputMode = Recording.OutputMode.COMPOSED;
         static readonly recordingLayout: RecordingLayout = RecordingLayout.BEST_FIT;
-        static readonly resolution: string = "1280x720";
+        static readonly resolution: string = '1280x720';
         static readonly frameRate: number = 25;
         static readonly shmSize: number = 536870912;
         static readonly ignoreFailedStreams: boolean = false;
     }
-
 }

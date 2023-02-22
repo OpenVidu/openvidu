@@ -15,14 +15,12 @@
  *
  */
 
-
 /**
  * See {@link Connection.publishers}
  *
  * This is a backend representation of a published media stream (see [OpenVidu Browser Stream class](/en/stable/api/openvidu-browser/classes/Stream.html))
  */
 export class Publisher {
-
     /**
      * Unique identifier of the [Stream](/en/stable/api/openvidu-browser/classes/Stream.html) associated to this Publisher.
      * Each Publisher is paired with only one Stream, so you can identify each Publisher by its
@@ -109,5 +107,4 @@ export class Publisher {
             this.videoDimensions === other.videoDimensions
         );
     }
-
 }

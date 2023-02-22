@@ -20,7 +20,6 @@ import { ConnectionType } from './ConnectionType';
 import { OpenViduRole } from './OpenViduRole';
 
 export interface ConnectionProperties {
-
     /**
      * Type of Connection. The {@link ConnectionType} dictates what properties will have effect:
      *
@@ -85,11 +84,11 @@ export interface ConnectionProperties {
      * **Only for {@link ConnectionType.WEBRTC}**
      */
     kurentoOptions?: {
-        videoMaxRecvBandwidth?: number,
-        videoMinRecvBandwidth?: number,
-        videoMaxSendBandwidth?: number,
-        videoMinSendBandwidth?: number,
-        allowedFilters?: string[]
+        videoMaxRecvBandwidth?: number;
+        videoMinRecvBandwidth?: number;
+        videoMaxSendBandwidth?: number;
+        videoMinSendBandwidth?: number;
+        allowedFilters?: string[];
     };
 
     /**

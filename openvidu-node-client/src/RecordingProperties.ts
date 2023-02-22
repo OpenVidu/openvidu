@@ -22,7 +22,6 @@ import { RecordingLayout } from './RecordingLayout';
  * See {@link OpenVidu.startRecording}
  */
 export interface RecordingProperties {
-
     /**
      * Name of the Recording. The video file will be named after this property.
      * You can access this same value in your clients on recording events
@@ -122,6 +121,5 @@ export interface RecordingProperties {
      */
     mediaNode?: {
         id: string;
-    }
-
+    };
 }
