@@ -28,6 +28,9 @@ import { SessionProperties } from './SessionProperties';
 import { TokenOptions } from './TokenOptions';
 import { RecordingProperties } from './RecordingProperties';
 import { IceServerProperties } from './IceServerProperties';
+import { OpenViduLogger } from './Logger/OpenViduLogger';
+
+const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 export class Session {
     /**
@@ -245,7 +248,7 @@ export class Session {
                         this.resetWithJson(res.data);
                         const afterJSON: string = JSON.stringify(this, this.removeCircularOpenViduReference);
                         const hasChanged: boolean = !(beforeJSON === afterJSON);
-                        console.log("Session info fetched for session '" + this.sessionId + "'. Any change: " + hasChanged);
+                        logger.log("Session info fetched for session '" + this.sessionId + "'. Any change: " + hasChanged);
                         resolve(hasChanged);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
@@ -316,12 +319,12 @@ export class Session {
                                 });
                             });
                         } else {
-                            console.warn(
+                            logger.warn(
                                 "The closed connection wasn't fetched in OpenVidu Node Client. No changes in the collection of active connections of the Session"
                             );
                         }
                         this.updateActiveConnectionsArray();
-                        console.log("Connection '" + connectionId + "' closed");
+                        logger.log("Connection '" + connectionId + "' closed");
                         resolve();
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
@@ -379,7 +382,7 @@ export class Session {
                             }
                         });
                         this.updateActiveConnectionsArray();
-                        console.log("Stream '" + streamId + "' unpublished");
+                        logger.log("Stream '" + streamId + "' unpublished");
                         resolve();
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
@@ -428,7 +431,7 @@ export class Session {
                 })
                 .then((res) => {
                     if (res.status === 200) {
-                        console.log('Connection ' + connectionId + ' updated');
+                        logger.log('Connection ' + connectionId + ' updated');
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
                         reject(new Error(res.status.toString()));

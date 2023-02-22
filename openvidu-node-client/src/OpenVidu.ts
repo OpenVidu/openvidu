@@ -16,6 +16,7 @@
  */
 
 import axios, { AxiosError } from 'axios';
+import { OpenViduLogger } from './Logger/OpenViduLogger';
 import { Connection } from './Connection';
 import { Recording } from './Recording';
 import { RecordingProperties } from './RecordingProperties';
@@ -28,6 +29,8 @@ import { SessionProperties } from './SessionProperties';
 interface ObjMap<T> {
     [s: string]: T;
 }
+
+const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 export class OpenVidu {
     private Buffer = require('buffer/').Buffer;
@@ -199,7 +202,7 @@ export class OpenVidu {
                         if (!!activeSession) {
                             activeSession.recording = true;
                         } else {
-                            console.warn(
+                            logger.warn(
                                 "No active session found for sessionId '" +
                                     r.sessionId +
                                     "'. This instance of OpenVidu Node Client didn't create this session"
@@ -244,7 +247,7 @@ export class OpenVidu {
                         if (!!activeSession) {
                             activeSession.recording = false;
                         } else {
-                            console.warn(
+                            logger.warn(
                                 "No active session found for sessionId '" +
                                     r.sessionId +
                                     "'. This instance of OpenVidu Node Client didn't create this session"
@@ -424,7 +427,7 @@ export class OpenVidu {
                         if (!!activeSession) {
                             activeSession.broadcasting = true;
                         } else {
-                            console.warn(
+                            logger.warn(
                                 "No active session found for sessionId '" +
                                     sessionId +
                                     "'. This instance of OpenVidu Node Client didn't create this session"
@@ -472,7 +475,7 @@ export class OpenVidu {
                         if (!!activeSession) {
                             activeSession.broadcasting = false;
                         } else {
-                            console.warn(
+                            logger.warn(
                                 "No active session found for sessionId '" +
                                     sessionId +
                                     "'. This instance of OpenVidu Node Client didn't create this session"
@@ -521,12 +524,12 @@ export class OpenVidu {
                                 // 2. Update existing Session
                                 const changed: boolean = !storedSession.equalTo(fetchedSession);
                                 storedSession.resetWithJson(jsonSession);
-                                console.log("Available session '" + storedSession.sessionId + "' info fetched. Any change: " + changed);
+                                logger.log("Available session '" + storedSession.sessionId + "' info fetched. Any change: " + changed);
                                 hasChanged = hasChanged || changed;
                             } else {
                                 // 3. Add new Session
                                 this.activeSessions.push(fetchedSession);
-                                console.log("New session '" + fetchedSession.sessionId + "' info fetched");
+                                logger.log("New session '" + fetchedSession.sessionId + "' info fetched");
                                 hasChanged = true;
                             }
                         });
@@ -535,13 +538,13 @@ export class OpenVidu {
                         for (var i = this.activeSessions.length - 1; i >= 0; --i) {
                             let sessionId = this.activeSessions[i].sessionId;
                             if (!fetchedSessionIds.includes(sessionId)) {
-                                console.log("Removing closed session '" + sessionId + "'");
+                                logger.log("Removing closed session '" + sessionId + "'");
                                 hasChanged = true;
                                 this.activeSessions.splice(i, 1);
                             }
                         }
 
-                        console.log('Active sessions info fetched: ', fetchedSessionIds);
+                        logger.log('Active sessions info fetched: ', fetchedSessionIds);
                         resolve(hasChanged);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
@@ -671,13 +674,13 @@ export class OpenVidu {
                                 storedSession.connections.forEach((connection) => {
                                     addWebRtcStatsToConnections(connection, jsonSession.connections.content);
                                 });
-                                console.log("Available session '" + storedSession.sessionId + "' info fetched. Any change: " + changed);
+                                logger.log("Available session '" + storedSession.sessionId + "' info fetched. Any change: " + changed);
                                 sessionChanges[storedSession.sessionId] = changed;
                                 globalChanges = globalChanges || changed;
                             } else {
                                 // 3. Add new Session
                                 this.activeSessions.push(fetchedSession);
-                                console.log("New session '" + fetchedSession.sessionId + "' info fetched");
+                                logger.log("New session '" + fetchedSession.sessionId + "' info fetched");
                                 sessionChanges[fetchedSession.sessionId] = true;
                                 globalChanges = true;
                             }
@@ -687,14 +690,14 @@ export class OpenVidu {
                         for (var i = this.activeSessions.length - 1; i >= 0; --i) {
                             let sessionId = this.activeSessions[i].sessionId;
                             if (!fetchedSessionIds.includes(sessionId)) {
-                                console.log("Removing closed session '" + sessionId + "'");
+                                logger.log("Removing closed session '" + sessionId + "'");
                                 sessionChanges[sessionId] = true;
                                 globalChanges = true;
                                 this.activeSessions.splice(i, 1);
                             }
                         }
 
-                        console.log('Active sessions info fetched: ', fetchedSessionIds);
+                        logger.log('Active sessions info fetched: ', fetchedSessionIds);
                         resolve({ changes: globalChanges, sessionChanges });
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
@@ -707,6 +710,13 @@ export class OpenVidu {
         });
     }
     // tslint:enable:no-string-literal
+
+    /**
+     * Disable all logging except error level
+     */
+    enableProdMode(): void {
+        logger.enableProdMode();
+    }
 
     private getBasicAuth(secret: string): string {
         return 'Basic ' + this.Buffer('OPENVIDUAPP:' + secret).toString('base64');
