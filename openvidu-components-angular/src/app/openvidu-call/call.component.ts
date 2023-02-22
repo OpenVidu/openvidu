@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { RecordingInfo, TokenModel } from 'openvidu-angular';
+import { BroadcastingService, BroadcastingStatus, RecordingInfo, RecordingService, RecordingStatus, TokenModel } from 'openvidu-angular';
 import { RestService } from '../services/rest.service';
 
 @Component({
@@ -18,7 +18,11 @@ export class CallComponent implements OnInit {
 	recordingError: any;
 	broadcastingError: any;
 
-	constructor(private restService: RestService) {}
+	constructor(
+		private restService: RestService,
+		private recordingService: RecordingService,
+		private broadcastingService: BroadcastingService
+	) {}
 
 	async ngOnInit() {
 		await this.requestForTokens();
@@ -134,12 +138,15 @@ export class CallComponent implements OnInit {
 	}
 
 	private async requestForTokens() {
-		const response = await this.restService.getTokensFromBackend(this.sessionId);
-		this.recordingList = response.recordings;
+		const { broadcastingEnabled, recordingEnabled, recordings, cameraToken, screenToken, isRecordingActive, isBroadcastingActive } =
+			await this.restService.getTokensFromBackend(this.sessionId);
+		this.recordingList = recordings;
 		this.tokens = {
-			webcam: response.cameraToken,
-			screen: response.screenToken
+			webcam: cameraToken,
+			screen: screenToken
 		};
+		if (isRecordingActive) this.recordingService.updateStatus(RecordingStatus.STARTED);
+		if (isBroadcastingActive) this.broadcastingService.updateStatus(BroadcastingStatus.STARTED);
 
 		console.log('Token requested: ', this.tokens);
 	}

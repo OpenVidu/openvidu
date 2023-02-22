@@ -4,6 +4,17 @@ import { RecordingInfo } from 'openvidu-angular';
 import { catchError, lastValueFrom } from 'rxjs';
 import { throwError as observableThrowError } from 'rxjs/internal/observable/throwError';
 
+interface SessionResponse {
+	cameraToken: string;
+	screenToken: string;
+	recordingEnabled: boolean;
+	isRecordingActive: boolean;
+	recordings?: RecordingInfo[];
+	broadcastingEnabled: boolean;
+	isBroadcastingActive: boolean;
+}
+
+
 @Injectable({
 	providedIn: 'root'
 })
@@ -19,7 +30,7 @@ export class RestService {
 			return await this.createToken(_sessionId, openviduServerUrl, openviduSecret);
 		}
 	}
-	async getTokensFromBackend(sessionId: string): Promise<{ cameraToken: string; screenToken: string; recordings?: RecordingInfo[] }> {
+	async getTokensFromBackend(sessionId: string): Promise<SessionResponse> {
 		try {
 			return lastValueFrom(this.http.post<any>(this.baseHref + 'sessions', { sessionId }));
 		} catch (error) {
