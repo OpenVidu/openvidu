@@ -695,21 +695,18 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToRecordingStatus() {
-		this.recordingSubscription = this.recordingService.recordingStatusObs
-			.pipe(skip(1))
-			.subscribe((ev: { info: RecordingInfo; time?: Date }) => {
-				this.recordingStatus = ev.info.status;
-				if (ev.time) {
-					this.recordingTime = ev.time;
-				}
-				this.cd.markForCheck();
-			});
+		this.recordingSubscription = this.recordingService.recordingStatusObs.subscribe((ev: { info: RecordingInfo; time?: Date }) => {
+			this.recordingStatus = ev.info.status;
+			if (ev.time) {
+				this.recordingTime = ev.time;
+			}
+			this.cd.markForCheck();
+		});
 	}
 
 	private subscribeToBroadcastingStatus() {
-		this.broadcastingSubscription = this.broadcastingService.broadcastingStatusObs
-			.pipe(skip(1))
-			.subscribe((ev: { status: BroadcastingStatus, time?: Date } | undefined) => {
+		this.broadcastingSubscription = this.broadcastingService.broadcastingStatusObs.subscribe(
+			(ev: { status: BroadcastingStatus; time?: Date } | undefined) => {
 				if (!!ev) {
 					this.broadcastingStatus = ev.status;
 					if (ev.time) {
@@ -717,7 +714,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 					}
 					this.cd.markForCheck();
 				}
-			});
+			}
+		);
 	}
 
 	private subscribeToToolbarDirectives() {
