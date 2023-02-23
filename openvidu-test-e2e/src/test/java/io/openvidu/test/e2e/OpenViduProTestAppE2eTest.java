@@ -60,6 +60,7 @@ import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.RecordingUtils;
 import io.openvidu.test.browsers.utils.Unzipper;
 import io.openvidu.test.browsers.utils.webhook.CustomWebhook;
+import io.openvidu.test.e2e.utils.TestUtils;
 
 public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
@@ -230,7 +231,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		io.openvidu.test.browsers.utils.webhook.CustomWebhook.main(new String[0], initLatch);
 
 		try {
-			String BROADCAST_IP = startRtmpServer();
+			String BROADCAST_IP = TestUtils.startRtmpServer();
 
 			if (!initLatch.await(30, TimeUnit.SECONDS)) {
 				Assertions.fail("Timeout waiting for webhook springboot app to start");
@@ -591,7 +592,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			}
 
 		} finally {
-			stopRtmpServer();
+			TestUtils.stopRtmpServer();
 			CustomWebhook.shutDown();
 		}
 	}
@@ -1090,7 +1091,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertTrue(connection.getNetworkCache() == null, "Wrong networkCache property");
 
 		try {
-			String BROADCAST_IP = startRtmpServer();
+			String BROADCAST_IP = TestUtils.startRtmpServer();
 			// Start broadcast
 			try {
 				OV.startBroadcast("NOT_EXISTS", "rtmp://" + BROADCAST_IP + "/live");
@@ -1134,7 +1135,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assertions.assertFalse(session.isBeingBroadcasted());
 
 		} finally {
-			stopRtmpServer();
+			TestUtils.stopRtmpServer();
 		}
 	}
 
@@ -2810,7 +2811,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		log.info("Successfull broadcast Test");
 
 		try {
-			String BROADCAST_IP = startRtmpServer();
+			String BROADCAST_IP = TestUtils.startRtmpServer();
 
 			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 			user.getDriver().findElement(By.id("add-user-btn")).click();
@@ -2859,7 +2860,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			gracefullyLeaveParticipants(user, 1);
 
 		} finally {
-			stopRtmpServer();
+			TestUtils.stopRtmpServer();
 		}
 	}
 
@@ -2870,7 +2871,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		log.info("Wrong broadcast Test");
 
 		try {
-			String BROADCAST_IP = startRtmpServer();
+			String BROADCAST_IP = TestUtils.startRtmpServer();
 
 			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 			user.getDriver().findElement(By.id("add-user-btn")).click();
@@ -2982,7 +2983,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			gracefullyLeaveParticipants(user, 1);
 
 		} finally {
-			stopRtmpServer();
+			TestUtils.stopRtmpServer();
 		}
 	}
 
