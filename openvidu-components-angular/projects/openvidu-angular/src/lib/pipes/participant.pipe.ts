@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { StreamModel, ParticipantAbstractModel } from '../models/participant.model';
+import { ParticipantAbstractModel, StreamModel } from '../models/participant.model';
 import { TranslateService } from '../services/translate/translate.service';
 
 @Pipe({ name: 'streams' })
@@ -10,11 +10,8 @@ export class ParticipantStreamsPipe implements PipeTransform {
 		let streams: StreamModel[] = [];
 		if(participants && Object.keys(participants).length > 0){
 			if (Array.isArray(participants)) {
-				participants.forEach((p) => {
-					streams = streams.concat(p.getAvailableConnections());
-				});
+				streams = participants.map(p => p.getAvailableConnections()).flat();
 			} else {
-
 				streams = participants.getAvailableConnections();
 			}
 		}
