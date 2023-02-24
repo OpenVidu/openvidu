@@ -2,7 +2,13 @@ import { Injectable } from '@angular/core';
 import { Publisher, Subscriber } from 'openvidu-browser';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
-import { OpenViduRole, ParticipantAbstractModel, ParticipantModel, ParticipantProperties, StreamModel } from '../../models/participant.model';
+import {
+	OpenViduRole,
+	ParticipantAbstractModel,
+	ParticipantModel,
+	ParticipantProperties,
+	StreamModel
+} from '../../models/participant.model';
 import { VideoType } from '../../models/video-type.model';
 import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.service';
 import { LoggerService } from '../logger/logger.service';
@@ -241,7 +247,9 @@ export class ParticipantService {
 	 * Force to update the local participant object and fire a new {@link localParticipantObs} Observable event.
 	 */
 	updateLocalParticipant() {
-		this._localParticipant.next(Object.assign(Object.create(this.localParticipant), this.localParticipant));
+		this._localParticipant.next(
+			Object.assign(Object.create(Object.getPrototypeOf(this.localParticipant)), { ...this.localParticipant })
+		);
 	}
 
 	/**
