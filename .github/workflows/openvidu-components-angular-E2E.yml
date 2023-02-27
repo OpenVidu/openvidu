@@ -10,6 +10,11 @@ on:
     branches:
       - master
   workflow_dispatch:
+    inputs:
+      commit_sha:
+          description: 'Commit SHA'
+          required: false
+          default: ''
 
 jobs:
 
@@ -18,6 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.inputs.commit_sha || github.sha }}
     - uses: actions/setup-node@v3
       with:
         node-version: '16'
@@ -52,6 +59,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.inputs.commit_sha || github.sha }}
     - uses: actions/setup-node@v3
       with:
         node-version: '16'
@@ -85,6 +94,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.inputs.commit_sha || github.sha }}
     - uses: actions/setup-node@v3
       with:
         node-version: '16'
