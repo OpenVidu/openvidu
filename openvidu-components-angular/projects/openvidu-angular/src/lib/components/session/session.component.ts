@@ -194,11 +194,11 @@ export class SessionComponent implements OnInit, OnDestroy {
 		this.cd.markForCheck();
 	}
 
-	ngOnDestroy() {
+	async ngOnDestroy() {
 		// Reconnecting session is received in Firefox
 		// To avoid 'Connection lost' message uses session.off()
 		this.session?.off('reconnecting');
-		this.participantService.clear();
+		await this.participantService.clear();
 		this.session = null;
 		this.sessionScreen = null;
 		if (this.menuSubscription) this.menuSubscription.unsubscribe();

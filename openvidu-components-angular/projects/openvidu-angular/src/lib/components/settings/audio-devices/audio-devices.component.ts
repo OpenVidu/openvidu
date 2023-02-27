@@ -58,7 +58,7 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 
 	toggleMic() {
 		const publish = this.isAudioMuted;
-		this.openviduService.publishAudio(publish);
+		this.participantService.publishAudio(publish);
 		this.onAudioMutedClicked.emit(publish);
 	}
 

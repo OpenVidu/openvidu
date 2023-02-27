@@ -500,7 +500,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	async toggleMicrophone() {
 		this.onMicrophoneButtonClicked.emit();
 		try {
-			await this.openviduService.publishAudio(!this.isAudioActive);
+			this.participantService.publishAudio(!this.isAudioActive);
 		} catch (error) {
 			this.log.e('There was an error toggling microphone:', error.code, error.message);
 			this.actionService.openDialog(

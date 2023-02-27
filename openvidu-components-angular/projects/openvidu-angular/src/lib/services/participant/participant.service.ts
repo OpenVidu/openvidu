@@ -41,7 +41,6 @@ export class ParticipantService {
 	 */
 	constructor(protected openviduAngularConfigSrv: OpenViduAngularConfigService, protected loggerSrv: LoggerService) {
 		this.log = this.loggerSrv.get('ParticipantService');
-
 		this.localParticipantObs = this._localParticipant.asObservable();
 		this.remoteParticipantsObs = this._remoteParticipants.asObservable();
 	}
@@ -59,6 +58,24 @@ export class ParticipantService {
 	}
 
 	/**
+	 * Publish or unpublish the audio stream (if available).
+	 * See openvidu-browser {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Publisher.html#publishAudio publishAudio}.
+	 *
+	 */
+	publishAudio(publish: boolean): void {
+		if (this.isMyCameraActive()) {
+			if (this.isMyScreenActive() && this.hasScreenAudioActive()) {
+				this.publishAudioAux(this.getMyScreenPublisher(), false);
+			}
+
+			this.publishAudioAux(this.getMyCameraPublisher(), publish);
+		} else {
+			this.publishAudioAux(this.getMyScreenPublisher(), publish);
+		}
+		this.updateLocalParticipant();
+	}
+
+	/**
 	 * @internal
 	 */
 	getMyCameraPublisher(): Publisher {
@@ -68,7 +85,7 @@ export class ParticipantService {
 	/**
 	 * @internal
 	 */
-	setMyCameraPublisher(publisher: Publisher) {
+	setMyCameraPublisher(publisher: Publisher | undefined) {
 		this.localParticipant.setCameraPublisher(publisher);
 	}
 	/**
@@ -186,11 +203,13 @@ export class ParticipantService {
 	/**
 	 * @internal
 	 */
-	clear() {
+	async clear() {
+		await this.getMyCameraPublisher()?.stream?.disposeMediaStream();
+		await this.getMyScreenPublisher()?.stream?.disposeMediaStream();
 		this.disableScreenStream();
 		this.remoteParticipants = [];
 		this.updateRemoteParticipants();
-		this.updateLocalParticipant();
+		// this.updateLocalParticipant();
 	}
 
 	/**
@@ -250,6 +269,12 @@ export class ParticipantService {
 		this._localParticipant.next(
 			Object.assign(Object.create(Object.getPrototypeOf(this.localParticipant)), { ...this.localParticipant })
 		);
+	}
+
+	private publishAudioAux(publisher: Publisher, value: boolean): void {
+		if (!!publisher) {
+			publisher.publishAudio(value);
+		}
 	}
 
 	/**

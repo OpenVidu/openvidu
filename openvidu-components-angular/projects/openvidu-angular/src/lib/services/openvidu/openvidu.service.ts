@@ -140,8 +140,8 @@ export class OpenViduService {
 	async clear() {
 		this.videoSource = undefined;
 		this.audioSource = undefined;
-		await this.participantService.getMyCameraPublisher()?.stream?.disposeMediaStream();
-		await this.participantService.getMyScreenPublisher()?.stream?.disposeMediaStream();
+		// await this.participantService.getMyCameraPublisher()?.stream?.disposeMediaStream();
+		// await this.participantService.getMyScreenPublisher()?.stream?.disposeMediaStream();
 	}
 
 	/**
@@ -273,12 +273,7 @@ export class OpenViduService {
 			mirror
 		};
 		if (hasVideoDevices || hasAudioDevices) {
-			const publisher = await this.initPublisher(properties);
-			this.participantService.setMyCameraPublisher(publisher);
-			this.participantService.updateLocalParticipant();
-			return publisher;
-		} else {
-			this.participantService.setMyCameraPublisher(null);
+			return this.initPublisher(properties);
 		}
 	}
 
@@ -373,24 +368,10 @@ export class OpenViduService {
 	}
 
 	/**
-	 * Publish or unpublish the audio stream (if available).
-	 * See openvidu-browser {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Publisher.html#publishAudio publishAudio}.
-	 */
-	async publishAudio(publish: boolean): Promise<void> {
-		if (this.participantService.isMyCameraActive()) {
-			if (this.participantService.isMyScreenActive() && this.participantService.hasScreenAudioActive()) {
-				this.publishAudioAux(this.participantService.getMyScreenPublisher(), false);
-			}
-
-			this.publishAudioAux(this.participantService.getMyCameraPublisher(), publish);
-		} else {
-			this.publishAudioAux(this.participantService.getMyScreenPublisher(), publish);
-		}
-	}
-
-	/**
 	 * Share or unshare the screen.
 	 * Hide the camera muted stream when screen is sharing.
+	 *
+	 * TODO: This method should be in participant service
 	 */
 	async toggleScreenshare() {
 		if (this.participantService.haveICameraAndScreenActive()) {
@@ -459,6 +440,7 @@ export class OpenViduService {
 
 	/**
 	 * @internal
+	 * TODO: Remove when it is in participant service
 	 */
 	private publishAudioAux(publisher: Publisher, value: boolean): void {
 		if (!!publisher) {

@@ -238,7 +238,7 @@ export abstract class ParticipantAbstractModel {
 	/**
 	 * @internal
 	 */
-	setCameraPublisher(publisher: Publisher) {
+	setCameraPublisher(publisher: Publisher | undefined) {
 		const cameraConnection = this.getCameraConnection();
 		if (cameraConnection) cameraConnection.streamManager = publisher;
 	}
