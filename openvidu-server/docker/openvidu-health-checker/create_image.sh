@@ -1,3 +1,4 @@
+#!/bin/bash -x
 VERSION=$1
 if [[ ! -z $VERSION ]]; then
     docker build --pull --no-cache --rm=true -t openvidu/openvidu-health-checker:$VERSION .
