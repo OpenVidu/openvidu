@@ -123,7 +123,8 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should run the app with VIDEO MUTED in prejoin page', async () => {
-		let idVideoEnabled;
+		try {
+			let idVideoEnabled;
 		const script = 'return document.getElementsByTagName("video")[0].srcObject.getVideoTracks()[0].enabled;';
 
 		await browser.get(`${url}&prejoin=true&videoMuted=true`);
@@ -152,6 +153,11 @@ describe('Testing API Directives', () => {
 
 		await utils.waitForElement('#videocam_off');
 		expect(await utils.isPresent('#videocam_off')).to.be.true;
+		} catch (error) {
+			console.log(error);
+			console.log(await browser.takeScreenshot());
+		}
+
 	});
 
 	it('should run the app with VIDEO MUTED and WITHOUT PREJOIN page', async () => {
@@ -159,6 +165,8 @@ describe('Testing API Directives', () => {
 		const videoEnableScript = 'return document.getElementsByTagName("video")[0].srcObject.getVideoTracks()[0].enabled;';
 
 		await browser.get(`${url}&prejoin=false&videoMuted=true`);
+
+		await browser.sleep(2000);
 
 		await utils.checkSessionIsPresent();
 

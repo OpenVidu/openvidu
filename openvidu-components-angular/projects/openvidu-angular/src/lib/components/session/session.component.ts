@@ -197,13 +197,15 @@ export class SessionComponent implements OnInit, OnDestroy {
 	async ngOnDestroy() {
 		// Reconnecting session is received in Firefox
 		// To avoid 'Connection lost' message uses session.off()
-		this.session?.off('reconnecting');
-		await this.participantService.clear();
-		this.session = null;
-		this.sessionScreen = null;
-		if (this.menuSubscription) this.menuSubscription.unsubscribe();
-		if (this.layoutWidthSubscription) this.layoutWidthSubscription.unsubscribe();
-		if (this.captionLanguageSubscription) this.captionLanguageSubscription.unsubscribe();
+		if (!this.usedInPrejoinPage) {
+			this.session?.off('reconnecting');
+			await this.participantService.clear();
+			this.session = null;
+			this.sessionScreen = null;
+			if (this.menuSubscription) this.menuSubscription.unsubscribe();
+			if (this.layoutWidthSubscription) this.layoutWidthSubscription.unsubscribe();
+			if (this.captionLanguageSubscription) this.captionLanguageSubscription.unsubscribe();
+		}
 	}
 
 	leaveSession() {
