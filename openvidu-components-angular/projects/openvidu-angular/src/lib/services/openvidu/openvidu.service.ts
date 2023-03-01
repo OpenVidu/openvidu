@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import {
 	Connection,
 	OpenVidu,
@@ -53,7 +53,7 @@ export class OpenViduService {
 		protected openviduAngularConfigSrv: OpenViduAngularConfigService,
 		protected platformService: PlatformService,
 		protected loggerSrv: LoggerService,
-		private participantService: ParticipantService,
+		private injector: Injector,
 		protected deviceService: DeviceService
 	) {
 		this.log = this.loggerSrv.get('OpenViduService');
@@ -140,8 +140,6 @@ export class OpenViduService {
 	async clear() {
 		this.videoSource = undefined;
 		this.audioSource = undefined;
-		// await this.participantService.getMyCameraPublisher()?.stream?.disposeMediaStream();
-		// await this.participantService.getMyScreenPublisher()?.stream?.disposeMediaStream();
 	}
 
 	/**
@@ -201,30 +199,43 @@ export class OpenViduService {
 
 	/**
 	 * @internal
+	 * Connects to webcam session using webcam token.
 	 */
-	async connectSession(session: Session, token: string): Promise<void> {
-		if (!!token && session) {
-			const nickname = this.participantService.getMyNickname();
-			const participantId = this.participantService.getLocalParticipant().id;
-			if (session === this.webcamSession) {
-				this.log.d('Connecting webcam session');
-				await this.webcamSession.connect(token, {
-					clientData: nickname,
-					participantId,
-					type: VideoType.CAMERA
-				});
-				this.participantService.setMyCameraConnectionId(this.webcamSession.connection.connectionId);
-			} else if (session === this.screenSession) {
-				this.log.d('Connecting screen session');
-				await this.screenSession.connect(token, {
-					clientData: `${nickname}_${VideoType.SCREEN}`,
-					participantId,
-					type: VideoType.SCREEN
-				});
-
-				this.participantService.setMyScreenConnectionId(this.screenSession.connection.connectionId);
-			}
+	async connectWebcamSession(participantId: string, nickname: string): Promise<string | undefined> {
+		if (this.isWebcamSessionConnected()) {
+			this.log.d('Webcam session is already connected');
+			return undefined;
 		}
+
+		this.log.d('Connecting webcam session');
+		await this.webcamSession.connect(this.getWebcamToken(), {
+			clientData: nickname,
+			participantId,
+			type: VideoType.CAMERA
+		});
+
+		return this.webcamSession.connection.connectionId;
+		// this.participantService.setMyCameraConnectionId(this.webcamSession.connection.connectionId);
+	}
+
+	/**
+	 * @internal
+	 * Connects to screen session using screen token.
+	 */
+	async connectScreenSession(participantId: string, nickname: string): Promise<string | undefined> {
+		if (this.isScreenSessionConnected()) {
+			this.log.d('Screen session is already connected');
+			return undefined;
+		}
+
+		this.log.d('Connecting screen session');
+		await this.screenSession.connect(this.getScreenToken(), {
+			clientData: `${nickname}_${VideoType.SCREEN}`,
+			participantId,
+			type: VideoType.SCREEN
+		});
+
+		return this.screenSession.connection.connectionId;
 	}
 
 	/**
@@ -286,103 +297,86 @@ export class OpenViduService {
 	}
 
 	/**
-	 * @internal
+	 * Publishes the publisher to the webcam Session
+	 * @param publisher
 	 */
-	async publish(publisher: Publisher): Promise<void> {
-		if (!!publisher) {
-			if (publisher === this.participantService.getMyCameraPublisher()) {
-				if (this.webcamSession?.capabilities?.publish) {
-					return await this.webcamSession.publish(publisher);
-				}
-				this.log.e('Webcam publisher cannot be published');
-			} else if (publisher === this.participantService.getMyScreenPublisher()) {
-				if (this.screenSession?.capabilities?.publish) {
-					return await this.screenSession.publish(publisher);
-				}
-				this.log.e('Screen publisher cannot be published');
-			}
+	async publishCamera(publisher: Publisher): Promise<void> {
+		if (!publisher) return;
+		if (this.webcamSession?.capabilities?.publish) {
+			return this.webcamSession.publish(publisher);
 		}
+		this.log.e('Webcam publisher cannot be published');
 	}
 
 	/**
-	 * @internal
+	 * Publishes the publisher to the screen Session
+	 * @param publisher
 	 */
-	private async unpublish(publisher: Publisher): Promise<void> {
-		if (!!publisher) {
-			if (publisher === this.participantService.getMyCameraPublisher()) {
-				this.publishAudioAux(this.participantService.getMyScreenPublisher(), this.participantService.isMyAudioActive());
-				await this.webcamSession.unpublish(publisher);
-			} else if (publisher === this.participantService.getMyScreenPublisher()) {
-				await this.screenSession.unpublish(publisher);
-			}
+	async publishScreen(publisher: Publisher): Promise<void> {
+		if (!publisher) return;
+
+		if (this.screenSession?.capabilities?.publish) {
+			return this.screenSession.publish(publisher);
 		}
+		this.log.e('Screen publisher cannot be published');
+	}
+
+	/**
+	 * Unpublishes the publisher of the webcam Session
+	 * @param publisher
+	 */
+	async unpublishCamera(publisher: Publisher): Promise<void> {
+		if (!publisher) return;
+		return this.webcamSession.unpublish(publisher);
+	}
+
+	/**
+	 * Unpublishes the publisher of the screen Session
+	 * @param publisher
+	 */
+	async unpublishScreen(publisher: Publisher): Promise<void> {
+		if (!publisher) return;
+		return this.screenSession.unpublish(publisher);
 	}
 
 	/**
 	 * Publish or unpublish the video stream (if available).
 	 * It hides the camera muted stream if screen is sharing.
 	 * See openvidu-browser {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Publisher.html#publishVideo publishVideo}
+	 *
+	 * @deprecated This method has been moved to ParticipantService
+	 *
+	 * TODO: Remove this method in release 2.28.0
 	 */
 	async publishVideo(publish: boolean): Promise<void> {
-		const publishAudio = this.participantService.isMyAudioActive();
-
-		// Disabling webcam
-		if (this.participantService.haveICameraAndScreenActive()) {
-			await this.publishVideoAux(this.participantService.getMyCameraPublisher(), publish);
-			await this.unpublish(this.participantService.getMyCameraPublisher());
-			this.publishAudioAux(this.participantService.getMyScreenPublisher(), publishAudio);
-			this.participantService.disableWebcamStream();
-		} else if (this.participantService.isOnlyMyScreenActive()) {
-			// Enabling webcam
-			const hasAudio = this.participantService.hasScreenAudioActive();
-			if (!this.isWebcamSessionConnected()) {
-				await this.connectSession(this.getWebcamSession(), this.getWebcamToken());
-			}
-			await this.publish(this.participantService.getMyCameraPublisher());
-			await this.publishVideoAux(this.participantService.getMyCameraPublisher(), true);
-			this.publishAudioAux(this.participantService.getMyScreenPublisher(), false);
-			this.publishAudioAux(this.participantService.getMyCameraPublisher(), hasAudio);
-			this.participantService.enableWebcamStream();
-		} else {
-			// Muting/unmuting webcam
-			await this.publishVideoAux(this.participantService.getMyCameraPublisher(), publish);
-		}
-	}
-
-	/**
-	 * @internal
-	 */
-	private async publishVideoAux(publisher: Publisher, publish: boolean): Promise<void> {
-		if (!!publisher) {
-			let resource: boolean | MediaStreamTrack = true;
-			if (publish) {
-				// Forcing restoration with a custom media stream (the older one instead the default)
-				const currentDeviceId = this.deviceService.getCameraSelected()?.device;
-				const mediaStream = await this.createMediaStream({ videoSource: currentDeviceId, audioSource: false });
-				resource = mediaStream.getVideoTracks()[0];
-			}
-
-			await publisher.publishVideo(publish, resource);
-			this.participantService.updateLocalParticipant();
-		}
+		const participantService = this.injector.get(ParticipantService);
+		participantService.publishVideo(publish);
 	}
 
 	/**
 	 * Share or unshare the screen.
 	 * Hide the camera muted stream when screen is sharing.
+	 * @deprecated This method has been moved to ParticipantService
 	 *
-	 * TODO: This method should be in participant service
+	 * TODO: Remove this method in release 2.28.0
 	 */
 	async toggleScreenshare() {
-		if (this.participantService.haveICameraAndScreenActive()) {
+		const participantService = this.injector.get(ParticipantService);
+
+		const screenPublisher = participantService.getMyScreenPublisher();
+		const cameraPublisher = participantService.getMyCameraPublisher();
+		const participantNickname = participantService.getMyNickname();
+		const participantId = participantService.getLocalParticipant().id;
+
+		if (participantService.haveICameraAndScreenActive()) {
 			// Disabling screenShare
-			this.participantService.disableScreenStream();
-			await this.unpublish(this.participantService.getMyScreenPublisher());
-		} else if (this.participantService.isOnlyMyCameraActive()) {
+			participantService.disableScreenStream();
+			this.unpublishScreen(screenPublisher);
+		} else if (participantService.isOnlyMyCameraActive()) {
 			// I only have the camera published
 			const hasAudioDevicesAvailable = this.deviceService.hasAudioDeviceAvailable();
-			const willWebcamBePresent = this.participantService.isMyCameraActive() && this.participantService.isMyVideoActive();
-			const hasAudio = willWebcamBePresent ? false : hasAudioDevicesAvailable && this.participantService.isMyAudioActive();
+			const willWebcamBePresent = participantService.isMyCameraActive() && participantService.isMyVideoActive();
+			const hasAudio = willWebcamBePresent ? false : hasAudioDevicesAvailable && participantService.isMyAudioActive();
 
 			const properties: PublisherProperties = {
 				videoSource: ScreenType.SCREEN,
@@ -404,16 +398,16 @@ export class OpenViduService {
 					});
 
 				// Enabling screenShare
-				this.participantService.activeMyScreenShare(screenPublisher);
+				participantService.activeMyScreenShare(screenPublisher);
 
 				if (!this.isScreenSessionConnected()) {
-					await this.connectSession(this.getScreenSession(), this.getScreenToken());
+					await this.connectScreenSession(participantId, participantNickname);
 				}
-				await this.publish(this.participantService.getMyScreenPublisher());
-				if (!this.participantService.isMyVideoActive()) {
+				await this.publishScreen(screenPublisher);
+				if (!participantService.isMyVideoActive()) {
 					// Disabling webcam
-					this.participantService.disableWebcamStream();
-					await this.unpublish(this.participantService.getMyCameraPublisher());
+					participantService.disableWebcamStream();
+					this.unpublishCamera(cameraPublisher);
 				}
 			});
 
@@ -422,31 +416,46 @@ export class OpenViduService {
 			});
 		} else {
 			// I only have my screenshare active and I have no camera or it is muted
-			const hasAudio = this.participantService.hasScreenAudioActive();
+			const hasAudio = participantService.hasScreenAudioActive();
 
 			// Enable webcam
 			if (!this.isWebcamSessionConnected()) {
-				await this.connectSession(this.getWebcamSession(), this.getWebcamToken());
+				await this.connectWebcamSession(participantId, participantNickname);
 			}
-			await this.publish(this.participantService.getMyCameraPublisher());
-			this.publishAudioAux(this.participantService.getMyCameraPublisher(), hasAudio);
-			this.participantService.enableWebcamStream();
+			await this.publishCamera(cameraPublisher);
+			this.publishAudioAux(cameraPublisher, hasAudio);
+			participantService.enableWebcamStream();
 
 			// Disabling screenshare
-			this.participantService.disableScreenStream();
-			await this.unpublish(this.participantService.getMyScreenPublisher());
+			participantService.disableScreenStream();
+			this.unpublishScreen(screenPublisher);
 		}
 	}
 
 	/**
 	 * @internal
-	 * TODO: Remove when it is in participant service
+	 * @deprecated
+	 *
+	 * TODO: Remove this method in release 2.28.0
 	 */
 	private publishAudioAux(publisher: Publisher, value: boolean): void {
+		const participantService = this.injector.get(ParticipantService);
+
 		if (!!publisher) {
 			publisher.publishAudio(value);
-			this.participantService.updateLocalParticipant();
+			participantService.updateLocalParticipant();
 		}
+	}
+
+	/**
+	 *
+	 * Publish or unpublish the audio stream (if available).
+	 * See openvidu-browser {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Publisher.html#publishAudio publishAudio}.
+	 * @deprecated This method has been moved to ParticipantService
+	 */
+	publishAudio(publish: boolean): void {
+		const participantService = this.injector.get(ParticipantService);
+		participantService.publishAudio(publish);
 	}
 
 	/**
@@ -455,19 +464,23 @@ export class OpenViduService {
 	 * @param type: type of signal
 	 * @param connections: if undefined, the signal will be sent to all participants
 	 */
-	sendSignal(type: Signal, connections?: Connection[], data?: any): void {
+	sendSignal(type: Signal, connections?: Connection[], data?: any): Promise<void> {
 		const signalOptions: SignalOptions = {
 			data: JSON.stringify(data),
 			type,
 			to: connections && connections.length > 0 ? connections : undefined
 		};
-		this.webcamSession.signal(signalOptions);
+		return this.webcamSession.signal(signalOptions);
 	}
 
 	/**
 	 * @internal
 	 */
 	async replaceTrack(videoType: VideoType, props: PublisherProperties) {
+		const participantService = this.injector.get(ParticipantService);
+		const screenPublisher = participantService.getMyScreenPublisher();
+		const cameraPublisher = participantService.getMyCameraPublisher();
+
 		try {
 			this.log.d(`Replacing ${videoType} track`, props);
 
@@ -480,18 +493,18 @@ export class OpenViduService {
 					mediaStream = await this.createMediaStream(props);
 					// Replace video track
 					const videoTrack: MediaStreamTrack = mediaStream.getVideoTracks()[0];
-					await this.participantService.getMyCameraPublisher().replaceTrack(videoTrack);
+					await cameraPublisher.replaceTrack(videoTrack);
 				} else if (isReplacingAudio) {
 					mediaStream = await this.createMediaStream(props);
 					// Replace audio track
 					const audioTrack: MediaStreamTrack = mediaStream.getAudioTracks()[0];
-					await this.participantService.getMyCameraPublisher().replaceTrack(audioTrack);
+					await cameraPublisher.replaceTrack(audioTrack);
 				}
 			} else if (videoType === VideoType.SCREEN) {
 				try {
 					let newScreenMediaStream = await this.OVScreen.getUserMedia(props);
-					this.participantService.getMyScreenPublisher().stream.getMediaStream().getVideoTracks()[0].stop();
-					await this.participantService.getMyScreenPublisher().replaceTrack(newScreenMediaStream.getVideoTracks()[0]);
+					screenPublisher.stream.getMediaStream().getVideoTracks()[0].stop();
+					await screenPublisher.replaceTrack(newScreenMediaStream.getVideoTracks()[0]);
 				} catch (error) {
 					this.log.w('Cannot create the new MediaStream', error);
 				}
@@ -509,7 +522,9 @@ export class OpenViduService {
 	 * @param lang The language of the Stream's audio track.
 	 */
 	async subscribeRemotesToSTT(lang: string): Promise<void> {
-		const remoteParticipants = this.participantService.getRemoteParticipants();
+		const participantService = this.injector.get(ParticipantService);
+
+		const remoteParticipants = participantService.getRemoteParticipants();
 		let successNumber = 0;
 
 		for (const p of remoteParticipants) {
@@ -548,9 +563,11 @@ export class OpenViduService {
 	 * Unsubscribe to all `CAMERA` stream types to speech-to-text if STT is up(ready)
 	 */
 	async unsubscribeRemotesFromSTT(): Promise<void> {
+		const participantService = this.injector.get(ParticipantService);
+
 		clearTimeout(this.sttReconnectionTimeout);
 		if (this.isSttReady()) {
-			for (const p of this.participantService.getRemoteParticipants()) {
+			for (const p of participantService.getRemoteParticipants()) {
 				const stream = p.getCameraConnection().streamManager.stream;
 				if (stream) {
 					try {
@@ -563,7 +580,14 @@ export class OpenViduService {
 		}
 	}
 
-	private async createMediaStream(pp: PublisherProperties): Promise<MediaStream> {
+
+	/**
+	 * @internal
+	 * @param pp {@link PublisherProperties}
+	 * @returns Promise<MediaStream>
+	 */
+	async createMediaStream(pp: PublisherProperties): Promise<MediaStream> {
+		const participantService = this.injector.get(ParticipantService);
 		const currentCameraSelected = this.deviceService.getCameraSelected();
 		const currentMicSelected = this.deviceService.getMicrophoneSelected();
 		const isReplacingAudio = Boolean(pp.audioSource);
@@ -571,7 +595,7 @@ export class OpenViduService {
 
 		try {
 			const trackType = isReplacingAudio ? 'audio' : 'video';
-			this.forceStopMediaTracks(this.participantService.getMyCameraPublisher().stream.getMediaStream(), trackType);
+			this.forceStopMediaTracks(participantService.getMyCameraPublisher().stream.getMediaStream(), trackType);
 			return this.OV.getUserMedia(pp);
 		} catch (error) {
 			console.warn('Error creating MediaStream', error);
@@ -594,6 +618,7 @@ export class OpenViduService {
 	 * @internal
 	 */
 	needSendNicknameSignal(): boolean {
+		const participantService = this.injector.get(ParticipantService);
 		let oldNickname: string = "";
 		try {
 			const connData = JSON.parse(this.cleanConnectionData(this.webcamSession.connection.data));
@@ -601,7 +626,7 @@ export class OpenViduService {
 		} catch (error) {
 			this.log.e(error);
 		} finally {
-			return oldNickname !== this.participantService.getMyNickname();
+			return oldNickname !== participantService.getMyNickname();
 		}
 	}
 

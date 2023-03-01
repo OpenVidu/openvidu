@@ -64,7 +64,7 @@ export class ChatService {
 		});
 	}
 
-	sendMessage(message: string) {
+	async sendMessage(message: string) {
 		message = message.replace(/ +(?= )/g, '');
 		if (message !== '' && message !== ' ') {
 			const data = {
@@ -72,7 +72,7 @@ export class ChatService {
 				nickname: this.participantService.getMyNickname()
 			};
 
-			this.openviduService.sendSignal(Signal.CHAT, undefined, data);
+			await this.openviduService.sendSignal(Signal.CHAT, undefined, data);
 		}
 	}
 

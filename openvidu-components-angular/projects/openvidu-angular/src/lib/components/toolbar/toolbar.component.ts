@@ -521,7 +521,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			if (this.panelService.isExternalPanelOpened() && !publishVideo) {
 				this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
 			}
-			await this.openviduService.publishVideo(publishVideo);
+			await this.participantService.publishVideo(publishVideo);
 		} catch (error) {
 			this.log.e('There was an error toggling camera:', error.code, error.message);
 			this.actionService.openDialog(this.translateService.translate('ERRORS.TOGGLE_CAMERA'), error?.error || error?.message || error);

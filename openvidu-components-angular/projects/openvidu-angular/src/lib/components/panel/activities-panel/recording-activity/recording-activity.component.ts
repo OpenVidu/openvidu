@@ -167,10 +167,10 @@ export class RecordingActivityComponent implements OnInit {
 	 */
 
 	deleteRecording(id: string) {
-		const succsessCallback = () => {
+		const succsessCallback = async () => {
 			this.onDeleteRecordingClicked.emit(id);
 			// Sending signal to all participants with the aim of updating their recordings list
-			this.openviduService.sendSignal(Signal.RECORDING_DELETED, this.openviduService.getRemoteConnections());
+			await this.openviduService.sendSignal(Signal.RECORDING_DELETED, this.openviduService.getRemoteConnections());
 		};
 		this.actionService.openDeleteRecordingDialog(succsessCallback.bind(this));
 	}

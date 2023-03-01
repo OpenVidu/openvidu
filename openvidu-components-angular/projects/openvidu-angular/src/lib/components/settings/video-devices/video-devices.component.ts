@@ -67,7 +67,7 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 	async toggleCam() {
 		this.videoMuteChanging = true;
 		const publish = this.isVideoMuted;
-		await this.openviduService.publishVideo(publish);
+		await this.participantService.publishVideo(publish);
 		if (this.isVideoMuted && this.panelService.isExternalPanelOpened()) {
 			this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
 		}

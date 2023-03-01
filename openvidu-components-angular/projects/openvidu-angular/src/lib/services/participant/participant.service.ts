@@ -11,7 +11,9 @@ import {
 } from '../../models/participant.model';
 import { VideoType } from '../../models/video-type.model';
 import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.service';
+import { DeviceService } from '../device/device.service';
 import { LoggerService } from '../logger/logger.service';
+import { OpenViduService } from '../openvidu/openvidu.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -39,7 +41,12 @@ export class ParticipantService {
 	/**
 	 * @internal
 	 */
-	constructor(protected openviduAngularConfigSrv: OpenViduAngularConfigService, protected loggerSrv: LoggerService) {
+	constructor(
+		protected openviduAngularConfigSrv: OpenViduAngularConfigService,
+		private openviduService: OpenViduService,
+		private deviceService: DeviceService,
+		protected loggerSrv: LoggerService
+	) {
 		this.log = this.loggerSrv.get('ParticipantService');
 		this.localParticipantObs = this._localParticipant.asObservable();
 		this.remoteParticipantsObs = this._remoteParticipants.asObservable();
@@ -58,7 +65,40 @@ export class ParticipantService {
 	}
 
 	/**
-	 * Publish or unpublish the audio stream (if available).
+	 * Publish or unpublish the local participant video stream (if available).
+	 * It hides the camera stream (while muted) if screen is sharing.
+	 * See openvidu-browser {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Publisher.html#publishVideo publishVideo}
+	 *
+	 */
+	async publishVideo(publish: boolean): Promise<void> {
+		const publishAudio = this.isMyAudioActive();
+		const cameraPublisher = this.getMyCameraPublisher();
+		const screenPublisher = this.getMyScreenPublisher();
+
+		// Disabling webcam
+		if (this.haveICameraAndScreenActive()) {
+			await this.publishVideoAux(cameraPublisher, publish);
+			this.disableWebcamStream();
+			this.openviduService.unpublishCamera(cameraPublisher);
+			this.publishAudioAux(screenPublisher, publishAudio);
+		} else if (this.isOnlyMyScreenActive()) {
+			// Enabling webcam
+			const hasAudio = this.hasScreenAudioActive();
+			const sessionId = await this.openviduService.connectWebcamSession(this.getMyNickname(), this.getLocalParticipant().id);
+			if (sessionId) this.setMyCameraConnectionId(sessionId);
+			await this.openviduService.publishCamera(cameraPublisher);
+			await this.publishVideoAux(cameraPublisher, true);
+			this.publishAudioAux(screenPublisher, false);
+			this.publishAudioAux(cameraPublisher, hasAudio);
+			this.enableWebcamStream();
+		} else {
+			// Muting/unmuting webcam
+			await this.publishVideoAux(cameraPublisher, publish);
+		}
+	}
+
+	/**
+	 * Publish or unpublish the local participant audio stream (if available).
 	 * See openvidu-browser {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Publisher.html#publishAudio publishAudio}.
 	 *
 	 */
@@ -274,6 +314,24 @@ export class ParticipantService {
 	private publishAudioAux(publisher: Publisher, value: boolean): void {
 		if (!!publisher) {
 			publisher.publishAudio(value);
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	private async publishVideoAux(publisher: Publisher, publish: boolean): Promise<void> {
+		if (!!publisher) {
+			let resource: boolean | MediaStreamTrack = true;
+			if (publish) {
+				// Forcing restoration with a custom media stream (the older one instead the default)
+				const currentDeviceId = this.deviceService.getCameraSelected()?.device;
+				const mediaStream = await this.openviduService.createMediaStream({ videoSource: currentDeviceId, audioSource: false });
+				resource = mediaStream.getVideoTracks()[0];
+			}
+
+			await publisher.publishVideo(publish, resource);
+			this.updateLocalParticipant();
 		}
 	}
 

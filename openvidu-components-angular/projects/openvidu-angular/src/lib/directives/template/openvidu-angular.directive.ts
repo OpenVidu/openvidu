@@ -25,7 +25,7 @@ import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
  *	publishVideo = true;
  *	publishAudio = true;
  *
- *	constructor(private httpClient: HttpClient, private openviduService: OpenViduService) { }
+ *	constructor(private httpClient: HttpClient, private participantService: ParticipantService) { }
  *
  *	async ngOnInit() {
  *		this.tokens = {
@@ -36,18 +36,18 @@ import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
  *
  *	toggleVideo() {
  *		this.publishVideo = !this.publishVideo;
- *		this.openviduService.publishVideo(this.publishVideo);
+ *		this.participantService.publishVideo(this.publishVideo);
  *	}
  *
  *	toggleAudio() {
  *		this.publishAudio = !this.publishAudio;
- *		this.openviduService.publishAudio(this.publishAudio);
+ *		this.participantService.publishAudio(this.publishAudio);
  *	}
  *
  *	async getToken(): Promise<string> {
  * 		// Returns an OpeVidu token
  * 	}
- * 
+ *
  * }
  * ```
  *
@@ -88,13 +88,12 @@ export class ToolbarDirective {
     sessionId = "panel-directive-example";
     tokens!: TokenModel;
 
-   
+
  *	sessionId = 'toolbar-additionalbtn-directive-example';
  *	tokens!: TokenModel;
  *
  *	constructor(
  *		private httpClient: HttpClient,
- *		private openviduService: OpenViduService,
  *		private participantService: ParticipantService
  *	) { }
  *
@@ -107,18 +106,18 @@ export class ToolbarDirective {
  *
  *	toggleVideo() {
  *		const publishVideo = !this.participantService.isMyVideoActive();
- *		this.openviduService.publishVideo(publishVideo);
+ *		this.participantService.publishVideo(publishVideo);
  *	}
  *
  *	toggleAudio() {
  *		const publishAudio = !this.participantService.isMyAudioActive();
- *		this.openviduService.publishAudio(publishAudio);
+ *		this.participantService.publishAudio(publishAudio);
  *	}
  *
  *	async getToken(): Promise<string> {
  * 		// Returns an OpeVidu token
  * 	}
- * 
+ *
  * }
  * ```
  */
@@ -149,7 +148,7 @@ export class ToolbarAdditionalButtonsDirective {
  *
  * ```javascript
  * export class ToolbarAdditionalPanelButtonsDirectiveComponent {
- * 
+ *
  *  sessionId = "toolbar-additionalPanelbtn";
  *  tokens!: TokenModel;
  *
@@ -169,7 +168,7 @@ export class ToolbarAdditionalButtonsDirective {
  *  async getToken(): Promise<string> {
  *    // Returns an OpeVidu token
  *  }
- * 
+ *
  * }
  * ```
  */
@@ -206,7 +205,7 @@ export class ToolbarAdditionalPanelButtonsDirective {
  *
  * ```javascript
  * export class PanelDirectiveComponent {
- * 
+ *
  *	sessionId = "panel-directive-example";
  *	tokens!: TokenModel;
  *
@@ -222,7 +221,7 @@ export class ToolbarAdditionalPanelButtonsDirective {
  *	async getToken(): Promise<string> {
  *		// Returns an OpeVidu token
  *	}
- * 
+ *
  * }
  * ```
  */
@@ -275,7 +274,7 @@ export class PanelDirective {
  *
  * ```javascript
  * export class AdditionalPanelsDirectiveComponent implements OnInit {
- * 
+ *
  *	sessionId = "toolbar-additionalbtn-directive-example";
  *	tokens!: TokenModel;
  *
@@ -445,7 +444,7 @@ export class BackgroundEffectsPanelDirective {
  *
  * ```javascript
  * export class AppComponent implements OnInit {
- * 
+ *
  *	sessionId = "activities-panel-directive-example";
  *	tokens!: TokenModel;
  *
@@ -585,7 +584,7 @@ export class ParticipantsPanelDirective {
  * 	async getToken(): Promise<string> {
  *		// Returns an OpeVidu token
  *	}
- * 
+ *
  * }
  * ```
  *
@@ -684,10 +683,10 @@ export class ParticipantPanelItemElementsDirective {
  *
  * We need to get the participants in our Session, so we use the {@link ParticipantService} to subscribe to the required Observables.
  * We'll get the local participant and the remote participants to display their streams in our custom session layout.
- * 
+ *
  * ```javascript
  * export class LayoutDirectiveComponent implements OnInit, OnDestroy {
- * 
+ *
  * 	sessionId = 'layout-directive-example';
  *	tokens!: TokenModel;
  *
@@ -723,7 +722,7 @@ export class ParticipantPanelItemElementsDirective {
  * 	async getToken(): Promise<string> {
  *		// Returns an OpeVidu token
  *	}
- * 
+ *
  * }
  * ```
  */
