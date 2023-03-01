@@ -218,7 +218,6 @@ export abstract class ParticipantAbstractModel {
 	 */
 	isLocal(): boolean {
 		return this.local;
-		// return Array.from(this.streams.values()).every((conn) => conn.local);
 	}
 
 	/**
@@ -305,6 +304,30 @@ export abstract class ParticipantAbstractModel {
 	disableScreen() {
 		const screenConnection = this.getScreenConnection();
 		if (screenConnection) screenConnection.connected = false;
+	}
+
+	/**
+	 * @internal
+	 * @returns true if both camera and screen are active
+	 */
+	hasCameraAndScreenActives(): boolean {
+		return this.isCameraActive() && this.isScreenActive();
+	}
+
+	/**
+	 * @internal
+	 * @returns true if only screen is active
+	 */
+	hasOnlyScreenActive(): boolean {
+		return this.isScreenActive() && !this.isCameraActive();
+	}
+
+	/**
+	 * @internal
+	 * @returns true if only camera is active
+	 */
+	hasOnlyCameraActive(): boolean {
+		return this.isCameraActive() && !this.isScreenActive();
 	}
 
 	/**

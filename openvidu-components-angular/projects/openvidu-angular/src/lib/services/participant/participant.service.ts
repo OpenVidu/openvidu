@@ -76,12 +76,12 @@ export class ParticipantService {
 		const screenPublisher = this.getMyScreenPublisher();
 
 		// Disabling webcam
-		if (this.haveICameraAndScreenActive()) {
+		if (this.localParticipant.hasCameraAndScreenActives()) {
 			await this.publishVideoAux(cameraPublisher, publish);
 			this.disableWebcamStream();
 			this.openviduService.unpublishCamera(cameraPublisher);
 			this.publishAudioAux(screenPublisher, publishAudio);
-		} else if (this.isOnlyMyScreenActive()) {
+		} else if (this.localParticipant.hasOnlyScreenActive()) {
 			// Enabling webcam
 			const hasAudio = this.hasScreenAudioActive();
 			const sessionId = await this.openviduService.connectWebcamSession(this.getMyNickname(), this.getLocalParticipant().id);
@@ -106,7 +106,7 @@ export class ParticipantService {
 	 */
 	publishAudio(publish: boolean): void {
 		if (this.isMyCameraActive()) {
-			if (this.isMyScreenActive() && this.hasScreenAudioActive()) {
+			if (this.localParticipant.isScreenActive() && this.hasScreenAudioActive()) {
 				this.publishAudioAux(this.getMyScreenPublisher(), false);
 			}
 
@@ -129,12 +129,12 @@ export class ParticipantService {
 		const participantNickname = this.getMyNickname();
 		const participantId = this.getLocalParticipant().id;
 
-		if (this.haveICameraAndScreenActive()) {
+		if (this.localParticipant.hasCameraAndScreenActives()) {
 			// Disabling screenShare
 			this.disableScreenStream();
 			this.updateLocalParticipant();
 			this.openviduService.unpublishScreen(screenPublisher);
-		} else if (this.isOnlyMyCameraActive()) {
+		} else if (this.localParticipant.hasOnlyCameraActive()) {
 			// I only have the camera published
 			const willWebcamBePresent = this.isMyCameraActive() && this.isMyVideoActive();
 			const hasAudio = willWebcamBePresent ? false : this.isMyAudioActive();
@@ -334,34 +334,6 @@ export class ParticipantService {
 
 	isMyAudioActive(): boolean {
 		return this.localParticipant?.hasAudioActive();
-	}
-
-	/**
-	 * @internal
-	 */
-	isMyScreenActive(): boolean {
-		return this.localParticipant.isScreenActive();
-	}
-
-	/**
-	 * @internal
-	 */
-	isOnlyMyCameraActive(): boolean {
-		return this.isMyCameraActive() && !this.isMyScreenActive();
-	}
-
-	/**
-	 * @internal
-	 */
-	isOnlyMyScreenActive(): boolean {
-		return this.isMyScreenActive() && !this.isMyCameraActive();
-	}
-
-	/**
-	 * @internal
-	 */
-	haveICameraAndScreenActive(): boolean {
-		return this.isMyCameraActive() && this.isMyScreenActive();
 	}
 
 	/**

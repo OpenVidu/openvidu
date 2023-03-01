@@ -253,12 +253,14 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 	private async connectToSession(): Promise<void> {
 		try {
-			const nickname = this.participantService.getMyNickname();
-			const participantId = this.participantService.getLocalParticipant().id;
+			const participant = this.participantService.getLocalParticipant();
+			const nickname = participant.getNickname();
+			const participantId = participant.id;
 			const screenPublisher = this.participantService.getMyScreenPublisher();
 			const cameraPublisher = this.participantService.getMyCameraPublisher();
 
-			if (this.participantService.haveICameraAndScreenActive()) {
+
+			if (participant.hasCameraAndScreenActives()) {
 
 				const webcamSessionId = await this.openviduService.connectWebcamSession(participantId, nickname);
 				if (webcamSessionId) this.participantService.setMyCameraConnectionId(webcamSessionId);
@@ -266,10 +268,9 @@ export class SessionComponent implements OnInit, OnDestroy {
 				const screenSessionId = await this.openviduService.connectScreenSession(participantId, nickname);
 				if (screenSessionId) this.participantService.setMyScreenConnectionId(screenSessionId);
 
-
 				await this.openviduService.publishCamera(cameraPublisher);
 				await this.openviduService.publishScreen(screenPublisher);
-			} else if (this.participantService.isOnlyMyScreenActive()) {
+			} else if (participant.hasOnlyScreenActive()) {
 				await this.openviduService.connectScreenSession(participantId, nickname);
 				await this.openviduService.publishScreen(screenPublisher);
 			} else {
