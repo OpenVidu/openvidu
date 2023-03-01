@@ -371,6 +371,7 @@ export class OpenViduService {
 		if (participantService.haveICameraAndScreenActive()) {
 			// Disabling screenShare
 			participantService.disableScreenStream();
+			participantService.updateLocalParticipant();
 			this.unpublishScreen(screenPublisher);
 		} else if (participantService.isOnlyMyCameraActive()) {
 			// I only have the camera published
@@ -407,6 +408,7 @@ export class OpenViduService {
 				if (!participantService.isMyVideoActive()) {
 					// Disabling webcam
 					participantService.disableWebcamStream();
+					participantService.updateLocalParticipant();
 					this.unpublishCamera(cameraPublisher);
 				}
 			});
@@ -428,6 +430,7 @@ export class OpenViduService {
 
 			// Disabling screenshare
 			participantService.disableScreenStream();
+			participantService.updateLocalParticipant();
 			this.unpublishScreen(screenPublisher);
 		}
 	}
