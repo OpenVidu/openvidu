@@ -11,8 +11,6 @@ import {
 	Stream
 } from 'openvidu-browser';
 
-import { LoggerService } from '../logger/logger.service';
-
 import { BehaviorSubject, Observable } from 'rxjs';
 import { CameraType } from '../../models/device.model';
 import { ILogger } from '../../models/logger.model';
@@ -21,6 +19,7 @@ import { Signal } from '../../models/signal.model';
 import { ScreenType, VideoType } from '../../models/video-type.model';
 import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.service';
 import { DeviceService } from '../device/device.service';
+import { LoggerService } from '../logger/logger.service';
 import { ParticipantService } from '../participant/participant.service';
 import { PlatformService } from '../platform/platform.service';
 
@@ -215,7 +214,6 @@ export class OpenViduService {
 		});
 
 		return this.webcamSession.connection.connectionId;
-		// this.participantService.setMyCameraConnectionId(this.webcamSession.connection.connectionId);
 	}
 
 	/**
@@ -291,9 +289,27 @@ export class OpenViduService {
 	/**
 	 * @internal
 	 */
-	private async initPublisher(properties: PublisherProperties, targetElement?: string | HTMLElement): Promise<Publisher> {
+	private initPublisher(properties: PublisherProperties, targetElement?: string | HTMLElement): Promise<Publisher> {
 		this.log.d('Initializing publisher with properties: ', properties);
 		return this.OV.initPublisherAsync(targetElement, properties);
+	}
+
+	/**
+	 * @internal
+	 * @param hasAudio
+	 * @returns
+	 */
+	initScreenPublisher(hasAudio: boolean): Promise<Publisher> {
+		const hasAudioDevicesAvailable = this.deviceService.hasAudioDeviceAvailable();
+
+		const properties: PublisherProperties = {
+			videoSource: ScreenType.SCREEN,
+			audioSource: hasAudioDevicesAvailable ? this.deviceService.getMicrophoneSelected().device : false,
+			publishVideo: true,
+			publishAudio: hasAudio && hasAudioDevicesAvailable,
+			mirror: false
+		};
+		return this.initPublisher(properties);
 	}
 
 	/**
@@ -350,7 +366,7 @@ export class OpenViduService {
 	 */
 	async publishVideo(publish: boolean): Promise<void> {
 		const participantService = this.injector.get(ParticipantService);
-		participantService.publishVideo(publish);
+		return participantService.publishVideo(publish);
 	}
 
 	/**
@@ -362,92 +378,7 @@ export class OpenViduService {
 	 */
 	async toggleScreenshare() {
 		const participantService = this.injector.get(ParticipantService);
-
-		const screenPublisher = participantService.getMyScreenPublisher();
-		const cameraPublisher = participantService.getMyCameraPublisher();
-		const participantNickname = participantService.getMyNickname();
-		const participantId = participantService.getLocalParticipant().id;
-
-		if (participantService.haveICameraAndScreenActive()) {
-			// Disabling screenShare
-			participantService.disableScreenStream();
-			participantService.updateLocalParticipant();
-			this.unpublishScreen(screenPublisher);
-		} else if (participantService.isOnlyMyCameraActive()) {
-			// I only have the camera published
-			const hasAudioDevicesAvailable = this.deviceService.hasAudioDeviceAvailable();
-			const willWebcamBePresent = participantService.isMyCameraActive() && participantService.isMyVideoActive();
-			const hasAudio = willWebcamBePresent ? false : hasAudioDevicesAvailable && participantService.isMyAudioActive();
-
-			const properties: PublisherProperties = {
-				videoSource: ScreenType.SCREEN,
-				audioSource: hasAudioDevicesAvailable ? this.deviceService.getMicrophoneSelected().device : false,
-				publishVideo: true,
-				publishAudio: hasAudio,
-				mirror: false
-			};
-			const screenPublisher = await this.initPublisher(properties);
-
-			screenPublisher.once('accessAllowed', async () => {
-				// Listen to event fired when native stop button is clicked
-				screenPublisher.stream
-					.getMediaStream()
-					.getVideoTracks()[0]
-					.addEventListener('ended', async () => {
-						this.log.d('Clicked native stop button. Stopping screen sharing');
-						await this.toggleScreenshare();
-					});
-
-				// Enabling screenShare
-				participantService.activeMyScreenShare(screenPublisher);
-
-				if (!this.isScreenSessionConnected()) {
-					await this.connectScreenSession(participantId, participantNickname);
-				}
-				await this.publishScreen(screenPublisher);
-				if (!participantService.isMyVideoActive()) {
-					// Disabling webcam
-					participantService.disableWebcamStream();
-					participantService.updateLocalParticipant();
-					this.unpublishCamera(cameraPublisher);
-				}
-			});
-
-			screenPublisher.once('accessDenied', (error: any) => {
-				return Promise.reject(error);
-			});
-		} else {
-			// I only have my screenshare active and I have no camera or it is muted
-			const hasAudio = participantService.hasScreenAudioActive();
-
-			// Enable webcam
-			if (!this.isWebcamSessionConnected()) {
-				await this.connectWebcamSession(participantId, participantNickname);
-			}
-			await this.publishCamera(cameraPublisher);
-			this.publishAudioAux(cameraPublisher, hasAudio);
-			participantService.enableWebcamStream();
-
-			// Disabling screenshare
-			participantService.disableScreenStream();
-			participantService.updateLocalParticipant();
-			this.unpublishScreen(screenPublisher);
-		}
-	}
-
-	/**
-	 * @internal
-	 * @deprecated
-	 *
-	 * TODO: Remove this method in release 2.28.0
-	 */
-	private publishAudioAux(publisher: Publisher, value: boolean): void {
-		const participantService = this.injector.get(ParticipantService);
-
-		if (!!publisher) {
-			publisher.publishAudio(value);
-			participantService.updateLocalParticipant();
-		}
+		return participantService.toggleScreenshare();
 	}
 
 	/**
@@ -455,6 +386,8 @@ export class OpenViduService {
 	 * Publish or unpublish the audio stream (if available).
 	 * See openvidu-browser {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Publisher.html#publishAudio publishAudio}.
 	 * @deprecated This method has been moved to ParticipantService
+	 *
+	 * TODO: Remove this method in release 2.28.0
 	 */
 	publishAudio(publish: boolean): void {
 		const participantService = this.injector.get(ParticipantService);

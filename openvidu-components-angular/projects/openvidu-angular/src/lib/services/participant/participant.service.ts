@@ -118,6 +118,76 @@ export class ParticipantService {
 	}
 
 	/**
+	 * Share or unshare the local participant screen.
+	 * Hide the camera stream (while muted) when screen is sharing.
+	 *
+	 */
+	async toggleScreenshare() {
+
+		const screenPublisher = this.getMyScreenPublisher();
+		const cameraPublisher = this.getMyCameraPublisher();
+		const participantNickname = this.getMyNickname();
+		const participantId = this.getLocalParticipant().id;
+
+		if (this.haveICameraAndScreenActive()) {
+			// Disabling screenShare
+			this.disableScreenStream();
+			this.updateLocalParticipant();
+			this.openviduService.unpublishScreen(screenPublisher);
+		} else if (this.isOnlyMyCameraActive()) {
+			// I only have the camera published
+			const willWebcamBePresent = this.isMyCameraActive() && this.isMyVideoActive();
+			const hasAudio = willWebcamBePresent ? false : this.isMyAudioActive();
+			const screenPublisher = await this.openviduService.initScreenPublisher(hasAudio);
+
+			screenPublisher.once('accessAllowed', async () => {
+				// Listen to event fired when native stop button is clicked
+				screenPublisher.stream
+					.getMediaStream()
+					.getVideoTracks()[0]
+					.addEventListener('ended', async () => {
+						this.log.d('Clicked native stop button. Stopping screen sharing');
+						await this.toggleScreenshare();
+					});
+
+				// Enabling screenShare
+				this.activeMyScreenShare(screenPublisher);
+
+				if (!this.openviduService.isScreenSessionConnected()) {
+					await this.openviduService.connectScreenSession(participantId, participantNickname);
+				}
+				await this.openviduService.publishScreen(screenPublisher);
+				if (!this.isMyVideoActive()) {
+					// Disabling webcam
+					this.disableWebcamStream();
+					this.updateLocalParticipant();
+					this.openviduService.unpublishCamera(cameraPublisher);
+				}
+			});
+
+			screenPublisher.once('accessDenied', (error: any) => {
+				return Promise.reject(error);
+			});
+		} else {
+			// I only have my screenshare active and I have no camera or it is muted
+			const hasAudio = this.hasScreenAudioActive();
+
+			// Enable webcam
+			if (!this.openviduService.isWebcamSessionConnected()) {
+				await this.openviduService.connectWebcamSession(participantId, participantNickname);
+			}
+			await this.openviduService.publishCamera(cameraPublisher);
+			this.publishAudioAux(cameraPublisher, hasAudio);
+			this.enableWebcamStream();
+
+			// Disabling screenshare
+			this.disableScreenStream();
+			this.updateLocalParticipant();
+			this.openviduService.unpublishScreen(screenPublisher);
+		}
+	}
+
+	/**
 	 * @internal
 	 */
 	getMyCameraPublisher(): Publisher {
