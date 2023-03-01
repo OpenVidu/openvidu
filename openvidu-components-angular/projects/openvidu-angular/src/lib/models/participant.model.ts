@@ -160,13 +160,14 @@ export abstract class ParticipantAbstractModel {
 
 	/**
 	 * @internal
+	 * @returns The participant active connection types
 	 */
-	getConnectionTypesActive(): VideoType[] {
-		let connType = [];
-		if (this.isCameraActive()) connType.push(VideoType.CAMERA);
-		if (this.isScreenActive()) connType.push(VideoType.SCREEN);
+	getActiveConnectionTypes(): VideoType[] {
+		const activeTypes: VideoType[] = [];
+		if (this.isCameraActive()) activeTypes.push(VideoType.CAMERA);
+		if (this.isScreenActive()) activeTypes.push(VideoType.SCREEN);
 
-		return connType;
+		return activeTypes;
 	}
 
 	/**

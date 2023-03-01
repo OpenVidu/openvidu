@@ -27,15 +27,11 @@ export class StreamTypesEnabledPipe implements PipeTransform {
 	constructor(private translateService: TranslateService) {}
 
 	transform(participant: ParticipantAbstractModel): string {
-		let result = '';
-		let activeStreams = participant?.getConnectionTypesActive().toString();
-		const activeStreamsArr: string[] = activeStreams.split(',');
-		activeStreamsArr.forEach((type, index) => {
-			result += this.translateService.translate(`PANEL.PARTICIPANTS.${type}`)
-			if(activeStreamsArr.length > 0 && index < activeStreamsArr.length - 1){
-				result += ', ';
-			}
-		});
-		return `(${result})`;
+
+		const activeStreams = participant?.getActiveConnectionTypes() ?? [];
+		const streamNames = activeStreams.map(streamType => this.translateService.translate(`PANEL.PARTICIPANTS.${streamType}`));
+		const streamsString = streamNames.join(', ');
+
+		return `(${streamsString})`;
 	}
 }
