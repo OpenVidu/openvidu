@@ -4,17 +4,30 @@ set -eu -o pipefail
 # CI flags
 GITHUB_ACTIONS_ORIGINAL_WORKING_DIR="${PWD}"
 GITHUB_ACTIONS_WORKING_DIR="${GITHUB_ACTIONS_WORKING_DIR:-}"
-CLEAN_ENVIRONMENT=false
+
 PREPARE=false
 TEST_IMAGE="openvidu/openvidu-test-e2e"
+
+CLEAN_ENVIRONMENT=false
 PREPARE_KURENTO_SNAPSHOT=false
 EXECUTE_ALL=false
+SERVE_OV_TESTAPP=false
+
+# Build artifacts
 BUILD_OV_BROWSER=false
 BUILD_OV_NODE_CLIENT=false
 BUILD_OV_JAVA_CLIENT=false
 BUILD_OV_PARENT=false
 BUILD_OV_TESTAPP=false
-SERVE_OV_TESTAPP=false
+
+# Bump versions
+BUMP_NPM_PROJECT_VERSION=false
+BUMP_MAVEN_PROJECT_VERSION=false
+BUMP_NPM_DEPENDENCY_VERSION=false
+BUMP_MAVEN_DEPENDENCY_VERSION=false
+
+NPM_PROJECT_PATH=""
+VERSION=""
 
 # cd to directory if GITHUB_ACTIONS_WORKING_DIR is set
 if [[ -n "${GITHUB_ACTIONS_WORKING_DIR:-}" ]]; then
@@ -23,51 +36,91 @@ fi
 
 # Environment variables
 if [[ -n ${1:-} ]]; then
-    while :
-    do
+    while :; do
         case "${1:-}" in
-            --clean-environment )
-                CLEAN_ENVIRONMENT=true
-                shift 1
-                ;;
-            --prepare )
-                PREPARE=true
-                if [[ -n "${2:-}" ]]; then
-                    TEST_IMAGE="${2}"
-                fi
-                shift 1
-                ;;
-            --prepare-kurento-snapshot )
-                PREPARE_KURENTO_SNAPSHOT=true
-                shift 1
-                ;;
-            --build-openvidu-browser )
-                BUILD_OV_BROWSER=true
-                shift 1
-                ;;
-            --build-openvidu-node-client )
-                BUILD_OV_NODE_CLIENT=true
-                shift 1
-                ;;
-            --build-openvidu-java-client )
-                BUILD_OV_JAVA_CLIENT=true
-                shift 1
-                ;;
-            --build-openvidu-parent )
-                BUILD_OV_PARENT=true
-                shift 1
-                ;;
-            --build-openvidu-testapp )
-                BUILD_OV_TESTAPP=true
-                shift 1
-                ;;
-            --serve-openvidu-testapp )
-                SERVE_OV_TESTAPP=true
-                shift 1
-                ;;
-            *)
-                break
-                ;;
+        --clean-environment)
+            CLEAN_ENVIRONMENT=true
+            shift 1
+            ;;
+        --prepare)
+            PREPARE=true
+            if [[ -n "${2:-}" ]]; then
+                TEST_IMAGE="${2}"
+            fi
+            shift 1
+            ;;
+        --prepare-kurento-snapshot)
+            PREPARE_KURENTO_SNAPSHOT=true
+            shift 1
+            ;;
+        --build-openvidu-browser)
+            BUILD_OV_BROWSER=true
+            shift 1
+            ;;
+        --build-openvidu-node-client)
+            BUILD_OV_NODE_CLIENT=true
+            shift 1
+            ;;
+        --build-openvidu-java-client)
+            BUILD_OV_JAVA_CLIENT=true
+            shift 1
+            ;;
+        --build-openvidu-parent)
+            BUILD_OV_PARENT=true
+            shift 1
+            ;;
+        --build-openvidu-testapp)
+            BUILD_OV_TESTAPP=true
+            shift 1
+            ;;
+        --serve-openvidu-testapp)
+            SERVE_OV_TESTAPP=true
+            shift 1
+            ;;
+        --bump-npm-project-version)
+            if [[ -z "${2:-}" ]]; then
+                echo "Must provide NPM_PROJECT_PATH as 1st parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${3:-}" ]]; then
+                echo "Must provide VERSION as 2nd parameter" 1>&2
+                exit 1
+            fi
+            BUMP_NPM_PROJECT_VERSION=true
+            NPM_PROJECT_PATH="${2}"
+            VERSION="${3}"
+            shift 1
+            ;;
+        --bump-maven-project-version)
+            BUMP_MAVEN_PROJECT_VERSION=true
+            shift 1
+            ;;
+        --bump-npm-dependency-version)
+            if [[ -z "${2:-}" ]]; then
+                echo "Must provide NPM_PROJECT_PATH as 1st parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${3:-}" ]]; then
+                echo "Must provide NPM_DEPENDENCY as 2nd parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${4:-}" ]]; then
+                echo "Must provide VERSION as 3rd parameter" 1>&2
+                exit 1
+            fi
+            BUMP_NPM_DEPENDENCY_VERSION=true
+            NPM_PROJECT_PATH="${2}"
+            NPM_DEPENDENCY="${3}"
+            VERSION="${4}"
+            shift 1
+            ;;
+        --bump-maven-dependency-version)
+            BUMP_MAVEN_DEPENDENCY_VERSION=true
+            shift 1
+            ;;
+        *)
+            break
+            ;;
         esac
     done
 else
@@ -81,8 +134,7 @@ if [[ "${CLEAN_ENVIRONMENT}" == true || "${EXECUTE_ALL}" == true ]]; then
 
     # Remove all running containers except test container and runner container
     ids=$(docker ps -a -q)
-    for id in $ids
-    do
+    for id in $ids; do
         DOCKER_IMAGE=$(docker inspect --format='{{.Config.Image}}' $id)
         if [[ "${DOCKER_IMAGE}" != *"openvidu/openvidu-test-e2e"* ]] &&
             [[ "${DOCKER_IMAGE}" != *"runner-deployment"* ]] &&
@@ -108,7 +160,7 @@ fi
 if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
 
     # Connect e2e test container to network bridge so it is vissible for browser and media server containers
-    E2E_CONTAINER_ID="$(docker ps  | grep  "${TEST_IMAGE}":* | awk '{ print $1 }')"
+    E2E_CONTAINER_ID="$(docker ps | grep "${TEST_IMAGE}":* | awk '{ print $1 }')"
 
     docker network connect bridge "${E2E_CONTAINER_ID}"
 
@@ -146,7 +198,6 @@ if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
     sudo mkdir -p /opt/openvidu/recordings && sudo chmod 777 /opt/openvidu/recordings
     # Prepare directory for OpenVidu Android apps
     sudo mkdir -p /opt/openvidu/android && sudo chmod 777 /opt/openvidu/android
-
 
     # Configure Snapshots repository
     if [[ -n "${KURENTO_SNAPSHOTS_URL:-}" ]]; then
@@ -289,6 +340,24 @@ if [[ "${SERVE_OV_TESTAPP}" == true || "${EXECUTE_ALL}" == true ]]; then
 
     # Serve TestApp
     pushd /opt/openvidu/testapp
-    http-server -S -p 4200 &> /opt/openvidu/testapp.log &
+    http-server -S -p 4200 &>/opt/openvidu/testapp.log &
+    popd
+fi
+
+# -------------
+# Bump NPM project version
+# -------------
+if [[ "${BUMP_NPM_PROJECT_VERSION}" == true ]]; then
+    pushd ${NPM_PROJECT_PATH}
+    npm version ${VERSION} --git-tag-version=false --commit-hooks=false
+    popd
+fi
+
+# -------------
+# Bump NPM project dependency
+# -------------
+if [[ "${BUMP_NPM_DEPENDENCY_VERSION}" == true ]]; then
+    pushd ${NPM_PROJECT_PATH}
+    npm install "${NPM_DEPENDENCY}@${VERSION}" --save-exact=true --legacy-peer-deps
     popd
 fi

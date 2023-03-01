@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 VERSION=$1
 if [[ ! -z $VERSION ]]; then
