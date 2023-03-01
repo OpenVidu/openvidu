@@ -1,4 +1,5 @@
 #!/bin/bash -x
+
 VERSION=$1
 if [[ ! -z $VERSION ]]; then
     cp ../utils/discover_my_public_ip.sh ./discover_my_public_ip.sh
