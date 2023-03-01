@@ -81,7 +81,6 @@ export class ParticipantService {
 			this.disableWebcamStream();
 			this.openviduService.unpublishCamera(cameraPublisher);
 			this.publishAudioAux(screenPublisher, publishAudio);
-			this.updateLocalParticipant();
 		} else if (this.isOnlyMyScreenActive()) {
 			// Enabling webcam
 			const hasAudio = this.hasScreenAudioActive();
@@ -92,11 +91,12 @@ export class ParticipantService {
 			this.publishAudioAux(screenPublisher, false);
 			this.publishAudioAux(cameraPublisher, hasAudio);
 			this.enableWebcamStream();
-			this.updateLocalParticipant();
 		} else {
 			// Muting/unmuting webcam
 			await this.publishVideoAux(cameraPublisher, publish);
 		}
+		this.updateLocalParticipant();
+
 	}
 
 	/**
