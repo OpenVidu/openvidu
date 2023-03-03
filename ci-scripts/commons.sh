@@ -22,12 +22,11 @@ BUILD_OV_TESTAPP=false
 
 # Bump versions
 BUMP_NPM_PROJECT_VERSION=false
-BUMP_MAVEN_PROJECT_VERSION=false
 BUMP_NPM_DEPENDENCY_VERSION=false
-BUMP_MAVEN_DEPENDENCY_VERSION=false
+BUMP_MAVEN_PROJECT_VERSION=false
+BUMP_MAVEN_PROPERTY_VERSION=false
 
-NPM_PROJECT_PATH=""
-VERSION=""
+WAIT_FOR_NPM_DEPENDENCY=false
 
 # cd to directory if GITHUB_ACTIONS_WORKING_DIR is set
 if [[ -n "${GITHUB_ACTIONS_WORKING_DIR:-}" ]]; then
@@ -79,7 +78,7 @@ if [[ -n ${1:-} ]]; then
             ;;
         --bump-npm-project-version)
             if [[ -z "${2:-}" ]]; then
-                echo "Must provide NPM_PROJECT_PATH as 1st parameter" 1>&2
+                echo "Must provide PROJECT_PATH as 1st parameter" 1>&2
                 exit 1
             fi
             if [[ -z "${3:-}" ]]; then
@@ -87,21 +86,17 @@ if [[ -n ${1:-} ]]; then
                 exit 1
             fi
             BUMP_NPM_PROJECT_VERSION=true
-            NPM_PROJECT_PATH="${2}"
+            PROJECT_PATH="${2}"
             VERSION="${3}"
-            shift 1
-            ;;
-        --bump-maven-project-version)
-            BUMP_MAVEN_PROJECT_VERSION=true
             shift 1
             ;;
         --bump-npm-dependency-version)
             if [[ -z "${2:-}" ]]; then
-                echo "Must provide NPM_PROJECT_PATH as 1st parameter" 1>&2
+                echo "Must provide PROJECT_PATH as 1st parameter" 1>&2
                 exit 1
             fi
             if [[ -z "${3:-}" ]]; then
-                echo "Must provide NPM_DEPENDENCY as 2nd parameter" 1>&2
+                echo "Must provide DEPENDENCY as 2nd parameter" 1>&2
                 exit 1
             fi
             if [[ -z "${4:-}" ]]; then
@@ -109,13 +104,56 @@ if [[ -n ${1:-} ]]; then
                 exit 1
             fi
             BUMP_NPM_DEPENDENCY_VERSION=true
-            NPM_PROJECT_PATH="${2}"
-            NPM_DEPENDENCY="${3}"
+            PROJECT_PATH="${2}"
+            DEPENDENCY="${3}"
             VERSION="${4}"
             shift 1
             ;;
-        --bump-maven-dependency-version)
-            BUMP_MAVEN_DEPENDENCY_VERSION=true
+        --bump-maven-project-version)
+            if [[ -z "${2:-}" ]]; then
+                echo "Must provide PROJECT_PATH as 1st parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${3:-}" ]]; then
+                echo "Must provide VERSION as 2nd parameter" 1>&2
+                exit 1
+            fi
+            BUMP_MAVEN_PROJECT_VERSION=true
+            PROJECT_PATH="${2}"
+            VERSION="${3}"
+            shift 1
+            ;;
+        --bump-maven-property-version)
+            if [[ -z "${2:-}" ]]; then
+                echo "Must provide PROJECT_PATH as 1st parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${3:-}" ]]; then
+                echo "Must provide PROPERTY as 2nd parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${4:-}" ]]; then
+                echo "Must provide VERSION as 3rd parameter" 1>&2
+                exit 1
+            fi
+            BUMP_MAVEN_PROPERTY_VERSION=true
+            PROJECT_PATH="${2}"
+            PROPERTY="${3}"
+            VERSION="${4}"
+            shift 1
+            ;;
+        --wait-for-npm-dependency)
+            if [[ -z "${2:-}" ]]; then
+                echo "Must provide DEPENDENCY as 1st parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${3:-}" ]]; then
+                echo "Must provide VERSION as 2nd parameter" 1>&2
+                exit 1
+            fi
+            WAIT_FOR_NPM_DEPENDENCY=true
+            DEPENDENCY="${2}"
+            VERSION="${3}"
             shift 1
             ;;
         *)
@@ -348,7 +386,7 @@ fi
 # Bump NPM project version
 # -------------
 if [[ "${BUMP_NPM_PROJECT_VERSION}" == true ]]; then
-    pushd ${NPM_PROJECT_PATH}
+    pushd ${PROJECT_PATH}
     npm version ${VERSION} --git-tag-version=false --commit-hooks=false
     popd
 fi
@@ -357,7 +395,52 @@ fi
 # Bump NPM project dependency
 # -------------
 if [[ "${BUMP_NPM_DEPENDENCY_VERSION}" == true ]]; then
-    pushd ${NPM_PROJECT_PATH}
-    npm install "${NPM_DEPENDENCY}@${VERSION}" --save-exact=true --legacy-peer-deps
+    pushd ${PROJECT_PATH}
+    npm install "${DEPENDENCY}@${VERSION}" --save-exact=true --legacy-peer-deps
+    popd
+fi
+
+# -------------
+# Bump Maven project version
+# -------------
+if [[ "${BUMP_MAVEN_PROJECT_VERSION}" == true ]]; then
+    pushd ${PROJECT_PATH}
+    mvn -DskipTests=true versions:set -DnewVersion="${VERSION}"
+    popd
+fi
+
+# -------------
+# Bump Maven project property
+# -------------
+if [[ "${BUMP_MAVEN_PROPERTY_VERSION}" == true ]]; then
+
+    if [[ -n "${OPENVIDU_MAVEN_GENERIC_SETTINGS:-}" ]]; then
+        # Config file with Kurento Snapshots configuration only
+        mkdir -p /tmp/maven-generic-settings
+        echo "${OPENVIDU_MAVEN_GENERIC_SETTINGS}" >/tmp/maven-generic-settings/settings.xml
+    fi
+
+    pushd ${PROJECT_PATH}
+    mvn --batch-mode \
+        --settings /tmp/maven-generic-settings/settings.xml \
+        -DskipTests=true \
+        versions:set-property \
+        -Dproperty="${PROPERTY}" \
+        -DnewVersion="${VERSION}"
+    popd
+fi
+
+# -------------
+# Wait for NPM dependency to be available
+# -------------
+if [[ "${WAIT_FOR_NPM_DEPENDENCY}" == true ]]; then
+    CHECK_VERSION_AVAILABILTY="npm show ${DEPENDENCY}@${VERSION} version || echo ''"
+    VERSION_AUX=$(eval "${CHECK_VERSION_AVAILABILTY}")
+    until [[ "${VERSION_AUX}" == "${VERSION}" ]]; do
+        echo "Waiting for ${DEPENDENCY}@${VERSION} to be available in NPM..."
+        sleep 2
+        VERSION_AUX=$(eval "${CHECK_VERSION_AVAILABILTY}")
+    done
+    echo "${DEPENDENCY}@${VERSION} already available in NPM"
     popd
 fi
