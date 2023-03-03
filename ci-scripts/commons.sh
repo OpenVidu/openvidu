@@ -396,7 +396,7 @@ fi
 # -------------
 if [[ "${BUMP_NPM_DEPENDENCY_VERSION}" == true ]]; then
     pushd ${PROJECT_PATH}
-    tmp=$(mktemp) && jq ".dependencies.\"${DEPENDENCY}\" = \"${VERSION}\"" package.json >"$tmp" && mv "$tmp" package.json
+    tmp=$(mktemp) && jq -j ".dependencies.\"${DEPENDENCY}\" = \"${VERSION}\"" package.json >"$tmp" && mv "$tmp" package.json
     # npm install "${DEPENDENCY}@${VERSION}" --save-exact=true --legacy-peer-deps
     popd
 fi
