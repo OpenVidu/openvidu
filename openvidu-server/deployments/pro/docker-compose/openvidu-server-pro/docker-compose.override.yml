@@ -3,13 +3,13 @@ version: '3.1'
 services:
     # --------------------------------------------------------------
     #
-    #   Change this if your want use your own application.
-    #   It's very important expose your application in port 5442
-    #   and use the http protocol.
+    #    Change this if your want use your own application.
+    #    It's very important expose your application in port 5442
+    #    and use the http protocol.
     #
-    #   Default Application
+    #    Default Application
     #
-    #   Openvidu-Call Version: 2.25.0
+    #    Openvidu-Call Version: 2.25.0
     #
     # --------------------------------------------------------------
     app:
