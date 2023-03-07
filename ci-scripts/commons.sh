@@ -28,6 +28,7 @@ BUMP_MAVEN_PROPERTY_VERSION=false
 BUMP_DOCKER_COMPOSE_SERVICE_VERSION=false
 BUMP_DOCKER_COMPOSE_HEADER_VERSION=false
 BUMP_DOCKER_IMAGE_VERSION_IN_FILES=false
+BUMP_APPLICATION_PROPERTIES_VAR_VALUE=false
 
 WAIT_FOR_NPM_DEPENDENCY=false
 
@@ -224,6 +225,26 @@ if [[ -n ${1:-} ]]; then
             shift 1
             ;;
 
+        --bump-application-properties-var-value)
+            if [[ -z "${3:-}" ]]; then
+                echo "Must provide APPLICATION_PROPERTIES_FILE as 2nd parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${4:-}" ]]; then
+                echo "Must provide VARIABLE as 3rd parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${4:-}" ]]; then
+                echo "Must provide VALUE as 4th parameter" 1>&2
+                exit 1
+            fi
+            BUMP_APPLICATION_PROPERTIES_VAR_VALUE=true
+            APPLICATION_PROPERTIES_FILE="${2}"
+            VARIABLE="${3}"
+            VALUE="${4}"
+            shift 1
+            ;;
+
         --wait-for-npm-dependency)
             if [[ -z "${2:-}" ]]; then
                 echo "Must provide DEPENDENCY as 1st parameter" 1>&2
@@ -246,6 +267,18 @@ if [[ -n ${1:-} ]]; then
 else
     EXECUTE_ALL=true
 fi
+
+compareFiles() {
+    if cmp -s "$1" "$1-AUX"; then
+        rm -f $1-AUX
+        echo "Error: no changes has been made to $1"
+        echo "Trying to change \"$2\" to \"$3\""
+        exit 1
+    else
+        cp -f "$1-AUX" "$1"
+        rm -f "$1-AUX"
+    fi
+}
 
 # -------------
 # Clean environment
@@ -517,32 +550,16 @@ fi
 # Bump docker-compose.yml service version
 # -------------
 if [[ "${BUMP_DOCKER_COMPOSE_SERVICE_VERSION}" == true ]]; then
-    sed "s|image:\s\+${SERVICE_IMAGE}:[[:alnum:]\._-]\+|image: ${SERVICE_IMAGE}:${VERSION}|g" ${DOCKER_COMPOSE_FILE} >${DOCKER_COMPOSE_FILE}-AUX
-    if cmp -s "${DOCKER_COMPOSE_FILE}" "${DOCKER_COMPOSE_FILE}-AUX"; then
-        rm -f ${DOCKER_COMPOSE_FILE}-AUX
-        echo "Error: no changes has been made to $DOCKER_COMPOSE_FILE"
-        echo "Trying to change service image \"${SERVICE_IMAGE}\" to version \"${VERSION}\""
-        exit 1
-    else
-        rm -f ${DOCKER_COMPOSE_FILE}-AUX
-        sed -i "s|image:\s\+${SERVICE_IMAGE}:[[:alnum:]\._-]\+|image: ${SERVICE_IMAGE}:${VERSION}|g" ${DOCKER_COMPOSE_FILE}
-    fi
+    sed -r "s|image:\s+${SERVICE_IMAGE}:[[:alnum:]._-]+|image: ${SERVICE_IMAGE}:${VERSION}|g" ${DOCKER_COMPOSE_FILE} >${DOCKER_COMPOSE_FILE}-AUX
+    compareFiles $DOCKER_COMPOSE_FILE $SERVICE_IMAGE $VERSION
 fi
 
 # -------------
 # Bump docker-compose.yml header version
 # -------------
 if [[ "${BUMP_DOCKER_COMPOSE_HEADER_VERSION}" == true ]]; then
-    sed "s|#\s\+${HEADER}:\s\+[[:alnum:]\._-]\+|#    ${HEADER}: ${VERSION}|g" ${DOCKER_COMPOSE_FILE} >${DOCKER_COMPOSE_FILE}-AUX
-    if cmp -s "${DOCKER_COMPOSE_FILE}" "${DOCKER_COMPOSE_FILE}-AUX"; then
-        rm -f ${DOCKER_COMPOSE_FILE}-AUX
-        echo "Error: no changes has been made to $DOCKER_COMPOSE_FILE"
-        echo "Trying to change header \"${HEADER}\" to version \"${VERSION}\""
-        exit 1
-    else
-        rm -f ${DOCKER_COMPOSE_FILE}-AUX
-        sed -i "s|#\s\+${HEADER}:\s\+[[:alnum:]\._-]\+|#    ${HEADER}: ${VERSION}|g" ${DOCKER_COMPOSE_FILE}
-    fi
+    sed -r "s|#\s+${HEADER}:\s+[[:alnum:]._-]+|#    ${HEADER}: ${VERSION}|g" ${DOCKER_COMPOSE_FILE} >${DOCKER_COMPOSE_FILE}-AUX
+    compareFiles $DOCKER_COMPOSE_FILE $HEADER $VERSION
 fi
 
 # -------------
@@ -550,8 +567,16 @@ fi
 # -------------
 if [[ "${BUMP_DOCKER_IMAGE_VERSION_IN_FILES}" == true ]]; then
     pushd ${PROJECT_PATH}
-    find . -type f -name ${FILE_NAME} | xargs sed -i "s|${IMAGE}:[[:alnum:]\._-]\+|${IMAGE}:${VERSION}|g"
+    find . -type f -name ${FILE_NAME} | xargs sed -i -r "s|${IMAGE}:[[:alnum:]._-]+|${IMAGE}:${VERSION}|g"
     popd
+fi
+
+# -------------
+# Bump application.properties variable value
+# -------------
+if [[ "${BUMP_APPLICATION_PROPERTIES_VAR_VALUE}" == true ]]; then
+    sed -r "s%${VARIABLE}((:|=)\s*).*$%${VARIABLE}\1${VALUE}%g" ${APPLICATION_PROPERTIES_FILE} >${APPLICATION_PROPERTIES_FILE}-AUX
+    compareFiles $APPLICATION_PROPERTIES_FILE $VARIABLE $VALUE
 fi
 
 # -------------
