@@ -46,6 +46,7 @@ export class VideoComponent implements OnInit, OnDestroy {
 
     unpublished = false;
     publisherChanged = false;
+    trackReplaced = false;
     audioMuted = false;
     videoMuted = false;
     sendAudio = true;
@@ -319,6 +320,42 @@ export class VideoComponent implements OnInit, OnDestroy {
         });
 
         this.publisherChanged = !this.publisherChanged;
+    }
+
+    async replaceTrack() {
+        let newMediaStream: MediaStream;
+        let newVideoTrack: MediaStreamTrack;
+        const originalPublisherProperties = this.streamManager.stream.outboundStreamOpts.publisherProperties;
+        if (!this.trackReplaced) {
+            newMediaStream = await this.OV.getUserMedia(originalPublisherProperties);
+            const videoStreamTrack: MediaStreamTrack = newMediaStream.getVideoTracks()[0];
+            const video: HTMLVideoElement = document.createElement('video');
+            video.srcObject = new MediaStream([videoStreamTrack]);
+            video.play();
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.filter = 'grayscale(100%)';
+            video.addEventListener('play', () => {
+                const loop = () => {
+                    if (!video.paused && !video.ended) {
+                        ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, video.videoWidth, video.videoHeight);
+                        setTimeout(loop, 33); // Drawing at 30fps
+                    }
+                };
+                loop();
+            });
+            newVideoTrack = canvas.captureStream(30).getVideoTracks()[0];
+        } else {
+            newMediaStream = await this.OV.getUserMedia(originalPublisherProperties);
+            newVideoTrack = newMediaStream.getVideoTracks()[0];
+        }
+        try {
+            await (this.streamManager as Publisher).replaceTrack(newVideoTrack);
+            console.log('Track replaced');
+        } catch (error) {
+            console.error('Error replacing track', error);
+        }
+        this.trackReplaced = !this.trackReplaced;
     }
 
     reconnect() {

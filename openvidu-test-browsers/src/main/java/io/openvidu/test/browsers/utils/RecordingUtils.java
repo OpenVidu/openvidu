@@ -86,6 +86,14 @@ public class RecordingUtils {
 				&& (Math.abs(rgb.get("b") - rgb.get("g")) <= 2);
 	}
 
+	public static boolean checkVideoAverageRgbLightGray(Map<String, Long> rgb) {
+		// GRAY color: {r < 50, g < 50, b < 50} and the absolute difference between them
+		// not greater than 2
+		return (rgb.get("r") >= 90) && (rgb.get("g") >= 90) && (rgb.get("b") >= 90) && (rgb.get("r") <= 110)
+				&& (rgb.get("g") <= 110) && (rgb.get("b") <= 110) && (Math.abs(rgb.get("r") - rgb.get("g")) <= 10)
+				&& (Math.abs(rgb.get("r") - rgb.get("b")) <= 10) && (Math.abs(rgb.get("b") - rgb.get("g")) <= 10);
+	}
+
 	public static boolean checkVideoAverageRgbRed(Map<String, Long> rgb) {
 		// RED color: {r > 240, g < 15, b <15}
 		return (rgb.get("r") > 240) && (rgb.get("g") < 15) && (rgb.get("b") < 15);

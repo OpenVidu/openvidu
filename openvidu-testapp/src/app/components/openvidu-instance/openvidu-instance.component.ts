@@ -617,53 +617,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     this.subscribers.push(session.subscribe(event.stream, undefined));
   }
 
-  initGrayVideo(): void {
-
-    this.OV.getUserMedia(
-      {
-        audioSource: undefined,
-        videoSource: undefined,
-        resolution: '1280x720',
-        frameRate: 3,
-      }
-    )
-      .then((mediaStream: MediaStream) => {
-
-        const videoStreamTrack: MediaStreamTrack = mediaStream.getVideoTracks()[0];
-        const video: HTMLVideoElement = document.createElement('video');
-        video.srcObject = new MediaStream([videoStreamTrack]);
-        video.play();
-        const canvas = document.createElement('canvas') as any;
-        const ctx = canvas.getContext('2d');
-        ctx.filter = 'grayscale(100%)';
-
-        video.addEventListener('play', () => {
-          const loop = () => {
-            if (!video.paused && !video.ended) {
-              ctx.drawImage(video, 0, 0, 300, 170);
-              setTimeout(loop, 33); // Drawing at 30fps
-            }
-          };
-          loop();
-        });
-        const grayVideoTrack: MediaStreamTrack = (<MediaStream>canvas.captureStream(30)).getVideoTracks()[0];
-        this.OV.getUserMedia({
-          audioSource: false,
-          videoSource: grayVideoTrack
-        }).then(mediastream => {
-          this.publisher.replaceTrack(mediastream.getVideoTracks()[0])
-            .then(() => console.log('New track is being published'))
-            .catch(error => {
-              console.error('Error replacing track');
-              console.error(error);
-            });
-        });
-      })
-      .catch(error => {
-        console.error(error);
-      });
-  }
-
   openSessionPropertiesDialog() {
     this.sessionProperties.customSessionId = this.sessionName;
     const dialogRef = this.dialog.open(SessionPropertiesDialogComponent, {

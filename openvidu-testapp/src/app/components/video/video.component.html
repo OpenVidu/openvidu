@@ -30,7 +30,10 @@
                 <mat-icon aria-label="Publish or unpublish audio" class="mat-icon material-icons" role="img" aria-hidden="true">{{pubSubAudioIcon}}</mat-icon>
             </button>
             <button *ngIf="!this.unpublished" class="video-btn change-publisher-btn" title="Change publisher" (click)="changePub()">
-                <mat-icon aria-label="Change publisher" class="mat-icon material-icons" role="img" aria-hidden="true">switch_video</mat-icon>
+                <mat-icon aria-label="Change publisher" class="mat-icon material-icons" role="img" aria-hidden="true">cameraswitch</mat-icon>
+            </button>
+            <button *ngIf="!this.unpublished" class="video-btn replace-track-btn" title="Replace track" (click)="replaceTrack()">
+                <mat-icon aria-label="Replace track" class="mat-icon material-icons" role="img" aria-hidden="true">switch_video</mat-icon>
             </button>
             <button *ngIf="!this.unpublished" class="video-btn reconnect-publisher-btn" title="Reconnect publisher" (click)="reconnect()">
                 <mat-icon aria-label="Reconnect publisher" class="mat-icon material-icons" role="img" aria-hidden="true">refresh</mat-icon>

@@ -810,6 +810,49 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@DisplayName("Replace track")
+	void replaceTrackTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Replace track");
+
+		WebElement oneToManyInput = user.getDriver().findElement(By.id("one2many-input"));
+		oneToManyInput.clear();
+		oneToManyInput.sendKeys("1");
+
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		user.getDriver().findElement(By.id("one2many-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		final CountDownLatch latch = new CountDownLatch(2);
+		user.getEventManager().on("streamPropertyChanged", (event) -> {
+			if ("videoTrack".equals(event.get("changedProperty").getAsString())) {
+				Assertions.assertEquals("trackReplaced", event.get("reason").getAsString(),
+						"Wrong streamPropertyChanged reason for videoTrack");
+				latch.countDown();
+			}
+		});
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .replace-track-btn")).click();
+		if (!latch.await(3000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(user, 2);
+			fail();
+			return;
+		}
+
+		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video"));
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video"));
+		Map<String, Long> rgbPublisher = user.getBrowserUser().getAverageRgbFromVideo(publisherVideo);
+		Map<String, Long> rgbSubscriber = user.getBrowserUser().getAverageRgbFromVideo(subscriberVideo);
+		Assertions.assertTrue(RecordingUtils.checkVideoAverageRgbLightGray(rgbPublisher),
+				"Publisher video is not average gray");
+		Assertions.assertTrue(RecordingUtils.checkVideoAverageRgbLightGray(rgbSubscriber),
+				"Subscriber video is not average gray");
+	}
+
+	@Test
 	@DisplayName("Moderator capabilities")
 	void moderatorCapabilitiesTest() throws Exception {
 
