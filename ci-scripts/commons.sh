@@ -25,6 +25,9 @@ BUMP_NPM_PROJECT_VERSION=false
 BUMP_NPM_DEPENDENCY_VERSION=false
 BUMP_MAVEN_PROJECT_VERSION=false
 BUMP_MAVEN_PROPERTY_VERSION=false
+BUMP_DOCKER_COMPOSE_SERVICE_VERSION=false
+BUMP_DOCKER_COMPOSE_HEADER_VERSION=false
+BUMP_DOCKER_IMAGE_VERSION_IN_FILES=false
 
 WAIT_FOR_NPM_DEPENDENCY=false
 
@@ -37,10 +40,12 @@ fi
 if [[ -n ${1:-} ]]; then
     while :; do
         case "${1:-}" in
+
         --clean-environment)
             CLEAN_ENVIRONMENT=true
             shift 1
             ;;
+
         --prepare)
             PREPARE=true
             if [[ -n "${2:-}" ]]; then
@@ -48,34 +53,42 @@ if [[ -n ${1:-} ]]; then
             fi
             shift 1
             ;;
+
         --prepare-kurento-snapshot)
             PREPARE_KURENTO_SNAPSHOT=true
             shift 1
             ;;
+
         --build-openvidu-browser)
             BUILD_OV_BROWSER=true
             shift 1
             ;;
+
         --build-openvidu-node-client)
             BUILD_OV_NODE_CLIENT=true
             shift 1
             ;;
+
         --build-openvidu-java-client)
             BUILD_OV_JAVA_CLIENT=true
             shift 1
             ;;
+
         --build-openvidu-parent)
             BUILD_OV_PARENT=true
             shift 1
             ;;
+
         --build-openvidu-testapp)
             BUILD_OV_TESTAPP=true
             shift 1
             ;;
+
         --serve-openvidu-testapp)
             SERVE_OV_TESTAPP=true
             shift 1
             ;;
+
         --bump-npm-project-version)
             if [[ -z "${2:-}" ]]; then
                 echo "Must provide PROJECT_PATH as 1st parameter" 1>&2
@@ -90,6 +103,7 @@ if [[ -n ${1:-} ]]; then
             VERSION="${3}"
             shift 1
             ;;
+
         --bump-npm-dependency-version)
             if [[ -z "${2:-}" ]]; then
                 echo "Must provide PROJECT_PATH as 1st parameter" 1>&2
@@ -109,6 +123,7 @@ if [[ -n ${1:-} ]]; then
             VERSION="${4}"
             shift 1
             ;;
+
         --bump-maven-project-version)
             if [[ -z "${2:-}" ]]; then
                 echo "Must provide PROJECT_PATH as 1st parameter" 1>&2
@@ -123,6 +138,7 @@ if [[ -n ${1:-} ]]; then
             VERSION="${3}"
             shift 1
             ;;
+
         --bump-maven-property-version)
             if [[ -z "${2:-}" ]]; then
                 echo "Must provide PROJECT_PATH as 1st parameter" 1>&2
@@ -142,6 +158,72 @@ if [[ -n ${1:-} ]]; then
             VERSION="${4}"
             shift 1
             ;;
+
+        --bump-docker-compose-service-version)
+            if [[ -z "${2:-}" ]]; then
+                echo "Must provide DOCKER_COMPOSE_FILE as 1st parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${3:-}" ]]; then
+                echo "Must provide SERVICE_IMAGE as 2nd parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${4:-}" ]]; then
+                echo "Must provide VERSION as 3rd parameter" 1>&2
+                exit 1
+            fi
+            BUMP_DOCKER_COMPOSE_SERVICE_VERSION=true
+            DOCKER_COMPOSE_FILE="${2}"
+            SERVICE_IMAGE="${3}"
+            VERSION="${4}"
+            shift 1
+            ;;
+
+        --bump-docker-compose-header-version)
+            if [[ -z "${2:-}" ]]; then
+                echo "Must provide DOCKER_COMPOSE_FILE as 1st parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${3:-}" ]]; then
+                echo "Must provide HEADER as 2nd parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${4:-}" ]]; then
+                echo "Must provide VERSION as 3rd parameter" 1>&2
+                exit 1
+            fi
+            BUMP_DOCKER_COMPOSE_HEADER_VERSION=true
+            DOCKER_COMPOSE_FILE="${2}"
+            HEADER="${3}"
+            VERSION="${4}"
+            shift 1
+            ;;
+
+        --bump-docker-image-version-in-files)
+            if [[ -z "${2:-}" ]]; then
+                echo "Must provide PROJECT_PATH as 1st parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${3:-}" ]]; then
+                echo "Must provide FILE_NAME as 2nd parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${4:-}" ]]; then
+                echo "Must provide IMAGE as 3rd parameter" 1>&2
+                exit 1
+            fi
+            if [[ -z "${4:-}" ]]; then
+                echo "Must provide VERSION as 4th parameter" 1>&2
+                exit 1
+            fi
+            BUMP_DOCKER_IMAGE_VERSION_IN_FILES=true
+            PROJECT_PATH="${2}"
+            FILE_NAME="${3}"
+            IMAGE="${4}"
+            VERSION="${5}"
+            shift 1
+            ;;
+
         --wait-for-npm-dependency)
             if [[ -z "${2:-}" ]]; then
                 echo "Must provide DEPENDENCY as 1st parameter" 1>&2
@@ -428,6 +510,47 @@ if [[ "${BUMP_MAVEN_PROPERTY_VERSION}" == true ]]; then
         versions:set-property \
         -Dproperty="${PROPERTY}" \
         -DnewVersion="${VERSION}"
+    popd
+fi
+
+# -------------
+# Bump docker-compose.yml service version
+# -------------
+if [[ "${BUMP_DOCKER_COMPOSE_SERVICE_VERSION}" == true ]]; then
+    sed "s|image:\s\+${SERVICE_IMAGE}:[[:alnum:]\._-]\+|image: ${SERVICE_IMAGE}:${VERSION}|g" ${DOCKER_COMPOSE_FILE} >${DOCKER_COMPOSE_FILE}-AUX
+    if cmp -s "${DOCKER_COMPOSE_FILE}" "${DOCKER_COMPOSE_FILE}-AUX"; then
+        rm -f ${DOCKER_COMPOSE_FILE}-AUX
+        echo "Error: no changes has been made to $DOCKER_COMPOSE_FILE"
+        echo "Trying to change service image \"${SERVICE_IMAGE}\" to version \"${VERSION}\""
+        exit 1
+    else
+        rm -f ${DOCKER_COMPOSE_FILE}-AUX
+        sed -i "s|image:\s\+${SERVICE_IMAGE}:[[:alnum:]\._-]\+|image: ${SERVICE_IMAGE}:${VERSION}|g" ${DOCKER_COMPOSE_FILE}
+    fi
+fi
+
+# -------------
+# Bump docker-compose.yml header version
+# -------------
+if [[ "${BUMP_DOCKER_COMPOSE_HEADER_VERSION}" == true ]]; then
+    sed "s|#\s\+${HEADER}:\s\+[[:alnum:]\._-]\+|#    ${HEADER}: ${VERSION}|g" ${DOCKER_COMPOSE_FILE} >${DOCKER_COMPOSE_FILE}-AUX
+    if cmp -s "${DOCKER_COMPOSE_FILE}" "${DOCKER_COMPOSE_FILE}-AUX"; then
+        rm -f ${DOCKER_COMPOSE_FILE}-AUX
+        echo "Error: no changes has been made to $DOCKER_COMPOSE_FILE"
+        echo "Trying to change header \"${HEADER}\" to version \"${VERSION}\""
+        exit 1
+    else
+        rm -f ${DOCKER_COMPOSE_FILE}-AUX
+        sed -i "s|#\s\+${HEADER}:\s\+[[:alnum:]\._-]\+|#    ${HEADER}: ${VERSION}|g" ${DOCKER_COMPOSE_FILE}
+    fi
+fi
+
+# -------------
+# Bump Docker image version in files
+# -------------
+if [[ "${BUMP_DOCKER_IMAGE_VERSION_IN_FILES}" == true ]]; then
+    pushd ${PROJECT_PATH}
+    find . -type f -name ${FILE_NAME} | xargs sed -i "s|${IMAGE}:[[:alnum:]\._-]\+|${IMAGE}:${VERSION}|g"
     popd
 fi
 
