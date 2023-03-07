@@ -87,8 +87,8 @@ public class RecordingUtils {
 	}
 
 	public static boolean checkVideoAverageRgbLightGray(Map<String, Long> rgb) {
-		// GRAY color: {r < 50, g < 50, b < 50} and the absolute difference between them
-		// not greater than 2
+		// GRAY color: {r [90,110], g [90,110], b [90,110]} and the absolute difference
+		// between not greater than 10
 		return (rgb.get("r") >= 90) && (rgb.get("g") >= 90) && (rgb.get("b") >= 90) && (rgb.get("r") <= 110)
 				&& (rgb.get("g") <= 110) && (rgb.get("b") <= 110) && (Math.abs(rgb.get("r") - rgb.get("g")) <= 10)
 				&& (Math.abs(rgb.get("r") - rgb.get("b")) <= 10) && (Math.abs(rgb.get("b") - rgb.get("g")) <= 10);
