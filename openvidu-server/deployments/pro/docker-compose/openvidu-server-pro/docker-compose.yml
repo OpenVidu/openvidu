@@ -43,6 +43,7 @@ services:
             - COTURN_IP=${COTURN_IP:-auto-ipv4}
             - COTURN_PORT=${COTURN_PORT:-3478}
             - OPENVIDU_PRO_CLUSTER=true
+            - OPENVIDU_PRO_ELASTICSEARCH_ENABLED=${OPENVIDU_PRO_ELASTICSEARCH_ENABLED:-true}
             - OPENVIDU_PRO_KIBANA_HOST=${OPENVIDU_PRO_KIBANA_HOST:-http://127.0.0.1/kibana}
             - OPENVIDU_PRO_ELASTICSEARCH_HOST=${OPENVIDU_PRO_ELASTICSEARCH_HOST:-http://127.0.0.1:9200}
             - WAIT_KIBANA_URL=${OPENVIDU_PRO_KIBANA_HOST:-http://127.0.0.1/kibana}
@@ -159,6 +160,23 @@ services:
             - /proc:/hostfs/proc:ro
             - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
             - /:/hostfs:ro
+        entrypoint: >
+            /bin/bash -c 'if [[ $${OPENVIDU_PRO_ELASTICSEARCH_HOST} =~ ^(https?://)?([^:/]+)(:([0-9]+))?(/.*)?$$ ]]; then
+                ES_PROTO=$${BASH_REMATCH[1]}
+                ES_HOST=$${BASH_REMATCH[2]}
+                ES_PATH=$${BASH_REMATCH[5]}
+                if [[ $$ES_PROTO == "https://" ]] && [[ -z $${BASH_REMATCH[4]} ]]; then
+                    ES_PORT=443
+                else
+                    ES_PORT=80
+                fi;
+                OPENVIDU_PRO_ELASTICSEARCH_HOST=$${ES_PROTO}$${ES_HOST}:$${ES_PORT}$${ES_PATH}
+            else
+                echo "Invalid OPENVIDU_PRO_ELASTICSEARCH_HOST"
+                echo "It must be a valid URL"
+                exit 1
+            fi;
+            /bin/bash -c "$$@"'
         command: >
             /bin/bash -c "metricbeat -e -strict.perms=false -e -system.hostfs=/hostfs
             `if [ ! -z $ELASTICSEARCH_USERNAME ]; then echo '-E output.elasticsearch.username=$ELASTICSEARCH_USERNAME'; fi`
@@ -180,6 +198,23 @@ services:
             - ./beats/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
             - /var/lib/docker:/var/lib/docker:ro
             - /var/run/docker.sock:/var/run/docker.sock
+        entrypoint: >
+            /bin/bash -c 'if [[ $${OPENVIDU_PRO_ELASTICSEARCH_HOST} =~ ^(https?://)?([^:/]+)(:([0-9]+))?(/.*)?$$ ]]; then
+                ES_PROTO=$${BASH_REMATCH[1]}
+                ES_HOST=$${BASH_REMATCH[2]}
+                ES_PATH=$${BASH_REMATCH[5]}
+                if [[ $$ES_PROTO == "https://" ]] && [[ -z $${BASH_REMATCH[4]} ]]; then
+                    ES_PORT=443
+                else
+                    ES_PORT=80
+                fi;
+                OPENVIDU_PRO_ELASTICSEARCH_HOST=$${ES_PROTO}$${ES_HOST}:$${ES_PORT}$${ES_PATH}
+            else
+                echo "Invalid OPENVIDU_PRO_ELASTICSEARCH_HOST"
+                echo "It must be a valid URL"
+                exit 1
+            fi;
+            /bin/bash -c "$$@"'
         command: >
             /bin/bash -c "filebeat -e -strict.perms=false
             `if [ ! -z $ELASTICSEARCH_USERNAME ]; then echo '-E output.elasticsearch.username=$ELASTICSEARCH_USERNAME'; fi`

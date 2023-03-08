@@ -230,6 +230,47 @@ is_external_url() {
   fi
 }
 
+is_elasticsearch_enabled() {
+  local ELASTICSEARCH_ENABLED
+  ELASTICSEARCH_ENABLED=$(grep -v '^#' .env | grep OPENVIDU_PRO_ELASTICSEARCH_ENABLED | cut -d '=' -f2)
+
+  # First check if empty
+  if [[ -z "$ELASTICSEARCH_ENABLED" ]]; then
+    # If empty, then elasticsearch is enabled
+    return 0
+  fi
+
+  # If not empty, then check if true
+  if [[ "$ELASTICSEARCH_ENABLED" == "true" ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+is_elasticsearch_secured() {
+  local ELASTICSEARCH_USER
+  local ELASTICSEARCH_PASSWORD
+  ELASTICSEARCH_USER=$(grep -v '^#' .env | grep ELASTICSEARCH_USER | cut -d '=' -f2)
+  ELASTICSEARCH_PASSWORD=$(grep -v '^#' .env | grep ELASTICSEARCH_PASSWORD | cut -d '=' -f2)
+
+  # First check if empty
+  if [[ -z "$ELASTICSEARCH_USER" ]] || [[ -z "$ELASTICSEARCH_PASSWORD" ]]; then
+    # If empty, then elasticsearch is not secured
+    printf "ERROR: The elasticsearch user or password is empty."
+    printf "\nVariables ELASTICSEARCH_USER and ELASTICSEARCH_PASSWORD in the .env file are mandatory"
+    return 1
+  fi
+
+  # Check that password is greater than 6 characters
+  if [[ ${#ELASTICSEARCH_PASSWORD} -lt 6 ]]; then
+    printf "ERROR:  Variable ELASTICSEARCH_PASSWORD in the .env file must be greater than 6 characters"
+    return 1
+  fi
+
+  return 0
+}
+
 start_openvidu() {
   local RUN_LOCAL_ES
   local RUN_LOCAL_KIBANA
@@ -240,22 +281,43 @@ start_openvidu() {
   COTURN_IN_MEDIA_NODES=$(grep -v '^#' .env | grep COTURN_IN_MEDIA_NODES | cut -d '=' -f2)
   RUN_LOCAL_ES=true
   RUN_LOCAL_KIBANA=true
+  RUN_LOCAL_FILEBEAT=true
+  RUN_LOCAL_METRICBEAT=true
+
+  # Default values
   if [[ -z "${COTURN_IN_MEDIA_NODES}" ]]; then
     COTURN_IN_MEDIA_NODES=false
   fi
-  if is_external_url "${CONFIGURED_ELASTICSEARCH_HOST}"; then
-    printf "Configured external elasticsearch: %s" "${CONFIGURED_ELASTICSEARCH_HOST}"
-    printf "\n"
+
+  if is_elasticsearch_enabled; then
     RUN_LOCAL_ES=false
-  fi
-  if is_external_url "${CONFIGURED_KIBANA_HOST}"; then
-    printf "Configured external kibana: %s" "${CONFIGURED_KIBANA_HOST}"
-    printf "\n"
     RUN_LOCAL_KIBANA=false
+    RUN_LOCAL_FILEBEAT=false
+    RUN_LOCAL_METRICBEAT=false
+  else
+    # If elastic is not enabled, check credentials, and check if external elasticsearch is configured
+    if ! is_elasticsearch_secured; then
+      exit 1
+    fi
+
+    if is_external_url "${CONFIGURED_ELASTICSEARCH_HOST}"; then
+      printf "Configured external elasticsearch: %s" "${CONFIGURED_ELASTICSEARCH_HOST}"
+      printf "\n"
+      RUN_LOCAL_ES=false
+    fi
+    if is_external_url "${CONFIGURED_KIBANA_HOST}"; then
+      printf "Configured external kibana: %s" "${CONFIGURED_KIBANA_HOST}"
+      printf "\n"
+      RUN_LOCAL_KIBANA=false
+    fi
   fi
+
+
   docker-compose up -d \
     $(if [ "${RUN_LOCAL_ES}" == "false" ]; then echo '--scale elasticsearch=0'; fi) \
     $(if [ "${RUN_LOCAL_KIBANA}" == "false" ]; then echo '--scale kibana=0'; fi) \
+    $(if [ "${RUN_LOCAL_FILEBEAT}" == "false" ]; then echo '--scale filebeat=0'; fi) \
+    $(if [ "${RUN_LOCAL_METRICBEAT}" == "false" ]; then echo '--scale metricbeat=0'; fi) \
     $(if [ "${COTURN_IN_MEDIA_NODES}" == "true" ]; then echo '--scale coturn=0'; fi)
 }
 

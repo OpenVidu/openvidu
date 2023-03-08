@@ -30,7 +30,12 @@ if [[ -z "${COTURN_SHARED_SECRET_KEY}" ]]; then
         sed 's/\r$//' | awk '/=/ {print $1}')"
 fi
 
-# Wait for kibana
+# Don't wait for Kibana if Elasticsearch is disabled
+if [ "${OPENVIDU_PRO_ELASTICSEARCH_ENABLED}" == "false" ]; then
+    unset WAIT_KIBANA_URL
+fi
+
+# Wait for Kibana service
 if [ -n "${WAIT_KIBANA_URL}" ]; then
   printf "\n"
   printf "\n  ======================================="
