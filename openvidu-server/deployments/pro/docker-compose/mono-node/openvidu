@@ -290,16 +290,13 @@ start_openvidu() {
   fi
 
   if is_elasticsearch_enabled; then
-    RUN_LOCAL_ES=false
-    RUN_LOCAL_KIBANA=false
-    RUN_LOCAL_FILEBEAT=false
-    RUN_LOCAL_METRICBEAT=false
-  else
-    # If elastic is not enabled, check credentials, and check if external elasticsearch is configured
+
+    # If elastic is enabled, check credentials
     if ! is_elasticsearch_secured; then
       exit 1
     fi
 
+    # Check if external elasticsearch is configured
     if is_external_url "${CONFIGURED_ELASTICSEARCH_HOST}"; then
       printf "Configured external elasticsearch: %s" "${CONFIGURED_ELASTICSEARCH_HOST}"
       printf "\n"
@@ -310,6 +307,12 @@ start_openvidu() {
       printf "\n"
       RUN_LOCAL_KIBANA=false
     fi
+
+  else
+    RUN_LOCAL_ES=false
+    RUN_LOCAL_KIBANA=false
+    RUN_LOCAL_FILEBEAT=false
+    RUN_LOCAL_METRICBEAT=false
   fi
 
 
