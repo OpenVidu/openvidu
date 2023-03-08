@@ -1,7 +1,7 @@
 <div
 	*ngIf="this._stream"
 	class="OV_stream"
-	[ngClass]="{'no-size': !showVideo}"
+	[ngClass]="{ 'no-size': !showVideo }"
 	[id]="'container-' + this._stream.streamManager?.stream?.streamId"
 	#streamContainer
 >
@@ -50,11 +50,18 @@
 	</div>
 
 	<div *ngIf="!isMinimal && showSettingsButton" id="settings-container" class="videoButtons">
-		<button mat-icon-button (click)="toggleVideoMenu($event)" matTooltip="{{ 'STREAM.SETTINGS' | translate }}" matTooltipPosition="above" aria-label="Video settings menu" id="stream-menu-btn">
+		<button
+			mat-icon-button
+			(click)="toggleVideoMenu($event)"
+			matTooltip="{{ 'STREAM.SETTINGS' | translate }}"
+			matTooltipPosition="above"
+			aria-label="Video settings menu"
+			id="video-settings-btn-{{this._stream.streamManager?.stream?.typeOfVideo}}"
+		>
 			<mat-icon>more_vert</mat-icon>
 		</button>
 		<span [matMenuTriggerFor]="menu"></span>
-		<mat-menu #menu="matMenu" yPosition="above" xPosition="before">
+		<mat-menu #menu="matMenu" yPosition="above" xPosition="before" class="video-settings-menu">
 			<button mat-menu-item id="videoZoomButton" (click)="toggleVideoEnlarged()">
 				<mat-icon>{{ this.videoSizeIcon }}</mat-icon>
 				<span *ngIf="videoSizeIcon === videoSizeIconEnum.NORMAL">{{ 'STREAM.ZOOM_OUT' | translate }}</span>
@@ -70,7 +77,7 @@
 			<button
 				mat-menu-item
 				(click)="replaceScreenTrack()"
-				id="changeScreenButton"
+				id="replace-screen-button"
 				*ngIf="!this._stream.streamManager?.remote && this._stream.streamManager?.stream?.typeOfVideo === videoTypeEnum.SCREEN"
 			>
 				<mat-icon>picture_in_picture</mat-icon>

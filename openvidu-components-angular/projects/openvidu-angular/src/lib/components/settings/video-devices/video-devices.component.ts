@@ -21,8 +21,8 @@ import { VirtualBackgroundService } from '../../../services/virtual-background/v
 	styleUrls: ['./video-devices.component.css']
 })
 export class VideoDevicesComponent implements OnInit, OnDestroy {
-	@Output()  onDeviceSelectorClicked = new EventEmitter<void>();
-	@Output()  onVideoMutedClicked = new EventEmitter<boolean>();
+	@Output() onDeviceSelectorClicked = new EventEmitter<void>();
+	@Output() onVideoMutedClicked = new EventEmitter<boolean>();
 
 	videoMuteChanging: boolean;
 	isVideoMuted: boolean;
@@ -47,9 +47,8 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 			await this.deviceSrv.refreshDevices();
 		}
 
-
 		this.hasVideoDevices = this.deviceSrv.hasVideoDeviceAvailable();
-		if(this.hasVideoDevices){
+		if (this.hasVideoDevices) {
 			this.cameras = this.deviceSrv.getCameras();
 			this.cameraSelected = this.deviceSrv.getCameraSelected();
 		}
@@ -76,18 +75,19 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 	}
 
 	async onCameraSelected(event: any) {
-		const videoSource = event?.value;
+		const device: CustomDevice = event?.value;
+
 		// Is New deviceId different from the old one?
-		if (this.deviceSrv.needUpdateVideoTrack(videoSource)) {
-			const mirror = this.deviceSrv.cameraNeedsMirror(videoSource);
+		if (this.deviceSrv.needUpdateVideoTrack(device)) {
+			const mirror = this.deviceSrv.cameraNeedsMirror(device.device);
 			// Reapply Virtual Background to new Publisher if necessary
 			const backgroundSelected = this.backgroundService.backgroundSelected.getValue();
-			const isBackgroundApplied = this.backgroundService.isBackgroundApplied()
+			const isBackgroundApplied = this.backgroundService.isBackgroundApplied();
 
 			if (isBackgroundApplied) {
 				await this.backgroundService.removeBackground();
 			}
-			const pp: PublisherProperties = { videoSource, audioSource: false, mirror };
+			const pp: PublisherProperties = { videoSource: device.device, audioSource: false, mirror };
 			await this.openviduService.replaceTrack(VideoType.CAMERA, pp);
 
 			if (isBackgroundApplied) {
@@ -97,10 +97,18 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 				}
 			}
 
-			this.deviceSrv.setCameraSelected(videoSource);
+			this.deviceSrv.setCameraSelected(device.device);
 			this.cameraSelected = this.deviceSrv.getCameraSelected();
 		}
 	}
+
+	/**
+	 * @internal
+	 * Compare two devices to check if they are the same. Used by the mat-select
+	 */
+	compareObjectDevices(o1: CustomDevice, o2: CustomDevice): boolean {
+		return o1.label === o2.label;
+	  }
 
 	protected subscribeToParticipantMediaProperties() {
 		this.localParticipantSubscription = this.participantService.localParticipantObs.subscribe((p: ParticipantAbstractModel) => {
