@@ -1,13 +1,13 @@
 #!/bin/bash -x
 set -eu -o pipefail
 
-# Ci flags
 OV_INTEGRATION_TESTS=false
 OV_UNIT_TESTS=false
-LAUNCH_OV_KURENTO=false
 OV_E2E_KURENTO=false
-LAUNCH_OV_MEDIASOUP=false
 OV_E2E_MEDIASOUP=false
+
+LAUNCH_OV_KURENTO=false
+LAUNCH_OV_MEDIASOUP=false
 
 function environmentLaunch {
     local MEDIA_SERVER="$1"
@@ -167,17 +167,17 @@ if [[ -n ${1:-} ]]; then
     --openvidu-server-integration-tests)
         OV_INTEGRATION_TESTS=true
         ;;
-    --environment-launch-kurento)
-        LAUNCH_OV_KURENTO=true
-        ;;
     --openvidu-e2e-tests-kurento)
         OV_E2E_KURENTO=true
         ;;
-    --environment-launch-mediasoup)
-        LAUNCH_OV_MEDIASOUP=true
-        ;;
     --openvidu-e2e-tests-mediasoup)
         OV_E2E_MEDIASOUP=true
+        ;;
+    --environment-launch-kurento)
+        LAUNCH_OV_KURENTO=true
+        ;;
+    --environment-launch-mediasoup)
+        LAUNCH_OV_MEDIASOUP=true
         ;;
     *)
         echo "Unrecognized method $1"
@@ -208,13 +208,6 @@ if [[ "${OV_INTEGRATION_TESTS}" == true ]]; then
 fi
 
 # -------------
-# Environment launch Kurento
-# -------------
-if [[ "${LAUNCH_OV_KURENTO}" == true ]]; then
-    environmentLaunch "kurento"
-fi
-
-# -------------
 # OpenVidu E2E Tests Kurento
 # -------------
 if [[ "${OV_E2E_KURENTO}" == true ]]; then
@@ -222,15 +215,22 @@ if [[ "${OV_E2E_KURENTO}" == true ]]; then
 fi
 
 # -------------
-# Environment launch mediasoup
-# -------------
-if [[ "${LAUNCH_OV_MEDIASOUP}" == true ]]; then
-    environmentLaunch "mediasoup"
-fi
-
-# -------------
 # OpenVidu E2E Tests mediasoup
 # -------------
 if [[ "${OV_E2E_MEDIASOUP}" == true ]]; then
     openviduE2ETests "mediasoup"
+fi
+
+# -------------
+# Environment launch Kurento
+# -------------
+if [[ "${LAUNCH_OV_KURENTO}" == true ]]; then
+    environmentLaunch "kurento"
+fi
+
+# -------------
+# Environment launch mediasoup
+# -------------
+if [[ "${LAUNCH_OV_MEDIASOUP}" == true ]]; then
+    environmentLaunch "mediasoup"
 fi
