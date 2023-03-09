@@ -7,7 +7,6 @@ set -eu -o pipefail
 ################################################################
 
 # CI flags
-GITHUB_ACTIONS_ORIGINAL_WORKING_DIR="${PWD}"
 GITHUB_ACTIONS_WORKING_DIR="${GITHUB_ACTIONS_WORKING_DIR:-}"
 
 PREPARE_TEST_ENVIRONMENT=false
@@ -39,11 +38,6 @@ BUMP_DOCKER_IMAGE_VERSION_IN_FILES=false
 BUMP_APPLICATION_PROPERTIES_VAR_VALUE=false
 
 WAIT_FOR_NPM_DEPENDENCY=false
-
-# cd to directory if GITHUB_ACTIONS_WORKING_DIR is set
-# if [[ -n "${GITHUB_ACTIONS_WORKING_DIR:-}" ]]; then
-#     cd "${GITHUB_ACTIONS_WORKING_DIR}"
-# fi
 
 # Environment variables
 if [[ -n ${1:-} ]]; then
@@ -364,10 +358,6 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
     # Pull firefox image if env variable FIREFOX_VERSION is set
     if [[ -n "${FIREFOX_VERSION:-}" ]]; then
         docker pull selenium/standalone-firefox:"${FIREFOX_VERSION}"
-    fi
-    # Pull opera image if env variable OPERA_VERSION is set
-    if [[ -n "${OPERA_VERSION:-}" ]]; then
-        docker pull selenium/standalone-opera:"${OPERA_VERSION}"
     fi
     # Pull edge image if env variable EDGE_VERSION is set
     if [[ -n "${EDGE_VERSION:-}" ]]; then

@@ -109,7 +109,6 @@ function openviduE2ETests {
             -DOPENVIDU_URL="https://${E2E_CONTAINER_IP}:4443" \
             -DCHROME_VERSION="${CHROME_VERSION}" \
             -DFIREFOX_VERSION="${FIREFOX_VERSION}" \
-            -DOPERA_VERSION="${OPERA_VERSION}" \
             -DEDGE_VERSION="${EDGE_VERSION}" \
             -Dtest=OpenViduTestAppE2eTest \
             -DAPP_URL="https://${E2E_CONTAINER_IP}:4200" \
@@ -127,7 +126,6 @@ function openviduE2ETests {
             -DOPENVIDU_URL="https://${E2E_CONTAINER_IP}:4443" \
             -DCHROME_VERSION="${CHROME_VERSION}" \
             -DFIREFOX_VERSION="${FIREFOX_VERSION}" \
-            -DOPERA_VERSION="${OPERA_VERSION}" \
             -DEDGE_VERSION="${EDGE_VERSION}" \
             -Dtest=OpenViduTestAppE2eTest \
             -DAPP_URL="https://${E2E_CONTAINER_IP}:4200" \
