@@ -53,11 +53,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     container:
-      image: ${{ github.event.inputs.TEST_IMAGE || 'openvidu/openvidu-test-e2e:22.04' }}
+      image: ${{ github.event.inputs.TEST_IMAGE }}
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
         - /opt/openvidu:/opt/openvidu
     env:
+      TEST_IMAGE: ${{ github.event.inputs.TEST_IMAGE }}
       KURENTO_SNAPSHOTS_URL: ${{ secrets.KURENTO_SNAPSHOTS_URL }}
       KURENTO_MEDIA_SERVER_IMAGE: ${{ github.event.inputs.KURENTO_MEDIA_SERVER_IMAGE || 'kurento/kurento-media-server:6.18.0' }}
       MEDIASOUP_CONTROLLER_VERSION: ${{ github.event.inputs.MEDIASOUP_CONTROLLER_VERSION || 'master' }}
@@ -74,7 +75,9 @@ jobs:
       - name: Clean environment
         run: /opt/commons.sh --clean-environment
       - name: Prepare test environment
-        run: /opt/commons.sh --prepare-test-environment openvidu/openvidu-test-e2e
+        run: |
+          DOCKER_IMAGE=$(sed -r "s|^(.+):.+$|\1|g" <<<${TEST_IMAGE})
+          /opt/commons.sh --prepare-test-environment ${DOCKER_IMAGE}
       - name: Setting up Kurento Snapshots
         run: /opt/commons.sh --prepare-kurento-snapshot
       - name: Build openvidu-browser
