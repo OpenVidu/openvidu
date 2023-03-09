@@ -60,14 +60,14 @@ jobs:
     env:
       TEST_IMAGE: ${{ github.event.inputs.TEST_IMAGE }}
       KURENTO_SNAPSHOTS_URL: ${{ secrets.KURENTO_SNAPSHOTS_URL }}
-      KURENTO_MEDIA_SERVER_IMAGE: ${{ github.event.inputs.KURENTO_MEDIA_SERVER_IMAGE || 'kurento/kurento-media-server:6.18.0' }}
-      MEDIASOUP_CONTROLLER_VERSION: ${{ github.event.inputs.MEDIASOUP_CONTROLLER_VERSION || 'master' }}
-      KURENTO_JAVA_COMMIT: ${{ github.event.inputs.KURENTO_JAVA_COMMIT || 'default' }}
-      DOCKER_RECORDING_VERSION: ${{ github.event.inputs.DOCKER_RECORDING_VERSION || 'default' }}
-      CHROME_VERSION: ${{ github.event.inputs.CHROME_VERSION || 'latest' }}
-      FIREFOX_VERSION: ${{ github.event.inputs.FIREFOX_VERSION || 'latest' }}
-      OPERA_VERSION: ${{ github.event.inputs.OPERA_VERSION || 'latest' }}
-      EDGE_VERSION: ${{ github.event.inputs.EDGE_VERSION || 'latest' }}
+      KURENTO_MEDIA_SERVER_IMAGE: ${{ github.event.inputs.KURENTO_MEDIA_SERVER_IMAGE }}
+      MEDIASOUP_CONTROLLER_VERSION: ${{ github.event.inputs.MEDIASOUP_CONTROLLER_VERSION }}
+      KURENTO_JAVA_COMMIT: ${{ github.event.inputs.KURENTO_JAVA_COMMIT }}
+      DOCKER_RECORDING_VERSION: ${{ github.event.inputs.DOCKER_RECORDING_VERSION }}
+      CHROME_VERSION: ${{ github.event.inputs.CHROME_VERSION }}
+      FIREFOX_VERSION: ${{ github.event.inputs.FIREFOX_VERSION }}
+      OPERA_VERSION: ${{ github.event.inputs.OPERA_VERSION }}
+      EDGE_VERSION: ${{ github.event.inputs.EDGE_VERSION }}
     steps:
       - uses: actions/checkout@v3
       - name: Download commons.sh script
