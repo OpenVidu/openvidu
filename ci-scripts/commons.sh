@@ -435,7 +435,7 @@ if [[ "${PREPARE_KURENTO_SNAPSHOT}" == true || "${EXECUTE_ALL}" == true ]]; then
 fi
 
 # -------------
-# OpenVidu Browser build
+# Build openvidu-browser
 # -------------
 if [[ "${BUILD_OV_BROWSER}" == true || "${EXECUTE_ALL}" == true ]]; then
     pushd openvidu-browser || exit 1
@@ -448,7 +448,7 @@ if [[ "${BUILD_OV_BROWSER}" == true || "${EXECUTE_ALL}" == true ]]; then
 fi
 
 # -------------
-# OpenVidu Node client build
+# Build openvidu-node-client
 # -------------
 if [[ "${BUILD_OV_NODE_CLIENT}" == true || "${EXECUTE_ALL}" == true ]]; then
     pushd openvidu-node-client
@@ -461,7 +461,7 @@ if [[ "${BUILD_OV_NODE_CLIENT}" == true || "${EXECUTE_ALL}" == true ]]; then
 fi
 
 # -------------
-# OpenVidu Java client build
+# Build openvidu-java-client
 # -------------
 if [[ "${BUILD_OV_JAVA_CLIENT}" == true || "${EXECUTE_ALL}" == true ]]; then
     pushd openvidu-java-client
@@ -475,7 +475,7 @@ if [[ "${BUILD_OV_JAVA_CLIENT}" == true || "${EXECUTE_ALL}" == true ]]; then
 fi
 
 # -------------
-# OpenVidu Parent build
+# Build openvidu-parent
 # -------------
 if [[ "${BUILD_OV_PARENT}" == true || "${EXECUTE_ALL}" == true ]]; then
     mvn -B versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST
@@ -483,7 +483,7 @@ if [[ "${BUILD_OV_PARENT}" == true || "${EXECUTE_ALL}" == true ]]; then
 fi
 
 # -------------
-# OpenVidu Test App build
+# Build openvidu-testapp
 # -------------
 if [[ "${BUILD_OV_TESTAPP}" == true || "${EXECUTE_ALL}" == true ]]; then
     pushd openvidu-testapp
@@ -494,7 +494,7 @@ if [[ "${BUILD_OV_TESTAPP}" == true || "${EXECUTE_ALL}" == true ]]; then
 fi
 
 # -------------
-# OpenVidu Server dashboard build
+# Build openvidu-server dashboard
 # -------------
 if [[ "${BUILD_OV_SERVER_DASHBOARD}" == true || "${EXECUTE_ALL}" == true ]]; then
     pushd openvidu-server/src/dashboard
@@ -505,7 +505,7 @@ if [[ "${BUILD_OV_SERVER_DASHBOARD}" == true || "${EXECUTE_ALL}" == true ]]; the
 fi
 
 # -------------
-# OpenVidu Server build
+# Build openvidu-server
 # -------------
 if [[ "${BUILD_OV_SERVER}" == true || "${EXECUTE_ALL}" == true ]]; then
     pushd openvidu-server
@@ -515,7 +515,7 @@ if [[ "${BUILD_OV_SERVER}" == true || "${EXECUTE_ALL}" == true ]]; then
 fi
 
 # -------------
-# OpenVidu Server dependency build
+# Build openvidu-server dependency
 # -------------
 if [[ "${BUILD_OV_SERVER_DEPENDENCY}" == true || "${EXECUTE_ALL}" == true ]]; then
     pushd openvidu-server
@@ -524,7 +524,7 @@ if [[ "${BUILD_OV_SERVER_DEPENDENCY}" == true || "${EXECUTE_ALL}" == true ]]; th
 fi
 
 # -------------
-# OpenVidu Server PRO Inspector build
+# Build Inspector
 # -------------
 if [[ "${BUILD_OV_SERVER_PRO_INSPECTOR}" == true || "${EXECUTE_ALL}" == true ]]; then
     pushd dashboard
@@ -535,7 +535,7 @@ if [[ "${BUILD_OV_SERVER_PRO_INSPECTOR}" == true || "${EXECUTE_ALL}" == true ]];
 fi
 
 # -------------
-# OpenVidu Server PRO build
+# Build openvidu-server-pro
 # -------------
 if [[ "${BUILD_OV_SERVER_PRO}" == true || "${EXECUTE_ALL}" == true ]]; then
     pushd openvidu-server-pro
@@ -545,7 +545,7 @@ if [[ "${BUILD_OV_SERVER_PRO}" == true || "${EXECUTE_ALL}" == true ]]; then
 fi
 
 # -------------
-# Serve OpenVidu TestApp
+# Serve openvidu-testapp
 # -------------
 if [[ "${SERVE_OV_TESTAPP}" == true || "${EXECUTE_ALL}" == true ]]; then
     # Generate certificate

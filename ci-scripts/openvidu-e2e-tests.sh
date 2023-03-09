@@ -4,7 +4,7 @@ set -eu -o pipefail
 # Ci flags
 OV_INTEGRATION_TESTS=false
 OV_UNIT_TESTS=false
-OV_E2E_TESTS_BUILD=false
+BUILD_OV_TEST_E2E=false
 LAUNCH_OV_KURENTO=false
 OV_E2E_KURENTO=false
 LAUNCH_OV_MEDIASOUP=false
@@ -170,8 +170,8 @@ if [[ -n ${1:-} ]]; then
                 OV_INTEGRATION_TESTS=true
                 shift 1
                 ;;
-            --openvidu-test-e2e-build )
-                OV_E2E_TESTS_BUILD=true
+            --build-openvidu-test-e2e )
+                BUILD_OV_TEST_E2E=true
                 shift 1
                 ;;
             --environment-launch-kurento )
@@ -200,7 +200,7 @@ else
 fi
 
 # -------------
-# OpenVidu Unit tests
+# openvidu-server unit tests
 # -------------
 if [[ "${OV_UNIT_TESTS}" == true || "${EXECUTE_ALL}" == true ]]; then
     pushd openvidu-server
@@ -209,7 +209,7 @@ if [[ "${OV_UNIT_TESTS}" == true || "${EXECUTE_ALL}" == true ]]; then
 fi
 
 # -------------
-# OpenVidu Integration tests
+# openvidu-server integration tests
 # -------------
 if [[ "${OV_INTEGRATION_TESTS}" == true || "${EXECUTE_ALL}" == true ]]; then
     pushd openvidu-server
@@ -218,9 +218,9 @@ if [[ "${OV_INTEGRATION_TESTS}" == true || "${EXECUTE_ALL}" == true ]]; then
 fi
 
 # -------------
-# OpenVidu E2E Tests build
+# Build openvidu-test-e2e
 # -------------
-if [[ "${OV_E2E_TESTS_BUILD}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${BUILD_OV_TEST_E2E}" == true || "${EXECUTE_ALL}" == true ]]; then
     pushd openvidu-test-browsers
     mvn -B versions:set -DnewVersion=TEST && mvn -B clean install
     popd
