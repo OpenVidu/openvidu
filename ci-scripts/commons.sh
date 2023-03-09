@@ -344,6 +344,7 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
     # Configure Snapshots repository
     if [[ -n "${KURENTO_SNAPSHOTS_URL:-}" ]]; then
         sudo mkdir -p /etc/maven
+        chmod -R 777 /etc/maven
         pushd /etc/maven
         rm -f settings.xml
         curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/kurento-snapshots.xml -o settings.xml
