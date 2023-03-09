@@ -9,7 +9,6 @@ LAUNCH_OV_KURENTO=false
 OV_E2E_KURENTO=false
 LAUNCH_OV_MEDIASOUP=false
 OV_E2E_MEDIASOUP=false
-EXECUTE_ALL=false
 
 function environmentLaunch {
     local MEDIA_SERVER="$1"
@@ -191,18 +190,20 @@ if [[ -n ${1:-} ]]; then
                 shift 1
                 ;;
             *)
-                break
+                echo "Unrecognized method $1"
+                exit 1
                 ;;
         esac
     done
 else
-    EXECUTE_ALL=true
+    echo "Must provide a method to execute as first parameter when calling the script"
+    exit 1
 fi
 
 # -------------
 # openvidu-server unit tests
 # -------------
-if [[ "${OV_UNIT_TESTS}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${OV_UNIT_TESTS}" == true ]]; then
     pushd openvidu-server
     mvn -B -Dtest=io.openvidu.server.test.unit.*Test test
     popd
@@ -211,7 +212,7 @@ fi
 # -------------
 # openvidu-server integration tests
 # -------------
-if [[ "${OV_INTEGRATION_TESTS}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${OV_INTEGRATION_TESTS}" == true ]]; then
     pushd openvidu-server
     mvn -B -Dtest=io.openvidu.server.test.integration.*Test test
     popd
@@ -220,7 +221,7 @@ fi
 # -------------
 # Build openvidu-test-e2e
 # -------------
-if [[ "${BUILD_OV_TEST_E2E}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${BUILD_OV_TEST_E2E}" == true ]]; then
     pushd openvidu-test-browsers
     mvn -B versions:set -DnewVersion=TEST && mvn -B clean install
     popd
@@ -234,27 +235,27 @@ fi
 # -------------
 # Environment launch Kurento
 # -------------
-if [[ "${LAUNCH_OV_KURENTO}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${LAUNCH_OV_KURENTO}" == true ]]; then
     environmentLaunch "kurento"
 fi
 
 # -------------
 # OpenVidu E2E Tests Kurento
 # -------------
-if [[ "${OV_E2E_KURENTO}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${OV_E2E_KURENTO}" == true ]]; then
     openviduE2ETests "kurento"
 fi
 
 # -------------
 # Environment launch mediasoup
 # -------------
-if [[ "${LAUNCH_OV_MEDIASOUP}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${LAUNCH_OV_MEDIASOUP}" == true ]]; then
     environmentLaunch "mediasoup"
 fi
 
 # -------------
 # OpenVidu E2E Tests mediasoup
 # -------------
-if [[ "${OV_E2E_MEDIASOUP}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${OV_E2E_MEDIASOUP}" == true ]]; then
     openviduE2ETests "mediasoup"
 fi
