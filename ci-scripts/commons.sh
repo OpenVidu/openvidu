@@ -54,11 +54,6 @@ if [[ -n ${1:-} ]]; then
         ;;
 
     --prepare-test-environment)
-        if [[ -z "${2:-}" ]]; then
-            echo "No test docker container provided when running --prepare-test-environment"
-        else
-            TEST_IMAGE="${2}"
-        fi
         PREPARE_TEST_ENVIRONMENT=true
         ;;
 
@@ -276,7 +271,7 @@ if [[ "${CLEAN_ENVIRONMENT}" == true ]]; then
     ids=$(docker ps -a -q)
     for id in $ids; do
         DOCKER_IMAGE=$(docker inspect --format='{{.Config.Image}}' $id)
-        if [[ "${DOCKER_IMAGE}" != *"openvidu/openvidu-test-e2e"* ]] &&
+        if [[ "${DOCKER_IMAGE}" != *"$TEST_IMAGE"* ]] &&
             [[ "${DOCKER_IMAGE}" != *"runner-deployment"* ]] &&
             [[ "${DOCKER_IMAGE}" != *"openvidu/openvidu-dev-generic"* ]]; then
             echo "Removing container image '$DOCKER_IMAGE' with id '$id'"
@@ -301,11 +296,11 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
 
     # Connect e2e test container to network bridge so it is vissible for browser and media server containers
     if [[ -n "${TEST_IMAGE}" ]]; then
-        E2E_CONTAINER_ID="$(docker ps | grep "${TEST_IMAGE}":* | awk '{ print $1 }')" || echo "Docker container not found for image ${TEST_IMAGE}"
+        E2E_CONTAINER_ID="$(docker ps | grep "${TEST_IMAGE}" | awk '{ print $1 }')" || echo "Docker container not found for image ${TEST_IMAGE}"
         if [[ -n "${E2E_CONTAINER_ID}" ]]; then
             docker network connect bridge "${E2E_CONTAINER_ID}"
         else
-            echo "Could not connect test docker container \"${TEST_IMAGE}\" to docker bridge, because no running container was found"
+            echo "Could not connect test docker container to docker bridge, because no running container was found for image \"${TEST_IMAGE}\""
         fi
     else
         echo "No TEST_IMAGE env var provided. Skipping network bridge connection"
@@ -348,7 +343,7 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
 
     # Configure Snapshots repository
     if [[ -n "${KURENTO_SNAPSHOTS_URL:-}" ]]; then
-        mkdir -p /etc/maven
+        sudo mkdir -p /etc/maven
         pushd /etc/maven
         rm -f settings.xml
         curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/kurento-snapshots.xml -o settings.xml

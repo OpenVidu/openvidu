@@ -14,7 +14,7 @@ function environmentLaunch {
 
     # Get e2e container id
     local E2E_CONTAINER_ID
-    E2E_CONTAINER_ID="$(docker ps | grep 'openvidu/openvidu-test-e2e:*' | awk '{ print $1 }')"
+    E2E_CONTAINER_ID="$(docker ps | grep "$TEST_IMAGE" | awk '{ print $1 }')"
 
     # Get e2e container IP so services running can be accessed by browser and media server containers
     local E2E_CONTAINER_IP
@@ -92,7 +92,7 @@ function openviduE2ETests {
 
     # Get e2e container id
     local E2E_CONTAINER_ID
-    E2E_CONTAINER_ID="$(docker ps | grep 'openvidu/openvidu-test-e2e:*' | awk '{ print $1 }')"
+    E2E_CONTAINER_ID="$(docker ps | grep "$TEST_IMAGE" | awk '{ print $1 }')"
 
     # Get e2e container IP so services running can be accessed by browser and media server containers
     local E2E_CONTAINER_IP
