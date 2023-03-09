@@ -36,15 +36,15 @@ on:
       CHROME_VERSION:
         description: "Version of Chrome to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-chrome/tags"
         required: true
-        default: latest
+        default: "latest"
       FIREFOX_VERSION:
         description: "Version of Firefox to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-firefox/tags"
         required: true
-        default: latest
+        default: "latest"
       EDGE_VERSION:
         description: "Version of Edge to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-opera/tags"
         required: true
-        default: latest
+        default: "latest"
 jobs:
   main:
     runs-on: ubuntu-latest

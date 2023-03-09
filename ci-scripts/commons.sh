@@ -354,7 +354,7 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
     sudo curl --location https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/docker/my-custom-layout/index.html --create-dirs --output /opt/openvidu/test-layouts/layout1/index.html
 
     # Open permissions for /opt/openvidu folder
-    chmod -R 777 /opt/openvidu
+    sudo chmod -R 777 /opt/openvidu
 
     # Pull browser images
     # Pull chrome image if env variable CHROME_VERSION is set
