@@ -347,16 +347,11 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
 
     # Configure Snapshots repository
     if [[ -n "${KURENTO_SNAPSHOTS_URL:-}" ]]; then
-        # Cd to GITHUB_ACTIONS_ORIGINAL_WORKING_DIR only if GITHUB_ACTIONS_WORKING_DIR is set
-        if [[ -n "${GITHUB_ACTIONS_WORKING_DIR:-}" ]]; then
-            pushd "${GITHUB_ACTIONS_ORIGINAL_WORKING_DIR}"/ci-scripts
-            curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/kurento-snapshots.xml -o kurento-snapshots.xml
-        else
-            pushd ci-scripts
-        fi
-        sed -i "s|KURENTO_SNAPSHOTS_URL|${KURENTO_SNAPSHOTS_URL}|g" kurento-snapshots.xml
-        rm /etc/maven/settings.xml
-        mv kurento-snapshots.xml /etc/maven/settings.xml
+        mkdir -p /etc/maven
+        cd /etc/maven
+        rm -f settings.xml
+        curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/kurento-snapshots.xml -o settings.xml
+        sed -i "s|KURENTO_SNAPSHOTS_URL|${KURENTO_SNAPSHOTS_URL}|g" settings.xml
         popd
     fi
 
