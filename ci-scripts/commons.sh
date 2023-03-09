@@ -53,7 +53,6 @@ if [[ -n ${1:-} ]]; then
 
         --clean-environment)
             CLEAN_ENVIRONMENT=true
-            shift 1
             ;;
 
         --prepare-test-environment)
@@ -61,67 +60,54 @@ if [[ -n ${1:-} ]]; then
             if [[ -n "${2:-}" ]]; then
                 TEST_IMAGE="${2}"
             fi
-            shift 1
             ;;
 
         --prepare-kurento-snapshot)
             PREPARE_KURENTO_SNAPSHOT=true
-            shift 1
             ;;
 
         --build-openvidu-browser)
             BUILD_OV_BROWSER=true
-            shift 1
             ;;
 
         --build-openvidu-node-client)
             BUILD_OV_NODE_CLIENT=true
-            shift 1
             ;;
 
         --build-openvidu-java-client)
             BUILD_OV_JAVA_CLIENT=true
-            shift 1
             ;;
 
         --build-openvidu-parent)
             BUILD_OV_PARENT=true
-            shift 1
             ;;
 
         --build-openvidu-testapp)
             BUILD_OV_TESTAPP=true
-            shift 1
             ;;
 
         --build-openvidu-server-dashboard)
             BUILD_OV_SERVER_DASHBOARD=true
-            shift 1
             ;;
 
         --build-openvidu-server)
             BUILD_OV_SERVER=true
-            shift 1
             ;;
 
         --build-openvidu-server-dependency)
             BUILD_OV_SERVER_DEPENDENCY=true
-            shift 1
             ;;
 
         --build-openvidu-server-pro-inspector)
             BUILD_OV_SERVER_PRO_INSPECTOR=true
-            shift 1
             ;;
 
         --build-openvidu-server-pro)
             BUILD_OV_SERVER_PRO=true
-            shift 1
             ;;
 
         --serve-openvidu-testapp)
             SERVE_OV_TESTAPP=true
-            shift 1
             ;;
 
         --bump-npm-project-version)
@@ -131,7 +117,6 @@ if [[ -n ${1:-} ]]; then
             fi
             BUMP_NPM_PROJECT_VERSION=true
             VERSION="${2}"
-            shift 1
             ;;
 
         --bump-npm-dependency-version)
@@ -146,7 +131,6 @@ if [[ -n ${1:-} ]]; then
             BUMP_NPM_DEPENDENCY_VERSION=true
             DEPENDENCY="${2}"
             VERSION="${3}"
-            shift 1
             ;;
 
         --bump-maven-project-version)
@@ -156,7 +140,6 @@ if [[ -n ${1:-} ]]; then
             fi
             BUMP_MAVEN_PROJECT_VERSION=true
             VERSION="${2}"
-            shift 1
             ;;
 
         --bump-maven-property-version)
@@ -171,7 +154,6 @@ if [[ -n ${1:-} ]]; then
             BUMP_MAVEN_PROPERTY_VERSION=true
             PROPERTY="${2}"
             VERSION="${3}"
-            shift 1
             ;;
 
         --bump-docker-compose-service-version)
@@ -191,7 +173,6 @@ if [[ -n ${1:-} ]]; then
             DOCKER_COMPOSE_FILE="${2}"
             SERVICE_IMAGE="${3}"
             VERSION="${4}"
-            shift 1
             ;;
 
         --bump-docker-compose-header-version)
@@ -211,7 +192,6 @@ if [[ -n ${1:-} ]]; then
             DOCKER_COMPOSE_FILE="${2}"
             HEADER="${3}"
             VERSION="${4}"
-            shift 1
             ;;
 
         --bump-docker-image-version-in-files)
@@ -231,7 +211,6 @@ if [[ -n ${1:-} ]]; then
             FILE_NAME_PATTERN="${2}"
             IMAGE="${3}"
             VERSION="${4}"
-            shift 1
             ;;
 
         --bump-application-properties-var-value)
@@ -251,7 +230,6 @@ if [[ -n ${1:-} ]]; then
             APPLICATION_PROPERTIES_FILE="${2}"
             VARIABLE="${3}"
             VALUE="${4}"
-            shift 1
             ;;
 
         --wait-for-npm-dependency)
@@ -266,7 +244,6 @@ if [[ -n ${1:-} ]]; then
             WAIT_FOR_NPM_DEPENDENCY=true
             DEPENDENCY="${2}"
             VERSION="${3}"
-            shift 1
             ;;
         *)
             echo "Unrecognized method $1"

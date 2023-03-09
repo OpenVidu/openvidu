@@ -15,7 +15,7 @@ function environmentLaunch {
 
     # Get e2e container id
     local E2E_CONTAINER_ID
-    E2E_CONTAINER_ID="$(docker ps  | grep  'openvidu/openvidu-test-e2e:*' | awk '{ print $1 }')"
+    E2E_CONTAINER_ID="$(docker ps | grep 'openvidu/openvidu-test-e2e:*' | awk '{ print $1 }')"
 
     # Get e2e container IP so services running can be accessed by browser and media server containers
     local E2E_CONTAINER_IP
@@ -29,14 +29,14 @@ function environmentLaunch {
         docker run -e KMS_UID=$(id -u) --network=host --detach=true --volume=/opt/openvidu/recordings:/opt/openvidu/recordings "${KURENTO_MEDIA_SERVER_IMAGE}"
         while true; do
             RC="$(curl \
-            --silent \
-            --no-buffer \
-            --write-out '%{http_code}' \
-            --header "Connection: Upgrade" \
-            --header "Upgrade: websocket" \
-            --header "Host: ${DOCKER_HOST_IP}" \
-            --header "Origin: ${DOCKER_HOST_IP}" \
-            "http://${DOCKER_HOST_IP}:8888/kurento" || echo '')"
+                --silent \
+                --no-buffer \
+                --write-out '%{http_code}' \
+                --header "Connection: Upgrade" \
+                --header "Upgrade: websocket" \
+                --header "Host: ${DOCKER_HOST_IP}" \
+                --header "Origin: ${DOCKER_HOST_IP}" \
+                "http://${DOCKER_HOST_IP}:8888/kurento" || echo '')"
 
             if [[ "$RC" == "500" ]]; then
                 break
@@ -55,7 +55,10 @@ function environmentLaunch {
             --env=WEBRTC_LISTENIPS_0_IP="${DOCKER_HOST_IP}" \
             --volume=/opt/openvidu/recordings:/opt/openvidu/recordings \
             openvidu/mediasoup-controller:"${MEDIASOUP_CONTROLLER_VERSION}"
-        until $(curl --insecure --output /dev/null --silent http://${DOCKER_HOST_IP}:8888/kurento); do echo "Waiting for ${MEDIA_SERVER}..."; sleep 1; done
+        until $(curl --insecure --output /dev/null --silent http://${DOCKER_HOST_IP}:8888/kurento); do
+            echo "Waiting for ${MEDIA_SERVER}..."
+            sleep 1
+        done
     else
         echo "Not valid media server"
         exit 1
@@ -69,7 +72,7 @@ function environmentLaunch {
             -DOPENVIDU_RECORDING_CUSTOM_LAYOUT=/opt/openvidu/test-layouts \
             -DOPENVIDU_RECORDING_VERSION="${DOCKER_RECORDING_VERSION}" -DOPENVIDU_WEBHOOK=true \
             -DOPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook \
-            /opt/openvidu/openvidu-server-*.jar &> /opt/openvidu/openvidu-server-"${MEDIA_SERVER}".log &
+            /opt/openvidu/openvidu-server-*.jar &>/opt/openvidu/openvidu-server-"${MEDIA_SERVER}".log &
     else
         echo "Using default openvidu-recording tag"
         java -jar -DKMS_URIS="[\"ws://${DOCKER_HOST_IP}:8888/kurento\"]" \
@@ -77,9 +80,12 @@ function environmentLaunch {
             -DOPENVIDU_SECRET=MY_SECRET -DHTTPS_PORT=4443 -DOPENVIDU_RECORDING=true \
             -DOPENVIDU_RECORDING_CUSTOM_LAYOUT=/opt/openvidu/test-layouts -DOPENVIDU_WEBHOOK=true \
             -DOPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook \
-            /opt/openvidu/openvidu-server-*.jar &> /opt/openvidu/openvidu-server-"${MEDIA_SERVER}".log &
+            /opt/openvidu/openvidu-server-*.jar &>/opt/openvidu/openvidu-server-"${MEDIA_SERVER}".log &
     fi
-    until $(curl --insecure --output /dev/null --silent --head --fail https://OPENVIDUAPP:MY_SECRET@localhost:4443/); do echo "Waiting for openvidu-server..."; sleep 2; done
+    until $(curl --insecure --output /dev/null --silent --head --fail https://OPENVIDUAPP:MY_SECRET@localhost:4443/); do
+        echo "Waiting for openvidu-server..."
+        sleep 2
+    done
 }
 
 function openviduE2ETests {
@@ -87,7 +93,7 @@ function openviduE2ETests {
 
     # Get e2e container id
     local E2E_CONTAINER_ID
-    E2E_CONTAINER_ID="$(docker ps  | grep  'openvidu/openvidu-test-e2e:*' | awk '{ print $1 }')"
+    E2E_CONTAINER_ID="$(docker ps | grep 'openvidu/openvidu-test-e2e:*' | awk '{ print $1 }')"
 
     # Get e2e container IP so services running can be accessed by browser and media server containers
     local E2E_CONTAINER_IP
@@ -114,7 +120,7 @@ function openviduE2ETests {
             -DREMOTE_URL_OPERA="http://${DOCKER_HOST_IP}:6668/wd/hub/" \
             -DREMOTE_URL_EDGE="http://${DOCKER_HOST_IP}:6669/wd/hub/" \
             -DEXTERNAL_CUSTOM_LAYOUT_PARAMS="sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET" \
-        test
+            test
 
     elif [[ "${MEDIA_SERVER}" == "mediasoup" ]]; then
 
@@ -134,7 +140,7 @@ function openviduE2ETests {
             -DEXTERNAL_CUSTOM_LAYOUT_PARAMS="sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET" \
             -DOPENVIDU_PRO_LICENSE="${OPENVIDU_PRO_LICENSE}" \
             -DOPENVIDU_PRO_LICENSE_API="${OPENVIDU_PRO_LICENSE_API}" \
-        test
+            test
 
     else
         echo "Not valid media server"
@@ -148,9 +154,8 @@ function openviduE2ETests {
 function stopMediaServer {
     # Remove Kurento Media Server
     declare -a arr=("kurento/kurento-media-server"
-                    "openvidu/mediasoup-controller:")
-    for image in "${arr[@]}"
-    do
+        "openvidu/mediasoup-controller:")
+    for image in "${arr[@]}"; do
         docker ps -a | awk '{ print $1,$2 }' | grep "${image}" | awk '{ print $1 }' | xargs -I {} docker rm -f {} || true
     done
     docker ps -a
@@ -158,41 +163,33 @@ function stopMediaServer {
 
 # Environment variables
 if [[ -n ${1:-} ]]; then
-    while :
-    do
+    while :; do
         case "${1:-}" in
-            --openvidu-server-unit-tests )
-                OV_UNIT_TESTS=true
-                shift 1
-                ;;
-            --openvidu-server-integration-tests )
-                OV_INTEGRATION_TESTS=true
-                shift 1
-                ;;
-            --build-openvidu-test-e2e )
-                BUILD_OV_TEST_E2E=true
-                shift 1
-                ;;
-            --environment-launch-kurento )
-                LAUNCH_OV_KURENTO=true
-                shift 1
-                ;;
-            --openvidu-e2e-tests-kurento )
-                OV_E2E_KURENTO=true
-                shift 1
-                ;;
-            --environment-launch-mediasoup )
-                LAUNCH_OV_MEDIASOUP=true
-                shift 1
-                ;;
-            --openvidu-e2e-tests-mediasoup )
-                OV_E2E_MEDIASOUP=true
-                shift 1
-                ;;
-            *)
-                echo "Unrecognized method $1"
-                exit 1
-                ;;
+        --openvidu-server-unit-tests)
+            OV_UNIT_TESTS=true
+            ;;
+        --openvidu-server-integration-tests)
+            OV_INTEGRATION_TESTS=true
+            ;;
+        --build-openvidu-test-e2e)
+            BUILD_OV_TEST_E2E=true
+            ;;
+        --environment-launch-kurento)
+            LAUNCH_OV_KURENTO=true
+            ;;
+        --openvidu-e2e-tests-kurento)
+            OV_E2E_KURENTO=true
+            ;;
+        --environment-launch-mediasoup)
+            LAUNCH_OV_MEDIASOUP=true
+            ;;
+        --openvidu-e2e-tests-mediasoup)
+            OV_E2E_MEDIASOUP=true
+            ;;
+        *)
+            echo "Unrecognized method $1"
+            exit 1
+            ;;
         esac
     done
 else
