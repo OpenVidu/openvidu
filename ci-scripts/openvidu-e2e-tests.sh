@@ -2,11 +2,9 @@
 set -eu -o pipefail
 
 # Ci flags
-BUILD_OV_DASHBOARD=false
 OV_INTEGRATION_TESTS=false
 OV_UNIT_TESTS=false
 OV_E2E_TESTS_BUILD=false
-OV_SERVER_BUILD=false
 LAUNCH_OV_KURENTO=false
 OV_E2E_KURENTO=false
 LAUNCH_OV_MEDIASOUP=false
@@ -164,10 +162,6 @@ if [[ -n ${1:-} ]]; then
     while :
     do
         case "${1:-}" in
-            --build-dashboard )
-                BUILD_OV_DASHBOARD=true
-                shift 1
-                ;;
             --openvidu-server-unit-tests )
                 OV_UNIT_TESTS=true
                 shift 1
@@ -178,10 +172,6 @@ if [[ -n ${1:-} ]]; then
                 ;;
             --openvidu-test-e2e-build )
                 OV_E2E_TESTS_BUILD=true
-                shift 1
-                ;;
-            --openvidu-server-build )
-                OV_SERVER_BUILD=true
                 shift 1
                 ;;
             --environment-launch-kurento )
@@ -196,7 +186,7 @@ if [[ -n ${1:-} ]]; then
                 LAUNCH_OV_MEDIASOUP=true
                 shift 1
                 ;;
-            --openvidu-e2e-test-mediasoup )
+            --openvidu-e2e-tests-mediasoup )
                 OV_E2E_MEDIASOUP=true
                 shift 1
                 ;;
@@ -207,17 +197,6 @@ if [[ -n ${1:-} ]]; then
     done
 else
     EXECUTE_ALL=true
-fi
-
-# -------------
-# OpenVidu Dashboard build
-# -------------
-if [[ "${BUILD_OV_DASHBOARD}" == true || "${EXECUTE_ALL}" == true ]]; then
-    pushd openvidu-server/src/dashboard
-    npm install
-    npm link openvidu-browser openvidu-node-client
-    npm run build-prod
-    popd
 fi
 
 # -------------
@@ -249,16 +228,6 @@ if [[ "${OV_E2E_TESTS_BUILD}" == true || "${EXECUTE_ALL}" == true ]]; then
     mvn -B versions:set-property -Dproperty=version.openvidu.test.browsers -DnewVersion=TEST
     pushd openvidu-test-e2e
     mvn -B -DskipTests=true clean install
-    popd
-fi
-
-# -------------
-# OpenVidu Server build
-# -------------
-if [[ "${OV_SERVER_BUILD}" == true || "${EXECUTE_ALL}" == true ]]; then
-    pushd openvidu-server
-    mvn -B -DskipTests=true package
-    cp target/openvidu-server*.jar /opt/openvidu
     popd
 fi
 

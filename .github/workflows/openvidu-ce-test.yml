@@ -69,22 +69,26 @@ jobs:
       EDGE_VERSION: ${{ github.event.inputs.EDGE_VERSION || 'latest' }}
     steps:
       - uses: actions/checkout@v3
+      - name: Download commons.sh script
+        run: curl -s https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/commons.sh -o /opt/commons.sh && chmod u+x /opt/commons.sh
+      - name: Clean environment
+        run: /opt/commons.sh --clean-environment
       - name: Setting up CI
-        run: ci-scripts/commons.sh --prepare openvidu/openvidu-test-e2e
-      - name: Prepare Kurento Snapshots
-        run: ci-scripts/commons.sh --prepare-kurento-snapshot
-      - name: OpenVidu Browser build
-        run: ci-scripts/commons.sh --build-openvidu-browser
-      - name: OpenVidu Node Client build
-        run: ci-scripts/commons.sh --build-openvidu-node-client
-      - name: OpenVidu Java Client build
-        run: ci-scripts/commons.sh --build-openvidu-java-client
-      - name: OpenVidu Server pre-build
-        run: ci-scripts/commons.sh --build-openvidu-parent
-      - name: OpenVidu TestApp build
-        run: ci-scripts/commons.sh --build-openvidu-testapp
+        run: /opt/commons.sh --prepare-test-environment openvidu/openvidu-test-e2e
+      - name: Setting up Kurento Snapshots
+        run: /opt/commons.sh --prepare-kurento-snapshot
+      - name: Build OpenVidu Browser
+        run: cd openvidu && /opt/commons.sh --build-openvidu-browser
+      - name: Build Openvidu Node Client
+        run: cd openvidu && /opt/commons.sh --build-openvidu-node-client
+      - name: Build Openvidu Java Client
+        run: cd openvidu && /opt/commons.sh --build-openvidu-java-client
+      - name: Build Openvidu Parent
+        run: cd openvidu && /opt/commons.sh --build-openvidu-parent
+      - name: Build Openvidu Testapp
+        run: cd openvidu && /opt/commons.sh --build-openvidu-testapp
       - name: OpenVidu Server dashboard build
-        run: ci-scripts/openvidu-e2e-tests.sh --build-dashboard
+        run: cd openvidu && /opt/commons.sh --build-openvidu-server-dashboard
       - name: OpenVidu Server unit tests
         run: ci-scripts/openvidu-e2e-tests.sh --openvidu-server-unit-tests
       - name: OpenVidu Server integration tests
@@ -92,11 +96,11 @@ jobs:
       - name: OpenVidu Server E2E build tests
         run: ci-scripts/openvidu-e2e-tests.sh --openvidu-test-e2e-build
       - name: OpenVidu Server Build
-        run: ci-scripts/openvidu-e2e-tests.sh --openvidu-server-build
+        run: cd openvidu && /opt/commons.sh --build-openvidu-server
       - name: Environment launch Kurento
         run: ci-scripts/openvidu-e2e-tests.sh --environment-launch-kurento
       - name: Serve Testapp
-        run: ci-scripts/commons.sh --serve-openvidu-testapp
+        run: cd openvidu && /opt/commons.sh --serve-openvidu-testapp
       - name: OpenVidu E2E Tests Kurento
         run: ci-scripts/openvidu-e2e-tests.sh --openvidu-e2e-tests-kurento
       - name: Test reports

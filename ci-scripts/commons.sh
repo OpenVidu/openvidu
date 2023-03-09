@@ -1,11 +1,16 @@
 #!/bin/bash -x
 set -eu -o pipefail
 
+################################################################
+# Any functions offered by this file assume that the path is   #
+# located where the first command of each function requires it #
+################################################################
+
 # CI flags
 GITHUB_ACTIONS_ORIGINAL_WORKING_DIR="${PWD}"
 GITHUB_ACTIONS_WORKING_DIR="${GITHUB_ACTIONS_WORKING_DIR:-}"
 
-PREPARE=false
+PREPARE_TEST_ENVIRONMENT=false
 TEST_IMAGE="openvidu/openvidu-test-e2e"
 
 CLEAN_ENVIRONMENT=false
@@ -19,6 +24,11 @@ BUILD_OV_NODE_CLIENT=false
 BUILD_OV_JAVA_CLIENT=false
 BUILD_OV_PARENT=false
 BUILD_OV_TESTAPP=false
+BUILD_OV_SERVER_DASHBOARD=false
+BUILD_OV_SERVER=false
+BUILD_OV_SERVER_DEPENDENCY=false
+BUILD_OV_SERVER_PRO_INSPECTOR=false
+BUILD_OV_SERVER_PRO=false
 
 # Bump versions
 BUMP_NPM_PROJECT_VERSION=false
@@ -33,9 +43,9 @@ BUMP_APPLICATION_PROPERTIES_VAR_VALUE=false
 WAIT_FOR_NPM_DEPENDENCY=false
 
 # cd to directory if GITHUB_ACTIONS_WORKING_DIR is set
-if [[ -n "${GITHUB_ACTIONS_WORKING_DIR:-}" ]]; then
-    cd "${GITHUB_ACTIONS_WORKING_DIR}"
-fi
+# if [[ -n "${GITHUB_ACTIONS_WORKING_DIR:-}" ]]; then
+#     cd "${GITHUB_ACTIONS_WORKING_DIR}"
+# fi
 
 # Environment variables
 if [[ -n ${1:-} ]]; then
@@ -47,8 +57,8 @@ if [[ -n ${1:-} ]]; then
             shift 1
             ;;
 
-        --prepare)
-            PREPARE=true
+        --prepare-test-environment)
+            PREPARE_TEST_ENVIRONMENT=true
             if [[ -n "${2:-}" ]]; then
                 TEST_IMAGE="${2}"
             fi
@@ -85,6 +95,31 @@ if [[ -n ${1:-} ]]; then
             shift 1
             ;;
 
+        --build-openvidu-server-dashboard)
+            BUILD_OV_SERVER_DASHBOARD=true
+            shift 1
+            ;;
+
+        --build-openvidu-server)
+            BUILD_OV_SERVER=true
+            shift 1
+            ;;
+
+        --build-openvidu-server-dependency)
+            BUILD_OV_SERVER_DEPENDENCY=true
+            shift 1
+            ;;
+
+        --build-openvidu-server-pro-inspector)
+            BUILD_OV_SERVER_PRO_INSPECTOR=true
+            shift 1
+            ;;
+
+        --build-openvidu-server-pro)
+            BUILD_OV_SERVER_PRO=true
+            shift 1
+            ;;
+
         --serve-openvidu-testapp)
             SERVE_OV_TESTAPP=true
             shift 1
@@ -92,71 +127,51 @@ if [[ -n ${1:-} ]]; then
 
         --bump-npm-project-version)
             if [[ -z "${2:-}" ]]; then
-                echo "Must provide PROJECT_PATH as 1st parameter" 1>&2
-                exit 1
-            fi
-            if [[ -z "${3:-}" ]]; then
-                echo "Must provide VERSION as 2nd parameter" 1>&2
+                echo "Must provide VERSION as 1st parameter" 1>&2
                 exit 1
             fi
             BUMP_NPM_PROJECT_VERSION=true
-            PROJECT_PATH="${2}"
-            VERSION="${3}"
+            VERSION="${2}"
             shift 1
             ;;
 
         --bump-npm-dependency-version)
             if [[ -z "${2:-}" ]]; then
-                echo "Must provide PROJECT_PATH as 1st parameter" 1>&2
-                exit 1
-            fi
-            if [[ -z "${3:-}" ]]; then
-                echo "Must provide DEPENDENCY as 2nd parameter" 1>&2
-                exit 1
-            fi
-            if [[ -z "${4:-}" ]]; then
-                echo "Must provide VERSION as 3rd parameter" 1>&2
-                exit 1
-            fi
-            BUMP_NPM_DEPENDENCY_VERSION=true
-            PROJECT_PATH="${2}"
-            DEPENDENCY="${3}"
-            VERSION="${4}"
-            shift 1
-            ;;
-
-        --bump-maven-project-version)
-            if [[ -z "${2:-}" ]]; then
-                echo "Must provide PROJECT_PATH as 1st parameter" 1>&2
+                echo "Must provide DEPENDENCY as 1st parameter" 1>&2
                 exit 1
             fi
             if [[ -z "${3:-}" ]]; then
                 echo "Must provide VERSION as 2nd parameter" 1>&2
                 exit 1
             fi
-            BUMP_MAVEN_PROJECT_VERSION=true
-            PROJECT_PATH="${2}"
+            BUMP_NPM_DEPENDENCY_VERSION=true
+            DEPENDENCY="${2}"
             VERSION="${3}"
+            shift 1
+            ;;
+
+        --bump-maven-project-version)
+            if [[ -z "${2:-}" ]]; then
+                echo "Must provide VERSION as 1st parameter" 1>&2
+                exit 1
+            fi
+            BUMP_MAVEN_PROJECT_VERSION=true
+            VERSION="${2}"
             shift 1
             ;;
 
         --bump-maven-property-version)
             if [[ -z "${2:-}" ]]; then
-                echo "Must provide PROJECT_PATH as 1st parameter" 1>&2
+                echo "Must provide PROPERTY as 1st parameter" 1>&2
                 exit 1
             fi
             if [[ -z "${3:-}" ]]; then
-                echo "Must provide PROPERTY as 2nd parameter" 1>&2
-                exit 1
-            fi
-            if [[ -z "${4:-}" ]]; then
-                echo "Must provide VERSION as 3rd parameter" 1>&2
+                echo "Must provide VERSION as 2nd parameter" 1>&2
                 exit 1
             fi
             BUMP_MAVEN_PROPERTY_VERSION=true
-            PROJECT_PATH="${2}"
-            PROPERTY="${3}"
-            VERSION="${4}"
+            PROPERTY="${2}"
+            VERSION="${3}"
             shift 1
             ;;
 
@@ -201,27 +216,22 @@ if [[ -n ${1:-} ]]; then
             ;;
 
         --bump-docker-image-version-in-files)
-            if [[ -z "${2:-}" ]]; then
-                echo "Must provide PROJECT_PATH as 1st parameter" 1>&2
-                exit 1
-            fi
             if [[ -z "${3:-}" ]]; then
-                echo "Must provide FILE_NAME as 2nd parameter" 1>&2
+                echo "Must provide FILE_NAME_PATTERN as 1st parameter" 1>&2
                 exit 1
             fi
             if [[ -z "${4:-}" ]]; then
-                echo "Must provide IMAGE as 3rd parameter" 1>&2
+                echo "Must provide IMAGE as 2nd parameter" 1>&2
                 exit 1
             fi
             if [[ -z "${4:-}" ]]; then
-                echo "Must provide VERSION as 4th parameter" 1>&2
+                echo "Must provide VERSION as 3rd parameter" 1>&2
                 exit 1
             fi
             BUMP_DOCKER_IMAGE_VERSION_IN_FILES=true
-            PROJECT_PATH="${2}"
-            FILE_NAME="${3}"
-            IMAGE="${4}"
-            VERSION="${5}"
+            FILE_NAME_PATTERN="${2}"
+            IMAGE="${3}"
+            VERSION="${4}"
             shift 1
             ;;
 
@@ -310,7 +320,7 @@ fi
 # -------------
 # Prepare build
 # -------------
-if [[ "${PREPARE}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${PREPARE_TEST_ENVIRONMENT}" == true || "${EXECUTE_ALL}" == true ]]; then
 
     # Connect e2e test container to network bridge so it is vissible for browser and media server containers
     E2E_CONTAINER_ID="$(docker ps | grep "${TEST_IMAGE}":* | awk '{ print $1 }')"
@@ -432,7 +442,8 @@ if [[ "${BUILD_OV_BROWSER}" == true || "${EXECUTE_ALL}" == true ]]; then
     npm install
     npm run build
     npm link
-    npm pack && mv openvidu-browser-*.tgz /opt/openvidu/.
+    npm pack
+    mv openvidu-browser-*.tgz /opt/openvidu
     popd
 fi
 
@@ -444,7 +455,8 @@ if [[ "${BUILD_OV_NODE_CLIENT}" == true || "${EXECUTE_ALL}" == true ]]; then
     npm install
     npm run build
     npm link
-    npm pack && mv openvidu-node-client-*.tgz /opt/openvidu/.
+    npm pack
+    mv openvidu-node-client-*.tgz /opt/openvidu
     popd
 fi
 
@@ -482,6 +494,57 @@ if [[ "${BUILD_OV_TESTAPP}" == true || "${EXECUTE_ALL}" == true ]]; then
 fi
 
 # -------------
+# OpenVidu Server dashboard build
+# -------------
+if [[ "${BUILD_OV_SERVER_DASHBOARD}" == true || "${EXECUTE_ALL}" == true ]]; then
+    pushd openvidu-server/src/dashboard
+    npm install
+    npm link openvidu-browser openvidu-node-client
+    npm run build-prod
+    popd
+fi
+
+# -------------
+# OpenVidu Server build
+# -------------
+if [[ "${BUILD_OV_SERVER}" == true || "${EXECUTE_ALL}" == true ]]; then
+    pushd openvidu-server
+    mvn -B -DskipTests=true package
+    mv target/openvidu-server*.jar /opt/openvidu
+    popd
+fi
+
+# -------------
+# OpenVidu Server dependency build
+# -------------
+if [[ "${BUILD_OV_SERVER_DEPENDENCY}" == true || "${EXECUTE_ALL}" == true ]]; then
+    pushd openvidu-server
+    mvn -B -DskipTests=true -Pdependency clean install
+    popd
+fi
+
+# -------------
+# OpenVidu Server PRO Inspector build
+# -------------
+if [[ "${BUILD_OV_SERVER_PRO_INSPECTOR}" == true || "${EXECUTE_ALL}" == true ]]; then
+    pushd dashboard
+    npm install
+    npm link openvidu-browser openvidu-node-client
+    npm run build-server-prod
+    popd
+fi
+
+# -------------
+# OpenVidu Server PRO build
+# -------------
+if [[ "${BUILD_OV_SERVER_PRO}" == true || "${EXECUTE_ALL}" == true ]]; then
+    pushd openvidu-server-pro
+    mvn -B -DskipTests=true clean package
+    mv target/openvidu-server-pro-*.jar /opt/openvidu
+    popd
+fi
+
+# -------------
 # Serve OpenVidu TestApp
 # -------------
 if [[ "${SERVE_OV_TESTAPP}" == true || "${EXECUTE_ALL}" == true ]]; then
@@ -501,28 +564,22 @@ fi
 # Bump NPM project version
 # -------------
 if [[ "${BUMP_NPM_PROJECT_VERSION}" == true ]]; then
-    pushd ${PROJECT_PATH}
     npm version ${VERSION} --git-tag-version=false --commit-hooks=false
-    popd
 fi
 
 # -------------
 # Bump NPM project dependency
 # -------------
 if [[ "${BUMP_NPM_DEPENDENCY_VERSION}" == true ]]; then
-    pushd ${PROJECT_PATH}
     tmp=$(mktemp) && jq -j ".dependencies.\"${DEPENDENCY}\" = \"${VERSION}\"" package.json >"$tmp" && mv "$tmp" package.json
     # npm install "${DEPENDENCY}@${VERSION}" --save-exact=true --legacy-peer-deps
-    popd
 fi
 
 # -------------
 # Bump Maven project version
 # -------------
 if [[ "${BUMP_MAVEN_PROJECT_VERSION}" == true ]]; then
-    pushd ${PROJECT_PATH}
     mvn -DskipTests=true versions:set -DnewVersion="${VERSION}"
-    popd
 fi
 
 # -------------
@@ -536,14 +593,12 @@ if [[ "${BUMP_MAVEN_PROPERTY_VERSION}" == true ]]; then
         echo "${OPENVIDU_MAVEN_GENERIC_SETTINGS}" >/tmp/maven-generic-settings/settings.xml
     fi
 
-    pushd ${PROJECT_PATH}
     mvn --batch-mode \
         --settings /tmp/maven-generic-settings/settings.xml \
         -DskipTests=true \
         versions:set-property \
         -Dproperty="${PROPERTY}" \
         -DnewVersion="${VERSION}"
-    popd
 fi
 
 # -------------
@@ -566,9 +621,7 @@ fi
 # Bump Docker image version in files
 # -------------
 if [[ "${BUMP_DOCKER_IMAGE_VERSION_IN_FILES}" == true ]]; then
-    pushd ${PROJECT_PATH}
-    find . -type f -name ${FILE_NAME} | xargs sed -i -r "s|${IMAGE}:[[:alnum:]._-]+|${IMAGE}:${VERSION}|g"
-    popd
+    find . -type f -name ${FILE_NAME_PATTERN} | xargs sed -i -r "s|${IMAGE}:[[:alnum:]._-]+|${IMAGE}:${VERSION}|g"
 fi
 
 # -------------
