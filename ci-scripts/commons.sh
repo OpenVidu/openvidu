@@ -15,7 +15,6 @@ TEST_IMAGE="openvidu/openvidu-test-e2e"
 
 CLEAN_ENVIRONMENT=false
 PREPARE_KURENTO_SNAPSHOT=false
-EXECUTE_ALL=false
 SERVE_OV_TESTAPP=false
 
 # Build artifacts
@@ -127,7 +126,7 @@ if [[ -n ${1:-} ]]; then
 
         --bump-npm-project-version)
             if [[ -z "${2:-}" ]]; then
-                echo "Must provide VERSION as 1st parameter" 1>&2
+                echo "Must provide VERSION as 1st parameter"
                 exit 1
             fi
             BUMP_NPM_PROJECT_VERSION=true
@@ -137,11 +136,11 @@ if [[ -n ${1:-} ]]; then
 
         --bump-npm-dependency-version)
             if [[ -z "${2:-}" ]]; then
-                echo "Must provide DEPENDENCY as 1st parameter" 1>&2
+                echo "Must provide DEPENDENCY as 1st parameter"
                 exit 1
             fi
             if [[ -z "${3:-}" ]]; then
-                echo "Must provide VERSION as 2nd parameter" 1>&2
+                echo "Must provide VERSION as 2nd parameter"
                 exit 1
             fi
             BUMP_NPM_DEPENDENCY_VERSION=true
@@ -152,7 +151,7 @@ if [[ -n ${1:-} ]]; then
 
         --bump-maven-project-version)
             if [[ -z "${2:-}" ]]; then
-                echo "Must provide VERSION as 1st parameter" 1>&2
+                echo "Must provide VERSION as 1st parameter"
                 exit 1
             fi
             BUMP_MAVEN_PROJECT_VERSION=true
@@ -162,11 +161,11 @@ if [[ -n ${1:-} ]]; then
 
         --bump-maven-property-version)
             if [[ -z "${2:-}" ]]; then
-                echo "Must provide PROPERTY as 1st parameter" 1>&2
+                echo "Must provide PROPERTY as 1st parameter"
                 exit 1
             fi
             if [[ -z "${3:-}" ]]; then
-                echo "Must provide VERSION as 2nd parameter" 1>&2
+                echo "Must provide VERSION as 2nd parameter"
                 exit 1
             fi
             BUMP_MAVEN_PROPERTY_VERSION=true
@@ -177,15 +176,15 @@ if [[ -n ${1:-} ]]; then
 
         --bump-docker-compose-service-version)
             if [[ -z "${2:-}" ]]; then
-                echo "Must provide DOCKER_COMPOSE_FILE as 1st parameter" 1>&2
+                echo "Must provide DOCKER_COMPOSE_FILE as 1st parameter"
                 exit 1
             fi
             if [[ -z "${3:-}" ]]; then
-                echo "Must provide SERVICE_IMAGE as 2nd parameter" 1>&2
+                echo "Must provide SERVICE_IMAGE as 2nd parameter"
                 exit 1
             fi
             if [[ -z "${4:-}" ]]; then
-                echo "Must provide VERSION as 3rd parameter" 1>&2
+                echo "Must provide VERSION as 3rd parameter"
                 exit 1
             fi
             BUMP_DOCKER_COMPOSE_SERVICE_VERSION=true
@@ -197,15 +196,15 @@ if [[ -n ${1:-} ]]; then
 
         --bump-docker-compose-header-version)
             if [[ -z "${2:-}" ]]; then
-                echo "Must provide DOCKER_COMPOSE_FILE as 1st parameter" 1>&2
+                echo "Must provide DOCKER_COMPOSE_FILE as 1st parameter"
                 exit 1
             fi
             if [[ -z "${3:-}" ]]; then
-                echo "Must provide HEADER as 2nd parameter" 1>&2
+                echo "Must provide HEADER as 2nd parameter"
                 exit 1
             fi
             if [[ -z "${4:-}" ]]; then
-                echo "Must provide VERSION as 3rd parameter" 1>&2
+                echo "Must provide VERSION as 3rd parameter"
                 exit 1
             fi
             BUMP_DOCKER_COMPOSE_HEADER_VERSION=true
@@ -217,15 +216,15 @@ if [[ -n ${1:-} ]]; then
 
         --bump-docker-image-version-in-files)
             if [[ -z "${3:-}" ]]; then
-                echo "Must provide FILE_NAME_PATTERN as 1st parameter" 1>&2
+                echo "Must provide FILE_NAME_PATTERN as 1st parameter"
                 exit 1
             fi
             if [[ -z "${4:-}" ]]; then
-                echo "Must provide IMAGE as 2nd parameter" 1>&2
+                echo "Must provide IMAGE as 2nd parameter"
                 exit 1
             fi
             if [[ -z "${4:-}" ]]; then
-                echo "Must provide VERSION as 3rd parameter" 1>&2
+                echo "Must provide VERSION as 3rd parameter"
                 exit 1
             fi
             BUMP_DOCKER_IMAGE_VERSION_IN_FILES=true
@@ -237,15 +236,15 @@ if [[ -n ${1:-} ]]; then
 
         --bump-application-properties-var-value)
             if [[ -z "${3:-}" ]]; then
-                echo "Must provide APPLICATION_PROPERTIES_FILE as 2nd parameter" 1>&2
+                echo "Must provide APPLICATION_PROPERTIES_FILE as 2nd parameter"
                 exit 1
             fi
             if [[ -z "${4:-}" ]]; then
-                echo "Must provide VARIABLE as 3rd parameter" 1>&2
+                echo "Must provide VARIABLE as 3rd parameter"
                 exit 1
             fi
             if [[ -z "${4:-}" ]]; then
-                echo "Must provide VALUE as 4th parameter" 1>&2
+                echo "Must provide VALUE as 4th parameter"
                 exit 1
             fi
             BUMP_APPLICATION_PROPERTIES_VAR_VALUE=true
@@ -257,11 +256,11 @@ if [[ -n ${1:-} ]]; then
 
         --wait-for-npm-dependency)
             if [[ -z "${2:-}" ]]; then
-                echo "Must provide DEPENDENCY as 1st parameter" 1>&2
+                echo "Must provide DEPENDENCY as 1st parameter"
                 exit 1
             fi
             if [[ -z "${3:-}" ]]; then
-                echo "Must provide VERSION as 2nd parameter" 1>&2
+                echo "Must provide VERSION as 2nd parameter"
                 exit 1
             fi
             WAIT_FOR_NPM_DEPENDENCY=true
@@ -270,12 +269,14 @@ if [[ -n ${1:-} ]]; then
             shift 1
             ;;
         *)
-            break
+            echo "Unrecognized method $1"
+            exit 1
             ;;
         esac
     done
 else
-    EXECUTE_ALL=true
+    echo "Must provide a method to execute as first parameter when calling the script"
+    exit 1
 fi
 
 compareFiles() {
@@ -293,7 +294,7 @@ compareFiles() {
 # -------------
 # Clean environment
 # -------------
-if [[ "${CLEAN_ENVIRONMENT}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${CLEAN_ENVIRONMENT}" == true ]]; then
 
     # Remove all running containers except test container and runner container
     ids=$(docker ps -a -q)
@@ -320,7 +321,7 @@ fi
 # -------------
 # Prepare build
 # -------------
-if [[ "${PREPARE_TEST_ENVIRONMENT}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
 
     # Connect e2e test container to network bridge so it is vissible for browser and media server containers
     E2E_CONTAINER_ID="$(docker ps | grep "${TEST_IMAGE}":* | awk '{ print $1 }')"
@@ -416,7 +417,7 @@ fi
 # -------------
 # Prepare Kurento Snapshots
 # -------------
-if [[ "${PREPARE_KURENTO_SNAPSHOT}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${PREPARE_KURENTO_SNAPSHOT}" == true ]]; then
 
     # Prepare Kurento Snapshot if it is configured
     if [[ $KURENTO_JAVA_COMMIT != "default" ]]; then
@@ -437,7 +438,7 @@ fi
 # -------------
 # Build openvidu-browser
 # -------------
-if [[ "${BUILD_OV_BROWSER}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${BUILD_OV_BROWSER}" == true ]]; then
     pushd openvidu-browser || exit 1
     npm install
     npm run build
@@ -450,7 +451,7 @@ fi
 # -------------
 # Build openvidu-node-client
 # -------------
-if [[ "${BUILD_OV_NODE_CLIENT}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${BUILD_OV_NODE_CLIENT}" == true ]]; then
     pushd openvidu-node-client
     npm install
     npm run build
@@ -463,7 +464,7 @@ fi
 # -------------
 # Build openvidu-java-client
 # -------------
-if [[ "${BUILD_OV_JAVA_CLIENT}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${BUILD_OV_JAVA_CLIENT}" == true ]]; then
     pushd openvidu-java-client
     mvn -B versions:set -DnewVersion=TEST
     mvn -B clean compile package
@@ -477,7 +478,7 @@ fi
 # -------------
 # Build openvidu-parent
 # -------------
-if [[ "${BUILD_OV_PARENT}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${BUILD_OV_PARENT}" == true ]]; then
     mvn -B versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST
     mvn -B -DskipTests=true -Dmaven.artifact.threads=1 clean install
 fi
@@ -485,7 +486,7 @@ fi
 # -------------
 # Build openvidu-testapp
 # -------------
-if [[ "${BUILD_OV_TESTAPP}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${BUILD_OV_TESTAPP}" == true ]]; then
     pushd openvidu-testapp
     npm install
     npm link openvidu-browser openvidu-node-client
@@ -496,7 +497,7 @@ fi
 # -------------
 # Build openvidu-server dashboard
 # -------------
-if [[ "${BUILD_OV_SERVER_DASHBOARD}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${BUILD_OV_SERVER_DASHBOARD}" == true ]]; then
     pushd openvidu-server/src/dashboard
     npm install
     npm link openvidu-browser openvidu-node-client
@@ -507,7 +508,7 @@ fi
 # -------------
 # Build openvidu-server
 # -------------
-if [[ "${BUILD_OV_SERVER}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${BUILD_OV_SERVER}" == true ]]; then
     pushd openvidu-server
     mvn -B -DskipTests=true package
     mv target/openvidu-server*.jar /opt/openvidu
@@ -517,7 +518,7 @@ fi
 # -------------
 # Build openvidu-server dependency
 # -------------
-if [[ "${BUILD_OV_SERVER_DEPENDENCY}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${BUILD_OV_SERVER_DEPENDENCY}" == true ]]; then
     pushd openvidu-server
     mvn -B -DskipTests=true -Pdependency clean install
     popd
@@ -526,7 +527,7 @@ fi
 # -------------
 # Build Inspector
 # -------------
-if [[ "${BUILD_OV_SERVER_PRO_INSPECTOR}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${BUILD_OV_SERVER_PRO_INSPECTOR}" == true ]]; then
     pushd dashboard
     npm install
     npm link openvidu-browser openvidu-node-client
@@ -537,7 +538,7 @@ fi
 # -------------
 # Build openvidu-server-pro
 # -------------
-if [[ "${BUILD_OV_SERVER_PRO}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${BUILD_OV_SERVER_PRO}" == true ]]; then
     pushd openvidu-server-pro
     mvn -B -DskipTests=true clean package
     mv target/openvidu-server-pro-*.jar /opt/openvidu
@@ -547,7 +548,7 @@ fi
 # -------------
 # Serve openvidu-testapp
 # -------------
-if [[ "${SERVE_OV_TESTAPP}" == true || "${EXECUTE_ALL}" == true ]]; then
+if [[ "${SERVE_OV_TESTAPP}" == true ]]; then
     # Generate certificate
     openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 \
         -subj "/CN=www.mydom.com/O=My Company LTD./C=US" \
