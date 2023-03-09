@@ -306,36 +306,6 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
         echo "No TEST_IMAGE env var provided. Skipping network bridge connection"
     fi
 
-    # Pull browser images
-    # Pull chrome image if env variable CHROME_VERSION is set
-    if [[ -n "${CHROME_VERSION:-}" ]]; then
-        docker pull selenium/standalone-chrome:"${CHROME_VERSION}"
-    fi
-    # Pull firefox image if env variable FIREFOX_VERSION is set
-    if [[ -n "${FIREFOX_VERSION:-}" ]]; then
-        docker pull selenium/standalone-firefox:"${FIREFOX_VERSION}"
-    fi
-    # Pull opera image if env variable OPERA_VERSION is set
-    if [[ -n "${OPERA_VERSION:-}" ]]; then
-        docker pull selenium/standalone-opera:"${OPERA_VERSION}"
-    fi
-    # Pull edge image if env variable EDGE_VERSION is set
-    if [[ -n "${EDGE_VERSION:-}" ]]; then
-        docker pull selenium/standalone-edge:"${EDGE_VERSION}"
-    fi
-    # Pull Docker Android image if env variable DOCKER_ANDROID_IMAGE is set
-    if [[ -n "${DOCKER_ANDROID_IMAGE:-}" ]]; then
-        docker pull "${DOCKER_ANDROID_IMAGE}"
-    fi
-
-    # Pull mediasoup and kurento
-    if [[ -n "${MEDIASOUP_CONTROLLER_VERSION:-}" ]]; then
-        docker pull openvidu/mediasoup-controller:"${MEDIASOUP_CONTROLLER_VERSION}"
-    fi
-    if [[ -n "${KURENTO_MEDIA_SERVER_IMAGE:-}" ]]; then
-        docker pull "${KURENTO_MEDIA_SERVER_IMAGE}"
-    fi
-
     # Prepare directory for OpenVidu recordings
     sudo mkdir -p /opt/openvidu/recordings && sudo chmod 777 /opt/openvidu/recordings
     # Prepare directory for OpenVidu Android apps
@@ -385,6 +355,36 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
 
     # Open permissions for /opt/openvidu folder
     chmod -R 777 /opt/openvidu
+
+    # Pull browser images
+    # Pull chrome image if env variable CHROME_VERSION is set
+    if [[ -n "${CHROME_VERSION:-}" ]]; then
+        docker pull selenium/standalone-chrome:"${CHROME_VERSION}"
+    fi
+    # Pull firefox image if env variable FIREFOX_VERSION is set
+    if [[ -n "${FIREFOX_VERSION:-}" ]]; then
+        docker pull selenium/standalone-firefox:"${FIREFOX_VERSION}"
+    fi
+    # Pull opera image if env variable OPERA_VERSION is set
+    if [[ -n "${OPERA_VERSION:-}" ]]; then
+        docker pull selenium/standalone-opera:"${OPERA_VERSION}"
+    fi
+    # Pull edge image if env variable EDGE_VERSION is set
+    if [[ -n "${EDGE_VERSION:-}" ]]; then
+        docker pull selenium/standalone-edge:"${EDGE_VERSION}"
+    fi
+    # Pull Docker Android image if env variable DOCKER_ANDROID_IMAGE is set
+    if [[ -n "${DOCKER_ANDROID_IMAGE:-}" ]]; then
+        docker pull "${DOCKER_ANDROID_IMAGE}"
+    fi
+
+    # Pull mediasoup and kurento
+    if [[ -n "${MEDIASOUP_CONTROLLER_VERSION:-}" ]]; then
+        docker pull openvidu/mediasoup-controller:"${MEDIASOUP_CONTROLLER_VERSION}"
+    fi
+    if [[ -n "${KURENTO_MEDIA_SERVER_IMAGE:-}" ]]; then
+        docker pull "${KURENTO_MEDIA_SERVER_IMAGE}"
+    fi
 
 fi
 
