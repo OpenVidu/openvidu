@@ -299,9 +299,16 @@ fi
 if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
 
     # Connect e2e test container to network bridge so it is vissible for browser and media server containers
-    E2E_CONTAINER_ID="$(docker ps | grep "${TEST_IMAGE}":* | awk '{ print $1 }')"
-
-    docker network connect bridge "${E2E_CONTAINER_ID}"
+    if [[ -n "${TEST_IMAGE}" ]]; then
+        E2E_CONTAINER_ID="$(docker ps | grep "${TEST_IMAGE}":* | awk '{ print $1 }')" || echo "Docker container not found for image ${TEST_IMAGE}"
+        if [[ -n "${E2E_CONTAINER_ID}" ]]; then
+            docker network connect bridge "${E2E_CONTAINER_ID}"
+        else
+            echo "Could not connect test docker container \"${TEST_IMAGE}\" to docker bridge, because no running container was found"
+        fi
+    else
+        echo "No TEST_IMAGE env var provided. Skipping network bridge connection"
+    fi
 
     # Pull browser images
     # Pull chrome image if env variable CHROME_VERSION is set
