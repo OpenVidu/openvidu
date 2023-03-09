@@ -38,7 +38,7 @@ on:
         required: true
         default: "latest"
       EDGE_VERSION:
-        description: "Version of Edge to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-opera/tags"
+        description: "Version of Edge to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-edge/tags"
         required: true
         default: "latest"
 jobs:
