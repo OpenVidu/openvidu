@@ -4,41 +4,41 @@ on:
     branches:
       - master
     paths-ignore:
-      - '.github/workflows/openvidu-components-angular-E2E.yml'
-      - 'openvidu-components-angular/**'
-      - 'openvidu-server/docker/**'
-      - 'openvidu-server/deployments/**'
+      - ".github/workflows/openvidu-components-angular-E2E.yml"
+      - "openvidu-components-angular/**"
+      - "openvidu-server/docker/**"
+      - "openvidu-server/deployments/**"
   pull_request:
     branches:
       - master
   workflow_dispatch:
     inputs:
       TEST_IMAGE:
-        description: 'Docker image where to run the tests'
+        description: "Docker image where to run the tests"
         required: true
-        default: 'openvidu/openvidu-test-e2e:22.04'
+        default: "openvidu/openvidu-test-e2e:22.04"
       KURENTO_MEDIA_SERVER_IMAGE:
-        description: 'Docker image of kurento-media-server'
+        description: "Docker image of kurento-media-server"
         required: true
-        default: 'kurento/kurento-media-server:6.18.0'
+        default: "kurento/kurento-media-server:6.18.0"
       MEDIASOUP_CONTROLLER_VERSION:
-        description: 'Tag of image openvidu/mediasoup-controller'
+        description: "Tag of image openvidu/mediasoup-controller"
         required: true
-        default: 'master'
+        default: "master"
       KURENTO_JAVA_COMMIT:
         description: 'Commit to use in kurento-java dependencies. If "default" the release version declared in property "version.kurento" of openvidu-parent/pom.xml will be used'
         required: true
-        default: 'default'
+        default: "default"
       DOCKER_RECORDING_VERSION:
-        description: 'Force version of openvidu/openvidu-recording container'
+        description: "Force version of openvidu/openvidu-recording container"
         required: true
-        default: 'default'
+        default: "default"
       CHROME_VERSION:
-        description: 'Version of Chrome to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-chrome/tags'
+        description: "Version of Chrome to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-chrome/tags"
         required: true
         default: latest
       FIREFOX_VERSION:
-        description: 'Version of Firefox to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-firefox/tags'
+        description: "Version of Firefox to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-firefox/tags"
         required: true
         default: latest
       # OPERA_VERSION:
@@ -46,7 +46,7 @@ on:
       #   required: true
       #   default: latest
       EDGE_VERSION:
-        description: 'Version of Edge to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-opera/tags'
+        description: "Version of Edge to use. Must be a valid image tag from https://hub.docker.com/r/selenium/standalone-opera/tags"
         required: true
         default: latest
 jobs:
@@ -89,14 +89,12 @@ jobs:
         run: /opt/commons.sh --build-openvidu-testapp
       - name: Build openvidu-server dashboard
         run: /opt/commons.sh --build-openvidu-server-dashboard
+      - name: Build openvidu-server
+        run: /opt/commons.sh --build-openvidu-server
       - name: openvidu-server unit tests
         run: ci-scripts/openvidu-e2e-tests.sh --openvidu-server-unit-tests
       - name: openvidu-server integration tests
         run: ci-scripts/openvidu-e2e-tests.sh --openvidu-server-integration-tests
-      - name: Build openvidu-test-e2e
-        run: ci-scripts/openvidu-e2e-tests.sh --build-openvidu-test-e2e
-      - name: Build openvidu-server
-        run: /opt/commons.sh --build-openvidu-server
       - name: Environment launch Kurento
         run: ci-scripts/openvidu-e2e-tests.sh --environment-launch-kurento
       - name: Serve openvidu-testapp
@@ -107,7 +105,7 @@ jobs:
         uses: mikepenz/action-junit-report@v3
         if: always() # always run even if the previous step fails
         with:
-          report_paths: '**/target/surefire-reports/TEST-*.xml'
+          report_paths: "**/target/surefire-reports/TEST-*.xml"
       - name: Upload logs
         uses: actions/upload-artifact@v3
         if: always() # always run even if the previous step fails

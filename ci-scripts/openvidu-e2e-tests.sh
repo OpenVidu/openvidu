@@ -4,7 +4,6 @@ set -eu -o pipefail
 # Ci flags
 OV_INTEGRATION_TESTS=false
 OV_UNIT_TESTS=false
-BUILD_OV_TEST_E2E=false
 LAUNCH_OV_KURENTO=false
 OV_E2E_KURENTO=false
 LAUNCH_OV_MEDIASOUP=false
@@ -170,9 +169,6 @@ if [[ -n ${1:-} ]]; then
     --openvidu-server-integration-tests)
         OV_INTEGRATION_TESTS=true
         ;;
-    --build-openvidu-test-e2e)
-        BUILD_OV_TEST_E2E=true
-        ;;
     --environment-launch-kurento)
         LAUNCH_OV_KURENTO=true
         ;;
@@ -210,20 +206,6 @@ fi
 if [[ "${OV_INTEGRATION_TESTS}" == true ]]; then
     pushd openvidu-server
     mvn -B -Dtest=io.openvidu.server.test.integration.*Test test
-    popd
-fi
-
-# -------------
-# Build openvidu-test-e2e
-# -------------
-if [[ "${BUILD_OV_TEST_E2E}" == true ]]; then
-    pushd openvidu-test-browsers
-    mvn -B versions:set -DnewVersion=TEST && mvn -B clean install
-    popd
-    mvn -B versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST
-    mvn -B versions:set-property -Dproperty=version.openvidu.test.browsers -DnewVersion=TEST
-    pushd openvidu-test-e2e
-    mvn -B -DskipTests=true clean install
     popd
 fi
 

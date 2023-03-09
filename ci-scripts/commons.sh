@@ -457,7 +457,7 @@ fi
 # -------------
 if [[ "${BUILD_OV_PARENT}" == true ]]; then
     mvn -B versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST
-    mvn -B -DskipTests=true -Dmaven.artifact.threads=1 clean install
+    mvn -B -DskipTests=true clean install
 fi
 
 # -------------
