@@ -48,209 +48,207 @@ WAIT_FOR_NPM_DEPENDENCY=false
 
 # Environment variables
 if [[ -n ${1:-} ]]; then
-    while :; do
-        case "${1:-}" in
+    case "${1:-}" in
 
-        --clean-environment)
-            CLEAN_ENVIRONMENT=true
-            ;;
+    --clean-environment)
+        CLEAN_ENVIRONMENT=true
+        ;;
 
-        --prepare-test-environment)
-            PREPARE_TEST_ENVIRONMENT=true
-            if [[ -n "${2:-}" ]]; then
-                TEST_IMAGE="${2}"
-            fi
-            ;;
+    --prepare-test-environment)
+        PREPARE_TEST_ENVIRONMENT=true
+        if [[ -n "${2:-}" ]]; then
+            TEST_IMAGE="${2}"
+        fi
+        ;;
 
-        --prepare-kurento-snapshot)
-            PREPARE_KURENTO_SNAPSHOT=true
-            ;;
+    --prepare-kurento-snapshot)
+        PREPARE_KURENTO_SNAPSHOT=true
+        ;;
 
-        --build-openvidu-browser)
-            BUILD_OV_BROWSER=true
-            ;;
+    --build-openvidu-browser)
+        BUILD_OV_BROWSER=true
+        ;;
 
-        --build-openvidu-node-client)
-            BUILD_OV_NODE_CLIENT=true
-            ;;
+    --build-openvidu-node-client)
+        BUILD_OV_NODE_CLIENT=true
+        ;;
 
-        --build-openvidu-java-client)
-            BUILD_OV_JAVA_CLIENT=true
-            ;;
+    --build-openvidu-java-client)
+        BUILD_OV_JAVA_CLIENT=true
+        ;;
 
-        --build-openvidu-parent)
-            BUILD_OV_PARENT=true
-            ;;
+    --build-openvidu-parent)
+        BUILD_OV_PARENT=true
+        ;;
 
-        --build-openvidu-testapp)
-            BUILD_OV_TESTAPP=true
-            ;;
+    --build-openvidu-testapp)
+        BUILD_OV_TESTAPP=true
+        ;;
 
-        --build-openvidu-server-dashboard)
-            BUILD_OV_SERVER_DASHBOARD=true
-            ;;
+    --build-openvidu-server-dashboard)
+        BUILD_OV_SERVER_DASHBOARD=true
+        ;;
 
-        --build-openvidu-server)
-            BUILD_OV_SERVER=true
-            ;;
+    --build-openvidu-server)
+        BUILD_OV_SERVER=true
+        ;;
 
-        --build-openvidu-server-dependency)
-            BUILD_OV_SERVER_DEPENDENCY=true
-            ;;
+    --build-openvidu-server-dependency)
+        BUILD_OV_SERVER_DEPENDENCY=true
+        ;;
 
-        --build-openvidu-server-pro-inspector)
-            BUILD_OV_SERVER_PRO_INSPECTOR=true
-            ;;
+    --build-openvidu-server-pro-inspector)
+        BUILD_OV_SERVER_PRO_INSPECTOR=true
+        ;;
 
-        --build-openvidu-server-pro)
-            BUILD_OV_SERVER_PRO=true
-            ;;
+    --build-openvidu-server-pro)
+        BUILD_OV_SERVER_PRO=true
+        ;;
 
-        --serve-openvidu-testapp)
-            SERVE_OV_TESTAPP=true
-            ;;
+    --serve-openvidu-testapp)
+        SERVE_OV_TESTAPP=true
+        ;;
 
-        --bump-npm-project-version)
-            if [[ -z "${2:-}" ]]; then
-                echo "Must provide VERSION as 1st parameter"
-                exit 1
-            fi
-            BUMP_NPM_PROJECT_VERSION=true
-            VERSION="${2}"
-            ;;
-
-        --bump-npm-dependency-version)
-            if [[ -z "${2:-}" ]]; then
-                echo "Must provide DEPENDENCY as 1st parameter"
-                exit 1
-            fi
-            if [[ -z "${3:-}" ]]; then
-                echo "Must provide VERSION as 2nd parameter"
-                exit 1
-            fi
-            BUMP_NPM_DEPENDENCY_VERSION=true
-            DEPENDENCY="${2}"
-            VERSION="${3}"
-            ;;
-
-        --bump-maven-project-version)
-            if [[ -z "${2:-}" ]]; then
-                echo "Must provide VERSION as 1st parameter"
-                exit 1
-            fi
-            BUMP_MAVEN_PROJECT_VERSION=true
-            VERSION="${2}"
-            ;;
-
-        --bump-maven-property-version)
-            if [[ -z "${2:-}" ]]; then
-                echo "Must provide PROPERTY as 1st parameter"
-                exit 1
-            fi
-            if [[ -z "${3:-}" ]]; then
-                echo "Must provide VERSION as 2nd parameter"
-                exit 1
-            fi
-            BUMP_MAVEN_PROPERTY_VERSION=true
-            PROPERTY="${2}"
-            VERSION="${3}"
-            ;;
-
-        --bump-docker-compose-service-version)
-            if [[ -z "${2:-}" ]]; then
-                echo "Must provide DOCKER_COMPOSE_FILE as 1st parameter"
-                exit 1
-            fi
-            if [[ -z "${3:-}" ]]; then
-                echo "Must provide SERVICE_IMAGE as 2nd parameter"
-                exit 1
-            fi
-            if [[ -z "${4:-}" ]]; then
-                echo "Must provide VERSION as 3rd parameter"
-                exit 1
-            fi
-            BUMP_DOCKER_COMPOSE_SERVICE_VERSION=true
-            DOCKER_COMPOSE_FILE="${2}"
-            SERVICE_IMAGE="${3}"
-            VERSION="${4}"
-            ;;
-
-        --bump-docker-compose-header-version)
-            if [[ -z "${2:-}" ]]; then
-                echo "Must provide DOCKER_COMPOSE_FILE as 1st parameter"
-                exit 1
-            fi
-            if [[ -z "${3:-}" ]]; then
-                echo "Must provide HEADER as 2nd parameter"
-                exit 1
-            fi
-            if [[ -z "${4:-}" ]]; then
-                echo "Must provide VERSION as 3rd parameter"
-                exit 1
-            fi
-            BUMP_DOCKER_COMPOSE_HEADER_VERSION=true
-            DOCKER_COMPOSE_FILE="${2}"
-            HEADER="${3}"
-            VERSION="${4}"
-            ;;
-
-        --bump-docker-image-version-in-files)
-            if [[ -z "${3:-}" ]]; then
-                echo "Must provide FILE_NAME_PATTERN as 1st parameter"
-                exit 1
-            fi
-            if [[ -z "${4:-}" ]]; then
-                echo "Must provide IMAGE as 2nd parameter"
-                exit 1
-            fi
-            if [[ -z "${4:-}" ]]; then
-                echo "Must provide VERSION as 3rd parameter"
-                exit 1
-            fi
-            BUMP_DOCKER_IMAGE_VERSION_IN_FILES=true
-            FILE_NAME_PATTERN="${2}"
-            IMAGE="${3}"
-            VERSION="${4}"
-            ;;
-
-        --bump-application-properties-var-value)
-            if [[ -z "${3:-}" ]]; then
-                echo "Must provide APPLICATION_PROPERTIES_FILE as 2nd parameter"
-                exit 1
-            fi
-            if [[ -z "${4:-}" ]]; then
-                echo "Must provide VARIABLE as 3rd parameter"
-                exit 1
-            fi
-            if [[ -z "${4:-}" ]]; then
-                echo "Must provide VALUE as 4th parameter"
-                exit 1
-            fi
-            BUMP_APPLICATION_PROPERTIES_VAR_VALUE=true
-            APPLICATION_PROPERTIES_FILE="${2}"
-            VARIABLE="${3}"
-            VALUE="${4}"
-            ;;
-
-        --wait-for-npm-dependency)
-            if [[ -z "${2:-}" ]]; then
-                echo "Must provide DEPENDENCY as 1st parameter"
-                exit 1
-            fi
-            if [[ -z "${3:-}" ]]; then
-                echo "Must provide VERSION as 2nd parameter"
-                exit 1
-            fi
-            WAIT_FOR_NPM_DEPENDENCY=true
-            DEPENDENCY="${2}"
-            VERSION="${3}"
-            ;;
-        *)
-            echo "Unrecognized method $1"
+    --bump-npm-project-version)
+        if [[ -z "${2:-}" ]]; then
+            echo "Must provide VERSION as 1st parameter"
             exit 1
-            ;;
-        esac
-    done
+        fi
+        BUMP_NPM_PROJECT_VERSION=true
+        VERSION="${2}"
+        ;;
+
+    --bump-npm-dependency-version)
+        if [[ -z "${2:-}" ]]; then
+            echo "Must provide DEPENDENCY as 1st parameter"
+            exit 1
+        fi
+        if [[ -z "${3:-}" ]]; then
+            echo "Must provide VERSION as 2nd parameter"
+            exit 1
+        fi
+        BUMP_NPM_DEPENDENCY_VERSION=true
+        DEPENDENCY="${2}"
+        VERSION="${3}"
+        ;;
+
+    --bump-maven-project-version)
+        if [[ -z "${2:-}" ]]; then
+            echo "Must provide VERSION as 1st parameter"
+            exit 1
+        fi
+        BUMP_MAVEN_PROJECT_VERSION=true
+        VERSION="${2}"
+        ;;
+
+    --bump-maven-property-version)
+        if [[ -z "${2:-}" ]]; then
+            echo "Must provide PROPERTY as 1st parameter"
+            exit 1
+        fi
+        if [[ -z "${3:-}" ]]; then
+            echo "Must provide VERSION as 2nd parameter"
+            exit 1
+        fi
+        BUMP_MAVEN_PROPERTY_VERSION=true
+        PROPERTY="${2}"
+        VERSION="${3}"
+        ;;
+
+    --bump-docker-compose-service-version)
+        if [[ -z "${2:-}" ]]; then
+            echo "Must provide DOCKER_COMPOSE_FILE as 1st parameter"
+            exit 1
+        fi
+        if [[ -z "${3:-}" ]]; then
+            echo "Must provide SERVICE_IMAGE as 2nd parameter"
+            exit 1
+        fi
+        if [[ -z "${4:-}" ]]; then
+            echo "Must provide VERSION as 3rd parameter"
+            exit 1
+        fi
+        BUMP_DOCKER_COMPOSE_SERVICE_VERSION=true
+        DOCKER_COMPOSE_FILE="${2}"
+        SERVICE_IMAGE="${3}"
+        VERSION="${4}"
+        ;;
+
+    --bump-docker-compose-header-version)
+        if [[ -z "${2:-}" ]]; then
+            echo "Must provide DOCKER_COMPOSE_FILE as 1st parameter"
+            exit 1
+        fi
+        if [[ -z "${3:-}" ]]; then
+            echo "Must provide HEADER as 2nd parameter"
+            exit 1
+        fi
+        if [[ -z "${4:-}" ]]; then
+            echo "Must provide VERSION as 3rd parameter"
+            exit 1
+        fi
+        BUMP_DOCKER_COMPOSE_HEADER_VERSION=true
+        DOCKER_COMPOSE_FILE="${2}"
+        HEADER="${3}"
+        VERSION="${4}"
+        ;;
+
+    --bump-docker-image-version-in-files)
+        if [[ -z "${3:-}" ]]; then
+            echo "Must provide FILE_NAME_PATTERN as 1st parameter"
+            exit 1
+        fi
+        if [[ -z "${4:-}" ]]; then
+            echo "Must provide IMAGE as 2nd parameter"
+            exit 1
+        fi
+        if [[ -z "${4:-}" ]]; then
+            echo "Must provide VERSION as 3rd parameter"
+            exit 1
+        fi
+        BUMP_DOCKER_IMAGE_VERSION_IN_FILES=true
+        FILE_NAME_PATTERN="${2}"
+        IMAGE="${3}"
+        VERSION="${4}"
+        ;;
+
+    --bump-application-properties-var-value)
+        if [[ -z "${3:-}" ]]; then
+            echo "Must provide APPLICATION_PROPERTIES_FILE as 2nd parameter"
+            exit 1
+        fi
+        if [[ -z "${4:-}" ]]; then
+            echo "Must provide VARIABLE as 3rd parameter"
+            exit 1
+        fi
+        if [[ -z "${4:-}" ]]; then
+            echo "Must provide VALUE as 4th parameter"
+            exit 1
+        fi
+        BUMP_APPLICATION_PROPERTIES_VAR_VALUE=true
+        APPLICATION_PROPERTIES_FILE="${2}"
+        VARIABLE="${3}"
+        VALUE="${4}"
+        ;;
+
+    --wait-for-npm-dependency)
+        if [[ -z "${2:-}" ]]; then
+            echo "Must provide DEPENDENCY as 1st parameter"
+            exit 1
+        fi
+        if [[ -z "${3:-}" ]]; then
+            echo "Must provide VERSION as 2nd parameter"
+            exit 1
+        fi
+        WAIT_FOR_NPM_DEPENDENCY=true
+        DEPENDENCY="${2}"
+        VERSION="${3}"
+        ;;
+    *)
+        echo "Unrecognized method $1"
+        exit 1
+        ;;
+    esac
 else
     echo "Must provide a method to execute as first parameter when calling the script"
     exit 1

@@ -163,35 +163,33 @@ function stopMediaServer {
 
 # Environment variables
 if [[ -n ${1:-} ]]; then
-    while :; do
-        case "${1:-}" in
-        --openvidu-server-unit-tests)
-            OV_UNIT_TESTS=true
-            ;;
-        --openvidu-server-integration-tests)
-            OV_INTEGRATION_TESTS=true
-            ;;
-        --build-openvidu-test-e2e)
-            BUILD_OV_TEST_E2E=true
-            ;;
-        --environment-launch-kurento)
-            LAUNCH_OV_KURENTO=true
-            ;;
-        --openvidu-e2e-tests-kurento)
-            OV_E2E_KURENTO=true
-            ;;
-        --environment-launch-mediasoup)
-            LAUNCH_OV_MEDIASOUP=true
-            ;;
-        --openvidu-e2e-tests-mediasoup)
-            OV_E2E_MEDIASOUP=true
-            ;;
-        *)
-            echo "Unrecognized method $1"
-            exit 1
-            ;;
-        esac
-    done
+    case "${1:-}" in
+    --openvidu-server-unit-tests)
+        OV_UNIT_TESTS=true
+        ;;
+    --openvidu-server-integration-tests)
+        OV_INTEGRATION_TESTS=true
+        ;;
+    --build-openvidu-test-e2e)
+        BUILD_OV_TEST_E2E=true
+        ;;
+    --environment-launch-kurento)
+        LAUNCH_OV_KURENTO=true
+        ;;
+    --openvidu-e2e-tests-kurento)
+        OV_E2E_KURENTO=true
+        ;;
+    --environment-launch-mediasoup)
+        LAUNCH_OV_MEDIASOUP=true
+        ;;
+    --openvidu-e2e-tests-mediasoup)
+        OV_E2E_MEDIASOUP=true
+        ;;
+    *)
+        echo "Unrecognized method $1"
+        exit 1
+        ;;
+    esac
 else
     echo "Must provide a method to execute as first parameter when calling the script"
     exit 1
