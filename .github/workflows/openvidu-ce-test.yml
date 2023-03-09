@@ -76,8 +76,8 @@ jobs:
         run: /opt/commons.sh --clean-environment
       - name: Prepare test environment
         run: |
-          DOCKER_IMAGE=$(sed -r "s|^(.+):.+$|\1|g" <<<${TEST_IMAGE})
-          /opt/commons.sh --prepare-test-environment ${DOCKER_IMAGE}
+          TEST_IMAGE_WITHOUT_TAG=$(sed -r "s|^(.+):.+$|\1|g" <<<${TEST_IMAGE})
+          /opt/commons.sh --prepare-test-environment "${TEST_IMAGE_WITHOUT_TAG}"
       - name: Setting up Kurento Snapshots
         run: /opt/commons.sh --prepare-kurento-snapshot
       - name: Build openvidu-browser

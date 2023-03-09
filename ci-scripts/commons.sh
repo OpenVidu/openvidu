@@ -54,10 +54,12 @@ if [[ -n ${1:-} ]]; then
         ;;
 
     --prepare-test-environment)
-        PREPARE_TEST_ENVIRONMENT=true
-        if [[ -n "${2:-}" ]]; then
+        if [[ -z "${2:-}" ]]; then
+            echo "No test docker container provided when running --prepare-test-environment"
+        else
             TEST_IMAGE="${2}"
         fi
+        PREPARE_TEST_ENVIRONMENT=true
         ;;
 
     --prepare-kurento-snapshot)
