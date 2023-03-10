@@ -252,7 +252,8 @@ export class StreamComponent implements OnInit {
 			publishAudio: !this.participantService.isMyCameraActive(),
 			mirror: false
 		};
-		await this.openviduService.replaceTrack(VideoType.SCREEN, properties);
+		const publisher = this.participantService.getMyScreenPublisher();
+		await this.openviduService.replaceScreenTrack(publisher, properties);
 	}
 
 	private checkVideoEnlarged() {

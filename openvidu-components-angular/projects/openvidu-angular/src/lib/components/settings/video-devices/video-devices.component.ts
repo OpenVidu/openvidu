@@ -4,7 +4,6 @@ import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../../models/device.model';
 import { PanelType } from '../../../models/panel.model';
 import { ParticipantAbstractModel } from '../../../models/participant.model';
-import { VideoType } from '../../../models/video-type.model';
 import { DeviceService } from '../../../services/device/device.service';
 import { OpenViduService } from '../../../services/openvidu/openvidu.service';
 import { PanelService } from '../../../services/panel/panel.service';
@@ -88,7 +87,8 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 				await this.backgroundService.removeBackground();
 			}
 			const pp: PublisherProperties = { videoSource: device.device, audioSource: false, mirror };
-			await this.openviduService.replaceTrack(VideoType.CAMERA, pp);
+			const publisher = this.participantService.getMyCameraPublisher();
+			await this.openviduService.replaceCameraTrack(publisher, pp);
 
 			if (isBackgroundApplied) {
 				const bgSelected = this.backgroundService.backgrounds.find((b) => b.id === backgroundSelected);

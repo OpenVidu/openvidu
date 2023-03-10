@@ -411,42 +411,46 @@ export class OpenViduService {
 
 	/**
 	 * @internal
+	 * @param cameraPublisher
+	 * @param props
 	 */
-	async replaceTrack(videoType: VideoType, props: PublisherProperties) {
-		const participantService = this.injector.get(ParticipantService);
-		const screenPublisher = participantService.getMyScreenPublisher();
-		const cameraPublisher = participantService.getMyCameraPublisher();
+	async replaceCameraTrack(cameraPublisher: Publisher, props: PublisherProperties) {
+		const isReplacingAudio = !!props.audioSource;
+		const isReplacingVideo = !!props.videoSource;
+		let mediaStream: MediaStream | undefined;
+		let track: MediaStreamTrack | undefined;
 
 		try {
-			this.log.d(`Replacing ${videoType} track`, props);
+			if (isReplacingVideo || isReplacingAudio) {
+				mediaStream = await this.createMediaStream(props);
+			}
 
-			if (videoType === VideoType.CAMERA) {
-				let mediaStream: MediaStream;
-				const isReplacingAudio = !!props.audioSource;
-				const isReplacingVideo = !!props.videoSource;
+			if (isReplacingVideo) {
+				track = mediaStream?.getVideoTracks()[0];
+			} else if (isReplacingAudio) {
+				track = mediaStream?.getAudioTracks()[0];
+			}
 
-				if (isReplacingVideo) {
-					mediaStream = await this.createMediaStream(props);
-					// Replace video track
-					const videoTrack: MediaStreamTrack = mediaStream.getVideoTracks()[0];
-					await cameraPublisher.replaceTrack(videoTrack);
-				} else if (isReplacingAudio) {
-					mediaStream = await this.createMediaStream(props);
-					// Replace audio track
-					const audioTrack: MediaStreamTrack = mediaStream.getAudioTracks()[0];
-					await cameraPublisher.replaceTrack(audioTrack);
-				}
-			} else if (videoType === VideoType.SCREEN) {
-				try {
-					let newScreenMediaStream = await this.OVScreen.getUserMedia(props);
-					screenPublisher.stream.getMediaStream().getVideoTracks()[0].stop();
-					await screenPublisher.replaceTrack(newScreenMediaStream.getVideoTracks()[0]);
-				} catch (error) {
-					this.log.w('Cannot create the new MediaStream', error);
-				}
+			if (track) {
+				await cameraPublisher.replaceTrack(track);
 			}
 		} catch (error) {
 			this.log.e('Error replacing track ', error);
+		}
+	}
+
+	/**
+	 * @internal
+	 * @param screenPublisher
+	 * @param props
+	 */
+	async replaceScreenTrack(screenPublisher: Publisher, props: PublisherProperties) {
+		try {
+			let newScreenMediaStream = await this.OVScreen.getUserMedia(props);
+			screenPublisher.stream.getMediaStream().getVideoTracks()[0].stop();
+			await screenPublisher.replaceTrack(newScreenMediaStream.getVideoTracks()[0]);
+		} catch (error) {
+			this.log.w('Cannot create the new MediaStream', error);
 		}
 	}
 
