@@ -7,11 +7,8 @@ set -eu -o pipefail
 ################################################################
 
 # CI flags
-GITHUB_ACTIONS_WORKING_DIR="${GITHUB_ACTIONS_WORKING_DIR:-}"
-
-PREPARE_TEST_ENVIRONMENT=false
-
 CLEAN_ENVIRONMENT=false
+PREPARE_TEST_ENVIRONMENT=false
 PREPARE_KURENTO_SNAPSHOT=false
 SERVE_OV_TESTAPP=false
 
@@ -266,8 +263,7 @@ if [[ "${CLEAN_ENVIRONMENT}" == true ]]; then
     for id in $ids; do
         DOCKER_IMAGE=$(docker inspect --format='{{.Config.Image}}' $id)
         if [[ "${DOCKER_IMAGE}" != *"$TEST_IMAGE"* ]] &&
-            [[ "${DOCKER_IMAGE}" != *"runner-deployment"* ]] &&
-            [[ "${DOCKER_IMAGE}" != *"openvidu/openvidu-dev-generic"* ]]; then
+            [[ "${DOCKER_IMAGE}" != *"runner-deployment"* ]]; then
             echo "Removing container image '$DOCKER_IMAGE' with id '$id'"
             docker stop $id && docker rm $id
         fi
@@ -275,11 +271,6 @@ if [[ "${CLEAN_ENVIRONMENT}" == true ]]; then
 
     # Clean /opt/openvidu contents
     rm -rf /opt/openvidu/*
-
-    # Recreate working dir just in case it was placed under /opt/openvidu
-    if [[ -n "${GITHUB_ACTIONS_WORKING_DIR:-}" ]]; then
-        mkdir -p "${GITHUB_ACTIONS_WORKING_DIR}"
-    fi
 
 fi
 
