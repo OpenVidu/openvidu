@@ -60,8 +60,10 @@ jobs:
       EDGE_VERSION: ${{ github.event.inputs.EDGE_VERSION || 'latest' }}
     steps:
       - uses: actions/checkout@v3
-      - name: Download commons.sh script
-        run: curl -s https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/commons.sh -o /opt/commons.sh && chmod u+x /opt/commons.sh
+      - name: Setup scripts
+        run: |
+          curl -s https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/commons.sh -o /opt/commons.sh && chmod u+x /opt/commons.sh
+          cp ci-scripts/openvidu-e2e-tests.sh /opt/openvidu-e2e-tests.sh && chmod u+x /opt/openvidu-e2e-tests.sh
       - name: Clean environment
         run: /opt/commons.sh --clean-environment
       - name: Prepare test environment
@@ -83,15 +85,15 @@ jobs:
       - name: Build openvidu-server
         run: /opt/commons.sh --build-openvidu-server
       - name: openvidu-server unit tests
-        run: ci-scripts/openvidu-e2e-tests.sh --openvidu-server-unit-tests
+        run: /opt/openvidu-e2e-tests.sh --openvidu-server-unit-tests
       - name: openvidu-server integration tests
-        run: ci-scripts/openvidu-e2e-tests.sh --openvidu-server-integration-tests
+        run: /opt/openvidu-e2e-tests.sh --openvidu-server-integration-tests
       - name: Environment launch Kurento
-        run: ci-scripts/openvidu-e2e-tests.sh --environment-launch-kurento
+        run: /opt/openvidu-e2e-tests.sh --environment-launch-kurento
       - name: Serve openvidu-testapp
         run: /opt/commons.sh --serve-openvidu-testapp
       - name: OpenVidu E2E Tests Kurento
-        run: ci-scripts/openvidu-e2e-tests.sh --openvidu-e2e-tests-kurento
+        run: /opt/openvidu-e2e-tests.sh --openvidu-e2e-tests-kurento
       - name: Test reports
         uses: mikepenz/action-junit-report@v3
         if: always() # always run even if the previous step fails
