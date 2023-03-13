@@ -45,7 +45,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     container:
-      image: ${{ github.event.inputs.TEST_IMAGE }}
+      image: ${{ github.event.inputs.TEST_IMAGE || 'openvidu/openvidu-test-e2e:22.04' }}
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
         - /opt/openvidu:/opt/openvidu
