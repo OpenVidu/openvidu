@@ -2955,7 +2955,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Assertions.assertTrue(e.getMessage().contains("expected to return status 200 but got 409"),
 						"Exception message wasn't 409. It was: " + e.getMessage());
 			}
-			Assertions.assertEquals(PETITIONS - 1, exceptions.size(), "Wrong number of councurrent started broadcasts");
+			Assertions.assertEquals(1, responses.size(), "Wrong number of successfully started broadcasts");
+			Assertions.assertEquals(PETITIONS - 1, exceptions.size(), "Wrong number of concurrent started broadcasts");
 			// 409
 			restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
 					HttpURLConnection.HTTP_CONFLICT);

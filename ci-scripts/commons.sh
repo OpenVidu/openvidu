@@ -2,7 +2,7 @@
 set -eu -o pipefail
 
 ################################################################
-# Any functions offered by this file assume that the path is   #
+# Any function offered by this file assume that the path is    #
 # located where the first command of each function requires it #
 ################################################################
 
