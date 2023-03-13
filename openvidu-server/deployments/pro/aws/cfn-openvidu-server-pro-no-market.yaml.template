@@ -86,32 +86,42 @@ Parameters:
     Type: Number
     Default: 1
 
+  # Enable Elasticsearch and Kibana
+  ElasticsearchEnabled:
+    Description: "Choose if you want OpenVidu to use Elasticsearch."
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: true
+
   # Elasticsearch configuration
   ElasticsearchUser:
-    Description: "Username for Elasticsearch and Kibana"
+    Description: "Username for Elasticsearch and Kibana. ('ElasticSearch Enabled' must be true)"
     Type: String
     AllowedPattern: ^((?!")(?! ).)+$
     ConstraintDescription: Elasticsearch user is mandatory (no whitespaces or quotations allowed)
     Default: elasticadmin
 
   ElasticsearchPassword:
-    Description: "Password for Elasticsearch and Kibana"
+    Description: "Password for Elasticsearch and Kibana ('ElasticSearch Enabled' must be true)"
     Type: String
     AllowedPattern: ^((?!")(?! ).)+$
     NoEcho: true
     ConstraintDescription: Elasticsearch password is mandatory (no whitespaces or quotations allowed)
+    MinLength: 7
 
   # Elasticsearch configuration
   ElasticsearchUrl:
-    Description: "If you have an external Elasticsearch service running, put here the url to the service. If empty, an Elasticsearch service will be deployed next to OpenVidu."
+    Description: "If you have an external Elasticsearch service running, put here the url to the service. If empty, an Elasticsearch service will be deployed next to OpenVidu. ('ElasticSearch Enabled' must be true)"
     Type: String
-    AllowedPattern: (^(http|https):\/\/.*:[1-9]{1,5}+.*$|^$)
+    AllowedPattern: (^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/.*)?$)
     ConstraintDescription: "It is very important to specify the Elasticsearch URL with the port used by this service. For example: https://es-example:443"
 
   KibanaUrl:
-    Description: "If you have an external Kibana service running, put here the url to the service. If empty, a Kibana service will be deployed next to OpenVidu."
+    Description: "If you have an external Kibana service running, put here the url to the service. If empty, a Kibana service will be deployed next to OpenVidu. ('ElasticSearch Enabled' must be true)"
     Type: String
-    AllowedPattern: (^(http|https):\/\/.*:[1-9]{1,5}+.*$|^$)
+    AllowedPattern: (^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/.*)?$)
     ConstraintDescription: "It is very important to specify the url with port used by this service. For example: https://kibana-example:443"
 
   # EC2 Instance configuration
@@ -267,6 +277,7 @@ Metadata:
       - Label:
           default: Elasticsearch and Kibana configuration
         Parameters:
+          - ElasticsearchEnabled
           - ElasticsearchUrl
           - KibanaUrl
           - ElasticsearchUser
@@ -316,6 +327,8 @@ Metadata:
       OpenViduSecret:
         default: "Openvidu Secret"
       # Kibana configuration
+      ElasticsearchEnabled:
+        default: "Enable Elasticsearch and Kibana"
       ElasticsearchUrl:
         default: "Elasticsearch URL"
       KibanaUrl:
@@ -352,6 +365,7 @@ Conditions:
 
 Rules:
 
+  # Check recording
   RecordingValidation:
     RuleCondition:
       Fn::Or: [ !Equals [!Ref Recording, 'disabled' ], !Equals [!Ref Recording, 'local' ] ]
@@ -359,6 +373,61 @@ Rules:
       - AssertDescription: If recording Storage is 'disabled' or 'local', you don't need to specify a S3 bucket.
         Assert:
           Fn::Equals: [ !Ref S3RecordingsBucketName, "" ]
+  # Check when Elasticsearch is enabled that all the parameters are present
+  ElasticsearchValidation:
+    RuleCondition:
+      Fn::Equals: [ !Ref ElasticsearchEnabled, 'true' ]
+    Assertions:
+      - AssertDescription: If Elasticsearch is enabled, you need to specify a Elasticsearch username.
+        Assert:
+          Fn::Not: [ !Equals [!Ref ElasticsearchUser, ''] ]
+      - AssertDescription: If Elasticsearch is enabled, you need to specify a Elasticsearch password.
+        Assert:
+          Fn::Not: [ !Equals [!Ref ElasticsearchPassword, ''] ]
+  # Check when Elasticsearch is disabled that any parameter of elasticsearch is not present
+  ElasticsearchDisabledValidation:
+    RuleCondition:
+      Fn::Equals: [ !Ref ElasticsearchEnabled, 'false' ]
+    Assertions:
+      - AssertDescription: If Elasticsearch is disabled, you don't need to specify a Elasticsearch URL.
+        Assert:
+          Fn::Equals: [ !Ref ElasticsearchUrl, "" ]
+      - AssertDescription: If Elasticsearch is disabled, you don't need to specify a Kibana URL.
+        Assert:
+          Fn::Equals: [ !Ref KibanaUrl, "" ]
+      - AssertDescription: If Elasticsearch is disabled, you don't need to specify a Elasticsearch username.
+        Assert:
+          Fn::Equals: [ !Ref ElasticsearchUser, "" ]
+      - AssertDescription: If Elasticsearch is disabled, you don't need to specify a Elasticsearch password.
+        Assert:
+          Fn::Equals: [ !Ref ElasticsearchPassword, "" ]
+  # Check Elastic IP is defined if letsencrypt or owncert is selected
+  ElasticIPValidation:
+    RuleCondition:
+      Fn::Or: [ !Equals [!Ref WhichCert, 'letsencrypt' ], !Equals [!Ref WhichCert, 'owncert' ] ]
+    Assertions:
+      - AssertDescription: If you want to use Let's Encrypt or your own certificate, you need to specify a Elastic IP.
+        Assert:
+          Fn::Not: [ !Equals [!Ref PublicElasticIP, ''] ]
+  # Check Let's Encrypt email is defined if letsencrypt is selected
+  LetsEncryptEmailValidation:
+    RuleCondition:
+      Fn::Equals: [ !Ref WhichCert, 'letsencrypt' ]
+    Assertions:
+      - AssertDescription: If you want to use Let's Encrypt, you need to specify a Let's Encrypt email.
+        Assert:
+          Fn::Not: [ !Equals [!Ref LetsEncryptEmail, ''] ]
+  # Check OwnCertCRT and OwnCertKEY are defined if owncert is selected
+  OwnCertValidation:
+    RuleCondition:
+      Fn::Equals: [ !Ref WhichCert, 'owncert' ]
+    Assertions:
+      - AssertDescription: If you want to use your own certificate, you need to specify a CRT file.
+        Assert:
+          Fn::Not: [ !Equals [!Ref OwnCertCRT, ''] ]
+      - AssertDescription: If you want to use your own certificate, you need to specify a KEY file.
+        Assert:
+          Fn::Not: [ !Equals [!Ref OwnCertKEY, ''] ]
 
 Resources:
 
@@ -520,14 +589,18 @@ Resources:
                 sed -i "s/LETSENCRYPT_EMAIL=user@example.com/LETSENCRYPT_EMAIL=${LetsEncryptEmail}/" $WORKINGDIR/.env
 
                 # Replace Elastic Search Conf
-                if [[ ! -z "${ElasticsearchUrl}" ]]; then
-                  sed -i "s,#OPENVIDU_PRO_ELASTICSEARCH_HOST=,OPENVIDU_PRO_ELASTICSEARCH_HOST=${ElasticsearchUrl}," $WORKINGDIR/.env
+                if [[ "${ElasticsearchEnabled}" == "true" ]]; then
+                  if [[ ! -z "${ElasticsearchUrl}" ]]; then
+                    sed -i "s,#OPENVIDU_PRO_ELASTICSEARCH_HOST=,OPENVIDU_PRO_ELASTICSEARCH_HOST=${ElasticsearchUrl}," $WORKINGDIR/.env
+                  fi
+                  if [[ ! -z "${KibanaUrl}" ]]; then
+                    sed -i "s,#OPENVIDU_PRO_KIBANA_HOST=,OPENVIDU_PRO_KIBANA_HOST=${KibanaUrl}," $WORKINGDIR/.env
+                  fi
+                  sed -i "s/ELASTICSEARCH_USERNAME=elasticadmin/ELASTICSEARCH_USERNAME=${ElasticsearchUser}/" $WORKINGDIR/.env
+                  sed -i "s/ELASTICSEARCH_PASSWORD=/ELASTICSEARCH_PASSWORD=${ElasticsearchPassword}/" $WORKINGDIR/.env
+                else
+                  sed -i "s/OPENVIDU_PRO_ELASTICSEARCH=true/OPENVIDU_PRO_ELASTICSEARCH=false/" $WORKINGDIR/.env
                 fi
-                if [[ ! -z "${KibanaUrl}" ]]; then
-                  sed -i "s,#OPENVIDU_PRO_KIBANA_HOST=,OPENVIDU_PRO_KIBANA_HOST=${KibanaUrl}," $WORKINGDIR/.env
-                fi
-                sed -i "s/ELASTICSEARCH_USERNAME=elasticadmin/ELASTICSEARCH_USERNAME=${ElasticsearchUser}/" $WORKINGDIR/.env
-                sed -i "s/ELASTICSEARCH_PASSWORD=/ELASTICSEARCH_PASSWORD=${ElasticsearchPassword}/" $WORKINGDIR/.env
 
                 # Replace vars AWS
                 INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
