@@ -208,7 +208,7 @@ is_external_url() {
 
 is_elasticsearch_enabled() {
   local ELASTICSEARCH_ENABLED
-  ELASTICSEARCH_ENABLED=$(grep -v '^#' .env | grep OPENVIDU_PRO_ELASTICSEARCH_ENABLED | cut -d '=' -f2)
+  ELASTICSEARCH_ENABLED=$(grep -v '^#' .env | grep 'OPENVIDU_PRO_ELASTICSEARCH=' | cut -d '=' -f2)
 
   # First check if empty
   if [[ -z "$ELASTICSEARCH_ENABLED" ]]; then

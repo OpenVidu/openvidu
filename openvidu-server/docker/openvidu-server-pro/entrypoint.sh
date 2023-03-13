@@ -31,7 +31,7 @@ if [[ -z "${COTURN_SHARED_SECRET_KEY}" ]]; then
 fi
 
 # Don't wait for Kibana if Elasticsearch is disabled
-if [ "${OPENVIDU_PRO_ELASTICSEARCH_ENABLED}" == "false" ]; then
+if [ "${OPENVIDU_PRO_ELASTICSEARCH}" == "false" ]; then
     unset WAIT_KIBANA_URL
 fi
 
