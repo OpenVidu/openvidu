@@ -87,6 +87,7 @@ if [[ -n ${1:-} ]]; then
 
     --build-openvidu-server-pro-inspector)
         BUILD_OV_SERVER_PRO_INSPECTOR=true
+        LINK_LOCAL_DEPENDENCIES="${2:-true}"
         ;;
 
     --build-openvidu-server-pro)
@@ -491,7 +492,9 @@ fi
 if [[ "${BUILD_OV_SERVER_PRO_INSPECTOR}" == true ]]; then
     pushd dashboard
     npm install
-    npm link openvidu-browser openvidu-node-client
+    if [[ "${LINK_LOCAL_DEPENDENCIES}" == true ]]; then
+        npm link openvidu-browser openvidu-node-client
+    fi
     npm run build-server-prod
     popd
 fi
