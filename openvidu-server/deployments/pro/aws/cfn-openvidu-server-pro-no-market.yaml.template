@@ -99,30 +99,29 @@ Parameters:
   ElasticsearchUser:
     Description: "Username for Elasticsearch and Kibana. ('ElasticSearch Enabled' must be true)"
     Type: String
-    AllowedPattern: ^((?!")(?! ).)+$
+    AllowedPattern: ^$|^[^" ]+$
     ConstraintDescription: Elasticsearch user is mandatory (no whitespaces or quotations allowed)
     Default: elasticadmin
 
   ElasticsearchPassword:
     Description: "Password for Elasticsearch and Kibana ('ElasticSearch Enabled' must be true)"
     Type: String
-    AllowedPattern: ^((?!")(?! ).)+$
+    AllowedPattern: ^$|^[^" ]+$
     NoEcho: true
-    ConstraintDescription: Elasticsearch password is mandatory (no whitespaces or quotations allowed)
-    MinLength: 7
+    ConstraintDescription: Elasticsearch password is mandatory and it should have at least 6 characters (no whitespaces or quotations allowed)
 
   # Elasticsearch configuration
   ElasticsearchUrl:
     Description: "If you have an external Elasticsearch service running, put here the url to the service. If empty, an Elasticsearch service will be deployed next to OpenVidu. ('ElasticSearch Enabled' must be true)"
     Type: String
-    AllowedPattern: (^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/.*)?$)
-    ConstraintDescription: "It is very important to specify the Elasticsearch URL with the port used by this service. For example: https://es-example:443"
+    AllowedPattern: (^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/.*)?$|^$)
+    ConstraintDescription: "It is very important to specify the Elasticsearch URL with the port used by this service. For example: https://es-example"
 
   KibanaUrl:
     Description: "If you have an external Kibana service running, put here the url to the service. If empty, a Kibana service will be deployed next to OpenVidu. ('ElasticSearch Enabled' must be true)"
     Type: String
-    AllowedPattern: (^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/.*)?$)
-    ConstraintDescription: "It is very important to specify the url with port used by this service. For example: https://kibana-example:443"
+    AllowedPattern: (^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/.*)?$|^$)
+    ConstraintDescription: "It is very important to specify the url with port used by this service. For example: https://kibana-example"
 
   # EC2 Instance configuration
 
@@ -212,14 +211,17 @@ Parameters:
     ConstraintDescription: "must be the name of an existing EC2 KeyPair"
 
   # Networking configuration
-
   OpenViduVPC:
     Description: "Dedicated VPC for OpenVidu cluster"
     Type: AWS::EC2::VPC::Id
+    AllowedPattern: ^.+$
+    ConstraintDescription: You must specify a VPC ID
 
   OpenViduSubnet:
     Description: "Subnet for OpenVidu cluster"
     Type: AWS::EC2::Subnet::Id
+    AllowedPattern: ^.+$
+    ConstraintDescription: You must specify a subnet ID
 
   # Other configuration
 
@@ -367,67 +369,63 @@ Rules:
 
   # Check recording
   RecordingValidation:
-    RuleCondition:
-      Fn::Or: [ !Equals [!Ref Recording, 'disabled' ], !Equals [!Ref Recording, 'local' ] ]
+    RuleCondition: !Or [ !Equals [!Ref Recording, 'disabled' ], !Equals [!Ref Recording, 'local' ] ]
     Assertions:
-      - AssertDescription: If recording Storage is 'disabled' or 'local', you don't need to specify a S3 bucket.
-        Assert:
-          Fn::Equals: [ !Ref S3RecordingsBucketName, "" ]
+      - AssertDescription: Parameter 'S3 Bucket where recordings will be stored' (S3RecordingsBucketName) is not needed when 'Recording' is 'disabled' or 'local'.
+        Assert: !Equals [ !Ref S3RecordingsBucketName, '' ]
+
   # Check when Elasticsearch is enabled that all the parameters are present
   ElasticsearchValidation:
-    RuleCondition:
-      Fn::Equals: [ !Ref ElasticsearchEnabled, 'true' ]
+    RuleCondition: !Equals [ !Ref ElasticsearchEnabled, 'true' ]
     Assertions:
-      - AssertDescription: If Elasticsearch is enabled, you need to specify a Elasticsearch username.
-        Assert:
-          Fn::Not: [ !Equals [!Ref ElasticsearchUser, ''] ]
-      - AssertDescription: If Elasticsearch is enabled, you need to specify a Elasticsearch password.
-        Assert:
-          Fn::Not: [ !Equals [!Ref ElasticsearchPassword, ''] ]
+      - AssertDescription: Paramter 'Elasticsearch and Kibana username' (ElasticsearchUser) is needed when 'Enable Elasticsearch and Kibana' (ElasticsearchEnabled) is 'true'.
+        Assert: !Not [ !Equals [!Ref ElasticsearchUser, ''] ]
+      - AssertDescription: Parameter 'Elasticsearch and Kibana password' (ElasticsearchPassword) is needed when 'Enable Elasticsearch and Kibana' (ElasticsearchEnabled) is 'true'.
+        Assert: !Not [ !Equals [!Ref ElasticsearchPassword, ''] ]
+
   # Check when Elasticsearch is disabled that any parameter of elasticsearch is not present
   ElasticsearchDisabledValidation:
-    RuleCondition:
-      Fn::Equals: [ !Ref ElasticsearchEnabled, 'false' ]
+    RuleCondition: !Equals [ !Ref ElasticsearchEnabled, 'false' ]
     Assertions:
-      - AssertDescription: If Elasticsearch is disabled, you don't need to specify a Elasticsearch URL.
-        Assert:
-          Fn::Equals: [ !Ref ElasticsearchUrl, "" ]
-      - AssertDescription: If Elasticsearch is disabled, you don't need to specify a Kibana URL.
-        Assert:
-          Fn::Equals: [ !Ref KibanaUrl, "" ]
-      - AssertDescription: If Elasticsearch is disabled, you don't need to specify a Elasticsearch username.
-        Assert:
-          Fn::Equals: [ !Ref ElasticsearchUser, "" ]
-      - AssertDescription: If Elasticsearch is disabled, you don't need to specify a Elasticsearch password.
-        Assert:
-          Fn::Equals: [ !Ref ElasticsearchPassword, "" ]
-  # Check Elastic IP is defined if letsencrypt or owncert is selected
-  ElasticIPValidation:
-    RuleCondition:
-      Fn::Or: [ !Equals [!Ref WhichCert, 'letsencrypt' ], !Equals [!Ref WhichCert, 'owncert' ] ]
+      - AssertDescription: Parameter 'Elasticsearch URL' (ElasticsearchUrl) is not needed when 'Enable Elasticsearch and Kibana' (ElasticsearchEnabled) is 'false'.
+        Assert: !Equals [ !Ref ElasticsearchUrl, "" ]
+      - AssertDescription: Parameter 'Kibana URL' (KibanaUrl) is not needed when 'Enable Elasticsearch and Kibana' (ElasticsearchEnabled) is 'false'.
+        Assert: !Equals [ !Ref KibanaUrl, "" ]
+      - AssertDescription: Parameter 'Elasticsearch and Kibana username' (ElasticsearchUser) is not needed when 'Enable Elasticsearch and Kibana' (ElasticsearchEnabled) is 'false'.
+        Assert: !Equals [ !Ref ElasticsearchUser, "" ]
+      - AssertDescription: Parameter 'Elasticsearch and Kibana password' (ElasticsearchPassword) is not needed when 'Enable Elasticsearch and Kibana' (ElasticsearchEnabled) is 'false'.
+        Assert: !Equals [ !Ref ElasticsearchPassword, "" ]
+
+  # Check selfsigend parameters
+  SelfSignedValidation:
+    RuleCondition: !Equals [!Ref WhichCert, 'selfsigned' ]
     Assertions:
-      - AssertDescription: If you want to use Let's Encrypt or your own certificate, you need to specify a Elastic IP.
-        Assert:
-          Fn::Not: [ !Equals [!Ref PublicElasticIP, ''] ]
-  # Check Let's Encrypt email is defined if letsencrypt is selected
-  LetsEncryptEmailValidation:
-    RuleCondition:
-      Fn::Equals: [ !Ref WhichCert, 'letsencrypt' ]
+      - AssertDescription: Parameter 'URL to the CRT file' (OwnCertCRT) is not necessary when using 'selfsigned' as 'Certificate Type' (WhichCert).
+        Assert: !Equals [ !Ref OwnCertCRT, '' ]
+      - AssertDescription: Parameter 'URL to the key file' (OwnCertKEY) is not necessary when using 'selfsigned' as 'Certificate Type' (WhichCert).
+        Assert: !Equals [!Ref OwnCertKEY, '']
+      - AssertDescription: Parameter 'Email for Let's Encrypt' (LetsEncryptEmail) is not necessary when using 'selfsigned' as 'Certificate Type' (WhichCert).
+        Assert: !Equals [!Ref LetsEncryptEmail, '']
+
+  # Check Letsencrypt parameters
+  LetsEncryptValidation:
+    RuleCondition: !Equals [!Ref WhichCert, 'letsencrypt' ]
     Assertions:
-      - AssertDescription: If you want to use Let's Encrypt, you need to specify a Let's Encrypt email.
-        Assert:
-          Fn::Not: [ !Equals [!Ref LetsEncryptEmail, ''] ]
+      - AssertDescription: Parameter 'AWS Elastic IP' (PublicElasticIP) is needed when using 'letsencrypt' as 'Certificate Type' (WhichCert).
+        Assert: !Not [ !Equals [ !Ref PublicElasticIP, '' ] ]
+      - AssertDescription: Parameter 'Email for Let's Encrypt' (LetsEncryptEmail) is needed when using 'letsencrypt' as 'Certificate Type' (WhichCert).
+        Assert: !Not [ !Equals [!Ref LetsEncryptEmail, ''] ]
+
   # Check OwnCertCRT and OwnCertKEY are defined if owncert is selected
   OwnCertValidation:
-    RuleCondition:
-      Fn::Equals: [ !Ref WhichCert, 'owncert' ]
+    RuleCondition: !Equals [ !Ref WhichCert, 'owncert' ]
     Assertions:
-      - AssertDescription: If you want to use your own certificate, you need to specify a CRT file.
-        Assert:
-          Fn::Not: [ !Equals [!Ref OwnCertCRT, ''] ]
-      - AssertDescription: If you want to use your own certificate, you need to specify a KEY file.
-        Assert:
-          Fn::Not: [ !Equals [!Ref OwnCertKEY, ''] ]
+      - AssertDescription: Parameter 'AWS Elastic IP' (PublicElasticIP) is needed when using 'owncert' as 'Certificate Type' (WhichCert).
+        Assert: !Not [ !Equals [ !Ref PublicElasticIP, '' ] ]
+      - AssertDescription: Parameter 'URL to the CRT file' (OwnCertCRT) is needed when using 'owncert' as 'Certificate Type' (WhichCert).
+        Assert: !Not [ !Equals [!Ref OwnCertCRT, ''] ]
+      - AssertDescription: Parameter 'URL to the key file' (OwnCertKEY) is needed when using 'owncert' as 'Certificate Type' (WhichCert).
+        Assert: !Not [ !Equals [!Ref OwnCertKEY, ''] ]
 
 Resources:
 
