@@ -612,5 +612,4 @@ if [[ "${WAIT_FOR_NPM_DEPENDENCY}" == true ]]; then
         VERSION_AUX=$(eval "${CHECK_VERSION_AVAILABILTY}")
     done
     echo "${DEPENDENCY}@${VERSION} already available in NPM"
-    popd
 fi
