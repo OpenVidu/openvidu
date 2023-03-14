@@ -74,6 +74,7 @@ if [[ -n ${1:-} ]]; then
 
     --build-openvidu-server-dashboard)
         BUILD_OV_SERVER_DASHBOARD=true
+        LINK_LOCAL_DEPENDENCIES="${2:-true}"
         ;;
 
     --build-openvidu-server)
@@ -117,6 +118,7 @@ if [[ -n ${1:-} ]]; then
         BUMP_NPM_DEPENDENCY_VERSION=true
         DEPENDENCY="${2}"
         VERSION="${3}"
+        TYPE_OF_DEPENDENCY="${4:-dependencies}" # [dependencies, devDependencies, peerDependencies, optionalDependencies]
         ;;
 
     --bump-maven-project-version)
@@ -400,6 +402,8 @@ if [[ "${BUILD_OV_BROWSER}" == true ]]; then
     npm link
     npm pack
     mv openvidu-browser-*.tgz /opt/openvidu
+    npm run browserify
+    npm run browserify-prod
     popd
 fi
 
@@ -455,7 +459,9 @@ fi
 if [[ "${BUILD_OV_SERVER_DASHBOARD}" == true ]]; then
     pushd openvidu-server/src/dashboard
     npm install
-    npm link openvidu-browser openvidu-node-client
+    if [[ "${LINK_LOCAL_DEPENDENCIES}" == true ]]; then
+        npm link openvidu-browser openvidu-node-client
+    fi
     npm run build-prod
     popd
 fi
@@ -527,14 +533,18 @@ fi
 # Bump NPM project dependency
 # -------------
 if [[ "${BUMP_NPM_DEPENDENCY_VERSION}" == true ]]; then
-    tmp=$(mktemp) && jq -j ".dependencies.\"${DEPENDENCY}\" = \"${VERSION}\"" package.json >"$tmp" && mv "$tmp" package.json
+    jq -j ".${TYPE_OF_DEPENDENCY}.\"${DEPENDENCY}\" = \"${VERSION}\"" package.json >package.json-AUX
+    compareFiles package.json version $VERSION
 fi
 
 # -------------
 # Bump Maven project version
 # -------------
 if [[ "${BUMP_MAVEN_PROJECT_VERSION}" == true ]]; then
+    cp pom.xml pom.xml-AUX
     mvn -DskipTests=true versions:set -DnewVersion="${VERSION}"
+    mv pom.xml changed-pom.xml && mv pom.xml-AUX pom.xml && mv changed-pom.xml pom.xml-AUX
+    compareFiles pom.xml "<version>" $VERSION
 fi
 
 # -------------
