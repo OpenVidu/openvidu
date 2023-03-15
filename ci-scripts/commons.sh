@@ -469,8 +469,8 @@ fi
 # -------------
 if [[ "${BUILD_OV_SERVER}" == true ]]; then
     pushd openvidu-server
-    mvn -B -DskipTests=true package
-    mv target/openvidu-server*.jar /opt/openvidu
+    mvn -B -DskipTests=true clean package
+    mv target/openvidu-server-*.jar /opt/openvidu
     popd
 fi
 

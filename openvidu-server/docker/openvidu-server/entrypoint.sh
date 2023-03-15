@@ -21,15 +21,15 @@ if [[ -z "${COTURN_SHARED_SECRET_KEY}" ]]; then
         mkdir -p /run/secrets/coturn
 
         # Generate random coturn secret
-        RANDOM_COTURN_SECRET="$(shuf --echo --repeat --zero-terminated --head-count=35  {A..Z} {a..z} {0..9})"
+        RANDOM_COTURN_SECRET="$(shuf --echo --repeat --zero-terminated --head-count=35 {A..Z} {a..z} {0..9})"
 
         # Replace value and generate shared-secret-key file
         sed "s|{{COTURN_SHARED_SECRET_KEY}}|${RANDOM_COTURN_SECRET}|g" \
-            /usr/local/coturn-shared-key.template > /run/secrets/coturn/shared-secret-key
+            /usr/local/coturn-shared-key.template >/run/secrets/coturn/shared-secret-key
     fi
 
     # Read value
-    export "$(grep -v '#' /run/secrets/coturn/shared-secret-key  | grep COTURN_SHARED_SECRET_KEY |
+    export "$(grep -v '#' /run/secrets/coturn/shared-secret-key | grep COTURN_SHARED_SECRET_KEY |
         sed 's/\r$//' | awk '/=/ {print $1}')"
 fi
 
@@ -50,4 +50,4 @@ fi
 
 # Here we don't expand variables to be interpreted as separated arguments
 # shellcheck disable=SC2086
-java ${JAVA_OPTIONS:-} -jar openvidu-server.jar
+java ${JAVA_OPTIONS:-} -jar openvidu-server-*.jar
