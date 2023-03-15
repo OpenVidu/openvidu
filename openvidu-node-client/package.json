@@ -1,37 +1,37 @@
 {
-    "author": "OpenVidu", 
+    "author": "OpenVidu",
     "dependencies": {
-        "axios": "0.27.2", 
+        "axios": "0.27.2",
         "buffer": "6.0.3"
-    }, 
-    "description": "OpenVidu Node Client", 
+    },
+    "description": "OpenVidu Node Client",
     "devDependencies": {
-        "@types/node": "18.11.9", 
-        "grunt": "1.5.3", 
-        "grunt-cli": "1.4.3", 
-        "grunt-contrib-copy": "1.0.0", 
-        "grunt-contrib-sass": "2.0.0", 
-        "grunt-contrib-uglify": "5.2.2", 
-        "grunt-contrib-watch": "1.1.0", 
-        "grunt-postcss": "0.9.0", 
-        "grunt-string-replace": "1.3.3", 
-        "grunt-ts": "6.0.0-beta.22", 
-        "ts-node": "10.9.1", 
-        "tslint": "6.1.3", 
-        "typedoc": "0.23.21", 
+        "@types/node": "18.11.9",
+        "grunt": "1.5.3",
+        "grunt-cli": "1.4.3",
+        "grunt-contrib-copy": "1.0.0",
+        "grunt-contrib-sass": "2.0.0",
+        "grunt-contrib-uglify": "5.2.2",
+        "grunt-contrib-watch": "1.1.0",
+        "grunt-postcss": "0.9.0",
+        "grunt-string-replace": "1.3.3",
+        "grunt-ts": "6.0.0-beta.22",
+        "ts-node": "10.9.1",
+        "tslint": "6.1.3",
+        "typedoc": "0.23.21",
         "typescript": "4.9.3"
-    }, 
-    "license": "Apache-2.0", 
-    "main": "lib/index.js", 
-    "name": "openvidu-node-client", 
+    },
+    "license": "Apache-2.0",
+    "main": "lib/index.js",
+    "name": "openvidu-node-client",
     "repository": {
-        "type": "git", 
+        "type": "git",
         "url": "git://github.com/OpenVidu/openvidu"
-    }, 
+    },
     "scripts": {
-        "build": "./node_modules/typescript/bin/tsc", 
+        "build": "./node_modules/typescript/bin/tsc",
         "docs": "./generate-docs.sh"
-    }, 
-    "typings": "lib/index.d.ts", 
-    "version": "2.25.0"
+    },
+    "typings": "lib/index.d.ts",
+    "version": "2.26.2"
 }
