@@ -559,14 +559,16 @@ fi
 # -------------
 if [[ "${BUMP_MAVEN_PROPERTY_VERSION}" == true ]]; then
 
+    MVN_SETTINGS_FLAG=""
+
     if [[ -n "${OPENVIDU_MAVEN_GENERIC_SETTINGS:-}" ]]; then
         # Config file with Kurento Snapshots configuration only
         mkdir -p /tmp/maven-generic-settings
         echo "${OPENVIDU_MAVEN_GENERIC_SETTINGS}" >/tmp/maven-generic-settings/settings.xml
+        MVN_SETTINGS_FLAG='--settings /tmp/maven-generic-settings/settings.xml'
     fi
 
-    mvn --batch-mode \
-        --settings /tmp/maven-generic-settings/settings.xml \
+    mvn --batch-mode $MVN_SETTINGS_FLAG \
         -DskipTests=true \
         versions:set-property \
         -Dproperty="${PROPERTY}" \
