@@ -35,7 +35,7 @@ if [ "${OPENVIDU_PRO_ELASTICSEARCH}" == "false" ]; then
 fi
 
 # Wait for Kibana service
-if [ -n "${WAIT_KIBANA_URL}" ]; then
+if [ -n "${WAIT_KIBANA_URL:-}" ]; then
     printf "\n"
     printf "\n  ======================================="
     printf "\n      Waiting for Kibana service."
