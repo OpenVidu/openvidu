@@ -9,7 +9,7 @@ set -eu -o pipefail
 # CI flags
 CLEAN_ENVIRONMENT=false
 PREPARE_TEST_ENVIRONMENT=false
-PREPARE_KURENTO_SNAPSHOT=false
+USE_SPECIFIC_KURENTO_JAVA_COMMIT=false
 SERVE_OV_TESTAPP=false
 
 # Build artifacts
@@ -48,8 +48,8 @@ if [[ -n ${1:-} ]]; then
         PREPARE_TEST_ENVIRONMENT=true
         ;;
 
-    --prepare-kurento-snapshot)
-        PREPARE_KURENTO_SNAPSHOT=true
+    --use-specific-kurento-java-commit)
+        USE_SPECIFIC_KURENTO_JAVA_COMMIT=true
         ;;
 
     --build-openvidu-browser)
@@ -373,23 +373,20 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
 fi
 
 # -------------
-# Prepare Kurento Snapshots
+# Use a specific kurento-java commit other than the configured in openvidu-parent pom.xml
 # -------------
-if [[ "${PREPARE_KURENTO_SNAPSHOT}" == true ]]; then
+if [[ "${USE_SPECIFIC_KURENTO_JAVA_COMMIT}" == true ]]; then
 
-    # Prepare Kurento Snapshot if it is configured
-    if [[ $KURENTO_JAVA_COMMIT != "default" ]]; then
-        git clone https://github.com/Kurento/kurento-java.git
-        pushd kurento-java
-        git checkout -f "${KURENTO_JAVA_COMMIT}"
-        MVN_VERSION="$(grep -oPm1 "(?<=<version>)[^<]+" "pom.xml")"
-        mvn -B -Dmaven.artifact.threads=1 clean install
-        popd
-        rm -rf kurento-java
-        mvn -B versions:set-property \
-            -Dproperty=version.kurento \
-            -DnewVersion="${MVN_VERSION}"
-    fi
+    git clone https://github.com/Kurento/kurento-java.git
+    pushd kurento-java
+    git checkout -f "${KURENTO_JAVA_COMMIT}"
+    MVN_VERSION="$(grep -oPm1 "(?<=<version>)[^<]+" "pom.xml")"
+    mvn -B -Dmaven.artifact.threads=1 clean install
+    popd
+    rm -rf kurento-java
+    mvn -B versions:set-property \
+        -Dproperty=version.kurento \
+        -DnewVersion="${MVN_VERSION}"
 
 fi
 
