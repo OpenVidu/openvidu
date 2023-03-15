@@ -59,4 +59,4 @@ typings/
 
 docs/
 lib/
-static/*.js
+static/**
