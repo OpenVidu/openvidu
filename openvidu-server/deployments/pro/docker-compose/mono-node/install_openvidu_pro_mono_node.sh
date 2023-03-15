@@ -387,17 +387,24 @@ upgrade_ov() {
 # Check docker and docker-compose installation
 if ! command -v docker > /dev/null; then
      echo "You don't have docker installed, please install it and re-run the command"
-     exit 0
+     exit 1
+else
+     # Check version of docker is equal or higher than 20.10.10
+     DOCKER_VERSION=$(docker version --format '{{.Server.Version}}' | sed "s/-rc[0-9]*//")
+     if ! printf '%s\n%s\n' "20.10.10" "$DOCKER_VERSION" | sort -V -C; then
+          echo "You need a docker version equal or higher than 20.10.10, please update your docker and re-run the command"; \
+          exit 1
+     fi
 fi
 
 if ! command -v docker-compose > /dev/null; then
      echo "You don't have docker-compose installed, please install it and re-run the command"
-     exit 0
+     exit 1
 else
      COMPOSE_VERSION=$(docker-compose version --short | sed "s/-rc[0-9]*//")
      if ! printf '%s\n%s\n' "1.24" "$COMPOSE_VERSION" | sort -V -C; then
           echo "You need a docker-compose version equal or higher than 1.24, please update your docker-compose and re-run the command"; \
-          exit 0
+          exit 1
      fi
 fi
 
