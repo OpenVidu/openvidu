@@ -68,8 +68,9 @@ jobs:
         run: /opt/commons.sh --clean-environment
       - name: Prepare test environment
         run: /opt/commons.sh --prepare-test-environment "${TEST_IMAGE}"
-      - name: Setting up Kurento Snapshots
-        run: /opt/commons.sh --prepare-kurento-snapshot
+      - name: Use specific kurento-java commit
+        if: ${{ env.KURENTO_JAVA_COMMIT != 'default'}}
+        run: /opt/commons.sh --use-specific-kurento-java-commit
       - name: Build openvidu-browser
         run: /opt/commons.sh --build-openvidu-browser
       - name: Build openvidu-node-client
