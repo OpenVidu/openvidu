@@ -73,8 +73,12 @@ if [[ -n ${1:-} ]]; then
         ;;
 
     --build-openvidu-server-dashboard)
+        if [[ -z "${2:-}" ]]; then
+            echo "Must provide LINK_LOCAL_DEPENDENCIES as 1st parameter"
+            exit 1
+        fi
         BUILD_OV_SERVER_DASHBOARD=true
-        LINK_LOCAL_DEPENDENCIES="${2:-true}"
+        LINK_LOCAL_DEPENDENCIES="${2}"
         ;;
 
     --build-openvidu-server)
@@ -86,8 +90,12 @@ if [[ -n ${1:-} ]]; then
         ;;
 
     --build-openvidu-server-pro-inspector)
+        if [[ -z "${2:-}" ]]; then
+            echo "Must provide LINK_LOCAL_DEPENDENCIES as 1st parameter"
+            exit 1
+        fi
         BUILD_OV_SERVER_PRO_INSPECTOR=true
-        LINK_LOCAL_DEPENDENCIES="${2:-true}"
+        LINK_LOCAL_DEPENDENCIES="${2}"
         ;;
 
     --build-openvidu-server-pro)
@@ -380,7 +388,7 @@ if [[ "${USE_SPECIFIC_KURENTO_JAVA_COMMIT}" == true ]]; then
     git clone https://github.com/Kurento/kurento-java.git
     pushd kurento-java
     git checkout -f "${KURENTO_JAVA_COMMIT}"
-    MVN_VERSION="$(grep -oPm1 "(?<=<version>)[^<]+" "pom.xml")"
+    MVN_VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
     mvn -B -Dmaven.artifact.threads=1 clean install
     popd
     rm -rf kurento-java
@@ -423,12 +431,12 @@ fi
 # -------------
 if [[ "${BUILD_OV_JAVA_CLIENT}" == true ]]; then
     pushd openvidu-java-client
-    mvn -B versions:set -DnewVersion=TEST
+    MVN_VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
     mvn -B clean compile package
-    mvn -B install:install-file -Dfile=target/openvidu-java-client-TEST.jar \
+    mvn -B install:install-file -Dfile=target/openvidu-java-client-${MVN_VERSION}.jar \
         -DgroupId=io.openvidu \
         -DartifactId=openvidu-java-client \
-        -Dversion=TEST -Dpackaging=jar
+        -Dversion=${MVN_VERSION} -Dpackaging=jar
     popd
 fi
 
@@ -436,7 +444,6 @@ fi
 # Build openvidu-parent
 # -------------
 if [[ "${BUILD_OV_PARENT}" == true ]]; then
-    mvn -B versions:set-property -Dproperty=version.openvidu.java.client -DnewVersion=TEST
     mvn -B -DskipTests=true -Dmaven.artifact.threads=1 clean install
 fi
 

@@ -82,7 +82,7 @@ jobs:
       - name: Build openvidu-testapp
         run: /opt/commons.sh --build-openvidu-testapp
       - name: Build openvidu-server dashboard
-        run: /opt/commons.sh --build-openvidu-server-dashboard
+        run: /opt/commons.sh --build-openvidu-server-dashboard true
       - name: Build openvidu-server
         run: /opt/commons.sh --build-openvidu-server
       - name: openvidu-server unit tests
