@@ -35,6 +35,7 @@ BUMP_DOCKER_IMAGE_VERSION_IN_FILES=false
 BUMP_APPLICATION_PROPERTIES_VAR_VALUE=false
 
 WAIT_FOR_NPM_DEPENDENCY=false
+GENERIC_SED=false
 
 # Environment variables
 if [[ -n ${1:-} ]]; then
@@ -241,6 +242,19 @@ if [[ -n ${1:-} ]]; then
         WAIT_FOR_NPM_DEPENDENCY=true
         DEPENDENCY="${2}"
         VERSION="${3}"
+        ;;
+    --generic-sed)
+        if [[ -z "${2:-}" ]]; then
+            echo "Must provide FILE as 1st parameter"
+            exit 1
+        fi
+        if [[ -z "${3:-}" ]]; then
+            echo "Must provide SED_EXPRESSION as 2nd parameter"
+            exit 1
+        fi
+        GENERIC_SED=true
+        FILE="${2}"
+        SED_EXPRESSION="${3}"
         ;;
     *)
         echo "Unrecognized method $1"
@@ -618,4 +632,12 @@ if [[ "${WAIT_FOR_NPM_DEPENDENCY}" == true ]]; then
         VERSION_AUX=$(eval "${CHECK_VERSION_AVAILABILTY}")
     done
     echo "${DEPENDENCY}@${VERSION} already available in NPM"
+fi
+
+# -------------
+# Generic sed replacement
+# -------------
+if [[ "${GENERIC_SED}" == true ]]; then
+    sed -r "$SED_EXPRESSION" ${FILE} >${FILE}-AUX
+    compareFiles $FILE "(generic sed)" "$SED_EXPRESSION"
 fi
