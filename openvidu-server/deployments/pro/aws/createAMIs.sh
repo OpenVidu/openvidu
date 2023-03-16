@@ -5,7 +5,7 @@ CF_RELEASE=${CF_RELEASE:-false}
 AWS_KEY_NAME=${AWS_KEY_NAME:-}
 
 if [[ $CF_RELEASE == "true" ]]; then
-    git checkout v$OPENVIDU_PRO_VERSION
+  git checkout v$OPENVIDU_PRO_VERSION
 fi
 
 export AWS_DEFAULT_REGION=eu-west-1
@@ -17,13 +17,13 @@ TEMPJSON=$(mktemp -t cloudformation-XXX --suffix .json)
 # Parameters
 # $1 Aws region
 getUbuntuAmiId() {
-    local AMI_ID=$(
-        aws --region ${1} ec2 describe-images \
-        --filters "Name=name,Values=*ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*" \
-        --query "sort_by(Images, &CreationDate)" \
-        | jq -r 'del(.[] | select(.ImageOwnerAlias != null)) | .[-1].ImageId'
-    )
-    echo $AMI_ID
+  local AMI_ID=$(
+    aws --region ${1} ec2 describe-images \
+      --filters "Name=name,Values=*ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*" \
+      --query "sort_by(Images, &CreationDate)" |
+      jq -r 'del(.[] | select(.ImageOwnerAlias != null)) | .[-1].ImageId'
+  )
+  echo $AMI_ID
 }
 
 AMIEUWEST1=$(getUbuntuAmiId 'eu-west-1')
@@ -74,7 +74,7 @@ if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
       exit 1
     fi
   fi
-  aws s3 cp  ../docker-compose/media-node/install_media_node.sh s3://aws.openvidu.io/install_media_node_$OPENVIDU_PRO_VERSION.sh --acl public-read
+  aws s3 cp ../docker-compose/media-node/install_media_node.sh s3://aws.openvidu.io/install_media_node_$OPENVIDU_PRO_VERSION.sh --acl public-read
 fi
 
 aws cloudformation create-stack \
@@ -103,25 +103,24 @@ aws cloudformation delete-stack --stack-name kms-${DATESTAMP}
 # Unfortunately, aws cli does not have a way to increase timeout
 WAIT_RETRIES=0
 WAIT_MAX_RETRIES=3
-until [ "${WAIT_RETRIES}" -ge "${WAIT_MAX_RETRIES}" ]
-do
-   aws ec2 wait image-available --image-ids ${KMS_RAW_AMI_ID} && break
-   WAIT_RETRIES=$((WAIT_RETRIES+1)) 
-   sleep 5
+until [ "${WAIT_RETRIES}" -ge "${WAIT_MAX_RETRIES}" ]; do
+  aws ec2 wait image-available --image-ids ${KMS_RAW_AMI_ID} && break
+  WAIT_RETRIES=$((WAIT_RETRIES + 1))
+  sleep 5
 done
 
 if [[ $CF_RELEASE == "true" ]]; then
-   aws ec2 modify-image-attribute --image-id ${KMS_RAW_AMI_ID} --launch-permission "Add=[{Group=all}]"
-   aws ec2 describe-images --image-ids ${KMS_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId'
-   SNAPSHOT_ID=$(aws ec2 describe-images --image-ids ${KMS_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId')
-   aws ec2 modify-snapshot-attribute --snapshot-id ${SNAPSHOT_ID} --create-volume-permission "Add=[{Group=all}]"
+  aws ec2 modify-image-attribute --image-id ${KMS_RAW_AMI_ID} --launch-permission "Add=[{Group=all}]"
+  aws ec2 describe-images --image-ids ${KMS_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId'
+  SNAPSHOT_ID=$(aws ec2 describe-images --image-ids ${KMS_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId')
+  aws ec2 modify-snapshot-attribute --snapshot-id ${SNAPSHOT_ID} --create-volume-permission "Add=[{Group=all}]"
 fi
 
 ## OpenVidu AMI
 
 # Copy template to S3
-  aws s3 cp cfn-mkt-ov-ami.yaml s3://aws.openvidu.io
-  TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-ov-ami.yaml
+aws s3 cp cfn-mkt-ov-ami.yaml s3://aws.openvidu.io
+TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-ov-ami.yaml
 
 # Update installation script
 if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
@@ -135,7 +134,7 @@ if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
       exit 1
     fi
   fi
-  aws s3 cp  ../docker-compose/openvidu-server-pro/install_openvidu_pro.sh s3://aws.openvidu.io/install_openvidu_pro_$OPENVIDU_PRO_VERSION.sh --acl public-read
+  aws s3 cp ../docker-compose/openvidu-server-pro/install_openvidu_pro.sh s3://aws.openvidu.io/install_openvidu_pro_$OPENVIDU_PRO_VERSION.sh --acl public-read
 fi
 
 aws cloudformation create-stack \
@@ -164,23 +163,21 @@ aws cloudformation delete-stack --stack-name openvidu-${DATESTAMP}
 # Unfortunately, aws cli does not have a way to increase timeout
 WAIT_RETRIES=0
 WAIT_MAX_RETRIES=3
-until [ "${WAIT_RETRIES}" -ge "${WAIT_MAX_RETRIES}" ]
-do
-   aws ec2 wait image-available --image-ids ${OV_RAW_AMI_ID} && break
-   WAIT_RETRIES=$((WAIT_RETRIES+1)) 
-   sleep 5
+until [ "${WAIT_RETRIES}" -ge "${WAIT_MAX_RETRIES}" ]; do
+  aws ec2 wait image-available --image-ids ${OV_RAW_AMI_ID} && break
+  WAIT_RETRIES=$((WAIT_RETRIES + 1))
+  sleep 5
 done
 
 if [[ $CF_RELEASE == "true" ]]; then
-   aws ec2 modify-image-attribute --image-id ${OV_RAW_AMI_ID} --launch-permission "Add=[{Group=all}]"
-   aws ec2 describe-images --image-ids ${OV_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId'
-   SNAPSHOT_ID=$(aws ec2 describe-images --image-ids ${OV_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId')
-   aws ec2 modify-snapshot-attribute --snapshot-id ${SNAPSHOT_ID} --create-volume-permission "Add=[{Group=all}]"
+  aws ec2 modify-image-attribute --image-id ${OV_RAW_AMI_ID} --launch-permission "Add=[{Group=all}]"
+  aws ec2 describe-images --image-ids ${OV_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId'
+  SNAPSHOT_ID=$(aws ec2 describe-images --image-ids ${OV_RAW_AMI_ID} | jq -r '.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId')
+  aws ec2 modify-snapshot-attribute --snapshot-id ${SNAPSHOT_ID} --create-volume-permission "Add=[{Group=all}]"
 fi
 
-
 # Updating the template
-sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" cfn-openvidu-server-pro-no-market.yaml.template > cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
+sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" cfn-openvidu-server-pro-no-market.yaml.template >cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
 sed -i "s/KMS_AMI_ID/${KMS_RAW_AMI_ID}/g" cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
 sed -i "s/AWS_DOCKER_TAG/${AWS_DOCKER_TAG}/g" cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
 
