@@ -29,6 +29,7 @@ BUMP_NPM_PROJECT_VERSION=false
 BUMP_NPM_DEPENDENCY_VERSION=false
 BUMP_MAVEN_PROJECT_VERSION=false
 BUMP_MAVEN_PROPERTY_VERSION=false
+BUMP_MAVEN_DEPENDENCY_VERSION=false
 BUMP_DOCKER_COMPOSE_SERVICE_VERSION=false
 BUMP_DOCKER_COMPOSE_HEADER_VERSION=false
 BUMP_DOCKER_IMAGE_VERSION_IN_FILES=false
@@ -151,6 +152,20 @@ if [[ -n ${1:-} ]]; then
         fi
         BUMP_MAVEN_PROPERTY_VERSION=true
         PROPERTY="${2}"
+        VERSION="${3}"
+        ;;
+
+    --bump-maven-dependency-version)
+        if [[ -z "${2:-}" ]]; then
+            echo "Must provide DEPENDENCY as 1st parameter"
+            exit 1
+        fi
+        if [[ -z "${3:-}" ]]; then
+            echo "Must provide VERSION as 2nd parameter"
+            exit 1
+        fi
+        BUMP_MAVEN_DEPENDENCY_VERSION=true
+        DEPENDENCY="${2}"
         VERSION="${3}"
         ;;
 
@@ -587,6 +602,13 @@ if [[ "${BUMP_MAVEN_PROPERTY_VERSION}" == true ]]; then
         versions:set-property \
         -Dproperty="${PROPERTY}" \
         -DnewVersion="${VERSION}"
+fi
+
+# -------------
+# Bump Maven dependency property
+# -------------
+if [[ "${BUMP_MAVEN_DEPENDENCY_VERSION}" == true ]]; then
+    mvn --batch-mode versions:use-dep-version -Dincludes=$DEPENDENCY -DdepVersion=$VERSION -DforceVersion=true
 fi
 
 # -------------
