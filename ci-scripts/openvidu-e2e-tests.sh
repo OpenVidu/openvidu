@@ -1,6 +1,11 @@
 #!/bin/bash -x
 set -eu -o pipefail
 
+############################################################################
+# Any function offered by this file that is not path agnostic assumes that #
+# the path is located where the first command of each function requires it #
+############################################################################
+
 OV_INTEGRATION_TESTS=false
 OV_UNIT_TESTS=false
 OV_E2E_KURENTO=false

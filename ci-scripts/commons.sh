@@ -1,10 +1,10 @@
 #!/bin/bash -x
 set -eu -o pipefail
 
-################################################################
-# Any function offered by this file assume that the path is    #
-# located where the first command of each function requires it #
-################################################################
+############################################################################
+# Any function offered by this file that is not path agnostic assumes that #
+# the path is located where the first command of each function requires it #
+############################################################################
 
 # CI flags
 CLEAN_ENVIRONMENT=false
