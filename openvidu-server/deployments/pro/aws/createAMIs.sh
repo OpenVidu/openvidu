@@ -14,8 +14,6 @@ DATESTAMP=$(date +%s)
 TEMPJSON=$(mktemp -t cloudformation-XXX --suffix .json)
 
 # Get Latest Ubuntu AMI id from specified region
-# Parameters
-# $1 Aws region
 getUbuntuAmiId() {
   local AMI_ID=$(
     aws --region ${1} ec2 describe-images \
@@ -177,9 +175,9 @@ if [[ $CF_RELEASE == "true" ]]; then
 fi
 
 # Updating the template
-sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" cfn-openvidu-server-pro-no-market.yaml.template >cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
-sed -i "s/KMS_AMI_ID/${KMS_RAW_AMI_ID}/g" cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
-sed -i "s/AWS_CLI_DOCKER_TAG/${AWS_CLI_DOCKER_TAG}/g" cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
+sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" CF-OpenVidu-Pro.yaml.template >CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml
+sed -i "s/KMS_AMI_ID/${KMS_RAW_AMI_ID}/g" CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml
+sed -i "s/AWS_CLI_DOCKER_TAG/${AWS_CLI_DOCKER_TAG}/g" CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml
 
 # Update CF template
 if [[ ${UPDATE_S3_FILES} == "true" ]]; then
@@ -193,7 +191,7 @@ if [[ ${UPDATE_S3_FILES} == "true" ]]; then
       exit 1
     fi
   fi
-  aws s3 cp cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml s3://aws.openvidu.io/CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml --acl public-read
+  aws s3 cp CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml s3://aws.openvidu.io/CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml --acl public-read
 fi
 
 rm $TEMPJSON
