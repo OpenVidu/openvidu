@@ -5,7 +5,7 @@ CF_RELEASE=${CF_RELEASE:-false}
 AWS_KEY_NAME=${AWS_KEY_NAME:-}
 
 if [[ $CF_RELEASE == "true" ]]; then
-  git checkout v$OPENVIDU_VERSION
+  # git checkout v$OPENVIDU_VERSION
 fi
 
 export AWS_DEFAULT_REGION=eu-west-1
