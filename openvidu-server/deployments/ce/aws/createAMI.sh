@@ -4,9 +4,9 @@ set -eu -o pipefail
 CF_RELEASE=${CF_RELEASE:-false}
 AWS_KEY_NAME=${AWS_KEY_NAME:-}
 
-# if [[ $CF_RELEASE == "true" ]]; then
-#   git checkout v$OPENVIDU_VERSION
-# fi
+if [[ $CF_RELEASE == "true" ]]; then
+  git checkout v$OPENVIDU_VERSION
+fi
 
 export AWS_DEFAULT_REGION=eu-west-1
 
@@ -14,9 +14,6 @@ DATESTAMP=$(date +%s)
 TEMPJSON=$(mktemp -t cloudformation-XXX --suffix .json)
 
 # Get Latest Ubuntu AMI id from specified region
-# Parameters
-# $1 Aws region
-
 getUbuntuAmiId() {
   local AMI_ID=$(
     aws --region ${1} ec2 describe-images \
