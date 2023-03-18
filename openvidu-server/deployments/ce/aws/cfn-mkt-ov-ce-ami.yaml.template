@@ -82,7 +82,7 @@ Resources:
                 cd /opt
                 curl https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/install_openvidu_OPENVIDU_VERSION.sh | bash
 
-                if [[ USE_MASTER_DOCKER_IMAGE == "true" ]]; then
+                if [[ USE_MASTER_DOCKER_IMAGES == "true" ]]; then
                   pushd openvidu
                   # docker-compose.yml replace with master version
                   IMAGES="$(cat docker-compose.yml | grep 'image: openvidu/' | cut -d':' -f2 | sed -e 's/^[[:space:]]*//')"

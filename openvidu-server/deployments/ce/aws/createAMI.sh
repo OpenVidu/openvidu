@@ -40,7 +40,7 @@ else
   sed -i '/      KeyName: AWS_KEY_NAME/d' cfn-mkt-ov-ce-ami.yaml
 fi
 sed -i "s/AWS_KEY_NAME/${AWS_KEY_NAME}/g" cfn-mkt-ov-ce-ami.yaml
-sed -i "s/USE_MASTER_DOCKER_IMAGE/${USE_MASTER_DOCKER_IMAGE}/g" cfn-mkt-ov-ce-ami.yaml
+sed -i "s/USE_MASTER_DOCKER_IMAGES/${USE_MASTER_DOCKER_IMAGES}/g" cfn-mkt-ov-ce-ami.yaml
 sed -i "s/OPENVIDU_VERSION/${OPENVIDU_VERSION}/g" cfn-mkt-ov-ce-ami.yaml
 sed -i "s/OPENVIDU_RECORDING_DOCKER_TAG/${OPENVIDU_RECORDING_DOCKER_TAG}/g" cfn-mkt-ov-ce-ami.yaml
 sed -i "s/AMIEUWEST1/${AMIEUWEST1}/g" cfn-mkt-ov-ce-ami.yaml
@@ -53,7 +53,7 @@ aws s3 cp cfn-mkt-ov-ce-ami.yaml s3://aws.openvidu.io
 TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-ov-ce-ami.yaml
 
 # Update installation script
-if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
+if [[ ${UPDATE_S3_FILES} == "true" ]]; then
   # Avoid overriding existing versions
   # Only master and non existing versions can be overriden
   if [[ ${OPENVIDU_VERSION} != "master" ]]; then
@@ -111,7 +111,7 @@ sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" CF-OpenVidu.yaml.template >CF-OpenVidu-${OPE
 sed -i "s/OPENVIDU_VERSION/${OPENVIDU_VERSION}/g" CF-OpenVidu-${OPENVIDU_VERSION}.yaml
 
 # Update CF template
-if [[ ${UPDATE_CF} == "true" ]]; then
+if [[ ${UPDATE_S3_FILES} == "true" ]]; then
   # Avoid overriding existing versions
   # Only master and non existing versions can be overriden
   if [[ ${OPENVIDU_VERSION} != "master" ]]; then

@@ -12,8 +12,8 @@ DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERS
 # Support docker compose v1 and v2
 shopt -s expand_aliases
 alias docker-compose='docker compose'
-if ! docker compose version &> /dev/null; then
-    unalias docker-compose
+if ! docker compose version &>/dev/null; then
+     unalias docker-compose
 fi
 
 # Change default http timeout for slow networks
@@ -21,10 +21,10 @@ export COMPOSE_HTTP_TIMEOUT=500
 export DOCKER_CLIENT_TIMEOUT=500
 
 fatal_error() {
-    printf "\n     =======¡ERROR!======="
-    printf "\n     %s" "$1"
-    printf "\n"
-    exit 1
+     printf "\n     =======¡ERROR!======="
+     printf "\n     %s" "$1"
+     printf "\n"
+     exit 1
 }
 
 new_ov_installation() {
@@ -139,7 +139,7 @@ new_ov_installation() {
      printf "\n     CAUTION: The folder 'openvidu/elasticsearch' use user and group 1000 permissions. "
      printf "\n     This folder is necessary for store elasticsearch data."
      printf "\n     For more information, check:"
-     printf '\n     https://docs.openvidu.io/en/%s/openvidu-pro/deployment/on-premises/#deployment-instructions' "${OPENVIDU_VERSION//v}"
+     printf '\n     https://docs.openvidu.io/en/%s/openvidu-pro/deployment/on-premises/#deployment-instructions' "${OPENVIDU_VERSION//v/}"
      printf '\n'
      printf '\n'
      exit 0
@@ -157,32 +157,32 @@ replace_variable_in_new_env_file() {
 }
 
 # Check docker and docker-compose installation
-if ! command -v docker > /dev/null; then
+if ! command -v docker >/dev/null; then
      echo "You don't have docker installed, please install it and re-run the command"
      exit 1
 else
      # Check version of docker is equal or higher than 20.10.10
      DOCKER_VERSION=$(docker version --format '{{.Server.Version}}' | sed "s/-rc[0-9]*//")
      if ! printf '%s\n%s\n' "20.10.10" "$DOCKER_VERSION" | sort -V -C; then
-          echo "You need a docker version equal or higher than 20.10.10, please update your docker and re-run the command"; \
+          echo "You need a docker version equal or higher than 20.10.10, please update your docker and re-run the command"
           exit 1
      fi
 fi
 
-if ! command -v docker-compose > /dev/null; then
+if ! command -v docker-compose >/dev/null; then
      echo "You don't have docker-compose installed, please install it and re-run the command"
      exit 1
 else
      COMPOSE_VERSION=$(docker-compose version --short | sed "s/-rc[0-9]*//")
      if ! printf '%s\n%s\n' "1.24" "$COMPOSE_VERSION" | sort -V -C; then
-          echo "You need a docker-compose version equal or higher than 1.24, please update your docker-compose and re-run the command"; \
+          echo "You need a docker-compose version equal or higher than 1.24, please update your docker-compose and re-run the command"
           exit 1
      fi
 fi
 
 # Check type of installation
 if [[ -n "$1" && "$1" == "upgrade" ]]; then
-     fatal_error "OpenVidu Enterprise HA can't be upgraded manually. Deploy the Cloudformation template of the version '${OPENVIDU_VERSION}' you want to deploy: https://docs.openvidu.io/en/${OPENVIDU_VERSION//v}/deployment/enterprise/aws/"
+     fatal_error "OpenVidu Enterprise HA can't be upgraded manually. Deploy the Cloudformation template of the version '${OPENVIDU_VERSION}' you want to deploy: https://docs.openvidu.io/en/${OPENVIDU_VERSION//v/}/deployment/enterprise/aws/"
 else
      new_ov_installation
 fi

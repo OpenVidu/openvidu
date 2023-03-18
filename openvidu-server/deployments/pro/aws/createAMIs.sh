@@ -42,15 +42,15 @@ else
   sed -i '/      KeyName: AWS_KEY_NAME/d' cfn-mkt-kms-ami.yaml
 fi
 sed -i "s/AWS_KEY_NAME/${AWS_KEY_NAME}/g" cfn-mkt-ov-ami.yaml
-sed -i "s/USE_MASTER_DOCKER_IMAGE/${USE_MASTER_DOCKER_IMAGE}/g" cfn-mkt-ov-ami.yaml
+sed -i "s/USE_MASTER_DOCKER_IMAGES/${USE_MASTER_DOCKER_IMAGES}/g" cfn-mkt-ov-ami.yaml
 sed -i "s/OPENVIDU_VERSION/${OPENVIDU_PRO_VERSION}/g" cfn-mkt-ov-ami.yaml
-sed -i "s/AWS_DOCKER_TAG/${AWS_DOCKER_TAG}/g" cfn-mkt-ov-ami.yaml
+sed -i "s/AWS_CLI_DOCKER_TAG/${AWS_CLI_DOCKER_TAG}/g" cfn-mkt-ov-ami.yaml
 sed -i "s/OPENVIDU_RECORDING_DOCKER_TAG/${OPENVIDU_RECORDING_DOCKER_TAG}/g" cfn-mkt-ov-ami.yaml
 sed -i "s/AMIEUWEST1/${AMIEUWEST1}/g" cfn-mkt-ov-ami.yaml
 sed -i "s/AMIUSEAST1/${AMIUSEAST1}/g" cfn-mkt-ov-ami.yaml
 
 sed -i "s/AWS_KEY_NAME/${AWS_KEY_NAME}/g" cfn-mkt-kms-ami.yaml
-sed -i "s/USE_MASTER_DOCKER_IMAGE/${USE_MASTER_DOCKER_IMAGE}/g" cfn-mkt-kms-ami.yaml
+sed -i "s/USE_MASTER_DOCKER_IMAGES/${USE_MASTER_DOCKER_IMAGES}/g" cfn-mkt-kms-ami.yaml
 sed -i "s/OPENVIDU_VERSION/${OPENVIDU_PRO_VERSION}/g" cfn-mkt-kms-ami.yaml
 sed -i "s/OPENVIDU_RECORDING_DOCKER_TAG/${OPENVIDU_RECORDING_DOCKER_TAG}/g" cfn-mkt-kms-ami.yaml
 sed -i "s/AMIEUWEST1/${AMIEUWEST1}/g" cfn-mkt-kms-ami.yaml
@@ -63,7 +63,7 @@ aws s3 cp cfn-mkt-kms-ami.yaml s3://aws.openvidu.io
 TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-kms-ami.yaml
 
 # Update installation script
-if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
+if [[ ${UPDATE_S3_FILES} == "true" ]]; then
   # Avoid overriding existing versions
   # Only master and non existing versions can be overriden
   if [[ ${OPENVIDU_PRO_VERSION} != "master" ]]; then
@@ -123,7 +123,7 @@ aws s3 cp cfn-mkt-ov-ami.yaml s3://aws.openvidu.io
 TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-ov-ami.yaml
 
 # Update installation script
-if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
+if [[ ${UPDATE_S3_FILES} == "true" ]]; then
   # Avoid overriding existing versions
   # Only master and non existing versions can be overriden
   if [[ ${OPENVIDU_PRO_VERSION} != "master" ]]; then
@@ -179,10 +179,10 @@ fi
 # Updating the template
 sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" cfn-openvidu-server-pro-no-market.yaml.template >cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
 sed -i "s/KMS_AMI_ID/${KMS_RAW_AMI_ID}/g" cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
-sed -i "s/AWS_DOCKER_TAG/${AWS_DOCKER_TAG}/g" cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
+sed -i "s/AWS_CLI_DOCKER_TAG/${AWS_CLI_DOCKER_TAG}/g" cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
 
 # Update CF template
-if [[ ${UPDATE_CF} == "true" ]]; then
+if [[ ${UPDATE_S3_FILES} == "true" ]]; then
   # Avoid overriding existing versions
   # Only master and non existing versions can be overriden
   if [[ ${OPENVIDU_PRO_VERSION} != "master" ]]; then
@@ -199,3 +199,6 @@ fi
 rm $TEMPJSON
 rm cfn-mkt-kms-ami.yaml
 rm cfn-mkt-ov-ami.yaml
+
+# Return the KMS AMI identifier to the standard output
+echo ${KMS_RAW_AMI_ID}
