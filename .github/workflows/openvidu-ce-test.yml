@@ -74,7 +74,7 @@ jobs:
         if: ${{ env.KURENTO_JAVA_COMMIT != 'default'}}
         run: /opt/test-utils.sh --use-specific-kurento-java-commit
       - name: Build openvidu-browser
-        run: /opt/build.sh --use-specific-kurento-java-commit
+        run: /opt/build.sh --build-openvidu-browser
       - name: Build openvidu-node-client
         run: /opt/build.sh --build-openvidu-node-client
       - name: Build openvidu-java-client
