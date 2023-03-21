@@ -62,29 +62,31 @@ jobs:
       - uses: actions/checkout@v3
       - name: Setup scripts
         run: |
-          curl -s https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/commons.sh -o /opt/commons.sh && chmod u+x /opt/commons.sh
-          cp ci-scripts/openvidu-e2e-tests.sh /opt/openvidu-e2e-tests.sh && chmod u+x /opt/openvidu-e2e-tests.sh
+          curl -sOJ --output-dir /opt https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/commons/build.sh
+          curl -sOJ --output-dir /opt https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/commons/test-utils.sh
+          cp ci-scripts/openvidu-e2e-tests.sh /opt/openvidu-e2e-tests.sh
+          find /opt/*.sh -type f -print0 | xargs -0 chmod u+x
       - name: Clean environment
-        run: /opt/commons.sh --clean-environment
+        run: /opt/build.sh --clean-environment
       - name: Prepare test environment
-        run: /opt/commons.sh --prepare-test-environment "${TEST_IMAGE}"
+        run: /opt/test-utils.sh --prepare-test-environment "${TEST_IMAGE}"
       - name: Use specific kurento-java commit
         if: ${{ env.KURENTO_JAVA_COMMIT != 'default'}}
-        run: /opt/commons.sh --use-specific-kurento-java-commit
+        run: /opt/test-utils.sh --use-specific-kurento-java-commit
       - name: Build openvidu-browser
-        run: /opt/commons.sh --build-openvidu-browser
+        run: /opt/build.sh --use-specific-kurento-java-commit
       - name: Build openvidu-node-client
-        run: /opt/commons.sh --build-openvidu-node-client
+        run: /opt/build.sh --build-openvidu-node-client
       - name: Build openvidu-java-client
-        run: /opt/commons.sh --build-openvidu-java-client
+        run: /opt/build.sh --build-openvidu-java-client
       - name: Build openvidu-parent
-        run: /opt/commons.sh --build-openvidu-parent
+        run: /opt/build.sh --build-openvidu-parent
       - name: Build openvidu-testapp
-        run: /opt/commons.sh --build-openvidu-testapp
+        run: /opt/build.sh --build-openvidu-testapp
       - name: Build openvidu-server dashboard
-        run: /opt/commons.sh --build-openvidu-server-dashboard true
+        run: /opt/build.sh --build-openvidu-server-dashboard true
       - name: Build openvidu-server
-        run: /opt/commons.sh --build-openvidu-server
+        run: /opt/build.sh --build-openvidu-server
       - name: openvidu-server unit tests
         run: /opt/openvidu-e2e-tests.sh --openvidu-server-unit-tests
       - name: openvidu-server integration tests
@@ -92,7 +94,7 @@ jobs:
       - name: Environment launch Kurento
         run: /opt/openvidu-e2e-tests.sh --environment-launch-kurento
       - name: Serve openvidu-testapp
-        run: /opt/commons.sh --serve-openvidu-testapp
+        run: /opt/test-utils.sh --serve-openvidu-testapp
       - name: OpenVidu E2E Tests Kurento
         run: /opt/openvidu-e2e-tests.sh --openvidu-e2e-tests-kurento
       - name: Test reports
