@@ -300,9 +300,9 @@ export class SessionComponent implements OnInit, OnDestroy {
 	private subscribeToConnectionCreatedAndDestroyed() {
 		this.session.on('connectionCreated', async (event: ConnectionEvent) => {
 			const connectionId = event.connection?.connectionId;
-			const newNickname: string = this.participantService.getNicknameFromConnectionData(event.connection.data);
+			const connectionNickname: string = this.participantService.getNicknameFromConnectionData(event.connection.data);
 			const isRemoteConnection: boolean = !this.openviduService.isMyOwnConnection(connectionId);
-			const isCameraConnection: boolean = !newNickname?.includes(`_${VideoType.SCREEN}`);
+			const isCameraConnection: boolean = !connectionNickname?.includes(`_${VideoType.SCREEN}`);
 			const nickname = this.participantService.getMyNickname();
 			const data = event.connection?.data;
 
@@ -310,9 +310,9 @@ export class SessionComponent implements OnInit, OnDestroy {
 				// Adding participant when connection is created and it's not screen
 				this.participantService.addRemoteConnection(connectionId, data, null);
 
-				//Sending nicnkanme signal to new participants
-				if (this.openviduService.needSendNicknameSignal(nickname)) {
-					const data = { clientData: this.participantService.getMyNickname() };
+				//Sending nicnkanme signal to new connection
+				if (this.openviduService.myNicknameHasBeenChanged()) {
+					const data = { clientData: nickname };
 					await this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, [event.connection], data);
 				}
 			}

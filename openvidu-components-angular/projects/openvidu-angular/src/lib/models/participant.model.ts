@@ -21,7 +21,7 @@ export interface StreamModel {
 	/**
 	 * The streamManager object from openvidu-browser library.{@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/StreamManager.html}
 	 */
-	streamManager: StreamManager;
+	streamManager: StreamManager | undefined;
 	/**
 	 * Whether the stream is enlarged or not
 	 */
@@ -29,7 +29,7 @@ export interface StreamModel {
 	/**
 	 * Unique identifier of the stream
 	 */
-	connectionId: string;
+	connectionId: string | undefined;
 	/**
 	 * The participant object
 	 */
@@ -68,7 +68,7 @@ export abstract class ParticipantAbstractModel {
 	isMutedForcibly: boolean;
 
 	constructor(props: ParticipantProperties, model?: StreamModel) {
-		this.id = props.id ? props.id : Math.random().toString(32).replace('.','_');
+		this.id = props.id || Math.random().toString(32).replace('.','_');
 		this.local = props.local;
 		this.nickname = props.nickname;
 		this.colorProfile = !!props.colorProfile ? props.colorProfile : `hsl(${Math.random() * 360}, 100%, 80%)`;
@@ -76,9 +76,9 @@ export abstract class ParticipantAbstractModel {
 		let streamModel: StreamModel = {
 			connected: model ? model.connected : true,
 			type: model ? model.type : VideoType.CAMERA,
-			streamManager: model ? model.streamManager : null,
+			streamManager: model?.streamManager,
 			videoEnlarged: model ? model.videoEnlarged : false,
-			connectionId: model ? model.connectionId : null,
+			connectionId: model?.connectionId,
 			participant: this
 		};
 		this.streams.set(streamModel.type, streamModel);
@@ -113,7 +113,7 @@ export abstract class ParticipantAbstractModel {
 	private isCameraAudioActive(): boolean {
 		const cameraConnection = this.getCameraConnection();
 		if (cameraConnection?.connected) {
-			return cameraConnection.streamManager?.stream?.audioActive;
+			return cameraConnection.streamManager?.stream?.audioActive || false;
 		}
 		return false;
 	}
@@ -132,7 +132,7 @@ export abstract class ParticipantAbstractModel {
 	isScreenAudioActive(): boolean {
 		const screenConnection = this.getScreenConnection();
 		if (screenConnection?.connected) {
-			return screenConnection?.streamManager?.stream?.audioActive;
+			return screenConnection?.streamManager?.stream?.audioActive || false;
 		}
 		return false;
 	}

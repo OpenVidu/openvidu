@@ -557,7 +557,7 @@ export class OpenViduService {
 	/**
 	 * @internal
 	 */
-	needSendNicknameSignal(): boolean {
+	myNicknameHasBeenChanged(): boolean {
 		const participantService = this.injector.get(ParticipantService);
 		let oldNickname: string = "";
 		try {
