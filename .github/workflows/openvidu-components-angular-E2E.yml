@@ -24,12 +24,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        ref: ${{ github.event.inputs.commit_sha || github.sha }}
+        ref: ${{ inputs.commit_sha || github.sha }}
     - uses: actions/setup-node@v3
       with:
         node-version: '16'
     - name: Commit URL
-      run: echo https://github.com/OpenVidu/openvidu/commit/${{ github.event.inputs.commit_sha || github.sha }}
+      run: echo https://github.com/OpenVidu/openvidu/commit/${{ inputs.commit_sha || github.sha }}
     - name: Send repository dispatch event
       env:
         GITHUB_TOKEN: ${{ secrets.OPENVIDU_DISPATCH_EVENT_GA }}
@@ -62,7 +62,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        ref: ${{ github.event.inputs.commit_sha || github.sha }}
+        ref: ${{ inputs.commit_sha || github.sha }}
     - uses: actions/setup-node@v3
       with:
         node-version: '16'
@@ -97,7 +97,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        ref: ${{ github.event.inputs.commit_sha || github.sha }}
+        ref: ${{ inputs.commit_sha || github.sha }}
     - uses: actions/setup-node@v3
       with:
         node-version: '16'
