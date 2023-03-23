@@ -18,12 +18,12 @@ RUN apt update && apt -y upgrade && apt install -y \
     ttf-ancient-fonts fonts-beng fonts-wqy-zenhei fonts-indic \
   && rm -rf /var/lib/apt/lists/*
 
-# Install chrome
-RUN apt update && apt -y upgrade && apt install -y wget sudo
-RUN wget http://dl.google.com/linux/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb \
-  && apt install -y ./google-chrome-stable_${CHROME_VERSION}_amd64.deb \
-  && rm google-chrome-stable_${CHROME_VERSION}_amd64.deb \
-  && google-chrome --version
+# Install latest stable Chrome browser
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4CCA1EAF950CEE4AB83976DCA040830F7FAC5991 \
+  && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
+  && apt update \
+  && apt install -y google-chrome-stable \
+  && rm -rf /var/lib/apt/lists/*
 
 # Add root user to pulseaudio group
 RUN adduser root pulse-access

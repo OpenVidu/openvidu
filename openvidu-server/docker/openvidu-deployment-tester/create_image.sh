@@ -1,7 +1,7 @@
 #!/bin/bash -x
 VERSION=$1
 if [[ ! -z $VERSION ]]; then
-    docker build --pull --no-cache --rm=true -t openvidu/openvidu-health-checker:$VERSION .
+    docker build --pull --no-cache --rm=true -t openvidu/openvidu-deployment-tester:latest .
 else
     echo "Error: You need to specify a version as first argument"
 fi
