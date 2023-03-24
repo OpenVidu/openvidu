@@ -204,6 +204,8 @@ fi
 rm $TEMPJSON
 rm cfn-mkt-kms-ami.yaml
 rm cfn-mkt-ov-ami.yaml
+aws s3api delete-object --bucket aws.openvidu.io --key cfn-mkt-kms-ami.yaml
+aws s3api delete-object --bucket aws.openvidu.io --key cfn-mkt-ov-ami.yaml
 
 # Return the KMS AMI identifier to the standard output
 echo ${KMS_RAW_AMI_ID} >>${OUTPUT_FILE}

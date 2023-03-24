@@ -124,3 +124,4 @@ fi
 
 rm $TEMPJSON
 rm cfn-mkt-ov-ce-ami.yaml
+aws s3api delete-object --bucket aws.openvidu.io --key cfn-mkt-ov-ce-ami.yaml
