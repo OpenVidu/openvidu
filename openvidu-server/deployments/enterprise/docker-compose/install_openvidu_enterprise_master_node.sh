@@ -56,15 +56,15 @@ new_ov_installation() {
      # Download necessary files
      printf '\n     => Downloading OpenVidu Pro files:'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/master-node/cluster/aws/openvidu_autodiscover.sh \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/docker-compose/cluster/aws/openvidu_autodiscover.sh \
           --output "${AWS_SCRIPTS_FOLDER}/openvidu_autodiscover.sh" || fatal_error "Error when downloading the file 'openvidu_autodiscover.sh'"
      printf '\n          - openvidu_autodiscover.sh'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/master-node/cluster/aws/openvidu_drop.sh \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/docker-compose/cluster/aws/openvidu_drop.sh \
           --output "${AWS_SCRIPTS_FOLDER}/openvidu_drop.sh" || fatal_error "Error when downloading the file 'openvidu_drop.sh'"
      printf '\n          - openvidu_drop.sh'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/master-node/cluster/aws/openvidu_launch_kms.sh \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/docker-compose/cluster/aws/openvidu_launch_kms.sh \
           --output "${AWS_SCRIPTS_FOLDER}/openvidu_launch_kms.sh" || fatal_error "Error when downloading the file 'openvidu_launch_kms.sh'"
      printf '\n          - openvidu_launch_kms.sh'
 

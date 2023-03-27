@@ -1,0 +1,1395 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: Openvidu Pro With Master Replication
+
+Parameters:
+
+  DomainName:
+    Description: 'Domain name which will be used to access OpenVidu Pro. This domain name should point to the Load Balancer URL after the stack is deployed.'
+    Type: 'String'
+    AllowedPattern: ^$|^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$
+    MinLength: 1
+    ConstraintDescription: The domain name does not have a valid domain name format
+
+  KeyName:
+    Description: 'Name of an existing EC2 KeyPair to enable SSH access to the instance. It is mandatory to perform some administrative tasks on instances.'
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    AllowedPattern : '.+'
+    ConstraintDescription: 'Must be defined and to be an existing EC2 KeyPair'
+
+  OpenViduLicense:
+    Description: 'Visit https://openvidu.io/account'
+    Type: String
+    AllowedPattern: ^(?!\s*$).+$
+    MinLength: 1
+    NoEcho: true
+    ConstraintDescription: OpenVidu Pro License is mandatory
+
+  OpenViduSecret:
+    Description: 'Secret to connect to this OpenVidu Platform. Cannot be empty and must contain only alphanumeric characters [a-zA-Z0-9], hypens ("-") and underscores ("_")'
+    Type: String
+    AllowedPattern: ^[a-zA-Z0-9_-]+$
+    MinLength: 1
+    NoEcho: true
+    ConstraintDescription: 'Cannot be empty and must contain only alphanumeric characters [a-zA-Z0-9], hypens ("-") and underscores ("_")'
+
+  MediaServer:
+    Description: 'Media Server to be deployed in Media Nodes'
+    Type: String
+    Default: mediasoup
+    AllowedValues:
+      - mediasoup
+      - kurento
+    ConstraintDescription: 'Must be a valid EC2 instance type'
+
+  OpenViduProClusterId:
+    Description: 'Unique identifier for the OpenVidu Pro cluster'
+    Type: String
+    MinLength: 1
+    AllowedPattern: ^[a-z0-9_-]+$
+    ConstraintDescription: 'Cannot be empty and must contain only lowercase characters [a-z0-9], hypens ("-") and underscores ("_")'
+
+
+  OpenViduS3BucketName:
+    Description: "Bucket to save configuration and recordings. If not defined, a default one will be created"
+    Type: String
+    Default: ''
+
+  OpenViduS3ConfigAutoRestart:
+    Description: "If true, changes at in .env file in S3 bucket will restart automatically all master nodes."
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: true
+
+  OpenViduRecording:
+    Description: "If 'true', recordings will be saved in an s3 bucket created by this cloudformation, or the defined one at OpenViduS3Bucket"
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: true
+
+  CoturnInMediaNodes:
+    Description: "If true, Coturn will be deployed on media nodes. Otherwise it will be deployed in master nodes."
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: false
+
+  # Enable Elasticsearch and Kibana
+  ElasticsearchEnabled:
+    Description: "Choose if you want OpenVidu to use Elasticsearch."
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: true
+
+  # Elasticsearch configuration
+  ElasticsearchUser:
+    Description: "Username for Elasticsearch and Kibana. ('ElasticSearch Enabled' must be true)"
+    Type: String
+    AllowedPattern: ^$|^[^" ]+$
+    ConstraintDescription: Elasticsearch user is mandatory (no whitespaces or quotations allowed)
+    Default: elasticadmin
+
+  ElasticsearchPassword:
+    Description: "Password for Elasticsearch and Kibana ('ElasticSearch Enabled' must be true)"
+    Type: String
+    AllowedPattern: ^$|^[^" ]+$
+    NoEcho: true
+    ConstraintDescription: Elasticsearch password is mandatory and it should have at least 6 characters (no whitespaces or quotations allowed)
+
+  # Elasticsearch configuration
+  ElasticsearchUrl:
+    Description: "If you have an external Elasticsearch service running, put here the url to the service. If empty, an Elasticsearch service will be deployed next to OpenVidu. ('ElasticSearch Enabled' must be true)"
+    Type: String
+    AllowedPattern: (^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/.*)?$|^$)
+    ConstraintDescription: "It is very important to specify the Elasticsearch URL with the port used by this service. For example: https://es-example"
+
+  KibanaUrl:
+    Description: "If you have an external Kibana service running, put here the url to the service. If empty, a Kibana service will be deployed next to OpenVidu. ('ElasticSearch Enabled' must be true)"
+    Type: String
+    AllowedPattern: (^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/.*)?$|^$)
+    ConstraintDescription: "It is very important to specify the url with port used by this service. For example: https://kibana-example"
+
+  LoadBalancerCertificateARN:
+    Description: 'Amazon certificate arn resource to load into the LoadBalancer'
+    Type: String
+    AllowedPattern: '.+'
+    ConstraintDescription: The Load Balancer domain name must be defined
+
+  AwsInstanceTypeOV:
+    Description: 'Specifies the EC2 instance type for your OpenVidu Server Pro Node'
+    Type: String
+    Default: c5.xlarge
+    AllowedValues:
+      - t2.medium
+      - t2.large
+      - t2.xlarge
+      - t2.2xlarge
+      - t3.large
+      - t3.xlarge
+      - t3.2xlarge
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - m5.8xlarge
+      - m5.12xlarge
+      - m5.16xlarge
+      - m5.24xlarge
+      - c4.large
+      - c4.xlarge
+      - c4.2xlarge
+      - c4.4xlarge
+      - c4.8xlarge
+      - c5.large
+      - c5.xlarge
+      - c5.2xlarge
+      - c5.4xlarge
+      - c5.9xlarge
+      - c5.12xlarge
+      - c5.18xlarge
+      - c5.24xlarge
+    ConstraintDescription: 'Must be a valid EC2 instance type'
+
+  AwsInstanceTypeKMS:
+    Description: 'Specifies the EC2 instance type for your Media Nodes'
+    Type: String
+    Default: c5.xlarge
+    AllowedValues:
+      - t2.medium
+      - t2.large
+      - t2.xlarge
+      - t2.2xlarge
+      - t3.large
+      - t3.xlarge
+      - t3.2xlarge
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - m5.8xlarge
+      - m5.12xlarge
+      - m5.16xlarge
+      - m5.24xlarge
+      - c4.large
+      - c4.xlarge
+      - c4.2xlarge
+      - c4.4xlarge
+      - c4.8xlarge
+      - c5.large
+      - c5.xlarge
+      - c5.2xlarge
+      - c5.4xlarge
+      - c5.9xlarge
+      - c5.12xlarge
+      - c5.18xlarge
+      - c5.24xlarge
+    ConstraintDescription: 'Must be a valid EC2 instance type'
+
+  MinMasterNodes:
+    Description: 'Minimun number of Master Nodes'
+    Type: Number
+    Default: 1
+    MinValue: 1
+    ConstraintDescription: 'A Minimun number of Master Nodes is mandatory'
+
+  MaxMasterNodes:
+    Description: 'Maximum number of Master Nodes'
+    Type: Number
+    Default: 4
+    MinValue: 1
+    ConstraintDescription: 'A Maximum number of Master Nodes is mandatory'
+
+  DesiredMasterNodes:
+    Description: 'Desired number of Master Nodes'
+    Type: Number
+    Default: 1
+    MinValue: 1
+    ConstraintDescription: 'A desired number of Master Nodes is mandatory'
+
+  MinMediaNodes:
+    Description: 'Minimun number of Media Nodes'
+    Type: Number
+    Default: 1
+    MinValue: 1
+    ConstraintDescription: 'A Minimun number of Master Nodes is mandatory'
+
+  MaxMediaNodes:
+    Description: 'Maximum number of Media Nodes'
+    Type: Number
+    Default: 4
+    MinValue: 1
+    ConstraintDescription: 'A Maximum number of Master Nodes is mandatory'
+
+  ScaleUpMediaNodesAvgCpu:
+    Description: 'Scale up media nodes when avg cpu is greater the specified value'
+    Type: Number
+    Default: 70
+    MinValue: 0
+    ConstraintDescription: 'A desired number of Master Nodes is mandatory'
+
+  ScaleDownMediaNodesAvgCpu:
+    Description: 'Scale down media nodes when avg cpu is below the specified value'
+    Type: Number
+    Default: 30
+    MinValue: 1
+    ConstraintDescription: 'A desired number of Master Nodes is mandatory'
+
+  DesiredMediaNodes:
+    Description: 'Desired number of Media Nodes'
+    Type: Number
+    Default: 1
+    MinValue: 1
+    ConstraintDescription: 'A desired number of Master Nodes is mandatory'
+
+  OpenViduVPC:
+    Description: 'Dedicated VPC for OpenVidu cluster'
+    Type: AWS::EC2::VPC::Id
+    AllowedPattern: ^.+$
+    ConstraintDescription: You must specify a VPC ID
+
+  OpenViduSubnets:
+    Description: 'Subnet for OpenVidu cluster'
+    Type: List<AWS::EC2::Subnet::Id>
+    AllowedPattern: ^.+$
+    ConstraintDescription: You must specify a subnet ID
+
+#start_mappings
+Mappings:
+  OVAMIMAP:
+    eu-west-1:
+      AMI: OV_MASTER_REPLICATION_AMI_ID
+
+  KMSAMIMAP:
+    eu-west-1:
+      AMI: KMS_AMI_ID
+#end_mappings
+
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: OpenVidu configuration
+        Parameters:
+          - DomainName
+          - OpenViduProClusterId
+          - OpenViduLicense
+          - OpenViduSecret
+          - MediaServer
+          - OpenViduS3BucketName
+          - OpenViduS3ConfigAutoRestart
+          - OpenViduRecording
+          - CoturnInMediaNodes
+      - Label:
+          default: Elasticsearch and Kibana configuration
+        Parameters:
+          - ElasticsearchEnabled
+          - ElasticsearchUrl
+          - KibanaUrl
+          - ElasticsearchUser
+          - ElasticsearchPassword
+      - Label:
+            default: EC2 and Autoscaling configuration
+        Parameters:
+            - AwsInstanceTypeOV
+            - AwsInstanceTypeKMS
+            - KeyName
+            - MinMasterNodes
+            - MaxMasterNodes
+            - DesiredMasterNodes
+            - MinMediaNodes
+            - MaxMediaNodes
+            - DesiredMediaNodes
+            - ScaleUpMediaNodesAvgCpu
+            - ScaleDownMediaNodesAvgCpu
+      - Label:
+          default: Load Balancer Certificate Configuration
+        Parameters:
+          - LoadBalancerCertificateARN
+      - Label:
+          default: Networking configuration
+        Parameters:
+          - OpenViduVPC
+          - OpenViduSubnets
+    ParameterLabels:
+      # OpenVidu General Configuration
+      DomainName:
+        default: 'Domain Name'
+      OpenViduProClusterId:
+        default: 'OpenVidu Pro Cluster Id'
+      OpenViduLicense:
+        default: 'OpenVidu Pro License'
+      OpenViduSecret:
+        default: 'OpenVidu Secret'
+      MediaServer:
+        default: 'Media Server'
+      OpenViduS3BucketName:
+        default: 'S3 Bucket where recordings and OpenVidu configuration will be stored'
+      OpenViduS3ConfigAutoRestart:
+        default: 'Auto Restart OpenVidu on S3 bucket .env changes'
+      OpenViduRecording:
+        default: 'Enable OpenVidu Recording'
+      CoturnInMediaNodes:
+        default: 'Deploy Coturn in Media Nodes. (Experimental)'
+      # Elasticsearch and Kibana Configuration
+      ElasticsearchEnabled:
+        default: "Enable Elasticsearch and Kibana"
+      ElasticsearchUrl:
+        default: 'Elasticsearch URL'
+      KibanaUrl:
+        default: 'Kibana URL'
+      ElasticsearchUser:
+        default: 'Elasticsearch and Kibana username'
+      ElasticsearchPassword:
+        default: 'Elasticsearch and Kibana password'
+      # SSL Certificate Configuration
+      LoadBalancerCertificateARN:
+        default: 'ARN of the AWS Certificate. This certificate must be valid for "Domain Name"'
+      # EC2 And Autoscaling Configuration
+      AwsInstanceTypeOV:
+        default: "Master Nodes instance type"
+      AwsInstanceTypeKMS:
+        default: 'Media Nodes instance type'
+      KeyName:
+        default: 'SSH Key Name'
+      MinMasterNodes:
+        default: 'Minimum Master Nodes'
+      MaxMasterNodes:
+        default: 'Maximum Master Nodes'
+      DesiredMasterNodes:
+        default: 'Desired Master Nodes'
+      DesiredMediaNodes:
+        default: 'Desired Media Nodes'
+      MinMediaNodes:
+        default: 'Minimum Media Nodes'
+      MaxMediaNodes:
+        default: 'Maximum Media Nodes'
+      ScaleUpMediaNodesAvgCpu:
+        default: 'Scale Up Media Nodes on Average CPU'
+      ScaleDownMediaNodesAvgCpu:
+        default: 'Scale Down Media Nodes on Average CPU'
+      # Networking Configuration
+      OpenViduVPC:
+        default: 'OpenVidu Pro VPC'
+      OpenViduSubnets:
+        default: 'OpenVIdu Pro Subnets'
+
+Conditions:
+  CreateS3Bucket: !Equals [ !Ref OpenViduS3BucketName, '']
+
+Rules:
+
+  # Check when Elasticsearch is enabled that all the parameters are present
+  ElasticsearchValidation:
+    RuleCondition: !Equals [ !Ref ElasticsearchEnabled, 'true' ]
+    Assertions:
+      - AssertDescription: Paramter 'Elasticsearch and Kibana username' (ElasticsearchUser) is needed when 'Enable Elasticsearch and Kibana' (ElasticsearchEnabled) is 'true'.
+        Assert: !Not [ !Equals [!Ref ElasticsearchUser, ''] ]
+      - AssertDescription: Parameter 'Elasticsearch and Kibana password' (ElasticsearchPassword) is needed when 'Enable Elasticsearch and Kibana' (ElasticsearchEnabled) is 'true'.
+        Assert: !Not [ !Equals [!Ref ElasticsearchPassword, ''] ]
+
+  # Check when Elasticsearch is disabled that any parameter of elasticsearch is not present
+  ElasticsearchDisabledValidation:
+    RuleCondition: !Equals [ !Ref ElasticsearchEnabled, 'false' ]
+    Assertions:
+      - AssertDescription: Parameter 'Elasticsearch URL' (ElasticsearchUrl) is not needed when 'Enable Elasticsearch and Kibana' (ElasticsearchEnabled) is 'false'.
+        Assert: !Equals [ !Ref ElasticsearchUrl, "" ]
+      - AssertDescription: Parameter 'Kibana URL' (KibanaUrl) is not needed when 'Enable Elasticsearch and Kibana' (ElasticsearchEnabled) is 'false'.
+        Assert: !Equals [ !Ref KibanaUrl, "" ]
+      - AssertDescription: Parameter 'Elasticsearch and Kibana username' (ElasticsearchUser) is not needed when 'Enable Elasticsearch and Kibana' (ElasticsearchEnabled) is 'false'.
+        Assert: !Equals [ !Ref ElasticsearchUser, "" ]
+      - AssertDescription: Parameter 'Elasticsearch and Kibana password' (ElasticsearchPassword) is not needed when 'Enable Elasticsearch and Kibana' (ElasticsearchEnabled) is 'false'.
+        Assert: !Equals [ !Ref ElasticsearchPassword, "" ]
+
+
+Resources:
+
+  #####
+  # S3 bucket
+  #####
+  S3OpenViduBucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+    ### Unique bucket name using Stack ID
+      BucketName: !Join [ "-", [ !Ref OpenViduProClusterId, !Select [0, !Split ["-", !Select [2, !Split [/, !Ref AWS::StackId ]]]] ] ]
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls : true
+        RestrictPublicBuckets: true
+    Condition: CreateS3Bucket
+
+  #####
+  # Security groups
+  #####
+
+  # Security group with all open ports necessary for OpenVidu Pro to work
+  # Only the Load Balancer has access to replication-manager port 4443 which proxies to OpenVidu Pro
+  OpenViduSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: SSH and OpenVidu WebRTC Ports
+      GroupName:  !Join [ "-", [ !Ref 'AWS::StackName', 'OpenViduSecurityGroup'] ]
+      VpcId: !Ref OpenViduVPC
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ !Ref 'AWS::StackName', 'OpenViduSecurityGroup'] ]
+      SecurityGroupIngress:
+        - IpProtocol: udp
+          FromPort: 3478
+          ToPort: 3478
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 3478
+          ToPort: 3478
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
+          FromPort: 3478
+          ToPort: 3478
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3478
+          ToPort: 3478
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
+          FromPort: 4443
+          ToPort: 4443
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+        - IpProtocol: udp
+          FromPort: 40000
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 40000
+          ToPort: 65535
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
+          FromPort: 40000
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 40000
+          ToPort: 65535
+          CidrIpv6: ::/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 1
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 1
+          ToPort: 65535
+          CidrIpv6: ::/0
+        - IpProtocol: udp
+          FromPort: 1
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 1
+          ToPort: 65535
+          CidrIpv6: ::/0
+
+  # This security groups Ingress rule is for OpenVidu Pro Master instances which only need access
+  # to other OpenVidu Pro instances at port 5443 and 4443 to proxy requests from replication-manager
+  OpenViduSecurityGroupIngressServer:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+        GroupId: !Ref OpenViduSecurityGroup
+        IpProtocol: tcp
+        FromPort: 5443
+        ToPort: 5443
+        SourceSecurityGroupId: !Ref OpenViduSecurityGroup
+
+  OpenViduSecurityGroupIngressReplicationManager:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+        GroupId: !Ref OpenViduSecurityGroup
+        IpProtocol: tcp
+        FromPort: 4443
+        ToPort: 4443
+        SourceSecurityGroupId: !Ref OpenViduSecurityGroup
+
+  LoadBalancerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref OpenViduVPC
+      GroupDescription: Load Balancer Security group
+      GroupName: !Join [ "-", [ !Ref 'AWS::StackName', 'LoadBalancerSecurityGroup'] ]
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ !Ref 'AWS::StackName', 'LoadBalancerSecurityGroup'] ]
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIpv6: ::/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 1
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 1
+          ToPort: 65535
+          CidrIpv6: ::/0
+        - IpProtocol: udp
+          FromPort: 1
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 1
+          ToPort: 65535
+          CidrIpv6: ::/0
+
+
+  # Redis Security group.
+  # Let access only to instances with OpenVidu Pro security group attached
+  RedisSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref OpenViduVPC
+      GroupDescription: Security Group for OpenVidu Pro Redis
+      GroupName: !Join [ "-", [ !Ref 'AWS::StackName', 'RedisSecurityGroup'] ]
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ !Ref 'AWS::StackName', 'RedisSecurityGroup'] ]
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !Ref OpenViduSecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 1
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 1
+          ToPort: 65535
+          CidrIpv6: ::/0
+
+  # Media Nodes Security group. Let access only to
+  # instances with OpenVidu Pro security group attached
+  # to ports 3000, 4000, and 8888
+  MediaNodeSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref OpenViduVPC
+      GroupDescription: SSH, Media Node controller and KMS WebRTC Ports
+      GroupName: !Join [ "-", [ !Ref 'AWS::StackName', 'KMSSecurityGroup'] ]
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ !Ref 'AWS::StackName', 'KMSSecurityGroup'] ]
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIpv6: ::/0
+        - IpProtocol: udp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 443
+          ToPort: 443
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          SourceSecurityGroupId: !Ref OpenViduSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 4000
+          ToPort: 4000
+          SourceSecurityGroupId: !Ref OpenViduSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 8888
+          ToPort: 8888
+          SourceSecurityGroupId: !Ref OpenViduSecurityGroup
+        - IpProtocol: udp
+          FromPort: 40000
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 40000
+          ToPort: 65535
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
+          FromPort: 40000
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 40000
+          ToPort: 65535
+          CidrIpv6: ::/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 1
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 1
+          ToPort: 65535
+          CidrIpv6: ::/0
+        - IpProtocol: udp
+          FromPort: 1
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 1
+          ToPort: 65535
+          CidrIpv6: ::/0
+
+  #####
+  # Redis Cluster
+  #####
+  RedisClusterSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      CacheSubnetGroupName: !Join [ "-", [ !Ref 'AWS::StackName', 'RedisSubnetGroup'] ]
+      Description: Subnet where to deploy Redis
+      SubnetIds: !Ref OpenViduSubnets
+
+  RedisCluster:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties:
+      ClusterName: !Join [ "-", [ !Ref 'AWS::StackName', 'Redis'] ]
+      CacheNodeType: cache.t3.medium
+      Engine: redis
+      EngineVersion: 6.x
+      NumCacheNodes: 1
+      CacheParameterGroupName: default.redis6.x
+      CacheSubnetGroupName: !Ref RedisClusterSubnetGroup
+      VpcSecurityGroupIds:
+        - !Ref RedisSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ !Ref 'AWS::StackName', 'Redis'] ]
+
+  #####
+  # Media Node Autoscaling Group
+  #####
+  MediaNodeAutoScalingLaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      LaunchConfigurationName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGMediaNodeLaunchConfiguration'] ]
+      SecurityGroups:
+        - !Ref MediaNodeSecurityGroup
+      ImageId: !GetAtt LambdaOnCreateInvoke.MediaNodeImageId
+      KeyName: !Ref KeyName
+      InstanceType: !Ref AwsInstanceTypeKMS
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeType: gp2
+            DeleteOnTermination: true
+            VolumeSize: 50
+
+  MediaNodeAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGMediaNode'] ]
+      LaunchConfigurationName: !Ref MediaNodeAutoScalingLaunchConfiguration
+      MinSize: !Ref MinMediaNodes
+      MaxSize: !Ref MaxMediaNodes
+      DesiredCapacity: !Ref DesiredMediaNodes
+      VPCZoneIdentifier: !Ref OpenViduSubnets
+      NewInstancesProtectedFromScaleIn: true
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ !Ref 'AWS::StackName', 'Media Node'] ]
+          PropagateAtLaunch: true
+        - Key: ov-cluster-member
+          Value: kms
+          PropagateAtLaunch: true
+        - Key: ov-medianode-status
+          Value: running
+          PropagateAtLaunch: true
+
+  #####
+  # SQS Queue
+  #####
+  SQSPolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref SQSQueue
+      PolicyDocument:
+        Statement:
+        - Effect: Allow
+          Action:
+            - 'sqs:SendMessage'
+          Principal:
+            Service:
+              - events.amazonaws.com
+          Resource:
+            - !GetAtt SQSQueue.Arn
+
+  SQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join ['-', [ !Ref 'AWS::StackName', 'SQS.fifo'] ]
+      FifoQueue: true
+      MessageRetentionPeriod: 60
+      VisibilityTimeout: 50
+      ContentBasedDeduplication: true
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [ !Ref 'AWS::StackName', 'SQS'] ]
+
+  #####
+  # Load Balancer
+  #####
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Join ['-', [ !Ref 'AWS::StackName', 'lb'] ]
+      Subnets: !Ref OpenViduSubnets
+      SecurityGroups:
+        - !Ref LoadBalancerSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [ !Ref 'AWS::StackName', 'lb'] ]
+
+  HttpLoadBalancerListener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+        - Type: "redirect"
+          RedirectConfig:
+            Protocol: "HTTPS"
+            Port: '443'
+            Host: "#{host}"
+            Path: "/#{path}"
+            Query: "#{query}"
+            StatusCode: "HTTP_301"
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: "HTTP"
+
+  LoadBalancerListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref LoadBalancerCertificateARN
+
+  RootListenerRule:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      ListenerArn: !Ref LoadBalancerListener
+      Priority: 1
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /
+      Actions:
+        - Type: "fixed-response"
+          FixedResponseConfig:
+            StatusCode: "401"
+
+  InspectorListenerRule:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      ListenerArn: !Ref LoadBalancerListener
+      Priority: 2
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /inspector
+      Actions:
+        - Type: "redirect"
+          RedirectConfig:
+            Protocol: "HTTPS"
+            Port: '443'
+            Host: "#{host}"
+            Path: "/inspector/"
+            Query: "#{query}"
+            StatusCode: "HTTP_301"
+
+  ListenerRule:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      ListenerArn: !Ref LoadBalancerListener
+      Priority: 3
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /openvidu*
+      Actions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+
+  TargetGroup:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      Name: !Ref 'AWS::StackName'
+      VpcId: !Ref OpenViduVPC
+      Port: 4443
+      Protocol: HTTP
+      Matcher:
+        HttpCode: '200'
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /openvidu/health
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: '4443'
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 4
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ !Ref 'AWS::StackName', 'TargetGroup'] ]
+
+  #####
+  # OpenVidu Pro Master Role
+  #####
+  OpenViduProMasterRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ !Ref 'AWS::StackName', 'MasterNodeRole'] ]
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: !Join ['-', [ !Ref 'AWS::StackName', 'MasterNodePolicy'] ]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ec2:Describe*'
+                  - 'ec2:CreateTags'
+                  - 'ec2:DescribeTags'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'sqs:*'
+                Resource: !GetAtt SQSQueue.Arn
+              - Effect: Allow
+                Action:
+                  - 'autoscaling:SetInstanceHealth'
+                  - 'autoscaling:DescribeAutoScalingInstances'
+                  - 'autoscaling:DescribeAutoScalingGroups'
+                  - 'autoscaling:SetInstanceProtection'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 's3:DeleteObject'
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                Resource:
+                  - Fn::If:
+                    - CreateS3Bucket
+                    # If bucket is created, get ARN
+                    - !Join [ "", [ !GetAtt S3OpenViduBucket.Arn, "/*" ] ]
+                    # If bucket name is defined, use bucket name
+                    - !Join [ "", [ 'arn:aws:s3:::', !Ref OpenViduS3BucketName, '/*'] ]
+              - Effect: Allow
+                Action:
+                  - 's3:ListBucket'
+                  - 's3:GetBucketLocation'
+                Resource:
+                  - Fn::If:
+                    - CreateS3Bucket
+                    # If bucket is created, get ARN
+                    - !Join [ "", [ !GetAtt S3OpenViduBucket.Arn ] ]
+                    # If bucket name is defined, use bucket name
+                    - !Join [ "", [ 'arn:aws:s3:::', !Ref OpenViduS3BucketName ]]
+      RoleName: !Join ['-', [ !Ref 'AWS::StackName', 'MasterNodeRole'] ]
+
+  OpenViduProMasterInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref OpenViduProMasterRole
+
+  #####
+  # OpenVidu Pro Master AutoScaling Group
+  #####
+  OpenViduProMasterNodeAutoScalingLaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      LaunchConfigurationName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGMasterNodeLaunchConfiguration'] ]
+      SecurityGroups:
+        - !Ref OpenViduSecurityGroup
+      IamInstanceProfile: !Ref OpenViduProMasterInstanceProfile
+      ImageId: !GetAtt LambdaOnCreateInvoke.MasterNodeImageId
+      KeyName: !Ref KeyName
+      InstanceType: !Ref AwsInstanceTypeOV
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeType: gp2
+            DeleteOnTermination: true
+            VolumeSize: 100
+      UserData:
+        Fn::Base64:
+          Fn::Sub:
+            - |
+              DOMAIN_OR_PUBLIC_IP=${DomainNameVar} | \
+              OPENVIDU_ENTERPRISE_MEDIA_SERVER=${MediaServer} | \
+              OPENVIDU_PRO_LICENSE=${OpenViduLicense} | \
+              OPENVIDU_SECRET=${OpenViduSecret} | \
+              OPENVIDU_PRO_CLUSTER_ID=${OpenViduProClusterId} | \
+              OPENVIDU_PRO_ELASTICSEARCH_HOST=${ElasticsearchUrl} | \
+              OPENVIDU_PRO_KIBANA_HOST=${KibanaUrl} | \
+              ELASTICSEARCH_USERNAME=${ElasticsearchUser} | \
+              ELASTICSEARCH_PASSWORD=${ElasticsearchPassword} | \
+              RM_REDIS_IP=${RedisHostName} | \
+              RM_REDIS_PORT=${RedisPort} | \
+              RM_SQS_QUEUE=${SqsQueueName} | \
+              RM_CLOUDFORMATION_ARN=${AWS::StackId} | \
+              OPENVIDU_PRO_CONFIG_S3_BUCKET=${OpenViduS3BucketParam} | \
+              RM_MEDIA_NODES_AUTOSCALING_GROUP_NAME=${MediaNodesAutoscalingGroupName} | \
+              RM_MASTER_NODES_AUTOSCALING_GROUP_NAME=${MasterNodesAutoscalingGroupName} | \
+              OPENVIDU_RECORDING=${OpenViduRecording} \
+              OPENVIDU_PRO_COTURN_IN_MEDIA_NODES=${CoturnInMediaNodes} | \
+              OPENVIDU_ENTERPRISE_S3_CONFIG_AUTORESTART=${OpenViduS3ConfigAutoRestart} | \
+              OPENVIDU_PRO_ELASITCSEARCH=${ElasticsearchEnabled}
+            - DomainNameVar: !Ref DomainName
+              RedisHostName: !GetAtt RedisCluster.RedisEndpoint.Address
+              RedisPort: !GetAtt RedisCluster.RedisEndpoint.Port
+              SqsQueueName: !GetAtt SQSQueue.QueueName
+              MediaNodesAutoscalingGroupName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGMediaNode'] ]
+              MasterNodesAutoscalingGroupName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGOpenViduProMasterNode'] ]
+              OpenViduS3BucketParam: !If [ CreateS3Bucket, !Ref S3OpenViduBucket, !Ref OpenViduS3BucketName ]
+
+  OpenViduProMasterNodeAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGOpenViduProMasterNode'] ]
+      LaunchConfigurationName: !Ref OpenViduProMasterNodeAutoScalingLaunchConfiguration
+      TargetGroupARNs:
+        - !Ref TargetGroup
+      MinSize: !Ref MinMasterNodes
+      MaxSize: !Ref MaxMasterNodes
+      DesiredCapacity: !Ref DesiredMasterNodes
+      VPCZoneIdentifier: !Ref OpenViduSubnets
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 180
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ !Ref 'AWS::StackName', 'Master Node'] ]
+          PropagateAtLaunch: true
+        - Key: ov-cluster-member
+          Value: server
+          PropagateAtLaunch: true
+
+  #####
+  # Media Node Autoscaling Lifecycle hooks
+  #####
+  LaunchMediaNodeLifeCycleHook:
+    Type: AWS::AutoScaling::LifecycleHook
+    Properties:
+      LifecycleHookName: !Join [ "-", [ !Ref 'AWS::StackName', 'LaunchMediaNodeLifeCycleHook'] ]
+      AutoScalingGroupName: !Ref MediaNodeAutoScalingGroup
+      LifecycleTransition: autoscaling:EC2_INSTANCE_LAUNCHING
+      DefaultResult: CONTINUE
+      HeartbeatTimeout: 30
+
+  TerminateMediaNodeLifeCycleHook:
+    Type: AWS::AutoScaling::LifecycleHook
+    Properties:
+      LifecycleHookName: !Join [ "-", [ !Ref 'AWS::StackName', 'TerminateMediaNodeLifeCycleHook'] ]
+      AutoScalingGroupName: !Ref MediaNodeAutoScalingGroup
+      LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
+      DefaultResult: ABANDON
+      HeartbeatTimeout: 30
+
+  ##########
+  # AWS Events
+  ##########
+  # Send event with launched and terminated autoscaling group instances
+  LifeCycleMediaNodesRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Join ['', [ !Ref AWS::StackName, '-asg-lifecycle-rule'] ]
+      State: 'ENABLED'
+      EventPattern: !Sub |
+        {
+          "source": [ "aws.autoscaling" ],
+          "detail": {
+            "LifecycleTransition": ["autoscaling:EC2_INSTANCE_LAUNCHING", "autoscaling:EC2_INSTANCE_TERMINATING"],
+            "AutoScalingGroupName": [ "${MediaNodeAutoScalingGroup}" ]
+          }
+        }
+      Targets:
+      - Arn: !GetAtt SQSQueue.Arn
+        Id: AsgLifecycleMediaNodes
+        SqsParameters:
+          MessageGroupId: sqs-notification
+        InputTransformer:
+          InputPathsMap:
+                source: $.source
+                lifecycle-transition: $.detail.LifecycleTransition
+                ec2-instance: $.detail.EC2InstanceId
+                autoscaling-groupname: $.detail.AutoScalingGroupName
+          InputTemplate: >-
+            {
+              "source": <source>,
+              "detail": {
+                "LifecycleTransition": <lifecycle-transition>,
+                "AutoScalingGroupName": <autoscaling-groupname>,
+                "EC2InstanceId": <ec2-instance>
+              },
+              "role": "MediaNode"
+            }
+
+  # Send event to update cluster state on autoscaling actions from AWS
+  AutoscalingScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: 'Executes periodically lambda which sends information about the OpenVidu Pro Cluster'
+      Name: !Join ['', [ !Ref AWS::StackName, '-asg-rule'] ]
+      ScheduleExpression: 'rate(1 minute)'
+      State: 'ENABLED'
+      Targets:
+        - Arn: !GetAtt SQSQueue.Arn
+          Id: AsgSchedule
+          SqsParameters:
+            MessageGroupId: sqs-notification
+          InputTransformer:
+            InputPathsMap:
+                  time: $.time
+            InputTemplate: >-
+              {
+                "source": "custom.autoscaling_schedule",
+                "detail": {
+                  "time": <time>
+                }
+              }
+
+  ##########
+  # Autoscaling Policies and Alarms for Media nodes
+  ##########
+  MediaNodeCPUAlarmHigh:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-up if CPU > 80% for 10 seconds
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: !Ref ScaleUpMediaNodesAvgCpu
+      AlarmActions:
+        - !Ref MediaNodeScaleUpPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref MediaNodeAutoScalingGroup
+      ComparisonOperator: GreaterThanThreshold
+
+  MediaNodeCPUAlarmLow:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-down if CPU < 30% for 10 seconds
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: !Ref ScaleDownMediaNodesAvgCpu
+      AlarmActions:
+        - !Ref MediaNodeScaleDownPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref MediaNodeAutoScalingGroup
+      ComparisonOperator: LessThanThreshold
+
+  MediaNodeScaleUpPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref MediaNodeAutoScalingGroup
+      Cooldown: '60'
+      ScalingAdjustment: 1
+
+  MediaNodeScaleDownPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref MediaNodeAutoScalingGroup
+      Cooldown: '60'
+      ScalingAdjustment: -1
+
+  ##########
+  # Lambda to delete protected Media nodes on destroy Cloudformation
+  ##########
+  LambdaOnDeleteRole:
+    Type: 'AWS::IAM::Role'
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: !Join ['', [ !Ref AWS::StackName, 'l-p-on-delete'] ]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'autoscaling:DescribeAutoScalingInstances'
+                  - 'autoscaling:DescribeAutoScalingGroups'
+                  - 'autoscaling:SetInstanceProtection'
+                  - 'autoscaling:UpdateAutoScalingGroup'
+                Resource: '*'
+      RoleName: !Join ['', [ !Ref AWS::StackName, 'l-r-on-delete'] ]
+
+  LambdaOnDelete:
+    Type: AWS::Lambda::Function
+    DeletionPolicy: Delete
+    Properties:
+      FunctionName: !Join ['', [ !Ref AWS::StackName, '-lambda-on-delete'] ]
+      Code:
+        ZipFile: |
+          from botocore.config import Config
+          import boto3
+          import cfnresponse
+          import time
+
+          def handler(event, context):
+            try:
+              if (event['RequestType'] == 'Delete'):
+                deleteResources(event, context)
+              else:
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+            except Exception:
+              cfnresponse.send(event, context, cfnresponse.FAILED, {})
+
+          def deleteResources(event, context):
+            aws_region = event['ResourceProperties']['AwsRegion']
+            media_nodes_asg = event['ResourceProperties']['MediaNodesASGName']
+            config_client = Config(region_name=aws_region)
+            asg_client = boto3.client('autoscaling', config=config_client)
+
+            # Unprotect autoscaling media nodes
+            asg_client.update_auto_scaling_group(
+              AutoScalingGroupName=media_nodes_asg,
+              NewInstancesProtectedFromScaleIn=False,
+              DesiredCapacity=0,
+              MinSize=0,
+              MaxSize=0
+            )
+            time.sleep(30)
+            response = asg_client.describe_auto_scaling_groups(
+              AutoScalingGroupNames=[media_nodes_asg]
+            )
+            instance_list = response['AutoScalingGroups'][0]['Instances']
+            instance_id_list=[]
+            for instance in instance_list:
+              instance_id_list.append(instance['InstanceId'])
+            asg_client.set_instance_protection(
+              InstanceIds=instance_id_list,
+              AutoScalingGroupName=media_nodes_asg,
+              ProtectedFromScaleIn=False
+            )
+
+            cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
+      Handler: index.handler
+      Role:
+        !GetAtt LambdaOnDeleteRole.Arn
+      Runtime: python3.7
+      Timeout: 900
+
+  LambdaOnDeleteInvoke:
+    Type: AWS::CloudFormation::CustomResource
+    DeletionPolicy: Delete
+    Version: "1.0"
+    Properties:
+      ServiceToken: !GetAtt LambdaOnDelete.Arn
+      AwsRegion: !Ref AWS::Region
+      MediaNodesASGName: !Ref MediaNodeAutoScalingGroup
+
+  ##########
+  # Lambda to Copy original AMIs from eu-west-1 to the deployment region (On create)
+  ##########
+  LambdaOnCreateRole:
+    Type: 'AWS::IAM::Role'
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: !Join ['', [ !Ref AWS::StackName, '-lambda-policy-on-create'] ]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              # Permissions to copy original Lambda to the region where it is being deployed
+              - Effect: Allow
+                Action:
+                  - 'ec2:DescribeImages'
+                  - 'ec2:CopyImage'
+                Resource: '*'
+              # Describe instances to get instances which OpenVidu PRO creates
+              - Effect: Allow
+                Action:
+                  - 'ec2:DescribeInstances'
+                Resource: '*'
+      RoleName: !Join ['', [ !Ref AWS::StackName, '-lambda-role-on-create'] ]
+
+  LambdaOnCreate:
+    Type: AWS::Lambda::Function
+    DeletionPolicy: Delete
+    Properties:
+      FunctionName: !Join ['', [ !Ref AWS::StackName, '-lambda-on-create'] ]
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          from botocore.config import Config
+
+          def handler(event, context):
+            try:
+              if (event['RequestType'] == 'Create'):
+                copy_ami(event, context)
+              else:
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+            except Exception:
+              cfnresponse.send(event, context, cfnresponse.FAILED, {})
+
+          def copy_ami_operation(source_image_id, source_region, new_ami_name, ec2_client):
+            own_ami_filter = [{ 'Name': 'name', 'Values': [new_ami_name] }]
+            amis_response = ec2_client.describe_images(Filters=own_ami_filter)
+            if (len(amis_response['Images']) == 1):
+              # If AMI exists, don't copy
+              return amis_response['Images'][0]['ImageId']
+            else:
+              # If AMI does not exist, copy
+              new_amis_response = ec2_client.copy_image(
+                SourceImageId=source_image_id,
+                SourceRegion=source_region,
+                Name=new_ami_name
+              )
+              return new_amis_response['ImageId']
+
+          def copy_ami(event, context):
+            new_images=[]
+            cfn_output = {}
+            source_image_id_master_node = event['ResourceProperties']['MasterNodeAmiSourceId']
+            source_image_id_media_node = event['ResourceProperties']['MediaNodeAmiSourceId']
+            source_region = event['ResourceProperties']['AmiSourceRegion']
+            deployment_region = event['ResourceProperties']['DeploymentRegion']
+
+            # Clients init
+            ec2_client = boto3.client('ec2', config = Config(region_name=deployment_region))
+            ec2_client_ov = boto3.client('ec2', config = Config(region_name=source_region))
+            img_exists_waiter= ec2_client.get_waiter('image_exists')
+            img_avail_waiter = ec2_client.get_waiter('image_available')
+
+            # Get original ami name
+            public_ami_master_node_filter = [{ 'Name': 'image-id', 'Values': [ source_image_id_master_node ] }]
+            public_ami_media_node_filter = [{ 'Name': 'image-id', 'Values': [ source_image_id_media_node ] }]
+
+            response = ec2_client_ov.describe_images(Filters=public_ami_master_node_filter)
+            new_ami_name_master_node = "[ OpenVidu ENTERPRISE Master Node AMI Copy ] - " + response['Images'][0]['Name']
+            response = ec2_client_ov.describe_images(Filters=public_ami_media_node_filter)
+            new_ami_name_media_node = "[ OpenVidu PRO/ENTERPRISE Media Node AMI Copy ] - " + response['Images'][0]['Name']
+
+            # Copy master node AMI and media node AMI
+            master_node_ami_id = copy_ami_operation(source_image_id_master_node, source_region, new_ami_name_master_node, ec2_client)
+            new_images.append(master_node_ami_id)
+            cfn_output['MasterNodeImageId'] = master_node_ami_id
+            media_node_ami_id = copy_ami_operation(source_image_id_media_node, source_region, new_ami_name_media_node, ec2_client)
+            new_images.append(media_node_ami_id)
+            cfn_output['MediaNodeImageId'] = media_node_ami_id
+
+            # Wait images to be available
+            waiter_config = {'Delay': 15, 'MaxAttempts': 59 }
+            response = img_exists_waiter.wait(ImageIds=new_images, WaiterConfig=waiter_config)
+            response = img_avail_waiter.wait(ImageIds=new_images, WaiterConfig=waiter_config)
+
+            # Return AMIs
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, cfn_output)
+
+      Handler: index.handler
+      Role:
+        !GetAtt LambdaOnCreateRole.Arn
+      Runtime: python3.7
+      Timeout: 900
+
+  LambdaOnCreateInvoke:
+    Type: AWS::CloudFormation::CustomResource
+    DeletionPolicy: Delete
+    Version: "1.0"
+    Properties:
+      ServiceToken: !GetAtt LambdaOnCreate.Arn
+      AmiSourceRegion: 'eu-west-1'
+      MasterNodeAmiSourceId: !FindInMap [OVAMIMAP, 'eu-west-1', AMI]
+      MediaNodeAmiSourceId: !FindInMap [KMSAMIMAP, 'eu-west-1', AMI]
+      StackName: !Ref AWS::StackName
+      DeploymentRegion: !Ref AWS::Region
+
+Outputs:
+  LoadBalancerUrl:
+    Description: LoadBalancer of OpenVidu Pro. Point your domain name to this Load Balancer.
+    Value: !Join [ '', [ 'https://', !GetAtt LoadBalancer.DNSName ] ]
+  InspectorUrl:
+    Description: Inspector URL using domain name.
+    Value: !Join [ '', [ 'https://', !Ref DomainName, '/inspector' ] ]
