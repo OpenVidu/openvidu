@@ -5,9 +5,9 @@ AWS_KEY_NAME=${AWS_KEY_NAME:-}
 CF_RELEASE=${CF_RELEASE:-false}
 KMS_AMI_ID=${KMS_AMI_ID:-}
 
-if [[ $CF_RELEASE == "true" ]]; then
-  git checkout v$OPENVIDU_PRO_VERSION
-fi
+# if [[ $CF_RELEASE == "true" ]]; then
+#   git checkout v$OPENVIDU_PRO_VERSION
+# fi
 
 export AWS_DEFAULT_REGION=eu-west-1
 
