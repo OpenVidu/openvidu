@@ -1,7 +1,9 @@
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND noninteractive \
-    DISPLAY :99.0
+    DISPLAY :99.0 \
+    GECKO_DRIVER_LOCATION /usr/local/bin/geckodriver \
+    CHROME_DRIVER_LOCATION /usr/local/bin/chromedriver
 
 # Install Software
 RUN apt-get update && \

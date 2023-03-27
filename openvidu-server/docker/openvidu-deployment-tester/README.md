@@ -80,3 +80,41 @@ docker run openvidu/openvidu-deployment-tester basic-test \
 ### 2. Recording tests
 
 Working on...
+
+## Development and Build instructions
+
+### Requirements
+
+- Python >= 3
+- pip
+- virtualenv
+
+### Instructions
+
+1. In the directory of this README file, create a virtual environment and activate it:
+
+```bash
+virtualenv -p python3 python_modules
+
+source python_modules/bin/activate
+```
+
+2. Install the python dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Run the script:
+
+```bash
+cd src
+
+python main.py -h
+```
+
+4. To build the docker image:
+
+```bash
+./create_imagh.sh latest
+```

@@ -1,11 +1,11 @@
 #!/bin/bash
 set -eu -o pipefail
 
-# Iniciar XVFB
+# DISPLAY variable is used by Selenium to know which X server to use
 export DISPLAY_NUM=99
 export DISPLAY=":${DISPLAY_NUM}"
 
-# Esperar hasta que XVFB esté listo
+# Wait for Xvfb to be ready. If not ready after 2 seconds, try next display
 while ! xdpyinfo -display "${DISPLAY}" >/dev/null 2>&1; do
   DISPLAY_NUM=$((DISPLAY_NUM+1))
   DISPLAY=":${DISPLAY_NUM}"

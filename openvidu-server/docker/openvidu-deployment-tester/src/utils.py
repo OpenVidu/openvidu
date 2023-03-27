@@ -22,7 +22,7 @@ def install_drivers(chrome_version, gecko_version):
 
     with open("chrome_version", "w") as f:
         f.write(chrome_driver_manager.driver.get_version())
-    with open("firefox_version", "w") as f:
+    with open("gecko_version", "w") as f:
         f.write(firefox_driver_manager.driver.get_version())
 
 def authenticated_url(openvidu_url, openvidu_secret):
@@ -42,16 +42,15 @@ def runBrowser(browser, turn=False):
     return driver
 
 def runChrome():
-    # Get Chrome driver version from environment variable
-    chrome_version = os.environ.get("CHROME_VERSION")
+    driver_location = os.environ.get("CHROME_DRIVER_LOCATION")
 
-    # Get Chrome driver version from file if not found in environment variable
-    # Read it only if file exist (it may not exist if running in a container)
-    if chrome_version is None and os.path.isfile("chrome_version"):
-        with open("chrome_version", "r") as f:
-            chrome_version = f.read()
-    print("Chrome version: ", chrome_version)
+    # Load version from file
+    chrome_version = None
+    with open("chrome_version", "r") as f:
+        chrome_version = f.read()
+
     print("Running chrome...")
+    print("Chrome version: ", chrome_version)
     options = webdriver.ChromeOptions()
     options.add_argument("--use-fake-ui-for-media-stream")
     options.add_argument("--disable-infobars")
@@ -61,21 +60,19 @@ def runChrome():
     options.add_argument("--no-sandbox")
 
     return webdriver.Chrome(
-        service=ChromeService(ChromeDriverManager(version=chrome_version).install()),
+        service=ChromeService(ChromeDriverManager(path=driver_location, version=chrome_version).install()),
         options = options)
 
 def runFirefox(turn=False):
-    # Get Gecko driver version from environment variable
-    gecko_version = os.environ.get("GECKO_VERSION")
+    driver_location = os.environ.get("GECKO_DRIVER_LOCATION")
 
-    # Get Gecko driver version from file if not found in environment variable
-    # Read it only if file exist (it may not exist if running in a container)
-    if gecko_version is None and os.path.isfile("firefox_version"):
-        with open("firefox_version", "r") as f:
-            gecko_version = f.read()
+    # Load version from file
+    gecko_version = None
+    with open("gecko_version", "r") as f:
+        gecko_version = f.read()
 
-    print("Gecko version: ", gecko_version)
     print("Running firefox with Turn: ", turn)
+    print("Gecko version: ", gecko_version)
     options = webdriver.FirefoxOptions()
     options.set_preference('media.navigator.permission.disabled', True)
     options.set_preference('media.navigator.streams.fake', True)
@@ -89,7 +86,7 @@ def runFirefox(turn=False):
     options.set_preference('media.peerconnection.turn.disable', not turn)
 
     return webdriver.Firefox(
-        service=FirefoxService(GeckoDriverManager(version=gecko_version).install()),
+        service=FirefoxService(GeckoDriverManager(path=driver_location, version=gecko_version).install()),
         options = options)
 
 def print_candidates(driver):
