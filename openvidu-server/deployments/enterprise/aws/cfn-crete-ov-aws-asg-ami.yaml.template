@@ -123,7 +123,7 @@ Resources:
               mode: "000755"
               owner: "root"
               group: "root"
-            '/usr/local/bin/openvidu-init.sh':
+            "/usr/local/bin/openvidu-init.sh":
               content: |
                 #!/bin/bash -x
 

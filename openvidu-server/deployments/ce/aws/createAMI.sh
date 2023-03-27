@@ -4,9 +4,9 @@ set -eu -o pipefail
 CF_RELEASE=${CF_RELEASE:-false}
 AWS_KEY_NAME=${AWS_KEY_NAME:-}
 
-# if [[ $CF_RELEASE == "true" ]]; then
-#   git checkout v$OPENVIDU_VERSION
-# fi
+if [[ $CF_RELEASE == "true" ]]; then
+  git checkout v$OPENVIDU_VERSION
+fi
 
 export AWS_DEFAULT_REGION=eu-west-1
 
@@ -89,7 +89,7 @@ aws cloudformation delete-stack --stack-name openvidu-ce-${DATESTAMP}
 # Wait for the instance
 # Unfortunately, aws cli does not have a way to increase timeout
 WAIT_RETRIES=0
-WAIT_MAX_RETRIES=3
+WAIT_MAX_RETRIES=5
 until [ "${WAIT_RETRIES}" -ge "${WAIT_MAX_RETRIES}" ]; do
   aws ec2 wait image-available --image-ids ${OV_RAW_AMI_ID} && break
   WAIT_RETRIES=$((WAIT_RETRIES + 1))

@@ -4,9 +4,9 @@ set -eu -o pipefail
 AWS_KEY_NAME=${AWS_KEY_NAME:-}
 CF_RELEASE=${CF_RELEASE:-false}
 
-# if [[ $CF_RELEASE == "true" ]]; then
-#   git checkout v$OPENVIDU_PRO_VERSION
-# fi
+if [[ $CF_RELEASE == "true" ]]; then
+  git checkout v$OPENVIDU_PRO_VERSION
+fi
 
 export AWS_DEFAULT_REGION=eu-west-1
 
@@ -77,7 +77,7 @@ echo "Create AMI with ID: ${OV_RAW_AMI_ID}"
 # Wait for the instance
 # Unfortunately, aws cli does not have a way to increase timeout
 WAIT_RETRIES=0
-WAIT_MAX_RETRIES=3
+WAIT_MAX_RETRIES=5
 until [ "${WAIT_RETRIES}" -ge "${WAIT_MAX_RETRIES}" ]; do
   aws ec2 wait image-available --image-ids ${OV_RAW_AMI_ID} && break
   WAIT_RETRIES=$((WAIT_RETRIES + 1))
