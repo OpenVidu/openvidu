@@ -68,23 +68,23 @@ new_ov_installation() {
           --output "${AWS_SCRIPTS_FOLDER}/openvidu_launch_kms.sh" || fatal_error "Error when downloading the file 'openvidu_launch_kms.sh'"
      printf '\n          - openvidu_launch_kms.sh'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/master-node/beats/filebeat.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/docker-compose/beats/filebeat.yml \
           --output "${BEATS_FOLDER}/filebeat.yml" || fatal_error "Error when downloading the file 'filebeat.yml'"
      printf '\n          - filebeat.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/master-node/beats/metricbeat.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/docker-compose/beats/metricbeat.yml \
           --output "${BEATS_FOLDER}/metricbeat.yml" || fatal_error "Error when downloading the file 'metricbeat.yml'"
      printf '\n          - metricbeat.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/master-node/.env \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/docker-compose/.env \
           --output "${OPENVIDU_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
      printf '\n          - .env'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/master-node/docker-compose.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/docker-compose/docker-compose.yml \
           --output "${OPENVIDU_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/master-node/openvidu \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/enterprise/docker-compose/openvidu \
           --output "${OPENVIDU_FOLDER}/openvidu" || fatal_error "Error when downloading the file 'openvidu'"
      printf '\n          - openvidu'
 

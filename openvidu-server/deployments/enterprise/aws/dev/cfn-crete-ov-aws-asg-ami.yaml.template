@@ -81,9 +81,9 @@ Resources:
                 # Install openvidu-pro
                 cd /opt
                 if [[ "OPENVIDU_VERSION" == "master" ]]; then
-                  curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/deployments/enterprise/master-node/install_openvidu_enterprise_master_node.sh | bash
+                  curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/deployments/enterprise/docker-compose/install_openvidu_enterprise_master_node.sh | bash
                 else
-                  curl https://raw.githubusercontent.com/OpenVidu/openvidu/vOPENVIDU_VERSION/openvidu-server/deployments/enterprise/master-node/install_openvidu_enterprise_master_node.sh | bash
+                  curl https://raw.githubusercontent.com/OpenVidu/openvidu/vOPENVIDU_VERSION/openvidu-server/deployments/enterprise/docker-compose/install_openvidu_enterprise_master_node.sh | bash
                 fi
 
                 if [[ USE_MASTER_DOCKER_IMAGES == "true" ]]; then
