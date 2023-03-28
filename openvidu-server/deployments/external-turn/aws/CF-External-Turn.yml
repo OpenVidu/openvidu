@@ -28,7 +28,7 @@ Parameters:
     ConstraintDescription: Turn secret is mandatory.
 
   InstanceType:
-    Description: "Specifies the EC2 instance type for your OpenVidu instance"
+    Description: "Specifies the EC2 instance type for your TURN instance"
     Type: String
     Default: c5.xlarge
     AllowedValues:
@@ -68,7 +68,7 @@ Parameters:
     ConstraintDescription: "Must be a valid EC2 instance type"
 
   KeyName:
-    Description: "Name of an existing EC2 KeyPair to enable SSH access to the instance. It is mandatory to perform some administrative tasks of OpenVidu."
+    Description: "Name of an existing EC2 KeyPair to enable SSH access to the instance. It is mandatory to perform some administrative tasks to the TURN server."
     Type: 'AWS::EC2::KeyPair::KeyName'
     ConstraintDescription: "must be the name of an existing EC2 KeyPair"
 
@@ -322,7 +322,7 @@ Resources:
   WebServerSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: SSH, Proxy and OpenVidu WebRTC Ports
+      GroupDescription: SSH, Proxy and Turn necessaty ports
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -359,5 +359,5 @@ Resources:
 
 Outputs:
   TurnServerURI:
-    Description: Use this URL to connect OpenVidu Server
+    Description: Use this URL to connect the TURN Server
     Value: !Sub 'turns://${MyDomainName}:443?transport=tcp'
