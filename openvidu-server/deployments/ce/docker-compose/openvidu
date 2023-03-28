@@ -228,10 +228,14 @@ kurento_logs() {
   fi
 }
 
+[[ -z "${FOLLOW_OPENVIDU_LOGS}" ]] && FOLLOW_OPENVIDU_LOGS=true
+
 case $1 in
   start)
     docker-compose up -d
-    docker-compose logs -f --tail 10 openvidu-server
+    if [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]]; then
+      docker-compose logs -f --tail 10 openvidu-server
+    fi
     ;;
 
   stop)
@@ -241,7 +245,9 @@ case $1 in
   restart)
     docker-compose down
     docker-compose up -d
-    docker-compose logs -f --tail 10 openvidu-server
+    if [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]]; then
+      docker-compose logs -f --tail 10 openvidu-server
+    fi
     ;;
 
   logs)
