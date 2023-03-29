@@ -2,3 +2,5 @@ selenium==4.8.2
 webdriver-manager==3.8.5
 prettytable==3.6.0
 beautifulsoup4==4.12.0
+opencv-python-headless==4.7.0.72
+numpy==1.24.2

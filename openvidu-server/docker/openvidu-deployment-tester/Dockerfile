@@ -14,7 +14,8 @@ RUN apt-get update && \
     x11-utils \
     wget \
     python3 \
-    python3-pip
+    python3-pip \
+    ffmpeg
 
 # Install latest chrome
 RUN wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \

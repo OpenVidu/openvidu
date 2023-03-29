@@ -5,7 +5,6 @@ import tests
 
 # Define your commands here
 def install_drivers(args):
-    cli_utils.print_args(args)
     utils.install_drivers(args.chrome_version, args.gecko_version)
 
 # Define the command-line arguments
@@ -21,5 +20,9 @@ if args.command == "install-drivers":
     install_drivers(args)
 elif args.command == "basic-test":
     tests.basic_test(args)
+elif args.command == "call-test-recording":
+    tests.call_recording_test(args)
+elif args.command == "call-test":
+    tests.call_test(args)
 else:
     print("Error: No command specified")

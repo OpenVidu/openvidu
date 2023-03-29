@@ -9,12 +9,17 @@ def test_parser(subparsers, command):
     test_parser = subparsers.add_parser(command)
     test_parser.add_argument("--openvidu-url", required=True, help="OpenVidu URL to test")
     test_parser.add_argument("--openvidu-secret", required=True, help="OpenVidu secret used for OpenVidu API")
+    test_parser.add_argument("--browser", required=True, choices=["chrome", "firefox"], help="Browser to test")
+    test_parser.add_argument("--turn", required=False, default=False, action='store_true', help="Force TURN usage. Only available for Firefox")
+
+    # Basic test specific parameter
     if command == "basic-test":
         test_parser.add_argument("--openvidu-edition", required=True, choices=["ce", "pro", "enterprise"], help="OpenVidu edition to test")
-        test_parser.add_argument("--browser", required=True, choices=["chrome", "firefox"], help="Browser to test")
-        test_parser.add_argument("--turn", required=False, default=False, action='store_true', help="Force TURN usage. Only available for Firefox")
-    elif command == "recording-test":
+    if command.startswith("call-test"):
         test_parser.add_argument("--openvidu-call-url", required=True, help="OpenVidu Call URL to test")
+        test_parser.add_argument("--number-of-clients", required=False, nargs='?', help="Number of clients to test", const=4, default=4, type=int)
+        test_parser.add_argument("--openvidu-call-username", required=True, help="OpenVidu Call user to test")
+        test_parser.add_argument("--openvidu-call-password", required=True, help="OpenVidu Call password to test")
 
 def initialize_parser():
     parser = argparse.ArgumentParser()
@@ -22,13 +27,7 @@ def initialize_parser():
 
     install_drivers_parser(subparsers)
     test_parser(subparsers, "basic-test")
+    test_parser(subparsers, "call-test-recording")
+    test_parser(subparsers, "call-test")
 
     return parser
-
-def print_args(args):
-    print("Executing command: " + args.command)
-    for arg, value in vars(args).items():
-        if arg != 'command':
-            if arg == 'openvidu-secret':
-                value = '********'
-            print(f"\t{arg}: {value}")
