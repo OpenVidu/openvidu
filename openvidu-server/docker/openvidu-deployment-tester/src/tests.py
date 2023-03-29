@@ -60,7 +60,6 @@ def call_recording_test(args):
     driver.find_element(By.ID, 'stop-recording-btn').send_keys(Keys.RETURN)
     print('Recording stopped')
     time.sleep(5)
-    utils.close_all_tabs(driver, args.browser)
 
     print(f'Downloading recording from {args.openvidu_url}/openvidu/recordings/{session_name}/{session_name}.mp4')
     url = f'{args.openvidu_url}/openvidu/recordings/{session_name}/{session_name}.mp4'
@@ -83,6 +82,8 @@ def call_recording_test(args):
     print('Removing recording')
     url = f'{args.openvidu_url}/openvidu/api/recordings/stop/{session_name}'
     requests.delete(url, auth=HTTPBasicAuth('OPENVIDUAPP', args.openvidu_secret), verify=False)
+
+    utils.close_all_tabs(driver, args.browser)
 
 def call_test(args):
     print(f"Testing recording with OpenVidu Call with args: {args}")

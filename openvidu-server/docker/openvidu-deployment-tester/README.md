@@ -18,7 +18,7 @@ This test case will simply check from the dashboard (CE) or Inspector (PRO/Enter
 **1. OpenVidu CE without forcing TURN candidates to be used (Chrome)**
 
 ```bash
-docker run openvidu/openvidu-deployment-tester basic-test \
+docker run --shm-size 2G openvidu/openvidu-deployment-tester:<OPENVIDU_VERSION> basic-test \
         --openvidu-url <OPENVIDU_URL> \
         --openvidu-secret <OPENVIDU_SECRET> \
         --openvidu-edition ce \
@@ -28,7 +28,7 @@ docker run openvidu/openvidu-deployment-tester basic-test \
 **2. OpenVidu CE without forcing TURN candidates to be used (Firefox)**
 
 ```bash
-docker run openvidu/openvidu-deployment-tester basic-test \
+docker run --shm-size 2G openvidu/openvidu-deployment-tester:<OPENVIDU_VERSION> basic-test \
         --openvidu-url <OPENVIDU_URL> \
         --openvidu-secret <OPENVIDU_SECRET> \
         --openvidu-edition ce \
@@ -38,7 +38,7 @@ docker run openvidu/openvidu-deployment-tester basic-test \
 **3. OpenVidu CE forcing TURN candidates to be used (Firefox)**
 
 ```bash
-docker run openvidu/openvidu-deployment-tester basic-test \
+docker run --shm-size 2G openvidu/openvidu-deployment-tester:<OPENVIDU_VERSION> basic-test \
         --openvidu-url <OPENVIDU_URL> \
         --openvidu-secret <OPENVIDU_SECRET> \
         --openvidu-edition ce \
@@ -49,7 +49,7 @@ docker run openvidu/openvidu-deployment-tester basic-test \
 **4. OpenVidu PRO without forcing TURN candidates to be used (Chrome)**
 
 ```bash
-docker run openvidu/openvidu-deployment-tester basic-test \
+docker run --shm-size 2G openvidu/openvidu-deployment-tester:<OPENVIDU_VERSION> basic-test \
         --openvidu-url <OPENVIDU_URL> \
         --openvidu-secret <OPENVIDU_SECRET> \
         --openvidu-edition pro \
@@ -59,7 +59,7 @@ docker run openvidu/openvidu-deployment-tester basic-test \
 **5. OpenVidu PRO without forcing TURN candidates to be used (Firefox)**
 
 ```bash
-docker run openvidu/openvidu-deployment-tester basic-test \
+docker run --shm-size 2G openvidu/openvidu-deployment-tester:<OPENVIDU_VERSION> basic-test \
         --openvidu-url <OPENVIDU_URL> \
         --openvidu-secret <OPENVIDU_SECRET> \
         --openvidu-edition pro \
@@ -69,17 +69,98 @@ docker run openvidu/openvidu-deployment-tester basic-test \
 **6. OpenVidu PRO forcing TURN candidates to be used (Firefox)**
 
 ```bash
-docker run openvidu/openvidu-deployment-tester basic-test \
+docker run --shm-size 2G openvidu/openvidu-deployment-tester:<OPENVIDU_VERSION> basic-test \
         --openvidu-url <OPENVIDU_URL> \
         --openvidu-secret <OPENVIDU_SECRET> \
-        --openvidu-edition ce \
+        --openvidu-edition pro \
         --browser firefox \
         --turn
 ```
 
-### 2. Recording tests
+### 2. Session tests (with OpenVidu Call)
 
-Working on...
+To execute these tests you need these parameters to be configured in the `.env` file of OpenVidu:
+
+```
+OPENVIDU_RECORDING=true
+```
+
+**1. OpenVidu CE/PRO/ENTERPRISE with OpenVidu Call test (Chrome)**
+
+```bash
+docker run --shm-size 2G openvidu/openvidu-deployment-tester:<OPENVIDU_VERSION> call-test \
+        --openvidu-url <OPENVIDU_URL> \
+        --openvidu-secret <OPENVIDU_SECRET>\
+        --openvidu-call-url <OPENVIDU_CALL_URL> \
+        --openvidu-call-username <OPENVIDU_CALL_USERNAME> \
+        --openvidu-call-password <OPENVIDU_CALL_PASSWORD> \
+        --browser chrome
+```
+
+**2. OpenVidu CE/PRO/ENTERPRISE with OpenVidu Call test (Firefox)**
+
+```bash
+docker run --shm-size 2G openvidu/openvidu-deployment-tester:<OPENVIDU_VERSION> call-test \
+        --openvidu-url <OPENVIDU_URL> \
+        --openvidu-secret <OPENVIDU_SECRET>\
+        --openvidu-call-url <OPENVIDU_CALL_URL> \
+        --openvidu-call-username <OPENVIDU_CALL_USERNAME> \
+        --openvidu-call-password <OPENVIDU_CALL_PASSWORD> \
+        --browser firefox
+```
+
+**3. OpenVidu CE/PRO/ENTERPRISE with OpenVidu Call test forcing TURN (Firefox)**
+
+```bash
+docker run --shm-size 2G openvidu/openvidu-deployment-tester:<OPENVIDU_VERSION> call-test \
+        --openvidu-url <OPENVIDU_URL> \
+        --openvidu-secret <OPENVIDU_SECRET>\
+        --openvidu-call-url <OPENVIDU_CALL_URL> \
+        --openvidu-call-username <OPENVIDU_CALL_USERNAME> \
+        --openvidu-call-password <OPENVIDU_CALL_PASSWORD> \
+        --browser firefox \
+        --turn
+```
+
+### 3. Recording and sessions tests (with OpenVidu Call and OpenVidu Recording)
+
+**1. OpenVidu CE/PRO/ENTERPRISE with OpenVidu Call and OpenVidu Recording test (Chrome)**
+
+```bash
+docker run --shm-size 2G openvidu/openvidu-deployment-tester:<OPENVIDU_VERSION> call-test-recording \
+        --openvidu-url <OPENVIDU_URL> \
+        --openvidu-secret <OPENVIDU_SECRET>\
+        --openvidu-call-url <OPENVIDU_CALL_URL> \
+        --openvidu-call-username <OPENVIDU_CALL_USERNAME> \
+        --openvidu-call-password <OPENVIDU_CALL_PASSWORD> \
+        --browser chrome
+```
+
+**2. OpenVidu CE/PRO/ENTERPRISE with OpenVidu Call and OpenVidu Recording test (Firefox)**
+
+```bash
+docker run --shm-size 2G openvidu/openvidu-deployment-tester:<OPENVIDU_VERSION> call-test-recording \
+        --openvidu-url <OPENVIDU_URL> \
+        --openvidu-secret <OPENVIDU_SECRET>\
+        --openvidu-call-url <OPENVIDU_CALL_URL> \
+        --openvidu-call-username <OPENVIDU_CALL_USERNAME> \
+        --openvidu-call-password <OPENVIDU_CALL_PASSWORD> \
+        --browser firefox
+```
+
+**3. OpenVidu CE/PRO/ENTERPRISE with OpenVidu Call and OpenVidu Recording test forcing TURN (Firefox)**
+
+```bash
+docker run --shm-size 2G openvidu/openvidu-deployment-tester:<OPENVIDU_VERSION> call-test-recording \
+        --openvidu-url <OPENVIDU_URL> \
+        --openvidu-secret <OPENVIDU_SECRET>\
+        --openvidu-call-url <OPENVIDU_CALL_URL> \
+        --openvidu-call-username <OPENVIDU_CALL_USERNAME> \
+        --openvidu-call-password <OPENVIDU_CALL_PASSWORD> \
+        --turn \
+        --browser firefox
+```
+
 
 ## Development and Build instructions
 
