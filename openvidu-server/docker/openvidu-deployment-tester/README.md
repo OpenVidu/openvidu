@@ -4,6 +4,15 @@ This is a simple python automation script to test the deployment of any kind of 
 
 The script uses selenium to control a browser and execute the tests. As this automation tool is packaged in a docker container, it is not necessary to install any other dependency in the machine where the script is going to be executed.
 
+- [Requirements](#requirements)
+- [Test cases](#test-cases)
+  - [1. Basic Test](#1-basic-test)
+  - [2. Session tests (with OpenVidu Call)](#2-session-tests-with-openvidu-call)
+  - [3. Recording and sessions tests (with OpenVidu Call and OpenVidu Recording)](#3-recording-and-sessions-tests-with-openvidu-call-and-openvidu-recording)
+- [Development and Build instructions](#development-and-build-instructions)
+  - [Requirements](#requirements-1)
+  - [Instructions](#instructions)
+
 ## Requirements
 - A working OpenVidu Server deployment (CE/PRO/Enterprise)
 - Docker installed in the machine where the script is going to be executed.
