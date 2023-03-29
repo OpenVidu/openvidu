@@ -79,11 +79,6 @@ docker run --shm-size 2G openvidu/openvidu-deployment-tester:<OPENVIDU_VERSION> 
 
 ### 2. Session tests (with OpenVidu Call)
 
-To execute these tests you need these parameters to be configured in the `.env` file of OpenVidu:
-
-```
-OPENVIDU_RECORDING=true
-```
 
 **1. OpenVidu CE/PRO/ENTERPRISE with OpenVidu Call test (Chrome)**
 
@@ -123,6 +118,12 @@ docker run --shm-size 2G openvidu/openvidu-deployment-tester:<OPENVIDU_VERSION> 
 ```
 
 ### 3. Recording and sessions tests (with OpenVidu Call and OpenVidu Recording)
+
+To execute these tests you need these parameters to be configured in the `.env` file of OpenVidu:
+
+```
+OPENVIDU_RECORDING=true
+```
 
 **1. OpenVidu CE/PRO/ENTERPRISE with OpenVidu Call and OpenVidu Recording test (Chrome)**
 
