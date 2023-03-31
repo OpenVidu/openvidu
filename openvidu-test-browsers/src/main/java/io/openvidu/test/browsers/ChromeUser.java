@@ -73,6 +73,7 @@ public class ChromeUser extends BrowserUser {
 		}
 
 		options.addArguments("--disable-infobars");
+		options.addArguments("--remote-allow-origins=*");
 		options.setExperimentalOption("excludeSwitches", new String[] { "enable-automation" });
 
 		Map<String, Object> prefs = new HashMap<String, Object>();
