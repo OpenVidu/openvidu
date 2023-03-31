@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -21,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -59,6 +61,7 @@ import io.openvidu.java.client.Session;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.RecordingUtils;
 import io.openvidu.test.browsers.utils.Unzipper;
+import io.openvidu.test.browsers.utils.layout.CustomLayoutHandler;
 import io.openvidu.test.browsers.utils.webhook.CustomWebhook;
 import io.openvidu.test.e2e.utils.TestUtils;
 
@@ -2846,7 +2849,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getWaiter().until(ExpectedConditions.attributeContains(By.id("api-response-text-area"), "value",
 					"Number: 1. Changes: false"));
 
-			checkRtmpRecordingIsFine(30);
+			checkRtmpRecordingIsFine(30, RecordingUtils::checkVideoAverageRgbGreen);
 
 			user.getDriver().findElement(By.id("stop-broadcast-btn")).click();
 			user.getWaiter().until(
@@ -2962,7 +2965,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					HttpURLConnection.HTTP_CONFLICT);
 
 			user.getEventManager().waitUntilEventReaches("broadcastStarted", 1);
-			checkRtmpRecordingIsFine(30);
+			checkRtmpRecordingIsFine(30, RecordingUtils::checkVideoAverageRgbGreen);
 
 			/** Stop broadcast **/
 			// 400
@@ -2988,24 +2991,105 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 	}
 
-	private void checkRtmpRecordingIsFine(long secondsTimeout) throws InterruptedException {
+	@Test
+	@DisplayName("Custom layout broadcast Test")
+	void customLayoutBroadcastTest() throws Exception {
+
+		log.info("Custom layout broadcast Test");
+
+		try {
+			String BROADCAST_IP = TestUtils.startRtmpServer();
+
+			Map<String, Object> config = Map.of("OPENVIDU_PRO_SPEECH_TO_TEXT", "disabled", "OPENVIDU_RECORDING", true);
+			restartOpenViduServer(config);
+
+			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+
+			user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+			user.getDriver().findElement(By.id("session-api-btn-0")).click();
+			Thread.sleep(750);
+			user.getDriver().findElement(By.id("broadcast-properties-btn")).click();
+			user.getDriver().findElement(By.id("recording-layout-select")).click();
+			Thread.sleep(500);
+			user.getDriver().findElement(By.id("option-CUSTOM")).click();
+			Thread.sleep(500);
+			WebElement customLayoutInput = user.getDriver().findElement(By.id("custom-layout-input"));
+			customLayoutInput.clear();
+			customLayoutInput.sendKeys("layout1");
+			WebElement resolutionInput = user.getDriver().findElement(By.id("recording-resolution-field"));
+			resolutionInput.clear();
+			resolutionInput.sendKeys("1920x1080");
+			WebElement framerateInput = user.getDriver().findElement(By.id("recording-framerate-field"));
+			framerateInput.clear();
+			framerateInput.sendKeys("35");
+
+			WebElement broadcastUrlField = user.getDriver().findElement(By.id("broadcasturl-id-field"));
+			broadcastUrlField.clear();
+			broadcastUrlField.sendKeys("rtmp://" + BROADCAST_IP + "/live");
+			user.getDriver().findElement(By.id("start-broadcast-btn")).click();
+			user.getWaiter().until(
+					ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Broadcast started"));
+			user.getEventManager().waitUntilEventReaches("broadcastStarted", 1);
+			checkRtmpRecordingIsFine(30, RecordingUtils::checkVideoAverageRgbRed);
+			user.getDriver().findElement(By.id("stop-broadcast-btn")).click();
+			user.getWaiter().until(
+					ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Broadcast stopped"));
+			user.getEventManager().waitUntilEventReaches("broadcastStopped", 1);
+
+			// Custom layout from external URL
+			CountDownLatch initLatch = new CountDownLatch(1);
+			CustomLayoutHandler.main(new String[0], initLatch);
+			try {
+
+				if (!initLatch.await(30, TimeUnit.SECONDS)) {
+					Assertions.fail("Timeout waiting for webhook springboot app to start");
+					CustomLayoutHandler.shutDown();
+					return;
+				}
+
+				customLayoutInput.clear();
+				customLayoutInput.sendKeys(EXTERNAL_CUSTOM_LAYOUT_URL + "?" + EXTERNAL_CUSTOM_LAYOUT_PARAMS);
+				user.getDriver().findElement(By.id("start-broadcast-btn")).click();
+				user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+						"Broadcast started"));
+				user.getEventManager().waitUntilEventReaches("broadcastStarted", 2);
+				checkRtmpRecordingIsFine(30, RecordingUtils::checkVideoAverageRgbRed);
+
+			} finally {
+				CustomLayoutHandler.shutDown();
+			}
+
+		} finally {
+			TestUtils.stopRtmpServer();
+		}
+	}
+
+	private void checkRtmpRecordingIsFine(long secondsTimeout, Function<Map<String, Long>, Boolean> colorCheckFunction)
+			throws InterruptedException {
 		final String broadcastRecordingPath = "/opt/openvidu/recordings";
 		final String cleanBroadcastPath = "rm -rf " + broadcastRecordingPath + "/tmp";
 		try {
 			final long startTime = System.currentTimeMillis();
 			while (false || ((System.currentTimeMillis() - startTime) < (secondsTimeout * 1000))) {
 				commandLine.executeCommand(cleanBroadcastPath, 10);
-				commandLine.executeCommand("docker cp broadcast-nginx:/tmp " + broadcastRecordingPath, 30);
-				commandLine.executeCommand("ffmpeg -i " + broadcastRecordingPath + "/tmp/*.flv -vframes 1 "
-						+ broadcastRecordingPath + "/tmp/rtmp-screenshot.jpg", 30);
+				commandLine.executeCommand("docker cp broadcast-nginx:/tmp " + broadcastRecordingPath, 3);
+				// Analyze most recent file (there can be more than one in the path)
+				File[] files = new File(broadcastRecordingPath + "/tmp").listFiles();
+				Arrays.sort(files, Comparator.comparingLong(File::lastModified).reversed());
+				commandLine.executeCommand("ffmpeg -i " + files[0].getAbsolutePath() + " -vframes 1 "
+						+ broadcastRecordingPath + "/tmp/rtmp-screenshot.jpg", 3);
 				File screenshot = new File(broadcastRecordingPath + "/tmp/rtmp-screenshot.jpg");
 				if (screenshot.exists() && screenshot.isFile() && screenshot.length() > 0 && screenshot.canRead()) {
-					Assertions.assertTrue(
-							this.recordingUtils.thumbnailIsFine(screenshot, RecordingUtils::checkVideoAverageRgbGreen),
+					Assertions.assertTrue(this.recordingUtils.thumbnailIsFine(screenshot, colorCheckFunction),
 							"RTMP screenshot " + screenshot.getAbsolutePath() + " is not fine");
 					break;
 				}
 				log.info("RTMP screenshot could not be generated yet. Trying again");
+				commandLine.executeCommand(cleanBroadcastPath, 10);
 				Thread.sleep(1000);
 			}
 			if ((System.currentTimeMillis() - startTime) >= (secondsTimeout * 1000)) {

@@ -2002,9 +2002,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Thread.sleep(500);
 		user.getDriver().findElement(By.id("option-CUSTOM")).click();
 		Thread.sleep(500);
-		WebElement tokeInput = user.getDriver().findElement(By.id("custom-layout-input"));
-		tokeInput.clear();
-		tokeInput.sendKeys("layout1");
+		WebElement customLayoutInput = user.getDriver().findElement(By.id("custom-layout-input"));
+		customLayoutInput.clear();
+		customLayoutInput.sendKeys("layout1");
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
 
@@ -2057,9 +2057,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			user.getDriver().findElement(By.id("session-settings-btn-0")).click();
 			Thread.sleep(1000);
-			tokeInput = user.getDriver().findElement(By.id("custom-layout-input"));
-			tokeInput.clear();
-			tokeInput.sendKeys(EXTERNAL_CUSTOM_LAYOUT_URL + "?" + EXTERNAL_CUSTOM_LAYOUT_PARAMS);
+			customLayoutInput = user.getDriver().findElement(By.id("custom-layout-input"));
+			customLayoutInput.clear();
+			customLayoutInput.sendKeys(EXTERNAL_CUSTOM_LAYOUT_URL + "?" + EXTERNAL_CUSTOM_LAYOUT_PARAMS);
 			user.getDriver().findElement(By.id("save-btn")).click();
 			Thread.sleep(1000);
 
