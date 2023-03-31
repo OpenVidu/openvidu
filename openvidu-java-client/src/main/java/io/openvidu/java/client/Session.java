@@ -620,7 +620,7 @@ public class Session {
 	 * To get the list of active connections with their current actual value, you
 	 * must call first {@link io.openvidu.java.client.Session#fetch()
 	 * Session.fetch()} or {@link io.openvidu.java.client.OpenVidu#fetch()
-	 * OpenVidu.fetch()} OpenVidu.fetch()}.
+	 * OpenVidu.fetch()}.
 	 */
 	public List<Connection> getActiveConnections() {
 		return this.connections.values().stream().filter(con -> "active".equals(con.getStatus()))
