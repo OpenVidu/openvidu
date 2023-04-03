@@ -941,12 +941,21 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		try {
 			new VersionComparator().checkVersionCompatibility(clientVersion, serverVersion);
 		} catch (VersionMismatchException e) {
+
+			String outdatedModule = null;
+			if (participant.isRecorderParticipant())
+				outdatedModule = "COMPOSED recording layout";
+			else if (participant.isBroadcastParticipant())
+				outdatedModule = "broadcasting layout";
+			else if (participant.isSttParticipant())
+				outdatedModule = "Speech To Text module";
+
 			if (e.isIncompatible()) {
 
-				if (participant.isRecorderParticipant()) {
+				if (participant.isRecorderOrSttOrBroadcastParticipant()) {
 					log.error(
-							"The COMPOSED recording layout is using an incompatible version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). This may cause the system to malfunction",
-							clientVersion, serverVersion);
+							"The {} is using an incompatible version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). This may cause the system to malfunction",
+							outdatedModule, clientVersion, serverVersion);
 				} else {
 					log.error(
 							"Participant {}{}{} has an incompatible version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). This may cause the system to malfunction",
@@ -962,12 +971,13 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			} else {
 				DefaultArtifactVersion v = new DefaultArtifactVersion(serverVersion);
 
-				if (participant.isRecorderParticipant()) {
+				if (participant.isRecorderOrSttOrBroadcastParticipant()) {
+
 					log.warn(
-							"The COMPOSED recording layout has an older version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). These versions are still compatible with each other, "
-									+ "but client SDK must be updated as soon as possible to {}.x. This recording layout using openvidu-browser {} will become incompatible with the next release of openvidu-server",
-							clientVersion, serverVersion, (v.getMajorVersion() + "." + v.getMinorVersion()),
-							clientVersion);
+							"The {} has an older version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). These versions are still compatible with each other, "
+									+ "but client SDK must be updated as soon as possible to {}.x. This {} using openvidu-browser {} will become incompatible with the next release of openvidu-server",
+							outdatedModule, clientVersion, serverVersion,
+							(v.getMajorVersion() + "." + v.getMinorVersion()), outdatedModule, clientVersion);
 				} else {
 					log.warn(
 							"Participant {} with IP {} and platform {} has an older version of openvidu-browser SDK ({}) for this OpenVidu deployment ({}). "
