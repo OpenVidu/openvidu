@@ -83,7 +83,7 @@ public class OpenViduTestE2e {
 	protected static String OPENVIDU_PRO_LICENSE_API = "not_valid";
 	protected static String OPENVIDU_PRO_SPEECH_TO_TEXT = "vosk";
 	protected static String DOCKERHUB_PRIVATE_REGISTRY_PASSWORD = "not_valid";
-	protected static String EXTERNAL_CUSTOM_LAYOUT_PARAMS = "sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET";
+	protected static String EXTERNAL_CUSTOM_LAYOUT_PARAMS = "sessionId=CUSTOM_LAYOUT_SESSION&secret=MY_SECRET";
 
 	protected static String AWS_REGION = "fakeRegion";
 	protected static String AWS_ACCESS_KEY_ID = "fakeKey";
@@ -256,7 +256,7 @@ public class OpenViduTestE2e {
 				}
 			}
 		}
-		log.info("Using URL {} to connect to external custom layout", EXTERNAL_CUSTOM_LAYOUT_PARAMS);
+		log.info("Using query params {} when connecting to external custom layout", EXTERNAL_CUSTOM_LAYOUT_PARAMS);
 
 		String openviduUrl = System.getProperty("OPENVIDU_URL");
 		if (openviduUrl != null) {

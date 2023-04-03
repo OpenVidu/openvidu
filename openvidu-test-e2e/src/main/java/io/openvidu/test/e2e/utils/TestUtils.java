@@ -29,7 +29,7 @@ public class TestUtils {
 		File file = writeRtmpServerConfigInFile();
 		String dockerRunCommand = "docker run -d --name broadcast-nginx -p 1935:1935 -v " + file.getAbsolutePath()
 				+ ":/etc/nginx/nginx.conf tiangolo/nginx-rtmp";
-		commandLine.executeCommand(dockerRunCommand, 10);
+		commandLine.executeCommand(dockerRunCommand, 30);
 		return waitForContainerIpAddress("broadcast-nginx", 10);
 	}
 
