@@ -500,7 +500,7 @@ describe('Testing API Directives', () => {
 
 		// Go to first tab
 		const tabs = await browser.getAllWindowHandles();
-		browser.switchTo().window(tabs[0]);
+		await browser.switchTo().window(tabs[0]);
 
 		// Checking if mute button is not displayed in participant item
 		await utils.waitForElement('#remote-participant-item');
@@ -1531,6 +1531,187 @@ describe('Testing CHAT features', () => {
 	});
 });
 
+
+describe('Testing video is playing', () => {
+	let browser: WebDriver;
+	let utils: OpenViduComponentsPO;
+
+	async function createChromeBrowser(): Promise<WebDriver> {
+		return await new Builder()
+			.forBrowser(WebComponentConfig.browserName)
+			.withCapabilities(WebComponentConfig.browserCapabilities)
+			.setChromeOptions(WebComponentConfig.browserOptions)
+			.usingServer(WebComponentConfig.seleniumAddress)
+			.build();
+	}
+
+	beforeEach(async () => {
+		browser = await createChromeBrowser();
+		utils = new OpenViduComponentsPO(browser);
+	});
+
+	afterEach(async () => {
+		await browser.quit();
+	});
+
+	it('should play the participant video with only audio', async () => {
+		const sessionName = 'audioOnlyE2E';
+		const fixedUrl = `${url}&sessionName=${sessionName}`;
+		await browser.get(fixedUrl);
+
+		await utils.checkPrejoinIsPresent();
+		await utils.clickOn('#join-button');
+
+		// Starting new browser for adding the second participant
+		const newTabScript = `window.open("${fixedUrl}")`;
+		await browser.executeScript(newTabScript);
+		const tabs = await browser.getAllWindowHandles();
+		await browser.switchTo().window(tabs[1]);
+
+		await utils.checkPrejoinIsPresent();
+		await utils.clickOn('#camera-button');
+		await utils.clickOn('#join-button');
+
+		// Go to first tab
+		await browser.switchTo().window(tabs[0]);
+
+		// Wait until NO_STREAM_PLAYING_EVENT exception timeout is reached
+		await browser.sleep(6000);
+
+		const exceptionQuantity = await utils.getNumberOfElements('#NO_STREAM_PLAYING_EVENT');
+		expect(exceptionQuantity).equals(0);
+	});
+
+	it('should play the participant video with only video', async () => {
+		const sessionName = 'videoOnlyE2E';
+		const fixedUrl = `${url}&sessionName=${sessionName}`;
+		await browser.get(fixedUrl);
+
+		await utils.checkPrejoinIsPresent();
+		await utils.clickOn('#join-button');
+
+		// Starting new browser for adding the second participant
+		const newTabScript = `window.open("${fixedUrl}")`;
+		await browser.executeScript(newTabScript);
+		const tabs = await browser.getAllWindowHandles();
+		await browser.switchTo().window(tabs[1]);
+
+		await utils.checkPrejoinIsPresent();
+		await utils.clickOn('#microphone-button');
+		await utils.clickOn('#join-button');
+
+		// Go to first tab
+		await browser.switchTo().window(tabs[0]);
+
+		// Wait until NO_STREAM_PLAYING_EVENT exception timeout is reached
+		await browser.sleep(6000);
+
+		const exceptionQuantity = await utils.getNumberOfElements('#NO_STREAM_PLAYING_EVENT');
+		expect(exceptionQuantity).equals(0);
+	});
+});
+
+describe('Testing WITHOUT MEDIA DEVICES permissions', () => {
+	let browser: WebDriver;
+	let utils: OpenViduComponentsPO;
+	async function createChromeBrowser(): Promise<WebDriver> {
+		return await new Builder()
+			.forBrowser(WebComponentConfig.browserName)
+			.withCapabilities(WebComponentConfig.browserCapabilities)
+			.setChromeOptions(getBrowserOptionsWithoutDevices())
+			.usingServer(WebComponentConfig.seleniumAddress)
+			.build();
+	}
+
+	beforeEach(async () => {
+		browser = await createChromeBrowser();
+		utils = new OpenViduComponentsPO(browser);
+	});
+
+	afterEach(async () => {
+		await browser.quit();
+	});
+
+	it('should be able to ACCESS to PREJOIN page', async () => {
+		await browser.get(`${url}`);
+
+		await utils.checkPrejoinIsPresent();
+
+		let button = await utils.waitForElement('#camera-button');
+		expect(await button.isEnabled()).to.be.false;
+
+		button = await utils.waitForElement('#microphone-button');
+		expect(await button.isEnabled()).to.be.false;
+	});
+
+	it('should be able to ACCESS to ROOM page', async () => {
+		await browser.get(`${url}`);
+
+		await utils.checkPrejoinIsPresent();
+
+		await utils.clickOn('#join-button');
+
+		await utils.checkSessionIsPresent();
+
+		await utils.checkToolbarIsPresent();
+
+		let button = await utils.waitForElement('#camera-btn');
+		expect(await button.isEnabled()).to.be.false;
+
+		button = await utils.waitForElement('#mic-btn');
+		expect(await button.isEnabled()).to.be.false;
+	});
+
+	it('should be able to ACCESS to ROOM page without prejoin', async () => {
+		await browser.get(`${url}&prejoin=false`);
+
+		await utils.checkSessionIsPresent();
+
+		await utils.checkToolbarIsPresent();
+
+		let button = await utils.waitForElement('#camera-btn');
+		expect(await button.isEnabled()).to.be.false;
+
+		button = await utils.waitForElement('#mic-btn');
+		expect(await button.isEnabled()).to.be.false;
+	});
+
+	it('should the settings buttons be disabled', async () => {
+		await browser.get(`${url}&prejoin=false`);
+
+		await utils.checkToolbarIsPresent();
+
+		// Open more options menu
+		await utils.clickOn('#more-options-btn');
+
+		await browser.sleep(500);
+
+		// Checking if fullscreen button is not present
+		await utils.waitForElement('.mat-menu-content');
+		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+
+		await utils.clickOn('#toolbar-settings-btn');
+
+		await browser.sleep(500);
+
+		await utils.waitForElement('.settings-container');
+		expect(await utils.isPresent('.settings-container')).to.be.true;
+
+		await utils.clickOn('#video-opt');
+		expect(await utils.isPresent('ov-video-devices-select')).to.be.true;
+
+		let button = await utils.waitForElement('#camera-button');
+		expect(await button.isEnabled()).to.be.false;
+
+		await utils.clickOn('#audio-opt');
+		expect(await utils.isPresent('ov-audio-devices-select')).to.be.true;
+
+		button = await utils.waitForElement('#microphone-button');
+		expect(await button.isEnabled()).to.be.false;
+
+	});
+});
+
 describe('Testing PRO features with OpenVidu CE', () => {
 	let browser: WebDriver;
 	let utils: OpenViduComponentsPO;
@@ -1813,104 +1994,3 @@ describe('Testing PRO features with OpenVidu CE', () => {
 
 // 	});
 // });
-
-describe('Testing WITHOUT MEDIA DEVICES permissions', () => {
-	let browser: WebDriver;
-	let utils: OpenViduComponentsPO;
-	async function createChromeBrowser(): Promise<WebDriver> {
-		return await new Builder()
-			.forBrowser(WebComponentConfig.browserName)
-			.withCapabilities(WebComponentConfig.browserCapabilities)
-			.setChromeOptions(getBrowserOptionsWithoutDevices())
-			.usingServer(WebComponentConfig.seleniumAddress)
-			.build();
-	}
-
-	beforeEach(async () => {
-		browser = await createChromeBrowser();
-		utils = new OpenViduComponentsPO(browser);
-	});
-
-	afterEach(async () => {
-		await browser.quit();
-	});
-
-	it('should be able to ACCESS to PREJOIN page', async () => {
-		await browser.get(`${url}`);
-
-		await utils.checkPrejoinIsPresent();
-
-		let button = await utils.waitForElement('#camera-button');
-		expect(await button.isEnabled()).to.be.false;
-
-		button = await utils.waitForElement('#microphone-button');
-		expect(await button.isEnabled()).to.be.false;
-	});
-
-	it('should be able to ACCESS to ROOM page', async () => {
-		await browser.get(`${url}`);
-
-		await utils.checkPrejoinIsPresent();
-
-		await utils.clickOn('#join-button');
-
-		await utils.checkSessionIsPresent();
-
-		await utils.checkToolbarIsPresent();
-
-		let button = await utils.waitForElement('#camera-btn');
-		expect(await button.isEnabled()).to.be.false;
-
-		button = await utils.waitForElement('#mic-btn');
-		expect(await button.isEnabled()).to.be.false;
-	});
-
-	it('should be able to ACCESS to ROOM page without prejoin', async () => {
-		await browser.get(`${url}&prejoin=false`);
-
-		await utils.checkSessionIsPresent();
-
-		await utils.checkToolbarIsPresent();
-
-		let button = await utils.waitForElement('#camera-btn');
-		expect(await button.isEnabled()).to.be.false;
-
-		button = await utils.waitForElement('#mic-btn');
-		expect(await button.isEnabled()).to.be.false;
-	});
-
-	it('should the settings buttons be disabled', async () => {
-		await browser.get(`${url}&prejoin=false`);
-
-		await utils.checkToolbarIsPresent();
-
-		// Open more options menu
-		await utils.clickOn('#more-options-btn');
-
-		await browser.sleep(500);
-
-		// Checking if fullscreen button is not present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
-
-		await utils.clickOn('#toolbar-settings-btn');
-
-		await browser.sleep(500);
-
-		await utils.waitForElement('.settings-container');
-		expect(await utils.isPresent('.settings-container')).to.be.true;
-
-		await utils.clickOn('#video-opt');
-		expect(await utils.isPresent('ov-video-devices-select')).to.be.true;
-
-		let button = await utils.waitForElement('#camera-button');
-		expect(await button.isEnabled()).to.be.false;
-
-		await utils.clickOn('#audio-opt');
-		expect(await utils.isPresent('ov-audio-devices-select')).to.be.true;
-
-		button = await utils.waitForElement('#microphone-button');
-		expect(await button.isEnabled()).to.be.false;
-
-	});
-});

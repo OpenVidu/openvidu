@@ -170,6 +170,8 @@ $(document).ready(() => {
 			var user = JSON.parse(e.target.connection.data).clientData;
 			appendElement(user + '-sessionDisconnected');
 		});
+
+		session.on('exception', (e) => appendElement(e.name));
 	});
 
 	webComponent.addEventListener('onParticipantCreated', (event) => {
