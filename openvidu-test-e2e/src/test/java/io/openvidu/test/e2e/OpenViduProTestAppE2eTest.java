@@ -3003,9 +3003,13 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Map<String, Object> config = Map.of("OPENVIDU_PRO_SPEECH_TO_TEXT", "disabled", "OPENVIDU_RECORDING", true,
 					"OPENVIDU_RECORDING_CUSTOM_LAYOUT", "/opt/openvidu/test-layouts");
 			restartOpenViduServer(config);
+			
+			final String SESSION_NAME = "CUSTOM_LAYOUT_SESSION";
 
 			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.id("session-name-input-0")).clear();
+			user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(SESSION_NAME);
 
 			user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
 			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
