@@ -1481,7 +1481,7 @@ export class Stream {
                     this.mediaStream.getAudioTracks()[0].enabled = enabled;
                 }
                 if (!!this.mediaStream.getVideoTracks()[0]) {
-                    const enabled = reconnect ? this.videoActive : !!(this.streamManager as Subscriber).properties.subscribeToVideo;
+                    const enabled = reconnect ? this.videoActive : !!this.videoActive && !!(this.streamManager as Subscriber).properties.subscribeToVideo;
                     this.mediaStream.getVideoTracks()[0].enabled = enabled;
                 }
             }
