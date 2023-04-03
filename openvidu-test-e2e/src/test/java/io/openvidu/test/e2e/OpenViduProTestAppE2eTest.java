@@ -3000,7 +3000,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		try {
 			String BROADCAST_IP = TestUtils.startRtmpServer();
 
-			Map<String, Object> config = Map.of("OPENVIDU_PRO_SPEECH_TO_TEXT", "disabled", "OPENVIDU_RECORDING", true);
+			Map<String, Object> config = Map.of("OPENVIDU_PRO_SPEECH_TO_TEXT", "disabled", "OPENVIDU_RECORDING", true,
+					"OPENVIDU_RECORDING_CUSTOM_LAYOUT", "/opt/openvidu/test-layouts");
 			restartOpenViduServer(config);
 
 			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
