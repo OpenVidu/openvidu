@@ -128,7 +128,7 @@ services:
             - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
             - /:/hostfs:ro
         entrypoint: >
-            /bin/bash -c '$$(if [[ $${OPENVIDU_PRO_ELASTICSEARCH_HOST} =~ ^(https?://)?([^:/]+)(:([0-9]+))?(/.*)?$$ ]]; then
+            /bin/bash -c 'if [[ $${OPENVIDU_PRO_ELASTICSEARCH_HOST} =~ ^(https?://)?([^:/]+)(:([0-9]+))?(/.*)?$$ ]]; then
                 ES_PROTO=$${BASH_REMATCH[1]}
                 ES_HOST=$${BASH_REMATCH[2]}
                 ES_PORT=$${BASH_REMATCH[4]}
@@ -141,8 +141,8 @@ services:
                 export OPENVIDU_PRO_ELASTICSEARCH_HOST=$${ES_PROTO}$${ES_HOST}:$${ES_PORT}$${ES_PATH}
             else
                 exit 1
-            fi)
-            /bin/bash -c "$$@"'
+            fi;
+            exec /bin/bash -c "$$@"'
         command: >
             /bin/bash -c "metricbeat -e -strict.perms=false -e -system.hostfs=/hostfs
             `if [ ! -z $ELASTICSEARCH_USERNAME ]; then echo '-E output.elasticsearch.username=$ELASTICSEARCH_USERNAME'; fi`
@@ -165,7 +165,7 @@ services:
             - /var/lib/docker:/var/lib/docker:ro
             - /var/run/docker.sock:/var/run/docker.sock
         entrypoint: >
-            /bin/bash -c '$$(if [[ $${OPENVIDU_PRO_ELASTICSEARCH_HOST} =~ ^(https?://)?([^:/]+)(:([0-9]+))?(/.*)?$$ ]]; then
+            /bin/bash -c 'if [[ $${OPENVIDU_PRO_ELASTICSEARCH_HOST} =~ ^(https?://)?([^:/]+)(:([0-9]+))?(/.*)?$$ ]]; then
                 ES_PROTO=$${BASH_REMATCH[1]}
                 ES_HOST=$${BASH_REMATCH[2]}
                 ES_PORT=$${BASH_REMATCH[4]}
@@ -178,8 +178,8 @@ services:
                 export OPENVIDU_PRO_ELASTICSEARCH_HOST=$${ES_PROTO}$${ES_HOST}:$${ES_PORT}$${ES_PATH}
             else
                 exit 1
-            fi)
-            /bin/bash -c "$$@"'
+            fi;
+            exec /bin/bash -c "$$@"'
         command: >
             /bin/bash -c "filebeat -e -strict.perms=false
             `if [ ! -z $ELASTICSEARCH_USERNAME ]; then echo '-E output.elasticsearch.username=$ELASTICSEARCH_USERNAME'; fi`
