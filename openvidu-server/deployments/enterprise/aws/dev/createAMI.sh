@@ -38,7 +38,7 @@ else
 fi
 sed -i "s/AWS_KEY_NAME/${AWS_KEY_NAME}/g" cfn-crete-ov-aws-asg-ami.yaml
 sed -i "s/USE_MASTER_DOCKER_IMAGES/${USE_MASTER_DOCKER_IMAGES}/g" cfn-crete-ov-aws-asg-ami.yaml
-sed -i "s/AWS_DOCKER_TAG/${AWS_DOCKER_TAG}/g" cfn-crete-ov-aws-asg-ami.yaml
+sed -i "s/AWS_CLI_DOCKER_TAG/${AWS_CLI_DOCKER_TAG}/g" cfn-crete-ov-aws-asg-ami.yaml
 sed -i "s/OPENVIDU_RECORDING_DOCKER_TAG/${OPENVIDU_RECORDING_DOCKER_TAG}/g" cfn-crete-ov-aws-asg-ami.yaml
 sed -i "s/OPENVIDU_VERSION/${OPENVIDU_PRO_VERSION}/g" cfn-crete-ov-aws-asg-ami.yaml
 sed -i "s/AMIEUWEST1/${AMIEUWEST1}/g" cfn-crete-ov-aws-asg-ami.yaml
@@ -100,7 +100,6 @@ fi
 cd ..
 sed "s/OV_MASTER_REPLICATION_AMI_ID/${OV_RAW_AMI_ID}/" CF-OpenVidu-Enterprise.yaml.template >CF-OpenVidu-Enterprise-dev-${OPENVIDU_PRO_VERSION}.yaml
 sed -i "s/KMS_AMI_ID/${KMS_AMI_ID}/g" CF-OpenVidu-Enterprise-dev-${OPENVIDU_PRO_VERSION}.yaml
-sed -i "s/AWS_DOCKER_TAG/${AWS_DOCKER_TAG}/g" CF-OpenVidu-Enterprise-dev-${OPENVIDU_PRO_VERSION}.yaml
 # Update CF template
 aws s3 cp CF-OpenVidu-Enterprise-dev-${OPENVIDU_PRO_VERSION}.yaml s3://aws.openvidu.io/CF-OpenVidu-Enterprise-dev-${OPENVIDU_PRO_VERSION}.yaml --acl public-read
 

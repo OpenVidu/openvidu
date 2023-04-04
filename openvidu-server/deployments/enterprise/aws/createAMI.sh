@@ -115,7 +115,6 @@ fi
 # Updating the template
 sed "s/OV_MASTER_REPLICATION_AMI_ID/${OV_RAW_AMI_ID}/" CF-OpenVidu-Enterprise.yaml.template >CF-OpenVidu-Enterprise-${OPENVIDU_PRO_VERSION}.yaml
 sed -i "s/KMS_AMI_ID/${KMS_AMI_ID}/g" CF-OpenVidu-Enterprise-${OPENVIDU_PRO_VERSION}.yaml
-sed -i "s/AWS_CLI_DOCKER_TAG/${AWS_CLI_DOCKER_TAG}/g" CF-OpenVidu-Enterprise-${OPENVIDU_PRO_VERSION}.yaml
 
 # Update CF template
 if [[ ${UPDATE_S3_FILES} == "true" ]]; then

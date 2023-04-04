@@ -610,7 +610,7 @@ Resources:
                 sed -i "s/#AWS_SUBNET_ID=/AWS_SUBNET_ID=${OpenViduSubnet}/" $WORKINGDIR/.env
                 sed -i "s/#AWS_STACK_ID=/AWS_STACK_ID=$(echo ${AWS::StackId} | sed 's#/#\\/#g')/" $WORKINGDIR/.env
                 sed -i "s/#AWS_STACK_NAME=/AWS_STACK_NAME=${AWS::StackName}/" $WORKINGDIR/.env
-                sed -i "s/#AWS_CLI_DOCKER_TAG=/AWS_CLI_DOCKER_TAG=AWS_CLI_DOCKER_TAG/" $WORKINGDIR/.env
+                sed -i "s/#AWS_CLI_DOCKER_TAG=/AWS_CLI_DOCKER_TAG=_AWS_CLI_DOCKER_TAG_/" $WORKINGDIR/.env
                 sed -i "s/#AWS_VOLUME_SIZE=/AWS_VOLUME_SIZE=50/" $WORKINGDIR/.env
                 sed -i "s/#OPENVIDU_PRO_AWS_REGION=/OPENVIDU_PRO_AWS_REGION=${AWS::Region}/" $WORKINGDIR/.env
 
@@ -657,7 +657,7 @@ Resources:
             '/usr/local/bin/getSecurityGroupKms.sh':
               content: !Sub |
                 #!/bin/bash -x
-                docker run --rm amazon/aws-cli:AWS_CLI_DOCKER_TAG ec2 describe-security-groups \
+                docker run --rm amazon/aws-cli:_AWS_CLI_DOCKER_TAG_ ec2 describe-security-groups \
                                 --region ${AWS::Region} \
                                 --output text \
                                 --filters "Name=tag:aws:cloudformation:logical-id,Values=KMSSecurityGroup" \

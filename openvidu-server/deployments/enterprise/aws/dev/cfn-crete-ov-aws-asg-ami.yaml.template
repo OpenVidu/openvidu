@@ -116,7 +116,7 @@ Resources:
                 set -eu -o pipefail
 
                 # AWS cli
-                docker pull amazon/aws-cli:AWS_DOCKER_TAG
+                docker pull amazon/aws-cli:AWS_CLI_DOCKER_TAG
 
                 # Openvidu recording
                 docker pull openvidu/openvidu-recording:OPENVIDU_RECORDING_DOCKER_TAG
