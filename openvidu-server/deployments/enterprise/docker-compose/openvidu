@@ -270,8 +270,8 @@ start_openvidu() {
 
   docker-compose up -d \
     $(if [ "${COTURN_IN_MEDIA_NODES}" == "true" ]; then echo '--scale coturn=0'; fi) \
-    $(if [ "${RUN_LOCAL_FILEBEAT}" == "true" ]; then echo '--scale filebeat=0'; fi) \
-    $(if [ "${RUN_LOCAL_METRICBEAT}" == "true" ]; then echo '--scale metricbeat=0'; fi)
+    $(if [ "${RUN_LOCAL_FILEBEAT}" == "false" ]; then echo '--scale filebeat=0'; fi) \
+    $(if [ "${RUN_LOCAL_METRICBEAT}" == "false" ]; then echo '--scale metricbeat=0'; fi)
 }
 
 usage() {
