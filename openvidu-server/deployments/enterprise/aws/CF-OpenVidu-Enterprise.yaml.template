@@ -996,7 +996,7 @@ Resources:
               OPENVIDU_RECORDING=${OpenViduRecording} \
               OPENVIDU_PRO_COTURN_IN_MEDIA_NODES=${CoturnInMediaNodes} | \
               OPENVIDU_ENTERPRISE_S3_CONFIG_AUTORESTART=${OpenViduS3ConfigAutoRestart} | \
-              OPENVIDU_PRO_ELASITCSEARCH=${ElasticsearchEnabled}
+              OPENVIDU_PRO_ELASTICSEARCH=${ElasticsearchEnabled}
             - DomainNameVar: !Ref DomainName
               RedisHostName: !GetAtt RedisCluster.RedisEndpoint.Address
               RedisPort: !GetAtt RedisCluster.RedisEndpoint.Port
