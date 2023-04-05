@@ -993,7 +993,7 @@ Resources:
               OPENVIDU_PRO_CONFIG_S3_BUCKET=${OpenViduS3BucketParam} | \
               RM_MEDIA_NODES_AUTOSCALING_GROUP_NAME=${MediaNodesAutoscalingGroupName} | \
               RM_MASTER_NODES_AUTOSCALING_GROUP_NAME=${MasterNodesAutoscalingGroupName} | \
-              OPENVIDU_RECORDING=${OpenViduRecording} \
+              OPENVIDU_RECORDING=${OpenViduRecording} | \
               OPENVIDU_PRO_COTURN_IN_MEDIA_NODES=${CoturnInMediaNodes} | \
               OPENVIDU_ENTERPRISE_S3_CONFIG_AUTORESTART=${OpenViduS3ConfigAutoRestart} | \
               OPENVIDU_PRO_ELASTICSEARCH=${ElasticsearchEnabled}
