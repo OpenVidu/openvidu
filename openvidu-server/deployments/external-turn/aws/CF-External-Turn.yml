@@ -150,7 +150,8 @@ Resources:
           def handler(event, context):
             try:
               response = boto3.client('ec2').describe_images(Filters=[
-                {'Name': 'name', 'Values': [event['ResourceProperties']['Name']]}
+                {'Name': 'name', 'Values': [event['ResourceProperties']['Name']]},
+                {'Name': 'owner-alias', 'Values': ['amazon']}
               ])
               amis = sorted(response['Images'], key=lambda x: x['CreationDate'], reverse=True)
               id = amis[0]['ImageId']
