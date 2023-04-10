@@ -1,8 +1,6 @@
 FROM ubuntu:22.04
 LABEL maintainer="OpenVidu info@openvidu.io"
 
-ARG CHROME_VERSION
-
 # Install packages
 RUN apt update && apt -y upgrade && apt install -y \
     wget \
