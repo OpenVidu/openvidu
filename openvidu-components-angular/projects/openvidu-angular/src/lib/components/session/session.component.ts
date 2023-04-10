@@ -85,7 +85,6 @@ export class SessionComponent implements OnInit, OnDestroy {
 	protected layoutWidthSubscription: Subscription;
 
 	protected updateLayoutInterval: NodeJS.Timer;
-	// private sttReconnectionInterval: NodeJS.Timer;
 	private captionLanguageSubscription: Subscription;
 
 	protected log: ILogger;
@@ -214,6 +213,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 		this.sessionScreen = null;
 		if (this.menuSubscription) this.menuSubscription.unsubscribe();
 		if (this.layoutWidthSubscription) this.layoutWidthSubscription.unsubscribe();
+		if (this.captionLanguageSubscription) this.captionLanguageSubscription.unsubscribe();
 	}
 
 	leaveSession() {
