@@ -67,6 +67,7 @@
 		<version.enforcer.plugin>3.1.0</version.enforcer.plugin>
 		<version.extra.enforcer.rules.plugin>1.6.1</version.extra.enforcer.rules.plugin>
 		<version.source.plugin>3.2.1</version.source.plugin>
+		<version.assembly.plugin>3.3.0</version.assembly.plugin>
 		<version.surefire.plugin>3.0.0-M7</version.surefire.plugin>
 		<version.gpg.plugin>1.6</version.gpg.plugin>
 		<version.nexus.staging.plugin>1.6.13</version.nexus.staging.plugin>
