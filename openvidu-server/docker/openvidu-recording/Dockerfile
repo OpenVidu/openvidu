@@ -19,7 +19,7 @@ RUN apt update && apt -y upgrade && apt install -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Install latest stable Chrome browser
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4CCA1EAF950CEE4AB83976DCA040830F7FAC5991 \
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
   && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
   && apt update \
   && apt install -y google-chrome-stable \
