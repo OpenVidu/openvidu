@@ -101,6 +101,9 @@ Resources:
                     done
                   fi
 
+                  # openvidu-recording replace with master version
+                  echo "OPENVIDU_RECORDING_VERSION=OPENVIDU_RECORDING_DOCKER_TAG" >> /opt/openvidu/.env
+
                   popd
                 fi
               mode: "000755"

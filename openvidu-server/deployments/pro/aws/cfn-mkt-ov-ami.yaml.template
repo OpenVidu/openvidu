@@ -100,6 +100,9 @@ Resources:
                     sed -i "s|$IMG.*|$IMG:master|g" docker-compose.override.yml
                   done
                   popd
+
+                  # openvidu-recording replace with master version
+                  echo "OPENVIDU_RECORDING_VERSION=OPENVIDU_RECORDING_DOCKER_TAG" >> /opt/openvidu/.env
                 fi
 
                 # Define Installation Type
