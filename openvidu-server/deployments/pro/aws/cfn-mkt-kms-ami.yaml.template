@@ -83,22 +83,35 @@ Resources:
                 curl https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/install_media_node_OPENVIDU_VERSION.sh | bash
 
                 if [[ USE_MASTER_DOCKER_IMAGES == "true" ]]; then
+
                   pushd kms
-                  # docker-compose.yml replace with master version
-                  IMAGES="$(cat docker-compose.yml | grep 'image: openvidu/' | cut -d':' -f2 | sed -e 's/^[[:space:]]*//')"
-                  for IMG in $IMAGES
+
+                  # Stop media node and remove images
+                  ./media_node stop
+                  docker system prune -f --all
+
+                  # Images to change tag
+                  IMAGES=(
+                      "openvidu/media-node-controller"
+                      "openvidu/mediasoup-controller"
+                      "openvidu/openvidu-recording"
+                      "openvidu/openvidu-coturn"
+                      "openvidu/speech-to-text-service"
+                  )
+
+                  # Iterate over the images
+                  for IMAGE in "${IMAGES[@]}"
                   do
-                    sed -i "s|$IMG.*|$IMG:master|g" docker-compose.yml
+                      # Replace the image tag in the YAML file
+                      sed -i "s,$IMAGE:.*,${IMAGE}:master,g" docker-compose.yml
                   done
 
-                  # Environment variables from docker-compose.yml
-                  sed -i "s|MEDIASOUP_IMAGE=openvidu/mediasoup-controller.*|MEDIASOUP_IMAGE=openvidu/mediasoup-controller:master|g" docker-compose.yml
-                  sed -i "s|COTURN_IMAGE=openvidu/openvidu-coturn.*|COTURN_IMAGE=openvidu/openvidu-coturn:master|g" docker-compose.yml
-                  sed -i "s|SPEECH_TO_TEXT_IMAGE=openvidu/speech-to-text-service.*|SPEECH_TO_TEXT_IMAGE=openvidu/speech-to-text-service:master|g" docker-compose.yml
-                  sed -i "s|OPENVIDU_RECORDING_IMAGE=openvidu/openvidu-recording.*|OPENVIDU_RECORDING_IMAGE=openvidu/openvidu-recording:OPENVIDU_RECORDING_DOCKER_TAG|g" docker-compose.yml
-                  popd
+                  # Docker pull of the images
+                  IMAGES_TO_PULL=$(grep -oP '(?<=_IMAGE=).*' docker-compose.yml)
 
-                  docker pull openvidu/openvidu-recording:OPENVIDU_RECORDING_DOCKER_TAG
+                  # Pull each image
+                  echo "$IMAGES_TO_PULL" | xargs -n 1 docker pull
+                  docker-compose pull
                 fi
 
                 # Define Installation Type
