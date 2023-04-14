@@ -96,7 +96,7 @@ if [[ "${CLEAN_ENVIRONMENT}" == true ]]; then
     for id in $ids; do
         DOCKER_IMAGE=$(docker inspect --format='{{.Config.Image}}' $id)
         if [[ "${DOCKER_IMAGE}" != *"$TEST_IMAGE"* ]] &&
-            [[ "${DOCKER_IMAGE}" != *"runner-deployment"* ]]; then
+            [[ "${DOCKER_IMAGE}" != *"runner-image"* ]]; then
             echo "Removing container image '$DOCKER_IMAGE' with id '$id'"
             docker stop $id && docker rm $id
         fi
