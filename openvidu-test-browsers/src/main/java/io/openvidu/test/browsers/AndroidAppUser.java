@@ -11,6 +11,11 @@ public class AndroidAppUser extends BrowserUser {
 	public AndroidAppUser(String userName, int timeOfWaitInSeconds, String appPath) {
 		super(userName, timeOfWaitInSeconds);
 
+		String REMOTE_URL = System.getProperty("REMOTE_URL_ANDROID");
+		if (REMOTE_URL == null) {
+			REMOTE_URL = "http://172.17.0.1:4723/wd/hub";
+		}
+
 		UiAutomator2Options options = new UiAutomator2Options();
 		options.setAutoWebview(true);
 		options.setApp(appPath);
@@ -18,7 +23,7 @@ public class AndroidAppUser extends BrowserUser {
 
 		URL url = null;
 		try {
-			url = new URL("http://172.17.0.1:4723/wd/hub");
+			url = new URL(REMOTE_URL);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
