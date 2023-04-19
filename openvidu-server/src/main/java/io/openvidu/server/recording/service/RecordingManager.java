@@ -304,12 +304,8 @@ public class RecordingManager {
 							this.cdr.recordRecordingStatusChanged(recording, null, recording.getCreatedAt(),
 									Status.started);
 
-							if (!(OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo())) {
-								// Directly send recording started notification for all cases except for
-								// COMPOSED recordings with video (will be sent on first RECORDER subscriber)
-								// Both INDIVIDUAL and COMPOSED_QUICK_START should notify immediately
-								this.sessionHandler.sendRecordingStartedNotification(session, recording);
-							}
+							this.sessionHandler.sendRecordingStartedNotification(session, recording);
+
 							if (session.getActivePublishers() == 0) {
 								// Init automatic recording stop if no publishers when starting the recording
 								log.info(
@@ -318,6 +314,7 @@ public class RecordingManager {
 										this.openviduConfig.getOpenviduRecordingAutostopTimeout());
 								this.initAutomaticRecordingStopThread(session, EndReason.automaticStop);
 							}
+
 							return recording;
 						}
 					} finally {
@@ -936,8 +933,6 @@ public class RecordingManager {
 				|| (sessionsRecordingsStarting.putIfAbsent(recording.getSessionId(), recording) != null)) {
 			log.error("Concurrent session recording initialization. Aborting this thread");
 			throw new RuntimeException("Concurrent initialization of recording " + recording.getId());
-		} else {
-			this.sessionHandler.storeRecordingToSendClientEvent(recording);
 		}
 	}
 

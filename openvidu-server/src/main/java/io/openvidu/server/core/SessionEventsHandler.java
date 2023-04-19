@@ -64,8 +64,6 @@ public class SessionEventsHandler {
 	@Autowired
 	protected OpenviduBuildInfo openviduBuildConfig;
 
-	protected Map<String, Recording> recordingsToSendClientEvents = new ConcurrentHashMap<>();
-
 	public void onSessionCreated(Session session) {
 		CDR.recordSessionCreated(session);
 	}
@@ -381,13 +379,6 @@ public class SessionEventsHandler {
 			result.addProperty(ProtocolElements.RECEIVEVIDEO_SDPANSWER_PARAM, sdpAnswer);
 		}
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
-
-		if (participant.isRecorderParticipant()) {
-			recordingsToSendClientEvents.computeIfPresent(session.getSessionId(), (key, value) -> {
-				sendRecordingStartedNotification(session, value);
-				return null;
-			});
-		}
 	}
 
 	public void onUnsubscribe(Participant participant, Integer transactionId, OpenViduException error) {
@@ -556,9 +547,6 @@ public class SessionEventsHandler {
 
 	public void sendRecordingStoppedNotification(Session session, Recording recording, EndReason reason) {
 
-		// Be sure to clean this map (this should return null)
-		recordingsToSendClientEvents.remove(session.getSessionId());
-
 		// Filter participants by roles according to "OPENVIDU_RECORDING_NOTIFICATION"
 		Set<Participant> existingParticipants;
 		try {
@@ -711,10 +699,6 @@ public class SessionEventsHandler {
 
 	public void onSpeechToTextMessage(String sessionId, String connectionId, long timestamp, String text,
 			Set<Participant> subscribedParticipants) {
-	}
-
-	public void storeRecordingToSendClientEvent(Recording recording) {
-		recordingsToSendClientEvents.put(recording.getSessionId(), recording);
 	}
 
 	protected Set<Participant> filterParticipantsByRole(Set<OpenViduRole> roles, Set<Participant> participants) {
