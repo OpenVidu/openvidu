@@ -1037,6 +1037,43 @@ describe('Testing videoconference EVENTS', () => {
 	});
 });
 
+describe('Testing stream video menu features', () => {
+	let browser: WebDriver;
+	let utils: OpenViduComponentsPO;
+	async function createChromeBrowser(): Promise<WebDriver> {
+		return await new Builder()
+			.forBrowser(WebComponentConfig.browserName)
+			.withCapabilities(WebComponentConfig.browserCapabilities)
+			.setChromeOptions(WebComponentConfig.browserOptions)
+			.usingServer(WebComponentConfig.seleniumAddress)
+			.build();
+	}
+
+	beforeEach(async () => {
+		browser = await createChromeBrowser();
+		utils = new OpenViduComponentsPO(browser);
+	});
+
+	afterEach(async () => {
+		await browser.quit();
+	});
+
+	it('should not show the Mute sound button for local participant', async () => {
+		await browser.get(`${url}&prejoin=false`);
+
+		await utils.checkLayoutPresent();
+
+		await utils.waitForElement('#stream-menu-btn');
+		await utils.clickOn('#stream-menu-btn');
+
+		await browser.sleep(500);
+
+		// Checking if mute sound button is not present
+		expect(await utils.isPresent('#sound-btn')).to.be.false;
+	});
+});
+
+
 describe('Testing screenshare features', () => {
 	let browser: WebDriver;
 	let utils: OpenViduComponentsPO;

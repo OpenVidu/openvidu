@@ -50,7 +50,7 @@
 	</div>
 
 	<div *ngIf="!isMinimal && showSettingsButton" id="settings-container" class="videoButtons">
-		<button mat-icon-button (click)="toggleVideoMenu($event)" matTooltip="{{ 'STREAM.SETTINGS' | translate }}" matTooltipPosition="above" aria-label="Video settings menu">
+		<button mat-icon-button (click)="toggleVideoMenu($event)" matTooltip="{{ 'STREAM.SETTINGS' | translate }}" matTooltipPosition="above" aria-label="Video settings menu" id="stream-menu-btn">
 			<mat-icon>more_vert</mat-icon>
 		</button>
 		<span [matMenuTriggerFor]="menu"></span>
@@ -60,7 +60,7 @@
 				<span *ngIf="videoSizeIcon === videoSizeIconEnum.NORMAL">{{ 'STREAM.ZOOM_OUT' | translate }}</span>
 				<span *ngIf="videoSizeIcon === videoSizeIconEnum.BIG">{{ 'STREAM.ZOOM_IN' | translate }}</span>
 			</button>
-			<button mat-menu-item id="volumeButton" *ngIf="!this._stream.local" (click)="toggleMuteForcibly()">
+			<button mat-menu-item id="sound-btn" *ngIf="!this._stream.local" (click)="toggleMuteForcibly()">
 				<mat-icon *ngIf="!_stream.participant.isMutedForcibly">volume_up</mat-icon>
 				<span *ngIf="!_stream.participant.isMutedForcibly">{{ 'STREAM.MUTE_SOUND' | translate }}</span>
 
