@@ -212,7 +212,9 @@ export class StreamComponent implements OnInit {
 	 * @ignore
 	 */
 	toggleMuteForcibly() {
-		this.participantService.setRemoteMutedForcibly(this._stream.participant.id, !this._stream.participant.isMutedForcibly);
+		if(this._stream.participant){
+			this.participantService.setRemoteMutedForcibly(this._stream.participant.id, !this._stream.participant.isMutedForcibly);
+		}
 	}
 
 	/**
