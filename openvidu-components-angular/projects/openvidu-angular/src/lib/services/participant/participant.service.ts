@@ -368,7 +368,8 @@ export class ParticipantService {
 	 */
 	getNicknameFromConnectionData(data: string): string {
 		try {
-			return JSON.parse(data).clientData;
+			const dataClean = data.replace('%/%{}', '');
+			return JSON.parse(dataClean).clientData;
 		} catch (error) {
 			return 'OpenVidu_User';
 		}
