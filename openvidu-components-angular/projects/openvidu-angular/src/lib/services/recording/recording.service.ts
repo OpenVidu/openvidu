@@ -19,7 +19,6 @@ export class RecordingService {
 	private recordingStatus = <BehaviorSubject<{ info: RecordingInfo; time?: Date } | undefined>>new BehaviorSubject(undefined);
 	private baseUrl = '/' + (!!window.location.pathname.split('/')[1] ? window.location.pathname.split('/')[1] + '/' : '');
 
-
 	/**
 	 * @internal
 	 */
@@ -72,7 +71,10 @@ export class RecordingService {
 		const recordingId = recording.id;
 		// Only COMPOSED recording is supported. The extension will allways be 'mp4'.
 		const extension = 'mp4'; //recording.url?.split('.').pop()  || 'mp4';
-		this.actionService.openRecordingPlayerDialog(`${this.baseUrl}recordings/${recordingId}/${recordingId}.${extension}`);
+		const queryParamForAvoidCache = `?t=${new Date().getTime()}`;
+		this.actionService.openRecordingPlayerDialog(
+			`${this.baseUrl}recordings/${recordingId}/${recordingId}.${extension}${queryParamForAvoidCache}`
+		);
 	}
 
 	/**
@@ -106,7 +108,7 @@ export class RecordingService {
 		this.recordingTime = new Date();
 		this.recordingTime.setHours(0, 0, 0, 0);
 		this.recordingTimeInterval = setInterval(() => {
-			if(this.recordingTime) {
+			if (this.recordingTime) {
 				this.recordingTime.setSeconds(this.recordingTime.getSeconds() + 1);
 				this.recordingTime = new Date(this.recordingTime.getTime());
 				this.recordingStatus.next({ info: this.currentRecording, time: this.recordingTime });
