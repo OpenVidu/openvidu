@@ -17,8 +17,7 @@
     </mat-form-field>
     <div class="inner-text-input mat-form-field">
       <mat-checkbox id="rec-hasaudio-checkbox" [(ngModel)]="recordingProperties.hasAudio">Has audio</mat-checkbox>
-      <mat-checkbox *ngIf="!isBroadcast" id="rec-hasvideo-checkbox" [(ngModel)]="recordingProperties.hasVideo">Has
-        video</mat-checkbox>
+      <mat-checkbox id="rec-hasvideo-checkbox" [(ngModel)]="recordingProperties.hasVideo">Has video</mat-checkbox>
       <mat-checkbox *ngIf="recordingProperties.outputMode === 'INDIVIDUAL'" id="rec-ignorefailedstreams-checkbox"
         [(ngModel)]="recordingProperties.ignoreFailedStreams">Ignore failed streams</mat-checkbox>
     </div>

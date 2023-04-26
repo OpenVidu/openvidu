@@ -77,7 +77,8 @@
           aria-label="Recording properties">
           {{recPropertiesIcon}}</mat-icon>
       </button>
-      <app-recording-properties *ngIf="showRecProperties" [(recordingProperties)]="recordingProperties">
+      <app-recording-properties *ngIf="showRecProperties" [isBroadcast]="false"
+        [recordingProperties]="recordingProperties">
       </app-recording-properties>
     </div>
     <div>
@@ -106,7 +107,8 @@
         <mat-icon style="font-size: 18px; line-height: 18px; width: 18px; height: 18px"
           aria-label="Broadcast properties">{{broadcastPropertiesIcon}}</mat-icon>
       </button>
-      <app-recording-properties *ngIf="showBroadcastProperties" [isBroadcast]="true" [(recordingProperties)]="broadcastProperties">
+      <app-recording-properties *ngIf="showBroadcastProperties" [isBroadcast]="true"
+        [recordingProperties]="broadcastProperties">
       </app-recording-properties>
     </div>
 
@@ -120,6 +122,6 @@
   </mat-dialog-content>
   <mat-dialog-actions>
     <button mat-button id="close-dialog-btn"
-      [mat-dialog-close]="{session: session, recordingProperties: recordingProperties}">CLOSE</button>
+      [mat-dialog-close]="{session: session, recordingProperties: recordingProperties, broadcastProperties: broadcastProperties}">CLOSE</button>
   </mat-dialog-actions>
 </div>

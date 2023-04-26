@@ -716,8 +716,7 @@ public class RecordingProperties {
 	 * @hidden
 	 */
 	public final static Map<String, ?> removeNonBroadcastProperties(Map<String, ?> params) {
-		List<String> nonBroadcastProps = Arrays
-				.asList(new String[] { "outputMode", "name", "hasVideo", "ignoreFailedStreams" });
+		List<String> nonBroadcastProps = Arrays.asList(new String[] { "outputMode", "name", "ignoreFailedStreams" });
 		nonBroadcastProps.forEach(p -> params.remove(p));
 		return params;
 	}

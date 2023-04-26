@@ -11,21 +11,11 @@ export class RecordingPropertiesComponent {
     @Input()
     isBroadcast = false;
 
+    @Input()
+    recordingProperties: RecordingProperties;
+
     recMode = Recording.OutputMode;
     recLayouts = RecordingLayout;
-
-    getRecordingProperties: RecordingProperties;
-    @Output() recordingPropertiesChange: EventEmitter<RecordingProperties> = new EventEmitter<RecordingProperties>();
-
-    @Input()
-    get recordingProperties(): RecordingProperties {
-        return this.getRecordingProperties;
-    }
-
-    set recordingProperties(value: RecordingProperties) {
-        this.getRecordingProperties = value;
-        this.recordingPropertiesChange.emit(this.getRecordingProperties);
-    }
 
     enumToArray(enumerator: any) {
         return Object.keys(enumerator);

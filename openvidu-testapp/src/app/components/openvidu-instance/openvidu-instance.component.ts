@@ -649,13 +649,15 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   openSessionApiDialog() {
+    const defaultRecordingProperties = JSON.parse(JSON.stringify(this.sessionProperties.defaultRecordingProperties));
+    const defaultBroadcastProperties = JSON.parse(JSON.stringify(this.sessionProperties.defaultRecordingProperties));
     const dialogRef = this.dialog.open(SessionApiDialogComponent, {
       data: {
         openVidu: !!this.OV_NodeClient ? this.OV_NodeClient : new OpenViduAPI(this.openviduUrl, this.openviduSecret),
         session: this.sessionAPI,
         sessionId: !!this.session ? this.session.sessionId : this.sessionName,
-        recordingProperties: !!this.recordingProperties ? this.recordingProperties : this.sessionProperties.defaultRecordingProperties,
-        broadcastProperties: !!this.broadcastProperties ? this.broadcastProperties : this.sessionProperties.defaultRecordingProperties
+        recordingProperties: !!this.recordingProperties ? this.recordingProperties : defaultRecordingProperties,
+        broadcastProperties: !!this.broadcastProperties ? this.broadcastProperties : defaultBroadcastProperties
       },
       disableClose: true
     });
@@ -665,6 +667,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         delete this.sessionAPI;
       }
       this.recordingProperties = result.recordingProperties;
+      this.broadcastProperties = result.broadcastProperties;
       document.getElementById('session-api-btn-' + this.index).classList.remove('cdk-program-focused');
     });
   }

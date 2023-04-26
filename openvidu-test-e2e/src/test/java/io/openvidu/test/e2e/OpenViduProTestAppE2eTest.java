@@ -2868,6 +2868,67 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@DisplayName("Successfull only video only audio broadcast Test")
+	void sucessfullBroadcastOnlyVideoOnlyAudioTest() throws Exception {
+
+		log.info("Successfull only video only audio broadcast Test");
+
+		try {
+			String BROADCAST_IP = TestUtils.startRtmpServer();
+
+			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+			user.getDriver().findElement(By.id("session-api-btn-0")).click();
+			Thread.sleep(750);
+			WebElement broadcastUrlField = user.getDriver().findElement(By.id("broadcasturl-id-field"));
+			broadcastUrlField.clear();
+			broadcastUrlField.sendKeys("rtmp://" + BROADCAST_IP + "/live");
+			user.getDriver().findElement(By.id("broadcast-properties-btn")).click();
+			Thread.sleep(500);
+
+			// Only video
+			user.getDriver().findElement(By.id("rec-hasaudio-checkbox")).click();
+			Thread.sleep(500);
+
+			user.getDriver().findElement(By.id("start-broadcast-btn")).click();
+			user.getWaiter().until(
+					ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Broadcast started"));
+			user.getEventManager().waitUntilEventReaches("broadcastStarted", 1);
+
+			checkRtmpRecordingIsFine(30, RecordingUtils::checkVideoAverageRgbGreen);
+
+			user.getDriver().findElement(By.id("stop-broadcast-btn")).click();
+			user.getWaiter().until(
+					ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Broadcast stopped"));
+			user.getEventManager().waitUntilEventReaches("broadcastStopped", 1);
+
+			// Only audio
+			user.getDriver().findElement(By.id("rec-hasaudio-checkbox")).click();
+			user.getDriver().findElement(By.id("rec-hasvideo-checkbox")).click();
+			Thread.sleep(500);
+
+			user.getDriver().findElement(By.id("start-broadcast-btn")).click();
+			user.getWaiter().until(
+					ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Broadcast started"));
+			user.getEventManager().waitUntilEventReaches("broadcastStarted", 1);
+
+			user.getDriver().findElement(By.id("stop-broadcast-btn")).click();
+			user.getWaiter().until(
+					ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Broadcast stopped"));
+			user.getEventManager().waitUntilEventReaches("broadcastStopped", 1);
+
+			gracefullyLeaveParticipants(user, 1);
+
+		} finally {
+			TestUtils.stopRtmpServer();
+		}
+	}
+
+	@Test
 	@DisplayName("Wrong broadcast Test")
 	void wrongBroadcastTest() throws Exception {
 
@@ -2910,6 +2971,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					HttpURLConnection.HTTP_NOT_ACCEPTABLE);
 			// 422
 			body = "{'session':'TestSession','broadcastUrl':'rtmp://" + BROADCAST_IP + "/live','resolution':'99x1280'}";
+			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, 422);
+			body = "{'session':'TestSession','broadcastUrl':'rtmp://" + BROADCAST_IP
+					+ "/live','hasAudio':false,'hasVideo':false}";
 			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, 422);
 			// 500 (Connection refused)
 			body = "{'session':'TestSession','broadcastUrl':'rtmps://" + BROADCAST_IP + "/live'}";
@@ -3003,7 +3067,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Map<String, Object> config = Map.of("OPENVIDU_PRO_SPEECH_TO_TEXT", "disabled", "OPENVIDU_RECORDING", true,
 					"OPENVIDU_RECORDING_CUSTOM_LAYOUT", "/opt/openvidu/test-layouts");
 			restartOpenViduServer(config);
-			
+
 			final String SESSION_NAME = "CUSTOM_LAYOUT_SESSION";
 
 			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
@@ -3085,7 +3149,16 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// Analyze most recent file (there can be more than one in the path)
 				File[] files = new File(broadcastRecordingPath + "/tmp").listFiles();
 				Arrays.sort(files, Comparator.comparingLong(File::lastModified).reversed());
-				commandLine.executeCommand("ffmpeg -i " + files[0].getAbsolutePath() + " -vframes 1 "
+				// This fixes corrupted video files
+				String fixedFile = broadcastRecordingPath + "/tmp/test.flv";
+				commandLine.executeCommand(
+						"ffmpeg -i " + files[0].getAbsolutePath() + " -acodec copy -vcodec copy " + fixedFile, 10);
+				// This obtains the middle duration of the video
+				String videoDuration = commandLine.executeCommand(
+						"ffprobe -loglevel error -of csv=p=0 -show_entries format=duration " + fixedFile, 3);
+				float halfDuration = (float) (Float.parseFloat(videoDuration) * 0.5);
+				// This retrieves the frame from the middle of the video
+				commandLine.executeCommand("ffmpeg -ss " + halfDuration + " -i " + fixedFile + " -vframes 1 "
 						+ broadcastRecordingPath + "/tmp/rtmp-screenshot.jpg", 3);
 				File screenshot = new File(broadcastRecordingPath + "/tmp/rtmp-screenshot.jpg");
 				if (screenshot.exists() && screenshot.isFile() && screenshot.length() > 0 && screenshot.canRead()) {

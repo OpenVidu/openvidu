@@ -248,11 +248,15 @@ export class SessionApiDialogComponent {
     toggleRecProperties() {
         this.showRecProperties = !this.showRecProperties;
         this.recPropertiesIcon = this.showRecProperties ? 'remove_circle' : 'add_circle';
+        this.showBroadcastProperties = false;
+        this.broadcastPropertiesIcon = 'add_circle';
     }
 
     toggleBroadcastProperties() {
         this.showBroadcastProperties = !this.showBroadcastProperties;
         this.broadcastPropertiesIcon = this.showBroadcastProperties ? 'remove_circle' : 'add_circle';
+        this.showRecProperties = false;
+        this.recPropertiesIcon = 'add_circle';
     }
 
     changedNumIceServers(numIceServers: number) {
