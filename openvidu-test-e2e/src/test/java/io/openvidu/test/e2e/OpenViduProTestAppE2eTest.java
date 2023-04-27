@@ -3138,17 +3138,23 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@DisplayName("Broadcast and composed recording Test")
-	void broadcastAndComposedRecordingTest() throws Exception {
+	@DisplayName("Broadcast, Composed Recording and STT Test")
+	void broadcastComposedRecordingAndSttTest() throws Exception {
 
-		log.info("Broadcast and composed recording Test");
+		log.info("Broadcast, Composed Recording and STT Test");
 
 		try {
+			Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT",
+					OPENVIDU_PRO_SPEECH_TO_TEXT, "OPENVIDU_PRO_SPEECH_TO_TEXT_IMAGE",
+					"openvidu/speech-to-text-service:master", "OPENVIDU_PRO_SPEECH_TO_TEXT_VOSK_MODEL_LOAD_STRATEGY",
+					"on_demand");
+			restartOpenViduServer(config);
+
 			String BROADCAST_IP = TestUtils.startRtmpServer();
 
 			final String sessionName = "BROADCAST_AND_RECORDED_SESSION";
 
-			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
 			user.getDriver().findElement(By.id("add-user-btn")).click();
 			user.getDriver().findElement(By.id("session-name-input-0")).clear();
 			user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionName);
@@ -3157,7 +3163,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
 			user.getDriver().findElement(By.id("session-api-btn-0")).click();
-			Thread.sleep(750);
+			Thread.sleep(500);
 			WebElement broadcastUrlField = user.getDriver().findElement(By.id("broadcasturl-id-field"));
 			broadcastUrlField.clear();
 			broadcastUrlField.sendKeys("rtmp://" + BROADCAST_IP + "/live");
@@ -3181,11 +3187,26 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			// Check broadcast
 			checkRtmpRecordingIsFine(30, RecordingUtils::checkVideoAverageRgbGreen);
 
+			// Start STT
+			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			Thread.sleep(500);
+			this.sttSubUser(user, 0, 0, "en-US", true, true);
+			user.getEventManager().waitUntilEventReaches("speechToTextMessage", 5);
+			Assertions.assertEquals(1, user.getEventManager().getNumEvents("connectionCreated").get(),
+					"Wrong number of connectionCreated events");
+
 			// Stop broadcast
+			user.getDriver().findElement(By.id("session-api-btn-0")).click();
+			Thread.sleep(500);
 			user.getDriver().findElement(By.id("stop-broadcast-btn")).click();
 			user.getWaiter().until(
 					ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Broadcast stopped"));
 			user.getEventManager().waitUntilEventReaches("broadcastStopped", 1);
+
+			// After stopping broadcast speechToText events should keep coming
+			user.getEventManager().clearAllCurrentEvents(0);
+			user.getEventManager().clearAllCurrentEvents();
+			user.getEventManager().waitUntilEventReaches("speechToTextMessage", 4);
 
 			// Stop recording
 			user.getDriver().findElement(By.id("recording-id-field")).clear();
@@ -3205,6 +3226,23 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					"Recorded file " + file1.getAbsolutePath() + " is not fine");
 			Assertions.assertTrue(this.recordingUtils.thumbnailIsFine(file2, RecordingUtils::checkVideoAverageRgbGreen),
 					"Thumbnail " + file2.getAbsolutePath() + " is not fine");
+
+			// After stopping composed recording speechToText events should keep coming
+			user.getEventManager().clearAllCurrentEvents(0);
+			user.getEventManager().clearAllCurrentEvents();
+			user.getEventManager().waitUntilEventReaches("speechToTextMessage", 4);
+
+			// After unsubscription no more STT events should be received
+			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			Thread.sleep(500);
+			this.sttUnsubUser(user, 0, 0, true, true);
+			user.getEventManager().clearAllCurrentEvents(0);
+			user.getEventManager().clearAllCurrentEvents();
+			Thread.sleep(3000);
+			Assertions.assertEquals(user.getEventManager().getNumEvents("speechToTextMessage").intValue(), 0);
+
+			Assertions.assertEquals(0, user.getEventManager().getNumEvents("connectionDestroyed").get(),
+					"Wrong number of connectionDestroyed events");
 
 			gracefullyLeaveParticipants(user, 1);
 
