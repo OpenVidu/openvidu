@@ -119,7 +119,7 @@ public class RecordingPropertiesTest {
 	@Test
 	public void testNonBroadcastProperties() {
 		Map<String, ?> map = mapFromJsonString(
-				"{'outputMode':'INDIVIDUAL','name':'ABDCFG','hasVideo':false,'ignoreFailedStreams':true,'session':'TestSession','hasAudio':true,'recordingLayout':'CUSTOM','customLayout':'layout1','resolution':'920x600','frameRate':18,'shmSize':600000000,'mediaNode':{'id':'mediaNodeId'}}");
+				"{'outputMode':'INDIVIDUAL','name':'ABDCFG','ignoreFailedStreams':true,'session':'TestSession','hasAudio':true,'recordingLayout':'CUSTOM','customLayout':'layout1','resolution':'920x600','frameRate':18,'shmSize':600000000,'mediaNode':{'id':'mediaNodeId'}}");
 		RecordingProperties.removeNonBroadcastProperties(map);
 		RecordingProperties props = RecordingProperties.fromJson(map, null).build();
 		Assertions.assertEquals(OutputMode.COMPOSED, props.outputMode());
