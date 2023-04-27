@@ -137,7 +137,7 @@
 				*ngIf="!isMinimal && showBroadcastingButton"
 				mat-menu-item
 				id="broadcasting-btn"
-				[disabled]="broadcastingStatus === _broadcastingStatus.STARTING || recordingStatus === _broadcastingStatus.STOPPING"
+				[disabled]="broadcastingStatus === _broadcastingStatus.STARTING || recordingStatus === _broadcastingStatus.STOPPING || !isSessionCreator"
 				(click)="toggleBroadcasting()"
 			>
 				<mat-icon>sensors</mat-icon>
