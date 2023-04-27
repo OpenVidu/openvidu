@@ -3137,6 +3137,82 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 	}
 
+	@Test
+	@DisplayName("Broadcast and composed recording Test")
+	void broadcastAndComposedRecordingTest() throws Exception {
+
+		log.info("Broadcast and composed recording Test");
+
+		try {
+			String BROADCAST_IP = TestUtils.startRtmpServer();
+
+			final String sessionName = "BROADCAST_AND_RECORDED_SESSION";
+
+			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.id("session-name-input-0")).clear();
+			user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionName);
+			user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+			user.getDriver().findElement(By.id("session-api-btn-0")).click();
+			Thread.sleep(750);
+			WebElement broadcastUrlField = user.getDriver().findElement(By.id("broadcasturl-id-field"));
+			broadcastUrlField.clear();
+			broadcastUrlField.sendKeys("rtmp://" + BROADCAST_IP + "/live");
+			user.getDriver().findElement(By.id("broadcast-properties-btn")).click();
+			Thread.sleep(500);
+
+			// Start broadcast
+			user.getDriver().findElement(By.id("start-broadcast-btn")).click();
+			user.getWaiter().until(
+					ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Broadcast started"));
+			user.getEventManager().waitUntilEventReaches("broadcastStarted", 1);
+
+			// Start composed recording
+			user.getDriver().findElement(By.id("start-recording-btn")).click();
+			user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+					"Recording started [" + sessionName + "]"));
+			user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
+
+			Thread.sleep(2000);
+
+			// Check broadcast
+			checkRtmpRecordingIsFine(30, RecordingUtils::checkVideoAverageRgbGreen);
+
+			// Stop broadcast
+			user.getDriver().findElement(By.id("stop-broadcast-btn")).click();
+			user.getWaiter().until(
+					ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Broadcast stopped"));
+			user.getEventManager().waitUntilEventReaches("broadcastStopped", 1);
+
+			// Stop recording
+			user.getDriver().findElement(By.id("recording-id-field")).clear();
+			user.getDriver().findElement(By.id("recording-id-field")).sendKeys(sessionName);
+			user.getDriver().findElement(By.id("stop-recording-btn")).click();
+			user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+					"Recording stopped [" + sessionName + "]"));
+			user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
+
+			// Check recording
+			String recordingsPath = "/opt/openvidu/recordings/";
+			File file1 = new File(recordingsPath + sessionName + "/" + sessionName + ".mp4");
+			File file2 = new File(recordingsPath + sessionName + "/" + sessionName + ".jpg");
+			Assertions.assertTrue(
+					this.recordingUtils.recordedGreenFileFine(file1,
+							new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName)),
+					"Recorded file " + file1.getAbsolutePath() + " is not fine");
+			Assertions.assertTrue(this.recordingUtils.thumbnailIsFine(file2, RecordingUtils::checkVideoAverageRgbGreen),
+					"Thumbnail " + file2.getAbsolutePath() + " is not fine");
+
+			gracefullyLeaveParticipants(user, 1);
+
+		} finally {
+			TestUtils.stopRtmpServer();
+		}
+	}
+
 	private void checkRtmpRecordingIsFine(long secondsTimeout, Function<Map<String, Long>, Boolean> colorCheckFunction)
 			throws InterruptedException {
 		final String broadcastRecordingPath = "/opt/openvidu/recordings";

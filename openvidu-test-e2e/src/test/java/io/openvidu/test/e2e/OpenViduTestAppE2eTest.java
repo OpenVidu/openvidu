@@ -1009,51 +1009,22 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 
 		// Resize captured window
-		final CountDownLatch latchViewport = new CountDownLatch(1);
 		final CountDownLatch latch3 = new CountDownLatch(2);
 		int newWidth = 1000;
 		int newHeight = 700;
 
-		final long[] expectedWidthHeight = new long[2];
-
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
-			try {
-				if (latchViewport.await(4000, TimeUnit.MILLISECONDS)) {
-					// Using a local or dockerized browser may vary the height value in 1 unit
-					String expectedDimensions1 = "{\"width\":" + expectedWidthHeight[0] + ",\"height\":"
-							+ expectedWidthHeight[1] + "}";
-					String expectedDimensions2 = "{\"width\":" + expectedWidthHeight[0] + ",\"height\":"
-							+ (expectedWidthHeight[1] + 1) + "}";
-					System.out.println("Publisher dimensions: " + event.get("newValue").getAsJsonObject().toString());
-					System.out.println("Real dimensions of viewport (+0/+1 in height): " + expectedDimensions1);
-					if ("videoDimensions".equals(event.get("changedProperty").getAsString())
-							&& "screenResized".equals(event.get("reason").getAsString())
-							&& (expectedDimensions1.equals(event.get("newValue").getAsJsonObject().toString())
-									|| expectedDimensions2
-											.equals(event.get("newValue").getAsJsonObject().toString()))) {
-						latch3.countDown();
-					}
-				} else {
-					fail("Viewport resolution did not change in 4 seconds");
-				}
-			} catch (InterruptedException e) {
-				log.error("Error waiting for viewport resolution");
+			String expectedDimensions = "{\"width\":" + newWidth + ",\"height\":" + newHeight + "}";
+			System.out.println("Publisher dimensions: " + event.get("newValue").getAsJsonObject().toString());
+			System.out.println("Real dimensions of viewport: " + expectedDimensions);
+			if ("videoDimensions".equals(event.get("changedProperty").getAsString())
+					&& "screenResized".equals(event.get("reason").getAsString())
+					&& (expectedDimensions.equals(event.get("newValue").getAsJsonObject().toString()))) {
+				latch3.countDown();
 			}
 		});
 
 		user.getDriver().manage().window().setSize(new Dimension(newWidth, newHeight));
-
-		new Thread(() -> {
-			String widthAndHeight = user.getBrowserUser().getDimensionOfViewport();
-			JsonObject obj = JsonParser.parseString(widthAndHeight).getAsJsonObject();
-
-			expectedWidthHeight[0] = obj.get("width").getAsLong();
-			expectedWidthHeight[1] = obj.get("height").getAsLong();
-
-			System.out.println("New viewport dimension: " + obj.toString());
-			latchViewport.countDown();
-
-		}).start();
 
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
 
@@ -2669,7 +2640,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeAlternateScreenShare");
 
-		user.getDriver().manage().window().setSize(new Dimension(1000, 800));
+		final int width = 1000;
+		final int height = 800;
+		user.getDriver().manage().window().setSize(new Dimension(width, height));
 
 		log.info("openvidu-java-client test");
 
@@ -2885,19 +2858,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 		pub = connectionModerator.getPublishers().get(0);
 
-		String widthAndHeight = user.getBrowserUser().getDimensionOfViewport();
-		JsonObject obj = JsonParser.parseString(widthAndHeight).getAsJsonObject();
-
 		// Using a local or dockerized browser may vary the height value in 1 unit
-		long validHeight1 = obj.get("height").getAsLong();
-		long validHeight2 = validHeight1 + 1;
-		String validDimensions1 = "{\"width\":" + obj.get("width").getAsLong() + ",\"height\":" + validHeight1 + "}";
-		String validDimensions2 = "{\"width\":" + obj.get("width").getAsLong() + ",\"height\":" + validHeight2 + "}";
+		String validDimensions = "{\"width\":" + width + ",\"height\":" + height + "}";
 
-		Assertions.assertTrue(
-				validDimensions1.equals(pub.getVideoDimensions()) || validDimensions2.equals(pub.getVideoDimensions()),
-				"Wrong video dimenstions. Expected: " + validDimensions1 + "(+0/+1 in height) but actual: "
-						+ pub.getVideoDimensions());
+		Assertions.assertTrue(validDimensions.equals(pub.getVideoDimensions()),
+				"Wrong video dimensions. Expected: " + validDimensions + " but actual: " + pub.getVideoDimensions());
 
 		Assertions.assertEquals(Integer.valueOf(30), pub.getFrameRate());
 		Assertions.assertEquals("SCREEN", pub.getTypeOfVideo());
