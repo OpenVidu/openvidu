@@ -30,6 +30,13 @@ export class ActivitiesPanelComponent implements OnInit {
 	@Output() onDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
+	 * Provides event notifications that fire when a participant needs update the recordings information
+	 * (usually when recording is stopped by the session moderator or recording panel is opened).
+	 * The recordings should be updated using the REST API.
+	 */
+	@Output() onForceRecordingUpdate: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
 	 * Provides event notifications that fire when start broadcasting button has been clicked.
 	 * The broadcasting should be started using the REST API.
 	 */
@@ -110,6 +117,10 @@ export class ActivitiesPanelComponent implements OnInit {
 
 	_onStopBroadcastingClicked() {
 		this.onStopBroadcastingClicked.emit();
+	}
+
+	_onForceRecordingUpdate() {
+		this.onForceRecordingUpdate.emit();
 	}
 
 	private subscribeToPanelToggling() {

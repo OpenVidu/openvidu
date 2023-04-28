@@ -123,6 +123,7 @@ export class CallComponent implements OnInit {
 			this.recordingList = await this.restService.stopRecording(this.sessionId);
 			console.log('RECORDING LIST ', this.recordingList);
 		} catch (error) {
+			console.log(await this.restService.getRecordings())
 			this.recordingError = error;
 		}
 	}
@@ -135,6 +136,11 @@ export class CallComponent implements OnInit {
 		} catch (error) {
 			this.recordingError = error;
 		}
+	}
+
+	async onForceRecordingUpdate() {
+		console.warn('FORCE RECORDING UPDATE');
+		this.recordingList = await this.restService.getRecordings();
 	}
 
 	private async requestForTokens() {

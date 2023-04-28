@@ -379,6 +379,13 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	@Output() onActivitiesPanelDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
+	 * Provides event notifications that fire when a participant needs update the recordings information
+	 * (usually when recording is stopped by the session moderator or recording panel is opened) from {@link ActivitiesPanelComponent}.
+	 * The recordings should be updated using the REST API.
+	 */
+	@Output() onActivitiesPanelForceRecordingUpdate: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
 	 * Provides event notifications that fire when play recording button is clicked from {@link ActivitiesPanelComponent}.
 	 */
 	@Output() onActivitiesPanelPlayRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
@@ -690,6 +697,14 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	 */
 	onDeleteRecordingClicked(recordingId: string) {
 		this.onActivitiesPanelDeleteRecordingClicked.emit(recordingId);
+	}
+
+	/**
+	 * @internal
+	 */
+
+	onForceRecordingUpdate() {
+		this.onActivitiesPanelForceRecordingUpdate.emit();
 	}
 
 	/**

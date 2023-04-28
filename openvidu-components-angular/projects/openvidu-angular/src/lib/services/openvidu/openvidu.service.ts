@@ -469,6 +469,9 @@ export class OpenViduService {
 
 	/**
 	 * @internal
+	 *
+	 * @param type: type of signal
+	 * @param connections: if undefined, the signal will be sent to all participants
 	 */
 	sendSignal(type: Signal, connections?: Connection[], data?: any): void {
 		const signalOptions: SignalOptions = {
@@ -611,7 +614,7 @@ export class OpenViduService {
 	needSendNicknameSignal(): boolean {
 		let oldNickname: string;
 		try {
-			const connData = JSON.parse(this.webcamSession.connection.data.split('%/%')[0]);
+			const connData = JSON.parse(this.cleanConnectionData(this.webcamSession.connection.data));
 			oldNickname = connData.clientData;
 		} catch (error) {
 			this.log.e(error);
@@ -637,7 +640,7 @@ export class OpenViduService {
 		// Avoid screen connections
 		const remoteCameraConnections: Connection[] = Array.from(this.webcamSession.remoteConnections.values()).filter((conn) => {
 			let type: VideoType;
-			type = JSON.parse(conn.data).type;
+			type = JSON.parse(this.cleanConnectionData(conn.data)).type;
 			return type !== VideoType.SCREEN;
 		});
 		return remoteCameraConnections;
@@ -655,5 +658,9 @@ export class OpenViduService {
 				this.screenSession = null;
 			}
 		}
+	}
+
+	private cleanConnectionData(data: string): string {
+		return data.split('%/%')[0];
 	}
 }

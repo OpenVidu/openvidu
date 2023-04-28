@@ -64,29 +64,23 @@ export class SessionComponent implements OnInit, OnDestroy {
 	@ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any>;
 	@ContentChild('panel', { read: TemplateRef }) panelTemplate: TemplateRef<any>;
 	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
-
 	@Input() usedInPrejoinPage = false;
-
 	@Output() onNodeCrashed = new EventEmitter<any>();
 
 	session: Session;
 	sessionScreen: Session;
-
 	sideMenu: MatSidenav;
-
 	sidenavMode: SidenavMode = SidenavMode.SIDE;
 	settingsPanelOpened: boolean;
 	drawer: MatDrawerContainer;
 	preparing: boolean = true;
 
+	private isSessionCreator: boolean = false;
 	protected readonly SIDENAV_WIDTH_LIMIT_MODE = 790;
-
 	protected menuSubscription: Subscription;
 	protected layoutWidthSubscription: Subscription;
-
 	protected updateLayoutInterval: NodeJS.Timer;
 	private captionLanguageSubscription: Subscription;
-
 	protected log: ILogger;
 
 	constructor(
@@ -168,6 +162,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 	async ngOnInit() {
 		if (!this.usedInPrejoinPage) {
+			this.isSessionCreator = this.participantService.amIModerator();
 			if (!this.openviduService.getScreenToken()) {
 				// Hide screenshare button if screen token does not exist
 				this.libService.screenshareButton.next(false);
@@ -439,6 +434,11 @@ export class SessionComponent implements OnInit, OnDestroy {
 	private subscribeToBroadcastingEvents() {
 		this.session.on('broadcastStarted', () => this.broadcastingService.startBroadcasting());
 		this.session.on('broadcastStopped', () => this.broadcastingService.stopBroadcasting());
+
+		if (!this.isSessionCreator) {
+			// Listen to recording delete events from moderator
+			this.session.on(`signal:${Signal.RECORDING_DELETED}`, () => this.recordingService.forceUpdateRecordings());
+		}
 	}
 
 	private startUpdateLayoutInterval() {

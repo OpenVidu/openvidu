@@ -5,6 +5,8 @@ import { ActionService } from '../../../../services/action/action.service';
 import { OpenViduAngularConfigService } from '../../../../services/config/openvidu-angular.config.service';
 import { ParticipantService } from '../../../../services/participant/participant.service';
 import { RecordingService } from '../../../../services/recording/recording.service';
+import { OpenViduService } from '../../../../services/openvidu/openvidu.service';
+import { Signal } from '../../../../models/signal.model';
 
 @Component({
 	selector: 'ov-recording-activity',
@@ -35,6 +37,13 @@ export class RecordingActivityComponent implements OnInit {
 	 * The recording should be deleted using the REST API.
 	 */
 	@Output() onDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
+	 * Provides event notifications that fire when a participant needs update the recordings information
+	 * (usually when recording is stopped by the session moderator or recording panel is opened).
+	 * The recordings should be updated using the REST API.
+	 */
+	@Output() onForceRecordingUpdate: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
 	 * @internal
@@ -76,6 +85,7 @@ export class RecordingActivityComponent implements OnInit {
 	private recordingStatusSubscription: Subscription;
 	private recordingListSubscription: Subscription;
 	private recordingErrorSub: Subscription;
+	private forceRecordingUpdateSub: Subscription;
 
 	/**
 	 * @internal
@@ -85,6 +95,7 @@ export class RecordingActivityComponent implements OnInit {
 		private participantService: ParticipantService,
 		private libService: OpenViduAngularConfigService,
 		private actionService: ActionService,
+		private openviduService: OpenViduService,
 		private cd: ChangeDetectorRef
 	) {}
 
@@ -94,6 +105,7 @@ export class RecordingActivityComponent implements OnInit {
 	ngOnInit(): void {
 		this.subscribeToRecordingStatus();
 		this.subscribeToRecordingActivityDirective();
+		this.subscribeToForceRecordingUpdate();
 		this.isSessionCreator = this.participantService.amIModerator();
 	}
 
@@ -104,6 +116,7 @@ export class RecordingActivityComponent implements OnInit {
 		if (this.recordingStatusSubscription) this.recordingStatusSubscription.unsubscribe();
 		if (this.recordingListSubscription) this.recordingListSubscription.unsubscribe();
 		if (this.recordingErrorSub) this.recordingErrorSub.unsubscribe();
+		if (this.forceRecordingUpdateSub) this.forceRecordingUpdateSub.unsubscribe();
 	}
 
 	/**
@@ -156,8 +169,10 @@ export class RecordingActivityComponent implements OnInit {
 	deleteRecording(id: string) {
 		const succsessCallback = () => {
 			this.onDeleteRecordingClicked.emit(id);
+			// Sending signal to all participants with the aim of updating their recordings list
+			this.openviduService.sendSignal(Signal.RECORDING_DELETED, this.openviduService.getRemoteConnections());
 		};
-		this.actionService.openDeleteRecordingDialog(succsessCallback);
+		this.actionService.openDeleteRecordingDialog(succsessCallback.bind(this));
 	}
 
 	/**
@@ -180,6 +195,10 @@ export class RecordingActivityComponent implements OnInit {
 				if (ev?.info) {
 					if (this.recordingStatus !== RecordingStatus.FAILED) {
 						this.oldRecordingStatus = this.recordingStatus;
+						if (ev.info.status === RecordingStatus.STOPPED && !this.isSessionCreator) {
+							// Force update recording list when recording is stopped by moderator
+							this.onForceRecordingUpdate.emit();
+						}
 					}
 					this.recordingStatus = ev.info.status;
 					this.recordingAlive = ev.info.status === RecordingStatus.STARTED;
@@ -192,6 +211,8 @@ export class RecordingActivityComponent implements OnInit {
 	private subscribeToRecordingActivityDirective() {
 		this.recordingListSubscription = this.libService.recordingsListObs.subscribe((recordingList: RecordingInfo[]) => {
 			this.recordingsList = recordingList;
+			// si envio aqui el signal, estos eventos serian infinitos
+			// this.openviduService.sendSignal(Signal.RECORDING_DELETED, this.openviduService.getRemoteConnections());
 			this.cd.markForCheck();
 		});
 
@@ -200,6 +221,12 @@ export class RecordingActivityComponent implements OnInit {
 				this.recordingService.updateStatus(RecordingStatus.FAILED);
 				this.recordingError = error.error?.message || error.message || error;
 			}
+		});
+	}
+
+	private subscribeToForceRecordingUpdate() {
+		this.forceRecordingUpdateSub = this.recordingService.forceUpdateRecordingsObs.subscribe(() => {
+			this.onForceRecordingUpdate.emit();
 		});
 	}
 }

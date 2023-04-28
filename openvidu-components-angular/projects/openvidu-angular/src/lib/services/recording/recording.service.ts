@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { RecordingEvent } from 'openvidu-browser';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { RecordingInfo, RecordingStatus } from '../../models/recording.model';
 import { ActionService } from '../action/action.service';
 
@@ -13,6 +13,10 @@ export class RecordingService {
 	 */
 	recordingStatusObs: Observable<{ info: RecordingInfo; time?: Date } | undefined>;
 
+	/**
+	 * @internal
+	 */
+	forceUpdateRecordingsObs: Subject<void> = new Subject();
 	private recordingTime: Date | undefined;
 	private recordingTimeInterval: NodeJS.Timer;
 	private currentRecording: RecordingInfo = { status: RecordingStatus.STOPPED };
@@ -86,7 +90,6 @@ export class RecordingService {
 		const recordingId = recording.id;
 		// Only COMPOSED recording is supported. The extension will allways be 'mp4'.
 		const extension = 'mp4'; //recording.url?.split('.').pop()  || 'mp4';
-
 		const link = document.createElement('a');
 		link.href = `/recordings/${recordingId}/${recordingId}.${extension}`;
 		link.download = `${recordingId}.${extension}`;
@@ -102,6 +105,10 @@ export class RecordingService {
 			// For Firefox it is necessary to delay revoking the ObjectURL
 			link.remove();
 		}, 100);
+	}
+
+	forceUpdateRecordings() {
+		this.forceUpdateRecordingsObs.next();
 	}
 
 	private startRecordingTime() {
