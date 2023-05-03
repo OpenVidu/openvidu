@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 LABEL maintainer="info@openvidu.io"
 
 # Update and install dependencies
@@ -7,8 +7,8 @@ RUN apt-get update && apt-get -y upgrade && \
 	rm -rf /var/lib/apt/lists/*
 
 # Install Kurento Media Server (KMS)
-RUN echo "deb [arch=amd64] http://ubuntu.openvidu.io/6.18.0 bionic kms6" | tee /etc/apt/sources.list.d/kurento.list && \
-	apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5AFA7A83 && \
+RUN echo "deb [arch=amd64] http://ubuntu.openvidu.io/7.0.1 focal main" | tee /etc/apt/sources.list.d/kurento.list && \
+	apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 234821A61B67740F89BFD669FC8A16625AFA7A83 && \
 	apt-get update && \
 	apt-get -y install kurento-media-server && \
 	rm -rf /var/lib/apt/lists/*
