@@ -582,29 +582,29 @@ export class OpenViduService {
 	}
 
 	private async createMediaStream(pp: PublisherProperties): Promise<MediaStream> {
-		let mediaStream: MediaStream;
-		const isFirefoxPlatform = this.platformService.isFirefox();
-		const isReplacingAudio = !!pp.audioSource;
-		const isReplacingVideo = !!pp.videoSource;
+		const currentCameraSelected = this.deviceService.getCameraSelected();
+		const currentMicSelected = this.deviceService.getMicrophoneSelected();
+		const isReplacingAudio = Boolean(pp.audioSource);
+		const isReplacingVideo = Boolean(pp.videoSource);
 
 		try {
-			mediaStream = await this.OV.getUserMedia(pp);
+			const trackType = isReplacingAudio ? 'audio' : 'video';
+			this.forceStopMediaTracks(this.participantService.getMyCameraPublisher().stream.getMediaStream(), trackType);
+			return this.OV.getUserMedia(pp);
 		} catch (error) {
+			console.warn('Error creating MediaStream', error);
 			if ((<OpenViduError>error).name === OpenViduErrorName.DEVICE_ACCESS_DENIED) {
-				if (isFirefoxPlatform) {
-					this.log.w('The device requested is not available. Restoring the older one');
-					// The track requested is not available so we are getting the old tracks ids for recovering the track
-					if (isReplacingVideo) {
-						pp.videoSource = this.deviceService.getCameraSelected().device;
-					} else if (isReplacingAudio) {
-						pp.audioSource = this.deviceService.getMicrophoneSelected().device;
-					}
-					mediaStream = await this.OV.getUserMedia(pp);
-					// TODO show error alert informing that the new device is not available
+				this.log.w('The device requested is not available. Restoring the older one');
+				// The track requested is not available so we are getting the old tracks ids for recovering the track
+				if (isReplacingVideo) {
+					pp.videoSource = currentCameraSelected?.device;
+				} else if (isReplacingAudio) {
+					pp.audioSource = currentMicSelected?.device;
 				}
+				// TODO show error alert informing that the new device is not available
+				return this.OV.getUserMedia(pp);
 			}
-		} finally {
-			return mediaStream;
+			throw error;
 		}
 	}
 
@@ -662,5 +662,16 @@ export class OpenViduService {
 
 	private cleanConnectionData(data: string): string {
 		return data.split('%/%')[0];
+	}
+
+	private forceStopMediaTracks(stream: MediaStream, type: 'video' | 'audio'): void {
+		if (stream) {
+			stream.getTracks().forEach((track) => {
+				if (track.kind === type) {
+					track.stop();
+					track.enabled = false;
+				}
+			});
+		}
 	}
 }

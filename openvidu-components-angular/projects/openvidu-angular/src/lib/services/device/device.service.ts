@@ -20,8 +20,8 @@ export class DeviceService {
 	private devices: Device[];
 	private cameras: CustomDevice[] = [];
 	private microphones: CustomDevice[] = [];
-	private cameraSelected: CustomDevice | null;
-	private microphoneSelected: CustomDevice | null;
+	private cameraSelected: CustomDevice | undefined;
+	private microphoneSelected: CustomDevice | undefined;
 	private log: ILogger;
 	private videoDevicesEnabled: boolean = true;
 	private audioDevicesEnabled: boolean = true;
@@ -169,11 +169,11 @@ export class DeviceService {
 		return this.hasAudioDeviceAvailable() && this._isAudioMuted;
 	}
 
-	getCameraSelected(): CustomDevice | null {
+	getCameraSelected(): CustomDevice | undefined {
 		return this.cameraSelected;
 	}
 
-	getMicrophoneSelected(): CustomDevice | null {
+	getMicrophoneSelected(): CustomDevice | undefined {
 		return this.microphoneSelected;
 	}
 
@@ -228,8 +228,8 @@ export class DeviceService {
 		this.devices = [];
 		this.cameras = [];
 		this.microphones = [];
-		this.cameraSelected = null;
-		this.microphoneSelected = null;
+		this.cameraSelected = undefined;
+		this.microphoneSelected = undefined;
 		this.videoDevicesEnabled = true;
 		this.audioDevicesEnabled = true;
 	}
