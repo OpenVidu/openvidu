@@ -65,7 +65,7 @@
   .status-icons, #settings-container {
 	position: absolute;
 	bottom: 0;
-	z-index: 10;
+	z-index: 9999;
 	text-align: center;
   }
 
