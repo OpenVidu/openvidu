@@ -612,14 +612,15 @@ export class OpenViduService {
 	 * @internal
 	 */
 	needSendNicknameSignal(): boolean {
-		let oldNickname: string;
+		let oldNickname: string = "";
 		try {
 			const connData = JSON.parse(this.cleanConnectionData(this.webcamSession.connection.data));
 			oldNickname = connData.clientData;
 		} catch (error) {
 			this.log.e(error);
+		} finally {
+			return oldNickname !== this.participantService.getMyNickname();
 		}
-		return oldNickname !== this.participantService.getMyNickname();
 	}
 
 	/**
