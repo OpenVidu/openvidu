@@ -992,8 +992,8 @@ export class Session extends EventDispatcher {
                         oldValue = stream.videoActive;
                         event.newValue = event.newValue === 'true';
                         stream.videoActive = event.newValue;
-                        const videoTrack = stream.getMediaStream().getVideoTracks()[0];
-                        if(!videoTrack.enabled && stream.videoActive){
+                        const videoTrack = stream?.getMediaStream()?.getVideoTracks()?.[0];
+                        if(videoTrack && !videoTrack.enabled && stream.videoActive){
                             videoTrack.enabled = true;
                         }
                         break;
