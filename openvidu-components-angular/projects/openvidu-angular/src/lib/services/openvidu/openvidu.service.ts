@@ -312,13 +312,13 @@ export class OpenViduService {
 	/**
 	 * @internal
 	 */
-	private unpublish(publisher: Publisher): void {
+	private async unpublish(publisher: Publisher): Promise<void> {
 		if (!!publisher) {
 			if (publisher === this.participantService.getMyCameraPublisher()) {
 				this.publishAudioAux(this.participantService.getMyScreenPublisher(), this.participantService.isMyAudioActive());
-				this.webcamSession.unpublish(publisher);
+				await this.webcamSession.unpublish(publisher);
 			} else if (publisher === this.participantService.getMyScreenPublisher()) {
-				this.screenSession.unpublish(publisher);
+				await this.screenSession.unpublish(publisher);
 			}
 		}
 	}
@@ -334,9 +334,9 @@ export class OpenViduService {
 		// Disabling webcam
 		if (this.participantService.haveICameraAndScreenActive()) {
 			await this.publishVideoAux(this.participantService.getMyCameraPublisher(), publish);
-			this.participantService.disableWebcamStream();
-			this.unpublish(this.participantService.getMyCameraPublisher());
+			await this.unpublish(this.participantService.getMyCameraPublisher());
 			this.publishAudioAux(this.participantService.getMyScreenPublisher(), publishAudio);
+			this.participantService.disableWebcamStream();
 		} else if (this.participantService.isOnlyMyScreenActive()) {
 			// Enabling webcam
 			const hasAudio = this.participantService.hasScreenAudioActive();
@@ -396,7 +396,7 @@ export class OpenViduService {
 		if (this.participantService.haveICameraAndScreenActive()) {
 			// Disabling screenShare
 			this.participantService.disableScreenStream();
-			this.unpublish(this.participantService.getMyScreenPublisher());
+			await this.unpublish(this.participantService.getMyScreenPublisher());
 		} else if (this.participantService.isOnlyMyCameraActive()) {
 			// I only have the camera published
 			const hasAudioDevicesAvailable = this.deviceService.hasAudioDeviceAvailable();
@@ -432,7 +432,7 @@ export class OpenViduService {
 				if (!this.participantService.isMyVideoActive()) {
 					// Disabling webcam
 					this.participantService.disableWebcamStream();
-					this.unpublish(this.participantService.getMyCameraPublisher());
+					await this.unpublish(this.participantService.getMyCameraPublisher());
 				}
 			});
 
@@ -453,7 +453,7 @@ export class OpenViduService {
 
 			// Disabling screenshare
 			this.participantService.disableScreenStream();
-			this.unpublish(this.participantService.getMyScreenPublisher());
+			await this.unpublish(this.participantService.getMyScreenPublisher());
 		}
 	}
 
