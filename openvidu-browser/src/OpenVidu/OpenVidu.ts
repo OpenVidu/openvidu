@@ -512,107 +512,104 @@ export class OpenVidu {
      * });
      * ```
      */
-    getUserMedia(options: PublisherProperties): Promise<MediaStream> {
-        return new Promise<MediaStream>(async (resolve, reject) => {
-            const askForAudioStreamOnly = async (previousMediaStream: MediaStream, constraints: MediaStreamConstraints) => {
-                const definedAudioConstraint = constraints.audio === undefined ? true : constraints.audio;
-                const constraintsAux: MediaStreamConstraints = { audio: definedAudioConstraint, video: false };
-                try {
-                    const audioOnlyStream = await navigator.mediaDevices.getUserMedia(constraintsAux);
-                    previousMediaStream.addTrack(audioOnlyStream.getAudioTracks()[0]);
-                    return resolve(previousMediaStream);
-                } catch (error) {
-                    previousMediaStream.getAudioTracks().forEach((track) => {
-                        track.stop();
-                    });
-                    previousMediaStream.getVideoTracks().forEach((track) => {
-                        track.stop();
-                    });
-                    return reject(this.generateAudioDeviceError(error, constraintsAux));
-                }
-            };
-
+    async getUserMedia(options: PublisherProperties): Promise<MediaStream> {
+        const askForAudioStreamOnly = async (previousMediaStream: MediaStream, constraints: MediaStreamConstraints) => {
+            const definedAudioConstraint = constraints.audio === undefined ? true : constraints.audio;
+            const constraintsAux: MediaStreamConstraints = { audio: definedAudioConstraint, video: false };
             try {
-                const myConstraints = await this.generateMediaConstraints(options);
-                if (
-                    (!!myConstraints.videoTrack && !!myConstraints.audioTrack) ||
-                    (!!myConstraints.audioTrack && myConstraints.constraints?.video === false) ||
-                    (!!myConstraints.videoTrack && myConstraints.constraints?.audio === false)
-                ) {
-                    // No need to call getUserMedia at all. Both tracks provided, or only AUDIO track provided or only VIDEO track provided
-                    return resolve(this.addAlreadyProvidedTracks(myConstraints, new MediaStream()));
-                } else {
-                    // getUserMedia must be called. AUDIO or VIDEO are requesting a new track
+                const audioOnlyStream = await navigator.mediaDevices.getUserMedia(constraintsAux);
+                previousMediaStream.addTrack(audioOnlyStream.getAudioTracks()[0]);
+                return previousMediaStream;
+            } catch (error) {
+                previousMediaStream.getAudioTracks().forEach((track) => {
+                    track.stop();
+                });
+                previousMediaStream.getVideoTracks().forEach((track) => {
+                    track.stop();
+                });
+                throw this.generateAudioDeviceError(error, constraintsAux);
+            }
+        };
 
-                    // Delete already provided constraints for audio or video
-                    if (!!myConstraints.videoTrack) {
-                        delete myConstraints.constraints!.video;
-                    }
-                    if (!!myConstraints.audioTrack) {
-                        delete myConstraints.constraints!.audio;
-                    }
+        try {
+            const myConstraints = await this.generateMediaConstraints(options);
+            if (
+                (!!myConstraints.videoTrack && !!myConstraints.audioTrack) ||
+                (!!myConstraints.audioTrack && myConstraints.constraints?.video === false) ||
+                (!!myConstraints.videoTrack && myConstraints.constraints?.audio === false)
+            ) {
+                // No need to call getUserMedia at all. Both tracks provided, or only AUDIO track provided or only VIDEO track provided
+                return this.addAlreadyProvidedTracks(myConstraints, new MediaStream());
+            } else {
+                // getUserMedia must be called. AUDIO or VIDEO are requesting a new track
 
-                    let mustAskForAudioTrackLater = false;
-                    if (typeof options.videoSource === 'string') {
-                        // Video is deviceId or screen sharing
-                        if (
-                            options.videoSource === 'screen' ||
-                            options.videoSource === 'window' ||
-                            (platform.isElectron() && options.videoSource.startsWith('screen:'))
-                        ) {
-                            // Video is screen sharing
-                            mustAskForAudioTrackLater =
-                                !myConstraints.audioTrack && options.audioSource !== null && options.audioSource !== false;
-                            if (navigator.mediaDevices['getDisplayMedia'] && !platform.isElectron()) {
-                                // getDisplayMedia supported
-                                try {
-                                    const mediaStream = await navigator.mediaDevices['getDisplayMedia']({ video: true });
-                                    this.addAlreadyProvidedTracks(myConstraints, mediaStream);
-                                    if (mustAskForAudioTrackLater) {
-                                        await askForAudioStreamOnly(mediaStream, <MediaStreamConstraints>myConstraints.constraints);
-                                        return;
-                                    } else {
-                                        return resolve(mediaStream);
-                                    }
-                                } catch (error) {
-                                    let errorName: OpenViduErrorName = OpenViduErrorName.SCREEN_CAPTURE_DENIED;
-                                    const errorMessage = error.toString();
-                                    return reject(new OpenViduError(errorName, errorMessage));
+                // Delete already provided constraints for audio or video
+                if (!!myConstraints.videoTrack) {
+                    delete myConstraints.constraints!.video;
+                }
+                if (!!myConstraints.audioTrack) {
+                    delete myConstraints.constraints!.audio;
+                }
+
+                let mustAskForAudioTrackLater = false;
+                if (typeof options.videoSource === 'string') {
+                    // Video is deviceId or screen sharing
+                    if (
+                        options.videoSource === 'screen' ||
+                        options.videoSource === 'window' ||
+                        (platform.isElectron() && options.videoSource.startsWith('screen:'))
+                    ) {
+                        // Video is screen sharing
+                        mustAskForAudioTrackLater =
+                            !myConstraints.audioTrack && options.audioSource !== null && options.audioSource !== false;
+                        if (navigator.mediaDevices['getDisplayMedia'] && !platform.isElectron()) {
+                            // getDisplayMedia supported
+                            try {
+                                const mediaStream = await navigator.mediaDevices['getDisplayMedia']({ video: true });
+                                this.addAlreadyProvidedTracks(myConstraints, mediaStream);
+                                if (mustAskForAudioTrackLater) {
+                                    return await askForAudioStreamOnly(mediaStream, <MediaStreamConstraints>myConstraints.constraints);
+                                } else {
+                                    return mediaStream;
                                 }
-                            } else {
-                                // getDisplayMedia NOT supported. Can perform getUserMedia below with already calculated constraints
+                            } catch (error) {
+                                let errorName: OpenViduErrorName = OpenViduErrorName.SCREEN_CAPTURE_DENIED;
+                                const errorMessage = error.toString();
+                                throw new OpenViduError(errorName, errorMessage);
                             }
                         } else {
-                            // Video is deviceId. Can perform getUserMedia below with already calculated constraints
+                            // getDisplayMedia NOT supported. Can perform getUserMedia below with already calculated constraints
                         }
-                    }
-                    // Use already calculated constraints
-                    const constraintsAux = mustAskForAudioTrackLater
-                        ? { video: myConstraints.constraints!.video }
-                        : myConstraints.constraints;
-                    try {
-                        const mediaStream = await navigator.mediaDevices.getUserMedia(constraintsAux);
-                        this.addAlreadyProvidedTracks(myConstraints, mediaStream);
-                        if (mustAskForAudioTrackLater) {
-                            await askForAudioStreamOnly(mediaStream, <MediaStreamConstraints>myConstraints.constraints);
-                        } else {
-                            return resolve(mediaStream);
-                        }
-                    } catch (error) {
-                        let errorName: OpenViduErrorName;
-                        const errorMessage = error.toString();
-                        if (!(options.videoSource === 'screen')) {
-                            errorName = OpenViduErrorName.DEVICE_ACCESS_DENIED;
-                        } else {
-                            errorName = OpenViduErrorName.SCREEN_CAPTURE_DENIED;
-                        }
-                        return reject(new OpenViduError(errorName, errorMessage));
+                    } else {
+                        // Video is deviceId. Can perform getUserMedia below with already calculated constraints
                     }
                 }
-            } catch (error) {
-                reject(error);
+                // Use already calculated constraints
+                const constraintsAux = mustAskForAudioTrackLater
+                    ? { video: myConstraints.constraints!.video }
+                    : myConstraints.constraints;
+                try {
+                    const mediaStream = await navigator.mediaDevices.getUserMedia(constraintsAux);
+                    this.addAlreadyProvidedTracks(myConstraints, mediaStream);
+                    if (mustAskForAudioTrackLater) {
+                        return await askForAudioStreamOnly(mediaStream, <MediaStreamConstraints>myConstraints.constraints);
+                    } else {
+                        return mediaStream;
+                    }
+                } catch (error) {
+                    let errorName: OpenViduErrorName;
+                    const errorMessage = error.toString();
+                    if (!(options.videoSource === 'screen')) {
+                        errorName = OpenViduErrorName.DEVICE_ACCESS_DENIED;
+                    } else {
+                        errorName = OpenViduErrorName.SCREEN_CAPTURE_DENIED;
+                    }
+                    throw new OpenViduError(errorName, errorMessage);
+                }
             }
-        });
+        } catch (error) {
+            throw error;
+        }
     }
 
     /* tslint:disable:no-empty */
@@ -990,7 +987,7 @@ export class OpenVidu {
     /**
      * @hidden
      */
-    addAlreadyProvidedTracks(myConstraints: CustomMediaStreamConstraints, mediaStream: MediaStream, stream?: Stream) {
+    addAlreadyProvidedTracks(myConstraints: CustomMediaStreamConstraints, mediaStream: MediaStream, stream?: Stream): MediaStream {
         if (!!myConstraints.videoTrack) {
             mediaStream.addTrack(myConstraints.videoTrack);
             if (!!stream) {
