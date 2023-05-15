@@ -21,6 +21,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -844,15 +845,26 @@ public class SessionRestController {
 
 		ConnectionType type = ConnectionProperties.fromJson(params).build().getType();
 
+		// Check if custom ice servers are defined in params
+		boolean definedCustomIceServers = false;
+
 		if (ConnectionType.WEBRTC.equals(type)) {
-			if (params != null && params.get("customIceServers") == null
-					&& !openviduConfig.getWebrtcIceServersBuilders().isEmpty()) {
-				// If not defined in Connection, check if defined in OpenVidu global config
-				for (IceServerProperties.Builder iceServerPropertiesBuilder : openviduConfig
-						.getWebrtcIceServersBuilders()) {
-					IceServerProperties.Builder configIceBuilder = iceServerPropertiesBuilder.clone();
-					builder.addCustomIceServer(configIceBuilder.build());
+			if (params != null) {
+				JsonArray customIceServersJsonArray = null;
+				if (params.get("customIceServers") != null) {
+					customIceServersJsonArray = new Gson().toJsonTree(params.get("customIceServers"), List.class)
+							.getAsJsonArray();
+					definedCustomIceServers = customIceServersJsonArray.size() > 0;
 				}
+			}
+		}
+
+		if (!definedCustomIceServers && !openviduConfig.getWebrtcIceServersBuilders().isEmpty()) {
+			// If not defined in Connection, check if defined in OpenVidu global config
+			for (IceServerProperties.Builder iceServerPropertiesBuilder : openviduConfig
+					.getWebrtcIceServersBuilders()) {
+				IceServerProperties.Builder configIceBuilder = iceServerPropertiesBuilder.clone();
+				builder.addCustomIceServer(configIceBuilder.build());
 			}
 		}
 
