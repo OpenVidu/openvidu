@@ -524,9 +524,7 @@ export class Session {
                     if (!!error.response && error.response.status === 409) {
                         // 'customSessionId' already existed
                         this.sessionId = this.properties.customSessionId;
-                        this.fetch()
-                            .then(() => resolve(this.sessionId))
-                            .catch((error) => !rejected && this.ov.handleError(error, reject));
+                        this.fetch().then(() => resolve(this.sessionId));
                     } else {
                         !rejected && this.ov.handleError(error, reject);
                     }
