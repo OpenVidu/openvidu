@@ -30,6 +30,16 @@ interface ObjMap<T> {
     [s: string]: T;
 }
 
+/**
+ * @hidden
+ */
+interface HttpError {
+    message?: string;
+    response?: any;
+    request?: any;
+    status?: number;
+}
+
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 export class OpenVidu {
@@ -155,6 +165,7 @@ export class OpenVidu {
     public startRecording(sessionId: string, param2?: string | RecordingProperties): Promise<Recording> {
         return new Promise<Recording>((resolve, reject) => {
             let data;
+            let rejected = false;
 
             if (param2 != null) {
                 if (typeof param2 === 'string') {
@@ -211,11 +222,12 @@ export class OpenVidu {
                         resolve(r);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    this.handleError(error, reject);
+                    !rejected && this.handleError(error, reject);
                 });
         });
     }
@@ -232,6 +244,7 @@ export class OpenVidu {
      */
     public stopRecording(recordingId: string): Promise<Recording> {
         return new Promise<Recording>((resolve, reject) => {
+            let rejected = false;
             axios
                 .post(this.host + OpenVidu.API_RECORDINGS_STOP + '/' + recordingId, undefined, {
                     headers: {
@@ -256,11 +269,12 @@ export class OpenVidu {
                         resolve(r);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    this.handleError(error, reject);
+                    !rejected && this.handleError(error, reject);
                 });
         });
     }
@@ -277,6 +291,7 @@ export class OpenVidu {
      */
     public getRecording(recordingId: string): Promise<Recording> {
         return new Promise<Recording>((resolve, reject) => {
+            let rejected = false;
             axios
                 .get(this.host + OpenVidu.API_RECORDINGS + '/' + recordingId, {
                     headers: {
@@ -290,11 +305,12 @@ export class OpenVidu {
                         resolve(new Recording(res.data));
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true
+                        this.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    this.handleError(error, reject);
+                    !rejected && this.handleError(error, reject);
                 });
         });
     }
@@ -306,6 +322,7 @@ export class OpenVidu {
      */
     public listRecordings(): Promise<Recording[]> {
         return new Promise<Recording[]>((resolve, reject) => {
+            let rejected = false;
             axios
                 .get(this.host + OpenVidu.API_RECORDINGS, {
                     headers: {
@@ -325,11 +342,12 @@ export class OpenVidu {
                         resolve(recordingArray);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    this.handleError(error, reject);
+                    !rejected && this.handleError(error, reject);
                 });
         });
     }
@@ -346,6 +364,7 @@ export class OpenVidu {
      */
     public deleteRecording(recordingId: string): Promise<Error> {
         return new Promise<Error>((resolve, reject) => {
+            let rejected = false;
             axios
                 .delete(this.host + OpenVidu.API_RECORDINGS + '/' + recordingId, {
                     headers: {
@@ -359,11 +378,12 @@ export class OpenVidu {
                         resolve(undefined);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    this.handleError(error, reject);
+                    !rejected && this.handleError(error, reject);
                 });
         });
     }
@@ -393,7 +413,7 @@ export class OpenVidu {
     public startBroadcast(sessionId: string, broadcastUrl: string, properties?: RecordingProperties): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             let data;
-
+            let rejected = false;
             if (properties != undefined) {
                 data = {
                     session: sessionId,
@@ -436,11 +456,12 @@ export class OpenVidu {
                         resolve();
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    this.handleError(error, reject);
+                    !rejected && this.handleError(error, reject);
                 });
         });
     }
@@ -457,6 +478,7 @@ export class OpenVidu {
      */
     public stopBroadcast(sessionId: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
+            let rejected = false;
             axios
                 .post(
                     this.host + OpenVidu.API_BROADCAST_STOP,
@@ -484,11 +506,12 @@ export class OpenVidu {
                         resolve();
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    this.handleError(error, reject);
+                    !rejected && this.handleError(error, reject);
                 });
         });
     }
@@ -502,6 +525,7 @@ export class OpenVidu {
      */
     public fetch(): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
+            let rejected = false;
             axios
                 .get(this.host + OpenVidu.API_SESSIONS + '?pendingConnections=true', {
                     headers: {
@@ -548,11 +572,12 @@ export class OpenVidu {
                         resolve(hasChanged);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    this.handleError(error, reject);
+                    !rejected && this.handleError(error, reject);
                 });
         });
     }
@@ -632,6 +657,7 @@ export class OpenVidu {
         };
 
         return new Promise<{ changes: boolean; sessionChanges: ObjMap<boolean> }>((resolve, reject) => {
+            let rejected = false;
             axios
                 .get(this.host + OpenVidu.API_SESSIONS + '?webRtcStats=true', {
                     headers: {
@@ -701,11 +727,12 @@ export class OpenVidu {
                         resolve({ changes: globalChanges, sessionChanges });
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    this.handleError(error, reject);
+                    !rejected && this.handleError(error, reject);
                 });
         });
     }
@@ -735,8 +762,11 @@ export class OpenVidu {
     /**
      * @hidden
      */
-    handleError(error: AxiosError, reject: (reason?: any) => void) {
-        if (error.response) {
+    handleError(error: AxiosError | HttpError, reject: (reason?: any) => void) {
+        if (error.status) {
+            // Error returned by openvidu-server
+            reject(new Error(error.status.toString()));
+        } else if (error.response) {
             // The request was made and the server responded with a status code (not 2xx)
             reject(new Error(error.response.status.toString()));
         } else if (error.request) {

@@ -110,6 +110,7 @@ export class Session {
      */
     public generateToken(tokenOptions?: TokenOptions): Promise<string> {
         return new Promise<string>((resolve, reject) => {
+            let rejected = false;
             const data = JSON.stringify({
                 session: this.sessionId,
                 role: !!tokenOptions && !!tokenOptions.role ? tokenOptions.role : null,
@@ -129,11 +130,12 @@ export class Session {
                         resolve(res.data.token);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.ov.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    this.ov.handleError(error, reject);
+                    !rejected && this.ov.handleError(error, reject);
                 });
         });
     }
@@ -148,6 +150,7 @@ export class Session {
      */
     public createConnection(connectionProperties?: ConnectionProperties): Promise<Connection> {
         return new Promise<Connection>((resolve, reject) => {
+            let rejected = false;
             const data = JSON.stringify({
                 type: !!connectionProperties && !!connectionProperties.type ? connectionProperties.type : null,
                 data: !!connectionProperties && !!connectionProperties.data ? connectionProperties.data : null,
@@ -181,7 +184,8 @@ export class Session {
                         resolve(new Connection(res.data));
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.ov.handleError(res, reject)
                     }
                 })
                 .catch((error) => {
@@ -198,6 +202,7 @@ export class Session {
      */
     public close(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
+            let rejected = false;
             axios
                 .delete(this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId, {
                     headers: {
@@ -213,11 +218,12 @@ export class Session {
                         resolve();
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.ov.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    this.ov.handleError(error, reject);
+                    !rejected && this.ov.handleError(error, reject);
                 });
         });
     }
@@ -234,6 +240,7 @@ export class Session {
      */
     public fetch(): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
+            let rejected = false;
             const beforeJSON: string = JSON.stringify(this, this.removeCircularOpenViduReference);
             axios
                 .get(this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId + '?pendingConnections=true', {
@@ -252,11 +259,12 @@ export class Session {
                         resolve(hasChanged);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.ov.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    this.ov.handleError(error, reject);
+                    !rejected && this.ov.handleError(error, reject);
                 });
         });
     }
@@ -280,6 +288,7 @@ export class Session {
      */
     public forceDisconnect(connection: string | Connection): Promise<void> {
         return new Promise<void>((resolve, reject) => {
+            let rejected = false;
             const connectionId: string = typeof connection === 'string' ? connection : (<Connection>connection).connectionId;
             axios
                 .delete(this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/connection/' + connectionId, {
@@ -328,11 +337,12 @@ export class Session {
                         resolve();
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.ov.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    this.ov.handleError(error, reject);
+                    !rejected && this.ov.handleError(error, reject);
                 });
         });
     }
@@ -354,6 +364,7 @@ export class Session {
      */
     public forceUnpublish(publisher: string | Publisher): Promise<void> {
         return new Promise<void>((resolve, reject) => {
+            let rejected = false;
             const streamId: string = typeof publisher === 'string' ? publisher : (<Publisher>publisher).streamId;
             axios
                 .delete(this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/stream/' + streamId, {
@@ -386,11 +397,12 @@ export class Session {
                         resolve();
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.ov.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    this.ov.handleError(error, reject);
+                    !rejected && this.ov.handleError(error, reject);
                 });
         });
     }
@@ -422,6 +434,7 @@ export class Session {
      */
     public updateConnection(connectionId: string, connectionProperties: ConnectionProperties): Promise<Connection | undefined> {
         return new Promise<any>((resolve, reject) => {
+            let rejected = false;
             axios
                 .patch(this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/connection/' + connectionId, connectionProperties, {
                     headers: {
@@ -434,7 +447,8 @@ export class Session {
                         logger.log('Connection ' + connectionId + ' updated');
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.ov.handleError(res, reject);
                         return;
                     }
                     // Update the actual Connection object with the new options
@@ -453,7 +467,7 @@ export class Session {
                     }
                 })
                 .catch((error) => {
-                    this.ov.handleError(error, reject);
+                    !rejected && this.ov.handleError(error, reject);
                 });
         });
     }
@@ -470,6 +484,7 @@ export class Session {
      */
     public getSessionHttp(): Promise<string> {
         return new Promise<string>((resolve, reject) => {
+            let rejected = false;
             if (!!this.sessionId) {
                 resolve(this.sessionId);
             }
@@ -501,16 +516,19 @@ export class Session {
                         resolve(this.sessionId);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.status.toString()));
+                        rejected = true;
+                        this.ov.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
                     if (!!error.response && error.response.status === 409) {
                         // 'customSessionId' already existed
                         this.sessionId = this.properties.customSessionId;
-                        this.fetch().then(() => resolve(this.sessionId));
+                        this.fetch()
+                            .then(() => resolve(this.sessionId))
+                            .catch((error) => !rejected && this.ov.handleError(error, reject));
                     } else {
-                        this.ov.handleError(error, reject);
+                        !rejected && this.ov.handleError(error, reject);
                     }
                 });
         });
