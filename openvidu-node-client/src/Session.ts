@@ -110,7 +110,6 @@ export class Session {
      */
     public generateToken(tokenOptions?: TokenOptions): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            let rejected = false;
             const data = JSON.stringify({
                 session: this.sessionId,
                 role: !!tokenOptions && !!tokenOptions.role ? tokenOptions.role : null,
@@ -122,7 +121,8 @@ export class Session {
                     headers: {
                         Authorization: this.ov.basicAuth,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    validateStatus: (_) => true
                 })
                 .then((res) => {
                     if (res.status === 200) {
@@ -130,12 +130,12 @@ export class Session {
                         resolve(res.data.token);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        rejected = true;
                         this.ov.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    !rejected && this.ov.handleError(error, reject);
+                    // Request error.
+                    this.ov.handleError(error, reject);
                 });
         });
     }
@@ -150,7 +150,6 @@ export class Session {
      */
     public createConnection(connectionProperties?: ConnectionProperties): Promise<Connection> {
         return new Promise<Connection>((resolve, reject) => {
-            let rejected = false;
             const data = JSON.stringify({
                 type: !!connectionProperties && !!connectionProperties.type ? connectionProperties.type : null,
                 data: !!connectionProperties && !!connectionProperties.data ? connectionProperties.data : null,
@@ -171,7 +170,8 @@ export class Session {
                     headers: {
                         Authorization: this.ov.basicAuth,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    validateStatus: (_) => true
                 })
                 .then((res) => {
                     if (res.status === 200) {
@@ -184,11 +184,11 @@ export class Session {
                         resolve(new Connection(res.data));
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        rejected = true;
-                        this.ov.handleError(res, reject)
+                        this.ov.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
+                    // Request error.
                     this.ov.handleError(error, reject);
                 });
         });
@@ -202,13 +202,13 @@ export class Session {
      */
     public close(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            let rejected = false;
             axios
                 .delete(this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId, {
                     headers: {
                         Authorization: this.ov.basicAuth,
                         'Content-Type': 'application/x-www-form-urlencoded'
-                    }
+                    },
+                    validateStatus: (_) => true
                 })
                 .then((res) => {
                     if (res.status === 204) {
@@ -218,12 +218,12 @@ export class Session {
                         resolve();
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        rejected = true;
                         this.ov.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    !rejected && this.ov.handleError(error, reject);
+                    // Request error.
+                    this.ov.handleError(error, reject);
                 });
         });
     }
@@ -240,14 +240,14 @@ export class Session {
      */
     public fetch(): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
-            let rejected = false;
             const beforeJSON: string = JSON.stringify(this, this.removeCircularOpenViduReference);
             axios
                 .get(this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId + '?pendingConnections=true', {
                     headers: {
                         Authorization: this.ov.basicAuth,
                         'Content-Type': 'application/x-www-form-urlencoded'
-                    }
+                    },
+                    validateStatus: (_) => true
                 })
                 .then((res) => {
                     if (res.status === 200) {
@@ -259,12 +259,12 @@ export class Session {
                         resolve(hasChanged);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        rejected = true;
                         this.ov.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    !rejected && this.ov.handleError(error, reject);
+                    // Request error.
+                    this.ov.handleError(error, reject);
                 });
         });
     }
@@ -288,14 +288,14 @@ export class Session {
      */
     public forceDisconnect(connection: string | Connection): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            let rejected = false;
             const connectionId: string = typeof connection === 'string' ? connection : (<Connection>connection).connectionId;
             axios
                 .delete(this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/connection/' + connectionId, {
                     headers: {
                         Authorization: this.ov.basicAuth,
                         'Content-Type': 'application/x-www-form-urlencoded'
-                    }
+                    },
+                    validateStatus: (_) => true
                 })
                 .then((res) => {
                     if (res.status === 204) {
@@ -337,12 +337,12 @@ export class Session {
                         resolve();
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        rejected = true;
                         this.ov.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    !rejected && this.ov.handleError(error, reject);
+                    // Request error.
+                    this.ov.handleError(error, reject);
                 });
         });
     }
@@ -364,14 +364,14 @@ export class Session {
      */
     public forceUnpublish(publisher: string | Publisher): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            let rejected = false;
             const streamId: string = typeof publisher === 'string' ? publisher : (<Publisher>publisher).streamId;
             axios
                 .delete(this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/stream/' + streamId, {
                     headers: {
                         Authorization: this.ov.basicAuth,
                         'Content-Type': 'application/x-www-form-urlencoded'
-                    }
+                    },
+                    validateStatus: (_) => true
                 })
                 .then((res) => {
                     if (res.status === 204) {
@@ -397,12 +397,12 @@ export class Session {
                         resolve();
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        rejected = true;
                         this.ov.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    !rejected && this.ov.handleError(error, reject);
+                    // Request error.
+                    this.ov.handleError(error, reject);
                 });
         });
     }
@@ -434,20 +434,19 @@ export class Session {
      */
     public updateConnection(connectionId: string, connectionProperties: ConnectionProperties): Promise<Connection | undefined> {
         return new Promise<any>((resolve, reject) => {
-            let rejected = false;
             axios
                 .patch(this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/connection/' + connectionId, connectionProperties, {
                     headers: {
                         Authorization: this.ov.basicAuth,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    validateStatus: (_) => true
                 })
                 .then((res) => {
                     if (res.status === 200) {
                         logger.log('Connection ' + connectionId + ' updated');
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        rejected = true;
                         this.ov.handleError(res, reject);
                         return;
                     }
@@ -467,7 +466,8 @@ export class Session {
                     }
                 })
                 .catch((error) => {
-                    !rejected && this.ov.handleError(error, reject);
+                    // Request error.
+                    this.ov.handleError(error, reject);
                 });
         });
     }
@@ -484,7 +484,6 @@ export class Session {
      */
     public getSessionHttp(): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            let rejected = false;
             if (!!this.sessionId) {
                 resolve(this.sessionId);
             }
@@ -498,7 +497,8 @@ export class Session {
                     headers: {
                         Authorization: this.ov.basicAuth,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    validateStatus: (_) => true
                 })
                 .then((res) => {
                     if (res.status === 200) {
@@ -514,20 +514,20 @@ export class Session {
                         this.properties.allowTranscoding = res.data.allowTranscoding;
                         this.sanitizeDefaultSessionProperties(this.properties);
                         resolve(this.sessionId);
+                    } else if (res.status === 409) {
+                        // 'customSessionId' already existed
+                        this.sessionId = this.properties.customSessionId;
+                        this.fetch()
+                            .then(() => resolve(this.sessionId))
+                            .catch((error) => this.ov.handleError(error, reject));
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        rejected = true;
                         this.ov.handleError(res, reject);
                     }
                 })
                 .catch((error) => {
-                    if (!!error.response && error.response.status === 409) {
-                        // 'customSessionId' already existed
-                        this.sessionId = this.properties.customSessionId;
-                        this.fetch().then(() => resolve(this.sessionId));
-                    } else {
-                        !rejected && this.ov.handleError(error, reject);
-                    }
+                    // Request error.
+                    this.ov.handleError(error, reject);
                 });
         });
     }
