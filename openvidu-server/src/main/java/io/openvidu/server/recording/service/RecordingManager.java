@@ -218,7 +218,7 @@ public class RecordingManager {
 
 	private void downloadRecordingImageToLocal(LocalDockerManager dockMng) {
 		log.info("Recording module required: Downloading openvidu/openvidu-recording:"
-				+ openviduConfig.getOpenViduRecordingVersion() + " Docker image (350MB aprox)");
+				+ openviduConfig.getOpenViduRecordingVersion() + " Docker image");
 
 		if (dockMng.dockerImageExistsLocally(
 				openviduConfig.getOpenviduRecordingImageRepo() + ":" + openviduConfig.getOpenViduRecordingVersion())) {
