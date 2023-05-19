@@ -348,7 +348,9 @@ export class OpenVidu {
             platform.isSafariBrowser() ||
             platform.isAndroidBrowser() || // Android WebView & Ionic apps for Android
             platform.isElectron() ||
-            platform.isNodeJs()
+            platform.isNodeJs() ||
+            // TODO: remove when updating platform detection library
+            platform.isMotorolaEdgeDevice()
         );
     }
 

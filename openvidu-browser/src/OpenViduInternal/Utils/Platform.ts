@@ -101,6 +101,14 @@ export class PlatformUtils {
         return platform.name === 'Samsung Internet Mobile' || platform.name === 'Samsung Internet';
     }
 
+    // TODO: This method exists to overcome bug https://github.com/bestiejs/platform.js/issues/184
+    /**
+     * @hidden
+     */
+    public isMotorolaEdgeDevice(): boolean {
+        return platform.product?.toLowerCase().includes('motorola edge') || false;
+    }
+
     /**
      * @hidden
      */
@@ -168,9 +176,13 @@ export class PlatformUtils {
             this.isSamsungBrowser() ||
             this.isIonicAndroid() ||
             this.isIonicIos() ||
-            this.isElectron()
+            this.isElectron() ||
+            // TODO: remove when possible
+            this.isMotorolaEdgeDevice()
         );
     }
+
+
 
     /**
      * @hidden
