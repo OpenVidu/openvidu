@@ -1,5 +1,27 @@
 #!/bin/bash
 
+valid_ip_v4()
+{
+  regex='^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(/[0-9]+)?$'
+
+  if [[ "$1" =~ $regex ]]; then
+    return "$?"
+  else
+    return "$?"
+  fi
+}
+
+valid_ip_v6()
+{
+  regex='^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}(/[0-9]+)?$'
+
+  if [[ "$1" =~ $regex ]]; then
+      return "$?"
+  else
+      return "$?"
+  fi
+}
+
 # Checks
 if [ -z "${DOMAIN_OR_PUBLIC_IP}" ]; then
   printf "\n  =======¡ERROR!======="
@@ -192,6 +214,11 @@ if [ "${PROXY_MODE}" == "PRO" ]; then
   cp /default_nginx_conf/pro/default.conf /default_nginx_conf/default.conf
 fi
 
+if [[ "${PROXY_MODE}" == "ENTERPRISE_HA" ]]; then
+  [[ -f /default_nginx_conf/default.conf ]] && rm /default_nginx_conf/default.conf
+  cp /default_nginx_conf/enterprise-ha/default.conf /default_nginx_conf/default.conf
+fi
+
 # Create index.html
 mkdir -p /var/www/html
 cat> /var/www/html/index.html<<EOF
@@ -227,9 +254,14 @@ sed -e '/{common_api_ce}/{r default_nginx_conf/global/ce/common_api_ce.conf' -e 
 sed -e '/{new_api_ce}/{r default_nginx_conf/global/ce/new_api_ce.conf' -e 'd}' -i /etc/nginx/conf.d/*
 sed -e '/{common_api_pro}/{r default_nginx_conf/global/pro/common_api_pro.conf' -e 'd}' -i /etc/nginx/conf.d/*
 sed -e '/{new_api_pro}/{r default_nginx_conf/global/pro/new_api_pro.conf' -e 'd}' -i /etc/nginx/conf.d/*
+sed -e '/{common_api_enterprise}/{r default_nginx_conf/global/enterprise-ha/common_api_enterprise.conf' -e 'd}' -i /etc/nginx/conf.d/*
 
 if [[ "${WITH_APP}" == "true" ]]; then
-  sed -e '/{app_upstream}/{r default_nginx_conf/global/app_upstream.conf' -e 'd}' -i /etc/nginx/conf.d/*
+  if [[ "${PROXY_MODE}" == "ENTERPRISE_HA" ]]; then
+    sed -e '/{app_upstream}/{r default_nginx_conf/global/enterprise-ha/app_upstream.conf' -e 'd}' -i /etc/nginx/conf.d/*
+  else
+    sed -e '/{app_upstream}/{r default_nginx_conf/global/app_upstream.conf' -e 'd}' -i /etc/nginx/conf.d/*
+  fi
   sed -e '/{app_config}/{r default_nginx_conf/global/app_config.conf' -e 'd}' -i /etc/nginx/conf.d/*
 elif [[ "${WITH_APP}" == "false" ]]; then
   sed -i '/{app_upstream}/d' /etc/nginx/conf.d/*
@@ -256,12 +288,36 @@ if [[ "${REDIRECT_WWW}" == "true" ]]; then
     sed -e '/{redirect_www}/{r default_nginx_conf/global/ce/redirect_www.conf' -e 'd}' -i /etc/nginx/conf.d/*
   fi
 
-  if [ "${PROXY_MODE}" == "PRO" ]; then
+  if [[ "${PROXY_MODE}" == "PRO" ]] || [[ "${PROXY_MODE}" == "ENTERPRISE_HA" ]]; then
     sed -e '/{redirect_www}/{r default_nginx_conf/global/pro/redirect_www.conf' -e 'd}' -i /etc/nginx/conf.d/*
   fi
 elif [[ "${REDIRECT_WWW}" == "false" ]]; then
   sed -i '/{redirect_www}/d' /etc/nginx/conf.d/*
   sed -i '/{redirect_www_ssl}/d' /etc/nginx/conf.d/*
+fi
+
+if [[ "${PROXY_MODE}" == "ENTERPRISE_HA" ]]; then
+  TEMP_FILE_UPSTREAM=$(mktemp)
+
+  # Create upstream nodes
+  UPSTREAM="upstream openviduserver {\n"
+  IFS=','
+  for IP in $OPENVIDU_ENTERPRISE_HA_NODE_IPS;
+  do
+    if valid_ip_v4 "$IP" || valid_ip_v6 "$IP"; then
+      UPSTREAM+=$"    server $IP:4443 max_fails=2 fail_timeout=3s;\n"
+    else
+      printf "\n  =======¡ERROR!======="
+      printf "\n  The IP address %s defined in OPENVIDU_ENTERPRISE_HA_NODE_IPS is not valid" "$IP"
+      exit 1
+    fi
+  done
+  unset IFS
+  UPSTREAM+="}\n"
+  echo -e "$UPSTREAM" > "${TEMP_FILE_UPSTREAM}"
+
+  # Add upstream nodes to nginx config
+  sed -e '/{enterprise_ha_nodes_upstream}/{r '"${TEMP_FILE_UPSTREAM}"'' -e 'd}' -i /etc/nginx/conf.d/*
 fi
 
 # Process main configs
@@ -315,28 +371,6 @@ printf "\n  ======================================="
 printf "\n"
 
 printf "\n  Adding rules..."
-
-valid_ip_v4()
-{
-  regex='^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(/[0-9]+)?$'
-
-  if [[ "$1" =~ $regex ]]; then
-    return "$?"
-  else
-    return "$?"
-  fi
-}
-
-valid_ip_v6()
-{
-  regex='^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}(/[0-9]+)?$'
-
-  if [[ "$1" =~ $regex ]]; then
-      return "$?"
-  else
-      return "$?"
-  fi
-}
 
 LOCAL_NETWORKS=$(ip route list | grep -Eo '([0-9]*\.){3}[0-9]*/[0-9]*')
 if [[ "${PUBLIC_IP}" == "auto-ipv4" ]]; then
