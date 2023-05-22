@@ -1,0 +1,32 @@
+version: '3.1'
+
+services:
+    # --------------------------------------------------------------
+    #
+    #    Change this if your want use your own application.
+    #    It's very important expose your application in port 5442
+    #    and use the http protocol.
+    #
+    #    Default Application
+    #
+    #    Openvidu-Call Version: 2.27.0
+    #
+    # --------------------------------------------------------------
+    app:
+        image: openvidu/openvidu-call:master
+        restart: on-failure
+        ports:
+          - 5442:5442
+        environment:
+            - SERVER_PORT=5442
+            - OPENVIDU_URL=http://loadbalancer:5443
+            - OPENVIDU_SECRET=${OPENVIDU_SECRET}
+            - CALL_OPENVIDU_CERTTYPE=${CERTIFICATE_TYPE}
+            - CALL_PRIVATE_ACCESS=${CALL_PRIVATE_ACCESS:-}
+            - CALL_USER=${CALL_USER:-}
+            - CALL_SECRET=${CALL_SECRET:-}
+            - CALL_ADMIN_SECRET=${CALL_ADMIN_SECRET:-}
+            - CALL_RECORDING=${CALL_RECORDING:-}
+        logging:
+            options:
+                max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
