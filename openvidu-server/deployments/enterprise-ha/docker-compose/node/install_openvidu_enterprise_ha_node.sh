@@ -28,12 +28,18 @@ export DOCKER_CLIENT_TIMEOUT=500
 
 pull_images() {
     OV_DIRECTORY="$1"
+    pushd "${OV_DIRECTORY}" > /dev/null || fatal_error "Error: can not access to '${OV_DIRECTORY}'"
     echo "Pulling images..."
     for image in "${IMAGES_MEDIA_NODE_CONTROLLER[@]}"; do
-        IMAGE_PULL="$(grep "$image" "${OV_DIRECTORY}"/docker-compose.yml | cut -d "=" -f2)"
+        IMAGE_PULL="$(grep "$image" docker-compose.yml | cut -d "=" -f2)"
         docker pull "$IMAGE_PULL" || fatal_error "Error: can not pull '${IMAGE_PULL}'"
     done
-    docker-compose -f "${OV_DIRECTORY}"/docker-compose.yml pull || fatal_error "Error: can not pull images defined with docker-compose"
+    DEPLOYMENT_IMAGES=$(grep 'image:' docker-compose.yml | awk '{print $2}')
+    for IMAGE in ${DEPLOYMENT_IMAGES}; do
+        printf "\n     => Pulling image '%s'..." "${IMAGE}"
+        docker pull "${IMAGE}" || fatal_error "Error while pulling image '${IMAGE}'"
+    done
+    popd > /dev/null || fatal_error "Error: can not access to previous directory"
 }
 
 fatal_error() {

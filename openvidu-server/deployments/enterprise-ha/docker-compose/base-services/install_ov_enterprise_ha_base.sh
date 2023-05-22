@@ -21,7 +21,11 @@ export DOCKER_CLIENT_TIMEOUT=500
 pull_images() {
     OV_DIRECTORY="$1"
     pushd "${OV_DIRECTORY}" > /dev/null || fatal_error "Error: can not access to '${OV_DIRECTORY}' folder"
-    docker-compose pull || fatal_error "Error: can not pull images defined with docker-compose"
+    ALL_IMAGES=$(grep 'image:' docker-compose.yml | awk '{print $2}')
+    for IMAGE in ${ALL_IMAGES}; do
+        printf "\n     => Pulling image '%s'..." "${IMAGE}"
+        docker pull "${IMAGE}" || fatal_error "Error while pulling image '${IMAGE}'"
+    done
     popd > /dev/null || fatal_error "Error: can not access to previous folder"
 }
 
