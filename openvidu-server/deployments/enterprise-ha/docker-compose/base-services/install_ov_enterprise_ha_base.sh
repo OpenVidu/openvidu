@@ -23,7 +23,6 @@ pull_images() {
     pushd "${OV_DIRECTORY}" > /dev/null || fatal_error "Error: can not access to '${OV_DIRECTORY}' folder"
     ALL_IMAGES=$(grep  -h 'image:' docker-compose.yml docker-compose.override.yml | awk '{print $2}')
     for IMAGE in ${ALL_IMAGES}; do
-        printf "\n     => Pulling image '%s'..." "${IMAGE}"
         docker pull "${IMAGE}" || fatal_error "Error while pulling image '${IMAGE}'"
     done
     popd > /dev/null || fatal_error "Error: can not access to previous folder"

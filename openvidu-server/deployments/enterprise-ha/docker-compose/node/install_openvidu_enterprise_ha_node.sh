@@ -36,7 +36,6 @@ pull_images() {
     done
     DEPLOYMENT_IMAGES=$(grep 'image:' docker-compose.yml | awk '{print $2}')
     for IMAGE in ${DEPLOYMENT_IMAGES}; do
-        printf "\n     => Pulling image '%s'..." "${IMAGE}"
         docker pull "${IMAGE}" || fatal_error "Error while pulling image '${IMAGE}'"
     done
     popd > /dev/null || fatal_error "Error: can not access to previous directory"
