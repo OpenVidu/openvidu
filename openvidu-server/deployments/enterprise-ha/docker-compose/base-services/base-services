@@ -298,6 +298,7 @@ usage() {
     printf "\n\tstart\t\t\tStart all services"
     printf "\n\tstop\t\t\tStop all services"
     printf "\n\trestart\t\t\tRestart all stopped and running services"
+    printf "\n\tupdate-loadbalancer\tUpdate load balancer IPs \n\t\t\t\tfrom OPENVIDU_ENTERPRISE_HA_NODE_IPS"
     printf "\n\tlogs\t\t\tShow openvidu-server logs"
     printf "\n\tupgrade\t\t\tUpgrade to the latest Openvidu version"
     printf "\n\tupgrade [version]\tUpgrade to the specific Openvidu version"
@@ -331,6 +332,14 @@ restart)
     if [[ "${FOLLOW_OPENVIDU_LOGS}" == "true" ]]; then
         docker-compose logs -f --tail 10
     fi
+;;
+
+update-loadbalancer)
+    validate_env_vars
+    OPENVIDU_ENTERPRISE_HA_NODE_IPS=$(get_env_var_value "OPENVIDU_ENTERPRISE_HA_NODE_IPS")
+    docker-compose exec -it \
+        -e OPENVIDU_ENTERPRISE_HA_NODE_IPS="${OPENVIDU_ENTERPRISE_HA_NODE_IPS}" \
+        loadbalancer update_enterprise_ha_nodes.sh
 ;;
 
 logs)
