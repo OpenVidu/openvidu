@@ -700,7 +700,7 @@ export class Publisher extends StreamManager {
     getVideoDimensions(): Promise<{ width: number; height: number }> {
         return new Promise((resolve, reject) => {
             // Ionic iOS and Safari iOS supposedly require the video element to actually exist inside the DOM
-            const requiresDomInsertion: boolean = platform.isIonicIos() || platform.isIOSWithSafari();
+            const requiresDomInsertion: boolean = (platform.isIonicIos() || platform.isIOSWithSafari()) && (this.videoReference.readyState < 1);
 
             let loadedmetadataListener;
             const resolveDimensions = () => {
