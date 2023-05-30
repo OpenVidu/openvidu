@@ -462,6 +462,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.menuTrigger?.menuOpened.subscribe(() => {
 			this.isSessionCreator = this.participantService.amIModerator();
 		});
+		this.subscribeToFullscreenChanged();
 	}
 
 	ngOnDestroy(): void {
@@ -485,6 +486,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		if (this.screenSizeSub) this.screenSizeSub.unsubscribe();
 		if (this.settingsButtonSub) this.settingsButtonSub.unsubscribe();
 		if (this.captionsSubs) this.captionsSubs.unsubscribe();
+		document.removeEventListener('fullscreenchange', () => this.isFullscreenActive = false);
 	}
 
 	/**
@@ -638,7 +640,6 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 * @ignore
 	 */
 	toggleFullscreen() {
-		this.isFullscreenActive = !this.isFullscreenActive;
 		this.documentService.toggleFullscreen('session-container');
 		this.onFullscreenButtonClicked.emit();
 	}
@@ -659,6 +660,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.isConnectionLost = false;
 		});
 	}
+
+	private subscribeToFullscreenChanged() {
+		document.addEventListener("fullscreenchange", (event) => this.isFullscreenActive = Boolean(document.fullscreenElement));
+	}
+
 	protected subscribeToMenuToggling() {
 		this.panelTogglingSubscription = this.panelService.panelOpenedObs.subscribe((ev: PanelEvent) => {
 			this.isChatOpened = ev.opened && ev.type === PanelType.CHAT;
