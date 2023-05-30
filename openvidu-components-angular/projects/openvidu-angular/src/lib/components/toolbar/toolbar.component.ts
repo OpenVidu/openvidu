@@ -42,6 +42,7 @@ import { PlatformService } from '../../services/platform/platform.service';
 import { RecordingService } from '../../services/recording/recording.service';
 import { StorageService } from '../../services/storage/storage.service';
 import { TranslateService } from '../../services/translate/translate.service';
+import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 
 /**
  *
@@ -411,7 +412,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		private recordingService: RecordingService,
 		private broadcastingService: BroadcastingService,
 		private translateService: TranslateService,
-		private storageSrv: StorageService
+		private storageSrv: StorageService,
+		private cdkOverlayService: CdkOverlayService
 	) {
 		this.log = this.loggerSrv.get('ToolbarComponent');
 	}
@@ -486,7 +488,10 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		if (this.screenSizeSub) this.screenSizeSub.unsubscribe();
 		if (this.settingsButtonSub) this.settingsButtonSub.unsubscribe();
 		if (this.captionsSubs) this.captionsSubs.unsubscribe();
-		document.removeEventListener('fullscreenchange', () => this.isFullscreenActive = false);
+		document.removeEventListener('fullscreenchange', () => {
+			this.isFullscreenActive = false;
+			this.cdkOverlayService.setSelector('body');
+		});
 	}
 
 	/**
@@ -662,7 +667,10 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToFullscreenChanged() {
-		document.addEventListener("fullscreenchange", (event) => this.isFullscreenActive = Boolean(document.fullscreenElement));
+		document.addEventListener("fullscreenchange", (event) => {
+			this.isFullscreenActive = Boolean(document.fullscreenElement);
+			this.cdkOverlayService.setSelector(this.isFullscreenActive ? '#session-container' : 'body');
+		});
 	}
 
 	protected subscribeToMenuToggling() {
