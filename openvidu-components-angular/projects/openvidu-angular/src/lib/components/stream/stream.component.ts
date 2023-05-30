@@ -186,14 +186,16 @@ export class StreamComponent implements OnInit {
 	 * @ignore
 	 */
 	toggleVideoEnlarged() {
-		if (!!this._stream.streamManager?.stream?.connection?.connectionId) {
-			if (this.openviduService.isMyOwnConnection(this._stream.streamManager?.stream?.connection?.connectionId)) {
-				this.participantService.toggleMyVideoEnlarged(this._stream.streamManager?.stream?.connection?.connectionId);
+		const connectionId = this._stream.streamManager?.stream?.connection?.connectionId;
+		if (Boolean(connectionId)) {
+			if (this.openviduService.isMyOwnConnection(connectionId)) {
+				this.participantService.toggleMyVideoEnlarged(connectionId);
 			} else {
-				this.participantService.toggleRemoteVideoEnlarged(this._stream.streamManager?.stream?.connection?.connectionId);
+				this.participantService.toggleRemoteVideoEnlarged(connectionId);
 			}
+			this.checkVideoEnlarged();
+			this.layoutService.update();
 		}
-		this.layoutService.update();
 	}
 
 	/**
