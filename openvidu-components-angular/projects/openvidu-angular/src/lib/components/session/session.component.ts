@@ -194,16 +194,18 @@ export class SessionComponent implements OnInit, OnDestroy {
 		this.cd.markForCheck();
 	}
 
-	ngOnDestroy() {
+	async ngOnDestroy() {
 		// Reconnecting session is received in Firefox
 		// To avoid 'Connection lost' message uses session.off()
-		this.session?.off('reconnecting');
-		this.participantService.clear();
-		this.session = null;
-		this.sessionScreen = null;
-		if (this.menuSubscription) this.menuSubscription.unsubscribe();
-		if (this.layoutWidthSubscription) this.layoutWidthSubscription.unsubscribe();
-		if (this.captionLanguageSubscription) this.captionLanguageSubscription.unsubscribe();
+		if (!this.usedInPrejoinPage) {
+			this.session?.off('reconnecting');
+			await this.participantService.clear();
+			this.session = null;
+			this.sessionScreen = null;
+			if (this.menuSubscription) this.menuSubscription.unsubscribe();
+			if (this.layoutWidthSubscription) this.layoutWidthSubscription.unsubscribe();
+			if (this.captionLanguageSubscription) this.captionLanguageSubscription.unsubscribe();
+		}
 	}
 
 	leaveSession() {
@@ -251,20 +253,29 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 	private async connectToSession(): Promise<void> {
 		try {
-			const webcamToken = this.openviduService.getWebcamToken();
-			const screenToken = this.openviduService.getScreenToken();
+			const participant = this.participantService.getLocalParticipant();
+			const nickname = participant.getNickname();
+			const participantId = participant.id;
+			const screenPublisher = this.participantService.getMyScreenPublisher();
+			const cameraPublisher = this.participantService.getMyCameraPublisher();
 
-			if (this.participantService.haveICameraAndScreenActive()) {
-				await this.openviduService.connectSession(this.openviduService.getWebcamSession(), webcamToken);
-				await this.openviduService.connectSession(this.openviduService.getScreenSession(), screenToken);
-				await this.openviduService.publish(this.participantService.getMyCameraPublisher());
-				await this.openviduService.publish(this.participantService.getMyScreenPublisher());
-			} else if (this.participantService.isOnlyMyScreenActive()) {
-				await this.openviduService.connectSession(this.openviduService.getScreenSession(), screenToken);
-				await this.openviduService.publish(this.participantService.getMyScreenPublisher());
+
+			if (participant.hasCameraAndScreenActives()) {
+
+				const webcamSessionId = await this.openviduService.connectWebcamSession(participantId, nickname);
+				if (webcamSessionId) this.participantService.setMyCameraConnectionId(webcamSessionId);
+
+				const screenSessionId = await this.openviduService.connectScreenSession(participantId, nickname);
+				if (screenSessionId) this.participantService.setMyScreenConnectionId(screenSessionId);
+
+				await this.openviduService.publishCamera(cameraPublisher);
+				await this.openviduService.publishScreen(screenPublisher);
+			} else if (participant.hasOnlyScreenActive()) {
+				await this.openviduService.connectScreenSession(participantId, nickname);
+				await this.openviduService.publishScreen(screenPublisher);
 			} else {
-				await this.openviduService.connectSession(this.openviduService.getWebcamSession(), webcamToken);
-				await this.openviduService.publish(this.participantService.getMyCameraPublisher());
+				await this.openviduService.connectWebcamSession(participantId, nickname);
+				await this.openviduService.publishCamera(cameraPublisher);
 			}
 		} catch (error) {
 			// this._error.emit({ error: error.error, messgae: error.message, code: error.code, status: error.status });
@@ -287,21 +298,21 @@ export class SessionComponent implements OnInit, OnDestroy {
 	}
 
 	private subscribeToConnectionCreatedAndDestroyed() {
-		this.session.on('connectionCreated', (event: ConnectionEvent) => {
+		this.session.on('connectionCreated', async (event: ConnectionEvent) => {
 			const connectionId = event.connection?.connectionId;
-			const nickname: string = this.participantService.getNicknameFromConnectionData(event.connection.data);
+			const connectionNickname: string = this.participantService.getNicknameFromConnectionData(event.connection.data);
 			const isRemoteConnection: boolean = !this.openviduService.isMyOwnConnection(connectionId);
-			const isCameraConnection: boolean = !nickname?.includes(`_${VideoType.SCREEN}`);
+			const isCameraConnection: boolean = !connectionNickname?.includes(`_${VideoType.SCREEN}`);
+			const nickname = this.participantService.getMyNickname();
 			const data = event.connection?.data;
 
 			if (isRemoteConnection && isCameraConnection) {
 				// Adding participant when connection is created and it's not screen
 				this.participantService.addRemoteConnection(connectionId, data, null);
 
-				//Sending nicnkanme signal to new participants
-				if (this.openviduService.needSendNicknameSignal()) {
-					const data = { clientData: this.participantService.getMyNickname() };
-					this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, [event.connection], data);
+				//Sending nicnkanme signal to new connection
+				if (this.openviduService.myNicknameHasBeenChanged()) {
+					await this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, [event.connection], { clientData: nickname });
 				}
 			}
 		});

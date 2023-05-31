@@ -71,7 +71,7 @@ jobs:
         name: openvidu-browser
         path: openvidu-components-angular
     - name: Run Browserless Chrome
-      run: docker run -d -p 3000:3000 --network host browserless/chrome:1.53-chrome-stable
+      run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
     - name: Run openvidu-server-kms
       run: |
         docker run -p 4443:4443 --rm -d \
@@ -106,7 +106,7 @@ jobs:
         name: openvidu-browser
         path: openvidu-components-angular
     - name: Run Browserless Chrome
-      run: docker run -d -p 3000:3000 --network host browserless/chrome:1.53-chrome-stable
+      run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
     - name: Run openvidu-server-kms
       run: |
         docker run -p 4443:4443 --rm -d \
@@ -140,7 +140,7 @@ jobs:
         name: openvidu-browser
         path: openvidu-components-angular
     - name: Run Browserless Chrome
-      run: docker run -d -p 3000:3000 --network host browserless/chrome:1.53-chrome-stable
+      run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
     - name: Install openvidu-browser and dependencies
       run: |
         cd openvidu-components-angular

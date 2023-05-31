@@ -23,16 +23,17 @@
 			videocam_off
 		</mat-icon>
 	</button>
-	<mat-form-field>
+	<mat-form-field id="video-devices-form">
 		<mat-label *ngIf="hasVideoDevices">{{ 'PREJOIN.VIDEO_DEVICE' | translate }}</mat-label>
 		<mat-label *ngIf="!hasVideoDevices">{{ 'PREJOIN.NO_VIDEO_DEVICE' | translate }}</mat-label>
 		<mat-select
 			[disabled]="isVideoMuted || !hasVideoDevices"
-			[value]="cameraSelected?.device"
+			[compareWith]="compareObjectDevices"
+			[value]="cameraSelected"
 			(click)="onDeviceSelectorClicked.emit()"
 			(selectionChange)="onCameraSelected($event)"
 		>
-			<mat-option *ngFor="let camera of cameras" [value]="camera.device">
+			<mat-option *ngFor="let camera of cameras" [value]="camera" id="option-{{camera.label}}">
 				{{ camera.label }}
 			</mat-option>
 		</mat-select>

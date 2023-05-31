@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { StreamModel, ParticipantAbstractModel } from '../models/participant.model';
+import { ParticipantAbstractModel, StreamModel } from '../models/participant.model';
 import { TranslateService } from '../services/translate/translate.service';
 
 @Pipe({ name: 'streams' })
@@ -10,11 +10,8 @@ export class ParticipantStreamsPipe implements PipeTransform {
 		let streams: StreamModel[] = [];
 		if(participants && Object.keys(participants).length > 0){
 			if (Array.isArray(participants)) {
-				participants.forEach((p) => {
-					streams = streams.concat(p.getAvailableConnections());
-				});
+				streams = participants.map(p => p.getAvailableConnections()).flat();
 			} else {
-
 				streams = participants.getAvailableConnections();
 			}
 		}
@@ -30,15 +27,11 @@ export class StreamTypesEnabledPipe implements PipeTransform {
 	constructor(private translateService: TranslateService) {}
 
 	transform(participant: ParticipantAbstractModel): string {
-		let result = '';
-		let activeStreams = participant?.getConnectionTypesActive().toString();
-		const activeStreamsArr: string[] = activeStreams.split(',');
-		activeStreamsArr.forEach((type, index) => {
-			result += this.translateService.translate(`PANEL.PARTICIPANTS.${type}`)
-			if(activeStreamsArr.length > 0 && index < activeStreamsArr.length - 1){
-				result += ', ';
-			}
-		});
-		return `(${result})`;
+
+		const activeStreams = participant?.getActiveConnectionTypes() ?? [];
+		const streamNames = activeStreams.map(streamType => this.translateService.translate(`PANEL.PARTICIPANTS.${streamType}`));
+		const streamsString = streamNames.join(', ');
+
+		return `(${streamsString})`;
 	}
 }

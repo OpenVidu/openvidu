@@ -1,3 +1,5 @@
+import monkeyPatchMediaDevices from './utils/media-devices.js';
+
 var MINIMAL;
 var LANG;
 var CAPTIONS_LANG;
@@ -29,6 +31,7 @@ var CAPTIONS_BUTTON;
 
 var SINGLE_TOKEN;
 var SESSION_NAME;
+var FAKE_DEVICES;
 
 var PARTICIPANT_NAME;
 
@@ -42,6 +45,8 @@ $(document).ready(() => {
 	OPENVIDU_SECRET = url.searchParams.get('OV_SECRET');
 
 	SINGLE_TOKEN = url.searchParams.get('singleToken') === null ? false : url.searchParams.get('singleToken') === 'true';
+
+	FAKE_DEVICES = url.searchParams.get('fakeDevices') === null ? false : url.searchParams.get('fakeDevices') === 'true';
 
 	// Directives
 	MINIMAL = url.searchParams.get('minimal') === null ? false : url.searchParams.get('minimal') === 'true';
@@ -197,6 +202,11 @@ function appendElement(id) {
 async function joinSession(sessionName, participantName) {
 	var webComponent = document.querySelector('openvidu-webcomponent');
 	var tokens;
+
+	if (FAKE_DEVICES) {
+		monkeyPatchMediaDevices();
+	}
+
 	if (SINGLE_TOKEN) {
 		tokens = await getToken(sessionName);
 	} else {

@@ -4,7 +4,6 @@ import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../../models/device.model';
 import { PanelType } from '../../../models/panel.model';
 import { ParticipantAbstractModel } from '../../../models/participant.model';
-import { VideoType } from '../../../models/video-type.model';
 import { DeviceService } from '../../../services/device/device.service';
 import { OpenViduService } from '../../../services/openvidu/openvidu.service';
 import { PanelService } from '../../../services/panel/panel.service';
@@ -21,8 +20,8 @@ import { VirtualBackgroundService } from '../../../services/virtual-background/v
 	styleUrls: ['./video-devices.component.css']
 })
 export class VideoDevicesComponent implements OnInit, OnDestroy {
-	@Output()  onDeviceSelectorClicked = new EventEmitter<void>();
-	@Output()  onVideoMutedClicked = new EventEmitter<boolean>();
+	@Output() onDeviceSelectorClicked = new EventEmitter<void>();
+	@Output() onVideoMutedClicked = new EventEmitter<boolean>();
 
 	videoMuteChanging: boolean;
 	isVideoMuted: boolean;
@@ -47,9 +46,8 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 			await this.deviceSrv.refreshDevices();
 		}
 
-
 		this.hasVideoDevices = this.deviceSrv.hasVideoDeviceAvailable();
-		if(this.hasVideoDevices){
+		if (this.hasVideoDevices) {
 			this.cameras = this.deviceSrv.getCameras();
 			this.cameraSelected = this.deviceSrv.getCameraSelected();
 		}
@@ -67,7 +65,7 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 	async toggleCam() {
 		this.videoMuteChanging = true;
 		const publish = this.isVideoMuted;
-		await this.openviduService.publishVideo(publish);
+		await this.participantService.publishVideo(publish);
 		if (this.isVideoMuted && this.panelService.isExternalPanelOpened()) {
 			this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
 		}
@@ -76,19 +74,21 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 	}
 
 	async onCameraSelected(event: any) {
-		const videoSource = event?.value;
+		const device: CustomDevice = event?.value;
+
 		// Is New deviceId different from the old one?
-		if (this.deviceSrv.needUpdateVideoTrack(videoSource)) {
-			const mirror = this.deviceSrv.cameraNeedsMirror(videoSource);
+		if (this.deviceSrv.needUpdateVideoTrack(device)) {
+			const mirror = this.deviceSrv.cameraNeedsMirror(device.device);
 			// Reapply Virtual Background to new Publisher if necessary
 			const backgroundSelected = this.backgroundService.backgroundSelected.getValue();
-			const isBackgroundApplied = this.backgroundService.isBackgroundApplied()
+			const isBackgroundApplied = this.backgroundService.isBackgroundApplied();
 
 			if (isBackgroundApplied) {
 				await this.backgroundService.removeBackground();
 			}
-			const pp: PublisherProperties = { videoSource, audioSource: false, mirror };
-			await this.openviduService.replaceTrack(VideoType.CAMERA, pp);
+			const pp: PublisherProperties = { videoSource: device.device, audioSource: false, mirror };
+			const publisher = this.participantService.getMyCameraPublisher();
+			await this.openviduService.replaceCameraTrack(publisher, pp);
 
 			if (isBackgroundApplied) {
 				const bgSelected = this.backgroundService.backgrounds.find((b) => b.id === backgroundSelected);
@@ -97,10 +97,18 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 				}
 			}
 
-			this.deviceSrv.setCameraSelected(videoSource);
+			this.deviceSrv.setCameraSelected(device.device);
 			this.cameraSelected = this.deviceSrv.getCameraSelected();
 		}
 	}
+
+	/**
+	 * @internal
+	 * Compare two devices to check if they are the same. Used by the mat-select
+	 */
+	compareObjectDevices(o1: CustomDevice, o2: CustomDevice): boolean {
+		return o1.label === o2.label;
+	  }
 
 	protected subscribeToParticipantMediaProperties() {
 		this.localParticipantSubscription = this.participantService.localParticipantObs.subscribe((p: ParticipantAbstractModel) => {

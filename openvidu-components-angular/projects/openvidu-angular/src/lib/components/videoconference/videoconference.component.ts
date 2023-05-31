@@ -601,7 +601,14 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 						await this.handlePublisherError(e);
 						resolve();
 					});
-					publisher.once('accessAllowed', () => resolve());
+					publisher.once('accessAllowed', () => {
+						this.participantService.setMyCameraPublisher(publisher);
+						this.participantService.updateLocalParticipant();
+						resolve();
+					});
+				} else {
+					this.participantService.setMyCameraPublisher(undefined);
+					this.participantService.updateLocalParticipant();
 				}
 			} catch (error) {
 				this.actionService.openDialog(error.name.replace(/_/g, ' '), error.message, true);

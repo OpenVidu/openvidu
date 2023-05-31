@@ -3,7 +3,6 @@ import { PublisherProperties } from 'openvidu-browser';
 import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../../models/device.model';
 import { ParticipantAbstractModel } from '../../../models/participant.model';
-import { VideoType } from '../../../models/video-type.model';
 import { DeviceService } from '../../../services/device/device.service';
 import { OpenViduService } from '../../../services/openvidu/openvidu.service';
 import { ParticipantService } from '../../../services/participant/participant.service';
@@ -58,7 +57,7 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 
 	toggleMic() {
 		const publish = this.isAudioMuted;
-		this.openviduService.publishAudio(publish);
+		this.participantService.publishAudio(publish);
 		this.onAudioMutedClicked.emit(publish);
 	}
 
@@ -66,7 +65,8 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 		const audioSource = event?.value;
 		if (this.deviceSrv.needUpdateAudioTrack(audioSource)) {
 			const pp: PublisherProperties = { audioSource, videoSource: false };
-			await this.openviduService.replaceTrack(VideoType.CAMERA, pp);
+			const publisher = this.participantService.getMyCameraPublisher();
+			await this.openviduService.replaceCameraTrack(publisher, pp);
 			this.deviceSrv.setMicSelected(audioSource);
 			this.microphoneSelected = this.deviceSrv.getMicrophoneSelected();
 		}

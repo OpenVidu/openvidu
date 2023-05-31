@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { By, until, WebDriver, WebElement } from 'selenium-webdriver';
 
 export class OpenViduComponentsPO {
-	private TIMEOUT = 30 * 1000;
+	private TIMEOUT = 10 * 1000;
 	private POLL_TIMEOUT = 1 * 1000;
 
 	constructor(private browser: WebDriver) {}
@@ -16,7 +16,7 @@ export class OpenViduComponentsPO {
 		);
 	}
 
-	async getNumberOfElements(selector: string){
+	async getNumberOfElements(selector: string): Promise<number> {
 		return (await this.browser.findElements(By.css(selector))).length;
 	}
 
