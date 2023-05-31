@@ -1192,8 +1192,8 @@ describe('Testing stream video menu features', () => {
 
 		await utils.checkLayoutPresent();
 
-		await utils.waitForElement('#stream-menu-btn');
-		await utils.clickOn('#stream-menu-btn');
+		await utils.waitForElement('#video-settings-btn-CAMERA');
+		await utils.clickOn('#video-settings-btn-CAMERA');
 
 		await browser.sleep(500);
 
@@ -1334,7 +1334,7 @@ describe('Testing screenshare features', () => {
 	});
 
 	it('should screenshare has audio active when camera is muted', async () => {
-		let element, isAudioEnabled;
+		let isAudioEnabled;
 		const audioEnableScript = 'return document.getElementsByTagName("video")[0].srcObject.getAudioTracks()[0].enabled;';
 
 		await browser.get(`${url}&prejoin=false`);
@@ -1365,6 +1365,7 @@ describe('Testing screenshare features', () => {
 
 		// Unmuting camera
 		await muteVideoButton.click();
+		await browser.sleep(500);
 
 		await utils.waitForElement('.camera-type');
 		expect(await utils.getNumberOfElements('video')).equals(2);
