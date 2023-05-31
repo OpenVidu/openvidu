@@ -312,8 +312,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 				//Sending nicnkanme signal to new connection
 				if (this.openviduService.myNicknameHasBeenChanged()) {
-					const data = { clientData: nickname };
-					await this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, [event.connection], data);
+					await this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, [event.connection], { clientData: nickname });
 				}
 			}
 		});

@@ -231,12 +231,12 @@ export class StreamComponent implements OnInit {
 	/**
 	 * @ignore
 	 */
-	updateNickname(event) {
+	async updateNickname(event) {
 		if (event?.keyCode === 13 || event?.type === 'focusout') {
 			if (!!this.nickname) {
 				this.participantService.setMyNickname(this.nickname);
 				this.storageService.setNickname(this.nickname);
-				this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, undefined, { clientData: this.nickname });
+				await this.openviduService.sendSignal(Signal.NICKNAME_CHANGED, undefined, { clientData: this.nickname });
 			}
 			this.toggleNicknameForm();
 		}
