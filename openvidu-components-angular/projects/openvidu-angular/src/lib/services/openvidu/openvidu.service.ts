@@ -362,7 +362,7 @@ export class OpenViduService {
 	 *
 	 * @deprecated This method has been moved to ParticipantService
 	 *
-	 * TODO: Remove this method in release 2.28.0
+	 * TODO: Remove this method in release 2.29.0
 	 */
 	async publishVideo(publish: boolean): Promise<void> {
 		const participantService = this.injector.get(ParticipantService);
@@ -374,7 +374,7 @@ export class OpenViduService {
 	 * Hide the camera muted stream when screen is sharing.
 	 * @deprecated This method has been moved to ParticipantService
 	 *
-	 * TODO: Remove this method in release 2.28.0
+	 * TODO: Remove this method in release 2.29.0
 	 */
 	async toggleScreenshare() {
 		const participantService = this.injector.get(ParticipantService);
@@ -387,7 +387,7 @@ export class OpenViduService {
 	 * See openvidu-browser {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Publisher.html#publishAudio publishAudio}.
 	 * @deprecated This method has been moved to ParticipantService
 	 *
-	 * TODO: Remove this method in release 2.28.0
+	 * TODO: Remove this method in release 2.29.0
 	 */
 	publishAudio(publish: boolean): void {
 		const participantService = this.injector.get(ParticipantService);
