@@ -1365,7 +1365,7 @@ describe('Testing screenshare features', () => {
 
 		// Unmuting camera
 		await muteVideoButton.click();
-		await browser.sleep(500);
+		await browser.sleep(1000);
 
 		await utils.waitForElement('.camera-type');
 		expect(await utils.getNumberOfElements('video')).equals(2);
@@ -2032,6 +2032,7 @@ describe('Testing PRO features with OpenVidu CE', () => {
 		// Expect captions panel shows the pro feature content
 		await utils.waitForElement('#settings-container');
 		await utils.clickOn('#captions-opt');
+		await browser.sleep(1000);
 		await utils.waitForElement('.pro-feature');
 
 		// Open more options menu
