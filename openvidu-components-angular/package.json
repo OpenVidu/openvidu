@@ -67,7 +67,7 @@
     "lib:serve": "ng build openvidu-angular --watch",
     "lib:test": "ng test openvidu-angular --no-watch --code-coverage",
     "lint": "ng lint",
-    "start": "ng serve --configuration development",
+    "start": "ng serve --configuration development --open",
     "start-prod": "npx http-server ./dist/openvidu-components-testapp/ --port 4200",
     "start:ssl": "ng serve --ssl --configuration development --host 0.0.0.0 --port 4200 --ssl-cert /path/to/cert.pem --ssl-key /path/to/key.pem",
     "webcomponent:build": "./node_modules/@angular/cli/bin/ng.js build openvidu-webcomponent --configuration production && node ./openvidu-webcomponent-build.js",
