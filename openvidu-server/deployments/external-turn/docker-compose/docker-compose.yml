@@ -3,7 +3,7 @@ version: '3'
 services:
     coturn:
         container_name: coturn
-        image: coturn/coturn:4.5.2
+        image: coturn/coturn:4.6.2
         restart: always
         network_mode: host
         volumes:
