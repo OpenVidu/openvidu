@@ -19,10 +19,10 @@ export class OpenViduAngularConfigService {
 	prejoin = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	prejoinObs: Observable<boolean>;
 
-	videoMuted = <BehaviorSubject<boolean>>new BehaviorSubject(false);
-	videoMutedObs: Observable<boolean>;
-	audioMuted = <BehaviorSubject<boolean>>new BehaviorSubject(false);
-	audioMutedObs: Observable<boolean>;
+	videoMuted = <BehaviorSubject<boolean | undefined>>new BehaviorSubject(undefined);
+	videoMutedObs: Observable<boolean | undefined>;
+	audioMuted = <BehaviorSubject<boolean | undefined>>new BehaviorSubject(undefined);
+	audioMutedObs: Observable<boolean | undefined>;
 	screenshareButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	screenshareButtonObs: Observable<boolean>;
 

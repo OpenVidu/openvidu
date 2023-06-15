@@ -71,8 +71,14 @@ export class DeviceService {
 				this.updateAudioDeviceSelected();
 				this.updateVideoDeviceSelected();
 
-				this._isVideoMuted = this.storageSrv.isVideoMuted() || this.libSrv.videoMuted.getValue();
-				this._isAudioMuted = this.storageSrv.isAudioMuted() || this.libSrv.audioMuted.getValue();
+				this._isVideoMuted =
+					this.libSrv.videoMuted.getValue() === undefined
+						? this.storageSrv.isVideoMuted()
+						: Boolean(this.libSrv.videoMuted.getValue());
+				this._isAudioMuted =
+					this.libSrv.audioMuted.getValue() === undefined
+						? this.storageSrv.isAudioMuted()
+						: Boolean(this.libSrv.audioMuted.getValue());
 
 				this.log.d('Media devices', this.cameras, this.microphones);
 			}
