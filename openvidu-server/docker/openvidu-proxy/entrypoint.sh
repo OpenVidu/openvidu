@@ -296,7 +296,10 @@ elif [[ "${REDIRECT_WWW}" == "false" ]]; then
   sed -i '/{redirect_www_ssl}/d' /etc/nginx/conf.d/*
 fi
 
-if [[ "${PROXY_MODE}" == "ENTERPRISE_HA" ]]; then
+if [[ "${PROXY_MODE}" == "PRO" ]]; then
+  # Add dashboad and inspector rules
+  sed -e '/{dashboard_inspector_rules_pro}/{r default_nginx_conf/global/pro/dashboard_inspector_rules_pro.conf' -e 'd}' -i /etc/nginx/conf.d/*
+elif [[ "${PROXY_MODE}" == "ENTERPRISE_HA" ]]; then
   TEMP_FILE_UPSTREAM=$(mktemp)
 
   # Create upstream nodes
@@ -318,6 +321,12 @@ if [[ "${PROXY_MODE}" == "ENTERPRISE_HA" ]]; then
 
   # Add upstream nodes to nginx config
   sed -e '/{enterprise_ha_nodes_upstream}/{r '"${TEMP_FILE_UPSTREAM}"'' -e 'd}' -i /etc/nginx/conf.d/*
+
+  # Add dashboad and inspector rules
+  # 1. First remove pro rules
+  sed -i '/{dashboard_inspector_rules_pro}/d' /etc/nginx/conf.d/*
+  # 2. Add enterprise rules
+  sed -e '/{dashboard_inspector_rules_enterprise}/{r default_nginx_conf/global/enterprise-ha/dashboard_inspector_rules_enterprise.conf' -e 'd}' -i /etc/nginx/conf.d/*
 fi
 
 # Process main configs
