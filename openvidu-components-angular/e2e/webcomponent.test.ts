@@ -109,6 +109,52 @@ describe('Testing API Directives', () => {
 		expect(await element.getText()).equal('Unirme ahora');
 	});
 
+	it('should override the LANG OPTIONS', async () => {
+		await browser.get(`${url}&prejoin=true&langOptions=true`);
+
+
+		await utils.checkPrejoinIsPresent();
+		await utils.waitForElement('.lang-button');
+		await utils.clickOn('.lang-button');
+		await browser.sleep(500);
+		expect(await utils.getNumberOfElements('.lang-menu-opt')).equals(2);
+
+		await utils.clickOn('.lang-menu-opt');
+		await browser.sleep(500);
+
+		await utils.clickOn('#join-button');
+
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
+
+		// Open more options menu
+		await utils.clickOn('#more-options-btn');
+
+		await browser.sleep(500);
+
+		// Checking if button panel is present
+		await utils.waitForElement('.mat-menu-content');
+		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+
+		// Checking if captions button is present
+		await utils.waitForElement('#toolbar-settings-btn');
+		expect(await utils.isPresent('#toolbar-settings-btn')).to.be.true;
+		await utils.clickOn('#toolbar-settings-btn');
+
+		await browser.sleep(500);
+
+		await utils.waitForElement('#settings-container');
+		await utils.waitForElement('.lang-button');
+		await utils.clickOn('.lang-button');
+
+		await browser.sleep(500);
+
+		expect(await utils.getNumberOfElements('.lang-menu-opt')).equals(2);
+
+	});
+
 	it('should show the PREJOIN page', async () => {
 		await browser.get(`${url}&prejoin=true`);
 

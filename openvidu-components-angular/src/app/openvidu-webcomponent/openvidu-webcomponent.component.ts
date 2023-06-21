@@ -1,5 +1,5 @@
 import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { OpenViduService, ParticipantAbstractModel, RecordingInfo, TokenModel } from 'openvidu-angular';
+import { OpenViduService, ParticipantAbstractModel, RecordingInfo, TokenModel, LangOption } from 'openvidu-angular';
 import { Session } from 'openvidu-browser';
 import { CaptionsLangOption } from '../../../projects/openvidu-angular/src/lib/models/caption.model';
 
@@ -33,6 +33,11 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * @internal
 	 */
 	_captionsLang: string = '';
+
+	/**
+	 * @internal
+	 */
+	_langOptions: LangOption;
 
 	/**
 	 * @internal
@@ -181,6 +186,39 @@ export class OpenviduWebComponentComponent implements OnInit {
 	@Input() set captionsLang(value: string) {
 		this._captionsLang = value;
 	}
+
+	/**
+     * The **langOptions** directive allows to set the application language options.
+     * It will override the application languages provided by default.
+     * This propety is an array of objects which must comply with the {@link LangOption} interface.
+     *
+     * It is only available for {@link VideoconferenceComponent}.
+	 *
+	 * Default: ```
+	 * [
+	 * 	{ name: 'English', lang: 'en' },
+	 *  { name: 'Español', lang: 'es' },
+	 *  { name: 'Deutsch', lang: 'de' },
+	 *  { name: 'Français', lang: 'fr' },
+	 *  { name: '中国', lang: 'cn' },
+	 *  { name: 'हिन्दी', lang: 'hi' },
+	 *  { name: 'Italiano', lang: 'it' },
+	 *  { name: 'やまと', lang: 'ja' },
+	 *  { name: 'Dutch', lang: 'nl' },
+	 *  { name: 'Português', lang: 'pt' }
+	 * ]```
+	 *
+	 * Note: If you want to add a new language, you must add a new object with the name and the language code (e.g. `{ name: 'Custom', lang: 'cus' }`)
+ 	 * and then add the language file in the `assets/lang` folder with the name `cus.json`.
+	 *
+	 *
+	 * @example
+	 * <openvidu-webcomponent captions-lang-options="[{name:'Spanish', lang: 'es-ES'}]"></openvidu-webcomponent>
+	 */
+	@Input() set langOptions(value: string | LangOption[]) {
+		this._langOptions = this.castToArray(value);
+	}
+
 	/**
 	 * The captionsLangOptions attribute sets the language options for the captions.
 	 * It will override the languages provided by default.
@@ -188,19 +226,19 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 *
 	 * Default: ```
 	 * [
-	 * 	{ name: 'English', ISO: 'en-US' },
-	 * 	{ name: 'Español', ISO: 'es-ES' },
-	 * 	{ name: 'Deutsch', ISO: 'de-DE' },
-	 * 	{ name: 'Français', ISO: 'fr-FR' },
-	 * 	{ name: '中国', ISO: 'zh-CN' },
-	 * 	{ name: 'हिन्दी', ISO: 'hi-IN' },
-	 * 	{ name: 'Italiano', ISO: 'it-IT' },
-	 * 	{ name: 'やまと', ISO: 'jp-JP' },
-	 * 	{ name: 'Português', ISO: 'pt-PT' }
+	 * 	{ name: 'English', lang: 'en-US' },
+	 * 	{ name: 'Español', lang: 'es-ES' },
+	 * 	{ name: 'Deutsch', lang: 'de-DE' },
+	 * 	{ name: 'Français', lang: 'fr-FR' },
+	 * 	{ name: '中国', lang: 'zh-CN' },
+	 * 	{ name: 'हिन्दी', lang: 'hi-IN' },
+	 * 	{ name: 'Italiano', lang: 'it-IT' },
+	 * 	{ name: 'やまと', lang: 'jp-JP' },
+	 * 	{ name: 'Português', lang: 'pt-PT' }
 	 * ]```
 	 *
 	 * @example
-	 * <openvidu-webcomponent captions-lang-options="[{name:'Spanish', ISO: 'es-ES'}]"></openvidu-webcomponent>
+	 * <openvidu-webcomponent captions-lang-options="[{name:'Spanish', lang: 'es-ES'}]"></openvidu-webcomponent>
 	 */
 	@Input() set captionsLangOptions(value: string | CaptionsLangOption[]) {
 		this._captionsLangOptions = this.castToArray(value);
@@ -888,7 +926,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 			return value;
 		} else {
 			throw new Error(
-				'Parameter has not a valid type. The parameters must to be string or CaptionsLangOptions [] [{name:string, ISO: string}].'
+				'Parameter has not a valid type. The parameters must to be string or CaptionsLangOptions [] [{name:string, lang: string}].'
 			);
 		}
 	}

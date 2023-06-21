@@ -3,7 +3,7 @@
 	<mat-icon>expand_more</mat-icon>
 </button>
 <mat-menu #menu="matMenu">
-	<button mat-menu-item *ngFor="let lang of languages" (click)="onLangSelected(lang.lang)">
+	<button mat-menu-item *ngFor="let lang of languages" (click)="onLangSelected(lang.lang)" class="lang-menu-opt">
 		<span>{{lang.name}}</span>
 	</button>
 </mat-menu>

@@ -3,6 +3,7 @@ import { CaptionsLangOption } from '../../models/caption.model';
 import { CaptionService } from '../../services/caption/caption.service';
 import { OpenViduAngularConfigService } from '../../services/config/openvidu-angular.config.service';
 import { TranslateService } from '../../services/translate/translate.service';
+import { LangOption } from '../../models/lang.model';
 
 
 /**
@@ -113,6 +114,72 @@ export class LangDirective implements OnDestroy {
 	 */
 	update(value: string) {
 		this.translateService.setLanguage(value);
+	}
+}
+
+/**
+ * The **langOptions** directive allows to set the application language options.
+ * It will override the application languages provided by default.
+ * This propety is an array of objects which must comply with the {@link LangOption} interface.
+ *
+ * It is only available for {@link VideoconferenceComponent}.
+ *
+ * Default: ```
+ * [
+ * 	{ name: 'English', lang: 'en' },
+ *  { name: 'Español', lang: 'es' },
+ *  { name: 'Deutsch', lang: 'de' },
+ *  { name: 'Français', lang: 'fr' },
+ *  { name: '中国', lang: 'cn' },
+ *  { name: 'हिन्दी', lang: 'hi' },
+ *  { name: 'Italiano', lang: 'it' },
+ *  { name: 'やまと', lang: 'ja' },
+ *  { name: 'Dutch', lang: 'nl' },
+ *  { name: 'Português', lang: 'pt' }
+ * ]```
+ *
+ * Note: If you want to add a new language, you must add a new object with the name and the language code (e.g. `{ name: 'Custom', lang: 'cus' }`)
+ * and then add the language file in the `assets/lang` folder with the name `cus.json`.
+ *
+ *
+ * @example
+ * <ov-videoconference [langOptions]="[{name:'Spanish', lang: 'es'}]"></ov-videoconference>
+ */
+@Directive({
+	selector: 'ov-videoconference[langOptions]'
+})
+export class LangOptionsDirective implements OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set langOptions(value: LangOption []) {
+		this.update(value);
+	}
+
+	/**
+	 * @ignore
+	 */
+	constructor(public elementRef: ElementRef, private translateService: TranslateService) {}
+
+	/**
+	 * @ignore
+	 */
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	/**
+	 * @ignore
+	 */
+	clear() {
+		this.update(undefined);
+	}
+
+	/**
+	 * @ignore
+	 */
+	update(value: LangOption [] | undefined) {
+		this.translateService.setLanguageOptions(value);
 	}
 }
 

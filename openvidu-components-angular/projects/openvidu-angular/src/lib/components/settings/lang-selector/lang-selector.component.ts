@@ -1,9 +1,10 @@
-import { AfterViewInit, Component, OnInit, Output, ViewChild, EventEmitter } from '@angular/core';
+import { AfterViewInit, Component, OnInit, Output, ViewChild, EventEmitter, OnDestroy } from '@angular/core';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { MatSelect } from '@angular/material/select';
 import { StorageService } from '../../../services/storage/storage.service';
 import { TranslateService } from '../../../services/translate/translate.service';
 import { LangOption } from '../../../models/lang.model';
+import { Subscription } from 'rxjs';
 
 /**
  * @internal
@@ -13,10 +14,12 @@ import { LangOption } from '../../../models/lang.model';
 	templateUrl: './lang-selector.component.html',
 	styleUrls: ['./lang-selector.component.css']
 })
-export class LangSelectorComponent implements OnInit, AfterViewInit {
+export class LangSelectorComponent implements OnInit, AfterViewInit, OnDestroy {
 	@Output() onLangSelectorClicked = new EventEmitter<void>();
 	langSelected: LangOption | undefined;
 	languages: LangOption[] = [];
+
+	private langSub: Subscription;
 
 	/**
 	 * @ignore
@@ -31,8 +34,12 @@ export class LangSelectorComponent implements OnInit, AfterViewInit {
 	constructor(private translateService: TranslateService, private storageSrv: StorageService) {}
 
 	ngOnInit(): void {
+		this.subscribeToLangSelected();
 		this.languages = this.translateService.getLanguagesInfo();
-		this.langSelected = this.translateService.getLangSelected();
+	}
+
+	ngOnDestroy(): void {
+		this.langSub?.unsubscribe();
 	}
 
 	ngAfterViewInit() {
@@ -47,6 +54,11 @@ export class LangSelectorComponent implements OnInit, AfterViewInit {
 	onLangSelected(lang: string) {
 		this.translateService.setLanguage(lang);
 		this.storageSrv.setLang(lang);
-		this.langSelected = this.translateService.getLangSelected();
+	}
+
+	subscribeToLangSelected() {
+		this.langSub = this.translateService.langSelectedObs.subscribe((lang) => {
+			this.langSelected = lang;
+		});
 	}
 }

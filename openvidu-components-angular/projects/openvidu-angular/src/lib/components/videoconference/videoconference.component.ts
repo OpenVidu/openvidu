@@ -56,6 +56,7 @@ import { LangOption } from '../../models/lang.model';
  * | :----------------------------: | :-------: | :---------------------------------------------: |
  * | **minimal**                        | `boolean` | {@link MinimalDirective}                        |
  * | **lang**                           | `string`  | {@link LangDirective}                           |
+ * | **langOptions**            		| `LangOption []`  | {@link LangOptionsDirective}             |
  * | **captionsLang**                   | `string`  | {@link CaptionsLangDirective}                   |
  * | **captionsLangOptions**            | `CaptionsLangOption []`  | {@link CaptionsLangOptionsDirective}                   |
  * | **prejoin**                        | `boolean` | {@link PrejoinDirective}                        |

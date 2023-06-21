@@ -10,7 +10,7 @@ import * as ja from '../../lang/ja.json';
 import * as nl from '../../lang/nl.json';
 import * as pt from '../../lang/pt.json';
 import { StorageService } from '../storage/storage.service';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { LangOption } from '../../models/lang.model';
 
 /**
@@ -36,20 +36,24 @@ export class TranslateService {
 	private currentLang: any;
 	langSelected: LangOption | undefined;
 	langSelectedObs: Observable<LangOption | undefined>;
-	private _langSelected: BehaviorSubject<LangOption  | undefined> = new BehaviorSubject<LangOption | undefined>(undefined);
+	private _langSelected: BehaviorSubject<LangOption | undefined> = new BehaviorSubject<LangOption | undefined>(undefined);
 
 	constructor(private storageService: StorageService) {
-		const iso = this.storageService.getLang() || 'en';
-		this.langSelected = this.langOptions.find((l) => l.lang === iso) || this.langOptions[0];
-		this.currentLang = this.availableLanguages[this.langSelected.lang];
 		this.langSelectedObs = this._langSelected.asObservable();
-		this._langSelected.next(this.langSelected);
+		this.updateLangSelected();
 	}
 
-	setLanguage(lang: string) {
+	setLanguageOptions(options: LangOption[] | undefined) {
+		if (options && options.length > 0) {
+			this.langOptions = options;
+			this.updateLangSelected();
+		}
+	}
+
+	async setLanguage(lang: string) {
 		const matchingLang = this.langOptions.find((l) => l.lang === lang);
 		if (matchingLang) {
-			this.currentLang = this.availableLanguages[lang];
+			this.currentLang = await this.getLangData(lang);
 			this.langSelected = matchingLang;
 			this._langSelected.next(this.langSelected);
 		}
@@ -74,5 +78,33 @@ export class TranslateService {
 			}
 		});
 		return result;
+	}
+
+	private async updateLangSelected() {
+		const storageLang = this.storageService.getLang();
+		const langOpt = this.langOptions.find((opt) => opt.lang === storageLang);
+		if (storageLang && langOpt) {
+			this.langSelected = langOpt;
+		} else {
+			this.langSelected = this.langOptions[0];
+		}
+		this.currentLang = await this.getLangData(this.langSelected.lang);
+		this._langSelected.next(this.langSelected);
+
+	}
+
+	private async getLangData(lang: string): Promise<void> {
+		if (!(lang in this.availableLanguages)) {
+			// Language not found in default languages options
+			// Try to find it in the assets/lang directory
+			try {
+				const response = await fetch(`assets/lang/${lang}.json`);
+				return await response.json();
+			} catch (error) {
+				console.error(`Not found ${lang}.json in assets/lang`, error);
+			}
+		} else {
+			return this.availableLanguages[lang];
+		}
 	}
 }

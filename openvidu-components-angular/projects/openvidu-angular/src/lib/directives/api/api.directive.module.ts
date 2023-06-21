@@ -27,6 +27,7 @@ import {
 	AudioMutedDirective,
 	CaptionsLangDirective,
 	CaptionsLangOptionsDirective,
+	LangOptionsDirective,
 	LangDirective,
 	MinimalDirective,
 	ParticipantNameDirective,
@@ -38,6 +39,7 @@ import {
 	declarations: [
 		MinimalDirective,
 		LangDirective,
+		LangOptionsDirective,
 		CaptionsLangOptionsDirective,
 		CaptionsLangDirective,
 		PrejoinDirective,
@@ -73,6 +75,7 @@ import {
 	exports: [
 		MinimalDirective,
 		LangDirective,
+		LangOptionsDirective,
 		CaptionsLangOptionsDirective,
 		CaptionsLangDirective,
 		PrejoinDirective,
