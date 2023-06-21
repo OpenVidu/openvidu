@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { BroadcastingService, BroadcastingStatus, RecordingInfo, RecordingService, RecordingStatus, TokenModel } from 'openvidu-angular';
+import { BroadcastingService, BroadcastingStatus, RecordingInfo, RecordingService, RecordingStatus, TokenModel, LangOption } from 'openvidu-angular';
 import { RestService } from '../services/rest.service';
 
 @Component({
@@ -83,6 +83,10 @@ export class CallComponent implements OnInit {
 	onLeaveButtonClicked() {
 		this.isSessionAlive = false;
 		console.log('TOOLBAR LEAVE CLICKED');
+	}
+
+	onLangChanged(lang: LangOption) {
+		console.warn('LANG CHANGED', lang);
 	}
 
 	async onStartBroadcastingClicked(broadcastUrl: string) {

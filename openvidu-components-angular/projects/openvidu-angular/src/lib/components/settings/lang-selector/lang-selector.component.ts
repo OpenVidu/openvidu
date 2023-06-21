@@ -1,8 +1,9 @@
-import { AfterViewInit, Component, OnInit, Output, ViewChild,EventEmitter } from '@angular/core';
+import { AfterViewInit, Component, OnInit, Output, ViewChild, EventEmitter } from '@angular/core';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { MatSelect } from '@angular/material/select';
 import { StorageService } from '../../../services/storage/storage.service';
 import { TranslateService } from '../../../services/translate/translate.service';
+import { LangOption } from '../../../models/lang.model';
 
 /**
  * @internal
@@ -13,9 +14,9 @@ import { TranslateService } from '../../../services/translate/translate.service'
 	styleUrls: ['./lang-selector.component.css']
 })
 export class LangSelectorComponent implements OnInit, AfterViewInit {
-	@Output()  onLangSelectorClicked = new EventEmitter<void>();
-	langSelected: { name: string; ISO: string };
-	languages: { name: string; ISO: string }[] = [];
+	@Output() onLangSelectorClicked = new EventEmitter<void>();
+	langSelected: LangOption | undefined;
+	languages: LangOption[] = [];
 
 	/**
 	 * @ignore

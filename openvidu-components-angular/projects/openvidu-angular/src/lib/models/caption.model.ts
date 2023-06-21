@@ -1,9 +1,9 @@
+import { LangOption } from './lang.model';
 
 /**
  * @internal
  */
 export interface CaptionModel {
-
 	connectionId: string;
 	nickname: string;
 	color: string;
@@ -11,10 +11,4 @@ export interface CaptionModel {
 	text: string;
 }
 
-export interface CaptionsLangOption {
-
-	name: string;
-	lang: string;
-
-}
-
+export interface CaptionsLangOption extends LangOption {}

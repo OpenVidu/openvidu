@@ -10,6 +10,8 @@ import * as ja from '../../lang/ja.json';
 import * as nl from '../../lang/nl.json';
 import * as pt from '../../lang/pt.json';
 import { StorageService } from '../storage/storage.service';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { LangOption } from '../../models/lang.model';
 
 /**
  * @internal
@@ -19,40 +21,46 @@ import { StorageService } from '../storage/storage.service';
 })
 export class TranslateService {
 	private availableLanguages = { en, es, de, fr, cn, hi, it, ja, nl, pt };
-	private langTitles = [
-		{ name: 'English', ISO: 'en' },
-		{ name: 'Español', ISO: 'es' },
-		{ name: 'Deutsch', ISO: 'de' },
-		{ name: 'Français', ISO: 'fr' },
-		{ name: '中国', ISO: 'cn' },
-		{ name: 'हिन्दी', ISO: 'hi' },
-		{ name: 'Italiano', ISO: 'it' },
-		{ name: 'やまと', ISO: 'ja' },
-		{ name: 'Dutch', ISO: 'nl' },
-		{ name: 'Português', ISO: 'pt' }
+	private langOptions: LangOption[] = [
+		{ name: 'English', lang: 'en' },
+		{ name: 'Español', lang: 'es' },
+		{ name: 'Deutsch', lang: 'de' },
+		{ name: 'Français', lang: 'fr' },
+		{ name: '中国', lang: 'cn' },
+		{ name: 'हिन्दी', lang: 'hi' },
+		{ name: 'Italiano', lang: 'it' },
+		{ name: 'やまと', lang: 'ja' },
+		{ name: 'Dutch', lang: 'nl' },
+		{ name: 'Português', lang: 'pt' }
 	];
 	private currentLang: any;
-	langSelected: { name: string; ISO: string };
+	langSelected: LangOption | undefined;
+	langSelectedObs: Observable<LangOption | undefined>;
+	private _langSelected: BehaviorSubject<LangOption  | undefined> = new BehaviorSubject<LangOption | undefined>(undefined);
 
 	constructor(private storageService: StorageService) {
 		const iso = this.storageService.getLang() || 'en';
-		this.langSelected = this.langTitles.find((lang) => lang.ISO === iso) || this.langTitles[0];
-		this.currentLang = this.availableLanguages[this.langSelected.ISO];
+		this.langSelected = this.langOptions.find((l) => l.lang === iso) || this.langOptions[0];
+		this.currentLang = this.availableLanguages[this.langSelected.lang];
+		this.langSelectedObs = this._langSelected.asObservable();
+		this._langSelected.next(this.langSelected);
 	}
 
 	setLanguage(lang: string) {
-		if(this.langTitles.some(l => l.ISO === lang)){
+		const matchingLang = this.langOptions.find((l) => l.lang === lang);
+		if (matchingLang) {
 			this.currentLang = this.availableLanguages[lang];
-			this.langSelected = this.langTitles.find((l) => l.ISO === lang);
+			this.langSelected = matchingLang;
+			this._langSelected.next(this.langSelected);
 		}
 	}
 
-	getLangSelected(): { name: string; ISO: string } {
+	getLangSelected(): LangOption | undefined {
 		return this.langSelected;
 	}
 
 	getLanguagesInfo() {
-		return this.langTitles;
+		return this.langOptions;
 	}
 
 	translate(key: string): string {

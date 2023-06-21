@@ -39,6 +39,7 @@ import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { StorageService } from '../../services/storage/storage.service';
 import { TranslateService } from '../../services/translate/translate.service';
+import { LangOption } from '../../models/lang.model';
 
 /**
  * The **VideoconferenceComponent** is the parent of all OpenVidu components.
@@ -424,6 +425,11 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	@Output() onNodeCrashed: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
+	 * Provides event notifications that fire when the application language has changed.
+	 */
+	@Output() onLangChanged: EventEmitter<LangOption> = new EventEmitter<LangOption>();
+
+	/**
 	 * @internal
 	 */
 	showVideoconference: boolean = false;
@@ -458,6 +464,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	private externalParticipantName: string;
 	private prejoinSub: Subscription;
 	private participantNameSub: Subscription;
+	private langSub: Subscription;
 	private log: ILogger;
 
 	/**
@@ -483,6 +490,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	async ngOnDestroy() {
 		if (this.prejoinSub) this.prejoinSub.unsubscribe();
 		if (this.participantNameSub) this.participantNameSub.unsubscribe();
+		if (this.langSub) this.langSub.unsubscribe();
 		this.deviceSrv.clear();
 		await this.openviduService.clear();
 	}
@@ -775,6 +783,10 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 
 		this.participantNameSub = this.libService.participantName.subscribe((nickname: string) => {
 			this.externalParticipantName = nickname;
+		});
+
+		this.langSub = this.translateService.langSelectedObs.subscribe((lang: LangOption) => {
+			this.onLangChanged.emit(lang);
 		});
 	}
 }

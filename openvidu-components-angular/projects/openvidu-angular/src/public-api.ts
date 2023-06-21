@@ -38,6 +38,7 @@ export * from './lib/models/recording.model';
 export * from './lib/models/signal.model';
 export * from './lib/models/token.model';
 export * from './lib/models/video-type.model';
+export * from './lib/models/lang.model';
 export * from './lib/openvidu-angular.module';
 // Pipes
 export * from './lib/pipes/participant.pipe';
@@ -51,4 +52,3 @@ export * from './lib/services/openvidu/openvidu.service';
 export * from './lib/services/panel/panel.service';
 export * from './lib/services/participant/participant.service';
 export * from './lib/services/recording/recording.service';
-
