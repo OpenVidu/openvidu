@@ -57,7 +57,7 @@ import { LangOption } from '../../models/lang.model';
  * | **minimal**                        | `boolean` | {@link MinimalDirective}                        |
  * | **lang**                           | `string`  | {@link LangDirective}                           |
  * | **captionsLang**                   | `string`  | {@link CaptionsLangDirective}                   |
- * | **captionsLangOprions**            | `CaptionsLangOption []`  | {@link CaptionsLangOptionsDirective}                   |
+ * | **captionsLangOptions**            | `CaptionsLangOption []`  | {@link CaptionsLangOptionsDirective}                   |
  * | **prejoin**                        | `boolean` | {@link PrejoinDirective}                        |
  * | **participantName**                | `string`  | {@link ParticipantNameDirective}                |
  * | **videoMuted**                     | `boolean` | {@link VideoMutedDirective}                     |
