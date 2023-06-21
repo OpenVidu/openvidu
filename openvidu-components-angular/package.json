@@ -28,7 +28,7 @@
     "@types/node": "16.11.6",
     "@types/selenium-webdriver": "4.1.5",
     "chai": "4.3.6",
-    "chromedriver": "106.0.1",
+    "chromedriver": "114.0.2",
     "codelyzer": "6.0.2",
     "concat": "^1.0.3",
     "cross-env": "^7.0.3",
