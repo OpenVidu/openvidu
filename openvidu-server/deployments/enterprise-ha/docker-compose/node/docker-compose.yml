@@ -42,7 +42,7 @@ services:
             - OPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook
             - MULTI_MASTER_REPLICATION_MANAGER_WEBHOOK=http://127.0.0.1:4443/openvidu/replication-manager-webhook?OPENVIDU_SECRET=${OPENVIDU_SECRET}
             - COTURN_IP=${COTURN_IP:-auto-ipv4}
-            - COTURN_PORT=${COTURN_PORT:-3478}
+            - COTURN_PORT=${COTURN_PORT:-443}
             - OPENVIDU_PRO_CLUSTER=true
             - OPENVIDU_EDITION=enterprise
             - OPENVIDU_PRO_CLUSTER_ENVIRONMENT=${OPENVIDU_PRO_CLUSTER_ENVIRONMENT:-on_premise}
