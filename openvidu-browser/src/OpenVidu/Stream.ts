@@ -790,18 +790,20 @@ export class Stream {
      * @hidden
      */
     isSendScreen(): boolean {
-        let screen;
+        let screen = false
         if (typeof MediaStreamTrack !== 'undefined' &&
             this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack) {
-            var trackSettings = this.outboundStreamOpts.publisherProperties.videoSource.getSettings();
-			screen = ["monitor", "window", "browser"].includes(trackSettings.displaySurface);
-		}
-        else if (platform.isElectron()) {
+            let trackSettings: any = this.outboundStreamOpts.publisherProperties.videoSource.getSettings();
+            if (trackSettings.displaySurface) {
+                screen = ["monitor", "window", "browser"].includes(trackSettings.displaySurface);
+            }
+        }
+        if (!screen && platform.isElectron()) {
             screen =
                 typeof this.outboundStreamOpts.publisherProperties.videoSource === 'string' &&
                 this.outboundStreamOpts.publisherProperties.videoSource.startsWith('screen:');
         }
-        else {
+        if (!screen) {
             screen = this.outboundStreamOpts.publisherProperties.videoSource === 'screen';
         }
         return !!this.outboundStreamOpts && screen;
