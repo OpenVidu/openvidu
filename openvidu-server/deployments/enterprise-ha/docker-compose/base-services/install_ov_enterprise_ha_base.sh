@@ -3,7 +3,7 @@
 # Global variables
 OPENVIDU_FOLDER=ov-enterprise-base-services
 ELASTICSEARCH_FOLDER=${OPENVIDU_FOLDER}/elasticsearch
-OPENVIDU_VERSION=master
+OPENVIDU_VERSION=v2.28.0
 OPENVIDU_UPGRADABLE_VERSION="2.27"
 DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}
 
