@@ -12,7 +12,6 @@ IMAGES_MEDIA_NODE_CONTROLLER=(
     "docker.elastic.co/beats/metricbeat"
     "openvidu/mediasoup-controller"
     "openvidu/openvidu-recording"
-    "openvidu/openvidu-coturn"
     "openvidu/speech-to-text-service"
 )
 
