@@ -49,6 +49,22 @@ if [ -n "${WAIT_KIBANA_URL:-}" ]; then
     printf "\n  ==== Kibana is Ready ===="
 fi
 
+if [ -n "${OPENVIDU_ENTERPRISE_HA_NODE_PRIVATE_IP:-}" ]; then
+    printf "\n"
+    printf "\n  ======================================="
+    printf "\n   Waiting for Media Node controller."
+    printf "\n  "
+    printf "\n  Service openvidu/media-node-controller needs to be "
+    printf "\n  available and reachable in host machine at port 3000."
+    printf "\n  ======================================="
+    printf "\n"
+    until curl --insecure --output /dev/null --silent --head --fail --max-time 10 --connect-timeout 10 http://127.0.0.1:3000/media-node/status &>/dev/null; do
+        printf "\n  Waiting for Media Node controller in '%s' 'URL'. Please be patient..." "http://127.0.0.1:3000/media-node/status"
+        sleep 1
+    done
+    printf "\n  ==== Media Node controller is Ready ===="
+fi
+
 # Launch OpenVidu Pro
 printf "\n"
 printf "\n  ======================================="
