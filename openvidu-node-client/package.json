@@ -33,5 +33,5 @@
         "docs": "./generate-docs.sh"
     },
     "typings": "lib/index.d.ts",
-    "version": "2.27.0"
+    "version": "2.28.0"
 }
