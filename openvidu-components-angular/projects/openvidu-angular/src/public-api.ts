@@ -43,6 +43,7 @@ export * from './lib/openvidu-angular.module';
 // Pipes
 export * from './lib/pipes/participant.pipe';
 export * from './lib/pipes/recording.pipe';
+export * from './lib/pipes/translate.pipe';
 // Services
 export * from './lib/services/action/action.service';
 export * from './lib/services/broadcasting/broadcasting.service';

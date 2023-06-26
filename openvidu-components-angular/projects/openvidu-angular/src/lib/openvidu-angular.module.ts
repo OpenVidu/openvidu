@@ -143,6 +143,7 @@ const privateComponents = [
         ParticipantStreamsPipe,
         DurationFromSecondsPipe,
         StreamTypesEnabledPipe,
+        TranslatePipe,
         CommonModule,
         OpenViduAngularDirectiveModule,
         ApiDirectiveModule
