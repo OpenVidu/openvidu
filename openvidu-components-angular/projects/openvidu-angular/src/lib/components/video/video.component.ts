@@ -7,18 +7,12 @@ import { VideoType } from '../../models/video-type.model';
  */
 @Component({
 	selector: 'ov-video',
-	template: `
-		<video
-			class="OT_video-element"
-			#videoElement
-			[attr.id]="streamManager && _streamManager.stream ? 'video-' + _streamManager.stream.streamId : 'video-undefined'"
-			[muted]="mutedSound"
-		></video>
-	`,
+	template: ` <video class="OT_video-element" #videoElement [muted]="mutedSound"></video> `,
 	styleUrls: ['./video.component.css']
 })
 export class VideoComponent implements AfterViewInit {
 	@Input() mutedSound: boolean;
+	@Input() participantId: string;
 	_streamManager: StreamManager;
 	_videoElement: ElementRef;
 	type: VideoType = VideoType.CAMERA;
@@ -32,7 +26,7 @@ export class VideoComponent implements AfterViewInit {
 		});
 	}
 
-	@ViewChild('videoElement', {static:false})
+	@ViewChild('videoElement', { static: false })
 	set videoElement(element: ElementRef) {
 		this._videoElement = element;
 	}
@@ -49,15 +43,15 @@ export class VideoComponent implements AfterViewInit {
 	}
 
 	private updateVideoStyles() {
-
 		this.type = <VideoType>this._streamManager?.stream?.typeOfVideo;
 		if (this.type === VideoType.SCREEN) {
 			this._videoElement.nativeElement.style.objectFit = 'contain';
 			this._videoElement.nativeElement.classList.add('screen-type');
+			this._videoElement.nativeElement.id =`video-screen-${this.participantId}`;
 		} else {
 			this._videoElement.nativeElement.style.objectFit = 'cover';
 			this._videoElement.nativeElement.classList.add('camera-type');
+			this._videoElement.nativeElement.id = `video-camera-${this.participantId}`;
 		}
-
 	}
 }

@@ -41,6 +41,7 @@
 		(dblclick)="toggleVideoEnlarged()"
 		[streamManager]="_stream.streamManager"
 		[mutedSound]="_stream?.participant?.isMutedForcibly"
+		[participantId]="_stream?.participant?.id"
 	></ov-video>
 
 	<div class="status-icons">
