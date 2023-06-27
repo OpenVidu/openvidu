@@ -705,27 +705,30 @@ Resources:
   #####
   # Media Node Autoscaling Group
   #####
-  MediaNodeAutoScalingLaunchConfiguration:
-    Type: AWS::AutoScaling::LaunchConfiguration
+  MediaNodeLaunchTemplateConfiguration:
+    Type: AWS::EC2::LaunchTemplate
     Properties:
-      LaunchConfigurationName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGMediaNodeLaunchConfiguration'] ]
-      SecurityGroups:
-        - !Ref MediaNodeSecurityGroup
-      ImageId: !GetAtt LambdaOnCreateInvoke.MediaNodeImageId
-      KeyName: !Ref KeyName
-      InstanceType: !Ref AwsInstanceTypeKMS
-      BlockDeviceMappings:
-        - DeviceName: /dev/sda1
-          Ebs:
-            VolumeType: gp2
-            DeleteOnTermination: true
-            VolumeSize: 50
+      LaunchTemplateName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGMediaNodeLaunchTemplate'] ]
+      LaunchTemplateData:
+        SecurityGroupIds:
+          - !GetAtt MediaNodeSecurityGroup.GroupId
+        ImageId: !GetAtt LambdaOnCreateInvoke.MediaNodeImageId
+        KeyName: !Ref KeyName
+        InstanceType: !Ref AwsInstanceTypeKMS
+        BlockDeviceMappings:
+          - DeviceName: /dev/sda1
+            Ebs:
+              VolumeType: gp2
+              DeleteOnTermination: true
+              VolumeSize: 50
 
   MediaNodeAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       AutoScalingGroupName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGMediaNode'] ]
-      LaunchConfigurationName: !Ref MediaNodeAutoScalingLaunchConfiguration
+      LaunchTemplate:
+        LaunchTemplateId: !Ref MediaNodeLaunchTemplateConfiguration
+        Version: !GetAtt MediaNodeLaunchTemplateConfiguration.LatestVersionNumber
       MinSize: !Ref MinMediaNodes
       MaxSize: !Ref MaxMediaNodes
       DesiredCapacity: !Ref DesiredMediaNodes
@@ -957,59 +960,63 @@ Resources:
   #####
   # OpenVidu Pro Master AutoScaling Group
   #####
-  OpenViduProMasterNodeAutoScalingLaunchConfiguration:
-    Type: AWS::AutoScaling::LaunchConfiguration
+  OpenViduProMasterNodeAutoScalingLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
     Properties:
-      LaunchConfigurationName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGMasterNodeLaunchConfiguration'] ]
-      SecurityGroups:
-        - !Ref OpenViduSecurityGroup
-      IamInstanceProfile: !Ref OpenViduProMasterInstanceProfile
-      ImageId: !GetAtt LambdaOnCreateInvoke.MasterNodeImageId
-      KeyName: !Ref KeyName
-      InstanceType: !Ref AwsInstanceTypeOV
-      BlockDeviceMappings:
-        - DeviceName: /dev/sda1
-          Ebs:
-            VolumeType: gp2
-            DeleteOnTermination: true
-            VolumeSize: 100
-      UserData:
-        Fn::Base64:
-          Fn::Sub:
-            - |
-              DOMAIN_OR_PUBLIC_IP=${DomainNameVar} | \
-              OPENVIDU_ENTERPRISE_MEDIA_SERVER=${MediaServer} | \
-              OPENVIDU_PRO_LICENSE=${OpenViduLicense} | \
-              OPENVIDU_SECRET=${OpenViduSecret} | \
-              OPENVIDU_PRO_CLUSTER_ID=${OpenViduProClusterId} | \
-              OPENVIDU_PRO_ELASTICSEARCH_HOST=${ElasticsearchUrl} | \
-              OPENVIDU_PRO_KIBANA_HOST=${KibanaUrl} | \
-              ELASTICSEARCH_USERNAME=${ElasticsearchUser} | \
-              ELASTICSEARCH_PASSWORD=${ElasticsearchPassword} | \
-              RM_REDIS_IP=${RedisHostName} | \
-              RM_REDIS_PORT=${RedisPort} | \
-              RM_SQS_QUEUE=${SqsQueueName} | \
-              RM_CLOUDFORMATION_ARN=${AWS::StackId} | \
-              OPENVIDU_PRO_CONFIG_S3_BUCKET=${OpenViduS3BucketParam} | \
-              RM_MEDIA_NODES_AUTOSCALING_GROUP_NAME=${MediaNodesAutoscalingGroupName} | \
-              RM_MASTER_NODES_AUTOSCALING_GROUP_NAME=${MasterNodesAutoscalingGroupName} | \
-              OPENVIDU_RECORDING=${OpenViduRecording} | \
-              OPENVIDU_PRO_COTURN_IN_MEDIA_NODES=${CoturnInMediaNodes} | \
-              OPENVIDU_ENTERPRISE_S3_CONFIG_AUTORESTART=${OpenViduS3ConfigAutoRestart} | \
-              OPENVIDU_PRO_ELASTICSEARCH=${ElasticsearchEnabled}
-            - DomainNameVar: !Ref DomainName
-              RedisHostName: !GetAtt RedisCluster.RedisEndpoint.Address
-              RedisPort: !GetAtt RedisCluster.RedisEndpoint.Port
-              SqsQueueName: !GetAtt SQSQueue.QueueName
-              MediaNodesAutoscalingGroupName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGMediaNode'] ]
-              MasterNodesAutoscalingGroupName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGOpenViduProMasterNode'] ]
-              OpenViduS3BucketParam: !If [ CreateS3Bucket, !Ref S3OpenViduBucket, !Ref OpenViduS3BucketName ]
+      LaunchTemplateName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGMasterNodeLaunchConfiguration'] ]
+      LaunchTemplateData:
+        SecurityGroupIds:
+          - !GetAtt OpenViduSecurityGroup.GroupId
+        IamInstanceProfile:
+          Arn: !GetAtt OpenViduProMasterInstanceProfile.Arn
+        ImageId: !GetAtt LambdaOnCreateInvoke.MasterNodeImageId
+        KeyName: !Ref KeyName
+        InstanceType: !Ref AwsInstanceTypeOV
+        BlockDeviceMappings:
+          - DeviceName: /dev/sda1
+            Ebs:
+              VolumeType: gp2
+              DeleteOnTermination: true
+              VolumeSize: 100
+        UserData:
+          Fn::Base64:
+            Fn::Sub:
+              - |
+                DOMAIN_OR_PUBLIC_IP=${DomainNameVar} | \
+                OPENVIDU_ENTERPRISE_MEDIA_SERVER=${MediaServer} | \
+                OPENVIDU_PRO_LICENSE=${OpenViduLicense} | \
+                OPENVIDU_SECRET=${OpenViduSecret} | \
+                OPENVIDU_PRO_CLUSTER_ID=${OpenViduProClusterId} | \
+                OPENVIDU_PRO_ELASTICSEARCH_HOST=${ElasticsearchUrl} | \
+                OPENVIDU_PRO_KIBANA_HOST=${KibanaUrl} | \
+                ELASTICSEARCH_USERNAME=${ElasticsearchUser} | \
+                ELASTICSEARCH_PASSWORD=${ElasticsearchPassword} | \
+                RM_REDIS_IP=${RedisHostName} | \
+                RM_REDIS_PORT=${RedisPort} | \
+                RM_SQS_QUEUE=${SqsQueueName} | \
+                RM_CLOUDFORMATION_ARN=${AWS::StackId} | \
+                OPENVIDU_PRO_CONFIG_S3_BUCKET=${OpenViduS3BucketParam} | \
+                RM_MEDIA_NODES_AUTOSCALING_GROUP_NAME=${MediaNodesAutoscalingGroupName} | \
+                RM_MASTER_NODES_AUTOSCALING_GROUP_NAME=${MasterNodesAutoscalingGroupName} | \
+                OPENVIDU_RECORDING=${OpenViduRecording} | \
+                OPENVIDU_PRO_COTURN_IN_MEDIA_NODES=${CoturnInMediaNodes} | \
+                OPENVIDU_ENTERPRISE_S3_CONFIG_AUTORESTART=${OpenViduS3ConfigAutoRestart} | \
+                OPENVIDU_PRO_ELASTICSEARCH=${ElasticsearchEnabled}
+              - DomainNameVar: !Ref DomainName
+                RedisHostName: !GetAtt RedisCluster.RedisEndpoint.Address
+                RedisPort: !GetAtt RedisCluster.RedisEndpoint.Port
+                SqsQueueName: !GetAtt SQSQueue.QueueName
+                MediaNodesAutoscalingGroupName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGMediaNode'] ]
+                MasterNodesAutoscalingGroupName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGOpenViduProMasterNode'] ]
+                OpenViduS3BucketParam: !If [ CreateS3Bucket, !Ref S3OpenViduBucket, !Ref OpenViduS3BucketName ]
 
   OpenViduProMasterNodeAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       AutoScalingGroupName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGOpenViduProMasterNode'] ]
-      LaunchConfigurationName: !Ref OpenViduProMasterNodeAutoScalingLaunchConfiguration
+      LaunchTemplate:
+        LaunchTemplateId: !Ref OpenViduProMasterNodeAutoScalingLaunchTemplate
+        Version: !GetAtt OpenViduProMasterNodeAutoScalingLaunchTemplate.LatestVersionNumber
       TargetGroupARNs:
         - !Ref TargetGroup
       MinSize: !Ref MinMasterNodes
