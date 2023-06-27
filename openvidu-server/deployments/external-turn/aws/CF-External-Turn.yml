@@ -209,7 +209,7 @@ Resources:
                 # and we need to install coturn and fill the .env file
                 if [ ! -d "$WORKIND_DIR" ]; then
                   # This means it is the first time we run this script
-                  curl https://s3.eu-west-1.amazonaws.com/aws.openvidu.io/external-turn/4.5.2/install_openvidu_external_coturn.sh | bash
+                  curl https://s3.eu-west-1.amazonaws.com/aws.openvidu.io/external-turn/4.6.2/install_openvidu_external_coturn.sh | bash
                   cd "$WORKIND_DIR"
                   # Replace environment variables
                   sed -i "s|TURN_DOMAIN_NAME=.*|TURN_DOMAIN_NAME=${MyDomainName}|" .env
