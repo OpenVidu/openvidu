@@ -112,7 +112,7 @@ function WebSocketWithReconnection(config) {
             Logger.debug('Reconnected to ' + wsUri + ' after ' + numRetries + ' attempts...');
             reconnecting = false;
             registerMessageHandler();
-            if (config.onreconnected()) {
+            if (config.onreconnected) {
                 config.onreconnected();
             }
             ws.onclose = reconnectionOnClose;
