@@ -785,7 +785,9 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		String rpcSessionId = rpcSession.getSessionId();
 		String message = "";
 
-		if ("Close for not receive ping from client".equals(status)) {
+		if ("Connection closed for reconnection".equals(status)) {
+			message = "Evicting ghost reconnection participant with private id {}";
+		} else if ("Close for not receive ping from client".equals(status)) {
 			message = "Evicting participant with private id {} because of a network disconnection";
 		} else if (status == null) { // && this.webSocketBrokenPipeTransportError.remove(rpcSessionId) != null)) {
 			try {
@@ -810,7 +812,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 		if (this.webSocketEOFTransportError.remove(rpcSessionId) != null) {
 			log.warn(
-					"Evicting participant with private id {} because a transport error took place and its web socket connection is now closed",
+					"Evicting participant with private id {} because a transport error took place and its websocket connection is now closed",
 					rpcSession.getSessionId());
 			this.leaveRoomAfterConnClosed(rpcSessionId, EndReason.networkDisconnect);
 		}
