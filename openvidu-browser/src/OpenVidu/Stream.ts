@@ -1072,15 +1072,16 @@ export class Stream {
         if (!this.getWebRtcPeer() || !this.getRTCPeerConnection()) {
             return false;
         }
-        if (this.isLocal() && !!this.session.openvidu.advancedConfiguration.forceMediaReconnectionAfterNetworkDrop) {
+        if (!!this.session.openvidu.advancedConfiguration.forceMediaReconnectionAfterNetworkDrop) {
             logger.warn(
                 `OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Stream ${this.streamId
                 } (${this.isLocal() ? 'Publisher' : 'Subscriber'}) will force a reconnection`
             );
             return true;
+        } else {
+            const iceConnectionState: RTCIceConnectionState = this.getRTCPeerConnection().iceConnectionState;
+            return iceConnectionState !== 'connected' && iceConnectionState !== 'completed';
         }
-        const iceConnectionState: RTCIceConnectionState = this.getRTCPeerConnection().iceConnectionState;
-        return iceConnectionState !== 'connected' && iceConnectionState !== 'completed';
     }
 
     /* Private methods */
