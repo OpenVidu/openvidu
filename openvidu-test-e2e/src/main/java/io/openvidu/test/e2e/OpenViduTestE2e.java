@@ -102,7 +102,7 @@ public class OpenViduTestE2e {
 	protected static String EDGE_VERSION = "latest";
 
 	protected static String OPENVIDU_DEPLOYMENT = "http://localhost:5000/";
-	protected static String DOCKER_ANDROID_IMAGE = "budtmo/docker-android-x86-12.0:latest";
+	protected static String DOCKER_ANDROID_IMAGE = "budtmo/docker-android:latest";
 
 	protected static Exception ex = null;
 	protected final Object lock = new Object();
