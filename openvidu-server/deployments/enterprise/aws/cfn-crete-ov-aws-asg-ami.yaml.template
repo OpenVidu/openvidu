@@ -227,6 +227,9 @@ Resources:
                     echo "OPENVIDU_ENTERPRISE_S3_CONFIG_AUTORESTART=false" >> $WORKINGDIR/.env
                   fi
 
+                  # Random Turn shared secret
+                  echo "COTURN_SHARED_SECRET_KEY=$(openssl rand -hex 16)" >> $WORKINGDIR/.env
+
                   # End with newline
                   echo "" >> $WORKINGDIR/.env
                 fi
