@@ -8,7 +8,8 @@ import {
 	PublisherProperties,
 	Session,
 	SignalOptions,
-	Stream
+	Stream,
+	StreamManager
 } from 'openvidu-browser';
 
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -49,7 +50,7 @@ export class OpenViduService {
 	 * @internal
 	 */
 	constructor(
-		protected openviduAngularConfigSrv: OpenViduAngularConfigService,
+		protected libService: OpenViduAngularConfigService,
 		protected platformService: PlatformService,
 		protected loggerSrv: LoggerService,
 		private injector: Injector,
@@ -69,13 +70,13 @@ export class OpenViduService {
 				interval: 50
 			}
 		});
-		if (this.openviduAngularConfigSrv.isProduction()) this.OV.enableProdMode();
+		if (this.libService.isProduction()) this.OV.enableProdMode();
 		this.webcamSession = this.OV.initSession();
 
 		// Initialize screen session only if it is not mobile platform
 		if (!this.platformService.isMobile()) {
 			this.OVScreen = new OpenVidu();
-			if (this.openviduAngularConfigSrv.isProduction()) this.OVScreen.enableProdMode();
+			if (this.libService.isProduction()) this.OVScreen.enableProdMode();
 			this.screenSession = this.OVScreen.initSession();
 		}
 	}
@@ -244,11 +245,34 @@ export class OpenViduService {
 		this.disconnectSession(this.screenSession);
 	}
 
+	async updateVideoEncodingParameters(streamManager: StreamManager) {
+		if (!streamManager) return;
+		const track = streamManager?.stream.getMediaStream().getVideoTracks()[0];
+		const videoSender = streamManager?.stream
+			.getRTCPeerConnection()
+			.getSenders()
+			.find((sender) => sender.track === track);
+
+		if (!videoSender) return;
+
+		const parameters: RTCRtpSendParameters = videoSender.getParameters();
+		const desiredFrameRate = this.libService.getStreamFrameRate();
+		const desiredWidth = Number(this.libService.getStreamResolution().split('x')[0]);
+		const desiredResolution = Number(track?.getConstraints()?.width) / desiredWidth ?? 1.0;
+		parameters.encodings.forEach((encoding: RTCRtpEncodingParameters) => {
+			if (desiredFrameRate > 0 && encoding['maxFramerate'] !== desiredFrameRate) encoding['maxFramerate'] = desiredFrameRate;
+			if (desiredResolution >= 1 && encoding['scaleResolutionDownBy'] !== desiredResolution) {
+				encoding['scaleResolutionDownBy'] = desiredResolution;
+			}
+		});
+		await videoSender.setParameters(parameters);
+	}
+
 	/**
 	 * @internal
 	 * Initialize a publisher checking devices saved on storage or if participant have devices available.
 	 */
-	async initDefaultPublisher(): Promise<Publisher | undefined> {
+	async initDefaultPublisher(pp?: Partial<PublisherProperties>): Promise<Publisher | undefined> {
 		const hasVideoDevices = this.deviceService.hasVideoDeviceAvailable();
 		const hasAudioDevices = this.deviceService.hasAudioDeviceAvailable();
 		const isVideoActive = !this.deviceService.isVideoMuted();
@@ -259,7 +283,7 @@ export class OpenViduService {
 
 		if (hasVideoDevices) {
 			// Video is active, assign the device selected
-			videoSource = this.deviceService.getCameraSelected().device;
+			videoSource = this.deviceService.getCameraSelected()?.device ?? false;
 		} else if (!isVideoActive && hasVideoDevices) {
 			// Video is muted, assign the default device
 			// videoSource = undefined;
@@ -267,18 +291,21 @@ export class OpenViduService {
 
 		if (hasAudioDevices) {
 			// Audio is active, assign the device selected
-			audioSource = this.deviceService.getMicrophoneSelected().device;
+			audioSource = this.deviceService.getMicrophoneSelected()?.device ?? false;
 		} else if (!isAudioActive && hasAudioDevices) {
 			// Audio is muted, assign the default device
 			// audioSource = undefined;
 		}
 
-		const mirror = this.deviceService.getCameraSelected() && this.deviceService.getCameraSelected().type === CameraType.FRONT;
+		const mirror = this.deviceService.getCameraSelected() && this.deviceService.getCameraSelected()?.type === CameraType.FRONT;
 		const properties: PublisherProperties = {
 			videoSource,
 			audioSource,
 			publishVideo: isVideoActive,
 			publishAudio: isAudioActive,
+			resolution: pp?.resolution ?? '640x480',
+			frameRate: pp?.frameRate ?? 30,
+			videoSimulcast: pp?.videoSimulcast ?? false,
 			mirror
 		};
 		if (hasVideoDevices || hasAudioDevices) {
@@ -520,7 +547,6 @@ export class OpenViduService {
 		}
 	}
 
-
 	/**
 	 * @internal
 	 * @param pp {@link PublisherProperties}
@@ -538,7 +564,7 @@ export class OpenViduService {
 			this.forceStopMediaTracks(participantService.getMyCameraPublisher().stream.getMediaStream(), trackType);
 			return this.OV.getUserMedia(pp);
 		} catch (error) {
-			console.warn('Error creating MediaStream', error);
+			this.log.w('Error creating MediaStream', error);
 			if ((<OpenViduError>error).name === OpenViduErrorName.DEVICE_ACCESS_DENIED) {
 				this.log.w('The device requested is not available. Restoring the older one');
 				// The track requested is not available so we are getting the old tracks ids for recovering the track
@@ -559,7 +585,7 @@ export class OpenViduService {
 	 */
 	myNicknameHasBeenChanged(): boolean {
 		const participantService = this.injector.get(ParticipantService);
-		let oldNickname: string = "";
+		let oldNickname: string = '';
 		try {
 			const connData = JSON.parse(this.cleanConnectionData(this.webcamSession.connection.data));
 			oldNickname = connData.clientData;

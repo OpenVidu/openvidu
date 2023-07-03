@@ -60,6 +60,11 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * @internal
 	 */
 	_audioMuted: boolean = false;
+
+	/**
+	 * @internal
+	 */
+	_simulcast: boolean = false;
 	/**
 	 * @internal
 	 */
@@ -127,6 +132,14 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
+	_streamResolution: string = '640x480';
+	/**
+	 * @internal
+	 */
+	_streamFrameRate: number = 30;
+	/**
+	 * @internal
+	 */
 	_participantPanelItemMuteButton: boolean = true;
 	/**
 	 * @internal
@@ -188,11 +201,11 @@ export class OpenviduWebComponentComponent implements OnInit {
 	}
 
 	/**
-     * The **langOptions** directive allows to set the application language options.
-     * It will override the application languages provided by default.
-     * This propety is an array of objects which must comply with the {@link LangOption} interface.
-     *
-     * It is only available for {@link VideoconferenceComponent}.
+	 * The **langOptions** directive allows to set the application language options.
+	 * It will override the application languages provided by default.
+	 * This propety is an array of objects which must comply with the {@link LangOption} interface.
+	 *
+	 * It is only available for {@link VideoconferenceComponent}.
 	 *
 	 * Default: ```
 	 * [
@@ -209,7 +222,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * ]```
 	 *
 	 * Note: If you want to add a new language, you must add a new object with the name and the language code (e.g. `{ name: 'Custom', lang: 'cus' }`)
- 	 * and then add the language file in the `assets/lang` folder with the name `cus.json`.
+	 * and then add the language file in the `assets/lang` folder with the name `cus.json`.
 	 *
 	 *
 	 * @example
@@ -293,6 +306,20 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 */
 	@Input() set audioMuted(value: string | boolean) {
 		this._audioMuted = this.castToBoolean(value);
+	}
+
+	/**
+	 * The **simulcast** directive allows to enable/disable the Simulcast feature. Simulcast is a technique that allows
+	 * to send multiple versions of the same video stream at different resolutions, framerates and qualities. This way,
+	 * the receiver can subscribe to the most appropriate stream for its current network conditions.
+	 *
+	 * Default: `false`
+	 *
+	 * @example
+	 * <openvidu-webcomponent simulcast="true"></openvidu-webcomponent>
+	 */
+	@Input() set simulcast(value: string | boolean) {
+		this._simulcast = this.castToBoolean(value);
 	}
 
 	/**
@@ -523,6 +550,36 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 */
 	@Input() set streamSettingsButton(value: string | boolean) {
 		this._streamSettingsButton = this.castToBoolean(value);
+	}
+
+	/**
+	 * The **resolution** directive allows to set a specific participant resolution in stream component.
+	 *
+	 * Default: `640x480`
+	 *
+	 * <div class="warn-container">
+	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
+	 *
+	 * @example
+	 * <openvidu-webcomponent stream-resolution="'320x240'"></openvidu-webcomponent>
+	 */
+	@Input() set streamResolution(value: string) {
+		this._streamResolution = value;
+	}
+
+	/**
+	 * The **frameRate** directive allows initialize the publisher with a specific frame rate in stream component.
+	 *
+	 * Default: `30`
+	 *
+	 * <div class="warn-container">
+	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
+	 *
+	 * @example
+	 * <openvidu-webcomponent stream-frame-rate="30"></openvidu-webcomponent>
+	 */
+	@Input() set streamFrameRate(value: number) {
+		this._streamFrameRate = Number(value);
 	}
 	/**
 	 * The **participantPanelItemMuteButton** attribute allows show/hide the muted button in participant panel item component.

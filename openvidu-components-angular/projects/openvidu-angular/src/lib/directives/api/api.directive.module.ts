@@ -8,7 +8,9 @@ import { RecordingActivityRecordingErrorDirective, RecordingActivityRecordingsLi
 import {
 	StreamDisplayAudioDetectionDirective,
 	StreamDisplayParticipantNameDirective,
-	StreamSettingsButtonDirective
+	StreamSettingsButtonDirective,
+	StreamFrameRateDirective,
+	StreamResolutionDirective
 } from './stream.directive';
 import {
 	ToolbarActivitiesPanelButtonDirective,
@@ -32,7 +34,8 @@ import {
 	MinimalDirective,
 	ParticipantNameDirective,
 	PrejoinDirective,
-	VideoMutedDirective
+	VideoMutedDirective,
+	SimulcastDirective
 } from './videoconference.directive';
 
 @NgModule({
@@ -44,6 +47,7 @@ import {
 		CaptionsLangDirective,
 		PrejoinDirective,
 		VideoMutedDirective,
+		SimulcastDirective,
 		AudioMutedDirective,
 		ToolbarScreenshareButtonDirective,
 		ToolbarFullscreenButtonDirective,
@@ -61,6 +65,8 @@ import {
 		StreamDisplayParticipantNameDirective,
 		StreamDisplayAudioDetectionDirective,
 		StreamSettingsButtonDirective,
+		StreamFrameRateDirective,
+		StreamResolutionDirective,
 		LogoDirective,
 		ParticipantPanelItemMuteButtonDirective,
 		ParticipantNameDirective,
@@ -80,6 +86,7 @@ import {
 		CaptionsLangDirective,
 		PrejoinDirective,
 		VideoMutedDirective,
+		SimulcastDirective,
 		AudioMutedDirective,
 		ToolbarScreenshareButtonDirective,
 		ToolbarFullscreenButtonDirective,
@@ -97,6 +104,8 @@ import {
 		StreamDisplayParticipantNameDirective,
 		StreamDisplayAudioDetectionDirective,
 		StreamSettingsButtonDirective,
+		StreamFrameRateDirective,
+		StreamResolutionDirective,
 		LogoDirective,
 		ParticipantPanelItemMuteButtonDirective,
 		ParticipantNameDirective,

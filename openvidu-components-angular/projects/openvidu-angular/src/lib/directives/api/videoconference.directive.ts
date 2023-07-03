@@ -5,7 +5,6 @@ import { OpenViduAngularConfigService } from '../../services/config/openvidu-ang
 import { TranslateService } from '../../services/translate/translate.service';
 import { LangOption } from '../../models/lang.model';
 
-
 /**
  * The **minimal** directive applies a minimal UI hiding all controls except for cam and mic.
  *
@@ -79,7 +78,7 @@ export class MinimalDirective implements OnDestroy {
  * @example
  * <ov-videoconference [lang]="'es'"></ov-videoconference>
  */
- @Directive({
+@Directive({
 	selector: 'ov-videoconference[lang]'
 })
 export class LangDirective implements OnDestroy {
@@ -152,7 +151,7 @@ export class LangOptionsDirective implements OnDestroy {
 	/**
 	 * @ignore
 	 */
-	@Input() set langOptions(value: LangOption []) {
+	@Input() set langOptions(value: LangOption[]) {
 		this.update(value);
 	}
 
@@ -178,7 +177,7 @@ export class LangOptionsDirective implements OnDestroy {
 	/**
 	 * @ignore
 	 */
-	update(value: LangOption [] | undefined) {
+	update(value: LangOption[] | undefined) {
 		this.translateService.setLanguageOptions(value);
 	}
 }
@@ -208,7 +207,7 @@ export class LangOptionsDirective implements OnDestroy {
  * @example
  * <ov-videoconference [captionsLang]="'es-ES'"></ov-videoconference>
  */
- @Directive({
+@Directive({
 	selector: 'ov-videoconference[captionsLang]'
 })
 export class CaptionsLangDirective implements OnDestroy {
@@ -269,14 +268,14 @@ export class CaptionsLangDirective implements OnDestroy {
  * @example
  * <ov-videoconference [captionsLangOptions]="[{name:'Spanish', lang: 'es-ES'}]"></ov-videoconference>
  */
- @Directive({
+@Directive({
 	selector: 'ov-videoconference[captionsLangOptions]'
 })
 export class CaptionsLangOptionsDirective implements OnDestroy {
 	/**
 	 * @ignore
 	 */
-	@Input() set captionsLangOptions(value: CaptionsLangOption []) {
+	@Input() set captionsLangOptions(value: CaptionsLangOption[]) {
 		this.update(value);
 	}
 
@@ -302,11 +301,10 @@ export class CaptionsLangOptionsDirective implements OnDestroy {
 	/**
 	 * @ignore
 	 */
-	update(value: CaptionsLangOption [] | undefined) {
+	update(value: CaptionsLangOption[] | undefined) {
 		this.captionService.setLanguageOptions(value);
 	}
 }
-
 
 /**
  * The **participantName** directive sets the participant name. It can be useful for aplications which doesn't need the prejoin page.
@@ -477,7 +475,6 @@ export class VideoMutedDirective implements OnDestroy {
 	selector: 'ov-videoconference[audioMuted]'
 })
 export class AudioMutedDirective implements OnDestroy {
-
 	/**
 	 * @ignore
 	 */
@@ -507,6 +504,59 @@ export class AudioMutedDirective implements OnDestroy {
 	update(value: boolean) {
 		if (this.libService.audioMuted.getValue() !== value) {
 			this.libService.audioMuted.next(value);
+		}
+	}
+}
+
+/**
+ * The **simulcast** directive allows to enable/disable the Simulcast feature. Simulcast is a technique that allows
+ * to send multiple versions of the same video stream at different resolutions, framerates and qualities. This way,
+ * the receiver can subscribe to the most appropriate stream for its current network conditions.
+ *
+ * It is only available for {@link VideoconferenceComponent} and **only if OpenVidu Server was configured to use the
+ * mediasoup media server**. Otherwise, Simulcast will be disabled.
+ *
+ * Default: `false`
+ *
+ * @example
+ * <ov-videoconference [simulcast]="true"></ov-videoconference>
+ */
+@Directive({
+	selector: 'ov-videoconference[simulcast]'
+})
+export class SimulcastDirective implements OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set simulcast(value: boolean) {
+		this.update(value);
+	}
+
+	/**
+	 * @ignore
+	 */
+	constructor(public elementRef: ElementRef, private libService: OpenViduAngularConfigService) {}
+
+	/**
+	 * @ignore
+	 */
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	/**
+	 * @ignore
+	 */
+	clear() {
+		this.update(false);
+	}
+
+	/**
+	 * @ignore
+	 */
+	update(value: boolean) {
+		if (this.libService.simulcast.getValue() !== value) {
+			this.libService.simulcast.next(value);
 		}
 	}
 }

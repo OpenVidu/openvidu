@@ -30,6 +30,8 @@ import { StorageService } from '../../services/storage/storage.service';
  * | **displayParticipantName**   | `boolean` | {@link StreamDisplayParticipantNameDirective}   |
  * | **displayAudioDetection**    | `boolean` | {@link StreamDisplayAudioDetectionDirective}    |
  * | **settingsButton**          | `boolean` | {@link StreamSettingsButtonDirective}           |
+ * | **resolution**          | `string` | {@link StreamResolutionDirective}           |
+ * | **frameRate**          | `number` | {@link StreamFrameRateDirective}           |
  *
  * <p class="component-link-text">
  * <span class="italic">See all {@link ApiDirectiveModule API Directives}</span>
@@ -60,7 +62,7 @@ import { StorageService } from '../../services/storage/storage.service';
 	animations: [
 		trigger('posterAnimation', [
 			transition(':enter', [style({ opacity: 0 }), animate('100ms', style({ opacity: 1 }))]),
-			transition(':leave', [style({ opacity: 1 }), animate('200ms', style({ opacity: 0 }))]),
+			transition(':leave', [style({ opacity: 1 }), animate('200ms', style({ opacity: 0 }))])
 		])
 	]
 })
@@ -140,6 +142,7 @@ export class StreamComponent implements OnInit {
 		if (this._stream.participant) {
 			this.nickname = this._stream.participant.nickname;
 		}
+
 	}
 
 	/**
@@ -172,6 +175,12 @@ export class StreamComponent implements OnInit {
 
 	ngOnInit() {
 		this.subscribeToStreamDirectives();
+	}
+
+	async ngAfterViewInit() {
+		if (this._stream.streamManager) {
+			await this.openviduService.updateVideoEncodingParameters(this._stream.streamManager);
+		}
 	}
 
 	ngOnDestroy() {
@@ -214,7 +223,7 @@ export class StreamComponent implements OnInit {
 	 * @ignore
 	 */
 	toggleMuteForcibly() {
-		if(this._stream.participant){
+		if (this._stream.participant) {
 			this.participantService.setRemoteMutedForcibly(this._stream.participant.id, !this._stream.participant.isMutedForcibly);
 		}
 	}

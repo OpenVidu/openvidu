@@ -1,5 +1,6 @@
 <ov-videoconference
 	*ngIf="success"
+	[simulcast]="_simulcast"
 	[participantName]="_participantName"
 	[tokens]="_tokens"
 	[minimal]="_minimal"
@@ -26,6 +27,8 @@
 	[streamDisplayParticipantName]="_streamDisplayParticipantName"
 	[streamDisplayAudioDetection]="_streamDisplayAudioDetection"
 	[streamSettingsButton]="_streamSettingsButton"
+	[streamResolution]="_streamResolution"
+	[streamFrameRate]="_streamFrameRate"
 	[participantPanelItemMuteButton]="_participantPanelItemMuteButton"
 	[activitiesPanelRecordingActivity]="_activitiesPanelRecordingActivity"
 	[activitiesPanelBroadcastingActivity]="_activitiesPanelBroadcastingActivity"

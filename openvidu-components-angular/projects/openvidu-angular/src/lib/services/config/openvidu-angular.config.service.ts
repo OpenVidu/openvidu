@@ -19,6 +19,9 @@ export class OpenViduAngularConfigService {
 	prejoin = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	prejoinObs: Observable<boolean>;
 
+	simulcast = <BehaviorSubject<boolean>>new BehaviorSubject(false);
+	simulcastObs: Observable<boolean>;
+
 	videoMuted = <BehaviorSubject<boolean | undefined>>new BehaviorSubject(undefined);
 	videoMutedObs: Observable<boolean | undefined>;
 	audioMuted = <BehaviorSubject<boolean | undefined>>new BehaviorSubject(undefined);
@@ -50,6 +53,11 @@ export class OpenViduAngularConfigService {
 	displaySessionName = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	displaySessionNameObs: Observable<boolean>;
 
+	streamFrameRate = <BehaviorSubject<number>>new BehaviorSubject(30);
+	streamFrameRateObs: Observable<number>;
+
+	streamResolution = <BehaviorSubject<string>>new BehaviorSubject('640x480');
+	streamResolutionObs: Observable<string>;
 	displayLogo = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	displayLogoObs: Observable<boolean>;
 	displayParticipantName = <BehaviorSubject<boolean>>new BehaviorSubject(true);
@@ -91,6 +99,7 @@ export class OpenViduAngularConfigService {
 		this.prejoinObs = this.prejoin.asObservable();
 		this.videoMutedObs = this.videoMuted.asObservable();
 		this.audioMutedObs = this.audioMuted.asObservable();
+		this.simulcastObs = this.simulcast.asObservable();
 		//Toolbar observables
 		this.screenshareButtonObs = this.screenshareButton.asObservable();
 		this.fullscreenButtonObs = this.fullscreenButton.asObservable();
@@ -106,6 +115,8 @@ export class OpenViduAngularConfigService {
 		this.toolbarSettingsButtonObs = this.toolbarSettingsButton.asObservable();
 		this.captionsButtonObs = this.captionsButton.asObservable();
 		//Stream observables
+		this.streamFrameRateObs = this.streamFrameRate.asObservable();
+		this.streamResolutionObs = this.streamResolution.asObservable();
 		this.displayParticipantNameObs = this.displayParticipantName.asObservable();
 		this.displayAudioDetectionObs = this.displayAudioDetection.asObservable();
 		this.streamSettingsButtonObs = this.streamSettingsButton.asObservable();
@@ -144,5 +155,17 @@ export class OpenViduAngularConfigService {
 
 	isBroadcastingEnabled(): boolean {
 		return this.broadcastingButton.getValue() && this.broadcastingActivity.getValue();
+	}
+
+	getStreamResolution(): string {
+		return this.streamResolution.getValue();
+	}
+
+	getStreamFrameRate(): number {
+		return this.streamFrameRate.getValue();
+	}
+
+	isSimulcastEnabled(): boolean {
+		return this.simulcast.getValue() || false;
 	}
 }

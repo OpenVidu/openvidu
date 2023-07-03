@@ -63,6 +63,7 @@ import { LangOption } from '../../models/lang.model';
  * | **participantName**                | `string`  | {@link ParticipantNameDirective}                |
  * | **videoMuted**                     | `boolean` | {@link VideoMutedDirective}                     |
  * | **audioMuted**                     | `boolean` | {@link AudioMutedDirective}                     |
+   | **simulcast**                      | `boolean` | {@link SimulcastDirective}                      |
  * | **toolbarScreenshareButton**       | `boolean` | {@link ToolbarScreenshareButtonDirective}       |
  * | **toolbarFullscreenButton**        | `boolean` | {@link ToolbarFullscreenButtonDirective}        |
  * | **toolbarCaptionsButton** 			| `boolean` | {@link ToolbarCaptionsButtonDirective} 		  |
@@ -75,6 +76,8 @@ import { LangOption } from '../../models/lang.model';
  * | **streamDisplayParticipantName**   | `boolean` | {@link StreamDisplayParticipantNameDirective}   |
  * | **streamDisplayAudioDetection**    | `boolean` | {@link StreamDisplayAudioDetectionDirective}    |
  * | **streamSettingsButton**           | `boolean` | {@link StreamSettingsButtonDirective}           |
+ * | **streamFrameRate**                | `number` | {@link StreamFrameRateDirective}           |
+ * | **streamResolution**               | `string` | {@link StreamResolutionDirective}           |
  * | **participantPanelItemMuteButton** | `boolean` | {@link ParticipantPanelItemMuteButtonDirective} |
  * | **recordingActivityRecordingList** | `{@link RecordingInfo}[]` | {@link RecordingActivityRecordingsListDirective} |
  * | **recordingActivityRecordingError** | `any` | {@link RecordingActivityRecordingErrorDirective} |
@@ -603,7 +606,12 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	private async initwebcamPublisher(): Promise<void> {
 		return new Promise(async (resolve, reject) => {
 			try {
-				const publisher = await this.openviduService.initDefaultPublisher();
+				const pp = {
+					resolution: this.libService.getStreamResolution(),
+					frameRate: this.libService.getStreamFrameRate(),
+					videoSimulcast: this.libService.isSimulcastEnabled()
+				};
+				const publisher = await this.openviduService.initDefaultPublisher(pp);
 
 				if (publisher) {
 					publisher.once('accessDenied', async (e: any) => {
