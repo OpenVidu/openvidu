@@ -89,6 +89,16 @@
 			<artifactId>commons-validator</artifactId>
 			<version>1.7</version>
 		</dependency>
+		<!--
+			This dependency is used by commons-validator 1.7. But it should be
+			replaced or updated in the future:
+			https://issues.apache.org/jira/browse/VALIDATOR-485?jql=project%20%3D%20VALIDATOR%20AND%20fixVersion%20%3D%202.0
+		-->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.4</version>
+		</dependency>
 	</dependencies>
 
 	<profiles>
