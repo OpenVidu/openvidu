@@ -43,7 +43,7 @@
 
 	<properties>
 
-		<version.spring-boot>2.7.6</version.spring-boot>
+		<version.spring-boot>2.7.14</version.spring-boot>
 		<version.kurento>7.0.0</version.kurento>
 		<version.openvidu.java.client>2.28.0</version.openvidu.java.client>
 		<version.openvidu.client>1.1.0</version.openvidu.client>
