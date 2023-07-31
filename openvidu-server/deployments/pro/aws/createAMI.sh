@@ -84,8 +84,8 @@ fi
 
 aws cloudformation create-stack \
   --stack-name kms-${DATESTAMP} \
-  --template-url ${TEMPLATE_URL} \
-  "$(if [ "$NIGHTLY" == "false" ]; then echo '--disable-rollback'; fi)"
+  --template-url ${TEMPLATE_URL}
+  # --disable-rollback
 
 aws cloudformation wait stack-create-complete --stack-name kms-${DATESTAMP}
 
@@ -144,8 +144,8 @@ fi
 
 aws cloudformation create-stack \
   --stack-name openvidu-${DATESTAMP} \
-  --template-url ${TEMPLATE_URL} \
-  "$(if [ "$NIGHTLY" == "false" ]; then echo '--disable-rollback'; fi)"
+  --template-url ${TEMPLATE_URL}
+  # --disable-rollback
 
 aws cloudformation wait stack-create-complete --stack-name openvidu-${DATESTAMP}
 

@@ -52,8 +52,8 @@ TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-crete-ov-aws
 
 aws cloudformation create-stack \
   --stack-name openvidu-${DATESTAMP} \
-  --template-url ${TEMPLATE_URL} \
-  "$(if [ "$NIGHTLY" == "false" ]; then echo '--disable-rollback'; fi)"
+  --template-url ${TEMPLATE_URL}
+  # --disable-rollback
 
 aws cloudformation wait stack-create-complete --stack-name openvidu-${DATESTAMP}
 
