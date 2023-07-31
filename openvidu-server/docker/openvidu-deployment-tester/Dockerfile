@@ -41,7 +41,8 @@ RUN cd /workdir && pip3 install -r requirements.txt
 WORKDIR /workdir/src
 
 # Cache web driver
-RUN python3 main.py install-drivers
+# TODO: Fix cache
+# RUN python3 main.py install-drivers
 
 # Copy entrypoint
 COPY ./entrypoint.sh /usr/local/bin/
