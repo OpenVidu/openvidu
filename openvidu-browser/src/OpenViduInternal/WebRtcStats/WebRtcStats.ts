@@ -121,7 +121,13 @@ export class WebRtcStats {
     }
 
     public initWebRtcStats(): void {
-        const webrtcObj = localStorage.getItem(this.STATS_ITEM_NAME);
+        let webrtcObj = null;
+        // When cross-site (aka third-party) cookies are blocked by the browser,
+        // accessing localStorage in a third-party iframe throws a DOMException.
+        try {
+            webrtcObj = localStorage.getItem(this.STATS_ITEM_NAME);
+        }
+        catch(e){}
 
         if (!!webrtcObj) {
             this.webRtcStatsEnabled = true;
