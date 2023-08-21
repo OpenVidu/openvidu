@@ -121,7 +121,7 @@ export class WebRtcStats {
     }
 
     public initWebRtcStats(): void {
-        let webrtcObj = null;
+        let webrtcObj;
         // When cross-site (aka third-party) cookies are blocked by the browser,
         // accessing localStorage in a third-party iframe throws a DOMException.
         try {
