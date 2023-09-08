@@ -139,7 +139,7 @@ Resources:
       Handler: index.handler
       Role: !Sub ${DescribeImagesRole.Arn}
       Timeout: 60
-      Runtime: python3.9
+      Runtime: python3.11
       Code:
         ZipFile: |
           import boto3

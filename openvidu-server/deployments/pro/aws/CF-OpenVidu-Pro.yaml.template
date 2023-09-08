@@ -1073,7 +1073,7 @@ Resources:
       Handler: index.handler
       Role:
         !GetAtt CloudformationLambdaRole.Arn
-      Runtime: python3.7
+      Runtime: python3.11
       Timeout: 900
 
   CloudformationLambdaInvoke:
