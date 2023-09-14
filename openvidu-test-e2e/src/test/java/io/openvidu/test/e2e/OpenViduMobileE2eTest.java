@@ -132,7 +132,7 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 		urlInput.clear();
 		urlInput.sendKeys(OPENVIDU_DEPLOYMENT);
 		appiumDriver.findElement(By.cssSelector("#ok-btn")).click();
-		Thread.sleep(500);
+		Thread.sleep(2000);
 		appiumDriver.findElement(By.cssSelector("#join-button")).click();
 
 		OpenViduTestappUser chromeUser = null;

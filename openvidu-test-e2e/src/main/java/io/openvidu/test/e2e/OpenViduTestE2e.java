@@ -1,6 +1,7 @@
 package io.openvidu.test.e2e;
 
 import static org.openqa.selenium.OutputType.BASE64;
+import static org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,7 +9,6 @@ import java.net.HttpURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.AbstractWaitStrategy;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
@@ -62,7 +64,19 @@ import io.openvidu.test.browsers.utils.RecordingUtils;
 public class OpenViduTestE2e {
 
 	private final static WaitStrategy waitBrowser = Wait.forHttp("/wd/hub/status").forStatusCode(200);
-	private final static WaitStrategy waitAndroid = Wait.forHealthcheck().withStartupTimeout(Duration.ofSeconds(600));
+
+	private static class AndroidContainerWaitStrategy extends AbstractWaitStrategy {
+		@Override
+		protected void waitUntilReady() {
+			retryUntilSuccess(600, TimeUnit.SECONDS, () -> {
+				if (!"READY".equals(
+						this.waitStrategyTarget.execInContainer("bash", "-c", "cat device_status").getStdout())) {
+					throw new Exception();
+				}
+				return true;
+			});
+		}
+	}
 
 	// Media server variables
 	final protected static String KURENTO_IMAGE = "kurento/kurento-media-server";
@@ -198,12 +212,15 @@ public class OpenViduTestE2e {
 	}
 
 	private static GenericContainer<?> androidContainer(String image, long shmSize) {
-		GenericContainer<?> android = new GenericContainer<>(DockerImageName.parse(image)).withPrivilegedMode(true)
-				.withEnv(Map.of("DEVICE", "Samsung Galaxy S10", "APPIUM", "true", "APPIUM_HOST", "172.17.0.1",
-						"APPIUM_PORT", "4723", "MOBILE_WEB_TEST", "true", "RELAXED_SECURITY", "true", "DATAPARTITION",
-						"2500m"))
-				.withSharedMemorySize(shmSize).withExposedPorts(6080, 5554, 5555, 4723).waitingFor(waitAndroid)
-				.withFileSystemBind("/opt/openvidu/android", "/opt/openvidu/android").withReuse(true);
+		GenericContainer<?> android = new GenericContainer<>(DockerImageName.parse(image)).withEnv(Map.of(
+				"EMULATOR_DEVICE", "Samsung Galaxy S10", "APPIUM", "true", "APPIUM_HOST", "172.17.0.1", "APPIUM_PORT",
+				"4723", "APPIUM_ADDITIONAL_ARGS",
+				"--log /var/log/supervisor/appium.log --relaxed-security --allow-cors --allow-insecure=chromedriver_autodownload",
+				"MOBILE_WEB_TEST", "true", "RELAXED_SECURITY", "true", "WEB_VNC", "true", "WEB_LOG", "false",
+				"DATAPARTITION", "2500m")).withPrivilegedMode(true).withSharedMemorySize(shmSize)
+				.withExposedPorts(6080, 5554, 5555, 4723).withFileSystemBind("/dev/kvm", "/dev/kvm")
+				.withFileSystemBind("/opt/openvidu/android", "/opt/openvidu/android").withReuse(true)
+				.waitingFor(new AndroidContainerWaitStrategy());
 		android.setPortBindings(Arrays.asList("6080:6080", "5554:5554", "5555:5555", "4723:4723"));
 		return android;
 	}
@@ -465,20 +482,7 @@ public class OpenViduTestE2e {
 	protected static GenericContainer<?> setupDockerAndroidContainer() throws Exception {
 		GenericContainer<?> container = androidContainer(DOCKER_ANDROID_IMAGE, 4294967296L);
 		boolean newContainer = setupBrowserAux(BrowserNames.ANDROID, container, false);
-		if (newContainer) {
-			try {
-				// https://github.com/budtmo/docker-android/issues/309
-				// Stop default Appium Server
-				container.execInContainer("bash", "-c",
-						"ps axf | grep \"Appium Server\" | grep -v grep | awk '{print $1}' | xargs -I {} kill -9 {}");
-				// Run custom Appium Server
-				container.execInContainer("bash", "-c",
-						"xterm -T \"Appium Server\" -n \"Appium Server\" -e appium --log /var/log/supervisor/appium.log --relaxed-security --allow-insecure=chromedriver_autodownload &");
-			} catch (UnsupportedOperationException | IOException | InterruptedException e) {
-				log.error("Error running command in Android container");
-				throw e;
-			}
-		} else {
+		if (!newContainer) {
 			container = containers.stream().filter(c -> DOCKER_ANDROID_IMAGE.equals(c.getDockerImageName())).findFirst()
 					.get();
 		}
