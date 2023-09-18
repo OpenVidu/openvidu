@@ -644,7 +644,7 @@ export class Publisher extends StreamManager {
 
                     try {
                         if (this.stream.isSendScreen() && navigator.mediaDevices['getDisplayMedia'] && !platform.isElectron()) {
-                            const mediaStream = await navigator.mediaDevices['getDisplayMedia']({ video: true });
+                            const mediaStream = await navigator.mediaDevices['getDisplayMedia']({ video: true, audio: true });
                             this.openvidu.addAlreadyProvidedTracks(myConstraints, mediaStream);
                             await getMediaSuccess(mediaStream, definedAudioConstraint);
                         } else {
