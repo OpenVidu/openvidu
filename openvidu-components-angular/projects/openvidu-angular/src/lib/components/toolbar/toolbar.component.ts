@@ -536,7 +536,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.onScreenshareButtonClicked.emit();
 
 		try {
-			await this.openviduService.toggleScreenshare();
+			await this.participantService.toggleScreenshare();
 		} catch (error) {
 			this.log.e('There was an error toggling screen share', error.code, error.message);
 			if (error && error.name === 'SCREEN_SHARING_NOT_SUPPORTED') {

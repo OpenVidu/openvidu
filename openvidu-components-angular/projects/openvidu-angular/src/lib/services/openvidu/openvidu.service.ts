@@ -326,14 +326,13 @@ export class OpenViduService {
 	 * @param hasAudio
 	 * @returns
 	 */
-	initScreenPublisher(hasAudio: boolean): Promise<Publisher> {
-		const hasAudioDevicesAvailable = this.deviceService.hasAudioDeviceAvailable();
+	initScreenPublisher(): Promise<Publisher> {
 
 		const properties: PublisherProperties = {
 			videoSource: ScreenType.SCREEN,
-			audioSource: hasAudioDevicesAvailable ? this.deviceService.getMicrophoneSelected().device : false,
+			audioSource: true,
 			publishVideo: true,
-			publishAudio: hasAudio && hasAudioDevicesAvailable,
+			publishAudio: true,
 			mirror: false
 		};
 		return this.initPublisher(properties);

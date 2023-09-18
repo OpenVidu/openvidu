@@ -1301,7 +1301,7 @@ describe('Testing screenshare features', () => {
 
 	});
 
-	it('should show only screen if toggle screensharing with video muted', async () => {
+	it('should show the screen although toggle screensharing with video muted', async () => {
 		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkLayoutPresent();
@@ -1317,7 +1317,7 @@ describe('Testing screenshare features', () => {
 		await browser.sleep(1000);
 		await utils.waitForElement('.OV_big');
 
-		expect(await utils.getNumberOfElements('video')).equals(1);
+		expect(await utils.getNumberOfElements('video')).equals(2);
 
 
 		await screenshareButton.click();
@@ -1352,7 +1352,7 @@ describe('Testing screenshare features', () => {
 		expect(isAudioEnabled).to.be.false;
 
 		await utils.waitForElement('#statusMic');
-		expect(await utils.getNumberOfElements('#statusMic')).equals(2);
+		expect(await utils.getNumberOfElements('#statusMic')).equals(1);
 
 		// Clicking to screensharing button
 		await screenshareButton.click();
@@ -1360,7 +1360,7 @@ describe('Testing screenshare features', () => {
 
 	});
 
-	it('should show and hide CAMERA stream when muting video with screensharing', async () => {
+	it('should show CAMERA stream always visible when muting video with screensharing', async () => {
 		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkLayoutPresent();
@@ -1376,10 +1376,10 @@ describe('Testing screenshare features', () => {
 		const muteVideoButton = await utils.waitForElement('#camera-btn');
 		await muteVideoButton.click();
 
-		expect(await utils.getNumberOfElements('video')).equals(1);
+		expect(await utils.getNumberOfElements('video')).equals(2);
 	});
 
-	it('should screenshare has audio active when camera is muted', async () => {
+	it('should screen audio be independent of camera audio', async () => {
 		let isAudioEnabled;
 		const audioEnableScript = 'return document.getElementsByTagName("video")[0].srcObject.getAudioTracks()[0].enabled;';
 
@@ -1394,13 +1394,13 @@ describe('Testing screenshare features', () => {
 
 		await utils.waitForElement('.OV_big');
 		expect(await utils.getNumberOfElements('video')).equals(2);
-		expect(await utils.getNumberOfElements('#statusMic')).equals(1);
+		expect(await utils.getNumberOfElements('#statusMic')).equals(0);
 
 		// Muting camera video
 		const muteVideoButton = await utils.waitForElement('#camera-btn');
 		await muteVideoButton.click();
 
-		expect(await utils.getNumberOfElements('video')).equals(1);
+		expect(await utils.getNumberOfElements('video')).equals(2);
 
 		await browser.sleep(500);
 		expect(await utils.isPresent('#statusMic')).to.be.false;
@@ -1415,63 +1415,9 @@ describe('Testing screenshare features', () => {
 
 		await utils.waitForElement('.camera-type');
 		expect(await utils.getNumberOfElements('video')).equals(2);
-		expect(await utils.getNumberOfElements('#statusMic')).equals(1);
+		expect(await utils.getNumberOfElements('#statusMic')).equals(0);
 	});
 
-	it('should camera come back with audio muted when screensharing', async () => {
-		let element, isAudioEnabled;
-
-		const getAudioScript = (className: string) => {
-			return `return document.getElementsByClassName('${className}')[0].srcObject.getAudioTracks()[0].enabled;`;
-		};
-
-		await browser.get(`${url}&prejoin=false`);
-
-		await utils.checkLayoutPresent();
-
-		// Clicking to screensharing button
-		const screenshareButton = await utils.waitForElement('#screenshare-btn');
-		await screenshareButton.click();
-
-		await utils.waitForElement('.screen-type');
-		expect(await utils.getNumberOfElements('video')).equals(2);
-		expect(await utils.getNumberOfElements('#statusMic')).equals(1);
-
-
-		// Mute camera
-		const muteVideoButton = await utils.waitForElement('#camera-btn');
-		await muteVideoButton.click();
-
-
-		expect(await utils.getNumberOfElements('video')).equals(1);
-		expect(await utils.isPresent('#statusMic')).to.be.false;
-
-		// Checking if audio is muted after join the room
-		isAudioEnabled = await browser.executeScript(getAudioScript('screen-type'));
-		expect(isAudioEnabled).to.be.true;
-
-		// Mute audio
-		const muteAudioButton = await utils.waitForElement('#mic-btn');
-		await muteAudioButton.click();
-
-		await utils.waitForElement('#statusMic');
-		expect(await utils.getNumberOfElements('#statusMic')).equals(1);
-
-
-		isAudioEnabled = await browser.executeScript(getAudioScript('screen-type'));
-		expect(isAudioEnabled).to.be.false;
-
-		// Unmute camera
-		await muteVideoButton.click();
-
-		await utils.waitForElement('.camera-type');
-		expect(await utils.getNumberOfElements('video')).equals(2);
-		expect(await utils.getNumberOfElements('#statusMic')).equals(2);
-
-
-		isAudioEnabled = await browser.executeScript(getAudioScript('camera-type'));
-		expect(isAudioEnabled).to.be.false;
-	});
 });
 
 describe('Testing panels', () => {

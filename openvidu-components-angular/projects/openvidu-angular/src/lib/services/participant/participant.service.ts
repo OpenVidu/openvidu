@@ -71,32 +71,9 @@ export class ParticipantService {
 	 *
 	 */
 	async publishVideo(publish: boolean): Promise<void> {
-		const publishAudio = this.isMyAudioActive();
 		const cameraPublisher = this.getMyCameraPublisher();
-		const screenPublisher = this.getMyScreenPublisher();
-
-		// Disabling webcam
-		if (this.localParticipant.hasCameraAndScreenActives()) {
-			await this.publishVideoAux(cameraPublisher, publish);
-			this.disableWebcamStream();
-			this.openviduService.unpublishCamera(cameraPublisher);
-			this.publishAudioAux(screenPublisher, publishAudio);
-		} else if (this.localParticipant.hasOnlyScreenActive()) {
-			// Enabling webcam
-			const hasAudio = this.hasScreenAudioActive();
-			const sessionId = await this.openviduService.connectWebcamSession(this.getMyNickname(), this.getLocalParticipant().id);
-			if (sessionId) this.setMyCameraConnectionId(sessionId);
-			await this.openviduService.publishCamera(cameraPublisher);
-			await this.publishVideoAux(cameraPublisher, true);
-			this.publishAudioAux(screenPublisher, false);
-			this.publishAudioAux(cameraPublisher, hasAudio);
-			this.enableWebcamStream();
-		} else {
-			// Muting/unmuting webcam
-			await this.publishVideoAux(cameraPublisher, publish);
-		}
+		await this.publishVideoAux(cameraPublisher, publish);
 		this.updateLocalParticipant();
-
 	}
 
 	/**
@@ -106,15 +83,9 @@ export class ParticipantService {
 	 */
 	publishAudio(publish: boolean): void {
 		if (this.isMyCameraActive()) {
-			if (this.localParticipant.isScreenActive() && this.hasScreenAudioActive()) {
-				this.publishAudioAux(this.getMyScreenPublisher(), false);
-			}
-
 			this.publishAudioAux(this.getMyCameraPublisher(), publish);
-		} else {
-			this.publishAudioAux(this.getMyScreenPublisher(), publish);
+			this.updateLocalParticipant();
 		}
-		this.updateLocalParticipant();
 	}
 
 	/**
@@ -125,7 +96,6 @@ export class ParticipantService {
 	async toggleScreenshare() {
 
 		const screenPublisher = this.getMyScreenPublisher();
-		const cameraPublisher = this.getMyCameraPublisher();
 		const participantNickname = this.getMyNickname();
 		const participantId = this.getLocalParticipant().id;
 
@@ -136,9 +106,7 @@ export class ParticipantService {
 			this.openviduService.unpublishScreen(screenPublisher);
 		} else if (this.localParticipant.hasOnlyCameraActive()) {
 			// I only have the camera published
-			const willWebcamBePresent = this.isMyCameraActive() && this.isMyVideoActive();
-			const hasAudio = willWebcamBePresent ? false : this.isMyAudioActive();
-			const screenPublisher = await this.openviduService.initScreenPublisher(hasAudio);
+			const screenPublisher = await this.openviduService.initScreenPublisher();
 
 			screenPublisher.once('accessAllowed', async () => {
 				// Listen to event fired when native stop button is clicked
@@ -157,33 +125,11 @@ export class ParticipantService {
 					await this.openviduService.connectScreenSession(participantId, participantNickname);
 				}
 				await this.openviduService.publishScreen(screenPublisher);
-				if (!this.isMyVideoActive()) {
-					// Disabling webcam
-					this.disableWebcamStream();
-					this.updateLocalParticipant();
-					this.openviduService.unpublishCamera(cameraPublisher);
-				}
 			});
 
 			screenPublisher.once('accessDenied', (error: any) => {
 				return Promise.reject(error);
 			});
-		} else {
-			// I only have my screenshare active and I have no camera or it is muted
-			const hasAudio = this.hasScreenAudioActive();
-
-			// Enable webcam
-			if (!this.openviduService.isWebcamSessionConnected()) {
-				await this.openviduService.connectWebcamSession(participantId, participantNickname);
-			}
-			await this.openviduService.publishCamera(cameraPublisher);
-			this.publishAudioAux(cameraPublisher, hasAudio);
-			this.enableWebcamStream();
-
-			// Disabling screenshare
-			this.disableScreenStream();
-			this.updateLocalParticipant();
-			this.openviduService.unpublishScreen(screenPublisher);
 		}
 	}
 
