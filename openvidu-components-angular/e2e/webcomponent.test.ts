@@ -1327,7 +1327,7 @@ describe('Testing screenshare features', () => {
 
 	});
 
-	it('should screensharing with audio muted', async () => {
+	it('should screensharing with audio enabled', async () => {
 		let isAudioEnabled;
 		const getAudioScript = (className: string) => {
 			return `return document.getElementsByClassName('${className}')[0].srcObject.getAudioTracks()[0].enabled;`;
@@ -1349,7 +1349,7 @@ describe('Testing screenshare features', () => {
 
 
 		isAudioEnabled = await browser.executeScript(getAudioScript('screen-type'));
-		expect(isAudioEnabled).to.be.false;
+		expect(isAudioEnabled).to.be.true;
 
 		await utils.waitForElement('#statusMic');
 		expect(await utils.getNumberOfElements('#statusMic')).equals(1);
