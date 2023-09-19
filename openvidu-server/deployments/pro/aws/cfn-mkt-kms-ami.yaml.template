@@ -172,6 +172,12 @@ Resources:
       ImageId: !FindInMap [AMIMAP, !Ref 'AWS::Region', AMI]
       InstanceType: "t2.2xlarge"
       KeyName: AWS_KEY_NAME
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeType: gp2
+            DeleteOnTermination: true
+            VolumeSize: 10
       Tags:
         - Key: Name
           Value: !Ref AWS::StackName
