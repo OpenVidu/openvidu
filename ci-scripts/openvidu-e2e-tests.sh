@@ -49,6 +49,7 @@ function environmentLaunch {
             fi
         done
     elif [[ "${MEDIA_SERVER}" == "mediasoup" ]]; then
+        LOG_DATE=$(printf '%(%Y-%m-%d-%H:%M:%S)T')
         docker run --network=host --restart=always --detach=true \
             --env=KMS_MIN_PORT=40000 \
             --env=KMS_MAX_PORT=65535 \
@@ -57,7 +58,7 @@ function environmentLaunch {
             --env=WEBRTC_LISTENIPS_0_ANNOUNCEDIP="${DOCKER_HOST_IP}" \
             --env=WEBRTC_LISTENIPS_0_IP="${DOCKER_HOST_IP}" \
             --volume=/opt/openvidu/recordings:/opt/openvidu/recordings \
-            openvidu/mediasoup-controller:"${MEDIASOUP_CONTROLLER_VERSION}"
+            openvidu/mediasoup-controller:"${MEDIASOUP_CONTROLLER_VERSION} >& /opt/openvidu/mediasoup-controller-${LOG_DATE}.log"
         until $(curl --insecure --output /dev/null --silent http://${DOCKER_HOST_IP}:8888/kurento); do
             echo "Waiting for ${MEDIA_SERVER}..."
             sleep 1

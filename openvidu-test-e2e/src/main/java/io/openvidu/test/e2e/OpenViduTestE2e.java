@@ -638,11 +638,11 @@ public class OpenViduTestE2e {
 					+ " --volume=/opt/openvidu/recordings:/opt/openvidu/recordings " + MEDIA_SERVER_IMAGE;
 		} else if (MEDIA_SERVER_IMAGE.startsWith(MEDIASOUP_IMAGE)) {
 			log.info("Starting mediaSoup");
-			command = "docker run --network=host --restart=always --detach=true --env=KMS_MIN_PORT=40000 --env=KMS_MAX_PORT=65535"
+			command = "LOG_DATE=$(printf '%(%Y-%m-%d-%H:%M:%S)T'); docker run --network=host --restart=always --detach=true --env=KMS_MIN_PORT=40000 --env=KMS_MAX_PORT=65535"
 					+ " --env=OPENVIDU_PRO_LICENSE=" + OPENVIDU_PRO_LICENSE + " --env=OPENVIDU_PRO_LICENSE_API="
 					+ OPENVIDU_PRO_LICENSE_API
 					+ " --env=WEBRTC_LISTENIPS_0_ANNOUNCEDIP=172.17.0.1 --env=WEBRTC_LISTENIPS_0_IP=172.17.0.1"
-					+ " --volume=/opt/openvidu/recordings:/opt/openvidu/recordings " + MEDIA_SERVER_IMAGE;
+					+ " --volume=/opt/openvidu/recordings:/opt/openvidu/recordings " + MEDIA_SERVER_IMAGE + " >& /opt/openvidu/mediasoup-controller-${LOG_DATE}.log";
 		} else {
 			log.error("Unrecognized MEDIA_SERVER_IMAGE: {}", MEDIA_SERVER_IMAGE);
 			System.exit(1);
