@@ -49,7 +49,7 @@ function environmentLaunch {
             fi
         done
     elif [[ "${MEDIA_SERVER}" == "mediasoup" ]]; then
-        LOG_DATE=$(printf '%(%Y-%m-%d-%H:%M:%S)T')
+        LOG_DATE=$(printf '%(%Y-%m-%d-%H-%M-%S)T')
         docker run --network=host --restart=always \
             --env=KMS_MIN_PORT=40000 \
             --env=KMS_MAX_PORT=65535 \

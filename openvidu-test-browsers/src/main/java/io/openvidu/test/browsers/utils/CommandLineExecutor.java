@@ -27,10 +27,17 @@ public class CommandLineExecutor {
 	 * WARNING: does not work with subshell. i.e: echo $(VARIABLE)
 	 */
 	public String executeCommand(String command, int secondsTimeout) {
+		return this.executeCommand(command, false, secondsTimeout);
+	}
+
+	/**
+	 * WARNING: does not work with subshell. i.e: echo $(VARIABLE)
+	 */
+	public String executeCommand(String command, boolean useBash, int secondsTimeout) {
 		String output = "";
 		Process p = null;
 		try {
-			p = Runtime.getRuntime().exec((new String[] { "/bin/sh", "-c", command }));
+			p = Runtime.getRuntime().exec((new String[] { "/bin/" + (useBash ? "bash" : "sh"), "-c", command }));
 			if (!p.waitFor(secondsTimeout, TimeUnit.SECONDS)) {
 				System.err.println("Command " + command + " did not completed in " + secondsTimeout + " seconds");
 				p.destroyForcibly();
