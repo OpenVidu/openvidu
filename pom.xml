@@ -51,7 +51,7 @@
 		<version.openvidu.test.e2e>1.1.1</version.openvidu.test.e2e>
 
 		<version.junit>5.9.1</version.junit>
-		<version.selenium>4.7.2</version.selenium>
+		<version.selenium>4.12.1</version.selenium>
 		<version.mockito.core>4.9.0</version.mockito.core>
 		<version.powermock>2.0.9</version.powermock>
 		<version.janino>3.1.9</version.janino>
