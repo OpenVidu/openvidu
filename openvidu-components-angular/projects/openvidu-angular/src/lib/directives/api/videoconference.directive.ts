@@ -132,7 +132,7 @@ export class LangDirective implements OnDestroy {
  *  { name: '中国', lang: 'cn' },
  *  { name: 'हिन्दी', lang: 'hi' },
  *  { name: 'Italiano', lang: 'it' },
- *  { name: 'やまと', lang: 'ja' },
+ *  { name: '日本語', lang: 'ja' },
  *  { name: 'Dutch', lang: 'nl' },
  *  { name: 'Português', lang: 'pt' }
  * ]```
@@ -261,7 +261,7 @@ export class CaptionsLangDirective implements OnDestroy {
  * 	{ name: '中国', lang: 'zh-CN' },
  * 	{ name: 'हिन्दी', lang: 'hi-IN' },
  * 	{ name: 'Italiano', lang: 'it-IT' },
- * 	{ name: 'やまと', lang: 'jp-JP' },
+ * 	{ name: '日本語', lang: 'jp-JP' },
  * 	{ name: 'Português', lang: 'pt-PT' }
  * ]```
  *

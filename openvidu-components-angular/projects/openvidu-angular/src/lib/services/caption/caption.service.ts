@@ -18,7 +18,7 @@ export class CaptionService {
 		{ name: '中国', lang: 'zh-CN' },
 		{ name: 'हिन्दी', lang: 'hi-IN' },
 		{ name: 'Italiano', lang: 'it-IT' },
-		{ name: 'やまと', lang: 'jp-JP' },
+		{ name: '日本語', lang: 'jp-JP' },
 		{ name: 'Português', lang: 'pt-PT' }
 	];
 	captionLangSelected: CaptionsLangOption;

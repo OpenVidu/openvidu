@@ -29,7 +29,7 @@ export class TranslateService {
 		{ name: '中国', lang: 'cn' },
 		{ name: 'हिन्दी', lang: 'hi' },
 		{ name: 'Italiano', lang: 'it' },
-		{ name: 'やまと', lang: 'ja' },
+		{ name: '日本語', lang: 'ja' },
 		{ name: 'Dutch', lang: 'nl' },
 		{ name: 'Português', lang: 'pt' }
 	];

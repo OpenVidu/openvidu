@@ -1,19 +1,19 @@
 {
 	"ADMIN": {
 		"LOGIN": "ログイン",
-		"SECRET": "ひみつ",
-		"SECRET_REQURED": "秘密が必要です",
+		"SECRET": "パスワード",
+		"SECRET_REQURED": "パスワードが必要です",
 		"DASHBOARD": "ダッシュボード",
-		"NO_RECORDINGS": "録音はありません",
-		"SEARCH": "録音を検索する",
-		"DATE": "日にち",
-		"DURATION": "間隔",
+		"NO_RECORDINGS": "録画はありません",
+		"SEARCH": "録画を検索する",
+		"DATE": "日付",
+		"DURATION": "長さ",
 		"SIZE": "サイズ",
-		"STATUS": "状態",
+		"STATUS": "ステータス",
 		"NAME": "名前",
 		"SESSION": "セッション",
 		"OUTPUT": "出力モード",
-		"POWERED_BY": "搭載"
+		"POWERED_BY": "Powered by"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "ニックネームを設定してください",
@@ -28,11 +28,11 @@
 	},
 	"TOOLBAR": {
 		"MUTE_AUDIO": "オーディオをミュートする",
-		"UNMUTE_AUDIO": "オーディオをミュートしない",
-		"MUTE_VIDEO": "ビデオをミュートする",
-		"UNMUTE_VIDEO": "ビデオをミュートしない",
+		"UNMUTE_AUDIO": "オーディオを有効にする",
+		"MUTE_VIDEO": "カメラをミュートする",
+		"UNMUTE_VIDEO": "カメラを有効にする",
 		"ENABLE_SCREEN": "スクリーン共有を有効にする",
-		"DISABLE_SCREEN": "スクリーン共有を無効にする",
+		"DISABLE_SCREEN": "スクリーン共有を停止にする",
 		"MORE_OPTIONS": "その他のオプション",
 		"FULLSCREEN": "フルスクリーン",
 		"EXIT_FULLSCREEN": "フルスクリーンを終了する",
@@ -50,7 +50,7 @@
 	"STREAM": {
 		"SETTINGS": "設定",
 		"MUTE_SOUND": "サウンドをミュートする",
-		"UNMUTE_SOUND": "サウンドをミュートしない",
+		"UNMUTE_SOUND": "サウンドを有効にする",
 		"ZOOM_IN": "拡大する",
 		"ZOOM_OUT": "縮小する",
 		"REPLACE_SCREEN": "スクリーンを入れ替える"
@@ -90,18 +90,18 @@
 		},
 		"RECORDING": {
 			"TITLE": "レコーディング",
-			"SUBTITLE": "会議を録音して後世に残す",
+			"SUBTITLE": "会議を録画して保存する",
 			"CONTENT_TITLE": "ビデオ通話を録音する",
-			"CONTENT_SUBTITLE": "録音が完了したら、簡単にダウンロードできます",
+			"CONTENT_SUBTITLE": "録画が完了したら、簡単にダウンロードできます",
 			"STARTING": "録画開始",
-			"STOPPING": "録音を停止します",
-			"PLAY": "遊ぶ",
-			"DELETE": "消去",
+			"STOPPING": "録音停止",
+			"PLAY": "再生",
+			"DELETE": "削除",
 			"CANCEL": "キャンセル",
-			"DELETE_QUESTION": "録音を削除してもよろしいですか",
-			"DOWNLOAD": "ダウンロード",
+			"DELETE_QUESTION": "録画を削除してもよろしいですか",
+			"DOWNLOAD": "保存",
 			"RECORDINGS": "録画",
-			"NO_MODERATOR": "録音を開始できるのは、モデレーターのみです"
+			"NO_MODERATOR": "録画を開始できるのは、モデレーターのみです"
 		},
 		"STREAMING": {
 			"TITLE": "ストリーミング",
@@ -112,19 +112,19 @@
 			"URL": "ストリーミングURLを挿入してください",
 			"CANCEL": "キャンセル",
 			"REQUIRED_URL": "ストリーミングURLは必須です",
-			"NO_MODERATOR": "MODERATORのみがストリーミングを開始できます"
+			"NO_MODERATOR": "モデレータのみがストリーミングを開始できます"
 		}
 	},
 	"ERRORS": {
 		"SESSION": "セッションへの接続にエラーが発生しました",
 		"CONNECTION": "接続が失われました",
 		"RECONNECT": "セッションへの再接続を試みています",
-		"TOGGLE_CAMERA": "カメラのトグルエラーが発生しました",
-		"TOGGLE_MICROPHONE": "マイクロフォンのトグルにエラーが発生しました",
+		"TOGGLE_CAMERA": "カメラの切り替えに失敗しました",
+		"TOGGLE_MICROPHONE": "マイクの切り替えに失敗しました",
 		"SCREEN_SHARING": "画面共有にエラーが発生しました",
 		"SCREEN_SUPPORT": "お使いのブラウザは画面共有に対応していません",
 		"MEDIA_ACCESS": "メディアデバイスへのアクセスが許可されませんでした",
 		"DEVICE_NOT_FOUND": "ビデオまたはオーディオデバイスが見つかりませんでした 最低1台は接続してください",
-		"SST_CONNECTION": "接続が失われました。音声からテキストへの変換サービスに再接続しています"
+		"SST_CONNECTION": "接続が失われました。文字起こしサービスに再接続しています"
 	}
 }
