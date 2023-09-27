@@ -799,7 +799,7 @@ public class RecordingManager {
 			log.info("OpenVidu Server has write permissions on recording path: {}", openviduRecordingPath);
 		}
 
-		final String testFolderPath = openviduRecordingPath + "/TEST_RECORDING_PATH_" + System.currentTimeMillis();
+		final String testFolderPath = openviduRecordingPath + "TEST_RECORDING_PATH_" + System.currentTimeMillis();
 		final String testFilePath = testFolderPath + "/TEST_RECORDING_PATH"
 				+ openviduConfig.getMediaServer().getRecordingFileExtension();
 
