@@ -691,7 +691,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		Queue<Boolean> threadAssertions = new ConcurrentLinkedQueue<Boolean>();
 
-		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeAlternateScreenShare");
 
 		log.info("Change publisher dynamically");
 
@@ -770,7 +770,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertEquals(2, numberOfVideos, "Wrong number of videos");
 		Assertions.assertTrue(user.getBrowserUser()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true),
-				"Videos were expected to only have audio tracks");
+				"Videos were expected to only have video tracks");
 
 		final CountDownLatch latch3 = new CountDownLatch(2);
 
