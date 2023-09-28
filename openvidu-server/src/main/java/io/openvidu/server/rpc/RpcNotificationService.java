@@ -45,6 +45,12 @@ public class RpcNotificationService {
 	private ScheduledExecutorService closeWsScheduler = Executors
 			.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 
+	private RpcHandler rpcHandler;
+
+	public RpcNotificationService(RpcHandler rpcHandler) {
+		this.rpcHandler = rpcHandler;
+	}
+
 	public RpcConnection newRpcConnection(Transaction t, Request<JsonObject> request) {
 		String participantPrivateId = t.getSession().getSessionId();
 		RpcConnection connection = new RpcConnection(t.getSession());
@@ -118,9 +124,18 @@ public class RpcNotificationService {
 		try {
 			s.sendNotification(method, params);
 		} catch (KurentoException e) {
+
 			if (e.getCause() instanceof IllegalStateException) {
 				log.warn("Notification '{}' couldn't be sent to participant with privateId {}: {}", method,
 						participantPrivateId, e.getCause().getMessage());
+
+				// TODO: this is an ad-hoc fix to clean any ghost participant of sessions
+				if (e.getCause().getMessage() != null && e.getCause().getMessage().contains(
+						"has been closed and no method (apart from close()) may be called on a closed session")) {
+					log.warn("Removing ghost participant with participant private id {}", participantPrivateId);
+					this.rpcHandler.leaveRoomAfterConnClosed(participantPrivateId, null);
+				}
+
 			} else {
 				log.error("Exception sending notification '{}': {} to participant with private id {}", method, params,
 						participantPrivateId, e);
