@@ -130,11 +130,8 @@ public class RpcNotificationService {
 						participantPrivateId, e.getCause().getMessage());
 
 				// TODO: this is an ad-hoc fix to clean any ghost participant of sessions
-				if (e.getCause().getMessage() != null && e.getCause().getMessage().contains(
-						"has been closed and no method (apart from close()) may be called on a closed session")) {
-					log.warn("Removing ghost participant with participant private id {}", participantPrivateId);
-					this.rpcHandler.leaveRoomAfterConnClosed(participantPrivateId, null);
-				}
+				log.warn("Removing ghost participant with participant private id {}", participantPrivateId);
+				this.rpcHandler.leaveRoomAfterConnClosed(participantPrivateId, null);
 
 			} else {
 				log.error("Exception sending notification '{}': {} to participant with private id {}", method, params,
