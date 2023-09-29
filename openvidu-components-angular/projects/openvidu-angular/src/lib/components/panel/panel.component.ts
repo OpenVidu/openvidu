@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, OnInit, TemplateRef } from '@angular/core';
 import { skip, Subscription } from 'rxjs';
 import {
-	ActivitiesPanelDirective, AdditionalPanelsDirective, ChatPanelDirective, ParticipantsPanelDirective
+	ActivitiesPanelDirective,
+	AdditionalPanelsDirective,
+	ChatPanelDirective,
+	ParticipantsPanelDirective
 } from '../../directives/template/openvidu-angular.directive';
 import { PanelEvent, PanelType } from '../../models/panel.model';
 import { PanelService } from '../../services/panel/panel.service';
@@ -169,7 +172,13 @@ export class PanelComponent implements OnInit {
 			this.isBackgroundEffectsPanelOpened = ev.opened && ev.type === PanelType.BACKGROUND_EFFECTS;
 			this.isSettingsPanelOpened = ev.opened && ev.type === PanelType.SETTINGS;
 			this.isActivitiesPanelOpened = ev.opened && ev.type === PanelType.ACTIVITIES;
-			this.isExternalPanelOpened = ev.opened && ev.type !== PanelType.PARTICIPANTS && ev.type !== PanelType.CHAT;
+			this.isExternalPanelOpened =
+				ev.opened &&
+				!this.isChatPanelOpened &&
+				!this.isParticipantsPanelOpened &&
+				!this.isBackgroundEffectsPanelOpened &&
+				!this.isSettingsPanelOpened &&
+				!this.isActivitiesPanelOpened;
 			this.cd.markForCheck();
 		});
 	}
