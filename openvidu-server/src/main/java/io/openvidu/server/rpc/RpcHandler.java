@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -82,6 +83,11 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	RpcNotificationService notificationService;
 
 	private ConcurrentMap<String, Boolean> webSocketEOFTransportError = new ConcurrentHashMap<>();
+
+	@PostConstruct
+	public void init() {
+		notificationService.setRpcHandler(this);
+	}
 
 	@Override
 	public void handleRequest(Transaction transaction, Request<JsonObject> request) throws Exception {

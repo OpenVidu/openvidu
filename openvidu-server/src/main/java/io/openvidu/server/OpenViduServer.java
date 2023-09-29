@@ -157,9 +157,8 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
-	@DependsOn("rpcHandler")
-	public RpcNotificationService notificationService(RpcHandler rpcHandler) {
-		return new RpcNotificationService(rpcHandler);
+	public RpcNotificationService notificationService() {
+		return new RpcNotificationService();
 	}
 
 	@Bean

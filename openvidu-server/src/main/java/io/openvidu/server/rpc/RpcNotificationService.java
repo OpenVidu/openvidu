@@ -47,7 +47,7 @@ public class RpcNotificationService {
 
 	private RpcHandler rpcHandler;
 
-	public RpcNotificationService(RpcHandler rpcHandler) {
+	public void setRpcHandler(RpcHandler rpcHandler) {
 		this.rpcHandler = rpcHandler;
 	}
 
