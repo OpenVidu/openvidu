@@ -150,6 +150,17 @@ Parameters:
       - c5.12xlarge
       - c5.18xlarge
       - c5.24xlarge
+      - c6a.large
+      - c6a.xlarge
+      - c6a.2xlarge
+      - c6a.4xlarge
+      - c6a.8xlarge
+      - c6a.12xlarge
+      - c6a.16xlarge
+      - c6a.24xlarge
+      - c6a.32xlarge
+      - c6a.48xlarge
+      - c6a.metal
     ConstraintDescription: 'Must be a valid EC2 instance type'
 
   AwsInstanceTypeKMS:
@@ -191,6 +202,17 @@ Parameters:
       - c5.12xlarge
       - c5.18xlarge
       - c5.24xlarge
+      - c6a.large
+      - c6a.xlarge
+      - c6a.2xlarge
+      - c6a.4xlarge
+      - c6a.8xlarge
+      - c6a.12xlarge
+      - c6a.16xlarge
+      - c6a.24xlarge
+      - c6a.32xlarge
+      - c6a.48xlarge
+      - c6a.metal
     ConstraintDescription: 'Must be a valid EC2 instance type'
 
   MinMasterNodes:
