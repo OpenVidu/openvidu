@@ -25,6 +25,7 @@ export interface PublisherProperties {
     /**
      * Which device should provide the audio source. Can be:
      * - Property `deviceId` of a {@link Device}
+     * - `"screen"` to share the screen audio when {@link videoSource} is set to `"screen"`. If {@link videoSource} is not set to `"screen"` this will result in no audio source and a video-only publisher.
      * - A MediaStreamTrack obtained from a MediaStream object with {@link OpenVidu.getUserMedia}
      * - `false` or null to have a video-only publisher
      * @default _Default microphone_

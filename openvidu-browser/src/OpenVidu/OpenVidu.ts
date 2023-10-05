@@ -1024,6 +1024,10 @@ export class OpenVidu {
         if (typeof videoSource === 'string') {
             if (!this.isScreenShare(videoSource)) {
                 this.setVideoSource(myConstraints, videoSource);
+                if (audioSource === 'screen') {
+                    logger.warn('Parameter "audioSource" is set to "screen", which means rquesting audio from screen sharing source. But "videoSource" is not set to "screen". No audio source will be requested');
+                    myConstraints.constraints!.audio = false;
+                }
             } else {
                 // Screen sharing
 
