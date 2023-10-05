@@ -178,8 +178,11 @@ public class BrowserUser {
 				System.err.println("srcObject of HTMLVideoElement was not defined!");
 				return false;
 			}
-			success = success && (audioTransmission == this.hasAudioTracks(video, ""))
-					&& (videoTransmission == this.hasVideoTracks(video, ""));
+			boolean hasAudioTracks = this.hasAudioTracks(video, "");
+			boolean hasVideoTracks = this.hasVideoTracks(video, "");
+			System.out.println("Video " + video.getAttribute("id") + " has audio tracks [" + hasAudioTracks
+					+ "] and has video tracks [" + hasVideoTracks + "]");
+			success = success && (audioTransmission == hasAudioTracks) && (videoTransmission == hasVideoTracks);
 			if (!success)
 				break;
 		}
