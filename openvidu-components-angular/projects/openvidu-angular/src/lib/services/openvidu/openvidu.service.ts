@@ -327,10 +327,9 @@ export class OpenViduService {
 	 * @returns
 	 */
 	initScreenPublisher(): Promise<Publisher> {
-
 		const properties: PublisherProperties = {
 			videoSource: ScreenType.SCREEN,
-			audioSource: true,
+			audioSource: ScreenType.SCREEN,
 			publishVideo: true,
 			publishAudio: true,
 			mirror: false
