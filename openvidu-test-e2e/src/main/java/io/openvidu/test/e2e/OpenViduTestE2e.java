@@ -638,10 +638,13 @@ public class OpenViduTestE2e {
 					+ " --volume=/opt/openvidu/recordings:/opt/openvidu/recordings " + MEDIA_SERVER_IMAGE;
 		} else if (MEDIA_SERVER_IMAGE.startsWith(MEDIASOUP_IMAGE)) {
 			log.info("Starting mediaSoup");
+			command = "docker network inspect bridge | grep Subnet | cut -d'\"' -f4 | cut -d'/' -f1 | sed 's/.$/1/' | grep 172";
+			String dockerGatewayIp = commandLine.executeCommand(command, false, 5);
+			log.info("Discovered docker gateway IP is {}", dockerGatewayIp);
 			command = "LOG_DATE=$(printf '%(%Y-%m-%d-%H-%M-%S)T'); docker run --network=host --restart=always --env=KMS_MIN_PORT=40000 --env=KMS_MAX_PORT=65535"
 					+ " --env=OPENVIDU_PRO_LICENSE=" + OPENVIDU_PRO_LICENSE + " --env=OPENVIDU_PRO_LICENSE_API="
-					+ OPENVIDU_PRO_LICENSE_API
-					+ " --env=WEBRTC_LISTENIPS_0_ANNOUNCEDIP=172.17.0.1 --env=WEBRTC_LISTENIPS_0_IP=172.17.0.1"
+					+ OPENVIDU_PRO_LICENSE_API + " --env=WEBRTC_LISTENIPS_0_ANNOUNCEDIP=" + dockerGatewayIp
+					+ " --env=WEBRTC_LISTENIPS_0_IP=" + dockerGatewayIp
 					+ " --volume=/opt/openvidu/recordings:/opt/openvidu/recordings " + MEDIA_SERVER_IMAGE
 					+ " >& /opt/openvidu/mediasoup-controller-${LOG_DATE}.log &";
 		} else {
