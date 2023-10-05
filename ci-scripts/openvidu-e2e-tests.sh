@@ -26,7 +26,7 @@ function environmentLaunch {
 
     # Kurento and mediasoup needs to run as network host, so we need Docker host IP.
     local DOCKER_HOST_IP
-    DOCKER_HOST_IP="$(docker network inspect bridge | grep Subnet | cut -d'"' -f4 | cut -d'/' -f1 | sed 's/.$/1/' | grep 172)"
+    DOCKER_HOST_IP="$(docker inspect bridge --format '{{with index .IPAM.Config 0}}{{or .Gateway .Subnet}}{{end}}' | sed -r 's|\.0/[[:digit:]]+$|.1|')"
 
     if [[ "${MEDIA_SERVER}" == "kurento" ]]; then
         docker run -e KMS_UID=$(id -u) --network=host --detach=true --volume=/opt/openvidu/recordings:/opt/openvidu/recordings "${KURENTO_MEDIA_SERVER_IMAGE}"

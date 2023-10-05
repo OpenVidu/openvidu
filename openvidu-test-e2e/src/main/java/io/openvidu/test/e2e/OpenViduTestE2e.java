@@ -638,7 +638,7 @@ public class OpenViduTestE2e {
 					+ " --volume=/opt/openvidu/recordings:/opt/openvidu/recordings " + MEDIA_SERVER_IMAGE;
 		} else if (MEDIA_SERVER_IMAGE.startsWith(MEDIASOUP_IMAGE)) {
 			log.info("Starting mediaSoup");
-			command = "docker network inspect bridge | grep Subnet | cut -d'\"' -f4 | cut -d'/' -f1 | sed 's/.$/1/' | grep 172";
+			command = "docker inspect bridge --format '{{with index .IPAM.Config 0}}{{or .Gateway .Subnet}}{{end}}' | sed -r 's|\\.0/[[:digit:]]+$|.1|'";
 			String dockerGatewayIp = commandLine.executeCommand(command, false, 5);
 			log.info("Discovered docker gateway IP is {}", dockerGatewayIp);
 			command = "LOG_DATE=$(printf '%(%Y-%m-%d-%H-%M-%S)T'); docker run --network=host --restart=always --env=KMS_MIN_PORT=40000 --env=KMS_MAX_PORT=65535"
