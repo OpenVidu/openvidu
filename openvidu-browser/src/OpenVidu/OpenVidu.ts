@@ -567,7 +567,7 @@ export class OpenVidu {
                         if (navigator.mediaDevices['getDisplayMedia'] && !platform.isElectron()) {
                             // getDisplayMedia supported
                             try {
-                                const mediaStream = await navigator.mediaDevices['getDisplayMedia']({ video: true });
+                                const mediaStream = await navigator.mediaDevices['getDisplayMedia']({ video: true, audio: options.audioSource === 'screen' });
                                 this.addAlreadyProvidedTracks(myConstraints, mediaStream);
                                 if (mustAskForAudioTrackLater) {
                                     return await askForAudioStreamOnly(mediaStream, <MediaStreamConstraints>myConstraints.constraints);
@@ -1017,7 +1017,7 @@ export class OpenVidu {
     ) {
         const audioSource = publisherProperties.audioSource;
         const videoSource = publisherProperties.videoSource;
-        if (typeof audioSource === 'string') {
+        if (typeof audioSource === 'string' && audioSource !== 'screen') {
             myConstraints.constraints!.audio = { deviceId: { exact: audioSource } };
         }
 
