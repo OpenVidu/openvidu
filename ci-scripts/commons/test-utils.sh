@@ -10,12 +10,17 @@ set -eu -o pipefail
 PREPARE_TEST_ENVIRONMENT=false
 USE_SPECIFIC_KURENTO_JAVA_COMMIT=false
 SERVE_OV_TESTAPP=false
+CHECK_AND_PREPARE_KURENTO_SNAPSHOT=false
 
 if [[ -n ${1:-} ]]; then
     case "${1:-}" in
 
     --prepare-test-environment)
         PREPARE_TEST_ENVIRONMENT=true
+        ;;
+
+    --check-and-prepare-kurento-snapshot)
+        CHECK_AND_PREPARE_KURENTO_SNAPSHOT=true
         ;;
 
     --use-specific-kurento-java-commit)
@@ -58,17 +63,6 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
     sudo mkdir -p /opt/openvidu/recordings && sudo chmod 777 /opt/openvidu/recordings
     # Prepare directory for OpenVidu Android apps
     sudo mkdir -p /opt/openvidu/android && sudo chmod 777 /opt/openvidu/android
-
-    # Configure Snapshots repository
-    if [[ -n "${KURENTO_SNAPSHOTS_URL:-}" ]]; then
-        sudo mkdir -p /etc/maven
-        sudo chmod -R 777 /etc/maven
-        pushd /etc/maven
-        rm -f settings.xml
-        curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/kurento-snapshots.xml -o settings.xml
-        sed -i "s|KURENTO_SNAPSHOTS_URL|${KURENTO_SNAPSHOTS_URL}|g" settings.xml
-        popd
-    fi
 
     # Download fake videos
     FAKE_VIDEO1=/opt/openvidu/barcode.y4m
@@ -130,6 +124,27 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
         docker pull "${KURENTO_MEDIA_SERVER_IMAGE}"
     fi
 
+fi
+
+# -------------
+# Check kurento version from pom.xml
+# If kurento version is a snapshot, configure snapshot builds
+# -------------
+if [[ "${CHECK_AND_PREPARE_KURENTO_SNAPSHOT}" == true ]]; then
+    # Check if kurento version is a snapshot
+    KURENTO_VERSION=$(awk -F'[<>]' '/<version.kurento>/ {print $3}' pom.xml)
+    if [[ "${KURENTO_VERSION}" == *"-SNAPSHOT" ]] && [[ -n "${KURENTO_SNAPSHOTS_URL:-}" ]]; then
+        echo "Kurento version is a SNAPSHOT: ${KURENTO_VERSION}"
+        sudo mkdir -p /etc/maven
+        sudo chmod -R 777 /etc/maven
+        pushd /etc/maven
+        rm -f settings.xml
+        curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/kurento-snapshots.xml -o settings.xml
+        sed -i "s|KURENTO_SNAPSHOTS_URL|${KURENTO_SNAPSHOTS_URL}|g" settings.xml
+        popd
+    else
+        echo "Kurento version is not a SNAPSHOT: ${KURENTO_VERSION}"
+    fi
 fi
 
 # -------------
