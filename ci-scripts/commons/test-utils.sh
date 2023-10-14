@@ -127,27 +127,6 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
 fi
 
 # -------------
-# Check kurento version from pom.xml
-# If kurento version is a snapshot, configure snapshot builds
-# -------------
-if [[ "${CHECK_AND_PREPARE_KURENTO_SNAPSHOT}" == true ]]; then
-    # Check if kurento version is a snapshot
-    KURENTO_VERSION=$(awk -F'[<>]' '/<version.kurento>/ {print $3}' pom.xml)
-    if [[ "${KURENTO_VERSION}" == *"-SNAPSHOT" ]] && [[ -n "${KURENTO_SNAPSHOTS_URL:-}" ]]; then
-        echo "Kurento version is a SNAPSHOT: ${KURENTO_VERSION}"
-        sudo mkdir -p /etc/maven
-        sudo chmod -R 777 /etc/maven
-        pushd /etc/maven
-        rm -f settings.xml
-        curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/kurento-snapshots.xml -o settings.xml
-        sed -i "s|KURENTO_SNAPSHOTS_URL|${KURENTO_SNAPSHOTS_URL}|g" settings.xml
-        popd
-    else
-        echo "Kurento version is not a SNAPSHOT: ${KURENTO_VERSION}"
-    fi
-fi
-
-# -------------
 # Use a specific kurento-java commit other than the configured in openvidu-parent pom.xml
 # -------------
 if [[ "${USE_SPECIFIC_KURENTO_JAVA_COMMIT}" == true ]]; then

@@ -17,6 +17,7 @@ BUILD_OV_SERVER=false
 BUILD_OV_SERVER_DEPENDENCY=false
 BUILD_OV_SERVER_PRO_INSPECTOR=false
 BUILD_OV_SERVER_PRO=false
+CHECK_AND_PREPARE_KURENTO_SNAPSHOT=false
 
 if [[ -n ${1:-} ]]; then
     case "${1:-}" in
@@ -73,6 +74,9 @@ if [[ -n ${1:-} ]]; then
 
     --build-openvidu-server-pro)
         BUILD_OV_SERVER_PRO=true
+        ;;
+    --check-and-prepare-kurento-snapshot)
+        CHECK_AND_PREPARE_KURENTO_SNAPSHOT=true
         ;;
 
     *)
@@ -220,4 +224,25 @@ if [[ "${BUILD_OV_SERVER_PRO}" == true ]]; then
     mvn -B -DskipTests=true clean package
     mv target/openvidu-server-pro-*.jar /opt/openvidu
     popd
+fi
+
+# -------------
+# Check kurento version from pom.xml
+# If kurento version is a snapshot, configure snapshot builds
+# -------------
+if [[ "${CHECK_AND_PREPARE_KURENTO_SNAPSHOT}" == true ]]; then
+    # Check if kurento version is a snapshot
+    KURENTO_VERSION=$(awk -F'[<>]' '/<version.kurento>/ {print $3}' pom.xml)
+    if [[ "${KURENTO_VERSION}" == *"-SNAPSHOT" ]] && [[ -n "${KURENTO_SNAPSHOTS_URL:-}" ]]; then
+        echo "Kurento version is a SNAPSHOT: ${KURENTO_VERSION}"
+        sudo mkdir -p /etc/maven
+        sudo chmod -R 777 /etc/maven
+        pushd /etc/maven
+        rm -f settings.xml
+        curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/kurento-snapshots.xml -o settings.xml
+        sed -i "s|KURENTO_SNAPSHOTS_URL|${KURENTO_SNAPSHOTS_URL}|g" settings.xml
+        popd
+    else
+        echo "Kurento version is not a SNAPSHOT: ${KURENTO_VERSION}"
+    fi
 fi

@@ -71,7 +71,7 @@ jobs:
       - name: Prepare test environment
         run: /opt/test-utils.sh --prepare-test-environment "${TEST_IMAGE}"
       - name: Check and prepare kurento snapshots
-        run: /opt/test-utils.sh --check-and-prepare-kurento-snapshot
+        run: /opt/build.sh --check-and-prepare-kurento-snapshot
       - name: Use specific kurento-java commit
         if: ${{ env.KURENTO_JAVA_COMMIT != 'default'}}
         run: /opt/test-utils.sh --use-specific-kurento-java-commit
