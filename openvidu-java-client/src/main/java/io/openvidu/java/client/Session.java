@@ -119,10 +119,6 @@ public class Session {
 	 */
 	@Deprecated
 	public String generateToken(TokenOptions tokenOptions) throws OpenViduJavaClientException, OpenViduHttpException {
-		if (!this.hasSessionId()) {
-			this.getSessionId();
-		}
-
 		final HttpClientResponseHandler<String> responseHandler = new HttpClientResponseHandler<String>() {
 			@Override
 			public String handleResponse(final ClassicHttpResponse response) throws IOException, HttpException {
