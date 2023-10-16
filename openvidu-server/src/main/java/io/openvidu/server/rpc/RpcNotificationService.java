@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
+import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.IdentifierPrefixes;
 
 public class RpcNotificationService {
@@ -129,9 +130,11 @@ public class RpcNotificationService {
 				log.warn("Notification '{}' couldn't be sent to participant with privateId {}: {}", method,
 						participantPrivateId, e.getCause().getMessage());
 
-				// TODO: this is an ad-hoc fix to clean any ghost participant of sessions
+				// TODO BEGIN: this is an ad-hoc fix to clean any ghost participant of sessions
 				log.warn("Removing ghost participant with participant private id {}", participantPrivateId);
-				this.rpcHandler.leaveRoomAfterConnClosed(participantPrivateId, null);
+				EndReason reason = getEndReasonFromParams(params);
+				this.rpcHandler.leaveRoomAfterConnClosed(participantPrivateId, reason);
+				// TODO END: this is an ad-hoc fix to clean any ghost participant of sessions
 
 			} else {
 				log.error("Exception sending notification '{}': {} to participant with private id {}", method, params,
@@ -193,6 +196,23 @@ public class RpcNotificationService {
 
 	private boolean isIpcamParticipant(String participantPrivateId) {
 		return participantPrivateId.startsWith(IdentifierPrefixes.IPCAM_ID);
+	}
+
+	/**
+	 * Returns a possible EndReason from the params of a notification.
+	 * Returns null if no EndReason is found
+	 * @param params
+	 * @return EndReason
+	 */
+	private EndReason getEndReasonFromParams(Object params) {
+		try {
+			if (params != null && params instanceof JsonObject) {
+				String rawParamReason = ((JsonObject) params).get("reason").getAsString();
+				return EndReason.valueOf(rawParamReason);
+			}
+		} catch (Exception e) {}
+		log.warn("No EndReason found in notification params");
+		return null;
 	}
 
 }
