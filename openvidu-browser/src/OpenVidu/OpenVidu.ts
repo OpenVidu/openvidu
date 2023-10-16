@@ -568,7 +568,6 @@ export class OpenVidu {
                             // getDisplayMedia supported
                             try {
                                 const mediaStream = await navigator.mediaDevices['getDisplayMedia']({ video: true, audio: options.audioSource === 'screen' });
-                                this.removeScreenAudioTrackIfNotAvailable(mediaStream);
                                 this.addAlreadyProvidedTracks(myConstraints, mediaStream);
                                 if (mustAskForAudioTrackLater) {
                                     return await askForAudioStreamOnly(mediaStream, <MediaStreamConstraints>myConstraints.constraints);
@@ -1165,21 +1164,6 @@ export class OpenVidu {
     /**
      * @hidden
      */
-    removeScreenAudioTrackIfNotAvailable(mediaStream: MediaStream) {
-        const [screenVideoTrack] = mediaStream.getVideoTracks();
-        const displaySurface = (screenVideoTrack.getSettings() as any).displaySurface;
-        if (displaySurface !== 'browser') {
-            // tab screen share. This is the only way in CHromium right now that is possible to share the audio of a screen
-            mediaStream.getAudioTracks().forEach((screenAudioTrack) => {
-                mediaStream.removeTrack(screenAudioTrack);
-                screenAudioTrack.stop();
-            });
-        }
-    }
-
-    /**
-     * @hidden
-     */
     protected setVideoSource(myConstraints: CustomMediaStreamConstraints, videoSource: string) {
         if (!myConstraints.constraints!.video) {
             myConstraints.constraints!.video = {};
@@ -1314,5 +1298,4 @@ export class OpenVidu {
     private isScreenShare(videoSource: string) {
         return videoSource === 'screen' || videoSource === 'window' || (platform.isElectron() && videoSource.startsWith('screen:'));
     }
-
 }
