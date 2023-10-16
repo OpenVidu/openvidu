@@ -504,7 +504,7 @@ export class Publisher extends StreamManager {
 
             const getMediaSuccess = async (mediaStream: MediaStream, definedAudioConstraint) => {
                 this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
-                if (this.stream.isSendScreen() && this.stream.isSendAudio()) {
+                if (this.stream.isSendScreen() && this.properties.audioSource !== 'screen' && this.stream.isSendAudio()) {
                     // When getting desktop as user media audio constraint must be false. Now we can ask for it if required
                     constraintsAux.audio = definedAudioConstraint;
                     constraintsAux.video = false;
