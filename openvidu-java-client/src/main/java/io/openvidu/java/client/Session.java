@@ -183,17 +183,14 @@ public class Session {
 			this.getSessionId();
 		}
 
-		final HttpClientResponseHandler<Connection> responseHandler = new HttpClientResponseHandler<Connection>() {
-			@Override
-			public Connection handleResponse(final ClassicHttpResponse response) throws IOException, HttpException {
-				final int status = response.getCode();
-				if (status == HttpStatus.SC_OK) {
-					Connection connection = new Connection(OpenVidu.httpResponseEntityToJson(response.getEntity()));
-					connections.put(connection.getConnectionId(), connection);
-					return connection;
-				} else {
-					throw OpenVidu.openViduHttpException(status);
-				}
+		final HttpClientResponseHandler<Connection> responseHandler = response -> {
+			final int status = response.getCode();
+			if (status == HttpStatus.SC_OK) {
+				Connection connection = new Connection(OpenVidu.httpResponseEntityToJson(response.getEntity()));
+				connections.put(connection.getConnectionId(), connection);
+				return connection;
+			} else {
+				throw OpenVidu.openViduHttpException(status);
 			}
 		};
 
