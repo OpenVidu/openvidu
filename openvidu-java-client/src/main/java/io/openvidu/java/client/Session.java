@@ -182,10 +182,6 @@ public class Session {
 	 */
 	public Connection createConnection(ConnectionProperties connectionProperties)
 			throws OpenViduJavaClientException, OpenViduHttpException {
-		if (!this.hasSessionId()) {
-			this.getSessionId();
-		}
-
 		final HttpClientResponseHandler<Connection> responseHandler = new HttpClientResponseHandler<Connection>() {
 			@Override
 			public Connection handleResponse(final ClassicHttpResponse response) throws IOException, HttpException {
