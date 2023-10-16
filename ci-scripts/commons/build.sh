@@ -235,8 +235,8 @@ if [[ "${CHECK_AND_PREPARE_KURENTO_SNAPSHOT}" == true ]]; then
     KURENTO_VERSION=$(awk -F'[<>]' '/<version.kurento>/ {print $3}' pom.xml)
     if [[ "${KURENTO_VERSION}" == *"-SNAPSHOT" ]] && [[ -n "${KURENTO_SNAPSHOTS_URL:-}" ]]; then
         echo "Kurento version is a SNAPSHOT: ${KURENTO_VERSION}"
-        sudo mkdir -p /etc/maven
-        sudo chmod -R 777 /etc/maven
+        mkdir -p /etc/maven
+        chmod -R 777 /etc/maven
         pushd /etc/maven
         rm -f settings.xml
         curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/kurento-snapshots.xml -o settings.xml
