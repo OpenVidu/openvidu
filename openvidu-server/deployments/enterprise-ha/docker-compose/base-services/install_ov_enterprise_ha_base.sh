@@ -4,7 +4,7 @@
 OPENVIDU_FOLDER=ov-enterprise-base-services
 ELASTICSEARCH_FOLDER=${OPENVIDU_FOLDER}/elasticsearch
 OPENVIDU_VERSION=master
-OPENVIDU_UPGRADABLE_VERSION="2.28"
+OPENVIDU_UPGRADABLE_VERSION="2.29"
 DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}
 
 # Support docker compose v1 and v2
