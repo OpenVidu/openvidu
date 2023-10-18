@@ -6,7 +6,7 @@
 #
 #    This docker-compose file coordinates all services of OpenVidu CE Platform.
 #
-#    Openvidu Version: 2.28.0
+#    Openvidu Version: 2.29.0
 #
 #    Installation Mode: On Premises
 #
@@ -16,19 +16,19 @@ version: '3.1'
 
 services:
     media-node-controller:
-        image: openvidu/media-node-controller:2.28.0
+        image: openvidu/media-node-controller:2.29.0
         restart: always
         ulimits:
             core: -1
         entrypoint: ['/bin/sh', '-c', '/beats/copy_config_files.sh && /usr/local/bin/entrypoint.sh']
         environment:
             - KMS_IMAGE=kurento/kurento-media-server:7.0.1
-            - MEDIASOUP_IMAGE=openvidu/mediasoup-controller:2.28.0
+            - MEDIASOUP_IMAGE=openvidu/mediasoup-controller:2.29.0
             - METRICBEAT_IMAGE=docker.elastic.co/beats/metricbeat-oss:7.8.0
             - FILEBEAT_IMAGE=docker.elastic.co/beats/filebeat-oss:7.8.0
-            - OPENVIDU_RECORDING_IMAGE=openvidu/openvidu-recording:2.28.0
-            - COTURN_IMAGE=openvidu/openvidu-coturn:2.28.0
-            - SPEECH_TO_TEXT_IMAGE=openvidu/speech-to-text-service:2.28.0
+            - OPENVIDU_RECORDING_IMAGE=openvidu/openvidu-recording:2.29.0
+            - COTURN_IMAGE=openvidu/openvidu-coturn:2.29.0
+            - SPEECH_TO_TEXT_IMAGE=openvidu/speech-to-text-service:2.29.0
             - NO_COLOR=true
         ports:
             - 3000:3000
