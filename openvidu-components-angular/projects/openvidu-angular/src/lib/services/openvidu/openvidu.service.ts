@@ -245,8 +245,22 @@ export class OpenViduService {
 		this.disconnectSession(this.screenSession);
 	}
 
+	/**
+	 *
+	 * Apply the new resolution to the video stream if it is CAMERA type.
+	 * @param streamManager
+	 * @internal
+	 */
 	async updateVideoEncodingParameters(streamManager: StreamManager) {
-		if (!streamManager) return;
+		if (
+			!streamManager ||
+			!streamManager.stream ||
+			!streamManager.stream.getMediaStream() ||
+			streamManager.stream.typeOfVideo === VideoType.SCREEN
+		) {
+			return;
+		}
+
 		const track = streamManager?.stream.getMediaStream().getVideoTracks()[0];
 		const videoSender = streamManager?.stream
 			.getRTCPeerConnection()
