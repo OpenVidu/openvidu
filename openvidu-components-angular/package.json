@@ -27,6 +27,7 @@
     "@types/mocha": "9.1.0",
     "@types/node": "16.11.6",
     "@types/selenium-webdriver": "4.1.5",
+    "@types/ws": "8.5.4",
     "chai": "4.3.6",
     "chromedriver": "114.0.2",
     "codelyzer": "6.0.2",
