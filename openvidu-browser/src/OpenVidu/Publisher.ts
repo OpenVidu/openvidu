@@ -470,6 +470,15 @@ export class Publisher extends StreamManager {
                         };
 
                         if (this.stream.isSendScreen()) {
+
+                            if(this.stream.isSendAudio() && mediaStream.getAudioTracks().length === 0){
+                                // If sending audio is enabled and there are no audio tracks in the mediaStream, disable audio for screen sharing.
+                                this.stream.audioActive = false;
+                                this.stream.hasAudio = false;
+                                this.stream.outboundStreamOpts.publisherProperties.publishAudio = false;
+                                this.stream.outboundStreamOpts.publisherProperties.audioSource = false;
+                            }
+
                             // Set interval to listen for screen resize events
                             this.screenShareResizeInterval = setInterval(() => {
                                 const settings: MediaTrackSettings = mediaStream.getVideoTracks()[0].getSettings();
