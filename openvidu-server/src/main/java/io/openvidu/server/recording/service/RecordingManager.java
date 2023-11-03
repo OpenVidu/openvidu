@@ -690,8 +690,7 @@ public class RecordingManager {
 								if (session.isClosed()) {
 									return;
 								}
-								if (session.getParticipants().size() == 0
-										|| session.onlyRecorderAndOrSttAndOrBroadcastParticipant()) {
+								if (session.onlyRecorderAndOrSttAndOrBroadcastParticipant()) {
 									// Close session if there are no participants connected (RECORDER/STT/BROADCAST
 									// do not count) and publishing
 									log.info("Closing session {} after automatic stop of recording {}",
@@ -737,35 +736,38 @@ public class RecordingManager {
 		ScheduledFuture<?> future = this.automaticRecordingStopThreads.remove(session.getSessionId());
 		if (future != null) {
 			boolean cancelled = future.cancel(false);
-			try {
-				if (session.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
-					try {
-						if (session.isClosed()) {
-							return false;
-						}
-						if (session.getParticipants().size() == 0
-								|| session.onlyRecorderAndOrSttAndOrBroadcastParticipant()) {
-							// Close session if there are no participants connected (except for
-							// RECORDER/STT/BROADCAST). This code will only be executed if recording is
-							// manually stopped during the automatic stop timeout, so the session must be
-							// also closed
+			if (session.onlyRecorderAndOrSttAndOrBroadcastParticipant()) {
+				// Close session if there are no participants connected (except for
+				// RECORDER/STT/BROADCAST). This code will only be executed if recording is
+				// manually stopped during the automatic stop timeout, so the session must be
+				// also closed
+				try {
+					if (session.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
+						try {
+							if (!session.onlyRecorderAndOrSttAndOrBroadcastParticipant()) {
+								// Somebody connected after acquiring the lock. Cancel session close up
+								return true;
+							}
+							if (session.isClosed()) {
+								return false;
+							}
 							log.info(
 									"Ongoing recording of session {} was explicetly stopped within timeout for automatic recording stop. Closing session",
 									session.getSessionId());
 							sessionManager.closeSessionAndEmptyCollections(session, reason, false);
+						} finally {
+							session.closingLock.writeLock().unlock();
 						}
-					} finally {
-						session.closingLock.writeLock().unlock();
+					} else {
+						log.error(
+								"Timeout waiting for Session {} closing lock to be available for aborting automatic recording stop thred",
+								session.getSessionId());
 					}
-				} else {
+				} catch (InterruptedException e) {
 					log.error(
-							"Timeout waiting for Session {} closing lock to be available for aborting automatic recording stop thred",
+							"InterruptedException while waiting for Session {} closing lock to be available for aborting automatic recording stop thred",
 							session.getSessionId());
 				}
-			} catch (InterruptedException e) {
-				log.error(
-						"InterruptedException while waiting for Session {} closing lock to be available for aborting automatic recording stop thred",
-						session.getSessionId());
 			}
 			return cancelled;
 		} else {
