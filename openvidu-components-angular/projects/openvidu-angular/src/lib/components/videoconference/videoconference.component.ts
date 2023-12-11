@@ -408,6 +408,11 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 	/**
 	 * Provides event notifications that fire when start broadcasting button is clicked from {@link ToolbarComponent}.
 	 */
+	@Output() onToolbarStartBroadcastingClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when start broadcasting button is clicked from {@link ToolbarComponent}.
+	 */
 	@Output() onToolbarStopBroadcastingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**

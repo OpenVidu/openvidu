@@ -713,6 +713,11 @@ export class OpenviduWebComponentComponent implements OnInit {
 	@Output() onToolbarStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
+	 * Provides event notifications that fire when start broadcasting button is clicked from {@link ToolbarComponent}.
+	 */
+	@Output() onToolbarStartBroadcastingClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
 	 * Provides event notifications that fire when stop broadcasting button is clicked from {@link ToolbarComponent}.
 	 *  The recording should be stopped using the REST API.
 	 */

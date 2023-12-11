@@ -188,6 +188,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * Provides event notifications that fire when start broadcasting button has been clicked.
 	 */
+	@Output() onStartBroadcastingClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when stop broadcasting button has been clicked.
+	 */
 	@Output() onStopBroadcastingClicked: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
@@ -584,6 +589,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.onStopBroadcastingClicked.emit();
 			this.broadcastingService.updateStatus(BroadcastingStatus.STOPPING);
 		} else if (this.broadcastingStatus === BroadcastingStatus.STOPPED) {
+			this.onStartBroadcastingClicked.emit();
 			if (this.showActivitiesPanelButton && !this.isActivitiesOpened) {
 				this.toggleActivitiesPanel('broadcasting');
 			}
@@ -667,7 +673,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToFullscreenChanged() {
-		document.addEventListener("fullscreenchange", (event) => {
+		document.addEventListener('fullscreenchange', (event) => {
 			this.isFullscreenActive = Boolean(document.fullscreenElement);
 			this.cdkOverlayService.setSelector(this.isFullscreenActive ? '#session-container' : 'body');
 		});

@@ -91,6 +91,10 @@ export class CallComponent implements OnInit {
 
 	async onStartBroadcastingClicked(broadcastUrl: string) {
 		console.log('START STREAMING', broadcastUrl);
+		if (!broadcastUrl) {
+			console.error('Broadcasting URL is empty');
+			return;
+		}
 		try {
 			this.broadcastingError = null;
 			const resp = await this.restService.startBroadcasting(broadcastUrl);
