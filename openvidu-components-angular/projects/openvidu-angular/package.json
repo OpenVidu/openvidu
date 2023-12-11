@@ -14,5 +14,5 @@
     "buffer": "^6.0.3",
     "openvidu-browser": "2.29.1"
   },
-  "version": "2.29.2"
+  "version": "2.29.3"
 }
