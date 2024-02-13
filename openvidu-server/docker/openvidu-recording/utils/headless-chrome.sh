@@ -34,6 +34,7 @@ xvfb-run-safe --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chr
     --disable-component-update \
     --disable-background-networking \
     --disable-default-apps \
+    --flag-switches-begin --disable-features=WebRtcHideLocalIpsWithMdns --flag-switches-end \
     $DEBUG_CHROME_FLAGS $URL &>xvfb.log &
 
 until pids=$(pidof Xvfb); do
