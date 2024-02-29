@@ -133,9 +133,9 @@ Resources:
                 WORKINGDIR=/opt/openvidu
                 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
                 ASG_DATA=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/user-data)
-                AWS_AVAIL_ZONE=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
+                AWS_AVAIL_ZONE=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
                 AWS_REGION="`echo \"$AWS_AVAIL_ZONE\" | sed 's/[a-z]$//'`"
-                AWS_INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+                AWS_INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
 
                 # S3 bucket
                 OPENVIDU_PRO_CONFIG_S3_BUCKET=$(echo ${ASG_DATA} | grep -Po "(OPENVIDU_PRO_CONFIG_S3_BUCKET=).+?(?=\s*(\||$))" | cut -d"=" -f2)
