@@ -732,6 +732,10 @@ Resources:
     Properties:
       LaunchTemplateName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGMediaNodeLaunchTemplate'] ]
       LaunchTemplateData:
+        MetadataOptions:
+          HttpEndpoint: enabled
+          HttpPutResponseHopLimit: 1
+          HttpTokens: required
         SecurityGroupIds:
           - !GetAtt MediaNodeSecurityGroup.GroupId
         ImageId: !GetAtt LambdaOnCreateInvoke.MediaNodeImageId
@@ -987,6 +991,10 @@ Resources:
     Properties:
       LaunchTemplateName: !Join [ "-", [ !Ref 'AWS::StackName', 'ASGMasterNodeLaunchConfiguration'] ]
       LaunchTemplateData:
+        MetadataOptions:
+          HttpEndpoint: enabled
+          HttpPutResponseHopLimit: 1
+          HttpTokens: required
         SecurityGroupIds:
           - !GetAtt OpenViduSecurityGroup.GroupId
         IamInstanceProfile:

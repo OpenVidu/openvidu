@@ -194,6 +194,16 @@ Conditions:
 
 Resources:
 
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+        LaunchTemplateName: IMDSV2
+        LaunchTemplateData:
+          MetadataOptions:
+            HttpEndpoint: enabled
+            HttpPutResponseHopLimit: 1
+            HttpTokens: required
+
   OpenviduServer:
     Type: 'AWS::EC2::Instance'
     Metadata:
@@ -210,7 +220,8 @@ Resources:
                 INXDB_MEASUREMENT=server
 
                 OV_VERSION=OPENVIDU_VERSION
-                EC2_AVAIL_ZONE=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
+                TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+                EC2_AVAIL_ZONE=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
                 EC2_REGION=$(echo "$EC2_AVAIL_ZONE" | sed 's/[a-z]$//')
 
                 curl -i -XPOST "http://$INXDB_URL:8086/write?db=$INXDB_DB" \
@@ -246,7 +257,8 @@ Resources:
                   sed -i "s/DOMAIN_OR_PUBLIC_IP=/DOMAIN_OR_PUBLIC_IP=${PublicElasticIP}/" $WORKINGDIR/.env
                 else
                   [ ! -d "/usr/share/openvidu" ] && mkdir -p /usr/share/openvidu
-                  PublicHostname=$(curl http://169.254.169.254/latest/meta-data/public-hostname)
+                  TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+                  PublicHostname=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
                   sed -i "s/DOMAIN_OR_PUBLIC_IP=/DOMAIN_OR_PUBLIC_IP=$PublicHostname/" $WORKINGDIR/.env
                   echo $PublicHostname > /usr/share/openvidu/old-host-name
                 fi
@@ -279,7 +291,8 @@ Resources:
 
                 # Get new amazon URL
                 OldPublicHostname=$(cat /usr/share/openvidu/old-host-name)
-                PublicHostname=$(curl http://169.254.169.254/latest/meta-data/public-hostname)
+                TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+                PublicHostname=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
                 sed -i "s/$OldPublicHostname/$PublicHostname/" $WORKINGDIR/.env
                 echo $PublicHostname > /usr/share/openvidu/old-host-name
 
@@ -292,6 +305,9 @@ Resources:
               group: "root"
     Properties:
       ImageId: !GetAtt CloudformationLambdaInvoke.ImageId
+      LaunchTemplate:
+        LaunchTemplateName: IMDSV2
+        Version: 1
       InstanceType: !Ref InstanceType
       SecurityGroups:
         - !Ref WebServerSecurityGroup

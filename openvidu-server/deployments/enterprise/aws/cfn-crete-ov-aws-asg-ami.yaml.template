@@ -131,6 +131,7 @@ Resources:
                 #!/bin/bash -x
 
                 WORKINGDIR=/opt/openvidu
+                TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
                 ASG_DATA=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/user-data)
                 AWS_AVAIL_ZONE=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
                 AWS_REGION="`echo \"$AWS_AVAIL_ZONE\" | sed 's/[a-z]$//'`"
