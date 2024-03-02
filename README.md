@@ -35,6 +35,11 @@ Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com
 
 <a href="https://opencollective.com/openvidu#backers" target="_blank"><img src="https://opencollective.com/openvidu/backers.svg?width=890"></a>
 
+## Acknowledgments
+
+OpenVidu has been supported under project "CPP2021-008720 NewGenVidu: An elastic, user-friendly and privacy-friendly videoconferencing platform", funded by MCIN/AEI/10.13039/501100011033 and by the European Union-NextGenerationEU/PRTR.
+
+<img height="75px" src="https://openvidu.io/img/logos/support.jpg">
 
 ## Sponsors
 
