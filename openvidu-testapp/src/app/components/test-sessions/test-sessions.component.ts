@@ -11,6 +11,8 @@ import { SessionConf } from '../openvidu-instance/openvidu-instance.component';
 })
 export class TestSessionsComponent implements OnInit, OnDestroy {
 
+  Math = Math;
+
   openviduUrl: string;
   openviduSecret: string;
 
@@ -20,7 +22,7 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
   // OpenViduInstance collection
   users: SessionConf[] = [];
 
-  numberSubs = 3;
+  numberSubs = 2;
   autoJoin = false;
   useMediasoup = false;
 
