@@ -10,10 +10,10 @@
     <div class="scenario-div">
       <mat-checkbox id="mediasoup-checkbox" class="auto-join-check" [(ngModel)]="useMediasoup" name="useMediasoup">Mediasoup</mat-checkbox>
       <mat-checkbox id="auto-join-checkbox" class="auto-join-check" [(ngModel)]="autoJoin" name="autoJoin">Auto join</mat-checkbox>
-      <button id="one2one-btn" mat-raised-button color="primary" (click)="loadScenario(2,0,0)">1:1</button>
+      <button id="one2one-btn" mat-raised-button color="primary" (click)="loadScenario(numberSubs,0,0)">{{numberSubs}}:{{numberSubs}}</button>
       <button id="one2many-btn" mat-raised-button color="primary" (click)="loadScenario(0,1,numberSubs)">1:{{numberSubs}}</button>
       <mat-form-field>
-        <input id="one2many-input" matInput [(ngModel)]="numberSubs">
+        <input id="one2many-input" matInput type="number" [(ngModel)]="numberSubs">
       </mat-form-field>
     </div>
   </div>
