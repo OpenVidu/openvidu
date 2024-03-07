@@ -213,16 +213,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
 
             this.testFeedService.pushNewEvent({ user: 0, event });
 
-            const subscriber = session.subscribe(event.stream, undefined, (error) => {
-              const subAux = this.subscribers
-                .find(s => s.connectionId === session.connection.connectionId).subs
-                .find(s => s.streamManager.stream.connection.connectionId === subscriber.stream.connection.connectionId);
-              if (!!error) {
-                subAux.state['errorConnecting'] = (Date.now() - startTimeForUser);
-              } else {
-                subAux.state['connected'] = (Date.now() - startTimeForUser);
-              }
-            });
+            const subscriber = session.subscribe(event.stream, undefined);
 
             const sub = this.subscribers.find(s => s.connectionId === session.connection.connectionId);
             if (!sub) {
@@ -232,7 +223,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
                   startTime: startTimeForUser,
                   connectionId: session.connection.connectionId,
                   streamManager: subscriber,
-                  state: { 'connecting': (Date.now() - startTimeForUser) }
+                  state: { 'connected': (Date.now() - startTimeForUser) }
                 }]
               });
             } else {
@@ -240,7 +231,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
                 startTime: startTimeForUser,
                 connectionId: session.connection.connectionId,
                 streamManager: subscriber,
-                state: { 'connecting': (Date.now() - startTimeForUser) }
+                state: { 'connected': (Date.now() - startTimeForUser) }
               });
             }
 
@@ -294,8 +285,8 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
       this.sessionProperties.customSessionId = this.fixedSessionId;
     }
     return this.OV_NodeClient.createSession(this.sessionProperties)
-      .then(session_NodeClient => {
-        return session_NodeClient.generateToken();
+      .then(async (session_NodeClient) => {
+        return (await session_NodeClient.createConnection()).token;
       });
   }
 
