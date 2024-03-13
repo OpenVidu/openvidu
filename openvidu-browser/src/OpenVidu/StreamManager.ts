@@ -484,7 +484,7 @@ export abstract class StreamManager extends EventDispatcher {
             // Remove srcObject from the video
             this.removeSrcObject(streamManagerVideo);
             // Remove from collection of videos every video managed by OpenVidu Browser
-            this.videos.filter((v) => !v.targetElement);
+            this.videos = this.videos.filter((v) => !v.targetElement);
         });
     }
 
