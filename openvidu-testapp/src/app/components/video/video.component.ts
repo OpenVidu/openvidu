@@ -106,7 +106,7 @@ export class VideoComponent implements OnInit, OnDestroy {
                 accessDialogOpened: true,
                 accessDialogClosed: true,
                 streamCreated: true,
-                streamDestroyed: true,
+                streamDestroyed: false,
                 streamPropertyChanged: false
             };
             this.updatePublisherEvents(
