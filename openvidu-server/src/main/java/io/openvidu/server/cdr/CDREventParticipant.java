@@ -46,6 +46,7 @@ public class CDREventParticipant extends CDREventEnd {
 		// TODO: remove deprecated "participantId" when possible
 		json.addProperty("participantId", this.participant.getParticipantPublicId());
 		json.addProperty("connectionId", this.participant.getParticipantPublicId());
+		json.addProperty("role", this.participant.getToken().getRole().toString());
 		json.addProperty("location", this.participant.getLocation().toString());
 		json.addProperty("ip", this.participant.getLocation().getIp());
 		json.addProperty("platform", this.participant.getPlatform());

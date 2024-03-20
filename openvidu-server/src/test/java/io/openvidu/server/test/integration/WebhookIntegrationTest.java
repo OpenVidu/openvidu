@@ -42,6 +42,7 @@ import com.google.gson.JsonObject;
 
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.ConnectionProperties;
+import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
@@ -154,6 +155,7 @@ public class WebhookIntegrationTest {
 
 			Session session = kurentoSessionManager.getSessionWithNotActive(sessionId);
 			Token token = new Token("token", sessionId, new ConnectionProperties.Builder().build(), null);
+			token.setRole(OpenViduRole.PUBLISHER);
 			String participantPrivateId = "participantPrivateId";
 			Participant participant = kurentoSessionManager.newParticipant(session, participantPrivateId, token, null,
 					mock(GeoLocation.class), "platform", "finalUserId");
