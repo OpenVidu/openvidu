@@ -123,17 +123,14 @@ public class Session {
 			this.getSessionId();
 		}
 
-		final HttpClientResponseHandler<String> responseHandler = new HttpClientResponseHandler<String>() {
-			@Override
-			public String handleResponse(final ClassicHttpResponse response) throws IOException, HttpException {
-				final int status = response.getCode();
-				if (status == HttpStatus.SC_OK) {
-					String token = OpenVidu.httpResponseEntityToJson(response.getEntity()).get("id").getAsString();
-					log.info("Returning a TOKEN: {}", token);
-					return token;
-				} else {
-					throw OpenVidu.openViduHttpException(status);
-				}
+		final HttpClientResponseHandler<String> responseHandler = response -> {
+			final int status = response.getCode();
+			if (status == HttpStatus.SC_OK) {
+				String token = OpenVidu.httpResponseEntityToJson(response.getEntity()).get("id").getAsString();
+				log.info("Returning a TOKEN: {}", token);
+				return token;
+			} else {
+				throw OpenVidu.openViduHttpException(status);
 			}
 		};
 
@@ -186,17 +183,14 @@ public class Session {
 			this.getSessionId();
 		}
 
-		final HttpClientResponseHandler<Connection> responseHandler = new HttpClientResponseHandler<Connection>() {
-			@Override
-			public Connection handleResponse(final ClassicHttpResponse response) throws IOException, HttpException {
-				final int status = response.getCode();
-				if (status == HttpStatus.SC_OK) {
-					Connection connection = new Connection(OpenVidu.httpResponseEntityToJson(response.getEntity()));
-					connections.put(connection.getConnectionId(), connection);
-					return connection;
-				} else {
-					throw OpenVidu.openViduHttpException(status);
-				}
+		final HttpClientResponseHandler<Connection> responseHandler = response -> {
+			final int status = response.getCode();
+			if (status == HttpStatus.SC_OK) {
+				Connection connection = new Connection(OpenVidu.httpResponseEntityToJson(response.getEntity()));
+				connections.put(connection.getConnectionId(), connection);
+				return connection;
+			} else {
+				throw OpenVidu.openViduHttpException(status);
 			}
 		};
 
@@ -224,18 +218,15 @@ public class Session {
 	 */
 	public void close() throws OpenViduJavaClientException, OpenViduHttpException {
 
-		final HttpClientResponseHandler<Void> responseHandler = new HttpClientResponseHandler<Void>() {
-			@Override
-			public Void handleResponse(final ClassicHttpResponse response) throws IOException, HttpException {
-				final int status = response.getCode();
-				if (status == HttpStatus.SC_NO_CONTENT) {
-					openVidu.activeSessions.remove(sessionId);
-					log.info("Session {} closed", sessionId);
-				} else {
-					throw OpenVidu.openViduHttpException(status);
-				}
-				return null;
+		final HttpClientResponseHandler<Void> responseHandler = response -> {
+			final int status = response.getCode();
+			if (status == HttpStatus.SC_NO_CONTENT) {
+				openVidu.activeSessions.remove(sessionId);
+				log.info("Session {} closed", sessionId);
+			} else {
+				throw OpenVidu.openViduHttpException(status);
 			}
+			return null;
 		};
 
 		HttpDelete request = new HttpDelete(this.openVidu.hostname + OpenVidu.API_SESSIONS + "/" + this.sessionId);
@@ -272,19 +263,16 @@ public class Session {
 
 		final String beforeJSON = this.toJson();
 
-		final HttpClientResponseHandler<Boolean> responseHandler = new HttpClientResponseHandler<Boolean>() {
-			@Override
-			public Boolean handleResponse(final ClassicHttpResponse response) throws IOException, HttpException {
-				final int status = response.getCode();
-				if (status == HttpStatus.SC_OK) {
-					resetWithJson(OpenVidu.httpResponseEntityToJson(response.getEntity()));
-					final String afterJSON = toJson();
-					boolean hasChanged = !beforeJSON.equals(afterJSON);
-					log.info("Session info fetched for session '{}'. Any change: {}", sessionId, hasChanged);
-					return hasChanged;
-				} else {
-					throw OpenVidu.openViduHttpException(status);
-				}
+		final HttpClientResponseHandler<Boolean> responseHandler = response -> {
+			final int status = response.getCode();
+			if (status == HttpStatus.SC_OK) {
+				resetWithJson(OpenVidu.httpResponseEntityToJson(response.getEntity()));
+				final String afterJSON = toJson();
+				boolean hasChanged = !beforeJSON.equals(afterJSON);
+				log.info("Session info fetched for session '{}'. Any change: {}", sessionId, hasChanged);
+				return hasChanged;
+			} else {
+				throw OpenVidu.openViduHttpException(status);
 			}
 		};
 
@@ -344,34 +332,31 @@ public class Session {
 	 */
 	public void forceDisconnect(String connectionId) throws OpenViduJavaClientException, OpenViduHttpException {
 
-		final HttpClientResponseHandler<Void> responseHandler = new HttpClientResponseHandler<Void>() {
-			@Override
-			public Void handleResponse(final ClassicHttpResponse response) throws IOException, HttpException {
-				final int status = response.getCode();
-				if (status == HttpStatus.SC_NO_CONTENT) {
-					// Remove connection from activeConnections map
-					Connection connectionClosed = connections.remove(connectionId);
-					// Remove every Publisher of the closed connection from every subscriber list of
-					// other connections
-					if (connectionClosed != null) {
-						for (Publisher publisher : connectionClosed.getPublishers()) {
-							String streamId = publisher.getStreamId();
-							for (Connection connection : connections.values()) {
-								connection.setSubscribers(connection.getSubscribers().stream()
-										.filter(subscriber -> !streamId.equals(subscriber))
-										.collect(Collectors.toList()));
-							}
+		final HttpClientResponseHandler<Void> responseHandler = response -> {
+			final int status = response.getCode();
+			if (status == HttpStatus.SC_NO_CONTENT) {
+				// Remove connection from activeConnections map
+				Connection connectionClosed = connections.remove(connectionId);
+				// Remove every Publisher of the closed connection from every subscriber list of
+				// other connections
+				if (connectionClosed != null) {
+					for (Publisher publisher : connectionClosed.getPublishers()) {
+						String streamId = publisher.getStreamId();
+						for (Connection connection : connections.values()) {
+							connection.setSubscribers(connection.getSubscribers().stream()
+									.filter(subscriber -> !streamId.equals(subscriber))
+									.collect(Collectors.toList()));
 						}
-					} else {
-						log.warn(
-								"The closed connection wasn't fetched in OpenVidu Java Client. No changes in the collection of active connections of the Session");
 					}
-					log.info("Connection {} closed", connectionId);
 				} else {
-					throw OpenVidu.openViduHttpException(status);
+					log.warn(
+							"The closed connection wasn't fetched in OpenVidu Java Client. No changes in the collection of active connections of the Session");
 				}
-				return null;
+				log.info("Connection {} closed", connectionId);
+			} else {
+				throw OpenVidu.openViduHttpException(status);
 			}
+			return null;
 		};
 
 		HttpDelete request = new HttpDelete(
@@ -427,25 +412,22 @@ public class Session {
 	 */
 	public void forceUnpublish(String streamId) throws OpenViduJavaClientException, OpenViduHttpException {
 
-		final HttpClientResponseHandler<Void> responseHandler = new HttpClientResponseHandler<Void>() {
-			@Override
-			public Void handleResponse(final ClassicHttpResponse response) throws IOException, HttpException {
-				final int status = response.getCode();
-				if (status == HttpStatus.SC_NO_CONTENT) {
-					for (Connection connection : connections.values()) {
-						// Try to remove the Publisher from the Connection publishers collection
-						if (connection.publishers.remove(streamId) != null) {
-							continue;
-						}
-						// Try to remove the Publisher from the Connection subscribers collection
-						connection.subscribers.remove(streamId);
+		final HttpClientResponseHandler<Void> responseHandler = response -> {
+			final int status = response.getCode();
+			if (status == HttpStatus.SC_NO_CONTENT) {
+				for (Connection connection : connections.values()) {
+					// Try to remove the Publisher from the Connection publishers collection
+					if (connection.publishers.remove(streamId) != null) {
+						continue;
 					}
-					log.info("Stream {} unpublished", streamId);
-				} else {
-					throw OpenVidu.openViduHttpException(status);
+					// Try to remove the Publisher from the Connection subscribers collection
+					connection.subscribers.remove(streamId);
 				}
-				return null;
+				log.info("Stream {} unpublished", streamId);
+			} else {
+				throw OpenVidu.openViduHttpException(status);
 			}
+			return null;
 		};
 
 		HttpDelete request = new HttpDelete(
@@ -499,32 +481,29 @@ public class Session {
 	public Connection updateConnection(String connectionId, ConnectionProperties connectionProperties)
 			throws OpenViduJavaClientException, OpenViduHttpException {
 
-		final HttpClientResponseHandler<Connection> responseHandler = new HttpClientResponseHandler<Connection>() {
-			@Override
-			public Connection handleResponse(final ClassicHttpResponse response) throws IOException, HttpException {
-				final int status = response.getCode();
-				if (status == HttpStatus.SC_OK) {
-					log.info("Connection {} updated", connectionId);
-				} else if (status == HttpStatus.SC_NO_CONTENT) {
-					log.info("Properties of Connection {} remain the same", connectionId);
-				} else {
-					throw OpenVidu.openViduHttpException(status);
-				}
-				JsonObject json = OpenVidu.httpResponseEntityToJson(response.getEntity());
+		final HttpClientResponseHandler<Connection> responseHandler = response -> {
+			final int status = response.getCode();
+			if (status == HttpStatus.SC_OK) {
+				log.info("Connection {} updated", connectionId);
+			} else if (status == HttpStatus.SC_NO_CONTENT) {
+				log.info("Properties of Connection {} remain the same", connectionId);
+			} else {
+				throw OpenVidu.openViduHttpException(status);
+			}
+			JsonObject json = OpenVidu.httpResponseEntityToJson(response.getEntity());
 
-				// Update the actual Connection object with the new options
-				Connection existingConnection = connections.get(connectionId);
+			// Update the actual Connection object with the new options
+			Connection existingConnection = connections.get(connectionId);
 
-				if (existingConnection == null) {
-					// The updated Connection is not available in local map
-					Connection newConnection = new Connection(json);
-					connections.put(connectionId, newConnection);
-					return newConnection;
-				} else {
-					// The updated Connection was available in local map
-					existingConnection.overrideConnectionProperties(connectionProperties);
-					return existingConnection;
-				}
+			if (existingConnection == null) {
+				// The updated Connection is not available in local map
+				Connection newConnection = new Connection(json);
+				connections.put(connectionId, newConnection);
+				return newConnection;
+			} else {
+				// The updated Connection was available in local map
+				existingConnection.overrideConnectionProperties(connectionProperties);
+				return existingConnection;
 			}
 		};
 
@@ -657,42 +636,39 @@ public class Session {
 			return;
 		}
 
-		final HttpClientResponseHandler<Void> responseHandler = new HttpClientResponseHandler<Void>() {
-			@Override
-			public Void handleResponse(final ClassicHttpResponse response) throws IOException, HttpException {
-				final int status = response.getCode();
-				if (status == HttpStatus.SC_OK) {
-					JsonObject responseJson = OpenVidu.httpResponseEntityToJson(response.getEntity());
-					sessionId = responseJson.get("id").getAsString();
-					createdAt = responseJson.get("createdAt").getAsLong();
+		final HttpClientResponseHandler<Void> responseHandler = response -> {
+			final int status = response.getCode();
+			if (status == HttpStatus.SC_OK) {
+				JsonObject responseJson = OpenVidu.httpResponseEntityToJson(response.getEntity());
+				sessionId = responseJson.get("id").getAsString();
+				createdAt = responseJson.get("createdAt").getAsLong();
 
-					// Values that get filled by OpenVidu Server from its global or per-session
-					// configuration
-					VideoCodec forcedVideoCodec = VideoCodec
-							.valueOf(responseJson.get("forcedVideoCodec").getAsString());
-					Boolean allowTranscoding = responseJson.get("allowTranscoding").getAsBoolean();
+				// Values that get filled by OpenVidu Server from its global or per-session
+				// configuration
+				VideoCodec forcedVideoCodec = VideoCodec
+						.valueOf(responseJson.get("forcedVideoCodec").getAsString());
+				Boolean allowTranscoding = responseJson.get("allowTranscoding").getAsBoolean();
 
-					SessionProperties responseProperties = new SessionProperties.Builder()
-							.mediaMode(properties.mediaMode()).recordingMode(properties.recordingMode())
-							.defaultRecordingProperties(properties.defaultRecordingProperties())
-							.customSessionId(properties.customSessionId()).mediaNode(properties.mediaNode())
-							.forcedVideoCodec(forcedVideoCodec).allowTranscoding(allowTranscoding).build();
+				SessionProperties responseProperties = new SessionProperties.Builder()
+						.mediaMode(properties.mediaMode()).recordingMode(properties.recordingMode())
+						.defaultRecordingProperties(properties.defaultRecordingProperties())
+						.customSessionId(properties.customSessionId()).mediaNode(properties.mediaNode())
+						.forcedVideoCodec(forcedVideoCodec).allowTranscoding(allowTranscoding).build();
 
-					properties = responseProperties;
-					log.info("Session '{}' created", sessionId);
-				} else if (status == HttpStatus.SC_CONFLICT) {
-					// 'customSessionId' already existed
-					sessionId = properties.customSessionId();
-					try {
-						fetch();
-					} catch (OpenViduJavaClientException | OpenViduHttpException e) {
-						throw OpenVidu.openViduException(e);
-					}
-				} else {
-					throw OpenVidu.openViduHttpException(status);
+				properties = responseProperties;
+				log.info("Session '{}' created", sessionId);
+			} else if (status == HttpStatus.SC_CONFLICT) {
+				// 'customSessionId' already existed
+				sessionId = properties.customSessionId();
+				try {
+					fetch();
+				} catch (OpenViduJavaClientException | OpenViduHttpException e) {
+					throw OpenVidu.openViduException(e);
 				}
-				return null;
+			} else {
+				throw OpenVidu.openViduHttpException(status);
 			}
+			return null;
 		};
 
 		JsonObject json = properties.toJson();
