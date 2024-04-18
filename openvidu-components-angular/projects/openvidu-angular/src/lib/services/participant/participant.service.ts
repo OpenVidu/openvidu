@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Publisher, Subscriber } from 'openvidu-browser';
+import { Publisher, PublisherProperties, Subscriber } from 'openvidu-browser';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
 import {
@@ -14,6 +14,7 @@ import { OpenViduAngularConfigService } from '../config/openvidu-angular.config.
 import { DeviceService } from '../device/device.service';
 import { LoggerService } from '../logger/logger.service';
 import { OpenViduService } from '../openvidu/openvidu.service';
+import { CustomDevice } from '../../models/device.model';
 
 @Injectable({
 	providedIn: 'root'
@@ -88,13 +89,26 @@ export class ParticipantService {
 		}
 	}
 
+	async replaceVideoTrack(device: CustomDevice) {
+		const mirror = this.deviceService.cameraNeedsMirror(device.device);
+		const cameraPublisher = this.getMyCameraPublisher();
+		const { frameRate, videoDimensions } = cameraPublisher.stream;
+		const pp: PublisherProperties = {
+			videoSource: device.device,
+			audioSource: false,
+			frameRate,
+			resolution: `${videoDimensions.width}x${videoDimensions.height}`,
+			mirror
+		};
+		await this.openviduService.replaceCameraTrack(cameraPublisher, pp);
+	}
+
 	/**
 	 * Share or unshare the local participant screen.
 	 * Hide the camera stream (while muted) when screen is sharing.
 	 *
 	 */
 	async toggleScreenshare() {
-
 		const screenPublisher = this.getMyScreenPublisher();
 		const participantNickname = this.getMyNickname();
 		const participantId = this.getLocalParticipant().id;
@@ -313,7 +327,13 @@ export class ParticipantService {
 			if (publish) {
 				// Forcing restoration with a custom media stream (the older one instead the default)
 				const currentDeviceId = this.deviceService.getCameraSelected()?.device;
-				const mediaStream = await this.openviduService.createMediaStream({ videoSource: currentDeviceId, audioSource: false });
+				const { frameRate, videoDimensions } = publisher.stream;
+				const mediaStream = await this.openviduService.createMediaStream({
+					videoSource: currentDeviceId,
+					audioSource: false,
+					frameRate,
+					resolution: `${videoDimensions.width}x${videoDimensions.height}`,
+				});
 				resource = mediaStream.getVideoTracks()[0];
 			}
 

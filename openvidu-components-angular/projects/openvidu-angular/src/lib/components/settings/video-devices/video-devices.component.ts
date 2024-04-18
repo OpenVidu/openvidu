@@ -78,7 +78,6 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 
 		// Is New deviceId different from the old one?
 		if (this.deviceSrv.needUpdateVideoTrack(device)) {
-			const mirror = this.deviceSrv.cameraNeedsMirror(device.device);
 			// Reapply Virtual Background to new Publisher if necessary
 			const backgroundSelected = this.backgroundService.backgroundSelected.getValue();
 			const isBackgroundApplied = this.backgroundService.isBackgroundApplied();
@@ -86,9 +85,8 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 			if (isBackgroundApplied) {
 				await this.backgroundService.removeBackground();
 			}
-			const pp: PublisherProperties = { videoSource: device.device, audioSource: false, mirror };
-			const publisher = this.participantService.getMyCameraPublisher();
-			await this.openviduService.replaceCameraTrack(publisher, pp);
+
+			await this.participantService.replaceVideoTrack(device);
 
 			if (isBackgroundApplied) {
 				const bgSelected = this.backgroundService.backgrounds.find((b) => b.id === backgroundSelected);
@@ -108,7 +106,7 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 	 */
 	compareObjectDevices(o1: CustomDevice, o2: CustomDevice): boolean {
 		return o1.label === o2.label;
-	  }
+	}
 
 	protected subscribeToParticipantMediaProperties() {
 		this.localParticipantSubscription = this.participantService.localParticipantObs.subscribe((p: ParticipantAbstractModel) => {
