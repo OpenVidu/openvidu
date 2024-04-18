@@ -256,7 +256,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#mic_off')).to.be.true;
 	});
 
-	it('should run the app with VIDEO MUTED and WITHOUT PREJOIN page', async () => {
+	it('should run the app with AUDIO MUTED and WITHOUT PREJOIN page', async () => {
 		let isAudioEnabled;
 		const audioEnableScript = 'return document.getElementsByTagName("video")[0].srcObject.getAudioTracks()[0].enabled;';
 

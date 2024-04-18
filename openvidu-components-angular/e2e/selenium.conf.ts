@@ -10,9 +10,9 @@ interface BrowserConfig {
 	browserName: string;
 }
 
-const chromeArguments = ['--window-size=1024,768', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'];
+const chromeArguments = ['--window-size=1280,1024', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'];
 const chromeArgumentsCI = [
-	'--window-size=1024,768',
+	'--window-size=1280,1024',
 	'--headless',
 	'--no-sandbox',
 	'--disable-gpu',
@@ -57,10 +57,9 @@ export const AngularConfig: BrowserConfig = {
 };
 
 export function getBrowserOptionsWithoutDevices() {
-	if(LAUNCH_MODE === 'CI') {
+	if (LAUNCH_MODE === 'CI') {
 		return new chrome.Options().addArguments(...chromeArgumentsWithoutMediaDevicesCI);
 	} else {
 		return new chrome.Options().addArguments(...chromeArgumentsWithoutMediaDevices);
 	}
 }
-
