@@ -4,12 +4,12 @@
   },
   "name": "openvidu-angular",
   "peerDependencies": {
-    "@angular/animations": "^14.0.0",
-    "@angular/common": "^14.0.0",
-    "@angular/core": "^14.0.0",
-    "@angular/flex-layout": "^14.0.0-beta.40",
-    "@angular/forms": "^14.0.0",
-    "@angular/material": "^14.0.0",
+    "@angular/animations": "^15.0.0",
+    "@angular/common": "^15.0.0",
+    "@angular/core": "^15.0.0",
+    "@angular/flex-layout": "^15.0.0-beta.42",
+    "@angular/forms": "^15.0.0",
+    "@angular/material": "^15.0.0",
     "autolinker": "^4.0.0",
     "buffer": "^6.0.3",
     "openvidu-browser": "2.29.1"

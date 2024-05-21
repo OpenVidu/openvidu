@@ -12,7 +12,7 @@ export class BroadcastingService {
 	broadcastingStatusObs: Observable<{ status: BroadcastingStatus; time?: Date } | undefined>;
 
 	private broadcastingTime: Date | undefined;
-	private broadcastingTimeInterval: NodeJS.Timer;
+	private broadcastingTimeInterval: NodeJS.Timeout;
 	private broadcastingStatus = <BehaviorSubject<{ status: BroadcastingStatus; time?: Date } | undefined>>new BehaviorSubject(undefined);
 
 	/**

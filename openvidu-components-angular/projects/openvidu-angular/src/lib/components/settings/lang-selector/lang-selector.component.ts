@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, OnInit, Output, ViewChild, EventEmitter, OnDestroy } from '@angular/core';
-import { MatMenuTrigger } from '@angular/material/menu';
-import { MatSelect } from '@angular/material/select';
+import { MatLegacyMenuTrigger as MatMenuTrigger } from '@angular/material/legacy-menu';
+import { MatLegacySelect as MatSelect } from '@angular/material/legacy-select';
 import { StorageService } from '../../../services/storage/storage.service';
 import { TranslateService } from '../../../services/translate/translate.service';
 import { LangOption } from '../../../models/lang.model';

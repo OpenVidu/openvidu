@@ -18,7 +18,7 @@ export class RecordingService {
 	 */
 	forceUpdateRecordingsObs: Subject<void> = new Subject();
 	private recordingTime: Date | undefined;
-	private recordingTimeInterval: NodeJS.Timer;
+	private recordingTimeInterval: NodeJS.Timeout;
 	private currentRecording: RecordingInfo = { status: RecordingStatus.STOPPED };
 	private recordingStatus = <BehaviorSubject<{ info: RecordingInfo; time?: Date } | undefined>>new BehaviorSubject(undefined);
 	private baseUrl = '/' + (!!window.location.pathname.split('/')[1] ? window.location.pathname.split('/')[1] + '/' : '');

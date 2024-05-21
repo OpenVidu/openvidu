@@ -18,7 +18,7 @@ import { DocumentService } from '../../services/document/document.service';
 import { PanelService } from '../../services/panel/panel.service';
 
 import { MediaChange } from '@angular/flex-layout';
-import { MatMenuTrigger } from '@angular/material/menu';
+import { MatLegacyMenuTrigger as MatMenuTrigger } from '@angular/material/legacy-menu';
 import { Session } from 'openvidu-browser';
 import {
 	ToolbarAdditionalButtonsDirective,
