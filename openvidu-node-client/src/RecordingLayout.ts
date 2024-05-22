@@ -18,7 +18,7 @@
 /**
  * See {@link RecordingProperties.recordingLayout}
  */
-export enum RecordingLayout {
+export const enum RecordingLayout {
     /**
      * All the videos are evenly distributed, taking up as much space as possible
      */
