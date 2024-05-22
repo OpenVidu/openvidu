@@ -94,7 +94,7 @@ export class Recording {
                 json['frameRate'] != null ? Number(json['frameRate']) : Recording.DefaultRecordingPropertiesValues.frameRate;
             this.properties.shmSize =
                 json['shmSize'] != null ? Number(json['shmSize']) : Recording.DefaultRecordingPropertiesValues.shmSize;
-            if (this.properties.recordingLayout.toString() === RecordingLayout.CUSTOM.toString()) {
+            if (this.properties.recordingLayout.toString() === RecordingLayout[RecordingLayout.CUSTOM]) {
                 this.properties.customLayout = json['customLayout'] != null ? json['customLayout'] : '';
             }
         }
