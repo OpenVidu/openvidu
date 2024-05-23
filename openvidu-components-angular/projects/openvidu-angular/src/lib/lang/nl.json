@@ -70,7 +70,8 @@
 		"PARTICIPANTS": {
 			"TITLE": "Deelnemers",
 			"CAMERA": "CAMERA",
-			"SCREEN": "SCHERM"
+			"SCREEN": "SCHERM",
+			"YOU": "Jij"
 		},
 		"SETTINGS": {
 			"TITLE": "Instellingen",

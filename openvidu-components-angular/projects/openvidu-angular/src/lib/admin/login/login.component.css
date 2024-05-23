@@ -1,13 +1,17 @@
+
+/* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
 mat-card {
 	max-width: 220px;
 	margin: auto;
 	margin-top: 10vh;
 }
 
+/* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
 mat-card-content {
 	margin-bottom: 8px;
 }
 
+/* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
 mat-card-actions {
 	padding-top: 0px;
 }
@@ -21,7 +25,7 @@ mat-card-actions {
 mat-spinner {
 	margin: auto;
 }
-.mat-card-actions {
+.mat-mdc-card-actions {
 	margin: 0;
 }
 
@@ -52,17 +56,20 @@ mat-spinner {
 	width: 100%;
 }
 
-::ng-deep .mat-input-element {
+::ng-deep .mat-mdc-input-element {
 	caret-color: #000000;
 }
-::ng-deep .mat-primary .mat-option.mat-selected:not(.mat-option-disabled) {
+/* TODO(mdc-migration): The following rule targets internal classes of option that may no longer apply for the MDC version. */
+::ng-deep .mat-primary .mat-mdc-option.mat-selected:not(.mat-option-disabled) {
 	color: #000000;
 }
 
+/* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
 ::ng-deep .mat-form-field-label {
 	color: var(--ov-panel-text-color) !important;
 }
 
-::ng-deep .mat-form-field.mat-focused .mat-form-field-ripple {
+/* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
+::ng-deep .mat-mdc-form-field.mat-focused .mat-form-field-ripple {
 	background-color: var(--ov-panel-text-color) !important;
 }

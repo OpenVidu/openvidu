@@ -177,11 +177,13 @@
 	display: table;
 	text-align: center;
 }
+/* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
 ::ng-deep .mat-form-field-appearance-fill .mat-form-field-flex {
 	padding: 0px !important;
 	background-color: var(--ov-light-color) !important;
 }
 
+/* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
 ::ng-deep .mat-form-field-wrapper {
 	height: 100% !important;
 }

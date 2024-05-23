@@ -16,14 +16,14 @@
 //  If you specify typography styles for the components you use elsewhere, you should delete this line.
 //  If you don't need the default component typographies but still want the hierarchy styles,
 //  you can delete this line and instead use:
-//    `@include mat.legacy-typography-hierarchy(mat.define-legacy-typography-config());`
-@include mat.all-legacy-component-typographies();
-@include mat.legacy-core();
+//    `@include mat.legacy-typography-hierarchy(mat.define-typography-config());`
+@include mat.all-component-typographies();
+@include mat.core();
 
 // Define the palettes for your theme using the Material Design palettes available in palette.scss
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
 // hue. Available color palettes: https://material.io/design/color/
-$openvidu-components-primary: mat-palette($mat-blue-grey, 50, 300);
+$openvidu-components-primary: mat-palette($mat-blue-grey, 500, 300);
 $openvidu-components-accent: mat-palette($mat-amber, 500, 700, A100);
 
 // The warn palette is optional (defaults to red).
@@ -42,7 +42,7 @@ $openvidu-components-theme: mat.define-light-theme((
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
-@include mat.all-legacy-component-themes($openvidu-components-theme);
+@include mat.all-component-themes($openvidu-components-theme);
 
 
 // Custom openvidu-components styles

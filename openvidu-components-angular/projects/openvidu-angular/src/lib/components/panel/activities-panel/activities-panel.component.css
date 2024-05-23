@@ -9,34 +9,49 @@
 	display: inherit;
 	background-color: var(--ov-light-color);
 	border-radius: var(--ov-panel-radius);
+	margin: auto;
+	padding: 10px;
 }
 
-.activity-icon mat-icon {
-	margin: auto;
+::ng-deep .mat-mdc-list-item-icon {
+	margin: auto !important;
+}
+
+
+.activity-title,
+.activity-subtitle {
+	margin: 0;
+	color: var(--ov-panel-text-color);
+}
+
+.activity-title {
+	font-weight: bold !important;
 }
 
 .activity-subtitle {
 	font-style: italic;
 	font-size: 11px !important;
 }
-.activity-title {
-	font-weight: bold !important;
-}
 
 .activity-action-buttons {
 	font-weight: 600;
 	position: absolute;
 	right: 15px;
-	top: 15px;
+	top: 0px;
 }
 
 ::ng-deep .mat-content {
 	display: block !important;
-
 }
 
-::ng-deep .mat-list-text {
+/* .activity-icon mat-icon {
+	margin: auto;
+} */
+
+/* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+::ng-deep .mdc-list-item__content {
 	padding-left: 10px !important;
+	align-self: center !important;
 }
 
 ::ng-deep .mat-expansion-panel-header {
@@ -44,7 +59,7 @@
 	height: 65px !important;
 }
 
-::ng-deep .mat-list-base .mat-list-item .mat-list-item-content,
+::ng-deep .mat-mdc-list-base .mat-mdc-list-item .mat-list-item-content,
 .mat-list-base .mat-list-option .mat-list-item-content {
 	padding: 0px !important;
 }
@@ -63,4 +78,9 @@
 
 ::ng-deep .no-body .mat-expansion-panel-content {
 	display: none !important;
+}
+
+::ng-deep .mdc-list-item--with-leading-icon.mdc-list-item--with-two-lines.mdc-list-item--with-trailing-meta .mdc-list-item__end::before {
+	max-height: 24px;
+	height: 24px;
 }

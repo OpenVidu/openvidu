@@ -51,7 +51,6 @@
 	</div>
 
 	<div *ngIf="!isMinimal && showSettingsButton" id="settings-container" class="videoButtons">
-
 		<button
 			mat-icon-button
 			(click)="toggleVideoMenu($event)"
@@ -59,6 +58,7 @@
 			matTooltipPosition="above"
 			aria-label="Video settings menu"
 			id="video-settings-btn-{{ this._stream.streamManager?.stream?.typeOfVideo }}"
+			class="video-settings-btn"
 		>
 			<mat-icon>more_vert</mat-icon>
 		</button>

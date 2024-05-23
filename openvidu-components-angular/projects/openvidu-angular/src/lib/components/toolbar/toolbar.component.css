@@ -23,8 +23,8 @@
 #media-buttons-container:not(#media-buttons-container > button) button,
 /* Applying css for external additional buttons*/
 ::ng-deep #media-buttons-container:not(#media-buttons-container > button) button {
-	width: 40px;
-	height: 40px;
+	width: 48px;
+	height: 48px;
 	background-color: var(--ov-secondary-color);
 	margin: 6px;
 }
@@ -126,7 +126,7 @@
 #leave-btn {
 	background-color: var(--ov-warn-color) !important;
 	border-radius: var(--ov-leave-button-radius) !important;
-	width: 60px !important;
+	width: 68px !important;
 }
 
 .tooltipList {
@@ -141,13 +141,13 @@
 	top: -6px;
 }
 
-.mat-icon-button[disabled] {
+.mat-mdc-icon-button[disabled] {
 	color: #fff;
 }
 .divider {
 	margin: 8px 0px;
 }
-::ng-deep .mat-menu-item {
+::ng-deep .mat-mdc-menu-item {
 	/* margin-bottom: 10px; */
 	height: 40px;
 	line-height: 40px;

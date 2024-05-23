@@ -36,10 +36,12 @@
 	border-radius: var(--ov-panel-radius);
 }
 
+/* TODO(mdc-migration): The following rule targets internal classes of slider that may no longer apply for the MDC version. */
 ::ng-deep .mat-slider-thumb {
 	visibility: hidden;
 }
 
+/* TODO(mdc-migration): The following rule targets internal classes of slider that may no longer apply for the MDC version. */
 ::ng-deep .mat-slider-vertical .mat-slider-track-fill,
 ::ng-deep .mat-slider-vertical .mat-slider-track-background,
 ::ng-deep .mat-slider-vertical .mat-slider-track-wrapper {

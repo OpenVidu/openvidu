@@ -70,7 +70,8 @@
 		"PARTICIPANTS": {
 			"TITLE": "Participants",
 			"CAMERA": "CAMERA",
-			"SCREEN": "SCREEN"
+			"SCREEN": "SCREEN",
+			"YOU": "You"
 		},
 		"SETTINGS": {
 			"TITLE": "Settings",

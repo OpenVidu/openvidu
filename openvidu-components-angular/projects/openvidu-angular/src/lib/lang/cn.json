@@ -70,7 +70,8 @@
 		"PARTICIPANTS": {
 			"TITLE": "参与者",
 			"CAMERA": "摄像头",
-			"SCREEN": "屏幕"
+			"SCREEN": "屏幕",
+			"YOU": "你"
 		},
 		"SETTINGS": {
 			"TITLE": "设置",

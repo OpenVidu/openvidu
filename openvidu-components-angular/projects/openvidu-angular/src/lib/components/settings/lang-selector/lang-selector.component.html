@@ -1,9 +1,17 @@
 <button mat-flat-button [matMenuTriggerFor]="menu" class="lang-button">
-	<span>{{langSelected?.name}}</span>
-	<mat-icon>expand_more</mat-icon>
+	<span>
+		<span>{{ langSelected?.name }}</span>
+		<mat-icon>expand_more</mat-icon>
+	</span>
 </button>
 <mat-menu #menu="matMenu">
-	<button mat-menu-item *ngFor="let lang of languages" (click)="onLangSelected(lang.lang)" class="lang-menu-opt">
-		<span>{{lang.name}}</span>
+	<button
+		mat-menu-item
+		*ngFor="let lang of languages"
+		(click)="onLangSelected(lang.lang)"
+		[attr.id]="'lang-opt-' + lang.lang"
+		class="lang-menu-opt"
+	>
+		<span>{{ lang.name }}</span>
 	</button>
 </mat-menu>

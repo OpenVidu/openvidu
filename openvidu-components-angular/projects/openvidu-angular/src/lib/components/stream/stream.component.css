@@ -47,6 +47,15 @@
 	top: 40px;
 }
 
+.video-settings-btn mat-icon {
+	position: absolute;
+	top: 5px;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	margin: auto;
+}
+
 video {
 	-o-object-fit: cover;
 	object-fit: cover;
@@ -84,7 +93,7 @@ video {
 	background-color: var(--ov-warn-color);
 }
 
-.status-icons .mat-icon-button,
+.status-icons .mat-mdc-icon-button,
 #settings-container .mat-icon-button {
 	line-height: 0px;
 }
@@ -92,6 +101,12 @@ video {
 .status-icons mat-icon,
 #settings-container mat-icon {
 	font-size: 18px;
+	position: absolute;
+	top: 5px;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	margin: auto;
 }
 
 #settings-container {

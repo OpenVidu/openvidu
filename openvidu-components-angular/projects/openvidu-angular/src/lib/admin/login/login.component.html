@@ -9,7 +9,7 @@
 	</div>
 </div>
 
-<mat-card *ngIf="!checkingLogged">
+<mat-card appearance="outlined" *ngIf="!checkingLogged">
 	<mat-card-content>
 		<form ngNativeValidate #loginForm (ngSubmit)="login()">
 			<table class="full-width" cellspacing="0">

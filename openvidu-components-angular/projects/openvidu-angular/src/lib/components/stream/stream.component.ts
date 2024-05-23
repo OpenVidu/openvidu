@@ -1,6 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
-import { MatLegacyMenuPanel as MatMenuPanel, MatLegacyMenuTrigger as MatMenuTrigger } from '@angular/material/legacy-menu';
+import { MatMenuPanel, MatMenuTrigger } from '@angular/material/menu';
 import { PublisherProperties } from 'openvidu-browser';
 import { Subscription } from 'rxjs';
 import { VideoSizeIcon } from '../../models/icon.model';

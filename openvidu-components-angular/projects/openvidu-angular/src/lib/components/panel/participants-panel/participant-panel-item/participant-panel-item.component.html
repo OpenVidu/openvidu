@@ -1,13 +1,15 @@
 <mat-list>
 	<mat-list-item>
-		<mat-icon matListAvatar class="participant-avatar">person</mat-icon>
-		<h3 matLine class="participant-nickname">{{ _participant.nickname }}</h3>
-		<p matLine class="participant-subtitle">{{ _participant | streamTypesEnabled }}</p>
-		<!-- <p matLine>
-			<span class="participant-subtitle"></span>
-		</p> -->
+		<div matListItemIcon class="participant-avatar" [style.background-color]="_participant.colorProfile">
+			<mat-icon>person</mat-icon>
+		</div>
+		<h3 matListItemLine class="participant-nickname">
+			{{ _participant.nickname }}
+			<span *ngIf="_participant.isLocal"> ({{ 'PANEL.PARTICIPANTS.YOU' | translate }})</span>
+		</h3>
+		<p matListItemLine class="participant-subtitle">{{ _participant | streamTypesEnabled }}</p>
 
-		<div class="participant-action-buttons">
+		<div class="participant-action-buttons" matListItemMeta>
 			<button
 				mat-icon-button
 				id="mute-btn"

@@ -1,12 +1,12 @@
-<div class="panel-container" id="activities-container" fxLayout="column" fxLayoutAlign="space-evenly none">
-	<div class="panel-header-container" fxFlex="55px" fxLayoutAlign="start center">
+<div class="panel-container" id="activities-container">
+	<div class="panel-header-container">
 		<h3 class="panel-title">Activities</h3>
 		<button class="panel-close-button" mat-icon-button matTooltip="{{ 'PANEL.CLOSE' | translate }}" (click)="close()">
 			<mat-icon>close</mat-icon>
 		</button>
 	</div>
 
-	<div class="activities-body-container" fxFlex="75%" fxLayoutAlign="space-evenly none">
+	<div class="activities-body-container">
 		<mat-accordion [multi]="false">
 			<ov-recording-activity
 				*ngIf="showRecordingActivity"

@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { MatLegacyDialogRef as MatDialogRef, MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA } from '@angular/material/legacy-dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { RecordingDialogData } from '../../models/dialog.model';
 
 /**
@@ -17,11 +17,11 @@ import { RecordingDialogData } from '../../models/dialog.model';
 	`,
 	styles: [
 		`
-			video {
-				max-height: 64vh;
-				max-width: 100%;
-			}
-		`
+  			video {
+  				max-height: 64vh;
+  				max-width: 100%;
+  			}
+  		`
 	]
 })
 export class RecordingDialogComponent {

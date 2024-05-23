@@ -70,7 +70,8 @@
 		"PARTICIPANTS": {
 			"TITLE": "Teilnehmer",
 			"CAMERA": "KAMERA",
-			"SCREEN": "BILDSCHIRM"
+			"SCREEN": "BILDSCHIRM",
+			"YOU": "Sie"
 		},
 		"SETTINGS": {
 			"TITLE": "Einstellungen",

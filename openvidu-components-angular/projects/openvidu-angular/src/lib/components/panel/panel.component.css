@@ -4,11 +4,16 @@
 	border-radius: var(--ov-panel-radius);
 	max-height: calc(100% - 40px);
 	min-height: calc(100% - 40px);
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
 }
 
 .panel-header-container {
 	padding: 10px;
+	flex: inherit;
 	display: flex;
+	align-items: center;
 }
 
 .panel-title {

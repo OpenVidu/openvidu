@@ -15,8 +15,6 @@
 #toolbar ::ng-deep .lang-button {
 	height: 25px !important;
 	font-size: 14px !important;
-	line-height: 0px;
-	align-items: unset !important;
 }
 .spacer {
 	flex: 1 1 auto;
@@ -98,6 +96,7 @@ hr {
 	margin-bottom: 0px !important;
 }
 
+/* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
 .mat-form-field-appearance-fill .mat-form-field-flex {
 	/* background-color: var(--ov-text-color); */
 	border-radius: var(--ov-video-radius);

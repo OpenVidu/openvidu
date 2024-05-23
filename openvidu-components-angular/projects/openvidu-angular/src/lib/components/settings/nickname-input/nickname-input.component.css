@@ -6,7 +6,7 @@
 	margin: auto 10px auto auto;
 }
 
-#nickname-input-container button.mat-button-disabled {
+#nickname-button {
 	color: #000000 !important;
 }
 

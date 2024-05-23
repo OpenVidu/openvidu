@@ -1,9 +1,9 @@
-<mat-expansion-panel (opened)="panelOpened()" (closed)="panelClosed()" [expanded]="expanded" [ngClass]="{'no-body': !opened}">
+<mat-expansion-panel (opened)="panelOpened()" (closed)="panelClosed()" [expanded]="expanded" [ngClass]="{ 'no-body': !opened }">
 	<mat-expansion-panel-header>
 		<mat-list>
 			<mat-list-item>
 				<div
-					matListAvatar
+					matListItemIcon
 					class="activity-icon"
 					[ngClass]="{
 						started: recordingStatus === recStatusEnum.STARTED,
@@ -12,15 +12,18 @@
 						pending: recordingStatus === recStatusEnum.STARTING || recordingStatus === recStatusEnum.STOPPING
 					}"
 				>
-					<mat-icon id="recording-icon" *ngIf="recordingStatus !== recStatusEnum.FAILED && recordingStatus !== recStatusEnum.STARTED">
+					<mat-icon
+						id="recording-icon"
+						*ngIf="recordingStatus !== recStatusEnum.FAILED && recordingStatus !== recStatusEnum.STARTED"
+					>
 						video_camera_front
 					</mat-icon>
 					<mat-icon *ngIf="recordingStatus === recStatusEnum.FAILED">error</mat-icon>
 					<mat-icon class="blink" *ngIf="recordingStatus === recStatusEnum.STARTED">radio_button_checked</mat-icon>
 				</div>
-				<h3 matLine class="activity-title">{{ 'PANEL.RECORDING.TITLE' | translate }}</h3>
-				<p matLine class="activity-subtitle">{{ 'PANEL.RECORDING.SUBTITLE' | translate }}</p>
-				<div class="activity-action-buttons">
+				<h3 matListItemLine class="activity-title">{{ 'PANEL.RECORDING.TITLE' | translate }}</h3>
+				<p matListItemLine class="activity-subtitle">{{ 'PANEL.RECORDING.SUBTITLE' | translate }}</p>
+				<div class="activity-action-buttons" matListItemMeta>
 					<div
 						id="recording-status"
 						[ngClass]="{
@@ -95,9 +98,9 @@
 					</div>
 					<div mat-line class="time-container">
 						<span class="recording-duration"> {{ recording.duration | duration }} </span>
-						<span class="recording-size"> | {{ recording.size / 1024 / 1024 | number: '1.1-2' }} MBs</span>
+						<span class="recording-size"> | {{ recording.size / 1024 / 1024 | number : '1.1-2' }} MBs</span>
 					</div>
-					<div mat-line class="recording-date">{{ recording.createdAt | date: 'HH:mm - dd/MM/yyyy' }}</div>
+					<div mat-line class="recording-date">{{ recording.createdAt | date : 'HH:mm - dd/MM/yyyy' }}</div>
 
 					<button
 						mat-icon-button

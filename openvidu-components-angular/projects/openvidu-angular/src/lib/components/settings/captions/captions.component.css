@@ -2,6 +2,10 @@
 	margin-top: 10px;
 }
 
+.lang-section-item {
+	height: fit-content !important
+}
+
 .section-description {
 	color: var(--ov-panel-text-color);
 	font-size: 12px;
@@ -18,14 +22,6 @@
 	text-align: center;
 }
 
-.pro-feture p  {
+.pro-feture p {
 	font-size: 14px;
-}
-
-::ng-deep .mat-slide-toggle.mat-checked .mat-slide-toggle-bar {
-	background-color: var(--ov-tertiary-color);
-}
-
-::ng-deep .mat-slide-toggle.mat-checked .mat-slide-toggle-thumb {
-	background-color: var(--ov-light-color);
 }

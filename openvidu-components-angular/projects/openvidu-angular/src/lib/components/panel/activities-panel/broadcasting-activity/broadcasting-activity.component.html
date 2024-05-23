@@ -3,34 +3,39 @@
 		<mat-list>
 			<mat-list-item>
 				<div
-					matListAvatar
+					matListItemIcon
 					class="activity-icon"
 					[ngClass]="{
 						started: broadcastingStatus === broadcastingStatusEnum.STARTED,
 						stopped: broadcastingStatus === broadcastingStatusEnum.STOPPED,
 						failed: broadcastingStatus === broadcastingStatusEnum.FAILED,
-						pending: broadcastingStatus === broadcastingStatusEnum.STARTING || broadcastingStatus === broadcastingStatusEnum.STOPPING
+						pending:
+							broadcastingStatus === broadcastingStatusEnum.STARTING || broadcastingStatus === broadcastingStatusEnum.STOPPING
 					}"
 				>
 					<mat-icon
 						id="broadcasting-icon"
-						*ngIf="broadcastingStatus !== broadcastingStatusEnum.FAILED && broadcastingStatus !== broadcastingStatusEnum.STARTED"
+						*ngIf="
+							broadcastingStatus !== broadcastingStatusEnum.FAILED && broadcastingStatus !== broadcastingStatusEnum.STARTED
+						"
 					>
 						sensors
 					</mat-icon>
 					<mat-icon *ngIf="broadcastingStatus === broadcastingStatusEnum.FAILED">error</mat-icon>
 					<mat-icon class="blink" *ngIf="broadcastingStatus === broadcastingStatusEnum.STARTED">sensors</mat-icon>
 				</div>
-				<h3 matLine class="activity-title">{{ 'PANEL.STREAMING.TITLE' | translate }}</h3>
-				<p matLine class="activity-subtitle">{{ 'PANEL.STREAMING.SUBTITLE' | translate }}</p>
-				<div class="activity-action-buttons">
+				<h3 matListItemLine class="activity-title">{{ 'PANEL.STREAMING.TITLE' | translate }}</h3>
+				<p matListItemLine class="activity-subtitle">{{ 'PANEL.STREAMING.SUBTITLE' | translate }}</p>
+				<div class="activity-action-buttons" matListItemMeta>
 					<div
 						id="broadcasting-status"
 						[ngClass]="{
 							started: broadcastingStatus === broadcastingStatusEnum.STARTED,
 							stopped: broadcastingStatus === broadcastingStatusEnum.STOPPED,
 							failed: broadcastingStatus === broadcastingStatusEnum.FAILED,
-							pending: broadcastingStatus === broadcastingStatusEnum.STARTING || broadcastingStatus === broadcastingStatusEnum.STOPPING
+							pending:
+								broadcastingStatus === broadcastingStatusEnum.STARTING ||
+								broadcastingStatus === broadcastingStatusEnum.STOPPING
 						}"
 					>
 						<span>{{ broadcastingStatus | uppercase }}</span>
@@ -59,7 +64,9 @@
 			>
 				<input
 					placeholder="{{ 'PANEL.STREAMING.URL' | translate }}"
-					[disabled]="broadcastingStatus !== broadcastingStatusEnum.STOPPED && broadcastingStatus !== broadcastingStatusEnum.FAILED"
+					[disabled]="
+						broadcastingStatus !== broadcastingStatusEnum.STOPPED && broadcastingStatus !== broadcastingStatusEnum.FAILED
+					"
 					autocomplete="off"
 					(keypress)="eventKeyPress($event)"
 					[(ngModel)]="broadcastUrl"
@@ -70,7 +77,9 @@
 					*ngIf="broadcastingStatus !== broadcastingStatusEnum.STARTED"
 					id="broadcasting-btn"
 					[disabled]="
-						!broadcastUrl || broadcastingStatus === broadcastingStatusEnum.STARTING || broadcastingStatus === broadcastingStatusEnum.STOPPING
+						!broadcastUrl ||
+						broadcastingStatus === broadcastingStatusEnum.STARTING ||
+						broadcastingStatus === broadcastingStatusEnum.STOPPING
 					"
 					(click)="startBroadcasting()"
 				>

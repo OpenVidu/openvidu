@@ -1,4 +1,4 @@
-import { MatLegacySnackBarConfig as MatSnackBarConfig } from '@angular/material/legacy-snack-bar';
+import { MatSnackBarConfig } from '@angular/material/snack-bar';
 
 /**
  * @internal

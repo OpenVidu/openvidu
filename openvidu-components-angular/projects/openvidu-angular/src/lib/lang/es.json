@@ -70,7 +70,8 @@
 		"PARTICIPANTS": {
 			"TITLE": "Participantes",
 			"CAMERA": "CÁMARA",
-			"SCREEN": "PANTALLA"
+			"SCREEN": "PANTALLA",
+			"YOU": "Tú"
 		},
 		"SETTINGS": {
 			"TITLE": "Configuración",

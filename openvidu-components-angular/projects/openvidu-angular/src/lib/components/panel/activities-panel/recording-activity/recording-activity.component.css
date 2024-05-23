@@ -6,13 +6,23 @@
 	border-radius: var(--ov-panel-radius);
 }
 
+.recording-title {
+	margin: 0px;
+}
+
 .time-container {
 	padding: 2px;
 }
 .recording-icon {
 	font-size: 32px !important;
-	height: 32px !important;
 	width: 32px !important;
+	margin: 0 !important;
+	align-self: center !important;
+	display: flex;
+	flex-wrap: wrap;
+	height: auto;
+	align-content: center;
+	color: var(--ov-panel-text-color) !important;
 }
 
 .recording-duration {
@@ -109,6 +119,18 @@
 
 mat-expansion-panel {
 	margin: 0px 0px 5px 0px;
+}
+
+::ng-deep .mdc-list {
+	padding: 0px;
+}
+
+::ng-deep .mdc-list-item__secondary-text {
+	display: flex;
+}
+
+::ng-deep .mat-mdc-list-item-unscoped-content {
+	height: 0px !important;
 }
 
 .blink {
