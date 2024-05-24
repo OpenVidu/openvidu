@@ -20,7 +20,7 @@
 						"outputPath": "dist/openvidu-components-testapp",
 						"index": "src/index.html",
 						"main": "src/main.ts",
-						"polyfills": "src/polyfills.ts",
+						"polyfills": ["zone.js"],
 						"tsConfig": "tsconfig.app.json",
 						"aot": true,
 						"assets": ["src/favicon.ico", "src/assets"],
@@ -69,29 +69,29 @@
 				"serve": {
 					"builder": "@angular-devkit/build-angular:dev-server",
 					"options": {
-						"browserTarget": "openvidu-components-testapp:build",
-						"proxyConfig": "src/proxy.config.json"
+						"proxyConfig": "src/proxy.config.json",
+						"buildTarget": "openvidu-components-testapp:build"
 					},
 					"configurations": {
 						"development": {
-							"browserTarget": "openvidu-components-testapp:build:development"
+							"buildTarget": "openvidu-components-testapp:build:development"
 						},
 						"production": {
-							"browserTarget": "openvidu-components-testapp:build:production"
+							"buildTarget": "openvidu-components-testapp:build:production"
 						}
 					}
 				},
 				"extract-i18n": {
 					"builder": "@angular-devkit/build-angular:extract-i18n",
 					"options": {
-						"browserTarget": "openvidu-components-testapp:build"
+						"buildTarget": "openvidu-components-testapp:build"
 					}
 				},
 				"test": {
 					"builder": "@angular-devkit/build-angular:karma",
 					"options": {
 						"main": "src/test.ts",
-						"polyfills": "src/polyfills.ts",
+						"polyfills": ["zone.js"],
 						"tsConfig": "tsconfig.spec.json",
 						"karmaConfig": "karma.conf.js",
 						"assets": ["src/favicon.ico", "src/assets"],
@@ -162,7 +162,7 @@
 						"outputPath": "dist/openvidu-webcomponent-rc",
 						"index": "src/index.html",
 						"main": "src/app/openvidu-webcomponent/openvidu-webcomponent.main.ts",
-						"polyfills": "src/polyfills.ts",
+						"polyfills": ["zone.js"],
 						"tsConfig": "src/app/openvidu-webcomponent/tsconfig.openvidu-webcomponent.json",
 						"aot": true,
 						"assets": ["src/favicon.ico"],
@@ -201,8 +201,8 @@
 				}
 			}
 		}
-  },
-  "cli": {
-    "analytics": false
-  }
+	},
+	"cli": {
+		"analytics": false
+	}
 }

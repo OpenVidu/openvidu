@@ -1,14 +1,13 @@
 /* To learn more about this file see: https://angular.io/config/tsconfig. */
 {
-  "extends": "./tsconfig.lib.json",
-  "compilerOptions": {
-    "declarationMap": false,
+	"extends": "./tsconfig.lib.json",
+	"compilerOptions": {
+		"declarationMap": false,
 		"sourceMap": false,
 		"removeComments": true,
-		"pretty": false,
-		"watch": false,
-  },
-  "angularCompilerOptions": {
-    "compilationMode": "partial"
-  }
+		"pretty": false
+	},
+	"angularCompilerOptions": {
+		"compilationMode": "partial"
+	}
 }
