@@ -236,6 +236,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("One2Many [Video + Audio]");
 
+		WebElement one2ManyInput = user.getDriver().findElement(By.id("one2many-input"));
+		one2ManyInput.clear();
+		one2ManyInput.sendKeys("3");
 		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
 		user.getDriver().findElement(By.id("one2many-btn")).click();
 
