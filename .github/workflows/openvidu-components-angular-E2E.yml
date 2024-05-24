@@ -22,10 +22,10 @@ jobs:
     name: Test setup
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         ref: ${{ inputs.commit_sha || github.sha }}
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
         node-version: '20'
     - name: Commit URL
@@ -49,7 +49,7 @@ jobs:
         npm install
         npm run build && \
         npm pack
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: openvidu-browser
         path: openvidu-browser/openvidu-browser-*.tgz
@@ -60,13 +60,13 @@ jobs:
     name: OpenVidu Angular E2E tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         ref: ${{ inputs.commit_sha || github.sha }}
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
         node-version: '20'
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: openvidu-browser
         path: openvidu-components-angular
@@ -95,13 +95,13 @@ jobs:
     name: Webcomponent E2E CE tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         ref: ${{ inputs.commit_sha || github.sha }}
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
         node-version: '20'
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: openvidu-browser
         path: openvidu-components-angular
@@ -131,11 +131,11 @@ jobs:
     name: Webcomponent E2E PRO tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
       with:
         node-version: '20'
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: openvidu-browser
         path: openvidu-components-angular
