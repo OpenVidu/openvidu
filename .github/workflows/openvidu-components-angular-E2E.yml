@@ -27,7 +27,7 @@ jobs:
         ref: ${{ inputs.commit_sha || github.sha }}
     - uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '20'
     - name: Commit URL
       run: echo https://github.com/OpenVidu/openvidu/commit/${{ inputs.commit_sha || github.sha }}
     - name: Send repository dispatch event
@@ -65,7 +65,7 @@ jobs:
         ref: ${{ inputs.commit_sha || github.sha }}
     - uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '20'
     - uses: actions/download-artifact@v3
       with:
         name: openvidu-browser
@@ -100,7 +100,7 @@ jobs:
         ref: ${{ inputs.commit_sha || github.sha }}
     - uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '20'
     - uses: actions/download-artifact@v3
       with:
         name: openvidu-browser
@@ -134,7 +134,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '20'
     - uses: actions/download-artifact@v3
       with:
         name: openvidu-browser
