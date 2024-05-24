@@ -1,33 +1,12 @@
 @use '@angular/material' as mat;
-@import '@angular/material/theming';
-
-// Plus imports for other components in your app.
-
-// Include the common styles for Angular Material. We include this here so that you only
-// have to load a single css file for Angular Material in your app.
-// Be sure that you only ever include this mixin once!
-// TODO(v15): As of v15 mat.legacy-core no longer includes default typography styles.
-//  The following line adds:
-//    1. Default typography styles for all components
-//    2. Styles for typography hierarchy classes (e.g. .mat-headline-1)
-//  If you specify typography styles for the components you use elsewhere, you should delete this line.
-//  If you don't need the default component typographies but still want the hierarchy styles,
-//  you can delete this line and instead use:
-//    `@include mat.legacy-typography-hierarchy(mat.define-typography-config());`
-@include mat.all-component-typographies();
 @include mat.core();
 
-// Define the palettes for your theme using the Material Design palettes available in palette.scss
-// (imported above). For each palette, you can optionally specify a default, lighter, and darker
-// hue. Available color palettes: https://material.io/design/color/
-$openvidu-components-primary: mat-palette($mat-blue-grey, 50, 300);
-$openvidu-components-accent: mat-palette($mat-amber, 500, 700, A100);
-
-// The warn palette is optional (defaults to red).
+// Define your custom palettes
+$openvidu-components-primary: mat.define-palette(mat.$blue-grey-palette, 500, 300);
+$openvidu-components-accent: mat.define-palette(mat.$amber-palette, 500, 700, A100);
 $openvidu-components-warn: mat.define-palette(mat.$red-palette);
 
-// Create the theme object. A theme consists of configurations for individual
-// theming systems such as "color" or "typography".
+// Define the theme
 $openvidu-components-theme: mat.define-light-theme(
 	(
 		color: (
@@ -38,10 +17,14 @@ $openvidu-components-theme: mat.define-light-theme(
 	)
 );
 
-// Include theme styles for core and each component used in your app.
-// Alternatively, you can import and @include the theme mixins for each component
-// that you are using.
+// Include the non-legacy themes for the components
 @include mat.all-component-themes($openvidu-components-theme);
+
+// If you have custom typography configurations, include them as well
+@include mat.all-component-typographies($openvidu-components-theme);
+
+// If you need to adjust density, include it as well
+// @include mat.all-component-density-styles($openvidu-components-theme);
 
 @font-face {
 	font-family: 'Material Icons';
