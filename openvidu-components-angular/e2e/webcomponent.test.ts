@@ -135,8 +135,8 @@ describe('Testing API Directives', () => {
 		await browser.sleep(500);
 
 		// Checking if button panel is present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+		await utils.waitForElement('.mat-mdc-menu-content');
+		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 		// Checking if captions button is present
 		await utils.waitForElement('#toolbar-settings-btn');
@@ -301,8 +301,8 @@ describe('Testing API Directives', () => {
 		await browser.sleep(500);
 
 		// Checking if fullscreen button is not present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+		await utils.waitForElement('.mat-mdc-menu-content');
+		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 		expect(await utils.getNumberOfElements('#fullscreen-btn')).equals(0);
 
 	});
@@ -321,8 +321,8 @@ describe('Testing API Directives', () => {
 		await browser.sleep(500);
 
 		// Checking if button panel is present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+		await utils.waitForElement('.mat-mdc-menu-content');
+		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 		// Checking if captions button is not present
 		expect(await utils.isPresent('#captions-btn')).to.be.false;
@@ -351,8 +351,8 @@ describe('Testing API Directives', () => {
 		await browser.sleep(500);
 
 		// Checking if button panel is present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+		await utils.waitForElement('.mat-mdc-menu-content');
+		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 		// Checking if recording button is not present
 		expect(await utils.isPresent('#recording-btn')).to.be.false;
@@ -372,8 +372,8 @@ describe('Testing API Directives', () => {
 		await browser.sleep(500);
 
 		// Checking if button panel is present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+		await utils.waitForElement('.mat-mdc-menu-content');
+		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 		// Checking if broadcasting button is not present
 		expect(await utils.isPresent('#broadcasting-btn')).to.be.false;
@@ -393,8 +393,8 @@ describe('Testing API Directives', () => {
 		await browser.sleep(500);
 
 		// Checking if fullscreen button is not present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+		await utils.waitForElement('.mat-mdc-menu-content');
+		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 		expect(await utils.isPresent('#toolbar-settings-btn')).to.be.false;
 	});
@@ -796,7 +796,7 @@ describe('Testing videoconference EVENTS', () => {
 		await element.click();
 
 		// Clicking to fullscreen button
-		await utils.waitForElement('.mat-menu-content');
+		await utils.waitForElement('.mat-mdc-menu-content');
 
 		const fullscreenButton = await utils.waitForElement('#fullscreen-btn');
 		expect(await utils.isPresent('#fullscreen-btn')).to.be.true;
@@ -869,7 +869,7 @@ describe('Testing videoconference EVENTS', () => {
 		await browser.sleep(500);
 
 		// Clicking to recording button
-		await utils.waitForElement('.mat-menu-content');
+		await utils.waitForElement('.mat-mdc-menu-content');
 
 		await utils.waitForElement('#recording-btn');
 		expect(await utils.isPresent('#recording-btn')).to.be.true;
@@ -894,7 +894,7 @@ describe('Testing videoconference EVENTS', () => {
 
 	// 	await browser.sleep(500);
 
-	// 	await utils.waitForElement('.mat-menu-content');
+	// 	await utils.waitForElement('.mat-mdc-menu-content');
 
 	// 	await utils.waitForElement('#broadcasting-btn');
 	// 	await utils.clickOn('#broadcasting-btn');
@@ -916,7 +916,7 @@ describe('Testing videoconference EVENTS', () => {
 
 	// 	await browser.sleep(500);
 
-	// 	await utils.waitForElement('.mat-menu-content');
+	// 	await utils.waitForElement('.mat-mdc-menu-content');
 
 	// 	await utils.waitForElement('#broadcasting-btn');
 	// 	await utils.clickOn('#broadcasting-btn');
@@ -1150,8 +1150,8 @@ describe('Testing replace track with emulated devices', () => {
 		await utils.clickOn('#more-options-btn');
 
 		// Checking if button panel is present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+		await utils.waitForElement('.mat-mdc-menu-content');
+		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 		await utils.clickOn('#toolbar-settings-btn');
 
@@ -1556,8 +1556,8 @@ describe('Testing panels', () => {
 		await browser.sleep(500);
 
 		// Checking if mat menu is  present
-		element = await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+		element = await utils.waitForElement('.mat-mdc-menu-content');
+		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 		// Get settings button and click into it
 		const settingsBtn = await utils.waitForElement('#toolbar-settings-btn');
@@ -1631,8 +1631,8 @@ describe('Testing panels', () => {
 		await browser.sleep(500);
 
 		// Checking if mat menu is  present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+		await utils.waitForElement('.mat-mdc-menu-content');
+		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 		// Get settings button and click into it
 		const settingsBtn = await utils.waitForElement('#toolbar-settings-btn');
@@ -1917,8 +1917,8 @@ describe('Testing WITHOUT MEDIA DEVICES permissions', () => {
 		await browser.sleep(500);
 
 		// Checking if fullscreen button is not present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+		await utils.waitForElement('.mat-mdc-menu-content');
+		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 		await utils.clickOn('#toolbar-settings-btn');
 
@@ -1990,8 +1990,8 @@ describe('Testing PRO features with OpenVidu CE', () => {
 		await browser.sleep(500);
 
 		// Checking if button panel is present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+		await utils.waitForElement('.mat-mdc-menu-content');
+		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 		await utils.waitForElement('#virtual-bg-btn');
 		await utils.clickOn('#virtual-bg-btn');
@@ -2014,8 +2014,8 @@ describe('Testing PRO features with OpenVidu CE', () => {
 		await browser.sleep(500);
 
 		// Checking if button panel is present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+		await utils.waitForElement('.mat-mdc-menu-content');
+		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 		await utils.waitForElement('#toolbar-settings-btn');
 		expect(await utils.isPresent('#toolbar-settings-btn')).to.be.true;
@@ -2033,8 +2033,8 @@ describe('Testing PRO features with OpenVidu CE', () => {
 		await browser.sleep(500);
 
 		// Checking if button panel is present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+		await utils.waitForElement('.mat-mdc-menu-content');
+		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 		// Checking if captions button is present
 		await utils.waitForElement('#captions-btn');
@@ -2086,8 +2086,8 @@ describe('Testing PRO features with OpenVidu CE', () => {
 // 		await browser.sleep(500);
 
 // 		// Checking if button panel is present
-// 		await utils.waitForElement('.mat-menu-content');
-// 		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+// 		await utils.waitForElement('.mat-mdc-menu-content');
+// 		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 // 		// Checking if captions button is present
 // 		await utils.waitForElement('#captions-btn');
@@ -2111,8 +2111,8 @@ describe('Testing PRO features with OpenVidu CE', () => {
 // 		await browser.sleep(500);
 
 // 		// Checking if button panel is present
-// 		await utils.waitForElement('.mat-menu-content');
-// 		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+// 		await utils.waitForElement('.mat-mdc-menu-content');
+// 		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 // 		// Checking if captions button is present
 // 		await utils.waitForElement('#captions-btn');
@@ -2148,8 +2148,8 @@ describe('Testing PRO features with OpenVidu CE', () => {
 // 		await browser.sleep(500);
 
 // 		// Checking if button panel is present
-// 		await utils.waitForElement('.mat-menu-content');
-// 		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+// 		await utils.waitForElement('.mat-mdc-menu-content');
+// 		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 // 		// Checking if captions button is present
 // 		await utils.waitForElement('#captions-btn');
@@ -2191,8 +2191,8 @@ describe('Testing PRO features with OpenVidu CE', () => {
 // 		await browser.sleep(500);
 
 // 		// Checking if button panel is present
-// 		await utils.waitForElement('.mat-menu-content');
-// 		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+// 		await utils.waitForElement('.mat-mdc-menu-content');
+// 		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 // 		// Checking if captions button is present
 // 		await utils.waitForElement('#captions-btn');
@@ -2300,8 +2300,8 @@ describe('Testing WITHOUT MEDIA DEVICES permissions', () => {
 		await browser.sleep(500);
 
 		// Checking if fullscreen button is not present
-		await utils.waitForElement('.mat-menu-content');
-		expect(await utils.isPresent('.mat-menu-content')).to.be.true;
+		await utils.waitForElement('.mat-mdc-menu-content');
+		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
 
 		await utils.clickOn('#toolbar-settings-btn');
 

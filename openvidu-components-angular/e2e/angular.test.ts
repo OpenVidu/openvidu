@@ -873,7 +873,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await browser.sleep(500);
 
-		await utils.waitForElement('.mat-menu-content');
+		await utils.waitForElement('.mat-mdc-menu-content');
 
 		// Checking if fullscreen button is not present
 		expect(await utils.isPresent('#fullscreen-btn')).to.be.false;
@@ -894,7 +894,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		await utils.clickOn('#more-options-btn');
 		await browser.sleep(500);
 
-		await utils.waitForElement('.mat-menu-content');
+		await utils.waitForElement('.mat-mdc-menu-content');
 
 		// Checking if fullscreen button is not present
 		expect(await utils.isPresent('#broadcasting-btn')).to.be.false;
@@ -1181,7 +1181,7 @@ describe('Testing EVENTS', () => {
 
 		await browser.sleep(500);
 
-		await utils.waitForElement('.mat-menu-content');
+		await utils.waitForElement('.mat-mdc-menu-content');
 
 		await utils.clickOn('#fullscreen-btn');
 
