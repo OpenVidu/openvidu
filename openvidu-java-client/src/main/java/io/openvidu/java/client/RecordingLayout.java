@@ -19,7 +19,7 @@ package io.openvidu.java.client;
 
 /**
  * See
- * {@link io.openvidu.java.client.RecordingProperties#recordingLayout(RecordingLayout)}
+ * {@link io.openvidu.java.client.RecordingProperties#recordingLayout()}
  */
 public enum RecordingLayout {
 

@@ -72,6 +72,7 @@ public class Connection {
 	 * <li><code>active</code>: if the internal token of the Connection has already
 	 * been used by some user to connect to the session, and it cannot be used
 	 * again.</li>
+	 * </ul>
 	 */
 	public String getStatus() {
 		return this.status;
