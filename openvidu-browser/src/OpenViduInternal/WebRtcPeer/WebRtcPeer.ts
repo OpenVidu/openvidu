@@ -41,6 +41,7 @@ export interface WebRtcPeerConfiguration {
     onIceCandidate: (event: RTCIceCandidate) => void;
     onIceConnectionStateException: (exceptionName: ExceptionEventName, message: string, data?: any) => void;
     iceServers?: RTCIceServer[];
+    rtcConfiguration?: RTCConfiguration;
     mediaStream?: MediaStream | null;
     mode?: 'sendonly' | 'recvonly' | 'sendrecv';
     id?: string;
@@ -63,6 +64,7 @@ export class WebRtcPeer {
         this.configuration = {
             ...configuration,
             iceServers: !!configuration.iceServers && configuration.iceServers.length > 0 ? configuration.iceServers : freeice(),
+            rtcConfiguration: configuration.rtcConfiguration !== undefined ? configuration.rtcConfiguration : {},
             mediaStream: configuration.mediaStream !== undefined ? configuration.mediaStream : null,
             mode: !!configuration.mode ? configuration.mode : 'sendrecv',
             id: !!configuration.id ? configuration.id : this.generateUniqueId()
@@ -70,7 +72,13 @@ export class WebRtcPeer {
         // prettier-ignore
         logger.debug(`[WebRtcPeer] configuration:\n${JSON.stringify(this.configuration, null, 2)}`);
 
-        this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });
+        let rtcConfiguration: RTCConfiguration = this.configuration.rtcConfiguration
+            ? this.configuration.rtcConfiguration
+            : { iceServers: this.configuration.iceServers };
+        if (!rtcConfiguration.iceServers && this.configuration.iceServers) {
+            rtcConfiguration.iceServers = this.configuration.iceServers;
+        }
+        this.pc = new RTCPeerConnection(rtcConfiguration);
 
         this.pc.addEventListener('icecandidate', (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate !== null) {

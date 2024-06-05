@@ -1240,6 +1240,7 @@ export class Stream {
                 onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
                 onIceConnectionStateException: this.onIceConnectionStateExceptionHandler.bind(this),
                 iceServers: this.getIceServersConf(),
+                rtcConfiguration: this.session.openvidu.advancedConfiguration.rtcConfiguration,
                 mediaStream: this.mediaStream,
                 mediaServer: this.session.openvidu.mediaServer,
                 typeOfVideo: this.typeOfVideo ? TypeOfVideo[this.typeOfVideo] : undefined
@@ -1412,6 +1413,7 @@ export class Stream {
                 onIceCandidate: this.connection.sendIceCandidate.bind(this.connection),
                 onIceConnectionStateException: this.onIceConnectionStateExceptionHandler.bind(this),
                 iceServers: this.getIceServersConf(),
+                rtcConfiguration: this.session.openvidu.advancedConfiguration.rtcConfiguration,
                 mediaServer: this.session.openvidu.mediaServer,
                 typeOfVideo: this.typeOfVideo ? TypeOfVideo[this.typeOfVideo] : undefined
             };
@@ -1728,6 +1730,8 @@ export class Stream {
                 this.session.openvidu.advancedConfiguration.iceServers === 'freeice'
                     ? undefined
                     : this.session.openvidu.advancedConfiguration.iceServers;
+        } else if (!!this.session.openvidu.advancedConfiguration.rtcConfiguration?.iceServers) {
+            returnValue = this.session.openvidu.advancedConfiguration.rtcConfiguration.iceServers;
         } else if (this.session.openvidu.iceServers) {
             returnValue = this.session.openvidu.iceServers;
         } else {
