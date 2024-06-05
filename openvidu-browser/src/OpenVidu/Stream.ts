@@ -1726,15 +1726,19 @@ export class Stream {
     private getIceServersConf(): RTCIceServer[] | undefined {
         let returnValue;
         if (!!this.session.openvidu.advancedConfiguration.iceServers) {
+            // Priority 1: OpenViduAdvancedConfiguration.iceServers
             returnValue =
                 this.session.openvidu.advancedConfiguration.iceServers === 'freeice'
                     ? undefined
                     : this.session.openvidu.advancedConfiguration.iceServers;
         } else if (!!this.session.openvidu.advancedConfiguration.rtcConfiguration?.iceServers) {
+            // Priority 2: OpenViduAdvancedConfiguration.rtcConfiguration.iceServers
             returnValue = this.session.openvidu.advancedConfiguration.rtcConfiguration.iceServers;
         } else if (this.session.openvidu.iceServers) {
+            // Priority 3: default ICE servers sent by openvidu-server
             returnValue = this.session.openvidu.iceServers;
         } else {
+            // Priority 4: freeice STUN servers
             returnValue = undefined;
         }
         return returnValue;
