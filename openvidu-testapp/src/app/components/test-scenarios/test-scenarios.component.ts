@@ -65,10 +65,10 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
   manualTurnConf: RTCIceServer = { urls: [] };
 
   publisherProperties: PublisherProperties = {
-    audioSource: false,
+    audioSource: undefined,
     videoSource: undefined,
-    frameRate: 2,
-    resolution: '320x240',
+    frameRate: 1,
+    resolution: '80x60',
     mirror: true,
     publishAudio: true,
     publishVideo: true
@@ -205,6 +205,16 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
         });
 
         session.on('sessionDisconnected', (event: SessionDisconnectedEvent) => {
+          this.testFeedService.pushNewEvent({ user: 0, event });
+        });
+
+        session.on('reconnecting', () => {
+          const event = { cancelable: false, target: session, type: 'reconnecting', hasBeenPrevented: false, isDefaultPrevented: undefined, preventDefault: undefined, callDefaultBehavior: undefined };
+          this.testFeedService.pushNewEvent({ user: 0, event });
+        });
+
+        session.on('reconnected', () => {
+          const event = { cancelable: false, target: session, type: 'reconnected', hasBeenPrevented: false, isDefaultPrevented: undefined, preventDefault: undefined, callDefaultBehavior: undefined };
           this.testFeedService.pushNewEvent({ user: 0, event });
         });
 
