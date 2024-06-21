@@ -1,12 +1,12 @@
-# openvidu-angular
+# openvidu-angular-v2compatibility
 
 OpenVidu Components for Angular.
 
 [![License badge](https://img.shields.io/badge/license-Apache2-orange.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![OpenVidu Tests](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-ce-test.yml/badge.svg)](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-ce-test.yml)
 [![OpenVidu Tests](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-components-angular-E2E.yml/badge.svg)](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-components-angular-E2E.yml)
-[![Npm version](https://img.shields.io/npm/v/openvidu-angular?label=npm-version)](https://npmjs.org/package/openvidu-angular)
-[![Npm downloads](https://img.shields.io/npm/dw/openvidu-angular?label=npm2-downloads)](https://npmjs.org/package/openvidu-angular)
+[![Npm version](https://img.shields.io/npm/v/openvidu-angular-v2compatibility?label=npm-version)](https://npmjs.org/package/openvidu-angular-v2compatibility)
+[![Npm downloads](https://img.shields.io/npm/dw/openvidu-angular-v2compatibility?label=npm2-downloads)](https://npmjs.org/package/openvidu-angular-v2compatibility)
 
 **The easier way to build powerful OpenVidu videoconference frontend applications.**
 
@@ -21,10 +21,10 @@ ng v
 
 ## How to install it
 
-1. You need to install the openvidu-angular library in your Angular application:
+1. You need to install the openvidu-angular-v2compatibility library in your Angular application:
 
 ```
-npm install openvidu-angular
+npm install openvidu-angular-v2compatibility
 ```
 
 <br>
@@ -33,10 +33,10 @@ npm install openvidu-angular
 
 ## Configure it
 
-You need to import the openvidu-angular module in your `app.module.ts`:
+You need to import the openvidu-angular-v2compatibility module in your `app.module.ts`:
 
 ```typescript
-import { OpenViduAngularConfig, OpenViduAngularModule } from 'openvidu-angular';
+import { OpenViduAngularConfig, OpenViduAngularModule } from 'openvidu-angular-v2compatibility';
 import { environment } from 'src/environments/environment';
 
 const config: OpenViduAngularConfig = {
@@ -80,6 +80,6 @@ You can also add the default styles in your `styles.scss` file:
 OpenVidu team has created a few tutorials to help you to start using OpenVidu Angular components. You can find them [here](https://docs.openvidu.io/en/stable/components/#where-to-start).
 
 
-## openvidu-angular API
+## openvidu-angular-v2compatibility API
 
-openvidu-angular API documentation is available [here](https://docs.openvidu.io/en/stable/api/openvidu-angular/).
+openvidu-angular-v2compatibility API documentation is available [here](https://docs.openvidu.io/en/stable/api/openvidu-angular-v2compatibility/).

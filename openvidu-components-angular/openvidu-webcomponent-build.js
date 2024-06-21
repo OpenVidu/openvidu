@@ -3,6 +3,7 @@ const concat = require('concat');
 const VERSION = require('./package.json').version;
 const ovWebcomponentRCPath = './dist/openvidu-webcomponent-rc';
 const ovWebcomponentProdPath = './dist/openvidu-webcomponent';
+const bundleName = 'openvidu-webcomponent-v2compatibility-' + VERSION;
 
 module.exports.buildWebcomponent = async () => {
 	console.log('Building OpenVidu Web Component (' + VERSION + ')');
@@ -16,7 +17,7 @@ module.exports.buildWebcomponent = async () => {
 		await copyFiles(e2eWcPath);
 		await renameWebComponentTestName(e2eWcPath);
 
-		console.log(`OpenVidu Web Component (${VERSION}) built`);
+		console.log(`OpenVidu Web Component V2 Compatibility (${VERSION}) built`);
 	} catch (error) {
 		console.error(error);
 	}
@@ -27,21 +28,21 @@ async function buildElement() {
 
 	try {
 		await fs.ensureDir('./dist/openvidu-webcomponent');
-		await concat(files, `${ovWebcomponentProdPath}/openvidu-webcomponent-${VERSION}.js`);
-		await fs.copy(`${ovWebcomponentRCPath}/styles.css`, `${ovWebcomponentProdPath}/openvidu-webcomponent-${VERSION}.css`);
+		await concat(files, `${ovWebcomponentProdPath}/${bundleName}.js`);
+		await fs.copy(`${ovWebcomponentRCPath}/styles.css`, `${ovWebcomponentProdPath}/${bundleName}.css`);
 		// await fs.copy(
 		// 	"./dist/openvidu-webcomponent/assets",
 		// 	"./openvidu-webcomponent/assets"
 		// );
 	} catch (err) {
-		console.error('Error executing build function in webcomponent-builds.js');
+		console.error('Error executing buildElement function in openvidu-webcomponent-builds.js');
 		throw err;
 	}
 }
 
 function renameWebComponentTestName(dir) {
-	fs.renameSync(`${dir}/openvidu-webcomponent-${VERSION}.js`, `${dir}/openvidu-webcomponent-dev.js`);
-	fs.renameSync(`${dir}/openvidu-webcomponent-${VERSION}.css`, `${dir}/openvidu-webcomponent-dev.css`);
+	fs.renameSync(`${dir}/${bundleName}.js`, `${dir}/openvidu-webcomponent-dev.js`);
+	fs.renameSync(`${dir}/${bundleName}.css`, `${dir}/openvidu-webcomponent-dev.css`);
 }
 
 async function copyFiles(destination) {
