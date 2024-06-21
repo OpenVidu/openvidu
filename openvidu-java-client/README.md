@@ -5,12 +5,12 @@
 
 [![][OpenViduLogo]](https://openvidu.io)
 
-openvidu-java-client
+openvidu-java-client-v2compatibility
 ===
 
 - **Description**: Library for your JAVA server. It is a fully compatible and simple alternative to the REST API exposed by OpenVidu Server.
 
-- **Docs**: [openvidu-java-client API](https://docs.openvidu.io/en/stable/reference-docs/openvidu-java-client/)
+- **Docs**: [openvidu-java-client-v2compatibility API](https://docs.openvidu.io/en/stable/reference-docs/openvidu-java-client-v2compatibility/)
 
 - **Release**: [OpenVidu Artifacts](https://docs.openvidu.io/en/stable/releases/)
 

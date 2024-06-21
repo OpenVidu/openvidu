@@ -9,11 +9,11 @@
 		<version>2.0.0</version>
 	</parent>
 
-	<artifactId>openvidu-java-client</artifactId>
-	<version>2.30.0</version>
+	<artifactId>openvidu-java-client-v2compatibility</artifactId>
+	<version>3.0.0-beta1</version>
 	<packaging>jar</packaging>
 
-	<name>OpenVidu Java Client</name>
+	<name>OpenVidu Java Client V2 Compatibility</name>
 	<description>OpenVidu client for your Java backend: get sessionId's and tokens easily from your OpenVidu server</description>
 	<url>https://openvidu.io</url>
 
