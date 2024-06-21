@@ -329,7 +329,7 @@ export class Session {
                             });
                         } else {
                             logger.warn(
-                                "The closed connection wasn't fetched in OpenVidu Node Client. No changes in the collection of active connections of the Session"
+                                "The closed connection wasn't fetched in OpenVidu Node Client V2 Compatibility. No changes in the collection of active connections of the Session"
                             );
                         }
                         this.updateActiveConnectionsArray();

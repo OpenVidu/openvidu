@@ -4,7 +4,7 @@
         "axios": "1.7.1",
         "buffer": "6.0.3"
     },
-    "description": "OpenVidu Node Client",
+    "description": "OpenVidu Node Client V2 Compatibility",
     "devDependencies": {
         "@types/node": "20.12.12",
         "ts-node": "10.9.2",
@@ -14,7 +14,7 @@
     },
     "license": "Apache-2.0",
     "main": "lib/index.js",
-    "name": "openvidu-node-client",
+    "name": "openvidu-node-client-v2compatibility",
     "repository": {
         "type": "git",
         "url": "git://github.com/OpenVidu/openvidu"
@@ -24,5 +24,5 @@
         "docs": "./generate-docs.sh"
     },
     "typings": "lib/index.d.ts",
-    "version": "2.30.0"
+    "version": "3.0.0-beta1"
 }

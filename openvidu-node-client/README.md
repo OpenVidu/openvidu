@@ -5,12 +5,12 @@
 
 [![][OpenViduLogo]](https://openvidu.io)
 
-openvidu-node-client
+openvidu-node-client-v2compatibility
 ===
 
 - **Description**: Library for your NODE server. It is a fully compatible and simple alternative to the REST API exposed by OpenVidu Server.
 
-- **Docs**: [openvidu-node-client API](https://docs.openvidu.io/en/stable/reference-docs/openvidu-node-client/)
+- **Docs**: [openvidu-node-client-v2compatibility API](https://docs.openvidu.io/en/stable/reference-docs/openvidu-node-client-v2compatibility/)
 
 - **Release**: [OpenVidu Artifacts](https://docs.openvidu.io/en/stable/releases/)
 

@@ -216,7 +216,7 @@ export class OpenVidu {
                             logger.warn(
                                 "No active session found for sessionId '" +
                                     r.sessionId +
-                                    "'. This instance of OpenVidu Node Client didn't create this session"
+                                    "'. This instance of OpenVidu Node Client V2 Compatibility didn't create this session"
                             );
                         }
                         resolve(r);
@@ -263,7 +263,7 @@ export class OpenVidu {
                             logger.warn(
                                 "No active session found for sessionId '" +
                                     r.sessionId +
-                                    "'. This instance of OpenVidu Node Client didn't create this session"
+                                    "'. This instance of OpenVidu Node Client V2 Compatibility didn't create this session"
                             );
                         }
                         resolve(r);
@@ -450,7 +450,7 @@ export class OpenVidu {
                             logger.warn(
                                 "No active session found for sessionId '" +
                                     sessionId +
-                                    "'. This instance of OpenVidu Node Client didn't create this session"
+                                    "'. This instance of OpenVidu Node Client V2 Compatibility didn't create this session"
                             );
                         }
                         resolve();
@@ -500,7 +500,7 @@ export class OpenVidu {
                             logger.warn(
                                 "No active session found for sessionId '" +
                                     sessionId +
-                                    "'. This instance of OpenVidu Node Client didn't create this session"
+                                    "'. This instance of OpenVidu Node Client V2 Compatibility didn't create this session"
                             );
                         }
                         resolve();
@@ -521,7 +521,7 @@ export class OpenVidu {
      * After calling this method you can access the updated array of active sessions in {@link activeSessions}
      *
      * @returns A promise resolved to true if any Session status has changed with respect to the server, or to false if not.
-     * This applies to any property or sub-property of any of the sessions locally stored in OpenVidu Node Client
+     * This applies to any property or sub-property of any of the sessions locally stored in OpenVidu Node Client V2 Compatibility
      */
     public fetch(): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {

@@ -7,7 +7,7 @@ module.exports = {
     ],
     mode: "file",
     module: "commonjs",
-    name: "OpenVidu Node Client",
+    name: "OpenVidu Node Client V2 Compatibility",
     target: "es5",
     externalPattern: "node_modules",
     excludeExternals: true,

@@ -15,5 +15,5 @@ grep -rl '/en/stable/' src | xargs sed -i -e 's|/en/stable/|/en/'${BASEHREF_VERS
 grep -rl '/en/'${BASEHREF_VERSION}'/' src | xargs sed -i -e 's|/en/'${BASEHREF_VERSION}'/|/en/stable/|g'
 
 # Clean previous docs from openvidu.io-docs repo and copy new ones
-rm -rf ../../openvidu.io-docs/docs/api/openvidu-node-client/*
-cp -R ./docs/. ../../openvidu.io-docs/docs/api/openvidu-node-client
+rm -rf ../../openvidu.io-docs/docs/api/openvidu-node-client-v2compatibility/*
+cp -R ./docs/. ../../openvidu.io-docs/docs/api/openvidu-node-client-v2compatibility
