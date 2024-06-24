@@ -14,5 +14,5 @@
     "buffer": "^6.0.3",
     "openvidu-browser-v2compatibility": "3.0.0-dev5"
   },
-  "version": "3.0.0-dev5"
+  "version": "3.0.0-dev6"
 }
