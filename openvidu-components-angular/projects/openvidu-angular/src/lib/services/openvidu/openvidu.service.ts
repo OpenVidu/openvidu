@@ -10,7 +10,7 @@ import {
 	SignalOptions,
 	Stream,
 	StreamManager
-} from 'openvidu-browser';
+} from 'openvidu-browser-v2compatibility';
 
 import { BehaviorSubject, Observable } from 'rxjs';
 import { CameraType } from '../../models/device.model';

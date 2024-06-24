@@ -1,5 +1,5 @@
 import { fakeAsync, flush, TestBed } from '@angular/core/testing';
-import { Device } from 'openvidu-browser';
+import { Device } from 'openvidu-browser-v2compatibility';
 import { CameraType, IDevice } from '../../models/device.model';
 import { LoggerService } from '../logger/logger.service';
 import { LoggerServiceMock } from '../logger/logger.service.mock';

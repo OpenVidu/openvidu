@@ -19,7 +19,7 @@ import { PanelService } from '../../services/panel/panel.service';
 
 import { MediaChange } from '@angular/flex-layout';
 import { MatMenuTrigger } from '@angular/material/menu';
-import { Session } from 'openvidu-browser';
+import { Session } from 'openvidu-browser-v2compatibility';
 import {
 	ToolbarAdditionalButtonsDirective,
 	ToolbarAdditionalPanelButtonsDirective

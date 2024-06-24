@@ -3,7 +3,7 @@ import { Subscription } from 'rxjs';
 import { PanelService } from '../../services/panel/panel.service';
 
 import { animate, style, transition, trigger } from '@angular/animations';
-import { Session, SpeechToTextEvent } from 'openvidu-browser';
+import { Session, SpeechToTextEvent } from 'openvidu-browser-v2compatibility';
 import { CaptionModel, CaptionsLangOption } from '../../models/caption.model';
 import { PanelEvent, PanelSettingsOptions, PanelType } from '../../models/panel.model';
 import { CaptionService } from '../../services/caption/caption.service';

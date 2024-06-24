@@ -23,7 +23,7 @@ import {
 	StreamEvent,
 	StreamPropertyChangedEvent,
 	Subscriber
-} from 'openvidu-browser';
+} from 'openvidu-browser-v2compatibility';
 
 import { ILogger } from '../../models/logger.model';
 import { VideoType } from '../../models/video-type.model';

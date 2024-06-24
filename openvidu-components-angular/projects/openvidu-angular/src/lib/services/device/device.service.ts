@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Device, OpenVidu, OpenViduError, OpenViduErrorName } from 'openvidu-browser';
+import { Device, OpenVidu, OpenViduError, OpenViduErrorName } from 'openvidu-browser-v2compatibility';
 
 import { CameraType, CustomDevice, DeviceType } from '../../models/device.model';
 import { ILogger } from '../../models/logger.model';

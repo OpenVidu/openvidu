@@ -1,5 +1,5 @@
 import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
-import { PublisherProperties } from 'openvidu-browser';
+import { PublisherProperties } from 'openvidu-browser-v2compatibility';
 import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../../models/device.model';
 import { PanelType } from '../../../models/panel.model';

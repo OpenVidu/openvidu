@@ -11,7 +11,7 @@
     "@angular/platform-browser-dynamic": "17.3.10",
     "@angular/router": "17.3.10",
     "autolinker": "4.0.0",
-    "openvidu-browser": "2.30.0",
+    "openvidu-browser-v2compatibility": "^3.0.0-dev5",
     "rxjs": "7.5.7",
     "tslib": "2.3.1",
     "zone.js": "^0.14.6"

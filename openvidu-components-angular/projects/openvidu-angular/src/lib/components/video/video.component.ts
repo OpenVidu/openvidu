@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core';
-import { StreamManager } from 'openvidu-browser';
+import { StreamManager } from 'openvidu-browser-v2compatibility';
 import { VideoType } from '../../models/video-type.model';
 
 /**

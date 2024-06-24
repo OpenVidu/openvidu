@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Publisher, PublisherProperties, Subscriber } from 'openvidu-browser';
+import { Publisher, PublisherProperties, Subscriber } from 'openvidu-browser-v2compatibility';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
 import {

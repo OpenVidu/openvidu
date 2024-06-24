@@ -1,5 +1,5 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { PublisherSpeakingEvent, StreamManager } from 'openvidu-browser';
+import { PublisherSpeakingEvent, StreamManager } from 'openvidu-browser-v2compatibility';
 
 /**
  * @internal

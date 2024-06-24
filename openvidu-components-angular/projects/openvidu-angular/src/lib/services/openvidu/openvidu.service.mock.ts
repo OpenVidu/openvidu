@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Session, PublisherProperties, OpenVidu, Publisher, Connection } from 'openvidu-browser';
+import { Session, PublisherProperties, OpenVidu, Publisher, Connection } from 'openvidu-browser-v2compatibility';
 import { Signal } from '../../models/signal.model';
 
 @Injectable({

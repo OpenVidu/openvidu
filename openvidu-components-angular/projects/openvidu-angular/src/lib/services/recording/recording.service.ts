@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { RecordingEvent } from 'openvidu-browser';
+import { RecordingEvent } from 'openvidu-browser-v2compatibility';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { RecordingInfo, RecordingStatus } from '../../models/recording.model';
 import { ActionService } from '../action/action.service';

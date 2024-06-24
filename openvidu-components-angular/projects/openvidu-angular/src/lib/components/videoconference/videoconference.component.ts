@@ -11,7 +11,7 @@ import {
 	TemplateRef,
 	ViewChild
 } from '@angular/core';
-import { OpenViduErrorName, Session } from 'openvidu-browser';
+import { OpenViduErrorName, Session } from 'openvidu-browser-v2compatibility';
 import { Subscription } from 'rxjs';
 import {
 	ActivitiesPanelDirective,

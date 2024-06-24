@@ -1,4 +1,4 @@
-import { Publisher, StreamManager } from 'openvidu-browser';
+import { Publisher, StreamManager } from 'openvidu-browser-v2compatibility';
 import { VideoType } from './video-type.model';
 
 /**

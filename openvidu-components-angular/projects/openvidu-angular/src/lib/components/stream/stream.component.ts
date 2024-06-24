@@ -1,7 +1,7 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { MatMenuPanel, MatMenuTrigger } from '@angular/material/menu';
-import { PublisherProperties } from 'openvidu-browser';
+import { PublisherProperties } from 'openvidu-browser-v2compatibility';
 import { Subscription } from 'rxjs';
 import { VideoSizeIcon } from '../../models/icon.model';
 import { StreamModel } from '../../models/participant.model';
