@@ -96,6 +96,12 @@
 	margin-bottom: 20px;
 }
 
+#recording-action-buttons {
+	position: absolute;
+	bottom: 10px;
+	right: 0;
+}
+
 #start-recording-btn {
 	width: 100%;
 	background-color: var(--ov-tertiary-color);

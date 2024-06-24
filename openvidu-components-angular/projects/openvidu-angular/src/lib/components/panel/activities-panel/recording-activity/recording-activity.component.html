@@ -90,45 +90,47 @@
 		<!-- Recording list -->
 		<div *ngIf="recordingsList.length > 0" class="item">
 			<mat-list>
-				<div mat-subheader>{{ 'PANEL.RECORDING.RECORDINGS' | translate }}</div>
+				<!-- <div mat-subheader>{{ 'PANEL.RECORDING.RECORDINGS' | translate }}</div> -->
 				<mat-list-item *ngFor="let recording of recordingsList">
-					<mat-icon class="recording-icon" mat-list-icon>video_file</mat-icon>
-					<div mat-line>
+					<mat-icon class="recording-icon" matListItemIcon>video_file</mat-icon>
+					<div matListItemTitle>
 						<span class="recording-name">{{ recording.id }}</span>
 					</div>
-					<div mat-line class="time-container">
+					<div matListItemLine class="time-container">
 						<span class="recording-duration"> {{ recording.duration | duration }} </span>
 						<span class="recording-size"> | {{ recording.size / 1024 / 1024 | number : '1.1-2' }} MBs</span>
 					</div>
-					<div mat-line class="recording-date">{{ recording.createdAt | date : 'HH:mm - dd/MM/yyyy' }}</div>
+					<div matListItemLine class="recording-date">{{ recording.createdAt | date : 'HH:mm - dd/MM/yyyy' }}</div>
 
-					<button
-						mat-icon-button
-						(click)="play(recording)"
-						id="play-recording-btn"
-						matTooltip="{{ 'PANEL.RECORDING.PLAY' | translate }}"
-					>
-						<mat-icon>play_arrow</mat-icon>
-					</button>
-					<button
-						mat-icon-button
-						(click)="download(recording)"
-						id="download-recording-btn"
-						matTooltip="{{ 'PANEL.RECORDING.DOWNLOAD' | translate }}"
-					>
-						<mat-icon>download</mat-icon>
-					</button>
+					<div *ngIf="recording.status !== recStatusEnum.STARTED" id="recording-action-buttons">
+						<button
+							mat-icon-button
+							(click)="play(recording)"
+							id="play-recording-btn"
+							matTooltip="{{ 'PANEL.RECORDING.PLAY' | translate }}"
+						>
+							<mat-icon>play_arrow</mat-icon>
+						</button>
+						<button
+							mat-icon-button
+							(click)="download(recording)"
+							id="download-recording-btn"
+							matTooltip="{{ 'PANEL.RECORDING.DOWNLOAD' | translate }}"
+						>
+							<mat-icon>download</mat-icon>
+						</button>
 
-					<button
-						*ngIf="isSessionCreator"
-						mat-icon-button
-						class="delete-recording-btn"
-						id="delete-recording-btn"
-						(click)="deleteRecording(recording.id)"
-						matTooltip="{{ 'PANEL.RECORDING.DELETE' | translate }}"
-					>
-						<mat-icon>delete</mat-icon>
-					</button>
+						<button
+							*ngIf="isSessionCreator"
+							mat-icon-button
+							class="delete-recording-btn"
+							id="delete-recording-btn"
+							(click)="deleteRecording(recording.id)"
+							matTooltip="{{ 'PANEL.RECORDING.DELETE' | translate }}"
+						>
+							<mat-icon>delete</mat-icon>
+						</button>
+					</div>
 				</mat-list-item>
 			</mat-list>
 		</div>
