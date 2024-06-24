@@ -1,6 +1,6 @@
 # openvidu-angular-v2compatibility
 
-OpenVidu Components for Angular.
+OpenVidu Components v2 compatibility layer for Angular.
 
 [![License badge](https://img.shields.io/badge/license-Apache2-orange.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![OpenVidu Tests](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-ce-test.yml/badge.svg)](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-ce-test.yml)
