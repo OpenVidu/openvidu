@@ -1,6 +1,6 @@
 import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { OpenViduService, ParticipantAbstractModel, RecordingInfo, TokenModel, LangOption } from 'openvidu-angular';
-import { Session } from 'openvidu-browser';
+import { Session } from 'openvidu-browser-v2compatibility';
 import { CaptionsLangOption } from '../../../projects/openvidu-angular/src/lib/models/caption.model';
 
 /**
