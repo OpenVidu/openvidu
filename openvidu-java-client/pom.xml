@@ -10,7 +10,7 @@
 	</parent>
 
 	<artifactId>openvidu-java-client-v2compatibility</artifactId>
-	<version>3.0.0-beta1</version>
+	<version>3.0.0-beta0</version>
 	<packaging>jar</packaging>
 
 	<name>OpenVidu Java Client V2 Compatibility</name>
