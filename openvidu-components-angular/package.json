@@ -61,7 +61,7 @@
     "doc:build": "npx compodoc -c ./projects/openvidu-angular/doc/.compodocrc.json",
     "doc:clean-copy": "rm -rf ../../openvidu.io-docs/docs/api/openvidu-angular && cp -r ./docs/openvidu-angular/ ../../openvidu.io-docs/docs/api/openvidu-angular",
     "doc:serve": "npx compodoc --watch --serve -c ./projects/openvidu-angular/doc/.compodocrc.json",
-    "lib:build": "ng build openvidu-angular --configuration production && cd ./dist/openvidu-angular && npm pack",
+    "lib:build": "ng build openvidu-angular --configuration production && cd ./dist/openvidu-angular",
     "lib:copy": "cp dist/openvidu-angular/openvidu-angular-*.tgz ../../openvidu-tutorials/openvidu-call/openvidu-call-front",
     "lib:e2e": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/angular.test.js",
     "lib:e2e-ci": "cross-env LAUNCH_MODE=CI npm run lib:e2e",
@@ -78,5 +78,5 @@
     "webcomponent:e2e-pro-ci": "cross-env LAUNCH_MODE=CI npm run webcomponent:e2e-pro",
     "webcomponent:serve-testapp": "npx http-server ./e2e/webcomponent-app/ && echo http://localhost:8080/?OV_URL=https://localhost:4443&OV_SECRET=MY_SECRET&prejoin=false"
   },
-  "version": "3.0.0-dev6"
+  "version": "3.0.0-beta1"
 }
