@@ -1,3 +1,15 @@
+#spinner {
+	position: absolute;
+    top: 40%;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    text-align: -webkit-center;
+	text-align: -moz-center;
+	color: var(--ov-panel-background);
+}
+
 #session-container {
 	background-color: var(--ov-primary-color);
 	/* min-width: 400px; */

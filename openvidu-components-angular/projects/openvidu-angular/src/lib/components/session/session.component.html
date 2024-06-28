@@ -1,3 +1,8 @@
+<div id="spinner" *ngIf="preparing" >
+	<mat-spinner [diameter]="50"></mat-spinner>
+	<span>{{ 'PREJOIN.PREPARING' | translate }}</span>
+</div>
+
 <div id="session-container" *ngIf="!preparing" @sessionAnimation>
 	<mat-sidenav-container #container #videoContainer class="sidenav-container">
 		<mat-sidenav
