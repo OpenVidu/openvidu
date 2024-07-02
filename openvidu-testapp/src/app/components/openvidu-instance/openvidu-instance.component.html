@@ -1,164 +1,97 @@
 <div class="div-wrapper">
+    <div class="config-half">
+        <mat-card class="config-card">
 
-  <div class="config-half">
-    <mat-card class="join-card">
+            <mat-card-content>
+                <div class="row no-wrap-row">
 
-      <mat-card-content>
-        <form class="session-form">
+                    <mat-form-field style="margin-right: 8px" class="custom-mat-form-field">
+                        <mat-label>Room</mat-label>
+                        <input matInput placeholder="Room name" [id]="'room-name-input-' + index" [(ngModel)]="roomName"
+                            [disabled]="!!room">
+                    </mat-form-field>
 
-          <div fxLayout="row">
-            <mat-form-field style="margin-right: 10px">
-              <input matInput placeholder="Session name" [id]="'session-name-input-' + index" name="sessionName"
-                [(ngModel)]="sessionName" [disabled]="session">
-            </mat-form-field>
+                    <mat-form-field class="custom-mat-form-field">
+                        <mat-label>Participant</mat-label>
+                        <input matInput placeholder="Participant name" [id]="'participant-name-input-'+ index"
+                            [(ngModel)]="participantName" [disabled]="!!room">
+                    </mat-form-field>
 
-            <mat-form-field>
-              <input matInput placeholder="Client data" [id]="'client-data-input-'+ index" name="clientData"
-                [(ngModel)]="clientData" [disabled]="session">
-            </mat-form-field>
+                    <div class="room-btns-div">
+                        <button mat-icon-button title="Room options" [id]="'room-options-btn-' + index"
+                            class="mat-icon-custom" (click)="openRoomOptionsDialog()" [disabled]="room">
+                            <mat-icon class="mat-icon-custom-ic" aria-label="Room options button">settings</mat-icon>
+                        </button>
+                        <button mat-icon-button title="Room API" [id]="'room-api-btn-' + index" class="mat-icon-custom"
+                            (click)="openRoomApiDialog()">
+                            <mat-icon class="mat-icon-custom-ic" aria-label="Room API button">cloud_circle</mat-icon>
+                        </button>
+                        <button mat-icon-button title="Room events" [id]="'room-events-btn-' + index"
+                            class="mat-icon-custom" (click)="openRoomEventsDialog()">
+                            <mat-icon class="mat-icon-custom-ic"
+                                aria-label="Room events button">notifications</mat-icon>
+                        </button>
+                    </div>
 
-            <div fxLayout="column" class="session-btns-div">
-              <button mat-icon-button title="Session properties" [id]="'session-settings-btn-' + index"
-                class="mat-icon-custom" (click)="openSessionPropertiesDialog()" [disabled]="session">
-                <mat-icon class="mat-icon-custom-ic" aria-label="Session properties button">settings</mat-icon>
-              </button>
-              <button mat-icon-button title="Session API" [id]="'session-api-btn-' + index" class="mat-icon-custom"
-                (click)="openSessionApiDialog()">
-                <mat-icon class="mat-icon-custom-ic" aria-label="Session API button">cloud_circle</mat-icon>
-              </button>
-              <button mat-icon-button title="Session events" [id]="'session-events-btn-' + index"
-                class="mat-icon-custom" (click)="openSessionEventsDialog()">
-                <mat-icon class="mat-icon-custom-ic" aria-label="Session events button">notifications</mat-icon>
-              </button>
-              <button *ngIf="sessionAPI" mat-icon-button title="Session info" [id]="'session-info-btn-' + index"
-                      class="mat-icon-custom" (click)="openSessionInfo()">
-                <mat-icon class="mat-icon-custom-ic" aria-label="Session info button">info</mat-icon>
-              </button>
-            </div>
-          </div>
-
-          <div class="join-publish-div">
-            <button class="join-btn" mat-button (click)="joinSession()" [disabled]="session">JOIN</button>
-            <mat-checkbox class="subscribe-checkbox" name="subscribeTo" (change)="toggleSubscribeTo()"
-              [checked]="subscribeTo" [disabled]="session">Subscribe</mat-checkbox>
-            <mat-checkbox class="publish-checkbox" name="publishTo" (change)="togglePublishTo()" [checked]="publishTo"
-              [disabled]="session">Publish</mat-checkbox>
-          </div>
-
-          <div class="inner-card" fxLayout="row" fxLayoutAlign="start start">
-
-            <div fxFlex="55">
-              <div>
-                <h4>Send</h4>
-                <div>
-                  <mat-checkbox class="send-audio-checkbox" name="sendAudio" (change)="toggleSendAudio()"
-                    [checked]="publisherProperties.audioSource !== false" [disabled]="session || !publishTo">Audio
-                  </mat-checkbox>
-                  <mat-checkbox class="send-video-checkbox" name="sendVideo" (change)="toggleSendVideo()"
-                    [checked]="publisherProperties.videoSource !== false" [disabled]="session || !publishTo">Video
-                  </mat-checkbox>
                 </div>
-              </div>
-              <div style="padding-top: 5px;">
-                <h4>Enter active</h4>
-                <div>
-                  <mat-checkbox class="active-audio-checkbox" name="activeAudio"
-                    [checked]="publisherProperties.publishAudio"
-                    (change)="publisherProperties.publishAudio = !publisherProperties.publishAudio"
-                    [disabled]="session || !publishTo">Audio</mat-checkbox>
-                  <mat-checkbox class="active-video-checkbox" name="activeVideo"
-                    [checked]="publisherProperties.publishVideo"
-                    (change)="publisherProperties.publishVideo = !publisherProperties.publishVideo"
-                    [disabled]="session || !publishTo">Video</mat-checkbox>
+
+                <div class="row no-wrap-row">
+                    <button class="connect-btn" mat-button (click)="createTokenAndConnectRoom()"
+                        [disabled]="!!room">CONNECT</button>
+                    <mat-checkbox class="subscriber-checkbox" name="subscriber" [(ngModel)]="roomConf.subscriber"
+                        [disabled]="!!room">Subscriber</mat-checkbox>
+                    <mat-checkbox class="publisher-checkbox" name="publisher" [(ngModel)]="roomConf.publisher"
+                        [disabled]="!!room">Publisher</mat-checkbox>
                 </div>
-              </div>
-            </div>
+            </mat-card-content>
 
-            <div fxFlex="35">
-              <mat-radio-group [(ngModel)]="optionsVideo" (change)="updateOptionsVideo($event)"
-                [disabled]="session || !publishTo" [ngModelOptions]="{standalone: true}">
-                <div>
-                  <mat-radio-button class="video-radio" value="video">Video</mat-radio-button>
+        </mat-card>
+    </div>
+
+    <div *ngIf="room" class="room-half">
+
+        <mat-card class="room-card">
+
+            <mat-card-header style="margin-bottom: 7px">
+                <div class="row">
+                    <mat-card-title class="room-mat-card-title">{{room.name}}</mat-card-title>
+                    <div class="room-actions">
+                        <button class="message-btn" (click)="sendData()" title="Broadcast message to room">
+                            <mat-icon aria-label="Send message button">chat</mat-icon>
+                        </button>
+                        <button class="disconnect-btn" (click)="disconnectRoom()" title="Disconnect room">
+                            <mat-icon aria-label="Disconnect button">clear</mat-icon>
+                        </button>
+                    </div>
+                </div>
+            </mat-card-header>
+
+            <mat-card-content class="room-card-content">
+                <div class="event-list-flex">
+                    <div class="event-list scroll-custom">
+                        <mat-accordion [attr.id]="'room-events-' + room.localParticipant.identity">
+                            <mat-expansion-panel *ngFor="let event of events"
+                                [ngClass]="event.eventCategory === 'RoomEvent' ? 'room-event' : (event.eventCategory === 'ParticipantEvent' ? 'participant-event' : 'track-event')">
+                                <mat-expansion-panel-header
+                                    [ngClass]="event.eventType + '-' + room.localParticipant.identity"
+                                    [collapsedHeight]="'20px'" [expandedHeight]="'20px'">
+                                    {{event.eventType}}
+                                </mat-expansion-panel-header>
+                                <div class="event-content">{{event.eventDescription}}</div>
+                            </mat-expansion-panel>
+                        </mat-accordion>
+                    </div>
                 </div>
                 <div>
-                  <mat-radio-button class="screen-radio" value="screen">Screen</mat-radio-button>
+                    <app-participant class="local-participant" [participant]="room.localParticipant"
+                        [index]="index"></app-participant>
+                    <app-participant class="remote-participant" *ngFor="let participant of room.remoteParticipants | keyvalue"
+                        [participant]="participant.value" [index]="index" (sendDataToOneParticipant)="sendData($event)"></app-participant>
                 </div>
-              </mat-radio-group>
-              <mat-checkbox class="subscribe-remote-check" name="subscribeToRemote"
-                (change)="subscribeToRemote = !subscribeToRemote" [disabled]="!publishTo || session"
-                [checked]="publishTo && subscribeToRemote">Subscribe
-                <br>to remote</mat-checkbox>
-            </div>
+            </mat-card-content>
 
-            <div fxFlex="10">
-              <div fxLayout="column" class="publisher-btns-div">
-                <button mat-icon-button title="Publisher properties" [id]="'publisher-settings-btn-' + index"
-                  class="mat-icon-custom" (click)="openPublisherPropertiesDialog()" [disabled]="!publishTo">
-                  <mat-icon class="mat-icon-custom-ic" aria-label="Publisher properties button">settings</mat-icon>
-                </button>
-                <button mat-icon-button title="Add new publisher to running session" [id]="'session-api-btn-' + index"
-                  class="mat-icon-custom" [disabled]="!session || !publishTo">
-                  <mat-icon class="mat-icon-custom-ic" aria-label="Session API button">add_circle</mat-icon>
-                </button>
-              </div>
-            </div>
+        </mat-card>
 
-          </div>
-
-        </form>
-      </mat-card-content>
-
-    </mat-card>
-  </div>
-
-  <div class="session-half" *ngIf="session">
-    <mat-card class="session-card">
-      <div class="session-card-header">
-        <div class="session-card-inner">
-          <div class="session-title">{{sessionName}}</div>
-          <div class="session-actions">
-            <button *ngIf="republishPossible" class="republish-error-btn" (click)="republishAfterError()"
-              title="Re publish">
-              <mat-icon aria-label="Re publish video" style="font-size: 20px">linked_camera</mat-icon>
-            </button>
-            <button class="message-btn" (click)="sendMessage()" title="Broadcast message">
-              <mat-icon aria-label="Send message button" style="font-size: 20px">chat</mat-icon>
-            </button>
-            <button class="network-drop-btn" (click)="simulateNetworkDrop()" title="Simulate network drop">
-              <mat-icon aria-label="Simulate network drop button" style="font-size: 20px">wifi_off</mat-icon>
-            </button>
-            <button class="leave-btn" (click)="leaveSession()" title="Leave session">
-              <mat-icon aria-label="Leave button">clear</mat-icon>
-            </button>
-          </div>
-        </div>
-      </div>
-      <div *ngIf="session.connection" fxLayout>
-        <div fxFlex="140px" class="video-container">
-
-          <div class="event-list-div scroll-custom">
-            <mat-accordion [attr.id]="'events-' + session.connection.connectionId" class="event-list">
-              <mat-expansion-panel *ngFor="let event of events" class="event-item">
-                <mat-expansion-panel-header [attr.id]="event.eventName + '-' + session.connection.connectionId"
-                  [collapsedHeight]="'20px'" [expandedHeight]="'20px'" class="event-name">
-                  {{event.eventName}}
-                </mat-expansion-panel-header>
-                <div class="event-content" [ngClass]="'event-' + event.eventName">{{event.eventContent}}</div>
-              </mat-expansion-panel>
-            </mat-accordion>
-          </div>
-        </div>
-        <div [attr.id]="'remote-vid-' + session.connection.connectionId" fxFlex="240px" class="video-container">
-          <div [attr.id]="'local-vid-' + session.connection.connectionId"></div>
-          <app-video *ngIf="this.publisher" [streamManager]="this.publisher" [OV]="OV"
-            [properties]="publisherProperties" (updateEventListInParent)="updateEventFromChild($event)">
-          </app-video>
-          <app-video *ngFor="let subscriber of this.subscribers" [streamManager]="subscriber" [OV]="OV"
-            (updateEventListInParent)="updateEventFromChild($event)" (reSubbed)="updateSubscriberFromChild($event)">
-          </app-video>
-        </div>
-      </div>
-    </mat-card>
-  </div>
+    </div>
 
 </div>

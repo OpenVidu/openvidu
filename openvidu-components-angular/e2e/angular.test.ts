@@ -843,12 +843,12 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		expect(await utils.isPresent('branding-logo')).to.be.false;
 	});
 
-	it('should HIDE the DISPLAY SESSION name', async () => {
+	it('should HIDE the DISPLAY ROOM name', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovToolbar-checkbox');
 
-		await utils.clickOn('#displaySessionName-checkbox');
+		await utils.clickOn('#displayRoomName-checkbox');
 
 		await utils.clickOn('#apply-btn');
 
@@ -873,7 +873,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await browser.sleep(500);
 
-		await utils.waitForElement('.mat-mdc-menu-content');
+		await utils.waitForElement('#more-options-menu');
 
 		// Checking if fullscreen button is not present
 		expect(await utils.isPresent('#fullscreen-btn')).to.be.false;
@@ -894,7 +894,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		await utils.clickOn('#more-options-btn');
 		await browser.sleep(500);
 
-		await utils.waitForElement('.mat-mdc-menu-content');
+		await utils.waitForElement('#more-options-menu');
 
 		// Checking if fullscreen button is not present
 		expect(await utils.isPresent('#broadcasting-btn')).to.be.false;
@@ -955,7 +955,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		await utils.waitForElement('#session-container');
 		await utils.waitForElement('#custom-stream');
 
-		expect(await utils.isPresent('nickname-container')).to.be.false;
+		expect(await utils.isPresent('participant-name-container')).to.be.false;
 	});
 
 	it('should HIDE the SETTINGS button', async () => {
@@ -1181,7 +1181,7 @@ describe('Testing EVENTS', () => {
 
 		await browser.sleep(500);
 
-		await utils.waitForElement('.mat-mdc-menu-content');
+		await utils.waitForElement('#more-options-menu');
 
 		await utils.clickOn('#fullscreen-btn');
 

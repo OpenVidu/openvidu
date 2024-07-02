@@ -1,10 +1,8 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
-
+import { AfterViewInit, Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { BroadcastingError, PanelService } from 'openvidu-angular';
-import { Subscription, throwError as observableThrowError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { PanelService } from 'openvidu-components-angular';
+import { Subscription } from 'rxjs';
+import { RestService } from '../services/rest.service';
 
 interface TemplateDirectives {
 	name: string;
@@ -32,11 +30,6 @@ enum StructuralDirectives {
 }
 
 export enum AttributeDirective {
-	// MINIMAL = 'minimal',
-	// PARTICIPANT_NAME = 'participantName',
-	// PREJOIN = 'prejoin',
-	// VIDEO_MUTED = 'videoMuted',
-	// AUDIO_MUTED = 'audioMuted',
 	TOOLBAR_SCREENSHARE = 'screenshareButton',
 	TOOLBAR_FULLSCREEN = 'fullscreenButton',
 	TOOLBAR_BROADCASTING = 'broadcastingButton',
@@ -44,15 +37,14 @@ export enum AttributeDirective {
 	TOOLBAR_PARTICIPANTS_PANEL = 'participantsPanelButton',
 	TOOLBAR_ACTIVITIES_PANEL = 'activitiesPanelButton',
 	TOOLBAR_CHAT_PANEL = 'chatPanelButton',
-	TOOLBAR_DISPLAY_SESSION = 'displaySessionName',
+	TOOLBAR_DISPLAY_ROOM = 'displayRoomName',
 	TOOLBAR_DISPLAY_LOGO = 'displayLogo',
 	STREAM_PARTICIPANT_NAME = 'displayParticipantName',
 	STREAM_AUDIO_DETECTION = 'displayAudioDetection',
 	STREAM_SETTINGS = 'settingsButton',
 	PARTICIPANT_ITEM_MUTE = 'muteButton',
 	ACTIVITIES_PANEL_RECORDING_ACTIVITY = 'recordingActivity',
-	ACTIVITIES_PANEL_BROADCASTING_ACTIVITY = 'broadcastingActivity',
-	ACTIVITIES_PANEL_BROADCASTING_ERROR = 'broadcastingError'
+	ACTIVITIES_PANEL_BROADCASTING_ACTIVITY = 'broadcastingActivity'
 }
 
 @Component({
@@ -60,10 +52,8 @@ export enum AttributeDirective {
 	templateUrl: './testing.component.html',
 	styleUrls: ['./testing.component.scss']
 })
-export class TestingComponent implements OnInit {
-	OPENVIDU_SERVER_URL = 'http://localhost:4443';
-	OPENVIDU_SERVER_SECRET = 'MY_SECRET';
-	sessionId: string;
+export class TestingComponent implements AfterViewInit {
+	roomName: string;
 	templateDirectives: TemplateDirectives[] = [
 		{
 			name: StructuralDirectives.TOOLBAR,
@@ -98,7 +88,7 @@ export class TestingComponent implements OnInit {
 			directives: [
 				{ name: AttributeDirective.TOOLBAR_CHAT_PANEL, checked: true },
 				{ name: AttributeDirective.TOOLBAR_DISPLAY_LOGO, checked: true },
-				{ name: AttributeDirective.TOOLBAR_DISPLAY_SESSION, checked: true },
+				{ name: AttributeDirective.TOOLBAR_DISPLAY_ROOM, checked: true },
 				{ name: AttributeDirective.TOOLBAR_FULLSCREEN, checked: true },
 				{ name: AttributeDirective.TOOLBAR_BROADCASTING, checked: true },
 				{ name: AttributeDirective.TOOLBAR_LEAVE, checked: true },
@@ -123,8 +113,7 @@ export class TestingComponent implements OnInit {
 			component: StructuralDirectives.ACTIVITIES_PANEL,
 			directives: [
 				{ name: AttributeDirective.ACTIVITIES_PANEL_RECORDING_ACTIVITY, checked: true },
-				{ name: AttributeDirective.ACTIVITIES_PANEL_BROADCASTING_ACTIVITY, checked: true },
-				{ name: AttributeDirective.ACTIVITIES_PANEL_BROADCASTING_ERROR, checked: false }
+				{ name: AttributeDirective.ACTIVITIES_PANEL_BROADCASTING_ACTIVITY, checked: true }
 			]
 		}
 	];
@@ -145,7 +134,7 @@ export class TestingComponent implements OnInit {
 
 	displayLogo = true;
 	chatPanelBtn = true;
-	displaySessionId = true;
+	displayRoomName = true;
 	fullscreenBtn = true;
 	leaveBtn = true;
 	participantsPanelBtn = true;
@@ -153,37 +142,24 @@ export class TestingComponent implements OnInit {
 	screenshareBtn = true;
 	audioDetection = true;
 	participantName = true;
-	settingsBtn = true;
+	videoControls = true;
 	participantItemMuteBtn = true;
 	broadcastingActivity = true;
 	broadcastingBtn = true;
 
-	tokens: { webcam: any; screen: any };
+	token: string;
 
 	subscription: Subscription;
-	broadcastingError: BroadcastingError | undefined;
 
 	recordingActivity = true;
 
-	constructor(private httpClient: HttpClient, private route: ActivatedRoute, private panelService: PanelService) {}
+	constructor(
+		private restService: RestService,
+		private route: ActivatedRoute,
+		private panelService: PanelService
+	) {}
 
-	ngOnInit() {
-		this.subscription = this.route.queryParams.subscribe(async (params) => {
-			console.warn(params);
-			if (params?.sessionId) {
-				this.sessionId = params.sessionId;
-			} else {
-				this.sessionId = `testingSession-${(Math.random() + 1).toString(36).substring(7)}`;
-			}
-
-			console.warn('SESSION ID', this.sessionId);
-			this.tokens = {
-				webcam: await this.getToken(this.sessionId),
-				screen: await this.getToken(this.sessionId)
-			};
-		});
-		this.subscription.unsubscribe();
-	}
+	ngAfterViewInit() {}
 
 	appendElement(id: string) {
 		console.log(id);
@@ -256,8 +232,8 @@ export class TestingComponent implements OnInit {
 				this.displayLogo = value;
 				break;
 
-			case AttributeDirective.TOOLBAR_DISPLAY_SESSION:
-				this.displaySessionId = value;
+			case AttributeDirective.TOOLBAR_DISPLAY_ROOM:
+				this.displayRoomName = value;
 				break;
 
 			case AttributeDirective.TOOLBAR_FULLSCREEN:
@@ -288,7 +264,7 @@ export class TestingComponent implements OnInit {
 				break;
 
 			case AttributeDirective.STREAM_SETTINGS:
-				this.settingsBtn = value;
+				this.videoControls = value;
 				break;
 			case AttributeDirective.PARTICIPANT_ITEM_MUTE:
 				this.participantItemMuteBtn = value;
@@ -299,10 +275,6 @@ export class TestingComponent implements OnInit {
 			case AttributeDirective.ACTIVITIES_PANEL_BROADCASTING_ACTIVITY:
 				this.broadcastingActivity = value;
 				break;
-
-			case AttributeDirective.ACTIVITIES_PANEL_BROADCASTING_ERROR:
-				this.broadcastingError = { message: 'TEST_ERROR', broadcastAvailable: true };
-				break;
 			default:
 				break;
 		}
@@ -310,6 +282,17 @@ export class TestingComponent implements OnInit {
 
 	apply() {
 		this.showDirectives = false;
+		this.subscription = this.route.queryParams.subscribe(async (params) => {
+			console.warn(params);
+			if (params?.sessionId) {
+				this.roomName = params.sessionId;
+			} else {
+				this.roomName = `testingSession-${(Math.random() + 1).toString(36).substring(7)}`;
+			}
+
+			this.token = await this.getToken(this.roomName);
+		});
+		this.subscription.unsubscribe();
 	}
 
 	toggleMyPanel(type: string) {
@@ -328,74 +311,8 @@ export class TestingComponent implements OnInit {
 	 *   3) The Connection.token must be consumed in Session.connect() method
 	 */
 
-	async getToken(sessionId: string): Promise<string> {
-		const id = await this.createSession(sessionId);
-		return await this.createConnection(id);
-	}
-
-	createSession(sessionId: string) {
-		return new Promise((resolve, reject) => {
-			const body = JSON.stringify({ customSessionId: sessionId });
-			const options = {
-				headers: new HttpHeaders({
-					Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + this.OPENVIDU_SERVER_SECRET),
-					'Content-Type': 'application/json'
-				})
-			};
-			return this.httpClient
-				.post(this.OPENVIDU_SERVER_URL + '/openvidu/api/sessions', body, options)
-				.pipe(
-					catchError((error) => {
-						if (error.status === 409) {
-							resolve(sessionId);
-						} else {
-							console.warn(
-								'No connection to OpenVidu Server. This may be a certificate error at ' + this.OPENVIDU_SERVER_URL
-							);
-							if (
-								window.confirm(
-									'No connection to OpenVidu Server. This may be a certificate error at "' +
-										this.OPENVIDU_SERVER_URL +
-										'"\n\nClick OK to navigate and accept it. If no certificate warning is shown, then check that your OpenVidu Server' +
-										'is up and running at "' +
-										this.OPENVIDU_SERVER_URL +
-										'"'
-								)
-							) {
-								location.assign(this.OPENVIDU_SERVER_URL + '/accept-certificate');
-							}
-						}
-						return observableThrowError(error);
-					})
-				)
-				.subscribe((response) => {
-					console.log(response);
-					resolve(response['id']);
-				});
-		});
-	}
-
-	createConnection(sessionId): Promise<string> {
-		return new Promise((resolve, reject) => {
-			const body = { role: 'MODERATOR' };
-			const options = {
-				headers: new HttpHeaders({
-					Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + this.OPENVIDU_SERVER_SECRET),
-					'Content-Type': 'application/json'
-				})
-			};
-			return this.httpClient
-				.post(this.OPENVIDU_SERVER_URL + '/openvidu/api/sessions/' + sessionId + '/connection', body, options)
-				.pipe(
-					catchError((error) => {
-						reject(error);
-						return observableThrowError(error);
-					})
-				)
-				.subscribe((response) => {
-					console.log(response);
-					resolve(response['token']);
-				});
-		});
+	async getToken(roomName: string): Promise<string> {
+		const response = await this.restService.getTokenFromBackend(roomName, Math.random().toString(36).substring(7));
+		return response.token;
 	}
 }

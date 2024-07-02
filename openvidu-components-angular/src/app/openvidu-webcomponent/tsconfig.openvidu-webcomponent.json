@@ -1,19 +1,12 @@
 {
-    "extends": "../../../tsconfig.base.json",
-    "compilerOptions": {
-      "outDir": "../../../out-tsc/app",
-      "types": [],
-      "paths": {
-        "openvidu-angular": [
-          "dist/openvidu-angular"
-        ]
-      }
-    },
-    "files": [
-      "./openvidu-webcomponent.main.ts",
-      "../../polyfills.ts"
-    ],
-    "include": [
-      "src/**/*.d.ts"
-    ]
-  }
+	"extends": "../../../tsconfig.base.json",
+	"compilerOptions": {
+		"outDir": "../../../out-tsc/app",
+		"types": [],
+		"paths": {
+			"openvidu-components-angular": ["dist/openvidu-components-angular"]
+		}
+	},
+	"files": ["./openvidu-webcomponent.main.ts"],
+	"include": ["src/**/*.d.ts"]
+}

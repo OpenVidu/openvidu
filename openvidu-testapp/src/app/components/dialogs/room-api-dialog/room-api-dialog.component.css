@@ -1,0 +1,123 @@
+#response-text-area {
+  width: 100%;
+  color: #808080;
+  margin-top: 10px;
+}
+
+#response-text-area textarea {
+  height: 25vh;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+mat-dialog-content {
+  padding-bottom: 0 !important;
+}
+
+mat-dialog-content .button-group button,
+mat-divider {
+  margin-bottom: 5px;
+}
+
+mat-dialog-content button {
+  height: 30px;
+  line-height: 30px;
+  padding-left: 10px;
+  padding-right: 10px;
+  display: inline-flex;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.54);
+  font-weight: 400;
+  margin-bottom: 5px;
+  margin-top: 13px
+}
+
+.inner-text-input {
+  margin-left: 6px;
+  width: 22%;
+}
+
+#clear-response-text-area-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin-top: 16px;
+}
+
+mat-checkbox {
+  font-size: 12px;
+  --mdc-checkbox-state-layer-size: 16px;
+}
+
+mat-checkbox ::ng-deep .mdc-checkbox__background {
+  width: 0.75rem;
+  height: 0.75rem;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.button-group {
+  margin-top: 8px;
+}
+
+#ingress-input-type-select {
+  margin-bottom: 5px;
+  margin-left: 3px;
+}
+
+.egress-output {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+
+.egress-output-container {
+  display: block;
+  text-align: center;
+  min-width: 22%;
+}
+
+.egress-output-container>mat-checkbox {
+  width: 100%;
+  margin-bottom: 7px;
+}
+
+.egress-output-div {
+  width: 100%;
+}
+
+#rmpt-urls input {
+  font-size: 13px;
+}
+
+::ng-deep #rmpt-urls div.mat-mdc-form-field-infix {
+  width: 100%;
+}
+
+#s3-endpoint input {
+  font-size: 11px;
+}
+
+.remove-element-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+mat-chip-row {
+  font-size: 13px;
+  --mdc-chip-container-height: 25px !important;
+}
+
+#segment-duration {
+  width: 150px;
+}
+
+.room-composite-options mat-checkbox {
+  margin-left: 7px;
+}

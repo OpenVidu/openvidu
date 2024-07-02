@@ -1,0 +1,158 @@
+{
+	"ADMIN": {
+		"LOGIN": "登录",
+		"USERNAME": "用户名",
+		"USERNAME_REQUIRED": "需要用户名",
+		"PASSWORD": "密码",
+		"PASSWORD_REQUIRED": "需要密码",
+		"DASHBOARD_TITLE": "OpenVidu 通话仪表盘",
+		"LOAD_MORE": "加载更多",
+		"RECORDINGS": {
+			"EMPTY": "没有录音",
+			"SEARCH": "搜索录音",
+			"DATE_START": "开始日期",
+			"DATE_END": "结束日期",
+			"DURATION": "期间",
+			"SIZE": "尺寸",
+			"STATUS": "地位",
+			"NAME": "姓名",
+			"ROOM": "房间",
+			"OUTPUT": "输出方式"
+		},
+		"POWERED_BY": "动力 b"
+	},
+	"ROOM": {
+		"JOINING": "正在加入房间..."
+	},
+	"PREJOIN": {
+		"NICKNAME_SECTION": "设置你的绰号",
+		"NICKNAME": "昵称",
+		"NICKNAME_REQUIRED": "需要昵称",
+		"DEVICE_SECTION": "选择你的设备",
+		"VIDEO_DEVICE": "视频设备",
+		"AUDIO_DEVICE": "音频设备",
+		"NO_VIDEO_DEVICE": "未找到视频设备",
+		"NO_AUDIO_DEVICE": "未找到音频设备",
+		"JOIN": "加入会话",
+		"PREPARING": "筹备会议"
+	},
+	"TOOLBAR": {
+		"MUTE_AUDIO": "将你的音频静音",
+		"UNMUTE_AUDIO": "取消音频静音",
+		"STOP_VIDEO": "停止视频",
+		"START_VIDEO": "开始视频",
+		"ENABLE_SCREEN": "启用屏幕共享",
+		"DISABLE_SCREEN": "禁用屏幕共享",
+		"MORE_OPTIONS": "更多选项",
+		"FULLSCREEN": "全屏",
+		"EXIT_FULLSCREEN": "退出全屏",
+		"ENABLE_CAPTIONS": "启用字幕",
+		"DISABLE_CAPTIONS": "禁用字幕",
+		"BACKGROUND": "背景效果",
+		"START_RECORDING": "开始录音",
+		"STOP_RECORDING": "停止录制",
+		"SETTINGS": "设置",
+		"LEAVE": "离开会议",
+		"PARTICIPANTS": "参与者",
+		"CHAT": "聊天",
+		"ACTIVITIES": "活动"
+	},
+	"STREAM": {
+		"SETTINGS": "设置",
+		"MUTE_SOUND": "静音",
+		"UNMUTE_SOUND": "取消静音",
+		"ZOOM_IN": "放大",
+		"ZOOM_OUT": "缩小",
+		"REPLACE_SCREEN": "更换屏幕",
+		"PIN": "固定",
+		"UNPIN": "取消固定",
+		"MINIMIZE": "最小化",
+		"MAXIMIZE": "最大化"
+	},
+	"PANEL": {
+		"CLOSE": "关闭",
+		"SEE_MORE": "查看更多",
+		"PRO_FEATURE": "此功能属于OpenVidu PRO级别",
+		"PAID_FEATURE": "此功能是 OpenVidu 商业服务的一部分。请通过 commercial@openvidu.io 联系我们了解更多信息。",
+		"CHAT": {
+			"TITLE": "聊天",
+			"YOU": "你",
+			"SUBTITLE": "信息将在会议结束时被删除",
+			"PLACEHOLDER": "发送消息...",
+			"SEND": "发送",
+			"MESSAGE_SENT_NOTIFICATION": "消息已发送",
+			"OPEN_CHAT": "打开"
+		},
+		"PARTICIPANTS": {
+			"TITLE": "参与者",
+			"CAMERA": "摄像头",
+			"MICROPHONE": "麦克风",
+			"SCREEN": "屏幕",
+			"NO_STREAMS": "无",
+			"YOU": "你"
+		},
+		"SETTINGS": {
+			"TITLE": "设置",
+			"GENERAL": "一般的",
+			"VIDEO": "视频",
+			"AUDIO": "声音的",
+			"LANGUAGE": "语",
+			"CAPTIONS": "字幕",
+			"DISABLED_AUDIO": "没有音频设备",
+			"DISABLED_VIDEO": "没有视频设备",
+			"CAPTIONS_LANG_TEXT": "选择会话参与者将使用的语言。字幕将以该语言显示。"
+		},
+		"BACKGROUND": {
+			"TITLE": "背景效果",
+			"BLURRED_SECTION": "没有效果和模糊的背景",
+			"NO_EFFECTS": "没有背景效果",
+			"BLURRED_EFFECT": "模糊的背景",
+			"IMAGES_SECTION": "背景图像"
+		},
+		"RECORDING": {
+			"TITLE": "录音",
+			"SUBTITLE": "为后人记录你的会议",
+			"CONTENT_TITLE": "记录你的视频通话",
+			"CONTENT_SUBTITLE": "当录音完成后，你将可以轻松地下载它",
+			"STARTING": "开始录音",
+			"STOPPING": "停止录制",
+			"IN_PROGRESS": "录音中",
+			"PLAY": "玩",
+			"DELETE": "删除",
+			"CANCEL": "取消",
+			"ACCEPT": "接受",
+			"DELETE_QUESTION": "您确定要删除录音吗",
+			"DOWNLOAD": "下载",
+			"RECORDINGS": "录制",
+			"NO_MODERATOR": "只有主持人可以开始录音"
+		},
+		"STREAMING": {
+			"TITLE": "直播",
+			"SUBTITLE": "向观众直播您的会议",
+			"CONTENT_SUBTITLE": "OpenVidu需要直播平台的网址。",
+			"START": "开始直播",
+			"STOP": "结束直播",
+			"URL": "插入您的直播网址",
+			"CANCEL": "取消",
+			"REQUIRED_URL": "需要提供直播网址",
+			"NO_MODERATOR": "只有MODERATOR才能开始直播"
+		}
+	},
+	"ERRORS": {
+		"SESSION": "连接到会话时有错误",
+		"CONNECTION": "连接丢失",
+		"RECONNECT": "试图重新连接到会话",
+		"TOGGLE_CAMERA": "切换相机时出现错误",
+		"TOGGLE_MICROPHONE": "切换麦克风时出现错误",
+		"SCREEN_SHARING": "分享屏幕出错",
+		"SCREEN_SUPPORT": "您的浏览器不支持屏幕共享",
+		"MEDIA_ACCESS": "不允许访问媒体设备",
+		"DEVICE_NOT_FOUND": "没有找到视频或音频设备 请至少连接一个",
+		"SST_CONNECTION": "连接丢失。正在重新连接到语音到文本服务",
+		"LOAD_RECORDING_TITLE": "加载录音时出错",
+		"MEDIA_ERR_GENERIC": "加载视频时发生错误。",
+		"MEDIA_ERR_NETWORK": "网络错误导致视频下载中途失败。",
+		"MEDIA_ERR_DECODE": "由于损坏问题或视频使用了您的浏览器不支持的功能，视频播放被中止。",
+		"MEDIA_ERR_SRC_NOT_SUPPORTED": "流媒体录制错误：无法访问 S3。"
+	}
+}

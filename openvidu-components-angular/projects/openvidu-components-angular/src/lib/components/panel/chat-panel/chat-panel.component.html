@@ -1,0 +1,43 @@
+<div class="panel-container" id="chat-container">
+	<div class="panel-header-container">
+		<h3 class="panel-title">{{ 'PANEL.CHAT.TITLE' | translate }}</h3>
+		<button class="panel-close-button" mat-icon-button matTooltip="{{ 'PANEL.CLOSE' | translate }}" (click)="close()">
+			<mat-icon>close</mat-icon>
+		</button>
+	</div>
+
+	<div class="text-container">
+		<p class="text-info">{{ 'PANEL.CHAT.SUBTITLE' | translate }}</p>
+	</div>
+
+	<div class="messages-container" #chatScroll>
+		<div *ngFor="let data of messageList" class="message" [ngClass]="data.isLocal ? 'right' : 'left'">
+			<div class="msg-detail">
+				<div class="participant-name-container">
+					<p *ngIf="data.isLocal">{{ 'PANEL.CHAT.YOU' | translate }}</p>
+					<p *ngIf="!data.isLocal">{{ data.participantName }}</p>
+				</div>
+				<div class="msg-content">
+					<p [innerHTML]="data.message | linkify"></p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="input-container">
+		<textarea
+			#chatInput
+			maxlength="500"
+			rows="4"
+			placeholder="{{ 'PANEL.CHAT.PLACEHOLDER' | translate }}"
+			autocomplete="off"
+			(keypress)="eventKeyPress($event)"
+			[(ngModel)]="message"
+			id="chat-input"
+			[ngClass]="{ 'vertical-align': !message }"
+		></textarea>
+		<button mat-icon-button id="send-btn" (click)="sendMessage()" matTooltip="{{ 'PANEL.CHAT.SEND' | translate }}">
+			<mat-icon>send</mat-icon>
+		</button>
+	</div>
+</div>

@@ -1,28 +1,52 @@
-import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { OpenViduService, ParticipantAbstractModel, RecordingInfo, TokenModel, LangOption } from 'openvidu-angular';
-import { Session } from 'openvidu-browser-v2compatibility';
-import { CaptionsLangOption } from '../../../projects/openvidu-angular/src/lib/models/caption.model';
+import { Component, ElementRef, EventEmitter, Input, Output } from '@angular/core';
+import { OpenViduService, ParticipantModel, Room } from 'openvidu-components-angular';
+// import { CaptionsLangOption } from '../../../projects/openvidu-components-angular/src/lib/models/caption.model';
+import { CustomDevice } from '../../../projects/openvidu-components-angular/src/lib/models/device.model';
+import {
+	ActivitiesPanelStatusEvent,
+	ChatPanelStatusEvent,
+	ParticipantsPanelStatusEvent,
+	SettingsPanelStatusEvent
+} from '../../../projects/openvidu-components-angular/src/lib/models/panel.model';
+import {
+	RecordingDeleteRequestedEvent,
+	RecordingDownloadClickedEvent,
+	RecordingPlayClickedEvent,
+	RecordingStartRequestedEvent,
+	RecordingStopRequestedEvent
+} from '../../../projects/openvidu-components-angular/src/lib/models/recording.model';
+import {
+	BroadcastingStartRequestedEvent,
+	BroadcastingStopRequestedEvent
+} from '../../../projects/openvidu-components-angular/src/lib/models/broadcasting.model';
+import { LangOption } from '../../../projects/openvidu-components-angular/src/lib/models/lang.model';
 
 /**
  *
- * **OpenviduWebComponentComponent** is a wrapper of the {@link VideoconferenceComponent} which allows to generate and export the OpenVidu Webcomponent.
- * **It is not included in the library**.
+ * The **OpenviduWebComponentComponent** serves as a bridge to create and export the **OpenVidu Webcomponent**.
+ * It acts as an intermediary interface to the web component, it is not part of the Angular library.
+ *
  */
 @Component({
 	templateUrl: './openvidu-webcomponent.component.html'
 })
-export class OpenviduWebComponentComponent implements OnInit {
+export class OpenviduWebComponentComponent {
 	/**
 	 * @internal
 	 */
-	_tokens: TokenModel;
+	_livekitUrl: string;
+	/**
+	 * @internal
+	 */
+	_token: string;
+	/**
+	 * @internal
+	 */
+	_tokenError: string;
 	/**
 	 * @internal
 	 */
 	_minimal: boolean = false;
-	/**
-	 * @internal
-	 */
 
 	/**
 	 * @internal
@@ -32,17 +56,17 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
-	_captionsLang: string = '';
-
-	/**
-	 * @internal
-	 */
 	_langOptions: LangOption;
 
 	/**
 	 * @internal
 	 */
-	_captionsLangOptions: CaptionsLangOption;
+	_captionsLang: string = '';
+
+	/**
+	 * @internal
+	 */
+	// _captionsLangOptions: CaptionsLangOption;
 
 	/**
 	 * @internal
@@ -55,16 +79,11 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
-	_videoMuted: boolean = false;
+	_videoEnabled: boolean = false;
 	/**
 	 * @internal
 	 */
-	_audioMuted: boolean = false;
-
-	/**
-	 * @internal
-	 */
-	_simulcast: boolean = false;
+	_audioEnabled: boolean = false;
 	/**
 	 * @internal
 	 */
@@ -112,11 +131,12 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
-	_toolbarDisplaySessionName: boolean = true;
+	_toolbarDisplayRoomName: boolean = true;
 	/**
 	 * @internal
 	 */
-	_toolbarCaptionsButton: boolean = true;
+
+	// _toolbarCaptionsButton: boolean = true;
 	/**
 	 * @internal
 	 */
@@ -128,23 +148,12 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
-	_streamSettingsButton: boolean = true;
-	/**
-	 * @internal
-	 */
-	_streamResolution: string = '640x480';
-	/**
-	 * @internal
-	 */
-	_streamFrameRate: number = 30;
+	_streamVideoControls: boolean = true;
 	/**
 	 * @internal
 	 */
 	_participantPanelItemMuteButton: boolean = true;
-	/**
-	 * @internal
-	 */
-	_recordingActivityRecordingError: any = null;
+
 	/**
 	 * @internal
 	 */
@@ -153,16 +162,6 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * @internal
 	 */
 	_activitiesPanelBroadcastingActivity: boolean = true;
-
-	/**
-	 * @internal
-	 */
-	_recordingActivityRecordingsList: RecordingInfo[] = [];
-
-	/**
-	 * @internal
-	 */
-	_broadcastingActivityBroadcastingError: any;
 
 	/**
 	 * The **minimal** attribute applies a minimal UI hiding all controls except for cam and mic.
@@ -185,19 +184,6 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 */
 	@Input() set lang(value: string) {
 		this._lang = value;
-	}
-	/**
-	 * The **captionsLang** attribute sets the deafult language that OpenVidu will try to recognise.
-	 *
-	 * It must be a valid [BCP-47](https://tools.ietf.org/html/bcp47) language tag like "en-US" or "es-ES".
-	 *
-	 * Default: `en-US`
-	 *
-	 * @example
-	 * <openvidu-webcomponent captions-lang="es-ES"></openvidu-webcomponent>
-	 */
-	@Input() set captionsLang(value: string) {
-		this._captionsLang = value;
 	}
 
 	/**
@@ -233,6 +219,20 @@ export class OpenviduWebComponentComponent implements OnInit {
 	}
 
 	/**
+	 * The **captionsLang** attribute sets the deafult language that OpenVidu will try to recognise.
+	 *
+	 * It must be a valid [BCP-47](https://tools.ietf.org/html/bcp47) language tag like "en-US" or "es-ES".
+	 *
+	 * Default: `en-US`
+	 *
+	 * @example
+	 * <openvidu-webcomponent captions-lang="es-ES"></openvidu-webcomponent>
+	 */
+	// TODO: Uncomment when captions are implemented
+	// @Input() set captionsLang(value: string) {
+	// 	this._captionsLang = value;
+	// }
+	/**
 	 * The captionsLangOptions attribute sets the language options for the captions.
 	 * It will override the languages provided by default.
 	 * This propety is an array of objects which must comply with the {@link CaptionsLangOption} interface.
@@ -253,9 +253,10 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * @example
 	 * <openvidu-webcomponent captions-lang-options="[{name:'Spanish', lang: 'es-ES'}]"></openvidu-webcomponent>
 	 */
-	@Input() set captionsLangOptions(value: string | CaptionsLangOption[]) {
-		this._captionsLangOptions = this.castToArray(value);
-	}
+	// TODO: Uncomment when captions are implemented
+	// @Input() set captionsLangOptions(value: string | CaptionsLangOption[]) {
+	// 	this._captionsLangOptions = this.castToArray(value);
+	// }
 	/**
 	 * The **participantName** attribute sets the participant name. It can be useful for aplications which doesn't need the prejoin page.
 	 *
@@ -280,46 +281,32 @@ export class OpenviduWebComponentComponent implements OnInit {
 		this._prejoin = this.castToBoolean(value);
 	}
 	/**
-	 * The **videoMuted** attribute allows to join the session with camera muted/unmuted.
+	 * The **videoEnabled** attribute allows to join the room with camera enabled or disabled.
 	 *
-	 * Default: `false`
-	 *
-	 * <div class="warn-container">
-	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
-	 *
-	 * @example
-	 * <openvidu-webcomponent video-muted="false"></openvidu-webcomponent>
-	 */
-	@Input() set videoMuted(value: string | boolean) {
-		this._videoMuted = this.castToBoolean(value);
-	}
-	/**
-	 * The **audioMuted** attribute allows to join the session with microphone muted/unmuted.
-	 *
-	 * Default: `false`
+	 * Default: `true`
 	 *
 	 * <div class="warn-container">
 	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
 	 *
 	 * @example
-	 * <openvidu-webcomponent audio-muted="false"></openvidu-webcomponent>
+	 * <openvidu-webcomponent video-enabled="false"></openvidu-webcomponent>
 	 */
-	@Input() set audioMuted(value: string | boolean) {
-		this._audioMuted = this.castToBoolean(value);
+	@Input() set videoEnabled(value: string | boolean) {
+		this._videoEnabled = this.castToBoolean(value);
 	}
-
 	/**
-	 * The **simulcast** directive allows to enable/disable the Simulcast feature. Simulcast is a technique that allows
-	 * to send multiple versions of the same video stream at different resolutions, framerates and qualities. This way,
-	 * the receiver can subscribe to the most appropriate stream for its current network conditions.
+	 * The **audioEnabled** attribute allows to join the room with microphone muted/unmuted.
 	 *
-	 * Default: `false`
+	 * Default: `true`
+	 *
+	 * <div class="warn-container">
+	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
 	 *
 	 * @example
-	 * <openvidu-webcomponent simulcast="true"></openvidu-webcomponent>
+	 * <openvidu-webcomponent audio-enabled="false"></openvidu-webcomponent>
 	 */
-	@Input() set simulcast(value: string | boolean) {
-		this._simulcast = this.castToBoolean(value);
+	@Input() set audioEnabled(value: string | boolean) {
+		this._audioEnabled = this.castToBoolean(value);
 	}
 
 	/**
@@ -482,7 +469,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 		this._toolbarDisplayLogo = this.castToBoolean(value);
 	}
 	/**
-	 * The **toolbarDisplaySessionName** attribute allows show/hide the session name.
+	 * The **toolbarDisplayRoomName** attribute allows show/hide the room name.
 	 *
 	 * Default: `true`
 	 *
@@ -490,10 +477,10 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
 	 *
 	 * @example
-	 * <openvidu-webcomponent toolbar-display-session-name="false"></openvidu-webcomponent>
+	 * <openvidu-webcomponent toolbar-display-room-name="false"></openvidu-webcomponent>
 	 */
-	@Input() set toolbarDisplaySessionName(value: string | boolean) {
-		this._toolbarDisplaySessionName = this.castToBoolean(value);
+	@Input() set toolbarDisplayRoomName(value: string | boolean) {
+		this._toolbarDisplayRoomName = this.castToBoolean(value);
 	}
 	/**
 	 * The **toolbarCaptionsButton** attribute allows show/hide the captions toolbar button.
@@ -506,9 +493,10 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * @example
 	 * <openvidu-webcomponent toolbar-captions-button="false"></openvidu-webcomponent>
 	 */
-	@Input() set toolbarCaptionsButton(value: string | boolean) {
-		this._toolbarCaptionsButton = this.castToBoolean(value);
-	}
+	// TODO: Uncomment when captions are implemented
+	// @Input() set toolbarCaptionsButton(value: string | boolean) {
+	// 	this._toolbarCaptionsButton = this.castToBoolean(value);
+	// }
 	/**
 	 * The **streamDisplayParticipantName** attribute allows show/hide the participants name in stream component.
 	 *
@@ -538,7 +526,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 		this._streamDisplayAudioDetection = this.castToBoolean(value);
 	}
 	/**
-	 * The **streamSettingsButton** attribute allows show/hide the participants settings button in stream component.
+	 * The **streamVideoControls** attribute allows show/hide the participants video controls in stream component.
 	 *
 	 * Default: `true`
 	 *
@@ -546,40 +534,10 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
 	 *
 	 * @example
-	 * <openvidu-webcomponent stream-settings-button="false"></openvidu-webcomponent>
+	 * <openvidu-webcomponent stream-video-controls="false"></openvidu-webcomponent>
 	 */
-	@Input() set streamSettingsButton(value: string | boolean) {
-		this._streamSettingsButton = this.castToBoolean(value);
-	}
-
-	/**
-	 * The **resolution** directive allows to set a specific participant resolution in stream component.
-	 *
-	 * Default: `640x480`
-	 *
-	 * <div class="warn-container">
-	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
-	 *
-	 * @example
-	 * <openvidu-webcomponent stream-resolution="'320x240'"></openvidu-webcomponent>
-	 */
-	@Input() set streamResolution(value: string) {
-		this._streamResolution = value;
-	}
-
-	/**
-	 * The **frameRate** directive allows initialize the publisher with a specific frame rate in stream component.
-	 *
-	 * Default: `30`
-	 *
-	 * <div class="warn-container">
-	 * 	<span>WARNING</span>: If you want to use this parameter to OpenVidu Web Component statically, you have to replace the <strong>camelCase</strong> with a <strong>hyphen between words</strong>.</div>
-	 *
-	 * @example
-	 * <openvidu-webcomponent stream-frame-rate="30"></openvidu-webcomponent>
-	 */
-	@Input() set streamFrameRate(value: number) {
-		this._streamFrameRate = Number(value);
+	@Input() set streamVideoControls(value: string | boolean) {
+		this._streamVideoControls = this.castToBoolean(value);
 	}
 	/**
 	 * The **participantPanelItemMuteButton** attribute allows show/hide the muted button in participant panel item component.
@@ -594,18 +552,6 @@ export class OpenviduWebComponentComponent implements OnInit {
 	 */
 	@Input() set participantPanelItemMuteButton(value: string | boolean) {
 		this._participantPanelItemMuteButton = this.castToBoolean(value);
-	}
-
-	/**
-	 * The **recordingActivityRecordingError** attribute allows to show any possible error with the recording in the {@link RecordingActivityComponent}.
-	 *
-	 * Default: `true`
-	 *
-	 * @example
-	 * <openvidu-webcomponent recording-activity-recording-error="false"></openvidu-webcomponent>
-	 */
-	@Input() set recordingActivityRecordingError(value: any) {
-		this._recordingActivityRecordingError = value;
 	}
 
 	/**
@@ -633,106 +579,101 @@ export class OpenviduWebComponentComponent implements OnInit {
 	}
 
 	/**
-	 * The **broadcastingActivityBroadcastingError** attribute allows to show any possible error with the broadcasting in the {@link BroadcastingActivityComponent}.
-	 *
-	 * Default: `undefined`
-	 *
-	 * @example
-	 * <openvidu-webcomponent broadcasting-activity-broadcasting-error="broadcastingError"></openvidu-webcomponent>
+	 * Provides event notifications that fire when videconference is ready to received the token.
+	 * This event emits the participant name as data.
 	 */
-	@Input() set broadcastingActivityBroadcastingError(value: any) {
-		this._broadcastingActivityBroadcastingError = value;
-	}
+	@Output() onTokenRequested: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
-	 * The **recordingActivityRecordingList** attribute allows show to show the recordings available for the session in {@link RecordingActivityComponent}.
-	 *
-	 * Default: `[]`
-	 *
-	 * @example
-	 * <openvidu-webcomponent recording-activity-recordings-list="recordingsList"></openvidu-webcomponent>
+	 * Provides event notifications that fire when the participant is ready to join to the room. This event is only emitted when the prejoin page has been shown.
 	 */
-	@Input() set recordingActivityRecordingsList(value: RecordingInfo[]) {
-		this._recordingActivityRecordingsList = value;
-	}
+	@Output() onReadyToJoin: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when join button (in prejoin page) has been clicked.
+	 * Provides event notifications that fire when the room has been disconnected.
 	 */
-	@Output() onJoinButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onRoomDisconnected: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when leave button has been clicked.
+	 * This event is emitted when the video state changes, providing information about if the video is enabled (true) or disabled (false).
 	 */
-	@Output() onToolbarLeaveButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onVideoEnabledChanged = new EventEmitter<boolean>();
+	/**
+	 * This event is emitted when the selected video device changes, providing information about the new custom device that has been selected.
+	 */
+	@Output() onVideoDeviceChanged = new EventEmitter<CustomDevice>();
 
 	/**
-	 * Provides event notifications that fire when camera toolbar button has been clicked.
+	 * This event is emitted when the audio state changes, providing information about if the audio is enabled (true) or disabled (false).
 	 */
-	@Output() onToolbarCameraButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onAudioEnabledChanged = new EventEmitter<boolean>();
+	/**
+	 * This event is emitted when the selected audio device changes, providing information about the new custom device that has been selected.
+	 */
+	@Output() onAudioDeviceChanged = new EventEmitter<CustomDevice>();
 
 	/**
-	 * Provides event notifications that fire when microphone toolbar button has been clicked.
+	 * This event is emitted when the language changes, providing information about the new language that has been selected.
 	 */
-	@Output() onToolbarMicrophoneButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onLangChanged: EventEmitter<LangOption> = new EventEmitter<LangOption>();
 
 	/**
-	 * Provides event notifications that fire when screenshare toolbar button has been clicked.
+	 * This event is emitted when the screen share state changes, providing information about if the screen share is enabled (true) or disabled (false).
 	 */
-	@Output() onToolbarScreenshareButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onScreenShareEnabledChanged: EventEmitter<boolean> = new EventEmitter<boolean>();
 
 	/**
-	 * Provides event notifications that fire when fullscreen toolbar button has been clicked.
+	 * This event is emitted when the fullscreen state changes, providing information about if the fullscreen is enabled (true) or disabled (false).
 	 */
-	@Output() onToolbarFullscreenButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onFullscreenEnabledChanged: EventEmitter<boolean> = new EventEmitter<boolean>();
 
 	/**
-	 * Provides event notifications that fire when participants panel button has been clicked.
+	 * This events is emitted when the settings panel status changes.
 	 */
-	@Output() onToolbarParticipantsPanelButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onSettingsPanelStatusChanged = new EventEmitter<SettingsPanelStatusEvent>();
+	/**
+	 * This events is emitted when the participants panel status changes.
+	 */
+	@Output() onParticipantsPanelStatusChanged = new EventEmitter<ParticipantsPanelStatusEvent>();
 
 	/**
-	 * Provides event notifications that fire when chat panel button has been clicked.
+	 * This events is emitted when the chat panel status changes.
 	 */
-	@Output() onToolbarChatPanelButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onChatPanelStatusChanged = new EventEmitter<ChatPanelStatusEvent>();
 
 	/**
-	 * Provides event notifications that fire when activities panel button has been clicked.
+	 * This events is emitted when the activities panel status changes.
 	 */
-	@Output() onToolbarActivitiesPanelButtonClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onActivitiesPanelStatusChanged = new EventEmitter<ActivitiesPanelStatusEvent>();
 
 	/**
-	 * Provides event notifications that fire when start recording button is clicked from {@link ToolbarComponent}.
-	 *  The recording should be started using the REST API.
+	 * This event is fired when the user clicks on the start recording button.
+	 * It provides the {@link RecordingStartRequestedEvent} payload as event data.
 	 */
-	@Output() onToolbarStartRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onRecordingStartRequested: EventEmitter<RecordingStartRequestedEvent> = new EventEmitter<RecordingStartRequestedEvent>();
 	/**
-	 * Provides event notifications that fire when stop recording button is clicked from {@link ToolbarComponent}.
-	 *  The recording should be stopped using the REST API.
+	 * Provides event notifications that fire when stop recording button has been clicked.
+	 * It provides the {@link RecordingStopRequestedEvent} payload as event data.
 	 */
-	@Output() onToolbarStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onRecordingStopRequested: EventEmitter<RecordingStopRequestedEvent> = new EventEmitter<RecordingStopRequestedEvent>();
 
 	/**
-	 * Provides event notifications that fire when start broadcasting button is clicked from {@link ToolbarComponent}.
+	 * Provides event notifications that fire when delete recording button has been clicked.
+	 * It provides the {@link RecordingDeleteRequestedEvent} payload as event data.
 	 */
-	@Output() onToolbarStartBroadcastingClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onRecordingDeleteRequested: EventEmitter<RecordingDeleteRequestedEvent> = new EventEmitter<RecordingDeleteRequestedEvent>();
 
 	/**
-	 * Provides event notifications that fire when stop broadcasting button is clicked from {@link ToolbarComponent}.
-	 *  The recording should be stopped using the REST API.
+	 * Provides event notifications that fire when download recording button is clicked.
+	 * It provides the {@link RecordingDownloadClickedEvent} payload as event data.
 	 */
-	@Output() onToolbarStopBroadcastingClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onRecordingDownloadClicked: EventEmitter<RecordingDownloadClickedEvent> = new EventEmitter<RecordingDownloadClickedEvent>();
 
 	/**
-	 * Provides event notifications that fire when start recording button is clicked {@link ActivitiesPanelComponent}.
-	 *  The recording should be started using the REST API.
+	 * Provides event notifications that fire when play recording button is clicked.
+	 * It provides the {@link RecordingPlayClickedEvent} payload as event data.
 	 */
-	@Output() onActivitiesPanelStartRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
-	/**
-	 * Provides event notifications that fire when stop recording button is clicked from {@link ActivitiesPanelComponent}.
-	 *  The recording should be stopped using the REST API.
-	 */
-	@Output() onActivitiesPanelStopRecordingClicked: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onRecordingPlayClicked: EventEmitter<RecordingPlayClickedEvent> = new EventEmitter<RecordingPlayClickedEvent>();
 
 	/**
 	 * Provides event notifications that fire when download recording button is clicked from {@link ActivitiesPanelComponent}.
@@ -741,33 +682,28 @@ export class OpenviduWebComponentComponent implements OnInit {
 	@Output() onActivitiesPanelDownloadRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
-	 * Provides event notifications that fire when delete recording button is clicked from {@link ActivitiesPanelComponent}.
-	 *  The recording should be deleted using the REST API.
+	 * Provides event notifications that fire when start broadcasting button is clicked.
+	 * It provides the {@link BroadcastingStartRequestedEvent} payload as event data.
 	 */
-	@Output() onActivitiesPanelDeleteRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+	@Output() onBroadcastingStartRequested: EventEmitter<BroadcastingStartRequestedEvent> =
+		new EventEmitter<BroadcastingStartRequestedEvent>();
 
 	/**
-	 * Provides event notifications that fire when start broadcasting button is clicked {@link ActivitiesPanelComponent}.
-	 *  The broadcasting should be started using the REST API.
+	 * Provides event notifications that fire when stop broadcasting button is clicked.
+	 * It provides the {@link BroadcastingStopRequestedEvent} payload as event data.
 	 */
-	@Output() onActivitiesPanelStartBroadcastingClicked: EventEmitter<string> = new EventEmitter<string>();
+	@Output() onBroadcastingStopRequested: EventEmitter<BroadcastingStopRequestedEvent> =
+		new EventEmitter<BroadcastingStopRequestedEvent>();
 
 	/**
-	 * Provides event notifications that fire when stop broadcasting button is clicked {@link ActivitiesPanelComponent}.
-	 *  The broadcasting should be stopped using the REST API.
+	 * Provides event notifications that fire when OpenVidu Room is created.
 	 */
-	@Output() onActivitiesPanelStopBroadcastingClicked: EventEmitter<void> = new EventEmitter<void>();
-
-	/**
-	 * Provides event notifications that fire when OpenVidu Session is created.
-	 * See {@link https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html openvidu-browser Session}.
-	 */
-	@Output() onSessionCreated: EventEmitter<Session> = new EventEmitter<Session>();
+	@Output() onRoomCreated: EventEmitter<Room> = new EventEmitter<Room>();
 
 	/**
 	 * Provides event notifications that fire when local participant is created.
 	 */
-	@Output() onParticipantCreated: EventEmitter<ParticipantAbstractModel> = new EventEmitter<ParticipantAbstractModel>();
+	@Output() onParticipantCreated: EventEmitter<ParticipantModel> = new EventEmitter<ParticipantModel>();
 
 	/**
 	 * @internal
@@ -777,175 +713,70 @@ export class OpenviduWebComponentComponent implements OnInit {
 	/**
 	 * @internal
 	 */
-	constructor(private host: ElementRef, private openviduService: OpenViduService) {
+	constructor(
+		private host: ElementRef,
+		private openviduService: OpenViduService
+	) {
 		this.host.nativeElement.disconnect = this.disconnect.bind(this);
 	}
 
-	ngOnInit(): void {}
-
 	/**
-	 * Tokens parameter is required to grant a participant access to a Session.
-	 * This OpenVidu token will be use by each participant when connecting to a Session.
-	 *
-	 * This input accepts a {@link TokenModel} object type or a string type.
+	 * LivekitUrl parameter allows to grant a participant access to a Room.
+	 * This parameter will be use by each participant when connecting to a Room.
 	 *
 	 * @example
-	 * <openvidu-webcomponent tokens='{"webcam":"TOKEN1", "screen":"TOKEN2"}'></openvidu-webcomponent>
-	 *
-	 *
-	 * @example
-	 * <openvidu-webcomponent tokens='TOKEN1'></openvidu-webcomponent>
+	 * <openvidu-webcomponent livekit-url='http://localhost:1234'></openvidu-webcomponent>
 	 *
 	 */
-	@Input('tokens')
-	set tokens(value: TokenModel | string) {
-		// console.debug('Webcomponent tokens: ', value);
-		try {
-			this._tokens = this.castToJson(value);
-			this.success = !!this._tokens?.webcam && !!this._tokens?.screen;
-		} catch (error) {
-			if (typeof value === 'string' && value !== '') {
-				console.debug('Single token received.');
-				this._tokens = { webcam: value };
-				this.success = true;
-			} else {
-				console.error(error);
-				console.error('Tokens parameter received is incorrect: ', value);
-				console.error('Session cannot start');
-			}
+	@Input('livekitUrl')
+	set livekitUrl(value: string) {
+		console.debug('Webcomponent livekit url: ', value);
+		this._livekitUrl = value;
+	}
+
+	/**
+	 * Token parameter is required to grant a participant access to a Room.
+	 * This OpenVidu token will be use by each participant when connecting to a Room.
+	 *
+	 * @example
+	 * <openvidu-webcomponent token='1234qwerxzc'></openvidu-webcomponent>
+	 *
+	 */
+	@Input('token')
+	set token(value: string) {
+		console.debug('Webcomponent token: ', value);
+		if (!value) {
+			console.error('Token parameter is required');
+			return;
 		}
+		this._token = value;
+	}
+
+	/**
+	 * Use the 'tokenError' input to display an error message in case of issues during token request.
+	 *
+	 * @example
+	 * <openvidu-webcomponent token-error='error'></openvidu-webcomponent>
+	 *
+	 */
+	@Input('tokenError')
+	set tokenError(value: any) {
+		this._tokenError = value;
 	}
 
 	/**
 	 * @internal
 	 */
-	_onJoinButtonClicked() {
-		this.onJoinButtonClicked.emit();
-	}
-
-	/**
-	 * @internal
-	 */
-	_onToolbarLeaveButtonClicked() {
+	_onRoomDisconnected() {
 		this.success = false;
-		this.onToolbarLeaveButtonClicked.emit();
+		this.onRoomDisconnected.emit();
 	}
 
 	/**
-	 * @internal
+	 * Disconnects from the Livekit Room.
 	 */
-	_onToolbarCameraButtonClicked() {
-		this.onToolbarCameraButtonClicked.emit();
-	}
-
-	/**
-	 * @internal
-	 */
-	_onToolbarMicrophoneButtonClicked() {
-		this.onToolbarMicrophoneButtonClicked.emit();
-	}
-	/**
-	 * @internal
-	 */
-	_onToolbarScreenshareButtonClicked() {
-		this.onToolbarScreenshareButtonClicked.emit();
-	}
-	/**
-	 * @internal
-	 */
-	_onToolbarParticipantsPanelButtonClicked() {
-		this.onToolbarParticipantsPanelButtonClicked.emit();
-	}
-	/**
-	 * @internal
-	 */
-	_onToolbarChatPanelButtonClicked() {
-		this.onToolbarChatPanelButtonClicked.emit();
-	}
-
-	_onToolbarActivitiesPanelButtonClicked() {
-		this.onToolbarActivitiesPanelButtonClicked.emit();
-	}
-	/**
-	 * @internal
-	 */
-	_onToolbarFullscreenButtonClicked() {
-		this.onToolbarFullscreenButtonClicked.emit();
-	}
-	/**
-	 * @internal
-	 */
-	onStartRecordingClicked(from: string) {
-		if (from === 'toolbar') {
-			this.onToolbarStartRecordingClicked.emit();
-		} else if (from === 'panel') {
-			this.onActivitiesPanelStartRecordingClicked.emit();
-		}
-	}
-
-	/**
-	 * @internal
-	 */
-	onStopRecordingClicked(from: string) {
-		if (from === 'toolbar') {
-			this.onToolbarStopRecordingClicked.emit();
-		} else if (from === 'panel') {
-			this.onActivitiesPanelStopRecordingClicked.emit();
-		}
-	}
-
-	/**
-	 * @internal
-	 */
-	_onActivitiesDownloadRecordingClicked(recordingId: string) {
-		this.onActivitiesPanelDownloadRecordingClicked.emit(recordingId);
-	}
-
-	/**
-	 * @internal
-	 */
-	_onActivitiesDeleteRecordingClicked(recordingId: string) {
-		this.onActivitiesPanelDeleteRecordingClicked.emit(recordingId);
-	}
-
-	/**
-	 * @internal
-	 */
-	onStartBroadcastingClicked(rtmpUrl: string) {
-		// if (from === 'toolbar') {
-		// 	this.onToolbarStartRecordingClicked.emit();
-		// } else if (from === 'panel') {
-		this.onActivitiesPanelStartBroadcastingClicked.emit(rtmpUrl);
-		// }
-	}
-
-	/**
-	 * @internal
-	 */
-	onStopBroadcastingClicked(from: string) {
-		if (from === 'toolbar') {
-			this.onToolbarStopBroadcastingClicked.emit();
-		} else if (from === 'panel') {
-			this.onActivitiesPanelStopBroadcastingClicked.emit();
-		}
-	}
-
-	/**
-	 * @internal
-	 */
-	_onSessionCreated(session: Session) {
-		this.onSessionCreated.emit(session);
-	}
-
-	/**
-	 * @internal
-	 */
-	_onParticipantCreated(participant: ParticipantAbstractModel) {
-		this.onParticipantCreated.emit(participant);
-	}
-
 	disconnect() {
-		this.openviduService.disconnect();
+		this.openviduService.disconnectRoom();
 	}
 
 	private castToBoolean(value: string | boolean): boolean {
@@ -961,23 +792,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 		}
 	}
 
-	private castToJson(value: TokenModel | string) {
-		if (typeof value === 'string') {
-			try {
-				return JSON.parse(value);
-			} catch (error) {
-				throw 'Unexpected JSON' + error;
-			}
-		} else if (typeof value === 'object') {
-			return value;
-		} else {
-			throw new Error(
-				'Parameter has not a valid type. The parameters must to be string or TokenModel {webcam:string, screen: string}.'
-			);
-		}
-	}
-
-	private castToArray(value: CaptionsLangOption[] | string) {
+	private castToArray(value: LangOption[] | /* CaptionsLangOption[] |*/ string) {
 		if (typeof value === 'string') {
 			try {
 				return JSON.parse(value);
@@ -988,7 +803,7 @@ export class OpenviduWebComponentComponent implements OnInit {
 			return value;
 		} else {
 			throw new Error(
-				'Parameter has not a valid type. The parameters must to be string or CaptionsLangOptions [] [{name:string, lang: string}].'
+				`Parameter has not a valid type. The parameters must to be string or LangOption Array: [{name:string, lang: string}].`
 			);
 		}
 	}

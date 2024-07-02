@@ -1,0 +1,87 @@
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Validators, FormGroup, FormBuilder } from '@angular/forms';
+import { Subscription } from 'rxjs';
+import { ActionService } from '../../services/action/action.service';
+import { OpenViduComponentsConfigService } from '../../services/config/openvidu-components-angular.config.service';
+
+@Component({
+	selector: 'ov-admin-login',
+	templateUrl: './admin-login.component.html',
+	styleUrls: ['./admin-login.component.scss']
+})
+export class AdminLoginComponent implements OnInit {
+	/**
+	 * Provides event notifications that fire when login button has been clicked.
+	 * The event will contain the credentials value.
+	 * @returns {EventEmitter<{ username: string; password: string }>}
+	 */
+	@Output() onLoginRequested: EventEmitter<{ username: string; password: string }> = new EventEmitter<{
+		username: string;
+		password: string;
+	}>();
+
+	/**
+	 * @internal
+	 */
+	loading = false;
+
+	/**
+	 * @internal
+	 */
+	showSpinner = false;
+
+	/**
+	 * @internal
+	 */
+	loginForm: FormGroup;
+
+	private errorSub: Subscription;
+
+	/**
+	 * @internal
+	 */
+	constructor(
+		private libService: OpenViduComponentsConfigService,
+		private actionService: ActionService,
+		private fb: FormBuilder
+	) {
+		this.loginForm = this.fb.group({
+			username: ['', [Validators.required, Validators.minLength(4)]],
+			password: ['', [Validators.required, Validators.minLength(4)]]
+		});
+	}
+
+	/**
+	 * @internal
+	 */
+	ngOnInit() {
+		this.subscribeToAdminLoginDirectives();
+	}
+
+	/**
+	 * @internal
+	 */
+	ngOnDestroy() {
+		this.showSpinner = false;
+		if (this.errorSub) this.errorSub.unsubscribe();
+	}
+
+	/**
+	 * @internal
+	 */
+	login() {
+		if (this.loginForm.invalid) return;
+		this.showSpinner = true;
+		this.onLoginRequested.emit(this.loginForm.value);
+	}
+
+	private subscribeToAdminLoginDirectives() {
+		this.errorSub = this.libService.adminLoginError$.subscribe((value) => {
+			const errorExists = !!value;
+			if (errorExists) {
+				this.showSpinner = false;
+				this.actionService.openDialog(value.error, value.message, true);
+			}
+		});
+	}
+}

@@ -1,0 +1,30 @@
+<!-- start-dynamic-structural-directives-content -->
+<!-- IMPORTANT: This table is not generated automatically. -->
+
+## Structural Directives
+
+With these kind of directives you can replace the default **PanelComponent** with your own component. You can also add your own components to the default ones.
+
+| **Directive** |                   **Reference**                   |
+| :-----------: | :-----------------------------------------------: |
+| **\*ovPanel** | [PanelDirective](../directives/PanelDirective.html) |
+
+It is also providing us a way to **replace the children panels** to the default panel.
+It will recognise the following directive in a child element.
+
+|       **Directive**       |                               **Reference**                               |
+| :-----------------------: | :-----------------------------------------------------------------------: |
+|     **\*ovChatPanel**     |         [ChatPanelDirective](../directives/ChatPanelDirective.html)         |
+| **\*ovParticipantsPanel** | [ParticipantsPanelDirective](../directives/ParticipantsPanelDirective.html) |
+| **\*ovAdditionalPanels**  |  [AdditionalPanelsDirective](../directives/AdditionalPanelsDirective.html)  |
+
+<!-- end-dynamic-structural-directives-content -->
+
+## API Directives
+
+With the following directives you can modify the default User Interface with the aim of fully customizing your videoconference application.
+
+<!-- start-dynamic-api-directives-content -->
+_No API directives available for this component_. 
+
+<!-- end-dynamic-api-directives-content -->

@@ -10,9 +10,15 @@ interface BrowserConfig {
 	browserName: string;
 }
 
-const chromeArguments = ['--window-size=1280,1024', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'];
+const chromeArguments = [
+	'--window-size=1300,1000',
+	'--headless',
+	'--use-fake-ui-for-media-stream',
+	'--use-fake-device-for-media-stream',
+	'--use-file-for-fake-audio-capture=e2e/assets/audio.wav'
+];
 const chromeArgumentsCI = [
-	'--window-size=1280,1024',
+	'--window-size=1300,1000',
 	'--headless',
 	'--no-sandbox',
 	'--disable-gpu',
@@ -25,9 +31,9 @@ const chromeArgumentsCI = [
 	'--use-fake-ui-for-media-stream',
 	'--use-fake-device-for-media-stream'
 ];
-const chromeArgumentsWithoutMediaDevices = ['--window-size=1024,768', '--deny-permission-prompts'];
+const chromeArgumentsWithoutMediaDevices = ['--headless', '--window-size=1300,900', '--deny-permission-prompts'];
 const chromeArgumentsWithoutMediaDevicesCI = [
-	'--window-size=1024,768',
+	'--window-size=1300,900',
 	'--headless',
 	'--no-sandbox',
 	'--disable-gpu',

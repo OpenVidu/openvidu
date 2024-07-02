@@ -1,6 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { BroadcastingService, BroadcastingStatus, RecordingInfo, RecordingService, RecordingStatus, TokenModel, LangOption } from 'openvidu-angular';
+import {
+	BroadcastingStartRequestedEvent,
+	BroadcastingStopRequestedEvent,
+	RecordingDeleteRequestedEvent,
+	RecordingStartRequestedEvent,
+	RecordingStopRequestedEvent,
+	Room,
+	RoomEvent
+} from 'openvidu-components-angular';
 import { RestService } from '../services/rest.service';
+import { CustomDevice } from 'dist/openvidu-components-angular/lib/models/device.model';
+import { LangOption } from 'dist/openvidu-components-angular/lib/models/lang.model';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
 	selector: 'app-call',
@@ -8,68 +19,117 @@ import { RestService } from '../services/rest.service';
 	styleUrls: ['./call.component.scss']
 })
 export class CallComponent implements OnInit {
-	sessionId = 'daily-call';
-	tokens: TokenModel;
-
-	joinSessionClicked: boolean = false;
-	closeClicked: boolean = false;
+	roomName = 'daily-call';
+	token: string;
+	tokenError: string | undefined;
 	isSessionAlive: boolean = false;
-	recordingList: RecordingInfo[] = [];
-	recordingError: any;
-	broadcastingError: any;
+
+	private staticVideos = [
+		'https://videos.pexels.com/video-files/4089575/4089575-hd_1280_720_50fps.mp4',
+		'https://videos.pexels.com/video-files/8375762/8375762-hd_1080_2048_25fps.mp4',
+		'https://videos.pexels.com/video-files/4994156/4994156-hd_1080_1920_25fps.mp4',
+		'https://videos.pexels.com/video-files/5752499/5752499-hd_1080_1920_25fps.mp4',
+		'https://videos.pexels.com/video-files/6012390/6012390-hd_1080_1920_25fps.mp4',
+		'https://videos.pexels.com/video-files/6388880/6388880-hd_1080_1920_25fps.mp4',
+		'https://videos.pexels.com/video-files/5956873/5956873-hd_1080_1920_25fps.mp4',
+		'https://videos.pexels.com/video-files/5384955/5384955-hd_1080_1920_25fps.mp4',
+		'https://videos.pexels.com/video-files/5199626/5199626-hd_1280_720_25fps.mp4',
+		'https://videos.pexels.com/video-files/5638228/5638228-hd_1080_1920_25fps.mp4',
+		'https://videos.pexels.com/video-files/5647316/5647316-hd_1080_1920_25fps.mp4',
+		'https://videos.pexels.com/video-files/5992459/5992459-hd_1080_1920_25fps.mp4',
+		'https://videos.pexels.com/video-files/5438937/5438937-hd_1080_1920_25fps.mp4',
+		'https://videos.pexels.com/video-files/5586701/5586701-hd_1080_1920_25fps.mp4',
+		'https://videos.pexels.com/video-files/8375616/8375616-hd_1080_2048_25fps.mp4',
+		'https://videos.pexels.com/video-files/5087894/5087894-hd_1080_1920_25fps.mp4',
+		'https://videos.pexels.com/video-files/9569674/9569674-hd_1080_2048_25fps.mp4'
+	];
+
+	private areStaticVideosEnabled = false;
 
 	constructor(
 		private restService: RestService,
-		private recordingService: RecordingService,
-		private broadcastingService: BroadcastingService
+		private router: Router,
+		private activatedRoute: ActivatedRoute
 	) {}
 
 	async ngOnInit() {
-		await this.requestForTokens();
+		this.activatedRoute.queryParams.subscribe((params) => {
+			this.areStaticVideosEnabled = params['staticVideos'] === 'true';
+			console.log('Static videos enabled: ', this.areStaticVideosEnabled);
+		});
+		if (this.areStaticVideosEnabled) {
+			setTimeout(() => {
+				const videoElements = document.querySelectorAll('video');
+				this.replaceWithStaticVideos(videoElements);
+			}, 3000);
+		}
 	}
 
-	async onNodeCrashed() {
-		// Request the tokens again for reconnect to the session
-		await this.requestForTokens();
+	async onTokenRequested(participantName: string) {
+		await this.requestForTokens(participantName);
 	}
 
-	onJoinClicked() {
-		console.warn('VC JOIN BUTTON CLICKED');
+	async onReadyToJoin() {
+		console.warn('VC IS READY TO JOIN');
 	}
 
-	onToolbarCameraButtonClicked() {
-		console.warn('VC camera CLICKED');
-	}
-	onToolbarMicrophoneButtonClicked() {
-		console.warn('VC microphone CLICKED');
-	}
-	onToolbarScreenshareButtonClicked() {
-		console.warn('VC screenshare CLICKED');
-	}
-	onToolbarFullscreenButtonClicked() {
-		console.warn('VC fullscreen CLICKED');
-	}
-	onToolbarParticipantsPanelButtonClicked() {
-		console.warn('VC participants CLICKED');
-	}
-	onToolbarChatPanelButtonClicked() {
-		console.warn('VC chat CLICKED');
+	onRoomCreated(room: Room) {
+		console.warn('VC ROOM CREATED');
+		room.on(RoomEvent.Connected, () => {
+			if (this.areStaticVideosEnabled) {
+				setTimeout(() => {
+					const videoElements = document.querySelectorAll('video');
+					this.replaceWithStaticVideos(videoElements);
+				}, 3000);
+			}
+		});
+
+		room.on(RoomEvent.TrackPublished, (publication, participant) => {
+			participant.videoTrackPublications.forEach((publication) => {
+				if (this.areStaticVideosEnabled) {
+					setTimeout(() => {
+						if (publication.videoTrack?.attachedElements) {
+							this.replaceWithStaticVideos(publication.videoTrack?.attachedElements);
+							const firstVideo = this.staticVideos.shift();
+							this.staticVideos.push(firstVideo);
+						}
+					}, 2000);
+				}
+			});
+		});
 	}
 
-	onToolbarLeaveButtonClicked() {
+	onVideoEnabledChanged(value: boolean) {
+		console.warn('VC video enabled: ', value);
+	}
+	onVideoDeviceChanged(device: CustomDevice) {
+		console.warn('VC video device changed: ', device);
+	}
+	onAudioEnabledChanged(value: boolean) {
+		console.warn('VC audio enabled: ', value);
+	}
+	onAudioDeviceChanged(device: CustomDevice) {
+		console.warn('VC audio device changed: ', device);
+	}
+	onScreenShareEnabledChanged(enabled: boolean) {
+		console.warn('VC screenshare enabled: ', enabled);
+	}
+	onFullscreenEnabledChanged(enabled: boolean) {
+		console.warn('VC fullscreen enabled: ', enabled);
+	}
+	onParticipantsPanelStatusChanged(event) {
+		console.warn('VC participants panel status changed: ', event);
+	}
+	onChatPanelStatusChanged(event) {
+		console.warn('VC chat status changed: ', event);
+	}
+
+	onRoomDisconnected() {
 		this.isSessionAlive = false;
 		console.log('VC LEAVE BUTTON CLICKED');
+		this.router.navigate(['/']);
 	}
 
-	onCameraButtonClicked() {
-		console.warn('TOOLBAR camera CLICKED');
-	}
-	onMicrophoneButtonClicked() {
-		console.warn('TOOLBAR microphone CLICKED');
-	}
-	onScreenshareButtonClicked() {
-		console.warn('TOOLBAR screenshare CLICKED');
-	}
 	onFullscreenButtonClicked() {
 		console.warn('TOOLBAR fullscreen CLICKED');
 	}
@@ -85,83 +145,80 @@ export class CallComponent implements OnInit {
 		console.log('TOOLBAR LEAVE CLICKED');
 	}
 
-	onLangChanged(lang: LangOption) {
-		console.warn('LANG CHANGED', lang);
+	onLangChanged(event: LangOption) {
+		console.warn('LANG CHANGED', event);
 	}
 
-	async onStartBroadcastingClicked(broadcastUrl: string) {
-		console.log('START STREAMING', broadcastUrl);
-		if (!broadcastUrl) {
-			console.error('Broadcasting URL is empty');
-			return;
-		}
+	async onBroadcastingStartRequested(event: BroadcastingStartRequestedEvent) {
+		console.log('START STREAMING', event);
 		try {
-			this.broadcastingError = null;
-			const resp = await this.restService.startBroadcasting(broadcastUrl);
+			const resp = await this.restService.startBroadcasting(event.broadcastUrl);
 			console.log('Broadcasting response ', resp);
 		} catch (error) {
 			console.error(error);
-			this.broadcastingError = error.error;
 		}
 	}
 
-	async onStopBroadcastingClicked() {
-		console.log('STOP STREAMING');
+	async onBroadcastingStopRequested(event: BroadcastingStopRequestedEvent) {
+		console.log('STOP STREAMING', event);
 		try {
-			this.broadcastingError = null;
 			const resp = await this.restService.stopBroadcasting();
 			console.log('Broadcasting response ', resp);
 		} catch (error) {
 			console.error(error);
-			this.broadcastingError = error.message || error;
 		}
 	}
 
-	async onStartRecordingClicked() {
-		console.warn('START RECORDING CLICKED');
+	async onRecordingStartRequested(event: RecordingStartRequestedEvent) {
+		console.warn('START RECORDING CLICKED', event);
 		try {
-			await this.restService.startRecording(this.sessionId);
+			await this.restService.startRecording(this.roomName);
 		} catch (error) {
-			this.recordingError = error;
+			console.error(error);
 		}
 	}
-	async onStopRecordingClicked() {
-		console.warn('STOP RECORDING CLICKED');
+	async onRecordingStopRequested(event: RecordingStopRequestedEvent) {
+		console.warn('STOP RECORDING CLICKED', event);
 		try {
-			this.recordingList = await this.restService.stopRecording(this.sessionId);
-			console.log('RECORDING LIST ', this.recordingList);
+			await this.restService.stopRecording(event);
 		} catch (error) {
-			console.log(await this.restService.getRecordings())
-			this.recordingError = error;
+			console.error(error);
 		}
 	}
 
-	async onDeleteRecordingClicked(recordingId: string) {
-		console.warn('DELETE RECORDING CLICKED');
+	async onRecordingDeleteRequested(event: RecordingDeleteRequestedEvent) {
+		console.warn('DELETE RECORDING requested', event);
 
 		try {
-			this.recordingList = await this.restService.deleteRecording(recordingId);
+			await this.restService.deleteRecording(event);
 		} catch (error) {
-			this.recordingError = error;
+			console.error(error);
 		}
 	}
 
-	async onForceRecordingUpdate() {
-		console.warn('FORCE RECORDING UPDATE');
-		this.recordingList = await this.restService.getRecordings();
+	private async requestForTokens(participantName: string) {
+		try {
+			const { token } = await this.restService.getTokenFromBackend(this.roomName, participantName);
+			this.token = token;
+		} catch (error) {
+			console.error(error);
+			this.tokenError = error.error;
+		}
 	}
 
-	private async requestForTokens() {
-		const { broadcastingEnabled, recordingEnabled, recordings, cameraToken, screenToken, isRecordingActive, isBroadcastingActive } =
-			await this.restService.getTokensFromBackend(this.sessionId);
-		this.recordingList = recordings;
-		this.tokens = {
-			webcam: cameraToken,
-			screen: screenToken
-		};
-		if (isRecordingActive) this.recordingService.updateStatus(RecordingStatus.STARTED);
-		if (isBroadcastingActive) this.broadcastingService.updateStatus(BroadcastingStatus.STARTED);
-
-		console.log('Token requested: ', this.tokens);
+	private replaceWithStaticVideos(videoElements) {
+		let sourceIndex = 0;
+		for (let i = 0; i < videoElements.length; i++) {
+			const videoElement = videoElements[i];
+			videoElement.srcObject = null;
+			videoElement.src = this.staticVideos[sourceIndex];
+			console.log(`Assigned ${this.staticVideos[sourceIndex]}`);
+			sourceIndex = (sourceIndex + 1) % this.staticVideos.length;
+			videoElement.addEventListener('ended', () => {
+				// Allow loop
+				videoElement.currentTime = 0;
+				videoElement.play();
+			});
+		}
 	}
 }

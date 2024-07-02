@@ -1,0 +1,19 @@
+<div class="parent-div">
+    <video #videoElement [id]="elementRefId" [ngClass]="getTrackOrigin()"></video>
+    <div class="bottom-div">
+        <button *ngIf="localParticipant" (click)="muteUnmuteVideo()" class="video-btn" matTooltip="Mute/Unmute video"
+            matTooltipClass="custom-tooltip">
+            <mat-icon aria-label="Mute/Unmute video" class="mat-icon material-icons" role="img"
+                aria-hidden="true">{{muteVideoIcon}}</mat-icon>
+        </button>
+        <button *ngIf="localParticipant" (click)="unpublishTrack()" class="video-btn" matTooltip="Unpublish track"
+            matTooltipClass="custom-tooltip">
+            <mat-icon aria-label="Unpublish track" class="mat-icon material-icons" role="img"
+                aria-hidden="true">stop</mat-icon>
+        </button>
+        <!--<button *ngIf="isLocal" (click)="blur()" class="video-btn">
+            <mat-icon aria-label="Blur video" class="mat-icon material-icons" role="img"
+                aria-hidden="true">{{blurIcon}}</mat-icon>
+        </button>-->
+    </div>
+</div>

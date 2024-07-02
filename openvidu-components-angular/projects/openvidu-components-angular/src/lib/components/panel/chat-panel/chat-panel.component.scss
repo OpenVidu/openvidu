@@ -1,0 +1,123 @@
+.text-container {
+	background-color: var(--ov-light-color);
+	color: var(--ov-panel-text-color);
+	text-align: center;
+	font-size: 12px;
+	flex: inherit;
+}
+
+.text-info {
+	margin: auto;
+}
+
+.vertical-align {
+	line-height: 59px;
+}
+
+.messages-container {
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding: 10px;
+	flex: 75%;
+	display: block;
+	justify-content: space-evenly;
+	align-items: none;
+}
+
+.input-container {
+	height: 65px;
+	display: flex;
+	background-color: var(--ov-light-color);
+	padding: 10px 5px 10px 10px;
+	margin: 10px;
+	border-radius: var(--ov-panel-radius);
+	order: 3;
+	justify-content: space-evenly;
+	align-items: none;
+}
+
+.input-container textarea {
+	width: 100%;
+	height: 60px;
+	margin: auto;
+	margin-right: 3px;
+	background-color: transparent;
+	display: block;
+	border: none;
+	padding: 0;
+	word-wrap: break-word;
+	white-space: pre-wrap;
+	resize: none;
+	outline: none;
+	font-size: 16px;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+	font-family: 'Roboto', 'RobotoDraft', Helvetica, Arial, sans-serif;
+}
+
+.message {
+	position: relative;
+	padding: 3px 0;
+}
+
+.msg-detail {
+	width: 95%;
+	display: inline-block;
+}
+
+.msg-detail p {
+	margin: 0;
+	font-size: 14px;
+}
+
+.participant-name-container p {
+	font-size: 13px;
+	font-weight: bold;
+	color: var(--ov-panel-text-color);
+}
+
+.msg-content {
+	position: relative;
+	border-radius: var(--ov-panel-radius);
+	padding: 8px;
+	color: #000000;
+	width: auto;
+	max-width: 95%;
+	font-size: 13px;
+	word-break: break-all;
+}
+
+#send-btn {
+	border-radius: var(--ov-panel-radius);
+	color: var(--ov-light-color);
+	background-color: var(--ov-tertiary-color);
+	align-self: center;
+	height: 75px;
+}
+
+/* Start message from other user */
+
+.message.left .msg-detail .participant-name-container {
+	text-align: left;
+}
+
+.message.left .msg-detail .msg-content {
+	float: left;
+}
+
+/* End message from other user */
+
+/* Start my messages */
+
+.message.right .msg-detail .participant-name-container {
+	text-align: right;
+}
+
+.message.right .msg-detail .msg-content {
+	float: right;
+}
+
+::ng-deep a:-webkit-any-link {
+	color: var(--ov-tertiary-color);
+}

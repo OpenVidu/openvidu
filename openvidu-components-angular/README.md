@@ -10,21 +10,21 @@ openvidu-components-angular
 │
 └───projects
     │
-	└─── openvidu-angular-v2compatibility
+	└─── openvidu-components-angular
 ```
 
 ## How to develop with ease:
 
 Run `ng serve` for a dev server.
 
-Run, in a new terminal, `npm run lib:serve` for serving the openvidu-angular-v2compatibility library with live reload for listening changes
+Run, in a new terminal, `npm run lib:serve` for serving the openvidu-components-angular library with live reload for listening changes
 
 ## Code scaffolding
 
-For generate new components in openvidu-angular-v2compatibility:
+For generate new components in openvidu-components-angular:
 
 ```bash
-ng g component components/component-name --project=openvidu-angular-v2compatibility
+ng g component components/component-name --project=openvidu-components-angular
 ```
 
 

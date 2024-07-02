@@ -1,816 +1,1058 @@
-import { ChangeDetectorRef, Component, HostListener, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { Component, HostListener, Input } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 
-import { ConnectionEvent, ConnectionPropertyChangedEvent, Event, ExceptionEvent, NetworkQualityLevelChangedEvent, OpenVidu, OpenViduAdvancedConfiguration, OpenViduError, Publisher, PublisherProperties, PublisherSpeakingEvent, RecordingEvent, Session, SessionDisconnectedEvent, SignalEvent, SpeechToTextEvent, StreamEvent, StreamPropertyChangedEvent, Subscriber } from 'openvidu-browser';
+import { RoomConf } from '../test-sessions/test-sessions.component';
+import { LivekitParamsService } from 'src/app/services/livekit-params.service';
+
 import {
-  Connection,
-  ConnectionProperties, MediaMode, OpenVidu as OpenViduAPI, OpenViduRole, Recording, RecordingLayout, RecordingMode, RecordingProperties, Session as SessionAPI,
-  SessionProperties as SessionPropertiesAPI
-} from 'openvidu-node-client';
-import { TestFeedService } from '../../services/test-feed.service';
+  ConnectionQuality,
+  ConnectionState,
+  DataPacket_Kind,
+  DataPublishOptions,
+  DisconnectReason,
+  LocalAudioTrack,
+  LocalParticipant,
+  LocalTrackPublication,
+  LocalVideoTrack,
+  MediaDeviceFailure,
+  Participant,
+  RemoteAudioTrack,
+  RemoteParticipant,
+  RemoteTrack,
+  RemoteTrackPublication,
+  RemoteVideoTrack,
+  Room,
+  RoomConnectOptions,
+  RoomEvent,
+  RoomOptions,
+  SubscriptionError,
+  Track,
+  TrackPublication,
+} from 'livekit-client';
+import { ParticipantPermission } from 'livekit-server-sdk';
+import {
+  TestAppEvent,
+  TestFeedService,
+} from 'src/app/services/test-feed.service';
+import { RoomEventCallbacks } from 'livekit-client/dist/src/room/Room';
+import { MatDialog } from '@angular/material/dialog';
+import { RoomApiDialogComponent } from '../dialogs/room-api-dialog/room-api-dialog.component';
+import { RoomApiService } from 'src/app/services/room-api.service';
 import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.component';
-import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
-import { PublisherPropertiesDialogComponent } from '../dialogs/publisher-properties-dialog/publisher-properties-dialog.component';
-import { SessionApiDialogComponent } from '../dialogs/session-api-dialog/session-api-dialog.component';
-import { SessionInfoDialogComponent } from "../dialogs/session-info-dialog/session-info-dialog.component";
-import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-dialog/session-properties-dialog.component';
-
-
-export interface SessionConf {
-  subscribeTo: boolean;
-  publishTo: boolean;
-  startSession: boolean;
-}
-
-export interface OpenViduEvent {
-  eventName: string;
-  eventContent: string;
-  event: Event;
-}
 
 @Component({
   selector: 'app-openvidu-instance',
   templateUrl: './openvidu-instance.component.html',
   styleUrls: ['./openvidu-instance.component.css'],
-  // providers: [
-  //   { provide: MAT_CHECKBOX_CLICK_ACTION, useValue: 'noop' }
-  // ]
 })
-export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
-
+export class OpenviduInstanceComponent {
   @Input()
-  openviduUrl: string;
-
-  @Input()
-  openviduSecret: string;
-
-  @Input()
-  sessionConf: SessionConf;
-
-  @Input()
-  useMediasoup: boolean;
+  roomConf: RoomConf;
 
   @Input()
   index: number;
 
-  // Session join data
-  clientData: string;
-  sessionName: string;
-
-  // Session options
-  subscribeTo;
-  publishTo;
-  sendVideoRadio = true;
-  subscribeToRemote = false;
-  optionsVideo = 'video';
-
-  // Recording options
-  recordingProperties: RecordingProperties;
-
-  // Broadcast options
-  broadcastProperties: RecordingProperties;
-
-  // OpenVidu Browser objects
-  OV: OpenVidu;
-  session: Session;
-  publisher: Publisher;
-  subscribers: Subscriber[] = [];
-
-  // OpenVidu Node Client objects
-  OV_NodeClient: OpenViduAPI;
-  sessionAPI: SessionAPI;
-  sessionProperties: SessionPropertiesAPI = {
-    mediaMode: MediaMode.ROUTED,
-    recordingMode: RecordingMode.MANUAL,
-    defaultRecordingProperties: {
-      name: '',
-      hasAudio: true,
-      hasVideo: true,
-      outputMode: Recording.OutputMode.COMPOSED,
-      recordingLayout: RecordingLayout.BEST_FIT,
-      resolution: '1280x720',
-      frameRate: 25,
-      shmSize: 536870912,
-      customLayout: '',
-      ignoreFailedStreams: false,
-      mediaNode: {
-        id: ''
-      }
+  room?: Room;
+  roomEvents: Map<RoomEvent, Boolean> = new Map<RoomEvent, boolean>();
+  roomOptions: RoomOptions = {
+    adaptiveStream: true,
+    dynacast: true,
+    videoCaptureDefaults: {
+      resolution: {
+        width: 640,
+        height: 480,
+        frameRate: 30,
+      },
     },
-    customSessionId: '',
-    forcedVideoCodec: null,
-    allowTranscoding: null
+  };
+  roomConnectOptions: RoomConnectOptions = {
+    autoSubscribe: false,
   };
 
-  publisherProperties: PublisherProperties = {
-    audioSource: undefined,
-    videoSource: undefined,
-    frameRate: 30,
-    resolution: '640x480',
-    mirror: true,
-    publishAudio: true,
-    publishVideo: true,
-    videoSimulcast: false
-  };
+  roomName: string = 'TestRoom';
+  participantName: string = 'TestParticipant';
 
-  publisherPropertiesAux: PublisherProperties;
-
-  sessionEvents = {
-    connectionCreated: true,
-    connectionDestroyed: true,
-    sessionDisconnected: true,
-    streamCreated: true,
-    streamDestroyed: true,
-    streamPropertyChanged: true,
-    connectionPropertyChanged: true,
-    networkQualityLevelChanged: true,
-    recordingStarted: true,
-    recordingStopped: true,
-    broadcastStarted: true,
-    broadcastStopped: true,
-    signal: true,
-    publisherStartSpeaking: false,
-    publisherStopSpeaking: false,
-    speechToTextMessage: true,
-    reconnecting: true,
-    reconnected: true,
-    exception: true
-  };
-
-  // Session properties dialog
-  turnConf = 'auto';
-  manualTurnConf: RTCIceServer = { urls: [] };
-  customToken: string;
-  forcePublishing: boolean = false;
-  reconnectionOnServerFailure: boolean = false;
-  connectionProperties: ConnectionProperties = {
-    role: OpenViduRole.PUBLISHER,
-    record: true,
-    kurentoOptions: {
-      videoMaxRecvBandwidth: 1000,
-      videoMinRecvBandwidth: 300,
-      videoMaxSendBandwidth: 1000,
-      videoMinSendBandwidth: 300,
-      allowedFilters: []
+  localTracks: {
+    audioTrack: LocalAudioTrack | undefined;
+    videoTrack: LocalVideoTrack | undefined;
+  } = { audioTrack: undefined, videoTrack: undefined };
+  remoteTracks: Map<
+    string,
+    {
+      audioTrack: RemoteAudioTrack | undefined;
+      videoTrack: RemoteVideoTrack | undefined;
     }
-  };
+  > = new Map();
 
-  events: OpenViduEvent[] = [];
+  events: TestAppEvent[] = [];
 
-  republishPossible: boolean = false;
-  openviduError: any;
+  private decoder = new TextDecoder();
 
   constructor(
-    private changeDetector: ChangeDetectorRef,
-    private dialog: MatDialog,
-    private testFeedService: TestFeedService
-  ) {
-    this.generateSessionInfo();
-  }
+    private livekitParamsService: LivekitParamsService,
+    private testFeedService: TestFeedService,
+    private roomApiService: RoomApiService,
+    private dialog: MatDialog
+  ) {}
 
-  ngOnInit() {
-    this.subscribeTo = this.sessionConf.subscribeTo;
-    this.publishTo = this.sessionConf.publishTo;
-    this.publisherPropertiesAux = Object.assign({}, this.publisherProperties);
-    if (!this.publishTo) {
-      this.publishTo = !this.publishTo;
-      this.togglePublishTo();
+  async ngOnInit() {
+    for (let event of Object.keys(RoomEvent)) {
+      this.roomEvents.set(RoomEvent[event as keyof typeof RoomEvent], true);
+      this.roomEvents.set(RoomEvent.ActiveSpeakersChanged, false);
     }
-    if (this.sessionConf.startSession) {
-      this.joinSession();
-    }
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes.openviduSecret) {
-      this.openviduSecret = changes.openviduSecret.currentValue;
-    }
-    if (changes.openviduUrl) {
-      this.openviduUrl = changes.openviduUrl.currentValue;
+    this.participantName += this.index;
+    if (this.roomConf.startSession) {
+      const token = await this.roomApiService.createToken(
+        { roomJoin: true },
+        this.participantName,
+        this.roomName
+      );
+      this.connectRoom(token);
     }
   }
 
   ngOnDestroy() {
-    this.leaveSession();
+    this.disconnectRoom();
   }
 
   @HostListener('window:beforeunload')
   beforeunloadHandler() {
-    this.leaveSession();
+    this.disconnectRoom();
   }
 
-  private generateSessionInfo(): void {
-    this.sessionName = 'TestSession';
-    this.clientData = 'TestClient';
+  async createTokenAndConnectRoom() {
+    this.connectRoom(
+      await this.roomApiService.createToken(
+        { roomJoin: true },
+        this.participantName,
+        this.roomName
+      )
+    );
   }
 
-  async joinSession(): Promise<void> {
-    if (this.session) {
-      this.leaveSession();
-    }
-    const sessionId = !!this.customToken ? this.getSessionIdFromToken(this.customToken) : this.sessionName;
-    await this.initializeNodeClient(sessionId);
-    if (!!this.customToken) {
-      this.joinSessionShared(this.customToken);
-    } else {
-      const connection: Connection = await this.createConnection();
-      this.joinSessionShared(connection.token);
+  async connectRoom(token: string): Promise<void> {
+    // creates a new room with options
+    this.room = new Room(this.roomOptions);
+
+    this.setupRoomEventListeners(new Map(), true);
+
+    // connect to room
+    await this.room.connect(
+      this.livekitParamsService.getParams().livekitUrl,
+      token,
+      this.roomConnectOptions
+    );
+
+    if (this.roomConf.publisher) {
+      await this.room?.localParticipant.enableCameraAndMicrophone();
+      // await this.room?.localParticipant.setScreenShareEnabled(true);
     }
   }
 
-  private joinSessionShared(token: string): void {
+  setupRoomEventListeners(oldValues: Map<string, boolean>, firstTime: boolean) {
+    // This is a link to the complete list of Room events
+    let callbacks: RoomEventCallbacks;
+    let events: RoomEvent;
 
-    this.OV = new OpenVidu();
-
-    const advancedConfiguration: OpenViduAdvancedConfiguration = {};
-    if (this.turnConf === 'freeice') {
-      advancedConfiguration.iceServers = 'freeice';
-    } else if (this.turnConf === 'manual') {
-      advancedConfiguration.iceServers = [this.manualTurnConf];
-    }
-    this.OV.setAdvancedConfiguration(advancedConfiguration);
-
-    this.session = this.OV.initSession();
-
-    this.updateSessionEvents({
-      connectionCreated: false,
-      connectionDestroyed: false,
-      sessionDisconnected: false,
-      streamCreated: false,
-      streamDestroyed: false,
-      streamPropertyChanged: false,
-      connectionPropertyChanged: false,
-      networkQualityLevelChanged: false,
-      recordingStarted: false,
-      recordingStopped: false,
-      broadcastStarted: false,
-      broadcastStopped: false,
-      signal: false,
-      publisherStartSpeaking: true,
-      publisherStopSpeaking: true,
-      speechToTextMessage: false,
-      reconnecting: false,
-      reconnected: false,
-      exception: false
-    }, true);
-
-    if (this.useMediasoup) {
-      const realProcessJoinRoomResponseFunction = this.session['processJoinRoomResponse'];
-      this.session['processJoinRoomResponse'] = opts => {
-        opts.mediaServer = 'mediasoup';
-        realProcessJoinRoomResponseFunction.bind(this.session, opts)();
-      };
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.Connected) !==
+        oldValues.get(RoomEvent.Connected)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.Connected);
+      if (this.roomEvents.get(RoomEvent.Connected)) {
+        this.room!.on(RoomEvent.Connected, () => {
+          this.updateEventList(RoomEvent.Connected, {}, '');
+          this.room!.remoteParticipants.forEach(
+            (remoteParticipant: RemoteParticipant) => {
+              if (this.roomConf.subscriber) {
+                // Subscribe to already existing tracks
+                remoteParticipant.trackPublications.forEach(
+                  (publication: RemoteTrackPublication) => {
+                    publication.setSubscribed(true);
+                  }
+                );
+              }
+            }
+          );
+        });
+      }
     }
 
-    this.session.connect(token, this.clientData)
-      .then(() => {
-        this.changeDetector.detectChanges();
-
-        if (this.publishTo && this.session.capabilities.publish || this.forcePublishing) {
-          // this.asyncInitPublisher();
-          this.syncInitPublisher();
-        }
-      })
-      .catch(error => {
-        console.log('There was an error connecting to the session:', error.code, error.message);
-        alert('Error connecting to the session: ' + error.message);
-      });
-  }
-
-  private leaveSession(): void {
-    if (this.session) {
-      this.session.disconnect();
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.Reconnecting) !==
+        oldValues.get(RoomEvent.Reconnecting)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.Reconnecting);
+      if (this.roomEvents.get(RoomEvent.Reconnecting)) {
+        this.room!.on(RoomEvent.Reconnecting, () => {
+          this.updateEventList(RoomEvent.Reconnecting, {}, '');
+        });
+      }
     }
-    delete this.session;
-    delete this.OV;
-    delete this.publisher;
-    this.subscribers = [];
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.Reconnected) !==
+        oldValues.get(RoomEvent.Reconnected)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.Reconnected);
+      if (this.roomEvents.get(RoomEvent.Reconnected)) {
+        this.room!.on(RoomEvent.Reconnected, () => {
+          this.updateEventList(RoomEvent.Reconnected, {}, '');
+        });
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.Disconnected) !==
+        oldValues.get(RoomEvent.Disconnected)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.Disconnected);
+      if (this.roomEvents.get(RoomEvent.Disconnected)) {
+        this.room!.on(RoomEvent.Disconnected, (reason?: DisconnectReason) => {
+          this.updateEventList(RoomEvent.Disconnected, {}, `Reason: ${reason}`);
+        });
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.ConnectionStateChanged) !==
+        oldValues.get(RoomEvent.ConnectionStateChanged)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.ConnectionStateChanged);
+      if (this.roomEvents.get(RoomEvent.ConnectionStateChanged)) {
+        this.room!.on(
+          RoomEvent.ConnectionStateChanged,
+          (state: ConnectionState) => {
+            this.updateEventList(
+              RoomEvent.ConnectionStateChanged,
+              { state },
+              state
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.MediaDevicesChanged) !==
+        oldValues.get(RoomEvent.MediaDevicesChanged)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.MediaDevicesChanged);
+      if (this.roomEvents.get(RoomEvent.MediaDevicesChanged)) {
+        this.room!.on(RoomEvent.MediaDevicesChanged, () => {
+          this.updateEventList(RoomEvent.MediaDevicesChanged, {}, '');
+        });
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.ParticipantConnected) !==
+        oldValues.get(RoomEvent.ParticipantConnected)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.ParticipantConnected);
+      if (this.roomEvents.get(RoomEvent.ParticipantConnected)) {
+        this.room!.on(
+          RoomEvent.ParticipantConnected,
+          (participant: RemoteParticipant) => {
+            this.updateEventList(
+              RoomEvent.ParticipantConnected,
+              { participant },
+              participant.identity
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.ParticipantDisconnected) !==
+        oldValues.get(RoomEvent.ParticipantDisconnected)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.ParticipantDisconnected);
+      if (this.roomEvents.get(RoomEvent.ParticipantDisconnected)) {
+        this.room!.on(
+          RoomEvent.ParticipantDisconnected,
+          (participant: RemoteParticipant) => {
+            this.updateEventList(
+              RoomEvent.ParticipantDisconnected,
+              { participant },
+              participant.identity
+            );
+            this.remoteTracks.delete(participant.identity);
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.TrackPublished) !==
+        oldValues.get(RoomEvent.TrackPublished)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.TrackPublished);
+      if (this.roomEvents.get(RoomEvent.TrackPublished)) {
+        this.room!.on(
+          RoomEvent.TrackPublished,
+          (
+            publication: RemoteTrackPublication,
+            participant: RemoteParticipant
+          ) => {
+            this.updateEventList(
+              RoomEvent.TrackPublished,
+              { publication, participant },
+              `${participant.identity} (${publication.source})`
+            );
+            if (this.roomConf.subscriber) {
+              publication.setSubscribed(true);
+            }
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.TrackSubscribed) !==
+        oldValues.get(RoomEvent.TrackSubscribed)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.TrackSubscribed);
+      if (this.roomEvents.get(RoomEvent.TrackSubscribed)) {
+        this.room!.on(
+          RoomEvent.TrackSubscribed,
+          (
+            track: RemoteTrack,
+            publication: RemoteTrackPublication,
+            participant: RemoteParticipant
+          ) => {
+            this.updateEventList(
+              RoomEvent.TrackSubscribed,
+              { track, publication, participant },
+              `${participant.identity} (${publication.source})`
+            );
+            if (!this.remoteTracks.has(participant.identity)) {
+              this.remoteTracks.set(participant.identity, {
+                audioTrack: undefined,
+                videoTrack: undefined,
+              });
+            }
+            if (publication.kind === Track.Kind.Video) {
+              this.remoteTracks.get(participant.identity)!.videoTrack =
+                track as RemoteVideoTrack;
+            } else if (publication.kind === Track.Kind.Audio) {
+              this.remoteTracks.get(participant.identity)!.audioTrack =
+                track as RemoteAudioTrack;
+            } else {
+              console.warn('Unknown track kind');
+            }
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.TrackSubscriptionFailed) !==
+        oldValues.get(RoomEvent.TrackSubscriptionFailed)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.TrackSubscriptionFailed);
+      if (this.roomEvents.get(RoomEvent.TrackSubscriptionFailed)) {
+        this.room!.on(
+          RoomEvent.TrackSubscriptionFailed,
+          (
+            trackSid: string,
+            participant: RemoteParticipant,
+            reason?: SubscriptionError
+          ) => {
+            this.updateEventList(
+              RoomEvent.TrackSubscriptionFailed,
+              { trackSid, participant },
+              `${participant.identity} (${trackSid}). Reason: ${reason}`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.TrackUnpublished) !==
+        oldValues.get(RoomEvent.TrackUnpublished)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.TrackUnpublished);
+      if (this.roomEvents.get(RoomEvent.TrackUnpublished)) {
+        this.room!.on(
+          RoomEvent.TrackUnpublished,
+          (
+            publication: RemoteTrackPublication,
+            participant: RemoteParticipant
+          ) => {
+            this.updateEventList(
+              RoomEvent.TrackUnpublished,
+              { publication, participant },
+              `${participant.identity} (${publication.source})`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.TrackUnsubscribed) !==
+        oldValues.get(RoomEvent.TrackUnsubscribed)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.TrackUnsubscribed);
+      if (this.roomEvents.get(RoomEvent.TrackUnsubscribed)) {
+        this.room!.on(
+          RoomEvent.TrackUnsubscribed,
+          (
+            track: Track,
+            publication: RemoteTrackPublication,
+            participant: RemoteParticipant
+          ) => {
+            this.updateEventList(
+              RoomEvent.TrackUnsubscribed,
+              { track, publication, participant },
+              `${participant.identity} (${publication.source})`
+            );
+            let remoteTracks = this.remoteTracks.get(participant.identity);
+            if (remoteTracks) {
+              if (publication.kind === Track.Kind.Video) {
+                delete remoteTracks.videoTrack;
+              } else if (publication.kind === Track.Kind.Audio) {
+                delete remoteTracks.audioTrack;
+              } else {
+                console.warn('Unknown track kind');
+              }
+              if (
+                remoteTracks.audioTrack === undefined &&
+                remoteTracks.videoTrack === undefined
+              ) {
+                this.remoteTracks.delete(participant.identity);
+              }
+            }
+            track.detach();
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.TrackMuted) !==
+        oldValues.get(RoomEvent.TrackMuted)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.TrackMuted);
+      if (this.roomEvents.get(RoomEvent.TrackMuted)) {
+        this.room!.on(
+          RoomEvent.TrackMuted,
+          (publication: TrackPublication, participant: Participant) => {
+            this.updateEventList(
+              RoomEvent.TrackMuted,
+              { publication, participant },
+              `${participant.identity} (${publication.source})`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.TrackUnmuted) !==
+        oldValues.get(RoomEvent.TrackUnmuted)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.TrackUnmuted);
+      if (this.roomEvents.get(RoomEvent.TrackUnmuted)) {
+        this.room!.on(
+          RoomEvent.TrackUnmuted,
+          (publication: TrackPublication, participant: Participant) => {
+            this.updateEventList(
+              RoomEvent.TrackUnmuted,
+              { publication, participant },
+              `${participant.identity} (${publication.source})`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.LocalTrackPublished) !==
+        oldValues.get(RoomEvent.LocalTrackPublished)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.LocalTrackPublished);
+      if (this.roomEvents.get(RoomEvent.LocalTrackPublished)) {
+        this.room!.on(
+          RoomEvent.LocalTrackPublished,
+          (
+            publication: LocalTrackPublication,
+            participant: LocalParticipant
+          ) => {
+            this.updateEventList(
+              RoomEvent.LocalTrackPublished,
+              { publication, participant },
+              publication.source
+            );
+            if (publication.kind === Track.Kind.Video) {
+              this.localTracks.videoTrack = publication.videoTrack;
+            } else if (publication.kind === Track.Kind.Audio) {
+              this.localTracks.audioTrack = publication.audioTrack;
+            }
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.LocalTrackUnpublished) !==
+        oldValues.get(RoomEvent.LocalTrackUnpublished)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.LocalTrackUnpublished);
+      if (this.roomEvents.get(RoomEvent.LocalTrackUnpublished)) {
+        this.room!.on(
+          RoomEvent.LocalTrackUnpublished,
+          (
+            publication: LocalTrackPublication,
+            participant: LocalParticipant
+          ) => {
+            this.updateEventList(
+              RoomEvent.LocalTrackUnpublished,
+              { publication, participant },
+              publication.source
+            );
+            publication.track!.detach();
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.LocalAudioSilenceDetected) !==
+        oldValues.get(RoomEvent.LocalAudioSilenceDetected)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.LocalAudioSilenceDetected);
+      if (this.roomEvents.get(RoomEvent.LocalAudioSilenceDetected)) {
+        this.room!.on(
+          RoomEvent.LocalAudioSilenceDetected,
+          (publication: LocalTrackPublication) => {
+            this.updateEventList(
+              RoomEvent.LocalAudioSilenceDetected,
+              { publication },
+              publication.source
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.ParticipantMetadataChanged) !==
+        oldValues.get(RoomEvent.ParticipantMetadataChanged)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.ParticipantMetadataChanged);
+      if (this.roomEvents.get(RoomEvent.ParticipantMetadataChanged)) {
+        this.room!.on(
+          RoomEvent.ParticipantMetadataChanged,
+          (metadata: string | undefined, participant: Participant) => {
+            this.updateEventList(
+              RoomEvent.ParticipantMetadataChanged,
+              { metadata, participant },
+              `previous: ${metadata}, new: ${participant.metadata}`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.ParticipantNameChanged) !==
+        oldValues.get(RoomEvent.ParticipantNameChanged)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.ParticipantNameChanged);
+      if (this.roomEvents.get(RoomEvent.ParticipantNameChanged)) {
+        this.room!.on(
+          RoomEvent.ParticipantNameChanged,
+          (name: string, participant: Participant) => {
+            this.updateEventList(
+              RoomEvent.ParticipantNameChanged,
+              { name, participant },
+              `${participant.identity} (${name})`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.ParticipantPermissionsChanged) !==
+        oldValues.get(RoomEvent.ParticipantPermissionsChanged)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.ParticipantPermissionsChanged);
+      if (this.roomEvents.get(RoomEvent.ParticipantPermissionsChanged)) {
+        this.room!.on(
+          RoomEvent.ParticipantPermissionsChanged,
+          (
+            prevPermissions: ParticipantPermission | undefined,
+            participant: RemoteParticipant | LocalParticipant
+          ) => {
+            this.updateEventList(
+              RoomEvent.ParticipantPermissionsChanged,
+              { prevPermissions, participant },
+              `${
+                participant.identity
+              } (previous: ${prevPermissions}, new: ${JSON.stringify(
+                participant.permissions
+              )}`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.ActiveSpeakersChanged) !==
+        oldValues.get(RoomEvent.ActiveSpeakersChanged)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.ActiveSpeakersChanged);
+      if (this.roomEvents.get(RoomEvent.ActiveSpeakersChanged)) {
+        this.room!.on(
+          RoomEvent.ActiveSpeakersChanged,
+          (speakers: Participant[]) => {
+            this.updateEventList(
+              RoomEvent.ActiveSpeakersChanged,
+              { speakers },
+              JSON.stringify(
+                speakers.map(
+                  (speaker) => `${speaker.identity}: ${speaker.audioLevel}`
+                )
+              )
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.RoomMetadataChanged) !==
+        oldValues.get(RoomEvent.RoomMetadataChanged)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.RoomMetadataChanged);
+      if (this.roomEvents.get(RoomEvent.RoomMetadataChanged)) {
+        this.room!.on(RoomEvent.RoomMetadataChanged, (metadata: string) => {
+          this.updateEventList(
+            RoomEvent.RoomMetadataChanged,
+            { metadata },
+            metadata
+          );
+        });
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.DataReceived) !==
+        oldValues.get(RoomEvent.DataReceived)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.DataReceived);
+      if (this.roomEvents.get(RoomEvent.DataReceived)) {
+        this.room!.on(
+          RoomEvent.DataReceived,
+          (
+            payload: Uint8Array,
+            participant?: RemoteParticipant,
+            kind?: DataPacket_Kind,
+            topic?: string
+          ) => {
+            const decodedPayload = this.decoder.decode(payload);
+            this.updateEventList(
+              RoomEvent.DataReceived,
+              { payload: decodedPayload, participant, kind, topic },
+              decodedPayload
+
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.ConnectionQualityChanged) !==
+        oldValues.get(RoomEvent.ConnectionQualityChanged)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.ConnectionQualityChanged);
+      if (this.roomEvents.get(RoomEvent.ConnectionQualityChanged)) {
+        this.room!.on(
+          RoomEvent.ConnectionQualityChanged,
+          (quality: ConnectionQuality, participant: Participant) => {
+            this.updateEventList(
+              RoomEvent.ConnectionQualityChanged,
+              { quality, participant },
+              `${participant.identity} (${quality})`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.MediaDevicesError) !==
+        oldValues.get(RoomEvent.MediaDevicesError)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.MediaDevicesError);
+      if (this.roomEvents.get(RoomEvent.MediaDevicesError)) {
+        this.room!.on(RoomEvent.MediaDevicesError, (error: Error) => {
+          this.updateEventList(
+            RoomEvent.MediaDevicesError,
+            {
+              error: error.message,
+              failure: MediaDeviceFailure.getFailure(error),
+            },
+            `${error.message} (${MediaDeviceFailure.getFailure(error)})`
+          );
+        });
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.TrackStreamStateChanged) !==
+        oldValues.get(RoomEvent.TrackStreamStateChanged)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.TrackStreamStateChanged);
+      if (this.roomEvents.get(RoomEvent.TrackStreamStateChanged)) {
+        this.room!.on(
+          RoomEvent.TrackStreamStateChanged,
+          (
+            publication: RemoteTrackPublication,
+            streamState: Track.StreamState,
+            participant: RemoteParticipant
+          ) => {
+            this.updateEventList(
+              RoomEvent.TrackStreamStateChanged,
+              { publication, streamState, participant },
+              `${participant.identity} (${publication.source}: ${streamState})`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.TrackSubscriptionPermissionChanged) !==
+        oldValues.get(RoomEvent.TrackSubscriptionPermissionChanged)
+    ) {
+      this.room?.removeAllListeners(
+        RoomEvent.TrackSubscriptionPermissionChanged
+      );
+      if (this.roomEvents.get(RoomEvent.TrackSubscriptionPermissionChanged)) {
+        this.room!.on(
+          RoomEvent.TrackSubscriptionPermissionChanged,
+          (
+            publication: RemoteTrackPublication,
+            status: TrackPublication.PermissionStatus,
+            participant: RemoteParticipant
+          ) => {
+            this.updateEventList(
+              RoomEvent.TrackSubscriptionPermissionChanged,
+              { publication, status, participant },
+              `${participant.identity} (${publication.source}: ${status})`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.TrackSubscriptionStatusChanged) !==
+        oldValues.get(RoomEvent.TrackSubscriptionStatusChanged)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.TrackSubscriptionStatusChanged);
+      if (this.roomEvents.get(RoomEvent.TrackSubscriptionStatusChanged)) {
+        this.room!.on(
+          RoomEvent.TrackSubscriptionStatusChanged,
+          (
+            publication: RemoteTrackPublication,
+            status: TrackPublication.SubscriptionStatus,
+            participant: RemoteParticipant
+          ) => {
+            this.updateEventList(
+              RoomEvent.TrackSubscriptionStatusChanged,
+              { publication, status, participant },
+              `${participant.identity} (${publication.source} to ${status})`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.AudioPlaybackStatusChanged) !==
+        oldValues.get(RoomEvent.AudioPlaybackStatusChanged)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.AudioPlaybackStatusChanged);
+      if (this.roomEvents.get(RoomEvent.AudioPlaybackStatusChanged)) {
+        this.room!.on(
+          RoomEvent.AudioPlaybackStatusChanged,
+          (playing: boolean) => {
+            this.updateEventList(
+              RoomEvent.AudioPlaybackStatusChanged,
+              { playing },
+              `canPlaybackAudio: ${this.room!.canPlaybackAudio}`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.SignalConnected) !==
+        oldValues.get(RoomEvent.SignalConnected)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.SignalConnected);
+      if (this.roomEvents.get(RoomEvent.SignalConnected)) {
+        this.room!.on(RoomEvent.SignalConnected, () => {
+          this.updateEventList(RoomEvent.SignalConnected, {}, '');
+        });
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.RecordingStatusChanged) !==
+        oldValues.get(RoomEvent.RecordingStatusChanged)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.RecordingStatusChanged);
+      if (this.roomEvents.get(RoomEvent.RecordingStatusChanged)) {
+        this.room!.on(
+          RoomEvent.RecordingStatusChanged,
+          (recording: boolean) => {
+            this.updateEventList(
+              RoomEvent.RecordingStatusChanged,
+              { recording },
+              `recording: ${recording}`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.ParticipantEncryptionStatusChanged) !==
+        oldValues.get(RoomEvent.ParticipantEncryptionStatusChanged)
+    ) {
+      this.room?.removeAllListeners(
+        RoomEvent.ParticipantEncryptionStatusChanged
+      );
+      if (this.roomEvents.get(RoomEvent.ParticipantEncryptionStatusChanged)) {
+        this.room!.on(
+          RoomEvent.ParticipantEncryptionStatusChanged,
+          (encrypted: boolean, participant?: Participant) => {
+            this.updateEventList(
+              RoomEvent.ParticipantEncryptionStatusChanged,
+              { encrypted, participant },
+              `${participant?.identity} (encrypted: ${encrypted})`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.EncryptionError) !==
+        oldValues.get(RoomEvent.EncryptionError)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.EncryptionError);
+      if (this.roomEvents.get(RoomEvent.EncryptionError)) {
+        this.room!.on(RoomEvent.EncryptionError, (error: Error) => {
+          this.updateEventList(
+            RoomEvent.EncryptionError,
+            { error: error.message },
+            `${error.message}`
+          );
+        });
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.DCBufferStatusChanged) !==
+        oldValues.get(RoomEvent.DCBufferStatusChanged)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.DCBufferStatusChanged);
+      if (this.roomEvents.get(RoomEvent.DCBufferStatusChanged)) {
+        this.room!.on(
+          RoomEvent.DCBufferStatusChanged,
+          (isLow: boolean, kind: DataPacket_Kind) => {
+            this.updateEventList(
+              RoomEvent.DCBufferStatusChanged,
+              { isLow, kind },
+              `isLow: ${isLow} (${kind})`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.ActiveDeviceChanged) !==
+        oldValues.get(RoomEvent.ActiveDeviceChanged)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.ActiveDeviceChanged);
+      if (this.roomEvents.get(RoomEvent.ActiveDeviceChanged)) {
+        this.room!.on(
+          RoomEvent.ActiveDeviceChanged,
+          (kind: MediaDeviceKind, deviceId: string) => {
+            this.updateEventList(
+              RoomEvent.DCBufferStatusChanged,
+              { kind, deviceId },
+              `${kind} (${deviceId})`
+            );
+          }
+        );
+      }
+    }
   }
 
-  private simulateNetworkDrop(): void {
-    const jsonRpClient = (this.OV as any).jsonRpcClient;
-    jsonRpClient.close();
-  }
-
-  updateEventList(eventName: string, eventContent: string, event: Event) {
-    const eventInterface: OpenViduEvent = { eventName, eventContent, event };
-    this.events.push(eventInterface);
+  updateEventList(
+    eventType: RoomEvent,
+    eventContent: any,
+    eventDescription: string
+  ) {
+    const event: TestAppEvent = {
+      eventType,
+      eventCategory: 'RoomEvent',
+      eventContent,
+      eventDescription,
+    };
+    this.events.push(event);
     this.testFeedService.pushNewEvent({ user: this.index, event });
   }
 
-  toggleSubscribeTo(): void {
-    this.subscribeTo = !this.subscribeTo;
-  }
-
-  togglePublishTo(): void {
-    this.publishTo = !this.publishTo;
-    if (this.publishTo) {
-      this.publisherProperties = this.publisherPropertiesAux;
-    } else {
-      this.publisherPropertiesAux = Object.assign({}, this.publisherProperties);
-      this.publisherProperties.publishAudio = false;
-      this.publisherProperties.publishVideo = false;
-      this.publisherProperties.audioSource = false;
-      this.publisherProperties.videoSource = false;
-    }
-
-    if (this.publishTo) {
-      this.optionsVideo = 'video';
-    } else {
-      this.optionsVideo = '';
-    }
-
-    this.subscribeToRemote = false;
-  }
-
-  toggleSendAudio(): void {
-    if (this.publisherProperties.audioSource === false) {
-      this.publisherProperties.audioSource = this.publisherPropertiesAux.audioSource;
-    } else {
-      this.publisherPropertiesAux.audioSource = this.publisherProperties.audioSource;
-      this.publisherProperties.audioSource = false;
+  async disconnectRoom() {
+    if (this.room) {
+      await this.room.disconnect();
+      delete this.room;
+      delete this.localTracks.audioTrack;
+      delete this.localTracks.videoTrack;
+      this.remoteTracks.clear();
     }
   }
 
-  toggleSendVideo(): void {
-    if (this.publisherProperties.videoSource === false) {
-      this.publisherProperties.videoSource = this.publisherPropertiesAux.videoSource;
-    } else {
-      this.publisherPropertiesAux.videoSource = this.publisherProperties.videoSource;
-      this.publisherProperties.videoSource = false;
-    }
+  async setCameraEnabled() {
+    this.room!.localParticipant.setCameraEnabled(true);
   }
 
-  toggleActiveAudio(): void {
-    this.publisherProperties.publishAudio = !this.publisherProperties.publishAudio;
+  async setMicrophoneEnabled() {
+    this.room!.localParticipant.setMicrophoneEnabled(true);
   }
 
-  toggleActiveVideo(): void {
-    this.publisherProperties.publishVideo = !this.publisherProperties.publishVideo;
+  openRoomOptionsDialog() {
+    // this.roomOptions.customSessionId = this.sessionName;
+    // const dialogRef = this.dialog.open(SessionPropertiesDialogComponent, {
+    //   data: {
+    //     sessionProperties: this.sessionProperties,
+    //     turnConf: this.turnConf,
+    //     manualTurnConf: this.manualTurnConf,
+    //     customToken: this.customToken,
+    //     forcePublishing: this.forcePublishing,
+    //     reconnectionOnServerFailure: this.reconnectionOnServerFailure,
+    //     connectionProperties: this.connectionProperties,
+    //   }
+    // });
+    // dialogRef.afterClosed().subscribe(result => {
+    //   if (!!result) {
+    //     this.sessionProperties = result.sessionProperties;
+    //     if (!!this.sessionProperties.customSessionId) {
+    //       this.sessionName = this.sessionProperties.customSessionId;
+    //     }
+    //     this.turnConf = result.turnConf;
+    //     this.manualTurnConf = result.manualTurnConf;
+    //     this.customToken = result.customToken;
+    //     this.forcePublishing = result.forcePublishing;
+    //     this.reconnectionOnServerFailure = result.reconnectionOnServerFailure;
+    //     this.connectionProperties = result.connectionProperties;
+    //   }
+    //   document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
+    // });
   }
 
-  sendMessage(): void {
-    this.session.signal({
-      data: 'Test message',
-      to: [],
-      type: 'chat'
-    })
-      .then(() => {
-        console.log('Message successfully sent');
-      })
-      .catch(error => {
-        console.error(error);
-      });
-    // this.initGrayVideo();
-  }
-
-  updateSessionEvents(oldValues, firstTime) {
-
-    if (this.sessionEvents.streamCreated !== oldValues.streamCreated || firstTime) {
-      this.session.off('streamCreated');
-      if (this.sessionEvents.streamCreated) {
-        this.session.on('streamCreated', (event: StreamEvent) => {
-          this.changeDetector.detectChanges();
-          if (this.subscribeTo) {
-            this.syncSubscribe(this.session, event);
-          }
-          this.updateEventList('streamCreated', event.stream.streamId, event);
-        });
-      }
-    }
-
-    if (this.sessionEvents.streamDestroyed !== oldValues.streamDestroyed || firstTime) {
-      this.session.off('streamDestroyed');
-      if (this.sessionEvents.streamDestroyed) {
-        this.session.on('streamDestroyed', (event: StreamEvent) => {
-          const index = this.subscribers.indexOf(<Subscriber>event.stream.streamManager);
-          if (index > -1) {
-            this.subscribers.splice(index, 1);
-          }
-          this.updateEventList('streamDestroyed', event.stream.streamId, event);
-        });
-      }
-    }
-
-    if (this.sessionEvents.streamPropertyChanged !== oldValues.streamPropertyChanged || firstTime) {
-      this.session.off('streamPropertyChanged');
-      if (this.sessionEvents.streamPropertyChanged) {
-        this.session.on('streamPropertyChanged', (event: StreamPropertyChangedEvent) => {
-          let newValue: string;
-          if (event.changedProperty === 'filter') {
-            newValue = !event.newValue ? undefined : event.newValue.toString();
-          } else {
-            newValue = event.changedProperty === 'videoDimensions' ? JSON.stringify(event.newValue) : event.newValue.toString();
-          }
-          this.updateEventList('streamPropertyChanged', event.changedProperty + ' [' + newValue + ']', event);
-        });
-      }
-    }
-
-    if (this.sessionEvents.connectionPropertyChanged !== oldValues.connectionPropertyChanged || firstTime) {
-      this.session.off('connectionPropertyChanged');
-      if (this.sessionEvents.connectionPropertyChanged) {
-        this.session.on('connectionPropertyChanged', (event: ConnectionPropertyChangedEvent) => {
-          this.updateEventList('connectionPropertyChanged', event.changedProperty + ' [' + event.newValue + ']', event);
-        });
-      }
-    }
-
-    if (this.sessionEvents.networkQualityLevelChanged !== oldValues.networkQualityLevelChanged || firstTime) {
-      this.session.off('networkQualityLevelChanged');
-      if (this.sessionEvents.networkQualityLevelChanged) {
-        this.session.on('networkQualityLevelChanged', (event: NetworkQualityLevelChangedEvent) => {
-          this.updateEventList('networkQualityLevelChanged', event.connection.connectionId + ' [new:' + event.newValue + ',old:' + event.oldValue + ']', event);
-        });
-      }
-    }
-
-    if (this.sessionEvents.connectionCreated !== oldValues.connectionCreated || firstTime) {
-      this.session.off('connectionCreated');
-      if (this.sessionEvents.connectionCreated) {
-        this.session.on('connectionCreated', (event: ConnectionEvent) => {
-          this.updateEventList('connectionCreated', event.connection.connectionId, event);
-        });
-      }
-    }
-
-    if (this.sessionEvents.connectionDestroyed !== oldValues.connectionDestroyed || firstTime) {
-      this.session.off('connectionDestroyed');
-      if (this.sessionEvents.connectionDestroyed) {
-        this.session.on('connectionDestroyed', (event: ConnectionEvent) => {
-          delete this.subscribers[event.connection.connectionId];
-          this.updateEventList('connectionDestroyed', event.connection.connectionId, event);
-        });
-      }
-    }
-
-    if (this.sessionEvents.sessionDisconnected !== oldValues.sessionDisconnected || firstTime) {
-      this.session.off('sessionDisconnected');
-      if (this.sessionEvents.sessionDisconnected) {
-        this.session.on('sessionDisconnected', async (event: SessionDisconnectedEvent) => {
-          this.updateEventList('sessionDisconnected', '', event);
-          this.subscribers = [];
-          delete this.publisher;
-          delete this.session;
-          delete this.OV;
-
-          if (event.reason === 'nodeCrashed' && this.reconnectionOnServerFailure) {
-            console.warn('Reconnecting after node crash');
-            await this.initializeNodeClient((event.target as Session).sessionId);
-            const connection: Connection = await this.createConnection();
-            this.joinSessionShared(connection.token);
-          }
-
-        });
-      }
-    }
-
-    if (this.sessionEvents.signal !== oldValues.signal || firstTime) {
-      this.session.off('signal');
-      if (this.sessionEvents.signal) {
-        this.session.on('signal', (event: SignalEvent) => {
-          this.updateEventList('signal', !!event.from ? event.from.connectionId : 'server'
-            + ' - ' + event.type
-            + ' - ' + event.data, event);
-        });
-      }
-    }
-
-    if (this.sessionEvents.recordingStarted !== oldValues.recordingStarted || firstTime) {
-      this.session.off('recordingStarted');
-      if (this.sessionEvents.recordingStarted) {
-        this.session.on('recordingStarted', (event: RecordingEvent) => {
-          this.updateEventList('recordingStarted', event.id, event);
-        });
-      }
-    }
-
-    if (this.sessionEvents.recordingStopped !== oldValues.recordingStopped || firstTime) {
-      this.session.off('recordingStopped');
-      if (this.sessionEvents.recordingStopped) {
-        this.session.on('recordingStopped', (event: RecordingEvent) => {
-          this.updateEventList('recordingStopped', event.id, event);
-        });
-      }
-    }
-
-    if (this.sessionEvents.broadcastStarted !== oldValues.broadcastStarted || firstTime) {
-      this.session.off('broadcastStarted');
-      if (this.sessionEvents.broadcastStarted) {
-        this.session.on('broadcastStarted', () => {
-          this.updateEventList('broadcastStarted', '', { cancelable: false, target: this.session, type: 'broadcastStarted', hasBeenPrevented: false, isDefaultPrevented: undefined, preventDefault: undefined, callDefaultBehavior: undefined });
-        });
-      }
-    }
-
-    if (this.sessionEvents.broadcastStopped !== oldValues.broadcastStopped || firstTime) {
-      this.session.off('broadcastStopped');
-      if (this.sessionEvents.broadcastStopped) {
-        this.session.on('broadcastStopped', () => {
-          this.updateEventList('broadcastStopped', '', { cancelable: false, target: this.session, type: 'broadcastStopped', hasBeenPrevented: false, isDefaultPrevented: undefined, preventDefault: undefined, callDefaultBehavior: undefined });
-        });
-      }
-    }
-
-    if (this.sessionEvents.publisherStartSpeaking !== oldValues.publisherStartSpeaking || firstTime) {
-      this.session.off('publisherStartSpeaking');
-      if (this.sessionEvents.publisherStartSpeaking) {
-        this.session.on('publisherStartSpeaking', (event: PublisherSpeakingEvent) => {
-          this.updateEventList('publisherStartSpeaking', event.connection.connectionId, event);
-        });
-      }
-    }
-
-    if (this.sessionEvents.publisherStopSpeaking !== oldValues.publisherStopSpeaking || firstTime) {
-      if (!this.sessionEvents.publisherStartSpeaking) {
-        this.session.off('publisherStopSpeaking');
-      }
-      if (this.sessionEvents.publisherStopSpeaking) {
-        this.session.on('publisherStopSpeaking', (event: PublisherSpeakingEvent) => {
-          this.updateEventList('publisherStopSpeaking', event.connection.connectionId, event);
-        });
-      }
-    }
-
-    if (this.sessionEvents.speechToTextMessage !== oldValues.speechToTextMessage || firstTime) {
-      if (!this.sessionEvents.speechToTextMessage) {
-        this.session.off('speechToTextMessage');
-      }
-      if (this.sessionEvents.speechToTextMessage) {
-        this.session.on('speechToTextMessage', (event: SpeechToTextEvent) => {
-          this.updateEventList('speechToTextMessage', event.text, event);
-          if (event.reason === 'recognized') {
-            console.warn(event);
-          }
-        });
-      }
-    }
-
-    if (this.sessionEvents.reconnecting !== oldValues.reconnecting || firstTime) {
-      this.session.off('reconnecting');
-      if (this.sessionEvents.reconnecting) {
-        this.session.on('reconnecting', () => {
-          this.updateEventList('reconnecting', '', { cancelable: false, target: this.session, type: 'reconnecting', hasBeenPrevented: false, isDefaultPrevented: undefined, preventDefault: undefined, callDefaultBehavior: undefined });
-        });
-      }
-    }
-
-    if (this.sessionEvents.reconnected !== oldValues.reconnected || firstTime) {
-      this.session.off('reconnected');
-      if (this.sessionEvents.reconnected) {
-        this.session.on('reconnected', () => {
-          this.updateEventList('reconnected', '', { cancelable: false, target: this.session, type: 'reconnected', hasBeenPrevented: false, isDefaultPrevented: undefined, preventDefault: undefined, callDefaultBehavior: undefined });
-        });
-      }
-    }
-
-    if (this.sessionEvents.exception !== oldValues.exception || firstTime) {
-      this.session.off('exception');
-      if (this.sessionEvents.exception) {
-        this.session.on('exception', (event: ExceptionEvent) => {
-          this.updateEventList('exception', event.name, event);
-        });
-      }
-    }
-
-  }
-
-  syncInitPublisher() {
-    this.publisher = this.OV.initPublisher(
-      undefined,
-      this.publisherProperties,
-      err => {
-        if (err) {
-          console.warn(err);
-          this.openviduError = err;
-          if (err.name === 'SCREEN_EXTENSION_NOT_INSTALLED') {
-            this.dialog.open(ExtensionDialogComponent, {
-              data: { url: err.message },
-              disableClose: true,
-              width: '250px'
-            });
-          }
-        }
-      });
-
-    if (this.subscribeToRemote) {
-      this.publisher.subscribeToRemote();
-    }
-
-    this.session.publish(this.publisher).then(() => {
-      this.republishPossible = false;
-    }).catch((error: OpenViduError) => {
-      console.error(error);
-      if (!error.name) {
-        alert(error);
-      } else {
-        alert(error.name + ": " + error.message);
-      }
-
-      this.republishPossible = true;
-      this.session.unpublish(this.publisher);
-      delete this.publisher;
-    });
-  }
-
-  syncSubscribe(session: Session, event) {
-    this.subscribers.push(session.subscribe(event.stream, undefined));
-  }
-
-  openSessionPropertiesDialog() {
-    this.sessionProperties.customSessionId = this.sessionName;
-    const dialogRef = this.dialog.open(SessionPropertiesDialogComponent, {
+  openRoomApiDialog() {
+    const dialogRef = this.dialog.open(RoomApiDialogComponent, {
       data: {
-        sessionProperties: this.sessionProperties,
-        turnConf: this.turnConf,
-        manualTurnConf: this.manualTurnConf,
-        customToken: this.customToken,
-        forcePublishing: this.forcePublishing,
-        reconnectionOnServerFailure: this.reconnectionOnServerFailure,
-        connectionProperties: this.connectionProperties,
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (!!result) {
-        this.sessionProperties = result.sessionProperties;
-        if (!!this.sessionProperties.customSessionId) {
-          this.sessionName = this.sessionProperties.customSessionId;
-        }
-        this.turnConf = result.turnConf;
-        this.manualTurnConf = result.manualTurnConf;
-        this.customToken = result.customToken;
-        this.forcePublishing = result.forcePublishing;
-        this.reconnectionOnServerFailure = result.reconnectionOnServerFailure;
-        this.connectionProperties = result.connectionProperties;
-      }
-      document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
-    });
-  }
-
-  openSessionApiDialog() {
-    const defaultRecordingProperties = JSON.parse(JSON.stringify(this.sessionProperties.defaultRecordingProperties));
-    const defaultBroadcastProperties = JSON.parse(JSON.stringify(this.sessionProperties.defaultRecordingProperties));
-    const dialogRef = this.dialog.open(SessionApiDialogComponent, {
-      data: {
-        openVidu: !!this.OV_NodeClient ? this.OV_NodeClient : new OpenViduAPI(this.openviduUrl, this.openviduSecret),
-        session: this.sessionAPI,
-        sessionId: !!this.session ? this.session.sessionId : this.sessionName,
-        recordingProperties: !!this.recordingProperties ? this.recordingProperties : defaultRecordingProperties,
-        broadcastProperties: !!this.broadcastProperties ? this.broadcastProperties : defaultBroadcastProperties
+        room: this.room,
+        localParticipant: this.room?.localParticipant,
       },
-      disableClose: true
+      disableClose: true,
     });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (!result.session) {
-        delete this.sessionAPI;
-      }
-      this.recordingProperties = result.recordingProperties;
-      this.broadcastProperties = result.broadcastProperties;
-      document.getElementById('session-api-btn-' + this.index).classList.remove('cdk-program-focused');
+    dialogRef.afterClosed().subscribe((result) => {
+      document
+        .getElementById('room-api-btn-' + this.index)
+        ?.classList.remove('cdk-program-focused');
     });
   }
 
-  openSessionEventsDialog() {
-
-    const oldValues = {
-      connectionCreated: this.sessionEvents.connectionCreated,
-      connectionDestroyed: this.sessionEvents.connectionDestroyed,
-      sessionDisconnected: this.sessionEvents.sessionDisconnected,
-      streamCreated: this.sessionEvents.streamCreated,
-      streamDestroyed: this.sessionEvents.streamDestroyed,
-      streamPropertyChanged: this.sessionEvents.streamPropertyChanged,
-      connectionPropertyChanged: this.sessionEvents.connectionPropertyChanged,
-      networkQualityLevelChanged: this.sessionEvents.networkQualityLevelChanged,
-      recordingStarted: this.sessionEvents.recordingStarted,
-      recordingStopped: this.sessionEvents.recordingStopped,
-      broadcastStarted: this.sessionEvents.broadcastStarted,
-      broadcastStopped: this.sessionEvents.broadcastStopped,
-      signal: this.sessionEvents.signal,
-      publisherStartSpeaking: this.sessionEvents.publisherStartSpeaking,
-      publisherStopSpeaking: this.sessionEvents.publisherStopSpeaking,
-      speechToTextMessage: this.sessionEvents.speechToTextMessage,
-      reconnecting: this.sessionEvents.reconnecting,
-      reconnected: this.sessionEvents.reconnected,
-      exception: this.sessionEvents.exception
-    };
+  openRoomEventsDialog() {
+    const oldValues: Map<string, boolean> = new Map(
+      JSON.parse(JSON.stringify([...this.roomEvents]))
+    );
 
     const dialogRef = this.dialog.open(EventsDialogComponent, {
       data: {
-        eventCollection: this.sessionEvents,
-        target: 'Session'
+        eventCollection: this.roomEvents,
+        target: 'Session',
       },
-      width: '280px',
+      width: '800px',
       autoFocus: false,
-      disableClose: true
+      disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-
-      if (!!this.session && JSON.stringify(this.sessionEvents) !== JSON.stringify(oldValues)) {
-        this.updateSessionEvents(oldValues, false);
+    dialogRef.afterClosed().subscribe((result) => {
+      if (
+        !!this.room &&
+        JSON.stringify(Array.from(this.roomEvents.entries())) !==
+          JSON.stringify(Array.from(oldValues.entries()))
+      ) {
+        this.setupRoomEventListeners(oldValues, false);
       }
-
-      this.sessionEvents = {
-        connectionCreated: result.connectionCreated,
-        connectionDestroyed: result.connectionDestroyed,
-        sessionDisconnected: result.sessionDisconnected,
-        streamCreated: result.streamCreated,
-        streamDestroyed: result.streamDestroyed,
-        streamPropertyChanged: result.streamPropertyChanged,
-        connectionPropertyChanged: result.connectionPropertyChanged,
-        networkQualityLevelChanged: result.networkQualityLevelChanged,
-        recordingStarted: result.recordingStarted,
-        recordingStopped: result.recordingStopped,
-        broadcastStarted: result.broadcastStarted,
-        broadcastStopped: result.broadcastStopped,
-        signal: result.signal,
-        publisherStartSpeaking: result.publisherStartSpeaking,
-        publisherStopSpeaking: result.publisherStopSpeaking,
-        speechToTextMessage: result.speechToTextMessage,
-        reconnecting: result.reconnecting,
-        reconnected: result.reconnected,
-        exception: result.exception
-      };
-      document.getElementById('session-events-btn-' + this.index).classList.remove('cdk-program-focused');
     });
   }
 
-  openPublisherPropertiesDialog() {
-    const dialogRef = this.dialog.open(PublisherPropertiesDialogComponent, {
-      data: this.publisherProperties,
-      width: '300px',
-      disableClose: true
-    });
-
-    dialogRef.afterClosed().subscribe((result: PublisherProperties) => {
-      if (!!result) {
-        this.publisherProperties = result;
-        this.optionsVideo = this.publisherProperties.videoSource === 'screen' ? 'screen' : 'video';
-      }
-      document.getElementById('publisher-settings-btn-' + this.index).classList.remove('cdk-program-focused');
-    });
-  }
-
-  openSessionInfo() {
-    this.dialog.open(SessionInfoDialogComponent, {
-      data: {
-        sessionAPI: this.sessionAPI
-      },
-      width: '450px'
-    });
-  }
-
-  async initializeNodeClient(sessionId: string): Promise<any> {
-    this.OV_NodeClient = new OpenViduAPI(this.openviduUrl, this.openviduSecret);
-    this.sessionProperties.customSessionId = sessionId;
-    this.sessionAPI = await this.OV_NodeClient.createSession(this.sessionProperties);
-  }
-
-  async createConnection(): Promise<Connection> {
-    return this.sessionAPI.createConnection(this.connectionProperties);
-  }
-
-  updateEventFromChild(event: OpenViduEvent) {
-    this.updateEventList(event.eventName, event.eventContent, event.event);
-  }
-
-  updateSubscriberFromChild(newSubscriber: Subscriber) {
-    const oldSubscriber = this.subscribers.filter(sub => {
-      return sub.stream.streamId === newSubscriber.stream.streamId;
-    })[0];
-    this.subscribers[this.subscribers.indexOf(oldSubscriber)] = newSubscriber;
-  }
-
-  updateOptionsVideo(change) {
-    if (change.value === 'screen') {
-      this.publisherPropertiesAux.videoSource = this.publisherProperties.videoSource;
-      this.publisherProperties.videoSource = 'screen';
-    } else {
-      this.publisherProperties.videoSource = this.publisherPropertiesAux.videoSource;
+  sendData(destinationIdentity?: string) {
+    let strData = `Message from ${this.room?.localParticipant.identity}`;
+    strData += destinationIdentity ? ` to ${destinationIdentity}` : ' to all room';
+    const data = new TextEncoder().encode(strData);
+    let options: DataPublishOptions = {
+      reliable: true,
+    };
+    if (destinationIdentity) {
+      options.destinationIdentities = [destinationIdentity];
     }
+    this.room?.localParticipant.publishData(data, options);
   }
-
-  isVideo(): boolean {
-    return (this.publisherProperties.videoSource === undefined ||
-      typeof this.publisherProperties.videoSource === 'string' &&
-      this.publisherProperties.videoSource !== 'screen');
-  }
-
-  republishAfterError() {
-    this.syncInitPublisher();
-  }
-
-  private getSessionIdFromToken(token: string): string {
-    const queryParams = decodeURI(token.split('?')[1])
-      .split('&')
-      .map(param => param.split('='))
-      .reduce((values, [key, value]) => {
-        values[key] = value
-        return values
-      }, {});
-    return queryParams['sessionId'];
-  }
-
 }

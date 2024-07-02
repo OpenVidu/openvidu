@@ -9,40 +9,62 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
         <mat-dialog-content>
             <mat-slide-toggle [(ngModel)]="checkAll" (change)="updateAll()" [color]="'warn'"><i>ALL</i></mat-slide-toggle>
             <mat-divider></mat-divider>
-            <mat-slide-toggle *ngFor="let event of eventNamesArray()"
-                [(ngModel)]="eventCollection[event]"
-                [color]="'warn'">{{event}}
-            </mat-slide-toggle>
+            <div class="row no-wrap-row">
+                <div class="col-50">
+                    <div *ngFor="let event of eventArray | slice:0:(eventArray.length/2)" class="toggle">
+                        <mat-slide-toggle
+                            (change)="toggleEvent($event)"
+                            [checked]="eventCollection.get(event)"
+                            [name]="event"
+                            color="warn">{{event}}
+                        </mat-slide-toggle>
+                    </div>
+                </div>
+                <div class="col-50">
+                    <div *ngFor="let event of eventArray | slice:(eventArray.length/2 + 1):(eventArray.length)" class="toggle">
+                        <mat-slide-toggle
+                            (change)="toggleEvent($event)"
+                            [checked]="eventCollection.get(event)"
+                            [name]="event"
+                            color="warn">{{event}}
+                        </mat-slide-toggle>
+                    </div>
+                </div>
+            </div>
         </mat-dialog-content>
         <mat-dialog-actions>
-            <button mat-button id="close-dialog-btn" [mat-dialog-close]="eventCollection">CLOSE</button>
+            <button mat-button id="close-dialog-btn" mat-dialog-close="">CLOSE</button>
         </mat-dialog-actions>
     `,
     styles: [
         'mat-dialog-content { display: inline; }',
-        'mat-divider { margin-top: 5px; margin-bottom: 5px }'
+        'mat-divider { margin-top: 5px; margin-bottom: 5px; }',
+        '.col-50 {flex-basis: 50%; box-sizing: border-box; padding-left: 20px; }',
+        '.toggle { }'
     ]
 })
 export class EventsDialogComponent {
 
     target = '';
     checkAll = true;
-    eventCollection: any = {};
+    eventCollection: Map<string, boolean>;
+    eventArray: string[];
 
     constructor(public dialogRef: MatDialogRef<EventsDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) public data) {
+        @Inject(MAT_DIALOG_DATA) public data: any) {
         this.target = data.target;
         this.eventCollection = data.eventCollection;
+        this.eventArray = Array.from(this.eventCollection.keys());
     }
 
     updateAll() {
-        Object.keys(this.eventCollection).forEach(key => {
-            this.eventCollection[key] = this.checkAll;
+        this.eventCollection.forEach((value: boolean, key: string) => {
+            this.eventCollection.set(key, this.checkAll);
         });
     }
 
-    eventNamesArray(): String[] {
-        return Object.keys(this.eventCollection);
+    toggleEvent(event: any) {
+        this.eventCollection.set(event.source.name, event.checked);
     }
 
 }

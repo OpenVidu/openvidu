@@ -1,0 +1,105 @@
+:host {
+	/* Fixes layout bug. The OV_root is created with the entire layout width and it has a weird UX behaviour */
+	.no-size {
+		height: 0px !important;
+		width: 0px !important;
+	}
+
+	.participant-name {
+		padding: 0px;
+		position: absolute;
+		z-index: 999;
+		border-radius: var(--ov-video-radius);
+		color: var(--ov-text-color);
+		font-family: 'Roboto', 'RobotoDraft', Helvetica, Arial, sans-serif;
+	}
+	.participant-name-container {
+		background-color: var(--ov-secondary-color);
+		padding: 5px;
+		color: var(--ov-text-color);
+		font-weight: bold;
+		border-radius: var(--ov-video-radius);
+	}
+
+	#audio-wave-container {
+		position: absolute;
+		right: 0;
+		z-index: 999;
+		padding: 5px;
+	}
+
+	.fullscreen {
+		top: 40px;
+	}
+
+	.flex-container {
+		display: flex;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		button {
+			margin: auto;
+		}
+	}
+
+	.active-btn {
+		color: var(--ov-tertiary-color) !important;
+	}
+	.muted-btn {
+		color: var(--ov-warn-color) !important;
+	}
+
+	.stream-video-controls {
+		background-color: var(--ov-secondary-color);
+		border-radius: var(--ov-video-radius);
+		width: fit-content;
+		height: 50px;
+		opacity: 0.5;
+		position: absolute;
+		display: inline-grid;
+		z-index: 9999;
+		margin: auto;
+		bottom: 0;
+		right: 0;
+		left: 0;
+		top: 0;
+		// border: 2px solid var(--ov-text-color);
+		button {
+			color: var(--ov-text-color);
+		}
+	}
+
+	.stream-video-controls:hover {
+		opacity: 1;
+	}
+
+	.status-icons {
+		position: absolute;
+		bottom: 0;
+		z-index: 999;
+		left: 0;
+		line-height: 0;
+
+		#status-mic,
+		#status-muted-forcibly {
+			color: var(--ov-warn-color);
+			font-size: 24px;
+			margin: 5px;
+		}
+	}
+
+	/* Contains the video element, used to fix video letter-boxing */
+	.OV_stream {
+		width: 100%;
+		height: 100%;
+		position: relative;
+		overflow: hidden;
+		background-color: transparent;
+		border-radius: var(--ov-video-radius);
+		border: 2px solid var(--ov-primary-color);
+		box-sizing: border-box;
+	}
+
+	.OV_stream.speaking {
+		border-color: var(--ov-tertiary-color);
+	}
+}

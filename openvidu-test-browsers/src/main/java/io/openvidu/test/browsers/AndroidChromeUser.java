@@ -4,7 +4,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
@@ -43,8 +42,6 @@ public class AndroidChromeUser extends BrowserUser {
 		DesiredCapabilities capabilities = new DesiredCapabilities();
 		capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, MobilePlatform.ANDROID);
 		capabilities.setCapability(ChromeOptions.CAPABILITY, options);
-		capabilities.setCapability(CapabilityType.BROWSER_NAME, "Chrome");
-		capabilities.setCapability("appium:automationName", "UiAutomator2");
 
 		URL url = null;
 		try {

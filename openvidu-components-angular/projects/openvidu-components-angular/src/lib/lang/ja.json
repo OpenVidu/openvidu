@@ -1,0 +1,158 @@
+{
+	"ADMIN": {
+		"LOGIN": "ログイン",
+		"USERNAME": "ユーザー名",
+		"USERNAME_REQUIRED": "ユーザー名が必要です",
+		"PASSWORD": "パスワード",
+		"PASSWORD_REQUIRED": "パスワードが必要です",
+		"DASHBOARD_TITLE": "OpenVidu コールダッシュボード",
+		"LOAD_MORE": "もっと読み込む",
+		"RECORDINGS": {
+			"EMPTY": "録画はありません",
+			"SEARCH": "録画を検索する",
+			"DATE_START": "開始日",
+			"DATE_END": "終了日",
+			"DURATION": "長さ",
+			"SIZE": "サイズ",
+			"STATUS": "ステータス",
+			"NAME": "名前",
+			"ROOM": "部屋",
+			"OUTPUT": "出力モード"
+		},
+		"POWERED_BY": "Powered by"
+	},
+	"ROOM": {
+		"JOINING": "ルームに参加しています..."
+	},
+	"PREJOIN": {
+		"NICKNAME_SECTION": "ニックネームを設定してください",
+		"NICKNAME": "ニックネーム",
+		"NICKNAME_REQUIRED": "ニックネームが必要です",
+		"DEVICE_SECTION": "デバイスを選択してください",
+		"VIDEO_DEVICE": "ビデオデバイス",
+		"AUDIO_DEVICE": "オーディオデバイス",
+		"NO_VIDEO_DEVICE": "ビデオデバイスが見つかりません",
+		"NO_AUDIO_DEVICE": "オーディオデバイスが見つかりません",
+		"JOIN": "セッションに参加する",
+		"PREPARING": "セッションの準備中..."
+	},
+	"TOOLBAR": {
+		"MUTE_AUDIO": "オーディオをミュートする",
+		"UNMUTE_AUDIO": "オーディオをミュートしない",
+		"STOP_VIDEO": "あなたのビデオを停止",
+		"START_VIDEO": "あなたのビデオを開始",
+		"ENABLE_SCREEN": "スクリーン共有を有効にする",
+		"DISABLE_SCREEN": "スクリーン共有を停止にする",
+		"MORE_OPTIONS": "その他のオプション",
+		"FULLSCREEN": "フルスクリーン",
+		"EXIT_FULLSCREEN": "フルスクリーンを終了する",
+		"ENABLE_CAPTIONS": "字幕を有効にする",
+		"DISABLE_CAPTIONS": "字幕を無効にする",
+		"BACKGROUND": "背景効果",
+		"START_RECORDING": "録画開始",
+		"STOP_RECORDING": "録画の停止",
+		"SETTINGS": "設定",
+		"LEAVE": "セッションを終了する",
+		"PARTICIPANTS": "参加者",
+		"CHAT": "チャット",
+		"ACTIVITIES": "アクティビティ"
+	},
+	"STREAM": {
+		"SETTINGS": "設定",
+		"MUTE_SOUND": "サウンドをミュートする",
+		"UNMUTE_SOUND": "サウンドを有効にする",
+		"ZOOM_IN": "拡大する",
+		"ZOOM_OUT": "縮小する",
+		"REPLACE_SCREEN": "スクリーンを入れ替える",
+		"PIN": "ピン",
+		"UNPIN": "ピンの解除",
+		"MINIMIZE": "最小化",
+		"MAXIMIZE": "最大化"
+	},
+	"PANEL": {
+		"CLOSE": "閉じる",
+		"PRO_FEATURE": "この機能はOpenVidu PROの機能です",
+		"SEE_MORE": "もっと見る",
+		"PAID_FEATURE": "この機能は、OpenVidu 商用サービスの一部です。詳細については、commercial@openvidu.io までお問い合わせください。",
+		"CHAT": {
+			"TITLE": "チャット",
+			"YOU": "あなた",
+			"SUBTITLE": "メッセージはセッション終了時に削除されます",
+			"PLACEHOLDER": "メッセージを送信...",
+			"SEND": "送信する",
+			"MESSAGE_SENT_NOTIFICATION": "メッセージを送信しました",
+			"OPEN_CHAT": "開く"
+		},
+		"PARTICIPANTS": {
+			"TITLE": "参加者",
+			"CAMERA": "カメラ",
+			"MICROPHONE": "マイクロフォン",
+			"SCREEN": "スクリーン",
+			"NO_STREAMS": "ストリームなし",
+			"YOU": "あなた"
+		},
+		"SETTINGS": {
+			"TITLE": "設定",
+			"GENERAL": "全般的",
+			"VIDEO": "ビデオ",
+			"AUDIO": "オーディオ",
+			"LANGUAGE": "言語",
+			"CAPTIONS": "字幕",
+			"DISABLED_AUDIO": "オーディオを無効にする",
+			"DISABLED_VIDEO": "ビデオを無効にする",
+			"CAPTIONS_LANG_TEXT": "セッションの参加者が使用する言語を選択します。キャプションはその言語で表示されます。"
+		},
+		"BACKGROUND": {
+			"TITLE": "背景効果",
+			"BLURRED_SECTION": "エフェクトなし、ぼやけた背景",
+			"NO_EFFECTS": "背景エフェクトなし",
+			"BLURRED_EFFECT": "ぼやけた背景",
+			"IMAGES_SECTION": "背景画像"
+		},
+		"RECORDING": {
+			"TITLE": "レコーディング",
+			"SUBTITLE": "会議を録画して保存する",
+			"CONTENT_TITLE": "ビデオ通話を録音する",
+			"CONTENT_SUBTITLE": "録画が完了したら、簡単にダウンロードできます",
+			"STARTING": "録画開始",
+			"STOPPING": "録音停止",
+			"IN_PROGRESS": "録画中",
+			"PLAY": "再生",
+			"DELETE": "削除",
+			"CANCEL": "キャンセル",
+			"ACCEPT": "受け入れる",
+			"DELETE_QUESTION": "録画を削除してもよろしいですか",
+			"DOWNLOAD": "保存",
+			"RECORDINGS": "録画",
+			"NO_MODERATOR": "録画を開始できるのは、モデレーターのみです"
+		},
+		"STREAMING": {
+			"TITLE": "ストリーミング",
+			"SUBTITLE": "ミーティングを視聴者にストリーミングする",
+			"CONTENT_SUBTITLE": "OpenViduはストリーミングプラットフォームのURLが必要です。",
+			"START": "ストリーミングを開始する",
+			"STOP": "ストリーミングを終了する",
+			"URL": "ストリーミングURLを挿入してください",
+			"CANCEL": "キャンセル",
+			"REQUIRED_URL": "ストリーミングURLは必須です",
+			"NO_MODERATOR": "モデレータのみがストリーミングを開始できます"
+		}
+	},
+	"ERRORS": {
+		"SESSION": "セッションへの接続にエラーが発生しました",
+		"CONNECTION": "接続が失われました",
+		"RECONNECT": "セッションへの再接続を試みています",
+		"TOGGLE_CAMERA": "カメラの切り替えに失敗しました",
+		"TOGGLE_MICROPHONE": "マイクの切り替えに失敗しました",
+		"SCREEN_SHARING": "画面共有にエラーが発生しました",
+		"SCREEN_SUPPORT": "お使いのブラウザは画面共有に対応していません",
+		"MEDIA_ACCESS": "メディアデバイスへのアクセスが許可されませんでした",
+		"DEVICE_NOT_FOUND": "ビデオまたはオーディオデバイスが見つかりませんでした 最低1台は接続してください",
+		"SST_CONNECTION": "接続が失われました。文字起こしサービスに再接続しています",
+		"LOAD_RECORDING_TITLE": "録音の読み込みエラー",
+		"MEDIA_ERR_GENERIC": "ビデオの読み込み中にエラーが発生しました。",
+		"MEDIA_ERR_NETWORK": "ネットワークエラーにより、ビデオのダウンロードが途中で失敗しました。",
+		"MEDIA_ERR_DECODE": "破損の問題またはビデオがブラウザでサポートされていない機能を使用したために、ビデオの再生が中止されました。",
+		"MEDIA_ERR_SRC_NOT_SUPPORTED": "録画のストリーミングエラー：S3にアクセスできませんでした。"
+	}
+}

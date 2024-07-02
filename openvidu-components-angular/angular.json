@@ -15,17 +15,19 @@
 			"prefix": "app",
 			"architect": {
 				"build": {
-					"builder": "@angular-devkit/build-angular:browser",
+					"builder": "@angular-devkit/build-angular:application",
 					"options": {
-						"outputPath": "dist/openvidu-components-testapp",
+						"outputPath": {
+							"base": "dist/openvidu-components-testapp"
+						},
 						"index": "src/index.html",
-						"main": "src/main.ts",
 						"polyfills": ["zone.js"],
 						"tsConfig": "tsconfig.app.json",
 						"aot": true,
 						"assets": ["src/favicon.ico", "src/assets"],
 						"styles": ["src/styles.scss"],
-						"scripts": []
+						"scripts": [],
+						"browser": "src/main.ts"
 					},
 					"configurations": {
 						"development": {
@@ -33,9 +35,7 @@
 							"outputHashing": "all",
 							"sourceMap": true,
 							"namedChunks": false,
-							"extractLicenses": true,
-							"vendorChunk": false,
-							"buildOptimizer": false
+							"extractLicenses": true
 						},
 						"production": {
 							"fileReplacements": [
@@ -49,8 +49,6 @@
 							"sourceMap": false,
 							"namedChunks": false,
 							"extractLicenses": true,
-							"vendorChunk": false,
-							"buildOptimizer": true,
 							"budgets": [
 								{
 									"type": "initial",
@@ -69,7 +67,7 @@
 				"serve": {
 					"builder": "@angular-devkit/build-angular:dev-server",
 					"options": {
-						"proxyConfig": "src/proxy.config.json",
+						"proxyConfig": "src/proxy.conf.json",
 						"buildTarget": "openvidu-components-testapp:build"
 					},
 					"configurations": {
@@ -120,23 +118,23 @@
 				}
 			}
 		},
-		"openvidu-angular": {
+		"openvidu-components-angular": {
 			"projectType": "library",
-			"root": "projects/openvidu-angular",
-			"sourceRoot": "projects/openvidu-angular/src",
+			"root": "projects/openvidu-components-angular",
+			"sourceRoot": "projects/openvidu-components-angular/src",
 			"prefix": "ov",
 			"architect": {
 				"build": {
 					"builder": "@angular-devkit/build-angular:ng-packagr",
 					"options": {
-						"project": "projects/openvidu-angular/ng-package.json"
+						"project": "projects/openvidu-components-angular/ng-package.json"
 					},
 					"configurations": {
 						"production": {
-							"tsConfig": "projects/openvidu-angular/tsconfig.lib.prod.json"
+							"tsConfig": "projects/openvidu-components-angular/tsconfig.lib.prod.json"
 						},
 						"development": {
-							"tsConfig": "projects/openvidu-angular/tsconfig.lib.json"
+							"tsConfig": "projects/openvidu-components-angular/tsconfig.lib.json"
 						}
 					},
 					"defaultConfiguration": "production"
@@ -144,9 +142,9 @@
 				"test": {
 					"builder": "@angular-devkit/build-angular:karma",
 					"options": {
-						"main": "projects/openvidu-angular/src/test.ts",
-						"tsConfig": "projects/openvidu-angular/tsconfig.spec.json",
-						"karmaConfig": "projects/openvidu-angular/karma.conf.js"
+						"main": "projects/openvidu-components-angular/src/test.ts",
+						"tsConfig": "projects/openvidu-components-angular/tsconfig.spec.json",
+						"karmaConfig": "projects/openvidu-components-angular/karma.conf.js"
 					}
 				}
 			}
@@ -188,7 +186,32 @@
 								{
 									"type": "initial",
 									"maximumWarning": "1mb",
-									"maximumError": "3mb"
+									"maximumError": "2mb"
+								},
+								{
+									"type": "anyComponentStyle",
+									"maximumWarning": "2kb",
+									"maximumError": "4kb"
+								}
+							]
+						},
+						"testing": {
+							"fileReplacements": [
+								{
+									"replace": "src/environments/environment.ts",
+									"with": "src/environments/environment.testing.ts"
+								}
+							],
+							"optimization": true,
+							"outputHashing": "none",
+							"sourceMap": false,
+							"namedChunks": false,
+							"extractLicenses": true,
+							"budgets": [
+								{
+									"type": "initial",
+									"maximumWarning": "1mb",
+									"maximumError": "2mb"
 								},
 								{
 									"type": "anyComponentStyle",

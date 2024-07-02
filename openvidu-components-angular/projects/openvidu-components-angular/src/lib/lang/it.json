@@ -1,0 +1,158 @@
+{
+	"ADMIN": {
+		"LOGIN": "Login",
+		"USERNAME": "Nome utente",
+		"USERNAME_REQUIRED": "Il nome utente è obbligatorio",
+		"PASSWORD": "Password",
+		"PASSWORD_REQUIRED": "La password è obbligatoria",
+		"DASHBOARD_TITLE": "Dashboard delle chiamate OpenVidu",
+		"LOAD_MORE": "Carica di più",
+		"RECORDINGS": {
+			"EMPTY": "Non ci sono registrazioni",
+			"SEARCH": "Cerca una registrazione",
+			"DATE_START": "Data di inizio",
+			"DATE_END": "Data di fine",
+			"DURATION": "Durata",
+			"SIZE": "Dimensione",
+			"STATUS": "Stato",
+			"NAME": "Nome",
+			"ROOM": "Sala",
+			"OUTPUT": "Modalità di uscita"
+		},
+		"POWERED_BY": "Offerto da"
+	},
+	"ROOM": {
+		"JOINING": "Unendosi alla stanza..."
+	},
+	"PREJOIN": {
+		"NICKNAME_SECTION": "Imposta il tuo soprannome",
+		"NICKNAME": "Soprannome",
+		"NICKNAME_REQUIRED": "È richiesto un soprannome",
+		"DEVICE_SECTION": "Scegli i tuoi dispositivi",
+		"VIDEO_DEVICE": "Dispositivo video",
+		"AUDIO_DEVICE": "Dispositivo audio",
+		"NO_VIDEO_DEVICE": "Dispositivo video non trovato",
+		"NO_AUDIO_DEVICE": "Dispositivo audio non trovato",
+		"JOIN": "Unisciti alla sessione",
+		"PREPARING": "Preparazione della sessione in corso..."
+	},
+	"TOOLBAR": {
+		"MUTE_AUDIO": "Disattiva l'audio",
+		"UNMUTE_AUDIO": "Attiva l'audio",
+		"STOP_VIDEO": "Ferma il tuo video",
+		"START_VIDEO": "Avvia il tuo video",
+		"ENABLE_SCREEN": "Abilita la condivisione dello schermo",
+		"DISABLE_SCREEN": "Disabilita la condivisione dello schermo",
+		"MORE_OPTIONS": "Altre opzioni",
+		"FULLSCREEN": "Schermo intero",
+		"EXIT_FULLSCREEN": "Esci dallo schermo intero",
+		"ENABLE_CAPTIONS": "Abilita i sottotitoli",
+		"DISABLE_CAPTIONS": "Disabilita i sottotitoli",
+		"BACKGROUND": "Effetti di sfondo",
+		"START_RECORDING": "Avvia registrazione",
+		"STOP_RECORDING": "Interrompi registrazione",
+		"SETTINGS": "Impostazioni",
+		"LEAVE": "Abbandona la sessione",
+		"PARTICIPANTS": "Partecipanti",
+		"CHAT": "Chat",
+		"ACTIVITIES": "Attività"
+	},
+	"STREAM": {
+		"SETTINGS": "Impostazioni",
+		"MUTE_SOUND": "Disattiva l'audio",
+		"UNMUTE_SOUND": "Attiva l'audio",
+		"ZOOM_IN": "Ingrandisci",
+		"ZOOM_OUT": "Riduci",
+		"REPLACE_SCREEN": "Sostituisci lo schermo",
+		"PIN": "Fissa",
+		"UNPIN": "Sgancia",
+		"MINIMIZE": "Minimizza",
+		"MAXIMIZE": "Massimizza"
+	},
+	"PANEL": {
+		"CLOSE": "Chiudi",
+		"SEE_MORE": "Vedi di più",
+		"PRO_FEATURE": "Questa funzione fa parte del livello OpenVidu PRO",
+		"PAID_FEATURE": "Questa funzione fa parte del servizio commerciale di OpenVidu. Per ulteriori informazioni, contattaci tramite commercial@openvidu.io.",
+		"CHAT": {
+			"TITLE": "Chat",
+			"YOU": "Tu",
+			"SUBTITLE": "I messaggi verranno rimossi alla fine della sessione",
+			"PLACEHOLDER": "Invia un messaggio...",
+			"SEND": "Invia",
+			"MESSAGE_SENT_NOTIFICATION": "messaggio inviato",
+			"OPEN_CHAT": "APRI"
+		},
+		"PARTICIPANTS": {
+			"TITLE": "Partecipanti",
+			"CAMERA": "CAMERA",
+			"MICROPHONE": "MICROFONO",
+			"SCREEN": "SCREEN",
+			"NO_STREAMS": "NESSUNO",
+			"YOU": "Tu"
+		},
+		"SETTINGS": {
+			"TITLE": "Impostazioni",
+			"GENERAL": "Generale",
+			"VIDEO": "video",
+			"AUDIO": "Audio",
+			"LANGUAGE": "Lingua",
+			"CAPTIONS": "Sottotitoli",
+			"DISABLED_AUDIO": "Disattiva l'audio",
+			"DISABLED_VIDEO": "Disattiva il video",
+			"CAPTIONS_LANG_TEXT": "Seleziona la lingua che i partecipanti della sessione useranno. I sottotitoli appariranno in quella lingua."
+		},
+		"BACKGROUND": {
+			"TITLE": "Effetti di sfondo",
+			"BLURRED_SECTION": "Nessun effetto e sfondo sfocato",
+			"NO_EFFECTS": "Nessun effetto di sfondo",
+			"BLURRED_EFFECT": "Sfondo sfocato",
+			"IMAGES_SECTION": "Immagini di sfondo"
+		},
+		"RECORDING": {
+			"TITLE": "Registrazione",
+			"SUBTITLE": "Registra la tua riunione per i posteri",
+			"CONTENT_TITLE": "Registra la tua videochiamata",
+			"CONTENT_SUBTITLE": "Al termine della registrazione potrete scaricarla con facilità",
+			"STARTING": "Avvio della registrazione",
+			"STOPPING": "Interruzione della registrazione",
+			"IN_PROGRESS": "Registrazione in corso",
+			"PLAY": "Giocare a",
+			"DELETE": "Elimina",
+			"CANCEL": "Annulla",
+			"ACCEPT": "Accetta",
+			"DELETE_QUESTION": "Sei sicuro di voler eliminare la registrazione?",
+			"DOWNLOAD": "Scarica",
+			"RECORDINGS": "REGISTRAZIONI",
+			"NO_MODERATOR": "Solo il MODERATORE può avviare la registrazione"
+		},
+		"STREAMING": {
+			"TITLE": "Streaming",
+			"SUBTITLE": "Trasmetti la tua riunione al tuo pubblico",
+			"CONTENT_SUBTITLE": "OpenVidu ha bisogno dell'URL della piattaforma di streaming.",
+			"START": "Inizia lo streaming",
+			"STOP": "Termina lo streaming",
+			"URL": "Inserisci il tuo URL di streaming",
+			"CANCEL": "Annulla",
+			"REQUIRED_URL": "L'URL di streaming è obbligatorio",
+			"NO_MODERATOR": "Solo il MODERATORE può avviare lo streaming"
+		}
+	},
+	"ERRORS": {
+		"SESSION": "Si è verificato un errore di connessione alla sessione",
+		"CONNECTION": "Connessione persa",
+		"RECONNECT": "Oops! Si sta cercando di riconnettersi alla sessione...",
+		"TOGGLE_CAMERA": "Si è verificato un errore nell'attivazione della telecamera",
+		"TOGGLE_MICROPHONE": "Si è verificato un errore nell'attivazione del microfono",
+		"SCREEN_SHARING": "Errore nella condivisione dello schermo",
+		"SCREEN_SUPPORT": "Il browser non supporta la condivisione dello schermo",
+		"MEDIA_ACCESS": "L'accesso ai dispositivi multimediali non è stato consentito",
+		"DEVICE_NOT_FOUND": "Non sono stati trovati dispositivi video o audio. Si prega di collegarne almeno uno",
+		"SST_CONNECTION": "Connessione persa. Riconnessione al servizio di conversione testo da audio in corso...",
+		"LOAD_RECORDING_TITLE": "Errore nel caricamento della registrazione",
+		"MEDIA_ERR_GENERIC": "Si è verificato un errore durante il caricamento del video.",
+		"MEDIA_ERR_NETWORK": "Un errore di rete ha causato l'interruzione del download del video a metà strada.",
+		"MEDIA_ERR_DECODE": "La riproduzione del video è stata interrotta a causa di un problema di corruzione o perché il video utilizzava funzionalità non supportate dal tuo browser.",
+		"MEDIA_ERR_SRC_NOT_SUPPORTED": "Errore nello streaming della registrazione: impossibile raggiungere S3."
+	}
+}

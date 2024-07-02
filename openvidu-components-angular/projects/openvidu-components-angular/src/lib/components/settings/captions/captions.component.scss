@@ -1,0 +1,33 @@
+#lang-section {
+	margin-top: 10px;
+}
+
+.section-description {
+	color: var(--ov-panel-text-color);
+	font-size: 12px;
+	padding: 0px 5px;
+	display: block;
+}
+
+.lang-button {
+	background-color: var(--ov-logo-background-color);
+	color: var(--ov-text-color);
+}
+
+.pro-feature {
+	text-align: center;
+}
+
+.pro-feture p  {
+	font-size: 14px;
+}
+
+/* TODO(mdc-migration): The following rule targets internal classes of slide-toggle that may no longer apply for the MDC version. */
+::ng-deep .mat-mdc-slide-toggle.mat-checked .mat-slide-toggle-bar {
+	background-color: var(--ov-tertiary-color);
+}
+
+/* TODO(mdc-migration): The following rule targets internal classes of slide-toggle that may no longer apply for the MDC version. */
+::ng-deep .mat-mdc-slide-toggle.mat-checked .mat-slide-toggle-thumb {
+	background-color: var(--ov-light-color);
+}

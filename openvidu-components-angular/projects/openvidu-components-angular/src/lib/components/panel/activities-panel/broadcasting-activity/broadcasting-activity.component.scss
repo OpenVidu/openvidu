@@ -1,0 +1,151 @@
+#broadcasting-status {
+	color: var(--ov-text-color);
+	display: inline;
+	padding: 3px;
+	font-size: 11px;
+	border-radius: var(--ov-panel-radius);
+}
+
+.time-container {
+	padding: 2px;
+}
+
+.error-text {
+	color: var(--ov-warn-color);
+	font-style: italic;
+	font-size: 14px;
+}
+
+#broadcasting-icon {
+	color: #5903ca;
+}
+
+.broadcasting-duration {
+	background-color: var(--ov-light-color);
+	padding: 4px 8px;
+	border-radius: var(--ov-panel-radius);
+	font-weight: 500;
+}
+
+.broadcasting-duration mat-icon {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+}
+
+.started {
+	background-color: #5903ca !important;
+	color: var(--ov-text-color);
+}
+
+.activity-icon.started {
+	background-color: #5903ca !important;
+	color: var(--ov-text-color);
+}
+
+.failed {
+	background-color: var(--ov-warn-color) !important;
+	color: var(--ov-text-color);
+}
+.stopped {
+	background-color: var(--ov-light-color);
+	color: var(--ov-panel-text-color) !important;
+}
+
+.pending {
+	background-color: #ffd79b !important;
+	color: var(--ov-panel-text-color) !important;
+}
+
+.panel-body-container {
+	padding: 10px;
+}
+
+.panel-body-container > .content {
+	align-items: stretch;
+	justify-content: center;
+	display: flex;
+	flex-direction: column;
+	box-flex: 1;
+	flex-grow: 1;
+	text-align: center;
+}
+
+.broadcasting-error {
+	color: var(--ov-warn-color);
+	font-weight: 600;
+}
+.broadcasting-name {
+	font-size: 16px;
+	font-weight: bold;
+}
+
+.not-allowed-message {
+	margin-top: 10px;
+	font-weight: bold;
+}
+
+.broadcasting-action-buttons {
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+/* #start-broadcasting-btn {
+	width: 100%;
+	background-color: var(--ov-tertiary-color);
+	color: var(--ov-text-color);
+} */
+
+#stop-broadcasting-btn {
+	/* background-color: var(--ov-warn-color); */
+	color: var(--ov-warn-color);
+}
+
+#reset-broadcasting-status-btn {
+	width: 100%;
+	background-color: var(--ov-light-color);
+}
+
+mat-expansion-panel {
+	margin: 0px 0px 5px 0px;
+}
+
+.blink {
+	animation: blinker 1.5s linear infinite !important;
+}
+@keyframes blinker {
+	50% {
+		opacity: 0.4;
+	}
+}
+
+.input-container {
+	height: 25px;
+	display: flex;
+	background-color: var(--ov-light-color);
+	padding: 10px;
+	margin: 10px;
+	border-radius: var(--ov-panel-radius);
+    order: 3;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.input-container input {
+	width: 100%;
+	height: 16px;
+	margin: auto;
+	background-color: transparent;
+	display: block;
+	border: none;
+	padding: 0;
+	word-wrap: break-word;
+	white-space: pre-wrap;
+	resize: none;
+	outline: none;
+
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+	font-family: 'Roboto', 'RobotoDraft', Helvetica, Arial, sans-serif;
+}

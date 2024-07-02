@@ -1,0 +1,297 @@
+import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { COMMA, ENTER } from '@angular/cdk/keycodes';
+import { Component, Inject, inject } from '@angular/core';
+import { MatChipInputEvent } from '@angular/material/chips';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { LocalParticipant } from 'livekit-client';
+
+import { EgressClient, EncodedFileOutput, EncodedFileType, EncodedOutputs, IngressInput, Room, RoomCompositeOptions, RoomServiceClient, SegmentedFileOutput, SegmentedFileProtocol, StreamOutput, StreamProtocol } from 'livekit-server-sdk';
+import { RoomApiService } from 'src/app/services/room-api.service';
+
+@Component({
+    selector: 'app-room-api-dialog',
+    templateUrl: './room-api-dialog.component.html',
+    styleUrls: ['./room-api-dialog.component.css']
+})
+export class RoomApiDialogComponent {
+
+    room: Room;
+    localParticipant: LocalParticipant;
+    roomServiceClient: RoomServiceClient;
+    egressClient: EgressClient;
+
+    apiRoomName: string;
+    apiParticipantIdentity: string;
+    apiTrackSid: string;
+    muteTrack: boolean = true;
+
+    egressRoomName: string;
+    egressId: string;
+    audioTrackId: string;
+    videoTrackId: string;
+
+    ROOM_COMPOSITE_LAYOUTS = ['grid', 'speaker', 'single-speaker'];
+    roomCompositeLayoutSelected: string = 'grid';
+    roomCompositeAudioOnly: boolean = false;
+    roomCompositeVideoOnly: boolean = false;
+
+    fileOutputSelected: boolean = true;
+    streamOutputSelected: boolean = false;
+    s3Endpoint: string = 'http://localhost:9100'; // 'http://minio:9000'
+    rtmpUrls: string[] = ['rtmp://172.17.0.1:1936/live/']
+    segmentOutputSelected: boolean = false;
+    segmentDuration: number = 6;
+
+    ingressRoomName: string;
+    ingressId: string;
+    inputTypeSelected: IngressInput = IngressInput.RTMP_INPUT;
+    INGRESS_INPUT_TYPES: { value: IngressInput, viewValue: string }[] = [
+        { value: IngressInput.RTMP_INPUT, viewValue: 'RTMP' },
+        { value: IngressInput.WHIP_INPUT, viewValue: 'WHIP' },
+        { value: IngressInput.URL_INPUT, viewValue: 'URL' },
+    ];
+
+    response: string;
+
+    // s3Config = {
+    //     endpoint: this.s3Endpoint,
+    //     metadata: { "mytag": "myvalue" },
+    //     tagging: "mytagging"
+    // };
+
+    announcer = inject(LiveAnnouncer);
+    addOnBlur = true;
+    readonly separatorKeysCodes = [ENTER, COMMA] as const;
+
+    constructor(
+        private roomApiService: RoomApiService,
+        public dialogRef: MatDialogRef<RoomApiDialogComponent>,
+        @Inject(MAT_DIALOG_DATA) public data: any
+    ) {
+        this.room = data.room;
+        this.localParticipant = data.localParticipant;
+        this.apiRoomName = this.room?.name;
+        this.apiParticipantIdentity = this.localParticipant?.identity;
+        this.apiTrackSid = this.localParticipant?.videoTrackPublications.values().next().value?.trackSid;
+        this.egressRoomName = this.room?.name;
+        this.audioTrackId = this.localParticipant?.audioTrackPublications.values().next().value?.trackSid;
+        this.videoTrackId = this.localParticipant?.videoTrackPublications.values().next().value?.trackSid;
+        this.ingressRoomName = this.room?.name;
+    }
+
+    async listRooms() {
+        console.log('Listing rooms');
+        try {
+            const rooms = await this.roomApiService.listRooms();
+            this.response = JSON.stringify(rooms, null, 4);
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async getRoom() {
+        console.log('Getting room');
+        try {
+            const room = await this.roomApiService.getRoom(this.apiRoomName);
+            this.response = JSON.stringify(room, null, 4);
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async deleteRoom() {
+        console.log('Deleting room');
+        try {
+            await this.roomApiService.deleteRoom(this.apiRoomName);
+            this.response = 'Room deleted';
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+            console.log(JSON.stringify(error));
+        }
+    }
+
+    async listParticipants() {
+        console.log('Listing participants');
+        try {
+            const participants = await this.roomApiService.listParticipants(this.apiRoomName);
+            this.response = JSON.stringify(participants, null, 4);
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async getParticipant() {
+        console.log('Getting participant');
+        try {
+            const participant = await this.roomApiService.getParticipant(this.apiRoomName, this.apiParticipantIdentity);
+            this.response = JSON.stringify(participant, null, 4);
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async removeParticipant() {
+        console.log('Removing participant');
+        try {
+            await this.roomApiService.removeParticipant(this.apiRoomName, this.apiParticipantIdentity);
+            this.response = 'Participant removed';
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async mutePublishedTrack() {
+        console.log(`${this.muteTrack ? 'Muting' : 'Unmuting'} track`);
+        try {
+            await this.roomApiService.mutePublishedTrack(this.apiRoomName, this.apiParticipantIdentity, this.apiTrackSid, this.muteTrack);
+            this.response = `Track ${this.muteTrack ? 'muted' : 'unmuted'}`;
+            this.muteTrack = !this.muteTrack;
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async listEgress() {
+        console.log('Listing egress');
+        try {
+            const egress = await this.roomApiService.listEgress();
+            this.response = JSON.stringify(egress, null, 4);
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async getEgress() {
+        console.log('Getting egress');
+        try {
+            const egress = await this.roomApiService.getEgress(this.egressId);
+            this.response = JSON.stringify(egress, null, 4);
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async startRoomCompositeEgress() {
+        console.log('Starting room composite egress');
+        try {
+            const encodedOutputs = this.getEncodedOutputs();
+            const roomCompositeOptions: RoomCompositeOptions = {
+                layout: this.roomCompositeLayoutSelected,
+                audioOnly: this.roomCompositeAudioOnly,
+                videoOnly: this.roomCompositeVideoOnly
+            }
+            const egress = await this.roomApiService.startRoomCompositeEgress(this.egressRoomName, roomCompositeOptions, encodedOutputs);
+            this.response = JSON.stringify(egress, null, 4);
+            this.egressId = egress.egress_id;
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async startTrackCompositeEgress() {
+        console.log('Starting track composite egress');
+        try {
+            const encodedOutputs = this.getEncodedOutputs();
+            const egress = await this.roomApiService.startTrackCompositeEgress(this.egressRoomName, this.audioTrackId, this.videoTrackId, encodedOutputs);
+            this.response = JSON.stringify(egress, null, 4);
+            this.egressId = egress.egress_id;
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async startTrackEgress() {
+        console.log('Starting track egress');
+        try {
+            const encodedOutputs = this.getEncodedOutputs();
+            const egress = await this.roomApiService.startTrackEgress(this.egressRoomName, !!this.audioTrackId ? this.audioTrackId : this.videoTrackId, encodedOutputs);
+            this.response = JSON.stringify(egress, null, 4);
+            this.egressId = egress.egress_id;
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async stopEgress() {
+        console.log('Stopping egress');
+        try {
+            await this.roomApiService.stopEgress(this.egressId);
+            this.response = 'Egress stopped';
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async listIngress() {
+        console.log('Listing ingress');
+        try {
+            const ingress = await this.roomApiService.listIngress();
+            this.response = JSON.stringify(ingress, null, 4);
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async createIngress() {
+        console.log('Creating ingress');
+        try {
+            const ingress = await this.roomApiService.createIngress(this.ingressRoomName, this.inputTypeSelected);
+            this.response = JSON.stringify(ingress, null, 4);
+            this.ingressId = ingress.ingress_id;
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async deleteIngress() {
+        console.log('Deleting ingress');
+        try {
+            await this.roomApiService.deleteIngress(this.ingressId);
+            this.response = 'Ingress deleted';
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    addRtmpUrl(event: MatChipInputEvent): void {
+        const value = (event.value || '').trim();
+        if (value) {
+            this.rtmpUrls.push(value);
+        }
+        event.chipInput!.clear();
+    }
+
+    removeRtmpUrl(url: string): void {
+        const index = this.rtmpUrls.indexOf(url);
+        if (index >= 0) {
+            this.rtmpUrls.splice(index, 1);
+            this.announcer.announce(`Removed ${url}`);
+        }
+    }
+
+    private getEncodedOutputs(): EncodedOutputs {
+        // this.s3Config.endpoint = this.s3Endpoint;
+        const encodedOutputs: EncodedOutputs = {};
+        if (this.fileOutputSelected) {
+            encodedOutputs.file = new EncodedFileOutput({
+                fileType: EncodedFileType.DEFAULT_FILETYPE,
+                filepath: 'room-composite-{room_id}-{room_name}-{time}',
+            });
+        }
+        if (this.streamOutputSelected) {
+            encodedOutputs.stream = new StreamOutput({
+                urls: this.rtmpUrls,
+                protocol: StreamProtocol.RTMP
+            });
+        }
+        if (this.segmentOutputSelected) {
+            encodedOutputs.segments = new SegmentedFileOutput({
+                protocol: SegmentedFileProtocol.HLS_PROTOCOL,
+                segmentDuration: this.segmentDuration,
+                // s3: this.s3Config
+            });
+        }
+        return encodedOutputs;
+    }
+
+}

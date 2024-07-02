@@ -4,8 +4,8 @@
     "outDir": "./out-tsc/app",
     "types": [],
     "paths": {
-      "openvidu-angular": [
-        "dist/openvidu-angular"
+      "openvidu-components-angular": [
+        "dist/openvidu-components-angular"
       ]
     }
   },

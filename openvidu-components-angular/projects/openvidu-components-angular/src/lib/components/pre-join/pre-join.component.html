@@ -1,0 +1,65 @@
+<div class="container" id="prejoin-container">
+
+	<div *ngIf="isLoading" id="loading-container">
+		<mat-spinner [diameter]="50"></mat-spinner>
+		<span>{{ 'PREJOIN.PREPARING' | translate }}</span>
+	</div>
+
+	<div *ngIf="!isLoading"  id="prejoin-frame">
+		<!-- <img *ngIf="!isMinimal && showLogo" id="branding-logo" src="assets/images/lodgo.png" ovLogo /> -->
+		<ov-lang-selector *ngIf="!isMinimal" [compact]="true" class="lang-btn" (onLangChanged)="onLangChanged.emit($event)">
+		</ov-lang-selector>
+
+		<div>
+			<div class="video-container">
+				<div id="video-poster">
+					<ov-media-element
+						[track]="videoTrack"
+						[showAvatar]="!videoTrack || videoTrack.isMuted"
+						[avatarName]="participantName"
+						[avatarColor]="'hsl(48, 100%, 50%)'"
+						[isLocal]="true"
+					></ov-media-element>
+				</div>
+			</div>
+
+			<div class="media-controls-container">
+				<!-- Camera -->
+				<div class="video-controls-container">
+					<ov-video-devices-select
+						(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
+						(onVideoEnabledChanged)="videoEnabledChanged($event)"
+					></ov-video-devices-select>
+				</div>
+
+				<!-- Microphone -->
+				<div class="audio-controls-container">
+					<ov-audio-devices-select
+						(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
+						(onAudioEnabledChanged)="audioEnabledChanged($event)"
+						(onDeviceSelectorClicked)="onDeviceSelectorClicked()"
+					></ov-audio-devices-select>
+				</div>
+
+				<div class="participant-name-container">
+					<ov-participant-name-input
+						[isPrejoinPage]="true"
+						[error]="!!_error"
+						(onNameUpdated)="onParticipantNameChanged($event)"
+						(onEnterPressed)="onEnterPressed()"
+					></ov-participant-name-input>
+				</div>
+
+				<div *ngIf="!!_error" id="token-error">
+					<span class="error">{{ _error }}</span>
+				</div>
+
+				<div class="join-btn-container">
+					<button mat-flat-button (click)="joinSession()" id="join-button">
+						{{ 'PREJOIN.JOIN' | translate }}
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

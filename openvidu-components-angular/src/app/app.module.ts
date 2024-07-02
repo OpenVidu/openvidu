@@ -5,6 +5,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app.routing.module';
@@ -15,8 +16,8 @@ import { AdminDashboardComponent } from './admin/admin-dashboard/admin-dashboard
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { CallComponent } from './openvidu-call/call.component';
 import { TestingComponent } from './testing-app/testing.component';
-// openvidu-angular
-import { OpenViduAngularModule } from 'openvidu-angular';
+// openvidu-components-angular
+import { OpenViduComponentsModule } from 'openvidu-components-angular';
 
 @NgModule({
 	declarations: [AppComponent, DashboardComponent, AdminDashboardComponent, CallComponent, TestingComponent],
@@ -26,8 +27,9 @@ import { OpenViduAngularModule } from 'openvidu-angular';
 		MatButtonModule,
 		MatIconModule,
 		MatMenuModule,
+		MatTooltipModule,
 		BrowserAnimationsModule,
-		OpenViduAngularModule.forRoot(environment),
+		OpenViduComponentsModule.forRoot(environment),
 		AppRoutingModule // Order is important, AppRoutingModule must be the last import for useHash working
 	],
 	providers: [],

@@ -1,47 +1,46 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { animate, style, transition, trigger } from '@angular/animations';
+import { Component } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { OpenviduParamsService } from '../../services/openvidu-params.service';
-import { TestFeedService } from '../../services/test-feed.service';
-import { SessionConf } from '../openvidu-instance/openvidu-instance.component';
+import { TestFeedService } from 'src/app/services/test-feed.service';
+import * as stringify from 'json-stringify-safe';
+
+
+export interface RoomConf {
+  subscriber: boolean;
+  publisher: boolean;
+  startSession: boolean;
+}
 
 @Component({
   selector: 'app-test-sessions',
   templateUrl: './test-sessions.component.html',
-  styleUrls: ['./test-sessions.component.css']
+  styleUrls: ['./test-sessions.component.css'],
+  animations: [
+    trigger('fadeAnimation', [
+      transition(':enter', [
+        style({ opacity: 0 }), animate('100ms', style({ opacity: 1 }))]
+      )
+    ])
+  ],
 })
-export class TestSessionsComponent implements OnInit, OnDestroy {
-
-  Math = Math;
-
-  openviduUrl: string;
-  openviduSecret: string;
+export class TestSessionsComponent {
 
   paramsSubscription: Subscription;
   eventsInfoSubscription: Subscription;
 
   // OpenViduInstance collection
-  users: SessionConf[] = [];
+  users: RoomConf[] = [];
 
-  numberSubs = 2;
+  numberParticipants = 2;
   autoJoin = false;
-  useMediasoup = false;
 
-  constructor(private openviduParamsService: OpenviduParamsService, private testFeedService: TestFeedService) { }
+  constructor(private testFeedService: TestFeedService) { }
 
   ngOnInit() {
-    const openviduParams = this.openviduParamsService.getParams();
-    this.openviduUrl = openviduParams.openviduUrl;
-    this.openviduSecret = openviduParams.openviduSecret;
-
-    this.paramsSubscription = this.openviduParamsService.newParams$.subscribe(
-      params => {
-        this.openviduUrl = params.openviduUrl;
-        this.openviduSecret = params.openviduSecret;
-      });
-
+    (window as any).myEvents = '';
     this.eventsInfoSubscription = this.testFeedService.newLastEvent$.subscribe(
       newEvent => {
-        (window as any).myEvents += ('<br>' + this.testFeedService.stringifyEventNoCircularDependencies(newEvent));
+        (window as any).myEvents += ('<br>' + stringify(newEvent));
       });
   }
 
@@ -52,8 +51,8 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
 
   addUser(): void {
     this.users.push({
-      subscribeTo: true,
-      publishTo: true,
+      subscriber: true,
+      publisher: true,
       startSession: false
     });
   }
@@ -69,8 +68,8 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
   private loadSubsPubs(n: number): void {
     for (let i = 0; i < n; i++) {
       this.users.push({
-        subscribeTo: true,
-        publishTo: true,
+        subscriber: true,
+        publisher: true,
         startSession: this.autoJoin
       });
     }
@@ -79,8 +78,8 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
   private loadSubs(n: number): void {
     for (let i = 0; i < n; i++) {
       this.users.push({
-        subscribeTo: true,
-        publishTo: false,
+        subscriber: true,
+        publisher: false,
         startSession: this.autoJoin
       });
     }
@@ -89,8 +88,8 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
   private loadPubs(n: number): void {
     for (let i = 0; i < n; i++) {
       this.users.push({
-        subscribeTo: false,
-        publishTo: true,
+        subscriber: false,
+        publisher: true,
         startSession: this.autoJoin
       });
     }

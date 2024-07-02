@@ -1,24 +1,18 @@
 <ov-videoconference
-	[simulcast]="true"
-	[tokens]="tokens"
+	[token]="token"
+	[tokenError]="tokenError"
 	[minimal]="false"
 	[lang]="'es'"
 	[langOptions]="[
 		{ name: 'Spanish', lang: 'es' },
 		{ name: 'custom', lang: 'cus' }
 	]"
-	[captionsLang]=""
-	[captionsLangOptions]="[
-		{ name: 'Spanish', lang: 'es-ES' },
-		{ name: 'English', lang: 'en-US' }
-	]"
 	[prejoin]="true"
 	[participantName]="'Participant'"
-	[videoMuted]="false"
-	[audioMuted]="false"
+	[videoEnabled]="true"
+	[audioEnabled]="true"
 	[toolbarScreenshareButton]="true"
 	[toolbarFullscreenButton]="true"
-	[toolbarCaptionsButton]="true"
 	[toolbarRecordingButton]="true"
 	[toolbarBroadcastingButton]="true"
 	[toolbarBackgroundEffectsButton]="true"
@@ -26,45 +20,30 @@
 	[toolbarChatPanelButton]="true"
 	[toolbarParticipantsPanelButton]="true"
 	[toolbarDisplayLogo]="true"
-	[toolbarDisplaySessionName]="true"
-	[streamResolution]="'640x480'"
-	[streamFrameRate]="25"
+	[toolbarDisplayRoomName]="true"
 	[streamDisplayParticipantName]="true"
 	[streamDisplayAudioDetection]="true"
-	[streamSettingsButton]="true"
+	[streamVideoControls]="true"
 	[participantPanelItemMuteButton]="true"
 	[activitiesPanelRecordingActivity]="true"
-	[recordingActivityRecordingsList]="recordingList"
-	[recordingActivityRecordingError]="recordingError"
-	[broadcastingActivityBroadcastingError]="broadcastingError"
 	[toolbarSettingsButton]="true"
-	(onJoinButtonClicked)="onJoinClicked()"
-	(onToolbarLeaveButtonClicked)="onToolbarLeaveButtonClicked()"
-	(onToolbarCameraButtonClicked)="onToolbarCameraButtonClicked()"
-	(onToolbarMicrophoneButtonClicked)="onToolbarMicrophoneButtonClicked()"
-	(onToolbarScreenshareButtonClicked)="onToolbarScreenshareButtonClicked()"
-	(onToolbarFullscreenButtonClicked)="onToolbarFullscreenButtonClicked()"
-	(onToolbarParticipantsPanelButtonClicked)="onToolbarParticipantsPanelButtonClicked()"
-	(onToolbarChatPanelButtonClicked)="onToolbarChatPanelButtonClicked()"
-	(onToolbarStartRecordingClicked)="onStartRecordingClicked()"
-	(onToolbarStopRecordingClicked)="onStopRecordingClicked()"
-	(onToolbarStartBroadcastingClicked)="onStartBroadcastingClicked($event)"
-	(onActivitiesPanelStartRecordingClicked)="onStartRecordingClicked()"
-	(onActivitiesPanelStopRecordingClicked)="onStopRecordingClicked()"
-	(onActivitiesPanelDeleteRecordingClicked)="onDeleteRecordingClicked($event)"
-	(onActivitiesPanelForceRecordingUpdate)="onForceRecordingUpdate()"
-	(onActivitiesPanelStartBroadcastingClicked)="onStartBroadcastingClicked($event)"
-	(onActivitiesPanelStopBroadcastingClicked)="onStopBroadcastingClicked()"
-	(onToolbarStopBroadcastingClicked)="onStopBroadcastingClicked()"
-	(onNodeCrashed)="onNodeCrashed()"
+	(onTokenRequested)="onTokenRequested($event)"
+	(onReadyToJoin)="onReadyToJoin()"
+	(onRoomCreated)="onRoomCreated($event)"
+	(onRoomDisconnected)="onRoomDisconnected()"
+	(onVideoEnabledChanged)="onVideoEnabledChanged($event)"
+	(onVideoDeviceChanged)="onVideoDeviceChanged($event)"
+	(onAudioEnabledChanged)="onAudioEnabledChanged($event)"
+	(onAudioDeviceChanged)="onAudioDeviceChanged($event)"
 	(onLangChanged)="onLangChanged($event)"
+	(onScreenShareEnabledChanged)="onScreenShareEnabledChanged($event)"
+	(onFullscreenEnabledChanged)="onFullscreenEnabledChanged($event)"
+	(onParticipantsPanelStatusChanged)="onParticipantsPanelStatusChanged($event)"
+	(onChatPanelStatusChanged)="onChatPanelStatusChanged($event)"
+	(onRecordingStartRequested)="onRecordingStartRequested($event)"
+	(onRecordingStopRequested)="onRecordingStopRequested($event)"
+	(onRecordingDeleteRequested)="onRecordingDeleteRequested($event)"
+	(onBroadcastingStartRequested)="onBroadcastingStartRequested($event)"
+	(onBroadcastingStopRequested)="onBroadcastingStopRequested($event)"
 >
-	<!-- <div *ovActivitiesPanel>{{ 'CUSTOM.BUTTON' | translate }}</div> -->
-
-	<!-- <ov-toolbar *ovToolbar [activitiesPanelButton]="false"
-	[chatPanelButton]="false"></ov-toolbar> -->
-	<!-- <div *ovStream="let stream">
-		<ov-stream [stream]="stream" [displayParticipantName]="false" [frameRate]="2" [resolution]="'160x120'"></ov-stream>
-		<p>{{ stream.participant.nickname }}</p>
-	</div> -->
 </ov-videoconference>

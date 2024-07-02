@@ -1,9 +1,10 @@
-<ov-admin-login *ngIf="!logged" [error]="error" (onLoginButtonClicked)="login($event)"></ov-admin-login>
+<ov-admin-login *ngIf="!logged" [error]="error" (onLoginRequested)="login($event)"></ov-admin-login>
 
 <ov-admin-dashboard
 	*ngIf="logged"
 	[recordingsList]="recordings"
-	(onLogoutClicked)="onLogoutClicked()"
-	(onRefreshRecordingsClicked)="onRefreshRecordingsClicked()"
-	(onDeleteRecordingClicked)="onDeleteRecordingClicked($event)"
+	(onLogoutRequested)="onLogoutClicked()"
+	(onRefreshRecordingsRequested)="onRefreshRecordingsClicked()"
+	(onLoadMoreRecordingsRequested)="onLoadMoreRecordingsRequested()"
+	(onRecordingDeleteRequested)="onDeleteRecordingClicked($event)"
 ></ov-admin-dashboard>

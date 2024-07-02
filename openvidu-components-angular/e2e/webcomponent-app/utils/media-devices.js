@@ -6,20 +6,28 @@ export default function monkeyPatchMediaDevices() {
 	const getUserMediaFn = MediaDevices.prototype.getUserMedia;
 	const getDisplayMediaFn = MediaDevices.prototype.getDisplayMedia;
 
-	const fakeDevice = {
+	const fakeVideoDevice = {
 		deviceId: 'virtual',
 		groupID: '',
 		kind: 'videoinput',
 		label: 'custom_fake_video_1'
 	};
 
-	MediaDevices.prototype.enumerateDevices = async function () {
+	const fakeAudioDevice = {
+		deviceId: 'virtual',
+		groupID: '',
+		kind: 'audioinput',
+		label: 'custom_fake_audio_1'
+	};
+
+	const enumerateDevicesMonkeyPatch = async function () {
 		const res = await enumerateDevicesFn.call(navigator.mediaDevices);
-		res.push(fakeDevice);
+		res.push(fakeVideoDevice);
+		res.push(fakeAudioDevice);
 		return res;
 	};
 
-	MediaDevices.prototype.getUserMedia = async function () {
+	const getUserMediaMonkeyPatch = async function () {
 		const args = arguments[0];
 		const { deviceId, advanced, width, height } = args.video;
 		if (deviceId === 'virtual' || deviceId?.exact === 'virtual') {
@@ -35,7 +43,7 @@ export default function monkeyPatchMediaDevices() {
 			const res = await getUserMediaFn.call(navigator.mediaDevices, constraints);
 
 			if (res) {
-				const filter = new FilterStream(res, fakeDevice.label);
+				const filter = new FilterStream(res, fakeVideoDevice.label);
 				return filter.outputStream;
 			}
 
@@ -45,10 +53,10 @@ export default function monkeyPatchMediaDevices() {
 		return getUserMediaFn.call(navigator.mediaDevices, ...arguments);
 	};
 
-	MediaDevices.prototype.getDisplayMedia = async function () {
+	const getDisplayMediaMonkeyPatch = async function () {
 		const { video, audio } = arguments[0];
 
-		const screenVideoElement = document.getElementsByClassName("OT_video-element screen-type")[0];
+		const screenVideoElement = document.getElementsByClassName('OV_video-element screen-type')[0];
 		const currentTrackLabel = screenVideoElement?.srcObject?.getVideoTracks()[0]?.label;
 		const res = await getDisplayMediaFn.call(navigator.mediaDevices, { video, audio });
 
@@ -59,4 +67,11 @@ export default function monkeyPatchMediaDevices() {
 
 		return res;
 	};
+
+	MediaDevices.prototype.enumerateDevices = enumerateDevicesMonkeyPatch;
+	navigator.mediaDevices.enumerateDevices = enumerateDevicesMonkeyPatch;
+	MediaDevices.prototype.getUserMedia = getUserMediaMonkeyPatch;
+	navigator.mediaDevices.getUserMedia = getUserMediaMonkeyPatch;
+	MediaDevices.prototype.getDisplayMedia = getDisplayMediaMonkeyPatch;
+	navigator.mediaDevices.getDisplayMedia = getDisplayMediaMonkeyPatch;
 }

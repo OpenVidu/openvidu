@@ -1,0 +1,33 @@
+<mat-list>
+	<mat-list-item>
+		<div matListItemIcon class="participant-avatar" [style.background-color]="_participant.colorProfile">
+			<mat-icon>person</mat-icon>
+		</div>
+		<h3 matListItemTitle class="participant-name">{{ _participant.name }}
+			<span *ngIf="_participant.isLocal"> ({{ 'PANEL.PARTICIPANTS.YOU' | translate }})</span>
+		</h3>
+		<p matListItemLine class="participant-subtitle">{{ _participant | tracksPublishedTypes }}</p>
+		<!-- <p matListItemLine>
+			<span class="participant-subtitle"></span>
+		</p> -->
+
+		<div class="participant-action-buttons" matListItemMeta>
+			<button
+				mat-icon-button
+				id="mute-btn"
+				*ngIf="!_participant.isLocal && showMuteButton"
+				[class.warn-btn]="_participant.isMutedForcibly"
+				(click)="toggleMuteForcibly()"
+				[disableRipple]="true"
+			>
+				<mat-icon *ngIf="!_participant.isMutedForcibly">volume_up</mat-icon>
+				<mat-icon *ngIf="_participant.isMutedForcibly">volume_off</mat-icon>
+			</button>
+
+			<!-- External item elements  -->
+			<ng-container *ngIf="participantPanelItemElementsTemplate">
+				<ng-container *ngTemplateOutlet="participantPanelItemElementsTemplate"></ng-container>
+			</ng-container>
+		</div>
+	</mat-list-item>
+</mat-list>

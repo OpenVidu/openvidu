@@ -1,0 +1,202 @@
+<div>
+
+  <h2 mat-dialog-title>API REST</h2>
+
+  <mat-dialog-content>
+
+
+    <div>
+      <label class="label">Room Service API</label>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <mat-label>Room</mat-label>
+        <input matInput id="room-name-field" placeholder="Room" [(ngModel)]="apiRoomName">
+      </mat-form-field>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <mat-label>Participant</mat-label>
+        <input matInput id="participant-identity-field" placeholder="Participant" [(ngModel)]="apiParticipantIdentity">
+      </mat-form-field>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <mat-label>Track</mat-label>
+        <input matInput id="track-sid-field" placeholder="Track" [(ngModel)]="apiTrackSid">
+      </mat-form-field>
+    </div>
+
+    <div class="button-group">
+      <button mat-button id="list-rooms-api-btn" (click)="listRooms()">List Rooms</button>
+      <span style="display: inline-block" matTooltip='"Room" required' [matTooltipDisabled]="!!apiRoomName">
+        <button mat-button id="get-room-api-btn" (click)="getRoom()" [disabled]="!apiRoomName">Get
+          Room</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Room" required' [matTooltipDisabled]="!!apiRoomName">
+        <button mat-button id="delete-room-api-btn" (click)="deleteRoom()" [disabled]="!apiRoomName">Delete
+          Room</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Room" required' [matTooltipDisabled]="!!apiRoomName">
+        <button mat-button id="list-participants-api-btn" (click)="listParticipants()" [disabled]="!apiRoomName">List
+          participants</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Room" and "Participant" required'
+        [matTooltipDisabled]="!!apiRoomName && !!apiParticipantIdentity">
+        <button mat-button id="get-participant-api-btn" (click)="getParticipant()"
+          [disabled]="!apiRoomName || !apiParticipantIdentity">Get participant</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Room" and "Participant" required'
+        [matTooltipDisabled]="!!apiRoomName && !!apiParticipantIdentity">
+        <button mat-button id="remove-participant-api-btn" (click)="removeParticipant()"
+          [disabled]="!apiRoomName || !apiParticipantIdentity">Remove participant</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Room", "Participant" and "Track" required'
+        [matTooltipDisabled]="!!apiRoomName && !!apiParticipantIdentity && !!apiTrackSid">
+        <button mat-button id="force-unpublish-api-btn" (click)="mutePublishedTrack()"
+          [disabled]="!apiRoomName || !apiParticipantIdentity || !apiTrackSid">Mute
+          track</button>
+      </span>
+      <mat-checkbox class="subscriber-checkbox" name="subscriber" [(ngModel)]="muteTrack"
+        [disabled]="!apiRoomName || !apiParticipantIdentity || !apiTrackSid">Mute</mat-checkbox>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div>
+      <label class="label">Egress API</label>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <mat-label>Room</mat-label>
+        <input matInput id="egress-room-name-field" placeholder="Room" [(ngModel)]="egressRoomName">
+      </mat-form-field>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <mat-label>Audio Track</mat-label>
+        <input matInput id="audio-track-id-field" placeholder="Audio Track ID" [(ngModel)]="audioTrackId">
+      </mat-form-field>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <mat-label>Video Track</mat-label>
+        <input matInput id="video-track-id-field" placeholder="Video Track ID" [(ngModel)]="videoTrackId">
+      </mat-form-field>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <mat-label>Egress ID</mat-label>
+        <input matInput id="egress-id-field" placeholder="Egress ID" [(ngModel)]="egressId">
+      </mat-form-field>
+    </div>
+
+    <div class="button-group">
+      <button mat-button id="list-egress-api-btn" (click)="listEgress()">List Egress</button>
+      <span style="display: inline-block" matTooltip='"Egress ID" required' [matTooltipDisabled]="!!egressId">
+        <button mat-button id="get-egress-api-btn" (click)="getEgress()" [disabled]="!egressId">Get
+          Egress</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Room" required' [matTooltipDisabled]="!!egressRoomName">
+        <button mat-button id="start-room-composite-egress-api-btn" (click)="startRoomCompositeEgress()"
+          [disabled]="!egressRoomName">Start Room Composite Egress</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Room", "Audio Track" and "Video Track" required'
+        [matTooltipDisabled]="!(!egressRoomName || !audioTrackId || !videoTrackId)">
+        <button mat-button id="start-track-composite-egress-api-btn" (click)="startTrackCompositeEgress()"
+          [disabled]="!egressRoomName || !audioTrackId || !videoTrackId">Start Track Composite Egress</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Room" and only one of "Audio Track" or "Video Track" required'
+        [matTooltipDisabled]="!(!egressRoomName || (!!audioTrackId && !!videoTrackId || !audioTrackId && !videoTrackId))">
+        <button mat-button id="start-track-egress-api-btn" (click)="startTrackEgress()"
+          [disabled]="!egressRoomName || (!!audioTrackId && !!videoTrackId || !audioTrackId && !videoTrackId)">Start
+          Track Egress</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Egress ID" required' [matTooltipDisabled]="!!egressId">
+        <button mat-button id="stop-egress-api-btn" (click)="stopEgress()" [disabled]="!egressId">Stop Egress</button>
+      </span>
+    </div>
+
+    <label class="label">Room Composite options</label>
+    <div class="room-composite-options">
+      <mat-form-field id="room-composite-layout-select">
+        <mat-label>Layout</mat-label>
+        <mat-select [(value)]="roomCompositeLayoutSelected">
+          <mat-option *ngFor="let layout of ROOM_COMPOSITE_LAYOUTS" [value]="layout">
+            {{layout}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-checkbox id="room-composite-audio-only" [(ngModel)]="roomCompositeAudioOnly">Audio only</mat-checkbox>
+      <mat-checkbox id="room-composite-video-only" [(ngModel)]="roomCompositeVideoOnly">Video only</mat-checkbox>
+    </div>
+
+    <label class="label">Output options</label>
+    <div class="egress-output">
+      <div class="egress-output-container">
+        <mat-checkbox id="file-output-checkbox" [(ngModel)]="fileOutputSelected">MP4 file output</mat-checkbox>
+        <mat-form-field id="s3-endpoint" *ngIf="fileOutputSelected">
+          <mat-label>S3 endpoint</mat-label>
+          <input matInput type="url" placeholder="S3 endpoint" [(ngModel)]="s3Endpoint">
+        </mat-form-field>
+      </div>
+      <div class="egress-output-container">
+        <mat-checkbox id="stream-output-checkbox" [(ngModel)]="streamOutputSelected">RTMP stream output</mat-checkbox>
+        <mat-form-field *ngIf="streamOutputSelected" id="rmpt-urls" class="example-chip-list">
+          <mat-label>RTMP urls</mat-label>
+          <mat-chip-grid #chipGrid aria-label="Enter fruits">
+            <mat-chip-row *ngFor="let url of rtmpUrls" (removed)="removeRtmpUrl(url)">
+              {{url}}
+              <button class="remove-element-btn" matChipRemove aria-label="Remove URL">
+                <mat-icon class="remove-element-icon">cancel</mat-icon>
+              </button>
+            </mat-chip-row>
+            <input placeholder="New URL" [matChipInputFor]="chipGrid"
+              [matChipInputSeparatorKeyCodes]="separatorKeysCodes" [matChipInputAddOnBlur]="addOnBlur"
+              (matChipInputTokenEnd)="addRtmpUrl($event)" />
+          </mat-chip-grid>
+        </mat-form-field>
+      </div>
+      <div class="egress-output-container">
+        <mat-checkbox id="segment-output-checkbox" [(ngModel)]="segmentOutputSelected">HLS segment output</mat-checkbox>
+        <mat-form-field id="segment-duration" *ngIf="segmentOutputSelected">
+          <mat-label>Segment duration (s)</mat-label>
+          <input matInput type="number" min="1" placeholder="Segment duration" [(ngModel)]="segmentDuration">
+        </mat-form-field>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div>
+      <label class="label">Ingress API</label>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <mat-label>Room</mat-label>
+        <input matInput id="ingress-room-name-field" placeholder="Room" [(ngModel)]="ingressRoomName">
+      </mat-form-field>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <mat-label>Ingress ID</mat-label>
+        <input matInput id="ingress-id-field" placeholder="Ingress ID" [(ngModel)]="ingressId">
+      </mat-form-field>
+    </div>
+
+    <div class="button-group">
+      <button mat-button id="list-ingress-api-btn" (click)="listIngress()">List Ingress</button>
+      <span style="display: inline-block" matTooltip='"Room" required' [matTooltipDisabled]="!!ingressRoomName">
+        <button mat-button id="create-ingress-api-btn" (click)="createIngress()" [disabled]="!ingressRoomName">Create
+          Ingress</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Ingress ID" required' [matTooltipDisabled]="!!ingressId">
+        <button mat-button id="delete-ingress-api-btn" (click)="deleteIngress()" [disabled]="!ingressId">Delete
+          Ingress</button>
+      </span>
+      <mat-form-field id="ingress-input-type-select">
+        <mat-label>Input Type</mat-label>
+        <mat-select [(value)]="inputTypeSelected">
+          <mat-option *ngFor="let inputType of INGRESS_INPUT_TYPES" [value]="inputType.value">
+            {{inputType.viewValue}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <mat-form-field id="response-text-area" appearance="fill">
+      <textarea id="api-response-text-area" [(ngModel)]="response" matInput readonly></textarea>
+      <button mat-button id="clear-response-text-area-btn" (click)="response=''">Clear</button>
+    </mat-form-field>
+
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button id="close-dialog-btn" [mat-dialog-close]="{}">CLOSE</button>
+  </mat-dialog-actions>
+
+</div>

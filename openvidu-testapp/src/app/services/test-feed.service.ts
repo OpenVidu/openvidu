@@ -1,36 +1,21 @@
 import { Injectable } from '@angular/core';
+import { ParticipantEvent, RoomEvent, TrackEvent } from 'livekit-client';
 import { Subject } from 'rxjs';
 
-import { Event } from 'openvidu-browser';
-
-import * as stringify from 'json-stringify-safe';
+export interface TestAppEvent {
+    eventType: RoomEvent | ParticipantEvent | TrackEvent;
+    eventCategory: 'RoomEvent' | 'ParticipantEvent' | 'TrackEvent';
+    eventContent: any;
+    eventDescription: string;
+}
 
 @Injectable()
 export class TestFeedService {
 
-  lastEvent: { user: number, event: Event };
-  newLastEvent$ = new Subject<any>();
+    newLastEvent$ = new Subject<any>();
 
-  constructor() { }
-
-  getLastEvent() {
-    return this.lastEvent;
-  }
-
-  pushNewEvent({ user: number, event: Event }) {
-    this.lastEvent = { user: number, event: Event };
-    this.newLastEvent$.next(this.lastEvent);
-  }
-
-  stringifyEventNoCircularDependencies(event: Event): string {
-    return stringify(event, (key, value) => {
-      // Remove unnecessary properties
-      if (key == 'ee' || key == 'openvidu' || key == 'userHandlerArrowHandler' || key == 'handlers') {
-        return undefined;
-      }
-
-      return value;
-    });
-  }
+    pushNewEvent(userAndEvent: { user: number, event: TestAppEvent }) {
+        this.newLastEvent$.next(userAndEvent);
+    }
 
 }

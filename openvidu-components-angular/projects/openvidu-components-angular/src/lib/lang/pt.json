@@ -1,0 +1,159 @@
+{
+	"ADMIN": {
+		"LOGIN": "Conecte-se",
+		"USERNAME": "Nome de usuário",
+		"USERNAME_REQUIRED": "Nome de usuário é obrigatório",
+		"PASSWORD": "Senha",
+		"PASSWORD_REQUIRED": "A senha é obrigatória",
+		"DASHBOARD_TITLE": "Painel de Chamadas OpenVidu",
+		"LOAD_MORE": "Carregar mais",
+		"RECORDINGS": {
+			"EMPTY": "Não há gravações",
+			"SEARCH": "Pesquisar uma gravação",
+			"DATE_START": "Data de início",
+			"DATE_END": "Data de término",
+			"DURATION": "Duração",
+			"SIZE": "Tamanho",
+			"STATUS": "Status",
+			"NAME": "Nome",
+			"ROOM": "Sala",
+			"OUTPUT": "Modo de saída"
+		},
+		"POWERED_BY": "Distribuído por"
+	},
+	"ROOM": {
+		"JOINING": "Entrando na sala..."
+	},
+	"PREJOIN": {
+		"NICKNAME_SECTION": "Defina seu apelido",
+		"NICKNAME": "Apelido",
+		"NICKNAME_REQUIRED": "O apelido é obrigatório",
+		"DEVICE_SECTION": "Escolha seus dispositivos",
+		"VIDEO_DEVICE": "Dispositivo de vídeo",
+		"AUDIO_DEVICE": "Dispositivo de áudio",
+		"NO_VIDEO_DEVICE": "Dispositivo de vídeo não encontrado",
+		"NO_AUDIO_DEVICE": "Dispositivo de áudio não encontrado",
+		"JOIN": "Entrar na sessão",
+		"PREPARING": "Preparando sessão..."
+	},
+	"TOOLBAR": {
+		"MUTE_AUDIO": "Mute seu áudio",
+		"UNMUTE_AUDIO": "Desmute seu áudio",
+		"STOP_VIDEO": "Pare o seu vídeo",
+		"START_VIDEO": "Inicie o seu vídeo",
+		"ENABLE_SCREEN": "Habilitar compartilhamento de tela",
+		"DISABLE_SCREEN": "Desabilitar compartilhamento de tela",
+		"MORE_OPTIONS": "Mais opções",
+		"FULLSCREEN": "Tela cheia",
+		"EXIT_FULLSCREEN": "Sair da tela cheia",
+		"ENABLE_CAPTIONS": "Ativar legendas",
+		"DISABLE_CAPTIONS": "Desativar legendas",
+		"BACKGROUND": "Efeitos de fundo",
+		"START_RECORDING": "Iniciar_gravação",
+		"STOP_RECORDING": "Parar de gravar",
+		"SETTINGS": "Configurações",
+		"LEAVE": "Sair da sessão",
+		"PARTICIPANTS": "Participantes",
+		"CHAT": "Chat",
+		"ACTIVITIES": "Actividades"
+	},
+	"STREAM": {
+		"SETTINGS": "Configurações",
+		"MUTE_SOUND": "Mudo",
+		"UNMUTE_SOUND": "Com som",
+		"ZOOM_IN": "Aumentar zoom",
+		"ZOOM_OUT": "Diminuir zoom",
+		"REPLACE_SCREEN": "Trocar tela",
+		"PIN": "Fixar",
+		"UNPIN": "Desafixar",
+		"MINIMIZE": "Minimizar",
+		"MAXIMIZE": "Maximizar"
+	},
+	"PANEL": {
+		"CLOSE": "Fechar",
+		"SEE_MORE": "Ver mais",
+		"PRO_FEATURE": "Esta funcionalidade é parte do OpenVidu PRO tier",
+		"PAID_FEATURE": "Este recurso faz parte do serviço comercial OpenVidu. Entre em contato conosco através de commercial@openvidu.io para obter mais informações.",
+		"CHAT": {
+			"TITLE": "Chat",
+			"YOU": "Você",
+			"SUBTITLE": "As mensagens serão removidas no final da sessão",
+			"PLACEHOLDER": "Enviar uma mensagem...",
+			"SEND": "Enviar",
+			"MESSAGE_SENT_NOTIFICATION": "mensagem enviada",
+			"OPEN_CHAT": "ABRIR"
+		},
+		"PARTICIPANTS": {
+			"TITLE": "Participantes",
+			"CAMERA": "CÂMERA",
+			"MICROPHONE": "MICROFONE",
+			"SCREEN": "TELA",
+			"NO_STREAMS": "NENHUM",
+			"YOU": "Você (eu)"
+		},
+		"SETTINGS": {
+			"TITLE": "Configurações",
+			"GENERAL": "Em geral",
+			"VIDEO": "Vídeo",
+			"AUDIO": "Áudio",
+			"LANGUAGE": "Linguagem",
+			"CAPTIONS": "Legendas",
+			"DISABLED_AUDIO": "Áudio desativado",
+			"DISABLED_VIDEO": "Vídeo desativado",
+			"CAPTIONS_LANG_TEXT": "Selecione o idioma que os participantes da sessão utilizarão. Os legendas aparecerão nesse idioma."
+		},
+		"BACKGROUND": {
+			"TITLE": "Efeitos de fundo",
+			"BLURRED_SECTION": "Sem efeitos e fundo desfocado",
+			"NO_EFFECTS": "Sem efeito de fundo",
+			"BLURRED_EFFECT": "Fundo desfocado",
+			"IMAGES_SECTION": "Imagens de fundo"
+		},
+		"RECORDING": {
+			"TITLE": "Gravação",
+			"SUBTITLE": "Grave a sua reunião para a posteridade",
+			"CONTENT_TITLE": "Grave a sua videochamada",
+			"CONTENT_SUBTITLE": "Quando a gravação tiver terminado, poderá descarregá-la com facilidade",
+			"STARTING": "Começar a gravação",
+			"STOPPING": "Parando a gravação",
+			"IN_PROGRESS": "Gravação em andamento",
+			"PLAY": "Toque",
+			"DELETE": "Excluir",
+			"CANCEL": "Cancelar",
+			"ACCEPT": "Aceitar",
+			"DELETE_QUESTION": "Tem certeza de que deseja excluir a gravação?",
+			"DOWNLOAD": "Download",
+			"RECORDINGS": "GRAVAÇÕES",
+			"NO_MODERATOR": "Só o MODERADOR pode iniciar a gravação"
+		},
+		"STREAMING": {
+			"TITLE": "Streaming",
+			"SUBTITLE": "Transmita sua reunião para sua audiência",
+			"CONTENT_SUBTITLE": "O OpenVidu precisa do URL da plataforma de streaming.",
+			"START": "Iniciar streaming",
+			"STOP": "Finalizar streaming",
+			"URL": "Insira seu URL de streaming",
+			"CANCEL": "Cancelar",
+			"REQUIRED_URL": "O URL de streaming é obrigatório",
+			"NO_MODERATOR": "Apenas o MODERADOR pode iniciar o streaming"
+		}
+	},
+	"ERRORS": {
+		"SESSION": "Houve um erro de ligação à sessão",
+		"CONNECTION": "Ligação perdida",
+		"RECONNECT": "A tentar restabelecer a ligação à sessão...",
+		"TOGGLE_CAMERA": "Houve um erro ao alternar a câmara",
+		"TOGGLE_MICROPHONE": "Houve um erro ao alternar microhpone",
+		"SCREEN_SHARING": "ecrã_partilha de erros",
+		"SCREEN_SUPPORT": "O seu browser não suporta a partilha de ecrãs",
+		"MEDIA_ACCESS": "Não foi permitido o acesso a dispositivos de media",
+		"DEVICE_NOT_FOUND": "Nenhum dispositivo de vídeo ou áudio foi encontrado. Por favor, ligue pelo menos um",
+		"SST_CONNECTION": "Conexão perdida. Reconectando ao serviço de texto de voz...",
+
+		"LOAD_RECORDING_TITLE": "Erro ao carregar a gravação",
+		"MEDIA_ERR_GENERIC": "Ocorreu um erro ao carregar o vídeo.",
+		"MEDIA_ERR_NETWORK": "Um erro de rede fez com que o download do vídeo falhasse parcialmente.",
+		"MEDIA_ERR_DECODE": "A reprodução do vídeo foi interrompida devido a um problema de corrupção ou porque o vídeo usou recursos que o seu navegador não suportava.",
+		"MEDIA_ERR_SRC_NOT_SUPPORTED": "Erro ao transmitir a gravação: não foi possível acessar o S3."
+	}
+}

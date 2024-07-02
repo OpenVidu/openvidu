@@ -1,0 +1,84 @@
+:host {
+	--ov-light-color-darker: color-mix(in srgb, var(--ov-light-color), #000 15%);
+
+	.device-container-element {
+		border-radius: var(--ov-panel-radius);
+		border: 1px solid var(--ov-light-color-darker);
+	}
+	#audio-devices-form {
+		width: 100%;
+		height: 50px;
+	}
+
+	#audio-devices-not-found {
+		font-size: 13px;
+	}
+
+	#microphone-button {
+		color: var(--ov-secondary-color);
+	}
+
+	::ng-deep .mat-mdc-text-field-wrapper,
+	::ng-deep .mat-mdc-form-field-flex,
+	::ng-deep .mat-mdc-select-trigger {
+		height: 50px !important;
+	}
+
+	::ng-deep .mat-mdc-form-field-subscript-wrapper {
+		display: none !important;
+	}
+
+	::ng-deep .mat-mdc-text-field-wrapper {
+		padding-left: 0px;
+		padding-right: 10px;
+		background-color: var(--ov-panel-background) !important;
+		border-radius: var(--ov-panel-radius);
+	}
+	::ng-deep .mdc-button--unelevated {
+		border-top-left-radius: var(--ov-panel-radius);
+		border-bottom-left-radius: var(--ov-panel-radius);
+		border-bottom-right-radius: 0px !important;
+		border-top-right-radius: 0px !important;
+		background-color: var(--ov-light-color-darker) !important;
+		width: 48px !important;
+		min-width: 48px !important;
+		padding: 0;
+		height: 50px;
+	}
+
+	::ng-deep .mat-mdc-unelevated-button > .mat-icon {
+		height: 24px;
+		width: 24px;
+		font-size: 24px !important;
+		margin: auto;
+	}
+
+	::ng-deep .mat-mdc-form-field-infix {
+		padding: 0px !important;
+		min-height: 100%;
+	}
+
+	.selected-text {
+		padding-left: 5px;
+	}
+
+	.mat-icon {
+		vertical-align: middle;
+		display: inline-flex;
+	}
+
+	::ng-deep .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-line-ripple::before {
+		border: 0px !important;
+	}
+
+	::ng-deep .mat-mdc-button-touch-target {
+		border-radius: var(--ov-panel-radius) !important;
+	}
+
+	.warn-btn {
+		color: var(--ov-warn-color) !important;
+	}
+}
+::ng-deep .mat-mdc-select-panel {
+	background-color: var(--ov-panel-background) !important;
+}

@@ -1,27 +1,28 @@
 #nav-img {
-  height: 32px;
-  vertical-align: middle;
+    height: 32px;
+    margin-right: 8px;
+    vertical-align: middle;
 }
 
 main {
-  padding: 30px 50px 30px 50px;
+    padding: 30px 50px 30px 50px;
 }
 
 #nav-logo {
-  padding-right: 20px;
-  font-weight: inherit;
+    padding-right: 20px;
+    font-weight: inherit;
 }
 
 mat-toolbar a {
-  padding: 0 10px 0 10px;
-  margin: 0 3px 0 3px;
-  font-weight: bold;
+    padding: 0 10px 0 10px;
+    margin: 0 3px 0 3px;
+    font-weight: bold;
 }
 
 mat-toolbar a:first-of-type {
-  margin-left: 0;
+    margin-left: 0;
 }
 
-main > mat-form-field:first-of-type {
-  margin-right: 5px;
+main>mat-form-field {
+    margin-right: 5px;
 }

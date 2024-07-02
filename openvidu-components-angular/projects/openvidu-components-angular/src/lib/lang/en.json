@@ -1,0 +1,158 @@
+{
+	"ADMIN": {
+		"LOGIN": "Login",
+		"USERNAME": "Username",
+		"USERNAME_REQUIRED": "Username is required",
+		"PASSWORD": "Password",
+		"PASSWORD_REQUIRED": "Password is required",
+		"DASHBOARD_TITLE": "OpenVidu Call Dashboard",
+		"LOAD_MORE": "Load more",
+		"RECORDINGS": {
+			"EMPTY": "There are no recordings",
+			"SEARCH": "Search a recording",
+			"DATE_START": "Start date",
+			"DATE_END": "End date",
+			"DURATION": "Duration",
+			"SIZE": "Size",
+			"STATUS": "Status",
+			"NAME": "Name",
+			"ROOM": "Room",
+			"OUTPUT": "Output mode"
+		},
+		"POWERED_BY": "Powered by"
+	},
+	"PREJOIN": {
+		"NICKNAME_SECTION": "Set your nickname",
+		"NICKNAME": "Nickname",
+		"NICKNAME_REQUIRED": "Nickname is required",
+		"DEVICE_SECTION": "Choose your devices",
+		"VIDEO_DEVICE": "Video device",
+		"AUDIO_DEVICE": "Audio device",
+		"NO_VIDEO_DEVICE": "Video device not found",
+		"NO_AUDIO_DEVICE": "Audio device not found",
+		"JOIN": "Join session",
+		"PREPARING": "Preparing session..."
+	},
+	"ROOM": {
+		"JOINING": "Joining room..."
+	},
+	"TOOLBAR": {
+		"MUTE_AUDIO": "Mute your audio",
+		"UNMUTE_AUDIO": "Unmute your audio",
+		"STOP_VIDEO": "Stop your video",
+		"START_VIDEO": "Start your video",
+		"ENABLE_SCREEN": "Enable screen share",
+		"DISABLE_SCREEN": "Disable screen share",
+		"MORE_OPTIONS": "More options",
+		"FULLSCREEN": "Fullscreen",
+		"EXIT_FULLSCREEN": "Exit fullscreen",
+		"ENABLE_CAPTIONS": "Enable captions",
+		"DISABLE_CAPTIONS": "Disable captions",
+		"BACKGROUND": "Background effects",
+		"START_RECORDING": "Start recording",
+		"STOP_RECORDING": "Stop recording",
+		"SETTINGS": "Settings",
+		"LEAVE": "Leave the session",
+		"PARTICIPANTS": "Participants",
+		"CHAT": "Chat",
+		"ACTIVITIES": "Activities"
+	},
+	"STREAM": {
+		"SETTINGS": "Settings",
+		"MUTE_SOUND": "Mute sound",
+		"UNMUTE_SOUND": "Unmute sound",
+		"ZOOM_IN": "Zoom in",
+		"ZOOM_OUT": "Zoom out",
+		"REPLACE_SCREEN": "Replace screen",
+		"PIN": "Pin",
+		"UNPIN": "Unpin",
+		"MINIMIZE": "Minimize",
+		"MAXIMIZE": "Maximize"
+	},
+	"PANEL": {
+		"CLOSE": "Close",
+		"SEE_MORE": "See more",
+		"PRO_FEATURE": "This feature is part of OpenVidu PRO tier",
+		"PAID_FEATURE": "This feature is part of OpenVidu commercial service. Please contact us through commercial@openvidu.io for more information.",
+		"CHAT": {
+			"TITLE": "Chat",
+			"YOU": "You",
+			"SUBTITLE": "Messages will be removed at the end of the session",
+			"PLACEHOLDER": "Send a message...",
+			"SEND": "Send",
+			"MESSAGE_SENT_NOTIFICATION": "message sent",
+			"OPEN_CHAT": "OPEN"
+		},
+		"PARTICIPANTS": {
+			"TITLE": "Participants",
+			"CAMERA": "CAMERA",
+			"MICROPHONE": "MICROPHONE",
+			"SCREEN": "SCREEN",
+			"NO_STREAMS": "NONE",
+			"YOU": "You"
+		},
+		"SETTINGS": {
+			"TITLE": "Settings",
+			"GENERAL": "General",
+			"VIDEO": "Video",
+			"AUDIO": "Audio",
+			"LANGUAGE": "Language",
+			"CAPTIONS": "Captions",
+			"DISABLED_AUDIO": "Audio disabled",
+			"DISABLED_VIDEO": "Video disabled",
+			"CAPTIONS_LANG_TEXT": "Select the language that the participants of the session will use. The captions will appear in that language."
+		},
+		"BACKGROUND": {
+			"TITLE": "Background effects",
+			"BLURRED_SECTION": "No effects and blurred background",
+			"NO_EFFECTS": "No background effect",
+			"BLURRED_EFFECT": "Blurred background",
+			"IMAGES_SECTION": "Background images"
+		},
+		"RECORDING": {
+			"TITLE": "Recording",
+			"SUBTITLE": "Record your meeting for posterity",
+			"CONTENT_TITLE": "Record your video call",
+			"CONTENT_SUBTITLE": "When recording has finished you will be able to download it with ease",
+			"STARTING": "Starting recording",
+			"STOPPING": "Stopping recording",
+			"IN_PROGRESS": "Recording in progress ...",
+			"PLAY": "Play",
+			"DELETE": "Delete",
+			"CANCEL": "Cancel",
+			"ACCEPT": "Accept",
+			"DELETE_QUESTION": "Are you sure you want to delete the recording?",
+			"DOWNLOAD": "Download",
+			"RECORDINGS": "RECORDINGS",
+			"NO_MODERATOR": "Only the MODERATOR can start the recording"
+		},
+		"STREAMING": {
+			"TITLE": "Streaming",
+			"SUBTITLE": "Stream your meeting to your audience",
+			"CONTENT_SUBTITLE": "OpenVidu need the url of the streaming platform.",
+			"START": "Start streaming",
+			"STOP": "End streaming",
+			"URL": "Insert your streaming url",
+			"CANCEL": "Cancel",
+			"REQUIRED_URL": "The streaming url is required",
+			"NO_MODERATOR": "Only the MODERATOR can start the streaming"
+		}
+	},
+	"ERRORS": {
+		"SESSION": "There was an error connecting to the session",
+		"CONNECTION": "Connection lost",
+		"RECONNECT": "Oops! Trying to reconnect to the session...",
+		"TOGGLE_CAMERA": "There was an error toggling camera",
+		"TOGGLE_MICROPHONE": "There was an error toggling microhpone",
+		"SCREEN_SHARING": "Error sharing screen",
+		"SCREEN_SUPPORT": "Your browser does not support screen sharing",
+		"MEDIA_ACCESS": "Access to media devices was not allowed.",
+		"DEVICE_NOT_FOUND": "No video or audio devices have been found. Please, connect at least one.",
+		"SST_CONNECTION": "Connection lost. Reconnecting to the speech to text service ...",
+		"LOAD_RECORDING_TITLE": "Error loading recording",
+		"MEDIA_ERR_GENERIC": "An error occurred while loading the video.",
+		"MEDIA_ERR_NETWORK": "A network error caused the video download to fail part-way.",
+		"MEDIA_ERR_DECODE": "The video playback was aborted due to a corruption problem or because the video used features your browser did not support.",
+		"MEDIA_ERR_SRC_NOT_SUPPORTED": "Error streaming recording: S3 could not be reached."
+	}
+}

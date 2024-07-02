@@ -1,0 +1,157 @@
+<div id="call-container">
+	<div id="spinner" *ngIf="loading">
+		<mat-spinner [diameter]="50"></mat-spinner>
+		<span>{{ 'PREJOIN.PREPARING' | translate }}</span>
+	</div>
+
+	<div [@inOutAnimation] id="pre-join-container" *ngIf="showPrejoin && !loading">
+		<ov-pre-join
+			[error]="_tokenError"
+			(onReadyToJoin)="_onReadyToJoin()"
+			(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
+			(onVideoEnabledChanged)="onVideoEnabledChanged.emit($event)"
+			(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
+			(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
+			(onLangChanged)="onLangChanged.emit($event)"
+		></ov-pre-join>
+	</div>
+
+	<div id="spinner" *ngIf="!loading && error">
+		<mat-icon class="error-icon">error</mat-icon>
+		<span>{{ errorMessage }}</span>
+	</div>
+
+	<div [@inOutAnimation] id="vc-container" *ngIf="isRoomReady && !showPrejoin && !loading && !error">
+		<ov-session (onRoomCreated)="onRoomCreated.emit($event)" (onParticipantCreated)="onParticipantCreated.emit($event)">
+			<ng-template #toolbar>
+				<ng-container *ngIf="openviduAngularToolbarTemplate">
+					<ng-container *ngTemplateOutlet="openviduAngularToolbarTemplate"></ng-container>
+				</ng-container>
+			</ng-template>
+
+			<ng-template #panel>
+				<ng-container *ngIf="openviduAngularPanelTemplate">
+					<ng-container *ngTemplateOutlet="openviduAngularPanelTemplate"></ng-container>
+				</ng-container>
+			</ng-template>
+
+			<ng-template #layout>
+				<ng-container *ngIf="openviduAngularLayoutTemplate">
+					<ng-container *ngTemplateOutlet="openviduAngularLayoutTemplate"></ng-container>
+				</ng-container>
+			</ng-template>
+		</ov-session>
+	</div>
+</div>
+
+<ng-template #defaultToolbar>
+	<ov-toolbar
+		id="default-toolbar"
+		(onRoomDisconnected)="_onRoomDisconnected()"
+		(onVideoEnabledChanged)="onVideoEnabledChanged.emit($event)"
+		(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
+		(onScreenShareEnabledChanged)="onScreenShareEnabledChanged.emit($event)"
+		(onFullscreenEnabledChanged)="onFullscreenEnabledChanged.emit($event)"
+		(onRecordingStartRequested)="onRecordingStartRequested.emit($event)"
+		(onRecordingStopRequested)="onRecordingStopRequested.emit($event)"
+		(onBroadcastingStopRequested)="onBroadcastingStopRequested.emit($event)"
+	>
+		<ng-template #toolbarAdditionalButtons>
+			<ng-container *ngTemplateOutlet="openviduAngularToolbarAdditionalButtonsTemplate"></ng-container>
+		</ng-template>
+
+		<ng-template #toolbarAdditionalPanelButtons>
+			<ng-container *ngTemplateOutlet="openviduAngularToolbarAdditionalPanelButtonsTemplate"></ng-container>
+		</ng-template>
+	</ov-toolbar>
+</ng-template>
+
+<ng-template #defaultPanel>
+	<ov-panel
+		id="default-panel"
+		(onChatPanelStatusChanged)="onChatPanelStatusChanged.emit($event)"
+		(onParticipantsPanelStatusChanged)="onParticipantsPanelStatusChanged.emit($event)"
+		(onSettingsPanelStatusChanged)="onSettingsPanelStatusChanged.emit($event)"
+		(onActivitiesPanelStatusChanged)="onActivitiesPanelStatusChanged.emit($event)"
+	>
+		<ng-template #chatPanel>
+			<ng-container *ngTemplateOutlet="openviduAngularChatPanelTemplate"></ng-container>
+		</ng-template>
+
+		<ng-template #participantsPanel>
+			<ng-container *ngTemplateOutlet="openviduAngularParticipantsPanelTemplate"></ng-container>
+		</ng-template>
+
+		<ng-template #backgroundEffectsPanel>
+			<ov-background-effects-panel id="default-background-effects-panel"></ov-background-effects-panel>
+		</ng-template>
+
+		<ng-template #settingsPanel>
+			<ov-settings-panel
+				id="default-settings-panel"
+				(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
+				(onVideoEnabledChanged)="onVideoEnabledChanged.emit($event)"
+				(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
+				(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
+				(onLangChanged)="onLangChanged.emit($event)"
+			></ov-settings-panel>
+		</ng-template>
+
+		<ng-template #activitiesPanel>
+			<ng-container *ngTemplateOutlet="openviduAngularActivitiesPanelTemplate"></ng-container>
+		</ng-template>
+
+		<ng-template #additionalPanels>
+			<ng-container *ngTemplateOutlet="openviduAngularAdditionalPanelsTemplate"></ng-container>
+		</ng-template>
+	</ov-panel>
+</ng-template>
+
+<ng-template #defaultChatPanel>
+	<ov-chat-panel id="default-chat-panel"></ov-chat-panel>
+</ng-template>
+
+<ng-template #defaultActivitiesPanel>
+	<ov-activities-panel
+		id="default-activities-panel"
+		(onRecordingStartRequested)="onRecordingStartRequested.emit($event)"
+		(onRecordingStopRequested)="onRecordingStopRequested.emit($event)"
+		(onRecordingDeleteRequested)="onRecordingDeleteRequested.emit($event)"
+		(onRecordingDownloadClicked)="onRecordingDownloadClicked.emit($event)"
+		(onRecordingPlayClicked)="onRecordingPlayClicked.emit($event)"
+		(onBroadcastingStartRequested)="onBroadcastingStartRequested.emit($event)"
+		(onBroadcastingStopRequested)="onBroadcastingStopRequested.emit($event)"
+	></ov-activities-panel>
+</ng-template>
+
+<ng-template #defaultParticipantsPanel>
+	<ov-participants-panel id="default-participants-panel">
+		<ng-template #participantPanelItem let-participant>
+			<ng-container
+				*ngTemplateOutlet="openviduAngularParticipantPanelItemTemplate; context: { $implicit: participant }"
+			></ng-container>
+		</ng-template>
+	</ov-participants-panel>
+</ng-template>
+
+<ng-template #defaultParticipantPanelItem let-participant>
+	<ov-participant-panel-item [participant]="participant" id="default-participant-panel-item">
+		<ng-template #participantPanelItemElements>
+			<ng-container
+				*ngTemplateOutlet="openviduAngularParticipantPanelItemElementsTemplate; context: { $implicit: participant }"
+			></ng-container>
+		</ng-template>
+	</ov-participant-panel-item>
+</ng-template>
+
+<ng-template #defaultLayout>
+	<ov-layout id="default-layout">
+		<ng-template #stream let-track>
+			<ng-container *ngTemplateOutlet="openviduAngularStreamTemplate; context: { $implicit: track }"></ng-container>
+		</ng-template>
+	</ov-layout>
+</ng-template>
+
+<ng-template #defaultStream let-track>
+	<ov-stream [track]="track" id="default-stream"></ov-stream>
+</ng-template>

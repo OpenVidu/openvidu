@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { By, until, WebDriver, WebElement } from 'selenium-webdriver';
+import { By, Origin, until, WebDriver, WebElement } from 'selenium-webdriver';
 
 export class OpenViduComponentsPO {
 	private TIMEOUT = 10 * 1000;
@@ -23,6 +23,10 @@ export class OpenViduComponentsPO {
 	async isPresent(selector: string): Promise<boolean> {
 		const elements = await this.browser.findElements(By.css(selector));
 		return elements.length > 0;
+	}
+	async sendKeys(selector: string, keys: string): Promise<void> {
+		const element = await this.waitForElement(selector);
+		await element.sendKeys(keys);
 	}
 
 	async checkPrejoinIsPresent(): Promise<void> {
@@ -70,5 +74,82 @@ export class OpenViduComponentsPO {
 	async clickOn(selector: string): Promise<void> {
 		const element = await this.waitForElement(selector);
 		await element.click();
+	}
+
+	async hoverOn(selector: string): Promise<void> {
+		const element = await this.waitForElement(selector);
+		const action = this.browser.actions().move({ origin: element, duration: 1000 });
+		return action.perform();
+	}
+
+	async openTab(url: string): Promise<string[]> {
+		const newTabScript = `window.open("${url}")`;
+		await this.browser.executeScript(newTabScript);
+		return this.browser.getAllWindowHandles();
+	}
+
+	async subscribeToDropEvent(): Promise<void> {
+		const script = `
+			document.dispatchEvent(new Event("webcomponentTestingEndedDragAndDropEvent"));
+		`;
+		await this.browser.executeScript(script);
+	}
+
+	async dragToRight(x: number, y: number): Promise<void> {
+		const script = `
+			document.dispatchEvent(new CustomEvent("webcomponentTestingEndedDragAndDropRightEvent", {detail: {x: arguments[0], y: arguments[1]}}));
+		`;
+		await this.browser.executeScript(script, x, y);
+	}
+
+	async toggleToolbarMoreOptions(): Promise<void> {
+		await this.waitForElement('#more-options-btn');
+		expect(await this.isPresent('#more-options-btn')).to.be.true;
+		await this.clickOn('#more-options-btn');
+		await this.browser.sleep(500);
+		await this.waitForElement('#more-options-menu');
+	}
+
+	async toggleRecordingFromToolbar() {
+		// Open more options menu
+		await this.toggleToolbarMoreOptions();
+
+		await this.waitForElement('#recording-btn');
+		expect(await this.isPresent('#recording-btn')).to.be.true;
+		await this.clickOn('#recording-btn');
+	}
+
+	async toggleFullscreenFromToolbar() {
+		// Open more options menu
+		await this.toggleToolbarMoreOptions();
+
+		const fullscreenButton = await this.waitForElement('#fullscreen-btn');
+		expect(await this.isPresent('#fullscreen-btn')).to.be.true;
+		await fullscreenButton.click();
+	}
+
+	async togglePanel(panelName: string) {
+		switch (panelName) {
+			case 'activities':
+				await this.waitForElement('#activities-panel-btn');
+				expect(await this.isPresent('#activities-panel-btn')).to.be.true;
+				await this.clickOn('#activities-panel-btn');
+				break;
+
+			case 'chat':
+				await this.waitForElement('#chat-panel-btn');
+				await this.clickOn('#chat-panel-btn');
+				break;
+			case 'participants':
+				await this.waitForElement('#participants-panel-btn');
+				await this.clickOn('#participants-panel-btn');
+				break;
+
+			case 'settings':
+				await this.toggleToolbarMoreOptions();
+				await this.waitForElement('#toolbar-settings-btn');
+				await this.clickOn('#toolbar-settings-btn');
+				break;
+		}
 	}
 }

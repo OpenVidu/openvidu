@@ -19,7 +19,7 @@ package io.openvidu.test.browsers;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -47,8 +47,8 @@ public class FirefoxUser extends BrowserUser {
 			options.addPreference("media.gmp-gmpopenh264.enabled", false);
 		}
 
-		if (REMOTE_URL != null) {
-			options.setHeadless(true);
+		if (REMOTE_URL != null && !REMOTE_URL.isBlank()) {
+			// options.addArguments("--headless");
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {
 				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), options);
@@ -60,7 +60,7 @@ public class FirefoxUser extends BrowserUser {
 			this.driver = new FirefoxDriver(options);
 		}
 
-		this.driver.manage().timeouts().setScriptTimeout(timeOfWaitInSeconds, TimeUnit.SECONDS);
+		this.driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(timeOfWaitInSeconds));
 		this.configureDriver(new org.openqa.selenium.Dimension(1920, 1080));
 	}
 

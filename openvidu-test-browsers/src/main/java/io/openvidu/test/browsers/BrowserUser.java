@@ -170,19 +170,16 @@ public class BrowserUser {
 				parentSelector);
 	}
 
-	public boolean assertMediaTracks(Iterable<WebElement> videoElements, boolean audioTransmission,
+	public boolean assertMediaTracks(Iterable<WebElement> mediaElements, boolean audioTransmission,
 			boolean videoTransmission) {
 		boolean success = true;
-		for (WebElement video : videoElements) {
-			if (!waitUntilSrcObjectDefined(video, "", 5000)) {
+		for (WebElement mediaElement : mediaElements) {
+			if (!waitUntilSrcObjectDefined(mediaElement, "", 5000)) {
 				System.err.println("srcObject of HTMLVideoElement was not defined!");
 				return false;
 			}
-			boolean hasAudioTracks = this.hasAudioTracks(video, "");
-			boolean hasVideoTracks = this.hasVideoTracks(video, "");
-			System.out.println("Video " + video.getAttribute("id") + " has audio tracks [" + hasAudioTracks
-					+ "] and has video tracks [" + hasVideoTracks + "]");
-			success = success && (audioTransmission == hasAudioTracks) && (videoTransmission == hasVideoTracks);
+			success = success && (audioTransmission == this.hasAudioTracks(mediaElement, ""))
+					&& (videoTransmission == this.hasVideoTracks(mediaElement, ""));
 			if (!success)
 				break;
 		}
@@ -205,20 +202,20 @@ public class BrowserUser {
 		return success;
 	}
 
-	private boolean hasAudioTracks(WebElement videoElement, String parentSelector) {
+	private boolean hasAudioTracks(WebElement mediaElement, String parentSelector) {
 		String script = "return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
-				+ "#" + videoElement.getAttribute("id") + "').srcObject.getAudioTracks().length > 0)"
+				+ "#" + mediaElement.getAttribute("id") + "').srcObject.getAudioTracks().length === 1)"
 				+ " && (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
-				+ videoElement.getAttribute("id") + "').srcObject.getAudioTracks()[0].enabled))";
+				+ mediaElement.getAttribute("id") + "').srcObject.getAudioTracks()[0].enabled))";
 		boolean audioTracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
 		return audioTracks;
 	}
 
-	private boolean hasVideoTracks(WebElement videoElement, String parentSelector) {
+	private boolean hasVideoTracks(WebElement mediaElement, String parentSelector) {
 		String script = "return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
-				+ "#" + videoElement.getAttribute("id") + "').srcObject.getVideoTracks().length > 0)"
+				+ "#" + mediaElement.getAttribute("id") + "').srcObject.getVideoTracks().length === 1)"
 				+ " && (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
-				+ videoElement.getAttribute("id") + "').srcObject.getVideoTracks()[0].enabled))";
+				+ mediaElement.getAttribute("id") + "').srcObject.getVideoTracks()[0].enabled))";
 		boolean videoTracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
 		return videoTracks;
 	}

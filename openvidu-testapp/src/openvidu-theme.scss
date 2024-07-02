@@ -7,7 +7,7 @@
 @include mat.core();
 
 $mat-openvidu: (
-    50:  #eaeaea,
+    50: #eaeaea,
     100: #cacaca,
     200: #a6a6a6,
     300: #828282,
@@ -21,8 +21,7 @@ $mat-openvidu: (
     A200: #06D362,
     A400: #04C850,
     A700: #02B734,
-    contrast: (
-        50 :  #fff9e0,
+    contrast: (50 : #fff9e0,
         100 : #fff0b3,
         200 : #ffe680,
         300 : #ffdb4d,
@@ -43,10 +42,10 @@ $mat-openvidu: (
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
 // hue.
 $openvidu-primary: mat.define-palette($mat-openvidu);
-$openvidu-accent:  mat.define-palette($mat-openvidu, A200, A100, A400);
+$openvidu-accent: mat.define-palette($mat-openvidu, A200, A100, A400);
 
 // The warn palette is optional (defaults to red).
-$openvidu-warn:    mat.define-palette(mat.$red-palette);
+$openvidu-warn: mat.define-palette(mat.$red-palette);
 
 // Create the theme object (a Sass map containing all of the palettes).
 $openvidu-theme: mat.define-light-theme($openvidu-primary, $openvidu-accent, $openvidu-warn);
@@ -55,3 +54,25 @@ $openvidu-theme: mat.define-light-theme($openvidu-primary, $openvidu-accent, $op
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
 @include mat.all-component-themes($openvidu-theme);
+
+@mixin my-mat-form-field-density($density) {
+    $field-typography: mat.define-typography-config($body-1: mat.define-typography-level(13px, 24px, 400));
+    @include mat.typography-level($field-typography, 'body-1');
+    @include mat.form-field-density($density);
+}
+
+mat-form-field {
+    @include my-mat-form-field-density(-5);
+}
+
+mat-checkbox {
+    @include mat.checkbox-density(-2);
+}
+
+@include mat.tooltip-density(-1);
+
+$tt-typography: mat.define-typography-config(
+  $caption: mat.define-typography-level(12px, 1.4, 400),
+);
+
+@include mat.tooltip-typography($tt-typography)

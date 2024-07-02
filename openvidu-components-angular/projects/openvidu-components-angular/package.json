@@ -1,0 +1,18 @@
+{
+	"dependencies": {
+		"tslib": "^2.3.0"
+	},
+	"name": "openvidu-components-angular",
+	"peerDependencies": {
+		"@angular/animations": "^17.0.0 || ^18.0.0",
+		"@angular/common": "^17.0.0 || ^18.0.0",
+		"@angular/core": "^17.0.0 || ^18.0.0",
+		"@angular/forms": "^17.0.0 || ^18.0.0",
+		"@angular/material": "^17.0.0 || ^18.0.0",
+		"autolinker": "^4.0.0",
+		"buffer": "^6.0.3",
+		"livekit-client": "2.1.0",
+		"@livekit/track-processors": "0.3.2"
+	},
+	"version": "3.0.0-beta1"
+}

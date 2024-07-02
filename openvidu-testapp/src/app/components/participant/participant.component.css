@@ -1,0 +1,101 @@
+.participant-container {
+    background-color: #e0e0e0;
+    padding: 5px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+}
+
+.participant-content {
+    flex-direction: row;
+    box-sizing: border-box;
+    display: flex;
+}
+
+.participant-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.participant-identity {
+    font-size: 11px;
+    background-color: #fcfcfc;
+    padding: 1px 2px;
+    margin: 0;
+    border-radius: 2px;
+}
+
+.local-participant-identity {
+    background-color: #797979;
+    color: white;
+    font-weight: 500;
+}
+
+.participant-buttons {
+    margin-left: 10px;
+}
+
+.participant-actions button {
+    outline: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    margin-right: 4px;
+}
+
+.participant-actions button mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    line-height: 16px;
+}
+
+.participant-actions button:hover {
+    color: #4d4d4d;
+}
+
+.event-list {
+    width: 130px;
+    height: 90px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+mat-expansion-panel {
+    margin-right: 0 !important;
+}
+
+.participant-event {
+    background: #d0ebf1 !important;
+}
+
+.track-event {
+    background: #ede3bb !important;
+}
+
+mat-expansion-panel-header {
+    font-size: 10.5px !important;
+    padding: 0 7px 0 9px !important;
+}
+
+.scroll-custom::-webkit-scrollbar-track {
+    background-color: #e0e0e0;
+}
+
+.scroll-custom::-webkit-scrollbar {
+    width: 5px;
+    background-color: #F5F5F5;
+}
+
+.scroll-custom::-webkit-scrollbar-thumb {
+    background-color: #797979;
+}
+
+.audio-tracks-container {
+    margin: 0 4px 0 4px;
+}

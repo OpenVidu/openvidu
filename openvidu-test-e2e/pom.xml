@@ -103,6 +103,11 @@
 			<version>${version.openvidu.java.client}</version>
 		</dependency>
 		<dependency>
+			<groupId>io.livekit</groupId>
+			<artifactId>livekit-server</artifactId>
+			<version>0.5.7</version>
+		</dependency>
+		<dependency>
 			<groupId>com.github.docker-java</groupId>
 			<artifactId>docker-java</artifactId>
 			<version>${version.dockerjava}</version>

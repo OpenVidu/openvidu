@@ -1,0 +1,246 @@
+$ov-light-color-lighter: color-mix(in srgb, var(--ov-light-color), #fff 40%);
+
+:host {
+	--broadcasting-blinking-color: #5903ca;
+	--recording-blinking-color: var(--ov-warn-color);
+
+	#toolbar {
+		height: 100%;
+		background-color: transparent;
+		color: var(--ov-text-color);
+
+		.mat-mdc-icon-button {
+			--mat-mdc-button-persistent-ripple-color: transparent !important;
+			--mat-mdc-button-ripple-color: transparent !important;
+		}
+	}
+
+	.toolbar-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 40px;
+	}
+
+	.info-container {
+		flex: 20%;
+		display: flex;
+		justify-content: flex-start;
+		align-items: center;
+	}
+
+	.media-buttons-container {
+		flex: 60%;
+		order: 2;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+	.menu-buttons-container {
+		flex: 20%;
+		order: 3;
+		display: flex;
+		justify-content: flex-end;
+		align-items: center;
+	}
+
+	#info-container > div {
+		display: flex;
+		align-items: center;
+	}
+	#media-buttons-container {
+		max-height: 100% !important;
+	}
+
+	#media-buttons-container mat-icon {
+		font-size: 24px;
+	}
+
+	#media-buttons-container button,
+	#menu-buttons-container button {
+		border-radius: var(--ov-buttons-radius);
+		color: var(--ov-text-color);
+	}
+
+	#media-buttons-container > button,
+	::ng-deep #media-buttons-container > button,
+	#media-buttons-container:not(#media-buttons-container > button) button,
+	/* Applying css for external additional buttons*/
+	::ng-deep #media-buttons-container:not(#media-buttons-container > button) button {
+		// width: 40px;
+		// height: 40px;
+		background-color: var(--ov-secondary-color);
+		color: var(--ov-text-color);
+		margin: 6px;
+	}
+
+	.warn-btn {
+		background-color: var(--ov-warn-color) !important;
+	}
+	#disable-screen-button > mat-icon {
+		color: var(--ov-warn-color) !important;
+	}
+
+	.active-btn,
+	::ng-deep .active-btn {
+		background-color: var(--ov-tertiary-color) !important;
+	}
+
+	#branding-logo {
+		background-color: var(--ov-logo-background-color);
+		border-radius: var(--ov-panel-radius);
+		max-width: 35px;
+		max-height: 35px;
+		padding: 10px;
+	}
+
+	#session-name {
+		font-family: 'Ubuntu', sans-serif;
+		font-weight: bold;
+		font-size: 15px;
+		height: fit-content;
+		padding: 0px 5px;
+	}
+	#session-info-container {
+		display: flex;
+	}
+
+	.collapsed {
+		flex-direction: column;
+	}
+
+	#activities-tag {
+		display: inline-flex;
+	}
+
+	#activities-tag > div {
+		margin-left: 5px;
+	}
+	.recording-tag,
+	.broadcasting-tag {
+		padding: 0 10px;
+		border-radius: var(--ov-panel-radius);
+		width: fit-content;
+		font-size: 12px;
+		text-align: center;
+		line-height: 20px;
+		margin: auto;
+	}
+
+	.recording-tag {
+		background-color: var(--ov-warn-color);
+	}
+	.broadcasting-tag {
+		background-color: var(--broadcasting-blinking-color);
+	}
+
+	.recording-tag mat-icon,
+	.broadcasting-tag mat-icon {
+		font-size: 16px;
+		display: inline;
+		vertical-align: sub;
+		margin-right: 5px;
+	}
+
+	.blink {
+		animation: blinker 1.5s linear infinite;
+	}
+
+	#leave-btn {
+		background-color: var(--ov-warn-color) !important;
+		border-radius: var(--ov-leave-button-radius) !important;
+		width: 65px !important;
+	}
+
+	.mat-mdc-icon-button[disabled] {
+		color: #fff;
+	}
+	.divider {
+		margin: 8px 0px;
+	}
+	::ng-deep .mat-mdc-menu-item {
+		/* margin-bottom: 10px; */
+		height: 40px;
+		line-height: 40px;
+	}
+
+	/* Animation for general blinking */
+	@keyframes blinker {
+		50% {
+			opacity: 0.3;
+		}
+	}
+
+	/* Styles for XS screens */
+	@media (max-width: 599px) {
+		/* Hide info-container */
+		.info-container {
+			display: none;
+		}
+
+		/* Animation for recording blinking */
+		@keyframes blinker-recording {
+			50% {
+				background-color: var(--recording-blinking-color);
+			}
+		}
+
+		/* Animation for broadcasting blinking */
+		@keyframes blinker-broadcasting {
+			50% {
+				background-color: var(--broadcasting-blinking-color);
+			}
+		}
+
+		/* Apply blinking animations to buttons */
+		.blinking-broadcasting-button {
+			animation: blinker-broadcasting 1.5s linear infinite;
+		}
+		.blinking-recording-button {
+			animation: blinker-recording 1.5s linear infinite;
+		}
+	}
+
+	/* Styles for screens <= 750px */
+	@media (max-width: 750px) {
+		/* Hide elements on smaller screens */
+		#session-name {
+			display: none;
+		}
+
+		/* Display tags in a grid */
+		#activities-tag {
+			display: grid;
+			gap: 5px;
+		}
+	}
+
+	/* Styles for screens <= 850px */
+	@media (max-width: 850px) {
+		/* Hide logo on smaller screens */
+		#branding-logo {
+			display: none;
+		}
+
+		/* Display session info container inline */
+		#session-info-container {
+			display: inline-flex;
+		}
+	}
+
+	/* Styles for screens <= 550px */
+	@media (max-width: 550px) {
+		/* Toolbar design adjustments */
+	}
+}
+
+::ng-deep #broadcasting-btn > .mat-icon {
+	color: #5903ca !important;
+}
+
+::ng-deep .mat-mdc-menu-panel {
+	border-radius: var(--ov-panel-radius) !important;
+	background-color: var(--ov-panel-background) !important;
+	border: 1px solid $ov-light-color-lighter !important;
+	box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.2) !important;
+}

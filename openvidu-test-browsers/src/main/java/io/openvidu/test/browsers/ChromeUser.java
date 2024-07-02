@@ -21,9 +21,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -67,11 +67,6 @@ public class ChromeUser extends BrowserUser {
 
 		options.setAcceptInsecureCerts(true);
 		options.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE);
-
-		if (REMOTE_URL != null && headless) {
-			options.setHeadless(true);
-		}
-
 		options.addArguments("--disable-infobars");
 		options.addArguments("--remote-allow-origins=*");
 		options.setExperimentalOption("excludeSwitches", new String[] { "enable-automation" });
@@ -81,7 +76,10 @@ public class ChromeUser extends BrowserUser {
 		prefs.put("profile.default_content_setting_values.media_stream_camera", 1);
 		options.setExperimentalOption("prefs", prefs);
 
-		if (REMOTE_URL != null) {
+		if (REMOTE_URL != null && !REMOTE_URL.isBlank()) {
+			if (headless) {
+				options.addArguments("--headless=new");
+			}
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {
 				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), options);
@@ -93,7 +91,7 @@ public class ChromeUser extends BrowserUser {
 			this.driver = new ChromeDriver(options);
 		}
 
-		this.driver.manage().timeouts().setScriptTimeout(timeOfWaitInSeconds, TimeUnit.SECONDS);
+		this.driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(timeOfWaitInSeconds));
 		this.configureDriver(new org.openqa.selenium.Dimension(1920, 1080));
 	}
 

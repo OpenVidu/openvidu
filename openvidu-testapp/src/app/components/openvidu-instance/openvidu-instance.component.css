@@ -1,185 +1,136 @@
 .div-wrapper {
-  display: inline-flex;
-  background-color: #797979;
-  padding: 10px;
-  border-radius: 2px;
+    display: inline-flex;
+    background-color: #797979;
+    padding: 10px;
+    border-radius: 3px;
 }
 
 mat-card {
-  background-color: #ffffff;
-  margin: 0;
-  padding: 20px;
-  padding-top: 10px;
+    background-color: #ffffff;
+    margin: 0;
 }
 
-mat-card.session-card {
-  padding: 15px;
-  margin-left: 10px;
+mat-form-field {
+    width: 150px;
 }
 
-.session-form mat-form-field {
-  width: 110px;
+mat-form-field input {
+    font-size: 14px;
 }
 
-.join-card {
-  width: fit-content;
-  min-height: 215px;
-  padding-top: 20px;
-  padding-bottom: 10px;
+mat-card.room-card {
+    margin-left: 10px;
 }
 
-.join-card mat-card-content {
-  margin-bottom: 0;
+.room-mat-card-title {
+    flex: 1;
 }
 
-.join-publish-div {
-  justify-content: space-around;
-  width: 100%;
-  display: inline-flex;
+.room-actions {
+    float: right;
+    margin-top: -5px;
 }
 
-.join-publish-div > * {
-  align-self: center;
+.room-actions button {
+    outline: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    margin-right: 4px;
 }
 
-.inner-card {
-  border: 1px solid #e1e1e1;
-  padding: 10px 3px 10px 10px;
-  background: #ffffff;
-  margin-top: 5px;
+.room-actions button:hover {
+    color: #4d4d4d;
 }
 
-.inner-card h4 {
-  margin-top: 0;
-  margin-bottom: 0;
+.no-wrap-row {
+    flex-wrap: nowrap;
 }
 
-.join-btn {
-  margin-right: 4px;
+.no-wrap-row>* {
+    align-self: center;
 }
 
-#leave-btn {
-  position: absolute;
-  right: 0;
-  top: 0;
-  margin-top: 8px;
-  margin-right: 8px;
+.room-card-content {
+    flex-direction: row;
+    box-sizing: border-box;
+    display: flex;
 }
 
-mat-radio-button {
-  margin-bottom: 8px;
+.event-list-flex {
+    flex: 1 1 140px;
+    box-sizing: border-box;
+    max-width: 137px;
+    min-width: 137px;
 }
 
-.video-container {
-  min-width: 140px;
-}
-
-.session-card-header {
-  display: flex;
-}
-
-.session-card-inner {
-  width: 100%;
-  margin-bottom: 8px;
-}
-
-.session-card-inner .session-title {
-  float: left;
-}
-
-.session-card-inner .session-actions {
-  float: right;
-  margin-top: -5px;
-}
-
-.session-actions button {
-  outline: 0;
-  border: none;
-  background: none;
-  cursor: pointer;
-  padding: 0;
-  margin-right: 4px;
-}
-
-.session-actions button:last-child {
-  margin-right: 0;
-}
-
-.session-actions button:hover {
-  color: #4d4d4d;
-}
-
-.event-list-div {
-  display: inline-block;
-  width: 130px;
-  height: 180px;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-mat-chip {
-  line-height: 6px;
-  font-size: 9.5px;
-  padding: 6px 9px !important;
-  margin-bottom: 3.5px !important;
-  margin-right: 5px !important;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-.scroll-custom::-webkit-scrollbar-track {
-  /*-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);*/
-  background-color: #e0e0e0;
-}
-
-.scroll-custom::-webkit-scrollbar {
-  width: 5px;
-  background-color: #F5F5F5;
-}
-
-.scroll-custom::-webkit-scrollbar-thumb {
-  background-color: #797979;
+.event-list {
+    width: 130px;
+    height: 180px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 mat-expansion-panel {
-  background: #e0e0e0 !important;
-  margin-right: 0 !important;
+    margin-right: 0 !important;
+}
+
+.room-event {
+    background: #beefd5 !important;
 }
 
 mat-expansion-panel-header {
-  font-size: 10.5px !important;
-  padding: 0 7px 0 9px !important;
+    font-size: 10.5px !important;
+    padding: 0 7px 0 9px !important;
 }
 
-.mat-icon-custom {
-  width: 24px;
-  height: 24px;
-  line-height: 17px;
-  margin-bottom: -4px;
+button.mat-icon-custom {
+    --mdc-icon-button-state-layer-size: 24px;
+    padding: 0;
+    margin-bottom: -4px;
 }
 
-.mat-icon-custom-ic {
-  width: 18px;
-  height: 18px;
-  font-size: 18px;
-  line-height: 18px;
+mat-icon.mat-icon-custom-ic {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
 }
 
-.session-btns-div {
-  margin-top: -14px;
-  margin-right: -14px;
-  margin-left: 5px;
+.room-btns-div {
+    flex-direction: column;
+    display: flex;
+    margin-right: -12px;
+    margin-left: 5px;
+    margin-top: -11px;
 }
 
-.publisher-btns-div {
-  margin-top: -7px;
+.scroll-custom::-webkit-scrollbar-track {
+    background-color: #e0e0e0;
+}
+
+.scroll-custom::-webkit-scrollbar {
+    width: 5px;
+    background-color: #F5F5F5;
+}
+
+.scroll-custom::-webkit-scrollbar-thumb {
+    background-color: #797979;
+}
+
+app-local-video {
+    width: 50%;
+}
+
+app-remote-video {
+    width: 50%;
 }
 
 mat-checkbox {
-  margin-left: 4px;
+    font-size: 13px;
+    margin-left: 4px;
 }
 
 mat-checkbox:first-of-type {
-  margin-left: 0;
+    margin-left: 0;
 }

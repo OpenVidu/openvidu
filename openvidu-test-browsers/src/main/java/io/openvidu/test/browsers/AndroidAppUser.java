@@ -13,7 +13,7 @@ public class AndroidAppUser extends BrowserUser {
 
 		String REMOTE_URL = System.getProperty("REMOTE_URL_ANDROID");
 		if (REMOTE_URL == null) {
-			REMOTE_URL = "http://172.17.0.1:4723/";
+			REMOTE_URL = "http://172.17.0.1:4723/wd/hub";
 		}
 
 		UiAutomator2Options options = new UiAutomator2Options();

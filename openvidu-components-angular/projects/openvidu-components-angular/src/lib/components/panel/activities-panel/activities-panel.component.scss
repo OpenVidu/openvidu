@@ -1,0 +1,77 @@
+:host{
+	.activities-body-container {
+		display: block !important;
+		overflow-y: auto;
+		overflow-x: hidden;
+		padding: 10px;
+	}
+
+	.activity-icon {
+		display: inherit;
+		background-color: var(--ov-light-color);
+		border-radius: var(--ov-panel-radius);
+		margin: 10px 0px !important;
+		padding: 10px;
+	}
+
+	.activity-title, .activity-subtitle {
+		color: var(--ov-panel-text-color);
+	}
+
+	.activity-subtitle {
+		font-style: italic;
+		font-size: 11px !important;
+		display: block;
+	}
+	.activity-title {
+		font-weight: bold !important;
+	}
+
+	.activity-action-buttons {
+		font-weight: 600;
+		position: absolute;
+		right: 15px;
+		top: 0px;
+	}
+
+	::ng-deep .mat-content {
+		display: block !important;
+	}
+
+	::ng-deep .mdc-list-item__content {
+		padding-left: 10px !important;
+		align-self: center !important;
+	}
+
+	::ng-deep .mat-expansion-panel-header {
+		padding: 0px 5px !important;
+		height: 65px !important;
+	}
+
+	::ng-deep .mat-mdc-list-base .mat-mdc-list-item .mat-list-item-content,
+	.mat-list-base .mat-list-option .mat-list-item-content {
+		padding: 0px !important;
+	}
+
+	::ng-deep mat-expansion-panel .mat-expansion-panel-body {
+		padding: 0px !important;
+		min-height: 400px;
+	}
+	::ng-deep .mat-expansion-panel-header-description {
+		flex-grow: 0 !important;
+	}
+
+	::ng-deep .mat-expansion-panel {
+		box-shadow: none !important;
+		background-color: var(--ov-panel-background) !important;
+	}
+
+	::ng-deep .no-body .mat-expansion-panel-content {
+		display: none !important;
+	}
+
+	::ng-deep .mdc-list-item--with-leading-icon.mdc-list-item--with-two-lines.mdc-list-item--with-trailing-meta .mdc-list-item__end::before{
+		max-height: 24px;
+		height: 24px;
+	}
+}

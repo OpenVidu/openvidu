@@ -14,43 +14,49 @@
 	</a>
 </div>
 
-<div class="content" role="main" style="height: 100%;">
-
-
+<div class="content" role="main" style="height: 100%">
 	<div class="dashboard-section">
-
 		<div id="call-app">
-
 			<h2>OpenVidu Call APP</h2>
-			<p>Test the OpenVidu Call app using <b>{{title}}</b>:</p>
+			<p>
+				Test the OpenVidu Call app using <b>{{ title }}</b
+				>:
+			</p>
 
 			<div class="card-container">
 				<a id="call-app-btn" class="card" (click)="goTo('call')">
-
 					<span>OpenVidu Call APP</span>
 
 					<svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
 						<path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
 					</svg>
 				</a>
+				<a id="call-admin-dashboard-btn" class="card" (click)="goTo('admin')">
+					<span>Admin Dashboard</span>
+
+					<svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+						<path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+					</svg>
+				</a>
 			</div>
-
+			<div>
+				<mat-checkbox id="static-videos" (change)="staticVideosChanged($event.checked)">
+					Enable static videos
+				</mat-checkbox>
+				<mat-icon matTooltip="Enable or disable static videos with the aim of taking website screenshots">info</mat-icon>
+			</div>
 		</div>
-
 	</div>
-
 
 	<div class="dashboard-section">
 		<div id="testing-app">
-
 			<h2>Testing APP</h2>
-			<p>App for automated testing of openvidu-angular</p>
+			<p>App for automated testing of openvidu-components-angular</p>
 
 			<input type="hidden" #selection />
 
 			<div class="card-container">
 				<a class="card" id="testing-app-btn" (click)="goTo('testing')">
-
 					<span>Testing App</span>
 
 					<svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -58,8 +64,6 @@
 					</svg>
 				</a>
 			</div>
-
 		</div>
-
 	</div>
 </div>

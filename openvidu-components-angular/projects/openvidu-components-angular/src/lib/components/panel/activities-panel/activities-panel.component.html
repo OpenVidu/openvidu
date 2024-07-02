@@ -1,0 +1,30 @@
+<div class="panel-container" id="activities-container">
+	<div class="panel-header-container">
+		<h3 class="panel-title">Activities</h3>
+		<button class="panel-close-button" mat-icon-button matTooltip="{{ 'PANEL.CLOSE' | translate }}" (click)="close()">
+			<mat-icon>close</mat-icon>
+		</button>
+	</div>
+
+	<div class="activities-body-container">
+		<mat-accordion [multi]="false">
+			<ov-recording-activity
+				*ngIf="showRecordingActivity"
+				id="recording-activity"
+				[expanded]="expandedPanel === 'recording'"
+				(onRecordingStartRequested)="onRecordingStartRequested.emit($event)"
+				(onRecordingStopRequested)="onRecordingStopRequested.emit($event)"
+				(onRecordingDeleteRequested)="onRecordingDeleteRequested.emit($event)"
+				(onRecordingDownloadClicked)="onRecordingDownloadClicked.emit($event)"
+				(onRecordingPlayClicked)="onRecordingPlayClicked.emit($event)"
+			></ov-recording-activity>
+			<ov-broadcasting-activity
+				*ngIf="showBroadcastingActivity"
+				id="broadcasting-activity"
+				[expanded]="expandedPanel === 'broadcasting'"
+				(onBroadcastingStartRequested)="onBroadcastingStartRequested.emit($event)"
+				(onBroadcastingStopRequested)="onBroadcastingStopRequested.emit($event)"
+			></ov-broadcasting-activity>
+		</mat-accordion>
+	</div>
+</div>

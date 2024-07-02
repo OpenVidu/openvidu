@@ -1,0 +1,124 @@
+#session-container {
+	background-color: var(--ov-primary-color);
+	/* min-width: 400px; */
+	height: 100%;
+}
+#spinner {
+	position: absolute;
+	top: 40%;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	margin: auto;
+	text-align: -webkit-center;
+	text-align: -moz-center;
+	color: var(--ov-text-color);
+}
+
+.sidenav-container {
+	position: relative;
+	height: calc(100% - 70px);
+	min-height: calc(100% - 70px);
+	padding-top: 0px;
+	width: 100%;
+	overflow: hidden;
+}
+
+.sidenav-menu {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 380px;
+	background-color: var(--ov-primary-color);
+	border-left: none;
+	position: absolute;
+	z-index: 1;
+}
+
+.big {
+	width: 650px;
+	max-width: 100%;
+}
+
+.mat-drawer.mat-drawer-side {
+	z-index: 0 !important;
+}
+
+.sidenav-main {
+	height: 100%;
+	overflow: hidden;
+	min-height: -webkit-fill-available;
+	min-height: -moz-available;
+}
+
+#layout-container {
+	height: inherit;
+	width: inherit;
+}
+
+.mat-drawer-container {
+	background-color: var(--ov-primary-color);
+}
+
+#toolbar-container,
+#footer-container {
+	background-color: var(--ov-primary-color);
+	/* min-width: 400px !important; */
+	width: 100%;
+	height: 70px;
+}
+
+#footer {
+	color: #ffffff;
+	height: 25px;
+	background-color: #333333;
+	padding: 0 14px 0 0;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	z-index: 999999;
+	/* min-width: 400px !important; */
+}
+
+.reconnecting-container {
+	width: 100%;
+	height: 100%;
+	z-index: 1000;
+	background-color: black;
+	opacity: 80%;
+	position: absolute;
+}
+
+@media only screen and (max-width: 600px) {
+	#session-container {
+		width: 100%;
+		/* position: fixed; */
+	}
+}
+
+/* TODO(mdc-migration): The following rule targets internal classes of button that may no longer apply for the MDC version. */
+::ng-deep .mat-button-toggle-appearance-standard .mat-button-toggle-label-content {
+	padding: 1px !important;
+}
+
+::ng-deep .mat-mdc-input-element {
+	caret-color: #000000;
+}
+/* TODO(mdc-migration): The following rule targets internal classes of option that may no longer apply for the MDC version. */
+::ng-deep .mat-primary .mat-mdc-option.mat-selected:not(.mat-option-disabled) {
+	color: #000000;
+}
+
+/* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
+::ng-deep .mat-form-field-label {
+	color: var(--ov-panel-text-color) !important;
+}
+
+/* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
+::ng-deep .mat-mdc-form-field.mat-focused .mat-form-field-ripple {
+	background-color: var(--ov-panel-text-color) !important;
+}
+
+::ng-deep .mat-drawer {
+	background-color: transparent !important;
+}

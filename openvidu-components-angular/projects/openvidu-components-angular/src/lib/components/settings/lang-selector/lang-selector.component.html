@@ -1,0 +1,18 @@
+<button *ngIf="!compact" mat-flat-button [matMenuTriggerFor]="menu" class="lang-button" id="lang-btn">
+	<span id="lang-selected-name">{{ langSelected?.name }}</span>
+	<mat-icon>expand_more</mat-icon>
+</button>
+<button id="lang-btn-compact" *ngIf="compact" mat-icon-button [matMenuTriggerFor]="menu">
+	<mat-icon>translate</mat-icon>
+</button>
+<mat-menu #menu="matMenu">
+	<button
+		mat-menu-item
+		*ngFor="let lang of languages"
+		(click)="onLangSelected(lang.lang)"
+		[attr.id]="'lang-opt-' + lang.lang"
+		class="lang-menu-opt"
+	>
+		<span>{{ lang.name }}</span>
+	</button>
+</mat-menu>

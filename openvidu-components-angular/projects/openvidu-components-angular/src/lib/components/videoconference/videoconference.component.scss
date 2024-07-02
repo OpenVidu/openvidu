@@ -1,0 +1,35 @@
+#call-container,
+#vc-container {
+	height: 100%;
+}
+#vc-container {
+	background-color: var(--ov-primary-color);
+}
+
+#pre-join-container {
+	height: inherit;
+}
+
+.error-icon {
+	color: var(--ov-warn-color);
+}
+
+#spinner {
+	position: absolute;
+	top: 40%;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	margin: auto;
+	text-align: -webkit-center;
+	text-align: -moz-center;
+}
+
+::ng-deep .mat-mdc-progress-spinner {
+	--mdc-circular-progress-active-indicator-color: var(--ov-tertiary-color);
+}
+
+/* Private css variables */
+#call-container {
+	--ov-captions-height: 230px;
+}

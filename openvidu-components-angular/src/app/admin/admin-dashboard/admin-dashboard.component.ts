@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { RecordingService } from 'openvidu-angular';
+import { RecordingDeleteRequestedEvent, RecordingInfo } from 'openvidu-components-angular';
 import { RestService } from 'src/app/services/rest.service';
 
 @Component({
@@ -8,27 +8,35 @@ import { RestService } from 'src/app/services/rest.service';
 	styleUrls: ['./admin-dashboard.component.scss']
 })
 export class AdminDashboardComponent implements OnInit {
-	recordings: any[] = [];
+	recordings: RecordingInfo[] = [];
 	logged: boolean;
 	error: any;
-	constructor(private restService: RestService, private recordingService: RecordingService) {}
+	private continuationToken: string;
+	constructor(
+		private restService: RestService,
+	) {}
 
 	async ngOnInit() {
-		try {
-			const resp: any = await this.restService.login('');
-			this.logged = true;
-			this.recordings = resp.recordings;
-		} catch (error) {
-			this.logged = false;
-			console.log(error);
-		}
+		// try {
+		// 	const resp: any = await this.restService.login('');
+		// 	this.logged = true;
+		// 	this.recordings = resp.recordings;
+		// } catch (error) {
+		// 	this.logged = false;
+		// 	console.log(error);
+		// }
 	}
 
-	async login(pass: string) {
+	async login(credentials: { username: string; password: string }) {
+		console.log('LOGIN', credentials);
 		try {
-			const resp: any = await this.restService.login(pass);
+			const resp: any = await this.restService.login(credentials);
 			this.logged = true;
-			this.recordings = resp.recordings;
+
+			const response = await this.restService.getRecordings(this.continuationToken);
+
+			this.recordings = response.recordings;
+			this.continuationToken = response.continuationToken;
 		} catch (error) {
 			this.error = error;
 			console.log(error);
@@ -42,19 +50,27 @@ export class AdminDashboardComponent implements OnInit {
 
 	async onRefreshRecordingsClicked() {
 		console.log('GET ALL ');
-		const ecordings = await this.restService.getRecordings();
-		console.log(this.recordings);
-		this.recordings = ecordings;
+		const response = await this.restService.getRecordings();
+		this.recordings = response.recordings;
+		this.continuationToken = response.continuationToken;
 	}
 
-	async onDeleteRecordingClicked(recordingId: string) {
-		console.warn('DELETE RECORDING CLICKED');
+	async onLoadMoreRecordingsRequested() {
+		if (!this.continuationToken) return console.warn('No more recordings to load');
+		const response = await this.restService.getRecordings(this.continuationToken);
+		this.recordings = response.recordings;
+		this.continuationToken = response.continuationToken;
+	}
+
+	async onDeleteRecordingClicked(recording: RecordingDeleteRequestedEvent) {
+		console.warn('DELETE RECORDING CLICKED', recording);
 
 		try {
-			this.recordings = await this.restService.deleteRecording(recordingId);
+			await this.restService.deleteRecordingByAdmin(recording.recordingId);
+			const response = await this.restService.getRecordings();
+			this.recordings = response.recordings;
 		} catch (error) {
 			console.error(error);
 		}
 	}
-
 }

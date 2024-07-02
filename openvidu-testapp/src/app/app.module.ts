@@ -1,78 +1,78 @@
-import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
-import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { AppMaterialModule } from './app.material.module';
+import { HttpClientModule } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 
+import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { AppRoutingModule } from './app.routing';
-import { OpenviduInstanceComponent } from './components/openvidu-instance/openvidu-instance.component';
-import { TestApirestComponent } from './components/test-apirest/test-apirest.component';
-import { TestScenariosComponent } from './components/test-scenarios/test-scenarios.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatCardModule } from '@angular/material/card';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatSelectModule } from '@angular/material/select';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+
 import { TestSessionsComponent } from './components/test-sessions/test-sessions.component';
-import { TableVideoComponent } from './components/users-table/table-video.component';
-import { UsersTableComponent } from './components/users-table/users-table.component';
-import { OpenViduVideoComponent } from './components/video/ov-video.component';
-import { VideoComponent } from './components/video/video.component';
+import { OpenviduInstanceComponent } from './components/openvidu-instance/openvidu-instance.component';
+import { VideoTrackComponent } from './components/video-track/video-track.component';
+import { ParticipantComponent } from './components/participant/participant.component';
+import { AudioTrackComponent } from './components/audio-track/audio-track.component';
+import { TrackComponent } from './components/track/track.component';
+import { RoomOptionsDialogComponent } from './components/dialogs/room-options-dialog/room-options-dialog.component';
+import { RoomApiDialogComponent } from './components/dialogs/room-api-dialog/room-api-dialog.component';
 
-import { EventsDialogComponent } from './components/dialogs/events-dialog/events-dialog.component';
-import { ExtensionDialogComponent } from './components/dialogs/extension-dialog/extension-dialog.component';
-import { LocalRecordingDialogComponent } from './components/dialogs/local-recording-dialog/local-recording-dialog.component';
-import { OtherStreamOperationsDialogComponent } from './components/dialogs/other-stream-operations-dialog/other-stream-operations-dialog.component';
-import { PublisherPropertiesDialogComponent } from './components/dialogs/publisher-properties-dialog/publisher-properties-dialog.component';
-import { RecordingPropertiesComponent } from './components/dialogs/recording-properties/recording-properties.component';
-import { ScenarioPropertiesDialogComponent } from './components/dialogs/scenario-properties-dialog/scenario-properties-dialog.component';
-import { SessionApiDialogComponent } from './components/dialogs/session-api-dialog/session-api-dialog.component';
-import { SessionPropertiesDialogComponent } from './components/dialogs/session-properties-dialog/session-properties-dialog.component';
-import { ShowCodecDialogComponent } from './components/dialogs/show-codec-dialog/show-codec-dialog.component';
-
-import { SessionInfoDialogComponent } from "./components/dialogs/session-info-dialog/session-info-dialog.component";
-import { ShowIceServerConfiguredDialog } from './components/dialogs/show-configured-ice/show-configured-ice.component';
-import { MuteSubscribersService } from './services/mute-subscribers.service';
-import { OpenviduParamsService } from './services/openvidu-params.service';
-import { OpenviduRestService } from './services/openvidu-rest.service';
 import { TestFeedService } from './services/test-feed.service';
+import { EventsDialogComponent } from './components/dialogs/events-dialog/events-dialog.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    OpenviduInstanceComponent,
-    VideoComponent,
-    OpenViduVideoComponent,
     TestSessionsComponent,
-    TestApirestComponent,
-    TestScenariosComponent,
-    ExtensionDialogComponent,
-    SessionPropertiesDialogComponent,
-    SessionApiDialogComponent,
-    EventsDialogComponent,
-    RecordingPropertiesComponent,
-    LocalRecordingDialogComponent,
-    PublisherPropertiesDialogComponent,
-    ScenarioPropertiesDialogComponent,
-    OtherStreamOperationsDialogComponent,
-    ShowCodecDialogComponent,
-    ShowIceServerConfiguredDialog,
-    SessionInfoDialogComponent,
-    UsersTableComponent,
-    TableVideoComponent
+    OpenviduInstanceComponent,
+    ParticipantComponent,
+    VideoTrackComponent,
+    AudioTrackComponent,
+    TrackComponent,
+    RoomOptionsDialogComponent,
+    RoomApiDialogComponent,
+    EventsDialogComponent
   ],
   imports: [
-    BrowserModule,
     FormsModule,
-    BrowserAnimationsModule,
-    AppMaterialModule,
-    FlexLayoutModule,
+    BrowserModule,
     HttpClientModule,
-    AppRoutingModule
+    AppRoutingModule,
+    BrowserAnimationsModule,
+    MatExpansionModule,
+    MatToolbarModule,
+    MatSidenavModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatButtonModule,
+    MatCheckboxModule,
+    MatCardModule,
+    MatTooltipModule,
+    MatDialogModule,
+    MatDividerModule,
+    MatSelectModule,
+    MatChipsModule,
+    MatSlideToggleModule,
   ],
   providers: [
-    OpenviduRestService,
-    OpenviduParamsService,
     TestFeedService,
-    MuteSubscribersService
+    { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline', subscriptSizing: 'dynamic' } }
   ],
   bootstrap: [AppComponent]
 })

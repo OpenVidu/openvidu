@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import { Builder, WebDriver } from 'selenium-webdriver';
-import { OPENVIDU_SECRET, OPENVIDU_SERVER_URL } from './config';
+import { OPENVIDU_CALL_SERVER } from './config';
 import { WebComponentConfig } from './selenium.conf';
 import { OpenViduComponentsPO } from './utils.po.test';
 
-const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_SERVER_URL}&OV_SECRET=${OPENVIDU_SECRET}`;
+const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_CALL_SERVER}`;
 
 describe('Testing API Directives', () => {
 	let browser: WebDriver;
@@ -42,8 +42,8 @@ describe('Testing API Directives', () => {
 		await browser.sleep(500);
 
 		// Checking if button panel is present
-		await utils.waitForElement('.mat-mdc-menu-content');
-		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
+		await utils.waitForElement('#more-options-menu');
+		expect(await utils.isPresent('#more-options-menu')).to.be.true;
 
 		// Checking if captions button is present
 		await utils.waitForElement('#captions-btn');
@@ -81,8 +81,8 @@ describe('Testing API Directives', () => {
 		await browser.sleep(500);
 
 		// Checking if button panel is present
-		await utils.waitForElement('.mat-mdc-menu-content');
-		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
+		await utils.waitForElement('#more-options-menu');
+		expect(await utils.isPresent('#more-options-menu')).to.be.true;
 
 		// Checking if captions button is present
 		await utils.waitForElement('#captions-btn');
@@ -199,8 +199,8 @@ describe('Testing captions features', () => {
 		await browser.sleep(500);
 
 		// Checking if button panel is present
-		await utils.waitForElement('.mat-mdc-menu-content');
-		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
+		await utils.waitForElement('#more-options-menu');
+		expect(await utils.isPresent('#more-options-menu')).to.be.true;
 
 		// Checking if captions button is present
 		await utils.waitForElement('#captions-btn');
@@ -224,8 +224,8 @@ describe('Testing captions features', () => {
 		await browser.sleep(500);
 
 		// Checking if button panel is present
-		await utils.waitForElement('.mat-mdc-menu-content');
-		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
+		await utils.waitForElement('#more-options-menu');
+		expect(await utils.isPresent('#more-options-menu')).to.be.true;
 
 		// Checking if captions button is present
 		await utils.waitForElement('#captions-btn');
@@ -261,8 +261,8 @@ describe('Testing captions features', () => {
 		await browser.sleep(500);
 
 		// Checking if button panel is present
-		await utils.waitForElement('.mat-mdc-menu-content');
-		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
+		await utils.waitForElement('#more-options-menu');
+		expect(await utils.isPresent('#more-options-menu')).to.be.true;
 
 		// Checking if captions button is present
 		await utils.waitForElement('#captions-btn');
@@ -304,8 +304,8 @@ describe('Testing captions features', () => {
 		await browser.sleep(500);
 
 		// Checking if button panel is present
-		await utils.waitForElement('.mat-mdc-menu-content');
-		expect(await utils.isPresent('.mat-mdc-menu-content')).to.be.true;
+		await utils.waitForElement('#more-options-menu');
+		expect(await utils.isPresent('#more-options-menu')).to.be.true;
 
 		// Checking if captions button is present
 		await utils.waitForElement('#captions-btn');

@@ -1,0 +1,83 @@
+<div class="panel-container" id="settings-container">
+	<div class="panel-header-container">
+		<h3 class="panel-title">{{ 'PANEL.SETTINGS.TITLE' | translate }}</h3>
+		<button class="panel-close-button" mat-icon-button matTooltip="{{ 'PANEL.CLOSE' | translate }}" (click)="close()">
+			<mat-icon>close</mat-icon>
+		</button>
+	</div>
+
+	<div class="settings-container">
+		<div class="item-menu" [ngClass]="{ mobile: isMobile }">
+			<mat-selection-list
+				#optionList
+				(selectionChange)="onSelectionChanged(optionList.selectedOptions.selected[0]?.value)"
+				[multiple]="false"
+				[hideSingleSelectionIndicator]="true"
+				[disableRipple]="true"
+			>
+				<mat-list-option
+					class="option"
+					id="general-opt"
+					[selected]="selectedOption === settingsOptions.GENERAL"
+					[value]="settingsOptions.GENERAL"
+				>
+					<mat-icon matListItemIcon>manage_accounts</mat-icon>
+					<div mat-line *ngIf="!isMobile">{{ 'PANEL.SETTINGS.GENERAL' | translate }}</div>
+				</mat-list-option>
+				<mat-list-option
+					class="option"
+					id="video-opt"
+					[selected]="selectedOption === settingsOptions.VIDEO"
+					[value]="settingsOptions.VIDEO"
+				>
+					<mat-icon matListItemIcon>videocam</mat-icon>
+					<div mat-line *ngIf="!isMobile">{{ 'PANEL.SETTINGS.VIDEO' | translate }}</div>
+				</mat-list-option>
+				<mat-list-option
+					class="option"
+					id="audio-opt"
+					[selected]="selectedOption === settingsOptions.AUDIO"
+					[value]="settingsOptions.AUDIO"
+				>
+					<mat-icon matListItemIcon>mic</mat-icon>
+					<div mat-line *ngIf="!isMobile">{{ 'PANEL.SETTINGS.AUDIO' | translate }}</div>
+				</mat-list-option>
+				<!-- <mat-list-option
+					*ngIf="showCaptions"
+					class="option"
+					[selected]="selectedOption === settingsOptions.CAPTIONS"
+					[value]="settingsOptions.CAPTIONS"
+					id="captions-opt"
+				>
+					<mat-icon matListItemIcon>closed_caption</mat-icon>
+					<div mat-line *ngIf="!isMobile">{{ 'PANEL.SETTINGS.CAPTIONS' | translate }}</div>
+				</mat-list-option> -->
+			</mat-selection-list>
+		</div>
+
+		<div class="item-content">
+			<div *ngIf="selectedOption === settingsOptions.GENERAL">
+				<mat-label>{{ 'PREJOIN.NICKNAME' | translate }}</mat-label>
+				<ov-participant-name-input></ov-participant-name-input>
+				<mat-list>
+					<mat-list-item>
+						<mat-icon matListItemIcon>translate</mat-icon>
+						<div matListItemTitle>{{ 'PANEL.SETTINGS.LANGUAGE' | translate }}</div>
+						<ov-lang-selector matListItemMeta (onLangChanged)="onLangChanged.emit($event)"></ov-lang-selector>
+					</mat-list-item>
+				</mat-list>
+			</div>
+			<ov-video-devices-select
+				*ngIf="selectedOption === settingsOptions.VIDEO"
+				(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
+				(onVideoEnabledChanged)="onVideoEnabledChanged.emit($event)"
+			></ov-video-devices-select>
+			<ov-audio-devices-select
+				*ngIf="selectedOption === settingsOptions.AUDIO"
+				(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
+				(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
+			></ov-audio-devices-select>
+			<!-- <ov-captions-settings *ngIf="selectedOption === settingsOptions.CAPTIONS && showCaptions"></ov-captions-settings> -->
+		</div>
+	</div>
+</div>

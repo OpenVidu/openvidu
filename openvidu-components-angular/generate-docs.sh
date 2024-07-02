@@ -8,9 +8,9 @@ fi
 # Replace version from "stable" to the specified one in all TypeDoc links
 grep -rl '/en/stable/' projects src | xargs sed -i -e 's|/en/stable/|/en/'${BASEHREF_VERSION}'/|g'
 
-# Replace testapp README by openvidu-angular README
+# Replace testapp README by openvidu-components-angular README
 mv README.md README-testapp.md
-cp ./projects/openvidu-angular/README.md .
+cp ./projects/openvidu-components-angular/README.md .
 
 # Generate Compodoc
 npm run doc:build

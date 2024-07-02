@@ -66,14 +66,14 @@ public class CustomWebhook {
 		CustomWebhook.context.close();
 	}
 
-	public synchronized static void clean() {
+	public static void clean() {
 		CustomWebhook.accumulatedNumberOfEvents = 0;
 		CustomWebhook.accumulatedEvents.clear();
 		CustomWebhook.eventsInOrder.clear();
 		CustomWebhook.events.clear();
 	}
 
-	public synchronized static void cleanEventsInOrder() {
+	public static void cleanEventsInOrder() {
 		CustomWebhook.eventsInOrder.clear();
 	}
 

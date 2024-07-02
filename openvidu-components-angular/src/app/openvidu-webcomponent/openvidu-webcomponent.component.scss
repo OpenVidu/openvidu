@@ -1,30 +1,20 @@
 @use '@angular/material' as mat;
+
 @include mat.core();
 
-// Define your custom palettes
-$openvidu-components-primary: mat.define-palette(mat.$blue-grey-palette, 500, 300);
-$openvidu-components-accent: mat.define-palette(mat.$amber-palette, 500, 700, A100);
-$openvidu-components-warn: mat.define-palette(mat.$red-palette);
-
 // Define the theme
-$openvidu-components-theme: mat.define-light-theme(
-	(
-		color: (
-			primary: $openvidu-components-primary,
-			accent: $openvidu-components-accent,
-			warn: $openvidu-components-warn
-		)
-	)
-);
+$openvidu-theme: mat.define-theme();
 
-// Include the non-legacy themes for the components
-@include mat.all-component-themes($openvidu-components-theme);
+html {
+	// Emit theme-dependent styles for common features used across multiple components.
+	@include mat.core-theme($openvidu-theme);
+	// @include mat.button-theme($theme);
+	@include mat.all-component-bases($openvidu-theme);
+	@include mat.all-component-colors($openvidu-theme);
+	@include mat.all-component-typographies($openvidu-theme);
+	@include mat.all-component-densities($openvidu-theme);
+}
 
-// If you have custom typography configurations, include them as well
-@include mat.all-component-typographies($openvidu-components-theme);
-
-// If you need to adjust density, include it as well
-// @include mat.all-component-density-styles($openvidu-components-theme);
 
 @font-face {
 	font-family: 'Material Icons';

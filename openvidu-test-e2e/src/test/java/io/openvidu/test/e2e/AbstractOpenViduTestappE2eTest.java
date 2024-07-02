@@ -8,7 +8,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import io.openvidu.test.browsers.BrowserUser;
 
@@ -18,12 +17,15 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 
 	private void connectToOpenViduTestApp(OpenViduTestappUser user) {
 		user.getDriver().get(APP_URL);
-		WebElement urlInput = user.getDriver().findElement(By.id("openvidu-url"));
+		WebElement urlInput = user.getDriver().findElement(By.id("livekit-url"));
 		urlInput.clear();
-		urlInput.sendKeys(OPENVIDU_URL);
-		WebElement secretInput = user.getDriver().findElement(By.id("openvidu-secret"));
+		urlInput.sendKeys(LIVEKIT_URL);
+		WebElement keyInput = user.getDriver().findElement(By.id("livekit-api-key"));
+		keyInput.clear();
+		keyInput.sendKeys(LIVEKIT_API_KEY);
+		WebElement secretInput = user.getDriver().findElement(By.id("livekit-api-secret"));
 		secretInput.clear();
-		secretInput.sendKeys(OPENVIDU_SECRET);
+		secretInput.sendKeys(LIVEKIT_API_SECRET);
 		user.getEventManager().startPolling();
 	}
 
@@ -35,22 +37,15 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 		return testappUser;
 	}
 
-	protected void listEmptyRecordings(OpenViduTestappUser user) {
-		// List existing recordings (empty)
-		user.getDriver().findElement(By.id("list-recording-btn")).click();
-		user.getWaiter()
-				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording list []"));
-	}
-
 	protected void gracefullyLeaveParticipants(OpenViduTestappUser user, int numberOfParticipants) throws Exception {
-		int accumulatedConnectionDestroyed = 0;
+		int accumulatedDisconnected = 0;
 		for (int j = 1; j <= numberOfParticipants; j++) {
 			user.getDriver().findElement(By.id("remove-user-btn")).sendKeys(Keys.ENTER);
-			user.getEventManager().waitUntilEventReaches("sessionDisconnected", j);
-			accumulatedConnectionDestroyed = (j != numberOfParticipants)
-					? (accumulatedConnectionDestroyed + numberOfParticipants - j)
-					: (accumulatedConnectionDestroyed);
-			user.getEventManager().waitUntilEventReaches("connectionDestroyed", accumulatedConnectionDestroyed);
+			user.getEventManager().waitUntilEventReaches("disconnected", "RoomEvent", j);
+			accumulatedDisconnected = (j != numberOfParticipants) ? (accumulatedDisconnected + numberOfParticipants - j)
+					: (accumulatedDisconnected);
+			user.getEventManager().waitUntilEventReaches("participantDisconnected", "RoomEvent",
+					accumulatedDisconnected);
 		}
 	}
 

@@ -1,19 +1,24 @@
 <mat-sidenav-container fullscreen>
-  <mat-toolbar class="mat-elevation-z5" color="primary">
-    <div layout-align='center center' layout='column'>
-      <a id="nav-logo" routerLink="/"><img id="nav-img" src="assets/images/openvidu_vert_white_bg_trans_cropped.png"/> TestApp</a>
-      <a mat-button id="toolbar-sessions" routerLink="/test-sessions"><span>SESSIONS</span></a>
-      <a mat-button id="toolbar-scenarios" routerLink="/test-scenarios"><span>SCENARIOS</span></a>
-      <a mat-button id="toolbar-apirest" routerLink="/test-apirest"><span>API REST</span></a>
-    </div>
-  </mat-toolbar>
-  <main>
-    <mat-form-field appearance="outline">
-      <input id="openvidu-url" matInput placeholder="OpenVidu Server URL" [ngModel]="openviduURL" (ngModelChange)="updateUrl($event)">
-    </mat-form-field>
-    <mat-form-field appearance="outline">
-      <input id="openvidu-secret" matInput placeholder="OpenVidu Server Secret" [ngModel]="openviduSecret" (ngModelChange)="updateSecret($event)">
-    </mat-form-field>
-    <router-outlet></router-outlet>
-  </main>
+    <mat-toolbar class="mat-elevation-z5" color="primary">
+        <a id="nav-logo" routerLink="/"><img id="nav-img"
+                src="assets/images/openvidu_vert_white_bg_trans_cropped.png" />LiveKit TestApp</a>
+    </mat-toolbar>
+    <main>
+        <mat-form-field>
+            <mat-label>LiveKit URL</mat-label>
+            <input id="livekit-url" matInput placeholder="LiveKit URL" [ngModel]="livekitUrl"
+                (ngModelChange)="updateUrl($event)">
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>LiveKit Api Key</mat-label>
+            <input id="livekit-api-key" matInput placeholder="LiveKit Api Key" [ngModel]="livekitApiKey"
+                (ngModelChange)="updateApiKey($event)">
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>LiveKit Api Secret</mat-label>
+            <input id="livekit-api-secret" matInput type="password" placeholder="LiveKit Api Secret"
+                [ngModel]="livekitApiSecret" (ngModelChange)="updateApiSecret($event)">
+        </mat-form-field>
+        <app-test-sessions></app-test-sessions>
+    </main>
 </mat-sidenav-container>

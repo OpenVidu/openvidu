@@ -6,8 +6,8 @@ var CAPTIONS_LANG;
 var CUSTOM_LANG_OPTIONS;
 var CUSTOM_CAPTIONS_LANG_OPTIONS;
 var PREJOIN;
-var VIDEO_MUTED;
-var AUDIO_MUTED;
+var VIDEO_ENABLED;
+var AUDIO_ENABLED;
 
 var SCREENSHARE_BUTTON;
 var FULLSCREEN_BUTTON;
@@ -16,10 +16,10 @@ var RECORDING_BUTTON;
 var BROADCASTING_BUTTON;
 var CHAT_PANEL_BUTTON;
 var DISPLAY_LOGO;
-var DISPLAY_SESSION_NAME;
+var DISPLAY_ROOM_NAME;
 var DISPLAY_PARTICIPANT_NAME;
 var DISPLAY_AUDIO_DETECTION;
-var SETTINGS_BUTTON;
+var VIDEO_CONTROLS;
 var LEAVE_BUTTON;
 var PARTICIPANT_MUTE_BUTTON;
 var PARTICIPANTS_PANEL_BUTTON;
@@ -30,37 +30,38 @@ var BROADCASTING_ERROR;
 var TOOLBAR_SETTINGS_BUTTON;
 var CAPTIONS_BUTTON;
 
-var SINGLE_TOKEN;
-var SESSION_NAME;
+var ROOM_NAME;
 var FAKE_DEVICES;
+var FAKE_RECORDINGS;
 
 var PARTICIPANT_NAME;
 
-var OPENVIDU_SERVER_URL;
-var OPENVIDU_SECRET;
+var OPENVIDU_CALL_SERVER_URL;
+// var OPENVIDU_SECRET;
 
-$(document).ready(() => {
+document.addEventListener('DOMContentLoaded', () => {
 	var url = new URL(window.location.href);
 
-	OPENVIDU_SERVER_URL = url.searchParams.get('OV_URL');
-	OPENVIDU_SECRET = url.searchParams.get('OV_SECRET');
-
-	SINGLE_TOKEN = url.searchParams.get('singleToken') === null ? false : url.searchParams.get('singleToken') === 'true';
+	OPENVIDU_CALL_SERVER_URL = url.searchParams.get('OV_URL');
+	// OPENVIDU_SECRET = url.searchParams.get('OV_SECRET');
 
 	FAKE_DEVICES = url.searchParams.get('fakeDevices') === null ? false : url.searchParams.get('fakeDevices') === 'true';
+
+	FAKE_RECORDINGS = url.searchParams.get('fakeRecordings') === null ? false : url.searchParams.get('fakeRecordings') === 'true';
 
 	// Directives
 	MINIMAL = url.searchParams.get('minimal') === null ? false : url.searchParams.get('minimal') === 'true';
 	LANG = url.searchParams.get('lang') || 'en';
-	CAPTIONS_LANG = url.searchParams.get('captionsLang') || 'en-US';
-	CUSTOM_LANG_OPTIONS =
-	url.searchParams.get('langOptions') === null ? false : url.searchParams.get('langOptions') === 'true';
-	CUSTOM_CAPTIONS_LANG_OPTIONS =
-		url.searchParams.get('captionsLangOptions') === null ? false : url.searchParams.get('captionsLangOptions') === 'true';
-	PARTICIPANT_NAME = url.searchParams.get('participantName') || 'TEST_USER';
+	CUSTOM_LANG_OPTIONS = url.searchParams.get('langOptions') === null ? false : url.searchParams.get('langOptions') === 'true';
+	// CAPTIONS_LANG = url.searchParams.get('captionsLang') || 'en-US';
+	// CUSTOM_CAPTIONS_LANG_OPTIONS = url.searchParams.get('captionsLangOptions') === null ? false : url.searchParams.get('captionsLangOptions') === 'true';
+	PARTICIPANT_NAME =
+		url.searchParams.get('participantName') === null
+			? 'TEST_USER' + Math.random().toString(36).substr(2, 9)
+			: url.searchParams.get('participantName');
 	PREJOIN = url.searchParams.get('prejoin') === null ? true : url.searchParams.get('prejoin') === 'true';
-	VIDEO_MUTED = url.searchParams.get('videoMuted') === null ? false : url.searchParams.get('videoMuted') === 'true';
-	AUDIO_MUTED = url.searchParams.get('audioMuted') === null ? false : url.searchParams.get('audioMuted') === 'true';
+	VIDEO_ENABLED = url.searchParams.get('videoEnabled') === null ? true : url.searchParams.get('videoEnabled') === 'true';
+	AUDIO_ENABLED = url.searchParams.get('audioEnabled') === null ? true : url.searchParams.get('audioEnabled') === 'true';
 	SCREENSHARE_BUTTON = url.searchParams.get('screenshareBtn') === null ? true : url.searchParams.get('screenshareBtn') === 'true';
 	RECORDING_BUTTON =
 		url.searchParams.get('toolbarRecordingButton') === null ? true : url.searchParams.get('toolbarRecordingButton') === 'true';
@@ -95,53 +96,59 @@ $(document).ready(() => {
 	}
 
 	DISPLAY_LOGO = url.searchParams.get('displayLogo') === null ? true : url.searchParams.get('displayLogo') === 'true';
-	DISPLAY_SESSION_NAME =
-		url.searchParams.get('displaySessionName') === null ? true : url.searchParams.get('displaySessionName') === 'true';
+	DISPLAY_ROOM_NAME = url.searchParams.get('displayRoomName') === null ? true : url.searchParams.get('displayRoomName') === 'true';
 	DISPLAY_PARTICIPANT_NAME =
 		url.searchParams.get('displayParticipantName') === null ? true : url.searchParams.get('displayParticipantName') === 'true';
 	DISPLAY_AUDIO_DETECTION =
 		url.searchParams.get('displayAudioDetection') === null ? true : url.searchParams.get('displayAudioDetection') === 'true';
-	SETTINGS_BUTTON = url.searchParams.get('settingsBtn') === null ? true : url.searchParams.get('settingsBtn') === 'true';
+	VIDEO_CONTROLS = url.searchParams.get('videoControls') === null ? true : url.searchParams.get('videoControls') === 'true';
 	PARTICIPANT_MUTE_BUTTON =
 		url.searchParams.get('participantMuteBtn') === null ? true : url.searchParams.get('participantMuteBtn') === 'true';
 
-	SESSION_NAME =
-		url.searchParams.get('sessionName') === null ? `E2ESession${Math.floor(Date.now())}` : url.searchParams.get('sessionName');
+	ROOM_NAME = url.searchParams.get('roomName') === null ? `E2ESession${Math.floor(Date.now())}` : url.searchParams.get('roomName');
 
 	var webComponent = document.querySelector('openvidu-webcomponent');
 
-	webComponent.addEventListener('onJoinButtonClicked', (event) => appendElement('onJoinButtonClicked'));
-	webComponent.addEventListener('onToolbarLeaveButtonClicked', (event) => appendElement('onToolbarLeaveButtonClicked'));
-	webComponent.addEventListener('onToolbarCameraButtonClicked', (event) => appendElement('onToolbarCameraButtonClicked'));
-	webComponent.addEventListener('onToolbarMicrophoneButtonClicked', (event) => appendElement('onToolbarMicrophoneButtonClicked'));
-	webComponent.addEventListener('onToolbarScreenshareButtonClicked', (event) => appendElement('onToolbarScreenshareButtonClicked'));
-	webComponent.addEventListener('onToolbarParticipantsPanelButtonClicked', (event) =>
-		appendElement('onToolbarParticipantsPanelButtonClicked')
+	webComponent.addEventListener('onTokenRequested', (event) => {
+		appendElement('onTokenRequested');
+		console.log('Token ready', event.detail);
+		joinSession(ROOM_NAME, event.detail);
+	});
+	webComponent.addEventListener('onReadyToJoin', (event) => appendElement('onReadyToJoin'));
+	webComponent.addEventListener('onRoomDisconnected', (event) => appendElement('onRoomDisconnected'));
+	webComponent.addEventListener('onVideoEnabledChanged', (event) => appendElement('onVideoEnabledChanged-' + event.detail));
+	webComponent.addEventListener('onVideoDeviceChanged', (event) => appendElement('onVideoDeviceChanged'));
+	webComponent.addEventListener('onAudioEnabledChanged', (eSESSIONvent) => appendElement('onAudioEnabledChanged-' + event.detail));
+	webComponent.addEventListener('onAudioDeviceChanged', (event) => appendElement('onAudioDeviceChanged'));
+	webComponent.addEventListener('onScreenShareEnabledChanged', (event) => appendElement('onScreenShareEnabledChanged'));
+	webComponent.addEventListener('onParticipantsPanelStatusChanged', (event) =>
+		appendElement('onParticipantsPanelStatusChanged-' + event.detail.isOpened)
 	);
-	webComponent.addEventListener('onToolbarChatPanelButtonClicked', (event) => appendElement('onToolbarChatPanelButtonClicked'));
-	webComponent.addEventListener('onToolbarActivitiesPanelButtonClicked', (event) =>
-		appendElement('onToolbarActivitiesPanelButtonClicked')
+	webComponent.addEventListener('onLangChanged', (event) => appendElement('onLangChanged-' + event.detail.lang));
+	webComponent.addEventListener('onChatPanelStatusChanged', (event) =>
+		appendElement('onChatPanelStatusChanged-' + event.detail.isOpened)
 	);
-	webComponent.addEventListener('onToolbarFullscreenButtonClicked', (event) => appendElement('onToolbarFullscreenButtonClicked'));
+	webComponent.addEventListener('onActivitiesPanelStatusChanged', (event) =>
+		appendElement('onActivitiesPanelStatusChanged-' + event.detail.isOpened)
+	);
+	webComponent.addEventListener('onSettingsPanelStatusChanged', (event) =>
+		appendElement('onSettingsPanelStatusChanged-' + event.detail.isOpened)
+	);
+	webComponent.addEventListener('onFullscreenEnabledChanged', (event) => appendElement('onFullscreenEnabledChanged-' + event.detail));
 
-	webComponent.addEventListener('onToolbarStartRecordingClicked', async (event) => {
-		appendElement('onToolbarStartRecordingClicked');
+	webComponent.addEventListener('onRecordingStartRequested', async (event) => {
+		appendElement('onRecordingStartRequested-' + event.detail.roomName);
 		// Can't test the recording
 		// RECORDING_ID = await startRecording(SESSION_NAME);
 	});
 	// Can't test the recording
-	// webComponent.addEventListener('onToolbarStopRecordingClicked', async (event) => {
-	//     appendElement('onToolbarStopRecordingClicked');
+	// webComponent.addEventListener('onRecordingStopRequested', async (event) => {
+	//     appendElement('onRecordingStopRequested-' + event.detail.roomName);
 	//     await stopRecording(RECORDING_ID);
 	// });
 
-	webComponent.addEventListener('onToolbarStopBroadcastingClicked', async (event) => {
-		appendElement('onToolbarStopBroadcastingClicked');
-	});
-
-	webComponent.addEventListener('onActivitiesPanelStartRecordingClicked', async (event) => {
-		appendElement('onActivitiesPanelStartRecordingClicked');
-		// RECORDING_ID = await startRecording(SESSION_NAME);
+	webComponent.addEventListener('onRecordingStopRequested', async (event) => {
+		appendElement('onRecordingStopRequested-' + event.detail.roomName);
 	});
 
 	// Can't test the recording
@@ -150,95 +157,77 @@ $(document).ready(() => {
 	//     await stopRecording(RECORDING_ID);
 	// });
 
-	webComponent.addEventListener('onActivitiesPanelDeleteRecordingClicked', (event) => {
-		appendElement('onActivitiesPanelDeleteRecordingClicked');
+	webComponent.addEventListener('onRecordingDeleteRequested', (event) => {
+		const { roomName, recordingId } = event.detail;
+		appendElement(`onRecordingDeleteRequested-${roomName}-${recordingId}`);
 	});
 
-	webComponent.addEventListener('onActivitiesPanelStartBroadcastingClicked', async (event) => {
-		appendElement('onActivitiesPanelStartBroadcastingClicked');
+	webComponent.addEventListener('onBroadcastingStartRequested', async (event) => {
+		const { roomName, broadcastUrl } = event.detail;
+		appendElement(`onBroadcastingStartRequested-${roomName}-${broadcastUrl}`);
 	});
 
 	webComponent.addEventListener('onActivitiesPanelStopBroadcastingClicked', async (event) => {
 		appendElement('onActivitiesPanelStopBroadcastingClicked');
 	});
 
-	webComponent.addEventListener('onSessionCreated', (event) => {
-		var session = event.detail;
-		appendElement('onSessionCreated');
+	webComponent.addEventListener('onRoomCreated', (event) => {
+		var room = event.detail;
+		appendElement('onRoomCreated');
 
-		// You can see the session documentation here
-		// https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/Session.html
-
-		session.on('connectionCreated', (e) => {
-			var user = JSON.parse(e.connection.data).clientData;
-			appendElement(`${user}-connectionCreated`);
+		room.on('disconnected', (e) => {
+			appendElement('roomDisconnected');
 		});
-
-		session.on('sessionDisconnected', (e) => {
-			var user = JSON.parse(e.target.connection.data).clientData;
-			appendElement(user + '-sessionDisconnected');
-		});
-
-		session.on('exception', (e) => appendElement(e.name));
 	});
 
 	webComponent.addEventListener('onParticipantCreated', (event) => {
 		var participant = event.detail;
-		appendElement(`${participant.nickname}-onParticipantCreated`);
+		appendElement(`${participant.name}-onParticipantCreated`);
 	});
 
-	// webComponent.addEventListener('error', (event) => {
-	//     console.log('Error event', event.detail);
-	// });
-
-	joinSession(SESSION_NAME, PARTICIPANT_NAME);
+	setWebcomponentAttributes();
 });
 
-function appendElement(id) {
-	var eventsDiv = document.getElementById('events');
-	var element = document.createElement('div');
-	element.setAttribute('id', id);
-	element.setAttribute('style', 'height: 1px;');
-	eventsDiv.appendChild(element);
-}
-
-async function joinSession(sessionName, participantName) {
+function setWebcomponentAttributes() {
 	var webComponent = document.querySelector('openvidu-webcomponent');
-	var tokens;
-
-	if (FAKE_DEVICES) {
-		monkeyPatchMediaDevices();
-	}
-
-	if (SINGLE_TOKEN) {
-		tokens = await getToken(sessionName);
-	} else {
-		tokens = { webcam: await getToken(sessionName), screen: await getToken(sessionName) };
-	}
+	webComponent.participantName = PARTICIPANT_NAME;
 
 	webComponent.minimal = MINIMAL;
 	webComponent.lang = LANG;
-	webComponent.captionsLang = CAPTIONS_LANG;
 	if (CUSTOM_LANG_OPTIONS) {
 		webComponent.langOptions = [
 			{ name: 'Esp', lang: 'es' },
 			{ name: 'Eng', lang: 'en' }
 		];
 	}
-	if (CUSTOM_CAPTIONS_LANG_OPTIONS) {
-		webComponent.captionsLangOptions = [
-			{ name: 'Esp', lang: 'es-ES' },
-			{ name: 'Eng', lang: 'en-US' }
-		];
+	// TODO: Uncomment when the captions are implemented
+	// webComponent.captionsLang = CAPTIONS_LANG;
+	// if (CUSTOM_CAPTIONS_LANG_OPTIONS) {
+	// 	webComponent.captionsLangOptions = [
+	// 		{ name: 'Esp', lang: 'es-ES' },
+	// 		{ name: 'Eng', lang: 'en-US' }
+	// 	];
+	// }
+	if (FAKE_DEVICES) {
+		console.warn('Using fake devices');
+		monkeyPatchMediaDevices();
+	}
+	if (FAKE_RECORDINGS) {
+		console.warn('Using fake recordings');
+		webComponent.recordingActivityRecordingsList = [{ status: 'ready', filename: 'fakeRecording' }];
+	}
+
+	if (BROADCASTING_ERROR) {
+		webComponent.broadcastingActivityBroadcastingError = { message: BROADCASTING_ERROR, broadcastAvailable: true };
 	}
 	webComponent.prejoin = PREJOIN;
-	webComponent.videoMuted = VIDEO_MUTED;
-	webComponent.audioMuted = AUDIO_MUTED;
+	webComponent.videoEnabled = VIDEO_ENABLED;
+	webComponent.audioEnabled = AUDIO_ENABLED;
 	webComponent.toolbarScreenshareButton = SCREENSHARE_BUTTON;
 
 	webComponent.toolbarFullscreenButton = FULLSCREEN_BUTTON;
 	webComponent.toolbarSettingsButton = TOOLBAR_SETTINGS_BUTTON;
-	webComponent.toolbarCaptionsButton = CAPTIONS_BUTTON;
+	// webComponent.toolbarCaptionsButton = CAPTIONS_BUTTON;
 	webComponent.toolbarLeaveButton = LEAVE_BUTTON;
 	webComponent.toolbarRecordingButton = RECORDING_BUTTON;
 	webComponent.toolbarBroadcastingButton = BROADCASTING_BUTTON;
@@ -246,125 +235,58 @@ async function joinSession(sessionName, participantName) {
 	webComponent.toolbarChatPanelButton = CHAT_PANEL_BUTTON;
 	webComponent.toolbarParticipantsPanelButton = PARTICIPANTS_PANEL_BUTTON;
 	webComponent.toolbarDisplayLogo = DISPLAY_LOGO;
-	webComponent.toolbarDisplaySessionName = DISPLAY_SESSION_NAME;
+	webComponent.toolbarDisplayRoomName = DISPLAY_ROOM_NAME;
 	webComponent.streamDisplayParticipantName = DISPLAY_PARTICIPANT_NAME;
 	webComponent.streamDisplayAudioDetection = DISPLAY_AUDIO_DETECTION;
-	webComponent.streamSettingsButton = SETTINGS_BUTTON;
+	webComponent.streamVideoControls = VIDEO_CONTROLS;
 	webComponent.participantPanelItemMuteButton = PARTICIPANT_MUTE_BUTTON;
 
-	webComponent.recordingActivityRecordingsList = [{ status: 'ready' }];
 	webComponent.activitiesPanelRecordingActivity = ACTIVITIES_RECORDING_ACTIVITY;
 	webComponent.activitiesPanelBroadcastingActivity = ACTIVITIES_BROADCASTING_ACTIVITY;
 	webComponent.recordingActivityRecordingError = RECORDING_ERROR;
-
-	webComponent.broadcastingActivityBroadcastingError = { message: BROADCASTING_ERROR, broadcastAvailable: true };
-
-	webComponent.participantName = participantName;
-	webComponent.tokens = tokens;
 }
 
-/**
- * --------------------------
- * SERVER-SIDE RESPONSIBILITY
- * --------------------------
- * These methods retrieve the mandatory user token from OpenVidu Server.
- * This behavior MUST BE IN YOUR SERVER-SIDE IN PRODUCTION (by using
- * the API REST, openvidu-java-client or openvidu-node-client):
- *   1) Initialize a session in OpenVidu Server	(POST /api/sessions)
- *   2) Generate a token in OpenVidu Server		(POST /api/tokens)
- *   3) Configure OpenVidu Web Component in your client side with the token
- */
-
-function getToken(sessionName) {
-	return createSession(sessionName).then((sessionId) => createToken(sessionId));
+function appendElement(id) {
+	var eventsDiv = document.getElementById('events');
+	eventsDiv.setAttribute('style', 'position: absolute;');
+	var element = document.createElement('div');
+	element.setAttribute('id', id);
+	element.setAttribute('style', 'height: 1px;');
+	eventsDiv.appendChild(element);
 }
 
-function createSession(sessionName) {
-	// See https://docs.openvidu.io/en/stable/reference-docs/REST-API/#post-apisessions
-	return new Promise((resolve, reject) => {
-		$.ajax({
-			type: 'POST',
-			url: OPENVIDU_SERVER_URL + '/openvidu/api/sessions',
-			data: JSON.stringify({ customSessionId: sessionName }),
+async function joinSession(roomName, participantName) {
+	var webComponent = document.querySelector('openvidu-webcomponent');
+	console.log('Joining session', roomName, participantName);
+	try {
+		webComponent.token = await getToken(roomName, participantName);
+	} catch (error) {
+		webComponent.tokenError = error;
+	}
+}
+
+async function getToken(roomName, participantName) {
+	try {
+		const response = await fetch(OPENVIDU_CALL_SERVER_URL + '/call/api/rooms', {
+			method: 'POST',
 			headers: {
-				Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SECRET),
 				'Content-Type': 'application/json'
+				// 'Authorization': 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SECRET),
 			},
-			success: (response) => resolve(response.id),
-			error: (error) => {
-				if (error.status === 409) {
-					resolve(sessionName);
-				} else {
-					console.warn('No connection to OpenVidu Server. This may be a certificate error at ' + OPENVIDU_SERVER_URL);
-					if (
-						window.confirm(
-							'No connection to OpenVidu Server. This may be a certificate error at "' +
-								OPENVIDU_SERVER_URL +
-								'"\n\nClick OK to navigate and accept it. ' +
-								'If no certificate warning is shown, then check that your OpenVidu Server is up and running at "' +
-								OPENVIDU_SERVER_URL +
-								'"'
-						)
-					) {
-						location.assign(OPENVIDU_SERVER_URL + '/openvidu/accept-certificate');
-					}
-				}
-			}
+			body: JSON.stringify({
+				participantName,
+				roomName
+			})
 		});
-	});
+
+		if (!response.ok) {
+			throw new Error('Failed to fetch token');
+		}
+
+		const data = await response.json();
+		return data.token;
+	} catch (error) {
+		console.error(error);
+		throw error;
+	}
 }
-
-function createToken(sessionId) {
-	// See https://docs.openvidu.io/en/stable/reference-docs/REST-API/#post-apitokens
-	return new Promise((resolve, reject) => {
-		$.ajax({
-			type: 'POST',
-			url: `${OPENVIDU_SERVER_URL}/openvidu/api/sessions/${sessionId}/connection`,
-			data: JSON.stringify({ session: sessionId, role: 'MODERATOR' }),
-			headers: {
-				Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SECRET),
-				'Content-Type': 'application/json'
-			},
-			success: (response) => {
-				resolve(response.token);
-			},
-			error: (error) => reject(error)
-		});
-	});
-}
-
-// function startRecording(sessionId) {
-//     return new Promise((resolve, reject) => {
-//         $.ajax({
-//             type: 'POST',
-//             url: `${OPENVIDU_SERVER_URL}/openvidu/api/recordings/start`,
-//             data: JSON.stringify({ session: sessionId }),
-//             headers: {
-//                 Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
-//                 'Content-Type': 'application/json',
-//             },
-//             success: (response) => {console.log(response); resolve(response.id)},
-//             error: (error) => {
-//                 reject(error)
-//             },
-//         });
-//     });
-
-// }
-
-// function stopRecording(recordingId) {
-//     return new Promise((resolve, reject) => {
-//         $.ajax({
-//             type: 'POST',
-//             url: `${OPENVIDU_SERVER_URL}/openvidu/api/recordings/stop/${recordingId}`,
-//             headers: {
-//                 Authorization: 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
-//                 'Content-Type': 'application/json',
-//             },
-//             success: (response) => resolve(response),
-//             error: (error) => {
-//                 reject(error)
-//             },
-//         });
-//     });
-// }
