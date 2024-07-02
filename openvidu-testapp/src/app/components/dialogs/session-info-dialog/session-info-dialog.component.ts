@@ -1,6 +1,6 @@
 import {Component, Inject} from "@angular/core";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {Session as SessionAPI} from "openvidu-node-client";
+import {Session as SessionAPI} from 'openvidu-node-client-v2compatibility';
 
 @Component({
   selector: 'app-session-info-dialog',

@@ -14,10 +14,10 @@ import {
   SessionDisconnectedEvent,
   StreamEvent,
   StreamManagerEvent
-} from 'openvidu-browser';
+} from 'openvidu-browser-v2compatibility';
 import {
   MediaMode, OpenVidu as OpenViduAPI, RecordingLayout, RecordingMode, SessionProperties as SessionPropertiesAPI
-} from 'openvidu-node-client';
+} from 'openvidu-node-client-v2compatibility';
 
 @Component({
   selector: 'app-test-scenarios',

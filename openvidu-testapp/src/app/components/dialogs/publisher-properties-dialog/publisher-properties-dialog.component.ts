@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { Filter, OpenVidu, PublisherProperties } from 'openvidu-browser';
+import { Filter, OpenVidu, PublisherProperties } from 'openvidu-browser-v2compatibility';
 
 @Component({
     selector: 'app-publisher-properties-dialog',

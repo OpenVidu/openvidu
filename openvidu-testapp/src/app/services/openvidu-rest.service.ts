@@ -4,7 +4,7 @@ import {
   Session as SessionAPI,
   OpenViduRole as OpenViduRoleAPI,
   SessionProperties as SessionPropertiesAPI
-} from 'openvidu-node-client';
+} from 'openvidu-node-client-v2compatibility';
 
 @Injectable()
 export class OpenviduRestService {

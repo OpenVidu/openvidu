@@ -1,5 +1,5 @@
 import { Component, Input, AfterViewInit, EventEmitter, Output, DoCheck } from '@angular/core';
-import { StreamManager } from 'openvidu-browser';
+import { StreamManager } from 'openvidu-browser-v2compatibility';
 
 @Component({
     selector: 'app-table-video',

@@ -1,5 +1,5 @@
 import { Component, Input, EventEmitter, Output } from '@angular/core';
-import { StreamManager } from 'openvidu-browser';
+import { StreamManager } from 'openvidu-browser-v2compatibility';
 import { StreamManagerWrapper } from './table-video.component';
 
 @Component({

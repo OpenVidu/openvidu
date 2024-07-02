@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { FilterEvent, Session, Stream } from 'openvidu-browser';
+import { FilterEvent, Session, Stream } from 'openvidu-browser-v2compatibility';
 
 @Component({
     selector: 'app-session-api-dialog',
@@ -18,7 +18,7 @@ export class OtherStreamOperationsDialogComponent {
     filterOptions = '{"command": "videobalance saturation=0.0"}'; // '{"url": "https://openvidu.io/img/vb/office.jpeg"}';
 
     filterMethod = 'setElementProperty'; // 'update';
-    filterParams = '{"propertyName":"saturation","propertyValue":"1.0"}'; // '{"url": "http://localhost:4443/virtual-background/backgrounds/mountain.jpeg", "maskRadius":0.1, "backgroundCoverage":0.6, "lightWrapping":0.3}';
+    filterParams = '{"propertyName":"saturation","propertyValue":"1.0"}'; // '{"url": "http://localhost:7880/virtual-background/backgrounds/mountain.jpeg", "maskRadius":0.1, "backgroundCoverage":0.6, "lightWrapping":0.3}';
 
     eventType: string;
 

@@ -87,15 +87,15 @@ public class OpenViduTestE2e {
 	final protected String DEFAULT_JSON_IPCAM_CONNECTION = "{'id':'STR','object':'connection','type':'IPCAM','status':'active','connectionId':'STR','sessionId':'STR','createdAt':0,'activeAt':0,'location':'STR','ip':'STR','platform':'IPCAM','token':null,'serverData':'STR','record':true,'role':null,'kurentoOptions':null,'rtspUri':'STR','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'networkCache':2000,'clientData':null,'publishers':[],'subscribers':[], 'customIceServers':[]}";
 	final protected String DEFAULT_JSON_TOKEN = "{'id':'STR','token':'STR','connectionId':'STR','createdAt':0,'session':'STR','role':'STR','data':'STR','kurentoOptions':{}}";
 
-	protected static String OPENVIDU_SECRET = "MY_SECRET";
-	protected static String OPENVIDU_URL = "http://localhost:4443/";
+	protected static String OPENVIDU_SECRET = "secret";
+	protected static String OPENVIDU_URL = "http://localhost:7880/";
 	protected static String APP_URL = "http://localhost:4200/";
 	protected static String EXTERNAL_CUSTOM_LAYOUT_URL = "http://localhost:4114";
 	protected static String OPENVIDU_PRO_LICENSE = "not_valid";
 	protected static String OPENVIDU_PRO_LICENSE_API = "not_valid";
 	protected static String OPENVIDU_PRO_SPEECH_TO_TEXT = "vosk";
 	protected static String DOCKERHUB_PRIVATE_REGISTRY_PASSWORD = "not_valid";
-	protected static String EXTERNAL_CUSTOM_LAYOUT_PARAMS = "sessionId=CUSTOM_LAYOUT_SESSION&secret=MY_SECRET";
+	protected static String EXTERNAL_CUSTOM_LAYOUT_PARAMS = "sessionId=CUSTOM_LAYOUT_SESSION&secret=secret";
 
 	protected static String AWS_REGION = "fakeRegion";
 	protected static String AWS_ACCESS_KEY_ID = "fakeKey";

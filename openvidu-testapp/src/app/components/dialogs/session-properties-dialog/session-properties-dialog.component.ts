@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { ConnectionProperties, MediaMode, Recording, RecordingLayout, RecordingMode, SessionProperties, VideoCodec } from 'openvidu-node-client';
+import { ConnectionProperties, MediaMode, Recording, RecordingLayout, RecordingMode, SessionProperties, VideoCodec } from 'openvidu-node-client-v2compatibility';
 
 @Component({
     selector: 'app-session-properties-dialog',

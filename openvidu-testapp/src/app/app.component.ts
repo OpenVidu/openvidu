@@ -9,8 +9,8 @@ import { OpenviduParamsService } from './services/openvidu-params.service';
 })
 export class AppComponent {
 
-  openviduURL = window.location.protocol + '//' + window.location.hostname + ':4443/';
-  openviduSecret = 'MY_SECRET';
+  openviduURL = window.location.protocol + '//' + window.location.hostname + ':7880/';
+  openviduSecret = 'secret';
 
   constructor(private router: Router, private openviduParamsService: OpenviduParamsService) { }
 

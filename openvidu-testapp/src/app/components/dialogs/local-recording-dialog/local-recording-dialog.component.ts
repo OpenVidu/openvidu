@@ -1,6 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { LocalRecorder } from 'openvidu-browser';
+import { LocalRecorder } from 'openvidu-browser-v2compatibility';
 
 @Component({
     selector: 'app-local-recording-dialog',

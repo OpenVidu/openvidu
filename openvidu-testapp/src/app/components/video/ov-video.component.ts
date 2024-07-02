@@ -1,6 +1,6 @@
 import { Component, Input, ViewChild, ElementRef, OnInit, AfterViewInit } from '@angular/core';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
-import { StreamManager } from 'openvidu-browser';
+import { StreamManager } from 'openvidu-browser-v2compatibility';
 
 @Component({
     selector: 'app-ov-video',

@@ -1,12 +1,12 @@
 import { ChangeDetectorRef, Component, HostListener, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 
-import { ConnectionEvent, ConnectionPropertyChangedEvent, Event, ExceptionEvent, NetworkQualityLevelChangedEvent, OpenVidu, OpenViduAdvancedConfiguration, OpenViduError, Publisher, PublisherProperties, PublisherSpeakingEvent, RecordingEvent, Session, SessionDisconnectedEvent, SignalEvent, SpeechToTextEvent, StreamEvent, StreamPropertyChangedEvent, Subscriber } from 'openvidu-browser';
+import { ConnectionEvent, ConnectionPropertyChangedEvent, Event, ExceptionEvent, NetworkQualityLevelChangedEvent, OpenVidu, OpenViduAdvancedConfiguration, OpenViduError, Publisher, PublisherProperties, PublisherSpeakingEvent, RecordingEvent, Session, SessionDisconnectedEvent, SignalEvent, SpeechToTextEvent, StreamEvent, StreamPropertyChangedEvent, Subscriber } from 'openvidu-browser-v2compatibility';
 import {
   Connection,
   ConnectionProperties, MediaMode, OpenVidu as OpenViduAPI, OpenViduRole, Recording, RecordingLayout, RecordingMode, RecordingProperties, Session as SessionAPI,
   SessionProperties as SessionPropertiesAPI
-} from 'openvidu-node-client';
+} from 'openvidu-node-client-v2compatibility';
 import { TestFeedService } from '../../services/test-feed.service';
 import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.component';
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';

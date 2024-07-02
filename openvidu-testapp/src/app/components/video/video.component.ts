@@ -7,7 +7,7 @@ import {
     Publisher, PublisherSpeakingEvent, StreamEvent, StreamManager,
     StreamManagerEvent,
     StreamPropertyChangedEvent, Subscriber, VideoElementEvent, VideoInsertMode
-} from 'openvidu-browser';
+} from 'openvidu-browser-v2compatibility';
 
 import { Subscription } from 'rxjs';
 import { MuteSubscribersService } from '../../services/mute-subscribers.service';

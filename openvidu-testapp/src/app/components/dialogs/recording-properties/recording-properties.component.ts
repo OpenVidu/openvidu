@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { Recording, RecordingLayout, RecordingProperties } from 'openvidu-node-client';
+import { Recording, RecordingLayout, RecordingProperties } from 'openvidu-node-client-v2compatibility';
 
 @Component({
     selector: 'app-recording-properties',

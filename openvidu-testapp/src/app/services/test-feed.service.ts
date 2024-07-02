@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 
-import { Event } from 'openvidu-browser';
+import { Event } from 'openvidu-browser-v2compatibility';
 
 import * as stringify from 'json-stringify-safe';
 

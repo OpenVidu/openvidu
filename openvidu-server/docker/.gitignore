@@ -1,5 +1,0 @@
-# Ignore discover_my_public_ip.sh in docker folders
-openvidu-coturn/discover_my_public_ip.sh
-openvidu-proxy/discover_my_public_ip.sh
-openvidu-server/discover_my_public_ip.sh
-openvidu-server-pro/discover_my_public_ip.sh

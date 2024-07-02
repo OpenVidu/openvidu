@@ -2,7 +2,7 @@ import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { OpenviduRestService } from '../../services/openvidu-rest.service';
 import { OpenviduParamsService } from '../../services/openvidu-params.service';
-import { SessionProperties, RecordingMode, RecordingLayout, MediaMode } from 'openvidu-node-client';
+import { SessionProperties, RecordingMode, RecordingLayout, MediaMode } from 'openvidu-node-client-v2compatibility';
 
 import * as colormap from 'colormap';
 const numColors = 64;
