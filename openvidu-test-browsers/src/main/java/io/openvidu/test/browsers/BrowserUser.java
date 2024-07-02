@@ -120,7 +120,7 @@ public class BrowserUser {
 	public Map<String, Long> getAverageColorFromPixels(WebElement videoElement, List<Point> pixelPercentagePositions) {
 		String script = "var callback = arguments[arguments.length - 1];"
 				+ "var points = arguments[arguments.length - 2];" + "points = JSON.parse(points);"
-				+ "var video = document.getElementById('local-video-undefined');"
+				+ "var video = document.getElementById('" + videoElement.getAttribute("id") + "');"
 				+ "var canvas = document.createElement('canvas');" + "canvas.height = video.videoHeight;"
 				+ "canvas.width = video.videoWidth;" + "var context = canvas.getContext('2d');"
 				+ "context.drawImage(video, 0, 0, canvas.width, canvas.height);"
@@ -175,6 +175,9 @@ public class BrowserUser {
 		boolean success = true;
 		for (WebElement video : videoElements) {
 			if (!waitUntilSrcObjectDefined(video, "", 5000)) {
+				if (!audioTransmission && !videoTransmission) {
+					return true;
+				}
 				System.err.println("srcObject of HTMLVideoElement was not defined!");
 				return false;
 			}
@@ -194,6 +197,9 @@ public class BrowserUser {
 		boolean success = true;
 		for (WebElement video : videoElements) {
 			if (!waitUntilSrcObjectDefined(video, "", 5000)) {
+				if (!audioTransmission && !videoTransmission) {
+					return true;
+				}
 				System.err.println("srcObject of HTMLVideoElement was not defined!");
 				return false;
 			}

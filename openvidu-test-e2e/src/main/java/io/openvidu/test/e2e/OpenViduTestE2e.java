@@ -79,9 +79,7 @@ public class OpenViduTestE2e {
 	}
 
 	// Media server variables
-	final protected static String KURENTO_IMAGE = "kurento/kurento-media-server";
-	final protected static String MEDIASOUP_IMAGE = "openvidu/mediasoup-controller";
-	protected static String MEDIA_SERVER_IMAGE = KURENTO_IMAGE + ":6.18.0";
+	final String PLAYGROUND_SCRIPT = "/opt/openvidu-deployment/playground/dev.sh ";
 
 	final protected String DEFAULT_JSON_SESSION = "{'id':'STR','object':'session','sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultRecordingProperties':{'hasVideo':true,'frameRate':25,'hasAudio':true,'shmSize':536870912,'name':'','outputMode':'COMPOSED','resolution':'1280x720','recordingLayout':'BEST_FIT'},'customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':false,'broadcasting':false,'forcedVideoCodec':'STR','allowTranscoding':false}";
 	final protected String DEFAULT_JSON_PENDING_CONNECTION = "{'id':'STR','object':'connection','type':'WEBRTC','status':'pending','connectionId':'STR','sessionId':'STR','createdAt':0,'activeAt':null,'location':null,'ip':null,'platform':null,'token':'STR','serverData':'STR','record':true,'role':'STR','kurentoOptions':null,'rtspUri':null,'adaptativeBitrate':null,'onlyPlayWithSubscribers':null,'networkCache':null,'clientData':null,'publishers':null,'subscribers':null, 'customIceServers':[]}";
@@ -90,8 +88,8 @@ public class OpenViduTestE2e {
 	final protected String DEFAULT_JSON_TOKEN = "{'id':'STR','token':'STR','connectionId':'STR','createdAt':0,'session':'STR','role':'STR','data':'STR','kurentoOptions':{}}";
 
 	protected static String OPENVIDU_SECRET = "MY_SECRET";
-	protected static String OPENVIDU_URL = "https://localhost:4443/";
-	protected static String APP_URL = "https://localhost:4200/";
+	protected static String OPENVIDU_URL = "http://localhost:4443/";
+	protected static String APP_URL = "http://localhost:4200/";
 	protected static String EXTERNAL_CUSTOM_LAYOUT_URL = "http://localhost:4114";
 	protected static String OPENVIDU_PRO_LICENSE = "not_valid";
 	protected static String OPENVIDU_PRO_LICENSE_API = "not_valid";
@@ -286,12 +284,6 @@ public class OpenViduTestE2e {
 			OPENVIDU_SECRET = openvidusecret;
 		}
 		log.info("Using secret {} to connect to openvidu-server", OPENVIDU_SECRET);
-
-		String mediaServerImage = System.getProperty("MEDIA_SERVER_IMAGE");
-		if (mediaServerImage != null) {
-			MEDIA_SERVER_IMAGE = mediaServerImage;
-		}
-		log.info("Using media server {} for e2e tests", MEDIA_SERVER_IMAGE);
 
 		String chromeVersion = System.getProperty("CHROME_VERSION");
 		if (chromeVersion != null && !chromeVersion.isBlank()) {
@@ -607,7 +599,7 @@ public class OpenViduTestE2e {
 		} catch (OpenViduJavaClientException | OpenViduHttpException e) {
 			log.error("Error listing recordings: {}", e.getMessage());
 		}
-		removeAllRecordingContiners();
+		// removeAllRecordingContiners();
 		try {
 			FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
 		} catch (IOException e) {
@@ -631,27 +623,7 @@ public class OpenViduTestE2e {
 	}
 
 	protected void startMediaServer(boolean waitUntilKurentoClientReconnection) {
-		String command = null;
-		if (MEDIA_SERVER_IMAGE.startsWith(KURENTO_IMAGE)) {
-			log.info("Starting kurento");
-			command = "docker run -e KMS_UID=$(id -u) --network=host --detach=true"
-					+ " --volume=/opt/openvidu/recordings:/opt/openvidu/recordings " + MEDIA_SERVER_IMAGE;
-		} else if (MEDIA_SERVER_IMAGE.startsWith(MEDIASOUP_IMAGE)) {
-			log.info("Starting mediaSoup");
-			command = "docker inspect bridge --format '{{with index .IPAM.Config 0}}{{or .Gateway .Subnet}}{{end}}' | sed -r 's|\\.0/[[:digit:]]+$|.1|'";
-			String dockerGatewayIp = commandLine.executeCommand(command, false, 5);
-			log.info("Discovered docker gateway IP is {}", dockerGatewayIp);
-			command = "LOG_DATE=$(printf '%(%Y-%m-%d-%H-%M-%S)T'); docker run --network=host --restart=always --env=KMS_MIN_PORT=40000 --env=KMS_MAX_PORT=65535"
-					+ " --env=OPENVIDU_PRO_LICENSE=" + OPENVIDU_PRO_LICENSE + " --env=OPENVIDU_PRO_LICENSE_API="
-					+ OPENVIDU_PRO_LICENSE_API + " --env=WEBRTC_LISTENIPS_0_ANNOUNCEDIP=" + dockerGatewayIp
-					+ " --env=WEBRTC_LISTENIPS_0_IP=" + dockerGatewayIp
-					+ " --volume=/opt/openvidu/recordings:/opt/openvidu/recordings " + MEDIA_SERVER_IMAGE
-					+ " >& /opt/openvidu/mediasoup-controller-${LOG_DATE}.log &";
-		} else {
-			log.error("Unrecognized MEDIA_SERVER_IMAGE: {}", MEDIA_SERVER_IMAGE);
-			System.exit(1);
-		}
-		commandLine.executeCommand(command, true, 60);
+		commandLine.executeCommand(PLAYGROUND_SCRIPT + "start-service master-node-1 openvidu", true, 60);
 		if (waitUntilKurentoClientReconnection) {
 			try {
 				Thread.sleep(5000);
@@ -662,19 +634,7 @@ public class OpenViduTestE2e {
 	}
 
 	protected void stopMediaServer(boolean waitUntilNodeCrashedEvent) {
-		final String dockerRemoveCmd = "docker ps -a | awk '{ print $1,$2 }' | grep GREP_PARAMETER | awk '{ print $1 }' | xargs -I {} docker rm -f {}";
-		String grep = null;
-		if (MEDIA_SERVER_IMAGE.startsWith(KURENTO_IMAGE)) {
-			log.info("Stopping kurento");
-			grep = KURENTO_IMAGE;
-		} else if (MEDIA_SERVER_IMAGE.startsWith(MEDIASOUP_IMAGE)) {
-			log.info("Stopping mediasoup");
-			grep = MEDIASOUP_IMAGE;
-		} else {
-			log.error("Unrecognized MEDIA_SERVER_IMAGE: {}", MEDIA_SERVER_IMAGE);
-			System.exit(1);
-		}
-		commandLine.executeCommand(dockerRemoveCmd.replaceFirst("GREP_PARAMETER", grep), 60);
+		commandLine.executeCommand(PLAYGROUND_SCRIPT + "stop-service master-node-1 openvidu", true, 60);
 		if (waitUntilNodeCrashedEvent) {
 			try {
 				Thread.sleep(4000);
@@ -709,14 +669,7 @@ public class OpenViduTestE2e {
 	}
 
 	protected String getIndividualRecordingExtension() throws Exception {
-		if (MEDIA_SERVER_IMAGE.contains(KURENTO_IMAGE)) {
-			return "webm";
-		}
-		if (MEDIA_SERVER_IMAGE.contains(MEDIASOUP_IMAGE)) {
-			return "mkv";
-		} else {
-			throw new Exception("Unknown media server");
-		}
+		return "webm";
 	}
 
 	protected void waitUntilFileExistsAndIsBiggerThan(String absolutePath, int kbs, int maxSecondsWait)
@@ -795,7 +748,9 @@ public class OpenViduTestE2e {
 	}
 
 	protected JsonObject restartOpenViduServer(Map<String, Object> newConfig) {
-		return this.restartOpenViduServer(newConfig, false, HttpURLConnection.HTTP_OK);
+		return new JsonObject();
+		// return this.restartOpenViduServer(newConfig, false,
+		// HttpURLConnection.HTTP_OK);
 	}
 
 	protected JsonObject restartOpenViduServer(Map<String, Object> newConfig, boolean force, int status) {

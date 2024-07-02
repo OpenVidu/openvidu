@@ -20,6 +20,7 @@ package io.openvidu.test.browsers.utils;
 import java.net.Socket;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpClient.Version;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpResponse;
@@ -99,7 +100,7 @@ public class CustomHttpClient {
 			throw new RuntimeException(e);
 		}
 
-		this.client = HttpClient.newBuilder().sslContext(sslContext).build();
+		this.client = HttpClient.newBuilder().version(Version.HTTP_1_1).sslContext(sslContext).build();
 	}
 
 	public int getAndReturnStatus(String path, String credentials) throws Exception {

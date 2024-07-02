@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.awt.Point;
 import java.io.File;
 import java.io.FileReader;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,6 +23,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -45,6 +47,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 
 import info.debatty.java.stringsimilarity.Cosine;
@@ -58,6 +61,7 @@ import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.Session;
+import io.openvidu.test.browsers.BrowserUser;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.RecordingUtils;
 import io.openvidu.test.browsers.utils.Unzipper;
@@ -635,17 +639,29 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 9);
 
 		// Get connectionId and streamId for the user configured to be recorded
-		JsonObject sessionInfo = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/" + sessionName,
-				HttpURLConnection.HTTP_OK);
-		JsonArray connections = sessionInfo.get("connections").getAsJsonObject().get("content").getAsJsonArray();
-		String connectionId1 = null;
-		String streamId1 = null;
-		for (JsonElement connection : connections) {
-			if (connection.getAsJsonObject().get("record").getAsBoolean()) {
-				connectionId1 = connection.getAsJsonObject().get("connectionId").getAsString();
-				streamId1 = connection.getAsJsonObject().get("publishers").getAsJsonArray().get(0).getAsJsonObject()
-						.get("streamId").getAsString();
-				break;
+		JsonObject sessionInfo;
+		JsonArray connections;
+		String[] connectionId1 = new String[1];
+		String[] streamId1 = new String[1];
+		while (connectionId1[0] == null && streamId1[0] == null) {
+			sessionInfo = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/" + sessionName,
+					HttpURLConnection.HTTP_OK);
+			connections = sessionInfo.get("connections").getAsJsonObject().get("content").getAsJsonArray();
+			Gson gson = new Gson();
+			Type listType = new TypeToken<List<JsonObject>>() {
+			}.getType();
+			List<JsonObject> gsonList = gson.fromJson(connections, listType);
+			if (gsonList.stream().filter(con -> {
+				if (con.get("record").getAsBoolean() && !con.get("publishers").isJsonNull()) {
+					connectionId1[0] = con.get("connectionId").getAsString();
+					streamId1[0] = con.get("publishers").getAsJsonArray().get(0).getAsJsonObject().get("streamId")
+							.getAsString();
+					return true;
+				} else {
+					return false;
+				}
+			}).findAny().orElse(null) == null) {
+				Thread.sleep(500);
 			}
 		}
 
@@ -713,9 +729,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		for (JsonElement fileJson : syncArray) {
 			JsonObject file = fileJson.getAsJsonObject();
 			String fileStreamId = file.get("streamId").getAsString();
-			if (fileStreamId.equals(streamId1)) {
+			if (fileStreamId.equals(streamId1[0])) {
 				// Normal recorded user
-				Assertions.assertEquals(connectionId1, file.get("connectionId").getAsString(),
+				Assertions.assertEquals(connectionId1[0], file.get("connectionId").getAsString(),
 						"Wrong connectionId file metadata property");
 				long msDuration = file.get("endTimeOffset").getAsLong() - file.get("startTimeOffset").getAsLong();
 				Assertions.assertTrue(msDuration - 4000 < 750,
@@ -748,7 +764,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Assertions.fail("Metadata file element does not belong to a known stream (" + fileStreamId + ")");
 			}
 		}
-		Assertions.assertEquals(1, count1, "Wrong number of recording files for stream " + streamId1);
+		Assertions.assertEquals(1, count1, "Wrong number of recording files for stream " + streamId1[0]);
 		Assertions.assertEquals(3, count2, "Wrong number of recording files for stream " + streamId2);
 		Assertions.assertTrue(regexNames.isEmpty(), "Some expected file name didn't existed: " + regexNames.toString());
 	}
@@ -1176,6 +1192,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				threadAssertions.add(event.get("oldValue") == null);
 				threadAssertions.add(event.has("newValue") && event.get("newValue").getAsInt() > 0
 						&& event.get("newValue").getAsInt() < 6);
+				threadAssertions.add(connectionId
+						.equals(event.get("connection").getAsJsonObject().get("connectionId").getAsString()));
 				latch1.countDown();
 			} catch (Exception e) {
 				log.error("Error analysing NetworkQualityLevelChangedEvent: {}. {}", e.getCause(), e.getMessage());
@@ -1201,20 +1219,16 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 
 		// Both events should have publisher's connection ID
-		Assertions
-				.assertTrue(
-						user.getDriver()
-								.findElement(By.cssSelector(
-										"#openvidu-instance-0 .mat-expansion-panel:last-child .event-content"))
-								.getAttribute("textContent").contains(connectionId),
-						"Wrong connectionId in event NetworkQualityLevelChangedEvent");
-		Assertions
-				.assertTrue(
-						user.getDriver()
-								.findElement(By.cssSelector(
-										"#openvidu-instance-1 .mat-expansion-panel:last-child .event-content"))
-								.getAttribute("textContent").contains(connectionId),
-						"Wrong connectionId in event NetworkQualityLevelChangedEvent");
+		Assertions.assertTrue(
+				user.getDriver().findElement(By.cssSelector(
+						"#openvidu-instance-0 .mat-expansion-panel .event-content.event-networkQualityLevelChanged"))
+						.getAttribute("textContent").contains(connectionId),
+				"Wrong connectionId in event NetworkQualityLevelChangedEvent");
+		Assertions.assertTrue(
+				user.getDriver().findElement(By.cssSelector(
+						"#openvidu-instance-1 .mat-expansion-panel .event-content.event-networkQualityLevelChanged"))
+						.getAttribute("textContent").contains(connectionId),
+				"Wrong connectionId in event NetworkQualityLevelChangedEvent");
 
 		gracefullyLeaveParticipants(user, 2);
 	}
@@ -1338,11 +1352,12 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getWaiter().until(
 				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
 
-		rgb = user.getBrowserUser().getAverageColorFromPixels(subscriberVideo,
-				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
-
-		// Green
-		Assertions.assertTrue((rgb.get("r") < 150) && (rgb.get("g") > 240) && (rgb.get("b") < 100));
+		BiFunction<BrowserUser, WebElement, Boolean> waitForVideoToBeGreen = (browserUser, webVideo) -> {
+			Map<String, Long> rgbAux = browserUser.getAverageColorFromPixels(subscriberVideo,
+					Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
+			return (rgbAux.get("r") < 150) && (rgbAux.get("g") > 240) && (rgbAux.get("b") < 100);
+		};
+		waitForCondition(waitForVideoToBeGreen, user.getBrowserUser(), subscriberVideo, 5000, 500);
 
 		gracefullyLeaveParticipants(user, 2);
 	}
@@ -2833,6 +2848,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					"Number: 0. Changes: false"));
 
 			user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+			user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
 			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 

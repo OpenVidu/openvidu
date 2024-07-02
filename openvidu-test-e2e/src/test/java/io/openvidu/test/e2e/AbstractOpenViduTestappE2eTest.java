@@ -3,8 +3,10 @@ package io.openvidu.test.e2e;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.function.BiFunction;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
@@ -52,6 +54,19 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 					: (accumulatedConnectionDestroyed);
 			user.getEventManager().waitUntilEventReaches("connectionDestroyed", accumulatedConnectionDestroyed);
 		}
+	}
+	
+	protected void waitForCondition(BiFunction<BrowserUser, WebElement, Boolean> conditionFunction, BrowserUser user,
+			WebElement video, int maxWaitTime, int intervalWait) throws InterruptedException {
+		long startTime = System.currentTimeMillis();
+		boolean conditionFulfilled = false;
+		while (!conditionFulfilled && (System.currentTimeMillis() - startTime) < maxWaitTime) {
+			conditionFulfilled = conditionFunction.apply(user, video);
+			if (!conditionFulfilled) {
+				Thread.sleep(intervalWait);
+			}
+		}
+		Assertions.assertTrue(conditionFulfilled, "Video does not meet the condition");
 	}
 
 	@AfterEach
