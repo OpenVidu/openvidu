@@ -1,0 +1,3 @@
+[submodule "openvidu-livekit"]
+	path = openvidu-livekit
+	url = https://github.com/OpenVidu/openvidu-livekit.git
