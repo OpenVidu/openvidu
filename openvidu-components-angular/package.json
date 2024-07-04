@@ -100,5 +100,5 @@
     "webcomponent:serve-testapp": "npx http-server ./e2e/webcomponent-app/ && echo http://localhost:8080/?OV_URL=https://localhost:4443&OV_SECRET=MY_SECRET&prejoin=false",
     "simulate:multiparty": "livekit-cli load-test --url ws://localhost:7880 --api-key devkey --api-secret secret --room daily-call --publishers 8 --audio-publishers 8 --identity-prefix Participant --identity publisher"
   },
-  "version": "3.0.0-beta1"
+  "version": "3.0.0-beta2-dev.20240704"
 }
