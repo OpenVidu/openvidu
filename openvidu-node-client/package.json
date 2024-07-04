@@ -24,5 +24,11 @@
         "docs": "./generate-docs.sh"
     },
     "typings": "lib/index.d.ts",
+    "files": [
+        "lib",
+        "CHANGELOG.md",
+        "LICENSE",
+        "README.md"
+    ],
     "version": "3.0.0-beta1"
 }
