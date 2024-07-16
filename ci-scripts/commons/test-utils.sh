@@ -93,7 +93,7 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
     fi
 
     # Download recording custom layout
-    sudo curl --location https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/docker/my-custom-layout/index.html --create-dirs --output /opt/openvidu/test-layouts/layout1/index.html
+    sudo curl --location https://raw.githubusercontent.com/OpenVidu/openvidu/v2/openvidu-test-e2e/docker/my-custom-layout/index.html --create-dirs --output /opt/openvidu/test-layouts/layout1/index.html
 
     # Open permissions for /opt/openvidu folder
     sudo chmod -R 777 /opt/openvidu

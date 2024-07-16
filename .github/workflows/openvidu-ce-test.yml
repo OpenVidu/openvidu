@@ -62,8 +62,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Setup scripts
         run: |
-          curl -sOJ --output-dir /opt https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/commons/build.sh
-          curl -sOJ --output-dir /opt https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/commons/test-utils.sh
+          curl -sOJ --output-dir /opt https://raw.githubusercontent.com/OpenVidu/openvidu/v2/ci-scripts/commons/build.sh
+          curl -sOJ --output-dir /opt https://raw.githubusercontent.com/OpenVidu/openvidu/v2/ci-scripts/commons/test-utils.sh
           cp ci-scripts/openvidu-e2e-tests.sh /opt/openvidu-e2e-tests.sh
           find /opt/*.sh -type f -print0 | xargs -0 chmod u+x
       - name: Clean environment

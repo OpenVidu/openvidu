@@ -239,7 +239,7 @@ if [[ "${CHECK_AND_PREPARE_KURENTO_SNAPSHOT}" == true ]]; then
         chmod -R 777 /etc/maven
         pushd /etc/maven
         rm -f settings.xml
-        curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/kurento-snapshots.xml -o settings.xml
+        curl https://raw.githubusercontent.com/OpenVidu/openvidu/v2/ci-scripts/kurento-snapshots.xml -o settings.xml
         sed -i "s|KURENTO_SNAPSHOTS_URL|${KURENTO_SNAPSHOTS_URL}|g" settings.xml
         popd
     else
