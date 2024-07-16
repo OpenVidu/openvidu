@@ -31,7 +31,7 @@
     "@types/selenium-webdriver": "4.1.16",
     "@types/ws": "^8.5.4",
     "chai": "4.3.6",
-    "chromedriver": "116.0.0",
+    "chromedriver": "119.0.1",
     "codelyzer": "6.0.2",
     "concat": "^1.0.3",
     "cross-env": "^7.0.3",
