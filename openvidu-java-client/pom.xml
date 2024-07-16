@@ -113,7 +113,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>${version.javadoc.plugin}</version>
+						<version>3.4.1</version>
 						<configuration>
 							<show>public</show>
 							<excludePackageNames>io.openvidu.java.client.utils</excludePackageNames>
@@ -136,7 +136,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-source-plugin</artifactId>
-						<version>${version.source.plugin}</version>
+						<version>3.2.1</version>
 						<executions>
 							<execution>
 								<id>attach-sources</id>
@@ -149,7 +149,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>${version.javadoc.plugin}</version>
+						<version>3.4.1</version>
 						<configuration>
 							<show>public</show>
 							<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
@@ -167,7 +167,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>${version.gpg.plugin}</version>
+						<version>1.6</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
@@ -187,7 +187,7 @@
 					<plugin>
 						<groupId>org.sonatype.plugins</groupId>
 						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>${version.nexus.staging.plugin}</version>
+						<version>1.6.13</version>
 						<extensions>true</extensions>
 						<configuration>
 							<serverId>ossrh</serverId>
@@ -213,7 +213,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-assembly-plugin</artifactId>
-						<version>${version.assembly.plugin}</version>
+						<version>3.3.0</version>
 						<configuration>
 							<descriptorRefs>
 								<descriptorRef>jar-with-dependencies</descriptorRef>
