@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { OpenViduComponentsConfig, ParticipantFactoryFunction } from '../../config/openvidu-components-angular.config';
 import { RecordingInfo } from '../../models/recording.model';
+import { DOCUMENT } from '@angular/common';
 
 // import { version } from '../../../../package.json';
 
@@ -84,7 +85,10 @@ export class OpenViduComponentsConfigService {
 	private adminLoginError = <BehaviorSubject<any>>new BehaviorSubject(null);
 	adminLoginError$: Observable<any>;
 
-	constructor(@Inject('OPENVIDU_COMPONENTS_CONFIG') config: OpenViduComponentsConfig) {
+	constructor(
+		@Inject('OPENVIDU_COMPONENTS_CONFIG') config: OpenViduComponentsConfig,
+		@Inject(DOCUMENT) private document: Document
+	) {
 		this.configuration = config;
 		console.log(this.configuration);
 		if (this.isProduction()) console.log('OpenVidu Angular Production Mode');
@@ -354,6 +358,19 @@ export class OpenViduComponentsConfigService {
 	}
 	isProduction(): boolean {
 		return this.configuration?.production || false;
+	}
+
+	/**
+	 * Retrieves the base href of the application.
+	 *
+	 * @returns The base href of the application as a string.
+	 */
+	getBaseHref(): string {
+		const baseHref = this.document.getElementsByTagName('base')[0].href;
+		if (baseHref) {
+			return baseHref;
+		}
+		return '/';
 	}
 
 	hasParticipantFactory(): boolean {

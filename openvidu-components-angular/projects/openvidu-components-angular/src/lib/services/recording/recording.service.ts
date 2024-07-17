@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { RecordingInfo, RecordingStatus, RecordingStatusInfo } from '../../models/recording.model';
 import { ActionService } from '../action/action.service';
+import { OpenViduComponentsConfigService } from '../config/openvidu-components-angular.config.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -12,7 +13,7 @@ export class RecordingService {
 	 */
 	recordingStatusObs: Observable<RecordingStatusInfo>;
 	private recordingTimeInterval: NodeJS.Timeout;
-	private readonly API_RECORDINGS_PREFIX = '/call/api/recordings/';
+	private API_RECORDINGS_PREFIX = 'call/api/recordings/';
 	private recordingStatus = <BehaviorSubject<RecordingStatusInfo>>new BehaviorSubject({
 		status: RecordingStatus.STOPPED,
 		recordingList: [] as RecordingInfo[],
@@ -22,8 +23,9 @@ export class RecordingService {
 	/**
 	 * @internal
 	 */
-	constructor(private actionService: ActionService) {
+	constructor(private actionService: ActionService, private openviduConfigService: OpenViduComponentsConfigService) {
 		this.recordingStatusObs = this.recordingStatus.asObservable();
+		this.API_RECORDINGS_PREFIX = this.openviduConfigService.getBaseHref() + this.API_RECORDINGS_PREFIX;
 	}
 
 	/**
@@ -159,7 +161,7 @@ export class RecordingService {
 		// Only COMPOSED recording is supported. The extension will allways be 'mp4'.
 		const queryParamForAvoidCache = `?t=${new Date().getTime()}`;
 		const link = document.createElement('a');
-		link.href = `${this.API_RECORDINGS_PREFIX}${recording.filename}${queryParamForAvoidCache}`;
+		link.href = `${this.API_RECORDINGS_PREFIX}${recording.id}/stream${queryParamForAvoidCache}`;
 		link.download = recording.filename || 'openvidu-recording.mp4';
 		link.dispatchEvent(
 			new MouseEvent('click', {
