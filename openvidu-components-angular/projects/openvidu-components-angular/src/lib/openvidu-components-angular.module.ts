@@ -47,7 +47,7 @@ import { VideoconferenceComponent } from './components/videoconference/videoconf
 import { AdminDashboardComponent } from './admin/admin-dashboard/admin-dashboard.component';
 import { AdminLoginComponent } from './admin/admin-login/admin-login.component';
 import { AvatarProfileComponent } from './components/avatar-profile/avatar-profile.component';
-import { CaptionsComponent } from './components/captions/captions.component';
+// import { CaptionsComponent } from './components/captions/captions.component';
 import { ProFeatureDialogTemplateComponent } from './components/dialogs/pro-feature-dialog.component';
 import { ActivitiesPanelComponent } from './components/panel/activities-panel/activities-panel.component';
 import { BroadcastingActivityComponent } from './components/panel/activities-panel/broadcasting-activity/broadcasting-activity.component';
@@ -55,13 +55,16 @@ import { RecordingActivityComponent } from './components/panel/activities-panel/
 import { BackgroundEffectsPanelComponent } from './components/panel/background-effects-panel/background-effects-panel.component';
 import { SettingsPanelComponent } from './components/panel/settings-panel/settings-panel.component';
 import { AudioDevicesComponent } from './components/settings/audio-devices/audio-devices.component';
-import { CaptionsSettingComponent } from './components/settings/captions/captions.component';
+// import { CaptionsSettingComponent } from './components/settings/captions/captions.component';
 import { LangSelectorComponent } from './components/settings/lang-selector/lang-selector.component';
 import { ParticipantNameInputComponent } from './components/settings/participant-name-input/participant-name-input.component';
 import { VideoDevicesComponent } from './components/settings/video-devices/video-devices.component';
 import { ApiDirectiveModule } from './directives/api/api.directive.module';
 import { OpenViduComponentsDirectiveModule } from './directives/template/openvidu-components-angular.directive.module';
 import { AppMaterialModule } from './openvidu-components-angular.material.module';
+import { VirtualBackgroundService } from './services/virtual-background/virtual-background.service';
+import { BroadcastingService } from './services/broadcasting/broadcasting.service';
+import { TranslateService } from './services/translate/translate.service';
 
 const publicComponents = [
 	AdminDashboardComponent,
@@ -84,7 +87,7 @@ const privateComponents = [
 	BackgroundEffectsPanelComponent,
 	SettingsPanelComponent,
 	AudioWaveComponent,
-	CaptionsComponent,
+	// CaptionsComponent,
 	DialogTemplateComponent,
 	ProFeatureDialogTemplateComponent,
 	RecordingDialogComponent,
@@ -95,7 +98,7 @@ const privateComponents = [
 	AudioDevicesComponent,
 	ParticipantNameInputComponent,
 	LangSelectorComponent,
-	CaptionsSettingComponent
+	// CaptionsSettingComponent
 ];
 
 @NgModule({
@@ -129,19 +132,23 @@ const privateComponents = [
 	],
 	providers: [
 		ActionService,
+		BroadcastingService,
+		// CaptionService,
 		CdkOverlayContainer,
 		{ provide: OverlayContainer, useClass: CdkOverlayContainer },
 		ChatService,
-		PanelService,
 		DeviceService,
 		DocumentService,
 		LayoutService,
 		LoggerService,
-		PlatformService,
-		ParticipantService,
-		StorageService,
 		OpenViduService,
+		PanelService,
+		ParticipantService,
+		PlatformService,
 		RecordingService,
+		StorageService,
+		TranslateService,
+		VirtualBackgroundService,
 		provideHttpClient(withInterceptorsFromDi())
 	]
 })

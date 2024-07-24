@@ -170,7 +170,6 @@ export class SessionComponent implements OnInit, OnDestroy {
 	async ngOnInit() {
 		this.room = this.openviduService.getRoom();
 		this.onRoomCreated.emit(this.room);
-		this.participantService.setLocalParticipant(this.room.localParticipant);
 
 		// this.subscribeToCaptionLanguage();
 		this.subcribeToActiveSpeakersChanged();

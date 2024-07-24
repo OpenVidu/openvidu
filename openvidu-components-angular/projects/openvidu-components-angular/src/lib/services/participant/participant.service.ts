@@ -99,6 +99,8 @@ export class ParticipantService {
 		}
 
 		await this.openviduService.connectRoom();
+		this.setLocalParticipant(this.openviduService.getRoom().localParticipant);
+
 		const videoTrack = prejoinTracks.find((track) => track.kind === Track.Kind.Video);
 		const audioTrack = prejoinTracks.find((track) => track.kind === Track.Kind.Audio);
 
