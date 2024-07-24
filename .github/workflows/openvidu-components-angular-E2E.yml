@@ -81,7 +81,7 @@ jobs:
       - name: Build openvidu-components-angular Testapp
         run: npm run build --prefix openvidu-components-angular
       - name: Serve openvidu-components-angular Testapp
-        run: npm run start-prod --prefix openvidu-components-angular &
+        run: npm run start --prefix openvidu-components-angular &
       - name: Wait for openvidu-components-angular Testapp
         run: |
           until curl -s -f -o /dev/null http://localhost:4200; do
