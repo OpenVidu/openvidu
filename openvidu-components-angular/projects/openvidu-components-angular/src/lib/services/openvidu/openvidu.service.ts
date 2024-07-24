@@ -1,11 +1,7 @@
 import { Injectable } from '@angular/core';
-
 import { ILogger } from '../../models/logger.model';
-
-import { OpenViduComponentsConfigService } from '../config/openvidu-components-angular.config.service';
 import { DeviceService } from '../device/device.service';
 import { LoggerService } from '../logger/logger.service';
-import { PlatformService } from '../platform/platform.service';
 import {
 	AudioCaptureOptions,
 	ConnectionState,
@@ -49,8 +45,6 @@ export class OpenViduService {
 	 * @internal
 	 */
 	constructor(
-		private openviduAngularConfigSrv: OpenViduComponentsConfigService,
-		private platformService: PlatformService,
 		private loggerSrv: LoggerService,
 		private deviceService: DeviceService,
 		private storageSrv: StorageService
@@ -97,7 +91,10 @@ export class OpenViduService {
 		try {
 			await this.room.connect(this.livekitUrl, this.livekitToken);
 			this.log.d(`Successfully connected to room ${this.room.name}`);
-			this.room.localParticipant.setName(this.storageSrv.getParticipantName());
+			const participantName = this.storageSrv.getParticipantName();
+			if (participantName) {
+				this.room.localParticipant.setName(participantName);
+			}
 		} catch (error) {
 			this.log.e('Error connecting to room:', error);
 			throw { code: 'CONNECTION_ERROR', message: `Error connecting to the server at the following URL: ${this.livekitUrl}` };

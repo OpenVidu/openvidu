@@ -86,14 +86,11 @@ export class ParticipantService {
 	 * Connects to the room and publishes the local tracks.
 	 * @internal
 	 */
-	async connectLocalParticipant(): Promise<void> {
+	async connect(): Promise<void> {
 		let isCameraEnabled: boolean = this.isMyCameraEnabled();
 		let isMicrophoneEnabled: boolean = this.isMyMicrophoneEnabled();
-
-		//TODO: Las directivas audioEnabled y videoEnabled son ignoradas sin prejoin page
-		// !FIXME
-
 		let prejoinTracks = this.openviduService.getLocalTracks();
+
 		if (prejoinTracks.length === 0 && (isCameraEnabled || isMicrophoneEnabled)) {
 			prejoinTracks = await this.openviduService.createLocalTracks(isCameraEnabled, isMicrophoneEnabled);
 		}

@@ -2,11 +2,10 @@ import { Injectable } from '@angular/core';
 import { CameraType, CustomDevice, DeviceType } from '../../models/device.model';
 import { ILogger } from '../../models/logger.model';
 import { OpenViduComponentsConfigService } from '../config/openvidu-components-angular.config.service';
-
 import { LoggerService } from '../logger/logger.service';
 import { PlatformService } from '../platform/platform.service';
 import { StorageService } from '../storage/storage.service';
-import { LocalTrack, Room, Track, createLocalTracks } from 'livekit-client';
+import { LocalTrack, Room, createLocalTracks } from 'livekit-client';
 
 /**
  * @internal
@@ -51,12 +50,6 @@ export class DeviceService {
 			this.devices = await this.getLocalDevices();
 		} catch (error) {
 			this.log.e('Error getting media devices', error);
-			// TODO: Fix this error
-			// this.deviceAccessDeniedError = (<OpenViduError>error).name === OpenViduErrorName.DEVICE_ACCESS_DENIED;
-			// if (this.deviceAccessDeniedError) {
-			// 	this.disableVideoDevices();
-			// 	this.disableAudioDevices();
-			// }
 		} finally {
 			if (this.deviceAccessDeniedError) {
 				this.log.w('Media devices permissions were not granted.');

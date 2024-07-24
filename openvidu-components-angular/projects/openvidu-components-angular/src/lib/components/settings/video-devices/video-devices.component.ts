@@ -2,10 +2,8 @@ import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/cor
 import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../../models/device.model';
 import { DeviceService } from '../../../services/device/device.service';
-import { PanelService } from '../../../services/panel/panel.service';
 import { ParticipantService } from '../../../services/participant/participant.service';
 import { StorageService } from '../../../services/storage/storage.service';
-import { VirtualBackgroundService } from '../../../services/virtual-background/virtual-background.service';
 import { ParticipantModel } from '../../../models/participant.model';
 
 /**
@@ -28,11 +26,9 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 	localParticipantSubscription: Subscription;
 
 	constructor(
-		private panelService: PanelService,
 		private storageSrv: StorageService,
 		private deviceSrv: DeviceService,
-		private participantService: ParticipantService,
-		private backgroundService: VirtualBackgroundService
+		private participantService: ParticipantService
 	) {}
 
 	async ngOnInit() {

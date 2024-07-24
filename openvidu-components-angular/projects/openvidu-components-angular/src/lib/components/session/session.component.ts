@@ -23,7 +23,7 @@ import { DataTopic } from '../../models/data-topic.model';
 import { RoomStatusData } from '../../models/room.model';
 import { ActionService } from '../../services/action/action.service';
 import { BroadcastingService } from '../../services/broadcasting/broadcasting.service';
-import { CaptionService } from '../../services/caption/caption.service';
+// import { CaptionService } from '../../services/caption/caption.service';
 import { ChatService } from '../../services/chat/chat.service';
 import { OpenViduComponentsConfigService } from '../../services/config/openvidu-components-angular.config.service';
 import { LayoutService } from '../../services/layout/layout.service';
@@ -31,7 +31,6 @@ import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { PanelService } from '../../services/panel/panel.service';
 import { ParticipantService } from '../../services/participant/participant.service';
-import { PlatformService } from '../../services/platform/platform.service';
 import { RecordingService } from '../../services/recording/recording.service';
 import { TranslateService } from '../../services/translate/translate.service';
 import { VirtualBackgroundService } from '../../services/virtual-background/virtual-background.service';
@@ -102,8 +101,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 		private recordingService: RecordingService,
 		private broadcastingService: BroadcastingService,
 		private translateService: TranslateService,
-		private captionService: CaptionService,
-		private platformService: PlatformService,
+		// private captionService: CaptionService,
 		private backgroundService: VirtualBackgroundService,
 		private cd: ChangeDetectorRef
 	) {
@@ -191,7 +189,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 			// this.subscribeToBroadcastingEvents();
 		}
 		try {
-			await this.participantService.connectLocalParticipant();
+			await this.participantService.connect();
 			this.cd.markForCheck();
 			this.loading = false;
 			this.onParticipantCreated.emit(this.participantService.getLocalParticipant());
