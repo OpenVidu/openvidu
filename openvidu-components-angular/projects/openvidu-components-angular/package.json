@@ -11,8 +11,8 @@
 		"@angular/material": "^17.0.0 || ^18.0.0",
 		"autolinker": "^4.0.0",
 		"buffer": "^6.0.3",
-		"livekit-client": "2.1.0",
-		"@livekit/track-processors": "0.3.2"
+		"livekit-client": "^2.1.0",
+		"@livekit/track-processors": "^0.3.2"
 	},
-	"version": "3.0.0-beta2"
+	"version": "3.0.0-beta3-dev"
 }
