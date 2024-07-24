@@ -72,6 +72,12 @@ jobs:
             echo "Waiting for openvidu-local-deployment to be ready..."
             sleep 5
           done
+      - name: Run openvidu-call-backend
+        run: |
+          git clone --depth 1 https://github.com/OpenVidu/openvidu-call
+          cd openvidu-call/openvidu-call-back
+          npm install
+          npm run dev:start &
       - name: Install dependencies
         run: |
           cd openvidu-components-angular
