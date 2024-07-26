@@ -22,6 +22,6 @@ grep -rl '/en/'${BASEHREF_VERSION}'/' projects src | xargs sed -i -e 's|/en/'${B
 rm README.md
 mv README-testapp.md README.md
 
-# Clean previous docs from openvidu.io-docs repo and copy new ones
+# Clean previous docs from openvidu.io repo and copy new ones
 npm run doc:clean-copy
 
