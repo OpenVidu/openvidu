@@ -17,7 +17,7 @@
 					<p *ngIf="data.isLocal">{{ 'PANEL.CHAT.YOU' | translate }}</p>
 					<p *ngIf="!data.isLocal">{{ data.participantName }}</p>
 				</div>
-				<div class="msg-content">
+				<div class="chat-message">
 					<p [innerHTML]="data.message | linkify"></p>
 				</div>
 			</div>

@@ -35,6 +35,7 @@
 				<div
 					*ngFor="let effect of backgroundImages"
 					class="effect-button"
+					[id]="'effect-' + effect.id"
 					[class.active-effect-btn]="backgroundSelectedId === effect.id"
 					(click)="applyBackground(effect)"
 				>
