@@ -366,7 +366,12 @@ export class OpenViduComponentsConfigService {
 	 * @returns The base href of the application as a string.
 	 */
 	getBaseHref(): string {
-		const baseHref = this.document.getElementsByTagName('base')[0].href;
+		const base = this.document.getElementsByTagName('base');
+		if (!base || base.length === 0) {
+			return '/';
+		}
+
+		const baseHref = base[0].href;
 		if (baseHref) {
 			return baseHref;
 		}
