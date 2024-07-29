@@ -98,7 +98,7 @@
     "webcomponent:build": "./node_modules/@angular/cli/bin/ng.js build openvidu-webcomponent --configuration production && node ./openvidu-webcomponent-build.js",
     "webcomponent:e2e": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/webcomponent-e2e/**/*.test.js",
     "webcomponent:e2e-ci": "cross-env LAUNCH_MODE=CI npm run webcomponent:e2e",
-    "webcomponent:serve-testapp": "npx http-server ./e2e/webcomponent-app/ && echo http://localhost:8080/?OV_URL=https://localhost:4443&OV_SECRET=MY_SECRET&prejoin=false",
+    "webcomponent:serve-testapp": "npx http-server ./e2e/webcomponent-app/",
     "simulate:multiparty": "livekit-cli load-test --url ws://localhost:7880 --api-key devkey --api-secret secret --room daily-call --publishers 8 --audio-publishers 8 --identity-prefix Participant --identity publisher"
   },
   "version": "3.0.0-beta3-dev"

@@ -1100,7 +1100,7 @@ describe('Testing EVENTS', () => {
 		await browser.quit();
 	});
 
-	it('should receive the onLeaveButtonClicked event', async () => {
+	it('should receive the onRoomDisconnected event', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovToolbar-checkbox');
@@ -1113,11 +1113,11 @@ describe('Testing EVENTS', () => {
 		await utils.clickOn('#leave-btn');
 
 		// Checking if onLeaveButtonClicked has been received
-		await utils.waitForElement('#onLeaveButtonClicked');
-		expect(await utils.isPresent('#onLeaveButtonClicked')).to.be.true;
+		await utils.waitForElement('#onRoomDisconnected');
+		expect(await utils.isPresent('#onRoomDisconnected')).to.be.true;
 	});
 
-	it('should receive the onCameraButtonClicked event', async () => {
+	it('should receive the onVideoEnabledChanged event', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovToolbar-checkbox');
@@ -1126,15 +1126,13 @@ describe('Testing EVENTS', () => {
 
 		await utils.checkToolbarIsPresent();
 
-		// Clicking to leave button
 		await utils.clickOn('#camera-btn');
 
-		// Checking if onLeaveButtonClicked has been received
-		await utils.waitForElement('#onCameraButtonClicked');
-		expect(await utils.isPresent('#onCameraButtonClicked')).to.be.true;
+		await utils.waitForElement('#onVideoEnabledChanged');
+		expect(await utils.isPresent('#onVideoEnabledChanged')).to.be.true;
 	});
 
-	it('should receive the onMicrophoneButtonClicked event', async () => {
+	it('should receive the onAudioEnabledChanged event', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovToolbar-checkbox');
@@ -1143,15 +1141,13 @@ describe('Testing EVENTS', () => {
 
 		await utils.checkToolbarIsPresent();
 
-		// Clicking to leave button
 		await utils.clickOn('#mic-btn');
 
-		// Checking if onMicrophoneButtonClicked has been received
-		await utils.waitForElement('#onMicrophoneButtonClicked');
-		expect(await utils.isPresent('#onMicrophoneButtonClicked')).to.be.true;
+		await utils.waitForElement('#onAudioEnabledChanged');
+		expect(await utils.isPresent('#onAudioEnabledChanged')).to.be.true;
 	});
 
-	it('should receive the onScreenshareButtonClicked event', async () => {
+	it('should receive the onScreenShareEnabledChanged event', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovToolbar-checkbox');
@@ -1160,37 +1156,13 @@ describe('Testing EVENTS', () => {
 
 		await utils.checkToolbarIsPresent();
 
-		// Clicking to leave button
 		await utils.clickOn('#screenshare-btn');
 
-		// Checking if onScreenshareButtonClicked has been received
-		await utils.waitForElement('#onScreenshareButtonClicked');
-		expect(await utils.isPresent('#onScreenshareButtonClicked')).to.be.true;
+		await utils.waitForElement('#onScreenShareEnabledChanged');
+		expect(await utils.isPresent('#onScreenShareEnabledChanged')).to.be.true;
 	});
 
-	it('should receive the onFullscreenButtonClicked event', async () => {
-		await browser.get(`${url}`);
-
-		await utils.clickOn('#ovToolbar-checkbox');
-
-		await utils.clickOn('#apply-btn');
-
-		await utils.checkToolbarIsPresent();
-		// Open more options menu
-		await utils.clickOn('#more-options-btn');
-
-		await browser.sleep(500);
-
-		await utils.waitForElement('#more-options-menu');
-
-		await utils.clickOn('#fullscreen-btn');
-
-		// Checking if onFullscreenButtonClicked has been received
-		await utils.waitForElement('#onFullscreenButtonClicked');
-		expect(await utils.isPresent('#onFullscreenButtonClicked')).to.be.true;
-	});
-
-	it('should receive the onParticipantsPanelButtonClicked event', async () => {
+	it('should receive the onFullscreenEnabledChanged event', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovToolbar-checkbox');
@@ -1199,13 +1171,13 @@ describe('Testing EVENTS', () => {
 
 		await utils.checkToolbarIsPresent();
 
-		await utils.clickOn('#participants-panel-btn');
+		await utils.toggleFullscreenFromToolbar();
 
-		await utils.waitForElement('#onParticipantsPanelButtonClicked');
-		expect(await utils.isPresent('#onParticipantsPanelButtonClicked')).to.be.true;
+		await utils.waitForElement('#onFullscreenEnabledChanged');
+		expect(await utils.isPresent('#onFullscreenEnabledChanged')).to.be.true;
 	});
 
-	it('should receive the onChatPanelButtonClicked event', async () => {
+	it('should receive the onRecordingStartRequested event', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovToolbar-checkbox');
@@ -1214,24 +1186,69 @@ describe('Testing EVENTS', () => {
 
 		await utils.checkToolbarIsPresent();
 
-		await utils.clickOn('#chat-panel-btn');
+		await utils.toggleRecordingFromToolbar();
 
-		await utils.waitForElement('#onChatPanelButtonClicked');
-		expect(await utils.isPresent('#onChatPanelButtonClicked')).to.be.true;
+		await utils.waitForElement('#onRecordingStartRequested');
+		expect(await utils.isPresent('#onRecordingStartRequested')).to.be.true;
 	});
 
-	it('should receive the onActivitiesPanelButtonClicked event', async () => {
+	it('should receive the onParticipantsPanelStatusChanged event', async () => {
 		await browser.get(`${url}`);
 
-		await utils.clickOn('#ovToolbar-checkbox');
+		await utils.clickOn('#ovPanel-checkbox');
 
 		await utils.clickOn('#apply-btn');
 
 		await utils.checkToolbarIsPresent();
 
-		await utils.clickOn('#activities-panel-btn');
+		await utils.togglePanel('participants');
 
-		await utils.waitForElement('#onActivitiesPanelButtonClicked');
-		expect(await utils.isPresent('#onActivitiesPanelButtonClicked')).to.be.true;
+		await utils.waitForElement('#onParticipantsPanelStatusChanged');
+		expect(await utils.isPresent('#onParticipantsPanelStatusChanged')).to.be.true;
+	});
+
+	it('should receive the onChatPanelStatusChanged event', async () => {
+		await browser.get(`${url}`);
+
+		await utils.clickOn('#ovPanel-checkbox');
+
+		await utils.clickOn('#apply-btn');
+
+		await utils.checkToolbarIsPresent();
+
+		await utils.togglePanel('chat');
+
+		await utils.waitForElement('#onChatPanelStatusChanged');
+		expect(await utils.isPresent('#onChatPanelStatusChanged')).to.be.true;
+	});
+
+	it('should receive the onActivitiesPanelStatusChanged event', async () => {
+		await browser.get(`${url}`);
+
+		await utils.clickOn('#ovPanel-checkbox');
+
+		await utils.clickOn('#apply-btn');
+
+		await utils.checkToolbarIsPresent();
+
+		await utils.togglePanel('activities');
+
+		await utils.waitForElement('#onActivitiesPanelStatusChanged');
+		expect(await utils.isPresent('#onActivitiesPanelStatusChanged')).to.be.true;
+	});
+
+	it('should receive the onSettingsPanelStatusChanged event', async () => {
+		await browser.get(`${url}`);
+
+		await utils.clickOn('#ovPanel-checkbox');
+
+		await utils.clickOn('#apply-btn');
+
+		await utils.checkToolbarIsPresent();
+
+		await utils.togglePanel('settings');
+
+		await utils.waitForElement('#onSettingsPanelStatusChanged');
+		expect(await utils.isPresent('#onSettingsPanelStatusChanged')).to.be.true;
 	});
 });

@@ -78,6 +78,8 @@
 			id="custom-toolbar"
 			[screenshareButton]="screenshareBtn"
 			[fullscreenButton]="fullscreenBtn"
+			[backgroundEffectsButton]="backgroundEffectsBtn"
+			[settingsButton]="settingsBtn"
 			[leaveButton]="leaveBtn"
 			[participantsPanelButton]="participantsPanelBtn"
 			[activitiesPanelButton]="activitiesPanelBtn"
@@ -85,14 +87,14 @@
 			[displayRoomName]="displaySessionId"
 			[displayLogo]="displayLogo"
 			[broadcastingButton]="broadcastingBtn"
-			(onLeaveButtonClicked)="appendElement('onLeaveButtonClicked')"
-			(onCameraButtonClicked)="appendElement('onCameraButtonClicked')"
-			(onMicrophoneButtonClicked)="appendElement('onMicrophoneButtonClicked')"
+			(onAudioEnabledChanged)="appendElement('onAudioEnabledChanged')"
+			(onVideoEnabledChanged)="appendElement('onVideoEnabledChanged')"
+			(onBroadcastingStopRequested)="appendElement('onBroadcastingStopRequested')"
+			(onFullscreenEnabledChanged)="appendElement('onFullscreenEnabledChanged')"
+			(onRecordingStartRequested)="appendElement('onRecordingStartRequested')"
+			(onRecordingStopRequested)="appendElement('onRecordingStopRequested')"
+			(onRoomDisconnected)="appendElement('onRoomDisconnected')"
 			(onScreenShareEnabledChanged)="appendElement('onScreenShareEnabledChanged')"
-			(onFullscreenButtonClicked)="appendElement('onFullscreenButtonClicked')"
-			(onParticipantsPanelButtonClicked)="appendElement('onParticipantsPanelButtonClicked')"
-			(onChatPanelButtonClicked)="appendElement('onChatPanelButtonClicked')"
-			(onActivitiesPanelButtonClicked)="appendElement('onActivitiesPanelButtonClicked')"
 		>
 			<ng-template [ngIf]="ovToolbarAdditionalButtonsSelected">
 				<div *ovToolbarAdditionalButtons id="custom-toolbar-additional-buttons">
@@ -144,7 +146,14 @@
 
 	<!-- PANELS -->
 	<ng-template [ngIf]="ovPanelSelected">
-		<ov-panel *ovPanel id="custom-panels">
+		<ov-panel
+			*ovPanel
+			id="custom-panels"
+			(onActivitiesPanelStatusChanged)="appendElement('onActivitiesPanelStatusChanged')"
+			(onChatPanelStatusChanged)="appendElement('onChatPanelStatusChanged')"
+			(onParticipantsPanelStatusChanged)="appendElement('onParticipantsPanelStatusChanged')"
+			(onSettingsPanelStatusChanged)="appendElement('onSettingsPanelStatusChanged')"
+		>
 			<ng-template [ngIf]="ovAdditionalPanelsSelected">
 				<div *ovAdditionalPanels id="custom-additional-panel">
 					<h1 id="additional-panel-title">NEW PANEL</h1>
@@ -206,6 +215,13 @@
 			*ovActivitiesPanel
 			[recordingActivity]="recordingActivity"
 			[broadcastingActivity]="broadcastingActivity"
+			(onBroadcastingStartRequested)="appendElement('onBroadcastingStartRequested')"
+			(onBroadcastingStopRequested)="appendElement('onBroadcastingStopRequested')"
+			(onRecordingDeleteRequested)="appendElement('onRecordingDeleteRequested')"
+			(onRecordingDownloadClicked)="appendElement('onRecordingDownloadClicked')"
+			(onRecordingPlayClicked)="appendElement('onRecordingPlayClicked')"
+			(onRecordingStartRequested)="appendElement('onRecordingStartRequested')"
+			(onRecordingStopRequested)="appendElement('onRecordingStopRequested')"
 			id="custom-activities-panel"
 		>
 			<ov-recording-activity *ngIf="recordingActivity"></ov-recording-activity>
