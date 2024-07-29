@@ -123,9 +123,9 @@ export class OpenViduComponentsPO {
 		// Open more options menu
 		await this.toggleToolbarMoreOptions();
 
-		const fullscreenButton = await this.waitForElement('#fullscreen-btn');
+		await this.waitForElement('#fullscreen-btn');
 		expect(await this.isPresent('#fullscreen-btn')).to.be.true;
-		await fullscreenButton.click();
+		await this.clickOn('#fullscreen-btn');
 	}
 
 	async togglePanel(panelName: string) {

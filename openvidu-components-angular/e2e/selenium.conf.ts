@@ -56,7 +56,7 @@ export const WebComponentConfig: BrowserConfig = {
 
 export const NestedConfig: BrowserConfig = {
 	appUrl: 'http://localhost:4200/#/testing',
-	seleniumAddress: LAUNCH_MODE === 'CI' ? 'http://localhost:3000/webdriver' : '',
+	seleniumAddress: LAUNCH_MODE === 'CI' ? 'http://localhost:4444/wd/hub' : '',
 	browserName: 'Chrome',
 	browserCapabilities: Capabilities.chrome().set('acceptInsecureCerts', true),
 	browserOptions: new chrome.Options().addArguments(...(LAUNCH_MODE === 'CI' ? chromeArgumentsCI : chromeArguments))

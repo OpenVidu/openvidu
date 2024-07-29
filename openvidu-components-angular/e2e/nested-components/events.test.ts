@@ -101,6 +101,8 @@ describe('Testing EVENTS', () => {
 
 		await utils.toggleFullscreenFromToolbar();
 
+		await browser.sleep(1000);
+
 		await utils.waitForElement('#onFullscreenEnabledChanged');
 		expect(await utils.isPresent('#onFullscreenEnabledChanged')).to.be.true;
 	});

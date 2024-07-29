@@ -58,8 +58,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Run Browserless Chrome
-        run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
+      # - name: Run Browserless Chrome
+      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
+      - name: Run Chrome
+        run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
@@ -111,8 +113,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Run Browserless Chrome
-        run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
+      # - name: Run Browserless Chrome
+      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
+      - name: Run Chrome
+        run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
@@ -164,8 +168,10 @@ jobs:
   #       uses: actions/setup-node@v4
   #       with:
   #         node-version: '20'
-  #     - name: Run Browserless Chrome
-  #       run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
+      # - name: Run Browserless Chrome
+      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
+      # - name: Run Chrome
+      #   run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
   #     - name: Run openvidu-local-deployment
   #       run: |
   #         git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
