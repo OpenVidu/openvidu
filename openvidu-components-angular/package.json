@@ -83,13 +83,20 @@
     "doc:clean-copy": "rm -rf ../../openvidu-docs/docs/docs/reference-docs/openvidu-components-angular && cp -r ./docs/openvidu-components-angular/ ../../openvidu-docs/docs/docs/reference-docs/openvidu-components-angular",
     "doc:serve": "npx compodoc -c ../openvidu-components-angular/projects/openvidu-components-angular/doc/.compodocrc.json --serve --port 7000",
     "doc:serve-watch": "npm-watch doc:serve",
+    "lib:serve": "ng build openvidu-components-angular --watch",
     "lib:build": "ng build openvidu-components-angular --configuration development && cd ./dist/openvidu-components-angular",
     "lib:pack": "cd ./dist/openvidu-components-angular && npm pack",
     "lib:copy": "cp dist/openvidu-components-angular/openvidu-components-angular-*.tgz ../../openvidu-call/openvidu-call-front",
-    "lib:e2e": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/angular.test.js",
-    "lib:e2e-ci": "cross-env LAUNCH_MODE=CI npm run lib:e2e",
-    "lib:serve": "ng build openvidu-components-angular --watch",
     "lib:test": "ng test openvidu-components-angular --no-watch --code-coverage",
+
+    "e2e:nested-all": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/nested-components/*.test.js",
+    "e2e:nested-events": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/nested-components/events.test.js",
+    "e2e:nested-directives": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/nested-components/directives.test.js",
+    "e2e:nested-all-ci": "cross-env LAUNCH_MODE=CI npm run e2e:nested-all",
+    "e2e:nested-events-ci": "cross-env LAUNCH_MODE=CI npm run e2e:nested-events",
+    "e2e:nested-directives-ci": "cross-env LAUNCH_MODE=CI npm run e2e:nested-directives",
+
+
     "lint": "ng lint",
     "start": "ng serve --configuration development --open",
     "start-prod": "npx http-server ./dist/openvidu-components-testapp/browser --port 4200",
