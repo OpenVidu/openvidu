@@ -54,7 +54,7 @@ export const WebComponentConfig: BrowserConfig = {
 	browserOptions: new chrome.Options().addArguments(...(LAUNCH_MODE === 'CI' ? chromeArgumentsCI : chromeArguments))
 };
 
-export const AngularConfig: BrowserConfig = {
+export const NestedConfig: BrowserConfig = {
 	appUrl: 'http://localhost:4200/#/testing',
 	seleniumAddress: LAUNCH_MODE === 'CI' ? 'http://localhost:3000/webdriver' : '',
 	browserName: 'Chrome',

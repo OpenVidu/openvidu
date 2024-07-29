@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import { Builder, By, WebDriver } from 'selenium-webdriver';
 
-import { AngularConfig } from '../selenium.conf';
+import { NestedConfig } from '../selenium.conf';
 import { OpenViduComponentsPO } from '../utils.po.test';
 
-const url = AngularConfig.appUrl;
+const url = NestedConfig.appUrl;
 
 describe('Testing EVENTS', () => {
 	let browser: WebDriver;
@@ -12,10 +12,10 @@ describe('Testing EVENTS', () => {
 
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
-			.forBrowser(AngularConfig.browserName)
-			.withCapabilities(AngularConfig.browserCapabilities)
-			.setChromeOptions(AngularConfig.browserOptions)
-			.usingServer(AngularConfig.seleniumAddress)
+			.forBrowser(NestedConfig.browserName)
+			.withCapabilities(NestedConfig.browserCapabilities)
+			.setChromeOptions(NestedConfig.browserOptions)
+			.usingServer(NestedConfig.seleniumAddress)
 			.build();
 	}
 

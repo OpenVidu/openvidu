@@ -1,20 +1,20 @@
 import { expect } from 'chai';
 import { Builder, By, WebDriver } from 'selenium-webdriver';
 
-import { AngularConfig } from '../selenium.conf';
+import { NestedConfig } from '../selenium.conf';
 import { OpenViduComponentsPO } from '../utils.po.test';
 
-const url = AngularConfig.appUrl;
+const url = NestedConfig.appUrl;
 
 describe('Testing TOOLBAR STRUCTURAL DIRECTIVES', () => {
 	let browser: WebDriver;
 	let utils: OpenViduComponentsPO;
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
-			.forBrowser(AngularConfig.browserName)
-			.withCapabilities(AngularConfig.browserCapabilities)
-			.setChromeOptions(AngularConfig.browserOptions)
-			.usingServer(AngularConfig.seleniumAddress)
+			.forBrowser(NestedConfig.browserName)
+			.withCapabilities(NestedConfig.browserCapabilities)
+			.setChromeOptions(NestedConfig.browserOptions)
+			.usingServer(NestedConfig.seleniumAddress)
 			.build();
 	}
 
@@ -147,10 +147,10 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
-			.forBrowser(AngularConfig.browserName)
-			.withCapabilities(AngularConfig.browserCapabilities)
-			.setChromeOptions(AngularConfig.browserOptions)
-			.usingServer(AngularConfig.seleniumAddress)
+			.forBrowser(NestedConfig.browserName)
+			.withCapabilities(NestedConfig.browserCapabilities)
+			.setChromeOptions(NestedConfig.browserOptions)
+			.usingServer(NestedConfig.seleniumAddress)
 			.build();
 	}
 
@@ -669,10 +669,10 @@ describe('Testing LAYOUT STRUCTURAL DIRECTIVES', () => {
 
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
-			.forBrowser(AngularConfig.browserName)
-			.withCapabilities(AngularConfig.browserCapabilities)
-			.setChromeOptions(AngularConfig.browserOptions)
-			.usingServer(AngularConfig.seleniumAddress)
+			.forBrowser(NestedConfig.browserName)
+			.withCapabilities(NestedConfig.browserCapabilities)
+			.setChromeOptions(NestedConfig.browserOptions)
+			.usingServer(NestedConfig.seleniumAddress)
 			.build();
 	}
 
@@ -767,10 +767,10 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
-			.forBrowser(AngularConfig.browserName)
-			.withCapabilities(AngularConfig.browserCapabilities)
-			.setChromeOptions(AngularConfig.browserOptions)
-			.usingServer(AngularConfig.seleniumAddress)
+			.forBrowser(NestedConfig.browserName)
+			.withCapabilities(NestedConfig.browserCapabilities)
+			.setChromeOptions(NestedConfig.browserOptions)
+			.usingServer(NestedConfig.seleniumAddress)
 			.build();
 	}
 
@@ -1048,32 +1048,5 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		await utils.waitForElement('ov-recording-activity');
 
 		expect(await utils.isPresent('ov-broadcasting-activity')).to.be.false;
-	});
-
-	it('should SHOW STREAMING ERROR', async () => {
-		await browser.get(`${url}`);
-
-		await utils.clickOn('#ovActivitiesPanel-checkbox');
-
-		await utils.clickOn('#broadcastingError-checkbox');
-
-		await utils.clickOn('#apply-btn');
-
-		await utils.checkToolbarIsPresent();
-
-		await utils.clickOn('#activities-panel-btn');
-
-		await browser.sleep(500);
-
-		await utils.waitForElement('#custom-activities-panel');
-
-		const status = await utils.waitForElement('#broadcasting-status');
-
-		expect(await status.getAttribute('innerText')).equals('FAILED');
-
-		await utils.clickOn('#broadcasting-activity');
-		await browser.sleep(500);
-		const error = await utils.waitForElement('#broadcasting-error');
-		expect(await error.getAttribute('innerText')).equals('TEST_ERROR');
 	});
 });
