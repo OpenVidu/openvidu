@@ -111,7 +111,7 @@ describe('Testing CHAT features', () => {
 
 		await utils.clickOn('#send-btn');
 
-		await utils.waitForElement('.msg-content a');
-		expect(await utils.isPresent('.msg-content a')).to.be.true;
+		await utils.waitForElement('.chat-message a');
+		expect(await utils.isPresent('.chat-message a')).to.be.true;
 	});
 });
