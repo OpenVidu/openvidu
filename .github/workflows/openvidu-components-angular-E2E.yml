@@ -195,7 +195,7 @@ jobs:
       - name: Build openvidu-angular
         run: npm run lib:build --prefix openvidu-components-angular
       - name: Build openvidu-webcomponent
-        run: npm run webcomponent:build --prefix openvidu-components-angular
+        run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
       - name: Wait for openvidu-local-deployment
@@ -251,7 +251,7 @@ jobs:
       - name: Build openvidu-angular
         run: npm run lib:build --prefix openvidu-components-angular
       - name: Build openvidu-webcomponent
-        run: npm run webcomponent:build --prefix openvidu-components-angular
+        run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
       - name: Wait for openvidu-local-deployment
@@ -308,7 +308,7 @@ jobs:
       - name: Build openvidu-angular
         run: npm run lib:build --prefix openvidu-components-angular
       - name: Build openvidu-webcomponent
-        run: npm run webcomponent:build --prefix openvidu-components-angular
+        run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
       - name: Wait for openvidu-local-deployment
@@ -364,7 +364,7 @@ jobs:
       - name: Build openvidu-angular
         run: npm run lib:build --prefix openvidu-components-angular
       - name: Build openvidu-webcomponent
-        run: npm run webcomponent:build --prefix openvidu-components-angular
+        run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
       - name: Wait for openvidu-local-deployment
@@ -420,7 +420,7 @@ jobs:
       - name: Build openvidu-angular
         run: npm run lib:build --prefix openvidu-components-angular
       - name: Build openvidu-webcomponent
-        run: npm run webcomponent:build --prefix openvidu-components-angular
+        run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
       - name: Wait for openvidu-local-deployment
@@ -476,7 +476,7 @@ jobs:
       - name: Build openvidu-angular
         run: npm run lib:build --prefix openvidu-components-angular
       - name: Build openvidu-webcomponent
-        run: npm run webcomponent:build --prefix openvidu-components-angular
+        run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
       - name: Wait for openvidu-local-deployment
@@ -533,7 +533,7 @@ jobs:
       - name: Build openvidu-angular
         run: npm run lib:build --prefix openvidu-components-angular
       - name: Build openvidu-webcomponent
-        run: npm run webcomponent:build --prefix openvidu-components-angular
+        run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
       - name: Wait for openvidu-local-deployment
@@ -589,7 +589,7 @@ jobs:
       - name: Build openvidu-angular
         run: npm run lib:build --prefix openvidu-components-angular
       - name: Build openvidu-webcomponent
-        run: npm run webcomponent:build --prefix openvidu-components-angular
+        run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
       - name: Wait for openvidu-local-deployment
