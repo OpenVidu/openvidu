@@ -98,7 +98,9 @@ jobs:
             sleep 5
           done
       - name: Run nested components E2E event tests
-        run: npm run e2e:nested-events-ci --prefix openvidu-components-angular
+        env:
+          LAUNCH_MODE: CI
+        run: npm run e2e:nested-events --prefix openvidu-components-angular
 
   nested_components_e2e_directives:
     needs: test_setup
@@ -153,7 +155,9 @@ jobs:
             sleep 5
           done
       - name: Run nested components E2E directives tests
-        run: npm run e2e:nested-directives-ci --prefix openvidu-components-angular
+        env:
+          LAUNCH_MODE: CI
+        run: npm run e2e:nested-directives --prefix openvidu-components-angular
 
   webcomponent_e2e_directives:
     needs: test_setup
@@ -207,4 +211,6 @@ jobs:
               sleep 5
             done
       - name: Run Webcomponent E2E
-        run: LAUNCH_MODE=CI npm run e2e:webcomponent-directives --prefix openvidu-components-angular
+        env:
+          LAUNCH_MODE: CI
+        run: npm run e2e:webcomponent-directives --prefix openvidu-components-angular
