@@ -313,7 +313,7 @@ describe('Testing videoconference EVENTS', () => {
 	});
 
 	// With headless mode, the Fullscreen API doesn't work
-	(isHeadless ? it.skip : it)('should receive the onFullscreenEnabledChanged event', async () => {
+	it('should receive the onFullscreenEnabledChanged event', async () => {
 		let element;
 		await browser.get(`${url}&prejoin=false`);
 
