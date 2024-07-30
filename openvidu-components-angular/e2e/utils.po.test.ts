@@ -110,6 +110,15 @@ export class OpenViduComponentsPO {
 		await this.waitForElement('#more-options-menu');
 	}
 
+	async disableScreenShare(): Promise<void> {
+		await this.waitForElement('#screenshare-btn');
+		await this.clickOn('#screenshare-btn');
+		await this.browser.sleep(500);
+		await this.waitForElement('#screenshare-menu');
+		await this.clickOn('#disable-screen-button');
+		await this.browser.sleep(1000);
+	}
+
 	async toggleRecordingFromToolbar() {
 		// Open more options menu
 		await this.toggleToolbarMoreOptions();

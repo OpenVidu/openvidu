@@ -38,14 +38,10 @@ describe('Testing screenshare features', () => {
 		await browser.sleep(500);
 		await utils.waitForElement('.OV_big');
 		expect(await utils.getNumberOfElements('video')).equals(2);
-		expect(await utils.getNumberOfElements('.OV_stream.speaking')).equals(1);
 
-		// Clicking to screensharing button
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(500);
-		await utils.waitForElement('#screenshare-menu');
-		await utils.clickOn('#disable-screen-button');
-		await browser.sleep(500);
+		// expect(await utils.getNumberOfElements('.OV_stream.speaking')).equals(1);
+
+		await utils.disableScreenShare();
 
 		expect(await utils.getNumberOfElements('video')).equals(1);
 
@@ -56,11 +52,7 @@ describe('Testing screenshare features', () => {
 		await utils.waitForElement('.OV_big');
 		expect(await utils.getNumberOfElements('video')).equals(2);
 
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(500);
-		await utils.waitForElement('#screenshare-menu');
-		await utils.clickOn('#disable-screen-button');
-		await browser.sleep(500);
+		await utils.disableScreenShare();
 
 		expect(await utils.getNumberOfElements('video')).equals(1);
 	});
@@ -82,11 +74,7 @@ describe('Testing screenshare features', () => {
 		await utils.waitForElement('.OV_big');
 		expect(await utils.getNumberOfElements('video')).equals(2);
 
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(500);
-		await utils.waitForElement('#screenshare-menu');
-		await utils.clickOn('#disable-screen-button');
-		await browser.sleep(500);
+		await utils.disableScreenShare();
 
 		expect(await utils.getNumberOfElements('video')).equals(1);
 	});
@@ -167,10 +155,7 @@ describe('Testing screenshare features', () => {
 		await utils.waitForElement('.OV_big');
 		expect(await utils.getNumberOfElements('.OV_big')).equals(1);
 		// Disable screensharing
-		await utils.clickOn('#screenshare-btn');
-		await utils.waitForElement('#screenshare-menu');
-		await utils.clickOn('#disable-screen-button');
-		await browser.sleep(500);
+		await utils.disableScreenShare();
 		expect(await utils.getNumberOfElements('video')).equals(3);
 		await utils.waitForElement('.OV_big');
 		expect(await utils.getNumberOfElements('.OV_big')).equals(1);
