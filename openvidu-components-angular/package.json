@@ -74,7 +74,9 @@
     }
   },
   "scripts": {
-    "husky": "cd .. && husky install",
+    "start": "ng serve --configuration development --open",
+    "start-prod": "npx http-server ./dist/openvidu-components-testapp/browser --port 4200",
+    "start:ssl": "ng serve --ssl --configuration development --host 0.0.0.0 --port 5080",
     "build": "ng build openvidu-components-testapp --configuration production",
     "bundle-report": "ng build openvidu-webcomponent --stats-json --configuration production && webpack-bundle-analyzer dist/openvidu-webcomponent/stats.json",
     "doc:build": "npx compodoc -c ./projects/openvidu-components-angular/doc/.compodocrc.json",
@@ -84,11 +86,10 @@
     "doc:serve": "npx compodoc -c ../openvidu-components-angular/projects/openvidu-components-angular/doc/.compodocrc.json --serve --port 7000",
     "doc:serve-watch": "npm-watch doc:serve",
     "lib:serve": "ng build openvidu-components-angular --watch",
-    "lib:build": "ng build openvidu-components-angular --configuration development && cd ./dist/openvidu-components-angular",
+    "lib:build": "ng build openvidu-components-angular --configuration production && cd ./dist/openvidu-components-angular",
     "lib:pack": "cd ./dist/openvidu-components-angular && npm pack",
     "lib:copy": "cp dist/openvidu-components-angular/openvidu-components-angular-*.tgz ../../openvidu-call/openvidu-call-front",
     "lib:test": "ng test openvidu-components-angular --no-watch --code-coverage",
-
     "e2e:nested-all": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/nested-components/*.test.js",
     "e2e:nested-events": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/nested-components/events.test.js",
     "e2e:nested-directives": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/nested-components/directives.test.js",
@@ -102,16 +103,11 @@
     "e2e:webcomponent-screensharing": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/webcomponent-e2e/screensharing.test.js",
     "e2e:webcomponent-stream": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/webcomponent-e2e/stream.test.js",
     "e2e:webcomponent-toolbar": "tsc --project ./e2e && npx mocha --recursive --timeout 30000 ./e2e/dist/webcomponent-e2e/toolbar.test.js",
-
-    "lint": "ng lint",
-    "start": "ng serve --configuration development --open",
-    "start-prod": "npx http-server ./dist/openvidu-components-testapp/browser --port 4200",
-    "start:ssl": "ng serve --ssl --configuration development --host 0.0.0.0 --port 5080",
     "webcomponent:testing-build": "./node_modules/@angular/cli/bin/ng.js build openvidu-webcomponent --configuration testing && node ./openvidu-webcomponent-build.js",
     "webcomponent:build": "./node_modules/@angular/cli/bin/ng.js build openvidu-webcomponent --configuration production && node ./openvidu-webcomponent-build.js",
-    "webcomponent:e2e-ci": "cross-env LAUNCH_MODE=CI npm run webcomponent:e2e",
     "webcomponent:serve-testapp": "npx http-server ./e2e/webcomponent-app/",
-    "simulate:multiparty": "livekit-cli load-test --url ws://localhost:7880 --api-key devkey --api-secret secret --room daily-call --publishers 8 --audio-publishers 8 --identity-prefix Participant --identity publisher"
+    "simulate:multiparty": "livekit-cli load-test --url ws://localhost:7880 --api-key devkey --api-secret secret --room daily-call --publishers 8 --audio-publishers 8 --identity-prefix Participant --identity publisher",
+    "husky": "cd .. && husky install"
   },
   "version": "3.0.0-beta3-dev"
 }

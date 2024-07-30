@@ -61,6 +61,7 @@ describe('Testing CHAT features', () => {
 		let pName = `participant${Math.floor(Math.random() * 1000)}`;
 		const fixedUrl = `${url}&prejoin=false&roomName=${roomName}`;
 		await browser.get(fixedUrl);
+		await browser.sleep(1000);
 		await utils.checkLayoutPresent();
 
 		// Starting new browser for adding a new participant

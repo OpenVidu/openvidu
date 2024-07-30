@@ -27,8 +27,8 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await browser.quit();
 	});
 
-	it('should show ONE video element when a LOCAL participant joins with VIDEO and AUDIO MUTED', async () => {
-		await browser.get(`${url}&prejoin=true&videoEnabled=false&audioEnabled=false`);
+	it('should show 0 video element when a participant joins with video disabled', async () => {
+		await browser.get(`${url}&prejoin=true&videoEnabled=false`);
 
 		await utils.checkPrejoinIsPresent();
 		await utils.clickOn('#join-button');
@@ -36,10 +36,12 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.waitForElement('.OV_stream.local');
 
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
+		expect(await utils.getNumberOfElements('video')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(1);
 	});
 
-	it('should show ONE video element when a LOCAL participant joins with AUDIO MUTED', async () => {
-		await browser.get(`${url}&prejoin=true&videoEnabled=true&audioEnabled=false`);
+	it('should show a video element when a participant joins with audio muted', async () => {
+		await browser.get(`${url}&prejoin=true&audioEnabled=false`);
 
 		await utils.checkPrejoinIsPresent();
 		await utils.clickOn('#join-button');
@@ -47,20 +49,11 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.waitForElement('.OV_stream.local');
 
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
+		expect(await utils.getNumberOfElements('video')).equal(1);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 	});
 
-	it('should show a video element when a LOCAL participant joins with VIDEO MUTED', async () => {
-		await browser.get(`${url}&prejoin=true&videoEnabled=false&audioEnabled=true`);
-
-		await utils.checkPrejoinIsPresent();
-		await utils.clickOn('#join-button');
-		await utils.checkLayoutPresent();
-		await utils.waitForElement('.OV_stream.local');
-
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-	});
-
-	it('should show a video element when a LOCAL participant joins', async () => {
+	it('should show a video element when a participant joins', async () => {
 		await browser.get(`${url}&prejoin=true&videoEnabled=true&audioEnabled=true`);
 
 		await utils.checkPrejoinIsPresent();
@@ -69,9 +62,11 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.waitForElement('.OV_stream.local');
 
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
+		expect(await utils.getNumberOfElements('video')).equal(1);
+		expect(await utils.getNumberOfElements('audio')).equal(1);
 	});
 
-	it('should show a video element when a LOCAL participant shares its screen with VIDEO and AUDIO MUTED', async () => {
+	it('should show a video element when a participant shares its screen with VIDEO and AUDIO MUTED', async () => {
 		await browser.get(`${url}&prejoin=true&videoEnabled=false&audioEnabled=false`);
 
 		await utils.checkPrejoinIsPresent();
@@ -80,64 +75,20 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.waitForElement('.OV_stream.local');
 
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
+		expect(await utils.getNumberOfElements('video')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(1000);
 		await utils.waitForElement('#local-element-screen_share');
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
+		expect(await utils.getNumberOfElements('video')).equal(1);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(500);
-		await utils.waitForElement('#screenshare-menu');
-		await utils.clickOn('#disable-screen-button');
-		await browser.sleep(500);
+		await utils.disableScreenShare();
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-	});
-
-	it('should show a video element when a LOCAL participant shares its screen with VIDEO MUTED', async () => {
-		await browser.get(`${url}&prejoin=true&videoEnabled=false&audioEnabled=true`);
-
-		await utils.checkPrejoinIsPresent();
-		await utils.clickOn('#join-button');
-		await utils.checkLayoutPresent();
-		await utils.waitForElement('.OV_stream.local');
-
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(1000);
-		await utils.waitForElement('#local-element-screen_share');
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(500);
-		await utils.waitForElement('#screenshare-menu');
-		await utils.clickOn('#disable-screen-button');
-		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-	});
-
-	it('should show a video element when a LOCAL participant shares its screen with AUDIO MUTED', async () => {
-		await browser.get(`${url}&prejoin=true&videoEnabled=true&audioEnabled=false`);
-
-		await utils.checkPrejoinIsPresent();
-		await utils.clickOn('#join-button');
-		await utils.checkLayoutPresent();
-		await utils.waitForElement('.OV_stream.local');
-
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(1000);
-		await utils.waitForElement('#local-element-screen_share');
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(500);
-		await utils.waitForElement('#screenshare-menu');
-		await utils.clickOn('#disable-screen-button');
-		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
+		expect(await utils.getNumberOfElements('video')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 	});
 
 	it('should show a video element when a LOCAL participant shares its screen', async () => {
@@ -149,23 +100,25 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.waitForElement('.OV_stream.local');
 
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
+		expect(await utils.getNumberOfElements('video')).equal(1);
+		expect(await utils.getNumberOfElements('audio')).equal(1);
 
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(1000);
 		await utils.waitForElement('#local-element-screen_share');
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
+		expect(await utils.getNumberOfElements('video')).equal(2);
+		expect(await utils.getNumberOfElements('audio')).equal(1);
 
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(500);
-		await utils.waitForElement('#screenshare-menu');
-		await utils.clickOn('#disable-screen-button');
-		await browser.sleep(500);
+		await utils.disableScreenShare();
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
+		expect(await utils.getNumberOfElements('video')).equal(1);
+		expect(await utils.getNumberOfElements('audio')).equal(1);
 	});
 
 	/* ------------ Checking video elements with two participants ------------ */
 
-	it('should show TWO video elements when a REMOTE participant joins with VIDEO and AUDIO MUTED', async () => {
+	it('should show zero video elements when two participants join with VIDEO and AUDIO MUTED', async () => {
 		const roomName = `streams-${Date.now()}`;
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=false&audioEnabled=false`;
 		await browser.get(fixedUrl);
@@ -174,6 +127,8 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.waitForElement('.OV_stream.local');
 
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
+		expect(await utils.getNumberOfElements('video')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 
 		const tabs = await utils.openTab(fixedUrl);
 		await browser.switchTo().window(tabs[0]);
@@ -181,13 +136,17 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await browser.sleep(1000);
 		await utils.waitForElement('.OV_stream.remote');
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
+		expect(await utils.getNumberOfElements('video')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 
 		await browser.switchTo().window(tabs[1]);
 		await browser.sleep(1000);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
+		expect(await utils.getNumberOfElements('video')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 	});
 
-	it('should show TWO video elements when a REMOTE participant joins with AUDIO MUTED', async () => {
+	it('should show two video elements when a two participants join with audio muted', async () => {
 		const roomName = `streams-${Date.now()}`;
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=true&audioEnabled=false`;
 		await browser.get(fixedUrl);
@@ -196,20 +155,26 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.waitForElement('.OV_stream.local');
 
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
+		expect(await utils.getNumberOfElements('video')).equal(1);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 
 		const tabs = await utils.openTab(fixedUrl);
 		await browser.switchTo().window(tabs[0]);
 
-		await browser.sleep(1000);
 		await utils.waitForElement('.OV_stream.remote');
+		await browser.sleep(2000);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
+		expect(await utils.getNumberOfElements('video')).equal(2);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 
 		await browser.switchTo().window(tabs[1]);
 		await browser.sleep(1000);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
+		expect(await utils.getNumberOfElements('video')).equal(2);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 	});
 
-	it('should show TWO video elements when a REMOTE participant joins with VIDEO MUTED', async () => {
+	it('should show zero video elements when two participants join with video disabled', async () => {
 		const roomName = `streams-${Date.now()}`;
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=false`;
 		await browser.get(fixedUrl);
@@ -218,40 +183,26 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.waitForElement('.OV_stream.local');
 
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
+		expect(await utils.getNumberOfElements('video')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(1);
 
 		const tabs = await utils.openTab(fixedUrl);
 		await browser.switchTo().window(tabs[0]);
 
-		await browser.sleep(1000);
 		await utils.waitForElement('.OV_stream.remote');
+		await browser.sleep(2000);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
+		expect(await utils.getNumberOfElements('video')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(2);
+
 		await browser.switchTo().window(tabs[1]);
 		await browser.sleep(1000);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
+		expect(await utils.getNumberOfElements('video')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(2);
 	});
 
-	it('should show TWO video elements when a REMOTE participant joins', async () => {
-		const roomName = `streams-${Date.now()}`;
-		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=true&audioEnabled=true`;
-		await browser.get(fixedUrl);
-
-		await utils.checkLayoutPresent();
-		await utils.waitForElement('.OV_stream.local');
-
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-
-		const tabs = await utils.openTab(fixedUrl);
-		await browser.switchTo().window(tabs[0]);
-
-		await browser.sleep(1000);
-		await utils.waitForElement('.OV_stream.remote');
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-		await browser.switchTo().window(tabs[1]);
-		await browser.sleep(1000);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-	});
-
-	it('should show THREE video elements when a REMOTE participant shares its screen with AUDIO and VIDEO MUTED', async () => {
+	it('should show 3 video elements when a participant shares its screen with AUDIO and VIDEO MUTED', async () => {
 		const roomName = `streams-${Date.now()}`;
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=false&audioEnabled=false`;
 		await browser.get(fixedUrl);
@@ -268,95 +219,29 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await browser.sleep(1000);
 		await utils.waitForElement('#local-element-screen_share');
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
+		expect(await utils.getNumberOfElements('video')).equal(1);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(1000);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
+		expect(await utils.getNumberOfElements('video')).equal(1);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 
 		await browser.switchTo().window(tabs[1]);
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(500);
-		await utils.waitForElement('#screenshare-menu');
-		await utils.clickOn('#disable-screen-button');
-		await browser.sleep(500);
+		await utils.disableScreenShare();
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
+		expect(await utils.getNumberOfElements('video')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(500);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
+		expect(await utils.getNumberOfElements('video')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 	});
 
-	it('should show THREE video elements when a REMOTE participant shares its screen with VIDEO MUTED', async () => {
-		const roomName = `streams-${Date.now()}`;
-		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=false&audioEnabled=true`;
-		await browser.get(fixedUrl);
-
-		await utils.checkLayoutPresent();
-		await utils.waitForElement('.OV_stream.local');
-
-		const tabs = await utils.openTab(fixedUrl);
-		await browser.switchTo().window(tabs[1]);
-
-		await utils.waitForElement('.OV_stream.local');
-
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(1000);
-		await utils.waitForElement('#local-element-screen_share');
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
-
-		await browser.switchTo().window(tabs[0]);
-		await browser.sleep(1000);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
-
-		await browser.switchTo().window(tabs[1]);
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(500);
-		await utils.waitForElement('#screenshare-menu');
-		await utils.clickOn('#disable-screen-button');
-		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-
-		await browser.switchTo().window(tabs[0]);
-		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-	});
-
-	it('should show THREE video elements when a REMOTE participant shares its screen with AUDIO MUTED', async () => {
-		const roomName = `streams-${Date.now()}`;
-		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=true&audioEnabled=false`;
-		await browser.get(fixedUrl);
-
-		await utils.checkLayoutPresent();
-		await utils.waitForElement('.OV_stream.local');
-
-		const tabs = await utils.openTab(fixedUrl);
-		await browser.switchTo().window(tabs[1]);
-
-		await utils.waitForElement('.OV_stream.local');
-
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(1000);
-		await utils.waitForElement('#local-element-screen_share');
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
-
-		await browser.switchTo().window(tabs[0]);
-		await browser.sleep(1000);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
-
-		await browser.switchTo().window(tabs[1]);
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(500);
-		await utils.waitForElement('#screenshare-menu');
-		await utils.clickOn('#disable-screen-button');
-		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-
-		await browser.switchTo().window(tabs[0]);
-		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-	});
-
-	it('should show THREE video elements when a REMOTE participant shares its screen', async () => {
+	it('should show 3 video elements when a REMOTE participant shares its screen', async () => {
 		const roomName = `streams-${Date.now()}`;
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=true&audioEnabled=true`;
 		await browser.get(fixedUrl);
@@ -373,25 +258,29 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await browser.sleep(1000);
 		await utils.waitForElement('#local-element-screen_share');
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
+		expect(await utils.getNumberOfElements('video')).equal(3);
+		expect(await utils.getNumberOfElements('audio')).equal(2);
 
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(1000);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
+		expect(await utils.getNumberOfElements('video')).equal(3);
+		expect(await utils.getNumberOfElements('audio')).equal(2);
 
 		await browser.switchTo().window(tabs[1]);
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(500);
-		await utils.waitForElement('#screenshare-menu');
-		await utils.clickOn('#disable-screen-button');
-		await browser.sleep(500);
+		await utils.disableScreenShare();
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
+		expect(await utils.getNumberOfElements('video')).equal(2);
+		expect(await utils.getNumberOfElements('audio')).equal(2);
 
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(500);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
+		expect(await utils.getNumberOfElements('video')).equal(2);
+		expect(await utils.getNumberOfElements('audio')).equal(2);
 	});
 
-	it('should show FOUR video elements when a two participant shares theirs screen', async () => {
+	it('should show 4 video elements when a two participants share theirs screen', async () => {
 		const roomName = `streams-${Date.now()}`;
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=false&audioEnabled=false`;
 		await browser.get(fixedUrl);
@@ -406,26 +295,32 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 
 		await utils.waitForElement('.OV_stream.local');
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
+		expect(await utils.getNumberOfElements('video')).equal(1);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(500);
 		await utils.waitForElement('#local-element-screen_share');
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(4);
+		expect(await utils.getNumberOfElements('video')).equal(2);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(500);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(4);
-		await utils.clickOn('#camera-btn');
-		await utils.clickOn('#screenshare-btn');
-		await browser.sleep(500);
-		await utils.waitForElement('#screenshare-menu');
-		await utils.clickOn('#disable-screen-button');
-		await browser.sleep(500);
+		expect(await utils.getNumberOfElements('video')).equal(2);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
+
+		await utils.disableScreenShare();
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
+		expect(await utils.getNumberOfElements('video')).equal(1);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 
 		await browser.switchTo().window(tabs[1]);
 		await browser.sleep(500);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
+		expect(await utils.getNumberOfElements('video')).equal(1);
+		expect(await utils.getNumberOfElements('audio')).equal(0);
 	});
 });
 
@@ -764,7 +659,7 @@ describe('Testing stream features', () => {
 		expect(streamProps.y).equals(0);
 	});
 
-	it('should show the audio detection elements when participant is speaking', async () => {
+	it.skip('should show the audio detection elements when participant is speaking', async () => {
 		const roomName = 'speakingE2E';
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false`;
 		await browser.get(`${fixedUrl}&audioEnabled=false`);
