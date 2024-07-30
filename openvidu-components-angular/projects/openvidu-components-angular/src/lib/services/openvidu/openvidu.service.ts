@@ -47,7 +47,7 @@ export class OpenViduService {
 	constructor(
 		private loggerSrv: LoggerService,
 		private deviceService: DeviceService,
-		private storageSrv: StorageService
+		private storageService: StorageService
 	) {
 		this.log = this.loggerSrv.get('OpenViduService');
 		// this.isSttReadyObs = this._isSttReady.asObservable();
@@ -91,7 +91,7 @@ export class OpenViduService {
 		try {
 			await this.room.connect(this.livekitUrl, this.livekitToken);
 			this.log.d(`Successfully connected to room ${this.room.name}`);
-			const participantName = this.storageSrv.getParticipantName();
+			const participantName = this.storageService.getParticipantName();
 			if (participantName) {
 				this.room.localParticipant.setName(participantName);
 			}
@@ -194,13 +194,21 @@ export class OpenViduService {
 	}
 
 	/**
-	 * Allows create local tracks without connecting to a room.
-	 * @param videoDeviceId string to specific device, false to disable video, true to default device
-	 * @param audioDeviceId string to specific device, false to disable audio, true to default device
-	 * @returns Promise<LocalTrack[]> with the created tracks
+	 * Creates local tracks for video and audio devices.
+	 *
+	 * @param videoDeviceId - The ID of the video device to use. If not provided, the default video device will be used.
+	 * @param audioDeviceId - The ID of the audio device to use. If not provided, the default audio device will be used.
+	 * @returns A promise that resolves to an array of LocalTrack objects representing the created tracks.
 	 * @internal
 	 */
-	async createLocalTracks(videoDeviceId: string | boolean, audioDeviceId: string | boolean): Promise<LocalTrack[]> {
+	async createLocalTracks(
+		videoDeviceId: string | boolean | undefined = undefined,
+		audioDeviceId: string | boolean | undefined = undefined
+	): Promise<LocalTrack[]> {
+		// If video and audio device IDs are not provided, check if they are enabled and use the default devices
+		if (videoDeviceId === undefined) videoDeviceId = this.deviceService.isCameraEnabled();
+		if (audioDeviceId === undefined) audioDeviceId = this.deviceService.isMicrophoneEnabled();
+
 		let options: CreateLocalTracksOptions = {
 			audio: { echoCancellation: true, noiseSuppression: true },
 			video: {}

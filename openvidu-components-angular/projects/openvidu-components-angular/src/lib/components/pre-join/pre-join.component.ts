@@ -73,17 +73,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 
 	async ngOnInit() {
 		this.subscribeToPrejoinDirectives();
-		try {
-			const cameraEnabled = this.storageService.isCameraEnabled();
-			const microphoneEnabled = this.storageService.isMicrophoneEnabled();
-			this.tracks = await this.openviduService.createLocalTracks(cameraEnabled, microphoneEnabled);
-			this.openviduService.setLocalTracks(this.tracks);
-			this.videoTrack = this.tracks.find((track) => track.kind === 'video');
-			this.audioTrack = this.tracks.find((track) => track.kind === 'audio');
-		} catch (error) {
-			this.log.e('Error creating local tracks:', error);
-		}
-
+		await this.initializeDevices();
 		this.windowSize = window.innerWidth;
 		this.isLoading = false;
 	}
@@ -102,6 +92,17 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 			this.tracks.forEach((track) => {
 				track.stop();
 			});
+		}
+	}
+
+	private async initializeDevices() {
+		try {
+			this.tracks = await this.openviduService.createLocalTracks();
+			this.openviduService.setLocalTracks(this.tracks);
+			this.videoTrack = this.tracks.find((track) => track.kind === 'video');
+			this.audioTrack = this.tracks.find((track) => track.kind === 'audio');
+		} catch (error) {
+			this.log.e('Error creating local tracks:', error);
 		}
 	}
 

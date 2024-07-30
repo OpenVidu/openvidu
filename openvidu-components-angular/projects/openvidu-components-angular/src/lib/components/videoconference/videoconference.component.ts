@@ -481,7 +481,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 			}
 			this.openviduAngularLayoutTemplate = this.defaultLayoutTemplate;
 		}
-		this.deviceSrv.forceInitDevices().then(() => (this.loading = false));
+		this.deviceSrv.initializeDevices().then(() => (this.loading = false));
 	}
 
 	/**

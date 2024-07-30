@@ -4,6 +4,7 @@ import { CaptionsLangOption } from '../../models/caption.model';
 import { OpenViduComponentsConfigService } from '../../services/config/openvidu-components-angular.config.service';
 import { TranslateService } from '../../services/translate/translate.service';
 import { LangOption } from '../../models/lang.model';
+import { StorageService } from '../../services/storage/storage.service';
 
 /**
  * The **livekitUrl** directive sets the livekitUrl to grant a participant access to a Room.
@@ -614,7 +615,8 @@ export class VideoEnabledDirective implements OnDestroy {
 	 */
 	constructor(
 		public elementRef: ElementRef,
-		private libService: OpenViduComponentsConfigService
+		private libService: OpenViduComponentsConfigService,
+		private storageService: StorageService
 	) {}
 
 	/**
@@ -634,9 +636,25 @@ export class VideoEnabledDirective implements OnDestroy {
 	/**
 	 * @ignore
 	 */
-	update(value: boolean) {
-		if (this.libService.isVideoEnabled() !== value) {
-			this.libService.setVideoEnabled(value);
+	update(enabled: boolean) {
+		const storageIsEnabled = this.storageService.isCameraEnabled();
+
+		// Determine the final enabled state of the camera
+		let finalEnabledState: boolean;
+		if (enabled) {
+			// If enabled is true, respect the storage value if it's false
+			finalEnabledState = storageIsEnabled !== false;
+		} else {
+			// If enabled is false, disable the camera
+			finalEnabledState = false;
+		}
+
+		// Update the storage with the final state
+		this.storageService.setCameraEnabled(finalEnabledState);
+
+		// Ensure libService state is consistent with the final enabled state
+		if (this.libService.isVideoEnabled() !== finalEnabledState) {
+			this.libService.setVideoEnabled(finalEnabledState);
 		}
 	}
 }
@@ -668,7 +686,8 @@ export class AudioEnabledDirective implements OnDestroy {
 	 */
 	constructor(
 		public elementRef: ElementRef,
-		private libService: OpenViduComponentsConfigService
+		private libService: OpenViduComponentsConfigService,
+		private storageService: StorageService
 	) {}
 
 	ngOnDestroy(): void {
@@ -685,9 +704,24 @@ export class AudioEnabledDirective implements OnDestroy {
 	/**
 	 * @ignore
 	 */
-	update(value: boolean) {
-		if (this.libService.isAudioEnabled() !== value) {
-			this.libService.setAudioEnabled(value);
+	update(enabled: boolean) {
+		const storageIsEnabled = this.storageService.isMicrophoneEnabled();
+
+		// Determine the final enabled state of the microphone
+		let finalEnabledState: boolean;
+		if (enabled) {
+			// If enabled is true, respect the storage value if it's false
+			finalEnabledState = storageIsEnabled !== false;
+		} else {
+			// If enabled is false, disable the camera
+			finalEnabledState = false;
+		}
+
+		// Update the storage with the final state
+		this.storageService.setMicrophoneEnabled(finalEnabledState);
+
+		if (this.libService.isAudioEnabled() !== enabled) {
+			this.libService.setAudioEnabled(enabled);
 		}
 	}
 }

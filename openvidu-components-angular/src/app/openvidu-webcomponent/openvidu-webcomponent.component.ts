@@ -79,11 +79,11 @@ export class OpenviduWebComponentComponent {
 	/**
 	 * @internal
 	 */
-	_videoEnabled: boolean = false;
+	_videoEnabled: boolean = true;
 	/**
 	 * @internal
 	 */
-	_audioEnabled: boolean = false;
+	_audioEnabled: boolean = true;
 	/**
 	 * @internal
 	 */

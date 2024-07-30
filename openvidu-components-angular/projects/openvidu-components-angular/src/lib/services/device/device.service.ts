@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CameraType, CustomDevice, DeviceType } from '../../models/device.model';
 import { ILogger } from '../../models/logger.model';
-import { OpenViduComponentsConfigService } from '../config/openvidu-components-angular.config.service';
 import { LoggerService } from '../logger/logger.service';
 import { PlatformService } from '../platform/platform.service';
 import { StorageService } from '../storage/storage.service';
@@ -17,24 +16,17 @@ export class DeviceService {
 	private devices: MediaDeviceInfo[];
 	private cameras: CustomDevice[] = [];
 	private microphones: CustomDevice[] = [];
-	private cameraSelected: CustomDevice | undefined;
-	private microphoneSelected: CustomDevice | undefined;
+	private cameraSelected?: CustomDevice;
+	private microphoneSelected?: CustomDevice;
 	private log: ILogger;
 	private videoDevicesEnabled: boolean = true;
 	private audioDevicesEnabled: boolean = true;
-
-	// Initialized with Storage.CAMERA_ENABLED info saved on storage
-	private _isCameraEnabled: boolean;
-	// Initialized with Storage.MICROPHONE_ENABLED info saved on storage
-	private _isMicrophoneEnabled: boolean;
-	// Whether the media devices permission have been rejected or not
 	private deviceAccessDeniedError: boolean = false;
 
 	constructor(
 		private loggerSrv: LoggerService,
 		private platformSrv: PlatformService,
-		private storageSrv: StorageService,
-		private libSrv: OpenViduComponentsConfigService
+		private storageSrv: StorageService
 	) {
 		this.log = this.loggerSrv.get('DevicesService');
 	}
@@ -43,26 +35,21 @@ export class DeviceService {
 	 * Initialize media devices and select a devices checking in local storage (if exists) or
 	 * first devices found by default
 	 */
-	async forceInitDevices() {
+	async initializeDevices() {
 		this.clear();
 
 		try {
 			this.devices = await this.getLocalDevices();
-		} catch (error) {
-			this.log.e('Error getting media devices', error);
-		} finally {
 			if (this.deviceAccessDeniedError) {
 				this.log.w('Media devices permissions were not granted.');
-			} else {
-				this.initializeCustomDevices();
-				this.updateAudioDeviceSelected();
-				this.updateVideoDeviceSelected();
-
-				this._isCameraEnabled = this.storageSrv.isCameraEnabled() || this.libSrv.isVideoEnabled();
-				this._isMicrophoneEnabled = this.storageSrv.isMicrophoneEnabled() || this.libSrv.isAudioEnabled();
-
-				this.log.d('Media devices', this.cameras, this.microphones);
+				return;
 			}
+
+			this.initializeCustomDevices();
+			this.updateSelectedDevices();
+			this.log.d('Media devices', this.cameras, this.microphones);
+		} catch (error) {
+			this.log.e('Error getting media devices', error);
 		}
 	}
 
@@ -76,87 +63,52 @@ export class DeviceService {
 		}
 	}
 
-	private initializeCustomDevices(updateSelected: boolean = true): void {
-		const FIRST_POSITION = 0;
-		const defaultMicrophones: MediaDeviceInfo[] = this.devices.filter((device) => device.kind === DeviceType.AUDIO_INPUT);
-		const defaultCameras: MediaDeviceInfo[] = this.devices.filter((device) => device.kind === DeviceType.VIDEO_INPUT);
+	private initializeCustomDevices(): void {
+		this.cameras = this.devices
+			.filter((d) => d.kind === DeviceType.VIDEO_INPUT)
+			.map((d) => this.createCustomDevice(d, CameraType.BACK));
+		this.microphones = this.devices
+			.filter((d) => d.kind === DeviceType.AUDIO_INPUT)
+			.map((d) => ({ label: d.label, device: d.deviceId }));
 
-		if (defaultMicrophones.length > 0) {
-			this.microphones = [];
-			defaultMicrophones.forEach((device: MediaDeviceInfo) => {
-				this.microphones.push({ label: device.label, device: device.deviceId });
-			});
-		}
-
-		if (defaultCameras.length > 0) {
-			this.cameras = [];
-			defaultCameras.forEach((device: MediaDeviceInfo, index: number) => {
-				const myDevice: CustomDevice = {
-					label: device.label,
-					device: device.deviceId,
-					type: CameraType.BACK
-				};
-				if (this.platformSrv.isMobile()) {
-					// We assume front video device has 'front' in its label in Mobile devices
-					if (myDevice.label.toLowerCase().includes(CameraType.FRONT.toLowerCase())) {
-						myDevice.type = CameraType.FRONT;
-					}
-				} else {
-					// We assume first device is web camera in Browser Desktop
-					if (index === FIRST_POSITION) {
-						myDevice.type = CameraType.FRONT;
-					}
+		if (this.platformSrv.isMobile()) {
+			this.cameras.forEach((c) => {
+				if (c.label.toLowerCase().includes(CameraType.FRONT.toLowerCase())) {
+					c.type = CameraType.FRONT;
 				}
-				this.cameras.push(myDevice);
 			});
+		} else if (this.cameras.length > 0) {
+			this.cameras[0].type = CameraType.FRONT;
 		}
 	}
 
-	private updateAudioDeviceSelected() {
-		// Setting microphone selected
-		if (this.microphones.length > 0) {
-			const storageMicrophone = this.getMicrophoneFromStogare();
-			if (!!storageMicrophone) {
-				this.microphoneSelected = storageMicrophone;
-			} else if (this.microphones.length > 0) {
-				if (this.deviceAccessDeniedError && this.microphones.length > 1) {
-					// We assume that the default device is already in use
-					// Assign an alternative device with the aim of avoiding the DEVICE_ALREADY_IN_USE error
-					this.microphoneSelected = this.microphones[1];
-				} else {
-					this.microphoneSelected = this.microphones[0];
-				}
-			}
-		}
+	private createCustomDevice(device: MediaDeviceInfo, defaultType: CameraType): CustomDevice {
+		return {
+			label: device.label,
+			device: device.deviceId,
+			type: defaultType
+		};
 	}
 
-	private updateVideoDeviceSelected() {
-		// Setting camera selected
-		if (this.cameras.length > 0) {
-			const storageCamera = this.getCameraFromStorage();
-			if (!!storageCamera) {
-				this.cameraSelected = storageCamera;
-			} else if (this.cameras.length > 0) {
-				if (this.deviceAccessDeniedError && this.cameras.length > 1) {
-					// We assume that the default device is already in use
-					// Assign an alternative device with the aim of avoiding the DEVICE_ALREADY_IN_USE error
-					this.cameraSelected = this.cameras[1];
-				} else {
-					this.cameraSelected = this.cameras[0];
-				}
-			}
-		}
+	private updateSelectedDevices() {
+		this.cameraSelected = this.getDeviceFromStorage(this.cameras, this.storageSrv.getVideoDevice()) || this.cameras[0];
+		this.microphoneSelected = this.getDeviceFromStorage(this.microphones, this.storageSrv.getAudioDevice()) || this.microphones[0];
+	}
+
+	private getDeviceFromStorage(devices: CustomDevice[], storageDevice: CustomDevice | null): CustomDevice | undefined {
+		if (!storageDevice) return;
+		return devices.find((d) => d.device === storageDevice.device);
 	}
 
 	/**
 	 * @internal
 	 */
 	isCameraEnabled(): boolean {
-		return this.hasVideoDeviceAvailable() && this._isCameraEnabled;
+		return this.hasVideoDeviceAvailable() && this.storageSrv.isCameraEnabled();
 	}
 
 	isMicrophoneEnabled(): boolean {
-		return this.hasAudioDeviceAvailable() && this._isMicrophoneEnabled;
+		return this.hasAudioDeviceAvailable() && this.storageSrv.isMicrophoneEnabled();
 	}
 
 	getCameraSelected(): CustomDevice | undefined {
@@ -168,13 +120,15 @@ export class DeviceService {
 	}
 
 	setCameraSelected(deviceId: any) {
-		this.cameraSelected = this.getCameraByDeviceField(deviceId);
-		this.saveCameraToStorage(this.cameraSelected);
+		this.cameraSelected = this.getDeviceById(this.cameras, deviceId);
+		const saveFunction = (device) => this.storageSrv.setVideoDevice(device);
+		this.saveDeviceToStorage(this.cameraSelected, saveFunction);
 	}
 
-	setMicSelected(deviceField: any) {
-		this.microphoneSelected = this.getMicrophoneByDeviceField(deviceField);
-		this.saveMicrophoneToStorage(this.microphoneSelected);
+	setMicSelected(deviceId: string) {
+		this.microphoneSelected = this.getDeviceById(this.microphones, deviceId);
+		const saveFunction = (device) => this.storageSrv.setAudioDevice(device);
+		this.saveDeviceToStorage(this.microphoneSelected, saveFunction);
 	}
 
 	needUpdateVideoTrack(newDevice: CustomDevice): boolean {
@@ -201,18 +155,6 @@ export class DeviceService {
 		return this.audioDevicesEnabled && this.microphones.length > 0;
 	}
 
-	cameraNeedsMirror(deviceField: string): boolean {
-		return this.getCameraByDeviceField(deviceField)?.type === CameraType.FRONT;
-	}
-
-	disableVideoDevices() {
-		this.videoDevicesEnabled = false;
-	}
-
-	disableAudioDevices() {
-		this.audioDevicesEnabled = false;
-	}
-
 	clear() {
 		this.devices = [];
 		this.cameras = [];
@@ -223,34 +165,12 @@ export class DeviceService {
 		this.audioDevicesEnabled = true;
 	}
 
-	private getCameraByDeviceField(deviceField: any): CustomDevice {
-		return <CustomDevice>this.cameras.find((opt: CustomDevice) => opt.device === deviceField || opt.label === deviceField);
+	private getDeviceById(devices: CustomDevice[], deviceId: string): CustomDevice | undefined {
+		return devices.find((d) => d.device === deviceId);
 	}
 
-	private getMicrophoneByDeviceField(deviceField: any): CustomDevice {
-		return <CustomDevice>this.microphones.find((opt: CustomDevice) => opt.device === deviceField || opt.label === deviceField);
-	}
-
-	private getMicrophoneFromStogare(): CustomDevice | undefined {
-		const storageDevice: CustomDevice | null = this.storageSrv.getAudioDevice();
-		if (!!storageDevice && this.microphones.some((device) => device.device === storageDevice.device)) {
-			return storageDevice;
-		}
-	}
-
-	private getCameraFromStorage() {
-		const storageDevice: CustomDevice | null = this.storageSrv.getVideoDevice();
-		if (!!storageDevice && this.cameras.some((device) => device.device === storageDevice.device)) {
-			return storageDevice;
-		}
-	}
-
-	private saveCameraToStorage(cam: CustomDevice) {
-		this.storageSrv.setVideoDevice(cam);
-	}
-
-	private saveMicrophoneToStorage(mic: CustomDevice) {
-		this.storageSrv.setAudioDevice(mic);
+	private saveDeviceToStorage(device: CustomDevice | undefined, saveFunction: (device: CustomDevice) => void) {
+		if (device) saveFunction(device);
 	}
 
 	/**
@@ -262,17 +182,14 @@ export class DeviceService {
 		// Forcing media permissions request.
 		let localTracks: LocalTrack[] = [];
 		try {
-			try {
-				localTracks = await createLocalTracks({ audio: true, video: true });
-				localTracks.forEach((track) => track.stop());
-			} catch (error) {
-				this.log.e('Error getting local audio tracks', error);
-			}
+			localTracks = await createLocalTracks({ audio: true, video: true });
+			localTracks.forEach((track) => track.stop());
 
 			const devices = this.platformSrv.isFirefox() ? await this.getMediaDevicesFirefox() : await Room.getLocalDevices();
 			return devices.filter((d: MediaDeviceInfo) => d.label && d.deviceId && d.deviceId !== 'default');
 		} catch (error) {
 			this.log.e('Error getting local devices', error);
+			this.deviceAccessDeniedError = true;
 			return [];
 		}
 	}
