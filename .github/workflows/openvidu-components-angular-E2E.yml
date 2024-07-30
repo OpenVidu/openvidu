@@ -155,56 +155,56 @@ jobs:
       - name: Run nested components E2E directives tests
         run: npm run e2e:nested-directives-ci --prefix openvidu-components-angular
 
-  # webcomponent_e2e:
-  #   needs: test_setup
-  #   name: Webcomponent E2E CE tests
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout Repository
-  #       uses: actions/checkout@v4
-  #       with:
-  #         ref: ${{ inputs.commit_sha || github.sha }}
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '20'
+  webcomponent_e2e_directives:
+    needs: test_setup
+    name: Webcomponent directives
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha || github.sha }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
-      # - name: Run Chrome
-      #   run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
-  #     - name: Run openvidu-local-deployment
-  #       run: |
-  #         git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
-  #         cd openvidu-local-deployment/community
-  #         ./configure_lan_private_ip_linux.sh
-  #         docker compose up -d
-  #     - name: Run openvidu-call-backend
-  #       run: |
-  #         git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-  #         cd openvidu-call/openvidu-call-back
-  #         npm install
-  #         npm run dev:start &
-  #     - name: Install dependencies
-  #       run: |
-  #         cd openvidu-components-angular
-  #         npm install
-  #     - name: Build openvidu-angular
-  #       run: npm run lib:build --prefix openvidu-components-angular
-  #     - name: Build openvidu-webcomponent
-  #       run: npm run webcomponent:build --prefix openvidu-components-angular
-  #     - name: Serve Webcomponent Testapp
-  #       run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
-  #     - name: Wait for openvidu-local-deployment
-  #       run: |
-  #         until curl -s -f -o /dev/null http://localhost:7880; do
-  #           echo "Waiting for openvidu-local-deployment to be ready..."
-  #           sleep 5
-  #         done
-  #     - name: Wait for openvidu-components-angular Testapp
-  #       run: |
-  #           until curl -s -f -o /dev/null http://localhost:4200; do
-  #             echo "Waiting for openvidu-components-angular Testapp to be ready..."
-  #             sleep 5
-  #           done
-  #     - name: Run Webcomponent E2E
-  #       run: npm run webcomponent:e2e-ci --prefix openvidu-components-angular
+      - name: Run Chrome
+        run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
+      - name: Run openvidu-local-deployment
+        run: |
+          git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
+          cd openvidu-local-deployment/community
+          ./configure_lan_private_ip_linux.sh
+          docker compose up -d
+      - name: Run openvidu-call-backend
+        run: |
+          git clone --depth 1 https://github.com/OpenVidu/openvidu-call
+          cd openvidu-call/openvidu-call-back
+          npm install
+          npm run dev:start &
+      - name: Install dependencies
+        run: |
+          cd openvidu-components-angular
+          npm install
+      - name: Build openvidu-angular
+        run: npm run lib:build --prefix openvidu-components-angular
+      - name: Build openvidu-webcomponent
+        run: npm run webcomponent:build --prefix openvidu-components-angular
+      - name: Serve Webcomponent Testapp
+        run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
+      - name: Wait for openvidu-local-deployment
+        run: |
+          until curl -s -f -o /dev/null http://localhost:7880; do
+            echo "Waiting for openvidu-local-deployment to be ready..."
+            sleep 5
+          done
+      - name: Wait for openvidu-components-angular Testapp
+        run: |
+            until curl -s -f -o /dev/null http://localhost:8080; do
+              echo "Waiting for openvidu-components-angular Testapp to be ready..."
+              sleep 5
+            done
+      - name: Run Webcomponent E2E
+        run: LAUNCH_MODE=CI npm run e2e:webcomponent-directives --prefix openvidu-components-angular
