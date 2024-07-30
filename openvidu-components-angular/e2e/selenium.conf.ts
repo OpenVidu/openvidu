@@ -48,7 +48,7 @@ const chromeArgumentsWithoutMediaDevicesCI = [
 
 export const WebComponentConfig: BrowserConfig = {
 	appUrl: 'http://localhost:8080/',
-	seleniumAddress: LAUNCH_MODE === 'CI' ? 'http://localhost:3000/webdriver' : '',
+	seleniumAddress: LAUNCH_MODE === 'CI' ? 'http://localhost:4444/wd/hub' : '',
 	browserName: 'chrome',
 	browserCapabilities: Capabilities.chrome().set('acceptInsecureCerts', true),
 	browserOptions: new chrome.Options().addArguments(...(LAUNCH_MODE === 'CI' ? chromeArgumentsCI : chromeArguments))

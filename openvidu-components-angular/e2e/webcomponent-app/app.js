@@ -25,8 +25,6 @@ var PARTICIPANT_MUTE_BUTTON;
 var PARTICIPANTS_PANEL_BUTTON;
 var ACTIVITIES_RECORDING_ACTIVITY;
 var ACTIVITIES_BROADCASTING_ACTIVITY;
-var RECORDING_ERROR;
-var BROADCASTING_ERROR;
 var TOOLBAR_SETTINGS_BUTTON;
 var CAPTIONS_BUTTON;
 
@@ -37,13 +35,11 @@ var FAKE_RECORDINGS;
 var PARTICIPANT_NAME;
 
 var OPENVIDU_CALL_SERVER_URL;
-// var OPENVIDU_SECRET;
 
 document.addEventListener('DOMContentLoaded', () => {
 	var url = new URL(window.location.href);
 
-	OPENVIDU_CALL_SERVER_URL = url.searchParams.get('OV_URL');
-	// OPENVIDU_SECRET = url.searchParams.get('OV_SECRET');
+	OPENVIDU_CALL_SERVER_URL = url.searchParams.get('OPENVIDU_CALL_SERVER_URL') || 'http://localhost:6080';
 
 	FAKE_DEVICES = url.searchParams.get('fakeDevices') === null ? false : url.searchParams.get('fakeDevices') === 'true';
 
@@ -69,10 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	BROADCASTING_BUTTON =
 		url.searchParams.get('toolbarBroadcastingButton') === null ? true : url.searchParams.get('toolbarBroadcastingButton') === 'true';
 
-	if (url.searchParams.get('broadcastingError') !== null) {
-		BROADCASTING_ERROR = url.searchParams.get('broadcastingError');
-	}
-
 	TOOLBAR_SETTINGS_BUTTON =
 		url.searchParams.get('toolbarSettingsBtn') === null ? true : url.searchParams.get('toolbarSettingsBtn') === 'true';
 	CAPTIONS_BUTTON = url.searchParams.get('toolbarCaptionsBtn') === null ? true : url.searchParams.get('toolbarCaptionsBtn') === 'true';
@@ -91,9 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		url.searchParams.get('activitiesPanelRecordingActivity') === null
 			? true
 			: url.searchParams.get('activitiesPanelRecordingActivity') === 'true';
-	if (url.searchParams.get('recordingError') !== null) {
-		RECORDING_ERROR = url.searchParams.get('recordingError');
-	}
 
 	DISPLAY_LOGO = url.searchParams.get('displayLogo') === null ? true : url.searchParams.get('displayLogo') === 'true';
 	DISPLAY_ROOM_NAME = url.searchParams.get('displayRoomName') === null ? true : url.searchParams.get('displayRoomName') === 'true';
@@ -217,9 +206,6 @@ function setWebcomponentAttributes() {
 		webComponent.recordingActivityRecordingsList = [{ status: 'ready', filename: 'fakeRecording' }];
 	}
 
-	if (BROADCASTING_ERROR) {
-		webComponent.broadcastingActivityBroadcastingError = { message: BROADCASTING_ERROR, broadcastAvailable: true };
-	}
 	webComponent.prejoin = PREJOIN;
 	webComponent.videoEnabled = VIDEO_ENABLED;
 	webComponent.audioEnabled = AUDIO_ENABLED;
@@ -243,7 +229,6 @@ function setWebcomponentAttributes() {
 
 	webComponent.activitiesPanelRecordingActivity = ACTIVITIES_RECORDING_ACTIVITY;
 	webComponent.activitiesPanelBroadcastingActivity = ACTIVITIES_BROADCASTING_ACTIVITY;
-	webComponent.recordingActivityRecordingError = RECORDING_ERROR;
 }
 
 function appendElement(id) {

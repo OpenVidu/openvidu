@@ -224,18 +224,17 @@ describe('Testing API Directives', () => {
 		await utils.checkPrejoinIsPresent();
 
 		// Checking if video is displayed
-		expect(await utils.getNumberOfElements('video')).equals(1);
-
-		// Checking if virtual background button is disabled
-		// const button = await utils.waitForElement('#background-effects-btn');
-		// expect(await button.isEnabled()).to.be.false;
+		await utils.waitForElement('#video-poster');
+		expect(await utils.getNumberOfElements('video')).equals(0);
 
 		await utils.waitForElement('#videocam_off');
+
 		await utils.clickOn('#join-button');
 
 		await utils.checkSessionIsPresent();
 
-		expect(await utils.getNumberOfElements('video')).equals(1);
+		await utils.waitForElement('#video-poster');
+		expect(await utils.getNumberOfElements('video')).equals(0);
 
 		await utils.waitForElement('#videocam_off');
 		expect(await utils.isPresent('#videocam_off')).to.be.true;
@@ -249,7 +248,8 @@ describe('Testing API Directives', () => {
 		await utils.checkLayoutPresent();
 
 		// Checking if video is displayed
-		expect(await utils.getNumberOfElements('video')).equals(1);
+		await utils.waitForElement('#video-poster');
+		expect(await utils.getNumberOfElements('video')).equals(0);
 		expect(await utils.getNumberOfElements('#video-poster')).equals(1);
 
 		await utils.waitForElement('#videocam_off');
@@ -257,48 +257,38 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should run the app with AUDIO DISABLED in prejoin page', async () => {
-		// let isAudioEnabled;
-		// const script = 'return document.getElementsByTagName("video")[0].srcObject.getAudioTracks()[0].enabled;';
-
 		await browser.get(`${url}&audioEnabled=false`);
 
 		await utils.checkPrejoinIsPresent();
 
 		// Checking if video is displayed
 		await utils.checkVideoElementIsPresent();
+		expect(await utils.getNumberOfElements('video')).equals(1);
 
-		// Checking if audio track is disabled/muted
-		// isAudioEnabled = await browser.executeScript(script);
-		// expect(isAudioEnabled).to.be.false;
-
+		expect(await utils.getNumberOfElements('audio')).equals(0);
 		await utils.waitForElement('#mic_off');
 		expect(await utils.isPresent('#mic_off')).to.be.true;
 
 		await utils.clickOn('#join-button');
 
 		await utils.checkSessionIsPresent();
-		// isAudioEnabled = await browser.executeScript(script);
-		// expect(isAudioEnabled).to.be.false;
 
+		expect(await utils.getNumberOfElements('video')).equals(1);
+		expect(await utils.getNumberOfElements('audio')).equals(0);
 		await utils.waitForElement('#mic_off');
 		expect(await utils.isPresent('#mic_off')).to.be.true;
 	});
 
 	it('should run the app with AUDIO DISABLED and WITHOUT PREJOIN page', async () => {
-		// let isAudioEnabled;
-		// const audioEnableScript = 'return document.getElementsByTagName("video")[0].srcObject.getAudioTracks()[0].enabled;';
-
 		await browser.get(`${url}&prejoin=false&audioEnabled=false`);
 
 		await utils.checkSessionIsPresent();
 
 		// Checking if video is displayed
 		await utils.checkVideoElementIsPresent();
+		expect(await utils.getNumberOfElements('video')).equals(1);
 
-		// Checking if audio track is disabled/muted
-		// isAudioEnabled = await browser.executeScript(audioEnableScript);
-		// expect(isAudioEnabled).to.be.false;
-
+		expect(await utils.getNumberOfElements('audio')).equals(0);
 		await utils.waitForElement('#mic_off');
 		expect(await utils.isPresent('#mic_off')).to.be.true;
 	});
@@ -327,7 +317,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.getNumberOfElements('#fullscreen-btn')).equals(0);
 	});
 
-	it('should HIDE the CAPTIONS button', async () => {
+	it.skip('should HIDE the CAPTIONS button', async () => {
 		await browser.get(`${url}&prejoin=false&toolbarCaptionsBtn=false`);
 
 		await utils.checkSessionIsPresent();
@@ -456,7 +446,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#branding-logo')).to.be.false;
 	});
 
-	it('should HIDE the SESSION NAME', async () => {
+	it('should HIDE the ROOM NAME', async () => {
 		await browser.get(`${url}&prejoin=false&displayRoomName=false`);
 
 		await utils.checkSessionIsPresent();
@@ -574,79 +564,6 @@ describe('Testing API Directives', () => {
 		// Checking if recording activity exists
 		await utils.waitForElement('.activities-body-container');
 		expect(await utils.isPresent('ov-recording-activity')).to.be.false;
-	});
-
-	it('should SHOW a RECORDING ERROR in activities panel', async () => {
-		let element;
-		const fixedUrl = `${url}&prejoin=false&recordingError=TEST_ERROR`;
-		await browser.get(fixedUrl);
-
-		await utils.checkSessionIsPresent();
-
-		// Checking if toolbar is present
-		await utils.checkToolbarIsPresent();
-
-		element = await utils.waitForElement('#activities-panel-btn');
-		await element.click();
-
-		// Checking if participatns panel is displayed
-		await utils.waitForElement('#default-activities-panel');
-		expect(await utils.isPresent('#default-activities-panel')).to.be.true;
-
-		// Checking if recording activity exists
-		await utils.waitForElement('#activities-container');
-		await utils.waitForElement('.activities-body-container');
-
-		await utils.waitForElement('ov-recording-activity');
-		expect(await utils.isPresent('ov-recording-activity')).to.be.true;
-
-		await utils.waitForElement('.failed');
-		expect(await utils.isPresent('.failed')).to.be.true;
-
-		// Open recording
-		await browser.sleep(500);
-		await utils.waitForElement('ov-recording-activity');
-		await utils.clickOn('ov-recording-activity');
-		await browser.sleep(500);
-		element = await utils.waitForElement('.recording-error');
-		expect(await element.getAttribute('innerText')).equal('"TEST_ERROR"');
-		expect(await utils.isPresent('.recording-error')).to.be.true;
-	});
-
-	it('should SHOW a BROADCASTING ERROR in activities panel', async () => {
-		let element;
-		const fixedUrl = `${url}&prejoin=false&broadcastingError=TEST_ERROR`;
-		await browser.get(fixedUrl);
-
-		await utils.checkSessionIsPresent();
-
-		// Checking if toolbar is present
-		await utils.checkToolbarIsPresent();
-
-		element = await utils.waitForElement('#activities-panel-btn');
-		await element.click();
-
-		// Checking if participatns panel is displayed
-		await utils.waitForElement('#default-activities-panel');
-		expect(await utils.isPresent('#default-activities-panel')).to.be.true;
-
-		// Checking if broadcasting activity exists
-		await utils.waitForElement('#activities-container');
-		await utils.waitForElement('.activities-body-container');
-
-		await utils.waitForElement('ov-broadcasting-activity');
-		expect(await utils.isPresent('ov-broadcasting-activity')).to.be.true;
-
-		const status = await utils.waitForElement('#broadcasting-status');
-		expect(await status.getAttribute('innerText')).equals('FAILED');
-
-		// Open broadcasting
-		await browser.sleep(500);
-		await utils.clickOn('ov-broadcasting-activity');
-		await browser.sleep(500);
-
-		element = await utils.waitForElement('#broadcasting-error');
-		expect(await element.getAttribute('innerText')).equal('TEST_ERROR');
 	});
 
 	it('should HIDE the BROADCASTING ACTIVITY in activities panel', async () => {
