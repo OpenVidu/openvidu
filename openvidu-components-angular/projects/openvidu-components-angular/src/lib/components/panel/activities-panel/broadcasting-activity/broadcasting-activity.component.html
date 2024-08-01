@@ -9,7 +9,7 @@
 						started: broadcastingStatus === broadcastingStatusEnum.STARTED,
 						stopped: broadcastingStatus === broadcastingStatusEnum.STOPPED,
 						failed: broadcastingStatus === broadcastingStatusEnum.FAILED,
-						pending:
+						starting:
 							broadcastingStatus === broadcastingStatusEnum.STARTING || broadcastingStatus === broadcastingStatusEnum.STOPPING
 					}"
 				>
@@ -33,7 +33,7 @@
 							started: broadcastingStatus === broadcastingStatusEnum.STARTED,
 							stopped: broadcastingStatus === broadcastingStatusEnum.STOPPED,
 							failed: broadcastingStatus === broadcastingStatusEnum.FAILED,
-							pending:
+							starting:
 								broadcastingStatus === broadcastingStatusEnum.STARTING ||
 								broadcastingStatus === broadcastingStatusEnum.STOPPING
 						}"

@@ -9,7 +9,7 @@
 						started: recordingStatus === recStatusEnum.STARTED,
 						stopped: recordingStatus === recStatusEnum.STOPPED,
 						failed: recordingStatus === recStatusEnum.FAILED,
-						pending: recordingStatus === recStatusEnum.STARTING || recordingStatus === recStatusEnum.STOPPING
+						starting: recordingStatus === recStatusEnum.STARTING || recordingStatus === recStatusEnum.STOPPING
 					}"
 				>
 					<mat-icon
@@ -30,7 +30,7 @@
 							started: recordingStatus === recStatusEnum.STARTED,
 							stopped: recordingStatus === recStatusEnum.STOPPED,
 							failed: recordingStatus === recStatusEnum.FAILED,
-							pending: recordingStatus === recStatusEnum.STARTING || recordingStatus === recStatusEnum.STOPPING
+							starting: recordingStatus === recStatusEnum.STARTING || recordingStatus === recStatusEnum.STOPPING
 						}"
 					>
 						<span>{{ recordingStatus | uppercase }}</span>
