@@ -162,15 +162,8 @@ export class ParticipantService {
 	 * Switches the active screen share track showing a native browser dialog to select a screen or window.
 	 */
 	async switchScreenShare(): Promise<void> {
-		const options: ScreenShareCaptureOptions = {
-			audio: false,
-			resolution: VideoPresets.h1080.resolution,
-			suppressLocalAudioPlayback: true,
-			selfBrowserSurface: 'include',
-			surfaceSwitching: 'include'
-		};
-
 		if (this.localParticipant) {
+			const options = this.getScreenCaptureOptions();
 			const [newTrack] = await this.localParticipant.createScreenTracks(options);
 			if (newTrack) {
 				newTrack?.addListener('ended', async () => {
@@ -235,7 +228,8 @@ export class ParticipantService {
 	 *
 	 */
 	async setScreenShareEnabled(enabled: boolean): Promise<void> {
-		const track = await this.localParticipant?.setScreenShareEnabled(enabled);
+		const options = this.getScreenCaptureOptions();
+		const track = await this.localParticipant?.setScreenShareEnabled(enabled, options);
 		if (enabled && track) {
 			// Set all videos to normal size when a local screen is shared
 			this.resetRemoteStreamsToNormalSize();
@@ -542,5 +536,20 @@ export class ParticipantService {
 			return this.openviduAngularConfigSrv.getParticipantFactory().apply(this, [props]);
 		}
 		return new ParticipantModel(props);
+	}
+
+	private getScreenCaptureOptions(): ScreenShareCaptureOptions {
+		return {
+			audio: true,
+			video: {
+				displaySurface: 'browser' // Set browser tab as default options
+			},
+			systemAudio: 'include', // Include system audio as an option
+			resolution: VideoPresets.h1080.resolution,
+			contentHint: 'detail', // Optimized for detailed content, adjust based on use case
+			suppressLocalAudioPlayback: true,
+			selfBrowserSurface: 'exclude', // Avoid self capture to prevent mirror effect
+			surfaceSwitching: 'include' // Allow users to switch shared tab dynamically
+		};
 	}
 }
