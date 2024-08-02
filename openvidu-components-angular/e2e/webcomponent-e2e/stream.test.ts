@@ -82,8 +82,8 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await browser.sleep(1000);
 		await utils.waitForElement('#local-element-screen_share');
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('video')).equal(1); //screen sharse video
+		expect(await utils.getNumberOfElements('audio')).equal(1); //screen share audio
 
 		await utils.disableScreenShare();
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
@@ -108,7 +108,7 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.waitForElement('#local-element-screen_share');
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
 		expect(await utils.getNumberOfElements('video')).equal(2);
-		expect(await utils.getNumberOfElements('audio')).equal(1);
+		expect(await utils.getNumberOfElements('audio')).equal(2); //screen share audio and local audio
 
 		await utils.disableScreenShare();
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
@@ -220,13 +220,13 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.waitForElement('#local-element-screen_share');
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
 		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(1); // screen share audios
 
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(1000);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
 		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(1); // screen share audios
 
 		await browser.switchTo().window(tabs[1]);
 		await utils.disableScreenShare();
@@ -259,13 +259,13 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.waitForElement('#local-element-screen_share');
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
 		expect(await utils.getNumberOfElements('video')).equal(3);
-		expect(await utils.getNumberOfElements('audio')).equal(2);
+		expect(await utils.getNumberOfElements('audio')).equal(3); // screen share audios and local audio and remote audio
 
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(1000);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
 		expect(await utils.getNumberOfElements('video')).equal(3);
-		expect(await utils.getNumberOfElements('audio')).equal(2);
+		expect(await utils.getNumberOfElements('audio')).equal(3); // screen share audios and local audio and remote audio
 
 		await browser.switchTo().window(tabs[1]);
 		await utils.disableScreenShare();
@@ -296,31 +296,31 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.waitForElement('.OV_stream.local');
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
 		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(1); // screen share audios
 
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(500);
 		await utils.waitForElement('#local-element-screen_share');
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(4);
 		expect(await utils.getNumberOfElements('video')).equal(2);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(2); // screen share audios
 
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(500);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(4);
 		expect(await utils.getNumberOfElements('video')).equal(2);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(2); // screen share audios
 
 		await utils.disableScreenShare();
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
 		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(1); // screen share audios
 
 		await browser.switchTo().window(tabs[1]);
 		await browser.sleep(500);
 		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
 		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('audio')).equal(1); // screen share audios
 	});
 });
 
