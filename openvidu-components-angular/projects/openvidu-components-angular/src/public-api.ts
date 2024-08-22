@@ -48,5 +48,6 @@ export * from './lib/services/openvidu/openvidu.service';
 export * from './lib/services/panel/panel.service';
 export * from './lib/services/participant/participant.service';
 export * from './lib/services/recording/recording.service';
+export * from './lib/services/config/openvidu-components-angular.config.service';
 
 export * from 'livekit-client';
