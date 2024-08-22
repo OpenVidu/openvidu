@@ -35,6 +35,7 @@ export * from './lib/models/participant.model';
 export * from './lib/models/recording.model';
 export * from './lib/models/data-topic.model';
 export * from './lib/models/room.model';
+export * from './lib/models/toolbar.model';
 export * from './lib/openvidu-components-angular.module';
 // Pipes
 export * from './lib/pipes/participant.pipe';
