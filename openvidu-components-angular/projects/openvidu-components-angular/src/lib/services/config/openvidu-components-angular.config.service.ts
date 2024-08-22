@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { OpenViduComponentsConfig, ParticipantFactoryFunction } from '../../config/openvidu-components-angular.config';
 import { RecordingInfo } from '../../models/recording.model';
 import { DOCUMENT } from '@angular/common';
+import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
 
 // import { version } from '../../../../package.json';
 
@@ -60,6 +61,12 @@ export class OpenViduComponentsConfigService {
 
 	private displayLogo = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	displayLogo$: Observable<boolean>;
+
+	private toolbarAdditionalButtonsPosition = <BehaviorSubject<ToolbarAdditionalButtonsPosition>>(
+		new BehaviorSubject(ToolbarAdditionalButtonsPosition.AFTER_MENU)
+	);
+	toolbarAdditionalButtonsPosition$: Observable<ToolbarAdditionalButtonsPosition>;
+
 	private displayParticipantName = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	displayParticipantName$: Observable<boolean>;
 	private displayAudioDetection = <BehaviorSubject<boolean>>new BehaviorSubject(true);
@@ -114,6 +121,7 @@ export class OpenViduComponentsConfigService {
 		this.broadcastingButton$ = this.broadcastingButton.asObservable();
 		this.toolbarSettingsButton$ = this.toolbarSettingsButton.asObservable();
 		this.captionsButton$ = this.captionsButton.asObservable();
+		this.toolbarAdditionalButtonsPosition$ = this.toolbarAdditionalButtonsPosition.asObservable();
 		//Stream observables
 		this.displayParticipantName$ = this.displayParticipantName.asObservable();
 		this.displayAudioDetection$ = this.displayAudioDetection.asObservable();
@@ -260,6 +268,13 @@ export class OpenViduComponentsConfigService {
 
 	showLogo(): boolean {
 		return this.displayLogo.getValue();
+	}
+	getToolbarAdditionalButtonsPosition(): ToolbarAdditionalButtonsPosition {
+		return this.toolbarAdditionalButtonsPosition.getValue();
+	}
+
+	setToolbarAdditionalButtonsPosition(toolbarAdditionalButtonsPosition: ToolbarAdditionalButtonsPosition) {
+		this.toolbarAdditionalButtonsPosition.next(toolbarAdditionalButtonsPosition);
 	}
 
 	setRecordingButton(recordingButton: boolean) {

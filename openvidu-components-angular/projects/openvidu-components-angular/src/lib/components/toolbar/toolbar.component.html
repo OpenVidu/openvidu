@@ -91,6 +91,10 @@
 			</button>
 		</mat-menu>
 
+		<ng-container *ngIf="toolbarAdditionalButtonsTemplate && additionalButtonsPosition && additionalButtonsPosition === 'beforeMenu'">
+			<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate"></ng-container>
+		</ng-container>
+
 		<!-- More options button -->
 		<button
 			mat-icon-button
@@ -187,7 +191,7 @@
 		</mat-menu>
 
 		<!-- External additional buttons  -->
-		<ng-container *ngIf="toolbarAdditionalButtonsTemplate">
+		<ng-container *ngIf="toolbarAdditionalButtonsTemplate && additionalButtonsPosition && additionalButtonsPosition === 'afterMenu'">
 			<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate"></ng-container>
 		</ng-container>
 

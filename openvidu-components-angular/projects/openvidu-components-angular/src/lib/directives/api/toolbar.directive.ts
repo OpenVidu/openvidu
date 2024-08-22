@@ -1,5 +1,6 @@
 import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular/core';
 import { OpenViduComponentsConfigService } from '../../services/config/openvidu-components-angular.config.service';
+import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
 
 /**
  * The **screenshareButton** directive allows show/hide the screenshare toolbar button.
@@ -809,6 +810,62 @@ export class ToolbarDisplayLogoDirective implements AfterViewInit, OnDestroy {
 	private update(value: boolean) {
 		if (this.libService.showLogo() !== value) {
 			this.libService.setDisplayLogo(value);
+		}
+	}
+}
+
+/**
+ * The **ovToolbarAdditionalButtonsPosition** defines the position where the additional buttons should be inserted.
+ *
+ * The possible values are: {@link ToolbarAdditionalButtonsPosition}
+ * Default: `afterMenu`
+ *
+ * It can be used in the any element which contains the  structural directive {@link ToolbarAdditionalButtonsDirective}.
+ *
+ * @example
+ * <div *ovToolbarAdditionalButtons [ovToolbarAdditionalButtonsPosition]="'beforeMenu'"></div>
+ *
+ */
+@Directive({
+	selector: '[ovToolbarAdditionalButtonsPosition]'
+})
+export class ToolbarAdditionalButtonsPossitionDirective implements AfterViewInit, OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set ovToolbarAdditionalButtonsPosition(value: ToolbarAdditionalButtonsPosition) {
+		if (!value) return;
+		if (!Object.values(ToolbarAdditionalButtonsPosition).includes(value)) return;
+
+		this.additionalButtonsPosition = value;
+		this.update(this.additionalButtonsPosition);
+	}
+
+	private additionalButtonsPosition: ToolbarAdditionalButtonsPosition = ToolbarAdditionalButtonsPosition.AFTER_MENU;
+
+	/**
+	 * @ignore
+	 */
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	ngAfterViewInit() {
+		this.update(this.additionalButtonsPosition);
+	}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	private clear() {
+		this.additionalButtonsPosition = ToolbarAdditionalButtonsPosition.AFTER_MENU;
+		this.update(ToolbarAdditionalButtonsPosition.AFTER_MENU);
+	}
+
+	private update(value: ToolbarAdditionalButtonsPosition) {
+		if (this.libService.getToolbarAdditionalButtonsPosition() !== value) {
+			this.libService.setToolbarAdditionalButtonsPosition(value);
 		}
 	}
 }

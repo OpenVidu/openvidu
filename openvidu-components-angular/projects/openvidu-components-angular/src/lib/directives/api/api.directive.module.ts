@@ -21,7 +21,8 @@ import {
 	ToolbarParticipantsPanelButtonDirective,
 	ToolbarRecordingButtonDirective,
 	ToolbarScreenshareButtonDirective,
-	ToolbarSettingsButtonDirective
+	ToolbarSettingsButtonDirective,
+	ToolbarAdditionalButtonsPossitionDirective
 } from './toolbar.directive';
 import {
 	AudioEnabledDirective,
@@ -65,6 +66,7 @@ import {
 		ToolbarDisplayRoomNameDirective,
 		ToolbarDisplayLogoDirective,
 		ToolbarSettingsButtonDirective,
+		ToolbarAdditionalButtonsPossitionDirective,
 		StreamDisplayParticipantNameDirective,
 		StreamDisplayAudioDetectionDirective,
 		StreamVideoControlsDirective,
@@ -101,6 +103,7 @@ import {
 		ToolbarDisplayRoomNameDirective,
 		ToolbarDisplayLogoDirective,
 		ToolbarSettingsButtonDirective,
+		ToolbarAdditionalButtonsPossitionDirective,
 		StreamDisplayParticipantNameDirective,
 		StreamDisplayAudioDetectionDirective,
 		StreamVideoControlsDirective,

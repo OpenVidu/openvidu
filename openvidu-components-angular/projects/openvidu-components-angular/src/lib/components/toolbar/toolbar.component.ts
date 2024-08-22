@@ -48,6 +48,7 @@ import { TranslateService } from '../../services/translate/translate.service';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { ParticipantModel } from '../../models/participant.model';
 import { Room, RoomEvent } from 'livekit-client';
+import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
 
 /**
  * The **ToolbarComponent** is hosted inside of the {@link VideoconferenceComponent}.
@@ -75,7 +76,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 */
 	@ContentChild(ToolbarAdditionalButtonsDirective)
 	set externalAdditionalButtons(externalAdditionalButtons: ToolbarAdditionalButtonsDirective) {
-		// This directive will has value only when ADDITIONAL BUTTONS component tagget with '*ovToolbarAdditionalButtons' directive
+		// This directive will has value only when ADDITIONAL BUTTONS component (tagged with '*ovToolbarAdditionalButtons' directive)
 		// is inside of the TOOLBAR component tagged with '*ovToolbar' directive
 		if (externalAdditionalButtons) {
 			this.toolbarAdditionalButtonsTemplate = externalAdditionalButtons.template;
@@ -87,7 +88,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 */
 	@ContentChild(ToolbarAdditionalPanelButtonsDirective)
 	set externalAdditionalPanelButtons(externalAdditionalPanelButtons: ToolbarAdditionalPanelButtonsDirective) {
-		// This directive will has value only when ADDITIONAL PANEL BUTTONS component tagget with '*ovToolbarAdditionalPanelButtons' directive
+		// This directive will has value only when ADDITIONAL PANEL BUTTONS component tagged with '*ovToolbarAdditionalPanelButtons' directive
 		// is inside of the TOOLBAR component tagged with '*ovToolbar' directive
 		if (externalAdditionalPanelButtons) {
 			this.toolbarAdditionalPanelButtonsTemplate = externalAdditionalPanelButtons.template;
@@ -269,6 +270,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
+	additionalButtonsPosition: ToolbarAdditionalButtonsPosition;
+
+	/**
+	 * @ignore
+	 */
 	captionsEnabled: boolean = false;
 
 	/**
@@ -333,6 +339,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	private displayRoomNameSub: Subscription;
 	private settingsButtonSub: Subscription;
 	private captionsSubs: Subscription;
+	private additionalButtonsPositionSub: Subscription;
 	private fullscreenChangeSubscription: Subscription;
 	private currentWindowHeight = window.innerHeight;
 
@@ -427,6 +434,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		if (this.settingsButtonSub) this.settingsButtonSub.unsubscribe();
 		if (this.captionsSubs) this.captionsSubs.unsubscribe();
 		if (this.fullscreenChangeSubscription) this.fullscreenChangeSubscription.unsubscribe();
+		if (this.additionalButtonsPositionSub) this.additionalButtonsPositionSub.unsubscribe();
 		this.isFullscreenActive = false;
 		this.cdkOverlayService.setSelector('body');
 	}
@@ -744,6 +752,20 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.showCaptionsButton = value;
 			this.cd.markForCheck();
 		});
+
+		this.additionalButtonsPositionSub = this.libService.toolbarAdditionalButtonsPosition$.subscribe(
+			(value: ToolbarAdditionalButtonsPosition) => {
+				// Using Promise.resolve() to defer change detection until the next microtask.
+				// This ensures that Angular's change detection has the latest value before updating the view.
+				// Without this, Angular's OnPush strategy might not immediately reflect the change,
+				// due to asynchronous operations affecting the timing of the detection cycle.
+
+				Promise.resolve().then(() => {
+					this.additionalButtonsPosition = value;
+					this.cd.markForCheck();
+				});
+			}
+		);
 	}
 
 	private subscribeToCaptionsToggling() {
