@@ -1,6 +1,6 @@
 import { Directive, AfterViewInit, OnDestroy, Input, ElementRef } from '@angular/core';
 import { RecordingInfo } from '../../models/recording.model';
-import { OpenViduComponentsConfigService } from '../../services/config/openvidu-components-angular.config.service';
+import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 
 /**
  * The **recordingsList** directive allows show all recordings saved in your OpenVidu deployment in {@link AdminDashboardComponent}.

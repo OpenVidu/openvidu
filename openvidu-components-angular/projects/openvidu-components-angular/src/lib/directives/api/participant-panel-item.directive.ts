@@ -1,5 +1,5 @@
 import { Directive, AfterViewInit, OnDestroy, Input, ElementRef } from '@angular/core';
-import { OpenViduComponentsConfigService } from '../../services/config/openvidu-components-angular.config.service';
+import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 
 /**
  * The **muteButton** directive allows show/hide the muted button in participant panel item component.

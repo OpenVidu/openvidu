@@ -1,5 +1,5 @@
 import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular/core';
-import { OpenViduComponentsConfigService } from '../../services/config/openvidu-components-angular.config.service';
+import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
 
 /**

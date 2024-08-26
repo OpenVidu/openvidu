@@ -25,7 +25,7 @@ import { ActionService } from '../../services/action/action.service';
 import { BroadcastingService } from '../../services/broadcasting/broadcasting.service';
 // import { CaptionService } from '../../services/caption/caption.service';
 import { ChatService } from '../../services/chat/chat.service';
-import { OpenViduComponentsConfigService } from '../../services/config/openvidu-components-angular.config.service';
+import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { LayoutService } from '../../services/layout/layout.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';

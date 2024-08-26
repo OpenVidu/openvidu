@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, In
 import { Subscription } from 'rxjs';
 import { ParticipantPanelItemElementsDirective } from '../../../../directives/template/openvidu-components-angular.directive';
 import { ParticipantModel } from '../../../../models/participant.model';
-import { OpenViduComponentsConfigService } from '../../../../services/config/openvidu-components-angular.config.service';
+import { OpenViduComponentsConfigService } from '../../../../services/config/directive-config.service';
 import { ParticipantService } from '../../../../services/participant/participant.service';
 
 /**

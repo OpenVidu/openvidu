@@ -1,18 +1,13 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { OpenViduComponentsConfig, ParticipantFactoryFunction } from '../../config/openvidu-components-angular.config';
 import { RecordingInfo } from '../../models/recording.model';
-import { DOCUMENT } from '@angular/common';
 import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
-
-// import { version } from '../../../../package.json';
 
 /**
  * @internal
  */
 @Injectable()
 export class OpenViduComponentsConfigService {
-	private configuration: OpenViduComponentsConfig;
 	private token = <BehaviorSubject<string>>new BehaviorSubject('');
 	token$: Observable<string>;
 
@@ -92,13 +87,7 @@ export class OpenViduComponentsConfigService {
 	private adminLoginError = <BehaviorSubject<any>>new BehaviorSubject(null);
 	adminLoginError$: Observable<any>;
 
-	constructor(
-		@Inject('OPENVIDU_COMPONENTS_CONFIG') config: OpenViduComponentsConfig,
-		@Inject(DOCUMENT) private document: Document
-	) {
-		this.configuration = config;
-		console.log(this.configuration);
-		if (this.isProduction()) console.log('OpenVidu Angular Production Mode');
+	constructor() {
 		this.token$ = this.token.asObservable();
 		this.livekitUrl$ = this.livekitUrl.asObservable();
 		this.tokenError$ = this.tokenError.asObservable();
@@ -366,39 +355,6 @@ export class OpenViduComponentsConfigService {
 
 	getAdminLoginError(): any {
 		return this.adminLoginError.getValue();
-	}
-
-	getConfig(): OpenViduComponentsConfig {
-		return this.configuration;
-	}
-	isProduction(): boolean {
-		return this.configuration?.production || false;
-	}
-
-	/**
-	 * Retrieves the base href of the application.
-	 *
-	 * @returns The base href of the application as a string.
-	 */
-	getBaseHref(): string {
-		const base = this.document.getElementsByTagName('base');
-		if (!base || base.length === 0) {
-			return '/';
-		}
-
-		const baseHref = base[0].href;
-		if (baseHref) {
-			return baseHref;
-		}
-		return '/';
-	}
-
-	hasParticipantFactory(): boolean {
-		return typeof this.getConfig().participantFactory === 'function';
-	}
-
-	getParticipantFactory(): ParticipantFactoryFunction {
-		return this.getConfig().participantFactory;
 	}
 
 	isRecordingEnabled(): boolean {

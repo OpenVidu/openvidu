@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { RecordingInfo, RecordingStatus, RecordingStatusInfo } from '../../models/recording.model';
 import { ActionService } from '../action/action.service';
-import { OpenViduComponentsConfigService } from '../config/openvidu-components-angular.config.service';
+import { GlobalConfigService } from '../config/global-config.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -23,9 +23,9 @@ export class RecordingService {
 	/**
 	 * @internal
 	 */
-	constructor(private actionService: ActionService, private openviduConfigService: OpenViduComponentsConfigService) {
+	constructor(private actionService: ActionService, private globalService: GlobalConfigService) {
 		this.recordingStatusObs = this.recordingStatus.asObservable();
-		this.API_RECORDINGS_PREFIX = this.openviduConfigService.getBaseHref() + this.API_RECORDINGS_PREFIX;
+		this.API_RECORDINGS_PREFIX = this.globalService.getBaseHref() + this.API_RECORDINGS_PREFIX;
 	}
 
 	/**

@@ -1,7 +1,7 @@
 import { Directive, ElementRef, Input, OnDestroy, OnInit } from '@angular/core';
 import { CaptionsLangOption } from '../../models/caption.model';
 // import { CaptionService } from '../../services/caption/caption.service';
-import { OpenViduComponentsConfigService } from '../../services/config/openvidu-components-angular.config.service';
+import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { TranslateService } from '../../services/translate/translate.service';
 import { LangOption } from '../../models/lang.model';
 import { StorageService } from '../../services/storage/storage.service';

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { PanelStatusInfo, PanelType } from '../../../models/panel.model';
-import { OpenViduComponentsConfigService } from '../../../services/config/openvidu-components-angular.config.service';
+import { OpenViduComponentsConfigService } from '../../../services/config/directive-config.service';
 import { PanelService } from '../../../services/panel/panel.service';
 import {
 	RecordingDeleteRequestedEvent,

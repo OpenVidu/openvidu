@@ -2,7 +2,7 @@ import { Component, OnInit, Output, EventEmitter, OnDestroy } from '@angular/cor
 import { Subscription } from 'rxjs';
 import { RecordingDeleteRequestedEvent, RecordingInfo, RecordingStatus } from '../../models/recording.model';
 import { ActionService } from '../../services/action/action.service';
-import { OpenViduComponentsConfigService } from '../../services/config/openvidu-components-angular.config.service';
+import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { RecordingService } from '../../services/recording/recording.service';
 
 @Component({

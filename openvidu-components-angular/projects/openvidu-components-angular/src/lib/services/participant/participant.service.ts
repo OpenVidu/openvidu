@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
 import { ParticipantModel, ParticipantProperties } from '../../models/participant.model';
-import { OpenViduComponentsConfigService } from '../config/openvidu-components-angular.config.service';
+import { OpenViduComponentsConfigService } from '../config/directive-config.service';
+import { GlobalConfigService } from '../config/global-config.service';
 import { LoggerService } from '../logger/logger.service';
 
 import { OpenViduService } from '../openvidu/openvidu.service';
@@ -45,7 +46,8 @@ export class ParticipantService {
 	 * @internal
 	 */
 	constructor(
-		private openviduAngularConfigSrv: OpenViduComponentsConfigService,
+		private globalService: GlobalConfigService,
+		private directiveService: OpenViduComponentsConfigService,
 		private openviduService: OpenViduService,
 		private storageSrv: StorageService,
 		private loggerSrv: LoggerService
@@ -320,7 +322,7 @@ export class ParticipantService {
 		if (this.openviduService.isRoomConnected() && this.localParticipant) {
 			return this.localParticipant.isCameraEnabled;
 		} else {
-			const directiveCameraEnabled = this.openviduAngularConfigSrv.isVideoEnabled();
+			const directiveCameraEnabled = this.directiveService.isVideoEnabled();
 
 			if (!directiveCameraEnabled) {
 				return false;
@@ -336,7 +338,7 @@ export class ParticipantService {
 		if (this.openviduService.isRoomConnected() && this.localParticipant) {
 			return this.localParticipant.isMicrophoneEnabled;
 		} else {
-			const directiveMicropgoneEnabled = this.openviduAngularConfigSrv.isAudioEnabled();
+			const directiveMicropgoneEnabled = this.directiveService.isAudioEnabled();
 
 			if (!directiveMicropgoneEnabled) {
 				return false;
@@ -532,8 +534,8 @@ export class ParticipantService {
 	}
 
 	private newParticipant(props: ParticipantProperties) {
-		if (this.openviduAngularConfigSrv.hasParticipantFactory()) {
-			return this.openviduAngularConfigSrv.getParticipantFactory().apply(this, [props]);
+		if (this.globalService.hasParticipantFactory()) {
+			return this.globalService.getParticipantFactory().apply(this, [props]);
 		}
 		return new ParticipantModel(props);
 	}

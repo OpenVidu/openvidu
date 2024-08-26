@@ -18,7 +18,7 @@ import { LayoutService } from '../../services/layout/layout.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { CdkDrag } from '@angular/cdk/drag-drop';
 import { PanelService } from '../../services/panel/panel.service';
-import { OpenViduComponentsConfigService } from '../../services/config/openvidu-components-angular.config.service';
+import { GlobalConfigService } from '../../services/config/global-config.service';
 
 /**
  *
@@ -86,7 +86,7 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 		private layoutService: LayoutService,
 		private panelService: PanelService,
 		private participantService: ParticipantService,
-		private libService: OpenViduComponentsConfigService,
+		private globalService: GlobalConfigService,
 		private cd: ChangeDetectorRef
 	) {}
 
@@ -207,7 +207,7 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 		};
 		this.cdkSubscription = this.cdkDrag.released.subscribe(handler);
 
-		if (this.libService.getConfig().production) return;
+		if (this.globalService.isProduction()) return;
 		// Just for allow E2E testing with drag and drop
 		document.addEventListener('webcomponentTestingEndedDragAndDropEvent', handler);
 		document.addEventListener('webcomponentTestingEndedDragAndDropRightEvent', (event: any) => {

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ILogService } from '../../models/logger.model';
 
-import { OpenViduComponentsConfigService } from '../config/openvidu-components-angular.config.service';
+import { GlobalConfigService } from '../config/global-config.service';
 
 /**
  * @internal
@@ -18,7 +18,7 @@ export class LoggerService implements ILogService {
 		['[', '] ERROR: ']
 	];
 
-	constructor(private openviduAngularConfigSrv: OpenViduComponentsConfigService) {
+	constructor(private globalService: GlobalConfigService) {
 	}
 
 	private getLoggerFns(prefix: string) {
@@ -31,7 +31,7 @@ export class LoggerService implements ILogService {
 	}
 
 	public get(prefix: string) {
-		const prodMode = this.openviduAngularConfigSrv.isProduction();
+		const prodMode = this.globalService.isProduction();
 		const loggerService = this;
 		return {
 			d: function(...args: any[]) {

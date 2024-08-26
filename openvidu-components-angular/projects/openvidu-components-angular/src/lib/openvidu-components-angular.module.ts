@@ -25,7 +25,7 @@ import { CdkOverlayContainer } from './config/custom-cdk-overlay';
 import { OpenViduComponentsConfig } from './config/openvidu-components-angular.config';
 import { ActionService } from './services/action/action.service';
 import { ChatService } from './services/chat/chat.service';
-import { OpenViduComponentsConfigService } from './services/config/openvidu-components-angular.config.service';
+import { OpenViduComponentsConfigService } from './services/config/directive-config.service';
 import { DeviceService } from './services/device/device.service';
 import { DocumentService } from './services/document/document.service';
 import { LayoutService } from './services/layout/layout.service';
@@ -97,7 +97,7 @@ const privateComponents = [
 	VideoDevicesComponent,
 	AudioDevicesComponent,
 	ParticipantNameInputComponent,
-	LangSelectorComponent,
+	LangSelectorComponent
 	// CaptionsSettingComponent
 ];
 

@@ -28,7 +28,7 @@ import {
 } from '../../directives/template/openvidu-components-angular.directive';
 import { ILogger } from '../../models/logger.model';
 import { ActionService } from '../../services/action/action.service';
-import { OpenViduComponentsConfigService } from '../../services/config/openvidu-components-angular.config.service';
+import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { DeviceService } from '../../services/device/device.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
