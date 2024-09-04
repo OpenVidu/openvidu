@@ -4,6 +4,7 @@ import { CaptionsLangOption } from '../../../models/caption.model';
 import { CaptionService } from '../../../services/caption/caption.service';
 import { LayoutService } from '../../../services/layout/layout.service';
 import { OpenViduService } from '../../../services/openvidu/openvidu.service';
+import { ServiceConfigService } from '../../../services/config/service-config.service';
 
 /**
  * @internal
@@ -22,8 +23,11 @@ export class CaptionsSettingComponent implements OnInit, OnDestroy {
 	private captionsStatusSubs: Subscription;
 	private sttStatusSubs: Subscription;
 
+	private layoutService: LayoutService;
 
-	constructor(private layoutService: LayoutService, private captionService: CaptionService, private openviduService: OpenViduService) {}
+	constructor(private serviceConfig: ServiceConfigService, private captionService: CaptionService, private openviduService: OpenViduService) {
+		this.layoutService = this.serviceConfig.getLayoutService();
+	}
 
 	ngOnInit(): void {
 		// this.isOpenViduPro = this.openviduService.isOpenViduPro();

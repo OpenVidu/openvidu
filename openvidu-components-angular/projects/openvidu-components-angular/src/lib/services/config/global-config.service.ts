@@ -2,6 +2,9 @@ import { DOCUMENT } from '@angular/common';
 import { Inject, Injectable} from '@angular/core';
 import { ParticipantFactoryFunction, OpenViduComponentsConfig } from '../../config/openvidu-components-angular.config';
 
+/**
+ * @internal
+ */
 @Injectable({
 	providedIn: 'root'
 })

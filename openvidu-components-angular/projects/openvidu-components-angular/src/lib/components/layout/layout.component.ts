@@ -11,7 +11,7 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { combineLatest, map, Subscription } from 'rxjs';
 import { StreamDirective } from '../../directives/template/openvidu-components-angular.directive';
 import { ParticipantTrackPublication, ParticipantModel } from '../../models/participant.model';
 import { LayoutService } from '../../services/layout/layout.service';
@@ -19,6 +19,8 @@ import { ParticipantService } from '../../services/participant/participant.servi
 import { CdkDrag } from '@angular/cdk/drag-drop';
 import { PanelService } from '../../services/panel/panel.service';
 import { GlobalConfigService } from '../../services/config/global-config.service';
+import { ServiceConfigService } from '../../services/config/service-config.service';
+import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 
 /**
  *
@@ -78,17 +80,21 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	private resizeTimeout: NodeJS.Timeout;
 	private videoIsAtRight: boolean = false;
 	private lastLayoutWidth: number = 0;
+	private layoutService: LayoutService;
 
 	/**
 	 * @ignore
 	 */
 	constructor(
-		private layoutService: LayoutService,
+		private serviceConfig: ServiceConfigService,
 		private panelService: PanelService,
 		private participantService: ParticipantService,
 		private globalService: GlobalConfigService,
+		private directiveService: OpenViduComponentsConfigService,
 		private cd: ChangeDetectorRef
-	) {}
+	) {
+		this.layoutService = this.serviceConfig.getLayoutService();
+	}
 
 	ngOnInit(): void {
 		this.subscribeToParticipants();
@@ -96,6 +102,7 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	ngAfterViewInit() {
+		console.log('LayoutComponent.ngAfterViewInit');
 		this.layoutService.initialize(this.layoutContainer.element.nativeElement);
 		this.lastLayoutWidth = this.layoutContainer.element.nativeElement.getBoundingClientRect().width;
 		this.listenToResizeLayout();
@@ -142,11 +149,20 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 			}
 		});
 
-		this.remoteParticipantsSubs = this.participantService.remoteParticipants$.subscribe((participants) => {
+		this.remoteParticipantsSubs = combineLatest([
+			this.participantService.remoteParticipants$,
+			this.directiveService.layoutRemoteParticipants$
+		  ])
+		  .pipe(
+			map(([serviceParticipants, directiveParticipants]) =>
+			  directiveParticipants !== undefined ? directiveParticipants : serviceParticipants
+			)
+		  )
+		  .subscribe((participants) => {
 			this.remoteParticipants = participants;
 			this.layoutService.update();
 			this.cd.markForCheck();
-		});
+		  });
 	}
 
 	private listenToResizeLayout() {

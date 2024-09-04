@@ -47,6 +47,7 @@ import {
 	Track
 } from 'livekit-client';
 import { ParticipantModel } from '../../models/participant.model';
+import { ServiceConfigService } from '../../services/config/service-config.service';
 
 /**
  * @internal
@@ -88,15 +89,16 @@ export class SessionComponent implements OnInit, OnDestroy {
 	private updateLayoutInterval: NodeJS.Timeout;
 	private captionLanguageSubscription: Subscription;
 	private log: ILogger;
+	private layoutService: LayoutService;
 
 	constructor(
+		private serviceConfig: ServiceConfigService,
 		private actionService: ActionService,
 		private openviduService: OpenViduService,
 		private participantService: ParticipantService,
 		private loggerSrv: LoggerService,
 		private chatService: ChatService,
 		private libService: OpenViduComponentsConfigService,
-		private layoutService: LayoutService,
 		private panelService: PanelService,
 		private recordingService: RecordingService,
 		private broadcastingService: BroadcastingService,
@@ -106,6 +108,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 		private cd: ChangeDetectorRef
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
+		this.layoutService = this.serviceConfig.getLayoutService();
 	}
 
 	@HostListener('window:beforeunload')
@@ -205,7 +208,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 	}
 
 	async ngOnDestroy() {
-		if(this.shouldDisconnectRoomWhenComponentIsDestroyed) {
+		if (this.shouldDisconnectRoomWhenComponentIsDestroyed) {
 			await this.disconnectRoom();
 		}
 		this.room.removeAllListeners();

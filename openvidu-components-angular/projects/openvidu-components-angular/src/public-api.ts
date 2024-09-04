@@ -36,6 +36,7 @@ export * from './lib/models/recording.model';
 export * from './lib/models/data-topic.model';
 export * from './lib/models/room.model';
 export * from './lib/models/toolbar.model';
+export * from './lib/models/logger.model'
 export * from './lib/openvidu-components-angular.module';
 // Pipes
 export * from './lib/pipes/participant.pipe';
@@ -50,5 +51,6 @@ export * from './lib/services/panel/panel.service';
 export * from './lib/services/participant/participant.service';
 export * from './lib/services/recording/recording.service';
 export * from './lib/services/config/global-config.service';
+export * from './lib/services/logger/logger.service';
 
 export * from 'livekit-client';

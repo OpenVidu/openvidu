@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { LayoutAlignment, LayoutClass, OpenViduLayout, OpenViduLayoutOptions } from '../../models/layout.model';
+import { ILogger } from '../../models/logger.model';
+import { LoggerService } from '../logger/logger.service';
 
 /**
  * @internal
@@ -9,17 +11,19 @@ import { LayoutAlignment, LayoutClass, OpenViduLayout, OpenViduLayoutOptions } f
 	providedIn: 'root'
 })
 export class LayoutService {
-	layoutContainer: HTMLElement | null = null;
+	layoutContainer: HTMLElement | undefined = undefined;
 	layoutWidthObs: Observable<number>;
 	captionsTogglingObs: Observable<boolean>;
-	private layoutWidth: BehaviorSubject<number> = new BehaviorSubject(0);
-	private openviduLayout: OpenViduLayout;
-	private openviduLayoutOptions: OpenViduLayoutOptions;
-	private captionsToggling: BehaviorSubject<boolean> = new BehaviorSubject(false);
+	protected layoutWidth: BehaviorSubject<number> = new BehaviorSubject(0);
+	protected openviduLayout: OpenViduLayout | undefined;
+	protected openviduLayoutOptions: OpenViduLayoutOptions;
+	protected captionsToggling: BehaviorSubject<boolean> = new BehaviorSubject(false);
+	protected log: ILogger;
 
-	constructor() {
+	constructor(protected loggerSrv: LoggerService) {
 		this.layoutWidthObs = this.layoutWidth.asObservable();
 		this.captionsTogglingObs = this.captionsToggling.asObservable();
+		this.log = this.loggerSrv.get('LayoutService');
 	}
 
 	initialize(container: HTMLElement) {
@@ -32,7 +36,33 @@ export class LayoutService {
 		this.sendLayoutWidthEvent();
 	}
 
-	private getOptions(): OpenViduLayoutOptions {
+	toggleCaptions() {
+		this.captionsToggling.next(!this.captionsToggling.getValue());
+	}
+
+	update(timeout: number | undefined = undefined) {
+		const updateAux = () => {
+			if (this.openviduLayout && this.layoutContainer) {
+				this.openviduLayout.updateLayout(this.layoutContainer, this.openviduLayoutOptions);
+				this.sendLayoutWidthEvent();
+			}
+		};
+		if (typeof timeout === 'number' && timeout >= 0) {
+			setTimeout(() => updateAux(), timeout);
+		} else {
+			updateAux();
+		}
+	}
+
+	getLayout() {
+		return this.openviduLayout;
+	}
+
+	clear() {
+		this.openviduLayout = undefined;
+	}
+
+	protected getOptions(): OpenViduLayoutOptions {
 		const options = {
 			maxRatio: 3 / 2, // The narrowest ratio that will be used (default 2x3)
 			minRatio: 9 / 16, // The widest ratio that will be used (default 16x9)
@@ -63,43 +93,19 @@ export class LayoutService {
 		return options;
 	}
 
-	toggleCaptions() {
-		this.captionsToggling.next(!this.captionsToggling.getValue());
-	}
-
-	update(timeout: number = null) {
-		const updateAux = () => {
-			if (!!this.openviduLayout) {
-				this.openviduLayout.updateLayout(this.layoutContainer, this.openviduLayoutOptions);
-				this.sendLayoutWidthEvent();
-			}
-		};
-		if (typeof timeout === 'number' && timeout >= 0) {
-			setTimeout(() => updateAux(), timeout);
-		} else {
-			updateAux();
+	protected sendLayoutWidthEvent() {
+		const layoutContainer = this.openviduLayout?.getLayoutContainer();
+		if (!layoutContainer) {
+			this.log.e('Layout container not found. Cannot send layout width event');
+			return;
 		}
-	}
-
-	getLayout() {
-		return this.openviduLayout;
-	}
-
-	clear() {
-		this.openviduLayout = null;
-	}
-
-	private sendLayoutWidthEvent() {
-		const sidenavLayoutElement = this.getHTMLElementByClassName(
-			this.openviduLayout?.getLayoutContainer(),
-			LayoutClass.SIDENAV_CONTAINER
-		);
+		const sidenavLayoutElement = this.getHTMLElementByClassName(layoutContainer, LayoutClass.SIDENAV_CONTAINER);
 		if (sidenavLayoutElement && sidenavLayoutElement.clientWidth) {
 			this.layoutWidth.next(sidenavLayoutElement.clientWidth);
 		}
 	}
 
-	private getHTMLElementByClassName(element: HTMLElement | null, className: string): HTMLElement | null {
+	protected getHTMLElementByClassName(element: HTMLElement | null, className: string): HTMLElement | null {
 		while (!!element && element !== document.body) {
 			if (element.className.includes(className)) {
 				return element;

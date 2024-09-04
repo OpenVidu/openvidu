@@ -1,6 +1,8 @@
-// * Private directives *
+// * Internal directives *
 
 import { Directive, ElementRef, HostListener, Input } from '@angular/core';
+import { ParticipantModel } from '../../models/participant.model';
+import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 
 /**
  * Load default OpenVidu logo if custom one is not exist
@@ -19,5 +21,37 @@ export class LogoDirective {
 	loadDefaultLogo() {
 		const element = <HTMLImageElement>this.elementRef.nativeElement;
 		element.src = this.ovLogo || this.defaultLogo;
+	}
+}
+
+/**
+ * @internal
+ */
+@Directive({
+	selector: 'ov-layout[ovRemoteParticipants]'
+})
+export class LayoutRemoteParticipantsDirective {
+	@Input() set ovRemoteParticipants(value: ParticipantModel[] | undefined) {
+		this.update(value);
+	}
+	constructor(
+		public elementRef: ElementRef,
+		private directiveService: OpenViduComponentsConfigService
+	) {}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	ngAfterViewInit() {
+		this.update(this.ovRemoteParticipants);
+	}
+
+	update(value: ParticipantModel[] | undefined) {
+		this.directiveService.setLayoutRemoteParticipants(value);
+	}
+
+	clear() {
+		this.update(undefined);
 	}
 }

@@ -2,11 +2,14 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { RecordingInfo } from '../../models/recording.model';
 import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
+import { ParticipantModel } from '../../models/participant.model';
 
 /**
  * @internal
  */
-@Injectable()
+@Injectable({
+	providedIn: 'root'
+})
 export class OpenViduComponentsConfigService {
 	private token = <BehaviorSubject<string>>new BehaviorSubject('');
 	token$: Observable<string>;
@@ -87,6 +90,10 @@ export class OpenViduComponentsConfigService {
 	private adminLoginError = <BehaviorSubject<any>>new BehaviorSubject(null);
 	adminLoginError$: Observable<any>;
 
+	// Internals
+	private layoutRemoteParticipants: BehaviorSubject<ParticipantModel[] | undefined> = new BehaviorSubject(<any>undefined);
+	layoutRemoteParticipants$: Observable<ParticipantModel[] | undefined>;
+
 	constructor() {
 		this.token$ = this.token.asObservable();
 		this.livekitUrl$ = this.livekitUrl.asObservable();
@@ -124,6 +131,8 @@ export class OpenViduComponentsConfigService {
 		// Admin dashboard
 		this.adminRecordingsList$ = this.adminRecordingsList.asObservable();
 		this.adminLoginError$ = this.adminLoginError.asObservable();
+		// Internals
+		this.layoutRemoteParticipants$ = this.layoutRemoteParticipants.asObservable();
 	}
 
 	setToken(token: string) {
@@ -363,5 +372,10 @@ export class OpenViduComponentsConfigService {
 
 	isBroadcastingEnabled(): boolean {
 		return this.broadcastingButton.getValue() && this.broadcastingActivity.getValue();
+	}
+
+	// Internals
+	setLayoutRemoteParticipants(participants: ParticipantModel[] | undefined) {
+		this.layoutRemoteParticipants.next(participants);
 	}
 }

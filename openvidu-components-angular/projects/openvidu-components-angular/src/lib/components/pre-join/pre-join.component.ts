@@ -3,7 +3,6 @@ import { Subscription } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
-import { LayoutService } from '../../services/layout/layout.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { TranslateService } from '../../services/translate/translate.service';
@@ -55,11 +54,9 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	@HostListener('window:resize')
 	sizeChange() {
 		this.windowSize = window.innerWidth;
-		this.layoutService.update();
 	}
 
 	constructor(
-		private layoutService: LayoutService,
 		private loggerSrv: LoggerService,
 		private libService: OpenViduComponentsConfigService,
 		private cdkSrv: CdkOverlayService,

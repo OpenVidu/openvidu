@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { ActivitiesPanelBroadcastingActivityDirective, ActivitiesPanelRecordingActivityDirective } from './activities-panel.directive';
 import { AdminLoginErrorDirective, AdminDashboardRecordingsListDirective } from './admin.directive';
-import { LogoDirective } from './internals.directive';
+import { LayoutRemoteParticipantsDirective, LogoDirective } from './internals.directive';
 import { ParticipantPanelItemMuteButtonDirective } from './participant-panel-item.directive';
 import {
 	StreamDisplayAudioDetectionDirective,
@@ -76,7 +76,8 @@ import {
 		ActivitiesPanelRecordingActivityDirective,
 		ActivitiesPanelBroadcastingActivityDirective,
 		AdminDashboardRecordingsListDirective,
-		AdminLoginErrorDirective
+		AdminLoginErrorDirective,
+		LayoutRemoteParticipantsDirective
 	],
 	exports: [
 		LivekitUrlDirective,
@@ -113,7 +114,8 @@ import {
 		ActivitiesPanelRecordingActivityDirective,
 		ActivitiesPanelBroadcastingActivityDirective,
 		AdminDashboardRecordingsListDirective,
-		AdminLoginErrorDirective
+		AdminLoginErrorDirective,
+		LayoutRemoteParticipantsDirective
 	]
 })
 export class ApiDirectiveModule {}

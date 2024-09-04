@@ -4,11 +4,10 @@ import { Subscription } from 'rxjs';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { LayoutService } from '../../services/layout/layout.service';
-import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { ParticipantService } from '../../services/participant/participant.service';
-import { StorageService } from '../../services/storage/storage.service';
 import { Track } from 'livekit-client';
 import { ParticipantTrackPublication } from '../../models/participant.model';
+import { ServiceConfigService } from '../../services/config/service-config.service';
 
 /**
  * The **StreamComponent** is hosted inside of the {@link LayoutComponent}.
@@ -99,17 +98,18 @@ export class StreamComponent implements OnInit, OnDestroy {
 	private videoControlsSub: Subscription;
 	private readonly HOVER_TIMEOUT = 3000;
 
+	private layoutService: LayoutService;
 	/**
 	 * @ignore
 	 */
 	constructor(
-		private openviduService: OpenViduService,
-		private layoutService: LayoutService,
+		private serviceConfig: ServiceConfigService,
 		private participantService: ParticipantService,
-		private storageService: StorageService,
 		private cdkSrv: CdkOverlayService,
 		private libService: OpenViduComponentsConfigService
-	) {}
+	) {
+		this.layoutService = this.serviceConfig.getLayoutService();
+	}
 
 	ngOnInit() {
 		this.subscribeToStreamDirectives();

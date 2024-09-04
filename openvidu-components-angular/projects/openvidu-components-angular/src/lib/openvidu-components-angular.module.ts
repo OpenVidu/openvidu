@@ -1,7 +1,7 @@
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { CommonModule } from '@angular/common';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { ModuleWithProviders, NgModule } from '@angular/core';
+import { ModuleWithProviders, NgModule, Provider } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { DeleteDialogComponent } from './components/dialogs/delete-recording.component';
@@ -25,7 +25,6 @@ import { CdkOverlayContainer } from './config/custom-cdk-overlay';
 import { OpenViduComponentsConfig } from './config/openvidu-components-angular.config';
 import { ActionService } from './services/action/action.service';
 import { ChatService } from './services/chat/chat.service';
-import { OpenViduComponentsConfigService } from './services/config/directive-config.service';
 import { DeviceService } from './services/device/device.service';
 import { DocumentService } from './services/document/document.service';
 import { LayoutService } from './services/layout/layout.service';
@@ -65,6 +64,8 @@ import { AppMaterialModule } from './openvidu-components-angular.material.module
 import { VirtualBackgroundService } from './services/virtual-background/virtual-background.service';
 import { BroadcastingService } from './services/broadcasting/broadcasting.service';
 import { TranslateService } from './services/translate/translate.service';
+import { GlobalConfigService } from './services/config/global-config.service';
+import { OpenViduComponentsConfigService } from './services/config/directive-config.service';
 
 const publicComponents = [
 	AdminDashboardComponent,
@@ -131,6 +132,8 @@ const privateComponents = [
 		DragDropModule
 	],
 	providers: [
+		GlobalConfigService,
+		OpenViduComponentsConfigService,
 		ActionService,
 		BroadcastingService,
 		// CaptionService,
@@ -139,7 +142,7 @@ const privateComponents = [
 		ChatService,
 		DeviceService,
 		DocumentService,
-		LayoutService,
+		// LayoutService,
 		LoggerService,
 		OpenViduService,
 		PanelService,
@@ -153,12 +156,12 @@ const privateComponents = [
 	]
 })
 export class OpenViduComponentsModule {
-	static forRoot(config): ModuleWithProviders<OpenViduComponentsModule> {
-		// console.log(`${library.name} config: ${environment}`);
-		const libConfig: OpenViduComponentsConfig = config;
+	static forRoot(config: OpenViduComponentsConfig): ModuleWithProviders<OpenViduComponentsModule> {
+		const providers: Provider[] = [{ provide: 'OPENVIDU_COMPONENTS_CONFIG', useValue: config }];
+
 		return {
 			ngModule: OpenViduComponentsModule,
-			providers: [OpenViduComponentsConfigService, { provide: 'OPENVIDU_COMPONENTS_CONFIG', useValue: libConfig }]
+			providers
 		};
 	}
 }
