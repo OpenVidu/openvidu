@@ -1,19 +1,22 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { LogLevel, setLogLevel } from 'livekit-client';
 import { LivekitParamsService } from './services/livekit-params.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
-
   livekitUrl = 'ws://localhost:7880/'; // `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://localhost:1880/`;
   livekitApiKey = 'devkey';
   livekitApiSecret = 'secret';
 
-  constructor(private livekitParamsService: LivekitParamsService) { }
+  constructor(
+    private router: Router,
+    private livekitParamsService: LivekitParamsService
+  ) {}
 
   async ngOnInit() {
     // LiveKit client logging. Change here to build with verbose logging.
@@ -44,6 +47,10 @@ export class AppComponent {
     if (!(myUrl.substring(myUrl.length - 1) === '/')) {
       myUrl += '/';
     }
-    await this.livekitParamsService.updateParams({ livekitUrl: myUrl, livekitApiKey: this.livekitApiKey, livekitApiSecret: this.livekitApiSecret });
+    await this.livekitParamsService.updateParams({
+      livekitUrl: myUrl,
+      livekitApiKey: this.livekitApiKey,
+      livekitApiSecret: this.livekitApiSecret,
+    });
   }
 }

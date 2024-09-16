@@ -94,3 +94,9 @@ button.mat-icon-custom .mat-mdc-button-touch-target {
     width: 24px;
     height: 24px;
 }
+
+.top-div {
+    display: inline-block;
+    width: 100%;
+    margin-top: 12px;
+}

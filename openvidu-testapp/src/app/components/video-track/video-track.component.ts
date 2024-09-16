@@ -1,7 +1,6 @@
 import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { LocalTrack, VideoTrack, VideoCaptureOptions, ScreenShareCaptureOptions } from 'livekit-client';
 import { TrackComponent } from '../track/track.component';
-// import { BackgroundBlur } from '@livekit/track-processors';
 
 @Component({
     selector: 'app-video-track',

@@ -1,0 +1,25 @@
+<div class="top-div">
+  <div>
+    <button id="m2m-btn" mat-raised-button color="primary" (click)="loadScenario(MtoM,0,0)" [disabled]="scenarioPlaying">{{MtoM}} To {{MtoM}}</button>
+    <mat-form-field class="scenario-input">
+      <input id="m2m-input" matInput [(ngModel)]="MtoM" type="number" [disabled]="scenarioPlaying">
+    </mat-form-field>
+    <mat-form-field class="scenario-input">
+      <input id="n-of-n2m-input" matInput [(ngModel)]="NofNtoM" type="number" [disabled]="scenarioPlaying">
+    </mat-form-field>
+    <button id="n2m-btn" mat-raised-button color="primary" (click)="loadScenario(0,NofNtoM,MofNtoM)" [disabled]="scenarioPlaying">{{NofNtoM}} to {{MofNtoM}}</button>
+    <mat-form-field class="scenario-input">
+      <input id="m-of-n2m-input" matInput [(ngModel)]="MofNtoM" type="number" [disabled]="scenarioPlaying">
+    </mat-form-field>
+  </div>
+  <div>
+    <button mat-icon-button id="scenario-options-btn" title="Scenario options" class="mat-icon-custom" (click)="openScenarioOptionsDialog()" [disabled]="scenarioPlaying">
+        <mat-icon class="mat-icon-custom-ic" aria-label="Room options button">settings</mat-icon>
+    </button>
+    <button id="finish-btn" mat-raised-button color="primary" (click)="endScenario()" [disabled]="!scenarioPlaying">FINISH</button>
+  </div>
+</div>
+
+<div class="instance-div">
+  <app-users-table *ngIf="!!users.length" [users]="users"></app-users-table>
+</div>

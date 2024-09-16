@@ -1,0 +1,13 @@
+mat-form-field {
+  margin-top: 10px;
+  margin-right: 5px;
+}
+
+a {
+  color: #007bff;
+  cursor: pointer;
+}
+
+mat-divider {
+  margin: 20px 0;
+}

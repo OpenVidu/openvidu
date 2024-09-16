@@ -4,7 +4,6 @@ import { Subscription } from 'rxjs';
 import { TestFeedService } from 'src/app/services/test-feed.service';
 import * as stringify from 'json-stringify-safe';
 
-
 export interface RoomConf {
   subscriber: boolean;
   publisher: boolean;
@@ -18,14 +17,13 @@ export interface RoomConf {
   animations: [
     trigger('fadeAnimation', [
       transition(':enter', [
-        style({ opacity: 0 }), animate('100ms', style({ opacity: 1 }))]
-      )
-    ])
+        style({ opacity: 0 }),
+        animate('100ms', style({ opacity: 1 })),
+      ]),
+    ]),
   ],
 })
 export class TestSessionsComponent {
-
-  paramsSubscription: Subscription;
   eventsInfoSubscription: Subscription;
 
   // OpenViduInstance collection
@@ -34,18 +32,18 @@ export class TestSessionsComponent {
   numberParticipants = 2;
   autoJoin = false;
 
-  constructor(private testFeedService: TestFeedService) { }
+  constructor(private testFeedService: TestFeedService) {}
 
   ngOnInit() {
     (window as any).myEvents = '';
     this.eventsInfoSubscription = this.testFeedService.newLastEvent$.subscribe(
-      newEvent => {
-        (window as any).myEvents += ('<br>' + stringify(newEvent));
-      });
+      (newEvent) => {
+        (window as any).myEvents += '<br>' + stringify(newEvent);
+      }
+    );
   }
 
   ngOnDestroy() {
-    this.paramsSubscription.unsubscribe();
     this.eventsInfoSubscription.unsubscribe();
   }
 
@@ -53,7 +51,7 @@ export class TestSessionsComponent {
     this.users.push({
       subscriber: true,
       publisher: true,
-      startSession: false
+      startSession: false,
     });
   }
 
@@ -70,7 +68,7 @@ export class TestSessionsComponent {
       this.users.push({
         subscriber: true,
         publisher: true,
-        startSession: this.autoJoin
+        startSession: this.autoJoin,
       });
     }
   }
@@ -80,7 +78,7 @@ export class TestSessionsComponent {
       this.users.push({
         subscriber: true,
         publisher: false,
-        startSession: this.autoJoin
+        startSession: this.autoJoin,
       });
     }
   }
@@ -90,7 +88,7 @@ export class TestSessionsComponent {
       this.users.push({
         subscriber: false,
         publisher: true,
-        startSession: this.autoJoin
+        startSession: this.autoJoin,
       });
     }
   }
@@ -101,5 +99,4 @@ export class TestSessionsComponent {
     this.loadPubs(pubs);
     this.loadSubs(subs);
   }
-
 }

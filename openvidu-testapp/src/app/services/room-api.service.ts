@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import * as _ from 'lodash';
 
 import { AccessToken, EncodedOutputs, EncodingOptions, EncodingOptionsPreset, IngressInput, RoomCompositeOptions, VideoGrant } from 'livekit-server-sdk';
-import { LivekitParams, LivekitParamsService } from './livekit-params.service';
+import { LivekitParamsService } from './livekit-params.service';
 
 @Injectable({
     providedIn: 'root'

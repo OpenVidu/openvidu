@@ -3,12 +3,6 @@ app-openvidu-instance {
     margin: 15px 5px 0px 0px;
 }
 
-.top-div {
-    display: inline-block;
-    width: 100%;
-    margin-top: 12px;
-}
-
 .controls-div {
     float: left;
 }

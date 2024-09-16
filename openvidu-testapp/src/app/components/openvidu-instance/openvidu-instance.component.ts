@@ -1,5 +1,4 @@
 import { Component, HostListener, Input } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 
 import { RoomConf } from '../test-sessions/test-sessions.component';
 import { LivekitParamsService } from 'src/app/services/livekit-params.service';
@@ -7,11 +6,13 @@ import { LivekitParamsService } from 'src/app/services/livekit-params.service';
 import {
   ConnectionQuality,
   ConnectionState,
+  CreateLocalTracksOptions,
   DataPacket_Kind,
   DataPublishOptions,
   DisconnectReason,
   LocalAudioTrack,
   LocalParticipant,
+  LocalTrack,
   LocalTrackPublication,
   LocalVideoTrack,
   MediaDeviceFailure,
@@ -25,9 +26,11 @@ import {
   RoomConnectOptions,
   RoomEvent,
   RoomOptions,
+  ScreenShareCaptureOptions,
   SubscriptionError,
   Track,
   TrackPublication,
+  TrackPublishOptions,
 } from 'livekit-client';
 import { ParticipantPermission } from 'livekit-server-sdk';
 import {
@@ -39,6 +42,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { RoomApiDialogComponent } from '../dialogs/room-api-dialog/room-api-dialog.component';
 import { RoomApiService } from 'src/app/services/room-api.service';
 import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.component';
+import { OptionsDialogComponent } from '../dialogs/options-dialog/options-dialog.component';
 
 @Component({
   selector: 'app-openvidu-instance',
@@ -54,6 +58,11 @@ export class OpenviduInstanceComponent {
 
   room?: Room;
   roomEvents: Map<RoomEvent, Boolean> = new Map<RoomEvent, boolean>();
+
+  roomName: string = 'TestRoom';
+  participantName: string = 'TestParticipant';
+
+  // Options
   roomOptions: RoomOptions = {
     adaptiveStream: true,
     dynacast: true,
@@ -68,9 +77,18 @@ export class OpenviduInstanceComponent {
   roomConnectOptions: RoomConnectOptions = {
     autoSubscribe: false,
   };
-
-  roomName: string = 'TestRoom';
-  participantName: string = 'TestParticipant';
+  createLocalTracksOptions: CreateLocalTracksOptions = {
+    audio: true,
+    video: {
+      resolution: {
+        width: 640,
+        height: 480,
+        frameRate: 30,
+      },
+    },
+  };
+  screenShareCaptureOptions: ScreenShareCaptureOptions;
+  trackPublishOptions: TrackPublishOptions = {};
 
   localTracks: {
     audioTrack: LocalAudioTrack | undefined;
@@ -93,7 +111,11 @@ export class OpenviduInstanceComponent {
     private testFeedService: TestFeedService,
     private roomApiService: RoomApiService,
     private dialog: MatDialog
-  ) {}
+  ) {
+    const roomForDefaults = new Room(this.roomOptions);
+    this.roomOptions = roomForDefaults.options;
+    this.trackPublishOptions = roomForDefaults.options.publishDefaults!;
+  }
 
   async ngOnInit() {
     for (let event of Object.keys(RoomEvent)) {
@@ -144,8 +166,25 @@ export class OpenviduInstanceComponent {
     );
 
     if (this.roomConf.publisher) {
-      await this.room?.localParticipant.enableCameraAndMicrophone();
-      // await this.room?.localParticipant.setScreenShareEnabled(true);
+      const tracks: LocalTrack[] =
+        await this.room.localParticipant.createTracks(
+          this.createLocalTracksOptions
+        );
+      if (this.screenShareCaptureOptions) {
+        const screenTracks: LocalTrack[] =
+          await this.room.localParticipant.createScreenTracks(
+            this.screenShareCaptureOptions
+          );
+        tracks.push(...screenTracks);
+      }
+      await Promise.all(
+        tracks.map((track) =>
+          this.room!.localParticipant.publishTrack(
+            track,
+            this.trackPublishOptions
+          )
+        )
+      );
     }
   }
 
@@ -685,7 +724,6 @@ export class OpenviduInstanceComponent {
               RoomEvent.DataReceived,
               { payload: decodedPayload, participant, kind, topic },
               decodedPayload
-
             );
           }
         );
@@ -972,34 +1010,24 @@ export class OpenviduInstanceComponent {
     this.room!.localParticipant.setMicrophoneEnabled(true);
   }
 
-  openRoomOptionsDialog() {
-    // this.roomOptions.customSessionId = this.sessionName;
-    // const dialogRef = this.dialog.open(SessionPropertiesDialogComponent, {
-    //   data: {
-    //     sessionProperties: this.sessionProperties,
-    //     turnConf: this.turnConf,
-    //     manualTurnConf: this.manualTurnConf,
-    //     customToken: this.customToken,
-    //     forcePublishing: this.forcePublishing,
-    //     reconnectionOnServerFailure: this.reconnectionOnServerFailure,
-    //     connectionProperties: this.connectionProperties,
-    //   }
-    // });
-    // dialogRef.afterClosed().subscribe(result => {
-    //   if (!!result) {
-    //     this.sessionProperties = result.sessionProperties;
-    //     if (!!this.sessionProperties.customSessionId) {
-    //       this.sessionName = this.sessionProperties.customSessionId;
-    //     }
-    //     this.turnConf = result.turnConf;
-    //     this.manualTurnConf = result.manualTurnConf;
-    //     this.customToken = result.customToken;
-    //     this.forcePublishing = result.forcePublishing;
-    //     this.reconnectionOnServerFailure = result.reconnectionOnServerFailure;
-    //     this.connectionProperties = result.connectionProperties;
-    //   }
-    //   document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
-    // });
+  openOptionsDialog() {
+    const dialogRef = this.dialog.open(OptionsDialogComponent, {
+      data: {
+        roomOptions: this.roomOptions,
+        createLocalTracksOptions: this.createLocalTracksOptions,
+        shareScreen: true,
+        screenShareCaptureOptions: this.screenShareCaptureOptions,
+        trackPublishOptions: this.trackPublishOptions,
+      },
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!!result) {
+        this.roomOptions = result;
+        this.createLocalTracksOptions = result.createLocalTracksOptions;
+        this.screenShareCaptureOptions = result.screenShareCaptureOptions;
+        this.trackPublishOptions = result.trackPublishOptions;
+      }
+    });
   }
 
   openRoomApiDialog() {
@@ -1045,7 +1073,9 @@ export class OpenviduInstanceComponent {
 
   sendData(destinationIdentity?: string) {
     let strData = `Message from ${this.room?.localParticipant.identity}`;
-    strData += destinationIdentity ? ` to ${destinationIdentity}` : ' to all room';
+    strData += destinationIdentity
+      ? ` to ${destinationIdentity}`
+      : ' to all room';
     const data = new TextEncoder().encode(strData);
     let options: DataPublishOptions = {
       reliable: true,

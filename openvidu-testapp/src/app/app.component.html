@@ -2,6 +2,8 @@
     <mat-toolbar class="mat-elevation-z5" color="primary">
         <a id="nav-logo" routerLink="/"><img id="nav-img"
                 src="assets/images/openvidu_vert_white_bg_trans_cropped.png" />LiveKit TestApp</a>
+        <a mat-button id="toolbar-sessions" routerLink="/test-sessions"><span>SESSIONS</span></a>
+        <a mat-button id="toolbar-scenarios" routerLink="/test-scenarios"><span>SCENARIOS</span></a>
     </mat-toolbar>
     <main>
         <mat-form-field>
@@ -19,6 +21,6 @@
             <input id="livekit-api-secret" matInput type="password" placeholder="LiveKit Api Secret"
                 [ngModel]="livekitApiSecret" (ngModelChange)="updateApiSecret($event)">
         </mat-form-field>
-        <app-test-sessions></app-test-sessions>
+        <router-outlet></router-outlet>
     </main>
 </mat-sidenav-container>
