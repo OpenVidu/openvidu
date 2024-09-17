@@ -83,10 +83,10 @@
                     </div>
                 </div>
                 <div>
-                    <app-participant class="local-participant" [participant]="room.localParticipant"
+                    <app-participant class="local-participant" [participant]="room.localParticipant" [room]="room"
                         [index]="index"></app-participant>
                     <app-participant class="remote-participant" *ngFor="let participant of room.remoteParticipants | keyvalue"
-                        [participant]="participant.value" [index]="index" (sendDataToOneParticipant)="sendData($event)"></app-participant>
+                        [participant]="participant.value" [room]="room" [index]="index" (sendDataToOneParticipant)="sendData($event)"></app-participant>
                 </div>
             </mat-card-content>
 

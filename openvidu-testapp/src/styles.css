@@ -1,102 +1,107 @@
 /* You can add global styles to this file, and also import other style files */
 html,
 body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05);
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05);
 }
 
 body {
-    font-family: Roboto, Helvetica Neue Light, Helvetica Neue, Helvetica, Arial, Lucida Grande, sans-serif;
+  font-family: Roboto, Helvetica Neue Light, Helvetica Neue, Helvetica, Arial,
+    Lucida Grande, sans-serif;
 }
 
 a {
-    color: inherit;
-    cursor: inherit;
-    text-decoration: inherit;
+  color: inherit;
+  cursor: inherit;
+  text-decoration: inherit;
 }
 
 ul {
-    list-style: none;
-    padding-left: 0;
+  list-style: none;
+  padding-left: 0;
 }
 
 button {
-    font-weight: bold !important;
+  font-weight: bold !important;
 }
 
 .row {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    width: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 .mat-expansion-panel-body {
-    font-size: 9.5px !important;
-    padding: 0 9px 0px !important;
-    margin: 0 2px 0 2px !important;
-    background-color: white;
-    border: 3px solid;
-    line-height: 13px;
-    padding: 4px 7px 3px 7px !important;
-    word-break: break-all;
+  font-size: 9.5px !important;
+  padding: 0 9px 0px !important;
+  margin: 0 2px 0 2px !important;
+  background-color: white;
+  border: 3px solid;
+  line-height: 13px;
+  padding: 4px 7px 3px 7px !important;
+  word-break: break-all;
 }
 
 .room-event .mat-expansion-panel-body {
-    border-color: #beefd5;
+  border-color: #beefd5;
 }
 
 .participant-event .mat-expansion-panel-body {
-    border-color: #d0ebf1;
+  border-color: #d0ebf1;
 }
 
 .track-event .mat-expansion-panel-body {
-    border-color: #ede3bb;
+  border-color: #ede3bb;
 }
 
 .mat-expansion-indicator {
-    display: none;
+  display: none;
 }
 
 .mat-expansion-indicator::after {
-    display: none;
+  display: none;
 }
 
 .mat-expansion-panel-spacing {
-    margin: 3px 0 !important;
+  margin: 3px 0 !important;
 }
 
 .mat-mdc-text-field-wrapper {
-    align-items: center !important;
+  align-items: center !important;
 }
 
 .mat-mdc-form-field-infix {
-    display: flex !important;
+  display: flex !important;
 }
 
-app-participant:last-child>.participant-container {
-    margin-bottom: 0;
+app-participant:last-child > .participant-container {
+  margin-bottom: 0;
 }
 
 .custom-tooltip {
-    font-size: 11px;
+  font-size: 11px;
 }
 
 .custom-tooltip > div {
-    padding: 2px 3px 2px 3px;
-    line-height: 11px;
-    min-height: 15px;
+  padding: 2px 3px 2px 3px;
+  line-height: 11px;
+  min-height: 15px;
 }
 
 button.mat-icon-custom .mat-mdc-button-touch-target {
-    width: 24px;
-    height: 24px;
+  width: 24px;
+  height: 24px;
 }
 
 .top-div {
-    display: inline-block;
-    width: 100%;
-    margin-top: 12px;
+  display: inline-block;
+  width: 100%;
+  margin-top: 12px;
+}
+
+app-options-dialog .mat-mdc-form-field-infix {
+  width: 140px;
 }

@@ -1,6 +1,26 @@
 mat-form-field {
-  margin-top: 10px;
-  margin-right: 5px;
+  margin: 10px 5px 0 5px;
+  font-size: 14px;
+}
+
+mat-form-field:first-child {
+  margin-left: 0;
+}
+
+mat-radio-group {
+  font-size: 14px;
+}
+
+mat-checkbox {
+  font-size: 14px;
+}
+
+mat-select {
+  font-size: 14px;
+}
+
+mat-option {
+  font-size: 14px;
 }
 
 a {

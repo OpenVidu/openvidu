@@ -53,10 +53,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
 
   users: User[] = [];
 
-  roomOptions: RoomOptions = {
-    adaptiveStream: true,
-    dynacast: true,
-  };
+  roomOptions: RoomOptions;
   roomConnectOptions: RoomConnectOptions = {
     autoSubscribe: false,
   };
@@ -70,7 +67,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
     },
     audio: false,
   };
-  trackPublishOptions: TrackPublishOptions = {};
+  trackPublishOptions: TrackPublishOptions;
 
   constructor(
     private livekitParamsService: LivekitParamsService,

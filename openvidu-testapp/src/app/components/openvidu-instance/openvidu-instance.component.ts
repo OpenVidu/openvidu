@@ -166,10 +166,17 @@ export class OpenviduInstanceComponent {
     );
 
     if (this.roomConf.publisher) {
-      const tracks: LocalTrack[] =
-        await this.room.localParticipant.createTracks(
-          this.createLocalTracksOptions
+      const tracks: LocalTrack[] = [];
+      if (
+        this.createLocalTracksOptions.audio ||
+        this.createLocalTracksOptions.video
+      ) {
+        tracks.push(
+          ...(await this.room.localParticipant.createTracks(
+            this.createLocalTracksOptions
+          ))
         );
+      }
       if (this.screenShareCaptureOptions) {
         const screenTracks: LocalTrack[] =
           await this.room.localParticipant.createScreenTracks(
@@ -1026,6 +1033,23 @@ export class OpenviduInstanceComponent {
         this.createLocalTracksOptions = result.createLocalTracksOptions;
         this.screenShareCaptureOptions = result.screenShareCaptureOptions;
         this.trackPublishOptions = result.trackPublishOptions;
+        if (
+          this.createLocalTracksOptions.audio != undefined &&
+          typeof this.createLocalTracksOptions.audio !== 'boolean'
+        ) {
+          this.roomOptions.audioCaptureDefaults =
+            this.createLocalTracksOptions.audio;
+        }
+        if (
+          this.createLocalTracksOptions.video != undefined &&
+          typeof this.createLocalTracksOptions.video !== 'boolean'
+        ) {
+          this.roomOptions.videoCaptureDefaults =
+            this.createLocalTracksOptions.video;
+        }
+        if (this.trackPublishOptions != undefined) {
+          this.roomOptions.publishDefaults = this.trackPublishOptions;
+        }
       }
     });
   }

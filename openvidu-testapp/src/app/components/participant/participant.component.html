@@ -9,7 +9,7 @@
             </button>
             <button *ngIf="participant.isLocal" class="options-audio-btn" (click)="openAudioTrackOptionsDialog()"
                 title="Video track options" matTooltip="Audio track options" matTooltipClass="custom-tooltip">
-                <mat-icon aria-label="New video track">more_vert</mat-icon>
+                <mat-icon aria-label="Audio options">more_vert</mat-icon>
             </button>
             <button *ngIf="participant.isLocal" class="add-video-btn" (click)="addVideoTrack()" title="New video track"
                 matTooltip="New video track" matTooltipClass="custom-tooltip">
@@ -17,7 +17,7 @@
             </button>
             <button *ngIf="participant.isLocal" class="options-video-btn" (click)="openVideoTrackOptionsDialog()"
                 title="Video track options" matTooltip="Video track options" matTooltipClass="custom-tooltip">
-                <mat-icon aria-label="New video track">more_vert</mat-icon>
+                <mat-icon aria-label="Video options">more_vert</mat-icon>
             </button>
             <button *ngIf="participant.isLocal" class="add-screen-btn" (click)="addScreenTrack()"
                 title="New screen track" matTooltip="New screen track" matTooltipClass="custom-tooltip">
@@ -25,7 +25,11 @@
             </button>
             <button *ngIf="participant.isLocal" class="options-screen-btn" (click)="openScreenTrackOptionsDialog()"
                 title="Screen track options" matTooltip="Screen track options" matTooltipClass="custom-tooltip">
-                <mat-icon aria-label="New video track">more_vert</mat-icon>
+                <mat-icon aria-label="Screen options">more_vert</mat-icon>
+            </button>
+            <button *ngIf="participant.isLocal" class="options-track-publish-btn" (click)="openTrackPublishOptionsDialog()"
+                title="Track publish options" matTooltip="Track publish options" matTooltipClass="custom-tooltip">
+                <mat-icon aria-label="Track publish options">settings</mat-icon>
             </button>
             <button *ngIf="!participant.isLocal" class="message-btn" (click)="sendData()" title="Send message to this participant">
                 <mat-icon aria-label="Send message button">chat</mat-icon>

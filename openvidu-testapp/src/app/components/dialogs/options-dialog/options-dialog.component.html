@@ -4,81 +4,72 @@
     <mat-divider *ngIf="roomOptions"></mat-divider>
     <div *ngIf="roomOptions">
       <label><a href="https://docs.livekit.io/client-sdk-js/interfaces/RoomOptions.html" target="_blank">RoomOptions</a></label><br>
-      <mat-checkbox id="room-adaptiveStream" [(ngModel)]="roomOptions.adaptiveStream" [style.fontSize.px]="14">adaptiveStream</mat-checkbox>
-      <mat-checkbox id="room-dynacast" [(ngModel)]="roomOptions.dynacast" [style.fontSize.px]="14">dynacast</mat-checkbox>
-      <mat-checkbox id="room-disconnectOnPageLeave" [(ngModel)]="roomOptions.disconnectOnPageLeave" [style.fontSize.px]="14">disconnectOnPageLeave</mat-checkbox>
-      <mat-checkbox id="room-stopLocalTrackOnUnpublish" [(ngModel)]="roomOptions.stopLocalTrackOnUnpublish" [style.fontSize.px]="14">stopLocalTrackOnUnpublish</mat-checkbox>
-      <mat-checkbox id="room-webAudioMix" [(ngModel)]="roomOptions.webAudioMix" [style.fontSize.px]="14">webAudioMix</mat-checkbox>
+      <mat-checkbox id="room-adaptiveStream" [(ngModel)]="roomOptions.adaptiveStream">adaptiveStream</mat-checkbox>
+      <mat-checkbox id="room-dynacast" [(ngModel)]="roomOptions.dynacast">dynacast</mat-checkbox>
+      <mat-checkbox id="room-disconnectOnPageLeave" [(ngModel)]="roomOptions.disconnectOnPageLeave">disconnectOnPageLeave</mat-checkbox>
+      <mat-checkbox id="room-stopLocalTrackOnUnpublish" [(ngModel)]="roomOptions.stopLocalTrackOnUnpublish">stopLocalTrackOnUnpublish</mat-checkbox>
+      <mat-checkbox id="room-webAudioMix" [(ngModel)]="roomOptions.webAudioMix">webAudioMix</mat-checkbox>
     </div>
     <mat-divider *ngIf="createLocalTracksOptions"></mat-divider>
     <div *ngIf="createLocalTracksOptions">
-      <label class="label">CreateLocalTracksOptions</label>
-      <div>
+      <div *ngIf="createLocalTracksOptions.video !== undefined">
         <a href="https://docs.livekit.io/client-sdk-js/interfaces/VideoCaptureOptions.html" target="_blank">VideoCaptureOptions</a>
         <mat-radio-group [(ngModel)]="videoOption">
           <mat-radio-button [value]="true">True (default)</mat-radio-button>
-          <mat-radio-button [value]="false">False (no video)</mat-radio-button>
+          <mat-radio-button *ngIf="allowDisablingVideo" [value]="false">False (no video)</mat-radio-button>
           <mat-radio-button [value]="'custom'">Custom</mat-radio-button>
         </mat-radio-group>
         <div *ngIf="videoOption === 'custom'">
-          <mat-form-field class="inner-text-input" [style.fontSize.px]="14">
+          <mat-form-field class="inner-text-input">
             <mat-label>deviceId</mat-label>
             <input matInput id="video-deviceId" placeholder="deviceId" [(ngModel)]="auxVideoCaptureOptions.deviceId"/>
           </mat-form-field>
-          <mat-form-field id="video-facingMode" [style.fontSize.px]="14">
+          <mat-form-field id="video-facingMode">
             <mat-label>facingMode</mat-label>
             <mat-select [(value)]="auxVideoCaptureOptions.facingMode">
               <mat-option *ngFor="let mode of ['user','environment','left','right']" [value]="mode">{{mode}}</mat-option>
             </mat-select>
           </mat-form-field>
-          <mat-form-field class="inner-text-input" [style.fontSize.px]="14">
-            <mat-label>aspectRatio</mat-label>
-            <input matInput id="video-aspectRatio" placeholder="aspectRatio" [(ngModel)]="auxVideoCaptureOptions.resolution!.aspectRatio"/>
-          </mat-form-field>
-          <mat-form-field class="inner-text-input" [style.fontSize.px]="14">
-            <mat-label>frameRate</mat-label>
-            <input matInput id="video-frameRate" placeholder="frameRate" [(ngModel)]="auxVideoCaptureOptions.resolution!.frameRate"/>
-          </mat-form-field>
-          <mat-form-field class="inner-text-input" [style.fontSize.px]="14">
-            <mat-label>width</mat-label>
-            <input matInput id="video-width" placeholder="width" [(ngModel)]="auxVideoCaptureOptions.resolution!.width"/>
-          </mat-form-field>
-          <mat-form-field class="inner-text-input" [style.fontSize.px]="14">
-            <mat-label>height</mat-label>
-            <input matInput id="video-height" placeholder="height" [(ngModel)]="auxVideoCaptureOptions.resolution!.height"/>
-          </mat-form-field>
+          <app-video-resolution style="display: inline-block;"
+            [componentId]="'resolution-video-capture-options'"
+            [width]="auxVideoCaptureOptions.resolution!.width"
+            [height]="auxVideoCaptureOptions.resolution!.height"
+            [frameRate]="auxVideoCaptureOptions.resolution!.frameRate"
+            [aspectRatio]="auxVideoCaptureOptions.resolution!.aspectRatio"
+            (resolutionChanged)="auxVideoCaptureOptions.resolution!.width = $event.width; auxVideoCaptureOptions.resolution!.height = $event.height; auxVideoCaptureOptions.resolution!.frameRate = $event.frameRate; auxVideoCaptureOptions.resolution!.aspectRatio = $event.aspectRatio">
+          </app-video-resolution>
         </div>
       </div>
-      <div>
+      <div *ngIf="createLocalTracksOptions.audio !== undefined" style="margin-top: 16px">
         <label class="label"><a href="https://docs.livekit.io/client-sdk-js/interfaces/AudioCaptureOptions.html" target="_blank">AudioCaptureOptions</a></label>
         <mat-radio-group [(ngModel)]="audioOption">
           <mat-radio-button [value]="true">True (default)</mat-radio-button>
-          <mat-radio-button [value]="false">False (no audio)</mat-radio-button>
+          <mat-radio-button *ngIf="allowDisablingAudio" [value]="false">False (no audio)</mat-radio-button>
           <mat-radio-button [value]="'custom'">Custom</mat-radio-button>
         </mat-radio-group>
         <div *ngIf="audioOption === 'custom'">
           <div>
-            <mat-checkbox id="audio-autoGainControl" [(ngModel)]="auxAudioCaptureOptions.autoGainControl" [style.fontSize.px]="14">autoGainControl</mat-checkbox>
-            <mat-checkbox id="audio-echoCancellation" [(ngModel)]="auxAudioCaptureOptions.echoCancellation" [style.fontSize.px]="14">echoCancellation</mat-checkbox>
-            <mat-checkbox id="audio-noiseSuppression" [(ngModel)]="auxAudioCaptureOptions.noiseSuppression" [style.fontSize.px]="14">noiseSuppression</mat-checkbox>
+            <mat-checkbox id="audio-autoGainControl" [(ngModel)]="auxAudioCaptureOptions.autoGainControl">autoGainControl</mat-checkbox>
+            <mat-checkbox id="audio-echoCancellation" [(ngModel)]="auxAudioCaptureOptions.echoCancellation">echoCancellation</mat-checkbox>
+            <mat-checkbox id="audio-noiseSuppression" [(ngModel)]="auxAudioCaptureOptions.noiseSuppression">noiseSuppression</mat-checkbox>
           </div>
-          <mat-form-field class="inner-text-input" [style.fontSize.px]="14">
+          <mat-form-field class="inner-text-input">
             <mat-label>deviceId</mat-label>
             <input matInput id="audio-deviceId" placeholder="deviceId" [(ngModel)]="auxAudioCaptureOptions.deviceId"/>
           </mat-form-field>
-          <mat-form-field class="inner-text-input" [style.fontSize.px]="14">
+          <mat-form-field class="inner-text-input">
             <mat-label>channelCount</mat-label>
             <input matInput id="audio-channelCount" type="number" placeholder="channelCount" [(ngModel)]="auxAudioCaptureOptions.channelCount"/>
           </mat-form-field>
-          <mat-form-field class="inner-text-input" [style.fontSize.px]="14">
+          <mat-form-field class="inner-text-input">
             <mat-label>latency</mat-label>
             <input matInput id="audio-latency" type="number" placeholder="latency" [(ngModel)]="auxAudioCaptureOptions.latency"/>
           </mat-form-field>
-          <mat-form-field class="inner-text-input" [style.fontSize.px]="14">
+          <mat-form-field class="inner-text-input">
             <mat-label>sampleRate</mat-label>
             <input matInput id="audio-sampleRate" type="number" placeholder="sampleRate" [(ngModel)]="auxAudioCaptureOptions.sampleRate"/>
           </mat-form-field>
-          <mat-form-field class="inner-text-input" [style.fontSize.px]="14">
+          <mat-form-field class="inner-text-input">
             <mat-label>sampleSize</mat-label>
             <input matInput id="audio-sampleSize" type="number" placeholder="sampleSize" [(ngModel)]="auxAudioCaptureOptions.sampleSize"/>
           </mat-form-field>
@@ -90,20 +81,20 @@
       <label><a href="https://docs.livekit.io/client-sdk-js/interfaces/ScreenShareCaptureOptions.html" target="_blank">ScreenShareCaptureOptions</a></label><br>
       <mat-radio-group [(ngModel)]="screenOption" (change)="screenOptionChanged($event)">
         <mat-radio-button [value]="true">True (default)</mat-radio-button>
-        <mat-radio-button [value]="false">False (no screen)</mat-radio-button>
+        <mat-radio-button [value]="false" *ngIf="allowDisablingScreen">False (no screen)</mat-radio-button>
         <mat-radio-button [value]="'custom'">Custom</mat-radio-button>
       </mat-radio-group>
       <div *ngIf="screenOption == 'custom'">
-        <mat-checkbox id="screenShare-video" [(ngModel)]="screenShareCaptureOptions!.video" [style.fontSize.px]="14">video</mat-checkbox>
+        <mat-checkbox id="screenShare-video" [(ngModel)]="screenShareCaptureOptions!.video">video</mat-checkbox>
+        <mat-checkbox id="screenShare-audio" [(ngModel)]="screenShareCaptureOptions!.audio">audio</mat-checkbox>
+        <mat-checkbox id="screenShare-preferCurrentTab" [(ngModel)]="screenShareCaptureOptions!.preferCurrentTab">preferCurrentTab</mat-checkbox>
+        <mat-checkbox id="screenShare-suppressLocalAudioPlayback" [(ngModel)]="screenShareCaptureOptions!.suppressLocalAudioPlayback">suppressLocalAudioPlayback</mat-checkbox>
         <mat-form-field *ngIf="screenShareCaptureOptions!.video" id="screenShare-displaySurface">
           <mat-label>displaySurface</mat-label>
           <mat-select [(value)]="auxScreenDisplaySurface">
             <mat-option *ngFor="let surface of ['NONE','window','browser','monitor']" [value]="surface">{{surface}}</mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-checkbox id="screenShare-audio" [(ngModel)]="screenShareCaptureOptions!.audio" [style.fontSize.px]="14">audio</mat-checkbox>
-        <mat-checkbox id="screenShare-preferCurrentTab" [(ngModel)]="screenShareCaptureOptions!.preferCurrentTab" [style.fontSize.px]="14">preferCurrentTab</mat-checkbox>
-        <mat-checkbox id="screenShare-suppressLocalAudioPlayback" [(ngModel)]="screenShareCaptureOptions!.suppressLocalAudioPlayback" [style.fontSize.px]="14">suppressLocalAudioPlayback</mat-checkbox>
         <mat-form-field id="screenShare-contentHint">
           <mat-label>contentHint</mat-label>
           <mat-select [(value)]="screenShareCaptureOptions!.contentHint">
@@ -128,42 +119,58 @@
             <mat-option *ngFor="let audio of ['include','exclude']" [value]="audio">{{audio}}</mat-option>
           </mat-select>
         </mat-form-field>
+        <div>
+          <label>Resolution</label>
+          <mat-radio-group [(ngModel)]="customScreenShareResolution" (change)="handleCustomScreenResolutionChange()">
+            <mat-radio-button [value]="false">Default</mat-radio-button>
+            <mat-radio-button [value]="true">Custom</mat-radio-button>
+          </mat-radio-group>
+          <app-video-resolution *ngIf="customScreenShareResolution"
+            [componentId]="'resolution-screen-capture-options'"
+            [showTitle]="false"
+            [width]="screenShareCaptureOptions!.resolution!.width"
+            [height]="screenShareCaptureOptions!.resolution!.height"
+            [frameRate]="screenShareCaptureOptions!.resolution!.frameRate"
+            [aspectRatio]="screenShareCaptureOptions!.resolution!.aspectRatio"
+            (resolutionChanged)="screenShareCaptureOptions!.resolution!.width = $event.width; screenShareCaptureOptions!.resolution!.height = $event.height; screenShareCaptureOptions!.resolution!.frameRate = $event.frameRate; screenShareCaptureOptions!.resolution!.aspectRatio = $event.aspectRatio">
+          </app-video-resolution>
+        </div>
       </div>
     </div>
     <mat-divider *ngIf="trackPublishOptions"></mat-divider>
     <div *ngIf="trackPublishOptions">
       <label><a href="https://docs.livekit.io/client-sdk-js/interfaces/TrackPublishOptions.html" target="_blank">TrackPublishOptions</a></label><br>
-      <mat-checkbox id="trackPublish-backupCodec" [(ngModel)]="trackPublishOptions.backupCodec" [style.fontSize.px]="14">backupCodec</mat-checkbox>
-      <mat-checkbox id="trackPublish-dtx" [(ngModel)]="trackPublishOptions.dtx" [style.fontSize.px]="14">dtx</mat-checkbox>
-      <mat-checkbox id="trackPublish-forceStereo" [(ngModel)]="trackPublishOptions.forceStereo" [style.fontSize.px]="14">forceStereo</mat-checkbox>
-      <mat-form-field class="inner-text" [style.fontSize.px]="14">
-        <mat-label>name</mat-label>
-        <input matInput id="trackPublish-name" placeholder="name" [(ngModel)]="trackPublishOptions.name"/>
+      <mat-checkbox id="trackPublish-simulcast" [(ngModel)]="trackPublishOptions.simulcast">simulcast</mat-checkbox>
+      <mat-checkbox id="trackPublish-dtx" [(ngModel)]="trackPublishOptions.dtx">dtx</mat-checkbox>
+      <mat-checkbox id="trackPublish-red" [(ngModel)]="trackPublishOptions.red">red</mat-checkbox>
+      <mat-checkbox id="trackPublish-backupCodec" [(ngModel)]="trackPublishOptions.backupCodec">backupCodec</mat-checkbox>
+      <mat-checkbox id="trackPublish-forceStereo" [(ngModel)]="trackPublishOptions.forceStereo">forceStereo</mat-checkbox>
+      <mat-checkbox id="trackPublish-stopMicTrackOnMute" [(ngModel)]="trackPublishOptions.stopMicTrackOnMute">stopMicTrackOnMute</mat-checkbox>
+      <mat-form-field id="trackPublish-videoCodec">
+        <mat-label>videoCodec</mat-label>
+        <mat-select [(value)]="trackPublishOptions.videoCodec">
+          <mat-option *ngFor="let codec of ['vp8','h264','vp9','av1']" [value]="codec">{{codec}}</mat-option>
+        </mat-select>
       </mat-form-field>
-      <mat-checkbox id="trackPublish-red" [(ngModel)]="trackPublishOptions.red" [style.fontSize.px]="14">red</mat-checkbox>
-      <mat-form-field id="trackPublish-scalabilityMode" [style.fontSize.px]="14">
+      <mat-form-field id="trackPublish-scalabilityMode">
         <mat-label>scalabilityMode</mat-label>
         <mat-select [(value)]="trackPublishOptions.scalabilityMode">
           <mat-option *ngFor="let mode of ['L1T1','L1T2','L1T3','L2T1','L2T1h','L2T1_KEY','L2T2','L2T2h','L2T2_KEY','L2T3','L2T3h','L2T3_KEY','L3T1','L3T1h','L3T1_KEY','L3T2','L3T2h','L3T2_KEY','L3T3','L3T3h','L3T3_KEY']" [value]="mode">{{mode}}</mat-option>
         </mat-select>
       </mat-form-field>
-      <mat-checkbox id="trackPublish-simulcast" [(ngModel)]="trackPublishOptions.simulcast" [style.fontSize.px]="14">simulcast</mat-checkbox>
-      <mat-form-field id="trackPublish-source" [style.fontSize.px]="14">
+      <mat-form-field class="inner-text">
+        <mat-label>name</mat-label>
+        <input matInput id="trackPublish-name" placeholder="name" [(ngModel)]="trackPublishOptions.name"/>
+      </mat-form-field>
+      <mat-form-field id="trackPublish-source">
         <mat-label>source</mat-label>
         <mat-select [(value)]="trackPublishOptions.source">
           <mat-option *ngFor="let source of ENUMERATION_SOURCE" [value]="source">{{source}}</mat-option>
         </mat-select>
       </mat-form-field>
-      <mat-checkbox id="trackPublish-stopMicTrackOnMute" [(ngModel)]="trackPublishOptions.stopMicTrackOnMute" [style.fontSize.px]="14">stopMicTrackOnMute</mat-checkbox>
-      <mat-form-field id="trackPublish-stream" [style.fontSize.px]="14">
+      <mat-form-field id="trackPublish-stream">
         <mat-label>stream</mat-label>
         <input matInput id="trackPublish-stream" placeholder="stream" [(ngModel)]="trackPublishOptions.stream"/>
-      </mat-form-field>
-      <mat-form-field id="trackPublish-videoCodec" [style.fontSize.px]="14">
-        <mat-label>videoCodec</mat-label>
-        <mat-select [(value)]="trackPublishOptions.videoCodec">
-          <mat-option *ngFor="let codec of ['vp8','h264','vp9','av1']" [value]="codec">{{codec}}</mat-option>
-        </mat-select>
       </mat-form-field>
     </div>
   </mat-dialog-content>

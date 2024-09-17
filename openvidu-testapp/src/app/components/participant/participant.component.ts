@@ -1,7 +1,9 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import {
   AudioCaptureOptions,
   ConnectionQuality,
+  CreateLocalTracksOptions,
   DataPacket_Kind,
   LocalAudioTrack,
   LocalParticipant,
@@ -12,11 +14,13 @@ import {
   ParticipantEvent,
   RemoteTrack,
   RemoteTrackPublication,
+  Room,
   ScreenShareCaptureOptions,
   SubscriptionError,
   Track,
   TrackEvent,
   TrackPublication,
+  TrackPublishOptions,
   VideoCaptureOptions,
   createLocalAudioTrack,
   createLocalScreenTracks,
@@ -28,6 +32,7 @@ import {
   TestAppEvent,
   TestFeedService,
 } from 'src/app/services/test-feed.service';
+import { OptionsDialogComponent } from '../dialogs/options-dialog/options-dialog.component';
 
 @Component({
   selector: 'app-participant',
@@ -39,6 +44,9 @@ export class ParticipantComponent {
   participant: Participant;
 
   @Input()
+  room: Room;
+
+  @Input()
   index: number;
 
   @Output()
@@ -48,33 +56,57 @@ export class ParticipantComponent {
 
   events: TestAppEvent[] = [];
 
-  videoCaptureOptions: VideoCaptureOptions;
-  audioCaptureOptions: AudioCaptureOptions;
-  screenShareCaptureOptions: ScreenShareCaptureOptions = { audio: true };
+  createLocalTracksOptions: CreateLocalTracksOptions;
+  screenShareCaptureOptions: ScreenShareCaptureOptions = {};
+  trackPublishOptions?: TrackPublishOptions;
 
   private decoder = new TextDecoder();
 
-  constructor(private testFeedService: TestFeedService) {}
+  constructor(
+    private testFeedService: TestFeedService,
+    private dialog: MatDialog
+  ) {}
 
   ngOnInit() {
     this.setupParticipantEventListeners();
     this.localParticipant = this.participant.isLocal
       ? (this.participant as LocalParticipant)
       : undefined;
+    this.createLocalTracksOptions = {
+      audio: JSON.parse(JSON.stringify(this.room.options.audioCaptureDefaults)),
+      video: JSON.parse(JSON.stringify(this.room.options.videoCaptureDefaults)),
+    };
+    this.trackPublishOptions = JSON.parse(
+      JSON.stringify(this.room.options.publishDefaults)
+    );
   }
 
   async addVideoTrack() {
+    const options =
+      this.createLocalTracksOptions.video === true
+        ? undefined
+        : (this.createLocalTracksOptions.video as VideoCaptureOptions);
     const localVideoTrack: LocalVideoTrack = await createLocalVideoTrack(
-      this.videoCaptureOptions
+      options
     );
-    (this.participant as LocalParticipant).publishTrack(localVideoTrack);
+    (this.participant as LocalParticipant).publishTrack(
+      localVideoTrack,
+      this.trackPublishOptions
+    );
   }
 
   async addAudioTrack() {
+    const options =
+      this.createLocalTracksOptions.audio === true
+        ? undefined
+        : (this.createLocalTracksOptions.audio as AudioCaptureOptions);
     const localAudioTrack: LocalAudioTrack = await createLocalAudioTrack(
-      this.audioCaptureOptions
+      options
     );
-    (this.participant as LocalParticipant).publishTrack(localAudioTrack);
+    (this.participant as LocalParticipant).publishTrack(
+      localAudioTrack,
+      this.trackPublishOptions
+    );
   }
 
   async addScreenTrack() {
@@ -82,15 +114,79 @@ export class ParticipantComponent {
       this.screenShareCaptureOptions
     );
     localScreenTracks.forEach((track) =>
-      (this.participant as LocalParticipant).publishTrack(track)
+      (this.participant as LocalParticipant).publishTrack(
+        track,
+        this.trackPublishOptions
+      )
     );
   }
 
-  openVideoTrackOptionsDialog() {}
+  openVideoTrackOptionsDialog() {
+    const dialogRef = this.dialog.open(OptionsDialogComponent, {
+      data: {
+        createLocalTracksOptions: {
+          video: this.createLocalTracksOptions.video,
+        },
+        allowDisablingVideo: false,
+      },
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!!result) {
+        if (typeof result.createLocalTracksOptions.video === 'boolean') {
+          this.createLocalTracksOptions.video =
+            this.room.options.videoCaptureDefaults!;
+        } else {
+          this.createLocalTracksOptions.video = result.createLocalTracksOptions
+            .video as VideoCaptureOptions;
+        }
+      }
+    });
+  }
 
-  openAudioTrackOptionsDialog() {}
+  openAudioTrackOptionsDialog() {
+    const dialogRef = this.dialog.open(OptionsDialogComponent, {
+      data: {
+        createLocalTracksOptions: {
+          audio: this.createLocalTracksOptions.audio,
+        },
+        allowDisablingAudio: false,
+      },
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!!result) {
+        this.createLocalTracksOptions.audio =
+          result.createLocalTracksOptions.audio;
+      }
+    });
+  }
 
-  openScreenTrackOptionsDialog() {}
+  openScreenTrackOptionsDialog() {
+    const dialogRef = this.dialog.open(OptionsDialogComponent, {
+      data: {
+        shareScreen: true,
+        screenShareCaptureOptions: this.screenShareCaptureOptions,
+        allowDisablingScreen: false,
+      },
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!!result) {
+        this.screenShareCaptureOptions = result.screenShareCaptureOptions;
+      }
+    });
+  }
+
+  openTrackPublishOptionsDialog() {
+    const dialogRef = this.dialog.open(OptionsDialogComponent, {
+      data: {
+        trackPublishOptions: this.trackPublishOptions,
+      },
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!!result) {
+        this.trackPublishOptions = result.trackPublishOptions;
+      }
+    });
+  }
 
   /**
    * [ParticipantEventCallbacks]

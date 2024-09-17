@@ -23,6 +23,9 @@ export class OptionsDialogComponent {
   shareScreen = false;
   screenShareCaptureOptions?: ScreenShareCaptureOptions;
   trackPublishOptions?: TrackPublishOptions;
+  allowDisablingAudio = true;
+  allowDisablingVideo = true;
+  allowDisablingScreen = true;
 
   videoOption: true | false | 'custom';
   audioOption: true | false | 'custom';
@@ -32,6 +35,7 @@ export class OptionsDialogComponent {
   auxAudioCaptureOptions: AudioCaptureOptions;
 
   auxScreenDisplaySurface: 'NONE' | 'window' | 'browser' | 'monitor';
+  customScreenShareResolution: boolean = false;
 
   ENUMERATION_SOURCE = Object.keys(Track.Source);
 
@@ -44,6 +48,9 @@ export class OptionsDialogComponent {
       shareScreen: boolean;
       screenShareCaptureOptions?: ScreenShareCaptureOptions;
       trackPublishOptions?: TrackPublishOptions;
+      allowDisablingAudio?: boolean;
+      allowDisablingVideo?: boolean;
+      allowDisablingScreen?: boolean;
     }
   ) {
     this.roomOptions = data.roomOptions;
@@ -51,31 +58,45 @@ export class OptionsDialogComponent {
     this.shareScreen = data.shareScreen;
     this.screenShareCaptureOptions = data.screenShareCaptureOptions;
     this.trackPublishOptions = data.trackPublishOptions;
-    if (typeof this.createLocalTracksOptions?.video !== 'boolean') {
-      this.auxVideoCaptureOptions = this.createLocalTracksOptions!
-        .video as VideoCaptureOptions;
-      this.videoOption = 'custom';
-    } else {
-      this.videoOption = this.createLocalTracksOptions.video;
-      this.auxVideoCaptureOptions = new Room().options.videoCaptureDefaults!;
-    }
-    if (typeof this.createLocalTracksOptions?.audio !== 'boolean') {
-      this.auxAudioCaptureOptions = this.createLocalTracksOptions!
-        .audio as AudioCaptureOptions;
-      this.audioOption = 'custom';
-    } else {
-      this.audioOption = this.createLocalTracksOptions.audio;
-      this.auxAudioCaptureOptions = new Room().options.audioCaptureDefaults!;
+    if (this.createLocalTracksOptions !== undefined) {
+      if (typeof this.createLocalTracksOptions.video !== 'boolean') {
+        this.auxVideoCaptureOptions = this.createLocalTracksOptions!
+          .video as VideoCaptureOptions;
+        this.videoOption = 'custom';
+      } else {
+        this.videoOption = this.createLocalTracksOptions.video;
+        this.auxVideoCaptureOptions = new Room().options.videoCaptureDefaults!;
+      }
+      if (typeof this.createLocalTracksOptions?.audio !== 'boolean') {
+        this.auxAudioCaptureOptions = this.createLocalTracksOptions!
+          .audio as AudioCaptureOptions;
+        this.audioOption = 'custom';
+      } else {
+        this.audioOption = this.createLocalTracksOptions.audio;
+        this.auxAudioCaptureOptions = new Room().options.audioCaptureDefaults!;
+      }
     }
     if (this.shareScreen) {
       if (this.screenShareCaptureOptions == undefined) {
         this.screenOption = false;
       } else if (Object.keys(this.screenShareCaptureOptions).length > 0) {
         this.screenOption = 'custom';
+        if (this.screenShareCaptureOptions.resolution) {
+          this.customScreenShareResolution = true;
+        }
       } else {
         this.screenOption = true;
         this.screenShareCaptureOptions = {};
       }
+    }
+    if (this.data.allowDisablingAudio === false) {
+      this.allowDisablingAudio = false;
+    }
+    if (this.data.allowDisablingVideo === false) {
+      this.allowDisablingVideo = false;
+    }
+    if (this.data.allowDisablingScreen === false) {
+      this.allowDisablingScreen = false;
     }
   }
 
@@ -117,8 +138,21 @@ export class OptionsDialogComponent {
   screenOptionChanged(event: MatRadioChange) {
     if (event.value === 'custom' && !this.screenShareCaptureOptions) {
       this.screenShareCaptureOptions = {
-        video: true
+        video: true,
       };
+    }
+  }
+
+  handleCustomScreenResolutionChange() {
+    if (this.customScreenShareResolution) {
+      if (!this.screenShareCaptureOptions!.resolution) {
+        this.screenShareCaptureOptions!.resolution = {
+          width: 1920,
+          height: 1080,
+        };
+      }
+    } else {
+      delete this.screenShareCaptureOptions!.resolution;
     }
   }
 }
