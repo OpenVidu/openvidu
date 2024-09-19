@@ -103,9 +103,12 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
     this.scenarioPlaying = true;
   }
 
-  endScenario() {
-    for (const user of this.users) {
-      user.room.disconnect();
+  async endScenario() {
+    await Promise.all(this.users.map((user) => user.room.disconnect()));
+    try {
+      await this.roomApiService.deleteRoom(this.fixedRoomId);
+    } catch (error: any) {
+      console.error(JSON.stringify(error));
     }
     this.users = [];
     this.scenarioPlaying = false;
