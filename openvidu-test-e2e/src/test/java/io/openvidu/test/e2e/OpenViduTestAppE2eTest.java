@@ -386,7 +386,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Massive session");
 
-		final Integer NUMBER_OF_USERS = 7;
+		final Integer NUMBER_OF_USERS = 11;
 
 		user.getDriver().findElement(By.id("toolbar-scenarios")).sendKeys(Keys.ENTER);
 
@@ -396,15 +396,29 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getDriver().findElement(By.id("one2many-btn")).click();
 
+		user.getEventManager().waitUntilEventReaches("connectionCreated", NUMBER_OF_USERS * NUMBER_OF_USERS, 20, true);
+		user.getEventManager().waitUntilEventReaches("streamCreated", NUMBER_OF_USERS * NUMBER_OF_USERS, 15, true);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", NUMBER_OF_USERS * NUMBER_OF_USERS, 15, true);
 		user.getWaiter()
 				.until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), NUMBER_OF_USERS * NUMBER_OF_USERS));
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(
+				By.cssSelector("mat-icon[data-status=\"success\"]"), NUMBER_OF_USERS * NUMBER_OF_USERS));
 
-		user.getEventManager().waitUntilEventReaches("streamCreated", NUMBER_OF_USERS * NUMBER_OF_USERS);
-		user.getEventManager().waitUntilEventReaches("streamPlaying", NUMBER_OF_USERS * NUMBER_OF_USERS);
+		Assertions.assertEquals(NUMBER_OF_USERS * NUMBER_OF_USERS,
+				user.getEventManager().getNumEvents("connectionCreated").get(),
+				"Wrong number of connectionCreated events");
+		Assertions.assertEquals(NUMBER_OF_USERS * NUMBER_OF_USERS,
+				user.getEventManager().getNumEvents("streamCreated").get(), "Wrong number of streamCreated events");
+		Assertions.assertEquals(NUMBER_OF_USERS * NUMBER_OF_USERS,
+				user.getEventManager().getNumEvents("streamPlaying").get(), "Wrong number of streamPlaying events");
 
-		this.stopMediaServer(false);
+		OpenVidu OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
+		OV.fetch();
+		OV.getActiveSessions().get(0).close();
 
 		user.getEventManager().waitUntilEventReaches("sessionDisconnected", NUMBER_OF_USERS);
+		Assertions.assertEquals(NUMBER_OF_USERS, user.getEventManager().getNumEvents("sessionDisconnected").get(),
+				"Wrong number of sessionDisconnected events");
 	}
 
 	@Test
