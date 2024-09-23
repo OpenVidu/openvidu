@@ -9,7 +9,7 @@ import { StreamManager } from 'openvidu-browser-v2compatibility';
                 *ngIf="!success() && !fail()" [diameter]="24">
             </mat-spinner>
             <mat-icon [color]="'warn'" *ngIf="success() || fail()"
-                matTooltip aria-label="Select report" (click)="emitClickIconEvent($event)">{{success() ? 'done' : 'warning'}}</mat-icon>
+                matTooltip aria-label="Select report" (click)="emitClickIconEvent($event)" [attr.data-status]="success() ? 'success' : 'waiting'">{{success() ? 'done' : 'warning'}}</mat-icon>
         </div>
         <app-ov-video [streamManager]="streamManager.streamManager"
             [attrstyle]="'width: 120px; height: initial'">
@@ -39,7 +39,7 @@ export class TableVideoComponent implements AfterViewInit, DoCheck {
                     streamManager: this.streamManager.streamManager
                 });
             }
-        }, 10000);
+        }, 18000);
     }
 
     ngDoCheck() {

@@ -1,32 +1,38 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { Component, OnDestroy, OnInit } from "@angular/core";
+import { Subscription } from "rxjs";
 
-import { OpenviduParamsService } from '../../services/openvidu-params.service';
-import { TestFeedService } from '../../services/test-feed.service';
-import { ScenarioPropertiesDialogComponent } from '../dialogs/scenario-properties-dialog/scenario-properties-dialog.component';
-import { SessionConf } from '../openvidu-instance/openvidu-instance.component';
-import { StreamManagerWrapper } from '../users-table/table-video.component';
+import { OpenviduParamsService } from "../../services/openvidu-params.service";
+import { TestFeedService } from "../../services/test-feed.service";
+import { ScenarioPropertiesDialogComponent } from "../dialogs/scenario-properties-dialog/scenario-properties-dialog.component";
+import { SessionConf } from "../openvidu-instance/openvidu-instance.component";
+import { StreamManagerWrapper } from "../users-table/table-video.component";
 
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog } from "@angular/material/dialog";
 import {
-  ConnectionEvent, OpenVidu, PublisherProperties, Session,
+  ConnectionEvent,
+  OpenVidu,
+  PublisherProperties,
+  Session,
   SessionDisconnectedEvent,
   StreamEvent,
-  StreamManagerEvent
-} from 'openvidu-browser-v2compatibility';
+  StreamManagerEvent,
+} from "openvidu-browser-v2compatibility";
 import {
-  MediaMode, OpenVidu as OpenViduAPI, RecordingLayout, RecordingMode, SessionProperties as SessionPropertiesAPI
-} from 'openvidu-node-client-v2compatibility';
+  MediaMode,
+  OpenVidu as OpenViduAPI,
+  RecordingLayout,
+  RecordingMode,
+  SessionProperties as SessionPropertiesAPI,
+} from "openvidu-node-client-v2compatibility";
 
 @Component({
-  selector: 'app-test-scenarios',
-  templateUrl: './test-scenarios.component.html',
-  styleUrls: ['./test-scenarios.component.css']
+  selector: "app-test-scenarios",
+  templateUrl: "./test-scenarios.component.html",
+  styleUrls: ["./test-scenarios.component.css"],
 })
 export class TestScenariosComponent implements OnInit, OnDestroy {
-
-  fixedSessionId = 'SCENARIO_TEST';
+  fixedSessionId = "SCENARIO_TEST";
 
   openviduUrl: string;
   openviduSecret: string;
@@ -40,7 +46,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
   users: SessionConf[] = [];
   connections: string[] = [];
   publishers: StreamManagerWrapper[] = [];
-  subscribers: { connectionId: string, subs: StreamManagerWrapper[] }[] = [];
+  subscribers: { connectionId: string; subs: StreamManagerWrapper[] }[] = [];
   totalNumberOfStreams = 0;
   manyToMany = 2;
   oneToMany = 2;
@@ -56,38 +62,38 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
     recordingMode: RecordingMode.MANUAL,
     defaultRecordingProperties: {
       recordingLayout: RecordingLayout.BEST_FIT,
-      customLayout: ''
+      customLayout: "",
     },
-    customSessionId: ''
+    customSessionId: "",
   };
 
-  turnConf = 'auto';
+  turnConf = "auto";
   manualTurnConf: RTCIceServer = { urls: [] };
 
   publisherProperties: PublisherProperties = {
     audioSource: undefined,
     videoSource: undefined,
     frameRate: 1,
-    resolution: '80x60',
+    resolution: "40x30",
     mirror: true,
     publishAudio: true,
-    publishVideo: true
+    publishVideo: true,
   };
 
   report;
   numberOfReports = 0;
-  stringifyAllReports = '';
-  textAreaValue = '';
+  stringifyAllReports = "";
+  textAreaValue = "";
   isFocusedOnReport = false;
 
-  private API_PATH = 'openvidu/api';
+  private API_PATH = "openvidu/api";
 
   constructor(
     private openviduParamsService: OpenviduParamsService,
     private testFeedService: TestFeedService,
     private dialog: MatDialog,
     private http: HttpClient
-  ) { }
+  ) {}
 
   ngOnInit() {
     const openviduParams = this.openviduParamsService.getParams();
@@ -95,15 +101,19 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
     this.openviduSecret = openviduParams.openviduSecret;
 
     this.paramsSubscription = this.openviduParamsService.newParams$.subscribe(
-      params => {
+      (params) => {
         this.openviduUrl = params.openviduUrl;
         this.openviduSecret = params.openviduSecret;
-      });
+      }
+    );
 
     this.eventsInfoSubscription = this.testFeedService.newLastEvent$.subscribe(
-      newEvent => {
-        (window as any).myEvents += ('<br>' + this.testFeedService.stringifyEventNoCircularDependencies(newEvent));
-      });
+      (newEvent) => {
+        (window as any).myEvents +=
+          "<br>" +
+          this.testFeedService.stringifyEventNoCircularDependencies(newEvent);
+      }
+    );
   }
 
   ngOnDestroy() {
@@ -113,7 +123,6 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
   }
 
   loadScenario(subsPubs: number, pubs: number, subs: number): void {
-
     this.totalNumberOfStreams = pubs + subsPubs; // Number of outgoing streams
     this.totalNumberOfStreams += pubs * (subs + subsPubs); // Publishers only times total number of subscribers
     if (subsPubs > 0) {
@@ -122,7 +131,10 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
     }
 
     this.users = [];
-    this.report = { 'streamsOut': { 'numberOfElements': 0, 'content': [] }, 'streamsIn': { 'numberOfElements': 0, 'content': [] } };
+    this.report = {
+      streamsOut: { numberOfElements: 0, content: [] },
+      streamsIn: { numberOfElements: 0, content: [] },
+    };
     this.loadSubsPubs(subsPubs);
     this.loadPubs(pubs);
     this.loadSubs(subs);
@@ -134,6 +146,11 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
     for (const session of this.sessions) {
       session.disconnect();
     }
+    if (!!this.OV_NodeClient) {
+      this.OV_NodeClient.activeSessions.forEach(async (session) => {
+        await session.close();
+      });
+    }
     this.publishers = [];
     this.subscribers = [];
     this.OVs = [];
@@ -142,8 +159,8 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
     this.scenarioPlaying = false;
     delete this.report;
     this.numberOfReports = 0;
-    this.textAreaValue = '';
-    this.stringifyAllReports = '';
+    this.textAreaValue = "";
+    this.stringifyAllReports = "";
   }
 
   private loadSubsPubs(n: number): void {
@@ -151,7 +168,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
       this.users.push({
         subscribeTo: true,
         publishTo: true,
-        startSession: true
+        startSession: true,
       });
     }
   }
@@ -161,7 +178,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
       this.users.push({
         subscribeTo: true,
         publishTo: false,
-        startSession: true
+        startSession: true,
       });
     }
   }
@@ -171,26 +188,25 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
       this.users.push({
         subscribeTo: false,
         publishTo: true,
-        startSession: true
+        startSession: true,
       });
     }
   }
 
   private startSession() {
     for (const user of this.users) {
-      this.getToken().then(token => {
-
+      this.getToken().then((token) => {
         const startTimeForUser = Date.now();
 
         const OV = new OpenVidu();
 
         OV.setAdvancedConfiguration({
-          noStreamPlayingEventExceptionTimeout: 50000
+          noStreamPlayingEventExceptionTimeout: 50000,
         });
 
-        if (this.turnConf === 'freeice') {
-          OV.setAdvancedConfiguration({ iceServers: 'freeice' });
-        } else if (this.turnConf === 'manual') {
+        if (this.turnConf === "freeice") {
+          OV.setAdvancedConfiguration({ iceServers: "freeice" });
+        } else if (this.turnConf === "manual") {
           OV.setAdvancedConfiguration({ iceServers: [this.manualTurnConf] });
         }
         const session = OV.initSession();
@@ -198,90 +214,117 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
         this.OVs.push(OV);
         this.sessions.push(session);
 
-        session.on('connectionCreated', (event: ConnectionEvent) => {
+        session.on("connectionCreated", (event: ConnectionEvent) => {
+          this.testFeedService.pushNewEvent({ user: 0, event });
           if (this.connections.indexOf(event.connection.connectionId) === -1) {
             this.connections.push(event.connection.connectionId);
           }
         });
 
-        session.on('sessionDisconnected', (event: SessionDisconnectedEvent) => {
+        session.on("sessionDisconnected", (event: SessionDisconnectedEvent) => {
           this.testFeedService.pushNewEvent({ user: 0, event });
         });
 
-        session.on('reconnecting', () => {
-          const event = { cancelable: false, target: session, type: 'reconnecting', hasBeenPrevented: false, isDefaultPrevented: undefined, preventDefault: undefined, callDefaultBehavior: undefined };
+        session.on("reconnecting", () => {
+          const event = {
+            cancelable: false,
+            target: session,
+            type: "reconnecting",
+            hasBeenPrevented: false,
+            isDefaultPrevented: undefined,
+            preventDefault: undefined,
+            callDefaultBehavior: undefined,
+          };
           this.testFeedService.pushNewEvent({ user: 0, event });
         });
 
-        session.on('reconnected', () => {
-          const event = { cancelable: false, target: session, type: 'reconnected', hasBeenPrevented: false, isDefaultPrevented: undefined, preventDefault: undefined, callDefaultBehavior: undefined };
+        session.on("reconnected", () => {
+          const event = {
+            cancelable: false,
+            target: session,
+            type: "reconnected",
+            hasBeenPrevented: false,
+            isDefaultPrevented: undefined,
+            preventDefault: undefined,
+            callDefaultBehavior: undefined,
+          };
           this.testFeedService.pushNewEvent({ user: 0, event });
         });
 
         if (user.subscribeTo) {
-          session.on('streamCreated', (event: StreamEvent) => {
-
+          session.on("streamCreated", (event: StreamEvent) => {
             this.testFeedService.pushNewEvent({ user: 0, event });
 
             const subscriber = session.subscribe(event.stream, undefined);
 
-            const sub = this.subscribers.find(s => s.connectionId === session.connection.connectionId);
+            const sub = this.subscribers.find(
+              (s) => s.connectionId === session.connection.connectionId
+            );
             if (!sub) {
               this.subscribers.push({
                 connectionId: session.connection.connectionId,
-                subs: [{
-                  startTime: startTimeForUser,
-                  connectionId: session.connection.connectionId,
-                  streamManager: subscriber,
-                  state: { 'connected': (Date.now() - startTimeForUser) }
-                }]
+                subs: [
+                  {
+                    startTime: startTimeForUser,
+                    connectionId: session.connection.connectionId,
+                    streamManager: subscriber,
+                    state: { connected: Date.now() - startTimeForUser },
+                  },
+                ],
               });
             } else {
               sub.subs.push({
                 startTime: startTimeForUser,
                 connectionId: session.connection.connectionId,
                 streamManager: subscriber,
-                state: { 'connected': (Date.now() - startTimeForUser) }
+                state: { connected: Date.now() - startTimeForUser },
               });
             }
 
-            subscriber.on('streamPlaying', (e: StreamManagerEvent) => {
-
+            subscriber.on("streamPlaying", (e: StreamManagerEvent) => {
               this.testFeedService.pushNewEvent({ user: 0, event: e });
 
               this.subscribers
-                .find(s => s.connectionId === session.connection.connectionId).subs
-                .find(s => s.streamManager.stream.connection.connectionId === subscriber.stream.connection.connectionId)
-                .state['playing'] = (Date.now() - startTimeForUser);
+                .find((s) => s.connectionId === session.connection.connectionId)
+                .subs.find(
+                  (s) =>
+                    s.streamManager.stream.connection.connectionId ===
+                    subscriber.stream.connection.connectionId
+                ).state["playing"] = Date.now() - startTimeForUser;
             });
           });
         }
 
-        session.connect(token)
+        session
+          .connect(token)
           .then(() => {
             if (user.publishTo) {
-
-              const publisher = OV.initPublisher(undefined, this.publisherProperties);
+              const publisher = OV.initPublisher(
+                undefined,
+                this.publisherProperties
+              );
               const publisherWrapper = {
                 startTime: startTimeForUser,
                 connectionId: session.connection.connectionId,
                 streamManager: publisher,
-                state: { 'connecting': (Date.now() - startTimeForUser) }
+                state: { connecting: Date.now() - startTimeForUser },
               };
 
-              publisher.on('streamCreated', event => {
+              publisher.on("streamCreated", (event) => {
                 this.testFeedService.pushNewEvent({ user: 0, event });
-                publisherWrapper.state['connected'] = (Date.now() - startTimeForUser);
+                publisherWrapper.state["connected"] =
+                  Date.now() - startTimeForUser;
               });
-              publisher.on('streamPlaying', event => {
+              publisher.on("streamPlaying", (event) => {
                 this.testFeedService.pushNewEvent({ user: 0, event });
-                publisherWrapper.state['playing'] = (Date.now() - startTimeForUser);
+                publisherWrapper.state["playing"] =
+                  Date.now() - startTimeForUser;
               });
               session.publish(publisher).catch(() => {
-                publisherWrapper.state['errorConnecting'] = (Date.now() - startTimeForUser);
+                publisherWrapper.state["errorConnecting"] =
+                  Date.now() - startTimeForUser;
               });
               this.publishers.push(publisherWrapper);
-
             }
           })
           .catch();
@@ -294,10 +337,11 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
     if (!this.sessionProperties.customSessionId) {
       this.sessionProperties.customSessionId = this.fixedSessionId;
     }
-    return this.OV_NodeClient.createSession(this.sessionProperties)
-      .then(async (session_NodeClient) => {
+    return this.OV_NodeClient.createSession(this.sessionProperties).then(
+      async (session_NodeClient) => {
         return (await session_NodeClient.createConnection()).token;
-      });
+      }
+    );
   }
 
   openScenarioPropertiesDialog() {
@@ -305,13 +349,13 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
       data: {
         publisherProperties: this.publisherProperties,
         turnConf: this.turnConf,
-        manualTurnConf: this.manualTurnConf
+        manualTurnConf: this.manualTurnConf,
       },
-      width: '300px',
-      disableClose: true
+      width: "300px",
+      disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (!!result) {
         this.publisherProperties = result.publisherProperties;
         this.turnConf = result.turnConf;
@@ -321,120 +365,139 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
   }
 
   addReportForStream(event: StreamManagerWrapper) {
-    event.streamManager.stream.getSelectedIceCandidate()
-      .then(localCandidatePair => {
-
-        let newReport;
-
-        if (event.streamManager.remote) {
-          newReport = {
-            connectionId: event.connectionId,
-            startTime: event.startTime,
-            streamId: event.streamManager.stream.streamId,
-            state: event.state,
-            candidatePairSelectedByBrowser: {
-              localCandidate: localCandidatePair.localCandidate,
-              remoteCandidate: localCandidatePair.remoteCandidate
-            },
-            candidatePairSelectedByKms: {
-              localCandidate: {},
-              remoteCandidate: {}
-            },
-            iceCandidatesSentByBrowser:
-              event.streamManager.stream.getLocalIceCandidateList().map((c: RTCIceCandidate) => c.candidate),
-            iceCandidatesReceivedByBrowser:
-              event.streamManager.stream.getRemoteIceCandidateList().map((c: RTCIceCandidate) => c.candidate),
-          };
-
-          this.report.streamsIn.numberOfElements++;
-          this.report.streamsIn.content.push(newReport);
-        } else {
-          newReport = {
-            connectionId: event.connectionId,
-            startTime: event.startTime,
-            streamId: event.streamManager.stream.streamId,
-            state: event.state,
-            candidatePairSelectedByBrowser: {
-              localCandidate: localCandidatePair.localCandidate,
-              remoteCandidate: localCandidatePair.remoteCandidate
-            },
-            candidatePairSelectedByKms: {
-              localCandidate: {},
-              remoteCandidate: {}
-            },
-            iceCandidatesSentByBrowser:
-              event.streamManager.stream.getLocalIceCandidateList().map((c: RTCIceCandidate) => c.candidate),
-            iceCandidatesReceivedByBrowser:
-              event.streamManager.stream.getRemoteIceCandidateList().map((c: RTCIceCandidate) => c.candidate)
-          };
-
-          this.report.streamsOut.numberOfElements++;
-          this.report.streamsOut.content.push(newReport);
-        }
-
-        if (++this.numberOfReports === this.totalNumberOfStreams) {
-          this.updateRemoteStreamsInfo();
-        }
-
-      })
-      .catch();
+    // event.streamManager.stream.getSelectedIceCandidate()
+    //   .then(localCandidatePair => {
+    //     let newReport;
+    //     if (event.streamManager.remote) {
+    //       newReport = {
+    //         connectionId: event.connectionId,
+    //         startTime: event.startTime,
+    //         streamId: event.streamManager.stream.streamId,
+    //         state: event.state,
+    //         candidatePairSelectedByBrowser: {
+    //           localCandidate: localCandidatePair.localCandidate,
+    //           remoteCandidate: localCandidatePair.remoteCandidate
+    //         },
+    //         candidatePairSelectedByKms: {
+    //           localCandidate: {},
+    //           remoteCandidate: {}
+    //         },
+    //         iceCandidatesSentByBrowser:
+    //           event.streamManager.stream.getLocalIceCandidateList().map((c: RTCIceCandidate) => c.candidate),
+    //         iceCandidatesReceivedByBrowser:
+    //           event.streamManager.stream.getRemoteIceCandidateList().map((c: RTCIceCandidate) => c.candidate),
+    //       };
+    //       this.report.streamsIn.numberOfElements++;
+    //       this.report.streamsIn.content.push(newReport);
+    //     } else {
+    //       newReport = {
+    //         connectionId: event.connectionId,
+    //         startTime: event.startTime,
+    //         streamId: event.streamManager.stream.streamId,
+    //         state: event.state,
+    //         candidatePairSelectedByBrowser: {
+    //           localCandidate: localCandidatePair.localCandidate,
+    //           remoteCandidate: localCandidatePair.remoteCandidate
+    //         },
+    //         candidatePairSelectedByKms: {
+    //           localCandidate: {},
+    //           remoteCandidate: {}
+    //         },
+    //         iceCandidatesSentByBrowser:
+    //           event.streamManager.stream.getLocalIceCandidateList().map((c: RTCIceCandidate) => c.candidate),
+    //         iceCandidatesReceivedByBrowser:
+    //           event.streamManager.stream.getRemoteIceCandidateList().map((c: RTCIceCandidate) => c.candidate)
+    //       };
+    //       this.report.streamsOut.numberOfElements++;
+    //       this.report.streamsOut.content.push(newReport);
+    //     }
+    //     if (++this.numberOfReports === this.totalNumberOfStreams) {
+    //       this.updateRemoteStreamsInfo();
+    //     }
+    //   })
+    //   .catch();
   }
 
   private updateRemoteStreamsInfo() {
     let headers = new HttpHeaders();
-    headers = headers.append('Authorization', 'Basic ' + btoa('OPENVIDUAPP:' + this.openviduSecret));
-    this.http.get(this.openviduUrl + this.API_PATH + '/sessions/' + this.fixedSessionId + '?webRtcStats=true', { headers }).subscribe(
-      sessionInfo => {
-
-        this.report.streamsOut.content.forEach(report => {
-          const streamOutRemoteInfo = sessionInfo['connections'].content
-            .find(c => c.connectionId === report.connectionId).publishers
-            .find(p => {
-              report.webrtcEndpointName = p.webrtcEndpointName;
-              report.localSdp = p.localSdp;
-              report.remoteSdp = p.remoteSdp;
-              return p.webrtcEndpointName === report.streamId;
-            });
-          report.candidatePairSelectedByKms = {
-            localCandidate: this.parseRemoteCandidatePair(streamOutRemoteInfo.localCandidate),
-            remoteCandidate: this.parseRemoteCandidatePair(streamOutRemoteInfo.remoteCandidate)
-          };
-          report.serverEvents = streamOutRemoteInfo.events;
-          for (const ev of report.serverEvents) {
-            ev.timestamp = Number(ev.timestamp) - report.startTime;
-          }
-        });
-
-        this.report.streamsIn.content.forEach(report => {
-          const streamInRemoteInfo = sessionInfo['connections'].content
-            .find(c => c.connectionId === report.connectionId).subscribers
-            .find(p => {
-              report.webrtcEndpointName = p.webrtcEndpointName;
-              report.localSdp = p.localSdp;
-              report.remoteSdp = p.remoteSdp;
-              return p.webrtcEndpointName === report.connectionId + '_' + report.streamId;
-            });
-          report.candidatePairSelectedByKms = {
-            localCandidate: this.parseRemoteCandidatePair(streamInRemoteInfo.localCandidate),
-            remoteCandidate: this.parseRemoteCandidatePair(streamInRemoteInfo.remoteCandidate)
-          };
-          report.serverEvents = streamInRemoteInfo.events;
-          for (const ev of report.serverEvents) {
-            ev.timestamp = Number(ev.timestamp) - report.startTime;
-          }
-        });
-
-        this.stringifyAllReports = JSON.stringify(this.report, null, '\t');
-        console.log('Info has changed: ' + !(this.stringifyAllReports === this.textAreaValue));
-        this.textAreaValue = this.stringifyAllReports;
-      },
-      error => { }
+    headers = headers.append(
+      "Authorization",
+      "Basic " + btoa("OPENVIDUAPP:" + this.openviduSecret)
     );
+    this.http
+      .get(
+        this.openviduUrl +
+          this.API_PATH +
+          "/sessions/" +
+          this.fixedSessionId +
+          "?webRtcStats=true",
+        { headers }
+      )
+      .subscribe(
+        (sessionInfo) => {
+          this.report.streamsOut.content.forEach((report) => {
+            const streamOutRemoteInfo = sessionInfo["connections"].content
+              .find((c) => c.connectionId === report.connectionId)
+              .publishers.find((p) => {
+                report.webrtcEndpointName = p.webrtcEndpointName;
+                report.localSdp = p.localSdp;
+                report.remoteSdp = p.remoteSdp;
+                return p.webrtcEndpointName === report.streamId;
+              });
+            report.candidatePairSelectedByKms = {
+              localCandidate: this.parseRemoteCandidatePair(
+                streamOutRemoteInfo.localCandidate
+              ),
+              remoteCandidate: this.parseRemoteCandidatePair(
+                streamOutRemoteInfo.remoteCandidate
+              ),
+            };
+            report.serverEvents = streamOutRemoteInfo.events;
+            for (const ev of report.serverEvents) {
+              ev.timestamp = Number(ev.timestamp) - report.startTime;
+            }
+          });
+
+          this.report.streamsIn.content.forEach((report) => {
+            const streamInRemoteInfo = sessionInfo["connections"].content
+              .find((c) => c.connectionId === report.connectionId)
+              .subscribers.find((p) => {
+                report.webrtcEndpointName = p.webrtcEndpointName;
+                report.localSdp = p.localSdp;
+                report.remoteSdp = p.remoteSdp;
+                return (
+                  p.webrtcEndpointName ===
+                  report.connectionId + "_" + report.streamId
+                );
+              });
+            report.candidatePairSelectedByKms = {
+              localCandidate: this.parseRemoteCandidatePair(
+                streamInRemoteInfo.localCandidate
+              ),
+              remoteCandidate: this.parseRemoteCandidatePair(
+                streamInRemoteInfo.remoteCandidate
+              ),
+            };
+            report.serverEvents = streamInRemoteInfo.events;
+            for (const ev of report.serverEvents) {
+              ev.timestamp = Number(ev.timestamp) - report.startTime;
+            }
+          });
+
+          this.stringifyAllReports = JSON.stringify(this.report, null, "\t");
+          console.log(
+            "Info has changed: " +
+              !(this.stringifyAllReports === this.textAreaValue)
+          );
+          this.textAreaValue = this.stringifyAllReports;
+        },
+        (error) => {}
+      );
   }
 
   private parseRemoteCandidatePair(candidateStr: string) {
     if (!candidateStr) {
-      return 'ERROR: No remote candidate available';
+      return "ERROR: No remote candidate available";
     }
     const array = candidateStr.split(/\s+/);
     return {
@@ -443,18 +506,25 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
       transport: array[2].toLowerCase(),
       candidateType: array[7],
       priority: array[3],
-      raw: candidateStr
+      raw: candidateStr,
     };
   }
 
   focusOnReportForStream(event) {
     this.isFocusedOnReport = true;
-    let jsonObject = !!event.in ? this.report.streamsIn : this.report.streamsOut;
-    jsonObject = jsonObject.content.find(stream => {
-      const webrtcEndpointName = !!event.in ? event.connectionId + '_' + event.streamId : event.streamId;
-      return (stream.connectionId === event.connectionId && stream.webrtcEndpointName === webrtcEndpointName);
+    let jsonObject = !!event.in
+      ? this.report.streamsIn
+      : this.report.streamsOut;
+    jsonObject = jsonObject.content.find((stream) => {
+      const webrtcEndpointName = !!event.in
+        ? event.connectionId + "_" + event.streamId
+        : event.streamId;
+      return (
+        stream.connectionId === event.connectionId &&
+        stream.webrtcEndpointName === webrtcEndpointName
+      );
     });
-    this.textAreaValue = JSON.stringify(jsonObject, null, '\t');
+    this.textAreaValue = JSON.stringify(jsonObject, null, "\t");
   }
 
   /*addReportForStreamConcurrent(event: StreamManagerWrapper) {
@@ -517,5 +587,4 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
       error => { }
     );
   }*/
-
 }
