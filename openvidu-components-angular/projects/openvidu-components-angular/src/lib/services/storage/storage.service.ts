@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ILogger } from '../../models/logger.model';
-import { Storage } from '../../models/storage.model';
+import { StorageKeys } from '../../models/storage.model';
 import { LoggerService } from '../logger/logger.service';
 import { CustomDevice } from '../../models/device.model';
 
@@ -14,31 +14,31 @@ export class StorageService {
 	public storage = window.localStorage;
 	public log: ILogger;
 
-	constructor(private loggerSrv: LoggerService) {
+	constructor(protected loggerSrv: LoggerService) {
 		this.log = this.loggerSrv.get('StorageService');
 	}
 
 	getParticipantName(): string | null {
-		return this.get(Storage.PARTICIPANT_NAME);
+		return this.get(StorageKeys.PARTICIPANT_NAME);
 	}
 
 	setParticipantName(name: string) {
-		this.set(Storage.PARTICIPANT_NAME, name);
+		this.set(StorageKeys.PARTICIPANT_NAME, name);
 	}
 	getVideoDevice(): CustomDevice | null {
-		return this.get(Storage.VIDEO_DEVICE);
+		return this.get(StorageKeys.VIDEO_DEVICE);
 	}
 
 	setVideoDevice(device: CustomDevice) {
-		this.set(Storage.VIDEO_DEVICE, device);
+		this.set(StorageKeys.VIDEO_DEVICE, device);
 	}
 
 	getAudioDevice(): CustomDevice | null {
-		return this.get(Storage.AUDIO_DEVICE);
+		return this.get(StorageKeys.AUDIO_DEVICE);
 	}
 
 	setAudioDevice(device: CustomDevice) {
-		this.set(Storage.AUDIO_DEVICE, device);
+		this.set(StorageKeys.AUDIO_DEVICE, device);
 	}
 
 	/**
@@ -46,7 +46,7 @@ export class StorageService {
 	 * Returns true only if the participant has the camera deliberately enabled
 	 */
 	isCameraEnabled(): boolean {
-		const value = this.get(Storage.CAMERA_ENABLED);
+		const value = this.get(StorageKeys.CAMERA_ENABLED);
 		if (value === null) {
 			return true;
 		}
@@ -54,7 +54,7 @@ export class StorageService {
 	}
 
 	setCameraEnabled(enabled: boolean) {
-		this.set(Storage.CAMERA_ENABLED, enabled);
+		this.set(StorageKeys.CAMERA_ENABLED, enabled);
 	}
 
 	/**
@@ -62,7 +62,7 @@ export class StorageService {
 	 * Returns true only if the participant has the microphone deliberately enabled
 	 */
 	isMicrophoneEnabled(): boolean {
-		const value = this.get(Storage.MICROPHONE_ENABLED);
+		const value = this.get(StorageKeys.MICROPHONE_ENABLED);
 		if (value === null) {
 			return true;
 		}
@@ -73,42 +73,43 @@ export class StorageService {
 	 * @param enabled
 	 */
 	setMicrophoneEnabled(enabled: boolean) {
-		this.set(Storage.MICROPHONE_ENABLED, enabled);
+		this.set(StorageKeys.MICROPHONE_ENABLED, enabled);
 	}
 
 	setLang(lang: string) {
-		this.set(Storage.LANG, lang);
+		this.set(StorageKeys.LANG, lang);
 	}
 
 	getLang(): string {
-		return this.get(Storage.LANG);
+		return this.get(StorageKeys.LANG);
 	}
 
 	setCaptionLang(lang: string) {
-		this.set(Storage.CAPTION_LANG, lang);
+		this.set(StorageKeys.CAPTION_LANG, lang);
 	}
 
 	getCaptionsLang(): string {
-		return this.get(Storage.CAPTION_LANG);
+		return this.get(StorageKeys.CAPTION_LANG);
 	}
 
 	setBackground(id: string) {
-		this.set(Storage.BACKGROUND, id);
+		this.set(StorageKeys.BACKGROUND, id);
 	}
 
 	getBackground(): string {
-		return this.get(Storage.BACKGROUND);
+		return this.get(StorageKeys.BACKGROUND);
 	}
 
 	removeBackground() {
-		this.remove(Storage.BACKGROUND);
+		this.remove(StorageKeys.BACKGROUND);
 	}
 
-	private set(key: string, item: any) {
+	protected set(key: string, item: any) {
 		const value = JSON.stringify({ item: item });
 		this.storage.setItem(key, value);
 	}
-	private get(key: string): any {
+
+	protected get(key: string): any {
 		const str = this.storage.getItem(key);
 		if (!!str) {
 			return JSON.parse(str).item;
@@ -116,7 +117,7 @@ export class StorageService {
 		return null;
 	}
 
-	private remove(key: string) {
+	protected remove(key: string) {
 		this.storage.removeItem(key);
 	}
 

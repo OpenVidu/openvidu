@@ -1,7 +1,7 @@
 /**
  * @internal
  */
-export enum Storage {
+export enum StorageKeys {
 	PARTICIPANT_NAME = 'openviduCallName',
 	VIDEO_DEVICE = 'openviduCallVideoDevice',
 	AUDIO_DEVICE = 'openviduCallAudioDevice',
