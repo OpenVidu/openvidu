@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ILogger } from '../../models/logger.model';
-import { StorageKeys } from '../../models/storage.model';
+import { STORAGE_PREFIX, StorageKeys } from '../../models/storage.model';
 import { LoggerService } from '../logger/logger.service';
 import { CustomDevice } from '../../models/device.model';
 
@@ -13,6 +13,7 @@ import { CustomDevice } from '../../models/device.model';
 export class StorageService {
 	public storage = window.localStorage;
 	public log: ILogger;
+	protected PREFIX_KEY = STORAGE_PREFIX;
 
 	constructor(protected loggerSrv: LoggerService) {
 		this.log = this.loggerSrv.get('StorageService');
@@ -106,11 +107,11 @@ export class StorageService {
 
 	protected set(key: string, item: any) {
 		const value = JSON.stringify({ item: item });
-		this.storage.setItem(key, value);
+		this.storage.setItem(this.PREFIX_KEY + key, value);
 	}
 
 	protected get(key: string): any {
-		const str = this.storage.getItem(key);
+		const str = this.storage.getItem(this.PREFIX_KEY + key);
 		if (!!str) {
 			return JSON.parse(str).item;
 		}
@@ -118,7 +119,7 @@ export class StorageService {
 	}
 
 	protected remove(key: string) {
-		this.storage.removeItem(key);
+		this.storage.removeItem(this.PREFIX_KEY + key);
 	}
 
 	public clear() {
