@@ -68,10 +68,10 @@ jobs:
           cd openvidu-local-deployment/community
           ./configure_lan_private_ip_linux.sh
           docker compose up -d
-      - name: Run openvidu-call-backend
+      - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/openvidu-call-back
+          cd openvidu-call/backend
           npm install
           npm run dev &
       - name: Install dependencies
@@ -125,10 +125,10 @@ jobs:
           cd openvidu-local-deployment/community
           ./configure_lan_private_ip_linux.sh
           docker compose up -d
-      - name: Run openvidu-call-backend
+      - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/openvidu-call-back
+          cd openvidu-call/backend
           npm install
           npm run dev &
       - name: Install dependencies
@@ -182,10 +182,10 @@ jobs:
           cd openvidu-local-deployment/community
           ./configure_lan_private_ip_linux.sh
           docker compose up -d
-      - name: Run openvidu-call-backend
+      - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/openvidu-call-back
+          cd openvidu-call/backend
           npm install
           npm run dev &
       - name: Install dependencies
@@ -238,10 +238,10 @@ jobs:
           cd openvidu-local-deployment/community
           ./configure_lan_private_ip_linux.sh
           docker compose up -d
-      - name: Run openvidu-call-backend
+      - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/openvidu-call-back
+          cd openvidu-call/backend
           npm install
           npm run dev &
       - name: Install dependencies
@@ -295,10 +295,10 @@ jobs:
           cd openvidu-local-deployment/community
           ./configure_lan_private_ip_linux.sh
           docker compose up -d
-      - name: Run openvidu-call-backend
+      - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/openvidu-call-back
+          cd openvidu-call/backend
           npm install
           npm run dev &
       - name: Install dependencies
@@ -351,10 +351,10 @@ jobs:
           cd openvidu-local-deployment/community
           ./configure_lan_private_ip_linux.sh
           docker compose up -d
-      - name: Run openvidu-call-backend
+      - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/openvidu-call-back
+          cd openvidu-call/backend
           npm install
           npm run dev &
       - name: Install dependencies
@@ -407,10 +407,10 @@ jobs:
           cd openvidu-local-deployment/community
           ./configure_lan_private_ip_linux.sh
           docker compose up -d
-      - name: Run openvidu-call-backend
+      - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/openvidu-call-back
+          cd openvidu-call/backend
           npm install
           npm run dev &
       - name: Install dependencies
@@ -463,10 +463,10 @@ jobs:
           cd openvidu-local-deployment/community
           ./configure_lan_private_ip_linux.sh
           docker compose up -d
-      - name: Run openvidu-call-backend
+      - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/openvidu-call-back
+          cd openvidu-call/backend
           npm install
           npm run dev &
       - name: Install dependencies
@@ -520,10 +520,10 @@ jobs:
           cd openvidu-local-deployment/community
           ./configure_lan_private_ip_linux.sh
           docker compose up -d
-      - name: Run openvidu-call-backend
+      - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/openvidu-call-back
+          cd openvidu-call/backend
           npm install
           npm run dev &
       - name: Install dependencies
@@ -576,10 +576,10 @@ jobs:
           cd openvidu-local-deployment/community
           ./configure_lan_private_ip_linux.sh
           docker compose up -d
-      - name: Run openvidu-call-backend
+      - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/openvidu-call-back
+          cd openvidu-call/backend
           npm install
           npm run dev &
       - name: Install dependencies
