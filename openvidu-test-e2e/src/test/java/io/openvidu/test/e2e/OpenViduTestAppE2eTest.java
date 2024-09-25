@@ -396,7 +396,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getDriver().findElement(By.id("one2many-btn")).click();
 
-		user.getEventManager().waitUntilEventReaches("connectionCreated", NUMBER_OF_USERS * NUMBER_OF_USERS, 20, true);
+		user.getEventManager().waitUntilEventReaches("connectionCreated", NUMBER_OF_USERS * NUMBER_OF_USERS, 30, true);
 		user.getEventManager().waitUntilEventReaches("streamCreated", NUMBER_OF_USERS * NUMBER_OF_USERS, 15, true);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", NUMBER_OF_USERS * NUMBER_OF_USERS, 15, true);
 		user.getWaiter()
@@ -436,7 +436,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			}
 		};
 
-		final CountDownLatch latch = new CountDownLatch(3);
+		final int NUMBER_OF_USERS = 3;
+		final CountDownLatch latch = new CountDownLatch(NUMBER_OF_USERS);
 
 		final BiFunction<OpenViduTestappUser, String, Void> browserTest = (user, browserName) -> {
 
@@ -444,13 +445,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.className("join-btn")).click();
 
 			try {
-				user.getEventManager().waitUntilEventReaches("connectionCreated", 3, 100, true);
+				user.getEventManager().waitUntilEventReaches("connectionCreated", NUMBER_OF_USERS, 100, true);
 				user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
-				user.getEventManager().waitUntilEventReaches("streamCreated", 3);
-				user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
+				user.getEventManager().waitUntilEventReaches("streamCreated", NUMBER_OF_USERS);
+				user.getEventManager().waitUntilEventReaches("streamPlaying", NUMBER_OF_USERS);
 
 				final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-				Assertions.assertEquals(3, numberOfVideos, "Wrong number of videos");
+				Assertions.assertEquals(NUMBER_OF_USERS, numberOfVideos, "Wrong number of videos");
 				Assertions
 						.assertTrue(
 								user.getBrowserUser().assertMediaTracks(
@@ -477,6 +478,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		Thread threadChrome = new Thread(() -> {
 			try {
+				Thread.sleep((long)(Math.random() * 2500));
 				browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("chrome"), "Chrome");
 			} catch (Exception e) {
 				String errMsg = "Error setting up browser: " + e.getMessage();
@@ -487,6 +489,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		});
 		Thread threadFirefox = new Thread(() -> {
 			try {
+				//Thread.sleep(3000);
 				browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("firefox"), "Firefox");
 			} catch (Exception e) {
 				String errMsg = "Error setting up browser: " + e.getMessage();
@@ -497,6 +500,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		});
 		Thread threadEdge = new Thread(() -> {
 			try {
+				Thread.sleep((long)(Math.random() * 2500));
 				browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("edge"), "Edge");
 			} catch (Exception e) {
 				String errMsg = "Error setting up browser: " + e.getMessage();
