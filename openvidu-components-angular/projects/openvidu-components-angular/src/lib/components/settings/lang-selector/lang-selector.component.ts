@@ -3,7 +3,7 @@ import { MatMenuTrigger } from '@angular/material/menu';
 import { MatSelect } from '@angular/material/select';
 import { StorageService } from '../../../services/storage/storage.service';
 import { TranslateService } from '../../../services/translate/translate.service';
-import { LangOption } from '../../../models/lang.model';
+import { AvailableLangs, LangOption } from '../../../models/lang.model';
 import { Subscription } from 'rxjs';
 
 /**
@@ -42,20 +42,20 @@ export class LangSelectorComponent implements OnInit, OnDestroy {
 
 	ngOnInit(): void {
 		this.subscribeToLangSelected();
-		this.languages = this.translateService.getLanguagesInfo();
+		this.languages = this.translateService.getAvailableLanguages();
 	}
 
 	ngOnDestroy(): void {
 		this.langSub?.unsubscribe();
 	}
 
-	onLangSelected(lang: string) {
-		this.translateService.setLanguage(lang);
+	onLangSelected(lang: AvailableLangs) {
+		this.translateService.setCurrentLanguage(lang);
 		this.storageSrv.setLang(lang);
 	}
 
 	subscribeToLangSelected() {
-		this.langSub = this.translateService.langSelectedObs.subscribe((lang) => {
+		this.langSub = this.translateService.selectedLanguageOption$.subscribe((lang) => {
 			this.langSelected = lang;
 			this.onLangChanged.emit(lang);
 		});

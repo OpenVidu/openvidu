@@ -1,4 +1,4 @@
-import { Injectable, Inject, Injector, Type, Optional } from '@angular/core';
+import { Injectable, Inject, Injector, Optional } from '@angular/core';
 import { LayoutService } from '../layout/layout.service';
 import { OpenViduComponentsConfig } from '../../config/openvidu-components-angular.config';
 

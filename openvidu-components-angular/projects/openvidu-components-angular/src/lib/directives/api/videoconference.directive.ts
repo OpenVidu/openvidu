@@ -3,7 +3,7 @@ import { CaptionsLangOption } from '../../models/caption.model';
 // import { CaptionService } from '../../services/caption/caption.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { TranslateService } from '../../services/translate/translate.service';
-import { LangOption } from '../../models/lang.model';
+import { AvailableLangs, LangOption } from '../../models/lang.model';
 import { StorageService } from '../../services/storage/storage.service';
 
 /**
@@ -244,7 +244,7 @@ export class LangDirective implements OnDestroy {
 	/**
 	 * @ignore
 	 */
-	@Input() set lang(value: string) {
+	@Input() set lang(value: AvailableLangs) {
 		this.update(value);
 	}
 
@@ -273,8 +273,8 @@ export class LangDirective implements OnDestroy {
 	/**
 	 * @ignore
 	 */
-	update(value: string) {
-		this.translateService.setLanguage(value);
+	update(value: AvailableLangs) {
+		this.translateService.setCurrentLanguage(value);
 	}
 }
 
@@ -343,7 +343,7 @@ export class LangOptionsDirective implements OnDestroy {
 	 * @ignore
 	 */
 	update(value: LangOption[] | undefined) {
-		this.translateService.setLanguageOptions(value);
+		this.translateService.updateLanguageOptions(value);
 	}
 }
 

@@ -63,7 +63,6 @@ import { OpenViduComponentsDirectiveModule } from './directives/template/openvid
 import { AppMaterialModule } from './openvidu-components-angular.material.module';
 import { VirtualBackgroundService } from './services/virtual-background/virtual-background.service';
 import { BroadcastingService } from './services/broadcasting/broadcasting.service';
-import { TranslateService } from './services/translate/translate.service';
 import { GlobalConfigService } from './services/config/global-config.service';
 import { OpenViduComponentsConfigService } from './services/config/directive-config.service';
 
@@ -119,6 +118,7 @@ const privateComponents = [
 		RemoteParticipantTracksPipe,
 		DurationFromSecondsPipe,
 		TrackPublishedTypesPipe,
+		TranslatePipe,
 		OpenViduComponentsDirectiveModule,
 		ApiDirectiveModule
 	],
@@ -150,7 +150,6 @@ const privateComponents = [
 		PlatformService,
 		RecordingService,
 		StorageService,
-		TranslateService,
 		VirtualBackgroundService,
 		provideHttpClient(withInterceptorsFromDi())
 	]
