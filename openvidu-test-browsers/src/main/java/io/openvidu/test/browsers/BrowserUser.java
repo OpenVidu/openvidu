@@ -20,7 +20,6 @@ package io.openvidu.test.browsers;
 import java.awt.Point;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -164,83 +163,23 @@ public class BrowserUser {
 		((JavascriptExecutor) driver).executeScript(script);
 	}
 
-	public boolean assertMediaTracks(WebElement videoElement, boolean audioTransmission, boolean videoTransmission,
-			String parentSelector) {
-		return this.assertMediaTracks(Collections.singleton(videoElement), audioTransmission, videoTransmission,
-				parentSelector);
-	}
-
-	public boolean assertMediaTracks(Iterable<WebElement> mediaElements, boolean audioTransmission,
-			boolean videoTransmission) {
-		boolean success = true;
-		for (WebElement mediaElement : mediaElements) {
-			if (!waitUntilSrcObjectDefined(mediaElement, "", 5000)) {
-				System.err.println("srcObject of HTMLVideoElement was not defined!");
-				return false;
-			}
-			success = success && (audioTransmission == this.hasAudioTracks(mediaElement, ""))
-					&& (videoTransmission == this.hasVideoTracks(mediaElement, ""));
-			if (!success)
-				break;
+	public boolean assertAllElementsHaveTracks(String querySelector, boolean hasAudio, boolean hasVideo) {
+		String calculateReturnValue = "returnValue && ";
+		if (hasAudio) {
+			calculateReturnValue += "el.srcObject.getAudioTracks().length === 1 && el.srcObject.getAudioTracks()[0].enabled";
+		} else {
+			calculateReturnValue += "el.srcObject.getAudioTracks().length === 0";
 		}
-		return success;
-	}
-
-	public boolean assertMediaTracks(Iterable<WebElement> videoElements, boolean audioTransmission,
-			boolean videoTransmission, String parentSelector) {
-		boolean success = true;
-		for (WebElement video : videoElements) {
-			if (!waitUntilSrcObjectDefined(video, "", 5000)) {
-				System.err.println("srcObject of HTMLVideoElement was not defined!");
-				return false;
-			}
-			success = success && (audioTransmission == this.hasAudioTracks(video, parentSelector))
-					&& (videoTransmission == this.hasVideoTracks(video, parentSelector));
-			if (!success)
-				break;
+		calculateReturnValue += " && ";
+		if (hasVideo) {
+			calculateReturnValue += "el.srcObject.getVideoTracks().length === 1 && el.srcObject.getVideoTracks()[0].enabled";
+		} else {
+			calculateReturnValue += "el.srcObject.getVideoTracks().length === 0";
 		}
-		return success;
-	}
-
-	private boolean hasAudioTracks(WebElement mediaElement, String parentSelector) {
-		String script = "return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
-				+ "#" + mediaElement.getAttribute("id") + "').srcObject.getAudioTracks().length === 1)"
-				+ " && (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
-				+ mediaElement.getAttribute("id") + "').srcObject.getAudioTracks()[0].enabled))";
-		boolean audioTracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
-		return audioTracks;
-	}
-
-	private boolean hasVideoTracks(WebElement mediaElement, String parentSelector) {
-		String script = "return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
-				+ "#" + mediaElement.getAttribute("id") + "').srcObject.getVideoTracks().length === 1)"
-				+ " && (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
-				+ mediaElement.getAttribute("id") + "').srcObject.getVideoTracks()[0].enabled))";
-		boolean videoTracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
-		return videoTracks;
-	}
-
-	private boolean waitUntilSrcObjectDefined(WebElement videoElement, String parentSelector, int maxMsWait) {
-		final int sleepInterval = 50;
-		int maxIterations = maxMsWait / sleepInterval;
-		int counter = 0;
-		boolean defined = srcObjectDefined(videoElement, parentSelector);
-		while (!defined && counter < maxIterations) {
-			try {
-				Thread.sleep(sleepInterval);
-			} catch (InterruptedException e) {
-			}
-			defined = srcObjectDefined(videoElement, parentSelector);
-			counter++;
-		}
-		return defined;
-	}
-
-	private boolean srcObjectDefined(WebElement videoElement, String parentSelector) {
-		String script = "return (!!(document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
-				+ "#" + videoElement.getAttribute("id") + "').srcObject))";
-		boolean defined = (boolean) ((JavascriptExecutor) driver).executeScript(script);
-		return defined;
+		String script = "var returnValue = true; document.querySelectorAll('" + querySelector
+				+ "').forEach(el => { returnValue = " + calculateReturnValue + " }); return returnValue;";
+		boolean tracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
+		return tracks;
 	}
 
 }

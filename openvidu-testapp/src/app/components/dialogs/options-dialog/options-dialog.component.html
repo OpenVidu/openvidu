@@ -15,9 +15,9 @@
       <div *ngIf="createLocalTracksOptions.video !== undefined">
         <a href="https://docs.livekit.io/client-sdk-js/interfaces/VideoCaptureOptions.html" target="_blank">VideoCaptureOptions</a>
         <mat-radio-group [(ngModel)]="videoOption">
-          <mat-radio-button [value]="true">True (default)</mat-radio-button>
-          <mat-radio-button *ngIf="allowDisablingVideo" [value]="false">False (no video)</mat-radio-button>
-          <mat-radio-button [value]="'custom'">Custom</mat-radio-button>
+          <mat-radio-button [value]="true" id="video-capture-true">True (default)</mat-radio-button>
+          <mat-radio-button *ngIf="allowDisablingVideo" [value]="false" id="video-capture-false">False (no video)</mat-radio-button>
+          <mat-radio-button [value]="'custom'" id="video-capture-custom">Custom</mat-radio-button>
         </mat-radio-group>
         <div *ngIf="videoOption === 'custom'">
           <mat-form-field class="inner-text-input">
@@ -43,9 +43,9 @@
       <div *ngIf="createLocalTracksOptions.audio !== undefined" style="margin-top: 16px">
         <label class="label"><a href="https://docs.livekit.io/client-sdk-js/interfaces/AudioCaptureOptions.html" target="_blank">AudioCaptureOptions</a></label>
         <mat-radio-group [(ngModel)]="audioOption">
-          <mat-radio-button [value]="true">True (default)</mat-radio-button>
-          <mat-radio-button *ngIf="allowDisablingAudio" [value]="false">False (no audio)</mat-radio-button>
-          <mat-radio-button [value]="'custom'">Custom</mat-radio-button>
+          <mat-radio-button [value]="true" id="audio-capture-true">True (default)</mat-radio-button>
+          <mat-radio-button *ngIf="allowDisablingAudio" [value]="false" id="audio-capture-false">False (no audio)</mat-radio-button>
+          <mat-radio-button [value]="'custom'" id="audio-capture-custom">Custom</mat-radio-button>
         </mat-radio-group>
         <div *ngIf="audioOption === 'custom'">
           <div>

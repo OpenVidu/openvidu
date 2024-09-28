@@ -24,7 +24,6 @@ import java.util.function.BiFunction;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -102,20 +101,15 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertEquals(4, numberOfVideos, "Wrong number of videos");
 		Assertions.assertEquals(4, numberOfAudios, "Wrong number of audios");
 
-		Assertions.assertTrue(user.getBrowserUser()
-				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true),
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
-		Assertions
-				.assertTrue(
-						user.getBrowserUser().assertMediaTracks(
-								user.getDriver().findElements(By.cssSelector("audio.remote")), true, false),
-						"HTMLAudioElements were expected to have only one audio track");
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("audio.remote", true, false),
+				"HTMLAudioElements were expected to have only one audio track");
 		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
 	@DisplayName("One2One only audio")
-	@Disabled
 	void oneToOneOnlyAudioSession() throws Exception {
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
@@ -124,26 +118,33 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 
-		user.getDriver().findElements(By.className("send-video-checkbox")).forEach(el -> el.click());
+		for (int n = 0; n < 2; n++) {
+			user.getDriver().findElement(By.id("room-options-btn-" + n)).click();
+			Thread.sleep(300);
+			user.getDriver().findElement(By.id("video-capture-false")).click();
+			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			Thread.sleep(300);
+		}
+
 		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
-		user.getEventManager().waitUntilEventReaches("connectionCreated", "RoomEvent", 4);
-		user.getEventManager().waitUntilEventReaches("accessAllowed", "RoomEvent", 2);
-		user.getEventManager().waitUntilEventReaches("streamCreated", "RoomEvent", 4);
-		user.getEventManager().waitUntilEventReaches("streamPlaying", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2);
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assertions.assertEquals(4, numberOfVideos, "Wrong number of videos");
-		Assertions.assertTrue(user.getBrowserUser()
-				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, false),
-				"Videos were expected to only have audio tracks");
+		Assertions.assertEquals(0, numberOfVideos, "Wrong number of videos");
+		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
+		Assertions.assertEquals(4, numberOfAudios, "Wrong number of audios");
+
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("audio.remote", true, false),
+				"HTMLAudioElements were expected to have only one audio track");
 
 		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
 	@DisplayName("One2One only video")
-	@Disabled
 	void oneToOneOnlyVideoSession() throws Exception {
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
@@ -152,19 +153,27 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 
-		user.getDriver().findElements(By.className("send-audio-checkbox")).forEach(el -> el.click());
+		for (int n = 0; n < 2; n++) {
+			user.getDriver().findElement(By.id("room-options-btn-" + n)).click();
+			Thread.sleep(300);
+			user.getDriver().findElement(By.id("audio-capture-false")).click();
+			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			Thread.sleep(300);
+		}
+
 		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
-		user.getEventManager().waitUntilEventReaches("connectionCreated", "RoomEvent", 4);
-		user.getEventManager().waitUntilEventReaches("accessAllowed", "RoomEvent", 2);
-		user.getEventManager().waitUntilEventReaches("streamCreated", "RoomEvent", 4);
-		user.getEventManager().waitUntilEventReaches("streamPlaying", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2);
 
+		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
+		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assertions.assertEquals(4, numberOfVideos, "Wrong number of videos");
-		Assertions.assertTrue(user.getBrowserUser()
-				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true),
-				"Videos were expected to only have video tracks");
+
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
+				"HTMLVideoElements were expected to have only one audio track");
 
 		gracefullyLeaveParticipants(user, 2);
 	}
@@ -177,34 +186,33 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("One2Many [Video + Audio]");
 
+		final int SUBSCRIBERS = 7;
+		final int USERS = SUBSCRIBERS + 1;
+
 		WebElement one2ManyInput = user.getDriver().findElement(By.id("one2many-input"));
 		one2ManyInput.clear();
-		one2ManyInput.sendKeys("3");
+		one2ManyInput.sendKeys(Integer.toString(SUBSCRIBERS));
 		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
 		user.getDriver().findElement(By.id("one2many-btn")).click();
 
-		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 4);
-		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", USERS);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", USERS);
 		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 2);
-		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 6);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", (SUBSCRIBERS) * 2);
 
-		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 4));
-		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("audio"), 4));
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), USERS));
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("audio"), USERS));
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
-		Assertions.assertEquals(4, numberOfVideos, "Wrong number of videos");
-		Assertions.assertEquals(4, numberOfAudios, "Wrong number of audios");
+		Assertions.assertEquals(USERS, numberOfVideos, "Wrong number of videos");
+		Assertions.assertEquals(USERS, numberOfAudios, "Wrong number of audios");
 
-		Assertions.assertTrue(user.getBrowserUser()
-				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true),
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
-		Assertions
-				.assertTrue(
-						user.getBrowserUser().assertMediaTracks(
-								user.getDriver().findElements(By.cssSelector("audio.remote")), true, false),
-						"HTMLAudioElements were expected to have only one audio track");
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("audio.remote", true, false),
+				"HTMLAudioElements were expected to have only one audio track");
 
-		gracefullyLeaveParticipants(user, 4);
+		gracefullyLeaveParticipants(user, USERS);
 	}
 
 	@Test
@@ -234,46 +242,48 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertEquals(16, numberOfVideos, "Wrong number of videos");
 		Assertions.assertEquals(16, numberOfAudios, "Wrong number of audios");
 
-		Assertions.assertTrue(user.getBrowserUser()
-				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true),
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
-		Assertions
-				.assertTrue(
-						user.getBrowserUser().assertMediaTracks(
-								user.getDriver().findElements(By.cssSelector("audio.remote")), true, false),
-						"HTMLAudioElements were expected to have only one audio track");
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("audio.remote", true, false),
+				"HTMLAudioElements were expected to have only one audio track");
 
 		gracefullyLeaveParticipants(user, 4);
 	}
 
 	@Test
 	@DisplayName("Massive session")
-	@Disabled
 	void massiveSessionTest() throws Exception {
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 		log.info("Massive session");
 
-		final Integer NUMBER_OF_USERS = 7;
+		final Integer NUMBER_OF_USERS = 8;
 
 		user.getDriver().findElement(By.id("toolbar-scenarios")).sendKeys(Keys.ENTER);
 
-		WebElement one2ManyInput = user.getDriver().findElement(By.id("one2many-input"));
-		one2ManyInput.clear();
-		one2ManyInput.sendKeys(NUMBER_OF_USERS.toString());
+		WebElement many2ManyInput = user.getDriver().findElement(By.id("m2m-input"));
+		many2ManyInput.clear();
+		many2ManyInput.sendKeys(NUMBER_OF_USERS.toString());
 
-		user.getDriver().findElement(By.id("one2many-btn")).click();
+		user.getDriver().findElement(By.id("m2m-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", NUMBER_OF_USERS);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", NUMBER_OF_USERS);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", NUMBER_OF_USERS * 2);
+		user.getEventManager().waitUntilEventReaches("trackPublished", "RoomEvent",
+				(NUMBER_OF_USERS) * (NUMBER_OF_USERS - 1) * 2);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent",
+				(NUMBER_OF_USERS) * (NUMBER_OF_USERS - 1) * 2);
 
 		user.getWaiter()
 				.until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), NUMBER_OF_USERS * NUMBER_OF_USERS));
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", true, true),
+				"HTMLVideoElements were expected to have a video track and an audio track attached");
 
-		user.getEventManager().waitUntilEventReaches("streamCreated", "RoomEvent", NUMBER_OF_USERS * NUMBER_OF_USERS);
-		user.getEventManager().waitUntilEventReaches("streamPlaying", "RoomEvent", NUMBER_OF_USERS * NUMBER_OF_USERS);
+		user.getDriver().findElement(By.id("finish-btn")).click();
 
-		this.stopMediaServer();
-
-		user.getEventManager().waitUntilEventReaches("sessionDisconnected", "RoomEvent", NUMBER_OF_USERS);
+		user.getEventManager().waitUntilEventReaches("disconnected", "RoomEvent", NUMBER_OF_USERS);
 	}
 
 	@Test
@@ -315,14 +325,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Assertions.assertEquals(3, numberOfVideos, "Wrong number of videos");
 				Assertions.assertEquals(3, numberOfAudios, "Wrong number of audios");
 
-				Assertions
-						.assertTrue(
-								user.getBrowserUser().assertMediaTracks(
-										user.getDriver().findElements(By.tagName("video")), false, true),
-								"HTMLVideoElements were expected to have only one video track");
-				Assertions.assertTrue(
-						user.getBrowserUser().assertMediaTracks(
-								user.getDriver().findElements(By.cssSelector("audio.remote")), true, false),
+				Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
+						"HTMLVideoElements were expected to have only one video track");
+				Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("audio.remote", true, false),
 						"HTMLAudioElements were expected to have only one audio track");
 
 				latch.countDown();

@@ -1,7 +1,10 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 
-import { TestFeedService } from '../../services/test-feed.service';
+import {
+  TestAppEvent,
+  TestFeedService,
+} from '../../services/test-feed.service';
 
 import {
   CreateLocalTracksOptions,
@@ -15,6 +18,9 @@ import {
   RoomOptions,
   LocalTrack,
   TrackPublishOptions,
+  ParticipantEvent,
+  LocalTrackPublication,
+  RemoteTrack,
 } from 'livekit-client';
 import { LivekitParamsService } from 'src/app/services/livekit-params.service';
 import { RoomApiService } from 'src/app/services/room-api.service';
@@ -60,12 +66,12 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
   createLocalTracksOptions: CreateLocalTracksOptions = {
     video: {
       resolution: {
-        frameRate: 1,
-        height: 30,
-        width: 40,
+        frameRate: 6,
+        height: 144,
+        width: 256,
       },
     },
-    audio: false,
+    audio: true,
   };
   trackPublishOptions: TrackPublishOptions;
 
@@ -156,6 +162,16 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
     }
   }
 
+  private updateEventList(eventType: RoomEvent) {
+    const event: TestAppEvent = {
+      eventType,
+      eventCategory: 'RoomEvent',
+      eventContent: {},
+      eventDescription: '',
+    };
+    this.testFeedService.pushNewEvent({ user: 0, event });
+  }
+
   private async startSession() {
     let promises = [];
     let i = -1;
@@ -174,7 +190,12 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
           );
           const room: Room = user.room;
 
-          room!.on(RoomEvent.Connected, () => {
+          room.on(RoomEvent.SignalConnected, () => {
+            this.updateEventList(RoomEvent.SignalConnected);
+          });
+
+          room.on(RoomEvent.Connected, () => {
+            this.updateEventList(RoomEvent.Connected);
             room.remoteParticipants.forEach(
               (remoteParticipant: RemoteParticipant) => {
                 if (user.subscriber) {
@@ -189,15 +210,36 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
             );
           });
 
+          room.on(RoomEvent.ParticipantConnected, () => {
+            this.updateEventList(RoomEvent.ParticipantConnected);
+          });
+
+          room.on(RoomEvent.ParticipantConnected, () => {
+            this.updateEventList(RoomEvent.ParticipantConnected);
+          });
+
           room.on(
             RoomEvent.TrackPublished,
             (publication: RemoteTrackPublication) => {
+              this.updateEventList(RoomEvent.TrackPublished);
               if (user.subscriber) {
                 // Subscribe to new tracks
                 publication.setSubscribed(true);
               }
             }
           );
+
+          room.on(RoomEvent.LocalTrackPublished, () => {
+            this.updateEventList(RoomEvent.LocalTrackPublished);
+          });
+
+          room.on(RoomEvent.TrackSubscribed, () => {
+            this.updateEventList(RoomEvent.TrackSubscribed);
+          });
+
+          room.on(RoomEvent.Disconnected, () => {
+            this.updateEventList(RoomEvent.Disconnected);
+          });
 
           await room.connect(
             this.livekitParamsService.getParams().livekitUrl,

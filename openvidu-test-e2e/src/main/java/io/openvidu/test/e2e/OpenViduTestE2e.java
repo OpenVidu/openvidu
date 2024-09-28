@@ -44,9 +44,9 @@ public class OpenViduTestE2e {
 
 	protected static String MEDIA_SERVER_IMAGE = "livekit-server:latest";
 
-	protected static String LIVEKIT_API_KEY = "key1";
-	protected static String LIVEKIT_API_SECRET = "abcdefghijklmnopqrstuvwxyz123456";
-	protected static String LIVEKIT_URL = "wss://localhost:1880/";
+	protected static String LIVEKIT_API_KEY = "devkey";
+	protected static String LIVEKIT_API_SECRET = "secret";
+	protected static String LIVEKIT_URL = "ws://localhost:7880/";
 	protected static String APP_URL = "https://localhost:4200/";
 
 	protected static String OPENVIDU_PRO_LICENSE = "not_valid";
