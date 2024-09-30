@@ -21,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +58,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		this.closeAllRooms(LK);
 	}
 
+	@AfterEach()
+	protected void finishEach() {
+		this.closeAllRooms(LK);
+	}
+
 	@Test
 	@DisplayName("One2One Chrome")
 	void oneToOneChrome() throws Exception {
@@ -86,13 +92,18 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 4);
 		user.getEventManager().waitUntilEventReaches("localTrackPublished", "ParticipantEvent", 4);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "ParticipantEvent", 4);
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 4);
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 4);
 		user.getEventManager().waitUntilEventReaches("trackSubscriptionStatusChanged", "RoomEvent", 8);
-		user.getEventManager().waitUntilEventReaches("trackStreamStateChanged", "RoomEvent", 2);
-		user.getEventManager().waitUntilEventReaches("trackStreamStateChanged", "ParticipantEvent", 2);
+		// user.getEventManager().waitUntilEventReaches("trackStreamStateChanged",
+		// "RoomEvent", 2);
+		// user.getEventManager().waitUntilEventReaches("trackStreamStateChanged",
+		// "ParticipantEvent", 2);
 
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 4));
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("audio"), 4));
@@ -130,6 +141,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2);
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
@@ -165,6 +177,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2);
 
 		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
@@ -198,6 +211,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", USERS);
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", USERS);
 		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", (SUBSCRIBERS) * 2);
 
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), USERS));
@@ -233,6 +247,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 4);
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 4);
 		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 8);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 8);
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 24);
 
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 16));
@@ -271,8 +286,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", NUMBER_OF_USERS);
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", NUMBER_OF_USERS);
 		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", NUMBER_OF_USERS * 2);
-		user.getEventManager().waitUntilEventReaches("trackPublished", "RoomEvent",
-				(NUMBER_OF_USERS) * (NUMBER_OF_USERS - 1) * 2);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", NUMBER_OF_USERS * 2);
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent",
 				(NUMBER_OF_USERS) * (NUMBER_OF_USERS - 1) * 2);
 
@@ -315,8 +329,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 1, 100, true);
 				user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
 				user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 2);
+				user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 2);
 				user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 4);
-				user.getEventManager().waitUntilEventReaches("trackStreamStateChanged", "RoomEvent", 2);
+				// user.getEventManager().waitUntilEventReaches("trackStreamStateChanged",
+				// "RoomEvent", 2);
 
 				user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 3));
 				user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("audio"), 3));

@@ -130,7 +130,7 @@ public class OpenViduEventManager {
 				this.getEventsFromBrowser();
 				this.emitEvents();
 				try {
-					Thread.sleep(25);
+					Thread.sleep(75);
 				} catch (InterruptedException e) {
 				}
 			}
@@ -197,7 +197,7 @@ public class OpenViduEventManager {
 		CountDownLatch eventSignal = new CountDownLatch(eventNumber);
 		this.setCountDown(eventType + "-" + eventCategory, eventSignal);
 		try {
-			if (!eventSignal.await(secondsOfWait * 1000, TimeUnit.MILLISECONDS)) {
+			if (!eventSignal.await(secondsOfWait, TimeUnit.SECONDS)) {
 				if (printTimeoutError) {
 					String screenshot = "data:image/png;base64," + ((TakesScreenshot) driver).getScreenshotAs(BASE64);
 					System.out.println("TIMEOUT SCREENSHOT");
@@ -218,7 +218,7 @@ public class OpenViduEventManager {
 		CountDownLatch eventSignal = new CountDownLatch(eventNumber);
 		this.setCountDown(numberOfUser, eventType + "-" + eventCategory, eventSignal);
 		try {
-			if (!eventSignal.await(secondsOfWait * 1000, TimeUnit.MILLISECONDS)) {
+			if (!eventSignal.await(secondsOfWait, TimeUnit.SECONDS)) {
 				if (printTimeoutError) {
 					String screenshot = "data:image/png;base64," + ((TakesScreenshot) driver).getScreenshotAs(BASE64);
 					System.out.println("TIMEOUT SCREENSHOT");

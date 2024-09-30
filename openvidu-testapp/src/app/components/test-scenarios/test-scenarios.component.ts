@@ -233,6 +233,10 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
             this.updateEventList(RoomEvent.LocalTrackPublished);
           });
 
+          room.on(RoomEvent.LocalTrackSubscribed, () => {
+            this.updateEventList(RoomEvent.LocalTrackSubscribed);
+          });
+
           room.on(RoomEvent.TrackSubscribed, () => {
             this.updateEventList(RoomEvent.TrackSubscribed);
           });

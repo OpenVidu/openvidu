@@ -982,6 +982,29 @@ export class OpenviduInstanceComponent {
         );
       }
     }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.LocalTrackSubscribed) !==
+        oldValues.get(RoomEvent.LocalTrackSubscribed)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.LocalTrackSubscribed);
+      if (this.roomEvents.get(RoomEvent.LocalTrackSubscribed)) {
+        this.room!.on(
+          RoomEvent.LocalTrackSubscribed,
+          (
+            publication: LocalTrackPublication,
+            participant: LocalParticipant
+          ) => {
+            this.updateEventList(
+              RoomEvent.LocalTrackSubscribed,
+              { publication, participant },
+              `${publication.source}`
+            );
+          }
+        );
+      }
+    }
   }
 
   updateEventList(

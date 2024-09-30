@@ -335,7 +335,12 @@ export class ParticipantComponent {
       )
 
       .on(ParticipantEvent.IsSpeakingChanged, (speaking: boolean) => {
-        // this.updateEventList(ParticipantEvent.IsSpeakingChanged, 'ParticipantEvent', { speaking }, `${speaking}`);
+        this.updateEventList(
+          ParticipantEvent.IsSpeakingChanged,
+          'ParticipantEvent',
+          { speaking },
+          `${speaking}`
+        );
       })
 
       .on(
@@ -414,6 +419,18 @@ export class ParticipantComponent {
             'ParticipantEvent',
             { publication, status },
             `${publication.source}: ${status}`
+          );
+        }
+      )
+
+      .on(
+        ParticipantEvent.LocalTrackSubscribed,
+        (trackPublication: LocalTrackPublication) => {
+          this.updateEventList(
+            ParticipantEvent.LocalTrackSubscribed,
+            'ParticipantEvent',
+            { trackPublication },
+            trackPublication.source
           );
         }
       );

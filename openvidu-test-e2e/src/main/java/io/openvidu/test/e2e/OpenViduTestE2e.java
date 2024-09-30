@@ -37,6 +37,8 @@ import io.openvidu.test.browsers.EdgeUser;
 import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.utils.BrowserNames;
 import io.openvidu.test.browsers.utils.CommandLineExecutor;
+import livekit.LivekitModels.Room;
+import retrofit2.Response;
 
 public class OpenViduTestE2e {
 
@@ -383,8 +385,23 @@ public class OpenViduTestE2e {
 
 	protected void closeAllRooms(RoomServiceClient client) {
 		try {
-			client.listRooms().execute().body().forEach(r -> client.deleteRoom(r.getName()));
-		} catch (IOException e) {
+			Response<List<Room>> response = client.listRooms().execute();
+			if (response.isSuccessful()) {
+				List<Room> roomList = response.body();
+				if (roomList != null) {
+					client.listRooms().execute().body().forEach(r -> {
+						log.info("Closing existing room " + r.getName());
+						try {
+							log.info("Response: " + client.deleteRoom(r.getName()).execute().code());
+						} catch (IOException e) {
+							log.error("Error closing room " + r.getName(), e);
+						}
+					});
+				}
+			} else {
+				log.error("Error listing rooms: " + response.errorBody());
+			}
+		} catch (Exception e) {
 			log.error("Error closing rooms: {}", e.getMessage());
 		}
 	}
