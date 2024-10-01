@@ -56,6 +56,9 @@
                 <div class="row">
                     <mat-card-title class="room-mat-card-title">{{room.name}}</mat-card-title>
                     <div class="room-actions">
+                        <button class="peer-info-btn" (click)="openInfoDialog()" title="PCTransports info">
+                            <mat-icon aria-label="PCTransports info button">info</mat-icon>
+                        </button>
                         <button class="message-btn" (click)="sendData()" title="Broadcast message to room">
                             <mat-icon aria-label="Send message button">chat</mat-icon>
                         </button>

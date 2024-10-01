@@ -1,45 +1,65 @@
 video {
-    height: 90px;
-    width: 120px;
+  height: 90px;
+  width: 120px;
 }
 
 .parent-div {
-    position: relative;
-    height: 90px;
+  position: relative;
+  height: 90px;
 }
 
 .top-div {
-    position: absolute;
-    top: 0;
+  position: absolute;
+  top: 0;
 }
 
 .bottom-div {
-    position: absolute;
-    bottom: 0;
+  position: absolute;
+  bottom: 0;
 }
 
 .video-btn {
-    border: none;
-    background: rgba(255, 255, 255, 0.75);
-    cursor: pointer;
-    padding: 0;
-    height: 16px;
-    float: left;
+  border: none;
+  background: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  padding: 0;
+  height: 16px;
+  float: left;
+}
+
+.quality-option {
+  float: right;
 }
 
 .video-btn:hover {
-    color: #4d4d4d;
+  color: #4d4d4d;
 }
 
 .video-btn.top-row {
-    margin-top: 0;
-    display: inline-flex;
-    float: right;
+  margin-top: 0;
+  display: inline-flex;
+  float: right;
 }
 
 .video-btn mat-icon {
-    font-size: 14px;
-    width: 14px;
-    height: 14px;
-    line-height: 16px;
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  line-height: 16px;
+}
+
+#max-video-quality {
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+::ng-deep #max-video-quality * {
+  height: 16px !important;
+  width: 8px !important;
+  min-height: 16px !important;
+  min-width: 8px !important;
+  padding: 0 !important;
+  border-color: transparent !important;
 }

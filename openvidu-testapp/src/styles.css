@@ -105,3 +105,7 @@ button.mat-icon-custom .mat-mdc-button-touch-target {
 app-options-dialog .mat-mdc-form-field-infix {
   width: 140px;
 }
+
+.cdk-overlay-pane:has(.mat-mdc-select-panel) {
+  min-width: fit-content;
+}

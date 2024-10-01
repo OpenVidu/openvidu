@@ -45,6 +45,7 @@ import { TableVideoComponent } from './components/users-table/table-video.compon
 import { CallbackPipe } from './pipes/callback.pipe';
 import { AppRoutingModule } from './app.routing';
 import { VideoResolutionComponent } from './components/dialogs/options-dialog/video-resolution/video-resolution.component';
+import { InfoDialogComponent } from './components/dialogs/info-dialog/info-dialog.component';
 
 @NgModule({
   declarations: [
@@ -63,6 +64,7 @@ import { VideoResolutionComponent } from './components/dialogs/options-dialog/vi
     CallbackPipe,
     OptionsDialogComponent,
     VideoResolutionComponent,
+    InfoDialogComponent,
   ],
   imports: [
     FormsModule,

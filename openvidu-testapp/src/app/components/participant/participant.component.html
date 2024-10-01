@@ -55,9 +55,9 @@
                 [localParticipant]="localParticipant" [index]="index"
                 (newTrackEvent)="events.push($event)"></app-audio-track>
         </div>
-        <app-video-track *ngFor="let trackPublication of participant.videoTrackPublications | keyvalue"
+        <app-video-track *ngFor="let trackPublication of participant.videoTrackPublications | keyvalue ; index as i"
             [trackPublication]="trackPublication.value" [videoTrack]="trackPublication.value.videoTrack"
             [localParticipant]="localParticipant" [index]="index"
-            (newTrackEvent)="events.push($event)"></app-video-track>
+            (newTrackEvent)="events.push($event)" [attr.id]="'user-' + index + '-' + participant.identity + '-video-' + i"></app-video-track>
     </div>
 </div>

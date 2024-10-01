@@ -1,0 +1,27 @@
+<div>
+  <h2 mat-dialog-title>{{ title }}</h2>
+  <p *ngIf="subtitle" id="subtitle">{{ subtitle }}</p>
+
+  <mat-dialog-content>
+    <mat-form-field>
+      <textarea
+        id="info-text-area"
+        matInput
+        cdkTextareaAutosize
+        cdkAutosizeMinRows="10"
+        #autosize="cdkTextareaAutosize"
+        [(ngModel)]="textAreaValue"
+        readonly="true"
+      ></textarea>
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button id="close-dialog-btn" [mat-dialog-close]="{}">
+      CLOSE
+    </button>
+    <button mat-raised-button (click)="updateValue()" id="update-value-btn">
+      Update
+    </button>
+  </mat-dialog-actions>
+</div>

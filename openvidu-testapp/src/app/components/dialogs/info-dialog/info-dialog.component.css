@@ -1,0 +1,13 @@
+mat-form-field {
+  width: 100%;
+}
+
+textarea {
+  font-size: 13px !important;
+  line-height: 18px !important;
+}
+
+#subtitle {
+  font-size: 12px;
+  margin: 0 10px 0 10px;
+}

@@ -43,6 +43,8 @@ import { RoomApiDialogComponent } from '../dialogs/room-api-dialog/room-api-dial
 import { RoomApiService } from 'src/app/services/room-api.service';
 import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.component';
 import { OptionsDialogComponent } from '../dialogs/options-dialog/options-dialog.component';
+import PCTransport from 'livekit-client/dist/src/room/PCTransport';
+import { InfoDialogComponent } from '../dialogs/info-dialog/info-dialog.component';
 
 @Component({
   selector: 'app-openvidu-instance',
@@ -1052,7 +1054,7 @@ export class OpenviduInstanceComponent {
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (!!result) {
-        this.roomOptions = result;
+        this.roomOptions = result.roomOptions;
         this.createLocalTracksOptions = result.createLocalTracksOptions;
         this.screenShareCaptureOptions = result.screenShareCaptureOptions;
         this.trackPublishOptions = result.trackPublishOptions;
@@ -1131,5 +1133,45 @@ export class OpenviduInstanceComponent {
       options.destinationIdentities = [destinationIdentity];
     }
     this.room?.localParticipant.publishData(data, options);
+  }
+
+  openInfoDialog() {
+    const updateFunction = async (): Promise<string> => {
+      const pub: PCTransport = this.getPublisherPC()!;
+      const sub: PCTransport = this.getSubscriberPC()!;
+      return JSON.stringify(
+        {
+          publisher: {
+            connectedAddress: await pub.getConnectedAddress(),
+            connectionState: pub.getConnectionState(),
+            iceConnectionState: pub.getICEConnectionState(),
+            signallingState: pub.getSignallingState(),
+          },
+          subscriber: {
+            connectedAddress: await sub.getConnectedAddress(),
+            connectionState: sub.getConnectionState(),
+            iceConnectionState: sub.getICEConnectionState(),
+            signallingState: sub.getSignallingState(),
+          },
+        },
+        null,
+        2
+      );
+    };
+    this.dialog.open(InfoDialogComponent, {
+      data: {
+        title: 'PCTransports info',
+        updateFunction,
+      },
+      minWidth: '50vh'
+    });
+  }
+
+  getPublisherPC(): PCTransport | undefined {
+    return this.room?.localParticipant.engine.pcManager?.publisher;
+  }
+
+  getSubscriberPC(): PCTransport | undefined {
+    return this.room?.localParticipant.engine.pcManager?.subscriber;
   }
 }
