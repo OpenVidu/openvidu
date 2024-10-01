@@ -87,13 +87,6 @@ public class BrowserUser {
 		this.driver.quit();
 	}
 
-	public boolean hasMediaStream(WebElement videoElement, String parentSelector) {
-		boolean hasMediaStream = (boolean) ((JavascriptExecutor) driver).executeScript(
-				"return (!!(document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
-						+ videoElement.getAttribute("id") + "').srcObject))");
-		return hasMediaStream;
-	}
-
 	public Map<String, Long> getAverageRgbFromVideo(WebElement videoElement) {
 		String script = "var callback = arguments[arguments.length - 1];" + "var video = document.getElementById('"
 				+ videoElement.getAttribute("id") + "');" + "var canvas = document.createElement('canvas');"
@@ -150,19 +143,6 @@ public class BrowserUser {
 		return (Map<String, Long>) averageRgb;
 	}
 
-	public String getDimensionOfViewport() {
-		String dimension = (String) ((JavascriptExecutor) driver)
-				.executeScript("return (JSON.stringify({width: window.innerWidth, height: window.innerHeight - 1}))");
-		return dimension;
-	}
-
-	public void stopVideoTracksOfVideoElement(WebElement videoElement, String parentSelector) {
-		String script = "return (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
-				+ "#" + videoElement.getAttribute("id")
-				+ "').srcObject.getVideoTracks().forEach(track => track.stop()))";
-		((JavascriptExecutor) driver).executeScript(script);
-	}
-
 	public boolean assertAllElementsHaveTracks(String querySelector, boolean hasAudio, boolean hasVideo) {
 		String calculateReturnValue = "returnValue && ";
 		if (hasAudio) {
@@ -180,12 +160,6 @@ public class BrowserUser {
 				+ "').forEach(el => { returnValue = " + calculateReturnValue + " }); return returnValue;";
 		boolean tracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
 		return tracks;
-	}
-
-	public int getVideoTrackWidth(WebElement videoElement) {
-		String script = "return document.querySelector('#" + videoElement.getAttribute("id")
-				+ "').srcObject.getVideoTracks()[0].getSettings().width";
-		return Math.toIntExact((long) ((JavascriptExecutor) driver).executeScript(script));
 	}
 
 	public void changeElementSize(WebElement videoElement, Integer newWidthInPixels, Integer newHeightInPixels) {

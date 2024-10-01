@@ -20,6 +20,8 @@ package io.openvidu.test.e2e;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
@@ -40,10 +42,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
-import io.openvidu.test.browsers.BrowserUser;
 
 /**
  * E2E tests for openvidu-testapp.
@@ -501,75 +502,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@DisplayName("Adaptive stream enabled")
-	void aptiveStreamEnabledTest() throws Exception {
-
+	@DisplayName("Simulcast enabled")
+	void simulcastEnabledTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
-		log.info("Adaptive stream enabled");
-
-		user.getDriver().findElement(By.id("one2one-btn")).click();
-
-		// Only video publisher
-		user.getDriver().findElement(By.id("room-options-btn-0")).click();
-		Thread.sleep(300);
-		user.getDriver().findElement(By.id("audio-capture-false")).click();
-		user.getDriver().findElement(By.id("close-dialog-btn")).click();
-		Thread.sleep(300);
-
-		// Only subscriber
-		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publisher-checkbox")).click();
-
-		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
-
-		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
-		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
-		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 4);
-		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 1);
-		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 1);
-		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 1);
-		user.getEventManager().waitUntilEventReaches("trackSubscriptionStatusChanged", "RoomEvent", 2);
-
-		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assertions.assertEquals(2, numberOfVideos, "Wrong number of videos");
-		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
-		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
-
-		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
-				"HTMLVideoElements were expected to have only one audio track");
-
-		Thread.sleep(1500);
-
-		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
-
-		int oldTrackWidth = user.getBrowserUser().getVideoTrackWidth(subscriberVideo);
-
-		user.getBrowserUser().changeElementSize(subscriberVideo, 500, 300);
-		oldTrackWidth = this.waitForVideoTrackResolutionChange(user.getBrowserUser(), subscriberVideo, oldTrackWidth,
-				true);
-
-		user.getBrowserUser().changeElementSize(subscriberVideo, 80, 40);
-		oldTrackWidth = this.waitForVideoTrackResolutionChange(user.getBrowserUser(), subscriberVideo, oldTrackWidth,
-				false);
-
-		user.getBrowserUser().changeElementSize(subscriberVideo, 1000, 700);
-		oldTrackWidth = this.waitForVideoTrackResolutionChange(user.getBrowserUser(), subscriberVideo, oldTrackWidth,
-				true);
-
-		user.getBrowserUser().changeElementSize(subscriberVideo, 120, 80);
-		oldTrackWidth = this.waitForVideoTrackResolutionChange(user.getBrowserUser(), subscriberVideo, oldTrackWidth,
-				false);
-
-		gracefullyLeaveParticipants(user, 2);
-	}
-
-	@Test
-	@DisplayName("Adaptive stream disabled")
-	void aptiveStreamDisabledTest() throws Exception {
-
-		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
-
-		log.info("Adaptive stream disabled");
+		log.info("Simulcast enabled");
 
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 
@@ -578,6 +515,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Thread.sleep(300);
 		user.getDriver().findElement(By.id("audio-capture-false")).click();
 		user.getDriver().findElement(By.id("room-adaptiveStream")).click();
+		user.getDriver().findElement(By.id("room-dynacast")).click();
+		this.setPublisherCustomVideoProperties(user, 1920, 1080, "L1T3");
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(300);
 
@@ -586,6 +525,79 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("room-options-btn-1")).click();
 		Thread.sleep(300);
 		user.getDriver().findElement(By.id("room-adaptiveStream")).click();
+		user.getDriver().findElement(By.id("room-dynacast")).click();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().clearAllCurrentEvents();
+
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assertions.assertEquals(2, numberOfVideos, "Wrong number of videos");
+		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
+		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
+
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
+				"HTMLVideoElements were expected to have only one audio track");
+
+		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
+		Assertions.assertEquals(3, countNumberOfPublishedLayers(user, publisherVideo),
+				"Wrong number of published layers");
+		int f = Integer.parseInt(getPublisherVideoLayerAttribute(user, publisherVideo, "f", "frameWidth"));
+		int h = Integer.parseInt(getPublisherVideoLayerAttribute(user, publisherVideo, "h", "frameWidth"));
+		int q = Integer.parseInt(getPublisherVideoLayerAttribute(user, publisherVideo, "q", "frameWidth"));
+
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+
+		// Video quality of subscriber should be by default f
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, f);
+
+		// Manually change video quality of subscriber to h
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 #max-video-quality")).click();
+		user.getDriver().findElement(By.cssSelector("mat-option.mode-MEDIUM")).click();
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, h);
+
+		// Manually change video quality of subscriber to q
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 #max-video-quality")).click();
+		user.getDriver().findElement(By.cssSelector("mat-option.mode-LOW")).click();
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, q);
+	}
+
+	@Test
+	@DisplayName("Simulcast disabled")
+	void simulcastDisabledTest() throws Exception {
+
+	}
+
+	@Test
+	@DisplayName("Adaptive stream disabled Dynacast disabled")
+	void adaptiveStreamDisabledDynacastDisabledTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Adaptive stream disabled Dynacast disabled");
+
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		// Only video publisher
+		user.getDriver().findElement(By.id("room-options-btn-0")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("video-capture-true")).click();
+		user.getDriver().findElement(By.id("audio-capture-false")).click();
+		user.getDriver().findElement(By.id("room-adaptiveStream")).click();
+		user.getDriver().findElement(By.id("room-dynacast")).click();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		// Only subscriber
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publisher-checkbox")).click();
+		user.getDriver().findElement(By.id("room-options-btn-1")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("room-adaptiveStream")).click();
+		user.getDriver().findElement(By.id("room-dynacast")).click();
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(300);
 
@@ -607,67 +619,408 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
 				"HTMLVideoElements were expected to have only one audio track");
 
-		Thread.sleep(1500);
+		Thread.sleep(3000);
 
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
 
-		int oldTrackWidth = user.getBrowserUser().getVideoTrackWidth(subscriberVideo);
+		int oldFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
 		user.getBrowserUser().changeElementSize(subscriberVideo, 1000, 700);
-		Thread.sleep(2000);
-		int newTrackWidth = user.getBrowserUser().getVideoTrackWidth(subscriberVideo);
+		Thread.sleep(2300);
+		int newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
 
-		Assertions.assertEquals(oldTrackWidth, newTrackWidth,
+		Assertions.assertEquals(oldFrameWidth, newFrameWidth,
 				"With adaptive stream disabled subscriber's track resolution should NOT change");
 
-		oldTrackWidth = newTrackWidth;
+		oldFrameWidth = newFrameWidth;
 		user.getBrowserUser().changeElementSize(subscriberVideo, 100, 30);
-		Thread.sleep(2000);
-		newTrackWidth = user.getBrowserUser().getVideoTrackWidth(subscriberVideo);
+		Thread.sleep(3000);
+		newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
 
-		Assertions.assertEquals(oldTrackWidth, newTrackWidth,
+		Assertions.assertEquals(oldFrameWidth, newFrameWidth,
+				"With adaptive stream disabled subscriber's track resolution should NOT change");
+
+		oldFrameWidth = newFrameWidth;
+		oldFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+		user.getBrowserUser().changeElementSize(subscriberVideo, 1000, 700);
+		Thread.sleep(3000);
+		newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+
+		Assertions.assertEquals(oldFrameWidth, newFrameWidth,
 				"With adaptive stream disabled subscriber's track resolution should NOT change");
 
 		gracefullyLeaveParticipants(user, 2);
 	}
 
-	private int waitForVideoTrackResolutionChange(BrowserUser user, WebElement videoElement, int oldTrackWidth,
-			boolean shouldBeHigher) {
-		final int maxWaitMillis = 6000;
-		final int intervalWait = 250;
-		final int MAX_ITERATIONS = maxWaitMillis / intervalWait;
-		int iteration = 0;
-		boolean changed = false;
-		int newTrackWidth = -1;
-		while (!changed && iteration < MAX_ITERATIONS) {
-			iteration++;
-			newTrackWidth = user.getVideoTrackWidth(videoElement);
-			changed = oldTrackWidth != newTrackWidth;
-			if (changed) {
-				break;
-			} else {
+	@Test
+	@DisplayName("Adaptive stream enabled Dynacast disabled")
+	void adaptiveStreamEnabledDynacastDisabledTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Adaptive stream enabled Dynacast disabled");
+
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		// Only video publisher
+		user.getDriver().findElement(By.id("room-options-btn-0")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("audio-capture-false")).click();
+		user.getDriver().findElement(By.id("room-dynacast")).click();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		// Only subscriber
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publisher-checkbox")).click();
+		user.getDriver().findElement(By.id("room-options-btn-1")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("room-dynacast")).click();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("trackSubscriptionStatusChanged", "RoomEvent", 2);
+
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assertions.assertEquals(2, numberOfVideos, "Wrong number of videos");
+		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
+		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
+
+		// Some time to let subscriber's video stabilize its first resolution
+		Thread.sleep(2000);
+
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
+				"HTMLVideoElements were expected to have only one audio track");
+
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+		int frameWidth;
+
+		frameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+		user.getBrowserUser().changeElementSize(subscriberVideo, 500, 300);
+		this.waitUntilSubscriberFrameWidthChanges(user, subscriberVideo, frameWidth, true);
+
+		frameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+		user.getBrowserUser().changeElementSize(subscriberVideo, 80, 40);
+		this.waitUntilSubscriberFrameWidthChanges(user, subscriberVideo, frameWidth, false);
+
+		frameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+		user.getBrowserUser().changeElementSize(subscriberVideo, 1000, 700);
+		this.waitUntilSubscriberFrameWidthChanges(user, subscriberVideo, frameWidth, true);
+
+		frameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+		user.getBrowserUser().changeElementSize(subscriberVideo, 120, 80);
+		this.waitUntilSubscriberFrameWidthChanges(user, subscriberVideo, frameWidth, false);
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("Dynacast enabled adaptive stream disabled")
+	void dynacastEnabledAdaptiveStreamDisabledTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Dynacast enabled adaptive stream disabled");
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+
+		// Only video publisher
+		user.getDriver().findElement(By.id("room-options-btn-0")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("audio-capture-false")).click();
+		user.getDriver().findElement(By.id("room-adaptiveStream")).click();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		user.getDriver().findElement(By.className("connect-btn")).sendKeys(Keys.ENTER);
+
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 1);
+		user.getEventManager().clearAllCurrentEvents();
+
+		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
+
+		// With no subscribers and dynacast enabled, all published layers should finally
+		// reach inactive state
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", false);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", false);
+
+		// Add only subscriber
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publisher-checkbox")).click();
+		user.getDriver().findElement(By.id("room-options-btn-1")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("room-adaptiveStream")).click();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .connect-btn")).sendKeys(Keys.ENTER);
+		user.getEventManager().waitUntilEventReaches(0, "localTrackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscriptionStatusChanged", "RoomEvent", 2);
+		user.getEventManager().clearAllCurrentEvents();
+
+		// After subscription all layers should be active
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", true);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", true);
+
+		// With adaptive stream disabled, it doesn't matter the subscription video is
+		// small. All layers will remain active
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+		user.getBrowserUser().changeElementSize(subscriberVideo, 100, 30);
+		Thread.sleep(4000);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", true);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", true);
+
+		// After unsubscription, all layers will be paused in publisher
+		WebElement toggleSubscriptionBtn = user.getDriver()
+				.findElement(By.cssSelector("#openvidu-instance-1 .toggle-video-subscribed"));
+		toggleSubscriptionBtn.click();
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscriptionStatusChanged", "RoomEvent", 1);
+		user.getEventManager().clearAllCurrentEvents();
+
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", false);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", false);
+
+		// After re-subscription, all layers will be active in publisher
+		toggleSubscriptionBtn.click();
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscriptionStatusChanged", "RoomEvent", 2);
+		user.getEventManager().clearAllCurrentEvents();
+
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", true);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", true);
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("Dynacast enabled adaptive stream enabled")
+	void dynacastEnabledAdaptiveStreamEnabledTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Dynacast enabled adaptive stream enabled");
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+
+		// Only video publisher with 1 spatial layer and 3 temporal layers (L1T3)
+		user.getDriver().findElement(By.id("room-options-btn-0")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("audio-capture-false")).click();
+		this.setPublisherCustomVideoProperties(user, 1920, 1080, "L1T3");
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		user.getDriver().findElement(By.className("connect-btn")).sendKeys(Keys.ENTER);
+
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 1);
+		user.getEventManager().clearAllCurrentEvents();
+
+		// Add only subscriber
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publisher-checkbox")).click();
+
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .connect-btn")).sendKeys(Keys.ENTER);
+		user.getEventManager().waitUntilEventReaches(0, "localTrackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscriptionStatusChanged", "RoomEvent", 2);
+		user.getEventManager().clearAllCurrentEvents();
+
+		// Half and full video layers should reach disabled status with a small video in
+		// the subscriber side
+		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+		user.getBrowserUser().changeElementSize(subscriberVideo, 100, 30);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", true);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", false);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "f", false);
+
+		int publisherActiveFrameWidth = Integer
+				.parseInt(this.getPublisherVideoLayerAttribute(user, publisherVideo, "q", "frameWidth"));
+		int subscriberFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+		Assertions.assertEquals(publisherActiveFrameWidth, subscriberFrameWidth,
+				"Wrong publisher and subscriber video frameWidth");
+
+		// All video layers should reach enabled status with a big video in the
+		// subscriber side
+		user.getBrowserUser().changeElementSize(subscriberVideo, 1000, 500);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", true);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", true);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "f", true);
+
+		publisherActiveFrameWidth = Integer
+				.parseInt(this.getPublisherVideoLayerAttribute(user, publisherVideo, "f", "frameWidth"));
+		subscriberFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+		Assertions.assertEquals(publisherActiveFrameWidth, subscriberFrameWidth,
+				"Wrong publisher and subscriber video frameWidth");
+
+		// Half and quarter video layers should reach enabled status with a medium video
+		// in the subscriber side
+		user.getBrowserUser().changeElementSize(subscriberVideo, 500, 300);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", true);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", true);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "f", false);
+
+		publisherActiveFrameWidth = Integer
+				.parseInt(this.getPublisherVideoLayerAttribute(user, publisherVideo, "h", "frameWidth"));
+		subscriberFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+		Assertions.assertEquals(publisherActiveFrameWidth, subscriberFrameWidth,
+				"Wrong publisher and subscriber video frameWidth");
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	private int countNumberOfPublishedLayers(OpenViduTestappUser user, WebElement publisherVideo) {
+		JsonArray json = this.getLayersAsJsonArray(user, publisherVideo);
+		return json.size();
+	}
+
+	private int getSubscriberVideoFrameWidth(OpenViduTestappUser user, WebElement subscriberVideo) {
+		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
+		return json.get(0).getAsJsonObject().get("frameWidth").getAsInt();
+	}
+
+	private String getPublisherVideoLayerAttribute(OpenViduTestappUser user, WebElement publisherVideo, String rid,
+			String attribute) {
+		JsonArray json = this.getLayersAsJsonArray(user, publisherVideo);
+		Optional<JsonElement> result = json.asList().stream().parallel()
+				.filter(jsonElement -> rid.equals(jsonElement.getAsJsonObject().get("rid").getAsString())).findAny();
+		return result.get().getAsJsonObject().get(attribute).toString();
+	}
+
+	private JsonArray getLayersAsJsonArray(OpenViduTestappUser user, WebElement video) {
+		this.openInfoDialog(user, video);
+		user.getDriver().findElement(By.cssSelector("#update-value-btn")).click();
+		WebElement textarea = user.getDriver().findElement(By.id("info-text-area"));
+		String value = textarea.getAttribute("value");
+		return JsonParser.parseString(value).getAsJsonArray();
+	}
+
+	private void waitUntilSubscriberFrameWidthIs(OpenViduTestappUser user, WebElement videoElement,
+			final int expectedFrameWidth) {
+		this.waitUntilAux(user, videoElement, () -> {
+			return this.getSubscriberVideoFrameWidth(user, videoElement) == expectedFrameWidth;
+		}, "Timeout waiting for video track to have a frameWidth of " + expectedFrameWidth);
+	}
+
+	private void waitUntilSubscriberFrameWidthChanges(OpenViduTestappUser user, WebElement videoElement,
+			final int oldFrameWidth, final boolean shouldBeHigher) {
+		this.waitUntilAux(user, videoElement, () -> {
+			return this.getSubscriberVideoFrameWidth(user, videoElement) != oldFrameWidth;
+		}, "Timeout waiting for video track to reach a " + (shouldBeHigher ? "higher" : "lower") + " resolution");
+		int newFrameWidth = this.getSubscriberVideoFrameWidth(user, videoElement);
+		if (shouldBeHigher) {
+			Assertions.assertTrue(newFrameWidth > oldFrameWidth,
+					"Video track should have now a higher resolution, but it is not. Old width: " + oldFrameWidth
+							+ ". New width: " + newFrameWidth);
+		} else {
+			Assertions.assertTrue(newFrameWidth < oldFrameWidth,
+					"Video track should have now a lower resolution, but it is not. Old width: " + oldFrameWidth
+							+ ". New width: " + newFrameWidth);
+		}
+	}
+
+	private void waitUntilPublisherLayerActive(OpenViduTestappUser user, WebElement publisherVideo, String rid,
+			final boolean active) {
+		this.waitUntilAux(user, publisherVideo, () -> {
+			boolean currentlyActive = Boolean
+					.parseBoolean(this.getPublisherVideoLayerAttribute(user, publisherVideo, rid, "active"));
+			return currentlyActive == active;
+		}, "Timeout waiting for video track layer to be " + (active ? "active" : "inactive"));
+	}
+
+	private void waitUntilAux(OpenViduTestappUser user, WebElement videoElement,
+			Callable<Boolean> breakFromLoopFunction, String errMsg) {
+		try {
+			final int maxWaitMillis = 6000;
+			final int intervalWait = 250;
+			final int MAX_ITERATIONS = maxWaitMillis / intervalWait;
+			int iteration = 0;
+			boolean breakFromLoop = false;
+			while (!breakFromLoop && iteration < MAX_ITERATIONS) {
+				iteration++;
 				try {
-					Thread.sleep(intervalWait);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+					breakFromLoop = breakFromLoopFunction.call();
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+				if (breakFromLoop) {
+					break;
+				} else {
+					try {
+						Thread.sleep(intervalWait);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
 			}
-		}
-		if (!changed) {
-			Assertions.fail("Timeout waiting for video track to reach a " + (shouldBeHigher ? "higher" : "lower")
-					+ " resolution");
-		} else {
-			if (shouldBeHigher) {
-				Assertions.assertTrue(newTrackWidth > oldTrackWidth,
-						"Video track should have now a higher resolution, but it is not. Old width: " + oldTrackWidth
-								+ ". New width: " + newTrackWidth);
-			} else {
-				Assertions.assertTrue(newTrackWidth < oldTrackWidth,
-						"Video track should have now a lower resolution, but it is not. Old width: " + oldTrackWidth
-								+ ". New width: " + newTrackWidth);
+			if (!breakFromLoop) {
+				Assertions.fail(errMsg);
 			}
-
+		} finally {
+			// Close dialog
+			user.getWaiter().until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#close-dialog-btn")));
+			user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
-		return newTrackWidth;
+	}
+
+	private void openInfoDialog(OpenViduTestappUser user, WebElement video) {
+		String videoId = video.getAttribute("id");
+		// Open the track info dialog if required
+		if (!user.getDriver().findElements(By.cssSelector("app-info-dialog")).isEmpty()) {
+			// Dialog already opened
+			if (!user.getDriver().findElement(By.cssSelector("#subtitle")).getText().equals(videoId)) {
+				// Wrong dialog
+				user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();
+				user.getDriver().findElement(By.cssSelector("#" + videoId + " ~ .bottom-div .video-track-info"))
+						.click();
+			}
+		} else {
+			// Dialog is not opened
+			user.getDriver().findElement(By.cssSelector("#" + videoId + " ~ .bottom-div .video-track-info")).click();
+		}
+		try {
+			Thread.sleep(300);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void setPublisherCustomVideoProperties(OpenViduTestappUser user, Integer width, Integer height,
+			String scalabilityMode) {
+		user.getDriver().findElement(By.id("video-capture-custom")).click();
+		if (width != null) {
+			WebElement trackWidth = user.getDriver().findElement(By.id("resolution-video-capture-options-width"));
+			trackWidth.clear();
+			trackWidth.sendKeys(width.toString());
+		}
+		if (height != null) {
+			WebElement trackHeight = user.getDriver().findElement(By.id("resolution-video-capture-options-height"));
+			trackHeight.clear();
+			trackHeight.sendKeys(height.toString());
+		}
+		if (scalabilityMode != null) {
+			user.getDriver().findElement(By.id("trackPublish-scalabilityMode")).click();
+			user.getDriver().findElement(By.className("mode-" + scalabilityMode)).click();
+		}
 	}
 
 }
