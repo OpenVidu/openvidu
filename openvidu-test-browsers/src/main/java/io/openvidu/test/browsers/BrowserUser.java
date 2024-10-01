@@ -182,4 +182,21 @@ public class BrowserUser {
 		return tracks;
 	}
 
+	public int getVideoTrackWidth(WebElement videoElement) {
+		String script = "return document.querySelector('#" + videoElement.getAttribute("id")
+				+ "').srcObject.getVideoTracks()[0].getSettings().width";
+		return Math.toIntExact((long) ((JavascriptExecutor) driver).executeScript(script));
+	}
+
+	public void changeElementSize(WebElement videoElement, Integer newWidthInPixels, Integer newHeightInPixels) {
+		String script = "var htmlelement = document.querySelector('#" + videoElement.getAttribute("id") + "');";
+		if (newWidthInPixels != null) {
+			script += "htmlelement.style.width = '" + newWidthInPixels + "px';";
+		}
+		if (newHeightInPixels != null) {
+			script += "htmlelement.style.height = '" + newHeightInPixels + "px';";
+		}
+		((JavascriptExecutor) driver).executeScript(script);
+	}
+
 }

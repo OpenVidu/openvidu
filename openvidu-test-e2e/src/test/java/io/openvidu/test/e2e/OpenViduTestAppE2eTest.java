@@ -17,6 +17,9 @@
 
 package io.openvidu.test.e2e;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
@@ -34,6 +37,13 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import com.google.common.collect.ImmutableList;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import io.openvidu.test.browsers.BrowserUser;
 
 /**
  * E2E tests for openvidu-testapp.
@@ -410,6 +420,254 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				throw OpenViduTestAppE2eTest.ex;
 			}
 		}
+	}
+
+	@Test
+	@DisplayName("Speaker detection")
+	void speakerDetectionTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+
+		log.info("Speaker detection");
+
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		// Only audio publisher
+		user.getDriver().findElement(By.id("room-options-btn-0")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("video-capture-false")).click();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		// Only subscriber
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publisher-checkbox")).click();
+
+		for (int n = 0; n < 2; n++) {
+			user.getDriver().findElement(By.id("room-events-btn-" + n)).click();
+			Thread.sleep(300);
+			user.getDriver().findElement(By.cssSelector("button[name='activeSpeakersChanged']")).click();
+			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			Thread.sleep(300);
+		}
+
+		List<JsonObject> events = new ArrayList<>();
+		user.getEventManager().on("activeSpeakersChanged", "RoomEvent", ev -> {
+			events.add(JsonParser.parseString(ev.toString()).getAsJsonObject());
+		});
+
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches(0, "signalConnected", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(0, "connected", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(0, "connectionStateChanged", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches(0, "localTrackPublished", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(0, "localTrackPublished", "ParticipantEvent", 1);
+		user.getEventManager().waitUntilEventReaches(0, "localTrackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(0, "localTrackSubscribed", "ParticipantEvent", 1);
+
+		user.getEventManager().waitUntilEventReaches(0, "signalConnected", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(0, "connected", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(0, "connectionStateChanged", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscriptionStatusChanged", "RoomEvent", 2);
+
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assertions.assertEquals(0, numberOfVideos, "Wrong number of videos");
+		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
+		Assertions.assertEquals(2, numberOfAudios, "Wrong number of audios");
+
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("audio.remote", true, false),
+				"HTMLAudioElements were expected to have only one audio track");
+
+		user.getEventManager().waitUntilEventReaches(0, "activeSpeakersChanged", "RoomEvent", 5);
+		user.getEventManager().waitUntilEventReaches(0, "isSpeakingChanged", "ParticipantEvent", 5);
+		user.getEventManager().waitUntilEventReaches(1, "activeSpeakersChanged", "RoomEvent", 5);
+		user.getEventManager().waitUntilEventReaches(1, "isSpeakingChanged", "ParticipantEvent", 5);
+
+		user.getEventManager().off("activeSpeakersChanged", "RoomEvent");
+
+		Collection<JsonObject> finalList = ImmutableList.copyOf(events);
+		finalList.forEach(event -> {
+			JsonArray speakers = event.get("eventContent").getAsJsonObject().get("speakers").getAsJsonArray();
+			if (speakers.size() > 0) {
+				Assertions.assertEquals(1, speakers.size(), "Wrong number of speakers");
+				JsonObject participant = speakers.get(0).getAsJsonObject();
+				Assertions.assertEquals("TestParticipant0", participant.get("identity").getAsString(),
+						"Wrong speaker identity");
+			}
+		});
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("Adaptive stream enabled")
+	void aptiveStreamEnabledTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Adaptive stream enabled");
+
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		// Only video publisher
+		user.getDriver().findElement(By.id("room-options-btn-0")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("audio-capture-false")).click();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		// Only subscriber
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publisher-checkbox")).click();
+
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("trackSubscriptionStatusChanged", "RoomEvent", 2);
+
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assertions.assertEquals(2, numberOfVideos, "Wrong number of videos");
+		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
+		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
+
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
+				"HTMLVideoElements were expected to have only one audio track");
+
+		Thread.sleep(1500);
+
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+
+		int oldTrackWidth = user.getBrowserUser().getVideoTrackWidth(subscriberVideo);
+
+		user.getBrowserUser().changeElementSize(subscriberVideo, 500, 300);
+		oldTrackWidth = this.waitForVideoTrackResolutionChange(user.getBrowserUser(), subscriberVideo, oldTrackWidth,
+				true);
+
+		user.getBrowserUser().changeElementSize(subscriberVideo, 80, 40);
+		oldTrackWidth = this.waitForVideoTrackResolutionChange(user.getBrowserUser(), subscriberVideo, oldTrackWidth,
+				false);
+
+		user.getBrowserUser().changeElementSize(subscriberVideo, 1000, 700);
+		oldTrackWidth = this.waitForVideoTrackResolutionChange(user.getBrowserUser(), subscriberVideo, oldTrackWidth,
+				true);
+
+		user.getBrowserUser().changeElementSize(subscriberVideo, 120, 80);
+		oldTrackWidth = this.waitForVideoTrackResolutionChange(user.getBrowserUser(), subscriberVideo, oldTrackWidth,
+				false);
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("Adaptive stream disabled")
+	void aptiveStreamDisabledTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Adaptive stream disabled");
+
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		// Only video publisher
+		user.getDriver().findElement(By.id("room-options-btn-0")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("audio-capture-false")).click();
+		user.getDriver().findElement(By.id("room-adaptiveStream")).click();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		// Only subscriber
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publisher-checkbox")).click();
+		user.getDriver().findElement(By.id("room-options-btn-1")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("room-adaptiveStream")).click();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("trackSubscriptionStatusChanged", "RoomEvent", 2);
+
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assertions.assertEquals(2, numberOfVideos, "Wrong number of videos");
+		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
+		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
+
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
+				"HTMLVideoElements were expected to have only one audio track");
+
+		Thread.sleep(1500);
+
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+
+		int oldTrackWidth = user.getBrowserUser().getVideoTrackWidth(subscriberVideo);
+		user.getBrowserUser().changeElementSize(subscriberVideo, 1000, 700);
+		Thread.sleep(2000);
+		int newTrackWidth = user.getBrowserUser().getVideoTrackWidth(subscriberVideo);
+
+		Assertions.assertEquals(oldTrackWidth, newTrackWidth,
+				"With adaptive stream disabled subscriber's track resolution should NOT change");
+
+		oldTrackWidth = newTrackWidth;
+		user.getBrowserUser().changeElementSize(subscriberVideo, 100, 30);
+		Thread.sleep(2000);
+		newTrackWidth = user.getBrowserUser().getVideoTrackWidth(subscriberVideo);
+
+		Assertions.assertEquals(oldTrackWidth, newTrackWidth,
+				"With adaptive stream disabled subscriber's track resolution should NOT change");
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	private int waitForVideoTrackResolutionChange(BrowserUser user, WebElement videoElement, int oldTrackWidth,
+			boolean shouldBeHigher) {
+		final int maxWaitMillis = 6000;
+		final int intervalWait = 250;
+		final int MAX_ITERATIONS = maxWaitMillis / intervalWait;
+		int iteration = 0;
+		boolean changed = false;
+		int newTrackWidth = -1;
+		while (!changed && iteration < MAX_ITERATIONS) {
+			iteration++;
+			newTrackWidth = user.getVideoTrackWidth(videoElement);
+			changed = oldTrackWidth != newTrackWidth;
+			if (changed) {
+				break;
+			} else {
+				try {
+					Thread.sleep(intervalWait);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		if (!changed) {
+			Assertions.fail("Timeout waiting for video track to reach a " + (shouldBeHigher ? "higher" : "lower")
+					+ " resolution");
+		} else {
+			if (shouldBeHigher) {
+				Assertions.assertTrue(newTrackWidth > oldTrackWidth,
+						"Video track should have now a higher resolution, but it is not. Old width: " + oldTrackWidth
+								+ ". New width: " + newTrackWidth);
+			} else {
+				Assertions.assertTrue(newTrackWidth < oldTrackWidth,
+						"Video track should have now a lower resolution, but it is not. Old width: " + oldTrackWidth
+								+ ". New width: " + newTrackWidth);
+			}
+
+		}
+		return newTrackWidth;
 	}
 
 }

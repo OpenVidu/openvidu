@@ -42,6 +42,7 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 		for (int j = 1; j <= numberOfParticipants; j++) {
 			user.getDriver().findElement(By.className("disconnect-btn")).sendKeys(Keys.ENTER);
 			user.getEventManager().waitUntilEventReaches("disconnected", "RoomEvent", j);
+			user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", j);
 			accumulatedDisconnected = (j != numberOfParticipants) ? (accumulatedDisconnected + numberOfParticipants - j)
 					: (accumulatedDisconnected);
 			user.getEventManager().waitUntilEventReaches("participantDisconnected", "RoomEvent",

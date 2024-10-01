@@ -1,8 +1,11 @@
 package io.openvidu.test.e2e;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,6 +24,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
@@ -266,8 +270,19 @@ public class OpenViduTestE2e {
 		case "chromeFakeAudio":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
 			setupBrowserAux(BrowserNames.CHROME, container, false);
-			path = Paths.get("/opt/openvidu/stt-test.wav");
-			checkMediafilePath(path);
+			path = new File(System.getProperty("java.io.tmpdir"), "test.wav").toPath();
+			try {
+				checkMediafilePath(path);
+			} catch (Exception e) {
+				try {
+					FileUtils.copyURLToFile(
+							new URL("https://openvidu-loadtest-mediafiles.s3.amazonaws.com/interview.wav"),
+							new File(System.getProperty("java.io.tmpdir"), "test.wav"), 60000, 60000);
+				} catch (FileNotFoundException e2) {
+					e2.printStackTrace();
+					System.err.println("exception on: downLoadFile() function: " + e.getMessage());
+				}
+			}
 			browserUser = new ChromeUser("TestUser", 50, null, path);
 			break;
 		case "chromeVirtualBackgroundFakeVideo":
