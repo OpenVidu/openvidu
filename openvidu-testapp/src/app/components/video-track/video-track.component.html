@@ -1,5 +1,5 @@
 <div class="parent-div">
-    <video #videoElement [id]="elementRefId" [ngClass]="getTrackOrigin()"></video>
+    <video #mediaElement [id]="finalElementRefId" [ngClass]="getTrackOrigin()"></video>
     <div class="bottom-div">
         <button *ngIf="localParticipant" (click)="muteUnmuteVideo()" class="video-btn mute-unmute-video" matTooltip="Mute/Unmute video"
             matTooltipClass="custom-tooltip">

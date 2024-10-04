@@ -1,5 +1,5 @@
 <div class="parent-div">
-    <audio #audioElement [id]="elementRefId" [ngClass]="getTrackOrigin()"></audio>
+    <audio #mediaElement [id]="finalElementRefId" [ngClass]="getTrackOrigin()"></audio>
     <span>{{trackPublication.source}}</span>
     <div class="bottom-div">
         <button *ngIf="localParticipant" (click)="muteUnmuteAudio()" class="audio-btn" matTooltip="Mute/Unmute audio"

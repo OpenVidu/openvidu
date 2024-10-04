@@ -1,4 +1,11 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  Output,
+  ViewChild,
+} from '@angular/core';
 import {
   TrackPublication,
   LocalParticipant,
@@ -9,6 +16,8 @@ import {
   TrackEventCallbacks,
   LocalTrackPublication,
   RemoteTrackPublication,
+  AudioTrack,
+  VideoTrack,
 } from 'livekit-client';
 import {
   TestAppEvent,
@@ -35,18 +44,62 @@ export class TrackComponent {
   @Input()
   localParticipant: LocalParticipant | undefined;
 
-  @Input()
-  index: number;
+  protected finalElementRefId: string = '';
+  private indexId: string;
+  private trackId: string;
 
-  protected track: Track | undefined;
+  protected _track: Track | undefined;
+  @ViewChild('mediaElement') protected elementRef: ElementRef;
 
   trackSubscribed: boolean = true;
   trackEnabled: boolean = true;
 
   constructor(protected testFeedService: TestFeedService) {}
 
+  @Input() set index(index: number) {
+    this.indexId = index.toString();
+    this.finalElementRefId = `participant-${this.indexId}-${this.trackId}`;
+  }
+
+  @Input() set track(track: AudioTrack | VideoTrack | undefined) {
+    this._track = track;
+
+    this.setupTrackEventListeners();
+
+    this.trackId = `-${this.getTrackOrigin()}--${this._track?.kind}--${
+      this._track?.source
+    }--${this._track?.sid}`;
+    if (this._track?.sid !== this._track?.mediaStreamID) {
+      this.trackId += `--${this._track?.mediaStreamID}`;
+    }
+    this.trackId = this.trackId.replace(/[^0-9a-z-A-Z_-]+/g, '');
+    this.finalElementRefId = `participant-${this.indexId}-${this.trackId}`;
+
+    this.attachTrack();
+  }
+
+  ngAfterViewInit() {
+    this.attachTrack();
+  }
+
+  ngOnDestroy() {
+    if (this.elementRef) {
+      this._track?.detach(this.elementRef.nativeElement);
+    }
+  }
+
+  private attachTrack() {
+    if (
+      this.elementRef &&
+      (this._track?.kind === Track.Kind.Video ||
+        (this._track?.kind === Track.Kind.Audio && !this.localParticipant))
+    ) {
+      this._track.attach(this.elementRef.nativeElement);
+    }
+  }
+
   protected async unpublishTrack() {
-    await this.localParticipant?.unpublishTrack(this.track as LocalTrack);
+    await this.localParticipant?.unpublishTrack(this._track as LocalTrack);
   }
 
   protected async toggleSubscribeTrack() {
@@ -68,13 +121,13 @@ export class TrackComponent {
     let callbacks: TrackEventCallbacks;
     let events: TrackEvent;
 
-    this.track
+    this._track
       ?.on(TrackEvent.Message, () => {
         this.newTrackEvent.emit({
           eventType: TrackEvent.Message,
           eventCategory: 'TrackEvent',
           eventContent: {},
-          eventDescription: this.track!.source,
+          eventDescription: this._track!.source,
         });
       })
       .on(TrackEvent.Muted, () => {
@@ -82,7 +135,7 @@ export class TrackComponent {
           eventType: TrackEvent.Muted,
           eventCategory: 'TrackEvent',
           eventContent: {},
-          eventDescription: this.track!.source,
+          eventDescription: this._track!.source,
         });
       })
       .on(TrackEvent.Unmuted, () => {
@@ -90,7 +143,7 @@ export class TrackComponent {
           eventType: TrackEvent.Unmuted,
           eventCategory: 'TrackEvent',
           eventContent: {},
-          eventDescription: this.track!.source,
+          eventDescription: this._track!.source,
         });
       })
       .on(TrackEvent.AudioSilenceDetected, () => {
@@ -98,7 +151,7 @@ export class TrackComponent {
           eventType: TrackEvent.AudioSilenceDetected,
           eventCategory: 'TrackEvent',
           eventContent: {},
-          eventDescription: this.track!.source,
+          eventDescription: this._track!.source,
         });
       })
       .on(TrackEvent.Restarted, () => {
@@ -106,7 +159,7 @@ export class TrackComponent {
           eventType: TrackEvent.Restarted,
           eventCategory: 'TrackEvent',
           eventContent: {},
-          eventDescription: this.track!.source,
+          eventDescription: this._track!.source,
         });
       })
       .on(TrackEvent.Ended, () => {
@@ -114,23 +167,23 @@ export class TrackComponent {
           eventType: TrackEvent.Ended,
           eventCategory: 'TrackEvent',
           eventContent: {},
-          eventDescription: this.track!.source,
+          eventDescription: this._track!.source,
         });
       })
       .on(TrackEvent.VisibilityChanged, (visible: boolean) => {
         this.newTrackEvent.emit({
           eventType: TrackEvent.VisibilityChanged,
           eventCategory: 'TrackEvent',
-          eventContent: { visible, track: this.track },
-          eventDescription: `${this.track!.source} is visible: ${visible}`,
+          eventContent: { visible, track: this._track },
+          eventDescription: `${this._track!.source} is visible: ${visible}`,
         });
       })
       .on(TrackEvent.VideoDimensionsChanged, (dimensions: Track.Dimensions) => {
         this.newTrackEvent.emit({
           eventType: TrackEvent.VideoDimensionsChanged,
           eventCategory: 'TrackEvent',
-          eventContent: { dimensions, track: this.track },
-          eventDescription: `${this.track?.source} ${JSON.stringify(
+          eventContent: { dimensions, track: this._track },
+          eventDescription: `${this._track?.source} ${JSON.stringify(
             dimensions
           )}`,
         });
@@ -140,7 +193,7 @@ export class TrackComponent {
           eventType: TrackEvent.UpstreamPaused,
           eventCategory: 'TrackEvent',
           eventContent: {},
-          eventDescription: this.track!.source,
+          eventDescription: this._track!.source,
         });
       })
       .on(TrackEvent.UpstreamResumed, () => {
@@ -148,16 +201,16 @@ export class TrackComponent {
           eventType: TrackEvent.UpstreamResumed,
           eventCategory: 'TrackEvent',
           eventContent: {},
-          eventDescription: this.track!.source,
+          eventDescription: this._track!.source,
         });
       });
   }
 
   protected getTrackOrigin(): string {
     let origin: string;
-    if (this.track instanceof RemoteTrack) {
+    if (this._track instanceof RemoteTrack) {
       origin = 'remote';
-    } else if (this.track instanceof LocalTrack) {
+    } else if (this._track instanceof LocalTrack) {
       origin = 'local';
     } else {
       origin = 'unknown';

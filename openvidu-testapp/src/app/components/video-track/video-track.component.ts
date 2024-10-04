@@ -1,10 +1,7 @@
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { Component } from '@angular/core';
 import {
   LocalTrack,
   VideoTrack,
-  VideoCaptureOptions,
-  ScreenShareCaptureOptions,
-  RemoteTrack,
   RemoteTrackPublication,
   VideoQuality,
 } from 'livekit-client';
@@ -19,35 +16,9 @@ import { InfoDialogComponent } from '../dialogs/info-dialog/info-dialog.componen
   styleUrls: ['./video-track.component.css'],
 })
 export class VideoTrackComponent extends TrackComponent {
-  @ViewChild('videoElement') elementRef: ElementRef;
-  elementRefId: string = '';
-
   muteVideoIcon: string = 'videocam';
   blurIcon: string = 'blur_on';
-
-  private _videoTrack: VideoTrack | undefined;
   maxVideoQuality: string;
-
-  @Input() set videoTrack(videoTrack: VideoTrack | undefined) {
-    this._videoTrack = videoTrack;
-    this.track = this._videoTrack;
-
-    this.setupTrackEventListeners();
-
-    let id = '';
-    id = `${this.getTrackOrigin()}--video--${this._videoTrack?.source}--${
-      this._videoTrack?.sid
-    }`;
-    if (this._videoTrack?.sid !== this._videoTrack?.mediaStreamID) {
-      id += `--${this._videoTrack?.mediaStreamID}`;
-    }
-    id = id.replace(/[^0-9a-z-A-Z_-]+/g, '');
-    this.elementRefId = id;
-
-    if (this.elementRef) {
-      this._videoTrack?.attach(this.elementRef.nativeElement);
-    }
-  }
 
   constructor(
     protected override testFeedService: TestFeedService,
@@ -56,21 +27,13 @@ export class VideoTrackComponent extends TrackComponent {
     super(testFeedService);
   }
 
-  ngAfterViewInit() {
-    this._videoTrack?.attach(this.elementRef.nativeElement);
-  }
-
-  ngOnDestroy() {
-    this._videoTrack?.detach(this.elementRef.nativeElement);
-  }
-
   async muteUnmuteVideo() {
-    if (this._videoTrack?.isMuted) {
+    if (this._track?.isMuted) {
       this.muteVideoIcon = 'videocam';
-      await (this._videoTrack as LocalTrack).unmute();
+      await (this._track as LocalTrack).unmute();
     } else {
       this.muteVideoIcon = 'videocam_off';
-      await (this._videoTrack as LocalTrack).mute();
+      await (this._track as LocalTrack).mute();
     }
   }
 
@@ -97,7 +60,7 @@ export class VideoTrackComponent extends TrackComponent {
   openInfoDialog() {
     const updateFunction = async (): Promise<string> => {
       const videoLayers: any[] = [];
-      let stats = await this._videoTrack?.getRTCStatsReport();
+      let stats = await (this._track! as VideoTrack).getRTCStatsReport();
       stats?.forEach((report) => {
         if (report.type === 'outbound-rtp' || report.type === 'inbound-rtp') {
           videoLayers.push({
@@ -108,6 +71,8 @@ export class VideoTrackComponent extends TrackComponent {
             frameWidth: report.frameWidth,
             frameHeight: report.frameHeight,
             framesPerSecond: report.framesPerSecond,
+            bytesReceived: report.bytesReceived,
+            bytesSent: report.bytesSent,
           });
         }
       });
@@ -116,7 +81,7 @@ export class VideoTrackComponent extends TrackComponent {
     this.dialog.open(InfoDialogComponent, {
       data: {
         title: 'Video Track Layers Info',
-        subtitle: this.elementRefId,
+        subtitle: this.finalElementRefId,
         updateFunction,
       },
     });
@@ -124,10 +89,10 @@ export class VideoTrackComponent extends TrackComponent {
 
   async blur() {
     if (this.blurIcon == 'blur_on') {
-      // await (this._videoTrack! as LocalVideoTrack).setProcessor(BackgroundBlur());
+      // await (this._track! as LocalVideoTrack).setProcessor(BackgroundBlur());
       this.blurIcon = 'blur_off';
     } else {
-      // await (this._videoTrack! as LocalVideoTrack).stopProcessor();
+      // await (this._track! as LocalVideoTrack).stopProcessor();
       this.blurIcon = 'blur_on';
     }
   }
