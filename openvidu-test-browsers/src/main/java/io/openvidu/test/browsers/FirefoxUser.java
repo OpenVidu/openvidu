@@ -61,8 +61,6 @@ public class FirefoxUser extends BrowserUser {
 			}
 		} else {
 			log.info("Using local web driver");
-			System.setProperty("webdriver.gecko.driver",
-					"/home/pablo/Downloads/geckodriver-v0.35.0-linux64/geckodriver");
 			this.driver = new FirefoxDriver(options);
 		}
 
