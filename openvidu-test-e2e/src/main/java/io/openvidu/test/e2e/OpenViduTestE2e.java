@@ -242,10 +242,10 @@ public class OpenViduTestE2e {
 		BrowserUser browserUser = null;
 		GenericContainer<?> container;
 		Path path;
+		boolean headless = false;
 
 		switch (browser) {
 		case "chrome":
-			boolean headless = false;
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, headless);
 			setupBrowserAux(BrowserNames.CHROME, container, false);
 			browserUser = new ChromeUser("TestUser", 50, headless);
@@ -283,7 +283,7 @@ public class OpenViduTestE2e {
 					System.err.println("exception on: downLoadFile() function: " + e.getMessage());
 				}
 			}
-			browserUser = new ChromeUser("TestUser", 50, null, path);
+			browserUser = new ChromeUser("TestUser", 50, null, path, headless);
 			break;
 		case "chromeVirtualBackgroundFakeVideo":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
@@ -295,17 +295,17 @@ public class OpenViduTestE2e {
 		case "firefox":
 			container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, false);
 			setupBrowserAux(BrowserNames.FIREFOX, container, false);
-			browserUser = new FirefoxUser("TestUser", 50, false);
+			browserUser = new FirefoxUser("TestUser", 50, false, headless);
 			break;
 		case "firefoxDisabledOpenH264":
 			container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, true);
 			setupBrowserAux(BrowserNames.FIREFOX, container, false);
-			browserUser = new FirefoxUser("TestUser", 50, true);
+			browserUser = new FirefoxUser("TestUser", 50, true, headless);
 			break;
 		case "edge":
 			container = edgeContainer("selenium/standalone-edge:" + EDGE_VERSION, 2147483648L, 1, false);
 			setupBrowserAux(BrowserNames.EDGE, container, false);
-			browserUser = new EdgeUser("TestUser", 50);
+			browserUser = new EdgeUser("TestUser", 50, headless);
 			break;
 		default:
 			log.error("Browser {} not recognized", browser);

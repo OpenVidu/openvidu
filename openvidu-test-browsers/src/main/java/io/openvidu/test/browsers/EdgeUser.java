@@ -11,7 +11,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class EdgeUser extends BrowserUser {
 
-	public EdgeUser(String userName, int timeOfWaitInSeconds) {
+	public EdgeUser(String userName, int timeOfWaitInSeconds, boolean headless) {
 		super(userName, timeOfWaitInSeconds);
 
 		String REMOTE_URL = System.getProperty("REMOTE_URL_EDGE");
@@ -23,8 +23,12 @@ public class EdgeUser extends BrowserUser {
 		options.addArguments("--use-fake-device-for-media-stream");
 		options.addArguments("--disable-infobars");
 
-		if (REMOTE_URL != null && !REMOTE_URL.isBlank()) {
+		if (headless) {
 			options.addArguments("--headless=new");
+			options.addArguments("--mute-audio");
+		}
+
+		if (REMOTE_URL != null && !REMOTE_URL.isBlank()) {
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {
 				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), options);

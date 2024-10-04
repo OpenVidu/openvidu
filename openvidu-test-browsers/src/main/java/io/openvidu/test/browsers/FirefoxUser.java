@@ -28,7 +28,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class FirefoxUser extends BrowserUser {
 
-	public FirefoxUser(String userName, int timeOfWaitInSeconds, boolean disableOpenH264) {
+	public FirefoxUser(String userName, int timeOfWaitInSeconds, boolean disableOpenH264, boolean headless) {
 		super(userName, timeOfWaitInSeconds);
 
 		String REMOTE_URL = System.getProperty("REMOTE_URL_FIREFOX");
@@ -47,8 +47,12 @@ public class FirefoxUser extends BrowserUser {
 			options.addPreference("media.gmp-gmpopenh264.enabled", false);
 		}
 
+		if (headless) {
+			options.addArguments("--headless");
+			options.addPreference("media.volume_scale", "0.0");
+		}
+
 		if (REMOTE_URL != null && !REMOTE_URL.isBlank()) {
-			// options.addArguments("--headless");
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {
 				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), options);
@@ -57,6 +61,8 @@ public class FirefoxUser extends BrowserUser {
 			}
 		} else {
 			log.info("Using local web driver");
+			System.setProperty("webdriver.gecko.driver",
+					"/home/pablo/Downloads/geckodriver-v0.35.0-linux64/geckodriver");
 			this.driver = new FirefoxDriver(options);
 		}
 

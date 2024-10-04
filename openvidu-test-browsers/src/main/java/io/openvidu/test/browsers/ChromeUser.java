@@ -76,10 +76,12 @@ public class ChromeUser extends BrowserUser {
 		prefs.put("profile.default_content_setting_values.media_stream_camera", 1);
 		options.setExperimentalOption("prefs", prefs);
 
+		if (headless) {
+			options.addArguments("--headless=new");
+			options.addArguments("--mute-audio");
+		}
+
 		if (REMOTE_URL != null && !REMOTE_URL.isBlank()) {
-			if (headless) {
-				options.addArguments("--headless=new");
-			}
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {
 				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), options);
