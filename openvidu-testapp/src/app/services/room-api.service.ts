@@ -185,7 +185,7 @@ export class RoomApiService {
 
     private getUrl(endpoint: string, method: string) {
         const wsUrl = this.livekitParamsService.getParams().livekitUrl;
-        const protocol = wsUrl.startsWith('wss:') ? 'https' : 'http';
+        const protocol = (wsUrl.startsWith('wss:') || wsUrl.startsWith('https:')) ? 'https' : 'http';
         const restUrl = `${protocol}://${wsUrl.substring(wsUrl.indexOf('//') + 2).replace(/\/$/, "")}`;
         return `${restUrl}/twirp/livekit.${endpoint}/${method}`;
     }

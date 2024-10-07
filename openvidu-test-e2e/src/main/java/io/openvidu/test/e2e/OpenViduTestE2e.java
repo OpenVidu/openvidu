@@ -145,7 +145,8 @@ public class OpenViduTestE2e {
 		} catch (URISyntaxException e) {
 			Assertions.fail("Wrong LIVEKIT_URL");
 		}
-		String url = ("wss".equals(uri.getScheme()) ? "https" : "http") + "://" + uri.getAuthority() + uri.getPath();
+		String url = (("wss".equals(uri.getScheme()) || "https".equals(uri.getScheme())) ? "https" : "http") + "://"
+				+ uri.getAuthority() + uri.getPath();
 
 		LK = RoomServiceClient.create(url.toString(), LIVEKIT_API_KEY, LIVEKIT_API_SECRET, false,
 				(okHttpClientBuilder) -> {

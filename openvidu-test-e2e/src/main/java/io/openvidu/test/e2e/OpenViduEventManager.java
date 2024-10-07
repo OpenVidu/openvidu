@@ -24,8 +24,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -91,12 +91,12 @@ public class OpenViduEventManager {
 	public OpenViduEventManager(WebDriver driver, int timeOfWaitInSeconds) {
 		this.driver = driver;
 		this.eventQueue = new ConcurrentLinkedQueue<JsonObject>();
-		this.eventCallbacks = new ConcurrentHashMap<>();
-		this.eventNumbers = new ConcurrentHashMap<>();
-		this.eventCountdowns = new ConcurrentHashMap<>();
-		this.eventCallbacksByUser = new ConcurrentHashMap<>();
-		this.eventNumbersByUser = new ConcurrentHashMap<>();
-		this.eventCountdownsByUser = new ConcurrentHashMap<>();
+		this.eventCallbacks = new ConcurrentSkipListMap<>();
+		this.eventNumbers = new ConcurrentSkipListMap<>();
+		this.eventCountdowns = new ConcurrentSkipListMap<>();
+		this.eventCallbacksByUser = new ConcurrentSkipListMap<>();
+		this.eventNumbersByUser = new ConcurrentSkipListMap<>();
+		this.eventCountdownsByUser = new ConcurrentSkipListMap<>();
 		this.timeOfWaitInSeconds = timeOfWaitInSeconds;
 	}
 
@@ -280,11 +280,11 @@ public class OpenViduEventManager {
 		this.startPolling();
 	}
 
-	public AtomicInteger getNumEvents(String eventTypeAndCategory) {
+	public synchronized AtomicInteger getNumEvents(String eventTypeAndCategory) {
 		return this.eventNumbers.computeIfAbsent(eventTypeAndCategory, k -> new AtomicInteger(0));
 	}
 
-	public AtomicInteger getNumEvents(int numberOfUser, String eventTypeAndCategory) {
+	public synchronized AtomicInteger getNumEvents(int numberOfUser, String eventTypeAndCategory) {
 		this.eventNumbersByUser.putIfAbsent(numberOfUser, new HashMap<>());
 		return this.eventNumbersByUser.get(numberOfUser).computeIfAbsent(eventTypeAndCategory,
 				k -> new AtomicInteger(0));
