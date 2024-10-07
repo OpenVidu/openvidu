@@ -23,6 +23,11 @@ export class AdminLoginComponent implements OnInit {
 	/**
 	 * @internal
 	 */
+	title: string;
+
+	/**
+	 * @internal
+	 */
 	loading = false;
 
 	/**
@@ -36,6 +41,7 @@ export class AdminLoginComponent implements OnInit {
 	loginForm: FormGroup;
 
 	private errorSub: Subscription;
+	private titleSub: Subscription;
 
 	/**
 	 * @internal
@@ -64,6 +70,7 @@ export class AdminLoginComponent implements OnInit {
 	ngOnDestroy() {
 		this.showSpinner = false;
 		if (this.errorSub) this.errorSub.unsubscribe();
+		if (this.titleSub) this.titleSub.unsubscribe();
 	}
 
 	/**
@@ -82,6 +89,10 @@ export class AdminLoginComponent implements OnInit {
 				this.showSpinner = false;
 				this.actionService.openDialog(value.error, value.message, true);
 			}
+		});
+
+		this.titleSub = this.libService.adminLoginTitle$.subscribe((value) => {
+			this.title = value;
 		});
 	}
 }

@@ -1,6 +1,6 @@
 <div class="dashboard-container">
 	<mat-toolbar class="header">
-		<span>{{ 'ADMIN.DASHBOARD_TITLE' | translate }}</span>
+		<span>{{ title || ('ADMIN.DASHBOARD_TITLE' | translate) }}</span>
 		<span class="toolbar-spacer"></span>
 
 		<button class="logout-btn" mat-icon-button aria-label="Refresh" (click)="logout()">

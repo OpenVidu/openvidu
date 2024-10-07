@@ -1,4 +1,4 @@
-<mat-toolbar class="header"> {{ 'ADMIN.DASHBOARD_TITLE' | translate }} </mat-toolbar>
+<mat-toolbar class="header"> {{ title || ('ADMIN.DASHBOARD_TITLE' | translate) }} </mat-toolbar>
 
 <div class="center-container">
 	<div *ngIf="loading" class="outer">

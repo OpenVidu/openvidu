@@ -88,6 +88,10 @@ export class OpenViduComponentsConfigService {
 	private adminRecordingsList: BehaviorSubject<RecordingInfo[]> = new BehaviorSubject(<RecordingInfo[]>[]);
 	adminRecordingsList$: Observable<RecordingInfo[]>;
 	private adminLoginError = <BehaviorSubject<any>>new BehaviorSubject(null);
+	private adminLoginTitle = <BehaviorSubject<string>>new BehaviorSubject('');
+	private adminDashboardTitle = <BehaviorSubject<string>>new BehaviorSubject('');
+	adminLoginTitle$: Observable<string>;
+	adminDashboardTitle$: Observable<string>;
 	adminLoginError$: Observable<any>;
 
 	// Internals
@@ -131,6 +135,8 @@ export class OpenViduComponentsConfigService {
 		// Admin dashboard
 		this.adminRecordingsList$ = this.adminRecordingsList.asObservable();
 		this.adminLoginError$ = this.adminLoginError.asObservable();
+		this.adminLoginTitle$ = this.adminLoginTitle.asObservable();
+		this.adminDashboardTitle$ = this.adminDashboardTitle.asObservable();
 		// Internals
 		this.layoutRemoteParticipants$ = this.layoutRemoteParticipants.asObservable();
 	}
@@ -364,6 +370,22 @@ export class OpenViduComponentsConfigService {
 
 	getAdminLoginError(): any {
 		return this.adminLoginError.getValue();
+	}
+
+	getAdminLoginTitle(): string {
+		return this.adminLoginTitle.getValue();
+	}
+
+	setAdminLoginTitle(title: string) {
+		this.adminLoginTitle.next(title);
+	}
+
+	getAdminDashboardTitle(): string {
+		return this.adminDashboardTitle.getValue();
+	}
+
+	setAdminDashboardTitle(title: string) {
+		this.adminDashboardTitle.next(title);
 	}
 
 	isRecordingEnabled(): boolean {

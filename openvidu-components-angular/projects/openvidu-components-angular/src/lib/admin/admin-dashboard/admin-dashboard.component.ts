@@ -38,6 +38,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	/**
 	 * @internal
 	 */
+	title = '';
+
+	/**
+	 * @internal
+	 */
 	recordings: RecordingInfo[] = [];
 	/**
 	 * @internal
@@ -55,7 +60,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	 * @internal
 	 */
 	recordingStatusEnum = RecordingStatus;
-	private adminSubscription: Subscription;
+	private recordingsSub: Subscription;
+	private titleSub: Subscription;
+
 	/**
 	 * @internal
 	 */
@@ -76,7 +83,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	 * @internal
 	 */
 	ngOnDestroy() {
-		if (this.adminSubscription) this.adminSubscription.unsubscribe();
+		if (this.recordingsSub) this.recordingsSub.unsubscribe();
+		if (this.titleSub) this.titleSub.unsubscribe();
 	}
 
 	/**
@@ -245,7 +253,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 	}
 
 	private subscribeToAdminDirectives() {
-		this.adminSubscription = this.libService.adminRecordingsList$.subscribe((recordings: RecordingInfo[]) => {
+		this.recordingsSub = this.libService.adminRecordingsList$.subscribe((recordings: RecordingInfo[]) => {
 
 			// Remove the recordings that are marked for deletion
 			this.filterDeletedRecordings(recordings);
@@ -254,6 +262,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 			this.mergeRecordings(recordings);
 
 			this.sortRecordings();
+		});
+
+		this.titleSub = this.libService.adminDashboardTitle$.subscribe((value) => {
+			this.title = value;
 		});
 	}
 }

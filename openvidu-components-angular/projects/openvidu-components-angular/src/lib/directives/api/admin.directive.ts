@@ -44,6 +44,91 @@ export class AdminDashboardRecordingsListDirective implements AfterViewInit, OnD
 }
 
 /**
+ * The **navbarTitle** directive allows customize the title of the navbar in {@link AdminLoginComponent}.
+ *
+ * Default: `'OpenVidu Call Dashboard'`
+ *
+ * @example
+ * <ov-admin-dashboard [navbarTitle]="'My Dashboard'"></ov-admin-dashboard>
+ *
+ */
+@Directive({
+	selector: 'ov-admin-dashboard[navbarTitle]'
+})
+export class AdminDashboardTitleDirective implements AfterViewInit, OnDestroy {
+
+	@Input() set navbarTitle(value: any) {
+		this.navbarTitleValue = value;
+		this.update(this.navbarTitleValue);
+	}
+
+	navbarTitleValue: any = null;
+
+	constructor(public elementRef: ElementRef, private libService: OpenViduComponentsConfigService) {}
+
+	ngAfterViewInit() {
+		this.update(this.navbarTitleValue);
+	}
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.navbarTitleValue = null;
+		this.update(null);
+	}
+
+	update(value: any) {
+		if (this.libService.getAdminDashboardTitle() !== value) {
+			this.libService.setAdminDashboardTitle(value);
+		}
+	}
+}
+
+
+/**
+ * The **navbarTitle** directive allows customize the title of the navbar in {@link AdminLoginComponent}.
+ *
+ * Default: `'OpenVidu Call Dashboard'`
+ *
+ * @example
+ * <ov-admin-login [navbarTitle]="'My login'"></ov-admin-login>
+ *
+ */
+@Directive({
+	selector: 'ov-admin-login[navbarTitle]'
+})
+export class AdminLoginTitleDirective implements AfterViewInit, OnDestroy {
+
+	@Input() set navbarTitle(value: any) {
+		this.navbarTitleValue = value;
+		this.update(this.navbarTitleValue);
+	}
+
+	navbarTitleValue: any = null;
+
+	constructor(public elementRef: ElementRef, private libService: OpenViduComponentsConfigService) {}
+
+	ngAfterViewInit() {
+		this.update(this.navbarTitleValue);
+	}
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	clear() {
+		this.navbarTitleValue = null;
+		this.update(null);
+	}
+
+	update(value: any) {
+		if (this.libService.getAdminLoginTitle() !== value) {
+			this.libService.setAdminLoginTitle(value);
+		}
+	}
+}
+
+
+
+/**
  * The **error** directive allows show the authentication error in {@link AdminLoginComponent}.
  *
  * Default: `null`

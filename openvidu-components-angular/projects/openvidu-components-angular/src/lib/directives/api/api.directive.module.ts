@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { ActivitiesPanelBroadcastingActivityDirective, ActivitiesPanelRecordingActivityDirective } from './activities-panel.directive';
-import { AdminLoginErrorDirective, AdminDashboardRecordingsListDirective } from './admin.directive';
+import { AdminLoginErrorDirective, AdminDashboardRecordingsListDirective, AdminLoginTitleDirective, AdminDashboardTitleDirective } from './admin.directive';
 import { LayoutRemoteParticipantsDirective, LogoDirective } from './internals.directive';
 import { ParticipantPanelItemMuteButtonDirective } from './participant-panel-item.directive';
 import {
@@ -76,7 +76,9 @@ import {
 		ActivitiesPanelRecordingActivityDirective,
 		ActivitiesPanelBroadcastingActivityDirective,
 		AdminDashboardRecordingsListDirective,
+		AdminLoginTitleDirective,
 		AdminLoginErrorDirective,
+		AdminDashboardTitleDirective,
 		LayoutRemoteParticipantsDirective
 	],
 	exports: [
@@ -114,7 +116,9 @@ import {
 		ActivitiesPanelRecordingActivityDirective,
 		ActivitiesPanelBroadcastingActivityDirective,
 		AdminDashboardRecordingsListDirective,
+		AdminLoginTitleDirective,
 		AdminLoginErrorDirective,
+		AdminDashboardTitleDirective,
 		LayoutRemoteParticipantsDirective
 	]
 })
