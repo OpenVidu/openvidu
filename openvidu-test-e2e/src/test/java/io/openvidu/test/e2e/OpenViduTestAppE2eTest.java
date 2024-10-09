@@ -524,8 +524,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		Assertions.assertEquals(3, countNumberOfPublishedLayers(user, publisherVideo),
 				"Wrong number of published layers");
-		int f = Integer.parseInt(getPublisherVideoLayerAttribute(user, publisherVideo, "f", "frameWidth"));
-		int q = Integer.parseInt(getPublisherVideoLayerAttribute(user, publisherVideo, "q", "frameWidth"));
+		int f = Integer.parseInt(getPublisherVideoLayerAttribute(user, publisherVideo, "f", "frameWidth").toString());
+		int q = Integer.parseInt(getPublisherVideoLayerAttribute(user, publisherVideo, "q", "frameWidth").toString());
 
 		this.addSubscriber(user, false);
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-2 .connect-btn")).sendKeys(Keys.ENTER);
@@ -717,9 +717,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
 		Assertions.assertEquals(3, countNumberOfPublishedLayers(user, publisherVideo),
 				"Wrong number of published layers");
-		int f = Integer.parseInt(getPublisherVideoLayerAttribute(user, publisherVideo, "f", "frameWidth"));
-		int h = Integer.parseInt(getPublisherVideoLayerAttribute(user, publisherVideo, "h", "frameWidth"));
-		int q = Integer.parseInt(getPublisherVideoLayerAttribute(user, publisherVideo, "q", "frameWidth"));
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "f", true);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", true);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", true);
+		int f = getPublisherVideoLayerAttribute(user, publisherVideo, "f", "frameWidth").getAsInt();
+		int h = getPublisherVideoLayerAttribute(user, publisherVideo, "h", "frameWidth").getAsInt();
+		int q = getPublisherVideoLayerAttribute(user, publisherVideo, "q", "frameWidth").getAsInt();
 
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
 
@@ -1014,8 +1017,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", false);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "f", false);
 
-		int publisherActiveFrameWidth = Integer
-				.parseInt(this.getPublisherVideoLayerAttribute(user, publisherVideo, "q", "frameWidth"));
+		int publisherActiveFrameWidth = this.getPublisherVideoLayerAttribute(user, publisherVideo, "q", "frameWidth")
+				.getAsInt();
 		int subscriberFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
 		Assertions.assertEquals(publisherActiveFrameWidth, subscriberFrameWidth,
 				"Wrong publisher and subscriber video frameWidth");
@@ -1027,8 +1030,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", true);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "f", true);
 
-		publisherActiveFrameWidth = Integer
-				.parseInt(this.getPublisherVideoLayerAttribute(user, publisherVideo, "f", "frameWidth"));
+		publisherActiveFrameWidth = this.getPublisherVideoLayerAttribute(user, publisherVideo, "f", "frameWidth")
+				.getAsInt();
+		waitUntilSubscriberFrameWidthIs(user, subscriberVideo, publisherActiveFrameWidth);
 		subscriberFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
 		Assertions.assertEquals(publisherActiveFrameWidth, subscriberFrameWidth,
 				"Wrong publisher and subscriber video frameWidth");
@@ -1040,8 +1044,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", true);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "f", false);
 
-		publisherActiveFrameWidth = Integer
-				.parseInt(this.getPublisherVideoLayerAttribute(user, publisherVideo, "h", "frameWidth"));
+		publisherActiveFrameWidth = this.getPublisherVideoLayerAttribute(user, publisherVideo, "h", "frameWidth")
+				.getAsInt();
 		subscriberFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
 		Assertions.assertEquals(publisherActiveFrameWidth, subscriberFrameWidth,
 				"Wrong publisher and subscriber video frameWidth");
@@ -1064,12 +1068,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		return json.get(0).getAsJsonObject().get("bytesReceived").getAsLong();
 	}
 
-	private String getPublisherVideoLayerAttribute(OpenViduTestappUser user, WebElement publisherVideo, String rid,
+	private JsonElement getPublisherVideoLayerAttribute(OpenViduTestappUser user, WebElement publisherVideo, String rid,
 			String attribute) {
 		JsonArray json = this.getLayersAsJsonArray(user, publisherVideo);
 		Optional<JsonElement> result = json.asList().stream().parallel()
 				.filter(jsonElement -> rid.equals(jsonElement.getAsJsonObject().get("rid").getAsString())).findAny();
-		return result.get().getAsJsonObject().get(attribute).toString();
+		return result.get().getAsJsonObject().get(attribute);
 	}
 
 	private JsonArray getLayersAsJsonArray(OpenViduTestappUser user, WebElement video) {
@@ -1104,12 +1108,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 	}
 
-	private void waitUntilPublisherLayerActive(OpenViduTestappUser user, WebElement publisherVideo, String rid,
-			final boolean active) {
+	private void waitUntilPublisherLayerActive(OpenViduTestappUser user, final WebElement publisherVideo,
+			final String rid, final boolean active) {
 		this.waitUntilAux(user, publisherVideo, () -> {
-			boolean currentlyActive = Boolean
-					.parseBoolean(this.getPublisherVideoLayerAttribute(user, publisherVideo, rid, "active"));
-			return currentlyActive == active;
+			boolean currentlyActive = this.getPublisherVideoLayerAttribute(user, publisherVideo, rid, "active")
+					.getAsBoolean();
+			if (active) {
+				JsonElement frameWidth = this.getPublisherVideoLayerAttribute(user, publisherVideo, rid, "frameWidth");
+				return currentlyActive && frameWidth != null;
+			} else {
+				return !currentlyActive;
+			}
 		}, "Timeout waiting for video track layer to be " + (active ? "active" : "inactive"));
 	}
 
