@@ -102,6 +102,27 @@ jobs:
           LAUNCH_MODE: CI
         run: npm run e2e:nested-events --prefix openvidu-components-angular
 
+  unit_tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: test_setup
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha || github.sha }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Dependencies
+        run: |
+          cd openvidu-components-angular
+          npm install
+      - name: Run Unit Tests
+        run: npm run lib:test --prefix openvidu-components-angular
+
+
   nested_components_e2e_directives:
     needs: test_setup
     name: Nested directives
