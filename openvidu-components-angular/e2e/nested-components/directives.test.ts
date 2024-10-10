@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { Builder, By, WebDriver } from 'selenium-webdriver';
 
 import { NestedConfig } from '../selenium.conf';
@@ -37,13 +36,13 @@ describe('Testing TOOLBAR STRUCTURAL DIRECTIVES', () => {
 
 		// Check if custom toolbar is present in DOM
 		await utils.waitForElement('#custom-toolbar');
-		expect(await utils.isPresent('#custom-toolbar')).to.be.true;
+		expect(await utils.isPresent('#custom-toolbar')).toBeTrue();
 
 		// Check if additional buttons element has not been rendered
-		expect(await utils.isPresent('#custom-toolbar-additional-buttons')).to.be.false;
+		expect(await utils.isPresent('#custom-toolbar-additional-buttons')).toBeFalse();
 
 		// Check if default toolbar is not present
-		expect(await utils.isPresent('#default-toolbar')).to.be.false;
+		expect(await utils.isPresent('#default-toolbar')).toBeFalse();
 	});
 
 	it('should inject the custom TOOLBAR with additional buttons', async () => {
@@ -57,17 +56,17 @@ describe('Testing TOOLBAR STRUCTURAL DIRECTIVES', () => {
 
 		// Check if custom toolbar is present in DOM
 		await utils.waitForElement('#custom-toolbar');
-		expect(await utils.isPresent('#custom-toolbar')).to.be.true;
+		expect(await utils.isPresent('#custom-toolbar')).toBeTrue();
 
 		// Check if additional buttons element has been rendered;
 		await utils.waitForElement('#custom-toolbar-additional-buttons');
-		expect(await utils.isPresent('#custom-toolbar-additional-buttons')).to.be.true;
+		expect(await utils.isPresent('#custom-toolbar-additional-buttons')).toBeTrue();
 
 		const element = await browser.findElements(By.id('toolbar-additional-btn'));
-		expect(element.length).equals(2);
+		expect(element.length).toEqual(2);
 
 		// Check if default toolbar is not present
-		expect(await utils.isPresent('#default-toolbar')).to.be.false;
+		expect(await utils.isPresent('#default-toolbar')).toBeFalse();
 	});
 
 	it('should inject the custom TOOLBAR with additional PANEL buttons', async () => {
@@ -81,17 +80,17 @@ describe('Testing TOOLBAR STRUCTURAL DIRECTIVES', () => {
 
 		// Check if custom toolbar is present in DOM
 		await utils.waitForElement('#custom-toolbar');
-		expect(await utils.isPresent('#custom-toolbar')).to.be.true;
+		expect(await utils.isPresent('#custom-toolbar')).toBeTrue();
 
 		// Check if additional buttons element has been rendered;
 		await utils.waitForElement('#custom-toolbar-additional-panel-buttons');
-		expect(await utils.isPresent('#custom-toolbar-additional-panel-buttons')).to.be.true;
+		expect(await utils.isPresent('#custom-toolbar-additional-panel-buttons')).toBeTrue();
 
 		const element = await browser.findElements(By.id('toolbar-additional-panel-btn'));
-		expect(element.length).equals(1);
+		expect(element.length).toEqual(1);
 
 		// Check if default toolbar is not present
-		expect(await utils.isPresent('#default-toolbar')).to.be.false;
+		expect(await utils.isPresent('#default-toolbar')).toBeFalse();
 	});
 
 	it('should inject the TOOLBAR ADDITIONAL BUTTONS only', async () => {
@@ -104,17 +103,17 @@ describe('Testing TOOLBAR STRUCTURAL DIRECTIVES', () => {
 
 		// Check if default toolbar is present
 		await utils.waitForElement('#default-toolbar');
-		expect(await utils.isPresent('#default-toolbar')).to.be.true;
+		expect(await utils.isPresent('#default-toolbar')).toBeTrue();
 
 		// Check if additional buttons are present
 		await utils.waitForElement('#custom-toolbar-additional-buttons');
-		expect(await utils.isPresent('#custom-toolbar-additional-buttons')).to.be.true;
+		expect(await utils.isPresent('#custom-toolbar-additional-buttons')).toBeTrue();
 
 		element = await browser.findElements(By.id('toolbar-additional-btn'));
-		expect(element.length).equals(3);
+		expect(element.length).toEqual(3);
 
 		// Check if custom toolbar not is present
-		expect(await utils.isPresent('#custom-toolbar')).to.be.false;
+		expect(await utils.isPresent('#custom-toolbar')).toBeFalse();
 	});
 
 	it('should inject the TOOLBAR ADDITIONAL PANEL BUTTONS only', async () => {
@@ -127,17 +126,17 @@ describe('Testing TOOLBAR STRUCTURAL DIRECTIVES', () => {
 
 		// Check if default toolbar is present
 		await utils.waitForElement('#default-toolbar');
-		expect(await utils.isPresent('#default-toolbar')).to.be.true;
+		expect(await utils.isPresent('#default-toolbar')).toBeTrue();
 
 		// Check if additional buttons are present
 		await utils.waitForElement('#custom-toolbar-additional-panel-buttons');
-		expect(await utils.isPresent('#custom-toolbar-additional-panel-buttons')).to.be.true;
+		expect(await utils.isPresent('#custom-toolbar-additional-panel-buttons')).toBeTrue();
 
 		element = await browser.findElements(By.id('toolbar-additional-panel-btn'));
-		expect(element.length).equals(2);
+		expect(element.length).toEqual(2);
 
 		// Check if custom toolbar not is present
-		expect(await utils.isPresent('#custom-toolbar')).to.be.false;
+		expect(await utils.isPresent('#custom-toolbar')).toBeFalse();
 	});
 });
 
@@ -178,25 +177,25 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 
 		// Check if custom panel is present
 		await utils.waitForElement('#custom-panels');
-		expect(await utils.isPresent('#custom-panels')).to.be.true;
+		expect(await utils.isPresent('#custom-panels')).toBeTrue();
 
 		// Check if default panel is not present
-		expect(await utils.isPresent('#default-panel')).to.be.false;
+		expect(await utils.isPresent('#default-panel')).toBeFalse();
 
 		// Check if default participant panel is not present
-		expect(await utils.isPresent('#default-participant-panel')).to.be.false;
+		expect(await utils.isPresent('#default-participant-panel')).toBeFalse();
 
 		// Check if custom participant panel is not present
-		expect(await utils.isPresent('#custom-participants-panel')).to.be.false;
+		expect(await utils.isPresent('#custom-participants-panel')).toBeFalse();
 
 		// Click on button for opening panel
 		await utils.clickOn('#chat-panel-btn');
 
 		// Check if default chat panel is not present
-		expect(await utils.isPresent('#default-chat-panel')).to.be.false;
+		expect(await utils.isPresent('#default-chat-panel')).toBeFalse();
 
 		// Check if custom chat panel is not present
-		expect(await utils.isPresent('#custom-chat-panel')).to.be.false;
+		expect(await utils.isPresent('#custom-chat-panel')).toBeFalse();
 	});
 
 	it('should inject the CUSTOM PANEL with ADDITIONAL PANEL only', async () => {
@@ -217,15 +216,15 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 
 		// Check if custom panel is present
 		element = await browser.findElements(By.id('custom-additional-panel'));
-		expect(element.length).equals(1);
+		expect(element.length).toEqual(1);
 
 		element = await utils.waitForElement('#additional-panel-title');
-		expect(await utils.isPresent('#additional-panel-title')).to.be.true;
-		expect(await element.getAttribute('innerText')).equals('NEW PANEL');
+		expect(await utils.isPresent('#additional-panel-title')).toBeTrue();
+		expect(await element.getAttribute('innerText')).toEqual('NEW PANEL');
 
 		await utils.clickOn('#toolbar-additional-panel-btn');
 
-		expect(await utils.isPresent('#custom-additional-panel')).to.be.false;
+		expect(await utils.isPresent('#custom-additional-panel')).toBeFalse();
 	});
 
 	it('should inject the CUSTOM PANEL with CHAT PANEL only', async () => {
@@ -245,26 +244,26 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 
 		// Check if custom panel is present
 		await utils.waitForElement('#custom-panels');
-		expect(await utils.isPresent('#custom-panels')).to.be.true;
+		expect(await utils.isPresent('#custom-panels')).toBeTrue();
 
 		// Check if default panel is not present
-		expect(await utils.isPresent('#default-panel')).to.be.false;
+		expect(await utils.isPresent('#default-panel')).toBeFalse();
 
 		// Check if default participant panel is not present
-		expect(await utils.isPresent('#default-participant-panel')).to.be.false;
+		expect(await utils.isPresent('#default-participant-panel')).toBeFalse();
 
 		// Check if custom participant panel is not present
-		expect(await utils.isPresent('#custom-participants-panel')).to.be.false;
+		expect(await utils.isPresent('#custom-participants-panel')).toBeFalse();
 
 		// Click on button for opening chat panel
 		await utils.clickOn('#chat-panel-btn');
 
 		// Check if default chat panel is not present
-		expect(await utils.isPresent('#default-chat-panel')).to.be.false;
+		expect(await utils.isPresent('#default-chat-panel')).toBeFalse();
 
 		// Check if custom chat panel is not present
 		await utils.waitForElement('#custom-chat-panel');
-		expect(await utils.isPresent('#custom-chat-panel')).to.be.true;
+		expect(await utils.isPresent('#custom-chat-panel')).toBeTrue();
 	});
 
 	it('should inject the CUSTOM PANEL with ACTIVITIES PANEL only', async () => {
@@ -284,14 +283,14 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 		await utils.clickOn('#activities-panel-btn');
 
 		// Check if default activities panel is not present
-		expect(await utils.isPresent('#default-activities-panel')).to.be.false;
+		expect(await utils.isPresent('#default-activities-panel')).toBeFalse();
 
 		// Check if custom chat panel is not present
 		element = await utils.waitForElement('#custom-activities-panel');
-		expect(await utils.isPresent('#custom-activities-panel')).to.be.true;
+		expect(await utils.isPresent('#custom-activities-panel')).toBeTrue();
 
 		element = await utils.waitForElement('#activities-panel-title');
-		expect(await element.getAttribute('innerText')).equals('CUSTOM ACTIVITIES PANEL');
+		expect(await element.getAttribute('innerText')).toEqual('CUSTOM ACTIVITIES PANEL');
 	});
 
 	it('should inject the CUSTOM PANEL with PARTICIPANTS PANEL only and without children', async () => {
@@ -311,25 +310,25 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 
 		// Check if custom panel is present
 		await utils.waitForElement('#custom-panels');
-		expect(await utils.isPresent('#custom-panels')).to.be.true;
+		expect(await utils.isPresent('#custom-panels')).toBeTrue();
 
 		// Check if default panel is not present
-		expect(await utils.isPresent('#default-panel')).to.be.false;
+		expect(await utils.isPresent('#default-panel')).toBeFalse();
 
 		// Check if default participant panel is not present
-		expect(await utils.isPresent('#default-participant-panel')).to.be.false;
+		expect(await utils.isPresent('#default-participant-panel')).toBeFalse();
 
 		await utils.waitForElement('#custom-participants-panel');
-		expect(await utils.isPresent('#custom-participants-panel')).to.be.true;
+		expect(await utils.isPresent('#custom-participants-panel')).toBeTrue();
 
 		// Click on button for opening chat panel
 		await utils.clickOn('#chat-panel-btn');
 
 		// Check if default chat panel is not present
-		expect(await utils.isPresent('#default-chat-panel')).to.be.false;
+		expect(await utils.isPresent('#default-chat-panel')).toBeFalse();
 
 		// Check if custom chat panel is not present
-		expect(await utils.isPresent('#custom-chat-panel')).to.be.false;
+		expect(await utils.isPresent('#custom-chat-panel')).toBeFalse();
 	});
 
 	it('should inject the CUSTOM PANEL with PARTICIPANTS PANEL and P ITEM only', async () => {
@@ -351,24 +350,24 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 
 		// Check if custom panel is present
 		await utils.waitForElement('#custom-panels');
-		expect(await utils.isPresent('#custom-panels')).to.be.true;
+		expect(await utils.isPresent('#custom-panels')).toBeTrue();
 
 		// Check if default panel is not present
-		expect(await utils.isPresent('#default-panel')).to.be.false;
+		expect(await utils.isPresent('#default-panel')).toBeFalse();
 
 		// Check if default participant panel is not present
-		expect(await utils.isPresent('#default-participant-panel')).to.be.false;
+		expect(await utils.isPresent('#default-participant-panel')).toBeFalse();
 
 		// Check if custom participant panel is present
 		await utils.waitForElement('#custom-participants-panel');
-		expect(await utils.isPresent('#custom-participants-panel')).to.be.true;
+		expect(await utils.isPresent('#custom-participants-panel')).toBeTrue();
 
 		// Check if custom participant panel item is present
 		await utils.waitForElement('#custom-participants-panel-item');
-		expect(await utils.isPresent('#custom-participants-panel-item')).to.be.true;
+		expect(await utils.isPresent('#custom-participants-panel-item')).toBeTrue();
 
 		// Check if default participant panel item is not present
-		expect(await utils.isPresent('#default-participant-panel-item')).to.be.false;
+		expect(await utils.isPresent('#default-participant-panel-item')).toBeFalse();
 	});
 
 	it('should inject the CUSTOM PANEL with PARTICIPANTS PANEL and P ITEM and P ITEM ELEMENT', async () => {
@@ -392,28 +391,28 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 
 		// Check if custom panel is present
 		await utils.waitForElement('#custom-panels');
-		expect(await utils.isPresent('#custom-panels')).to.be.true;
+		expect(await utils.isPresent('#custom-panels')).toBeTrue();
 
 		// Check if custom participant panel is present
 		await utils.waitForElement('#custom-participants-panel');
-		expect(await utils.isPresent('#custom-participants-panel')).to.be.true;
+		expect(await utils.isPresent('#custom-participants-panel')).toBeTrue();
 
 		// Check if custom participant panel item is present
 		await utils.waitForElement('#custom-participants-panel-item');
-		expect(await utils.isPresent('#custom-participants-panel-item')).to.be.true;
+		expect(await utils.isPresent('#custom-participants-panel-item')).toBeTrue();
 
 		// Check if custom participant panel item element is present
 		await utils.waitForElement('#custom-participants-panel-item-element');
-		expect(await utils.isPresent('#custom-participants-panel-item-element')).to.be.true;
+		expect(await utils.isPresent('#custom-participants-panel-item-element')).toBeTrue();
 
 		// Check if default panel is not present
-		expect(await utils.isPresent('#default-panel')).to.be.false;
+		expect(await utils.isPresent('#default-panel')).toBeFalse();
 
 		// Check if default participant panel is not present
-		expect(await utils.isPresent('#default-participant-panel')).to.be.false;
+		expect(await utils.isPresent('#default-participant-panel')).toBeFalse();
 
 		// Check if default participant panel item is not present
-		expect(await utils.isPresent('#default-participant-panel-item')).to.be.false;
+		expect(await utils.isPresent('#default-participant-panel-item')).toBeFalse();
 	});
 
 	it('should inject an ACTIVITIES PANEL only', async () => {
@@ -430,15 +429,15 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 		await utils.clickOn('#activities-panel-btn');
 
 		// Check if default panel is not present
-		expect(await utils.isPresent('#default-activities-panel')).to.be.false;
+		expect(await utils.isPresent('#default-activities-panel')).toBeFalse();
 
 		// Check if custom panel is present
 		await utils.waitForElement('#custom-activities-panel');
-		expect(await utils.isPresent('#custom-activities-panel')).to.be.true;
+		expect(await utils.isPresent('#custom-activities-panel')).toBeTrue();
 
 		// Check if activities panel is has content
 		await utils.waitForElement('#activities-container');
-		expect(await utils.isPresent('#activities-container')).to.be.true;
+		expect(await utils.isPresent('#activities-container')).toBeTrue();
 	});
 
 	it('should inject an ADDITIONAL PANEL only', async () => {
@@ -457,14 +456,14 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 
 		// Check if custom panel is present
 		await utils.waitForElement('#custom-additional-panel');
-		expect(await utils.isPresent('#custom-additional-panel')).to.be.true;
+		expect(await utils.isPresent('#custom-additional-panel')).toBeTrue();
 
 		element = await utils.waitForElement('#additional-panel-title');
-		expect(await element.getAttribute('innerText')).equals('NEW PANEL');
+		expect(await element.getAttribute('innerText')).toEqual('NEW PANEL');
 
 		await utils.clickOn('#toolbar-additional-panel-btn');
 
-		expect(await utils.isPresent('#custom-additional-panel')).to.be.false;
+		expect(await utils.isPresent('#custom-additional-panel')).toBeFalse();
 	});
 
 	it('should inject the CHAT PANEL only', async () => {
@@ -481,28 +480,28 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 		await utils.clickOn('#participants-panel-btn');
 
 		// Check if custom panel is present
-		expect(await utils.isPresent('#custom-panels')).to.be.false;
+		expect(await utils.isPresent('#custom-panels')).toBeFalse();
 
 		// Check if default panel is not present
 		await utils.waitForElement('#default-panel');
-		expect(await utils.isPresent('#default-panel')).to.be.true;
+		expect(await utils.isPresent('#default-panel')).toBeTrue();
 
 		// Check if default participant panel is not present
 		await utils.waitForElement('#default-participants-panel');
-		expect(await utils.isPresent('#default-participants-panel')).to.be.true;
+		expect(await utils.isPresent('#default-participants-panel')).toBeTrue();
 
 		// Check if custom participant panel is not present
-		expect(await utils.isPresent('#custom-participants-panel')).to.be.false;
+		expect(await utils.isPresent('#custom-participants-panel')).toBeFalse();
 
 		// Click on button for opening chat panel
 		await utils.clickOn('#chat-panel-btn');
 
 		// Check if default chat panel is not present
-		expect(await utils.isPresent('#default-chat-panel')).to.be.false;
+		expect(await utils.isPresent('#default-chat-panel')).toBeFalse();
 
 		// Check if custom chat panel is present
 		await utils.waitForElement('#custom-chat-panel');
-		expect(await utils.isPresent('#custom-chat-panel')).to.be.true;
+		expect(await utils.isPresent('#custom-chat-panel')).toBeTrue();
 	});
 
 	it('should inject the PARTICIPANTS PANEL only', async () => {
@@ -519,28 +518,28 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 		await utils.clickOn('#participants-panel-btn');
 
 		// Check if custom panel is present
-		expect(await utils.isPresent('#custom-panels')).to.be.false;
+		expect(await utils.isPresent('#custom-panels')).toBeFalse();
 
 		// Check if default panel is not present
 		await utils.waitForElement('#default-panel');
-		expect(await utils.isPresent('#default-panel')).to.be.true;
+		expect(await utils.isPresent('#default-panel')).toBeTrue();
 
 		// Check if default participant panel is not present
-		expect(await utils.isPresent('#default-participant-panel')).to.be.false;
+		expect(await utils.isPresent('#default-participant-panel')).toBeFalse();
 
 		// Check if custom participant panel is present
 		await utils.waitForElement('#custom-participants-panel');
-		expect(await utils.isPresent('#custom-participants-panel')).to.be.true;
+		expect(await utils.isPresent('#custom-participants-panel')).toBeTrue();
 
 		// Click on button for opening chat panel
 		await utils.clickOn('#chat-panel-btn');
 
 		// Check if default chat panel is present
 		await utils.waitForElement('#default-chat-panel');
-		expect(await utils.isPresent('#default-chat-panel')).to.be.true;
+		expect(await utils.isPresent('#default-chat-panel')).toBeTrue();
 
 		// Check if custom chat panel is not present
-		expect(await utils.isPresent('#custom-chat-panel')).to.be.false;
+		expect(await utils.isPresent('#custom-chat-panel')).toBeFalse();
 	});
 
 	it('should inject the PARTICIPANTS PANEL ITEM only', async () => {
@@ -557,31 +556,31 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 		await utils.clickOn('#participants-panel-btn');
 
 		// Check if custom panel is present
-		expect(await utils.isPresent('#custom-panels')).to.be.false;
+		expect(await utils.isPresent('#custom-panels')).toBeFalse();
 
 		// Check if default panel is not present
 		await utils.waitForElement('#default-panel');
-		expect(await utils.isPresent('#default-panel')).to.be.true;
+		expect(await utils.isPresent('#default-panel')).toBeTrue();
 
 		// Check if default participant panel is not present
 		await utils.waitForElement('#default-participants-panel');
-		expect(await utils.isPresent('#default-participants-panel')).to.be.true;
+		expect(await utils.isPresent('#default-participants-panel')).toBeTrue();
 
 		// Check if custom participant panel is not present
-		expect(await utils.isPresent('#custom-participants-panel')).to.be.false;
+		expect(await utils.isPresent('#custom-participants-panel')).toBeFalse();
 
 		await utils.waitForElement('#custom-participants-panel-item');
-		expect(await utils.isPresent('#custom-participants-panel-item')).to.be.true;
+		expect(await utils.isPresent('#custom-participants-panel-item')).toBeTrue();
 
 		// Click on button for opening chat panel
 		await utils.clickOn('#chat-panel-btn');
 
 		// Check if default chat panel is present
 		await utils.waitForElement('#default-chat-panel');
-		expect(await utils.isPresent('#default-chat-panel')).to.be.true;
+		expect(await utils.isPresent('#default-chat-panel')).toBeTrue();
 
 		// Check if custom chat panel is not present
-		expect(await utils.isPresent('#custom-chat-panel')).to.be.false;
+		expect(await utils.isPresent('#custom-chat-panel')).toBeFalse();
 	});
 
 	it('should inject the PARTICIPANTS PANEL ITEM ELEMENT only', async () => {
@@ -599,27 +598,27 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 
 		// Check if default participant panel is not present
 		await utils.waitForElement('#default-participants-panel');
-		expect(await utils.isPresent('#default-participants-panel')).to.be.true;
+		expect(await utils.isPresent('#default-participants-panel')).toBeTrue();
 
 		// Check if custom participant panel is not present
-		expect(await utils.isPresent('#custom-participants-panel')).to.be.false;
+		expect(await utils.isPresent('#custom-participants-panel')).toBeFalse();
 
-		expect(await utils.isPresent('#custom-participants-panel-item')).to.be.false;
+		expect(await utils.isPresent('#custom-participants-panel-item')).toBeFalse();
 
-		expect(await utils.isPresent('#custom-participants-panel-item')).to.be.false;
+		expect(await utils.isPresent('#custom-participants-panel-item')).toBeFalse();
 
 		await utils.waitForElement('#custom-participants-panel-item-element');
-		expect(await utils.isPresent('#custom-participants-panel-item-element')).to.be.true;
+		expect(await utils.isPresent('#custom-participants-panel-item-element')).toBeTrue();
 
 		// Click on button for opening chat panel
 		await utils.clickOn('#chat-panel-btn');
 
 		// Check if default chat panel is present
 		await utils.waitForElement('#default-chat-panel');
-		expect(await utils.isPresent('#default-chat-panel')).to.be.true;
+		expect(await utils.isPresent('#default-chat-panel')).toBeTrue();
 
 		// Check if custom chat panel is not present;
-		expect(await utils.isPresent('#custom-chat-panel')).to.be.false;
+		expect(await utils.isPresent('#custom-chat-panel')).toBeFalse();
 	});
 
 	it('should inject the CUSTOM PANEL with CHAT and PARTICIPANTS PANELS', async () => {
@@ -639,27 +638,27 @@ describe('Testing PANEL STRUCTURAL DIRECTIVES', () => {
 
 		// Check if custom panel is present
 		await utils.waitForElement('#custom-panels');
-		expect(await utils.isPresent('#custom-panels')).to.be.true;
+		expect(await utils.isPresent('#custom-panels')).toBeTrue();
 
 		// Check if default panel is not present
-		expect(await utils.isPresent('#default-panel')).to.be.false;
+		expect(await utils.isPresent('#default-panel')).toBeFalse();
 
 		// Check if default participant panel is not present
-		expect(await utils.isPresent('#default-participant-panel')).to.be.false;
+		expect(await utils.isPresent('#default-participant-panel')).toBeFalse();
 
 		// Check if custom participant panel is present
 		await utils.waitForElement('#custom-participants-panel');
-		expect(await utils.isPresent('#custom-participants-panel')).to.be.true;
+		expect(await utils.isPresent('#custom-participants-panel')).toBeTrue();
 
 		// Click on button for opening chat panel
 		await utils.clickOn('#chat-panel-btn');
 
 		// Check if default chat panel is not present
-		expect(await utils.isPresent('#default-chat-panel')).to.be.false;
+		expect(await utils.isPresent('#default-chat-panel')).toBeFalse();
 
 		// Check if custom chat panel is present
 		await utils.waitForElement('#custom-chat-panel');
-		expect(await utils.isPresent('#custom-chat-panel')).to.be.true;
+		expect(await utils.isPresent('#custom-chat-panel')).toBeTrue();
 	});
 });
 
@@ -694,16 +693,16 @@ describe('Testing LAYOUT STRUCTURAL DIRECTIVES', () => {
 
 		// Check if custom layout is present
 		await utils.waitForElement('#custom-layout');
-		expect(await utils.isPresent('#custom-layout')).to.be.true;
+		expect(await utils.isPresent('#custom-layout')).toBeTrue();
 
 		// Check if default layout is not present
-		expect(await utils.isPresent('#default-layout')).to.be.false;
+		expect(await utils.isPresent('#default-layout')).toBeFalse();
 
 		// Check if custom stream is not present
-		expect(await utils.isPresent('#custom-stream')).to.be.false;
+		expect(await utils.isPresent('#custom-stream')).toBeFalse();
 
 		// Check if video is not present
-		expect(await utils.isPresent('video')).to.be.false;
+		expect(await utils.isPresent('video')).toBeFalse();
 	});
 
 	it('should inject the custom LAYOUT WITH STREAM', async () => {
@@ -717,21 +716,21 @@ describe('Testing LAYOUT STRUCTURAL DIRECTIVES', () => {
 
 		// Check if custom layout is present
 		await utils.waitForElement('#custom-layout');
-		expect(await utils.isPresent('#custom-layout')).to.be.true;
+		expect(await utils.isPresent('#custom-layout')).toBeTrue();
 
 		// Check if default layout is not present
-		expect(await utils.isPresent('default-layout')).to.be.false;
+		expect(await utils.isPresent('default-layout')).toBeFalse();
 
 		// Check if custom stream is present
 		await utils.waitForElement('#custom-stream');
-		expect(await utils.isPresent('#custom-stream')).to.be.true;
+		expect(await utils.isPresent('#custom-stream')).toBeTrue();
 
 		// Check if default stream is not present
-		expect(await utils.isPresent('default-stream')).to.be.false;
+		expect(await utils.isPresent('default-stream')).toBeFalse();
 
 		// Check if video is present
 		await utils.waitForElement('video');
-		expect(await utils.isPresent('video')).to.be.true;
+		expect(await utils.isPresent('video')).toBeTrue();
 	});
 
 	it('should inject the CUSTOM STREAM only', async () => {
@@ -743,21 +742,21 @@ describe('Testing LAYOUT STRUCTURAL DIRECTIVES', () => {
 
 		// Check if default layout is not present
 		await utils.waitForElement('#default-layout');
-		expect(await utils.isPresent('#default-layout')).to.be.true;
+		expect(await utils.isPresent('#default-layout')).toBeTrue();
 
 		// Check if custom stream is present
 		await utils.waitForElement('#custom-stream');
-		expect(await utils.isPresent('#custom-stream')).to.be.true;
+		expect(await utils.isPresent('#custom-stream')).toBeTrue();
 
 		// Check if custom layout is not present
-		expect(await utils.isPresent('#custom-layout')).to.be.false;
+		expect(await utils.isPresent('#custom-layout')).toBeFalse();
 
 		// Check if default stream is not present
-		expect(await utils.isPresent('default-stream')).to.be.false;
+		expect(await utils.isPresent('default-stream')).toBeFalse();
 
 		// Check if video is present
 		await utils.waitForElement('video');
-		expect(await utils.isPresent('video')).to.be.true;
+		expect(await utils.isPresent('video')).toBeTrue();
 	});
 });
 
@@ -796,7 +795,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		await utils.checkToolbarIsPresent();
 
 		// Check if chat button does not exist
-		expect(await utils.isPresent('chat-panel-btn')).to.be.false;
+		expect(await utils.isPresent('chat-panel-btn')).toBeFalse();
 	});
 
 	it('should HIDE the PARTICIPANTS PANEL BUTTON', async () => {
@@ -811,7 +810,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		await utils.checkToolbarIsPresent();
 
 		// Check if participants button does not exist
-		expect(await utils.isPresent('participants-panel-btn')).to.be.false;
+		expect(await utils.isPresent('participants-panel-btn')).toBeFalse();
 	});
 
 	it('should HIDE the ACTIVITIES PANEL BUTTON', async () => {
@@ -826,7 +825,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		await utils.checkToolbarIsPresent();
 
 		// Check if participants button does not exist
-		expect(await utils.isPresent('activities-panel-btn')).to.be.false;
+		expect(await utils.isPresent('activities-panel-btn')).toBeFalse();
 	});
 
 	it('should HIDE the DISPLAY LOGO', async () => {
@@ -840,7 +839,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await utils.checkToolbarIsPresent();
 
-		expect(await utils.isPresent('branding-logo')).to.be.false;
+		expect(await utils.isPresent('branding-logo')).toBeFalse();
 	});
 
 	it('should HIDE the DISPLAY ROOM name', async () => {
@@ -854,7 +853,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await utils.checkToolbarIsPresent();
 
-		expect(await utils.isPresent('session-name')).to.be.false;
+		expect(await utils.isPresent('session-name')).toBeFalse();
 	});
 
 	it('should HIDE the FULLSCREEN button', async () => {
@@ -876,7 +875,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		await utils.waitForElement('#more-options-menu');
 
 		// Checking if fullscreen button is not present
-		expect(await utils.isPresent('#fullscreen-btn')).to.be.false;
+		expect(await utils.isPresent('#fullscreen-btn')).toBeFalse();
 	});
 
 	it('should HIDE the STREAMING button', async () => {
@@ -897,7 +896,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		await utils.waitForElement('#more-options-menu');
 
 		// Checking if fullscreen button is not present
-		expect(await utils.isPresent('#broadcasting-btn')).to.be.false;
+		expect(await utils.isPresent('#broadcasting-btn')).toBeFalse();
 	});
 
 	it('should HIDE the LEAVE button', async () => {
@@ -911,7 +910,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await utils.checkToolbarIsPresent();
 
-		expect(await utils.isPresent('leave-btn')).to.be.false;
+		expect(await utils.isPresent('leave-btn')).toBeFalse();
 	});
 
 	it('should HIDE the SCREENSHARE button', async () => {
@@ -925,7 +924,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await utils.checkToolbarIsPresent();
 
-		expect(await utils.isPresent('screenshare-btn')).to.be.false;
+		expect(await utils.isPresent('screenshare-btn')).toBeFalse();
 	});
 
 	it('should HIDE the AUDIO detector', async () => {
@@ -940,7 +939,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		await utils.waitForElement('#session-container');
 		await utils.waitForElement('#custom-stream');
 
-		expect(await utils.isPresent('audio-wave-container')).to.be.false;
+		expect(await utils.isPresent('audio-wave-container')).toBeFalse();
 	});
 
 	it('should HIDE the PARTICIPANT NAME', async () => {
@@ -955,7 +954,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 		await utils.waitForElement('#session-container');
 		await utils.waitForElement('#custom-stream');
 
-		expect(await utils.isPresent('participant-name-container')).to.be.false;
+		expect(await utils.isPresent('participant-name-container')).toBeFalse();
 	});
 
 	it('should HIDE the SETTINGS button', async () => {
@@ -969,7 +968,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await utils.waitForElement('#custom-stream');
 
-		expect(await utils.isPresent('settings-container')).to.be.false;
+		expect(await utils.isPresent('settings-container')).toBeFalse();
 	});
 
 	it('should HIDE the participant MUTE button', async () => {
@@ -1005,7 +1004,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await utils.waitForElement('#remote-participant-item');
 
-		expect(await utils.isPresent('mute-btn')).to.be.false;
+		expect(await utils.isPresent('mute-btn')).toBeFalse();
 	});
 
 	it('should HIDE the RECORDING activity', async () => {
@@ -1025,7 +1024,7 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await utils.waitForElement('#custom-activities-panel');
 
-		expect(await utils.isPresent('ov-recording-activity')).to.be.false;
+		expect(await utils.isPresent('ov-recording-activity')).toBeFalse();
 	});
 
 	it('should HIDE the STREAMING activity', async () => {
@@ -1047,6 +1046,6 @@ describe('Testing ATTRIBUTE DIRECTIVES', () => {
 
 		await utils.waitForElement('ov-recording-activity');
 
-		expect(await utils.isPresent('ov-broadcasting-activity')).to.be.false;
+		expect(await utils.isPresent('ov-broadcasting-activity')).toBeFalse();
 	});
 });

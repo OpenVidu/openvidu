@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { Builder, Key, WebDriver } from 'selenium-webdriver';
 import { OPENVIDU_CALL_SERVER } from '../config';
 import { WebComponentConfig } from '../selenium.conf';
@@ -43,11 +42,11 @@ const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_CALL_SERVER}`;
 
 // 		// Checking if button panel is present
 // 		await utils.waitForElement('#more-options-menu');
-// 		expect(await utils.isPresent('#more-options-menu')).to.be.true;
+// 		expect(await utils.isPresent('#more-options-menu')).toBeTrue();
 
 // 		// Checking if captions button is present
 // 		await utils.waitForElement('#captions-btn');
-// 		expect(await utils.isPresent('#captions-btn')).to.be.true;
+// 		expect(await utils.isPresent('#captions-btn')).toBeTrue();
 // 		await utils.clickOn('#captions-btn');
 
 // 		await utils.waitForElement('.captions-container');
@@ -68,11 +67,11 @@ const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_CALL_SERVER}`;
 
 // 		// Checking if button panel is present
 // 		await utils.waitForElement('#more-options-menu');
-// 		expect(await utils.isPresent('#more-options-menu')).to.be.true;
+// 		expect(await utils.isPresent('#more-options-menu')).toBeTrue();
 
 // 		// Checking if captions button is present
 // 		await utils.waitForElement('#captions-btn');
-// 		expect(await utils.isPresent('#captions-btn')).to.be.true;
+// 		expect(await utils.isPresent('#captions-btn')).toBeTrue();
 // 		await utils.clickOn('#captions-btn');
 
 // 		await utils.waitForElement('.captions-container');
@@ -82,12 +81,12 @@ const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_CALL_SERVER}`;
 // 		await browser.sleep(500);
 
 // 		await utils.waitForElement('.settings-container');
-// 		expect(await utils.isPresent('.settings-container')).to.be.true;
+// 		expect(await utils.isPresent('.settings-container')).toBeTrue();
 
 // 		await utils.waitForElement('ov-captions-settings');
 
 // 		// Expect caption button is not present
-// 		expect(await utils.isPresent('#caption-settings-btn')).to.be.false;
+// 		expect(await utils.isPresent('#caption-settings-btn')).toBeFalse();
 // 	});
 
 // 	it('should TOGGLE the CAPTIONS container from settings panel', async () => {
@@ -105,11 +104,11 @@ const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_CALL_SERVER}`;
 
 // 		// Checking if button panel is present
 // 		await utils.waitForElement('#more-options-menu');
-// 		expect(await utils.isPresent('#more-options-menu')).to.be.true;
+// 		expect(await utils.isPresent('#more-options-menu')).toBeTrue();
 
 // 		// Checking if captions button is present
 // 		await utils.waitForElement('#captions-btn');
-// 		expect(await utils.isPresent('#captions-btn')).to.be.true;
+// 		expect(await utils.isPresent('#captions-btn')).toBeTrue();
 // 		await utils.clickOn('#captions-btn');
 
 // 		await utils.waitForElement('.captions-container');
@@ -119,18 +118,18 @@ const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_CALL_SERVER}`;
 // 		await browser.sleep(500);
 
 // 		await utils.waitForElement('.settings-container');
-// 		expect(await utils.isPresent('.settings-container')).to.be.true;
+// 		expect(await utils.isPresent('.settings-container')).toBeTrue();
 
 // 		await utils.waitForElement('ov-captions-settings');
 
-// 		expect(await utils.isPresent('.captions-container')).to.be.true;
+// 		expect(await utils.isPresent('.captions-container')).toBeTrue();
 // 		await utils.clickOn('#captions-toggle-slide');
-// 		expect(await utils.isPresent('.captions-container')).to.be.false;
+// 		expect(await utils.isPresent('.captions-container')).toBeFalse();
 
 // 		await browser.sleep(200);
 
 // 		await utils.clickOn('#captions-toggle-slide');
-// 		expect(await utils.isPresent('.captions-container')).to.be.true;
+// 		expect(await utils.isPresent('.captions-container')).toBeTrue();
 // 	});
 
 // 	it('should change the CAPTIONS language', async () => {
@@ -148,11 +147,11 @@ const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_CALL_SERVER}`;
 
 // 		// Checking if button panel is present
 // 		await utils.waitForElement('#more-options-menu');
-// 		expect(await utils.isPresent('#more-options-menu')).to.be.true;
+// 		expect(await utils.isPresent('#more-options-menu')).toBeTrue();
 
 // 		// Checking if captions button is present
 // 		await utils.waitForElement('#captions-btn');
-// 		expect(await utils.isPresent('#captions-btn')).to.be.true;
+// 		expect(await utils.isPresent('#captions-btn')).toBeTrue();
 // 		await utils.clickOn('#captions-btn');
 
 // 		await utils.waitForElement('.captions-container');
@@ -162,11 +161,11 @@ const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_CALL_SERVER}`;
 // 		await browser.sleep(500);
 
 // 		await utils.waitForElement('.settings-container');
-// 		expect(await utils.isPresent('.settings-container')).to.be.true;
+// 		expect(await utils.isPresent('.settings-container')).toBeTrue();
 
 // 		await utils.waitForElement('ov-captions-settings');
 
-// 		expect(await utils.isPresent('.captions-container')).to.be.true;
+// 		expect(await utils.isPresent('.captions-container')).toBeTrue();
 
 // 		await utils.clickOn('.lang-button');
 // 		await browser.sleep(500);
@@ -175,7 +174,7 @@ const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_CALL_SERVER}`;
 // 		await utils.clickOn('.panel-close-button');
 
 // 		const button = await utils.waitForElement('#caption-settings-btn');
-// 		expect(await button.getText()).equals('settingsEspañol');
+// 		expect(await button.getText()).toEqual('settingsEspañol');
 
 // 	});
 // });

@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { Builder, WebDriver } from 'selenium-webdriver';
 import { OPENVIDU_CALL_SERVER } from '../config';
 import { WebComponentConfig } from '../selenium.conf';
@@ -37,24 +36,24 @@ describe('Testing screenshare features', () => {
 
 		await browser.sleep(500);
 		await utils.waitForElement('.OV_big');
-		expect(await utils.getNumberOfElements('video')).equals(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(2);
 
-		// expect(await utils.getNumberOfElements('.OV_stream.speaking')).equals(1);
+		// expect(await utils.getNumberOfElements('.OV_stream.speaking')).toEqual(1);
 
 		await utils.disableScreenShare();
 
-		expect(await utils.getNumberOfElements('video')).equals(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
 
 		// toggle screenshare again
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(500);
 
 		await utils.waitForElement('.OV_big');
-		expect(await utils.getNumberOfElements('video')).equals(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(2);
 
 		await utils.disableScreenShare();
 
-		expect(await utils.getNumberOfElements('video')).equals(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
 	});
 
 	it('should show screen and muted camera', async () => {
@@ -67,16 +66,16 @@ describe('Testing screenshare features', () => {
 
 		// Clicking to screensharing button
 		const screenshareButton = await utils.waitForElement('#screenshare-btn');
-		expect(await screenshareButton.isDisplayed()).to.be.true;
+		expect(await screenshareButton.isDisplayed()).toBeTrue();
 		await screenshareButton.click();
 
 		await browser.sleep(500);
 		await utils.waitForElement('.OV_big');
-		expect(await utils.getNumberOfElements('video')).equals(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(2);
 
 		await utils.disableScreenShare();
 
-		expect(await utils.getNumberOfElements('video')).equals(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
 	});
 
 	it('should screensharing with PINNED video', async () => {
@@ -85,11 +84,11 @@ describe('Testing screenshare features', () => {
 
 		// Clicking to screensharing button
 		const screenshareButton = await utils.waitForElement('#screenshare-btn');
-		expect(await screenshareButton.isDisplayed()).to.be.true;
+		expect(await screenshareButton.isDisplayed()).toBeTrue();
 		await screenshareButton.click();
 
 		await utils.waitForElement('.OV_big');
-		expect(await utils.getNumberOfElements('.OV_big')).equals(1);
+		expect(await utils.getNumberOfElements('.OV_big')).toEqual(1);
 	});
 
 	it('should screensharing with PINNED video and replace the existing one', async () => {
@@ -102,7 +101,7 @@ describe('Testing screenshare features', () => {
 		await utils.waitForElement('#screenshare-btn');
 		await utils.clickOn('#screenshare-btn');
 		await utils.waitForElement('.OV_big');
-		expect(await utils.getNumberOfElements('.OV_big')).equals(1);
+		expect(await utils.getNumberOfElements('.OV_big')).toEqual(1);
 
 		// Starting new browser for adding the second participant
 		const newTabScript = `window.open("${fixedUrl}")`;
@@ -116,16 +115,16 @@ describe('Testing screenshare features', () => {
 		await utils.waitForElement('#screenshare-btn');
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('video')).equals(4);
+		expect(await utils.getNumberOfElements('video')).toEqual(4);
 		await utils.waitForElement('.OV_big');
-		expect(await utils.getNumberOfElements('.OV_big')).equals(1);
+		expect(await utils.getNumberOfElements('.OV_big')).toEqual(1);
 
 		// Go to first tab
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('video')).equals(4);
+		expect(await utils.getNumberOfElements('video')).toEqual(4);
 		await utils.waitForElement('.OV_big');
-		expect(await utils.getNumberOfElements('.OV_big')).equals(1);
+		expect(await utils.getNumberOfElements('.OV_big')).toEqual(1);
 	});
 
 	it('should disabled a screensharing and pinned the previous one', async () => {
@@ -139,7 +138,7 @@ describe('Testing screenshare features', () => {
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(500);
 		await utils.waitForElement('.OV_big');
-		expect(await utils.getNumberOfElements('.OV_big')).equals(1);
+		expect(await utils.getNumberOfElements('.OV_big')).toEqual(1);
 
 		// Starting new browser for adding the second participant
 		const tabs = await utils.openTab(fixedUrl);
@@ -151,21 +150,21 @@ describe('Testing screenshare features', () => {
 		await utils.waitForElement('#screenshare-btn');
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('video')).equals(4);
+		expect(await utils.getNumberOfElements('video')).toEqual(4);
 		await utils.waitForElement('.OV_big');
-		expect(await utils.getNumberOfElements('.OV_big')).equals(1);
+		expect(await utils.getNumberOfElements('.OV_big')).toEqual(1);
 		// Disable screensharing
 		await utils.disableScreenShare();
-		expect(await utils.getNumberOfElements('video')).equals(3);
+		expect(await utils.getNumberOfElements('video')).toEqual(3);
 		await utils.waitForElement('.OV_big');
-		expect(await utils.getNumberOfElements('.OV_big')).equals(1);
+		expect(await utils.getNumberOfElements('.OV_big')).toEqual(1);
 
 		// Go to first tab
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('video')).equals(3);
+		expect(await utils.getNumberOfElements('video')).toEqual(3);
 		await utils.waitForElement('.OV_big');
-		expect(await utils.getNumberOfElements('.OV_big')).equals(1);
+		expect(await utils.getNumberOfElements('.OV_big')).toEqual(1);
 	});
 
 	// it('should screensharing with audio muted', async () => {
@@ -182,21 +181,21 @@ describe('Testing screenshare features', () => {
 
 	// 	// Clicking to screensharing button
 	// 	const screenshareButton = await utils.waitForElement('#screenshare-btn');
-	// 	expect(await utils.isPresent('#screenshare-btn')).to.be.true;
+	// 	expect(await utils.isPresent('#screenshare-btn')).toBeTrue();
 	// 	await screenshareButton.click();
 
 	// 	await utils.waitForElement('.screen-type');
-	// 	expect(await utils.getNumberOfElements('video')).equals(2);
+	// 	expect(await utils.getNumberOfElements('video')).toEqual(2);
 
 	// 	isAudioEnabled = await browser.executeScript(getAudioScript('screen-type'));
-	// 	expect(isAudioEnabled).to.be.false;
+	// 	expect(isAudioEnabled).toBeFalse();
 
 	// 	await utils.waitForElement('#status-mic');
-	// 	expect(await utils.getNumberOfElements('#status-mic')).equals(2);
+	// 	expect(await utils.getNumberOfElements('#status-mic')).toEqual(2);
 
 	// 	// Clicking to screensharing button
 	// 	await screenshareButton.click();
-	// 	expect(await utils.getNumberOfElements('video')).equals(1);
+	// 	expect(await utils.getNumberOfElements('video')).toEqual(1);
 
 	// });
 
@@ -207,16 +206,16 @@ describe('Testing screenshare features', () => {
 
 	// 	// Clicking to screensharing button
 	// 	const screenshareButton = await utils.waitForElement('#screenshare-btn');
-	// 	expect(await screenshareButton.isDisplayed()).to.be.true;
+	// 	expect(await screenshareButton.isDisplayed()).toBeTrue();
 	// 	await screenshareButton.click();
 
 	// 	await utils.waitForElement('.OV_big');
-	// 	expect(await utils.getNumberOfElements('video')).equals(2);
+	// 	expect(await utils.getNumberOfElements('video')).toEqual(2);
 
 	// 	const muteVideoButton = await utils.waitForElement('#camera-btn');
 	// 	await muteVideoButton.click();
 
-	// 	expect(await utils.getNumberOfElements('video')).equals(1);
+	// 	expect(await utils.getNumberOfElements('video')).toEqual(1);
 	// });
 
 	// it('should screenshare has audio active when camera is muted', async () => {
@@ -229,33 +228,33 @@ describe('Testing screenshare features', () => {
 
 	// 	// Clicking to screensharing button
 	// 	const screenshareButton = await utils.waitForElement('#screenshare-btn');
-	// 	expect(await utils.isPresent('#screenshare-btn')).to.be.true;
+	// 	expect(await utils.isPresent('#screenshare-btn')).toBeTrue();
 	// 	await screenshareButton.click();
 
 	// 	await utils.waitForElement('.OV_big');
-	// 	expect(await utils.getNumberOfElements('video')).equals(2);
-	// 	expect(await utils.getNumberOfElements('#status-mic')).equals(1);
+	// 	expect(await utils.getNumberOfElements('video')).toEqual(2);
+	// 	expect(await utils.getNumberOfElements('#status-mic')).toEqual(1);
 
 	// 	// Muting camera video
 	// 	const muteVideoButton = await utils.waitForElement('#camera-btn');
 	// 	await muteVideoButton.click();
 
-	// 	expect(await utils.getNumberOfElements('video')).equals(1);
+	// 	expect(await utils.getNumberOfElements('video')).toEqual(1);
 
 	// 	await browser.sleep(500);
-	// 	expect(await utils.isPresent('#status-mic')).to.be.false;
+	// 	expect(await utils.isPresent('#status-mic')).toBeFalse();
 
 	// 	// Checking if audio is muted after join the room
 	// 	isAudioEnabled = await browser.executeScript(audioEnableScript);
-	// 	expect(isAudioEnabled).to.be.true;
+	// 	expect(isAudioEnabled).toBeTrue();
 
 	// 	// Unmuting camera
 	// 	await muteVideoButton.click();
 	// 	await browser.sleep(1000);
 
 	// 	await utils.waitForElement('.camera-type');
-	// 	expect(await utils.getNumberOfElements('video')).equals(2);
-	// 	expect(await utils.getNumberOfElements('#status-mic')).equals(1);
+	// 	expect(await utils.getNumberOfElements('video')).toEqual(2);
+	// 	expect(await utils.getNumberOfElements('#status-mic')).toEqual(1);
 	// });
 
 	// it('should camera come back with audio muted when screensharing', async () => {
@@ -274,38 +273,38 @@ describe('Testing screenshare features', () => {
 	// 	await screenshareButton.click();
 
 	// 	await utils.waitForElement('.screen-type');
-	// 	expect(await utils.getNumberOfElements('video')).equals(2);
-	// 	expect(await utils.getNumberOfElements('#status-mic')).equals(1);
+	// 	expect(await utils.getNumberOfElements('video')).toEqual(2);
+	// 	expect(await utils.getNumberOfElements('#status-mic')).toEqual(1);
 
 	// 	// Mute camera
 	// 	const muteVideoButton = await utils.waitForElement('#camera-btn');
 	// 	await muteVideoButton.click();
 
-	// 	expect(await utils.getNumberOfElements('video')).equals(1);
-	// 	expect(await utils.isPresent('#status-mic')).to.be.false;
+	// 	expect(await utils.getNumberOfElements('video')).toEqual(1);
+	// 	expect(await utils.isPresent('#status-mic')).toBeFalse();
 
 	// 	// Checking if audio is muted after join the room
 	// 	isAudioEnabled = await browser.executeScript(getAudioScript('screen-type'));
-	// 	expect(isAudioEnabled).to.be.true;
+	// 	expect(isAudioEnabled).toBeTrue();
 
 	// 	// Mute audio
 	// 	const muteAudioButton = await utils.waitForElement('#mic-btn');
 	// 	await muteAudioButton.click();
 
 	// 	await utils.waitForElement('#status-mic');
-	// 	expect(await utils.getNumberOfElements('#status-mic')).equals(1);
+	// 	expect(await utils.getNumberOfElements('#status-mic')).toEqual(1);
 
 	// 	isAudioEnabled = await browser.executeScript(getAudioScript('screen-type'));
-	// 	expect(isAudioEnabled).to.be.false;
+	// 	expect(isAudioEnabled).toBeFalse();
 
 	// 	// Unmute camera
 	// 	await muteVideoButton.click();
 
 	// 	await utils.waitForElement('.camera-type');
-	// 	expect(await utils.getNumberOfElements('video')).equals(2);
-	// 	expect(await utils.getNumberOfElements('#status-mic')).equals(2);
+	// 	expect(await utils.getNumberOfElements('video')).toEqual(2);
+	// 	expect(await utils.getNumberOfElements('#status-mic')).toEqual(2);
 
 	// 	isAudioEnabled = await browser.executeScript(getAudioScript('camera-type'));
-	// 	expect(isAudioEnabled).to.be.false;
+	// 	expect(isAudioEnabled).toBeFalse();
 	// });
 });

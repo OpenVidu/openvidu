@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { Builder, By, WebDriver } from 'selenium-webdriver';
 
 import { NestedConfig } from '../selenium.conf';
@@ -42,7 +41,7 @@ describe('Testing EVENTS', () => {
 
 		// Checking if onLeaveButtonClicked has been received
 		await utils.waitForElement('#onRoomDisconnected');
-		expect(await utils.isPresent('#onRoomDisconnected')).to.be.true;
+		expect(await utils.isPresent('#onRoomDisconnected')).toBeTrue();
 	});
 
 	it('should receive the onVideoEnabledChanged event', async () => {
@@ -57,7 +56,7 @@ describe('Testing EVENTS', () => {
 		await utils.clickOn('#camera-btn');
 
 		await utils.waitForElement('#onVideoEnabledChanged');
-		expect(await utils.isPresent('#onVideoEnabledChanged')).to.be.true;
+		expect(await utils.isPresent('#onVideoEnabledChanged')).toBeTrue();
 	});
 
 	it('should receive the onAudioEnabledChanged event', async () => {
@@ -72,7 +71,7 @@ describe('Testing EVENTS', () => {
 		await utils.clickOn('#mic-btn');
 
 		await utils.waitForElement('#onAudioEnabledChanged');
-		expect(await utils.isPresent('#onAudioEnabledChanged')).to.be.true;
+		expect(await utils.isPresent('#onAudioEnabledChanged')).toBeTrue();
 	});
 
 	it('should receive the onScreenShareEnabledChanged event', async () => {
@@ -87,7 +86,7 @@ describe('Testing EVENTS', () => {
 		await utils.clickOn('#screenshare-btn');
 
 		await utils.waitForElement('#onScreenShareEnabledChanged');
-		expect(await utils.isPresent('#onScreenShareEnabledChanged')).to.be.true;
+		expect(await utils.isPresent('#onScreenShareEnabledChanged')).toBeTrue();
 	});
 
 	it('should receive the onFullscreenEnabledChanged event', async () => {
@@ -104,7 +103,7 @@ describe('Testing EVENTS', () => {
 		await browser.sleep(1000);
 
 		await utils.waitForElement('#onFullscreenEnabledChanged');
-		expect(await utils.isPresent('#onFullscreenEnabledChanged')).to.be.true;
+		expect(await utils.isPresent('#onFullscreenEnabledChanged')).toBeTrue();
 	});
 
 	it('should receive the onRecordingStartRequested event', async () => {
@@ -119,7 +118,7 @@ describe('Testing EVENTS', () => {
 		await utils.toggleRecordingFromToolbar();
 
 		await utils.waitForElement('#onRecordingStartRequested');
-		expect(await utils.isPresent('#onRecordingStartRequested')).to.be.true;
+		expect(await utils.isPresent('#onRecordingStartRequested')).toBeTrue();
 	});
 
 	it('should receive the onParticipantsPanelStatusChanged event', async () => {
@@ -134,7 +133,7 @@ describe('Testing EVENTS', () => {
 		await utils.togglePanel('participants');
 
 		await utils.waitForElement('#onParticipantsPanelStatusChanged');
-		expect(await utils.isPresent('#onParticipantsPanelStatusChanged')).to.be.true;
+		expect(await utils.isPresent('#onParticipantsPanelStatusChanged')).toBeTrue();
 	});
 
 	it('should receive the onChatPanelStatusChanged event', async () => {
@@ -149,7 +148,7 @@ describe('Testing EVENTS', () => {
 		await utils.togglePanel('chat');
 
 		await utils.waitForElement('#onChatPanelStatusChanged');
-		expect(await utils.isPresent('#onChatPanelStatusChanged')).to.be.true;
+		expect(await utils.isPresent('#onChatPanelStatusChanged')).toBeTrue();
 	});
 
 	it('should receive the onActivitiesPanelStatusChanged event', async () => {
@@ -164,7 +163,7 @@ describe('Testing EVENTS', () => {
 		await utils.togglePanel('activities');
 
 		await utils.waitForElement('#onActivitiesPanelStatusChanged');
-		expect(await utils.isPresent('#onActivitiesPanelStatusChanged')).to.be.true;
+		expect(await utils.isPresent('#onActivitiesPanelStatusChanged')).toBeTrue();
 	});
 
 	it('should receive the onSettingsPanelStatusChanged event', async () => {
@@ -179,6 +178,6 @@ describe('Testing EVENTS', () => {
 		await utils.togglePanel('settings');
 
 		await utils.waitForElement('#onSettingsPanelStatusChanged');
-		expect(await utils.isPresent('#onSettingsPanelStatusChanged')).to.be.true;
+		expect(await utils.isPresent('#onSettingsPanelStatusChanged')).toBeTrue();
 	});
 });

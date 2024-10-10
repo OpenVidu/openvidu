@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { Builder, Key, WebDriver } from 'selenium-webdriver';
 import { OPENVIDU_CALL_SERVER } from '../config';
 import { WebComponentConfig } from '../selenium.conf';
@@ -32,7 +31,7 @@ describe('Testing videoconference EVENTS', () => {
 		await browser.get(`${url}`);
 
 		await utils.waitForElement('#prejoin-container');
-		expect(await utils.isPresent('#prejoin-container')).to.be.true;
+		expect(await utils.isPresent('#prejoin-container')).toBeTrue();
 
 		// Clicking to join button
 		await utils.waitForElement('#join-button');
@@ -40,14 +39,14 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onReadyToJoin has been received
 		await utils.waitForElement('#onReadyToJoin');
-		expect(await utils.isPresent('#onReadyToJoin')).to.be.true;
+		expect(await utils.isPresent('#onReadyToJoin')).toBeTrue();
 	});
 
 	it('should receive the onTokenRequested event', async () => {
 		await browser.get(`${url}`);
 
 		await utils.waitForElement('#prejoin-container');
-		expect(await utils.isPresent('#prejoin-container')).to.be.true;
+		expect(await utils.isPresent('#prejoin-container')).toBeTrue();
 
 		// Clicking to join button
 		await utils.waitForElement('#join-button');
@@ -55,7 +54,7 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onTokenRequested has been received
 		await utils.waitForElement('#onTokenRequested');
-		expect(await utils.isPresent('#onTokenRequested')).to.be.true;
+		expect(await utils.isPresent('#onTokenRequested')).toBeTrue();
 	});
 
 	it('should receive the onRoomDisconnected event', async () => {
@@ -67,12 +66,12 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Clicking to leave button
 		const leaveButton = await utils.waitForElement('#leave-btn');
-		expect(await utils.isPresent('#leave-btn')).to.be.true;
+		expect(await utils.isPresent('#leave-btn')).toBeTrue();
 		await leaveButton.click();
 
 		// Checking if onRoomDisconnected has been received
 		await utils.waitForElement('#onRoomDisconnected');
-		expect(await utils.isPresent('#onRoomDisconnected')).to.be.true;
+		expect(await utils.isPresent('#onRoomDisconnected')).toBeTrue();
 	});
 
 	it('should receive the onVideoEnabledChanged event when clicking on the prejoin', async () => {
@@ -84,7 +83,7 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onVideoEnabledChanged has been received
 		await utils.waitForElement('#onVideoEnabledChanged-false');
-		expect(await utils.isPresent('#onVideoEnabledChanged-false')).to.be.true;
+		expect(await utils.isPresent('#onVideoEnabledChanged-false')).toBeTrue();
 	});
 
 	it('should receive the onVideoEnabledChanged event when clicking on the toolbar', async () => {
@@ -100,11 +99,11 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onVideoEnabledChanged has been received
 		await utils.waitForElement('#onVideoEnabledChanged-false');
-		expect(await utils.isPresent('#onVideoEnabledChanged-false')).to.be.true;
+		expect(await utils.isPresent('#onVideoEnabledChanged-false')).toBeTrue();
 
 		await utils.clickOn('#camera-btn');
 		await utils.waitForElement('#onVideoEnabledChanged-true');
-		expect(await utils.isPresent('#onVideoEnabledChanged-true')).to.be.true;
+		expect(await utils.isPresent('#onVideoEnabledChanged-true')).toBeTrue();
 	});
 
 	it('should receive the onVideoEnabledChanged event when clicking on the settings panel', async () => {
@@ -123,11 +122,11 @@ describe('Testing videoconference EVENTS', () => {
 		await utils.clickOn('ov-video-devices-select #camera-button');
 		// Checking if onVideoEnabledChanged has been received
 		await utils.waitForElement('#onVideoEnabledChanged-false');
-		expect(await utils.isPresent('#onVideoEnabledChanged-false')).to.be.true;
+		expect(await utils.isPresent('#onVideoEnabledChanged-false')).toBeTrue();
 
 		await utils.clickOn('ov-video-devices-select #camera-button');
 		await utils.waitForElement('#onVideoEnabledChanged-true');
-		expect(await utils.isPresent('#onVideoEnabledChanged-true')).to.be.true;
+		expect(await utils.isPresent('#onVideoEnabledChanged-true')).toBeTrue();
 	});
 
 	it('should receive the onVideoDeviceChanged event on prejoin', async () => {
@@ -141,7 +140,7 @@ describe('Testing videoconference EVENTS', () => {
 		await utils.clickOn('#option-custom_fake_video_1');
 
 		await utils.waitForElement('#onVideoDeviceChanged');
-		expect(await utils.isPresent('#onVideoDeviceChanged')).to.be.true;
+		expect(await utils.isPresent('#onVideoDeviceChanged')).toBeTrue();
 	});
 
 	it('should receive the onVideoDeviceChanged event on settings panel', async () => {
@@ -164,7 +163,7 @@ describe('Testing videoconference EVENTS', () => {
 		await utils.clickOn('#option-custom_fake_video_1');
 
 		await utils.waitForElement('#onVideoDeviceChanged');
-		expect(await utils.isPresent('#onVideoDeviceChanged')).to.be.true;
+		expect(await utils.isPresent('#onVideoDeviceChanged')).toBeTrue();
 	});
 
 	it('should receive the onAudioEnabledChanged event when clicking on the prejoin', async () => {
@@ -176,7 +175,7 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onAudioEnabledChanged has been received
 		await utils.waitForElement('#onAudioEnabledChanged-false');
-		expect(await utils.isPresent('#onAudioEnabledChanged-false')).to.be.true;
+		expect(await utils.isPresent('#onAudioEnabledChanged-false')).toBeTrue();
 	});
 
 	it('should receive the onAudioEnabledChanged event when clicking on the toolbar', async () => {
@@ -192,11 +191,11 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onAudioEnabledChanged has been received
 		await utils.waitForElement('#onAudioEnabledChanged-false');
-		expect(await utils.isPresent('#onAudioEnabledChanged-false')).to.be.true;
+		expect(await utils.isPresent('#onAudioEnabledChanged-false')).toBeTrue();
 
 		await utils.clickOn('#mic-btn');
 		await utils.waitForElement('#onAudioEnabledChanged-true');
-		expect(await utils.isPresent('#onAudioEnabledChanged-true')).to.be.true;
+		expect(await utils.isPresent('#onAudioEnabledChanged-true')).toBeTrue();
 	});
 
 	it('should receive the onAudioEnabledChanged event when clicking on the settings panel', async () => {
@@ -215,11 +214,11 @@ describe('Testing videoconference EVENTS', () => {
 		await utils.clickOn('ov-audio-devices-select #microphone-button');
 		// Checking if onAudioEnabledChanged has been received
 		await utils.waitForElement('#onAudioEnabledChanged-false');
-		expect(await utils.isPresent('#onAudioEnabledChanged-false')).to.be.true;
+		expect(await utils.isPresent('#onAudioEnabledChanged-false')).toBeTrue();
 
 		await utils.clickOn('ov-audio-devices-select #microphone-button');
 		await utils.waitForElement('#onAudioEnabledChanged-true');
-		expect(await utils.isPresent('#onAudioEnabledChanged-true')).to.be.true;
+		expect(await utils.isPresent('#onAudioEnabledChanged-true')).toBeTrue();
 	});
 
 	it('should receive the onAudioDeviceChanged event on prejoin', async () => {
@@ -233,7 +232,7 @@ describe('Testing videoconference EVENTS', () => {
 		await utils.clickOn('#option-custom_fake_audio_1');
 
 		await utils.waitForElement('#onAudioDeviceChanged');
-		expect(await utils.isPresent('#onAudioDeviceChanged')).to.be.true;
+		expect(await utils.isPresent('#onAudioDeviceChanged')).toBeTrue();
 	});
 
 	it('should receive the onAudioDeviceChanged event on settings panel', async () => {
@@ -256,7 +255,7 @@ describe('Testing videoconference EVENTS', () => {
 		await utils.clickOn('#option-custom_fake_audio_1');
 
 		await utils.waitForElement('#onAudioDeviceChanged');
-		expect(await utils.isPresent('#onAudioDeviceChanged')).to.be.true;
+		expect(await utils.isPresent('#onAudioDeviceChanged')).toBeTrue();
 	});
 
 	it('should receive the onLangChanged event on prejoin', async () => {
@@ -271,7 +270,7 @@ describe('Testing videoconference EVENTS', () => {
 		await browser.sleep(500);
 
 		await utils.waitForElement('#onLangChanged-es');
-		expect(await utils.isPresent('#onLangChanged-es')).to.be.true;
+		expect(await utils.isPresent('#onLangChanged-es')).toBeTrue();
 	});
 
 	it('should receive the onLangChanged event on settings panel', async () => {
@@ -292,7 +291,7 @@ describe('Testing videoconference EVENTS', () => {
 		await browser.sleep(500);
 
 		await utils.waitForElement('#onLangChanged-es');
-		expect(await utils.isPresent('#onLangChanged-es')).to.be.true;
+		expect(await utils.isPresent('#onLangChanged-es')).toBeTrue();
 	});
 
 	it('should receive the onScreenShareEnabledChanged event', async () => {
@@ -304,12 +303,12 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Clicking to leave button
 		const screenshareButton = await utils.waitForElement('#screenshare-btn');
-		expect(await utils.isPresent('#screenshare-btn')).to.be.true;
+		expect(await utils.isPresent('#screenshare-btn')).toBeTrue();
 		await screenshareButton.click();
 
 		// Checking if onScreenShareEnabledChanged has been received
 		await utils.waitForElement('#onScreenShareEnabledChanged');
-		expect(await utils.isPresent('#onScreenShareEnabledChanged')).to.be.true;
+		expect(await utils.isPresent('#onScreenShareEnabledChanged')).toBeTrue();
 	});
 
 	// With headless mode, the Fullscreen API doesn't work
@@ -326,13 +325,13 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onFullscreenEnabledChanged has been received
 		await utils.waitForElement('#onFullscreenEnabledChanged-true');
-		expect(await utils.isPresent('#onFullscreenEnabledChanged-true')).to.be.true;
+		expect(await utils.isPresent('#onFullscreenEnabledChanged-true')).toBeTrue();
 
 		await (await utils.waitForElement('html')).sendKeys(Key.F11);
 		await browser.sleep(500);
 
 		await utils.waitForElement('#onFullscreenEnabledChanged-false');
-		expect(await utils.isPresent('#onFullscreenEnabledChanged-false')).to.be.true;
+		expect(await utils.isPresent('#onFullscreenEnabledChanged-false')).toBeTrue();
 	});
 
 	it('should receive the onChatPanelStatusChanged event', async () => {
@@ -346,13 +345,13 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onChatPanelStatusChanged has been received
 		await utils.waitForElement('#onChatPanelStatusChanged-true');
-		expect(await utils.isPresent('#onChatPanelStatusChanged-true')).to.be.true;
+		expect(await utils.isPresent('#onChatPanelStatusChanged-true')).toBeTrue();
 
 		await utils.togglePanel('chat');
 
 		// Checking if onChatPanelStatusChanged has been received
 		await utils.waitForElement('#onChatPanelStatusChanged-false');
-		expect(await utils.isPresent('#onChatPanelStatusChanged-false')).to.be.true;
+		expect(await utils.isPresent('#onChatPanelStatusChanged-false')).toBeTrue();
 	});
 
 	it('should receive the onParticipantsPanelStatusChanged event', async () => {
@@ -366,13 +365,13 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onParticipantsPanelStatusChanged has been received
 		await utils.waitForElement('#onParticipantsPanelStatusChanged-true');
-		expect(await utils.isPresent('#onParticipantsPanelStatusChanged-true')).to.be.true;
+		expect(await utils.isPresent('#onParticipantsPanelStatusChanged-true')).toBeTrue();
 
 		await utils.togglePanel('participants');
 
 		// Checking if onParticipantsPanelStatusChanged has been received
 		await utils.waitForElement('#onParticipantsPanelStatusChanged-false');
-		expect(await utils.isPresent('#onParticipantsPanelStatusChanged-false')).to.be.true;
+		expect(await utils.isPresent('#onParticipantsPanelStatusChanged-false')).toBeTrue();
 	});
 
 	it('should receive the onActivitiesPanelStatusChanged event', async () => {
@@ -385,13 +384,13 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onActivitiesPanelStatusChanged has been received
 		await utils.waitForElement('#onActivitiesPanelStatusChanged-true');
-		expect(await utils.isPresent('#onActivitiesPanelStatusChanged-true')).to.be.true;
+		expect(await utils.isPresent('#onActivitiesPanelStatusChanged-true')).toBeTrue();
 
 		await utils.togglePanel('activities');
 
 		// Checking if onActivitiesPanelStatusChanged has been received
 		await utils.waitForElement('#onActivitiesPanelStatusChanged-false');
-		expect(await utils.isPresent('#onActivitiesPanelStatusChanged-false')).to.be.true;
+		expect(await utils.isPresent('#onActivitiesPanelStatusChanged-false')).toBeTrue();
 	});
 
 	it('should receive the onSettingsPanelStatusChanged event', async () => {
@@ -404,13 +403,13 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onSettingsPanelStatusChanged has been received
 		await utils.waitForElement('#onSettingsPanelStatusChanged-true');
-		expect(await utils.isPresent('#onSettingsPanelStatusChanged-true')).to.be.true;
+		expect(await utils.isPresent('#onSettingsPanelStatusChanged-true')).toBeTrue();
 
 		await utils.togglePanel('settings');
 
 		// Checking if onSettingsPanelStatusChanged has been received
 		await utils.waitForElement('#onSettingsPanelStatusChanged-false');
-		expect(await utils.isPresent('#onSettingsPanelStatusChanged-false')).to.be.true;
+		expect(await utils.isPresent('#onSettingsPanelStatusChanged-false')).toBeTrue();
 	});
 
 	it('should receive the onRecordingStartRequested event when clicking toolbar button', async () => {
@@ -424,7 +423,7 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onRecordingStartRequested has been received
 		await utils.waitForElement(`#onRecordingStartRequested-${roomName}`);
-		expect(await utils.isPresent(`#onRecordingStartRequested-${roomName}`)).to.be.true;
+		expect(await utils.isPresent(`#onRecordingStartRequested-${roomName}`)).toBeTrue();
 	});
 
 	xit('should receive the onRecordingStopRequested event when clicking toolbar button', async () => {});
@@ -458,7 +457,7 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onBroadcastingStopRequested has been received
 		await utils.waitForElement('#onBroadcastingStopRequested');
-		expect(await utils.isPresent('#onBroadcastingStopRequested')).to.be.true;
+		expect(await utils.isPresent('#onBroadcastingStopRequested')).toBeTrue();
 	});
 
 	it('should receive the onRecordingStartRequested when clicking from activities panel', async () => {
@@ -484,7 +483,7 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onRecordingStartRequested has been received
 		await utils.waitForElement(`#onRecordingStartRequested-${roomName}`);
-		expect(await utils.isPresent(`#onRecordingStartRequested-${roomName}`)).to.be.true;
+		expect(await utils.isPresent(`#onRecordingStartRequested-${roomName}`)).toBeTrue();
 	});
 
 	xit('should receive the onRecordingStopRequested when clicking from activities panel', async () => {});
@@ -500,7 +499,7 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Clicking to activities button
 		const activitiesButton = await utils.waitForElement('#activities-panel-btn');
-		expect(await utils.isPresent('#activities-panel-btn')).to.be.true;
+		expect(await utils.isPresent('#activities-panel-btn')).toBeTrue();
 		await activitiesButton.click();
 
 		await browser.sleep(1500);
@@ -512,15 +511,15 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Delete event
 		element = await utils.waitForElement('#delete-recording-btn');
-		expect(await utils.isPresent('#delete-recording-btn')).to.be.true;
+		expect(await utils.isPresent('#delete-recording-btn')).toBeTrue();
 		await element.click();
 
 		element = await utils.waitForElement('#delete-recording-confirm-btn');
-		expect(await utils.isPresent('#delete-recording-confirm-btn')).to.be.true;
+		expect(await utils.isPresent('#delete-recording-confirm-btn')).toBeTrue();
 		await element.click();
 
 		await utils.waitForElement(`#onRecordingDeleteRequested-${roomName}-fakeRecording`);
-		expect(await utils.isPresent(`#onRecordingDeleteRequested-${roomName}-fakeRecording`)).to.be.true;
+		expect(await utils.isPresent(`#onRecordingDeleteRequested-${roomName}-fakeRecording`)).toBeTrue();
 	});
 
 	it('should receive the onBroadcastingStartRequested event when clicking from panel', async () => {
@@ -540,7 +539,7 @@ describe('Testing videoconference EVENTS', () => {
 		await browser.sleep(1000);
 
 		const button = await utils.waitForElement('#broadcasting-btn');
-		expect(await button.isEnabled()).to.be.false;
+		expect(await button.isEnabled()).toBeFalse();
 
 		const input = await utils.waitForElement('#broadcast-url-input');
 		await input.sendKeys(broadcastUrl);
@@ -549,7 +548,7 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onBroadcastingStartRequested has been received
 		await utils.waitForElement(`#onBroadcastingStartRequested-${roomName}-${broadcastUrl}`);
-		expect(await utils.isPresent(`#onBroadcastingStartRequested-${roomName}-${broadcastUrl}`)).to.be.true;
+		expect(await utils.isPresent(`#onBroadcastingStartRequested-${roomName}-${broadcastUrl}`)).toBeTrue();
 	});
 
 	xit('should receive the onBroadcastingStopRequested event when clicking from panel', async () => {
@@ -565,21 +564,21 @@ describe('Testing videoconference EVENTS', () => {
 		await utils.clickOn('#broadcasting-activity');
 
 		const button = await utils.waitForElement('#broadcasting-btn');
-		expect(await button.isEnabled()).to.be.false;
+		expect(await button.isEnabled()).toBeFalse();
 
 		const input = await utils.waitForElement('#broadcast-url-input');
 		await input.sendKeys('BroadcastUrl');
 
 		await utils.clickOn('#broadcasting-btn');
 
-		expect(await utils.isPresent('#broadcasting-tag')).to.be.true;
+		expect(await utils.isPresent('#broadcasting-tag')).toBeTrue();
 
 		await utils.clickOn('#stop-broadcasting-btn');
 
 		// Checking if onBroadcastingStopRequested has been received
 		await utils.waitForElement('#onBroadcastingStopRequested');
-		expect(await utils.isPresent('#onBroadcastingStopRequested')).to.be.true;
-		expect(await utils.isPresent('#broadcasting-tag')).to.be.false;
+		expect(await utils.isPresent('#onBroadcastingStopRequested')).toBeTrue();
+		expect(await utils.isPresent('#broadcasting-tag')).toBeFalse();
 	});
 
 	xit('should receive the onBroadcastingStopRequested event when clicking from toolbar', async () => {
@@ -597,8 +596,8 @@ describe('Testing videoconference EVENTS', () => {
 
 		// Checking if onBroadcastingStopRequested has been received
 		await utils.waitForElement('#onBroadcastingStopRequested');
-		expect(await utils.isPresent('#onBroadcastingStopRequested')).to.be.true;
-		expect(await utils.isPresent('#broadcasting-tag')).to.be.false;
+		expect(await utils.isPresent('#onBroadcastingStopRequested')).toBeTrue();
+		expect(await utils.isPresent('#broadcasting-tag')).toBeFalse();
 	});
 
 	it('should receive the onRoomCreated event', async () => {
@@ -609,9 +608,9 @@ describe('Testing videoconference EVENTS', () => {
 		await utils.checkToolbarIsPresent();
 
 		await utils.waitForElement('#onRoomCreated');
-		expect(await utils.isPresent('#onRoomCreated')).to.be.true;
+		expect(await utils.isPresent('#onRoomCreated')).toBeTrue();
 
-		expect(await utils.isPresent('#onReadyToJoin')).to.be.false;
+		expect(await utils.isPresent('#onReadyToJoin')).toBeFalse();
 	});
 
 	// * PUBLISHER EVENTS
@@ -620,7 +619,7 @@ describe('Testing videoconference EVENTS', () => {
 		const participantName = 'TEST_USER';
 		await browser.get(`${url}&participantName=${participantName}&prejoin=false`);
 		await utils.waitForElement(`#${participantName}-onParticipantCreated`);
-		expect(await utils.isPresent(`#${participantName}-onParticipantCreated`)).to.be.true;
+		expect(await utils.isPresent(`#${participantName}-onParticipantCreated`)).toBeTrue();
 	});
 
 	// * ROOM EVENTS
@@ -639,6 +638,6 @@ describe('Testing videoconference EVENTS', () => {
 		await element.click();
 
 		await utils.waitForElement(`#roomDisconnected`);
-		expect(await utils.isPresent(`#roomDisconnected`)).to.be.true;
+		expect(await utils.isPresent(`#roomDisconnected`)).toBeTrue();
 	});
 });

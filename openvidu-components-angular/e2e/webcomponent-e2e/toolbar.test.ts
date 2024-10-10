@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { Builder, WebDriver } from 'selenium-webdriver';
 import { OPENVIDU_CALL_SERVER } from '../config';
 import { WebComponentConfig } from '../selenium.conf';
@@ -36,12 +35,12 @@ describe('Testing TOOLBAR features', () => {
 		await micButton.click();
 
 		await utils.waitForElement('#mic-btn #mic_off');
-		expect(await utils.isPresent('#mic-btn #mic_off')).to.be.true;
+		expect(await utils.isPresent('#mic-btn #mic_off')).toBeTrue();
 
 		await micButton.click();
 
 		await utils.waitForElement('#mic-btn #mic');
-		expect(await utils.isPresent('#mic-btn #mic')).to.be.true;
+		expect(await utils.isPresent('#mic-btn #mic')).toBeTrue();
 	});
 
 	it('should mute and unmute the local camera', async () => {
@@ -53,11 +52,11 @@ describe('Testing TOOLBAR features', () => {
 		await cameraButton.click();
 
 		await utils.waitForElement('#camera-btn #videocam_off');
-		expect(await utils.isPresent('#camera-btn #videocam_off')).to.be.true;
+		expect(await utils.isPresent('#camera-btn #videocam_off')).toBeTrue();
 
 		await cameraButton.click();
 
 		await utils.waitForElement('#camera-btn #videocam');
-		expect(await utils.isPresent('#camera-btn #videocam')).to.be.true;
+		expect(await utils.isPresent('#camera-btn #videocam')).toBeTrue();
 	});
 });

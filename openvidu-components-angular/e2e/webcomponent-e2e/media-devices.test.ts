@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { Builder, WebDriver } from 'selenium-webdriver';
 import { OPENVIDU_CALL_SERVER } from '../config';
 import { getBrowserOptionsWithoutDevices, WebComponentConfig } from '../selenium.conf';
@@ -45,7 +44,7 @@ describe('Testing replace track with emulated devices', () => {
 
 		await browser.sleep(1000);
 		videoLabel = await browser.executeScript<string>(script);
-		expect(videoLabel).to.be.equal('custom_fake_video_1');
+		expect(videoLabel).toEqual('custom_fake_video_1');
 
 		await videoDevices.click();
 
@@ -54,7 +53,7 @@ describe('Testing replace track with emulated devices', () => {
 
 		await browser.sleep(1000);
 		videoLabel = await browser.executeScript<string>(script);
-		expect(videoLabel).to.be.equal('fake_device_0');
+		expect(videoLabel).toEqual('fake_device_0');
 	});
 
 	it('should replace the video track in videoconference page', async () => {
@@ -70,10 +69,10 @@ describe('Testing replace track with emulated devices', () => {
 		await utils.togglePanel('settings');
 
 		await utils.waitForElement('.settings-container');
-		expect(await utils.isPresent('.settings-container')).to.be.true;
+		expect(await utils.isPresent('.settings-container')).toBeTrue();
 
 		await utils.clickOn('#video-opt');
-		expect(await utils.isPresent('ov-video-devices-select')).to.be.true;
+		expect(await utils.isPresent('ov-video-devices-select')).toBeTrue();
 
 		let videoDevices = await utils.waitForElement('#video-devices-form');
 
@@ -86,7 +85,7 @@ describe('Testing replace track with emulated devices', () => {
 		let videoLabel;
 		await browser.sleep(1000);
 		videoLabel = await browser.executeScript<string>(script);
-		expect(videoLabel).to.be.equal('custom_fake_video_1');
+		expect(videoLabel).toEqual('custom_fake_video_1');
 
 		await videoDevices.click();
 
@@ -95,7 +94,7 @@ describe('Testing replace track with emulated devices', () => {
 
 		await browser.sleep(1000);
 		videoLabel = await browser.executeScript<string>(script);
-		expect(videoLabel).to.be.equal('fake_device_0');
+		expect(videoLabel).toEqual('fake_device_0');
 	});
 
 	// TODO: Uncommented when Livekit allows to replace the screen track
@@ -112,7 +111,7 @@ describe('Testing replace track with emulated devices', () => {
 	// 	await browser.sleep(500);
 
 	// 	let screenLabel = await browser.executeScript<string>(script);
-	// 	expect(screenLabel).not.equal('custom_fake_screen');
+	// 	expect(screenLabel).not.toEqual('custom_fake_screen');
 
 	// 	await utils.clickOn('#video-settings-btn-SCREEN');
 	// 	await browser.sleep(500);
@@ -123,7 +122,7 @@ describe('Testing replace track with emulated devices', () => {
 
 	// 	await browser.sleep(1000);
 	// 	screenLabel = await browser.executeScript<string>(script);
-	// 	expect(screenLabel).to.be.equal('custom_fake_screen');
+	// 	expect(screenLabel).to.be.toEqual('custom_fake_screen');
 	// });
 });
 
@@ -154,10 +153,10 @@ describe('Testing WITHOUT MEDIA DEVICES permissions', () => {
 		await utils.checkPrejoinIsPresent();
 
 		let button = await utils.waitForElement('#camera-button');
-		expect(await button.isEnabled()).to.be.false;
+		expect(await button.isEnabled()).toBeFalse();
 
 		button = await utils.waitForElement('#microphone-button');
-		expect(await button.isEnabled()).to.be.false;
+		expect(await button.isEnabled()).toBeFalse();
 	});
 
 	it('should be able to ACCESS to ROOM page', async () => {
@@ -172,10 +171,10 @@ describe('Testing WITHOUT MEDIA DEVICES permissions', () => {
 		await utils.checkToolbarIsPresent();
 
 		let button = await utils.waitForElement('#camera-btn');
-		expect(await button.isEnabled()).to.be.false;
+		expect(await button.isEnabled()).toBeFalse();
 
 		button = await utils.waitForElement('#mic-btn');
-		expect(await button.isEnabled()).to.be.false;
+		expect(await button.isEnabled()).toBeFalse();
 	});
 
 	it('should be able to ACCESS to ROOM page without prejoin', async () => {
@@ -186,10 +185,10 @@ describe('Testing WITHOUT MEDIA DEVICES permissions', () => {
 		await utils.checkToolbarIsPresent();
 
 		let button = await utils.waitForElement('#camera-btn');
-		expect(await button.isEnabled()).to.be.false;
+		expect(await button.isEnabled()).toBeFalse();
 
 		button = await utils.waitForElement('#mic-btn');
-		expect(await button.isEnabled()).to.be.false;
+		expect(await button.isEnabled()).toBeFalse();
 	});
 
 	it('should the settings buttons be disabled', async () => {
@@ -202,18 +201,18 @@ describe('Testing WITHOUT MEDIA DEVICES permissions', () => {
 		await browser.sleep(500);
 
 		await utils.waitForElement('.settings-container');
-		expect(await utils.isPresent('.settings-container')).to.be.true;
+		expect(await utils.isPresent('.settings-container')).toBeTrue();
 
 		await utils.clickOn('#video-opt');
-		expect(await utils.isPresent('ov-video-devices-select')).to.be.true;
+		expect(await utils.isPresent('ov-video-devices-select')).toBeTrue();
 
 		let button = await utils.waitForElement('#camera-button');
-		expect(await button.isEnabled()).to.be.false;
+		expect(await button.isEnabled()).toBeFalse();
 
 		await utils.clickOn('#audio-opt');
-		expect(await utils.isPresent('ov-audio-devices-select')).to.be.true;
+		expect(await utils.isPresent('ov-audio-devices-select')).toBeTrue();
 
 		button = await utils.waitForElement('#microphone-button');
-		expect(await button.isEnabled()).to.be.false;
+		expect(await button.isEnabled()).toBeFalse();
 	});
 });

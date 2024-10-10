@@ -6,7 +6,7 @@
 	  "strict": true,
 	  "outDir": "./dist",
 	  "lib": ["es6"],
-	  "types": [ "mocha", "node" ],
+	  "types": [ "jasmine", "node" ],
 	  "experimentalDecorators": true,
 	  "emitDecoratorMetadata": true
 	},

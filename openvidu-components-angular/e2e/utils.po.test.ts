@@ -1,5 +1,4 @@
-import { expect } from 'chai';
-import { By, Origin, until, WebDriver, WebElement } from 'selenium-webdriver';
+import { By, until, WebDriver, WebElement } from 'selenium-webdriver';
 
 export class OpenViduComponentsPO {
 	private TIMEOUT = 10 * 1000;
@@ -31,44 +30,44 @@ export class OpenViduComponentsPO {
 
 	async checkPrejoinIsPresent(): Promise<void> {
 		await this.waitForElement('#prejoin-container');
-		expect(await this.isPresent('#prejoin-container')).to.be.true;
+		expect(await this.isPresent('#prejoin-container')).toBe(true);
 	}
 
 	async checkSessionIsPresent() {
 		await this.waitForElement('#call-container');
-		expect(await this.isPresent('#call-container')).to.be.true;
+		expect(await this.isPresent('#call-container')).toBe(true);
 
 		await this.waitForElement('#session-container');
-		expect(await this.isPresent('#session-container')).to.be.true;
+		expect(await this.isPresent('#session-container')).toBe(true);
 	}
 
 	async checkLayoutPresent(): Promise<void> {
 		await this.waitForElement('#layout-container');
-		expect(await this.isPresent('#layout-container')).to.be.true;
+		expect(await this.isPresent('#layout-container')).toBe(true);
 
 		await this.waitForElement('#layout');
-		expect(await this.isPresent('#layout')).to.be.true;
+		expect(await this.isPresent('#layout')).toBe(true);
 	}
 
 	async checkStreamIsPresent(): Promise<void> {
 		await this.waitForElement('.OV_stream');
-		expect(await this.isPresent('.OV_stream')).to.be.true;
+		expect(await this.isPresent('.OV_stream')).toBe(true);
 	}
 
 	async checkVideoElementIsPresent(): Promise<void> {
 		await this.waitForElement('video');
-		expect(await this.isPresent('video')).to.be.true;
+		expect(await this.isPresent('video')).toBe(true);
 	}
 
 	async checkToolbarIsPresent(): Promise<void> {
 		await this.waitForElement('#toolbar');
 		await this.waitForElement('#media-buttons-container');
-		expect(await this.isPresent('#media-buttons-container')).to.be.true;
+		expect(await this.isPresent('#media-buttons-container')).toBe(true);
 	}
 
 	async chceckProFeatureAlertIsPresent(): Promise<void> {
 		await this.waitForElement('ov-pro-feature-template');
-		expect(await this.isPresent('ov-pro-feature-template')).to.be.true;
+		expect(await this.isPresent('ov-pro-feature-template')).toBe(true);
 	}
 
 	async clickOn(selector: string): Promise<void> {
@@ -104,7 +103,7 @@ export class OpenViduComponentsPO {
 
 	async toggleToolbarMoreOptions(): Promise<void> {
 		await this.waitForElement('#more-options-btn');
-		expect(await this.isPresent('#more-options-btn')).to.be.true;
+		expect(await this.isPresent('#more-options-btn')).toBe(true);
 		await this.clickOn('#more-options-btn');
 		await this.browser.sleep(500);
 		await this.waitForElement('#more-options-menu');
@@ -124,7 +123,7 @@ export class OpenViduComponentsPO {
 		await this.toggleToolbarMoreOptions();
 
 		await this.waitForElement('#recording-btn');
-		expect(await this.isPresent('#recording-btn')).to.be.true;
+		expect(await this.isPresent('#recording-btn')).toBe(true);
 		await this.clickOn('#recording-btn');
 	}
 
@@ -133,7 +132,7 @@ export class OpenViduComponentsPO {
 		await this.toggleToolbarMoreOptions();
 
 		await this.waitForElement('#fullscreen-btn');
-		expect(await this.isPresent('#fullscreen-btn')).to.be.true;
+		expect(await this.isPresent('#fullscreen-btn')).toBe(true);
 		await this.clickOn('#fullscreen-btn');
 	}
 
@@ -141,7 +140,7 @@ export class OpenViduComponentsPO {
 		switch (panelName) {
 			case 'activities':
 				await this.waitForElement('#activities-panel-btn');
-				expect(await this.isPresent('#activities-panel-btn')).to.be.true;
+				expect(await this.isPresent('#activities-panel-btn')).toBe(true);
 				await this.clickOn('#activities-panel-btn');
 				break;
 

@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { Builder, WebDriver } from 'selenium-webdriver';
 import { OPENVIDU_CALL_SERVER } from '../config';
 import { WebComponentConfig } from '../selenium.conf';
@@ -38,7 +37,7 @@ describe('Testing CHAT features', () => {
 
 		await utils.waitForElement('.sidenav-menu');
 		await utils.waitForElement('.input-container');
-		expect(await utils.isPresent('.input-container')).to.be.true;
+		expect(await utils.isPresent('.input-container')).toBeTrue();
 
 		const input = await utils.waitForElement('#chat-input');
 		await input.sendKeys('Test message');
@@ -47,13 +46,13 @@ describe('Testing CHAT features', () => {
 
 		await utils.waitForElement('.message');
 		await utils.getNumberOfElements('.message');
-		expect(await utils.isPresent('.message')).to.be.true;
+		expect(await utils.isPresent('.message')).toBeTrue();
 
-		expect(await utils.getNumberOfElements('.message')).equals(1);
+		expect(await utils.getNumberOfElements('.message')).toEqual(1);
 
 		await input.sendKeys('Test message');
 		await utils.clickOn('#send-btn');
-		expect(await utils.getNumberOfElements('.message')).equals(2);
+		expect(await utils.getNumberOfElements('.message')).toEqual(2);
 	});
 
 	it('should receive a message', async () => {
@@ -77,7 +76,7 @@ describe('Testing CHAT features', () => {
 
 		await utils.waitForElement('.sidenav-menu');
 		await utils.waitForElement('.input-container');
-		expect(await utils.isPresent('.input-container')).to.be.true;
+		expect(await utils.isPresent('.input-container')).toBeTrue();
 
 		const input = await utils.waitForElement('#chat-input');
 		await input.sendKeys('test message');
@@ -91,8 +90,8 @@ describe('Testing CHAT features', () => {
 		await browser.sleep(1000);
 		await utils.waitForElement('.message');
 		const participantName = await utils.waitForElement('.participant-name-container>p');
-		expect(await utils.getNumberOfElements('.message')).equals(1);
-		expect(await participantName.getText()).equals(pName);
+		expect(await utils.getNumberOfElements('.message')).toEqual(1);
+		expect(await participantName.getText()).toEqual(pName);
 	});
 
 	it('should send an url message and converts in a link', async () => {
@@ -105,7 +104,7 @@ describe('Testing CHAT features', () => {
 
 		await utils.waitForElement('.sidenav-menu');
 		await utils.waitForElement('.input-container');
-		expect(await utils.isPresent('.input-container')).to.be.true;
+		expect(await utils.isPresent('.input-container')).toBeTrue();
 
 		const input = await utils.waitForElement('#chat-input');
 		await input.sendKeys('demos.openvidu.io');
@@ -113,6 +112,6 @@ describe('Testing CHAT features', () => {
 		await utils.clickOn('#send-btn');
 
 		await utils.waitForElement('.chat-message a');
-		expect(await utils.isPresent('.chat-message a')).to.be.true;
+		expect(await utils.isPresent('.chat-message a')).toBeTrue();
 	});
 });

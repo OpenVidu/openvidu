@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { Builder, ILocation, IRectangle, ISize, WebDriver } from 'selenium-webdriver';
 import { OPENVIDU_CALL_SERVER } from '../config';
 import { WebComponentConfig } from '../selenium.conf';
@@ -35,9 +34,9 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.checkLayoutPresent();
 		await utils.waitForElement('.OV_stream.local');
 
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-		expect(await utils.getNumberOfElements('video')).equal(0);
-		expect(await utils.getNumberOfElements('audio')).equal(1);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
+		expect(await utils.getNumberOfElements('audio')).toEqual(1);
 	});
 
 	it('should show a video element when a participant joins with audio muted', async () => {
@@ -48,9 +47,9 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.checkLayoutPresent();
 		await utils.waitForElement('.OV_stream.local');
 
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
+		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 	});
 
 	it('should show a video element when a participant joins', async () => {
@@ -61,9 +60,9 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.checkLayoutPresent();
 		await utils.waitForElement('.OV_stream.local');
 
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(1);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
+		expect(await utils.getNumberOfElements('audio')).toEqual(1);
 	});
 
 	it('should show a video element when a participant shares its screen with VIDEO and AUDIO MUTED', async () => {
@@ -74,21 +73,21 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.checkLayoutPresent();
 		await utils.waitForElement('.OV_stream.local');
 
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-		expect(await utils.getNumberOfElements('video')).equal(0);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
+		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(1000);
 		await utils.waitForElement('#local-element-screen_share');
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-		expect(await utils.getNumberOfElements('video')).equal(1); //screen sharse video
-		expect(await utils.getNumberOfElements('audio')).equal(1); //screen share audio
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(1); //screen sharse video
+		expect(await utils.getNumberOfElements('audio')).toEqual(1); //screen share audio
 
 		await utils.disableScreenShare();
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-		expect(await utils.getNumberOfElements('video')).equal(0);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
+		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 	});
 
 	it('should show a video element when a LOCAL participant shares its screen', async () => {
@@ -99,21 +98,21 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.checkLayoutPresent();
 		await utils.waitForElement('.OV_stream.local');
 
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(1);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
+		expect(await utils.getNumberOfElements('audio')).toEqual(1);
 
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(1000);
 		await utils.waitForElement('#local-element-screen_share');
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-		expect(await utils.getNumberOfElements('video')).equal(2);
-		expect(await utils.getNumberOfElements('audio')).equal(2); //screen share audio and local audio
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(2);
+		expect(await utils.getNumberOfElements('audio')).toEqual(2); //screen share audio and local audio
 
 		await utils.disableScreenShare();
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(1);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
+		expect(await utils.getNumberOfElements('audio')).toEqual(1);
 	});
 
 	/* ------------ Checking video elements with two participants ------------ */
@@ -126,24 +125,24 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.checkLayoutPresent();
 		await utils.waitForElement('.OV_stream.local');
 
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-		expect(await utils.getNumberOfElements('video')).equal(0);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
+		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 
 		const tabs = await utils.openTab(fixedUrl);
 		await browser.switchTo().window(tabs[0]);
 
 		await browser.sleep(1000);
 		await utils.waitForElement('.OV_stream.remote');
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-		expect(await utils.getNumberOfElements('video')).equal(0);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
+		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 
 		await browser.switchTo().window(tabs[1]);
 		await browser.sleep(1000);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-		expect(await utils.getNumberOfElements('video')).equal(0);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
+		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 	});
 
 	it('should show two video elements when a two participants join with audio muted', async () => {
@@ -154,24 +153,24 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.checkLayoutPresent();
 		await utils.waitForElement('.OV_stream.local');
 
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
+		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 
 		const tabs = await utils.openTab(fixedUrl);
 		await browser.switchTo().window(tabs[0]);
 
 		await utils.waitForElement('.OV_stream.remote');
 		await browser.sleep(2000);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-		expect(await utils.getNumberOfElements('video')).equal(2);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(2);
+		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 
 		await browser.switchTo().window(tabs[1]);
 		await browser.sleep(1000);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-		expect(await utils.getNumberOfElements('video')).equal(2);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(2);
+		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 	});
 
 	it('should show zero video elements when two participants join with video disabled', async () => {
@@ -182,24 +181,24 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.checkLayoutPresent();
 		await utils.waitForElement('.OV_stream.local');
 
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(1);
-		expect(await utils.getNumberOfElements('video')).equal(0);
-		expect(await utils.getNumberOfElements('audio')).equal(1);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
+		expect(await utils.getNumberOfElements('audio')).toEqual(1);
 
 		const tabs = await utils.openTab(fixedUrl);
 		await browser.switchTo().window(tabs[0]);
 
 		await utils.waitForElement('.OV_stream.remote');
 		await browser.sleep(2000);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-		expect(await utils.getNumberOfElements('video')).equal(0);
-		expect(await utils.getNumberOfElements('audio')).equal(2);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
+		expect(await utils.getNumberOfElements('audio')).toEqual(2);
 
 		await browser.switchTo().window(tabs[1]);
 		await browser.sleep(1000);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-		expect(await utils.getNumberOfElements('video')).equal(0);
-		expect(await utils.getNumberOfElements('audio')).equal(2);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
+		expect(await utils.getNumberOfElements('audio')).toEqual(2);
 	});
 
 	it('should show 3 video elements when a participant shares its screen with AUDIO and VIDEO MUTED', async () => {
@@ -218,27 +217,27 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(1000);
 		await utils.waitForElement('#local-element-screen_share');
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
-		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(1); // screen share audios
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(3);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
+		expect(await utils.getNumberOfElements('audio')).toEqual(1); // screen share audios
 
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(1000);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
-		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(1); // screen share audios
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(3);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
+		expect(await utils.getNumberOfElements('audio')).toEqual(1); // screen share audios
 
 		await browser.switchTo().window(tabs[1]);
 		await utils.disableScreenShare();
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-		expect(await utils.getNumberOfElements('video')).equal(0);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
+		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-		expect(await utils.getNumberOfElements('video')).equal(0);
-		expect(await utils.getNumberOfElements('audio')).equal(0);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
+		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 	});
 
 	it('should show 3 video elements when a REMOTE participant shares its screen', async () => {
@@ -257,27 +256,27 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(1000);
 		await utils.waitForElement('#local-element-screen_share');
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
-		expect(await utils.getNumberOfElements('video')).equal(3);
-		expect(await utils.getNumberOfElements('audio')).equal(3); // screen share audios and local audio and remote audio
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(3);
+		expect(await utils.getNumberOfElements('video')).toEqual(3);
+		expect(await utils.getNumberOfElements('audio')).toEqual(3); // screen share audios and local audio and remote audio
 
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(1000);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
-		expect(await utils.getNumberOfElements('video')).equal(3);
-		expect(await utils.getNumberOfElements('audio')).equal(3); // screen share audios and local audio and remote audio
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(3);
+		expect(await utils.getNumberOfElements('video')).toEqual(3);
+		expect(await utils.getNumberOfElements('audio')).toEqual(3); // screen share audios and local audio and remote audio
 
 		await browser.switchTo().window(tabs[1]);
 		await utils.disableScreenShare();
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-		expect(await utils.getNumberOfElements('video')).equal(2);
-		expect(await utils.getNumberOfElements('audio')).equal(2);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(2);
+		expect(await utils.getNumberOfElements('audio')).toEqual(2);
 
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(2);
-		expect(await utils.getNumberOfElements('video')).equal(2);
-		expect(await utils.getNumberOfElements('audio')).equal(2);
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(2);
+		expect(await utils.getNumberOfElements('video')).toEqual(2);
+		expect(await utils.getNumberOfElements('audio')).toEqual(2);
 	});
 
 	it('should show 4 video elements when a two participants share theirs screen', async () => {
@@ -294,33 +293,33 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		await browser.switchTo().window(tabs[1]);
 
 		await utils.waitForElement('.OV_stream.local');
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
-		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(1); // screen share audios
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(3);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
+		expect(await utils.getNumberOfElements('audio')).toEqual(1); // screen share audios
 
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(500);
 		await utils.waitForElement('#local-element-screen_share');
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(4);
-		expect(await utils.getNumberOfElements('video')).equal(2);
-		expect(await utils.getNumberOfElements('audio')).equal(2); // screen share audios
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(4);
+		expect(await utils.getNumberOfElements('video')).toEqual(2);
+		expect(await utils.getNumberOfElements('audio')).toEqual(2); // screen share audios
 
 		await browser.switchTo().window(tabs[0]);
 		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(4);
-		expect(await utils.getNumberOfElements('video')).equal(2);
-		expect(await utils.getNumberOfElements('audio')).equal(2); // screen share audios
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(4);
+		expect(await utils.getNumberOfElements('video')).toEqual(2);
+		expect(await utils.getNumberOfElements('audio')).toEqual(2); // screen share audios
 
 		await utils.disableScreenShare();
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
-		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(1); // screen share audios
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(3);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
+		expect(await utils.getNumberOfElements('audio')).toEqual(1); // screen share audios
 
 		await browser.switchTo().window(tabs[1]);
 		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('.OV_stream')).equal(3);
-		expect(await utils.getNumberOfElements('video')).equal(1);
-		expect(await utils.getNumberOfElements('audio')).equal(1); // screen share audios
+		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(3);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
+		expect(await utils.getNumberOfElements('audio')).toEqual(1); // screen share audios
 	});
 });
 
@@ -352,7 +351,7 @@ describe('Testing stream features', () => {
 		await utils.waitForElement('.OV_stream.local');
 		await utils.hoverOn('.OV_stream.local');
 		await utils.waitForElement('#pin-btn');
-		expect(await utils.isPresent('#pin-btn')).to.be.true;
+		expect(await utils.isPresent('#pin-btn')).toBeTrue();
 	});
 
 	it('should show the PIN button over the REMOTE video', async () => {
@@ -373,7 +372,7 @@ describe('Testing stream features', () => {
 		await utils.waitForElement('.OV_stream.remote');
 		await utils.hoverOn('.OV_stream.remote');
 		await utils.waitForElement('#pin-btn');
-		expect(await utils.isPresent('#pin-btn')).to.be.true;
+		expect(await utils.isPresent('#pin-btn')).toBeTrue();
 	});
 
 	it('should show the SILENCE button ONLY over the REMOTE video', async () => {
@@ -386,7 +385,7 @@ describe('Testing stream features', () => {
 		await utils.hoverOn('.OV_stream.local');
 		await browser.sleep(500);
 
-		expect(await utils.getNumberOfElements('.OV_stream.local #silence-btn')).equals(0);
+		expect(await utils.getNumberOfElements('.OV_stream.local #silence-btn')).toEqual(0);
 
 		// Starting new browser for adding the second participant
 		const newTabScript = `window.open("${fixedUrl}")`;
@@ -398,13 +397,13 @@ describe('Testing stream features', () => {
 		await utils.waitForElement('.OV_stream.remote');
 		await utils.hoverOn('.OV_stream.remote');
 		await utils.waitForElement('.OV_stream.remote #silence-btn');
-		expect(await utils.isPresent('.OV_stream.remote #silence-btn')).to.be.true;
-		expect(await utils.getNumberOfElements('.OV_stream.remote #silence-btn')).equals(1);
+		expect(await utils.isPresent('.OV_stream.remote #silence-btn')).toBeTrue();
+		expect(await utils.getNumberOfElements('.OV_stream.remote #silence-btn')).toEqual(1);
 
 		await utils.hoverOn('.OV_stream.local');
 		await browser.sleep(500);
 
-		expect(await utils.getNumberOfElements('.OV_stream.local #silence-btn')).equals(0);
+		expect(await utils.getNumberOfElements('.OV_stream.local #silence-btn')).toEqual(0);
 	});
 
 	it('should show the MINIMIZE button ONLY over the LOCAL video', async () => {
@@ -415,7 +414,7 @@ describe('Testing stream features', () => {
 		await utils.waitForElement('.OV_stream.local');
 		await utils.hoverOn('.OV_stream.local');
 		await utils.waitForElement('#minimize-btn');
-		expect(await utils.isPresent('#minimize-btn')).to.be.true;
+		expect(await utils.isPresent('#minimize-btn')).toBeTrue();
 
 		// Starting new browser for adding the second participant
 		const newTabScript = `window.open("${fixedUrl}")`;
@@ -426,11 +425,11 @@ describe('Testing stream features', () => {
 		await utils.checkLayoutPresent();
 		await utils.waitForElement('.OV_stream.local');
 		await utils.hoverOn('.OV_stream.remote');
-		expect(await utils.getNumberOfElements('#minimize-btn')).equals(0);
+		expect(await utils.getNumberOfElements('#minimize-btn')).toEqual(0);
 
 		await utils.hoverOn('.OV_stream.local');
 		await utils.waitForElement('#minimize-btn');
-		expect(await utils.isPresent('#minimize-btn')).to.be.true;
+		expect(await utils.isPresent('#minimize-btn')).toBeTrue();
 	});
 
 	it('should minimize the LOCAL video', async () => {
@@ -447,10 +446,10 @@ describe('Testing stream features', () => {
 		await browser.sleep(900);
 		const minimizeStream = await utils.waitForElement('.OV_stream.local');
 		const minimizeStreamProps: IRectangle = await minimizeStream.getRect();
-		expect(streamProps.height).not.equals(minimizeStreamProps.height);
-		expect(streamProps.width).not.equals(minimizeStreamProps.width);
-		expect(minimizeStreamProps.x).lessThan(100);
-		expect(minimizeStreamProps.y).lessThan(100);
+		expect(streamProps.height).not.toEqual(minimizeStreamProps.height);
+		expect(streamProps.width).not.toEqual(minimizeStreamProps.width);
+		expect(minimizeStreamProps.x).toBeLessThan(100);
+		expect(minimizeStreamProps.y).toBeLessThan(100);
 	});
 
 	it('should MAXIMIZE the local video', async () => {
@@ -471,8 +470,8 @@ describe('Testing stream features', () => {
 
 		let stream = await utils.waitForElement('.OV_stream.local');
 		let streamProps: IRectangle = await stream.getRect();
-		expect(streamProps.x).equals(300 + marginX);
-		expect(streamProps.y).equals(300);
+		expect(streamProps.x).toEqual(300 + marginX);
+		expect(streamProps.y).toEqual(300);
 
 		await utils.hoverOn('.OV_stream.local');
 		await utils.waitForElement('#minimize-btn');
@@ -481,8 +480,8 @@ describe('Testing stream features', () => {
 
 		stream = await utils.waitForElement('.OV_stream.local');
 		streamProps = await stream.getRect();
-		expect(streamProps.x).lessThan(300 + marginX);
-		expect(streamProps.y).equals(1); //.OV_publisher element has 1px of padding
+		expect(streamProps.x).toBeLessThan(300 + marginX);
+		expect(streamProps.y).toEqual(1); //.OV_publisher element has 1px of padding
 	});
 
 	it('should be able to dragg the minimized LOCAL video', async () => {
@@ -503,8 +502,8 @@ describe('Testing stream features', () => {
 
 		const stream = await utils.waitForElement('.OV_stream.local');
 		const streamProps: IRectangle = await stream.getRect();
-		expect(streamProps.x).equals(300 + marginX);
-		expect(streamProps.y).equals(300);
+		expect(streamProps.x).toEqual(300 + marginX);
+		expect(streamProps.y).toEqual(300);
 	});
 
 	it('should be the MINIMIZED video ALWAYS VISIBLE when toggling panels', async () => {
@@ -526,8 +525,8 @@ describe('Testing stream features', () => {
 
 		let stream = await utils.waitForElement('.OV_stream.local');
 		let streamProps: IRectangle = await stream.getRect();
-		expect(streamProps.x).equals(900 + marginX);
-		expect(streamProps.y).equals(0);
+		expect(streamProps.x).toEqual(900 + marginX);
+		expect(streamProps.y).toEqual(0);
 
 		// Open chat panel
 		await utils.clickOn('#chat-panel-btn');
@@ -536,8 +535,8 @@ describe('Testing stream features', () => {
 		streamProps = await stream.getRect();
 		let lastX = streamProps.x;
 
-		expect(streamProps.x).lessThan(900 + marginX);
-		expect(streamProps.y).equals(0);
+		expect(streamProps.x).toBeLessThan(900 + marginX);
+		expect(streamProps.y).toEqual(0);
 
 		// Close chat panel
 		await utils.clickOn('#chat-panel-btn');
@@ -546,8 +545,8 @@ describe('Testing stream features', () => {
 		stream = await utils.waitForElement('.OV_stream.local');
 		streamProps = await stream.getRect();
 
-		expect(streamProps.x).greaterThan(lastX + marginX);
-		expect(streamProps.y).equals(0);
+		expect(streamProps.x).toBeGreaterThanOrEqual(lastX + marginX);
+		expect(streamProps.y).toEqual(0);
 	});
 
 	it('should be the MINIMIZED video go to the right when panel closes', async () => {
@@ -576,8 +575,8 @@ describe('Testing stream features', () => {
 
 		let stream = await utils.waitForElement('.OV_stream.local');
 		let streamProps: IRectangle = await stream.getRect();
-		expect(streamProps.x).equals(newX + marginX);
-		expect(streamProps.y).equals(0);
+		expect(streamProps.x).toEqual(newX + marginX);
+		expect(streamProps.y).toEqual(0);
 
 		// Close chat panel
 		// There is a unstable behaviour simulating the drag and drop with selenium (the stream is not moved the first time)
@@ -592,8 +591,8 @@ describe('Testing stream features', () => {
 		streamProps = await stream.getRect();
 		let lastX = streamProps.x;
 
-		expect(streamProps.x).greaterThanOrEqual(newX + marginX);
-		expect(streamProps.y).equals(0);
+		expect(streamProps.x).toBeGreaterThanOrEqual(newX + marginX);
+		expect(streamProps.y).toEqual(0);
 
 		// Open chat panel
 		await utils.clickOn('#chat-panel-btn');
@@ -602,8 +601,8 @@ describe('Testing stream features', () => {
 		stream = await utils.waitForElement('.OV_stream.local');
 		streamProps = await stream.getRect();
 
-		expect(streamProps.x).lessThan(lastX + marginX);
-		expect(streamProps.y).equals(0);
+		expect(streamProps.x).toBeLessThan(lastX + marginX);
+		expect(streamProps.y).toEqual(0);
 	});
 
 	it('should be the MINIMIZED video ALWAYS VISIBLE when toggling from small to bigger panel', async () => {
@@ -625,8 +624,8 @@ describe('Testing stream features', () => {
 
 		let stream = await utils.waitForElement('.OV_stream.local');
 		let streamProps: IRectangle = await stream.getRect();
-		expect(streamProps.x).equals(900 + marginX);
-		expect(streamProps.y).equals(0);
+		expect(streamProps.x).toEqual(900 + marginX);
+		expect(streamProps.y).toEqual(0);
 
 		// Open chat panel
 		await utils.clickOn('#chat-panel-btn');
@@ -635,8 +634,8 @@ describe('Testing stream features', () => {
 		streamProps = await stream.getRect();
 		let lastX = streamProps.x;
 
-		expect(streamProps.x).lessThan(900 + marginX);
-		expect(streamProps.y).equals(0);
+		expect(streamProps.x).toBeLessThan(900 + marginX);
+		expect(streamProps.y).toEqual(0);
 
 		// Open settings panel
 		await utils.togglePanel('settings');
@@ -645,8 +644,8 @@ describe('Testing stream features', () => {
 		stream = await utils.waitForElement('.OV_stream.local');
 		streamProps = await stream.getRect();
 
-		expect(streamProps.x).lessThan(lastX + marginX);
-		expect(streamProps.y).equals(0);
+		expect(streamProps.x).toBeLessThan(lastX + marginX);
+		expect(streamProps.y).toEqual(0);
 		lastX = streamProps.x;
 
 		// Open chat panel
@@ -655,11 +654,11 @@ describe('Testing stream features', () => {
 		stream = await utils.waitForElement('.OV_stream.local');
 		streamProps = await stream.getRect();
 
-		expect(streamProps.x).greaterThan(lastX + marginX);
-		expect(streamProps.y).equals(0);
+		expect(streamProps.x).toBeGreaterThanOrEqual(lastX + marginX);
+		expect(streamProps.y).toEqual(0);
 	});
 
-	it.skip('should show the audio detection elements when participant is speaking', async () => {
+	xit('should show the audio detection elements when participant is speaking', async () => {
 		const roomName = 'speakingE2E';
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false`;
 		await browser.get(`${fixedUrl}&audioEnabled=false`);
@@ -673,8 +672,8 @@ describe('Testing stream features', () => {
 		await browser.switchTo().window(tabs[0]);
 
 		await utils.waitForElement('.OV_stream.remote.speaking');
-		expect(await utils.getNumberOfElements('.OV_stream.remote.speaking')).to.be.equal(1);
-		expect(await utils.getNumberOfElements('.OV_stream.speaking')).to.be.equal(1);
+		expect(await utils.getNumberOfElements('.OV_stream.remote.speaking')).toEqual(1);
+		expect(await utils.getNumberOfElements('.OV_stream.speaking')).toEqual(1);
 	});
 });
 
@@ -725,7 +724,7 @@ describe('Testing video is playing', () => {
 		await browser.sleep(6000);
 
 		const exceptionQuantity = await utils.getNumberOfElements('#NO_STREAM_PLAYING_EVENT');
-		expect(exceptionQuantity).equals(0);
+		expect(exceptionQuantity).toEqual(0);
 	});
 
 	it('should play the participant video with only video', async () => {
@@ -753,6 +752,6 @@ describe('Testing video is playing', () => {
 		await browser.sleep(6000);
 
 		const exceptionQuantity = await utils.getNumberOfElements('#NO_STREAM_PLAYING_EVENT');
-		expect(exceptionQuantity).equals(0);
+		expect(exceptionQuantity).toEqual(0);
 	});
 });

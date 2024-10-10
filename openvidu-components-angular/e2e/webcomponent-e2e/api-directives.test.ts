@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { Builder, WebDriver } from 'selenium-webdriver';
 import { OPENVIDU_CALL_SERVER } from '../config';
 import { WebComponentConfig } from '../selenium.conf';
@@ -34,7 +33,7 @@ describe('Testing API Directives', () => {
 		await utils.checkPrejoinIsPresent();
 
 		// Checking if audio detection is not displayed
-		expect(await utils.isPresent('#audio-wave-container')).to.be.false;
+		expect(await utils.isPresent('#audio-wave-container')).toBeFalse();
 
 		const joinButton = await utils.waitForElement('#join-button');
 		await joinButton.click();
@@ -52,31 +51,31 @@ describe('Testing API Directives', () => {
 		await utils.checkToolbarIsPresent();
 
 		// Checking if screenshare button is not present
-		expect(await utils.isPresent('#screenshare-btn')).to.be.false;
+		expect(await utils.isPresent('#screenshare-btn')).toBeFalse();
 
 		// Checking if more options button is not present
-		expect(await utils.isPresent('#more-options-btn')).to.be.false;
+		expect(await utils.isPresent('#more-options-btn')).toBeFalse();
 
 		// Checking if participants panel button is not present
-		expect(await utils.isPresent('#participants-panel-btn')).to.be.false;
+		expect(await utils.isPresent('#participants-panel-btn')).toBeFalse();
 
 		// Checking if activities panel button is not present
-		expect(await utils.isPresent('#activities-panel-btn')).to.be.false;
+		expect(await utils.isPresent('#activities-panel-btn')).toBeFalse();
 
 		// Checking if logo is not displayed
-		expect(await utils.isPresent('#branding-logo')).to.be.false;
+		expect(await utils.isPresent('#branding-logo')).toBeFalse();
 
 		// Checking if session name is not displayed
-		expect(await utils.isPresent('#session-name')).to.be.false;
+		expect(await utils.isPresent('#session-name')).toBeFalse();
 
 		// Checking if nickname is not displayed
-		expect(await utils.getNumberOfElements('#participant-name-container')).equals(0);
+		expect(await utils.getNumberOfElements('#participant-name-container')).toEqual(0);
 
 		// Checking if audio detection is not displayed
-		expect(await utils.isPresent('#audio-wave-container')).to.be.false;
+		expect(await utils.isPresent('#audio-wave-container')).toBeFalse();
 
 		// Checking if settings button is not displayed
-		expect(await utils.isPresent('#settings-container')).to.be.false;
+		expect(await utils.isPresent('#settings-container')).toBeFalse();
 	});
 
 	it('should change the UI LANG in prejoin page', async () => {
@@ -87,7 +86,7 @@ describe('Testing API Directives', () => {
 		await utils.waitForElement('#lang-btn-compact');
 
 		const element = await utils.waitForElement('#join-button');
-		expect(await element.getText()).equal('Unirme ahora');
+		expect(await element.getText()).toEqual('Unirme ahora');
 	});
 
 	it('should change the UI LANG in room page', async () => {
@@ -99,12 +98,12 @@ describe('Testing API Directives', () => {
 		await utils.togglePanel('settings');
 
 		await utils.waitForElement('.sidenav-menu');
-		expect(await utils.isPresent('#default-settings-panel')).to.be.true;
+		expect(await utils.isPresent('#default-settings-panel')).toBeTrue();
 		const panelTitle = await utils.waitForElement('.panel-title');
-		expect(await panelTitle.getText()).equal('Configuración');
+		expect(await panelTitle.getText()).toEqual('Configuración');
 
 		const element = await utils.waitForElement('#lang-selected-name');
-		expect(await element.getAttribute('innerText')).equal('Español');
+		expect(await element.getAttribute('innerText')).toEqual('Español');
 	});
 
 	it('should override the LANG OPTIONS', async () => {
@@ -114,7 +113,7 @@ describe('Testing API Directives', () => {
 		await utils.waitForElement('#lang-btn-compact');
 		await utils.clickOn('#lang-btn-compact');
 		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('.lang-menu-opt')).equals(2);
+		expect(await utils.getNumberOfElements('.lang-menu-opt')).toEqual(2);
 
 		await utils.clickOn('.lang-menu-opt');
 		await browser.sleep(500);
@@ -136,7 +135,7 @@ describe('Testing API Directives', () => {
 
 		await browser.sleep(500);
 
-		expect(await utils.getNumberOfElements('.lang-menu-opt')).equals(2);
+		expect(await utils.getNumberOfElements('.lang-menu-opt')).toEqual(2);
 	});
 
 	it('should show the PREJOIN page', async () => {
@@ -165,7 +164,7 @@ describe('Testing API Directives', () => {
 		await utils.checkToolbarIsPresent();
 
 		// Checking if screenshare button is not present
-		expect(await utils.isPresent('#screenshare-btn')).to.be.true;
+		expect(await utils.isPresent('#screenshare-btn')).toBeTrue();
 	});
 
 	it('should show the token error WITH prejoin page', async () => {
@@ -195,7 +194,7 @@ describe('Testing API Directives', () => {
 
 		// Checking if token error is displayed
 		await utils.waitForElement('#token-error');
-		expect(await utils.isPresent('#token-error')).to.be.true;
+		expect(await utils.isPresent('#token-error')).toBeTrue();
 	});
 
 	it('should show the token error WITHOUT prejoin page', async () => {
@@ -215,7 +214,7 @@ describe('Testing API Directives', () => {
 
 		// Checking if token error is displayed
 		await utils.waitForElement('#openvidu-dialog');
-		expect(await utils.isPresent('#openvidu-dialog')).to.be.true;
+		expect(await utils.isPresent('#openvidu-dialog')).toBeTrue();
 	});
 
 	it('should run the app with VIDEO DISABLED in prejoin page', async () => {
@@ -225,7 +224,7 @@ describe('Testing API Directives', () => {
 
 		// Checking if video is displayed
 		await utils.waitForElement('#video-poster');
-		expect(await utils.getNumberOfElements('video')).equals(0);
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
 
 		await utils.waitForElement('#videocam_off');
 
@@ -234,10 +233,10 @@ describe('Testing API Directives', () => {
 		await utils.checkSessionIsPresent();
 
 		await utils.waitForElement('#video-poster');
-		expect(await utils.getNumberOfElements('video')).equals(0);
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
 
 		await utils.waitForElement('#videocam_off');
-		expect(await utils.isPresent('#videocam_off')).to.be.true;
+		expect(await utils.isPresent('#videocam_off')).toBeTrue();
 	});
 
 	it('should run the app with VIDEO DISABLED and WITHOUT PREJOIN page', async () => {
@@ -249,11 +248,11 @@ describe('Testing API Directives', () => {
 
 		// Checking if video is displayed
 		await utils.waitForElement('#video-poster');
-		expect(await utils.getNumberOfElements('video')).equals(0);
-		expect(await utils.getNumberOfElements('#video-poster')).equals(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
+		expect(await utils.getNumberOfElements('#video-poster')).toEqual(1);
 
 		await utils.waitForElement('#videocam_off');
-		expect(await utils.isPresent('#videocam_off')).to.be.true;
+		expect(await utils.isPresent('#videocam_off')).toBeTrue();
 	});
 
 	it('should run the app with AUDIO DISABLED in prejoin page', async () => {
@@ -263,20 +262,20 @@ describe('Testing API Directives', () => {
 
 		// Checking if video is displayed
 		await utils.checkVideoElementIsPresent();
-		expect(await utils.getNumberOfElements('video')).equals(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
 
-		expect(await utils.getNumberOfElements('audio')).equals(0);
+		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 		await utils.waitForElement('#mic_off');
-		expect(await utils.isPresent('#mic_off')).to.be.true;
+		expect(await utils.isPresent('#mic_off')).toBeTrue();
 
 		await utils.clickOn('#join-button');
 
 		await utils.checkSessionIsPresent();
 
-		expect(await utils.getNumberOfElements('video')).equals(1);
-		expect(await utils.getNumberOfElements('audio')).equals(0);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
+		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 		await utils.waitForElement('#mic_off');
-		expect(await utils.isPresent('#mic_off')).to.be.true;
+		expect(await utils.isPresent('#mic_off')).toBeTrue();
 	});
 
 	it('should run the app with AUDIO DISABLED and WITHOUT PREJOIN page', async () => {
@@ -286,11 +285,11 @@ describe('Testing API Directives', () => {
 
 		// Checking if video is displayed
 		await utils.checkVideoElementIsPresent();
-		expect(await utils.getNumberOfElements('video')).equals(1);
+		expect(await utils.getNumberOfElements('video')).toEqual(1);
 
-		expect(await utils.getNumberOfElements('audio')).equals(0);
+		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 		await utils.waitForElement('#mic_off');
-		expect(await utils.isPresent('#mic_off')).to.be.true;
+		expect(await utils.isPresent('#mic_off')).toBeTrue();
 	});
 
 	it('should HIDE the SCREENSHARE button', async () => {
@@ -302,7 +301,7 @@ describe('Testing API Directives', () => {
 		await utils.checkToolbarIsPresent();
 
 		// Checking if screenshare button is not present
-		expect(await utils.isPresent('#screenshare-btn')).to.be.false;
+		expect(await utils.isPresent('#screenshare-btn')).toBeFalse();
 	});
 
 	it('should HIDE the FULLSCREEN button', async () => {
@@ -314,10 +313,10 @@ describe('Testing API Directives', () => {
 		await utils.checkToolbarIsPresent();
 
 		await utils.toggleToolbarMoreOptions();
-		expect(await utils.getNumberOfElements('#fullscreen-btn')).equals(0);
+		expect(await utils.getNumberOfElements('#fullscreen-btn')).toEqual(0);
 	});
 
-	it.skip('should HIDE the CAPTIONS button', async () => {
+	xit('should HIDE the CAPTIONS button', async () => {
 		await browser.get(`${url}&prejoin=false&toolbarCaptionsBtn=false`);
 
 		await utils.checkSessionIsPresent();
@@ -328,16 +327,16 @@ describe('Testing API Directives', () => {
 		await utils.toggleToolbarMoreOptions();
 
 		// Checking if captions button is not present
-		expect(await utils.isPresent('#captions-btn')).to.be.false;
+		expect(await utils.isPresent('#captions-btn')).toBeFalse();
 
 		await utils.clickOn('#toolbar-settings-btn');
 
 		await browser.sleep(500);
 
 		await utils.waitForElement('.settings-container');
-		expect(await utils.isPresent('.settings-container')).to.be.true;
+		expect(await utils.isPresent('.settings-container')).toBeTrue();
 
-		expect(await utils.isPresent('#captions-opt')).to.be.false;
+		expect(await utils.isPresent('#captions-opt')).toBeFalse();
 	});
 
 	it('should HIDE the TOOLBAR RECORDING button', async () => {
@@ -351,7 +350,7 @@ describe('Testing API Directives', () => {
 		await utils.toggleToolbarMoreOptions();
 
 		// Checking if recording button is not present
-		expect(await utils.isPresent('#recording-btn')).to.be.false;
+		expect(await utils.isPresent('#recording-btn')).toBeFalse();
 	});
 
 	it('should HIDE the TOOLBAR BROADCASTING button', async () => {
@@ -365,7 +364,7 @@ describe('Testing API Directives', () => {
 		await utils.toggleToolbarMoreOptions();
 
 		// Checking if broadcasting button is not present
-		expect(await utils.isPresent('#broadcasting-btn')).to.be.false;
+		expect(await utils.isPresent('#broadcasting-btn')).toBeFalse();
 	});
 
 	it('should HIDE the TOOLBAR SETTINGS button', async () => {
@@ -379,7 +378,7 @@ describe('Testing API Directives', () => {
 		// Open more options menu
 		await utils.toggleToolbarMoreOptions();
 
-		expect(await utils.isPresent('#toolbar-settings-btn')).to.be.false;
+		expect(await utils.isPresent('#toolbar-settings-btn')).toBeFalse();
 	});
 
 	it('should HIDE the LEAVE button', async () => {
@@ -391,7 +390,7 @@ describe('Testing API Directives', () => {
 		await utils.checkToolbarIsPresent();
 
 		// Checking if leave button is not present
-		expect(await utils.getNumberOfElements('#leave-btn')).equals(0);
+		expect(await utils.getNumberOfElements('#leave-btn')).toEqual(0);
 	});
 
 	it('should HIDE the ACTIVITIES PANEL button', async () => {
@@ -403,7 +402,7 @@ describe('Testing API Directives', () => {
 		await utils.checkToolbarIsPresent();
 
 		// Checking if activities panel button is not present
-		expect(await utils.isPresent('#activities-panel-btn')).to.be.false;
+		expect(await utils.isPresent('#activities-panel-btn')).toBeFalse();
 	});
 
 	it('should HIDE the CHAT PANEL button', async () => {
@@ -415,7 +414,7 @@ describe('Testing API Directives', () => {
 		await utils.checkToolbarIsPresent();
 
 		// Checking if chat panel button is not present
-		expect(await utils.isPresent('#chat-panel-btn')).to.be.false;
+		expect(await utils.isPresent('#chat-panel-btn')).toBeFalse();
 	});
 
 	it('should HIDE the PARTICIPANTS PANEL button', async () => {
@@ -427,7 +426,7 @@ describe('Testing API Directives', () => {
 		await utils.checkToolbarIsPresent();
 
 		// Checking if participants panel button is not present
-		expect(await utils.isPresent('#participants-panel-btn')).to.be.false;
+		expect(await utils.isPresent('#participants-panel-btn')).toBeFalse();
 	});
 
 	it('should HIDE the LOGO', async () => {
@@ -440,10 +439,10 @@ describe('Testing API Directives', () => {
 
 		// Checking if toolbar is present
 		await utils.waitForElement('#info-container');
-		expect(await utils.isPresent('#info-container')).to.be.true;
+		expect(await utils.isPresent('#info-container')).toBeTrue();
 
 		// Checking if logo is not displayed
-		expect(await utils.isPresent('#branding-logo')).to.be.false;
+		expect(await utils.isPresent('#branding-logo')).toBeFalse();
 	});
 
 	it('should HIDE the ROOM NAME', async () => {
@@ -456,10 +455,10 @@ describe('Testing API Directives', () => {
 
 		// Checking if toolbar is present
 		await utils.waitForElement('#info-container');
-		expect(await utils.isPresent('#info-container')).to.be.true;
+		expect(await utils.isPresent('#info-container')).toBeTrue();
 
 		// Checking if session name is not displayed
-		expect(await utils.isPresent('#session-name')).to.be.false;
+		expect(await utils.isPresent('#session-name')).toBeFalse();
 	});
 
 	it('should HIDE the PARTICIPANT NAME', async () => {
@@ -474,7 +473,7 @@ describe('Testing API Directives', () => {
 		await utils.checkStreamIsPresent();
 
 		// Checking if nickname is not present
-		expect(await utils.isPresent('#participant-name-container')).to.be.false;
+		expect(await utils.isPresent('#participant-name-container')).toBeFalse();
 	});
 
 	it('should HIDE the AUDIO DETECTION element', async () => {
@@ -489,7 +488,7 @@ describe('Testing API Directives', () => {
 		await utils.checkStreamIsPresent();
 
 		// Checking if audio detection is not present
-		expect(await utils.isPresent('#audio-wave-container')).to.be.false;
+		expect(await utils.isPresent('#audio-wave-container')).toBeFalse();
 	});
 
 	it('should HIDE the STREAM VIDEO CONTROLS button', async () => {
@@ -504,7 +503,7 @@ describe('Testing API Directives', () => {
 		await utils.checkStreamIsPresent();
 
 		// Checking if settings button is not present
-		expect(await utils.isPresent('.stream-video-controls')).to.be.false;
+		expect(await utils.isPresent('.stream-video-controls')).toBeFalse();
 	});
 
 	it('should HIDE the MUTE button in participants panel', async () => {
@@ -522,10 +521,10 @@ describe('Testing API Directives', () => {
 
 		// Checking if participatns panel is displayed
 		await utils.waitForElement('#participants-container');
-		expect(await utils.isPresent('#participants-container')).to.be.true;
+		expect(await utils.isPresent('#participants-container')).toBeTrue();
 
 		// Checking remote participants item
-		expect(await utils.isPresent('#remote-participant-item')).to.be.false;
+		expect(await utils.isPresent('#remote-participant-item')).toBeFalse();
 
 		// Starting new browser for adding a new participant
 		const newTabScript = `window.open("${fixedUrl}")`;
@@ -537,9 +536,9 @@ describe('Testing API Directives', () => {
 
 		// Checking if mute button is not displayed in participant item
 		await utils.waitForElement('#remote-participant-item');
-		expect(await utils.isPresent('#remote-participant-item')).to.be.true;
+		expect(await utils.isPresent('#remote-participant-item')).toBeTrue();
 
-		expect(await utils.isPresent('#mute-btn')).to.be.false;
+		expect(await utils.isPresent('#mute-btn')).toBeFalse();
 	});
 
 	it('should HIDE the RECORDING ACTIVITY in activities panel', async () => {
@@ -557,13 +556,13 @@ describe('Testing API Directives', () => {
 
 		// Checking if participatns panel is displayed
 		await utils.waitForElement('#default-activities-panel');
-		expect(await utils.isPresent('#default-activities-panel')).to.be.true;
+		expect(await utils.isPresent('#default-activities-panel')).toBeTrue();
 
 		// await browser.sleep(1000);
 
 		// Checking if recording activity exists
 		await utils.waitForElement('.activities-body-container');
-		expect(await utils.isPresent('ov-recording-activity')).to.be.false;
+		expect(await utils.isPresent('ov-recording-activity')).toBeFalse();
 	});
 
 	it('should HIDE the BROADCASTING ACTIVITY in activities panel', async () => {
@@ -579,12 +578,12 @@ describe('Testing API Directives', () => {
 
 		// Checking if participatns panel is displayed
 		await utils.waitForElement('#default-activities-panel');
-		expect(await utils.isPresent('#default-activities-panel')).to.be.true;
+		expect(await utils.isPresent('#default-activities-panel')).toBeTrue();
 
 		// await browser.sleep(1000);
 
 		// Checking if recording activity exists
 		await utils.waitForElement('.activities-body-container');
-		expect(await utils.isPresent('ov-broadcasting-activity')).to.be.false;
+		expect(await utils.isPresent('ov-broadcasting-activity')).toBeFalse();
 	});
 });
