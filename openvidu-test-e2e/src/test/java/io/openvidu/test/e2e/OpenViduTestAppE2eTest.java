@@ -236,32 +236,34 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Many2Many [Video + Audio]");
 
+		final int USERS = 4;
+
 		WebElement addUser = user.getDriver().findElement(By.id("add-user-btn"));
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < USERS; i++) {
 			addUser.click();
 		}
 
 		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
-		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 4);
-		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 4);
-		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 8);
-		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 8);
-		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 24);
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", USERS);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", USERS);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", USERS * 2);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", USERS * 2);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", (USERS * (USERS - 1) * 2));
 
-		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 16));
-		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("audio"), 16));
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), USERS * USERS));
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("audio"), USERS * USERS));
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
-		Assertions.assertEquals(16, numberOfVideos, "Wrong number of videos");
-		Assertions.assertEquals(16, numberOfAudios, "Wrong number of audios");
+		Assertions.assertEquals(USERS * USERS, numberOfVideos, "Wrong number of videos");
+		Assertions.assertEquals(USERS * USERS, numberOfAudios, "Wrong number of audios");
 
 		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
 		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("audio.remote", true, false),
 				"HTMLAudioElements were expected to have only one audio track");
 
-		gracefullyLeaveParticipants(user, 4);
+		gracefullyLeaveParticipants(user, USERS);
 	}
 
 	@Test
