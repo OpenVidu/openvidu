@@ -13,7 +13,7 @@
 		"declarationMap": true,
 		"inlineSources": true,
 		"resolveJsonModule": true,
-		"types": ["node"],
+		"types": ["jasmine", "node"],
 		"allowSyntheticDefaultImports": true
 	},
 	"exclude": ["node_modules", "src/test.ts", "**/*.spec.ts", "**/*.mock.ts"]

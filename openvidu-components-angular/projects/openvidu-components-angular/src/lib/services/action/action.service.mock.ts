@@ -9,10 +9,10 @@ export class ActionServiceMock {
 
 	}
 
-	openDialog(titleMessage: string, descriptionMessage: string, allowClose = true) {
+	openConnectionDialog(titleMessage: string, descriptionMessage: string, allowClose = true) {
 
 	}
 
-	closeDialog() {
+	closeConnectionDialog() {
 	}
 }
