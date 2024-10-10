@@ -20,6 +20,9 @@ export class ActionService {
 		| MatDialogRef<DialogTemplateComponent | RecordingDialogComponent | DeleteDialogComponent | ProFeatureDialogTemplateComponent>
 		| undefined;
 	private dialogSubscription: Subscription;
+	private connectionDialogRef: MatDialogRef<DialogTemplateComponent> | undefined;
+	private isConnectionDialogOpen: boolean = false;
+
 	constructor(
 		private snackBar: MatSnackBar,
 		public dialog: MatDialog,
@@ -62,23 +65,17 @@ export class ActionService {
 		}
 	}
 
-	// openProFeatureDialog(titleMessage: string, descriptionMessage: string, allowClose = true) {
-	// 	try {
-	// 		this.closeDialog();
-	// 	} catch (error) {
-	// 	} finally {
-	// 		const config: MatDialogConfig = {
-	// 			minWidth: '250px',
-	// 			data: { title: titleMessage, description: descriptionMessage, showActionButtons: allowClose },
-	// 			disableClose: !allowClose
-	// 		};
-	// 		this.dialogRef = this.dialog.open(ProFeatureDialogTemplateComponent, config);
-	// 		this.dialogSubscription = this.dialogRef.afterClosed().subscribe((result) => {
-	// 			this.dialogRef = undefined;
-	// 			if (this.dialogSubscription) this.dialogSubscription.unsubscribe();
-	// 		});
-	// 	}
-	// }
+	openConnectionDialog(titleMessage: string, descriptionMessage: string, allowClose = false) {
+		if (this.isConnectionDialogOpen) return;
+		const config: MatDialogConfig = {
+			minWidth: '250px',
+			data: { title: titleMessage, description: descriptionMessage, showActionButtons: allowClose },
+			disableClose: !allowClose
+		};
+
+		this.connectionDialogRef = this.dialog.open(DialogTemplateComponent, config);
+		this.isConnectionDialogOpen = true;
+	}
 
 	openDeleteRecordingDialog(succsessCallback) {
 		try {
@@ -119,6 +116,14 @@ export class ActionService {
 
 	closeDialog() {
 		this.dialogRef?.close();
+	}
+
+	closeConnectionDialog() {
+		if (this.connectionDialogRef) {
+			this.connectionDialogRef.close();
+			this.isConnectionDialogOpen = false;
+			this.connectionDialogRef = undefined;
+		}
 	}
 
 	private handleRecordingPlayerError(error: MediaError | null) {

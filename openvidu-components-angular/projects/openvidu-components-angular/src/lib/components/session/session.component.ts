@@ -211,7 +211,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 		if (this.shouldDisconnectRoomWhenComponentIsDestroyed) {
 			await this.disconnectRoom();
 		}
-		this.room.removeAllListeners();
+		if(this.room) this.room.removeAllListeners();
 		this.participantService.clear();
 		// this.room = undefined;
 		if (this.menuSubscription) this.menuSubscription.unsubscribe();
@@ -443,27 +443,25 @@ export class SessionComponent implements OnInit, OnDestroy {
 		);
 	}
 
-	private subscribeToReconnection() {
+	subscribeToReconnection() {
 		this.room.on(RoomEvent.Reconnecting, () => {
 			this.log.w('Connection lost: Reconnecting');
-			this.actionService.openDialog(
+			this.actionService.openConnectionDialog(
 				this.translateService.translate('ERRORS.CONNECTION'),
-				this.translateService.translate('ERRORS.RECONNECT'),
-				false
+				this.translateService.translate('ERRORS.RECONNECT')
 			);
 		});
 		this.room.on(RoomEvent.Reconnected, () => {
 			this.log.w('Connection lost: Reconnected');
-			this.actionService.closeDialog();
+			this.actionService.closeConnectionDialog();
 		});
 
 		this.room.on(RoomEvent.Disconnected, async (reason: DisconnectReason | undefined) => {
 			if (reason === DisconnectReason.SERVER_SHUTDOWN) {
 				this.log.e('Room Disconnected', reason);
-				this.actionService.openDialog(
+				this.actionService.openConnectionDialog(
 					this.translateService.translate('ERRORS.CONNECTION'),
-					this.translateService.translate('ERRORS.RECONNECT'),
-					false
+					this.translateService.translate('ERRORS.RECONNECT')
 				);
 			}
 			// await this.disconnectRoom();
