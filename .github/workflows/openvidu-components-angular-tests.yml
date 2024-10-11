@@ -1,4 +1,4 @@
-name: openvidu-components-angular E2E
+name: openvidu-components-angular Tests
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - master
     paths:
       - 'openvidu-components-angular/**'
-      - '.github/workflows/openvidu-components-angular-E2E.yml'
+      - '.github/workflows/openvidu-components-angular-tests.yml'
   pull_request:
     branches:
       - master
