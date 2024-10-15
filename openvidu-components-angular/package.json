@@ -79,7 +79,7 @@
     "doc:build": "npx compodoc -c ./projects/openvidu-components-angular/doc/.compodocrc.json",
     "doc:generate-directives-tutorials": "node ./projects/openvidu-components-angular/doc/scripts/generate-directive-tutorials.js",
     "doc:generate-directive-tables": "node ./projects/openvidu-components-angular/doc/scripts/generate-directive-tables.js",
-    "doc:clean-copy": "rm -rf ../../openvidu-docs/docs/docs/reference-docs/openvidu-components-angular && cp -r ./docs/openvidu-components-angular/ ../../openvidu-docs/docs/docs/reference-docs/openvidu-components-angular",
+    "doc:clean-copy": "rm -rf ../../openvidu.io/docs/docs/reference-docs/openvidu-components-angular && cp -r ./docs/openvidu-components-angular/ ../../openvidu.io/docs/docs/reference-docs/openvidu-components-angular",
     "doc:serve": "npx compodoc -c ../openvidu-components-angular/projects/openvidu-components-angular/doc/.compodocrc.json --serve --port 7000",
     "doc:serve-watch": "npm-watch doc:serve",
     "lib:serve": "ng build openvidu-components-angular --watch",
