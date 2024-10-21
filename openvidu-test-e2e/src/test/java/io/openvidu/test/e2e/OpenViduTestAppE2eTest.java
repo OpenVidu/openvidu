@@ -445,19 +445,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// An enabled subscribed track increases its bytesReceived over time
 
 		long bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
-		Thread.sleep(500);
-		Assertions.assertTrue(bytesReceived < this.getSubscriberVideoBytesReceived(user, subscriberVideo),
-				"Subscriber enabled should have increased its bytesReceived");
-
-		user.getDriver().findElement(By.id("close-dialog-btn")).click();
-		Thread.sleep(300);
+		this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo, bytesReceived);
 
 		// A disabled subscribed track does not increase its bytesReceived over time
 		WebElement enableToggle = user.getDriver()
 				.findElement(By.cssSelector("#openvidu-instance-1 .toggle-video-enabled"));
 		enableToggle.click();
 		bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
-		Thread.sleep(1000);
+		Thread.sleep(1250);
 		Assertions.assertEquals(bytesReceived, this.getSubscriberVideoBytesReceived(user, subscriberVideo),
 				"Subscriber disabled should have NOT increased its bytesReceived");
 
@@ -465,9 +460,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Thread.sleep(300);
 
 		enableToggle.click();
-		Thread.sleep(500);
-		Assertions.assertTrue(bytesReceived < this.getSubscriberVideoBytesReceived(user, subscriberVideo),
-				"Subscriber enabled should have increased its bytesReceived");
+		this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo, bytesReceived);
 
 		gracefullyLeaveParticipants(user, 2);
 	}
@@ -514,8 +507,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", false);
 
 		firstSubscriberToggle.click();
-		Assertions.assertTrue(bytesReceived < this.getSubscriberVideoBytesReceived(user, subscriberVideo1),
-				"Subscriber enabled should have increased its bytesReceived");
+		this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo1, bytesReceived);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "f", true);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", true);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", true);
@@ -824,13 +816,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
 				"HTMLVideoElements were expected to have only one audio track");
 
+		// Some time for the subscriber's track to settle in one simulcasted resolution
 		Thread.sleep(3000);
 
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
 
 		int oldFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
 		user.getBrowserUser().changeElementSize(subscriberVideo, 1000, 700);
-		Thread.sleep(2300);
+		Thread.sleep(2000);
 		int newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
 
 		Assertions.assertEquals(oldFrameWidth, newFrameWidth,
@@ -1108,6 +1101,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					"Video track should have now a lower resolution, but it is not. Old width: " + oldFrameWidth
 							+ ". New width: " + newFrameWidth);
 		}
+	}
+
+	private void waitUntilSubscriberBytesReceivedIncrease(OpenViduTestappUser user, WebElement videoElement,
+			final long previousBytesReceived) {
+		this.waitUntilAux(user, videoElement, () -> {
+			return this.getSubscriberVideoBytesReceived(user, videoElement) > previousBytesReceived;
+		}, "Timeout waiting for subscriber track to increase its bytesReceived from " + previousBytesReceived);
 	}
 
 	private void waitUntilPublisherLayerActive(OpenViduTestappUser user, final WebElement publisherVideo,
