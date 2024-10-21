@@ -47,8 +47,8 @@
 	</developers>
 
 	<properties>
-		<!-- Java 11 -->
-		<java.version>11</java.version>
+		<!-- Java 17 -->
+		<java.version>17</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<!-- Encoding -->
