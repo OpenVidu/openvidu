@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -145,7 +144,22 @@ public class BrowserUser {
 	}
 
 	public boolean assertAllElementsHaveTracks(String querySelector, boolean hasAudio, boolean hasVideo) {
-		Assertions.assertTrue(this.waitUntilAllSrcObjectsDefined(querySelector, 5000));
+		String waitForSrcObject = """
+				const sleepUntil = async (f, timeoutMs) => {
+				    return new Promise((resolve, reject) => {
+				        const timeWas = new Date();
+				        const wait = setInterval(function() {
+				            if (f()) {
+				                clearInterval(wait);
+				                resolve();
+				            } else if (new Date() - timeWas > timeoutMs) { // Timeout
+				                clearInterval(wait);
+				                reject();
+				            }
+				        }, 50);
+				    });
+				}
+				""";
 		String calculateReturnValue = "returnValue && ";
 		if (hasAudio) {
 			calculateReturnValue += "el.srcObject.getAudioTracks().length === 1 && el.srcObject.getAudioTracks()[0].enabled";
@@ -158,33 +172,22 @@ public class BrowserUser {
 		} else {
 			calculateReturnValue += "el.srcObject.getVideoTracks().length === 0";
 		}
-		String script = "var returnValue = true; document.querySelectorAll('" + querySelector
-				+ "').forEach(el => { returnValue = " + calculateReturnValue + " }); return returnValue;";
+		String script = waitForSrcObject + """
+				var returnValue = true;
+				const elements = [...document.querySelectorAll('%s')];
+				elements.forEach(async (el) => {
+					try {
+						await sleepUntil(() => !!el.srcObject, 5000);
+						returnValue = %s;
+					} catch(error) {
+						returnValue = false;
+						console.error('Error waiting for srcObject to be defined');
+						throw error;
+					}
+				});
+				return returnValue;""".formatted(querySelector, calculateReturnValue);
 		boolean tracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
 		return tracks;
-	}
-
-	private boolean waitUntilAllSrcObjectsDefined(String querySelector, int maxMsWait) {
-		final int sleepInterval = 50;
-		int maxIterations = maxMsWait / sleepInterval;
-		int counter = 0;
-		boolean defined = srcObjectDefined(querySelector);
-		while (!defined && counter < maxIterations) {
-			try {
-				Thread.sleep(sleepInterval);
-			} catch (InterruptedException e) {
-			}
-			defined = srcObjectDefined(querySelector);
-			counter++;
-		}
-		return defined;
-	}
-
-	private boolean srcObjectDefined(String querySelector) {
-		String script = "return ![...document.querySelectorAll('" + querySelector
-				+ "')].some(mediaElement => !mediaElement.srcObject);";
-		boolean defined = (boolean) ((JavascriptExecutor) driver).executeScript(script);
-		return defined;
 	}
 
 	public void changeElementSize(WebElement videoElement, Integer newWidthInPixels, Integer newHeightInPixels) {
