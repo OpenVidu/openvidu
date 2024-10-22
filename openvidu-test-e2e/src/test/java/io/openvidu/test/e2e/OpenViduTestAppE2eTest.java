@@ -814,12 +814,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
 
 		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
-				"HTMLVideoElements were expected to have only one audio track");
-
-		// Some time for the subscriber's track to settle in one simulcasted resolution
-		Thread.sleep(3000);
+				"HTMLVideoElements were expected to have only one video track");
 
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+
+		// Subscriber should settle in 640p
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 640);
 
 		int oldFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
 		user.getBrowserUser().changeElementSize(subscriberVideo, 1000, 700);
