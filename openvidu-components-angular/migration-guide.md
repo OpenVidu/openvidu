@@ -204,7 +204,6 @@ npm install openvidu-components-angular@3.0.0
         -   `publishScreen` and `unpublishScreen` methods have been renamed to `setScreenShareEnabled`
         -   `isSttReadyObs` observable has been deleted
         -   `connectRoom` method has been added
-        -   `getRoomMetadata` method has been added to get the metadata of the room
         -   `getRoomName` method has been added to get the name of the room
 
     -   ##### Panel Service (`PanelService`):

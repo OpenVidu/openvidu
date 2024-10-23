@@ -38,7 +38,6 @@ export class OpenViduService {
 	private localTracks: LocalTrack[] = [];
 	private livekitToken = '';
 	private livekitUrl = '';
-	private livekitRoomAdmin = false;
 	private log: ILogger;
 
 	/**
@@ -129,15 +128,6 @@ export class OpenViduService {
 		return this.room?.name;
 	}
 
-	/**
-	 * Returns the room metadata from the token
-	 * @returns
-	 */
-	getRoomMetadata(): { roomAdmin: boolean } {
-		return {
-			roomAdmin: this.livekitRoomAdmin
-		};
-	}
 
 	/**
 	 * Returns if the room is connected or not
@@ -154,7 +144,6 @@ export class OpenViduService {
 		const livekitData = this.extractLivekitData(token, livekitUrl);
 		this.livekitToken = token;
 		this.livekitUrl = livekitData.livekitUrl;
-		this.livekitRoomAdmin = livekitData.livekitRoomAdmin;
 
 		if (!this.livekitUrl) {
 			this.log.e('LiveKit URL is not defined. Please, check the livekitUrl parameter of the VideoConferenceComponent');
