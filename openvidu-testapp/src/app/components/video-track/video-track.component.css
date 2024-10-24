@@ -1,5 +1,4 @@
 video {
-  height: 90px;
   width: 120px;
 }
 
@@ -16,6 +15,12 @@ video {
 .bottom-div {
   position: absolute;
   bottom: 0;
+}
+
+.top-right-div {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .video-btn {

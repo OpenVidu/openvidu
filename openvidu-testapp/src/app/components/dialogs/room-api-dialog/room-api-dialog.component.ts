@@ -72,10 +72,10 @@ export class RoomApiDialogComponent {
         this.localParticipant = data.localParticipant;
         this.apiRoomName = this.room?.name;
         this.apiParticipantIdentity = this.localParticipant?.identity;
-        this.apiTrackSid = this.localParticipant?.videoTrackPublications.values().next().value?.trackSid;
+        this.apiTrackSid = this.localParticipant?.videoTrackPublications.values().next().value?.trackSid!;
         this.egressRoomName = this.room?.name;
-        this.audioTrackId = this.localParticipant?.audioTrackPublications.values().next().value?.trackSid;
-        this.videoTrackId = this.localParticipant?.videoTrackPublications.values().next().value?.trackSid;
+        this.audioTrackId = this.localParticipant?.audioTrackPublications.values().next().value?.trackSid!;
+        this.videoTrackId = this.localParticipant?.videoTrackPublications.values().next().value?.trackSid!;
         this.ingressRoomName = this.room?.name;
     }
 

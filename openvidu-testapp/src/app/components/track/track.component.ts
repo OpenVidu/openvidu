@@ -14,7 +14,6 @@ import {
   LocalTrack,
   RemoteTrack,
   TrackEventCallbacks,
-  LocalTrackPublication,
   RemoteTrackPublication,
   AudioTrack,
   VideoTrack,

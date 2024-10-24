@@ -20,6 +20,8 @@ export class VideoTrackComponent extends TrackComponent {
   blurIcon: string = 'blur_on';
   maxVideoQuality: string;
 
+  videoZoom = false;
+
   constructor(
     protected override testFeedService: TestFeedService,
     private dialog: MatDialog
@@ -95,5 +97,11 @@ export class VideoTrackComponent extends TrackComponent {
       // await (this._track! as LocalVideoTrack).stopProcessor();
       this.blurIcon = 'blur_on';
     }
+  }
+
+  toggleVideoZoom() {
+    this.videoZoom = !this.videoZoom;
+    let newWidth = this.videoZoom ? '720px' : '120px';
+    this.elementRef.nativeElement.style.width = newWidth;
   }
 }

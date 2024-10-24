@@ -36,4 +36,11 @@
                 aria-hidden="true">{{blurIcon}}</mat-icon>
         </button>-->
     </div>
+    <div class="top-right-div">
+        <button *ngIf="!localParticipant" (click)="toggleVideoZoom()" class="video-btn toggle-video-zoom" matTooltip="Toggle video zoom"
+            matTooltipClass="custom-tooltip">
+            <mat-icon aria-label="Toggle video zoom" class="mat-icon material-icons" role="img"
+                aria-hidden="true">{{videoZoom ? 'zoom_out' : 'zoom_in'}}</mat-icon>
+        </button>
+    </div>
 </div>
