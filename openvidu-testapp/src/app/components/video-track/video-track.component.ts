@@ -63,7 +63,12 @@ export class VideoTrackComponent extends TrackComponent {
     const updateFunction = async (): Promise<string> => {
       const videoLayers: any[] = [];
       let stats = await (this._track! as VideoTrack).getRTCStatsReport();
+      let codecs = new Map();
       stats?.forEach((report) => {
+        if (report.type === 'codec') {
+          // Store for matching with codecId in 'outbound-rtp' or 'inbound-rtp' reports
+          codecs.set(report.id, report);
+        }
         if (report.type === 'outbound-rtp' || report.type === 'inbound-rtp') {
           videoLayers.push({
             codecId: report.codecId,
@@ -76,6 +81,11 @@ export class VideoTrackComponent extends TrackComponent {
             bytesReceived: report.bytesReceived,
             bytesSent: report.bytesSent,
           });
+        }
+      });
+      videoLayers.forEach((layer) => {
+        if (codecs.has(layer.codecId)) {
+          layer.codec = codecs.get(layer.codecId).mimeType;
         }
       });
       return JSON.stringify(videoLayers, null, 2);
