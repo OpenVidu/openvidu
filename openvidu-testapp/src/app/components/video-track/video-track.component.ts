@@ -111,7 +111,7 @@ export class VideoTrackComponent extends TrackComponent {
 
   toggleVideoZoom() {
     this.videoZoom = !this.videoZoom;
-    let newWidth = this.videoZoom ? '720px' : '120px';
+    let newWidth = this.videoZoom ? '1500px' : '120px';
     this.elementRef.nativeElement.style.width = newWidth;
   }
 }

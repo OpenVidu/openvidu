@@ -39,6 +39,8 @@ export class OptionsDialogComponent {
 
   ENUMERATION_SOURCE = Object.keys(Track.Source);
 
+  inputVideoDevices: MediaDeviceInfo[] = [];
+
   constructor(
     public dialogRef: MatDialogRef<OptionsDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
@@ -98,6 +100,9 @@ export class OptionsDialogComponent {
     if (this.data.allowDisablingScreen === false) {
       this.allowDisablingScreen = false;
     }
+    Room.getLocalDevices('videoinput').then((devices) => {
+      this.inputVideoDevices = devices;
+    });
   }
 
   returnValues() {

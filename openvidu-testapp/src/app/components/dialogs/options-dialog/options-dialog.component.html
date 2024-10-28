@@ -20,9 +20,11 @@
           <mat-radio-button [value]="'custom'" id="video-capture-custom">Custom</mat-radio-button>
         </mat-radio-group>
         <div *ngIf="videoOption === 'custom'">
-          <mat-form-field class="inner-text-input">
+          <mat-form-field id="video-deviceId">
             <mat-label>deviceId</mat-label>
-            <input matInput id="video-deviceId" placeholder="deviceId" [(ngModel)]="auxVideoCaptureOptions.deviceId"/>
+            <mat-select [(value)]="auxVideoCaptureOptions.deviceId">
+              <mat-option *ngFor="let device of inputVideoDevices" [value]="{ exact: device.deviceId }">{{'[' + device.label + '] ' + device.deviceId}}</mat-option>
+            </mat-select>
           </mat-form-field>
           <mat-form-field id="video-facingMode">
             <mat-label>facingMode</mat-label>
