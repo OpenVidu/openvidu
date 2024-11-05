@@ -1,9 +1,11 @@
+$ov-broadcasting-color: #5903ca;
+
 #broadcasting-status {
-	color: var(--ov-text-color);
+	color: var(--ov-text-surface-color);
 	display: inline;
 	padding: 3px;
 	font-size: 11px;
-	border-radius: var(--ov-panel-radius);
+	border-radius: var(--ov-surface-radius);
 }
 
 .time-container {
@@ -11,19 +13,19 @@
 }
 
 .error-text {
-	color: var(--ov-warn-color);
+	color: var(--ov-error-color);
 	font-style: italic;
 	font-size: 14px;
 }
 
 #broadcasting-icon {
-	color: #5903ca;
+	color: var(--ov-primary-action-color) !important;
 }
 
 .broadcasting-duration {
-	background-color: var(--ov-light-color);
+	background-color: var(--ov-secondary-action-color);
 	padding: 4px 8px;
-	border-radius: var(--ov-panel-radius);
+	border-radius: var(--ov-surface-radius);
 	font-weight: 500;
 }
 
@@ -34,27 +36,27 @@
 }
 
 .started {
-	background-color: #5903ca !important;
-	color: var(--ov-text-color);
+	background-color: $ov-broadcasting-color !important;
+	color: var(--ov-text-primary-color);
 }
 
 .activity-icon.started {
-	background-color: #5903ca !important;
-	color: var(--ov-text-color);
+	background-color: $ov-broadcasting-color !important;
+	color: var(--ov-text-primary-color);
 }
 
 .failed {
-	background-color: var(--ov-warn-color) !important;
-	color: var(--ov-text-color);
+	background-color: var(--ov-error-color) !important;
+	color: var(--ov-text-primary-color);
 }
 .stopped {
-	background-color: var(--ov-light-color);
-	color: var(--ov-panel-text-color) !important;
+	background-color: var(--ov-secondary-action-color);
+	color: var(--ov-text-surface-color) !important;
 }
 
 .starting {
-	background-color: #ffd79b !important;
-	color: var(--ov-panel-text-color) !important;
+	background-color: var(--ov-warn-color) !important;
+	color: var(--ov-text-primary-color) !important;
 }
 
 .panel-body-container {
@@ -72,7 +74,7 @@
 }
 
 .broadcasting-error {
-	color: var(--ov-warn-color);
+	color: var(--ov-error-color);
 	font-weight: 600;
 }
 .broadcasting-name {
@@ -92,13 +94,13 @@
 
 /* #start-broadcasting-btn {
 	width: 100%;
-	background-color: var(--ov-tertiary-color);
-	color: var(--ov-text-color);
+	background-color: var(--ov-accent-action-color);
+	color: var(--ov-text-primary-color);
 } */
 
 #stop-broadcasting-btn {
-	/* background-color: var(--ov-warn-color); */
-	color: var(--ov-warn-color);
+	/* background-color: var(--ov-error-color); */
+	color: var(--ov-error-color);
 }
 
 #reset-broadcasting-status-btn {
@@ -122,10 +124,10 @@ mat-expansion-panel {
 .input-container {
 	height: 25px;
 	display: flex;
-	background-color: var(--ov-light-color);
+	background-color: var(--ov-secondary-action-color);
 	padding: 10px;
 	margin: 10px;
-	border-radius: var(--ov-panel-radius);
+	border-radius: var(--ov-surface-radius);
     order: 3;
     justify-content: space-evenly;
     align-items: center;

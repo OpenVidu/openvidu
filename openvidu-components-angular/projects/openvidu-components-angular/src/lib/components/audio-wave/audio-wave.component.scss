@@ -23,13 +23,13 @@
 }
 
 .audio-container{
-	background-color: var(--ov-tertiary-color);
+	background-color: var(--ov-accent-action-color);
 	padding: 5px;
 	max-width: 15px;
 	max-height: 15px;
 	height: 15px;
 	width: 15px;
-	border-radius: var(--ov-video-radius);
+	border-radius: var(--ov-surface-radius);
 	display: flex;
 	justify-content: space-between;
 }
@@ -38,7 +38,7 @@
 	margin: auto;
 	height: 80%;
 	width: 3px;
-	background: var(--ov-text-color);
+	background: var(--ov-text-primary-color);
 	border-radius: 8px;
 }
 

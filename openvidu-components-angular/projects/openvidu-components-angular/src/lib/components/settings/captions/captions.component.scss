@@ -3,15 +3,15 @@
 }
 
 .section-description {
-	color: var(--ov-panel-text-color);
+	color: var(--ov-text-primary-color);
 	font-size: 12px;
 	padding: 0px 5px;
 	display: block;
 }
 
 .lang-button {
-	background-color: var(--ov-logo-background-color);
-	color: var(--ov-text-color);
+	background-color: var(--ov-secondary-action-color);
+	color: var(--ov-text-primary-color);
 }
 
 .pro-feature {
@@ -24,7 +24,7 @@
 
 /* TODO(mdc-migration): The following rule targets internal classes of slide-toggle that may no longer apply for the MDC version. */
 ::ng-deep .mat-mdc-slide-toggle.mat-checked .mat-slide-toggle-bar {
-	background-color: var(--ov-tertiary-color);
+	background-color: var(--ov-accent-action-color);
 }
 
 /* TODO(mdc-migration): The following rule targets internal classes of slide-toggle that may no longer apply for the MDC version. */

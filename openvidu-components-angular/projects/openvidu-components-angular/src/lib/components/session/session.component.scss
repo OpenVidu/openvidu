@@ -1,5 +1,5 @@
 #session-container {
-	background-color: var(--ov-primary-color);
+	background-color: var(--ov-background-color);
 	/* min-width: 400px; */
 	height: 100%;
 }
@@ -12,7 +12,7 @@
 	margin: auto;
 	text-align: -webkit-center;
 	text-align: -moz-center;
-	color: var(--ov-text-color);
+	color: var(--ov-text-primary-color);
 }
 
 .sidenav-container {
@@ -29,7 +29,7 @@
 	align-items: center;
 	justify-content: center;
 	width: 380px;
-	background-color: var(--ov-primary-color);
+	background-color: var(--ov-background-color);
 	border-left: none;
 	position: absolute;
 	z-index: 1;
@@ -57,21 +57,21 @@
 }
 
 .mat-drawer-container {
-	background-color: var(--ov-primary-color);
+	background-color: var(--ov-background-color);
 }
 
 #toolbar-container,
 #footer-container {
-	background-color: var(--ov-primary-color);
+	background-color: var(--ov-background-color);
 	/* min-width: 400px !important; */
 	width: 100%;
 	height: 70px;
 }
 
 #footer {
-	color: #ffffff;
+	color: var(--ov-text-primary-color);
 	height: 25px;
-	background-color: #333333;
+	background-color: var(--ov-background-color);
 	padding: 0 14px 0 0;
 	position: absolute;
 	bottom: 0;
@@ -111,12 +111,12 @@
 
 /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
 ::ng-deep .mat-form-field-label {
-	color: var(--ov-panel-text-color) !important;
+	color: var(--ov-text-primary-color) !important;
 }
 
 /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
 ::ng-deep .mat-mdc-form-field.mat-focused .mat-form-field-ripple {
-	background-color: var(--ov-panel-text-color) !important;
+	background-color: var(--ov-text-primary-color) !important;
 }
 
 ::ng-deep .mat-drawer {

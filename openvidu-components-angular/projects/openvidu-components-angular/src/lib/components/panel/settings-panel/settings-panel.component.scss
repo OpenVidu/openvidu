@@ -11,7 +11,7 @@
 
 	.item-menu {
 		padding-right: 5px;
-		border-right: 1px solid var(--ov-secondary-color);
+		border-right: 1px solid var(--ov-secondary-action-color);
 		width: 170px;
 	}
 	.item-menu.mobile {
@@ -29,17 +29,17 @@
 	}
 
 	mat-list-option[aria-selected='true'] {
-		background: var(--ov-tertiary-color) !important;
-		border-radius: var(--ov-panel-radius);
+		background: var(--ov-accent-action-color) !important;
+		border-radius: var(--ov-surface-radius);
 		::ng-deep .mat-mdc-list-item-unscoped-content,
 		mat-icon {
-			color: var(--ov-panel-background) !important;
+			color: var(--ov-secondary-action-color) !important;
 		}
 	}
 
 	mat-list-option[aria-selected='false'] {
 		mat-icon {
-			color: var(--ov-panel-text-color) !important;
+			color: var(--ov-text-surface-color) !important;
 		}
 	}
 

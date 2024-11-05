@@ -1,14 +1,14 @@
+$ov-selection-color: #d4d6d7;
 :host {
-	--ov-light-color-darker: color-mix(in srgb, var(--ov-light-color), #000 15%);
 
 	#name-input-container {
 		height: 70px;
-		border-radius: var(--ov-panel-radius);
+		border-radius: var(--ov-surface-radius);
 	}
 
 	#name-input-container mat-form-field {
 		width: 100%;
-		color: var(--ov-secondary-color);
+		color: var(--ov-secondary-action-color);
 	}
 
 	::ng-deep .mat-mdc-form-field-infix {
@@ -18,18 +18,18 @@
 	::ng-deep .mat-mdc-text-field-wrapper {
 		padding: 0;
 		height: 70px;
-		background-color: var(--ov-panel-background) !important;
+		background-color: var(--ov-surface-color) !important;
 
 	}
 	::ng-deep .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-line-ripple::before {
 		border: 0px !important;
 	}
 	::ng-deep .mdc-button--unelevated {
-		border-top-left-radius: var(--ov-panel-radius) !important;
-		border-bottom-left-radius: var(--ov-panel-radius) !important;
+		border-top-left-radius: var(--ov-surface-radius) !important;
+		border-bottom-left-radius: var(--ov-surface-radius) !important;
 		border-bottom-right-radius: 0px !important;
 		border-top-right-radius: 0px !important;
-		background-color: var(--ov-light-color-darker) !important;
+		background-color: $ov-selection-color !important;
 		width: 48px !important;
 		min-width: 48px !important;
 		padding: 0;
@@ -38,7 +38,7 @@
 
 	.error {
 		::ng-deep .mdc-button--unelevated {
-			background-color: var(--ov-warn-color) !important;
+			background-color: var(--ov-error-color) !important;
 		}
 	}
 
@@ -47,16 +47,20 @@
 		width: 24px;
 		font-size: 24px !important;
 		margin: auto;
-		color: var(--ov-secondary-color) !important;
+		color: #000000 !important;
 	}
 
 	input {
 		padding-left: 10px !important;
-		border-top-right-radius: var(--ov-panel-radius) !important;
-		border-bottom-right-radius: var(--ov-panel-radius) !important;
+		border-top-right-radius: var(--ov-surface-radius) !important;
+		border-bottom-right-radius: var(--ov-surface-radius) !important;
 		border-bottom-left-radius: 0px !important;
 		border-top-left-radius: 0px !important;
-		border: 1px solid var(--ov-light-color-darker);
-		color: var(--ov-panel-text-color);
+		border: 1px solid $ov-selection-color;
+		color: #000000;
 	}
+}
+
+::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-select-arrow {
+	color: var(--ov-primary-action-color) !important;
 }

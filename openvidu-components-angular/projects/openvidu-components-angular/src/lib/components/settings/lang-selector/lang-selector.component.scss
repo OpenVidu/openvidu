@@ -1,12 +1,10 @@
-$ov-light-color-lighter: color-mix(in srgb, var(--ov-light-color), #fff 40%);
 
 .lang-button {
-	background-color: var(--ov-secondary-color) !important;
-	color: var(--ov-text-color);
+	background-color: var(--ov-primary-action-color) !important;
+	color: var(--ov-secondary-action-color);
 }
 ::ng-deep .mat-mdc-menu-panel {
-	border-radius: var(--ov-panel-radius) !important;
-	background-color: var(--ov-panel-background) !important;
-	border: 1px solid $ov-light-color-lighter !important;
+	border-radius: var(--ov-surface-radius) !important;
+	background-color: var(--ov-surface-color) !important;
 	box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.2) !important;
 }

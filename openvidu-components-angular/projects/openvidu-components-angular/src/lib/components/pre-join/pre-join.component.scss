@@ -1,5 +1,9 @@
 :host {
-	--ov-primary-color-lighter: color-mix(in srgb, var(--ov-primary-color), #fff 15%);
+	.container {
+		height: 100%;
+		background-color: var(--ov-background-color);
+		display: flex;
+	}
 
 	#loading-container {
 		position: absolute;
@@ -10,34 +14,19 @@
 		margin: auto;
 		text-align: -webkit-center;
 		text-align: -moz-center;
-		color: #fff;
+		color: var(--ov-text-primary-color);
 	}
 
-	.container {
-		height: 100%;
-		background-color: var(--ov-secondary-color);
-		display: flex;
-	}
-
-	#features-container {
-		margin: auto;
-		width: 70vh;
-		height: 70vh;
-		margin-right: 0;
-		box-shadow: -6px 2px 20px 0px #0003;
-		background-color: var(--ov-accent-color);
-	}
-
-	#prejoin-frame {
+	#prejoin-card {
 		display: grid;
 		align-content: center;
 		margin: auto;
 		// margin-left: 0px;
-		border-radius: var(--ov-panel-radius);
+		border-radius: var(--ov-surface-radius);
 		width: 70vh;
 		height: 85vh;
 		padding: 20px;
-		background-color: var(--ov-panel-background);
+		background-color: var(--ov-surface-color);
 		box-shadow: 6px 4px 20px 0px #0003;
 		position: relative;
 	}
@@ -48,20 +37,6 @@
 		right: 10px;
 		height: 25px !important;
 		font-size: 14px !important;
-	}
-
-	#branding-logo {
-		position: absolute;
-		top: 10px;
-		left: 10px;
-		max-width: 50px;
-	}
-
-	#branding-logo {
-		border-radius: var(--ov-panel-radius);
-		max-width: 35px;
-		max-height: 35px;
-		margin-right: 10px;
 	}
 
 	.video-container {
@@ -77,9 +52,6 @@
 		position: relative;
 	}
 
-	.media-panel {
-		background-color: var(--ov-light-color);
-	}
 	.media-controls-container {
 		display: flex;
 		flex-wrap: wrap;
@@ -107,10 +79,10 @@
 	}
 
 	#join-button {
-		background-color: var(--ov-tertiary-color);
-		color: var(--ov-text-color);
+		background-color: var(--ov-primary-action-color);
+		color: var(--ov-text-primary-color);
 		font-weight: bold;
-		border-radius: var(--ov-video-radius);
+		border-radius: var(--ov-surface-radius);
 		width: 100%;
 		height: 50px;
 	}
@@ -119,7 +91,7 @@
 		font-size: 12px;
 		font-weight: bold;
 		font-style: italic;
-		color: var(--ov-warn-color);
+		color: var(--ov-error-color);
 	}
 
 	/* Styles for screens up to 768px wide */
@@ -128,7 +100,7 @@
 		.container {
 			padding: 0px;
 		}
-		#prejoin-frame {
+		#prejoin-card {
 			margin: auto;
 			height: 100%;
 			padding: 0px;
@@ -143,26 +115,6 @@
 			width: 90%;
 			max-width: 90%;
 		}
-	}
-
-	/* Styles for screens from 768px to 992px wide */
-	@media (min-width: 768px) and (max-width: 992px) {
-		/* Specific styles for medium screens */
-	}
-
-	/* Styles for screens from 992px to 1200px wide */
-	@media (min-width: 992px) and (max-width: 1200px) {
-		/* Specific styles for large screens */
-	}
-
-	/* Styles for screens over 1200px wide */
-	@media (min-width: 1200px) {
-		/* Specific styles for extra-large screens */
-	}
-
-	/* Styles for screens with vertical orientation */
-	@media (orientation: portrait) {
-		/* Specific styles for screens in portrait orientation */
 	}
 
 	/* Styles for screens with horizontal orientation */

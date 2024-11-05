@@ -7,13 +7,33 @@ import { MatDialogRef } from '@angular/material/dialog';
 @Component({
 	selector: 'app-delete-dialog',
 	template: `
-		<div mat-dialog-content>{{'PANEL.RECORDING.DELETE_QUESTION' | translate}}</div>
+		<div mat-dialog-content>{{ 'PANEL.RECORDING.DELETE_QUESTION' | translate }}</div>
 		<div mat-dialog-actions>
-			<button mat-button (click)="close()">{{'PANEL.RECORDING.CANCEL' | translate }}</button>
-			<button mat-button cdkFocusInitial (click)="close(true)" id="delete-recording-confirm-btn">{{'PANEL.RECORDING.DELETE' | translate}}</button>
+			<button mat-button [disableRipple]="true" (click)="close()">{{ 'PANEL.RECORDING.CANCEL' | translate }}</button>
+			<button [disableRipple]="true" mat-button cdkFocusInitial (click)="close(true)" id="delete-recording-confirm-btn">
+				{{ 'PANEL.RECORDING.DELETE' | translate }}
+			</button>
 		</div>
 	`,
-	styles: [``]
+	styles: [
+		`
+			::ng-deep .mat-mdc-dialog-surface {
+				background-color: var(--ov-surface-color);
+				border-radius: var(--ov-surface-radius);
+			}
+			#delete-recording-confirm-btn {
+				background-color: var(--ov-error-color);
+				color: var(--ov-text-primary-color);
+			}
+			.mat-mdc-button,
+			.mat-mdc-button:not(:disabled),
+			::ng-deep .mat-mdc-button .mat-mdc-button-persistent-ripple::before {
+				color: var(--ov-text-primary-color);
+				background-color: var(--ov-primary-action-color) !important;
+				border-radius: var(--ov-surface-radius);
+			}
+		`
+	]
 })
 export class DeleteDialogComponent {
 	constructor(public dialogRef: MatDialogRef<DeleteDialogComponent>) {}

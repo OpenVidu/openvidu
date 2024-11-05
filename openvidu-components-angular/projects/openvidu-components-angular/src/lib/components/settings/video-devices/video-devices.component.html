@@ -1,4 +1,4 @@
-<div class="device-container-element">
+<div class="device-container-element" [class.mute-btn]="!isCameraEnabled">
 	<mat-form-field id="video-devices-form" *ngIf="cameras.length > 0">
 		<mat-select
 			[disabled]="!hasVideoDevices"
@@ -12,7 +12,7 @@
 					id="camera-button"
 					[disableRipple]="true"
 					[disabled]="!hasVideoDevices || cameraStatusChanging"
-					[class.warn-btn]="!isCameraEnabled"
+					[class.mute-btn]="!isCameraEnabled"
 					(click)="toggleCam($event)"
 					[matTooltip]="isCameraEnabled ? ('TOOLBAR.STOP_VIDEO' | translate) : ('TOOLBAR.START_VIDEO' | translate)"
 					[matTooltipDisabled]="!hasVideoDevices"
@@ -31,7 +31,7 @@
 
 	<div id="video-devices-form" *ngIf="cameras.length === 0">
 		<div id="mat-select-trigger">
-			<button mat-icon-button id="camera-button" class="warn-btn" [disabled]="true">
+			<button mat-icon-button id="camera-button" class="mute-btn" [disabled]="true">
 				<mat-icon id="videocam_off"> videocam_off </mat-icon>
 			</button>
 			<span id="video-devices-not-found"> {{ 'PREJOIN.NO_VIDEO_DEVICE' | translate }} </span>

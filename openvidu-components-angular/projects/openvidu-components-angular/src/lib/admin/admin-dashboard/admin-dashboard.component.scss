@@ -4,16 +4,16 @@
 
 .header {
 	height: 50px;
-	background-color: var(--ov-secondary-color);
-	color: var(--ov-text-color);
+	background-color: var(--ov-secondary-action-color);
+	color: var(--ov-text-primary-color);
 }
 
 .logout-btn {
-	color: var(--ov-text-color);
+	color: var(--ov-text-primary-color);
 }
 
 .dashboard-body {
-	background-color: var(--ov-secondary-color);
+	background-color: var(--ov-secondary-action-color);
 	height: calc(100% - 75px);
 }
 .toolbar-spacer {
@@ -41,17 +41,17 @@
 
 #sort-menu-btn {
 	margin-left: 5px;
-	background-color: var(--ov-panel-background);
-	color: var(--ov-panel-text-color);
+	background-color: var(--ov-surface-color);
+	color: var(--ov-text-primary-color);
 }
 
 .search-bar {
 	height: 95%;
 	width: 30%;
 	display: flex;
-	background-color: var(--ov-panel-background);
+	background-color: var(--ov-surface-color);
 	padding: 0px 10px;
-	border-radius: var(--ov-panel-radius);
+	border-radius: var(--ov-surface-radius);
 }
 
 #search-input {
@@ -87,7 +87,7 @@
 }
 
 .recordings-container {
-	background-color: var(--ov-secondary-color);
+	background-color: var(--ov-secondary-action-color);
 	height: calc(100% - 50px);
 	overflow-y: auto;
 	overflow-x: hidden;
@@ -106,7 +106,7 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		background-color: var(--ov-panel-background);
+		background-color: var(--ov-surface-color);
 	}
 }
 
@@ -135,18 +135,18 @@
 	margin-right: -50%;
 	top: 50%;
 	left: 50%;
-	background-color: var(--ov-logo-background-color);
-	border-radius: var(--ov-panel-radius);
+	background-color: var(--ov-secondary-action-color);
+	border-radius: var(--ov-surface-radius);
 }
 
 .video-btns button #play {
-	color: var(--ov-text-color);
+	color: var(--ov-text-primary-color);
 }
 .video-btns button #download {
-	color: var(--ov-tertiary-color);
+	color: var(--ov-accent-action-color);
 }
 .video-btns button #delete {
-	color: var(--ov-warn-color);
+	color: var(--ov-error-color);
 }
 
 .video-info-container > div {
@@ -167,7 +167,7 @@
 
 .video-card-tag {
 	font-size: 13px;
-	color: var(--ov-panel-text-color);
+	color: var(--ov-text-primary-color);
 	font-weight: bold;
 }
 
@@ -204,16 +204,16 @@
     transform: translateX(-50%);
 
 	.load-more-btn {
-		background-color: var(--ov-panel-background);
-		color: var(--ov-panel-text-color);
-		border-radius: var(--ov-panel-radius);
+		background-color: var(--ov-surface-color);
+		color: var(--ov-text-primary-color);
+		border-radius: var(--ov-surface-radius);
 	}
 }
 
 .footer {
 	height: 25px;
-	background-color: var(--ov-primary-color);
-	color: var(--ov-text-color);
+	background-color: var(--ov-background-color);
+	color: var(--ov-text-primary-color);
 	position: absolute;
 	bottom: 0;
 	left: 0;
@@ -225,7 +225,7 @@
 	gap: 2px;
 }
 .footer a {
-	color: var(--ov-tertiary-color);
+	color: var(--ov-accent-action-color);
 	padding-left: 5px;
 }
 
@@ -234,7 +234,7 @@
 	width: 100%;
 	display: table;
 	text-align: center;
-	color: var(--ov-text-color);
+	color: var(--ov-text-primary-color);
 }
 /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
 ::ng-deep .mat-form-field-appearance-fill .mat-form-field-flex {

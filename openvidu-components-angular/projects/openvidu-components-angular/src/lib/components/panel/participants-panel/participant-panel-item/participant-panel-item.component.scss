@@ -1,10 +1,10 @@
 :host {
 	.participant-avatar {
 		display: inherit;
-		border-radius: var(--ov-panel-radius);
+		border-radius: var(--ov-surface-radius);
 		margin: auto !important;
 		padding: 10px;
-		color: var(--ov-panel-text-color);
+		color: var(--ov-text-surface-color);
 	}
 
 	.participant-subtitle {
@@ -14,7 +14,7 @@
 	}
 	.participant-name {
 		font-weight: bold !important;
-		color: var(--ov-panel-text-color);
+		color: var(--ov-text-surface-color);
 	}
 
 	.participant-action-buttons {
@@ -53,7 +53,7 @@
 	}
 
 	.warn-btn {
-		/* background-color: var(--ov-warn-color) !important; */
-		color: var(--ov-warn-color);
+		/* background-color: var(--ov-error-color) !important; */
+		color: var(--ov-error-color);
 	}
 }

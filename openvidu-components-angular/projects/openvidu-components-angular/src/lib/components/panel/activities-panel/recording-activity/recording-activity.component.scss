@@ -1,10 +1,10 @@
 :host {
 	#recording-status {
-		color: var(--ov-text-color);
+		color: var(--ov-text-primary-color);
 		display: inline;
 		padding: 3px;
 		font-size: 11px;
-		border-radius: var(--ov-panel-radius);
+		border-radius: var(--ov-surface-radius);
 	}
 
 	.recording-title {
@@ -23,13 +23,13 @@
 		flex-wrap: wrap;
 		height: auto;
 		align-content: center;
-		color: var(--ov-panel-text-color) !important;
+		color: var(--ov-text-surface-color) !important;
 	}
 
 	.recording-duration {
-		background-color: var(--ov-light-color);
+		background-color: var(--ov-secondary-action-color);
 		padding: 4px 8px;
-		border-radius: var(--ov-panel-radius);
+		border-radius: var(--ov-surface-radius);
 		font-weight: 500;
 	}
 
@@ -41,22 +41,22 @@
 
 	.started {
 		background-color: #3b7430 !important;
-		color: var(--ov-text-color);
+		color: var(--ov-text-primary-color);
 	}
 
 	.activity-icon.started,
 	.failed {
-		background-color: var(--ov-warn-color) !important;
-		color: var(--ov-text-color);
+		background-color: var(--ov-error-color) !important;
+		color: var(--ov-text-primary-color);
 	}
 	.stopped {
-		background-color: var(--ov-light-color);
-		color: var(--ov-panel-text-color) !important;
+		background-color: var(--ov-secondary-action-color);
+		color: var(--ov-text-surface-color) !important;
 	}
 
 	.starting {
-		background-color: #ffd79b !important;
-		color: var(--ov-panel-text-color) !important;
+		background-color: var(--ov-warn-color) !important;
+		color: var(--ov-text-surface-color) !important;
 	}
 
 	.panel-body-container {
@@ -74,7 +74,7 @@
 	}
 
 	.recording-error {
-		color: var(--ov-warn-color);
+		color: var(--ov-error-color);
 		font-weight: 600;
 	}
 	.recording-name {
@@ -99,23 +99,23 @@
 
 	#start-recording-btn {
 		width: 100%;
-		background-color: var(--ov-tertiary-color);
-		color: var(--ov-text-color);
+		background-color: var(--ov-primary-action-color);
+		color: var(--ov-text-primary-color);
 	}
 
 	#stop-recording-btn {
 		width: 100%;
-		background-color: var(--ov-warn-color);
-		color: var(--ov-text-color);
+		background-color: var(--ov-error-color);
+		color: var(--ov-text-primary-color);
 	}
 
 	.delete-recording-btn {
-		color: var(--ov-warn-color);
+		color: var(--ov-error-color);
 	}
 
 	#reset-recording-status-btn {
 		width: 100%;
-		background-color: var(--ov-light-color);
+		background-color: var(--ov-secondary-action-color);
 	}
 
 	.recording-item {

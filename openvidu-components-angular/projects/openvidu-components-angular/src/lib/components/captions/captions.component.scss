@@ -29,7 +29,7 @@
 .error-container {
 	display: grid;
 	text-align: center;
-	color: var(--ov-text-color);
+	color: var(--ov-text-primary-color);
 	font-size: 18px;
 }
 
@@ -43,7 +43,7 @@ mat-spinner {
 }
 
 ::ng-deep .mat-mdc-progress-spinner {
-	--mdc-circular-progress-active-indicator-color: var(--ov-tertiary-color);
+	--mdc-circular-progress-active-indicator-color: var(--ov-accent-action-color);
 }
 
 /*
@@ -160,8 +160,8 @@ mat-spinner {
 }
 
 #caption-settings-btn {
-	color: var(--ov-text-color);
-	background-color: var(--ov-secondary-color);
+	color: var(--ov-text-primary-color);
+	background-color: var(--ov-secondary-action-color);
 }
 #caption-settings-icon {
 	font-size: 15px;
@@ -190,12 +190,12 @@ mat-spinner {
 
 .caption-text,
 #speaker {
-	color: var(--ov-text-color);
+	color: var(--ov-text-primary-color);
 	font-family: 'Roboto', arial, sans-serif;
 }
 
 .caption-text {
-	background-color: var(--ov-logo-background-color);
+	background-color: var(--ov-secondary-action-color);
 	padding: 4.5px;
 	line-height: 1.6;
 	word-break: break-word;

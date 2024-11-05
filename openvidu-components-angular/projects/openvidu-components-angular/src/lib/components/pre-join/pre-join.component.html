@@ -5,8 +5,7 @@
 		<span>{{ 'PREJOIN.PREPARING' | translate }}</span>
 	</div>
 
-	<div *ngIf="!isLoading"  id="prejoin-frame">
-		<!-- <img *ngIf="!isMinimal && showLogo" id="branding-logo" src="assets/images/lodgo.png" ovLogo /> -->
+	<div *ngIf="!isLoading"  id="prejoin-card">
 		<ov-lang-selector *ngIf="!isMinimal" [compact]="true" class="lang-btn" (onLangChanged)="onLangChanged.emit($event)">
 		</ov-lang-selector>
 

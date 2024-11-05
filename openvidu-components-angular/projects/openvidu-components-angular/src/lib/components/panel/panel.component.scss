@@ -1,7 +1,7 @@
 .panel-container {
 	margin: 20px;
-	background-color: var(--ov-panel-background);
-	border-radius: var(--ov-panel-radius);
+	background-color: var(--ov-surface-color);
+	border-radius: var(--ov-surface-radius);
 	max-height: calc(100% - 40px);
 	min-height: calc(100% - 40px);
 	display: flex;
@@ -41,6 +41,6 @@
 }
 
 ::-webkit-scrollbar-track {
-	background: var(--ov-light-color);
+	background: var(--ov-secondary-action-color);
 	border-radius: 4px;
 }

@@ -1,4 +1,4 @@
-:host{
+:host {
 	.activities-body-container {
 		display: block !important;
 		overflow-y: auto;
@@ -8,14 +8,15 @@
 
 	.activity-icon {
 		display: inherit;
-		background-color: var(--ov-light-color);
-		border-radius: var(--ov-panel-radius);
+		background-color: var(--ov-secondary-action-color);
+		border-radius: var(--ov-surface-radius);
 		margin: 10px 0px !important;
 		padding: 10px;
 	}
 
-	.activity-title, .activity-subtitle {
-		color: var(--ov-panel-text-color);
+	.activity-title,
+	.activity-subtitle {
+		color: var(--ov-text-surface-color);
 	}
 
 	.activity-subtitle {
@@ -46,11 +47,20 @@
 	::ng-deep .mat-expansion-panel-header {
 		padding: 0px 5px !important;
 		height: 65px !important;
+		cursor: pointer !important;
+	}
+
+	::ng-deep .mat-expansion-panel-header:hover {
+		background: none !important;
 	}
 
 	::ng-deep .mat-mdc-list-base .mat-mdc-list-item .mat-list-item-content,
 	.mat-list-base .mat-list-option .mat-list-item-content {
 		padding: 0px !important;
+	}
+
+	::ng-deep mat-list mat-list-item {
+		cursor: pointer !important;
 	}
 
 	::ng-deep mat-expansion-panel .mat-expansion-panel-body {
@@ -63,14 +73,16 @@
 
 	::ng-deep .mat-expansion-panel {
 		box-shadow: none !important;
-		background-color: var(--ov-panel-background) !important;
+		background-color: var(--ov-surface-color) !important;
 	}
 
 	::ng-deep .no-body .mat-expansion-panel-content {
 		display: none !important;
 	}
 
-	::ng-deep .mdc-list-item--with-leading-icon.mdc-list-item--with-two-lines.mdc-list-item--with-trailing-meta .mdc-list-item__end::before{
+	::ng-deep
+		.mdc-list-item--with-leading-icon.mdc-list-item--with-two-lines.mdc-list-item--with-trailing-meta
+		.mdc-list-item__end::before {
 		max-height: 24px;
 		height: 24px;
 	}

@@ -1,4 +1,9 @@
-<mat-expansion-panel (opened)="setPanelOpened(true)" (closed)="setPanelOpened(false)" [expanded]="expanded" [ngClass]="{ 'no-body': !isPanelOpened }">
+<mat-expansion-panel
+	(opened)="setPanelOpened(true)"
+	(closed)="setPanelOpened(false)"
+	[expanded]="expanded"
+	[ngClass]="{ 'no-body': !isPanelOpened }"
+>
 	<mat-expansion-panel-header>
 		<mat-list>
 			<mat-list-item>

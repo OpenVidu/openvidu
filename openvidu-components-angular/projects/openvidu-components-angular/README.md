@@ -54,24 +54,28 @@ You can also customize the styles in your `styles.scss` file:
 
 ```scss
 :root {
-	--ov-primary-color: #303030;
-	--ov-secondary-color: #3e3f3f;
-	--ov-tertiary-color: #598eff;
-	--ov-warn-color: #eb5144;
-	--ov-accent-color: #ffae35;
-	--ov-light-color: #e6e6e6;
+	/* Basic colors */
+	--ov-background-color: #303030; // Background color
+	--ov-surface-color: #ffffff; // Surfaces colors (panels, dialogs)
 
-	--ov-logo-background-color: #3a3d3d;
+	/* Text colors */
+	--ov-text-primary-color: #ffffff; // Text color over primary background
+	--ov-text-surface-color: #1d1d1d; // Text color over surface background
 
-	--ov-text-color: #ffffff;
+	/* Action colors */
+	--ov-primary-action-color: #273235; // Primary color for buttons, etc.
+	--ov-secondary-action-color: #f1f1f1; // Secondary color for buttons, etc.
+	--ov-accent-action-color: #0089ab; // Color for highlighted elements
 
-	--ov-panel-text-color: #1d1d1d;
-	--ov-panel-background: #ffffff;
+	/* Status colors */
+	--ov-error-color: #eb5144; // Error color
+	--ov-warn-color: #ffba53; // Warning color
 
+	/* Radius */
 	--ov-buttons-radius: 50%;
 	--ov-leave-button-radius: 10px;
 	--ov-video-radius: 5px;
-	--ov-panel-radius: 5px;
+	--ov-surface-radius: 5px;
 }
 ```
 

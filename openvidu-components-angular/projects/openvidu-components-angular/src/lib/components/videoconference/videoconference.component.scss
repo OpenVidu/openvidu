@@ -3,7 +3,7 @@
 	height: 100%;
 }
 #vc-container {
-	background-color: var(--ov-primary-color);
+	background-color: var(--ov-background-color);
 }
 
 #pre-join-container {
@@ -11,7 +11,7 @@
 }
 
 .error-icon {
-	color: var(--ov-warn-color);
+	color: var(--ov-error-color);
 }
 
 #spinner {
@@ -26,7 +26,7 @@
 }
 
 ::ng-deep .mat-mdc-progress-spinner {
-	--mdc-circular-progress-active-indicator-color: var(--ov-tertiary-color);
+	--mdc-circular-progress-active-indicator-color: var(--ov-accent-action-color);
 }
 
 /* Private css variables */

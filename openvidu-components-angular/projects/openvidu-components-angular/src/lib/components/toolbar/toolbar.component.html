@@ -137,7 +137,7 @@
 			<button
 				*ngIf="!isMinimal && showBroadcastingButton"
 				mat-menu-item
-				id="broadcasting-btn"
+				id="toolbar-broadcasting-btn"
 				[disabled]="broadcastingStatus === _broadcastingStatus.STARTING || recordingStatus === _broadcastingStatus.STOPPING"
 				(click)="toggleBroadcasting()"
 			>

@@ -1,4 +1,4 @@
-<div class="device-container-element">
+<div class="device-container-element" [class.mute-btn]="!isMicrophoneEnabled">
 	<!-- <button mat-stroked-button [matMenuTriggerFor]="menu" #menuTrigger="matMenuTrigger" id="audio-devices-menu">
 		<mat-icon class="audio-icon">mic</mat-icon>
 		<span class="device-label"> {{ microphoneSelected.label }} </span>
@@ -22,7 +22,7 @@
 					id="microphone-button"
 					[disableRipple]="true"
 					[disabled]="!hasAudioDevices || microphoneStatusChanging"
-					[class.warn-btn]="!isMicrophoneEnabled"
+					[class.mute-btn]="!isMicrophoneEnabled"
 					(click)="toggleMic($event)"
 					[matTooltip]="isMicrophoneEnabled ? ('TOOLBAR.MUTE_AUDIO' | translate) : ('TOOLBAR.UNMUTE_AUDIO' | translate)"
 					[matTooltipDisabled]="!hasAudioDevices"
@@ -46,7 +46,7 @@
 
 	<div id="audio-devices-form" *ngIf="microphones.length === 0">
 		<div id="mat-select-trigger">
-			<button mat-icon-button id="microphone-button" class="warn-btn" [disabled]="true">
+			<button mat-icon-button id="microphone-button" class="mute-btn" [disabled]="true">
 				<mat-icon id="mic_off"> mic_off </mat-icon>
 			</button>
 			<span id="audio-devices-not-found"> {{ 'PREJOIN.NO_AUDIO_DEVICE' | translate }} </span>

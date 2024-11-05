@@ -1,7 +1,7 @@
 .header {
 	height: 50px;
-	background-color: var(--ov-primary-color);
-	color: var(--ov-text-color);
+	background-color: var(--ov-background-color);
+	color: var(--ov-text-primary-color);
 }
 
 .center-container {
@@ -9,12 +9,12 @@
 	justify-content: center;
 	align-items: center;
 	height: 100vh;
-	background-color: var(--ov-secondary-color);
+	background-color: var(--ov-secondary-action-color);
 }
 
 .card-container {
 	text-align: center;
-	background-color: var(--ov-panel-background);
+	background-color: var(--ov-surface-color);
 	padding: 10px;
 	max-width: 300px;
 	min-width: 300px;
@@ -23,8 +23,8 @@
 }
 
 .form-btn {
-	background-color: var(--ov-tertiary-color) !important;
-	color: var(--ov-text-color) !important;
+	background-color: var(--ov-accent-action-color) !important;
+	color: var(--ov-text-primary-color) !important;
 }
 
 .form-field,
@@ -33,5 +33,5 @@
 }
 
 ::ng-deep .mat-mdc-progress-spinner {
-	--mdc-circular-progress-active-indicator-color: var(--ov-tertiary-color);
+	--mdc-circular-progress-active-indicator-color: var(--ov-accent-action-color);
 }

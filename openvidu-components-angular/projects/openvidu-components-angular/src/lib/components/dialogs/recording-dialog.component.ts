@@ -12,14 +12,26 @@ import { RecordingDialogData } from '../../models/dialog.model';
 			<video #videoElement controls autoplay [src]="src" (error)="handleError()"></video>
 		</div>
 		<div mat-dialog-actions *ngIf="data.showActionButtons" align="end">
-			<button mat-button (click)="close()">{{ 'PANEL.CLOSE' | translate }}</button>
+			<button mat-button [disableRipple]="true" (click)="close()">{{ 'PANEL.CLOSE' | translate }}</button>
 		</div>
 	`,
 	styles: [
 		`
+			::ng-deep .mat-mdc-dialog-surface {
+				background-color: var(--ov-surface-color);
+				border-radius: var(--ov-surface-radius);
+			}
 			video {
 				max-height: 64vh;
 				max-width: 100%;
+			}
+
+			.mat-mdc-button,
+			.mat-mdc-button:not(:disabled),
+			::ng-deep .mat-mdc-button .mat-mdc-button-persistent-ripple::before {
+				color: var(--ov-text-primary-color);
+				background-color: var(--ov-primary-action-color) !important;
+				border-radius: var(--ov-surface-radius);
 			}
 		`
 	]

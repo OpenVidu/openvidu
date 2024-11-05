@@ -1,6 +1,7 @@
+$ov-selection-color: #d4d6d7;
+
 .text-container {
-	background-color: var(--ov-light-color);
-	color: var(--ov-panel-text-color);
+	color: var(--ov-text-primary-color);
 	text-align: center;
 	font-size: 12px;
 	flex: inherit;
@@ -27,10 +28,11 @@
 .input-container {
 	height: 65px;
 	display: flex;
-	background-color: var(--ov-light-color);
+	background-color: var(--ov-surface-color);
+	border: 1px solid $ov-selection-color;
 	padding: 10px 5px 10px 10px;
 	margin: 10px;
-	border-radius: var(--ov-panel-radius);
+	border-radius: var(--ov-surface-radius);
 	order: 3;
 	justify-content: space-evenly;
 	align-items: none;
@@ -73,25 +75,27 @@
 
 .participant-name-container p {
 	font-size: 13px;
-	font-weight: bold;
-	color: var(--ov-panel-text-color);
+	font-style: italic;
+	color: var(--ov-primary-action-color);
+	padding: 5px;
 }
 
 .chat-message {
 	position: relative;
-	border-radius: var(--ov-panel-radius);
+	border-radius: var(--ov-surface-radius);
 	padding: 8px;
-	color: #000000;
+	color: var(--ov-secondary-action-color);
 	width: auto;
 	max-width: 95%;
-	font-size: 13px;
+	font-size: 14px;
 	word-break: break-all;
+	background-color: var(--ov-primary-action-color);
 }
 
 #send-btn {
-	border-radius: var(--ov-panel-radius);
-	color: var(--ov-light-color);
-	background-color: var(--ov-tertiary-color);
+	border-radius: var(--ov-surface-radius);
+	color: var(--ov-secondary-action-color);
+	background-color: var(--ov-primary-action-color);
 	align-self: center;
 	height: 75px;
 }
@@ -119,5 +123,5 @@
 }
 
 ::ng-deep a:-webkit-any-link {
-	color: var(--ov-tertiary-color);
+	color: var(--ov-accent-action-color);
 }

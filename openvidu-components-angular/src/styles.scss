@@ -27,21 +27,47 @@ body {
 
 // Custom openvidu-components styles
 :root {
-	--ov-primary-color: #303030;
-	--ov-secondary-color: #3e3f3f;
-	--ov-tertiary-color: #598eff;
-	--ov-warn-color: #eb5144;
-	--ov-accent-color: #ffae35;
-	--ov-light-color: #e6e6e6;
+	--ov-background-color: #1f2020;
+	--ov-surface-color: #ffffff;
 
-	--ov-logo-background-color: #3a3d3d;
-	--ov-text-color: #ffffff;
+	--ov-primary-action-color: #273235;
+	--ov-secondary-action-color: #f1f1f1;
+	--ov-accent-action-color: #0089ab;
 
-	--ov-panel-text-color: #1d1d1d;
-	--ov-panel-background: #ffffff;
+	--ov-error-color: #eb5144;
+	--ov-warn-color: #ffba53;
+
+	--ov-text-primary-color: #ffffff;
+	--ov-text-surface-color: #1d1d1d;
 
 	--ov-buttons-radius: 50%;
 	--ov-leave-button-radius: 10px;
 	--ov-video-radius: 5px;
-	--ov-panel-radius: 5px;
+	--ov-surface-radius: 5px;
 }
+
+/*
+--ov-primary-color: #303030; -> --ov-background-color
+
+						+		-> --ov-primary-action-color
+--ov-secondary-color: #3e3f3f; -> --ov-secondary-action-color
+--ov-tertiary-color: #598eff;  -> REMOVED (se usará --ov-accent-color)
+
+
+--ov-warn-color: #eb5144; -> --ov-warn-color
+						+ -> --ov-error-color
+--ov-accent-color: #ffae35; -> --ov-accent-action-color
+--ov-light-color: #e6e6e6;  -> REMOVED
+
+--ov-logo-background-color: #3a3d3d; -> REMOVED (se usará --ov-secondary-color)
+--ov-text-color: #ffffff; -> --ov-text-primary-color
+ 						-> --ov-text-secondary-color
+
+--ov-panel-text-color: #1d1d1d; -> --ov-text-color-surface
+--ov-panel-background: #ffffff; -> --ov-surface-color
+
+--ov-buttons-radius: 50%;
+--ov-leave-button-radius: 10px;
+--ov-video-radius: 5px;
+--ov-panel-radius: 5px; -> --ov-surface-radius
+*/

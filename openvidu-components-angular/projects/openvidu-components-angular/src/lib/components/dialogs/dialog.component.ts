@@ -12,12 +12,30 @@ import { DialogData } from '../../models/dialog.model';
 		<h1 mat-dialog-title>{{ data.title }}</h1>
 		<div mat-dialog-content id="openvidu-dialog">{{ data.description }}</div>
 		<div mat-dialog-actions *ngIf="data.showActionButtons">
-			<button mat-button (click)="close()">{{'PANEL.CLOSE' | translate}}</button>
+			<button mat-button [disableRipple]="true" (click)="close()">{{ 'PANEL.CLOSE' | translate }}</button>
 		</div>
-	`
+	`,
+	styles: [
+		`
+			::ng-deep .mat-mdc-dialog-surface {
+				background-color: var(--ov-surface-color);
+				border-radius: var(--ov-surface-radius);
+			}
+			.mat-mdc-button,
+			.mat-mdc-button:not(:disabled),
+			::ng-deep .mat-mdc-button .mat-mdc-button-persistent-ripple::before {
+				color: var(--ov-text-primary-color);
+				background-color: var(--ov-primary-action-color) !important;
+				border-radius: var(--ov-surface-radius);
+			}
+		`
+	]
 })
 export class DialogTemplateComponent {
-	constructor(public dialogRef: MatDialogRef<DialogTemplateComponent>, @Inject(MAT_DIALOG_DATA) public data: DialogData) {}
+	constructor(
+		public dialogRef: MatDialogRef<DialogTemplateComponent>,
+		@Inject(MAT_DIALOG_DATA) public data: DialogData
+	) {}
 
 	close() {
 		this.dialogRef.close();

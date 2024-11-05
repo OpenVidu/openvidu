@@ -1,13 +1,12 @@
-$ov-light-color-lighter: color-mix(in srgb, var(--ov-light-color), #fff 40%);
+$ov-broadcasting-blinking-color: #5903ca;
+$ov-recording-blinking-color: #eb5144;
 
 :host {
-	--broadcasting-blinking-color: #5903ca;
-	--recording-blinking-color: var(--ov-warn-color);
 
 	#toolbar {
 		height: 100%;
 		background-color: transparent;
-		color: var(--ov-text-color);
+		color: var(--ov-text-primary-color);
 
 		.mat-mdc-icon-button {
 			--mat-mdc-button-persistent-ripple-color: transparent !important;
@@ -59,7 +58,7 @@ $ov-light-color-lighter: color-mix(in srgb, var(--ov-light-color), #fff 40%);
 	#media-buttons-container button,
 	#menu-buttons-container button {
 		border-radius: var(--ov-buttons-radius);
-		color: var(--ov-text-color);
+		color: var(--ov-secondary-action-color);
 	}
 
 	#media-buttons-container > button,
@@ -69,26 +68,26 @@ $ov-light-color-lighter: color-mix(in srgb, var(--ov-light-color), #fff 40%);
 	::ng-deep #media-buttons-container:not(#media-buttons-container > button) button {
 		// width: 40px;
 		// height: 40px;
-		background-color: var(--ov-secondary-color);
-		color: var(--ov-text-color);
+		background-color: var(--ov-primary-action-color);
+		color: var(--ov-secondary-action-color);
 		margin: 6px;
 	}
 
 	.warn-btn {
-		background-color: var(--ov-warn-color) !important;
+		background-color: var(--ov-error-color) !important;
 	}
 	#disable-screen-button > mat-icon {
-		color: var(--ov-warn-color) !important;
+		color: var(--ov-error-color) !important;
 	}
 
 	.active-btn,
 	::ng-deep .active-btn {
-		background-color: var(--ov-tertiary-color) !important;
+		background-color: var(--ov-accent-action-color) !important;
 	}
 
 	#branding-logo {
-		background-color: var(--ov-logo-background-color);
-		border-radius: var(--ov-panel-radius);
+		background-color: var(--ov-primary-action-color);
+		border-radius: var(--ov-surface-radius);
 		max-width: 35px;
 		max-height: 35px;
 		padding: 10px;
@@ -119,7 +118,7 @@ $ov-light-color-lighter: color-mix(in srgb, var(--ov-light-color), #fff 40%);
 	.recording-tag,
 	.broadcasting-tag {
 		padding: 0 10px;
-		border-radius: var(--ov-panel-radius);
+		border-radius: var(--ov-surface-radius);
 		width: fit-content;
 		font-size: 12px;
 		text-align: center;
@@ -128,10 +127,10 @@ $ov-light-color-lighter: color-mix(in srgb, var(--ov-light-color), #fff 40%);
 	}
 
 	.recording-tag {
-		background-color: var(--ov-warn-color);
+		background-color: var(--ov-error-color);
 	}
 	.broadcasting-tag {
-		background-color: var(--broadcasting-blinking-color);
+		background-color: $ov-broadcasting-blinking-color;
 	}
 
 	.recording-tag mat-icon,
@@ -147,7 +146,7 @@ $ov-light-color-lighter: color-mix(in srgb, var(--ov-light-color), #fff 40%);
 	}
 
 	#leave-btn {
-		background-color: var(--ov-warn-color) !important;
+		background-color: var(--ov-error-color) !important;
 		border-radius: var(--ov-leave-button-radius) !important;
 		width: 65px !important;
 	}
@@ -181,14 +180,14 @@ $ov-light-color-lighter: color-mix(in srgb, var(--ov-light-color), #fff 40%);
 		/* Animation for recording blinking */
 		@keyframes blinker-recording {
 			50% {
-				background-color: var(--recording-blinking-color);
+				background-color: $ov-recording-blinking-color;
 			}
 		}
 
 		/* Animation for broadcasting blinking */
 		@keyframes blinker-broadcasting {
 			50% {
-				background-color: var(--broadcasting-blinking-color);
+				background-color: $ov-broadcasting-blinking-color;
 			}
 		}
 
@@ -234,13 +233,15 @@ $ov-light-color-lighter: color-mix(in srgb, var(--ov-light-color), #fff 40%);
 	}
 }
 
-::ng-deep #broadcasting-btn > .mat-icon {
-	color: #5903ca !important;
+::ng-deep #toolbar-broadcasting-btn > .mat-icon {
+	color: $ov-broadcasting-blinking-color !important;
+}
+::ng-deep #recording-btn > .mat-icon {
+	color: $ov-recording-blinking-color !important;
 }
 
 ::ng-deep .mat-mdc-menu-panel {
-	border-radius: var(--ov-panel-radius) !important;
-	background-color: var(--ov-panel-background) !important;
-	border: 1px solid $ov-light-color-lighter !important;
+	border-radius: var(--ov-surface-radius) !important;
+	background-color: var(--ov-surface-color) !important;
 	box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.2) !important;
 }

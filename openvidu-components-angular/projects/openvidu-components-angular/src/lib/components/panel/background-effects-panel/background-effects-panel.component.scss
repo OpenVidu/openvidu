@@ -7,8 +7,9 @@
 
 .effect-button {
 	margin: 5px;
-	border-radius: var(--ov-panel-radius);
-	background-color: var(--ov-light-color);
+	border-radius: var(--ov-surface-radius);
+	background-color: var(--ov-secondary-action-color);
+	color: var(--ov-primary-action-color);
 	width: 60px;
 	height: 60px;
 	line-height: inherit;
@@ -19,7 +20,7 @@
 }
 
 .active-effect-btn {
-	border: 2px solid var(--ov-tertiary-color);
+	border: 2px solid var(--ov-accent-action-color);
 }
 
 #hard_blur-btn .mat-icon {
@@ -34,7 +35,7 @@
 .grid img {
 	max-width: 100%;
 	max-height: 100%;
-	border-radius: var(--ov-panel-radius);
+	border-radius: var(--ov-surface-radius);
 }
 
 /* TODO(mdc-migration): The following rule targets internal classes of slider that may no longer apply for the MDC version. */
