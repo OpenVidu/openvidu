@@ -9,6 +9,7 @@ $ov-selection-color: #d4d6d7;
 
 .text-info {
 	margin: auto;
+	color: var(--ov-text-surface-color);
 }
 
 .vertical-align {
@@ -36,6 +37,7 @@ $ov-selection-color: #d4d6d7;
 	order: 3;
 	justify-content: space-evenly;
 	align-items: none;
+
 }
 
 .input-container textarea {
@@ -56,6 +58,7 @@ $ov-selection-color: #d4d6d7;
 	-moz-box-shadow: none;
 	box-shadow: none;
 	font-family: 'Roboto', 'RobotoDraft', Helvetica, Arial, sans-serif;
+	color: var(--ov-text-surface-color);
 }
 
 .message {
@@ -76,7 +79,7 @@ $ov-selection-color: #d4d6d7;
 .participant-name-container p {
 	font-size: 13px;
 	font-style: italic;
-	color: var(--ov-primary-action-color);
+	color: var(--ov-text-surface-color);
 	padding: 5px;
 }
 

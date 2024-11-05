@@ -1,3 +1,5 @@
+$ov-activity-status-color: #afafaf;
+
 :host {
 	.activities-body-container {
 		display: block !important;
@@ -6,9 +8,18 @@
 		padding: 10px;
 	}
 
+	.activity-status {
+		color: var(--ov-text-surface-color);
+		display: inline;
+		padding: 3px;
+		font-size: 11px;
+		border-radius: var(--ov-surface-radius);
+		background-color: $ov-activity-status-color;
+	}
+
 	.activity-icon {
 		display: inherit;
-		background-color: var(--ov-secondary-action-color);
+		background-color: $ov-activity-status-color;;
 		border-radius: var(--ov-surface-radius);
 		margin: 10px 0px !important;
 		padding: 10px;

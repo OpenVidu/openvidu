@@ -1,10 +1,21 @@
+$ov-surface-color-lighter: color-mix(in srgb, var(--ov-surface-color), #fff 5%);
 
 .lang-button {
 	background-color: var(--ov-primary-action-color) !important;
 	color: var(--ov-secondary-action-color);
 }
+.lang-button .mat-icon {
+	color: var(--ov-secondary-action-color);
+
+}
 ::ng-deep .mat-mdc-menu-panel {
 	border-radius: var(--ov-surface-radius) !important;
-	background-color: var(--ov-surface-color) !important;
+	background-color: $ov-surface-color-lighter !important;
 	box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.2) !important;
+}
+
+::ng-deep .mat-mdc-menu-item,
+.mat-mdc-menu-item:visited,
+.mat-mdc-menu-item:link {
+	color: var(--ov-text-surface-color) !important;
 }

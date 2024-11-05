@@ -2,7 +2,6 @@ $ov-broadcasting-blinking-color: #5903ca;
 $ov-recording-blinking-color: #eb5144;
 
 :host {
-
 	#toolbar {
 		height: 100%;
 		background-color: transparent;
@@ -61,6 +60,8 @@ $ov-recording-blinking-color: #eb5144;
 		color: var(--ov-secondary-action-color);
 	}
 
+
+
 	#media-buttons-container > button,
 	::ng-deep #media-buttons-container > button,
 	#media-buttons-container:not(#media-buttons-container > button) button,
@@ -99,6 +100,7 @@ $ov-recording-blinking-color: #eb5144;
 		font-size: 15px;
 		height: fit-content;
 		padding: 0px 5px;
+		color: var(--ov-text-primary-color);
 	}
 	#session-info-container {
 		display: flex;
@@ -233,6 +235,12 @@ $ov-recording-blinking-color: #eb5144;
 	}
 }
 
+::ng-deep .mat-mdc-menu-item {
+	color: var(--ov-text-surface-color) !important;
+}
+::ng-deep .mat-mdc-menu-item mat-icon {
+	color: var(--ov-text-surface-color) !important;
+}
 ::ng-deep #toolbar-broadcasting-btn > .mat-icon {
 	color: $ov-broadcasting-blinking-color !important;
 }

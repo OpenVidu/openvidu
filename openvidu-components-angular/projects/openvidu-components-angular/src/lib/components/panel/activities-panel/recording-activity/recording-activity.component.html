@@ -26,6 +26,7 @@
 				<div class="activity-action-buttons" matListItemMeta>
 					<div
 						id="recording-status"
+						class="activity-status"
 						[ngClass]="{
 							started: recordingStatus === recStatusEnum.STARTED,
 							stopped: recordingStatus === recStatusEnum.STOPPED,
@@ -48,8 +49,8 @@
 				/>
 			</div>
 
-			<h2 *ngIf="recordingList.length === 0">{{ 'PANEL.RECORDING.CONTENT_TITLE' | translate }}</h2>
-			<span *ngIf="recordingList.length === 0">{{ 'PANEL.RECORDING.CONTENT_SUBTITLE' | translate }}</span>
+			<h2 *ngIf="recordingList.length === 0" class="recording-title">{{ 'PANEL.RECORDING.CONTENT_TITLE' | translate }}</h2>
+			<span *ngIf="recordingList.length === 0" class="recording-subtitle">{{ 'PANEL.RECORDING.CONTENT_SUBTITLE' | translate }}</span>
 
 			<!-- Recording button -->
 			<div class="item recording-action-buttons">

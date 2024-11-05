@@ -1,8 +1,10 @@
-$ov-selection-color: #d4d6d7;
+$ov-selection-color-btn: #afafaf;
+$ov-selection-color: #cccccc;
+
 :host {
 	.device-container-element {
 		border-radius: var(--ov-surface-radius);
-		border: 1px solid $ov-selection-color;
+		border: 1px solid $ov-selection-color-btn;
 	}
 	.device-container-element.mute-btn {
 		border: 1px solid var(--ov-error-color);
@@ -33,7 +35,7 @@ $ov-selection-color: #d4d6d7;
 	::ng-deep .mat-mdc-text-field-wrapper {
 		padding-left: 0px;
 		padding-right: 10px;
-		background-color: var(--ov-surface-color) !important;
+		background-color: $ov-selection-color !important;
 		border-radius: var(--ov-surface-radius);
 	}
 	::ng-deep .mdc-button--unelevated {
@@ -41,7 +43,7 @@ $ov-selection-color: #d4d6d7;
 		border-bottom-left-radius: var(--ov-surface-radius);
 		border-bottom-right-radius: 0px !important;
 		border-top-right-radius: 0px !important;
-		background-color: $ov-selection-color !important;
+		background-color: $ov-selection-color-btn !important;
 		width: 48px !important;
 		min-width: 48px !important;
 		padding: 0;
@@ -86,7 +88,7 @@ $ov-selection-color: #d4d6d7;
 }
 
 ::ng-deep .mat-mdc-select-panel {
-	background-color: var(--ov-surface-color) !important;
+	background-color: #e2e2e2 !important;
 }
 
 ::ng-deep .mat-mdc-option {

@@ -1,13 +1,5 @@
 $ov-broadcasting-color: #5903ca;
 
-#broadcasting-status {
-	color: var(--ov-text-surface-color);
-	display: inline;
-	padding: 3px;
-	font-size: 11px;
-	border-radius: var(--ov-surface-radius);
-}
-
 .time-container {
 	padding: 2px;
 }
@@ -19,7 +11,7 @@ $ov-broadcasting-color: #5903ca;
 }
 
 #broadcasting-icon {
-	color: var(--ov-primary-action-color) !important;
+	color: $ov-broadcasting-color !important;
 }
 
 .broadcasting-duration {
@@ -128,9 +120,9 @@ mat-expansion-panel {
 	padding: 10px;
 	margin: 10px;
 	border-radius: var(--ov-surface-radius);
-    order: 3;
-    justify-content: space-evenly;
-    align-items: center;
+	order: 3;
+	justify-content: space-evenly;
+	align-items: center;
 }
 
 .input-container input {

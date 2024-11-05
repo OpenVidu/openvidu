@@ -17,6 +17,10 @@ import { RecordingDialogData } from '../../models/dialog.model';
 	`,
 	styles: [
 		`
+			::ng-deep .mat-mdc-dialog-content {
+				color: var(--ov-text-surface-color) !important;
+			}
+
 			::ng-deep .mat-mdc-dialog-surface {
 				background-color: var(--ov-surface-color);
 				border-radius: var(--ov-surface-radius);
@@ -29,7 +33,7 @@ import { RecordingDialogData } from '../../models/dialog.model';
 			.mat-mdc-button,
 			.mat-mdc-button:not(:disabled),
 			::ng-deep .mat-mdc-button .mat-mdc-button-persistent-ripple::before {
-				color: var(--ov-text-primary-color);
+				color: var(--ov-secondary-action-color);
 				background-color: var(--ov-primary-action-color) !important;
 				border-radius: var(--ov-surface-radius);
 			}

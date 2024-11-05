@@ -16,6 +16,11 @@
 	align-items: center;
 }
 
+.panel-title,
+.panel-close-button {
+	color: var(--ov-text-surface-color);
+}
+
 .panel-title {
 	margin-left: 5px;
 	margin-top: auto;

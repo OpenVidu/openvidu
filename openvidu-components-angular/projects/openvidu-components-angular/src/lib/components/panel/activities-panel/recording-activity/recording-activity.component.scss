@@ -1,10 +1,8 @@
 :host {
-	#recording-status {
-		color: var(--ov-text-primary-color);
-		display: inline;
-		padding: 3px;
-		font-size: 11px;
-		border-radius: var(--ov-surface-radius);
+	$ov-activity-status-color: #afafaf;
+	.recording-title,
+	.recording-subtitle {
+		color: var(--ov-text-surface-color);
 	}
 
 	.recording-title {
@@ -27,10 +25,11 @@
 	}
 
 	.recording-duration {
-		background-color: var(--ov-secondary-action-color);
+		background-color: $ov-activity-status-color;
 		padding: 4px 8px;
 		border-radius: var(--ov-surface-radius);
 		font-weight: 500;
+		color: var(--ov-text-surface-color);
 	}
 
 	.recording-duration mat-icon {
@@ -41,22 +40,22 @@
 
 	.started {
 		background-color: #3b7430 !important;
-		color: var(--ov-text-primary-color);
+		color: #ffffff !important;
 	}
 
 	.activity-icon.started,
 	.failed {
 		background-color: var(--ov-error-color) !important;
-		color: var(--ov-text-primary-color);
+		// color: var(--ov-secondary-action-color);
 	}
 	.stopped {
-		background-color: var(--ov-secondary-action-color);
+		// background-color: var(--ov-secondary-action-color);
 		color: var(--ov-text-surface-color) !important;
 	}
 
 	.starting {
 		background-color: var(--ov-warn-color) !important;
-		color: var(--ov-text-surface-color) !important;
+		color: #000000 !important;
 	}
 
 	.panel-body-container {
@@ -100,17 +99,13 @@
 	#start-recording-btn {
 		width: 100%;
 		background-color: var(--ov-primary-action-color);
-		color: var(--ov-text-primary-color);
+		color: var(--ov-secondary-action-color);
 	}
 
 	#stop-recording-btn {
 		width: 100%;
 		background-color: var(--ov-error-color);
-		color: var(--ov-text-primary-color);
-	}
-
-	.delete-recording-btn {
-		color: var(--ov-error-color);
+		color: var(--ov-secondary-action-color);
 	}
 
 	#reset-recording-status-btn {
@@ -133,11 +128,19 @@
 		width: 40px !important;
 		height: 40px !important;
 		padding: 5px !important;
+		color: var(--ov-text-surface-color);
 	}
 	#play-recording-btn > .mat-icon,
 	#download-recording-btn > .mat-icon,
 	#delete-recording-btn > .mat-icon {
 		height: 20px !important;
+	}
+
+	#delete-recording-btn {
+		color: var(--ov-error-color);
+	}
+	#download-recording-btn {
+		color: var(--ov-accent-action-color);
 	}
 
 	mat-expansion-panel {
@@ -154,6 +157,18 @@
 
 	::ng-deep .mat-mdc-list-item-unscoped-content {
 		height: 0px !important;
+	}
+
+	::ng-deep .mdc-list-item__secondary-text,
+	::ng-deep .mdc-list-item__primary-text {
+		color: var(--ov-text-surface-color);
+	}
+
+	// ::ng-deep .mat-mdc-list-item:hover {
+	// 	color: #000000 !important;
+	// }
+	::ng-deep .mat-mdc-list-item:hover .mat-mdc-list-item-title {
+		color: var(--ov-text-surface-color) !important;
 	}
 
 	.blink {

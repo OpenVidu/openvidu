@@ -38,6 +38,7 @@
 	}
 
 	mat-list-option[aria-selected='false'] {
+		::ng-deep .mdc-list-item__primary-text,
 		mat-icon {
 			color: var(--ov-text-surface-color) !important;
 		}
@@ -49,5 +50,14 @@
 
 	.mat-mdc-list-base {
 		--mdc-list-list-item-focus-state-layer-color: transparent !important;
+	}
+
+	::ng-deep .lang-selector .expand-more-icon {
+		color: var(--ov-secondary-action-color) !important;
+	}
+
+	::ng-deep .lang-selector div,
+	.input-label {
+		color: var(--ov-text-surface-color) !important;
 	}
 }

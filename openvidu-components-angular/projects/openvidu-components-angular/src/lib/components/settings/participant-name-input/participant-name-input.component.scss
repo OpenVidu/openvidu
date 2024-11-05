@@ -1,6 +1,6 @@
-$ov-selection-color: #d4d6d7;
+$ov-selection-color-btn: #afafaf;
+$ov-selection-color: #cccccc;
 :host {
-
 	#name-input-container {
 		height: 70px;
 		border-radius: var(--ov-surface-radius);
@@ -18,8 +18,8 @@ $ov-selection-color: #d4d6d7;
 	::ng-deep .mat-mdc-text-field-wrapper {
 		padding: 0;
 		height: 70px;
-		background-color: var(--ov-surface-color) !important;
-
+		background-color: $ov-selection-color !important;
+		border-radius: var(--ov-surface-radius);
 	}
 	::ng-deep .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-line-ripple::before {
 		border: 0px !important;
@@ -29,7 +29,7 @@ $ov-selection-color: #d4d6d7;
 		border-bottom-left-radius: var(--ov-surface-radius) !important;
 		border-bottom-right-radius: 0px !important;
 		border-top-right-radius: 0px !important;
-		background-color: $ov-selection-color !important;
+		background-color: $ov-selection-color-btn !important;
 		width: 48px !important;
 		min-width: 48px !important;
 		padding: 0;
@@ -56,8 +56,9 @@ $ov-selection-color: #d4d6d7;
 		border-bottom-right-radius: var(--ov-surface-radius) !important;
 		border-bottom-left-radius: 0px !important;
 		border-top-left-radius: 0px !important;
-		border: 1px solid $ov-selection-color;
+		border: 1px solid $ov-selection-color-btn;
 		color: #000000;
+		caret-color: #000000 !important;
 	}
 }
 

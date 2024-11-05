@@ -17,18 +17,21 @@ import { MatDialogRef } from '@angular/material/dialog';
 	`,
 	styles: [
 		`
+			::ng-deep .mat-mdc-dialog-content {
+				color: var(--ov-text-surface-color) !important;
+			}
 			::ng-deep .mat-mdc-dialog-surface {
 				background-color: var(--ov-surface-color);
 				border-radius: var(--ov-surface-radius);
 			}
 			#delete-recording-confirm-btn {
-				background-color: var(--ov-error-color);
-				color: var(--ov-text-primary-color);
+				background-color: var(--ov-error-color) !important;
+				color: var(--ov-secondary-action-color);
 			}
 			.mat-mdc-button,
 			.mat-mdc-button:not(:disabled),
 			::ng-deep .mat-mdc-button .mat-mdc-button-persistent-ripple::before {
-				color: var(--ov-text-primary-color);
+				color: var(--ov-secondary-action-color);
 				background-color: var(--ov-primary-action-color) !important;
 				border-radius: var(--ov-surface-radius);
 			}

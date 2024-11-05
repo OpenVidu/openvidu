@@ -39,6 +39,10 @@
 		font-size: 14px !important;
 	}
 
+	::ng-deep .lang-btn mat-icon {
+		color: var(--ov-text-surface-color) !important;
+	}
+
 	.video-container {
 		margin: auto;
 		min-height: 45vh;
@@ -80,7 +84,7 @@
 
 	#join-button {
 		background-color: var(--ov-primary-action-color);
-		color: var(--ov-text-primary-color);
+		color: var(--ov-secondary-action-color);
 		font-weight: bold;
 		border-radius: var(--ov-surface-radius);
 		width: 100%;

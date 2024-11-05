@@ -57,10 +57,10 @@
 
 		<div class="item-content">
 			<div *ngIf="selectedOption === settingsOptions.GENERAL">
-				<mat-label>{{ 'PREJOIN.NICKNAME' | translate }}</mat-label>
+				<mat-label class="input-label">{{ 'PREJOIN.NICKNAME' | translate }}</mat-label>
 				<ov-participant-name-input></ov-participant-name-input>
 				<mat-list>
-					<mat-list-item>
+					<mat-list-item class="lang-selector">
 						<mat-icon matListItemIcon>translate</mat-icon>
 						<div matListItemTitle>{{ 'PANEL.SETTINGS.LANGUAGE' | translate }}</div>
 						<ov-lang-selector matListItemMeta (onLangChanged)="onLangChanged.emit($event)"></ov-lang-selector>

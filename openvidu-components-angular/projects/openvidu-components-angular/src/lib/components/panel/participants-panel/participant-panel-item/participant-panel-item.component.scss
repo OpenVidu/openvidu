@@ -4,13 +4,14 @@
 		border-radius: var(--ov-surface-radius);
 		margin: auto !important;
 		padding: 10px;
-		color: var(--ov-text-surface-color);
+		color: #000000;
 	}
 
 	.participant-subtitle {
 		font-style: italic;
 		font-size: 11px !important;
 		margin: 0;
+		color: var(--ov-text-surface-color);
 	}
 	.participant-name {
 		font-weight: bold !important;
@@ -34,6 +35,13 @@
 		padding-bottom: 10px !important;
 	}
 
+	::ng-deep .mat-mdc-list-item:hover {
+		color: #000000 !important;
+	}
+	::ng-deep .mat-mdc-list-item:hover .mat-mdc-list-item-title {
+		color: var(--ov-text-surface-color) !important;
+	}
+
 	mat-list {
 		padding: 3px;
 	}
@@ -50,6 +58,7 @@
 
 	#mute-btn {
 		border-radius: var(--ov-buttons-radius);
+		color: var(--ov-text-surface-color);
 	}
 
 	.warn-btn {
