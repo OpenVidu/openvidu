@@ -1,5 +1,4 @@
 $ov-video-elements-bg-color: var(--ov-primary-action-color);;
-$ov-video-elements-text-color: #ffffff;
 :host {
 	/* Fixes layout bug. The OV_root is created with the entire layout width and it has a weird UX behaviour */
 	.no-size {
@@ -10,7 +9,7 @@ $ov-video-elements-text-color: #ffffff;
 	.participant-name-container {
 		background-color: $ov-video-elements-bg-color;
 		padding: 5px;
-		color: $ov-video-elements-text-color;
+		color: var(--ov-secondary-action-color);
 		font-weight: bold;
 		border-radius: var(--ov-video-radius);
 	}
@@ -65,7 +64,7 @@ $ov-video-elements-text-color: #ffffff;
 		top: 0;
 		// border: 2px solid var(--ov-text-primary-color);
 		button {
-			color: $ov-video-elements-text-color;
+			color: var(--ov-secondary-action-color);
 		}
 	}
 

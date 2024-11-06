@@ -52,7 +52,8 @@
 		--mdc-list-list-item-focus-state-layer-color: transparent !important;
 	}
 
-	::ng-deep .lang-selector .expand-more-icon {
+	::ng-deep .lang-selector .expand-more-icon,
+	::ng-deep .lang-selector mat-icon {
 		color: var(--ov-secondary-action-color) !important;
 	}
 

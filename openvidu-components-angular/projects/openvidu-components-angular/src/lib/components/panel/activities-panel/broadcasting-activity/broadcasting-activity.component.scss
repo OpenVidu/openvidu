@@ -1,5 +1,8 @@
 $ov-broadcasting-color: #5903ca;
 
+$ov-input-color: #cccccc;
+
+
 .time-container {
 	padding: 2px;
 }
@@ -116,7 +119,7 @@ mat-expansion-panel {
 .input-container {
 	height: 25px;
 	display: flex;
-	background-color: var(--ov-secondary-action-color);
+	background-color: $ov-input-color;
 	padding: 10px;
 	margin: 10px;
 	border-radius: var(--ov-surface-radius);
@@ -137,7 +140,6 @@ mat-expansion-panel {
 	white-space: pre-wrap;
 	resize: none;
 	outline: none;
-
 	-webkit-box-shadow: none;
 	-moz-box-shadow: none;
 	box-shadow: none;

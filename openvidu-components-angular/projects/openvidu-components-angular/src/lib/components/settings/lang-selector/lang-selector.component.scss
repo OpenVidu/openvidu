@@ -2,7 +2,7 @@ $ov-surface-color-lighter: color-mix(in srgb, var(--ov-surface-color), #fff 5%);
 
 .lang-button {
 	background-color: var(--ov-primary-action-color) !important;
-	color: var(--ov-secondary-action-color);
+	color: var(--ov-secondary-action-color) !important;
 }
 .lang-button .mat-icon {
 	color: var(--ov-secondary-action-color);
