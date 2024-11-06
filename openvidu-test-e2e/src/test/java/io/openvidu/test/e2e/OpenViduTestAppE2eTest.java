@@ -20,7 +20,6 @@ package io.openvidu.test.e2e;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -1048,6 +1047,50 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		gracefullyLeaveParticipants(user, 2);
 	}
 
+	@Test
+	@DisplayName("Simulcast disabled dynacast enabled")
+	void simulcastDisabledDynacastEnabledTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Simulcast disabled dynacast enabled");
+
+		// Only video publisher with simulcast without dynacast
+		this.addOnlyPublisherVideo(user, false, true, false);
+		// Only subscriber without adaptive stream
+		this.addSubscriber(user, true);
+
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().clearAllCurrentEvents();
+
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assertions.assertEquals(2, numberOfVideos, "Wrong number of videos");
+		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
+		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
+
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
+				"HTMLVideoElements were expected to have only one audio track");
+
+		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
+		Assertions.assertEquals(1, countNumberOfPublishedLayers(user, publisherVideo),
+				"Wrong number of published layers");
+
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+
+		long bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
+		long bytesSent = this.getPublisherVideoLayerAttribute(user, publisherVideo, null, "bytesSent").getAsLong();
+
+		Thread.sleep(3000);
+
+		this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo, bytesReceived);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, null, true);
+		this.waitUntilPublisherBytesSentIncrease(user, publisherVideo, null, bytesSent);
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
 	private int countNumberOfPublishedLayers(OpenViduTestappUser user, WebElement publisherVideo) {
 		JsonArray json = this.getLayersAsJsonArray(user, publisherVideo);
 		return json.size();
@@ -1063,12 +1106,19 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		return json.get(0).getAsJsonObject().get("bytesReceived").getAsLong();
 	}
 
+	// If rid is null, retrieve the first layer
 	private JsonElement getPublisherVideoLayerAttribute(OpenViduTestappUser user, WebElement publisherVideo, String rid,
 			String attribute) {
 		JsonArray json = this.getLayersAsJsonArray(user, publisherVideo);
-		Optional<JsonElement> result = json.asList().stream().parallel()
-				.filter(jsonElement -> rid.equals(jsonElement.getAsJsonObject().get("rid").getAsString())).findAny();
-		return result.get().getAsJsonObject().get(attribute);
+		JsonElement result;
+		if (rid != null) {
+			result = json.asList().stream().parallel()
+					.filter(jsonElement -> rid.equals(jsonElement.getAsJsonObject().get("rid").getAsString())).findAny()
+					.get();
+		} else {
+			result = json.get(0);
+		}
+		return result.getAsJsonObject().get(attribute);
 	}
 
 	private JsonArray getLayersAsJsonArray(OpenViduTestappUser user, WebElement video) {
@@ -1108,6 +1158,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		this.waitUntilAux(user, videoElement, () -> {
 			return this.getSubscriberVideoBytesReceived(user, videoElement) > previousBytesReceived;
 		}, "Timeout waiting for subscriber track to increase its bytesReceived from " + previousBytesReceived);
+	}
+
+	private void waitUntilPublisherBytesSentIncrease(OpenViduTestappUser user, WebElement videoElement, String rid,
+			final long previousBytesSent) {
+		this.waitUntilAux(user, videoElement, () -> {
+			return this.getPublisherVideoLayerAttribute(user, videoElement, rid, "bytesSent")
+					.getAsLong() > previousBytesSent;
+		}, "Timeout waiting for publisher track to increase its bytesSent from " + previousBytesSent);
 	}
 
 	private void waitUntilPublisherLayerActive(OpenViduTestappUser user, final WebElement publisherVideo,
