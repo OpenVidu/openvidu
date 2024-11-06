@@ -72,10 +72,10 @@ You can also customize the styles in your `styles.scss` file:
 	--ov-warn-color: #ffba53; // Warning color
 
 	/* Radius */
-	--ov-buttons-radius: 50%;
-	--ov-leave-button-radius: 10px;
-	--ov-video-radius: 5px;
-	--ov-surface-radius: 5px;
+	--ov-toolbar-buttons-radius: 50%; // Radius for toolbar buttons
+	--ov-leave-button-radius: 10px; // Radius for leave button
+	--ov-video-radius: 5px; // Radius for video elements
+	--ov-surface-radius: 5px; // Radius for surface elements
 }
 ```
 
