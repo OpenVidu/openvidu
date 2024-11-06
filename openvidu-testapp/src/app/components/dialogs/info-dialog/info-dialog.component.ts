@@ -1,4 +1,4 @@
-import { Component, Inject, NgZone, ViewChild } from '@angular/core';
+import { Component, Inject, NgZone, OnDestroy, ViewChild } from '@angular/core';
 import { CdkTextareaAutosize } from '@angular/cdk/text-field';
 import { take } from 'rxjs/operators';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -8,12 +8,14 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
   templateUrl: './info-dialog.component.html',
   styleUrls: ['./info-dialog.component.css'],
 })
-export class InfoDialogComponent {
+export class InfoDialogComponent implements OnDestroy {
   title: string;
   subtitle: string;
   updateFunction: () => Promise<string>;
 
   textAreaValue: string;
+
+  interval;
 
   @ViewChild('autosize') autosize: CdkTextareaAutosize;
 
@@ -31,6 +33,9 @@ export class InfoDialogComponent {
     this.updateFunction = data.updateFunction;
 
     this.updateValue();
+    this.interval = setInterval(() => {
+      this.updateValue();
+    }, 700);
 
     // this.publisher
     //   .getSenders()
@@ -68,6 +73,10 @@ export class InfoDialogComponent {
     //       this.subscriber.getRemoteDescription()!.sdp + '\n';
     //   });
     // });
+  }
+
+  ngOnDestroy() {
+    clearInterval(this.interval);
   }
 
   async updateValue() {
