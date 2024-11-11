@@ -51,6 +51,11 @@
 		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
+
+		<version.gson>2.10.1</version.gson>
+		<version.testcontainers>1.20.1</version.testcontainers>
+		<version.stringsimilarity>2.0.0</version.stringsimilarity>
+
 		<!-- Encoding -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
