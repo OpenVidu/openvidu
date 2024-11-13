@@ -2,7 +2,7 @@ name: OpenVidu CE Tests
 on:
   push:
     branches:
-      - master
+      - v2
     paths-ignore:
       - ".github/workflows/openvidu-components-angular-E2E.yml"
       - "openvidu-components-angular/**"
@@ -10,7 +10,7 @@ on:
       - "openvidu-server/deployments/**"
   pull_request:
     branches:
-      - master
+      - v2
   workflow_dispatch:
     inputs:
       TEST_IMAGE:

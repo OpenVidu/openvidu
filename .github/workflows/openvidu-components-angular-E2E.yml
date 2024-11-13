@@ -1,6 +1,8 @@
 name: openvidu-components-angular E2E
 on:
   push:
+    branches:
+      - v2
     paths:
       - 'openvidu-components-angular/**'
       - 'openvidu-browser/**'
@@ -8,7 +10,7 @@ on:
       - '.github/workflows/openvidu-components-angular-E2E.yml'
   pull_request:
     branches:
-      - master
+      - v2
   workflow_dispatch:
     inputs:
       commit_sha:
