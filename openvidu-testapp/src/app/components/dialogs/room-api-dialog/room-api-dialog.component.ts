@@ -85,7 +85,7 @@ export class RoomApiDialogComponent {
             const rooms = await this.roomApiService.listRooms();
             this.response = JSON.stringify(rooms, null, 4);
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
         }
     }
 
@@ -95,7 +95,7 @@ export class RoomApiDialogComponent {
             await this.roomApiService.deleteRoom(this.apiRoomName);
             this.response = 'Room deleted';
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
             console.log(JSON.stringify(error));
         }
     }
@@ -111,7 +111,7 @@ export class RoomApiDialogComponent {
             await Promise.all(promises);
             this.response = 'Deleted ' + promises.length + ' rooms';
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
         }
     }
 
@@ -121,7 +121,7 @@ export class RoomApiDialogComponent {
             const participants = await this.roomApiService.listParticipants(this.apiRoomName);
             this.response = JSON.stringify(participants, null, 4);
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
         }
     }
 
@@ -131,7 +131,7 @@ export class RoomApiDialogComponent {
             const participant = await this.roomApiService.getParticipant(this.apiRoomName, this.apiParticipantIdentity);
             this.response = JSON.stringify(participant, null, 4);
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
         }
     }
 
@@ -141,7 +141,7 @@ export class RoomApiDialogComponent {
             await this.roomApiService.removeParticipant(this.apiRoomName, this.apiParticipantIdentity);
             this.response = 'Participant removed';
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
         }
     }
 
@@ -152,7 +152,7 @@ export class RoomApiDialogComponent {
             this.response = `Track ${this.muteTrack ? 'muted' : 'unmuted'}`;
             this.muteTrack = !this.muteTrack;
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
         }
     }
 
@@ -162,7 +162,7 @@ export class RoomApiDialogComponent {
             const egress = await this.roomApiService.listEgress();
             this.response = JSON.stringify(egress, null, 4);
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
         }
     }
 
@@ -179,7 +179,7 @@ export class RoomApiDialogComponent {
             this.response = JSON.stringify(egress, null, 4);
             this.egressId = egress.egressId;
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
         }
     }
 
@@ -191,7 +191,7 @@ export class RoomApiDialogComponent {
             this.response = JSON.stringify(egress, null, 4);
             this.egressId = egress.egressId;
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
         }
     }
 
@@ -202,7 +202,7 @@ export class RoomApiDialogComponent {
             this.response = JSON.stringify(egress, null, 4);
             this.egressId = egress.egressId;
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
         }
     }
 
@@ -212,7 +212,7 @@ export class RoomApiDialogComponent {
             await this.roomApiService.stopEgress(this.egressId);
             this.response = 'Egress stopped';
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
         }
     }
 
@@ -222,7 +222,7 @@ export class RoomApiDialogComponent {
             const ingress = await this.roomApiService.listIngress();
             this.response = JSON.stringify(ingress, null, 4);
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
         }
     }
 
@@ -233,7 +233,10 @@ export class RoomApiDialogComponent {
             this.response = JSON.stringify(ingress, null, 4);
             this.ingressId = ingress.ingressId;
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
+            console.warn(error);
+            console.warn(error.code);
+            console.warn(error.msg);
         }
     }
 
@@ -243,7 +246,7 @@ export class RoomApiDialogComponent {
             await this.roomApiService.deleteIngress(this.ingressId);
             this.response = 'Ingress deleted';
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
         }
     }
 
@@ -258,7 +261,7 @@ export class RoomApiDialogComponent {
             await Promise.all(promises);
             this.response = 'Deleted ' + promises.length + ' ingresses';
         } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
+            this.response = error;
         }
     }
 
