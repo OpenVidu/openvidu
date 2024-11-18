@@ -5,7 +5,7 @@ import { MatChipInputEvent } from '@angular/material/chips';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { LocalParticipant } from 'livekit-client';
 
-import { EgressClient, EncodedFileOutput, EncodedFileType, EncodedOutputs, IngressInput, Room, RoomCompositeOptions, RoomServiceClient, SegmentedFileOutput, SegmentedFileProtocol, StreamOutput, StreamProtocol } from 'livekit-server-sdk';
+import { DirectFileOutput, EgressClient, EncodedFileOutput, EncodedFileType, EncodedOutputs, IngressInfo, IngressInput, Room, RoomCompositeOptions, RoomServiceClient, SegmentedFileOutput, SegmentedFileProtocol, StreamOutput, StreamProtocol } from 'livekit-server-sdk';
 import { RoomApiService } from 'src/app/services/room-api.service';
 
 @Component({
@@ -44,11 +44,11 @@ export class RoomApiDialogComponent {
 
     ingressRoomName: string;
     ingressId: string;
-    inputTypeSelected: IngressInput = IngressInput.RTMP_INPUT;
+    inputTypeSelected: IngressInput = IngressInput.URL_INPUT;
     INGRESS_INPUT_TYPES: { value: IngressInput, viewValue: string }[] = [
+        { value: IngressInput.URL_INPUT, viewValue: 'URL' },
         { value: IngressInput.RTMP_INPUT, viewValue: 'RTMP' },
         { value: IngressInput.WHIP_INPUT, viewValue: 'WHIP' },
-        { value: IngressInput.URL_INPUT, viewValue: 'URL' },
     ];
 
     response: string;
@@ -89,16 +89,6 @@ export class RoomApiDialogComponent {
         }
     }
 
-    async getRoom() {
-        console.log('Getting room');
-        try {
-            const room = await this.roomApiService.getRoom(this.apiRoomName);
-            this.response = JSON.stringify(room, null, 4);
-        } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
-        }
-    }
-
     async deleteRoom() {
         console.log('Deleting room');
         try {
@@ -107,6 +97,21 @@ export class RoomApiDialogComponent {
         } catch (error: any) {
             this.response = 'Error [' + error.error.msg + ']';
             console.log(JSON.stringify(error));
+        }
+    }
+
+    async deleteAllRooms() {
+        console.log('Deleting all rooms');
+        try {
+            const promises: Promise<void>[] = [];
+            const rooms = await this.roomApiService.listRooms();
+            rooms.forEach(r => {
+                promises.push(this.roomApiService.deleteRoom(r.name));
+            });
+            await Promise.all(promises);
+            this.response = 'Deleted ' + promises.length + ' rooms';
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
         }
     }
 
@@ -161,16 +166,6 @@ export class RoomApiDialogComponent {
         }
     }
 
-    async getEgress() {
-        console.log('Getting egress');
-        try {
-            const egress = await this.roomApiService.getEgress(this.egressId);
-            this.response = JSON.stringify(egress, null, 4);
-        } catch (error: any) {
-            this.response = 'Error [' + error.error.msg + ']';
-        }
-    }
-
     async startRoomCompositeEgress() {
         console.log('Starting room composite egress');
         try {
@@ -182,7 +177,7 @@ export class RoomApiDialogComponent {
             }
             const egress = await this.roomApiService.startRoomCompositeEgress(this.egressRoomName, roomCompositeOptions, encodedOutputs);
             this.response = JSON.stringify(egress, null, 4);
-            this.egressId = egress.egress_id;
+            this.egressId = egress.egressId;
         } catch (error: any) {
             this.response = 'Error [' + error.error.msg + ']';
         }
@@ -194,7 +189,7 @@ export class RoomApiDialogComponent {
             const encodedOutputs = this.getEncodedOutputs();
             const egress = await this.roomApiService.startTrackCompositeEgress(this.egressRoomName, this.audioTrackId, this.videoTrackId, encodedOutputs);
             this.response = JSON.stringify(egress, null, 4);
-            this.egressId = egress.egress_id;
+            this.egressId = egress.egressId;
         } catch (error: any) {
             this.response = 'Error [' + error.error.msg + ']';
         }
@@ -203,10 +198,9 @@ export class RoomApiDialogComponent {
     async startTrackEgress() {
         console.log('Starting track egress');
         try {
-            const encodedOutputs = this.getEncodedOutputs();
-            const egress = await this.roomApiService.startTrackEgress(this.egressRoomName, !!this.audioTrackId ? this.audioTrackId : this.videoTrackId, encodedOutputs);
+            const egress = await this.roomApiService.startTrackEgress(this.egressRoomName, !!this.audioTrackId ? this.audioTrackId : this.videoTrackId);
             this.response = JSON.stringify(egress, null, 4);
-            this.egressId = egress.egress_id;
+            this.egressId = egress.egressId;
         } catch (error: any) {
             this.response = 'Error [' + error.error.msg + ']';
         }
@@ -237,7 +231,7 @@ export class RoomApiDialogComponent {
         try {
             const ingress = await this.roomApiService.createIngress(this.ingressRoomName, this.inputTypeSelected);
             this.response = JSON.stringify(ingress, null, 4);
-            this.ingressId = ingress.ingress_id;
+            this.ingressId = ingress.ingressId;
         } catch (error: any) {
             this.response = 'Error [' + error.error.msg + ']';
         }
@@ -248,6 +242,21 @@ export class RoomApiDialogComponent {
         try {
             await this.roomApiService.deleteIngress(this.ingressId);
             this.response = 'Ingress deleted';
+        } catch (error: any) {
+            this.response = 'Error [' + error.error.msg + ']';
+        }
+    }
+
+    async deleteAllIngress() {
+        console.log('Deleting all ingress');
+        try {
+            const promises: Promise<IngressInfo>[] = [];
+            const ingresses = await this.roomApiService.listIngress();
+            ingresses.forEach(i => {
+                promises.push(this.roomApiService.deleteIngress(i.ingressId));
+            });
+            await Promise.all(promises);
+            this.response = 'Deleted ' + promises.length + ' ingresses';
         } catch (error: any) {
             this.response = 'Error [' + error.error.msg + ']';
         }

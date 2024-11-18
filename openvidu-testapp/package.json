@@ -21,6 +21,7 @@
     "@angular/platform-browser": "^16.2.11",
     "@angular/platform-browser-dynamic": "^16.2.11",
     "@angular/router": "^16.2.11",
+    "@livekit/protocol": "^1.27.1",
     "buffer": "^6.0.3",
     "crypto-browserify": "^3.12.0",
     "json-stringify-safe": "5.0.1",

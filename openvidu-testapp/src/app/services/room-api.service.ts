@@ -1,202 +1,267 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 import * as _ from 'lodash';
 
-import { AccessToken, EncodedOutputs, EncodingOptions, EncodingOptionsPreset, IngressInput, RoomCompositeOptions, VideoGrant } from 'livekit-server-sdk';
+import {
+  AccessToken,
+  CreateIngressOptions,
+  DirectFileOutput,
+  EgressClient,
+  EgressInfo,
+  EncodedOutputs,
+  EncodingOptions,
+  EncodingOptionsPreset,
+  IngressClient,
+  IngressInfo,
+  IngressInput,
+  IngressVideoEncodingPreset,
+  ParticipantInfo,
+  Room,
+  RoomCompositeOptions,
+  RoomServiceClient,
+  TrackCompositeOptions,
+  TrackInfo,
+  TrackSource,
+  VideoGrant,
+} from 'livekit-server-sdk';
 import { LivekitParamsService } from './livekit-params.service';
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root',
 })
 export class RoomApiService {
+  private roomServiceClient: RoomServiceClient;
+  private egressClient: EgressClient;
+  private ingressClient: IngressClient;
 
-    private ADMIN_PERMISSIONS: VideoGrant = {
-        roomCreate: true,
-        roomList: true,
-        roomRecord: true,
-        roomAdmin: true,
-        ingressAdmin: true,
-        canPublish: true,
-        canSubscribe: true,
-        canPublishData: true,
-        canUpdateOwnMetadata: true,
+  constructor(
+    private http: HttpClient,
+    private livekitParamsService: LivekitParamsService
+  ) {
+    this.roomServiceClient = new RoomServiceClient(
+      this.getRestUrl(),
+      this.livekitParamsService.getParams().livekitApiKey,
+      this.livekitParamsService.getParams().livekitApiSecret
+    );
+    this.egressClient = new EgressClient(
+      this.getRestUrl(),
+      this.livekitParamsService.getParams().livekitApiKey,
+      this.livekitParamsService.getParams().livekitApiSecret
+    );
+    this.ingressClient = new IngressClient(
+      this.getRestUrl(),
+      this.livekitParamsService.getParams().livekitApiKey,
+      this.livekitParamsService.getParams().livekitApiSecret
+    );
+  }
+
+  async createToken(
+    permissions: VideoGrant,
+    participantName?: string,
+    roomName?: string
+  ): Promise<string> {
+    const at = new AccessToken(
+      this.livekitParamsService.getParams().livekitApiKey,
+      this.livekitParamsService.getParams().livekitApiSecret,
+      { identity: participantName }
+    );
+    if (roomName) {
+      permissions.room = roomName;
+    }
+    at.addGrant(permissions);
+    return at.toJwt();
+  }
+
+  /*
+   * RoomService API
+   * https://docs.livekit.io/reference/server/server-apis/
+   */
+
+  async listRooms(): Promise<Room[]> {
+    return this.roomServiceClient.listRooms();
+  }
+
+  async deleteRoom(roomName: string): Promise<void> {
+    return await this.roomServiceClient.deleteRoom(roomName);
+  }
+
+  async listParticipants(roomName: string): Promise<ParticipantInfo[]> {
+    return await this.roomServiceClient.listParticipants(roomName);
+  }
+
+  async getParticipant(
+    roomName: string,
+    participantIdentity: string
+  ): Promise<ParticipantInfo> {
+    return await this.roomServiceClient.getParticipant(
+      roomName,
+      participantIdentity
+    );
+  }
+
+  async removeParticipant(
+    roomName: string,
+    participantIdentity: string
+  ): Promise<void> {
+    return await this.roomServiceClient.removeParticipant(
+      roomName,
+      participantIdentity
+    );
+  }
+
+  async mutePublishedTrack(
+    roomName: string,
+    participantIdentity: string,
+    track_sid: string,
+    muted: boolean
+  ): Promise<TrackInfo> {
+    return await this.roomServiceClient.mutePublishedTrack(
+      roomName,
+      participantIdentity,
+      track_sid,
+      muted
+    );
+  }
+
+  async listEgress(): Promise<EgressInfo[]> {
+    return await this.egressClient.listEgress({});
+  }
+
+  async startRoomCompositeEgress(
+    roomName: string,
+    roomCompositeOptions: RoomCompositeOptions,
+    encodedOutputs: EncodedOutputs,
+    encodingOptions?: EncodingOptionsPreset | EncodingOptions
+  ): Promise<EgressInfo> {
+    if (encodedOutputs.file) {
+      encodedOutputs.file.filepath = 'RoomComposite-{room_id}-{room_name}-{time}';
+    }
+    if (encodingOptions) {
+      roomCompositeOptions.encodingOptions = encodingOptions;
+    }
+    return await this.egressClient.startRoomCompositeEgress(
+      roomName,
+      encodedOutputs,
+      roomCompositeOptions
+    );
+  }
+
+  async startTrackCompositeEgress(
+    roomName: string,
+    audioTrackId: string,
+    videoTrackId: string,
+    encodedOutputs: EncodedOutputs,
+    encodingOptions?: EncodingOptionsPreset | EncodingOptions
+  ): Promise<EgressInfo> {
+    if (encodedOutputs.file) {
+      encodedOutputs.file.filepath =
+        'TrackComposite-{room_id}-{room_name}-{time}-{publisher_identity}';
+    }
+    const trackCompositeOptions: TrackCompositeOptions = {
+      audioTrackId,
+      videoTrackId,
     };
-
-    constructor(private http: HttpClient, private livekitParamsService: LivekitParamsService) { }
-
-    async createToken(permissions: VideoGrant, participantName?: string, roomName?: string): Promise<string> {
-        const at = new AccessToken(this.livekitParamsService.getParams().livekitApiKey, this.livekitParamsService.getParams().livekitApiSecret, { identity: participantName });
-        if (roomName) {
-            permissions.room = roomName;
-        }
-        at.addGrant(permissions);
-        return at.toJwt();
+    if (encodingOptions) {
+      trackCompositeOptions.encodingOptions = encodingOptions;
     }
+    return await this.egressClient.startTrackCompositeEgress(
+      roomName,
+      encodedOutputs,
+      trackCompositeOptions
+    );
+  }
 
-    private globalAdminToken(): Promise<string> {
-        return this.createToken(this.ADMIN_PERMISSIONS, 'GLOBAL_ADMIN', undefined);
+  async startTrackEgress(
+    roomName: string,
+    track_id: string,
+    output?: DirectFileOutput | string
+  ): Promise<EgressInfo> {
+    if (!output) {
+      let outputAux = {
+        filepath:
+          'Track-{room_id}-{room_name}-{time}-{publisher_identity}-{track_id}-{track_type}-{track_source}',
+      };
+      output = outputAux as DirectFileOutput;
     }
+    return await this.egressClient.startTrackEgress(roomName, output, track_id);
+  }
 
-    private roomAdminToken(roomName: string): Promise<string> {
-        return this.createToken(this.ADMIN_PERMISSIONS, 'ROOM_ADMIN', roomName);
-    }
+  async stopEgress(egressId: string): Promise<EgressInfo> {
+    return await this.egressClient.stopEgress(egressId);
+  }
 
-    /*
-     * RoomService API
-     * https://docs.livekit.io/reference/server/server-apis/
-     */
+  async listIngress(): Promise<IngressInfo[]> {
+    const ingressClient: IngressClient = new IngressClient(
+      this.getRestUrl(),
+      this.livekitParamsService.getParams().livekitApiKey,
+      this.livekitParamsService.getParams().livekitApiSecret
+    );
+    return await ingressClient.listIngress({});
+  }
 
-    async listRooms() {
-        const token = await this.globalAdminToken();
-        return await firstValueFrom<any>(this.http.post(this.getUrl('RoomService', 'ListRooms'), {}, this.getRestOptions(token)));
-    }
+  async createIngress(
+    room_name: string,
+    input_type: IngressInput
+  ): Promise<IngressInfo> {
+    const ingressClient: IngressClient = new IngressClient(
+      this.getRestUrl(),
+      this.livekitParamsService.getParams().livekitApiKey,
+      this.livekitParamsService.getParams().livekitApiSecret
+    );
+    let options: CreateIngressOptions = {
+      name: input_type + '-' + room_name,
+      roomName: room_name,
+      participantIdentity: 'IngressParticipantIdentity',
+      participantName: 'MyIngress',
+      participantMetadata: 'IngressParticipantMetadata',
+      url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+      // video: {
+      //     encodingOptions: {
+      //       video_codec: VideoCodec.VP8,
+      //       frame_rate: 30,
+      //       layers: [
+      //         {
+      //           quality: VideoQuality.HIGH,
+      //           width: 1920,
+      //           height: 1080,
+      //           bitrate: 4500000,
+      //         },
+      //       ],
+      //     },
+      //   } as any,
+      video: {
+        name: 'pelicula',
+        source: TrackSource.SCREEN_SHARE,
+        encodingOptions: {
+          case: 'preset',
+          value:
+            IngressVideoEncodingPreset.H264_540P_25FPS_2_LAYERS_HIGH_MOTION,
+        },
+      } as any,
+      // audio: {
+      //     source: TrackSource.MICROPHONE,
+      //     preset: IngressAudioEncodingPreset.OPUS_MONO_64KBS,
+      // } as any,
+    };
+    const ingressInfo = await ingressClient.createIngress(input_type, options);
+    return ingressInfo;
+  }
 
-    async getRoom(roomName: string) {
-        const token = await this.globalAdminToken();
-        return await firstValueFrom<any>(this.http.post(this.getUrl('RoomService', 'ListRooms'), { names: [roomName] }, this.getRestOptions(token)));
-    }
+  async deleteIngress(ingressId: string): Promise<IngressInfo> {
+    const ingressClient: IngressClient = new IngressClient(
+      this.getRestUrl(),
+      this.livekitParamsService.getParams().livekitApiKey,
+      this.livekitParamsService.getParams().livekitApiSecret
+    );
+    return await ingressClient.deleteIngress(ingressId);
+  }
 
-    async deleteRoom(roomName: string) {
-        const token = await this.globalAdminToken();
-        return await firstValueFrom<any>(this.http.post(this.getUrl('RoomService', 'DeleteRoom'), { room: roomName }, this.getRestOptions(token)));
-    }
-
-    async listParticipants(roomName: string) {
-        const token = await this.roomAdminToken(roomName);
-        return await firstValueFrom<any>(this.http.post(this.getUrl('RoomService', 'ListParticipants'), { room: roomName }, this.getRestOptions(token)));
-    }
-
-    async getParticipant(roomName: string, participantIdentity: string) {
-        const token = await this.roomAdminToken(roomName);
-        return await firstValueFrom<any>(this.http.post(this.getUrl('RoomService', 'GetParticipant'), { room: roomName, identity: participantIdentity }, this.getRestOptions(token)));
-    }
-
-    async removeParticipant(roomName: string, participantIdentity: string) {
-        const token = await this.roomAdminToken(roomName);
-        return await firstValueFrom<any>(this.http.post(this.getUrl('RoomService', 'RemoveParticipant'), { room: roomName, identity: participantIdentity }, this.getRestOptions(token)));
-    }
-
-    async mutePublishedTrack(roomName: string, participantIdentity: string, track_sid: string, muted: boolean) {
-        const token = await this.roomAdminToken(roomName);
-        return await firstValueFrom<any>(this.http.post(this.getUrl('RoomService', 'MutePublishedTrack'), { room: roomName, identity: participantIdentity, track_sid, muted }, this.getRestOptions(token)));
-    }
-
-    /**
-     * Egress API
-     * https://docs.livekit.io/egress-ingress/egress/overview/#api
-     */
-
-    async listEgress() {
-        const token = await this.globalAdminToken();
-        return await firstValueFrom<any>(this.http.post(this.getUrl('Egress', 'ListEgress'), {}, this.getRestOptions(token)));
-    }
-
-    async getEgress(egress_id: string) {
-        const token = await this.globalAdminToken();
-        return await firstValueFrom<any>(this.http.post(this.getUrl('Egress', 'ListEgress'), { egress_id }, this.getRestOptions(token)));
-    }
-
-    // {room_id} {room_name} {time}
-    async startRoomCompositeEgress(room_name: string, compositeOptions: RoomCompositeOptions, encodedOutputs: EncodedOutputs, encodingOptions?: EncodingOptionsPreset | EncodingOptions) {
-        const token = await this.globalAdminToken();
-        if (encodedOutputs.file) {
-            encodedOutputs.file.filepath = 'track-{room_id}-{room_name}-{time}';
-        }
-        return await firstValueFrom<any>(this.http.post(this.getUrl('Egress', 'StartRoomCompositeEgress'), {
-            room_name,
-            layout: compositeOptions?.layout,
-            audio_only: compositeOptions?.audioOnly,
-            video_only: compositeOptions?.videoOnly,
-            custom_base_url: compositeOptions?.customBaseUrl,
-            file_outputs: encodedOutputs?.file ? [encodedOutputs?.file] : [],
-            segment_outputs: encodedOutputs?.segments ? [encodedOutputs?.segments] : [],
-            stream_outputs: encodedOutputs?.stream ? [encodedOutputs?.stream] : [],
-            preset: encodingOptions
-        }, this.getRestOptions(token)));
-    }
-
-    // {room_id} {room_name} {time} {publisher_identity}
-    async startTrackCompositeEgress(room_name: string, audio_track_id: string, video_track_id: string, encodedOutputs: EncodedOutputs, encodingOptions?: EncodingOptionsPreset | EncodingOptions) {
-        const token = await this.globalAdminToken();
-        if (encodedOutputs.file) {
-            encodedOutputs.file.filepath = 'track-{room_id}-{room_name}-{time}-{publisher_identity}';
-        }
-        return await firstValueFrom<any>(this.http.post(this.getUrl('Egress', 'StartTrackCompositeEgress'), {
-            room_name,
-            audio_track_id,
-            video_track_id,
-            file_outputs: encodedOutputs?.file ? [encodedOutputs?.file] : [],
-            segment_outputs: encodedOutputs?.segments ? [encodedOutputs?.segments] : [],
-            stream_outputs: encodedOutputs?.stream ? [encodedOutputs?.stream] : [],
-            preset: encodingOptions
-        }, this.getRestOptions(token)));
-    }
-
-    // {room_id} {room_name} {time} {publisher_identity} {track_id} {track_type} {track_source}
-    async startTrackEgress(room_name: string, track_id: string, encodedOutputs: EncodedOutputs) {
-        const token = await this.roomAdminToken(room_name);
-        if (encodedOutputs.file) {
-            encodedOutputs.file.filepath = 'track-{room_id}-{room_name}-{time}-{publisher_identity}-{track_id}-{track_type}-{track_source}';
-        }
-        return await firstValueFrom<any>(this.http.post(this.getUrl('Egress', 'StartTrackEgress'), {
-            room_name,
-            track_id,
-            file: encodedOutputs?.file,
-            // websocket_url: ""
-        }, this.getRestOptions(token)));
-    }
-
-    async stopEgress(egress_id: string) {
-        const token = await this.globalAdminToken();
-        return await firstValueFrom<any>(this.http.post(this.getUrl('Egress', 'StopEgress'), { egress_id }, this.getRestOptions(token)));
-    }
-
-    /**
-     * Ingress API
-     * https://docs.livekit.io/egress-ingress/ingress/overview/#api
-     */
-
-    async listIngress() {
-        const token = await this.globalAdminToken();
-        return await firstValueFrom<any>(this.http.post(this.getUrl('Ingress', 'ListIngress'), {}, this.getRestOptions(token)));
-    }
-
-    async createIngress(room_name: string, input_type: IngressInput) {
-        const token = await this.roomAdminToken(room_name);
-        let options = {
-            room_name,
-            input_type,
-            name: 'MyIngress',
-            participant_identity: 'IngressParticipantIdentity',
-            participant_name: 'IngressParticipantName',
-            url: 'http://playertest.longtailvideo.com/adaptive/wowzaid3/playlist.m3u8'
-        }
-        if (input_type === IngressInput.WHIP_INPUT) {
-            (options as any).bypass_transcoding = true;
-        }
-        return await firstValueFrom<any>(this.http.post(this.getUrl('Ingress', 'CreateIngress'), options, this.getRestOptions(token)));
-    }
-
-    async deleteIngress(ingress_id: string) {
-        const token = await this.globalAdminToken();
-        return await firstValueFrom<any>(this.http.post(this.getUrl('Ingress', 'DeleteIngress'), { ingress_id }, this.getRestOptions(token)));
-    }
-
-    private getUrl(endpoint: string, method: string) {
-        const wsUrl = this.livekitParamsService.getParams().livekitUrl;
-        const protocol = (wsUrl.startsWith('wss:') || wsUrl.startsWith('https:')) ? 'https' : 'http';
-        const restUrl = `${protocol}://${wsUrl.substring(wsUrl.indexOf('//') + 2).replace(/\/$/, "")}`;
-        return `${restUrl}/twirp/livekit.${endpoint}/${method}`;
-    }
-
-    private getRestOptions(token: string) {
-        return {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            }
-        }
-    }
-
+  private getRestUrl() {
+    const wsUrl = this.livekitParamsService.getParams().livekitUrl;
+    const protocol =
+      wsUrl.startsWith('wss:') || wsUrl.startsWith('https:') ? 'https' : 'http';
+    return `${protocol}://${wsUrl
+      .substring(wsUrl.indexOf('//') + 2)
+      .replace(/\/$/, '')}`;
+  }
 }

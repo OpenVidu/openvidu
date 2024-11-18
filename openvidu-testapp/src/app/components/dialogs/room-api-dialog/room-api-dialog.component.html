@@ -24,10 +24,6 @@
     <div class="button-group">
       <button mat-button id="list-rooms-api-btn" (click)="listRooms()">List Rooms</button>
       <span style="display: inline-block" matTooltip='"Room" required' [matTooltipDisabled]="!!apiRoomName">
-        <button mat-button id="get-room-api-btn" (click)="getRoom()" [disabled]="!apiRoomName">Get
-          Room</button>
-      </span>
-      <span style="display: inline-block" matTooltip='"Room" required' [matTooltipDisabled]="!!apiRoomName">
         <button mat-button id="delete-room-api-btn" (click)="deleteRoom()" [disabled]="!apiRoomName">Delete
           Room</button>
       </span>
@@ -53,6 +49,9 @@
       </span>
       <mat-checkbox class="subscriber-checkbox" name="subscriber" [(ngModel)]="muteTrack"
         [disabled]="!apiRoomName || !apiParticipantIdentity || !apiTrackSid">Mute</mat-checkbox>
+      <span style="display: inline-block">
+        <button mat-button id="delete-all-rooms-api-btn" (click)="deleteAllRooms()" style="font-style: italic; font-size: 0.75rem; margin-left: 5px;">Delete all</button>
+      </span>
     </div>
 
     <mat-divider></mat-divider>
@@ -79,10 +78,6 @@
 
     <div class="button-group">
       <button mat-button id="list-egress-api-btn" (click)="listEgress()">List Egress</button>
-      <span style="display: inline-block" matTooltip='"Egress ID" required' [matTooltipDisabled]="!!egressId">
-        <button mat-button id="get-egress-api-btn" (click)="getEgress()" [disabled]="!egressId">Get
-          Egress</button>
-      </span>
       <span style="display: inline-block" matTooltip='"Room" required' [matTooltipDisabled]="!!egressRoomName">
         <button mat-button id="start-room-composite-egress-api-btn" (click)="startRoomCompositeEgress()"
           [disabled]="!egressRoomName">Start Room Composite Egress</button>
@@ -184,6 +179,9 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+      <span style="display: inline-block">
+        <button mat-button id="delete-all-ingress-api-btn" (click)="deleteAllIngress()" style="font-style: italic; font-size: 0.75rem; margin-left: 5px;">Delete all</button>
+      </span>
     </div>
 
     <mat-divider></mat-divider>
