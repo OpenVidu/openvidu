@@ -33,7 +33,7 @@ mat-dialog-content button {
   color: rgba(0, 0, 0, 0.54);
   font-weight: 400;
   margin-bottom: 5px;
-  margin-top: 13px
+  margin-top: 13px;
 }
 
 .inner-text-input {
@@ -82,7 +82,7 @@ mat-checkbox ::ng-deep .mdc-checkbox__background {
   min-width: 22%;
 }
 
-.egress-output-container>mat-checkbox {
+.egress-output-container > mat-checkbox {
   width: 100%;
   margin-bottom: 7px;
 }
@@ -120,4 +120,16 @@ mat-chip-row {
 
 .room-composite-options mat-checkbox {
   margin-left: 7px;
+}
+
+.ingress-options {
+  margin-bottom: 7px;
+}
+
+#ingress-simulcast {
+  margin-right: 6px;
+}
+
+#ingress-video-codec-select {
+  margin-right: 6px;
 }

@@ -163,9 +163,10 @@
 
     <div class="button-group">
       <button mat-button id="list-ingress-api-btn" (click)="listIngress()">List Ingress</button>
-      <span style="display: inline-block" matTooltip='"Room" required' [matTooltipDisabled]="!!ingressRoomName">
-        <button mat-button id="create-ingress-api-btn" (click)="createIngress()" [disabled]="!ingressRoomName">Create
-          Ingress</button>
+      <span style="display: inline-block" [matTooltip]="!ingressRoomName ? 'Room required' : 'At least one of audio and video required'"
+        [matTooltipDisabled]="!!ingressRoomName && (ingressWithAudio || ingressWithVideo)">
+        <button mat-button id="create-ingress-api-btn" (click)="createIngress()"
+          [disabled]="!ingressRoomName || (!ingressWithAudio && !ingressWithVideo)">Create Ingress</button>
       </span>
       <span style="display: inline-block" matTooltip='"Ingress ID" required' [matTooltipDisabled]="!!ingressId">
         <button mat-button id="delete-ingress-api-btn" (click)="deleteIngress()" [disabled]="!ingressId">Delete
@@ -181,6 +182,38 @@
       </mat-form-field>
       <span style="display: inline-block">
         <button mat-button id="delete-all-ingress-api-btn" (click)="deleteAllIngress()" style="font-style: italic; font-size: 0.75rem; margin-left: 5px;">Delete all</button>
+      </span>
+    </div>
+
+    <label class="label">Ingress options</label>
+    <div class="ingress-options">
+      <mat-checkbox id="ingress-with-audio" [(ngModel)]="ingressWithAudio">With audio</mat-checkbox>
+      <mat-checkbox id="ingress-with-video" [(ngModel)]="ingressWithVideo">With video</mat-checkbox>
+      <span style="display: inline-block" [matTooltip]="!ingressWithVideo ? 'Only with video' : 'Preset overrides this value'"
+        [matTooltipDisabled]="!!ingressWithVideo && ingressVideoEncodingPresetSelected == undefined">
+        <mat-checkbox id="ingress-simulcast" [(ngModel)]="ingressSimulcast"
+          [disabled]="!ingressWithVideo || ingressVideoEncodingPresetSelected != undefined">Simulcast</mat-checkbox>
+      </span>
+      <span style="display: inline-block" [matTooltip]="!ingressWithVideo ? 'Only with video' : 'Preset overrides this value'"
+        [matTooltipDisabled]="!!ingressWithVideo && ingressVideoEncodingPresetSelected == undefined">
+        <mat-form-field id="ingress-video-codec-select">
+          <mat-label>Codec</mat-label>
+          <mat-select [(value)]="ingressVideoCodecSelected" [disabled]="!ingressWithVideo || ingressVideoEncodingPresetSelected != undefined">
+            <mat-option *ngFor="let codec of INGRESS_VIDEO_CODECS" [value]="codec.value">
+              {{codec.viewValue}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </span>
+      <span style="display: inline-block" matTooltip="Only with video" [matTooltipDisabled]="!!ingressWithVideo">
+        <mat-form-field id="ingress-preset-select">
+          <mat-label>Preset</mat-label>
+          <mat-select [(value)]="ingressVideoEncodingPresetSelected" [disabled]="!ingressWithVideo">
+            <mat-option *ngFor="let preset of INGRESS_VIDEO_ENCODING_PRESETS" [value]="preset.value">
+              {{preset.viewValue}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
       </span>
     </div>
 

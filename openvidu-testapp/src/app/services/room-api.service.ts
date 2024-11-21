@@ -21,10 +21,15 @@ import {
   RoomServiceClient,
   TrackCompositeOptions,
   TrackInfo,
-  TrackSource,
   VideoGrant,
 } from 'livekit-server-sdk';
 import { LivekitParamsService } from './livekit-params.service';
+import { VideoQuality } from 'livekit-client';
+import {
+  IngressVideoEncodingOptions,
+  VideoCodec,
+  VideoLayer,
+} from '@livekit/protocol';
 
 @Injectable({
   providedIn: 'root',
@@ -134,7 +139,8 @@ export class RoomApiService {
     encodingOptions?: EncodingOptionsPreset | EncodingOptions
   ): Promise<EgressInfo> {
     if (encodedOutputs.file) {
-      encodedOutputs.file.filepath = 'RoomComposite-{room_id}-{room_name}-{time}';
+      encodedOutputs.file.filepath =
+        'RoomComposite-{room_id}-{room_name}-{time}';
     }
     if (encodingOptions) {
       roomCompositeOptions.encodingOptions = encodingOptions;
@@ -201,49 +207,78 @@ export class RoomApiService {
 
   async createIngress(
     room_name: string,
-    input_type: IngressInput
+    input_type: IngressInput,
+    withAudio: boolean,
+    withVideo: boolean,
+    codec: VideoCodec,
+    simulcast: boolean,
+    preset?: IngressVideoEncodingPreset
   ): Promise<IngressInfo> {
-    const ingressClient: IngressClient = new IngressClient(
-      this.getRestUrl(),
-      this.livekitParamsService.getParams().livekitApiKey,
-      this.livekitParamsService.getParams().livekitApiSecret
-    );
+    let url;
+    if (!withVideo) {
+      url =
+        'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio.mp3';
+    } else {
+      url = withAudio
+        ? 'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4'
+        : 'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_noaudio.mp4';
+    }
     let options: CreateIngressOptions = {
       name: input_type + '-' + room_name,
       roomName: room_name,
       participantIdentity: 'IngressParticipantIdentity',
       participantName: 'MyIngress',
       participantMetadata: 'IngressParticipantMetadata',
-      url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-      // video: {
-      //     encodingOptions: {
-      //       video_codec: VideoCodec.VP8,
-      //       frame_rate: 30,
-      //       layers: [
-      //         {
-      //           quality: VideoQuality.HIGH,
-      //           width: 1920,
-      //           height: 1080,
-      //           bitrate: 4500000,
-      //         },
-      //       ],
-      //     },
-      //   } as any,
+      url,
       video: {
-        name: 'pelicula',
-        source: TrackSource.SCREEN_SHARE,
         encodingOptions: {
-          case: 'preset',
-          value:
-            IngressVideoEncodingPreset.H264_540P_25FPS_2_LAYERS_HIGH_MOTION,
+          case: preset != undefined ? 'preset' : 'options',
+          value: {},
         },
       } as any,
-      // audio: {
-      //     source: TrackSource.MICROPHONE,
-      //     preset: IngressAudioEncodingPreset.OPUS_MONO_64KBS,
-      // } as any,
     };
-    const ingressInfo = await ingressClient.createIngress(input_type, options);
+    if (preset != undefined) {
+      options.video!.encodingOptions.value = preset;
+    } else {
+      const encodingOptions = options.video!.encodingOptions
+        .value! as IngressVideoEncodingOptions;
+      encodingOptions.videoCodec = codec;
+      encodingOptions.frameRate = 30;
+      let layers: VideoLayer[] = [];
+      if (simulcast) {
+        layers = [
+          {
+            quality: VideoQuality.HIGH,
+            width: 1920,
+            height: 1080,
+          },
+          {
+            quality: VideoQuality.MEDIUM,
+            width: 1280,
+            height: 720,
+          },
+          {
+            quality: VideoQuality.LOW,
+            width: 640,
+            height: 360,
+          },
+        ] as VideoLayer[];
+      } else {
+        layers = [
+          {
+            quality: VideoQuality.HIGH,
+            width: 1920,
+            height: 1080,
+          } as VideoLayer,
+        ];
+      }
+      encodingOptions.layers = layers;
+    }
+
+    const ingressInfo = await this.ingressClient.createIngress(
+      input_type,
+      options
+    );
     return ingressInfo;
   }
 
