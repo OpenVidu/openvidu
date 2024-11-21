@@ -207,11 +207,12 @@ export class RoomApiService {
 
   async createIngress(
     room_name: string,
-    input_type: IngressInput,
+    inputType: IngressInput,
     withAudio: boolean,
     withVideo: boolean,
     codec: VideoCodec,
     simulcast: boolean,
+    enableTranscoding: boolean,
     preset?: IngressVideoEncodingPreset
   ): Promise<IngressInfo> {
     let url;
@@ -224,59 +225,63 @@ export class RoomApiService {
         : 'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_noaudio.mp4';
     }
     let options: CreateIngressOptions = {
-      name: input_type + '-' + room_name,
+      name: inputType + '-' + room_name,
       roomName: room_name,
       participantIdentity: 'IngressParticipantIdentity',
       participantName: 'MyIngress',
       participantMetadata: 'IngressParticipantMetadata',
       url,
-      video: {
+    };
+    if (inputType === IngressInput.WHIP_INPUT) {
+      options.enableTranscoding = enableTranscoding;
+    }
+    if (inputType != IngressInput.WHIP_INPUT || enableTranscoding) {
+      options.video = {
         encodingOptions: {
           case: preset != undefined ? 'preset' : 'options',
           value: {},
         },
-      } as any,
-    };
-    if (preset != undefined) {
-      options.video!.encodingOptions.value = preset;
-    } else {
-      const encodingOptions = options.video!.encodingOptions
-        .value! as IngressVideoEncodingOptions;
-      encodingOptions.videoCodec = codec;
-      encodingOptions.frameRate = 30;
-      let layers: VideoLayer[] = [];
-      if (simulcast) {
-        layers = [
-          {
-            quality: VideoQuality.HIGH,
-            width: 1920,
-            height: 1080,
-          },
-          {
-            quality: VideoQuality.MEDIUM,
-            width: 1280,
-            height: 720,
-          },
-          {
-            quality: VideoQuality.LOW,
-            width: 640,
-            height: 360,
-          },
-        ] as VideoLayer[];
+      } as any;
+      if (preset != undefined) {
+        options.video!.encodingOptions.value = preset;
       } else {
-        layers = [
-          {
-            quality: VideoQuality.HIGH,
-            width: 1920,
-            height: 1080,
-          } as VideoLayer,
-        ];
+        const encodingOptions = options.video!.encodingOptions
+          .value! as IngressVideoEncodingOptions;
+        encodingOptions.videoCodec = codec;
+        encodingOptions.frameRate = 30;
+        let layers: VideoLayer[] = [];
+        if (simulcast) {
+          layers = [
+            {
+              quality: VideoQuality.HIGH,
+              width: 1920,
+              height: 1080,
+            },
+            {
+              quality: VideoQuality.MEDIUM,
+              width: 1280,
+              height: 720,
+            },
+            {
+              quality: VideoQuality.LOW,
+              width: 640,
+              height: 360,
+            },
+          ] as VideoLayer[];
+        } else {
+          layers = [
+            {
+              quality: VideoQuality.HIGH,
+              width: 1920,
+              height: 1080,
+            } as VideoLayer,
+          ];
+        }
+        encodingOptions.layers = layers;
       }
-      encodingOptions.layers = layers;
     }
-
     const ingressInfo = await this.ingressClient.createIngress(
-      input_type,
+      inputType,
       options
     );
     return ingressInfo;

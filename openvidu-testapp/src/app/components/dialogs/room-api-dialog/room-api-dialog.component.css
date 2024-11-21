@@ -126,8 +126,8 @@ mat-chip-row {
   margin-bottom: 7px;
 }
 
-#ingress-simulcast {
-  margin-right: 6px;
+#ingress-video-codec-select {
+  margin-left: 6px;
 }
 
 #ingress-video-codec-select {

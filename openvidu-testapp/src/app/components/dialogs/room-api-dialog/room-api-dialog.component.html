@@ -194,6 +194,9 @@
         <mat-checkbox id="ingress-simulcast" [(ngModel)]="ingressSimulcast"
           [disabled]="!ingressWithVideo || ingressVideoEncodingPresetSelected != undefined">Simulcast</mat-checkbox>
       </span>
+      <span style="display: inline-block" matTooltip="Only for WHIP" [matTooltipDisabled]="inputTypeSelected === 1">
+        <mat-checkbox id="ingress-transcoding" [(ngModel)]="ingressEnableTranscoding" [disabled]="inputTypeSelected !== 1">Transcoding</mat-checkbox>
+      </span>
       <span style="display: inline-block" [matTooltip]="!ingressWithVideo ? 'Only with video' : 'Preset overrides this value'"
         [matTooltipDisabled]="!!ingressWithVideo && ingressVideoEncodingPresetSelected == undefined">
         <mat-form-field id="ingress-video-codec-select">

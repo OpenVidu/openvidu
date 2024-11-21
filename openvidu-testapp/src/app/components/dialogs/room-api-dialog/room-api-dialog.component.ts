@@ -65,6 +65,7 @@ export class RoomApiDialogComponent {
   ingressWithAudio: boolean = false;
   ingressVideoCodecSelected: VideoCodec = VideoCodec.H264_BASELINE;
   ingressSimulcast: boolean = true;
+  ingressEnableTranscoding: boolean = false;
   ingressVideoEncodingPresetSelected?: IngressVideoEncodingPreset = undefined;
 
   response: string;
@@ -306,6 +307,7 @@ export class RoomApiDialogComponent {
         this.ingressWithVideo,
         this.ingressVideoCodecSelected,
         this.ingressSimulcast,
+        this.ingressEnableTranscoding,
         this.ingressVideoEncodingPresetSelected
       );
       this.response = JSON.stringify(ingress, null, 4);
