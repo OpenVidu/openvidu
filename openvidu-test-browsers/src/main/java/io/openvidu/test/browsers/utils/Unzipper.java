@@ -37,7 +37,7 @@ public class Unzipper {
 
 	private static final Logger log = LoggerFactory.getLogger(Unzipper.class);
 
-	private final Set<String> VIDEO_EXTENSIONS = Set.of("webm", "mkv", "mp4");
+	private final Set<String> VIDEO_EXTENSIONS = Set.of("webm", "mkv", "mp4", "ogg");
 
 	public List<File> unzipFile(String path, String fileName) {
 		final int BUFFER = 2048;

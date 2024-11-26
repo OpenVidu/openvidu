@@ -1,11 +1,15 @@
 package io.openvidu.test.e2e;
 
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.ExecCreateCmdResponse;
+import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.model.ContainerNetwork;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
@@ -26,6 +30,23 @@ public class MediaNodeDockerUtils {
 		DockerClient dockerClient = getDockerClient();
 		return dockerClient.inspectContainerCmd(containerId).exec().getNetworkSettings().getNetworks().get("bridge")
 				.getIpAddress();
+	}
+
+	public static String getConntainerGateway(String containerId) {
+		DockerClient dockerClient = getDockerClient();
+
+    	InspectContainerResponse containerInfo = dockerClient.inspectContainerCmd(containerId).exec();
+
+   		Map<String, ContainerNetwork> networks = containerInfo.getNetworkSettings().getNetworks();
+
+		for (ContainerNetwork network : networks.values()) {
+			String gateway = network.getGateway();
+			if (gateway != null && !gateway.isEmpty()) {
+				return gateway;
+			}
+		}
+		throw new IllegalStateException("No gateway found for container: " + containerId);
+
 	}
 
 	public static void crashMediaServerInsideMediaNode(String containerId) {

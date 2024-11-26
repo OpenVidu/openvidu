@@ -21,16 +21,19 @@ public class TestUtils {
 
 	/**
 	 * https://github.com/tiangolo/nginx-rtmp-docker
-	 * 
+	 *
 	 * @return The IP address of the Docker container
 	 * @throws InterruptedException
 	 */
 	public static String startRtmpServer() throws IOException, TimeoutException, InterruptedException {
 		File file = writeRtmpServerConfigInFile();
-		String dockerRunCommand = "docker run -d --name broadcast-nginx -p 1935:1935 -v " + file.getAbsolutePath()
+		String dockerRunCommand = "docker run -d --network host --name broadcast-nginx -v " + file.getAbsolutePath()
 				+ ":/etc/nginx/nginx.conf tiangolo/nginx-rtmp";
 		commandLine.executeCommand(dockerRunCommand, 30);
-		return waitForContainerIpAddress("broadcast-nginx", 10);
+		//waitForContainerIpAddress("broadcast-nginx", 30);
+		String gateway = waitForContainerGateway("egress", 30);
+		return gateway + ":1936";
+
 	}
 
 	public static void stopRtmpServer() {
@@ -59,6 +62,27 @@ public class TestUtils {
 		throw new TimeoutException();
 	}
 
+	private static String waitForContainerGateway(String containerNameOrId, int secondsTimeout)
+			throws TimeoutException, UnknownHostException, InterruptedException {
+		long currentTime = System.currentTimeMillis();
+		long maxTime = currentTime + (secondsTimeout * 1000);
+		while (System.currentTimeMillis() < maxTime) {
+			try {
+				String ip = MediaNodeDockerUtils.getConntainerGateway(containerNameOrId);
+				if (ip.isBlank()) {
+					log.warn("Container Gateway address is empty for container {}", containerNameOrId);
+				} else {
+					return ip;
+				}
+			} catch (Exception e) {
+				log.error("Error obtaining container Gateway address for container {}: {}", containerNameOrId,
+						e.getMessage());
+			}
+			Thread.sleep(50);
+		}
+		throw new TimeoutException();
+	}
+
 	private static File writeRtmpServerConfigInFile() throws IOException {
 		String newLine = System.getProperty("line.separator");
 		// @formatter:off
@@ -68,8 +92,8 @@ public class TestUtils {
                 "events {}",
                 "rtmp {",
                 "    server {",
-                "        listen 1935;",
-                "        listen [::]:1935 ipv6only=on;",
+                "        listen 1936;",
+                "        listen [::]:1936 ipv6only=on;",
                 "        application live {",
                 "        	live on;",
                 "			recorder all {",

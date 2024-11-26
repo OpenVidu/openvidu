@@ -14,9 +14,9 @@
     "colormap": "2.3.2",
     "core-js": "3.26.1",
     "json-stringify-safe": "5.0.1",
-    "openvidu-browser-v2compatibility": "3.0.0-beta2",
-    "openvidu-node-client-v2compatibility": "3.0.0-beta2",
-    "rxjs": "7.5.7",
+    "openvidu-browser-v2compatibility": "3.0.0-beta3",
+    "openvidu-node-client-v2compatibility": "3.0.0-beta3",
+    "rxjs": "7.8.1",
     "tslib": "2.4.1",
     "zone.js": "0.12.0"
   },
@@ -38,7 +38,7 @@
   "name": "openvidu-testapp",
   "private": true,
   "scripts": {
-    "build": "ng build",
+    "build": "ng build --configuration production",
     "e2e": "ng e2e",
     "lint": "ng lint",
     "ng": "ng",
@@ -46,5 +46,5 @@
     "start:dev": "ng serve --open --configuration development",
     "test": "ng test"
   },
-  "version": "2.30.0"
+  "version": "3.0.0-v2compatibility"
 }

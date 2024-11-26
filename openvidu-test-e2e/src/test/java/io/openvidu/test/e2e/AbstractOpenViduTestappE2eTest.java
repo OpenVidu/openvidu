@@ -19,6 +19,7 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 	protected Collection<OpenViduTestappUser> testappUsers = new HashSet<>();
 
 	private void connectToOpenViduTestApp(OpenViduTestappUser user) {
+		log.info("Connecting to OpenVidu TestApp", APP_URL);
 		user.getDriver().get(APP_URL);
 		WebElement urlInput = user.getDriver().findElement(By.id("openvidu-url"));
 		urlInput.clear();
@@ -55,7 +56,7 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 			user.getEventManager().waitUntilEventReaches("connectionDestroyed", accumulatedConnectionDestroyed);
 		}
 	}
-	
+
 	protected void waitForCondition(BiFunction<BrowserUser, WebElement, Boolean> conditionFunction, BrowserUser user,
 			WebElement video, int maxWaitTime, int intervalWait) throws InterruptedException {
 		long startTime = System.currentTimeMillis();

@@ -1,0 +1,302 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>io.openvidu</groupId>
+	<artifactId>openvidu-parent</artifactId>
+	<version>2.0.0</version>
+	<packaging>pom</packaging>
+
+	<name>OpenVidu</name>
+	<description>OpenVidu parent pom: versioning, dependencies and plugins for all OpenVidu artifacts</description>
+	<url>https://openvidu.io</url>
+
+	<licenses>
+		<license>
+			<name>Apache 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<organization>
+		<name>OpenVidu</name>
+		<url>https://openvidu.io</url>
+	</organization>
+
+	<scm>
+		<url>https://github.com/OpenVidu/openvidu.git</url>
+		<connection>scm:git:https://github.com/OpenVidu/openvidu.git</connection>
+		<developerConnection>scm:git:https://github.com/OpenVidu/openvidu.git</developerConnection>
+		<tag>develop</tag>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>openvidu.io</id>
+			<name>-openvidu.io Community</name>
+			<organization>openvidu.io</organization>
+			<organizationUrl>https://openvidu.io</organizationUrl>
+		</developer>
+	</developers>
+
+	<properties>
+
+		<version.spring-boot>2.7.18</version.spring-boot>
+		<version.openvidu.java.client>2.30.0</version.openvidu.java.client>
+		<!-- <version.openvidu.client>1.1.0</version.openvidu.client> -->
+		<version.openvidu.test.browsers>1.1.0</version.openvidu.test.browsers>
+		<version.openvidu.test.e2e>1.1.1</version.openvidu.test.e2e>
+
+		<version.junit>5.9.1</version.junit>
+		<version.selenium>4.12.1</version.selenium>
+		<version.mockito.core>4.9.0</version.mockito.core>
+		<version.powermock>2.0.9</version.powermock>
+		<version.janino>3.1.9</version.janino>
+		<version.dockerjava>3.2.13</version.dockerjava>
+		<version.slf4j>1.7.36</version.slf4j>
+		<version.gson>2.10</version.gson>
+		<version.jcodec>0.2.5</version.jcodec>
+		<version.testcontainers>1.17.6</version.testcontainers>
+		<version.appium>8.3.0</version.appium>
+		<version.stringsimilarity>2.0.0</version.stringsimilarity>
+
+		<version.compiler.plugin>3.10.1</version.compiler.plugin>
+		<version.enforcer.plugin>3.1.0</version.enforcer.plugin>
+		<version.extra.enforcer.rules.plugin>1.6.1</version.extra.enforcer.rules.plugin>
+		<version.source.plugin>3.2.1</version.source.plugin>
+		<version.assembly.plugin>3.3.0</version.assembly.plugin>
+		<version.surefire.plugin>3.0.0-M7</version.surefire.plugin>
+		<version.gpg.plugin>1.6</version.gpg.plugin>
+		<version.nexus.staging.plugin>1.6.13</version.nexus.staging.plugin>
+		<version.exec.plugin>3.1.0</version.exec.plugin>
+		<version.javadoc.plugin>3.4.1</version.javadoc.plugin>
+		<version.maven.artifact>3.8.6</version.maven.artifact>
+
+		<openvidu.scm.url>https://github.com/OpenVidu/openvidu</openvidu.scm.url>
+		<openvidu.scm.connection>git@github.com:OpenVidu/openvidu.git</openvidu.scm.connection>
+
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<!-- ************** -->
+		<!-- Build settings -->
+		<!-- ************** -->
+
+		<!-- Cross plugins settings -->
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+		<java.version>11</java.version>
+
+		<!-- maven-compiler-plugin -->
+		<maven.compiler.release>${java.version}</maven.compiler.release>
+
+		<!-- maven-enforcer-plugin -->
+		<maven.min.version>3.0.3</maven.min.version>
+
+	</properties>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+
+	<build>
+		<plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${version.compiler.plugin}</version>
+			</plugin>
+
+			<plugin>
+
+				<!-- Check for the minimum version of Java and Maven. Runs during the
+					validate phase. -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>${version.enforcer.plugin}</version>
+				<executions>
+					<execution>
+						<id>enforce-java-version</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireJavaVersion>
+									<message>To build this project JDK ${java.version} (or greater)
+										is required. Please install it.</message>
+									<version>${java.version}</version>
+								</requireJavaVersion>
+							</rules>
+						</configuration>
+					</execution>
+					<execution>
+						<id>enforce-maven-version</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireMavenVersion>
+									<message>To build this project Maven ${maven.min.version} (or
+										greater) is required. Please install it.</message>
+									<version>${maven.min.version}</version>
+								</requireMavenVersion>
+							</rules>
+						</configuration>
+					</execution>
+					<execution>
+						<id>enforce-bytecode-version</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<enforceBytecodeVersion>
+									<maxJdkVersion>${java.version}</maxJdkVersion>
+								</enforceBytecodeVersion>
+							</rules>
+							<fail>true</fail>
+						</configuration>
+					</execution>
+					<execution>
+						<id>enforce-ban-duplicate-classes</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<banDuplicateClasses>
+									<findAllDuplicates>true</findAllDuplicates>
+								</banDuplicateClasses>
+							</rules>
+							<fail>false</fail>
+						</configuration>
+					</execution>
+					<execution>
+						<id>enforce-ban-circular-dependencies</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<banCircularDependencies />
+							</rules>
+							<fail>true</fail>
+						</configuration>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>extra-enforcer-rules</artifactId>
+						<version>${version.extra.enforcer.rules.plugin}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>default</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<modules>
+				<!-- <module>openvidu-server</module> -->
+				<!-- <module>openvidu-client</module> -->
+				<module>openvidu-test-e2e</module>
+				<module>openvidu-test-browsers</module>
+				<module>openvidu-java-client</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>release-sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>${version.source.plugin}</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>${version.gpg.plugin}</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.sonatype.plugins</groupId>
+						<artifactId>nexus-staging-maven-plugin</artifactId>
+						<version>${version.nexus.staging.plugin}</version>
+						<extensions>true</extensions>
+						<configuration>
+							<serverId>ossrh</serverId>
+							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+							<autoReleaseAfterClose>false</autoReleaseAfterClose>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- <dependency>
+				<groupId>io.openvidu</groupId>
+				<artifactId>openvidu-server</artifactId>
+			</dependency> -->
+			<!-- <dependency>
+				<groupId>io.openvidu</groupId>
+				<artifactId>openvidu-client</artifactId>
+			</dependency> -->
+			<dependency>
+				<groupId>io.openvidu</groupId>
+				<artifactId>openvidu-test-e2e</artifactId>
+			</dependency>
+			<dependency>
+				<groupId>io.openvidu</groupId>
+				<artifactId>openvidu-test-browsers</artifactId>
+			</dependency>
+			<dependency>
+				<groupId>io.openvidu</groupId>
+				<artifactId>openvidu-java-client</artifactId>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+</project>

@@ -69,7 +69,7 @@ public class ChromeUser extends BrowserUser {
 		options.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE);
 
 		if (REMOTE_URL != null && headless) {
-			options.setHeadless(true);
+			options.addArguments("--headless=new");
 		}
 
 		options.addArguments("--disable-infobars");
