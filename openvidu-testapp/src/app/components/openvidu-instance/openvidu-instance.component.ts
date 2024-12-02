@@ -80,7 +80,7 @@ export class OpenviduInstanceComponent {
     autoSubscribe: false,
   };
   createLocalTracksOptions: CreateLocalTracksOptions = {
-    audio: false,
+    audio: true,
     video: {
       resolution: {
         width: 1920,

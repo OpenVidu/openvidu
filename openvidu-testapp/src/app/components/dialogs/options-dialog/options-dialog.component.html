@@ -151,7 +151,7 @@
       <mat-form-field id="trackPublish-videoCodec">
         <mat-label>videoCodec</mat-label>
         <mat-select [(value)]="trackPublishOptions.videoCodec">
-          <mat-option *ngFor="let codec of ['vp8','h264','vp9','av1']" [value]="codec">{{codec | uppercase}}</mat-option>
+          <mat-option *ngFor="let codec of ['vp8','h264','vp9','av1']" [value]="codec" [id]="'mat-option-' + codec">{{codec | uppercase}}</mat-option>
         </mat-select>
       </mat-form-field>
       <mat-form-field id="trackPublish-scalabilityMode">

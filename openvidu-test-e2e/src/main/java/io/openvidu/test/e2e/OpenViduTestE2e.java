@@ -34,6 +34,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.utility.DockerImageName;
 
+import io.livekit.server.IngressServiceClient;
 import io.livekit.server.RoomServiceClient;
 import io.openvidu.test.browsers.BrowserUser;
 import io.openvidu.test.browsers.ChromeUser;
@@ -41,7 +42,9 @@ import io.openvidu.test.browsers.EdgeUser;
 import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.utils.BrowserNames;
 import io.openvidu.test.browsers.utils.CommandLineExecutor;
+import livekit.LivekitIngress.IngressInfo;
 import livekit.LivekitModels.Room;
+import okhttp3.OkHttpClient;
 import retrofit2.Response;
 
 public class OpenViduTestE2e {
@@ -76,6 +79,7 @@ public class OpenViduTestE2e {
 	protected static Collection<GenericContainer<?>> containers = new HashSet<>();
 
 	protected static RoomServiceClient LK;
+	protected static IngressServiceClient LK_INGRESS;
 
 	private static boolean isMediaServerRestartTest = false;
 
@@ -149,33 +153,36 @@ public class OpenViduTestE2e {
 				+ uri.getAuthority() + uri.getPath();
 
 		LK = RoomServiceClient.create(url.toString(), LIVEKIT_API_KEY, LIVEKIT_API_SECRET, false,
-				(okHttpClientBuilder) -> {
-					TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
-						@Override
-						public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
-						}
+				(okHttpClientBuilder) -> okHttpClientBuilder(okHttpClientBuilder));
+		LK_INGRESS = IngressServiceClient.create(url.toString(), LIVEKIT_API_KEY, LIVEKIT_API_SECRET, false);
+	}
 
-						@Override
-						public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
-						}
+	private static OkHttpClient okHttpClientBuilder(okhttp3.OkHttpClient.Builder okHttpClientBuilder) {
+		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+			@Override
+			public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+			}
 
-						@Override
-						public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-							return new java.security.cert.X509Certificate[] {};
-						}
-					} };
-					SSLContext sslContext = null;
-					try {
-						sslContext = SSLContext.getInstance("SSL");
-						sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-					} catch (KeyManagementException | NoSuchAlgorithmException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					okHttpClientBuilder.sslSocketFactory(sslContext.getSocketFactory(),
-							(X509TrustManager) trustAllCerts[0]);
-					okHttpClientBuilder.hostnameVerifier((hostname, session) -> true);
-				});
+			@Override
+			public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+			}
+
+			@Override
+			public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+				return new java.security.cert.X509Certificate[] {};
+			}
+		} };
+		SSLContext sslContext = null;
+		try {
+			sslContext = SSLContext.getInstance("SSL");
+			sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+		} catch (KeyManagementException | NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		okHttpClientBuilder.sslSocketFactory(sslContext.getSocketFactory(), (X509TrustManager) trustAllCerts[0]);
+		okHttpClientBuilder.hostnameVerifier((hostname, session) -> true);
+		return okHttpClientBuilder.build();
 	}
 
 	protected static void loadEnvironmentVariables() {
@@ -419,6 +426,29 @@ public class OpenViduTestE2e {
 			}
 		} catch (Exception e) {
 			log.error("Error closing rooms: {}", e.getMessage());
+		}
+	}
+
+	protected void deleteAllIngresses(IngressServiceClient client) {
+		try {
+			Response<List<IngressInfo>> response = client.listIngress().execute();
+			if (response.isSuccessful()) {
+				List<IngressInfo> ingressList = response.body();
+				if (ingressList != null) {
+					client.listIngress().execute().body().forEach(i -> {
+						log.info("Deleting existing ingress " + i.getName());
+						try {
+							log.info("Response: " + client.deleteIngress(i.getIngressId()).execute().code());
+						} catch (IOException e) {
+							log.error("Error deleting ingress " + i.getName(), e);
+						}
+					});
+				}
+			} else {
+				log.error("Error listing ingresses: " + response.errorBody());
+			}
+		} catch (Exception e) {
+			log.error("Error deleting ingresses: {}", e.getMessage());
 		}
 	}
 

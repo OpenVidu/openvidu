@@ -29,6 +29,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -66,11 +67,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@BeforeEach()
 	protected void setupEach() {
 		this.closeAllRooms(LK);
+		this.deleteAllIngresses(LK_INGRESS);
 	}
 
 	@AfterEach()
 	protected void finishEach() {
 		this.closeAllRooms(LK);
+		this.deleteAllIngresses(LK_INGRESS);
 	}
 
 	@Test
@@ -410,6 +413,97 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				throw OpenViduTestAppE2eTest.ex;
 			}
 		}
+	}
+
+	@Test
+	@DisplayName("Chrome force VP8")
+	void chromeForceVP8Test() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		log.info("Chrome force VP8");
+		forceCodecTest(user, "vp8");
+	}
+
+	@Test
+	@DisplayName("Firefox force VP8")
+	void firefoxForceVP8Test() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
+		log.info("Firefox force VP8");
+		forceCodecTest(user, "vp8");
+	}
+
+	@Test
+	@DisplayName("Chrome force H264")
+	void chromeForceH264Test() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		log.info("Chrome force H264");
+		forceCodecTest(user, "h264");
+	}
+
+	@Test
+	@DisplayName("Firefox force H264")
+	@Disabled // It seems that Firefox only available codec is VP8 using Pion
+	void firefoxForceH264Test() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
+		log.info("Firefox force H264");
+		forceCodecTest(user, "h264");
+	}
+
+	@Test
+	@DisplayName("Chrome force VP9")
+	void chromeForceVP9Test() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		log.info("Chrome force VP9");
+		forceCodecTest(user, "vp9");
+	}
+
+	@Test
+	@DisplayName("Firefox force VP9")
+	@Disabled // It seems that Firefox only available codec is VP8 using Pion
+	void firefoxForceVP9Test() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
+		log.info("Firefox force VP9");
+		forceCodecTest(user, "vp9");
+	}
+
+	private void forceCodecTest(OpenViduTestappUser user, String codec) throws Exception {
+		this.addOnlyPublisherVideo(user, false, false, false);
+
+		user.getDriver().findElement(By.id("room-options-btn-0")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("trackPublish-backupCodec")).click();
+		user.getDriver().findElement(By.id("trackPublish-videoCodec")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("mat-option-" + codec.toLowerCase())).click();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		this.addSubscriber(user, false);
+
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "ParticipantEvent", 1);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
+
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 2));
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assertions.assertEquals(2, numberOfVideos, "Wrong number of videos");
+
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
+				"HTMLVideoElements were expected to have only one video track");
+
+		String expectedCodec = "video/" + codec.toUpperCase();
+		// Check publisher's codec
+		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
+		Assertions.assertEquals(expectedCodec,
+				getPublisherVideoLayerAttribute(user, publisherVideo, null, "codec").getAsString());
+
+		// Check subscriber's codec
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
+		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
+		String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
+		Assertions.assertEquals(expectedCodec, subscriberCodec);
+
+		gracefullyLeaveParticipants(user, 2);
 	}
 
 	@Test
@@ -820,15 +914,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Subscriber should settle in 640p
 		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 640);
 
-		int oldFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
 		user.getBrowserUser().changeElementSize(subscriberVideo, 1000, 700);
 		Thread.sleep(2000);
 		int newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
 
-		Assertions.assertEquals(oldFrameWidth, newFrameWidth,
+		Assertions.assertEquals(640, newFrameWidth,
 				"With adaptive stream disabled subscriber's track resolution should NOT change");
 
-		oldFrameWidth = newFrameWidth;
+		int oldFrameWidth = newFrameWidth;
 		user.getBrowserUser().changeElementSize(subscriberVideo, 100, 30);
 		Thread.sleep(3000);
 		newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
@@ -1056,7 +1149,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Only video publisher with simulcast without dynacast
 		this.addOnlyPublisherVideo(user, false, true, false);
-		// Only subscriber without adaptive stream
+		// Only subscriber with adaptive stream
 		this.addSubscriber(user, true);
 
 		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
@@ -1091,12 +1184,230 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		gracefullyLeaveParticipants(user, 2);
 	}
 
+	@Test
+	@DisplayName("Ingress VP8 Simulcast Chrome")
+	void ingressVP8SimulcastChromeTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Ingress VP8 Simulcast Chrome");
+
+		ingressSimulcastTest(user, true, "vp8", null);
+
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+		testThreeLayers(user, subscriberVideo);
+	}
+
+	// BROKEN
+	@Test
+	@DisplayName("Ingress VP8 Simulcast Firefox")
+	void ingressVP8SimulcastFirefoxTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
+
+		log.info("Ingress VP8 Simulcast Firefox");
+
+		ingressSimulcastTest(user, true, "vp8", null);
+
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+		testThreeLayers(user, subscriberVideo);
+	}
+
+	@Test
+	@DisplayName("Ingress H264 Simulcast Chrome")
+	void ingressH264SimulcastChromeTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Ingress H264 Simulcast Chrome");
+
+		ingressSimulcastTest(user, true, "h264", null);
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+		testThreeLayers(user, subscriberVideo);
+	}
+
+	// BROKEN
+	@Test
+	@DisplayName("Ingress H264 Simulcast Firefox")
+	void ingressH264SimulcastFirefoxTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
+
+		log.info("Ingress H264 Simulcast Firefox");
+
+		ingressSimulcastTest(user, true, "h264", null);
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+		testThreeLayers(user, subscriberVideo);
+	}
+
+	@Test
+	@DisplayName("Ingress H264 Simulcast two layers Chrome")
+	void ingressH264SimulcastTwoLayersChromeTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Ingress H264 Simulcast Chrome");
+
+		ingressSimulcastTest(user, true, null, "H264_540P_25FPS_2_LAYERS");
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+		testTwoLayers(user, subscriberVideo);
+	}
+
+	// BROKEN
+	@Test
+	@DisplayName("Ingress H264 Simulcast two layers Firefox")
+	void ingressH264SimulcastTwoLayersFirefoxTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
+
+		log.info("Ingress H264 Simulcast Firefox");
+
+		ingressSimulcastTest(user, true, null, "H264_540P_25FPS_2_LAYERS");
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+		testTwoLayers(user, subscriberVideo);
+	}
+
+	@Test
+	@DisplayName("Ingress VP8 No Simulcast Chrome")
+	void ingressVP8NoSimulcastChromeTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Ingress VP8 No Simulcast Chrome");
+
+		ingressSimulcastTest(user, false, "vp8", null);
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+		testNoSimulcast(user, subscriberVideo);
+	}
+
+	// NOT BROKEN???!!?!
+	@Test
+	@DisplayName("Ingress VP8 No Simulcast Firefox")
+	void ingressVP8NoSimulcastFirefoxTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
+
+		log.info("Ingress VP8 No Simulcast Firefox");
+
+		ingressSimulcastTest(user, false, "vp8", null);
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+		testNoSimulcast(user, subscriberVideo);
+	}
+
+	// BROKEN
+	@Test
+	@DisplayName("Ingress H264 No Simulcast Chrome")
+	void ingressH264NoSimulcastChromeTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Ingress H264 No Simulcast Chrome");
+
+		ingressSimulcastTest(user, false, "h264", null);
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+		testNoSimulcast(user, subscriberVideo);
+	}
+
+	// BROKEN
+	@Test
+	@DisplayName("Ingress H264 No Simulcast Firefox")
+	void ingressH264NoSimulcastFirefoxTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
+
+		log.info("Ingress H264 No Simulcast Firefox");
+
+		ingressSimulcastTest(user, false, "h264", null);
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+		testNoSimulcast(user, subscriberVideo);
+	}
+
+	private void ingressSimulcastTest(OpenViduTestappUser user, boolean simulcast, String codec, String preset)
+			throws Exception {
+
+		// Only subscriber without adaptive stream
+		this.addSubscriber(user, false);
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
+
+		createIngress(user, preset, codec, simulcast);
+
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
+
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assertions.assertEquals(1, numberOfVideos, "Wrong number of videos");
+
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
+				"HTMLVideoElements were expected to have only one video track");
+
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+
+		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
+		long bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
+		this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo, bytesReceived);
+		this.waitUntilSubscriberFramesPerSecondNotZero(user, subscriberVideo);
+
+		// Check subscriber's codec
+		if (codec != null) {
+			JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
+			String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
+			String expectedCodec = "video/" + codec.toUpperCase();
+			Assertions.assertEquals(expectedCodec, subscriberCodec);
+		}
+		if (preset != null) {
+			JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
+			String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
+			Assertions.assertEquals("video/H264", subscriberCodec);
+		}
+	}
+
+	private void testThreeLayers(OpenViduTestappUser user, WebElement subscriberVideo) throws InterruptedException {
+		// Check manual simulcast changes
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 1920);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 #max-video-quality")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.cssSelector("mat-option.mode-LOW")).click();
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 640);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 #max-video-quality")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.cssSelector("mat-option.mode-MEDIUM")).click();
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 1280);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 #max-video-quality")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.cssSelector("mat-option.mode-HIGH")).click();
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 1920);
+	}
+
+	private void testTwoLayers(OpenViduTestappUser user, WebElement subscriberVideo) throws InterruptedException {
+		// Check manual simulcast changes
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 960);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 #max-video-quality")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.cssSelector("mat-option.mode-LOW")).click();
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 480);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 #max-video-quality")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.cssSelector("mat-option.mode-MEDIUM")).click();
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 960);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 #max-video-quality")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.cssSelector("mat-option.mode-LOW")).click();
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 480);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 #max-video-quality")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.cssSelector("mat-option.mode-HIGH")).click();
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 960);
+	}
+
+	private void testNoSimulcast(OpenViduTestappUser user, WebElement subscriberVideo) throws InterruptedException {
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 1920);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 #max-video-quality")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.cssSelector("mat-option.mode-LOW")).click();
+		// Without simulcast video should remain in high quality
+		Thread.sleep(4000);
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 1920);
+	}
+
 	private int countNumberOfPublishedLayers(OpenViduTestappUser user, WebElement publisherVideo) {
 		JsonArray json = this.getLayersAsJsonArray(user, publisherVideo);
 		return json.size();
 	}
 
 	private int getSubscriberVideoFrameWidth(OpenViduTestappUser user, WebElement subscriberVideo) {
+		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
 		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
 		return json.get(0).getAsJsonObject().get("frameWidth").getAsInt();
 	}
@@ -1104,6 +1415,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	private long getSubscriberVideoBytesReceived(OpenViduTestappUser user, WebElement subscriberVideo) {
 		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
 		return json.get(0).getAsJsonObject().get("bytesReceived").getAsLong();
+	}
+
+	private int getSubscriberVideoFramesPerSecond(OpenViduTestappUser user, WebElement subscriberVideo) {
+		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
+		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
+		return json.get(0).getAsJsonObject().get("framesPerSecond").getAsInt();
 	}
 
 	// If rid is null, retrieve the first layer
@@ -1127,6 +1444,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		WebElement textarea = user.getDriver().findElement(By.id("info-text-area"));
 		String value = textarea.getAttribute("value");
 		return JsonParser.parseString(value).getAsJsonArray();
+	}
+
+	private void waitUntilVideoLayersNotEmpty(OpenViduTestappUser user, WebElement videoElement) {
+		this.waitUntilAux(user, videoElement, () -> !getLayersAsJsonArray(user, videoElement).isEmpty(),
+				"Timeout waiting video layers to not be empty");
+	}
+
+	private void waitUntilSubscriberFramesPerSecondNotZero(OpenViduTestappUser user, WebElement videoElement) {
+		this.waitUntilAux(user, videoElement, () -> {
+			return this.getSubscriberVideoFramesPerSecond(user, videoElement) > 0;
+		}, "Timeout waiting for video track to have a framesPerSecond greater than 0");
 	}
 
 	private void waitUntilSubscriberFrameWidthIs(OpenViduTestappUser user, WebElement videoElement,
@@ -1319,6 +1647,31 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
 			Thread.sleep(300);
 		}
+	}
+
+	private void createIngress(OpenViduTestappUser user, String preset, String codec, boolean simulcast)
+			throws InterruptedException {
+		if (!user.getDriver().findElements(By.id("close-dialog-btn")).isEmpty()) {
+			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			Thread.sleep(300);
+		}
+		user.getDriver().findElement(By.xpath("//button[contains(@title,'Room API')]")).click();
+		Thread.sleep(300);
+		if (preset != null) {
+			user.getDriver().findElement(By.cssSelector("#ingress-preset-select")).click();
+			Thread.sleep(300);
+			user.getDriver().findElement(By.cssSelector("#mat-option-" + preset.toUpperCase())).click();
+		} else {
+			if (!simulcast) {
+				user.getDriver().findElement(By.cssSelector("#ingress-simulcast")).click();
+			}
+			user.getDriver().findElement(By.cssSelector("#ingress-video-codec-select")).click();
+			Thread.sleep(300);
+			user.getDriver().findElement(By.cssSelector("#mat-option-" + codec.toUpperCase())).click();
+		}
+		user.getDriver().findElement(By.cssSelector("#create-ingress-api-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();
+		Thread.sleep(300);
 	}
 
 	private void setPublisherCustomVideoProperties(OpenViduTestappUser user, Integer width, Integer height,

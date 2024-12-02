@@ -202,7 +202,7 @@
         <mat-form-field id="ingress-video-codec-select">
           <mat-label>Codec</mat-label>
           <mat-select [(value)]="ingressVideoCodecSelected" [disabled]="!ingressWithVideo || ingressVideoEncodingPresetSelected != undefined">
-            <mat-option *ngFor="let codec of INGRESS_VIDEO_CODECS" [value]="codec.value">
+            <mat-option *ngFor="let codec of INGRESS_VIDEO_CODECS" [value]="codec.value" [id]="'mat-option-' + codec.viewValue">
               {{codec.viewValue}}
             </mat-option>
           </mat-select>
@@ -212,7 +212,7 @@
         <mat-form-field id="ingress-preset-select">
           <mat-label>Preset</mat-label>
           <mat-select [(value)]="ingressVideoEncodingPresetSelected" [disabled]="!ingressWithVideo">
-            <mat-option *ngFor="let preset of INGRESS_VIDEO_ENCODING_PRESETS" [value]="preset.value">
+            <mat-option *ngFor="let preset of INGRESS_VIDEO_ENCODING_PRESETS" [value]="preset.value" [id]="'mat-option-' + preset.viewValue">
               {{preset.viewValue}}
             </mat-option>
           </mat-select>
