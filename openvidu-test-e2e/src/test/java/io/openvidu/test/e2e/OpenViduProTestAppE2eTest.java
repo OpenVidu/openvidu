@@ -1143,7 +1143,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.className("join-btn")).click();
 			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
-			Thread.sleep(7000);
+			// Sleep to wait for the connection to be established after a participant joins
+			Thread.sleep(10000);
 
 			Assertions.assertTrue(OV.fetch());
 			session = OV.getActiveSession("TestSession");
@@ -2859,7 +2860,6 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@Disabled
 	@DisplayName("Successfull broadcast Test")
 	void sucessfullBroadcastTest() throws Exception {
 
@@ -2888,6 +2888,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
 			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+			// Sleep to wait for the connection to be established after a participant joins
+			Thread.sleep(10000);
 
 			user.getDriver().findElement(By.id("list-sessions-btn")).click();
 			user.getWaiter().until(ExpectedConditions.attributeContains(By.id("api-response-text-area"), "value",
