@@ -47,6 +47,9 @@ public class FirefoxUser extends BrowserUser {
 			options.addPreference("media.gmp-gmpopenh264.enabled", false);
 		}
 
+		// ATTENTION: WITHOUT THIS FLAG H264 DOES NOT WORK IN SELENIUM-MANAGED FIREFOX
+		options.addPreference("media.webrtc.hw.h264.enabled", true);
+
 		if (headless) {
 			options.addArguments("--headless");
 			options.addPreference("media.volume_scale", "0.0");
