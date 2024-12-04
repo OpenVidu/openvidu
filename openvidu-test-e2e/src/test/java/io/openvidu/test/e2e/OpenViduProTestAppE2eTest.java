@@ -251,15 +251,18 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			CustomHttpClient restClient = new CustomHttpClient(OpenViduTestAppE2eTest.OPENVIDU_URL, "OPENVIDUAPP",
 					OpenViduTestAppE2eTest.OPENVIDU_SECRET);
-			// JsonObject config = restClient.rest(HttpMethod.GET, "/openvidu/api/config", HttpURLConnection.HTTP_OK);
+			// JsonObject config = restClient.rest(HttpMethod.GET, "/openvidu/api/config",
+			// HttpURLConnection.HTTP_OK);
 
 			// String defaultOpenViduWebhookEndpoint = null;
 			// Integer defaultOpenViduRecordingAutostopTimeout = null;
 			// if (config.has("OPENVIDU_WEBHOOK_ENDPOINT")) {
-			// 	defaultOpenViduWebhookEndpoint = config.get("OPENVIDU_WEBHOOK_ENDPOINT").getAsString();
+			// defaultOpenViduWebhookEndpoint =
+			// config.get("OPENVIDU_WEBHOOK_ENDPOINT").getAsString();
 			// }
 			// if (config.has("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT")) {
-			// 	defaultOpenViduRecordingAutostopTimeout = config.get("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT").getAsInt();
+			// defaultOpenViduRecordingAutostopTimeout =
+			// config.get("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT").getAsInt();
 			// }
 
 			try {
@@ -593,10 +596,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Map<String, Object> oldConfig = new HashMap<>();
 				oldConfig.put("OPENVIDU_WEBHOOK", false);
 				// if (defaultOpenViduWebhookEndpoint != null) {
-				// 	oldConfig.put("OPENVIDU_WEBHOOK_ENDPOINT", defaultOpenViduWebhookEndpoint);
+				// oldConfig.put("OPENVIDU_WEBHOOK_ENDPOINT", defaultOpenViduWebhookEndpoint);
 				// }
 				// if (defaultOpenViduRecordingAutostopTimeout != null) {
-				// 	oldConfig.put("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT", defaultOpenViduRecordingAutostopTimeout);
+				// oldConfig.put("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT",
+				// defaultOpenViduRecordingAutostopTimeout);
 				// }
 				restartOpenViduServer(oldConfig);
 			}
@@ -694,86 +698,87 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// configured to NOT be recorded
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':true}", HttpURLConnection.HTTP_OK);
-		Thread.sleep(1000);
+
+		 Thread.sleep(2000);
+
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':false}", HttpURLConnection.HTTP_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':true}", HttpURLConnection.HTTP_OK);
-		Thread.sleep(1000);
+
+		Thread.sleep(2000);
+
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':false}", HttpURLConnection.HTTP_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':true}", HttpURLConnection.HTTP_OK);
-		Thread.sleep(1000);
+
+		Thread.sleep(2000);
 
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/" + sessionName, HttpURLConnection.HTTP_OK);
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 3);
 
 		gracefullyLeaveParticipants(user, 3);
 
-
-		// Commented until we fix the analysis of individual recordings
-
-		// String recPath = "/opt/openvidu/recordings/" + sessionName + "/";
-		// Recording recording = new OpenVidu(OpenViduTestAppE2eTest.OPENVIDU_URL, OpenViduTestAppE2eTest.OPENVIDU_SECRET)
-		// 		.getRecording(sessionName);
-		// this.recordingUtils.checkIndividualRecording(recPath, recording, 4, "opus", "vp8", true);
-
+		String recPath = "/opt/openvidu/recordings/" + sessionName + "/";
+		Recording recording = new OpenVidu(OpenViduTestAppE2eTest.OPENVIDU_URL, OpenViduTestAppE2eTest.OPENVIDU_SECRET)
+				.getRecording(sessionName);
+		this.recordingUtils.checkIndividualRecording(recPath, recording, 4, "aac", "h264", true);
 
 		// Analyze INDIVIDUAL recording metadata
-		// new Unzipper().unzipFile(recPath, recording.getName() + ".zip");
-		// File jsonSyncFile = new File(recPath + recording.getName() + ".json");
-		// JsonReader reader = new JsonReader(new FileReader(jsonSyncFile));
-		// JsonObject jsonMetadata = new Gson().fromJson(reader, JsonObject.class);
-		// JsonArray syncArray = jsonMetadata.get("files").getAsJsonArray();
-		// int count1 = 0;
-		// int count2 = 0;
+		new Unzipper().unzipFile(recPath, recording.getName() + ".zip");
+		File jsonSyncFile = new File(recPath + recording.getName() + ".json");
+		JsonReader reader = new JsonReader(new FileReader(jsonSyncFile));
+		JsonObject jsonMetadata = new Gson().fromJson(reader, JsonObject.class);
+		JsonArray syncArray = jsonMetadata.get("files").getAsJsonArray();
+		int count1 = 0;
+		int count2 = 0;
 
-		// Set<String> regexNames = Stream.of("^" + streamId2 + "\\.(webm|mkv|mp4)$",
-		// 		"^" + streamId2 + "-1\\.(webm|mkv|mp4)$", "^" + streamId2 + "-2\\.(webm|mkv|mp4)$")
-		// 		.collect(Collectors.toSet());
+		Set<String> regexNames = Stream.of("^" + streamId2 + "\\.(webm|mkv|mp4)$",
+				"^" + streamId2 + "-1\\.(webm|mkv|mp4)$", "^" + streamId2 + "-2\\.(webm|mkv|mp4)$")
+				.collect(Collectors.toSet());
 
-		// for (JsonElement fileJson : syncArray) {
-		// 	JsonObject file = fileJson.getAsJsonObject();
-		// 	String fileStreamId = file.get("streamId").getAsString();
-		// 	if (fileStreamId.equals(streamId1[0])) {
-		// 		// Normal recorded user
-		// 		Assertions.assertEquals(connectionId1[0], file.get("connectionId").getAsString(),
-		// 				"Wrong connectionId file metadata property");
-		// 		long msDuration = file.get("endTimeOffset").getAsLong() - file.get("startTimeOffset").getAsLong();
-		// 		Assertions.assertTrue(msDuration - 4000 < 750,
-		// 				"Wrong recording duration of individual file. Difference: " + (msDuration - 4000));
-		// 		count1++;
-		// 	} else if (fileStreamId.equals(streamId2)) {
-		// 		// Dynamically recorded user
-		// 		Assertions.assertEquals(connectionId2, file.get("connectionId").getAsString(),
-		// 				"Wrong connectionId file metadata property");
-		// 		long msDuration = file.get("endTimeOffset").getAsLong() - file.get("startTimeOffset").getAsLong();
-		// 		Assertions.assertTrue(Math.abs(msDuration - 1000) < 150,
-		// 				"Wrong recording duration of individual file. Difference: " + Math.abs(msDuration - 1000));
+		for (JsonElement fileJson : syncArray) {
+			JsonObject file = fileJson.getAsJsonObject();
+			String fileStreamId = file.get("streamId").getAsString();
+			if (fileStreamId.equals(streamId1[0])) {
+				// Normal recorded user
+				Assertions.assertEquals(connectionId1[0], file.get("connectionId").getAsString(),
+						"Wrong connectionId file metadata property");
+				// long msDuration = file.get("endTimeOffset").getAsLong() - file.get("startTimeOffset").getAsLong();
+				// Assertions.assertTrue(msDuration - 8000 < 750,
+				// 		"Wrong recording duration of individual file. Difference: " + (msDuration - 8000));
+				count1++;
+			} else if (fileStreamId.equals(streamId2)) {
+				// Dynamically recorded user
+				Assertions.assertEquals(connectionId2, file.get("connectionId").getAsString(),
+						"Wrong connectionId file metadata property");
+				// long msDuration = file.get("endTimeOffset").getAsLong() - file.get("startTimeOffset").getAsLong();
+				// Assertions.assertTrue(Math.abs(msDuration - 1000) < 150,
+				// 		"Wrong recording duration of individual file. Difference: " + Math.abs(msDuration - 1000));
 
-		// 		String fileName = file.get("name").getAsString();
+				String fileName = file.get("name").getAsString();
 
-		// 		boolean found = false;
-		// 		Iterator<String> regexNamesIterator = regexNames.iterator();
-		// 		while (regexNamesIterator.hasNext()) {
-		// 			if (Pattern.compile(regexNamesIterator.next()).matcher(fileName).matches()) {
-		// 				found = true;
-		// 				regexNamesIterator.remove();
-		// 				break;
-		// 			}
-		// 		}
+				boolean found = false;
+				Iterator<String> regexNamesIterator = regexNames.iterator();
+				while (regexNamesIterator.hasNext()) {
+					if (Pattern.compile(regexNamesIterator.next()).matcher(fileName).matches()) {
+						found = true;
+						regexNamesIterator.remove();
+						break;
+					}
+				}
 
-		// 		Assertions.assertTrue(found,
-		// 				"File name " + fileName + " not found among regex " + regexNames.toString());
-		// 		count2++;
-		// 	} else {
-		// 		Assertions.fail("Metadata file element does not belong to a known stream (" + fileStreamId + ")");
-		// 	}
-		// }
-		// Assertions.assertEquals(1, count1, "Wrong number of recording files for stream " + streamId1[0]);
-		// Assertions.assertEquals(3, count2, "Wrong number of recording files for stream " + streamId2);
-		// Assertions.assertTrue(regexNames.isEmpty(), "Some expected file name didn't existed: " + regexNames.toString());
+				Assertions.assertTrue(found,
+						"File name " + fileName + " not found among regex " + regexNames.toString());
+				count2++;
+			} else {
+				Assertions.fail("Metadata file element does not belong to a known stream (" + fileStreamId + ")");
+			}
+		}
+		Assertions.assertEquals(1, count1, "Wrong number of recording files for stream " + streamId1[0]);
+		Assertions.assertEquals(3, count2, "Wrong number of recording files for stream " + streamId2);
+		Assertions.assertTrue(regexNames.isEmpty(), "Some expected file name didn't existed: " + regexNames.toString());
 	}
 
 	@Test

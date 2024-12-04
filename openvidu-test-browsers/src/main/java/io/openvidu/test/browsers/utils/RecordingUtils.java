@@ -123,7 +123,7 @@ public class RecordingUtils {
 						+ Arrays.toString(folder.listFiles()));
 
 		File file1 = new File(recPath + recording.getName() + ".zip");
-		File file2 = new File(recPath + ".recording." + recording.getId());
+		File file2 = new File(recPath + recording.getName() + ".json");
 
 		Assertions.assertTrue(file1.exists() && file1.length() > 0,
 				"File " + file1.getAbsolutePath() + " does not exist or is empty");
@@ -206,7 +206,8 @@ public class RecordingUtils {
 				}
 			}
 			if (resolution != null) {
-				Assertions.assertEquals(resolution, metadata.getVideoWidth() + "x" + metadata.getVideoHeight());
+				Assertions.assertEquals(resolution, metadata.getVideoWidth() + "x" +
+						metadata.getVideoHeight());
 			}
 			if (frameRate != null) {
 				Assertions.assertEquals(frameRate.intValue(), metadata.getFrameRate());
@@ -222,13 +223,18 @@ public class RecordingUtils {
 		// Check duration with 1 decimal precision
 		DecimalFormat df = new DecimalFormat("#0.0");
 		df.setRoundingMode(RoundingMode.UP);
-		log.info("Duration of {} according to ffmpeg: {} s", file.getName(), metadata.getDuration());
-		log.info("Duration of {} according to 'duration' property: {} s", file.getName(), duration);
-		log.info("Difference in s duration: {}", Math.abs(metadata.getDuration() - duration));
+		log.info("Duration of {} according to ffmpeg: {} s", file.getName(),
+				metadata.getDuration());
+		log.info("Duration of {} according to 'duration' property: {} s",
+				file.getName(), duration);
+		log.info("Difference in s duration: {}", Math.abs(metadata.getDuration() -
+				duration));
 		final double difference = 10;
+		System.out.println("Duration of " + file.getName() + " according to ffmpeg: " + metadata.getDuration() + " s");
+		System.out.println("Duration of " + file.getName() + " according to 'duration' property: " + duration + " s");
 		Assertions.assertTrue(Math.abs((metadata.getDuration() - duration)) < difference,
-				"Difference between recording entity duration (" + duration + ") and real video duration ("
-						+ metadata.getDuration() + ") is greater than " + difference + "  in file " + file.getName());
+				"Difference between recording entity duration (" + duration + ") and real	video duration ("
+						+ metadata.getDuration() + ") is greater than " + difference + " in file " + file.getName());
 	}
 
 	public boolean thumbnailIsFine(File file, Function<Map<String, Long>, Boolean> colorCheckFunction) {
