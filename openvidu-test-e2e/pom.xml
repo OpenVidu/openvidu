@@ -99,8 +99,8 @@
 		</dependency>
 		<dependency>
 			<groupId>io.openvidu</groupId>
-			<artifactId>openvidu-java-client</artifactId>
-			<version>${version.openvidu.java.client}</version>
+			<artifactId>openvidu-java-client-v2compatibility</artifactId>
+			<version>${version.openvidu.java.client.v2compatibility}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.docker-java</groupId>
