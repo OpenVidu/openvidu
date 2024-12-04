@@ -1070,15 +1070,14 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@Disabled
 	@DisplayName("openvidu-java-client PRO test")
 	void openViduJavaClientProTest() throws Exception {
 
 		log.info("openvidu-java-client PRO test");
 
-		Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT",
-				"disabled");
-		restartOpenViduServer(config);
+		// Map<String, Object> config = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false, "OPENVIDU_PRO_SPEECH_TO_TEXT",
+		// 		"disabled");
+		// restartOpenViduServer(config);
 
 		// Create default Connection
 		Session session = OV.createSession();
@@ -1144,6 +1143,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.className("join-btn")).click();
 			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+			Thread.sleep(7000);
 
 			Assertions.assertTrue(OV.fetch());
 			session = OV.getActiveSession("TestSession");
