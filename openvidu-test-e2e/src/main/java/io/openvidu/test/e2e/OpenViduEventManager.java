@@ -235,12 +235,12 @@ public class OpenViduEventManager {
 	}
 
 	// Sets any event count to 0
-	public synchronized void clearCurrentEvents(String eventTypeAndCategory) {
+	public void clearCurrentEvents(String eventTypeAndCategory) {
 		this.eventNumbers.put(eventTypeAndCategory, new AtomicInteger(0));
 		this.setCountDown(eventTypeAndCategory, new CountDownLatch(0));
 	}
 
-	public synchronized void clearCurrentEvents(int numberOfUser, String eventTypeAndCategory) {
+	public void clearCurrentEvents(int numberOfUser, String eventTypeAndCategory) {
 		if (this.eventNumbersByUser.containsKey(numberOfUser)) {
 			this.eventNumbersByUser.get(numberOfUser).put(eventTypeAndCategory, new AtomicInteger(0));
 			this.setCountDown(numberOfUser, eventTypeAndCategory, new CountDownLatch(0));
@@ -250,6 +250,9 @@ public class OpenViduEventManager {
 	public synchronized void clearAllCurrentEvents() {
 		this.eventNumbers.keySet().forEach(eventTypeAndCategory -> {
 			this.clearCurrentEvents(eventTypeAndCategory);
+		});
+		this.eventNumbersByUser.entrySet().forEach(entry -> {
+			this.clearAllCurrentEvents(entry.getKey());
 		});
 	}
 
@@ -280,29 +283,33 @@ public class OpenViduEventManager {
 		this.startPolling();
 	}
 
-	public synchronized AtomicInteger getNumEvents(String eventTypeAndCategory) {
+	private AtomicInteger getNumEvents(String eventTypeAndCategory) {
 		return this.eventNumbers.computeIfAbsent(eventTypeAndCategory, k -> new AtomicInteger(0));
 	}
 
-	public synchronized AtomicInteger getNumEvents(int numberOfUser, String eventTypeAndCategory) {
+	private AtomicInteger getNumEvents(int numberOfUser, String eventTypeAndCategory) {
 		this.eventNumbersByUser.putIfAbsent(numberOfUser, new HashMap<>());
 		return this.eventNumbersByUser.get(numberOfUser).computeIfAbsent(eventTypeAndCategory,
 				k -> new AtomicInteger(0));
 	}
 
 	private void setCountDown(String eventTypeAndCategory, CountDownLatch cd) {
-		this.eventCountdowns.put(eventTypeAndCategory, cd);
-		for (int i = 0; i < getNumEvents(eventTypeAndCategory).get(); i++) {
-			cd.countDown();
-		}
+		executeInNamedLock(eventTypeAndCategory, () -> {
+			for (int i = 0; i < getNumEvents(eventTypeAndCategory).get(); i++) {
+				cd.countDown();
+			}
+			this.eventCountdowns.put(eventTypeAndCategory, cd);
+		});
 	}
 
 	private void setCountDown(int numberOfUser, String eventTypeAndCategory, CountDownLatch cd) {
-		this.eventCountdownsByUser.putIfAbsent(numberOfUser, new HashMap<>());
-		this.eventCountdownsByUser.get(numberOfUser).put(eventTypeAndCategory, cd);
-		for (int i = 0; i < getNumEvents(numberOfUser, eventTypeAndCategory).get(); i++) {
-			cd.countDown();
-		}
+		executeInNamedLock(numberOfUser + eventTypeAndCategory, () -> {
+			for (int i = 0; i < getNumEvents(numberOfUser, eventTypeAndCategory).get(); i++) {
+				cd.countDown();
+			}
+			this.eventCountdownsByUser.putIfAbsent(numberOfUser, new HashMap<>());
+			this.eventCountdownsByUser.get(numberOfUser).put(eventTypeAndCategory, cd);
+		});
 	}
 
 	private void emitEvents() {
@@ -350,16 +357,20 @@ public class OpenViduEventManager {
 
 			this.eventQueue.add(userAndEvent);
 
-			getNumEvents(eventTypeAndCategory).incrementAndGet();
-			if (this.eventCountdowns.get(eventTypeAndCategory) != null) {
-				this.eventCountdowns.get(eventTypeAndCategory).countDown();
-			}
+			executeInNamedLock(eventTypeAndCategory, () -> {
+				getNumEvents(eventTypeAndCategory).incrementAndGet();
+				if (this.eventCountdowns.get(eventTypeAndCategory) != null) {
+					this.eventCountdowns.get(eventTypeAndCategory).countDown();
+				}
+			});
 
-			getNumEvents(numberOfUser, eventTypeAndCategory).incrementAndGet();
-			this.eventCountdownsByUser.putIfAbsent(numberOfUser, new HashMap<>());
-			if (this.eventCountdownsByUser.get(numberOfUser).get(eventTypeAndCategory) != null) {
-				this.eventCountdownsByUser.get(numberOfUser).get(eventTypeAndCategory).countDown();
-			}
+			executeInNamedLock(numberOfUser + eventTypeAndCategory, () -> {
+				getNumEvents(numberOfUser, eventTypeAndCategory).incrementAndGet();
+				this.eventCountdownsByUser.putIfAbsent(numberOfUser, new HashMap<>());
+				if (this.eventCountdownsByUser.get(numberOfUser).get(eventTypeAndCategory) != null) {
+					this.eventCountdownsByUser.get(numberOfUser).get(eventTypeAndCategory).countDown();
+				}
+			});
 		}
 	}
 
@@ -367,5 +378,11 @@ public class OpenViduEventManager {
 		String events = (String) ((JavascriptExecutor) driver)
 				.executeScript("var e = window.myEvents; window.myEvents = ''; return e;");
 		return events;
+	}
+
+	public void executeInNamedLock(String lockName, Runnable runnable) {
+		synchronized (lockName.intern()) {
+			runnable.run();
+		}
 	}
 }
