@@ -229,7 +229,9 @@ export class ParticipantComponent {
             ParticipantEvent.TrackSubscriptionFailed,
             'ParticipantEvent',
             { trackSid, reason },
-            trackSid + ' . Reason: ' + reason
+            trackSid +
+              ' . Reason: ' +
+              (reason ? SubscriptionError[reason] : reason)
           );
         }
       )

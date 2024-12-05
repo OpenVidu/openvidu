@@ -261,7 +261,7 @@ export class OpenviduInstanceComponent {
       this.room?.removeAllListeners(RoomEvent.Disconnected);
       if (this.roomEvents.get(RoomEvent.Disconnected)) {
         this.room!.on(RoomEvent.Disconnected, (reason?: DisconnectReason) => {
-          this.updateEventList(RoomEvent.Disconnected, {}, `Reason: ${reason}`);
+          this.updateEventList(RoomEvent.Disconnected, {}, `Reason: ${reason ? DisconnectReason[reason] : reason}`);
         });
       }
     }
@@ -422,7 +422,7 @@ export class OpenviduInstanceComponent {
             this.updateEventList(
               RoomEvent.TrackSubscriptionFailed,
               { trackSid, participant },
-              `${participant.identity} (${trackSid}). Reason: ${reason}`
+              `${participant.identity} (${trackSid}). Reason: ${reason ? SubscriptionError[reason] : reason}`
             );
           }
         );
