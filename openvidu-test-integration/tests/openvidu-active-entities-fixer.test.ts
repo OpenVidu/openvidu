@@ -15,7 +15,7 @@ describe("OpenVidu active entities fixer", () => {
 
     beforeEach(async () => {
         await startLocalDeployment();
-    }, 60000); // 1 minute
+    }, 120000); // 2 minute
 
     afterEach(() => {
         stopLocalDeployment();
