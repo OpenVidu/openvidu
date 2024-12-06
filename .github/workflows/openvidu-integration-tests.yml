@@ -1,0 +1,55 @@
+name: OpenVidu integration tests
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "openvidu-test-integration/**"
+      - ".github/workflows/openvidu-integration-tests.yml"
+  workflow_dispatch:
+
+jobs:
+  integration-tests:
+    name: Backend tests
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout OpenVidu Local Deployment
+        uses: actions/checkout@v4
+        with:
+          repository: OpenVidu/openvidu-local-deployment
+          path: openvidu-local-deployment
+
+      - name: Configure OpenVidu Local Deployment
+        working-directory: ./openvidu-local-deployment/community
+        run: |
+          ./configure_lan_private_ip_linux.sh
+          sed -i 's/interval: 10s/interval: 1s/' livekit.yaml
+          sed -i '/interval: 1s/a \        fixer_interval: 10s' livekit.yaml
+          docker compose pull
+
+      - name: Checkout current repository
+        uses: actions/checkout@v4
+        with:
+          path: openvidu
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: ./openvidu/openvidu-test-integration
+        run: npm ci
+
+      - name: Run tests
+        working-directory: ./openvidu/openvidu-test-integration
+        run: npm run test:ci
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: openvidu-integration-tests-report
+          path: ./openvidu/openvidu-test-integration/test-results.json
+          retention-days: 7
