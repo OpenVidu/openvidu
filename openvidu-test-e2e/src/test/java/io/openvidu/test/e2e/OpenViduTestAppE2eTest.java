@@ -22,6 +22,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
@@ -441,7 +445,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox force H264")
-	@Disabled // It seems that Firefox only available codec is VP8 using Pion
+	@Disabled // Firefox forces H264 in linux/android when publishing even with Pion
 	void firefoxForceH264Test() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 		log.info("Firefox force H264");
@@ -458,7 +462,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox force VP9")
-	@Disabled // It seems that Firefox only available codec is VP8 using Pion
+	@Disabled // Firefox forces H264 in linux/android when publishing even with Pion
 	void firefoxForceVP9Test() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 		log.info("Firefox force VP9");
@@ -502,6 +506,139 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
 		String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
 		Assertions.assertEquals(expectedCodec, subscriberCodec);
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("Firefox subscribe to VP8")
+	void firefoxSubscribeToVP8Test() throws Exception {
+		log.info("Firefox subscribe to VP8");
+		firefoxSubscribeToCodecTest("vp8");
+	}
+
+	@Test
+	@DisplayName("Firefox subscribe to H264")
+	void firefoxSubscribeToH264Test() throws Exception {
+		log.info("Firefox subscribe to H264");
+		firefoxSubscribeToCodecTest("h264");
+	}
+
+	@Test
+	@DisplayName("Firefox subscribe to VP9")
+	void firefoxSubscribeToVP9Test() throws Exception {
+		log.info("Firefox subscribe to VP9");
+		firefoxSubscribeToCodecTest("vp9");
+	}
+
+	private void firefoxSubscribeToCodecTest(String codec) throws Exception {
+		final String expectedCodec = "video/" + codec.toUpperCase();
+		final CountDownLatch latch = new CountDownLatch(2);
+		ExecutorService executor = Executors.newFixedThreadPool(2);
+
+		Future<?> task1 = executor.submit(() -> {
+			try {
+				OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+				this.addOnlyPublisherVideo(chromeUser, false, false, false);
+				WebElement participantNameInput = chromeUser.getDriver().findElement(By.id("participant-name-input-0"));
+				participantNameInput.clear();
+				participantNameInput.sendKeys("CHROME_USER");
+				chromeUser.getDriver().findElement(By.id("room-options-btn-0")).click();
+				Thread.sleep(300);
+				chromeUser.getDriver().findElement(By.id("trackPublish-backupCodec")).click();
+				chromeUser.getDriver().findElement(By.id("trackPublish-videoCodec")).click();
+				Thread.sleep(300);
+				chromeUser.getDriver().findElement(By.id("mat-option-" + codec.toLowerCase())).click();
+				chromeUser.getDriver().findElement(By.id("close-dialog-btn")).click();
+				Thread.sleep(300);
+				chromeUser.getDriver().findElement(By.className("connect-btn")).click();
+				chromeUser.getEventManager().waitUntilEventReaches("localTrackSubscribed", "ParticipantEvent", 1);
+				// Check publisher's codec
+				WebElement publisherVideo = chromeUser.getDriver()
+						.findElement(By.cssSelector("#openvidu-instance-0 video.local"));
+				Assertions.assertEquals(expectedCodec,
+						getPublisherVideoLayerAttribute(chromeUser, publisherVideo, null, "codec").getAsString());
+				latch.countDown();
+				latch.await(10, TimeUnit.SECONDS);
+				gracefullyLeaveParticipants(chromeUser, 1);
+			} catch (Exception e) {
+				Assertions.fail("Error while setting up Chrome publisher", e);
+			}
+		});
+
+		Future<?> task2 = executor.submit(() -> {
+			try {
+				OpenViduTestappUser firefoxUser = setupBrowserAndConnectToOpenViduTestapp("firefox");
+				this.addSubscriber(firefoxUser, false);
+				WebElement participantNameInput = firefoxUser.getDriver()
+						.findElement(By.id("participant-name-input-0"));
+				participantNameInput.clear();
+				participantNameInput.sendKeys("FIREFOX_USER");
+				firefoxUser.getDriver().findElement(By.className("connect-btn")).click();
+				firefoxUser.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
+				firefoxUser.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
+				final int numberOfVideos = firefoxUser.getDriver().findElements(By.tagName("video")).size();
+				Assertions.assertEquals(1, numberOfVideos, "Wrong number of videos");
+				Assertions.assertTrue(firefoxUser.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
+						"HTMLVideoElements were expected to have only one video track");
+
+				// Check subscriber's codec
+				WebElement subscriberVideo = firefoxUser.getDriver()
+						.findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+				waitUntilVideoLayersNotEmpty(firefoxUser, subscriberVideo);
+				JsonArray json = this.getLayersAsJsonArray(firefoxUser, subscriberVideo);
+				String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
+				Assertions.assertEquals(expectedCodec, subscriberCodec);
+				latch.countDown();
+				latch.await(10, TimeUnit.SECONDS);
+				gracefullyLeaveParticipants(firefoxUser, 1);
+			} catch (Exception e) {
+				Assertions.fail("Error while setting up Firefox subscriber", e);
+			}
+		});
+
+		try {
+			task1.get();
+			task2.get();
+		} catch (ExecutionException ex) {
+			Assertions.fail("Error while running browsers in parallel", ex);
+		}
+	}
+
+	@Test
+	@DisplayName("Firefox toggle subscription")
+	void firefoxToggleSubscriptionTest() throws Exception {
+		log.info("Firefox toggle subscription");
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
+		this.addOnlyPublisherVideo(user, false, false, false);
+		this.addSubscriber(user, false);
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		user.getEventManager().waitUntilEventReaches(0, "localTrackSubscribed", "ParticipantEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 1);
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 2));
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
+				"HTMLVideoElements were expected to have only one video track");
+
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+		long bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
+		this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo, bytesReceived);
+
+		// Unsubscribe
+		WebElement toggleSubscriptionBtn = user.getDriver()
+				.findElement(By.cssSelector("#openvidu-instance-1 .toggle-video-subscribed"));
+		toggleSubscriptionBtn.click();
+		user.getEventManager().waitUntilEventReaches(1, "trackUnsubscribed", "ParticipantEvent", 1);
+
+		this.waitUntilAux(user, subscriberVideo, () -> {
+			return this.getLayersAsString(user, subscriberVideo).isBlank();
+		}, "Timeout waiting for subscriber video to not have any layers");
+
+		// Re-subscribe
+		toggleSubscriptionBtn.click();
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 2);
+		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
+		bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
+		this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo, bytesReceived);
 
 		gracefullyLeaveParticipants(user, 2);
 	}
@@ -1048,7 +1185,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		WebElement toggleSubscriptionBtn = user.getDriver()
 				.findElement(By.cssSelector("#openvidu-instance-1 .toggle-video-subscribed"));
 		toggleSubscriptionBtn.click();
-		user.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "trackUnsubscribed", "RoomEvent", 1);
 		user.getEventManager().waitUntilEventReaches(1, "trackSubscriptionStatusChanged", "RoomEvent", 1);
 		user.getEventManager().clearAllCurrentEvents();
 
@@ -1438,16 +1575,22 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		return result.getAsJsonObject().get(attribute);
 	}
 
-	private JsonArray getLayersAsJsonArray(OpenViduTestappUser user, WebElement video) {
+	private String getLayersAsString(OpenViduTestappUser user, WebElement video) {
 		this.openInfoDialog(user, video);
 		user.getDriver().findElement(By.cssSelector("#update-value-btn")).click();
 		WebElement textarea = user.getDriver().findElement(By.id("info-text-area"));
-		String value = textarea.getAttribute("value");
+		return textarea.getAttribute("value");
+	}
+
+	private JsonArray getLayersAsJsonArray(OpenViduTestappUser user, WebElement video) {
+		String value = getLayersAsString(user, video);
 		return JsonParser.parseString(value).getAsJsonArray();
 	}
 
 	private void waitUntilVideoLayersNotEmpty(OpenViduTestappUser user, WebElement videoElement) {
-		this.waitUntilAux(user, videoElement, () -> !getLayersAsJsonArray(user, videoElement).isEmpty(),
+		this.waitUntilAux(user, videoElement,
+				() -> !getLayersAsString(user, videoElement).isBlank()
+						&& !getLayersAsJsonArray(user, videoElement).isEmpty(),
 				"Timeout waiting video layers to not be empty");
 	}
 
