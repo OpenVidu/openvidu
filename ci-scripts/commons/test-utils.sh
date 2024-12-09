@@ -68,12 +68,12 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
     FAKE_VIDEO1=/opt/openvidu/barcode.y4m
     FAKE_VIDEO2=/opt/openvidu/girl.mjpeg
     if [ ! -f ${FAKE_VIDEO1} ]; then
-        sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m --create-dirs --output /opt/openvidu/barcode.y4m
+        sudo curl --location https://github.com/OpenVidu/openvidu/raw/v2/openvidu-test-e2e/docker/barcode.y4m --create-dirs --output /opt/openvidu/barcode.y4m
     else
         echo "File ${FAKE_VIDEO1} already exists"
     fi
     if [ ! -f ${FAKE_VIDEO2} ]; then
-        sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/girl.mjpeg --create-dirs --output /opt/openvidu/girl.mjpeg
+        sudo curl --location https://github.com/OpenVidu/openvidu/raw/v2/openvidu-test-e2e/docker/girl.mjpeg --create-dirs --output /opt/openvidu/girl.mjpeg
     else
         echo "File ${FAKE_VIDEO2} already exists"
     fi
@@ -82,12 +82,12 @@ if [[ "${PREPARE_TEST_ENVIRONMENT}" == true ]]; then
     FAKE_AUDIO1=/opt/openvidu/fakeaudio.wav
     FAKE_AUDIO2=/opt/openvidu/stt-test.wav
     if [ ! -f ${FAKE_AUDIO1} ]; then
-        sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/fakeaudio.wav --create-dirs --output /opt/openvidu/fakeaudio.wav
+        sudo curl --location https://github.com/OpenVidu/openvidu/raw/v2/openvidu-test-e2e/docker/fakeaudio.wav --create-dirs --output /opt/openvidu/fakeaudio.wav
     else
         echo "File ${FAKE_AUDIO1} already exists"
     fi
     if [ ! -f ${FAKE_AUDIO2} ]; then
-        sudo curl --location https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/stt-test.wav --create-dirs --output /opt/openvidu/stt-test.wav
+        sudo curl --location https://github.com/OpenVidu/openvidu/raw/v2/openvidu-test-e2e/docker/stt-test.wav --create-dirs --output /opt/openvidu/stt-test.wav
     else
         echo "File ${FAKE_AUDIO2} already exists"
     fi
