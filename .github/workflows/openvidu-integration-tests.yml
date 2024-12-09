@@ -18,6 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OpenVidu/openvidu-local-deployment
+          ref: development
           path: openvidu-local-deployment
 
       - name: Configure OpenVidu Local Deployment
@@ -27,6 +28,10 @@ jobs:
           sed -i 's/interval: 10s/interval: 1s/' livekit.yaml
           sed -i '/interval: 1s/a \        fixer_interval: 10s' livekit.yaml
           docker compose pull
+
+      - name: Install LiveKit CLI
+        run: |
+          curl -sSL https://get.livekit.io/cli | bash
 
       - name: Checkout current repository
         uses: actions/checkout@v4
