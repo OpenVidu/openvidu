@@ -392,7 +392,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Massive session");
 
-		final Integer NUMBER_OF_USERS = 11;
+		// Set the maximum number limit of participants in the rom because of the evaluation mode
+		final Integer NUMBER_OF_USERS = 8;
 
 		user.getDriver().findElement(By.id("toolbar-scenarios")).sendKeys(Keys.ENTER);
 
