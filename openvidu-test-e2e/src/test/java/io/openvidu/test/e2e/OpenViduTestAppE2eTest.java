@@ -402,7 +402,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		one2ManyInput.sendKeys(NUMBER_OF_USERS.toString());
 
 		user.getDriver().findElement(By.id("one2many-btn")).click();
-
 		user.getEventManager().waitUntilEventReaches("connectionCreated", NUMBER_OF_USERS * NUMBER_OF_USERS, 30, true);
 		user.getEventManager().waitUntilEventReaches("streamCreated", NUMBER_OF_USERS * NUMBER_OF_USERS, 15, true);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", NUMBER_OF_USERS * NUMBER_OF_USERS, 15, true);
@@ -1897,12 +1896,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Check video-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "~1/";
 		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "~1");
-		this.recordingUtils.checkIndividualRecording(recPath, recording, 3, "opus", "vp8", true);
+		this.recordingUtils.checkIndividualRecording(recPath, recording, 3, "acc", "h264", true);
 
 		// Check audio-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "~2/";
 		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "~2");
-		this.recordingUtils.checkIndividualRecording(recPath, recording, 2, "opus", "vp8", true);
+		this.recordingUtils.checkIndividualRecording(recPath, recording, 2, "opus",null, true);
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
