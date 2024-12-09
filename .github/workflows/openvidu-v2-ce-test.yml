@@ -1,4 +1,4 @@
-name: OpenVidu V2 CE Tests
+name: OpenVidu V2 Tests
 on:
   push:
     branches:
@@ -60,11 +60,13 @@ jobs:
       EDGE_VERSION: ${{ inputs.EDGE_VERSION || 'latest' }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: v2
       - name: Setup scripts
         run: |
           curl -sOJ --output-dir /opt https://raw.githubusercontent.com/OpenVidu/openvidu/v2/ci-scripts/commons/build.sh
           curl -sOJ --output-dir /opt https://raw.githubusercontent.com/OpenVidu/openvidu/v2/ci-scripts/commons/test-utils.sh
-          curl -sOJ --output-dir /opt https://raw.githubusercontent.com/OpenVidu/openvidu/v2/ci-scripts/openvidu-e2e-tests.sh
+          cp ci-scripts/openvidu-e2e-tests.sh /opt/openvidu-e2e-tests.sh
           find /opt/*.sh -type f -print0 | xargs -0 chmod u+x
       - name: Clean environment
         run: /opt/build.sh --clean-environment
