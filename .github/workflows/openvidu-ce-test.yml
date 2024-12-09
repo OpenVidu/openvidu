@@ -1,4 +1,4 @@
-name: OpenVidu V2 Tests
+name: OpenVidu V2 CE Tests
 on:
   push:
     branches:
