@@ -703,6 +703,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':false}", HttpURLConnection.HTTP_OK);
+		Thread.sleep(3000);
+
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':true}", HttpURLConnection.HTTP_OK);
 
@@ -710,10 +712,12 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':false}", HttpURLConnection.HTTP_OK);
+		Thread.sleep(3000);
+
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':true}", HttpURLConnection.HTTP_OK);
 
-		Thread.sleep(2000);
+		Thread.sleep(5000);
 
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/" + sessionName, HttpURLConnection.HTTP_OK);
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 3);
