@@ -950,6 +950,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				"Videos were expected to have audio and video tracks");
 
 		// Moderator forces disconnect of publisher
+		Thread.sleep(3000);
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-2 .force-disconnect-btn")).click();
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 6);
 		user.getEventManager().waitUntilEventReaches("connectionDestroyed", 2);
