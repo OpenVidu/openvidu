@@ -1533,11 +1533,19 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
 				Assertions.assertEquals("started", event.get("status").getAsString(),
 						"Wrong status in recordingStatusChanged event");
-				event = CustomWebhook.waitForEvent("recordingStatusChanged", 10); // failed
-				Assertions.assertEquals("failed", event.get("status").getAsString(),
-						"Wrong status in recordingStatusChanged event");
-				Assertions.assertEquals(Recording.Status.failed, OV.getRecording(sessionName + "~2").getStatus(),
-						"Wrong recording status");
+				try {
+					// Wait first for a failed event
+					event = CustomWebhook.waitForEvent("recordingStatusChanged", 10); // failed
+					Assertions.assertEquals("failed", event.get("status").getAsString(),
+							"Wrong status in recordingStatusChanged event");
+					Assertions.assertEquals(Recording.Status.failed, OV.getRecording(sessionName + "~2").getStatus(),
+							"Wrong recording status");
+				} catch (Exception e) {
+					// If the failed event is not received, it's because the session has been destroyed
+					// before the recording started
+					// Check for sessionDestroyed event
+					event = CustomWebhook.waitForEvent("sessionDestroyed", 5);	
+				}
 			} else {
 				// Recording did have time to start. Should trigger started, stopped, ready
 				event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
