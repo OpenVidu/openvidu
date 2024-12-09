@@ -3305,7 +3305,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		/** DELETE /openvidu/api/sessions/<SESSION_ID>/connection/<CONNECTION_ID> **/
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/NOT_EXISTS/connection/NOT_EXISTS",
-				HttpURLConnection.HTTP_BAD_REQUEST);
+				HttpURLConnection.HTTP_NOT_FOUND);
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/NOT_EXISTS",
 				HttpURLConnection.HTTP_NOT_FOUND);
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
