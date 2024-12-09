@@ -472,6 +472,12 @@ public class OpenViduTestE2e {
 			}
 			if (!containerAlreadyRunning) {
 				container.start();
+				try {
+					// Avoid error starting container
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 				containers.add(container);
 				return true;
 			}
