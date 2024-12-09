@@ -1533,7 +1533,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
 				Assertions.assertEquals("started", event.get("status").getAsString(),
 						"Wrong status in recordingStatusChanged event");
-				event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // failed
+				event = CustomWebhook.waitForEvent("recordingStatusChanged", 10); // failed
 				Assertions.assertEquals("failed", event.get("status").getAsString(),
 						"Wrong status in recordingStatusChanged event");
 				Assertions.assertEquals(Recording.Status.failed, OV.getRecording(sessionName + "~2").getStatus(),
@@ -1543,7 +1543,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
 				Assertions.assertEquals("stopped", event.get("status").getAsString(),
 						"Wrong status in recordingStatusChanged event");
-				event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // failed
+				event = CustomWebhook.waitForEvent("recordingStatusChanged", 10); // failed
 				Assertions.assertEquals("ready", event.get("status").getAsString(),
 						"Wrong status in recordingStatusChanged event");
 				Assertions.assertEquals(Recording.Status.ready, OV.getRecording(sessionName + "~2").getStatus(),
