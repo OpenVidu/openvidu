@@ -3849,6 +3849,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assertions.assertEquals(10 + 1, event.keySet().size(),
 					"Wrong number of properties in event 'participantJoined'");
 
+			Thread.sleep(5000);
 			event = CustomWebhook.waitForEvent("webrtcConnectionCreated", 4);
 			Assertions.assertEquals(12 + 1, event.keySet().size(),
 					"Wrong number of properties in event 'webrtcConnectionCreated'");
@@ -3872,7 +3873,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.id("add-user-btn")).click();
 			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
 
-			Thread.sleep(3000);
+			Thread.sleep(5000);
 			event = CustomWebhook.waitForEvent("participantJoined", 2);
 			CustomWebhook.waitForEvent("webrtcConnectionCreated", 12);
 			// NO SUBSCRIBERS
@@ -3885,6 +3886,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			long timestamp = System.currentTimeMillis();
 			user.getDriver().findElement(By.cssSelector(("#openvidu-instance-0 .message-btn"))).click();
 			user.getEventManager().waitUntilEventReaches("signal:chat", 2);
+			Thread.sleep(3000);
 			event = CustomWebhook.waitForEvent("signalSent", 1);
 			Assertions.assertEquals(7 + 1, event.keySet().size(), "Wrong number of properties in event 'signalSent'");
 			Assertions.assertEquals("TestSession", event.get("sessionId").getAsString(),
