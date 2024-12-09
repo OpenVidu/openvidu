@@ -1,8 +1,8 @@
-name: OpenVidu CE Tests
+name: OpenVidu V2 Tests
 on:
   push:
     branches:
-      - master
+      - v2
     paths-ignore:
       - ".github/workflows/openvidu-components-angular-E2E.yml"
       - "openvidu-components-angular/**"
@@ -10,7 +10,7 @@ on:
       - "openvidu-server/deployments/**"
   pull_request:
     branches:
-      - master
+      - v2
   workflow_dispatch:
     inputs:
       TEST_IMAGE:
@@ -62,9 +62,9 @@ jobs:
       - uses: actions/checkout@v3
       - name: Setup scripts
         run: |
-          curl -sOJ --output-dir /opt https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/commons/build.sh
-          curl -sOJ --output-dir /opt https://raw.githubusercontent.com/OpenVidu/openvidu/master/ci-scripts/commons/test-utils.sh
-          cp ci-scripts/openvidu-e2e-tests.sh /opt/openvidu-e2e-tests.sh
+          curl -sOJ --output-dir /opt https://raw.githubusercontent.com/OpenVidu/openvidu/v2/ci-scripts/commons/build.sh
+          curl -sOJ --output-dir /opt https://raw.githubusercontent.com/OpenVidu/openvidu/v2/ci-scripts/commons/test-utils.sh
+          curl -sOJ --output-dir /opt https://raw.githubusercontent.com/OpenVidu/openvidu/v2/ci-scripts/openvidu-e2e-tests.sh
           find /opt/*.sh -type f -print0 | xargs -0 chmod u+x
       - name: Clean environment
         run: /opt/build.sh --clean-environment
