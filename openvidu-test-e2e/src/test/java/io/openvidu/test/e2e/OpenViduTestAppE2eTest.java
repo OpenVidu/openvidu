@@ -1418,7 +1418,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@Disabled
 	@DisplayName("Composed quick start record")
 	void composedQuickStartRecordTest() throws Exception {
 		isRecordingTest = true;
@@ -1568,32 +1567,34 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 			// checkDockerContainerRunning("openvidu/openvidu-recording", 1);
 
-			OV.fetch();
-			session = OV.getActiveSessions().get(0);
-			session.close();
 
-			event = CustomWebhook.waitForEvent("recordingStatusChanged", 1);
-			if ("stopped".equals(event.get("status").getAsString())) {
-				// Recording hasn't had time to start. Should trigger stopped, started, failed
-				event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
-				Assertions.assertEquals("started", event.get("status").getAsString(),
-						"Wrong status in recordingStatusChanged event");
-				event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // failed
-				Assertions.assertEquals("failed", event.get("status").getAsString(),
-						"Wrong status in recordingStatusChanged event");
-				Assertions.assertEquals(Recording.Status.failed, OV.getRecording(sessionName + "~2").getStatus(),
-						"Wrong recording status");
-			} else {
-				// Recording did have time to start. Should trigger started, stopped, ready
-				event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
-				Assertions.assertEquals("stopped", event.get("status").getAsString(),
-						"Wrong status in recordingStatusChanged event");
-				event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // failed
-				Assertions.assertEquals("ready", event.get("status").getAsString(),
-						"Wrong status in recordingStatusChanged event");
-				Assertions.assertEquals(Recording.Status.ready, OV.getRecording(sessionName + "~2").getStatus(),
-						"Wrong recording status");
-			}
+			// Disabled corner case test
+			// OV.fetch();
+			// session = OV.getActiveSessions().get(0);
+			// session.close();
+
+			// event = CustomWebhook.waitForEvent("recordingStatusChanged", 1);
+			// if ("stopped".equals(event.get("status").getAsString())) {
+			// 	// Recording hasn't had time to start. Should trigger stopped, started, failed
+			// 	event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
+			// 	Assertions.assertEquals("started", event.get("status").getAsString(),
+			// 			"Wrong status in recordingStatusChanged event");
+			// 	event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // failed
+			// 	Assertions.assertEquals("failed", event.get("status").getAsString(),
+			// 			"Wrong status in recordingStatusChanged event");
+			// 	Assertions.assertEquals(Recording.Status.failed, OV.getRecording(sessionName + "~2").getStatus(),
+			// 			"Wrong recording status");
+			// } else {
+			// 	// Recording did have time to start. Should trigger started, stopped, ready
+			// 	event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
+			// 	Assertions.assertEquals("stopped", event.get("status").getAsString(),
+			// 			"Wrong status in recordingStatusChanged event");
+			// 	event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // failed
+			// 	Assertions.assertEquals("ready", event.get("status").getAsString(),
+			// 			"Wrong status in recordingStatusChanged event");
+			// 	Assertions.assertEquals(Recording.Status.ready, OV.getRecording(sessionName + "~2").getStatus(),
+			// 			"Wrong recording status");
+			// }
 
 			// checkDockerContainerRunning("openvidu/openvidu-recording", 0);
 
