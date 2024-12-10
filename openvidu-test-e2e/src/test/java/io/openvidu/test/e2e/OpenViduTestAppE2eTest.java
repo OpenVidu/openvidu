@@ -133,6 +133,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@BeforeEach()
 	protected void beforeEach() {
 		this.closeAllSessions(OV);
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		this.deleteAllRecordings(OV);
 	}
 
