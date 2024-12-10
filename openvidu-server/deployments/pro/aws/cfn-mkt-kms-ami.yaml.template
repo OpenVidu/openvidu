@@ -103,7 +103,7 @@ Resources:
                   for IMAGE in "${IMAGES[@]}"
                   do
                       # Replace the image tag in the YAML file
-                      sed -i "s,$IMAGE:.*,${IMAGE}:master,g" docker-compose.yml
+                      sed -i "s,$IMAGE:.*,${IMAGE}:master-v2,g" docker-compose.yml
                   done
 
                   # Docker pull of the images

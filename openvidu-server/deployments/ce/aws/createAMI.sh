@@ -54,7 +54,7 @@ TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-ov-ce-am
 if [[ ${UPDATE_S3_FILES} == "true" ]]; then
   # Avoid overriding existing versions
   # Only master and non existing versions can be overriden
-  if [[ ${OPENVIDU_VERSION} != "master" ]]; then
+  if [[ ${OPENVIDU_VERSION} != "master-v2" ]]; then
     INSTALL_SCRIPT_EXISTS=true
     aws s3api head-object --bucket aws.openvidu.io --key install_openvidu_$OPENVIDU_VERSION.sh || INSTALL_SCRIPT_EXISTS=false
     if [[ ${INSTALL_SCRIPT_EXISTS} == "true" ]]; then
@@ -112,7 +112,7 @@ sed -i "s/OPENVIDU_VERSION/${OPENVIDU_VERSION}/g" CF-OpenVidu-${OPENVIDU_VERSION
 if [[ ${UPDATE_S3_FILES} == "true" ]]; then
   # Avoid overriding existing versions
   # Only master and non existing versions can be overriden
-  if [[ ${OPENVIDU_VERSION} != "master" ]]; then
+  if [[ ${OPENVIDU_VERSION} != "master-v2" ]]; then
     CF_EXIST=true
     aws s3api head-object --bucket aws.openvidu.io --key CF-OpenVidu-${OPENVIDU_VERSION}.yaml || CF_EXIST=false
     if [[ ${CF_EXIST} == "true" ]]; then

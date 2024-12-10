@@ -72,7 +72,7 @@ TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-kms-ami.
 if [[ ${UPDATE_S3_FILES} == "true" ]]; then
   # Avoid overriding existing versions
   # Only master and non existing versions can be overriden
-  if [[ ${OPENVIDU_PRO_VERSION} != "master" ]]; then
+  if [[ ${OPENVIDU_PRO_VERSION} != "master-v2" ]]; then
     INSTALL_SCRIPT_EXISTS=true
     aws s3api head-object --bucket aws.openvidu.io --key install_media_node_$OPENVIDU_PRO_VERSION.sh || INSTALL_SCRIPT_EXISTS=false
     if [[ ${INSTALL_SCRIPT_EXISTS} == "true" ]]; then
@@ -132,7 +132,7 @@ TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-ov-ami.y
 if [[ ${UPDATE_S3_FILES} == "true" ]]; then
   # Avoid overriding existing versions
   # Only master and non existing versions can be overriden
-  if [[ ${OPENVIDU_PRO_VERSION} != "master" ]]; then
+  if [[ ${OPENVIDU_PRO_VERSION} != "master-v2" ]]; then
     INSTALL_SCRIPT_EXISTS=true
     aws s3api head-object --bucket aws.openvidu.io --key install_openvidu_pro_$OPENVIDU_PRO_VERSION.sh || INSTALL_SCRIPT_EXISTS=false
     if [[ ${INSTALL_SCRIPT_EXISTS} == "true" ]]; then
@@ -191,7 +191,7 @@ sed -i "s/_AWS_CLI_DOCKER_TAG_/${AWS_CLI_DOCKER_TAG}/g" CF-OpenVidu-Pro-${OPENVI
 if [[ ${UPDATE_S3_FILES} == "true" ]]; then
   # Avoid overriding existing versions
   # Only master and non existing versions can be overriden
-  if [[ ${OPENVIDU_PRO_VERSION} != "master" ]]; then
+  if [[ ${OPENVIDU_PRO_VERSION} != "master-v2" ]]; then
     CF_EXIST=true
     aws s3api head-object --bucket aws.openvidu.io --key CF-OpenVidu-Pro-${OPENVIDU_PRO_VERSION}.yaml || CF_EXIST=false
     if [[ ${CF_EXIST} == "true" ]]; then

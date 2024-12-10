@@ -90,14 +90,14 @@ Resources:
                   IMAGES=$(echo "$IMAGES" | grep -v openvidu/openvidu-elasticsearch)
                   for IMG in $IMAGES
                   do
-                    sed -i "s|$IMG.*|$IMG:master|g" docker-compose.yml
+                    sed -i "s|$IMG.*|$IMG:master-v2|g" docker-compose.yml
                   done
 
                   # docker-compose.override.yml replace with master version
                   IMAGES="$(cat docker-compose.override.yml | grep 'image: openvidu/' | cut -d':' -f2 | sed -e 's/^[[:space:]]*//')"
                   for IMG in $IMAGES
                   do
-                    sed -i "s|$IMG.*|$IMG:master|g" docker-compose.override.yml
+                    sed -i "s|$IMG.*|$IMG:master-v2|g" docker-compose.override.yml
                   done
                   popd
 

@@ -2,8 +2,8 @@
 
 COTURN_FOLDER="coturn"
 CERTBOT_WRAPPER="${COTURN_FOLDER}/certbot-wrapper"
-COTURN_VERSION=master
-DOWNLOAD_URL="https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/deployments/external-turn/${COTURN_VERSION}"
+COTURN_VERSION=v2
+DOWNLOAD_URL="https://raw.githubusercontent.com/OpenVidu/openvidu/v2/openvidu-server/deployments/external-turn/${COTURN_VERSION}"
 #COTURN_VERSION=4.6.2
 #DOWNLOAD_URL="https://s3.eu-west-1.amazonaws.com/aws.openvidu.io/external-turn/${COTURN_VERSION}"
 
