@@ -376,6 +376,10 @@ public class OpenViduTestE2e {
 	}
 
 	protected BrowserUser setupBrowser(String browser) throws Exception {
+		return setupBrowser(browser, 5000);
+	}
+
+	protected BrowserUser setupBrowser(String browser, long startDelay) throws Exception {
 
 		BrowserUser browserUser = null;
 		GenericContainer<?> container;
@@ -384,58 +388,58 @@ public class OpenViduTestE2e {
 		switch (browser) {
 		case "chrome":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
-			setupBrowserAux(BrowserNames.CHROME, container, false);
+			setupBrowserAux(BrowserNames.CHROME, container, false, startDelay);
 			browserUser = new ChromeUser("TestUser", 50, true);
 			break;
 		case "chromeTwoInstances":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 2, true);
-			setupBrowserAux(BrowserNames.CHROME, container, false);
+			setupBrowserAux(BrowserNames.CHROME, container, false, startDelay);
 			browserUser = new ChromeUser("TestUser", 50, true);
 			break;
 		case "chromeAlternateScreenShare":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
-			setupBrowserAux(BrowserNames.CHROME, container, false);
+			setupBrowserAux(BrowserNames.CHROME, container, false, startDelay);
 			browserUser = new ChromeUser("TestUser", 50, "OpenVidu TestApp");
 			break;
 		case "chromeAlternateFakeVideo":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
-			setupBrowserAux(BrowserNames.CHROME, container, false);
+			setupBrowserAux(BrowserNames.CHROME, container, false, startDelay);
 			path = Paths.get("/opt/openvidu/barcode.y4m");
 			checkMediafilePath(path);
 			browserUser = new ChromeUser("TestUser", 50, path);
 			break;
 		case "chromeFakeAudio":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
-			setupBrowserAux(BrowserNames.CHROME, container, false);
+			setupBrowserAux(BrowserNames.CHROME, container, false, startDelay);
 			path = Paths.get("/opt/openvidu/stt-test.wav");
 			checkMediafilePath(path);
 			browserUser = new ChromeUser("TestUser", 50, null, path);
 			break;
 		case "chromeVirtualBackgroundFakeVideo":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
-			setupBrowserAux(BrowserNames.CHROME, container, false);
+			setupBrowserAux(BrowserNames.CHROME, container, false, startDelay);
 			path = Paths.get("/opt/openvidu/girl.mjpeg");
 			checkMediafilePath(path);
 			browserUser = new ChromeUser("TestUser", 50, path, false);
 			break;
 		case "firefox":
 			container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, true);
-			setupBrowserAux(BrowserNames.FIREFOX, container, false);
+			setupBrowserAux(BrowserNames.FIREFOX, container, false, startDelay);
 			browserUser = new FirefoxUser("TestUser", 50, false);
 			break;
 		case "firefoxDisabledOpenH264":
 			container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, true);
-			setupBrowserAux(BrowserNames.FIREFOX, container, false);
+			setupBrowserAux(BrowserNames.FIREFOX, container, false, startDelay);
 			browserUser = new FirefoxUser("TestUser", 50, true);
 			break;
 		case "opera":
 			container = operaContainer("selenium/standalone-opera:" + OPERA_VERSION, 2147483648L, 1);
-			setupBrowserAux(BrowserNames.OPERA, container, false);
+			setupBrowserAux(BrowserNames.OPERA, container, false, startDelay);
 			browserUser = new OperaUser("TestUser", 50);
 			break;
 		case "edge":
 			container = edgeContainer("selenium/standalone-edge:" + EDGE_VERSION, 2147483648L, 1, true);
-			setupBrowserAux(BrowserNames.EDGE, container, false);
+			setupBrowserAux(BrowserNames.EDGE, container, false, startDelay);
 			browserUser = new EdgeUser("TestUser", 50);
 			break;
 		case "androidChrome":
@@ -462,7 +466,7 @@ public class OpenViduTestE2e {
 		return browserUser;
 	}
 
-	private static boolean setupBrowserAux(BrowserNames browser, GenericContainer<?> container, boolean forceRestart) {
+	private static boolean setupBrowserAux(BrowserNames browser, GenericContainer<?> container, boolean forceRestart, long startDelay) {
 		if (isRemote(browser)) {
 			String dockerImage = container.getDockerImageName();
 			String ps = commandLine.executeCommand("docker ps | grep " + dockerImage, 30);
@@ -487,7 +491,7 @@ public class OpenViduTestE2e {
 
 	protected static GenericContainer<?> setupDockerAndroidContainer() throws Exception {
 		GenericContainer<?> container = androidContainer(DOCKER_ANDROID_IMAGE, 4294967296L);
-		boolean newContainer = setupBrowserAux(BrowserNames.ANDROID, container, false);
+		boolean newContainer = setupBrowserAux(BrowserNames.ANDROID, container, false, 5000);
 		if (!newContainer) {
 			container = containers.stream().filter(c -> DOCKER_ANDROID_IMAGE.equals(c.getDockerImageName())).findFirst()
 					.get();

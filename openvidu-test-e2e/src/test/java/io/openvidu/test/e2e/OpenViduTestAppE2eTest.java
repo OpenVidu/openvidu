@@ -154,7 +154,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@Test
 	@DisplayName("One2One Edge")
 	void oneToOneEdge() throws Exception {
-		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("edge");
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("edge", 20000);
 		log.info("One2One Edge");
 		oneToOneAux(user);
 	}
@@ -453,7 +453,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		Thread threadChrome = new Thread(() -> {
 			try {
-				browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("chrome"), "Chrome");
+				browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("chrome", 20000), "Chrome");
 			} catch (Exception e) {
 				String errMsg = "Error setting up browser: " + e.getMessage();
 				System.err.println(errMsg);
@@ -463,7 +463,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		});
 		Thread threadFirefox = new Thread(() -> {
 			try {
-				browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("firefox"), "Firefox");
+				browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("firefox", 20000), "Firefox");
 			} catch (Exception e) {
 				String errMsg = "Error setting up browser: " + e.getMessage();
 				System.err.println(errMsg);
@@ -473,7 +473,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		});
 		Thread threadEdge = new Thread(() -> {
 			try {
-				browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("edge"), "Edge");
+				browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("edge", 20000), "Edge");
 			} catch (Exception e) {
 				String errMsg = "Error setting up browser: " + e.getMessage();
 				System.err.println(errMsg);

@@ -28,7 +28,15 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 	}
 
 	protected OpenViduTestappUser setupBrowserAndConnectToOpenViduTestapp(String browser) throws Exception {
-		BrowserUser browserUser = this.setupBrowser(browser);
+		BrowserUser browserUser = this.setupBrowser(browser, 5000);
+		OpenViduTestappUser testappUser = new OpenViduTestappUser(browserUser);
+		this.testappUsers.add(testappUser);
+		this.connectToOpenViduTestApp(testappUser);
+		return testappUser;
+	}
+
+	protected OpenViduTestappUser setupBrowserAndConnectToOpenViduTestapp(String browser, long startDelay) throws Exception {
+		BrowserUser browserUser = this.setupBrowser(browser, startDelay);
 		OpenViduTestappUser testappUser = new OpenViduTestappUser(browserUser);
 		this.testappUsers.add(testappUser);
 		this.connectToOpenViduTestApp(testappUser);
