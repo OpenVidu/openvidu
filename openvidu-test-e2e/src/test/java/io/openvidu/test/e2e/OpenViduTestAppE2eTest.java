@@ -3864,7 +3864,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			event = CustomWebhook.waitForEvent("webrtcConnectionCreated", 4);
 			Assertions.assertEquals(12 + 1, event.keySet().size(),
 					"Wrong number of properties in event 'webrtcConnectionCreated'");
-			String connectionId1 = event.get("connectionId").getAsString();
+			final String connectionId1 = event.get("connectionId").getAsString();
 
 			event = CustomWebhook.waitForEvent("recordingStatusChanged", 10);
 			Assertions.assertEquals(12 + 1, event.keySet().size(),
