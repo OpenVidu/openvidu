@@ -1253,7 +1253,6 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@Disabled
 	@DisplayName("Virtual Background test")
 	void virtualBackgroundTest() throws Exception {
 
@@ -1275,8 +1274,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
+		Thread.sleep(2000);
 		user.getDriver().findElement(By.cssSelector(".other-operations-btn")).click();
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 
 		WebElement filterTypeInput = user.getDriver().findElement(By.id("filter-type-field"));
 		filterTypeInput.clear();
@@ -1284,24 +1284,37 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Blur filter
 		filterTypeInput.sendKeys("VB:blur");
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
+		Thread.sleep(3000);
 		user.getWaiter().until(
 				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
+		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
+		Thread.sleep(1000);
 		user.getWaiter().until(
 				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
+		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
+		Thread.sleep(1000);
 		user.getWaiter().until(
 				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
+		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
+		Thread.sleep(1000);
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Error [There is already a filter applied"));
+		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
+		Thread.sleep(1000);
 		user.getWaiter().until(
 				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter removed"));
+		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
+		Thread.sleep(1000);
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"has no filter applied"));
+		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
+		Thread.sleep(1000);
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"has no filter applied"));
 
@@ -1324,7 +1337,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		filterOptionsInput = user.getDriver().findElement(By.id("filter-options-field"));
 		filterOptionsInput.clear();
-		filterOptionsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/red.jpg\"}");
+		filterOptionsInput.sendKeys("{\"url\": \"https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Solid_red.svg/1024px-Solid_red.svg.png\"}");
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter().until(
 				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
@@ -1360,7 +1373,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Blue
 		filterParamsInput.clear();
-		filterParamsInput.sendKeys("{\"url\": \"https://openvidu.io/img/vb/blue.jpg\"}");
+		filterParamsInput.sendKeys("{\"url\": \"https://png.pngtree.com/thumb_back/fw800/background/20210207/pngtree-blue-pure-color-simple-background-image_557085.jpg\"}");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Filter method executed"));
