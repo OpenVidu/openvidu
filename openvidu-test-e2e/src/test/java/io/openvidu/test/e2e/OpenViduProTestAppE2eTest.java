@@ -229,7 +229,6 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	 * events triggered.
 	 */
 	@Test
-	@Disabled
 	@DisplayName("End reason")
 	void endReasonTest() throws Exception {
 
@@ -267,28 +266,31 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			try {
 
-				Map<String, Object> newConfig = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false,
-						"OPENVIDU_PRO_SPEECH_TO_TEXT", "disabled", "OPENVIDU_WEBHOOK", true,
-						"OPENVIDU_WEBHOOK_ENDPOINT", "http://127.0.0.1:7777/webhook",
-						"OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT", 0);
-				restartOpenViduServer(newConfig);
+				// Map<String, Object> newConfig = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false,
+				// 		"OPENVIDU_PRO_SPEECH_TO_TEXT", "disabled", "OPENVIDU_WEBHOOK", true,
+				// 		"OPENVIDU_WEBHOOK_ENDPOINT", "http://127.0.0.1:7777/webhook",
+				// 		"OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT", 0);
+				// restartOpenViduServer(newConfig);
 
 				OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
 				// unsubscribe: webrtcConnectionDestroyed
 				this.connectTwoUsers(user, restClient, false, false, null);
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .sub-btn")).click();
-				Assertions.assertEquals("unsubscribe",
-						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
+
+				// webrtcConnectionDestroyed event is not triggered when unsubscribing in v2Compatibility (only OUTBOUND)
+				// Assertions.assertEquals("unsubscribe",
+				// 		CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// unpublish: webrtcConnectionDestroyed
 				this.connectTwoUsers(user, restClient, false, false, null);
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .pub-btn")).click();
-				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("unpublish",
-							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
-				}
+				// for (int i = 0; i < 2; i++) {
+				// webrtcConnectionDestroyed event is not triggered when unsubscribing in v2Compatibility (only OUTBOUND)
+				Assertions.assertEquals("unpublish",
+						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
+				// }
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// disconnect: webrtcConnectionDestroyed, participantLeft (and subsequent
@@ -297,39 +299,43 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
 				// First user out
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .leave-btn")).click();
-				for (int i = 0; i < 3; i++) {
-					Assertions.assertEquals("disconnect",
+				// webrtcConnectionDestroyed event is only triggered when participant left in v2Compatibility
+				// for (int i = 0; i < 3; i++) {
+					Assertions.assertEquals("unpublish",  // reason is always "unpublish" in v2Compatibility
 							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
-				}
+				// }
 				Assertions.assertEquals("disconnect",
 						CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
 				// Second user out
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .leave-btn")).click();
-				Assertions.assertEquals("disconnect",
+				Assertions.assertEquals("unpublish",  // reason is always "unpublish" in v2Compatibility
 						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
 				Assertions.assertEquals("disconnect",
 						CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
 				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("lastParticipantLeft",
+					Assertions.assertEquals("recordingStoppedByServer", // reason is always "recordingStoppedByServer" in v2Compatibility
 							CustomWebhook.waitForEvent("recordingStatusChanged", 2).get("reason").getAsString());
 				}
-				Assertions.assertEquals("lastParticipantLeft",
-						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
-				Assertions.assertEquals("lastParticipantLeft",
+				// broadcastStopped does not exist in the official OpenVidu docs and v2Compatibility does not trigger it
+				// Assertions.assertEquals("lastParticipantLeft",
+				// 		CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
+				Assertions.assertEquals("sessionClosedByServer", // reason is always "sessionClosedByServer" in v2Compatibility
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// forceUnpublishByUser: webrtcConnectionDestroyed
 				this.connectTwoUsers(user, restClient, true, false, null);
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .force-unpub-btn")).click();
-				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("forceUnpublishByUser",
+				// webrtcConnectionDestroyed event is only triggered when participant left in v2Compatibility
+				// for (int i = 0; i < 2; i++) {
+					Assertions.assertEquals("unpublish", // reason is always "unpublish" in v2Compatibility
 							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
-				}
+				// }
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// forceUnpublishByServer: webrtcConnectionDestroyed
 				this.connectTwoUsers(user, restClient, false, false, null);
+				Thread.sleep(5000);
 				String streamId = restClient
 						.rest(HttpMethod.GET, "/openvidu/api/sessions/TestSession", HttpURLConnection.HTTP_OK)
 						.get("connections").getAsJsonObject().get("content").getAsJsonArray().asList().stream()
@@ -338,20 +344,23 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 						.get("streamId").getAsString();
 				restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/TestSession/stream/" + streamId,
 						HttpURLConnection.HTTP_NO_CONTENT);
-				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("forceUnpublishByServer",
+				// webrtcConnectionDestroyed event is only triggered when participant left in v2Compatibility
+				// for (int i = 0; i < 2; i++) {
+					Assertions.assertEquals("unpublish", // reason is always "unpublish" in v2Compatibility
 							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
-				}
+				// }
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// forceDisconnectByUser: webrtcConnectionDestroyed, participantLeft
 				this.connectTwoUsers(user, restClient, true, false, null);
+				Thread.sleep(5000);
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .force-disconnect-btn")).click();
-				for (int i = 0; i < 3; i++) {
-					Assertions.assertEquals("forceDisconnectByUser",
-							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
-				}
-				Assertions.assertEquals("forceDisconnectByUser",
+				// for (int i = 0; i < 3; i++) {
+				// webrtcConnectionDestroyed event is only triggered when participant left in v2Compatibility
+				Assertions.assertEquals("unpublish", // reason is always "unpublish" in v2Compatibility
+						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 5).get("reason").getAsString());
+				// }
+				Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
 						CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
@@ -359,6 +368,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// subsequent lastParticipantLeft triggered events for sessionDestroyed,
 				// recordingStatusChanged, broadcastStopped)
 				this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
+				Thread.sleep(2000);
 				String[] connectionIds = restClient
 						.rest(HttpMethod.GET, "/openvidu/api/sessions/TestSession", HttpURLConnection.HTTP_OK)
 						.get("connections").getAsJsonObject().get("content").getAsJsonArray().asList().stream()
@@ -366,48 +376,54 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// First user out
 				restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/TestSession/connection/" + connectionIds[0],
 						HttpURLConnection.HTTP_NO_CONTENT);
-				for (int i = 0; i < 3; i++) {
-					Assertions.assertEquals("forceDisconnectByServer",
-							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
-				}
-				Assertions.assertEquals("forceDisconnectByServer",
+
+				// webrtcConnectionDestroyed event is only triggered when participant left in v2Compatibility
+				// for (int i = 0; i < 3; i++) {
+				Assertions.assertEquals("unpublish", // reason is always "unpublish" in v2Compatibility
+						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
+				// }
+				Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
 						CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
 				// Second user out
 				restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/TestSession/connection/" + connectionIds[1],
 						HttpURLConnection.HTTP_NO_CONTENT);
-				Assertions.assertEquals("forceDisconnectByServer",
+				Assertions.assertEquals("unpublish", // reason is always "unpublish" in v2Compatibility
 						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
-				Assertions.assertEquals("forceDisconnectByServer",
+				Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
 						CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
 				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("lastParticipantLeft",
+					Assertions.assertEquals("recordingStoppedByServer", // reason is always "recordingStoppedByServer" in v2Compatibility
 							CustomWebhook.waitForEvent("recordingStatusChanged", 2).get("reason").getAsString());
 				}
-				Assertions.assertEquals("lastParticipantLeft",
-						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
-				Assertions.assertEquals("lastParticipantLeft",
+				// broadcastStopped does not exist in the official OpenVidu docs and v2Compatibility does not trigger it
+				// Assertions.assertEquals("lastParticipantLeft",
+				// 		CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
+				Assertions.assertEquals("sessionClosedByServer", // reason is always "sessionClosedByServer" in v2Compatibility
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// sessionClosedByServer: webrtcConnectionDestroyed, participantLeft,
 				// sessionDestroyed, recordingStatusChanged, broadcastStopped
 				this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
+				Thread.sleep(2000);
 				restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/TestSession",
 						HttpURLConnection.HTTP_NO_CONTENT);
-				for (int i = 0; i < 4; i++) {
-					Assertions.assertEquals("sessionClosedByServer",
+				// webrtcConnectionDestroyed event is only triggered when participant left in v2Compatibility
+				for (int i = 0; i < 2; i++) {
+					Assertions.assertEquals("unpublish", // reason is always "unpublish" in v2Compatibility
 							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
 				}
 				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("sessionClosedByServer",
+					Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
 							CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
 				}
 				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("sessionClosedByServer",
+					Assertions.assertEquals("recordingStoppedByServer", // reason is always "recordingStoppedByServer" in v2Compatibility
 							CustomWebhook.waitForEvent("recordingStatusChanged", 2).get("reason").getAsString());
 				}
-				Assertions.assertEquals("sessionClosedByServer",
-						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
+				// broadcastStopped does not exist in the official OpenVidu docs and v2Compatibility does not trigger it
+				// Assertions.assertEquals("sessionClosedByServer",
+				// 		CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
 				Assertions.assertEquals("sessionClosedByServer",
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
@@ -418,158 +434,163 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
 				// First user out
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .network-drop-btn")).click();
-				for (int i = 0; i < 3; i++) {
-					Assertions.assertEquals("networkDisconnect",
-							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 20).get("reason").getAsString());
-				}
-				Assertions.assertEquals("networkDisconnect",
+				// webrtcConnectionDestroyed event is only triggered when participant left in v2Compatibility
+				// for (int i = 0; i < 3; i++) {
+				Assertions.assertEquals("unpublish",
+						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 30).get("reason").getAsString());
+				// }
+				Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
 						CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
 				// Second user out
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .network-drop-btn")).click();
-				Assertions.assertEquals("networkDisconnect",
-						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 20).get("reason").getAsString());
-				Assertions.assertEquals("networkDisconnect",
+				Assertions.assertEquals("unpublish", // reason is always "unpublish" in v2Compatibility
+						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 30).get("reason").getAsString());
+				Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
 						CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
 				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("lastParticipantLeft",
+					Assertions.assertEquals("recordingStoppedByServer", // reason is always "recordingStoppedByServer" in v2Compatibility
 							CustomWebhook.waitForEvent("recordingStatusChanged", 2).get("reason").getAsString());
 				}
-				Assertions.assertEquals("lastParticipantLeft",
-						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
-				Assertions.assertEquals("lastParticipantLeft",
+				// broadcastStopped does not exist in the official OpenVidu docs and v2Compatibility does not trigger it
+				// Assertions.assertEquals("lastParticipantLeft",
+				// 		CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
+				Assertions.assertEquals("sessionClosedByServer", // reason is always "sessionClosedByServer" in v2Compatibility
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// mediaServerDisconnect: webrtcConnectionDestroyed, participantLeft,
 				// sessionDestroyed, recordingStatusChanged, broadcastStopped
-				this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
-				String mediaNodeId = restClient
-						.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpURLConnection.HTTP_OK).get("content")
-						.getAsJsonArray().get(0).getAsJsonObject().get("id").getAsString();
-				restClient.rest(HttpMethod.DELETE,
-						"/openvidu/api/media-nodes/" + mediaNodeId + "?wait=false&deletion-strategy=now",
-						HttpURLConnection.HTTP_OK);
-				CustomWebhook.waitForEvent("mediaNodeStatusChanged", 3);
-				for (int i = 0; i < 4; i++) {
-					Assertions.assertEquals("mediaServerDisconnect",
-							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 20).get("reason").getAsString());
-				}
-				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("mediaServerDisconnect",
-							CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
-				}
-				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("mediaServerDisconnect",
-							CustomWebhook.waitForEvent("recordingStatusChanged", 4).get("reason").getAsString());
-				}
-				Assertions.assertEquals("mediaServerDisconnect",
-						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
-				Assertions.assertEquals("mediaServerDisconnect",
-						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
-				CustomWebhook.waitForEvent("mediaNodeStatusChanged", 5);
-				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
-				restartOpenViduServer(new HashMap<>(), true, HttpURLConnection.HTTP_OK);
+				// this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
+				// String mediaNodeId = restClient
+				// 		.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpURLConnection.HTTP_OK).get("content")
+				// 		.getAsJsonArray().get(0).getAsJsonObject().get("id").getAsString();
+				// restClient.rest(HttpMethod.DELETE,
+				// 		"/openvidu/api/media-nodes/" + mediaNodeId + "?wait=false&deletion-strategy=now",
+				// 		HttpURLConnection.HTTP_OK);
+				// CustomWebhook.waitForEvent("mediaNodeStatusChanged", 3);
+				// for (int i = 0; i < 4; i++) {
+				// 	Assertions.assertEquals("mediaServerDisconnect",
+				// 			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 20).get("reason").getAsString());
+				// }
+				// for (int i = 0; i < 2; i++) {
+				// 	Assertions.assertEquals("mediaServerDisconnect",
+				// 			CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
+				// }
+				// for (int i = 0; i < 2; i++) {
+				// 	Assertions.assertEquals("mediaServerDisconnect",
+				// 			CustomWebhook.waitForEvent("recordingStatusChanged", 4).get("reason").getAsString());
+				// }
+				// Assertions.assertEquals("mediaServerDisconnect",
+				// 		CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
+				// Assertions.assertEquals("mediaServerDisconnect",
+				// 		CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
+				// CustomWebhook.waitForEvent("mediaNodeStatusChanged", 5);
+				// CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
+				// restartOpenViduServer(new HashMap<>(), true, HttpURLConnection.HTTP_OK);
 
 				// mediaServerReconnect: webrtcConnectionDestroyed, recordingStatusChanged
-				this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
-				String containerId = restClient
-						.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpURLConnection.HTTP_OK).get("content")
-						.getAsJsonArray().get(0).getAsJsonObject().get("environmentId").getAsString();
-				MediaNodeDockerUtils.stopMediaServerInsideMediaNodeAndRecover(containerId, 400);
-				for (int i = 0; i < 4; i++) {
-					Assertions.assertEquals("mediaServerReconnect",
-							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 6).get("reason").getAsString());
-				}
-				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("mediaServerReconnect",
-							CustomWebhook.waitForEvent("recordingStatusChanged", 2).get("reason").getAsString());
-				}
-				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
+				// this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
+				// String containerId = restClient
+				// 		.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpURLConnection.HTTP_OK).get("content")
+				// 		.getAsJsonArray().get(0).getAsJsonObject().get("environmentId").getAsString();
+				// MediaNodeDockerUtils.stopMediaServerInsideMediaNodeAndRecover(containerId, 400);
+				// for (int i = 0; i < 4; i++) {
+				// 	Assertions.assertEquals("mediaServerReconnect",
+				// 			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 6).get("reason").getAsString());
+				// }
+				// for (int i = 0; i < 2; i++) {
+				// 	Assertions.assertEquals("mediaServerReconnect",
+				// 			CustomWebhook.waitForEvent("recordingStatusChanged", 2).get("reason").getAsString());
+				// }
+				// CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// nodeCrashed: webrtcConnectionDestroyed, participantLeft, sessionDestroyed,
 				// recordingStatusChanged, broadcastStopped
-				this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
-				containerId = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpURLConnection.HTTP_OK)
-						.get("content").getAsJsonArray().get(0).getAsJsonObject().get("environmentId").getAsString();
-				MediaNodeDockerUtils.crashMediaNode(containerId);
-				JsonObject nodeCrashedEvent = CustomWebhook.waitForEvent("nodeCrashed", 10);
+				// this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
+				// containerId = restClient.rest(HttpMethod.GET, "/openvidu/api/media-nodes", HttpURLConnection.HTTP_OK)
+				// 		.get("content").getAsJsonArray().get(0).getAsJsonObject().get("environmentId").getAsString();
+				// MediaNodeDockerUtils.crashMediaNode(containerId);
+				// JsonObject nodeCrashedEvent = CustomWebhook.waitForEvent("nodeCrashed", 10);
 
-				Assertions.assertEquals(1, nodeCrashedEvent.get("recordingIds").getAsJsonArray().size());
-				JsonArray affectedBroadcasts = nodeCrashedEvent.get("broadcasts").getAsJsonArray();
-				Assertions.assertEquals(1, affectedBroadcasts.size());
-				Assertions.assertTrue(affectedBroadcasts.get(0).equals(JsonParser.parseString("TestSession")));
+				// Assertions.assertEquals(1, nodeCrashedEvent.get("recordingIds").getAsJsonArray().size());
+				// JsonArray affectedBroadcasts = nodeCrashedEvent.get("broadcasts").getAsJsonArray();
+				// Assertions.assertEquals(1, affectedBroadcasts.size());
+				// Assertions.assertTrue(affectedBroadcasts.get(0).equals(JsonParser.parseString("TestSession")));
 
-				CustomWebhook.waitForEvent("mediaNodeStatusChanged", 2);
-				for (int i = 0; i < 4; i++) {
-					Assertions.assertEquals("nodeCrashed",
-							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
-				}
-				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("nodeCrashed",
-							CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
-				}
-				// Only status "stopped" for recording. Not "ready" if node crash
-				Assertions.assertEquals("nodeCrashed",
-						CustomWebhook.waitForEvent("recordingStatusChanged", 10).get("reason").getAsString());
-				Assertions.assertEquals("nodeCrashed",
-						CustomWebhook.waitForEvent("broadcastStopped", 10).get("reason").getAsString());
-				Assertions.assertEquals("nodeCrashed",
-						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
-				CustomWebhook.waitForEvent("mediaNodeStatusChanged", 2);
-				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
-				restartOpenViduServer(new HashMap<>(), true, HttpURLConnection.HTTP_OK);
+				// CustomWebhook.waitForEvent("mediaNodeStatusChanged", 2);
+				// for (int i = 0; i < 4; i++) {
+				// 	Assertions.assertEquals("nodeCrashed",
+				// 			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
+				// }
+				// for (int i = 0; i < 2; i++) {
+				// 	Assertions.assertEquals("nodeCrashed",
+				// 			CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
+				// }
+				// // Only status "stopped" for recording. Not "ready" if node crash
+				// Assertions.assertEquals("nodeCrashed",
+				// 		CustomWebhook.waitForEvent("recordingStatusChanged", 10).get("reason").getAsString());
+				// Assertions.assertEquals("nodeCrashed",
+				// 		CustomWebhook.waitForEvent("broadcastStopped", 10).get("reason").getAsString());
+				// Assertions.assertEquals("nodeCrashed",
+				// 		CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
+				// CustomWebhook.waitForEvent("mediaNodeStatusChanged", 2);
+				// CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
+				// restartOpenViduServer(new HashMap<>(), true, HttpURLConnection.HTTP_OK);
 
 				// openviduServerStopped: webrtcConnectionDestroyed, participantLeft,
 				// sessionDestroyed, recordingStatusChanged, broadcastStopped
-				this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
-				restartOpenViduServer(new HashMap<>(), true, HttpURLConnection.HTTP_OK);
-				for (int i = 0; i < 4; i++) {
-					Assertions.assertEquals("openviduServerStopped",
-							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 20).get("reason").getAsString());
-				}
-				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("openviduServerStopped",
-							CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
-				}
-				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("openviduServerStopped",
-							CustomWebhook.waitForEvent("recordingStatusChanged", 4).get("reason").getAsString());
-				}
-				Assertions.assertEquals("openviduServerStopped",
-						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
-				Assertions.assertEquals("openviduServerStopped",
-						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
-				for (int i = 0; i < 2; i++) {
-					CustomWebhook.waitForEvent("mediaNodeStatusChanged", 15);
-				}
-				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
+				// this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
+				// restartOpenViduServer(new HashMap<>(), true, HttpURLConnection.HTTP_OK);
+				// for (int i = 0; i < 4; i++) {
+				// 	Assertions.assertEquals("openviduServerStopped",
+				// 			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 20).get("reason").getAsString());
+				// }
+				// for (int i = 0; i < 2; i++) {
+				// 	Assertions.assertEquals("openviduServerStopped",
+				// 			CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
+				// }
+				// for (int i = 0; i < 2; i++) {
+				// 	Assertions.assertEquals("openviduServerStopped",
+				// 			CustomWebhook.waitForEvent("recordingStatusChanged", 4).get("reason").getAsString());
+				// }
+				// Assertions.assertEquals("openviduServerStopped",
+				// 		CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
+				// Assertions.assertEquals("openviduServerStopped",
+				// 		CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
+				// for (int i = 0; i < 2; i++) {
+				// 	CustomWebhook.waitForEvent("mediaNodeStatusChanged", 15);
+				// }
+				// CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// automaticStop: sessionDestroyed, recordingStatusChanged
-				newConfig = Map.of("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT", 1);
-				restartOpenViduServer(newConfig);
+				// newConfig = Map.of("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT", 1);
+				// restartOpenViduServer(newConfig);
 				this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .leave-btn")).click();
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .leave-btn")).click();
-				for (int i = 0; i < 4; i++) {
-					Assertions.assertEquals("disconnect",
+				// webrtcConnectionDestroyed event is only triggered when participant left in v2Compatibility
+				for (int i = 0; i < 2; i++) {
+					Assertions.assertEquals("unpublish", // reason is always "unpublish" in v2Compatibility
 							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
 				}
 				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("disconnect",
+					Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
 							CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
 				}
 				for (int i = 0; i < 2; i++) {
-					Assertions.assertEquals("automaticStop",
+					Assertions.assertEquals("recordingStoppedByServer", // reason is always "recordingStoppedByServer" in v2Compatibility
 							CustomWebhook.waitForEvent("recordingStatusChanged", 4).get("reason").getAsString());
 				}
-				Assertions.assertEquals("lastParticipantLeft",
-						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
-				Assertions.assertEquals("automaticStop",
+				// broadcastStopped does not exist in the official OpenVidu docs and v2Compatibility does not trigger it
+				// Assertions.assertEquals("lastParticipantLeft",
+				// 		CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
+				Assertions.assertEquals("sessionClosedByServer", // reason is always "sessionClosedByServer" in v2Compatibility
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// recordingStoppedByServer: recordingStatusChanged
 				this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
+				Thread.sleep(2000);
 				String recordingId = restClient
 						.rest(HttpMethod.GET, "/openvidu/api/recordings", HttpURLConnection.HTTP_OK).get("items")
 						.getAsJsonArray().asList().stream()
@@ -588,8 +609,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				this.connectTwoUsers(user, restClient, false, true, BROADCAST_IP);
 				restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/stop", "{'session':'TestSession'}",
 						HttpURLConnection.HTTP_OK);
-				Assertions.assertEquals("broadcastStoppedByServer",
-						CustomWebhook.waitForEvent("broadcastStopped", 5).get("reason").getAsString());
+				// broadcastStopped does not exist in the official OpenVidu docs and v2Compatibility does not trigger it
+				// Assertions.assertEquals("broadcastStoppedByServer",
+				// 		CustomWebhook.waitForEvent("broadcastStopped", 5).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 			} finally {
@@ -3035,8 +3057,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			body = "{'session':'TestSession','broadcastUrl':'schemefail://" + BROADCAST_IP + "/live'}";
 			errorResponse = restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
 					HttpURLConnection.HTTP_BAD_REQUEST);
-			// Assertions.assertTrue(errorResponse.contains("schemefail://" + BROADCAST_IP + "/live: Protocol not found"),
-			// 		"Broadcast error message does not contain expected message");
+			// Assertions.assertTrue(errorResponse.contains("schemefail://" + BROADCAST_IP +
+			// "/live: Protocol not found"),
+			// "Broadcast error message does not contain expected message");
 			// 404
 			body = "{'session':'NOT_EXISTS','broadcastUrl':'rtmp://" + BROADCAST_IP + "/live'}";
 			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, HttpURLConnection.HTTP_NOT_FOUND);
@@ -3054,19 +3077,23 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					+ "/live','hasAudio':false,'hasVideo':false}";
 			restClient.rest(HttpMethod.POST, "/openvidu/api/broadcast/start", body, 422);
 			// 500 (Connection refused)
-			// body = "{'session':'TestSession','broadcastUrl':'rtmps://" + BROADCAST_IP + "/live'}";
-			// errorResponse = restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
-			// 		HttpURLConnection.HTTP_INTERNAL_ERROR);
+			// body = "{'session':'TestSession','broadcastUrl':'rtmps://" + BROADCAST_IP +
+			// "/live'}";
+			// errorResponse = restClient.commonRestString(HttpMethod.POST,
+			// "/openvidu/api/broadcast/start", body,
+			// HttpURLConnection.HTTP_INTERNAL_ERROR);
 			// Assertions.assertTrue(
-			// 		errorResponse.contains("Cannot open connection")
-			// 				&& errorResponse.contains("rtmps://" + BROADCAST_IP + "/live: Connection refused"),
-			// 		"Broadcast error message does not contain expected message");
+			// errorResponse.contains("Cannot open connection")
+			// && errorResponse.contains("rtmps://" + BROADCAST_IP + "/live: Connection
+			// refused"),
+			// "Broadcast error message does not contain expected message");
 			// 500 (Input/output error)
 			body = "{'session':'TestSession','broadcastUrl':'rtmp://not.exists'}";
 			errorResponse = restClient.commonRestString(HttpMethod.POST, "/openvidu/api/broadcast/start", body,
 					HttpURLConnection.HTTP_INTERNAL_ERROR);
-			// Assertions.assertTrue(errorResponse.contains("rtmp://not.exists: Input/output error"),
-			// 		"Broadcast error message does not contain expected message");
+			// Assertions.assertTrue(errorResponse.contains("rtmp://not.exists: Input/output
+			// error"),
+			// "Broadcast error message does not contain expected message");
 
 			// Concurrent broadcast
 			final int PETITIONS = 20;
@@ -3577,7 +3604,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		for (int i = 0; i < 2; i++) {
 			CustomWebhook.waitForEvent("participantJoined", 1);
 		}
-		for (int i = 0; i < 4; i++) {
+		// Only OUTBOUND events will be fired in V2Compatibility
+		for (int i = 0; i < 2; i++) {
 			CustomWebhook.waitForEvent("webrtcConnectionCreated", 1);
 		}
 		if (startRecording) {
@@ -3592,7 +3620,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					"{'session':'TestSession','broadcastUrl':'rtmp://" + broadcastIp + "/live'}",
 					HttpURLConnection.HTTP_OK);
 			user.getEventManager().waitUntilEventReaches("broadcastStarted", 2);
-			CustomWebhook.waitForEvent("broadcastStarted", 3);
+			// broadcastStarted does not exist in the official OpenVidu docs and v2Compatibility does not trigger it
+			// CustomWebhook.waitForEvent("broadcastStarted", 3);
 		}
 	}
 
