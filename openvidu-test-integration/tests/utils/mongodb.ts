@@ -46,6 +46,24 @@ export class MongoService {
         return MongoService.instace;
     }
 
+    public async connect(): Promise<void> {
+        try {
+            await this.client.connect();
+        } catch (error) {
+            console.error("Error connecting to MongoDB", error);
+            throw error;
+        }
+    }
+
+    public async disconnect(): Promise<void> {
+        try {
+            await this.client.close();
+        } catch (error) {
+            console.error("Error disconnecting from MongoDB", error);
+            throw error;
+        }
+    }
+
     public async findStartEvent(entityType: EntityType, entityName: string): Promise<WithId<Document> | null> {
         try {
             const eventType = entityStartEventTypesMap.get(entityType)!;

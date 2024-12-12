@@ -1,12 +1,6 @@
-import {
-    joinParticipantToRoom,
-    killProcess,
-    sleep,
-    startComposeContainer,
-    startLocalDeployment,
-    stopComposeContainer,
-    stopLocalDeployment
-} from "./utils/helper";
+import { killProcess, sleep } from "./utils/helper";
+import { Livekit } from "./utils/livekit";
+import { LocalDeployment } from "./utils/local-deployment";
 import { MongoService } from "./utils/mongodb";
 import { EntityType } from "./utils/types";
 
@@ -14,18 +8,22 @@ describe("OpenVidu active entities fixer", () => {
     const mongoService = MongoService.getInstance();
 
     beforeEach(async () => {
-        await startLocalDeployment();
+        await LocalDeployment.start();
     }, 60000); // 1 minute
 
     afterEach(() => {
-        stopLocalDeployment();
+        LocalDeployment.stop();
     }, 60000); // 1 minute
+
+    afterAll(async () => {
+        await mongoService.disconnect();
+    });
 
     it("should fix fake active entities in MongoDB", async () => {
         console.log("Joining participant to room...");
         const roomName = "TestRoom";
         const participantIdentity = "TestParticipant1";
-        const pid = joinParticipantToRoom(participantIdentity, roomName);
+        const pid = Livekit.joinParticipantToRoom(participantIdentity, roomName);
         await sleep(5);
 
         const roomStartedEvent = await mongoService.findStartEvent(EntityType.ROOM, roomName);
@@ -41,10 +39,10 @@ describe("OpenVidu active entities fixer", () => {
         const roomId = roomStartedEvent.room.sid;
         const participantId = participantActiveEvent.participant_id;
 
-        stopComposeContainer("openvidu");
+        LocalDeployment.stopContainer("openvidu");
         killProcess(pid);
         await sleep(5);
-        startComposeContainer("openvidu");
+        LocalDeployment.startContainer("openvidu");
 
         // Check if there is a fake close event for room and participant in MongoDB
         // and the active entities are removed
