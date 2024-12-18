@@ -116,7 +116,7 @@ import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
 * ```
  * <!--ovToolbar-end-tutorial-->
  *
- * You can run the associated tutorial [here](https://docs.openvidu.io/en/stable/components/openvidu-custom-toolbar).
+ * You can run the associated tutorial [here](https://openvidu.io/latest/docs/tutorials/angular-components/openvidu-custom-toolbar/).
  */
 @Directive({
 	selector: '[ovToolbar]'
@@ -254,7 +254,7 @@ export class ToolbarDirective {
 * ```
  * <!--ovToolbarAdditionalButtons-end-tutorial-->
  *
- * To follow a step-by-step tutorial on this feature, please visit [this link](https://docs.openvidu.io/en/stable/components/openvidu-toolbar-buttons).
+ * To follow a step-by-step tutorial on this feature, please visit [this link](https://openvidu.io/latest/docs/tutorials/angular-components/openvidu-toolbar-buttons/).
  */
 
 @Directive({
@@ -377,7 +377,7 @@ export class ToolbarAdditionalButtonsDirective {
 * ```
  * <!--ovToolbarAdditionalPanelButtons-end-tutorial-->
  *
- * You can run the associated tutorial [here](https://docs.openvidu.io/en/stable/components/openvidu-toolbar-panel-buttons).
+ * You can run the associated tutorial [here](https://openvidu.io/latest/docs/tutorials/angular-components/openvidu-toolbar-panel-buttons/).
  */
 @Directive({
 	selector: '[ovToolbarAdditionalPanelButtons]'
@@ -526,7 +526,7 @@ export class ToolbarAdditionalPanelButtonsDirective {
  * <!--ovPanel-end-tutorial-->
  *
  *
- * For a comprehensive tutorial on implementing custom panels, please refer to the associated guide [here](https://docs.openvidu.io/en/stable/components/openvidu-custom-panels).
+ * For a comprehensive tutorial on implementing custom panels, please refer to the associated guide [here](https://openvidu.io/latest/docs/tutorials/angular-components/openvidu-custom-panels/).
  */
 @Directive({
 	selector: '[ovPanel]'
@@ -712,7 +712,7 @@ export class PanelDirective {
 * ```
  * <!--ovAdditionalPanels-end-tutorial-->
  *
- * For detailed instructions, refer to the tutorial available [here](https://docs.openvidu.io/en/stable/components/openvidu-additional-panels).
+ * For detailed instructions, refer to the tutorial available [here](https://openvidu.io/latest/docs/tutorials/angular-components/openvidu-additional-panels/).
  */
 @Directive({
 	selector: '[ovAdditionalPanels]'
@@ -889,7 +889,7 @@ export class AdditionalPanelsDirective {
  *
  *
  * For a step-by-step tutorial on how to replace the chat template with just a few lines of code,
- * check out our comprehensive guide: [Customizing the Chat Panel](https://docs.openvidu.io/en/stable/components/openvidu-custom-chat-panel).
+ * check out our comprehensive guide: [Customizing the Chat Panel](https://openvidu.io/latest/docs/tutorials/angular-components/openvidu-custom-chat-panel/).
  */
 @Directive({
 	selector: '[ovChatPanel]'
@@ -1015,7 +1015,7 @@ export class BackgroundEffectsPanelDirective {
  * <!--ovActivitiesPanel-end-tutorial-->
  *
  * For a step-by-step tutorial on how to replace the activities template with just a few lines of code,
- * check out our comprehensive guide: [Customizing the Activities Panel](https://docs.openvidu.io/en/stable/components/openvidu-custom-activities-panel).
+ * check out our comprehensive guide: [Customizing the Activities Panel](https://openvidu.io/latest/docs/tutorials/angular-components/openvidu-custom-activities-panel/).
  */
 @Directive({
 	selector: '[ovActivitiesPanel]'
@@ -1184,7 +1184,7 @@ export class ActivitiesPanelDirective {
 * ```
  * <!--ovParticipantsPanel-end-tutorial-->
  *
- * For a comprehensive tutorial on customizing the participants panel, please visit [this link](https://docs.openvidu.io/en/stable/components/openvidu-custom-participants-panel).
+ * For a comprehensive tutorial on customizing the participants panel, please visit [this link](https://openvidu.io/latest/docs/tutorials/angular-components/openvidu-custom-participants-panel/).
  */
 
 @Directive({
@@ -1321,7 +1321,7 @@ export class ParticipantsPanelDirective {
 * ```
  * <!--ovParticipantPanelItem-end-tutorial-->
  *
- * For a detailed tutorial on customizing participant panel items, please visit [this link](https://docs.openvidu.io/en/stable/components/openvidu-custom-participant-panel-item).
+ * For a detailed tutorial on customizing participant panel items, please visit [this link](https://openvidu.io/latest/docs/tutorials/angular-components/openvidu-custom-participant-panel-item/).
  */
 
 @Directive({
@@ -1463,7 +1463,7 @@ export class ParticipantPanelItemDirective {
 * ```
  * <!--ovParticipantPanelItemElements-end-tutorial-->
  *
- * For a comprehensive tutorial on adding elements to participant panel items, please visit [this link](https://docs.openvidu.io/en/stable/components/openvidu-custom-participant-panel-item-elements).
+ * For a comprehensive tutorial on adding elements to participant panel items, please visit [this link](https://openvidu.io/latest/docs/tutorials/angular-components/openvidu-custom-participant-panel-item-element/).
  */
 
 @Directive({
@@ -1659,7 +1659,7 @@ export class ParticipantPanelItemElementsDirective {
  * <!--ovLayout-end-tutorial-->
  *
  *
- * For a comprehensive guide on implementing custom layouts, please refer to the associated tutorial [here](https://docs.openvidu.io/en/stable/components/openvidu-custom-layout).
+ * For a comprehensive guide on implementing custom layouts, please refer to the associated tutorial [here](https://openvidu.io/latest/docs/tutorials/angular-components/openvidu-custom-layout/).
  */
 @Directive({
 	selector: '[ovLayout]'
@@ -1789,7 +1789,7 @@ export class LayoutDirective {
 * ```
  * <!--ovStream-end-tutorial-->
  *
- * For a detailed tutorial on customizing the stream component, please visit [this link](https://docs.openvidu.io/en/stable/components/openvidu-custom-stream).
+ * For a detailed tutorial on customizing the stream component, please visit [this link](https://openvidu.io/latest/docs/tutorials/angular-components/openvidu-custom-stream/).
  */
 
 @Directive({

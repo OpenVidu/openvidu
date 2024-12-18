@@ -6,7 +6,7 @@ if [[ -z "$BASEHREF_VERSION" ]]; then
 fi
 
 # Replace version from "stable" to the specified one in all TypeDoc links
-grep -rl '/en/stable/' projects src | xargs sed -i -e 's|/en/stable/|/en/'${BASEHREF_VERSION}'/|g'
+grep -rl '/latest/' projects src | xargs sed -i -e 's|/latest/|/'${BASEHREF_VERSION}'/|g'
 
 # Replace testapp README by openvidu-components-angular README
 mv README.md README-testapp.md
@@ -16,7 +16,7 @@ cp ./projects/openvidu-components-angular/README.md .
 npm run doc:build
 
 # Return links to "stable" version
-grep -rl '/en/'${BASEHREF_VERSION}'/' projects src | xargs sed -i -e 's|/en/'${BASEHREF_VERSION}'/|/en/stable/|g'
+grep -rl '/'${BASEHREF_VERSION}'/' projects src | xargs sed -i -e 's|/'${BASEHREF_VERSION}'/|/latest/|g'
 
 # Undo changes with READMEs
 rm README.md

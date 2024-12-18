@@ -330,7 +330,7 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 
 	/**
 	 * Provides event notifications that fire when OpenVidu Room is created.
-	 * It provides the {@link https://openvidu.io/docs/getting-started/#room Room} payload as event data.
+	 * It provides the {@link https://openvidu.io/latest/docs/getting-started/#room Room} payload as event data.
 	 */
 	@Output() onRoomCreated: EventEmitter<Room> = new EventEmitter<Room>();
 

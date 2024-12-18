@@ -8,7 +8,7 @@ Angular Components are the simplest way to create real-time videoconferencing ap
 
 ## Getting Started
 
-To get started with OpenVidu Components Angular, visit our [**Getting Started guide**](https://openvidu.io/docs/ui-components/angular-components/).
+To get started with OpenVidu Components Angular, visit our [**Getting Started guide**](https://openvidu.io/latest/docs/ui-components/angular-components/).
 
 1. Create an Angular Project (>= 17.0.0)
 
@@ -92,7 +92,7 @@ You can also customize the styles in your `styles.scss` file:
 
 ## API Documentation
 
-For detailed information on OpenVidu Angular Components, refer to our [**API Reference**](https://openvidu.io/docs/reference-docs/openvidu-components-angular).
+For detailed information on OpenVidu Angular Components, refer to our [**API Reference**](https://openvidu.io/latest/docs/reference-docs/openvidu-components-angular/).
 
 ## Support
 

@@ -29,6 +29,6 @@ export class ProFeatureDialogTemplateComponent {
 	}
 
 	seeMore() {
-		window.open('https://docs.openvidu.io/en/stable/openvidu-pro/', '_blank')?.focus();
+		window.open('https://openvidu.io/pricing/#openvidu-pro', '_blank')?.focus();
 	}
 }
