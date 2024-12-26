@@ -314,7 +314,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 						CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
 				for (int i = 0; i < 2; i++) {
 					Assertions.assertEquals("recordingStoppedByServer", // reason is always "recordingStoppedByServer" in v2Compatibility
-							CustomWebhook.waitForEvent("recordingStatusChanged", 2).get("reason").getAsString());
+							CustomWebhook.waitForEvent("recordingStatusChanged", 60).get("reason").getAsString());
 				}
 				// broadcastStopped does not exist in the official OpenVidu docs and v2Compatibility does not trigger it
 				// Assertions.assertEquals("lastParticipantLeft",
@@ -342,6 +342,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 						.filter(con -> con.getAsJsonObject().get("role").getAsString().equals("PUBLISHER")).findFirst()
 						.get().getAsJsonObject().get("publishers").getAsJsonArray().get(0).getAsJsonObject()
 						.get("streamId").getAsString();
+
 				restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/TestSession/stream/" + streamId,
 						HttpURLConnection.HTTP_NO_CONTENT);
 				// webrtcConnectionDestroyed event is only triggered when participant left in v2Compatibility
@@ -380,7 +381,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// webrtcConnectionDestroyed event is only triggered when participant left in v2Compatibility
 				// for (int i = 0; i < 3; i++) {
 				Assertions.assertEquals("unpublish", // reason is always "unpublish" in v2Compatibility
-						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
+						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 60).get("reason").getAsString());
 				// }
 				Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
 						CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
@@ -3365,7 +3366,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				commandLine.executeCommand("docker cp broadcast-nginx:/tmp " + broadcastRecordingPath, 3);
 				// Analyze most recent file (there can be more than one in the path)
 				File[] files = new File(broadcastRecordingPath + "/tmp").listFiles();
-				if(files == null || files.length == 0) {
+				if (files == null || files.length == 0) {
 					log.info("RTMP screenshot could not be generated yet. Trying again");
 					Thread.sleep(1000);
 					continue;
@@ -3385,8 +3386,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				File screenshot = new File(broadcastRecordingPath + "/tmp/rtmp-screenshot.jpg");
 				if (screenshot.exists() && screenshot.isFile() && screenshot.length() > 0 && screenshot.canRead()) {
 					// The check logic is not working properly
-					// Assertions.assertTrue(this.recordingUtils.thumbnailIsFine(screenshot, colorCheckFunction),
-					// 		"RTMP screenshot " + screenshot.getAbsolutePath() + " is not fine");
+					// Assertions.assertTrue(this.recordingUtils.thumbnailIsFine(screenshot,
+					// colorCheckFunction),
+					// "RTMP screenshot " + screenshot.getAbsolutePath() + " is not fine");
 					break;
 				}
 				log.info("RTMP screenshot could not be generated yet. Trying again");

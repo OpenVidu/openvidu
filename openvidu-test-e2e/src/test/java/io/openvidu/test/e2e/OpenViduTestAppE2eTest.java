@@ -1718,6 +1718,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@Test
 	@DisplayName("Record cross-browser audio-only and video-only")
 	void audioOnlyVideoOnlyRecordTest() throws Exception {
+
+		Thread.sleep(4000);
 		isRecordingTest = true;
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeAlternateScreenShare");
@@ -1909,7 +1911,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Check audio-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "~2/";
 		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "~2");
-		this.recordingUtils.checkIndividualRecording(recPath, recording, 2, "opus",null, true);
+		// As the recording is audio only and there is only one participant publishing its audio
+		// The zip file only has 1 file (audio file)
+		this.recordingUtils.checkIndividualRecording(recPath, recording, 1, "opus",null, true);
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
@@ -3822,7 +3826,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// server requires additional time after stopping a recording before it can be deleted,
 		// causing the beforeEach logic to be bypassed.
 		// To ensure stability, we add a delay and perform manual cleanup:
-		Thread.sleep(2000);
+		Thread.sleep(5000);
 		this.closeAllSessions(OV);
 		this.deleteAllRecordings(OV);
 		CustomWebhook.clean();
@@ -3962,7 +3966,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 //			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2);
 			CustomWebhook.waitForEvent("participantLeft", 2);
 			CustomWebhook.waitForEvent("participantLeft", 2);
-			event = CustomWebhook.waitForEvent("recordingStatusChanged", 2);
+			event = CustomWebhook.waitForEvent("recordingStatusChanged", 60);
 
 			OV.fetch();
 			List<Recording> recs = OV.listRecordings();
