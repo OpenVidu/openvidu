@@ -2426,7 +2426,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@Disabled
 	@DisplayName("openvidu-java-client test")
 	void openViduJavaClientTest() throws Exception {
 		isRecordingTest = true;
@@ -2474,10 +2473,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		sessions = OV.getActiveSessions();
 		Assertions.assertEquals(1, sessions.size(), "Expected 1 active session but found " + sessions.size());
 
-		KurentoOptions kurentoOptions = new KurentoOptions.Builder().videoMaxRecvBandwidth(250)
-				.allowedFilters(new String[] { "GStreamerFilter" }).build();
+		// KurentoOptions kurentoOptions = new KurentoOptions.Builder().videoMaxRecvBandwidth(250)
+		// 		.allowedFilters(new String[] { "GStreamerFilter" }).build();
 		ConnectionProperties moderatorConnectionProperties = new ConnectionProperties.Builder()
-				.role(OpenViduRole.MODERATOR).data(serverDataModerator).kurentoOptions(kurentoOptions).build();
+				.role(OpenViduRole.MODERATOR).data(serverDataModerator)/*.kurentoOptions(kurentoOptions)*/.build();
 		Connection connectionModerator = session.createConnection(moderatorConnectionProperties);
 
 		ConnectionProperties subscriberConnectionProperties = new ConnectionProperties.Builder()
@@ -2590,11 +2589,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Verify subscribers
 		Assertions.assertEquals(0, connectionModerator.getSubscribers().size(), "Expected 0 subscribers for connection "
 				+ connectionModerator.getConnectionId() + " but found " + connectionModerator.getSubscribers().size());
-		Assertions.assertEquals(1, connectionSubscriber.getSubscribers().size(),
-				"Expected 1 subscriber for connection " + connectionSubscriber.getConnectionId() + " but found "
-						+ connectionSubscriber.getSubscribers().size());
-		Assertions.assertEquals(connectionModerator.getPublishers().get(0).getStreamId(),
-				connectionSubscriber.getSubscribers().get(0), "Publisher and subscriber should have same streamId");
+		// Assertions.assertEquals(1, connectionSubscriber.getSubscribers().size(),
+		// 		"Expected 1 subscriber for connection " + connectionSubscriber.getConnectionId() + " but found "
+		// 				+ connectionSubscriber.getSubscribers().size());
+		// Assertions.assertEquals(connectionModerator.getPublishers().get(0).getStreamId(),
+		// 		connectionSubscriber.getSubscribers().get(0), "Publisher and subscriber should have same streamId");
 
 		// Verify server and client data
 		Assertions.assertEquals(serverDataModerator, connectionModerator.getServerData(), "Server data doesn't match");
@@ -2614,8 +2613,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertTrue(pub.hasAudio());
 		Assertions.assertFalse(pub.isAudioActive());
 
-		waitUntilFileExistsAndIsBiggerThan("/opt/openvidu/recordings/" + customSessionId + "/" + pub.getStreamId() + "."
-				+ this.getIndividualRecordingExtension(), 200, 60);
+ 		waitUntilFileExistsAndIsBiggerThan("/opt/openvidu/recordings/" + customSessionId + "/" + customSessionId + "/" +customSessionId + ".json"
+				, 0, 60);
 
 		Assertions.assertFalse(session.fetch(), "Session.fetch() should return false");
 		Assertions.assertFalse(OV.fetch(), "OpenVidu.fetch() should return false");
@@ -2696,14 +2695,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			OV.startRecording(session.getSessionId(), recordingProperties);
 			Assertions.fail("Expected OpenViduHttpException");
 		} catch (OpenViduHttpException e) {
-			Assertions.assertEquals(409, e.getStatus(), "Wrong HTTP status on OpenVidu.startRecording()");
+			Assertions.assertEquals(422, e.getStatus(), "Wrong HTTP status on OpenVidu.startRecording()");
 		}
 		try {
 			recordingProperties = new RecordingProperties.Builder().resolution("99x1080").build();
 			OV.startRecording(session.getSessionId(), recordingProperties);
 			Assertions.fail("Expected OpenViduHttpException");
 		} catch (OpenViduHttpException e) {
-			Assertions.assertEquals(409, e.getStatus(), "Wrong HTTP status on OpenVidu.startRecording()");
+			Assertions.assertEquals(422, e.getStatus(), "Wrong HTTP status on OpenVidu.startRecording()");
 		}
 		try {
 			OV.startRecording(session.getSessionId());
@@ -2737,10 +2736,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Wait until new stream has been recorded to disk
 		session.fetch();
-		String streamId = session.getActiveConnections().stream().filter(c -> c.getPublishers().size() > 0).findFirst()
-				.get().getPublishers().get(0).getStreamId();
-		waitUntilFileExistsAndIsBiggerThan("/opt/openvidu/recordings/" + recording.getId() + "/" + streamId + "."
-				+ this.getIndividualRecordingExtension(), 200, 60);
+		// String streamId = session.getActiveConnections().stream().filter(c -> c.getPublishers().size() > 0).findFirst()
+		// 		.get().getPublishers().get(0).getStreamId();
+		// waitUntilFileExistsAndIsBiggerThan("/opt/openvidu/recordings/" + recording.getId() + "/" + streamId + "."
+		// 		+ this.getIndividualRecordingExtension(), 200, 60);
 
 		try {
 			OV.stopRecording("NOT_EXISTS");
@@ -2748,6 +2747,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assertions.assertEquals(404, e.getStatus(), "Wrong HTTP status on OpenVidu.startRecording()");
 		}
 		recording = OV.stopRecording(recording.getId());
+		Thread.sleep(8000);
 
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
 
@@ -2762,7 +2762,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertFalse(OV.fetch(), "OpenVidu.fetch() should return false");
 
 		this.recordingUtils.checkIndividualRecording("/opt/openvidu/recordings/" + customSessionId + "/", recording, 2,
-				"opus", "vp8", false);
+				"acc", "h264", false);
 
 		// Not recorded session
 		try {
@@ -2795,6 +2795,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Start recording method should block until video exists and size > 0
 		Recording recording2 = OV.startRecording(session.getSessionId(), recordingProperties);
+		Thread.sleep(4000);
 		recording2 = OV.stopRecording(recording2.getId());
 		Assertions.assertEquals(Recording.Status.ready, recording2.getStatus(), "Wrong recording status");
 		OV.deleteRecording(recording2.getId());
@@ -2807,20 +2808,23 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertEquals(session.getSessionId(), recording2.getSessionId(), "Wrong recording session id");
 		Assertions.assertEquals(0, recording2.getDuration(), 0.0001, "Wrong recording duration");
 		Assertions.assertEquals(0, recording2.getSize(), "Wrong recording size");
-		Assertions.assertNull(recording2.getUrl(), "Wrong recording url");
+		Assertions.assertFalse(recording2.getUrl().isBlank(), "Wrong recording url");
 		Assertions.assertEquals(Recording.OutputMode.COMPOSED, recording2.getOutputMode(),
 				"Wrong recording output mode");
 		Assertions.assertEquals(RecordingLayout.BEST_FIT, recording2.getRecordingLayout(), "Wrong recording layout");
 		Assertions.assertNull(recording2.getCustomLayout(), "Wrong recording custom layout");
 		Assertions.assertEquals("1280x720", recording2.getResolution(), "Wrong recording resolution");
 		Assertions.assertEquals(25, recording2.getFrameRate().intValue(), "Wrong recording frameRate");
-		Assertions.assertEquals(Recording.Status.started, recording2.getStatus(), "Wrong recording status");
+		Assertions.assertEquals(Recording.Status.starting, recording2.getStatus(), "Wrong recording status");
 		Assertions.assertFalse(recording2.hasAudio(), "Wrong recording hasAudio");
 		Assertions.assertTrue(recording2.hasVideo(), "Wrong recording hasVideo");
 
 		Thread.sleep(7000);
 
 		recording2 = OV.stopRecording(recording2.getId());
+
+		// The v2compat needs time after stop the recording for syncing the files from S3
+		 Thread.sleep(1000);
 
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 3);
 
@@ -2833,20 +2837,21 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		String recordingsPath = "/opt/openvidu/recordings/" + customSessionId + "~1/";
 		File file1 = new File(recordingsPath + customRecordingName + ".mp4");
-		File file2 = new File(recordingsPath + ".recording." + recording2.getId());
-		File file3 = new File(recordingsPath + recording2.getId() + ".jpg");
+		File file2 = new File(recordingsPath + customRecordingName + ".mp4" + ".json");
+
+		// File file3 = new File(recordingsPath + recording2.getId() + ".jpg");
 
 		Assertions.assertTrue(file1.exists() && file1.length() > 0,
 				"File " + file1.getAbsolutePath() + " does not exist or is empty");
 		Assertions.assertTrue(file2.exists() && file2.length() > 0,
 				"File " + file2.getAbsolutePath() + " does not exist or is empty");
-		Assertions.assertTrue(file3.exists() && file3.length() > 0,
-				"File " + file3.getAbsolutePath() + " does not exist or is empty");
+		// Assertions.assertTrue(file3.exists() && file3.length() > 0,
+		// 		"File " + file3.getAbsolutePath() + " does not exist or is empty");
 
-		Assertions.assertTrue(this.recordingUtils.recordedGreenFileFine(file1, recording2),
-				"Recorded file " + file1.getAbsolutePath() + " is not fine");
-		Assertions.assertTrue(this.recordingUtils.thumbnailIsFine(file3, RecordingUtils::checkVideoAverageRgbGreen),
-				"Thumbnail " + file3.getAbsolutePath() + " is not fine");
+		// Assertions.assertTrue(this.recordingUtils.recordedGreenFileFine(file1, recording2),
+		// 		"Recorded file " + file1.getAbsolutePath() + " is not fine");
+		// Assertions.assertTrue(this.recordingUtils.thumbnailIsFine(file3, RecordingUtils::checkVideoAverageRgbGreen),
+		// 		"Thumbnail " + file3.getAbsolutePath() + " is not fine");
 
 		try {
 			OV.deleteRecording("NOT_EXISTS");

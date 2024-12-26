@@ -657,7 +657,7 @@ public class OpenViduTestE2e {
 	}
 
 	protected String getIndividualRecordingExtension() throws Exception {
-		return "webm";
+		return "mp4";
 	}
 
 	protected void waitUntilFileExistsAndIsBiggerThan(String absolutePath, int kbs, int maxSecondsWait)
@@ -681,7 +681,8 @@ public class OpenViduTestE2e {
 				} catch (IOException e) {
 					System.err.println("Error getting file size from " + path + ": " + e.getMessage());
 				}
-				bigger = (bytes / 1024) > kbs;
+				int kbsFile = (int) Math.ceil(bytes / 1024.0);
+				bigger = kbsFile > kbs;
 			}
 			loop++;
 			Thread.sleep(interval);
