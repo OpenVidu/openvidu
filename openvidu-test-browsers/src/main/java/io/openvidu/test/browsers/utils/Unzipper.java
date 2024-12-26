@@ -17,17 +17,17 @@
 
 package io.openvidu.test.browsers.utils;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,33 +40,37 @@ public class Unzipper {
 	private final Set<String> VIDEO_EXTENSIONS = Set.of("webm", "mkv", "mp4", "ogg");
 
 	public List<File> unzipFile(String path, String fileName) {
-		final int BUFFER = 2048;
-		final List<File> recordingFiles = new ArrayList<>();
-		try {
-			BufferedOutputStream dest = null;
-			FileInputStream fis = new FileInputStream(path + fileName);
-			ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));
-			ZipEntry entry;
-			while ((entry = zis.getNextEntry()) != null) {
-				log.info("Extracting: " + entry);
-				String fileExtension = Files.getFileExtension(entry.getName());
-				if (VIDEO_EXTENSIONS.contains(fileExtension)) {
-					recordingFiles.add(new File(path + entry.getName()));
+		List<File> recordingFiles = new ArrayList<>();
+		File zipFile = new File(path, fileName);
+
+		try (ZipFile zip = new ZipFile(zipFile)) {
+			Enumeration<ZipArchiveEntry> entries = zip.getEntries();
+
+			while (entries.hasMoreElements()) {
+				ZipArchiveEntry entry = entries.nextElement();
+				log.info("Extracting: " + entry.getName());
+
+				if (!entry.isDirectory()) {
+					String fileExtension = Files.getFileExtension(entry.getName());
+					if (VIDEO_EXTENSIONS.contains(fileExtension)) {
+						File outputFile = new File(path, entry.getName());
+						recordingFiles.add(outputFile);
+						new File(outputFile.getParent()).mkdirs();
+
+						try (FileOutputStream fos = new FileOutputStream(outputFile);
+								BufferedOutputStream dest = new BufferedOutputStream(fos)) {
+							zip.getInputStream(entry).transferTo(dest);
+						}
+					} else {
+						log.info("Skipping non-video file: " + entry.getName());
+					}
 				}
-				int count;
-				byte data[] = new byte[BUFFER];
-				FileOutputStream fos = new FileOutputStream(path + entry.getName());
-				dest = new BufferedOutputStream(fos, BUFFER);
-				while ((count = zis.read(data, 0, BUFFER)) != -1) {
-					dest.write(data, 0, count);
-				}
-				dest.flush();
-				dest.close();
 			}
-			zis.close();
-		} catch (Exception e) {
+		} catch (IOException e) {
+			log.error("Error extracting ZIP file: " + e.getMessage());
 			e.printStackTrace();
 		}
+
 		return recordingFiles;
 	}
 
