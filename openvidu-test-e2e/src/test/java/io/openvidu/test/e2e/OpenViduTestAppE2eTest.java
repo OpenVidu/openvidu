@@ -3820,16 +3820,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@DisplayName("Webhook test")
 	void webhookTest() throws Exception {
 
-		// This test occasionally fails due to leftover events in the queue from previous tests.
-		// To address this, we clean the queue before starting the test.
-		// The beforeEach method does not handle queue cleanup because the v2 compatibility
-		// server requires additional time after stopping a recording before it can be deleted,
-		// causing the beforeEach logic to be bypassed.
-		// To ensure stability, we add a delay and perform manual cleanup:
-		Thread.sleep(5000);
-		this.closeAllSessions(OV);
-		this.deleteAllRecordings(OV);
-		CustomWebhook.clean();
 
 		isRecordingTest = true;
 
@@ -3847,6 +3837,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				CustomWebhook.shutDown();
 				return;
 			}
+
+			// This test occasionally fails due to leftover events in the queue from previous tests.
+			// To address this, we clean the queue before starting the test.
+			// The beforeEach method does not handle queue cleanup because the v2 compatibility
+			// server requires additional time after stopping a recording before it can be deleted,
+			// causing the beforeEach logic to be bypassed.
+			// To ensure stability, we add a delay and perform manual cleanup:
+			Thread.sleep(7000);
+			this.closeAllSessions(OV);
+			this.deleteAllRecordings(OV);
+			CustomWebhook.clean();
 
 			user.getDriver().findElement(By.id("add-user-btn")).click();
 			user.getDriver().findElement(By.id("session-settings-btn-0")).click();
