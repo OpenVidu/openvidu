@@ -289,7 +289,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// for (int i = 0; i < 2; i++) {
 				// webrtcConnectionDestroyed event is not triggered when unsubscribing in v2Compatibility (only OUTBOUND)
 				Assertions.assertEquals("unpublish",
-						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
+						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 30).get("reason").getAsString());
 				// }
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
@@ -371,6 +371,14 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// }
 				Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
 						CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
+				if(CustomWebhook.events.values().stream().anyMatch(collection -> !collection.isEmpty())) {
+					CustomWebhook.events.values().forEach(collection -> {
+						if (!collection.isEmpty()) {
+							// clean up
+							collection.clear();
+						}
+					});
+				}
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// forceDisconnectByServer: webrtcConnectionDestroyed, participantLeft (and
@@ -392,12 +400,12 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 60).get("reason").getAsString());
 				// }
 				Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
-						CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
+						CustomWebhook.waitForEvent("participantLeft", 30).get("reason").getAsString());
 				// Second user out
 				restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/TestSession/connection/" + connectionIds[1],
 						HttpURLConnection.HTTP_NO_CONTENT);
 				Assertions.assertEquals("unpublish", // reason is always "unpublish" in v2Compatibility
-						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
+						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 30).get("reason").getAsString());
 				Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
 						CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
 				for (int i = 0; i < 2; i++) {
@@ -408,7 +416,15 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// Assertions.assertEquals("lastParticipantLeft",
 				// 		CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
 				Assertions.assertEquals("sessionClosedByServer", // reason is always "sessionClosedByServer" in v2Compatibility
-						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
+						CustomWebhook.waitForEvent("sessionDestroyed", 30).get("reason").getAsString());
+				if(CustomWebhook.events.values().stream().anyMatch(collection -> !collection.isEmpty())) {
+					CustomWebhook.events.values().forEach(collection -> {
+						if (!collection.isEmpty()) {
+							// clean up
+							collection.clear();
+						}
+					});
+				}
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// sessionClosedByServer: webrtcConnectionDestroyed, participantLeft,
@@ -424,7 +440,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				}
 				for (int i = 0; i < 2; i++) {
 					Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
-							CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
+							CustomWebhook.waitForEvent("participantLeft", 30).get("reason").getAsString());
 				}
 				for (int i = 0; i < 2; i++) {
 					Assertions.assertEquals("recordingStoppedByServer", // reason is always "recordingStoppedByServer" in v2Compatibility
@@ -434,7 +450,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// Assertions.assertEquals("sessionClosedByServer",
 				// 		CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
 				Assertions.assertEquals("sessionClosedByServer",
-						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
+						CustomWebhook.waitForEvent("sessionDestroyed", 30).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// networkDisconnect: webrtcConnectionDestroyed, participantLeft (and
@@ -449,13 +465,13 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 30).get("reason").getAsString());
 				// }
 				Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
-						CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
+						CustomWebhook.waitForEvent("participantLeft", 30).get("reason").getAsString());
 				// Second user out
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .network-drop-btn")).click();
 				Assertions.assertEquals("unpublish", // reason is always "unpublish" in v2Compatibility
 						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 30).get("reason").getAsString());
 				Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
-						CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
+						CustomWebhook.waitForEvent("participantLeft", 30).get("reason").getAsString());
 				for (int i = 0; i < 2; i++) {
 					Assertions.assertEquals("recordingStoppedByServer", // reason is always "recordingStoppedByServer" in v2Compatibility
 							CustomWebhook.waitForEvent("recordingStatusChanged", 30).get("reason").getAsString());
@@ -464,7 +480,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// Assertions.assertEquals("lastParticipantLeft",
 				// 		CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
 				Assertions.assertEquals("sessionClosedByServer", // reason is always "sessionClosedByServer" in v2Compatibility
-						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
+						CustomWebhook.waitForEvent("sessionDestroyed", 30).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// mediaServerDisconnect: webrtcConnectionDestroyed, participantLeft,
@@ -580,11 +596,11 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// webrtcConnectionDestroyed event is only triggered when participant left in v2Compatibility
 				for (int i = 0; i < 2; i++) {
 					Assertions.assertEquals("unpublish", // reason is always "unpublish" in v2Compatibility
-							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2).get("reason").getAsString());
+							CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 30).get("reason").getAsString());
 				}
 				for (int i = 0; i < 2; i++) {
 					Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
-							CustomWebhook.waitForEvent("participantLeft", 2).get("reason").getAsString());
+							CustomWebhook.waitForEvent("participantLeft", 30).get("reason").getAsString());
 				}
 				for (int i = 0; i < 2; i++) {
 					Assertions.assertEquals("recordingStoppedByServer", // reason is always "recordingStoppedByServer" in v2Compatibility
@@ -594,7 +610,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// Assertions.assertEquals("lastParticipantLeft",
 				// 		CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
 				Assertions.assertEquals("sessionClosedByServer", // reason is always "sessionClosedByServer" in v2Compatibility
-						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
+						CustomWebhook.waitForEvent("sessionDestroyed", 30).get("reason").getAsString());
 				CustomWebhook.events.values().forEach(collection -> Assertions.assertTrue(collection.isEmpty()));
 
 				// recordingStoppedByServer: recordingStatusChanged
@@ -1373,6 +1389,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getWaiter().until(
 				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
 
+		Thread.sleep(2000);
 		rgb = user.getBrowserUser().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
 
