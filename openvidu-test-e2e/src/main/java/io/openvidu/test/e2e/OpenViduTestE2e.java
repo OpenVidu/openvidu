@@ -12,7 +12,6 @@ import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,7 +48,7 @@ import retrofit2.Response;
 
 public class OpenViduTestE2e {
 
-	private final static WaitStrategy waitBrowser = Wait.forHttp("/wd/hub/status").forStatusCode(200);
+	private final static WaitStrategy waitBrowser = Wait.forLogMessage("^.*Started Selenium Standalone.*$", 1);
 
 	protected static String MEDIA_SERVER_IMAGE = "livekit-server:latest";
 
@@ -96,6 +95,7 @@ public class OpenViduTestE2e {
 
 	private GenericContainer<?> chromeContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
 		Map<String, String> map = new HashMap<>();
+		map.put("SE_OPTS", "--port 4444");
 		if (headless) {
 			map.put("START_XVFB", "false");
 		}
@@ -104,14 +104,14 @@ public class OpenViduTestE2e {
 			map.put("SE_NODE_MAX_SESSIONS", String.valueOf(maxBrowserSessions));
 		}
 		GenericContainer<?> chrome = new GenericContainer<>(DockerImageName.parse(image)).withSharedMemorySize(shmSize)
-				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withExposedPorts(4444)
+				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withNetworkMode("host")
 				.waitingFor(waitBrowser);
-		chrome.setPortBindings(Arrays.asList("6666:4444", "7900:7900"));
 		return chrome;
 	}
 
 	private GenericContainer<?> firefoxContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
 		Map<String, String> map = new HashMap<>();
+		map.put("SE_OPTS", "--port 4445");
 		if (headless) {
 			map.put("START_XVFB", "false");
 		}
@@ -120,14 +120,14 @@ public class OpenViduTestE2e {
 			map.put("SE_NODE_MAX_SESSIONS", String.valueOf(maxBrowserSessions));
 		}
 		GenericContainer<?> firefox = new GenericContainer<>(DockerImageName.parse(image)).withSharedMemorySize(shmSize)
-				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withExposedPorts(4444)
+				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withNetworkMode("host")
 				.waitingFor(waitBrowser);
-		firefox.setPortBindings(Arrays.asList("6667:4444", "7901:7900"));
 		return firefox;
 	}
 
 	private GenericContainer<?> edgeContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
 		Map<String, String> map = new HashMap<>();
+		map.put("SE_OPTS", "--port 4446");
 		if (headless) {
 			map.put("START_XVFB", "false");
 		}
@@ -136,9 +136,8 @@ public class OpenViduTestE2e {
 			map.put("SE_NODE_MAX_SESSIONS", String.valueOf(maxBrowserSessions));
 		}
 		GenericContainer<?> edge = new GenericContainer<>(DockerImageName.parse(image)).withSharedMemorySize(shmSize)
-				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withExposedPorts(4444)
+				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withNetworkMode("host")
 				.waitingFor(waitBrowser);
-		edge.setPortBindings(Arrays.asList("6668:4444", "7902:7900"));
 		return edge;
 	}
 
@@ -192,9 +191,9 @@ public class OpenViduTestE2e {
 		}
 		log.info("Using URL {} to connect to openvidu-testapp", APP_URL);
 
-		String openviduUrl = System.getProperty("LIVEKIT_URL");
-		if (openviduUrl != null) {
-			LIVEKIT_URL = openviduUrl;
+		String livekitUrl = System.getProperty("LIVEKIT_URL");
+		if (livekitUrl != null) {
+			LIVEKIT_URL = livekitUrl;
 		}
 		log.info("Using URL {} to connect to livekit-server", LIVEKIT_URL);
 
@@ -269,23 +268,23 @@ public class OpenViduTestE2e {
 			browserUser = new ChromeUser("TestUser", 50, "OpenVidu TestApp");
 			break;
 		case "chromeAlternateFakeVideo":
-			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
+			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
 			setupBrowserAux(BrowserNames.CHROME, container, false);
 			path = Paths.get("/opt/openvidu/barcode.y4m");
 			checkMediafilePath(path);
 			browserUser = new ChromeUser("TestUser", 50, path);
 			break;
 		case "chromeFakeAudio":
-			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, true);
+			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
 			setupBrowserAux(BrowserNames.CHROME, container, false);
-			path = new File(System.getProperty("java.io.tmpdir"), "test.wav").toPath();
+			path = new File("/opt/openvidu/test.wav").toPath();
 			try {
 				checkMediafilePath(path);
 			} catch (Exception e) {
 				try {
 					FileUtils.copyURLToFile(
 							new URL("https://openvidu-loadtest-mediafiles.s3.amazonaws.com/interview.wav"),
-							new File(System.getProperty("java.io.tmpdir"), "test.wav"), 60000, 60000);
+							new File("/opt/openvidu/test.wav"), 60000, 60000);
 				} catch (FileNotFoundException e2) {
 					e2.printStackTrace();
 					System.err.println("exception on: downLoadFile() function: " + e.getMessage());

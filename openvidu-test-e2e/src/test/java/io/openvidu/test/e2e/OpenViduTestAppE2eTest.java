@@ -445,7 +445,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox force H264")
-	@Disabled // Firefox forces H264 in linux/android when publishing even with Pion
+	@Disabled // Firefox forces VP8 in linux/android when publishing even with Pion
 	void firefoxForceH264Test() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 		log.info("Firefox force H264");
@@ -462,7 +462,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox force VP9")
-	@Disabled // Firefox forces H264 in linux/android when publishing even with Pion
+	@Disabled // Firefox forces VP8 in linux/android when publishing even with Pion
 	void firefoxForceVP9Test() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 		log.info("Firefox force VP9");
@@ -497,6 +497,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		String expectedCodec = "video/" + codec.toUpperCase();
 		// Check publisher's codec
 		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
+		this.waitUntilVideoLayersNotEmpty(user, publisherVideo);
 		Assertions.assertEquals(expectedCodec,
 				getPublisherVideoLayerAttribute(user, publisherVideo, null, "codec").getAsString());
 
@@ -514,24 +515,45 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@DisplayName("Firefox subscribe to VP8")
 	void firefoxSubscribeToVP8Test() throws Exception {
 		log.info("Firefox subscribe to VP8");
-		firefoxSubscribeToCodecTest("vp8");
+		firefoxSubscribeToCodecTest("vp8", false);
 	}
 
 	@Test
 	@DisplayName("Firefox subscribe to H264")
 	void firefoxSubscribeToH264Test() throws Exception {
 		log.info("Firefox subscribe to H264");
-		firefoxSubscribeToCodecTest("h264");
+		firefoxSubscribeToCodecTest("h264", false);
 	}
 
 	@Test
 	@DisplayName("Firefox subscribe to VP9")
 	void firefoxSubscribeToVP9Test() throws Exception {
 		log.info("Firefox subscribe to VP9");
-		firefoxSubscribeToCodecTest("vp9");
+		firefoxSubscribeToCodecTest("vp9", false);
 	}
 
-	private void firefoxSubscribeToCodecTest(String codec) throws Exception {
+	@Test
+	@DisplayName("Firefox subscribe to VP8 simulcast")
+	void firefoxSubscribeToVP8SimulcastTest() throws Exception {
+		log.info("Firefox subscribe to VP8 simulcast");
+		firefoxSubscribeToCodecTest("vp8", true);
+	}
+
+	@Test
+	@DisplayName("Firefox subscribe to H264 simulcast")
+	void firefoxSubscribeToH264SimulcastTest() throws Exception {
+		log.info("Firefox subscribe to H264 simulcast");
+		firefoxSubscribeToCodecTest("h264", true);
+	}
+
+	@Test
+	@DisplayName("Firefox subscribe to VP9 simulcast")
+	void firefoxSubscribeToVP9SimulcastTest() throws Exception {
+		log.info("Firefox subscribe to VP9 simulcast");
+		firefoxSubscribeToCodecTest("vp9", true);
+	}
+
+	private void firefoxSubscribeToCodecTest(String codec, boolean simulcast) throws Exception {
 		final String expectedCodec = "video/" + codec.toUpperCase();
 		final CountDownLatch latch = new CountDownLatch(2);
 		ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -539,7 +561,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Future<?> task1 = executor.submit(() -> {
 			try {
 				OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
-				this.addOnlyPublisherVideo(chromeUser, false, false, false);
+				this.addOnlyPublisherVideo(chromeUser, simulcast, false, false);
 				WebElement participantNameInput = chromeUser.getDriver().findElement(By.id("participant-name-input-0"));
 				participantNameInput.clear();
 				participantNameInput.sendKeys("CHROME_USER");
@@ -620,6 +642,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				"HTMLVideoElements were expected to have only one video track");
 
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+		this.waitUntilVideoLayersNotEmpty(user, subscriberVideo);
 		long bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
 		this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo, bytesReceived);
 
@@ -1447,6 +1470,43 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		ingressSimulcastTest(user, false, "h264", null);
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
 		testNoSimulcast(user, subscriberVideo);
+	}
+
+	@Test
+	@DisplayName("Custom ingress")
+	@Disabled // ONLY FOR CUSTOM ingress IMAGE
+	void customIngressTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
+
+		// With custom ingress it should force VP8 no simulcast 1920x0180
+		log.info("Custom ingress");
+
+		this.addSubscriber(user, true);
+		user.getDriver().findElement(By.className("connect-btn")).sendKeys(Keys.ENTER);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
+
+		// Try publishing H264 with 2 layer simulcast
+		createIngress(user, "H264_540P_25FPS_2_LAYERS", null, true);
+
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
+		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assertions.assertEquals(1, numberOfVideos, "Wrong number of videos");
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
+				"HTMLVideoElements were expected to have only one video track");
+
+		// Should receive VP8 1920
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
+		String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
+		String expectedCodec = "video/VP8";
+		Assertions.assertEquals(expectedCodec, subscriberCodec);
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 1920);
+
+		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
+		long bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
+		this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo, bytesReceived);
+		this.waitUntilSubscriberFramesPerSecondNotZero(user, subscriberVideo);
 	}
 
 	private void ingressSimulcastTest(OpenViduTestappUser user, boolean simulcast, String codec, String preset)
