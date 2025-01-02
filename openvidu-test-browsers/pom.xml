@@ -90,7 +90,7 @@
 		<dependency>
 			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-java-client</artifactId>
-			<version>${version.openvidu.java.client}</version>
+			<version>2.30.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>

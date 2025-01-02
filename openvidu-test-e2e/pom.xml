@@ -98,11 +98,6 @@
 			<version>${version.openvidu.test.browsers}</version>
 		</dependency>
 		<dependency>
-			<groupId>io.openvidu</groupId>
-			<artifactId>openvidu-java-client</artifactId>
-			<version>${version.openvidu.java.client}</version>
-		</dependency>
-		<dependency>
 			<groupId>io.livekit</groupId>
 			<artifactId>livekit-server</artifactId>
 			<version>0.5.7</version>
