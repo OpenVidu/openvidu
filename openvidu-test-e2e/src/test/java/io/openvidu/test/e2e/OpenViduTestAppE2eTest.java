@@ -437,6 +437,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Chrome force H264")
+	@Disabled // TODO: enable when not forcing VP8
 	void chromeForceH264Test() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		log.info("Chrome force H264");
@@ -454,6 +455,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Chrome force VP9")
+	@Disabled // TODO: enable when not forcing VP8
 	void chromeForceVP9Test() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		log.info("Chrome force VP9");
@@ -520,6 +522,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox subscribe to H264")
+	@Disabled // TODO: enable when not forcing VP8
 	void firefoxSubscribeToH264Test() throws Exception {
 		log.info("Firefox subscribe to H264");
 		firefoxSubscribeToCodecTest("h264", false);
@@ -527,6 +530,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox subscribe to VP9")
+	@Disabled // TODO: enable when not forcing VP8
 	void firefoxSubscribeToVP9Test() throws Exception {
 		log.info("Firefox subscribe to VP9");
 		firefoxSubscribeToCodecTest("vp9", false);
@@ -541,6 +545,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox subscribe to H264 simulcast")
+	@Disabled // TODO: enable when not forcing VP8
 	void firefoxSubscribeToH264SimulcastTest() throws Exception {
 		log.info("Firefox subscribe to H264 simulcast");
 		firefoxSubscribeToCodecTest("h264", true);
@@ -548,6 +553,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox subscribe to VP9 simulcast")
+	@Disabled // TODO: enable when not forcing VP8
 	void firefoxSubscribeToVP9SimulcastTest() throws Exception {
 		log.info("Firefox subscribe to VP9 simulcast");
 		firefoxSubscribeToCodecTest("vp9", true);
@@ -1346,6 +1352,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress VP8 Simulcast Chrome")
+	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
 	void ingressVP8SimulcastChromeTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -1357,9 +1364,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		testThreeLayers(user, subscriberVideo);
 	}
 
-	// BROKEN
 	@Test
 	@DisplayName("Ingress VP8 Simulcast Firefox")
+	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
 	void ingressVP8SimulcastFirefoxTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 
@@ -1373,6 +1380,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress H264 Simulcast Chrome")
+	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
 	void ingressH264SimulcastChromeTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -1383,9 +1391,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		testThreeLayers(user, subscriberVideo);
 	}
 
-	// BROKEN
 	@Test
 	@DisplayName("Ingress H264 Simulcast Firefox")
+	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
 	void ingressH264SimulcastFirefoxTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 
@@ -1398,6 +1406,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress H264 Simulcast two layers Chrome")
+	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
 	void ingressH264SimulcastTwoLayersChromeTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -1408,9 +1417,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		testTwoLayers(user, subscriberVideo);
 	}
 
-	// BROKEN
 	@Test
 	@DisplayName("Ingress H264 Simulcast two layers Firefox")
+	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
 	void ingressH264SimulcastTwoLayersFirefoxTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 
@@ -1433,7 +1442,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		testNoSimulcast(user, subscriberVideo);
 	}
 
-	// NOT BROKEN???!!?!
 	@Test
 	@DisplayName("Ingress VP8 No Simulcast Firefox")
 	void ingressVP8NoSimulcastFirefoxTest() throws Exception {
@@ -1446,9 +1454,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		testNoSimulcast(user, subscriberVideo);
 	}
 
-	// BROKEN
 	@Test
 	@DisplayName("Ingress H264 No Simulcast Chrome")
+	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
 	void ingressH264NoSimulcastChromeTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -1459,9 +1467,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		testNoSimulcast(user, subscriberVideo);
 	}
 
-	// BROKEN
 	@Test
 	@DisplayName("Ingress H264 No Simulcast Firefox")
+	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
 	void ingressH264NoSimulcastFirefoxTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 
