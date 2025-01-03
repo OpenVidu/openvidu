@@ -4,10 +4,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
-import io.appium.java_client.remote.MobileCapabilityType;
 import io.appium.java_client.remote.MobilePlatform;
 
 // Run Docker Android:
@@ -40,7 +40,7 @@ public class AndroidChromeUser extends BrowserUser {
 				"autoplay-policy=no-user-gesture-required");
 
 		DesiredCapabilities capabilities = new DesiredCapabilities();
-		capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, MobilePlatform.ANDROID);
+		capabilities.setCapability(CapabilityType.PLATFORM_NAME, MobilePlatform.ANDROID);
 		capabilities.setCapability(ChromeOptions.CAPABILITY, options);
 
 		URL url = null;

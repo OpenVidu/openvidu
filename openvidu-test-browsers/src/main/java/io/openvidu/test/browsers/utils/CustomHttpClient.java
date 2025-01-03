@@ -290,33 +290,33 @@ public class CustomHttpClient {
 		if (body != null && !body.isEmpty()) {
 			body = body.replaceAll("'", "\"");
 			BodyPublisher bodyPublisher = HttpRequest.BodyPublishers.ofString(body);
-			switch (method) {
-			case POST:
+			switch (method.name()) {
+			case "POST":
 				builder = builder.POST(bodyPublisher);
 				break;
-			case PUT:
+			case "PUT":
 				builder = builder.PUT(bodyPublisher);
 				break;
-			case PATCH:
+			case "PATCH":
 			default:
 				builder = builder.method("PATCH", bodyPublisher);
 				break;
 			}
 			builder.setHeader("Content-Type", "application/json");
 		} else {
-			switch (method) {
-			case GET:
+			switch (method.name()) {
+			case "GET":
 				builder = builder.GET();
 				builder.setHeader("Content-Type", "application/x-www-form-urlencoded");
 				break;
-			case POST:
+			case "POST":
 				builder = builder.POST(HttpRequest.BodyPublishers.noBody());
 				break;
-			case DELETE:
+			case "DELETE":
 				builder = builder.DELETE();
 				builder.setHeader("Content-Type", "application/x-www-form-urlencoded");
 				break;
-			case PUT:
+			case "PUT":
 				builder = builder.PUT(HttpRequest.BodyPublishers.noBody());
 			default:
 				break;
