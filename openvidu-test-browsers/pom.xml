@@ -2,13 +2,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
-	<parent>
-		<groupId>io.openvidu</groupId>
-		<artifactId>openvidu-parent</artifactId>
-		<version>2.0.0</version>
-	</parent>
-
+	<groupId>io.openvidu</groupId>
 	<artifactId>openvidu-test-browsers</artifactId>
 	<version>1.1.0</version>
 	<packaging>jar</packaging>
@@ -47,13 +41,22 @@
 	</developers>
 
 	<properties>
-		<!-- Java 17 -->
 		<java.version>17</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
-		<!-- Encoding -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<openvidu.scm.url>https://github.com/OpenVidu/openvidu</openvidu.scm.url>
+		<openvidu.scm.connection>git@github.com:OpenVidu/openvidu.git</openvidu.scm.connection>
+
+		<version.spring-boot>2.7.18</version.spring-boot>
+		<version.openvidu.java.client>2.30.0</version.openvidu.java.client>
+		<version.slf4j>1.7.36</version.slf4j>
+		<version.selenium>4.12.1</version.selenium>
+		<version.gson>2.10</version.gson>
+		<version.jcodec>0.2.5</version.jcodec>
+		<version.junit>5.9.1</version.junit>
+		<version.appium>8.3.0</version.appium>
 	</properties>
 
 	<dependencies>
@@ -90,7 +93,7 @@
 		<dependency>
 			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-java-client</artifactId>
-			<version>2.30.0</version>
+			<version>${version.openvidu.java.client}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>

@@ -3,12 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>io.openvidu</groupId>
-		<artifactId>openvidu-parent</artifactId>
-		<version>2.0.0</version>
-	</parent>
-
+	<groupId>io.openvidu</groupId>
 	<artifactId>openvidu-test-e2e</artifactId>
 	<version>1.1.1</version>
 	<packaging>jar</packaging>
@@ -47,13 +42,22 @@
 	</developers>
 
 	<properties>
-		<!-- Java 17 -->
 		<java.version>17</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
-		<!-- Encoding -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<openvidu.scm.url>https://github.com/OpenVidu/openvidu</openvidu.scm.url>
+		<openvidu.scm.connection>git@github.com:OpenVidu/openvidu.git</openvidu.scm.connection>
+
+		<version.spring-boot>2.7.18</version.spring-boot>
+		<version.selenium>4.12.1</version.selenium>
+		<version.gson>2.10</version.gson>
+		<version.livekit-server>0.8.3</version.livekit-server>
+		<version.testcontainers>1.17.6</version.testcontainers>
+		<version.dockerjava>3.2.13</version.dockerjava>
+		<version.stringsimilarity>2.0.0</version.stringsimilarity>
+		<version.openvidu-test-browsers>1.1.0</version.openvidu-test-browsers>
 	</properties>
 
 	<build>
@@ -95,12 +99,12 @@
 		<dependency>
 			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-test-browsers</artifactId>
-			<version>${version.openvidu.test.browsers}</version>
+			<version>${version.openvidu-test-browsers}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.livekit</groupId>
 			<artifactId>livekit-server</artifactId>
-			<version>0.5.7</version>
+			<version>${version.livekit-server}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.docker-java</groupId>
