@@ -51,6 +51,7 @@
 		<openvidu.scm.connection>git@github.com:OpenVidu/openvidu.git</openvidu.scm.connection>
 
 		<version.spring-boot>2.7.18</version.spring-boot>
+		<version.surefire.plugin>3.0.0-M7</version.surefire.plugin>
 		<version.selenium>4.12.1</version.selenium>
 		<version.gson>2.10</version.gson>
 		<version.livekit-server>0.8.3</version.livekit-server>
