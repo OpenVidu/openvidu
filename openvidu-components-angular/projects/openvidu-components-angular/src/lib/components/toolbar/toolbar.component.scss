@@ -156,6 +156,9 @@ $ov-recording-blinking-color: #eb5144;
 	.mat-mdc-icon-button[disabled] {
 		color: #fff;
 	}
+	::ng-deep .mat-badge-content{
+		background-color: var(--ov-warn-color);
+	}
 	.divider {
 		margin: 8px 0px;
 	}
