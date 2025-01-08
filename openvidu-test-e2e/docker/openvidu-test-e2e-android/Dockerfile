@@ -1,4 +1,4 @@
-FROM openvidu/openvidu-test-e2e:22.04
+FROM openvidu/openvidu-test-e2e:24.04
 
 RUN apt-get -y update && \
     apt-get install -y wget unzip

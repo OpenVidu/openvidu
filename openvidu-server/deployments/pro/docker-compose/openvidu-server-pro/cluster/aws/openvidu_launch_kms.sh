@@ -50,7 +50,7 @@ docker run --rm amazon/aws-cli:"${AWS_CLI_DOCKER_TAG}" ec2 run-instances \
     --subnet-id "${AWS_SUBNET_ID}" \
     --tag-specifications "ResourceType=instance,Tags=[{Key='Name',Value='OpenVidu Pro Media Node'},{Key='ov-cluster-member',Value='kms'},{Key='ov-stack-name',Value='${AWS_STACK_NAME}'},{Key='ov-stack-region',Value='${AWS_DEFAULT_REGION}'}]" \
     --iam-instance-profile Name="OpenViduInstanceProfile-${AWS_STACK_NAME}-${AWS_DEFAULT_REGION}" \
-    --block-device-mappings "DeviceName=/dev/sda1,Ebs={DeleteOnTermination=True,VolumeType='gp2',VolumeSize='${AWS_VOLUME_SIZE}'}" \
+    --block-device-mappings "DeviceName=/dev/sda1,Ebs={DeleteOnTermination=True,VolumeType='gp3',VolumeSize='${AWS_VOLUME_SIZE}'}" \
     --security-group-ids "${AWS_SECURITY_GROUP}" > "${OUTPUT}" 2> "${ERROUTPUT}"
 
 docker run --rm amazon/aws-cli:"${AWS_CLI_DOCKER_TAG}" ec2 wait instance-running --instance-ids $(cat ${OUTPUT} | jq --raw-output ' .Instances[] | .InstanceId')

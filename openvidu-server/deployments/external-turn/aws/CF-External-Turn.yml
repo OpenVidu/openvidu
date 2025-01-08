@@ -174,7 +174,7 @@ Resources:
     Type: Custom::FindAMI
     Properties:
       ServiceToken: !Sub ${GetLatestUbuntuAmi.Arn}
-      Name: "*ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
+      Name: "*ubuntu/images/hvm-ssd/ubuntu-noble-24.04-amd64-server-*"
 
   TurnServerInstance:
     Type: 'AWS::EC2::Instance'
@@ -314,7 +314,7 @@ Resources:
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeType: gp2
+            VolumeType: gp3
             DeleteOnTermination: true
             VolumeSize: 25
 

@@ -47,7 +47,7 @@ TEMP_JSON_ES_EBS_OPT=$(mktemp -t es-ebs-XXX --suffix .json)
 cat > "$TEMP_JSON_ES_EBS_OPT"<<EOF
 {
   "EBSEnabled": true,
-  "VolumeType": "gp2",
+  "VolumeType": "gp3",
   "VolumeSize": 10
 }
 EOF

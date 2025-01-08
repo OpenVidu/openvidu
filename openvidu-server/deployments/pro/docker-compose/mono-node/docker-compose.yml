@@ -157,7 +157,7 @@ services:
             core: -1
         environment:
             - MEDIA_NODE_CONTROLLER_RECORDINGS_PATH=/opt/openvidu/mncontroller/recordings
-            - KMS_IMAGE=kurento/kurento-media-server:7.0.1
+            - KMS_IMAGE=kurento/kurento-media-server:7.1.1
             - MEDIASOUP_IMAGE=openvidu/mediasoup-controller:2.30.0
             - METRICBEAT_IMAGE=docker.elastic.co/beats/metricbeat-oss:7.8.0
             - FILEBEAT_IMAGE=docker.elastic.co/beats/filebeat-oss:7.8.0
