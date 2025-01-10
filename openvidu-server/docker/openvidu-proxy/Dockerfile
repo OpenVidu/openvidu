@@ -1,4 +1,4 @@
-FROM nginx:1.25.5-alpine
+FROM nginx:1.27.3-alpine
 
 # Install required software
 RUN apk update && \
