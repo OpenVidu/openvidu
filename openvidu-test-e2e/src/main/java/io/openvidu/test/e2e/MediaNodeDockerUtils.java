@@ -9,8 +9,8 @@ import com.github.dockerjava.api.command.ExecCreateCmdResponse;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
-import com.github.dockerjava.okhttp.OkDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
+import com.github.dockerjava.zerodep.ZerodepDockerHttpClient;
 
 public class MediaNodeDockerUtils {
 
@@ -53,7 +53,7 @@ public class MediaNodeDockerUtils {
 
 	public static DockerClient getDockerClient() {
 		DockerClientConfig dockerClientConfig = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
-		DockerHttpClient dockerHttpClient = new OkDockerHttpClient.Builder()
+		DockerHttpClient dockerHttpClient = new ZerodepDockerHttpClient.Builder()
 			.dockerHost(dockerClientConfig.getDockerHost())
 			.sslConfig(dockerClientConfig.getSSLConfig())
 			.build();

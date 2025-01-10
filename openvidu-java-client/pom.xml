@@ -66,38 +66,28 @@
 		<dependency>
 			<groupId>org.apache.httpcomponents.client5</groupId>
 			<artifactId>httpclient5</artifactId>
-			<version>5.1.4</version>
+			<version>5.4.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
-			<version>2.10</version>
+			<version>2.10.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.36</version>
+			<version>1.7.36.redhat-00003</version>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.9.1</version>
+			<version>5.11.4</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>commons-validator</groupId>
 			<artifactId>commons-validator</artifactId>
-			<version>1.7</version>
-		</dependency>
-		<!--
-			This dependency is used by commons-validator 1.7. But it should be
-			replaced or updated in the future:
-			https://issues.apache.org/jira/browse/VALIDATOR-485?jql=project%20%3D%20VALIDATOR%20AND%20fixVersion%20%3D%202.0
-		-->
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-collections4</artifactId>
-			<version>4.4</version>
+			<version>1.9.0</version>
 		</dependency>
 	</dependencies>
 

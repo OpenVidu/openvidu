@@ -20,6 +20,20 @@
 		</license>
 	</licenses>
 
+	<!-- Additonal repositories -->
+	 <repositories>
+		<repository>
+			<id>redhat-ga</id>
+			<url>https://maven.repository.redhat.com/ga/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
 	<organization>
 		<name>OpenVidu</name>
 		<url>https://openvidu.io</url>
@@ -62,6 +76,15 @@
 		<version.testcontainers>1.17.6</version.testcontainers>
 		<version.appium>8.3.0</version.appium>
 		<version.stringsimilarity>2.0.0</version.stringsimilarity>
+
+		<!-- fixed patched versions -->
+		<version.commons.io>2.16.1</version.commons.io>
+		<version.commons.compress>1.26.2</version.commons.compress>
+		<version.snakeyaml>1.33.0.redhat-00002</version.snakeyaml>
+		<version.woodstox>6.6.2</version.woodstox>
+		<version.google.guava>33.2.1-jre</version.google.guava>
+		<version.netty>4.1.112.Final</version.netty>
+		<version.logback.classic>1.2.13</version.logback.classic>
 
 		<version.compiler.plugin>3.10.1</version.compiler.plugin>
 		<version.enforcer.plugin>3.1.0</version.enforcer.plugin>
