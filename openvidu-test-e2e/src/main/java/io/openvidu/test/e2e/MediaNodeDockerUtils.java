@@ -9,7 +9,7 @@ import com.github.dockerjava.api.command.ExecCreateCmdResponse;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
-import com.github.dockerjava.jaxrs.JerseyDockerHttpClient;
+import com.github.dockerjava.okhttp.OkDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 
 public class MediaNodeDockerUtils {
@@ -53,9 +53,13 @@ public class MediaNodeDockerUtils {
 
 	public static DockerClient getDockerClient() {
 		DockerClientConfig dockerClientConfig = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
-		DockerHttpClient dockerHttpClient = new JerseyDockerHttpClient.Builder()
-				.dockerHost(dockerClientConfig.getDockerHost()).sslConfig(dockerClientConfig.getSSLConfig()).build();
-		return DockerClientBuilder.getInstance(dockerClientConfig).withDockerHttpClient(dockerHttpClient).build();
+		DockerHttpClient dockerHttpClient = new OkDockerHttpClient.Builder()
+			.dockerHost(dockerClientConfig.getDockerHost())
+			.sslConfig(dockerClientConfig.getSSLConfig())
+			.build();
+		return DockerClientBuilder.getInstance(dockerClientConfig)
+			.withDockerHttpClient(dockerHttpClient)
+			.build();
 	}
 
 }

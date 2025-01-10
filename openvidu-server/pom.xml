@@ -236,6 +236,16 @@
 			<version>${version.dockerjava}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.github.docker-java</groupId>
+			<artifactId>docker-java-transport-okhttp</artifactId>
+			<version>${version.dockerjava}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.docker-java</groupId>
+			<artifactId>docker-java-api</artifactId>
+			<version>${version.dockerjava}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.codehaus.janino</groupId>
 			<artifactId>janino</artifactId>
 			<version>${version.janino}</version>

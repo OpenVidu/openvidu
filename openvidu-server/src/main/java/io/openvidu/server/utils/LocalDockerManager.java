@@ -51,7 +51,7 @@ import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
-import com.github.dockerjava.jaxrs.JerseyDockerHttpClient;
+import com.github.dockerjava.okhttp.OkDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import com.google.common.collect.ImmutableList;
 
@@ -74,10 +74,13 @@ public class LocalDockerManager implements DockerManager {
 	@Override
 	public DockerManager init() {
 		DockerClientConfig dockerClientConfig = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
-		DockerHttpClient dockerHttpClient = new JerseyDockerHttpClient.Builder()
-				.dockerHost(dockerClientConfig.getDockerHost()).sslConfig(dockerClientConfig.getSSLConfig()).build();
-		this.dockerClient = DockerClientBuilder.getInstance(dockerClientConfig).withDockerHttpClient(dockerHttpClient)
-				.build();
+		DockerHttpClient dockerHttpClient = new OkDockerHttpClient.Builder()
+			.dockerHost(dockerClientConfig.getDockerHost())
+			.sslConfig(dockerClientConfig.getSSLConfig())
+			.build();
+		this.dockerClient = DockerClientBuilder.getInstance(dockerClientConfig)
+			.withDockerHttpClient(dockerHttpClient)
+			.build();
 		return this;
 	}
 

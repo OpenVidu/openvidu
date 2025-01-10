@@ -16,7 +16,7 @@ RUN apt-get update && apt-get -y upgrade && \
     iproute2 \
     lsb-release \
     maven \
-    openjdk-11-jdk-headless \
+    openjdk-21-jdk-headless \
     rsync \
     software-properties-common \
     sudo && \

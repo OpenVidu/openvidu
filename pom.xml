@@ -55,7 +55,7 @@
 		<version.mockito.core>4.9.0</version.mockito.core>
 		<version.powermock>2.0.9</version.powermock>
 		<version.janino>3.1.9</version.janino>
-		<version.dockerjava>3.2.13</version.dockerjava>
+		<version.dockerjava>3.4.1</version.dockerjava>
 		<version.slf4j>1.7.36</version.slf4j>
 		<version.gson>2.10</version.gson>
 		<version.jcodec>0.2.5</version.jcodec>
