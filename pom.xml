@@ -57,7 +57,7 @@
 		<version.janino>3.1.9</version.janino>
 		<version.dockerjava>3.4.1</version.dockerjava>
 		<version.slf4j>1.7.36</version.slf4j>
-		<version.gson>2.10</version.gson>
+		<version.gson>2.11.0</version.gson>
 		<version.jcodec>0.2.5</version.jcodec>
 		<version.testcontainers>1.17.6</version.testcontainers>
 		<version.appium>8.3.0</version.appium>
@@ -65,6 +65,7 @@
 
 		<!-- fixed patched versions -->
 		<version.logback>1.2.13</version.logback>
+		<version.jackson>2.13.5</version.jackson>
 
 		<version.compiler.plugin>3.10.1</version.compiler.plugin>
 		<version.enforcer.plugin>3.1.0</version.enforcer.plugin>
