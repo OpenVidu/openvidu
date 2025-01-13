@@ -31,6 +31,9 @@ RUN apt-get update && apt-get -y upgrade && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove --purge -y && apt-get autoclean
 
+# Change openjdk-11 as the default java
+RUN update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java
+
 # Docker
 RUN sudo mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
