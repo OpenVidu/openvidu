@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
   curl \
   wget \
-  openjdk-21-jre \
+  openjdk-11-jre \
   jq \
   docker.io \
   ethtool \

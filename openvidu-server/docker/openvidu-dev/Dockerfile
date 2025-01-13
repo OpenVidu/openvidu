@@ -15,7 +15,7 @@ RUN echo "deb [arch=amd64] http://ubuntu.openvidu.io/7.1.1 noble main" | tee /et
 
 # Install Java, supervisor and netstat
 RUN apt-get update && apt-get install -y \
-	openjdk-21-jre \
+	openjdk-11-jre \
 	supervisor && \
 	rm -rf /var/lib/apt/lists/*
 
