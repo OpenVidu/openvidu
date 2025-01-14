@@ -2,7 +2,7 @@
 
 # Global variables
 OPENVIDU_FOLDER=openvidu
-OPENVIDU_VERSION=v2
+OPENVIDU_VERSION=v2.31.0
 OPENVIDU_UPGRADABLE_VERSION="2.30"
 DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}
 
