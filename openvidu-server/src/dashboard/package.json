@@ -12,7 +12,7 @@
     "@angular/router": "15.0.2",
     "core-js": "3.26.1",
     "jquery": "3.6.1",
-    "openvidu-browser": "2.30.0",
+    "openvidu-browser": "2.31.0",
     "rxjs": "7.5.7",
     "tslib": "2.4.1",
     "zone.js": "0.12.0"
@@ -50,5 +50,5 @@
     "start": "ng serve --host 0.0.0.0 --ssl",
     "test": "ng test"
   },
-  "version": "2.30.0"
+  "version": "2.31.0"
 }
