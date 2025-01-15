@@ -1505,6 +1505,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Should receive VP8 1920
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
 		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
 		String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
 		String expectedCodec = "video/VP8";
