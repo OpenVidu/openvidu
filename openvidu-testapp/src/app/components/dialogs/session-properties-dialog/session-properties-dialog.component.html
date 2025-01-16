@@ -122,6 +122,9 @@
         <mat-checkbox class="checkbox-form" [(ngModel)]="forcePublishing" id="force-publishing-checkbox">Force
           publishing
         </mat-checkbox>
+        <mat-checkbox class="checkbox-form" [(ngModel)]="targetElement" id="target-element-checkbox">Init with target
+          element
+        </mat-checkbox>
         <mat-checkbox class="checkbox-form" [(ngModel)]="reconnectionOnServerFailure" id="reconnection-on-server-failure-checkbox">
           Reconnection on server failure
         </mat-checkbox>
@@ -135,5 +138,5 @@
 <mat-dialog-actions>
   <button id="cancel-btn" mat-button [mat-dialog-close]="undefined">CANCEL</button>
   <button id="save-btn" mat-button
-    [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf, customToken: customToken, forcePublishing: forcePublishing, reconnectionOnServerFailure: reconnectionOnServerFailure, connectionProperties: generateConnectionProperties()}">SAVE</button>
+    [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf, customToken: customToken, forcePublishing: forcePublishing, targetElement: targetElement, reconnectionOnServerFailure: reconnectionOnServerFailure, connectionProperties: generateConnectionProperties()}">SAVE</button>
 </mat-dialog-actions>

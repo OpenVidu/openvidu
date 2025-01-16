@@ -836,6 +836,11 @@ export class VideoComponent implements OnInit, OnDestroy {
         });
     }
 
+    addVideoElement() {
+        const sub: Subscriber = <Subscriber>this.streamManager;
+        sub.createVideoElement(document.getElementsByClassName('video-container')[0] as HTMLElement);
+    }
+
     emitFilterEventToParent(event: FilterEvent) {
         this.updateEventListInParent.emit({
             eventName: 'filterEvent',

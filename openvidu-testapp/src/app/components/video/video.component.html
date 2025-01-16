@@ -58,6 +58,9 @@
             <button class="video-btn other-operations-btn" title="Other operations" (click)="otherOperations()">
                 <mat-icon aria-label="Other operations" class="mat-icon material-icons" role="img" aria-hidden="true">settings</mat-icon>
             </button>
+            <button class="video-btn add-video-element-btn" *ngIf="!this.unpublished" title="Add Video Element" (click)="addVideoElement()">
+                <mat-icon aria-label="Add Video Element" class="mat-icon material-icons" role="img" aria-hidden="true">add</mat-icon>
+            </button>
             <button class="video-btn stats-button bottom-left-rounded" title="Peer Connection Stats" (click)="showCodecUsed()">
               <mat-icon aria-label="Peer Connection Stats" class="mat-icon material-icons" role="img" aria-hidden="true">info</mat-icon>
             </button>

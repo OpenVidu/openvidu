@@ -142,6 +142,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   manualTurnConf: RTCIceServer = { urls: [] };
   customToken: string;
   forcePublishing: boolean = false;
+  withTargetElement: boolean = false;
   reconnectionOnServerFailure: boolean = false;
   connectionProperties: ConnectionProperties = {
     role: OpenViduRole.PUBLISHER,
@@ -576,8 +577,12 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   syncInitPublisher() {
+    let targetElement: HTMLElement = undefined;
+    if(this.withTargetElement){
+      targetElement = document.getElementsByClassName('video-container')[0] as HTMLElement;
+    }
     this.publisher = this.OV.initPublisher(
-      undefined,
+      targetElement,
       this.publisherProperties,
       err => {
         if (err) {
@@ -614,7 +619,13 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   syncSubscribe(session: Session, event) {
-    this.subscribers.push(session.subscribe(event.stream, undefined));
+    let targetElement: HTMLElement = undefined;
+    if(this.withTargetElement){
+      targetElement = document.getElementsByClassName('video-container')[0] as HTMLElement;
+    }
+
+    const subscriber = session.subscribe(event.stream, targetElement);
+    this.subscribers.push(subscriber);
   }
 
   openSessionPropertiesDialog() {
@@ -626,6 +637,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         manualTurnConf: this.manualTurnConf,
         customToken: this.customToken,
         forcePublishing: this.forcePublishing,
+        targetElement: this.withTargetElement,
         reconnectionOnServerFailure: this.reconnectionOnServerFailure,
         connectionProperties: this.connectionProperties,
       }
@@ -641,6 +653,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         this.manualTurnConf = result.manualTurnConf;
         this.customToken = result.customToken;
         this.forcePublishing = result.forcePublishing;
+        this.withTargetElement = result.targetElement;
         this.reconnectionOnServerFailure = result.reconnectionOnServerFailure;
         this.connectionProperties = result.connectionProperties;
       }
