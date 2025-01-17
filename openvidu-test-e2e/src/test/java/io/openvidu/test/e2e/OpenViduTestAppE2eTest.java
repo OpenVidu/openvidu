@@ -17,9 +17,11 @@
 
 package io.openvidu.test.e2e;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -133,6 +135,150 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				"HTMLVideoElements were expected to have only one video track");
 		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("audio.remote", true, false),
 				"HTMLAudioElements were expected to have only one audio track");
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("Signal")
+	void signalTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		log.info("Signal");
+		for (int i = 0; i < 2; i++) {
+			WebElement addUserBtn = user.getDriver().findElement(By.id("add-user-btn"));
+			addUserBtn.click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-" + i + " .subscriber-checkbox")).click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-" + i + " .publisher-checkbox")).click();
+		}
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("participantConnected", "RoomEvent", 1);
+
+		// Broadcast signal
+		Collection<Entry<String, String>> assertions = new ArrayList<>();
+
+		// Broadcast from TestParticipant0
+		final CountDownLatch signalEventLatch1 = new CountDownLatch(2);
+
+		user.getEventManager().on(1, "dataReceived", "RoomEvent", json -> {
+			assertions.add(new AbstractMap.SimpleEntry<>("Message from TestParticipant0 to all room",
+					json.getAsJsonObject().get("eventDescription").getAsString()));
+			signalEventLatch1.countDown();
+		});
+		user.getEventManager().on(1, "dataReceived", "ParticipantEvent", json -> {
+			assertions.add(new AbstractMap.SimpleEntry<>("Message from TestParticipant0 to all room",
+					json.getAsJsonObject().get("eventDescription").getAsString()));
+			signalEventLatch1.countDown();
+		});
+
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .message-btn")).click();
+		user.getEventManager().waitUntilEventReaches(1, "dataReceived", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "dataReceived", "ParticipantEvent", 1);
+		// Do not trigger own signals
+		Assertions.assertEquals(0, user.getEventManager().getNumEvents(0, "dataReceived-RoomEvent").get());
+		Assertions.assertEquals(0, user.getEventManager().getNumEvents(0, "dataReceived-ParticipantEvent").get());
+
+		if (!signalEventLatch1.await(3, TimeUnit.SECONDS)) {
+			Assertions.fail("Timeout waiting for signal event content check");
+		}
+		assertions.forEach(assertion -> Assertions.assertEquals(assertion.getKey(), assertion.getValue()));
+		user.getEventManager().off(1, "dataReceived", "RoomEvent");
+		user.getEventManager().off(1, "dataReceived", "ParticipantEvent");
+		assertions.clear();
+		user.getEventManager().clearAllCurrentEvents();
+
+		// Broadcast from TestParticipant1
+		final CountDownLatch signalEventLatch2 = new CountDownLatch(2);
+
+		user.getEventManager().on(0, "dataReceived", "RoomEvent", json -> {
+			assertions.add(new AbstractMap.SimpleEntry<>("Message from TestParticipant1 to all room",
+					json.getAsJsonObject().get("eventDescription").getAsString()));
+			signalEventLatch2.countDown();
+		});
+		user.getEventManager().on(0, "dataReceived", "ParticipantEvent", json -> {
+			assertions.add(new AbstractMap.SimpleEntry<>("Message from TestParticipant1 to all room",
+					json.getAsJsonObject().get("eventDescription").getAsString()));
+			signalEventLatch2.countDown();
+		});
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .message-btn")).click();
+		user.getEventManager().waitUntilEventReaches(0, "dataReceived", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(0, "dataReceived", "ParticipantEvent", 1);
+		// Do not trigger own signals
+		Assertions.assertEquals(1, user.getEventManager().getNumEvents(0, "dataReceived-RoomEvent").get());
+		Assertions.assertEquals(1, user.getEventManager().getNumEvents(0, "dataReceived-ParticipantEvent").get());
+
+		if (!signalEventLatch2.await(3, TimeUnit.SECONDS)) {
+			Assertions.fail("Timeout waiting for signal event content check");
+		}
+		assertions.forEach(assertion -> Assertions.assertEquals(assertion.getKey(), assertion.getValue()));
+		user.getEventManager().off(0, "dataReceived", "RoomEvent");
+		user.getEventManager().off(0, "dataReceived", "ParticipantEvent");
+		assertions.clear();
+		user.getEventManager().clearAllCurrentEvents();
+
+		// Signal specific participant
+
+		// Signal from TestParticipant0 to TestParticipant1
+		final CountDownLatch signalEventLatch3 = new CountDownLatch(2);
+
+		user.getEventManager().on(1, "dataReceived", "RoomEvent", json -> {
+			assertions.add(new AbstractMap.SimpleEntry<>("Message from TestParticipant0 to TestParticipant1",
+					json.getAsJsonObject().get("eventDescription").getAsString()));
+			signalEventLatch3.countDown();
+		});
+		user.getEventManager().on(1, "dataReceived", "ParticipantEvent", json -> {
+			assertions.add(new AbstractMap.SimpleEntry<>("Message from TestParticipant0 to TestParticipant1",
+					json.getAsJsonObject().get("eventDescription").getAsString()));
+			signalEventLatch3.countDown();
+		});
+		user.getDriver()
+				.findElement(By.cssSelector("#openvidu-instance-0 app-participant.remote-participant .message-btn"))
+				.click();
+		user.getEventManager().waitUntilEventReaches(1, "dataReceived", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "dataReceived", "ParticipantEvent", 1);
+
+		// Do not trigger own signals
+		Assertions.assertEquals(0, user.getEventManager().getNumEvents(0, "dataReceived-RoomEvent").get());
+		Assertions.assertEquals(0, user.getEventManager().getNumEvents(0, "dataReceived-ParticipantEvent").get());
+
+		if (!signalEventLatch3.await(3, TimeUnit.SECONDS)) {
+			Assertions.fail("Timeout waiting for signal event content check");
+		}
+		assertions.forEach(assertion -> Assertions.assertEquals(assertion.getKey(), assertion.getValue()));
+		user.getEventManager().off(1, "dataReceived", "RoomEvent");
+		user.getEventManager().off(1, "dataReceived", "ParticipantEvent");
+		assertions.clear();
+		user.getEventManager().clearAllCurrentEvents();
+
+		// Signal from TestParticipant1 to TestParticipant0
+		final CountDownLatch signalEventLatch4 = new CountDownLatch(2);
+
+		user.getEventManager().on(0, "dataReceived", "RoomEvent", json -> {
+			assertions.add(new AbstractMap.SimpleEntry<>("Message from TestParticipant1 to TestParticipant0",
+					json.getAsJsonObject().get("eventDescription").getAsString()));
+			signalEventLatch4.countDown();
+		});
+		user.getEventManager().on(0, "dataReceived", "ParticipantEvent", json -> {
+			assertions.add(new AbstractMap.SimpleEntry<>("Message from TestParticipant1 to TestParticipant0",
+					json.getAsJsonObject().get("eventDescription").getAsString()));
+			signalEventLatch4.countDown();
+		});
+		user.getDriver()
+				.findElement(By.cssSelector("#openvidu-instance-1 app-participant.remote-participant .message-btn"))
+				.click();
+		user.getEventManager().waitUntilEventReaches(0, "dataReceived", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(0, "dataReceived", "ParticipantEvent", 1);
+
+		// Do not trigger own signals
+		Assertions.assertEquals(0, user.getEventManager().getNumEvents(1, "dataReceived-RoomEvent").get());
+		Assertions.assertEquals(0, user.getEventManager().getNumEvents(1, "dataReceived-ParticipantEvent").get());
+
+		if (!signalEventLatch4.await(3, TimeUnit.SECONDS)) {
+			Assertions.fail("Timeout waiting for signal event content check");
+		}
+		assertions.forEach(assertion -> Assertions.assertEquals(assertion.getKey(), assertion.getValue()));
+
 		gracefullyLeaveParticipants(user, 2);
 	}
 

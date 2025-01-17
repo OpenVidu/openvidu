@@ -283,11 +283,11 @@ public class OpenViduEventManager {
 		this.startPolling();
 	}
 
-	private AtomicInteger getNumEvents(String eventTypeAndCategory) {
+	public AtomicInteger getNumEvents(String eventTypeAndCategory) {
 		return this.eventNumbers.computeIfAbsent(eventTypeAndCategory, k -> new AtomicInteger(0));
 	}
 
-	private AtomicInteger getNumEvents(int numberOfUser, String eventTypeAndCategory) {
+	public AtomicInteger getNumEvents(int numberOfUser, String eventTypeAndCategory) {
 		this.eventNumbersByUser.putIfAbsent(numberOfUser, new HashMap<>());
 		return this.eventNumbersByUser.get(numberOfUser).computeIfAbsent(eventTypeAndCategory,
 				k -> new AtomicInteger(0));
@@ -330,10 +330,13 @@ public class OpenViduEventManager {
 				}
 			}
 			if (this.eventCallbacksByUser.containsKey(numberOfUser)) {
-				for (Consumer<JsonObject> callback : this.eventCallbacksByUser.get(numberOfUser)
-						.get(eventTypeAndCategory)) {
-					final RunnableCallback runnableCallback = new RunnableCallback(callback, event);
-					execService.submit(runnableCallback);
+				Collection<Consumer<JsonObject>> callbacksForEvent = this.eventCallbacksByUser.get(numberOfUser)
+						.get(eventTypeAndCategory);
+				if (callbacksForEvent != null) {
+					for (Consumer<JsonObject> callback : callbacksForEvent) {
+						final RunnableCallback runnableCallback = new RunnableCallback(callback, event);
+						execService.submit(runnableCallback);
+					}
 				}
 			}
 		}
