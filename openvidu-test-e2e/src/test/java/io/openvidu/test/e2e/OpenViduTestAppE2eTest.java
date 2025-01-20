@@ -759,6 +759,265 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		gracefullyLeaveParticipants(user, 2);
 	}
 
+	@Test
+	@DisplayName("Verify that the session emits the streamCreated event when the publisher has only audio active.")
+	void sessionStreamCreatedOnlyAudioTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		// Add subscriber
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .publish-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).click();
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+
+
+		// Add publisher
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .subscribe-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .active-video-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		Thread.sleep(2000);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+
+		gracefullyLeaveParticipants(user, 1);
+	}
+
+	@Test
+	@DisplayName("Verify that the session emits the streamCreated event when the publisher has only video active.")
+	void sessionStreamCreatedOnlyVideoTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		// Add subscriber
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .publish-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).click();
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+
+
+		// Add publisher
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .subscribe-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .active-audio-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		Thread.sleep(2000);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+
+		gracefullyLeaveParticipants(user, 1);
+	}
+
+	@Test
+	@DisplayName("Verify that the session emits the streamPropertyChanged event when the publisher has only audio active and toggles (mutes/unmutes) it.")
+	void sessionStreamPropertyChangedOnlyAudioTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		// Add subscriber
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .publish-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).click();
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+
+		// Add publisher
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .subscribe-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .active-video-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .pub-audio-btn")).click();
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);
+
+		gracefullyLeaveParticipants(user, 1);
+	}
+
+	@Test
+	@DisplayName("Verify that the session emits the streamPropertyChanged event when the publisher has only video active and toggles (enable/disable) it.")
+	void sessionStreamPropertyChangedOnlyVideoTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		// Add subscriber
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .publish-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).click();
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+
+		// Add publisher
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .subscribe-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .active-audio-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .pub-video-btn")).click();
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);
+
+		gracefullyLeaveParticipants(user, 1);
+	}
+
+	@Test
+	@DisplayName("Verify that the webrtcConnectionCreated webhook is received when the publisher has only video active.")
+	void webrtcConnectionCreatedWebhookOnlyVideoTest() throws Exception {
+
+		CountDownLatch initLatch = new CountDownLatch(1);
+		io.openvidu.test.browsers.utils.webhook.CustomWebhook.main(new String[0], initLatch);
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		try {
+
+			if (!initLatch.await(30, TimeUnit.SECONDS)) {
+				Assertions.fail("Timeout waiting for webhook springboot app to start");
+				CustomWebhook.shutDown();
+				return;
+			}
+
+			// Add publisher with only video active
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .subscribe-checkbox")).click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .active-audio-checkbox")).click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).click();
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 10);
+
+		}  catch (TimeoutException e) {
+			log.error("Timeout: {}", e.getMessage());
+			e.printStackTrace();
+			System.out.println(getBase64Screenshot(user.getBrowserUser()));
+			Assertions.fail(e.getMessage());
+		} finally {
+			CustomWebhook.shutDown();
+			gracefullyLeaveParticipants(user, 1);
+		}
+	}
+
+	@Test
+	@DisplayName("Verify that the webrtcConnectionCreated webhook is received when the publisher has only audio active.")
+	void webrtcConnectionCreatedWebhookOnlyAudioTest() throws Exception {
+
+		CountDownLatch initLatch = new CountDownLatch(1);
+		io.openvidu.test.browsers.utils.webhook.CustomWebhook.main(new String[0], initLatch);
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		try {
+
+			if (!initLatch.await(30, TimeUnit.SECONDS)) {
+				Assertions.fail("Timeout waiting for webhook springboot app to start");
+				CustomWebhook.shutDown();
+				return;
+			}
+
+			// Add publisher with only video active
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			// user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .subscribe-checkbox")).click();
+			// user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .active-video-checkbox")).click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).click();
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 20);
+
+		}  catch (TimeoutException e) {
+			log.error("Timeout: {}", e.getMessage());
+			e.printStackTrace();
+			System.out.println(getBase64Screenshot(user.getBrowserUser()));
+			Assertions.fail(e.getMessage());
+		} finally {
+			CustomWebhook.shutDown();
+			gracefullyLeaveParticipants(user, 1);
+		}
+	}
+
+	@Test
+	@DisplayName("Verify that the webrtcConnectionDestroyed webhook is received when the publisher has only video active.")
+	void webrtcConnectionDestroyedWebhookOnlyVideoTest() throws Exception {
+
+		CountDownLatch initLatch = new CountDownLatch(1);
+		io.openvidu.test.browsers.utils.webhook.CustomWebhook.main(new String[0], initLatch);
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		try {
+
+			if (!initLatch.await(30, TimeUnit.SECONDS)) {
+				Assertions.fail("Timeout waiting for webhook springboot app to start");
+				CustomWebhook.shutDown();
+				return;
+			}
+
+			// Add publisher with only video active
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .subscribe-checkbox")).click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .active-audio-checkbox")).click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).click();
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+
+			gracefullyLeaveParticipants(user, 1);
+
+			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 10);
+
+
+		}  catch (TimeoutException e) {
+			log.error("Timeout: {}", e.getMessage());
+			e.printStackTrace();
+			System.out.println(getBase64Screenshot(user.getBrowserUser()));
+			Assertions.fail(e.getMessage());
+		} finally {
+			CustomWebhook.shutDown();
+		}
+	}
+
+	@Test
+	@DisplayName("Verify that the webrtcConnectionDestroyed webhook is received when the publisher has only audio active.")
+	void webrtcConnectionDestroyedWebhookOnlyAudioTest() throws Exception {
+
+		CountDownLatch initLatch = new CountDownLatch(1);
+		io.openvidu.test.browsers.utils.webhook.CustomWebhook.main(new String[0], initLatch);
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		try {
+
+			if (!initLatch.await(30, TimeUnit.SECONDS)) {
+				Assertions.fail("Timeout waiting for webhook springboot app to start");
+				CustomWebhook.shutDown();
+				return;
+			}
+
+			// Add publisher with only video active
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .subscribe-checkbox")).click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .active-video-checkbox")).click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).click();
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+
+			gracefullyLeaveParticipants(user, 1);
+			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 10);
+
+
+		}  catch (TimeoutException e) {
+			log.error("Timeout: {}", e.getMessage());
+			e.printStackTrace();
+			System.out.println(getBase64Screenshot(user.getBrowserUser()));
+			Assertions.fail(e.getMessage());
+		} finally {
+			CustomWebhook.shutDown();
+		}
+	}
+
 
 	@Test
 	@DisplayName("Change publisher dynamically")
