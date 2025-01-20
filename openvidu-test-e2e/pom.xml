@@ -96,6 +96,17 @@
 			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-test-browsers</artifactId>
 			<version>${version.openvidu.test.browsers}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-io</groupId>
+					<artifactId>commons-io</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.13.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.openvidu</groupId>
