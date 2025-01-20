@@ -1696,6 +1696,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
 
+		// Should receive VP8 1920x1080 30 fps
 		subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
 		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
 		Assertions.assertEquals(1, getLayersAsJsonArray(user, subscriberVideo).size());
