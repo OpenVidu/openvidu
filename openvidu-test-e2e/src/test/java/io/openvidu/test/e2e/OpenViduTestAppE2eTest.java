@@ -52,6 +52,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import io.openvidu.test.e2e.annotations.OnlyMediasoup;
+import io.openvidu.test.e2e.annotations.OnlyPion;
+
 /**
  * E2E tests for openvidu-testapp.
  *
@@ -583,7 +586,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Chrome force H264")
-	@Disabled // TODO: enable when not forcing VP8
+	// TODO: remove tag when not forcing VP8 with mediasoup
+	@OnlyPion
 	void chromeForceH264Test() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		log.info("Chrome force H264");
@@ -601,7 +605,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Chrome force VP9")
-	@Disabled // TODO: enable when not forcing VP8
+	// TODO: remove tag when not forcing VP8 with mediasoup
+	@OnlyPion
 	void chromeForceVP9Test() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		log.info("Chrome force VP9");
@@ -668,7 +673,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox subscribe to H264")
-	@Disabled // TODO: enable when not forcing VP8
+	// TODO: remove tag when not forcing VP8 with mediasoup
+	@OnlyPion
 	void firefoxSubscribeToH264Test() throws Exception {
 		log.info("Firefox subscribe to H264");
 		firefoxSubscribeToCodecTest("h264", false);
@@ -676,7 +682,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox subscribe to VP9")
-	@Disabled // TODO: enable when not forcing VP8
+	// TODO: remove tag when not forcing VP8 with mediasoup
+	@OnlyPion
 	void firefoxSubscribeToVP9Test() throws Exception {
 		log.info("Firefox subscribe to VP9");
 		firefoxSubscribeToCodecTest("vp9", false);
@@ -691,7 +698,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox subscribe to H264 simulcast")
-	@Disabled // TODO: enable when not forcing VP8
+	// TODO: remove tag when not forcing VP8 with mediasoup
+	@OnlyPion
 	void firefoxSubscribeToH264SimulcastTest() throws Exception {
 		log.info("Firefox subscribe to H264 simulcast");
 		firefoxSubscribeToCodecTest("h264", true);
@@ -699,7 +707,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox subscribe to VP9 simulcast")
-	@Disabled // TODO: enable when not forcing VP8
+	// TODO: remove tag when not forcing VP8 with mediasoup
+	@OnlyPion
 	void firefoxSubscribeToVP9SimulcastTest() throws Exception {
 		log.info("Firefox subscribe to VP9 simulcast");
 		firefoxSubscribeToCodecTest("vp9", true);
@@ -1498,7 +1507,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress VP8 Simulcast Chrome")
-	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
+	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
+	@OnlyPion
 	void ingressVP8SimulcastChromeTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -1512,7 +1522,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress VP8 Simulcast Firefox")
-	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
+	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
+	@OnlyPion
 	void ingressVP8SimulcastFirefoxTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 
@@ -1526,7 +1537,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress H264 Simulcast Chrome")
-	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
+	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
+	@OnlyPion
 	void ingressH264SimulcastChromeTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -1539,7 +1551,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress H264 Simulcast Firefox")
-	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
+	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
+	@OnlyPion
 	void ingressH264SimulcastFirefoxTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 
@@ -1552,7 +1565,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress H264 Simulcast two layers Chrome")
-	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
+	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
+	@OnlyPion
 	void ingressH264SimulcastTwoLayersChromeTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -1565,7 +1579,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress H264 Simulcast two layers Firefox")
-	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
+	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
+	@OnlyPion
 	void ingressH264SimulcastTwoLayersFirefoxTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 
@@ -1602,7 +1617,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress H264 No Simulcast Chrome")
-	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
+	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
+	@OnlyPion
 	void ingressH264NoSimulcastChromeTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -1615,7 +1631,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress H264 No Simulcast Firefox")
-	@Disabled // TODO: enable when not forcing VP8 no-simulcast in ingress
+	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
+	@OnlyPion
 	void ingressH264NoSimulcastFirefoxTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 
@@ -1628,11 +1645,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Custom ingress")
-	@Disabled // ONLY FOR CUSTOM ingress IMAGE
+	// TODO: remove tag when not using custom ingress image with mediasoup
+	@OnlyMediasoup
 	void customIngressTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 
-		// With custom ingress it should force VP8 no simulcast 1920x0180
+		// With custom ingress and mediasoup it should force VP8 no simulcast with
+		// highest quality layer width, height, framerate and bitrate
 		log.info("Custom ingress");
 
 		this.addSubscriber(user, true);
@@ -1649,19 +1668,47 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
 
-		// Should receive VP8 1920
+		// Should receive VP8 960x540 25 fps
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
 		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
+		Assertions.assertEquals(1, getLayersAsJsonArray(user, subscriberVideo).size());
+		long bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
+		this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo, bytesReceived);
+		this.waitUntilSubscriberFramesPerSecondNotZero(user, subscriberVideo);
 		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
 		String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
 		String expectedCodec = "video/VP8";
 		Assertions.assertEquals(expectedCodec, subscriberCodec);
-		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 1920);
+		this.waitUntilSubscriberFramesPerSecondIs(user, subscriberVideo, 25);
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 960);
+		this.waitUntilSubscriberFrameHeightIs(user, subscriberVideo, 540);
 
+		this.deleteAllIngresses(LK_INGRESS);
+		user.getEventManager().waitUntilEventReaches("trackUnpublished", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("participantDisconnected", "RoomEvent", 1);
+
+		// Try publishing H264 with 3 layer simulcast
+		createIngress(user, "H264_1080P_30FPS_3_LAYERS_HIGH_MOTION", null, true);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
+		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assertions.assertEquals(1, numberOfVideos, "Wrong number of videos");
+		Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
+				"HTMLVideoElements were expected to have only one video track");
+
+		subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
 		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
-		long bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
+		Assertions.assertEquals(1, getLayersAsJsonArray(user, subscriberVideo).size());
+		bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
 		this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo, bytesReceived);
 		this.waitUntilSubscriberFramesPerSecondNotZero(user, subscriberVideo);
+		json = this.getLayersAsJsonArray(user, subscriberVideo);
+		subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
+		expectedCodec = "video/VP8";
+		Assertions.assertEquals(expectedCodec, subscriberCodec);
+		this.waitUntilSubscriberFramesPerSecondIs(user, subscriberVideo, 30);
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 1920);
+		this.waitUntilSubscriberFrameHeightIs(user, subscriberVideo, 1080);
 	}
 
 	private void ingressSimulcastTest(OpenViduTestappUser user, boolean simulcast, String codec, String preset)
@@ -1764,6 +1811,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		return json.get(0).getAsJsonObject().get("frameWidth").getAsInt();
 	}
 
+	private int getSubscriberVideoFrameHeight(OpenViduTestappUser user, WebElement subscriberVideo) {
+		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
+		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
+		return json.get(0).getAsJsonObject().get("frameHeight").getAsInt();
+	}
+
 	private long getSubscriberVideoBytesReceived(OpenViduTestappUser user, WebElement subscriberVideo) {
 		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
 		return json.get(0).getAsJsonObject().get("bytesReceived").getAsLong();
@@ -1815,11 +1868,24 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}, "Timeout waiting for video track to have a framesPerSecond greater than 0");
 	}
 
+	private void waitUntilSubscriberFramesPerSecondIs(OpenViduTestappUser user, WebElement videoElement, int fps) {
+		this.waitUntilAux(user, videoElement, () -> {
+			return this.getSubscriberVideoFramesPerSecond(user, videoElement) == fps;
+		}, "Timeout waiting for video track to have a framesPerSecond equal to " + fps);
+	}
+
 	private void waitUntilSubscriberFrameWidthIs(OpenViduTestappUser user, WebElement videoElement,
 			final int expectedFrameWidth) {
 		this.waitUntilAux(user, videoElement, () -> {
 			return this.getSubscriberVideoFrameWidth(user, videoElement) == expectedFrameWidth;
 		}, "Timeout waiting for video track to have a frameWidth of " + expectedFrameWidth);
+	}
+
+	private void waitUntilSubscriberFrameHeightIs(OpenViduTestappUser user, WebElement videoElement,
+			final int expectedFrameHeight) {
+		this.waitUntilAux(user, videoElement, () -> {
+			return this.getSubscriberVideoFrameHeight(user, videoElement) == expectedFrameHeight;
+		}, "Timeout waiting for video track to have a frameHeight of " + expectedFrameHeight);
 	}
 
 	private void waitUntilSubscriberFrameWidthChanges(OpenViduTestappUser user, WebElement videoElement,
