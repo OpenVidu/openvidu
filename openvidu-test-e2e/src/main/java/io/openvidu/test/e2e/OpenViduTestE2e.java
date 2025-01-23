@@ -87,7 +87,7 @@ public class OpenViduTestE2e {
 	final protected String DEFAULT_JSON_TOKEN = "{'id':'STR','token':'STR','connectionId':'STR','createdAt':0,'session':'STR','role':'STR','data':'STR','kurentoOptions':{}}";
 
 	protected static String OPENVIDU_SECRET = "secret";
-	protected static String OPENVIDU_URL = "http://localhost:7880/";
+	protected static String OPENVIDU_URL = "http://localhost:4443/";
 	protected static String APP_URL = "http://localhost:4200/";
 	protected static String EXTERNAL_CUSTOM_LAYOUT_URL = "http://host.docker.internal:7880/openvidu/layouts/v2compat/";
 	protected static String OPENVIDU_PRO_LICENSE = "not_valid";
