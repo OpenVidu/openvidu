@@ -14,7 +14,7 @@
     "colormap": "2.3.2",
     "core-js": "3.26.1",
     "json-stringify-safe": "5.0.1",
-    "openvidu-browser-v2compatibility": "3.0.1-beta2",
+    "openvidu-browser-v2compatibility": "3.1.0-dev2",
     "openvidu-node-client-v2compatibility": "3.0.1-beta1",
     "rxjs": "7.8.1",
     "tslib": "2.4.1",
