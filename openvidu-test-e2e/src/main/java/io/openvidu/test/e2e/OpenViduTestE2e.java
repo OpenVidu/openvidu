@@ -89,7 +89,7 @@ public class OpenViduTestE2e {
 	protected static String OPENVIDU_SECRET = "secret";
 	protected static String OPENVIDU_URL = "http://localhost:7880/";
 	protected static String APP_URL = "http://localhost:4200/";
-	protected static String EXTERNAL_CUSTOM_LAYOUT_URL = "http://localhost:4114";
+	protected static String EXTERNAL_CUSTOM_LAYOUT_URL = "http://host.docker.internal:7880/openvidu/layouts/v2compat/";
 	protected static String OPENVIDU_PRO_LICENSE = "not_valid";
 	protected static String OPENVIDU_PRO_LICENSE_API = "not_valid";
 	protected static String OPENVIDU_PRO_SPEECH_TO_TEXT = "vosk";
