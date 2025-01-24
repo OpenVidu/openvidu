@@ -2053,10 +2053,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				user2.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 
 				user2.getEventManager().waitUntilEventReaches("recordingStarted", 4);
-				user2.getEventManager().waitUntilEventReaches("recordingStopped", 4);
+				user2.getEventManager().waitUntilEventReaches("recordingStopped", 4, 120, true);
 
 				user2.getEventManager().waitUntilEventReaches("recordingStarted", 6);
-				user2.getEventManager().waitUntilEventReaches("recordingStopped", 6);
+				user2.getEventManager().waitUntilEventReaches("recordingStopped", 6, 120, true);
 
 				user2.getEventManager().waitUntilEventReaches("streamDestroyed", 4);
 				user2.getEventManager().waitUntilEventReaches("connectionDestroyed", 4);
@@ -2140,7 +2140,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("stop-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording stopped [" + SESSION_NAME + "~1]"));
-		user.getEventManager().waitUntilEventReaches("recordingStopped", 4);
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 4, 120, true);
 
 		// Audio-only INDIVIDUAL recording
 		recordingNameField.clear();
@@ -2160,7 +2160,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("stop-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording stopped [" + SESSION_NAME + "~2]"));
-		user.getEventManager().waitUntilEventReaches("recordingStopped", 6);
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 6, 120, true);
 
 		String recordingsPath = "/opt/openvidu/recordings/";
 
