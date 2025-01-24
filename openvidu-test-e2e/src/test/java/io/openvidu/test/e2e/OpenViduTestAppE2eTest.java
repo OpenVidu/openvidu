@@ -156,15 +156,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@DisplayName("One2One Opera")
-	@Disabled
-	void oneToOneOpera() throws Exception {
-		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("opera");
-		log.info("One2One Opera");
-		oneToOneAux(user);
-	}
-
-	@Test
 	@DisplayName("One2One Edge")
 	void oneToOneEdge() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("edge");
@@ -395,7 +386,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Massive session");
 
-		// Set the maximum number limit of participants in the rom because of the evaluation mode
+		// Set the maximum number limit of participants in the rom because of the
+		// evaluation mode
 		final Integer NUMBER_OF_USERS = 8;
 
 		user.getDriver().findElement(By.id("toolbar-scenarios")).sendKeys(Keys.ENTER);
@@ -487,7 +479,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		Thread threadChrome = new Thread(() -> {
 			try {
-				Thread.sleep((long)(Math.random() * 2500));
+				Thread.sleep((long) (Math.random() * 2500));
 				browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("chrome"), "Chrome");
 			} catch (Exception e) {
 				String errMsg = "Error setting up browser: " + e.getMessage();
@@ -498,7 +490,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		});
 		Thread threadFirefox = new Thread(() -> {
 			try {
-				//Thread.sleep(3000);
+				// Thread.sleep(3000);
 				browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("firefox"), "Firefox");
 			} catch (Exception e) {
 				String errMsg = "Error setting up browser: " + e.getMessage();
@@ -509,7 +501,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		});
 		Thread threadEdge = new Thread(() -> {
 			try {
-				Thread.sleep((long)(Math.random() * 2500));
+				Thread.sleep((long) (Math.random() * 2500));
 				browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("edge"), "Edge");
 			} catch (Exception e) {
 				String errMsg = "Error setting up browser: " + e.getMessage();
@@ -518,29 +510,16 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Thread.currentThread().interrupt();
 			}
 		});
-		// Thread threadOpera = new Thread(() -> {
-		// try {
-		// browserTest.apply(setupBrowserAndConnectToOpenViduTestapp("opera"), "Opera");
-		// } catch (Exception e) {
-		// String errMsg = "Error setting up browser: " + e.getMessage();
-		// System.err.println(errMsg);
-		// Assertions.fail(errMsg);
-		// Thread.currentThread().interrupt();
-		// }
-		// });
 
 		threadChrome.setUncaughtExceptionHandler(h);
 		threadFirefox.setUncaughtExceptionHandler(h);
 		threadEdge.setUncaughtExceptionHandler(h);
-		// threadOpera.setUncaughtExceptionHandler(h);
 		threadChrome.start();
 		threadFirefox.start();
 		threadEdge.start();
-		// threadOpera.start();
 		threadChrome.join();
 		threadFirefox.join();
 		threadEdge.join();
-		// threadOpera.join();
 
 		synchronized (lock) {
 			if (OpenViduTestAppE2eTest.ex != null) {
@@ -771,7 +750,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).click();
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
 
-
 		// Add publisher
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .subscribe-checkbox")).click();
@@ -796,7 +774,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .publish-checkbox")).click();
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).click();
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
-
 
 		// Add publisher
 		user.getDriver().findElement(By.id("add-user-btn")).click();
@@ -890,7 +867,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			CustomWebhook.waitForEvent("webrtcConnectionCreated", 10);
 
-		}  catch (TimeoutException e) {
+		} catch (TimeoutException e) {
 			log.error("Timeout: {}", e.getMessage());
 			e.printStackTrace();
 			System.out.println(getBase64Screenshot(user.getBrowserUser()));
@@ -920,15 +897,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			// Add publisher with only video active
 			user.getDriver().findElement(By.id("add-user-btn")).click();
-			// user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .subscribe-checkbox")).click();
-			// user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .active-video-checkbox")).click();
+			// user.getDriver().findElement(By.cssSelector("#openvidu-instance-0
+			// .subscribe-checkbox")).click();
+			// user.getDriver().findElement(By.cssSelector("#openvidu-instance-0
+			// .active-video-checkbox")).click();
 			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).click();
 			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 
 			CustomWebhook.waitForEvent("webrtcConnectionCreated", 20);
 
-		}  catch (TimeoutException e) {
+		} catch (TimeoutException e) {
 			log.error("Timeout: {}", e.getMessage());
 			e.printStackTrace();
 			System.out.println(getBase64Screenshot(user.getBrowserUser()));
@@ -968,8 +947,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 10);
 
-
-		}  catch (TimeoutException e) {
+		} catch (TimeoutException e) {
 			log.error("Timeout: {}", e.getMessage());
 			e.printStackTrace();
 			System.out.println(getBase64Screenshot(user.getBrowserUser()));
@@ -1007,8 +985,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			gracefullyLeaveParticipants(user, 1);
 			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 10);
 
-
-		}  catch (TimeoutException e) {
+		} catch (TimeoutException e) {
 			log.error("Timeout: {}", e.getMessage());
 			e.printStackTrace();
 			System.out.println(getBase64Screenshot(user.getBrowserUser()));
@@ -1017,7 +994,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			CustomWebhook.shutDown();
 		}
 	}
-
 
 	@Test
 	@DisplayName("Change publisher dynamically")
@@ -1858,7 +1834,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 			// checkDockerContainerRunning("openvidu/openvidu-recording", 1);
 
-
 			// Disabled corner case test
 			// OV.fetch();
 			// session = OV.getActiveSessions().get(0);
@@ -1866,25 +1841,28 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			// event = CustomWebhook.waitForEvent("recordingStatusChanged", 1);
 			// if ("stopped".equals(event.get("status").getAsString())) {
-			// 	// Recording hasn't had time to start. Should trigger stopped, started, failed
-			// 	event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
-			// 	Assertions.assertEquals("started", event.get("status").getAsString(),
-			// 			"Wrong status in recordingStatusChanged event");
-			// 	event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // failed
-			// 	Assertions.assertEquals("failed", event.get("status").getAsString(),
-			// 			"Wrong status in recordingStatusChanged event");
-			// 	Assertions.assertEquals(Recording.Status.failed, OV.getRecording(sessionName + "~2").getStatus(),
-			// 			"Wrong recording status");
+			// // Recording hasn't had time to start. Should trigger stopped, started,
+			// failed
+			// event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
+			// Assertions.assertEquals("started", event.get("status").getAsString(),
+			// "Wrong status in recordingStatusChanged event");
+			// event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // failed
+			// Assertions.assertEquals("failed", event.get("status").getAsString(),
+			// "Wrong status in recordingStatusChanged event");
+			// Assertions.assertEquals(Recording.Status.failed, OV.getRecording(sessionName
+			// + "~2").getStatus(),
+			// "Wrong recording status");
 			// } else {
-			// 	// Recording did have time to start. Should trigger started, stopped, ready
-			// 	event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
-			// 	Assertions.assertEquals("stopped", event.get("status").getAsString(),
-			// 			"Wrong status in recordingStatusChanged event");
-			// 	event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // failed
-			// 	Assertions.assertEquals("ready", event.get("status").getAsString(),
-			// 			"Wrong status in recordingStatusChanged event");
-			// 	Assertions.assertEquals(Recording.Status.ready, OV.getRecording(sessionName + "~2").getStatus(),
-			// 			"Wrong recording status");
+			// // Recording did have time to start. Should trigger started, stopped, ready
+			// event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
+			// Assertions.assertEquals("stopped", event.get("status").getAsString(),
+			// "Wrong status in recordingStatusChanged event");
+			// event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // failed
+			// Assertions.assertEquals("ready", event.get("status").getAsString(),
+			// "Wrong status in recordingStatusChanged event");
+			// Assertions.assertEquals(Recording.Status.ready, OV.getRecording(sessionName +
+			// "~2").getStatus(),
+			// "Wrong recording status");
 			// }
 
 			// checkDockerContainerRunning("openvidu/openvidu-recording", 0);
@@ -2190,9 +2168,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		String recPath = recordingsPath + SESSION_NAME + "/";
 		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME);
 
-		//Commented because the duration file using ffmpeg probe is not the same as the duration in the Livekit Egress entity
-		// this.recordingUtils.checkMultimediaFile(new File(recPath + recording.getName() + ".mp4"), false, true,
-		// 		recording.getDuration(), recording.getResolution(), recording.getFrameRate(), null, "h264", true);
+		// Commented because the duration file using ffmpeg probe is not the same as the
+		// duration in the Livekit Egress entity
+		// this.recordingUtils.checkMultimediaFile(new File(recPath +
+		// recording.getName() + ".mp4"), false, true,
+		// recording.getDuration(), recording.getResolution(), recording.getFrameRate(),
+		// null, "h264", true);
 
 		// Check video-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "~1/";
@@ -2202,9 +2183,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Check audio-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "~2/";
 		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "~2");
-		// As the recording is audio only and there is only one participant publishing its audio
+		// As the recording is audio only and there is only one participant publishing
+		// its audio
 		// The zip file only has 1 file (audio file)
-		this.recordingUtils.checkIndividualRecording(recPath, recording, 1, "opus",null, true);
+		this.recordingUtils.checkIndividualRecording(recPath, recording, 1, "opus", null, true);
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
@@ -2323,7 +2305,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Thread.sleep(500);
 		WebElement customLayoutInput = user.getDriver().findElement(By.id("custom-layout-input"));
 		customLayoutInput.clear();
-		// For choose the default custom layout, the customLayout parameter must be empty
+		// For choose the default custom layout, the customLayout parameter must be
+		// empty
 		// customLayoutInput.sendKeys("layout1");
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
@@ -2356,17 +2339,19 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		String recordingsPath = "/opt/openvidu/recordings/" + SESSION_NAME + "/";
 		File file1 = new File(recordingsPath + SESSION_NAME + ".mp4");
 
-		// The video duration using Ffmpeg is almost 1.5s longer than the actual duration provided by REST API (Egress)
+		// The video duration using Ffmpeg is almost 1.5s longer than the actual
+		// duration provided by REST API (Egress)
 		// Commented until this issue is fixed
 		// Assertions.assertTrue(
-		// 		this.recordingUtils.recordedRedFileFine(file1,
-		// 				new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME)),
-		// 		"Recorded file " + file1.getAbsolutePath() + " is not fine");
+		// this.recordingUtils.recordedRedFileFine(file1,
+		// new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME)),
+		// "Recorded file " + file1.getAbsolutePath() + " is not fine");
 
 		// Thumbnail is not supported by recordings at the moment
 		// File file2 = new File(recordingsPath + SESSION_NAME + ".jpg");
-		// Assertions.assertTrue(this.recordingUtils.thumbnailIsFine(file2, RecordingUtils::checkVideoAverageRgbRed),
-		// 		"Thumbnail " + file2.getAbsolutePath() + " is not fine");
+		// Assertions.assertTrue(this.recordingUtils.thumbnailIsFine(file2,
+		// RecordingUtils::checkVideoAverageRgbRed),
+		// "Thumbnail " + file2.getAbsolutePath() + " is not fine");
 
 		// Custom layout from external URL
 		CountDownLatch initLatch = new CountDownLatch(1);
@@ -2415,17 +2400,20 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			recordingsPath = "/opt/openvidu/recordings/" + SESSION_NAME + "~1/";
 			file1 = new File(recordingsPath + SESSION_NAME + "~1.mp4");
 
-			// The video duration using Ffmpeg is almost 1.5s longer than the actual duration provided by REST API (Egress)
+			// The video duration using Ffmpeg is almost 1.5s longer than the actual
+			// duration provided by REST API (Egress)
 			// Commented until this issue is fixed
 			// Assertions.assertTrue(
-			// 		this.recordingUtils.recordedRedFileFine(file1,
-			// 				new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "~1")),
-			// 		"Recorded file " + file1.getAbsolutePath() + " is not fine");
+			// this.recordingUtils.recordedRedFileFine(file1,
+			// new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME +
+			// "~1")),
+			// "Recorded file " + file1.getAbsolutePath() + " is not fine");
 
 			// Thumbnail is not supported by recordings at the moment
 			// file2 = new File(recordingsPath + SESSION_NAME + "~1.jpg");
-			// Assertions.assertTrue(this.recordingUtils.thumbnailIsFine(file2, RecordingUtils::checkVideoAverageRgbRed),
-			// 		"Thumbnail " + file2.getAbsolutePath() + " is not fine");
+			// Assertions.assertTrue(this.recordingUtils.thumbnailIsFine(file2,
+			// RecordingUtils::checkVideoAverageRgbRed),
+			// "Thumbnail " + file2.getAbsolutePath() + " is not fine");
 
 		} finally {
 			CustomLayoutHandler.shutDown();
@@ -2598,7 +2586,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// 1. No valid certificate with no forgiving SSLContext
 		OpenVidu[] customOV = { new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET, HttpClients.custom()) };
 		// Assertions.assertThrows(OpenViduJavaClientException.class, () -> {
-		// 	customOV[0].fetch();
+		// customOV[0].fetch();
 		// });
 
 		// 2. No CredentialsProvider, no Authorization header, no secret, 401
@@ -2768,10 +2756,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		sessions = OV.getActiveSessions();
 		Assertions.assertEquals(1, sessions.size(), "Expected 1 active session but found " + sessions.size());
 
-		// KurentoOptions kurentoOptions = new KurentoOptions.Builder().videoMaxRecvBandwidth(250)
-		// 		.allowedFilters(new String[] { "GStreamerFilter" }).build();
+		// KurentoOptions kurentoOptions = new
+		// KurentoOptions.Builder().videoMaxRecvBandwidth(250)
+		// .allowedFilters(new String[] { "GStreamerFilter" }).build();
 		ConnectionProperties moderatorConnectionProperties = new ConnectionProperties.Builder()
-				.role(OpenViduRole.MODERATOR).data(serverDataModerator)/*.kurentoOptions(kurentoOptions)*/.build();
+				.role(OpenViduRole.MODERATOR).data(serverDataModerator)/* .kurentoOptions(kurentoOptions) */.build();
 		Connection connectionModerator = session.createConnection(moderatorConnectionProperties);
 
 		ConnectionProperties subscriberConnectionProperties = new ConnectionProperties.Builder()
@@ -2885,10 +2874,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertEquals(0, connectionModerator.getSubscribers().size(), "Expected 0 subscribers for connection "
 				+ connectionModerator.getConnectionId() + " but found " + connectionModerator.getSubscribers().size());
 		// Assertions.assertEquals(1, connectionSubscriber.getSubscribers().size(),
-		// 		"Expected 1 subscriber for connection " + connectionSubscriber.getConnectionId() + " but found "
-		// 				+ connectionSubscriber.getSubscribers().size());
+		// "Expected 1 subscriber for connection " +
+		// connectionSubscriber.getConnectionId() + " but found "
+		// + connectionSubscriber.getSubscribers().size());
 		// Assertions.assertEquals(connectionModerator.getPublishers().get(0).getStreamId(),
-		// 		connectionSubscriber.getSubscribers().get(0), "Publisher and subscriber should have same streamId");
+		// connectionSubscriber.getSubscribers().get(0), "Publisher and subscriber
+		// should have same streamId");
 
 		// Verify server and client data
 		Assertions.assertEquals(serverDataModerator, connectionModerator.getServerData(), "Server data doesn't match");
@@ -2908,8 +2899,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertTrue(pub.hasAudio());
 		Assertions.assertFalse(pub.isAudioActive());
 
- 		waitUntilFileExistsAndIsBiggerThan("/opt/openvidu/recordings/" + customSessionId + "/" + customSessionId + "/" +customSessionId + ".json"
-				, 0, 60);
+		waitUntilFileExistsAndIsBiggerThan(
+				"/opt/openvidu/recordings/" + customSessionId + "/" + customSessionId + "/" + customSessionId + ".json",
+				0, 60);
 
 		Assertions.assertFalse(session.fetch(), "Session.fetch() should return false");
 		Assertions.assertFalse(OV.fetch(), "OpenVidu.fetch() should return false");
@@ -3031,10 +3023,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Wait until new stream has been recorded to disk
 		session.fetch();
-		// String streamId = session.getActiveConnections().stream().filter(c -> c.getPublishers().size() > 0).findFirst()
-		// 		.get().getPublishers().get(0).getStreamId();
-		// waitUntilFileExistsAndIsBiggerThan("/opt/openvidu/recordings/" + recording.getId() + "/" + streamId + "."
-		// 		+ this.getIndividualRecordingExtension(), 200, 60);
+		// String streamId = session.getActiveConnections().stream().filter(c ->
+		// c.getPublishers().size() > 0).findFirst()
+		// .get().getPublishers().get(0).getStreamId();
+		// waitUntilFileExistsAndIsBiggerThan("/opt/openvidu/recordings/" +
+		// recording.getId() + "/" + streamId + "."
+		// + this.getIndividualRecordingExtension(), 200, 60);
 
 		try {
 			OV.stopRecording("NOT_EXISTS");
@@ -3118,8 +3112,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		recording2 = OV.stopRecording(recording2.getId());
 
-		// The v2compat needs time after stop the recording for syncing the files from S3
-		 Thread.sleep(1000);
+		// The v2compat needs time after stop the recording for syncing the files from
+		// S3
+		Thread.sleep(1000);
 
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 3);
 
@@ -3141,12 +3136,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertTrue(file2.exists() && file2.length() > 0,
 				"File " + file2.getAbsolutePath() + " does not exist or is empty");
 		// Assertions.assertTrue(file3.exists() && file3.length() > 0,
-		// 		"File " + file3.getAbsolutePath() + " does not exist or is empty");
+		// "File " + file3.getAbsolutePath() + " does not exist or is empty");
 
-		// Assertions.assertTrue(this.recordingUtils.recordedGreenFileFine(file1, recording2),
-		// 		"Recorded file " + file1.getAbsolutePath() + " is not fine");
-		// Assertions.assertTrue(this.recordingUtils.thumbnailIsFine(file3, RecordingUtils::checkVideoAverageRgbGreen),
-		// 		"Thumbnail " + file3.getAbsolutePath() + " is not fine");
+		// Assertions.assertTrue(this.recordingUtils.recordedGreenFileFine(file1,
+		// recording2),
+		// "Recorded file " + file1.getAbsolutePath() + " is not fine");
+		// Assertions.assertTrue(this.recordingUtils.thumbnailIsFine(file3,
+		// RecordingUtils::checkVideoAverageRgbGreen),
+		// "Thumbnail " + file3.getAbsolutePath() + " is not fine");
 
 		try {
 			OV.deleteRecording("NOT_EXISTS");
@@ -3214,7 +3211,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertEquals(0, session.getActiveConnections().size(), "Wrong number of active Connections");
 		Assertions.assertFalse(session.fetch());
 	}
-
 
 	@Test
 	@OnlyKurento
@@ -3812,110 +3808,124 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	// @Test
 	// @DisplayName("Media server reconnect active session no streams test")
 	// void mediaServerReconnectActiveSessionNoStreamsTest() throws Exception {
-	// 	isKurentoRestartTest = true;
+	// isKurentoRestartTest = true;
 
-	// 	log.info("Media server reconnect active session no streams test");
+	// log.info("Media server reconnect active session no streams test");
 
-	// 	CountDownLatch initLatch = new CountDownLatch(1);
-	// 	io.openvidu.test.browsers.utils.webhook.CustomWebhook.main(new String[0], initLatch);
+	// CountDownLatch initLatch = new CountDownLatch(1);
+	// io.openvidu.test.browsers.utils.webhook.CustomWebhook.main(new String[0],
+	// initLatch);
 
-	// 	try {
+	// try {
 
-	// 		if (!initLatch.await(30, TimeUnit.SECONDS)) {
-	// 			Assertions.fail("Timeout waiting for webhook springboot app to start");
-	// 			CustomWebhook.shutDown();
-	// 			return;
-	// 		}
+	// if (!initLatch.await(30, TimeUnit.SECONDS)) {
+	// Assertions.fail("Timeout waiting for webhook springboot app to start");
+	// CustomWebhook.shutDown();
+	// return;
+	// }
 
-	// 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+	// OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
-	// 		// TOTAL DISCONNECTION
-	// 		// Session should be destroyed with reason nodeCrashed
-	// 		user.getDriver().findElement(By.id("add-user-btn")).click();
-	// 		user.getDriver().findElements(By.className("publish-checkbox")).forEach(el -> el.click());
-	// 		user.getDriver().findElement(By.className("join-btn")).click();
+	// // TOTAL DISCONNECTION
+	// // Session should be destroyed with reason nodeCrashed
+	// user.getDriver().findElement(By.id("add-user-btn")).click();
+	// user.getDriver().findElements(By.className("publish-checkbox")).forEach(el ->
+	// el.click());
+	// user.getDriver().findElement(By.className("join-btn")).click();
 
-	// 		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
-	// 		CustomWebhook.waitForEvent("sessionCreated", 2);
-	// 		CustomWebhook.waitForEvent("participantJoined", 2);
+	// user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+	// CustomWebhook.waitForEvent("sessionCreated", 2);
+	// CustomWebhook.waitForEvent("participantJoined", 2);
 
-	// 		OV.fetch();
-	// 		List<Session> sessions = OV.getActiveSessions();
-	// 		Assertions.assertEquals(1, sessions.size(), "Expected 1 active sessions but found " + sessions.size());
-	// 		Assertions.assertEquals(1, sessions.get(0).getActiveConnections().size(),
-	// 				"Expected 1 active connection but found " + sessions.get(0).getActiveConnections().size());
+	// OV.fetch();
+	// List<Session> sessions = OV.getActiveSessions();
+	// Assertions.assertEquals(1, sessions.size(), "Expected 1 active sessions but
+	// found " + sessions.size());
+	// Assertions.assertEquals(1, sessions.get(0).getActiveConnections().size(),
+	// "Expected 1 active connection but found " +
+	// sessions.get(0).getActiveConnections().size());
 
-	// 		this.stopMediaServer(true);
+	// this.stopMediaServer(true);
 
-	// 		user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
-	// 		JsonObject event = CustomWebhook.waitForEvent("sessionDestroyed", 2);
-	// 		Assertions.assertEquals("nodeCrashed", event.get("reason").getAsString(), "Wrong reason in webhook event");
+	// user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
+	// JsonObject event = CustomWebhook.waitForEvent("sessionDestroyed", 2);
+	// Assertions.assertEquals("nodeCrashed", event.get("reason").getAsString(),
+	// "Wrong reason in webhook event");
 
-	// 		OV.fetch();
-	// 		sessions = OV.getActiveSessions();
-	// 		Assertions.assertEquals(0, sessions.size(), "Expected no active sessions but found " + sessions.size());
-	// 		user.getDriver().findElement(By.id("remove-user-btn")).sendKeys(Keys.ENTER);
+	// OV.fetch();
+	// sessions = OV.getActiveSessions();
+	// Assertions.assertEquals(0, sessions.size(), "Expected no active sessions but
+	// found " + sessions.size());
+	// user.getDriver().findElement(By.id("remove-user-btn")).sendKeys(Keys.ENTER);
 
-	// 		// NO MEDIA SERVER
-	// 		// Session should be created, but client's operation joinRoom should fail
-	// 		user.getDriver().findElement(By.id("add-user-btn")).click();
-	// 		user.getDriver().findElement(By.className("publish-checkbox")).click();
-	// 		user.getDriver().findElement(By.className("subscribe-checkbox")).click();
-	// 		user.getDriver().findElement(By.className("join-btn")).click();
+	// // NO MEDIA SERVER
+	// // Session should be created, but client's operation joinRoom should fail
+	// user.getDriver().findElement(By.id("add-user-btn")).click();
+	// user.getDriver().findElement(By.className("publish-checkbox")).click();
+	// user.getDriver().findElement(By.className("subscribe-checkbox")).click();
+	// user.getDriver().findElement(By.className("join-btn")).click();
 
-	// 		try {
-	// 			user.getWaiter().until(ExpectedConditions.alertIsPresent());
-	// 			Alert alert = user.getDriver().switchTo().alert();
-	// 			final String alertMessage = "Error connecting to the session: There is no available Media Node where to initialize session 'TestSession'. Code: 204";
-	// 			Assertions.assertTrue(alert.getText().contains(alertMessage),
-	// 					"Alert message wrong. Expected to contain: \"" + alertMessage + "\". Actual message: \""
-	// 							+ alert.getText() + "\"");
-	// 			alert.accept();
-	// 		} catch (Exception e) {
-	// 			Assertions.fail("Alert exception");
-	// 		} finally {
-	// 			user.getEventManager().resetEventThread(false);
-	// 		}
+	// try {
+	// user.getWaiter().until(ExpectedConditions.alertIsPresent());
+	// Alert alert = user.getDriver().switchTo().alert();
+	// final String alertMessage = "Error connecting to the session: There is no
+	// available Media Node where to initialize session 'TestSession'. Code: 204";
+	// Assertions.assertTrue(alert.getText().contains(alertMessage),
+	// "Alert message wrong. Expected to contain: \"" + alertMessage + "\". Actual
+	// message: \""
+	// + alert.getText() + "\"");
+	// alert.accept();
+	// } catch (Exception e) {
+	// Assertions.fail("Alert exception");
+	// } finally {
+	// user.getEventManager().resetEventThread(false);
+	// }
 
-	// 		OV.fetch();
-	// 		sessions = OV.getActiveSessions();
-	// 		Assertions.assertEquals(1, sessions.size(), "Expected 1 active sessions but found " + sessions.size());
+	// OV.fetch();
+	// sessions = OV.getActiveSessions();
+	// Assertions.assertEquals(1, sessions.size(), "Expected 1 active sessions but
+	// found " + sessions.size());
 
-	// 		user.getDriver().findElement(By.id("remove-user-btn")).sendKeys(Keys.ENTER);
-	// 		this.closeAllSessions(OV);
-	// 		CustomWebhook.waitForEvent("sessionDestroyed", 2);
+	// user.getDriver().findElement(By.id("remove-user-btn")).sendKeys(Keys.ENTER);
+	// this.closeAllSessions(OV);
+	// CustomWebhook.waitForEvent("sessionDestroyed", 2);
 
-	// 		// RECONNECTION
-	// 		// Nothing should happen as long as there were no streams while reconnecting
-	// 		// A publisher should be able to publish normally after media server reconnected
-	// 		this.startMediaServer(true);
+	// // RECONNECTION
+	// // Nothing should happen as long as there were no streams while reconnecting
+	// // A publisher should be able to publish normally after media server
+	// reconnected
+	// this.startMediaServer(true);
 
-	// 		user.getDriver().findElement(By.id("add-user-btn")).click();
-	// 		user.getDriver().findElements(By.className("publish-checkbox")).forEach(el -> el.click());
-	// 		user.getDriver().findElement(By.className("join-btn")).click();
+	// user.getDriver().findElement(By.id("add-user-btn")).click();
+	// user.getDriver().findElements(By.className("publish-checkbox")).forEach(el ->
+	// el.click());
+	// user.getDriver().findElement(By.className("join-btn")).click();
 
-	// 		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
-	// 		CustomWebhook.waitForEvent("sessionCreated", 2);
-	// 		CustomWebhook.waitForEvent("participantJoined", 2);
+	// user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+	// CustomWebhook.waitForEvent("sessionCreated", 2);
+	// CustomWebhook.waitForEvent("participantJoined", 2);
 
-	// 		OV.fetch();
-	// 		sessions = OV.getActiveSessions();
-	// 		Assertions.assertEquals(1, sessions.size(), "Expected 1 active sessions but found " + sessions.size());
-	// 		Assertions.assertEquals(1, sessions.get(0).getActiveConnections().size(),
-	// 				"Expected 1 active connection but found " + sessions.get(0).getActiveConnections().size());
+	// OV.fetch();
+	// sessions = OV.getActiveSessions();
+	// Assertions.assertEquals(1, sessions.size(), "Expected 1 active sessions but
+	// found " + sessions.size());
+	// Assertions.assertEquals(1, sessions.get(0).getActiveConnections().size(),
+	// "Expected 1 active connection but found " +
+	// sessions.get(0).getActiveConnections().size());
 
-	// 		this.stopMediaServer(false);
-	// 		this.startMediaServer(true);
+	// this.stopMediaServer(false);
+	// this.startMediaServer(true);
 
-	// 		user.getEventManager().resetEventThread(true);
-	// 		user.getDriver().findElement(By.id("add-user-btn")).click();
-	// 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
-	// 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
-	// 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+	// user.getEventManager().resetEventThread(true);
+	// user.getDriver().findElement(By.id("add-user-btn")).click();
+	// user.getDriver().findElement(By.cssSelector("#openvidu-instance-1
+	// .join-btn")).click();
+	// user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+	// user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
-	// 	} finally {
-	// 		CustomWebhook.shutDown();
-	// 	}
+	// } finally {
+	// CustomWebhook.shutDown();
+	// }
 	// }
 
 	@Test
@@ -4111,7 +4121,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@DisplayName("Webhook test")
 	void webhookTest() throws Exception {
 
-
 		isRecordingTest = true;
 
 		CountDownLatch initLatch = new CountDownLatch(1);
@@ -4129,10 +4138,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				return;
 			}
 
-			// This test occasionally fails due to leftover events in the queue from previous tests.
+			// This test occasionally fails due to leftover events in the queue from
+			// previous tests.
 			// To address this, we clean the queue before starting the test.
-			// The beforeEach method does not handle queue cleanup because the v2 compatibility
-			// server requires additional time after stopping a recording before it can be deleted,
+			// The beforeEach method does not handle queue cleanup because the v2
+			// compatibility
+			// server requires additional time after stopping a recording before it can be
+			// deleted,
 			// causing the beforeEach logic to be bypassed.
 			// To ensure stability, we add a delay and perform manual cleanup:
 			Thread.sleep(7000);
@@ -4271,13 +4283,16 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					"Wrong recording status in webhook event");
 			Assertions.assertEquals(0, event.get("size").getAsLong(), "Wrong recording outputMode in webhook event");
 			Assertions.assertEquals(0, event.get("duration").getAsLong(), "Wrong recording duration in webhook event");
-			// Webhooks don't send the sessionClosedByServer reason, it only sends the recordingStoppedByServer
-			// Assertions.assertEquals("sessionClosedByServer", event.get("reason").getAsString(),
-			// 		"Wrong recording reason in webhook event");
+			// Webhooks don't send the sessionClosedByServer reason, it only sends the
+			// recordingStoppedByServer
+			// Assertions.assertEquals("sessionClosedByServer",
+			// event.get("reason").getAsString(),
+			// "Wrong recording reason in webhook event");
 			Assertions.assertEquals("recordingStoppedByServer", event.get("reason").getAsString(),
 					"Wrong recording reason in webhook event");
-			// Assertions.assertEquals(rec.getCreatedAt(), event.get("startTime").getAsLong(),
-			// 		"Wrong recording startTime in webhook event");
+			// Assertions.assertEquals(rec.getCreatedAt(),
+			// event.get("startTime").getAsLong(),
+			// "Wrong recording startTime in webhook event");
 
 			event = CustomWebhook.waitForEvent("recordingStatusChanged", 2);
 
@@ -4292,14 +4307,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					"Wrong recording status in webhook event");
 			Assertions.assertTrue(event.get("size").getAsLong() > 0, "Wrong recording size in webhook event");
 			Assertions.assertTrue(event.get("duration").getAsLong() > 0, "Wrong recording duration in webhook event");
-			// Webhooks don't send the sessionClosedByServer reason, it only sends the recordingStoppedByServer
-			// Assertions.assertEquals("sessionClosedByServer", event.get("reason").getAsString(),
-			// 		"Wrong recording reason in webhook event");
+			// Webhooks don't send the sessionClosedByServer reason, it only sends the
+			// recordingStoppedByServer
+			// Assertions.assertEquals("sessionClosedByServer",
+			// event.get("reason").getAsString(),
+			// "Wrong recording reason in webhook event");
 			Assertions.assertEquals("recordingStoppedByServer", event.get("reason").getAsString(),
 					"Wrong recording reason in webhook event");
 
-			// Assertions.assertEquals(rec.getCreatedAt(), event.get("startTime").getAsLong(),
-					// "Wrong recording startTime in webhook event");
+			// Assertions.assertEquals(rec.getCreatedAt(),
+			// event.get("startTime").getAsLong(),
+			// "Wrong recording startTime in webhook event");
 
 			event = CustomWebhook.waitForEvent("sessionDestroyed", 2);
 			Assertions.assertEquals(6 + 1, event.keySet().size(),
