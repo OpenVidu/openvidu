@@ -2183,10 +2183,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Check audio-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "~2/";
 		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "~2");
-		// As the recording is audio only and there is only one participant publishing
-		// its audio
-		// The zip file only has 1 file (audio file)
-		this.recordingUtils.checkIndividualRecording(recPath, recording, 1, "opus", null, true);
+		// As the recording is audio only and there are 2 participants publishing audio,
+		// the zip file must contain only 2 audio files
+		this.recordingUtils.checkIndividualRecording(recPath, recording, 2, "opus", null, true);
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
