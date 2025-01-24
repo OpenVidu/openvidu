@@ -1988,7 +1988,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@DisplayName("Record cross-browser audio-only and video-only")
 	void audioOnlyVideoOnlyRecordTest() throws Exception {
 
-		Thread.sleep(4000);
 		isRecordingTest = true;
 
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeAlternateScreenShare");
@@ -2065,6 +2064,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				user2.getDriver().findElement(By.id("remove-user-btn")).click();
 				user2.getEventManager().waitUntilEventReaches("sessionDisconnected", 2);
 			} catch (Exception e) {
+				OpenViduTestAppE2eTest.ex = e;
 				e.printStackTrace();
 				user2.dispose();
 				Thread.currentThread().interrupt();
