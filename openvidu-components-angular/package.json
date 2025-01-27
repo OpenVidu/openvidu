@@ -85,7 +85,7 @@
     "lib:serve": "ng build openvidu-components-angular --watch",
     "lib:build": "ng build openvidu-components-angular --configuration production && cd ./dist/openvidu-components-angular",
     "lib:pack": "cd ./dist/openvidu-components-angular && npm pack",
-    "lib:copy": "cp dist/openvidu-components-angular/openvidu-components-angular-*.tgz ../../openvidu-call/openvidu-call-front",
+    "lib:copy": "cp dist/openvidu-components-angular/openvidu-components-angular-*.tgz ../../openvidu-call/frontend",
     "lib:test": "ng test openvidu-components-angular --no-watch --code-coverage",
     "e2e:nested-all": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/nested-components/*.test.js",
     "e2e:nested-events": "tsc --project ./e2e && npx jasmine --fail-fast ./e2e/dist/nested-components/events.test.js",
