@@ -57,6 +57,9 @@ export class OpenViduComponentsConfigService {
 	private displayRoomName = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	displayRoomName$: Observable<boolean>;
 
+	private brandingLogo = <BehaviorSubject<string>>new BehaviorSubject('');
+	brandingLogo$: Observable<string>;
+
 	private displayLogo = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	displayLogo$: Observable<boolean>;
 
@@ -117,6 +120,7 @@ export class OpenViduComponentsConfigService {
 		this.activitiesPanelButton$ = this.activitiesPanelButton.asObservable();
 		this.displayRoomName$ = this.displayRoomName.asObservable();
 		this.displayLogo$ = this.displayLogo.asObservable();
+		this.brandingLogo$ = this.brandingLogo.asObservable();
 		this.recordingButton$ = this.recordingButton.asObservable();
 		this.broadcastingButton$ = this.broadcastingButton.asObservable();
 		this.toolbarSettingsButton$ = this.toolbarSettingsButton.asObservable();
@@ -260,6 +264,10 @@ export class OpenViduComponentsConfigService {
 
 	setDisplayRoomName(displayRoomName: boolean) {
 		this.displayRoomName.next(displayRoomName);
+	}
+
+	setBrandingLogo(brandingLogo: string) {
+		this.brandingLogo.next(brandingLogo);
 	}
 
 	showRoomName(): boolean {

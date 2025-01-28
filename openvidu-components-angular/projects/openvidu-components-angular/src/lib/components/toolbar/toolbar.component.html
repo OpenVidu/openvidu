@@ -4,7 +4,7 @@
 <mat-toolbar id="toolbar" class="toolbar-container">
 	<div id="info-container" class="info-container">
 		<div>
-			<img *ngIf="!isMinimal && showLogo" id="branding-logo" src="assets/images/logo.png" ovLogo />
+			<img *ngIf="!isMinimal && showLogo" id="branding-logo" [ovLogo]="brandingLogo"  />
 			<div
 				id="session-info-container"
 				[class.collapsed]="recordingStatus === _recordingStatus.STARTED || broadcastingStatus === _broadcastingStatus.STARTED"

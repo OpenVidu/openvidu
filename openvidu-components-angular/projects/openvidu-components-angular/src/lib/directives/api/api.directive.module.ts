@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { ActivitiesPanelBroadcastingActivityDirective, ActivitiesPanelRecordingActivityDirective } from './activities-panel.directive';
 import { AdminLoginErrorDirective, AdminDashboardRecordingsListDirective, AdminLoginTitleDirective, AdminDashboardTitleDirective } from './admin.directive';
-import { LayoutRemoteParticipantsDirective, LogoDirective } from './internals.directive';
+import { LayoutRemoteParticipantsDirective, FallbackLogoDirective, ToolbarBrandingLogoDirective } from './internals.directive';
 import { ParticipantPanelItemMuteButtonDirective } from './participant-panel-item.directive';
 import {
 	StreamDisplayAudioDetectionDirective,
@@ -70,7 +70,8 @@ import {
 		StreamDisplayParticipantNameDirective,
 		StreamDisplayAudioDetectionDirective,
 		StreamVideoControlsDirective,
-		LogoDirective,
+		FallbackLogoDirective,
+		ToolbarBrandingLogoDirective,
 		ParticipantPanelItemMuteButtonDirective,
 		ParticipantNameDirective,
 		ActivitiesPanelRecordingActivityDirective,
@@ -110,7 +111,8 @@ import {
 		StreamDisplayParticipantNameDirective,
 		StreamDisplayAudioDetectionDirective,
 		StreamVideoControlsDirective,
-		LogoDirective,
+		FallbackLogoDirective,
+		ToolbarBrandingLogoDirective,
 		ParticipantPanelItemMuteButtonDirective,
 		ParticipantNameDirective,
 		ActivitiesPanelRecordingActivityDirective,

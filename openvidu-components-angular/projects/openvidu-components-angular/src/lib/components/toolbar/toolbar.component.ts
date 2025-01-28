@@ -258,6 +258,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 * @ignore
 	 */
 	showLogo: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	brandingLogo: string = '';
 	/**
 	 * @ignore
 	 */
@@ -337,6 +342,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	private participantsPanelButtonSub: Subscription;
 	private chatPanelButtonSub: Subscription;
 	private displayLogoSub: Subscription;
+	private brandingLogoSub: Subscription;
 	private displayRoomNameSub: Subscription;
 	private settingsButtonSub: Subscription;
 	private captionsSubs: Subscription;
@@ -429,6 +435,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		if (this.participantsPanelButtonSub) this.participantsPanelButtonSub.unsubscribe();
 		if (this.chatPanelButtonSub) this.chatPanelButtonSub.unsubscribe();
 		if (this.displayLogoSub) this.displayLogoSub.unsubscribe();
+		if (this.brandingLogoSub) this.brandingLogoSub.unsubscribe();
 		if (this.displayRoomNameSub) this.displayRoomNameSub.unsubscribe();
 		if (this.minimalSub) this.minimalSub.unsubscribe();
 		if (this.activitiesPanelButtonSub) this.activitiesPanelButtonSub.unsubscribe();
@@ -695,6 +702,10 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.isMinimal = value;
 			this.cd.markForCheck();
 		});
+		this.brandingLogoSub = this.libService.brandingLogo$.subscribe((value: string) => {
+			this.brandingLogo = value;
+			this.cd.markForCheck();
+		});
 		this.screenshareButtonSub = this.libService.screenshareButton$.subscribe((value: boolean) => {
 			this.showScreenshareButton = value && !this.platformService.isMobile();
 			this.cd.markForCheck();
@@ -747,6 +758,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.showLogo = value;
 			this.cd.markForCheck();
 		});
+
 		this.displayRoomNameSub = this.libService.displayRoomName$.subscribe((value: boolean) => {
 			this.showSessionName = value;
 			this.cd.markForCheck();
