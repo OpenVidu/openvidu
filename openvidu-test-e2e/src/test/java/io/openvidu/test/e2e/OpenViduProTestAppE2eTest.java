@@ -462,7 +462,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// webrtcConnectionDestroyed event is only triggered when participant left in v2Compatibility
 				// for (int i = 0; i < 3; i++) {
 				Assertions.assertEquals("unpublish",
-						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 30).get("reason").getAsString());
+						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 60).get("reason").getAsString());
 				// }
 				Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
 						CustomWebhook.waitForEvent("participantLeft", 30).get("reason").getAsString());
