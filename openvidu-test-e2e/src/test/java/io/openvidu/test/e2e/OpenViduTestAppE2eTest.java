@@ -65,6 +65,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -140,6 +141,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("One2One Chrome")
 	void oneToOneChrome() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
@@ -148,6 +150,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("One2One Firefox")
 	void oneToOneFirefox() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
@@ -156,6 +159,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("One2One Edge")
 	void oneToOneEdge() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("edge");
@@ -179,6 +183,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("One2One only audio")
 	void oneToOneOnlyAudioSession() throws Exception {
 
@@ -206,6 +211,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("One2One only video")
 	void oneToOneOnlyVideoSession() throws Exception {
 
@@ -233,6 +239,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("One2Many [Video + Audio]")
 	void oneToManyVideoAudioSession() throws Exception {
 
@@ -346,6 +353,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Many2Many [Video + Audio]")
 	void manyToManyVideoAudioSession() throws Exception {
 
@@ -378,6 +386,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Massive session")
 	void massiveSessionTest() throws Exception {
 		isKurentoRestartTest = true;
@@ -423,6 +432,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Cross-Browser test")
 	void crossBrowserTest() throws Exception {
 
@@ -529,6 +539,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Signal message")
 	void oneToManySignalMessage() throws Exception {
 
@@ -552,6 +563,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("ExceptionEvent test")
 	void exceptionEventTest() throws Exception {
 
@@ -587,6 +599,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Subscribe Unsubscribe")
 	void subscribeUnsubscribeTest() throws Exception {
 
@@ -657,6 +670,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Publish Unpublish")
 	void publishUnpublishTest() throws Exception {
 
@@ -705,6 +719,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Receive VideoElementCreated event when subscriber initializes with target element")
 	void subscriberVideoElementCreatedTest() throws Exception {
 
@@ -739,6 +754,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Verify that the session emits the streamCreated event when the publisher has only audio active.")
 	void sessionStreamCreatedOnlyAudioTest() throws Exception {
 
@@ -764,6 +780,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Verify that the session emits the streamCreated event when the publisher has only video active.")
 	void sessionStreamCreatedOnlyVideoTest() throws Exception {
 
@@ -789,6 +806,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Verify that the session emits the streamPropertyChanged event when the publisher has only audio active and toggles (mutes/unmutes) it.")
 	void sessionStreamPropertyChangedOnlyAudioTest() throws Exception {
 
@@ -815,6 +833,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Verify that the session emits the streamPropertyChanged event when the publisher has only video active and toggles (enable/disable) it.")
 	void sessionStreamPropertyChangedOnlyVideoTest() throws Exception {
 
@@ -841,6 +860,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Verify that the webrtcConnectionCreated webhook is received when the publisher has only video active.")
 	void webrtcConnectionCreatedWebhookOnlyVideoTest() throws Exception {
 
@@ -879,6 +899,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Verify that the webrtcConnectionCreated webhook is received when the publisher has only audio active.")
 	void webrtcConnectionCreatedWebhookOnlyAudioTest() throws Exception {
 
@@ -919,6 +940,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Verify that the webrtcConnectionDestroyed webhook is received when the publisher has only video active.")
 	void webrtcConnectionDestroyedWebhookOnlyVideoTest() throws Exception {
 
@@ -958,6 +980,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Verify that the webrtcConnectionDestroyed webhook is received when the publisher has only audio active.")
 	void webrtcConnectionDestroyedWebhookOnlyAudioTest() throws Exception {
 
@@ -996,6 +1019,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Change publisher dynamically")
 	void changePublisherTest() throws Exception {
 
@@ -1120,6 +1144,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Replace track")
 	void replaceTrackTest() throws Exception {
 
@@ -1164,6 +1189,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Moderator capabilities")
 	void moderatorCapabilitiesTest() throws Exception {
 
@@ -1234,6 +1260,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Stream property changed event")
 	void streamPropertyChangedEventTest() throws Exception {
 
@@ -1427,6 +1454,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Local browser record")
 	void localBrowserRecordTest() throws Exception {
 
@@ -1485,6 +1513,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Composed record")
 	void composedRecordTest() throws Exception {
 		isRecordingTest = true;
@@ -1685,6 +1714,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Composed quick start record")
 	void composedQuickStartRecordTest() throws Exception {
 		isRecordingTest = true;
@@ -1873,6 +1903,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Individual record")
 	void individualRecordTest() throws Exception {
 		isRecordingTest = true;
@@ -1985,6 +2016,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Record cross-browser audio-only and video-only")
 	void audioOnlyVideoOnlyRecordTest() throws Exception {
 
@@ -2420,6 +2452,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("REST API: Fetch all, fetch one, force disconnect, force unpublish, close session")
 	void restApiFetchForce() throws Exception {
 
@@ -2561,6 +2594,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("openvidu-java-client custom HttpClient test")
 	void openViduJavaClientCustomHttpClientTest() throws Exception {
 
@@ -2708,6 +2742,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("openvidu-java-client test")
 	void openViduJavaClientTest() throws Exception {
 		isRecordingTest = true;
@@ -3750,6 +3785,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Media server reconnect no active session test")
 	void mediaServerReconnectNoActiveSessionTest() throws Exception {
 		isKurentoRestartTest = true;
@@ -4117,6 +4153,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("Webhook test")
 	void webhookTest() throws Exception {
 
@@ -4685,6 +4722,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@Timeout(1200)
 	@DisplayName("OpenVidu SDK fetch test")
 	void openviduSdkFetchTest() throws Exception {
 		isRecordingTest = true;
