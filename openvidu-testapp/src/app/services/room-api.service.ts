@@ -208,6 +208,7 @@ export class RoomApiService {
   async createIngress(
     room_name: string,
     inputType: IngressInput,
+    urlInputType: string,
     withAudio: boolean,
     withVideo: boolean,
     codec: VideoCodec,
@@ -216,13 +217,23 @@ export class RoomApiService {
     preset?: IngressVideoEncodingPreset
   ): Promise<IngressInfo> {
     let url;
-    if (!withVideo) {
-      url =
-        'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio.mp3';
-    } else {
-      url = withAudio
-        ? 'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4'
-        : 'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_noaudio.mp4';
+    switch (urlInputType) {
+      case 'HTTP':
+        if (!withVideo) {
+          url =
+            'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio.mp3';
+        } else {
+          url = withAudio
+            ? 'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4'
+            : 'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_noaudio.mp4';
+        }
+        break;
+      case 'SRT':
+        url = 'srt://127.0.0.1:8554/';
+        break;
+      case 'RTSP':
+        url = 'rtsp://127.0.0.1:8554/';
+        break;
     }
     let options: CreateIngressOptions = {
       name: inputType + '-' + room_name,

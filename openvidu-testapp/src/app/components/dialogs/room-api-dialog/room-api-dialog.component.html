@@ -197,6 +197,16 @@
       <span style="display: inline-block" matTooltip="Only for WHIP" [matTooltipDisabled]="inputTypeSelected === 1">
         <mat-checkbox id="ingress-transcoding" [(ngModel)]="ingressEnableTranscoding" [disabled]="inputTypeSelected !== 1">Transcoding</mat-checkbox>
       </span>
+      <span style="display: inline-block" matTooltip="Only for URL input type" [matTooltipDisabled]="inputTypeSelected === 2">
+        <mat-form-field id="ingress-url-type-select">
+          <mat-label>URL type</mat-label>
+          <mat-select [(value)]="ingressUrlType" [disabled]="inputTypeSelected !== 2">
+            <mat-option *ngFor="let urlType of INGRESS_URL_TYPES" [value]="urlType" [id]="'mat-option-' + urlType">
+              {{urlType}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </span>
       <span style="display: inline-block" [matTooltip]="!ingressWithVideo ? 'Only with video' : 'Preset overrides this value'"
         [matTooltipDisabled]="!!ingressWithVideo && ingressVideoEncodingPresetSelected == undefined">
         <mat-form-field id="ingress-video-codec-select">

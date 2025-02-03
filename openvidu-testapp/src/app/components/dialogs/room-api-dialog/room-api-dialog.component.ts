@@ -68,6 +68,9 @@ export class RoomApiDialogComponent {
   ingressEnableTranscoding: boolean = false;
   ingressVideoEncodingPresetSelected?: IngressVideoEncodingPreset = undefined;
 
+  INGRESS_URL_TYPES: string[] = ['HTTP', 'SRT', 'RTSP'];
+  ingressUrlType: string = 'HTTP';
+
   response: string;
 
   INGRESS_INPUT_TYPES: { value: IngressInput; viewValue: string }[] = [
@@ -303,6 +306,7 @@ export class RoomApiDialogComponent {
       const ingress = await this.roomApiService.createIngress(
         this.ingressRoomName,
         this.inputTypeSelected,
+        this.ingressUrlType,
         this.ingressWithAudio,
         this.ingressWithVideo,
         this.ingressVideoCodecSelected,
