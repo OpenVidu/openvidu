@@ -12,7 +12,6 @@ import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -143,9 +142,8 @@ public class OpenViduTestE2e {
 
 	public void startRtspServer(boolean withAudio, boolean withVideo) throws Exception {
 		GenericContainer<?> rtspServerContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
-				.withCommand(getFileUrl(withAudio, withVideo)
+				.withNetworkMode("host").withCommand(getFileUrl(withAudio, withVideo)
 						+ " --loop :sout=#gather:rtp{sdp=rtsp://:8554/} :network-caching=1500 :sout-all :sout-keep");
-		rtspServerContainer.setPortBindings(Arrays.asList("8554:8554"));
 		rtspServerContainer.start();
 		containers.add(rtspServerContainer);
 	}

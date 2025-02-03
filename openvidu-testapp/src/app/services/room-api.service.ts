@@ -229,10 +229,10 @@ export class RoomApiService {
         }
         break;
       case 'SRT':
-        url = 'srt://127.0.0.1:8554/';
+        url = 'srt://host.docker.internal:8554/';
         break;
       case 'RTSP':
-        url = 'rtsp://127.0.0.1:8554/';
+        url = 'rtsp://host.docker.internal:8554/';
         break;
     }
     let options: CreateIngressOptions = {

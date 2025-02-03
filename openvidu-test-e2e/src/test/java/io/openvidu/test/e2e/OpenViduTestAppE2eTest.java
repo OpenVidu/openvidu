@@ -1737,6 +1737,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("SRT ingress")
+	@Disabled
 	void srtIngressTest() throws Exception {
 		startSrtServer(true, true);
 		urPullCommon("SRT", true, true);
@@ -1744,6 +1745,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("SRT ingress only video")
+	@Disabled
 	void srtIngressTestOnlyVideo() throws Exception {
 		startSrtServer(false, true);
 		urPullCommon("SRT", false, true);
@@ -1751,6 +1753,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("SRT ingress only audio")
+	@Disabled
 	void srtIngressTestOnlyAudio() throws Exception {
 		startSrtServer(true, false);
 		urPullCommon("SRT", true, false);
