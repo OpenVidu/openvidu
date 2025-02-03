@@ -52,6 +52,7 @@ public class OpenViduTestE2e {
 
 	protected static String RTSP_SERVER_IMAGE = "lroktu/vlc-server:latest";
 	protected static String SRT_SERVER_IMAGE = "linuxserver/ffmpeg:latest";
+	protected static int RTSP_SRT_PORT = 8554;
 
 	protected static String LIVEKIT_API_KEY = "devkey";
 	protected static String LIVEKIT_API_SECRET = "secret";
@@ -142,16 +143,17 @@ public class OpenViduTestE2e {
 
 	public void startRtspServer(boolean withAudio, boolean withVideo) throws Exception {
 		GenericContainer<?> rtspServerContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
-				.withNetworkMode("host").withCommand(getFileUrl(withAudio, withVideo)
-						+ " --loop :sout=#gather:rtp{sdp=rtsp://:8554/} :network-caching=1500 :sout-all :sout-keep");
+				.withNetworkMode("host")
+				.withCommand(getFileUrl(withAudio, withVideo) + " --loop :sout=#gather:rtp{sdp=rtsp://:" + RTSP_SRT_PORT
+						+ "/} :network-caching=1500 :sout-all :sout-keep");
 		rtspServerContainer.start();
 		containers.add(rtspServerContainer);
 	}
 
 	public void startSrtServer(boolean withAudio, boolean withVideo) throws Exception {
 		GenericContainer<?> srtServerContainer = new GenericContainer<>(DockerImageName.parse(SRT_SERVER_IMAGE))
-				.withNetworkMode("host").withCommand(
-						"-i " + getFileUrl(withAudio, withVideo) + " -c:v libx264 -f mpegts srt://:8554?mode=listener");
+				.withNetworkMode("host").withCommand("-i " + getFileUrl(withAudio, withVideo)
+						+ " -c:v libx264 -f mpegts srt://:" + RTSP_SRT_PORT + "?mode=listener");
 		srtServerContainer.start();
 		containers.add(srtServerContainer);
 	}
