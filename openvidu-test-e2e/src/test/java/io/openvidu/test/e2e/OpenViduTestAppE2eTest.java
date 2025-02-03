@@ -54,6 +54,8 @@ import com.google.gson.JsonParser;
 
 import io.openvidu.test.e2e.annotations.OnlyMediasoup;
 import io.openvidu.test.e2e.annotations.OnlyPion;
+import livekit.LivekitIngress.IngressInfo;
+import livekit.LivekitIngress.IngressState;
 
 /**
  * E2E tests for openvidu-testapp.
@@ -1659,7 +1661,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
 
 		// Try publishing H264 with 2 layer simulcast
-		createIngress(user, "H264_540P_25FPS_2_LAYERS", null, true);
+		createIngress(user, "H264_540P_25FPS_2_LAYERS", null, true, "HTTP");
 
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
@@ -1688,7 +1690,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("participantDisconnected", "RoomEvent", 1);
 
 		// Try publishing H264 with 3 layer simulcast
-		createIngress(user, "H264_1080P_30FPS_3_LAYERS_HIGH_MOTION", null, true);
+		createIngress(user, "H264_1080P_30FPS_3_LAYERS_HIGH_MOTION", null, true, "HTTP");
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
 		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
@@ -1712,6 +1714,102 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		this.waitUntilSubscriberFrameHeightIs(user, subscriberVideo, 1080);
 	}
 
+	@Test
+	@DisplayName("RTSP ingress")
+	void rtspIngressTest() throws Exception {
+		startRtspServer(true, true);
+		urPullCommon("RTSP", true, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress only video")
+	void rtspIngressTestOnlyVideo() throws Exception {
+		startRtspServer(false, true);
+		urPullCommon("RTSP", false, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress only audio")
+	void rtspIngressTestOnlyAudio() throws Exception {
+		startRtspServer(true, false);
+		urPullCommon("RTSP", true, false);
+	}
+
+	@Test
+	@DisplayName("SRT ingress")
+	void srtIngressTest() throws Exception {
+		startSrtServer(true, true);
+		urPullCommon("SRT", true, true);
+	}
+
+	@Test
+	@DisplayName("SRT ingress only video")
+	void srtIngressTestOnlyVideo() throws Exception {
+		startSrtServer(false, true);
+		urPullCommon("SRT", false, true);
+	}
+
+	@Test
+	@DisplayName("SRT ingress only audio")
+	void srtIngressTestOnlyAudio() throws Exception {
+		startSrtServer(true, false);
+		urPullCommon("SRT", true, false);
+	}
+
+	private void urPullCommon(String urlType, boolean withAudio, boolean withVideo) throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addSubscriber(user, false);
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
+		createIngress(user, null, "VP8", false, urlType);
+
+		if (withAudio && withVideo) {
+			user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 2);
+		} else {
+			user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
+		}
+
+		if (withAudio) {
+			user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("audio"), 1));
+			final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
+			Assertions.assertEquals(1, numberOfAudios, "Wrong number of videos");
+			Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("audio", true, false),
+					"HTMLAudioElements were expected to have only one audio track");
+			if (!withVideo) {
+				final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+				Assertions.assertEquals(0, numberOfVideos, "Wrong number of videos");
+			}
+		}
+		if (withVideo) {
+			user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
+			final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+			Assertions.assertEquals(1, numberOfVideos, "Wrong number of videos");
+			Assertions.assertTrue(user.getBrowserUser().assertAllElementsHaveTracks("video", false, true),
+					"HTMLVideoElements were expected to have only one video track");
+			if (!withAudio) {
+				final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
+				Assertions.assertEquals(0, numberOfAudios, "Wrong number of videos");
+			}
+
+			WebElement subscriberVideo = user.getDriver()
+					.findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+
+			waitUntilVideoLayersNotEmpty(user, subscriberVideo);
+			long bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
+			this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo, bytesReceived);
+			this.waitUntilSubscriberFramesPerSecondNotZero(user, subscriberVideo);
+			JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
+			String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
+			String expectedCodec = "video/VP8";
+			Assertions.assertEquals(expectedCodec, subscriberCodec);
+		}
+
+		List<IngressInfo> ingresses = LK_INGRESS.listIngress().execute().body();
+		Assertions.assertEquals(1, ingresses.size());
+		Assertions.assertTrue(ingresses.get(0).getUrl().startsWith(urlType.toLowerCase() + "://"));
+		Assertions.assertEquals(IngressState.Status.ENDPOINT_PUBLISHING, ingresses.get(0).getState().getStatus());
+	}
+
 	private void ingressSimulcastTest(OpenViduTestappUser user, boolean simulcast, String codec, String preset)
 			throws Exception {
 
@@ -1721,7 +1819,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
 
-		createIngress(user, preset, codec, simulcast);
+		createIngress(user, preset, codec, simulcast, "HTTP");
 
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
 
@@ -2074,7 +2172,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 	}
 
-	private void createIngress(OpenViduTestappUser user, String preset, String codec, boolean simulcast)
+	private void createIngress(OpenViduTestappUser user, String preset, String codec, boolean simulcast, String urlType)
 			throws InterruptedException {
 		if (!user.getDriver().findElements(By.id("close-dialog-btn")).isEmpty()) {
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
@@ -2093,6 +2191,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.cssSelector("#ingress-video-codec-select")).click();
 			Thread.sleep(300);
 			user.getDriver().findElement(By.cssSelector("#mat-option-" + codec.toUpperCase())).click();
+		}
+		if (urlType != null) {
+			user.getDriver().findElement(By.cssSelector("#ingress-url-type-select")).click();
+			Thread.sleep(300);
+			user.getDriver().findElement(By.cssSelector("#mat-option-" + urlType.toUpperCase())).click();
 		}
 		user.getDriver().findElement(By.cssSelector("#create-ingress-api-btn")).click();
 		user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();

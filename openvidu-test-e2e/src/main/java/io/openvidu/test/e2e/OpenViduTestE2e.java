@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,7 +51,8 @@ public class OpenViduTestE2e {
 
 	private final static WaitStrategy waitBrowser = Wait.forLogMessage("^.*Started Selenium Standalone.*$", 1);
 
-	protected static String MEDIA_SERVER_IMAGE = "livekit-server:latest";
+	protected static String RTSP_SERVER_IMAGE = "lroktu/vlc-server:latest";
+	protected static String SRT_SERVER_IMAGE = "linuxserver/ffmpeg:latest";
 
 	protected static String LIVEKIT_API_KEY = "devkey";
 	protected static String LIVEKIT_API_SECRET = "secret";
@@ -79,8 +81,6 @@ public class OpenViduTestE2e {
 
 	protected static RoomServiceClient LK;
 	protected static IngressServiceClient LK_INGRESS;
-
-	private static boolean isMediaServerRestartTest = false;
 
 	protected static void checkFfmpegInstallation() {
 		String ffmpegOutput = commandLine.executeCommand("which ffmpeg", 60);
@@ -139,6 +139,37 @@ public class OpenViduTestE2e {
 				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withNetworkMode("host")
 				.waitingFor(waitBrowser);
 		return edge;
+	}
+
+	public void startRtspServer(boolean withAudio, boolean withVideo) throws Exception {
+		GenericContainer<?> rtspServerContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
+				.withCommand(getFileUrl(withAudio, withVideo)
+						+ " --loop :sout=#gather:rtp{sdp=rtsp://:8554/} :network-caching=1500 :sout-all :sout-keep");
+		rtspServerContainer.setPortBindings(Arrays.asList("8554:8554"));
+		rtspServerContainer.start();
+		containers.add(rtspServerContainer);
+	}
+
+	public void startSrtServer(boolean withAudio, boolean withVideo) throws Exception {
+		GenericContainer<?> srtServerContainer = new GenericContainer<>(DockerImageName.parse(SRT_SERVER_IMAGE))
+				.withNetworkMode("host").withCommand(
+						"-i " + getFileUrl(withAudio, withVideo) + " -c:v libx264 -f mpegts srt://:8554?mode=listener");
+		srtServerContainer.start();
+		containers.add(srtServerContainer);
+	}
+
+	private String getFileUrl(boolean withAudio, boolean withVideo) throws Exception {
+		String fileUrl;
+		if (withAudio && withVideo) {
+			fileUrl = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4";
+		} else if (!withAudio && withVideo) {
+			fileUrl = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_noaudio.mp4";
+		} else if (withAudio) {
+			fileUrl = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio.mp3";
+		} else {
+			throw new Exception("Must have audio or video");
+		}
+		return fileUrl;
 	}
 
 	protected static void setUpLiveKitClient() throws NoSuchAlgorithmException {
@@ -208,12 +239,6 @@ public class OpenViduTestE2e {
 			LIVEKIT_API_SECRET = livekitApiSecret;
 		}
 		log.info("Using api secret {} to connect to livekit-server", LIVEKIT_API_SECRET);
-
-		String mediaServerImage = System.getProperty("MEDIA_SERVER_IMAGE");
-		if (mediaServerImage != null) {
-			MEDIA_SERVER_IMAGE = mediaServerImage;
-		}
-		log.info("Using media server {} for e2e tests", MEDIA_SERVER_IMAGE);
 
 		String chromeVersion = System.getProperty("CHROME_VERSION");
 		if (chromeVersion != null && !chromeVersion.isBlank()) {
@@ -366,13 +391,6 @@ public class OpenViduTestE2e {
 		// Close all remaining Rooms
 		this.closeAllRooms(LK);
 
-		// Reset Media Server
-		if (isMediaServerRestartTest) {
-			this.stopMediaServer();
-			this.startMediaServer();
-			isMediaServerRestartTest = false;
-		}
-
 		// Dispose all browsers users
 		Iterator<BrowserUser> it1 = browserUsers.iterator();
 		while (it1.hasNext()) {
@@ -458,17 +476,4 @@ public class OpenViduTestE2e {
 			throw new Exception("File " + path.toAbsolutePath().toString() + " exists but is not readable");
 		}
 	}
-
-	protected void startMediaServer() {
-		String command = "docker run --rm -p 1880:7880 -e LIVEKIT_KEYS=\"" + LIVEKIT_API_KEY + " : "
-				+ LIVEKIT_API_SECRET + "\" " + MEDIA_SERVER_IMAGE;
-		commandLine.executeCommand(command, 60);
-	}
-
-	protected void stopMediaServer() {
-		isMediaServerRestartTest = true;
-		final String dockerRemoveCmd = "docker ps -a | awk '{ print $1,$2 }' | grep livekit-server | awk '{ print $1 }' | xargs -I {} docker rm -f {}";
-		commandLine.executeCommand(dockerRemoveCmd, 60);
-	}
-
 }
