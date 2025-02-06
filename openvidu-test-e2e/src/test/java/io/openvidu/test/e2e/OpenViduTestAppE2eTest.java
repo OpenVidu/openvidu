@@ -2230,23 +2230,35 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	private int getSubscriberVideoFrameWidth(OpenViduTestappUser user, WebElement subscriberVideo) {
 		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
+		this.waitUntilAux(user, subscriberVideo,
+				() -> getLayersAsJsonArray(user, subscriberVideo).get(0).getAsJsonObject().get("frameWidth") != null,
+				"Timeout waiting for frameWidth to exist");
 		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
 		return json.get(0).getAsJsonObject().get("frameWidth").getAsInt();
 	}
 
 	private int getSubscriberVideoFrameHeight(OpenViduTestappUser user, WebElement subscriberVideo) {
 		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
+		this.waitUntilAux(user, subscriberVideo,
+				() -> getLayersAsJsonArray(user, subscriberVideo).get(0).getAsJsonObject().get("frameHeight") != null,
+				"Timeout waiting for frameHeight to exist");
 		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
 		return json.get(0).getAsJsonObject().get("frameHeight").getAsInt();
 	}
 
 	private long getSubscriberVideoBytesReceived(OpenViduTestappUser user, WebElement subscriberVideo) {
+		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
+		this.waitUntilAux(user, subscriberVideo,
+				() -> getLayersAsJsonArray(user, subscriberVideo).get(0).getAsJsonObject().get("bytesReceived") != null,
+				"Timeout waiting for bytesReceived to exist");
 		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
 		return json.get(0).getAsJsonObject().get("bytesReceived").getAsLong();
 	}
 
 	private int getSubscriberVideoFramesPerSecond(OpenViduTestappUser user, WebElement subscriberVideo) {
 		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
+		this.waitUntilAux(user, subscriberVideo, () -> getLayersAsJsonArray(user, subscriberVideo).get(0)
+				.getAsJsonObject().get("framesPerSecond") != null, "Timeout waiting for framesPerSecond to exist");
 		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
 		return json.get(0).getAsJsonObject().get("framesPerSecond").getAsInt();
 	}
