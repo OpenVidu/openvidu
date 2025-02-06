@@ -82,7 +82,7 @@ public class OpenViduTestE2e {
 	// 3. The string expected to appear on the server log when the stream starts
 	final protected static Map<String, Triple<String, String, String>> FFMPEG_AUDIO_CODEC_NAMES = new HashMap<>() {
 		{
-			put("AAC", Triple.of("aac", "-b:a 128k", "MPEG-4 Audio"));
+			put("AAC", Triple.of("aac", "-ac 2 -b:a 128k", "MPEG-4 Audio"));
 			put("AC3", Triple.of("ac3", "-b:a 128k", null));
 			put("OPUS", Triple.of("libopus", "", "Opus"));
 			put("MP3", Triple.of("libmp3lame", "", "MPEG-1/2 Audio"));
@@ -185,8 +185,7 @@ public class OpenViduTestE2e {
 
 		GenericContainer<?> rtspServerContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
 				.withCreateContainerCmdModifier(cmd -> cmd.withName("rtsp-" + Math.random() * 100000))
-				.withEnv(Map.of("MTX_LOGLEVEL",
-						"info", "MTX_PROTOCOLS", "tcp", "MTX_RTSPADDRESS", ":8554", "MTX_HLS",
+				.withEnv(Map.of("MTX_LOGLEVEL", "info", "MTX_PROTOCOLS", "tcp", "MTX_RTSPADDRESS", ":8554", "MTX_HLS",
 						"no", "MTX_RTSP", "yes", "MTX_WEBRTC", "yes", "MTX_SRT", "no", "MTX_RTMP", "no", "MTX_API",
 						"no"))
 				.withExposedPorts(8889, 8554).waitingFor(Wait.forHttp("/").forPort(8889).forStatusCode(404));

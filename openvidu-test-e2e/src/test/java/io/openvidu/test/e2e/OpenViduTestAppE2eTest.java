@@ -1771,6 +1771,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@DisplayName("RTSP ingress VP8 + AAC")
+	void rtspIngressVP8_AACTest() throws Exception {
+		log.info("RTSP ingress VP8 + AAC");
+		String rtspUri = startRtspServer("VP8", "AAC");
+		urPullCommon("RTSP", rtspUri, true, true);
+	}
+
+	@Test
 	@DisplayName("RTSP ingress MPEG4 + OPUS")
 	void rtspIngressMPEG4_OPUSTest() throws Exception {
 		log.info("RTSP ingress MPEG4 + OPUS");
@@ -1791,6 +1799,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	void rtspIngressMPEG4_MP3Test() throws Exception {
 		log.info("RTSP ingress MPEG4 + MP3");
 		String rtspUri = startRtspServer("MPEG-4", "MP3");
+		urPullCommon("RTSP", rtspUri, true, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress MPEG-4 + AAC")
+	void rtspIngressMPEG4_AACTest() throws Exception {
+		log.info("RTSP ingress MPEG-4 + AAC");
+		String rtspUri = startRtspServer("MPEG-4", "AAC");
 		urPullCommon("RTSP", rtspUri, true, true);
 	}
 
@@ -1819,6 +1835,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@DisplayName("RTSP ingress VP9 + AAC")
+	void rtspIngressVP9_AACTest() throws Exception {
+		log.info("RTSP ingress VP9 + AAC");
+		String rtspUri = startRtspServer("VP9", "AAC");
+		urPullCommon("RTSP", rtspUri, true, true);
+	}
+
+	@Test
 	@DisplayName("RTSP ingress M-JPEG + OPUS")
 	void rtspIngressMJPEG_OPUSTest() throws Exception {
 		log.info("RTSP ingress M-JPEG + OPUS");
@@ -1839,6 +1863,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	void rtspIngressMJPEG_MP3Test() throws Exception {
 		log.info("RTSP ingress M-JPEG + MP3");
 		String rtspUri = startRtspServer("M-JPEG", "MP3");
+		urPullCommon("RTSP", rtspUri, true, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress M-JPEG + AAC")
+	void rtspIngressMJPEG_AACTest() throws Exception {
+		log.info("RTSP ingress M-JPEG + AAC");
+		String rtspUri = startRtspServer("M-JPEG", "AAC");
 		urPullCommon("RTSP", rtspUri, true, true);
 	}
 
