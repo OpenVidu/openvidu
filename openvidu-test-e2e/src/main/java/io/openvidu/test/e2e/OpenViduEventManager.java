@@ -181,8 +181,7 @@ public class OpenViduEventManager {
 	}
 
 	// 'eventNumber' is accumulative for event 'eventType-eventCategory' for one
-	// page while it is
-	// not refreshed
+	// page while it is not refreshed
 	public void waitUntilEventReaches(String eventType, String eventCategory, int eventNumber) throws Exception {
 		this.waitUntilEventReaches(eventType, eventCategory, eventNumber, this.timeOfWaitInSeconds, true);
 	}

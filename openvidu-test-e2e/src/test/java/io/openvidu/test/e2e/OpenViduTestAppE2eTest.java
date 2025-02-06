@@ -1661,7 +1661,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
 
 		// Try publishing H264 with 2 layer simulcast
-		createIngress(user, "H264_540P_25FPS_2_LAYERS", null, true, "HTTP");
+		createIngress(user, "H264_540P_25FPS_2_LAYERS", null, true, "HTTP", null);
 
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
@@ -1690,7 +1690,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("participantDisconnected", "RoomEvent", 1);
 
 		// Try publishing H264 with 3 layer simulcast
-		createIngress(user, "H264_1080P_30FPS_3_LAYERS_HIGH_MOTION", null, true, "HTTP");
+		createIngress(user, "H264_1080P_30FPS_3_LAYERS_HIGH_MOTION", null, true, "HTTP", null);
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
 		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
@@ -1715,58 +1715,347 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@DisplayName("RTSP ingress")
-	void rtspIngressTest() throws Exception {
-		startRtspServer(true, true);
-		urPullCommon("RTSP", true, true);
+	@DisplayName("RTSP ingress H264 + OPUS")
+	void rtspIngressH264_OPUSTest() throws Exception {
+		log.info("RTSP ingress H264 + OPUS");
+		String rtspUri = startRtspServer("H264", "OPUS");
+		urPullCommon("RTSP", rtspUri, true, true);
 	}
 
 	@Test
-	@DisplayName("RTSP ingress only video")
-	void rtspIngressTestOnlyVideo() throws Exception {
-		startRtspServer(false, true);
-		urPullCommon("RTSP", false, true);
+	@DisplayName("RTSP ingress H264 + G711")
+	void rtspIngressH264_G711Test() throws Exception {
+		log.info("RTSP ingress H264 + G711");
+		String rtspUri = startRtspServer("H264", "G711");
+		urPullCommon("RTSP", rtspUri, true, true);
 	}
 
 	@Test
-	@DisplayName("RTSP ingress only audio")
-	void rtspIngressTestOnlyAudio() throws Exception {
-		startRtspServer(true, false);
-		urPullCommon("RTSP", true, false);
+	@DisplayName("RTSP ingress H264 + MP3")
+	void rtspIngressH264_MP3Test() throws Exception {
+		log.info("RTSP ingress H264 + MP3");
+		String rtspUri = startRtspServer("H264", "MP3");
+		urPullCommon("RTSP", rtspUri, true, true);
 	}
 
 	@Test
-	@DisplayName("SRT ingress")
-	@Disabled
-	void srtIngressTest() throws Exception {
-		startSrtServer(true, true);
-		urPullCommon("SRT", true, true);
+	@DisplayName("RTSP ingress H264 + AAC")
+	void rtspIngressH264_AACTest() throws Exception {
+		log.info("RTSP ingress H264 + AAC");
+		String rtspUri = startRtspServer("H264", "AAC");
+		urPullCommon("RTSP", rtspUri, true, true);
 	}
 
 	@Test
-	@DisplayName("SRT ingress only video")
-	@Disabled
-	void srtIngressTestOnlyVideo() throws Exception {
-		startSrtServer(false, true);
-		urPullCommon("SRT", false, true);
+	@DisplayName("RTSP ingress VP8 + OPUS")
+	void rtspIngressVP8_OPUSTest() throws Exception {
+		log.info("RTSP ingress VP8 + OPUS");
+		String rtspUri = startRtspServer("VP8", "OPUS");
+		urPullCommon("RTSP", rtspUri, true, true);
 	}
 
 	@Test
-	@DisplayName("SRT ingress only audio")
-	@Disabled
-	void srtIngressTestOnlyAudio() throws Exception {
-		startSrtServer(true, false);
-		urPullCommon("SRT", true, false);
+	@DisplayName("RTSP ingress VP8 + G711")
+	void rtspIngressVP8_G711Test() throws Exception {
+		log.info("RTSP ingress VP8 + G711");
+		String rtspUri = startRtspServer("VP8", "G711");
+		urPullCommon("RTSP", rtspUri, true, true);
 	}
 
-	private void urPullCommon(String urlType, boolean withAudio, boolean withVideo) throws Exception {
+	@Test
+	@DisplayName("RTSP ingress VP8 + MP3")
+	void rtspIngressVP8_MP3Test() throws Exception {
+		log.info("RTSP ingress VP8 + MP3");
+		String rtspUri = startRtspServer("VP8", "MP3");
+		urPullCommon("RTSP", rtspUri, true, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress MPEG4 + OPUS")
+	void rtspIngressMPEG4_OPUSTest() throws Exception {
+		log.info("RTSP ingress MPEG4 + OPUS");
+		String rtspUri = startRtspServer("MPEG-4", "OPUS");
+		urPullCommon("RTSP", rtspUri, true, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress MPEG4 + G711")
+	void rtspIngressMPEG4_G711Test() throws Exception {
+		log.info("RTSP ingress MPEG4 + G711");
+		String rtspUri = startRtspServer("MPEG-4", "G711");
+		urPullCommon("RTSP", rtspUri, true, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress MPEG4 + MP3")
+	void rtspIngressMPEG4_MP3Test() throws Exception {
+		log.info("RTSP ingress MPEG4 + MP3");
+		String rtspUri = startRtspServer("MPEG-4", "MP3");
+		urPullCommon("RTSP", rtspUri, true, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress VP9 + OPUS")
+	void rtspIngressVP9_OPUSTest() throws Exception {
+		log.info("RTSP ingress VP9 + OPUS");
+		String rtspUri = startRtspServer("VP9", "OPUS");
+		urPullCommon("RTSP", rtspUri, true, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress VP9 + G711")
+	void rtspIngressVP9_G711Test() throws Exception {
+		log.info("RTSP ingress VP9 + G711");
+		String rtspUri = startRtspServer("VP9", "G711");
+		urPullCommon("RTSP", rtspUri, true, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress VP9 + MP3")
+	void rtspIngressVP9_MP3Test() throws Exception {
+		log.info("RTSP ingress VP9 + MP3");
+		String rtspUri = startRtspServer("VP9", "MP3");
+		urPullCommon("RTSP", rtspUri, true, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress M-JPEG + OPUS")
+	void rtspIngressMJPEG_OPUSTest() throws Exception {
+		log.info("RTSP ingress M-JPEG + OPUS");
+		String rtspUri = startRtspServer("M-JPEG", "OPUS");
+		urPullCommon("RTSP", rtspUri, true, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress M-JPEG + G711")
+	void rtspIngressMJPEG_G711Test() throws Exception {
+		log.info("RTSP ingress M-JPEG + G711");
+		String rtspUri = startRtspServer("M-JPEG", "G711");
+		urPullCommon("RTSP", rtspUri, true, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress M-JPEG + MP3")
+	void rtspIngressMJPEG_MP3Test() throws Exception {
+		log.info("RTSP ingress M-JPEG + MP3");
+		String rtspUri = startRtspServer("M-JPEG", "MP3");
+		urPullCommon("RTSP", rtspUri, true, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress H264")
+	void rtspIngressH264Test() throws Exception {
+		log.info("RTSP ingress H264");
+		String rtspUri = startRtspServer("H264", null);
+		urPullCommon("RTSP", rtspUri, true, false);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress VP8")
+	void rtspIngressVP8Test() throws Exception {
+		log.info("RTSP ingress VP8");
+		String rtspUri = startRtspServer("VP8", null);
+		urPullCommon("RTSP", rtspUri, true, false);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress MPEG-4")
+	void rtspIngressMPEG4Test() throws Exception {
+		log.info("RTSP ingress MPEG-4");
+		String rtspUri = startRtspServer("MPEG-4", null);
+		urPullCommon("RTSP", rtspUri, true, false);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress VP9")
+	void rtspIngressVP9Test() throws Exception {
+		log.info("RTSP ingress VP9");
+		String rtspUri = startRtspServer("VP9", null);
+		urPullCommon("RTSP", rtspUri, true, false);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress M-JPEG")
+	void rtspIngressMJPEGTest() throws Exception {
+		log.info("RTSP ingress M-JPEG");
+		String rtspUri = startRtspServer("M-JPEG", null);
+		urPullCommon("RTSP", rtspUri, true, false);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress AAC")
+	void rtspIngressAACTest() throws Exception {
+		log.info("RTSP ingress AAC");
+		String rtspUri = startRtspServer(null, "AAC");
+		urPullCommon("RTSP", rtspUri, false, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress MP3")
+	void rtspIngressMP3Test() throws Exception {
+		log.info("RTSP ingress MP3");
+		String rtspUri = startRtspServer(null, "MP3");
+		urPullCommon("RTSP", rtspUri, false, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress OPUS")
+	void rtspIngressOPUSTest() throws Exception {
+		log.info("RTSP ingress OPUS");
+		String rtspUri = startRtspServer(null, "OPUS");
+		urPullCommon("RTSP", rtspUri, false, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress G711")
+	@Disabled // Ingress fails with error "Not found"
+	void rtspIngressG711Test() throws Exception {
+		log.info("RTSP ingress G711");
+		String rtspUri = startRtspServer(null, "G711");
+		urPullCommon("RTSP", rtspUri, false, true);
+	}
+
+	@Test
+	@DisplayName("RTSP ingress AC3")
+	@Disabled // AC3 audio codec not supported through RTSP server with a single audio PCMU
+				// track
+	void rtspIngressAC3Test() throws Exception {
+		log.info("RTSP ingress AC3");
+		String rtspUri = startRtspServer(null, "AC3");
+		urPullCommon("RTSP", rtspUri, false, true);
+	}
+
+	/**
+	 * NOTE 1: ingress with SRT pull does not work in the local network when ingress
+	 * process is a Docker container
+	 */
+	/**
+	 * NOTE 2: ingress SRT seems to support only video codecs H264 and MPEG-4
+	 */
+
+//	@Test
+//	@DisplayName("SRT ingress H264 + AAC")
+//	@Disabled // AAC audio codec stream fails if sent along a video stream
+//	void srtIngressTestH264_AAC() throws Exception {
+//		log.info("SRT ingress H264 + AAC");
+//		String srtUri = startSrtServer("H264", "AAC");
+//		urPullCommon("SRT", srtUri, true, true);
+//	}
+//
+//	@Test
+//	@DisplayName("SRT ingress H264 + AC3")
+//	void srtIngressTestH264_AC3() throws Exception {
+//		log.info("SRT ingress H264 + AC3");
+//		String srtUri = startSrtServer("H264", "AC3");
+//		urPullCommon("SRT", srtUri, true, true);
+//	}
+//
+//	@Test
+//	@DisplayName("SRT ingress H264 + OPUS")
+//	void srtIngressTestH264_OPUS() throws Exception {
+//		log.info("SRT ingress H264 + OPUS");
+//		String srtUri = startSrtServer("H264", "OPUS");
+//		urPullCommon("SRT", srtUri, true, true);
+//	}
+//
+//	@Test
+//	@DisplayName("SRT ingress H264 + MP3")
+//	void srtIngressTestH264_MP3() throws Exception {
+//		log.info("SRT ingress H264 + MP3");
+//		String srtUri = startSrtServer("H264", "MP3");
+//		urPullCommon("SRT", srtUri, true, true);
+//	}
+//
+//	@Test
+//	@DisplayName("SRT ingress MPEG-4 + AAC")
+//	@Disabled // AAC audio codec stream fails if sent along a video stream
+//	void srtIngressTestMPEG-4_AAC() throws Exception {
+//		log.info("SRT ingress MPEG-4 + AAC");
+//		String srtUri = startSrtServer("MPEG-4", "AAC");
+//		urPullCommon("SRT", srtUri, true, true);
+//	}
+//
+//	@Test
+//	@DisplayName("SRT ingress MPEG-4 + AC3")
+//	void srtIngressTestMPEG-4_AC3() throws Exception {
+//		log.info("SRT ingress MPEG-4 + AC3");
+//		String srtUri = startSrtServer("MPEG-4", "AC3");
+//		urPullCommon("SRT", srtUri, true, true);
+//	}
+//
+//	@Test
+//	@DisplayName("SRT ingress MPEG-4 + OPUS")
+//	void srtIngressTestMPEG-4_OPUS() throws Exception {
+//		log.info("SRT ingress MPEG-4 + OPUS");
+//		String srtUri = startSrtServer("MPEG-4", "OPUS");
+//		urPullCommon("SRT", srtUri, true, true);
+//	}
+//
+//	@Test
+//	@DisplayName("SRT ingress MPEG-4 + MP3")
+//	void srtIngressTestMPEG-4_MP3() throws Exception {
+//		log.info("SRT ingress MPEG-4 + MP3");
+//		String srtUri = startSrtServer("MPEG-4", "MP3");
+//		urPullCommon("SRT", srtUri, true, true);
+//	}
+//
+//	@Test
+//	@DisplayName("SRT ingress H264")
+//	void srtIngressTestH264() throws Exception {
+//		log.info("SRT ingress H264");
+//		String srtUri = startSrtServer("H264", null);
+//		urPullCommon("SRT", srtUri, true, false);
+//	}
+//
+//	@Test
+//	@DisplayName("SRT ingress MPEG-4")
+//	void srtIngressTestMPEG-4() throws Exception {
+//		log.info("SRT ingress MPEG-4");
+//		String srtUri = startSrtServer("MPEG-4", null);
+//		urPullCommon("SRT", srtUri, true, false);
+//	}
+//
+//	@Test
+//	@DisplayName("SRT ingress AAC")
+//	void srtIngressTestAAC() throws Exception {
+//		log.info("SRT ingress AAC");
+//		String srtUri = startSrtServer(null, "AAC");
+//		urPullCommon("SRT", srtUri, false, true);
+//	}
+//
+//	@Test
+//	@DisplayName("SRT ingress AC3")
+//	void srtIngressTestAC3() throws Exception {
+//		log.info("SRT ingress AC3");
+//		String srtUri = startSrtServer(null, "AC3");
+//		urPullCommon("SRT", srtUri, false, true);
+//	}
+//
+//	@Test
+//	@DisplayName("SRT ingress MP3")
+//	void srtIngressTestMP3() throws Exception {
+//		log.info("SRT ingress MP3");
+//		String srtUri = startSrtServer(null, "MP3");
+//		urPullCommon("SRT", srtUri, false, true);
+//	}
+//
+//	@Test
+//	@DisplayName("SRT ingress OPUS")
+//	@Disabled // A single OPUS audio stream fails
+//	void srtIngressTestOPUS() throws Exception {
+//		log.info("SRT ingress OPUS");
+//		String srtUri = startSrtServer(null, "OPUS");
+//		urPullCommon("SRT", srtUri, false, true);
+//	}
+
+	private void urPullCommon(String urlType, String uri, boolean withVideo, boolean withAudio) throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		this.addSubscriber(user, false);
 		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
-		createIngress(user, null, "VP8", false, urlType);
+		createIngress(user, null, "VP8", false, urlType, uri);
 
-		if (withAudio && withVideo) {
+		if (withVideo && withAudio) {
 			user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 2);
 		} else {
 			user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
@@ -1822,7 +2111,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
 
-		createIngress(user, preset, codec, simulcast, "HTTP");
+		createIngress(user, preset, codec, simulcast, "HTTP", null);
 
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
 
@@ -2175,8 +2464,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 	}
 
-	private void createIngress(OpenViduTestappUser user, String preset, String codec, boolean simulcast, String urlType)
-			throws InterruptedException {
+	private void createIngress(OpenViduTestappUser user, String preset, String codec, boolean simulcast, String urlType,
+			String urlUri) throws InterruptedException {
 		if (!user.getDriver().findElements(By.id("close-dialog-btn")).isEmpty()) {
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
 			Thread.sleep(300);
@@ -2199,6 +2488,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.cssSelector("#ingress-url-type-select")).click();
 			Thread.sleep(300);
 			user.getDriver().findElement(By.cssSelector("#mat-option-" + urlType.toUpperCase())).click();
+		}
+		if (urlUri != null) {
+			user.getDriver().findElement(By.cssSelector("#ingress-url-uri-field")).sendKeys(urlUri);
 		}
 		user.getDriver().findElement(By.cssSelector("#create-ingress-api-btn")).click();
 		user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();

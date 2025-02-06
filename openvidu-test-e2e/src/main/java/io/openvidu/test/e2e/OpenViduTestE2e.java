@@ -11,19 +11,22 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
@@ -50,9 +53,43 @@ public class OpenViduTestE2e {
 
 	private final static WaitStrategy waitBrowser = Wait.forLogMessage("^.*Started Selenium Standalone.*$", 1);
 
-	protected static String RTSP_SERVER_IMAGE = "lroktu/vlc-server:latest";
-	protected static String SRT_SERVER_IMAGE = "linuxserver/ffmpeg:latest";
+	protected static String RTSP_SERVER_IMAGE = "bluenviron/mediamtx:latest-ffmpeg";
 	protected static int RTSP_SRT_PORT = 8554;
+
+	// Key is the common name of the video codec. It must match the output log of
+	// the RTSP server when receiving it.
+	// Value is a pair with:
+	// 1. The flag value of the ffmpeg command
+	// 2. Any extra flags needed for that codec to work
+	final protected static Map<String, Pair<String, ?>> FFMPEG_VIDEO_CODEC_NAMES = new HashMap<>() {
+		{
+			put("H264", Pair.of("libx264", ""));
+			put("VP8", Pair.of("libvpx", ""));
+			put("VP9", Pair.of("libvpx-vp9", ""));
+			put("MPEG-4", Pair.of("mpeg4", ""));
+			put("M-JPEG", Pair.of("mjpeg", "-force_duplicated_matrix:v 1 -huffman:v 0"));
+			// put("AV1", Pair.of("libaom-av1", "")); // NOT SUPPORTED BY THE RTSP SERVER
+			// (maybe gstreamer?)
+			// put("H265", Pair.of("libx265", "")); // NOT SUPPORTED BY INGRESS
+		}
+	};
+
+	// Key is the common name of the video codec. It must match the output log of
+	// the RTSP server when receiving it.
+	// Value is a triple with:
+	// 1. The flag value of the ffmpeg command
+	// 2. Any extra flags needed for that codec to work
+	// 3. The string expected to appear on the server log when the stream starts
+	final protected static Map<String, Triple<String, String, String>> FFMPEG_AUDIO_CODEC_NAMES = new HashMap<>() {
+		{
+			put("AAC", Triple.of("aac", "-b:a 128k", "MPEG-4 Audio"));
+			put("AC3", Triple.of("ac3", "-b:a 128k", null));
+			put("OPUS", Triple.of("libopus", "", "Opus"));
+			put("MP3", Triple.of("libmp3lame", "", "MPEG-1/2 Audio"));
+			put("VORBIS", Triple.of("libvorbis", "", null));
+			put("G711", Triple.of("pcm_mulaw", "", "G711"));
+		}
+	};
 
 	protected static String LIVEKIT_API_KEY = "devkey";
 	protected static String LIVEKIT_API_SECRET = "secret";
@@ -141,24 +178,123 @@ public class OpenViduTestE2e {
 		return edge;
 	}
 
-	public void startRtspServer(boolean withAudio, boolean withVideo) throws Exception {
+	/**
+	 * @return the rtsp URI where the stream is served
+	 */
+	public String startRtspServer(String videoCodec, String audioCodec) throws Exception {
+
 		GenericContainer<?> rtspServerContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
-				.withNetworkMode("host")
-				.withCommand(getFileUrl(withAudio, withVideo) + " --loop :sout=#gather:rtp{sdp=rtsp://:" + RTSP_SRT_PORT
-						+ "/} :network-caching=1500 :sout-all :sout-keep");
+				.withCreateContainerCmdModifier(cmd -> cmd.withName("rtsp-" + Math.random() * 100000))
+				.withEnv(Map.of("MTX_LOGLEVEL",
+						"info", "MTX_PROTOCOLS", "tcp", "MTX_RTSPADDRESS", ":8554", "MTX_HLS",
+						"no", "MTX_RTSP", "yes", "MTX_WEBRTC", "yes", "MTX_SRT", "no", "MTX_RTMP", "no", "MTX_API",
+						"no"))
+				.withExposedPorts(8889, 8554).waitingFor(Wait.forHttp("/").forPort(8889).forStatusCode(404));
+		rtspServerContainer.setPortBindings(Arrays.asList("8554:8554"));
+
 		rtspServerContainer.start();
 		containers.add(rtspServerContainer);
+
+		final String RTSP_PATH = "live";
+		String fileUrl = getFileUrl(videoCodec != null, audioCodec != null);
+		String codecs = getCodecs(videoCodec, audioCodec);
+		String rtspServerIp = rtspServerContainer.getContainerInfo().getNetworkSettings().getIpAddress();
+
+		String ffmpegCommand = "ffmpeg -i " + fileUrl + " " + codecs + " "
+				+ " -async 50 -strict -2 -f rtsp -rtsp_transport tcp rtsp://" + rtspServerIp + ":" + RTSP_SRT_PORT + "/"
+				+ RTSP_PATH;
+
+		// Clean adjacent white spaces or the ffmpeg command will fail
+		ffmpegCommand = ffmpegCommand.trim().replaceAll(" +", " ");
+
+		GenericContainer<?> ffmpegPublishContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
+				.withCreateContainerCmdModifier(cmd -> cmd.withName("ffmpeg-" + Math.random() * 100000))
+				.withEnv("MTX_PATHS_RTSP_RUNONINIT", ffmpegCommand)
+				.waitingFor(Wait.forLogMessage(".*Press \\[q\\] to stop.*", 1));
+
+		ffmpegPublishContainer.start();
+		containers.add(ffmpegPublishContainer);
+
+		if (videoCodec != null) {
+			String regex = ".*is publishing to path '" + RTSP_PATH + "'[^\\n]*\\([^\\n]*(?i)(" + videoCodec
+					+ ")[^\\n]*\\)\\n";
+			waitUntilLog(rtspServerContainer, regex, 15);
+		}
+		if (audioCodec != null) {
+			String expectedValue = FFMPEG_AUDIO_CODEC_NAMES.get(audioCodec).getRight();
+			String regex = ".*is publishing to path '" + RTSP_PATH + "'[^\\n]*\\([^\\n]*(?i)(" + expectedValue
+					+ ")[^\\n]*\\)\\n";
+			waitUntilLog(rtspServerContainer, regex, 15);
+		}
+
+		return "rtsp://host.docker.internal:" + RTSP_SRT_PORT + "/" + RTSP_PATH;
 	}
 
-	public void startSrtServer(boolean withAudio, boolean withVideo) throws Exception {
-		GenericContainer<?> srtServerContainer = new GenericContainer<>(DockerImageName.parse(SRT_SERVER_IMAGE))
-				.withNetworkMode("host").withCommand("-i " + getFileUrl(withAudio, withVideo)
-						+ " -c:v libx264 -f mpegts srt://:" + RTSP_SRT_PORT + "?mode=listener");
+	/**
+	 * @return the srt URI where the stream is served
+	 */
+	public String startSrtServer(String videoCodec, String audioCodec) throws Exception {
+
+		String fileUrl = getFileUrl(videoCodec != null, audioCodec != null);
+		String codecs = getCodecs(videoCodec, audioCodec);
+
+		String ffmpegCommand = "ffmpeg -i " + fileUrl + " " + codecs + " -strict -2 -f mpegts srt://:" + RTSP_SRT_PORT
+				+ "?mode=listener";
+
+		// Clean adjacent white spaces or the ffmpeg command will fail
+		ffmpegCommand = ffmpegCommand.trim().replaceAll(" +", " ");
+
+		GenericContainer<?> srtServerContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
+				.withCreateContainerCmdModifier(cmd -> cmd.withName("ffmpeg-" + Math.random() * 100000))
+				.withEnv("MTX_PATHS_RTSP_RUNONINIT", ffmpegCommand)
+				.waitingFor(Wait.forLogMessage(".*" + fileUrl + ".+", 1));
+
 		srtServerContainer.start();
 		containers.add(srtServerContainer);
+
+		String srtServerIp = srtServerContainer.getContainerInfo().getNetworkSettings().getIpAddress();
+
+		return "srt://" + srtServerIp + ":" + RTSP_SRT_PORT;
 	}
 
-	private String getFileUrl(boolean withAudio, boolean withVideo) throws Exception {
+	private void waitUntilLog(GenericContainer<?> container, String regex, int secondsTimeout) {
+		int t = secondsTimeout * 2; // We wait half a second between retries
+		Pattern pattern = Pattern.compile(regex);
+		while (t > 0) {
+			String logs = container.getLogs();
+			if (pattern.matcher(logs).find()) {
+				break;
+			}
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			t--;
+		}
+		if (!pattern.matcher(container.getLogs()).find()) {
+			Assertions.fail("RTSP server has not published media in " + secondsTimeout + " seconds. Looking for regex "
+					+ regex);
+		}
+	}
+
+	private String getCodecs(String videoCodec, String audioCodec) {
+		String codecs = " ";
+		if (videoCodec != null) {
+			String ffmpegVideoCodecFlag = FFMPEG_VIDEO_CODEC_NAMES.get(videoCodec).getLeft();
+			codecs += " -vcodec " + ffmpegVideoCodecFlag + " ";
+			codecs += FFMPEG_VIDEO_CODEC_NAMES.get(videoCodec).getRight() + " ";
+		}
+		if (audioCodec != null) {
+			String ffmpegAudioCodecFlag = FFMPEG_AUDIO_CODEC_NAMES.get(audioCodec).getLeft();
+			codecs += " -acodec " + ffmpegAudioCodecFlag + " ";
+			codecs += FFMPEG_AUDIO_CODEC_NAMES.get(audioCodec).getMiddle() + " ";
+		}
+		codecs = codecs.trim().replaceAll(" +", " ");
+		return " " + codecs + " ";
+	}
+
+	private String getFileUrl(boolean withVideo, boolean withAudio) throws Exception {
 		String fileUrl;
 		if (withAudio && withVideo) {
 			fileUrl = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4";
@@ -399,27 +535,13 @@ public class OpenViduTestE2e {
 			it1.remove();
 		}
 
-		// Stop and remove all browser containers if necessary
+		// Stop and remove all containers
 		Iterator<GenericContainer<?>> it2 = containers.iterator();
-		List<String> waitUntilContainerIsRemovedCommands = new ArrayList<>();
-		containers.forEach(c -> {
-			waitUntilContainerIsRemovedCommands
-					.add("while docker inspect " + c.getContainerId() + " >/dev/null 2>&1; do sleep 1; done");
-		});
 		while (it2.hasNext()) {
 			GenericContainer<?> c = it2.next();
-			stopContainerIfPossible(c);
+			c.stop();
+			c.close();
 			it2.remove();
-		}
-		waitUntilContainerIsRemovedCommands.forEach(command -> {
-			commandLine.executeCommand(command, 30);
-		});
-	}
-
-	private void stopContainerIfPossible(GenericContainer<?> container) {
-		if (container != null && container.isRunning()) {
-			container.stop();
-			container.close();
 		}
 	}
 
