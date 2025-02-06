@@ -39,6 +39,7 @@ mat-dialog-content button {
 .inner-text-input {
   margin-left: 6px;
   width: 22%;
+  min-width: 200px;
 }
 
 #clear-response-text-area-btn {

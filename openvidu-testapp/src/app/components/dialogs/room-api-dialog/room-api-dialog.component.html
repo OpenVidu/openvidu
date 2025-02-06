@@ -228,6 +228,12 @@
           </mat-select>
         </mat-form-field>
       </span>
+      <span style="display: inline-block" matTooltip="Only for URL input type" [matTooltipDisabled]="inputTypeSelected === 2">
+        <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+          <mat-label>URI</mat-label>
+          <input matInput id="ingress-url-uri-field" placeholder="URI" [(ngModel)]="ingressUrlUri" [disabled]="inputTypeSelected !== 2">
+        </mat-form-field>
+      </span>
     </div>
 
     <mat-divider></mat-divider>

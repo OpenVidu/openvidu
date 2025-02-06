@@ -31,6 +31,15 @@ import {
   VideoLayer,
 } from '@livekit/protocol';
 
+export const DEFAULT_URI_HTTP_VIDEO_AUDIO =
+  'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4';
+export const DEFAULT_URI_HTTP_ONLY_VIDEO =
+  'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_noaudio.mp4';
+export const DEFAULT_URI_HTTP_ONLY_AUDIO =
+  'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio.mp3';
+export const DEFAULT_URI_RTSP = 'rtsp://127.0.0.1:8554/live';
+export const DEFAULT_URI_SRT = 'srt://127.0.0.1:8554/';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -209,6 +218,7 @@ export class RoomApiService {
     room_name: string,
     inputType: IngressInput,
     urlInputType: string,
+    urlUri: string,
     withAudio: boolean,
     withVideo: boolean,
     codec: VideoCodec,
@@ -217,23 +227,35 @@ export class RoomApiService {
     preset?: IngressVideoEncodingPreset
   ): Promise<IngressInfo> {
     let url;
-    switch (urlInputType) {
-      case 'HTTP':
-        if (!withVideo) {
-          url =
-            'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio.mp3';
-        } else {
-          url = withAudio
-            ? 'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4'
-            : 'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_noaudio.mp4';
+    if (inputType === IngressInput.URL_INPUT) {
+      if (urlUri) {
+        url = urlUri;
+      } else {
+        switch (urlInputType) {
+          case 'HTTP':
+            if (withVideo && withAudio) {
+              url = DEFAULT_URI_HTTP_VIDEO_AUDIO;
+            } else {
+              if (withVideo) {
+                url = DEFAULT_URI_HTTP_ONLY_VIDEO;
+              } else {
+                url = DEFAULT_URI_HTTP_ONLY_AUDIO;
+              }
+            }
+            break;
+          case 'SRT':
+            url = DEFAULT_URI_SRT;
+            break;
+          case 'RTSP':
+            url = DEFAULT_URI_RTSP;
+            break;
+          default:
+            const errorMsg = 'Invalid URL type';
+            console.error(errorMsg);
+            window.alert(errorMsg);
+            throw new Error(errorMsg);
         }
-        break;
-      case 'SRT':
-        url = 'srt://host.docker.internal:8554/';
-        break;
-      case 'RTSP':
-        url = 'rtsp://host.docker.internal:8554/';
-        break;
+      }
     }
     let options: CreateIngressOptions = {
       name: inputType + '-' + room_name,

@@ -7,7 +7,6 @@ import { VideoCodec } from '@livekit/protocol';
 import { LocalParticipant } from 'livekit-client';
 
 import {
-  DirectFileOutput,
   EgressClient,
   EncodedFileOutput,
   EncodedFileType,
@@ -23,7 +22,14 @@ import {
   StreamOutput,
   StreamProtocol,
 } from 'livekit-server-sdk';
-import { RoomApiService } from 'src/app/services/room-api.service';
+import {
+  DEFAULT_URI_HTTP_ONLY_AUDIO,
+  DEFAULT_URI_HTTP_ONLY_VIDEO,
+  DEFAULT_URI_HTTP_VIDEO_AUDIO,
+  DEFAULT_URI_RTSP,
+  DEFAULT_URI_SRT,
+  RoomApiService,
+} from 'src/app/services/room-api.service';
 
 @Component({
   selector: 'app-room-api-dialog',
@@ -70,6 +76,7 @@ export class RoomApiDialogComponent {
 
   INGRESS_URL_TYPES: string[] = ['HTTP', 'SRT', 'RTSP'];
   ingressUrlType: string = 'HTTP';
+  ingressUrlUri: string;
 
   response: string;
 
@@ -307,6 +314,7 @@ export class RoomApiDialogComponent {
         this.ingressRoomName,
         this.inputTypeSelected,
         this.ingressUrlType,
+        this.ingressUrlUri,
         this.ingressWithAudio,
         this.ingressWithVideo,
         this.ingressVideoCodecSelected,
