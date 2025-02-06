@@ -84,7 +84,7 @@ public class OpenViduTestE2e {
 		{
 			put("AAC", Triple.of("aac", "-ac 2 -b:a 128k", "MPEG-4 Audio"));
 			put("AC3", Triple.of("ac3", "-b:a 128k", null));
-			put("OPUS", Triple.of("libopus", "", "Opus"));
+			put("OPUS", Triple.of("libopus", "-ac 2", "Opus"));
 			put("MP3", Triple.of("libmp3lame", "", "MPEG-1/2 Audio"));
 			put("VORBIS", Triple.of("libvorbis", "", null));
 			put("G711", Triple.of("pcm_mulaw", "", "G711"));
