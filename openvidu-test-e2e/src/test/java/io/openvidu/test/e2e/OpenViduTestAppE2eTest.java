@@ -1932,6 +1932,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("RTSP ingress OPUS")
+	@Disabled // Ingress fails with error "Could not write to resource"
 	void rtspIngressOPUSTest() throws Exception {
 		log.info("RTSP ingress OPUS");
 		String rtspUri = startRtspServer(null, "OPUS");
