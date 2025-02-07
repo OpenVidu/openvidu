@@ -4,9 +4,7 @@ import {
 	Component,
 	ContentChild,
 	EventEmitter,
-	Input,
 	OnDestroy,
-	OnInit,
 	Output,
 	TemplateRef,
 	ViewChild
@@ -67,7 +65,7 @@ import { LangOption } from '../../models/lang.model';
 		])
 	]
 })
-export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewInit {
+export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	// *** Toolbar ***
 	/**
 	 * @internal
@@ -384,9 +382,6 @@ export class VideoconferenceComponent implements OnInit, OnDestroy, AfterViewIni
 		private libService: OpenViduComponentsConfigService
 	) {
 		this.log = this.loggerSrv.get('VideoconferenceComponent');
-	}
-
-	ngOnInit() {
 		this.subscribeToVideconferenceDirectives();
 	}
 
