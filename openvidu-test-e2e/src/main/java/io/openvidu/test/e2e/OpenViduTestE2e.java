@@ -297,8 +297,8 @@ public class OpenViduTestE2e {
 		String fileUrl;
 		if (withAudio && withVideo) {
 			fileUrl = lossless ?
-				 "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4" :
-				 "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_fastdecode.mkv";
+				 "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_fastdecode.mkv" :
+				 "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4";
 		} else if (!withAudio && withVideo) {
 			fileUrl = lossless ?
 				"https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_noaudio_fastdecode.mkv" :
