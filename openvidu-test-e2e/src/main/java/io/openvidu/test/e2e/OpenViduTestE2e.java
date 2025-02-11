@@ -195,7 +195,7 @@ public class OpenViduTestE2e {
 		containers.add(rtspServerContainer);
 
 		final String RTSP_PATH = "live";
-		String fileUrl = getFileUrl(videoCodec != null, audioCodec != null);
+		String fileUrl = getFileUrl(videoCodec != null, audioCodec != null, true);
 		String codecs = getCodecs(videoCodec, audioCodec);
 		String rtspServerIp = rtspServerContainer.getContainerInfo().getNetworkSettings().getIpAddress();
 
@@ -234,7 +234,7 @@ public class OpenViduTestE2e {
 	 */
 	public String startSrtServer(String videoCodec, String audioCodec) throws Exception {
 
-		String fileUrl = getFileUrl(videoCodec != null, audioCodec != null);
+		String fileUrl = getFileUrl(videoCodec != null, audioCodec != null, true);
 		String codecs = getCodecs(videoCodec, audioCodec);
 
 		String ffmpegCommand = "ffmpeg -i " + fileUrl + " " + codecs + " -strict -2 -f mpegts srt://:" + RTSP_SRT_PORT
@@ -293,14 +293,20 @@ public class OpenViduTestE2e {
 		return " " + codecs + " ";
 	}
 
-	private String getFileUrl(boolean withVideo, boolean withAudio) throws Exception {
+	private String getFileUrl(boolean withVideo, boolean withAudio, boolean lossless) throws Exception {
 		String fileUrl;
 		if (withAudio && withVideo) {
-			fileUrl = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_fastdecode.mkv";
+			fileUrl = lossless ?
+				 "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4" :
+				 "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_fastdecode.mkv";
 		} else if (!withAudio && withVideo) {
-			fileUrl = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_noaudio_fastdecode.mkv";
+			fileUrl = lossless ?
+				"https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_noaudio_fastdecode.mkv" :
+				"https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_noaudio.mp4";
 		} else if (withAudio) {
-			fileUrl = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio_fastdecode.flac";
+			fileUrl = lossless ?
+			 	"https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio_fastdecode.flac" :
+				"https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio.mp3";
 		} else {
 			throw new Exception("Must have audio or video");
 		}
