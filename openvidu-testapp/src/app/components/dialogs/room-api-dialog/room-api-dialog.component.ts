@@ -23,11 +23,6 @@ import {
   StreamProtocol,
 } from 'livekit-server-sdk';
 import {
-  DEFAULT_URI_HTTP_ONLY_AUDIO,
-  DEFAULT_URI_HTTP_ONLY_VIDEO,
-  DEFAULT_URI_HTTP_VIDEO_AUDIO,
-  DEFAULT_URI_RTSP,
-  DEFAULT_URI_SRT,
   RoomApiService,
 } from 'src/app/services/room-api.service';
 
