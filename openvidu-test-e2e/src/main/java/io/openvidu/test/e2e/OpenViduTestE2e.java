@@ -63,9 +63,9 @@ public class OpenViduTestE2e {
 	// 2. Any extra flags needed for that codec to work
 	final protected static Map<String, Pair<String, ?>> FFMPEG_VIDEO_CODEC_NAMES = new HashMap<>() {
 		{
-			put("H264", Pair.of("libx264", "-crf 40"));
-			put("VP8", Pair.of("libvpx", "-crf 40"));
-			put("VP9", Pair.of("libvpx-vp9", "-crf 40"));
+			put("H264", Pair.of("libx264", ""));
+			put("VP8", Pair.of("libvpx", ""));
+			put("VP9", Pair.of("libvpx-vp9", ""));
 			put("MPEG-4", Pair.of("mpeg4", ""));
 			put("M-JPEG", Pair.of("mjpeg", "-force_duplicated_matrix:v 1 -huffman:v 0"));
 			// put("AV1", Pair.of("libaom-av1", "")); // NOT SUPPORTED BY THE RTSP SERVER
@@ -296,11 +296,11 @@ public class OpenViduTestE2e {
 	private String getFileUrl(boolean withVideo, boolean withAudio) throws Exception {
 		String fileUrl;
 		if (withAudio && withVideo) {
-			fileUrl = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4";
+			fileUrl = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_fastdecode.mkv";
 		} else if (!withAudio && withVideo) {
-			fileUrl = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_noaudio.mp4";
+			fileUrl = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_noaudio_fastdecode.mkv";
 		} else if (withAudio) {
-			fileUrl = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio.mp3";
+			fileUrl = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio_fastdecode.flac";
 		} else {
 			throw new Exception("Must have audio or video");
 		}

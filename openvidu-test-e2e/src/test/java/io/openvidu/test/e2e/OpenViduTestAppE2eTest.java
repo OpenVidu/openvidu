@@ -1932,7 +1932,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("RTSP ingress OPUS")
-	@Disabled // Ingress fails with error "Could not write to resource"
 	void rtspIngressOPUSTest() throws Exception {
 		log.info("RTSP ingress OPUS");
 		String rtspUri = startRtspServer(null, "OPUS");
@@ -1941,7 +1940,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("RTSP ingress G711")
-	@Disabled // Ingress fails with error "Not found"
 	void rtspIngressG711Test() throws Exception {
 		log.info("RTSP ingress G711");
 		String rtspUri = startRtspServer(null, "G711");
