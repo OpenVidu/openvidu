@@ -69,6 +69,7 @@ import io.openvidu.test.browsers.utils.RecordingUtils;
 import io.openvidu.test.browsers.utils.Unzipper;
 import io.openvidu.test.browsers.utils.layout.CustomLayoutHandler;
 import io.openvidu.test.browsers.utils.webhook.CustomWebhook;
+import io.openvidu.test.e2e.annotations.OnlyPion;
 import io.openvidu.test.e2e.utils.TestUtils;
 
 public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
@@ -232,6 +233,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@Test
 	@Timeout(1200)
 	@DisplayName("End reason")
+	@OnlyPion // TODO: UNCOMMENT WHEN UPGRADING MEDIASOUP TO LATEST
 	void endReasonTest() throws Exception {
 
 		isRecordingTest = true;
