@@ -27,7 +27,7 @@ describe('Testing EVENTS', () => {
 		await browser.quit();
 	});
 
-	it('should receive the onRoomDisconnected event', async () => {
+	it('should receive the onParticipantLeft event', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovToolbar-checkbox');
@@ -40,8 +40,8 @@ describe('Testing EVENTS', () => {
 		await utils.clickOn('#leave-btn');
 
 		// Checking if onLeaveButtonClicked has been received
-		await utils.waitForElement('#onRoomDisconnected');
-		expect(await utils.isPresent('#onRoomDisconnected')).toBeTrue();
+		await utils.waitForElement('#onParticipantLeft');
+		expect(await utils.isPresent('#onParticipantLeft')).toBeTrue();
 	});
 
 	it('should receive the onVideoEnabledChanged event', async () => {
