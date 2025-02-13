@@ -57,23 +57,6 @@ describe('Testing videoconference EVENTS', () => {
 		expect(await utils.isPresent('#onTokenRequested')).toBeTrue();
 	});
 
-	it('should receive the onRoomDisconnected event', async () => {
-		await browser.get(`${url}&prejoin=false`);
-
-		await utils.checkSessionIsPresent();
-
-		await utils.checkToolbarIsPresent();
-
-		// Clicking to leave button
-		const leaveButton = await utils.waitForElement('#leave-btn');
-		expect(await utils.isPresent('#leave-btn')).toBeTrue();
-		await leaveButton.click();
-
-		// Checking if onRoomDisconnected has been received
-		await utils.waitForElement('#onRoomDisconnected');
-		expect(await utils.isPresent('#onRoomDisconnected')).toBeTrue();
-	});
-
 	it('should receive the onVideoEnabledChanged event when clicking on the prejoin', async () => {
 		await browser.get(url);
 		await utils.checkPrejoinIsPresent();
@@ -622,22 +605,38 @@ describe('Testing videoconference EVENTS', () => {
 		expect(await utils.isPresent(`#${participantName}-onParticipantCreated`)).toBeTrue();
 	});
 
-	// * ROOM EVENTS
-
-	it('should receive roomDisconnected event from LOCAL participant', async () => {
-		const participantName = 'TEST_USER';
-		let element;
-		await browser.get(`${url}&prejoin=false&participantName=${participantName}`);
+	it('should receive the onParticipantLeft event', async () => {
+		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkSessionIsPresent();
 
 		await utils.checkToolbarIsPresent();
 
-		// Checking if leave button is not present
-		element = await utils.waitForElement('#leave-btn');
-		await element.click();
+		// Clicking to leave button
+		const leaveButton = await utils.waitForElement('#leave-btn');
+		expect(await utils.isPresent('#leave-btn')).toBeTrue();
+		await leaveButton.click();
 
-		await utils.waitForElement(`#roomDisconnected`);
-		expect(await utils.isPresent(`#roomDisconnected`)).toBeTrue();
+		// Checking if onParticipantLeft has been received
+		await utils.waitForElement('#onParticipantLeft');
+		expect(await utils.isPresent('#onParticipantLeft')).toBeTrue();
 	});
+
+	// * ROOM EVENTS
+
+	//TODO: Implement a mechanism to emulate network disconnection
+	// it('should receive the onRoomDisconnected event', async () => {
+	// 	await browser.get(`${url}&prejoin=false`);
+
+	// 	await utils.checkSessionIsPresent();
+
+	// 	await utils.checkToolbarIsPresent();
+
+	// 	// Emulate network disconnection
+	// 	await utils.forceCloseWebsocket();
+
+	// 	// Checking if onRoomDisconnected has been received
+	// 	await utils.waitForElement('#onRoomDisconnected');
+	// 	expect(await utils.isPresent('#onRoomDisconnected')).toBeTrue();
+	// });
 });

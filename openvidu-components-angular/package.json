@@ -29,7 +29,7 @@
     "@types/node": "20.12.14",
     "@types/selenium-webdriver": "4.1.16",
     "@types/ws": "^8.5.12",
-    "chromedriver": "129.0.0",
+    "chromedriver": "132.0.0",
     "concat": "^1.0.3",
     "cross-env": "^7.0.3",
     "eslint-config-prettier": "^9.1.0",

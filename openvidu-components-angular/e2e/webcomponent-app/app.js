@@ -105,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 	webComponent.addEventListener('onReadyToJoin', (event) => appendElement('onReadyToJoin'));
 	webComponent.addEventListener('onRoomDisconnected', (event) => appendElement('onRoomDisconnected'));
+	webComponent.addEventListener('onParticipantLeft', (event) => appendElement('onParticipantLeft'));
 	webComponent.addEventListener('onVideoEnabledChanged', (event) => appendElement('onVideoEnabledChanged-' + event.detail));
 	webComponent.addEventListener('onVideoDeviceChanged', (event) => appendElement('onVideoDeviceChanged'));
 	webComponent.addEventListener('onAudioEnabledChanged', (eSESSIONvent) => appendElement('onAudioEnabledChanged-' + event.detail));
@@ -165,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		appendElement('onRoomCreated');
 
 		room.on('disconnected', (e) => {
+			console.log('Room disconnected', e);
 			appendElement('roomDisconnected');
 		});
 	});
