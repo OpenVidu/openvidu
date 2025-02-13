@@ -1,14 +1,5 @@
 import { animate, style, transition, trigger } from '@angular/animations';
-import {
-	AfterViewInit,
-	Component,
-	ContentChild,
-	EventEmitter,
-	OnDestroy,
-	Output,
-	TemplateRef,
-	ViewChild
-} from '@angular/core';
+import { AfterViewInit, Component, ContentChild, EventEmitter, OnDestroy, Output, TemplateRef, ViewChild } from '@angular/core';
 import { Subscription, skip } from 'rxjs';
 import {
 	ActivitiesPanelDirective,
@@ -32,7 +23,7 @@ import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { StorageService } from '../../services/storage/storage.service';
 import { Room } from 'livekit-client';
-import { ParticipantModel } from '../../models/participant.model';
+import { ParticipantLeftEvent, ParticipantModel } from '../../models/participant.model';
 import { CustomDevice } from '../../models/device.model';
 import {
 	ActivitiesPanelStatusEvent,
@@ -219,9 +210,25 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	@Output() onReadyToJoin: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when the room has been disconnected.
+	 * This event is emitted when the room connection has been lost and the reconnection process has started.
 	 */
 	@Output() onRoomDisconnected: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when OpenVidu Room is disconnected.
+	 */
+	@Output() onRoomReconnecting: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when OpenVidu Room is reconnected.
+	 */
+	@Output() onRoomReconnected: EventEmitter<void> = new EventEmitter<void>();
+
+
+	/**
+	 * This event is emitted when a participant leaves the room.
+	 */
+	@Output() onParticipantLeft: EventEmitter<ParticipantLeftEvent> = new EventEmitter<ParticipantLeftEvent>();
 
 	/**
 	 * This event is emitted when the video state changes, providing information about if the video is enabled (true) or disabled (false).
@@ -492,9 +499,9 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	/**
 	 * @internal
 	 */
-	_onRoomDisconnected() {
+	_onParticipantLeft(event: ParticipantLeftEvent) {
 		this.isRoomReady = false;
-		this.onRoomDisconnected.emit();
+		this.onParticipantLeft.emit(event);
 	}
 
 	private subscribeToVideconferenceDirectives() {

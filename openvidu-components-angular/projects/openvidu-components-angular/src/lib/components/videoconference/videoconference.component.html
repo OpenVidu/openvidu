@@ -22,7 +22,13 @@
 	</div>
 
 	<div [@inOutAnimation] id="vc-container" *ngIf="isRoomReady && !showPrejoin && !loading && !error">
-		<ov-session (onRoomCreated)="onRoomCreated.emit($event)" (onParticipantCreated)="onParticipantCreated.emit($event)">
+		<ov-session
+			(onRoomCreated)="onRoomCreated.emit($event)"
+			(onRoomReconnecting)="onRoomDisconnected.emit()"
+			(onRoomDisconnected)="onRoomDisconnected.emit()"
+			(onRoomReconnected)="onRoomReconnected.emit()"
+			(onParticipantCreated)="onParticipantCreated.emit($event)"
+		>
 			<ng-template #toolbar>
 				<ng-container *ngIf="openviduAngularToolbarTemplate">
 					<ng-container *ngTemplateOutlet="openviduAngularToolbarTemplate"></ng-container>
@@ -47,7 +53,7 @@
 <ng-template #defaultToolbar>
 	<ov-toolbar
 		id="default-toolbar"
-		(onRoomDisconnected)="_onRoomDisconnected()"
+		(onParticipantLeft)="_onParticipantLeft($event)"
 		(onVideoEnabledChanged)="onVideoEnabledChanged.emit($event)"
 		(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
 		(onScreenShareEnabledChanged)="onScreenShareEnabledChanged.emit($event)"

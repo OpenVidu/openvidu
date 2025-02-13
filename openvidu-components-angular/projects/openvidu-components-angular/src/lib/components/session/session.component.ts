@@ -71,6 +71,21 @@ export class SessionComponent implements OnInit, OnDestroy {
 	@Output() onRoomCreated: EventEmitter<Room> = new EventEmitter<Room>();
 
 	/**
+	 * Provides event notifications that fire when OpenVidu Room is disconnected.
+	 */
+	@Output() onRoomReconnecting: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when OpenVidu Room is reconnected.
+	 */
+	@Output() onRoomReconnected: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * Provides event notifications that fire when OpenVidu Room is disconnected.
+	 */
+	@Output() onRoomDisconnected: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
 	 * Provides event notifications that fire when local participant is created.
 	 */
 	@Output() onParticipantCreated: EventEmitter<ParticipantModel> = new EventEmitter<ParticipantModel>();
@@ -211,7 +226,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 		if (this.shouldDisconnectRoomWhenComponentIsDestroyed) {
 			await this.disconnectRoom();
 		}
-		if(this.room) this.room.removeAllListeners();
+		if (this.room) this.room.removeAllListeners();
 		this.participantService.clear();
 		// this.room = undefined;
 		if (this.menuSubscription) this.menuSubscription.unsubscribe();
@@ -450,10 +465,12 @@ export class SessionComponent implements OnInit, OnDestroy {
 				this.translateService.translate('ERRORS.CONNECTION'),
 				this.translateService.translate('ERRORS.RECONNECT')
 			);
+			this.onRoomReconnecting.emit();
 		});
 		this.room.on(RoomEvent.Reconnected, () => {
 			this.log.w('Connection lost: Reconnected');
 			this.actionService.closeConnectionDialog();
+			this.onRoomReconnected.emit();
 		});
 
 		this.room.on(RoomEvent.Disconnected, async (reason: DisconnectReason | undefined) => {
@@ -463,6 +480,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 					this.translateService.translate('ERRORS.CONNECTION'),
 					this.translateService.translate('ERRORS.RECONNECT')
 				);
+				this.onRoomDisconnected.emit();
 			}
 			// await this.disconnectRoom();
 		});

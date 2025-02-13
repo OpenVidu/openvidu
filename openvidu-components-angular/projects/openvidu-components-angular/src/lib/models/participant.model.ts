@@ -16,6 +16,11 @@ import {
 	VideoPresets
 } from 'livekit-client';
 
+export interface ParticipantLeftEvent {
+	roomName: string;
+	participantId: string;
+}
+
 /**
  * Interface that defines the properties of the participant track publication.
  */

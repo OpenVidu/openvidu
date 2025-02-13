@@ -46,7 +46,7 @@ import { RecordingService } from '../../services/recording/recording.service';
 import { StorageService } from '../../services/storage/storage.service';
 import { TranslateService } from '../../services/translate/translate.service';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
-import { ParticipantModel } from '../../models/participant.model';
+import { ParticipantLeftEvent, ParticipantModel } from '../../models/participant.model';
 import { Room, RoomEvent } from 'livekit-client';
 import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
 import { ServiceConfigService } from '../../services/config/service-config.service';
@@ -97,9 +97,9 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	/**
-	 * This event is emitted when the room has been disconnected.
+	 * This event is emitted when a participant leaves the room.
 	 */
-	@Output() onRoomDisconnected: EventEmitter<void> = new EventEmitter<void>();
+	@Output() onParticipantLeft: EventEmitter<ParticipantLeftEvent> = new EventEmitter<ParticipantLeftEvent>();
 
 	/**
 	 * This event is emitted when the video state changes, providing information about if the video is enabled (true) or disabled (false).
@@ -506,8 +506,17 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 * @ignore
 	 */
 	async disconnect() {
-		await this.openviduService.disconnectRoom();
-		this.onRoomDisconnected.emit();
+		const event: ParticipantLeftEvent = {
+			roomName: this.openviduService.getRoomName(),
+			participantId: this.participantService.getLocalParticipant()?.identity || ''
+		};
+		try {
+			await this.openviduService.disconnectRoom();
+			this.onParticipantLeft.emit(event);
+		} catch (error) {
+			this.log.e('There was an error disconnecting:', error.code, error.message);
+			this.actionService.openDialog(this.translateService.translate('ERRORS.DISCONNECT'), error?.error || error?.message || error);
+		}
 	}
 
 	/**

@@ -1,5 +1,5 @@
 import { Component, ElementRef, EventEmitter, Input, Output } from '@angular/core';
-import { OpenViduService, ParticipantModel, Room } from 'openvidu-components-angular';
+import { OpenViduService, ParticipantModel, Room, ParticipantLeftEvent } from 'openvidu-components-angular';
 // import { CaptionsLangOption } from '../../../projects/openvidu-components-angular/src/lib/models/caption.model';
 import { CustomDevice } from '../../../projects/openvidu-components-angular/src/lib/models/device.model';
 import {
@@ -590,9 +590,14 @@ export class OpenviduWebComponentComponent {
 	@Output() onReadyToJoin: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when the room has been disconnected.
+	 * This event is emitted when the room connection has been lost and the reconnection process has started.
 	 */
 	@Output() onRoomDisconnected: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * This event is emitted when a participant leaves the room.
+	 */
+	@Output() onParticipantLeft: EventEmitter<ParticipantLeftEvent> = new EventEmitter<ParticipantLeftEvent>();
 
 	/**
 	 * This event is emitted when the video state changes, providing information about if the video is enabled (true) or disabled (false).
@@ -767,9 +772,9 @@ export class OpenviduWebComponentComponent {
 	/**
 	 * @internal
 	 */
-	_onRoomDisconnected() {
+	_onParticipantLeft(event: ParticipantLeftEvent) {
 		this.success = false;
-		this.onRoomDisconnected.emit();
+		this.onParticipantLeft.emit(event);
 	}
 
 	/**
