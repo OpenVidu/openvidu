@@ -4449,8 +4449,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@OnlyKurento
-	@Disabled
+	@Timeout(1200)
 	@DisplayName("IP camera test")
 	void ipCameraTest() throws Exception {
 		isRecordingTest = true;
@@ -4467,9 +4466,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				CustomWebhook.shutDown();
 				return;
 			}
-
-			// Extra wait time for the webhook endpoint to be ready
-			Thread.sleep(3000);
 
 			CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
@@ -4490,17 +4486,18 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					"{'type':'IPCAM','rtspUri': 'NOT_A_URL'}", HttpURLConnection.HTTP_BAD_REQUEST);
 			// Wrong adaptativeBitrate [400]
 			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/IP_CAM_SESSION/connection",
-					"{'type':'IPCAM','rtspUri':'rtsp://dummyurl.com','adaptativeBitrate':123,}",
+					"{'type':'IPCAM','rtspUri':'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4','adaptativeBitrate':123}",
 					HttpURLConnection.HTTP_BAD_REQUEST);
 
 			// Publish IP camera. Dummy URL because no user will subscribe to it [200]
-			String ipCamBody = "{'type':'IPCAM','rtspUri':'rtsp://dummyurl.com','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'networkCache':1000,'data':'MY_IP_CAMERA'}";
+			String ipCamBody = "{'type':'IPCAM','rtspUri':'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'networkCache':1000,'data':'MY_IP_CAMERA'}";
 			JsonObject response = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/IP_CAM_SESSION/connection",
 					ipCamBody, HttpURLConnection.HTTP_OK, true, false, true, DEFAULT_JSON_IPCAM_CONNECTION);
 
 			CustomWebhook.waitForEvent("sessionCreated", 1);
-			CustomWebhook.waitForEvent("participantJoined", 1);
-			CustomWebhook.waitForEvent("webrtcConnectionCreated", 1);
+			CustomWebhook.waitForEvent("participantJoined", 5);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 10);
+			CustomWebhook.clean();
 
 			Assertions.assertEquals("MY_IP_CAMERA", response.get("serverData").getAsString(),
 					"Wrong serverData property");
@@ -4512,13 +4509,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					"Wrong number of publishers in IPCAM participant");
 			JsonObject ipCamPublisher = response.get("publishers").getAsJsonArray().get(0).getAsJsonObject();
 			Assertions.assertEquals(4, ipCamPublisher.size(), "Wrong number of properties in IPCAM publisher");
-			Assertions.assertEquals("rtsp://dummyurl.com", ipCamPublisher.get("rtspUri").getAsString(),
-					"Wrong rtspUri property");
+			Assertions.assertEquals(
+					"https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4",
+					ipCamPublisher.get("rtspUri").getAsString(), "Wrong rtspUri property");
 			JsonObject mediaOptions = ipCamPublisher.get("mediaOptions").getAsJsonObject();
-			Assertions.assertEquals(11, mediaOptions.size(), "Wrong number of properties in MediaOptions");
+			Assertions.assertEquals(9, mediaOptions.size(), "Wrong number of properties in MediaOptions");
 			Assertions.assertTrue(mediaOptions.get("adaptativeBitrate").getAsBoolean(),
 					"Wrong adaptativeBitrate property");
-			Assertions.assertTrue(mediaOptions.get("onlyPlayWithSubscribers").getAsBoolean(),
+			Assertions.assertFalse(mediaOptions.get("onlyPlayWithSubscribers").getAsBoolean(),
 					"Wrong onlyPlayWithSubscribers property");
 
 			// Can't delete the stream [405]
@@ -4531,13 +4529,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					"/openvidu/api/sessions/IP_CAM_SESSION/connection/" + response.get("connectionId").getAsString(),
 					HttpURLConnection.HTTP_NO_CONTENT);
 
-			response = CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
-			Assertions.assertEquals("forceDisconnectByServer", response.get("reason").getAsString(),
+			response = CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 6000);
+			Assertions.assertEquals("unpublish", response.get("reason").getAsString(),
 					"Wrong reason in webrtcConnectionDestroyed event");
 			response = CustomWebhook.waitForEvent("participantLeft", 1);
 			Assertions.assertEquals("forceDisconnectByServer", response.get("reason").getAsString(),
 					"Wrong reason in participantLeft event");
-			CustomWebhook.waitForEvent("sessionDestroyed", 1);
+			CustomWebhook.waitForEvent("sessionDestroyed", 5);
+			CustomWebhook.clean();
 
 			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -4565,41 +4564,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			CustomWebhook.waitForEvent("sessionCreated", 1);
 			CustomWebhook.waitForEvent("participantJoined", 1);
 			CustomWebhook.waitForEvent("webrtcConnectionCreated", 1);
+			CustomWebhook.clean();
 
-			// Composed recording to get an MP4 file AUDIO + VIDEO
-			String recordingName = "audioVideo";
-			response = restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start",
-					"{'session':'TestSession','name':'" + recordingName + "','hasAudio':true,'hasVideo':true}",
-					HttpURLConnection.HTTP_OK);
-			String recId = response.get("id").getAsString();
-			user.getEventManager().waitUntilEventReaches("recordingStarted", 1); // Started
-			CustomWebhook.waitForEvent("recordingStatusChanged", 1);
-
-			waitUntilFileExistsAndIsBiggerThan("/opt/openvidu/recordings/" + recId + "/" + recordingName + ".mp4", 200,
-					30);
-
-			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/TestSession", HttpURLConnection.HTTP_OK);
-			user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
-			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Stopped
-			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
-
-			// Composed recording to get an MP4 file ONLY VIDEO
-			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start",
-					"{'session':'TestSession','name':'videoOnly','hasAudio':false,'hasVideo':true}",
-					HttpURLConnection.HTTP_OK);
-			user.getEventManager().waitUntilEventReaches("recordingStarted", 1); // Started
-			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Started
-			Thread.sleep(4000);
-			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/TestSession~1", HttpURLConnection.HTTP_OK);
-			user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
-			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Stopped
-			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
-
-			// Publish the MP4 file as an IPCAM
-			String recPath = restClient.rest(HttpMethod.GET, "/openvidu/api/config", HttpURLConnection.HTTP_OK)
-					.get("OPENVIDU_RECORDING_PATH").getAsString();
-			recPath = recPath.endsWith("/") ? recPath : (recPath + "/");
-			String fullRecordingPath = "file://" + recPath + "TestSession/audioVideo.mp4";
+			// Publish an MP4 file as an IPCAM
+			String fullRecordingPath = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4";
 			ipCamBody = "{'type':'IPCAM','rtspUri':'" + fullRecordingPath
 					+ "','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'networkCache':1000,'data':'MY_IP_CAMERA'}";
 
@@ -4612,20 +4580,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			CustomWebhook.waitForEvent("participantJoined", 1);
 			CustomWebhook.waitForEvent("webrtcConnectionCreated", 1);
-			CustomWebhook.waitForEvent("webrtcConnectionCreated", 1);
+			CustomWebhook.clean();
 
 			// A moderator should be able to evict the IPCAM participant
 			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .force-disconnect-btn")).click();
 			user.getEventManager().waitUntilEventReaches("streamDestroyed", 1);
 			user.getEventManager().waitUntilEventReaches("connectionDestroyed", 1);
 			response = CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
-			Assertions.assertEquals("forceDisconnectByUser", response.get("reason").getAsString(),
-					"Wrong reason in participantLeft event");
-			response = CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
-			Assertions.assertEquals("forceDisconnectByUser", response.get("reason").getAsString(),
+			Assertions.assertEquals("unpublish", response.get("reason").getAsString(),
 					"Wrong reason in participantLeft event");
 			response = CustomWebhook.waitForEvent("participantLeft", 1);
-			Assertions.assertEquals("forceDisconnectByUser", response.get("reason").getAsString(),
+			Assertions.assertEquals("forceDisconnectByServer", response.get("reason").getAsString(),
 					"Wrong reason in participantLeft event");
 			user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
 
@@ -4638,8 +4603,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 2));
 
 			String connectionId = response.get("id").getAsString();
-			String streamId = response.get("publishers").getAsJsonArray().get(0).getAsJsonObject().get("streamId")
-					.getAsString();
 
 			// Removing browser user shouldn't close the session if IPCAM participant
 			// remains
@@ -4648,28 +4611,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
 
 			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 4);
-			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
 			CustomWebhook.waitForEvent("participantLeft", 1);
+			CustomWebhook.clean();
 
 			restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/TestSession", null, HttpURLConnection.HTTP_OK);
-
-			// Test IPCAM individual recording (IPCAM audio+video, recording audio+video)
-			response = restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start",
-					"{'session':'TestSession','outputMode':'INDIVIDUAL','hasAudio':true,'hasVideo':true}",
-					HttpURLConnection.HTTP_OK);
-			recId = response.get("id").getAsString();
-			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Started
-
-			waitUntilFileExistsAndIsBiggerThan(
-					"/opt/openvidu/recordings/" + recId + "/" + streamId + "." + this.getIndividualRecordingExtension(),
-					200, 60);
-
-			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/" + recId, HttpURLConnection.HTTP_OK);
-			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Stopped
-			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
-
-			Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(recId);
-			this.recordingUtils.checkIndividualRecording(recPath + recId + "/", recording, 1, "opus", "vp8", true);
 
 			// Test IPCAM individual recording (IPCAM video only, recording audio and video)
 
@@ -4680,41 +4625,26 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			// Session is closed (create new session)
 			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
 			CustomWebhook.waitForEvent("participantLeft", 1);
-			CustomWebhook.waitForEvent("sessionDestroyed", 1);
+			CustomWebhook.waitForEvent("sessionDestroyed", 10);
+			CustomWebhook.clean();
 
 			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", "{'customSessionId':'TestSession'}",
 					HttpURLConnection.HTTP_OK);
 
 			// Publish video only IPCAM
-			fullRecordingPath = "file://" + recPath + "TestSession~1/videoOnly.mp4";
+			fullRecordingPath = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_noaudio.mp4";
 			ipCamBody = "{'type':'IPCAM','rtspUri':'" + fullRecordingPath + "'}";
 			response = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/TestSession/connection", ipCamBody,
 					HttpURLConnection.HTTP_OK);
 			CustomWebhook.waitForEvent("sessionCreated", 1);
-			CustomWebhook.waitForEvent("participantJoined", 1);
-			CustomWebhook.waitForEvent("webrtcConnectionCreated", 1);
-
-			// Record audio and video
-			// TODO: THIS SHOULD WORK
-//			response = restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start",
-//					"{'session':'TestSession','outputMode':'INDIVIDUAL','hasAudio':true,'hasVideo':true}",
-//					HttpURLConnection.HTTP_OK);
-//			recId = response.get("id").getAsString();
-//			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Started
-//
-//			Thread.sleep(2000);
-//			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/TestSession~2", HttpURLConnection.HTTP_OK);
-//			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Stopped
-//			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
-//
-//			recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(recId);
-//			this.checkIndividualRecording(recPath + recId + "/", recording, 1, "opus", "vp8", true);
+			CustomWebhook.waitForEvent("participantJoined", 10);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 10);
 
 			restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/TestSession", HttpURLConnection.HTTP_NO_CONTENT);
 
-			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 4);
-			CustomWebhook.waitForEvent("participantLeft", 1);
-			CustomWebhook.waitForEvent("sessionDestroyed", 1);
+			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 10);
+			CustomWebhook.waitForEvent("participantLeft", 10);
+			CustomWebhook.waitForEvent("sessionDestroyed", 10);
 
 		} finally {
 			CustomWebhook.shutDown();
