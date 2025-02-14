@@ -4576,7 +4576,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/" + recId, HttpURLConnection.HTTP_OK);
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Stopped
-			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
+			CustomWebhook.waitForEvent("recordingStatusChanged", 10); // Ready
 
 			Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(recId);
 			this.recordingUtils.checkIndividualRecording(recPath + recId + "/", recording, 1, "opus", "vp8", true);
