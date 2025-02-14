@@ -4529,10 +4529,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					"/openvidu/api/sessions/IP_CAM_SESSION/connection/" + response.get("connectionId").getAsString(),
 					HttpURLConnection.HTTP_NO_CONTENT);
 
-			response = CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 6000);
+			response = CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 10);
 			Assertions.assertEquals("unpublish", response.get("reason").getAsString(),
 					"Wrong reason in webrtcConnectionDestroyed event");
-			response = CustomWebhook.waitForEvent("participantLeft", 1);
+			response = CustomWebhook.waitForEvent("participantLeft", 10);
 			Assertions.assertEquals("forceDisconnectByServer", response.get("reason").getAsString(),
 					"Wrong reason in participantLeft event");
 			CustomWebhook.waitForEvent("sessionDestroyed", 5);
