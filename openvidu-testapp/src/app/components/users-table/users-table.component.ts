@@ -3,10 +3,10 @@ import { AudioTrack, VideoTrack } from 'livekit-client';
 import { User } from '../test-scenarios/test-scenarios.component';
 
 @Component({
-    selector: 'app-users-table',
-    styleUrls: ['users-table.component.css'],
-    templateUrl: 'users-table.component.html',
-    standalone: false
+  selector: 'app-users-table',
+  styleUrls: ['users-table.component.css'],
+  templateUrl: 'users-table.component.html',
+  standalone: false,
 })
 export class UsersTableComponent {
   @Input() users: User[] = [];
@@ -54,9 +54,9 @@ export class UsersTableComponent {
       if (remoteParticipant) {
         return {
           audio: remoteParticipant.audioTrackPublications.values().next().value
-            ?.track,
+            ?.track as AudioTrack,
           video: remoteParticipant.videoTrackPublications.values().next().value
-            ?.track,
+            ?.track as VideoTrack,
         };
       } else {
         return undefined;
