@@ -1,4 +1,4 @@
-@use '@angular/material' as mat;
+@use "@angular/material" as mat;
 // Plus imports for other components in your app.
 
 // Include the common styles for Angular Material. We include this here so that you only
@@ -7,48 +7,56 @@
 @include mat.core();
 
 $mat-openvidu: (
-    50: #eaeaea,
-    100: #cacaca,
-    200: #a6a6a6,
-    300: #828282,
-    400: #686868,
-    500: #4d4d4d,
-    600: #464646,
-    700: #3d3d3d,
-    800: #343434,
-    900: #252525,
-    A100: #83E9B1,
-    A200: #06D362,
-    A400: #04C850,
-    A700: #02B734,
-    contrast: (50 : #fff9e0,
-        100 : #fff0b3,
-        200 : #ffe680,
-        300 : #ffdb4d,
-        400 : #ffd426,
-        500 : #ffcc00,
-        600 : #ffc700,
-        700 : #ffc000,
-        800 : #ffb900,
-        900 : #ffad00,
-        A100 : #ffffff,
-        A200 : #fffaf2,
-        A400 : #ffe8bf,
-        A700 : #ffdfa6,
-    )
+  50: #eaeaea,
+  100: #cacaca,
+  200: #a6a6a6,
+  300: #828282,
+  400: #686868,
+  500: #4d4d4d,
+  600: #464646,
+  700: #3d3d3d,
+  800: #343434,
+  900: #252525,
+  A100: #83e9b1,
+  A200: #06d362,
+  A400: #04c850,
+  A700: #02b734,
+  contrast: (
+    50: #fff9e0,
+    100: #fff0b3,
+    200: #ffe680,
+    300: #ffdb4d,
+    400: #ffd426,
+    500: #ffcc00,
+    600: #ffc700,
+    700: #ffc000,
+    800: #ffb900,
+    900: #ffad00,
+    A100: #ffffff,
+    A200: #fffaf2,
+    A400: #ffe8bf,
+    A700: #ffdfa6,
+  ),
 );
 
 // Define the palettes for your theme using the Material Design palettes available in palette.scss
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
 // hue.
-$openvidu-primary: mat.define-palette($mat-openvidu);
-$openvidu-accent: mat.define-palette($mat-openvidu, A200, A100, A400);
+$openvidu-primary: mat.m2-define-palette($mat-openvidu);
+$openvidu-accent: mat.m2-define-palette($mat-openvidu, A200, A100, A400);
 
 // The warn palette is optional (defaults to red).
-$openvidu-warn: mat.define-palette(mat.$red-palette);
+$openvidu-warn: mat.m2-define-palette(mat.$m2-red-palette);
 
-// Create the theme object (a Sass map containing all of the palettes).
-$openvidu-theme: mat.define-light-theme($openvidu-primary, $openvidu-accent, $openvidu-warn);
+$openvidu-theme: mat.m2-define-light-theme((
+ color: (
+   primary: $openvidu-primary,
+   accent: $openvidu-accent,
+   warn: $openvidu-warn,
+ ),
+ typography: mat.m2-define-typography-config(),
+ density: 0,
+));
 
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
@@ -56,23 +64,25 @@ $openvidu-theme: mat.define-light-theme($openvidu-primary, $openvidu-accent, $op
 @include mat.all-component-themes($openvidu-theme);
 
 @mixin my-mat-form-field-density($density) {
-    $field-typography: mat.define-typography-config($body-1: mat.define-typography-level(13px, 24px, 400));
-    @include mat.typography-level($field-typography, 'body-1');
-    @include mat.form-field-density($density);
+  $field-typography: mat.m2-define-typography-config(
+    $body-1: mat.m2-define-typography-level(13px, 24px, 400),
+  );
+  @include mat.m2-typography-level($field-typography, "body-1");
+  @include mat.form-field-density($density);
 }
 
 mat-form-field {
-    @include my-mat-form-field-density(-5);
+  @include my-mat-form-field-density(-5);
 }
 
 mat-checkbox {
-    @include mat.checkbox-density(-2);
+  @include mat.checkbox-density(-2);
 }
 
 @include mat.tooltip-density(-1);
 
-$tt-typography: mat.define-typography-config(
-  $caption: mat.define-typography-level(12px, 1.4, 400),
+$tt-typography: mat.m2-define-typography-config(
+  $caption: mat.m2-define-typography-level(12px, 1.4, 400),
 );
 
-@include mat.tooltip-typography($tt-typography)
+@include mat.tooltip-typography($tt-typography);

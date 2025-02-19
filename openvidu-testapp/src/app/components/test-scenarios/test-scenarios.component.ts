@@ -24,7 +24,7 @@ import {
 } from 'livekit-client';
 import { LivekitParamsService } from 'src/app/services/livekit-params.service';
 import { RoomApiService } from 'src/app/services/room-api.service';
-import * as stringify from 'json-stringify-safe';
+import stringify from 'json-stringify-safe';
 import { MatDialog } from '@angular/material/dialog';
 import { OptionsDialogComponent } from '../dialogs/options-dialog/options-dialog.component';
 

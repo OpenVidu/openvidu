@@ -2,7 +2,7 @@ import { animate, style, transition, trigger } from '@angular/animations';
 import { Component } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { TestFeedService } from 'src/app/services/test-feed.service';
-import * as stringify from 'json-stringify-safe';
+import stringify from 'json-stringify-safe';
 
 export interface RoomConf {
   subscriber: boolean;
