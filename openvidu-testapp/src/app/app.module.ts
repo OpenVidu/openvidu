@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
 import { AppComponent } from './app.component';
@@ -47,57 +47,51 @@ import { AppRoutingModule } from './app.routing';
 import { VideoResolutionComponent } from './components/dialogs/options-dialog/video-resolution/video-resolution.component';
 import { InfoDialogComponent } from './components/dialogs/info-dialog/info-dialog.component';
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    TestScenariosComponent,
-    TestSessionsComponent,
-    OpenviduInstanceComponent,
-    ParticipantComponent,
-    VideoTrackComponent,
-    AudioTrackComponent,
-    TrackComponent,
-    RoomApiDialogComponent,
-    EventsDialogComponent,
-    UsersTableComponent,
-    TableVideoComponent,
-    CallbackPipe,
-    OptionsDialogComponent,
-    VideoResolutionComponent,
-    InfoDialogComponent,
-  ],
-  imports: [
-    FormsModule,
-    BrowserModule,
-    HttpClientModule,
-    AppRoutingModule,
-    BrowserAnimationsModule,
-    MatExpansionModule,
-    MatToolbarModule,
-    MatSidenavModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatButtonModule,
-    MatCheckboxModule,
-    MatCardModule,
-    MatTooltipModule,
-    MatDialogModule,
-    MatDividerModule,
-    MatRadioModule,
-    MatSelectModule,
-    MatChipsModule,
-    MatSlideToggleModule,
-    MatBadgeModule,
-    MatProgressSpinnerModule,
-  ],
-  providers: [
-    TestFeedService,
-    {
-      provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
-      useValue: { appearance: 'outline', subscriptSizing: 'dynamic' },
-    },
-  ],
-  bootstrap: [AppComponent],
-})
+@NgModule({ declarations: [
+        AppComponent,
+        TestScenariosComponent,
+        TestSessionsComponent,
+        OpenviduInstanceComponent,
+        ParticipantComponent,
+        VideoTrackComponent,
+        AudioTrackComponent,
+        TrackComponent,
+        RoomApiDialogComponent,
+        EventsDialogComponent,
+        UsersTableComponent,
+        TableVideoComponent,
+        CallbackPipe,
+        OptionsDialogComponent,
+        VideoResolutionComponent,
+        InfoDialogComponent,
+    ],
+    bootstrap: [AppComponent], imports: [FormsModule,
+        BrowserModule,
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        MatExpansionModule,
+        MatToolbarModule,
+        MatSidenavModule,
+        MatFormFieldModule,
+        MatIconModule,
+        MatInputModule,
+        MatButtonModule,
+        MatCheckboxModule,
+        MatCardModule,
+        MatTooltipModule,
+        MatDialogModule,
+        MatDividerModule,
+        MatRadioModule,
+        MatSelectModule,
+        MatChipsModule,
+        MatSlideToggleModule,
+        MatBadgeModule,
+        MatProgressSpinnerModule], providers: [
+        TestFeedService,
+        {
+            provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
+            useValue: { appearance: 'outline', subscriptSizing: 'dynamic' },
+        },
+        provideHttpClient(withInterceptorsFromDi()),
+    ] })
 export class AppModule {}
