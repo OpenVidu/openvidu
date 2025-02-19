@@ -39,9 +39,10 @@ export interface User {
 }
 
 @Component({
-  selector: 'app-test-scenarios',
-  templateUrl: './test-scenarios.component.html',
-  styleUrls: ['./test-scenarios.component.css'],
+    selector: 'app-test-scenarios',
+    templateUrl: './test-scenarios.component.html',
+    styleUrls: ['./test-scenarios.component.css'],
+    standalone: false
 })
 export class TestScenariosComponent implements OnInit, OnDestroy {
   fixedRoomId = 'SCENARIO_TEST';

@@ -8,17 +8,18 @@ import {
 import { AudioTrack, VideoTrack } from 'livekit-client';
 
 @Component({
-  selector: 'app-table-video',
-  template: `
+    selector: 'app-table-video',
+    template: `
     <video #mediaElement [id]="videoId" autoplay playsinline></video>
   `,
-  styles: [
-    `
+    styles: [
+        `
       video {
         width: 100px;
       }
     `,
-  ],
+    ],
+    standalone: false
 })
 export class TableVideoComponent implements AfterViewInit {
   @ViewChild('mediaElement') elementRef: ElementRef;

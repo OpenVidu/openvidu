@@ -27,9 +27,10 @@ import {
 } from 'src/app/services/room-api.service';
 
 @Component({
-  selector: 'app-room-api-dialog',
-  templateUrl: './room-api-dialog.component.html',
-  styleUrls: ['./room-api-dialog.component.css'],
+    selector: 'app-room-api-dialog',
+    templateUrl: './room-api-dialog.component.html',
+    styleUrls: ['./room-api-dialog.component.css'],
+    standalone: false
 })
 export class RoomApiDialogComponent {
   room: Room;

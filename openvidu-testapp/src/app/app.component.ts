@@ -4,9 +4,10 @@ import { LogLevel, setLogLevel } from 'livekit-client';
 import { LivekitParamsService } from './services/livekit-params.service';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.css'],
+    standalone: false
 })
 export class AppComponent {
   livekitUrl = 'ws://localhost:7880/'; // `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://localhost:1880/`;

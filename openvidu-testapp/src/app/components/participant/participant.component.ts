@@ -35,9 +35,10 @@ import {
 import { OptionsDialogComponent } from '../dialogs/options-dialog/options-dialog.component';
 
 @Component({
-  selector: 'app-participant',
-  templateUrl: './participant.component.html',
-  styleUrls: ['./participant.component.css'],
+    selector: 'app-participant',
+    templateUrl: './participant.component.html',
+    styleUrls: ['./participant.component.css'],
+    standalone: false
 })
 export class ParticipantComponent {
   @Input()

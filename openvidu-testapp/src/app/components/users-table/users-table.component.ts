@@ -3,9 +3,10 @@ import { AudioTrack, VideoTrack } from 'livekit-client';
 import { User } from '../test-scenarios/test-scenarios.component';
 
 @Component({
-  selector: 'app-users-table',
-  styleUrls: ['users-table.component.css'],
-  templateUrl: 'users-table.component.html',
+    selector: 'app-users-table',
+    styleUrls: ['users-table.component.css'],
+    templateUrl: 'users-table.component.html',
+    standalone: false
 })
 export class UsersTableComponent {
   @Input() users: User[] = [];

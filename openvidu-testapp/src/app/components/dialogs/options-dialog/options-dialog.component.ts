@@ -13,9 +13,10 @@ import {
 } from 'livekit-client';
 
 @Component({
-  selector: 'app-options-dialog',
-  templateUrl: './options-dialog.component.html',
-  styleUrls: ['./options-dialog.component.css'],
+    selector: 'app-options-dialog',
+    templateUrl: './options-dialog.component.html',
+    styleUrls: ['./options-dialog.component.css'],
+    standalone: false
 })
 export class OptionsDialogComponent {
   roomOptions?: RoomOptions;

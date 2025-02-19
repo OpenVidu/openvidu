@@ -24,9 +24,10 @@ import {
 } from 'src/app/services/test-feed.service';
 
 @Component({
-  selector: 'app-track',
-  template: '',
-  styleUrls: [],
+    selector: 'app-track',
+    template: '',
+    styleUrls: [],
+    standalone: false
 })
 export class TrackComponent {
   @Output()

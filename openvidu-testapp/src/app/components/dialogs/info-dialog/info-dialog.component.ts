@@ -4,9 +4,10 @@ import { take } from 'rxjs/operators';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
-  selector: 'app-info-dialog',
-  templateUrl: './info-dialog.component.html',
-  styleUrls: ['./info-dialog.component.css'],
+    selector: 'app-info-dialog',
+    templateUrl: './info-dialog.component.html',
+    styleUrls: ['./info-dialog.component.css'],
+    standalone: false
 })
 export class InfoDialogComponent implements OnDestroy {
   title: string;

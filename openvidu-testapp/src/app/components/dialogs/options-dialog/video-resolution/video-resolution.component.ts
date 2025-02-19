@@ -1,9 +1,10 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
-  selector: 'app-video-resolution',
-  templateUrl: './video-resolution.component.html',
-  styleUrls: ['./video-resolution.component.css'],
+    selector: 'app-video-resolution',
+    templateUrl: './video-resolution.component.html',
+    styleUrls: ['./video-resolution.component.css'],
+    standalone: false
 })
 export class VideoResolutionComponent {
   @Input() componentId: string;

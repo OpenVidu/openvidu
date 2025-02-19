@@ -11,9 +11,10 @@ import { TestFeedService } from 'src/app/services/test-feed.service';
 import { InfoDialogComponent } from '../dialogs/info-dialog/info-dialog.component';
 
 @Component({
-  selector: 'app-video-track',
-  templateUrl: './video-track.component.html',
-  styleUrls: ['./video-track.component.css'],
+    selector: 'app-video-track',
+    templateUrl: './video-track.component.html',
+    styleUrls: ['./video-track.component.css'],
+    standalone: false
 })
 export class VideoTrackComponent extends TrackComponent {
   muteVideoIcon: string = 'videocam';

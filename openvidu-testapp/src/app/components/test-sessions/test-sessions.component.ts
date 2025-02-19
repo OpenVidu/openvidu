@@ -11,17 +11,18 @@ export interface RoomConf {
 }
 
 @Component({
-  selector: 'app-test-sessions',
-  templateUrl: './test-sessions.component.html',
-  styleUrls: ['./test-sessions.component.css'],
-  animations: [
-    trigger('fadeAnimation', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('100ms', style({ opacity: 1 })),
-      ]),
-    ]),
-  ],
+    selector: 'app-test-sessions',
+    templateUrl: './test-sessions.component.html',
+    styleUrls: ['./test-sessions.component.css'],
+    animations: [
+        trigger('fadeAnimation', [
+            transition(':enter', [
+                style({ opacity: 0 }),
+                animate('100ms', style({ opacity: 1 })),
+            ]),
+        ]),
+    ],
+    standalone: false
 })
 export class TestSessionsComponent {
   eventsInfoSubscription: Subscription;

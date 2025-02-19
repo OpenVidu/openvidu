@@ -3,9 +3,10 @@ import { LocalTrack } from 'livekit-client';
 import { TrackComponent } from '../track/track.component';
 
 @Component({
-  selector: 'app-audio-track',
-  templateUrl: './audio-track.component.html',
-  styleUrls: ['./audio-track.component.css'],
+    selector: 'app-audio-track',
+    templateUrl: './audio-track.component.html',
+    styleUrls: ['./audio-track.component.css'],
+    standalone: false
 })
 export class AudioTrackComponent extends TrackComponent {
   muteAudioIcon: string = 'mic';

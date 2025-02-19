@@ -47,9 +47,10 @@ import PCTransport from 'livekit-client/dist/src/room/PCTransport';
 import { InfoDialogComponent } from '../dialogs/info-dialog/info-dialog.component';
 
 @Component({
-  selector: 'app-openvidu-instance',
-  templateUrl: './openvidu-instance.component.html',
-  styleUrls: ['./openvidu-instance.component.css'],
+    selector: 'app-openvidu-instance',
+    templateUrl: './openvidu-instance.component.html',
+    styleUrls: ['./openvidu-instance.component.css'],
+    standalone: false
 })
 export class OpenviduInstanceComponent {
   @Input()

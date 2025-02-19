@@ -41,7 +41,8 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
         'mat-divider { margin-top: 5px; margin-bottom: 5px; }',
         '.col-50 {flex-basis: 50%; box-sizing: border-box; padding-left: 20px; }',
         '.toggle { }'
-    ]
+    ],
+    standalone: false
 })
 export class EventsDialogComponent {
 
