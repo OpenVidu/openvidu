@@ -62,10 +62,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "openvidu-testapp-livekit:build:production"
+              "buildTarget": "openvidu-testapp-livekit:build:production"
             },
             "development": {
-              "browserTarget": "openvidu-testapp-livekit:build:development"
+              "buildTarget": "openvidu-testapp-livekit:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -73,7 +73,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "openvidu-testapp-livekit:build"
+            "buildTarget": "openvidu-testapp-livekit:build"
           }
         },
         "test": {

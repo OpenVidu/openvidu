@@ -11,16 +11,16 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^16.2.11",
+    "@angular/animations": "^17.3.12",
     "@angular/cdk": "^16.2.10",
-    "@angular/common": "^16.2.11",
-    "@angular/compiler": "^16.2.11",
-    "@angular/core": "^16.2.11",
-    "@angular/forms": "^16.2.11",
+    "@angular/common": "^17.3.12",
+    "@angular/compiler": "^17.3.12",
+    "@angular/core": "^17.3.12",
+    "@angular/forms": "^17.3.12",
     "@angular/material": "^16.2.10",
-    "@angular/platform-browser": "^16.2.11",
-    "@angular/platform-browser-dynamic": "^16.2.11",
-    "@angular/router": "^16.2.11",
+    "@angular/platform-browser": "^17.3.12",
+    "@angular/platform-browser-dynamic": "^17.3.12",
+    "@angular/router": "^17.3.12",
     "@livekit/protocol": "1.29.2",
     "buffer": "^6.0.3",
     "crypto-browserify": "^3.12.0",
@@ -32,12 +32,12 @@
     "stream-browserify": "^3.0.0",
     "tslib": "^2.6.2",
     "util": "^0.12.5",
-    "zone.js": "~0.13.0"
+    "zone.js": "~0.14.10"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^16.2.8",
-    "@angular/cli": "~16.2.8",
-    "@angular/compiler-cli": "^16.2.11",
+    "@angular-devkit/build-angular": "^17.3.12",
+    "@angular/cli": "~17.3.12",
+    "@angular/compiler-cli": "^17.3.12",
     "@types/events": "^3.0.2",
     "@types/jasmine": "~5.1.1",
     "@types/json-stringify-safe": "^5.0.2",
@@ -49,6 +49,6 @@
     "karma-coverage": "~2.2.1",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "typescript": "5.1.6"
+    "typescript": "5.4.5"
   }
 }
