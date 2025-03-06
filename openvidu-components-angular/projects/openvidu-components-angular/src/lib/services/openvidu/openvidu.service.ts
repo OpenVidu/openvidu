@@ -84,7 +84,7 @@ export class OpenViduService {
 	}
 
 	/**
-	 * Connects to the Room
+	 * Connects local participant to the room
 	 */
 	async connectRoom(): Promise<void> {
 		try {
@@ -101,7 +101,7 @@ export class OpenViduService {
 	}
 
 	/**
-	 * Disconnects the room
+	 * Disconnects local participant from the room
 	 */
 	async disconnectRoom(): Promise<void> {
 		if (this.isRoomConnected()) {
@@ -130,7 +130,7 @@ export class OpenViduService {
 
 
 	/**
-	 * Returns if the room is connected or not
+	 * Returns if local participant is connected to the room
 	 * @returns
 	 */
 	isRoomConnected(): boolean {
