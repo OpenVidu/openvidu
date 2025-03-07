@@ -65,28 +65,28 @@ export class SessionComponent implements OnInit, OnDestroy {
 	@ContentChild('panel', { read: TemplateRef }) panelTemplate: TemplateRef<any>;
 	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
 	/**
-	 * Provides event notifications that fire when OpenVidu Room is created.
+	 * Provides event notifications that fire when Room is created for the local participant.
 	 *
 	 */
 	@Output() onRoomCreated: EventEmitter<Room> = new EventEmitter<Room>();
 
 	/**
-	 * Provides event notifications that fire when OpenVidu Room is disconnected.
+	 * Provides event notifications that fire when Room is being reconnected for the local participant.
 	 */
 	@Output() onRoomReconnecting: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when OpenVidu Room is reconnected.
+	 * Provides event notifications that fire when Room is reconnected for the local participant.
 	 */
 	@Output() onRoomReconnected: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when OpenVidu Room is disconnected.
+	 * Provides event notifications that fire when Room is disconnected for the local participant.
 	 */
 	@Output() onRoomDisconnected: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when local participant is created.
+	 * Provides event notifications that fire when local participant is created and connected to the Room.
 	 */
 	@Output() onParticipantCreated: EventEmitter<ParticipantModel> = new EventEmitter<ParticipantModel>();
 
