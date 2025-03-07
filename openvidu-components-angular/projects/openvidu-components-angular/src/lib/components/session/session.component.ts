@@ -46,7 +46,7 @@ import {
 	RoomEvent,
 	Track
 } from 'livekit-client';
-import { ParticipantModel } from '../../models/participant.model';
+import { ParticipantLeftEvent, ParticipantModel } from '../../models/participant.model';
 import { ServiceConfigService } from '../../services/config/service-config.service';
 
 /**
@@ -88,6 +88,11 @@ export class SessionComponent implements OnInit, OnDestroy {
 	 * Provides event notifications that fire when local participant is connected to the Room.
 	 */
 	@Output() onParticipantConnected: EventEmitter<ParticipantModel> = new EventEmitter<ParticipantModel>();
+
+	/**
+	 * This event is emitted when the local participant leaves the room.
+	 */
+	@Output() onParticipantLeft: EventEmitter<ParticipantLeftEvent> = new EventEmitter<ParticipantLeftEvent>();
 
 	room: Room;
 	sideMenu: MatSidenav;
@@ -206,6 +211,13 @@ export class SessionComponent implements OnInit, OnDestroy {
 		}
 		try {
 			await this.participantService.connect();
+			this.openviduService.setDisconnectCallback(() => {
+				const event: ParticipantLeftEvent = {
+					roomName: this.openviduService.getRoomName(),
+					participantName: this.participantService.getLocalParticipant()?.identity || ''
+				};
+				this.onParticipantLeft.emit(event);
+			});
 			// Send room created after participant connect for avoiding to send incomplete room payload
 			this.onRoomCreated.emit(this.room);
 			this.cd.markForCheck();
