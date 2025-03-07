@@ -18,7 +18,7 @@ import {
 
 export interface ParticipantLeftEvent {
 	roomName: string;
-	participantId: string;
+	participantName: string;
 }
 
 /**

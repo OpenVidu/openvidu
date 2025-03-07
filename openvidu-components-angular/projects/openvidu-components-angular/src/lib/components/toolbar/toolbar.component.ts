@@ -508,7 +508,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	async disconnect() {
 		const event: ParticipantLeftEvent = {
 			roomName: this.openviduService.getRoomName(),
-			participantId: this.participantService.getLocalParticipant()?.identity || ''
+			participantName: this.participantService.getLocalParticipant()?.identity || ''
 		};
 		try {
 			await this.openviduService.disconnectRoom();
