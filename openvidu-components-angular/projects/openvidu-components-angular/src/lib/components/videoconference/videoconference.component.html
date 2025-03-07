@@ -27,7 +27,8 @@
 			(onRoomReconnecting)="onRoomDisconnected.emit()"
 			(onRoomDisconnected)="onRoomDisconnected.emit()"
 			(onRoomReconnected)="onRoomReconnected.emit()"
-			(onParticipantCreated)="onParticipantCreated.emit($event)"
+			(onParticipantConnected)="onParticipantCreated.emit($event)"
+			(onParticipantConnected)="onParticipantConnected.emit($event)"
 		>
 			<ng-template #toolbar>
 				<ng-container *ngIf="openviduAngularToolbarTemplate">

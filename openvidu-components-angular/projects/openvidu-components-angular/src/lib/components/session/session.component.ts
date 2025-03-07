@@ -85,9 +85,9 @@ export class SessionComponent implements OnInit, OnDestroy {
 	@Output() onRoomDisconnected: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when local participant is created and connected to the Room.
+	 * Provides event notifications that fire when local participant is connected to the Room.
 	 */
-	@Output() onParticipantCreated: EventEmitter<ParticipantModel> = new EventEmitter<ParticipantModel>();
+	@Output() onParticipantConnected: EventEmitter<ParticipantModel> = new EventEmitter<ParticipantModel>();
 
 	room: Room;
 	sideMenu: MatSidenav;
@@ -210,7 +210,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 			this.onRoomCreated.emit(this.room);
 			this.cd.markForCheck();
 			this.loading = false;
-			this.onParticipantCreated.emit(this.participantService.getLocalParticipant());
+			this.onParticipantConnected.emit(this.participantService.getLocalParticipant());
 		} catch (error) {
 			this.log.e('There was an error connecting to the room:', error.code, error.message);
 			this.actionService.openDialog(this.translateService.translate('ERRORS.SESSION'), error?.error || error?.message || error);

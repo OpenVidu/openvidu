@@ -341,9 +341,15 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 
 	/**
 	 * Provides event notifications that fire when local participant is created and connected to the Room.
-	 * It provides the {@link ParticipantModel} payload as event data.
+	 * @deprecated Use `onParticipantConnected` instead
 	 */
 	@Output() onParticipantCreated: EventEmitter<ParticipantModel> = new EventEmitter<ParticipantModel>();
+
+	/**
+	 * Provides event notifications that fire when local participant is connected to the Room.
+	 * It provides the {@link ParticipantModel} payload as event data.
+	 */
+	@Output() onParticipantConnected: EventEmitter<ParticipantModel> = new EventEmitter<ParticipantModel>();
 
 	/**
 	 * @internal
