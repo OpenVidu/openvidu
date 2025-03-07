@@ -74,7 +74,7 @@ export class CallComponent implements OnInit {
 	}
 
 	onRoomCreated(room: Room) {
-		console.warn('VC ROOM CREATED');
+		console.warn('VC ROOM CREATED', room.name);
 		room.on(RoomEvent.Connected, () => {
 			if (this.areStaticVideosEnabled) {
 				setTimeout(() => {
