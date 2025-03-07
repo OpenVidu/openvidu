@@ -199,34 +199,34 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	openviduAngularStreamTemplate: TemplateRef<any>;
 
 	/**
-	 * Provides event notifications that fire when videconference is ready to received the token.
+	 * Provides event notifications that fire when the local participant is ready to join to the room.
 	 * This event emits the participant name as data.
 	 */
 	@Output() onTokenRequested: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
-	 * Provides event notifications that fire when the participant is ready to join to the room. This event is only emitted when the prejoin page has been shown.
+	 * Provides event notifications that fire when the local participant is ready to join to the room.
+	 * This event is only emitted when the prejoin page has been shown.
 	 */
 	@Output() onReadyToJoin: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * This event is emitted when the room connection has been lost and the reconnection process has started.
+	 * Provides event notifications that fire when Room is disconnected for the local participant.
 	 */
 	@Output() onRoomDisconnected: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when OpenVidu Room is disconnected.
+	 * Provides event notifications that fire when Room is being reconnected for the local participant.
 	 */
 	@Output() onRoomReconnecting: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when OpenVidu Room is reconnected.
+	 * Provides event notifications that fire when Room is reconnected for the local participant.
 	 */
 	@Output() onRoomReconnected: EventEmitter<void> = new EventEmitter<void>();
 
-
 	/**
-	 * This event is emitted when a participant leaves the room.
+	 * This event is emitted when the local participant leaves the room.
 	 */
 	@Output() onParticipantLeft: EventEmitter<ParticipantLeftEvent> = new EventEmitter<ParticipantLeftEvent>();
 
@@ -334,13 +334,13 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		new EventEmitter<BroadcastingStopRequestedEvent>();
 
 	/**
-	 * Provides event notifications that fire when OpenVidu Room is created.
+	 * Provides event notifications that fire when Room is created for the local participant.
 	 * It provides the {@link https://openvidu.io/latest/docs/getting-started/#room Room} payload as event data.
 	 */
 	@Output() onRoomCreated: EventEmitter<Room> = new EventEmitter<Room>();
 
 	/**
-	 * Provides event notifications that fire when local participant is created.
+	 * Provides event notifications that fire when local participant is created and connected to the Room.
 	 * It provides the {@link ParticipantModel} payload as event data.
 	 */
 	@Output() onParticipantCreated: EventEmitter<ParticipantModel> = new EventEmitter<ParticipantModel>();

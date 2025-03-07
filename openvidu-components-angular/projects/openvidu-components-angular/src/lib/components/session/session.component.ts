@@ -66,7 +66,6 @@ export class SessionComponent implements OnInit, OnDestroy {
 	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
 	/**
 	 * Provides event notifications that fire when Room is created for the local participant.
-	 *
 	 */
 	@Output() onRoomCreated: EventEmitter<Room> = new EventEmitter<Room>();
 

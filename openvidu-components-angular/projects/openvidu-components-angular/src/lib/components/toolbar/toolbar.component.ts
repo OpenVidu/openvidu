@@ -97,7 +97,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	/**
-	 * This event is emitted when a participant leaves the room.
+	 * This event is emitted when the local participant leaves the room.
 	 */
 	@Output() onParticipantLeft: EventEmitter<ParticipantLeftEvent> = new EventEmitter<ParticipantLeftEvent>();
 
