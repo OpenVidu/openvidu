@@ -185,7 +185,6 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 	async ngOnInit() {
 		this.room = this.openviduService.getRoom();
-		this.onRoomCreated.emit(this.room);
 
 		// this.subscribeToCaptionLanguage();
 		this.subcribeToActiveSpeakersChanged();
@@ -208,6 +207,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 		}
 		try {
 			await this.participantService.connect();
+			// Send room created after participant connect for avoiding to send incomplete room payload
+			this.onRoomCreated.emit(this.room);
 			this.cd.markForCheck();
 			this.loading = false;
 			this.onParticipantCreated.emit(this.participantService.getLocalParticipant());
