@@ -19,7 +19,6 @@ import { ParticipantService } from '../../services/participant/participant.servi
 import { CdkDrag } from '@angular/cdk/drag-drop';
 import { PanelService } from '../../services/panel/panel.service';
 import { GlobalConfigService } from '../../services/config/global-config.service';
-import { ServiceConfigService } from '../../services/config/service-config.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 
 /**
@@ -80,21 +79,18 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	private resizeTimeout: NodeJS.Timeout;
 	private videoIsAtRight: boolean = false;
 	private lastLayoutWidth: number = 0;
-	private layoutService: LayoutService;
 
 	/**
 	 * @ignore
 	 */
 	constructor(
-		private serviceConfig: ServiceConfigService,
+		private layoutService: LayoutService,
 		private panelService: PanelService,
 		private participantService: ParticipantService,
 		private globalService: GlobalConfigService,
 		private directiveService: OpenViduComponentsConfigService,
 		private cd: ChangeDetectorRef
-	) {
-		this.layoutService = this.serviceConfig.getLayoutService();
-	}
+	) {}
 
 	ngOnInit(): void {
 		this.subscribeToParticipants();
@@ -152,17 +148,17 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.remoteParticipantsSubs = combineLatest([
 			this.participantService.remoteParticipants$,
 			this.directiveService.layoutRemoteParticipants$
-		  ])
-		  .pipe(
-			map(([serviceParticipants, directiveParticipants]) =>
-			  directiveParticipants !== undefined ? directiveParticipants : serviceParticipants
+		])
+			.pipe(
+				map(([serviceParticipants, directiveParticipants]) =>
+					directiveParticipants !== undefined ? directiveParticipants : serviceParticipants
+				)
 			)
-		  )
-		  .subscribe((participants) => {
-			this.remoteParticipants = participants;
-			this.layoutService.update();
-			this.cd.markForCheck();
-		  });
+			.subscribe((participants) => {
+				this.remoteParticipants = participants;
+				this.layoutService.update();
+				this.cd.markForCheck();
+			});
 	}
 
 	private listenToResizeLayout() {

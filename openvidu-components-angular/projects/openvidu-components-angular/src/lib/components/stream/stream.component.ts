@@ -7,7 +7,6 @@ import { LayoutService } from '../../services/layout/layout.service';
 import { ParticipantService } from '../../services/participant/participant.service';
 import { Track } from 'livekit-client';
 import { ParticipantTrackPublication } from '../../models/participant.model';
-import { ServiceConfigService } from '../../services/config/service-config.service';
 
 /**
  * The **StreamComponent** is hosted inside of the {@link LayoutComponent}.
@@ -98,18 +97,15 @@ export class StreamComponent implements OnInit, OnDestroy {
 	private videoControlsSub: Subscription;
 	private readonly HOVER_TIMEOUT = 3000;
 
-	private layoutService: LayoutService;
 	/**
 	 * @ignore
 	 */
 	constructor(
-		private serviceConfig: ServiceConfigService,
+		private layoutService: LayoutService,
 		private participantService: ParticipantService,
 		private cdkSrv: CdkOverlayService,
 		private libService: OpenViduComponentsConfigService
-	) {
-		this.layoutService = this.serviceConfig.getLayoutService();
-	}
+	) {}
 
 	ngOnInit() {
 		this.subscribeToStreamDirectives();

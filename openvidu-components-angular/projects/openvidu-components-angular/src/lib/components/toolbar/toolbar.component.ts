@@ -49,7 +49,6 @@ import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.servic
 import { ParticipantLeftEvent, ParticipantModel } from '../../models/participant.model';
 import { Room, RoomEvent } from 'livekit-client';
 import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
-import { ServiceConfigService } from '../../services/config/service-config.service';
 
 /**
  * The **ToolbarComponent** is hosted inside of the {@link VideoconferenceComponent}.
@@ -349,13 +348,12 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	private additionalButtonsPositionSub: Subscription;
 	private fullscreenChangeSubscription: Subscription;
 	private currentWindowHeight = window.innerHeight;
-	private layoutService: LayoutService;
 
 	/**
 	 * @ignore
 	 */
 	constructor(
-		private serviceConfig: ServiceConfigService,
+		private layoutService: LayoutService,
 		private documentService: DocumentService,
 		private chatService: ChatService,
 		private panelService: PanelService,
@@ -374,7 +372,6 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		private cdkOverlayService: CdkOverlayService
 	) {
 		this.log = this.loggerSrv.get('ToolbarComponent');
-		this.layoutService = this.serviceConfig.getLayoutService();
 	}
 	/**
 	 * @ignore

@@ -47,7 +47,6 @@ import {
 	Track
 } from 'livekit-client';
 import { ParticipantLeftEvent, ParticipantModel } from '../../models/participant.model';
-import { ServiceConfigService } from '../../services/config/service-config.service';
 
 /**
  * @internal
@@ -108,10 +107,9 @@ export class SessionComponent implements OnInit, OnDestroy {
 	private updateLayoutInterval: NodeJS.Timeout;
 	private captionLanguageSubscription: Subscription;
 	private log: ILogger;
-	private layoutService: LayoutService;
 
 	constructor(
-		private serviceConfig: ServiceConfigService,
+		private layoutService: LayoutService,
 		private actionService: ActionService,
 		private openviduService: OpenViduService,
 		private participantService: ParticipantService,
@@ -127,7 +125,6 @@ export class SessionComponent implements OnInit, OnDestroy {
 		private cd: ChangeDetectorRef
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
-		this.layoutService = this.serviceConfig.getLayoutService();
 	}
 
 	@HostListener('window:beforeunload')

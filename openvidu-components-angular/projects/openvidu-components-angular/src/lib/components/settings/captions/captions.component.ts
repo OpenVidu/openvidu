@@ -23,11 +23,11 @@ export class CaptionsSettingComponent implements OnInit, OnDestroy {
 	private captionsStatusSubs: Subscription;
 	private sttStatusSubs: Subscription;
 
-	private layoutService: LayoutService;
-
-	constructor(private serviceConfig: ServiceConfigService, private captionService: CaptionService, private openviduService: OpenViduService) {
-		this.layoutService = this.serviceConfig.getLayoutService();
-	}
+	constructor(
+		private layoutService: LayoutService,
+		private captionService: CaptionService,
+		private openviduService: OpenViduService
+	) {}
 
 	ngOnInit(): void {
 		// this.isOpenViduPro = this.openviduService.isOpenViduPro();
