@@ -9,6 +9,8 @@ var PREJOIN;
 var VIDEO_ENABLED;
 var AUDIO_ENABLED;
 
+var CAMERA_BUTTON;
+var MICROPHONE_BUTTON;
 var SCREENSHARE_BUTTON;
 var FULLSCREEN_BUTTON;
 var ACTIVITIES_PANEL_BUTTON;
@@ -58,6 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	PREJOIN = url.searchParams.get('prejoin') === null ? true : url.searchParams.get('prejoin') === 'true';
 	VIDEO_ENABLED = url.searchParams.get('videoEnabled') === null ? true : url.searchParams.get('videoEnabled') === 'true';
 	AUDIO_ENABLED = url.searchParams.get('audioEnabled') === null ? true : url.searchParams.get('audioEnabled') === 'true';
+	CAMERA_BUTTON = url.searchParams.get('cameraBtn') === null ? true : url.searchParams.get('cameraBtn') === 'true';
+	MICROPHONE_BUTTON = url.searchParams.get('microphoneBtn') === null ? true : url.searchParams.get('microphoneBtn') === 'true';
 	SCREENSHARE_BUTTON = url.searchParams.get('screenshareBtn') === null ? true : url.searchParams.get('screenshareBtn') === 'true';
 	RECORDING_BUTTON =
 		url.searchParams.get('toolbarRecordingButton') === null ? true : url.searchParams.get('toolbarRecordingButton') === 'true';
@@ -211,6 +215,8 @@ function setWebcomponentAttributes() {
 	webComponent.prejoin = PREJOIN;
 	webComponent.videoEnabled = VIDEO_ENABLED;
 	webComponent.audioEnabled = AUDIO_ENABLED;
+	webComponent.toolbarCameraButton = CAMERA_BUTTON;
+	webComponent.toolbarMicrophoneButton = MICROPHONE_BUTTON;
 	webComponent.toolbarScreenshareButton = SCREENSHARE_BUTTON;
 
 	webComponent.toolbarFullscreenButton = FULLSCREEN_BUTTON;

@@ -292,6 +292,31 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#mic_off')).toBeTrue();
 	});
 
+	it('should run the app without camera button' , async () => {
+		await browser.get(`${url}&prejoin=false&cameraBtn=false`);
+
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
+
+		// Checking if camera button is not present
+		expect(await utils.isPresent('#camera-btn')).toBeFalse();
+	});
+
+	it('should run the app without microphone button' , async () => {
+		await browser.get(`${url}&prejoin=false&microphoneBtn=false`);
+
+		await utils.checkSessionIsPresent();
+
+		// Checking if toolbar is present
+		await utils.checkToolbarIsPresent();
+
+		// Checking if microphone button is not present
+		expect(await utils.isPresent('#microphone-btn')).toBeFalse();
+	});
+
+
 	it('should HIDE the SCREENSHARE button', async () => {
 		await browser.get(`${url}&prejoin=false&screenshareBtn=false`);
 

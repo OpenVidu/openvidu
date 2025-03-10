@@ -84,6 +84,15 @@ export class OpenviduWebComponentComponent {
 	 * @internal
 	 */
 	_audioEnabled: boolean = true;
+
+	/**
+	 * @internal
+	 */
+	_toolbarCameraButton: boolean = true;
+	/**
+	 * @internal
+	 */
+	_toolbarMicrophoneButton: boolean = true;
 	/**
 	 * @internal
 	 */
@@ -307,6 +316,31 @@ export class OpenviduWebComponentComponent {
 	 */
 	@Input() set audioEnabled(value: string | boolean) {
 		this._audioEnabled = this.castToBoolean(value);
+	}
+
+	/**
+	 * The **toolbarCameraButton** attribute allows show/hide the camera toolbar button.
+	 *
+	 * Default: `true`
+	 *
+	 * @example
+	 * <openvidu-webcomponent toolbar-camera-button="false"></openvidu-webcomponent>
+	 */
+	@Input() set toolbarCameraButton(value: string | boolean) {
+		this._toolbarCameraButton = this.castToBoolean(value);
+	}
+
+	/**
+	 * The **toolbarMicrophoneButton** attribute allows show/hide the microphone toolbar button.
+	 *
+	 * Default: `true`
+	 *
+	 * @example
+	 * <openvidu-webcomponent toolbar-microphone-button="false"></openvidu-webcomponent>
+	 */
+
+	@Input() set toolbarMicrophoneButton(value: string | boolean) {
+		this._toolbarMicrophoneButton = this.castToBoolean(value);
 	}
 
 	/**
