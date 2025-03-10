@@ -204,6 +204,14 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
+	showCameraButton: boolean = true;
+	/**
+	 * @ignore
+	 */
+	showMicrophoneButton: boolean = true;
+	/**
+	 * @ignore
+	 */
 	showScreenshareButton = true;
 	/**
 	 * @ignore
@@ -329,6 +337,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	private panelTogglingSubscription: Subscription;
 	private chatMessagesSubscription: Subscription;
 	private localParticipantSubscription: Subscription;
+	private cameraButtonSub: Subscription;
+	private microphoneButtonSub: Subscription;
 	private screenshareButtonSub: Subscription;
 	private fullscreenButtonSub: Subscription;
 	private backgroundEffectsButtonSub: Subscription;
@@ -423,6 +433,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		if (this.panelTogglingSubscription) this.panelTogglingSubscription.unsubscribe();
 		if (this.chatMessagesSubscription) this.chatMessagesSubscription.unsubscribe();
 		if (this.localParticipantSubscription) this.localParticipantSubscription.unsubscribe();
+		if (this.cameraButtonSub) this.cameraButtonSub.unsubscribe();
+		if (this.microphoneButtonSub) this.microphoneButtonSub.unsubscribe();
 		if (this.screenshareButtonSub) this.screenshareButtonSub.unsubscribe();
 		if (this.fullscreenButtonSub) this.fullscreenButtonSub.unsubscribe();
 		if (this.backgroundEffectsButtonSub) this.backgroundEffectsButtonSub.unsubscribe();
@@ -710,6 +722,14 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		});
 		this.brandingLogoSub = this.libService.brandingLogo$.subscribe((value: string) => {
 			this.brandingLogo = value;
+			this.cd.markForCheck();
+		});
+		this.cameraButtonSub = this.libService.cameraButton$.subscribe((value: boolean) => {
+			this.showCameraButton = value;
+			this.cd.markForCheck();
+		});
+		this.microphoneButtonSub = this.libService.microphoneButton$.subscribe((value: boolean) => {
+			this.showMicrophoneButton = value;
 			this.cd.markForCheck();
 		});
 		this.screenshareButtonSub = this.libService.screenshareButton$.subscribe((value: boolean) => {

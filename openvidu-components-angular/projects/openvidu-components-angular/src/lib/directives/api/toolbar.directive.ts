@@ -3,6 +3,137 @@ import { OpenViduComponentsConfigService } from '../../services/config/directive
 import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
 
 /**
+ * The **cameraButton** directive allows show/hide the camera toolbar button.
+ *
+ * Default: `true`
+ *
+ * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `toolbar` component:
+ *
+ * @example
+ * <ov-videoconference [toolbarCameraButton]="false"></ov-videoconference>
+ *
+ * \
+ * And it also can be used in the {@link ToolbarComponent}.
+ * @example
+ * <ov-toolbar [cameraButton]="false"></ov-toolbar>
+ */
+@Directive({
+	selector: 'ov-videoconference[toolbarCameraButton], ov-toolbar[cameraButton]'
+})
+export class ToolbarCameraButtonDirective implements AfterViewInit, OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set toolbarCameraButton(value: boolean) {
+		this.cameraValue = value;
+		this.update(this.cameraValue);
+	}
+
+	/**
+	 * @ignore
+	 */
+	@Input() set cameraButton(value: boolean) {
+		this.cameraValue = value;
+		this.update(this.cameraValue);
+	}
+
+	private cameraValue: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	ngAfterViewInit() {
+		this.update(this.cameraValue);
+	}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	private clear() {
+		this.cameraValue = true;
+		this.update(true);
+	}
+
+	private update(value: boolean) {
+		if (this.libService.showCameraButton() !== value) {
+			this.libService.setCameraButton(value);
+		}
+	}
+}
+
+/**
+ * The **microphoneButton** directive allows show/hide the microphone toolbar button.
+ *
+ * Default: `true`
+ *
+ * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `toolbar` component:
+ *
+ * @example
+ * <ov-videoconference [toolbarMicrophoneButton]="false"></ov-videoconference>
+ *
+ * \
+ * And it also can be used in the {@link ToolbarComponent}.
+ * @example
+ * <ov-toolbar [microphoneButton]="false"></ov-toolbar>
+ */
+@Directive({
+	selector: 'ov-videoconference[toolbarMicrophoneButton], ov-toolbar[microphoneButton]'
+})
+export class ToolbarMicrophoneButtonDirective implements AfterViewInit, OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set toolbarMicrophoneButton(value: boolean) {
+		this.microphoneValue = value;
+		this.update(this.microphoneValue);
+	}
+
+	/**
+	 * @ignore
+	 */
+	@Input() set microphoneButton(value: boolean) {
+		this.microphoneValue = value;
+		this.update(this.microphoneValue);
+	}
+
+	private microphoneValue: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	ngAfterViewInit() {
+		this.update(this.microphoneValue);
+	}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	private clear() {
+		this.microphoneValue = true;
+		this.update(true);
+	}
+
+	private update(value: boolean) {
+		if (this.libService.showMicrophoneButton() !== value) {
+			this.libService.setMicrophoneButton(value);
+		}
+	}
+}
+
+
+/**
  * The **screenshareButton** directive allows show/hide the screenshare toolbar button.
  *
  * Default: `true`

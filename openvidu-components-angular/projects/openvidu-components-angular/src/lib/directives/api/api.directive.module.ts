@@ -22,7 +22,9 @@ import {
 	ToolbarRecordingButtonDirective,
 	ToolbarScreenshareButtonDirective,
 	ToolbarSettingsButtonDirective,
-	ToolbarAdditionalButtonsPossitionDirective
+	ToolbarAdditionalButtonsPossitionDirective,
+	ToolbarCameraButtonDirective,
+	ToolbarMicrophoneButtonDirective
 } from './toolbar.directive';
 import {
 	AudioEnabledDirective,
@@ -53,6 +55,8 @@ import {
 		PrejoinDirective,
 		VideoEnabledDirective,
 		AudioEnabledDirective,
+		ToolbarCameraButtonDirective,
+		ToolbarMicrophoneButtonDirective,
 		ToolbarScreenshareButtonDirective,
 		ToolbarFullscreenButtonDirective,
 		ToolbarBackgroundEffectsButtonDirective,
@@ -94,6 +98,8 @@ import {
 		PrejoinDirective,
 		VideoEnabledDirective,
 		AudioEnabledDirective,
+		ToolbarCameraButtonDirective,
+		ToolbarMicrophoneButtonDirective,
 		ToolbarScreenshareButtonDirective,
 		ToolbarFullscreenButtonDirective,
 		ToolbarBackgroundEffectsButtonDirective,

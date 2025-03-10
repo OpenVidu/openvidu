@@ -24,7 +24,7 @@
 
 			<div class="media-controls-container">
 				<!-- Camera -->
-				<div class="video-controls-container">
+				<div class="video-controls-container" *ngIf="showCameraButton">
 					<ov-video-devices-select
 						(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
 						(onVideoEnabledChanged)="videoEnabledChanged($event)"
@@ -32,7 +32,7 @@
 				</div>
 
 				<!-- Microphone -->
-				<div class="audio-controls-container">
+				<div class="audio-controls-container" *ngIf="showMicrophoneButton">
 					<ov-audio-devices-select
 						(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
 						(onAudioEnabledChanged)="audioEnabledChanged($event)"

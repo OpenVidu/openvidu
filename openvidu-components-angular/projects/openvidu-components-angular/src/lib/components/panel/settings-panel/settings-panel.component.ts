@@ -23,9 +23,13 @@ export class SettingsPanelComponent implements OnInit {
 	@Output() onLangChanged = new EventEmitter<LangOption>();
 	settingsOptions: typeof PanelSettingsOptions = PanelSettingsOptions;
 	selectedOption: PanelSettingsOptions = PanelSettingsOptions.GENERAL;
+	showCameraButton: boolean = true;
+	showMicrophoneButton: boolean = true;
 	showCaptions: boolean = true;
 	panelSubscription: Subscription;
 	isMobile: boolean = false;
+	private cameraButtonSub: Subscription;
+	private microphoneButtonSub: Subscription;
 	private captionsSubs: Subscription;
 	constructor(
 		private panelService: PanelService,
@@ -39,6 +43,9 @@ export class SettingsPanelComponent implements OnInit {
 	}
 
 	ngOnDestroy() {
+		if (this.panelSubscription) this.panelSubscription.unsubscribe();
+		if (this.cameraButtonSub) this.cameraButtonSub.unsubscribe();
+		if (this.microphoneButtonSub) this.microphoneButtonSub.unsubscribe();
 		if (this.captionsSubs) this.captionsSubs.unsubscribe();
 	}
 
@@ -50,9 +57,9 @@ export class SettingsPanelComponent implements OnInit {
 	}
 
 	private subscribeToDirectives() {
-		this.captionsSubs = this.libService.captionsButton$.subscribe((value: boolean) => {
-			this.showCaptions = value;
-		});
+		this.cameraButtonSub = this.libService.cameraButton$.subscribe((value: boolean) => (this.showCameraButton = value));
+		this.microphoneButtonSub = this.libService.microphoneButton$.subscribe((value: boolean) => (this.showMicrophoneButton = value));
+		this.captionsSubs = this.libService.captionsButton$.subscribe((value: boolean) => (this.showCaptions = value));
 	}
 
 	private subscribeToPanelToggling() {

@@ -40,13 +40,16 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	 * @ignore
 	 */
 	isMinimal: boolean = false;
+	showCameraButton: boolean = true;
+	showMicrophoneButton: boolean = true;
 	showLogo: boolean = true;
 
 	videoTrack: LocalTrack | undefined;
 	audioTrack: LocalTrack | undefined;
 	private tracks: LocalTrack[];
 	private log: ILogger;
-	private screenShareStateSubscription: Subscription;
+	private cameraButtonSub: Subscription;
+	private microphoneButtonSub: Subscription;
 	private minimalSub: Subscription;
 	private displayLogoSub: Subscription;
 	private shouldRemoveTracksWhenComponentIsDestroyed: boolean = true;
@@ -81,8 +84,9 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 
 	async ngOnDestroy() {
 		this.cdkSrv.setSelector('body');
-		if (this.screenShareStateSubscription) this.screenShareStateSubscription.unsubscribe();
 		if (this.minimalSub) this.minimalSub.unsubscribe();
+		if (this.cameraButtonSub) this.cameraButtonSub.unsubscribe();
+		if (this.microphoneButtonSub) this.microphoneButtonSub.unsubscribe();
 		if (this.displayLogoSub) this.displayLogoSub.unsubscribe();
 
 		if (this.shouldRemoveTracksWhenComponentIsDestroyed) {
@@ -132,6 +136,12 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		this.minimalSub = this.libService.minimal$.subscribe((value: boolean) => {
 			this.isMinimal = value;
 			// this.cd.markForCheck();
+		});
+		this.cameraButtonSub = this.libService.cameraButton$.subscribe((value: boolean) => {
+			this.showCameraButton = value;
+		});
+		this.microphoneButtonSub = this.libService.microphoneButton$.subscribe((value: boolean) => {
+			this.showMicrophoneButton = value;
 		});
 		this.displayLogoSub = this.libService.displayLogo$.subscribe((value: boolean) => {
 			this.showLogo = value;

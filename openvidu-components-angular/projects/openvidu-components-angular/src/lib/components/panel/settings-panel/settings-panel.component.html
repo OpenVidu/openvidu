@@ -25,6 +25,7 @@
 					<div mat-line *ngIf="!isMobile">{{ 'PANEL.SETTINGS.GENERAL' | translate }}</div>
 				</mat-list-option>
 				<mat-list-option
+					*ngIf="showCameraButton"
 					class="option"
 					id="video-opt"
 					[selected]="selectedOption === settingsOptions.VIDEO"
@@ -34,6 +35,7 @@
 					<div mat-line *ngIf="!isMobile">{{ 'PANEL.SETTINGS.VIDEO' | translate }}</div>
 				</mat-list-option>
 				<mat-list-option
+					*ngIf="showMicrophoneButton"
 					class="option"
 					id="audio-opt"
 					[selected]="selectedOption === settingsOptions.AUDIO"
@@ -68,12 +70,12 @@
 				</mat-list>
 			</div>
 			<ov-video-devices-select
-				*ngIf="selectedOption === settingsOptions.VIDEO"
+				*ngIf="showCameraButton && selectedOption === settingsOptions.VIDEO"
 				(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
 				(onVideoEnabledChanged)="onVideoEnabledChanged.emit($event)"
 			></ov-video-devices-select>
 			<ov-audio-devices-select
-				*ngIf="selectedOption === settingsOptions.AUDIO"
+				*ngIf="showMicrophoneButton && selectedOption === settingsOptions.AUDIO"
 				(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
 				(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
 			></ov-audio-devices-select>

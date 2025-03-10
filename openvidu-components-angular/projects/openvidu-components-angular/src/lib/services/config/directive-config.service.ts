@@ -30,6 +30,14 @@ export class OpenViduComponentsConfigService {
 	videoEnabled$: Observable<boolean>;
 	private audioEnabled = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	audioEnabled$: Observable<boolean>;
+
+	//Toolbar settings
+	private cameraButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
+	cameraButton$: Observable<boolean>;
+
+	private microphoneButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
+	microphoneButton$: Observable<boolean>;
+
 	private screenshareButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	screenshareButton$: Observable<boolean>;
 
@@ -111,6 +119,8 @@ export class OpenViduComponentsConfigService {
 		this.videoEnabled$ = this.videoEnabled.asObservable();
 		this.audioEnabled$ = this.audioEnabled.asObservable();
 		//Toolbar observables
+		this.cameraButton$ = this.cameraButton.asObservable();
+		this.microphoneButton$ = this.microphoneButton.asObservable();
 		this.screenshareButton$ = this.screenshareButton.asObservable();
 		this.fullscreenButton$ = this.fullscreenButton.asObservable();
 		this.backgroundEffectsButton$ = this.backgroundEffectsButton.asObservable();
@@ -198,6 +208,23 @@ export class OpenViduComponentsConfigService {
 	}
 
 	//Toolbar settings
+
+	setCameraButton(cameraButton: boolean) {
+		this.cameraButton.next(cameraButton);
+	}
+
+	showCameraButton(): boolean {
+		return this.cameraButton.getValue();
+	}
+
+	setMicrophoneButton(microphoneButton: boolean) {
+		this.microphoneButton.next(microphoneButton);
+	}
+
+	showMicrophoneButton(): boolean {
+		return this.microphoneButton.getValue();
+	}
+
 	setScreenshareButton(screenshareButton: boolean) {
 		this.screenshareButton.next(screenshareButton);
 	}
