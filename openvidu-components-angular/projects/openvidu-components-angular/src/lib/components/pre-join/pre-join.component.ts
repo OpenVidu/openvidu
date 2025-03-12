@@ -77,11 +77,11 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		this.subscribeToPrejoinDirectives();
 		await this.initializeDevices();
 		this.windowSize = window.innerWidth;
-		this.isLoading = false;
 	}
 
 	ngAfterContentChecked(): void {
 		this.changeDetector.detectChanges();
+		this.isLoading = false;
 	}
 
 	async ngOnDestroy() {
