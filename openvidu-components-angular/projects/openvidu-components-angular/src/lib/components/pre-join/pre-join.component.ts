@@ -117,7 +117,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	joinSession() {
-		if (!this.participantName) {
+		if (this.showParticipantName && !this.participantName) {
 			this._error = this.translateService.translate('PREJOIN.NICKNAME_REQUIRED');
 			return;
 		}

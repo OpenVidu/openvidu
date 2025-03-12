@@ -3,31 +3,33 @@
 		height: 100%;
 		background-color: var(--ov-background-color);
 		display: flex;
+		justify-content: center;
+		align-items: center;
 	}
 
 	#loading-container {
 		position: absolute;
 		top: 40%;
-		bottom: 0;
 		left: 0;
 		right: 0;
-		margin: auto;
-		text-align: -webkit-center;
-		text-align: -moz-center;
+		text-align: center;
 		color: var(--ov-text-primary-color);
 	}
 
 	#prejoin-card {
-		display: grid;
-		align-content: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 		margin: auto;
-		// margin-left: 0px;
 		border-radius: var(--ov-surface-radius);
-		width: 70vh;
-		height: 85vh;
-		padding: 20px;
+		width: 90%;
+		max-width: 400px;
+		max-height: 650px;
+		height: min-content;
+		padding: 55px 40px;
 		background-color: var(--ov-surface-color);
-		box-shadow: 6px 4px 20px 0px #0003;
+		box-shadow: 6px 4px 20px rgba(0, 0, 0, 0.3);
 		position: relative;
 	}
 
@@ -45,41 +47,46 @@
 
 	.video-container {
 		margin: auto;
-		min-height: 45vh;
-		max-height: 45vh;
-		height: 45vh;
-		max-width: 80%;
+		height: 35vh;
+		width: 100%;
+		max-width: 100%;
+		display: flex;
+		justify-content: center;
+		align-items: center;
 	}
+
 	#video-poster {
 		height: 100%;
 		width: 100%;
 		position: relative;
+		border-radius: var(--ov-surface-radius);
+		overflow: hidden;
 	}
 
 	.media-controls-container {
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: space-between;
-		max-width: 80%;
-		margin: auto;
-		height: 25vh;
+		width: 100%;
+		margin-top: 15px;
+		height: auto;
 	}
 
 	.participant-name-container {
 		display: block !important;
 		width: 100%;
-		margin-bottom: 2%;
+		margin: 10px 0;
 	}
 
 	.video-controls-container,
 	.audio-controls-container {
-		width: calc(50% - 3px);
-		margin-top: 10px;
-		margin-bottom: 10px;
+		width: calc(50% - 10px);
+		margin: 5px 0;
 	}
 
 	.join-btn-container {
 		width: 100%;
+		margin-top: 15px;
 	}
 
 	#join-button {
@@ -89,67 +96,61 @@
 		border-radius: var(--ov-surface-radius);
 		width: 100%;
 		height: 50px;
+		transition: background-color 0.3s;
 	}
+
+	// #join-button:hover {
+	//   background-color: lighten(var(--ov-primary-action-color), 10%);
+	// }
 
 	.error {
 		font-size: 12px;
 		font-weight: bold;
 		font-style: italic;
 		color: var(--ov-error-color);
+		margin-top: 5px;
 	}
 
-	/* Styles for screens up to 768px wide */
 	@media (max-width: 768px) {
-		/* Specific styles for small screens */
-		.container {
-			padding: 0px;
-		}
 		#prejoin-card {
-			margin: auto;
-			height: 100%;
-			padding: 0px;
+			padding: 10px;
 		}
+
 		.video-container {
-			height: 50vh;
-			width: 90%;
-			max-width: 90%;
+			height: 40vh;
 		}
+
 		.media-controls-container {
-			height: 30vh;
-			width: 90%;
-			max-width: 90%;
+			flex-direction: column;
+			align-items: center;
+			height: auto;
+		}
+
+		.video-controls-container,
+		.audio-controls-container {
+			width: 100%;
 		}
 	}
 
-	/* Styles for screens with horizontal orientation */
-	@media (max-width: 800) and (orientation: landscape) {
-		/* Specific styles for screens in landscape orientation */
-		.container {
-			height: 100%;
-			padding: 10px 60px;
-		}
-		.prejoin-toolbar {
-			display: none;
+	@media (max-width: 800px) and (orientation: landscape) {
+		.media-controls-container {
+			flex-direction: row;
+			justify-content: space-between;
 		}
 
 		.video-controls-container,
 		.audio-controls-container {
 			width: 48%;
-			margin-bottom: 2%;
 		}
 	}
 
-	/* Styles for screens with maximum height of 630px */
 	@media (max-height: 630px) {
 		.video-container {
-			max-width: 85%;
-			height: 37vh;
-			min-height: 37vh;
+			height: 30vh;
 		}
 
 		.media-controls-container {
-			height: 35vh;
-			max-width: 85%;
+			height: auto;
 		}
 	}
 }
