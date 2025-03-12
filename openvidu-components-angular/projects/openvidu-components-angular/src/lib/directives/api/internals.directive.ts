@@ -122,3 +122,38 @@ export class ToolbarBrandingLogoDirective implements AfterViewInit, OnDestroy {
 		this.libService.setBrandingLogo(value);
 	}
 }
+
+/**
+ * @internal
+ */
+@Directive({
+	selector: 'ov-videoconference[prejoinDisplayParticipantName]'
+})
+export class PrejoinDisplayParticipantName implements OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set prejoinDisplayParticipantName(value: boolean) {
+		this.update(value);
+	}
+
+	/**
+	 * @ignore
+	 */
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	private clear() {
+		this.update(true);
+	}
+
+	private update(value: boolean) {
+		this.libService.setPrejoinDisplayParticipantName(value);
+	}
+}

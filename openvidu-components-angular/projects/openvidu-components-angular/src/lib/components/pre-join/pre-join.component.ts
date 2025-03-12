@@ -43,6 +43,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	showCameraButton: boolean = true;
 	showMicrophoneButton: boolean = true;
 	showLogo: boolean = true;
+	showParticipantName: boolean = true;
 
 	videoTrack: LocalTrack | undefined;
 	audioTrack: LocalTrack | undefined;
@@ -52,6 +53,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	private microphoneButtonSub: Subscription;
 	private minimalSub: Subscription;
 	private displayLogoSub: Subscription;
+	private displayParticipantNameSub: Subscription;
 	private shouldRemoveTracksWhenComponentIsDestroyed: boolean = true;
 
 	@HostListener('window:resize')
@@ -88,6 +90,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		if (this.cameraButtonSub) this.cameraButtonSub.unsubscribe();
 		if (this.microphoneButtonSub) this.microphoneButtonSub.unsubscribe();
 		if (this.displayLogoSub) this.displayLogoSub.unsubscribe();
+		if (this.displayParticipantNameSub) this.displayParticipantNameSub.unsubscribe();
 
 		if (this.shouldRemoveTracksWhenComponentIsDestroyed) {
 			this.tracks.forEach((track) => {
@@ -150,6 +153,9 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		this.libService.participantName$.subscribe((value: string) => {
 			if (value) this.participantName = value;
 			// this.cd.markForCheck();
+		});
+		this.displayParticipantNameSub = this.libService.prejoinDisplayParticipantName$.subscribe((value: boolean) => {
+			this.showParticipantName = value;
 		});
 	}
 

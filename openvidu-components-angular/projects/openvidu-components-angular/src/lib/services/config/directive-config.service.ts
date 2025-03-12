@@ -25,6 +25,8 @@ export class OpenViduComponentsConfigService {
 	participantName$: Observable<string>;
 	private prejoin = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	prejoin$: Observable<boolean>;
+	private prejoinDisplayParticipantName = <BehaviorSubject<boolean>>new BehaviorSubject(true);
+	prejoinDisplayParticipantName$: Observable<boolean>;
 
 	private videoEnabled = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	videoEnabled$: Observable<boolean>;
@@ -116,6 +118,7 @@ export class OpenViduComponentsConfigService {
 		this.minimal$ = this.minimal.asObservable();
 		this.participantName$ = this.participantName.asObservable();
 		this.prejoin$ = this.prejoin.asObservable();
+		this.prejoinDisplayParticipantName$ = this.prejoinDisplayParticipantName.asObservable();
 		this.videoEnabled$ = this.videoEnabled.asObservable();
 		this.audioEnabled$ = this.audioEnabled.asObservable();
 		//Toolbar observables
@@ -185,6 +188,10 @@ export class OpenViduComponentsConfigService {
 
 	setPrejoin(prejoin: boolean) {
 		this.prejoin.next(prejoin);
+	}
+
+	setPrejoinDisplayParticipantName(prejoinDisplayParticipantName: boolean) {
+		this.prejoinDisplayParticipantName.next(prejoinDisplayParticipantName);
 	}
 
 	isPrejoin(): boolean {

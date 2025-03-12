@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { ActivitiesPanelBroadcastingActivityDirective, ActivitiesPanelRecordingActivityDirective } from './activities-panel.directive';
 import { AdminLoginErrorDirective, AdminDashboardRecordingsListDirective, AdminLoginTitleDirective, AdminDashboardTitleDirective } from './admin.directive';
-import { LayoutRemoteParticipantsDirective, FallbackLogoDirective, ToolbarBrandingLogoDirective } from './internals.directive';
+import { LayoutRemoteParticipantsDirective, FallbackLogoDirective, ToolbarBrandingLogoDirective, PrejoinDisplayParticipantName } from './internals.directive';
 import { ParticipantPanelItemMuteButtonDirective } from './participant-panel-item.directive';
 import {
 	StreamDisplayAudioDetectionDirective,
@@ -53,6 +53,7 @@ import {
 		// CaptionsLangOptionsDirective,
 		// CaptionsLangDirective,
 		PrejoinDirective,
+		PrejoinDisplayParticipantName,
 		VideoEnabledDirective,
 		AudioEnabledDirective,
 		ToolbarCameraButtonDirective,
@@ -96,6 +97,7 @@ import {
 		// CaptionsLangOptionsDirective,
 		// CaptionsLangDirective,
 		PrejoinDirective,
+		PrejoinDisplayParticipantName,
 		VideoEnabledDirective,
 		AudioEnabledDirective,
 		ToolbarCameraButtonDirective,

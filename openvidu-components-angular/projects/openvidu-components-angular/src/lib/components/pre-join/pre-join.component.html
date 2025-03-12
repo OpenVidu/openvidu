@@ -40,7 +40,7 @@
 					></ov-audio-devices-select>
 				</div>
 
-				<div class="participant-name-container">
+				<div class="participant-name-container" *ngIf="showParticipantName">
 					<ov-participant-name-input
 						[isPrejoinPage]="true"
 						[error]="!!_error"
