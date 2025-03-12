@@ -1,4 +1,4 @@
-import { Directive, ElementRef, Input, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, Input, OnDestroy, OnInit } from '@angular/core';
 import { CaptionsLangOption } from '../../models/caption.model';
 // import { CaptionService } from '../../services/caption/caption.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
@@ -490,7 +490,7 @@ export class LangOptionsDirective implements OnDestroy {
 @Directive({
 	selector: 'ov-videoconference[participantName]'
 })
-export class ParticipantNameDirective implements OnInit {
+export class ParticipantNameDirective implements AfterViewInit, OnDestroy {
 	/**
 	 * @ignore
 	 */
@@ -509,7 +509,7 @@ export class ParticipantNameDirective implements OnInit {
 	/**
 	 * @ignore
 	 */
-	ngOnInit(): void {
+	ngAfterViewInit(): void {
 		this.update(this.participantName);
 	}
 
@@ -531,7 +531,7 @@ export class ParticipantNameDirective implements OnInit {
 	 * @ignore
 	 */
 	update(value: string) {
-		this.libService.setParticipantName(value);
+		if (value) this.libService.setParticipantName(value);
 	}
 }
 

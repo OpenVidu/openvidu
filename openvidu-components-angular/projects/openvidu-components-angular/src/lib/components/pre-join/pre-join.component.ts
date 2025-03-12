@@ -128,7 +128,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	onParticipantNameChanged(name: string) {
-		this.participantName = name;
+		if (name) this.participantName = name;
 	}
 
 	onEnterPressed() {
@@ -151,6 +151,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 			// this.cd.markForCheck();
 		});
 		this.libService.participantName$.subscribe((value: string) => {
+			console.warn('participantName', value);
 			if (value) this.participantName = value;
 			// this.cd.markForCheck();
 		});
