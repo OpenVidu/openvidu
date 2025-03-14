@@ -36,6 +36,7 @@ import {
 	MinimalDirective,
 	ParticipantNameDirective,
 	PrejoinDirective,
+	RecordingStreamBaseUrlDirective,
 	TokenDirective,
 	TokenErrorDirective,
 	VideoEnabledDirective
@@ -56,6 +57,7 @@ import {
 		PrejoinDisplayParticipantName,
 		VideoEnabledDirective,
 		AudioEnabledDirective,
+		RecordingStreamBaseUrlDirective,
 		ToolbarCameraButtonDirective,
 		ToolbarMicrophoneButtonDirective,
 		ToolbarScreenshareButtonDirective,
@@ -100,6 +102,7 @@ import {
 		PrejoinDisplayParticipantName,
 		VideoEnabledDirective,
 		AudioEnabledDirective,
+		RecordingStreamBaseUrlDirective,
 		ToolbarCameraButtonDirective,
 		ToolbarMicrophoneButtonDirective,
 		ToolbarScreenshareButtonDirective,

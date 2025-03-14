@@ -33,6 +33,9 @@ export class OpenViduComponentsConfigService {
 	private audioEnabled = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	audioEnabled$: Observable<boolean>;
 
+	private recordingStreamBaseUrl = <BehaviorSubject<string>>new BehaviorSubject('');
+	recordingStreamBaseUrl$: Observable<string>;
+
 	//Toolbar settings
 	private cameraButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	cameraButton$: Observable<boolean>;
@@ -121,6 +124,7 @@ export class OpenViduComponentsConfigService {
 		this.prejoinDisplayParticipantName$ = this.prejoinDisplayParticipantName.asObservable();
 		this.videoEnabled$ = this.videoEnabled.asObservable();
 		this.audioEnabled$ = this.audioEnabled.asObservable();
+		this.recordingStreamBaseUrl$ = this.recordingStreamBaseUrl.asObservable();
 		//Toolbar observables
 		this.cameraButton$ = this.cameraButton.asObservable();
 		this.microphoneButton$ = this.microphoneButton.asObservable();
@@ -212,6 +216,17 @@ export class OpenViduComponentsConfigService {
 
 	isAudioEnabled(): boolean {
 		return this.audioEnabled.getValue();
+	}
+
+	setRecordingStreamBaseUrl(recordingStreamBaseUrl: string) {
+		this.recordingStreamBaseUrl.next(recordingStreamBaseUrl);
+	}
+
+	getRecordingStreamBaseUrl(): string {
+		let baseUrl = this.recordingStreamBaseUrl.getValue();
+		// Add trailing slash if not present
+		baseUrl += baseUrl.endsWith('/') ? '' : '/';
+		return baseUrl;
 	}
 
 	//Toolbar settings

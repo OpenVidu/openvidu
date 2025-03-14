@@ -2,7 +2,9 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { RecordingInfo, RecordingStatus, RecordingStatusInfo } from '../../models/recording.model';
 import { ActionService } from '../action/action.service';
-import { GlobalConfigService } from '../config/global-config.service';
+import { LoggerService } from '../logger/logger.service';
+import { ILogger } from '../../models/logger.model';
+import { OpenViduComponentsConfigService } from '../config/directive-config.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -13,19 +15,19 @@ export class RecordingService {
 	 */
 	recordingStatusObs: Observable<RecordingStatusInfo>;
 	private recordingTimeInterval: NodeJS.Timeout;
-	private API_RECORDINGS_PREFIX = 'call/api/recordings/';
 	private recordingStatus = <BehaviorSubject<RecordingStatusInfo>>new BehaviorSubject({
 		status: RecordingStatus.STOPPED,
 		recordingList: [] as RecordingInfo[],
 		recordingElapsedTime: new Date(0, 0, 0, 0, 0, 0, 0)
 	});
+	private log: ILogger;
 
 	/**
 	 * @internal
 	 */
-	constructor(private actionService: ActionService, private globalService: GlobalConfigService) {
+	constructor(private actionService: ActionService, private libService: OpenViduComponentsConfigService, private loggerService: LoggerService) {
+		this.log = this.loggerService.get('RecordingService');
 		this.recordingStatusObs = this.recordingStatus.asObservable();
-		this.API_RECORDINGS_PREFIX = this.globalService.getBaseHref() + this.API_RECORDINGS_PREFIX;
 	}
 
 	/**
@@ -146,9 +148,10 @@ export class RecordingService {
 	 */
 	playRecording(recording: RecordingInfo) {
 		// Only COMPOSED recording is supported. The extension will allways be 'mp4'.
-		console.log('Playing recording', recording);
+		this.log.d('Playing recording', recording);
 		const queryParamForAvoidCache = `?t=${new Date().getTime()}`;
-		const streamRecordingUrl = `${this.API_RECORDINGS_PREFIX}${recording.id}/stream${queryParamForAvoidCache}`;
+		const baseUrl = this.libService.getRecordingStreamBaseUrl();
+		const streamRecordingUrl = `${baseUrl}${recording.id}/stream${queryParamForAvoidCache}`;
 		this.actionService.openRecordingPlayerDialog(streamRecordingUrl);
 	}
 
@@ -161,7 +164,8 @@ export class RecordingService {
 		// Only COMPOSED recording is supported. The extension will allways be 'mp4'.
 		const queryParamForAvoidCache = `?t=${new Date().getTime()}`;
 		const link = document.createElement('a');
-		link.href = `${this.API_RECORDINGS_PREFIX}${recording.id}/stream${queryParamForAvoidCache}`;
+		const baseUrl = this.libService.getRecordingStreamBaseUrl();
+		link.href = `${baseUrl}${recording.id}/stream${queryParamForAvoidCache}`;
 		link.download = recording.filename || 'openvidu-recording.mp4';
 		link.dispatchEvent(
 			new MouseEvent('click', {

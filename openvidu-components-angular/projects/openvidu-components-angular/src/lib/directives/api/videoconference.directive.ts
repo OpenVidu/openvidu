@@ -725,3 +725,69 @@ export class AudioEnabledDirective implements OnDestroy {
 		}
 	}
 }
+
+/**
+ * The **recordingStreamBaseUrl** directive sets the base URL for retrieving recording streams.
+ * The complete request URL is dynamically constructed by concatenating the supplied URL, the
+ * internally managed recordingId, and the `/stream` segment.
+ *
+ * The final URL format will be:
+ *
+ *    {recordingStreamBaseUrl}/{recordingId}/stream
+ *
+ * Default: `"/{recordingId}/stream"`
+ *
+ * It is essential that the resulting route is declared and configured on your backend, as it is
+ * used for serving and accessing the recording streams.
+ *
+ * @example
+ * <ov-videoconference [recordingStreamBaseUrl]="'https://myserver.com/api/recordings'">
+ * </ov-videoconference>
+ */
+@Directive({
+	selector: 'ov-videoconference[recordingStreamBaseUrl]'
+})
+export class RecordingStreamBaseUrlDirective implements AfterViewInit, OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set recordingStreamBaseUrl(url: string) {
+		this.update(url);
+	}
+
+	/**
+	 * @ignore
+	 */
+	constructor(
+		private elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	/**
+	 * @ignore
+	 */
+	ngAfterViewInit(): void {
+		this.update(this.recordingStreamBaseUrl);
+	}
+
+	/**
+	 * @ignore
+	 */
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	/**
+	 * @ignore
+	 */
+	clear() {
+		this.update('');
+	}
+
+	/**
+	 * @ignore
+	 */
+	update(value: string) {
+		if (value) this.libService.setRecordingStreamBaseUrl(value);
+	}
+}
