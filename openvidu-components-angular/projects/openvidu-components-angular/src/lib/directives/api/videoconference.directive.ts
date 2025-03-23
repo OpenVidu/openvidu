@@ -735,7 +735,7 @@ export class AudioEnabledDirective implements OnDestroy {
  *
  *    {recordingStreamBaseUrl}/{recordingId}/stream
  *
- * Default: `"/{recordingId}/stream"`
+ * Default: `"call/api/recordings/{recordingId}/stream"`
  *
  * It is essential that the resulting route is declared and configured on your backend, as it is
  * used for serving and accessing the recording streams.

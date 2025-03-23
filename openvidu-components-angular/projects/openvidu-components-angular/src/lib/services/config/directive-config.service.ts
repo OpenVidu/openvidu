@@ -33,7 +33,7 @@ export class OpenViduComponentsConfigService {
 	private audioEnabled = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	audioEnabled$: Observable<boolean>;
 
-	private recordingStreamBaseUrl = <BehaviorSubject<string>>new BehaviorSubject('');
+	private recordingStreamBaseUrl = <BehaviorSubject<string>>new BehaviorSubject('call/api/recordings');
 	recordingStreamBaseUrl$: Observable<string>;
 
 	//Toolbar settings
