@@ -1,0 +1,1604 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.34.44.8038",
+      "templateHash": "14975259616382894965"
+    }
+  },
+  "parameters": {
+    "stackName": {
+      "type": "string",
+      "metadata": {
+        "description": "Stack name"
+      }
+    },
+    "certificateType": {
+      "type": "string",
+      "defaultValue": "selfsigned",
+      "allowedValues": [
+        "selfsigned",
+        "owncert",
+        "letsencrypt"
+      ],
+      "metadata": {
+        "description": "[selfsigned] Not recommended for production use. If you don't have a FQDN, (DomainName parameter) you can use this option to generate a self-signed certificate.\n[owncert] Valid for productions environments. If you have a FQDN, (DomainName parameter)\nand an Elastic IP, you can use this option to use your own certificate.\n[letsencrypt] Valid for production environments. If you have a FQDN, (DomainName parameter)\nand an Elastic IP, you can use this option to generate a Let's Encrypt certificate.\n"
+      }
+    },
+    "publicIpAddress": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Previously created Public IP address for the OpenVidu Deployment. Blank will generate a public IP"
+      }
+    },
+    "publicIpAddressResourceName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Name of the PublicIPAddress resource in your azure if you have a resource of publicIPAddress"
+      }
+    },
+    "domainName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Domain name for the OpenVidu Deployment. Blank will generate default domain"
+      }
+    },
+    "ownPublicCertificate": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "If certificate type is 'owncert', this parameter will be used to specify the public certificate"
+      }
+    },
+    "ownPrivateCertificate": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "If certificate type is 'owncert', this parameter will be used to specify the private certificate"
+      }
+    },
+    "letsEncryptEmail": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "If certificate type is 'letsencrypt', this email will be used for Let's Encrypt notifications"
+      }
+    },
+    "turnDomainName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "(Optional) Domain name for the TURN server with TLS. Only needed if your users are behind restrictive firewalls"
+      }
+    },
+    "turnOwnPublicCertificate": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified."
+      }
+    },
+    "turnOwnPrivateCertificate": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified."
+      }
+    },
+    "openviduLicense": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Visit https://openvidu.io/account"
+      }
+    },
+    "rtcEngine": {
+      "type": "string",
+      "defaultValue": "pion",
+      "allowedValues": [
+        "pion",
+        "mediasoup"
+      ],
+      "metadata": {
+        "description": "RTCEngine media engine to use"
+      }
+    },
+    "masterNodeInstanceType": {
+      "type": "string",
+      "defaultValue": "Standard_B2s",
+      "allowedValues": [
+        "Standard_B1s",
+        "Standard_B1ms",
+        "Standard_B2s",
+        "Standard_B2ms",
+        "Standard_B4ms",
+        "Standard_B8ms",
+        "Standard_D2_v3",
+        "Standard_D4_v3",
+        "Standard_D8_v3",
+        "Standard_D16_v3",
+        "Standard_D32_v3",
+        "Standard_D48_v3",
+        "Standard_D64_v3",
+        "Standard_D2_v4",
+        "Standard_D4_v4",
+        "Standard_D8_v4",
+        "Standard_D16_v4",
+        "Standard_D32_v4",
+        "Standard_D48_v4",
+        "Standard_D64_v4",
+        "Standard_D96_v4",
+        "Standard_D2_v5",
+        "Standard_D4_v5",
+        "Standard_D8_v5",
+        "Standard_D16_v5",
+        "Standard_D32_v5",
+        "Standard_D48_v5",
+        "Standard_D64_v5",
+        "Standard_D96_v5",
+        "Standard_F2",
+        "Standard_F4",
+        "Standard_F8",
+        "Standard_F16",
+        "Standard_F32",
+        "Standard_F64",
+        "Standard_F72",
+        "Standard_F2s_v2",
+        "Standard_F4s_v2",
+        "Standard_F8s_v2",
+        "Standard_F16s_v2",
+        "Standard_F32s_v2",
+        "Standard_F64s_v2",
+        "Standard_F72s_v2",
+        "Standard_E2_v3",
+        "Standard_E4_v3",
+        "Standard_E8_v3",
+        "Standard_E16_v3",
+        "Standard_E32_v3",
+        "Standard_E48_v3",
+        "Standard_E64_v3",
+        "Standard_E96_v3",
+        "Standard_E2_v4",
+        "Standard_E4_v4",
+        "Standard_E8_v4",
+        "Standard_E16_v4",
+        "Standard_E32_v4",
+        "Standard_E48_v4",
+        "Standard_E64_v4",
+        "Standard_E2_v5",
+        "Standard_E4_v5",
+        "Standard_E8_v5",
+        "Standard_E16_v5",
+        "Standard_E32_v5",
+        "Standard_E48_v5",
+        "Standard_E64_v5",
+        "Standard_E96_v5",
+        "Standard_M64",
+        "Standard_M128",
+        "Standard_M208ms_v2",
+        "Standard_M416ms_v2",
+        "Standard_L4s_v2",
+        "Standard_L8s_v2",
+        "Standard_L16s_v2",
+        "Standard_L32s_v2",
+        "Standard_L64s_v2",
+        "Standard_L80s_v2",
+        "Standard_NC6",
+        "Standard_NC12",
+        "Standard_NC24",
+        "Standard_NC24r",
+        "Standard_ND6s",
+        "Standard_ND12s",
+        "Standard_ND24s",
+        "Standard_ND24rs",
+        "Standard_NV6",
+        "Standard_NV12",
+        "Standard_NV24",
+        "Standard_H8",
+        "Standard_H16",
+        "Standard_H16r",
+        "Standard_H16mr",
+        "Standard_HB120rs_v2",
+        "Standard_HC44rs",
+        "Standard_DC2s",
+        "Standard_DC4s",
+        "Standard_DC2s_v2",
+        "Standard_DC4s_v2",
+        "Standard_DC8s_v2",
+        "Standard_DC16s_v2",
+        "Standard_DC32s_v2",
+        "Standard_A1_v2",
+        "Standard_A2_v2",
+        "Standard_A4_v2",
+        "Standard_A8_v2",
+        "Standard_A2m_v2",
+        "Standard_A4m_v2",
+        "Standard_A8m_v2"
+      ],
+      "metadata": {
+        "description": "Specifies the EC2 instance type for your OpenVidu Master Node"
+      }
+    },
+    "mediaNodeInstanceType": {
+      "type": "string",
+      "defaultValue": "Standard_B2s",
+      "allowedValues": [
+        "Standard_B1s",
+        "Standard_B1ms",
+        "Standard_B2s",
+        "Standard_B2ms",
+        "Standard_B4ms",
+        "Standard_B8ms",
+        "Standard_D2_v3",
+        "Standard_D4_v3",
+        "Standard_D8_v3",
+        "Standard_D16_v3",
+        "Standard_D32_v3",
+        "Standard_D48_v3",
+        "Standard_D64_v3",
+        "Standard_D2_v4",
+        "Standard_D4_v4",
+        "Standard_D8_v4",
+        "Standard_D16_v4",
+        "Standard_D32_v4",
+        "Standard_D48_v4",
+        "Standard_D64_v4",
+        "Standard_D96_v4",
+        "Standard_D2_v5",
+        "Standard_D4_v5",
+        "Standard_D8_v5",
+        "Standard_D16_v5",
+        "Standard_D32_v5",
+        "Standard_D48_v5",
+        "Standard_D64_v5",
+        "Standard_D96_v5",
+        "Standard_F2",
+        "Standard_F4",
+        "Standard_F8",
+        "Standard_F16",
+        "Standard_F32",
+        "Standard_F64",
+        "Standard_F72",
+        "Standard_F2s_v2",
+        "Standard_F4s_v2",
+        "Standard_F8s_v2",
+        "Standard_F16s_v2",
+        "Standard_F32s_v2",
+        "Standard_F64s_v2",
+        "Standard_F72s_v2",
+        "Standard_E2_v3",
+        "Standard_E4_v3",
+        "Standard_E8_v3",
+        "Standard_E16_v3",
+        "Standard_E32_v3",
+        "Standard_E48_v3",
+        "Standard_E64_v3",
+        "Standard_E96_v3",
+        "Standard_E2_v4",
+        "Standard_E4_v4",
+        "Standard_E8_v4",
+        "Standard_E16_v4",
+        "Standard_E32_v4",
+        "Standard_E48_v4",
+        "Standard_E64_v4",
+        "Standard_E2_v5",
+        "Standard_E4_v5",
+        "Standard_E8_v5",
+        "Standard_E16_v5",
+        "Standard_E32_v5",
+        "Standard_E48_v5",
+        "Standard_E64_v5",
+        "Standard_E96_v5",
+        "Standard_M64",
+        "Standard_M128",
+        "Standard_M208ms_v2",
+        "Standard_M416ms_v2",
+        "Standard_L4s_v2",
+        "Standard_L8s_v2",
+        "Standard_L16s_v2",
+        "Standard_L32s_v2",
+        "Standard_L64s_v2",
+        "Standard_L80s_v2",
+        "Standard_NC6",
+        "Standard_NC12",
+        "Standard_NC24",
+        "Standard_NC24r",
+        "Standard_ND6s",
+        "Standard_ND12s",
+        "Standard_ND24s",
+        "Standard_ND24rs",
+        "Standard_NV6",
+        "Standard_NV12",
+        "Standard_NV24",
+        "Standard_H8",
+        "Standard_H16",
+        "Standard_H16r",
+        "Standard_H16mr",
+        "Standard_HB120rs_v2",
+        "Standard_HC44rs",
+        "Standard_DC2s",
+        "Standard_DC4s",
+        "Standard_DC2s_v2",
+        "Standard_DC4s_v2",
+        "Standard_DC8s_v2",
+        "Standard_DC16s_v2",
+        "Standard_DC32s_v2",
+        "Standard_A1_v2",
+        "Standard_A2_v2",
+        "Standard_A4_v2",
+        "Standard_A8_v2",
+        "Standard_A2m_v2",
+        "Standard_A4m_v2",
+        "Standard_A8m_v2"
+      ],
+      "metadata": {
+        "description": "Specifies the EC2 instance type for your OpenVidu Media Nodes"
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Username for the Virtual Machine."
+      }
+    },
+    "adminSshKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "SSH Key or password for the Virtual Machine"
+      }
+    },
+    "initialNumberOfMediaNodes": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "Number of initial media nodes to deploy"
+      }
+    },
+    "minNumberOfMediaNodes": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "Minimum number of media nodes to deploy"
+      }
+    },
+    "maxNumberOfMediaNodes": {
+      "type": "int",
+      "defaultValue": 5,
+      "metadata": {
+        "description": "Maximum number of media nodes to deploy"
+      }
+    },
+    "scaleTargetCPU": {
+      "type": "int",
+      "defaultValue": 50,
+      "metadata": {
+        "description": "Target CPU percentage to scale up or down"
+      }
+    },
+    "datetime": {
+      "type": "string",
+      "defaultValue": "[utcNow('u')]"
+    },
+    "automationAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Automation Account Name to create a runbook inside it for scale in"
+      }
+    }
+  },
+  "variables": {
+    "copy": [
+      {
+        "name": "allPartsValid",
+        "count": "[length(variables('domainParts'))]",
+        "input": "[and(and(and(and(and(greaterOrEquals(length(variables('domainParts')[copyIndex('allPartsValid')]), 1), lessOrEquals(length(variables('domainParts')[copyIndex('allPartsValid')]), 63)), not(empty(variables('domainParts')[copyIndex('allPartsValid')]))), equals(variables('domainParts')[copyIndex('allPartsValid')], toLower(variables('domainParts')[copyIndex('allPartsValid')]))), not(contains(variables('domainParts')[copyIndex('allPartsValid')], '--'))), empty(replace(variables('domainParts')[copyIndex('allPartsValid')], '[a-z0-9-]', '')))]"
+      }
+    ],
+    "isEmptyIp": "[equals(parameters('publicIpAddress'), '')]",
+    "ipSegments": "[split(parameters('publicIpAddress'), '.')]",
+    "isFourSegments": "[equals(length(variables('ipSegments')), 4)]",
+    "seg1valid": "[if(variables('isEmptyIp'), true(), and(greaterOrEquals(int(variables('ipSegments')[0]), 0), lessOrEquals(int(variables('ipSegments')[0]), 255)))]",
+    "seg2valid": "[if(variables('isEmptyIp'), true(), and(greaterOrEquals(int(variables('ipSegments')[1]), 0), lessOrEquals(int(variables('ipSegments')[1]), 255)))]",
+    "seg3valid": "[if(variables('isEmptyIp'), true(), and(greaterOrEquals(int(variables('ipSegments')[2]), 0), lessOrEquals(int(variables('ipSegments')[2]), 255)))]",
+    "seg4valid": "[if(variables('isEmptyIp'), true(), and(greaterOrEquals(int(variables('ipSegments')[3]), 0), lessOrEquals(int(variables('ipSegments')[3]), 255)))]",
+    "isValidIP": "[and(and(and(and(and(not(variables('isEmptyIp')), variables('isFourSegments')), variables('seg1valid')), variables('seg2valid')), variables('seg3valid')), variables('seg4valid'))]",
+    "isEmptyDomain": "[equals(parameters('domainName'), '')]",
+    "domainParts": "[split(parameters('domainName'), '.')]",
+    "validNumberParts": "[greaterOrEquals(length(variables('domainParts')), 2)]",
+    "isDomainValid": "[and(and(not(variables('isEmptyDomain')), variables('validNumberParts')), not(contains(variables('allPartsValid'), false())))]",
+    "masterNodeVMSettings": {
+      "vmName": "[format('{0}-VN-MasterNode', parameters('stackName'))]",
+      "osDiskType": "StandardSSD_LRS",
+      "ubuntuOSVersion": {
+        "publisher": "Canonical",
+        "offer": "0001-com-ubuntu-server-jammy",
+        "sku": "22_04-lts-gen2",
+        "version": "latest"
+      },
+      "linuxConfiguration": {
+        "disablePasswordAuthentication": true,
+        "ssh": {
+          "publicKeys": [
+            {
+              "path": "[format('/home/{0}/.ssh/authorized_keys', parameters('adminUsername'))]",
+              "keyData": "[parameters('adminSshKey')]"
+            }
+          ]
+        }
+      }
+    },
+    "mediaNodeVMSettings": {
+      "vmName": "[format('{0}-VM-MediaNode', parameters('stackName'))]",
+      "osDiskType": "StandardSSD_LRS",
+      "ubuntuOSVersion": {
+        "publisher": "Canonical",
+        "offer": "0001-com-ubuntu-server-jammy",
+        "sku": "22_04-lts-gen2",
+        "version": "latest"
+      },
+      "linuxConfiguration": {
+        "disablePasswordAuthentication": true,
+        "ssh": {
+          "publicKeys": [
+            {
+              "path": "[format('/home/{0}/.ssh/authorized_keys', parameters('adminUsername'))]",
+              "keyData": "[parameters('adminSshKey')]"
+            }
+          ]
+        }
+      }
+    },
+    "networkSettings": {
+      "vNetAddressPrefix": "10.0.0.0/16",
+      "subnetAddressPrefixMaster1": "10.0.1.0/24",
+      "subnetAddressPrefixMedia": "10.0.0.0/24",
+      "vNetName": "[format('{0}-virtualNetwork', parameters('stackName'))]"
+    },
+    "keyVaultName": "[format('{0}-keyvault', parameters('stackName'))]",
+    "location": "[resourceGroup().location]",
+    "tenantId": "[subscription().tenantId]",
+    "deploymentUser": "[deployer().objectId]",
+    "installScriptTemplateMaster": "#!/bin/bash -x\nOPENVIDU_VERSION=main\nDOMAIN=\n\n# Assume azure cli is installed\n\napt-get update && apt-get install -y \\\n  curl \\\n  unzip \\\n  jq \\\n  wget\n\n# Configure Domain\nif [[ \"${domainName}\" == '' ]]; then\n  DOMAIN=${fqdn}\nelse\n  DOMAIN=${domainName}\nfi\n\n# Wait for the keyvault availability\nMAX_WAIT=100\nWAIT_INTERVAL=1\nELAPSED_TIME=0\nwhile true; do\n  # Check keyvault availability\n  set +e\n  az keyvault secret list --vault-name ${keyVaultName}\n\n  # If it is available, exit the loop\n  if [ $? -eq 0 ]; then\n    break\n  fi\n\n  # If not, wait and check again incrementing the time\n  ELAPSED_TIME=$((ELAPSED_TIME + WAIT_INTERVAL))\n\n  # If exceeded the maximum time, exit with error\n  if [ $ELAPSED_TIME -ge $MAX_WAIT ]; then\n    exit 1\n  fi\n\n  # Wait for the next iteration\n  sleep $WAIT_INTERVAL\ndone\nset -e\n\n# Get own private IP\nPRIVATE_IP=$(curl -H Metadata:true --noproxy \"*\" \"http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/privateIpAddress?api-version=2017-08-01&format=text\")\n\n\n# Store usernames and generate random passwords\nDOMAIN=\"$(/usr/local/bin/store_secret.sh save DOMAIN-NAME \"$DOMAIN\")\"\nOPENVIDU_PRO_LICENSE=\"$(/usr/local/bin/store_secret.sh save OPENVIDU-PRO-LICENSE \"${openviduLicense}\")\"\nOPENVIDU_RTC_ENGINE=\"$(/usr/local/bin/store_secret.sh save OPENVIDU-RTC-ENGINE \"${rtcEngine}\")\"\nREDIS_PASSWORD=\"$(/usr/local/bin/store_secret.sh generate REDIS-PASSWORD)\"\nMONGO_ADMIN_USERNAME=\"$(/usr/local/bin/store_secret.sh save MONGO-ADMIN-USERNAME \"mongoadmin\")\"\nMONGO_ADMIN_PASSWORD=\"$(/usr/local/bin/store_secret.sh generate MONGO-ADMIN-PASSWORD)\"\nMONGO_REPLICA_SET_KEY=\"$(/usr/local/bin/store_secret.sh generate MONGO-REPLICA-SET-KEY)\"\nMINIO_ACCESS_KEY=\"$(/usr/local/bin/store_secret.sh save MINIO-ACCESS-KEY \"minioadmin\")\"\nMINIO_SECRET_KEY=\"$(/usr/local/bin/store_secret.sh generate MINIO-SECRET-KEY)\"\nDASHBOARD_ADMIN_USERNAME=\"$(/usr/local/bin/store_secret.sh save DASHBOARD-ADMIN-USERNAME \"dashboardadmin\")\"\nDASHBOARD_ADMIN_PASSWORD=\"$(/usr/local/bin/store_secret.sh generate DASHBOARD-ADMIN-PASSWORD)\"\nGRAFANA_ADMIN_USERNAME=\"$(/usr/local/bin/store_secret.sh save GRAFANA-ADMIN-USERNAME \"grafanaadmin\")\"\nGRAFANA_ADMIN_PASSWORD=\"$(/usr/local/bin/store_secret.sh generate GRAFANA-ADMIN-PASSWORD)\"\nDEFAULT_APP_USERNAME=\"$(/usr/local/bin/store_secret.sh save DEFAULT-APP-USERNAME \"calluser\")\"\nDEFAULT_APP_PASSWORD=\"$(/usr/local/bin/store_secret.sh generate DEFAULT-APP-PASSWORD)\"\nDEFAULT_APP_ADMIN_USERNAME=\"$(/usr/local/bin/store_secret.sh save DEFAULT-APP-ADMIN-USERNAME \"calladmin\")\"\nDEFAULT_APP_ADMIN_PASSWORD=\"$(/usr/local/bin/store_secret.sh generate DEFAULT-APP-ADMIN-PASSWORD)\"\nLIVEKIT_API_KEY=\"$(/usr/local/bin/store_secret.sh generate LIVEKIT-API-KEY \"API\" 12)\"\nLIVEKIT_API_SECRET=\"$(/usr/local/bin/store_secret.sh generate LIVEKIT-API-SECRET)\"\nOPENVIDU_VERSION=\"$(/usr/local/bin/store_secret.sh save OPENVIDU-VERSION \"${OPENVIDU_VERSION}\")\"\nENABLED_MODULES=\"$(/usr/local/bin/store_secret.sh save ENABLED-MODULES \"observability,app\")\"\nALL_SECRETS_GENERATED=\"$(/usr/local/bin/store_secret.sh save ALL-SECRETS-GENERATED \"true\")\"\n\n# Base command\nINSTALL_COMMAND=\"sh <(curl -fsSL http://get.openvidu.io/pro/elastic/$OPENVIDU_VERSION/install_ov_master_node.sh)\"\n\n# Common arguments\nCOMMON_ARGS=(\n  \"--no-tty\"\n  \"--install\"\n  \"--environment=azure\"\n  \"--deployment-type=elastic\"\n  \"--node-role='master-node'\"\n  \"--openvidu-pro-license=$OPENVIDU_PRO_LICENSE\"\n  \"--private-ip=$PRIVATE_IP\"\n  \"--domain-name=$DOMAIN\"\n  \"--enabled-modules='$ENABLED_MODULES'\"\n  \"--rtc-engine=$OPENVIDU_RTC_ENGINE\"\n  \"--redis-password=$REDIS_PASSWORD\"\n  \"--mongo-admin-user=$MONGO_ADMIN_USERNAME\"\n  \"--mongo-admin-password=$MONGO_ADMIN_PASSWORD\"\n  \"--mongo-replica-set-key=$MONGO_REPLICA_SET_KEY\"\n  \"--minio-access-key=$MINIO_ACCESS_KEY\"\n  \"--minio-secret-key=$MINIO_SECRET_KEY\"\n  \"--dashboard-admin-user=$DASHBOARD_ADMIN_USERNAME\"\n  \"--dashboard-admin-password=$DASHBOARD_ADMIN_PASSWORD\"\n  \"--grafana-admin-user=$GRAFANA_ADMIN_USERNAME\"\n  \"--grafana-admin-password=$GRAFANA_ADMIN_PASSWORD\"\n  \"--default-app-user=$DEFAULT_APP_USERNAME\"\n  \"--default-app-password=$DEFAULT_APP_PASSWORD\"\n  \"--default-app-admin-user=$DEFAULT_APP_ADMIN_USERNAME\"\n  \"--default-app-admin-password=$DEFAULT_APP_ADMIN_PASSWORD\"\n  \"--livekit-api-key=$LIVEKIT_API_KEY\"\n  \"--livekit-api-secret=$LIVEKIT_API_SECRET\"\n)\n\n\n# Turn with TLS\nif [[ \"${turnDomainName}\" != '' ]]; then\n  LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT-TURN-DOMAIN-NAME \"${turnDomainName}\")\n  COMMON_ARGS+=(\n    \"--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME\"\n  )\nfi\n\n# Certificate arguments\nif [[ \"${certificateType}\" == \"selfsigned\" ]]; then\n  CERT_ARGS=(\n    \"--certificate-type=selfsigned\"\n  )\nelif [[ \"${certificateType}\" == \"letsencrypt\" ]]; then\n  LETSENCRYPT_EMAIL=$(/usr/local/bin/store_secret.sh save LETSENCRYPT-EMAIL \"${letsEncryptEmail}\")\n  CERT_ARGS=(\n    \"--certificate-type=letsencrypt\"\n    \"--letsencrypt-email=$LETSENCRYPT_EMAIL\"\n  )\nelse\n  # Download owncert files\n  mkdir -p /tmp/owncert\n  wget -O /tmp/owncert/fullchain.pem ${ownPublicCertificate}\n  wget -O /tmp/owncert/privkey.pem ${ownPrivateCertificate}\n\n  # Convert to base64\n  OWN_CERT_CRT=$(base64 -w 0 /tmp/owncert/fullchain.pem)\n  OWN_CERT_KEY=$(base64 -w 0 /tmp/owncert/privkey.pem)\n\n  CERT_ARGS=(\n    \"--certificate-type=owncert\"\n    \"--owncert-public-key=$OWN_CERT_CRT\"\n    \"--owncert-private-key=$OWN_CERT_KEY\"\n  )\n\n  # Turn with TLS and own certificate\n  if [[ \"${turnDomainName}\" != '' ]]; then\n    # Download owncert files\n    mkdir -p /tmp/owncert-turn\n    wget -O /tmp/owncert-turn/fullchain.pem ${turnOwnPublicCertificate}\n    wget -O /tmp/owncert-turn/privkey.pem ${turnOwnPrivateCertificate}\n\n    # Convert to base64\n    OWN_CERT_CRT_TURN=$(base64 -w 0 /tmp/owncert-turn/fullchain.pem)\n    OWN_CERT_KEY_TURN=$(base64 -w 0 /tmp/owncert-turn/privkey.pem)\n\n    CERT_ARGS+=(\n      \"--turn-owncert-private-key=$OWN_CERT_KEY_TURN\"\n      \"--turn-owncert-public-key=$OWN_CERT_CRT_TURN\"\n    )\n  fi\nfi\n\n# Construct the final command with all arguments\nFINAL_COMMAND=\"$INSTALL_COMMAND $(printf \"%s \" \"${COMMON_ARGS[@]}\") $(printf \"%s \" \"${CERT_ARGS[@]}\")\"\n\n# Install OpenVidu\nexec bash -c \"$FINAL_COMMAND\"\n",
+    "after_installScriptTemplateMaster": "#!/bin/bash\nset -e\n\naz login --identity --allow-no-subscriptions > /dev/null\n\n# Configure Domain\nif [[ \"${domainName}\" == '' ]]; then\n  DOMAIN=${fqdn}\nelse\n  DOMAIN=${domainName}\nfi\n\n# Generate URLs\nDASHBOARD_URL=\"https://${DOMAIN}/dashboard/\"\nGRAFANA_URL=\"https://${DOMAIN}/grafana/\"\nMINIO_URL=\"https://${DOMAIN}/minio-console/\"\n\n# Update shared secret\naz keyvault secret set --vault-name ${keyVaultName} --name DOMAIN-NAME --value $DOMAIN\naz keyvault secret set --vault-name ${keyVaultName} --name DASHBOARD-URL --value $DASHBOARD_URL\naz keyvault secret set --vault-name ${keyVaultName} --name GRAFANA-URL --value $GRAFANA_URL\naz keyvault secret set --vault-name ${keyVaultName} --name MINIO-URL --value $MINIO_URL\n\naz keyvault secret show --vault-name ${keyVaultName} --name MINIO-URL\n\nif [[ $? -ne 0 ]]; then\n    echo \"Error updating keyvault\"\nfi\n",
+    "update_config_from_secretScriptTemplateMaster": "#!/bin/bash\nset -e\n\naz login --identity --allow-no-subscriptions > /dev/null\n\n# Installation directory\nINSTALL_DIR=\"/opt/openvidu\"\nCLUSTER_CONFIG_DIR=\"${INSTALL_DIR}/config/cluster\"\nMASTER_NODE_CONFIG_DIR=\"${INSTALL_DIR}/config/node\"\n\n# Replace DOMAIN_NAME\nexport DOMAIN=$(az keyvault secret show --vault-name ${keyVaultName} --name DOMAIN-NAME --query value -o tsv)\nif [[ -n \"$DOMAIN\" ]]; then\n    sed -i \"s/DOMAIN_NAME=.*/DOMAIN_NAME=$DOMAIN/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nelse\n    exit 1\nfi\n\n# Replace LIVEKIT_TURN_DOMAIN_NAME\nexport LIVEKIT_TURN_DOMAIN_NAME=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-TURN-DOMAIN-NAME --query value -o tsv)\nif [[ -n \"$LIVEKIT_TURN_DOMAIN_NAME\" ]]; then\n    sed -i \"s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nfi\n\nif [[ ${certificateType} == \"letsencrypt\" ]]; then\n    export LETSENCRYPT_EMAIL=$(az keyvault secret show --vault-name ${keyVaultName} --name LETSENCRYPT-EMAIL --query value -o tsv)\n    sed -i \"s/LETSENCRYPT_EMAIL=.*/LETSENCRYPT_EMAIL=$LETSENCRYPT_EMAIL/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nfi\n\n# Get the rest of the values\nexport REDIS_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name REDIS-PASSWORD --query value -o tsv)\nexport OPENVIDU_RTC_ENGINE=$(az keyvault secret show --vault-name ${keyVaultName} --name OPENVIDU-RTC-ENGINE --query value -o tsv)\nexport OPENVIDU_PRO_LICENSE=$(az keyvault secret show --vault-name ${keyVaultName} --name OPENVIDU-PRO-LICENSE --query value -o tsv)\nexport MONGO_ADMIN_USERNAME=$(az keyvault secret show --vault-name ${keyVaultName} --name MONGO-ADMIN-USERNAME --query value -o tsv)\nexport MONGO_ADMIN_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name MONGO-ADMIN-PASSWORD --query value -o tsv)\nexport MONGO_REPLICA_SET_KEY=$(az keyvault secret show --vault-name ${keyVaultName} --name MONGO-REPLICA-SET-KEY --query value -o tsv)\nexport DASHBOARD_ADMIN_USERNAME=$(az keyvault secret show --vault-name ${keyVaultName} --name DASHBOARD-ADMIN-USERNAME --query value -o tsv)\nexport DASHBOARD_ADMIN_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name DASHBOARD-ADMIN-PASSWORD --query value -o tsv)\nexport MINIO_ACCESS_KEY=$(az keyvault secret show --vault-name ${keyVaultName} --name MINIO-ACCESS-KEY --query value -o tsv)\nexport MINIO_SECRET_KEY=$(az keyvault secret show --vault-name ${keyVaultName} --name MINIO-SECRET-KEY --query value -o tsv)\nexport GRAFANA_ADMIN_USERNAME=$(az keyvault secret show --vault-name ${keyVaultName} --name GRAFANA-ADMIN-USERNAME --query value -o tsv)\nexport GRAFANA_ADMIN_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name GRAFANA-ADMIN-PASSWORD --query value -o tsv)\nexport LIVEKIT_API_KEY=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-API-KEY --query value -o tsv)\nexport LIVEKIT_API_SECRET=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-API-SECRET --query value -o tsv)\nexport DEFAULT_APP_USERNAME=$(az keyvault secret show --vault-name ${keyVaultName} --name DEFAULT-APP-USERNAME --query value -o tsv)\nexport DEFAULT_APP_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name DEFAULT-APP-PASSWORD --query value -o tsv)\nexport DEFAULT_APP_ADMIN_USERNAME=$(az keyvault secret show --vault-name ${keyVaultName} --name DEFAULT-APP-ADMIN-USERNAME --query value -o tsv)\nexport DEFAULT_APP_ADMIN_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name DEFAULT-APP-ADMIN-PASSWORD --query value -o tsv)\nexport ENABLED_MODULES=$(az keyvault secret show --vault-name ${keyVaultName} --name ENABLED-MODULES --query value -o tsv)\n\n# Replace rest of the values\nsed -i \"s/REDIS_PASSWORD=.*/REDIS_PASSWORD=$REDIS_PASSWORD/\" \"${MASTER_NODE_CONFIG_DIR}/master_node.env\"\nsed -i \"s/OPENVIDU_RTC_ENGINE=.*/OPENVIDU_RTC_ENGINE=$OPENVIDU_RTC_ENGINE/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nsed -i \"s/OPENVIDU_PRO_LICENSE=.*/OPENVIDU_PRO_LICENSE=$OPENVIDU_PRO_LICENSE/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nsed -i \"s/MONGO_ADMIN_USERNAME=.*/MONGO_ADMIN_USERNAME=$MONGO_ADMIN_USERNAME/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nsed -i \"s/MONGO_ADMIN_PASSWORD=.*/MONGO_ADMIN_PASSWORD=$MONGO_ADMIN_PASSWORD/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nsed -i \"s/MONGO_REPLICA_SET_KEY=.*/MONGO_REPLICA_SET_KEY=$MONGO_REPLICA_SET_KEY/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nsed -i \"s/DASHBOARD_ADMIN_USERNAME=.*/DASHBOARD_ADMIN_USERNAME=$DASHBOARD_ADMIN_USERNAME/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nsed -i \"s/DASHBOARD_ADMIN_PASSWORD=.*/DASHBOARD_ADMIN_PASSWORD=$DASHBOARD_ADMIN_PASSWORD/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nsed -i \"s/MINIO_ACCESS_KEY=.*/MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nsed -i \"s/MINIO_SECRET_KEY=.*/MINIO_SECRET_KEY=$MINIO_SECRET_KEY/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nsed -i \"s/GRAFANA_ADMIN_USERNAME=.*/GRAFANA_ADMIN_USERNAME=$GRAFANA_ADMIN_USERNAME/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nsed -i \"s/GRAFANA_ADMIN_PASSWORD=.*/GRAFANA_ADMIN_PASSWORD=$GRAFANA_ADMIN_PASSWORD/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nsed -i \"s/LIVEKIT_API_KEY=.*/LIVEKIT_API_KEY=$LIVEKIT_API_KEY/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nsed -i \"s/LIVEKIT_API_SECRET=.*/LIVEKIT_API_SECRET=$LIVEKIT_API_SECRET/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\nsed -i \"s/CALL_USER=.*/CALL_USER=$DEFAULT_APP_USERNAME/\" \"${CLUSTER_CONFIG_DIR}/master_node/app.env\"\nsed -i \"s/CALL_SECRET=.*/CALL_SECRET=$DEFAULT_APP_PASSWORD/\" \"${CLUSTER_CONFIG_DIR}/master_node/app.env\"\nsed -i \"s/CALL_ADMIN_USER=.*/CALL_ADMIN_USER=$DEFAULT_APP_ADMIN_USERNAME/\" \"${CLUSTER_CONFIG_DIR}/master_node/app.env\"\nsed -i \"s/CALL_ADMIN_SECRET=.*/CALL_ADMIN_SECRET=$DEFAULT_APP_ADMIN_PASSWORD/\" \"${CLUSTER_CONFIG_DIR}/master_node/app.env\"\nsed -i \"s/ENABLED_MODULES=.*/ENABLED_MODULES=$ENABLED_MODULES/\" \"${CLUSTER_CONFIG_DIR}/openvidu.env\"\n\n# Update URLs in secret\nDASHBOARD_URL=\"https://${DOMAIN}/dashboard/\"\nGRAFANA_URL=\"https://${DOMAIN}/grafana/\"\nMINIO_URL=\"https://${DOMAIN}/minio-console/\"\n\n# Update shared secret\naz keyvault secret set --vault-name ${keyVaultName} --name DOMAIN-NAME --value $DOMAIN\naz keyvault secret set --vault-name ${keyVaultName} --name DASHBOARD-URL --value $DASHBOARD_URL\naz keyvault secret set --vault-name ${keyVaultName} --name GRAFANA-URL --value $GRAFANA_URL\naz keyvault secret set --vault-name ${keyVaultName} --name MINIO-URL --value $MINIO_URL\n",
+    "update_secret_from_configScriptTemplateMaster": "#!/bin/bash\nset -e\n\naz login --identity --allow-no-subscriptions > /dev/null\n\n# Installation directory\nINSTALL_DIR=\"/opt/openvidu\"\nCLUSTER_CONFIG_DIR=\"${INSTALL_DIR}/config/cluster\"\nMASTER_NODE_CONFIG_DIR=\"${INSTALL_DIR}/config/node\"\n\nif [[ ${certificateType} == \"letsencrypt\" ]]; then\n  LETSENCRYPT_EMAIL=\"$(/usr/local/bin/get_value_from_config.sh LETSENCRYPT_EMAIL \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\n  az keyvault secret set --vault-name ${keyVaultName} --name \"LETSENCRYPT-EMAIL\" --value $LETSENCRYPT_EMAIL\nfi\n\n# Get current values of the config\nREDIS_PASSWORD=\"$(/usr/local/bin/get_value_from_config.sh REDIS_PASSWORD \"${MASTER_NODE_CONFIG_DIR}/master_node.env\")\"\nDOMAIN_NAME=\"$(/usr/local/bin/get_value_from_config.sh DOMAIN_NAME \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nLIVEKIT_TURN_DOMAIN_NAME=\"$(/usr/local/bin/get_value_from_config.sh LIVEKIT_TURN_DOMAIN_NAME \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nOPENVIDU_RTC_ENGINE=\"$(/usr/local/bin/get_value_from_config.sh OPENVIDU_RTC_ENGINE \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nOPENVIDU_PRO_LICENSE=\"$(/usr/local/bin/get_value_from_config.sh OPENVIDU_PRO_LICENSE \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nMONGO_ADMIN_USERNAME=\"$(/usr/local/bin/get_value_from_config.sh MONGO_ADMIN_USERNAME \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nMONGO_ADMIN_PASSWORD=\"$(/usr/local/bin/get_value_from_config.sh MONGO_ADMIN_PASSWORD \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nMONGO_REPLICA_SET_KEY=\"$(/usr/local/bin/get_value_from_config.sh MONGO_REPLICA_SET_KEY \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nMINIO_ACCESS_KEY=\"$(/usr/local/bin/get_value_from_config.sh MINIO_ACCESS_KEY \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nMINIO_SECRET_KEY=\"$(/usr/local/bin/get_value_from_config.sh MINIO_SECRET_KEY \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nDASHBOARD_ADMIN_USERNAME=\"$(/usr/local/bin/get_value_from_config.sh DASHBOARD_ADMIN_USERNAME \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nDASHBOARD_ADMIN_PASSWORD=\"$(/usr/local/bin/get_value_from_config.sh DASHBOARD_ADMIN_PASSWORD \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nGRAFANA_ADMIN_USERNAME=\"$(/usr/local/bin/get_value_from_config.sh GRAFANA_ADMIN_USERNAME \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nGRAFANA_ADMIN_PASSWORD=\"$(/usr/local/bin/get_value_from_config.sh GRAFANA_ADMIN_PASSWORD \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nLIVEKIT_API_KEY=\"$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_KEY \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nLIVEKIT_API_SECRET=\"$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_SECRET \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\nDEFAULT_APP_USERNAME=\"$(/usr/local/bin/get_value_from_config.sh CALL_USER \"${CLUSTER_CONFIG_DIR}/master_node/app.env\")\"\nDEFAULT_APP_PASSWORD=\"$(/usr/local/bin/get_value_from_config.sh CALL_SECRET \"${CLUSTER_CONFIG_DIR}/master_node/app.env\")\"\nDEFAULT_APP_ADMIN_USERNAME=\"$(/usr/local/bin/get_value_from_config.sh CALL_ADMIN_USER \"${CLUSTER_CONFIG_DIR}/master_node/app.env\")\"\nDEFAULT_APP_ADMIN_PASSWORD=\"$(/usr/local/bin/get_value_from_config.sh CALL_ADMIN_SECRET \"${CLUSTER_CONFIG_DIR}/master_node/app.env\")\"\nENABLED_MODULES=\"$(/usr/local/bin/get_value_from_config.sh ENABLED_MODULES \"${CLUSTER_CONFIG_DIR}/openvidu.env\")\"\n\n# Update shared secret\naz keyvault secret set --vault-name ${keyVaultName} --name REDIS-PASSWORD --value $REDIS_PASSWORD\naz keyvault secret set --vault-name ${keyVaultName} --name DOMAIN-NAME --value $DOMAIN_NAME\naz keyvault secret set --vault-name ${keyVaultName} --name LIVEKIT-TURN-DOMAIN-NAME --value $LIVEKIT_TURN_DOMAIN_NAME\naz keyvault secret set --vault-name ${keyVaultName} --name OPENVIDU-RTC-ENGINE --value $OPENVIDU_RTC_ENGINE\naz keyvault secret set --vault-name ${keyVaultName} --name OPENVIDU-PRO-LICENSE --value $OPENVIDU_PRO_LICENSE\naz keyvault secret set --vault-name ${keyVaultName} --name MONGO-ADMIN-USERNAME --value $MONGO_ADMIN_USERNAME\naz keyvault secret set --vault-name ${keyVaultName} --name MONGO-ADMIN-PASSWORD --value $MONGO_ADMIN_PASSWORD\naz keyvault secret set --vault-name ${keyVaultName} --name MONGO-REPLICA-SET-KEY --value $MONGO_REPLICA_SET_KEY\naz keyvault secret set --vault-name ${keyVaultName} --name MINIO-ACCESS-KEY --value $MINIO_ACCESS_KEY\naz keyvault secret set --vault-name ${keyVaultName} --name MINIO-SECRET-KEY --value $MINIO_SECRET_KEY\naz keyvault secret set --vault-name ${keyVaultName} --name DASHBOARD-ADMIN-USERNAME --value $DASHBOARD_ADMIN_USERNAME\naz keyvault secret set --vault-name ${keyVaultName} --name DASHBOARD-ADMIN-PASSWORD --value $DASHBOARD_ADMIN_PASSWORD\naz keyvault secret set --vault-name ${keyVaultName} --name GRAFANA-ADMIN-USERNAME --value $GRAFANA_ADMIN_USERNAME\naz keyvault secret set --vault-name ${keyVaultName} --name GRAFANA-ADMIN-PASSWORD --value $GRAFANA_ADMIN_PASSWORD\naz keyvault secret set --vault-name ${keyVaultName} --name LIVEKIT-API-KEY --value $LIVEKIT_API_KEY\naz keyvault secret set --vault-name ${keyVaultName} --name LIVEKIT-API-SECRET --value $LIVEKIT_API_SECRET\naz keyvault secret set --vault-name ${keyVaultName} --name DEFAULT-APP-USERNAME --value $DEFAULT_APP_USERNAME\naz keyvault secret set --vault-name ${keyVaultName} --name DEFAULT-APP-PASSWORD --value $DEFAULT_APP_PASSWORD\naz keyvault secret set --vault-name ${keyVaultName} --name DEFAULT-APP-ADMIN-USERNAME --value $DEFAULT_APP_ADMIN_USERNAME\naz keyvault secret set --vault-name ${keyVaultName} --name DEFAULT-APP-ADMIN-PASSWORD --value $DEFAULT_APP_ADMIN_PASSWORD\naz keyvault secret set --vault-name ${keyVaultName} --name ENABLED-MODULES --value $ENABLED_MODULES\n",
+    "get_value_from_configScriptMaster": "#!/bin/bash\nset -e\n\n# Function to get the value of a given key from the environment file\nget_value() {\n    local key=\"$1\"\n    local file_path=\"$2\"\n\n    # Use grep to find the line with the key, ignoring lines starting with #\n    # Use awk to split on '=' and print the second field, which is the value\n    local value=$(grep -E \"^\\s*$key\\s*=\" \"$file_path\" | awk -F= '{print $2}' | sed 's/#.*//; s/^\\s*//; s/\\s*$//')\n\n    # If the value is empty, return \"none\"\n    if [ -z \"$value\" ]; then\n        echo \"none\"\n    else\n        echo \"$value\"\n    fi\n}\n\n# Check if the correct number of arguments are supplied\nif [ \"$#\" -ne 2 ]; then\n    echo \"Usage: $0 <key> <file_path>\"\n    exit 1\nfi\n\n# Get the key and file path from the arguments\nkey=\"$1\"\nfile_path=\"$2\"\n\n# Get and print the value\nget_value \"$key\" \"$file_path\"\n",
+    "store_secretScriptTemplateMaster": "#!/bin/bash\nset -e\n\naz login --identity --allow-no-subscriptions > /dev/null\n\n# Modes: save, generate\n# save mode: save the secret in the secret manager\n# generate mode: generate a random password and save it in the secret manager\nMODE=\"$1\"\n\nif [[ \"$MODE\" == \"generate\" ]]; then\n    SECRET_KEY_NAME=\"$2\"\n    PREFIX=\"${3:-}\"\n    LENGTH=\"${4:-44}\"\n    RANDOM_PASSWORD=\"$(openssl rand -base64 64 | tr -d '+/=\\n' | cut -c -${LENGTH})\"\n    RANDOM_PASSWORD=\"${PREFIX}${RANDOM_PASSWORD}\"\n    az keyvault secret set --vault-name ${keyVaultName} --name $SECRET_KEY_NAME --value $RANDOM_PASSWORD > /dev/null\n    if [[ $? -ne 0 ]]; then\n        echo \"Error generating secret\"\n    fi\n    echo \"$RANDOM_PASSWORD\"\nelif [[ \"$MODE\" == \"save\" ]]; then\n    SECRET_KEY_NAME=\"$2\"\n    SECRET_VALUE=\"$3\"\n    az keyvault secret set --vault-name ${keyVaultName} --name $SECRET_KEY_NAME --value $SECRET_VALUE > /dev/null\n    if [[ $? -ne 0 ]]; then\n        echo \"Error generating secret\"\n    fi\n    echo \"$SECRET_VALUE\"\nelse\n    exit 1\nfi\n",
+    "check_app_readyScriptMaster": "#!/bin/bash\nset -e\nwhile true; do\n  HTTP_STATUS=$(curl -Ik http://localhost:7880/twirp/health | head -n1 | awk '{print $2}')\n  if [ $HTTP_STATUS == 200 ]; then\n    break\n  fi\n  sleep 5\ndone\n",
+    "restartScriptMaster": "#!/bin/bash\nset -e\n# Stop all services\nsystemctl stop openvidu\n\n# Update config from secret\n/usr/local/bin/update_config_from_secret.sh\n\n# Start all services\nsystemctl start openvidu\n",
+    "base64get_value_from_configMaster": "[base64(variables('get_value_from_configScriptMaster'))]",
+    "base64check_app_readyMaster": "[base64(variables('check_app_readyScriptMaster'))]",
+    "base64restartMaster": "[base64(variables('restartScriptMaster'))]",
+    "userDataTemplateMasterNode": "#!/bin/bash -x\nset -eu -o pipefail\n\n# Introduce the scripts in the instance\n# install.sh\necho ${base64install} | base64 -d > /usr/local/bin/install.sh\nchmod +x /usr/local/bin/install.sh\n\n# after_install.sh\necho ${base64after_install} | base64 -d > /usr/local/bin/after_install.sh\nchmod +x /usr/local/bin/after_install.sh\n\n# update_config_from_secret.sh\necho ${base64update_config_from_secret} | base64 -d > /usr/local/bin/update_config_from_secret.sh\nchmod +x /usr/local/bin/update_config_from_secret.sh\n\n# update_secret_from_config.sh\necho ${base64update_secret_from_config} | base64 -d > /usr/local/bin/update_secret_from_config.sh\nchmod +x /usr/local/bin/update_secret_from_config.sh\n\n# get_value_from_config.sh\necho ${base64get_value_from_config} | base64 -d > /usr/local/bin/get_value_from_config.sh\nchmod +x /usr/local/bin/get_value_from_config.sh\n\n# store_secret.sh\necho ${base64store_secret} | base64 -d > /usr/local/bin/store_secret.sh\nchmod +x /usr/local/bin/store_secret.sh\n\n# check_app_ready.sh\necho ${base64check_app_ready} | base64 -d > /usr/local/bin/check_app_ready.sh\nchmod +x /usr/local/bin/check_app_ready.sh\n\n# restart.sh\necho ${base64restart} | base64 -d > /usr/local/bin/restart.sh\nchmod +x /usr/local/bin/restart.sh\n\n# Install azure cli\ncurl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash\n\naz login --identity --allow-no-subscriptions\n\napt-get update && apt-get install -y\n\nexport HOME=\"/root\"\n\n# Install OpenVidu\n/usr/local/bin/install.sh || { echo \"[OpenVidu] error installing OpenVidu\"; exit 1; }\n\n# Start OpenVidu\nsystemctl start openvidu || { echo \"[OpenVidu] error starting OpenVidu\"; exit 1; }\n\n# Update shared secret\n/usr/local/bin/after_install.sh || { echo \"[OpenVidu] error updating shared secret\"; exit 1; }\n\n# Launch on reboot\necho \"@reboot /usr/local/bin/restart.sh >> /var/log/openvidu-restart.log\" 2>&1 | crontab\n\nset +e\naz storage blob upload --account-name ${storageAccountName} --container-name automation-locks --name lock.txt --file /dev/null --auth-mode key\nset -e\n\naz keyvault secret set --vault-name ${keyVaultName} --name FINISH-MASTER-NODE --value \"true\"\n\n# Wait for the app\nsleep 150\n/usr/local/bin/check_app_ready.sh\n",
+    "installScriptTemplateMedia": "#!/bin/bash -x\nset -e\nDOMAIN=\n\n# Install dependencies\napt-get update && apt-get install -y \\\n  curl \\\n  unzip \\\n  jq \\\n  wget\n\n# Get own private IP\nPRIVATE_IP=$(curl -H Metadata:true --noproxy \"*\" \"http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/privateIpAddress?api-version=2017-08-01&format=text\")\n\nWAIT_INTERVAL=1\nMAX_WAIT=200\nELAPSED_TIME=0\nset +e\nwhile true; do\n  # get secret value\n  FINISH_MASTER_NODE=$(az keyvault secret show --vault-name ${keyVaultName} --name FINISH-MASTER-NODE --query value -o tsv)\n\n  # Check if the secret has been generated\n  if [ \"$FINISH_MASTER_NODE\" == \"true\" ]; then\n    break\n  fi\n\n  ELAPSED_TIME=$((ELAPSED_TIME + WAIT_INTERVAL))\n\n  # Check if the maximum waiting time has been reached\n  if [ $ELAPSED_TIME -ge $MAX_WAIT ]; then\n    exit 1\n  fi\n\n  sleep $WAIT_INTERVAL\ndone\nset -e\n\n# Get current shared secret\nDOMAIN=$(az keyvault secret show --vault-name ${keyVaultName} --name DOMAIN-NAME --query value -o tsv)\nOPENVIDU_PRO_LICENSE=$(az keyvault secret show --vault-name ${keyVaultName} --name OPENVIDU-PRO-LICENSE --query value -o tsv)\nREDIS_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name REDIS-PASSWORD --query value -o tsv)\nENABLED_MODULES=$(az keyvault secret show --vault-name ${keyVaultName} --name ENABLED-MODULES --query value -o tsv)\nOPENVIDU_VERSION=\"$(az keyvault secret show --vault-name ${keyVaultName} --name OPENVIDU-VERSION --query value -o tsv)\"\n\n# Get Master Node private IP\nMASTER_NODE_IP=${privateIPMasterNode}\n\n# Base command\nINSTALL_COMMAND=\"sh <(curl -fsSL http://get.openvidu.io/pro/elastic/$OPENVIDU_VERSION/install_ov_media_node.sh)\"\n\n# Common arguments\nCOMMON_ARGS=(\n  \"--no-tty\"\n  \"--install\"\n  \"--environment=azure\"\n  \"--deployment-type=elastic\"\n  \"--node-role='media-node'\"\n  \"--master-node-private-ip=$MASTER_NODE_IP\"\n  \"--private-ip=$PRIVATE_IP\"\n  \"--enabled-modules='$ENABLED_MODULES'\"\n  \"--redis-password=$REDIS_PASSWORD\"\n)\n# Construct the final command with all arguments\nFINAL_COMMAND=\"$INSTALL_COMMAND $(printf \"%s \" \"${COMMON_ARGS[@]}\")\"\n\n# Install OpenVidu\nexec bash -c \"$FINAL_COMMAND\"\n",
+    "stopMediaNodeParams": {
+      "subscriptionId": "[subscription().subscriptionId]",
+      "resourceGroupName": "[resourceGroup().name]",
+      "vmScaleSetName": "[format('{0}-mediaNodeScaleSet', parameters('stackName'))]",
+      "storageAccountName": "[format('lockstorage{0}', uniqueString(resourceGroup().id))]"
+    },
+    "stop_media_nodesScriptMediaTemplate": "#!/bin/bash\nset -e\n\nif ! (set -o noclobber ; echo > /tmp/global.lock) ; then\n    exit 1  # the global.lock already exists\nfi\n\n# Execute if docker is installed\nif [ -x \"$(command -v docker)\" ]; then\n\n  echo \"Stopping media node services and waiting for termination...\"\n  docker container kill --signal=SIGINT openvidu || true\n  docker container kill --signal=SIGINT ingress || true\n  docker container kill --signal=SIGINT egress || true\n\n  # Wait for running containers to not be openvidu, ingress or egress\n  while [ $(docker inspect -f '{{.State.Running}}' openvidu 2>/dev/null) == \"true\" ] || \\\n        [ $(docker inspect -f '{{.State.Running}}' ingress 2>/dev/null) == \"true\" ] || \\\n        [ $(docker inspect -f '{{.State.Running}}' egress 2>/dev/null) == \"true\" ]; do\n    echo \"Waiting for containers to stop...\"\n    sleep 5\n  done\nfi\n\naz login --identity\n\nRESOURCE_GROUP_NAME=${resourceGroupName}\nVM_SCALE_SET_NAME=${vmScaleSetName}\nSUBSCRIPTION_ID=${subscriptionId}\nBEFORE_INSTANCE_ID=$(curl -H Metadata:true --noproxy \"*\" \"http://169.254.169.254/metadata/instance?api-version=2021-02-01\" | jq -r '.compute.resourceId')\nINSTANCE_ID=$(echo $BEFORE_INSTANCE_ID | awk -F'/' '{print $NF}')\nRESOURCE_ID=/subscriptions/$SUBSCRIPTION_ID/resourcegroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Compute/virtualMachineScaleSets/$VM_SCALE_SET_NAME\nTIMESTAMP=$(date -u +\"%Y-%m-%dT%H:%M:%SZ\")\n\naz tag update --resource-id $RESOURCE_ID --operation replace --tags \"STATUS\"=\"HEALTHY\" \"InstanceDeleteTime\"=\"$TIMESTAMP\" \"storageAccount\"=\"${storageAccountName}\"\n\naz vmss delete-instances --resource-group $RESOURCE_GROUP_NAME --name $VM_SCALE_SET_NAME --instance-ids $INSTANCE_ID\n",
+    "userDataMediaNodeTemplate": "#!/bin/bash -x\nset -eu -o pipefail\n\n# Introduce the scripts in the instance\n# install.sh\necho ${base64install} | base64 -d > /usr/local/bin/install.sh\nchmod +x /usr/local/bin/install.sh\n\n# stop_media_nodes.sh\necho ${base64stop} | base64 -d > /usr/local/bin/stop_media_node.sh\nchmod +x /usr/local/bin/stop_media_node.sh\n\napt-get update && apt-get install -y\napt-get install -y jq\n\n# Install azure cli\ncurl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash\n\naz login --identity\n\n# Protect from scale in actions\nRESOURCE_GROUP_NAME=${resourceGroupName}\nVM_SCALE_SET_NAME=${vmScaleSetName}\nBEFORE_INSTANCE_ID=$(curl -H Metadata:true --noproxy \"*\" \"http://169.254.169.254/metadata/instance?api-version=2021-02-01\" | jq -r '.compute.resourceId')\nINSTANCE_ID=$(echo $BEFORE_INSTANCE_ID | awk -F'/' '{print $NF}')\naz vmss update --resource-group $RESOURCE_GROUP_NAME --name $VM_SCALE_SET_NAME --instance-id $INSTANCE_ID --protect-from-scale-in true\n\nexport HOME=\"/root\"\n\n# Install OpenVidu\n/usr/local/bin/install.sh || { echo \"[OpenVidu] error installing OpenVidu\"; exit 1; }\n\n# Start OpenVidu\nsystemctl start openvidu || { echo \"[OpenVidu] error starting OpenVidu\"; exit 1; }\n#/usr/local/bin/set_as_unhealthy.sh\n",
+    "stop_media_nodesScriptMedia": "[reduce(items(variables('stopMediaNodeParams')), createObject('value', variables('stop_media_nodesScriptMediaTemplate')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value]",
+    "base64stopMediaNode": "[base64(variables('stop_media_nodesScriptMedia'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2023-07-01",
+      "name": "[variables('keyVaultName')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "enabledForDeployment": true,
+        "enabledForDiskEncryption": false,
+        "enabledForTemplateDeployment": true,
+        "tenantId": "[variables('tenantId')]",
+        "enableSoftDelete": false,
+        "accessPolicies": [
+          {
+            "objectId": "[reference(resourceId('Microsoft.Compute/virtualMachines', variables('masterNodeVMSettings').vmName), '2023-09-01', 'full').identity.principalId]",
+            "tenantId": "[variables('tenantId')]",
+            "permissions": {
+              "secrets": [
+                "get",
+                "set",
+                "list"
+              ]
+            }
+          },
+          {
+            "objectId": "[reference(resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName'))), '2024-07-01', 'full').identity.principalId]",
+            "tenantId": "[variables('tenantId')]",
+            "permissions": {
+              "secrets": [
+                "get"
+              ]
+            }
+          },
+          {
+            "objectId": "[variables('deploymentUser')]",
+            "tenantId": "[variables('tenantId')]",
+            "permissions": {
+              "secrets": [
+                "get",
+                "list",
+                "set",
+                "delete",
+                "recover",
+                "backup",
+                "restore"
+              ]
+            }
+          }
+        ],
+        "sku": {
+          "name": "standard",
+          "family": "A"
+        },
+        "networkAcls": {
+          "defaultAction": "Allow",
+          "bypass": "AzureServices"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('masterNodeVMSettings').vmName)]",
+        "[resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2023-09-01",
+      "name": "[variables('masterNodeVMSettings').vmName]",
+      "location": "[variables('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('masterNodeInstanceType')]"
+        },
+        "storageProfile": {
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "[variables('masterNodeVMSettings').osDiskType]"
+            },
+            "diskSizeGB": 100
+          },
+          "imageReference": "[variables('masterNodeVMSettings').ubuntuOSVersion]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-masterNoderNetInterface', parameters('stackName')))]"
+            }
+          ]
+        },
+        "osProfile": {
+          "computerName": "[variables('masterNodeVMSettings').vmName]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminSshKey')]",
+          "linuxConfiguration": "[variables('masterNodeVMSettings').linuxConfiguration]"
+        },
+        "userData": "[base64(reduce(items(createObject('base64install', base64(reduce(items(createObject('domainName', parameters('domainName'), 'fqdn', if(variables('isEmptyIp'), reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName'))), '2023-11-01').dnsSettings.fqdn, parameters('domainName')), 'turnDomainName', parameters('turnDomainName'), 'certificateType', parameters('certificateType'), 'letsEncryptEmail', parameters('letsEncryptEmail'), 'ownPublicCertificate', parameters('ownPublicCertificate'), 'ownPrivateCertificate', parameters('ownPrivateCertificate'), 'turnOwnPublicCertificate', parameters('turnOwnPublicCertificate'), 'turnOwnPrivateCertificate', parameters('turnOwnPrivateCertificate'), 'openviduLicense', parameters('openviduLicense'), 'rtcEngine', parameters('rtcEngine'), 'keyVaultName', variables('keyVaultName'))), createObject('value', variables('installScriptTemplateMaster')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value), 'base64after_install', base64(reduce(items(createObject('domainName', parameters('domainName'), 'fqdn', if(variables('isEmptyIp'), reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName'))), '2023-11-01').dnsSettings.fqdn, parameters('domainName')), 'turnDomainName', parameters('turnDomainName'), 'certificateType', parameters('certificateType'), 'letsEncryptEmail', parameters('letsEncryptEmail'), 'ownPublicCertificate', parameters('ownPublicCertificate'), 'ownPrivateCertificate', parameters('ownPrivateCertificate'), 'turnOwnPublicCertificate', parameters('turnOwnPublicCertificate'), 'turnOwnPrivateCertificate', parameters('turnOwnPrivateCertificate'), 'openviduLicense', parameters('openviduLicense'), 'rtcEngine', parameters('rtcEngine'), 'keyVaultName', variables('keyVaultName'))), createObject('value', variables('after_installScriptTemplateMaster')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value), 'base64update_config_from_secret', base64(reduce(items(createObject('domainName', parameters('domainName'), 'fqdn', if(variables('isEmptyIp'), reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName'))), '2023-11-01').dnsSettings.fqdn, parameters('domainName')), 'turnDomainName', parameters('turnDomainName'), 'certificateType', parameters('certificateType'), 'letsEncryptEmail', parameters('letsEncryptEmail'), 'ownPublicCertificate', parameters('ownPublicCertificate'), 'ownPrivateCertificate', parameters('ownPrivateCertificate'), 'turnOwnPublicCertificate', parameters('turnOwnPublicCertificate'), 'turnOwnPrivateCertificate', parameters('turnOwnPrivateCertificate'), 'openviduLicense', parameters('openviduLicense'), 'rtcEngine', parameters('rtcEngine'), 'keyVaultName', variables('keyVaultName'))), createObject('value', variables('update_config_from_secretScriptTemplateMaster')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value), 'base64update_secret_from_config', base64(reduce(items(createObject('domainName', parameters('domainName'), 'fqdn', if(variables('isEmptyIp'), reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName'))), '2023-11-01').dnsSettings.fqdn, parameters('domainName')), 'turnDomainName', parameters('turnDomainName'), 'certificateType', parameters('certificateType'), 'letsEncryptEmail', parameters('letsEncryptEmail'), 'ownPublicCertificate', parameters('ownPublicCertificate'), 'ownPrivateCertificate', parameters('ownPrivateCertificate'), 'turnOwnPublicCertificate', parameters('turnOwnPublicCertificate'), 'turnOwnPrivateCertificate', parameters('turnOwnPrivateCertificate'), 'openviduLicense', parameters('openviduLicense'), 'rtcEngine', parameters('rtcEngine'), 'keyVaultName', variables('keyVaultName'))), createObject('value', variables('update_secret_from_configScriptTemplateMaster')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value), 'base64get_value_from_config', variables('base64get_value_from_configMaster'), 'base64store_secret', base64(reduce(items(createObject('domainName', parameters('domainName'), 'fqdn', if(variables('isEmptyIp'), reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName'))), '2023-11-01').dnsSettings.fqdn, parameters('domainName')), 'turnDomainName', parameters('turnDomainName'), 'certificateType', parameters('certificateType'), 'letsEncryptEmail', parameters('letsEncryptEmail'), 'ownPublicCertificate', parameters('ownPublicCertificate'), 'ownPrivateCertificate', parameters('ownPrivateCertificate'), 'turnOwnPublicCertificate', parameters('turnOwnPublicCertificate'), 'turnOwnPrivateCertificate', parameters('turnOwnPrivateCertificate'), 'openviduLicense', parameters('openviduLicense'), 'rtcEngine', parameters('rtcEngine'), 'keyVaultName', variables('keyVaultName'))), createObject('value', variables('store_secretScriptTemplateMaster')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value), 'base64check_app_ready', variables('base64check_app_readyMaster'), 'base64restart', variables('base64restartMaster'), 'keyVaultName', variables('keyVaultName'), 'storageAccountName', format('lockstorage{0}', uniqueString(resourceGroup().id)))), createObject('value', variables('userDataTemplateMasterNode')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value)]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-masterNoderNetInterface', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName')))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', format('lockstorage{0}', uniqueString(resourceGroup().id)))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "apiVersion": "2024-07-01",
+      "name": "[format('{0}-mediaNodeScaleSet', parameters('stackName'))]",
+      "location": "[variables('location')]",
+      "tags": {
+        "InstanceDeleteTime": "[parameters('datetime')]",
+        "storageAccount": "[format('lockstorage{0}', uniqueString(resourceGroup().id))]"
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "sku": {
+        "name": "[parameters('mediaNodeInstanceType')]",
+        "tier": "Standard",
+        "capacity": "[parameters('initialNumberOfMediaNodes')]"
+      },
+      "properties": {
+        "overprovision": true,
+        "upgradePolicy": {
+          "mode": "Automatic"
+        },
+        "singlePlacementGroup": true,
+        "platformFaultDomainCount": 1,
+        "virtualMachineProfile": {
+          "storageProfile": {
+            "osDisk": {
+              "createOption": "FromImage",
+              "managedDisk": {
+                "storageAccountType": "[variables('mediaNodeVMSettings').osDiskType]"
+              },
+              "diskSizeGB": 50
+            },
+            "imageReference": "[variables('mediaNodeVMSettings').ubuntuOSVersion]"
+          },
+          "osProfile": {
+            "computerNamePrefix": "[variables('mediaNodeVMSettings').vmName]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "adminPassword": "[parameters('adminSshKey')]",
+            "linuxConfiguration": "[variables('mediaNodeVMSettings').linuxConfiguration]"
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[format('{0}-mediaNodeNetInterface', parameters('stackName'))]",
+                "properties": {
+                  "primary": true,
+                  "ipConfigurations": [
+                    {
+                      "name": "ipconfigMediaNode",
+                      "properties": {
+                        "subnet": {
+                          "id": "[reference(resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetName), '2023-11-01').subnets[0].id]"
+                        },
+                        "applicationSecurityGroups": [
+                          {
+                            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+                          }
+                        ],
+                        "publicIPAddressConfiguration": {
+                          "name": "publicIPAddressMediaNode",
+                          "properties": {
+                            "publicIPAddressVersion": "IPv4"
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-mediaNoderNSG', parameters('stackName')))]"
+                  }
+                }
+              }
+            ]
+          },
+          "userData": "[base64(reduce(items(createObject('base64install', base64(reduce(items(createObject('privateIPMasterNode', reference(resourceId('Microsoft.Network/networkInterfaces', format('{0}-masterNoderNetInterface', parameters('stackName'))), '2023-11-01').ipConfigurations[0].properties.privateIPAddress, 'keyVaultName', variables('keyVaultName'))), createObject('value', variables('installScriptTemplateMedia')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value), 'base64stop', variables('base64stopMediaNode'), 'resourceGroupName', resourceGroup().name, 'vmScaleSetName', format('{0}-mediaNodeScaleSet', parameters('stackName')))), createObject('value', variables('userDataMediaNodeTemplate')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value)]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-masterNoderNetInterface', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-mediaNoderNSG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', format('lockstorage{0}', uniqueString(resourceGroup().id)))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetName)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/autoscalesettings",
+      "apiVersion": "2022-10-01",
+      "name": "[format('{0}-autoscaleSettings', parameters('stackName'))]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "profiles": [
+          {
+            "name": "openvidu-medianode-autoscale",
+            "capacity": {
+              "minimum": "[string(parameters('minNumberOfMediaNodes'))]",
+              "maximum": "[string(parameters('maxNumberOfMediaNodes'))]",
+              "default": "[string(parameters('initialNumberOfMediaNodes'))]"
+            },
+            "rules": [
+              {
+                "metricTrigger": {
+                  "metricName": "Percentage CPU",
+                  "metricNamespace": "Microsoft.Compute/virtualMachineScaleSets",
+                  "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName')))]",
+                  "statistic": "Average",
+                  "operator": "GreaterThan",
+                  "threshold": "[parameters('scaleTargetCPU')]",
+                  "timeAggregation": "Average",
+                  "timeWindow": "PT5M",
+                  "timeGrain": "PT1M"
+                },
+                "scaleAction": {
+                  "direction": "Increase",
+                  "type": "ChangeCount",
+                  "value": "1",
+                  "cooldown": "PT5M"
+                }
+              },
+              {
+                "metricTrigger": {
+                  "metricName": "Percentage CPU",
+                  "metricNamespace": "Microsoft.Compute/virtualMachineScaleSets",
+                  "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName')))]",
+                  "statistic": "Average",
+                  "operator": "LessThan",
+                  "threshold": "[parameters('scaleTargetCPU')]",
+                  "timeAggregation": "Average",
+                  "timeWindow": "PT5M",
+                  "timeGrain": "PT1M"
+                },
+                "scaleAction": {
+                  "direction": "Decrease",
+                  "type": "ChangeCount",
+                  "value": "1",
+                  "cooldown": "PT5M"
+                }
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "targetResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName')))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(format('roleAssignmentForMasterNode{0}', variables('masterNodeVMSettings').vmName))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', variables('masterNodeVMSettings').vmName), '2023-09-01', 'full').identity.principalId]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('masterNodeVMSettings').vmName)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(format('roleAssignmentForScaleSet{0}', format('{0}-mediaNodeScaleSet', parameters('stackName'))))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName'))), '2024-07-01', 'full').identity.principalId]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/actionGroups",
+      "apiVersion": "2023-01-01",
+      "name": "actiongrouptest",
+      "location": "global",
+      "properties": {
+        "groupShortName": "scaleinag",
+        "enabled": true,
+        "automationRunbookReceivers": [
+          {
+            "name": "scalein",
+            "useCommonAlertSchema": false,
+            "automationAccountId": "[reference(resourceId('Microsoft.Resources/deployments', 'WebhookDeployment'), '2022-09-01').outputs.automationAccountId.value]",
+            "runbookName": "scaleInRunbook",
+            "webhookResourceId": "[reference(resourceId('Microsoft.Resources/deployments', 'WebhookDeployment'), '2022-09-01').outputs.webhookId.value]",
+            "isGlobalRunbook": false,
+            "serviceUri": "[reference(resourceId('Microsoft.Resources/deployments', 'WebhookDeployment'), '2022-09-01').outputs.webhookUri.value]"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'WebhookDeployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/activityLogAlerts",
+      "apiVersion": "2020-10-01",
+      "name": "ScaleInAlertRule",
+      "location": "global",
+      "properties": {
+        "scopes": [
+          "[resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName')))]"
+        ],
+        "condition": {
+          "allOf": [
+            {
+              "field": "category",
+              "equals": "Administrative"
+            },
+            {
+              "field": "operationName",
+              "equals": "Microsoft.Compute/virtualMachineScaleSets/write"
+            },
+            {
+              "field": "level",
+              "containsAny": [
+                "error"
+              ]
+            },
+            {
+              "field": "status",
+              "containsAny": [
+                "failed"
+              ]
+            },
+            {
+              "field": "caller",
+              "equals": "42628537-ebd8-40bf-941a-dddd338e1fe9"
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            {
+              "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', 'actiongrouptest')]"
+            }
+          ]
+        },
+        "enabled": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/actionGroups', 'actiongrouptest')]",
+        "[resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName')))]"
+      ]
+    },
+    {
+      "condition": "[equals(variables('isEmptyIp'), true())]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}-publicIP', parameters('stackName'))]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "Standard",
+        "tier": "Regional"
+      },
+      "properties": {
+        "publicIPAddressVersion": "IPv4",
+        "publicIPAllocationMethod": "Static",
+        "dnsSettings": {
+          "domainNameLabel": "[if(variables('isEmptyDomain'), toLower(format('{0}', parameters('stackName'))), null())]",
+          "fqdn": "[if(variables('isEmptyDomain'), null(), parameters('domainName'))]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2023-11-01",
+      "name": "[variables('networkSettings').vNetName]",
+      "location": "[variables('location')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('networkSettings').vNetAddressPrefix]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "subnetForMediaNodes",
+            "properties": {
+              "addressPrefix": "[variables('networkSettings').subnetAddressPrefixMedia]",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Enabled",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-mediaNoderNSG', parameters('stackName')))]"
+              }
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-mediaNoderNSG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', variables('networkSettings').vNetName, 'firstSubnetForMasterNodes')]",
+      "properties": {
+        "addressPrefix": "[variables('networkSettings').subnetAddressPrefixMaster1]",
+        "privateEndpointNetworkPolicies": "Disabled",
+        "privateLinkServiceNetworkPolicies": "Enabled"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetName)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}-masterNoderNetInterface', parameters('stackName'))]",
+      "location": "[variables('location')]",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "primaryIPConfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetName, 'firstSubnetForMasterNodes')]"
+              },
+              "applicationSecurityGroups": [
+                {
+                  "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+                }
+              ],
+              "publicIPAddress": {
+                "id": "[if(variables('isEmptyIp'), resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName'))), resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressResourceName')))]",
+                "properties": {
+                  "deleteOption": "Delete"
+                }
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNoderNSG', parameters('stackName')))]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNoderNSG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetName, 'firstSubnetForMasterNodes')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}-masterNoderNSG', parameters('stackName'))]",
+      "location": "[variables('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "SSH",
+            "properties": {
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "22",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "HTTP",
+            "properties": {
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "80",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "HTTPS",
+            "properties": {
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "443",
+              "access": "Allow",
+              "priority": 120,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "RTMP",
+            "properties": {
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "1935",
+              "access": "Allow",
+              "priority": 130,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "MinIO",
+            "properties": {
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "9000",
+              "access": "Allow",
+              "priority": 140,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/applicationSecurityGroups",
+      "apiVersion": "2024-03-01",
+      "name": "[format('{0}-masterNodeASG', parameters('stackName'))]",
+      "location": "[variables('location')]"
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-masterNoderNSG', parameters('stackName')), 'mediaNode_to_masterNode_REDIS_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "7000",
+        "access": "Allow",
+        "priority": 150,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNoderNSG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-masterNoderNSG', parameters('stackName')), 'mediaNode_to_masterNode_MINIO_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "9100",
+        "access": "Allow",
+        "priority": 160,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNoderNSG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-masterNoderNSG', parameters('stackName')), 'mediaNode_to_masterNode_MONGO_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "20000",
+        "access": "Allow",
+        "priority": 170,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNoderNSG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-masterNoderNSG', parameters('stackName')), 'mediaNode_to_masterNode_LOKI_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "3100",
+        "access": "Allow",
+        "priority": 180,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNoderNSG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-masterNoderNSG', parameters('stackName')), 'mediaNode_to_masterNode_MIMIR_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "9009",
+        "access": "Allow",
+        "priority": 190,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNoderNSG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-masterNoderNSG', parameters('stackName')), 'mediaNode_to_masterNode_V2COMPATIBILITY_WEBHOOK_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "4443",
+        "access": "Allow",
+        "priority": 200,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNoderNSG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-masterNoderNSG', parameters('stackName')), 'mediaNode_to_masterNode_DEFAULTAPP_WEBHOOK_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "6080",
+        "access": "Allow",
+        "priority": 210,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNoderNSG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}-mediaNoderNSG', parameters('stackName'))]",
+      "location": "[variables('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "SSH",
+            "properties": {
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "22",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "TURN",
+            "properties": {
+              "protocol": "Udp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "443",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "WebRTC_over_TCP",
+            "properties": {
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "7881",
+              "access": "Allow",
+              "priority": 120,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "WebRTC_using_WHIP",
+            "properties": {
+              "protocol": "Udp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "7885",
+              "access": "Allow",
+              "priority": 130,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "WebRTC_traffic_UDP",
+            "properties": {
+              "protocol": "Udp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRanges": [
+                "50000",
+                "60000"
+              ],
+              "access": "Allow",
+              "priority": 140,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/applicationSecurityGroups",
+      "apiVersion": "2024-03-01",
+      "name": "[format('{0}-mediaNodeASG', parameters('stackName'))]",
+      "location": "[variables('location')]"
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-mediaNoderNSG', parameters('stackName')), 'masterNode_to_mediaNode_RTMP_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "1935",
+        "access": "Allow",
+        "priority": 150,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-mediaNoderNSG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-mediaNoderNSG', parameters('stackName')), 'masterNode_to_mediaNode_TURN_TLS_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "5349",
+        "access": "Allow",
+        "priority": 160,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-mediaNoderNSG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-mediaNoderNSG', parameters('stackName')), 'masterNode_to_mediaNode_SERVER_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "7880",
+        "access": "Allow",
+        "priority": 170,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-mediaNoderNSG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-mediaNoderNSG', parameters('stackName')), 'masterNode_to_mediaNode_HTTP_WHIP_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "8080",
+        "access": "Allow",
+        "priority": 180,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-mediaNoderNSG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-01-01",
+      "name": "[format('lockstorage{0}', uniqueString(resourceGroup().id))]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "accessTier": "Cool",
+        "supportsHttpsTrafficOnly": true
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-01-01",
+      "name": "[format('{0}/default/automation-locks', format('lockstorage{0}', uniqueString(resourceGroup().id)))]",
+      "properties": {
+        "publicAccess": "None"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', format('lockstorage{0}', uniqueString(resourceGroup().id)))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "WebhookDeployment",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "automationAccountName": {
+            "value": "[parameters('automationAccountName')]"
+          },
+          "runbookName": {
+            "value": "scaleInRunbook"
+          },
+          "webhookName": {
+            "value": "webhookForScaleIn"
+          },
+          "WebhookExpiryTime": {
+            "value": "2035-03-30T00:00:00Z"
+          },
+          "_artifactsLocation": {
+            "value": "https://raw.githubusercontent.com/Piwccle/AzureScaleIn/refs/heads/main/scaleInRunbook.ps1"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "automationAccountName": {
+              "type": "String",
+              "metadata": {
+                "description": "Automation account name"
+              }
+            },
+            "webhookName": {
+              "type": "String",
+              "metadata": {
+                "description": "Webhook Name"
+              }
+            },
+            "runbookName": {
+              "type": "String",
+              "metadata": {
+                "description": "Runbook Name for which webhook will be created"
+              }
+            },
+            "WebhookExpiryTime": {
+              "type": "String",
+              "metadata": {
+                "description": "Webhook Expiry time"
+              }
+            },
+            "_artifactsLocation": {
+              "defaultValue": "https://raw.githubusercontent.com/Piwccle/AzureScaleIn/refs/heads/main/scaleInRunbook.ps1",
+              "type": "String",
+              "metadata": {
+                "description": "URI to artifacts location"
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Automation/automationAccounts",
+              "apiVersion": "2020-01-13-preview",
+              "name": "[parameters('automationAccountName')]",
+              "location": "[resourceGroup().location]",
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "properties": {
+                "sku": {
+                  "name": "Basic"
+                }
+              },
+              "resources": [
+                {
+                  "type": "runbooks",
+                  "apiVersion": "2018-06-30",
+                  "name": "[parameters('runbookName')]",
+                  "location": "[resourceGroup().location]",
+                  "dependsOn": [
+                    "[parameters('automationAccountName')]"
+                  ],
+                  "properties": {
+                    "runbookType": "PowerShell72",
+                    "logProgress": "true",
+                    "description": "Scale In Runbook",
+                    "publishContentLink": {
+                      "uri": "[parameters('_artifactsLocation')]",
+                      "version": "1.0.0.0"
+                    }
+                  }
+                },
+                {
+                  "type": "webhooks",
+                  "apiVersion": "2018-06-30",
+                  "name": "[parameters('webhookName')]",
+                  "dependsOn": [
+                    "[parameters('automationAccountName')]",
+                    "[parameters('runbookName')]"
+                  ],
+                  "properties": {
+                    "isEnabled": true,
+                    "expiryTime": "[parameters('WebhookExpiryTime')]",
+                    "runbook": {
+                      "name": "[parameters('runbookName')]"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "name": "[guid(format('roleAutomationContributorAssignmentAutomationAccount{0}', parameters('automationAccountName')))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+                "principalId": "[reference(resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName')), '2023-11-01', 'full').identity.principalId]",
+                "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "webhookUri": {
+              "type": "String",
+              "value": "[reference(parameters('webhookName')).uri]"
+            },
+            "automationAccountId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
+            },
+            "webhookId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Automation/automationAccounts/webhooks', parameters('automationAccountName'), parameters('webhookName'))]"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "ipValidationStatus": {
+      "type": "string",
+      "value": "[if(variables('isValidIP'), 'IP address is valid', 'IP address not valid')]"
+    },
+    "domainValidationStatus": {
+      "type": "string",
+      "value": "[if(variables('isDomainValid'), 'Domain is valid', 'Domain is not valid')]"
+    },
+    "ownCertValidationStatus": {
+      "type": "string",
+      "value": "[if(and(and(equals(parameters('certificateType'), 'owncert'), not(equals(parameters('ownPrivateCertificate'), ''))), not(equals(parameters('ownPublicCertificate'), ''))), 'owncert selected and valid', 'You need to fill ''Own Public Certificate'' and ''Own Private Certificate''')]"
+    },
+    "letsEncryptValidationStatus": {
+      "type": "string",
+      "value": "[if(and(equals(parameters('certificateType'), 'letsencrypt'), not(equals(parameters('letsEncryptEmail'), ''))), 'letsEncrypt selected and valid', 'You need to fill ''Lets Encrypt Email''')]"
+    }
+  }
+}
