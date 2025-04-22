@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.34.44.8038",
-      "templateHash": "14975259616382894965"
+      "templateHash": "17682215124645099959"
     }
   },
   "parameters": {
@@ -1461,7 +1461,7 @@
             "value": "2035-03-30T00:00:00Z"
           },
           "_artifactsLocation": {
-            "value": "https://raw.githubusercontent.com/Piwccle/AzureScaleIn/refs/heads/main/scaleInRunbook.ps1"
+            "value": "https://raw.githubusercontent.com/OpenVidu/openvidu/refs/heads/master/openvidu-deployment/pro/shared/scaleInRunbook.ps1"
           }
         },
         "template": {
@@ -1493,7 +1493,7 @@
               }
             },
             "_artifactsLocation": {
-              "defaultValue": "https://raw.githubusercontent.com/Piwccle/AzureScaleIn/refs/heads/main/scaleInRunbook.ps1",
+              "defaultValue": "https://raw.githubusercontent.com/OpenVidu/openvidu/refs/heads/master/openvidu-deployment/pro/shared/scaleInRunbook.ps1",
               "type": "String",
               "metadata": {
                 "description": "URI to artifacts location"

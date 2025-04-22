@@ -1411,7 +1411,7 @@ module webhookModule '../../shared/webhookdeployment.json' = {
     runbookName: 'scaleInRunbook'
     webhookName: 'webhookForScaleIn'
     WebhookExpiryTime: '2035-03-30T00:00:00Z'
-    _artifactsLocation: 'https://raw.githubusercontent.com/Piwccle/AzureScaleIn/refs/heads/main/scaleInRunbook.ps1' //Change when we upload this to s3 or blob
+    _artifactsLocation: 'https://raw.githubusercontent.com/OpenVidu/openvidu/refs/heads/master/openvidu-deployment/pro/shared/scaleInRunbook.ps1'
   }
   name: 'WebhookDeployment'
 }
