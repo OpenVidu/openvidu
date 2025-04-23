@@ -27,7 +27,7 @@
             }
         },
         "_artifactsLocation": {
-            "defaultValue": "https://raw.githubusercontent.com/Piwccle/AzureScaleIn/refs/heads/main/scaleInRunbook.ps1",
+            "defaultValue": "https://raw.githubusercontent.com/OpenVidu/openvidu/refs/heads/master/openvidu-deployment/pro/shared/scaleInRunbook.ps1",
             "type": "String",
             "metadata": {
                 "description": "URI to artifacts location"

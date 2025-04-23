@@ -1705,7 +1705,7 @@ module webhookModule '../../shared/webhookdeployment.json' = {
     runbookName: 'scaleInRunbook'
     webhookName: 'webhookForScaleIn'
     WebhookExpiryTime: '2035-03-30T00:00:00Z'
-    _artifactsLocation: 'https://raw.githubusercontent.com/Piwccle/AzureScaleIn/refs/heads/main/scaleInRunbook.ps1' //Change when we upload this to s3 or blob
+    _artifactsLocation: 'https://raw.githubusercontent.com/OpenVidu/openvidu/refs/heads/master/openvidu-deployment/pro/shared/scaleInRunbook.ps1'
   }
   name: 'WebhookDeployment'
 }
@@ -2923,7 +2923,7 @@ resource masterToMediaClientIngress 'Microsoft.Network/networkSecurityGroups/sec
 /*------------------------------------------- STORAGE ACCOUNT ----------------------------------------*/
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
-  name: 'lockstorage${uniqueString(resourceGroup().id)}'
+  name: uniqueString(resourceGroup().id)
   location: resourceGroup().location
   sku: {
     name: 'Standard_LRS'
@@ -2935,8 +2935,22 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   }
 }
 
-resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+resource blobContainerScaleIn 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
   name: '${storageAccount.name}/default/automation-locks'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+@description('Name of the bucket where OpenVidu will store the recordings. If not specified, a default bucket will be created.')
+param containerName string = ''
+
+var isEmptyContainerName = containerName == ''
+
+resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  name: isEmptyContainerName
+    ? '${storageAccount.name}/default/openvidu-appdata'
+    : '${storageAccount.name}/default/${containerName}'
   properties: {
     publicAccess: 'None'
   }
