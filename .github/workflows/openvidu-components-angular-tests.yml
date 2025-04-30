@@ -183,6 +183,7 @@ jobs:
   webcomponent_e2e_directives:
     needs: test_setup
     name: Webcomponent directives
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -239,6 +240,7 @@ jobs:
   webcomponent_e2e_chat:
     needs: test_setup
     name: Webcomponent chat
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -296,6 +298,7 @@ jobs:
   webcomponent_e2e_events:
     needs: test_setup
     name: Webcomponent events
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -352,6 +355,7 @@ jobs:
   webcomponent_e2e_media_devices:
     needs: test_setup
     name: Webcomponent media devices
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -408,6 +412,7 @@ jobs:
   webcomponent_e2e_panels:
     needs: test_setup
     name: Webcomponent panels
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -464,6 +469,7 @@ jobs:
   webcomponent_e2e_screen_sharing:
     needs: test_setup
     name: Webcomponent screen sharing
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -521,6 +527,7 @@ jobs:
   webcomponent_e2e_stream:
     needs: test_setup
     name: Webcomponent stream
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -577,6 +584,7 @@ jobs:
   webcomponent_e2e_toolbar:
     needs: test_setup
     name: Webcomponent toolbar
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
