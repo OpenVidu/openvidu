@@ -52,7 +52,7 @@
 		"START_RECORDING": "Iniciar grabación",
 		"STOP_RECORDING": "Detener grabación",
 		"SETTINGS": "Configuración",
-		"LEAVE": "Salir de la sesión",
+		"LEAVE": "Salir de la sala",
 		"PARTICIPANTS": "Participantes",
 		"CHAT": "Chat",
 		"ACTIVITIES": "Actividades"
@@ -77,7 +77,7 @@
 		"CHAT": {
 			"TITLE": "Chat",
 			"YOU": "Tú",
-			"SUBTITLE": "Los mensajes se borrarán al finalizar la sesión",
+			"SUBTITLE": "Los mensajes se borrarán al salir de la sala",
 			"PLACEHOLDER": "Enviar mensaje...",
 			"SEND": "Enviar",
 			"MESSAGE_SENT_NOTIFICATION": "mensaje enviado",
@@ -100,7 +100,7 @@
 			"CAPTIONS": "Subtítulos",
 			"DISABLED_AUDIO": "Audio desactivado",
 			"DISABLED_VIDEO": "Video desactivado",
-			"CAPTIONS_LANG_TEXT": "Selecciona el idioma que usarán los participantes de la sesión. Los subtítulos aparecerán en ese idioma."
+			"CAPTIONS_LANG_TEXT": "Selecciona el idioma que usarán los participantes de la sala. Los subtítulos aparecerán en ese idioma."
 		},
 		"BACKGROUND": {
 			"TITLE": "Efectos de fondo",
@@ -138,9 +138,16 @@
 		}
 	},
 	"ERRORS": {
-		"SESSION": "Hubo un error al conectar a la sesión",
+		"SESSION": "Hubo un error al conectar a la sala",
 		"CONNECTION": "Sin conexión",
-		"RECONNECT": "Intentando reconectar a la sesión...",
+		"RECONNECT": "Intentando reconectar a la sala...",
+		"DISCONNECT": "Te has desconectado",
+		"NETWORK_DISCONNECT": "Te desconectaste debido a un problema de conectividad de red",
+		"SIGNAL_CLOSE": "La conexión con el servidor se cerró inesperadamente",
+		"SERVER_SHUTDOWN": "El servidor está actualmente fuera de servicio o en mantenimiento",
+		"PARTICIPANT_REMOVED": "Has sido eliminado de esta sala",
+		"ROOM_DELETED": "Esta sala ha sido eliminada",
+		"DUPLICATE_IDENTITY": "Te has desconectado porque tu alias ha sido asignado a otro participante",
 		"TOGGLE_CAMERA": "Hubo un error cambiando la cámara",
 		"TOGGLE_MICROPHONE": "Hubo un error cambiando el micrófono",
 		"SCREEN_SHARING": "Hubo un error compartiendo pantalla",

@@ -139,9 +139,16 @@
 		}
 	},
 	"ERRORS": {
-		"SESSION": "There was an error connecting to the session",
+		"SESSION": "There was an error connecting to the room",
 		"CONNECTION": "Connection lost",
-		"RECONNECT": "Oops! Trying to reconnect to the session...",
+		"RECONNECT": "Oops! Trying to reconnect to the room...",
+		"DISCONNECT": "Te has desconectado",
+		"NETWORK_DISCONNECT": "Te desconectaste debido a un problema de conectividad de red",
+		"SIGNAL_CLOSE": "La conexión con el servidor se cerró inesperadamente",
+		"SERVER_SHUTDOWN": "El servidor está actualmente fuera de servicio o en mantenimiento",
+		"PARTICIPANT_REMOVED": "Has sido eliminado de esta sala",
+		"ROOM_DELETED": "Esta sala ha sido eliminada",
+		"DUPLICATE_IDENTITY": "Te has desconectado porque tu alias ha sido asignado a otro participante",
 		"TOGGLE_CAMERA": "There was an error toggling camera",
 		"TOGGLE_MICROPHONE": "There was an error toggling microhpone",
 		"SCREEN_SHARING": "Error sharing screen",
