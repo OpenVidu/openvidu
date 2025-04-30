@@ -104,10 +104,6 @@ export class VirtualBackgroundService {
 					this.log.e('No processor found for the background effect.');
 					return;
 				}
-				// If there is a current processor, remove it before applying the new one
-				if (currentProcessor) {
-					await this.removeBackground();
-				}
 				await this.applyProcessorToCameraTracks(cameraTracks, newProcessor);
 			}
 
