@@ -46,7 +46,7 @@ import {
 	RoomEvent,
 	Track
 } from 'livekit-client';
-import { ParticipantLeftEvent, ParticipantModel } from '../../models/participant.model';
+import { ParticipantLeftEvent, ParticipantLeftReason, ParticipantModel } from '../../models/participant.model';
 
 /**
  * @internal
@@ -79,7 +79,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 	@Output() onRoomReconnected: EventEmitter<void> = new EventEmitter<void>();
 
 	/**
-	 * Provides event notifications that fire when Room is disconnected for the local participant.
+	 * Provides event notifications that fire when participant is disconnected from Room.
+	 * @deprecated Use onParticipantLeft instead
 	 */
 	@Output() onRoomDisconnected: EventEmitter<void> = new EventEmitter<void>();
 
@@ -129,7 +130,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 	@HostListener('window:beforeunload')
 	beforeunloadHandler() {
-		this.disconnectRoom();
+		this.disconnectRoom(ParticipantLeftReason.BROWSER_UNLOAD);
 	}
 
 	@HostListener('window:resize')
@@ -185,6 +186,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 	}
 
 	async ngOnInit() {
+		this.shouldDisconnectRoomWhenComponentIsDestroyed = true;
 		this.room = this.openviduService.getRoom();
 
 		// this.subscribeToCaptionLanguage();
@@ -208,13 +210,6 @@ export class SessionComponent implements OnInit, OnDestroy {
 		}
 		try {
 			await this.participantService.connect();
-			this.openviduService.setDisconnectCallback(() => {
-				const event: ParticipantLeftEvent = {
-					roomName: this.openviduService.getRoomName(),
-					participantName: this.participantService.getLocalParticipant()?.identity || ''
-				};
-				this.onParticipantLeft.emit(event);
-			});
 			// Send room created after participant connect for avoiding to send incomplete room payload
 			this.onRoomCreated.emit(this.room);
 			this.cd.markForCheck();
@@ -233,7 +228,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 	async ngOnDestroy() {
 		if (this.shouldDisconnectRoomWhenComponentIsDestroyed) {
-			await this.disconnectRoom();
+			await this.disconnectRoom(ParticipantLeftReason.LEAVE);
 		}
 		if (this.room) this.room.removeAllListeners();
 		this.participantService.clear();
@@ -243,10 +238,16 @@ export class SessionComponent implements OnInit, OnDestroy {
 		// 	if (this.captionLanguageSubscription) this.captionLanguageSubscription.unsubscribe();
 	}
 
-	async disconnectRoom() {
+	async disconnectRoom(reason: ParticipantLeftReason) {
 		// Mark session as disconnected for avoiding to do it again in ngOnDestroy
 		this.shouldDisconnectRoomWhenComponentIsDestroyed = false;
-		await this.openviduService.disconnectRoom();
+		await this.openviduService.disconnectRoom(() => {
+			this.onParticipantLeft.emit({
+				roomName: this.openviduService.getRoomName(),
+				participantName: this.participantService.getLocalParticipant()?.identity || '',
+				reason
+			});
+		});
 	}
 
 	private subscribeToTogglingMenu() {
@@ -483,14 +484,46 @@ export class SessionComponent implements OnInit, OnDestroy {
 		});
 
 		this.room.on(RoomEvent.Disconnected, async (reason: DisconnectReason | undefined) => {
-			if (reason === DisconnectReason.SERVER_SHUTDOWN) {
-				this.log.e('Room Disconnected', reason);
-				this.actionService.openConnectionDialog(
-					this.translateService.translate('ERRORS.CONNECTION'),
-					this.translateService.translate('ERRORS.RECONNECT')
-				);
-				this.onRoomDisconnected.emit();
+			const participantLeftEvent: ParticipantLeftEvent = {
+				roomName: this.openviduService.getRoomName(),
+				participantName: this.participantService.getLocalParticipant()?.identity || '',
+				reason: ParticipantLeftReason.NETWORK_DISCONNECT
+			};
+			const messageErrorKey = 'ERRORS.DISCONNECT';
+			let descriptionErrorKey = 'ERRORS.NETWORK_DISCONNECT';
+
+			switch (reason) {
+				case DisconnectReason.CLIENT_INITIATED:
+					// Skip disconnect reason if the user has left the room
+					return;
+				case DisconnectReason.DUPLICATE_IDENTITY:
+					participantLeftEvent.reason = ParticipantLeftReason.DUPLICATE_IDENTITY;
+					descriptionErrorKey = 'ERRORS.DUPLICATE_IDENTITY';
+					break;
+				case DisconnectReason.SERVER_SHUTDOWN:
+					descriptionErrorKey = 'ERRORS.SERVER_SHUTDOWN';
+					participantLeftEvent.reason = ParticipantLeftReason.SERVER_SHUTDOWN;
+					break;
+				case DisconnectReason.PARTICIPANT_REMOVED:
+					participantLeftEvent.reason = ParticipantLeftReason.PARTICIPANT_REMOVED;
+					descriptionErrorKey = 'ERRORS.PARTICIPANT_REMOVED';
+					break;
+				case DisconnectReason.ROOM_DELETED:
+					participantLeftEvent.reason = ParticipantLeftReason.ROOM_DELETED;
+					descriptionErrorKey = 'ERRORS.ROOM_DELETED';
+					break;
+				case DisconnectReason.SIGNAL_CLOSE:
+					participantLeftEvent.reason = ParticipantLeftReason.SIGNAL_CLOSE;
+					descriptionErrorKey = 'ERRORS.SIGNAL_CLOSE';
+					break;
 			}
+			this.log.e('Room Disconnected', participantLeftEvent.reason);
+			this.onParticipantLeft.emit(participantLeftEvent);
+			this.onRoomDisconnected.emit();
+			this.actionService.openDialog(
+				this.translateService.translate(messageErrorKey),
+				this.translateService.translate(descriptionErrorKey)
+			);
 			// await this.disconnectRoom();
 		});
 	}

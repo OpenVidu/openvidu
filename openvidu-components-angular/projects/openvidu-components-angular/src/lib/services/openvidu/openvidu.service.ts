@@ -38,7 +38,6 @@ export class OpenViduService {
 	private localTracks: LocalTrack[] = [];
 	private livekitToken = '';
 	private livekitUrl = '';
-	private disconnectCallback: () => void;
 	private log: ILogger;
 
 	/**
@@ -102,31 +101,20 @@ export class OpenViduService {
 	}
 
 	/**
-	 * Disconnects local participant from the room
+	 * Disconnects from the current room.
+	 *
+	 * This method will check if there's an active connection to a room before attempting to disconnect.
+	 * If the room is connected, it will perform the disconnection and call the optional callback function.
+	 *
+	 * @param callback - Optional function to be executed after a successful disconnection
+	 * @returns A Promise that resolves once the disconnection is complete
 	 */
-	async disconnectRoom(): Promise<void> {
+	async disconnectRoom(callback?: () => void): Promise<void> {
 		if (this.isRoomConnected()) {
-			this.log.d('Disconnecting room');
+			this.log.d('Disconnecting from room');
 			await this.room.disconnect();
-			if (this.disconnectCallback) {
-				this.disconnectCallback();
-			}
+			if (callback) callback();
 		}
-	}
-
-	/**
-	 * Sets a callback function that triggers when a participant is disconnected
-	 * from the session using the OpenViduService.disconnectRoom() method.
-	 *
-	 * This is particularly useful in cases where the disconnection occurs externally,
-	 * outside of this component, ensuring that the parent component is notified
-	 * even when the service is used directly.
-	 *
-	 * @param callback - The function to be executed upon disconnection.
-	 * @internal
-	 */
-	setDisconnectCallback(callback: () => void): void {
-		this.disconnectCallback = callback;
 	}
 
 	/**

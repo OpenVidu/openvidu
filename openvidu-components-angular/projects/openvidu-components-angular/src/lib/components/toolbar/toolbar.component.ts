@@ -46,7 +46,7 @@ import { RecordingService } from '../../services/recording/recording.service';
 import { StorageService } from '../../services/storage/storage.service';
 import { TranslateService } from '../../services/translate/translate.service';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
-import { ParticipantLeftEvent, ParticipantModel } from '../../models/participant.model';
+import { ParticipantLeftEvent, ParticipantLeftReason, ParticipantModel } from '../../models/participant.model';
 import { Room, RoomEvent } from 'livekit-client';
 import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
 
@@ -512,16 +512,18 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	/**
+	 * The participant leaves the room voluntarily.
 	 * @ignore
 	 */
 	async disconnect() {
-		const event: ParticipantLeftEvent = {
-			roomName: this.openviduService.getRoomName(),
-			participantName: this.participantService.getLocalParticipant()?.identity || ''
-		};
 		try {
-			await this.openviduService.disconnectRoom();
-			this.onParticipantLeft.emit(event);
+			await this.openviduService.disconnectRoom(() =>
+				this.onParticipantLeft.emit({
+					roomName: this.openviduService.getRoomName(),
+					participantName: this.participantService.getLocalParticipant()?.identity || '',
+					reason: ParticipantLeftReason.LEAVE
+				})
+			);
 		} catch (error) {
 			this.log.e('There was an error disconnecting:', error.code, error.message);
 			this.actionService.openDialog(this.translateService.translate('ERRORS.DISCONNECT'), error?.error || error?.message || error);

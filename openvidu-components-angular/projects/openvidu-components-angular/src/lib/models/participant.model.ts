@@ -1,7 +1,6 @@
 import { DeviceType } from './device.model';
 import {
 	AudioCaptureOptions,
-	DataPacket_Kind,
 	DataPublishOptions,
 	LocalParticipant,
 	LocalTrack,
@@ -19,8 +18,26 @@ import {
 export interface ParticipantLeftEvent {
 	roomName: string;
 	participantName: string;
+	reason: ParticipantLeftReason;
 }
 
+export enum ParticipantLeftReason {
+	// User-initiated disconnections
+	LEAVE = 'LEAVE', // The participant left the room voluntarily
+	BROWSER_UNLOAD = 'browser_unload', // The participant was disconnected due to a browser unload event
+
+	// Network-related disconnections
+	NETWORK_DISCONNECT = 'network_disconnect', // The participant was disconnected due to a network error
+	SIGNAL_CLOSE = 'websocket_closed', // The participant was disconnected due to a websocket error
+
+	// Server-initiated disconnections
+	SERVER_SHUTDOWN = 'server_shutdown', // The server was shut down
+	PARTICIPANT_REMOVED = 'participant_removed', // The participant was removed from the room
+	ROOM_DELETED = 'room_deleted', // The room was deleted
+
+	// Permission/policy-based disconnections
+	DUPLICATE_IDENTITY = 'duplicate_identity' // The participant was disconnected due to a duplicate identity
+}
 /**
  * Interface that defines the properties of the participant track publication.
  */
