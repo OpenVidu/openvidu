@@ -15,87 +15,92 @@ export class RecordingService {
 	 */
 	recordingStatusObs: Observable<RecordingStatusInfo>;
 	private recordingTimeInterval: NodeJS.Timeout;
+	private recordingStartTimestamp: number | null = null;
+
 	private recordingStatus = <BehaviorSubject<RecordingStatusInfo>>new BehaviorSubject({
 		status: RecordingStatus.STOPPED,
 		recordingList: [] as RecordingInfo[],
-		recordingElapsedTime: new Date(0, 0, 0, 0, 0, 0, 0)
+		recordingElapsedTime: new Date(0, 0, 0, 0, 0, 0),
 	});
 	private log: ILogger;
 
 	/**
 	 * @internal
 	 */
-	constructor(private actionService: ActionService, private libService: OpenViduComponentsConfigService, private loggerService: LoggerService) {
+	constructor(
+		private actionService: ActionService,
+		private libService: OpenViduComponentsConfigService,
+		private loggerService: LoggerService
+	) {
 		this.log = this.loggerService.get('RecordingService');
 		this.recordingStatusObs = this.recordingStatus.asObservable();
 	}
 
 	/**
+	 * Initializes the recording status with the given parameters and the timer to calculate the elapsed time.
 	 * @internal
-	 * @param event
 	 */
-	setRecordingStarted(recordingInfo?: RecordingInfo) {
-		this.startRecordingTime();
-		const { recordingElapsedTime, recordingList } = this.recordingStatus.getValue();
+	setRecordingStarted(recordingInfo?: RecordingInfo, startTimestamp?: number) {
+		// Register the start timestamp of the recording
+		// to calculate the elapsed time
+		debugger
+		this.recordingStartTimestamp = recordingInfo?.startedAt || Date.now();
+
+		// Initialize the recording elapsed time
+		this.startRecordingTimer();
+
+		const { recordingList } = this.recordingStatus.getValue();
+		let updatedRecordingList = [...recordingList];
+
 		if (recordingInfo) {
-			const existingRecordingIndex = recordingList.findIndex((recording) => recording.id === recordingInfo.id);
-			if (existingRecordingIndex !== -1) {
+			const existingIndex = updatedRecordingList.findIndex((recording) => recording.id === recordingInfo.id);
+			if (existingIndex !== -1) {
 				// Replace existing recording info
-				recordingList[existingRecordingIndex] = recordingInfo;
+				updatedRecordingList[existingIndex] = recordingInfo;
 			} else {
 				// Add new recording info
-				recordingList.unshift(recordingInfo);
+				updatedRecordingList = [recordingInfo, ...updatedRecordingList];
 			}
 		}
-		const statusInfo: RecordingStatusInfo = {
-			status: RecordingStatus.STARTED,
-			recordingList,
-			recordingElapsedTime
-		};
-		this.updateStatus(statusInfo);
-	}
-
-	/**
-	 * Deletes a recording from the recording list.
-	 *
-	 * @param rec - The recording to be deleted.
-	 * @internal
-	 */
-	deleteRecording(rec: RecordingInfo) {
-		const { recordingList } = this.recordingStatus.getValue();
-		const index = recordingList.findIndex((recording) => recording.id === rec.id);
-		if (index !== -1) {
-			recordingList.splice(index, 1);
-			this.updateStatus({
-				status: this.recordingStatus.getValue().status,
-				recordingList,
-				recordingElapsedTime: this.recordingStatus.getValue().recordingElapsedTime
-			});
+		const recordingElapsedTime = new Date(0, 0, 0, 0, 0, 0);
+		if (startTimestamp) {
+			const elapsedSeconds = Math.floor((Date.now() - startTimestamp) / 1000);
+			recordingElapsedTime.setSeconds(elapsedSeconds);
 		}
+
+		this.updateStatus({
+			status: RecordingStatus.STARTED,
+			recordingList: updatedRecordingList,
+			recordingElapsedTime
+		});
 	}
 
 	/**
+	 * Stops the recording timer and updates the recording status to **stopped**.
 	 * @internal
-	 * @param event
 	 */
 	setRecordingStopped(recordingInfo?: RecordingInfo) {
-		this.stopRecordingTime();
-		const { recordingElapsedTime, recordingList } = this.recordingStatus.getValue();
+		this.stopRecordingTimer();
+		const { recordingList } = this.recordingStatus.getValue();
+		let updatedRecordingList = [...recordingList];
+
+		// Update the recording list with the new recording info
 		if (recordingInfo) {
-			const existingRecordingIndex = recordingList.findIndex((recording) => recording.id === recordingInfo.id);
-			if (existingRecordingIndex !== -1) {
-				// Replace existing recording info with the new one
-				recordingList[existingRecordingIndex] = recordingInfo;
+			const existingIndex = updatedRecordingList.findIndex((recording) => recording.id === recordingInfo.id);
+			if (existingIndex !== -1) {
+				updatedRecordingList[existingIndex] = recordingInfo;
 			} else {
-				recordingList.unshift(recordingInfo);
+				updatedRecordingList = [recordingInfo, ...updatedRecordingList];
 			}
 		}
-		const statusInfo: RecordingStatusInfo = {
+
+		this.updateStatus({
 			status: RecordingStatus.STOPPED,
-			recordingList,
-			recordingElapsedTime
-		};
-		this.updateStatus(statusInfo);
+			recordingList: updatedRecordingList,
+			recordingElapsedTime: new Date(0, 0, 0, 0, 0, 0)
+		});
+
+		this.recordingStartTimestamp = null;
 	}
 
 	/**
@@ -104,12 +109,11 @@ export class RecordingService {
 	 */
 	setRecordingStarting() {
 		const { recordingList, recordingElapsedTime } = this.recordingStatus.getValue();
-		const statusInfo: RecordingStatusInfo = {
+		this.updateStatus({
 			status: RecordingStatus.STARTING,
 			recordingList,
 			recordingElapsedTime
-		};
-		this.updateStatus(statusInfo);
+		});
 	}
 
 	/**
@@ -117,7 +121,7 @@ export class RecordingService {
 	 * @param error
 	 */
 	setRecordingFailed(error: string) {
-		this.stopRecordingTime();
+		this.stopRecordingTimer();
 		const { recordingElapsedTime, recordingList } = this.recordingStatus.getValue();
 		const statusInfo: RecordingStatusInfo = {
 			status: RecordingStatus.FAILED,
@@ -134,12 +138,12 @@ export class RecordingService {
 	 */
 	setRecordingStopping() {
 		const { recordingElapsedTime, recordingList } = this.recordingStatus.getValue();
-		const statusInfo: RecordingStatusInfo = {
+
+		this.updateStatus({
 			status: RecordingStatus.STOPPING,
 			recordingList,
 			recordingElapsedTime
-		};
-		this.updateStatus(statusInfo);
+		});
 	}
 
 	/**
@@ -174,10 +178,29 @@ export class RecordingService {
 				view: window
 			})
 		);
-		setTimeout(() => {
-			// For Firefox it is necessary to delay revoking the ObjectURL
-			link.remove();
-		}, 100);
+		// For Firefox it is necessary to delay revoking the ObjectURL
+		setTimeout(() => link.remove(), 100);
+	}
+
+	/**
+	 * Deletes a recording from the recording list.
+	 *
+	 * @param recording - The recording to be deleted.
+	 * @internal
+	 */
+	deleteRecording(recording: RecordingInfo) {
+		const { recordingList, status, recordingElapsedTime } = this.recordingStatus.getValue();
+		const updatedList = recordingList.filter((item) => item.id !== recording.id);
+
+		if (updatedList.length !== recordingList.length) {
+			this.updateStatus({
+				status,
+				recordingList: updatedList,
+				recordingElapsedTime
+			});
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -187,13 +210,12 @@ export class RecordingService {
 	 */
 	setRecordingList(recordings: RecordingInfo[]) {
 		const { status, recordingElapsedTime, error } = this.recordingStatus.getValue();
-		const statusInfo: RecordingStatusInfo = {
+		this.updateStatus({
 			status,
 			recordingList: recordings,
 			recordingElapsedTime,
 			error
-		};
-		this.updateStatus(statusInfo);
+		});
 	}
 
 	/**
@@ -210,23 +232,35 @@ export class RecordingService {
 		});
 	}
 
-	private startRecordingTime() {
+	private startRecordingTimer() {
+		if (this.recordingStartTimestamp === null) {
+			this.recordingStartTimestamp = Date.now();
+		}
+		if (this.recordingTimeInterval) {
+			clearInterval(this.recordingTimeInterval);
+		}
+
 		this.recordingTimeInterval = setInterval(() => {
-			let { recordingElapsedTime, recordingList, status } = this.recordingStatus.getValue();
+			if (!this.recordingStartTimestamp) return;
+
+			let { recordingElapsedTime } = this.recordingStatus.getValue();
 			if (recordingElapsedTime) {
-				recordingElapsedTime.setSeconds(recordingElapsedTime.getSeconds() + 1);
-				recordingElapsedTime = new Date(recordingElapsedTime.getTime());
-				const statusInfo: RecordingStatusInfo = {
+				// Calculamos con precisión el tiempo transcurrido
+				const elapsedSeconds = Math.floor((Date.now() - this.recordingStartTimestamp) / 1000);
+				const updatedElapsedTime = new Date(0, 0, 0, 0, 0, 0);
+				updatedElapsedTime.setSeconds(elapsedSeconds);
+
+				const { recordingList, status } = this.recordingStatus.getValue();
+				this.updateStatus({
 					status,
 					recordingList,
-					recordingElapsedTime
-				};
-				this.updateStatus(statusInfo);
+					recordingElapsedTime: updatedElapsedTime
+				});
 			}
 		}, 1000);
 	}
 
-	private stopRecordingTime() {
+	private stopRecordingTimer() {
 		clearInterval(this.recordingTimeInterval);
 		const { recordingList, status, error } = this.recordingStatus.getValue();
 		const statusInfo: RecordingStatusInfo = {

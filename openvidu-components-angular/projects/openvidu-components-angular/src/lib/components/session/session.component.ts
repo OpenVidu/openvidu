@@ -47,18 +47,19 @@ import {
 	Track
 } from 'livekit-client';
 import { ParticipantLeftEvent, ParticipantLeftReason, ParticipantModel } from '../../models/participant.model';
+import { RecordingStatus } from '../../models/recording.model';
 
 /**
  * @internal
  */
 
 @Component({
-    selector: 'ov-session',
-    templateUrl: './session.component.html',
-    styleUrls: ['./session.component.scss'],
-    animations: [trigger('sessionAnimation', [transition(':enter', [style({ opacity: 0 }), animate('50ms', style({ opacity: 1 }))])])],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+	selector: 'ov-session',
+	templateUrl: './session.component.html',
+	styleUrls: ['./session.component.scss'],
+	animations: [trigger('sessionAnimation', [transition(':enter', [style({ opacity: 0 }), animate('50ms', style({ opacity: 1 }))])])],
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	standalone: false
 })
 export class SessionComponent implements OnInit, OnDestroy {
 	@ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any>;
@@ -456,7 +457,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 						this.recordingService.setRecordingList(recordingList);
 						if (isRecordingStarted) {
-							this.recordingService.setRecordingStarted();
+							const recordingActive = recordingList.find((recording) => recording.status === RecordingStatus.STARTED);
+							this.recordingService.setRecordingStarted(recordingActive);
 						}
 						if (isBroadcastingStarted) {
 							this.broadcastingService.setBroadcastingStarted(broadcastingId);
