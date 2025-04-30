@@ -5,7 +5,8 @@
 		"types": [],
 		"paths": {
 			"openvidu-components-angular": ["dist/openvidu-components-angular"]
-		}
+		},
+		"skipLibCheck": true // Livekit track processors fails with typescript types checking
 	},
 	"files": ["./openvidu-webcomponent.main.ts"],
 	"include": ["src/**/*.d.ts"]

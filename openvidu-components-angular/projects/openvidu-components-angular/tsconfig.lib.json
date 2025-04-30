@@ -15,7 +15,7 @@
 		"resolveJsonModule": true,
 		"types": ["jasmine", "node"],
 		"allowSyntheticDefaultImports": true,
-		"skipLibCheck": true
+		"skipLibCheck": true // Livekit track processors fails with typescript types checking
 	},
 	"exclude": ["node_modules", "src/test.ts", "**/*.spec.ts", "**/*.mock.ts"]
 }

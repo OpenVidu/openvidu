@@ -9,7 +9,8 @@
     ],
     "moduleResolution": "node",
     "experimentalDecorators": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "skipLibCheck": true // Livekit track processors fails with typescript types checking
   },
   "files": [
     "src/test.ts"
