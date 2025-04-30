@@ -12,7 +12,8 @@ import { ParticipantModel } from '../../../models/participant.model';
 @Component({
 	selector: 'ov-video-devices-select',
 	templateUrl: './video-devices.component.html',
-	styleUrls: ['./video-devices.component.scss']
+	styleUrls: ['./video-devices.component.scss'],
+	standalone: false
 })
 export class VideoDevicesComponent implements OnInit, OnDestroy {
 	@Output() onVideoDeviceChanged = new EventEmitter<CustomDevice>();

@@ -12,7 +12,8 @@ import { VirtualBackgroundService } from '../../../services/virtual-background/v
 	selector: 'ov-background-effects-panel',
 	templateUrl: './background-effects-panel.component.html',
 	styleUrls: ['../panel.component.scss', './background-effects-panel.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	standalone: false
 })
 export class BackgroundEffectsPanelComponent implements OnInit {
 	backgroundSelectedId: string;
@@ -56,10 +57,6 @@ export class BackgroundEffectsPanelComponent implements OnInit {
 	}
 
 	async applyBackground(effect: BackgroundEffect) {
-		if (effect.type === EffectType.NONE) {
-			await this.backgroundService.removeBackground();
-		} else {
-			await this.backgroundService.applyBackground(effect);
-		}
+		await this.backgroundService.applyBackground(effect);
 	}
 }

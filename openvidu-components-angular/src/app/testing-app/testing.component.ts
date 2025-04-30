@@ -48,9 +48,10 @@ export enum AttributeDirective {
 }
 
 @Component({
-	selector: 'app-testing',
-	templateUrl: './testing.component.html',
-	styleUrls: ['./testing.component.scss']
+    selector: 'app-testing',
+    templateUrl: './testing.component.html',
+    styleUrls: ['./testing.component.scss'],
+    standalone: false
 })
 export class TestingComponent implements AfterViewInit {
 	roomName: string;

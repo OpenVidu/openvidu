@@ -30,7 +30,8 @@ import { OpenViduComponentsConfigService } from '../../services/config/directive
 	selector: 'ov-layout',
 	templateUrl: './layout.component.html',
 	styleUrls: ['./layout.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	standalone: false
 })
 export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**

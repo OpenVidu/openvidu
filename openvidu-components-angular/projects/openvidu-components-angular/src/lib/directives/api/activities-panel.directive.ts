@@ -17,7 +17,8 @@ import { OpenViduComponentsConfigService } from '../../services/config/directive
  * <ov-activities-panel *ovActivitiesPanel [recordingActivity]="false"></ov-activities-panel>
  */
 @Directive({
-	selector: 'ov-videoconference[activitiesPanelRecordingActivity], ov-activities-panel[recordingActivity]'
+	selector: 'ov-videoconference[activitiesPanelRecordingActivity], ov-activities-panel[recordingActivity]',
+	standalone: false
 })
 export class ActivitiesPanelRecordingActivityDirective implements AfterViewInit, OnDestroy {
 	@Input() set activitiesPanelRecordingActivity(value: boolean) {
@@ -31,7 +32,10 @@ export class ActivitiesPanelRecordingActivityDirective implements AfterViewInit,
 
 	recordingActivityValue: boolean = true;
 
-	constructor(public elementRef: ElementRef, private libService: OpenViduComponentsConfigService) {}
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
 
 	ngAfterViewInit() {
 		this.update(this.recordingActivityValue);
@@ -66,8 +70,9 @@ export class ActivitiesPanelRecordingActivityDirective implements AfterViewInit,
  * @example
  * <ov-activities-panel *ovActivitiesPanel [broadcastingActivity]="false"></ov-activities-panel>
  */
- @Directive({
-	selector: 'ov-videoconference[activitiesPanelBroadcastingActivity], ov-activities-panel[broadcastingActivity]'
+@Directive({
+	selector: 'ov-videoconference[activitiesPanelBroadcastingActivity], ov-activities-panel[broadcastingActivity]',
+	standalone: false
 })
 export class ActivitiesPanelBroadcastingActivityDirective implements AfterViewInit, OnDestroy {
 	@Input() set activitiesPanelBroadcastingActivity(value: boolean) {
@@ -81,7 +86,10 @@ export class ActivitiesPanelBroadcastingActivityDirective implements AfterViewIn
 
 	broadcastingActivityValue: boolean = true;
 
-	constructor(public elementRef: ElementRef, private libService: OpenViduComponentsConfigService) {}
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
 
 	ngAfterViewInit() {
 		this.update(this.broadcastingActivityValue);
@@ -100,4 +108,3 @@ export class ActivitiesPanelBroadcastingActivityDirective implements AfterViewIn
 		}
 	}
 }
-

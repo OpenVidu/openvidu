@@ -37,7 +37,8 @@ import { BackgroundEffect } from '../../models/background-effect.model';
 	selector: 'ov-panel',
 	templateUrl: './panel.component.html',
 	styleUrls: ['./panel.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	standalone: false
 })
 export class PanelComponent implements OnInit {
 	/**

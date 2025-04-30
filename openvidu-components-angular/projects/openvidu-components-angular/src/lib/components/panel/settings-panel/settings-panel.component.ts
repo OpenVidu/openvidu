@@ -13,7 +13,8 @@ import { LangOption } from '../../../models/lang.model';
 @Component({
 	selector: 'ov-settings-panel',
 	templateUrl: './settings-panel.component.html',
-	styleUrls: ['../panel.component.scss', './settings-panel.component.scss']
+	styleUrls: ['../panel.component.scss', './settings-panel.component.scss'],
+	standalone: false
 })
 export class SettingsPanelComponent implements OnInit {
 	@Output() onVideoEnabledChanged = new EventEmitter<boolean>();

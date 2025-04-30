@@ -18,7 +18,8 @@ import { StorageService } from '../../services/storage/storage.service';
  * <ov-videoconference [livekitUrl]="http://localhost:1234"></ov-videoconference>
  */
 @Directive({
-	selector: 'ov-videoconference[livekitUrl]'
+	selector: 'ov-videoconference[livekitUrl]',
+	standalone: false
 })
 export class LivekitUrlDirective implements OnDestroy {
 	/**
@@ -70,7 +71,8 @@ export class LivekitUrlDirective implements OnDestroy {
  * <ov-videoconference [token]="token"></ov-videoconference>
  */
 @Directive({
-	selector: 'ov-videoconference[token]'
+	selector: 'ov-videoconference[token]',
+	standalone: false
 })
 export class TokenDirective implements OnDestroy {
 	/**
@@ -121,7 +123,8 @@ export class TokenDirective implements OnDestroy {
  * <ov-videoconference [tokenError]="error"></ov-videoconference>
  */
 @Directive({
-	selector: 'ov-videoconference[tokenError]'
+	selector: 'ov-videoconference[tokenError]',
+	standalone: false
 })
 export class TokenErrorDirective implements OnDestroy {
 	/**
@@ -172,7 +175,8 @@ export class TokenErrorDirective implements OnDestroy {
  * <ov-videoconference [minimal]="true"></ov-videoconference>
  */
 @Directive({
-	selector: 'ov-videoconference[minimal]'
+	selector: 'ov-videoconference[minimal]',
+	standalone: false
 })
 export class MinimalDirective implements OnDestroy {
 	/**
@@ -238,7 +242,8 @@ export class MinimalDirective implements OnDestroy {
  * <ov-videoconference [lang]="'es'"></ov-videoconference>
  */
 @Directive({
-	selector: 'ov-videoconference[lang]'
+	selector: 'ov-videoconference[lang]',
+	standalone: false
 })
 export class LangDirective implements OnDestroy {
 	/**
@@ -307,7 +312,8 @@ export class LangDirective implements OnDestroy {
  * <ov-videoconference [langOptions]="[{name:'Spanish', lang: 'es'}]"></ov-videoconference>
  */
 @Directive({
-	selector: 'ov-videoconference[langOptions]'
+	selector: 'ov-videoconference[langOptions]',
+	standalone: false
 })
 export class LangOptionsDirective implements OnDestroy {
 	/**
@@ -488,7 +494,8 @@ export class LangOptionsDirective implements OnDestroy {
  * <ov-videoconference [participantName]="'OpenVidu'"></ov-videoconference>
  */
 @Directive({
-	selector: 'ov-videoconference[participantName]'
+	selector: 'ov-videoconference[participantName]',
+	standalone: false
 })
 export class ParticipantNameDirective implements AfterViewInit, OnDestroy {
 	/**
@@ -546,7 +553,8 @@ export class ParticipantNameDirective implements AfterViewInit, OnDestroy {
  * <ov-videoconference [prejoin]="false"></ov-videoconference>
  */
 @Directive({
-	selector: 'ov-videoconference[prejoin]'
+	selector: 'ov-videoconference[prejoin]',
+	standalone: false
 })
 export class PrejoinDirective implements OnDestroy {
 	/**
@@ -600,7 +608,8 @@ export class PrejoinDirective implements OnDestroy {
  * <ov-videoconference [videoEnabled]="false"></ov-videoconference>
  */
 @Directive({
-	selector: 'ov-videoconference[videoEnabled]'
+	selector: 'ov-videoconference[videoEnabled]',
+	standalone: false
 })
 export class VideoEnabledDirective implements OnDestroy {
 	/**
@@ -671,7 +680,8 @@ export class VideoEnabledDirective implements OnDestroy {
  */
 
 @Directive({
-	selector: 'ov-videoconference[audioEnabled]'
+	selector: 'ov-videoconference[audioEnabled]',
+	standalone: false
 })
 export class AudioEnabledDirective implements OnDestroy {
 	/**
@@ -745,7 +755,8 @@ export class AudioEnabledDirective implements OnDestroy {
  * </ov-videoconference>
  */
 @Directive({
-	selector: 'ov-videoconference[recordingStreamBaseUrl]'
+	selector: 'ov-videoconference[recordingStreamBaseUrl]',
+	standalone: false
 })
 export class RecordingStreamBaseUrlDirective implements AfterViewInit, OnDestroy {
 	/**

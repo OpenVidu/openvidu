@@ -7,16 +7,16 @@ import { DialogData } from '../../models/dialog.model';
  */
 
 @Component({
-	selector: 'ov-dialog-template',
-	template: `
+    selector: 'ov-dialog-template',
+    template: `
 		<h1 mat-dialog-title>{{ data.title }}</h1>
 		<div mat-dialog-content id="openvidu-dialog">{{ data.description }}</div>
 		<div mat-dialog-actions *ngIf="data.showActionButtons">
 			<button mat-button [disableRipple]="true" (click)="close()">{{ 'PANEL.CLOSE' | translate }}</button>
 		</div>
 	`,
-	styles: [
-		`
+    styles: [
+        `
 			::ng-deep .mat-mdc-dialog-content {
 				color: var(--ov-text-surface-color) !important;
 			}
@@ -33,7 +33,8 @@ import { DialogData } from '../../models/dialog.model';
 				border-radius: var(--ov-surface-radius);
 			}
 		`
-	]
+    ],
+    standalone: false
 })
 export class DialogTemplateComponent {
 	constructor(

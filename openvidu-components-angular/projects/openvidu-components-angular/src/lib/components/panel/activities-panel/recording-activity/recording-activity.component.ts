@@ -24,7 +24,8 @@ import { LoggerService } from '../../../../services/logger/logger.service';
 	selector: 'ov-recording-activity',
 	templateUrl: './recording-activity.component.html',
 	styleUrls: ['./recording-activity.component.scss', '../activities-panel.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	standalone: false
 })
 
 // TODO: Allow to add more than one recording type

@@ -28,7 +28,8 @@ import { LangOption } from '../../../projects/openvidu-components-angular/src/li
  *
  */
 @Component({
-	templateUrl: './openvidu-webcomponent.component.html'
+    templateUrl: './openvidu-webcomponent.component.html',
+    standalone: false
 })
 export class OpenviduWebComponentComponent {
 	/**

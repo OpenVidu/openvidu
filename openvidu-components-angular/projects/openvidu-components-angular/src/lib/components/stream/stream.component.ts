@@ -15,7 +15,8 @@ import { ParticipantTrackPublication } from '../../models/participant.model';
 @Component({
 	selector: 'ov-stream',
 	templateUrl: './stream.component.html',
-	styleUrls: ['./stream.component.scss']
+	styleUrls: ['./stream.component.scss'],
+	standalone: false
 })
 export class StreamComponent implements OnInit, OnDestroy {
 	/**

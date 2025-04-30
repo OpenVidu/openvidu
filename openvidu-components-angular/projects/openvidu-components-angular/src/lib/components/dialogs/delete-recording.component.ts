@@ -5,8 +5,8 @@ import { MatDialogRef } from '@angular/material/dialog';
  * @internal
  */
 @Component({
-	selector: 'app-delete-dialog',
-	template: `
+    selector: 'app-delete-dialog',
+    template: `
 		<div mat-dialog-content>{{ 'PANEL.RECORDING.DELETE_QUESTION' | translate }}</div>
 		<div mat-dialog-actions>
 			<button mat-button [disableRipple]="true" (click)="close()">{{ 'PANEL.RECORDING.CANCEL' | translate }}</button>
@@ -15,8 +15,8 @@ import { MatDialogRef } from '@angular/material/dialog';
 			</button>
 		</div>
 	`,
-	styles: [
-		`
+    styles: [
+        `
 			::ng-deep .mat-mdc-dialog-content {
 				color: var(--ov-text-surface-color) !important;
 			}
@@ -36,7 +36,8 @@ import { MatDialogRef } from '@angular/material/dialog';
 				border-radius: var(--ov-surface-radius);
 			}
 		`
-	]
+    ],
+    standalone: false
 })
 export class DeleteDialogComponent {
 	constructor(public dialogRef: MatDialogRef<DeleteDialogComponent>) {}

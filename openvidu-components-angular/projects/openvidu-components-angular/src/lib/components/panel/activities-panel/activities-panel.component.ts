@@ -20,7 +20,8 @@ import { BroadcastingStartRequestedEvent, BroadcastingStopRequestedEvent } from 
 	selector: 'ov-activities-panel',
 	templateUrl: './activities-panel.component.html',
 	styleUrls: ['../panel.component.scss', './activities-panel.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	standalone: false
 })
 export class ActivitiesPanelComponent implements OnInit {
 	/**

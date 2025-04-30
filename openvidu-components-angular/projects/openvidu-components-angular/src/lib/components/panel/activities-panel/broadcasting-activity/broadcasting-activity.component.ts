@@ -18,7 +18,8 @@ import { OpenViduService } from '../../../../services/openvidu/openvidu.service'
 	selector: 'ov-broadcasting-activity',
 	templateUrl: './broadcasting-activity.component.html',
 	styleUrls: ['./broadcasting-activity.component.scss', '../activities-panel.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	standalone: false
 })
 
 // TODO: Allow to add more than one broadcast url

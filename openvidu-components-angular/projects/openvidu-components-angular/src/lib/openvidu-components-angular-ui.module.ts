@@ -46,7 +46,6 @@ import { ApiDirectiveModule } from './directives/api/api.directive.module';
 import { OpenViduComponentsDirectiveModule } from './directives/template/openvidu-components-angular.directive.module';
 import { AppMaterialModule } from './openvidu-components-angular.material.module';
 
-// Declaraciones de componentes/pipes (públicos y privados)
 const publicComponents = [
   AdminDashboardComponent,
   AdminLoginComponent,

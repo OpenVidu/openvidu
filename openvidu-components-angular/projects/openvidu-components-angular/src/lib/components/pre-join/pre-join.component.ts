@@ -17,7 +17,8 @@ import { StorageService } from '../../services/storage/storage.service';
 @Component({
 	selector: 'ov-pre-join',
 	templateUrl: './pre-join.component.html',
-	styleUrls: ['./pre-join.component.scss']
+	styleUrls: ['./pre-join.component.scss'],
+	standalone: false
 })
 export class PreJoinComponent implements OnInit, OnDestroy {
 	@Input() set error(error: { name: string; message: string } | undefined) {

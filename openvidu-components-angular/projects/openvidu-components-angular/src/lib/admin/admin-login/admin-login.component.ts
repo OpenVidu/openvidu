@@ -7,7 +7,8 @@ import { OpenViduComponentsConfigService } from '../../services/config/directive
 @Component({
 	selector: 'ov-admin-login',
 	templateUrl: './admin-login.component.html',
-	styleUrls: ['./admin-login.component.scss']
+	styleUrls: ['./admin-login.component.scss'],
+	standalone: false
 })
 export class AdminLoginComponent implements OnInit {
 	/**

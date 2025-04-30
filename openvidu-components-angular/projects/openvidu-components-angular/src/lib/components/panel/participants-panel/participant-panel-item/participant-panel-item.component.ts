@@ -15,7 +15,8 @@ import { ParticipantService } from '../../../../services/participant/participant
 	selector: 'ov-participant-panel-item',
 	templateUrl: './participant-panel-item.component.html',
 	styleUrls: ['./participant-panel-item.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	standalone: false
 })
 export class ParticipantPanelItemComponent implements OnInit, OnDestroy {
 	/**

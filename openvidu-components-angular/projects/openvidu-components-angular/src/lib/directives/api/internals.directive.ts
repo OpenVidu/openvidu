@@ -9,7 +9,8 @@ import { OpenViduComponentsConfigService } from '../../services/config/directive
  * @internal
  */
 @Directive({
-	selector: 'img[ovLogo]'
+	selector: 'img[ovLogo]',
+	standalone: false
 })
 export class FallbackLogoDirective implements OnInit {
 	defaultLogo =
@@ -53,7 +54,8 @@ export class FallbackLogoDirective implements OnInit {
  * @internal
  */
 @Directive({
-	selector: 'ov-layout[ovRemoteParticipants]'
+	selector: 'ov-layout[ovRemoteParticipants]',
+	standalone: false
 })
 export class LayoutRemoteParticipantsDirective {
 	@Input() set ovRemoteParticipants(value: ParticipantModel[] | undefined) {
@@ -85,7 +87,8 @@ export class LayoutRemoteParticipantsDirective {
  * @internal
  */
 @Directive({
-	selector: 'ov-videoconference[brandingLogo], ov-toolbar[brandingLogo]'
+	selector: 'ov-videoconference[brandingLogo], ov-toolbar[brandingLogo]',
+	standalone: false
 })
 export class ToolbarBrandingLogoDirective implements AfterViewInit, OnDestroy {
 	/**
@@ -127,7 +130,8 @@ export class ToolbarBrandingLogoDirective implements AfterViewInit, OnDestroy {
  * @internal
  */
 @Directive({
-	selector: 'ov-videoconference[prejoinDisplayParticipantName]'
+	selector: 'ov-videoconference[prejoinDisplayParticipantName]',
+	standalone: false
 })
 export class PrejoinDisplayParticipantName implements OnDestroy {
 	/**

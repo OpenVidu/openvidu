@@ -3,9 +3,10 @@ import { RecordingDeleteRequestedEvent, RecordingInfo } from 'openvidu-component
 import { RestService } from 'src/app/services/rest.service';
 
 @Component({
-	selector: 'app-admin-dashboard',
-	templateUrl: './admin-dashboard.component.html',
-	styleUrls: ['./admin-dashboard.component.scss']
+    selector: 'app-admin-dashboard',
+    templateUrl: './admin-dashboard.component.html',
+    styleUrls: ['./admin-dashboard.component.scss'],
+    standalone: false
 })
 export class AdminDashboardComponent implements OnInit {
 	recordings: RecordingInfo[] = [];

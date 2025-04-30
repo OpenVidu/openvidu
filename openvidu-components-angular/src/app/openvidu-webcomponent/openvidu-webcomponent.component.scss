@@ -1,13 +1,15 @@
 @use '@angular/material' as mat;
 
-@include mat.core();
+@include mat.elevation-classes();
+@include mat.app-background();
 
 // Define the theme
 $openvidu-theme: mat.define-theme();
 
 html {
 	// Emit theme-dependent styles for common features used across multiple components.
-	@include mat.core-theme($openvidu-theme);
+	@include mat.elevation-classes();
+	@include mat.app-background();
 	// @include mat.button-theme($theme);
 	@include mat.all-component-bases($openvidu-theme);
 	@include mat.all-component-colors($openvidu-theme);

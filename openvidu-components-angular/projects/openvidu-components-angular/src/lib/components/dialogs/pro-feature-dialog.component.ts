@@ -8,8 +8,8 @@ import { DialogData } from '../../models/dialog.model';
  */
 
 @Component({
-	selector: 'ov-pro-feature-template',
-	template: `
+    selector: 'ov-pro-feature-template',
+    template: `
 		<h1 mat-dialog-title>{{ data.title }}</h1>
 		<div mat-dialog-content>{{ data.description }}</div>
 		<div mat-dialog-actions *ngIf="data.showActionButtons">
@@ -19,7 +19,8 @@ import { DialogData } from '../../models/dialog.model';
 			</button>
 			<button mat-button (click)="close()">{{'PANEL.CLOSE' | translate}}</button>
 		</div>
-	`
+	`,
+    standalone: false
 })
 export class ProFeatureDialogTemplateComponent {
 	constructor(public dialogRef: MatDialogRef<ProFeatureDialogTemplateComponent>, @Inject(MAT_DIALOG_DATA) public data: DialogData) {}

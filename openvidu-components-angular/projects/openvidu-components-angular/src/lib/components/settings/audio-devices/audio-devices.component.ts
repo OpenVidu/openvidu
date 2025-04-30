@@ -12,7 +12,8 @@ import { ParticipantModel } from '../../../models/participant.model';
 @Component({
 	selector: 'ov-audio-devices-select',
 	templateUrl: './audio-devices.component.html',
-	styleUrls: ['./audio-devices.component.scss']
+	styleUrls: ['./audio-devices.component.scss'],
+	standalone: false
 })
 export class AudioDevicesComponent implements OnInit, OnDestroy {
 	@Output() onAudioDeviceChanged = new EventEmitter<CustomDevice>();

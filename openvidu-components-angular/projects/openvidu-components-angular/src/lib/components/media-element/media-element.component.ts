@@ -18,7 +18,8 @@ import { Track } from 'livekit-client';
 			transition(':enter', [style({ opacity: 0 }), animate('100ms', style({ opacity: 1 }))]),
 			transition(':leave', [style({ opacity: 1 }), animate('200ms', style({ opacity: 0 }))])
 		])
-	]
+	],
+	standalone: false
 })
 export class MediaElementComponent implements AfterViewInit {
 	_track: Track;

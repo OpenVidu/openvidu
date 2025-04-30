@@ -8,7 +8,8 @@ import { RecordingService } from '../../services/recording/recording.service';
 @Component({
 	selector: 'ov-admin-dashboard',
 	templateUrl: './admin-dashboard.component.html',
-	styleUrls: ['./admin-dashboard.component.scss']
+	styleUrls: ['./admin-dashboard.component.scss'],
+	standalone: false
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
 	/**

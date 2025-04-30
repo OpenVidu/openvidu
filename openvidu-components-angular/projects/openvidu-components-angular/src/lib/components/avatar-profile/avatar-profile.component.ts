@@ -13,7 +13,8 @@ import { Component, Input } from '@angular/core';
 			</div>
 		</div>
 	`,
-	styleUrls: ['./avatar-profile.component.scss']
+	styleUrls: ['./avatar-profile.component.scss'],
+	standalone: false
 })
 export class AvatarProfileComponent {
 	letter: string;

@@ -9,7 +9,8 @@ import { StorageService } from '../../../services/storage/storage.service';
 @Component({
 	selector: 'ov-participant-name-input',
 	templateUrl: './participant-name-input.component.html',
-	styleUrls: ['./participant-name-input.component.scss']
+	styleUrls: ['./participant-name-input.component.scss'],
+	standalone: false
 })
 export class ParticipantNameInputComponent implements OnInit {
 	name: string;

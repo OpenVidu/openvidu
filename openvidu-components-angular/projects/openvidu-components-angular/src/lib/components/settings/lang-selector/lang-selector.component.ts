@@ -12,7 +12,8 @@ import { Subscription } from 'rxjs';
 @Component({
 	selector: 'ov-lang-selector',
 	templateUrl: './lang-selector.component.html',
-	styleUrls: ['./lang-selector.component.scss']
+	styleUrls: ['./lang-selector.component.scss'],
+	standalone: false
 })
 export class LangSelectorComponent implements OnInit, OnDestroy {
 	/**

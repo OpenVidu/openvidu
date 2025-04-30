@@ -12,7 +12,8 @@ import { OpenViduComponentsConfigService } from '../../services/config/directive
  *
  */
 @Directive({
-	selector: 'ov-admin-dashboard[recordingsList]'
+	selector: 'ov-admin-dashboard[recordingsList]',
+	standalone: false
 })
 export class AdminDashboardRecordingsListDirective implements AfterViewInit, OnDestroy {
 
@@ -53,7 +54,8 @@ export class AdminDashboardRecordingsListDirective implements AfterViewInit, OnD
  *
  */
 @Directive({
-	selector: 'ov-admin-dashboard[navbarTitle]'
+	selector: 'ov-admin-dashboard[navbarTitle]',
+	standalone: false
 })
 export class AdminDashboardTitleDirective implements AfterViewInit, OnDestroy {
 
@@ -95,7 +97,8 @@ export class AdminDashboardTitleDirective implements AfterViewInit, OnDestroy {
  *
  */
 @Directive({
-	selector: 'ov-admin-login[navbarTitle]'
+	selector: 'ov-admin-login[navbarTitle]',
+	standalone: false
 })
 export class AdminLoginTitleDirective implements AfterViewInit, OnDestroy {
 
@@ -138,7 +141,8 @@ export class AdminLoginTitleDirective implements AfterViewInit, OnDestroy {
  *
  */
  @Directive({
-	selector: 'ov-admin-login[error]'
+	selector: 'ov-admin-login[error]',
+	standalone: false
 })
 export class AdminLoginErrorDirective implements AfterViewInit, OnDestroy {
 

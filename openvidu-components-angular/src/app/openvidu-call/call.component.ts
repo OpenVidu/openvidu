@@ -15,9 +15,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ParticipantLeftEvent } from '../../../projects/openvidu-components-angular/src/lib/models/participant.model';
 
 @Component({
-	selector: 'app-call',
-	templateUrl: './call.component.html',
-	styleUrls: ['./call.component.scss']
+    selector: 'app-call',
+    templateUrl: './call.component.html',
+    styleUrls: ['./call.component.scss'],
+    standalone: false
 })
 export class CallComponent implements OnInit {
 	roomName = 'daily-call';

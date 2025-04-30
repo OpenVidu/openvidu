@@ -25,7 +25,8 @@ import { ParticipantModel } from '../../../../models/participant.model';
 	selector: 'ov-participants-panel',
 	templateUrl: './participants-panel.component.html',
 	styleUrls: ['../../panel.component.scss', './participants-panel.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	standalone: false
 })
 export class ParticipantsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
