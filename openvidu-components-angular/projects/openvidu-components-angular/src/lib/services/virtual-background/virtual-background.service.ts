@@ -44,7 +44,7 @@ export class VirtualBackgroundService {
 	];
 
 	private SOFT_BLUR_INTENSITY = 20;
-	private HARD_BLUR_INTENSITY = 50;
+	private HARD_BLUR_INTENSITY = 60;
 
 	private log: ILogger;
 	constructor(
@@ -76,6 +76,7 @@ export class VirtualBackgroundService {
 	}
 
 	async applyBackground(bg: BackgroundEffect) {
+		// If the background is already applied, do nothing
 		if (this.backgroundIsAlreadyApplied(bg.id)) return;
 
 		const cameraTracks = this.getCameraTracks();
@@ -83,16 +84,33 @@ export class VirtualBackgroundService {
 			this.log.e('No camera tracks found. Cannot apply background.');
 			return;
 		}
-
-		const processor = this.getBackgroundProcessor(bg);
-		if (!processor) {
-			this.log.e('No processor found for the background effect.');
-			return;
-		}
-
 		try {
-			await this.removeBackground();
-			await this.applyProcessorToCameraTracks(cameraTracks, processor);
+			// If no effect is selected, remove the background
+			if (bg.type === EffectType.NONE) {
+				await this.removeBackground();
+				return;
+			}
+
+			const localTrack = cameraTracks[0].track as LocalTrack;
+			const currentProcessor = localTrack.getProcessor() as ProcessorWrapper<BackgroundOptions>;
+
+			// Check if the background is the same type as the previous one
+			if (this.hasSameTypeAsPreviousOne(bg.type) && currentProcessor) {
+				await this.replaceBackground(currentProcessor, bg);
+			} else {
+				// If the background is different, remove the previous one and apply the new one
+				const newProcessor = this.getBackgroundProcessor(bg);
+				if (!newProcessor) {
+					this.log.e('No processor found for the background effect.');
+					return;
+				}
+				// If there is a current processor, remove it before applying the new one
+				if (currentProcessor) {
+					await this.removeBackground();
+				}
+				await this.applyProcessorToCameraTracks(cameraTracks, newProcessor);
+			}
+
 			this.storageService.setBackground(bg.id);
 			this.backgroundIdSelected.next(bg.id);
 		} catch (error) {
@@ -100,12 +118,27 @@ export class VirtualBackgroundService {
 		}
 	}
 
+	private getBackgroundOptions(bg: BackgroundEffect): BackgroundOptions {
+		if (bg.type === EffectType.IMAGE && bg.src) {
+			return { imagePath: bg.src };
+		} else if (bg.type === EffectType.BLUR) {
+			return {
+				blurRadius: bg.id === 'soft_blur' ? this.SOFT_BLUR_INTENSITY : this.HARD_BLUR_INTENSITY
+			};
+		}
+		return {};
+	}
+
 	async removeBackground() {
 		if (this.isBackgroundApplied()) {
 			this.backgroundIdSelected.next('no_effect');
 			const tracks = this.participantService.getLocalParticipant()?.tracks;
-			const promises = tracks?.map((t) => {
-				return (t.track as LocalTrack).stopProcessor();
+			const promises = tracks?.map(async (t) => {
+				try {
+					await (t.track as LocalTrack).stopProcessor();
+				} catch (e) {
+					this.log.w('Error stopping processor:', e);
+				}
 			});
 			await Promise.all(promises || []);
 			this.storageService.removeBackground();
@@ -151,13 +184,38 @@ export class VirtualBackgroundService {
 		return localParticipant?.cameraTracks;
 	}
 
-	// private async replaceBackground(bg: BackgroundEffect) {
-	// 	await this.removeBackground();
-	// 	await this.applyBackground(bg);
-	// }
+	/**
+	 * Replaces the current background effect with a new one by updating the processor options.
+	 *
+	 * @private
+	 * @param currentProcessor - The current processor wrapper that handles background effects
+	 * @param bg - The new background effect to apply
+	 * @returns A Promise that resolves when the background options have been updated
+	 * @throws Will throw an error if updating the background options fails
+	 */
+	private async replaceBackground(currentProcessor: ProcessorWrapper<BackgroundOptions>, bg: BackgroundEffect) {
+		try {
+			const options = this.getBackgroundOptions(bg);
+			// Update the processor with the new options
+			await currentProcessor.updateTransformerOptions(options);
+			this.log.d('Background options updated:', options);
+		} catch (error) {
+			this.log.e('Error updating background options:', error);
+			throw error;
+		}
+	}
 
-	// private hasSameTypeAsPreviousOne(type: EffectType): boolean {
-	// 	const oldEffect = this.backgrounds.find((bg) => bg.id === this.backgroundSelected.getValue());
-	// 	return oldEffect?.type === type;
-	// }
+	/**
+	 * Checks if the currently selected background has the same effect type as the provided one.
+	 *
+	 * @param type - The effect type to compare with the currently selected background.
+	 * @returns `true` if the currently selected background has the same effect type, `false` otherwise.
+	 * @private
+	 */
+	private hasSameTypeAsPreviousOne(type: EffectType): boolean {
+		const currentBgId = this.backgroundIdSelected.getValue();
+		const currentBg = this.backgrounds.find((b) => b.id === currentBgId);
+		const isSameEffectType = currentBg && currentBg.type === type;
+		return !!isSameEffectType;
+	}
 }
