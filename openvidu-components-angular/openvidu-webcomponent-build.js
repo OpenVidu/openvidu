@@ -1,14 +1,14 @@
-const fs = require('fs-extra');
-const concat = require('concat');
-const VERSION = require('./package.json').version;
+import fs from 'fs-extra';
+import concat from 'concat';
+const packageJson = fs.readJSONSync('./package.json');
+const VERSION = packageJson.version;
 const ovWebcomponentRCPath = './dist/openvidu-webcomponent-rc';
 const ovWebcomponentProdPath = './dist/openvidu-webcomponent';
 
-module.exports.buildWebcomponent = async () => {
+export const buildWebcomponent = async () => {
 	console.log('Building OpenVidu Web Component (' + VERSION + ')');
 	const tutorialWcPath = '../../openvidu-tutorials/openvidu-webcomponent/web';
 	const e2eWcPath = './e2e/webcomponent-app';
-
 
 	try {
 		await buildElement();
@@ -23,16 +23,21 @@ module.exports.buildWebcomponent = async () => {
 };
 
 async function buildElement() {
-	const files = [`${ovWebcomponentRCPath}/runtime.js`, `${ovWebcomponentRCPath}/main.js`, `${ovWebcomponentRCPath}/polyfills.js`];
-
+	const files = [`${ovWebcomponentRCPath}/polyfills.js`, /*`${ovWebcomponentRCPath}/runtime.js`,*/ `${ovWebcomponentRCPath}/main.js`];
 	try {
+		for (const file of files) {
+			if (!fs.existsSync(file)) {
+				console.error(`Error: File ${file} does not exist`);
+				throw new Error(`Missing required file: ${file}`);
+			}
+		}
 		await fs.ensureDir('./dist/openvidu-webcomponent');
 		await concat(files, `${ovWebcomponentProdPath}/openvidu-webcomponent-${VERSION}.js`);
 		await fs.copy(`${ovWebcomponentRCPath}/styles.css`, `${ovWebcomponentProdPath}/openvidu-webcomponent-${VERSION}.css`);
-		// await fs.copy(
-		// 	"./dist/openvidu-webcomponent/assets",
-		// 	"./openvidu-webcomponent/assets"
-		// );
+
+		if (fs.existsSync(`${ovWebcomponentRCPath}/assets`)) {
+			await fs.copy(`${ovWebcomponentRCPath}/assets`, `${ovWebcomponentProdPath}/assets`);
+		}
 	} catch (err) {
 		console.error('Error executing build function in webcomponent-builds.js');
 		throw err;
@@ -57,4 +62,4 @@ async function copyFiles(destination) {
 	}
 }
 
-this.buildWebcomponent();
+await buildWebcomponent();

@@ -18,7 +18,8 @@
 					"builder": "@angular-devkit/build-angular:application",
 					"options": {
 						"outputPath": {
-							"base": "dist/openvidu-components-testapp"
+							"base": "dist/openvidu-components-testapp",
+							"browser": ""
 						},
 						"index": "src/index.html",
 						"polyfills": ["zone.js"],
@@ -158,16 +159,17 @@
 					"builder": "@angular-devkit/build-angular:application",
 					"options": {
 						"outputPath": {
-              "base": "dist/openvidu-webcomponent-rc"
-            },
-            "index": "src/index.html",
+							"base": "dist/openvidu-webcomponent-rc",
+							"browser": ""
+						},
+						"index": "src/index.html",
 						"polyfills": ["zone.js"],
 						"tsConfig": "src/app/openvidu-webcomponent/tsconfig.openvidu-webcomponent.json",
 						"aot": true,
 						"assets": ["src/favicon.ico"],
 						"styles": ["src/app/openvidu-webcomponent/openvidu-webcomponent.component.scss"],
-            "scripts": [],
-            "browser": "src/app/openvidu-webcomponent/openvidu-webcomponent.main.ts"
+						"scripts": [],
+						"browser": "src/app/openvidu-webcomponent/openvidu-webcomponent.main.ts"
 					},
 					"configurations": {
 						"production": {
@@ -181,7 +183,7 @@
 							"outputHashing": "none",
 							"sourceMap": false,
 							"namedChunks": false,
-              "extractLicenses": true,
+							"extractLicenses": true,
 							"budgets": [
 								{
 									"type": "initial",

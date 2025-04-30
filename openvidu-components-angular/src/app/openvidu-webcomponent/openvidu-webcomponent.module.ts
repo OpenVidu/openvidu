@@ -20,10 +20,10 @@ export class OpenviduWebComponentModule implements DoBootstrap {
 	constructor(private injector: Injector) {}
 
 	ngDoBootstrap(): void {
-		const element = createCustomElement(OpenviduWebComponentComponent, {
+		const elementConstructor = createCustomElement(OpenviduWebComponentComponent, {
 			injector: this.injector
 		});
 
-		customElements.define('openvidu-webcomponent', element);
+		customElements.define('openvidu-webcomponent', elementConstructor);
 	}
 }
