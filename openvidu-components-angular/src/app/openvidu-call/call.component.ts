@@ -12,6 +12,7 @@ import { RestService } from '../services/rest.service';
 import { CustomDevice } from 'dist/openvidu-components-angular/lib/models/device.model';
 import { LangOption } from 'dist/openvidu-components-angular/lib/models/lang.model';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ParticipantLeftEvent } from '../../../projects/openvidu-components-angular/src/lib/models/participant.model';
 
 @Component({
 	selector: 'app-call',
@@ -73,6 +74,11 @@ export class CallComponent implements OnInit {
 		console.warn('VC IS READY TO JOIN');
 	}
 
+	async onParticipantLeft(event: ParticipantLeftEvent) {
+		console.warn('VC PARTICIPANT LEFT', event);
+		await this.router.navigate(['/']);
+	}
+
 	onRoomCreated(room: Room) {
 		console.warn('VC ROOM CREATED', room.name);
 		room.on(RoomEvent.Connected, () => {
@@ -124,10 +130,10 @@ export class CallComponent implements OnInit {
 		console.warn('VC chat status changed: ', event);
 	}
 
-	onRoomDisconnected() {
+	async onRoomDisconnected() {
 		this.isSessionAlive = false;
 		console.log('VC LEAVE BUTTON CLICKED');
-		this.router.navigate(['/']);
+		await this.router.navigate(['/']);
 	}
 
 	onFullscreenButtonClicked() {
