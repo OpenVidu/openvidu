@@ -1,4 +1,14 @@
-import { ChangeDetectorRef, Component, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	EventEmitter,
+	HostListener,
+	Input,
+	OnDestroy,
+	OnInit,
+	Output
+} from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
@@ -18,6 +28,7 @@ import { StorageService } from '../../services/storage/storage.service';
 	selector: 'ov-pre-join',
 	templateUrl: './pre-join.component.html',
 	styleUrls: ['./pre-join.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	standalone: false
 })
 export class PreJoinComponent implements OnInit, OnDestroy {
@@ -35,7 +46,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 
 	windowSize: number;
 	isLoading = true;
-	participantName: string | undefined;
+	participantName: string | undefined = '';
 
 	/**
 	 * @ignore
@@ -78,12 +89,14 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		this.subscribeToPrejoinDirectives();
 		await this.initializeDevices();
 		this.windowSize = window.innerWidth;
+		this.isLoading = false;
+		this.changeDetector.markForCheck();
 	}
 
-	ngAfterContentChecked(): void {
-		this.changeDetector.detectChanges();
-		this.isLoading = false;
-	}
+	// ngAfterContentChecked(): void {
+	// 	// this.changeDetector.detectChanges();
+	// 	this.isLoading = false;
+	// }
 
 	async ngOnDestroy() {
 		this.cdkSrv.setSelector('body');
@@ -139,25 +152,29 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	private subscribeToPrejoinDirectives() {
 		this.minimalSub = this.libService.minimal$.subscribe((value: boolean) => {
 			this.isMinimal = value;
-			// this.cd.markForCheck();
+			this.changeDetector.markForCheck();
 		});
 		this.cameraButtonSub = this.libService.cameraButton$.subscribe((value: boolean) => {
 			this.showCameraButton = value;
+			this.changeDetector.markForCheck();
 		});
 		this.microphoneButtonSub = this.libService.microphoneButton$.subscribe((value: boolean) => {
 			this.showMicrophoneButton = value;
+			this.changeDetector.markForCheck();
 		});
 		this.displayLogoSub = this.libService.displayLogo$.subscribe((value: boolean) => {
 			this.showLogo = value;
-			// this.cd.markForCheck();
+			this.changeDetector.markForCheck();
 		});
 		this.libService.participantName$.subscribe((value: string) => {
-			console.warn('participantName', value);
-			if (value) this.participantName = value;
-			// this.cd.markForCheck();
+			if (value) {
+				this.participantName = value;
+				this.changeDetector.markForCheck();
+			}
 		});
 		this.displayParticipantNameSub = this.libService.prejoinDisplayParticipantName$.subscribe((value: boolean) => {
 			this.showParticipantName = value;
+			this.changeDetector.markForCheck();
 		});
 	}
 
