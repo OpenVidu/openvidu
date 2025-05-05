@@ -14,6 +14,8 @@
 		"module": "es2020",
 		"lib": ["es2021", "dom"],
 		"allowSyntheticDefaultImports": true,
-		"skipLibCheck": true // Livekit track processors fails with typescript types checking
+		"types": ["dom-mediacapture-transform"],
+		"skipDefaultLibCheck": true, // Livekit track processors fails with typescript types checking
+		///"skipLibCheck": true // Livekit track processors fails with typescript types checking
 	}
 }

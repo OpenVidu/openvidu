@@ -10,6 +10,7 @@
     "@angular/platform-browser-dynamic": "19.2.8",
     "@angular/router": "19.2.8",
     "@livekit/track-processors": "^0.5.6",
+    "@types/dom-mediacapture-transform": "^0.1.11",
     "autolinker": "4.0.0",
     "livekit-client": "2.11.4",
     "rxjs": "7.8.1",

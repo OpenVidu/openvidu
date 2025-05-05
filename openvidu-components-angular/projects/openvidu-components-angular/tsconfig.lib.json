@@ -5,7 +5,7 @@
 		"outDir": "../../dist/openvidu-components-angular",
 		"module": "esnext",
 		"moduleResolution": "node",
-		"lib": ["ES2020", "DOM"],
+		"lib": ["ES2021", "DOM"],
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
 		"declaration": true,
@@ -13,9 +13,10 @@
 		"declarationMap": true,
 		"inlineSources": true,
 		"resolveJsonModule": true,
-		"types": ["jasmine", "node"],
+		"types": ["jasmine", "node", "dom-mediacapture-transform"],
 		"allowSyntheticDefaultImports": true,
-		"skipLibCheck": true // Livekit track processors fails with typescript types checking
+		"skipDefaultLibCheck": true // Livekit track processors fails with typescript types checking
+		//"skipLibCheck": true // Livekit track processors fails with typescript types checking
 	},
 	"exclude": ["node_modules", "src/test.ts", "**/*.spec.ts", "**/*.mock.ts"]
 }

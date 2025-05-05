@@ -68,7 +68,7 @@ export class StreamComponent implements OnInit, OnDestroy {
 	/**
 	 * @ignore
 	 */
-	hoveringTimeout: NodeJS.Timeout;
+	hoveringTimeout: ReturnType<typeof setTimeout>;
 
 	/**
 	 * @ignore
