@@ -884,6 +884,26 @@ systemctl stop openvidu
 systemctl start openvidu
 '''
 
+var config_blobStorageTemplate = '''
+#!/bin/bash
+set -e
+
+# Install dir and config dir
+INSTALL_DIR="/opt/openvidu"
+CONFIG_DIR="${INSTALL_DIR}/config"
+
+az login --identity
+
+# Config azure blob storage
+AZURE_ACCOUNT_NAME="${storageAccountName}"
+AZURE_ACCOUNT_KEY=$(az storage account keys list --account-name ${storageAccountName} --query '[0].value' -o tsv)
+AZURE_CONTAINER_NAME="${storageAccountContainerName}"
+
+sed -i "s|AZURE_ACCOUNT_NAME=.*|AZURE_ACCOUNT_NAME=$AZURE_ACCOUNT_NAME|" "${CONFIG_DIR}/openvidu.env"
+sed -i "s|AZURE_ACCOUNT_KEY=.*|AZURE_ACCOUNT_KEY=$AZURE_ACCOUNT_KEY|" "${CONFIG_DIR}/openvidu.env"
+sed -i "s|AZURE_CONTAINER_NAME=.*|AZURE_CONTAINER_NAME=$AZURE_CONTAINER_NAME|" "${CONFIG_DIR}/openvidu.env"
+'''
+
 var installScriptMaster = reduce(
   items(stringInterpolationParamsMaster),
   { value: installScriptTemplateMaster },
@@ -914,6 +934,18 @@ var store_secretScriptMaster = reduce(
   (curr, next) => { value: replace(curr.value, '\${${next.key}}', next.value) }
 ).value
 
+var blobStorageParams = {
+  storageAccountName: storageAccount.name
+  storageAccountKey: listKeys(storageAccount.id, '2021-04-01').keys[0].value
+  storageAccountContainerName: isEmptyContainerName ? 'openvidu-appdata' : '${containerName}'
+}
+
+var config_blobStorageScript = reduce(
+  items(blobStorageParams),
+  { value: config_blobStorageTemplate },
+  (curr, next) => { value: replace(curr.value, '\${${next.key}}', next.value) }
+).value
+
 var base64installMaster = base64(installScriptMaster)
 var base64after_installMaster = base64(after_installScriptMaster)
 var base64update_config_from_secretMaster = base64(update_config_from_secretScriptMaster)
@@ -922,6 +954,7 @@ var base64get_value_from_configMaster = base64(get_value_from_configScriptMaster
 var base64store_secretMaster = base64(store_secretScriptMaster)
 var base64check_app_readyMaster = base64(check_app_readyScriptMaster)
 var base64restartMaster = base64(restartScriptMaster)
+var base64config_blobStorage = base64(config_blobStorageScript)
 
 var userDataParamsMasterNode = {
   base64install: base64installMaster
@@ -932,6 +965,7 @@ var userDataParamsMasterNode = {
   base64store_secret: base64store_secretMaster
   base64check_app_ready: base64check_app_readyMaster
   base64restart: base64restartMaster
+  base64config_blobStorage: base64config_blobStorage
   keyVaultName: keyVaultName
   storageAccountName: storageAccount.name
 }
@@ -973,6 +1007,9 @@ chmod +x /usr/local/bin/check_app_ready.sh
 echo ${base64restart} | base64 -d > /usr/local/bin/restart.sh
 chmod +x /usr/local/bin/restart.sh
 
+echo ${base64config_blobStorage} | base64 -d > /usr/local/bin/config_blobStorage.sh
+chmod +x /usr/local/bin/config_blobStorage.sh
+
 # Install azure cli
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
@@ -984,6 +1021,9 @@ export HOME="/root"
 
 # Install OpenVidu
 /usr/local/bin/install.sh || { echo "[OpenVidu] error installing OpenVidu"; exit 1; }
+
+#Config blob storage
+/usr/local/bin/config_blobStorage.sh || { echo "[OpenVidu] error configuring Blob Storage"; exit 1; }
 
 # Start OpenVidu
 systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }

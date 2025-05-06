@@ -688,13 +688,13 @@ CONFIG_DIR="${INSTALL_DIR}/config"
 az login --identity
 
 # Config azure blob storage
-EXTERNAL_S3_ACCOUNT_NAME="${storageAccountName}"
-EXTERNAL_S3_ACCOUNT_KEY=$(az storage account keys list --account-name ${storageAccountName} --query '[0].value' -o tsv)
-EXTERNAL_S3_CONTAINER_NAME="${storageAccountContainerName}"
+AZURE_ACCOUNT_NAME="${storageAccountName}"
+AZURE_ACCOUNT_KEY=$(az storage account keys list --account-name ${storageAccountName} --query '[0].value' -o tsv)
+AZURE_CONTAINER_NAME="${storageAccountContainerName}"
 
-sed -i "s|EXTERNAL_S3_ACCOUNT_NAME=.*|EXTERNAL_S3_ACCOUNT_NAME=$EXTERNAL_S3_ACCOUNT_NAME|" "${CONFIG_DIR}/openvidu.env"
-sed -i "s|EXTERNAL_S3_ACCOUNT_KEY=.*|EXTERNAL_S3_ACCOUNT_KEY=$EXTERNAL_S3_ACCOUNT_KEY|" "${CONFIG_DIR}/openvidu.env"
-sed -i "s|EXTERNAL_S3_CONTAINER_NAME=.*|EXTERNAL_S3_CONTAINER_NAME=$EXTERNAL_S3_CONTAINER_NAME|" "${CONFIG_DIR}/openvidu.env"
+sed -i "s|AZURE_ACCOUNT_NAME=.*|AZURE_ACCOUNT_NAME=$AZURE_ACCOUNT_NAME|" "${CONFIG_DIR}/openvidu.env"
+sed -i "s|AZURE_ACCOUNT_KEY=.*|AZURE_ACCOUNT_KEY=$AZURE_ACCOUNT_KEY|" "${CONFIG_DIR}/openvidu.env"
+sed -i "s|AZURE_CONTAINER_NAME=.*|AZURE_CONTAINER_NAME=$AZURE_CONTAINER_NAME|" "${CONFIG_DIR}/openvidu.env"
 '''
 
 var formattedTemplateInstallScript = reduce(
@@ -866,6 +866,18 @@ resource openviduServer 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   }
 }
 
+resource roleAssignmentOpenViduServer 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('roleAssignmentForOpenViduServer${openviduServer.name}')
+  scope: resourceGroup()
+  properties: {
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'b24988ac-6180-42a0-ab88-20f7382dd24c'
+    )
+    principalId: openviduServer.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
 /*------------------------------------------- NETWORK -------------------------------------------*/
 
 //Create publicIPAddress if convinient
