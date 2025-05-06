@@ -149,6 +149,7 @@
 		"PARTICIPANT_REMOVED": "このルームから削除されました",
 		"ROOM_DELETED": "このルームは削除されました",
 		"DUPLICATE_IDENTITY": "ニックネームが他の参加者に割り当てられたため、切断されました",
+		"UNKNOWN_DISCONNECT": "あなたはルームから切断されました",
 		"TOGGLE_CAMERA": "カメラの切り替えに失敗しました",
 		"TOGGLE_MICROPHONE": "マイクの切り替えに失敗しました",
 		"SCREEN_SHARING": "画面共有にエラーが発生しました",

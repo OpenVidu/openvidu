@@ -149,6 +149,7 @@
 		"PARTICIPANT_REMOVED": "Sei stato rimosso da questa stanza",
 		"ROOM_DELETED": "Questa stanza è stata eliminata",
 		"DUPLICATE_IDENTITY": "Sei stato disconnesso perché il tuo soprannome è stato assegnato a un altro partecipante",
+		"UNKNOWN_DISCONNECT": "Sei stato disconnesso dalla stanza",
 		"TOGGLE_CAMERA": "Si è verificato un errore nell'attivazione della telecamera",
 		"TOGGLE_MICROPHONE": "Si è verificato un errore nell'attivazione del microfono",
 		"SCREEN_SHARING": "Errore nella condivisione dello schermo",

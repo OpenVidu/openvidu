@@ -36,7 +36,9 @@ export enum ParticipantLeftReason {
 	ROOM_DELETED = 'room_deleted', // The room was deleted
 
 	// Permission/policy-based disconnections
-	DUPLICATE_IDENTITY = 'duplicate_identity' // The participant was disconnected due to a duplicate identity
+	DUPLICATE_IDENTITY = 'duplicate_identity', // The participant was disconnected due to a duplicate identity
+
+	OTHER = 'other' // The participant was disconnected for an unknown reason
 }
 /**
  * Interface that defines the properties of the participant track publication.

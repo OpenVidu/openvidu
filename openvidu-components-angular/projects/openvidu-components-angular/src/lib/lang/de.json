@@ -149,6 +149,7 @@
 		"PARTICIPANT_REMOVED": "Sie wurden aus diesem Raum entfernt",
 		"ROOM_DELETED": "Dieser Raum wurde gelöscht",
 		"DUPLICATE_IDENTITY": "Sie wurden getrennt, da Ihr Spitzname einem anderen Teilnehmer zugewiesen wurde",
+		"UNKNOWN_DISCONNECT": "Sie wurden vom Raum getrennt",
 		"TOGGLE_CAMERA": "Es gab einen Fehler beim Umschalten der Kamera",
 		"TOGGLE_MICROPHONE": "Es ist ein Fehler beim Umschalten des Mikrofons aufgetreten",
 		"SCREEN_SHARING": "Fehler beim Teilen des Bildschirms",

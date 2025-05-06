@@ -148,6 +148,7 @@
 		"PARTICIPANT_REMOVED": "Has sido eliminado de esta sala",
 		"ROOM_DELETED": "Esta sala ha sido eliminada",
 		"DUPLICATE_IDENTITY": "Te has desconectado porque tu alias ha sido asignado a otro participante",
+		"UNKNOWN_DISCONNECT": "Te has desconectado de la sala",
 		"TOGGLE_CAMERA": "Hubo un error cambiando la cámara",
 		"TOGGLE_MICROPHONE": "Hubo un error cambiando el micrófono",
 		"SCREEN_SHARING": "Hubo un error compartiendo pantalla",

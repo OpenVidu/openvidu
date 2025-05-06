@@ -149,6 +149,7 @@
 		"PARTICIPANT_REMOVED": "Vous avez été retiré de cette salle",
 		"ROOM_DELETED": "Cette salle a été supprimée",
 		"DUPLICATE_IDENTITY": "Vous avez été déconnecté car votre pseudo a été attribué à un autre participant",
+		"UNKNOWN_DISCONNECT": "Vous avez été déconnecté de la salle",
 		"TOGGLE_CAMERA": "There was an error toggle camera",
 		"TOGGLE_MICROPHONE": "There was an error toggling microhpone",
 		"SCREEN_SHARING": "Erreur de partage d'écran",

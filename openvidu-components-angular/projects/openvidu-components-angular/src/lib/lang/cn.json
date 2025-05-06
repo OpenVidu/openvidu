@@ -149,6 +149,7 @@
 		"PARTICIPANT_REMOVED": "您已被移出此房间",
 		"ROOM_DELETED": "此房间已被删除",
 		"DUPLICATE_IDENTITY": "由于您的昵称已被分配给另一位参与者，您已被断开连接",
+		"UNKNOWN_DISCONNECT": "您已从房间断开连接",
 		"TOGGLE_CAMERA": "切换相机时出现错误",
 		"TOGGLE_MICROPHONE": "切换麦克风时出现错误",
 		"SCREEN_SHARING": "分享屏幕出错",

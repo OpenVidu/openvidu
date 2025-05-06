@@ -149,6 +149,7 @@
 		"PARTICIPANT_REMOVED": "Je bent uit deze kamer verwijderd",
 		"ROOM_DELETED": "Deze kamer is verwijderd",
 		"DUPLICATE_IDENTITY": "Je bent losgekoppeld omdat je bijnaam aan een andere deelnemer is toegewezen",
+		"UNKNOWN_DISCONNECT": "Je bent losgekoppeld van de kamer",
 		"TOGGLE_CAMERA": "Er is een fout opgetreden bij het overschakelen naar een andere camera",
 		"TOGGLE_MICROPHONE": "Er is een fout opgetreden bij het overschakelen naar een microfoon",
 		"SCREEN_SHARING": "Fout bij het delen van het scherm",
