@@ -104,6 +104,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 	loading: boolean = true;
 
 	private shouldDisconnectRoomWhenComponentIsDestroyed: boolean = true;
+	private shouldListenClientInitiatedDisconnectEvent: boolean = true;
 	private readonly SIDENAV_WIDTH_LIMIT_MODE = 790;
 	private menuSubscription: Subscription;
 	private layoutWidthSubscription: Subscription;
@@ -243,6 +244,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 	async disconnectRoom(reason: ParticipantLeftReason) {
 		// Mark session as disconnected for avoiding to do it again in ngOnDestroy
 		this.shouldDisconnectRoomWhenComponentIsDestroyed = false;
+		this.shouldListenClientInitiatedDisconnectEvent = false;
 		await this.openviduService.disconnectRoom(() => {
 			this.onParticipantLeft.emit({
 				roomName: this.openviduService.getRoomName(),
@@ -487,18 +489,20 @@ export class SessionComponent implements OnInit, OnDestroy {
 		});
 
 		this.room.on(RoomEvent.Disconnected, async (reason: DisconnectReason | undefined) => {
+			this.shouldDisconnectRoomWhenComponentIsDestroyed = false;
 			const participantLeftEvent: ParticipantLeftEvent = {
 				roomName: this.openviduService.getRoomName(),
 				participantName: this.participantService.getLocalParticipant()?.identity || '',
 				reason: ParticipantLeftReason.NETWORK_DISCONNECT
 			};
 			const messageErrorKey = 'ERRORS.DISCONNECT';
-			let descriptionErrorKey = 'ERRORS.NETWORK_DISCONNECT';
-
+			let descriptionErrorKey = '';
 			switch (reason) {
 				case DisconnectReason.CLIENT_INITIATED:
-					// Skip disconnect reason if the user has left the room
-					return;
+					// Skip disconnect reason if a default disconnect method has been called
+					if (!this.shouldListenClientInitiatedDisconnectEvent) return;
+					participantLeftEvent.reason = ParticipantLeftReason.LEAVE;
+					break;
 				case DisconnectReason.DUPLICATE_IDENTITY:
 					participantLeftEvent.reason = ParticipantLeftReason.DUPLICATE_IDENTITY;
 					descriptionErrorKey = 'ERRORS.DUPLICATE_IDENTITY';
@@ -527,11 +531,12 @@ export class SessionComponent implements OnInit, OnDestroy {
 			this.log.e('Room Disconnected', participantLeftEvent.reason);
 			this.onParticipantLeft.emit(participantLeftEvent);
 			this.onRoomDisconnected.emit();
-			this.actionService.openDialog(
-				this.translateService.translate(messageErrorKey),
-				this.translateService.translate(descriptionErrorKey)
-			);
-			// await this.disconnectRoom();
+			if (descriptionErrorKey) {
+				this.actionService.openDialog(
+					this.translateService.translate(messageErrorKey),
+					this.translateService.translate(descriptionErrorKey)
+				);
+			}
 		});
 	}
 
