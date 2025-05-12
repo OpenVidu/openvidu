@@ -155,7 +155,7 @@ export class RecordingService {
 		this.log.d('Playing recording', recording);
 		const queryParamForAvoidCache = `?t=${new Date().getTime()}`;
 		const baseUrl = this.libService.getRecordingStreamBaseUrl();
-		const streamRecordingUrl = `${baseUrl}${recording.id}/stream${queryParamForAvoidCache}`;
+		const streamRecordingUrl = `${baseUrl}${recording.id}/media${queryParamForAvoidCache}`;
 		this.actionService.openRecordingPlayerDialog(streamRecordingUrl);
 	}
 
@@ -169,7 +169,7 @@ export class RecordingService {
 		const queryParamForAvoidCache = `?t=${new Date().getTime()}`;
 		const link = document.createElement('a');
 		const baseUrl = this.libService.getRecordingStreamBaseUrl();
-		link.href = `${baseUrl}${recording.id}/stream${queryParamForAvoidCache}`;
+		link.href = `${baseUrl}${recording.id}/media${queryParamForAvoidCache}`;
 		link.download = recording.filename || 'openvidu-recording.mp4';
 		link.dispatchEvent(
 			new MouseEvent('click', {

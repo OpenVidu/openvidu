@@ -739,13 +739,17 @@ export class AudioEnabledDirective implements OnDestroy {
 /**
  * The **recordingStreamBaseUrl** directive sets the base URL for retrieving recording streams.
  * The complete request URL is dynamically constructed by concatenating the supplied URL, the
- * internally managed recordingId, and the `/stream` segment.
+ * internally managed recordingId, and the `/media` segment.
  *
  * The final URL format will be:
  *
- *    {recordingStreamBaseUrl}/{recordingId}/stream
+ *    {recordingStreamBaseUrl}/{recordingId}/media
  *
  * Default: `"call/api/recordings/{recordingId}/stream"`
+ *
+ * Example:
+ * Given a recordingStreamBaseUrl of `api/recordings`, the resulting URL for a recordingId of `12345` would be:
+ *   `api/recordings/12345/media`
  *
  * It is essential that the resulting route is declared and configured on your backend, as it is
  * used for serving and accessing the recording streams.
