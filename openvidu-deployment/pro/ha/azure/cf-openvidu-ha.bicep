@@ -1055,7 +1055,7 @@ var store_secretScriptMaster = reduce(
 ).value
 
 var blobStorageParams = {
-  storageAccountName: isEmptyStorageAccountName ? storageAccount.name : exisitngStorageAccount.name
+  storageAccountName: isEmptyStorageAccountName ? storageAccount.name : existingStorageAccount.name
   storageAccountKey: listKeys(storageAccount.id, '2021-04-01').keys[0].value
   storageAccountContainerName: isEmptyContainerName ? 'openvidu-appdata' : '${containerName}'
 }
@@ -1129,7 +1129,7 @@ var userDataParamsMasterNode4 = {
   base64restart: base64restartMaster
   keyVaultName: keyVaultName
   masterNodeNum: '4'
-  storageAccountName: isEmptyStorageAccountName ? storageAccount.name : exisitngStorageAccount.name
+  storageAccountName: isEmptyStorageAccountName ? storageAccount.name : existingStorageAccount.name
   base64config_blobStorage: base64config_blobStorage
 }
 
@@ -1468,7 +1468,7 @@ var stopMediaNodeParams = {
   subscriptionId: subscription().subscriptionId
   resourceGroupName: resourceGroup().name
   vmScaleSetName: '${stackName}-mediaNodeScaleSet'
-  storageAccountName: isEmptyStorageAccountName ? storageAccount.name : exisitngStorageAccount.name
+  storageAccountName: isEmptyStorageAccountName ? storageAccount.name : existingStorageAccount.name
 }
 
 var stop_media_nodesScriptMediaTemplate = '''
@@ -1584,7 +1584,7 @@ resource openviduScaleSetMediaNode 'Microsoft.Compute/virtualMachineScaleSets@20
   location: location
   tags: {
     InstanceDeleteTime: datetime
-    storageAccount: isEmptyStorageAccountName ? storageAccount.name : exisitngStorageAccount.name
+    storageAccount: isEmptyStorageAccountName ? storageAccount.name : existingStorageAccount.name
   }
   identity: { type: 'SystemAssigned' }
   sku: {
@@ -2984,7 +2984,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = if (isE
   }
 }
 
-resource exisitngStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' existing = if (isEmptyStorageAccountName == false) {
+resource existingStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' existing = if (isEmptyStorageAccountName == false) {
   name: storageAccountName
 }
 
@@ -2995,7 +2995,7 @@ resource blobContainerScaleIn 'Microsoft.Storage/storageAccounts/blobServices/co
   }
 }
 
-@description('Name of the bucket where OpenVidu will store the recordings if a new Storage account is being creating. If not specified, a default bucket will be created.')
+@description('Name of the bucket where OpenVidu will store the recordings if a new Storage account is being creating. If not specified, a default bucket will be created. If you want to use an existing storage account, fill this parameter with the name of the container where the recordings are stored.')
 param containerName string = ''
 
 var isEmptyContainerName = containerName == ''

@@ -2057,7 +2057,7 @@ resource blobContainerScaleIn 'Microsoft.Storage/storageAccounts/blobServices/co
   }
 }
 
-@description('Name of the bucket where OpenVidu will store the recordings. If not specified, a default bucket will be created.')
+@description('Name of the bucket where OpenVidu will store the recordings if a new Storage account is being creating. If not specified, a default bucket will be created. If you want to use an existing storage account, fill this parameter with the name of the container where the recordings are stored.')
 param containerName string = ''
 
 var isEmptyContainerName = containerName == ''
