@@ -728,7 +728,7 @@ var store_secretScript = reduce(
 ).value
 
 var blobStorageParams = {
-  storageAccountName: storageAccount.name
+  storageAccountName: isEmptyStorageAccountName ? storageAccount.name : exisitngStorageAccount.name
   storageAccountKey: listKeys(storageAccount.id, '2021-04-01').keys[0].value
   storageAccountContainerName: isEmptyContainerName ? 'openvidu-appdata' : '${containerName}'
 }
@@ -1100,6 +1100,11 @@ resource webServerSecurityGroup 'Microsoft.Network/networkSecurityGroups@2023-11
 
 /*------------------------------------------- STORAGE ACCOUNT ----------------------------------------*/
 
+@description('Name of an existing storage account. It is essential that this parameter is filled just when you want to save recordings and still using the same container after an update. If not specified, a new storage account will be generated.')
+param storageAccountName string = ''
+
+var isEmptyStorageAccountName = storageAccountName == ''
+
 @description('Name of the bucket where OpenVidu will store the recordings. If not specified, a default bucket will be created.')
 param containerName string = ''
 
@@ -1114,6 +1119,10 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
     accessTier: 'Cool'
     supportsHttpsTrafficOnly: true
   }
+}
+
+resource exisitngStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' existing = if (isEmptyStorageAccountName == false) {
+  name: storageAccountName
 }
 
 var isEmptyContainerName = containerName == ''

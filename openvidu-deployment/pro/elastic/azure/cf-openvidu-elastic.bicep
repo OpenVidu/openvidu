@@ -890,7 +890,7 @@ set -e
 
 # Install dir and config dir
 INSTALL_DIR="/opt/openvidu"
-CONFIG_DIR="${INSTALL_DIR}/config"
+CLUSTER_CONFIG_DIR="${INSTALL_DIR}/config/cluster"
 
 az login --identity
 
@@ -899,9 +899,9 @@ AZURE_ACCOUNT_NAME="${storageAccountName}"
 AZURE_ACCOUNT_KEY=$(az storage account keys list --account-name ${storageAccountName} --query '[0].value' -o tsv)
 AZURE_CONTAINER_NAME="${storageAccountContainerName}"
 
-sed -i "s|AZURE_ACCOUNT_NAME=.*|AZURE_ACCOUNT_NAME=$AZURE_ACCOUNT_NAME|" "${CONFIG_DIR}/openvidu.env"
-sed -i "s|AZURE_ACCOUNT_KEY=.*|AZURE_ACCOUNT_KEY=$AZURE_ACCOUNT_KEY|" "${CONFIG_DIR}/openvidu.env"
-sed -i "s|AZURE_CONTAINER_NAME=.*|AZURE_CONTAINER_NAME=$AZURE_CONTAINER_NAME|" "${CONFIG_DIR}/openvidu.env"
+sed -i "s|AZURE_ACCOUNT_NAME=.*|AZURE_ACCOUNT_NAME=$AZURE_ACCOUNT_NAME|" "${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s|AZURE_ACCOUNT_KEY=.*|AZURE_ACCOUNT_KEY=$AZURE_ACCOUNT_KEY|" "${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s|AZURE_CONTAINER_NAME=.*|AZURE_CONTAINER_NAME=$AZURE_CONTAINER_NAME|" "${CLUSTER_CONFIG_DIR}/openvidu.env"
 '''
 
 var installScriptMaster = reduce(
@@ -935,7 +935,7 @@ var store_secretScriptMaster = reduce(
 ).value
 
 var blobStorageParams = {
-  storageAccountName: storageAccount.name
+  storageAccountName: isEmptyStorageAccountName ? storageAccount.name : exisitngStorageAccount.name
   storageAccountKey: listKeys(storageAccount.id, '2021-04-01').keys[0].value
   storageAccountContainerName: isEmptyContainerName ? 'openvidu-appdata' : '${containerName}'
 }
@@ -967,7 +967,7 @@ var userDataParamsMasterNode = {
   base64restart: base64restartMaster
   base64config_blobStorage: base64config_blobStorage
   keyVaultName: keyVaultName
-  storageAccountName: storageAccount.name
+  storageAccountName: isEmptyStorageAccountName ? storageAccount.name : exisitngStorageAccount.name
 }
 
 var userDataTemplateMasterNode = '''
@@ -1168,7 +1168,7 @@ var stopMediaNodeParams = {
   subscriptionId: subscription().subscriptionId
   resourceGroupName: resourceGroup().name
   vmScaleSetName: '${stackName}-mediaNodeScaleSet'
-  storageAccountName: storageAccount.name
+  storageAccountName: isEmptyStorageAccountName ? storageAccount.name : exisitngStorageAccount.name
 }
 
 var stop_media_nodesScriptMediaTemplate = '''
@@ -1286,7 +1286,7 @@ resource openviduScaleSetMediaNode 'Microsoft.Compute/virtualMachineScaleSets@20
   location: location
   tags: {
     InstanceDeleteTime: datetime
-    storageAccount: storageAccount.name
+    storageAccount: isEmptyStorageAccountName ? storageAccount.name : exisitngStorageAccount.name
   }
   identity: { type: 'SystemAssigned' }
   sku: {
@@ -2028,7 +2028,12 @@ resource masterToMediaHttpWhipIngress 'Microsoft.Network/networkSecurityGroups/s
 
 /*------------------------------------------- STORAGE ACCOUNT ----------------------------------------*/
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+@description('Name of the existing storage account. It is essential that this parameter is filled just when you want to save recordings and still using the same container after an update. If not specified, a new storage account will be generated.')
+param storageAccountName string = ''
+
+var isEmptyStorageAccountName = storageAccountName == ''
+
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = if (isEmptyStorageAccountName == true) {
   name: uniqueString(resourceGroup().id)
   location: resourceGroup().location
   sku: {
@@ -2041,7 +2046,11 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   }
 }
 
-resource blobContainerScaleIn 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+resource exisitngStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' existing = if (isEmptyStorageAccountName == false) {
+  name: storageAccountName
+}
+
+resource blobContainerScaleIn 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = if (isEmptyStorageAccountName == true) {
   name: '${storageAccount.name}/default/automation-locks'
   properties: {
     publicAccess: 'None'
@@ -2053,7 +2062,7 @@ param containerName string = ''
 
 var isEmptyContainerName = containerName == ''
 
-resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = if (isEmptyStorageAccountName == true) {
   name: isEmptyContainerName
     ? '${storageAccount.name}/default/openvidu-appdata'
     : '${storageAccount.name}/default/${containerName}'

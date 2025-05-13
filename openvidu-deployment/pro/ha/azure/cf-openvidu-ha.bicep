@@ -15,7 +15,7 @@ and an Elastic IP, you can use this option to generate a Let's Encrypt certifica
 ])
 param certificateType string = 'selfsigned'
 
-@description('Domain name for the OpenVidu Deployment. Blank will generate default domain')
+@description('Domain name for the OpenVidu Deployment.')
 param domainName string
 
 @description('If certificate type is \'owncert\', this parameter will be used to specify the public certificate')
@@ -986,6 +986,26 @@ systemctl stop openvidu
 systemctl start openvidu
 '''
 
+var config_blobStorageTemplate = '''
+#!/bin/bash
+set -e
+
+# Install dir and config dir
+INSTALL_DIR="/opt/openvidu"
+CLUSTER_CONFIG_DIR="${INSTALL_DIR}/config/cluster"
+
+az login --identity
+
+# Config azure blob storage
+AZURE_ACCOUNT_NAME="${storageAccountName}"
+AZURE_ACCOUNT_KEY=$(az storage account keys list --account-name ${storageAccountName} --query '[0].value' -o tsv)
+AZURE_CONTAINER_NAME="${storageAccountContainerName}"
+
+sed -i "s|AZURE_ACCOUNT_NAME=.*|AZURE_ACCOUNT_NAME=$AZURE_ACCOUNT_NAME|" "${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s|AZURE_ACCOUNT_KEY=.*|AZURE_ACCOUNT_KEY=$AZURE_ACCOUNT_KEY|" "${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s|AZURE_CONTAINER_NAME=.*|AZURE_CONTAINER_NAME=$AZURE_CONTAINER_NAME|" "${CLUSTER_CONFIG_DIR}/openvidu.env"
+'''
+
 var installScriptMaster1 = reduce(
   items(stringInterpolationParamsMaster1),
   { value: installScriptTemplateMaster },
@@ -1034,6 +1054,18 @@ var store_secretScriptMaster = reduce(
   (curr, next) => { value: replace(curr.value, '\${${next.key}}', next.value) }
 ).value
 
+var blobStorageParams = {
+  storageAccountName: isEmptyStorageAccountName ? storageAccount.name : exisitngStorageAccount.name
+  storageAccountKey: listKeys(storageAccount.id, '2021-04-01').keys[0].value
+  storageAccountContainerName: isEmptyContainerName ? 'openvidu-appdata' : '${containerName}'
+}
+
+var config_blobStorageScript = reduce(
+  items(blobStorageParams),
+  { value: config_blobStorageTemplate },
+  (curr, next) => { value: replace(curr.value, '\${${next.key}}', next.value) }
+).value
+
 var base64installMaster1 = base64(installScriptMaster1)
 var base64installMaster2 = base64(installScriptMaster2)
 var base64installMaster3 = base64(installScriptMaster3)
@@ -1045,6 +1077,7 @@ var base64get_value_from_configMaster = base64(get_value_from_configScriptMaster
 var base64store_secretMaster = base64(store_secretScriptMaster)
 var base64check_app_readyMaster = base64(check_app_readyScriptMaster)
 var base64restartMaster = base64(restartScriptMaster)
+var base64config_blobStorage = base64(config_blobStorageScript)
 
 var userDataParamsMasterNode1 = {
   base64install: base64installMaster1
@@ -1096,7 +1129,8 @@ var userDataParamsMasterNode4 = {
   base64restart: base64restartMaster
   keyVaultName: keyVaultName
   masterNodeNum: '4'
-  storageAccountName: storageAccount.name
+  storageAccountName: isEmptyStorageAccountName ? storageAccount.name : exisitngStorageAccount.name
+  base64config_blobStorage: base64config_blobStorage
 }
 
 var userDataTemplateMasterNode = '''
@@ -1159,9 +1193,17 @@ echo "@reboot /usr/local/bin/restart.sh >> /var/log/openvidu-restart.log" 2>&1 |
 
 MASTER_NODE_NUM=${masterNodeNum}
 if [[ $MASTER_NODE_NUM -eq 4 ]]; then
+  # Creating scale in lock
   set +e
   az storage blob upload --account-name ${storageAccountName} --container-name automation-locks --name lock.txt --file /dev/null --auth-mode key
   set -e
+  
+  # Configuring blob storage
+  echo ${base64config_blobStorage} | base64 -d > /usr/local/bin/config_blobStorage.sh
+  chmod +x /usr/local/bin/config_blobStorage.sh
+  /usr/local/bin/config_blobStorage.sh || { echo "[OpenVidu] error configuring Blob Storage"; exit 1; }
+
+  #Finish all the nodes
   az keyvault secret set --vault-name ${keyVaultName} --name FINISH-MASTER-NODE --value "true"
 fi
 
@@ -1426,7 +1468,7 @@ var stopMediaNodeParams = {
   subscriptionId: subscription().subscriptionId
   resourceGroupName: resourceGroup().name
   vmScaleSetName: '${stackName}-mediaNodeScaleSet'
-  storageAccountName: storageAccount.name
+  storageAccountName: isEmptyStorageAccountName ? storageAccount.name : exisitngStorageAccount.name
 }
 
 var stop_media_nodesScriptMediaTemplate = '''
@@ -1524,6 +1566,8 @@ var base64stopMediaNode = base64(stop_media_nodesScriptMedia)
 var userDataParamsMedia = {
   base64install: base64installMedia
   base64stop: base64stopMediaNode
+  resourceGroupName: resourceGroup().name
+  vmScaleSetName: '${stackName}-mediaNodeScaleSet'
 }
 
 var userDataMediaNode = reduce(
@@ -1540,7 +1584,7 @@ resource openviduScaleSetMediaNode 'Microsoft.Compute/virtualMachineScaleSets@20
   location: location
   tags: {
     InstanceDeleteTime: datetime
-    storageAccount: storageAccount.name
+    storageAccount: isEmptyStorageAccountName ? storageAccount.name : exisitngStorageAccount.name
   }
   identity: { type: 'SystemAssigned' }
   sku: {
@@ -2922,7 +2966,12 @@ resource masterToMediaClientIngress 'Microsoft.Network/networkSecurityGroups/sec
 
 /*------------------------------------------- STORAGE ACCOUNT ----------------------------------------*/
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+@description('Name of an existing storage account. It is essential that this parameter is filled just when you want to save recordings and still using the same container after an update. If not specified, a new storage account will be generated.')
+param storageAccountName string = ''
+
+var isEmptyStorageAccountName = storageAccountName == ''
+
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = if (isEmptyStorageAccountName == true) {
   name: uniqueString(resourceGroup().id)
   location: resourceGroup().location
   sku: {
@@ -2935,19 +2984,23 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   }
 }
 
-resource blobContainerScaleIn 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+resource exisitngStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' existing = if (isEmptyStorageAccountName == false) {
+  name: storageAccountName
+}
+
+resource blobContainerScaleIn 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = if (isEmptyStorageAccountName == true) {
   name: '${storageAccount.name}/default/automation-locks'
   properties: {
     publicAccess: 'None'
   }
 }
 
-@description('Name of the bucket where OpenVidu will store the recordings. If not specified, a default bucket will be created.')
+@description('Name of the bucket where OpenVidu will store the recordings if a new Storage account is being creating. If not specified, a default bucket will be created.')
 param containerName string = ''
 
 var isEmptyContainerName = containerName == ''
 
-resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = if (isEmptyStorageAccountName == true) {
   name: isEmptyContainerName
     ? '${storageAccount.name}/default/openvidu-appdata'
     : '${storageAccount.name}/default/${containerName}'
