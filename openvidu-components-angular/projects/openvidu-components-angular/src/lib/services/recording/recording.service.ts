@@ -156,7 +156,7 @@ export class RecordingService {
 		const queryParamForAvoidCache = `?t=${new Date().getTime()}`;
 		const baseUrl = this.libService.getRecordingStreamBaseUrl();
 		let streamRecordingUrl = '';
-		if (baseUrl === 'call/api/recordings') {
+		if (baseUrl === 'call/api/recordings/') {
 			// Keep the compatibility with the old version
 			streamRecordingUrl = `${baseUrl}${recording.id}/stream${queryParamForAvoidCache}`;
 		} else {
@@ -175,7 +175,7 @@ export class RecordingService {
 		const queryParamForAvoidCache = `?t=${new Date().getTime()}`;
 		const link = document.createElement('a');
 		const baseUrl = this.libService.getRecordingStreamBaseUrl();
-		if (baseUrl === 'call/api/recordings') {
+		if (baseUrl === 'call/api/recordings/') {
 			// Keep the compatibility with the old version
 			link.href = `${baseUrl}${recording.id}/stream${queryParamForAvoidCache}`;
 		} else {
