@@ -20,7 +20,7 @@ export class RecordingService {
 	private recordingStatus = <BehaviorSubject<RecordingStatusInfo>>new BehaviorSubject({
 		status: RecordingStatus.STOPPED,
 		recordingList: [] as RecordingInfo[],
-		recordingElapsedTime: new Date(0, 0, 0, 0, 0, 0),
+		recordingElapsedTime: new Date(0, 0, 0, 0, 0, 0)
 	});
 	private log: ILogger;
 
@@ -43,7 +43,7 @@ export class RecordingService {
 	setRecordingStarted(recordingInfo?: RecordingInfo, startTimestamp?: number) {
 		// Register the start timestamp of the recording
 		// to calculate the elapsed time
-		debugger
+		debugger;
 		this.recordingStartTimestamp = recordingInfo?.startedAt || Date.now();
 
 		// Initialize the recording elapsed time
@@ -155,7 +155,13 @@ export class RecordingService {
 		this.log.d('Playing recording', recording);
 		const queryParamForAvoidCache = `?t=${new Date().getTime()}`;
 		const baseUrl = this.libService.getRecordingStreamBaseUrl();
-		const streamRecordingUrl = `${baseUrl}${recording.id}/media${queryParamForAvoidCache}`;
+		let streamRecordingUrl = '';
+		if (baseUrl === 'call/api/recordings/') {
+			// Keep the compatibility with the old version
+			streamRecordingUrl = `${baseUrl}${recording.id}/stream${queryParamForAvoidCache}`;
+		} else {
+			streamRecordingUrl = `${baseUrl}${recording.id}/media${queryParamForAvoidCache}`;
+		}
 		this.actionService.openRecordingPlayerDialog(streamRecordingUrl);
 	}
 
@@ -169,7 +175,12 @@ export class RecordingService {
 		const queryParamForAvoidCache = `?t=${new Date().getTime()}`;
 		const link = document.createElement('a');
 		const baseUrl = this.libService.getRecordingStreamBaseUrl();
-		link.href = `${baseUrl}${recording.id}/media${queryParamForAvoidCache}`;
+		if (baseUrl === 'call/api/recordings/') {
+			// Keep the compatibility with the old version
+			link.href = `${baseUrl}${recording.id}/stream${queryParamForAvoidCache}`;
+		} else {
+			link.href = `${baseUrl}${recording.id}/media${queryParamForAvoidCache}`;
+		}
 		link.download = recording.filename || 'openvidu-recording.mp4';
 		link.dispatchEvent(
 			new MouseEvent('click', {
