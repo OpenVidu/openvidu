@@ -528,7 +528,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 					descriptionErrorKey = 'ERRORS.DISCONNECT';
 					break;
 			}
-			this.log.e('Room Disconnected', participantLeftEvent.reason);
+
+			this.log.d('Participant disconnected', participantLeftEvent);
 			this.onParticipantLeft.emit(participantLeftEvent);
 			this.onRoomDisconnected.emit();
 			if (descriptionErrorKey) {
