@@ -1,6 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { AfterViewInit, Component, ContentChild, EventEmitter, OnDestroy, Output, TemplateRef, ViewChild } from '@angular/core';
-import { Subscription, skip } from 'rxjs';
+import { Subscription, filter, skip, take } from 'rxjs';
 import {
 	ActivitiesPanelDirective,
 	AdditionalPanelsDirective,
@@ -383,6 +383,7 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	private tokenErrorSub: Subscription;
 	private participantNameSub: Subscription;
 	private log: ILogger;
+	private latestParticipantName: string | undefined;
 
 	/**
 	 * @internal
@@ -503,7 +504,7 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 */
 	_onReadyToJoin() {
 		this.openviduService.initRoom();
-		const participantName = this.storageSrv.getParticipantName();
+		const participantName = this.latestParticipantName;
 		if (participantName) this.onTokenRequested.emit(participantName);
 		// Emits onReadyToJoin event only if prejoin page has been shown
 		if (this.showPrejoin) this.onReadyToJoin.emit();
@@ -548,14 +549,48 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		this.prejoinSub = this.libService.prejoin$.subscribe((value: boolean) => {
 			this.showPrejoin = value;
 			if (!this.showPrejoin) {
-				// Emit token ready if the prejoin page won't be shown
-				this._onReadyToJoin();
+				// Ensure we have a participant name before proceeding with the join
+				this.log.d('Prejoin page is hidden, checking participant name');
+				// Check if we have a participant name already
+				if (this.latestParticipantName) {
+					// We have a name, proceed immediately
+					this._onReadyToJoin();
+				} else {
+					// Try to get it from storage first
+					const storedName = this.storageSrv.getParticipantName();
+					if (storedName) {
+						this.latestParticipantName = storedName;
+						this._onReadyToJoin();
+					} else {
+						// No name yet - set up a one-time subscription to wait for it
+						const waitForNameSub = this.libService.participantName$
+							.pipe(
+								filter((name) => !!name),
+								take(1)
+							)
+							.subscribe(() => {
+								// Now we have the name in latestParticipantName
+								this._onReadyToJoin();
+							});
+						// Add safety timeout in case name never arrives
+						setTimeout(() => {
+							if (!this.latestParticipantName) {
+								this.log.w('No participant name received after timeout, proceeding anyway');
+								waitForNameSub.unsubscribe();
+								this._onReadyToJoin();
+							}
+						}, 1000);
+					}
+				}
 			}
 			// this.cd.markForCheck();
 		});
 
 		this.participantNameSub = this.libService.participantName$.subscribe((name: string) => {
-			if (name) this.storageSrv.setParticipantName(name);
+			if (name) {
+				this.latestParticipantName = name;
+				this.storageSrv.setParticipantName(name);
+			}
 		});
 	}
 }
