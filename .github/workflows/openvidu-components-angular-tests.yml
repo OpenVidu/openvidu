@@ -92,6 +92,9 @@ jobs:
         env:
           LAUNCH_MODE: CI
         run: npm run e2e:nested-events --prefix openvidu-components-angular
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup
 
   unit_tests:
     name: Unit Tests
@@ -114,7 +117,9 @@ jobs:
           npm install
       - name: Run Unit Tests
         run: npm run lib:test --prefix openvidu-components-angular
-
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup
 
   nested_components_e2e_directives:
     needs: test_setup
@@ -163,6 +168,9 @@ jobs:
         env:
           LAUNCH_MODE: CI
         run: npm run e2e:nested-directives --prefix openvidu-components-angular
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup
 
   webcomponent_e2e_directives:
     needs: test_setup
@@ -212,6 +220,9 @@ jobs:
         env:
           LAUNCH_MODE: CI
         run: npm run e2e:webcomponent-directives --prefix openvidu-components-angular
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup
 
   webcomponent_e2e_chat:
     needs: test_setup
@@ -261,7 +272,9 @@ jobs:
         env:
           LAUNCH_MODE: CI
         run: npm run e2e:webcomponent-chat --prefix openvidu-components-angular
-
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup
 
   webcomponent_e2e_events:
     needs: test_setup
@@ -311,6 +324,9 @@ jobs:
         env:
           LAUNCH_MODE: CI
         run: npm run e2e:webcomponent-events --prefix openvidu-components-angular
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup
 
   webcomponent_e2e_media_devices:
     needs: test_setup
@@ -360,6 +376,9 @@ jobs:
         env:
           LAUNCH_MODE: CI
         run: npm run e2e:webcomponent-media-devices --prefix openvidu-components-angular
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup
 
   webcomponent_e2e_panels:
     needs: test_setup
@@ -409,6 +428,9 @@ jobs:
         env:
           LAUNCH_MODE: CI
         run: npm run e2e:webcomponent-panels --prefix openvidu-components-angular
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup
 
   webcomponent_e2e_screen_sharing:
     needs: test_setup
@@ -458,7 +480,9 @@ jobs:
         env:
           LAUNCH_MODE: CI
         run: npm run e2e:webcomponent-screensharing --prefix openvidu-components-angular
-
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup
 
   webcomponent_e2e_stream:
     needs: test_setup
@@ -508,6 +532,9 @@ jobs:
         env:
           LAUNCH_MODE: CI
         run: npm run e2e:webcomponent-stream --prefix openvidu-components-angular
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup
 
   webcomponent_e2e_toolbar:
     needs: test_setup
@@ -557,3 +584,6 @@ jobs:
         env:
           LAUNCH_MODE: CI
         run: npm run e2e:webcomponent-toolbar --prefix openvidu-components-angular
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup
