@@ -1,4 +1,4 @@
-$ov-video-elements-bg-color: var(--ov-primary-action-color);;
+$ov-video-elements-bg-color: var(--ov-primary-action-color);
 :host {
 	/* Fixes layout bug. The OV_root is created with the entire layout width and it has a weird UX behaviour */
 	.no-size {
@@ -41,9 +41,6 @@ $ov-video-elements-bg-color: var(--ov-primary-action-color);;
 		}
 	}
 
-	.active-btn {
-		color: var(--ov-accent-action-color) !important;
-	}
 	.muted-btn {
 		color: var(--ov-error-color) !important;
 	}
@@ -80,10 +77,14 @@ $ov-video-elements-bg-color: var(--ov-primary-action-color);;
 		line-height: 0;
 
 		#status-mic,
-		#status-muted-forcibly {
-			color: var(--ov-error-color);
+		#status-muted-forcibly,
+		#status-pinned {
 			font-size: 24px;
 			margin: 5px;
+		}
+		#status-mic,
+		#status-muted-forcibly {
+			color: var(--ov-error-color);
 		}
 	}
 
