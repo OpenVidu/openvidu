@@ -1,0 +1,26 @@
+name: 'Build and Serve openvidu-components-angular Testapp'
+description: 'Setup and serve openvidu-components-angular Testapp'
+runs:
+  using: 'composite'
+  steps:
+    - name: Install dependencies
+      run: |
+        cd openvidu-components-angular
+        npm install
+      shell: bash
+    - name: Build openvidu-components-angular
+      run: npm run lib:build --prefix openvidu-components-angular
+      shell: bash
+    - name: Build openvidu-components-angular Testapp
+      run: npm run build --prefix openvidu-components-angular
+      shell: bash
+    - name: Serve openvidu-components-angular Testapp
+      run: npm run start --prefix openvidu-components-angular &
+      shell: bash
+    - name: Wait for openvidu-components-angular Testapp
+      run: |
+        until curl -s -f -o /dev/null http://localhost:4200; do
+          echo "Waiting for openvidu-components-angular Testapp to be ready..."
+          sleep 5
+        done
+      shell: bash

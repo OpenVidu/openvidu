@@ -72,12 +72,8 @@ jobs:
         run: |
           cd openvidu-components-angular
           npm install
-      - name: Build openvidu-components-angular
-        run: npm run lib:build --prefix openvidu-components-angular
-      - name: Build openvidu-components-angular Testapp
-        run: npm run build --prefix openvidu-components-angular
-      - name: Serve openvidu-components-angular Testapp
-        run: npm run start --prefix openvidu-components-angular &
+      - name: Build and Serve openvidu-components-angular Testapp
+        uses: ./.github/actions/build-and-serve-components-testapp
       - name: Wait for openvidu-components-angular Testapp
         run: |
           until curl -s -f -o /dev/null http://localhost:4200; do
@@ -144,12 +140,8 @@ jobs:
         run: |
           cd openvidu-components-angular
           npm install
-      - name: Build openvidu-components-angular
-        run: npm run lib:build --prefix openvidu-components-angular
-      - name: Build openvidu-components-angular Testapp
-        run: npm run build --prefix openvidu-components-angular
-      - name: Serve openvidu-components-angular Testapp
-        run: npm run start --prefix openvidu-components-angular &
+      - name: Build and Serve openvidu-components-angular Testapp
+        uses: ./.github/actions/build-and-serve-components-testapp
       - name: Wait for openvidu-components-angular Testapp
         run: |
           until curl -s -f -o /dev/null http://localhost:4200; do
