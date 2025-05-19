@@ -66,12 +66,8 @@ jobs:
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: ./.github/actions/setup-local-deployment
-      - name: Run OpenVidu Call Backend
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/backend
-          npm install
-          npm run dev:start &
+      - name: Setup OpenVidu Call Backend
+        uses: ./.github/actions/setup-openvidu-call-backend
       - name: Install dependencies
         run: |
           cd openvidu-components-angular
@@ -142,12 +138,8 @@ jobs:
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: ./.github/actions/setup-local-deployment
-      - name: Run OpenVidu Call Backend
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/backend
-          npm install
-          npm run dev:start &
+      - name: Setup OpenVidu Call Backend
+        uses: ./.github/actions/setup-openvidu-call-backend
       - name: Install dependencies
         run: |
           cd openvidu-components-angular
@@ -194,12 +186,8 @@ jobs:
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: ./.github/actions/setup-local-deployment
-      - name: Run OpenVidu Call Backend
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/backend
-          npm install
-          npm run dev:start &
+      - name: Setup OpenVidu Call Backend
+        uses: ./.github/actions/setup-openvidu-call-backend
       - name: Install dependencies
         run: |
           cd openvidu-components-angular
@@ -246,12 +234,8 @@ jobs:
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: ./.github/actions/setup-local-deployment
-      - name: Run OpenVidu Call Backend
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/backend
-          npm install
-          npm run dev:start &
+      - name: Setup OpenVidu Call Backend
+        uses: ./.github/actions/setup-openvidu-call-backend
       - name: Install dependencies
         run: |
           cd openvidu-components-angular
@@ -298,12 +282,8 @@ jobs:
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: ./.github/actions/setup-local-deployment
-      - name: Run OpenVidu Call Backend
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/backend
-          npm install
-          npm run dev:start &
+      - name: Setup OpenVidu Call Backend
+        uses: ./.github/actions/setup-openvidu-call-backend
       - name: Install dependencies
         run: |
           cd openvidu-components-angular
@@ -350,12 +330,8 @@ jobs:
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: ./.github/actions/setup-local-deployment
-      - name: Run OpenVidu Call Backend
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/backend
-          npm install
-          npm run dev:start &
+      - name: Setup OpenVidu Call Backend
+        uses: ./.github/actions/setup-openvidu-call-backend
       - name: Install dependencies
         run: |
           cd openvidu-components-angular
@@ -402,12 +378,8 @@ jobs:
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: ./.github/actions/setup-local-deployment
-      - name: Run OpenVidu Call Backend
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/backend
-          npm install
-          npm run dev:start &
+      - name: Setup OpenVidu Call Backend
+        uses: ./.github/actions/setup-openvidu-call-backend
       - name: Install dependencies
         run: |
           cd openvidu-components-angular
@@ -454,12 +426,8 @@ jobs:
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: ./.github/actions/setup-local-deployment
-      - name: Run OpenVidu Call Backend
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/backend
-          npm install
-          npm run dev:start &
+      - name: Setup OpenVidu Call Backend
+        uses: ./.github/actions/setup-openvidu-call-backend
       - name: Install dependencies
         run: |
           cd openvidu-components-angular
@@ -506,12 +474,8 @@ jobs:
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: ./.github/actions/setup-local-deployment
-      - name: Run OpenVidu Call Backend
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/backend
-          npm install
-          npm run dev:start &
+      - name: Setup OpenVidu Call Backend
+        uses: ./.github/actions/setup-openvidu-call-backend
       - name: Install dependencies
         run: |
           cd openvidu-components-angular
@@ -558,12 +522,8 @@ jobs:
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: ./.github/actions/setup-local-deployment
-      - name: Run OpenVidu Call Backend
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-call
-          cd openvidu-call/backend
-          npm install
-          npm run dev:start &
+      - name: Setup OpenVidu Call Backend
+        uses: ./.github/actions/setup-openvidu-call-backend
       - name: Install dependencies
         run: |
           cd openvidu-components-angular
