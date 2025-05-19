@@ -51,7 +51,8 @@
 				[class.active-btn]="_track.isPinned"
 				[matTooltip]="_track.isPinned ? ('STREAM.UNPIN' | translate) : ('STREAM.PIN' | translate)"
 			>
-				<mat-icon>push_pin</mat-icon>
+				<mat-icon *ngIf="_track.isPinned" fontSet="material-symbols-outlined" fontIcon="keep">keep_off</mat-icon>
+				<mat-icon *ngIf="!_track.isPinned" id="status-pinned" fontIcon="push_pin"></mat-icon>
 			</button>
 			<button
 				*ngIf="!_track.participant.isLocal"

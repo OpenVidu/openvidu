@@ -1,10 +1,7 @@
-<head>
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-</head>
 <mat-toolbar id="toolbar" class="toolbar-container">
 	<div id="info-container" class="info-container">
 		<div>
-			<img *ngIf="!isMinimal && showLogo" id="branding-logo" [ovLogo]="brandingLogo"  />
+			<img *ngIf="!isMinimal && showLogo" id="branding-logo" [ovLogo]="brandingLogo" />
 			<div
 				id="session-info-container"
 				[class.collapsed]="recordingStatus === _recordingStatus.STARTED || broadcastingStatus === _broadcastingStatus.STARTED"
