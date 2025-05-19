@@ -58,16 +58,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install wait-on package
+        run: npm install -g wait-on
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
-          cd openvidu-local-deployment/community
-          ./configure_lan_private_ip_linux.sh
-          docker compose up -d
+        uses: ./.github/actions/setup-local-deployment
       - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
@@ -84,13 +82,6 @@ jobs:
         run: npm run build --prefix openvidu-components-angular
       - name: Serve openvidu-components-angular Testapp
         run: npm run start --prefix openvidu-components-angular &
-      - name: Wait for openvidu-local-deployment
-        run: |
-          until curl -s -f -o /dev/null http://localhost:7880; do
-            echo "Waiting for openvidu-local-deployment to be ready..."
-            sleep 5
-          done
-
       - name: Wait for openvidu-components-angular Testapp
         run: |
           until curl -s -f -o /dev/null http://localhost:4200; do
@@ -115,6 +106,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install wait-on package
+        run: npm install -g wait-on
       - name: Install Dependencies
         run: |
           cd openvidu-components-angular
@@ -136,16 +129,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install wait-on package
+        run: npm install -g wait-on
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
-          cd openvidu-local-deployment/community
-          ./configure_lan_private_ip_linux.sh
-          docker compose up -d
+        uses: ./.github/actions/setup-local-deployment
       - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
@@ -162,13 +153,6 @@ jobs:
         run: npm run build --prefix openvidu-components-angular
       - name: Serve openvidu-components-angular Testapp
         run: npm run start --prefix openvidu-components-angular &
-      - name: Wait for openvidu-local-deployment
-        run: |
-          until curl -s -f -o /dev/null http://localhost:7880; do
-            echo "Waiting for openvidu-local-deployment to be ready..."
-            sleep 5
-          done
-
       - name: Wait for openvidu-components-angular Testapp
         run: |
           until curl -s -f -o /dev/null http://localhost:4200; do
@@ -194,16 +178,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install wait-on package
+        run: npm install -g wait-on
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
-          cd openvidu-local-deployment/community
-          ./configure_lan_private_ip_linux.sh
-          docker compose up -d
+        uses: ./.github/actions/setup-local-deployment
       - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
@@ -220,12 +202,6 @@ jobs:
         run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
-      - name: Wait for openvidu-local-deployment
-        run: |
-          until curl -s -f -o /dev/null http://localhost:7880; do
-            echo "Waiting for openvidu-local-deployment to be ready..."
-            sleep 5
-          done
       - name: Wait for openvidu-components-angular Testapp
         run: |
             until curl -s -f -o /dev/null http://localhost:8080; do
@@ -251,16 +227,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install wait-on package
+        run: npm install -g wait-on
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
-          cd openvidu-local-deployment/community
-          ./configure_lan_private_ip_linux.sh
-          docker compose up -d
+        uses: ./.github/actions/setup-local-deployment
       - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
@@ -277,12 +251,6 @@ jobs:
         run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
-      - name: Wait for openvidu-local-deployment
-        run: |
-          until curl -s -f -o /dev/null http://localhost:7880; do
-            echo "Waiting for openvidu-local-deployment to be ready..."
-            sleep 5
-          done
       - name: Wait for openvidu-components-angular Testapp
         run: |
             until curl -s -f -o /dev/null http://localhost:8080; do
@@ -309,16 +277,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install wait-on package
+        run: npm install -g wait-on
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
-          cd openvidu-local-deployment/community
-          ./configure_lan_private_ip_linux.sh
-          docker compose up -d
+        uses: ./.github/actions/setup-local-deployment
       - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
@@ -335,12 +301,6 @@ jobs:
         run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
-      - name: Wait for openvidu-local-deployment
-        run: |
-          until curl -s -f -o /dev/null http://localhost:7880; do
-            echo "Waiting for openvidu-local-deployment to be ready..."
-            sleep 5
-          done
       - name: Wait for openvidu-components-angular Testapp
         run: |
             until curl -s -f -o /dev/null http://localhost:8080; do
@@ -366,16 +326,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install wait-on package
+        run: npm install -g wait-on
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
-          cd openvidu-local-deployment/community
-          ./configure_lan_private_ip_linux.sh
-          docker compose up -d
+        uses: ./.github/actions/setup-local-deployment
       - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
@@ -392,12 +350,6 @@ jobs:
         run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
-      - name: Wait for openvidu-local-deployment
-        run: |
-          until curl -s -f -o /dev/null http://localhost:7880; do
-            echo "Waiting for openvidu-local-deployment to be ready..."
-            sleep 5
-          done
       - name: Wait for openvidu-components-angular Testapp
         run: |
             until curl -s -f -o /dev/null http://localhost:8080; do
@@ -423,16 +375,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install wait-on package
+        run: npm install -g wait-on
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
-          cd openvidu-local-deployment/community
-          ./configure_lan_private_ip_linux.sh
-          docker compose up -d
+        uses: ./.github/actions/setup-local-deployment
       - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
@@ -449,12 +399,6 @@ jobs:
         run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
-      - name: Wait for openvidu-local-deployment
-        run: |
-          until curl -s -f -o /dev/null http://localhost:7880; do
-            echo "Waiting for openvidu-local-deployment to be ready..."
-            sleep 5
-          done
       - name: Wait for openvidu-components-angular Testapp
         run: |
             until curl -s -f -o /dev/null http://localhost:8080; do
@@ -480,16 +424,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install wait-on package
+        run: npm install -g wait-on
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
-          cd openvidu-local-deployment/community
-          ./configure_lan_private_ip_linux.sh
-          docker compose up -d
+        uses: ./.github/actions/setup-local-deployment
       - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
@@ -506,12 +448,6 @@ jobs:
         run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
-      - name: Wait for openvidu-local-deployment
-        run: |
-          until curl -s -f -o /dev/null http://localhost:7880; do
-            echo "Waiting for openvidu-local-deployment to be ready..."
-            sleep 5
-          done
       - name: Wait for openvidu-components-angular Testapp
         run: |
             until curl -s -f -o /dev/null http://localhost:8080; do
@@ -538,16 +474,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install wait-on package
+        run: npm install -g wait-on
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
-          cd openvidu-local-deployment/community
-          ./configure_lan_private_ip_linux.sh
-          docker compose up -d
+        uses: ./.github/actions/setup-local-deployment
       - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
@@ -564,12 +498,6 @@ jobs:
         run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
-      - name: Wait for openvidu-local-deployment
-        run: |
-          until curl -s -f -o /dev/null http://localhost:7880; do
-            echo "Waiting for openvidu-local-deployment to be ready..."
-            sleep 5
-          done
       - name: Wait for openvidu-components-angular Testapp
         run: |
             until curl -s -f -o /dev/null http://localhost:8080; do
@@ -595,16 +523,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install wait-on package
+        run: npm install -g wait-on
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
         run:  docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
-        run: |
-          git clone --depth 1 https://github.com/OpenVidu/openvidu-local-deployment
-          cd openvidu-local-deployment/community
-          ./configure_lan_private_ip_linux.sh
-          docker compose up -d
+        uses: ./.github/actions/setup-local-deployment
       - name: Run OpenVidu Call Backend
         run: |
           git clone --depth 1 https://github.com/OpenVidu/openvidu-call
@@ -621,12 +547,6 @@ jobs:
         run: npm run webcomponent:testing-build --prefix openvidu-components-angular
       - name: Serve Webcomponent Testapp
         run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
-      - name: Wait for openvidu-local-deployment
-        run: |
-          until curl -s -f -o /dev/null http://localhost:7880; do
-            echo "Waiting for openvidu-local-deployment to be ready..."
-            sleep 5
-          done
       - name: Wait for openvidu-components-angular Testapp
         run: |
             until curl -s -f -o /dev/null http://localhost:8080; do
