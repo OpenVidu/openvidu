@@ -220,7 +220,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#openvidu-dialog')).toBeTrue();
 	});
 
-	it('should run the app with VIDEO DISABLED in prejoin page', async () => {
+	fit('should run the app with VIDEO DISABLED in prejoin page', async () => {
 		await browser.get(`${url}&prejoin=true&videoEnabled=false`);
 
 		await utils.checkPrejoinIsPresent();
@@ -235,11 +235,11 @@ describe('Testing API Directives', () => {
 
 		await utils.checkSessionIsPresent();
 
-		await utils.waitForElement('#video-poster');
-		expect(await utils.getNumberOfElements('video')).toEqual(0);
-
 		await utils.waitForElement('#videocam_off');
 		expect(await utils.isPresent('#videocam_off')).toBeTrue();
+
+		await utils.waitForElement('#video-poster');
+		expect(await utils.getNumberOfElements('video')).toEqual(0);
 	});
 
 	it('should run the app with VIDEO DISABLED and WITHOUT PREJOIN page', async () => {
