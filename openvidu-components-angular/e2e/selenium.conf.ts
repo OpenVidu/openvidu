@@ -54,6 +54,15 @@ export const WebComponentConfig: BrowserConfig = {
 	browserOptions: new chrome.Options().addArguments(...(LAUNCH_MODE === 'CI' ? chromeArgumentsCI : chromeArguments))
 };
 
+
+export const TestAppConfig: BrowserConfig = {
+	appUrl: 'http://localhost:4200/#/call?staticVideos=false',
+	seleniumAddress: LAUNCH_MODE === 'CI' ? 'http://localhost:4444/wd/hub' : '',
+	browserName: 'chrome',
+	browserCapabilities: Capabilities.chrome().set('acceptInsecureCerts', true),
+	browserOptions: new chrome.Options().addArguments(...(LAUNCH_MODE === 'CI' ? chromeArgumentsCI : chromeArguments))
+};
+
 export const NestedConfig: BrowserConfig = {
 	appUrl: 'http://localhost:4200/#/testing',
 	seleniumAddress: LAUNCH_MODE === 'CI' ? 'http://localhost:4444/wd/hub' : '',

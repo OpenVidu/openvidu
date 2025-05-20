@@ -136,6 +136,13 @@ export class OpenViduComponentsPO {
 		await this.clickOn('#fullscreen-btn');
 	}
 
+	async leaveRoom() {
+		await this.clickOn('body');
+		await this.waitForElement('#leave-btn');
+		expect(await this.isPresent('#leave-btn')).toBe(true);
+		await this.clickOn('#leave-btn');
+	}
+
 	async togglePanel(panelName: string) {
 		switch (panelName) {
 			case 'activities':

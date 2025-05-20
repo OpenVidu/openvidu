@@ -1,19 +1,18 @@
 import { Builder, WebDriver } from 'selenium-webdriver';
-import { OPENVIDU_CALL_SERVER } from '../config';
-import { WebComponentConfig } from '../selenium.conf';
-import { OpenViduComponentsPO } from '../utils.po.test';
+import { TestAppConfig } from './selenium.conf';
+import { OpenViduComponentsPO } from './utils.po.test';
 
-const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_CALL_SERVER}`;
+const url = TestAppConfig.appUrl;
 
 describe('Testing API Directives', () => {
 	let browser: WebDriver;
 	let utils: OpenViduComponentsPO;
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
-			.forBrowser(WebComponentConfig.browserName)
-			.withCapabilities(WebComponentConfig.browserCapabilities)
-			.setChromeOptions(WebComponentConfig.browserOptions)
-			.usingServer(WebComponentConfig.seleniumAddress)
+			.forBrowser(TestAppConfig.browserName)
+			.withCapabilities(TestAppConfig.browserCapabilities)
+			.setChromeOptions(TestAppConfig.browserOptions)
+			.usingServer(TestAppConfig.seleniumAddress)
 			.build();
 	}
 
@@ -24,6 +23,10 @@ describe('Testing API Directives', () => {
 
 	afterEach(async () => {
 		// console.log('data:image/png;base64,' + await browser.takeScreenshot());
+		try {
+			// leaving room if connected
+			await utils.leaveRoom();
+		} catch (error) {}
 		await browser.quit();
 	});
 
@@ -292,7 +295,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#mic_off')).toBeTrue();
 	});
 
-	it('should run the app without camera button' , async () => {
+	it('should run the app without camera button', async () => {
 		await browser.get(`${url}&prejoin=false&cameraBtn=false`);
 
 		await utils.checkSessionIsPresent();
@@ -304,7 +307,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#camera-btn')).toBeFalse();
 	});
 
-	it('should run the app without microphone button' , async () => {
+	it('should run the app without microphone button', async () => {
 		await browser.get(`${url}&prejoin=false&microphoneBtn=false`);
 
 		await utils.checkSessionIsPresent();
@@ -315,7 +318,6 @@ describe('Testing API Directives', () => {
 		// Checking if microphone button is not present
 		expect(await utils.isPresent('#microphone-btn')).toBeFalse();
 	});
-
 
 	it('should HIDE the SCREENSHARE button', async () => {
 		await browser.get(`${url}&prejoin=false&screenshareBtn=false`);
@@ -552,8 +554,9 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#remote-participant-item')).toBeFalse();
 
 		// Starting new browser for adding a new participant
-		const newTabScript = `window.open("${fixedUrl}")`;
+		const newTabScript = `window.open("${fixedUrl}&participantName=SecondParticipant")`;
 		await browser.executeScript(newTabScript);
+		await browser.sleep(10000);
 
 		// Go to first tab
 		const tabs = await browser.getAllWindowHandles();
