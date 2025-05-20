@@ -877,13 +877,13 @@ resource publicIP_OV 'Microsoft.Network/publicIPAddresses@2023-11-01' = if (isEm
   }
 }
 
-var ipExists = publicIpAddressObject.newOrExisting == 'existing'
+var ipExists = publicIpAddressObject.newOrExistingOrNone == 'existing'
 
 resource publicIP_OV_ifExisting 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipExists == true) {
   name: publicIpAddressObject.name
 }
 
-var ipNew = publicIpAddressObject.newOrExisting == 'new'
+var ipNew = publicIpAddressObject.newOrExistingOrNone == 'new'
 
 resource publicIP_OV_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipNew == true) {
   name: publicIpAddressObject.name
