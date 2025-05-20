@@ -1,9 +1,8 @@
 import { Builder, WebDriver } from 'selenium-webdriver';
-import { OPENVIDU_CALL_SERVER } from '../config';
-import { WebComponentConfig } from '../selenium.conf';
-import { OpenViduComponentsPO } from '../utils.po.test';
+import { TestAppConfig } from './selenium.conf';
+import { OpenViduComponentsPO } from './utils.po.test';
 
-const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_CALL_SERVER}`;
+const url = TestAppConfig.appUrl;
 
 describe('Testing CHAT features', () => {
 	let browser: WebDriver;
@@ -11,10 +10,10 @@ describe('Testing CHAT features', () => {
 
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
-			.forBrowser(WebComponentConfig.browserName)
-			.withCapabilities(WebComponentConfig.browserCapabilities)
-			.setChromeOptions(WebComponentConfig.browserOptions)
-			.usingServer(WebComponentConfig.seleniumAddress)
+			.forBrowser(TestAppConfig.browserName)
+			.withCapabilities(TestAppConfig.browserCapabilities)
+			.setChromeOptions(TestAppConfig.browserOptions)
+			.usingServer(TestAppConfig.seleniumAddress)
 			.build();
 	}
 
@@ -24,6 +23,10 @@ describe('Testing CHAT features', () => {
 	});
 
 	afterEach(async () => {
+		try {
+			// leaving room if connected
+			await utils.leaveRoom();
+		} catch (error) {}
 		await browser.quit();
 	});
 
