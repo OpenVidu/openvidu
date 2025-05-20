@@ -15,16 +15,49 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ParticipantLeftEvent } from '../../../projects/openvidu-components-angular/src/lib/models/participant.model';
 
 @Component({
-    selector: 'app-call',
-    templateUrl: './call.component.html',
-    styleUrls: ['./call.component.scss'],
-    standalone: false
+	selector: 'app-call',
+	templateUrl: './call.component.html',
+	styleUrls: ['./call.component.scss'],
+	standalone: false
 })
 export class CallComponent implements OnInit {
 	roomName = 'daily-call';
 	token: string;
 	tokenError: string | undefined;
 	isSessionAlive: boolean = false;
+	configReady: boolean = false;
+
+	minimal: boolean = false;
+	lang: string = 'es';
+	langOptions: LangOption[] = [
+		{ name: 'Spanish', lang: 'es' },
+		{ name: 'custom', lang: 'cus' }
+	];
+	prejoin: boolean = true;
+	prejoinDisplayParticipantName: boolean = true;
+	participantName: string = `Participant${Math.floor(Math.random() * 1000)}`;
+	videoEnabled: boolean = true;
+	audioEnabled: boolean = true;
+	toolbarCameraButton: boolean = true;
+	toolbarMicrophoneButton: boolean = true;
+	toolbarScreenshareButton: boolean = true;
+	toolbarFullscreenButton: boolean = true;
+	toolbarRecordingButton: boolean = true;
+	toolbarBroadcastingButton: boolean = true;
+	toolbarActivitiesPanelButton: boolean = true;
+	toolbarBackgroundEffectsButton: boolean = true;
+	toolbarLeaveButton: boolean = true;
+	toolbarChatPanelButton: boolean = true;
+	toolbarParticipantsPanelButton: boolean = true;
+	toolbarDisplayLogo: boolean = true;
+	toolbarDisplayRoomName: boolean = true;
+	streamDisplayParticipantName: boolean = true;
+	streamDisplayAudioDetection: boolean = true;
+	streamVideoControls: boolean = true;
+	participantPanelItemMuteButton: boolean = true;
+	activitiesPanelRecordingActivity: boolean = true;
+	activitiesPanelBroadcastingActivity: boolean = true;
+	toolbarSettingsButton: boolean = true;
 
 	private staticVideos = [
 		'https://videos.pexels.com/video-files/4089575/4089575-hd_1280_720_50fps.mp4',
@@ -56,8 +89,59 @@ export class CallComponent implements OnInit {
 
 	async ngOnInit() {
 		this.activatedRoute.queryParams.subscribe((params) => {
-			this.areStaticVideosEnabled = params['staticVideos'] === 'true';
-			console.log('Static videos enabled: ', this.areStaticVideosEnabled);
+			if (params['roomName']) this.roomName = params['roomName'];
+			// if (params['token']) this.token = params['token'];
+			if (params['minimal'] !== undefined) this.minimal = params['minimal'] === 'true';
+			if (params['lang']) this.lang = params['lang'];
+			if (params['langOptions'] === 'true') {
+				try {
+					this.langOptions = [
+						{ name: 'Esp', lang: 'es' },
+						{ name: 'Eng', lang: 'en' }
+					];
+				} catch {}
+			}
+			if (params['prejoin'] !== undefined) this.prejoin = params['prejoin'] === 'true';
+			if (params['displayParticipantName'] !== undefined)
+				this.prejoinDisplayParticipantName = params['displayParticipantName'] === 'true';
+			if (params['participantName']) this.participantName = params['participantName'];
+			if (params['videoEnabled'] !== undefined) this.videoEnabled = params['videoEnabled'] === 'true';
+			if (params['audioEnabled'] !== undefined) this.audioEnabled = params['audioEnabled'] === 'true';
+			if (params['cameraBtn'] !== undefined) this.toolbarCameraButton = params['cameraBtn'] === 'true';
+			if (params['toolbarMicrophoneButton'] !== undefined)
+				this.toolbarMicrophoneButton = params['toolbarMicrophoneButton'] === 'true';
+			if (params['screenshareBtn'] !== undefined)
+				this.toolbarScreenshareButton = params['screenshareBtn'] === 'true';
+			if (params['fullscreenBtn'] !== undefined) this.toolbarFullscreenButton = params['fullscreenBtn'] === 'true';
+			if (params['toolbarRecordingButton'] !== undefined) this.toolbarRecordingButton = params['toolbarRecordingButton'] === 'true';
+			if (params['toolbarBroadcastingButton'] !== undefined)
+				this.toolbarBroadcastingButton = params['toolbarBroadcastingButton'] === 'true';
+			if (params['toolbarBackgroundEffectsButton'] !== undefined)
+				this.toolbarBackgroundEffectsButton = params['toolbarBackgroundEffectsButton'] === 'true';
+			if (params['activitiesPanelBtn'] !== undefined) this.toolbarActivitiesPanelButton = params['activitiesPanelBtn'] === 'true';
+			if (params['leaveBtn'] !== undefined) this.toolbarLeaveButton = params['leaveBtn'] === 'true';
+			if (params['chatPanelBtn'] !== undefined) this.toolbarChatPanelButton = params['chatPanelBtn'] === 'true';
+			if (params['participantsPanelBtn'] !== undefined)
+				this.toolbarParticipantsPanelButton = params['participantsPanelBtn'] === 'true';
+			if (params['displayLogo'] !== undefined) this.toolbarDisplayLogo = params['displayLogo'] === 'true';
+			if (params['displayRoomName'] !== undefined) this.toolbarDisplayRoomName = params['displayRoomName'] === 'true';
+			if (params['displayParticipantName'] !== undefined)
+				this.streamDisplayParticipantName = params['displayParticipantName'] === 'true';
+			if (params['streamDisplayAudioDetection'] !== undefined)
+				this.streamDisplayAudioDetection = params['streamDisplayAudioDetection'] === 'true';
+			if (params['streamVideoControls'] !== undefined) this.streamVideoControls = params['streamVideoControls'] === 'true';
+			if (params['participantMuteBtn'] !== undefined)
+				this.participantPanelItemMuteButton = params['participantMuteBtn'] === 'true';
+			if (params['activitiesPanelRecordingActivity'] !== undefined)
+				this.activitiesPanelRecordingActivity = params['activitiesPanelRecordingActivity'] === 'true';
+			if (params['activitiesPanelBroadcastingActivity'] !== undefined)
+				this.activitiesPanelBroadcastingActivity = params['activitiesPanelBroadcastingActivity'] === 'true';
+			if (params['toolbarSettingsBtn'] !== undefined) this.toolbarSettingsButton = params['toolbarSettingsBtn'] === 'true';
+			if (params['staticVideos'] !== undefined) this.areStaticVideosEnabled = params['staticVideos'] === 'true';
+			console.log('Query params:', params);
+
+			console.log('PARTICIPANT NAME:', this.participantName);
+			this.configReady = true;
 		});
 		if (this.areStaticVideosEnabled) {
 			setTimeout(() => {
@@ -68,6 +152,7 @@ export class CallComponent implements OnInit {
 	}
 
 	async onTokenRequested(participantName: string) {
+		console.warn('VC TOKEN REQUESTED', participantName);
 		await this.requestForTokens(participantName);
 	}
 
