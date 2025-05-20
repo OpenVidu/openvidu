@@ -104,7 +104,6 @@ export class SessionComponent implements OnInit, OnDestroy {
 	loading: boolean = true;
 
 	private shouldDisconnectRoomWhenComponentIsDestroyed: boolean = true;
-	private shouldListenClientInitiatedDisconnectEvent: boolean = true;
 	private readonly SIDENAV_WIDTH_LIMIT_MODE = 790;
 	private menuSubscription: Subscription;
 	private layoutWidthSubscription: Subscription;
@@ -244,14 +243,13 @@ export class SessionComponent implements OnInit, OnDestroy {
 	async disconnectRoom(reason: ParticipantLeftReason) {
 		// Mark session as disconnected for avoiding to do it again in ngOnDestroy
 		this.shouldDisconnectRoomWhenComponentIsDestroyed = false;
-		this.shouldListenClientInitiatedDisconnectEvent = false;
 		await this.openviduService.disconnectRoom(() => {
 			this.onParticipantLeft.emit({
 				roomName: this.openviduService.getRoomName(),
 				participantName: this.participantService.getLocalParticipant()?.identity || '',
 				reason
 			});
-		});
+		}, false);
 	}
 
 	private subscribeToTogglingMenu() {
@@ -473,7 +471,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 		);
 	}
 
-	subscribeToReconnection() {
+	private subscribeToReconnection() {
 		this.room.on(RoomEvent.Reconnecting, () => {
 			this.log.w('Connection lost: Reconnecting');
 			this.actionService.openConnectionDialog(
@@ -500,7 +498,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 			switch (reason) {
 				case DisconnectReason.CLIENT_INITIATED:
 					// Skip disconnect reason if a default disconnect method has been called
-					if (!this.shouldListenClientInitiatedDisconnectEvent) return;
+					if (!this.openviduService.shouldHandleClientInitiatedDisconnectEvent) return;
 					participantLeftEvent.reason = ParticipantLeftReason.LEAVE;
 					break;
 				case DisconnectReason.DUPLICATE_IDENTITY:

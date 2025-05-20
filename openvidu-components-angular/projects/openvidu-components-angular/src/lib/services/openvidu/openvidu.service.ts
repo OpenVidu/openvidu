@@ -32,6 +32,13 @@ export class OpenViduService {
 
 	private room: Room;
 
+	/**
+	 * @internal
+	 * Indicates whether the client initiated disconnect event should be handled.
+	 * This is used to determine if the disconnect event should be emitted when the 'Disconnect' event is triggered
+	 */
+	shouldHandleClientInitiatedDisconnectEvent = true;
+
 	/*
 	 * Tracks used in the prejoin component. They are created when the room is not yet created.
 	 */
@@ -109,7 +116,8 @@ export class OpenViduService {
 	 * @param callback - Optional function to be executed after a successful disconnection
 	 * @returns A Promise that resolves once the disconnection is complete
 	 */
-	async disconnectRoom(callback?: () => void): Promise<void> {
+	async disconnectRoom(callback?: () => void, shouldHandleClientInitiatedDisconnectEvent: boolean = true): Promise<void> {
+		this.shouldHandleClientInitiatedDisconnectEvent = shouldHandleClientInitiatedDisconnectEvent;
 		if (this.isRoomConnected()) {
 			this.log.d('Disconnecting from room');
 			await this.room.disconnect();
