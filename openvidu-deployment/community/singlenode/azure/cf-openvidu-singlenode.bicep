@@ -16,10 +16,7 @@ and an Elastic IP, you can use this option to generate a Let's Encrypt certifica
 param certificateType string = 'selfsigned'
 
 @description('Previously created Public IP address for the OpenVidu Deployment. Blank will generate a public IP')
-param publicIpAddress string = ''
-
-@description('Name of the PublicIPAddress resource in your azure if you have a resource of publicIPAddress')
-param publicIpAddressResourceName string = ''
+param publicIpAddressObject object
 
 @description('Domain name for the OpenVidu Deployment. Blank will generate default domain')
 param domainName string = ''
@@ -160,32 +157,15 @@ param adminUsername string
 
 @description('SSH Key or password for the Virtual Machine.')
 @secure()
-param adminSshKey string
+param adminSshKey object
 
 /*------------------------------------------- VARIABLES AND VALIDATIONS -------------------------------------------*/
 
 //Condition for ipValid if is filled
-var isEmptyIp = publicIpAddress == ''
-var ipSegments = split(publicIpAddress, '.')
-var isFourSegments = length(ipSegments) == 4
-var seg1valid = isEmptyIp ? true : int(ipSegments[0]) >= 0 && int(ipSegments[0]) <= 255
-var seg2valid = isEmptyIp ? true : int(ipSegments[1]) >= 0 && int(ipSegments[1]) <= 255
-var seg3valid = isEmptyIp ? true : int(ipSegments[2]) >= 0 && int(ipSegments[2]) <= 255
-var seg4valid = isEmptyIp ? true : int(ipSegments[3]) >= 0 && int(ipSegments[3]) <= 255
-var isValidIP = !isEmptyIp && isFourSegments && seg1valid && seg2valid && seg3valid && seg4valid
+var isEmptyIp = publicIpAddressObject.newOrExistingOrNone == 'none'
 
 //Condition for the domain name
 var isEmptyDomain = domainName == ''
-var domainParts = split(domainName, '.')
-var validNumberParts = length(domainParts) >= 2
-var allPartsValid = [
-  for part in domainParts: length(part) >= 1 && length(part) <= 63 && !empty(part) && part == toLower(part) && !contains(
-    part,
-    '--'
-  ) && empty(replace(part, '[a-z0-9-]', ''))
-]
-
-var isDomainValid = !isEmptyDomain && validNumberParts && !contains(allPartsValid, false)
 
 //Variables for deployment
 var networkSettings = {
@@ -212,7 +192,7 @@ var openviduVMSettings = {
       publicKeys: [
         {
           path: '/home/${adminUsername}/.ssh/authorized_keys'
-          keyData: adminSshKey
+          keyData: adminSshKey.sshPublicKey
         }
       ]
     }
@@ -859,7 +839,6 @@ resource openviduServer 'Microsoft.Compute/virtualMachines@2023-09-01' = {
     osProfile: {
       computerName: openviduVMSettings.vmName
       adminUsername: adminUsername
-      adminPassword: adminSshKey
       linuxConfiguration: openviduVMSettings.linuxConfiguration
     }
     userData: base64(userData)
@@ -898,8 +877,16 @@ resource publicIP_OV 'Microsoft.Network/publicIPAddresses@2023-11-01' = if (isEm
   }
 }
 
-resource publicIP_OV_ifNotEmpty 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (!isEmptyIp == true) {
-  name: publicIpAddressResourceName
+var ipExists = publicIpAddressObject.newOrExisting == 'existing'
+
+resource publicIP_OV_ifExisting 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipExists == true) {
+  name: publicIpAddressObject.name
+}
+
+var ipNew = publicIpAddressObject.newOrExisting == 'new'
+
+resource publicIP_OV_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipNew == true) {
+  name: publicIpAddressObject.name
 }
 
 // Create the virtual network
@@ -941,7 +928,7 @@ resource netInterface_OV 'Microsoft.Network/networkInterfaces@2023-11-01' = {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet_OV.name, networkSettings.subnetName)
           }
           publicIPAddress: {
-            id: isEmptyIp ? publicIP_OV.id : publicIP_OV_ifNotEmpty.id
+            id: isEmptyIp ? publicIP_OV.id : ipNew ? publicIP_OV_ifNew.id : publicIP_OV_ifExisting.id
           }
         }
       }
@@ -1135,19 +1122,3 @@ resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/container
     publicAccess: 'None'
   }
 }
-
-/*------------------------------------------- OUTPUTS -------------------------------------------*/
-
-output ipValidationStatus string = isValidIP ? 'IP address is valid' : 'IP address not valid'
-
-output domainValidationStatus string = isDomainValid ? 'Domain is valid' : 'Domain is not valid'
-
-//Condition if owncert is selected
-output ownCertValidationStatus string = (certificateType == 'owncert' && ownPrivateCertificate != '' && ownPublicCertificate != '')
-  ? 'owncert selected and valid'
-  : 'You need to fill \'Own Public Certificate\' and \'Own Private Certificate\''
-
-//Condition if letsEncrypt is selected
-output letsEncryptValidationStatus string = (certificateType == 'letsencrypt' && letsEncryptEmail != '')
-  ? 'letsEncrypt selected and valid'
-  : 'You need to fill \'Lets Encrypt Email\''

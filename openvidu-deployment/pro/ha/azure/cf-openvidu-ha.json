@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.35.1.17967",
-      "templateHash": "16513973763938354606"
+      "templateHash": "15246851867985685865"
     }
   },
   "parameters": {
@@ -406,7 +406,7 @@
       "type": "string",
       "defaultValue": "",
       "metadata": {
-        "description": "Name of the bucket where OpenVidu will store the recordings if a new Storage account is being creating. If not specified, a default bucket will be created."
+        "description": "Name of the bucket where OpenVidu will store the recordings if a new Storage account is being creating. If not specified, a default bucket will be created. If you want to use an existing storage account, fill this parameter with the name of the container where the recordings are stored."
       }
     }
   },

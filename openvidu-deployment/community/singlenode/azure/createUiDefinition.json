@@ -70,7 +70,7 @@
                             "visible": true
                         },
                         {
-                            "name": "publicIpAddress",
+                            "name": "publicIpAddressObject",
                             "type": "Microsoft.Network.PublicIpAddressCombo",
                             "label": {
                                 "publicIpAddress": "Public IP address"
@@ -79,7 +79,7 @@
                                 "publicIpAddress": "Previously created Public IP address for the OpenVidu Deployment. Blank will generate a public IP"
                             },
                             "defaultValue": {
-                                "publicIpAddressName": ""
+                                "publicIpAddressName": "None"
                             },
                             "options": {
                                 "hideNone": false,
@@ -358,7 +358,7 @@
             "parameters": {
                 "stackName": "[steps('basics').stackName]",
                 "certificateType": "[steps('parameters SSL').certificateType]",
-                "publicIpAddress": "[steps('parameters SSL').publicIpAddress]",
+                "publicIpAddressObject": "[steps('parameters SSL').publicIpAddressObject]",
                 "domainName": "[steps('parameters SSL').domainName]",
                 "ownPublicCertificate": "[steps('parameters SSL').ownPublicCertificate]",
                 "ownPrivateCertificate": "[steps('parameters SSL').ownPrivateCertificate]",
