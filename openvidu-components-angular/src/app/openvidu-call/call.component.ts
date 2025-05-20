@@ -12,7 +12,8 @@ import { RestService } from '../services/rest.service';
 import { CustomDevice } from 'dist/openvidu-components-angular/lib/models/device.model';
 import { LangOption } from 'dist/openvidu-components-angular/lib/models/lang.model';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ParticipantLeftEvent } from '../../../projects/openvidu-components-angular/src/lib/models/participant.model';
+import { ParticipantLeftEvent, ParticipantModel } from '../../../projects/openvidu-components-angular/src/lib/models/participant.model';
+import { monkeyPatchMediaDevices } from '../utils/media-devices';
 
 @Component({
 	selector: 'app-call',
@@ -58,6 +59,8 @@ export class CallComponent implements OnInit {
 	activitiesPanelRecordingActivity: boolean = true;
 	activitiesPanelBroadcastingActivity: boolean = true;
 	toolbarSettingsButton: boolean = true;
+	fakeDevices: boolean = false;
+	private redirectOnLeaves: boolean = true;
 
 	private staticVideos = [
 		'https://videos.pexels.com/video-files/4089575/4089575-hd_1280_720_50fps.mp4',
@@ -110,8 +113,7 @@ export class CallComponent implements OnInit {
 			if (params['cameraBtn'] !== undefined) this.toolbarCameraButton = params['cameraBtn'] === 'true';
 			if (params['toolbarMicrophoneButton'] !== undefined)
 				this.toolbarMicrophoneButton = params['toolbarMicrophoneButton'] === 'true';
-			if (params['screenshareBtn'] !== undefined)
-				this.toolbarScreenshareButton = params['screenshareBtn'] === 'true';
+			if (params['screenshareBtn'] !== undefined) this.toolbarScreenshareButton = params['screenshareBtn'] === 'true';
 			if (params['fullscreenBtn'] !== undefined) this.toolbarFullscreenButton = params['fullscreenBtn'] === 'true';
 			if (params['toolbarRecordingButton'] !== undefined) this.toolbarRecordingButton = params['toolbarRecordingButton'] === 'true';
 			if (params['toolbarBroadcastingButton'] !== undefined)
@@ -130,8 +132,7 @@ export class CallComponent implements OnInit {
 			if (params['displayAudioDetection'] !== undefined)
 				this.streamDisplayAudioDetection = params['displayAudioDetection'] === 'true';
 			if (params['streamVideoControls'] !== undefined) this.streamVideoControls = params['streamVideoControls'] === 'true';
-			if (params['participantMuteBtn'] !== undefined)
-				this.participantPanelItemMuteButton = params['participantMuteBtn'] === 'true';
+			if (params['participantMuteBtn'] !== undefined) this.participantPanelItemMuteButton = params['participantMuteBtn'] === 'true';
 			if (params['activitiesPanelRecordingActivity'] !== undefined)
 				this.activitiesPanelRecordingActivity = params['activitiesPanelRecordingActivity'] === 'true';
 			if (params['activitiesPanelBroadcastingActivity'] !== undefined)
@@ -139,31 +140,48 @@ export class CallComponent implements OnInit {
 			if (params['toolbarSettingsBtn'] !== undefined) this.toolbarSettingsButton = params['toolbarSettingsBtn'] === 'true';
 			if (params['staticVideos'] !== undefined) this.areStaticVideosEnabled = params['staticVideos'] === 'true';
 
+			if (params['fakeDevices'] !== undefined) this.fakeDevices = params['fakeDevices'] === 'true';
+
+			if (params['redirect'] === undefined) {
+				this.redirectOnLeaves = true;
+			} else {
+				this.redirectOnLeaves = params['redirect'] === 'true';
+			}
 			this.configReady = true;
+
+			if (this.areStaticVideosEnabled) {
+				setTimeout(() => {
+					const videoElements = document.querySelectorAll('video');
+					this.replaceWithStaticVideos(videoElements);
+				}, 3000);
+			}
+
+			if (this.fakeDevices) {
+				console.warn('Using fake devices');
+				monkeyPatchMediaDevices();
+			}
 		});
-		if (this.areStaticVideosEnabled) {
-			setTimeout(() => {
-				const videoElements = document.querySelectorAll('video');
-				this.replaceWithStaticVideos(videoElements);
-			}, 3000);
-		}
 	}
 
 	async onTokenRequested(participantName: string) {
 		console.warn('VC TOKEN REQUESTED', participantName);
+		this.appendElement('onTokenRequested');
 		await this.requestForTokens(participantName);
 	}
 
 	async onReadyToJoin() {
+		this.appendElement('onReadyToJoin');
 		console.warn('VC IS READY TO JOIN');
 	}
 
 	async onParticipantLeft(event: ParticipantLeftEvent) {
+		this.appendElement('onParticipantLeft');
 		console.warn('VC PARTICIPANT LEFT', event);
-		await this.router.navigate(['/']);
+		if (this.redirectOnLeaves) await this.router.navigate(['/']);
 	}
 
 	onRoomCreated(room: Room) {
+		this.appendElement('onRoomCreated');
 		console.warn('VC ROOM CREATED', room.name);
 		room.on(RoomEvent.Connected, () => {
 			if (this.areStaticVideosEnabled) {
@@ -189,57 +207,86 @@ export class CallComponent implements OnInit {
 		});
 	}
 
+	onParticipantCreated(event: ParticipantModel) {
+		this.appendElement(event.name + '-onParticipantCreated');
+		console.warn('VC PARTICIPANT CREATED', event);
+	}
+
 	onVideoEnabledChanged(value: boolean) {
+		this.appendElement('onVideoEnabledChanged-' + value);
 		console.warn('VC video enabled: ', value);
 	}
 	onVideoDeviceChanged(device: CustomDevice) {
+		this.appendElement('onVideoDeviceChanged');
 		console.warn('VC video device changed: ', device);
 	}
 	onAudioEnabledChanged(value: boolean) {
+		this.appendElement('onAudioEnabledChanged-' + value);
 		console.warn('VC audio enabled: ', value);
 	}
 	onAudioDeviceChanged(device: CustomDevice) {
+		this.appendElement('onAudioDeviceChanged');
 		console.warn('VC audio device changed: ', device);
 	}
 	onScreenShareEnabledChanged(enabled: boolean) {
+		this.appendElement('onScreenShareEnabledChanged');
 		console.warn('VC screenshare enabled: ', enabled);
 	}
 	onFullscreenEnabledChanged(enabled: boolean) {
+		this.appendElement('onFullscreenEnabledChanged-' + enabled);
 		console.warn('VC fullscreen enabled: ', enabled);
 	}
 	onParticipantsPanelStatusChanged(event) {
+		this.appendElement('onParticipantsPanelStatusChanged-' + event.isOpened);
 		console.warn('VC participants panel status changed: ', event);
 	}
 	onChatPanelStatusChanged(event) {
+		this.appendElement('onChatPanelStatusChanged-' + event.isOpened);
 		console.warn('VC chat status changed: ', event);
 	}
 
 	async onRoomDisconnected() {
+		this.appendElement('onRoomDisconnected');
 		this.isSessionAlive = false;
 		console.log('VC LEAVE BUTTON CLICKED');
 		await this.router.navigate(['/']);
 	}
 
 	onFullscreenButtonClicked() {
+		this.appendElement('onFullscreenButtonClicked');
 		console.warn('TOOLBAR fullscreen CLICKED');
 	}
 	onParticipantsPanelButtonClicked() {
+		this.appendElement('onParticipantsPanelButtonClicked');
 		console.warn('TOOLBAR participants CLICKED');
 	}
 	onChatPanelButtonClicked() {
+		this.appendElement('onChatPanelButtonClicked');
 		console.warn('TOOLBAR chat CLICKED');
 	}
 
 	onLeaveButtonClicked() {
+		this.appendElement('onLeaveButtonClicked');
 		this.isSessionAlive = false;
 		console.log('TOOLBAR LEAVE CLICKED');
 	}
 
 	onLangChanged(event: LangOption) {
+		this.appendElement('onLangChanged-' + event.lang);
 		console.warn('LANG CHANGED', event);
+	}
+	onSettingsPanelStatusChanged(event) {
+		this.appendElement('onSettingsPanelStatusChanged-' + event.isOpened);
+		console.warn('VC settings panel status changed: ', event);
+	}
+
+	onActivitiesPanelStatusChanged(event) {
+		this.appendElement('onActivitiesPanelStatusChanged-' + event.isOpened);
+		console.warn('VC activities panel status changed: ', event);
 	}
 
 	async onBroadcastingStartRequested(event: BroadcastingStartRequestedEvent) {
+		this.appendElement(`onBroadcastingStartRequested-${event.roomName}-${event.broadcastUrl}`);
 		console.log('START STREAMING', event);
 		try {
 			const resp = await this.restService.startBroadcasting(event.broadcastUrl);
@@ -248,8 +295,8 @@ export class CallComponent implements OnInit {
 			console.error(error);
 		}
 	}
-
 	async onBroadcastingStopRequested(event: BroadcastingStopRequestedEvent) {
+		this.appendElement('onBroadcastingStopRequested');
 		console.log('STOP STREAMING', event);
 		try {
 			const resp = await this.restService.stopBroadcasting();
@@ -260,6 +307,7 @@ export class CallComponent implements OnInit {
 	}
 
 	async onRecordingStartRequested(event: RecordingStartRequestedEvent) {
+		this.appendElement('onRecordingStartRequested-' + event.roomName);
 		console.warn('START RECORDING CLICKED', event);
 		try {
 			await this.restService.startRecording(this.roomName);
@@ -268,6 +316,7 @@ export class CallComponent implements OnInit {
 		}
 	}
 	async onRecordingStopRequested(event: RecordingStopRequestedEvent) {
+		this.appendElement('onRecordingStopRequested');
 		console.warn('STOP RECORDING CLICKED', event);
 		try {
 			await this.restService.stopRecording(event);
@@ -277,6 +326,7 @@ export class CallComponent implements OnInit {
 	}
 
 	async onRecordingDeleteRequested(event: RecordingDeleteRequestedEvent) {
+		this.appendElement('onRecordingDeleteRequested');
 		console.warn('DELETE RECORDING requested', event);
 
 		try {
@@ -310,5 +360,14 @@ export class CallComponent implements OnInit {
 				videoElement.play();
 			});
 		}
+	}
+
+	private appendElement(id: string) {
+		var eventsDiv = document.getElementById('events');
+		eventsDiv?.setAttribute('style', 'position: absolute;');
+		var element = document.createElement('div');
+		element.setAttribute('id', id);
+		element.setAttribute('style', 'height: 1px;');
+		eventsDiv?.appendChild(element);
 	}
 }

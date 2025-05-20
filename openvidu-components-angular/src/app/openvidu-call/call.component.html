@@ -30,9 +30,11 @@
 		[activitiesPanelRecordingActivity]="activitiesPanelRecordingActivity"
 		[activitiesPanelBroadcastingActivity]="activitiesPanelBroadcastingActivity"
 		[toolbarSettingsButton]="toolbarSettingsButton"
+
 		(onTokenRequested)="onTokenRequested($event)"
 		(onReadyToJoin)="onReadyToJoin()"
 		(onRoomCreated)="onRoomCreated($event)"
+		(onParticipantCreated)="onParticipantCreated($event)"
 		(onParticipantLeft)="onParticipantLeft($event)"
 		(onRoomDisconnected)="onRoomDisconnected()"
 		(onVideoEnabledChanged)="onVideoEnabledChanged($event)"
@@ -49,7 +51,12 @@
 		(onRecordingDeleteRequested)="onRecordingDeleteRequested($event)"
 		(onBroadcastingStartRequested)="onBroadcastingStartRequested($event)"
 		(onBroadcastingStopRequested)="onBroadcastingStopRequested($event)"
+		(onSettingsPanelStatusChanged)="onSettingsPanelStatusChanged($event)"
+		(onActivitiesPanelStatusChanged)="onActivitiesPanelStatusChanged($event)"
 	>
 	</ov-videoconference>
 
 }
+
+
+<div id="events"></div>
