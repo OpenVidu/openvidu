@@ -667,24 +667,23 @@
                         },
                         {
                             "name": "adminSshKey",
-                            "resourceTypes": [
-                                "Microsoft.Compute/sshPublicKeys"
-                            ],
+                            "type": "Microsoft.Compute.CredentialsCombo",
                             "label": {
-                                "password": "SSH Key",
-                                "confirmPassword": "Confirm password"
+                                "authenticationType": "Authentication type",
+                                "sshPublicKey": "SSH public key"
                             },
-                            "defaultValue": "",
-                            "toolTip": "SSH Key for the Virtual Machine.",
+                            "toolTip": {
+                                "authenticationType": "",
+                                "sshPublicKey": "SSH Key for the Virtual Machine."
+                            },
                             "constraints": {
-                                "required": true,
-                                "regex": "",
-                                "validationMessage": "",
-                                "validations": []
+                                "required": true
                             },
                             "options": {
-                                "hideConfirmation": true
+                                "hideConfirmation": true,
+                                "hidePassword": true
                             },
+                            "osPlatform": "Linux",
                             "visible": true
                         }
                     ]
