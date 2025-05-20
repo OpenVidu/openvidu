@@ -556,31 +556,29 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 					// We have a name, proceed immediately
 					this._onReadyToJoin();
 				} else {
-					// Try to get it from storage first
-					const storedName = this.storageSrv.getParticipantName();
-					if (storedName) {
-						this.latestParticipantName = storedName;
-						this._onReadyToJoin();
-					} else {
-						// No name yet - set up a one-time subscription to wait for it
-						const waitForNameSub = this.libService.participantName$
-							.pipe(
-								filter((name) => !!name),
-								take(1)
-							)
-							.subscribe(() => {
-								// Now we have the name in latestParticipantName
-								this._onReadyToJoin();
-							});
-						// Add safety timeout in case name never arrives
-						setTimeout(() => {
-							if (!this.latestParticipantName) {
-								this.log.w('No participant name received after timeout, proceeding anyway');
-								waitForNameSub.unsubscribe();
-								this._onReadyToJoin();
+					// No name yet - set up a one-time subscription to wait for it
+					const waitForNameSub = this.libService.participantName$
+						.pipe(
+							filter((name) => !!name),
+							take(1)
+						)
+						.subscribe(() => {
+							// Now we have the name in latestParticipantName
+							this._onReadyToJoin();
+						});
+					// Add safety timeout in case name never arrives
+					setTimeout(() => {
+						if (!this.latestParticipantName) {
+							this.log.w('No participant name received after timeout, proceeding anyway');
+							waitForNameSub.unsubscribe();
+							const storedName = this.storageSrv.getParticipantName();
+							if (storedName) {
+								this.latestParticipantName = storedName;
+								this.libService.setParticipantName(storedName);
 							}
-						}, 1000);
-					}
+							this._onReadyToJoin();
+						}
+					}, 1000);
 				}
 			}
 			// this.cd.markForCheck();
