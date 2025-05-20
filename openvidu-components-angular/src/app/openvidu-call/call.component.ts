@@ -127,8 +127,8 @@ export class CallComponent implements OnInit {
 			if (params['displayRoomName'] !== undefined) this.toolbarDisplayRoomName = params['displayRoomName'] === 'true';
 			if (params['displayParticipantName'] !== undefined)
 				this.streamDisplayParticipantName = params['displayParticipantName'] === 'true';
-			if (params['streamDisplayAudioDetection'] !== undefined)
-				this.streamDisplayAudioDetection = params['streamDisplayAudioDetection'] === 'true';
+			if (params['displayAudioDetection'] !== undefined)
+				this.streamDisplayAudioDetection = params['displayAudioDetection'] === 'true';
 			if (params['streamVideoControls'] !== undefined) this.streamVideoControls = params['streamVideoControls'] === 'true';
 			if (params['participantMuteBtn'] !== undefined)
 				this.participantPanelItemMuteButton = params['participantMuteBtn'] === 'true';
