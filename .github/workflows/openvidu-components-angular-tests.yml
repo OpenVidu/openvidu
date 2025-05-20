@@ -215,7 +215,6 @@ jobs:
   e2e_chat:
     needs: test_setup
     name: Chat E2E
-    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
