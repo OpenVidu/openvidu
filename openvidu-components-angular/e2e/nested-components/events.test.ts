@@ -5,7 +5,7 @@ import { OpenViduComponentsPO } from '../utils.po.test';
 
 const url = NestedConfig.appUrl;
 
-describe('Testing EVENTS', () => {
+describe('OpenVidu Components EVENTS', () => {
 	let browser: WebDriver;
 	let utils: OpenViduComponentsPO;
 

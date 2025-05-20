@@ -86,11 +86,13 @@
     "lib:pack": "cd ./dist/openvidu-components-angular && npm pack",
     "lib:copy": "cp dist/openvidu-components-angular/openvidu-components-angular-*.tgz ../../openvidu-call/frontend",
     "lib:test": "ng test openvidu-components-angular --no-watch --code-coverage",
-    "e2e:lib-directives": "tsc --project ./e2e && npx jasmine --fail-fast ./e2e/dist/api-directives.test.js",
-
     "e2e:nested-all": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/nested-components/*.test.js",
     "e2e:nested-events": "tsc --project ./e2e && npx jasmine --fail-fast ./e2e/dist/nested-components/events.test.js",
-    "e2e:nested-directives": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/nested-components/directives.test.js",
+    "e2e:nested-structural-directives": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/nested-components/structural-directives.test.js",
+    "e2e:nested-attribute-directives": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/nested-components/attribute-directives.test.js",
+
+    "e2e:lib-directives": "tsc --project ./e2e && npx jasmine --fail-fast ./e2e/dist/api-directives.test.js",
+
     "e2e:webcomponent-all": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/webcomponent-e2e/**/*.test.js",
     "e2e:webcomponent-captions": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/webcomponent-e2e/captions.test.js",
     "e2e:webcomponent-chat": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/webcomponent-e2e/chat.test.js",
