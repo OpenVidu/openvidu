@@ -1,0 +1,1353 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2021-09-09/uiFormDefinition.schema.json",
+    "view": {
+        "kind": "Form",
+        "properties": {
+            "title": "OpenVidu Elastic Deployment",
+            "steps": [
+                {
+                    "name": "basics",
+                    "label": "Basics",
+                    "elements": [
+                        {
+                            "name": "resourceScope",
+                            "type": "Microsoft.Common.ResourceScope",
+                            "location": {
+                                "resourceTypes": [
+                                    "microsoft.insights/autoscalesettings",
+                                    "microsoft.storage/storageaccounts",
+                                    "microsoft.resources/resourcegroups"
+                                ]
+                            }
+                        },
+                        {
+                            "name": "stackName",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Stack Name",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "Stack name",
+                            "constraints": {
+                                "required": true,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "certificateType",
+                            "type": "Microsoft.Common.DropDown",
+                            "label": "Certificate Type",
+                            "subLabel": "",
+                            "defaultValue": "selfsigned",
+                            "toolTip": "[[selfsigned] Not recommended for production use. If you don't have a FQDN, (DomainName parameter) you can use this option to generate a self-signed certificate.\n[owncert] Valid for productions environments. If you have a FQDN, (DomainName parameter)\nand an Elastic IP, you can use this option to use your own certificate.\n[letsencrypt] Valid for production environments. If you have a FQDN, (DomainName parameter)\nand an Elastic IP, you can use this option to generate a Let's Encrypt certificate.\n",
+                            "constraints": {
+                                "required": false,
+                                "allowedValues": [
+                                    {
+                                        "label": "selfsigned",
+                                        "value": "selfsigned"
+                                    },
+                                    {
+                                        "label": "owncert",
+                                        "value": "owncert"
+                                    },
+                                    {
+                                        "label": "letsencrypt",
+                                        "value": "letsencrypt"
+                                    }
+                                ],
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "publicIpAddress",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Public Ip Address",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "Previously created Public IP address for the OpenVidu Deployment. Blank will generate a public IP",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "publicIpAddressResourceName",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Public Ip Address Resource Name",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "Name of the PublicIPAddress resource in your azure if you have a resource of publicIPAddress",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "domainName",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Domain Name",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "Domain name for the OpenVidu Deployment. Blank will generate default domain",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "ownPublicCertificate",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Own Public Certificate",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "If certificate type is 'owncert', this parameter will be used to specify the public certificate",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "ownPrivateCertificate",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Own Private Certificate",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "If certificate type is 'owncert', this parameter will be used to specify the private certificate",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "letsEncryptEmail",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Lets Encrypt Email",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "If certificate type is 'letsencrypt', this email will be used for Let's Encrypt notifications",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "turnDomainName",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Turn Domain Name",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "(Optional) Domain name for the TURN server with TLS. Only needed if your users are behind restrictive firewalls",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "turnOwnPublicCertificate",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Turn Own Public Certificate",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified.",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "turnOwnPrivateCertificate",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Turn Own Private Certificate",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified.",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "openviduLicense",
+                            "type": "Microsoft.Common.PasswordBox",
+                            "label": {
+                                "password": "Openvidu License",
+                                "confirmPassword": "Confirm password"
+                            },
+                            "defaultValue": "",
+                            "toolTip": "Visit https://openvidu.io/account",
+                            "constraints": {
+                                "required": true,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "options": {
+                                "hideConfirmation": true
+                            },
+                            "visible": true
+                        },
+                        {
+                            "name": "rtcEngine",
+                            "type": "Microsoft.Common.DropDown",
+                            "label": "Rtc Engine",
+                            "subLabel": "",
+                            "defaultValue": "pion",
+                            "toolTip": "RTCEngine media engine to use",
+                            "constraints": {
+                                "required": false,
+                                "allowedValues": [
+                                    {
+                                        "label": "pion",
+                                        "value": "pion"
+                                    },
+                                    {
+                                        "label": "mediasoup",
+                                        "value": "mediasoup"
+                                    }
+                                ],
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "masterNodeInstanceType",
+                            "type": "Microsoft.Common.DropDown",
+                            "label": "Master Node Instance Type",
+                            "subLabel": "",
+                            "defaultValue": "Standard_B2s",
+                            "toolTip": "Specifies the EC2 instance type for your OpenVidu Master Node",
+                            "constraints": {
+                                "required": false,
+                                "allowedValues": [
+                                    {
+                                        "label": "Standard_B1s",
+                                        "value": "Standard_B1s"
+                                    },
+                                    {
+                                        "label": "Standard_B1ms",
+                                        "value": "Standard_B1ms"
+                                    },
+                                    {
+                                        "label": "Standard_B2s",
+                                        "value": "Standard_B2s"
+                                    },
+                                    {
+                                        "label": "Standard_B2ms",
+                                        "value": "Standard_B2ms"
+                                    },
+                                    {
+                                        "label": "Standard_B4ms",
+                                        "value": "Standard_B4ms"
+                                    },
+                                    {
+                                        "label": "Standard_B8ms",
+                                        "value": "Standard_B8ms"
+                                    },
+                                    {
+                                        "label": "Standard_D2_v3",
+                                        "value": "Standard_D2_v3"
+                                    },
+                                    {
+                                        "label": "Standard_D4_v3",
+                                        "value": "Standard_D4_v3"
+                                    },
+                                    {
+                                        "label": "Standard_D8_v3",
+                                        "value": "Standard_D8_v3"
+                                    },
+                                    {
+                                        "label": "Standard_D16_v3",
+                                        "value": "Standard_D16_v3"
+                                    },
+                                    {
+                                        "label": "Standard_D32_v3",
+                                        "value": "Standard_D32_v3"
+                                    },
+                                    {
+                                        "label": "Standard_D48_v3",
+                                        "value": "Standard_D48_v3"
+                                    },
+                                    {
+                                        "label": "Standard_D64_v3",
+                                        "value": "Standard_D64_v3"
+                                    },
+                                    {
+                                        "label": "Standard_D2_v4",
+                                        "value": "Standard_D2_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D4_v4",
+                                        "value": "Standard_D4_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D8_v4",
+                                        "value": "Standard_D8_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D16_v4",
+                                        "value": "Standard_D16_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D32_v4",
+                                        "value": "Standard_D32_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D48_v4",
+                                        "value": "Standard_D48_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D64_v4",
+                                        "value": "Standard_D64_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D96_v4",
+                                        "value": "Standard_D96_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D2_v5",
+                                        "value": "Standard_D2_v5"
+                                    },
+                                    {
+                                        "label": "Standard_D4_v5",
+                                        "value": "Standard_D4_v5"
+                                    },
+                                    {
+                                        "label": "Standard_D8_v5",
+                                        "value": "Standard_D8_v5"
+                                    },
+                                    {
+                                        "label": "Standard_D16_v5",
+                                        "value": "Standard_D16_v5"
+                                    },
+                                    {
+                                        "label": "Standard_D32_v5",
+                                        "value": "Standard_D32_v5"
+                                    },
+                                    {
+                                        "label": "Standard_D48_v5",
+                                        "value": "Standard_D48_v5"
+                                    },
+                                    {
+                                        "label": "Standard_D64_v5",
+                                        "value": "Standard_D64_v5"
+                                    },
+                                    {
+                                        "label": "Standard_D96_v5",
+                                        "value": "Standard_D96_v5"
+                                    },
+                                    {
+                                        "label": "Standard_F2",
+                                        "value": "Standard_F2"
+                                    },
+                                    {
+                                        "label": "Standard_F4",
+                                        "value": "Standard_F4"
+                                    },
+                                    {
+                                        "label": "Standard_F8",
+                                        "value": "Standard_F8"
+                                    },
+                                    {
+                                        "label": "Standard_F16",
+                                        "value": "Standard_F16"
+                                    },
+                                    {
+                                        "label": "Standard_F32",
+                                        "value": "Standard_F32"
+                                    },
+                                    {
+                                        "label": "Standard_F64",
+                                        "value": "Standard_F64"
+                                    },
+                                    {
+                                        "label": "Standard_F72",
+                                        "value": "Standard_F72"
+                                    },
+                                    {
+                                        "label": "Standard_F2s_v2",
+                                        "value": "Standard_F2s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_F4s_v2",
+                                        "value": "Standard_F4s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_F8s_v2",
+                                        "value": "Standard_F8s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_F16s_v2",
+                                        "value": "Standard_F16s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_F32s_v2",
+                                        "value": "Standard_F32s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_F64s_v2",
+                                        "value": "Standard_F64s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_F72s_v2",
+                                        "value": "Standard_F72s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_E2_v3",
+                                        "value": "Standard_E2_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E4_v3",
+                                        "value": "Standard_E4_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E8_v3",
+                                        "value": "Standard_E8_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E16_v3",
+                                        "value": "Standard_E16_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E32_v3",
+                                        "value": "Standard_E32_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E48_v3",
+                                        "value": "Standard_E48_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E64_v3",
+                                        "value": "Standard_E64_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E96_v3",
+                                        "value": "Standard_E96_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E2_v4",
+                                        "value": "Standard_E2_v4"
+                                    },
+                                    {
+                                        "label": "Standard_E4_v4",
+                                        "value": "Standard_E4_v4"
+                                    },
+                                    {
+                                        "label": "Standard_E8_v4",
+                                        "value": "Standard_E8_v4"
+                                    },
+                                    {
+                                        "label": "Standard_E16_v4",
+                                        "value": "Standard_E16_v4"
+                                    },
+                                    {
+                                        "label": "Standard_E32_v4",
+                                        "value": "Standard_E32_v4"
+                                    },
+                                    {
+                                        "label": "Standard_E48_v4",
+                                        "value": "Standard_E48_v4"
+                                    },
+                                    {
+                                        "label": "Standard_E64_v4",
+                                        "value": "Standard_E64_v4"
+                                    },
+                                    {
+                                        "label": "Standard_E2_v5",
+                                        "value": "Standard_E2_v5"
+                                    },
+                                    {
+                                        "label": "Standard_E4_v5",
+                                        "value": "Standard_E4_v5"
+                                    },
+                                    {
+                                        "label": "Standard_E8_v5",
+                                        "value": "Standard_E8_v5"
+                                    },
+                                    {
+                                        "label": "Standard_E16_v5",
+                                        "value": "Standard_E16_v5"
+                                    },
+                                    {
+                                        "label": "Standard_E32_v5",
+                                        "value": "Standard_E32_v5"
+                                    },
+                                    {
+                                        "label": "Standard_E48_v5",
+                                        "value": "Standard_E48_v5"
+                                    },
+                                    {
+                                        "label": "Standard_E64_v5",
+                                        "value": "Standard_E64_v5"
+                                    },
+                                    {
+                                        "label": "Standard_E96_v5",
+                                        "value": "Standard_E96_v5"
+                                    },
+                                    {
+                                        "label": "Standard_M64",
+                                        "value": "Standard_M64"
+                                    },
+                                    {
+                                        "label": "Standard_M128",
+                                        "value": "Standard_M128"
+                                    },
+                                    {
+                                        "label": "Standard_M208ms_v2",
+                                        "value": "Standard_M208ms_v2"
+                                    },
+                                    {
+                                        "label": "Standard_M416ms_v2",
+                                        "value": "Standard_M416ms_v2"
+                                    },
+                                    {
+                                        "label": "Standard_L4s_v2",
+                                        "value": "Standard_L4s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_L8s_v2",
+                                        "value": "Standard_L8s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_L16s_v2",
+                                        "value": "Standard_L16s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_L32s_v2",
+                                        "value": "Standard_L32s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_L64s_v2",
+                                        "value": "Standard_L64s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_L80s_v2",
+                                        "value": "Standard_L80s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_NC6",
+                                        "value": "Standard_NC6"
+                                    },
+                                    {
+                                        "label": "Standard_NC12",
+                                        "value": "Standard_NC12"
+                                    },
+                                    {
+                                        "label": "Standard_NC24",
+                                        "value": "Standard_NC24"
+                                    },
+                                    {
+                                        "label": "Standard_NC24r",
+                                        "value": "Standard_NC24r"
+                                    },
+                                    {
+                                        "label": "Standard_ND6s",
+                                        "value": "Standard_ND6s"
+                                    },
+                                    {
+                                        "label": "Standard_ND12s",
+                                        "value": "Standard_ND12s"
+                                    },
+                                    {
+                                        "label": "Standard_ND24s",
+                                        "value": "Standard_ND24s"
+                                    },
+                                    {
+                                        "label": "Standard_ND24rs",
+                                        "value": "Standard_ND24rs"
+                                    },
+                                    {
+                                        "label": "Standard_NV6",
+                                        "value": "Standard_NV6"
+                                    },
+                                    {
+                                        "label": "Standard_NV12",
+                                        "value": "Standard_NV12"
+                                    },
+                                    {
+                                        "label": "Standard_NV24",
+                                        "value": "Standard_NV24"
+                                    },
+                                    {
+                                        "label": "Standard_H8",
+                                        "value": "Standard_H8"
+                                    },
+                                    {
+                                        "label": "Standard_H16",
+                                        "value": "Standard_H16"
+                                    },
+                                    {
+                                        "label": "Standard_H16r",
+                                        "value": "Standard_H16r"
+                                    },
+                                    {
+                                        "label": "Standard_H16mr",
+                                        "value": "Standard_H16mr"
+                                    },
+                                    {
+                                        "label": "Standard_HB120rs_v2",
+                                        "value": "Standard_HB120rs_v2"
+                                    },
+                                    {
+                                        "label": "Standard_HC44rs",
+                                        "value": "Standard_HC44rs"
+                                    },
+                                    {
+                                        "label": "Standard_DC2s",
+                                        "value": "Standard_DC2s"
+                                    },
+                                    {
+                                        "label": "Standard_DC4s",
+                                        "value": "Standard_DC4s"
+                                    },
+                                    {
+                                        "label": "Standard_DC2s_v2",
+                                        "value": "Standard_DC2s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_DC4s_v2",
+                                        "value": "Standard_DC4s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_DC8s_v2",
+                                        "value": "Standard_DC8s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_DC16s_v2",
+                                        "value": "Standard_DC16s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_DC32s_v2",
+                                        "value": "Standard_DC32s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_A1_v2",
+                                        "value": "Standard_A1_v2"
+                                    },
+                                    {
+                                        "label": "Standard_A2_v2",
+                                        "value": "Standard_A2_v2"
+                                    },
+                                    {
+                                        "label": "Standard_A4_v2",
+                                        "value": "Standard_A4_v2"
+                                    },
+                                    {
+                                        "label": "Standard_A8_v2",
+                                        "value": "Standard_A8_v2"
+                                    },
+                                    {
+                                        "label": "Standard_A2m_v2",
+                                        "value": "Standard_A2m_v2"
+                                    },
+                                    {
+                                        "label": "Standard_A4m_v2",
+                                        "value": "Standard_A4m_v2"
+                                    },
+                                    {
+                                        "label": "Standard_A8m_v2",
+                                        "value": "Standard_A8m_v2"
+                                    }
+                                ],
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "mediaNodeInstanceType",
+                            "type": "Microsoft.Common.DropDown",
+                            "label": "Media Node Instance Type",
+                            "subLabel": "",
+                            "defaultValue": "Standard_B2s",
+                            "toolTip": "Specifies the EC2 instance type for your OpenVidu Media Nodes",
+                            "constraints": {
+                                "required": false,
+                                "allowedValues": [
+                                    {
+                                        "label": "Standard_B1s",
+                                        "value": "Standard_B1s"
+                                    },
+                                    {
+                                        "label": "Standard_B1ms",
+                                        "value": "Standard_B1ms"
+                                    },
+                                    {
+                                        "label": "Standard_B2s",
+                                        "value": "Standard_B2s"
+                                    },
+                                    {
+                                        "label": "Standard_B2ms",
+                                        "value": "Standard_B2ms"
+                                    },
+                                    {
+                                        "label": "Standard_B4ms",
+                                        "value": "Standard_B4ms"
+                                    },
+                                    {
+                                        "label": "Standard_B8ms",
+                                        "value": "Standard_B8ms"
+                                    },
+                                    {
+                                        "label": "Standard_D2_v3",
+                                        "value": "Standard_D2_v3"
+                                    },
+                                    {
+                                        "label": "Standard_D4_v3",
+                                        "value": "Standard_D4_v3"
+                                    },
+                                    {
+                                        "label": "Standard_D8_v3",
+                                        "value": "Standard_D8_v3"
+                                    },
+                                    {
+                                        "label": "Standard_D16_v3",
+                                        "value": "Standard_D16_v3"
+                                    },
+                                    {
+                                        "label": "Standard_D32_v3",
+                                        "value": "Standard_D32_v3"
+                                    },
+                                    {
+                                        "label": "Standard_D48_v3",
+                                        "value": "Standard_D48_v3"
+                                    },
+                                    {
+                                        "label": "Standard_D64_v3",
+                                        "value": "Standard_D64_v3"
+                                    },
+                                    {
+                                        "label": "Standard_D2_v4",
+                                        "value": "Standard_D2_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D4_v4",
+                                        "value": "Standard_D4_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D8_v4",
+                                        "value": "Standard_D8_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D16_v4",
+                                        "value": "Standard_D16_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D32_v4",
+                                        "value": "Standard_D32_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D48_v4",
+                                        "value": "Standard_D48_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D64_v4",
+                                        "value": "Standard_D64_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D96_v4",
+                                        "value": "Standard_D96_v4"
+                                    },
+                                    {
+                                        "label": "Standard_D2_v5",
+                                        "value": "Standard_D2_v5"
+                                    },
+                                    {
+                                        "label": "Standard_D4_v5",
+                                        "value": "Standard_D4_v5"
+                                    },
+                                    {
+                                        "label": "Standard_D8_v5",
+                                        "value": "Standard_D8_v5"
+                                    },
+                                    {
+                                        "label": "Standard_D16_v5",
+                                        "value": "Standard_D16_v5"
+                                    },
+                                    {
+                                        "label": "Standard_D32_v5",
+                                        "value": "Standard_D32_v5"
+                                    },
+                                    {
+                                        "label": "Standard_D48_v5",
+                                        "value": "Standard_D48_v5"
+                                    },
+                                    {
+                                        "label": "Standard_D64_v5",
+                                        "value": "Standard_D64_v5"
+                                    },
+                                    {
+                                        "label": "Standard_D96_v5",
+                                        "value": "Standard_D96_v5"
+                                    },
+                                    {
+                                        "label": "Standard_F2",
+                                        "value": "Standard_F2"
+                                    },
+                                    {
+                                        "label": "Standard_F4",
+                                        "value": "Standard_F4"
+                                    },
+                                    {
+                                        "label": "Standard_F8",
+                                        "value": "Standard_F8"
+                                    },
+                                    {
+                                        "label": "Standard_F16",
+                                        "value": "Standard_F16"
+                                    },
+                                    {
+                                        "label": "Standard_F32",
+                                        "value": "Standard_F32"
+                                    },
+                                    {
+                                        "label": "Standard_F64",
+                                        "value": "Standard_F64"
+                                    },
+                                    {
+                                        "label": "Standard_F72",
+                                        "value": "Standard_F72"
+                                    },
+                                    {
+                                        "label": "Standard_F2s_v2",
+                                        "value": "Standard_F2s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_F4s_v2",
+                                        "value": "Standard_F4s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_F8s_v2",
+                                        "value": "Standard_F8s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_F16s_v2",
+                                        "value": "Standard_F16s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_F32s_v2",
+                                        "value": "Standard_F32s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_F64s_v2",
+                                        "value": "Standard_F64s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_F72s_v2",
+                                        "value": "Standard_F72s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_E2_v3",
+                                        "value": "Standard_E2_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E4_v3",
+                                        "value": "Standard_E4_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E8_v3",
+                                        "value": "Standard_E8_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E16_v3",
+                                        "value": "Standard_E16_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E32_v3",
+                                        "value": "Standard_E32_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E48_v3",
+                                        "value": "Standard_E48_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E64_v3",
+                                        "value": "Standard_E64_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E96_v3",
+                                        "value": "Standard_E96_v3"
+                                    },
+                                    {
+                                        "label": "Standard_E2_v4",
+                                        "value": "Standard_E2_v4"
+                                    },
+                                    {
+                                        "label": "Standard_E4_v4",
+                                        "value": "Standard_E4_v4"
+                                    },
+                                    {
+                                        "label": "Standard_E8_v4",
+                                        "value": "Standard_E8_v4"
+                                    },
+                                    {
+                                        "label": "Standard_E16_v4",
+                                        "value": "Standard_E16_v4"
+                                    },
+                                    {
+                                        "label": "Standard_E32_v4",
+                                        "value": "Standard_E32_v4"
+                                    },
+                                    {
+                                        "label": "Standard_E48_v4",
+                                        "value": "Standard_E48_v4"
+                                    },
+                                    {
+                                        "label": "Standard_E64_v4",
+                                        "value": "Standard_E64_v4"
+                                    },
+                                    {
+                                        "label": "Standard_E2_v5",
+                                        "value": "Standard_E2_v5"
+                                    },
+                                    {
+                                        "label": "Standard_E4_v5",
+                                        "value": "Standard_E4_v5"
+                                    },
+                                    {
+                                        "label": "Standard_E8_v5",
+                                        "value": "Standard_E8_v5"
+                                    },
+                                    {
+                                        "label": "Standard_E16_v5",
+                                        "value": "Standard_E16_v5"
+                                    },
+                                    {
+                                        "label": "Standard_E32_v5",
+                                        "value": "Standard_E32_v5"
+                                    },
+                                    {
+                                        "label": "Standard_E48_v5",
+                                        "value": "Standard_E48_v5"
+                                    },
+                                    {
+                                        "label": "Standard_E64_v5",
+                                        "value": "Standard_E64_v5"
+                                    },
+                                    {
+                                        "label": "Standard_E96_v5",
+                                        "value": "Standard_E96_v5"
+                                    },
+                                    {
+                                        "label": "Standard_M64",
+                                        "value": "Standard_M64"
+                                    },
+                                    {
+                                        "label": "Standard_M128",
+                                        "value": "Standard_M128"
+                                    },
+                                    {
+                                        "label": "Standard_M208ms_v2",
+                                        "value": "Standard_M208ms_v2"
+                                    },
+                                    {
+                                        "label": "Standard_M416ms_v2",
+                                        "value": "Standard_M416ms_v2"
+                                    },
+                                    {
+                                        "label": "Standard_L4s_v2",
+                                        "value": "Standard_L4s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_L8s_v2",
+                                        "value": "Standard_L8s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_L16s_v2",
+                                        "value": "Standard_L16s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_L32s_v2",
+                                        "value": "Standard_L32s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_L64s_v2",
+                                        "value": "Standard_L64s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_L80s_v2",
+                                        "value": "Standard_L80s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_NC6",
+                                        "value": "Standard_NC6"
+                                    },
+                                    {
+                                        "label": "Standard_NC12",
+                                        "value": "Standard_NC12"
+                                    },
+                                    {
+                                        "label": "Standard_NC24",
+                                        "value": "Standard_NC24"
+                                    },
+                                    {
+                                        "label": "Standard_NC24r",
+                                        "value": "Standard_NC24r"
+                                    },
+                                    {
+                                        "label": "Standard_ND6s",
+                                        "value": "Standard_ND6s"
+                                    },
+                                    {
+                                        "label": "Standard_ND12s",
+                                        "value": "Standard_ND12s"
+                                    },
+                                    {
+                                        "label": "Standard_ND24s",
+                                        "value": "Standard_ND24s"
+                                    },
+                                    {
+                                        "label": "Standard_ND24rs",
+                                        "value": "Standard_ND24rs"
+                                    },
+                                    {
+                                        "label": "Standard_NV6",
+                                        "value": "Standard_NV6"
+                                    },
+                                    {
+                                        "label": "Standard_NV12",
+                                        "value": "Standard_NV12"
+                                    },
+                                    {
+                                        "label": "Standard_NV24",
+                                        "value": "Standard_NV24"
+                                    },
+                                    {
+                                        "label": "Standard_H8",
+                                        "value": "Standard_H8"
+                                    },
+                                    {
+                                        "label": "Standard_H16",
+                                        "value": "Standard_H16"
+                                    },
+                                    {
+                                        "label": "Standard_H16r",
+                                        "value": "Standard_H16r"
+                                    },
+                                    {
+                                        "label": "Standard_H16mr",
+                                        "value": "Standard_H16mr"
+                                    },
+                                    {
+                                        "label": "Standard_HB120rs_v2",
+                                        "value": "Standard_HB120rs_v2"
+                                    },
+                                    {
+                                        "label": "Standard_HC44rs",
+                                        "value": "Standard_HC44rs"
+                                    },
+                                    {
+                                        "label": "Standard_DC2s",
+                                        "value": "Standard_DC2s"
+                                    },
+                                    {
+                                        "label": "Standard_DC4s",
+                                        "value": "Standard_DC4s"
+                                    },
+                                    {
+                                        "label": "Standard_DC2s_v2",
+                                        "value": "Standard_DC2s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_DC4s_v2",
+                                        "value": "Standard_DC4s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_DC8s_v2",
+                                        "value": "Standard_DC8s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_DC16s_v2",
+                                        "value": "Standard_DC16s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_DC32s_v2",
+                                        "value": "Standard_DC32s_v2"
+                                    },
+                                    {
+                                        "label": "Standard_A1_v2",
+                                        "value": "Standard_A1_v2"
+                                    },
+                                    {
+                                        "label": "Standard_A2_v2",
+                                        "value": "Standard_A2_v2"
+                                    },
+                                    {
+                                        "label": "Standard_A4_v2",
+                                        "value": "Standard_A4_v2"
+                                    },
+                                    {
+                                        "label": "Standard_A8_v2",
+                                        "value": "Standard_A8_v2"
+                                    },
+                                    {
+                                        "label": "Standard_A2m_v2",
+                                        "value": "Standard_A2m_v2"
+                                    },
+                                    {
+                                        "label": "Standard_A4m_v2",
+                                        "value": "Standard_A4m_v2"
+                                    },
+                                    {
+                                        "label": "Standard_A8m_v2",
+                                        "value": "Standard_A8m_v2"
+                                    }
+                                ],
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "adminUsername",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Admin Username",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "Username for the Virtual Machine.",
+                            "constraints": {
+                                "required": true,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": [
+                                    {
+                                        "isValid": "[or(or(empty(steps('basics').adminUsername),and(not(startsWith(steps('basics').adminUsername,'[[')),startsWith(steps('basics').adminUsername,'['),endsWith(steps('basics').adminUsername,']'),greater(indexOf(steps('basics').adminUsername,'('),-1),greater(indexOf(steps('basics').adminUsername,')'),-1))),and(not(regex(steps('basics').adminUsername,'/[\\\\/\\\"\\\"\\[\\]:|<>+=;,$ ?*@]+/')),not(endsWith(steps('basics').adminUsername,'.'))),regex(steps('basics').adminUsername,'^[a-zA-Z0-9-]+$'))]",
+                                        "message": "User name cannot contain special characters \\/\\\"[]:|<>+=;,?*@ or end with '.', and must be between 1 and 15 characters."
+                                    },
+                                    {
+                                        "isValid": "[or(or(empty(steps('basics').adminUsername),and(not(startsWith(steps('basics').adminUsername,'[[')),startsWith(steps('basics').adminUsername,'['),endsWith(steps('basics').adminUsername,']'),greater(indexOf(steps('basics').adminUsername,'('),-1),greater(indexOf(steps('basics').adminUsername,')'),-1))),equals(length(filter(parse('[\"administrator\", \"admin\", \"user\", \"user1\", \"test\", \"user2\", \"test1\", \"user3\", \"admin1\", \"1\", \"123\", \"a\", \"actuser\", \"adm\", \"admin2\", \"aspnet\", \"backup\", \"console\", \"david\", \"guest\", \"john\", \"owner\", \"root\", \"server\", \"sql\", \"support\", \"support_388945a0\", \"sys\", \"test2\", \"test3\", \"user4\", \"user5\"]'),(item) => equals(toLower(item),toLower(steps('basics').adminUsername)))),0))]",
+                                        "message": "The specified username is not allowed. Please choose a different value."
+                                    }
+                                ]
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "adminSshKey",
+                            "type": "Microsoft.Common.PasswordBox",
+                            "label": {
+                                "password": "Admin Ssh Key",
+                                "confirmPassword": "Confirm password"
+                            },
+                            "defaultValue": "",
+                            "toolTip": "SSH Key or password for the Virtual Machine",
+                            "constraints": {
+                                "required": true,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "options": {
+                                "hideConfirmation": true
+                            },
+                            "visible": true
+                        },
+                        {
+                            "name": "initialNumberOfMediaNodes",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Initial Number Of Media Nodes",
+                            "subLabel": "",
+                            "defaultValue": "1",
+                            "toolTip": "Number of initial media nodes to deploy",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "minNumberOfMediaNodes",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Min Number Of Media Nodes",
+                            "subLabel": "",
+                            "defaultValue": "1",
+                            "toolTip": "Minimum number of media nodes to deploy",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "maxNumberOfMediaNodes",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Max Number Of Media Nodes",
+                            "subLabel": "",
+                            "defaultValue": "5",
+                            "toolTip": "Maximum number of media nodes to deploy",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "scaleTargetCPU",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Scale Target CPU",
+                            "subLabel": "",
+                            "defaultValue": "50",
+                            "toolTip": "Target CPU percentage to scale up or down",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "datetime",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Datetime",
+                            "subLabel": "",
+                            "defaultValue": "[[utcNow('u')]",
+                            "toolTip": "",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "automationAccountName",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Automation Account Name",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "Automation Account Name to create a runbook inside it for scale in",
+                            "constraints": {
+                                "required": true,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "storageAccountName",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Storage Account Name",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "Name of the existing storage account. It is essential that this parameter is filled just when you want to save recordings and still using the same container after an update. If not specified, a new storage account will be generated.",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "containerName",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Container Name",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "Name of the bucket where OpenVidu will store the recordings. If not specified, a default bucket will be created.",
+                            "constraints": {
+                                "required": false,
+                                "regex": "",
+                                "validationMessage": "",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        }
+                    ]
+                }
+            ]
+        },
+        "outputs": {
+            "kind": "ResourceGroup",
+            "location": "[steps('basics').resourceScope.location.name]",
+            "resourceGroupId": "[steps('basics').resourceScope.resourceGroup.id]",
+            "parameters": {
+                "stackName": "[steps('basics').stackName]",
+                "certificateType": "[steps('basics').certificateType]",
+                "publicIpAddress": "[steps('basics').publicIpAddress]",
+                "publicIpAddressResourceName": "[steps('basics').publicIpAddressResourceName]",
+                "domainName": "[steps('basics').domainName]",
+                "ownPublicCertificate": "[steps('basics').ownPublicCertificate]",
+                "ownPrivateCertificate": "[steps('basics').ownPrivateCertificate]",
+                "letsEncryptEmail": "[steps('basics').letsEncryptEmail]",
+                "turnDomainName": "[steps('basics').turnDomainName]",
+                "turnOwnPublicCertificate": "[steps('basics').turnOwnPublicCertificate]",
+                "turnOwnPrivateCertificate": "[steps('basics').turnOwnPrivateCertificate]",
+                "openviduLicense": "[steps('basics').openviduLicense]",
+                "rtcEngine": "[steps('basics').rtcEngine]",
+                "masterNodeInstanceType": "[steps('basics').masterNodeInstanceType]",
+                "mediaNodeInstanceType": "[steps('basics').mediaNodeInstanceType]",
+                "adminUsername": "[steps('basics').adminUsername]",
+                "adminSshKey": "[steps('basics').adminSshKey]",
+                "initialNumberOfMediaNodes": "[steps('basics').initialNumberOfMediaNodes]",
+                "minNumberOfMediaNodes": "[steps('basics').minNumberOfMediaNodes]",
+                "maxNumberOfMediaNodes": "[steps('basics').maxNumberOfMediaNodes]",
+                "scaleTargetCPU": "[steps('basics').scaleTargetCPU]",
+                "datetime": "[steps('basics').datetime]",
+                "automationAccountName": "[steps('basics').automationAccountName]",
+                "storageAccountName": "[steps('basics').storageAccountName]",
+                "containerName": "[steps('basics').containerName]"
+            }
+        }
+    }
+}
