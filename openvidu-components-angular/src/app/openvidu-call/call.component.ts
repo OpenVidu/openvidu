@@ -138,9 +138,7 @@ export class CallComponent implements OnInit {
 				this.activitiesPanelBroadcastingActivity = params['activitiesPanelBroadcastingActivity'] === 'true';
 			if (params['toolbarSettingsBtn'] !== undefined) this.toolbarSettingsButton = params['toolbarSettingsBtn'] === 'true';
 			if (params['staticVideos'] !== undefined) this.areStaticVideosEnabled = params['staticVideos'] === 'true';
-			console.log('Query params:', params);
 
-			console.log('PARTICIPANT NAME:', this.participantName);
 			this.configReady = true;
 		});
 		if (this.areStaticVideosEnabled) {
