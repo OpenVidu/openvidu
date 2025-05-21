@@ -1,19 +1,18 @@
 import { Builder, WebDriver } from 'selenium-webdriver';
-import { OPENVIDU_CALL_SERVER } from '../config';
-import { WebComponentConfig } from '../selenium.conf';
-import { OpenViduComponentsPO } from '../utils.po.test';
+import { TestAppConfig } from './selenium.conf';
+import { OpenViduComponentsPO } from './utils.po.test';
 
-const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_CALL_SERVER}`;
+const url = TestAppConfig.appUrl;
 
-describe('Testing TOOLBAR features', () => {
+describe('Toolbar button functionality for local media control', () => {
 	let browser: WebDriver;
 	let utils: OpenViduComponentsPO;
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
-			.forBrowser(WebComponentConfig.browserName)
-			.withCapabilities(WebComponentConfig.browserCapabilities)
-			.setChromeOptions(WebComponentConfig.browserOptions)
-			.usingServer(WebComponentConfig.seleniumAddress)
+			.forBrowser(TestAppConfig.browserName)
+			.withCapabilities(TestAppConfig.browserCapabilities)
+			.setChromeOptions(TestAppConfig.browserOptions)
+			.usingServer(TestAppConfig.seleniumAddress)
 			.build();
 	}
 
@@ -23,10 +22,13 @@ describe('Testing TOOLBAR features', () => {
 	});
 
 	afterEach(async () => {
+		try {
+			await utils.leaveRoom();
+		} catch (error) {}
 		await browser.quit();
 	});
 
-	it('should mute and unmute the local microphone', async () => {
+	it('should toggle mute/unmute on the local microphone and update the icon accordingly', async () => {
 		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkLayoutPresent();
@@ -43,7 +45,7 @@ describe('Testing TOOLBAR features', () => {
 		expect(await utils.isPresent('#mic-btn #mic')).toBeTrue();
 	});
 
-	it('should mute and unmute the local camera', async () => {
+	it('should toggle mute/unmute on the local camera and update the icon accordingly', async () => {
 		await browser.get(`${url}&prejoin=false`);
 
 		await utils.checkLayoutPresent();

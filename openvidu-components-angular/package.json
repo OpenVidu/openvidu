@@ -97,10 +97,10 @@
     "e2e:lib-panels": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/panels.test.js",
     "e2e:lib-screensharing": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/screensharing.test.js",
     "e2e:lib-stream": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/stream.test.js",
+    "e2e:lib-toolbar": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/toolbar.test.js",
 
     "e2e:webcomponent-all": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/webcomponent-e2e/**/*.test.js",
     "e2e:webcomponent-captions": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/webcomponent-e2e/captions.test.js",
-    "e2e:webcomponent-toolbar": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/webcomponent-e2e/toolbar.test.js",
     "webcomponent:testing-build": "./node_modules/@angular/cli/bin/ng.js build openvidu-webcomponent --configuration testing && node ./openvidu-webcomponent-build.js",
     "webcomponent:build": "./node_modules/@angular/cli/bin/ng.js build openvidu-webcomponent --configuration production && node ./openvidu-webcomponent-build.js",
     "webcomponent:serve-testapp": "npx http-server ./e2e/webcomponent-app/",
