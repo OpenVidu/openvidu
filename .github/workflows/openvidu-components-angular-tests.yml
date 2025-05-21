@@ -388,7 +388,6 @@ jobs:
   e2e_toolbar:
     needs: test_setup
     name: Toolbar E2E
-    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
