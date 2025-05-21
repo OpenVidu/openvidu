@@ -220,7 +220,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#openvidu-dialog')).toBeTrue();
 	});
 
-	fit('should run the app with VIDEO DISABLED in prejoin page', async () => {
+	it('should run the app with VIDEO DISABLED in prejoin page', async () => {
 		await browser.get(`${url}&prejoin=true&videoEnabled=false`);
 
 		await utils.checkPrejoinIsPresent();
