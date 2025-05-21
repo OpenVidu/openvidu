@@ -15,7 +15,7 @@ const chromeArguments = [
 	// '--headless',
 	'--use-fake-ui-for-media-stream',
 	'--use-fake-device-for-media-stream',
-	'--use-file-for-fake-audio-capture=e2e/assets/audio_lorem_ipsum.wav'
+	'--use-file-for-fake-audio-capture=e2e/assets/audio_test.wav'
 ];
 const chromeArgumentsCI = [
 	'--window-size=1300,1000',
@@ -30,7 +30,7 @@ const chromeArgumentsCI = [
 	'--disable-default-apps',
 	'--use-fake-ui-for-media-stream',
 	'--use-fake-device-for-media-stream',
-	'--use-file-for-fake-audio-capture=e2e/assets/audio_lorem_ipsum.wav'
+	'--use-file-for-fake-audio-capture=e2e/assets/audio_test.wav'
 ];
 const chromeArgumentsWithoutMediaDevices = ['--headless', '--window-size=1300,900', '--deny-permission-prompts'];
 const chromeArgumentsWithoutMediaDevicesCI = [
