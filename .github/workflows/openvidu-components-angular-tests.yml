@@ -289,7 +289,6 @@ jobs:
   e2e_panels:
     needs: test_setup
     name: Panels E2E
-    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
