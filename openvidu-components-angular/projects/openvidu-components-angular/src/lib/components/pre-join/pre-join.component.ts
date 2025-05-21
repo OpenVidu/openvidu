@@ -138,6 +138,10 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 
 		// Mark tracks as permanent for avoiding to be removed in ngOnDestroy
 		this.shouldRemoveTracksWhenComponentIsDestroyed = false;
+
+		// Assign participant name to the observable if it is defined
+		if(this.participantName) this.libService.setParticipantName(this.participantName);
+
 		this.onReadyToJoin.emit();
 	}
 

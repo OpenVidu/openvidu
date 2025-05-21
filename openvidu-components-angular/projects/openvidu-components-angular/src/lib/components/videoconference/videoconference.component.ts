@@ -549,6 +549,8 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		this.prejoinSub = this.libService.prejoin$.subscribe((value: boolean) => {
 			this.showPrejoin = value;
 			if (!this.showPrejoin) {
+				// Emit token ready if the prejoin page won't be shown
+
 				// Ensure we have a participant name before proceeding with the join
 				this.log.d('Prejoin page is hidden, checking participant name');
 				// Check if we have a participant name already
