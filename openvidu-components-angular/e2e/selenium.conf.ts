@@ -10,12 +10,14 @@ interface BrowserConfig {
 	browserName: string;
 }
 
+const audioPath = LAUNCH_MODE === 'CI' ? `${process.cwd()}/e2e/assets/audio_test.wav` : 'e2e/assets/audio_test.wav';
+
 const chromeArguments = [
 	'--window-size=1300,1000',
 	// '--headless',
 	'--use-fake-ui-for-media-stream',
 	'--use-fake-device-for-media-stream',
-	'--use-file-for-fake-audio-capture=e2e/assets/audio_test.wav'
+	`--use-file-for-fake-audio-capture=${audioPath}`
 ];
 const chromeArgumentsCI = [
 	'--window-size=1300,1000',
@@ -30,7 +32,7 @@ const chromeArgumentsCI = [
 	'--disable-default-apps',
 	'--use-fake-ui-for-media-stream',
 	'--use-fake-device-for-media-stream',
-	'--use-file-for-fake-audio-capture=e2e/assets/audio_test.wav',
+	`--use-file-for-fake-audio-capture=${audioPath}`,
 	'--autoplay-policy=no-user-gesture-required',
 	'--allow-file-access-from-files'
 ];
