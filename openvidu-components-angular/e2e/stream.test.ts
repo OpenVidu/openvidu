@@ -1,19 +1,18 @@
 import { Builder, ILocation, IRectangle, ISize, WebDriver } from 'selenium-webdriver';
-import { OPENVIDU_CALL_SERVER } from '../config';
-import { WebComponentConfig } from '../selenium.conf';
-import { OpenViduComponentsPO } from '../utils.po.test';
+import { TestAppConfig } from './selenium.conf';
+import { OpenViduComponentsPO } from './utils.po.test';
 
-const url = `${WebComponentConfig.appUrl}?OV_URL=${OPENVIDU_CALL_SERVER}`;
+const url = TestAppConfig.appUrl;
 
-describe('Checking stream elements by disabling/enabling the media', () => {
+describe('Stream rendering and media toggling scenarios', () => {
 	let browser: WebDriver;
 	let utils: OpenViduComponentsPO;
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
-			.forBrowser(WebComponentConfig.browserName)
-			.withCapabilities(WebComponentConfig.browserCapabilities)
-			.setChromeOptions(WebComponentConfig.browserOptions)
-			.usingServer(WebComponentConfig.seleniumAddress)
+			.forBrowser(TestAppConfig.browserName)
+			.withCapabilities(TestAppConfig.browserCapabilities)
+			.setChromeOptions(TestAppConfig.browserOptions)
+			.usingServer(TestAppConfig.seleniumAddress)
 			.build();
 	}
 
@@ -23,10 +22,13 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 	});
 
 	afterEach(async () => {
+		try {
+			await utils.leaveRoom();
+		} catch (error) {}
 		await browser.quit();
 	});
 
-	it('should show 0 video element when a participant joins with video disabled', async () => {
+	it('should not render any video element when joining with video disabled', async () => {
 		await browser.get(`${url}&prejoin=true&videoEnabled=false`);
 
 		await utils.checkPrejoinIsPresent();
@@ -39,7 +41,7 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		expect(await utils.getNumberOfElements('audio')).toEqual(1);
 	});
 
-	it('should show a video element when a participant joins with audio muted', async () => {
+	it('should render a video element but no audio when joining with audio muted', async () => {
 		await browser.get(`${url}&prejoin=true&audioEnabled=false`);
 
 		await utils.checkPrejoinIsPresent();
@@ -52,7 +54,7 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 	});
 
-	it('should show a video element when a participant joins', async () => {
+	it('should render both video and audio elements when joining with both enabled', async () => {
 		await browser.get(`${url}&prejoin=true&videoEnabled=true&audioEnabled=true`);
 
 		await utils.checkPrejoinIsPresent();
@@ -65,7 +67,7 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		expect(await utils.getNumberOfElements('audio')).toEqual(1);
 	});
 
-	it('should show a video element when a participant shares its screen with VIDEO and AUDIO MUTED', async () => {
+	it('should add a screen share video/audio when sharing screen with both camera and mic muted', async () => {
 		await browser.get(`${url}&prejoin=true&videoEnabled=false&audioEnabled=false`);
 
 		await utils.checkPrejoinIsPresent();
@@ -90,7 +92,7 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 	});
 
-	it('should show a video element when a LOCAL participant shares its screen', async () => {
+	it('should add a screen share video/audio when sharing screen with both camera and mic enabled', async () => {
 		await browser.get(`${url}&prejoin=true&videoEnabled=true&audioEnabled=true`);
 
 		await utils.checkPrejoinIsPresent();
@@ -115,9 +117,9 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		expect(await utils.getNumberOfElements('audio')).toEqual(1);
 	});
 
-	/* ------------ Checking video elements with two participants ------------ */
+	/* ------------ Checking video/audio elements with two participants ------------ */
 
-	it('should show zero video elements when two participants join with VIDEO and AUDIO MUTED', async () => {
+	it('should not render any video/audio elements when two participants join with both video and audio muted', async () => {
 		const roomName = `streams-${Date.now()}`;
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=false&audioEnabled=false`;
 		await browser.get(fixedUrl);
@@ -145,7 +147,7 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 	});
 
-	it('should show two video elements when a two participants join with audio muted', async () => {
+	it('should render two video elements and no audio when two participants join with audio muted', async () => {
 		const roomName = `streams-${Date.now()}`;
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=true&audioEnabled=false`;
 		await browser.get(fixedUrl);
@@ -158,6 +160,8 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 
 		const tabs = await utils.openTab(fixedUrl);
+		await browser.sleep(1000);
+
 		await browser.switchTo().window(tabs[0]);
 
 		await utils.waitForElement('.OV_stream.remote');
@@ -173,7 +177,7 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 	});
 
-	it('should show zero video elements when two participants join with video disabled', async () => {
+	it('should not render any video elements but should render two audio elements when two participants join with video disabled', async () => {
 		const roomName = `streams-${Date.now()}`;
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=false`;
 		await browser.get(fixedUrl);
@@ -186,6 +190,7 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		expect(await utils.getNumberOfElements('audio')).toEqual(1);
 
 		const tabs = await utils.openTab(fixedUrl);
+		await browser.sleep(1000);
 		await browser.switchTo().window(tabs[0]);
 
 		await utils.waitForElement('.OV_stream.remote');
@@ -201,7 +206,7 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		expect(await utils.getNumberOfElements('audio')).toEqual(2);
 	});
 
-	it('should show 3 video elements when a participant shares its screen with AUDIO and VIDEO MUTED', async () => {
+	it('should add a screen share video/audio when a participant with both video and audio muted shares their screen (two participants)', async () => {
 		const roomName = `streams-${Date.now()}`;
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=false&audioEnabled=false`;
 		await browser.get(fixedUrl);
@@ -240,7 +245,7 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		expect(await utils.getNumberOfElements('audio')).toEqual(0);
 	});
 
-	it('should show 3 video elements when a REMOTE participant shares its screen', async () => {
+	it('should add a screen share video/audio when a remote participant with both video and audio enabled shares their screen', async () => {
 		const roomName = `streams-${Date.now()}`;
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=true&audioEnabled=true`;
 		await browser.get(fixedUrl);
@@ -279,7 +284,7 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 		expect(await utils.getNumberOfElements('audio')).toEqual(2);
 	});
 
-	it('should show 4 video elements when a two participants share theirs screen', async () => {
+	it('should add a screen share video/audio for both participants when both share their screen with video/audio muted', async () => {
 		const roomName = `streams-${Date.now()}`;
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false&videoEnabled=false&audioEnabled=false`;
 		await browser.get(fixedUrl);
@@ -323,15 +328,15 @@ describe('Checking stream elements by disabling/enabling the media', () => {
 	});
 });
 
-describe('Testing stream features', () => {
+describe('Stream UI controls and interaction features', () => {
 	let browser: WebDriver;
 	let utils: OpenViduComponentsPO;
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
-			.forBrowser(WebComponentConfig.browserName)
-			.withCapabilities(WebComponentConfig.browserCapabilities)
-			.setChromeOptions(WebComponentConfig.browserOptions)
-			.usingServer(WebComponentConfig.seleniumAddress)
+			.forBrowser(TestAppConfig.browserName)
+			.withCapabilities(TestAppConfig.browserCapabilities)
+			.setChromeOptions(TestAppConfig.browserOptions)
+			.usingServer(TestAppConfig.seleniumAddress)
 			.build();
 	}
 
@@ -341,6 +346,9 @@ describe('Testing stream features', () => {
 	});
 
 	afterEach(async () => {
+		try {
+			await utils.leaveRoom();
+		} catch (error) {}
 		await browser.quit();
 	});
 
@@ -658,7 +666,7 @@ describe('Testing stream features', () => {
 		expect(streamProps.y).toEqual(0);
 	});
 
-	xit('should show the audio detection elements when participant is speaking', async () => {
+	it('should show the audio detection elements when participant is speaking', async () => {
 		const roomName = 'speakingE2E';
 		const fixedUrl = `${url}&roomName=${roomName}&prejoin=false`;
 		await browser.get(`${fixedUrl}&audioEnabled=false`);
@@ -668,7 +676,11 @@ describe('Testing stream features', () => {
 		// Starting new browser for adding the second participant
 		const newTabScript = `window.open("${fixedUrl}")`;
 		await browser.executeScript(newTabScript);
+		await browser.sleep(1000);
 		const tabs = await browser.getAllWindowHandles();
+
+		await browser.switchTo().window(tabs[1]);
+		await utils.clickOn('#mic-btn');
 		await browser.switchTo().window(tabs[0]);
 
 		await utils.waitForElement('.OV_stream.remote.speaking');
@@ -677,16 +689,16 @@ describe('Testing stream features', () => {
 	});
 });
 
-describe('Testing video is playing', () => {
+describe('Video playback reliability with different media states', () => {
 	let browser: WebDriver;
 	let utils: OpenViduComponentsPO;
 
 	async function createChromeBrowser(): Promise<WebDriver> {
 		return await new Builder()
-			.forBrowser(WebComponentConfig.browserName)
-			.withCapabilities(WebComponentConfig.browserCapabilities)
-			.setChromeOptions(WebComponentConfig.browserOptions)
-			.usingServer(WebComponentConfig.seleniumAddress)
+			.forBrowser(TestAppConfig.browserName)
+			.withCapabilities(TestAppConfig.browserCapabilities)
+			.setChromeOptions(TestAppConfig.browserOptions)
+			.usingServer(TestAppConfig.seleniumAddress)
 			.build();
 	}
 
@@ -696,6 +708,9 @@ describe('Testing video is playing', () => {
 	});
 
 	afterEach(async () => {
+		try {
+			await utils.leaveRoom();
+		} catch (error) {}
 		await browser.quit();
 	});
 

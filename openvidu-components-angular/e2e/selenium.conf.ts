@@ -15,7 +15,7 @@ const chromeArguments = [
 	// '--headless',
 	'--use-fake-ui-for-media-stream',
 	'--use-fake-device-for-media-stream',
-	'--use-file-for-fake-audio-capture=e2e/assets/audio.wav'
+	'--use-file-for-fake-audio-capture=e2e/assets/audio_lorem_ipsum.wav'
 ];
 const chromeArgumentsCI = [
 	'--window-size=1300,1000',
@@ -29,7 +29,8 @@ const chromeArgumentsCI = [
 	'--disable-background-networking',
 	'--disable-default-apps',
 	'--use-fake-ui-for-media-stream',
-	'--use-fake-device-for-media-stream'
+	'--use-fake-device-for-media-stream',
+	'--use-file-for-fake-audio-capture=e2e/assets/audio_lorem_ipsum.wav'
 ];
 const chromeArgumentsWithoutMediaDevices = ['--headless', '--window-size=1300,900', '--deny-permission-prompts'];
 const chromeArgumentsWithoutMediaDevicesCI = [
@@ -53,7 +54,6 @@ export const WebComponentConfig: BrowserConfig = {
 	browserCapabilities: Capabilities.chrome().set('acceptInsecureCerts', true),
 	browserOptions: new chrome.Options().addArguments(...(LAUNCH_MODE === 'CI' ? chromeArgumentsCI : chromeArguments))
 };
-
 
 export const TestAppConfig: BrowserConfig = {
 	appUrl: 'http://localhost:4200/#/call?staticVideos=false',
