@@ -12,7 +12,7 @@ interface BrowserConfig {
 
 const chromeArguments = [
 	'--window-size=1300,1000',
-	'--headless',
+	// '--headless',
 	'--use-fake-ui-for-media-stream',
 	'--use-fake-device-for-media-stream',
 	'--use-file-for-fake-audio-capture=e2e/assets/audio.wav'
