@@ -8,7 +8,7 @@ import { ScenarioPropertiesDialogComponent } from "../dialogs/scenario-propertie
 import { SessionConf } from "../openvidu-instance/openvidu-instance.component";
 import { StreamManagerWrapper } from "../users-table/table-video.component";
 
-import { MatDialog } from "@angular/material/dialog";
+import { MatLegacyDialog as MatDialog } from "@angular/material/legacy-dialog";
 import {
   ConnectionEvent,
   OpenVidu,
