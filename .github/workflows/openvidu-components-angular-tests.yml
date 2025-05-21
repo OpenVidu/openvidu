@@ -278,7 +278,7 @@ jobs:
         uses: ./.github/actions/setup-openvidu-call-backend
       - name: Build and Serve openvidu-components-angular Testapp
         uses: ./.github/actions/build-and-serve-components-testapp
-      - name: Run Webcomponent E2E
+      - name: Run Tests
         env:
           LAUNCH_MODE: CI
         run: npm run e2e:lib-media-devices --prefix openvidu-components-angular
@@ -312,7 +312,7 @@ jobs:
         uses: ./.github/actions/setup-openvidu-call-backend
       - name: Build and Serve openvidu-components-angular Testapp
         uses: ./.github/actions/build-and-serve-components-testapp
-      - name: Run Webcomponent E2E
+      - name: Run Tests
         env:
           LAUNCH_MODE: CI
         run: npm run e2e:lib-panels --prefix openvidu-components-angular
@@ -320,10 +320,9 @@ jobs:
         if: always()
         uses: ./.github/actions/cleanup
 
-  webcomponent_e2e_screen_sharing:
+  e2e_screen_sharing:
     needs: test_setup
-    name: Webcomponent screen sharing
-    if: false
+    name: Screen sharing E2E
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -344,26 +343,12 @@ jobs:
         uses: ./.github/actions/setup-local-deployment
       - name: Setup OpenVidu Call Backend
         uses: ./.github/actions/setup-openvidu-call-backend
-      - name: Install dependencies
-        run: |
-          cd openvidu-components-angular
-          npm install
-      - name: Build openvidu-angular
-        run: npm run lib:build --prefix openvidu-components-angular
-      - name: Build openvidu-webcomponent
-        run: npm run webcomponent:testing-build --prefix openvidu-components-angular
-      - name: Serve Webcomponent Testapp
-        run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
-      - name: Wait for openvidu-components-angular Testapp
-        run: |
-            until curl -s -f -o /dev/null http://localhost:8080; do
-              echo "Waiting for openvidu-components-angular Testapp to be ready..."
-              sleep 5
-            done
-      - name: Run Webcomponent E2E
+      - name: Build and Serve openvidu-components-angular Testapp
+        uses: ./.github/actions/build-and-serve-components-testapp
+      - name: Run Tests
         env:
           LAUNCH_MODE: CI
-        run: npm run e2e:webcomponent-screensharing --prefix openvidu-components-angular
+        run: npm run e2e:lib-screensharing --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
         uses: ./.github/actions/cleanup
