@@ -82,7 +82,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 	/**
 	 * Provides event notifications that fire when participant is disconnected from Room.
-	 * @deprecated Use onParticipantLeft instead
+	 * @deprecated Use {@link onParticipantLeft} instead.
 	 */
 	@Output() onRoomDisconnected: EventEmitter<void> = new EventEmitter<void>();
 

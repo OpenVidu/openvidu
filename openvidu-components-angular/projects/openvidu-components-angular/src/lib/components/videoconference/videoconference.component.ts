@@ -213,6 +213,7 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 
 	/**
 	 * Provides event notifications that fire when Room is disconnected for the local participant.
+	 * @deprecated Use {@link onParticipantLeft} instead
 	 */
 	@Output() onRoomDisconnected: EventEmitter<void> = new EventEmitter<void>();
 

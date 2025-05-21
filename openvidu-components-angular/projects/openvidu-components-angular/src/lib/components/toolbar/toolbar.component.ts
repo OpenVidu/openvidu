@@ -97,6 +97,12 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	/**
+	 * This event is emitted when the room has been disconnected.
+	 *  @deprecated Use {@link onParticipantLeft} instead.
+	 */
+	@Output() onRoomDisconnected: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
 	 * This event is emitted when the local participant leaves the room.
 	 */
 	@Output() onParticipantLeft: EventEmitter<ParticipantLeftEvent> = new EventEmitter<ParticipantLeftEvent>();
@@ -524,6 +530,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 					participantName: this.participantService.getLocalParticipant()?.identity || '',
 					reason: ParticipantLeftReason.LEAVE
 				});
+				this.onRoomDisconnected.emit();
 			}, false);
 		} catch (error) {
 			this.log.e('There was an error disconnecting:', error.code, error.message);

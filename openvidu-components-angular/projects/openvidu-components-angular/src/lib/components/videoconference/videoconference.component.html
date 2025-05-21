@@ -56,6 +56,7 @@
 	<ov-toolbar
 		id="default-toolbar"
 		(onParticipantLeft)="_onParticipantLeft($event)"
+		(onRoomDisconnected)="onRoomDisconnected.emit()"
 		(onVideoEnabledChanged)="onVideoEnabledChanged.emit($event)"
 		(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
 		(onScreenShareEnabledChanged)="onScreenShareEnabledChanged.emit($event)"
