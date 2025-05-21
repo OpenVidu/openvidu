@@ -4,16 +4,18 @@
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
     "declaration": false,
+    "module": "esnext",
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "target": "es2020",
+    "target": "ES6",
     "typeRoots": [
       "node_modules/@types"
     ],
     "lib": [
       "es2017",
-      "dom"
+      "dom",
+      "ES2021.WeakRef"
     ]
   }
 }
