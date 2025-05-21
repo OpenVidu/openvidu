@@ -79,33 +79,31 @@ describe('Media Devices: Virtual Device Replacement and Permissions Handling', (
 		expect(videoLabel).toEqual('fake_device_0');
 	});
 
-	// TODO: Uncommented when Livekit allows to replace the screen track
-	// it('should replace the screen track with a custom virtual device', async () => {
-	// 	const script = 'return document.getElementsByClassName("OV_video-element screen-type")[0].srcObject.getVideoTracks()[0].label;';
+	it('should replace the screen track with a custom virtual device', async () => {
+		const script = 'return document.getElementsByClassName("OV_video-element screen-type")[0].srcObject.getVideoTracks()[0].label;';
 
-	// 	await browser.get(`${url}&prejoin=false&fakeDevices=true`);
+		await browser.get(`${url}&prejoin=false&fakeDevices=true`);
 
-	// 	await utils.checkLayoutPresent();
-	// 	await utils.checkToolbarIsPresent();
+		await utils.checkLayoutPresent();
+		await utils.checkToolbarIsPresent();
 
-	// 	await utils.clickOn('#screenshare-btn');
+		await utils.clickOn('#screenshare-btn');
 
-	// 	await browser.sleep(500);
+		await browser.sleep(500);
 
-	// 	let screenLabel = await browser.executeScript<string>(script);
-	// 	expect(screenLabel).not.toEqual('custom_fake_screen');
+		let screenLabel = await browser.executeScript<string>(script);
+		expect(screenLabel).not.toEqual('custom_fake_screen');
 
-	// 	await utils.clickOn('#video-settings-btn-SCREEN');
-	// 	await browser.sleep(500);
+		await utils.clickOn('#screenshare-btn');
+		await browser.sleep(500);
 
-	// 	await utils.waitForElement('.video-settings-menu');
-	// 	const replaceBtn = await utils.waitForElement('#replace-screen-button');
-	// 	await replaceBtn.sendKeys(Key.ENTER);
+		await utils.waitForElement('#replace-screen-button');
+		await utils.clickOn('#replace-screen-button');
+		await browser.sleep(1000);
 
-	// 	await browser.sleep(1000);
-	// 	screenLabel = await browser.executeScript<string>(script);
-	// 	expect(screenLabel).to.be.toEqual('custom_fake_screen');
-	// });
+		screenLabel = await browser.executeScript<string>(script);
+		expect(screenLabel).toEqual('custom_fake_screen');
+	});
 });
 
 describe('Media Devices: UI Behavior Without Media Device Permissions', () => {

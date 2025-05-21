@@ -255,7 +255,7 @@ jobs:
 
   e2e_media_devices:
     needs: test_setup
-    name: Mmedia devices E2E
+    name: Media devices E2E
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
