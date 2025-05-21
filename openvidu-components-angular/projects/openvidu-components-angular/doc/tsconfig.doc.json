@@ -5,8 +5,7 @@
 		"../src/lib/directives/**/*.ts",
 		"../src/lib/services/**/*.ts",
 		"../src/lib/models/**/*.ts",
-		"../src/lib/pipes/**/*.ts",
-		// "../../../src/app/openvidu-webcomponent/**/*.ts",
+		"../src/lib/pipes/**/*.ts"
 	],
 	"exclude": [
 		"src/test.ts",

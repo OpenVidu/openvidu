@@ -22,7 +22,6 @@
     "@angular/cli": "19.2.9",
     "@angular/compiler": "19.2.8",
     "@angular/compiler-cli": "19.2.8",
-    "@angular/elements": "19.2.8",
     "@compodoc/compodoc": "^1.1.25",
     "@types/jasmine": "^5.1.4",
     "@types/node": "20.12.14",
@@ -74,7 +73,6 @@
     "start-prod": "npx http-server ./dist/openvidu-components-testapp/browser --port 4200",
     "start:ssl": "ng serve --ssl --configuration development --host 0.0.0.0 --port 5080",
     "build": "ng build openvidu-components-testapp --configuration production",
-    "bundle-report": "ng build openvidu-webcomponent --stats-json --configuration production && webpack-bundle-analyzer dist/openvidu-webcomponent/stats.json",
     "doc:build": "npx compodoc -c ./projects/openvidu-components-angular/doc/.compodocrc.json",
     "doc:generate-directives-tutorials": "node ./projects/openvidu-components-angular/doc/scripts/generate-directive-tutorials.js",
     "doc:generate-directive-tables": "node ./projects/openvidu-components-angular/doc/scripts/generate-directive-tables.js",
@@ -98,12 +96,6 @@
     "e2e:lib-screensharing": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/screensharing.test.js",
     "e2e:lib-stream": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/stream.test.js",
     "e2e:lib-toolbar": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/toolbar.test.js",
-
-    "e2e:webcomponent-all": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/webcomponent-e2e/**/*.test.js",
-    "e2e:webcomponent-captions": "tsc --project ./e2e && npx jasmine --fail-fast  ./e2e/dist/webcomponent-e2e/captions.test.js",
-    "webcomponent:testing-build": "./node_modules/@angular/cli/bin/ng.js build openvidu-webcomponent --configuration testing && node ./openvidu-webcomponent-build.js",
-    "webcomponent:build": "./node_modules/@angular/cli/bin/ng.js build openvidu-webcomponent --configuration production && node ./openvidu-webcomponent-build.js",
-    "webcomponent:serve-testapp": "npx http-server ./e2e/webcomponent-app/",
     "simulate:multiparty": "livekit-cli load-test --url ws://localhost:7880 --api-key devkey --api-secret secret --room daily-call --publishers 8 --audio-publishers 8 --identity-prefix Participant --identity publisher",
     "husky": "cd .. && husky install"
   },
