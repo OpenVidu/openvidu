@@ -286,9 +286,9 @@ jobs:
         if: always()
         uses: ./.github/actions/cleanup
 
-  webcomponent_e2e_panels:
+  e2e_panels:
     needs: test_setup
-    name: Webcomponent panels
+    name: Panels E2E
     if: false
     runs-on: ubuntu-latest
     steps:
@@ -310,26 +310,12 @@ jobs:
         uses: ./.github/actions/setup-local-deployment
       - name: Setup OpenVidu Call Backend
         uses: ./.github/actions/setup-openvidu-call-backend
-      - name: Install dependencies
-        run: |
-          cd openvidu-components-angular
-          npm install
-      - name: Build openvidu-angular
-        run: npm run lib:build --prefix openvidu-components-angular
-      - name: Build openvidu-webcomponent
-        run: npm run webcomponent:testing-build --prefix openvidu-components-angular
-      - name: Serve Webcomponent Testapp
-        run: npm run webcomponent:serve-testapp --prefix openvidu-components-angular &
-      - name: Wait for openvidu-components-angular Testapp
-        run: |
-            until curl -s -f -o /dev/null http://localhost:8080; do
-              echo "Waiting for openvidu-components-angular Testapp to be ready..."
-              sleep 5
-            done
+      - name: Build and Serve openvidu-components-angular Testapp
+        uses: ./.github/actions/build-and-serve-components-testapp
       - name: Run Webcomponent E2E
         env:
           LAUNCH_MODE: CI
-        run: npm run e2e:webcomponent-panels --prefix openvidu-components-angular
+        run: npm run e2e:lib-panels --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
         uses: ./.github/actions/cleanup
