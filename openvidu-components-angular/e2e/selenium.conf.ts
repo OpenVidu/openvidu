@@ -10,7 +10,7 @@ interface BrowserConfig {
 	browserName: string;
 }
 
-const audioPath = LAUNCH_MODE === 'CI' ? `${process.cwd()}/e2e/assets/audio_test.wav` : 'e2e/assets/audio_test.wav';
+const audioPath = LAUNCH_MODE === 'CI' ? `e2e-assets/audio_test.wav` : 'e2e/assets/audio_test.wav';
 
 const chromeArguments = [
 	'--window-size=1300,1000',

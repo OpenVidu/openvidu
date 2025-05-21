@@ -370,7 +370,7 @@ jobs:
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
+        run: docker run --network=host -d -v $(pwd)/openvidu-components-angular/e2e/assets:/e2e-assets selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: ./.github/actions/setup-local-deployment
       - name: Setup OpenVidu Call Backend
