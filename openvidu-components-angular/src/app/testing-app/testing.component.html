@@ -70,7 +70,7 @@
 
 <div id="events"></div>
 
-<ov-videoconference *ngIf="!showDirectives" [token]="token" [prejoin]="false" [participantName]="'Testing'">
+<ov-videoconference *ngIf="!showDirectives" [token]="token" [prejoin]="false" [participantName]="'Testing'" (onParticipantLeft)="onParticipantLeft($event)">
 	<!-- TOOLBAR -->
 	<ng-template [ngIf]="ovToolbarSelected">
 		<ov-toolbar

@@ -1,8 +1,9 @@
 import { AfterViewInit, Component } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { PanelService } from 'openvidu-components-angular';
 import { Subscription } from 'rxjs';
 import { RestService } from '../services/rest.service';
+import { ParticipantLeftEvent } from '../../../projects/openvidu-components-angular/src/lib/models/participant.model';
 
 interface TemplateDirectives {
 	name: string;
@@ -157,6 +158,7 @@ export class TestingComponent implements AfterViewInit {
 	constructor(
 		private restService: RestService,
 		private route: ActivatedRoute,
+		private router: Router,
 		private panelService: PanelService
 	) {}
 
@@ -294,6 +296,10 @@ export class TestingComponent implements AfterViewInit {
 			this.token = await this.getToken(this.roomName);
 		});
 		this.subscription.unsubscribe();
+	}
+
+	onParticipantLeft(event: ParticipantLeftEvent) {
+		this.router.navigate(['']);
 	}
 
 	toggleMyPanel(type: string) {
