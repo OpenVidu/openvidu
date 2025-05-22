@@ -38,23 +38,38 @@ export class PanelService {
 	 * If the type is differente, it will switch to the properly panel.
 	 */
 	togglePanel(panelType: PanelType | string, subOptionType?: PanelSettingsOptions | string) {
-		let nextOpenedValue: boolean = false;
-		const previousPanelType = this._panelOpened.getValue().panelType;
-		const previousOpened = this._panelOpened.getValue().isOpened;
+		const previousState = this._panelOpened.getValue();
+		const isDefaultPanel = this.panelTypes.includes(panelType);
 
-		if (this.panelTypes.includes(panelType)) {
-			this.log.d(`Toggling ${panelType} menu`);
-			nextOpenedValue = previousPanelType !== panelType ? true : !previousOpened;
+		this.log.d(`Toggling ${isDefaultPanel ? panelType : 'external'} menu`);
+
+		// Set the next panel state
+		let nextOpenedValue: boolean;
+
+		if (panelType === previousState.panelType) {
+			// Same panel clicked, toggle it
+			nextOpenedValue = !previousState.isOpened;
 		} else {
-			// Panel is external
-			this.log.d('Toggling external panel');
-			// Opening when external panel is closed or is opened with another type
-			this.isExternalOpened = !this.isExternalOpened || this.externalType !== panelType;
-			this.externalType = !this.isExternalOpened ? '' : panelType;
-			nextOpenedValue = this.isExternalOpened;
+			// Different panel clicked, always open it
+			nextOpenedValue = true;
 		}
 
-		this._panelOpened.next({ isOpened: nextOpenedValue, panelType, subOptionType, previousPanelType });
+		// Update external panel tracking
+		if (isDefaultPanel) {
+			this.isExternalOpened = false;
+			this.externalType = '';
+		} else {
+			this.isExternalOpened = nextOpenedValue;
+			this.externalType = nextOpenedValue ? panelType : '';
+		}
+
+		// Update the panel state
+		this._panelOpened.next({
+			isOpened: nextOpenedValue,
+			panelType,
+			subOptionType,
+			previousPanelType: previousState.panelType
+		});
 	}
 
 	/**
