@@ -133,7 +133,7 @@ describe('OpenVidu Components STRUCTURAL toolbar directives', () => {
 		expect(await utils.isPresent('#custom-toolbar-additional-panel-buttons')).toBeTrue();
 
 		element = await browser.findElements(By.id('toolbar-additional-panel-btn'));
-		expect(element.length).toEqual(2);
+		expect(element.length).toEqual(1);
 
 		// Check if custom toolbar not is present
 		expect(await utils.isPresent('#custom-toolbar')).toBeFalse();
