@@ -5,7 +5,7 @@ import { OpenViduComponentsPO } from '../utils.po.test';
 
 const url = NestedConfig.appUrl;
 
-describe('OpenVidu Components STRUCTURAL toolbar directives', () => {
+describe('E2E: Toolbar structural directive scenarios', () => {
 	let browser: WebDriver;
 	let utils: OpenViduComponentsPO;
 	async function createChromeBrowser(): Promise<WebDriver> {
@@ -24,10 +24,13 @@ describe('OpenVidu Components STRUCTURAL toolbar directives', () => {
 
 	afterEach(async () => {
 		// console.log('data:image/png;base64,' + await browser.takeScreenshot());
+		try {
+			await utils.leaveRoom();
+		} catch (error) {}
 		await browser.quit();
 	});
 
-	it('should inject the custom TOOLBAR without additional buttons', async () => {
+	it('should render only the custom toolbar (no additional buttons, no default toolbar)', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovToolbar-checkbox');
@@ -45,7 +48,7 @@ describe('OpenVidu Components STRUCTURAL toolbar directives', () => {
 		expect(await utils.isPresent('#default-toolbar')).toBeFalse();
 	});
 
-	it('should inject the custom TOOLBAR with additional buttons', async () => {
+	it('should render the custom toolbar with additional custom buttons and hide the default toolbar', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovToolbar-checkbox');
@@ -69,7 +72,7 @@ describe('OpenVidu Components STRUCTURAL toolbar directives', () => {
 		expect(await utils.isPresent('#default-toolbar')).toBeFalse();
 	});
 
-	it('should inject the custom TOOLBAR with additional PANEL buttons', async () => {
+	it('should render the custom toolbar with additional custom panel buttons and hide the default toolbar', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovToolbar-checkbox');
@@ -93,7 +96,7 @@ describe('OpenVidu Components STRUCTURAL toolbar directives', () => {
 		expect(await utils.isPresent('#default-toolbar')).toBeFalse();
 	});
 
-	it('should inject the TOOLBAR ADDITIONAL BUTTONS only', async () => {
+	it('should render only additional toolbar buttons (default toolbar visible, no custom toolbar)', async () => {
 		let element;
 		await browser.get(`${url}`);
 
@@ -116,7 +119,7 @@ describe('OpenVidu Components STRUCTURAL toolbar directives', () => {
 		expect(await utils.isPresent('#custom-toolbar')).toBeFalse();
 	});
 
-	it('should inject the TOOLBAR ADDITIONAL PANEL BUTTONS only', async () => {
+	it('should render only additional toolbar panel buttons (default toolbar visible, no custom toolbar)', async () => {
 		let element;
 		await browser.get(`${url}`);
 
@@ -140,7 +143,7 @@ describe('OpenVidu Components STRUCTURAL toolbar directives', () => {
 	});
 });
 
-describe('OpenVidu Components STRUCTURAL panel directives', () => {
+describe('E2E: Panel structural directive scenarios', () => {
 	let browser: WebDriver;
 	let utils: OpenViduComponentsPO;
 
@@ -159,10 +162,49 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 	});
 
 	afterEach(async () => {
+		try {
+			await utils.leaveRoom();
+		} catch (error) {}
 		await browser.quit();
 	});
 
-	it('should inject the CUSTOM PANEL without children', async () => {
+	it('should render an additional custom panel with default panels', async () => {
+		let element;
+		await browser.get(`${url}`);
+
+		await utils.clickOn('#ovAdditionalPanels-checkbox');
+
+		await utils.clickOn('#apply-btn');
+
+		// Check if toolbar panel buttons are present
+		await utils.checkToolbarIsPresent();
+
+		// Open additional panel
+		await utils.clickOn('#toolbar-additional-panel-btn');
+		await browser.sleep(500);
+
+		// Check if custom panel is present
+		expect(await utils.isPresent('#custom-additional-panel')).toBeTrue();
+		element = await utils.waitForElement('#additional-panel-title');
+		expect(await element.getAttribute('innerText')).toEqual('NEW PANEL');
+
+		// Open the participants panel
+		await utils.clickOn('#participants-panel-btn');
+		await browser.sleep(500);
+
+		// Check if default panel is present
+		expect(await utils.isPresent('#default-participants-panel')).toBeTrue();
+
+		// Open additional panel again
+		await utils.clickOn('#toolbar-additional-panel-btn');
+		expect(await utils.isPresent('#custom-additional-panel')).toBeTrue();
+
+		// Close the additional panel
+		await utils.clickOn('#toolbar-additional-panel-btn');
+		expect(await utils.isPresent('#custom-additional-panel')).toBeFalse();
+	});
+
+	it('should render only the custom panel container (no children, no default panels)', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovPanel-checkbox');
@@ -198,7 +240,7 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 		expect(await utils.isPresent('#custom-chat-panel')).toBeFalse();
 	});
 
-	it('should inject the CUSTOM PANEL with ADDITIONAL PANEL only', async () => {
+	it('should render the custom panel container with an additional panel only', async () => {
 		let element;
 		await browser.get(`${url}`);
 
@@ -227,7 +269,7 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 		expect(await utils.isPresent('#custom-additional-panel')).toBeFalse();
 	});
 
-	it('should inject the CUSTOM PANEL with CHAT PANEL only', async () => {
+	it('should render the custom panel container with a custom chat panel only', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovPanel-checkbox');
@@ -266,7 +308,7 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 		expect(await utils.isPresent('#custom-chat-panel')).toBeTrue();
 	});
 
-	it('should inject the CUSTOM PANEL with ACTIVITIES PANEL only', async () => {
+	it('should render the custom panel container with a custom activities panel only', async () => {
 		let element;
 		await browser.get(`${url}`);
 
@@ -293,7 +335,7 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 		expect(await element.getAttribute('innerText')).toEqual('CUSTOM ACTIVITIES PANEL');
 	});
 
-	it('should inject the CUSTOM PANEL with PARTICIPANTS PANEL only and without children', async () => {
+	it('should render the custom panel container with a custom participants panel only (no children)', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovPanel-checkbox');
@@ -331,7 +373,7 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 		expect(await utils.isPresent('#custom-chat-panel')).toBeFalse();
 	});
 
-	it('should inject the CUSTOM PANEL with PARTICIPANTS PANEL and P ITEM only', async () => {
+	it('should render the custom panel container with a custom participants panel and a custom participant item', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovPanel-checkbox');
@@ -370,7 +412,7 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 		expect(await utils.isPresent('#default-participant-panel-item')).toBeFalse();
 	});
 
-	it('should inject the CUSTOM PANEL with PARTICIPANTS PANEL and P ITEM and P ITEM ELEMENT', async () => {
+	it('should render the custom panel container with a custom participants panel, custom participant item, and custom item element', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovPanel-checkbox');
@@ -415,7 +457,7 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 		expect(await utils.isPresent('#default-participant-panel-item')).toBeFalse();
 	});
 
-	it('should inject an ACTIVITIES PANEL only', async () => {
+	it('should render only a custom activities panel (no default panel)', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovActivitiesPanel-checkbox');
@@ -440,7 +482,7 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 		expect(await utils.isPresent('#activities-container')).toBeTrue();
 	});
 
-	it('should inject an ADDITIONAL PANEL only', async () => {
+	it('should render only a custom additional panel (no default panel)', async () => {
 		let element;
 		await browser.get(`${url}`);
 
@@ -466,7 +508,7 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 		expect(await utils.isPresent('#custom-additional-panel')).toBeFalse();
 	});
 
-	it('should inject the CHAT PANEL only', async () => {
+	it('should render only a custom chat panel (no custom panel container)', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovChatPanel-checkbox');
@@ -504,7 +546,7 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 		expect(await utils.isPresent('#custom-chat-panel')).toBeTrue();
 	});
 
-	it('should inject the PARTICIPANTS PANEL only', async () => {
+	it('should render only a custom participants panel (no custom panel container)', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovParticipantsPanel-checkbox');
@@ -542,7 +584,7 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 		expect(await utils.isPresent('#custom-chat-panel')).toBeFalse();
 	});
 
-	it('should inject the PARTICIPANTS PANEL ITEM only', async () => {
+	it('should render only a custom participant panel item (no custom panel container)', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovParticipantPanelItem-checkbox');
@@ -583,7 +625,7 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 		expect(await utils.isPresent('#custom-chat-panel')).toBeFalse();
 	});
 
-	it('should inject the PARTICIPANTS PANEL ITEM ELEMENT only', async () => {
+	it('should render only a custom participant panel item element (no custom panel container)', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovParticipantPanelItemElements-checkbox');
@@ -621,7 +663,7 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 		expect(await utils.isPresent('#custom-chat-panel')).toBeFalse();
 	});
 
-	it('should inject the CUSTOM PANEL with CHAT and PARTICIPANTS PANELS', async () => {
+	it('should render the custom panel container with both custom chat and participants panels', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovPanel-checkbox');
@@ -662,7 +704,7 @@ describe('OpenVidu Components STRUCTURAL panel directives', () => {
 	});
 });
 
-describe('OpenVidu Components STRUCTURAL layout directives', () => {
+describe('E2E: Layout and stream structural directive scenarios', () => {
 	let browser: WebDriver;
 	let utils: OpenViduComponentsPO;
 
@@ -681,10 +723,13 @@ describe('OpenVidu Components STRUCTURAL layout directives', () => {
 	});
 
 	afterEach(async () => {
+		try {
+			await utils.leaveRoom();
+		} catch (error) {}
 		await browser.quit();
 	});
 
-	it('should inject the custom LAYOUT WITHOUT STREAM', async () => {
+	it('should render only the custom layout (no stream, no default layout)', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovLayout-checkbox');
@@ -705,7 +750,7 @@ describe('OpenVidu Components STRUCTURAL layout directives', () => {
 		expect(await utils.isPresent('video')).toBeFalse();
 	});
 
-	it('should inject the custom LAYOUT WITH STREAM', async () => {
+	it('should render the custom layout with a custom stream (no default layout/stream)', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovLayout-checkbox');
@@ -733,7 +778,7 @@ describe('OpenVidu Components STRUCTURAL layout directives', () => {
 		expect(await utils.isPresent('video')).toBeTrue();
 	});
 
-	it('should inject the CUSTOM STREAM only', async () => {
+	it('should render only a custom stream (no custom layout, no default stream)', async () => {
 		await browser.get(`${url}`);
 
 		await utils.clickOn('#ovStream-checkbox');
@@ -759,4 +804,3 @@ describe('OpenVidu Components STRUCTURAL layout directives', () => {
 		expect(await utils.isPresent('video')).toBeTrue();
 	});
 });
-
