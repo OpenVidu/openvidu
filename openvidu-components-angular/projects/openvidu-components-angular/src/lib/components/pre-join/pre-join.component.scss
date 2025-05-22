@@ -14,6 +14,9 @@
 		right: 0;
 		text-align: center;
 		color: var(--ov-text-primary-color);
+		.mat-mdc-progress-spinner {
+			margin: auto;
+		}
 	}
 
 	#prejoin-card {
