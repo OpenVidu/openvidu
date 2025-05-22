@@ -157,7 +157,7 @@ jobs:
   e2e_directives:
     needs: test_setup
     name: API Directives Tests
-    runs-on: ov-actions-runner
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -223,7 +223,7 @@ jobs:
   e2e_events:
     needs: test_setup
     name: Events E2E
-    runs-on: ov-actions-runner
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
