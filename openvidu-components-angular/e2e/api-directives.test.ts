@@ -284,6 +284,7 @@ describe('Testing API Directives', () => {
 	it('should run the app with AUDIO DISABLED and WITHOUT PREJOIN page', async () => {
 		await browser.get(`${url}&prejoin=false&audioEnabled=false`);
 
+		await browser.sleep(1000);
 		await utils.checkSessionIsPresent();
 
 		// Checking if video is displayed
