@@ -599,7 +599,7 @@ describe('Testing videoconference EVENTS', () => {
 		expect(await utils.isPresent('#onReadyToJoin')).toBeFalse();
 	});
 
-	// * PUBLISHER EVENTS
+	// PARTICIPANT EVENTS
 
 	it('should receive onParticipantCreated event from LOCAL participant', async () => {
 		const participantName = 'TEST_USER';
@@ -609,7 +609,7 @@ describe('Testing videoconference EVENTS', () => {
 	});
 
 	it('should receive the onParticipantLeft event', async () => {
-		await browser.get(`${url}&prejoin=false&redirect=false`);
+		await browser.get(`${url}&prejoin=false&redirectToHome=false`);
 
 		await utils.checkSessionIsPresent();
 

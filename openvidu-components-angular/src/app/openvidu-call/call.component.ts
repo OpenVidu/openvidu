@@ -60,7 +60,7 @@ export class CallComponent implements OnInit {
 	activitiesPanelBroadcastingActivity: boolean = true;
 	toolbarSettingsButton: boolean = true;
 	fakeDevices: boolean = false;
-	private redirectOnLeaves: boolean = true;
+	private redirectToHomeOnLeaves: boolean = true;
 
 	private staticVideos = [
 		'https://videos.pexels.com/video-files/4089575/4089575-hd_1280_720_50fps.mp4',
@@ -142,10 +142,10 @@ export class CallComponent implements OnInit {
 
 			if (params['fakeDevices'] !== undefined) this.fakeDevices = params['fakeDevices'] === 'true';
 
-			if (params['redirect'] === undefined) {
-				this.redirectOnLeaves = true;
+			if (params['redirectToHome'] === undefined) {
+				this.redirectToHomeOnLeaves = true;
 			} else {
-				this.redirectOnLeaves = params['redirect'] === 'true';
+				this.redirectToHomeOnLeaves = params['redirectToHome'] === 'true';
 			}
 			this.configReady = true;
 
@@ -177,7 +177,7 @@ export class CallComponent implements OnInit {
 	async onParticipantLeft(event: ParticipantLeftEvent) {
 		this.appendElement('onParticipantLeft');
 		console.warn('VC PARTICIPANT LEFT', event);
-		if (this.redirectOnLeaves) await this.router.navigate(['/']);
+		if (this.redirectToHomeOnLeaves) await this.router.navigate(['/']);
 	}
 
 	onRoomCreated(room: Room) {
@@ -363,11 +363,16 @@ export class CallComponent implements OnInit {
 	}
 
 	private appendElement(id: string) {
-		var eventsDiv = document.getElementById('events');
-		eventsDiv?.setAttribute('style', 'position: absolute;');
-		var element = document.createElement('div');
+		const eventsDiv = document.getElementById('events');
+		if (!eventsDiv) {
+			console.error('No events div found');
+			return;
+		}
+
+		eventsDiv.setAttribute('style', 'position: absolute;');
+		const element = document.createElement('div');
 		element.setAttribute('id', id);
 		element.setAttribute('style', 'height: 1px;');
-		eventsDiv?.appendChild(element);
+		eventsDiv.appendChild(element);
 	}
 }
