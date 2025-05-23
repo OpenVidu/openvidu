@@ -615,17 +615,12 @@ describe('Testing videoconference EVENTS', () => {
 
 		await utils.checkToolbarIsPresent();
 
-		console.log('data:image/png;base64,' + (await browser.takeScreenshot()));
-
 		// Clicking to leave button
 		const leaveButton = await utils.waitForElement('#leave-btn');
 		expect(await utils.isPresent('#leave-btn')).toBeTrue();
 		await leaveButton.click();
-		await browser.sleep(1000);
-		console.log('data:image/png;base64,' + (await browser.takeScreenshot()));
 
 		await utils.waitForElement('#events');
-
 		// Checking if onParticipantLeft has been received
 		await utils.waitForElement('#onParticipantLeft');
 		expect(await utils.isPresent('#onParticipantLeft')).toBeTrue();

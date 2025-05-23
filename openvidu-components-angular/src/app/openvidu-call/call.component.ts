@@ -174,11 +174,9 @@ export class CallComponent implements OnInit {
 	}
 
 	async onParticipantLeft(event: ParticipantLeftEvent) {
-		this.configReady = false;
-		this.isSessionAlive = false;
-		this.appendElement('onParticipantLeft');
 		console.warn('VC PARTICIPANT LEFT', event);
-		if (this.redirectToHomeOnLeaves) await this.router.navigate(['/']);
+		this.appendElement('onParticipantLeft');
+		this.handleDisconnect();
 	}
 
 	onRoomCreated(room: Room) {
@@ -246,11 +244,13 @@ export class CallComponent implements OnInit {
 		console.warn('VC chat status changed: ', event);
 	}
 
+	/**
+	 * @deprecated
+	 */
 	async onRoomDisconnected() {
 		this.appendElement('onRoomDisconnected');
-		this.isSessionAlive = false;
 		console.log('VC LEAVE BUTTON CLICKED');
-		await this.router.navigate(['/']);
+		this.handleDisconnect();
 	}
 
 	onFullscreenButtonClicked() {
@@ -361,6 +361,12 @@ export class CallComponent implements OnInit {
 				videoElement.play();
 			});
 		}
+	}
+
+	private async handleDisconnect() {
+		this.configReady = false;
+		this.isSessionAlive = false;
+		if (this.redirectToHomeOnLeaves) await this.router.navigate(['/']);
 	}
 
 	private appendElement(id: string) {
