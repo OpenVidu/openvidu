@@ -51,3 +51,7 @@ jobs:
           name: openvidu-integration-tests-report
           path: ./openvidu/openvidu-test-integration/test-results.json
           retention-days: 7
+      - name: Cleanup
+        if: always()
+        uses: OpenVidu/actions/cleanup@main
+

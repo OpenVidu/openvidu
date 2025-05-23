@@ -80,7 +80,7 @@ jobs:
         run: npm run e2e:nested-events --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: ./.github/actions/cleanup
+        uses: OpenVidu/actions/cleanup@main
 
   nested_structural_directives:
     needs: test_setup
@@ -113,7 +113,7 @@ jobs:
         run: npm run e2e:nested-structural-directives --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: ./.github/actions/cleanup
+        uses: OpenVidu/actions/cleanup@main
 
   nested_attribute_directives:
     needs: test_setup
@@ -146,7 +146,7 @@ jobs:
         run: npm run e2e:nested-attribute-directives --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: ./.github/actions/cleanup
+        uses: OpenVidu/actions/cleanup@main
 
   e2e_directives:
     needs: test_setup
@@ -179,7 +179,7 @@ jobs:
         run: npm run e2e:lib-directives --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: ./.github/actions/cleanup
+        uses: OpenVidu/actions/cleanup@main
 
   e2e_chat:
     needs: test_setup
@@ -212,7 +212,7 @@ jobs:
         run: npm run e2e:lib-chat --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: ./.github/actions/cleanup
+        uses: OpenVidu/actions/cleanup@main
 
   e2e_events:
     needs: test_setup
@@ -245,7 +245,7 @@ jobs:
         run: npm run e2e:lib-events --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: ./.github/actions/cleanup
+        uses: OpenVidu/actions/cleanup@main
 
   e2e_media_devices:
     needs: test_setup
@@ -278,7 +278,7 @@ jobs:
         run: npm run e2e:lib-media-devices --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: ./.github/actions/cleanup
+        uses: OpenVidu/actions/cleanup@main
 
   e2e_panels:
     needs: test_setup
@@ -311,7 +311,7 @@ jobs:
         run: npm run e2e:lib-panels --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: ./.github/actions/cleanup
+        uses: OpenVidu/actions/cleanup@main
 
   e2e_screen_sharing:
     needs: test_setup
@@ -344,7 +344,7 @@ jobs:
         run: npm run e2e:lib-screensharing --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: ./.github/actions/cleanup
+        uses: OpenVidu/actions/cleanup@main
 
   e2e_stream:
     needs: test_setup
@@ -377,7 +377,7 @@ jobs:
         run: npm run e2e:lib-stream --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: ./.github/actions/cleanup
+        uses: OpenVidu/actions/cleanup@main
 
   e2e_toolbar:
     needs: test_setup
@@ -410,4 +410,4 @@ jobs:
         run: npm run e2e:lib-toolbar --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: ./.github/actions/cleanup
+        uses: OpenVidu/actions/cleanup@main
