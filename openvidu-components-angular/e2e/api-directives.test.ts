@@ -27,6 +27,7 @@ describe('Testing API Directives', () => {
 			// leaving room if connected
 			await utils.leaveRoom();
 		} catch (error) {}
+		await browser.sleep(500);
 		await browser.quit();
 	});
 
@@ -238,6 +239,8 @@ describe('Testing API Directives', () => {
 		await utils.waitForElement('#videocam_off');
 		expect(await utils.isPresent('#videocam_off')).toBeTrue();
 
+		console.log('data:image/png;base64,' + await browser.takeScreenshot());
+
 		await utils.waitForElement('#video-poster');
 		expect(await utils.getNumberOfElements('video')).toEqual(0);
 	});
@@ -265,7 +268,6 @@ describe('Testing API Directives', () => {
 
 		// Checking if video is displayed
 		await utils.checkVideoElementIsPresent();
-		console.log('data:image/png;base64,' + await browser.takeScreenshot());
 		expect(await utils.getNumberOfElements('video')).toEqual(1);
 
 		expect(await utils.getNumberOfElements('audio')).toEqual(0);
@@ -275,6 +277,7 @@ describe('Testing API Directives', () => {
 		await utils.clickOn('#join-button');
 
 		await utils.checkSessionIsPresent();
+		console.log('data:image/png;base64,' + await browser.takeScreenshot());
 
 		expect(await utils.getNumberOfElements('video')).toEqual(1);
 		expect(await utils.getNumberOfElements('audio')).toEqual(0);
