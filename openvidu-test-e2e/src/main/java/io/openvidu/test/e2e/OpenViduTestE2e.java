@@ -36,6 +36,9 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.utility.DockerImageName;
 
+import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.model.ContainerNetwork;
+
 import io.livekit.server.IngressServiceClient;
 import io.livekit.server.RoomServiceClient;
 import io.openvidu.test.browsers.BrowserUser;
@@ -185,11 +188,11 @@ public class OpenViduTestE2e {
 
 		GenericContainer<?> rtspServerContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
 				.withCreateContainerCmdModifier(cmd -> cmd.withName("rtsp-" + Math.random() * 100000))
-				.withEnv(Map.of("MTX_LOGLEVEL", "info", "MTX_PROTOCOLS", "tcp", "MTX_RTSPADDRESS", ":8554", "MTX_HLS",
-						"no", "MTX_RTSP", "yes", "MTX_WEBRTC", "yes", "MTX_SRT", "no", "MTX_RTMP", "no", "MTX_API",
-						"no"))
-				.withExposedPorts(8889, 8554).waitingFor(Wait.forHttp("/").forPort(8889).forStatusCode(404));
-		rtspServerContainer.setPortBindings(Arrays.asList("8554:8554"));
+				.withEnv(Map.of("MTX_LOGLEVEL", "info", "MTX_PROTOCOLS", "tcp", "MTX_RTSPADDRESS", ":" + RTSP_SRT_PORT,
+						"MTX_HLS", "no", "MTX_RTSP", "yes", "MTX_WEBRTC", "yes", "MTX_SRT", "no", "MTX_RTMP", "no",
+						"MTX_API", "no"))
+				.withExposedPorts(8889, RTSP_SRT_PORT).waitingFor(Wait.forHttp("/").forPort(8889).forStatusCode(404));
+		rtspServerContainer.setPortBindings(Arrays.asList(RTSP_SRT_PORT + ":" + RTSP_SRT_PORT));
 
 		rtspServerContainer.start();
 		containers.add(rtspServerContainer);
@@ -226,7 +229,13 @@ public class OpenViduTestE2e {
 			waitUntilLog(rtspServerContainer, regex, 15);
 		}
 
-		return "rtsp://host.docker.internal:" + RTSP_SRT_PORT + "/" + RTSP_PATH;
+		String containerIp = "host.docker.internal";
+		InspectContainerResponse containerInfo = rtspServerContainer.getCurrentContainerInfo();
+		if (containerInfo != null) {
+			ContainerNetwork network = containerInfo.getNetworkSettings().getNetworks().values().iterator().next();
+			containerIp = network.getIpAddress();
+		}
+		return "rtsp://" + containerIp + ":" + RTSP_SRT_PORT + "/" + RTSP_PATH;
 	}
 
 	/**
@@ -296,17 +305,17 @@ public class OpenViduTestE2e {
 	private String getFileUrl(boolean withVideo, boolean withAudio, boolean lossless) throws Exception {
 		String fileUrl;
 		if (withAudio && withVideo) {
-			fileUrl = lossless ?
-				 "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_fastdecode.mkv" :
-				 "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4";
+			fileUrl = lossless
+					? "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_fastdecode.mkv"
+					: "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4";
 		} else if (!withAudio && withVideo) {
-			fileUrl = lossless ?
-				"https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_noaudio_fastdecode.mkv" :
-				"https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_noaudio.mp4";
+			fileUrl = lossless
+					? "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_noaudio_fastdecode.mkv"
+					: "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_noaudio.mp4";
 		} else if (withAudio) {
-			fileUrl = lossless ?
-			 	"https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio_fastdecode.flac" :
-				"https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio.mp3";
+			fileUrl = lossless
+					? "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio_fastdecode.flac"
+					: "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio.mp3";
 		} else {
 			throw new Exception("Must have audio or video");
 		}
