@@ -26,10 +26,7 @@ describe('Testing videoconference EVENTS', () => {
 		try {
 			// leaving room if connected
 			await utils.leaveRoom();
-		} catch (error) {
-			console.error('Error leaving room:', error);
-		}
-		console.log('data:image/png;base64,' + (await browser.takeScreenshot()));
+		} catch (error) {}
 		await browser.quit();
 	});
 
@@ -618,10 +615,14 @@ describe('Testing videoconference EVENTS', () => {
 
 		await utils.checkToolbarIsPresent();
 
+		console.log('data:image/png;base64,' + (await browser.takeScreenshot()));
+
 		// Clicking to leave button
 		const leaveButton = await utils.waitForElement('#leave-btn');
 		expect(await utils.isPresent('#leave-btn')).toBeTrue();
 		await leaveButton.click();
+		await browser.sleep(1000);
+		console.log('data:image/png;base64,' + (await browser.takeScreenshot()));
 
 		await utils.waitForElement('#events');
 
