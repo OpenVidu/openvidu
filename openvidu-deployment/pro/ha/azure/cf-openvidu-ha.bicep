@@ -1820,8 +1820,8 @@ resource scaleInActivityLogRule 'Microsoft.Insights/activityLogAlerts@2020-10-01
 
 /*------------------------------------------- NETWORK -------------------------------------------*/
 
-var isEmptyIp = publicIpAddressObject.newOrExistingOrNone == ''
-var turnIsEmptyIp = turnPublicIpAddressObject.newOrExistingOrNone == ''
+var isEmptyIp = publicIpAddressObject.newOrExistingOrNone == 'none'
+var turnIsEmptyIp = turnPublicIpAddressObject.newOrExistingOrNone == 'none'
 var lbName = '${stackName}-loadBalancer'
 var lbFrontEndName = 'LoadBalancerFrontEnd'
 var lbBackendPoolNameMasterNode = 'LoadBalancerBackEndMasterNode'
