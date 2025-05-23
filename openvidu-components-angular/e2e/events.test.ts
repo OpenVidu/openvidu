@@ -26,7 +26,10 @@ describe('Testing videoconference EVENTS', () => {
 		try {
 			// leaving room if connected
 			await utils.leaveRoom();
-		} catch (error) {}
+		} catch (error) {
+			console.error('Error leaving room:', error);
+		}
+		console.log('data:image/png;base64,' + (await browser.takeScreenshot()));
 		await browser.quit();
 	});
 

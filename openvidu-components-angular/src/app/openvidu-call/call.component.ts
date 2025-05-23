@@ -27,7 +27,6 @@ export class CallComponent implements OnInit {
 	tokenError: string | undefined;
 	isSessionAlive: boolean = false;
 	configReady: boolean = false;
-
 	minimal: boolean = false;
 	lang: string = 'es';
 	langOptions: LangOption[] = [
