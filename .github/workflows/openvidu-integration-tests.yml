@@ -14,21 +14,14 @@ jobs:
     timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout OpenVidu Local Deployment
-        uses: actions/checkout@v4
-        with:
-          repository: OpenVidu/openvidu-local-deployment
-          ref: development
-          path: openvidu-local-deployment
-
       - name: Configure OpenVidu Local Deployment
-        working-directory: ./openvidu-local-deployment/community
-        run: |
-          ./configure_lan_private_ip_linux.sh
-          sed -i 's/interval: 10s/interval: 1s/' livekit.yaml
-          sed -i '/interval: 1s/a \        fixer_interval: 10s' livekit.yaml
-          docker compose pull
-
+        uses: OpenVidu/actions/start-openvidu-local-deployment@main
+        with:
+          branch: development
+          pre_startup_commands: |
+            sed -i 's/interval: 10s/interval: 1s/' livekit.yaml
+            sed -i '/interval: 1s/a \        fixer_interval: 10s' livekit.yaml
+            docker compose pull
       - name: Install LiveKit CLI
         run: |
           curl -sSL https://get.livekit.io/cli | bash
