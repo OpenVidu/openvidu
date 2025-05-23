@@ -28,7 +28,7 @@ param ownPrivateCertificate string = ''
 param letsEncryptEmail string = ''
 
 @description('Name of the PublicIPAddress resource in Azure when using certificateType \'owncert\' or \'letsencrypt\'')
-param publicIpAddressResourceName string = ''
+param publicIpAddressObject object
 
 @description('(Optional) Domain name for the TURN server with TLS. Only needed if your users are behind restrictive firewalls')
 param turnDomainName string = ''
@@ -40,7 +40,10 @@ param turnOwnPublicCertificate string = ''
 param turnOwnPrivateCertificate string = ''
 
 @description('Name of the PublicIPAddress resource in Azure when using TURN server with TLS')
-param turnPublicIpAddressResourceName string = ''
+param turnPublicIpAddressObject object = {
+  name: ''
+  id: ''
+}
 
 @description('Visit https://openvidu.io/account')
 @secure()
@@ -285,7 +288,7 @@ param adminUsername string
 
 @description('SSH Key for the Virtual Machine.')
 @secure()
-param adminSshKey string
+param adminSshKey object
 
 @description('Number of initial media nodes to deploy')
 param initialNumberOfMediaNodes int = 1
@@ -316,7 +319,7 @@ var masterNodeVMSettings = {
       publicKeys: [
         {
           path: '/home/${adminUsername}/.ssh/authorized_keys'
-          keyData: adminSshKey
+          keyData: adminSshKey.sshPublicKey
         }
       ]
     }
@@ -338,7 +341,7 @@ var mediaNodeVMSettings = {
       publicKeys: [
         {
           path: '/home/${adminUsername}/.ssh/authorized_keys'
-          keyData: adminSshKey
+          keyData: adminSshKey.sshPublicKey
         }
       ]
     }
@@ -1264,7 +1267,6 @@ resource openviduMasterNode1 'Microsoft.Compute/virtualMachines@2023-09-01' = {
     osProfile: {
       computerName: '${stackName}-VM-MasterNode1'
       adminUsername: adminUsername
-      adminPassword: adminSshKey
       linuxConfiguration: masterNodeVMSettings.linuxConfiguration
     }
     userData: base64(userDataMasterNode1)
@@ -1299,7 +1301,6 @@ resource openviduMasterNode2 'Microsoft.Compute/virtualMachines@2023-09-01' = {
     osProfile: {
       computerName: '${stackName}-VM-MasterNode2'
       adminUsername: adminUsername
-      adminPassword: adminSshKey
       linuxConfiguration: masterNodeVMSettings.linuxConfiguration
     }
     userData: base64(userDataMasterNode2)
@@ -1335,7 +1336,6 @@ resource openviduMasterNode3 'Microsoft.Compute/virtualMachines@2023-09-01' = {
     osProfile: {
       computerName: '${stackName}-VM-MasterNode3'
       adminUsername: adminUsername
-      adminPassword: adminSshKey
       linuxConfiguration: masterNodeVMSettings.linuxConfiguration
     }
     userData: base64(userDataMasterNode3)
@@ -1371,7 +1371,6 @@ resource openviduMasterNode4 'Microsoft.Compute/virtualMachines@2023-09-01' = {
     osProfile: {
       computerName: '${stackName}-VM-MasterNode4'
       adminUsername: adminUsername
-      adminPassword: adminSshKey
       linuxConfiguration: masterNodeVMSettings.linuxConfiguration
     }
     userData: base64(userDataMasterNode4)
@@ -1613,7 +1612,6 @@ resource openviduScaleSetMediaNode 'Microsoft.Compute/virtualMachineScaleSets@20
       osProfile: {
         computerNamePrefix: mediaNodeVMSettings.vmName
         adminUsername: adminUsername
-        adminPassword: adminSshKey
         linuxConfiguration: mediaNodeVMSettings.linuxConfiguration
       }
       networkProfile: {
@@ -1822,8 +1820,8 @@ resource scaleInActivityLogRule 'Microsoft.Insights/activityLogAlerts@2020-10-01
 
 /*------------------------------------------- NETWORK -------------------------------------------*/
 
-var isEmptyIp = publicIpAddressResourceName == ''
-var turnIsEmptyIp = turnPublicIpAddressResourceName == ''
+var isEmptyIp = publicIpAddressObject.newOrExistingOrNone == ''
+var turnIsEmptyIp = turnPublicIpAddressObject.newOrExistingOrNone == ''
 var lbName = '${stackName}-loadBalancer'
 var lbFrontEndName = 'LoadBalancerFrontEnd'
 var lbBackendPoolNameMasterNode = 'LoadBalancerBackEndMasterNode'
@@ -1840,8 +1838,16 @@ resource publicIPAddressLoadBalancer 'Microsoft.Network/publicIPAddresses@2024-0
   }
 }
 
-resource publicIP_LoadBalancer_ifNotEmpty 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (!isEmptyIp == true) {
-  name: publicIpAddressResourceName
+var ipExists = publicIpAddressObject.newOrExistingOrNone == 'existing'
+
+resource publicIP_LoadBalancer_ifExisting 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipExists == true) {
+  name: publicIpAddressObject.name
+}
+
+var ipNew = publicIpAddressObject.newOrExistingOrNone == 'new'
+
+resource publicIP_LoadBalancer_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipNew == true) {
+  name: publicIpAddressObject.name
 }
 
 resource publicIPAddressTurnTLSLoadBalancer 'Microsoft.Network/publicIPAddresses@2024-05-01' = if (turnTLSIsEnabled == true) {
@@ -1856,8 +1862,16 @@ resource publicIPAddressTurnTLSLoadBalancer 'Microsoft.Network/publicIPAddresses
   }
 }
 
-resource publicIP_TurnTLSLoadBalancer_ifNotEmpty 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (!turnIsEmptyIp && turnTLSIsEnabled == true) {
-  name: publicIpAddressResourceName
+var ipTURNExists = publicIpAddressObject.newOrExistingOrNone == 'existing'
+
+resource publicIP_TurnTLSLoadBalancer_ifExisting 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipTURNExists && turnTLSIsEnabled == true) {
+  name: publicIpAddressObject.name
+}
+
+var ipTURNNew = publicIpAddressObject.newOrExistingOrNone == 'new'
+
+resource publicIP_TurnTLSLoadBalancer_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipTURNNew && turnTLSIsEnabled == true) {
+  name: publicIpAddressObject.name
 }
 
 resource LoadBalancer 'Microsoft.Network/loadBalancers@2024-05-01' = {
@@ -1872,7 +1886,9 @@ resource LoadBalancer 'Microsoft.Network/loadBalancers@2024-05-01' = {
         name: lbFrontEndName
         properties: {
           publicIPAddress: {
-            id: isEmptyIp ? publicIPAddressLoadBalancer.id : publicIP_LoadBalancer_ifNotEmpty.id
+            id: isEmptyIp
+              ? publicIPAddressLoadBalancer.id
+              : ipNew ? publicIP_LoadBalancer_ifNew.id : publicIP_LoadBalancer_ifExisting.id
           }
         }
       }
@@ -1990,7 +2006,9 @@ resource TurnTLSLoadbalancer 'Microsoft.Network/loadBalancers@2024-05-01' = if (
           privateIPAllocationMethod: 'Dynamic'
           privateIPAddressVersion: 'IPv4'
           publicIPAddress: {
-            id: turnIsEmptyIp ? publicIPAddressLoadBalancer.id : publicIP_TurnTLSLoadBalancer_ifNotEmpty.id
+            id: turnIsEmptyIp
+              ? publicIPAddressTurnTLSLoadBalancer.id
+              : ipTURNNew ? publicIP_TurnTLSLoadBalancer_ifNew.id : publicIP_TurnTLSLoadBalancer_ifExisting.id
           }
         }
       }

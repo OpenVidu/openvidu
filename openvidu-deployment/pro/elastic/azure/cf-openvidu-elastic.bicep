@@ -16,10 +16,7 @@ and an Elastic IP, you can use this option to generate a Let's Encrypt certifica
 param certificateType string = 'selfsigned'
 
 @description('Previously created Public IP address for the OpenVidu Deployment. Blank will generate a public IP')
-param publicIpAddress string = ''
-
-@description('Name of the PublicIPAddress resource in your azure if you have a resource of publicIPAddress')
-param publicIpAddressResourceName string = ''
+param publicIpAddressObject object
 
 @description('Domain name for the OpenVidu Deployment. Blank will generate default domain')
 param domainName string = ''
@@ -282,7 +279,7 @@ param adminUsername string
 
 @description('SSH Key or password for the Virtual Machine')
 @secure()
-param adminSshKey string
+param adminSshKey object
 
 @description('Number of initial media nodes to deploy')
 param initialNumberOfMediaNodes int = 1
@@ -298,29 +295,12 @@ param scaleTargetCPU int = 50
 
 /*------------------------------------------- VARIABLES AND VALIDATIONS -------------------------------------------*/
 
-var isEmptyIp = publicIpAddress == ''
-var ipSegments = split(publicIpAddress, '.')
-var isFourSegments = length(ipSegments) == 4
-var seg1valid = isEmptyIp ? true : int(ipSegments[0]) >= 0 && int(ipSegments[0]) <= 255
-var seg2valid = isEmptyIp ? true : int(ipSegments[1]) >= 0 && int(ipSegments[1]) <= 255
-var seg3valid = isEmptyIp ? true : int(ipSegments[2]) >= 0 && int(ipSegments[2]) <= 255
-var seg4valid = isEmptyIp ? true : int(ipSegments[3]) >= 0 && int(ipSegments[3]) <= 255
-var isValidIP = !isEmptyIp && isFourSegments && seg1valid && seg2valid && seg3valid && seg4valid
+var isEmptyIp = publicIpAddressObject.newOrExistingOrNone == 'none'
 
 var isEmptyDomain = domainName == ''
-var domainParts = split(domainName, '.')
-var validNumberParts = length(domainParts) >= 2
-var allPartsValid = [
-  for part in domainParts: length(part) >= 1 && length(part) <= 63 && !empty(part) && part == toLower(part) && !contains(
-    part,
-    '--'
-  ) && empty(replace(part, '[a-z0-9-]', ''))
-]
-
-var isDomainValid = !isEmptyDomain && validNumberParts && !contains(allPartsValid, false)
 
 var masterNodeVMSettings = {
-  vmName: '${stackName}-VN-MasterNode'
+  vmName: '${stackName}-VM-MasterNode'
   osDiskType: 'StandardSSD_LRS'
   ubuntuOSVersion: {
     publisher: 'Canonical'
@@ -334,7 +314,7 @@ var masterNodeVMSettings = {
       publicKeys: [
         {
           path: '/home/${adminUsername}/.ssh/authorized_keys'
-          keyData: adminSshKey
+          keyData: adminSshKey.sshPublicKey
         }
       ]
     }
@@ -356,7 +336,7 @@ var mediaNodeVMSettings = {
       publicKeys: [
         {
           path: '/home/${adminUsername}/.ssh/authorized_keys'
-          keyData: adminSshKey
+          keyData: adminSshKey.sshPublicKey
         }
       ]
     }
@@ -1079,7 +1059,6 @@ resource openviduMasterNode 'Microsoft.Compute/virtualMachines@2023-09-01' = {
     osProfile: {
       computerName: masterNodeVMSettings.vmName
       adminUsername: adminUsername
-      adminPassword: adminSshKey
       linuxConfiguration: masterNodeVMSettings.linuxConfiguration
     }
     userData: base64(userDataMasterNode)
@@ -1315,7 +1294,6 @@ resource openviduScaleSetMediaNode 'Microsoft.Compute/virtualMachineScaleSets@20
       osProfile: {
         computerNamePrefix: mediaNodeVMSettings.vmName
         adminUsername: adminUsername
-        adminPassword: adminSshKey
         linuxConfiguration: mediaNodeVMSettings.linuxConfiguration
       }
       networkProfile: {
@@ -1541,8 +1519,16 @@ resource publicIP_OV 'Microsoft.Network/publicIPAddresses@2023-11-01' = if (isEm
   }
 }
 
-resource publicIP_OV_ifNotEmpty 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (!isEmptyIp == true) {
-  name: publicIpAddressResourceName
+var ipExists = publicIpAddressObject.newOrExistingOrNone == 'existing'
+
+resource publicIP_OV_ifExisting 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipExists == true) {
+  name: publicIpAddressObject.name
+}
+
+var ipNew = publicIpAddressObject.newOrExistingOrNone == 'new'
+
+resource publicIP_OV_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipNew == true) {
+  name: publicIpAddressObject.name
 }
 
 resource vnet_OV 'Microsoft.Network/virtualNetworks@2023-11-01' = {
@@ -1598,7 +1584,7 @@ resource netInterfaceMasterNode 'Microsoft.Network/networkInterfaces@2023-11-01'
             }
           ]
           publicIPAddress: {
-            id: isEmptyIp ? publicIP_OV.id : publicIP_OV_ifNotEmpty.id
+            id: isEmptyIp ? publicIP_OV.id : ipNew ? publicIP_OV_ifNew.id : publicIP_OV_ifExisting.id
             properties: {
               deleteOption: 'Delete'
             }
@@ -2070,16 +2056,3 @@ resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/container
     publicAccess: 'None'
   }
 }
-
-/*------------------------------------------- OUTPUTS -------------------------------------------*/
-
-output ipValidationStatus string = isValidIP ? 'IP address is valid' : 'IP address not valid'
-
-output domainValidationStatus string = isDomainValid ? 'Domain is valid' : 'Domain is not valid'
-
-output ownCertValidationStatus string = (certificateType == 'owncert' && ownPrivateCertificate != '' && ownPublicCertificate != '')
-  ? 'owncert selected and valid'
-  : 'You need to fill \'Own Public Certificate\' and \'Own Private Certificate\''
-output letsEncryptValidationStatus string = (certificateType == 'letsencrypt' && letsEncryptEmail != '')
-  ? 'letsEncrypt selected and valid'
-  : 'You need to fill \'Lets Encrypt Email\''

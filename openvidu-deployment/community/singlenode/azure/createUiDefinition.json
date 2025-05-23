@@ -39,7 +39,7 @@
                 },
                 {
                     "name": "parameters SSL",
-                    "label": "Parameters for Domain and SSL certificate configuration",
+                    "label": "Domain and SSL certificate configuration",
                     "elements": [
                         {
                             "name": "certificateType",
@@ -176,7 +176,7 @@
                 },
                 {
                     "name": "parameters INSTANCE",
-                    "label": "Parameters for OpenVidu instance configuration",
+                    "label": "OpenVidu instance configuration",
                     "elements": [
                         {
                             "name": "instanceType",
@@ -249,7 +249,7 @@
                 },
                 {
                     "name": "parameters STORAGE",
-                    "label": "Parameters for Storage Account configuration",
+                    "label": "Storage Account configuration",
                     "elements": [
                         {
                             "name": "storageAccountName",
@@ -287,7 +287,7 @@
                 },
                 {
                     "name": "parameters TURN",
-                    "label": "(Optional) Parameters for TURN server configuration with TLS",
+                    "label": "(Optional) TURN server configuration with TLS",
                     "elements": [
                         {
                             "name": "turnDomainName",
