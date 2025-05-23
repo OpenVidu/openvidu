@@ -620,6 +620,8 @@ describe('Testing videoconference EVENTS', () => {
 		expect(await utils.isPresent('#leave-btn')).toBeTrue();
 		await leaveButton.click();
 
+		await utils.waitForElement('#events');
+
 		// Checking if onParticipantLeft has been received
 		await utils.waitForElement('#onParticipantLeft');
 		expect(await utils.isPresent('#onParticipantLeft')).toBeTrue();

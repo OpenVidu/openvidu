@@ -1,3 +1,5 @@
+<div id="events"></div>
+
 @if (configReady) {
 	<ov-videoconference
 		[token]="token"
@@ -30,7 +32,6 @@
 		[activitiesPanelRecordingActivity]="activitiesPanelRecordingActivity"
 		[activitiesPanelBroadcastingActivity]="activitiesPanelBroadcastingActivity"
 		[toolbarSettingsButton]="toolbarSettingsButton"
-
 		(onTokenRequested)="onTokenRequested($event)"
 		(onReadyToJoin)="onReadyToJoin()"
 		(onRoomCreated)="onRoomCreated($event)"
@@ -55,8 +56,4 @@
 		(onActivitiesPanelStatusChanged)="onActivitiesPanelStatusChanged($event)"
 	>
 	</ov-videoconference>
-
 }
-
-
-<div id="events"></div>

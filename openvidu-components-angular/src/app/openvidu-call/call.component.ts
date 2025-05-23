@@ -175,6 +175,8 @@ export class CallComponent implements OnInit {
 	}
 
 	async onParticipantLeft(event: ParticipantLeftEvent) {
+		this.configReady = false;
+		this.isSessionAlive = false;
 		this.appendElement('onParticipantLeft');
 		console.warn('VC PARTICIPANT LEFT', event);
 		if (this.redirectToHomeOnLeaves) await this.router.navigate(['/']);
