@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.35.1.17967",
-      "templateHash": "5324001294294208652"
+      "templateHash": "13616087415887006037"
     }
   },
   "parameters": {
@@ -27,18 +27,10 @@
         "description": "[selfsigned] Not recommended for production use. If you don't have a FQDN, (DomainName parameter) you can use this option to generate a self-signed certificate.\n[owncert] Valid for productions environments. If you have a FQDN, (DomainName parameter)\nand an Elastic IP, you can use this option to use your own certificate.\n[letsencrypt] Valid for production environments. If you have a FQDN, (DomainName parameter)\nand an Elastic IP, you can use this option to generate a Let's Encrypt certificate.\n"
       }
     },
-    "publicIpAddress": {
-      "type": "string",
-      "defaultValue": "",
+    "publicIpAddressObject": {
+      "type": "object",
       "metadata": {
         "description": "Previously created Public IP address for the OpenVidu Deployment. Blank will generate a public IP"
-      }
-    },
-    "publicIpAddressResourceName": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Name of the PublicIPAddress resource in your azure if you have a resource of publicIPAddress"
       }
     },
     "domainName": {
@@ -346,7 +338,7 @@
       }
     },
     "adminSshKey": {
-      "type": "securestring",
+      "type": "secureObject",
       "metadata": {
         "description": "SSH Key or password for the Virtual Machine"
       }
@@ -405,27 +397,10 @@
     }
   },
   "variables": {
-    "copy": [
-      {
-        "name": "allPartsValid",
-        "count": "[length(variables('domainParts'))]",
-        "input": "[and(and(and(and(and(greaterOrEquals(length(variables('domainParts')[copyIndex('allPartsValid')]), 1), lessOrEquals(length(variables('domainParts')[copyIndex('allPartsValid')]), 63)), not(empty(variables('domainParts')[copyIndex('allPartsValid')]))), equals(variables('domainParts')[copyIndex('allPartsValid')], toLower(variables('domainParts')[copyIndex('allPartsValid')]))), not(contains(variables('domainParts')[copyIndex('allPartsValid')], '--'))), empty(replace(variables('domainParts')[copyIndex('allPartsValid')], '[a-z0-9-]', '')))]"
-      }
-    ],
-    "isEmptyIp": "[equals(parameters('publicIpAddress'), '')]",
-    "ipSegments": "[split(parameters('publicIpAddress'), '.')]",
-    "isFourSegments": "[equals(length(variables('ipSegments')), 4)]",
-    "seg1valid": "[if(variables('isEmptyIp'), true(), and(greaterOrEquals(int(variables('ipSegments')[0]), 0), lessOrEquals(int(variables('ipSegments')[0]), 255)))]",
-    "seg2valid": "[if(variables('isEmptyIp'), true(), and(greaterOrEquals(int(variables('ipSegments')[1]), 0), lessOrEquals(int(variables('ipSegments')[1]), 255)))]",
-    "seg3valid": "[if(variables('isEmptyIp'), true(), and(greaterOrEquals(int(variables('ipSegments')[2]), 0), lessOrEquals(int(variables('ipSegments')[2]), 255)))]",
-    "seg4valid": "[if(variables('isEmptyIp'), true(), and(greaterOrEquals(int(variables('ipSegments')[3]), 0), lessOrEquals(int(variables('ipSegments')[3]), 255)))]",
-    "isValidIP": "[and(and(and(and(and(not(variables('isEmptyIp')), variables('isFourSegments')), variables('seg1valid')), variables('seg2valid')), variables('seg3valid')), variables('seg4valid'))]",
+    "isEmptyIp": "[equals(parameters('publicIpAddressObject').newOrExistingOrNone, 'none')]",
     "isEmptyDomain": "[equals(parameters('domainName'), '')]",
-    "domainParts": "[split(parameters('domainName'), '.')]",
-    "validNumberParts": "[greaterOrEquals(length(variables('domainParts')), 2)]",
-    "isDomainValid": "[and(and(not(variables('isEmptyDomain')), variables('validNumberParts')), not(contains(variables('allPartsValid'), false())))]",
     "masterNodeVMSettings": {
-      "vmName": "[format('{0}-VN-MasterNode', parameters('stackName'))]",
+      "vmName": "[format('{0}-VM-MasterNode', parameters('stackName'))]",
       "osDiskType": "StandardSSD_LRS",
       "ubuntuOSVersion": {
         "publisher": "Canonical",
@@ -439,7 +414,7 @@
           "publicKeys": [
             {
               "path": "[format('/home/{0}/.ssh/authorized_keys', parameters('adminUsername'))]",
-              "keyData": "[parameters('adminSshKey')]"
+              "keyData": "[parameters('adminSshKey').sshPublicKey]"
             }
           ]
         }
@@ -460,7 +435,7 @@
           "publicKeys": [
             {
               "path": "[format('/home/{0}/.ssh/authorized_keys', parameters('adminUsername'))]",
-              "keyData": "[parameters('adminSshKey')]"
+              "keyData": "[parameters('adminSshKey').sshPublicKey]"
             }
           ]
         }
@@ -500,6 +475,8 @@
     "userDataMediaNodeTemplate": "#!/bin/bash -x\nset -eu -o pipefail\n\n# Introduce the scripts in the instance\n# install.sh\necho ${base64install} | base64 -d > /usr/local/bin/install.sh\nchmod +x /usr/local/bin/install.sh\n\n# stop_media_nodes.sh\necho ${base64stop} | base64 -d > /usr/local/bin/stop_media_node.sh\nchmod +x /usr/local/bin/stop_media_node.sh\n\napt-get update && apt-get install -y\napt-get install -y jq\n\n# Install azure cli\ncurl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash\n\naz login --identity\n\n# Protect from scale in actions\nRESOURCE_GROUP_NAME=${resourceGroupName}\nVM_SCALE_SET_NAME=${vmScaleSetName}\nBEFORE_INSTANCE_ID=$(curl -H Metadata:true --noproxy \"*\" \"http://169.254.169.254/metadata/instance?api-version=2021-02-01\" | jq -r '.compute.resourceId')\nINSTANCE_ID=$(echo $BEFORE_INSTANCE_ID | awk -F'/' '{print $NF}')\naz vmss update --resource-group $RESOURCE_GROUP_NAME --name $VM_SCALE_SET_NAME --instance-id $INSTANCE_ID --protect-from-scale-in true\n\nexport HOME=\"/root\"\n\n# Install OpenVidu\n/usr/local/bin/install.sh || { echo \"[OpenVidu] error installing OpenVidu\"; exit 1; }\n\n# Start OpenVidu\nsystemctl start openvidu || { echo \"[OpenVidu] error starting OpenVidu\"; exit 1; }\n#/usr/local/bin/set_as_unhealthy.sh\n",
     "stop_media_nodesScriptMedia": "[reduce(items(variables('stopMediaNodeParams')), createObject('value', variables('stop_media_nodesScriptMediaTemplate')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value]",
     "base64stopMediaNode": "[base64(variables('stop_media_nodesScriptMedia'))]",
+    "ipExists": "[equals(parameters('publicIpAddressObject').newOrExistingOrNone, 'existing')]",
+    "ipNew": "[equals(parameters('publicIpAddressObject').newOrExistingOrNone, 'new')]",
     "isEmptyStorageAccountName": "[equals(parameters('storageAccountName'), '')]",
     "isEmptyContainerName": "[equals(parameters('containerName'), '')]"
   },
@@ -598,7 +575,6 @@
         "osProfile": {
           "computerName": "[variables('masterNodeVMSettings').vmName]",
           "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminSshKey')]",
           "linuxConfiguration": "[variables('masterNodeVMSettings').linuxConfiguration]"
         },
         "userData": "[base64(reduce(items(createObject('base64install', base64(reduce(items(createObject('domainName', parameters('domainName'), 'fqdn', if(variables('isEmptyIp'), reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName'))), '2023-11-01').dnsSettings.fqdn, parameters('domainName')), 'turnDomainName', parameters('turnDomainName'), 'certificateType', parameters('certificateType'), 'letsEncryptEmail', parameters('letsEncryptEmail'), 'ownPublicCertificate', parameters('ownPublicCertificate'), 'ownPrivateCertificate', parameters('ownPrivateCertificate'), 'turnOwnPublicCertificate', parameters('turnOwnPublicCertificate'), 'turnOwnPrivateCertificate', parameters('turnOwnPrivateCertificate'), 'openviduLicense', parameters('openviduLicense'), 'rtcEngine', parameters('rtcEngine'), 'keyVaultName', variables('keyVaultName'))), createObject('value', variables('installScriptTemplateMaster')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value), 'base64after_install', base64(reduce(items(createObject('domainName', parameters('domainName'), 'fqdn', if(variables('isEmptyIp'), reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName'))), '2023-11-01').dnsSettings.fqdn, parameters('domainName')), 'turnDomainName', parameters('turnDomainName'), 'certificateType', parameters('certificateType'), 'letsEncryptEmail', parameters('letsEncryptEmail'), 'ownPublicCertificate', parameters('ownPublicCertificate'), 'ownPrivateCertificate', parameters('ownPrivateCertificate'), 'turnOwnPublicCertificate', parameters('turnOwnPublicCertificate'), 'turnOwnPrivateCertificate', parameters('turnOwnPrivateCertificate'), 'openviduLicense', parameters('openviduLicense'), 'rtcEngine', parameters('rtcEngine'), 'keyVaultName', variables('keyVaultName'))), createObject('value', variables('after_installScriptTemplateMaster')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value), 'base64update_config_from_secret', base64(reduce(items(createObject('domainName', parameters('domainName'), 'fqdn', if(variables('isEmptyIp'), reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName'))), '2023-11-01').dnsSettings.fqdn, parameters('domainName')), 'turnDomainName', parameters('turnDomainName'), 'certificateType', parameters('certificateType'), 'letsEncryptEmail', parameters('letsEncryptEmail'), 'ownPublicCertificate', parameters('ownPublicCertificate'), 'ownPrivateCertificate', parameters('ownPrivateCertificate'), 'turnOwnPublicCertificate', parameters('turnOwnPublicCertificate'), 'turnOwnPrivateCertificate', parameters('turnOwnPrivateCertificate'), 'openviduLicense', parameters('openviduLicense'), 'rtcEngine', parameters('rtcEngine'), 'keyVaultName', variables('keyVaultName'))), createObject('value', variables('update_config_from_secretScriptTemplateMaster')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value), 'base64update_secret_from_config', base64(reduce(items(createObject('domainName', parameters('domainName'), 'fqdn', if(variables('isEmptyIp'), reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName'))), '2023-11-01').dnsSettings.fqdn, parameters('domainName')), 'turnDomainName', parameters('turnDomainName'), 'certificateType', parameters('certificateType'), 'letsEncryptEmail', parameters('letsEncryptEmail'), 'ownPublicCertificate', parameters('ownPublicCertificate'), 'ownPrivateCertificate', parameters('ownPrivateCertificate'), 'turnOwnPublicCertificate', parameters('turnOwnPublicCertificate'), 'turnOwnPrivateCertificate', parameters('turnOwnPrivateCertificate'), 'openviduLicense', parameters('openviduLicense'), 'rtcEngine', parameters('rtcEngine'), 'keyVaultName', variables('keyVaultName'))), createObject('value', variables('update_secret_from_configScriptTemplateMaster')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value), 'base64get_value_from_config', variables('base64get_value_from_configMaster'), 'base64store_secret', base64(reduce(items(createObject('domainName', parameters('domainName'), 'fqdn', if(variables('isEmptyIp'), reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName'))), '2023-11-01').dnsSettings.fqdn, parameters('domainName')), 'turnDomainName', parameters('turnDomainName'), 'certificateType', parameters('certificateType'), 'letsEncryptEmail', parameters('letsEncryptEmail'), 'ownPublicCertificate', parameters('ownPublicCertificate'), 'ownPrivateCertificate', parameters('ownPrivateCertificate'), 'turnOwnPublicCertificate', parameters('turnOwnPublicCertificate'), 'turnOwnPrivateCertificate', parameters('turnOwnPrivateCertificate'), 'openviduLicense', parameters('openviduLicense'), 'rtcEngine', parameters('rtcEngine'), 'keyVaultName', variables('keyVaultName'))), createObject('value', variables('store_secretScriptTemplateMaster')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value), 'base64check_app_ready', variables('base64check_app_readyMaster'), 'base64restart', variables('base64restartMaster'), 'base64config_blobStorage', base64(reduce(items(createObject('storageAccountName', if(variables('isEmptyStorageAccountName'), uniqueString(resourceGroup().id), parameters('storageAccountName')), 'storageAccountKey', listKeys(resourceId('Microsoft.Storage/storageAccounts', uniqueString(resourceGroup().id)), '2021-04-01').keys[0].value, 'storageAccountContainerName', if(variables('isEmptyContainerName'), 'openvidu-appdata', format('{0}', parameters('containerName'))))), createObject('value', variables('config_blobStorageTemplate')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value), 'keyVaultName', variables('keyVaultName'), 'storageAccountName', if(variables('isEmptyStorageAccountName'), uniqueString(resourceGroup().id), parameters('storageAccountName')))), createObject('value', variables('userDataTemplateMasterNode')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value)]"
@@ -647,7 +623,6 @@
           "osProfile": {
             "computerNamePrefix": "[variables('mediaNodeVMSettings').vmName]",
             "adminUsername": "[parameters('adminUsername')]",
-            "adminPassword": "[parameters('adminSshKey')]",
             "linuxConfiguration": "[variables('mediaNodeVMSettings').linuxConfiguration]"
           },
           "networkProfile": {
@@ -938,7 +913,7 @@
                 }
               ],
               "publicIPAddress": {
-                "id": "[if(variables('isEmptyIp'), resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName'))), resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressResourceName')))]",
+                "id": "[if(variables('isEmptyIp'), resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName'))), if(variables('ipNew'), resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressObject').name), resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressObject').name)))]",
                 "properties": {
                   "deleteOption": "Delete"
                 }
@@ -1613,23 +1588,5 @@
         }
       }
     }
-  ],
-  "outputs": {
-    "ipValidationStatus": {
-      "type": "string",
-      "value": "[if(variables('isValidIP'), 'IP address is valid', 'IP address not valid')]"
-    },
-    "domainValidationStatus": {
-      "type": "string",
-      "value": "[if(variables('isDomainValid'), 'Domain is valid', 'Domain is not valid')]"
-    },
-    "ownCertValidationStatus": {
-      "type": "string",
-      "value": "[if(and(and(equals(parameters('certificateType'), 'owncert'), not(equals(parameters('ownPrivateCertificate'), ''))), not(equals(parameters('ownPublicCertificate'), ''))), 'owncert selected and valid', 'You need to fill ''Own Public Certificate'' and ''Own Private Certificate''')]"
-    },
-    "letsEncryptValidationStatus": {
-      "type": "string",
-      "value": "[if(and(equals(parameters('certificateType'), 'letsencrypt'), not(equals(parameters('letsEncryptEmail'), ''))), 'letsEncrypt selected and valid', 'You need to fill ''Lets Encrypt Email''')]"
-    }
-  }
+  ]
 }

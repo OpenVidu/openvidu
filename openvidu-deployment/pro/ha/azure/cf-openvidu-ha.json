@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.35.1.17967",
-      "templateHash": "15246851867985685865"
+      "templateHash": "4820629106695863876"
     }
   },
   "parameters": {
@@ -54,9 +54,8 @@
         "description": "If certificate type is 'letsencrypt', this email will be used for Let's Encrypt notifications"
       }
     },
-    "publicIpAddressResourceName": {
-      "type": "string",
-      "defaultValue": "",
+    "publicIpAddressObject": {
+      "type": "object",
       "metadata": {
         "description": "Name of the PublicIPAddress resource in Azure when using certificateType 'owncert' or 'letsencrypt'"
       }
@@ -82,9 +81,12 @@
         "description": "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified."
       }
     },
-    "turnPublicIpAddressResourceName": {
-      "type": "string",
-      "defaultValue": "",
+    "turnPublicIpAddressObject": {
+      "type": "object",
+      "defaultValue": {
+        "name": "",
+        "id": ""
+      },
       "metadata": {
         "description": "Name of the PublicIPAddress resource in Azure when using TURN server with TLS"
       }
@@ -352,7 +354,7 @@
       }
     },
     "adminSshKey": {
-      "type": "securestring",
+      "type": "secureObject",
       "metadata": {
         "description": "SSH Key for the Virtual Machine."
       }
@@ -426,7 +428,7 @@
           "publicKeys": [
             {
               "path": "[format('/home/{0}/.ssh/authorized_keys', parameters('adminUsername'))]",
-              "keyData": "[parameters('adminSshKey')]"
+              "keyData": "[parameters('adminSshKey').sshPublicKey]"
             }
           ]
         }
@@ -447,7 +449,7 @@
           "publicKeys": [
             {
               "path": "[format('/home/{0}/.ssh/authorized_keys', parameters('adminUsername'))]",
-              "keyData": "[parameters('adminSshKey')]"
+              "keyData": "[parameters('adminSshKey').sshPublicKey]"
             }
           ]
         }
@@ -598,11 +600,15 @@
     "userDataMediaNodeTemplate": "#!/bin/bash -x\nset -eu -o pipefail\n\n# Introduce the scripts in the instance\n# install.sh\necho ${base64install} | base64 -d > /usr/local/bin/install.sh\nchmod +x /usr/local/bin/install.sh\n\n# stop_media_nodes.sh\necho ${base64stop} | base64 -d > /usr/local/bin/stop_media_node.sh\nchmod +x /usr/local/bin/stop_media_node.sh\n\napt-get update && apt-get install -y \napt-get install -y jq\n\n# Install azure cli\ncurl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash\n\naz login --identity\n\n# Protect from scale in actions\nRESOURCE_GROUP_NAME=${resourceGroupName}\nVM_SCALE_SET_NAME=${vmScaleSetName}\nBEFORE_INSTANCE_ID=$(curl -H Metadata:true --noproxy \"*\" \"http://169.254.169.254/metadata/instance?api-version=2021-02-01\" | jq -r '.compute.resourceId')\nINSTANCE_ID=$(echo $BEFORE_INSTANCE_ID | awk -F'/' '{print $NF}')\naz vmss update --resource-group $RESOURCE_GROUP_NAME --name $VM_SCALE_SET_NAME --instance-id $INSTANCE_ID --protect-from-scale-in true\n\nexport HOME=\"/root\"\n\n# Install OpenVidu\n/usr/local/bin/install.sh || { echo \"[OpenVidu] error installing OpenVidu\"; exit 1; }\n\n# Start OpenVidu\nsystemctl start openvidu || { echo \"[OpenVidu] error starting OpenVidu\"; exit 1; }\n",
     "stop_media_nodesScriptMedia": "[reduce(items(variables('stopMediaNodeParams')), createObject('value', variables('stop_media_nodesScriptMediaTemplate')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value]",
     "base64stopMediaNode": "[base64(variables('stop_media_nodesScriptMedia'))]",
-    "isEmptyIp": "[equals(parameters('publicIpAddressResourceName'), '')]",
-    "turnIsEmptyIp": "[equals(parameters('turnPublicIpAddressResourceName'), '')]",
+    "isEmptyIp": "[equals(parameters('publicIpAddressObject').newOrExistingOrNone, '')]",
+    "turnIsEmptyIp": "[equals(parameters('turnPublicIpAddressObject').newOrExistingOrNone, '')]",
     "lbName": "[format('{0}-loadBalancer', parameters('stackName'))]",
     "lbFrontEndName": "LoadBalancerFrontEnd",
     "lbBackendPoolNameMasterNode": "LoadBalancerBackEndMasterNode",
+    "ipExists": "[equals(parameters('publicIpAddressObject').newOrExistingOrNone, 'existing')]",
+    "ipNew": "[equals(parameters('publicIpAddressObject').newOrExistingOrNone, 'new')]",
+    "ipTURNExists": "[equals(parameters('publicIpAddressObject').newOrExistingOrNone, 'existing')]",
+    "ipTURNNew": "[equals(parameters('publicIpAddressObject').newOrExistingOrNone, 'new')]",
     "tlbName": "[format('{0}-loadBalancer', parameters('stackName'))]",
     "tlbFrontEndName": "LoadBalancerFrontEnd",
     "networkSettings": {
@@ -746,7 +752,6 @@
         "osProfile": {
           "computerName": "[format('{0}-VM-MasterNode1', parameters('stackName'))]",
           "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminSshKey')]",
           "linuxConfiguration": "[variables('masterNodeVMSettings').linuxConfiguration]"
         },
         "userData": "[base64(variables('userDataMasterNode1'))]"
@@ -787,7 +792,6 @@
         "osProfile": {
           "computerName": "[format('{0}-VM-MasterNode2', parameters('stackName'))]",
           "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminSshKey')]",
           "linuxConfiguration": "[variables('masterNodeVMSettings').linuxConfiguration]"
         },
         "userData": "[base64(variables('userDataMasterNode2'))]"
@@ -829,7 +833,6 @@
         "osProfile": {
           "computerName": "[format('{0}-VM-MasterNode3', parameters('stackName'))]",
           "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminSshKey')]",
           "linuxConfiguration": "[variables('masterNodeVMSettings').linuxConfiguration]"
         },
         "userData": "[base64(variables('userDataMasterNode3'))]"
@@ -871,7 +874,6 @@
         "osProfile": {
           "computerName": "[format('{0}-VM-MasterNode4', parameters('stackName'))]",
           "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminSshKey')]",
           "linuxConfiguration": "[variables('masterNodeVMSettings').linuxConfiguration]"
         },
         "userData": "[base64(reduce(items(createObject('base64install', variables('base64installMaster4'), 'base64after_install', variables('base64after_installMaster'), 'base64update_config_from_secret', variables('base64update_config_from_secretMaster'), 'base64update_secret_from_config', variables('base64update_secret_from_configMaster'), 'base64get_value_from_config', variables('base64get_value_from_configMaster'), 'base64store_secret', variables('base64store_secretMaster'), 'base64check_app_ready', variables('base64check_app_readyMaster'), 'base64restart', variables('base64restartMaster'), 'keyVaultName', variables('keyVaultName'), 'masterNodeNum', '4', 'storageAccountName', if(variables('isEmptyStorageAccountName'), uniqueString(resourceGroup().id), parameters('storageAccountName')), 'base64config_blobStorage', base64(reduce(items(createObject('storageAccountName', if(variables('isEmptyStorageAccountName'), uniqueString(resourceGroup().id), parameters('storageAccountName')), 'storageAccountKey', listKeys(resourceId('Microsoft.Storage/storageAccounts', uniqueString(resourceGroup().id)), '2021-04-01').keys[0].value, 'storageAccountContainerName', if(variables('isEmptyContainerName'), 'openvidu-appdata', format('{0}', parameters('containerName'))))), createObject('value', variables('config_blobStorageTemplate')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value))), createObject('value', variables('userDataTemplateMasterNode')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value)]"
@@ -920,7 +922,6 @@
           "osProfile": {
             "computerNamePrefix": "[variables('mediaNodeVMSettings').vmName]",
             "adminUsername": "[parameters('adminUsername')]",
-            "adminPassword": "[parameters('adminSshKey')]",
             "linuxConfiguration": "[variables('mediaNodeVMSettings').linuxConfiguration]"
           },
           "networkProfile": {
@@ -1175,7 +1176,7 @@
             "name": "[variables('lbFrontEndName')]",
             "properties": {
               "publicIPAddress": {
-                "id": "[if(variables('isEmptyIp'), resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIPAddressLoadBalancer', parameters('stackName'))), resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressResourceName')))]"
+                "id": "[if(variables('isEmptyIp'), resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIPAddressLoadBalancer', parameters('stackName'))), if(variables('ipNew'), resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressObject').name), resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressObject').name)))]"
               }
             }
           }
@@ -1295,7 +1296,7 @@
               "privateIPAllocationMethod": "Dynamic",
               "privateIPAddressVersion": "IPv4",
               "publicIPAddress": {
-                "id": "[if(variables('turnIsEmptyIp'), resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIPAddressLoadBalancer', parameters('stackName'))), resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressResourceName')))]"
+                "id": "[if(variables('turnIsEmptyIp'), resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIPAddressTurnTLSLoadBalancer', parameters('stackName'))), if(variables('ipTURNNew'), resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressObject').name), resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressObject').name)))]"
               }
             }
           }
@@ -1343,7 +1344,7 @@
         ]
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIPAddressLoadBalancer', parameters('stackName')))]"
+        "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIPAddressTurnTLSLoadBalancer', parameters('stackName')))]"
       ]
     },
     {
