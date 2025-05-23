@@ -265,6 +265,7 @@ describe('Testing API Directives', () => {
 
 		// Checking if video is displayed
 		await utils.checkVideoElementIsPresent();
+		console.log('data:image/png;base64,' + await browser.takeScreenshot());
 		expect(await utils.getNumberOfElements('video')).toEqual(1);
 
 		expect(await utils.getNumberOfElements('audio')).toEqual(0);
