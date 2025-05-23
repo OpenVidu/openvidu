@@ -66,8 +66,8 @@ jobs:
         run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Setup OpenVidu Call Backend
-        uses: ./.github/actions/setup-openvidu-call-backend
+      - name: Start OpenVidu Call backend
+        uses: OpenVidu/actions/start-openvidu-call@main
       - name: Install dependencies
         run: |
           cd openvidu-components-angular
@@ -109,8 +109,8 @@ jobs:
         run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Setup OpenVidu Call Backend
-        uses: ./.github/actions/setup-openvidu-call-backend
+      - name: Start OpenVidu Call backend
+        uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
         uses: ./.github/actions/build-and-serve-components-testapp
       - name: Run nested structural directives tests
@@ -142,8 +142,8 @@ jobs:
         run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Setup OpenVidu Call Backend
-        uses: ./.github/actions/setup-openvidu-call-backend
+      - name: Start OpenVidu Call backend
+        uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
         uses: ./.github/actions/build-and-serve-components-testapp
       - name: Run nested attribute directives tests
@@ -175,8 +175,8 @@ jobs:
         run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Setup OpenVidu Call Backend
-        uses: ./.github/actions/setup-openvidu-call-backend
+      - name: Start OpenVidu Call backend
+        uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
         uses: ./.github/actions/build-and-serve-components-testapp
       - name: Run Tests
@@ -208,8 +208,8 @@ jobs:
         run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Setup OpenVidu Call Backend
-        uses: ./.github/actions/setup-openvidu-call-backend
+      - name: Start OpenVidu Call backend
+        uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
         uses: ./.github/actions/build-and-serve-components-testapp
       - name: Run Tests
@@ -241,8 +241,8 @@ jobs:
         run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Setup OpenVidu Call Backend
-        uses: ./.github/actions/setup-openvidu-call-backend
+      - name: Start OpenVidu Call backend
+        uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
         uses: ./.github/actions/build-and-serve-components-testapp
       - name: Run Tests
@@ -274,8 +274,8 @@ jobs:
         run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Setup OpenVidu Call Backend
-        uses: ./.github/actions/setup-openvidu-call-backend
+      - name: Start OpenVidu Call backend
+        uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
         uses: ./.github/actions/build-and-serve-components-testapp
       - name: Run Tests
@@ -307,8 +307,8 @@ jobs:
         run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Setup OpenVidu Call Backend
-        uses: ./.github/actions/setup-openvidu-call-backend
+      - name: Start OpenVidu Call backend
+        uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
         uses: ./.github/actions/build-and-serve-components-testapp
       - name: Run Tests
@@ -340,8 +340,8 @@ jobs:
         run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Setup OpenVidu Call Backend
-        uses: ./.github/actions/setup-openvidu-call-backend
+      - name: Start OpenVidu Call backend
+        uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
         uses: ./.github/actions/build-and-serve-components-testapp
       - name: Run Tests
@@ -373,8 +373,8 @@ jobs:
         run: docker run --network=host -d -v $(pwd)/openvidu-components-angular/e2e/assets:/e2e-assets selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Setup OpenVidu Call Backend
-        uses: ./.github/actions/setup-openvidu-call-backend
+      - name: Start OpenVidu Call backend
+        uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
         uses: ./.github/actions/build-and-serve-components-testapp
       - name: Run Tests
@@ -406,8 +406,8 @@ jobs:
         run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Setup OpenVidu Call Backend
-        uses: ./.github/actions/setup-openvidu-call-backend
+      - name: Start OpenVidu Call backend
+        uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
         uses: ./.github/actions/build-and-serve-components-testapp
       - name: Run Webcomponent E2E
