@@ -73,7 +73,7 @@ jobs:
           cd openvidu-components-angular
           npm install
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp
+        uses: OpenVidu/actions/start-openvidu-components-testapp@main
       - name: Run nested components E2E event tests
         env:
           LAUNCH_MODE: CI
@@ -106,7 +106,7 @@ jobs:
       - name: Start OpenVidu Call backend
         uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp
+        uses: OpenVidu/actions/start-openvidu-components-testapp@main
       - name: Run nested structural directives tests
         env:
           LAUNCH_MODE: CI
@@ -139,7 +139,7 @@ jobs:
       - name: Start OpenVidu Call backend
         uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp
+        uses: OpenVidu/actions/start-openvidu-components-testapp@main
       - name: Run nested attribute directives tests
         env:
           LAUNCH_MODE: CI
@@ -172,7 +172,7 @@ jobs:
       - name: Start OpenVidu Call backend
         uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp
+        uses: OpenVidu/actions/start-openvidu-components-testapp@main
       - name: Run Tests
         env:
           LAUNCH_MODE: CI
@@ -205,7 +205,7 @@ jobs:
       - name: Start OpenVidu Call backend
         uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp
+        uses: OpenVidu/actions/start-openvidu-components-testapp@main
       - name: Run Tests
         env:
           LAUNCH_MODE: CI
@@ -238,7 +238,7 @@ jobs:
       - name: Start OpenVidu Call backend
         uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp
+        uses: OpenVidu/actions/start-openvidu-components-testapp@main
       - name: Run Tests
         env:
           LAUNCH_MODE: CI
@@ -271,7 +271,7 @@ jobs:
       - name: Start OpenVidu Call backend
         uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp
+        uses: OpenVidu/actions/start-openvidu-components-testapp@main
       - name: Run Tests
         env:
           LAUNCH_MODE: CI
@@ -304,7 +304,7 @@ jobs:
       - name: Start OpenVidu Call backend
         uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp
+        uses: OpenVidu/actions/start-openvidu-components-testapp@main
       - name: Run Tests
         env:
           LAUNCH_MODE: CI
@@ -337,7 +337,7 @@ jobs:
       - name: Start OpenVidu Call backend
         uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp
+        uses: OpenVidu/actions/start-openvidu-components-testapp@main
       - name: Run Tests
         env:
           LAUNCH_MODE: CI
@@ -370,7 +370,7 @@ jobs:
       - name: Start OpenVidu Call backend
         uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp
+        uses: OpenVidu/actions/start-openvidu-components-testapp@main
       - name: Run Tests
         env:
           LAUNCH_MODE: CI
@@ -403,7 +403,7 @@ jobs:
       - name: Start OpenVidu Call backend
         uses: OpenVidu/actions/start-openvidu-call@main
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp
+        uses: OpenVidu/actions/start-openvidu-components-testapp@main
       - name: Run Webcomponent E2E
         env:
           LAUNCH_MODE: CI
