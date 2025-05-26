@@ -202,7 +202,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#token-error')).toBeTrue();
 	});
 
-	fit('should show the token error WITHOUT prejoin page', async () => {
+	it('should show the token error WITHOUT prejoin page', async () => {
 		const fixedUrl = `${url}&roomName=TOKEN_ERROR&prejoin=false&participantName=PNAME`;
 		await browser.get(`${fixedUrl}`);
 
@@ -222,7 +222,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#openvidu-dialog')).toBeTrue();
 	});
 
-	fit('should run the app with VIDEO DISABLED in prejoin page', async () => {
+	it('should run the app with VIDEO DISABLED in prejoin page', async () => {
 		await browser.get(`${url}&prejoin=true&videoEnabled=false`);
 
 		await utils.checkPrejoinIsPresent();
@@ -246,7 +246,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.getNumberOfElements('video')).toEqual(0);
 	});
 
-	fit('should run the app with VIDEO DISABLED and WITHOUT PREJOIN page', async () => {
+	it('should run the app with VIDEO DISABLED and WITHOUT PREJOIN page', async () => {
 		await browser.get(`${url}&prejoin=false&videoEnabled=false`);
 
 		await utils.checkSessionIsPresent();
@@ -262,7 +262,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#videocam_off')).toBeTrue();
 	});
 
-	fit('should run the app with AUDIO DISABLED in prejoin page', async () => {
+	it('should run the app with AUDIO DISABLED in prejoin page', async () => {
 		await browser.get(`${url}&audioEnabled=false`);
 
 		await utils.checkPrejoinIsPresent();
@@ -286,7 +286,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#mic_off')).toBeTrue();
 	});
 
-	fit('should run the app with AUDIO DISABLED and WITHOUT PREJOIN page', async () => {
+	it('should run the app with AUDIO DISABLED and WITHOUT PREJOIN page', async () => {
 		await browser.get(`${url}&prejoin=false&audioEnabled=false`);
 
 		await browser.sleep(1000);
