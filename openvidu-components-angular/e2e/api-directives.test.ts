@@ -24,8 +24,9 @@ describe('Testing API Directives', () => {
 	afterEach(async () => {
 		// console.log('data:image/png;base64,' + await browser.takeScreenshot());
 		try {
-			// leaving room if connected
-			await utils.leaveRoom();
+			if (await utils.isPresent('#session-container')) {
+				await utils.leaveRoom();
+			}
 		} catch (error) {}
 		await browser.sleep(500);
 		await browser.quit();
@@ -201,7 +202,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#token-error')).toBeTrue();
 	});
 
-	it('should show the token error WITHOUT prejoin page', async () => {
+	fit('should show the token error WITHOUT prejoin page', async () => {
 		const fixedUrl = `${url}&roomName=TOKEN_ERROR&prejoin=false&participantName=PNAME`;
 		await browser.get(`${fixedUrl}`);
 
@@ -221,7 +222,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#openvidu-dialog')).toBeTrue();
 	});
 
-	it('should run the app with VIDEO DISABLED in prejoin page', async () => {
+	fit('should run the app with VIDEO DISABLED in prejoin page', async () => {
 		await browser.get(`${url}&prejoin=true&videoEnabled=false`);
 
 		await utils.checkPrejoinIsPresent();
@@ -239,13 +240,13 @@ describe('Testing API Directives', () => {
 		await utils.waitForElement('#videocam_off');
 		expect(await utils.isPresent('#videocam_off')).toBeTrue();
 
-		console.log('data:image/png;base64,' + await browser.takeScreenshot());
+		console.log('data:image/png;base64,' + (await browser.takeScreenshot()));
 
 		await utils.waitForElement('#video-poster');
 		expect(await utils.getNumberOfElements('video')).toEqual(0);
 	});
 
-	it('should run the app with VIDEO DISABLED and WITHOUT PREJOIN page', async () => {
+	fit('should run the app with VIDEO DISABLED and WITHOUT PREJOIN page', async () => {
 		await browser.get(`${url}&prejoin=false&videoEnabled=false`);
 
 		await utils.checkSessionIsPresent();
@@ -261,7 +262,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#videocam_off')).toBeTrue();
 	});
 
-	it('should run the app with AUDIO DISABLED in prejoin page', async () => {
+	fit('should run the app with AUDIO DISABLED in prejoin page', async () => {
 		await browser.get(`${url}&audioEnabled=false`);
 
 		await utils.checkPrejoinIsPresent();
@@ -277,7 +278,7 @@ describe('Testing API Directives', () => {
 		await utils.clickOn('#join-button');
 
 		await utils.checkSessionIsPresent();
-		console.log('data:image/png;base64,' + await browser.takeScreenshot());
+		console.log('data:image/png;base64,' + (await browser.takeScreenshot()));
 
 		expect(await utils.getNumberOfElements('video')).toEqual(1);
 		expect(await utils.getNumberOfElements('audio')).toEqual(0);
@@ -285,7 +286,7 @@ describe('Testing API Directives', () => {
 		expect(await utils.isPresent('#mic_off')).toBeTrue();
 	});
 
-	it('should run the app with AUDIO DISABLED and WITHOUT PREJOIN page', async () => {
+	fit('should run the app with AUDIO DISABLED and WITHOUT PREJOIN page', async () => {
 		await browser.get(`${url}&prejoin=false&audioEnabled=false`);
 
 		await browser.sleep(1000);

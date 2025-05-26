@@ -137,8 +137,47 @@ export class OpenViduComponentsPO {
 	}
 
 	async leaveRoom() {
-		await this.clickOn('body');
-		await this.clickOn('#leave-btn');
+		try {
+			// Close any open panels or menus clicking on the body
+			await this.clickOn('body');
+			await this.browser.sleep(300);
+
+			// Verify that the leave button is present
+			await this.waitForElement('#leave-btn');
+
+			// Click on the leave button
+			await this.clickOn('#leave-btn');
+
+			// Verify that the session container is no longer present
+			await this.browser.wait(
+				async () => {
+					return !(await this.isPresent('#session-container'));
+				},
+				this.TIMEOUT,
+				'Session container should disappear after leaving room'
+			);
+
+			// Wait for the prejoin container to be present again
+			await this.browser.sleep(500);
+
+			// Verify that there are no video elements left in the DOM
+			const videoCount = await this.getNumberOfElements('video');
+			if (videoCount > 0) {
+				console.warn(`Warning: ${videoCount} video elements still present after leaving room`);
+			}
+		} catch (error) {
+			console.error('Error during leaveRoom:', error);
+
+			// Try to reload the page as a fallback
+			try {
+				await this.browser.executeScript('window.location.reload()');
+				await this.browser.sleep(2000);
+			} catch (reloadError) {
+				console.error('Failed to reload page as fallback:', reloadError);
+			}
+
+			throw error;
+		}
 	}
 
 	async togglePanel(panelName: string) {
