@@ -2,7 +2,7 @@ import { Builder, WebDriver } from 'selenium-webdriver';
 import { TestAppConfig } from './selenium.conf';
 import { OpenViduComponentsPO } from './utils.po.test';
 
-const url = TestAppConfig.appUrl;
+let url = '';
 
 describe('Testing API Directives', () => {
 	let browser: WebDriver;
@@ -19,6 +19,7 @@ describe('Testing API Directives', () => {
 	beforeEach(async () => {
 		browser = await createChromeBrowser();
 		utils = new OpenViduComponentsPO(browser);
+		url = `${TestAppConfig.appUrl}&roomName=API_DIRECTIVES_${Math.floor(Math.random() * 1000)}`;
 	});
 
 	afterEach(async () => {
@@ -173,7 +174,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should show the token error WITH prejoin page', async () => {
-		const fixedUrl = `${url}&roomName=TEST_TOKEN&participantName=PNAME`;
+		const fixedUrl = `${TestAppConfig.appUrl}&roomName=TEST_TOKEN&participantName=PNAME`;
 		await browser.get(`${fixedUrl}`);
 
 		// Checking if prejoin page exist
@@ -203,7 +204,7 @@ describe('Testing API Directives', () => {
 	});
 
 	it('should show the token error WITHOUT prejoin page', async () => {
-		const fixedUrl = `${url}&roomName=TOKEN_ERROR&prejoin=false&participantName=PNAME`;
+		const fixedUrl = `${TestAppConfig.appUrl}&roomName=TOKEN_ERROR&prejoin=false&participantName=PNAME`;
 		await browser.get(`${fixedUrl}`);
 
 		// Checking if session container is present
@@ -541,7 +542,7 @@ describe('Testing API Directives', () => {
 
 	it('should HIDE the MUTE button in participants panel', async () => {
 		const roomName = 'e2etest';
-		const fixedUrl = `${url}&prejoin=false&participantMuteBtn=false&roomName=${roomName}`;
+		const fixedUrl = `${TestAppConfig.appUrl}&prejoin=false&participantMuteBtn=false&roomName=${roomName}`;
 		await browser.get(fixedUrl);
 
 		await utils.checkSessionIsPresent();

@@ -1,5 +1,4 @@
 import { By, until, WebDriver, WebElement } from 'selenium-webdriver';
-import { TestAppConfig } from './selenium.conf';
 
 export class OpenViduComponentsPO {
 	private TIMEOUT = 10 * 1000;
@@ -167,7 +166,9 @@ export class OpenViduComponentsPO {
 				console.warn(`Warning: ${videoCount} video elements still present after leaving room`);
 			}
 		} catch (error) {
-			this.browser.get(TestAppConfig.appUrl);
+			console.error('Error during leaveRoom:', error);
+
+			throw error;
 		}
 	}
 
