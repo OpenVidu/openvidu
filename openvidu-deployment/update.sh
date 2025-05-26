@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 export INSTALL_PREFIX="${INSTALL_PREFIX:-/opt/openvidu}"
-export OPENVIDU_VERSION="${OPENVIDU_VERSION:-3.2.0-dev1}"
+export OPENVIDU_VERSION="${OPENVIDU_VERSION:-main}"
 export REGISTRY="${REGISTRY:-docker.io}"
 export UPDATER_IMAGE="${UPDATER_IMAGE:-${REGISTRY}/openvidu/openvidu-updater:${OPENVIDU_VERSION}}"
 
