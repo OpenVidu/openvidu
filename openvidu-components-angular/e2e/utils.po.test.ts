@@ -1,4 +1,5 @@
 import { By, until, WebDriver, WebElement } from 'selenium-webdriver';
+import { TestAppConfig } from './selenium.conf';
 
 export class OpenViduComponentsPO {
 	private TIMEOUT = 10 * 1000;
@@ -166,17 +167,7 @@ export class OpenViduComponentsPO {
 				console.warn(`Warning: ${videoCount} video elements still present after leaving room`);
 			}
 		} catch (error) {
-			console.error('Error during leaveRoom:', error);
-
-			// Try to reload the page as a fallback
-			try {
-				await this.browser.executeScript('window.location.reload()');
-				await this.browser.sleep(2000);
-			} catch (reloadError) {
-				console.error('Failed to reload page as fallback:', reloadError);
-			}
-
-			throw error;
+			this.browser.get(TestAppConfig.appUrl);
 		}
 	}
 
