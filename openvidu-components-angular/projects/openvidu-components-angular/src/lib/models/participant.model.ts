@@ -169,8 +169,8 @@ export class ParticipantModel {
 	 * @returns string
 	 */
 	get name(): string | undefined {
-		// return this.participant.name;
-		return this.identity;
+		return this.participant.name;
+		// return this.identity;
 	}
 
 	/**
