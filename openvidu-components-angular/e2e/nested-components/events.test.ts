@@ -24,6 +24,9 @@ describe('OpenVidu Components EVENTS', () => {
 	});
 
 	afterEach(async () => {
+		try {
+			await utils.leaveRoom();
+		} catch (error) {}
 		await browser.quit();
 	});
 

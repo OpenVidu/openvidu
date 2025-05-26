@@ -25,6 +25,9 @@ describe('OpenVidu Components ATTRIBUTE toolbar directives', () => {
 
 	afterEach(async () => {
 		// console.log('data:image/png;base64,' + await browser.takeScreenshot());
+		try {
+			await utils.leaveRoom();
+		} catch (error) {}
 		await browser.quit();
 	});
 
@@ -193,6 +196,9 @@ describe('OpenVidu Components ATTRIBUTE stream directives', () => {
 
 	afterEach(async () => {
 		// console.log('data:image/png;base64,' + await browser.takeScreenshot());
+		try {
+			await utils.leaveRoom();
+		} catch (error) {}
 		await browser.quit();
 	});
 
@@ -261,6 +267,9 @@ describe('OpenVidu Components ATTRIBUTE participant panels directives', () => {
 
 	afterEach(async () => {
 		// console.log('data:image/png;base64,' + await browser.takeScreenshot());
+		try {
+			await utils.leaveRoom();
+		} catch (error) {}
 		await browser.quit();
 	});
 
@@ -321,6 +330,9 @@ describe('OpenVidu Components ATTRIBUTE activity panel directives', () => {
 
 	afterEach(async () => {
 		// console.log('data:image/png;base64,' + await browser.takeScreenshot());
+		try {
+			await utils.leaveRoom();
+		} catch (error) {}
 		await browser.quit();
 	});
 

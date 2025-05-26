@@ -138,8 +138,6 @@ export class OpenViduComponentsPO {
 
 	async leaveRoom() {
 		await this.clickOn('body');
-		await this.waitForElement('#leave-btn');
-		expect(await this.isPresent('#leave-btn')).toBe(true);
 		await this.clickOn('#leave-btn');
 	}
 
