@@ -1421,11 +1421,15 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 }
 
 @description('Automation Account Name to create a runbook inside it for scale in')
-param automationAccountName string
+param automationAccountName string = ''
+
+var isEmptyAutomationAccountName = automationAccountName == ''
 
 module webhookModule '../../shared/webhookdeployment.json' = {
   params: {
-    automationAccountName: automationAccountName
+    automationAccountName: isEmptyAutomationAccountName
+      ? uniqueString(resourceGroup().id, openviduMasterNode.id)
+      : automationAccountName
     runbookName: 'scaleInRunbook'
     webhookName: 'webhookForScaleIn'
     WebhookExpiryTime: '2035-03-30T00:00:00Z'

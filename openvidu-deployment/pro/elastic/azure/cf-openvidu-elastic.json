@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.35.1.17967",
-      "templateHash": "13616087415887006037"
+      "templateHash": "10496626830363677426"
     }
   },
   "parameters": {
@@ -377,6 +377,7 @@
     },
     "automationAccountName": {
       "type": "string",
+      "defaultValue": "",
       "metadata": {
         "description": "Automation Account Name to create a runbook inside it for scale in"
       }
@@ -475,6 +476,7 @@
     "userDataMediaNodeTemplate": "#!/bin/bash -x\nset -eu -o pipefail\n\n# Introduce the scripts in the instance\n# install.sh\necho ${base64install} | base64 -d > /usr/local/bin/install.sh\nchmod +x /usr/local/bin/install.sh\n\n# stop_media_nodes.sh\necho ${base64stop} | base64 -d > /usr/local/bin/stop_media_node.sh\nchmod +x /usr/local/bin/stop_media_node.sh\n\napt-get update && apt-get install -y\napt-get install -y jq\n\n# Install azure cli\ncurl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash\n\naz login --identity\n\n# Protect from scale in actions\nRESOURCE_GROUP_NAME=${resourceGroupName}\nVM_SCALE_SET_NAME=${vmScaleSetName}\nBEFORE_INSTANCE_ID=$(curl -H Metadata:true --noproxy \"*\" \"http://169.254.169.254/metadata/instance?api-version=2021-02-01\" | jq -r '.compute.resourceId')\nINSTANCE_ID=$(echo $BEFORE_INSTANCE_ID | awk -F'/' '{print $NF}')\naz vmss update --resource-group $RESOURCE_GROUP_NAME --name $VM_SCALE_SET_NAME --instance-id $INSTANCE_ID --protect-from-scale-in true\n\nexport HOME=\"/root\"\n\n# Install OpenVidu\n/usr/local/bin/install.sh || { echo \"[OpenVidu] error installing OpenVidu\"; exit 1; }\n\n# Start OpenVidu\nsystemctl start openvidu || { echo \"[OpenVidu] error starting OpenVidu\"; exit 1; }\n#/usr/local/bin/set_as_unhealthy.sh\n",
     "stop_media_nodesScriptMedia": "[reduce(items(variables('stopMediaNodeParams')), createObject('value', variables('stop_media_nodesScriptMediaTemplate')), lambda('curr', 'next', createObject('value', replace(lambdaVariables('curr').value, format('${{{0}}}', lambdaVariables('next').key), lambdaVariables('next').value)))).value]",
     "base64stopMediaNode": "[base64(variables('stop_media_nodesScriptMedia'))]",
+    "isEmptyAutomationAccountName": "[equals(parameters('automationAccountName'), '')]",
     "ipExists": "[equals(parameters('publicIpAddressObject').newOrExistingOrNone, 'existing')]",
     "ipNew": "[equals(parameters('publicIpAddressObject').newOrExistingOrNone, 'new')]",
     "isEmptyStorageAccountName": "[equals(parameters('storageAccountName'), '')]",
@@ -1454,9 +1456,7 @@
         },
         "mode": "Incremental",
         "parameters": {
-          "automationAccountName": {
-            "value": "[parameters('automationAccountName')]"
-          },
+          "automationAccountName": "[if(variables('isEmptyAutomationAccountName'), createObject('value', uniqueString(resourceGroup().id, resourceId('Microsoft.Compute/virtualMachines', variables('masterNodeVMSettings').vmName))), createObject('value', parameters('automationAccountName')))]",
           "runbookName": {
             "value": "scaleInRunbook"
           },
@@ -1586,7 +1586,10 @@
             }
           }
         }
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('masterNodeVMSettings').vmName)]"
+      ]
     }
   ]
 }
