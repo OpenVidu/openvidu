@@ -11,7 +11,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,9 +34,6 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.utility.DockerImageName;
-
-import com.github.dockerjava.api.command.InspectContainerResponse;
-import com.github.dockerjava.api.model.ContainerNetwork;
 
 import io.livekit.server.IngressServiceClient;
 import io.livekit.server.RoomServiceClient;
@@ -191,8 +187,8 @@ public class OpenViduTestE2e {
 				.withEnv(Map.of("MTX_LOGLEVEL", "info", "MTX_PROTOCOLS", "tcp", "MTX_RTSPADDRESS", ":" + RTSP_SRT_PORT,
 						"MTX_HLS", "no", "MTX_RTSP", "yes", "MTX_WEBRTC", "yes", "MTX_SRT", "no", "MTX_RTMP", "no",
 						"MTX_API", "no"))
-				.withExposedPorts(8889, RTSP_SRT_PORT).waitingFor(Wait.forHttp("/").forPort(8889).forStatusCode(404));
-		rtspServerContainer.setPortBindings(Arrays.asList(RTSP_SRT_PORT + ":" + RTSP_SRT_PORT));
+				.withNetworkMode("host")
+				.waitingFor(Wait.forLogMessage("^.*\\[RTSP\\] listener opened on :" + RTSP_SRT_PORT + ".*$", 1));
 
 		rtspServerContainer.start();
 		containers.add(rtspServerContainer);
@@ -200,7 +196,7 @@ public class OpenViduTestE2e {
 		final String RTSP_PATH = "live";
 		String fileUrl = getFileUrl(videoCodec != null, audioCodec != null, true);
 		String codecs = getCodecs(videoCodec, audioCodec);
-		String rtspServerIp = rtspServerContainer.getContainerInfo().getNetworkSettings().getIpAddress();
+		String rtspServerIp = "host.docker.internal";
 
 		String ffmpegCommand = "ffmpeg -i " + fileUrl + " " + codecs + " "
 				+ " -async 50 -strict -2 -f rtsp -rtsp_transport tcp rtsp://" + rtspServerIp + ":" + RTSP_SRT_PORT + "/"
@@ -212,6 +208,7 @@ public class OpenViduTestE2e {
 		GenericContainer<?> ffmpegPublishContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
 				.withCreateContainerCmdModifier(cmd -> cmd.withName("ffmpeg-" + Math.random() * 100000))
 				.withEnv("MTX_PATHS_RTSP_RUNONINIT", ffmpegCommand)
+				.withExtraHost("host.docker.internal", "host-gateway")
 				.waitingFor(Wait.forLogMessage(".*Press \\[q\\] to stop.*", 1));
 
 		ffmpegPublishContainer.start();
@@ -229,13 +226,7 @@ public class OpenViduTestE2e {
 			waitUntilLog(rtspServerContainer, regex, 15);
 		}
 
-		String containerIp = "host.docker.internal";
-		InspectContainerResponse containerInfo = rtspServerContainer.getCurrentContainerInfo();
-		if (containerInfo != null) {
-			ContainerNetwork network = containerInfo.getNetworkSettings().getNetworks().values().iterator().next();
-			containerIp = network.getIpAddress();
-		}
-		return "rtsp://" + containerIp + ":" + RTSP_SRT_PORT + "/" + RTSP_PATH;
+		return "rtsp://host.docker.internal:" + RTSP_SRT_PORT + "/" + RTSP_PATH;
 	}
 
 	/**
