@@ -494,7 +494,7 @@ DEFAULT_APP_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate DEFAULT-AP
 LIVEKIT_API_KEY="$(/usr/local/bin/store_secret.sh generate LIVEKIT-API-KEY "API" 12)"
 LIVEKIT_API_SECRET="$(/usr/local/bin/store_secret.sh generate LIVEKIT-API-SECRET)"
 OPENVIDU_VERSION="$(/usr/local/bin/store_secret.sh save OPENVIDU-VERSION "${OPENVIDU_VERSION}")"
-ENABLED_MODULES="$(/usr/local/bin/store_secret.sh save ENABLED-MODULES "observability,app")"
+ENABLED_MODULES="$(/usr/local/bin/store_secret.sh save ENABLED-MODULES "observability,app,v2compatibility")"
 ALL_SECRETS_GENERATED="$(/usr/local/bin/store_secret.sh save ALL-SECRETS-GENERATED "true")"
 
 # Base command
