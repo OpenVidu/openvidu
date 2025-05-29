@@ -1093,6 +1093,7 @@ var userDataParamsMasterNode1 = {
   base64restart: base64restartMaster
   keyVaultName: keyVaultName
   masterNodeNum: '1'
+  base64config_blobStorage: base64config_blobStorage
 }
 
 var userDataParamsMasterNode2 = {
@@ -1106,6 +1107,7 @@ var userDataParamsMasterNode2 = {
   base64restart: base64restartMaster
   keyVaultName: keyVaultName
   masterNodeNum: '2'
+  base64config_blobStorage: base64config_blobStorage
 }
 
 var userDataParamsMasterNode3 = {
@@ -1119,6 +1121,7 @@ var userDataParamsMasterNode3 = {
   base64restart: base64restartMaster
   keyVaultName: keyVaultName
   masterNodeNum: '3'
+  base64config_blobStorage: base64config_blobStorage
 }
 
 var userDataParamsMasterNode4 = {
@@ -1173,6 +1176,9 @@ chmod +x /usr/local/bin/check_app_ready.sh
 echo ${base64restart} | base64 -d > /usr/local/bin/restart.sh
 chmod +x /usr/local/bin/restart.sh
 
+echo ${base64config_blobStorage} | base64 -d > /usr/local/bin/config_blobStorage.sh
+chmod +x /usr/local/bin/config_blobStorage.sh
+
 # Install azure cli
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
@@ -1184,6 +1190,9 @@ export HOME="/root"
 
 # Install OpenVidu
 /usr/local/bin/install.sh || { echo "[OpenVidu] error installing OpenVidu"; exit 1; }
+
+#Config blob storage
+/usr/local/bin/config_blobStorage.sh || { echo "[OpenVidu] error configuring Blob Storage"; exit 1; }
 
 # Start OpenVidu
 systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
@@ -1200,11 +1209,6 @@ if [[ $MASTER_NODE_NUM -eq 4 ]]; then
   set +e
   az storage blob upload --account-name ${storageAccountName} --container-name automation-locks --name lock.txt --file /dev/null --auth-mode key
   set -e
-  
-  # Configuring blob storage
-  echo ${base64config_blobStorage} | base64 -d > /usr/local/bin/config_blobStorage.sh
-  chmod +x /usr/local/bin/config_blobStorage.sh
-  /usr/local/bin/config_blobStorage.sh || { echo "[OpenVidu] error configuring Blob Storage"; exit 1; }
 
   #Finish all the nodes
   az keyvault secret set --vault-name ${keyVaultName} --name FINISH-MASTER-NODE --value "true"
@@ -1854,7 +1858,9 @@ resource publicIP_LoadBalancer_ifNew 'Microsoft.Network/publicIPAddresses@2023-1
   name: publicIpAddressObject.name
 }
 
-resource publicIPAddressTurnTLSLoadBalancer 'Microsoft.Network/publicIPAddresses@2024-05-01' = if (turnTLSIsEnabled == true) {
+var ipTURNEmpty = turnPublicIpAddressObject.newOrExistingOrNone == 'none'
+
+resource publicIPAddressTurnTLSLoadBalancer 'Microsoft.Network/publicIPAddresses@2024-05-01' = if (ipTURNEmpty && turnTLSIsEnabled == true) {
   name: '${stackName}-publicIPAddressTurnTLSLoadBalancer'
   location: location
   sku: {
@@ -1866,16 +1872,16 @@ resource publicIPAddressTurnTLSLoadBalancer 'Microsoft.Network/publicIPAddresses
   }
 }
 
-var ipTURNExists = publicIpAddressObject.newOrExistingOrNone == 'existing'
+var ipTURNExists = turnPublicIpAddressObject.newOrExistingOrNone == 'existing'
 
 resource publicIP_TurnTLSLoadBalancer_ifExisting 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipTURNExists && turnTLSIsEnabled == true) {
-  name: publicIpAddressObject.name
+  name: turnPublicIpAddressObject.name
 }
 
-var ipTURNNew = publicIpAddressObject.newOrExistingOrNone == 'new'
+var ipTURNNew = turnPublicIpAddressObject.newOrExistingOrNone == 'new'
 
 resource publicIP_TurnTLSLoadBalancer_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipTURNNew && turnTLSIsEnabled == true) {
-  name: publicIpAddressObject.name
+  name: turnPublicIpAddressObject.name
 }
 
 resource LoadBalancer 'Microsoft.Network/loadBalancers@2024-05-01' = {
