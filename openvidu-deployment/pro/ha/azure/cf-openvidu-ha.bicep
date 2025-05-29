@@ -1726,7 +1726,7 @@ resource roleAssignmentMasterNode1 'Microsoft.Authorization/roleAssignments@2022
       'Microsoft.Authorization/roleDefinitions',
       'b24988ac-6180-42a0-ab88-20f7382dd24c'
     )
-    principalId: openviduMasterNode4.identity.principalId
+    principalId: openviduMasterNode1.identity.principalId
   }
 }
 
@@ -1738,7 +1738,7 @@ resource roleAssignmentMasterNode2 'Microsoft.Authorization/roleAssignments@2022
       'Microsoft.Authorization/roleDefinitions',
       'b24988ac-6180-42a0-ab88-20f7382dd24c'
     )
-    principalId: openviduMasterNode4.identity.principalId
+    principalId: openviduMasterNode2.identity.principalId
   }
 }
 
@@ -1750,7 +1750,7 @@ resource roleAssignmentMasterNode3 'Microsoft.Authorization/roleAssignments@2022
       'Microsoft.Authorization/roleDefinitions',
       'b24988ac-6180-42a0-ab88-20f7382dd24c'
     )
-    principalId: openviduMasterNode4.identity.principalId
+    principalId: openviduMasterNode3.identity.principalId
   }
 }
 

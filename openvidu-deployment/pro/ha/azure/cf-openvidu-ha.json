@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.35.1.17967",
-      "templateHash": "17220104896328722806"
+      "templateHash": "1564892158622430080"
     }
   },
   "parameters": {
@@ -1000,6 +1000,42 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(format('roleAssignmentForMasterNode{0}', format('{0}-VM-MasterNode1', parameters('stackName'))))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode1', parameters('stackName'))), '2023-09-01', 'full').identity.principalId]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode1', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(format('roleAssignmentForMasterNode{0}', format('{0}-VM-MasterNode2', parameters('stackName'))))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode2', parameters('stackName'))), '2023-09-01', 'full').identity.principalId]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode2', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(format('roleAssignmentForMasterNode{0}', format('{0}-VM-MasterNode3', parameters('stackName'))))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode3', parameters('stackName'))), '2023-09-01', 'full').identity.principalId]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode3', parameters('stackName')))]"
       ]
     },
     {
