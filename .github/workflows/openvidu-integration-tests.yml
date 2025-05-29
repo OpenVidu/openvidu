@@ -17,11 +17,10 @@ jobs:
       - name: Configure OpenVidu Local Deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
         with:
-          branch: development
+          ref-openvidu-local-deployment: development
           pre_startup_commands: |
             sed -i 's/interval: 10s/interval: 1s/' livekit.yaml
             sed -i '/interval: 1s/a \        fixer_interval: 10s' livekit.yaml
-            docker compose pull
       - name: Install LiveKit CLI
         run: |
           curl -sSL https://get.livekit.io/cli | bash
