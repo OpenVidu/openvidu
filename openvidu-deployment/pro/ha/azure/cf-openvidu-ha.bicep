@@ -1718,7 +1718,43 @@ resource openviduAutoScaleSettingsMediaNode 'Microsoft.Insights/autoscaleSetting
 
 /*------------------------------------------- SCALE IN ------------------------------------------*/
 
-resource roleAssignmentMasterNode 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource roleAssignmentMasterNode1 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('roleAssignmentForMasterNode${openviduMasterNode1.name}')
+  scope: resourceGroup()
+  properties: {
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'b24988ac-6180-42a0-ab88-20f7382dd24c'
+    )
+    principalId: openviduMasterNode4.identity.principalId
+  }
+}
+
+resource roleAssignmentMasterNode2 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('roleAssignmentForMasterNode${openviduMasterNode2.name}')
+  scope: resourceGroup()
+  properties: {
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'b24988ac-6180-42a0-ab88-20f7382dd24c'
+    )
+    principalId: openviduMasterNode4.identity.principalId
+  }
+}
+
+resource roleAssignmentMasterNode3 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('roleAssignmentForMasterNode${openviduMasterNode3.name}')
+  scope: resourceGroup()
+  properties: {
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'b24988ac-6180-42a0-ab88-20f7382dd24c'
+    )
+    principalId: openviduMasterNode4.identity.principalId
+  }
+}
+
+resource roleAssignmentMasterNode4 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid('roleAssignmentForMasterNode${openviduMasterNode4.name}')
   scope: resourceGroup()
   properties: {
