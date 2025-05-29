@@ -426,8 +426,8 @@
                             "toolTip": "",
                             "constraints": {
                                 "required": true,
-                                "regex": "",
-                                "validationMessage": "",
+                                "regex": "^[a-zA-Z0-9][a-zA-Z0-9\\-]{4,48}[a-zA-Z0-9]$",
+                                "validationMessage": "The account name must be 6–50 characters, start and end with a letter or number, and contain only letters, numbers, or hyphens (–).",
                                 "validations": []
                             },
                             "infoMessages": [],
