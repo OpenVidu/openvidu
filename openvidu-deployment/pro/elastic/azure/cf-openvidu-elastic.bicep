@@ -1162,9 +1162,9 @@ fi
 if [ -x "$(command -v docker)" ]; then
 
   echo "Stopping media node services and waiting for termination..."
-  docker container kill --signal=SIGINT openvidu || true
-  docker container kill --signal=SIGINT ingress || true
-  docker container kill --signal=SIGINT egress || true
+  docker container kill --signal=SIGQUIT openvidu || true
+  docker container kill --signal=SIGQUIT ingress || true
+  docker container kill --signal=SIGQUIT egress || true
 
   # Wait for running containers to not be openvidu, ingress or egress
   while [ $(docker inspect -f '{{.State.Running}}' openvidu 2>/dev/null) == "true" ] || \
