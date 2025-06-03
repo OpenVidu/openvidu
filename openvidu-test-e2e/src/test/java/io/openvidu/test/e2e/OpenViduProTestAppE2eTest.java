@@ -810,7 +810,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			}
 		}
 
-		// Generate 3 total recordings of 1 second length for the stream of the user
+		// Generate 3 total recordings of 3 seconds length for the stream of the user
 		// configured to NOT be recorded
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':true}", HttpURLConnection.HTTP_OK);
@@ -835,14 +835,14 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':true}", HttpURLConnection.HTTP_OK);
 
-		Thread.sleep(5000);
+		Thread.sleep(3000);
 
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/" + sessionName, HttpURLConnection.HTTP_OK);
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 3);
 
 		gracefullyLeaveParticipants(user, 3);
 
-		String recPath = "/opt/openvidu/recordings/" + sessionName + "/";
+		String recPath = OPENVIDU_LOCAL_RECORDING_PATH + "/" + sessionName + "/";
 		Recording recording = new OpenVidu(OpenViduTestAppE2eTest.OPENVIDU_URL, OpenViduTestAppE2eTest.OPENVIDU_SECRET)
 				.getRecording(sessionName);
 		// this.recordingUtils.checkIndividualRecording(recPath, recording, 4, "aac",
@@ -3433,7 +3433,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
 
 			// Check recording
-			String recordingsPath = "/opt/openvidu/recordings/";
+			String recordingsPath = OPENVIDU_LOCAL_RECORDING_PATH + "/";
 			File file1 = new File(recordingsPath + sessionName + "/" + sessionName + ".mp4");
 			File file2 = new File(recordingsPath + sessionName + "/" + sessionName + ".jpg");
 			Assertions.assertTrue(
@@ -3469,7 +3469,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	private void checkRtmpRecordingIsFine(long secondsTimeout, Function<Map<String, Long>, Boolean> colorCheckFunction)
 			throws InterruptedException {
-		final String broadcastRecordingPath = "/opt/openvidu/recordings";
+		final String broadcastRecordingPath = OPENVIDU_LOCAL_RECORDING_PATH;
 		final String cleanBroadcastPath = "rm -rf " + broadcastRecordingPath + "/tmp";
 		try {
 			final long startTime = System.currentTimeMillis();

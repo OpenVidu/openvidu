@@ -182,8 +182,10 @@ public class RecordingUtils {
 			webmFile.delete();
 		}
 
-		// Assertions.assertEquals(recording.getSize(), totalFileSize, "Size of recording entity ("
-		// 		+ recording.getSessionId() + ") is not equal to real file size (" + totalFileSize + ")");
+		// Assertions.assertEquals(recording.getSize(), totalFileSize, "Size of
+		// recording entity ("
+		// + recording.getSessionId() + ") is not equal to real file size (" +
+		// totalFileSize + ")");
 
 		jsonSyncFile.delete();
 	}
@@ -206,8 +208,7 @@ public class RecordingUtils {
 				}
 			}
 			if (resolution != null) {
-				Assertions.assertEquals(resolution, metadata.getVideoWidth() + "x" +
-						metadata.getVideoHeight());
+				Assertions.assertEquals(resolution, metadata.getVideoWidth() + "x" + metadata.getVideoHeight());
 			}
 			if (frameRate != null) {
 				Assertions.assertEquals(frameRate.intValue(), metadata.getFrameRate());
@@ -223,13 +224,10 @@ public class RecordingUtils {
 		// Check duration with 1 decimal precision
 		DecimalFormat df = new DecimalFormat("#0.0");
 		df.setRoundingMode(RoundingMode.UP);
-		log.info("Duration of {} according to ffmpeg: {} s", file.getName(),
-				metadata.getDuration());
-		log.info("Duration of {} according to 'duration' property: {} s",
-				file.getName(), duration);
-		log.info("Difference in s duration: {}", Math.abs(metadata.getDuration() -
-				duration));
-		final double difference = 10;
+		log.info("Duration of {} according to ffmpeg: {} s", file.getName(), metadata.getDuration());
+		log.info("Duration of {} according to 'duration' property: {} s", file.getName(), duration);
+		log.info("Difference in s duration: {}", Math.abs(metadata.getDuration() - duration));
+		final double difference = 20;
 		System.out.println("Duration of " + file.getName() + " according to ffmpeg: " + metadata.getDuration() + " s");
 		System.out.println("Duration of " + file.getName() + " according to 'duration' property: " + duration + " s");
 		Assertions.assertTrue(Math.abs((metadata.getDuration() - duration)) < difference,

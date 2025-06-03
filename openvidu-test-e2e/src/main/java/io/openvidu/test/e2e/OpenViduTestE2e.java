@@ -108,6 +108,7 @@ public class OpenViduTestE2e {
 	protected static String EDGE_VERSION = "latest";
 
 	protected static String OPENVIDU_DEPLOYMENT = "http://localhost:5000/";
+	protected static String OPENVIDU_LOCAL_RECORDING_PATH = "/opt/openvidu/recordings";
 	protected static String DOCKER_ANDROID_IMAGE = "budtmo/docker-android:latest";
 
 	protected static Exception ex = null;
@@ -194,8 +195,8 @@ public class OpenViduTestE2e {
 
 	protected static void cleanFoldersAndSetUpOpenViduJavaClient() {
 		try {
-			log.info("Cleaning folder /opt/openvidu/recordings");
-			FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
+			log.info("Cleaning folder " + OPENVIDU_LOCAL_RECORDING_PATH);
+			FileUtils.cleanDirectory(new File(OPENVIDU_LOCAL_RECORDING_PATH));
 		} catch (IOException e) {
 			log.error(e.getMessage());
 		}
@@ -328,6 +329,16 @@ public class OpenViduTestE2e {
 			OPENVIDU_DEPLOYMENT = openviduDeployment;
 		}
 		log.info("Using URL {} to connect to OpenVidu deployment", OPENVIDU_DEPLOYMENT);
+
+		String openviduLocalRecordingPath = System.getProperty("OPENVIDU_LOCAL_RECORDING_PATH");
+		if (openviduLocalRecordingPath != null && !openviduLocalRecordingPath.isBlank()) {
+			OPENVIDU_LOCAL_RECORDING_PATH = openviduLocalRecordingPath;
+		}
+		if (OPENVIDU_LOCAL_RECORDING_PATH.endsWith("/")) {
+			OPENVIDU_LOCAL_RECORDING_PATH = OPENVIDU_LOCAL_RECORDING_PATH.substring(0,
+					OPENVIDU_LOCAL_RECORDING_PATH.length() - 1);
+		}
+		log.info("Using local recording path {}", OPENVIDU_LOCAL_RECORDING_PATH);
 	}
 
 	protected BrowserUser setupBrowser(String browser) throws Exception {
@@ -563,7 +574,7 @@ public class OpenViduTestE2e {
 		}
 		// removeAllRecordingContiners();
 		try {
-			FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
+			FileUtils.cleanDirectory(new File(OPENVIDU_LOCAL_RECORDING_PATH));
 		} catch (IOException e) {
 			log.error(e.getMessage());
 		}

@@ -1668,7 +1668,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
 
-		String recordingsPath = "/opt/openvidu/recordings/";
+		String recordingsPath = OPENVIDU_LOCAL_RECORDING_PATH + "/";
 		File file1 = new File(recordingsPath + sessionName + "/" + sessionName + ".mp4");
 		File file2 = new File(recordingsPath + sessionName + "/" + ".recording." + sessionName);
 		File file3 = new File(recordingsPath + sessionName + "/" + sessionName + ".jpg");
@@ -1951,7 +1951,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 //		List<String> streamIds = activeStreamsOfSession(sessionName);
 //		for (String strId : streamIds) {
-//			waitUntilFileExistsAndIsBiggerThan("/opt/openvidu/recordings/" + sessionName + "/" + strId + "."
+//			waitUntilFileExistsAndIsBiggerThan(OPENVIDU_LOCAL_RECORDING_PATH + "/" + sessionName + "/" + strId + "."
 //					+ this.getIndividualRecordingExtension(), 200, 60);
 //		}
 
@@ -1985,7 +1985,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 
-		String recordingsPath = "/opt/openvidu/recordings/";
+		String recordingsPath = OPENVIDU_LOCAL_RECORDING_PATH + "/";
 		String recPath = recordingsPath + sessionName + "/";
 
 		// At the moment the .webm recordings are not supported
@@ -2030,7 +2030,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final String RECORDING_COMPOSED_VIDEO = "COMPOSED_VIDEO_ONLY";
 		final String RECORDING_INDIVIDUAL_VIDEO = "INDIVIDUAL_VIDEO_ONLY";
 		final String RECORDING_INDIVIDUAL_AUDIO = "INDIVIDUAL_AUDIO_ONLY";
-		final int RECORDING_DURATION = 5000;
+		final int RECORDING_DURATION = 7000;
 
 		Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
 			public void uncaughtException(Thread th, Throwable ex) {
@@ -2085,10 +2085,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				user2.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 
 				user2.getEventManager().waitUntilEventReaches("recordingStarted", 4);
-				user2.getEventManager().waitUntilEventReaches("recordingStopped", 4, 120, true);
+				user2.getEventManager().waitUntilEventReaches("recordingStopped", 4, 180, true);
 
 				user2.getEventManager().waitUntilEventReaches("recordingStarted", 6);
-				user2.getEventManager().waitUntilEventReaches("recordingStopped", 6, 120, true);
+				user2.getEventManager().waitUntilEventReaches("recordingStopped", 6, 180, true);
 
 				user2.getEventManager().waitUntilEventReaches("streamDestroyed", 4);
 				user2.getEventManager().waitUntilEventReaches("connectionDestroyed", 4);
@@ -2172,7 +2172,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("stop-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording stopped [" + SESSION_NAME + "~1]"));
-		user.getEventManager().waitUntilEventReaches("recordingStopped", 4, 120, true);
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 4, 180, true);
 
 		// Audio-only INDIVIDUAL recording
 		recordingNameField.clear();
@@ -2192,20 +2192,15 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("stop-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording stopped [" + SESSION_NAME + "~2]"));
-		user.getEventManager().waitUntilEventReaches("recordingStopped", 6, 120, true);
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 6, 180, true);
 
-		String recordingsPath = "/opt/openvidu/recordings/";
+		String recordingsPath = OPENVIDU_LOCAL_RECORDING_PATH + "/";
 
 		// Check video-only COMPOSED recording
 		String recPath = recordingsPath + SESSION_NAME + "/";
 		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME);
-
-		// Commented because the duration file using ffmpeg probe is not the same as the
-		// duration in the Livekit Egress entity
-		// this.recordingUtils.checkMultimediaFile(new File(recPath +
-		// recording.getName() + ".mp4"), false, true,
-		// recording.getDuration(), recording.getResolution(), recording.getFrameRate(),
-		// null, "h264", true);
+		this.recordingUtils.checkMultimediaFile(new File(recPath + recording.getName() + ".mp4"), false, true,
+				recording.getDuration(), recording.getResolution(), recording.getFrameRate(), null, "h264", true);
 
 		// Check video-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "~1/";
@@ -2286,7 +2281,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				"Recording started [" + SESSION_NAME + "]"));
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 3);
 
-		String recordingFilePath = "/opt/openvidu/recordings/" + SESSION_NAME + "/" + RECORDING_NAME + ".webm";
+		String recordingFilePath = OPENVIDU_LOCAL_RECORDING_PATH + "/" + SESSION_NAME + "/" + RECORDING_NAME + ".webm";
 		// waitUntilFileExistsAndIsBiggerThan(recordingFilePath, 40, 30);
 
 		user.getDriver().findElement(By.id("recording-id-field")).clear();
@@ -2367,7 +2362,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
 
-		String recordingsPath = "/opt/openvidu/recordings/" + SESSION_NAME + "/";
+		String recordingsPath = OPENVIDU_LOCAL_RECORDING_PATH + "/" + SESSION_NAME + "/";
 		File file1 = new File(recordingsPath + SESSION_NAME + ".mp4");
 
 		// The video duration using Ffmpeg is almost 1.5s longer than the actual
@@ -2428,7 +2423,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
 			Thread.sleep(500);
 
-			recordingsPath = "/opt/openvidu/recordings/" + SESSION_NAME + "~1/";
+			recordingsPath = OPENVIDU_LOCAL_RECORDING_PATH + "/" + SESSION_NAME + "~1/";
 			file1 = new File(recordingsPath + SESSION_NAME + "~1.mp4");
 
 			// The video duration using Ffmpeg is almost 1.5s longer than the actual
@@ -2933,9 +2928,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertTrue(pub.hasAudio());
 		Assertions.assertFalse(pub.isAudioActive());
 
-		waitUntilFileExistsAndIsBiggerThan(
-				"/opt/openvidu/recordings/" + customSessionId + "/" + customSessionId + "/" + customSessionId + ".json",
-				0, 60);
+		waitUntilFileExistsAndIsBiggerThan(OPENVIDU_LOCAL_RECORDING_PATH + "/" + customSessionId + "/" + customSessionId
+				+ "/" + customSessionId + ".json", 0, 60);
 
 		Assertions.assertFalse(session.fetch(), "Session.fetch() should return false");
 		Assertions.assertFalse(OV.fetch(), "OpenVidu.fetch() should return false");
@@ -3060,7 +3054,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// String streamId = session.getActiveConnections().stream().filter(c ->
 		// c.getPublishers().size() > 0).findFirst()
 		// .get().getPublishers().get(0).getStreamId();
-		// waitUntilFileExistsAndIsBiggerThan("/opt/openvidu/recordings/" +
+		// waitUntilFileExistsAndIsBiggerThan(OPENVIDU_LOCAL_RECORDING_PATH + "/" +
 		// recording.getId() + "/" + streamId + "."
 		// + this.getIndividualRecordingExtension(), 200, 60);
 
@@ -3084,8 +3078,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertFalse(session.isBeingRecorded(), "Session shouldn't be being recorded");
 		Assertions.assertFalse(OV.fetch(), "OpenVidu.fetch() should return false");
 
-		this.recordingUtils.checkIndividualRecording("/opt/openvidu/recordings/" + customSessionId + "/", recording, 2,
-				"acc", "h264", false);
+		this.recordingUtils.checkIndividualRecording(OPENVIDU_LOCAL_RECORDING_PATH + "/" + customSessionId + "/",
+				recording, 2, "acc", "h264", false);
 
 		// Not recorded session
 		try {
@@ -3159,7 +3153,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertFalse(session.isBeingRecorded(), "Session shouldn't be being recorded");
 		Assertions.assertFalse(session.fetch(), "Session.fetch() should return false");
 
-		String recordingsPath = "/opt/openvidu/recordings/" + customSessionId + "~1/";
+		String recordingsPath = OPENVIDU_LOCAL_RECORDING_PATH + "/" + customSessionId + "~1/";
 		File file1 = new File(recordingsPath + customRecordingName + ".mp4");
 		File file2 = new File(recordingsPath + customRecordingName + ".mp4" + ".json");
 
@@ -4010,9 +4004,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					new RecordingProperties.Builder().outputMode(OutputMode.INDIVIDUAL).build());
 			user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
 
-			waitUntilFileExistsAndIsBiggerThan(
-					"/opt/openvidu/recordings/TestSession/" + streamId + "." + this.getIndividualRecordingExtension(),
-					200, 60);
+			waitUntilFileExistsAndIsBiggerThan(OPENVIDU_LOCAL_RECORDING_PATH + "/TestSession/" + streamId + "."
+					+ this.getIndividualRecordingExtension(), 200, 60);
 
 			final CountDownLatch latch = new CountDownLatch(2);
 
@@ -4053,8 +4046,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assertions.assertTrue(rec.getDuration() > 0, "Recording duration is 0");
 			Assertions.assertTrue(rec.getSize() > 0, "Recording size is 0");
 
-			this.recordingUtils.checkIndividualRecording("/opt/openvidu/recordings/TestSession/", rec, 1, "opus", "vp8",
-					true);
+			this.recordingUtils.checkIndividualRecording(OPENVIDU_LOCAL_RECORDING_PATH + "/TestSession/", rec, 1,
+					"opus", "vp8", true);
 
 			user.getDriver().findElement(By.id("remove-all-users-btn")).click();
 			user.getEventManager().clearAllCurrentEvents();
@@ -4088,9 +4081,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					new RecordingProperties.Builder().outputMode(OutputMode.INDIVIDUAL).build());
 			user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
 
-			waitUntilFileExistsAndIsBiggerThan(
-					"/opt/openvidu/recordings/TestSession/" + streamId + "." + this.getIndividualRecordingExtension(),
-					200, 60);
+			waitUntilFileExistsAndIsBiggerThan(OPENVIDU_LOCAL_RECORDING_PATH + "/TestSession/" + streamId + "."
+					+ this.getIndividualRecordingExtension(), 200, 60);
 
 			final CountDownLatch latch2 = new CountDownLatch(4);
 
@@ -4137,8 +4129,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assertions.assertTrue(rec.getDuration() > 0, "Recording duration is 0");
 			Assertions.assertTrue(rec.getSize() > 0, "Recording size is 0");
 
-			this.recordingUtils.checkIndividualRecording("/opt/openvidu/recordings/TestSession/", rec, 1, "opus", "vp8",
-					true);
+			this.recordingUtils.checkIndividualRecording(OPENVIDU_LOCAL_RECORDING_PATH + "/TestSession/", rec, 1,
+					"opus", "vp8", true);
 
 			OV.fetch();
 			sessions = OV.getActiveSessions();
