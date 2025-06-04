@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.35.1.17967",
-      "templateHash": "1564892158622430080"
+      "templateHash": "14954022358157654793"
     }
   },
   "parameters": {
@@ -573,8 +573,8 @@
     "ipTURNEmpty": "[equals(parameters('turnPublicIpAddressObject').newOrExistingOrNone, 'none')]",
     "ipTURNExists": "[equals(parameters('turnPublicIpAddressObject').newOrExistingOrNone, 'existing')]",
     "ipTURNNew": "[equals(parameters('turnPublicIpAddressObject').newOrExistingOrNone, 'new')]",
-    "tlbName": "[format('{0}-loadBalancer', parameters('stackName'))]",
-    "tlbFrontEndName": "LoadBalancerFrontEnd",
+    "tlbName": "[format('{0}-turnloadBalancer', parameters('stackName'))]",
+    "tlbFrontEndName": "TurnLoadBalancerFrontEnd",
     "networkSettings": {
       "vNetAddressPrefix": "10.0.0.0/16",
       "subnetAddressPrefixMaster1": "10.0.1.0/24",
