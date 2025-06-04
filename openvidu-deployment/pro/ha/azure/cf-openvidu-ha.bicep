@@ -2035,8 +2035,8 @@ resource LoadBalancer 'Microsoft.Network/loadBalancers@2024-05-01' = {
   }
 }
 
-var tlbName = '${stackName}-loadBalancer'
-var tlbFrontEndName = 'LoadBalancerFrontEnd'
+var tlbName = '${stackName}-turnloadBalancer'
+var tlbFrontEndName = 'TurnLoadBalancerFrontEnd'
 
 resource TurnTLSLoadbalancer 'Microsoft.Network/loadBalancers@2024-05-01' = if (turnTLSIsEnabled == true) {
   name: tlbName
