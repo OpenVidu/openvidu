@@ -22,7 +22,7 @@
 					[value]="settingsOptions.GENERAL"
 				>
 					<mat-icon matListItemIcon>manage_accounts</mat-icon>
-					<div mat-line *ngIf="!isMobile">{{ 'PANEL.SETTINGS.GENERAL' | translate }}</div>
+					<div *ngIf="!isMobile">{{ 'PANEL.SETTINGS.GENERAL' | translate }}</div>
 				</mat-list-option>
 				<mat-list-option
 					*ngIf="showCameraButton"
@@ -32,7 +32,7 @@
 					[value]="settingsOptions.VIDEO"
 				>
 					<mat-icon matListItemIcon>videocam</mat-icon>
-					<div mat-line *ngIf="!isMobile">{{ 'PANEL.SETTINGS.VIDEO' | translate }}</div>
+					<div *ngIf="!isMobile">{{ 'PANEL.SETTINGS.VIDEO' | translate }}</div>
 				</mat-list-option>
 				<mat-list-option
 					*ngIf="showMicrophoneButton"
@@ -42,7 +42,7 @@
 					[value]="settingsOptions.AUDIO"
 				>
 					<mat-icon matListItemIcon>mic</mat-icon>
-					<div mat-line *ngIf="!isMobile">{{ 'PANEL.SETTINGS.AUDIO' | translate }}</div>
+					<div *ngIf="!isMobile">{{ 'PANEL.SETTINGS.AUDIO' | translate }}</div>
 				</mat-list-option>
 				<!-- <mat-list-option
 					*ngIf="showCaptions"
