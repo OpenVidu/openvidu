@@ -33,8 +33,8 @@
 		"AUDIO_DEVICE": "Audiogerät",
 		"NO_VIDEO_DEVICE": "Video-Gerät nicht gefunden",
 		"NO_AUDIO_DEVICE": "Audio-Gerät nicht gefunden",
-		"JOIN": "Sitzung beitreten",
-		"PREPARING": "Sitzung vorbereiten..."
+		"JOIN": "Raum beitreten",
+		"PREPARING": "Raum vorbereiten..."
 	},
 	"TOOLBAR": {
 		"MUTE_AUDIO": "Stummschalten des Audios",
@@ -52,7 +52,7 @@
 		"START_RECORDING": "Aufzeichnung starten",
 		"STOP_RECORDING": "Aufzeichnung stoppen",
 		"SETTINGS": "Einstellungen",
-		"LEAVE": "Die Sitzung verlassen",
+		"LEAVE": "Die Raum verlassen",
 		"PARTICIPANTS": "Teilnehmer",
 		"CHAT": "Chat",
 		"ACTIVITIES": "Aktivitäten"
@@ -77,7 +77,7 @@
 		"CHAT": {
 			"TITLE": "Chat",
 			"YOU": "Sie",
-			"SUBTITLE": "Nachrichten werden am Ende der Sitzung entfernt",
+			"SUBTITLE": "Nachrichten werden am Ende der Raum entfernt",
 			"PLACEHOLDER": "Eine Nachricht senden...",
 			"SEND": "Senden",
 			"MESSAGE_SENT_NOTIFICATION": "Nachricht gesendet",
@@ -100,7 +100,7 @@
 			"CAPTIONS": "Untertitel",
 			"DISABLED_AUDIO": "Audio deaktiviert",
 			"DISABLED_VIDEO": "Video deaktiviert",
-			"CAPTIONS_LANG_TEXT": "Wählen Sie die Sprache, die die Teilnehmer der Sitzung verwenden. Die Untertitel werden in dieser Sprache angezeigt."
+			"CAPTIONS_LANG_TEXT": "Wählen Sie die Sprache, die die Teilnehmer der Raum verwenden. Die Untertitel werden in dieser Sprache angezeigt."
 		},
 		"BACKGROUND": {
 			"TITLE": "Hintergrund-Effekte",
@@ -139,9 +139,9 @@
 		}
 	},
 	"ERRORS": {
-		"SESSION": "Es ist ein Fehler beim Verbinden mit der Sitzung aufgetreten",
+		"SESSION": "Es ist ein Fehler beim Verbinden mit der Raum aufgetreten",
 		"CONNECTION": "Verbindung verloren",
-		"RECONNECT": "Ich versuche, die Verbindung zur Sitzung wiederherzustellen...",
+		"RECONNECT": "Ich versuche, die Verbindung zur Raum wiederherzustellen...",
 		"DISCONNECT": "Sie wurden getrennt",
 		"NETWORK_DISCONNECT": "Sie wurden aufgrund eines Netzwerkproblems getrennt",
 		"SIGNAL_CLOSE": "Die Verbindung zum Server wurde unerwartet geschlossen",

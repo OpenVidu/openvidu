@@ -33,7 +33,7 @@
 		"AUDIO_DEVICE": "音频设备",
 		"NO_VIDEO_DEVICE": "未找到视频设备",
 		"NO_AUDIO_DEVICE": "未找到音频设备",
-		"JOIN": "加入会话",
+		"JOIN": "加入房间",
 		"PREPARING": "筹备会议"
 	},
 	"TOOLBAR": {
@@ -100,7 +100,7 @@
 			"CAPTIONS": "字幕",
 			"DISABLED_AUDIO": "没有音频设备",
 			"DISABLED_VIDEO": "没有视频设备",
-			"CAPTIONS_LANG_TEXT": "选择会话参与者将使用的语言。字幕将以该语言显示。"
+			"CAPTIONS_LANG_TEXT": "选择房间参与者将使用的语言。字幕将以该语言显示。"
 		},
 		"BACKGROUND": {
 			"TITLE": "背景效果",
@@ -139,9 +139,9 @@
 		}
 	},
 	"ERRORS": {
-		"SESSION": "连接到会话时有错误",
+		"SESSION": "连接到房间时有错误",
 		"CONNECTION": "连接丢失",
-		"RECONNECT": "试图重新连接到会话",
+		"RECONNECT": "试图重新连接到房间",
 		"DISCONNECT": "您已断开连接",
 		"NETWORK_DISCONNECT": "由于网络连接问题，您已断开连接",
 		"SIGNAL_CLOSE": "与服务器的连接意外关闭",

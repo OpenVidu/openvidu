@@ -33,8 +33,8 @@
 		"AUDIO_DEVICE": "Dispositivo audio",
 		"NO_VIDEO_DEVICE": "Dispositivo video non trovato",
 		"NO_AUDIO_DEVICE": "Dispositivo audio non trovato",
-		"JOIN": "Unisciti alla sessione",
-		"PREPARING": "Preparazione della sessione in corso..."
+		"JOIN": "Unisciti alla stanza",
+		"PREPARING": "Preparazione della stanza in corso..."
 	},
 	"TOOLBAR": {
 		"MUTE_AUDIO": "Disattiva l'audio",
@@ -52,7 +52,7 @@
 		"START_RECORDING": "Avvia registrazione",
 		"STOP_RECORDING": "Interrompi registrazione",
 		"SETTINGS": "Impostazioni",
-		"LEAVE": "Abbandona la sessione",
+		"LEAVE": "Abbandona la stanza",
 		"PARTICIPANTS": "Partecipanti",
 		"CHAT": "Chat",
 		"ACTIVITIES": "Attività"
@@ -77,7 +77,7 @@
 		"CHAT": {
 			"TITLE": "Chat",
 			"YOU": "Tu",
-			"SUBTITLE": "I messaggi verranno rimossi alla fine della sessione",
+			"SUBTITLE": "I messaggi verranno rimossi alla fine della stanza",
 			"PLACEHOLDER": "Invia un messaggio...",
 			"SEND": "Invia",
 			"MESSAGE_SENT_NOTIFICATION": "messaggio inviato",
@@ -100,7 +100,7 @@
 			"CAPTIONS": "Sottotitoli",
 			"DISABLED_AUDIO": "Disattiva l'audio",
 			"DISABLED_VIDEO": "Disattiva il video",
-			"CAPTIONS_LANG_TEXT": "Seleziona la lingua che i partecipanti della sessione useranno. I sottotitoli appariranno in quella lingua."
+			"CAPTIONS_LANG_TEXT": "Seleziona la lingua che i partecipanti della stanza useranno. I sottotitoli appariranno in quella lingua."
 		},
 		"BACKGROUND": {
 			"TITLE": "Effetti di sfondo",
@@ -139,9 +139,9 @@
 		}
 	},
 	"ERRORS": {
-		"SESSION": "Si è verificato un errore di connessione alla sessione",
+		"SESSION": "Si è verificato un errore di connessione alla stanza",
 		"CONNECTION": "Connessione persa",
-		"RECONNECT": "Oops! Si sta cercando di riconnettersi alla sessione...",
+		"RECONNECT": "Oops! Si sta cercando di riconnettersi alla stanza...",
 		"DISCONNECT": "Sei stato disconnesso",
 		"NETWORK_DISCONNECT": "Sei stato disconnesso a causa di un problema di connettività di rete",
 		"SIGNAL_CLOSE": "La connessione al server è stata chiusa inaspettatamente",

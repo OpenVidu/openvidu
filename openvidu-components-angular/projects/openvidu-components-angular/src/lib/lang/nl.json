@@ -33,8 +33,8 @@
 		"AUDIO_DEVICE": "Audiospeler",
 		"NO_VIDEO_DEVICE": "Videoapparaat niet gevonden",
 		"NO_AUDIO_DEVICE": "Audioapparaat niet gevonden",
-		"JOIN": "Deelnemen aan sessie",
-		"PREPARING": "Sessie voorbereiden ..."
+		"JOIN": "Deelnemen aan kamer",
+		"PREPARING": "Kamer voorbereiden ..."
 	},
 	"TOOLBAR": {
 		"MUTE_AUDIO": "Audio dempen",
@@ -52,7 +52,7 @@
 		"START_RECORDING": "Start opname",
 		"STOP_RECORDING": "Stop opname",
 		"SETTINGS": "Instellingen",
-		"LEAVE": "Verlaat de sessie",
+		"LEAVE": "Verlaat de kamer",
 		"PARTICIPANTS": "Deelnemers",
 		"CHAT": "Chat",
 		"ACTIVITIES": "Activiteiten"
@@ -77,7 +77,7 @@
 		"CHAT": {
 			"TITLE": "Chat",
 			"YOU": "Jij",
-			"SUBTITLE": "Berichten worden aan het einde van de sessie verwijderd",
+			"SUBTITLE": "Berichten worden aan het einde van de kamer verwijderd",
 			"PLACEHOLDER": "Stuur een bericht ...",
 			"SEND": "Versturen",
 			"MESSAGE_SENT_NOTIFICATION": "bericht verzonden",
@@ -100,7 +100,7 @@
 			"CAPTIONS": "Ondertitels",
 			"DISABLED_AUDIO": "Geen audio",
 			"DISABLED_VIDEO": "Geen video",
-			"CAPTIONS_LANG_TEXT": "Selecteer de taal die de deelnemers van de sessie zullen gebruiken. De ondertiteling zal in die taal verschijnen."
+			"CAPTIONS_LANG_TEXT": "Selecteer de taal die de deelnemers van de kamer zullen gebruiken. De ondertiteling zal in die taal verschijnen."
 		},
 		"BACKGROUND": {
 			"TITLE": "Achtergrondeffecten",
@@ -139,9 +139,9 @@
 		}
 	},
 	"ERRORS": {
-		"SESSION": "Er is een fout opgetreden bij het verbinden met de sessie",
+		"SESSION": "Er is een fout opgetreden bij het verbinden met de kamer",
 		"CONNECTION": "Verbinding verloren",
-		"RECONNECT": "Proberen opnieuw verbinding te maken met de sessie...",
+		"RECONNECT": "Proberen opnieuw verbinding te maken met de kamer...",
 		"DISCONNECT": "Je bent losgekoppeld",
 		"NETWORK_DISCONNECT": "Je bent losgekoppeld vanwege een netwerkprobleem",
 		"SIGNAL_CLOSE": "De verbinding met de server werd onverwacht verbroken",

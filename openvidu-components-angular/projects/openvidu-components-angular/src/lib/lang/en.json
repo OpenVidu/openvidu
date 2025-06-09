@@ -30,8 +30,8 @@
 		"AUDIO_DEVICE": "Audio device",
 		"NO_VIDEO_DEVICE": "Video device not found",
 		"NO_AUDIO_DEVICE": "Audio device not found",
-		"JOIN": "Join session",
-		"PREPARING": "Preparing session..."
+		"JOIN": "Join room",
+		"PREPARING": "Preparing room..."
 	},
 	"ROOM": {
 		"JOINING": "Joining room..."
@@ -52,7 +52,7 @@
 		"START_RECORDING": "Start recording",
 		"STOP_RECORDING": "Stop recording",
 		"SETTINGS": "Settings",
-		"LEAVE": "Leave the session",
+		"LEAVE": "Leave the room",
 		"PARTICIPANTS": "Participants",
 		"CHAT": "Chat",
 		"ACTIVITIES": "Activities"
@@ -77,7 +77,7 @@
 		"CHAT": {
 			"TITLE": "Chat",
 			"YOU": "You",
-			"SUBTITLE": "Messages will be removed at the end of the session",
+			"SUBTITLE": "Messages will be removed at the end of the room",
 			"PLACEHOLDER": "Send a message...",
 			"SEND": "Send",
 			"MESSAGE_SENT_NOTIFICATION": "message sent",
@@ -100,7 +100,7 @@
 			"CAPTIONS": "Captions",
 			"DISABLED_AUDIO": "Audio disabled",
 			"DISABLED_VIDEO": "Video disabled",
-			"CAPTIONS_LANG_TEXT": "Select the language that the participants of the session will use. The captions will appear in that language."
+			"CAPTIONS_LANG_TEXT": "Select the language that the participants of the room will use. The captions will appear in that language."
 		},
 		"BACKGROUND": {
 			"TITLE": "Background effects",

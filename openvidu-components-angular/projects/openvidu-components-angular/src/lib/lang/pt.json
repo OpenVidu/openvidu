@@ -33,8 +33,8 @@
 		"AUDIO_DEVICE": "Dispositivo de áudio",
 		"NO_VIDEO_DEVICE": "Dispositivo de vídeo não encontrado",
 		"NO_AUDIO_DEVICE": "Dispositivo de áudio não encontrado",
-		"JOIN": "Entrar na sessão",
-		"PREPARING": "Preparando sessão..."
+		"JOIN": "Entrar na sala",
+		"PREPARING": "Preparando sala..."
 	},
 	"TOOLBAR": {
 		"MUTE_AUDIO": "Mute seu áudio",
@@ -52,7 +52,7 @@
 		"START_RECORDING": "Iniciar_gravação",
 		"STOP_RECORDING": "Parar de gravar",
 		"SETTINGS": "Configurações",
-		"LEAVE": "Sair da sessão",
+		"LEAVE": "Sair da sala",
 		"PARTICIPANTS": "Participantes",
 		"CHAT": "Chat",
 		"ACTIVITIES": "Actividades"
@@ -77,7 +77,7 @@
 		"CHAT": {
 			"TITLE": "Chat",
 			"YOU": "Você",
-			"SUBTITLE": "As mensagens serão removidas no final da sessão",
+			"SUBTITLE": "As mensagens serão removidas no final da sala",
 			"PLACEHOLDER": "Enviar uma mensagem...",
 			"SEND": "Enviar",
 			"MESSAGE_SENT_NOTIFICATION": "mensagem enviada",
@@ -100,7 +100,7 @@
 			"CAPTIONS": "Legendas",
 			"DISABLED_AUDIO": "Áudio desativado",
 			"DISABLED_VIDEO": "Vídeo desativado",
-			"CAPTIONS_LANG_TEXT": "Selecione o idioma que os participantes da sessão utilizarão. Os legendas aparecerão nesse idioma."
+			"CAPTIONS_LANG_TEXT": "Selecione o idioma que os participantes da sala utilizarão. Os legendas aparecerão nesse idioma."
 		},
 		"BACKGROUND": {
 			"TITLE": "Efeitos de fundo",
@@ -139,9 +139,9 @@
 		}
 	},
 	"ERRORS": {
-		"SESSION": "Houve um erro de ligação à sessão",
+		"SESSION": "Houve um erro de ligação à sala",
 		"CONNECTION": "Ligação perdida",
-		"RECONNECT": "A tentar restabelecer a ligação à sessão...",
+		"RECONNECT": "A tentar restabelecer a ligação à sala...",
 		"DISCONNECT": "Você foi desconectado",
 		"NETWORK_DISCONNECT": "Você foi desconectado devido a um problema de conectividade de rede",
 		"SIGNAL_CLOSE": "A conexão com o servidor foi encerrada inesperadamente",
