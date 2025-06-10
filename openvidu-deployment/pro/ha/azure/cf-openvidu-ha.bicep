@@ -39,12 +39,6 @@ param turnOwnPublicCertificate string = ''
 @description('(Optional) This setting is applicable if the certificate type is set to \'owncert\' and the TurnDomainName is specified.')
 param turnOwnPrivateCertificate string = ''
 
-@description('Name of the PublicIPAddress resource in Azure when using TURN server with TLS')
-param turnPublicIpAddressObject object = {
-  name: ''
-  id: ''
-}
-
 @description('Visit https://openvidu.io/account')
 @secure()
 param openviduLicense string
@@ -1888,7 +1882,6 @@ resource scaleInActivityLogRule 'Microsoft.Insights/activityLogAlerts@2020-10-01
 /*------------------------------------------- NETWORK -------------------------------------------*/
 
 var isEmptyIp = publicIpAddressObject.newOrExistingOrNone == 'none'
-var turnIsEmptyIp = turnPublicIpAddressObject.newOrExistingOrNone == 'none'
 var lbName = '${stackName}-loadBalancer'
 var lbFrontEndName = 'LoadBalancerFrontEnd'
 var lbBackendPoolNameMasterNode = 'LoadBalancerBackEndMasterNode'
@@ -1915,32 +1908,6 @@ var ipNew = publicIpAddressObject.newOrExistingOrNone == 'new'
 
 resource publicIP_LoadBalancer_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipNew == true) {
   name: publicIpAddressObject.name
-}
-
-var ipTURNEmpty = turnPublicIpAddressObject.newOrExistingOrNone == 'none'
-
-resource publicIPAddressTurnTLSLoadBalancer 'Microsoft.Network/publicIPAddresses@2024-05-01' = if (ipTURNEmpty && turnTLSIsEnabled == true) {
-  name: '${stackName}-publicIPAddressTurnTLSLoadBalancer'
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  properties: {
-    publicIPAddressVersion: 'IPv4'
-    publicIPAllocationMethod: 'Static'
-  }
-}
-
-var ipTURNExists = turnPublicIpAddressObject.newOrExistingOrNone == 'existing'
-
-resource publicIP_TurnTLSLoadBalancer_ifExisting 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipTURNExists && turnTLSIsEnabled == true) {
-  name: turnPublicIpAddressObject.name
-}
-
-var ipTURNNew = turnPublicIpAddressObject.newOrExistingOrNone == 'new'
-
-resource publicIP_TurnTLSLoadBalancer_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipTURNNew && turnTLSIsEnabled == true) {
-  name: turnPublicIpAddressObject.name
 }
 
 resource LoadBalancer 'Microsoft.Network/loadBalancers@2024-05-01' = {
@@ -2055,74 +2022,6 @@ resource LoadBalancer 'Microsoft.Network/loadBalancers@2024-05-01' = {
       }
     ]
     outboundRules: []
-  }
-}
-
-var tlbName = '${stackName}-turnloadBalancer'
-var tlbFrontEndName = 'TurnLoadBalancerFrontEnd'
-
-resource TurnTLSLoadbalancer 'Microsoft.Network/loadBalancers@2024-05-01' = if (turnTLSIsEnabled == true) {
-  name: tlbName
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  properties: {
-    frontendIPConfigurations: [
-      {
-        name: tlbFrontEndName
-        properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          privateIPAddressVersion: 'IPv4'
-          publicIPAddress: {
-            id: turnIsEmptyIp
-              ? publicIPAddressTurnTLSLoadBalancer.id
-              : ipTURNNew ? publicIP_TurnTLSLoadBalancer_ifNew.id : publicIP_TurnTLSLoadBalancer_ifExisting.id
-          }
-        }
-      }
-    ]
-    backendAddressPools: [
-      {
-        name: lbBackendPoolNameMasterNode
-      }
-    ]
-    loadBalancingRules: [
-      {
-        name: 'TURNTLSRuleforMasterNode'
-        properties: {
-          frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', tlbName, tlbFrontEndName)
-          }
-          backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', tlbName, lbBackendPoolNameMasterNode)
-          }
-          frontendPort: 443
-          backendPort: 443
-          enableFloatingIP: false
-          protocol: 'Tcp'
-          enableTcpReset: true
-          loadDistribution: 'Default'
-          disableOutboundSnat: true
-          probe: {
-            id: resourceId('Microsoft.Network/loadBalancers/probes', tlbName, 'probeForHTTPSRuleMasterNode')
-          }
-        }
-      }
-    ]
-    probes: [
-      {
-        name: 'probeForTURNTLSRuleMasterNode'
-        properties: {
-          protocol: 'Http'
-          requestPath: '/'
-          port: 443
-          probeThreshold: 3
-          intervalInSeconds: 10
-          numberOfProbes: 5
-        }
-      }
-    ]
   }
 }
 
