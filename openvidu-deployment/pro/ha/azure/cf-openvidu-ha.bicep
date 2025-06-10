@@ -1514,6 +1514,21 @@ az tag update --resource-id $RESOURCE_ID --operation replace --tags "STATUS"="HE
 az vmss delete-instances --resource-group $RESOURCE_GROUP_NAME --name $VM_SCALE_SET_NAME --instance-ids $INSTANCE_ID
 '''
 
+var delete_mediaNode_ScriptMediaTemplate = '''
+#!/bin/bash
+set -e
+
+az login --identity
+
+RESOURCE_GROUP_NAME=${resourceGroupName}
+VM_SCALE_SET_NAME=${vmScaleSetName}
+BEFORE_INSTANCE_ID=$(curl -H Metadata:true --noproxy "*" "http://169.254.169.254/metadata/instance?api-version=2021-02-01" | jq -r '.compute.resourceId')
+INSTANCE_ID=$(echo $BEFORE_INSTANCE_ID | awk -F'/' '{print $NF}')
+
+
+az vmss delete-instances --resource-group $RESOURCE_GROUP_NAME --name $VM_SCALE_SET_NAME --instance-ids $INSTANCE_ID
+'''
+
 var userDataMediaNodeTemplate = '''
 #!/bin/bash -x
 set -eu -o pipefail
@@ -1545,10 +1560,10 @@ az vmss update --resource-group $RESOURCE_GROUP_NAME --name $VM_SCALE_SET_NAME -
 export HOME="/root"
 
 # Install OpenVidu
-/usr/local/bin/install.sh || { echo "[OpenVidu] error installing OpenVidu"; exit 1; }
+/usr/local/bin/install.sh || { echo "[OpenVidu] error installing OpenVidu"; /usr/local/bin/delete_media_node.sh; }
 
 # Start OpenVidu
-systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
+systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; /usr/local/bin/delete_media_node.sh; }
 '''
 
 var installScriptMedia = reduce(
@@ -1563,12 +1578,20 @@ var stop_media_nodesScriptMedia = reduce(
   (curr, next) => { value: replace(curr.value, '\${${next.key}}', next.value) }
 ).value
 
+var delete_mediaNode_ScriptMedia = reduce(
+  items(stopMediaNodeParams),
+  { value: delete_mediaNode_ScriptMediaTemplate },
+  (curr, next) => { value: replace(curr.value, '\${${next.key}}', next.value) }
+).value
+
 var base64installMedia = base64(installScriptMedia)
 var base64stopMediaNode = base64(stop_media_nodesScriptMedia)
+var base64delete_mediaNode_ScriptMedia = base64(delete_mediaNode_ScriptMedia)
 
 var userDataParamsMedia = {
   base64install: base64installMedia
   base64stop: base64stopMediaNode
+  base64delete_mediaNode: base64delete_mediaNode_ScriptMedia
   resourceGroupName: resourceGroup().name
   vmScaleSetName: '${stackName}-mediaNodeScaleSet'
 }
