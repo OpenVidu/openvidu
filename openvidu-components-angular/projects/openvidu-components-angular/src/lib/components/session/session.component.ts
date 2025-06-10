@@ -181,8 +181,10 @@ export class SessionComponent implements OnInit, OnDestroy {
 	set layoutContainer(container: ElementRef) {
 		setTimeout(async () => {
 			if (container) {
-				// Apply background from storage when layout container is in DOM
-				await this.backgroundService.applyBackgroundFromStorage();
+				if (this.libService.showBackgroundEffectsButton()) {
+					// Apply background from storage when layout container is in DOM only when background effects button is enabled
+					await this.backgroundService.applyBackgroundFromStorage();
+				}
 			}
 		}, 0);
 	}
