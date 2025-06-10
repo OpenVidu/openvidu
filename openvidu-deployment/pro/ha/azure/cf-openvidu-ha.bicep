@@ -663,7 +663,7 @@ COMMON_ARGS=(
 )
 
 if [[ $LIVEKIT_TURN_DOMAIN_NAME != "" ]]; then
-  COMMON_ARGS+=("--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME}")
+  COMMON_ARGS+=("--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME")
 fi
 
 # Certificate arguments
