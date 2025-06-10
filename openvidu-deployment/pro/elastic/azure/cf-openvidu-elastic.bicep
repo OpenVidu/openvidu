@@ -1110,7 +1110,6 @@ while true; do
   sleep $WAIT_INTERVAL
 done
 set -e
-pppp
 # Get current shared secret
 DOMAIN=$(az keyvault secret show --vault-name ${keyVaultName} --name DOMAIN-NAME --query value -o tsv)
 OPENVIDU_PRO_LICENSE=$(az keyvault secret show --vault-name ${keyVaultName} --name OPENVIDU-PRO-LICENSE --query value -o tsv)
