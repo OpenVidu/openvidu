@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.1.42791",
-      "templateHash": "3547117393656361477"
+      "templateHash": "1254853653132773989"
     }
   },
   "parameters": {
@@ -1349,6 +1349,7 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Network/natGateways', format('{0}-natGateway', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetName, 'firstSubnetForMasterNodes')]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetName)]"
       ]
     },

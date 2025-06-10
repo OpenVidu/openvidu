@@ -2111,6 +2111,9 @@ resource subnetMasterNode2 'Microsoft.Network/virtualNetworks/subnets@2023-11-01
       id: natGateway.id
     }
   }
+  dependsOn: [
+    subnetMasterNode1
+  ]
 }
 
 resource netInterfaceMasterNode1 'Microsoft.Network/networkInterfaces@2023-11-01' = {
