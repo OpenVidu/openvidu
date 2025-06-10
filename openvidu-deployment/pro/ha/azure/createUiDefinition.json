@@ -534,25 +534,6 @@
                             },
                             "infoMessages": [],
                             "visible": true
-                        },
-                        {
-                            "name": "turnPublicIpAddressObject",
-                            "type": "Microsoft.Network.PublicIpAddressCombo",
-                            "label": {
-                                "publicIpAddress": "Turn Public Ip Address"
-                            },
-                            "toolTip": {
-                                "publicIpAddress": "Name of the PublicIPAddress resource in Azure when using TURN server with TLS"
-                            },
-                            "defaultValue": {
-                                "publicIpAddressName": "defaultName"
-                            },
-                            "options": {
-                                "hideNone": false,
-                                "hideDomainNameLabel": true,
-                                "hideExisting": false
-                            },
-                            "visible": true
                         }
                     ]
                 }
@@ -573,7 +554,6 @@
                 "turnDomainName": "[steps('parameters TURN').turnDomainName]",
                 "turnOwnPublicCertificate": "[steps('parameters TURN').turnOwnPublicCertificate]",
                 "turnOwnPrivateCertificate": "[steps('parameters TURN').turnOwnPrivateCertificate]",
-                "turnPublicIpAddressObject": "[steps('parameters TURN').turnPublicIpAddressObject]",
                 "openviduLicense": "[steps('parameters OPENVIDU').openviduLicense]",
                 "rtcEngine": "[steps('parameters OPENVIDU').rtcEngine]",
                 "masterNodeInstanceType": "[steps('parameters INSTANCE').masterNodeInstanceType]",
